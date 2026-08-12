@@ -1125,6 +1125,12 @@ class PublicPortalService:
                     # Begründung des Eigentümers (0332) — ohne sie muss die
                     # Agentur raten, warum gesperrt werden soll.
                     "reason": req.reason,
+                    # Der Eigentümer erklärt damit, den Vermarktungsvertrag
+                    # beenden zu wollen (0377). Es ist SEINE Erklärung — die
+                    # Agentur entscheidet beim Genehmigen, ob und zu welchem
+                    # Datum sie wirksam wird, und trägt ihre eigene Wertung in
+                    # `als_kuendigung_gewertet`.
+                    "ist_kuendigung": req.ist_kuendigung,
                 }
             )
             .execute()
@@ -1198,7 +1204,11 @@ class PublicPortalService:
             self._db.table("block_requests")
             .select(
                 "id, property_id, unit_id, start_date, end_date, status, "
-                "reason, decided_at, decision_note, created_at"
+                "reason, decided_at, decision_note, created_at, "
+                # Vertragskündigung (0377) — der Eigentümer sieht, dass sein
+                # Antrag als Kündigung geführt wird und zu welchem Datum.
+                "ist_kuendigung, als_kuendigung_gewertet, "
+                "vertragsende_gesetzt_auf"
             )
             .eq("tenant_id", tenant_id)
             # Wurzel 3/9: der Eigentümer sieht NUR seine eigenen Anträge, nicht
@@ -1329,6 +1339,13 @@ def _block(r: dict) -> BlockRequestItem:
         decided_at=str(r["decided_at"]) if r.get("decided_at") else None,
         decision_note=r.get("decision_note"),
         created_at=str(r["created_at"]) if r.get("created_at") else None,
+        ist_kuendigung=bool(r.get("ist_kuendigung")),
+        als_kuendigung_gewertet=bool(r.get("als_kuendigung_gewertet")),
+        vertragsende_gesetzt_auf=(
+            date.fromisoformat(str(r["vertragsende_gesetzt_auf"])[:10])
+            if r.get("vertragsende_gesetzt_auf")
+            else None
+        ),
     )
 
 

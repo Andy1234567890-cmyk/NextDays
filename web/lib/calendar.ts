@@ -454,6 +454,11 @@ export type Sperrantrag = {
   id: string;
   property_id: string;
   property_title: string | null;
+  /** Die beantragte Einheit (0353). null = der ganze Einheiten-TYP. Die
+   *  Agentur MUSS das sehen: „Studio 3 vom 1.–5." ist eine andere
+   *  Entscheidung als „alle fünf Studios vom 1.–5.". */
+  unit_id: string | null;
+  unit_name: string | null;
   requested_by: string | null;
   /** Name des Antragstellers. Bewusst OHNE E-Mail/Telefon — die
    *  Entscheidungsliste braucht sie nicht (Wurzel 9). */
@@ -469,6 +474,15 @@ export type Sperrantrag = {
   decided_at: string | null;
   decision_note: string | null;
   created_at: string | null;
+  /** Der EIGENTÜMER hat beim Stellen erklärt, den Vertrag beenden zu wollen. */
+  ist_kuendigung: boolean;
+  /** Die AGENTUR hat den Antrag beim Genehmigen als Kündigung gewertet — für
+   *  Bestandsanträge ohne das Feld. Getrennt von `ist_kuendigung`, damit
+   *  hinterher nicht dasteht „der Eigentümer hat gekündigt", wo ausgelegt
+   *  wurde. */
+  als_kuendigung_gewertet: boolean;
+  /** Das Vertragsende, das diese Genehmigung gesetzt hat. */
+  vertragsende_gesetzt_auf: string | null;
 };
 
 /** Anträge des Mandanten. Ohne `status` alle, `pending` ist die Warteschlange. */
@@ -479,15 +493,120 @@ export async function listBlockRequests(
   return call(`/calendar/block-requests${p}`);
 }
 
+/** Eine Buchung/Eigennutzung, die dem beantragten Zeitraum im Weg steht. */
+export type SperrantragKollision = {
+  reservation_id: string;
+  /** buchung = storniert werden (Gast, Geld, OTA-Meldung); eigennutzung =
+   *  gehört demselben Eigentümer, wird eher über den Widerruf ihres eigenen
+   *  Antrags aufgelöst. Zwei verschiedene Auflösungswege. */
+  art: string;
+  bezeichnung: string;
+  unit_id: string | null;
+  unit_name: string | null;
+  check_in: string;
+  check_out: string; // exklusiv (Abreisetag ist wieder frei)
+  status: string;
+  channel: string;
+  ota_name: string | null;
+  total_amount: number | null;
+  /** Währung DIESER Buchung. null → symbollos rendern (formatCurrency), nie
+   *  ein €-Ersatz (Wurzel 4). */
+  currency: string | null;
+  is_owner_stay: boolean;
+  owner_id: string | null;
+};
+
+/** Eine gesperrte Nacht OHNE Buchung dahinter (Handwerker/Agentur/iCal) —
+ *  wird im Kalender aufgehoben, nicht storniert. */
+export type SperrantragSperrtag = {
+  datum: string;
+  unit_id: string | null;
+  unit_name: string | null;
+  source: string;
+};
+
+/** Was der Genehmigung im Weg steht. `blockiert` sperrt den Genehmigen-Knopf.
+ *
+ *  Die `*_gesamt`-Zahlen sind VOLLSTÄNDIG, die Listen können gekürzt sein
+ *  (`gekuerzt`) — ein Jahresantrag über ein Hotel hätte sonst einen Payload,
+ *  den niemand liest. */
+export type SperrantragKollisionen = {
+  property_id: string;
+  /** Wurde als VERTRAGSKÜNDIGUNG geprüft? Dann ist eine bestehende
+   *  `contract_end`-Sperre der Zielzustand und kein Hindernis. */
+  als_kuendigung: boolean;
+  unit_id: string | null;
+  unit_name: string | null;
+  start_date: string;
+  end_date: string; // INKLUSIV, wie der Antrag gestellt wurde
+  naechte: number;
+  einheiten_gesamt: number;
+  blockiert: boolean;
+  grund: string | null; // belegt | stop_sell
+  freie_einheit_id: string | null;
+  freie_einheit_name: string | null;
+  min_freie_einheiten: number;
+  buchungen: SperrantragKollision[];
+  buchungen_gesamt: number;
+  sperrtage: SperrantragSperrtag[];
+  sperrtage_gesamt: number;
+  stop_sell_tage: string[];
+  stop_sell_gesamt: number;
+  gekuerzt: boolean;
+  /** Längster durchgehend freier Abschnitt im beantragten Zeitraum — ein
+   *  Vorschlag, keine automatische Kürzung. */
+  frei_von: string | null;
+  frei_bis: string | null;
+};
+
+/** Prüfen, was der Genehmigung im Weg steht — VOR dem Klick.
+ *
+ *  Nur lesend. Ohne diesen Aufruf endete ein belegter Zeitraum in einem
+ *  nackten 409, der nicht sagte, WELCHE Buchung im Weg steht — bei einem
+ *  Jahresantrag genau die Information, die fehlt. */
+export async function blockRequestKollisionen(
+  id: string,
+  // KEIN Default-Wert (`= false`) in der Signatur: dieses Modul ist
+  // `"use server"`, die Funktion wird also über die Netzwerkgrenze aufgerufen.
+  // Argumente werden dabei serialisiert, und ein weggelassenes Argument mit
+  // Default kam am Server nicht als `false` an — der Aufruf schlug fehl, BEVOR
+  // er das Backend erreichte: der Dialog hing ewig auf „wird geprüft" und im
+  // API-Log stand kein einziger Request (live 12.08.2026). Der Aufrufer
+  // übergibt den Wert immer.
+  alsKuendigung: boolean,
+): Promise<Result<SperrantragKollisionen>> {
+  // `als_kuendigung` ändert die FRAGE, nicht nur den Text: eine Kündigung
+  // belegt keine Nächte, also ist ein bestehendes Vertragsende dort der
+  // Zielzustand statt ein Hindernis.
+  const p = alsKuendigung ? "?als_kuendigung=true" : "";
+  return call(`/calendar/block-requests/${id}/kollisionen${p}`);
+}
+
 /** Genehmigen — sperrt die Nächte im Kalender und meldet es an die Portale.
  *  409, wenn der Zeitraum gebuchte Tage enthält oder schon entschieden wurde. */
 export async function approveBlockRequest(
   id: string,
   note: string | null,
+  /** Die Agentur wertet den Antrag als Vertragskündigung — dann wird nicht
+   *  gesperrt, sondern `properties.contract_end_date` gesetzt. Für
+   *  Bestandsanträge, deren Eigentümer die Absicht nur im Freitext erklärt
+   *  hat, ohne ihn erneut zu fragen.
+   *
+   *  `null` = normale Sperrung. Bewusst PFLICHT und nicht optional (`?`):
+   *  Server-Action-Argumente gehen über die Netzwerkgrenze, und ein
+   *  weggelassenes Argument ist dort nicht verlässlich `undefined` — siehe
+   *  `blockRequestKollisionen`. Der Aufrufer übergibt immer beides. */
+  kuendigung: { vertragsende: string | null } | null,
 ): Promise<Result<Sperrantrag>> {
   return call(`/calendar/block-requests/${id}/approve`, {
     method: "POST",
-    body: { note },
+    body: {
+      note,
+      als_kuendigung: kuendigung !== null,
+      // Leer → der Server nimmt den Antragsbeginn („ab da nicht mehr
+      // vermieten" = „ab da kein Vertrag"). Nichts wird hier geraten.
+      vertragsende: kuendigung?.vertragsende ?? null,
+    },
   });
 }
 

@@ -31,6 +31,7 @@ import {
   type OwnerBillingTerms,
   type PauschaleBasis,
   type PauschaleZeitpunkt,
+  type VertragsendeWirkung,
 } from "@/lib/owner-billing";
 
 type PropOption = { id: string; title: string };
@@ -194,9 +195,47 @@ export function Abrechnungsvertrag({
       return;
     }
     toast.success(t("saved"));
+    wirkungMelden(res.data.vertragsende_wirkung);
     setForm(null);
     setEditId(null);
     await laden();
+  }
+
+  /**
+   * Was der Klick am VERKAUF geändert hat (0378) — als eigene Meldung neben
+   * „gespeichert".
+   *
+   * Ein „Gültig bis" ist gleichzeitig ein Vermarktungsende: das Objekt geht bei
+   * Booking und Airbnb aus dem Verkauf. Bis diese Meldung da war, sah der Klick
+   * wie eine reine Abrechnungsnotiz aus, und die Agentur erfuhr erst im
+   * Kalender, dass Hunderte Nächte gesperrt sind.
+   */
+  function wirkungMelden(wirkung: VertragsendeWirkung[] | undefined) {
+    for (const w of wirkung ?? []) {
+      // Ein No-op wird nicht gemeldet — sonst kommt bei jedem Speichern eine
+      // Meldung, die nichts sagt, und die echten gehen darin unter.
+      if (w.unveraendert || w.uebersprungen) continue;
+      const objekt = objektTitel(w.property_id);
+      if (w.fehler) {
+        toast.error(
+          w.fehler === "objekt_ohne_einheit"
+            ? t("effectNoUnit", { property: objekt })
+            : t("effectCalendarFailed", { property: objekt }),
+        );
+        continue;
+      }
+      if (w.ende) {
+        toast.warning(
+          t("effectBlocked", {
+            property: objekt,
+            date: w.ende,
+            nights: w.gesperrte_naechte ?? 0,
+          }),
+        );
+      } else {
+        toast.success(t("effectReleased", { property: objekt }));
+      }
+    }
   }
 
   async function loeschen(id: string) {
@@ -213,6 +252,28 @@ export function Abrechnungsvertrag({
 
   const objektTitel = (id: string | null) =>
     id ? (properties.find((p) => p.id === id)?.title ?? id) : t("allProperties");
+
+  /**
+   * Folgt auf das eingegebene „Gültig bis" ein Anschlussvertrag? Dieselbe Regel
+   * wie serverseitig (`ende_bestimmen`): die Intervalle sind halb offen
+   * [ab, bis), der Endtag gehört bereits dem Folgevertrag — eine Zeile, die
+   * spätestens am Endtag beginnt, schließt lückenlos an.
+   *
+   * Nur für den Hinweis, nicht für die Entscheidung: gesperrt wird ausschließlich
+   * nach dem Server-Ergebnis. Eine zweite Meinung darüber, was gilt, ist genau
+   * der Fehler, der die beiden Felder auseinanderlaufen ließ.
+   */
+  const hatAnschluss = (() => {
+    if (!form?.gueltig_bis) return false;
+    const geltung = form.property_id || null;
+    return items.some(
+      (v) =>
+        v.id !== editId &&
+        (v.property_id ?? null) === geltung &&
+        v.gueltig_ab <= form.gueltig_bis &&
+        (v.gueltig_bis === null || v.gueltig_bis > form.gueltig_bis),
+    );
+  })();
 
   return (
     <Card className="flex flex-col gap-4 p-6">
@@ -380,6 +441,20 @@ export function Abrechnungsvertrag({
               />
             </Feld>
           </div>
+
+          {/*
+            VOR dem Speichern warnen, nicht erst danach (0378): ein „Gültig bis"
+            ist gleichzeitig ein Vermarktungsende und nimmt das Objekt bei
+            Booking und Airbnb aus dem Verkauf. Der Hinweis erscheint nur, wenn
+            wirklich befristet wird — und nur, wenn KEIN Anschlussvertrag
+            folgt, denn dann ist es bloß ein Satzwechsel.
+          */}
+          {form.gueltig_bis && !hatAnschluss && (
+            <InfoHinweis
+              text={t("endsSalesHint", { date: form.gueltig_bis })}
+              ariaLabel={t("infoAria", { feld: t("validTo") })}
+            />
+          )}
 
           <div className="flex flex-col gap-2">
             <span className="text-sm font-semibold">{t("minCommission")}</span>

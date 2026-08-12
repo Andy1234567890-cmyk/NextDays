@@ -1405,7 +1405,13 @@
       },
       "reason": "Iemesls",
       "reasonPlaceholder": "Kāpēc tas būtu jābloķē? (piem., paškā izmantošana, amatnieki)",
-      "decisionNote": "Pārvaldības piezīme"
+      "decisionNote": "Pārvaldības piezīme",
+      "termination": "Es vēlētos lauzt līgumu.",
+      "terminationConfirmed": "Līgums beidzas {datum}.",
+      "terminationHint": "Tas ne tikai bloķē periodu, bet arī izbeidz mārketinga līgumu sākuma datumā. Administrācija apstiprina datumu.",
+      "terminationInterpreted": "Administrācija šo pieprasījumu ir interpretējusi kā paziņojumu par līguma atcelšanu — līgums beidzas {datum}. Lūdzu, informējiet mūs, ja tas nebija domāts.",
+      "terminationPending": "Līguma izbeigšana — administrācija vēl nav apstiprinājusi līguma izbeigšanu.",
+      "terminationSent": "Paziņojums par līguma izbeigšanu ir iesniegts. Administrācija apstiprina līguma izbeigšanu."
     },
     "meter": {
       "title": "Ievadīt skaitītāja rādījumu",
@@ -5771,7 +5777,8 @@
         "booked": "Rezervēts",
         "blocked": "Bloķēts",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Līgums izbeigts"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "visi kanāli",
@@ -5900,6 +5907,10 @@
       "fallbackAddonName": "Papildpakalpojums",
       "markPaidAction": "Atzīmēt kā apmaksātu",
       "markPaidSuccess": "Atzīmēts kā apmaksāts.",
+      "cancelAction": "Atcelt",
+      "cancelBusy": "Atceļ…",
+      "cancelConfirm": "Vai tiešām atcelt šo papildpakalpojumu?",
+      "cancelSuccess": "Papildpakalpojums atcelts.",
       "addSuccess": "Papildpakalpojums pievienots.",
       "totalLabel": "Papildpakalpojumu summa",
       "emptyPurchased": "Papildpakalpojumi vēl nav rezervēti.",
@@ -6175,7 +6186,44 @@
         "approve": "Pieprasījums apstiprināts, naktis bloķētas.",
         "reject": "Pieprasījums noraidīts.",
         "revoke": "Apstiprinājums atsaukts, naktis atbrīvotas."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "Periods ir rezervēts.",
+          "stop_sell": "Šajā periodā ir spēkā pārdošanas aizliegums.",
+          "vertragsende": "Periods ir pēc administratīvā līguma termiņa beigām."
+        },
+        "blockedNightsHint": "Bloķēt bez rezervācijas — noņemt kalendārā, neatcelt.",
+        "bookingsHint": "Tie NETIKS automātiski atcelti. Atceliet tos atsevišķi, un pēc tam pieteikumu varēs apstiprināt.",
+        "close": "Aizvērt",
+        "loading": "Termiņš tiek pārskatīts…",
+        "openBooking": "Atvērt rezervāciju",
+        "openStay": "Atvērts uzturēšanās laiks",
+        "title": "Pārbaudes apstiprinājums",
+        "truncated": "Saraksts ir saīsināts; iepriekš minētie skaitļi ir pilnīgi.",
+        "free": "Laika periods ir pieejams.",
+        "blockedNights": "{anzahl} bloķētas naktis",
+        "bookings": "{anzahl} rezervācijas šajā periodā",
+        "stopSell": "{anzahl} dienas ar izpārdošanas pārtraukumu",
+        "subtitle": "{objekt}, {von} – {bis}. Pirms bloķēšanas tiek pārbaudīts, vai laika periods ir brīvs.",
+        "suggestion": "{von} – {bis} būtu pieejams.",
+        "summary": "{naechte} naktis · {einheiten} vienības · pieejamas vismaz {frei}",
+        "unitScope": "Pieteikums attiecas tikai uz: {einheit}",
+        "willUse": "Aizņemts ir sekojošais: {einheit}",
+        "contractHint": "Kamēr līgums netiek pagarināts, šeit neko nevar bloķēt — šajā periodā īpašumu nepārvaldāt jūs.",
+        "approveTermination": "Ievadiet līguma beigu datumu",
+        "bookingsAfterEnd": "{anzahl} rezervācijas pēc līguma beigām",
+        "bookingsAfterEndHint": "Tie paliek derīgi un tiks izpildīti — līgums tiem beidzas. Bloķētas ir tikai brīvdienas.",
+        "contractEndHint": "Atstājiet tukšu: tiek piemērots pieteikuma sākuma datums ({datum}). Ja līgums ir spēkā ilgāku laiku, šeit ievadiet faktisko beigu datumu.",
+        "contractEndLabel": "Līguma beigas (pirmā diena bez līguma)",
+        "isTermination": "Šī ir līguma izbeigšana",
+        "terminationByOwner": "Īpašnieks to pats paskaidroja pieteikumā.",
+        "terminationHint": "Īpašnieks vēlas lauzt līgumu, nevis tikai bloķēt naktis. Piekļuves bloķēšanas vietā līguma beigu datums tiks noteikts tieši īpašumam, tādējādi pārtraucot tā mārketingu visos portālos.",
+        "terminationReady": "Paziņojumu par līguma izbeigšanu var reģistrēt.",
+        "terminationSummary": "Līgums beidzas no {datum} — no šīs dienas īpašums vairs netiks nekur pārdots."
+      },
+      "terminationRequested": "Īpašnieks vēlas lauzt līgumu.",
+      "terminationSet": "Līgums beidzas {datum}."
     }
   },
   "seasons": {

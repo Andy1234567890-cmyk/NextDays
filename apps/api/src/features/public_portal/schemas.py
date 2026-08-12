@@ -152,6 +152,18 @@ class BlockRequestCreate(BaseModel):
     # Warum gesperrt werden soll (Eigennutzung, Handwerker …). Optional, aber
     # die Agentur kann ohne sie schlecht entscheiden.
     reason: str | None = Field(default=None, max_length=2000)
+    # Der Eigentümer will den VERMARKTUNGSVERTRAG beenden, nicht nur Nächte
+    # sperren (0377). Ein eigenes Feld, weil es eine andere Erklärung ist:
+    # Live vorgefunden (12.08.2026) beantragte ein Eigentümer 2027 komplett mit
+    # der Begründung „Vi er ikke interesseret i udlejning 2027" — gemeint war
+    # die Kündigung, gespeichert wurde eine Jahres-Sperre. Die Agentur musste
+    # den dänischen Freitext deuten und das Vertragsende von Hand nachtragen;
+    # genau dieser Schritt wird vergessen, und danach läuft der Vertrag mit
+    # Provision und Portal-Distribution weiter.
+    #
+    # Der Freitext bleibt der Freitext: aus ihm wird NICHTS abgeleitet
+    # (Wortsuche in 24 Sprachen als Grundlage einer Kündigung, Wurzel 4).
+    ist_kuendigung: bool = False
 
     @model_validator(mode="after")
     def _check_order(self) -> "BlockRequestCreate":
@@ -179,6 +191,14 @@ class BlockRequestItem(BaseModel):
     decided_at: str | None = None
     decision_note: str | None = None
     created_at: str | None = None
+    # Vertragskündigung (0377). Der Eigentümer MUSS beides sehen: dass sein
+    # Antrag als Kündigung geführt wird, und ZU WELCHEM Datum sie wirksam ist.
+    # `als_kuendigung_gewertet` steht ausdrücklich mit dabei — hat die Agentur
+    # seinen Sperrantrag als Kündigung ausgelegt, ist das eine Auslegung SEINER
+    # Erklärung, und er muss ihr widersprechen können, wenn sie falsch ist.
+    ist_kuendigung: bool = False
+    als_kuendigung_gewertet: bool = False
+    vertragsende_gesetzt_auf: date_ | None = None
 
 
 class BlockRequestList(BaseModel):

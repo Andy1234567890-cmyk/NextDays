@@ -1353,7 +1353,12 @@
     "commissionableNo": "Nem — jutalékmentes",
     "infoAria": "Magyarázat ehhez: {feld}",
     "rulesPageTitle": "Elszámolási szabályok",
-    "rulesPageIntro": "Mennyit tartanak vissza a portálok foglalásonként, és kit illetnek a díjak. A kettő együtt határozza meg, hogy végül mekkora összeg kerül a tulajdonosai jutalékelszámolásába."
+    "rulesPageIntro": "Mennyit tartanak vissza a portálok foglalásonként, és kit illetnek a díjak. A kettő együtt határozza meg, hogy végül mekkora összeg kerül a tulajdonosai jutalékelszámolásába.",
+    "endsSalesHint": "Figyelem: Itt ér véget a marketing. Az {date}-től kezdődően az ingatlant már nem árulják egyetlen csatornán sem – beleértve a Booking.com-ot, az Airbnb-t vagy a myBestDays-t. Tiszta mondatmódosításhoz hozzon létre egy kapcsolati szerződést a mai naptól.",
+    "effectBlocked": "{property}: A marketing a következő napon ér véget: {date} – {nights} éjszakák blokkolva és eltávolítva a portálokról.",
+    "effectReleased": "{property}: A marketing folytatódik – a szerződés lejártát feloldották, és az éjszakák újra eladók.",
+    "effectNoUnit": "{property}: A szerződés vége be van írva, de a naptár nincs zárolva - az objektumból hiányzik egy egység. Tedd fel és a zár érvénybe lép.",
+    "effectCalendarFailed": "{property}: A szerződés végét beírták, a naptárzárat nem írták ki. Ma este lesz hozzá."
   },
   "portal": {
     "title": "Portálom",
@@ -1405,7 +1410,13 @@
       },
       "reason": "Indok",
       "reasonPlaceholder": "Miért kell zárolni? (pl. saját használat, kivitelezők)",
-      "decisionNote": "Kezelőség megjegyzése"
+      "decisionNote": "Kezelőség megjegyzése",
+      "termination": "Szeretném felmondani a szerződést.",
+      "terminationConfirmed": "A szerződés {datum} dátummal lejár.",
+      "terminationHint": "Ez nemcsak az időszakot zárolja, hanem a marketingszerződést is megszünteti a kezdőnapon. Az adminisztráció megerősíti a dátumot.",
+      "terminationInterpreted": "Az adminisztráció ezt a kérést felmondásként értelmezte – a szerződés {datum} dátummal lejár. Kérjük, jelezze, ha nem erre gondolt.",
+      "terminationPending": "Megszüntetés – a vezetőség még nem erősítette meg a szerződés végét.",
+      "terminationSent": "A felmondási értesítést benyújtották. Az adminisztráció megerősíti a szerződés megszüntetését."
     },
     "meter": {
       "title": "Mérőállás rögzítése",
@@ -5771,7 +5782,8 @@
         "booked": "Foglalt",
         "blocked": "Zárolt",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Szerződés felmondva"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "minden csatorna",
@@ -5900,6 +5912,10 @@
       "fallbackAddonName": "Extra szolgáltatás",
       "markPaidAction": "Megjelölés fizetettként",
       "markPaidSuccess": "Fizetettként megjelölve.",
+      "cancelAction": "Lemondás",
+      "cancelBusy": "Lemondás…",
+      "cancelConfirm": "Biztosan lemondja ezt a kiegészítő szolgáltatást?",
+      "cancelSuccess": "A kiegészítő szolgáltatás lemondva.",
       "addSuccess": "Extra szolgáltatás hozzáadva.",
       "totalLabel": "Extra szolgáltatások összesen",
       "emptyPurchased": "Még nincs foglalt extra szolgáltatás.",
@@ -6175,7 +6191,44 @@
         "approve": "Kérelem jóváhagyva, éjszakák zárolva.",
         "reject": "Kérelem elutasítva.",
         "revoke": "Jóváhagyás visszavonva, éjszakák felszabadítva."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "Az időszak le van foglalva.",
+          "stop_sell": "Ebben az időszakban értékesítési tilalom van érvényben.",
+          "vertragsende": "Az időszak a közigazgatási szerződés lejárta után van."
+        },
+        "blockedNightsHint": "Foglalás nélküli blokkolás — törlés a naptárban, de ne mondd le.",
+        "bookingsHint": "NEM kerülnek automatikusan törlésre. Ha egyenként törli őket, a kérelmet jóváhagyhatjuk.",
+        "close": "Közeli",
+        "loading": "Az időbeosztást felülvizsgálják…",
+        "openBooking": "Foglalás megnyitása",
+        "openStay": "Nyitva tartás",
+        "title": "Jóváhagyás ellenőrzése",
+        "truncated": "A lista rövidített; a fenti számok teljesek.",
+        "free": "Az időszak elérhető.",
+        "blockedNights": "{anzahl} blokkolt éjszakák",
+        "bookings": "{anzahl} foglalások az adott időszakban",
+        "stopSell": "{anzahl} nap akciós szünettel",
+        "subtitle": "{objekt}, {von} – {bis}. Zárolás előtt ellenőrzi, hogy az időszak szabad-e.",
+        "suggestion": "{von} – {bis} elérhető lenne.",
+        "summary": "{naechte} éjszaka · {einheiten} egység · legalább {frei} elérhető",
+        "unitScope": "A kérelem kizárólag a következőre vonatkozik: {einheit}",
+        "willUse": "A következő foglalt: {einheit}",
+        "contractHint": "Amíg a szerződést nem hosszabbítják meg, itt semmi sem blokkolható – az ingatlant ez idő alatt nem Ön kezeli.",
+        "approveTermination": "Írja be a szerződés lejárati dátumát",
+        "bookingsAfterEnd": "{anzahl} Foglalások a szerződés lejárta után",
+        "bookingsAfterEndHint": "Érvényesek maradnak és le lesznek töltve – a szerződésük lejár. Csak a szabadnapok vannak blokkolva.",
+        "contractEndHint": "Hagyja üresen: a jelentkezés kezdő dátuma ({datum}) érvényes. Ha a szerződés hosszabb időtartamra szól, adja meg itt a tényleges befejezési dátumot.",
+        "contractEndLabel": "Szerződés vége (első nap szerződés nélkül)",
+        "isTermination": "Ez egy szerződésfelmondás",
+        "terminationByOwner": "A tulajdonos maga magyarázta ezt a kérelemben.",
+        "terminationHint": "A tulajdonos fel akarja mondani a szerződést, nem csak éjszakákat akar lefoglalni. A hozzáférés blokkolása helyett a szerződés lejárati dátumát közvetlenül az ingatlanon fogják meghatározni – ezzel véget vetve annak marketingjének minden portálon.",
+        "terminationReady": "A felmondási nyilatkozatot be lehet jelenteni.",
+        "terminationSummary": "A szerződés {datum} dátummal lejár — ettől a naptól kezdve az ingatlant sehol sem lehet értékesíteni."
+      },
+      "terminationRequested": "A tulajdonos fel kívánja bontani a szerződést.",
+      "terminationSet": "A szerződés {datum} dátummal lejár."
     }
   },
   "seasons": {

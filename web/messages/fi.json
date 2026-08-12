@@ -1353,7 +1353,12 @@
     "commissionableNo": "Ei — provisiovapaa",
     "infoAria": "Selitys kohtaan {feld}",
     "rulesPageTitle": "Laskutussäännöt",
-    "rulesPageIntro": "Mitä portaalit pidättävät varausta kohden ja kenelle maksut kuuluvat. Molemmat määrittävät, mikä summa lopulta päätyy omistajienne provisiolaskelmaan."
+    "rulesPageIntro": "Mitä portaalit pidättävät varausta kohden ja kenelle maksut kuuluvat. Molemmat määrittävät, mikä summa lopulta päätyy omistajienne provisiolaskelmaan.",
+    "endsSalesHint": "Huomio: Tähän markkinointi päättyy. {date}:stä eteenpäin kiinteistöä ei enää myydä millään kanavalla – mukaan lukien Booking.com, Airbnb tai myBestDays. Jos haluat tehdä puhtaan lauseen muutoksen, luo sen sijaan yhteyssopimus tältä päivältä.",
+    "effectBlocked": "{property}: Markkinointi päättyy {date} – {nights} yöt estetään ja poistetaan portaaleista.",
+    "effectReleased": "{property}: Markkinointi jatkuu - sopimuksen päättyminen on purettu ja yöt ovat jälleen myynnissä.",
+    "effectNoUnit": "{property}: Sopimuksen loppu on kirjattu, mutta kalenteri ei ole lukittu - kohteesta puuttuu yksikkö. Laita se päälle ja lukko astuu voimaan.",
+    "effectCalendarFailed": "{property}: Sopimuksen loppu on kirjattu, kalenterilukkoa ei ole kirjoitettu. Se lisätään tänä iltana."
   },
   "portal": {
     "title": "Oma portaali",
@@ -1405,7 +1410,13 @@
       },
       "reason": "Syy",
       "reasonPlaceholder": "Miksi kohde tulisi estää? (esim. oma käyttö, käsityöläiset)",
-      "decisionNote": "Hallinnon huomautus"
+      "decisionNote": "Hallinnon huomautus",
+      "termination": "Haluaisin irtisanoa sopimuksen.",
+      "terminationConfirmed": "Sopimus päättyy {datum}.",
+      "terminationHint": "Tämä ei ainoastaan pysäytä ajanjaksoa, vaan myös irtisanoo markkinointisopimuksen aloituspäivänä. Hallinto vahvistaa päivämäärän.",
+      "terminationInterpreted": "Ylläpito on tulkinnut tämän pyynnön peruutusilmoitukseksi – sopimus päättyy {datum}. Kerrothan meille, jos se ei ollut tarkoitus.",
+      "terminationPending": "Irtisanominen — hallinto ei ole vielä vahvistanut sopimuksen päättymistä.",
+      "terminationSent": "Irtisanomisilmoitus on jätetty. Hallinto vahvistaa sopimuksen irtisanomisen."
     },
     "meter": {
       "title": "Kirjaa mittarilukema",
@@ -5771,7 +5782,8 @@
         "booked": "Varattu",
         "blocked": "Suljettu",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Sopimus irtisanottu"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "kaikki kanavat",
@@ -5900,6 +5912,10 @@
       "fallbackAddonName": "Lisäpalvelu",
       "markPaidAction": "Merkitse maksetuksi",
       "markPaidSuccess": "Merkitty maksetuksi.",
+      "cancelAction": "Peruuta",
+      "cancelBusy": "Perutaan…",
+      "cancelConfirm": "Perutaanko tämä lisäpalvelu?",
+      "cancelSuccess": "Lisäpalvelu peruttu.",
       "addSuccess": "Lisäpalvelu lisätty.",
       "totalLabel": "Lisäpalveluiden summa",
       "emptyPurchased": "Ei vielä varattuja lisäpalveluita.",
@@ -6175,7 +6191,44 @@
         "approve": "Pyyntö hyväksytty, yöt suljettu.",
         "reject": "Pyyntö hylätty.",
         "revoke": "Hyväksyntä peruutettu, yöt vapautettu."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "Jakso on varattu.",
+          "stop_sell": "Myyntikielto on voimassa tänä aikana.",
+          "vertragsende": "Jakso on hallintosopimuksen päättymisen jälkeinen."
+        },
+        "blockedNightsHint": "Estä ilman varausta — poista kalenterista, älä peruuta.",
+        "bookingsHint": "Niitä EI peruuteta automaattisesti. Peruuta ne yksitellen, niin hakemus voidaan hyväksyä.",
+        "close": "Lähellä",
+        "loading": "Aikataulua tarkistetaan…",
+        "openBooking": "Avaa varaus",
+        "openStay": "Avoin oleskelu",
+        "title": "Tarkista hyväksyntä",
+        "truncated": "Lista on lyhennetty; yllä olevat numerot ovat täydellisiä.",
+        "free": "Aikajakso on käytettävissä.",
+        "blockedNights": "{anzahl} estettyjä öitä",
+        "bookings": "{anzahl}-varaukset kauden aikana",
+        "stopSell": "{anzahl} päivää myyntitauolla",
+        "subtitle": "{objekt}, {von} – {bis}. Ennen lukitsemista tarkistetaan, onko aikajakso vapaa.",
+        "suggestion": "{von} – {bis} olisi saatavilla.",
+        "summary": "{naechte} yötä · {einheiten} yksikköä · vähintään {frei} saatavilla",
+        "unitScope": "Hakemus koskee vain: {einheit}",
+        "willUse": "Seuraava on varattu: {einheit}",
+        "contractHint": "Niin kauan kuin sopimusta ei jatketa, mitään ei voida estää täällä – et hallinnoi kiinteistöä tänä aikana.",
+        "approveTermination": "Syötä sopimuksen päättymispäivä",
+        "bookingsAfterEnd": "{anzahl}-varaukset sopimuksen päättymisen jälkeen",
+        "bookingsAfterEndHint": "Ne pysyvät voimassa ja ne tullaan antamaan – sopimus päättyy niiden osalta. Vain vapaapäivät on estetty.",
+        "contractEndHint": "Jätä tyhjäksi: hakemuksen alkamispäivämäärä ({datum}) on voimassa. Jos sopimus on pidempi, anna tähän todellinen päättymispäivämäärä.",
+        "contractEndLabel": "Sopimuksen päättyminen (ensimmäinen päivä ilman sopimusta)",
+        "isTermination": "Tämä on työsopimuksen irtisanominen",
+        "terminationByOwner": "Omistaja selitti tämän itse hakemuksessa.",
+        "terminationHint": "Omistaja haluaa irtisanoa sopimuksen, ei vain estää öitä. Pääsyn estämisen sijaan sopimuksen päättymispäivä asetetaan suoraan kiinteistölle – näin ollen sen markkinointi kaikissa portaaleissa lopetetaan.",
+        "terminationReady": "Irtisanomisilmoitus voidaan rekisteröidä.",
+        "terminationSummary": "Sopimus päättyy {datum} alkaen — tästä päivästä lähtien kiinteistöä ei enää myydä missään."
+      },
+      "terminationRequested": "Omistaja haluaa irtisanoa sopimuksen.",
+      "terminationSet": "Sopimus päättyy {datum}."
     }
   },
   "seasons": {

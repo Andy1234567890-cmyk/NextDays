@@ -376,6 +376,125 @@ class AddonsService:
         log.info("reservation_addon_marked_paid", tenant_id=tenant_id, id=res_addon_id)
         return ReservationAddonResponse(**_res_addon_row(res.data[0]))
 
+    def cancel_reservation_addon(
+        self, ctx: AuthContext, res_addon_id: str
+    ) -> ReservationAddonResponse:
+        """Eine versehentlich gebuchte Zusatzleistung stornieren (status=cancelled).
+
+        Fachlich ein Storno, keine Löschung: die Zeile bleibt als Beleg stehen und
+        fällt überall dort heraus, wo bereits ``status != 'cancelled'`` gilt
+        (Rechnungspositionen, Eigentümer-Abrechnung, Gast-Portal). Der partielle
+        Unique-Index (0109) klammert stornierte Zeilen aus, dieselbe Leistung ist
+        danach also erneut buchbar.
+
+        Zwei Schranken:
+        * Steht die Position schon auf einer FESTGESCHRIEBENEN Rechnung
+          (Nummer gezogen), wäre ein stilles Verschwinden ein GoBD-Bruch → 409 mit
+          dem Hinweis auf die Storno-Rechnung. Ein Entwurf (ohne Nummer) darf sich
+          noch ändern.
+        * Ein bereits BEZAHLTES Extra wird nicht stillschweigend storniert → 409,
+          weil sonst ein vereinnahmter Betrag ohne Rückzahlungsspur verschwindet.
+
+        Idempotent (Wurzel 2): ein zweites Storno derselben Zeile ist ein No-op und
+        gibt die bereits stornierte Zeile zurück, statt 404/500 zu werfen.
+        """
+        tenant_id = self._require_tenant(ctx)
+        rows = (
+            self._db.table("reservation_addons")
+            .select(_RES_ADDON_COLS)
+            .eq("tenant_id", tenant_id)
+            .eq("id", res_addon_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise AddonError("Gekaufte Zusatzleistung nicht gefunden.", status_code=404)
+        row = rows[0]
+        if str(row.get("status")) == AddonStatus.cancelled.value:
+            return ReservationAddonResponse(**_res_addon_row(row))
+        if str(row.get("status")) == AddonStatus.paid.value:
+            raise AddonError(
+                "Diese Zusatzleistung ist bereits als bezahlt markiert. Bitte "
+                "zuerst die Zahlung rückabwickeln bzw. erstatten.",
+                status_code=409,
+            )
+        self._assert_not_invoiced(tenant_id, str(row["reservation_id"]))
+
+        res = (
+            self._db.table("reservation_addons")
+            .update({"status": AddonStatus.cancelled.value})
+            .eq("tenant_id", tenant_id)
+            .eq("id", res_addon_id)
+            .neq("status", AddonStatus.cancelled.value)
+            .execute()
+        )
+        if not res.data:
+            raise AddonError("Gekaufte Zusatzleistung nicht gefunden.", status_code=404)
+        self._close_addon_task(tenant_id, row)
+        log.info("reservation_addon_cancelled", tenant_id=tenant_id, id=res_addon_id)
+        return ReservationAddonResponse(**_res_addon_row(res.data[0]))
+
+    def _assert_not_invoiced(self, tenant_id: str, reservation_id: str) -> None:
+        """409, wenn zur Buchung schon eine festgeschriebene Rechnung existiert.
+
+        Festgeschrieben = Rechnungsnummer gezogen (GoBD). Entwürfe ohne Nummer
+        werden beim Check-out ohnehin neu aus dem Bestand aufgebaut und dürfen
+        sich daher noch ändern."""
+        try:
+            rows = (
+                self._db.table("invoices")
+                .select("invoice_number")
+                .eq("tenant_id", tenant_id)
+                .eq("reservation_id", reservation_id)
+                .eq("invoice_type", "invoice")
+                .neq("status", "cancelled")
+                .is_("deleted_at", "null")
+                .not_.is_("invoice_number", "null")
+                .limit(1)
+                .execute()
+            ).data or []
+        except APIError as exc:
+            # Kein stilles Durchwinken: ohne belastbare Auskunft der Rechnungs-
+            # tabelle darf nicht storniert werden (fail-closed, Wurzel 5).
+            log.warning(
+                "addon_cancel_invoice_check_failed",
+                reservation_id=reservation_id,
+                error=str(exc),
+            )
+            raise AddonError(
+                "Rechnungsstand konnte nicht geprüft werden — Storno abgebrochen.",
+                status_code=503,
+            ) from exc
+        if rows:
+            raise AddonError(
+                f"Zu dieser Buchung existiert bereits die Rechnung "
+                f"{rows[0].get('invoice_number')}. Bitte die Position über eine "
+                "Storno-/Korrekturrechnung ausbuchen.",
+                status_code=409,
+            )
+
+    def _close_addon_task(self, tenant_id: str, row: dict) -> None:
+        """Die beim Kauf erzeugte Vorbereitungs-Aufgabe mit stornieren.
+
+        Sonst bleibt „Zusatzleistung vorbereiten: X" offen stehen und die
+        Reinigung bereitet etwas vor, das storniert wurde (Wurzel 1: der
+        Gegenzustand muss mitgepflegt werden). Best-effort — ein Task-Fehler
+        darf das Storno nicht kippen."""
+        names = row.get("name") or {}
+        label = names.get("de") or next(iter(names.values()), "Zusatzleistung")
+        try:
+            self._db.table("tasks").update({"status": "cancelled"}).eq(
+                "tenant_id", tenant_id
+            ).eq("reservation_id", str(row["reservation_id"])).eq(
+                "title", f"Zusatzleistung vorbereiten: {label}"
+            ).in_("status", ["open", "accepted", "in_progress"]).execute()
+        except Exception as exc:  # noqa: BLE001 — Task-Fehler darf Storno nicht killen
+            log.warning(
+                "addon_cancel_task_cleanup_failed",
+                reservation_id=row.get("reservation_id"),
+                error=str(exc),
+            )
+
 
 def purchase_addons(
     db: Client,

@@ -1405,7 +1405,13 @@
       },
       "reason": "Priežastis",
       "reasonPlaceholder": "Kodėl turėtų būti užblokuota? (pvz., naudojimas sau, meistrai)",
-      "decisionNote": "Valdymo pastaba"
+      "decisionNote": "Valdymo pastaba",
+      "termination": "Norėčiau nutraukti sutartį.",
+      "terminationConfirmed": "Sutartis baigiasi {datum}.",
+      "terminationHint": "Tai ne tik blokuoja laikotarpį, bet ir nutraukia rinkodaros sutartį pradžios dieną. Administracija patvirtina datą.",
+      "terminationInterpreted": "Administracija šį prašymą interpretavo kaip pranešimą apie sutarties nutraukimą – sutartis baigiasi {datum}. Jei tai nebuvo jūsų tikslas, praneškite mums.",
+      "terminationPending": "Nutraukimas – administracija dar nepatvirtino sutarties pabaigos.",
+      "terminationSent": "Pranešimas apie sutarties nutraukimą pateiktas. Administracija patvirtina sutarties nutraukimą."
     },
     "meter": {
       "title": "Įvesti skaitiklio rodmenį",
@@ -5771,7 +5777,8 @@
         "booked": "Užsakyta",
         "blocked": "Užblokuota",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Sutartis nutraukta"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "visi kanalai",
@@ -5900,6 +5907,10 @@
       "fallbackAddonName": "Papildoma paslauga",
       "markPaidAction": "Pažymėti kaip apmokėtą",
       "markPaidSuccess": "Pažymėta kaip apmokėta.",
+      "cancelAction": "Atšaukti",
+      "cancelBusy": "Atšaukiama…",
+      "cancelConfirm": "Ar tikrai atšaukti šią papildomą paslaugą?",
+      "cancelSuccess": "Papildoma paslauga atšaukta.",
       "addSuccess": "Papildoma paslauga pridėta.",
       "totalLabel": "Papildomų paslaugų suma",
       "emptyPurchased": "Papildomų paslaugų dar neužsakyta.",
@@ -6175,7 +6186,44 @@
         "approve": "Prašymas patvirtintas, naktys užblokuotos.",
         "reject": "Prašymas atmestas.",
         "revoke": "Patvirtinimas atšauktas, naktys atlaisvintos."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "Laikotarpis užsakytas.",
+          "stop_sell": "Šiuo laikotarpiu galioja prekybos draudimas.",
+          "vertragsende": "Laikotarpis yra po administracinės sutarties pabaigos."
+        },
+        "blockedNightsHint": "Blokuoti be rezervacijos – pašalinti kalendoriuje, neatšaukti.",
+        "bookingsHint": "Jie nebus automatiškai atšaukti. Atšaukite juos po vieną, tada paraiška bus patvirtinta.",
+        "close": "Uždaryti",
+        "loading": "Terminas yra peržiūrimas…",
+        "openBooking": "Atidaryti rezervaciją",
+        "openStay": "Atidaryta viešnagė",
+        "title": "Patikrinkite patvirtinimą",
+        "truncated": "Sąrašas yra sutrumpintas; aukščiau pateikti skaičiai yra pilni.",
+        "free": "Laikotarpis yra prieinamas.",
+        "blockedNights": "{anzahl} užblokuotos naktys",
+        "bookings": "{anzahl} užsakymai per šį laikotarpį",
+        "stopSell": "{anzahl} dienų su išpardavimo sustabdymu",
+        "subtitle": "{objekt}, {von} – {bis}. Prieš užrakinant patikrinama, ar laikotarpis laisvas.",
+        "suggestion": "{von} – {bis} būtų prieinami.",
+        "summary": "{naechte} naktų · {einheiten} vienetų · laisvų bent {frei}",
+        "unitScope": "Paraiška taikoma tik: {einheit}",
+        "willUse": "Užimta: {einheit}",
+        "contractHint": "Kol sutartis nepratęsiama, čia nieko negalima blokuoti – šiuo laikotarpiu turto nevaldote.",
+        "approveTermination": "Įveskite sutarties pabaigos datą",
+        "bookingsAfterEnd": "{anzahl} užsakymai pasibaigus sutarčiai",
+        "bookingsAfterEndHint": "Jie lieka galioti ir bus įteikti – jų sutartis baigiasi. Blokuojamos tik laisvos dienos.",
+        "contractEndHint": "Palikite tuščią: taikoma paraiškos pradžios data ({datum}). Jei sutartis galioja ilgiau, čia įveskite faktinę pabaigos datą.",
+        "contractEndLabel": "Sutarties pabaiga (pirma diena be sutarties)",
+        "isTermination": "Tai yra sutarties nutraukimas",
+        "terminationByOwner": "Savininkas pats tai paaiškino paraiškoje.",
+        "terminationHint": "Savininkas nori nutraukti sutartį, o ne tik užblokuoti naktis. Užuot užblokavus prieigą, sutarties pabaigos data bus nustatyta tiesiai ant nekilnojamojo turto – taip nutraukiant jo rinkodarą visuose portaluose.",
+        "terminationReady": "Pranešimą apie atleidimą galima užregistruoti.",
+        "terminationSummary": "Sutartis baigiasi nuo {datum} – nuo šios dienos turtas niekur nebeparduodamas."
+      },
+      "terminationRequested": "Savininkas nori nutraukti sutartį.",
+      "terminationSet": "Sutartis baigiasi {datum}."
     }
   },
   "seasons": {

@@ -39,9 +39,15 @@ from .schemas import (
     BlockRequestDecision,
     DateRange,
     SperrantragItem,
+    SperrantragKollisionen,
     SperrantragListe,
 )
 from .service import CalendarError, CalendarService
+from .sperrantrag_kollisionen import (
+    kollisionen_pruefen,
+    konflikt_text,
+    naechste_freie_spanne,
+)
 
 log = get_logger("nextdays.sperrantraege")
 
@@ -49,7 +55,9 @@ log = get_logger("nextdays.sperrantraege")
 # ergänztes sensibles Feld nicht automatisch mit ausgeliefert wird.
 _SPALTEN = (
     "id, tenant_id, property_id, unit_id, requested_by, start_date, end_date, "
-    "status, reason, decided_by, decided_at, decision_note, created_at"
+    "status, reason, decided_by, decided_at, decision_note, created_at, "
+    # Vertragskündigung (0377).
+    "ist_kuendigung, als_kuendigung_gewertet, vertragsende_gesetzt_auf"
 )
 
 # Ein Antrag darf nicht beliebig weit in die Zukunft sperren — ein Tippfehler
@@ -240,6 +248,56 @@ class SperrantragService:
         ).data or []
         return {str(r["id"]): r.get("full_name") or "" for r in rows}
 
+    # --- Vorschau: was steht im Weg? ----------------------------------------
+
+    def kollisionen(
+        self, ctx: AuthContext, antrag_id: str, *, als_kuendigung: bool = False
+    ) -> SperrantragKollisionen:
+        """Was der Genehmigung DIESES Antrags im Weg steht (nur lesend).
+
+        Die Oberfläche lädt das, BEVOR jemand „Genehmigen" drückt: bei einem
+        Jahresantrag ist „was kollidiert?" die eigentliche Arbeit, und ein
+        nackter 409 nach dem Klick beantwortet sie nicht.
+
+        Bewusst ein eigener Endpunkt und kein Feld an `SperrantragItem`: die
+        Prüfung liest `availability`, `stop_sell`, `reservations`, `guests` und
+        `property_units` über den ganzen Zeitraum — das pro Zeile der
+        Warteschlange zu tun, machte die Liste unbenutzbar langsam.
+
+        `als_kuendigung` prüft den Antrag als VERTRAGSKÜNDIGUNG (0377). Das
+        ändert den Befund grundlegend: eine bestehende `contract_end`-Sperre ist
+        dann kein Hindernis, sondern der Zielzustand — genau das, was hier
+        gesetzt werden soll. Die Oberfläche schaltet damit um, sobald die
+        Agentur im Dialog „als Vertragsende akzeptieren" wählt, und sieht sofort,
+        was die Kündigung wirklich betrifft (nämlich die Buchungen dahinter).
+        """
+        antrag = self._laden(ctx, antrag_id)
+        rng = self._range(antrag)
+        kuendigung = bool(antrag.get("ist_kuendigung")) or als_kuendigung
+        befund = kollisionen_pruefen(
+            self._db,
+            str(antrag["tenant_id"]),
+            str(antrag["property_id"]),
+            rng,
+            unit_id=(
+                str(antrag["unit_id"]) if antrag.get("unit_id") else None
+            ),
+            antrag_id=antrag_id,
+            als_kuendigung=kuendigung,
+        )
+        if befund.blockiert:
+            # Nur wenn es klemmt: der Vorschlag kostet einen zweiten Durchlauf
+            # über denselben Zeitraum und trägt bei freiem Zeitraum nichts bei.
+            spanne = naechste_freie_spanne(
+                self._db,
+                str(antrag["tenant_id"]),
+                str(antrag["property_id"]),
+                rng,
+            )
+            if spanne:
+                befund.frei_von, befund.frei_bis = spanne
+        return befund
+
     # --- Entscheiden ---------------------------------------------------------
 
     def genehmigen(
@@ -275,9 +333,37 @@ class SperrantragService:
         das verlangt die Vorgabe — ein Antrag, dessen Sperre nicht ausgeführt
         werden konnte, darf nicht als genehmigt gelten, sonst zeigt das Portal
         dem Eigentümer eine Sperre, die es im Kalender nicht gibt.
+
+        ZWEI GANZ VERSCHIEDENE ENTSCHEIDUNGEN (0377): Ist der Antrag eine
+        VERTRAGSKÜNDIGUNG, führt er nicht hierher, sondern in
+        `_kuendigung_genehmigen`. Dort entsteht keine Eigennutzung, sondern das
+        Vertragsende am Objekt — eine Kündigung ist keine Belegung.
         """
         antrag = self._laden(ctx, antrag_id)
         rng = self._range(antrag)
+        kuendigung = self._ist_kuendigung(antrag, req)
+        log.info(
+            "sperrantrag_genehmigen_start",
+            tenant_id=ctx.tenant_id,
+            antrag_id=antrag_id,
+            property_id=str(antrag["property_id"]),
+            unit_id=str(antrag["unit_id"]) if antrag.get("unit_id") else None,
+            status_vorher=antrag.get("status"),
+            von=rng.start.isoformat(),
+            bis_exklusiv=rng.end.isoformat(),
+            naechte=len(rng.nights()),
+            mit_notiz=bool((req.note or "").strip()),
+            kuendigung=kuendigung,
+            # Woher die Einordnung kommt — der Unterschied ist rechtlich
+            # erheblich und muss im Log stehen, nicht nur „kuendigung=True".
+            kuendigung_quelle=(
+                "eigentuemer" if antrag.get("ist_kuendigung")
+                else "agentur" if req.als_kuendigung
+                else None
+            ),
+        )
+        if kuendigung:
+            return self._kuendigung_genehmigen(ctx, antrag, req, rng)
         # Der Eigentümer steht VOR dem Claim fest. Fehlt er, scheitert die
         # Genehmigung, ohne den Antrag angefasst zu haben — ein Claim, den man
         # gleich wieder zurückrollt, ist eine überflüssige Zustandsänderung.
@@ -304,14 +390,51 @@ class SperrantragService:
                 status_code=409,
             ) from exc
         if geclaimt is None:
+            log.info(
+                "sperrantrag_claim_verloren",
+                tenant_id=ctx.tenant_id,
+                antrag_id=antrag_id,
+                status_vorgefunden=antrag.get("status"),
+            )
             raise CalendarError(
                 f"Antrag ist bereits {_status_text(antrag.get('status'))} — "
                 "keine zweite Entscheidung möglich.",
                 status_code=409,
             )
+        log.info(
+            "sperrantrag_claim_gesetzt",
+            tenant_id=ctx.tenant_id,
+            antrag_id=antrag_id,
+            von="pending",
+            nach="approved",
+            entschieden_von=ctx.user_id,
+        )
         try:
+            # Belegungs-Riegel NACH dem Claim, und das ist keine Kosmetik:
+            # Steht er davor, sieht er beim ZWEITEN Klick die Eigennutzung, die
+            # der ERSTE Klick angelegt hat, und meldet „Zeitraum nicht frei" —
+            # eine falsche Aussage, denn der wahre Grund ist „bereits
+            # genehmigt". Der Claim ist der Einzige, der diese Frage beantworten
+            # kann (er allein kennt den Vorzustand), also entscheidet er zuerst.
+            # Danach ist jede gefundene Belegung echte FREMD-Belegung.
+            #
+            # Der Preis ist eine Claim-Spur, die zurückgerollt wird — dieselbe
+            # Rückrollung, die der `except`-Block unten für den Schreibpfad
+            # ohnehin fährt (Wurzel 1). Der Riegel liegt bewusst INNERHALB
+            # dieses try: sein 409 muss den Claim genauso zurücknehmen wie ein
+            # gescheitertes Anlegen, sonst bliebe der Antrag „approved" ohne
+            # eine einzige belegte Nacht.
+            self._kollisionen_riegel(ctx, antrag, rng, antrag_id)
             self._eigennutzung_anlegen(ctx, antrag, owner_id, rng)
-        except BaseException:
+        except BaseException as exc:
+            log.warning(
+                "sperrantrag_belegung_fehlgeschlagen",
+                tenant_id=ctx.tenant_id,
+                antrag_id=antrag_id,
+                property_id=str(antrag["property_id"]),
+                fehler=str(exc)[:300],
+                claim_wird_zurueckgerollt=True,
+            )
             # Gegenzustand pflegen (Wurzel 1): der Claim war eine Zustands-
             # änderung, die ohne den Seiteneffekt keinen Bestand haben darf.
             #
@@ -333,10 +456,257 @@ class SperrantragService:
             unit_id=str(antrag["unit_id"]) if antrag.get("unit_id") else None,
             owner_id=owner_id,
             naechte=len(rng.nights()),
+            # Der Kalender ist ab hier belegt und die ARI-Jobs sind eingereiht;
+            # was danach kommt (Mail, Aggregate), kippt die Sperre nicht mehr.
+            kalender_belegt=True,
         )
         neu = self._laden(ctx, antrag_id)
         self._melde_entscheidung(ctx, neu, GENEHMIGT)
         return self._einzel_item(neu)
+
+    # --- Vertragskündigung (0377) -------------------------------------------
+
+    @staticmethod
+    def _ist_kuendigung(antrag: dict, req: BlockRequestDecision) -> bool:
+        """Ist DIESE Genehmigung eine Vertragskündigung?
+
+        Zwei Wege dorthin, und beide zählen:
+          * Der EIGENTÜMER hat es beim Stellen erklärt (`ist_kuendigung`) — seine
+            Willenserklärung, die Agentur bestätigt sie nur.
+          * Die AGENTUR wertet den Antrag so (`req.als_kuendigung`). Der
+            Bestandsfall: Anträge von vor diesem Feld tragen `false`, obwohl der
+            Eigentümer im Freitext genau das erklärt hat („Vi er ikke
+            interesseret i udlejning 2027", live 12.08.2026). Ohne diesen Weg
+            müsste die Agentur den Eigentümer erneut anschreiben, damit er einen
+            zweiten Antrag mit Häkchen stellt — für eine Absicht, die er längst
+            mitgeteilt hat.
+
+        Kein Freitext-Erraten (kein „enthält das Wort udlejning"): eine
+        Kündigung ist eine Rechtshandlung und darf nicht aus einer
+        Wortsuche in 24 Sprachen folgen (Wurzel 4).
+        """
+        return bool(antrag.get("ist_kuendigung")) or bool(req.als_kuendigung)
+
+    def _kuendigung_genehmigen(
+        self,
+        ctx: AuthContext,
+        antrag: dict,
+        req: BlockRequestDecision,
+        rng: DateRange,
+    ) -> SperrantragItem:
+        """Eine Kündigung genehmigen: Vertragsende am Objekt setzen.
+
+        WARUM DAS NICHT DER NORMALE WEG IST: Eine Kündigung belegt keine Nächte.
+        Der normale Pfad legt eine Eigennutzung an — bei einer Kündigung wäre
+        das doppelt falsch: er verlangte einen `owner_id`-Personenbezug für
+        einen Aufenthalt, den es nicht gibt, und er sperrte GENAU den beantragten
+        Zeitraum, während ein Vertragsende unbefristet gilt (es endet nicht am
+        31.12.2027 wieder). Die Sperre kommt darum aus
+        `properties.vertragsende_durchsetzen`: sie schreibt den 730-Tage-Horizont
+        mit `source='contract_end'`, wächst über den nächtlichen Nachzug mit und
+        hat ihren eigenen, geprüften Gegenzustand (Wurzel 1).
+
+        DAS DATUM: `req.vertragsende` wenn gesetzt, sonst der `start_date` des
+        Antrags — „ab da nicht mehr vermieten" heißt „ab da kein Vertrag". Es
+        wird NICHT aus dem Freitext geraten und nicht auf einen Monatsanfang
+        gerundet (Wurzel 4).
+
+        REIHENFOLGE wie im Sperr-Pfad (Wurzel 2): erst claimen, dann handeln,
+        bei Fehlschlag zurückrollen. Ein Doppelklick bekommt 409, statt das
+        Vertragsende zweimal zu setzen — was hier besonders zählt, weil der
+        zweite Lauf sonst einen inzwischen von Hand korrigierten Wert
+        überschriebe.
+        """
+        property_id = str(antrag["property_id"])
+        ende = req.vertragsende or rng.start
+        # Ein Vertragsende in der Vergangenheit ist kein Tippfehler, den man
+        # glattbügelt: es hieße, das Objekt sei schon seit Monaten nicht mehr
+        # unter Vertrag, während es verkauft wurde. Klar fehlschlagen.
+        if ende < date.today():
+            raise CalendarError(
+                f"Das Vertragsende ({ende.isoformat()}) liegt in der "
+                "Vergangenheit. Bitte ein Datum ab heute wählen.",
+                status_code=422,
+            )
+        alt = self._vertragsende_lesen(ctx, property_id)
+        geclaimt = self._claim(
+            antrag_id=str(antrag["id"]),
+            von="pending",
+            nach="approved",
+            ctx=ctx,
+            note=req.note,
+            kuendigung_felder={
+                # Was die AGENTUR gewertet hat — getrennt von der Erklärung des
+                # Eigentümers, damit hinterher nicht dasteht „er hat gekündigt",
+                # wo ausgelegt wurde.
+                "als_kuendigung_gewertet": bool(req.als_kuendigung),
+                "vertragsende_gesetzt_auf": ende.isoformat(),
+            },
+        )
+        if geclaimt is None:
+            log.info(
+                "sperrantrag_claim_verloren",
+                tenant_id=ctx.tenant_id,
+                antrag_id=str(antrag["id"]),
+                status_vorgefunden=antrag.get("status"),
+                kuendigung=True,
+            )
+            raise CalendarError(
+                f"Antrag ist bereits {_status_text(antrag.get('status'))} — "
+                "keine zweite Entscheidung möglich.",
+                status_code=409,
+            )
+        log.info(
+            "sperrantrag_kuendigung_claim_gesetzt",
+            tenant_id=ctx.tenant_id,
+            antrag_id=str(antrag["id"]),
+            property_id=property_id,
+            vertragsende_alt=alt.isoformat() if alt else None,
+            vertragsende_neu=ende.isoformat(),
+            entschieden_von=ctx.user_id,
+        )
+        try:
+            gesperrt = self._vertragsende_setzen(ctx, property_id, ende)
+        except BaseException as exc:
+            # Wie im Sperr-Pfad: ohne den Seiteneffekt darf der Claim nicht
+            # stehen bleiben, sonst gilt der Antrag als genehmigt, während der
+            # Vertrag unverändert weiterläuft (mit Provision und Distribution).
+            log.warning(
+                "sperrantrag_vertragsende_fehlgeschlagen",
+                tenant_id=ctx.tenant_id,
+                antrag_id=str(antrag["id"]),
+                property_id=property_id,
+                fehler=str(exc)[:300],
+                claim_wird_zurueckgerollt=True,
+            )
+            self._zuruecksetzen(ctx, str(antrag["id"]))
+            raise
+        log.info(
+            "sperrantrag_kuendigung_genehmigt",
+            tenant_id=ctx.tenant_id,
+            antrag_id=str(antrag["id"]),
+            property_id=property_id,
+            vertragsende=ende.isoformat(),
+            gesperrte_naechte=gesperrt,
+            war_schon_gesetzt=alt == ende,
+        )
+        neu = self._laden(ctx, str(antrag["id"]))
+        self._melde_entscheidung(ctx, neu, GENEHMIGT)
+        return self._einzel_item(neu)
+
+    def _vertragsende_lesen(
+        self, ctx: AuthContext, property_id: str
+    ) -> date | None:
+        """Das aktuell hinterlegte Vertragsende — tenant-gescopt (Wurzel 3).
+
+        Wird VOR dem Setzen gelesen, damit im Log steht, was überschrieben
+        wurde. Live gelernt: „Feriehus Kornblomst" hatte längst den 09.10.2026
+        stehen (deshalb war 2027 komplett gesperrt), und niemand hatte den
+        Zusammenhang zum offenen Antrag gesehen.
+        """
+        rows = (
+            self._db.table("properties")
+            .select("contract_end_date")
+            .eq("id", property_id)
+            .eq("tenant_id", self._tenant(ctx))
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise CalendarError("Objekt nicht gefunden.", status_code=404)
+        wert = rows[0].get("contract_end_date")
+        return _als_datum(wert) if wert else None
+
+    def _vertragsende_setzen(
+        self, ctx: AuthContext, property_id: str, ende: date
+    ) -> int:
+        """Vertragsende am Objekt schreiben und durchsetzen. Gibt die Zahl der
+        geschriebenen Sperrnächte zurück.
+
+        Über `properties.vertragsende_durchsetzen` — den EINEN Einstiegspunkt,
+        der beide Richtungen kennt (Wurzel 1). Ein eigener Sperr-Loop hier
+        müsste den 730-Tage-Horizont, das Auslassen fremder Sperren, den
+        ARI-Push mit der echten Stückzahl und den nächtlichen Nachzug nachbauen
+        — und liefe beim ersten Zusatz dort auseinander.
+
+        Der UPDATE ist tenant-gescopt; `vertragsende_durchsetzen` selbst
+        verlässt sich darauf, dass der Aufrufer das Objekt schon geprüft hat
+        (`_vertragsende_lesen` hat das getan).
+        """
+        from src.features.properties.vertragsende import (  # noqa: PLC0415
+            vertragsende_durchsetzen,
+        )
+
+        self._db.table("properties").update(
+            {"contract_end_date": ende.isoformat()}
+        ).eq("id", property_id).eq("tenant_id", self._tenant(ctx)).execute()
+        return vertragsende_durchsetzen(
+            self._db, str(ctx.tenant_id), property_id, ende
+        )
+
+    def _kollisionen_riegel(
+        self,
+        ctx: AuthContext,
+        antrag: dict,
+        rng: DateRange,
+        antrag_id: str,
+    ) -> None:
+        """Ist der Zeitraum frei? Wenn nicht: 409 mit dem konkreten Befund.
+
+        WARUM HIER UND NICHT ERST IM SCHREIBPFAD: `ReservationsService.create`
+        prüft die Belegung ebenfalls und wirft 409 — aber mit dem Satz
+        „Zeitraum enthält bereits belegte/gesperrte Tage", der nicht sagt,
+        welche Buchung im Weg steht. Bei einem Jahresantrag ist das die
+        gesamte Information, die fehlt. Dieser Riegel liefert sie.
+
+        Er ERSETZT die Prüfung im Schreibpfad NICHT (Wurzel 2): zwischen
+        diesem Lesen und dem Anlegen kann eine OTA-Buchung eingehen. Der
+        Advisory-Lock in der RPC und der EXCLUDE-Constraint bleiben der harte
+        Schutz; hier entsteht die Aussage.
+
+        Storniert wird NICHTS (Entscheidung 12.08.2026): eine Gastbuchung
+        wegen eines Sperrantrags automatisch zu stornieren hätte Außenwirkung
+        (Gast-Mail, Rückzahlung, OTA-Meldung) und keinen Rückweg. Die Agentur
+        löst die Kollisionen bewusst einzeln auf.
+        """
+        befund = kollisionen_pruefen(
+            self._db,
+            str(antrag["tenant_id"]),
+            str(antrag["property_id"]),
+            rng,
+            unit_id=(
+                str(antrag["unit_id"]) if antrag.get("unit_id") else None
+            ),
+            antrag_id=antrag_id,
+        )
+        if not befund.blockiert:
+            log.info(
+                "sperrantrag_zeitraum_frei",
+                tenant_id=ctx.tenant_id,
+                antrag_id=antrag_id,
+                freie_einheit_id=befund.freie_einheit_id,
+                min_freie_einheiten=befund.min_freie_einheiten,
+                # Auch ein FREIER Zeitraum kann Buchungen enthalten — nämlich
+                # in Schwestereinheiten. Das mitzuloggen erspart die Rückfrage
+                # „warum ging das durch, da war doch eine Buchung?".
+                buchungen_in_anderen_einheiten=befund.buchungen_gesamt,
+            )
+            return
+        log.warning(
+            "sperrantrag_zeitraum_blockiert",
+            tenant_id=ctx.tenant_id,
+            antrag_id=antrag_id,
+            property_id=str(antrag["property_id"]),
+            grund=befund.grund,
+            buchungen=befund.buchungen_gesamt,
+            sperrtage=befund.sperrtage_gesamt,
+            stop_sell_tage=befund.stop_sell_gesamt,
+            min_freie_einheiten=befund.min_freie_einheiten,
+            # Die kollidierenden IDs: damit steht im Log, WAS aufzulösen ist,
+            # ohne Gastnamen/Kontaktdaten zu protokollieren (keine PII).
+            reservierungen=[k.reservation_id for k in befund.buchungen[:20]],
+        )
+        raise CalendarError(konflikt_text(befund), status_code=409)
 
     def _eigentuemer(self, ctx: AuthContext, property_id: str) -> str:
         """Der verwaltete Eigentümer DIESES Objekts (`owners`, 0063).
@@ -502,7 +872,19 @@ class SperrantragService:
                 f"(Antrag ist {_status_text(antrag.get('status'))}).",
                 status_code=409,
             )
+        log.info(
+            "sperrantrag_widerruf_claim_gesetzt",
+            tenant_id=ctx.tenant_id,
+            antrag_id=antrag_id,
+            property_id=str(antrag["property_id"]),
+            naechte=len(rng.nights()),
+            entschieden_von=ctx.user_id,
+        )
         try:
+            # War es eine Kündigung, ist der Gegenzustand das VERTRAGSENDE und
+            # nicht eine Nächte-Freigabe (0377) — zwei verschiedene Wege für
+            # zwei verschiedene Genehmigungen.
+            self._vertragsende_widerrufen(ctx, antrag)
             self._eigennutzung_stornieren(ctx, antrag_id, req.note)
             self._calendar.unblock(
                 ctx.tenant_id,
@@ -515,11 +897,19 @@ class SperrantragService:
                     str(antrag["unit_id"]) if antrag.get("unit_id") else None
                 ),
             )
-        except BaseException:
+        except BaseException as exc:
             # Wie beim Genehmigen (siehe dort): ohne die Freigabe darf der
             # Widerruf nicht stehen bleiben, sonst zeigt das Portal
             # „zurückgenommen", während die Nächte gesperrt sind. Auch hier
             # jeder Fehler, nicht nur der fachliche — und sofort re-raise.
+            log.warning(
+                "sperrantrag_freigabe_fehlgeschlagen",
+                tenant_id=ctx.tenant_id,
+                antrag_id=antrag_id,
+                property_id=str(antrag["property_id"]),
+                fehler=str(exc)[:300],
+                claim_wird_zurueckgerollt=True,
+            )
             self._auf_genehmigt_zurueck(ctx, antrag_id)
             raise
         log.info(
@@ -531,6 +921,64 @@ class SperrantragService:
         neu = self._laden(ctx, antrag_id)
         self._melde_entscheidung(ctx, neu, ZURUECKGENOMMEN)
         return self._einzel_item(neu)
+
+    def _vertragsende_widerrufen(
+        self, ctx: AuthContext, antrag: dict
+    ) -> None:
+        """Das aus DIESER Genehmigung gesetzte Vertragsende zurücknehmen (0377).
+
+        WURZEL 1, UND ZWAR NUR DER EIGENE GEGENZUSTAND: Zurückgenommen wird nur,
+        wenn am Objekt GENAU DAS Datum steht, das diese Genehmigung geschrieben
+        hat (`vertragsende_gesetzt_auf`). Hat jemand danach ein anderes Ende
+        eingetragen — von Hand oder über einen zweiten Antrag —, bleibt es
+        stehen: der Widerruf DIESES Antrags darf keine fremde, jüngere
+        Entscheidung überschreiben. Dasselbe Prinzip wie beim Storno über
+        `block_request_id` statt über (Objekt, Zeitraum).
+
+        Kein Anker, nichts zu tun: ein Antrag ohne `vertragsende_gesetzt_auf`
+        war keine Kündigung (oder hat keine gesetzt) — dann ist dies ein No-op
+        und der normale Freigabe-Pfad übernimmt.
+
+        Das Ende wird auf `None` gesetzt, was `vertragsende_durchsetzen` als
+        „unbefristet" versteht: es hebt ALLE `contract_end`-Sperren ab heute auf
+        und meldet die Tage als verfügbar. Ein Datum weiter in der Zukunft wäre
+        geraten (Wurzel 4) — der Vertrag läuft nach dem Widerruf schlicht
+        weiter.
+        """
+        anker = antrag.get("vertragsende_gesetzt_auf")
+        if not anker:
+            return
+        property_id = str(antrag["property_id"])
+        gesetzt = _als_datum(anker)
+        aktuell = self._vertragsende_lesen(ctx, property_id)
+        if aktuell != gesetzt:
+            log.info(
+                "sperrantrag_vertragsende_nicht_widerrufen",
+                tenant_id=ctx.tenant_id,
+                antrag_id=str(antrag["id"]),
+                property_id=property_id,
+                gesetzt_von_diesem_antrag=gesetzt.isoformat() if gesetzt else None,
+                aktuell_am_objekt=aktuell.isoformat() if aktuell else None,
+                grund="fremder_oder_juengerer_wert",
+            )
+            return
+        from src.features.properties.vertragsende import (  # noqa: PLC0415
+            vertragsende_durchsetzen,
+        )
+
+        self._db.table("properties").update(
+            {"contract_end_date": None}
+        ).eq("id", property_id).eq("tenant_id", self._tenant(ctx)).execute()
+        vertragsende_durchsetzen(
+            self._db, str(ctx.tenant_id), property_id, None
+        )
+        log.info(
+            "sperrantrag_vertragsende_widerrufen",
+            tenant_id=ctx.tenant_id,
+            antrag_id=str(antrag["id"]),
+            property_id=property_id,
+            war=gesetzt.isoformat() if gesetzt else None,
+        )
 
     def _eigennutzung_stornieren(
         self, ctx: AuthContext, antrag_id: str, note: str | None
@@ -588,6 +1036,7 @@ class SperrantragService:
         nach: str,
         ctx: AuthContext,
         note: str | None,
+        kuendigung_felder: dict[str, object] | None = None,
     ) -> dict | None:
         """Zustandswechsel als bedingter UPDATE — der Idempotenz-Riegel.
 
@@ -607,6 +1056,12 @@ class SperrantragService:
                     # Fachlicher Entscheidungszeitpunkt, nicht updated_at (5b).
                     "decided_at": "now()",
                     "decision_note": note,
+                    # Kündigungs-Einordnung und -Datum gehen IM SELBEN UPDATE
+                    # mit (0377): stünden sie in einem zweiten, könnte ein
+                    # Abbruch dazwischen einen genehmigten Antrag ohne
+                    # Kündigungsspur hinterlassen — und der Widerruf wüsste
+                    # nicht, dass er ein Vertragsende zurückzunehmen hat.
+                    **(kuendigung_felder or {}),
                 }
             )
             .eq("id", antrag_id)
@@ -863,4 +1318,11 @@ def _item(
         decided_at=str(r["decided_at"]) if r.get("decided_at") else None,
         decision_note=r.get("decision_note"),
         created_at=str(r["created_at"]) if r.get("created_at") else None,
+        ist_kuendigung=bool(r.get("ist_kuendigung")),
+        als_kuendigung_gewertet=bool(r.get("als_kuendigung_gewertet")),
+        vertragsende_gesetzt_auf=(
+            _als_datum(r["vertragsende_gesetzt_auf"])
+            if r.get("vertragsende_gesetzt_auf")
+            else None
+        ),
     )

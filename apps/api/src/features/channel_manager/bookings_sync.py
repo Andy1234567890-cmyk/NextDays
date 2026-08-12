@@ -2419,8 +2419,51 @@ class BookingsSyncMixin:
                     ).data
                     or []
                 }
+                # VERTRAGSENDE-TAGE NIE als Stop-Sell schreiben (0378).
+                #
+                # Das ist ein ECHO unserer eigenen Sperre, keine Information des
+                # Portals: `vertragsende_durchsetzen` meldet für diese Nächte
+                # `availability = 0`, Channex macht daraus für die OTAs einen
+                # Stop-Sell, und dieser Import las ihn als fremden Zustand
+                # zurück. Live gemessen (12.08.2026, Feriehus Kornblomst):
+                # Vertragszeile 11:10:07, danach 307 `source='channex'`-Zeilen
+                # um 11:10:11 — vier Sekunden später.
+                #
+                # Der Schaden ist die AUSSAGE, nicht die Zeile: der Kalender
+                # zeigte „Stop-Sell · alle Kanäle" statt „Vertragsende". Die
+                # Agentur sah eine Verkaufseinstellung, die sie selbst
+                # zurücknehmen kann — dahinter steht aber ein beendeter Vertrag,
+                # der gar nicht aufhebbar sein darf, solange kein Vertrag
+                # existiert.
+                #
+                # `eigene_push_tage` greift hier nicht: es deckt nur das
+                # Sekunden-Fenster eines noch laufenden Pushes ab. Ein
+                # Vertragsende steht für 730 Tage und wird jede Nacht neu
+                # nachgezogen — sein Echo kommt also lange nach dem Fenster.
+                vertragsende_tage = {
+                    r["date"]
+                    for r in (
+                        db.table("availability")
+                        .select("date")
+                        .eq("property_id", property_id)
+                        .eq("source", "contract_end")
+                        .eq("status", "blocked")
+                        .in_("date", list(stopped))
+                        .execute()
+                    ).data
+                    or []
+                }
+                if vertragsende_tage:
+                    log.info(
+                        "import_ari_stop_sell_vertragsende_uebersprungen",
+                        tenant_id=tenant_id,
+                        property_id=property_id,
+                        tage=len(vertragsende_tage),
+                    )
                 for d in stopped:
                     if d in existing_stops or d in booked_days:
+                        continue
+                    if d in vertragsende_tage:
                         continue
                     if d in eigene_push_tage:
                         # Unser eigener, noch nicht durchgelaufener Push — der

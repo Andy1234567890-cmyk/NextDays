@@ -1353,7 +1353,12 @@
     "commissionableNo": "Nein — provisionsfrei",
     "infoAria": "Erklärung zu {feld}",
     "rulesPageTitle": "Abrechnungsregeln",
-    "rulesPageIntro": "Was die Portale je Buchung einbehalten und wem die Gebühren gehören. Beides bestimmt, welcher Betrag am Ende in die Provisionsabrechnung Ihrer Eigentümer fließt."
+    "rulesPageIntro": "Was die Portale je Buchung einbehalten und wem die Gebühren gehören. Beides bestimmt, welcher Betrag am Ende in die Provisionsabrechnung Ihrer Eigentümer fließt.",
+    "endsSalesHint": "Achtung: Damit endet auch die Vermarktung. Ab dem {date} wird das Objekt auf keinem Kanal mehr verkauft — auch nicht bei Booking.com, Airbnb oder auf myBestDays. Für einen reinen Satzwechsel lege stattdessen einen Anschlussvertrag ab diesem Tag an.",
+    "effectBlocked": "{property}: Vermarktung endet am {date} — {nights} Nächte gesperrt und von den Portalen genommen.",
+    "effectReleased": "{property}: Vermarktung läuft weiter — das Vertragsende wurde aufgehoben und die Nächte sind wieder verkäuflich.",
+    "effectNoUnit": "{property}: Das Vertragsende ist eingetragen, der Kalender aber nicht gesperrt — dem Objekt fehlt eine Einheit. Lege sie an, dann greift die Sperre.",
+    "effectCalendarFailed": "{property}: Das Vertragsende ist eingetragen, die Kalendersperre nicht geschrieben. Sie wird heute Nacht nachgezogen."
   },
   "portal": {
     "title": "Mein Portal",
@@ -1405,7 +1410,13 @@
       },
       "reason": "Grund",
       "reasonPlaceholder": "Warum soll gesperrt werden? (z. B. Eigennutzung, Handwerker)",
-      "decisionNote": "Anmerkung der Verwaltung"
+      "decisionNote": "Anmerkung der Verwaltung",
+      "termination": "Ich möchte den Vertrag beenden",
+      "terminationHint": "Damit wird nicht nur der Zeitraum gesperrt, sondern der Vermarktungsvertrag zum Startdatum beendet. Die Verwaltung bestätigt das Datum.",
+      "terminationSent": "Kündigung übermittelt. Die Verwaltung bestätigt das Vertragsende.",
+      "terminationPending": "Kündigung — die Verwaltung hat das Vertragsende noch nicht bestätigt.",
+      "terminationConfirmed": "Vertrag endet am {datum}.",
+      "terminationInterpreted": "Die Verwaltung hat diesen Antrag als Kündigung gewertet — Vertrag endet am {datum}. Bitte melde dich, wenn das nicht gemeint war."
     },
     "meter": {
       "title": "Zählerstand erfassen",
@@ -5792,7 +5803,8 @@
         "booked": "Gebucht",
         "blocked": "Gesperrt",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Vertrag beendet"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "alle Kanäle",
@@ -5921,6 +5933,10 @@
       "fallbackAddonName": "Zusatzleistung",
       "markPaidAction": "Als bezahlt markieren",
       "markPaidSuccess": "Als bezahlt markiert.",
+      "cancelAction": "Stornieren",
+      "cancelBusy": "Storniere…",
+      "cancelConfirm": "Diese Zusatzleistung wirklich stornieren?",
+      "cancelSuccess": "Zusatzleistung storniert.",
       "addSuccess": "Zusatzleistung hinzugefügt.",
       "totalLabel": "Summe Zusatzleistungen",
       "emptyPurchased": "Noch keine Zusatzleistungen gebucht.",
@@ -6188,7 +6204,6 @@
         "revoke": "Zurücknehmen"
       },
       "confirm": {
-        "approve": "{objekt} vom {von} bis {bis} sperren? Die Nächte werden auf allen Portalen gesperrt.",
         "reject": "Antrag für {objekt} ({von} – {bis}) ablehnen?",
         "revoke": "Genehmigung für {objekt} ({von} – {bis}) zurücknehmen? Die Nächte werden wieder freigegeben."
       },
@@ -6196,7 +6211,44 @@
         "approve": "Antrag genehmigt, Nächte gesperrt.",
         "reject": "Antrag abgelehnt.",
         "revoke": "Genehmigung zurückgenommen, Nächte freigegeben."
-      }
+      },
+      "check": {
+        "title": "Genehmigung prüfen",
+        "subtitle": "{objekt}, {von} – {bis}. Vor dem Sperren wird geprüft, ob der Zeitraum frei ist.",
+        "loading": "Zeitraum wird geprüft …",
+        "free": "Der Zeitraum ist verfügbar.",
+        "blocked": {
+          "belegt": "Der Zeitraum ist belegt.",
+          "stop_sell": "Im Zeitraum liegt ein Verkaufsstopp.",
+          "vertragsende": "Der Zeitraum liegt nach dem Ende des Verwaltungsvertrags."
+        },
+        "summary": "{naechte} Nächte · {einheiten} Einheiten · mindestens {frei} verfügbar",
+        "suggestion": "Verfügbar wäre {von} – {bis}.",
+        "willUse": "Belegt wird: {einheit}",
+        "bookings": "{anzahl} Buchungen im Zeitraum",
+        "bookingsHint": "Sie werden NICHT automatisch storniert. Storniere sie einzeln, danach lässt sich der Antrag genehmigen.",
+        "openBooking": "Buchung öffnen",
+        "openStay": "Aufenthalt öffnen",
+        "blockedNights": "{anzahl} gesperrte Nächte",
+        "blockedNightsHint": "Sperren ohne Buchung — im Kalender aufheben, nicht stornieren.",
+        "stopSell": "{anzahl} Tage mit Verkaufsstopp",
+        "truncated": "Die Aufzählung ist gekürzt; die Zahlen oben sind vollständig.",
+        "unitScope": "Der Antrag betrifft nur: {einheit}",
+        "close": "Schließen",
+        "contractHint": "Solange der Vertrag nicht verlängert ist, lässt sich hier nichts sperren — das Objekt wird in diesem Zeitraum nicht von dir verwaltet.",
+        "isTermination": "Das ist eine Vertragskündigung",
+        "terminationHint": "Der Eigentümer will den Vertrag beenden, nicht nur Nächte sperren. Statt zu sperren wird das Vertragsende am Objekt gesetzt — damit endet die Vermarktung auf allen Portalen.",
+        "terminationByOwner": "Der Eigentümer hat das beim Antrag selbst erklärt.",
+        "contractEndLabel": "Vertragsende (erster Tag ohne Vertrag)",
+        "contractEndHint": "Leer lassen: es gilt der Antragsbeginn ({datum}). Läuft der Vertrag noch länger, hier das echte Ende eintragen.",
+        "terminationReady": "Die Kündigung kann eingetragen werden.",
+        "terminationSummary": "Vertragsende ab {datum} — ab diesem Tag wird das Objekt nirgends mehr verkauft.",
+        "approveTermination": "Vertragsende eintragen",
+        "bookingsAfterEnd": "{anzahl} Buchungen nach dem Vertragsende",
+        "bookingsAfterEndHint": "Sie bleiben gültig und werden bedient — der Vertrag läuft für sie aus. Gesperrt werden nur die freien Tage."
+      },
+      "terminationRequested": "Der Eigentümer möchte den Vertrag beenden.",
+      "terminationSet": "Vertrag endet am {datum}."
     }
   },
   "seasons": {

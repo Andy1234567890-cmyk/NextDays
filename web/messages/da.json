@@ -1353,7 +1353,12 @@
     "commissionableNo": "Nej — provisionsfrit",
     "infoAria": "Forklaring til {feld}",
     "rulesPageTitle": "Afregningsregler",
-    "rulesPageIntro": "Hvad portalerne beholder pr. booking, og hvem gebyrerne tilhører. Tilsammen bestemmer de, hvilket beløb der til sidst havner i dine ejeres provisionsafregning."
+    "rulesPageIntro": "Hvad portalerne beholder pr. booking, og hvem gebyrerne tilhører. Tilsammen bestemmer de, hvilket beløb der til sidst havner i dine ejeres provisionsafregning.",
+    "endsSalesHint": "OBS: Det er her markedsføringen slutter. Fra {date} og fremefter vil ejendommen ikke længere blive solgt på nogen kanal - inklusive Booking.com, Airbnb eller myBestDays. For en ren sætningsændring opret i stedet en tilslutningskontrakt fra denne dag.",
+    "effectBlocked": "{property}: Marketing slutter på {date} — {nights}-nætter blokeret og fjernet fra portalerne.",
+    "effectReleased": "{property}: Markedsføringen fortsætter - slutningen af ​​kontrakten er ophævet, og nætterne er til salg igen.",
+    "effectNoUnit": "{property}: Slutningen af ​​kontrakten er indtastet, men kalenderen er ikke låst - objektet mangler en enhed. Sæt den på, og låsen træder i kraft.",
+    "effectCalendarFailed": "{property}: Slutningen af ​​kontrakten er indtastet, kalenderlåsen er ikke skrevet. Det bliver tilføjet i aften."
   },
   "portal": {
     "title": "Min portal",
@@ -1405,7 +1410,13 @@
       },
       "reason": "Årsag",
       "reasonPlaceholder": "Hvorfor skal det spærres? (f.eks. egen brug, håndværkere)",
-      "decisionNote": "Bemærkning fra administrationen"
+      "decisionNote": "Bemærkning fra administrationen",
+      "termination": "Jeg vil gerne ophæve kontrakten.",
+      "terminationConfirmed": "Kontrakten udløber den {datum}.",
+      "terminationHint": "Dette blokerer ikke blot perioden, men ophæver også marketingkontrakten på startdatoen. Administrationen bekræfter datoen.",
+      "terminationInterpreted": "Administrationen har fortolket denne anmodning som en opsigelsesmeddelelse — kontrakten udløber den {datum}. Giv os venligst besked, hvis det ikke var meningen.",
+      "terminationPending": "Opsigelse — administrationen har endnu ikke bekræftet kontraktens ophør.",
+      "terminationSent": "Opsigelse er indsendt. Administrationen bekræfter kontraktens opsigelse."
     },
     "meter": {
       "title": "Registrer måleraflæsning",
@@ -5771,7 +5782,8 @@
         "booked": "Booket",
         "blocked": "Spærret",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Kontrakt opsagt"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "alle kanaler",
@@ -5900,6 +5912,10 @@
       "fallbackAddonName": "Tillægsydelse",
       "markPaidAction": "Marker som betalt",
       "markPaidSuccess": "Markeret som betalt.",
+      "cancelAction": "Annuller",
+      "cancelBusy": "Annullerer…",
+      "cancelConfirm": "Skal denne tillægsydelse annulleres?",
+      "cancelSuccess": "Tillægsydelsen er annulleret.",
       "addSuccess": "Tillægsydelse tilføjet.",
       "totalLabel": "Sum af tillægsydelser",
       "emptyPurchased": "Endnu ingen tillægsydelser booket.",
@@ -6175,7 +6191,44 @@
         "approve": "Anmodning godkendt, nætter spærret.",
         "reject": "Anmodning afvist.",
         "revoke": "Godkendelse tilbagekaldt, nætter frigivet."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "Perioden er booket.",
+          "stop_sell": "Der er et salgsforbud i kraft i denne periode.",
+          "vertragsende": "Perioden er efter udløbet af den administrative kontrakt."
+        },
+        "blockedNightsHint": "Bloker uden booking — fjern i kalenderen, afbestil ikke.",
+        "bookingsHint": "De vil IKKE blive annulleret automatisk. Annuller dem enkeltvis, hvorefter ansøgningen kan godkendes.",
+        "close": "Tæt",
+        "loading": "Tidsrammen bliver gennemgået…",
+        "openBooking": "Åben booking",
+        "openStay": "Åbent ophold",
+        "title": "Tjek godkendelse",
+        "truncated": "Listen er forkortet; ovenstående tal er komplette.",
+        "free": "Tidsperioden er tilgængelig.",
+        "blockedNights": "{anzahl} blokerede nætter",
+        "bookings": "{anzahl}-bookinger i perioden",
+        "stopSell": "{anzahl} dage med salgsstop",
+        "subtitle": "{objekt}, {von} – {bis}. Før låsning kontrolleres det, om tidsperioden er ledig.",
+        "suggestion": "{von} – {bis} ville være tilgængelig.",
+        "summary": "{naechte} nætter · {einheiten} enheder · mindst {frei} tilgængelig",
+        "unitScope": "Ansøgningen vedrører kun: {einheit}",
+        "willUse": "Følgende er optaget: {einheit}",
+        "contractHint": "Så længe kontrakten ikke forlænges, kan intet blokeres her — ejendommen administreres ikke af dig i denne periode.",
+        "approveTermination": "Indtast kontraktens slutdato",
+        "bookingsAfterEnd": "{anzahl} Bookinger efter kontraktens udløb",
+        "bookingsAfterEndHint": "De forbliver gyldige og vil blive afsonet — kontrakten udløber for dem. Kun fridagene er blokeret.",
+        "contractEndHint": "Lad feltet stå tomt: Ansøgningens startdato ({datum}) gælder. Hvis kontrakten løber over en længere periode, skal du indtaste den faktiske slutdato her.",
+        "contractEndLabel": "Kontraktslut (første dag uden kontrakt)",
+        "isTermination": "Dette er en kontraktopsigelse",
+        "terminationByOwner": "Ejeren forklarede dette selv i ansøgningen.",
+        "terminationHint": "Ejeren ønsker at opsige kontrakten, ikke blot at blokere overnatninger. I stedet for at blokere adgangen, vil kontraktens slutdato blive fastsat direkte på ejendommen – og dermed afslutte markedsføringen på alle portaler.",
+        "terminationReady": "Opsigelsen kan tinglyses.",
+        "terminationSummary": "Kontrakten udløber fra {datum} — fra denne dag og fremefter vil ejendommen ikke længere blive solgt nogen steder."
+      },
+      "terminationRequested": "Ejeren ønsker at ophæve kontrakten.",
+      "terminationSet": "Kontrakten udløber den {datum}."
     }
   },
   "seasons": {

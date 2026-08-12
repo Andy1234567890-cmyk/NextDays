@@ -204,6 +204,14 @@ export type BlockRequest = {
   /** Anmerkung der Verwaltung zur Entscheidung. */
   decision_note: string | null;
   created_at: string | null;
+  /** Ich habe beim Antrag erklärt, den Vertrag beenden zu wollen. */
+  ist_kuendigung: boolean;
+  /** Die Verwaltung hat meinen Sperrantrag als Kündigung ausgelegt. Muss
+   *  sichtbar sein — es ist eine Auslegung MEINER Erklärung, und ich muss ihr
+   *  widersprechen können, wenn sie falsch ist. */
+  als_kuendigung_gewertet: boolean;
+  /** Zu diesem Tag endet der Vertrag (erster Tag ohne Vertrag). */
+  vertragsende_gesetzt_auf: string | null;
 };
 
 export async function getBlockRequests(): Promise<
@@ -217,6 +225,10 @@ export async function createBlockRequest(input: {
   start_date: string;
   end_date: string;
   reason?: string | null;
+  /** Ich will den Vermarktungsvertrag beenden, nicht nur Nächte sperren. Ein
+   *  eigenes Feld, weil es eine andere Erklärung ist — aus dem Begründungstext
+   *  wird nichts abgeleitet. */
+  ist_kuendigung?: boolean;
 }): Promise<Result<BlockRequest>> {
   return call("/public-portal/block-requests", { method: "POST", body: input });
 }

@@ -436,6 +436,23 @@ class BlockRequestDecision(BaseModel):
     Begründung an den Eigentümer (bei Ablehnung fachlich erwartet)."""
 
     note: str | None = Field(default=None, max_length=2000)
+    # Die Agentur wertet DIESEN Antrag als Vertragskündigung (0377). Nötig für
+    # den Bestand: Anträge von vor diesem Feld tragen `ist_kuendigung=false`,
+    # obwohl der Eigentümer im Freitext genau das erklärt hat („Vi er ikke
+    # interesseret i udlejning 2027"). Die Agentur akzeptiert das hier, OHNE
+    # beim Eigentümer eine zweite Anfrage auszulösen.
+    #
+    # Bewusst ein Feld an der ENTSCHEIDUNG und nicht am Antrag: es ist die
+    # Auslegung der Agentur, nicht die Erklärung des Eigentümers. Trägt der
+    # Antrag `ist_kuendigung=true`, ist es überflüssig — dann steht die Absicht
+    # schon fest und der Genehmigen-Pfad handelt ohnehin danach.
+    als_kuendigung: bool = False
+    # Das Vertragsende, das gesetzt werden soll (erster Tag OHNE Vertrag).
+    # Leer → der Server nimmt den `start_date` des Antrags: „ab da nicht mehr
+    # vermieten" heißt „ab da kein Vertrag". Ein abweichender Wunsch (der
+    # Vertrag läuft noch bis Monatsende) wird hier ausdrücklich gesetzt, statt
+    # ihn aus dem Antrag zu raten (Wurzel 4).
+    vertragsende: date | None = None
 
 
 class SperrantragItem(BaseModel):
@@ -464,11 +481,103 @@ class SperrantragItem(BaseModel):
     decided_at: str | None = None
     decision_note: str | None = None
     created_at: str | None = None
+    # Vertragskündigung (0377) — drei Felder, drei verschiedene Aussagen:
+    # was der EIGENTÜMER erklärt hat, was die AGENTUR daraus gemacht hat, und
+    # welches Enddatum daraus wurde. Sie in eines zu falten hieße hinterher
+    # behaupten „der Eigentümer hat gekündigt", wo die Agentur ausgelegt hat.
+    ist_kuendigung: bool = False
+    als_kuendigung_gewertet: bool = False
+    vertragsende_gesetzt_auf: date | None = None
 
 
 class SperrantragListe(BaseModel):
     items: list[SperrantragItem]
     total: int
+
+
+class SperrantragKollision(BaseModel):
+    """Eine Buchung/Eigennutzung, die dem beantragten Zeitraum im Weg steht.
+
+    Trägt alles, was zum Entscheiden nötig ist — und nichts darüber hinaus:
+    kein Telefon, keine Adresse (Wurzel 9). `art` unterscheidet die beiden
+    Auflösungswege: eine `buchung` wird storniert (Gast, Geld, OTA-Meldung),
+    eine `eigennutzung` gehört demselben Eigentümer und wird eher über den
+    Widerruf ihres Antrags aufgelöst.
+    """
+
+    reservation_id: str
+    art: str  # buchung | eigennutzung
+    bezeichnung: str
+    unit_id: str | None = None
+    unit_name: str | None = None
+    check_in: date
+    check_out: date  # exklusiv (Abreisetag ist wieder frei)
+    status: str
+    channel: str
+    ota_name: str | None = None
+    total_amount: float | None = None
+    # Währung DIESER Buchung, nie ein €-Ersatz (Wurzel 4). Fehlt sie, rendert
+    # das Frontend den Betrag symbollos statt eine falsche Währung zu behaupten.
+    currency: str | None = None
+    is_owner_stay: bool = False
+    owner_id: str | None = None
+
+
+class SperrantragSperrtag(BaseModel):
+    """Eine gesperrte Nacht ohne Buchung dahinter (Handwerker/Agentur/iCal).
+
+    Wird NICHT storniert, sondern im Kalender aufgehoben — darum eine eigene
+    Form und nicht in `SperrantragKollision` hineingezwungen.
+    """
+
+    datum: date
+    unit_id: str | None = None
+    unit_name: str | None = None
+    source: str
+
+
+class SperrantragKollisionen(BaseModel):
+    """Was der Genehmigung eines Sperrantrags im Weg steht.
+
+    `blockiert` ist die Antwort, an der die Oberfläche den Genehmigen-Knopf
+    sperrt — dieselbe Frage, die der Schreibpfad beim Klick erneut stellt (die
+    Vorschau ist kein Anspruch: zwischen Anzeige und Klick kann eine Buchung
+    eingehen).
+
+    Die `*_gesamt`-Zahlen sind VOLLSTÄNDIG, die Listen können gekürzt sein
+    (`gekuerzt`) — ein Jahresantrag über ein Hotel hätte sonst einen Payload,
+    den niemand liest (Wurzel 8).
+    """
+
+    property_id: str
+    # Wurde als VERTRAGSKÜNDIGUNG geprüft (0377)? Dann ist eine bestehende
+    # `contract_end`-Sperre der Zielzustand und kein Hindernis, und die
+    # Oberfläche zeigt statt „was auflösen" die Buchungen hinter dem Enddatum.
+    als_kuendigung: bool = False
+    unit_id: str | None = None
+    unit_name: str | None = None
+    start_date: date
+    end_date: date  # INKLUSIV, wie der Antrag gestellt wurde
+    naechte: int
+    einheiten_gesamt: int
+    blockiert: bool
+    grund: str | None = None  # belegt | stop_sell
+    # Die Einheit, in die die Eigennutzung gehen würde ("*" = Altbestand ohne
+    # property_units). None, wenn keine im ganzen Zeitraum frei ist.
+    freie_einheit_id: str | None = None
+    freie_einheit_name: str | None = None
+    min_freie_einheiten: int
+    buchungen: list[SperrantragKollision] = []
+    buchungen_gesamt: int = 0
+    sperrtage: list[SperrantragSperrtag] = []
+    sperrtage_gesamt: int = 0
+    stop_sell_tage: list[str] = []
+    stop_sell_gesamt: int = 0
+    gekuerzt: bool = False
+    # Der längste durchgehend freie Abschnitt im beantragten Zeitraum — als
+    # Vorschlag für die Entscheiderin, nicht als automatische Kürzung.
+    frei_von: date | None = None
+    frei_bis: date | None = None
 
 
 class SliceHealth(BaseModel):

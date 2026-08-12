@@ -1353,7 +1353,12 @@
     "commissionableNo": "Non — hors commission",
     "infoAria": "Explication de {feld}",
     "rulesPageTitle": "Règles de décompte",
-    "rulesPageIntro": "Ce que les portails retiennent par réservation et à qui reviennent les frais. Ensemble, ces deux éléments déterminent le montant qui figurera au final dans le décompte de commission de vos propriétaires."
+    "rulesPageIntro": "Ce que les portails retiennent par réservation et à qui reviennent les frais. Ensemble, ces deux éléments déterminent le montant qui figurera au final dans le décompte de commission de vos propriétaires.",
+    "endsSalesHint": "Attention : c'est là que se termine le marketing. À partir de {date}, la propriété ne sera plus vendue sur aucun canal, y compris Booking.com, Airbnb ou myBestDays. Pour un pur changement de phrase, créez plutôt un contrat de connexion à partir de ce jour.",
+    "effectBlocked": "{property} : Fin de la commercialisation sur {date} — Nuits {nights} bloquées et supprimées des portails.",
+    "effectReleased": "{property} : La commercialisation continue - la fin du contrat a été levée et les nuits sont à nouveau en vente.",
+    "effectNoUnit": "{property} : La fin du contrat est saisie, mais le calendrier n'est pas verrouillé - il manque une unité à l'objet. Mettez-le et le verrouillage prendra effet.",
+    "effectCalendarFailed": "{property} : La fin du contrat a été inscrite, le verrouillage du calendrier n'a pas été écrit. Il sera ajouté ce soir."
   },
   "portal": {
     "title": "Mon portail",
@@ -1405,7 +1410,13 @@
       },
       "reason": "Motif",
       "reasonPlaceholder": "Pourquoi bloquer ? (par ex. usage personnel, artisans)",
-      "decisionNote": "Remarque de la gestion"
+      "decisionNote": "Remarque de la gestion",
+      "termination": "Je souhaite résilier le contrat.",
+      "terminationConfirmed": "Le contrat prend fin le {datum}.",
+      "terminationHint": "Cela bloque non seulement la période, mais résilie également le contrat de commercialisation à sa date de début. L'administration confirme cette date.",
+      "terminationInterpreted": "L'administration a interprété cette demande comme un avis de résiliation ; le contrat prend fin le {datum}. Veuillez nous indiquer si ce n'est pas ce que vous vouliez dire.",
+      "terminationPending": "Résiliation — l'administration n'a pas encore confirmé la fin du contrat.",
+      "terminationSent": "Un avis de résiliation a été déposé. L'administration confirme la résiliation du contrat."
     },
     "meter": {
       "title": "Saisir un relevé de compteur",
@@ -5771,7 +5782,8 @@
         "booked": "Réservé",
         "blocked": "Bloqué",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Contrat résilié"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "tous les canaux",
@@ -5900,6 +5912,10 @@
       "fallbackAddonName": "Service supplémentaire",
       "markPaidAction": "Marquer comme payé",
       "markPaidSuccess": "Marqué comme payé.",
+      "cancelAction": "Annuler",
+      "cancelBusy": "Annulation…",
+      "cancelConfirm": "Annuler vraiment ce service supplémentaire ?",
+      "cancelSuccess": "Service supplémentaire annulé.",
       "addSuccess": "Service supplémentaire ajouté.",
       "totalLabel": "Total services supplémentaires",
       "emptyPurchased": "Aucun service supplémentaire réservé pour le moment.",
@@ -6175,7 +6191,44 @@
         "approve": "Demande approuvée, nuits bloquées.",
         "reject": "Demande refusée.",
         "revoke": "Approbation révoquée, nuits libérées."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "La période est réservée.",
+          "stop_sell": "Une interdiction de vente est en vigueur pendant cette période.",
+          "vertragsende": "Cette période correspond à la fin du contrat administratif."
+        },
+        "blockedNightsHint": "Bloquer sans réserver — supprimer du calendrier, ne pas annuler.",
+        "bookingsHint": "Elles ne seront PAS annulées automatiquement. Annulez-les individuellement pour que votre demande puisse être approuvée.",
+        "close": "Fermer",
+        "loading": "Le calendrier est en cours de réévaluation…",
+        "openBooking": "Réservation ouverte",
+        "openStay": "séjour ouvert",
+        "title": "Vérifier l'approbation",
+        "truncated": "La liste est abrégée ; les numéros ci-dessus sont complets.",
+        "free": "La période est disponible.",
+        "blockedNights": "{anzahl} a bloqué les nuits",
+        "bookings": "Réservations {anzahl} pendant la période",
+        "stopSell": "Jours {anzahl} avec arrêt des ventes",
+        "subtitle": "{objekt}, {von} – {bis}. Avant le verrouillage, on vérifie si la période horaire est libre.",
+        "suggestion": "Les modèles {von} et {bis} seraient disponibles.",
+        "summary": "{naechte} nuits · {einheiten} unités · au moins {frei} disponibles",
+        "unitScope": "La demande concerne uniquement : {einheit}",
+        "willUse": "L'emplacement suivant est occupé : {einheit}",
+        "contractHint": "Tant que le contrat n'est pas prolongé, rien ne peut être bloqué ici — vous ne gérez pas le bien pendant cette période.",
+        "approveTermination": "Indiquez la date de fin du contrat",
+        "bookingsAfterEnd": "Réservations {anzahl} après la fin du contrat",
+        "bookingsAfterEndHint": "Elles restent valides et seront exécutées — le contrat expire pour elles. Seuls les jours de congé sont bloqués.",
+        "contractEndHint": "Laissez ce champ vide : la date de début de l’application ({datum}) s’applique. Si le contrat a une durée plus longue, indiquez ici la date de fin réelle.",
+        "contractEndLabel": "Fin du contrat (premier jour sans contrat)",
+        "isTermination": "Il s'agit d'une résiliation de contrat",
+        "terminationByOwner": "Le propriétaire l'a lui-même expliqué dans sa demande.",
+        "terminationHint": "Le propriétaire souhaite résilier le contrat, et non simplement bloquer des nuits. Au lieu de bloquer l'accès, la date de fin du contrat sera directement indiquée sur le bien, ce qui mettra fin à sa diffusion sur tous les portails de location.",
+        "terminationReady": "L'avis de résiliation peut être enregistré.",
+        "terminationSummary": "Le contrat prend fin le {datum} — à compter de ce jour, le bien ne sera plus vendu nulle part."
+      },
+      "terminationRequested": "Le propriétaire souhaite résilier le contrat.",
+      "terminationSet": "Le contrat prend fin le {datum}."
     }
   },
   "seasons": {

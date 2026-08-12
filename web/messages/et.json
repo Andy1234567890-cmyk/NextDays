@@ -1353,7 +1353,12 @@
     "commissionableNo": "Ei — komisjonivaba",
     "infoAria": "Selgitus välja {feld} kohta",
     "rulesPageTitle": "Arveldusreeglid",
-    "rulesPageIntro": "Mida portaalid iga broneeringu pealt kinni peavad ja kellele tasud kuuluvad. Mõlemad määravad, milline summa jõuab lõpuks teie omanike komisjonitasu arvestusse."
+    "rulesPageIntro": "Mida portaalid iga broneeringu pealt kinni peavad ja kellele tasud kuuluvad. Mõlemad määravad, milline summa jõuab lõpuks teie omanike komisjonitasu arvestusse.",
+    "endsSalesHint": "Tähelepanu: siin lõpeb turundus. Alates {date} ei müüda kinnisvara enam ühelgi kanalil – sh Booking.com, Airbnb või myBestDays. Puhta lausemuudatuse jaoks loo selle asemel liitumisleping sellest päevast.",
+    "effectBlocked": "{property}: Turundus lõpeb {date} — {nights} ööd blokeeritakse ja eemaldatakse portaalidest.",
+    "effectReleased": "{property}: Turundus jätkub – lepingu lõpp on tühistatud ja ööd on taas müügis.",
+    "effectNoUnit": "{property}: Lepingu lõpp on sisestatud, kuid kalender pole lukus - objektil puudub üksus. Pange see peale ja lukk hakkab kehtima.",
+    "effectCalendarFailed": "{property}: Lepingu lõpp on sisestatud, kalendrilukku pole kirjutatud. See lisatakse täna õhtul."
   },
   "portal": {
     "title": "Minu portaal",
@@ -1405,7 +1410,13 @@
       },
       "reason": "Põhjus",
       "reasonPlaceholder": "Miks tuleks blokeerida? (nt oma kasutus, käsitöölised)",
-      "decisionNote": "Halduse märkus"
+      "decisionNote": "Halduse märkus",
+      "termination": "Sooviksin lepingu lõpetada.",
+      "terminationConfirmed": "Leping lõpeb {datum}-il.",
+      "terminationHint": "See mitte ainult ei blokeeri perioodi, vaid lõpetab ka turunduslepingu alguskuupäeval. Administratsioon kinnitab kuupäeva.",
+      "terminationInterpreted": "Administratsioon on seda palvet tõlgendanud ülesütlemisteatisena – leping lõpeb {datum}. Palun andke meile teada, kui see polnud mõeldud.",
+      "terminationPending": "Lõpetamine — administratsioon ei ole lepingu lõppu veel kinnitanud.",
+      "terminationSent": "Lõpetamisteade on esitatud. Administratsioon kinnitab lepingu lõpetamist."
     },
     "meter": {
       "title": "Sisesta näidu lugem",
@@ -5771,7 +5782,8 @@
         "booked": "Broneeritud",
         "blocked": "Suletud",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Leping lõpetatud"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "kõik kanalid",
@@ -5900,6 +5912,10 @@
       "fallbackAddonName": "Lisateenus",
       "markPaidAction": "Märgi makstuks",
       "markPaidSuccess": "Märgitud makstuks.",
+      "cancelAction": "Tühista",
+      "cancelBusy": "Tühistan…",
+      "cancelConfirm": "Kas tühistada see lisateenus?",
+      "cancelSuccess": "Lisateenus tühistatud.",
       "addSuccess": "Lisateenus lisatud.",
       "totalLabel": "Lisateenuste summa",
       "emptyPurchased": "Lisateenuseid pole veel broneeritud.",
@@ -6175,7 +6191,44 @@
         "approve": "Taotlus heaks kiidetud, ööd blokeeritud.",
         "reject": "Taotlus tagasi lükatud.",
         "revoke": "Heakskiit tühistatud, ööd vabastatud."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "Periood on broneeritud.",
+          "stop_sell": "Sellel perioodil kehtib müügikeeld.",
+          "vertragsende": "See periood on pärast halduslepingu lõppemist."
+        },
+        "blockedNightsHint": "Blokeeri ilma broneeringuta — eemalda kalendrist, ära tühista.",
+        "bookingsHint": "Neid EI tühistata automaatselt. Tühistage need eraldi ja seejärel saab taotluse heaks kiita.",
+        "close": "Sule",
+        "loading": "Ajakava vaadatakse üle…",
+        "openBooking": "Ava broneerimine",
+        "openStay": "Avatud ööbimine",
+        "title": "Kontrolli kinnitust",
+        "truncated": "Nimekiri on lühendatud; ülaltoodud numbrid on täielikud.",
+        "free": "Ajavahemik on saadaval.",
+        "blockedNights": "{anzahl} blokeeritud ööd",
+        "bookings": "{anzahl} broneeringud sel perioodil",
+        "stopSell": "{anzahl} päeva müügipeatusega",
+        "subtitle": "{objekt}, {von} – {bis}. Enne lukustamist kontrollitakse, kas ajaperiood on vaba.",
+        "suggestion": "{von} – {bis} oleks saadaval.",
+        "summary": "{naechte} ööd · {einheiten} üksused · vähemalt {frei} saadaval",
+        "unitScope": "Taotlus puudutab ainult: {einheit}",
+        "willUse": "Järgnev on hõivatud: {einheit}",
+        "contractHint": "Seni kuni lepingut ei pikendata, ei saa siin midagi blokeerida – kinnisvara ei halda teie sel perioodil.",
+        "approveTermination": "Sisestage lepingu lõppkuupäev",
+        "bookingsAfterEnd": "{anzahl} Broneeringud pärast lepingu lõppemist",
+        "bookingsAfterEndHint": "Need jäävad kehtima ja need kantakse kätte – nende leping lõpeb. Blokeeritud on ainult puhkepäevad.",
+        "contractEndHint": "Jäta tühjaks: kehtib taotluse alguskuupäev ({datum}). Kui leping on pikemaajaline, sisesta siia tegelik lõppkuupäev.",
+        "contractEndLabel": "Lepingu lõpp (esimene päev ilma lepinguta)",
+        "isTermination": "See on lepingu lõpetamine",
+        "terminationByOwner": "Omanik selgitas seda avalduses ise.",
+        "terminationHint": "Omanik soovib lepingu lõpetada, mitte ainult öid blokeerida. Juurdepääsu blokeerimise asemel määratakse lepingu lõppkuupäev otse kinnisvarale – lõpetades sellega selle turundamise kõigis portaalides.",
+        "terminationReady": "Lõpetamisteate saab registreerida.",
+        "terminationSummary": "Leping lõpeb alates {datum} – alates sellest päevast ei müüda seda kinnisvara enam kusagil."
+      },
+      "terminationRequested": "Omanik soovib lepingu lõpetada.",
+      "terminationSet": "Leping lõpeb {datum}-il."
     }
   },
   "seasons": {

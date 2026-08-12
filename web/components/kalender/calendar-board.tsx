@@ -136,7 +136,18 @@ const PREFETCH_BEHIND_DAYS = 90;
 //   blocked_stop_sell  — BEIDES gilt. Früher gewann der Stop-Sell die Anzeige
 //                        und die Sperre darunter war unsichtbar; ein Nutzer hat
 //                        deshalb eine echte Sperre für einen Stop-Sell gehalten.
-type SegStatus = AvailabilityStatus | "stop_sell" | "blocked_stop_sell";
+// `contract_end` ist ein EIGENER Zustand, keine Sperre mit anderem Text
+// (0355/0377): Das Objekt ist ab diesem Tag nicht mehr unter Vertrag. Eine
+// Sperre hebt man im Kalender auf — diese nicht, sie folgt aus
+// `properties.contract_end_date` und verschwindet nur, wenn das Datum sich
+// ändert. Als `blocked` dargestellt sah der Balken aus wie eine Handsperre und
+// hieß „Gesperrt + Stop-Sell · alle Kanäle": man sucht dann einen Stop-Sell
+// zum Aufheben, den es nicht gibt (live 12.08.2026).
+type SegStatus =
+  | AvailabilityStatus
+  | "stop_sell"
+  | "blocked_stop_sell"
+  | "contract_end";
 
 // Jeder Zustand hat eine EIGENE, auf einen Blick unterscheidbare Darstellung:
 // Sperre = massiver neutraler Block, Stop-Sell = Warnfarbe mit Schrägstreifen,
@@ -148,15 +159,33 @@ const SEG_STYLE: Record<SegStatus, string> = {
   blocked: "bg-foreground text-background",
   stop_sell: "stop-sell-stripes text-warning-foreground",
   blocked_stop_sell: "bg-foreground blocked-stop-sell-stripes text-background",
+  // Vertragsende: eigene Optik, damit es sich auf einen Blick von beidem
+  // unterscheidet — gedeckte, kontrastarme Fläche mit Rahmen statt massivem
+  // Schwarz (Sperre) oder Warnstreifen (Stop-Sell). Es ist kein Alarm: der Tag
+  // ist einfach nicht mehr unser Geschäft. Semantische Tokens, keine Hex-Werte.
+  contract_end:
+    "bg-muted text-muted-foreground border border-dashed border-muted-foreground/40",
 };
 
 /** Zu welchen Zuständen gehört ein Stop-Sell? (Balken-Details, Kontextmenü) */
 function hasStopSell(status: SegStatus): boolean {
   return status === "stop_sell" || status === "blocked_stop_sell";
 }
-/** Zu welchen Zuständen gehört eine availability-Sperre? */
+/** Zu welchen Zuständen gehört eine availability-Sperre?
+ *
+ *  `contract_end` gehört BEWUSST NICHT dazu: Alles, was an `hasBlock` hängt,
+ *  ist „Sperre aufheben"/„Sperre bearbeiten" — und genau das darf beim
+ *  Vertragsende nicht angeboten werden (ohne Vertrag darf das Objekt nicht per
+ *  Klick wieder verkäuflich werden, 0355). Vorher hing das an einer
+ *  `blockSource !== "contract_end"`-Ausnahme an jeder einzelnen Aufrufstelle;
+ *  jetzt trägt der Zustand selbst die Antwort. */
 function hasBlock(status: SegStatus): boolean {
   return status === "blocked" || status === "blocked_stop_sell";
+}
+
+/** Ist der Tag wegen des Vertragsendes zu? (eigener Zustand, kein Sperr-Fall) */
+function isContractEnd(status: SegStatus): boolean {
+  return status === "contract_end";
 }
 // STATUS_LABEL aus t (Modul-Level-Konstante kann kein useTranslations nutzen) —
 // Funktion erhält t als Parameter, aufgerufen innerhalb der Komponente.
@@ -167,6 +196,7 @@ function statusLabels(t: (key: string) => string): Record<SegStatus, string> {
     blocked: t("calendarBoard.status.blocked"),
     stop_sell: t("calendarBoard.status.stopSell"),
     blocked_stop_sell: t("calendarBoard.status.blockedAndStopSell"),
+    contract_end: t("calendarBoard.status.contractEnd"),
   };
 }
 
@@ -302,9 +332,11 @@ function debugOrigin(seg: Segment): string {
         ? "SPERRE (availability.blocked) + STOP-SELL"
         : seg.status === "stop_sell"
           ? "STOP-SELL"
-          : seg.status === "booked"
-            ? "BUCHUNG"
-            : "FREI";
+          : seg.status === "contract_end"
+            ? "VERTRAGSENDE (properties.contract_end_date)"
+            : seg.status === "booked"
+              ? "BUCHUNG"
+              : "FREI";
   const parts = [typ, `Quelle: ${seg.source}`];
   if (hasStopSell(seg.status) && seg.stopSell) {
     const st = seg.stopSell;
@@ -352,13 +384,29 @@ function toSegments(
     // Sperre für einen Stop-Sell. Jetzt bekommt die Überlagerung einen EIGENEN
     // Zustand mit eigener Darstellung; nur eine echte Buchung sticht beides.
     const stop = !res ? stopSellByDay[key(d)] : undefined;
+    // VERTRAGSENDE sticht Sperre UND Stop-Sell (0355/0377): Sobald jemand
+    // `properties.contract_end_date` setzt, schreibt `vertragsende_durchsetzen`
+    // die Nächte mit `source='contract_end'` — genau daran wird der eigene
+    // Zustand hier ausgelöst, ohne zusätzlichen Endpunkt und ohne dass das
+    // Board etwas Neues laden muss.
+    //
+    // Es sticht auch einen daneben liegenden Stop-Sell, und zwar bewusst: der
+    // Tag ist ohne Vertrag so oder so unverkäuflich, und der Balken muss den
+    // Grund nennen, der zuerst aufzulösen ist. Der Stop-Sell aufzuheben ändert
+    // nichts — genau diese Suche hat das alte Label „Gesperrt + Stop-Sell"
+    // ausgelöst. Nur eine echte BUCHUNG bleibt stärker: sie ist eine Zusage an
+    // einen Gast, die auch nach Vertragsende bedient wird (0359).
+    const vertragEnde =
+      !res && rawStatus === "blocked" && sourceByDay[key(d)] === "contract_end";
     const s: SegStatus = res
       ? "booked"
-      : stop
-        ? rawStatus === "blocked"
-          ? "blocked_stop_sell"
-          : "stop_sell"
-        : rawStatus;
+      : vertragEnde
+        ? "contract_end"
+        : stop
+          ? rawStatus === "blocked"
+            ? "blocked_stop_sell"
+            : "stop_sell"
+          : rawStatus;
     // Kanal eines gebuchten Tages kommt aus der BUCHUNG, nicht aus availability.
     // availability.source hat den Kanal nur für Tage, die auch geladen wurden —
     // eine Buchung, die vor dem sichtbaren Fenster beginnt, hat dort keine Zeile.
@@ -819,9 +867,43 @@ export function CalendarBoard({
       if (!active || active.pid !== pid) return false;
       const lo = Math.min(active.from, active.to);
       const hi = Math.max(active.from, active.to);
-      return di >= lo && di <= hi;
+      // `hi + 1`: verkauft werden NÄCHTE. Eine gezogene Zelle ist die Nacht von
+      // diesem auf den folgenden Tag, also gehören Anreise- UND Abreisetag zur
+      // Markierung. Vorher war nur der Anreisetag schwarz, während die
+      // Kopfzeile „20.8. – 21.8. · 1 Nacht" nannte und genau das gebucht wurde.
+      return di >= lo && di <= hi + 1;
     },
     [drag, sel],
+  );
+
+  /**
+   * Ist dieser Tag für eine neue Belegung frei?
+   *
+   * WARUM DAS DAS ZIEHEN BEGRENZT UND NICHT DAS MENÜ SPERRT:
+   * Über einen belegten Zeitraum ließ sich bis hierhin ziehen, und das
+   * Kontextmenü bot danach Reservierung und Eigennutzung an. Der Server lehnt
+   * beides ab (`create_reservation_atomic` prüft `status <> 'open'`), aber erst
+   * NACH dem Ausfüllen des Formulars — die Arbeit war umsonst. Live gesehen
+   * (12.08.2026): über eine Airbnb-Buchung (Feriehus Dora, 07.–14.09.) und über
+   * ein Vertragsende (Feriehus Kornblomst, 09.–12.10.).
+   *
+   * Eine Auswahl, die gar nicht entsteht, braucht keine Erklärung — deshalb
+   * hier und nicht als gesperrtes Menü mit Hinweistext.
+   */
+  const tagIstFrei = useCallback(
+    (pid: string, di: number): boolean => {
+      if (!start) return false;
+      const tag = key(addDays(start, di));
+      // Buchung aus `reservations`, nicht aus `availability`: ein `booked` ohne
+      // zugehörige Buchung ist ein Geisterzustand (dieselbe Regel wie in
+      // `toSegments`).
+      if ((resByProp[pid] ?? []).some((r) => r.status !== "cancelled" && tag >= r.check_in && tag < r.check_out)) {
+        return false;
+      }
+      if ((avail[pid] ?? {})[tag] === "blocked") return false;
+      return !(stopSell[pid] ?? {})[tag];
+    },
+    [start, resByProp, avail, stopSell],
   );
 
   const onCellDown = useCallback(
@@ -830,13 +912,15 @@ export function CalendarBoard({
       ev.preventDefault();
       // Neuer Zug startet: alte Auswahl/Leiste verwerfen.
       setSel(null);
+      // Auf einem belegten Tag entsteht gar keine Auswahl.
+      if (!tagIstFrei(pid, di)) return;
       // Bezugspunkte für den Auto-Scroll am Rand: ohne die erste Cursor-Position
       // liefe der rAF-Loop bis zum ersten mousemove blind.
       cursorRef.current = { x: ev.clientX, y: ev.clientY };
       dragScrollLeft.current = scrollRef.current?.scrollLeft ?? 0;
       setDrag({ pid, from: di, to: di });
     },
-    [],
+    [tagIstFrei],
   );
 
   const onCellEnter = useCallback(
@@ -845,9 +929,24 @@ export function CalendarBoard({
       // Balken-Zug (barDrag) wird AUSSCHLIESSLICH im window-mousemove-Handler
       // fortgeschrieben (gerundetes Pixel-Delta) — kein zweiter, kanten-
       // quantisierter Schreibpfad, der sich damit überschreibt.
-      setDrag((cur) => (cur && cur.pid === pid ? { ...cur, to: di } : cur));
+      //
+      // Ein belegter Tag STOPPT die Auswahl, statt sie zu verwerfen: wer über
+      // eine Buchung hinauszieht, will bis dorthin auswählen. Die Auswahl bleibt
+      // deshalb auf dem letzten freien Tag stehen.
+      setDrag((cur) => {
+        if (!cur || cur.pid !== pid) return cur;
+        if (!tagIstFrei(pid, di)) return cur;
+        // Auch ein ÜBERSPRUNGENER belegter Tag zwischen Start und Ziel bricht
+        // die Auswahl — bei schnellem Ziehen feuert `onCellEnter` nicht für
+        // jede Zelle, und eine Auswahl mit Loch wäre serverseitig ungültig.
+        const schritt = di > cur.from ? 1 : -1;
+        for (let i = cur.from; i !== di; i += schritt) {
+          if (!tagIstFrei(pid, i)) return cur;
+        }
+        return { ...cur, to: di };
+      });
     },
-    [],
+    [tagIstFrei],
   );
 
   // Balken-Zug starten (auf einem belegten Buchungsbalken). mode unterscheidet
@@ -1058,7 +1157,17 @@ export function CalendarBoard({
         const x = el.scrollLeft + (cur.x - innerLeft);
         const di = Math.floor(x / colPx);
         const clamped = Math.max(0, Math.min(dates.length - 1, di));
-        return clamped === d.to ? d : { ...d, to: clamped };
+        if (clamped === d.to) return d;
+        // Auch beim Auto-Scroll am Rand nicht über eine Belegung hinaus (dieser
+        // Pfad läuft NICHT durch `onCellEnter`): bis zum letzten freien Tag
+        // wachsen, dort stehen bleiben.
+        const schritt = clamped > d.from ? 1 : -1;
+        let ziel = d.from;
+        for (let i = d.from; i !== clamped + schritt; i += schritt) {
+          if (!tagIstFrei(d.pid, i)) break;
+          ziel = i;
+        }
+        return ziel === d.to ? d : { ...d, to: ziel };
       });
       // Balken-Zug: sein dayOffset ist ein Pixel-Delta zum Greifpunkt. Der
       // window-mousemove rechnet nur den Bildschirm-Anteil; die gescrollte
@@ -1081,7 +1190,7 @@ export function CalendarBoard({
       window.removeEventListener("mousemove", onMove);
       cancelAnimationFrame(raf);
     };
-  }, [drag, barDrag, dates.length]);
+  }, [drag, barDrag, dates.length, tagIstFrei]);
 
   // rem→px (Spaltenbreite in px = COL * rem).
   const remPx = useCallback(
@@ -1889,7 +1998,19 @@ export function CalendarBoard({
                 Einträge — sie sehen im Raster verschieden aus und bedeuten
                 Verschiedenes (Sperre = zu, Stop-Sell = frei, aber nicht verkauft). */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-              {(["open", "blocked", "stop_sell", "blocked_stop_sell"] as SegStatus[]).map((s) => (
+              {(
+                [
+                  "open",
+                  "blocked",
+                  "stop_sell",
+                  "blocked_stop_sell",
+                  // Vertragsende: eigener Zustand mit eigener Optik, deshalb
+                  // auch ein eigener Legenden-Eintrag — er sieht im Raster
+                  // anders aus als die drei davor und bedeutet etwas anderes
+                  // (nicht „gesperrt", sondern „nicht mehr unter Vertrag").
+                  "contract_end",
+                ] as SegStatus[]
+              ).map((s) => (
                 <span key={s} className="flex items-center gap-1.5">
                   <span
                     className={`inline-block size-3 rounded-sm border ${s === "open" ? "bg-background" : SEG_STYLE[s]}`}
@@ -1956,11 +2077,18 @@ export function CalendarBoard({
           rangeLabel={(() => {
             const lo = Math.min(sel.from, sel.to);
             const hi = Math.max(sel.from, sel.to);
+            // NÄCHTE, nicht Tage: eine markierte Zelle ist die Nacht von diesem
+            // auf den FOLGENDEN Tag. Der Abreisetag ist deshalb `hi + 1` —
+            // dieselbe Rechnung, die der Buchungspfad unten macht
+            // (`checkOut = hi + 1`) und die Sperre in `confirmBlock`. Die
+            // Beschriftung rechnete als einzige in Tagen und zeigte für eine
+            // gezogene Zelle „20.8. – 20.8. · 1 Tag", während gebucht wurde,
+            // was dort auch verkauft wird: die Nacht 20.→21.8.
             const f = addDays(start, lo);
-            const t = addDays(start, hi);
+            const t = addDays(start, hi + 1);
             const fmt = (d: Date) => `${d.getDate()}.${d.getMonth() + 1}.`;
             const n = hi - lo + 1;
-            return `${fmt(f)} – ${fmt(t)} · ${n} Tag${n > 1 ? "e" : ""}`;
+            return `${fmt(f)} – ${fmt(t)} · ${n} Nacht${n > 1 ? "e" : ""}`;
           })()}
           saving={saving}
           onAction={(action) => {
@@ -2259,12 +2387,21 @@ export function CalendarBoard({
                         if (!active || active.pid !== p.id) return null;
                         const lo = Math.min(active.from, active.to);
                         const hi = Math.max(active.from, active.to);
+                        // NÄCHTE, nicht Tage: eine gezogene Zelle ist die Nacht
+                        // von diesem auf den FOLGENDEN Tag. Markiert werden
+                        // deshalb BEIDE Tage — Anreise und Abreise —, also eine
+                        // Spalte mehr als gezogen.
+                        //
+                        // Volle Zellen, kein Halbtags-Versatz wie bei den
+                        // Buchungsbalken: ein um eine halbe Spalte verschobener
+                        // Rahmen sitzt neben der schwarzen Zelle statt darauf,
+                        // und dann zeigen Füllung und Rahmen verschiedene Tage.
                         return (
                           <div
                             className="pointer-events-none absolute inset-y-0 border-2 border-dashed border-neutral-500"
                             style={{
                               left: `calc(${lo} * ${COL}rem)`,
-                              width: `calc(${hi - lo + 1} * ${COL}rem)`,
+                              width: `calc(${hi - lo + 2} * ${COL}rem)`,
                             }}
                           />
                         );
@@ -2394,6 +2531,13 @@ export function CalendarBoard({
                             {hasStopSell(seg.status) && (
                               <Icon icon="ph:prohibit" className="size-3 shrink-0" />
                             )}
+                            {/* Vertragsende: EIGENES Symbol. Ein Schloss hieße
+                                „gesperrt, aufhebbar", ein Verbotszeichen
+                                „nicht verkaufen" — beides trifft es nicht. Das
+                                Dokument-Symbol sagt: der Vertrag ist zu Ende. */}
+                            {isContractEnd(seg.status) && (
+                              <Icon icon="ph:file-x" className="size-3 shrink-0" />
+                            )}
                             {/* Status-Punkt (OPERA-Stil): bestätigt/Option/
                               eingecheckt/ausgecheckt/storniert. Beim Eigentümer-
                               Aufenthalt entfällt er — er ist immer bestätigt. */}
@@ -2430,8 +2574,17 @@ export function CalendarBoard({
                         // BEIDE Achsen — der Nutzer sieht ja auch beide Balken.
                         // Buchungsbalken bleiben davon unberührt (sie haben Klick
                         // + Drag + Detail-Slider).
+                        // `contract_end` gehört DAZU: das Menü zeigt dort den
+                        // Hinweis, WARUM nicht aufgehoben werden kann und wo das
+                        // Enddatum steht. Ohne ihn öffnete sich beim Rechtsklick
+                        // auf einen Vertragsende-Balken gar nichts, und der
+                        // Nutzer bliebe ohne Erklärung vor einem Balken, den er
+                        // nicht loswird.
                         const contextable =
-                          !!start && (hasBlock(seg.status) || hasStopSell(seg.status));
+                          !!start &&
+                          (hasBlock(seg.status) ||
+                            hasStopSell(seg.status) ||
+                            isContractEnd(seg.status));
                         const onBarContextMenu = contextable
                           ? (ev: React.MouseEvent) => {
                             ev.preventDefault();
@@ -2477,18 +2630,16 @@ export function CalendarBoard({
                         // ohne den Punkt „Aufheben"). Dieselbe Korrektur wie
                         // beim Stop-Sell.
                         //
-                        // AUSNAHME `contract_end` (0355): Diese eine Sperre ist
-                        // hier bewusst NICHT aufhebbar — sie sagt, dass es für
-                        // das Objekt ab diesem Tag keinen Vermarktungsvertrag
-                        // gibt. Der Server lehnt ein Aufheben ohnehin ab
-                        // (`_AUFHEBBARE_SPERRQUELLEN`); ohne das Gate hier
+                        // Das VERTRAGSENDE ist hier kein Fall mehr: es ist ein
+                        // eigener Zustand, den `hasBlock` ausschließt. Es sagt,
+                        // dass es für das Objekt ab diesem Tag keinen
+                        // Vermarktungsvertrag gibt, und ist bewusst NICHT per
+                        // Klick aufhebbar — der Server lehnt es ohnehin ab
+                        // (`_AUFHEBBARE_SPERRQUELLEN`); ohne diese Trennung
                         // klickte der Nutzer „Aufheben", bekäme keinen Fehler
                         // und stünde vor einem unverändert gesperrten Balken.
                         // Der Weg führt über das Enddatum in der Objektkartei.
-                        const unblockable =
-                          hasBlock(seg.status) &&
-                          !!start &&
-                          seg.source !== "contract_end";
+                        const unblockable = hasBlock(seg.status) && !!start;
                         if (unblockable) {
                           return (
                             <button
@@ -2647,11 +2798,12 @@ export function CalendarBoard({
                 die OTAs weiter. Mit dem Gate war eine zurückgespiegelte Sperre
                 aus dem Kalender heraus nicht mehr aufhebbar.
 
-                EINZIGE Ausnahme `contract_end` (0355): ohne Vermarktungsvertrag
-                darf das Objekt nicht per Klick wieder verkäuflich werden. Der
-                Server lehnt es ab, hier verschwindet der Punkt — statt eines
-                Knopfes, der nichts tut. Stattdessen der Hinweis unten. */}
-            {hasBlock(barMenu.status) && barMenu.blockSource !== "contract_end" && (
+                Das VERTRAGSENDE ist hier gar kein Fall mehr: es ist ein eigener
+                Zustand (`contract_end`), und `hasBlock` schließt ihn aus. Ohne
+                Vermarktungsvertrag darf das Objekt nicht per Klick wieder
+                verkäuflich werden (0355) — der Server lehnt es ab, hier
+                erscheint der Punkt nicht. Stattdessen der Hinweis unten. */}
+            {hasBlock(barMenu.status) && (
               <button
                 type="button"
                 disabled={saving}
@@ -2672,8 +2824,11 @@ export function CalendarBoard({
             )}
 
             {/* Warum hier kein „Aufheben" steht: ein fehlender Menüpunkt ohne
-                Begründung liest sich wie ein Fehler. */}
-            {hasBlock(barMenu.status) && barMenu.blockSource === "contract_end" && (
+                Begründung liest sich wie ein Fehler. Jetzt am eigenen Zustand
+                statt an der Herkunft — dieselbe Aussage, aber sie kann nicht
+                mehr auseinanderlaufen, wenn eine Aufrufstelle die
+                `blockSource`-Ausnahme vergisst. */}
+            {isContractEnd(barMenu.status) && (
               <p className="flex items-start gap-3 px-3 py-2.5 text-xs text-muted-foreground">
                 <Icon icon="ph:file-x" className="mt-0.5 size-4 shrink-0" />
                 {t("board.contractEndLocked")}

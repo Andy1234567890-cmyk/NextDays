@@ -1405,7 +1405,13 @@
       },
       "reason": "Anledning",
       "reasonPlaceholder": "Varför ska det spärras? (t.ex. eget bruk, hantverkare)",
-      "decisionNote": "Anteckning från förvaltningen"
+      "decisionNote": "Anteckning från förvaltningen",
+      "termination": "Jag skulle vilja säga upp kontraktet.",
+      "terminationConfirmed": "Kontraktet slutar den {datum}.",
+      "terminationHint": "Detta blockerar inte bara perioden utan avslutar även marknadsföringsavtalet på startdatumet. Administrationen bekräftar datumet.",
+      "terminationInterpreted": "Administrationen har tolkat denna begäran som ett uppsägningsmeddelande – kontraktet upphör den {datum}. Vänligen meddela oss om det inte var så det var avsett.",
+      "terminationPending": "Uppsägning — administrationen har ännu inte bekräftat att kontraktet löper ut.",
+      "terminationSent": "Uppsägning har lämnats in. Administrationen bekräftar uppsägningen av avtalet."
     },
     "meter": {
       "title": "Registrera mätarställning",
@@ -5771,7 +5777,8 @@
         "booked": "Bokad",
         "blocked": "Blockerad",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Avtalet uppsagt"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "alla kanaler",
@@ -5900,6 +5907,10 @@
       "fallbackAddonName": "Tilläggstjänst",
       "markPaidAction": "Markera som betald",
       "markPaidSuccess": "Markerad som betald.",
+      "cancelAction": "Annullera",
+      "cancelBusy": "Annullerar…",
+      "cancelConfirm": "Vill du verkligen annullera denna tilläggstjänst?",
+      "cancelSuccess": "Tilläggstjänsten har annullerats.",
       "addSuccess": "Tilläggstjänst tillagd.",
       "totalLabel": "Summa tilläggstjänster",
       "emptyPurchased": "Inga tilläggstjänster bokade än.",
@@ -6175,7 +6186,44 @@
         "approve": "Förfrågan godkänd, nätter blockerade.",
         "reject": "Förfrågan avvisad.",
         "revoke": "Godkännande återkallat, nätter frigjorda."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "Perioden är bokad.",
+          "stop_sell": "Ett försäljningsförbud gäller under denna period.",
+          "vertragsende": "Perioden är efter utgången av det administrativa avtalet."
+        },
+        "blockedNightsHint": "Blockera utan bokning — ta bort i kalendern, avboka inte.",
+        "bookingsHint": "De kommer INTE att avbrytas automatiskt. Avbryt dem individuellt, då kan ansökan godkännas.",
+        "close": "Nära",
+        "loading": "Tidsramen ses över…",
+        "openBooking": "Öppen bokning",
+        "openStay": "Öppet boende",
+        "title": "Kontrollera godkännande",
+        "truncated": "Listan är förkortad; numren ovan är fullständiga.",
+        "free": "Tidsperioden är tillgänglig.",
+        "blockedNights": "{anzahl} blockerade nätter",
+        "bookings": "{anzahl}-bokningar under perioden",
+        "stopSell": "{anzahl} dagar med försäljningsstopp",
+        "subtitle": "{objekt}, {von} – {bis}. Innan låsning kontrolleras om tidsperioden är ledig.",
+        "suggestion": "{von} – {bis} skulle vara tillgängliga.",
+        "summary": "{naechte} nätter · {einheiten} enheter · minst {frei} tillgängligt",
+        "unitScope": "Ansökan gäller endast: {einheit}",
+        "willUse": "Följande är upptaget: {einheit}",
+        "contractHint": "Så länge kontraktet inte förlängs kan ingenting blockeras här — fastigheten förvaltas inte av dig under denna period.",
+        "approveTermination": "Ange kontraktets slutdatum",
+        "bookingsAfterEnd": "{anzahl} Bokningar efter kontraktets slut",
+        "bookingsAfterEndHint": "De förblir giltiga och kommer att avtjänas – kontraktet löper ut för dem. Endast lediga dagar är blockerade.",
+        "contractEndHint": "Lämna tomt: ansökningsstartdatumet ({datum}) gäller. Om kontraktet löper över en längre period, ange det faktiska slutdatumet här.",
+        "contractEndLabel": "Kontraktsslut (första dagen utan kontrakt)",
+        "isTermination": "Detta är en uppsägning av kontraktet",
+        "terminationByOwner": "Ägaren förklarade detta själv i ansökan.",
+        "terminationHint": "Ägaren vill säga upp kontraktet, inte bara blockera nätter. Istället för att blockera åtkomst kommer kontraktets slutdatum att sättas direkt på fastigheten – och därmed avslutas marknadsföringen på alla portaler.",
+        "terminationReady": "Uppsägningsbeskedet kan registreras.",
+        "terminationSummary": "Kontraktet slutar från och med {datum} — från och med denna dag kommer fastigheten inte längre att säljas någonstans."
+      },
+      "terminationRequested": "Ägaren vill säga upp avtalet.",
+      "terminationSet": "Kontraktet slutar den {datum}."
     }
   },
   "seasons": {

@@ -15,6 +15,7 @@ import { NativeSelect } from "@nextdays/ui/native-select";
 import {
   addReservationAddon,
   availableReservationAddons,
+  cancelReservationAddon,
   listReservationAddons,
   markReservationAddonPaid,
   type Addon,
@@ -54,6 +55,10 @@ export function ReservationAddonsSection({
   const [cur, setCur] = useState<string | null>(currency);
   const [pick, setPick] = useState("");
   const [busy, setBusy] = useState(false);
+  // Storno wird inline bestätigt (id der Zeile, die gerade nachfragt) — dasselbe
+  // Muster wie der Buchungs-Storno im Slider, kein blindes Ein-Klick-Entfernen.
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
   const money = (v: number) =>
     cur ? formatCurrency(v, cur) : v.toLocaleString(locale);
@@ -111,6 +116,21 @@ export function ReservationAddonsSection({
     }
   }
 
+  async function cancelAddon(id: string) {
+    setCancelling(true);
+    const res = await cancelReservationAddon(id);
+    setCancelling(false);
+    setConfirmId(null);
+    if (res.ok) {
+      await reload();
+      toast.success(t("reservationAddonsSection.cancelSuccess"));
+      // Der Storno ändert die fällige Summe der Buchung → Detail neu rechnen.
+      onChanged?.();
+    } else {
+      toast.error(res.error);
+    }
+  }
+
   const total = purchased
     .filter((p) => p.status !== "cancelled")
     .reduce((s, p) => s + p.total, 0);
@@ -124,38 +144,100 @@ export function ReservationAddonsSection({
       {purchased.length > 0 ? (
         <div className="mb-3 flex flex-col gap-2">
           {purchased.map((p) => (
-            <div key={p.id} className="flex items-center justify-between gap-2 text-sm">
-              <span className="flex min-w-0 items-center gap-2">
-                <span className="truncate">
-                  {localized(p.name, t("reservationAddonsSection.fallbackAddonName"))}
-                </span>
-                {p.qty > 1 && (
-                  <span className="text-muted-foreground">×{p.qty}</span>
-                )}
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs ${
-                    p.status === "paid"
-                      ? "bg-secondary"
-                      : p.status === "cancelled"
-                        ? "bg-muted text-muted-foreground"
-                        : "bg-amber-100 text-amber-800"
-                  }`}
-                >
-                  {STATUS_LABEL[p.status]}
-                </span>
-              </span>
-              <span className="flex shrink-0 items-center gap-2">
-                <span>{money(p.total)}</span>
-                {p.status === "pending" && (
-                  <button
-                    type="button"
-                    onClick={() => void markPaid(p.id)}
-                    className="text-xs font-medium text-accent hover:underline"
+            <div key={p.id} className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between gap-2 text-sm">
+                <span className="flex min-w-0 items-center gap-2">
+                  <span
+                    className={`truncate ${
+                      p.status === "cancelled"
+                        ? "text-muted-foreground line-through"
+                        : ""
+                    }`}
                   >
-                    {t("reservationAddonsSection.markPaidAction")}
-                  </button>
-                )}
-              </span>
+                    {localized(p.name, t("reservationAddonsSection.fallbackAddonName"))}
+                  </span>
+                  {p.qty > 1 && (
+                    <span className="text-muted-foreground">×{p.qty}</span>
+                  )}
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs ${
+                      p.status === "paid"
+                        ? "bg-secondary"
+                        : p.status === "cancelled"
+                          ? "bg-muted text-muted-foreground"
+                          : "bg-amber-100 text-amber-800"
+                    }`}
+                  >
+                    {STATUS_LABEL[p.status]}
+                  </span>
+                </span>
+                <span className="flex shrink-0 items-center gap-2">
+                  <span
+                    className={
+                      p.status === "cancelled"
+                        ? "text-muted-foreground line-through"
+                        : ""
+                    }
+                  >
+                    {money(p.total)}
+                  </span>
+                  {p.status === "pending" && (
+                    <button
+                      type="button"
+                      onClick={() => void markPaid(p.id)}
+                      className="text-xs font-medium text-accent hover:underline"
+                    >
+                      {t("reservationAddonsSection.markPaidAction")}
+                    </button>
+                  )}
+                  {/* Storno für falsch gebuchte Zusatzleistungen. Nur solange
+                      offen — Bezahltes wird über die Zahlung/Rechnung
+                      rückabgewickelt, nicht hier weggeklickt. */}
+                  {p.status === "pending" && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setConfirmId((c) => (c === p.id ? null : p.id))
+                      }
+                      disabled={cancelling}
+                      aria-label={t("reservationAddonsSection.cancelAction")}
+                      title={t("reservationAddonsSection.cancelAction")}
+                      className="text-muted-foreground transition-colors hover:text-destructive disabled:opacity-50"
+                    >
+                      <Icon icon="ph:x-circle" className="size-4" />
+                    </button>
+                  )}
+                </span>
+              </div>
+              {confirmId === p.id && (
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-(--radius) border border-destructive/30 p-2">
+                  <p className="text-xs text-destructive">
+                    {t("reservationAddonsSection.cancelConfirm")}
+                  </p>
+                  <span className="flex shrink-0 gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setConfirmId(null)}
+                      disabled={cancelling}
+                    >
+                      {t("reservationAddonsSection.cancelAbort")}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={() => void cancelAddon(p.id)}
+                      disabled={cancelling}
+                    >
+                      {cancelling
+                        ? t("reservationAddonsSection.cancelBusy")
+                        : t("reservationAddonsSection.cancelAction")}
+                    </Button>
+                  </span>
+                </div>
+              )}
             </div>
           ))}
           <div className="mt-1 flex justify-between border-t pt-1.5 text-sm font-semibold">

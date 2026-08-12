@@ -56,6 +56,7 @@ class _Query:
         self._filters: list[tuple[str, object]] = []
         self._is_null: list[str] = []
         self._lte: list[tuple[str, str]] = []
+        self._in: list[tuple[str, list[str]]] = []
         self._order: str | None = None
         self._desc = False
 
@@ -92,6 +93,14 @@ class _Query:
         self._lte.append((col, val))
         return self
 
+    def in_(self, col: str, werte: list[str]) -> "_Query":
+        # Wirklich filternd, nicht nur geschluckt: die Vertragsende-Kopplung
+        # scopet ihre Objektliste mit `in_("id", …)` auf den Mandanten. Ein
+        # `return self` ohne Filter machte den Test grün und ließe genau den
+        # Wurzel-3-Fehler durch, den die Zeile verhindern soll.
+        self._in.append((col, [str(w) for w in werte]))
+        return self
+
     def order(self, col: str, desc: bool = False, **_k: object) -> "_Query":
         self._order = col
         self._desc = desc
@@ -104,6 +113,8 @@ class _Query:
         if not all(str(row.get(c)) == str(v) for c, v in self._filters):
             return False
         if not all(row.get(c) is None for c in self._is_null):
+            return False
+        if not all(str(row.get(c)) in werte for c, werte in self._in):
             return False
         return all(str(row.get(c) or "") <= v for c, v in self._lte)
 

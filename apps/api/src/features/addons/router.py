@@ -172,3 +172,23 @@ def mark_addon_paid(
         return service.mark_paid(ctx, res_addon_id)
     except AddonError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/reservation-addons/{res_addon_id}/cancel",
+    response_model=ReservationAddonResponse,
+)
+def cancel_reservation_addon(
+    res_addon_id: str,
+    service: AddonsServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> ReservationAddonResponse:
+    """Eine falsch gebuchte Zusatzleistung stornieren (status=cancelled).
+
+    Kein DELETE: die Zeile bleibt als Beleg stehen und fällt aus Rechnung,
+    Eigentümer-Abrechnung und Gast-Portal heraus. 409, wenn schon bezahlt oder
+    bereits auf einer festgeschriebenen Rechnung."""
+    try:
+        return service.cancel_reservation_addon(ctx, res_addon_id)
+    except AddonError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

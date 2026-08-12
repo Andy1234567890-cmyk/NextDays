@@ -1405,7 +1405,13 @@
       },
       "reason": "Raġuni",
       "reasonPlaceholder": "Għaliex għandu jiġi mblukkat? (pereż. użu proprju, ħaddiema)",
-      "decisionNote": "Nota mill-amministrazzjoni"
+      "decisionNote": "Nota mill-amministrazzjoni",
+      "termination": "Nixtieq intemm il-kuntratt.",
+      "terminationConfirmed": "Il-kuntratt jintemm fl-{datum}.",
+      "terminationHint": "Dan mhux biss jimblokka l-perjodu iżda jtemm ukoll il-kuntratt ta' kummerċjalizzazzjoni fid-data tal-bidu. L-amministrazzjoni tikkonferma d-data.",
+      "terminationInterpreted": "L-amministrazzjoni interpretat din it-talba bħala avviż ta' kanċellazzjoni — il-kuntratt jintemm fl-{datum}. Jekk jogħġbok għarrafna jekk dan ma kienx ir-riżultat.",
+      "terminationPending": "Terminazzjoni — l-amministrazzjoni għadha ma kkonfermatx it-tmiem tal-kuntratt.",
+      "terminationSent": "Ġie sottomess avviż ta' terminazzjoni. L-amministrazzjoni tikkonferma t-terminazzjoni tal-kuntratt."
     },
     "meter": {
       "title": "Irreġistra qari tal-arloġġ",
@@ -5771,7 +5777,8 @@
         "booked": "Ibbukkjat",
         "blocked": "Imblukkat",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Kuntratt terminat"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "il-kanali kollha",
@@ -5900,6 +5907,10 @@
       "fallbackAddonName": "Servizz addizzjonali",
       "markPaidAction": "Immarka bħala mħallas",
       "markPaidSuccess": "Immarkat bħala mħallas.",
+      "cancelAction": "Ikkanċella",
+      "cancelBusy": "Qed jiġi kkanċellat…",
+      "cancelConfirm": "Tassew tikkanċella dan is-servizz addizzjonali?",
+      "cancelSuccess": "Is-servizz addizzjonali ġie kkanċellat.",
       "addSuccess": "Servizz addizzjonali miżjud.",
       "totalLabel": "Total tas-servizzi addizzjonali",
       "emptyPurchased": "Għad m'hemm l-ebda servizz addizzjonali mibjug.",
@@ -6175,7 +6186,44 @@
         "approve": "Talba approvata, iljieli mblukkati.",
         "reject": "Talba miċħuda.",
         "revoke": "Approvazzjoni rrevokata, iljieli rilaxxati."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "Il-perjodu huwa bbukkjat.",
+          "stop_sell": "Projbizzjoni fuq il-bejgħ hija fis-seħħ matul dan il-perjodu.",
+          "vertragsende": "Il-perjodu huwa wara t-tmiem tal-kuntratt amministrattiv."
+        },
+        "blockedNightsHint": "Imblokka mingħajr prenotazzjoni — neħħi mill-kalendarju, tikkanċellax.",
+        "bookingsHint": "MHUX se jiġu kkanċellati awtomatikament. Ikkanċellahom individwalment, imbagħad l-applikazzjoni tista' tiġi approvata.",
+        "close": "Agħlaq",
+        "loading": "Il-perjodu ta’ żmien qed jiġi rivedut…",
+        "openBooking": "Iftaħ il-prenotazzjoni",
+        "openStay": "Soġġorn miftuħ",
+        "title": "Iċċekkja l-approvazzjoni",
+        "truncated": "Il-lista hija mqassra; in-numri ta’ hawn fuq huma kompluti.",
+        "free": "Il-perjodu ta' żmien huwa disponibbli.",
+        "blockedNights": "Iljieli mblukkati minn {anzahl}",
+        "bookings": "Bookings ta' {anzahl} matul il-perjodu",
+        "stopSell": "{anzahl} jiem b'waqfien tal-bejgħ",
+        "subtitle": "{objekt}, {von} – {bis}. Qabel ma jissakkar, jiġi ċċekkjat jekk il-perjodu ta' ħin huwiex vojt.",
+        "suggestion": "{von} – {bis} ikun disponibbli.",
+        "summary": "{naechte} iljieli · {einheiten} unitajiet · mill-inqas {frei} disponibbli",
+        "unitScope": "L-applikazzjoni tikkonċerna biss: {einheit}",
+        "willUse": "Dan li ġej huwa okkupat: {einheit}",
+        "contractHint": "Sakemm il-kuntratt ma jiġix estiż, xejn ma jista' jiġi mblukkat hawn — il-proprjetà mhix qed tiġi mmaniġġjata minnek matul dan il-perjodu.",
+        "approveTermination": "Daħħal id-data tat-tmiem tal-kuntratt",
+        "bookingsAfterEnd": "Bookings {anzahl} wara t-tmiem tal-kuntratt",
+        "bookingsAfterEndHint": "Jibqgħu validi u se jiġu servuti — il-kuntratt jiskadi għalihom. Il-ġranet ta' mistrieħ biss huma mblukkati.",
+        "contractEndHint": "Ħalli vojt: tapplika d-data tal-bidu tal-applikazzjoni ({datum}). Jekk il-kuntratt idum għal perjodu itwal, daħħal id-data tat-tmiem attwali hawn.",
+        "contractEndLabel": "Tmiem il-kuntratt (l-ewwel jum mingħajr kuntratt)",
+        "isTermination": "Din hija terminazzjoni ta' kuntratt",
+        "terminationByOwner": "Is-sid spjega dan hu stess fl-applikazzjoni.",
+        "terminationHint": "Is-sid irid itemm il-kuntratt, mhux biss jimblokka l-iljieli. Minflok ma jimblokka l-aċċess, id-data tat-tmiem tal-kuntratt se tiġi ssettjata direttament fuq il-proprjetà – u b'hekk tintemm il-kummerċjalizzazzjoni tagħha fuq il-portali kollha.",
+        "terminationReady": "L-avviż tat-terminazzjoni jista' jiġi rreġistrat.",
+        "terminationSummary": "Il-kuntratt jintemm minn {datum} — minn din il-ġurnata 'l quddiem, il-proprjetà ma tibqax tinbiegħ imkien."
+      },
+      "terminationRequested": "Is-sid jixtieq itemm il-kuntratt.",
+      "terminationSet": "Il-kuntratt jintemm fl-{datum}."
     }
   },
   "seasons": {

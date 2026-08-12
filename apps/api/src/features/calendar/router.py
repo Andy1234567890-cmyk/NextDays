@@ -1,9 +1,11 @@
 """Router für calendar. Gemountet unter /api/v1/calendar."""
+import time
 from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from src.core.logging import get_logger
 from src.core.security import CurrentUser
 from src.core.supabase import get_service_client
 from src.features.auth.dependencies import (
@@ -37,6 +39,7 @@ from .schemas import (
     SeasonUpdate,
     SliceHealth,
     SperrantragItem,
+    SperrantragKollisionen,
     SperrantragListe,
     StopSellClearRequest,
     StopSellListResponse,
@@ -47,6 +50,8 @@ from .service import CalendarError, CalendarService
 from .sperrantraege import SperrantragService
 
 router = APIRouter(prefix="/calendar", tags=["calendar"])
+
+log = get_logger("nextdays.calendar.router")
 
 
 def get_calendar_service() -> CalendarService:
@@ -514,6 +519,63 @@ def list_block_requests(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.get(
+    "/block-requests/{request_id}/kollisionen",
+    response_model=SperrantragKollisionen,
+)
+def block_request_kollisionen(
+    request_id: str,
+    service: SperrantragServiceDep,
+    ctx: Annotated[CurrentUser, Depends(_APPROVE)],
+    als_kuendigung: Annotated[bool, Query()] = False,
+) -> SperrantragKollisionen:
+    """Was der Genehmigung im Weg steht: kollidierende Buchungen, gesperrte
+    Nächte, Stop-Sell-Tage und die Zahl freier Einheiten.
+
+    Nur lesend — die Oberfläche lädt es, BEVOR „Genehmigen" geklickt wird, und
+    sperrt den Knopf bei `blockiert=true`. Derselbe Scope wie der List- und der
+    Approve-Pfad (Wurzel 9): dieselbe Capability, dieselbe Tenant-Prüfung am
+    Load.
+
+    `als_kuendigung=true` prüft den Antrag als VERTRAGSKÜNDIGUNG (0377): dann
+    ist eine bestehende `contract_end`-Sperre der Zielzustand statt ein
+    Hindernis, und übrig bleibt die eigentliche Frage — welche Buchungen hinter
+    dem Enddatum noch bedient werden müssen.
+    """
+    # DEBUGGING (12.08.2026): Eingang und Ausgang je Request. Der Dialog hing,
+    # und es war nicht unterscheidbar, ob der Request gar nicht ankommt, in der
+    # Prüfung feststeckt oder die Antwort den Client nicht erreicht. Jetzt steht
+    # beides im Log — fehlt „kollisionen_start", kam der Request nie an.
+    log.info(
+        "kollisionen_start",
+        antrag_id=request_id,
+        tenant_id=ctx.tenant_id,
+        als_kuendigung=als_kuendigung,
+    )
+    begonnen = time.monotonic()
+    try:
+        antwort = service.kollisionen(
+            ctx, request_id, als_kuendigung=als_kuendigung
+        )
+    except CalendarError as exc:
+        log.warning(
+            "kollisionen_abgelehnt",
+            antrag_id=request_id,
+            status=exc.status_code,
+            grund=exc.message[:200],
+            ms=round((time.monotonic() - begonnen) * 1000, 1),
+        )
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    log.info(
+        "kollisionen_fertig",
+        antrag_id=request_id,
+        blockiert=antwort.blockiert,
+        grund=antwort.grund,
+        ms=round((time.monotonic() - begonnen) * 1000, 1),
+    )
+    return antwort
+
+
 @router.post("/block-requests/{request_id}/approve", response_model=SperrantragItem)
 def approve_block_request(
     request_id: str,
@@ -524,10 +586,42 @@ def approve_block_request(
     """Antrag genehmigen — sperrt die Nächte im Kalender und meldet es an die
     Portale. 409, wenn der Zeitraum gebuchte Tage enthält (der Antrag bleibt
     dann offen) oder bereits entschieden wurde."""
+    # DEBUGGING wie bei /kollisionen: Eingang, Dauer, Ausgang. Dieser Pfad
+    # SCHREIBT (Kalender oder Vertragsende) — bleibt er hängen, muss ohne
+    # Rätselraten dastehen, ob er überhaupt begonnen hat.
+    log.info(
+        "approve_start",
+        antrag_id=request_id,
+        tenant_id=ctx.tenant_id,
+        als_kuendigung=req.als_kuendigung,
+        vertragsende=(
+            req.vertragsende.isoformat() if req.vertragsende else None
+        ),
+    )
+    begonnen = time.monotonic()
     try:
-        return service.genehmigen(ctx, request_id, req)
+        antwort = service.genehmigen(ctx, request_id, req)
     except CalendarError as exc:
+        log.warning(
+            "approve_abgelehnt",
+            antrag_id=request_id,
+            status=exc.status_code,
+            grund=exc.message[:200],
+            ms=round((time.monotonic() - begonnen) * 1000, 1),
+        )
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    log.info(
+        "approve_fertig",
+        antrag_id=request_id,
+        status=antwort.status,
+        vertragsende_gesetzt_auf=(
+            antwort.vertragsende_gesetzt_auf.isoformat()
+            if antwort.vertragsende_gesetzt_auf
+            else None
+        ),
+        ms=round((time.monotonic() - begonnen) * 1000, 1),
+    )
+    return antwort
 
 
 @router.post("/block-requests/{request_id}/reject", response_model=SperrantragItem)

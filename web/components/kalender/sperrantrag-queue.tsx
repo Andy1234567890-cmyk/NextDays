@@ -11,6 +11,15 @@
 // Jede Aktion ist ein Seiteneffekt am Kalender und wird deshalb BESTÄTIGT,
 // bevor sie läuft; Fehler (409 „Zeitraum enthält gebuchte Tage", 409 „bereits
 // entschieden") werden im Klartext gezeigt und nicht verschluckt (Wurzel 5).
+//
+// „Genehmigen" geht NICHT über ein `window.confirm`, sondern über den
+// Prüf-Dialog: eine Genehmigung sperrt die Nächte bei allen Portalen, und die
+// Frage „ist der Zeitraum überhaupt frei?" ist bei einem Jahresantrag die
+// eigentliche Arbeit. Ein Ja/Nein-Fenster ohne diesen Befund führte dazu, dass
+// man bestätigte und erst danach — aus einem nackten 409 — erfuhr, dass eine
+// Buchung im Weg steht, ohne zu wissen welche. Ablehnen und Widerrufen bleiben
+// beim `confirm`: sie brauchen keinen Befund (Ablehnen hat gar keinen
+// Kalender-Effekt, Widerrufen gibt nur die eigenen Nächte frei).
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
@@ -29,6 +38,7 @@ import {
   rejectBlockRequest,
   revokeBlockRequest,
 } from "@/lib/calendar";
+import { SperrantragPruefungDialog } from "./sperrantrag-pruefung-dialog";
 
 type Aktion = "approve" | "reject" | "revoke";
 
@@ -63,6 +73,15 @@ export function SperrantragQueue({
   // Entscheidungs-Notiz je Antrag. Sie geht an den Eigentümer und ist der
   // einzige Weg, ihm ein „warum" mitzugeben.
   const [notizen, setNotizen] = useState<Record<string, string>>({});
+  // Der Antrag, dessen Prüf-Dialog offen ist. Der ganze Antrag statt nur der
+  // ID: der Dialog zeigt Objektname/Zeitraum/Einheit, und die Zeile könnte
+  // durch ein Realtime-Ereignis aus der Liste verschwinden, während der Dialog
+  // noch offen ist.
+  const [pruefung, setPruefung] = useState<Sperrantrag | null>(null);
+  // Die Server-Ablehnung DIESES Prüfvorgangs. Getrennt von `fehler` (der
+  // Seitenfehler), weil sie im Dialog steht und beim Öffnen leer sein muss —
+  // sonst zeigte der Dialog die Ablehnung eines vorherigen Antrags.
+  const [pruefFehler, setPruefFehler] = useState<string | null>(null);
 
   const neuLaden = useCallback(async () => {
     const res = await listBlockRequests(filter || undefined);
@@ -85,22 +104,23 @@ export function SperrantragQueue({
   // ehrlich benannt statt mit einem toten Abo kaschiert.
   useRealtime({ table: "availability", onChange: () => void neuLaden() });
 
-  const entscheiden = async (antrag: Sperrantrag, aktion: Aktion) => {
-    if (laeuft) return;
-    const frage = t(`blockRequests.confirm.${aktion}`, {
-      objekt: antrag.property_title ?? antrag.property_id,
-      von: antrag.start_date,
-      bis: antrag.end_date,
-    });
-    // Jede dieser Aktionen verändert den Verkauf: Genehmigen sperrt die Nächte
-    // bei allen Portalen, Widerrufen gibt sie wieder frei.
-    if (!window.confirm(frage)) return;
-
+  /** Führt die Entscheidung aus. Rückgabe: hat sie gegriffen, und wenn nicht,
+   *  warum?
+   *
+   *  Der Prüf-Dialog braucht beides: er bleibt offen, wenn der Server ablehnt,
+   *  und zeigt den Grund an sich selbst. Ein Dialog, der sich auch im
+   *  Fehlerfall schließt, verbirgt genau die Begründung, für die er gebaut
+   *  wurde. */
+  const entscheiden = async (
+    antrag: Sperrantrag,
+    aktion: Aktion,
+    kuendigung: { vertragsende: string | null } | null = null,
+  ): Promise<{ ok: true } | { ok: false; error: string }> => {
     setLaeuft(antrag.id);
     const notiz = (notizen[antrag.id] ?? "").trim() || null;
     const res =
       aktion === "approve"
-        ? await approveBlockRequest(antrag.id, notiz)
+        ? await approveBlockRequest(antrag.id, notiz, kuendigung)
         : aktion === "reject"
           ? await rejectBlockRequest(antrag.id, notiz)
           : await revokeBlockRequest(antrag.id, notiz);
@@ -112,7 +132,7 @@ export function SperrantragQueue({
       // ersetzt.
       setFehler(res.error);
       toast.error(res.error);
-      return;
+      return { ok: false, error: res.error };
     }
     toast.success(t(`blockRequests.done.${aktion}`));
     setFehler(null);
@@ -128,6 +148,29 @@ export function SperrantragQueue({
         ? alt.filter((a) => a.id !== antrag.id)
         : alt.map((a) => (a.id === antrag.id ? res.data : a)),
     );
+    return { ok: true };
+  };
+
+  /** Der Klick auf einen Aktionsknopf.
+   *
+   *  „Genehmigen" führt in die Prüfung — dort entscheidet der Befund, ob der
+   *  Knopf überhaupt freigegeben wird. Die beiden anderen fragen nur nach:
+   *  Ablehnen hat gar keinen Kalender-Effekt, Widerrufen gibt nur die Nächte
+   *  DIESES Antrags frei, es gibt dort also nichts zu prüfen. */
+  const anstossen = (antrag: Sperrantrag, aktion: Aktion) => {
+    if (laeuft) return;
+    if (aktion === "approve") {
+      setPruefFehler(null);
+      setPruefung(antrag);
+      return;
+    }
+    const frage = t(`blockRequests.confirm.${aktion}`, {
+      objekt: antrag.property_title ?? antrag.property_id,
+      von: antrag.start_date,
+      bis: antrag.end_date,
+    });
+    if (!window.confirm(frage)) return;
+    void entscheiden(antrag, aktion);
   };
 
   return (
@@ -225,6 +268,23 @@ export function SperrantragQueue({
                             {t("blockRequests.decisionNote")}: {a.decision_note}
                           </span>
                         )}
+                        {/* Eine Kündigung ist etwas anderes als eine Sperre und
+                            muss in der Warteschlange auf den ersten Blick als
+                            solche erkennbar sein — sonst wird sie wie ein
+                            Sperrwunsch abgearbeitet. */}
+                        {a.vertragsende_gesetzt_auf ? (
+                          <span className="text-sm">
+                            {t("blockRequests.terminationSet", {
+                              datum: a.vertragsende_gesetzt_auf,
+                            })}
+                          </span>
+                        ) : (
+                          a.ist_kuendigung && (
+                            <span className="text-sm">
+                              {t("blockRequests.terminationRequested")}
+                            </span>
+                          )
+                        )}
                       </div>
                       {/* Unbekannter Status kommt als Rohwert durch, statt
                           erfunden oder verschluckt zu werden (Wurzel 4). */}
@@ -261,7 +321,7 @@ export function SperrantragQueue({
                                 aktion === "approve" ? "default" : "outline"
                               }
                               disabled={laeuft !== null}
-                              onClick={() => void entscheiden(a, aktion)}
+                              onClick={() => anstossen(a, aktion)}
                             >
                               {laeuft === a.id
                                 ? t("blockRequests.working")
@@ -277,6 +337,33 @@ export function SperrantragQueue({
             );
           })}
         </ul>
+      )}
+
+      {/* Der Prüf-Dialog. Er schließt NUR bei Erfolg — scheitert die
+          Genehmigung (409, weil zwischen Anzeige und Klick eine Buchung
+          eingegangen ist), bleibt er offen: der Server-Grund steht dann direkt
+          neben dem Befund, statt hinter einem geschlossenen Fenster. */}
+      {pruefung && (
+        <SperrantragPruefungDialog
+          antrag={pruefung}
+          open
+          laeuft={laeuft === pruefung.id}
+          fehler={pruefFehler}
+          onClose={() => setPruefung(null)}
+          onGenehmigen={(kuendigung) => {
+            const antrag = pruefung;
+            setPruefFehler(null);
+            void (async () => {
+              const ergebnis = await entscheiden(
+                antrag,
+                "approve",
+                kuendigung,
+              );
+              if (ergebnis.ok) setPruefung(null);
+              else setPruefFehler(ergebnis.error);
+            })();
+          }}
+        />
       )}
     </div>
   );

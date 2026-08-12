@@ -50,6 +50,10 @@ class _Query:
         self._op = "select"
         self._payload: list[dict] | dict | None = None
         self._filters: list[tuple[str, object]] = []
+        self._neq: list[tuple[str, object]] = []
+        self._is_null: list[str] = []
+        self._not_null: list[str] = []
+        self._negated = False
         self._in: tuple[str, list] | None = None
         self._embed_property = False
 
@@ -76,8 +80,32 @@ class _Query:
         self._filters.append((col, val))
         return self
 
+    def neq(self, col: str, val: object) -> _Query:
+        self._neq.append((col, val))
+        return self
+
     def in_(self, col: str, vals: list) -> _Query:
         self._in = (col, vals)
+        return self
+
+    def is_(self, col: str, val: object) -> _Query:
+        """PostgREST `is`/`not.is` — hier nur für NULL-Prüfungen gebraucht.
+
+        Muss WIRKLICH filtern: ein No-op würde `_assert_not_invoiced` im Test
+        grün färben, obwohl es live Entwürfe (invoice_number NULL) von
+        festgeschriebenen Rechnungen unterscheiden muss."""
+        if str(val).lower() != "null":
+            raise NotImplementedError("Fake unterstützt nur is_(col, 'null')")
+        if self._negated:
+            self._not_null.append(col)
+        else:
+            self._is_null.append(col)
+        self._negated = False
+        return self
+
+    @property
+    def not_(self) -> _Query:
+        self._negated = True
         return self
 
     def order(self, *_a: object, **_k: object) -> _Query:
@@ -88,6 +116,12 @@ class _Query:
 
     def _match(self, row: dict) -> bool:
         ok = all(str(row.get(c)) == str(v) for c, v in self._filters)
+        if ok:
+            ok = all(str(row.get(c)) != str(v) for c, v in self._neq)
+        if ok:
+            ok = all(row.get(c) is None for c in self._is_null)
+        if ok:
+            ok = all(row.get(c) is not None for c in self._not_null)
         if ok and self._in:
             col, vals = self._in
             ok = str(row.get(col)) in {str(v) for v in vals}
@@ -389,6 +423,137 @@ def test_catalog_currency_from_rate_plan() -> None:
     svc = AddonsService(service_client=db)
     res = svc.list_for_property(_ctx(), "prop-1")
     assert res.currency == "SEK"  # nie € erfunden
+
+
+# --- Storno einer falsch gebuchten Zusatzleistung ---------------------------
+
+
+def _cancel_db(
+    *, addon_status: str = "pending", invoices: list[dict] | None = None
+) -> _DB:
+    return _DB(
+        {
+            "properties": [{"id": "prop-1", "tenant_id": "t-1"}],
+            "reservations": [
+                {
+                    "id": "res-1",
+                    "tenant_id": "t-1",
+                    "property_id": "prop-1",
+                    "check_in": "2026-07-01",
+                    "check_out": "2026-07-04",
+                    "num_guests": 2,
+                }
+            ],
+            "reservation_addons": [
+                {
+                    "id": "ra-1",
+                    "tenant_id": "t-1",
+                    "reservation_id": "res-1",
+                    "addon_id": "addon-1",
+                    "name": {"de": "Wäschepaket"},
+                    "price": 150.0,
+                    "basis": "per_stay",
+                    "tax_rate": None,
+                    "qty": 1,
+                    "total": 150.0,
+                    "status": addon_status,
+                }
+            ],
+            "invoices": invoices if invoices is not None else [],
+            "tasks": [
+                {
+                    "id": "task-1",
+                    "tenant_id": "t-1",
+                    "reservation_id": "res-1",
+                    "title": "Zusatzleistung vorbereiten: Wäschepaket",
+                    "status": "open",
+                }
+            ],
+        }
+    )
+
+
+def test_cancel_addon_sets_status_and_drops_from_total() -> None:
+    db = _cancel_db()
+    svc = AddonsService(service_client=db)
+    res = svc.cancel_reservation_addon(_ctx(), "ra-1")
+    assert res.status == "cancelled"
+    # Die Zeile bleibt als Beleg stehen (kein DELETE) …
+    assert len(db.tables["reservation_addons"]) == 1
+    # … zählt aber nicht mehr zur fälligen Summe der Buchung.
+    view = svc.list_for_reservation(_ctx(), "res-1")
+    assert view.items[0].status == "cancelled"
+
+
+def test_cancel_addon_closes_preparation_task() -> None:
+    """Wurzel 1: der Gegenzustand (die Vorbereitungs-Aufgabe) muss mit weg."""
+    db = _cancel_db()
+    AddonsService(service_client=db).cancel_reservation_addon(_ctx(), "ra-1")
+    assert db.tables["tasks"][0]["status"] == "cancelled"
+
+
+def test_cancel_addon_is_idempotent() -> None:
+    """Wurzel 2: Doppelklick/Retry darf nicht 404/500 werfen."""
+    svc = AddonsService(service_client=_cancel_db(addon_status="cancelled"))
+    assert svc.cancel_reservation_addon(_ctx(), "ra-1").status == "cancelled"
+
+
+def test_cancel_paid_addon_rejected() -> None:
+    svc = AddonsService(service_client=_cancel_db(addon_status="paid"))
+    with pytest.raises(AddonError) as exc:
+        svc.cancel_reservation_addon(_ctx(), "ra-1")
+    assert exc.value.status_code == 409
+
+
+def test_cancel_addon_blocked_by_finalized_invoice() -> None:
+    """GoBD: was auf einer nummerierten Rechnung steht, verschwindet nicht still."""
+    db = _cancel_db(
+        invoices=[
+            {
+                "id": "inv-1",
+                "tenant_id": "t-1",
+                "reservation_id": "res-1",
+                "invoice_type": "invoice",
+                "invoice_number": "RE-2026-0001",
+                "status": "finalized",
+                "deleted_at": None,
+            }
+        ]
+    )
+    svc = AddonsService(service_client=db)
+    with pytest.raises(AddonError) as exc:
+        svc.cancel_reservation_addon(_ctx(), "ra-1")
+    assert exc.value.status_code == 409
+    assert "RE-2026-0001" in exc.value.message
+    assert db.tables["reservation_addons"][0]["status"] == "pending"
+
+
+def test_cancel_addon_allowed_with_draft_invoice() -> None:
+    """Ein Entwurf ohne Nummer wird beim Check-out neu aufgebaut → Storno erlaubt."""
+    db = _cancel_db(
+        invoices=[
+            {
+                "id": "inv-1",
+                "tenant_id": "t-1",
+                "reservation_id": "res-1",
+                "invoice_type": "invoice",
+                "invoice_number": None,
+                "status": "draft",
+                "deleted_at": None,
+            }
+        ]
+    )
+    svc = AddonsService(service_client=db)
+    assert svc.cancel_reservation_addon(_ctx(), "ra-1").status == "cancelled"
+
+
+def test_cancel_addon_foreign_tenant_rejected() -> None:
+    """Wurzel 3: service_role umgeht RLS — der Tenant-Scope muss explizit greifen."""
+    svc = AddonsService(service_client=_cancel_db())
+    fremd = AuthContext(user_id="u-2", tenant_id="t-2", role="admin")
+    with pytest.raises(AddonError) as exc:
+        svc.cancel_reservation_addon(fremd, "ra-1")
+    assert exc.value.status_code == 404
 
 
 def test_catalog_currency_none_without_rate_plan() -> None:

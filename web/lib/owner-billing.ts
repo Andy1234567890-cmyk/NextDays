@@ -101,6 +101,38 @@ export type OwnerBillingTerms = {
   updated_at: string;
   /** Gilt heute? Vom Server berechnet, nicht aus den Daten abgeleitet. */
   aktuell: boolean;
+  /**
+   * Was dieser Vertrag am VERKAUF geändert hat (0378). Vertrag und
+   * Vermarktungsende sind ein Ereignis: eine Befristung nimmt das Objekt bei
+   * Booking und Airbnb aus dem Verkauf, ein Anschlussvertrag gibt es wieder
+   * frei. Das darf die Agentur nicht erst im Kalender entdecken.
+   *
+   * Leer beim Lesen der Historie, gefüllt nach Anlegen/Ändern.
+   */
+  vertragsende_wirkung?: VertragsendeWirkung[];
+};
+
+/** Je berührtes Objekt, was die Kopplung dort getan hat. */
+export type VertragsendeWirkung = {
+  property_id: string;
+  /** Neues Vermarktungsende; null = kein Ende (Objekt bleibt verkäuflich). */
+  ende?: string | null;
+  ende_alt?: string | null;
+  /** Zahl der gesperrten Nächte im 730-Tage-Horizont. */
+  gesperrte_naechte?: number;
+  /** Stand schon richtig — nichts geschrieben, nichts an die Portale. */
+  unveraendert?: boolean;
+  /**
+   * Objekt ohne Abrechnungsvertrag: das Vermarktungsende kommt dort aus dem
+   * Kündigungsantrag oder von Hand und wird nicht überschrieben (Wurzel 4).
+   */
+  uebersprungen?: string;
+  /**
+   * Das Datum steht, der Kalender nicht. `objekt_ohne_einheit` heißt: dem
+   * Objekt fehlen `property_units` — ein Datenfehler am Objekt, kein
+   * Kopplungsfehler.
+   */
+  fehler?: string;
 };
 
 export type OwnerBillingTermsInput = {

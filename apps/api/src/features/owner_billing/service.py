@@ -44,6 +44,7 @@ from .schemas import (
     PortalAbzugssatzUpdate,
     SliceHealth,
 )
+from .vertragsende_kopplung import betroffene_objekte, nachziehen
 
 log = get_logger("nextdays.owner_billing")
 
@@ -627,6 +628,48 @@ class OwnerBillingService:
                     status_code=409,
                 )
 
+    def _vertragsende_koppeln(
+        self,
+        tenant_id: str,
+        owner_id: str,
+        property_ids: list[str],
+    ) -> list[dict[str, Any]]:
+        """Nach jeder Vertragsänderung das Vermarktungsende der berührten
+        Objekte neu bestimmen (0378).
+
+        Der Abrechnungsvertrag und das Vermarktungsende sind EIN Ereignis: läuft
+        der Vertrag aus, darf das Objekt nicht weiter bei Booking und Airbnb
+        stehen. Vorher waren das zwei Felder, die nichts voneinander wussten.
+        Die Regel und die Begründung stehen in `vertragsende_kopplung`.
+
+        Aufzurufen NACH dem Schreiben — die Kopplung liest den neuen Stand aus
+        der Tabelle, statt ihn aus dem Request nachzubilden: sonst hätte sie
+        eine zweite, mit der Zeit abweichende Meinung darüber, was gilt.
+        """
+        if not property_ids:
+            return []
+        return nachziehen(self._db, tenant_id, owner_id, property_ids)
+
+    def _kopplungs_objekte(
+        self, tenant_id: str, owner_id: str, *property_ids: str | None
+    ) -> list[str]:
+        """Die Objekte, deren Ende nach dieser Änderung neu zu rechnen ist.
+
+        Mehrere `property_id`-Werte, weil eine Änderung die Geltung VERSCHIEBEN
+        kann (Objektvertrag → eigentümerweit oder umgekehrt): dann muss auch das
+        vorher betroffene Objekt neu gerechnet werden, sonst bliebe es auf dem
+        alten Ende stehen (Wurzel 1). `None` als Wert heißt „eigentümerweit" und
+        fächert auf alle Objekte des Eigentümers auf.
+        """
+        gesammelt: list[str] = []
+        for property_id in property_ids:
+            for objekt in betroffene_objekte(
+                self._db, tenant_id, owner_id, property_id
+            ):
+                if objekt not in gesammelt:
+                    gesammelt.append(objekt)
+        return gesammelt
+
     def vertrag_anlegen(
         self, ctx: AuthContext, owner_id: str, req: OwnerBillingTermsCreate
     ) -> OwnerBillingTermsResponse:
@@ -675,7 +718,16 @@ class OwnerBillingService:
                     status_code=409,
                 ) from exc
             raise
-        return self._terms_row(res.data[0], heute=date.today())
+        antwort = self._terms_row(res.data[0], heute=date.today())
+        # Ein befristeter Vertrag ist gleichzeitig ein Vermarktungsende, ein
+        # Anschlussvertrag hebt das Ende des Vorgängers auf — beides fällt beim
+        # ANLEGEN an, nicht erst beim Ändern.
+        antwort.vertragsende_wirkung = self._vertragsende_koppeln(
+            tenant_id,
+            owner_id,
+            self._kopplungs_objekte(tenant_id, owner_id, req.property_id),
+        )
+        return antwort
 
     def vertrag_aendern(
         self, ctx: AuthContext, terms_id: str, req: OwnerBillingTermsUpdate
@@ -723,6 +775,22 @@ class OwnerBillingService:
         self._min_provision_uebernehmen(aenderung, alt, req)
         self._pauschale_uebernehmen(aenderung, alt, req)
 
+        # DEBUGGING (12.08.2026): Alt- und Neu-Wert je Änderung. Ohne das war
+        # nicht unterscheidbar, ob ein Speichern gar nicht ankam, mit
+        # unveränderten Werten kam oder an einem Constraint scheiterte — live
+        # stand im Formular ein neues „Gültig bis", in der DB der alte Wert,
+        # und im Log war NICHTS (die ganze Datei hatte eine Log-Zeile).
+        log.info(
+            "billing_terms_update_start",
+            tenant_id=tenant_id,
+            terms_id=terms_id,
+            property_id=str(alt["property_id"]) if alt.get("property_id") else None,
+            gueltig_ab_alt=str(alt.get("gueltig_ab")),
+            gueltig_ab_neu=aenderung["gueltig_ab"],
+            gueltig_bis_alt=str(alt.get("gueltig_bis")),
+            gueltig_bis_neu=aenderung["gueltig_bis"],
+            felder=sorted(aenderung),
+        )
         try:
             res = (
                 self._db.table("owner_billing_terms")
@@ -732,6 +800,13 @@ class OwnerBillingService:
                 .execute()
             )
         except APIError as exc:
+            log.warning(
+                "billing_terms_update_fehler",
+                tenant_id=tenant_id,
+                terms_id=terms_id,
+                code=exc.code,
+                message=str(exc.message)[:300],
+            )
             if exc.code == _EXCLUSION_VERLETZUNG:
                 raise BillingError(
                     "Der geänderte Zeitraum überschneidet sich mit einem "
@@ -740,8 +815,41 @@ class OwnerBillingService:
                 ) from exc
             raise
         if not res.data:
+            # Kein Treffer heißt: die ID gehört nicht zu diesem Mandanten oder
+            # existiert nicht. Das MUSS im Log stehen — es sieht in der
+            # Oberfläche wie „nichts passiert" aus.
+            log.warning(
+                "billing_terms_update_ohne_treffer",
+                tenant_id=tenant_id,
+                terms_id=terms_id,
+            )
             raise BillingError("Vertrag nicht gefunden.", status_code=404)
-        return self._terms_row(res.data[0], heute=date.today())
+        log.info(
+            "billing_terms_aktualisiert",
+            tenant_id=tenant_id,
+            terms_id=terms_id,
+            gueltig_bis=res.data[0].get("gueltig_bis"),
+            provisions_pct=res.data[0].get("provisions_pct"),
+        )
+        antwort = self._terms_row(res.data[0], heute=date.today())
+        # Die Geltung kann sich verschoben haben (Objektvertrag ↔
+        # eigentümerweit) — deshalb ALT und NEU nachziehen, sonst bliebe das
+        # vorher betroffene Objekt auf dem alten Ende stehen (Wurzel 1).
+        antwort.vertragsende_wirkung = self._vertragsende_koppeln(
+            tenant_id,
+            str(alt["owner_id"]),
+            self._kopplungs_objekte(
+                tenant_id,
+                str(alt["owner_id"]),
+                str(alt["property_id"]) if alt.get("property_id") else None,
+                (
+                    str(res.data[0]["property_id"])
+                    if res.data[0].get("property_id")
+                    else None
+                ),
+            ),
+        )
+        return antwort
 
     @staticmethod
     def _min_provision_uebernehmen(
@@ -829,6 +937,23 @@ class OwnerBillingService:
         Oberfläche warnt davor.
         """
         tenant_id = self._require_tenant(ctx)
+        # VOR dem Delete lesen: danach ist nicht mehr feststellbar, welcher
+        # Eigentümer und welche Objekte betroffen waren — und ohne das bliebe
+        # ein Objekt gesperrt, dessen Vertrag gerade entfernt wurde (Wurzel 1).
+        # Gleichzeitig ist das der Tenant-Scope des Item-Pfads (Wurzel 3/9).
+        alt = self._require_own_terms(tenant_id, terms_id)
+        objekte = self._kopplungs_objekte(
+            tenant_id,
+            str(alt["owner_id"]),
+            str(alt["property_id"]) if alt.get("property_id") else None,
+        )
+        log.info(
+            "billing_terms_loeschen_start",
+            tenant_id=tenant_id,
+            terms_id=terms_id,
+            owner_id=str(alt["owner_id"]),
+            objekte=len(objekte),
+        )
         res = (
             self._db.table("owner_billing_terms")
             .delete()
@@ -838,6 +963,7 @@ class OwnerBillingService:
         )
         if not res.data:
             raise BillingError("Vertrag nicht gefunden.", status_code=404)
+        self._vertragsende_koppeln(tenant_id, str(alt["owner_id"]), objekte)
 
     def vertrag_aufloesen(
         self,

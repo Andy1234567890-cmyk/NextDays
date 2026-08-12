@@ -1405,7 +1405,13 @@
       },
       "reason": "Powód",
       "reasonPlaceholder": "Dlaczego ma zostać zablokowane? (np. użytek własny, fachowcy)",
-      "decisionNote": "Uwaga zarządu"
+      "decisionNote": "Uwaga zarządu",
+      "termination": "Chciałbym rozwiązać umowę.",
+      "terminationConfirmed": "Kontrakt kończy się {datum}.",
+      "terminationHint": "To nie tylko blokuje okres, ale także rozwiązuje umowę marketingową w dniu rozpoczęcia. Administracja potwierdza datę.",
+      "terminationInterpreted": "Administracja zinterpretowała tę prośbę jako powiadomienie o wypowiedzeniu umowy – umowa kończy się dnia {datum}. Prosimy o informację, jeśli nie o to chodziło.",
+      "terminationPending": "Rozwiązanie umowy — administracja nie potwierdziła jeszcze rozwiązania umowy.",
+      "terminationSent": "Złożono wypowiedzenie umowy. Administracja potwierdza wypowiedzenie umowy."
     },
     "meter": {
       "title": "Zapisz stan licznika",
@@ -5771,7 +5777,8 @@
         "booked": "Zarezerwowane",
         "blocked": "Zablokowane",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Umowa rozwiązana"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "wszystkie kanały",
@@ -5900,6 +5907,10 @@
       "fallbackAddonName": "Usługa dodatkowa",
       "markPaidAction": "Oznacz jako opłacone",
       "markPaidSuccess": "Oznaczono jako opłacone.",
+      "cancelAction": "Anuluj",
+      "cancelBusy": "Anulowanie…",
+      "cancelConfirm": "Czy na pewno anulować tę usługę dodatkową?",
+      "cancelSuccess": "Usługa dodatkowa anulowana.",
       "addSuccess": "Dodano usługę dodatkową.",
       "totalLabel": "Suma usług dodatkowych",
       "emptyPurchased": "Nie zarezerwowano jeszcze żadnych usług dodatkowych.",
@@ -6175,7 +6186,44 @@
         "approve": "Wniosek zatwierdzony, noce zablokowane.",
         "reject": "Wniosek odrzucony.",
         "revoke": "Zatwierdzenie cofnięte, noce zwolnione."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "Termin jest zarezerwowany.",
+          "stop_sell": "W tym okresie obowiązuje zakaz sprzedaży.",
+          "vertragsende": "Okres ten przypada po zakończeniu umowy administracyjnej."
+        },
+        "blockedNightsHint": "Zablokuj bez rezerwacji — usuń z kalendarza, nie anuluj.",
+        "bookingsHint": "NIE zostaną automatycznie anulowane. Anuluj je pojedynczo, a wniosek zostanie zatwierdzony.",
+        "close": "Zamknąć",
+        "loading": "Harmonogram jest obecnie poddawany przeglądowi…",
+        "openBooking": "Otwarta rezerwacja",
+        "openStay": "Otwarty pobyt",
+        "title": "Sprawdź zatwierdzenie",
+        "truncated": "Lista jest skrócona; podane wyżej liczby są kompletne.",
+        "free": "Okres czasu jest dostępny.",
+        "blockedNights": "{anzahl} zablokował noce",
+        "bookings": "Rezerwacje {anzahl} w tym okresie",
+        "stopSell": "{anzahl} dni z zatrzymaniem sprzedaży",
+        "subtitle": "{objekt}, {von} – {bis}. Przed zablokowaniem sprawdzane jest, czy przedział czasowy jest wolny.",
+        "suggestion": "Dostępne będą {von} – {bis}.",
+        "summary": "Noce {naechte} · Jednostki {einheiten} · dostępne co najmniej {frei}",
+        "unitScope": "Aplikacja dotyczy wyłącznie: {einheit}",
+        "willUse": "Zajęte jest: {einheit}",
+        "contractHint": "Dopóki umowa nie zostanie przedłużona, nic nie może zostać zablokowane — nieruchomość nie jest przez Ciebie zarządzana w tym okresie.",
+        "approveTermination": "Wprowadź datę zakończenia umowy",
+        "bookingsAfterEnd": "{anzahl} Rezerwacje po zakończeniu umowy",
+        "bookingsAfterEndHint": "Pozostają ważne i będą wykorzystane – umowa wygasa. Zablokowane są tylko dni wolne.",
+        "contractEndHint": "Pozostaw puste: obowiązuje data rozpoczęcia obowiązywania umowy ({datum}). Jeśli umowa obowiązuje przez dłuższy okres, wpisz tutaj faktyczną datę zakończenia.",
+        "contractEndLabel": "Koniec umowy (pierwszy dzień bez umowy)",
+        "isTermination": "To jest rozwiązanie umowy",
+        "terminationByOwner": "Właściciel sam wyjaśnił to we wniosku.",
+        "terminationHint": "Właściciel chce rozwiązać umowę, a nie tylko zablokować noclegi. Zamiast blokować dostęp, data zakończenia umowy zostanie ustawiona bezpośrednio na obiekcie – co zakończy jego marketing na wszystkich portalach.",
+        "terminationReady": "Wypowiedzenie umowy może zostać zarejestrowane.",
+        "terminationSummary": "Umowa kończy się z dniem {datum} — od tego dnia nieruchomość nie będzie już nigdzie sprzedawana."
+      },
+      "terminationRequested": "Właściciel chce rozwiązać umowę.",
+      "terminationSet": "Kontrakt kończy się {datum}."
     }
   },
   "seasons": {

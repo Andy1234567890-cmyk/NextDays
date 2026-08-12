@@ -1405,7 +1405,13 @@
       },
       "reason": "Motiv",
       "reasonPlaceholder": "De ce ar trebui blocat? (de ex. uz propriu, meseriași)",
-      "decisionNote": "Notă din partea administrării"
+      "decisionNote": "Notă din partea administrării",
+      "termination": "Aș dori să reziliez contractul.",
+      "terminationConfirmed": "Contractul expiră pe {datum}.",
+      "terminationHint": "Aceasta nu numai că blochează perioada, dar și rezilează contractul de marketing la data începerii. Administrația confirmă data.",
+      "terminationInterpreted": "Administrația a interpretat această solicitare ca o notificare de anulare — contractul expiră pe {datum}. Vă rugăm să ne anunțați dacă nu acesta a fost scopul.",
+      "terminationPending": "Reziliere — administrația nu a confirmat încă încetarea contractului.",
+      "terminationSent": "Notificarea de reziliere a fost depusă. Administrația confirmă rezilierea contractului."
     },
     "meter": {
       "title": "Înregistrează index contor",
@@ -5771,7 +5777,8 @@
         "booked": "Rezervat",
         "blocked": "Blocat",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Contract reziliat"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "toate canalele",
@@ -5900,6 +5907,10 @@
       "fallbackAddonName": "Serviciu suplimentar",
       "markPaidAction": "Marchează ca plătit",
       "markPaidSuccess": "Marcat ca plătit.",
+      "cancelAction": "Anulează",
+      "cancelBusy": "Se anulează…",
+      "cancelConfirm": "Anulați cu adevărat acest serviciu suplimentar?",
+      "cancelSuccess": "Serviciul suplimentar a fost anulat.",
       "addSuccess": "Serviciul suplimentar a fost adăugat.",
       "totalLabel": "Total servicii suplimentare",
       "emptyPurchased": "Niciun serviciu suplimentar rezervat încă.",
@@ -6175,7 +6186,44 @@
         "approve": "Cerere aprobată, nopți blocate.",
         "reject": "Cerere respinsă.",
         "revoke": "Aprobare revocată, nopți eliberate."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "Perioada este rezervată.",
+          "stop_sell": "În această perioadă este în vigoare o interdicție de vânzare.",
+          "vertragsende": "Perioada este ulterioară încheierii contractului administrativ."
+        },
+        "blockedNightsHint": "Blocați fără rezervare — eliminați din calendar, nu anulați.",
+        "bookingsHint": "Acestea NU vor fi anulate automat. Anulați-le individual, apoi aplicația poate fi aprobată.",
+        "close": "Aproape",
+        "loading": "Termenul de plată este revizuit…",
+        "openBooking": "Rezervare deschisă",
+        "openStay": "Ședere deschisă",
+        "title": "Verificați aprobarea",
+        "truncated": "Lista este prescurtată; numerele de mai sus sunt complete.",
+        "free": "Perioada de timp este disponibilă.",
+        "blockedNights": "Nopți blocate de {anzahl}",
+        "bookings": "Rezervări {anzahl} în perioada respectivă",
+        "stopSell": "{anzahl} zile cu oprire a vânzărilor",
+        "subtitle": "{objekt}, {von} – {bis}. Înainte de blocare, se verifică dacă intervalul de timp este liber.",
+        "suggestion": "{von} – {bis} ar fi disponibil.",
+        "summary": "{naechte} nopți · {einheiten} unități · cel puțin {frei} disponibile",
+        "unitScope": "Aplicația se referă doar la: {einheit}",
+        "willUse": "Următorul loc este ocupat: {einheit}",
+        "contractHint": "Atâta timp cât contractul nu este prelungit, nimic nu poate fi blocat aici — proprietatea nu este administrată de dumneavoastră în această perioadă.",
+        "approveTermination": "Introduceți data de încheiere a contractului",
+        "bookingsAfterEnd": "Rezervări {anzahl} după încheierea contractului",
+        "bookingsAfterEndHint": "Acestea rămân valabile și vor fi servite la serviciu — contractul expiră pentru ele. Doar zilele libere sunt blocate.",
+        "contractEndHint": "Lăsați necompletat: se aplică data de începere a aplicării ({datum}). Dacă contractul este valabil pentru o perioadă mai lungă, introduceți aici data de încheiere efectivă.",
+        "contractEndLabel": "Sfârșitul contractului (prima zi fără contract)",
+        "isTermination": "Aceasta este o reziliere a contractului",
+        "terminationByOwner": "Proprietarul a explicat chiar el acest lucru în cerere.",
+        "terminationHint": "Proprietarul dorește să rezilieze contractul, nu doar să blocheze nopțile. În loc să blocheze accesul, data de încheiere a contractului va fi stabilită direct pe proprietate – astfel, marketingul acesteia pe toate portalurile va fi încheiat.",
+        "terminationReady": "Notificarea de reziliere poate fi înregistrată.",
+        "terminationSummary": "Contractul expiră la {datum} — începând cu această zi, proprietatea nu va mai fi vândută nicăieri."
+      },
+      "terminationRequested": "Proprietarul dorește să rezilieze contractul.",
+      "terminationSet": "Contractul expiră pe {datum}."
     }
   },
   "seasons": {

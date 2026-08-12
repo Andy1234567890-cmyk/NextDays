@@ -144,6 +144,18 @@ export async function markReservationAddonPaid(
   });
 }
 
+/** Eine falsch gebuchte Zusatzleistung stornieren (status=cancelled). Kein
+ *  Löschen: die Position bleibt als Beleg stehen, fällt aber aus Rechnung,
+ *  Eigentümer-Abrechnung und Gast-Portal heraus. 409, wenn bereits bezahlt oder
+ *  schon auf einer festgeschriebenen Rechnung. */
+export async function cancelReservationAddon(
+  resAddonId: string,
+): Promise<Result<ReservationAddon>> {
+  return call(`/addons/reservation-addons/${resAddonId}/cancel`, {
+    method: "POST",
+  });
+}
+
 /** Ein Medium (Foto) hochladen (multipart) → aktualisiertes Add-on.
  *  JPEG/PNG/WebP, 10 KB–20 MB, max. 5 (serverseitig validiert). */
 export async function uploadAddonMedia(

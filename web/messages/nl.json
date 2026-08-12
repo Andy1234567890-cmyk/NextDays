@@ -1405,7 +1405,13 @@
       },
       "reason": "Reden",
       "reasonPlaceholder": "Waarom moet het geblokkeerd worden? (bijv. eigen gebruik, vakmensen)",
-      "decisionNote": "Opmerking van het beheer"
+      "decisionNote": "Opmerking van het beheer",
+      "termination": "Ik wil het contract beëindigen.",
+      "terminationConfirmed": "Het contract eindigt op {datum}.",
+      "terminationHint": "Dit blokkeert niet alleen de periode, maar beëindigt ook het marketingcontract op de ingangsdatum. De administratie bevestigt de datum.",
+      "terminationInterpreted": "De directie heeft dit verzoek geïnterpreteerd als een opzegging — het contract eindigt op {datum}. Laat het ons weten als dat niet de bedoeling was.",
+      "terminationPending": "Beëindiging — de directie heeft de beëindiging van het contract nog niet bevestigd.",
+      "terminationSent": "De opzegging is ingediend. De directie bevestigt de beëindiging van het contract."
     },
     "meter": {
       "title": "Meterstand registreren",
@@ -5771,7 +5777,8 @@
         "booked": "Geboekt",
         "blocked": "Geblokkeerd",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Contract beëindigd"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "alle kanalen",
@@ -5900,6 +5907,10 @@
       "fallbackAddonName": "Extra service",
       "markPaidAction": "Als betaald markeren",
       "markPaidSuccess": "Als betaald gemarkeerd.",
+      "cancelAction": "Annuleren",
+      "cancelBusy": "Annuleren…",
+      "cancelConfirm": "Deze extra dienst echt annuleren?",
+      "cancelSuccess": "Extra dienst geannuleerd.",
       "addSuccess": "Extra service toegevoegd.",
       "totalLabel": "Totaal extra services",
       "emptyPurchased": "Nog geen extra services geboekt.",
@@ -6175,7 +6186,44 @@
         "approve": "Verzoek goedgekeurd, nachten geblokkeerd.",
         "reject": "Verzoek afgewezen.",
         "revoke": "Goedkeuring ingetrokken, nachten vrijgegeven."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "De periode is gereserveerd.",
+          "stop_sell": "Gedurende deze periode geldt een verkoopverbod.",
+          "vertragsende": "De periode loopt na afloop van het beheercontract."
+        },
+        "blockedNightsHint": "Blokkeer zonder te boeken — verwijder uit de agenda, niet annuleren.",
+        "bookingsHint": "Ze worden NIET automatisch geannuleerd. Annuleer ze individueel, dan kan de aanvraag worden goedgekeurd.",
+        "close": "Dichtbij",
+        "loading": "Het tijdschema wordt herzien…",
+        "openBooking": "Boekingen openen",
+        "openStay": "Open verblijf",
+        "title": "Controleer goedkeuring",
+        "truncated": "De lijst is ingekort; de bovenstaande nummers zijn volledig.",
+        "free": "De tijdsperiode is beschikbaar.",
+        "blockedNights": "{anzahl} geblokkeerde nachten",
+        "bookings": "{anzahl}-boekingen gedurende de periode",
+        "stopSell": "{anzahl} dagen met verkoopstop",
+        "subtitle": "{objekt}, {von} – {bis}. Voordat een vergrendeling wordt aangebracht, wordt gecontroleerd of de tijdsperiode vrij is.",
+        "suggestion": "{von} – {bis} zouden beschikbaar zijn.",
+        "summary": "{naechte} nachten · {einheiten} eenheden · minimaal {frei} beschikbaar",
+        "unitScope": "De aanvraag betreft alleen: {einheit}",
+        "willUse": "Het volgende adres is bezet: {einheit}",
+        "contractHint": "Zolang het contract niet wordt verlengd, kan hier niets worden geblokkeerd; u beheert het pand gedurende deze periode niet.",
+        "approveTermination": "Voer de einddatum van het contract in.",
+        "bookingsAfterEnd": "{anzahl}-boekingen na afloop van het contract",
+        "bookingsAfterEndHint": "Ze blijven geldig en zullen worden uitbetaald — het contract vervalt voor hen. Alleen de vrije dagen zijn geblokkeerd.",
+        "contractEndHint": "Laat dit veld leeg: de startdatum van de applicatie ({datum}) is van toepassing. Als het contract een langere looptijd heeft, vul dan hier de daadwerkelijke einddatum in.",
+        "contractEndLabel": "Einde contract (eerste dag zonder contract)",
+        "isTermination": "Dit betreft een beëindiging van het contract.",
+        "terminationByOwner": "De eigenaar heeft dit zelf uitgelegd in de aanvraag.",
+        "terminationHint": "De eigenaar wil het contract beëindigen, niet alleen de toegang blokkeren. In plaats van de toegang te blokkeren, wordt de einddatum van het contract direct op de accommodatie ingesteld – waardoor de advertentie op alle platforms stopt.",
+        "terminationReady": "De opzegging kan worden geregistreerd.",
+        "terminationSummary": "Het contract eindigt op {datum} — vanaf deze dag zal het pand nergens meer te koop worden aangeboden."
+      },
+      "terminationRequested": "De eigenaar wenst het contract te beëindigen.",
+      "terminationSet": "Het contract eindigt op {datum}."
     }
   },
   "seasons": {

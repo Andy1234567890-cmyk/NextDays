@@ -1353,7 +1353,12 @@
     "commissionableNo": "Níl — saor ó choimisiún",
     "infoAria": "Míniú ar {feld}",
     "rulesPageTitle": "Rialacha socraíochta",
-    "rulesPageIntro": "An méid a choinníonn na tairseacha in aghaidh gach áirithinte agus cé leis na táillí. Socraíonn an dá rud le chéile cén tsuim a shroicheann ráiteas coimisiúin do shealbhóirí ar deireadh."
+    "rulesPageIntro": "An méid a choinníonn na tairseacha in aghaidh gach áirithinte agus cé leis na táillí. Socraíonn an dá rud le chéile cén tsuim a shroicheann ráiteas coimisiúin do shealbhóirí ar deireadh.",
+    "endsSalesHint": "Aird: Seo nuair a thagann deireadh leis an margaíocht. Ó {date} ar aghaidh, ní dhíolfar an mhaoin a thuilleadh ar aon chainéal - lena n-áirítear Booking.com, Airbnb nó myBestDays. Le haghaidh athrú pianbhreithe íon, cruthaigh conradh ceangail ón lá seo ina ionad.",
+    "effectBlocked": "{property}: Críochnaíonn an mhargaíocht ar {date} - oícheanta {nights} bactha agus bainte de na tairseacha.",
+    "effectReleased": "{property}: Leanann an mhargaíocht ar aghaidh - tá deireadh leis an gconradh agus tá na hoícheanta ar díol arís.",
+    "effectNoUnit": "{property}: Cuirtear deireadh an chonartha isteach, ach níl an féilire faoi ghlas - tá aonad in easnamh ar an réad. Cuir air agus beidh an glas i bhfeidhm.",
+    "effectCalendarFailed": "{property}: Tá deireadh an chonartha curtha isteach, níl an glas féilire scríofa. Cuirfear leis anocht."
   },
   "portal": {
     "title": "Mo thairseach",
@@ -1405,7 +1410,13 @@
       },
       "reason": "Cúis",
       "reasonPlaceholder": "Cén fáth ar cheart é a bhlocáil? (m.sh. úsáid phearsanta, ceardaithe)",
-      "decisionNote": "Nóta ón mbainistíocht"
+      "decisionNote": "Nóta ón mbainistíocht",
+      "termination": "Ba mhaith liom an conradh a fhoirceannadh.",
+      "terminationConfirmed": "Críochnaíonn an conradh ar {datum}.",
+      "terminationHint": "Ní hamháin go gcuireann sé seo bac ar an tréimhse ach cuireann sé deireadh leis an gconradh margaíochta ar an dáta tosaithe freisin. Deimhníonn an riarachán an dáta.",
+      "terminationInterpreted": "Tá an riarachán tar éis an iarratas seo a léirmhíniú mar fhógra cealaithe — críochnaíonn an conradh ar {datum}. Cuir in iúl dúinn, le do thoil, murab é sin a bhí i gceist.",
+      "terminationPending": "Foirceannadh — níl deireadh an chonartha deimhnithe ag an riarachán go fóill.",
+      "terminationSent": "Tá fógra foirceanta curtha isteach. Deimhníonn an riarachán foirceannadh an chonartha."
     },
     "meter": {
       "title": "Cláraigh léamh méadair",
@@ -5771,7 +5782,8 @@
         "booked": "Curtha in áirithe",
         "blocked": "Blocáilte",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Conradh críochnaithe"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "gach cainéal",
@@ -5900,6 +5912,10 @@
       "fallbackAddonName": "Seirbhís bhreise",
       "markPaidAction": "Marcáil mar íoctha",
       "markPaidSuccess": "Marcáilte mar íoctha.",
+      "cancelAction": "Cealaigh",
+      "cancelBusy": "Á chealú…",
+      "cancelConfirm": "An bhfuil tú cinnte gur mhaith leat an tseirbhís bhreise seo a chealú?",
+      "cancelSuccess": "Seirbhís bhreise cealaithe.",
       "addSuccess": "Seirbhís bhreise curtha leis.",
       "totalLabel": "Iomlán na seirbhísí breise",
       "emptyPurchased": "Níor ceannaíodh aon seirbhís bhreise fós.",
@@ -6175,7 +6191,44 @@
         "approve": "Iarratas ceadaithe, oícheanta bactha.",
         "reject": "Iarratas diúltaithe.",
         "revoke": "Ceadú cúlghairthe, oícheanta scaoilte."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "Tá an tréimhse curtha in áirithe.",
+          "stop_sell": "Tá cosc díolacháin i bhfeidhm le linn na tréimhse seo.",
+          "vertragsende": "Is é an tréimhse tar éis dheireadh an chonartha riaracháin."
+        },
+        "blockedNightsHint": "Blocáil gan áirithint — bain den fhéilire, ná cealaigh.",
+        "bookingsHint": "NÍ chuirfear ar ceal iad go huathoibríoch. Má chealaíonn tú iad ina n-aonar, is féidir an t-iarratas a cheadú ansin.",
+        "close": "Dún",
+        "loading": "Tá an tréimhse ama á hathbhreithniú…",
+        "openBooking": "Áirithint oscailte",
+        "openStay": "Fanacht oscailte",
+        "title": "Seiceáil an ceadú",
+        "truncated": "Tá an liosta giorraithe; tá na huimhreacha thuas iomlán.",
+        "free": "Tá an tréimhse ama ar fáil.",
+        "blockedNights": "Oícheanta blocáilte {anzahl}",
+        "bookings": "Áirithintí {anzahl} le linn na tréimhse",
+        "stopSell": "{anzahl} lá le stad díolacháin",
+        "subtitle": "{objekt}, {von} – {bis}. Sula ndéantar an glasáil, déantar seiceáil an bhfuil an tréimhse ama saor.",
+        "suggestion": "Bheadh {von} – {bis} ar fáil.",
+        "summary": "Oícheanta {naechte} · Aonaid {einheiten} · ar a laghad {frei} ar fáil",
+        "unitScope": "Baineann an t-iarratas seo amháin le: {einheit}",
+        "willUse": "Tá an seo a leanas á áitiú: {einheit}",
+        "contractHint": "Chomh fada is nach síneofar an conradh, ní féidir aon rud a bhac anseo — níl an mhaoin á bainistiú agat le linn na tréimhse seo.",
+        "approveTermination": "Cuir isteach dáta deiridh an chonartha",
+        "bookingsAfterEnd": "Áirithintí {anzahl} tar éis dheireadh an chonartha",
+        "bookingsAfterEndHint": "Fanfaidh siad bailí agus déanfar iad a sheirbheáil — rachaidh an conradh in éag dóibh. Níl ach na laethanta saoire blocáilte.",
+        "contractEndHint": "Fág bán: is é dáta tosaithe an iarratais ({datum}) is infheidhme. Má mhaireann an conradh ar feadh tréimhse níos faide, cuir isteach an dáta deiridh iarbhír anseo.",
+        "contractEndLabel": "Deireadh an chonartha (an chéad lá gan chonradh)",
+        "isTermination": "Is foirceannadh conartha é seo",
+        "terminationByOwner": "Mhínigh an t-úinéir é seo é féin san iarratas.",
+        "terminationHint": "Tá an t-úinéir ag iarraidh deireadh a chur leis an gconradh, ní hamháin oícheanta a bhac. In ionad rochtain a bhac, socrófar dáta deiridh an chonartha go díreach ar an maoin – rud a chuirfidh deireadh lena margaíocht ar gach tairseach.",
+        "terminationReady": "Is féidir an fógra foirceanta a chlárú.",
+        "terminationSummary": "Críochnaíonn an conradh ó {datum} — ón lá seo ar aghaidh, ní dhíolfar an mhaoin in áit ar bith a thuilleadh."
+      },
+      "terminationRequested": "Tá an t-úinéir ag iarraidh an conradh a fhoirceannadh.",
+      "terminationSet": "Críochnaíonn an conradh ar {datum}."
     }
   },
   "seasons": {

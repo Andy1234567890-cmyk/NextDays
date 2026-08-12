@@ -1405,7 +1405,13 @@
       },
       "reason": "Dôvod",
       "reasonPlaceholder": "Prečo by malo byť blokované? (napr. vlastné použitie, remeselníci)",
-      "decisionNote": "Poznámka od správy"
+      "decisionNote": "Poznámka od správy",
+      "termination": "Chcel by som ukončiť zmluvu.",
+      "terminationConfirmed": "Zmluva končí {datum}.",
+      "terminationHint": "Tým sa nielen zablokuje obdobie, ale aj ukončí marketingová zmluva k dátumu začiatku. Administratíva tento dátum potvrdí.",
+      "terminationInterpreted": "Administratíva interpretovala túto žiadosť ako oznámenie o zrušení – zmluva končí dňa {datum}. Dajte nám vedieť, ak to nebolo myslené takto.",
+      "terminationPending": "Ukončenie – administratíva zatiaľ nepotvrdila ukončenie zmluvy.",
+      "terminationSent": "Oznámenie o ukončení bolo podané. Administratíva potvrdzuje ukončenie zmluvy."
     },
     "meter": {
       "title": "Zaznamenať stav merača",
@@ -5771,7 +5777,8 @@
         "booked": "Obsadené",
         "blocked": "Blokované",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Zmluva ukončená"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "všetky kanály",
@@ -5900,6 +5907,10 @@
       "fallbackAddonName": "Doplnková služba",
       "markPaidAction": "Označiť ako zaplatené",
       "markPaidSuccess": "Označené ako zaplatené.",
+      "cancelAction": "Stornovať",
+      "cancelBusy": "Stornujem…",
+      "cancelConfirm": "Naozaj stornovať túto doplnkovú službu?",
+      "cancelSuccess": "Doplnková služba bola stornovaná.",
       "addSuccess": "Doplnková služba pridaná.",
       "totalLabel": "Súčet doplnkových služieb",
       "emptyPurchased": "Zatiaľ nie sú rezervované žiadne doplnkové služby.",
@@ -6175,7 +6186,44 @@
         "approve": "Žiadosť schválená, noci zablokované.",
         "reject": "Žiadosť zamietnutá.",
         "revoke": "Schválenie odvolané, noci uvoľnené."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "Termín je rezervovaný.",
+          "stop_sell": "Počas tohto obdobia platí zákaz predaja.",
+          "vertragsende": "Toto obdobie je po skončení administratívnej zmluvy."
+        },
+        "blockedNightsHint": "Blokovať bez rezervácie – odstrániť z kalendára, nezrušiť.",
+        "bookingsHint": "Nebudú automaticky zrušené. Zrušte ich jednotlivo a potom bude možné žiadosť schváliť.",
+        "close": "Zatvoriť",
+        "loading": "Časový harmonogram sa prehodnocuje…",
+        "openBooking": "Otvoriť rezerváciu",
+        "openStay": "Otvorený pobyt",
+        "title": "Skontrolovať schválenie",
+        "truncated": "Zoznam je skrátený; uvedené čísla sú úplné.",
+        "free": "Časové obdobie je k dispozícii.",
+        "blockedNights": "{anzahl} blokované noci",
+        "bookings": "Rezervácie {anzahl} počas obdobia",
+        "stopSell": "{anzahl} dní so zastavením predaja",
+        "subtitle": "{objekt}, {von} – {bis}. Pred uzamknutím sa skontroluje, či je časový interval voľný.",
+        "suggestion": "{von} – {bis} by bol k dispozícii.",
+        "summary": "{naechte} nocí · {einheiten} jednotiek · k dispozícii aspoň {frei}",
+        "unitScope": "Žiadosť sa týka iba: {einheit}",
+        "willUse": "Nasledujúce je obsadené: {einheit}",
+        "contractHint": "Pokiaľ sa zmluva nepredĺži, nič tu nemožno zablokovať – počas tohto obdobia nehnuteľnosť nespravujete.",
+        "approveTermination": "Zadajte dátum ukončenia zmluvy",
+        "bookingsAfterEnd": "Rezervácie {anzahl} po skončení zmluvy",
+        "bookingsAfterEndHint": "Zostávajú v platnosti a budú doručené – zmluva pre ne stráca platnosť. Blokované sú iba dni voľna.",
+        "contractEndHint": "Nechajte prázdne: platí dátum začiatku žiadosti ({datum}). Ak zmluva trvá dlhšie obdobie, uveďte sem skutočný dátum ukončenia.",
+        "contractEndLabel": "Koniec zmluvy (prvý deň bez zmluvy)",
+        "isTermination": "Ide o ukončenie zmluvy",
+        "terminationByOwner": "Majiteľ to sám vysvetlil v žiadosti.",
+        "terminationHint": "Majiteľ chce zmluvu ukončiť, nielen blokovať noci. Namiesto blokovania prístupu bude dátum ukončenia zmluvy nastavený priamo na nehnuteľnosti – tým sa ukončí jej marketing na všetkých portáloch.",
+        "terminationReady": "Výpoveď je možné zaregistrovať.",
+        "terminationSummary": "Zmluva končí {datum} – od tohto dňa sa nehnuteľnosť už nikde nebude predávať."
+      },
+      "terminationRequested": "Majiteľ chce zmluvu ukončiť.",
+      "terminationSet": "Zmluva končí {datum}."
     }
   },
   "seasons": {

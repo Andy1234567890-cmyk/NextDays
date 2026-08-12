@@ -94,6 +94,14 @@ class _Query:
         self._filter.append((col, "isnull" if str(val) == "null" else "is", val))
         return self
 
+    def in_(self, col: str, werte: list[object]) -> "_Query":
+        # Echt filternd wie der Rest: die Vertragsende-Kopplung (0378) scopet
+        # ihre Objektliste damit auf den Mandanten. Ein durchwinkendes
+        # `return self` machte den Test grün und ließe genau den Wurzel-3-Fehler
+        # durch, den die Zeile verhindern soll.
+        self._filter.append((col, "in", [str(w) for w in werte]))
+        return self
+
     @property
     def not_(self) -> "_NichtQuery":
         # PostgREST-`.not_.is_(col, "null")` — negiert den NÄCHSTEN Operator.
@@ -120,6 +128,8 @@ class _Query:
             if op == "lt" and not (ist is not None and str(ist) < str(val)):
                 return False
             if op == "lte" and not (ist is not None and str(ist) <= str(val)):
+                return False
+            if op == "in" and str(ist) not in val:  # type: ignore[operator]
                 return False
             if op == "isnull" and ist is not None:
                 return False

@@ -1353,7 +1353,12 @@
     "commissionableNo": "No — commission-free",
     "infoAria": "Explanation of {feld}",
     "rulesPageTitle": "Billing rules",
-    "rulesPageIntro": "What the portals keep per booking, and who the fees belong to. Together these determine the amount that reaches your owners' commission statement."
+    "rulesPageIntro": "What the portals keep per booking, and who the fees belong to. Together these determine the amount that reaches your owners' commission statement.",
+    "endsSalesHint": "Careful: this also ends distribution. From {date} the property is no longer sold on any channel — including Booking.com, Airbnb and myBestDays. For a plain rate change, add a following agreement starting on that date instead.",
+    "effectBlocked": "{property}: distribution ends on {date} — {nights} nights blocked and withdrawn from the portals.",
+    "effectReleased": "{property}: distribution continues — the contract end was lifted and the nights are sellable again.",
+    "effectNoUnit": "{property}: the contract end is stored, but the calendar is not blocked — the property has no unit. Add one and the block takes effect.",
+    "effectCalendarFailed": "{property}: the contract end is stored, the calendar block was not written. It will be caught up tonight."
   },
   "portal": {
     "title": "My portal",
@@ -1405,7 +1410,13 @@
       },
       "reason": "Reason",
       "reasonPlaceholder": "Why should it be blocked? (e.g. own use, tradespeople)",
-      "decisionNote": "Note from the management"
+      "decisionNote": "Note from the management",
+      "termination": "I would like to terminate the contract.",
+      "terminationConfirmed": "Contract ends on {datum}.",
+      "terminationHint": "This not only blocks the period but also terminates the marketing contract on the start date. The administration confirms the date.",
+      "terminationInterpreted": "The administration has interpreted this request as a cancellation notice — the contract ends on {datum}. Please let us know if that's not what was meant.",
+      "terminationPending": "Termination — the administration has not yet confirmed the end of the contract.",
+      "terminationSent": "Notice of termination has been submitted. The administration confirms the termination of the contract."
     },
     "meter": {
       "title": "Add meter reading",
@@ -5792,7 +5803,8 @@
         "booked": "Booked",
         "blocked": "Blocked",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Contract terminated"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "all channels",
@@ -5921,6 +5933,10 @@
       "fallbackAddonName": "Add-on",
       "markPaidAction": "Mark as paid",
       "markPaidSuccess": "Marked as paid.",
+      "cancelAction": "Cancel item",
+      "cancelBusy": "Cancelling…",
+      "cancelConfirm": "Really cancel this add-on?",
+      "cancelSuccess": "Add-on cancelled.",
       "addSuccess": "Add-on added.",
       "totalLabel": "Total add-ons",
       "emptyPurchased": "No add-ons booked yet.",
@@ -6196,7 +6212,44 @@
         "approve": "Request approved, nights blocked.",
         "reject": "Request rejected.",
         "revoke": "Approval revoked, nights released."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "The period is booked.",
+          "stop_sell": "A sales ban is in effect during this period.",
+          "vertragsende": "The period is after the end of the administrative contract."
+        },
+        "blockedNightsHint": "Block without booking — remove in the calendar, do not cancel.",
+        "bookingsHint": "They will NOT be automatically cancelled. Cancel them individually, then the application can be approved.",
+        "close": "Close",
+        "loading": "The timeframe is being reviewed…",
+        "openBooking": "Open booking",
+        "openStay": "Open stay",
+        "title": "Check approval",
+        "truncated": "The list is abbreviated; the numbers above are complete.",
+        "free": "The time period is available.",
+        "blockedNights": "{anzahl} blocked nights",
+        "bookings": "{anzahl} bookings during the period",
+        "stopSell": "{anzahl} days with sales stop",
+        "subtitle": "{objekt}, {von} – {bis}. Before locking, it is checked whether the time period is free.",
+        "suggestion": "{von} – {bis} would be available.",
+        "summary": "{naechte} nights · {einheiten} units · at least {frei} available",
+        "unitScope": "The application only concerns: {einheit}",
+        "willUse": "The following is occupied: {einheit}",
+        "contractHint": "As long as the contract is not extended, nothing can be blocked here — the property is not being managed by you during this period.",
+        "approveTermination": "Enter contract end date",
+        "bookingsAfterEnd": "{anzahl} Bookings after the end of the contract",
+        "bookingsAfterEndHint": "They remain valid and will be served — the contract expires for them. Only the days off are blocked.",
+        "contractEndHint": "Leave blank: the application start date ({datum}) applies. If the contract runs for a longer period, enter the actual end date here.",
+        "contractEndLabel": "Contract end (first day without a contract)",
+        "isTermination": "This is a contract termination",
+        "terminationByOwner": "The owner explained this himself in the application.",
+        "terminationHint": "The owner wants to terminate the contract, not just block off nights. Instead of blocking access, the contract end date will be set directly on the property – thus ending its marketing on all portals.",
+        "terminationReady": "The termination notice can be registered.",
+        "terminationSummary": "Contract ends from {datum} — from this day onwards, the property will no longer be sold anywhere."
+      },
+      "terminationRequested": "The owner wishes to terminate the contract.",
+      "terminationSet": "Contract ends on {datum}."
     }
   },
   "seasons": {

@@ -14,6 +14,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.auth.dependencies import require_permission
 from src.features.auth.permissions import Capability
@@ -35,6 +36,8 @@ from .schemas import (
 from .service import BillingError
 
 router = APIRouter(prefix="/owner-billing", tags=["owner-billing"])
+
+log = get_logger("nextdays.owner_billing.router")
 
 # Der Vertrag ist Eigentümer-Verwaltung: wer Eigentümer pflegt, pflegt ihre
 # Konditionen. Dieselbe Capability wie `/owners`, damit nicht zwei Rechte
@@ -161,10 +164,32 @@ def terms_aendern(
     ctx: OwnersCtx,
 ) -> OwnerBillingTermsResponse:
     """Einen Vertrag korrigieren (Tippfehler im Satz, nachgetragene Befristung)."""
+    # DEBUGGING: Eingang je Request mit den GESENDETEN Feldern. Fehlt diese
+    # Zeile im Log, kam das Speichern nie an — genau das war live nicht
+    # unterscheidbar von „kam an, änderte aber nichts" (12.08.2026).
+    log.info(
+        "terms_patch_start",
+        terms_id=terms_id,
+        tenant_id=ctx.tenant_id,
+        # `exclude_unset` zeigt, was der Client WIRKLICH geschickt hat — ein
+        # Feld, das nicht dabei ist, kann auch nicht gespeichert werden.
+        gesendet=sorted(req.model_dump(exclude_unset=True)),
+        gueltig_bis=(
+            req.gueltig_bis.isoformat() if req.gueltig_bis else None
+        ),
+    )
     try:
-        return service.vertrag_aendern(ctx, terms_id, req)
+        antwort = service.vertrag_aendern(ctx, terms_id, req)
     except BillingError as exc:
+        log.warning(
+            "terms_patch_abgelehnt",
+            terms_id=terms_id,
+            status=exc.status_code,
+            grund=str(exc)[:200],
+        )
         raise _http(exc) from exc
+    log.info("terms_patch_fertig", terms_id=terms_id)
+    return antwort
 
 
 @router.delete("/terms/{terms_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -926,19 +926,117 @@ Der Eigentümer **stellt** den Antrag im Portal
 hier — denn eine Genehmigung ist eine Kalender-Aktion: sie sperrt Nächte in
 `availability` und meldet das über die ARI-Outbox an die Portale.
 
-Alle vier Endpunkte hängen an derselben Capability **`APPROVE_BLOCK`**
-(admin/co_admin, Cohost-Vollstufe) — Liste und `{id}`-Aktionen prüfen denselben
-Scope (Wurzel 9), der Tenant-Scope zusätzlich im Service.
+Alle fünf Endpunkte hängen an derselben Capability **`APPROVE_BLOCK`**
+(admin/co_admin, Cohost-Vollstufe) — Liste, Prüfung und `{id}`-Aktionen prüfen
+denselben Scope (Wurzel 9), der Tenant-Scope zusätzlich im Service.
 
 | Methode | Pfad                                                | Beschreibung                                              |
 | ------- | --------------------------------------------------- | --------------------------------------------------------- |
 | `GET`   | `/api/v1/calendar/block-requests?status=`           | Anträge des Mandanten; ohne `status` alle, sonst `pending`\|`approved`\|`rejected` |
+| `GET`   | `/api/v1/calendar/block-requests/{id}/kollisionen`  | **Prüfung vor dem Klick:** was steht der Genehmigung im Weg? Nur lesend |
 | `POST`  | `/api/v1/calendar/block-requests/{id}/approve`      | Genehmigen — sperrt die Nächte und pusht `availability=0`  |
 | `POST`  | `/api/v1/calendar/block-requests/{id}/reject`       | Ablehnen — kein Kalender-Effekt                            |
 | `POST`  | `/api/v1/calendar/block-requests/{id}/revoke`       | Erteilte Genehmigung widerrufen, Nächte wieder freigeben   |
 
 Body der drei Aktionen: `{ "note": "…" }` (optional, max. 2000 Zeichen) — die
-Anmerkung geht an den Eigentümer.
+Anmerkung geht an den Eigentümer. `approve` nimmt zusätzlich
+`{ "als_kuendigung": bool, "vertragsende": "YYYY-MM-DD"|null }` (siehe
+Vertragskündigung).
+
+#### Vertragskündigung statt Sperrung (`0377`)
+
+Ein Sperrantrag kann eine **Kündigung des Vermarktungsvertrags** sein. Live
+vorgefunden (12.08.2026): ein Eigentümer beantragte 2027 komplett mit der
+Begründung „Vi er ikke interesseret i udlejning 2027" — gemeint war die
+Kündigung, gespeichert wurde eine Jahres-Sperre. Die Agentur musste den
+dänischen Freitext deuten und `properties.contract_end_date` von Hand
+nachtragen; wird das vergessen, läuft der Vertrag mit Provision und
+Portal-Distribution weiter, während der Kalender ein Jahr zu ist.
+
+**Drei Felder, drei verschiedene Aussagen** — bewusst nicht in eines gefaltet,
+sonst stünde hinterher „der Eigentümer hat gekündigt", wo die Agentur ausgelegt
+hat:
+
+| Feld | Wer sagt das? | Wo gesetzt |
+| ---- | ------------- | ---------- |
+| `ist_kuendigung` | der **Eigentümer** beim Stellen (eigenes Feld im Portal-Formular) | `POST /public-portal/block-requests` |
+| `als_kuendigung_gewertet` | die **Agentur** beim Genehmigen — für Bestandsanträge ohne das Feld, **ohne** den Eigentümer erneut zu fragen | `approve` mit `als_kuendigung: true` |
+| `vertragsende_gesetzt_auf` | das Datum, das daraus wurde — der Anker des Widerrufs | Server |
+
+Aus dem Begründungstext wird **nichts** abgeleitet: eine Kündigung ist eine
+Rechtshandlung und darf nicht aus einer Wortsuche in 24 Sprachen folgen
+(Wurzel 4).
+
+**Der Genehmigen-Pfad ist ein anderer.** Eine Kündigung belegt keine Nächte:
+
+- Es entsteht **keine** Eigennutzung (kein `owner_id`-Personenbezug nötig — ein
+  Objekt ohne Eigentümer-Zuordnung kann gekündigt werden, gesperrt nicht).
+- Gesetzt wird `properties.contract_end_date`, durchgesetzt über
+  `properties.vertragsende_durchsetzen` — den einen Einstiegspunkt mit
+  730-Tage-Horizont, `source='contract_end'`, nächtlichem Nachzug und geprüftem
+  Gegenzustand. Ein Vertragsende gilt **unbefristet**, nicht nur den beantragten
+  Zeitraum.
+- Der Belegungs-Riegel greift **nicht**: ein Vertrag endet unabhängig davon, wer
+  nächste Woche anreist.
+- Das Datum ist `vertragsende` oder — leer — der `start_date` des Antrags („ab
+  da nicht mehr vermieten" = „ab da kein Vertrag"). Ein Datum **vor heute** ist
+  `422`: es hieße, das Objekt sei seit Monaten ohne Vertrag, während es verkauft
+  wurde.
+
+**Widerruf (Wurzel 1):** `revoke` nimmt das Vertragsende zurück — aber nur,
+wenn am Objekt **genau das** Datum steht, das diese Genehmigung geschrieben hat.
+Eine jüngere Entscheidung (von Hand oder aus einem zweiten Antrag) bleibt
+stehen; derselbe Anker-Gedanke wie beim Storno über `block_request_id`.
+
+`GET …/kollisionen?als_kuendigung=true` prüft entsprechend: eine bestehende
+`contract_end`-Sperre ist dann der **Zielzustand** statt ein Hindernis, und
+`blockiert` ist immer `false`. Übrig bleibt die einzige echte Frage — welche
+Buchungen hinter dem Enddatum noch bedient werden müssen. Sie verhindern die
+Kündigung nicht (`0359`: eine bestätigte Buchung wird bedient, der Vertrag läuft
+für sie aus), müssen aber sichtbar sein.
+
+Der EXCLUDE-Constraint `block_requests_kein_ueberlapp` schließt Kündigungen aus:
+„der Vertrag endet zum 01.01.2027" und „im März 2027 wohne ich selbst dort"
+schließen sich nicht aus, dürfen also nebeneinander genehmigt sein.
+
+#### Kollisionsprüfung (`/kollisionen`)
+
+Beantwortet vor dem Genehmigen, **was** im Weg steht — statt eines nackten
+`409 „Zeitraum enthält bereits belegte/gesperrte Tage"`, das bei einem
+Jahresantrag die gesamte fehlende Information war. Die Oberfläche lädt sie in
+den Prüf-Dialog und sperrt „Genehmigen" bei `blockiert=true`.
+
+Vier Ursachen, vier Auflösungswege — darum getrennt ausgewiesen:
+
+| Feld | Bedeutung | Auflösung |
+| ---- | --------- | --------- |
+| `buchungen[]` mit `art="buchung"` | echte Gastbuchung | einzeln stornieren (Gast/Geld/OTA) |
+| `buchungen[]` mit `art="eigennutzung"` | Eigentümer-Aufenthalt | eher den zugehörigen Antrag widerrufen |
+| `sperrtage[]` | Sperre ohne Buchung (`manual`/`ical`/`contract_end`) | im Kalender aufheben |
+| `stop_sell_tage[]` | objektweiter Verkaufsstopp | Stop-Sell aufheben |
+
+`grund` nennt die Ursache, die **zuerst** aufgelöst werden muss, in dieser
+Rangfolge: `vertragsende` → `belegt` → `stop_sell`. Live gelernt (12.08.2026):
+ein Antrag über 2027 hatte 365 `contract_end`-Nächte UND 223 Stop-Sell-Tage —
+„Verkaufsstopp" zu melden wäre wahr, aber irreführend gewesen, weil das
+Aufheben nichts geändert hätte.
+
+`blockiert` folgt derselben Frage wie der Schreibpfad: **gibt es EINE Einheit,
+die im GANZEN Zeitraum frei ist?** Bei `n` Einheiten (0265) ist ein belegter Tag
+also kein Hindernis; zwei versetzte Buchungen über zwei Einheiten schon (jeden
+Tag ist eine frei, aber keine durchgehend). Kanal-Filter wie im Schreibpfad: eine
+reine OTA-Sperre (`source='portal'`) blockt die Eigennutzung **nicht**.
+
+Es wird **nichts automatisch storniert** — die Prüfung ist rein lesend, und der
+`approve`-Pfad fasst fremde Buchungen nie an. Die `*_gesamt`-Zahlen sind
+vollständig, die Listen bei mehr als 200 Einträgen gekürzt (`gekuerzt=true`).
+`frei_von`/`frei_bis` nennen den längsten durchgehend freien Abschnitt als
+Vorschlag — ohne den Antrag automatisch zu kürzen.
+
+Die Vorschau ist **kein Anspruch**: zwischen Anzeige und Klick kann eine
+OTA-Buchung eingehen. `approve` prüft dasselbe erneut (mit demselben Modul) und
+liefert den Befund als sprechenden `409`; Advisory-Lock und EXCLUDE-Constraint
+in der RPC bleiben der harte Schutz.
 
 | Status | Bedeutung                                                                                     |
 | ------ | --------------------------------------------------------------------------------------------- |
@@ -946,7 +1044,7 @@ Anmerkung geht an den Eigentümer.
 | `400`  | kein Tenant im Konto                                                                            |
 | `403`  | ohne `APPROVE_BLOCK`                                                                            |
 | `404`  | Antrag gehört nicht zum eigenen Tenant / existiert nicht                                        |
-| `409`  | bereits entschieden; oder `approve` auf einen Zeitraum mit **gebuchten** Tagen; oder es liegt für das Objekt im Zeitraum schon eine genehmigte Sperrung; oder `revoke` auf einen nicht genehmigten Antrag |
+| `409`  | bereits entschieden; oder `approve` auf einen belegten Zeitraum — die Meldung **nennt** dann die Ursache (kollidierende Buchung mit Namen, Anzahl gesperrter Nächte, Stop-Sell-Tage, Vertragsende), siehe `/kollisionen`; oder es liegt für das Objekt im Zeitraum schon eine genehmigte Sperrung; oder `revoke` auf einen nicht genehmigten Antrag |
 | `422`  | Enddatum vor Startdatum; Zeitraum > **730 Nächte**; `status`-Filter unbekannt; `note` zu lang    |
 
 - **Zustandsautomat:** `pending → approved → (revoke) → rejected` bzw.
@@ -1911,13 +2009,25 @@ Der Eigentümer sieht **nicht** den Gast-Verkaufspreis (`price` ist für ihn imm
 
 ### Sperrwünsche (Eigentümer-Seite)
 
-`POST /block-requests` nimmt `{property_id, start_date, end_date, reason?}` —
-Daten **inklusiv**, `end_date` vor `start_date` ist `422`, `reason` max. 2000
+`POST /block-requests` nimmt
+`{property_id, start_date, end_date, reason?, ist_kuendigung?}` — Daten
+**inklusiv**, `end_date` vor `start_date` ist `422`, `reason` max. 2000
 Zeichen. Die Antwort trägt `status`, `reason`, `decided_at` und
 `decision_note`, aber bewusst **kein `decided_by`**: dass entschieden wurde und
 mit welcher Begründung, geht den Eigentümer an — wer intern zuständig war, nicht.
 Entschieden wird auf der Agentur-Seite unter
 [`/api/v1/calendar/block-requests`](#sperr-antr%C3%A4ge-entscheiden-033203330337).
+
+`ist_kuendigung: true` (`0377`) erklärt: der Eigentümer will den
+**Vermarktungsvertrag beenden**, nicht nur Nächte sperren. Ein eigenes Feld,
+weil es eine andere Erklärung ist — aus `reason` wird nichts abgeleitet. Die
+Agentur bestätigt das Datum beim Genehmigen; bis dahin steht
+`vertragsende_gesetzt_auf` auf `null`.
+
+Die Antwort trägt zusätzlich `als_kuendigung_gewertet`: hat die Agentur einen
+gewöhnlichen Sperrantrag als Kündigung ausgelegt, muss der Eigentümer das
+**sehen** — es ist eine Auslegung seiner Erklärung, und er muss widersprechen
+können, wenn sie falsch war.
 
 ### Dienstleistungen buchen (0330)
 

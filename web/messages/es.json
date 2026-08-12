@@ -1353,7 +1353,12 @@
     "commissionableNo": "No — exento de comisión",
     "infoAria": "Explicación de {feld}",
     "rulesPageTitle": "Reglas de liquidación",
-    "rulesPageIntro": "Lo que los portales retienen por reserva y a quién corresponden los cargos. Ambos determinan el importe que finalmente llega a la liquidación de comisiones de sus propietarios."
+    "rulesPageIntro": "Lo que los portales retienen por reserva y a quién corresponden los cargos. Ambos determinan el importe que finalmente llega a la liquidación de comisiones de sus propietarios.",
+    "endsSalesHint": "Atención: Aquí termina el marketing. A partir de {date}, la propiedad ya no se venderá en ningún canal, incluidos Booking.com, Airbnb o myBestDays. Para un cambio de oración puro, cree un contrato de conexión a partir de este día.",
+    "effectBlocked": "{property}: El marketing finaliza el {date}: noches {nights} bloqueadas y eliminadas de los portales.",
+    "effectReleased": "{property}: El marketing continúa: se ha levantado la finalización del contrato y las noches están a la venta nuevamente.",
+    "effectNoUnit": "{property}: Se ingresa el final del contrato, pero el calendario no está bloqueado: al objeto le falta una unidad. Póntelo y el bloqueo surtirá efecto.",
+    "effectCalendarFailed": "{property}: Se ha introducido la finalización del contrato, no se ha escrito el bloqueo del calendario. Se agregará esta noche."
   },
   "portal": {
     "title": "Mi portal",
@@ -1405,7 +1410,13 @@
       },
       "reason": "Motivo",
       "reasonPlaceholder": "¿Por qué debería bloquearse? (p. ej., uso propio, técnicos)",
-      "decisionNote": "Nota de la administración"
+      "decisionNote": "Nota de la administración",
+      "termination": "Me gustaría rescindir el contrato.",
+      "terminationConfirmed": "El contrato finaliza el {datum}.",
+      "terminationHint": "Esto no solo bloquea el período, sino que también rescinde el contrato de marketing en la fecha de inicio. La administración confirma la fecha.",
+      "terminationInterpreted": "La administración ha interpretado esta solicitud como una notificación de cancelación; el contrato finaliza el {datum}. Por favor, infórmenos si no era eso lo que se pretendía.",
+      "terminationPending": "Rescisión: la administración aún no ha confirmado la finalización del contrato.",
+      "terminationSent": "Se ha presentado la notificación de rescisión. La administración confirma la rescisión del contrato."
     },
     "meter": {
       "title": "Registrar lectura de contador",
@@ -5771,7 +5782,8 @@
         "booked": "Reservado",
         "blocked": "Bloqueado",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Contrato rescindido"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "todos los canales",
@@ -5900,6 +5912,10 @@
       "fallbackAddonName": "Extra",
       "markPaidAction": "Marcar como pagado",
       "markPaidSuccess": "Marcado como pagado.",
+      "cancelAction": "Anular",
+      "cancelBusy": "Anulando…",
+      "cancelConfirm": "¿Anular realmente este servicio adicional?",
+      "cancelSuccess": "Servicio adicional anulado.",
       "addSuccess": "Extra añadido.",
       "totalLabel": "Total extras",
       "emptyPurchased": "Aún no se han reservado extras.",
@@ -6175,7 +6191,44 @@
         "approve": "Solicitud aprobada, noches bloqueadas.",
         "reject": "Solicitud rechazada.",
         "revoke": "Aprobación revocada, noches liberadas."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "El período está reservado.",
+          "stop_sell": "Durante este período, estará vigente una prohibición de venta.",
+          "vertragsende": "El período es posterior a la finalización del contrato administrativo."
+        },
+        "blockedNightsHint": "Bloquear sin reservar: eliminar del calendario, no cancelar.",
+        "bookingsHint": "No se cancelarán automáticamente. Cancélelas individualmente y entonces se podrá aprobar la solicitud.",
+        "close": "Cerca",
+        "loading": "El plazo está siendo revisado…",
+        "openBooking": "Reservas abiertas",
+        "openStay": "Estancia abierta",
+        "title": "Verificar aprobación",
+        "truncated": "La lista es abreviada; las cifras anteriores son completas.",
+        "free": "El período de tiempo está disponible.",
+        "blockedNights": "{anzahl} noches bloqueadas",
+        "bookings": "Reservas de {anzahl} durante el período",
+        "stopSell": "Días de {anzahl} con fin de ventas",
+        "subtitle": "{objekt}, {von} – {bis}. Antes de bloquear, se comprueba si el período de tiempo está libre.",
+        "suggestion": "{von} – {bis} estaría disponible.",
+        "summary": "Noches {naechte} · Unidades {einheiten} · Al menos {frei} disponibles",
+        "unitScope": "La aplicación solo concierne a: {einheit}",
+        "willUse": "El siguiente número está ocupado: {einheit}",
+        "contractHint": "Mientras el contrato no se prorrogue, no hay nada que pueda bloquearse; usted no está gestionando la propiedad durante este período.",
+        "approveTermination": "Introduzca la fecha de finalización del contrato.",
+        "bookingsAfterEnd": "Reservas {anzahl} después de la finalización del contrato",
+        "bookingsAfterEndHint": "Siguen siendo válidos y se cumplirán; el contrato expira para ellos. Solo se bloquean los días libres.",
+        "contractEndHint": "Deje este campo en blanco: se aplicará la fecha de inicio de la aplicación ({datum}). Si el contrato tiene una duración mayor, introduzca aquí la fecha de finalización.",
+        "contractEndLabel": "Fin del contrato (primer día sin contrato)",
+        "isTermination": "Se trata de una rescisión de contrato.",
+        "terminationByOwner": "El propietario lo explicó él mismo en la solicitud.",
+        "terminationHint": "El propietario desea rescindir el contrato, no solo bloquear las noches. En lugar de bloquear el acceso, la fecha de finalización del contrato se establecerá directamente en la propiedad, poniendo fin así a su publicidad en todos los portales.",
+        "terminationReady": "El aviso de rescisión puede registrarse.",
+        "terminationSummary": "El contrato finaliza el día {datum}; a partir de ese día, la propiedad ya no se venderá en ningún lugar."
+      },
+      "terminationRequested": "El propietario desea rescindir el contrato.",
+      "terminationSet": "El contrato finaliza el {datum}."
     }
   },
   "seasons": {

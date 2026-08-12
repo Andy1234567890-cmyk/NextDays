@@ -310,6 +310,13 @@ class OwnerBillingTermsResponse(BaseModel):
     # den Daten abgeleitet: „heute" ist die Uhr des Servers, und zwei Clients
     # in verschiedenen Zeitzonen kämen sonst zu verschiedenen Aussagen.
     aktuell: bool
+    # Was der Vertrag am VERKAUF geändert hat (0378): je berührtes Objekt das
+    # neu gesetzte Vermarktungsende und die Zahl gesperrter Nächte. Der Vertrag
+    # und das Vermarktungsende sind ein Ereignis — eine Befristung nimmt das
+    # Objekt bei Booking und Airbnb aus dem Verkauf, und das darf die Agentur
+    # nicht erst im Kalender entdecken. Leer beim Lesen (Historie), gefüllt bei
+    # Anlegen/Ändern.
+    vertragsende_wirkung: list[dict[str, object]] = Field(default_factory=list)
 
 
 class OwnerBillingTermsListResponse(BaseModel):

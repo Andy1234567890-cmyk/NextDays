@@ -63,6 +63,11 @@ export function PortalSperrungen({
   const [von, setVon] = useState("");
   const [bis, setBis] = useState("");
   const [grund, setGrund] = useState("");
+  // Ich will den Vertrag beenden, nicht nur Nächte sperren. Ein eigenes
+  // Kästchen, weil beides verwechselt wurde: ein Antrag „ganzes Jahr sperren"
+  // mit der Begründung „ich will nicht mehr vermieten" landete als Sperre, und
+  // die Verwaltung musste den Freitext deuten.
+  const [kuendigung, setKuendigung] = useState(false);
   const [sendet, setSendet] = useState(false);
 
   const neuLaden = useCallback(async () => {
@@ -96,16 +101,18 @@ export function PortalSperrungen({
       start_date: von,
       end_date: bis,
       reason: grund.trim() || null,
+      ist_kuendigung: kuendigung,
     });
     setSendet(false);
     if (!res.ok) {
       toast.error(res.error);
       return;
     }
-    toast.success(t("block.requested"));
+    toast.success(t(kuendigung ? "block.terminationSent" : "block.requested"));
     setVon("");
     setBis("");
     setGrund("");
+    setKuendigung(false);
     // Die ANTWORT ist der neue Antrag — sie wird der Liste vorangestellt.
     //
     // Hier stand vorher, das Realtime-Abo auf `block_requests` bringe ihn von
@@ -198,6 +205,25 @@ export function PortalSperrungen({
               />
             </div>
 
+            {/* Vertragskündigung: bewusst ein eigenes Kästchen und keine
+                Auswertung des Begründungstextes. Wer „ich möchte 2027 nicht
+                mehr vermieten" schreibt, meint die Kündigung — aber das aus
+                Freitext in 24 Sprachen zu schließen, wäre geraten. */}
+            <label className="flex items-start gap-2.5 text-sm">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 shrink-0"
+                checked={kuendigung}
+                onChange={(e) => setKuendigung(e.target.checked)}
+              />
+              <span className="flex flex-col gap-0.5">
+                <span className="font-medium">{t("block.termination")}</span>
+                <span className="text-xs text-muted-foreground">
+                  {t("block.terminationHint")}
+                </span>
+              </span>
+            </label>
+
             <p className="text-xs text-muted-foreground">
               {t("block.readOnlyHint")}
             </p>
@@ -254,6 +280,26 @@ export function PortalSperrungen({
                     {r.decision_note && (
                       <span className="truncate text-xs text-muted-foreground">
                         {t("block.decisionNote")}: {r.decision_note}
+                      </span>
+                    )}
+                    {/* Vertragsende: das WICHTIGSTE an so einem Antrag und
+                        darum im Klartext. `als_kuendigung_gewertet` wird
+                        ausdrücklich benannt — hat die Verwaltung meinen
+                        Sperrantrag als Kündigung ausgelegt, muss ich das sehen
+                        und widersprechen können. */}
+                    {r.vertragsende_gesetzt_auf && (
+                      <span className="text-xs font-medium">
+                        {t(
+                          r.als_kuendigung_gewertet && !r.ist_kuendigung
+                            ? "block.terminationInterpreted"
+                            : "block.terminationConfirmed",
+                          { datum: r.vertragsende_gesetzt_auf },
+                        )}
+                      </span>
+                    )}
+                    {r.ist_kuendigung && !r.vertragsende_gesetzt_auf && (
+                      <span className="text-xs text-muted-foreground">
+                        {t("block.terminationPending")}
                       </span>
                     )}
                   </div>

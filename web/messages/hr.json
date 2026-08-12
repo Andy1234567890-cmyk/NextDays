@@ -1353,7 +1353,12 @@
     "commissionableNo": "Ne — bez provizije",
     "infoAria": "Objašnjenje za: {feld}",
     "rulesPageTitle": "Pravila obračuna",
-    "rulesPageIntro": "Što portali zadržavaju po rezervaciji i kome pripadaju naknade. Oboje određuje koji iznos na kraju ulazi u obračun provizije vaših vlasnika."
+    "rulesPageIntro": "Što portali zadržavaju po rezervaciji i kome pripadaju naknade. Oboje određuje koji iznos na kraju ulazi u obračun provizije vaših vlasnika.",
+    "endsSalesHint": "Pažnja: ovdje završava marketing. Od {date} nadalje, nekretnina se više neće prodavati ni na jednom kanalu - uključujući Booking.com, Airbnb ili myBestDays. Za čistu promjenu rečenice, umjesto toga izradite ugovor o povezivanju od ovog dana.",
+    "effectBlocked": "{property}: Marketing završava {date} — {nights} noći blokirano i uklonjeno s portala.",
+    "effectReleased": "{property}: Marketing se nastavlja - kraj ugovora je poništen i noći su ponovno na prodaju.",
+    "effectNoUnit": "{property}: Kraj ugovora je upisan, ali kalendar nije zaključan - objektu nedostaje jedinica. Stavite ga i brava će stupiti na snagu.",
+    "effectCalendarFailed": "{property}: Kraj ugovora je upisan, zaključavanje kalendara nije ispisano. Bit će dodan večeras."
   },
   "portal": {
     "title": "Moj portal",
@@ -1405,7 +1410,13 @@
       },
       "reason": "Razlog",
       "reasonPlaceholder": "Zašto bi trebalo biti blokirano? (npr. vlastito korištenje, majstori)",
-      "decisionNote": "Napomena uprave"
+      "decisionNote": "Napomena uprave",
+      "termination": "Želio bih raskinuti ugovor.",
+      "terminationConfirmed": "Ugovor završava {datum}.",
+      "terminationHint": "Time se ne samo blokira razdoblje, već se i prekida marketinški ugovor na datum početka. Administracija potvrđuje datum.",
+      "terminationInterpreted": "Administracija je ovaj zahtjev protumačila kao obavijest o raskidu - ugovor završava {datum}. Molimo vas da nas obavijestite ako to nije ono što ste mislili.",
+      "terminationPending": "Raskid — uprava još nije potvrdila kraj ugovora.",
+      "terminationSent": "Obavijest o raskidu je podnesena. Uprava potvrđuje raskid ugovora."
     },
     "meter": {
       "title": "Unesi stanje brojila",
@@ -5771,7 +5782,8 @@
         "booked": "Rezervirano",
         "blocked": "Blokirano",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Ugovor raskinut"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "svi kanali",
@@ -5900,6 +5912,10 @@
       "fallbackAddonName": "Dodatna usluga",
       "markPaidAction": "Označi kao plaćeno",
       "markPaidSuccess": "Označeno kao plaćeno.",
+      "cancelAction": "Otkaži",
+      "cancelBusy": "Otkazujem…",
+      "cancelConfirm": "Želite li stvarno otkazati ovu dodatnu uslugu?",
+      "cancelSuccess": "Dodatna usluga otkazana.",
       "addSuccess": "Dodatna usluga dodana.",
       "totalLabel": "Ukupno dodatnih usluga",
       "emptyPurchased": "Još nema rezerviranih dodatnih usluga.",
@@ -6175,7 +6191,44 @@
         "approve": "Zahtjev odobren, noćenja blokirana.",
         "reject": "Zahtjev odbijen.",
         "revoke": "Odobrenje opozvano, noćenja oslobođena."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "Period je rezerviran.",
+          "stop_sell": "U tom razdoblju na snazi je zabrana prodaje.",
+          "vertragsende": "Razdoblje je nakon završetka upravnog ugovora."
+        },
+        "blockedNightsHint": "Blokiraj bez rezervacije — ukloni iz kalendara, nemoj otkazati.",
+        "bookingsHint": "NEĆE biti automatski otkazani. Otkažite ih pojedinačno, nakon čega se prijava može odobriti.",
+        "close": "Zatvoriti",
+        "loading": "Vremenski okvir se preispituje…",
+        "openBooking": "Otvori rezervaciju",
+        "openStay": "Otvoreni boravak",
+        "title": "Provjeri odobrenje",
+        "truncated": "Popis je skraćen; gore navedeni brojevi su potpuni.",
+        "free": "Vremenski period je dostupan.",
+        "blockedNights": "{anzahl} blokirane noći",
+        "bookings": "{anzahl} rezervacije tijekom razdoblja",
+        "stopSell": "{anzahl} dana s prekidom prodaje",
+        "subtitle": "{objekt}, {von} – {bis}. Prije zaključavanja provjerava se je li vremenski period slobodan.",
+        "suggestion": "{von} – {bis} bi bio dostupan.",
+        "summary": "{naechte} noći · {einheiten} jedinica · dostupno najmanje {frei}",
+        "unitScope": "Aplikacija se odnosi samo na: {einheit}",
+        "willUse": "Sljedeće je zauzeto: {einheit}",
+        "contractHint": "Sve dok se ugovor ne produži, ovdje se ništa ne može blokirati - nekretninom ne upravljate tijekom tog razdoblja.",
+        "approveTermination": "Unesite datum završetka ugovora",
+        "bookingsAfterEnd": "{anzahl} Rezervacije nakon isteka ugovora",
+        "bookingsAfterEndHint": "Ostaju važeći i bit će im dostavljeni — ugovor za njih istječe. Blokirani su samo slobodni dani.",
+        "contractEndHint": "Ostavite prazno: primjenjuje se datum početka prijave ({datum}). Ako ugovor traje dulje razdoblje, ovdje unesite stvarni datum završetka.",
+        "contractEndLabel": "Istek ugovora (prvi dan bez ugovora)",
+        "isTermination": "Ovo je raskid ugovora",
+        "terminationByOwner": "Vlasnik je to sam objasnio u prijavi.",
+        "terminationHint": "Vlasnik želi raskinuti ugovor, ne samo blokirati noćenja. Umjesto blokiranja pristupa, datum završetka ugovora bit će postavljen izravno na nekretnini – čime će se zaustaviti njezin marketing na svim portalima.",
+        "terminationReady": "Otkaz ugovora može se registrirati.",
+        "terminationSummary": "Ugovor završava {datum} — od tog dana nadalje, nekretnina se više neće nigdje prodavati."
+      },
+      "terminationRequested": "Vlasnik želi raskinuti ugovor.",
+      "terminationSet": "Ugovor završava {datum}."
     }
   },
   "seasons": {

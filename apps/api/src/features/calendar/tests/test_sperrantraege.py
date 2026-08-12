@@ -72,7 +72,11 @@ class _Query:
         self._filters: list[tuple[str, object]] = []
         self._neq: list[tuple[str, object]] = []
         self._in: tuple[str, list] | None = None
+        self._not_in: tuple[str, list] | None = None
+        # Setzt `.not_`; gilt für den unmittelbar folgenden Operator.
+        self._negiert = False
         self._gte: tuple[str, str] | None = None
+        self._gt: tuple[str, str] | None = None
         self._lt: tuple[str, str] | None = None
         self._lte: tuple[str, str] | None = None
 
@@ -108,7 +112,15 @@ class _Query:
         return self
 
     def in_(self, col: str, vals: list) -> _Query:
-        self._in = (col, vals)
+        # Nach `.not_` ist es ein AUSSCHLUSS. Ohne diese Unterscheidung hätte
+        # der Fake `not_.in_(status, [cancelled, …])` wie ein normales `in_`
+        # behandelt und damit GENAU DAS GEGENTEIL gefiltert: nur stornierte
+        # Buchungen wären Hindernisse gewesen und keine einzige echte.
+        if self._negiert:
+            self._not_in = (col, vals)
+            self._negiert = False
+        else:
+            self._in = (col, vals)
         return self
 
     def gte(self, col: str, val: str) -> _Query:
@@ -123,13 +135,19 @@ class _Query:
         self._lte = (col, val)
         return self
 
-    def gt(self, *_a: object) -> _Query:
+    def gt(self, col: str, val: str) -> _Query:
+        # Wirkt WIRKLICH (verwarf früher still): der Kollisions-Check fragt
+        # Überlappung als `check_out > von` — ein ignoriertes `gt` hätte jede
+        # abgereiste Buchung als Hindernis gemeldet und den Test grün gelogen.
+        self._gt = (col, val)
         return self
 
     @property
     def not_(self) -> _Query:
-        # PostgREST-Kette `.not_.is_(...)` — `not_` ist eine PROPERTY, keine
-        # Methode (siehe pricing/resolver.py:444).
+        # PostgREST-Kette `.not_.is_(...)`/`.not_.in_(...)` — `not_` ist eine
+        # PROPERTY, keine Methode (siehe pricing/resolver.py:444). Sie merkt
+        # sich nur, dass der NÄCHSTE Operator negiert gilt.
+        self._negiert = True
         return self
 
     def is_(self, *_a: object) -> _Query:
@@ -167,8 +185,13 @@ class _Query:
         if ok and self._in:
             col, vals = self._in
             ok = str(row.get(col)) in {str(v) for v in vals}
+        if ok and self._not_in:
+            col, vals = self._not_in
+            ok = str(row.get(col)) not in {str(v) for v in vals}
         if ok and self._gte:
             ok = str(row.get(self._gte[0])) >= self._gte[1]
+        if ok and self._gt:
+            ok = str(row.get(self._gt[0])) > self._gt[1]
         if ok and self._lt:
             ok = str(row.get(self._lt[0])) < self._lt[1]
         if ok and self._lte:
@@ -722,6 +745,630 @@ def test_range_ist_inklusiv_bis_end_date() -> None:
     assert rng.start == date(2026, 3, 1)
     assert rng.end == date(2026, 3, 4)  # exklusiv
     assert len(rng.nights()) == 3
+
+
+# --- Kollisionsprüfung (Vorschau + Riegel) -----------------------------------
+#
+# Warum diese Tests: der Riegel ersetzt einen nackten 409 aus dem
+# Reservierungs-Pfad durch eine AUSSAGE. Was hier schiefgehen kann, ist nicht
+# „gar keine Prüfung", sondern eine FALSCHE Aussage — ein Hindernis melden, das
+# der Schreibpfad gar nicht sieht (Antrag bliebe grundlos liegen), oder „frei"
+# sagen und beim Klick 409 kassieren.
+
+
+def _buchung(
+    tables: dict[str, list[dict]],
+    *,
+    check_in: str = "2026-03-02",
+    check_out: str = "2026-03-05",
+    unit_id: str = EINHEIT_A,
+    status: str = "confirmed",
+    source: str = "airbnb",
+) -> str:
+    """Eine echte Gastbuchung samt ihrer Kalenderzeilen.
+
+    Beides zusammen, weil die Prüfung beides liest: `reservations` für die
+    Aufzählung im Dialog, `availability` für die Frage, ob eine Einheit
+    durchgehend frei ist.
+    """
+    rid = f"res-{len(tables['reservations']) + 1}"
+    tables["reservations"].append(
+        {
+            "id": rid,
+            "tenant_id": "t-1",
+            "property_id": OBJEKT,
+            "guest_id": "gast-1",
+            "unit_id": unit_id,
+            "check_in": check_in,
+            "check_out": check_out,
+            "status": status,
+            "channel": "airbnb",
+            "ota_name": "Airbnb",
+            "total_amount": 640.0,
+            "currency": "DKK",
+            "is_owner_stay": False,
+        }
+    )
+    tag = date.fromisoformat(check_in)
+    ende = date.fromisoformat(check_out)
+    while tag < ende:
+        # KEINE `reservation_id`: die Spalte gibt es in `availability` nicht
+        # (live geprüft — sie warf `42703 column availability.reservation_id
+        # does not exist`). Dass hier eine Buchung dahintersteht, sagt allein
+        # `status='booked'`. Ein Fake mit einer erfundenen Spalte hätte den
+        # Fehler grün gemacht — genau wie zuvor bei `users.name`.
+        tables["availability"].append(
+            {
+                "property_id": OBJEKT,
+                "date": tag.isoformat(),
+                "status": "booked",
+                "source": source,
+                "unit_id": unit_id,
+            }
+        )
+        tag += timedelta(days=1)
+    tables.setdefault("guests", []).append(
+        {
+            "id": "gast-1",
+            "tenant_id": "t-1",
+            "first_name": "Mette",
+            "last_name": "Zempel",
+        }
+    )
+    return rid
+
+
+def test_kollisionen_zeigt_die_buchung_mit_allem_zum_entscheiden() -> None:
+    """Der Dialog muss sagen WER, WANN, WIEVIEL — sonst muss man doch suchen."""
+    tables = _tables()
+    rid = _buchung(tables)
+    k = _svc(tables).kollisionen(_ctx(), ANTRAG)
+    assert k.blockiert is True
+    assert k.grund == "belegt"
+    assert k.buchungen_gesamt == 1
+    treffer = k.buchungen[0]
+    assert treffer.reservation_id == rid
+    assert treffer.art == "buchung"
+    assert treffer.bezeichnung == "Mette Zempel"
+    assert treffer.unit_name == "Studio 1"
+    assert treffer.total_amount == 640.0
+    # Währung aus der Zeile, kein €-Ersatz (Wurzel 4).
+    assert treffer.currency == "DKK"
+
+
+def test_kollisionen_meldet_frei_wenn_nichts_im_weg() -> None:
+    k = _svc().kollisionen(_ctx(), ANTRAG)
+    assert k.blockiert is False
+    assert k.grund is None
+    assert k.buchungen_gesamt == 0
+    assert k.freie_einheit_id == EINHEIT_A
+    assert k.min_freie_einheiten == 1
+    assert k.naechte == 3
+    # Nach außen INKLUSIV, wie der Antrag gestellt wurde.
+    assert k.end_date == date(2026, 3, 3)
+
+
+def test_kollisionen_ignoriert_reine_ota_sperre() -> None:
+    """Wurzel 3: derselbe Kanal-Filter wie der Schreibpfad.
+
+    Eine `source='portal'`-Sperre stammt aus dem Channex-Import und gilt nur
+    für OTAs — die Rezeption (und damit die Eigennutzung) darf trotzdem
+    belegen. Meldete die Vorschau sie als Hindernis, bliebe der Antrag
+    grundlos liegen, obwohl der Klick funktioniert hätte.
+    """
+    tables = _tables()
+    tables["availability"].append(
+        {
+            "property_id": OBJEKT,
+            "date": "2026-03-02",
+            "status": "blocked",
+            "source": "portal",
+            "unit_id": EINHEIT_A,
+        }
+    )
+    k = _svc(tables).kollisionen(_ctx(), ANTRAG)
+    assert k.blockiert is False
+    assert k.sperrtage_gesamt == 0
+
+
+def test_kollisionen_sieht_manuelle_sperre_ohne_buchung() -> None:
+    """Handwerker-Sperre: kein Storno, sondern im Kalender aufheben."""
+    tables = _tables()
+    tables["availability"].append(
+        {
+            "property_id": OBJEKT,
+            "date": "2026-03-02",
+            "status": "blocked",
+            "source": "manual",
+            "unit_id": EINHEIT_A,
+        }
+    )
+    k = _svc(tables).kollisionen(_ctx(), ANTRAG)
+    assert k.blockiert is True
+    assert k.buchungen_gesamt == 0  # nichts zu stornieren
+    assert k.sperrtage_gesamt == 1
+    assert k.sperrtage[0].source == "manual"
+    assert k.sperrtage[0].unit_name == "Studio 1"
+
+
+def test_kollisionen_sieht_stop_sell_der_in_availability_fehlt() -> None:
+    """Stop-Sell blockt den Schreibpfad, steht aber NICHT in `availability`.
+
+    Ohne eigene Abfrage sagte die Vorschau „frei" und der Klick kassierte 409.
+    """
+    tables = _tables()
+    tables["stop_sell"].append(
+        {
+            "property_id": OBJEKT,
+            "date": "2026-03-02",
+            "scope": "all",
+            "channels": [],
+            "rate_plan_id": None,
+        }
+    )
+    k = _svc(tables).kollisionen(_ctx(), ANTRAG)
+    assert k.blockiert is True
+    assert k.grund == "stop_sell"
+    assert k.stop_sell_gesamt == 1
+    assert k.stop_sell_tage == ["2026-03-02"]
+
+
+def test_kollisionen_abgereiste_buchung_ist_kein_hindernis() -> None:
+    """Check-out ist EXKLUSIV: wer am Anreisetag abreist, kollidiert nicht."""
+    tables = _tables()
+    _buchung(tables, check_in="2026-02-25", check_out="2026-03-01")
+    k = _svc(tables).kollisionen(_ctx(), ANTRAG)
+    assert k.blockiert is False
+    assert k.buchungen_gesamt == 0
+
+
+@pytest.mark.parametrize("status", ["cancelled", "declined", "expired"])
+def test_kollisionen_tote_buchung_ist_kein_hindernis(status: str) -> None:
+    """Alle drei Zustände, die den Kalender NICHT belegen — gegen das echte
+    Enum `reservation_status` geprüft (es gibt kein `checked_in`)."""
+    tables = _tables()
+    _buchung(tables, status=status)
+    # Der Kalender ist bei einem Storno freigegeben — hier ohne die Zeilen.
+    tables["availability"] = []
+    k = _svc(tables).kollisionen(_ctx(), ANTRAG)
+    assert k.blockiert is False
+    assert k.buchungen_gesamt == 0
+
+
+def test_kollisionen_lebende_buchung_zaehlt_trotz_leerem_kalender() -> None:
+    """Beweist, dass der Ausschluss-Filter RICHTIG HERUM wirkt.
+
+    Ohne diesen Test wäre eine Umkehrung (`in_` statt `not_.in_`) unentdeckt
+    geblieben: dann hätte nur eine STORNIERTE Buchung als Hindernis gezählt
+    und keine einzige echte. Hier ist der Kalender bewusst leer, damit der
+    Befund allein aus der Reservierungs-Abfrage stammt.
+    """
+    tables = _tables()
+    _buchung(tables, status="confirmed")
+    tables["availability"] = []
+    k = _svc(tables).kollisionen(_ctx(), ANTRAG)
+    # Der Kalender ist leer → nicht blockiert (die Einheit ist frei), aber die
+    # Buchung MUSS ausgewiesen sein, sonst filtert die Abfrage falsch.
+    assert k.buchungen_gesamt == 1
+    assert k.buchungen[0].status == "confirmed"
+
+
+def test_kollisionen_zweite_einheit_bleibt_frei() -> None:
+    """0265: ein belegter Tag ist bei n Einheiten KEIN Hindernis.
+
+    Bei zwei Studios und einer Buchung in Studio 1 kann die Eigennutzung in
+    Studio 2 — genau das entscheidet auch die RPC (0275).
+    """
+    tables = _tables(einheiten=2)
+    _buchung(tables, unit_id=EINHEIT_A)
+    k = _svc(tables).kollisionen(_ctx(), ANTRAG)
+    assert k.blockiert is False
+    assert k.freie_einheit_id == EINHEIT_B
+    assert k.einheiten_gesamt == 2
+    # Die Buchung wird trotzdem AUSGEWIESEN — der Entscheider soll sehen, dass
+    # das Objekt nicht leer ist, auch wenn es nicht blockiert.
+    assert k.buchungen_gesamt == 1
+
+
+def test_kollisionen_verzahnte_buchungen_lassen_keine_einheit_durchgehend_frei() -> None:
+    """Tageweise „eine frei" genügt NICHT — die Eigennutzung braucht EINE
+    Einheit für ALLE Nächte. Zwei versetzte Buchungen über zwei Einheiten
+    lassen jeden Tag eine frei, aber keine durchgehend."""
+    tables = _tables(einheiten=2)
+    _buchung(tables, check_in="2026-03-01", check_out="2026-03-03", unit_id=EINHEIT_A)
+    _buchung(tables, check_in="2026-03-03", check_out="2026-03-04", unit_id=EINHEIT_B)
+    k = _svc(tables).kollisionen(_ctx(), ANTRAG)
+    assert k.blockiert is True
+    assert k.freie_einheit_id is None
+    assert k.buchungen_gesamt == 2
+
+
+def test_kollisionen_bei_vorgegebener_einheit_nur_diese_zaehlt() -> None:
+    """Der Antrag meint „Studio 2" — eine Buchung in Studio 1 steht nicht
+    im Weg und darf nicht als Hindernis erscheinen."""
+    tables = _tables(einheiten=2)
+    tables["block_requests"][0]["unit_id"] = EINHEIT_B
+    _buchung(tables, unit_id=EINHEIT_A)
+    k = _svc(tables).kollisionen(_ctx(), ANTRAG)
+    assert k.blockiert is False
+    assert k.unit_name == "Studio 2"
+    assert k.buchungen_gesamt == 0
+
+
+def test_kollisionen_vorgegebene_einheit_belegt_blockiert() -> None:
+    tables = _tables(einheiten=2)
+    tables["block_requests"][0]["unit_id"] = EINHEIT_B
+    _buchung(tables, unit_id=EINHEIT_B)
+    k = _svc(tables).kollisionen(_ctx(), ANTRAG)
+    assert k.blockiert is True
+    assert k.buchungen_gesamt == 1
+
+
+def test_kollisionen_eigennutzung_wird_als_solche_ausgewiesen() -> None:
+    """Eine fremde Eigennutzung löst man über den Widerruf ihres Antrags auf,
+    nicht über einen Storno — darum eine eigene `art`."""
+    tables = _tables()
+    tables["reservations"].append(
+        {
+            "id": "res-own",
+            "tenant_id": "t-1",
+            "property_id": OBJEKT,
+            "guest_id": None,
+            "unit_id": EINHEIT_A,
+            "check_in": "2026-03-02",
+            "check_out": "2026-03-04",
+            "status": "confirmed",
+            "channel": "direct",
+            "total_amount": 0,
+            "is_owner_stay": True,
+            "owner_id": EIGENTUEMER,
+            "stay_name": "Familie Ohm",
+            "block_request_id": "ein-anderer-antrag",
+        }
+    )
+    tables["availability"].append(
+        {
+            "property_id": OBJEKT,
+            "date": "2026-03-02",
+            "status": "booked",
+            "source": "manual",
+            "unit_id": EINHEIT_A,
+        }
+    )
+    k = _svc(tables).kollisionen(_ctx(), ANTRAG)
+    assert k.blockiert is True
+    assert k.buchungen[0].art == "eigennutzung"
+    assert k.buchungen[0].bezeichnung == "Familie Ohm"
+    assert k.buchungen[0].is_owner_stay is True
+    # `booked` gehört zu einer Buchung, die schon oben steht — sie darf nicht
+    # zusätzlich als „gesperrte Nacht" erscheinen, sonst zeigt der Dialog
+    # alles doppelt. Das trennt der STATUS, nicht eine reservation_id.
+    assert k.sperrtage_gesamt == 0
+
+
+def test_kollisionen_vertragsende_wird_als_solches_benannt() -> None:
+    """Live gelernt (Kornblomst, Antrag „2027 komplett", 12.08.2026):
+
+    Dort lagen 365 `contract_end`-Nächte UND 223 Stop-Sell-Tage. „Verkaufsstopp"
+    zu melden wäre wahr, aber irreführend gewesen — die 223 Tage aufzuheben
+    hätte nichts geändert, weil der Verwaltungsvertrag vor 2027 endet. Die
+    Vertragssperre MUSS die genannte Ursache sein.
+    """
+    tables = _tables()
+    for tag in ("2026-03-01", "2026-03-02", "2026-03-03"):
+        tables["availability"].append(
+            {
+                "property_id": OBJEKT,
+                "date": tag,
+                "status": "blocked",
+                "source": "contract_end",
+                "unit_id": EINHEIT_A,
+            }
+        )
+    tables["stop_sell"].append(
+        {
+            "property_id": OBJEKT,
+            "date": "2026-03-02",
+            "scope": "all",
+            "channels": [],
+            "rate_plan_id": None,
+        }
+    )
+    k = _svc(tables).kollisionen(_ctx(), ANTRAG)
+    assert k.blockiert is True
+    assert k.grund == "vertragsende"  # NICHT stop_sell
+    assert k.sperrtage_gesamt == 3
+
+
+def test_genehmigen_nennt_vertragsende_und_nicht_den_stop_sell() -> None:
+    tables = _tables()
+    tables["availability"].append(
+        {
+            "property_id": OBJEKT,
+            "date": "2026-03-02",
+            "status": "blocked",
+            "source": "contract_end",
+            "unit_id": EINHEIT_A,
+        }
+    )
+    with pytest.raises(CalendarError) as exc:
+        _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung())
+    assert exc.value.status_code == 409
+    assert "Verwaltungsvertrag" in exc.value.message
+    assert tables["block_requests"][0]["status"] == "pending"
+
+
+def test_kollisionen_fremder_mandant_404() -> None:
+    """Wurzel 9: derselbe Scope wie List- und Approve-Pfad."""
+    with pytest.raises(CalendarError) as exc:
+        _svc().kollisionen(_ctx(), ANTRAG_FREMD)
+    assert exc.value.status_code == 404
+
+
+def test_kollisionen_schlaegt_freie_spanne_vor() -> None:
+    """Sagt der Dialog nur „belegt", muss die Entscheiderin selbst suchen."""
+    tables = _tables()
+    _buchung(tables, check_in="2026-03-01", check_out="2026-03-02")
+    k = _svc(tables).kollisionen(_ctx(), ANTRAG)
+    assert k.blockiert is True
+    assert k.frei_von == date(2026, 3, 2)
+    assert k.frei_bis == date(2026, 3, 3)
+
+
+def test_genehmigen_nennt_die_kollidierende_buchung_im_409() -> None:
+    """Der Kern des Auftrags: statt „enthält belegte Tage" steht im Fehler,
+    WAS im Weg ist — und der Antrag bleibt offen (Wurzel 1)."""
+    tables = _tables()
+    _buchung(tables)
+    with pytest.raises(CalendarError) as exc:
+        _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung())
+    assert exc.value.status_code == 409
+    assert "Mette Zempel" in exc.value.message
+    antrag = tables["block_requests"][0]
+    assert antrag["status"] == "pending"  # Claim zurückgerollt
+    assert antrag["decided_by"] is None
+    assert _eigennutzungen(tables) == []
+
+
+def test_genehmigen_nennt_stop_sell_im_409() -> None:
+    tables = _tables()
+    tables["stop_sell"].append(
+        {
+            "property_id": OBJEKT,
+            "date": "2026-03-02",
+            "scope": "all",
+            "channels": [],
+            "rate_plan_id": None,
+        }
+    )
+    with pytest.raises(CalendarError) as exc:
+        _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung())
+    assert exc.value.status_code == 409
+    assert "Stop-Sell" in exc.value.message
+    assert tables["block_requests"][0]["status"] == "pending"
+
+
+def test_genehmigen_laeuft_bei_buchung_in_anderer_einheit_durch() -> None:
+    """Der Riegel darf nicht strenger sein als der Schreibpfad."""
+    tables = _tables(einheiten=2)
+    _buchung(tables, unit_id=EINHEIT_A)
+    item = _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung())
+    assert item.status == "approved"
+    assert len(_eigennutzungen(tables)) == 1
+
+
+# --- Vertragskündigung (0377) ------------------------------------------------
+#
+# Der reale Fall: Der Eigentümer von „Feriehus Kornblomst" beantragte
+# 2027-01-01 bis 2027-12-31 mit „Vi er ikke interesseret i udlejning 2027" — er
+# wollte kündigen, gespeichert wurde eine Jahres-Sperre. Ohne dieses Feld musste
+# die Agentur den dänischen Freitext deuten und `contract_end_date` von Hand
+# nachtragen; wird das vergessen, läuft der Vertrag mit Provision und
+# Portal-Distribution weiter, während der Kalender ein Jahr zu ist.
+
+
+def _entscheidung_kuendigung(
+    note: str | None = None, ende: date | None = None
+) -> BlockRequestDecision:
+    return BlockRequestDecision(
+        note=note, als_kuendigung=True, vertragsende=ende
+    )
+
+
+def _property(tables: dict[str, list[dict]]) -> dict:
+    return next(p for p in tables["properties"] if p["id"] == OBJEKT)
+
+
+# Der Antragszeitraum der Standard-Fixture liegt im März 2026 und damit in der
+# VERGANGENHEIT (heute ist der 12.08.2026). Für eine Sperre ist das gleichgültig
+# — die Tests prüfen dort die Zustandslogik. Eine Kündigung dagegen lehnt ein
+# Datum vor heute bewusst ab (ein Vertrag, der seit Monaten beendet wäre,
+# während das Objekt verkauft wurde). Darum ein eigener, in der Zukunft
+# liegender Zeitraum, statt die Prüfung für die Tests aufzuweichen.
+KUENDIGUNG_START = date.today() + timedelta(days=140)
+KUENDIGUNG_ENDE = KUENDIGUNG_START + timedelta(days=2)
+
+
+def _kuendigungs_antrag(**kwargs: object) -> dict[str, list[dict]]:
+    """Tabellen mit einem Antrag, dessen Zeitraum in der Zukunft liegt."""
+    tables = _tables(**kwargs)  # type: ignore[arg-type]
+    tables["block_requests"][0]["start_date"] = KUENDIGUNG_START.isoformat()
+    tables["block_requests"][0]["end_date"] = KUENDIGUNG_ENDE.isoformat()
+    return tables
+
+
+def test_kuendigung_setzt_vertragsende_auf_start_date() -> None:
+    """Ohne ausdrückliches Datum gilt der Antragsbeginn: „ab da nicht mehr
+    vermieten" heißt „ab da kein Vertrag" — nichts wird gerundet oder
+    geraten (Wurzel 4)."""
+    tables = _kuendigungs_antrag()
+    item = _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung_kuendigung())
+    assert item.status == "approved"
+    assert item.als_kuendigung_gewertet is True
+    assert item.vertragsende_gesetzt_auf == KUENDIGUNG_START
+    assert _property(tables)["contract_end_date"] == KUENDIGUNG_START.isoformat()
+
+
+def test_kuendigung_nimmt_ausdrueckliches_datum() -> None:
+    """Der Vertrag kann noch bis Monatsende laufen — dann entscheidet die
+    Agentur das Datum, nicht der Antragszeitraum."""
+    tables = _kuendigungs_antrag()
+    item = _svc(tables).genehmigen(
+        _ctx(), ANTRAG, _entscheidung_kuendigung(ende=KUENDIGUNG_ENDE)
+    )
+    assert item.vertragsende_gesetzt_auf == KUENDIGUNG_ENDE
+    assert _property(tables)["contract_end_date"] == KUENDIGUNG_ENDE.isoformat()
+
+
+def test_kuendigung_legt_keine_eigennutzung_an() -> None:
+    """Eine Kündigung ist keine Belegung. Der normale Pfad legte eine
+    Reservierung an — hier wäre das doppelt falsch: er verlangte einen
+    Personenbezug für einen Aufenthalt, den es nicht gibt, und sperrte GENAU
+    den beantragten Zeitraum, während ein Vertragsende unbefristet gilt."""
+    tables = _kuendigungs_antrag()
+    _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung_kuendigung())
+    assert _eigennutzungen(tables) == []
+
+
+def test_kuendigung_braucht_keinen_eigentuemer_eintrag() -> None:
+    """Der Sperr-Pfad verlangt einen `owners`-Eintrag (der Aufenthalt braucht
+    einen Personenbezug). Eine Kündigung nicht — sie kündigt einen Vertrag am
+    OBJEKT. Ohne diese Trennung wäre eine Kündigung an einem Objekt ohne
+    Eigentümer-Zuordnung mit 422 gescheitert, obwohl sie nichts davon braucht.
+    """
+    tables = _kuendigungs_antrag(mit_eigentuemer=False)
+    item = _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung_kuendigung())
+    assert item.status == "approved"
+
+
+def test_kuendigung_ist_idempotent() -> None:
+    """Wurzel 2: der zweite Klick bekommt 409 und setzt das Datum NICHT
+    erneut — sonst überschriebe er einen inzwischen von Hand korrigierten
+    Wert."""
+    tables = _kuendigungs_antrag()
+    _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung_kuendigung())
+    _property(tables)["contract_end_date"] = "2026-06-01"  # Handkorrektur
+    with pytest.raises(CalendarError) as exc:
+        _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung_kuendigung())
+    assert exc.value.status_code == 409
+    assert _property(tables)["contract_end_date"] == "2026-06-01"
+
+
+def test_kuendigung_in_der_vergangenheit_422() -> None:
+    """Ein Vertragsende in der Vergangenheit hieße, das Objekt sei seit Monaten
+    nicht unter Vertrag — während es verkauft wurde. Klar fehlschlagen statt
+    glattbügeln (Wurzel 4)."""
+    tables = _kuendigungs_antrag()
+    with pytest.raises(CalendarError) as exc:
+        _svc(tables).genehmigen(
+            _ctx(), ANTRAG, _entscheidung_kuendigung(ende=date(2020, 1, 1))
+        )
+    assert exc.value.status_code == 422
+    assert tables["block_requests"][0]["status"] == "pending"
+
+
+def test_kuendigung_des_eigentuemers_braucht_kein_agentur_haekchen() -> None:
+    """Hat der Eigentümer es selbst erklärt (`ist_kuendigung`), handelt der
+    Genehmigen-Pfad ohnehin danach — die Agentur bestätigt nur."""
+    tables = _kuendigungs_antrag()
+    tables["block_requests"][0]["ist_kuendigung"] = True
+    item = _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung())
+    assert item.vertragsende_gesetzt_auf == KUENDIGUNG_START
+    # Die Wertung der Agentur bleibt FALSE: es war seine Erklärung, nicht ihre
+    # Auslegung. Beides zu vermischen hieße hinterher behaupten, die Agentur
+    # habe ausgelegt, wo der Eigentümer erklärt hat.
+    assert item.als_kuendigung_gewertet is False
+    assert item.ist_kuendigung is True
+
+
+def test_kuendigung_ohne_haekchen_bleibt_eine_sperre() -> None:
+    """Der Normalfall darf sich NICHT ändern: ohne beide Merkmale ist ein
+    Antrag eine Nächte-Sperre und kein Vertragsende."""
+    tables = _kuendigungs_antrag()
+    _svc(tables).genehmigen(_ctx(), ANTRAG, _entscheidung())
+    assert len(_eigennutzungen(tables)) == 1
+    assert _property(tables).get("contract_end_date") is None
+
+
+def test_widerruf_nimmt_das_vertragsende_zurueck() -> None:
+    """Wurzel 1 — der Gegenzustand: bleibt das Ende stehen, ist das Objekt für
+    immer aus dem Verkauf, ohne dass ein Antrag darauf hinweist."""
+    tables = _kuendigungs_antrag()
+    svc = _svc(tables)
+    svc.genehmigen(_ctx(), ANTRAG, _entscheidung_kuendigung())
+    assert _property(tables)["contract_end_date"] == KUENDIGUNG_START.isoformat()
+    item = svc.zuruecknehmen(_ctx(), ANTRAG, _entscheidung("doch nicht"))
+    assert item.status == "rejected"
+    assert _property(tables)["contract_end_date"] is None
+
+
+def test_widerruf_laesst_ein_fremdes_vertragsende_stehen() -> None:
+    """NUR der eigene Gegenzustand (Wurzel 1): hat jemand nach der Genehmigung
+    ein anderes Ende eingetragen, ist das eine jüngere Entscheidung. Der
+    Widerruf DIESES Antrags darf sie nicht überschreiben."""
+    tables = _kuendigungs_antrag()
+    svc = _svc(tables)
+    svc.genehmigen(_ctx(), ANTRAG, _entscheidung_kuendigung())
+    _property(tables)["contract_end_date"] = "2027-01-01"  # jüngere Entscheidung
+    svc.zuruecknehmen(_ctx(), ANTRAG, _entscheidung())
+    assert _property(tables)["contract_end_date"] == "2027-01-01"
+
+
+def test_kollisionen_als_kuendigung_ist_contract_end_kein_hindernis() -> None:
+    """Der live gefundene Fall: Kornblomst war 2027 komplett gesperrt, weil das
+    Vertragsende 09.10.2026 längst am Objekt stand. Als SPERRE geprüft ist das
+    ein Hindernis, als KÜNDIGUNG geprüft ist es der Zielzustand."""
+    tables = _kuendigungs_antrag()
+    for tag in [
+        (KUENDIGUNG_START + timedelta(days=i)).isoformat() for i in range(3)
+    ]:
+        tables["availability"].append(
+            {
+                "property_id": OBJEKT,
+                "date": tag,
+                "status": "blocked",
+                "source": "contract_end",
+                "unit_id": EINHEIT_A,
+            }
+        )
+    svc = _svc(tables)
+    assert svc.kollisionen(_ctx(), ANTRAG).grund == "vertragsende"
+    als_k = svc.kollisionen(_ctx(), ANTRAG, als_kuendigung=True)
+    assert als_k.blockiert is False
+    assert als_k.als_kuendigung is True
+
+
+def test_kollisionen_als_kuendigung_weist_buchungen_dahinter_aus() -> None:
+    """Buchungen VERHINDERN die Kündigung nicht (0359 — eine bestätigte Buchung
+    wird bedient, der Vertrag läuft für sie aus), müssen aber sichtbar sein:
+    sonst steht das Objekt gesperrt, mit Gästen darin, und niemand weiß welche.
+    """
+    tables = _kuendigungs_antrag()
+    _buchung(
+        tables,
+        check_in=KUENDIGUNG_START.isoformat(),
+        check_out=(KUENDIGUNG_ENDE + timedelta(days=1)).isoformat(),
+    )
+    k = _svc(tables).kollisionen(_ctx(), ANTRAG, als_kuendigung=True)
+    assert k.blockiert is False  # kein Hindernis
+    assert k.buchungen_gesamt == 1  # aber ausgewiesen
+    assert k.buchungen[0].bezeichnung == "Mette Zempel"
+
+
+def test_kuendigung_laeuft_trotz_belegtem_zeitraum() -> None:
+    """Der Belegungs-Riegel darf eine Kündigung nicht abweisen: sie belegt
+    nichts. Ein Vertrag endet unabhängig davon, wer nächste Woche anreist."""
+    tables = _kuendigungs_antrag()
+    _buchung(
+        tables,
+        check_in=KUENDIGUNG_START.isoformat(),
+        check_out=(KUENDIGUNG_ENDE + timedelta(days=1)).isoformat(),
+    )
+    item = _svc(tables).genehmigen(
+        _ctx(), ANTRAG, _entscheidung_kuendigung()
+    )
+    assert item.status == "approved"
+    assert item.vertragsende_gesetzt_auf == KUENDIGUNG_START
 
 
 # --- Empfängerkreis der Meldung ---------------------------------------------

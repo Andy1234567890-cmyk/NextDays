@@ -1405,7 +1405,13 @@
       },
       "reason": "Razlog",
       "reasonPlaceholder": "Zakaj naj bo blokirano? (npr. lastna uporaba, obrtniki)",
-      "decisionNote": "Opomba upravljanja"
+      "decisionNote": "Opomba upravljanja",
+      "termination": "Rad bi prekinil pogodbo.",
+      "terminationConfirmed": "Pogodba se konča na {datum}.",
+      "terminationHint": "S tem se ne le blokira obdobje, ampak se tudi prekine trženjska pogodba na datum začetka veljavnosti. Administracija potrdi datum.",
+      "terminationInterpreted": "Administracija je to zahtevo interpretirala kot obvestilo o preklicu – pogodba se konča {datum}. Prosimo, sporočite nam, če ni bilo mišljeno drugače.",
+      "terminationPending": "Prekinitev – uprava še ni potrdila konca pogodbe.",
+      "terminationSent": "Obvestilo o odpovedi je bilo poslano. Uprava potrjuje odpoved pogodbe."
     },
     "meter": {
       "title": "Vnesi stanje števca",
@@ -5771,7 +5777,8 @@
         "booked": "Zasedeno",
         "blocked": "Blokirano",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell"
+        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "contractEnd": "Pogodba prekinjena"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "vsi kanali",
@@ -5900,6 +5907,10 @@
       "fallbackAddonName": "Dodatna storitev",
       "markPaidAction": "Označi kot plačano",
       "markPaidSuccess": "Označeno kot plačano.",
+      "cancelAction": "Prekliči",
+      "cancelBusy": "Preklic…",
+      "cancelConfirm": "Ali res želite preklicati to dodatno storitev?",
+      "cancelSuccess": "Dodatna storitev je preklicana.",
       "addSuccess": "Dodatna storitev dodana.",
       "totalLabel": "Skupaj dodatne storitve",
       "emptyPurchased": "Še ni rezerviranih dodatnih storitev.",
@@ -6175,7 +6186,44 @@
         "approve": "Zahteva odobrena, nočitve blokirane.",
         "reject": "Zahteva zavrnjena.",
         "revoke": "Odobritev preklicana, nočitve sproščene."
-      }
+      },
+      "check": {
+        "blocked": {
+          "belegt": "Termin je rezerviran.",
+          "stop_sell": "V tem obdobju velja prepoved prodaje.",
+          "vertragsende": "Obdobje je po koncu upravne pogodbe."
+        },
+        "blockedNightsHint": "Blokiraj brez rezervacije – odstrani iz koledarja, ne prekliči.",
+        "bookingsHint": "NE bodo samodejno preklicani. Prekličite jih posamično, nato pa bo vloga odobrena.",
+        "close": "Zapri",
+        "loading": "Časovni okvir se pregleduje …",
+        "openBooking": "Odpri rezervacijo",
+        "openStay": "Odprto bivanje",
+        "title": "Preveri odobritev",
+        "truncated": "Seznam je skrajšan; zgornje številke so popolne.",
+        "free": "Časovno obdobje je na voljo.",
+        "blockedNights": "{anzahl} blokirane noči",
+        "bookings": "Rezervacije {anzahl} v tem obdobju",
+        "stopSell": "{anzahl} dni z ustavitvijo prodaje",
+        "subtitle": "{objekt}, {von} – {bis}. Pred zaklepanjem se preveri, ali je časovno obdobje prosto.",
+        "suggestion": "{von} – {bis} bi bil na voljo.",
+        "summary": "{naechte} noči · {einheiten} enote · na voljo vsaj {frei}",
+        "unitScope": "Vloga se nanaša samo na: {einheit}",
+        "willUse": "Naslednje je zasedeno: {einheit}",
+        "contractHint": "Dokler pogodba ni podaljšana, tukaj ni mogoče ničesar blokirati – v tem obdobju nepremičnine ne upravljate.",
+        "approveTermination": "Vnesite datum konca pogodbe",
+        "bookingsAfterEnd": "Rezervacije {anzahl} po izteku pogodbe",
+        "bookingsAfterEndHint": "Ostanejo veljavni in bodo izpolnjeni – pogodba zanje preneha veljati. Blokirani so le prosti dnevi.",
+        "contractEndHint": "Pustite prazno: velja datum začetka veljavnosti vloge ({datum}). Če pogodba velja dlje časa, tukaj vnesite dejanski datum konca.",
+        "contractEndLabel": "Konec pogodbe (prvi dan brez pogodbe)",
+        "isTermination": "To je prekinitev pogodbe",
+        "terminationByOwner": "Lastnik je to v prijavi pojasnil sam.",
+        "terminationHint": "Lastnik želi prekiniti pogodbo, ne le blokirati nočitev. Namesto blokiranja dostopa bo datum izteka pogodbe določen neposredno na nepremičnini – s tem se bo končalo njeno trženje na vseh portalih.",
+        "terminationReady": "Odpoved pogodbe o zaposlitvi se lahko registrira.",
+        "terminationSummary": "Pogodba se konča z {datum} – od tega dne naprej nepremičnina ne bo več naprodaj nikjer."
+      },
+      "terminationRequested": "Lastnik želi prekiniti pogodbo.",
+      "terminationSet": "Pogodba se konča na {datum}."
     }
   },
   "seasons": {
