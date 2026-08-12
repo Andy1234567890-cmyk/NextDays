@@ -1489,6 +1489,7 @@
       },
       "guest": "Oaspete",
       "channel": "Sursa rezervării",
+      "ownerStay": "Uz propriu",
       "blockHint": "Vrei să blochezi o perioadă? Trimite o cerere — administrația decide.",
       "blockCta": "Solicită blocare",
       "weekdays": "Lun,Mar,Mie,Joi,Vin,Sâm,Dum",

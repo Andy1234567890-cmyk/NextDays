@@ -1494,6 +1494,7 @@
       },
       "guest": "Vieras",
       "channel": "Varauslähde",
+      "ownerStay": "Omistajan käyttö",
       "blockHint": "Haluatko estää ajanjakson? Lähetä pyyntö — hallinto päättää.",
       "blockCta": "Pyydä estoa",
       "weekdays": "Ma,Ti,Ke,To,Pe,La,Su",

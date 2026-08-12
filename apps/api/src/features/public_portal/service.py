@@ -79,6 +79,13 @@ class _Belegung:
     belegt. Zwei gleichzeitige Reservierungen am selben Objekt sind damit der
     Normalfall, nicht die Ausnahme — fünf identische Studios unter einem Typ
     können an derselben Nacht fünf verschiedene Gäste tragen.
+
+    `eigennutzung=True` ist eine Belegung durch den EIGENTÜMER selbst (0241,
+    `reservations.is_owner_stay`) — der genehmigte Sperrantrag. Sie bringt
+    keinen Umsatz, belegt die Nacht aber genauso; deshalb steht sie hier mit
+    `betrag=None` und OHNE `grund`: es ist nichts unbestimmt, es gibt schlicht
+    nichts auszuzahlen. Ein `grund` würde in der Oberfläche „nicht ausweisbar"
+    behaupten und den Eigentümer einen Datenfehler suchen lassen, wo keiner ist.
     """
 
     reservation_id: str
@@ -88,6 +95,7 @@ class _Belegung:
     grund: str | None
     gast: str | None
     quelle: str | None
+    eigennutzung: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -127,12 +135,17 @@ class _NachtInfo:
         Eine Teilsumme auszuweisen wäre schlimmer als gar keine: sie sähe aus
         wie der Ertrag der Nacht, wäre aber zu niedrig (Wurzel 4).
         """
-        if not self.belegungen:
+        # Eigennutzungen zählen hier NICHT mit: sie bringen keinen Umsatz, also
+        # ist ihr fehlender Betrag kein „unbestimmt". Ohne diese Ausnahme zöge
+        # eine Eigennutzung die ganze Nacht auf None und verschluckte den echten
+        # Payout einer gleichzeitig belegten Schwestereinheit (0265).
+        bezahlte = [b for b in self.belegungen if not b.eigennutzung]
+        if not bezahlte:
             return None
-        if any(b.betrag is None for b in self.belegungen):
+        if any(b.betrag is None for b in bezahlte):
             return None
         gesamt = sum(
-            (Decimal(str(b.betrag)) for b in self.belegungen), Decimal("0")
+            (Decimal(str(b.betrag)) for b in bezahlte), Decimal("0")
         )
         return _money(gesamt)
 
@@ -295,6 +308,9 @@ class PublicPortalService:
             iso = cur.isoformat()
             info = nacht_info.get(iso)
             belegungen = info.belegungen if info else []
+            gast_belegung = next(
+                (b for b in belegungen if not b.eigennutzung), None
+            )
             days.append(
                 PortalCalendarDay(
                     date=cur,
@@ -307,8 +323,17 @@ class PublicPortalService:
                     owner_payout_unknown_reason=info.grund if info else None,
                     # Erster Gast/Quelle nur als Kurzform für die Monatszelle —
                     # die vollständige Liste steht in `bookings`.
-                    guest_first_name=belegungen[0].gast if belegungen else None,
-                    booking_source=belegungen[0].quelle if belegungen else None,
+                    #
+                    # Bewusst die erste BEZAHLTE Belegung: eine Eigennutzung hat
+                    # weder Gast noch Portal, und stünde sie vorn, verdeckte sie
+                    # den Gastnamen einer gleichzeitig belegten Schwestereinheit
+                    # (0265) mit einem leeren Feld.
+                    guest_first_name=(
+                        gast_belegung.gast if gast_belegung else None
+                    ),
+                    booking_source=(
+                        gast_belegung.quelle if gast_belegung else None
+                    ),
                     bookings=[_buchung(b) for b in belegungen],
                     units_booked=len(belegungen),
                     units_total=einheiten_gesamt,
@@ -381,14 +406,29 @@ class PublicPortalService:
                 # zusätzlich eine Zahlungsgebühr anfällt (0364).
                 "currency, source_channex_booking_id, ota_commission, "
                 # `pets` entscheidet, ob die Haustiergebühr des Objekts anfiel.
-                "payment_collect, pets"
+                "payment_collect, pets, "
+                # Eigennutzung des Eigentümers (0241): belegt die Nacht, bringt
+                # aber keinen Umsatz. Muss je ZEILE bekannt sein, weil davon
+                # abhängt, ob überhaupt gerechnet wird.
+                "is_owner_stay"
             )
             .eq("tenant_id", tenant_id)
             .eq("property_id", property_id)
-            # Eigentümer-Aufenthalte bringen keine Auszahlung (0241) — dieselbe
-            # Ausnahme wie im Abrechnungs-Service, sonst stünde im Kalender eine
-            # 0,00-Nacht für die eigene Nutzung.
-            .eq("is_owner_stay", False)
+            # Eigentümer-Aufenthalte werden MITGELADEN und weiter unten von der
+            # Payout-Rechnung ausgenommen (`is_owner_stay` je Zeile).
+            #
+            # Vorher stand hier `.eq("is_owner_stay", False)`. Die Absicht war
+            # richtig — eine Eigennutzung bringt keine Auszahlung (0241) —, die
+            # Folge war es nicht: mit dem Payout verschwand die BELEGUNG. Der
+            # Eigentümer bekam für seine eigene, genehmigte Sperre eine Nacht
+            # mit `status='booked'`, aber `units_booked=0` und leerer
+            # `bookings`-Liste; die Oberfläche zeichnet dort nichts und die
+            # Sperre war unsichtbar (live 12.08.2026: FeWo *Stjerneskud*,
+            # 29.08.–11.09., genehmigter Sperrantrag).
+            #
+            # Der Filter gehört an die RECHNUNG, nicht an die Belegung: was
+            # Geld bringt, entscheidet `is_owner_stay` je Zeile, was den
+            # Kalender belegt, ist jede aktive Reservierung.
             .in_("status", ["confirmed", "completed"])
             .lt("check_in", end.isoformat())
             .gt("check_out", start.isoformat())
@@ -704,6 +744,33 @@ class PublicPortalService:
         grund: str | None = None
         betraege: list[Decimal] = []
         currency = (r.get("currency") or "").strip()
+        # Eigennutzung (0241): der genehmigte Sperrantrag des Eigentümers. Sie
+        # belegt die Nacht, bringt aber keinen Umsatz — es wird GAR NICHT
+        # gerechnet. Der Unterschied zu „Betrag nicht ausweisbar" ist
+        # wesentlich: dort fehlt eine Grundlage (Datenfehler), hier gibt es
+        # nichts auszuzahlen. Darum bleibt `grund` None; ein Grund ließe die
+        # Oberfläche „nicht ausweisbar" behaupten und den Eigentümer einen
+        # Fehler suchen, den es nicht gibt (Wurzel 4).
+        #
+        # Gast und Quelle fallen ebenfalls weg: bei einer Eigennutzung gibt es
+        # keinen Gast (`guest_id` ist NULL) und `channel='direct'` ist eine
+        # technische Angabe, kein Buchungsportal — als Kanal-Logo gerendert
+        # sähe die eigene Sperre wie eine Direktbuchung aus.
+        eigennutzung = bool(r.get("is_owner_stay"))
+        if eigennutzung:
+            self._nacht_eintragen(
+                r,
+                start,
+                end,
+                out,
+                betrag_je_nacht=[],
+                currency=None,
+                grund=None,
+                gast=None,
+                quelle=None,
+                eigennutzung=True,
+            )
+            return
         try:
             # Vertrag (0343) schlägt Altspalten. Nur wenn für den Stichtag
             # dieser Buchung kein Vertrag gilt, muss überhaupt ein Altsatz da
@@ -749,6 +816,45 @@ class PublicPortalService:
                 reservation_id=str(r.get("id")),
                 grund=exc.grund,
             )
+        self._nacht_eintragen(
+            r,
+            start,
+            end,
+            out,
+            betrag_je_nacht=betraege,
+            currency=currency or None,
+            grund=grund,
+            gast=gast,
+            quelle=quelle,
+            eigennutzung=False,
+        )
+
+    @staticmethod
+    def _nacht_eintragen(  # noqa: PLR0913 — eine Belegung mit ihren Anzeigedaten
+        r: dict,
+        start: date,
+        end: date,
+        out: dict[str, _NachtInfo],
+        *,
+        betrag_je_nacht: list[Decimal],
+        currency: str | None,
+        grund: str | None,
+        gast: str | None,
+        quelle: str | None,
+        eigennutzung: bool,
+    ) -> None:
+        """Eine Buchung auf ihre Nächte im Fenster eintragen.
+
+        EIN Weg für beide Arten (Wurzel 1): bezahlte Buchung und Eigennutzung
+        landen über dieselbe Zuschnitt-Logik in der Nacht-Map. Ein zweiter,
+        danebenstehender Loop für die Eigennutzung liefe beim ersten Zusatz
+        auseinander — etwa wenn das Fenster-Zuschneiden sich ändert.
+
+        `betrag_je_nacht` ist bei einer Eigennutzung leer: dort gibt es nichts
+        zu verteilen, und jede Nacht bekommt `betrag=None` ohne `grund`.
+        """
+        check_in = _als_datum(r.get("check_in"))
+        check_out = _als_datum(r.get("check_out"))
         if check_in is None or check_out is None:
             return
         # Nächte der Buchung auf das angefragte Fenster zuschneiden.
@@ -757,8 +863,8 @@ class PublicPortalService:
         while cur < check_out:
             if start <= cur < end:
                 betrag = (
-                    _money(betraege[index])
-                    if betraege and index < len(betraege)
+                    _money(betrag_je_nacht[index])
+                    if betrag_je_nacht and index < len(betrag_je_nacht)
                     else None
                 )
                 # ANHÄNGEN, nicht ersetzen: mehrere Einheiten desselben Typs
@@ -770,10 +876,11 @@ class PublicPortalService:
                         reservation_id=str(r["id"]),
                         unit_id=str(r["unit_id"]) if r.get("unit_id") else None,
                         betrag=betrag,
-                        currency=currency or None,
+                        currency=currency,
                         grund=grund,
                         gast=gast,
                         quelle=quelle,
+                        eigennutzung=eigennutzung,
                     )
                 )
             cur += timedelta(days=1)
@@ -911,6 +1018,19 @@ class PublicPortalService:
             .gte("check_in", period_from.isoformat())
             .lte("check_in", period_to.isoformat())
             .in_("status", ["confirmed", "completed"])
+            # HIER gehört der Filter hin — anders als im Kalender (0241): die
+            # Einnahmen-Übersicht zählt VERMIETUNG, und eine Eigennutzung ist
+            # keine. Ohne ihn wurden Nächte und Buchungen des Eigentümers als
+            # Vermietung ausgewiesen (live 12.08.2026: FeWo *Stjerneskud*
+            # zeigte 50 Nächte / 6 Buchungen statt 36 / 5, weil 14 Nächte
+            # Eigennutzung mitzählten). Die Auszahlungssumme blieb dabei
+            # unauffällig, weil eine Eigennutzung `total_amount = 0` trägt —
+            # die falsche Zahl stand in der Belegung, nicht im Geld.
+            #
+            # Der Kalender macht bewusst das Gegenteil und lädt sie MIT: dort
+            # ist die Frage „was belegt diese Nacht?", hier „was hat vermietet
+            # eingebracht?".
+            .eq("is_owner_stay", False)
             .order("id")
         )
 
@@ -1320,6 +1440,7 @@ def _buchung(b: _Belegung) -> PortalNightBooking:
         payout_unknown_reason=b.grund,
         guest_first_name=b.gast,
         booking_source=b.quelle,
+        is_owner_stay=b.eigennutzung,
     )
 
 

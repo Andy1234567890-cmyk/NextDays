@@ -1489,6 +1489,7 @@
       },
       "guest": "Hosť",
       "channel": "Zdroj rezervácie",
+      "ownerStay": "Vlastné užívanie",
       "blockHint": "Chcete zablokovať obdobie? Podajte žiadosť — rozhoduje správa.",
       "blockCta": "Požiadať o blokovanie",
       "weekdays": "Po,Ut,St,Št,Pi,So,Ne",

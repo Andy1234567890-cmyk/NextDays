@@ -1494,6 +1494,7 @@
       },
       "guest": "Client",
       "channel": "Source de la réservation",
+      "ownerStay": "Usage personnel",
       "blockHint": "Tu veux faire bloquer une période ? Envoie une demande — la gestion décide.",
       "blockCta": "Demander un blocage",
       "weekdays": "Lun,Mar,Mer,Jeu,Ven,Sam,Dim",

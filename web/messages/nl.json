@@ -1489,6 +1489,7 @@
       },
       "guest": "Gast",
       "channel": "Boekingsbron",
+      "ownerStay": "Eigen gebruik",
       "blockHint": "Wil je een periode laten blokkeren? Dien een aanvraag in — de beheerder beslist.",
       "blockCta": "Blokkering aanvragen",
       "weekdays": "Ma,Di,Wo,Do,Vr,Za,Zo",

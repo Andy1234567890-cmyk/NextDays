@@ -1494,6 +1494,7 @@
       },
       "guest": "Gost",
       "channel": "Izvor rezervacije",
+      "ownerStay": "Vlastito korištenje",
       "blockHint": "Želiš blokirati razdoblje? Podnesi zahtjev — odlučuje uprava.",
       "blockCta": "Zatraži blokadu",
       "weekdays": "Pon,Uto,Sri,Čet,Pet,Sub,Ned",

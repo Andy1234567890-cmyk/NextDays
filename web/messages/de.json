@@ -1494,6 +1494,7 @@
       },
       "guest": "Gast",
       "channel": "Buchungsquelle",
+      "ownerStay": "Eigennutzung",
       "blockHint": "Einen Zeitraum sperren lassen? Stelle einen Antrag — die Verwaltung entscheidet.",
       "blockCta": "Sperrung beantragen",
       "weekdays": "Mo,Di,Mi,Do,Fr,Sa,So",

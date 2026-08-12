@@ -1489,6 +1489,7 @@
       },
       "guest": "Gost",
       "channel": "Vir rezervacije",
+      "ownerStay": "Lastna raba",
       "blockHint": "Želite blokirati obdobje? Oddajte zahtevo — odloča upravljanje.",
       "blockCta": "Zahtevaj blokado",
       "weekdays": "Pon,Tor,Sre,Čet,Pet,Sob,Ned",

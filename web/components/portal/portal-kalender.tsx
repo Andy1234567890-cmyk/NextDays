@@ -141,6 +141,16 @@ function kanalFarbe(quelle: string | null | undefined): string {
   return KANAL_FARBE[key] ?? "bg-channel-ota-other";
 }
 
+/**
+ * Farbe der EIGENNUTZUNG (0241) — bewusst kein Kanalton.
+ *
+ * Die eigene Sperre ist keine Buchung über einen Vertriebsweg; sie in einer
+ * Kanalfarbe zu zeichnen (und sei es der Sammelton `ota_other`) behauptete
+ * genau das. `bg-muted-foreground` ist derselbe Ton, den die Zelle für
+ * `status='blocked'` trägt — gesperrt sieht damit überall gleich aus.
+ */
+const EIGENNUTZUNG_FARBE = "bg-muted-foreground";
+
 // --- Aufenthalte statt Nächte ----------------------------------------------
 
 /**
@@ -180,6 +190,10 @@ type Aufenthalt = {
   currency: string | null;
   gast: string | null;
   quelle: string | null;
+  /** Eigennutzung des Eigentümers (0241) statt einer Gastbuchung. Sie trägt
+   *  weder Gast noch Portal und bringt keinen Umsatz — der Chip zeigt darum
+   *  „Eigennutzung" statt Logo/Vorname und gar keinen Betrag. */
+  eigennutzung: boolean;
 };
 
 /**
@@ -229,16 +243,28 @@ function aufenthalteBilden(tage: PortalCalendarDay[]): Aufenthalt[] {
           proNacht: wert,
           minProNacht: wert,
           maxProNacht: wert,
-          luecke: wert == null,
-          grund: wert == null ? b.payout_unknown_reason : null,
+          // Eine Eigennutzung hat KEINE Lücke: es fehlt nichts, es gibt nichts
+          // auszuzahlen. Ohne diese Ausnahme trüge der Chip der eigenen Sperre
+          // „k. A." und der Tooltip „nicht ausweisbar" — der Eigentümer suchte
+          // einen Datenfehler, den es nicht gibt (Wurzel 4).
+          luecke: !b.is_owner_stay && wert == null,
+          grund:
+            !b.is_owner_stay && wert == null ? b.payout_unknown_reason : null,
           currency: b.currency,
           gast: b.guest_first_name?.trim() || null,
           quelle: b.booking_source?.trim() || null,
+          eigennutzung: b.is_owner_stay,
         });
         continue;
       }
       vorhanden.bis = tag.date;
       vorhanden.naechte += 1;
+      // Bei einer Eigennutzung gibt es nichts fortzuschreiben: kein Betrag,
+      // keine Spanne, keine Währung. Ohne dieses frühe Weiter liefe sie in den
+      // Währungsvergleich unten und setzte `grund='betrag'` — die eigene Sperre
+      // behauptete dann einen Datenfehler, weil `currency` erwartungsgemäß
+      // `null` ist. Nur `bis`/`naechte` wachsen mit (oben bereits erledigt).
+      if (b.is_owner_stay) continue;
       // `proNacht` bleibt der Wert der ERSTEN Nacht und wird nicht fortgeschrieben.
       // Nur die Spanne wächst mit — sie speist den Tooltip bei Saisonwechsel.
       if (wert == null) {
@@ -461,12 +487,22 @@ export function PortalKalender({
   const kanaeleImMonat = useMemo(() => {
     const proFarbe = new Map<string, string>();
     for (const a of aufenthalte) {
-      if (!a.quelle) continue;
+      // Eigennutzungen tragen keinen Kanal und haben ihren eigenen
+      // Legendeneintrag (siehe `eigennutzungImBand`).
+      if (a.eigennutzung || !a.quelle) continue;
       const farbe = kanalFarbe(a.quelle);
       if (!proFarbe.has(farbe)) proFarbe.set(farbe, a.quelle);
     }
     return [...proFarbe.values()].sort((x, y) => x.localeCompare(y));
   }, [aufenthalte]);
+
+  // Steht im sichtbaren Band überhaupt eine Eigennutzung? Nur dann bekommt sie
+  // einen Legendenpunkt — wie bei den Kanälen wird nichts erklärt, was gerade
+  // nirgends zu sehen ist.
+  const eigennutzungImBand = useMemo(
+    () => aufenthalte.some((a) => a.eigennutzung),
+    [aufenthalte],
+  );
 
   /**
    * Das Band: je Monat seine Wochenzeilen samt Chip-Segmenten.
@@ -788,6 +824,12 @@ export function PortalKalender({
                 {kanaeleImMonat.map((k) => (
                   <LegendenPunkt key={k} klasse={kanalFarbe(k)} label={channelLabelLoose(k)} />
                 ))}
+                {eigennutzungImBand && (
+                  <LegendenPunkt
+                    klasse={EIGENNUTZUNG_FARBE}
+                    label={t("calendar.ownerStay")}
+                  />
+                )}
                 <LegendenPunkt
                   klasse="bg-muted-foreground"
                   label={t("calendar.status.blocked")}
@@ -920,30 +962,38 @@ function bahnenVerteilen(segmente: Segment[]): {
       // Sie zählt je SPALTE, damit „+2" wirklich an den Tagen steht, an denen
       // zwei weitere Einheiten belegt sind — und nicht über den ganzen
       // Aufenthalt hinweg eine Zahl behauptet, die nur am ersten Tag stimmt.
+      // Eine Eigennutzung wird MITGEZÄHLT (sie belegt eine Einheit), trägt aber
+      // NICHTS zur Summe bei: sie hat weder Betrag noch Währung. Ohne diese
+      // Trennung zöge sie die Sammelsumme auf `null` und der „+n"-Chip zeigte
+      // „k. A.", obwohl die übrigen Einheiten sehr wohl einen Payout haben.
+      const eigen = seg.aufenthalt.eigennutzung;
+      const beitrag = eigen ? null : seg.aufenthalt.proNacht;
+      const beitragWaehrung = eigen ? null : seg.aufenthalt.currency;
       for (const s of spalten) {
         const vorhanden = ueberlauf.get(s);
         if (!vorhanden) {
           ueberlauf.set(s, {
             anzahl: 1,
-            summe: seg.aufenthalt.proNacht,
-            currency: seg.aufenthalt.currency,
-            grund: seg.aufenthalt.proNacht == null ? seg.aufenthalt.grund : null,
+            summe: beitrag,
+            currency: beitragWaehrung,
+            grund: eigen || beitrag != null ? null : seg.aufenthalt.grund,
           });
           continue;
         }
         vorhanden.anzahl += 1;
+        if (eigen) continue;
         // Wie bei einem einzelnen Aufenthalt: eine unbestimmte Position macht
         // den Wert unbestimmt, es wird keine Teilsumme gezeigt (Wurzel 4).
         vorhanden.summe =
-          vorhanden.summe == null || seg.aufenthalt.proNacht == null
+          vorhanden.summe == null || beitrag == null
             ? null
-            : vorhanden.summe + seg.aufenthalt.proNacht;
+            : vorhanden.summe + beitrag;
         // Der Grund der ersten unbestimmten Position trägt die Erklärung — auch
         // hier darf kein wortloses „—" entstehen.
-        if (seg.aufenthalt.proNacht == null) {
+        if (beitrag == null) {
           vorhanden.grund = vorhanden.grund ?? seg.aufenthalt.grund;
         }
-        if (vorhanden.currency !== seg.aufenthalt.currency) {
+        if (vorhanden.currency !== beitragWaehrung) {
           vorhanden.currency = null;
           vorhanden.summe = null;
           vorhanden.grund = vorhanden.grund ?? "betrag";
@@ -1100,21 +1150,59 @@ function AufenthaltChip({
       ? t(GRUND_KEYS[a.grund])
       : t("calendar.payoutUnknown.label");
 
-  const titel = [
-    `${a.von} – ${a.bis}`,
-    t("calendar.nights", { count: a.naechte }),
-    a.gast ? `${t("calendar.guest")}: ${a.gast}` : null,
-    kanalLabel ? `${t("calendar.channel")}: ${kanalLabel}` : null,
-    // Fehlt der Betrag, nennt der Tooltip den GRUND statt eines Gedankenstrichs.
-    `${t("calendar.payoutPerNight")}: ${spanne ?? betrag ?? grundText}`,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  // Die Eigennutzung bekommt einen eigenen Tooltip: kein Gast, kein Kanal, und
+  // vor allem KEINE Betragszeile. „Auszahlung/Nacht: nicht ausweisbar" wäre
+  // hier eine Falschaussage — es gibt schlicht nichts auszuzahlen.
+  const titel = a.eigennutzung
+    ? [
+        `${a.von} – ${a.bis}`,
+        t("calendar.nights", { count: a.naechte }),
+        t("calendar.ownerStay"),
+      ].join(" · ")
+    : [
+        `${a.von} – ${a.bis}`,
+        t("calendar.nights", { count: a.naechte }),
+        a.gast ? `${t("calendar.guest")}: ${a.gast}` : null,
+        kanalLabel ? `${t("calendar.channel")}: ${kanalLabel}` : null,
+        // Fehlt der Betrag, nennt der Tooltip den GRUND statt eines Gedankenstrichs.
+        `${t("calendar.payoutPerNight")}: ${spanne ?? betrag ?? grundText}`,
+      ]
+        .filter(Boolean)
+        .join(" · ");
 
   // Halbtags-Versatz nur an ECHTEN Kanten: an einer bloßen Wochengrenze läuft
   // der Chip bündig weiter, sonst entstünde dort eine Lücke, die wie ein
   // freier Tag aussieht.
   const { links, breite } = chipLage(segment);
+
+  // Gemeinsame Geometrie beider Chip-Arten — sie unterscheiden sich nur in
+  // Farbe und Inhalt, nicht in Lage und Kantenrundung.
+  const lage = {
+    left: `calc(${links}% + 0.125rem)`,
+    width: `calc(${breite}% - 0.25rem)`,
+    top: `calc(${bahnOben(bahn)} + ${CHIP_HOEHE / 2}rem)`,
+    height: `${CHIP_HOEHE}rem`,
+  };
+  const kanten = `${segment.echterAnfang ? "rounded-l-full" : ""} ${
+    segment.echtesEnde ? "rounded-r-full" : ""
+  }`;
+
+  // EIGENNUTZUNG (0241): eigener Chip statt der Gast-Darstellung. Kein
+  // Portal-Logo (es gab kein Portal), kein Vorname (es gibt keinen Gast) und
+  // keine Betragszeile — nicht einmal die Kurzform „k. A.", die hier einen
+  // fehlenden Wert behauptete, wo gar keiner vorgesehen ist.
+  if (a.eigennutzung) {
+    return (
+      <div
+        title={titel}
+        className={`pointer-events-auto absolute flex -translate-y-1/2 items-center gap-1 px-2 text-[0.6875rem] font-medium text-background ring-1 ring-background ${EIGENNUTZUNG_FARBE} ${kanten}`}
+        style={lage}
+      >
+        <Icon icon="ph:lock-simple-fill" className="size-3 shrink-0" />
+        <span className="min-w-0 truncate">{t("calendar.ownerStay")}</span>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -1124,15 +1212,8 @@ function AufenthaltChip({
       // Saisonfarbe ineinander.
       // Wie der PMS-Balken: die Bahn gibt die Mitte vor, der Chip sitzt mit
       // `-translate-y-1/2` mittig darin — nicht auf ihrer Oberkante.
-      className={`pointer-events-auto absolute flex -translate-y-1/2 items-center gap-1 px-2 text-[0.6875rem] font-medium text-white ring-1 ring-background ${kanalFarbe(a.quelle)} ${
-        segment.echterAnfang ? "rounded-l-full" : ""
-      } ${segment.echtesEnde ? "rounded-r-full" : ""}`}
-      style={{
-        left: `calc(${links}% + 0.125rem)`,
-        width: `calc(${breite}% - 0.25rem)`,
-        top: `calc(${bahnOben(bahn)} + ${CHIP_HOEHE / 2}rem)`,
-        height: `${CHIP_HOEHE}rem`,
-      }}
+      className={`pointer-events-auto absolute flex -translate-y-1/2 items-center gap-1 px-2 text-[0.6875rem] font-medium text-white ring-1 ring-background ${kanalFarbe(a.quelle)} ${kanten}`}
+      style={lage}
     >
       {logo ? (
         // eslint-disable-next-line @next/next/no-img-element

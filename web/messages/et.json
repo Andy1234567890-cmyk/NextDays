@@ -1494,6 +1494,7 @@
       },
       "guest": "Külaline",
       "channel": "Broneeringu allikas",
+      "ownerStay": "Omaniku kasutus",
       "blockHint": "Soovid perioodi blokeerida? Esita taotlus — otsustab haldus.",
       "blockCta": "Taotle blokeeringut",
       "weekdays": "E,T,K,N,R,L,P",

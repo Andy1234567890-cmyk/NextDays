@@ -1489,6 +1489,7 @@
       },
       "guest": "Ospite",
       "channel": "Fonte prenotazione",
+      "ownerStay": "Uso proprio",
       "blockHint": "Vuoi far bloccare un periodo? Invia una richiesta: decide la gestione.",
       "blockCta": "Richiedi blocco",
       "weekdays": "Lun,Mar,Mer,Gio,Ven,Sab,Dom",

@@ -1494,6 +1494,7 @@
       },
       "guest": "Gæst",
       "channel": "Bookingkilde",
+      "ownerStay": "Egen benyttelse",
       "blockHint": "Vil du have en periode blokeret? Indsend en anmodning — det er udlejer, der beslutter.",
       "blockCta": "Anmod om blokering",
       "weekdays": "Man,Tir,Ons,Tor,Fre,Lør,Søn",

@@ -316,11 +316,61 @@ def test_calendar_freie_nacht_ohne_payout() -> None:
 
 
 def test_calendar_eigentuemer_aufenthalt_ohne_payout() -> None:
-    """Eigennutzung (0241) ist keine Auszahlung — sie taucht nicht auf."""
+    """Eigennutzung (0241) bringt keine Auszahlung."""
     tables = _tables()
     tables["reservations"][0]["is_owner_stay"] = True
     res = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
     assert all(d.owner_payout_per_night is None for d in res.days)
+
+
+def test_calendar_eigentuemer_aufenthalt_bleibt_sichtbar() -> None:
+    """Die Eigennutzung MUSS als Belegung erscheinen — sonst ist sie unsichtbar.
+
+    Der Regressionstest zum Live-Befund vom 12.08.2026: der Ladepfad filterte
+    `is_owner_stay = False`, um keine 0,00-Nacht auszuweisen. Damit verschwand
+    aber die BELEGUNG mit: die Nacht kam als `status='booked'` zurück, hatte
+    `units_booked=0` und eine leere `bookings`-Liste. Der Kalender zeichnet
+    daraufhin nichts, und der Eigentümer sah seine eigene, genehmigte Sperre
+    nicht (FeWo *Stjerneskud*, 29.08.–11.09.).
+
+    Der Test, der es NICHT gefunden hat, ist der darüber: „kein Payout" war
+    erfüllt — gerade weil die Zeile ganz fehlte.
+    """
+    tables = _tables()
+    tables["reservations"][0]["is_owner_stay"] = True
+    res = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
+    assert all(d.units_booked == 1 for d in res.days)
+    assert all(len(d.bookings) == 1 for d in res.days)
+    assert all(d.bookings[0].is_owner_stay for d in res.days)
+
+
+def test_calendar_eigennutzung_ohne_erfundenen_grund() -> None:
+    """Kein `payout_unknown_reason` bei Eigennutzung (Wurzel 4).
+
+    „nicht ausweisbar" hieße: eine Grundlage FEHLT (Datenfehler). Bei einer
+    Eigennutzung gibt es schlicht nichts auszuzahlen. Ein Grund schickte den
+    Eigentümer auf die Suche nach einem Fehler, den es nicht gibt.
+    """
+    tables = _tables()
+    tables["reservations"][0]["is_owner_stay"] = True
+    res = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
+    assert all(d.owner_payout_unknown_reason is None for d in res.days)
+    assert all(d.bookings[0].payout_unknown_reason is None for d in res.days)
+
+
+def test_calendar_eigennutzung_ohne_gast_und_quelle() -> None:
+    """Eigennutzung trägt weder Gastname noch Buchungsquelle.
+
+    `channel='direct'` als Quelle durchzureichen ließe die eigene Sperre in der
+    Oberfläche wie eine Direktbuchung aussehen — mit Kanalfarbe und Logo.
+    """
+    tables = _tables()
+    tables["reservations"][0]["is_owner_stay"] = True
+    res = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
+    assert all(d.guest_first_name is None for d in res.days)
+    assert all(d.booking_source is None for d in res.days)
+    assert all(d.bookings[0].guest_first_name is None for d in res.days)
+    assert all(d.bookings[0].booking_source is None for d in res.days)
 
 
 def test_calendar_zaehlt_zusatzleistungen_wie_die_abrechnung() -> None:
@@ -466,6 +516,54 @@ def test_calendar_mehrere_einheiten_keine_teilsumme() -> None:
     assert sorted(
         b.owner_payout_per_night for b in tag.bookings if b.owner_payout_per_night
     ) == [80.0]
+
+
+def test_calendar_eigennutzung_verschluckt_fremden_payout_nicht() -> None:
+    """Eine Eigennutzung darf den Payout einer Schwestereinheit nicht killen.
+
+    Der teuerste Fall des Umbaus: seit die Eigennutzung mitgeladen wird, liegt
+    sie in derselben Nacht wie eine bezahlte Buchung (0265, zwei Einheiten).
+    Zöge ihr fehlender Betrag die Tagessumme auf `None` — die Regel für
+    unbestimmte Beträge —, verschwände das Geld der ANDEREN Einheit aus dem
+    Kalender. Sie ist aber nicht unbestimmt: sie bringt nichts, und das ist
+    bekannt.
+
+    Einheit A (r-a, 80/Nacht) bleibt bezahlt, B (r-b) wird zur Eigennutzung.
+    """
+    tables = _zwei_einheiten(_tables())
+    tables["reservations"][1]["is_owner_stay"] = True
+    res = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 2), date(2026, 1, 3))
+    tag = res.days[0]
+    # Beide Einheiten belegt — die Eigennutzung zählt als Belegung mit.
+    assert tag.units_booked == 2
+    # Die Summe ist der Payout von A allein, NICHT None.
+    assert tag.owner_payout_per_night == 80.0
+    assert tag.owner_payout_unknown_reason is None
+    # Die Kurzform der Zelle nennt den GAST, nicht die leere Eigennutzung.
+    assert tag.guest_first_name == "Erika"
+    assert tag.booking_source is not None
+    eigen = [b for b in tag.bookings if b.is_owner_stay]
+    assert len(eigen) == 1
+    assert eigen[0].owner_payout_per_night is None
+    assert eigen[0].payout_unknown_reason is None
+
+
+def test_earnings_zaehlt_eigennutzung_nicht_als_vermietung() -> None:
+    """Die Einnahmen-Übersicht zählt VERMIETUNG — Eigennutzung gehört nicht dazu.
+
+    Gegenstück zum Kalender, der sie bewusst MIT lädt: dort lautet die Frage
+    „was belegt diese Nacht?", hier „was hat vermietet eingebracht?".
+
+    Live gefunden am 12.08.2026: `earnings` filterte `is_owner_stay` gar nicht
+    und wies dem Eigentümer 50 Nächte / 6 Buchungen aus statt 36 / 5. Die
+    Auszahlungssumme blieb unauffällig, weil eine Eigennutzung
+    `total_amount = 0` trägt — die falsche Zahl stand in der Belegung.
+    """
+    tables = _tables()
+    tables["reservations"][0]["is_owner_stay"] = True
+    res = _svc(tables).earnings(_ctx(), date(2026, 1, 1), date(2026, 1, 31))
+    assert all(i.nights == 0 for i in res.items)
+    assert all(i.reservations == 0 for i in res.items)
 
 
 def test_earnings_rechnet_wie_kalender_und_abrechnung() -> None:

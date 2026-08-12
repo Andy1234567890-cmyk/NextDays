@@ -1494,6 +1494,7 @@
       },
       "guest": "Vendég",
       "channel": "Foglalás forrása",
+      "ownerStay": "Saját használat",
       "blockHint": "Zároltatnál egy időszakot? Nyújts be kérelmet — a döntés az üzemeltetőé.",
       "blockCta": "Zárolás kérése",
       "weekdays": "H,K,Sze,Cs,P,Szo,V",

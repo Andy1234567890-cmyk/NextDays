@@ -42,6 +42,16 @@ class PortalNightBooking(BaseModel):
     payout_unknown_reason: str | None = None
     guest_first_name: str | None = None
     booking_source: str | None = None
+    # Ist das die EIGENNUTZUNG des Eigentümers (0241, aus einem genehmigten
+    # Sperrantrag)? Dann ist die Nacht belegt, bringt aber keinen Umsatz:
+    # `owner_payout_per_night` ist None und `payout_unknown_reason` ebenfalls —
+    # es fehlt keine Grundlage, es gibt nichts auszuzahlen.
+    #
+    # Ohne dieses Feld kann die Oberfläche die eigene Sperre nicht von einer
+    # Buchung ohne ausweisbaren Betrag unterscheiden und müsste es am fehlenden
+    # Gastnamen raten. Sie zeigt stattdessen „Eigennutzung" statt eines
+    # Portal-Logos, das hier eine Buchung behaupten würde, die es nicht gibt.
+    is_owner_stay: bool = False
 
 
 class PortalCalendarDay(BaseModel):

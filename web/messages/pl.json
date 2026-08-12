@@ -1489,6 +1489,7 @@
       },
       "guest": "Gość",
       "channel": "Źródło rezerwacji",
+      "ownerStay": "Użytek własny",
       "blockHint": "Chcesz zablokować okres? Złóż wniosek — decyduje zarządca.",
       "blockCta": "Złóż wniosek o blokadę",
       "weekdays": "Pon,Wt,Śr,Czw,Pt,Sob,Niedz",

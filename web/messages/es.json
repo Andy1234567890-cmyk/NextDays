@@ -1494,6 +1494,7 @@
       },
       "guest": "Huésped",
       "channel": "Origen de la reserva",
+      "ownerStay": "Uso propio",
       "blockHint": "¿Quieres bloquear un período? Envía una solicitud — la administración decide.",
       "blockCta": "Solicitar bloqueo",
       "weekdays": "Lun,Mar,Mié,Jue,Vie,Sáb,Dom",

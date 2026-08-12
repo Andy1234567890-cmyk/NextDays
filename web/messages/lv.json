@@ -1489,6 +1489,7 @@
       },
       "guest": "Viesis",
       "channel": "Rezervācijas avots",
+      "ownerStay": "Īpašnieka lietojums",
       "blockHint": "Vēlaties bloķēt periodu? Iesniedziet pieprasījumu — lēmumu pieņem pārvaldība.",
       "blockCta": "Pieprasīt bloķējumu",
       "weekdays": "Pr,Ot,Tr,Ce,Pk,Se,Sv",

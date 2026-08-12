@@ -1489,6 +1489,7 @@
       },
       "guest": "Svečias",
       "channel": "Užsakymo šaltinis",
+      "ownerStay": "Savininko naudojimas",
       "blockHint": "Norite užblokuoti laikotarpį? Pateikite prašymą — sprendžia administracija.",
       "blockCta": "Prašyti blokavimo",
       "weekdays": "Pr,An,Tr,Kt,Pn,Št,Sk",

@@ -1494,6 +1494,7 @@
       },
       "guest": "Guest",
       "channel": "Booking source",
+      "ownerStay": "Owner stay",
       "blockHint": "Want a period blocked? Submit a request — the management decides.",
       "blockCta": "Request block",
       "weekdays": "Mon,Tue,Wed,Thu,Fri,Sat,Sun",

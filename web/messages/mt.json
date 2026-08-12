@@ -1489,6 +1489,7 @@
       },
       "guest": "Mistieden",
       "channel": "Sors tal-prenotazzjoni",
+      "ownerStay": "Użu tas-sid",
       "blockHint": "Trid tibblokka perjodu? Ibgħat talba — il-ġestjoni tiddeċiedi.",
       "blockCta": "Itlob imblukkar",
       "weekdays": "Tn,Tl,Er,Ħa,Ġi,Sib,Ħad",

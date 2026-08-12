@@ -80,6 +80,16 @@ export type PortalNightBooking = {
   guest_first_name: string | null;
   /** Buchungsquelle (ota_name, sonst channel) — für Logo und Kanalfarbe. */
   booking_source: string | null;
+  /**
+   * EIGENNUTZUNG des Eigentümers (0241) — der genehmigte Sperrantrag.
+   *
+   * Die Nacht ist belegt, bringt aber keinen Umsatz: `owner_payout_per_night`
+   * und `payout_unknown_reason` sind beide `null`. Das unterscheidet sie von
+   * einer Buchung ohne ausweisbaren Betrag, wo eine Grundlage FEHLT. Ohne
+   * dieses Feld müsste die UI den Unterschied am leeren Gastnamen raten und
+   * würde die eigene Sperre als „nicht ausweisbar" beschriften.
+   */
+  is_owner_stay: boolean;
 };
 
 export type PortalCalendarDay = {

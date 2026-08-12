@@ -1489,6 +1489,7 @@
       },
       "guest": "Gäst",
       "channel": "Bokningskälla",
+      "ownerStay": "Eget nyttjande",
       "blockHint": "Vill du spärra en period? Skicka en förfrågan — förvaltningen beslutar.",
       "blockCta": "Begär spärrning",
       "weekdays": "Mån,Tis,Ons,Tor,Fre,Lör,Sön",
