@@ -1130,15 +1130,33 @@ async def channex_webhook(
 
     Channex sendet beim Einrichten/Validieren einen Test-Ping OHNE unseren
     geheimen Header → solche leeren Pings beantworten wir mit 200 (sonst
-    'Operation failed' im Dashboard). ECHTE Events (mit 'event'-Feld) müssen
-    das geteilte Secret tragen (Channex signiert nicht via HMAC)."""
+    'Operation failed' im Dashboard). ECHTE Events müssen das geteilte Secret
+    tragen (Channex signiert nicht via HMAC).
+
+    ZWEI NUTZLAST-FORMEN, und nur eine trägt ein `event`-Feld (belegt am
+    12.08.2026 im Channex-Dashboard):
+
+      * Ereignisse:   ``{"event": "booking_new", "property_id": …, …}``
+      * ARI-Changes:  ``{"changes": [{"date": …, "room_type_id": …,
+                        "availability": 0, "stop_sell": true}, …]}``
+
+    Die ARI-Form hat KEIN `event`. Der frühere Test-Ping-Riegel prüfte nur
+    darauf und hat damit jede ARI-Änderung als leeren Ping verworfen — mit 200
+    bestätigt, sodass Channex sie für zugestellt hielt. Live gemessen: 1.615
+    ausgelieferte ARI-Changes, 0 gespeicherte Ereignisse. Eine Änderung von
+    Verfügbarkeit oder Preis AUSSERHALB unseres PMS kam so nie an; sie fiel erst
+    beim nächsten periodischen Import auf.
+    """
     try:
         payload = await request.json()
     except Exception:
         payload = {}
 
-    # Leerer Test-Ping (kein Event) → freundlich bestätigen, kein Secret nötig.
-    if not isinstance(payload, dict) or not payload.get("event"):
+    if not isinstance(payload, dict):
+        return {"status": "ok"}
+    # Leerer Test-Ping → freundlich bestätigen, kein Secret nötig. Eine
+    # ARI-Nutzlast ist KEIN leerer Ping, auch wenn ihr das `event`-Feld fehlt.
+    if not payload.get("event") and not isinstance(payload.get("changes"), list):
         return {"status": "ok"}
 
     # Echtes Event → Secret zwingend. Vergleich konstant-zeitig via secrets_match

@@ -12,6 +12,7 @@ from typing import Any
 from supabase import Client
 
 from src.core.security import AuthContext, secrets_match
+from src.jobs import worker_verlauf
 
 from .channex_client import ChannexError
 from .common import ChannelManagerError, _booking_room_type, log
@@ -2929,6 +2930,12 @@ class ChannelsMixin:
         direkt anwenden). Alle Schritte sind best effort: der Webhook wird IMMER
         mit 200 bestätigt (sonst wiederholt Channex bis ~24h und gibt dann auf);
         die Backstop-Ticks holen Verlorenes nach."""
+        # ARI-Changes tragen KEIN `event`, sondern eine `changes`-Liste (belegt
+        # am 12.08.2026). Sie brauchen einen eigenen Weg: die betroffenen
+        # Objekte stehen nur als `room_type_id` darin, nicht als `property_id`.
+        if not payload.get("event") and isinstance(payload.get("changes"), list):
+            return self._ari_changes_eingegangen(payload["changes"])
+
         event = str(payload.get("event", "unknown"))
         channex_property_id = payload.get("property_id")
         # 'event' ist bei structlog für die Message reserviert → eigenes Feld.
@@ -2961,6 +2968,92 @@ class ChannelsMixin:
             self._bewertung_eingegangen(payload)
 
         return {"status": "accepted", "event": event}
+
+    def _ari_changes_eingegangen(
+        self, changes: list[Any]
+    ) -> dict[str, str]:
+        """ARI-Änderung eines Portals → Import-Job je betroffenem Objekt.
+
+        WARUM DAS EIN EIGENER WEG IST: Die Nutzlast nennt kein Objekt, sondern
+        `room_type_id` je Änderung. Aufgelöst wird über
+        `channex_room_type_map.property_map_id` → `channex_property_map`. Ohne
+        diesen Schritt gibt es keine `property_id`, und der bestehende
+        `_enqueue_ari_import` braucht sie.
+
+        WARUM DIE WERTE NICHT DIREKT ANGEWENDET WERDEN: dieselbe Regel wie bei
+        allen Channex-Webhooks — die Reihenfolge ist nicht zugesichert
+        (out-of-order laut Doku). Eine `availability: 0` aus einem alten Ereignis
+        würde einen frisch freigegebenen Tag wieder sperren. Das Ereignis ist
+        also nur der AUSLÖSER; den Stand zieht der Import.
+
+        Ein Objekt, dessen `room_type_id` wir nicht kennen, wird geloggt und
+        übersprungen — nicht geraten (Wurzel 4). Fremde Room-Types auf dem
+        Channex-Konto sind normal.
+
+        Immer 200, auch bei Fehlern: sonst wiederholt Channex bis ~24 h und gibt
+        dann auf. Der periodische Import ist der Backstop.
+        """
+        room_types = {
+            str(c.get("room_type_id"))
+            for c in changes
+            if isinstance(c, dict) and c.get("room_type_id")
+        }
+        if not room_types or self._db is None:
+            log.info("channex_ari_changes_ohne_room_type", anzahl=len(changes))
+            return {"status": "accepted", "event": "ari_changes", "objekte": "0"}
+
+        try:
+            zeilen = (
+                self._db.table("channex_room_type_map")
+                .select("channex_room_type_id, property_map_id")
+                .in_("channex_room_type_id", sorted(room_types))
+                .is_("deleted_at", "null")
+                .execute()
+            ).data or []
+            map_ids = sorted(
+                {str(z["property_map_id"]) for z in zeilen if z.get("property_map_id")}
+            )
+            objekte = (
+                (
+                    self._db.table("channex_property_map")
+                    .select("tenant_id, channex_property_id")
+                    .in_("id", map_ids)
+                    .is_("deleted_at", "null")
+                    .execute()
+                ).data
+                or []
+                if map_ids
+                else []
+            )
+        except Exception as exc:  # noqa: BLE001 — Ingest nie kippen (200 zurück)
+            log.warning("channex_ari_changes_lookup_failed", error=str(exc)[:200])
+            return {"status": "accepted", "event": "ari_changes", "objekte": "0"}
+
+        # Je Channex-Property EINMAL einreihen, auch wenn mehrere Room-Types
+        # derselben Property betroffen sind — `_enqueue_ari_import` fächert
+        # intern auf die Zimmer auf.
+        paare = {
+            (str(o["tenant_id"]), str(o["channex_property_id"]))
+            for o in objekte
+            if o.get("tenant_id") and o.get("channex_property_id")
+        }
+        unbekannt = len(room_types) - len(
+            {str(z["channex_room_type_id"]) for z in zeilen}
+        )
+        log.info(
+            "channex_ari_changes",
+            aenderungen=len(changes),
+            room_types=len(room_types),
+            unbekannte_room_types=unbekannt,
+            properties=len(paare),
+        )
+        for tenant_id, channex_property_id in sorted(paare):
+            self._enqueue_ari_import(tenant_id, channex_property_id)
+        return {
+            "status": "accepted",
+            "event": "ari_changes",
+            "objekte": str(len(paare)),
+        }
 
     # Bewertungs-Events: `review` = neu eingetroffen, `updated_review` = der Gast
     # hat nachgelegt oder das Portal hat die Sichtbarkeit geändert. Beide führen
@@ -3146,6 +3239,20 @@ class ChannelsMixin:
             self._db.table("channex_webhook_event").insert(zeile).execute()
         except Exception as exc:  # noqa: BLE001 — Persistenz nie den Ingest kippen
             log.warning("webhook_event_persist_failed", error=str(exc)[:200])
+
+        # Zusätzlich in den abonnierbaren Worker-Verlauf (0379). `severity`
+        # trägt drei Werte, der Verlauf nur zwei — 'action' (eine Airbnb-Anfrage
+        # wartet auf Antwort) zählt als Fehler, weil sie genau wie einer liegen
+        # bleibt, bis jemand sie bearbeitet.
+        worker_verlauf.merken(
+            self._db,
+            richtung="empfangen",
+            vorgang=event,
+            ergebnis="fehler" if severity in ("error", "action") else "ok",
+            tenant_id=str(tenant_id),
+            property_id=str(property_id) if property_id else None,
+            quelle_tabelle="channex_webhook_event",
+        )
 
     @staticmethod
     def _live_feed_event_id(payload: dict[str, Any]) -> str | None:

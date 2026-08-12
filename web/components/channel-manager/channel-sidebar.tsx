@@ -185,6 +185,16 @@ export function ChannelSidebar({
         {labels.allChannels}
       </Link>
 
+      {/* Ohne diesen Einstieg sieht niemand die Meldungen der Portale —
+          Sync-Fehler und fristgebundene Anfragen liefen bisher ins Leere. */}
+      <Link
+        href="/channels/ereignisse"
+        className="flex items-center gap-2 rounded-(--radius) p-3 text-sm font-medium text-muted-foreground hover:bg-secondary/60"
+      >
+        <Icon icon="ph:bell-ringing" className="size-5" />
+        Ereignisse
+      </Link>
+
       <Category>{labels.categoryOta}</Category>
       {shownOtas.map((c) => (
         <ChannelRow

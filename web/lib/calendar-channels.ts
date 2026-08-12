@@ -34,6 +34,15 @@ export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
     dotBg: "bg-channel-direct",
     textFg: "text-channel-direct",
   },
+  // Eigene Website des Betriebs (0380). Globus-Icon statt Marke: es gibt keine
+  // fremde Marke — es ist die Seite des Betriebs selbst.
+  website: {
+    logo: { kind: "icon", icon: "ph:globe-simple-fill" },
+    barBg: "bg-channel-website",
+    barFg: "text-white",
+    dotBg: "bg-channel-website",
+    textFg: "text-channel-website",
+  },
   booking: {
     logo: { kind: "icon", icon: "simple-icons:bookingdotcom" },
     barBg: "bg-channel-booking",
@@ -106,6 +115,9 @@ export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
 // Echte Vertriebskanäle (ohne „manual") — für Legende + Kanal-Filter.
 export const CHANNEL_SOURCES: AvailabilitySource[] = [
   "direct",
+  // Direkt neben „direct": beide sind provisionsfreie eigene Wege, sie
+  // gehören in der Legende nebeneinander und nicht zwischen die Portale.
+  "website",
   "booking",
   "airbnb",
   "vrbo",

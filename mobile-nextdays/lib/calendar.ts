@@ -7,6 +7,9 @@ import { call, type Result } from "@/lib/api";
 export type AvailabilityStatus = "open" | "booked" | "blocked";
 export type AvailabilitySource =
   | "direct"
+  // Eigene Website des Betriebs (0380) — provisionsfreier Direktumsatz,
+  // getrennt von "direct" (Telefon/E-Mail/vor Ort).
+  | "website"
   | "portal"
   | "booking"
   | "airbnb"

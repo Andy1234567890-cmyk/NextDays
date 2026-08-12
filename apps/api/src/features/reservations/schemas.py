@@ -12,6 +12,12 @@ from pydantic import BaseModel, Field, model_validator
 
 class ReservationChannel(StrEnum):
     direct = "direct"
+    # Eigene Website des BETRIEBS (dessen eigene Buchungsstrecke, 0380).
+    # Getrennt von `direct`, weil „Direkt" auch Telefon/E-Mail/vor Ort umfasst
+    # und die Frage „was bringt meine Website?" sonst unbeantwortbar bleibt.
+    # Provisionsfrei wie `direct` — steht bewusst NICHT in den Mengen der
+    # provisionspflichtigen Kanäle (payments/subscriptions service).
+    website = "website"
     portal = "portal"
     booking = "booking"
     airbnb = "airbnb"

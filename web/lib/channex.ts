@@ -1382,3 +1382,49 @@ export async function importExistingBookings(
   if (res.ok) revalidatePath("/reservierungen");
   return res;
 }
+
+// --- Kanal-Ereignisse (Airbnb-Anfragen, Sync-Fehler, Reviews, Kanalwechsel) ---
+//
+// Die Ereignisse kommen als Webhook von den Portalen herein und liegen in
+// `channex_webhook_event`. Sie sind der einzige Weg, auf dem der Betrieb von
+// einem Sync-Fehler oder einer fristgebundenen Airbnb-Anfrage erfährt —
+// ohne diese Ansicht laufen sie ins Leere.
+
+export type KanalEreignis = {
+  id: string;
+  property_id: string | null;
+  event: string;
+  payload: Record<string, unknown> | unknown[] | null;
+  /** error | action | info — bestimmt Dringlichkeit und Darstellung. */
+  severity: string;
+  resolved: boolean;
+  created_at: string | null;
+  /** Ohne diese ID ist eine Airbnb-Anfrage nicht beantwortbar. */
+  live_feed_event_id: string | null;
+  resolution: Record<string, unknown> | null;
+  resolved_at: string | null;
+};
+
+/** Die letzten Kanal-Ereignisse, neueste zuerst. */
+export async function listKanalEreignisse(
+  nurOffene = false,
+  limit = 100,
+): Promise<Result<KanalEreignis[]>> {
+  const p = new URLSearchParams({ limit: String(limit) });
+  if (nurOffene) p.set("only_unresolved", "true");
+  return call<KanalEreignis[]>(`/events?${p}`);
+}
+
+/** Ein Ereignis lokal abhaken („gesehen, kümmert sich jemand").
+ *
+ *  ACHTUNG: das ist NICHT die Antwort an Airbnb — eine Anfrage bleibt beim
+ *  Portal offen, bis sie dort beantwortet wird. Die Oberfläche muss diesen
+ *  Unterschied benennen, sonst hält der Betrieb etwas für erledigt, während
+ *  der Gast weiter wartet. */
+export async function kanalEreignisAbhaken(
+  eventId: string,
+): Promise<Result<null>> {
+  const res = await call<null>(`/events/${eventId}/resolve`, { method: "POST" });
+  if (res.ok) revalidatePath("/channels/ereignisse");
+  return res;
+}

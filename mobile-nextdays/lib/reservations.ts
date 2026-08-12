@@ -13,6 +13,9 @@ import { call, type Result } from "@/lib/api";
 // „ota_other" = Sammelkanal für OTAs ohne eigenen Wert (Expedia, Agoda …).
 export type ReservationChannel =
   | "direct"
+  // Eigene Website des Betriebs (0380) — provisionsfrei wie „direct", aber
+  // getrennt auswertbar.
+  | "website"
   | "portal"
   | "booking"
   | "airbnb"

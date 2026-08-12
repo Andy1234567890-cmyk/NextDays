@@ -14,6 +14,7 @@ from fastapi import APIRouter, HTTPException, Query, Request, status
 
 from src.core.security import CurrentPlatformAdmin, require_platform_write
 
+from . import worker_verlauf as worker
 from .dependencies import (
     DeployDbDep,
     DeployServiceDep,
@@ -24,6 +25,7 @@ from .schemas import (
     AuditList,
     BuchungDetail,
     BuchungList,
+    DeployEreignisListe,
     DeployLog,
     DeployUebersicht,
     DeployVerlauf,
@@ -54,6 +56,9 @@ from .schemas import (
     TenantDetail,
     TenantList,
     VorgangList,
+    WorkerDetail,
+    WorkerEreignisListe,
+    WorkerKennzahlen,
 )
 from .team_service import TeamError
 
@@ -777,6 +782,33 @@ def deploy_uebersicht(
     return ergebnis
 
 
+# WICHTIG: vor `/deploy/{anwendung_uuid}` registriert. FastAPI nimmt die erste
+# passende Route — stünde diese danach, würde „ereignisse" als Anwendungs-UUID
+# gelesen und der Verlauf liefe gegen Coolify statt gegen unsere Tabelle.
+@router.get("/deploy/ereignisse", response_model=DeployEreignisListe)
+def deploy_ereignisse(
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    deploy: DeployServiceDep,
+    db: DeployDbDep,
+    request: Request,
+    limit: int = Query(50, ge=1, le=200),
+    nur_fehler: bool = False,
+    anwendung_uuid: str | None = None,
+) -> DeployEreignisListe:
+    """Der Deploy-Verlauf ALLER Anwendungen, neueste zuerst.
+
+    Aus `deploy_ereignis` (0378) — unser eigenes Gedächtnis, das Coolifys
+    Retention überlebt und bei Fehlschlägen die Ursache trägt. Dieselbe
+    Tabelle abonniert das Backoffice per Realtime.
+    """
+    ergebnis = deploy.ereignisse(
+        db, limit=limit, nur_fehler=nur_fehler, anwendung_uuid=anwendung_uuid
+    )
+    service.log_action(ctx, "deploy.events", request=request)
+    return ergebnis
+
+
 @router.get("/deploy/{anwendung_uuid}", response_model=DeployVerlauf)
 def deploy_verlauf(
     anwendung_uuid: str,
@@ -834,6 +866,93 @@ def deploy_log(
         "deploy.log",
         target_type="deployment",
         target_id=deployment_uuid,
+        request=request,
+    )
+    return ergebnis
+
+
+# --------------------------------------------------------------------------
+# Worker-Verlauf (0379)
+# --------------------------------------------------------------------------
+# Der Worker hinterlässt seine Spuren in drei Tabellen (`jobs`,
+# `channex_debug_log`, `channex_webhook_event`), die alle für `authenticated`
+# gesperrt sind — sie tragen vollständige Nutzlasten mit Gastdaten und Preisen
+# (Wurzel 6). Diese Routen laufen mit der Service-Role hinter
+# `CurrentPlatformAdmin` und zeigen deshalb ALLES, ungekürzt.
+#
+# Die abonnierbare Spur liegt in `worker_ereignis` (0379, nur Metadaten); das
+# Backoffice hört dort zu und lädt die Details über `/worker/{id}` nach.
+
+# WICHTIG: `/worker/kennzahlen` steht VOR `/worker/{ereignis_id}`. FastAPI nimmt
+# die erste passende Route — andernfalls würde „kennzahlen" als Ereignis-ID
+# gelesen und die Detailsuche liefe ins Leere.
+@router.get("/worker/kennzahlen", response_model=WorkerKennzahlen)
+def worker_kennzahlen(
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    db: DeployDbDep,
+    request: Request,
+    stunden: int = Query(24, ge=1, le=720),
+) -> WorkerKennzahlen:
+    """Was der Worker im Zeitfenster getan hat, je Vorgang — plus die
+    Warteschlange, die JETZT offen ist."""
+    ergebnis = worker.kennzahlen(db, stunden=stunden)
+    service.log_action(ctx, "worker.stats", request=request)
+    return ergebnis
+
+
+@router.get("/worker/ereignisse", response_model=WorkerEreignisListe)
+def worker_ereignisse(
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    db: DeployDbDep,
+    request: Request,
+    limit: int = Query(100, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    richtung: str | None = None,
+    vorgang: str | None = None,
+    nur_fehler: bool = False,
+    property_id: str | None = None,
+) -> WorkerEreignisListe:
+    """Der Worker-Verlauf, neueste zuerst.
+
+    Serverseitig paginiert: die Tabelle wächst um ~1.400 Jobs und ~520
+    Portal-Aufrufe je Tag (live gemessen) — ein „alles laden" wäre nach einer
+    Woche ein Request über 13.000 Zeilen.
+    """
+    ergebnis = worker.liste(
+        db,
+        limit=limit,
+        offset=offset,
+        richtung=richtung,
+        vorgang=vorgang,
+        nur_fehler=nur_fehler,
+        property_id=property_id,
+    )
+    service.log_action(ctx, "worker.events", request=request)
+    return ergebnis
+
+
+@router.get("/worker/{ereignis_id}", response_model=WorkerDetail)
+def worker_detail(
+    ereignis_id: str,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    db: DeployDbDep,
+    request: Request,
+) -> WorkerDetail:
+    """Die VOLLSTÄNDIGE Quellzeile eines Ereignisses — Request- und
+    Response-Body, Job-Nutzlast, rohe Webhook-Payload, Fehlermeldung.
+
+    Ungekürzt und unmaskiert: genau dafür gibt es diese Route, statt die
+    Nutzlasten in die abonnierbare Tabelle zu legen.
+    """
+    ergebnis = worker.detail(db, ereignis_id)
+    service.log_action(
+        ctx,
+        "worker.detail",
+        target_type="worker_ereignis",
+        target_id=ereignis_id,
         request=request,
     )
     return ergebnis

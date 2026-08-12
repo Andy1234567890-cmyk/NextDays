@@ -15,6 +15,7 @@ from __future__ import annotations
 from supabase import Client
 
 from src.core.security import AuthContext
+from src.jobs import worker_verlauf
 
 from .abgaben_status import AbgabenStatusMixin
 from .airbnb_aktionen import AirbnbAktionenMixin
@@ -301,6 +302,30 @@ class ChannelManagerService(
             ).execute()
         except Exception as exc:  # noqa: BLE001 - Trace nie den Hauptpfad kippen
             log.warning("channex_debug_log_insert_failed", error=str(exc))
+
+        # Zusätzlich in den abonnierbaren Worker-Verlauf (0379). Getrennte
+        # Tabelle, weil `channex_debug_log` die vollständigen Bodies trägt und
+        # deshalb für `authenticated` gesperrt bleiben MUSS (Wurzel 6) — ein
+        # Realtime-Abo darauf wäre nicht erlaubt. Hier stehen nur Metadaten; die
+        # Bodies holt das Backoffice über seinen service-role-Endpunkt.
+        worker_verlauf.merken(
+            self._db,
+            richtung="gesendet",
+            vorgang=str(self._trace_ctx.get("step") or "call"),
+            ergebnis="ok" if trace.ok else "fehler",
+            tenant_id=str(tenant_id),
+            property_id=(
+                str(self._trace_ctx["property_id"])
+                if self._trace_ctx.get("property_id")
+                else None
+            ),
+            quelle_tabelle="channex_debug_log",
+            http_methode=trace.method,
+            http_pfad=trace.path,
+            http_status=trace.http_status,
+            dauer_ms=trace.duration_ms,
+            fehler_text=trace.error,
+        )
 
     def list_debug_trace(
         self,

@@ -676,6 +676,51 @@ export async function getDeployVerlauf(
   );
 }
 
+/** Ein Deploy-Zustandswechsel aus dem Verlauf (`deploy_ereignis`, 0378).
+ *
+ *  Der Spiegel hält nur den Jetzt-Stand und überschreibt ihn — hier steht, was
+ *  passiert IST, samt Ursache bei einem Fehlschlag. */
+export interface DeployEreignis {
+  id: string;
+  anwendung_uuid: string;
+  name: string;
+  /** null = Erstbefund (App zum ersten Mal gesehen), kein Wechsel. */
+  status_von: string | null;
+  status_nach: string;
+  deployment_uuid: string | null;
+  deploy_id: number | null;
+  commit: string | null;
+  commit_nachricht: string | null;
+  log_url: string | null;
+  gestartet_at: string | null;
+  beendet_at: string | null;
+  /** Aus dem Build-Log extrahiert. null bei Erfolg UND wenn im Log nichts zu
+   *  finden war — es wird nie ein Grund erfunden (Wurzel 4). */
+  fehler_text: string | null;
+  /** deployment_failed | healthcheck | stderr | kein_log | unbekannt */
+  fehler_quelle: string | null;
+  fehler_kontext: string | null;
+  /** UNSERE Uhr: wann der Worker den Wechsel bemerkt hat (Wurzel 5b). */
+  erkannt_at: string | null;
+}
+
+export interface DeployEreignisListe {
+  items: DeployEreignis[];
+  total: number;
+}
+
+/** Der Deploy-Verlauf ALLER Anwendungen, neueste zuerst. */
+export async function getDeployEreignisse(
+  limit = 50,
+  nurFehler = false,
+): Promise<DeployEreignisListe> {
+  const p = new URLSearchParams({ limit: String(limit) });
+  if (nurFehler) p.set("nur_fehler", "true");
+  return api<DeployEreignisListe>(`/platform/deploy/ereignisse?${p}`, {
+    cache: "no-store",
+  });
+}
+
 export interface DeployLogZeile {
   text: string;
   art: string;
@@ -693,4 +738,111 @@ export async function getDeployLog(deploymentUuid: string): Promise<DeployLog> {
   return api<DeployLog>(`/platform/deploy/log/${deploymentUuid}`, {
     cache: "no-store",
   });
+}
+
+// --------------------------------------------------------------------------
+// Worker-Verlauf (0379)
+// --------------------------------------------------------------------------
+// Der Worker hinterlässt seine Spuren in drei Tabellen (`jobs`,
+// `channex_debug_log`, `channex_webhook_event`), die alle für `authenticated`
+// gesperrt sind — sie tragen vollständige Nutzlasten mit Gastdaten und Preisen
+// (Wurzel 6). Abonniert wird deshalb `worker_ereignis` (nur Metadaten); die
+// Details holt `getWorkerDetail` über den Server, der `platform_admin` prüft.
+
+/** Eine Zeile des Worker-Verlaufs. */
+export interface WorkerEreignis {
+  id: string;
+  /** job | gesendet | empfangen | tick */
+  richtung: string;
+  vorgang: string;
+  /** ok | fehler */
+  ergebnis: string;
+  tenant_id: string | null;
+  property_id: string | null;
+  /** Objektname, serverseitig nachgezogen (kein FK auf properties). */
+  objekt: string | null;
+  quelle_tabelle: string | null;
+  quelle_id: string | null;
+  http_methode: string | null;
+  http_pfad: string | null;
+  http_status: number | null;
+  dauer_ms: number | null;
+  fehler_text: string | null;
+  versuche: number | null;
+  /** UNSERE Uhr. Bei richtung=empfangen der Eingang bei uns (Wurzel 5b). */
+  erfasst_at: string;
+}
+
+export interface WorkerEreignisListe {
+  items: WorkerEreignis[];
+  gesamt: number;
+  offset: number;
+  limit: number;
+}
+
+export interface WorkerKennzahl {
+  richtung: string;
+  vorgang: string;
+  anzahl: number;
+  fehler: number;
+  dauer_avg_ms: number | null;
+  dauer_max_ms: number | null;
+}
+
+export interface WorkerKennzahlen {
+  stunden: number;
+  items: WorkerKennzahl[];
+  ereignisse: number;
+  fehler: number;
+  /** Was JETZT offen ist — aus `jobs`, nicht aus dem Verlauf (Wurzel 5b). */
+  warteschlange: number;
+  aufgegeben: number;
+}
+
+export interface WorkerDetail {
+  ereignis: WorkerEreignis | null;
+  /** Die VOLLSTÄNDIGE Quellzeile, ungekürzt. null, wenn keine vorlag oder sie
+   *  aufgeräumt wurde — kein leeres Objekt, das wie „nichts drin" aussieht. */
+  quelle: Record<string, unknown> | null;
+}
+
+export interface WorkerFilter {
+  limit?: number;
+  offset?: number;
+  richtung?: string;
+  vorgang?: string;
+  nurFehler?: boolean;
+  propertyId?: string;
+}
+
+/** Der Worker-Verlauf, neueste zuerst. Serverseitig paginiert. */
+export async function getWorkerEreignisse(
+  filter: WorkerFilter = {},
+): Promise<WorkerEreignisListe> {
+  const p = new URLSearchParams({
+    limit: String(filter.limit ?? 100),
+    offset: String(filter.offset ?? 0),
+  });
+  if (filter.richtung) p.set("richtung", filter.richtung);
+  if (filter.vorgang) p.set("vorgang", filter.vorgang);
+  if (filter.nurFehler) p.set("nur_fehler", "true");
+  if (filter.propertyId) p.set("property_id", filter.propertyId);
+  return api<WorkerEreignisListe>(`/platform/worker/ereignisse?${p}`, {
+    cache: "no-store",
+  });
+}
+
+/** Kennzahlen je Vorgang plus die offene Warteschlange. */
+export async function getWorkerKennzahlen(
+  stunden = 24,
+): Promise<WorkerKennzahlen> {
+  return api<WorkerKennzahlen>(
+    `/platform/worker/kennzahlen?stunden=${stunden}`,
+    { cache: "no-store" },
+  );
+}
+
+/** Die vollständige Quellzeile eines Ereignisses — Bodies, Payload, Fehler. */
+export async function getWorkerDetail(id: string): Promise<WorkerDetail> {
+  return api<WorkerDetail>(`/platform/worker/${id}`, { cache: "no-store" });
 }

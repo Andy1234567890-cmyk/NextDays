@@ -277,6 +277,31 @@ def _spiegel_db(bestand: list[dict] | None = None) -> MagicMock:
     return db
 
 
+def _spiegel_db_mit_verlauf(bestand: list[dict] | None = None) -> MagicMock:
+    """Wie `_spiegel_db`, trennt aber `deploy_spiegel` von `deploy_ereignis`.
+
+    Nötig, weil beide Tabellen im selben Tick beschrieben werden: mit einer
+    gemeinsamen `table.return_value`-Attrappe wäre nicht unterscheidbar,
+    WELCHE Tabelle den Insert bekommen hat — der Test würde grün, auch wenn
+    der Verlauf in den Spiegel geschrieben würde.
+    """
+    db = MagicMock()
+    tabellen: dict[str, MagicMock] = {}
+
+    def hole(name: str) -> MagicMock:
+        if name not in tabellen:
+            t = MagicMock()
+            t.select.return_value.execute.return_value.data = (
+                bestand or [] if name == "deploy_spiegel" else []
+            )
+            tabellen[name] = t
+        return tabellen[name]
+
+    db.table.side_effect = hole
+    db.tabellen = tabellen
+    return db
+
+
 def test_spiegel_schreibt_fortschreibend_und_raet_nichts() -> None:
     """Der Worker spiegelt Coolify nach deploy_spiegel (Migration 0294).
 
@@ -654,3 +679,274 @@ def test_spiegel_ohne_deploy_liefert_keinen_leeren_eintrag() -> None:
     assert treffer.letzter is None
     # Der Blick des Workers ist trotzdem bekannt.
     assert treffer.geprueft_at is not None
+
+
+# --- Fehler-Extraktor: die Ursache aus dem Build-Log ------------------------
+#
+# Die Muster stammen aus 60 echten Fehlschlägen der Coolify-Postgres
+# (live gemessen 12.08.2026): 55 × „Deployment failed", 3 × Healthcheck-
+# Rollback, 2 × gar kein Log. Die Gegenprobe an 40 erfolgreichen Deploys ergab
+# 0 Falsch-Positive.
+
+
+def test_fehler_liest_coolifys_eigene_meldung() -> None:
+    from src.features.platform_admin.deploy_fehler import ursache_aus_log
+
+    befund = ursache_aus_log([
+        {"output": "Pulling & building required images.", "type": "stdout"},
+        {"output": "========================================", "type": "stderr"},
+        {
+            "output": "Deployment failed: Command execution failed (exit code 255)",
+            "type": "stderr",
+        },
+    ])
+    assert befund.quelle == "deployment_failed"
+    assert "exit code 255" in (befund.text or "")
+
+
+def test_fehler_erkennt_healthcheck_rollback() -> None:
+    """Die Klasse ohne „Deployment failed" — 3 von 60 real.
+
+    Ohne eigenes Muster ginge sie stillschweigend als „unbekannt" durch,
+    obwohl die Ursache klar im Log steht.
+    """
+    from src.features.platform_admin.deploy_fehler import ursache_aus_log
+
+    befund = ursache_aus_log([
+        {"output": "Starting new application.", "type": "stdout"},
+        {
+            "output": "New container is not healthy, rolling back to the old container.",
+            "type": "stdout",
+        },
+        {"output": "Rolling update completed.", "type": "stdout"},
+    ])
+    assert befund.quelle == "healthcheck"
+    assert "not healthy" in (befund.text or "")
+
+
+def test_fehler_erfindet_nichts_wenn_kein_muster_passt() -> None:
+    """Wurzel 4: lieber „weiß ich nicht" als eine plausible falsche Zeile.
+
+    Ein erfundener Fehlertext sähe im Backoffice richtig aus und würde die
+    Fehlersuche in die falsche Richtung schicken.
+    """
+    from src.features.platform_admin.deploy_fehler import ursache_aus_log
+
+    befund = ursache_aus_log([
+        {"output": "Building image.", "type": "stdout"},
+        {"output": "Rolling update completed.", "type": "stdout"},
+    ])
+    assert befund.quelle == "unbekannt"
+    assert befund.text is None
+    # Der Beleg wird trotzdem mitgegeben — ein Mensch kann daraus lesen.
+    assert befund.kontext is not None
+
+
+def test_fehler_ohne_log_ist_kein_erfundener_grund() -> None:
+    from src.features.platform_admin.deploy_fehler import ursache_aus_log
+
+    for leer in ([], None):
+        befund = ursache_aus_log(leer)
+        assert befund.quelle == "kein_log"
+        assert befund.text is None
+
+
+def test_fehler_ignoriert_versteckte_zeilen() -> None:
+    """`hidden` sind Laravel-Stacktraces des Deploy-Jobs, nicht die Ursache.
+
+    Coolify blendet sie in der eigenen Oberfläche aus; würden wir sie lesen,
+    stünde im Backoffice ein PHP-Dateipfad statt des echten Grundes.
+    """
+    from src.features.platform_admin.deploy_fehler import ursache_aus_log
+
+    befund = ursache_aus_log([
+        {
+            "output": "#1 /var/www/html/vendor/laravel/framework/…",
+            "type": "stderr",
+            "hidden": True,
+        },
+        {"output": "Deployment failed: The payload is invalid.", "type": "stderr"},
+    ])
+    assert befund.quelle == "deployment_failed"
+    assert "payload is invalid" in (befund.text or "")
+    assert "laravel" not in (befund.text or "").lower()
+
+
+def test_fehler_text_ist_gedeckelt() -> None:
+    """Wurzel 8: ein Build-Log ist 50 KB und mehr — nichts Unbegrenztes."""
+    from src.features.platform_admin.deploy_fehler import MAX_TEXT, ursache_aus_log
+
+    befund = ursache_aus_log(
+        [{"output": "Deployment failed: " + ("x" * 5000), "type": "stderr"}]
+    )
+    assert befund.text is not None
+    assert len(befund.text) <= MAX_TEXT
+
+
+def test_fehler_trennlinie_ist_keine_meldung() -> None:
+    """Coolify rahmt seine Fehlerzeile in „=====" — das ist kein Inhalt."""
+    from src.features.platform_admin.deploy_fehler import ursache_aus_log
+
+    befund = ursache_aus_log([
+        {"output": "========================================", "type": "stderr"},
+        {"output": "irgendwas lief", "type": "stdout"},
+    ])
+    assert befund.text != "========================================"
+
+
+# --- Verlauf: Ereignisse beim Zustandswechsel -------------------------------
+
+
+def _ueb(status: str, *, dep: str = "dep-1", laeuft: bool = False):
+    from src.features.platform_admin.schemas import DeployApp, DeployUebersicht
+
+    return DeployUebersicht(apps=[DeployApp(
+        uuid="u1",
+        name="nextdays-api",
+        laeuft=laeuft,
+        letzter=_eintrag({
+            "deployment_uuid": dep,
+            "application_name": "nextdays-api",
+            "status": status,
+        }),
+    )])
+
+
+def _bestand(status: str, *, dep: str = "dep-1") -> list[dict]:
+    jetzt = datetime.now(UTC)
+    return [{
+        "anwendung_uuid": "u1",
+        "name": "nextdays-api",
+        "status": status,
+        "deployment_uuid": dep,
+        "anwendung": "nextdays-api",
+        "laeuft": False,
+        "geprueft_at": jetzt.isoformat(),
+        "aktualisiert_at": jetzt.isoformat(),
+    }]
+
+
+def _tick(db, uebersicht) -> None:
+    from src.features.platform_admin import deploy_spiegel
+
+    with patch.object(deploy_spiegel, "get_settings") as gs, patch.object(
+        deploy_spiegel.DeployService, "uebersicht_von_coolify", return_value=uebersicht
+    ):
+        gs.return_value.coolify_configured = True
+        deploy_spiegel.spiegel_aktualisieren(db)
+
+
+def test_verlauf_haelt_fehlschlag_mit_ursache_fest() -> None:
+    """Der Kern: ein Fehlschlag landet MIT Grund im Verlauf.
+
+    Coolify liefert an der Deployment-Zeile kein Fehlerfeld — der Grund muss
+    aus dem Build-Log kommen, sonst steht im Backoffice nur „Fehlgeschlagen".
+    """
+    from src.features.platform_admin import deploy_spiegel
+
+    db = _spiegel_db_mit_verlauf(_bestand("in_progress"))
+    with patch.object(
+        deploy_spiegel.coolify,
+        "build_log",
+        return_value=("failed", [
+            {"output": "Deployment failed: Docker Compose file not found", "type": "stderr"},
+        ]),
+    ):
+        _tick(db, _ueb("failed"))
+
+    eintrag = db.tabellen["deploy_ereignis"].insert.call_args[0][0]
+    assert eintrag["status_von"] == "in_progress"
+    assert eintrag["status_nach"] == "failed"
+    assert "Docker Compose file not found" in eintrag["fehler_text"]
+    assert eintrag["fehler_quelle"] == "deployment_failed"
+
+
+def test_verlauf_zieht_kein_log_bei_erfolg() -> None:
+    """Ein Log-Abruf je erfolgreichem Deploy wäre reine Last ohne Aussage."""
+    from src.features.platform_admin import deploy_spiegel
+
+    db = _spiegel_db_mit_verlauf(_bestand("in_progress"))
+    with patch.object(deploy_spiegel.coolify, "build_log") as log_mock:
+        _tick(db, _ueb("finished"))
+        log_mock.assert_not_called()
+
+    eintrag = db.tabellen["deploy_ereignis"].insert.call_args[0][0]
+    assert eintrag["status_nach"] == "finished"
+    assert eintrag["fehler_text"] is None
+
+
+def test_verlauf_schweigt_wenn_sich_der_zustand_nicht_aendert() -> None:
+    """Nur ZUSTANDSWECHSEL sind Ereignisse — sonst läuft der Verlauf voll.
+
+    Ändert sich bloß der Rückstand (neuer Commit auf main), ist am Deploy
+    nichts passiert; ein Eintrag dafür würde die eine Zeile, die zählt, im
+    Rauschen begraben.
+    """
+    from src.features.platform_admin.schemas import DeployApp, DeployRueckstand, DeployUebersicht
+
+    db = _spiegel_db_mit_verlauf(_bestand("finished"))
+    ueb = DeployUebersicht(apps=[DeployApp(
+        uuid="u1",
+        name="nextdays-api",
+        letzter=_eintrag({
+            "deployment_uuid": "dep-1",
+            "application_name": "nextdays-api",
+            "status": "finished",
+        }),
+        # Neu: ein offener Commit. Fachlich eine Änderung, aber kein Wechsel.
+        rueckstand=DeployRueckstand(commits_gesamt=3, commits_relevant=1, betrifft_mich=True),
+    )])
+    _tick(db, ueb)
+
+    # Die Verlaufs-Tabelle wurde gar nicht erst angefasst.
+    assert "deploy_ereignis" not in db.tabellen
+    # Der SPIEGEL wird trotzdem fortgeschrieben — der Rückstand gehört dorthin.
+    db.tabellen["deploy_spiegel"].upsert.assert_called_once()
+
+
+def test_verlauf_ueberlebt_unlesbares_log() -> None:
+    """Wurzel 5: kein Grund lesbar → Ereignis TROTZDEM, aber ohne Erfindung."""
+    from src.features.platform_admin import deploy_spiegel
+
+    db = _spiegel_db_mit_verlauf(_bestand("in_progress"))
+    with patch.object(
+        deploy_spiegel.coolify, "build_log", side_effect=RuntimeError("Coolify weg")
+    ):
+        _tick(db, _ueb("failed"))
+
+    eintrag = db.tabellen["deploy_ereignis"].insert.call_args[0][0]
+    assert eintrag["status_nach"] == "failed"
+    assert eintrag["fehler_text"] is None
+    assert eintrag["fehler_quelle"] == "kein_log"
+
+
+def test_verlauf_kippt_den_tick_nicht() -> None:
+    """Ein kaputter Verlauf darf den Spiegel nicht mitreißen."""
+    from src.features.platform_admin import deploy_spiegel
+
+    db = _spiegel_db_mit_verlauf(_bestand("in_progress"))
+    db.table("deploy_ereignis").insert.side_effect = RuntimeError("DB weg")
+    with patch.object(deploy_spiegel.coolify, "build_log", return_value=("failed", [])):
+        _tick(db, _ueb("failed"))
+
+    # Der Spiegel wurde trotz Verlaufs-Fehler geschrieben.
+    db.tabellen["deploy_spiegel"].upsert.assert_called_once()
+
+
+def test_verlauf_erstbefund_ist_kein_wechsel() -> None:
+    """Erste Sicht auf eine App: status_von=None, damit man es unterscheiden kann."""
+    db = _spiegel_db_mit_verlauf([])
+    _tick(db, _ueb("finished"))
+
+    eintrag = db.tabellen["deploy_ereignis"].insert.call_args[0][0]
+    assert eintrag["status_von"] is None
+    assert eintrag["status_nach"] == "finished"
+
+
+def test_ereignisse_lesen_deckelt_das_limit() -> None:
+    """Wurzel 8: kein unbegrenzter Bereich."""
+    db = MagicMock()
+    kette = db.table.return_value.select.return_value.order.return_value
+    kette.limit.return_value.execute.return_value.data = []
+    DeployService.ereignisse(db, limit=99_999)
+    assert kette.limit.call_args[0][0] == 200

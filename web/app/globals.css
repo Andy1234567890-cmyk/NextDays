@@ -60,6 +60,7 @@
      Als Tokens statt bg-[#…]-Arbitraries (Tailwind v4 kompiliert die
      unzuverlässig). Genutzt von lib/calendar-channels.ts. */
   --color-channel-direct: var(--channel-direct);
+  --color-channel-website: var(--channel-website);
   --color-channel-booking: var(--channel-booking);
   --color-channel-airbnb: var(--channel-airbnb);
   --color-channel-vrbo: var(--channel-vrbo);
@@ -126,6 +127,10 @@
   /* Kanal-Markenfarben (Multikalender-Herkunft). Bewusst die offiziellen
      Plattform-Akzente, damit die Quelle sofort erkennbar ist. */
   --channel-direct: #0a0a0a;   /* Direkt = myNextDays-Schwarz */
+  /* Eigene Website des Betriebs (0380). Provisionsfreier Direktumsatz — bewusst
+     ein eigener, positiver Ton, damit er sich in der Legende sowohl von
+     „Direkt" (schwarz) als auch von jedem Portal abhebt. */
+  --channel-website: #047857;
   --channel-booking: #003580;  /* Booking.com-Blau */
   --channel-airbnb: #ff5a5f;   /* Airbnb-Rot */
   --channel-vrbo: #1668e3;     /* Vrbo-Blau */

@@ -12,6 +12,9 @@ export type AvailabilityStatus = "open" | "booked" | "blocked";
 // Locales landen (scripts/i18n/kanal-enums-pruefen.mjs erzwingt das).
 export type AvailabilitySource =
   | "direct"
+  // Eigene Website des Betriebs (0380) — provisionsfreier Direktumsatz,
+  // getrennt von „direct" (Telefon/E-Mail/vor Ort).
+  | "website"
   | "portal"
   | "booking"
   | "airbnb"

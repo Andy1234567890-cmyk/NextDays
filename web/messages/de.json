@@ -6165,6 +6165,7 @@
     },
     "channel": {
       "direct": "Direkt",
+      "website": "Website",
       "booking": "Booking.com",
       "airbnb": "Airbnb",
       "vrbo": "Vrbo",

@@ -18,6 +18,11 @@ class AvailabilityStatus(StrEnum):
 
 class AvailabilitySource(StrEnum):
     direct = "direct"
+    # Eigene Website des Betriebs (0380). `writes.py` reicht den Kanal der
+    # Buchung unverändert als availability_source durch — fehlte der Wert hier,
+    # zerlegte die erste Website-Buchung die Kalender-Antwort an der
+    # Validierung (dieselbe Falle wie 'ical', siehe unten).
+    website = "website"
     portal = "portal"
     booking = "booking"
     airbnb = "airbnb"

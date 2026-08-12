@@ -32,6 +32,7 @@ from src.core.config import get_settings
 from src.core.logging import configure_logging, get_logger
 from src.core.supabase import get_service_client
 from src.features.properties.vertragsende import vertragsenden_nachziehen
+from src.jobs import worker_verlauf
 from src.jobs.channex_budget import BudgetDecision, ChannexBudget
 from src.jobs.queue import enqueue, next_run_after, try_enqueue_content_sync
 
@@ -862,18 +863,27 @@ class Worker:
             if job["job_type"] in _CHANNEX_JOB_TYPES
             else None
         )
+        uhr = worker_verlauf.Stoppuhr()
         try:
             handler(self._db, job.get("payload") or {}, budget)
             self._finish(job["id"], "done")
+            worker_verlauf.job_ausgang(self._db, job, uhr, ausgang="done")
         except ChannexBudgetExhausted as exc:
             # Budget mitten im Job erschöpft → verzögern statt Retry verbrennen.
             progressed = budget is not None and budget.granted > 0
             self._defer(job, exc.retry_after, progressed=progressed)
             log.info("job_deferred_budget", id=job["id"], job_type=job["job_type"],
                      retry_after=exc.retry_after, progressed=progressed)
+            worker_verlauf.job_ausgang(
+                self._db, job, uhr, ausgang="aufschub", retry_after=exc.retry_after
+            )
         except Exception as exc:  # noqa: BLE001 — ein Job-Fehler darf den Worker nie killen
             self._retry(job, str(exc))
             log.warning("job_failed", id=job["id"], job_type=job["job_type"], error=str(exc)[:300])
+            # Der Verlauf MUSS den Fehler tragen (Wurzel 5).
+            worker_verlauf.job_ausgang(
+                self._db, job, uhr, ausgang="fehler", fehler=str(exc)
+            )
 
     async def _dispatch(self, job: dict[str, Any]) -> None:
         async with self._sem:
@@ -1410,6 +1420,11 @@ class Worker:
         Das ist der Ersatz fuer Polling im Browser: EIN Prozess fragt Coolify,
         das Backoffice bekommt die Aenderung per Realtime-Push. Solange etwas
         baut, wird eng nachgesehen — sonst ruhig.
+
+        Derselbe Aufruf schreibt bei jedem ZUSTANDSWECHSEL zusaetzlich eine
+        Zeile nach `public.deploy_ereignis` (0378) — den Verlauf, den der
+        fortgeschriebene Spiegel nicht halten kann. Bei einem Fehlschlag zieht
+        er dafuer das Build-Log und legt die extrahierte Ursache mit ab.
         """
         takt = (
             DEPLOY_TICK_AKTIV_SECONDS if self._deploy_aktiv

@@ -665,6 +665,41 @@ class DeployVerlauf(BaseModel):
     items: list[DeployEintrag]
 
 
+class DeployEreignis(BaseModel):
+    """Ein Deploy-Zustandswechsel aus dem Verlauf (`deploy_ereignis`, 0378).
+
+    Der Spiegel hält nur den Jetzt-Stand und überschreibt ihn; hier steht, was
+    passiert IST — inklusive der Ursache bei einem Fehlschlag.
+    """
+
+    id: str
+    anwendung_uuid: str
+    name: str
+    # None = Erstbefund (Anwendung zum ersten Mal gesehen), kein Wechsel.
+    status_von: str | None = None
+    status_nach: str
+    deployment_uuid: str | None = None
+    deploy_id: int | None = None
+    commit: str | None = None
+    commit_nachricht: str | None = None
+    log_url: str | None = None
+    gestartet_at: datetime | None = None
+    beendet_at: datetime | None = None
+    # Die aus dem Build-Log extrahierte Ursache. None bei Erfolg — und auch
+    # dann, wenn im Log keine zu finden war (Wurzel 4: nie erfinden).
+    fehler_text: str | None = None
+    # deployment_failed | healthcheck | stderr | kein_log | unbekannt
+    fehler_quelle: str | None = None
+    fehler_kontext: str | None = None
+    # UNSERE Uhr: wann der Worker den Wechsel bemerkt hat (Wurzel 5b).
+    erkannt_at: datetime | None = None
+
+
+class DeployEreignisListe(BaseModel):
+    items: list[DeployEreignis]
+    total: int = 0
+
+
 class DeployLogZeile(BaseModel):
     """Eine Zeile Build-Ausgabe eines Deploys.
 
@@ -680,3 +715,89 @@ class DeployLog(BaseModel):
     deployment_uuid: str
     status: str
     zeilen: list[DeployLogZeile]
+
+
+# --------------------------------------------------------------------------
+# Worker-Verlauf (0379)
+# --------------------------------------------------------------------------
+
+
+class WorkerEreignis(BaseModel):
+    """Eine Zeile des Worker-Verlaufs — Metadaten, keine Nutzlast.
+
+    Die Nutzlast (Request/Response-Body, Job-Payload, Webhook-Payload) kommt
+    über `WorkerDetail` nachgeladen: ein einzelner ARI-Request kann Hunderte
+    Zeilen tragen, und in einer Liste von 200 Ereignissen wären das Megabyte
+    für Daten, die man erst beim Aufklappen sieht.
+    """
+
+    id: str
+    # job | gesendet | empfangen | tick
+    richtung: str
+    vorgang: str
+    # ok | fehler
+    ergebnis: str
+    tenant_id: str | None = None
+    property_id: str | None = None
+    # Objektname, in EINER Abfrage nachgezogen. `worker_ereignis` trägt bewusst
+    # keinen FK (das Objekt darf verschwinden, das Ereignis bleibt wahr), also
+    # kann PostgREST hier nicht joinen.
+    objekt: str | None = None
+    quelle_tabelle: str | None = None
+    quelle_id: str | None = None
+    http_methode: str | None = None
+    http_pfad: str | None = None
+    http_status: int | None = None
+    dauer_ms: int | None = None
+    fehler_text: str | None = None
+    versuche: int | None = None
+    # UNSERE Uhr. Bei richtung=empfangen der Eingang bei uns, nicht der
+    # Zeitpunkt beim Portal (Wurzel 5b).
+    erfasst_at: str
+
+
+class WorkerEreignisListe(BaseModel):
+    items: list[WorkerEreignis]
+    # Gesamtzahl der Treffer im Filter — die Oberfläche braucht sie fürs Blättern.
+    gesamt: int = 0
+    offset: int = 0
+    limit: int = 100
+
+
+class WorkerKennzahl(BaseModel):
+    """Zahlen je Vorgang.
+
+    Die Fehlerquote steht bewusst NICHT nur als Gesamtwert: live sind 3 von 522
+    Portal-Aufrufen fehlgeschlagen — als Gesamtquote (0,6 %) sieht das nach
+    nichts aus, während ein einzelner Vorgang zu 100 % scheitern kann.
+    """
+
+    richtung: str
+    vorgang: str
+    anzahl: int
+    fehler: int
+    dauer_avg_ms: int | None = None
+    dauer_max_ms: int | None = None
+
+
+class WorkerKennzahlen(BaseModel):
+    stunden: int
+    items: list[WorkerKennzahl]
+    ereignisse: int = 0
+    fehler: int = 0
+    # Was JETZT offen ist — aus `jobs`, nicht aus dem Verlauf: der Verlauf sagt,
+    # was passiert IST, nicht was ansteht (Wurzel 5b).
+    warteschlange: int = 0
+    aufgegeben: int = 0
+
+
+class WorkerDetail(BaseModel):
+    """Ein Ereignis samt VOLLSTÄNDIGER Quellzeile — ungekürzt.
+
+    `quelle` ist `None`, wenn das Ereignis keine Quellzeile trug oder sie
+    aufgeräumt wurde. Kein leeres Objekt, das wie „nichts drin" aussieht
+    (Wurzel 4).
+    """
+
+    ereignis: WorkerEreignis | None = None
+    quelle: dict[str, object] | None = None

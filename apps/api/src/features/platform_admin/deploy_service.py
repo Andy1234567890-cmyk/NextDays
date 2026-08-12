@@ -42,6 +42,8 @@ from . import coolify, deploy_rueckstand
 from .schemas import (
     DeployApp,
     DeployEintrag,
+    DeployEreignis,
+    DeployEreignisListe,
     DeployLog,
     DeployLogZeile,
     DeployRueckstand,
@@ -59,6 +61,34 @@ _AKTIV = frozenset({"queued", "in_progress"})
 
 # Der Spiegel (Migration 0294/0345) — die Lesequelle des Request-Pfads.
 _TABELLE = "deploy_spiegel"
+# Der Verlauf (Migration 0378) — was passiert IST, inkl. Fehlerursache.
+_EREIGNIS_TABELLE = "deploy_ereignis"
+
+
+def _ereignis_zeile(zeile: dict) -> dict:
+    """Eine `deploy_ereignis`-Zeile in die Felder von `DeployEreignis`.
+
+    Nur Glättung (UUID→str, Zeiten): der Verlauf ist unsere eigene Tabelle,
+    hier wird nichts abgeleitet oder ergänzt.
+    """
+    return {
+        "id": str(zeile.get("id") or ""),
+        "anwendung_uuid": str(zeile.get("anwendung_uuid") or ""),
+        "name": str(zeile.get("name") or ""),
+        "status_von": zeile.get("status_von") or None,
+        "status_nach": str(zeile.get("status_nach") or "unbekannt"),
+        "deployment_uuid": zeile.get("deployment_uuid") or None,
+        "deploy_id": zeile.get("deploy_id"),
+        "commit": zeile.get("commit") or None,
+        "commit_nachricht": zeile.get("commit_nachricht") or None,
+        "log_url": zeile.get("log_url") or None,
+        "gestartet_at": _zeit(zeile.get("gestartet_at")),
+        "beendet_at": _zeit(zeile.get("beendet_at")),
+        "fehler_text": zeile.get("fehler_text") or None,
+        "fehler_quelle": zeile.get("fehler_quelle") or None,
+        "fehler_kontext": zeile.get("fehler_kontext") or None,
+        "erkannt_at": _zeit(zeile.get("erkannt_at")),
+    }
 
 
 @lru_cache(maxsize=1)
@@ -299,6 +329,37 @@ class DeployService:
             if isinstance(uuid, str) and isinstance(pfade, str):
                 treffer[uuid] = pfade
         return treffer
+
+    @staticmethod
+    def ereignisse(
+        db: Client,
+        *,
+        limit: int = 50,
+        nur_fehler: bool = False,
+        anwendung_uuid: str | None = None,
+    ) -> DeployEreignisListe:
+        """Der Verlauf aus `public.deploy_ereignis` (0378), neueste zuerst.
+
+        Anders als `verlauf()` geht das NICHT an Coolify: der Verlauf ist unser
+        eigenes Gedächtnis und überlebt Coolifys Retention. Er ist zugleich die
+        Realtime-Quelle des Backoffice — Ereignis-Quelle und Daten-Quelle sind
+        dieselbe Tabelle, wie schon beim Spiegel.
+
+        `nur_fehler` filtert auf fehlgeschlagene Deploys; das ist der Blick,
+        wegen dem jemand die Seite öffnet.
+        """
+        # Wurzel 8: harte Obergrenze, kein unbegrenzter Bereich.
+        limit = max(1, min(200, limit))
+        abfrage = db.table(_EREIGNIS_TABELLE).select("*")
+        if nur_fehler:
+            abfrage = abfrage.eq("status_nach", "failed")
+        if anwendung_uuid:
+            abfrage = abfrage.eq("anwendung_uuid", anwendung_uuid)
+        zeilen = (
+            abfrage.order("erkannt_at", desc=True).limit(limit).execute()
+        ).data or []
+        items = [DeployEreignis(**_ereignis_zeile(z)) for z in zeilen]
+        return DeployEreignisListe(items=items, total=len(items))
 
     def verlauf(self, anwendung_uuid: str, limit: int = 20) -> DeployVerlauf:
         """Die letzten Deploys einer Anwendung, neueste zuerst."""

@@ -44,7 +44,7 @@ Diff, Voll-Abgleich, Mapping-Assistent, Portal-Katalog) ist vorhanden und läuft
 | # | Lücke | Heute bei uns | Wirkung |
 |---|---|---|---|
 | 1 | **Stornobedingungen** | nur Freitext in `important_information` (`content_builder.py:114`) | Booking/Expedia-Anbindung blockiert |
-| 2 | **Kanal-Ereignisse unsichtbar** | `channex_webhook_event` wird befüllt, Endpunkte `GET /events` existieren — **keine UI** | Airbnb-Anfragen mit ~24-h-Frist, `sync_error`, `booking_unmapped_room` laufen ins Leere |
+| 2 | ~~**Kanal-Ereignisse unsichtbar**~~ | **ERLEDIGT**: Seite `/channels/ereignisse` (`components/channel-manager/kanal-ereignisse.tsx`) auf `GET /events`, Einstieg in der Kanal-Sidebar, Abhaken über `POST /events/{id}/resolve`; handlungspflichtige Anfragen stehen als Banner oben. Live-Aktualisierung über `reservations` — `channex_webhook_event` ist seit 0337 für `authenticated` gesperrt (Gast-PII), ein Abo darauf wäre eine stumme Attrappe | — |
 | 3 | **Gebühren je Kanal** | nur `taxes[]`; `meal_type`, `children_fee`, `infant_fee` nie gesendet | Reinigungs-/Zusatzgast-Gebühren landen still in der Nachtrate |
 | 4 | **Kanal-Aufschlag (Mark-up)** | fehlt ganz | kein kanalabhängiger Preisaufschlag (Lodgify: Pflichtfeld beim Mapping) |
 | 5 | **Room-Type-Facilities, Betten, Bundesland** | nur Property-Facilities (`content_sync.py:656`) | dünnes Listing bei Booking/Vrbo |

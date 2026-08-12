@@ -37,6 +37,9 @@ const PUNKTE: Punkt[] = [
   },
   { href: "/diagnose", label: "Diagnose", icon: "ph:activity" },
   { href: "/deploy", label: "Deploy-Monitor", icon: "ph:rocket-launch" },
+  // Neben dem Deploy-Monitor, weil beide dieselbe Frage beantworten: läuft der
+  // Hintergrund noch? Der eine für Ausrollen, der andere für die Jobs.
+  { href: "/worker", label: "Worker-Monitor", icon: "ph:gear-six" },
   { href: "/protokoll", label: "Protokoll", icon: "ph:list-checks" },
   // Sichtbar für alle im Backoffice — wer Zugriff hat, soll nachsehen können,
   // wer sonst noch Zugriff hat. Ändern darf trotzdem nur platform_admin.

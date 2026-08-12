@@ -4,10 +4,27 @@
 import { ApiError } from "@nextdays/auth/errors";
 
 import { DeployTabelle, SPIEGEL_STILL_MS } from "@/components/deploy-tabelle";
-import { getDeployUebersicht, getPlatformMe } from "@/lib/backoffice";
+import { DeployVerlaufListe } from "@/components/deploy-verlauf";
+import {
+  getDeployEreignisse,
+  getDeployUebersicht,
+  getPlatformMe,
+  type DeployEreignis,
+} from "@/lib/backoffice";
 
 export default async function DeploySeite() {
   const me = await getPlatformMe();
+
+  // Der Verlauf hängt an einer eigenen Tabelle und darf die Seite nicht
+  // mitreißen, wenn er (noch) nichts liefert — die Übersicht ist wichtiger.
+  let ereignisse: DeployEreignis[] = [];
+  let verlaufFehler: string | null = null;
+  try {
+    ereignisse = (await getDeployEreignisse(50)).items;
+  } catch (exc) {
+    verlaufFehler =
+      exc instanceof ApiError ? exc.message : "Verlauf nicht ladbar.";
+  }
 
   let uebersicht;
   let fehler: string | null = null;
@@ -97,6 +114,15 @@ export default async function DeploySeite() {
           aktiv={aktiv}
           darfDeployen={me.can_write}
         />
+      )}
+
+      {verlaufFehler ? (
+        <div className="mt-12 rounded-2xl border border-dashed border-border p-6">
+          <p className="text-sm font-medium">Verlauf nicht verfügbar</p>
+          <p className="mt-2 text-sm text-muted-foreground">{verlaufFehler}</p>
+        </div>
+      ) : (
+        <DeployVerlaufListe ereignisse={ereignisse} />
       )}
     </div>
   );
