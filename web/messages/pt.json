@@ -3741,7 +3741,7 @@
     },
     "propertyLocation": {
       "defaultTitle": "Objeto",
-      "mapTitle": "Localização de {title}",
+      "missingMapsKey": "Nenhuma chave do Google Maps definida (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).",
       "noAddress": "Nenhuma morada registada.",
       "openInMap": "Abrir no mapa"
     },

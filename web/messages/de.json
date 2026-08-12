@@ -3746,7 +3746,7 @@
     },
     "propertyLocation": {
       "defaultTitle": "Objekt",
-      "mapTitle": "Standort von {title}",
+      "missingMapsKey": "Kein Google-Maps-Key gesetzt (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).",
       "noAddress": "Keine Adresse hinterlegt.",
       "openInMap": "In Karte öffnen"
     },

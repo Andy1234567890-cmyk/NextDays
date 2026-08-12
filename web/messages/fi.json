@@ -3746,7 +3746,7 @@
     },
     "propertyLocation": {
       "defaultTitle": "Kohde",
-      "mapTitle": "{title} – sijainti",
+      "missingMapsKey": "Google Maps -avainta ei ole asetettu (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).",
       "noAddress": "Osoitetta ei ole tallennettu.",
       "openInMap": "Avaa kartassa"
     },

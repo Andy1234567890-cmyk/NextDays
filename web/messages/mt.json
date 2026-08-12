@@ -3741,7 +3741,7 @@
     },
     "propertyLocation": {
       "defaultTitle": "Proprjetà",
-      "mapTitle": "Post ta' {title}",
+      "missingMapsKey": "L-ebda Google-Maps-Key issettjata (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).",
       "noAddress": "L-ebda indirizz irreġistrat.",
       "openInMap": "Iftaħ fil-mappa"
     },

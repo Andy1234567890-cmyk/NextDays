@@ -3741,7 +3741,7 @@
     },
     "propertyLocation": {
       "defaultTitle": "Objektas",
-      "mapTitle": "{title} vieta",
+      "missingMapsKey": "Nenustatytas „Google Maps“ raktas (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).",
       "noAddress": "Adresas nenurodytas.",
       "openInMap": "Atidaryti žemėlapyje"
     },

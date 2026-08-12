@@ -4,6 +4,7 @@
 // fehlt etwas, zeigt die Karte ehrlich „nichts" statt erfundener Zahlen.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 
 import { Card, CardContent } from "@nextdays/ui/card";
 import { ChannelLogo } from "@/components/channel-logo";
@@ -47,25 +48,38 @@ function EntryRow({ entry }: { entry: DashboardEntry }) {
       ? channelLabelLoose(entry.ota_name)
       : channelLabel(entry.channel as AvailabilitySource);
   return (
-    <li className="flex items-center gap-3 py-2">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-        {entry.is_owner_stay ? (
-          <Icon icon={OWNER_STAY_ICON} className="size-4" />
-        ) : (
-          <ChannelLogo source={entry.channel as AvailabilitySource} className="size-4" />
-        )}
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">
-          {entry.guest_name || "Gast unbekannt"}
-          {entry.property_title ? (
-            <span className="text-muted-foreground">, {entry.property_title}</span>
-          ) : null}
-        </p>
-        <p className="truncate text-xs text-muted-foreground">
-          {channel} · {fmtDate(entry.check_in)} – {fmtDate(entry.check_out)}
-        </p>
-      </div>
+    <li>
+      {/* Die ganze Zeile führt zur Buchung. Vorher war sie eine Sackgasse: die
+          `reservation_id` lag vor und diente nur als React-Key — wer im
+          Dashboard einen Anreisenden sah, musste ihn in der Reservierungsliste
+          erneut suchen. */}
+      <Link
+        href={`/reservierungen/${entry.reservation_id}`}
+        className="flex items-center gap-3 rounded-xl py-2 transition-colors hover:bg-secondary/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      >
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+          {entry.is_owner_stay ? (
+            <Icon icon={OWNER_STAY_ICON} className="size-4" />
+          ) : (
+            <ChannelLogo source={entry.channel as AvailabilitySource} className="size-4" />
+          )}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium">
+            {entry.guest_name || "Gast unbekannt"}
+            {entry.property_title ? (
+              <span className="text-muted-foreground">, {entry.property_title}</span>
+            ) : null}
+          </p>
+          <p className="truncate text-xs text-muted-foreground">
+            {channel} · {fmtDate(entry.check_in)} – {fmtDate(entry.check_out)}
+          </p>
+        </div>
+        <Icon
+          icon="ph:caret-right"
+          className="size-4 shrink-0 text-muted-foreground"
+        />
+      </Link>
     </li>
   );
 }

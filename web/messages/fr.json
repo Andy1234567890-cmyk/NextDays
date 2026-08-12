@@ -3746,7 +3746,7 @@
     },
     "propertyLocation": {
       "defaultTitle": "Logement",
-      "mapTitle": "Emplacement de {title}",
+      "missingMapsKey": "Aucune clé Google Maps définie (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).",
       "noAddress": "Aucune adresse renseignée.",
       "openInMap": "Ouvrir dans la carte"
     },

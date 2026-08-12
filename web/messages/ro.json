@@ -3741,7 +3741,7 @@
     },
     "propertyLocation": {
       "defaultTitle": "Proprietate",
-      "mapTitle": "Locația {title}",
+      "missingMapsKey": "Nicio cheie Google Maps setată (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).",
       "noAddress": "Nicio adresă înregistrată.",
       "openInMap": "Deschide pe hartă"
     },

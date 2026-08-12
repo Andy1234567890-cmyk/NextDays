@@ -3746,7 +3746,7 @@
     },
     "propertyLocation": {
       "defaultTitle": "Ingatlan",
-      "mapTitle": "{title} helyszíne",
+      "missingMapsKey": "Nincs beállítva Google Maps-kulcs (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).",
       "noAddress": "Nincs megadva cím.",
       "openInMap": "Megnyitás térképen"
     },

@@ -3741,7 +3741,7 @@
     },
     "propertyLocation": {
       "defaultTitle": "Object",
-      "mapTitle": "Locatie van {title}",
+      "missingMapsKey": "Geen Google Maps-sleutel ingesteld (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).",
       "noAddress": "Geen adres opgeslagen.",
       "openInMap": "Op kaart openen"
     },

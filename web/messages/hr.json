@@ -3746,7 +3746,7 @@
     },
     "propertyLocation": {
       "defaultTitle": "Objekt",
-      "mapTitle": "Lokacija objekta {title}",
+      "missingMapsKey": "Nije postavljen Google Maps ključ (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).",
       "noAddress": "Adresa nije unesena.",
       "openInMap": "Otvori na karti"
     },

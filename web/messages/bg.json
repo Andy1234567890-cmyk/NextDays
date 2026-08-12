@@ -3746,7 +3746,7 @@
     },
     "propertyLocation": {
       "defaultTitle": "Обект",
-      "mapTitle": "Местоположение на {title}",
+      "missingMapsKey": "Не е зададен ключ за Google Maps (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).",
       "noAddress": "Няма въведен адрес.",
       "openInMap": "Отвори в картата"
     },

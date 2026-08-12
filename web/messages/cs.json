@@ -3746,7 +3746,7 @@
     },
     "propertyLocation": {
       "defaultTitle": "Objekt",
-      "mapTitle": "Poloha objektu {title}",
+      "missingMapsKey": "Není nastaven klíč Google Maps (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).",
       "noAddress": "Není uvedena žádná adresa.",
       "openInMap": "Otevřít na mapě"
     },

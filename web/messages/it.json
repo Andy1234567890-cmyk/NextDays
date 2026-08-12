@@ -3741,7 +3741,7 @@
     },
     "propertyLocation": {
       "defaultTitle": "Alloggio",
-      "mapTitle": "Posizione di {title}",
+      "missingMapsKey": "Nessuna chiave Google Maps impostata (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).",
       "noAddress": "Nessun indirizzo inserito.",
       "openInMap": "Apri nella mappa"
     },

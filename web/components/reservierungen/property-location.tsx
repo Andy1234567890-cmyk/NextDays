@@ -1,17 +1,33 @@
 "use client";
 
-// Objekt-Standort im Buchungsdetail (..: Karte rechts oben). Zeigt die
-// eingebettete OpenStreetMap-Karte mit Marker + die Adresse. Bewusst OHNE
-// Google/Mapbox (kein API-Key, kein Fremd-Branding — passt zu white-label und
-// dem self-hosted-Prinzip). Koordinaten kommen aus properties.lat/lng.
+// Objekt-Standort im Buchungsdetail (Karte rechts oben): Google-Maps-Karte mit
+// Marker + die Adresse. Koordinaten kommen aus properties.lat/lng.
+//
+// WARUM GOOGLE MAPS UND NICHT MEHR OSM (12.08.2026):
+// Hier stand ein OpenStreetMap-iframe, und der war LIVE BLOCKIERT — die Karte
+// zeigte „Dieser Inhalt ist blockiert". Ursache: unsere CSP
+// (`packages/security-headers`) hat kein `frame-src`, also greift
+// `default-src 'self'` und ein fremder iframe fliegt raus. Nicht OSM war schuld
+// (der Embed antwortet 200 ohne Frame-Sperre), sondern die eigene Policy.
+//
+// Die CSP dafür aufzuweichen wäre der falsche Weg gewesen: das Projekt hat die
+// Google-Maps-JS-API längst verdrahtet (`@vis.gl/react-google-maps`, Key in
+// NEXT_PUBLIC_GOOGLE_MAPS_API_KEY, `googleMaps: true` in web/next.config.ts) und
+// rendert damit schon die Objekt-Standortkarte. Dieselbe Bibliothek hier
+// bedeutet: keine neue CSP-Freigabe, kein iframe, eine Karten-Technik im
+// Projekt statt zwei.
 //
 // Fehlen lat/lng, wird KEIN Punkt erfunden (Wurzel 4) — dann nur die Adresse als
-// Text + „In Karte öffnen"-Link (öffnet die Standard-Karten-App per geo:/OSM).
+// Text + „In Karte öffnen"-Link. Fehlt der API-Key, wird das BENANNT statt eine
+// leere graue Fläche zu zeigen, die wie ein Defekt aussieht.
+import { APIProvider, Map, Marker } from "@vis.gl/react-google-maps";
 import { useTranslations } from "next-intl";
 
 import { Icon } from "@iconify/react";
 
 import { Card } from "@nextdays/ui/card";
+
+const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
 type LocationProps = {
   title: string;
@@ -45,30 +61,43 @@ export function PropertyLocation(p: LocationProps) {
   // Kein Standort bekannt → Abschnitt weglassen (nichts Erfundenes zeigen).
   if (!hasCoords && !address) return null;
 
-  // OSM-Embed: kleine BBox um den Punkt + Marker. Kein Key, kein Tracking-Skript.
   const lat = p.lat as number;
   const lng = p.lng as number;
-  const d = 0.008; // ~800 m Kantenlänge → Straßen-Zoom wie bei ..
-  const bbox = `${lng - d}%2C${lat - d}%2C${lng + d}%2C${lat + d}`;
-  const embedSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat}%2C${lng}`;
-  // „In Karte öffnen": vollständige OSM-Ansicht (öffnet extern in neuem Tab).
+  // „In Karte öffnen": Google Maps in neuem Tab. Mit Koordinaten der exakte
+  // Punkt, sonst die Adresssuche — nie ein geratener Ort (Wurzel 4).
   const openHref = hasCoords
-    ? `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`
-    : `https://www.openstreetmap.org/search?query=${encodeURIComponent(address)}`;
+    ? `https://www.google.com/maps/search/?api=1&query=${lat}%2C${lng}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 
   const propertyTitle = p.title || t("propertyLocation.defaultTitle");
 
   return (
     <Card className="flex flex-col gap-3 overflow-hidden p-0">
-      {hasCoords && (
-        <iframe
-          title={t("propertyLocation.mapTitle", { title: propertyTitle })}
-          src={embedSrc}
-          loading="lazy"
-          referrerPolicy="no-referrer"
-          className="h-44 w-full border-0"
-        />
-      )}
+      {hasCoords &&
+        (API_KEY ? (
+          <div className="h-44 w-full shrink-0">
+            <APIProvider apiKey={API_KEY}>
+              <Map
+                defaultCenter={{ lat, lng }}
+                defaultZoom={15}
+                // Nur ansehen, nicht bearbeiten: im Buchungsdetail soll ein
+                // Scrollen durch die Seite nicht in der Karte hängenbleiben.
+                gestureHandling="cooperative"
+                disableDefaultUI
+                mapId="nextdays-location"
+                style={{ width: "100%", height: "100%" }}
+              >
+                <Marker position={{ lat, lng }} />
+              </Map>
+            </APIProvider>
+          </div>
+        ) : (
+          // Kein Key → sagen, was fehlt. Eine leere graue Fläche sähe wie ein
+          // Defekt aus, und die Adresse darunter steht ohnehin (Wurzel 4/5).
+          <p className="px-4 pt-4 text-sm text-muted-foreground">
+            {t("propertyLocation.missingMapsKey")}
+          </p>
+        ))}
       <div className="flex items-start justify-between gap-3 p-4 pt-0">
         <div className="min-w-0">
           <p className="font-display text-sm font-bold">{propertyTitle}</p>

@@ -3741,7 +3741,7 @@
     },
     "propertyLocation": {
       "defaultTitle": "Objekts",
-      "mapTitle": "{title} atrašanās vieta",
+      "missingMapsKey": "Nav iestatīta Google Maps atslēga (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).",
       "noAddress": "Adrese nav norādīta.",
       "openInMap": "Atvērt kartē"
     },
