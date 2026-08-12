@@ -213,40 +213,35 @@ App-Wechsel (`lib/appwechsel.ts`), keine Navigation.
   einem frühen Return, unvollständige Hook-Dependencies, verschluckte Fehler
   ohne `cause`. Warnungen (`any`, `<img>`) brechen noch nicht ab — neue keine
   dazu. Geteilte Pakete: `bun run lint:packages`.
-- Frontend: `bunx next build` in jeder berührten App muss durchlaufen. `tsc` und
-  ESLint reichen NICHT — sie prüfen keine Next.js-Direktiven-Regeln. Ein
-  `"use server"`-Modul darf AUSSCHLIESSLICH async functions exportieren (ein
-  `const`/Objekt darin bricht erst „Collecting page data" mit
-  `A "use server" file can only export async functions`); Werte und Typen
-  gehören in eine Nachbardatei ohne die Direktive. Genau so ging ein kaputter
-  Build committet+gepusht durch beide Prüfungen. Buildfehler werden behoben,
-  nie per `ignoreBuildErrors` unterdrückt (Wurzel 4/5).
-  **WANN: EINMAL, direkt vor Commit/Push — NICHT je Arbeitsschritt und NICHT
-  je Agent.** `next build` löscht und schreibt `.next` neu; der Dev-Server des
-  Nutzers benutzt DENSELBEN Ordner und verliert dabei seine Dateien
-  (`ENOENT … routes-manifest.json`, jede Seite 500). Passiert am 09.08.2026:
-  mehrere Agenten bauten parallel, während der Nutzer arbeitete — seine
-  Oberfläche war reihenweise tot, ohne dass am Code etwas falsch war.
-  Wer während einer laufenden Sitzung bauen MUSS, baut in einem eigenen
-  Verzeichnis (`--distDir`) oder in einem eigenen Worktree, nie in das `.next`
-  des Nutzers hinein.
-  **`--distDir` MUSS ein ABSOLUTER Pfad sein.** Next.js löst einen relativen
-  Pfad gegen das App-Verzeichnis auf, nicht gegen die Wurzel: aus
-  `--distDir private/tmp/…/next-build` wurde `web/private/tmp/…` — 1,6 GB
-  fremder Build-Ausgabe MITTEN im Quellcode (12.08.2026). Der Ordner ist
-  git-ignoriert, tauchte also in `git status` nie auf und wuchs mit jedem Bau.
-  Der Schaden war nicht der Platz, sondern das QUALITÄTSGATE: `bun run lint`
-  meldete **57 813 Fehler** und `tsc` dutzende `TS2307` aus diesem Fremdcode —
-  jeder echte Befund war darin unsichtbar, und die Fehler wurden zweimal per
-  `grep -v` weggefiltert statt als kaputtes Gate gemeldet. Zusätzlich schrieb
-  der Build seine absoluten Scratchpad-Pfade in die eingecheckte
-  `web/tsconfig.json` (`include`), womit der Docker-Build scheiterte: dort gibt
-  es diese Pfade nicht. Nach einem Prüf-Build deshalb IMMER `git diff` auf
-  `tsconfig.json`/`next-env.d.ts` ansehen. Gegen den Wiederholungsfall gesperrt:
-  `"private"` in `web/tsconfig.json` (`exclude`) und `**/private/**` in
-  `packages/eslint-config` (`IGNORES`), das jetzt auch die Wurzel-`.gitignore`
-  liest. Einzelne Agenten prüfen mit `tsc --noEmit` + `bun run
-  lint`; den Build fährt EIN Durchlauf am Ende.
+- **Frontend: NIE `next build` auf dem Rechner des Nutzers.** Kein
+  `bunx next build`, nicht mit `--distDir`, nicht in einem Worktree, nicht
+  „nur einmal zur Prüfung". Den Build fährt AUSSCHLIESSLICH Coolify beim
+  Deploy. Ausdrückliche Anweisung vom 12.08.2026: *„alles deploy ohne build
+  auf meinen pc du müllst ihn komplett zu"* — samt der Auflage, diese Regel
+  hier so zu verankern, dass nie wieder ein lokaler Build daraus abgeleitet
+  wird.
+  Warum die Erlaubnis gestrichen wurde, statt sie zu bedingen: jede Variante
+  hat live Schaden angerichtet. Ohne `--distDir` löscht der Build das `.next`
+  des laufenden Dev-Servers und jede Seite antwortet 500
+  (`ENOENT … routes-manifest.json`, 09.08.2026 — die Oberfläche war
+  reihenweise tot, ohne dass am Code etwas falsch war). MIT `--distDir` und
+  relativem Pfad landeten 1,6 GB Build-Ausgabe mitten im Quellcode
+  (`web/private/tmp/…`, git-ignoriert, in `git status` unsichtbar); `bun run
+  lint` meldete daraufhin **57 813 Fehler** und `tsc` dutzende `TS2307` aus
+  diesem Fremdcode — jeder echte Befund war darin unsichtbar. Zusätzlich
+  schrieb der Build seine absoluten Pfade in die eingecheckte
+  `web/tsconfig.json`, womit der Docker-Build scheiterte. Eine Regel, deren
+  korrekte Anwendung dreimal misslang, gehört nicht präzisiert, sondern
+  entfernt.
+  **Was stattdessen geprüft wird:** `tsc --noEmit` + `bun run lint` in jeder
+  berührten App. Beide finden nicht alles — Next.js-Direktiven-Regeln prüfen
+  sie NICHT. Ein `"use server"`-Modul darf AUSSCHLIESSLICH async functions
+  exportieren (ein `const`/Objekt darin bricht erst in „Collecting page data"
+  mit `A "use server" file can only export async functions`); Werte und Typen
+  gehören in eine Nachbardatei ohne die Direktive. Diese Klasse Fehler wird
+  daher im Kopf geprüft und beim Deploy von Coolify gefangen; schlägt der
+  Deploy-Build fehl, wird er behoben, nie per `ignoreBuildErrors` unterdrückt
+  (Wurzel 4/5).
 - Kanal/Enum berührt? `node scripts/i18n/kanal-enums-pruefen.mjs` — hält
   DB-Enum → Pydantic → Frontend-Unions → Kanal-Meta → `calendar.channel.*`
   aller 24 Sprachen deckungsgleich. Ein neuer Backend-Kanalwert ohne diese
