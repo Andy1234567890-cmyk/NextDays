@@ -40,6 +40,9 @@ const PUNKTE: Punkt[] = [
   // Neben dem Deploy-Monitor, weil beide dieselbe Frage beantworten: läuft der
   // Hintergrund noch? Der eine für Ausrollen, der andere für die Jobs.
   { href: "/worker", label: "Worker-Monitor", icon: "ph:gear-six" },
+  // Direkt hinter dem Worker-Monitor, weil sie die zwei Richtungen derselben
+  // Sache sind: dort was WIR an die Portale senden, hier was sie uns schicken.
+  { href: "/webhook", label: "Webhook-Monitor", icon: "ph:cloud-arrow-down" },
   { href: "/protokoll", label: "Protokoll", icon: "ph:list-checks" },
   // Sichtbar für alle im Backoffice — wer Zugriff hat, soll nachsehen können,
   // wer sonst noch Zugriff hat. Ändern darf trotzdem nur platform_admin.

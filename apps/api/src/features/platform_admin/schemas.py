@@ -813,3 +813,77 @@ class WorkerDetail(BaseModel):
 
     ereignis: WorkerEreignis | None = None
     quelle: dict[str, object] | None = None
+
+
+class WebhookEreignis(BaseModel):
+    """Ein Eingang von einem Portal (channex_webhook_event).
+
+    Was WIR tun, steht im Worker-Verlauf; hier steht, was ANDERE uns schicken.
+    """
+
+    id: str
+    # booking_new | review | message | disconnect_listing | …
+    event: str
+    # info | error | action
+    severity: str
+    resolved: bool
+    # True, wenn dieses Ereignis einen EINGRIFF verlangt und noch offen ist
+    # (getrenntes Inserat, deaktivierter Kanal, unzugeordnete Rate). Serverseitig
+    # entschieden, damit die Oberfläche `severity` nicht selbst deuten muss.
+    handlungsbedarf: bool = False
+    tenant_id: str | None = None
+    betrieb: str | None = None
+    property_id: str | None = None
+    objekt: str | None = None
+    live_feed_event_id: str | None = None
+    # Worum es geht, aus der ECHTEN Payload gelesen (listing_id, channel, …).
+    # `None`, wenn die Payload nichts davon trug — nie geraten (Wurzel 4).
+    zusammenfassung: str | None = None
+    resolved_at: str | None = None
+    # Der Zeitpunkt BEIM PORTAL, aus `payload.timestamp`. `None`, wenn die
+    # Payload ihn nicht trug — dann gibt es ihn nicht, und die eigene Uhr wäre
+    # eine Falschaussage (Wurzel 5b).
+    portal_at: str | None = None
+    # UNSER Eingang, NICHT der Zeitpunkt beim Portal (Wurzel 5b). Deshalb so
+    # benannt: „created_at" hätte man als Portal-Zeitpunkt gelesen.
+    eingang_at: str
+
+
+class WebhookEreignisListe(BaseModel):
+    items: list[WebhookEreignis]
+    gesamt: int = 0
+    offset: int = 0
+    limit: int = 100
+
+
+class WebhookKennzahl(BaseModel):
+    """Zahlen je Ereignistyp. `offen` ist der Teil, der noch niemand angefasst
+    hat — bei einem Fehlertyp ist genau das die Aussage."""
+
+    event: str
+    severity: str
+    anzahl: int = 0
+    offen: int = 0
+
+
+class WebhookKennzahlen(BaseModel):
+    stunden: int
+    items: list[WebhookKennzahl]
+    ereignisse: int = 0
+    # ZEITFENSTER-UNABHÄNGIG: ein getrenntes Inserat vom 07.08. ist heute noch
+    # getrennt. Nur die letzten 24 h zu zählen liesse die Ansicht ruhig
+    # aussehen, während vier Inserate stillstehen.
+    handlungsbedarf: int = 0
+    fehler_offen: int = 0
+
+
+class WebhookDetail(BaseModel):
+    """Ein Eingang samt VOLLSTÄNDIGER Portal-Payload — ungekürzt.
+
+    `resolution` ist gefüllt, wenn jemand das Ereignis abgearbeitet hat; `None`
+    heisst offen (kein leeres Objekt, das wie „erledigt" aussieht).
+    """
+
+    ereignis: WebhookEreignis | None = None
+    payload: dict[str, Any] | None = None
+    resolution: dict[str, Any] | None = None

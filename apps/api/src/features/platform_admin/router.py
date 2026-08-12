@@ -14,6 +14,7 @@ from fastapi import APIRouter, HTTPException, Query, Request, status
 
 from src.core.security import CurrentPlatformAdmin, require_platform_write
 
+from . import webhook_verlauf as webhook
 from . import worker_verlauf as worker
 from .dependencies import (
     DeployDbDep,
@@ -56,6 +57,9 @@ from .schemas import (
     TenantDetail,
     TenantList,
     VorgangList,
+    WebhookDetail,
+    WebhookEreignisListe,
+    WebhookKennzahlen,
     WorkerDetail,
     WorkerEreignisListe,
     WorkerKennzahlen,
@@ -952,6 +956,80 @@ def worker_detail(
         ctx,
         "worker.detail",
         target_type="worker_ereignis",
+        target_id=ereignis_id,
+        request=request,
+    )
+    return ergebnis
+
+
+# --------------------------------------------------------------------------
+# Webhook-Eingänge: was die PORTALE uns schicken (der Worker-Verlauf oben zeigt,
+# was WIR tun). Getrennt, weil sonst 538 Eingänge in 1.400 Jobs am Tag
+# untergehen — und mit ihnen die Fehler.
+#
+# `channex_webhook_event.payload` trägt die vollständige Portal-Nutzlast
+# (Gastname, Preise, Kennungen). Für `authenticated` ist die Tabelle bewusst nur
+# tenant-gescoped und rollenbeschränkt lesbar; diese Routen laufen mit der
+# Service-Role hinter `CurrentPlatformAdmin` und zeigen ALLES (Wurzel 6).
+
+# WICHTIG: `/webhook/kennzahlen` VOR `/webhook/{ereignis_id}` — sonst liest
+# FastAPI „kennzahlen" als Ereignis-ID (dieselbe Falle wie bei /worker).
+@router.get("/webhook/kennzahlen", response_model=WebhookKennzahlen)
+def webhook_kennzahlen(
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    db: DeployDbDep,
+    request: Request,
+    stunden: int = Query(24, ge=1, le=720),
+) -> WebhookKennzahlen:
+    """Was eingetroffen ist, je Ereignistyp — plus was offen ist und Handeln
+    verlangt (zeitfenster-unabhängig gezählt)."""
+    ergebnis = webhook.kennzahlen(db, stunden=stunden)
+    service.log_action(ctx, "webhook.stats", request=request)
+    return ergebnis
+
+
+@router.get("/webhook/ereignisse", response_model=WebhookEreignisListe)
+def webhook_ereignisse(  # noqa: PLR0913 — jeder Filter ist eine Achse der Ansicht
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    db: DeployDbDep,
+    request: Request,
+    limit: int = Query(100, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    event: str | None = None,
+    severity: str | None = None,
+    nur_offen: bool = False,
+    tenant_id: str | None = None,
+) -> WebhookEreignisListe:
+    """Die Portal-Eingänge, neueste zuerst — serverseitig paginiert."""
+    ergebnis = webhook.liste(
+        db,
+        limit=limit,
+        offset=offset,
+        event=event,
+        severity=severity,
+        nur_offen=nur_offen,
+        tenant_id=tenant_id,
+    )
+    service.log_action(ctx, "webhook.events", request=request)
+    return ergebnis
+
+
+@router.get("/webhook/{ereignis_id}", response_model=WebhookDetail)
+def webhook_detail(
+    ereignis_id: str,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    db: DeployDbDep,
+    request: Request,
+) -> WebhookDetail:
+    """Die VOLLSTÄNDIGE Payload eines Eingangs — ungekürzt, plus `resolution`."""
+    ergebnis = webhook.detail(db, ereignis_id)
+    service.log_action(
+        ctx,
+        "webhook.detail",
+        target_type="channex_webhook_event",
         target_id=ereignis_id,
         request=request,
     )

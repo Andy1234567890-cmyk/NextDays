@@ -854,3 +854,105 @@ export async function getWorkerKennzahlen(
 export async function getWorkerDetail(id: string): Promise<WorkerDetail> {
   return api<WorkerDetail>(`/platform/worker/${id}`, { cache: "no-store" });
 }
+
+// --------------------------------------------------------------------------
+// Webhook-Eingänge: was die PORTALE uns schicken. Der Worker-Verlauf oben zeigt,
+// was WIR tun — getrennt, weil sonst die Fehler der einen Seite in der Menge der
+// anderen untergehen.
+
+export interface WebhookEreignis {
+  id: string;
+  /** booking_new | review | message | disconnect_listing | … */
+  event: string;
+  /** info | error | action */
+  severity: string;
+  resolved: boolean;
+  /** Verlangt einen EINGRIFF und ist noch offen (serverseitig entschieden). */
+  handlungsbedarf: boolean;
+  tenant_id: string | null;
+  betrieb: string | null;
+  property_id: string | null;
+  objekt: string | null;
+  live_feed_event_id: string | null;
+  /** Worum es geht, aus der echten Payload gelesen. null = trug nichts davon. */
+  zusammenfassung: string | null;
+  resolved_at: string | null;
+  /** Zeitpunkt BEIM PORTAL (payload.timestamp). null = trug keinen — dann gibt
+   *  es ihn nicht, und die eigene Uhr wäre eine Falschaussage (Wurzel 5b). */
+  portal_at: string | null;
+  /** UNSER Eingang, NICHT der Zeitpunkt beim Portal (Wurzel 5b). */
+  eingang_at: string;
+}
+
+export interface WebhookEreignisListe {
+  items: WebhookEreignis[];
+  gesamt: number;
+  offset: number;
+  limit: number;
+}
+
+export interface WebhookKennzahl {
+  event: string;
+  severity: string;
+  anzahl: number;
+  offen: number;
+}
+
+export interface WebhookKennzahlen {
+  stunden: number;
+  items: WebhookKennzahl[];
+  ereignisse: number;
+  /** Zeitfenster-UNABHÄNGIG: ein getrenntes Inserat vom 07.08. ist heute noch
+   *  getrennt. Nur 24 h zu zählen liesse die Ansicht ruhig aussehen. */
+  handlungsbedarf: number;
+  fehler_offen: number;
+}
+
+export interface WebhookDetail {
+  ereignis: WebhookEreignis | null;
+  /** Die VOLLSTÄNDIGE Portal-Payload, ungekürzt. */
+  payload: Record<string, unknown> | null;
+  /** Gefüllt, wenn jemand das Ereignis abgearbeitet hat; null = offen. */
+  resolution: Record<string, unknown> | null;
+}
+
+export interface WebhookFilter {
+  limit?: number;
+  offset?: number;
+  event?: string;
+  severity?: string;
+  nurOffen?: boolean;
+  tenantId?: string;
+}
+
+/** Die Portal-Eingänge, neueste zuerst. Serverseitig paginiert. */
+export async function getWebhookEreignisse(
+  filter: WebhookFilter = {},
+): Promise<WebhookEreignisListe> {
+  const p = new URLSearchParams({
+    limit: String(filter.limit ?? 100),
+    offset: String(filter.offset ?? 0),
+  });
+  if (filter.event) p.set("event", filter.event);
+  if (filter.severity) p.set("severity", filter.severity);
+  if (filter.nurOffen) p.set("nur_offen", "true");
+  if (filter.tenantId) p.set("tenant_id", filter.tenantId);
+  return api<WebhookEreignisListe>(`/platform/webhook/ereignisse?${p}`, {
+    cache: "no-store",
+  });
+}
+
+/** Kennzahlen je Ereignistyp plus der offene Handlungsbedarf. */
+export async function getWebhookKennzahlen(
+  stunden = 24,
+): Promise<WebhookKennzahlen> {
+  return api<WebhookKennzahlen>(
+    `/platform/webhook/kennzahlen?stunden=${stunden}`,
+    { cache: "no-store" },
+  );
+}
+
+/** Die vollständige Payload eines Eingangs — ungekürzt, plus resolution. */
+export async function getWebhookDetail(id: string): Promise<WebhookDetail> {
+  return api<WebhookDetail>(`/platform/webhook/${id}`, { cache: "no-store" });
+}
