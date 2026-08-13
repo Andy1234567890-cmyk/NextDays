@@ -4915,6 +4915,16 @@
       "toastSaved": "Tallennettu.",
       "toastDeleted": "Poistettu.",
       "toastMediaUploaded": "Media ladattu.",
+      "toastApplied": "Tallennettu ja lisätty {count, plural, one {# muuhun kohteeseen} other {# muuhun kohteeseen}}.",
+      "pickExisting": "Käytä olemassa olevaa",
+      "pickExistingTitle": "Käytä olemassa olevaa lisäpalvelua",
+      "pickExistingSubtitle": "Lisäpalvelut, jotka olet jo luonut muihin kohteisiisi.",
+      "pickExistingSearch": "Hae lisäpalveluita …",
+      "pickExistingAdd": "Lisää",
+      "pickExistingFrom": "Kohteesta {title}",
+      "pickExistingNoMatches": "Ei osumia.",
+      "pickExistingEmpty": "Muissa kohteissasi ei ole vielä lisäpalvelua, jonka voisit ottaa tähän käyttöön.",
+      "pickExistingNoCurrency": "Tälle kohteelle ei ole määritetty valuuttaa. Luo ensin hintasuunnitelma valuuttoineen — muuten summaa ei voi kopioida.",
       "basisPerStay": "Per oleskelu",
       "basisPerNight": "Per yö",
       "basisPerGuest": "Per vieras",
@@ -5322,6 +5332,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Käytä samaa kampanjaa myös muissa kohteissa.",
       "applyToOthersSeasonHint": "Luo sama sesonki myös muihin kohteisiin.",
+      "applyToOthersAddonHint": "Tarjoa sama lisäpalvelu myös muissa kohteissa.",
       "promoReason": {
         "mindestaufenthalt": "vähimmäisoleskelu",
         "fruehbucher": "ennakkovaraajan ennakko",
@@ -5933,7 +5944,8 @@
       "linkCopied": "Maksulinkki kopioitu.",
       "linkCopyFailed": "Kopiointi ei onnistunut — linkki näkyy alla.",
       "linkWithdraw": "Peru linkki",
-      "linkWithdrawn": "Maksulinkki peruttu."
+      "linkWithdrawn": "Maksulinkki peruttu.",
+      "linkAufteilung": "Vieras maksaa {brutto} · josta {prozent} % alustan osuutta ({anteil}) · lisäksi maksupalvelun kulut"
     },
     "ratesView": {
       "propertyLabel": "Kohde",
@@ -8260,6 +8272,39 @@
       "hinweis": "myBestDays-varaukset kulkevat tilimme kautta ja tilitetään lähdön jälkeen.",
       "offen": "Avoinna",
       "ausgezahlt": "Tilitetty"
+    },
+    "reiter": {
+      "abrechnung": "Tilitys",
+      "empfangen": "Vastaanotetut maksut",
+      "versendet": "Lähetetyt maksut"
+    },
+    "protokoll": {
+      "eingangTitel": "Vastaanotetut maksut",
+      "eingangHinweis": "Jokainen tilillesi saapunut maksu.",
+      "ausgangTitel": "Lähetetyt maksut",
+      "ausgangHinweis": "Tilitykset pankkitilillesi, hyvitykset ja perityt kulut.",
+      "offenTitel": "Avoimet erät",
+      "offenHinweis": "Maksulinkit, joita kukaan ei ole vielä maksanut.",
+      "statusOffen": "Avoin",
+      "statusBezahlt": "Maksettu",
+      "zahlseite": "Maksusivu",
+      "zurBuchung": "Varaukseen",
+      "zusatzleistungen": "Lisäpalvelut",
+      "leer": "Ei vielä tapahtumia.",
+      "gebuehr": "Kulu {betrag}",
+      "netto": "netto {betrag}",
+      "verfuegbarAb": "käytettävissä {datum} alkaen",
+      "typ": {
+        "charge": "Korttimaksu",
+        "payment": "Maksu",
+        "payout": "Tilitys",
+        "refund": "Hyvitys",
+        "payment_refund": "Hyvitys",
+        "application_fee": "Alustan osuus",
+        "stripe_fee": "Maksukulu",
+        "adjustment": "Takaisinveloitus",
+        "transfer": "Siirto"
+      }
     }
   }
 }

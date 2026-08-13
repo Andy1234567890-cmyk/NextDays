@@ -4910,6 +4910,16 @@
       "toastSaved": "Uložené.",
       "toastDeleted": "Odstránené.",
       "toastMediaUploaded": "Médium nahraté.",
+      "toastApplied": "Uložené a použité na {count, plural, one {# ďalší objekt} few {# ďalšie objekty} many {# ďalších objektov} other {# ďalších objektov}}.",
+      "pickExisting": "Použiť existujúcu",
+      "pickExistingTitle": "Použiť existujúcu doplnkovú službu",
+      "pickExistingSubtitle": "Doplnkové služby, ktoré ste už vytvorili pri iných objektoch.",
+      "pickExistingSearch": "Hľadať doplnkové služby …",
+      "pickExistingAdd": "Pridať",
+      "pickExistingFrom": "Z {title}",
+      "pickExistingNoMatches": "Žiadne výsledky.",
+      "pickExistingEmpty": "Pri vašich ďalších objektoch zatiaľ nie je doplnková služba, ktorú by ste sem mohli prevziať.",
+      "pickExistingNoCurrency": "Pre tento objekt nie je nastavená mena. Najprv vytvorte cenový plán s menou — inak sa žiadna suma nedá prevziať.",
       "basisPerStay": "Za pobyt",
       "basisPerNight": "Za noc",
       "basisPerGuest": "Za hosťa",
@@ -5317,6 +5327,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Použiť tú istú akciu aj pri ďalších objektoch.",
       "applyToOthersSeasonHint": "Vytvoriť rovnakú sezónu aj pri iných objektoch.",
+      "applyToOthersAddonHint": "Ponúknuť rovnakú doplnkovú službu aj pri iných objektoch.",
       "promoReason": {
         "mindestaufenthalt": "minimálny pobyt",
         "fruehbucher": "predstih včasnej rezervácie",
@@ -5928,7 +5939,8 @@
       "linkCopied": "Platobný odkaz skopírovaný.",
       "linkCopyFailed": "Kopírovanie zlyhalo — odkaz je nižšie.",
       "linkWithdraw": "Stiahnuť",
-      "linkWithdrawn": "Platobný odkaz stiahnutý."
+      "linkWithdrawn": "Platobný odkaz stiahnutý.",
+      "linkAufteilung": "Hosť platí {brutto} · z toho {prozent} % podiel platformy ({anteil}) · plus poplatky poskytovateľa platieb"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -8255,6 +8267,39 @@
       "hinweis": "Rezervácie cez myBestDays idú cez náš účet a vyplácajú sa po odchode.",
       "offen": "Otvorené",
       "ausgezahlt": "Vyplatené"
+    },
+    "reiter": {
+      "abrechnung": "Vyúčtovanie",
+      "empfangen": "Prijaté platby",
+      "versendet": "Odoslané platby"
+    },
+    "protokoll": {
+      "eingangTitel": "Prijaté platby",
+      "eingangHinweis": "Každá platba, ktorá prišla na tvoj účet.",
+      "ausgangTitel": "Odoslané platby",
+      "ausgangHinweis": "Výplaty na tvoj bankový účet, vrátenia a strhnuté poplatky.",
+      "offenTitel": "Otvorené položky",
+      "offenHinweis": "Platobné odkazy, ktoré zatiaľ nikto nezaplatil.",
+      "statusOffen": "Otvorené",
+      "statusBezahlt": "Zaplatené",
+      "zahlseite": "Platobná stránka",
+      "zurBuchung": "Na rezerváciu",
+      "zusatzleistungen": "Doplnkové služby",
+      "leer": "Zatiaľ žiadne pohyby.",
+      "gebuehr": "Poplatok {betrag}",
+      "netto": "netto {betrag}",
+      "verfuegbarAb": "dostupné od {datum}",
+      "typ": {
+        "charge": "Platba kartou",
+        "payment": "Platba",
+        "payout": "Výplata",
+        "refund": "Vrátenie peňazí",
+        "payment_refund": "Vrátenie peňazí",
+        "application_fee": "Podiel platformy",
+        "stripe_fee": "Poplatok za platbu",
+        "adjustment": "Spätné zúčtovanie",
+        "transfer": "Prevod"
+      }
     }
   }
 }

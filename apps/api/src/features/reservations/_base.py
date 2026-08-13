@@ -937,4 +937,10 @@ class ReservationsBase:
             # er per CHECK keinen Betrag tragen kann.
             is_owner_stay=bool(r.get("is_owner_stay")),
             stay_note=r.get("stay_note"),
+            # Buchungszeitpunkt der Quelle + unser Eingang getrennt (Wurzel 5b):
+            # die Buchungsliste sortiert und beschriftet nach `booked_at`; fehlt
+            # er, zeigt sie `created_at` ausdrücklich als Eingang bei uns.
+            booked_at=r.get("booked_at"),
+            created_at=r.get("created_at"),
+            archived_at=r.get("archived_at"),
         )

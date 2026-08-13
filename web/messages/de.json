@@ -4331,7 +4331,11 @@
         "taskCreated": "Aufgabe erstellt",
         "message": "Nachricht",
         "payment": "Zahlung",
-        "addon": "Zusatzleistung"
+        "addon": "Zusatzleistung",
+        "archived": "In die Ablage gelegt",
+        "unarchived": "Aus der Ablage geholt",
+        "noteChanged": "Notiz geändert",
+        "guestChanged": "Gastdaten geändert"
       },
       "title": {
         "onProperty": " auf {property}",
@@ -4434,7 +4438,33 @@
       "photos": "Fotos",
       "noPhotosFound": "Für diese Buchung wurden keine Bilder gefunden.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "bookedOn": "gebucht am {date}",
+      "receivedOn": "eingegangen bei uns am {date}",
+      "viaChannel": "über {channel}",
+      "moreActions": "Weitere Aktionen",
+      "print": "Drucken",
+      "paidTile": "Bezahlt",
+      "dueTile": "Offen",
+      "totalTile": "Gesamtbetrag",
+      "editNote": "Notiz bearbeiten",
+      "editGuest": "Gast bearbeiten",
+      "whatsapp": "Per WhatsApp schreiben",
+      "expectedCheckin": "Voraussichtliche Anreisezeit",
+      "expectedCheckout": "Voraussichtliche Abreisezeit",
+      "messages": "Nachrichten",
+      "archive": "Archivieren",
+      "unarchive": "Aus der Ablage holen",
+      "archivedBadge": "In der Ablage",
+      "noPriceInfo": "Keine Preisangabe aus der Quelle — die Buchung kam ohne Betrag herein.",
+      "unreportedTile": "Nicht gemeldet",
+      "paymentUnreported": "Das Portal hat zur Zahlung nichts gemeldet — Stand bitte im Portal prüfen.",
+      "invoicing": "Rechnungsstellung",
+      "invoiceActions": "Rechnung",
+      "viewInvoice": "Ansehen",
+      "sendInvoice": "An Gast senden",
+      "openInAccounting": "In der Buchhaltung öffnen",
+      "noInvoiceYet": "Noch keine Rechnung — sie entsteht beim Check-out."
     },
     "dashboard": {
       "todayCheckouts": "Heutige Check-outs",
@@ -4703,7 +4733,8 @@
       },
       "process": {
         "openBalance": "Offener Betrag",
-        "ownerStay": "Eigennutzung"
+        "ownerStay": "Eigennutzung",
+        "archived": "Ablage"
       },
       "csv": {
         "reference": "Referenz",
@@ -4720,6 +4751,79 @@
         "bookedAt": "Gebucht am (Portal)",
         "receivedAt": "Eingang bei uns"
       }
+    },
+    "bookingConditions": {
+      "title": "Buchungskonditionen",
+      "paymentPolicy": "Zahlungsrichtlinie",
+      "paymentFull": "{amount} sind bei Buchung vollständig fällig.",
+      "paymentSplit": "{now} sind bei Buchung fällig, {later} als Restzahlung.",
+      "balanceDue": "Fällig am {date}.",
+      "noCondition": "Keine Buchungskondition hinterlegt — es gilt: gesamter Betrag sofort fällig.",
+      "cancellationPolicy": "Stornierungsrichtlinie",
+      "mode": {
+        "non_refundable": "Nicht erstattungsfähig.",
+        "refundable": "Erstattungsfähig nach Staffel.",
+        "partial": "Teilweise erstattungsfähig."
+      },
+      "refundRule": "{percent} % Erstattung bei Storno mindestens {days} Tage vor Anreise.",
+      "deposit": "Kaution",
+      "depositPreauth": "{amount} werden auf der Karte des Gastes vorautorisiert.",
+      "depositManual": "{amount} Kaution, manuell eingezogen.",
+      "depositHold": "Zurückgehalten {days} Tage vor Anreise.",
+      "depositRelease": "Freigabe {days} Tage nach Abreise.",
+      "paymentRequest": "Zahlungsanforderung",
+      "plan": "Zahlungsplan",
+      "dueNow": "Bei Buchung fällig",
+      "dueLater": "Restzahlung",
+      "dueLaterOn": "Restzahlung am {date}",
+      "transactions": "Transaktionen",
+      "noTransactions": "Noch keine Zahlung erfasst.",
+      "txDue": "geplant {date}",
+      "txType": {
+        "deposit": "Kaution",
+        "full": "Gesamtbetrag",
+        "refund": "Erstattung",
+        "down_payment": "Anzahlung",
+        "balance": "Restzahlung",
+        "addon": "Zusatzleistungen"
+      },
+      "txStatus": {
+        "pending": "offen",
+        "succeeded": "bezahlt",
+        "failed": "fehlgeschlagen",
+        "refunded": "erstattet",
+        "partially_refunded": "teilweise erstattet"
+      }
+    },
+    "guestSheet": {
+      "title": "Gast bearbeiten",
+      "name": "Name",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "language": "Sprache",
+      "country": "Land",
+      "checkinTime": "Voraussichtliche Anreisezeit",
+      "checkoutTime": "Voraussichtliche Abreisezeit",
+      "cancel": "Abbrechen",
+      "confirm": "Bestätigen",
+      "saving": "Wird gespeichert …"
+    },
+    "noteSheet": {
+      "title": "Notiz bearbeiten",
+      "placeholder": "Interne Notiz zu dieser Buchung",
+      "hint": "Nur intern sichtbar — der Gast sieht diese Notiz nicht.",
+      "cancel": "Abbrechen",
+      "save": "Speichern",
+      "saving": "Wird gespeichert …"
+    },
+    "otaTerms": {
+      "title": "Konditionen des Portals",
+      "cancellation": "Stornierung",
+      "fromDate": "ab {date}",
+      "free": "kostenfrei",
+      "mealPlan": "Verpflegung",
+      "notes": "Hinweise des Portals",
+      "policies": "Richtlinien im Wortlaut"
     }
   },
   "objects": {
@@ -4994,6 +5098,16 @@
       "toastSaved": "Gespeichert.",
       "toastDeleted": "Gelöscht.",
       "toastMediaUploaded": "Medium hochgeladen.",
+      "toastApplied": "Gespeichert und auf {count, plural, one {# weiteres Objekt} other {# weitere Objekte}} übernommen.",
+      "pickExisting": "Bestehende übernehmen",
+      "pickExistingTitle": "Bestehende Zusatzleistung übernehmen",
+      "pickExistingSubtitle": "Zusatzleistungen, die du bei anderen Objekten schon angelegt hast.",
+      "pickExistingSearch": "Zusatzleistungen durchsuchen …",
+      "pickExistingAdd": "Hinzufügen",
+      "pickExistingFrom": "Von {title}",
+      "pickExistingNoMatches": "Keine Treffer.",
+      "pickExistingEmpty": "Bei deinen anderen Objekten ist noch keine Zusatzleistung angelegt, die du hier übernehmen könntest.",
+      "pickExistingNoCurrency": "Für dieses Objekt ist keine Währung hinterlegt. Lege zuerst einen Preisplan mit Währung an — sonst lässt sich kein Betrag übernehmen.",
       "basisPerStay": "Pro Aufenthalt",
       "basisPerNight": "Pro Nacht",
       "basisPerGuest": "Pro Gast",
@@ -5423,6 +5537,7 @@
       },
       "applyToOthersPromoHint": "Dieselbe Promotion auch bei anderen Objekten anwenden.",
       "applyToOthersSeasonHint": "Dieselbe Saison auch bei anderen Objekten anlegen.",
+      "applyToOthersAddonHint": "Dieselbe Zusatzleistung auch bei anderen Objekten anbieten.",
       "promoConditionsTitle": "Bedingungen",
       "promoValueHint": "% des Gesamtwerts der Buchung (exkl. Gebühren, Steuern und Promotions)",
       "promoAssignSubtitle": "Neue oder bestehende Promotion hinzufügen.",
@@ -6018,7 +6133,8 @@
       "linkCopied": "Zahlungslink kopiert.",
       "linkCopyFailed": "Kopieren nicht möglich — der Link steht darunter.",
       "linkWithdraw": "Zurückziehen",
-      "linkWithdrawn": "Zahlungslink zurückgezogen."
+      "linkWithdrawn": "Zahlungslink zurückgezogen.",
+      "linkAufteilung": "Gast zahlt {brutto} · davon {prozent} % Plattform-Anteil ({anteil}) · zzgl. Gebühren des Zahlungsanbieters"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -8848,6 +8964,39 @@
       "hinweis": "Buchungen über myBestDays laufen über unser Konto und werden nach der Abreise ausgezahlt.",
       "offen": "Offen",
       "ausgezahlt": "Ausgezahlt"
+    },
+    "reiter": {
+      "abrechnung": "Abrechnung",
+      "empfangen": "Empfangene Zahlungen",
+      "versendet": "Versendete Zahlungen"
+    },
+    "protokoll": {
+      "eingangTitel": "Eingegangene Zahlungen",
+      "eingangHinweis": "Jede Zahlung, die auf deinem Konto eingegangen ist.",
+      "ausgangTitel": "Versendete Zahlungen",
+      "ausgangHinweis": "Auszahlungen auf dein Bankkonto, Erstattungen und einbehaltene Gebühren.",
+      "offenTitel": "Offene Forderungen",
+      "offenHinweis": "Zahlungslinks, die noch niemand bezahlt hat.",
+      "statusOffen": "Offen",
+      "statusBezahlt": "Bezahlt",
+      "zahlseite": "Zahlseite",
+      "zurBuchung": "Zur Buchung",
+      "zusatzleistungen": "Zusatzleistungen",
+      "leer": "Noch keine Bewegungen.",
+      "gebuehr": "Gebühr {betrag}",
+      "netto": "netto {betrag}",
+      "verfuegbarAb": "verfügbar ab {datum}",
+      "typ": {
+        "charge": "Kartenzahlung",
+        "payment": "Zahlung",
+        "payout": "Auszahlung",
+        "refund": "Erstattung",
+        "payment_refund": "Erstattung",
+        "application_fee": "Plattform-Anteil",
+        "stripe_fee": "Zahlungsgebühr",
+        "adjustment": "Rückbelastung",
+        "transfer": "Übertrag"
+      }
     }
   }
 }

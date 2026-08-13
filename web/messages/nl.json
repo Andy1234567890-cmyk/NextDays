@@ -4910,6 +4910,16 @@
       "toastSaved": "Opgeslagen.",
       "toastDeleted": "Verwijderd.",
       "toastMediaUploaded": "Media geüpload.",
+      "toastApplied": "Opgeslagen en toegepast op {count, plural, one {# ander object} other {# andere objecten}}.",
+      "pickExisting": "Bestaande gebruiken",
+      "pickExistingTitle": "Een bestaande extra service gebruiken",
+      "pickExistingSubtitle": "Extra services die je al bij je andere objecten hebt aangemaakt.",
+      "pickExistingSearch": "Extra services zoeken …",
+      "pickExistingAdd": "Toevoegen",
+      "pickExistingFrom": "Van {title}",
+      "pickExistingNoMatches": "Geen resultaten.",
+      "pickExistingEmpty": "Bij je andere objecten staat nog geen extra service die je hier kunt overnemen.",
+      "pickExistingNoCurrency": "Voor dit object is geen valuta ingesteld. Maak eerst een tariefplan met valuta aan — anders kan geen bedrag worden overgenomen.",
       "basisPerStay": "Per verblijf",
       "basisPerNight": "Per nacht",
       "basisPerGuest": "Per gast",
@@ -5317,6 +5327,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Dezelfde actie ook op andere objecten toepassen.",
       "applyToOthersSeasonHint": "Hetzelfde seizoen ook bij andere objecten aanmaken.",
+      "applyToOthersAddonHint": "Dezelfde extra service ook bij andere objecten aanbieden.",
       "promoReason": {
         "mindestaufenthalt": "minimumverblijf",
         "fruehbucher": "vroegboekerstermijn",
@@ -5928,7 +5939,8 @@
       "linkCopied": "Betaallink gekopieerd.",
       "linkCopyFailed": "Kopiëren mislukt — de link staat hieronder.",
       "linkWithdraw": "Intrekken",
-      "linkWithdrawn": "Betaallink ingetrokken."
+      "linkWithdrawn": "Betaallink ingetrokken.",
+      "linkAufteilung": "Gast betaalt {brutto} · waarvan {prozent}% platformaandeel ({anteil}) · plus kosten van de betaalprovider"
     },
     "ratesView": {
       "propertyLabel": "Object",
@@ -8255,6 +8267,39 @@
       "hinweis": "Boekingen via myBestDays lopen via onze rekening en worden na vertrek uitbetaald.",
       "offen": "Open",
       "ausgezahlt": "Uitbetaald"
+    },
+    "reiter": {
+      "abrechnung": "Afrekening",
+      "empfangen": "Ontvangen betalingen",
+      "versendet": "Verzonden betalingen"
+    },
+    "protokoll": {
+      "eingangTitel": "Ontvangen betalingen",
+      "eingangHinweis": "Elke betaling die op je rekening is binnengekomen.",
+      "ausgangTitel": "Verzonden betalingen",
+      "ausgangHinweis": "Uitbetalingen naar je bankrekening, terugbetalingen en ingehouden kosten.",
+      "offenTitel": "Openstaande posten",
+      "offenHinweis": "Betaallinks die nog niemand heeft betaald.",
+      "statusOffen": "Open",
+      "statusBezahlt": "Betaald",
+      "zahlseite": "Betaalpagina",
+      "zurBuchung": "Naar de boeking",
+      "zusatzleistungen": "Extra diensten",
+      "leer": "Nog geen mutaties.",
+      "gebuehr": "Kosten {betrag}",
+      "netto": "netto {betrag}",
+      "verfuegbarAb": "beschikbaar vanaf {datum}",
+      "typ": {
+        "charge": "Kaartbetaling",
+        "payment": "Betaling",
+        "payout": "Uitbetaling",
+        "refund": "Terugbetaling",
+        "payment_refund": "Terugbetaling",
+        "application_fee": "Platformaandeel",
+        "stripe_fee": "Transactiekosten",
+        "adjustment": "Terugboeking",
+        "transfer": "Overboeking"
+      }
     }
   }
 }

@@ -4910,6 +4910,16 @@
       "toastSaved": "Salvat.",
       "toastDeleted": "Șters.",
       "toastMediaUploaded": "Fișier media încărcat.",
+      "toastApplied": "Salvat și aplicat la {count, plural, one {# altă proprietate} few {# alte proprietăți} other {# alte proprietăți}}.",
+      "pickExisting": "Folosește existent",
+      "pickExistingTitle": "Folosește un serviciu suplimentar existent",
+      "pickExistingSubtitle": "Servicii suplimentare pe care le-ai creat deja la celelalte proprietăți.",
+      "pickExistingSearch": "Caută servicii suplimentare …",
+      "pickExistingAdd": "Adaugă",
+      "pickExistingFrom": "De la {title}",
+      "pickExistingNoMatches": "Niciun rezultat.",
+      "pickExistingEmpty": "La celelalte proprietăți nu există încă un serviciu suplimentar pe care să îl poți prelua aici.",
+      "pickExistingNoCurrency": "Pentru această proprietate nu este setată o monedă. Creează mai întâi un plan tarifar cu monedă — altfel nicio sumă nu poate fi preluată.",
       "basisPerStay": "Pe sejur",
       "basisPerNight": "Pe noapte",
       "basisPerGuest": "Pe oaspete",
@@ -5317,6 +5327,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Aplicați aceeași promoție și la alte proprietăți.",
       "applyToOthersSeasonHint": "Creează același sezon și la alte obiecte.",
+      "applyToOthersAddonHint": "Oferă același serviciu suplimentar și la alte proprietăți.",
       "promoReason": {
         "mindestaufenthalt": "sejur minim",
         "fruehbucher": "avans pentru rezervare timpurie",
@@ -5928,7 +5939,8 @@
       "linkCopied": "Link de plată copiat.",
       "linkCopyFailed": "Copierea nu a reușit — linkul este mai jos.",
       "linkWithdraw": "Retrage",
-      "linkWithdrawn": "Link de plată retras."
+      "linkWithdrawn": "Link de plată retras.",
+      "linkAufteilung": "Oaspetele plătește {brutto} · din care {prozent} % partea platformei ({anteil}) · plus comisioanele procesatorului de plăți"
     },
     "ratesView": {
       "propertyLabel": "Proprietate",
@@ -8255,6 +8267,39 @@
       "hinweis": "Rezervările prin myBestDays trec prin contul nostru și sunt plătite după plecare.",
       "offen": "Deschis",
       "ausgezahlt": "Plătit"
+    },
+    "reiter": {
+      "abrechnung": "Decontare",
+      "empfangen": "Plăți primite",
+      "versendet": "Plăți trimise"
+    },
+    "protokoll": {
+      "eingangTitel": "Plăți primite",
+      "eingangHinweis": "Fiecare plată care a intrat în contul tău.",
+      "ausgangTitel": "Plăți trimise",
+      "ausgangHinweis": "Plăți către contul tău bancar, rambursări și comisioane reținute.",
+      "offenTitel": "Poziții deschise",
+      "offenHinweis": "Linkuri de plată pe care nu le-a plătit încă nimeni.",
+      "statusOffen": "Deschis",
+      "statusBezahlt": "Plătit",
+      "zahlseite": "Pagina de plată",
+      "zurBuchung": "La rezervare",
+      "zusatzleistungen": "Servicii suplimentare",
+      "leer": "Încă nicio mișcare.",
+      "gebuehr": "Comision {betrag}",
+      "netto": "net {betrag}",
+      "verfuegbarAb": "disponibil din {datum}",
+      "typ": {
+        "charge": "Plată cu cardul",
+        "payment": "Plată",
+        "payout": "Plată către bancă",
+        "refund": "Rambursare",
+        "payment_refund": "Rambursare",
+        "application_fee": "Partea platformei",
+        "stripe_fee": "Comision de plată",
+        "adjustment": "Contestație",
+        "transfer": "Transfer"
+      }
     }
   }
 }

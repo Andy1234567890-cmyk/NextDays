@@ -4915,6 +4915,16 @@
       "toastSaved": "Spremljeno.",
       "toastDeleted": "Izbrisano.",
       "toastMediaUploaded": "Medij učitan.",
+      "toastApplied": "Spremljeno i primijenjeno na {count, plural, one {# drugi objekt} few {# druga objekta} other {# drugih objekata}}.",
+      "pickExisting": "Upotrijebi postojeću",
+      "pickExistingTitle": "Upotrijebi postojeću dodatnu uslugu",
+      "pickExistingSubtitle": "Dodatne usluge koje ste već izradili na drugim objektima.",
+      "pickExistingSearch": "Pretraži dodatne usluge …",
+      "pickExistingAdd": "Dodaj",
+      "pickExistingFrom": "Iz {title}",
+      "pickExistingNoMatches": "Nema rezultata.",
+      "pickExistingEmpty": "Na vašim drugim objektima još nema dodatne usluge koju biste ovdje mogli preuzeti.",
+      "pickExistingNoCurrency": "Za ovaj objekt nije postavljena valuta. Najprije izradite cjenovni plan s valutom — inače se iznos ne može preuzeti.",
       "basisPerStay": "Po boravku",
       "basisPerNight": "Po noćenju",
       "basisPerGuest": "Po gostu",
@@ -5322,6 +5332,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Primijeni istu akciju i na druge objekte.",
       "applyToOthersSeasonHint": "Stvori istu sezonu i na drugim objektima.",
+      "applyToOthersAddonHint": "Ponudite istu dodatnu uslugu i na drugim objektima.",
       "promoReason": {
         "mindestaufenthalt": "najmanji broj noćenja",
         "fruehbucher": "rok rane rezervacije",
@@ -5933,7 +5944,8 @@
       "linkCopied": "Poveznica za plaćanje kopirana.",
       "linkCopyFailed": "Kopiranje nije uspjelo — poveznica je ispod.",
       "linkWithdraw": "Povuci",
-      "linkWithdrawn": "Poveznica za plaćanje povučena."
+      "linkWithdrawn": "Poveznica za plaćanje povučena.",
+      "linkAufteilung": "Gost plaća {brutto} · od toga {prozent} % udio platforme ({anteil}) · plus naknade pružatelja plaćanja"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -8260,6 +8272,39 @@
       "hinweis": "Rezervacije preko myBestDays idu preko našeg računa i isplaćuju se nakon odlaska.",
       "offen": "Otvoreno",
       "ausgezahlt": "Isplaćeno"
+    },
+    "reiter": {
+      "abrechnung": "Obračun",
+      "empfangen": "Primljena plaćanja",
+      "versendet": "Poslana plaćanja"
+    },
+    "protokoll": {
+      "eingangTitel": "Primljena plaćanja",
+      "eingangHinweis": "Svako plaćanje koje je stiglo na tvoj račun.",
+      "ausgangTitel": "Poslana plaćanja",
+      "ausgangHinweis": "Isplate na tvoj bankovni račun, povrati i zadržane naknade.",
+      "offenTitel": "Otvorene stavke",
+      "offenHinweis": "Poveznice za plaćanje koje još nitko nije platio.",
+      "statusOffen": "Otvoreno",
+      "statusBezahlt": "Plaćeno",
+      "zahlseite": "Stranica za plaćanje",
+      "zurBuchung": "Na rezervaciju",
+      "zusatzleistungen": "Dodatne usluge",
+      "leer": "Još nema prometa.",
+      "gebuehr": "Naknada {betrag}",
+      "netto": "neto {betrag}",
+      "verfuegbarAb": "dostupno od {datum}",
+      "typ": {
+        "charge": "Plaćanje karticom",
+        "payment": "Plaćanje",
+        "payout": "Isplata",
+        "refund": "Povrat",
+        "payment_refund": "Povrat",
+        "application_fee": "Udio platforme",
+        "stripe_fee": "Naknada za plaćanje",
+        "adjustment": "Povratno terećenje",
+        "transfer": "Prijenos"
+      }
     }
   }
 }

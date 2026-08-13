@@ -4915,6 +4915,16 @@
       "toastSaved": "Sábháilte.",
       "toastDeleted": "Scriosta.",
       "toastMediaUploaded": "Meán uaslódáilte.",
+      "toastApplied": "Sábháladh agus cuireadh i bhfeidhm ar {count, plural, one {# mhaoin eile} two {# mhaoin eile} few {# mhaoin eile} many {# maoin eile} other {# maoin eile}}.",
+      "pickExisting": "Bain úsáid as ceann atá ann",
+      "pickExistingTitle": "Bain úsáid as seirbhís bhreise atá ann cheana",
+      "pickExistingSubtitle": "Seirbhísí breise atá cruthaithe agat cheana ar do mhaoine eile.",
+      "pickExistingSearch": "Cuardaigh seirbhísí breise …",
+      "pickExistingAdd": "Cuir leis",
+      "pickExistingFrom": "Ó {title}",
+      "pickExistingNoMatches": "Gan torthaí.",
+      "pickExistingEmpty": "Níl seirbhís bhreise ar do mhaoine eile go fóill is féidir leat a úsáid anseo.",
+      "pickExistingNoCurrency": "Níl airgeadra socraithe don mhaoin seo. Cruthaigh plean rátaí le hairgeadra ar dtús — nó ní féidir méid ar bith a chóipeáil.",
       "basisPerStay": "In aghaidh na fanachta",
       "basisPerNight": "In aghaidh na hoíche",
       "basisPerGuest": "In aghaidh an aoi",
@@ -5322,6 +5332,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Cuir an tairiscint chéanna i bhfeidhm ar mhaoine eile freisin.",
       "applyToOthersSeasonHint": "Cruthaigh an séasúr céanna ar réadmhaoine eile freisin.",
+      "applyToOthersAddonHint": "Tairg an tseirbhís bhreise chéanna ar mhaoine eile freisin.",
       "promoReason": {
         "mindestaufenthalt": "fanacht íosta",
         "fruehbucher": "tréimhse áirithinte luaithe",
@@ -5933,7 +5944,8 @@
       "linkCopied": "Cóipeáladh an nasc íocaíochta.",
       "linkCopyFailed": "Theip ar an gcóipeáil — tá an nasc thíos.",
       "linkWithdraw": "Tarraing siar",
-      "linkWithdrawn": "Tarraingíodh an nasc íocaíochta siar."
+      "linkWithdrawn": "Tarraingíodh an nasc íocaíochta siar.",
+      "linkAufteilung": "Íocann an t-aoi {brutto} · as sin {prozent} % sciar an ardáin ({anteil}) · móide táillí an tsoláthraí íocaíochta"
     },
     "ratesView": {
       "propertyLabel": "Maoin",
@@ -8260,6 +8272,39 @@
       "hinweis": "Téann áirithintí trí myBestDays trínár gcuntas agus íoctar iad tar éis imeachta.",
       "offen": "Oscailte",
       "ausgezahlt": "Íoctha"
+    },
+    "reiter": {
+      "abrechnung": "Socrú cuntas",
+      "empfangen": "Íocaíochtaí faighte",
+      "versendet": "Íocaíochtaí seolta"
+    },
+    "protokoll": {
+      "eingangTitel": "Íocaíochtaí faighte",
+      "eingangHinweis": "Gach íocaíocht a tháinig isteach i do chuntas.",
+      "ausgangTitel": "Íocaíochtaí seolta",
+      "ausgangHinweis": "Íocaíochtaí chuig do chuntas bainc, aisíocaíochtaí agus táillí coinnithe.",
+      "offenTitel": "Míreanna oscailte",
+      "offenHinweis": "Naisc íocaíochta nár íoc aon duine fós.",
+      "statusOffen": "Oscailte",
+      "statusBezahlt": "Íoctha",
+      "zahlseite": "Leathanach íocaíochta",
+      "zurBuchung": "Chuig an áirithint",
+      "zusatzleistungen": "Seirbhísí breise",
+      "leer": "Níl aon ghluaiseacht fós.",
+      "gebuehr": "Táille {betrag}",
+      "netto": "glan {betrag}",
+      "verfuegbarAb": "ar fáil ó {datum}",
+      "typ": {
+        "charge": "Íocaíocht chárta",
+        "payment": "Íocaíocht",
+        "payout": "Íocaíocht amach",
+        "refund": "Aisíocaíocht",
+        "payment_refund": "Aisíocaíocht",
+        "application_fee": "Sciar an ardáin",
+        "stripe_fee": "Táille íocaíochta",
+        "adjustment": "Aismhuirear",
+        "transfer": "Aistriú"
+      }
     }
   }
 }

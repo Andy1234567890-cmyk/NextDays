@@ -13,12 +13,22 @@ import { useTranslations, useLocale } from "next-intl";
 import { useState } from "react";
 
 import { ReservationAddonsSection } from "@/components/kalender/reservation-addons-section";
+import { BookingConditionsCard } from "@/components/reservierungen/booking-conditions-card";
 import { BookingDetailTabs } from "@/components/reservierungen/booking-detail-tabs";
+import { BookingGuestSheet } from "@/components/reservierungen/booking-guest-sheet";
+import { BookingNoteSheet } from "@/components/reservierungen/booking-note-sheet";
+import { BookingOtaTermsCard } from "@/components/reservierungen/booking-ota-terms-card";
 import { BookingTasksSection } from "@/components/reservierungen/booking-tasks-section";
 import { CheckoutPaymentDialog } from "@/components/reservierungen/checkout-payment-dialog";
 import { PropertyLocation } from "@/components/reservierungen/property-location";
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@nextdays/ui/dropdown-menu";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import { channelMeta } from "@/lib/calendar-channels";
@@ -31,6 +41,7 @@ import {
 import { formatCurrency } from "@/lib/currency";
 import { channelLabelLoose } from "@/lib/channel-logos";
 import { dateKey } from "@/lib/calendar-views";
+import { setReservationArchived } from "@/lib/reservations";
 import { useReservationDetail } from "@/lib/use-reservation-detail";
 
 const SendDocumentModal = dynamic(
@@ -50,6 +61,8 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [earlyConfirm, setEarlyConfirm] = useState(false);
+  const [guestSheet, setGuestSheet] = useState(false);
+  const [noteSheet, setNoteSheet] = useState(false);
 
   const todayKey = dateKey(new Date());
   const { data, error } = d;
@@ -116,6 +129,16 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
     total != null && paid != null && total > 0
       ? Math.min(100, Math.round((paid / total) * 100))
       : null;
+  // Gibt es überhaupt eine Preisinformation? Ein Betrag von 0 ist bei
+  // importierten Buchungen (Fremdkalender, Alt-Import) das Zeichen, dass die
+  // Quelle keinen Preis mitgeliefert hat — er ist keine Gratis-Buchung. Drei
+  // Kacheln mit „0,00" behaupten genau das (Wurzel 4), deshalb hängt die
+  // Geld-Darstellung an dieser einen Frage.
+  const hatPreis = total != null && total > 0;
+  // Wissen wir, wer einzieht? Bei Direktbuchungen sind wir es (dort gibt es
+  // keinen Portal-Zahlweg), bei OTA-Buchungen sagt es `payment_collect`. Fehlt
+  // es dort, ist jede Aussage über „offen" geraten.
+  const zahlwegBekannt = !isOta || data.payment_collect != null;
 
   const submitCancel = async () => {
     const ok = await d.submitCancel(reason);
@@ -131,14 +154,51 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="font-display text-2xl font-extrabold">
-            {t("bookingDetail.bookingHeading", { ref: refLabel })}
+          {/* Überschrift ist der GAST (..-Struktur): an einer Buchung
+              arbeitet man mit einer Person, die Referenz ist Beiwerk. Bei einer
+              Eigennutzung gibt es keinen Gast — dort trägt der Aufenthaltsname
+              (oder das Objekt) die Zeile. */}
+          <h1 className="truncate font-display text-2xl font-extrabold">
+            {data.guest_name ||
+              data.property_title ||
+              t("bookingDetail.bookingHeading", { ref: refLabel })}
           </h1>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
+          {/* Herkunftszeile: Referenz, Buchungszeitpunkt und Kanal. Der
+              Zeitpunkt kommt aus der QUELLE (`booked_at`); fehlt er, wird
+              ausdrücklich unser Eingang benannt — unsere Uhr ist nie der
+              Zeitpunkt einer fremden Handlung (Wurzel 5b). */}
+          <p className="mt-0.5 truncate text-sm text-muted-foreground">
+            #{refLabel}
+            {data.booked_at
+              ? ` · ${t("bookingDetail.bookedOn", {
+                  date: fmtDateTime(data.booked_at),
+                })}`
+              : data.created_at
+                ? ` · ${t("bookingDetail.receivedOn", {
+                    date: fmtDateTime(data.created_at),
+                  })}`
+                : ""}
+            {!isOwnerStay
+              ? ` · ${t("bookingDetail.viaChannel", {
+                  channel: data.ota_name
+                    ? channelLabelLoose(data.ota_name)
+                    : channelLabel(data.channel as AvailabilitySource),
+                })}`
+              : ""}
+          </p>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
               <span className={`size-2 rounded-full ${STATUS_META[status].dotBg}`} />
               {statusLabel(status)}
             </span>
+            {/* Ablage sichtbar machen: sonst wundert man sich, warum diese
+                Buchung in der Liste fehlt (0383). */}
+            {data.archived_at && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-dashed px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                <Icon icon="ph:archive" className="size-3" />
+                {t("bookingDetail.archivedBadge")}
+              </span>
+            )}
             {/* Eigentümer-Aufenthalt statt Kanal — er kommt von keinem
                 Vertriebsweg, ein „Direkt"-Abzeichen wäre irreführend. */}
             {isOwnerStay ? (
@@ -171,7 +231,62 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
               {t("bookingDetail.openInPortal")}
             </a>
           )}
+          {/* Nachrichten dieser Buchung (..: Knopf „Nachrichten" oben
+              rechts). Führt in den Posteingang-Thread — dort liegt die
+              Korrespondenz samt Vorlagen, Übersetzung und Versand; eine zweite
+              Chat-Oberfläche hier wäre dieselbe Sache doppelt gepflegt.
+              Ohne Thread gibt es keinen Knopf (kein Link auf eine leere
+              Ansicht). */}
+          {data.message_thread_id && (
+            <Link
+              href={`/posteingang?thread=${encodeURIComponent(data.message_thread_id)}`}
+              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-secondary/60"
+            >
+              <Icon icon="ph:chat-circle-text" className="size-4" />
+              {t("bookingDetail.messages")}
+            </Link>
+          )}
           <BookingDetailTabs reservationId={reservationId} />
+          {/* Aktionsmenü (..: „…" oben rechts): Drucken + Ablage.
+              „Archivieren" nimmt die Buchung aus der Arbeitsliste, ohne den
+              Vorgang anzutasten — Nächte gibt nur der Storno frei (0383). */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                aria-label={t("bookingDetail.moreActions")}
+              >
+                <Icon icon="ph:dots-three" className="size-4.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => window.print()}>
+                <Icon icon="ph:printer" className="size-4" />
+                {t("bookingDetail.print")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={async () => {
+                  const res = await setReservationArchived(
+                    reservationId,
+                    !data.archived_at,
+                  );
+                  console.debug("[BookingDetail] Ablage geschaltet", {
+                    reservationId,
+                    archiviert: !data.archived_at,
+                    ok: res.ok,
+                  });
+                  if (res.ok) d.reload();
+                }}
+              >
+                <Icon icon="ph:archive" className="size-4" />
+                {data.archived_at
+                  ? t("bookingDetail.unarchive")
+                  : t("bookingDetail.archive")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -242,7 +357,11 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                 </div>
               </div>
               <div className="text-right">
-                {!isOwnerStay && (
+                {/* Preis nur zeigen, wenn es einen gibt. Ein Betrag von 0 heisst
+                    bei importierten Direkt-/Fremdkalender-Buchungen „die Quelle
+                    hat keinen Preis geliefert" — „0,00" dreifach hinzuschreiben
+                    behauptet eine Gratis-Buchung (Wurzel 4). */}
+                {!isOwnerStay && hatPreis && (
                   <p className="font-display text-2xl font-extrabold">
                     {money(data.total_amount, data.currency)}
                   </p>
@@ -252,6 +371,54 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                 </p>
               </div>
             </div>
+
+            {/* Zahlungsstand auf einen Blick (..-Kachel-Trio):
+                Bezahlt | Offen | Gesamt. Nur mit sichtbaren Beträgen — ohne
+                Finanzeinblick (§4.3) gäbe es hier drei Striche, das ist kein
+                Informationsgewinn, sondern Rauschen. */}
+            {!isOwnerStay && total != null && !hatPreis && (
+              <p className="rounded-(--radius) border bg-secondary/40 p-3 text-sm text-muted-foreground">
+                <Icon
+                  icon="ph:tag"
+                  className="mr-1.5 inline size-4 align-text-bottom"
+                />
+                {t("bookingDetail.noPriceInfo")}
+              </p>
+            )}
+
+            {!isOwnerStay && total != null && hatPreis && (
+              <div className="grid grid-cols-3 divide-x overflow-hidden rounded-(--radius) border">
+                <Kachel
+                  label={t("bookingDetail.paidTile")}
+                  value={money(paid, data.currency)}
+                />
+                {/* „Offen" nur behaupten, wenn wir den Zahlweg kennen. Bei
+                    Booking-Alt-Importen liefert das Portal keine Zahlart
+                    (payment_collect null) — dann ist der offene Betrag nicht
+                    „unbezahlt", sondern ungemeldet. Live geprüft: 51 von 52
+                    solchen Buchungen tragen in Channex nur „Imported Booking".
+                */}
+                <Kachel
+                  label={
+                    zahlwegBekannt
+                      ? t("bookingDetail.dueTile")
+                      : t("bookingDetail.unreportedTile")
+                  }
+                  value={
+                    zahlwegBekannt ? money(data.due_amount, data.currency) : "—"
+                  }
+                  betont={
+                    zahlwegBekannt &&
+                    data.due_amount != null &&
+                    data.due_amount > 0
+                  }
+                />
+                <Kachel
+                  label={t("bookingDetail.totalTile")}
+                  value={money(total, data.currency)}
+                />
+              </div>
+            )}
 
             {(data.checked_in_at || data.checked_out_at) && (
               <p className="text-xs text-muted-foreground">
@@ -399,6 +566,12 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
               <p className="text-sm text-muted-foreground">
                 {t("bookingDetail.noAmountAccess")}
               </p>
+            ) : !hatPreis ? (
+              // Ohne Preis gibt es keinen Zahlungsstand: ein Balken bei 0 von 0
+              // sähe aus wie „nichts bezahlt", obwohl nichts zu bezahlen ist.
+              <p className="text-sm text-muted-foreground">
+                {t("bookingDetail.noPriceInfo")}
+              </p>
             ) : (
               <>
                 <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
@@ -407,26 +580,30 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                     <span className="font-semibold">
                       {money(total, data.currency)}
                     </span>
-                    {paidPct != null && (
+                    {zahlwegBekannt && paidPct != null && (
                       <span className="text-muted-foreground"> · {paidPct}%</span>
                     )}
                   </span>
                   <span className="text-muted-foreground">
-                    {t("bookingDetail.stillDue", {
-                      amount: money(data.due_amount, data.currency),
-                    })}{" "}
-                    ·{" "}
-                    {t("bookingDetail.paidAmount", {
-                      amount: money(paid, data.currency),
-                    })}
+                    {/* Ohne gemeldeten Zahlweg keine „noch offen"-Aussage:
+                        das Portal hat zur Zahlung nichts geliefert. */}
+                    {zahlwegBekannt
+                      ? `${t("bookingDetail.stillDue", {
+                          amount: money(data.due_amount, data.currency),
+                        })} · ${t("bookingDetail.paidAmount", {
+                          amount: money(paid, data.currency),
+                        })}`
+                      : t("bookingDetail.paymentUnreported")}
                   </span>
                 </div>
-                <div className="h-2.5 overflow-hidden rounded-full bg-secondary">
-                  <div
-                    className="h-full rounded-full bg-success transition-all"
-                    style={{ width: `${paidPct ?? 0}%` }}
-                  />
-                </div>
+                {zahlwegBekannt && (
+                  <div className="h-2.5 overflow-hidden rounded-full bg-secondary">
+                    <div
+                      className="h-full rounded-full bg-success transition-all"
+                      style={{ width: `${paidPct ?? 0}%` }}
+                    />
+                  </div>
+                )}
 
                 {/* Zahlungsweg des Portals (0240). Ohne diese Zeile fragt die
                     Rezeption beim Gast nach, obwohl das Portal längst kassiert
@@ -510,11 +687,120 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
             </Card>
           )}
 
-          {/* Anmerkungen / Notiz */}
+          {/* Rechnungsstellung als eigene Karte (..-Struktur). Sie stand
+              vorher als Fußzeile in der Kostenaufteilung — dort sucht sie
+              niemand, obwohl es der Beleg ist, den der Gast anfordert. */}
+          {!isOwnerStay && (
+            <Card className="flex flex-col gap-3 p-5">
+              <h2 className="font-display text-lg font-bold">
+                {t("bookingDetail.invoicing")}
+              </h2>
+              {data.invoice ? (
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">
+                      {data.invoice.invoice_number ?? t("bookingDetail.invoice")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {/* Status kommt so aus der Buchhaltung (finalized/paid/…)
+                          — kein eigener Übersetzungsschlüssel, sonst gäbe es
+                          zwei Wahrheiten über denselben Zustand. */}
+                      {data.invoice.status}
+                      {data.invoice.gross_amount != null
+                        ? ` · ${money(
+                            data.invoice.gross_amount,
+                            data.invoice.currency || data.currency,
+                          )}`
+                        : ""}
+                    </p>
+                  </div>
+                  {/* Aktionsmenü wie in .. („…" an der Rechnungszeile).
+                      Nur echte Wege: Vorschau/Versand über den bestehenden
+                      Dokumenten-Dialog. „Erneuern" hat bei uns keine
+                      Entsprechung — eine GoBD-Nummer wird nicht neu gezogen. */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={d.invoiceDocBusy}
+                      >
+                        <Icon
+                          icon={d.invoiceDocBusy ? "ph:spinner" : "ph:receipt"}
+                          className={
+                            "size-4 " + (d.invoiceDocBusy ? "animate-spin" : "")
+                          }
+                        />
+                        {t("bookingDetail.invoiceActions")}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => void d.openInvoiceDialog(data.invoice!.id)}
+                      >
+                        <Icon icon="ph:eye" className="size-4" />
+                        {t("bookingDetail.viewInvoice")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => void d.openInvoiceDialog(data.invoice!.id)}
+                      >
+                        <Icon icon="ph:paper-plane-tilt" className="size-4" />
+                        {t("bookingDetail.sendInvoice")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href="/buchhaltung/rechnungen">
+                          <Icon icon="ph:arrow-square-out" className="size-4" />
+                          {t("bookingDetail.openInAccounting")}
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {t("bookingDetail.noInvoiceYet")}
+                </p>
+              )}
+            </Card>
+          )}
+
+          {/* Konditionen DES PORTALS zuerst: sie sind die Zusage an den Gast
+              (0384). Unsere eigene Kondition darunter gilt für Direktbuchungen. */}
+          {!isOwnerStay && <BookingOtaTermsCard data={data} />}
+
+          {/* Buchungskonditionen + Zahlungsplan/Transaktionen (..-
+              Karten „Buchungskonditionen" und „Zahlungsanforderung"). Bei einer
+              Eigennutzung gibt es keine Kondition und kein Geld. */}
+          {!isOwnerStay && (
+            <BookingConditionsCard
+              reservationId={reservationId}
+              currency={data.currency}
+              reloadKey={`${data.status}-${data.paid_amount ?? ""}-${
+                data.checked_out_at ?? ""
+              }`}
+            />
+          )}
+
+          {/* Anmerkungen / Notiz — bearbeitbar wie in .. */}
           <Card className="flex flex-col gap-2 p-5">
-            <h2 className="font-display text-lg font-bold">
-              {t("bookingDetail.notes")}
-            </h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="font-display text-lg font-bold">
+                {t("bookingDetail.notes")}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setNoteSheet(true)}
+                aria-label={t("bookingDetail.editNote")}
+                title={t("bookingDetail.editNote")}
+                className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
+              >
+                <Icon
+                  icon={data.note ? "ph:pencil-simple" : "ph:plus"}
+                  className="size-4.5"
+                />
+              </button>
+            </div>
             {data.note ? (
               <p className="whitespace-pre-wrap text-sm text-muted-foreground">
                 {data.note}
@@ -648,47 +934,73 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                     {money(total, data.currency)}
                   </dd>
                 </div>
-                {data.invoice && (
-                  <div className="mt-2 flex items-center justify-between gap-3 border-t pt-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-medium">
-                        {data.invoice.invoice_number ?? t("bookingDetail.invoice")}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {data.invoice.status}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={d.invoiceDocBusy}
-                      onClick={() => void d.openInvoiceDialog(data.invoice!.id)}
-                    >
-                      <Icon
-                        icon={d.invoiceDocBusy ? "ph:spinner" : "ph:receipt"}
-                        className={"size-4 " + (d.invoiceDocBusy ? "animate-spin" : "")}
-                      />
-                      {t("bookingDetail.view")}
-                    </Button>
-                  </div>
-                )}
               </dl>
             )}
           </Card>
           )}
 
-          {/* Kundendaten (maskiert) */}
+          {/* Kundendaten (maskiert) — Stift öffnet die Bearbeiten-Schublade
+              wie in ... Bei einer Eigennutzung gibt es keinen Gast: dort
+              führt der Stift ins Leere, deshalb erscheint er nicht. */}
           <Card className="flex flex-col gap-3 p-5">
-            <h2 className="font-display text-lg font-bold">
-              {t("bookingDetail.guestData")}
-            </h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="font-display text-lg font-bold">
+                {t("bookingDetail.guestData")}
+              </h2>
+              {!isOwnerStay && !isCancelled && (
+                <button
+                  type="button"
+                  onClick={() => setGuestSheet(true)}
+                  aria-label={t("bookingDetail.editGuest")}
+                  title={t("bookingDetail.editGuest")}
+                  className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
+                >
+                  <Icon icon="ph:pencil-simple" className="size-4.5" />
+                </button>
+              )}
+            </div>
             <dl className="flex flex-col gap-1.5 text-sm">
               <Row label={t("bookingDetail.name")} value={data.guest_name} />
-              <Row label={t("bookingDetail.email")} value={data.guest_email} />
-              <Row label={t("bookingDetail.phone")} value={data.guest_phone} />
+              {/* Kontakt direkt anwählbar (..): Mail, Telefon, WhatsApp.
+                  Ohne Kontakt-Sichtbarkeit kommt hier null aus dem Backend und
+                  die Zeile entfällt — kein leerer Link ins Nichts. */}
+              <Row
+                label={t("bookingDetail.email")}
+                value={data.guest_email}
+                href={data.guest_email ? `mailto:${data.guest_email}` : null}
+              />
+              <Row
+                label={t("bookingDetail.phone")}
+                value={data.guest_phone}
+                href={data.guest_phone ? `tel:${data.guest_phone}` : null}
+                zusatz={
+                  data.guest_phone ? (
+                    <a
+                      href={`https://wa.me/${data.guest_phone.replace(/[^\d]/g, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={t("bookingDetail.whatsapp")}
+                      title={t("bookingDetail.whatsapp")}
+                      className="text-success hover:opacity-80"
+                    >
+                      <Icon icon="ph:whatsapp-logo" className="size-4" />
+                    </a>
+                  ) : null
+                }
+              />
               <Row label={t("bookingDetail.language")} value={data.guest_language} />
               <Row label={t("bookingDetail.country")} value={data.guest_country} />
+              {/* Erwartete Zeiten (..: „Voraussichtliche Check-in-Zeit").
+                  Sie stehen an der Buchung und sind über die Schublade
+                  korrigierbar — kein Check-in-Zustand (0091). */}
+              <Row
+                label={t("bookingDetail.expectedCheckin")}
+                value={data.checkin_time}
+              />
+              <Row
+                label={t("bookingDetail.expectedCheckout")}
+                value={data.checkout_time}
+              />
             </dl>
             {data.guest_id && (
               <Link
@@ -738,6 +1050,38 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
           companyId="me"
         />
       )}
+
+      {/* Gast bearbeiten / Notiz bearbeiten (..-Schubladen von rechts).
+          Nach dem Speichern lädt der Hook die Buchung neu — die Realtime-
+          Änderung an `reservations` kommt zwar auch an, aber der eigene
+          Speichervorgang soll ohne Verzögerung sichtbar sein. */}
+      {guestSheet && (
+        <BookingGuestSheet
+          open
+          reservationId={reservationId}
+          values={{
+            guest_name: data.guest_name,
+            guest_email: data.guest_email,
+            guest_phone: data.guest_phone,
+            guest_language: data.guest_language,
+            guest_country: data.guest_country,
+            checkin_time: data.checkin_time,
+            checkout_time: data.checkout_time,
+          }}
+          onClose={() => setGuestSheet(false)}
+          onSaved={d.reload}
+        />
+      )}
+
+      {noteSheet && (
+        <BookingNoteSheet
+          open
+          reservationId={reservationId}
+          note={data.note}
+          onClose={() => setNoteSheet(false)}
+          onSaved={d.reload}
+        />
+      )}
     </div>
   );
 }
@@ -762,12 +1106,59 @@ function Breadcrumb({
   );
 }
 
-function Row({ label, value }: { label: string; value: string | null | undefined }) {
+function Kachel({
+  label,
+  value,
+  betont = false,
+}: {
+  label: string;
+  value: string;
+  betont?: boolean;
+}) {
+  return (
+    <div className="bg-secondary/40 px-3 py-2 text-center">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p
+        className={
+          "font-display text-lg font-extrabold tabular-nums " +
+          (betont ? "text-warning" : "")
+        }
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function Row({
+  label,
+  value,
+  href = null,
+  zusatz = null,
+}: {
+  label: string;
+  value: string | null | undefined;
+  /** Macht den Wert anwählbar (mailto:/tel:). null = reiner Text. */
+  href?: string | null;
+  /** Zusatz-Aktion rechts (z. B. WhatsApp neben der Nummer). */
+  zusatz?: React.ReactNode;
+}) {
   if (!value) return null;
   return (
     <div className="flex justify-between gap-4">
       <dt className="shrink-0 text-muted-foreground">{label}</dt>
-      <dd className="truncate text-right">{value}</dd>
+      <dd className="flex min-w-0 items-center gap-2 text-right">
+        {href ? (
+          <a href={href} className="truncate text-accent hover:underline">
+            {value}
+          </a>
+        ) : (
+          <span className="truncate">{value}</span>
+        )}
+        {zusatz}
+      </dd>
     </div>
   );
 }

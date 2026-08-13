@@ -4910,6 +4910,16 @@
       "toastSaved": "Išsaugota.",
       "toastDeleted": "Ištrinta.",
       "toastMediaUploaded": "Medija įkelta.",
+      "toastApplied": "Išsaugota ir pritaikyta {count, plural, one {# kitam objektui} few {# kitiems objektams} other {# kitų objektų}}.",
+      "pickExisting": "Naudoti esamą",
+      "pickExistingTitle": "Naudoti esamą papildomą paslaugą",
+      "pickExistingSubtitle": "Papildomos paslaugos, kurias jau sukūrėte kituose objektuose.",
+      "pickExistingSearch": "Ieškoti papildomų paslaugų …",
+      "pickExistingAdd": "Pridėti",
+      "pickExistingFrom": "Iš {title}",
+      "pickExistingNoMatches": "Atitikmenų nėra.",
+      "pickExistingEmpty": "Kituose jūsų objektuose dar nėra papildomos paslaugos, kurią galėtumėte perimti čia.",
+      "pickExistingNoCurrency": "Šiam objektui nenustatyta valiuta. Pirma sukurkite kainų planą su valiuta — kitaip sumos perimti negalima.",
       "basisPerStay": "Už viešnagę",
       "basisPerNight": "Už naktį",
       "basisPerGuest": "Už svečią",
@@ -5317,6 +5327,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Taikyti tą pačią akciją ir kitiems objektams.",
       "applyToOthersSeasonHint": "Sukurti tą patį sezoną ir kituose objektuose.",
+      "applyToOthersAddonHint": "Siūlykite tą pačią papildomą paslaugą ir kituose objektuose.",
       "promoReason": {
         "mindestaufenthalt": "minimalus apsistojimas",
         "fruehbucher": "ankstyvo rezervavimo terminas",
@@ -5928,7 +5939,8 @@
       "linkCopied": "Mokėjimo nuoroda nukopijuota.",
       "linkCopyFailed": "Nepavyko nukopijuoti — nuoroda pateikta žemiau.",
       "linkWithdraw": "Atšaukti",
-      "linkWithdrawn": "Mokėjimo nuoroda atšaukta."
+      "linkWithdrawn": "Mokėjimo nuoroda atšaukta.",
+      "linkAufteilung": "Svečias moka {brutto} · iš jų {prozent} % platformos dalis ({anteil}) · plius mokėjimų paslaugos mokesčiai"
     },
     "ratesView": {
       "propertyLabel": "Objektas",
@@ -8255,6 +8267,39 @@
       "hinweis": "Užsakymai per myBestDays eina per mūsų sąskaitą ir išmokami po išvykimo.",
       "offen": "Neapmokėta",
       "ausgezahlt": "Išmokėta"
+    },
+    "reiter": {
+      "abrechnung": "Atsiskaitymai",
+      "empfangen": "Gauti mokėjimai",
+      "versendet": "Išsiųsti mokėjimai"
+    },
+    "protokoll": {
+      "eingangTitel": "Gauti mokėjimai",
+      "eingangHinweis": "Kiekvienas mokėjimas, pasiekęs tavo sąskaitą.",
+      "ausgangTitel": "Išsiųsti mokėjimai",
+      "ausgangHinweis": "Išmokos į tavo banko sąskaitą, grąžinimai ir išskaityti mokesčiai.",
+      "offenTitel": "Neapmokėti įrašai",
+      "offenHinweis": "Mokėjimo nuorodos, kurių dar niekas neapmokėjo.",
+      "statusOffen": "Neapmokėta",
+      "statusBezahlt": "Apmokėta",
+      "zahlseite": "Mokėjimo puslapis",
+      "zurBuchung": "Į užsakymą",
+      "zusatzleistungen": "Papildomos paslaugos",
+      "leer": "Judėjimų dar nėra.",
+      "gebuehr": "Mokestis {betrag}",
+      "netto": "grynasis {betrag}",
+      "verfuegbarAb": "galima nuo {datum}",
+      "typ": {
+        "charge": "Mokėjimas kortele",
+        "payment": "Mokėjimas",
+        "payout": "Išmoka",
+        "refund": "Grąžinimas",
+        "payment_refund": "Grąžinimas",
+        "application_fee": "Platformos dalis",
+        "stripe_fee": "Mokėjimo mokestis",
+        "adjustment": "Lėšų nurašymas",
+        "transfer": "Pervedimas"
+      }
     }
   }
 }

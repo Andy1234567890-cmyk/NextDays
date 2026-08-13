@@ -4915,6 +4915,16 @@
       "toastSaved": "Αποθηκεύτηκε.",
       "toastDeleted": "Διαγράφηκε.",
       "toastMediaUploaded": "Το αρχείο μεταφορτώθηκε.",
+      "toastApplied": "Αποθηκεύτηκε και εφαρμόστηκε σε {count, plural, one {# ακόμη κατάλυμα} other {# ακόμη καταλύματα}}.",
+      "pickExisting": "Χρήση υπάρχουσας",
+      "pickExistingTitle": "Χρήση υπάρχουσας πρόσθετης υπηρεσίας",
+      "pickExistingSubtitle": "Πρόσθετες υπηρεσίες που έχετε ήδη δημιουργήσει στα άλλα καταλύματά σας.",
+      "pickExistingSearch": "Αναζήτηση πρόσθετων υπηρεσιών …",
+      "pickExistingAdd": "Προσθήκη",
+      "pickExistingFrom": "Από {title}",
+      "pickExistingNoMatches": "Κανένα αποτέλεσμα.",
+      "pickExistingEmpty": "Στα άλλα καταλύματά σας δεν υπάρχει ακόμη πρόσθετη υπηρεσία που θα μπορούσατε να χρησιμοποιήσετε εδώ.",
+      "pickExistingNoCurrency": "Για αυτό το κατάλυμα δεν έχει οριστεί νόμισμα. Δημιουργήστε πρώτα ένα τιμολογιακό πλάνο με νόμισμα — αλλιώς δεν μπορεί να αντιγραφεί ποσό.",
       "basisPerStay": "Ανά διαμονή",
       "basisPerNight": "Ανά διανυκτέρευση",
       "basisPerGuest": "Ανά επισκέπτη",
@@ -5322,6 +5332,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Εφαρμογή της ίδιας προσφοράς και σε άλλα καταλύματα.",
       "applyToOthersSeasonHint": "Δημιουργήστε την ίδια εποχή και σε άλλα καταλύματα.",
+      "applyToOthersAddonHint": "Προσφέρετε την ίδια πρόσθετη υπηρεσία και σε άλλα καταλύματα.",
       "promoReason": {
         "mindestaufenthalt": "ελάχιστη διαμονή",
         "fruehbucher": "διάστημα έγκαιρης κράτησης",
@@ -5933,7 +5944,8 @@
       "linkCopied": "Ο σύνδεσμος πληρωμής αντιγράφηκε.",
       "linkCopyFailed": "Η αντιγραφή απέτυχε — ο σύνδεσμος φαίνεται παρακάτω.",
       "linkWithdraw": "Απόσυρση",
-      "linkWithdrawn": "Ο σύνδεσμος πληρωμής αποσύρθηκε."
+      "linkWithdrawn": "Ο σύνδεσμος πληρωμής αποσύρθηκε.",
+      "linkAufteilung": "Ο επισκέπτης πληρώνει {brutto} · εκ των οποίων {prozent} % μερίδιο πλατφόρμας ({anteil}) · συν χρεώσεις του παρόχου πληρωμών"
     },
     "ratesView": {
       "propertyLabel": "Κατάλυμα",
@@ -8260,6 +8272,39 @@
       "hinweis": "Οι κρατήσεις μέσω myBestDays περνούν από τον λογαριασμό μας και πληρώνονται μετά την αναχώρηση.",
       "offen": "Ανοιχτό",
       "ausgezahlt": "Πληρώθηκε"
+    },
+    "reiter": {
+      "abrechnung": "Εκκαθάριση",
+      "empfangen": "Εισπράξεις",
+      "versendet": "Απεσταλμένες πληρωμές"
+    },
+    "protokoll": {
+      "eingangTitel": "Εισπράξεις",
+      "eingangHinweis": "Κάθε πληρωμή που έφτασε στον λογαριασμό σου.",
+      "ausgangTitel": "Απεσταλμένες πληρωμές",
+      "ausgangHinweis": "Πληρωμές στον τραπεζικό σου λογαριασμό, επιστροφές και παρακρατηθείσες χρεώσεις.",
+      "offenTitel": "Ανοιχτές θέσεις",
+      "offenHinweis": "Σύνδεσμοι πληρωμής που δεν έχει πληρώσει ακόμη κανείς.",
+      "statusOffen": "Ανοιχτό",
+      "statusBezahlt": "Πληρωμένο",
+      "zahlseite": "Σελίδα πληρωμής",
+      "zurBuchung": "Στην κράτηση",
+      "zusatzleistungen": "Πρόσθετες υπηρεσίες",
+      "leer": "Δεν υπάρχουν ακόμη κινήσεις.",
+      "gebuehr": "Χρέωση {betrag}",
+      "netto": "καθαρό {betrag}",
+      "verfuegbarAb": "διαθέσιμο από {datum}",
+      "typ": {
+        "charge": "Πληρωμή με κάρτα",
+        "payment": "Πληρωμή",
+        "payout": "Πληρωμή προς εσένα",
+        "refund": "Επιστροφή",
+        "payment_refund": "Επιστροφή",
+        "application_fee": "Μερίδιο πλατφόρμας",
+        "stripe_fee": "Χρέωση πληρωμής",
+        "adjustment": "Αντιλογισμός",
+        "transfer": "Μεταφορά"
+      }
     }
   }
 }

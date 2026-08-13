@@ -68,8 +68,22 @@ export function useReservationDetail(
 
   const reload = useCallback(() => {
     getReservationDetail(reservationId).then((res) => {
-      if (res.ok) setData(res.data);
-      else setError(res.error);
+      if (res.ok) {
+        // Diagnose der Felder, die die Darstellung umschalten (Eigennutzung,
+        // Preis, Ablage, Nachrichten-Thread). Ohne diese Zeile ist ein „warum
+        // steht da Direkt statt Eigennutzung?" nur durch Raten zu beantworten.
+        console.debug("[ReservationDetail] geladen", {
+          id: res.data.id,
+          is_owner_stay: res.data.is_owner_stay,
+          total_amount: res.data.total_amount,
+          archived_at: res.data.archived_at,
+          message_thread_id: res.data.message_thread_id,
+        });
+        setData(res.data);
+      } else {
+        console.debug("[ReservationDetail] Laden fehlgeschlagen:", res.error);
+        setError(res.error);
+      }
     });
   }, [reservationId]);
 

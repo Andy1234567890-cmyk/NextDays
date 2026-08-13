@@ -4910,6 +4910,16 @@
       "toastSaved": "Shranjeno.",
       "toastDeleted": "Izbrisano.",
       "toastMediaUploaded": "Medij naložen.",
+      "toastApplied": "Shranjeno in uporabljeno pri {count, plural, one {# drugi nastanitvi} two {# drugih nastanitvah} few {# drugih nastanitvah} other {# drugih nastanitvah}}.",
+      "pickExisting": "Uporabi obstoječo",
+      "pickExistingTitle": "Uporabi obstoječo dodatno storitev",
+      "pickExistingSubtitle": "Dodatne storitve, ki ste jih že ustvarili pri drugih nastanitvah.",
+      "pickExistingSearch": "Iskanje dodatnih storitev …",
+      "pickExistingAdd": "Dodaj",
+      "pickExistingFrom": "Iz {title}",
+      "pickExistingNoMatches": "Ni zadetkov.",
+      "pickExistingEmpty": "Pri vaših drugih nastanitvah še ni dodatne storitve, ki bi jo lahko prevzeli sem.",
+      "pickExistingNoCurrency": "Za to nastanitev ni nastavljena valuta. Najprej ustvarite cenovni načrt z valuto — sicer zneska ni mogoče prevzeti.",
       "basisPerStay": "Na bivanje",
       "basisPerNight": "Na noč",
       "basisPerGuest": "Na gosta",
@@ -5317,6 +5327,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Uporabi isto akcijo tudi pri drugih nastanitvah.",
       "applyToOthersSeasonHint": "Ustvari isto sezono tudi pri drugih objektih.",
+      "applyToOthersAddonHint": "Isto dodatno storitev ponudite tudi pri drugih nastanitvah.",
       "promoReason": {
         "mindestaufenthalt": "najkrajše bivanje",
         "fruehbucher": "rok zgodnje rezervacije",
@@ -5928,7 +5939,8 @@
       "linkCopied": "Plačilna povezava kopirana.",
       "linkCopyFailed": "Kopiranje ni uspelo — povezava je spodaj.",
       "linkWithdraw": "Umakni",
-      "linkWithdrawn": "Plačilna povezava umaknjena."
+      "linkWithdrawn": "Plačilna povezava umaknjena.",
+      "linkAufteilung": "Gost plača {brutto} · od tega {prozent} % delež platforme ({anteil}) · plus provizije ponudnika plačil"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -8255,6 +8267,39 @@
       "hinweis": "Rezervacije prek myBestDays gredo prek našega računa in se izplačajo po odhodu.",
       "offen": "Odprto",
       "ausgezahlt": "Izplačano"
+    },
+    "reiter": {
+      "abrechnung": "Obračun",
+      "empfangen": "Prejeta plačila",
+      "versendet": "Poslana plačila"
+    },
+    "protokoll": {
+      "eingangTitel": "Prejeta plačila",
+      "eingangHinweis": "Vsako plačilo, ki je prispelo na tvoj račun.",
+      "ausgangTitel": "Poslana plačila",
+      "ausgangHinweis": "Izplačila na tvoj bančni račun, vračila in zadržane provizije.",
+      "offenTitel": "Odprte postavke",
+      "offenHinweis": "Plačilne povezave, ki jih še nihče ni plačal.",
+      "statusOffen": "Odprto",
+      "statusBezahlt": "Plačano",
+      "zahlseite": "Plačilna stran",
+      "zurBuchung": "Na rezervacijo",
+      "zusatzleistungen": "Dodatne storitve",
+      "leer": "Še ni prometa.",
+      "gebuehr": "Provizija {betrag}",
+      "netto": "neto {betrag}",
+      "verfuegbarAb": "na voljo od {datum}",
+      "typ": {
+        "charge": "Plačilo s kartico",
+        "payment": "Plačilo",
+        "payout": "Izplačilo",
+        "refund": "Vračilo",
+        "payment_refund": "Vračilo",
+        "application_fee": "Delež platforme",
+        "stripe_fee": "Provizija za plačilo",
+        "adjustment": "Povratna bremenitev",
+        "transfer": "Prenos"
+      }
     }
   }
 }

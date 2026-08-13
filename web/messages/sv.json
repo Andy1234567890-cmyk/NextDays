@@ -4910,6 +4910,16 @@
       "toastSaved": "Sparat.",
       "toastDeleted": "Borttagen.",
       "toastMediaUploaded": "Media uppladdat.",
+      "toastApplied": "Sparad och tillämpad på {count, plural, one {# annat objekt} other {# andra objekt}}.",
+      "pickExisting": "Använd befintlig",
+      "pickExistingTitle": "Använd en befintlig tilläggstjänst",
+      "pickExistingSubtitle": "Tilläggstjänster som du redan har skapat på dina andra objekt.",
+      "pickExistingSearch": "Sök tilläggstjänster …",
+      "pickExistingAdd": "Lägg till",
+      "pickExistingFrom": "Från {title}",
+      "pickExistingNoMatches": "Inga träffar.",
+      "pickExistingEmpty": "Dina andra objekt har ännu ingen tilläggstjänst som du kan använda här.",
+      "pickExistingNoCurrency": "Ingen valuta är angiven för det här objektet. Skapa först en prisplan med valuta — annars kan inget belopp kopieras.",
       "basisPerStay": "Per vistelse",
       "basisPerNight": "Per natt",
       "basisPerGuest": "Per gäst",
@@ -5317,6 +5327,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Använd samma kampanj även för andra objekt.",
       "applyToOthersSeasonHint": "Skapa samma säsong även för andra objekt.",
+      "applyToOthersAddonHint": "Erbjud samma tilläggstjänst på andra objekt.",
       "promoReason": {
         "mindestaufenthalt": "minsta vistelse",
         "fruehbucher": "framförhållning för tidig bokning",
@@ -5928,7 +5939,8 @@
       "linkCopied": "Betallänk kopierad.",
       "linkCopyFailed": "Kunde inte kopiera — länken visas nedan.",
       "linkWithdraw": "Dra tillbaka",
-      "linkWithdrawn": "Betallänken har dragits tillbaka."
+      "linkWithdrawn": "Betallänken har dragits tillbaka.",
+      "linkAufteilung": "Gästen betalar {brutto} · varav {prozent} % plattformsandel ({anteil}) · plus betalleverantörens avgifter"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -8255,6 +8267,39 @@
       "hinweis": "Bokningar via myBestDays går via vårt konto och betalas ut efter avresan.",
       "offen": "Öppet",
       "ausgezahlt": "Utbetalt"
+    },
+    "reiter": {
+      "abrechnung": "Avräkning",
+      "empfangen": "Mottagna betalningar",
+      "versendet": "Skickade betalningar"
+    },
+    "protokoll": {
+      "eingangTitel": "Mottagna betalningar",
+      "eingangHinweis": "Varje betalning som kommit in på ditt konto.",
+      "ausgangTitel": "Skickade betalningar",
+      "ausgangHinweis": "Utbetalningar till ditt bankkonto, återbetalningar och avdragna avgifter.",
+      "offenTitel": "Öppna poster",
+      "offenHinweis": "Betallänkar som ingen har betalat än.",
+      "statusOffen": "Öppen",
+      "statusBezahlt": "Betald",
+      "zahlseite": "Betalsida",
+      "zurBuchung": "Till bokningen",
+      "zusatzleistungen": "Tilläggstjänster",
+      "leer": "Inga transaktioner än.",
+      "gebuehr": "Avgift {betrag}",
+      "netto": "netto {betrag}",
+      "verfuegbarAb": "tillgängligt från {datum}",
+      "typ": {
+        "charge": "Kortbetalning",
+        "payment": "Betalning",
+        "payout": "Utbetalning",
+        "refund": "Återbetalning",
+        "payment_refund": "Återbetalning",
+        "application_fee": "Plattformsandel",
+        "stripe_fee": "Betalningsavgift",
+        "adjustment": "Återkrav",
+        "transfer": "Överföring"
+      }
     }
   }
 }

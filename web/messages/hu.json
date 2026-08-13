@@ -4915,6 +4915,16 @@
       "toastSaved": "Elmentve.",
       "toastDeleted": "Törölve.",
       "toastMediaUploaded": "Médiafájl feltöltve.",
+      "toastApplied": "Mentve és alkalmazva {count, plural, one {# további szálláshelyre} other {# további szálláshelyre}}.",
+      "pickExisting": "Meglévő használata",
+      "pickExistingTitle": "Meglévő kiegészítő szolgáltatás használata",
+      "pickExistingSubtitle": "Kiegészítő szolgáltatások, amelyeket már létrehozott más szálláshelyeknél.",
+      "pickExistingSearch": "Kiegészítő szolgáltatások keresése …",
+      "pickExistingAdd": "Hozzáadás",
+      "pickExistingFrom": "Innen: {title}",
+      "pickExistingNoMatches": "Nincs találat.",
+      "pickExistingEmpty": "A többi szálláshelyén még nincs olyan kiegészítő szolgáltatás, amelyet itt átvehetne.",
+      "pickExistingNoCurrency": "Ehhez a szálláshelyhez nincs pénznem beállítva. Előbb hozzon létre árazási tervet pénznemmel — különben nem vehető át összeg.",
       "basisPerStay": "Tartózkodásonként",
       "basisPerNight": "Éjszakánként",
       "basisPerGuest": "Vendégenként",
@@ -5322,6 +5332,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Ugyanezt az akciót más objektumokra is alkalmazza.",
       "applyToOthersSeasonHint": "Ugyanezt a szezont más objektumoknál is létrehozza.",
+      "applyToOthersAddonHint": "Ugyanazt a kiegészítő szolgáltatást más szálláshelyeken is kínálja.",
       "promoReason": {
         "mindestaufenthalt": "minimális tartózkodás",
         "fruehbucher": "előre foglalási időelőny",
@@ -5933,7 +5944,8 @@
       "linkCopied": "Fizetési link kimásolva.",
       "linkCopyFailed": "A másolás nem sikerült — a link lent látható.",
       "linkWithdraw": "Visszavonás",
-      "linkWithdrawn": "Fizetési link visszavonva."
+      "linkWithdrawn": "Fizetési link visszavonva.",
+      "linkAufteilung": "A vendég {brutto} fizet · ebből {prozent} % platformrész ({anteil}) · plusz a fizetési szolgáltató díjai"
     },
     "ratesView": {
       "propertyLabel": "Ingatlan",
@@ -8260,6 +8272,39 @@
       "hinweis": "A myBestDays-en keresztüli foglalások a mi számlánkon futnak, és elutazás után kerülnek kifizetésre.",
       "offen": "Nyitott",
       "ausgezahlt": "Kifizetve"
+    },
+    "reiter": {
+      "abrechnung": "Elszámolás",
+      "empfangen": "Beérkezett fizetések",
+      "versendet": "Elküldött fizetések"
+    },
+    "protokoll": {
+      "eingangTitel": "Beérkezett fizetések",
+      "eingangHinweis": "Minden fizetés, ami a számládra érkezett.",
+      "ausgangTitel": "Elküldött fizetések",
+      "ausgangHinweis": "Kifizetések a bankszámládra, visszatérítések és levont díjak.",
+      "offenTitel": "Nyitott tételek",
+      "offenHinweis": "Fizetési linkek, amelyeket még senki nem fizetett ki.",
+      "statusOffen": "Nyitott",
+      "statusBezahlt": "Fizetve",
+      "zahlseite": "Fizetési oldal",
+      "zurBuchung": "A foglaláshoz",
+      "zusatzleistungen": "Kiegészítő szolgáltatások",
+      "leer": "Még nincs mozgás.",
+      "gebuehr": "Díj {betrag}",
+      "netto": "nettó {betrag}",
+      "verfuegbarAb": "elérhető {datum}-tól",
+      "typ": {
+        "charge": "Kártyás fizetés",
+        "payment": "Fizetés",
+        "payout": "Kifizetés",
+        "refund": "Visszatérítés",
+        "payment_refund": "Visszatérítés",
+        "application_fee": "Platform része",
+        "stripe_fee": "Fizetési díj",
+        "adjustment": "Visszaterhelés",
+        "transfer": "Átvezetés"
+      }
     }
   }
 }

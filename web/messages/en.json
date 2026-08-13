@@ -4936,6 +4936,16 @@
       "toastSaved": "Saved.",
       "toastDeleted": "Deleted.",
       "toastMediaUploaded": "Media uploaded.",
+      "toastApplied": "Saved and applied to {count, plural, one {# more property} other {# more properties}}.",
+      "pickExisting": "Use existing",
+      "pickExistingTitle": "Use an existing extra",
+      "pickExistingSubtitle": "Extras you have already created on your other properties.",
+      "pickExistingSearch": "Search extras …",
+      "pickExistingAdd": "Add",
+      "pickExistingFrom": "From {title}",
+      "pickExistingNoMatches": "No matches.",
+      "pickExistingEmpty": "None of your other properties has an extra you could use here yet.",
+      "pickExistingNoCurrency": "No currency is set for this property. Create a rate plan with a currency first — otherwise no amount can be copied.",
       "basisPerStay": "Per stay",
       "basisPerNight": "Per night",
       "basisPerGuest": "Per guest",
@@ -5343,6 +5353,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Apply the same promotion to other properties as well.",
       "applyToOthersSeasonHint": "Create the same season on other properties as well.",
+      "applyToOthersAddonHint": "Offer the same extra on other properties as well.",
       "promoReason": {
         "mindestaufenthalt": "minimum stay",
         "fruehbucher": "early-booker lead time",
@@ -5954,7 +5965,8 @@
       "linkCopied": "Payment link copied.",
       "linkCopyFailed": "Copying failed — the link is shown below.",
       "linkWithdraw": "Withdraw",
-      "linkWithdrawn": "Payment link withdrawn."
+      "linkWithdrawn": "Payment link withdrawn.",
+      "linkAufteilung": "Guest pays {brutto} · of which {prozent}% platform share ({anteil}) · plus payment provider fees"
     },
     "ratesView": {
       "propertyLabel": "Property",
@@ -8281,6 +8293,39 @@
       "hinweis": "Bookings via myBestDays run through our account and are paid out after departure.",
       "offen": "Open",
       "ausgezahlt": "Paid out"
+    },
+    "reiter": {
+      "abrechnung": "Billing",
+      "empfangen": "Payments received",
+      "versendet": "Payments sent"
+    },
+    "protokoll": {
+      "eingangTitel": "Payments received",
+      "eingangHinweis": "Every payment that arrived in your account.",
+      "ausgangTitel": "Payments sent",
+      "ausgangHinweis": "Payouts to your bank account, refunds and fees withheld.",
+      "offenTitel": "Open items",
+      "offenHinweis": "Payment links nobody has paid yet.",
+      "statusOffen": "Open",
+      "statusBezahlt": "Paid",
+      "zahlseite": "Payment page",
+      "zurBuchung": "To the booking",
+      "zusatzleistungen": "Extra services",
+      "leer": "No transactions yet.",
+      "gebuehr": "Fee {betrag}",
+      "netto": "net {betrag}",
+      "verfuegbarAb": "available from {datum}",
+      "typ": {
+        "charge": "Card payment",
+        "payment": "Payment",
+        "payout": "Payout",
+        "refund": "Refund",
+        "payment_refund": "Refund",
+        "application_fee": "Platform share",
+        "stripe_fee": "Payment fee",
+        "adjustment": "Chargeback",
+        "transfer": "Transfer"
+      }
     }
   }
 }

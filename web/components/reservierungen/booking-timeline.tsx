@@ -45,6 +45,12 @@ const KIND_META: Record<
   message: { icon: "ph:chat-circle-text-fill", labelKey: "kind.message", tone: "text-foreground", cat: "message" },
   payment: { icon: "ph:currency-circle-dollar-fill", labelKey: "kind.payment", tone: "text-success", cat: "payment" },
   addon: { icon: "ph:sparkle-fill", labelKey: "kind.addon", tone: "text-foreground", cat: "payment" },
+  // Neue Ereignisse (0383/0384): ohne Eintrag hier fällt das Ereignis in den
+  // Default und die Zeitleiste zeigt einen rohen Schlüssel statt einer Aussage.
+  archived: { icon: "ph:archive", labelKey: "kind.archived", tone: "text-muted-foreground", cat: "booking" },
+  unarchived: { icon: "ph:archive-box", labelKey: "kind.unarchived", tone: "text-foreground", cat: "booking" },
+  note_changed: { icon: "ph:note-pencil", labelKey: "kind.noteChanged", tone: "text-foreground", cat: "booking" },
+  guest_changed: { icon: "ph:user-gear", labelKey: "kind.guestChanged", tone: "text-foreground", cat: "booking" },
 };
 
 function useFilters(t: T): { key: Category; label: string }[] {

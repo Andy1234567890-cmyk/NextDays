@@ -4910,6 +4910,16 @@
       "toastSaved": "Saglabāts.",
       "toastDeleted": "Dzēsts.",
       "toastMediaUploaded": "Fails augšupielādēts.",
+      "toastApplied": "Saglabāts un piemērots {count, plural, zero {# citiem objektiem} one {# citam objektam} other {# citiem objektiem}}.",
+      "pickExisting": "Izmantot esošu",
+      "pickExistingTitle": "Izmantot esošu papildpakalpojumu",
+      "pickExistingSubtitle": "Papildpakalpojumi, ko jau esat izveidojis citos objektos.",
+      "pickExistingSearch": "Meklēt papildpakalpojumus …",
+      "pickExistingAdd": "Pievienot",
+      "pickExistingFrom": "No {title}",
+      "pickExistingNoMatches": "Nav rezultātu.",
+      "pickExistingEmpty": "Jūsu citos objektos vēl nav papildpakalpojuma, ko varētu pārņemt šeit.",
+      "pickExistingNoCurrency": "Šim objektam nav norādīta valūta. Vispirms izveidojiet cenu plānu ar valūtu — citādi summu nevar pārņemt.",
       "basisPerStay": "Par uzturēšanos",
       "basisPerNight": "Par nakti",
       "basisPerGuest": "Par viesi",
@@ -5317,6 +5327,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Piemērot to pašu akciju arī citiem objektiem.",
       "applyToOthersSeasonHint": "Izveidot to pašu sezonu arī citiem objektiem.",
+      "applyToOthersAddonHint": "Piedāvājiet to pašu papildpakalpojumu arī citos objektos.",
       "promoReason": {
         "mindestaufenthalt": "minimālā uzturēšanās",
         "fruehbucher": "agrās rezervācijas termiņš",
@@ -5928,7 +5939,8 @@
       "linkCopied": "Maksājuma saite nokopēta.",
       "linkCopyFailed": "Neizdevās nokopēt — saite redzama zemāk.",
       "linkWithdraw": "Atsaukt",
-      "linkWithdrawn": "Maksājuma saite atsaukta."
+      "linkWithdrawn": "Maksājuma saite atsaukta.",
+      "linkAufteilung": "Viesis maksā {brutto} · no tā {prozent} % platformas daļa ({anteil}) · plus maksājumu pakalpojuma komisijas"
     },
     "ratesView": {
       "propertyLabel": "Objekts",
@@ -8255,6 +8267,39 @@
       "hinweis": "Rezervācijas caur myBestDays iet caur mūsu kontu un tiek izmaksātas pēc izbraukšanas.",
       "offen": "Atvērts",
       "ausgezahlt": "Izmaksāts"
+    },
+    "reiter": {
+      "abrechnung": "Norēķini",
+      "empfangen": "Saņemtie maksājumi",
+      "versendet": "Nosūtītie maksājumi"
+    },
+    "protokoll": {
+      "eingangTitel": "Saņemtie maksājumi",
+      "eingangHinweis": "Katrs maksājums, kas ienācis tavā kontā.",
+      "ausgangTitel": "Nosūtītie maksājumi",
+      "ausgangHinweis": "Izmaksas uz tavu bankas kontu, atmaksas un ieturētās komisijas.",
+      "offenTitel": "Atvērtie posteņi",
+      "offenHinweis": "Maksājumu saites, ko neviens vēl nav apmaksājis.",
+      "statusOffen": "Atvērts",
+      "statusBezahlt": "Apmaksāts",
+      "zahlseite": "Maksājuma lapa",
+      "zurBuchung": "Uz rezervāciju",
+      "zusatzleistungen": "Papildpakalpojumi",
+      "leer": "Kustību vēl nav.",
+      "gebuehr": "Komisija {betrag}",
+      "netto": "neto {betrag}",
+      "verfuegbarAb": "pieejams no {datum}",
+      "typ": {
+        "charge": "Kartes maksājums",
+        "payment": "Maksājums",
+        "payout": "Izmaksa",
+        "refund": "Atmaksa",
+        "payment_refund": "Atmaksa",
+        "application_fee": "Platformas daļa",
+        "stripe_fee": "Maksājuma komisija",
+        "adjustment": "Atgriezeniskais maksājums",
+        "transfer": "Pārskaitījums"
+      }
     }
   }
 }

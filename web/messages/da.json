@@ -4915,6 +4915,16 @@
       "toastSaved": "Gemt.",
       "toastDeleted": "Slettet.",
       "toastMediaUploaded": "Medie uploadet.",
+      "toastApplied": "Gemt og anvendt på {count, plural, one {# ekstra bolig} other {# ekstra boliger}}.",
+      "pickExisting": "Brug eksisterende",
+      "pickExistingTitle": "Brug en eksisterende tillægsydelse",
+      "pickExistingSubtitle": "Tillægsydelser, du allerede har oprettet på dine andre boliger.",
+      "pickExistingSearch": "Søg i tillægsydelser …",
+      "pickExistingAdd": "Tilføj",
+      "pickExistingFrom": "Fra {title}",
+      "pickExistingNoMatches": "Ingen resultater.",
+      "pickExistingEmpty": "Ingen af dine andre boliger har endnu en tillægsydelse, du kan bruge her.",
+      "pickExistingNoCurrency": "Der er ikke angivet nogen valuta for denne bolig. Opret først en prisplan med valuta — ellers kan intet beløb kopieres.",
       "basisPerStay": "Pr. ophold",
       "basisPerNight": "Pr. nat",
       "basisPerGuest": "Pr. gæst",
@@ -5322,6 +5332,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Anvend den samme kampagne på andre objekter.",
       "applyToOthersSeasonHint": "Opret den samme sæson på andre objekter.",
+      "applyToOthersAddonHint": "Tilbyd den samme tillægsydelse på andre boliger.",
       "promoReason": {
         "mindestaufenthalt": "minimumsophold",
         "fruehbucher": "varsel for tidlig booking",
@@ -5933,7 +5944,8 @@
       "linkCopied": "Betalingslink kopieret.",
       "linkCopyFailed": "Kunne ikke kopiere — linket står nedenfor.",
       "linkWithdraw": "Træk tilbage",
-      "linkWithdrawn": "Betalingslink trukket tilbage."
+      "linkWithdrawn": "Betalingslink trukket tilbage.",
+      "linkAufteilung": "Gæsten betaler {brutto} · heraf {prozent} % platformsandel ({anteil}) · plus betalingsudbyderens gebyrer"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -8260,6 +8272,39 @@
       "hinweis": "Bookinger via myBestDays går gennem vores konto og udbetales efter afrejsen.",
       "offen": "Åben",
       "ausgezahlt": "Udbetalt"
+    },
+    "reiter": {
+      "abrechnung": "Afregning",
+      "empfangen": "Modtagne betalinger",
+      "versendet": "Sendte betalinger"
+    },
+    "protokoll": {
+      "eingangTitel": "Modtagne betalinger",
+      "eingangHinweis": "Hver betaling, der er kommet ind på din konto.",
+      "ausgangTitel": "Sendte betalinger",
+      "ausgangHinweis": "Udbetalinger til din bankkonto, refusioner og tilbageholdte gebyrer.",
+      "offenTitel": "Åbne poster",
+      "offenHinweis": "Betalingslinks, som endnu ingen har betalt.",
+      "statusOffen": "Åben",
+      "statusBezahlt": "Betalt",
+      "zahlseite": "Betalingsside",
+      "zurBuchung": "Til bookingen",
+      "zusatzleistungen": "Tillægsydelser",
+      "leer": "Ingen bevægelser endnu.",
+      "gebuehr": "Gebyr {betrag}",
+      "netto": "netto {betrag}",
+      "verfuegbarAb": "tilgængelig fra {datum}",
+      "typ": {
+        "charge": "Kortbetaling",
+        "payment": "Betaling",
+        "payout": "Udbetaling",
+        "refund": "Refusion",
+        "payment_refund": "Refusion",
+        "application_fee": "Platformsandel",
+        "stripe_fee": "Betalingsgebyr",
+        "adjustment": "Tilbageførsel",
+        "transfer": "Overførsel"
+      }
     }
   }
 }

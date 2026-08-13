@@ -4915,6 +4915,16 @@
       "toastSaved": "Uloženo.",
       "toastDeleted": "Smazáno.",
       "toastMediaUploaded": "Médium nahráno.",
+      "toastApplied": "Uloženo a použito na {count, plural, one {# další objekt} few {# další objekty} many {# dalších objektů} other {# dalších objektů}}.",
+      "pickExisting": "Použít stávající",
+      "pickExistingTitle": "Použít stávající doplňkovou službu",
+      "pickExistingSubtitle": "Doplňkové služby, které jste už vytvořili u jiných objektů.",
+      "pickExistingSearch": "Hledat doplňkové služby …",
+      "pickExistingAdd": "Přidat",
+      "pickExistingFrom": "Z {title}",
+      "pickExistingNoMatches": "Žádné výsledky.",
+      "pickExistingEmpty": "U vašich dalších objektů zatím není doplňková služba, kterou byste sem mohli převzít.",
+      "pickExistingNoCurrency": "U tohoto objektu není nastavena měna. Nejprve vytvořte cenový plán s měnou — jinak nelze žádnou částku převzít.",
       "basisPerStay": "Za pobyt",
       "basisPerNight": "Za noc",
       "basisPerGuest": "Za hosta",
@@ -5322,6 +5332,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Použít stejnou akci i u dalších objektů.",
       "applyToOthersSeasonHint": "Vytvořit stejnou sezónu i u jiných objektů.",
+      "applyToOthersAddonHint": "Nabídnout stejnou doplňkovou službu i u jiných objektů.",
       "promoReason": {
         "mindestaufenthalt": "minimální pobyt",
         "fruehbucher": "předstih včasné rezervace",
@@ -5933,7 +5944,8 @@
       "linkCopied": "Platební odkaz zkopírován.",
       "linkCopyFailed": "Kopírování se nezdařilo — odkaz je níže.",
       "linkWithdraw": "Stáhnout",
-      "linkWithdrawn": "Platební odkaz stažen."
+      "linkWithdrawn": "Platební odkaz stažen.",
+      "linkAufteilung": "Host platí {brutto} · z toho {prozent} % podíl platformy ({anteil}) · plus poplatky poskytovatele plateb"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -8260,6 +8272,39 @@
       "hinweis": "Rezervace přes myBestDays jdou přes náš účet a vyplácejí se po odjezdu.",
       "offen": "Otevřeno",
       "ausgezahlt": "Vyplaceno"
+    },
+    "reiter": {
+      "abrechnung": "Vyúčtování",
+      "empfangen": "Přijaté platby",
+      "versendet": "Odeslané platby"
+    },
+    "protokoll": {
+      "eingangTitel": "Přijaté platby",
+      "eingangHinweis": "Každá platba, která dorazila na tvůj účet.",
+      "ausgangTitel": "Odeslané platby",
+      "ausgangHinweis": "Výplaty na tvůj bankovní účet, vrácení peněz a stržené poplatky.",
+      "offenTitel": "Otevřené položky",
+      "offenHinweis": "Platební odkazy, které zatím nikdo nezaplatil.",
+      "statusOffen": "Otevřeno",
+      "statusBezahlt": "Zaplaceno",
+      "zahlseite": "Platební stránka",
+      "zurBuchung": "Na rezervaci",
+      "zusatzleistungen": "Doplňkové služby",
+      "leer": "Zatím žádné pohyby.",
+      "gebuehr": "Poplatek {betrag}",
+      "netto": "netto {betrag}",
+      "verfuegbarAb": "dostupné od {datum}",
+      "typ": {
+        "charge": "Platba kartou",
+        "payment": "Platba",
+        "payout": "Výplata",
+        "refund": "Vrácení peněz",
+        "payment_refund": "Vrácení peněz",
+        "application_fee": "Podíl platformy",
+        "stripe_fee": "Poplatek za platbu",
+        "adjustment": "Zpětné zúčtování",
+        "transfer": "Převod"
+      }
     }
   }
 }

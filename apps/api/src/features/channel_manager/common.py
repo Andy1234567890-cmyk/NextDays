@@ -1020,7 +1020,48 @@ def ota_buchungszeitpunkt(attrs: dict[str, object]) -> str | None:
         wert = ota_zeitstempel_utc(attrs.get(feld))
         if wert:
             return wert
-    return _aus_rohmeldung(attrs.get("raw_message"))
+    aus_meldung = _aus_rohmeldung(attrs.get("raw_message"))
+    if aus_meldung:
+        return aus_meldung
+    return _aus_stornostaffel(attrs)
+
+
+def _aus_stornostaffel(attrs: dict[str, object]) -> str | None:
+    """Buchungszeitpunkt aus der Storno-Staffel des Portals.
+
+    Booking.com liefert bei einem Teil der Buchungen weder `booked_at` noch
+    `raw_message` — aber immer `rooms[].meta.cancel_penalties`. Deren ERSTE
+    Stufe beginnt im Buchungsmoment: sie ist die Regel, die „ab jetzt" gilt.
+    Live geprüft an BDC-5716807885 (12.08.2026): erste Stufe
+    `from = 2026-08-12T22:01:18`, Channex' eigener Eingang 22:02:39 — 81
+    Sekunden später. Ohne diesen Griff blieb `booked_at` leer und die Buchung
+    stand in der Liste unter unserem Eingangstag.
+
+    Bewusst die LETZTE Stufe der Kette: Es ist eine Ableitung aus der Quelle,
+    kein gemeldeter Zeitpunkt. Sie greift nur, wenn das Portal nichts Besseres
+    liefert — und ist trotzdem eine Aussage der Quelle, nie unsere Uhr
+    (Wurzel 5b).
+    """
+    rooms = attrs.get("rooms")
+    if not isinstance(rooms, list):
+        return None
+    frueheste: str | None = None
+    for room in rooms:
+        if not isinstance(room, dict):
+            continue
+        meta = room.get("meta")
+        strafen = meta.get("cancel_penalties") if isinstance(meta, dict) else None
+        if not isinstance(strafen, list):
+            continue
+        for stufe in strafen:
+            if not isinstance(stufe, dict):
+                continue
+            wert = ota_zeitstempel_utc(stufe.get("from"))
+            # Die früheste Stufe ist der Buchungsmoment; späterer Beginn wäre
+            # eine Frist, kein Zeitpunkt der Handlung.
+            if wert and (frueheste is None or wert < frueheste):
+                frueheste = wert
+    return frueheste
 
 
 def _aus_rohmeldung(roh: object) -> str | None:
@@ -1138,3 +1179,86 @@ class ChannelManagerError(Exception):
         super().__init__(message)
         self.message = message
         self.status_code = status_code
+
+
+def ota_cancel_penalties(attrs: dict[str, Any]) -> list[dict[str, Any]] | None:
+    """Storno-Staffel des Portals aus allen Zimmern, chronologisch.
+
+    Bei einer Buchung mit mehreren Zimmern liefert jedes Zimmer seine eigene
+    Staffel; für die Anzeige zählt der Zeitverlauf, deshalb zusammengeführt
+    und nach `from` sortiert. None = keine geliefert — ausdrücklich NICHT
+    „kostenfrei stornierbar" (Wurzel 4).
+    """
+    gesammelt: list[dict[str, Any]] = []
+    for room in attrs.get("rooms") or []:
+        if not isinstance(room, dict):
+            continue
+        meta = room.get("meta")
+        strafen = meta.get("cancel_penalties") if isinstance(meta, dict) else None
+        if not isinstance(strafen, list):
+            continue
+        for stufe in strafen:
+            if isinstance(stufe, dict) and stufe.get("from"):
+                gesammelt.append(
+                    {
+                        "from": str(stufe.get("from")),
+                        "amount": stufe.get("amount"),
+                        "currency": stufe.get("currency"),
+                    }
+                )
+    if not gesammelt:
+        return None
+    gesammelt.sort(key=lambda s: s["from"])
+    return gesammelt
+
+def ota_notes_text(attrs: dict[str, Any]) -> str | None:
+    """Notes-Block des Portals im Klartext.
+
+    Booking.com transportiert darin Dinge, die sonst nirgends stehen:
+    „** THIS RESERVATION HAS BEEN PRE-PAID **", „Payment Collect: OTA
+    collect", „OTA Commission: 805.95" sowie Sonderwünsche des Gastes.
+    „Imported Booking" ist der Platzhalter, den Channex bei der
+    Bestandsübernahme selbst schreibt — er ist keine Information über die
+    Buchung und wird deshalb verworfen (sonst stünde er in jeder der 51
+    Alt-Buchungen als angeblicher Portal-Hinweis).
+    """
+    wert = str(attrs.get("notes") or "").strip()
+    if not wert or wert.lower() == "imported booking":
+        return None
+    return wert
+
+def ota_zusatzdetails(attrs: dict[str, Any]) -> dict[str, Any] | None:
+    """Weitere Portal-Angaben, die den Empfang betreffen (0384).
+
+    Alles aus der Quelle, nichts abgeleitet: Policies-Klartext, Verpflegung,
+    Rauchen, Alter der Kinder, Gast-Labels („Genius Booker"), die RUID des
+    Portals und die Preis-Details (Gast-/Hotel-Sicht mit Gebührenarten).
+    Leeres Ergebnis → None statt eines leeren Objekts, damit die Anzeige
+    „nichts geliefert" von „geliefert, aber leer" unterscheiden kann.
+    """
+    details: dict[str, Any] = {}
+    for schluessel in ("ruid", "arrival_hour", "secondary_ota"):
+        wert = attrs.get(schluessel)
+        if wert:
+            details[schluessel] = wert
+    labels = attrs.get("guest_labels") or attrs.get("labels")
+    if isinstance(labels, list) and labels:
+        details["guest_labels"] = labels
+    raeume: list[dict[str, Any]] = []
+    for room in attrs.get("rooms") or []:
+        if not isinstance(room, dict):
+            continue
+        meta = room.get("meta") if isinstance(room.get("meta"), dict) else {}
+        eintrag = {
+            k: meta.get(k)
+            for k in ("policies", "meal_plan", "price_details", "room_remarks")
+            if meta.get(k)
+        }
+        occupancy = room.get("occupancy")
+        if isinstance(occupancy, dict) and occupancy.get("ages"):
+            eintrag["children_ages"] = occupancy["ages"]
+        if eintrag:
+            raeume.append(eintrag)
+    if raeume:
+        details["rooms"] = raeume
+    return details or None

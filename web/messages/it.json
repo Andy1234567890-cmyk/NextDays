@@ -4910,6 +4910,16 @@
       "toastSaved": "Salvato.",
       "toastDeleted": "Eliminato.",
       "toastMediaUploaded": "Media caricato.",
+      "toastApplied": "Salvato e applicato a {count, plural, one {# altra struttura} other {# altre strutture}}.",
+      "pickExisting": "Usa esistente",
+      "pickExistingTitle": "Usa un servizio extra esistente",
+      "pickExistingSubtitle": "Servizi extra che hai già creato sulle tue altre strutture.",
+      "pickExistingSearch": "Cerca servizi extra …",
+      "pickExistingAdd": "Aggiungi",
+      "pickExistingFrom": "Da {title}",
+      "pickExistingNoMatches": "Nessun risultato.",
+      "pickExistingEmpty": "Nelle tue altre strutture non c’è ancora un servizio extra che potresti usare qui.",
+      "pickExistingNoCurrency": "Per questa struttura non è impostata alcuna valuta. Crea prima un piano tariffario con valuta — altrimenti nessun importo può essere copiato.",
       "basisPerStay": "Per soggiorno",
       "basisPerNight": "Per notte",
       "basisPerGuest": "Per ospite",
@@ -5317,6 +5327,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Applica la stessa promozione anche ad altre strutture.",
       "applyToOthersSeasonHint": "Creare la stessa stagione anche su altre strutture.",
+      "applyToOthersAddonHint": "Offrire lo stesso servizio extra anche su altre strutture.",
       "promoReason": {
         "mindestaufenthalt": "soggiorno minimo",
         "fruehbucher": "preavviso prenotazione anticipata",
@@ -5928,7 +5939,8 @@
       "linkCopied": "Link di pagamento copiato.",
       "linkCopyFailed": "Copia non riuscita: il link è qui sotto.",
       "linkWithdraw": "Revoca",
-      "linkWithdrawn": "Link di pagamento revocato."
+      "linkWithdrawn": "Link di pagamento revocato.",
+      "linkAufteilung": "L’ospite paga {brutto} · di cui {prozent} % quota della piattaforma ({anteil}) · più le commissioni del fornitore di pagamento"
     },
     "ratesView": {
       "propertyLabel": "Struttura",
@@ -8255,6 +8267,39 @@
       "hinweis": "Le prenotazioni tramite myBestDays passano dal nostro conto e vengono pagate dopo la partenza.",
       "offen": "Aperto",
       "ausgezahlt": "Pagato"
+    },
+    "reiter": {
+      "abrechnung": "Contabilità",
+      "empfangen": "Pagamenti ricevuti",
+      "versendet": "Pagamenti inviati"
+    },
+    "protokoll": {
+      "eingangTitel": "Pagamenti ricevuti",
+      "eingangHinweis": "Ogni pagamento arrivato sul tuo conto.",
+      "ausgangTitel": "Pagamenti inviati",
+      "ausgangHinweis": "Pagamenti sul tuo conto bancario, rimborsi e commissioni trattenute.",
+      "offenTitel": "Partite aperte",
+      "offenHinweis": "Link di pagamento che nessuno ha ancora pagato.",
+      "statusOffen": "Aperto",
+      "statusBezahlt": "Pagato",
+      "zahlseite": "Pagina di pagamento",
+      "zurBuchung": "Alla prenotazione",
+      "zusatzleistungen": "Servizi aggiuntivi",
+      "leer": "Ancora nessun movimento.",
+      "gebuehr": "Commissione {betrag}",
+      "netto": "netto {betrag}",
+      "verfuegbarAb": "disponibile dal {datum}",
+      "typ": {
+        "charge": "Pagamento con carta",
+        "payment": "Pagamento",
+        "payout": "Pagamento in uscita",
+        "refund": "Rimborso",
+        "payment_refund": "Rimborso",
+        "application_fee": "Quota della piattaforma",
+        "stripe_fee": "Commissione di pagamento",
+        "adjustment": "Storno",
+        "transfer": "Trasferimento"
+      }
     }
   }
 }

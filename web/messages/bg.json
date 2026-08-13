@@ -4915,6 +4915,16 @@
       "toastSaved": "Запазено.",
       "toastDeleted": "Изтрито.",
       "toastMediaUploaded": "Медията е качена.",
+      "toastApplied": "Запазено и приложено към {count, plural, one {# друг обект} other {# други обекта}}.",
+      "pickExisting": "Използвай съществуваща",
+      "pickExistingTitle": "Използване на съществуваща допълнителна услуга",
+      "pickExistingSubtitle": "Допълнителни услуги, които вече сте създали при другите си обекти.",
+      "pickExistingSearch": "Търсене на допълнителни услуги …",
+      "pickExistingAdd": "Добавяне",
+      "pickExistingFrom": "От {title}",
+      "pickExistingNoMatches": "Няма резултати.",
+      "pickExistingEmpty": "При другите ви обекти още няма допълнителна услуга, която бихте могли да поемете тук.",
+      "pickExistingNoCurrency": "За този обект не е зададена валута. Първо създайте ценови план с валута — иначе не може да се пренесе сума.",
       "basisPerStay": "На престой",
       "basisPerNight": "На нощувка",
       "basisPerGuest": "На гост",
@@ -5322,6 +5332,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Приложете същата промоция и към други обекти.",
       "applyToOthersSeasonHint": "Създайте същия сезон и при други обекти.",
+      "applyToOthersAddonHint": "Предлагайте същата допълнителна услуга и при други обекти.",
       "promoReason": {
         "mindestaufenthalt": "минимален престой",
         "fruehbucher": "срок за ранно записване",
@@ -5933,7 +5944,8 @@
       "linkCopied": "Линкът за плащане е копиран.",
       "linkCopyFailed": "Копирането не бе възможно — линкът е по-долу.",
       "linkWithdraw": "Оттегли",
-      "linkWithdrawn": "Линкът за плащане е оттеглен."
+      "linkWithdrawn": "Линкът за плащане е оттеглен.",
+      "linkAufteilung": "Гостът плаща {brutto} · от които {prozent} % дял на платформата ({anteil}) · плюс таксите на доставчика на плащания"
     },
     "ratesView": {
       "propertyLabel": "Обект",
@@ -8260,6 +8272,39 @@
       "hinweis": "Резервациите през myBestDays минават през нашата сметка и се изплащат след отпътуването.",
       "offen": "Отворено",
       "ausgezahlt": "Изплатено"
+    },
+    "reiter": {
+      "abrechnung": "Разплащане",
+      "empfangen": "Получени плащания",
+      "versendet": "Изпратени плащания"
+    },
+    "protokoll": {
+      "eingangTitel": "Получени плащания",
+      "eingangHinweis": "Всяко плащане, което е постъпило по сметката ти.",
+      "ausgangTitel": "Изпратени плащания",
+      "ausgangHinweis": "Изплащания към банковата ти сметка, възстановявания и удържани такси.",
+      "offenTitel": "Отворени пера",
+      "offenHinweis": "Линкове за плащане, които още никой не е платил.",
+      "statusOffen": "Отворено",
+      "statusBezahlt": "Платено",
+      "zahlseite": "Страница за плащане",
+      "zurBuchung": "Към резервацията",
+      "zusatzleistungen": "Допълнителни услуги",
+      "leer": "Все още няма движения.",
+      "gebuehr": "Такса {betrag}",
+      "netto": "нето {betrag}",
+      "verfuegbarAb": "налично от {datum}",
+      "typ": {
+        "charge": "Плащане с карта",
+        "payment": "Плащане",
+        "payout": "Изплащане",
+        "refund": "Възстановяване",
+        "payment_refund": "Възстановяване",
+        "application_fee": "Дял на платформата",
+        "stripe_fee": "Такса за плащане",
+        "adjustment": "Оспорено плащане",
+        "transfer": "Прехвърляне"
+      }
     }
   }
 }

@@ -4915,6 +4915,16 @@
       "toastSaved": "Enregistré.",
       "toastDeleted": "Supprimé.",
       "toastMediaUploaded": "Média téléversé.",
+      "toastApplied": "Enregistré et appliqué à {count, plural, one {# autre hébergement} other {# autres hébergements}}.",
+      "pickExisting": "Reprendre un existant",
+      "pickExistingTitle": "Reprendre un service supplémentaire existant",
+      "pickExistingSubtitle": "Services supplémentaires que vous avez déjà créés sur vos autres hébergements.",
+      "pickExistingSearch": "Rechercher des services supplémentaires …",
+      "pickExistingAdd": "Ajouter",
+      "pickExistingFrom": "De {title}",
+      "pickExistingNoMatches": "Aucun résultat.",
+      "pickExistingEmpty": "Aucun de vos autres hébergements ne propose encore un service que vous pourriez reprendre ici.",
+      "pickExistingNoCurrency": "Aucune devise n’est définie pour cet hébergement. Créez d’abord un plan tarifaire avec une devise — sinon aucun montant ne peut être repris.",
       "basisPerStay": "Par séjour",
       "basisPerNight": "Par nuit",
       "basisPerGuest": "Par client",
@@ -5322,6 +5332,7 @@
       "promoReasonAirbnb": "Airbnb : {grund}",
       "applyToOthersPromoHint": "Appliquer la même promotion à d'autres logements.",
       "applyToOthersSeasonHint": "Créer la même saison sur d’autres hébergements.",
+      "applyToOthersAddonHint": "Proposer le même service supplémentaire sur d’autres hébergements.",
       "promoReason": {
         "mindestaufenthalt": "séjour minimum",
         "fruehbucher": "délai de réservation anticipée",
@@ -5933,7 +5944,8 @@
       "linkCopied": "Lien de paiement copié.",
       "linkCopyFailed": "Copie impossible — le lien est affiché ci-dessous.",
       "linkWithdraw": "Retirer",
-      "linkWithdrawn": "Lien de paiement retiré."
+      "linkWithdrawn": "Lien de paiement retiré.",
+      "linkAufteilung": "Le client paie {brutto} · dont {prozent} % de part plateforme ({anteil}) · plus les frais du prestataire de paiement"
     },
     "ratesView": {
       "propertyLabel": "Bien",
@@ -8260,6 +8272,39 @@
       "hinweis": "Les réservations via myBestDays passent par notre compte et sont versées après le départ.",
       "offen": "En attente",
       "ausgezahlt": "Versé"
+    },
+    "reiter": {
+      "abrechnung": "Facturation",
+      "empfangen": "Paiements reçus",
+      "versendet": "Paiements envoyés"
+    },
+    "protokoll": {
+      "eingangTitel": "Paiements reçus",
+      "eingangHinweis": "Chaque paiement arrivé sur votre compte.",
+      "ausgangTitel": "Paiements envoyés",
+      "ausgangHinweis": "Versements vers votre compte bancaire, remboursements et frais retenus.",
+      "offenTitel": "Postes ouverts",
+      "offenHinweis": "Liens de paiement que personne n’a encore réglés.",
+      "statusOffen": "Ouvert",
+      "statusBezahlt": "Payé",
+      "zahlseite": "Page de paiement",
+      "zurBuchung": "Vers la réservation",
+      "zusatzleistungen": "Services supplémentaires",
+      "leer": "Aucun mouvement pour l’instant.",
+      "gebuehr": "Frais {betrag}",
+      "netto": "net {betrag}",
+      "verfuegbarAb": "disponible à partir du {datum}",
+      "typ": {
+        "charge": "Paiement par carte",
+        "payment": "Paiement",
+        "payout": "Versement",
+        "refund": "Remboursement",
+        "payment_refund": "Remboursement",
+        "application_fee": "Part de la plateforme",
+        "stripe_fee": "Frais de paiement",
+        "adjustment": "Rétrofacturation",
+        "transfer": "Transfert"
+      }
     }
   }
 }

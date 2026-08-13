@@ -4915,6 +4915,16 @@
       "toastSaved": "Salvestatud.",
       "toastDeleted": "Kustutatud.",
       "toastMediaUploaded": "Meedia üles laaditud.",
+      "toastApplied": "Salvestatud ja rakendatud {count, plural, one {# muule objektile} other {# muule objektile}}.",
+      "pickExisting": "Kasuta olemasolevat",
+      "pickExistingTitle": "Kasuta olemasolevat lisateenust",
+      "pickExistingSubtitle": "Lisateenused, mille oled juba oma teistele objektidele loonud.",
+      "pickExistingSearch": "Otsi lisateenuseid …",
+      "pickExistingAdd": "Lisa",
+      "pickExistingFrom": "Objektilt {title}",
+      "pickExistingNoMatches": "Vasteid ei leitud.",
+      "pickExistingEmpty": "Sinu teistel objektidel pole veel lisateenust, mida saaksid siia üle võtta.",
+      "pickExistingNoCurrency": "Sellele objektile pole valuutat määratud. Loo esmalt valuutaga hinnaplaan — muidu ei saa summat üle võtta.",
       "basisPerStay": "Viibimise kohta",
       "basisPerNight": "Öö kohta",
       "basisPerGuest": "Külalise kohta",
@@ -5322,6 +5332,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Rakenda sama kampaania ka teistele objektidele.",
       "applyToOthersSeasonHint": "Loo sama hooaeg ka teistele objektidele.",
+      "applyToOthersAddonHint": "Paku sama lisateenust ka teistel objektidel.",
       "promoReason": {
         "mindestaufenthalt": "minimaalne viibimine",
         "fruehbucher": "varase broneeringu etteteatamine",
@@ -5933,7 +5944,8 @@
       "linkCopied": "Makselink kopeeritud.",
       "linkCopyFailed": "Kopeerimine ebaõnnestus — link on allpool.",
       "linkWithdraw": "Võta tagasi",
-      "linkWithdrawn": "Makselink võeti tagasi."
+      "linkWithdrawn": "Makselink võeti tagasi.",
+      "linkAufteilung": "Külaline maksab {brutto} · sellest {prozent} % platvormi osa ({anteil}) · lisaks makseteenuse tasud"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -8260,6 +8272,39 @@
       "hinweis": "myBestDaysi kaudu tehtud broneeringud liiguvad meie konto kaudu ja makstakse välja pärast lahkumist.",
       "offen": "Avatud",
       "ausgezahlt": "Välja makstud"
+    },
+    "reiter": {
+      "abrechnung": "Arveldus",
+      "empfangen": "Saadud maksed",
+      "versendet": "Saadetud maksed"
+    },
+    "protokoll": {
+      "eingangTitel": "Saadud maksed",
+      "eingangHinweis": "Iga makse, mis on sinu kontole laekunud.",
+      "ausgangTitel": "Saadetud maksed",
+      "ausgangHinweis": "Väljamaksed sinu pangakontole, tagasimaksed ja kinnipeetud tasud.",
+      "offenTitel": "Avatud kirjed",
+      "offenHinweis": "Makselingid, mida keegi pole veel tasunud.",
+      "statusOffen": "Avatud",
+      "statusBezahlt": "Makstud",
+      "zahlseite": "Makseleht",
+      "zurBuchung": "Broneeringu juurde",
+      "zusatzleistungen": "Lisateenused",
+      "leer": "Liikumisi veel ei ole.",
+      "gebuehr": "Tasu {betrag}",
+      "netto": "neto {betrag}",
+      "verfuegbarAb": "saadaval alates {datum}",
+      "typ": {
+        "charge": "Kaardimakse",
+        "payment": "Makse",
+        "payout": "Väljamakse",
+        "refund": "Tagasimakse",
+        "payment_refund": "Tagasimakse",
+        "application_fee": "Platvormi osa",
+        "stripe_fee": "Makseteenustasu",
+        "adjustment": "Tagasinõue",
+        "transfer": "Ülekanne"
+      }
     }
   }
 }

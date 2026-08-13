@@ -36,7 +36,10 @@ from .common import (
     kanal_plan_id,
     log,
     ota_buchungszeitpunkt,
+    ota_cancel_penalties,
+    ota_notes_text,
     ota_zeitstempel_utc,
+    ota_zusatzdetails,
 )
 from .einheiten import einheiten_zahl, freie_einheiten_spannen
 from .schemas import (
@@ -1331,6 +1334,13 @@ class BookingsSyncMixin:
             "payment_method_ota": self._payment_method(attrs),
             "ota_commission": self._to_float(attrs.get("ota_commission")),
             "ota_withheld_taxes": self._withheld_taxes(attrs),
+            # Konditionen des PORTALS (0384). Sie gelten für diese Buchung,
+            # nicht unsere eigene Kondition: wer dem Gast sagt, bis wann er
+            # kostenfrei storniert, braucht die Staffel, die Booking/Airbnb ihm
+            # zugesagt hat. Lag bis 13.08.2026 nur im Rohpayload.
+            "ota_cancel_penalties": ota_cancel_penalties(attrs),
+            "ota_notes": ota_notes_text(attrs),
+            "ota_details": ota_zusatzdetails(attrs),
             # Zugewiesene Einheit (0265) — einmal bestimmt, siehe oben.
             "unit_id": einheit,
             # ZU WELCHEM PREIS die Buchung zustande kam. Channex liefert das

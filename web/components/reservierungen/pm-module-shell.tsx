@@ -18,9 +18,20 @@ const PROPERTY_DETAIL_RE = /^\/reservierungen\/unterkuenfte\/[^/]+/;
 // (wie ..): globale PM-Nav ausblenden, sonst stünden zwei Nav-Spalten.
 const TASKS_RE = /^\/reservierungen\/aufgaben(\/|$)/;
 
+// /reservierungen/<uuid>[/…] → Buchungsdetail. Dort steht links die Buchungs-
+// Liste (Posteingang-Struktur), die selbst die Navigation IST: man springt von
+// Buchung zu Buchung. Die Modul-Nav würde eine dritte Spalte aufmachen.
+// Bewusst auf UUID geprüft, damit benannte Unterseiten (/aufgaben, /bilder,
+// /warnungen …) ihre Modul-Nav behalten.
+const BOOKING_DETAIL_RE =
+  /^\/reservierungen\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\/|$)/i;
+
 export function PmModuleShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const hideNav = PROPERTY_DETAIL_RE.test(pathname) || TASKS_RE.test(pathname);
+  const hideNav =
+    PROPERTY_DETAIL_RE.test(pathname) ||
+    TASKS_RE.test(pathname) ||
+    BOOKING_DETAIL_RE.test(pathname);
 
   if (hideNav) {
     return <>{children}</>;

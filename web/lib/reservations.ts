@@ -100,6 +100,14 @@ export type Reservation = {
   // Die anwesende Person selbst kommt in `guest_name` (der Server setzt dort
   // `stay_name`, ersatzweise den Eigentümernamen).
   stay_note?: string | null;
+  // Wann der Gast beim Portal gebucht hat (0291). null = nicht geliefert; die
+  // Liste zeigt dann `created_at` und beschriftet es als Eingang bei uns —
+  // unsere Uhr ist nie der Zeitpunkt einer fremden Handlung (Wurzel 5b).
+  booked_at?: string | null;
+  created_at?: string | null;
+  // Ablage (0383): gesetzt = aus der Arbeitsliste genommen. Reine Ansichts-
+  // Entscheidung — Belegung und Status bleiben unverändert.
+  archived_at?: string | null;
 };
 
 export type QuoteItem = { label: string; amount: number };
@@ -174,6 +182,20 @@ export type ReservationDetail = {
   guest_language: string | null;
   guest_country: string | null;
   created_at: string | null;
+  // Buchungszeitpunkt beim Portal (0291) — getrennt von `created_at`, siehe
+  // Wurzel 5b. null = die Quelle hat ihn nicht geliefert.
+  booked_at: string | null;
+  // Ablage (0383) — gesetzt = archiviert.
+  archived_at: string | null;
+  // Konditionen des PORTALS (0384): für eine OTA-Buchung gilt die Staffel, die
+  // Booking/Airbnb dem Gast zugesagt hat — nicht unsere eigene Kondition.
+  // null = das Portal hat keine geliefert (NICHT „kostenfrei stornierbar").
+  ota_cancel_penalties: { from: string; amount: string | number | null; currency: string | null }[] | null;
+  ota_notes: string | null;
+  ota_details: Record<string, unknown> | null;
+  // Thread dieser Buchung im Posteingang (Channex-Booking-ID bzw.
+  // `ue:<id>` beim übernommenen Bestand); null = keine Korrespondenz.
+  message_thread_id: string | null;
 };
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -265,6 +287,101 @@ export async function getReservationDetail(
   reservationId: string,
 ): Promise<Result<ReservationDetail>> {
   return call(`/reservations/${encodeURIComponent(reservationId)}`);
+}
+
+// --- Buchungskonditionen + Zahlungsstand ------------------------------------
+
+/** Eine Stufe der Storno-Staffel (X % zurück ab Y Tagen vor Anreise). */
+export type ReservationRefundRule = {
+  refund_percent: number;
+  days_before_arrival: number;
+};
+
+/** Kaution der geltenden Kondition — Betrag bereits ausgerechnet. */
+export type ReservationDeposit = {
+  amount: number;
+  method: string | null;
+  currency: string | null;
+  preauth_days_before_arrival: number | null;
+  release_days_after_departure: number | null;
+};
+
+/** Eine Zahlungszeile der Buchung: geplant (due_at) oder vollzogen. */
+export type ReservationTransaction = {
+  id: string;
+  at: string;
+  amount: number | null;
+  currency: string;
+  status: string;
+  type: string;
+  due_at: string | null;
+};
+
+/** Konditionen + Zahlungsstand. Leere Plan-Felder heißen „alles sofort
+ *  fällig" (keine Kondition gepflegt) — kein erfundener Plan. */
+export type ReservationConditions = {
+  condition_name: string | null;
+  installments: number;
+  due_now: number | null;
+  due_later: number | null;
+  balance_due_date: string | null;
+  cancellation_mode: string | null;
+  refund_rules: ReservationRefundRule[];
+  deposit: ReservationDeposit | null;
+  transactions: ReservationTransaction[];
+  currency: string;
+};
+
+/** Buchungskonditionen + Zahlungszeilen einer Buchung. */
+export async function getReservationConditions(
+  reservationId: string,
+): Promise<Result<ReservationConditions>> {
+  return call(`/reservations/${encodeURIComponent(reservationId)}/conditions`);
+}
+
+/** Interne Notiz setzen (leerer Text entfernt sie). */
+export async function updateReservationNote(
+  reservationId: string,
+  note: string,
+): Promise<Result<Reservation>> {
+  return call(`/reservations/${encodeURIComponent(reservationId)}/note`, {
+    method: "PATCH",
+    body: { note },
+  });
+}
+
+/** Buchung in die Ablage legen (`true`) oder zurückholen (`false`). Ohne
+ *  Nebenwirkung auf Status/Belegung — Nächte gibt nur der Storno frei. */
+export async function setReservationArchived(
+  reservationId: string,
+  archived: boolean,
+): Promise<Result<Reservation>> {
+  return call(`/reservations/${encodeURIComponent(reservationId)}/archive`, {
+    method: "PATCH",
+    body: { archived },
+  });
+}
+
+export type ReservationGuestPatch = {
+  guest_name: string;
+  guest_email?: string | null;
+  guest_phone?: string | null;
+  guest_language?: string | null;
+  guest_country?: string | null;
+  checkin_time?: string | null;
+  checkout_time?: string | null;
+};
+
+/** Gastdaten + erwartete Zeiten DIESER Buchung korrigieren (die Gästekartei
+ *  bleibt unberührt — eine Buchung schreibt keine Stammdaten um). */
+export async function updateReservationGuest(
+  reservationId: string,
+  patch: ReservationGuestPatch,
+): Promise<Result<Reservation>> {
+  return call(`/reservations/${encodeURIComponent(reservationId)}/guest`, {
+    method: "PATCH",
+    body: patch,
+  });
 }
 
 // --- Zeitleiste (Ereignis-Log einer Buchung) --------------------------------

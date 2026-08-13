@@ -4910,6 +4910,16 @@
       "toastSaved": "Issejvjat.",
       "toastDeleted": "Imħassar.",
       "toastMediaUploaded": "Medja mtella'.",
+      "toastApplied": "Salvat u applikat għal {count, plural, one {# proprjetà oħra} few {# proprjetajiet oħra} many {# proprjetajiet oħra} other {# proprjetajiet oħra}}.",
+      "pickExisting": "Uża waħda eżistenti",
+      "pickExistingTitle": "Uża servizz addizzjonali eżistenti",
+      "pickExistingSubtitle": "Servizzi addizzjonali li diġà ħloqt fi proprjetajiet oħra tiegħek.",
+      "pickExistingSearch": "Fittex servizzi addizzjonali …",
+      "pickExistingAdd": "Żid",
+      "pickExistingFrom": "Minn {title}",
+      "pickExistingNoMatches": "L-ebda riżultat.",
+      "pickExistingEmpty": "Fil-proprjetajiet l-oħra tiegħek għad m'hemmx servizz addizzjonali li tista' tuża hawn.",
+      "pickExistingNoCurrency": "Għal din il-proprjetà m'hemm l-ebda munita mniżżla. L-ewwel oħloq pjan tar-rati b'munita — inkella l-ebda ammont ma jista' jiġi kkupjat.",
       "basisPerStay": "Għal kull soġġorn",
       "basisPerNight": "Għal kull lejl",
       "basisPerGuest": "Għal kull mistieden",
@@ -5317,6 +5327,7 @@
       "promoReasonAirbnb": "Airbnb: {grund}",
       "applyToOthersPromoHint": "Applika l-istess promozzjoni għal proprjetajiet oħra wkoll.",
       "applyToOthersSeasonHint": "Oħloq l-istess staġun ukoll f’oġġetti oħra.",
+      "applyToOthersAddonHint": "Offri l-istess servizz addizzjonali fi proprjetajiet oħra wkoll.",
       "promoReason": {
         "mindestaufenthalt": "żjara minima",
         "fruehbucher": "perjodu ta' booking bikri",
@@ -5928,7 +5939,8 @@
       "linkCopied": "Il-link tal-ħlas ġie kkupjat.",
       "linkCopyFailed": "L-ikkupjar ma rnexxiex — il-link jidher hawn taħt.",
       "linkWithdraw": "Irtira",
-      "linkWithdrawn": "Il-link tal-ħlas ġie rtirat."
+      "linkWithdrawn": "Il-link tal-ħlas ġie rtirat.",
+      "linkAufteilung": "L-mistieden iħallas {brutto} · minnhom {prozent} % sehem tal-pjattaforma ({anteil}) · flimkien mat-tariffi tal-fornitur tal-ħlas"
     },
     "ratesView": {
       "propertyLabel": "Proprjetà",
@@ -8255,6 +8267,39 @@
       "hinweis": "Il-prenotazzjonijiet permezz ta’ myBestDays jgħaddu mill-kont tagħna u jitħallsu wara t-tluq.",
       "offen": "Miftuħ",
       "ausgezahlt": "Imħallas"
+    },
+    "reiter": {
+      "abrechnung": "Saldu",
+      "empfangen": "Ħlasijiet riċevuti",
+      "versendet": "Ħlasijiet mibgħuta"
+    },
+    "protokoll": {
+      "eingangTitel": "Ħlasijiet riċevuti",
+      "eingangHinweis": "Kull ħlas li wasal fil-kont tiegħek.",
+      "ausgangTitel": "Ħlasijiet mibgħuta",
+      "ausgangHinweis": "Ħlasijiet lejn il-kont bankarju tiegħek, rifużjonijiet u tariffi miżmuma.",
+      "offenTitel": "Partiti miftuħa",
+      "offenHinweis": "Links tal-ħlas li għadhom ma tħallsux minn ħadd.",
+      "statusOffen": "Miftuħ",
+      "statusBezahlt": "Imħallas",
+      "zahlseite": "Paġna tal-ħlas",
+      "zurBuchung": "Għall-prenotazzjoni",
+      "zusatzleistungen": "Servizzi addizzjonali",
+      "leer": "Għad m’hemmx movimenti.",
+      "gebuehr": "Tariffa {betrag}",
+      "netto": "nett {betrag}",
+      "verfuegbarAb": "disponibbli minn {datum}",
+      "typ": {
+        "charge": "Ħlas bil-kard",
+        "payment": "Ħlas",
+        "payout": "Ħlas lilek",
+        "refund": "Rifużjoni",
+        "payment_refund": "Rifużjoni",
+        "application_fee": "Sehem tal-pjattaforma",
+        "stripe_fee": "Tariffa tal-ħlas",
+        "adjustment": "Charge back",
+        "transfer": "Trasferiment"
+      }
     }
   }
 }
