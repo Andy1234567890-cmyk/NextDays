@@ -17,7 +17,7 @@ export const agb: LegalDoc = {
   numbered: false,
   toc: true,
   title: "Allgemeine Geschäftsbedingungen (AGB) für Agenturen und Vermieter",
-  stand: "Stand: 30. Juli 2026",
+  stand: "Stand: 13. August 2026",
   intro: [
     "Diese Allgemeinen Geschäftsbedingungen (nachfolgend „AGB“) regeln die Nutzung der Software-Plattform myNextDays (nachfolgend „Plattform“) durch Agenturen, Vermieter, Hausverwaltungen und sonstige gewerbliche Nutzer (nachfolgend „Nutzer“).",
     "Anbieterin der Plattform ist myNextDays ApS, ein Anpartsselskab (ApS) dänischen Rechts, Hirtshalsvej 21, 9881 Bindslev, Dänemark, eingetragen im dänischen Centrale Virksomhedsregister (CVR) unter CVR-nr. 46615182 (nachfolgend „myNextDays“ oder „wir“).",
@@ -73,8 +73,9 @@ export const agb: LegalDoc = {
       heading: "§ 6 Auszahlungen, Rückbelastungen und negative Salden",
       paragraphs: [
         "Der Zahlungsweg richtet sich nach dem Buchungskanal. Bei Buchungen über die eigene Buchungsstrecke des Nutzers sowie bei Buchungen über angebundene Vertriebsportale werden die Zahlungen der Gäste unmittelbar auf dem Zahlungskonto des Nutzers vereinnahmt; der Nutzer ist insoweit gegenüber dem Gast Zahlungsempfänger und Vertragspartner der Beherbergungsleistung (§ 4), und myNextDays wird zu keinem Zeitpunkt Inhaber dieser Gelder. Auf solche Buchungen erhebt myNextDays keine prozentuale Buchungsgebühr; die Provision für Buchungen über angebundene Vertriebsportale wird gesondert ausgewiesen und nachträglich in Rechnung gestellt.",
+        "Zusatzleistungen, die der Nutzer seinen Gästen über die Plattform in Rechnung stellt (z. B. Reinigung, Wäsche, Transfer, Frühstück), werden unmittelbar auf dem Zahlungskonto des Nutzers vereinnahmt; der Nutzer ist auch insoweit Zahlungsempfänger und Erbringer der Leistung. Für die Bereitstellung und Abwicklung dieses Zahlungswegs behält myNextDays den in der jeweils gültigen Preisliste ausgewiesenen Anteil ein (derzeit 5 %). Bemessungsgrundlage ist der Nettobetrag der Zusatzleistung ohne die vom Nutzer geschuldete Umsatzsteuer. Der Anteil wird bei der Zahlung einbehalten und dem Nutzer vor dem Erstellen des Zahlungslinks betragsmäßig angezeigt. Die Entgelte des Zahlungsdienstleisters für die jeweilige Transaktion trägt der Nutzer.",
         "Bei Buchungen, die über das myNextDays-Buchungsportal zustande kommen, wird die Zahlung über myNextDays abgewickelt. myNextDays behält hierbei die in der jeweils gültigen Preisliste ausgewiesene Vermittlungsprovision einschließlich der Kosten der Zahlungsabwicklung ein und leitet den verbleibenden Betrag nach Maßgabe der nachstehenden Absätze an den Nutzer weiter. Das Entgelt für die Softwarenutzung (§ 7) bleibt hiervon unberührt.",
-        "Auszahlungen erfolgen auf das vom Nutzer hinterlegte Bankkonto. myNextDays kann den Auszahlungsrhythmus aus Risikogründen anpassen, insbesondere bei neuen Konten, auffälligen Transaktionsmustern oder laufenden Prüfungen.",
+        "Auszahlungen erfolgen auf das vom Nutzer hinterlegte Bankkonto. Den Rhythmus wählt der Nutzer in seinem Konto selbst: täglich, wöchentlich, monatlich oder ausschließlich auf eigenen Antrag. Die Umstellung wirkt für künftige Auszahlungen. Auszahlbar ist ein Guthaben erst nach Ablauf der Abwicklungsfrist des Zahlungsdienstleisters; bis dahin wird es als ausstehend ausgewiesen. myNextDays kann den Rhythmus aus Risikogründen anpassen, insbesondere bei neuen Konten, auffälligen Transaktionsmustern oder laufenden Prüfungen, und informiert den Nutzer darüber.",
         "Rückerstattungen an Gäste trägt wirtschaftlich der Nutzer. Rückbelastungen (Chargebacks) und daraus entstehende Gebühren trägt bei Buchungen über die eigene Buchungsstrecke des Nutzers sowie über angebundene Vertriebsportale der Nutzer, da er insoweit Zahlungsempfänger ist; bei Buchungen über das myNextDays-Buchungsportal trägt myNextDays das Rückbelastungsrisiko, soweit die Rückbelastung nicht auf einer Pflichtverletzung des Nutzers beruht (insbesondere Nichterbringung oder erhebliche Abweichung der Beherbergungsleistung). myNextDays ist berechtigt, vom Nutzer zu tragende Beträge mit künftigen Auszahlungen zu verrechnen.",
         "Entsteht auf dem Zahlungskonto des Nutzers ein negativer Saldo, hat der Nutzer diesen unverzüglich auszugleichen. Der Nutzer ermächtigt myNextDays und Stripe, negative Salden vom hinterlegten Bankkonto einzuziehen, soweit dies rechtlich zulässig ist.",
       ],
@@ -83,7 +84,7 @@ export const agb: LegalDoc = {
       heading: "§ 7 Entgelte und Abrechnung",
       paragraphs: [
         "Die Entgelte für die Nutzung der Plattform ergeben sich aus der bei Vertragsschluss vereinbarten Preisliste bzw. dem individuellen Angebot. Alle Preise verstehen sich zuzüglich der jeweils gesetzlich anfallenden Steuern und in der im Vertrag ausgewiesenen Währung.",
-        "Transaktionsabhängige Entgelte (z. B. Zahlungs- oder Kanalgebühren) können unmittelbar bei der Abwicklung der jeweiligen Transaktion einbehalten oder verrechnet werden.",
+        "Transaktionsabhängige Entgelte (z. B. Zahlungs- oder Kanalgebühren sowie der Anteil an über die Plattform kassierten Zusatzleistungen nach § 6) können unmittelbar bei der Abwicklung der jeweiligen Transaktion einbehalten oder verrechnet werden. Sie sind in der Preisliste ausgewiesen; eine Änderung wird nach § 17 angekündigt.",
         "Gerät der Nutzer mit Zahlungen in Verzug, kann myNextDays den Zugang zur Plattform nach vorheriger Ankündigung bis zum Ausgleich der offenen Forderungen sperren.",
       ],
     },
@@ -117,14 +118,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Geistiges Eigentum",
+      heading: "§ 12 Einsatz künstlicher Intelligenz",
+      paragraphs: [
+        "myNextDays setzt in einzelnen Funktionen KI-Systeme ein, insbesondere für Preisempfehlungen (Dynamic Pricing), für Antwortvorschläge im Nachrichten-Posteingang und für die Unterstützung im Support. Diese Funktionen erzeugen Vorschläge; Entscheidung und Verantwortung für deren Verwendung liegen beim Nutzer. Preisempfehlungen ersetzen keine eigene kaufmännische Prüfung.",
+        "Interagieren Gäste unmittelbar mit einem KI-System, wird ihnen dies offengelegt (Artikel 50 Absatz 1 der Verordnung (EU) 2024/1689 — „KI-Verordnung“). Texte, die ein KI-System erzeugt oder wesentlich verändert hat und die der Nutzer an Gäste weitergibt, hat der Nutzer kenntlich zu machen, soweit ihn hierzu eine gesetzliche Pflicht trifft.",
+        "myNextDays betreibt keine KI-Systeme, die nach Anhang III der KI-Verordnung als Hochrisiko-Systeme gelten, und keine nach Artikel 5 der KI-Verordnung verbotenen Praktiken. Eingaben des Nutzers und Daten seiner Gäste werden ohne gesonderten Auftrag nicht zum Training von Modellen verwendet.",
+        "Der Nutzer darf die KI-Funktionen nicht dazu verwenden, Gästen gegenüber den Anschein einer menschlichen Kommunikation zu erwecken, wo eine Offenlegungspflicht besteht, oder rechtlich verbindliche Erklärungen ohne eigene Prüfung abzugeben.",
+        "Verbindet der Nutzer sein Konto über die dafür vorgesehene Schnittstelle mit einem eigenen KI-Assistenten (etwa Claude von Anthropic), gilt Folgendes: Der Nutzer schließt den Vertrag über diesen Dienst selbst ab und ist für dessen Einsatz verantwortlich. Die Verbindung ist seine Weisung an myNextDays, die freigegebenen Daten dorthin herauszugeben — einschließlich einer Übermittlung in ein Drittland, wenn der Anbieter außerhalb der Europäischen Union sitzt. Der Nutzer stellt sicher, dass er dafür eine Rechtsgrundlage hat, dass seine eigenen Datenschutzinformationen den Empfänger ausweisen und dass die erforderlichen Garantien der Übermittlung vorliegen.",
+        "Für eine solche Verbindung setzt der Nutzer einen Zugang ein, für den der Anbieter eine Auftragsverarbeitung anbietet und eine Verwendung der Daten zum Training von Modellen ausschließt — bei Claude sind das die Geschäftskunden-Zugänge (Team, Enterprise oder API). Zugänge für private Nutzung erfüllen das regelmäßig nicht; für Gästedaten sind sie deshalb ungeeignet. myNextDays kann nicht erkennen, welchen Zugang der Nutzer verwendet, und weist hierauf im Zustimmungsdialog hin.",
+        "Der Nutzer beachtet dabei, dass Inhalte, die er aus der Oberfläche heraus von Hand in ein Eingabefeld des Assistenten kopiert, von den vertraglichen Beschränkungen des Anbieters regelmäßig nicht erfasst werden — anders als die über die Schnittstelle abgerufenen Daten.",
+        "Daten, die aus einem Buchungsportal stammen, verwendet der Nutzer auch über die Schnittstelle nur zur Abwicklung und Betreuung der jeweiligen Buchung — nicht zur Bewertung von Personen, zur Profilbildung oder für Werbung. Die Portale geben diese Zweckbindung in ihren eigenen Bedingungen vor.",
+      ],
+    },
+    {
+      heading: "§ 13 Beschwerden und Mediation",
+      paragraphs: [
+        "myNextDays unterhält für gewerbliche Nutzer ein kostenloses internes Beschwerdemanagement (Artikel 11 der Verordnung (EU) 2019/1150 — „P2B-Verordnung“). Beschwerden — insbesondere zu behaupteten Verstößen gegen diese AGB, zu technischen Problemen mit erheblicher Auswirkung oder zu Maßnahmen von myNextDays gegenüber dem Nutzer — können formlos an info@mynextdays.dk oder über den Support in der Anwendung eingereicht werden. Der Eingang wird bestätigt; die Bearbeitung erfolgt zügig und in angemessener Frist, bei einfach gelagerten Fällen in der Regel innerhalb von 14 Tagen. Das Ergebnis wird dem Nutzer in klarer Sprache mitgeteilt.",
+        "Kommt es im Beschwerdeverfahren zu keiner Einigung, ist myNextDays bereit, sich mit dem Nutzer außergerichtlich an folgende Mediatoren zu wenden (Artikel 12 der P2B-Verordnung): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Genf 20, Schweiz — Verfahren auch aus der Ferne und mehrsprachig; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 Kopenhagen K, Dänemark — Sitzstaat der Anbieterin.",
+        "Die Benennung verpflichtet den Nutzer nicht, ein Mediationsverfahren durchzuführen; das Recht, ein Gericht anzurufen, bleibt unberührt. An den angemessenen Kosten einer Mediation beteiligt sich myNextDays; die Aufteilung richtet sich nach der Ordnung des jeweiligen Mediators und den Umständen des Einzelfalls.",
+        "myNextDays veröffentlicht jährlich Angaben zum Beschwerdeaufkommen, zur Bearbeitungsdauer und zu den ergriffenen Maßnahmen.",
+      ],
+    },
+    {
+      heading: "§ 14 Geistiges Eigentum",
       paragraphs: [
         "Alle Rechte an der Plattform, ihrer Software und ihren Inhalten (mit Ausnahme der vom Nutzer eingestellten Inhalte) stehen myNextDays bzw. deren Lizenzgebern zu. Der Nutzer erhält für die Vertragslaufzeit ein einfaches, nicht übertragbares Recht zur Nutzung der Plattform im vertraglich vereinbarten Umfang.",
         "An den vom Nutzer eingestellten Inhalten räumt der Nutzer myNextDays die für den Betrieb der Plattform erforderlichen einfachen Nutzungsrechte ein (insbesondere zur Speicherung, Vervielfältigung, Anzeige und Übermittlung an angebundene Kanäle).",
       ],
     },
     {
-      heading: "§ 13 Haftung",
+      heading: "§ 15 Haftung",
       paragraphs: [
         "myNextDays haftet unbeschränkt für Vorsatz und grobe Fahrlässigkeit sowie für Schäden aus der Verletzung von Leben, Körper oder Gesundheit.",
         "Bei einfacher Fahrlässigkeit haftet myNextDays nur für die Verletzung wesentlicher Vertragspflichten (Kardinalpflichten), begrenzt auf den vertragstypischen, vorhersehbaren Schaden. Die Haftung nach dem Produkthaftungsgesetz sowie aus übernommenen Garantien bleibt unberührt.",
@@ -132,7 +155,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Laufzeit, Kündigung und Sperrung",
+      heading: "§ 16 Laufzeit, Kündigung und Sperrung",
       paragraphs: [
         "Laufzeit und Kündigungsfristen ergeben sich aus dem jeweiligen Vertrag. Das Recht zur außerordentlichen Kündigung aus wichtigem Grund bleibt unberührt.",
         "myNextDays kann den Zugang zur Plattform oder einzelne Funktionen (einschließlich Zahlungsannahme und Auszahlungen) vorübergehend sperren, wenn konkrete Anhaltspunkte für einen Verstoß gegen diese AGB, für Betrug oder für eine missbräuchliche Nutzung bestehen, oder wenn myNextDays hierzu gesetzlich oder durch Anordnung eines Zahlungsdienstleisters verpflichtet ist. Der Nutzer wird über die Sperrung informiert, soweit dies rechtlich zulässig ist.",
@@ -140,14 +163,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 Änderungen dieser AGB",
+      heading: "§ 17 Änderungen dieser AGB",
       paragraphs: [
         "myNextDays kann diese AGB mit Wirkung für die Zukunft ändern, soweit dies aus triftigen Gründen erforderlich ist (insbesondere Gesetzesänderungen, Änderungen der Rechtsprechung oder Anforderungen von Zahlungsdienstleistern) und der Nutzer dadurch nicht unangemessen benachteiligt wird.",
         "Änderungen werden dem Nutzer mindestens sechs Wochen vor Inkrafttreten in Textform angekündigt. Widerspricht der Nutzer nicht innerhalb der Ankündigungsfrist oder nutzt er die Plattform nach Inkrafttreten weiter, gelten die geänderten AGB als angenommen; auf diese Folge wird in der Ankündigung gesondert hingewiesen.",
       ],
     },
     {
-      heading: "§ 16 Schlussbestimmungen",
+      heading: "§ 18 Schlussbestimmungen",
       paragraphs: [
         "Es gilt das Recht des Staates, in dem die Anbieterin ihren Sitz hat, unter Ausschluss des UN-Kaufrechts. Zwingende Vorschriften des Staates, in dem der Nutzer seinen Sitz hat, bleiben unberührt.",
         "Ausschließlicher Gerichtsstand für alle Streitigkeiten aus oder im Zusammenhang mit diesem Vertrag ist — soweit gesetzlich zulässig — der Sitz der Anbieterin.",

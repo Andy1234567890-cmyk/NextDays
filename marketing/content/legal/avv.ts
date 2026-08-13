@@ -13,6 +13,10 @@
 //   Anmeldeprotokoll              → apps/api/src/features/login_devices
 //   Ratelimit                     → apps/api/src/core/ratelimit*.py
 //   Verschlüsselte Backups + Test → deploy/backup (Borg repokey + age, restore-test.sh)
+//   Connector nur durch Leitung   → apps/api/.../mcp/router.py (MANAGE_CONNECTIONS,
+//                                   Rolle aus der DB, nicht aus dem JWT)
+//   Freitexte nur auf Freigabe    → apps/api/.../mcp/oauth_service.py (SCOPE_FREITEXT)
+//   Zugriffslog je Abruf          → supabase/migrations/0388_mcp_zugriffslog.sql
 // Neue Maßnahme umgesetzt → hier nachtragen; entfällt eine → hier entfernen.
 //
 // Die Liste der Unterauftragsverarbeiter MUSS mit ./datenschutz.ts
@@ -104,6 +108,17 @@ export const avv: LegalDoc = {
             "Sind wir gesetzlich zur Verarbeitung verpflichtet (etwa gegenüber Behörden), informieren wir den Verantwortlichen vorab, soweit uns das rechtlich erlaubt ist.",
           ],
         },
+        {
+          titel: "Verbindung eigener Dienste des Verantwortlichen",
+          paragraphs: [
+            "Der Verantwortliche kann sein Konto über eine Schnittstelle mit einem Dienst verbinden, den er selbst gewählt und mit dem er einen eigenen Vertrag geschlossen hat — etwa einem KI-Assistenten. Erteilt er eine solche Verbindung, ist das seine ausdrückliche Weisung nach Art. 28 Abs. 3 Buchstabe a DSGVO, die freigegebenen Daten an diesen Dienst herauszugeben. Sie umfasst ausdrücklich auch eine damit verbundene Übermittlung in ein Drittland, wenn der Dienst seinen Sitz außerhalb der Europäischen Union hat.",
+            "Kurz gesagt: Über eine solche Verbindung entscheidet allein der Verantwortliche, und für den verbundenen Dienst ist er selbst zuständig.",
+            "Erteilen kann sie nur ein Konto mit der Berechtigung, externe Verbindungen zu verwalten. Diese Berechtigung ist der Rolle „Administrator“ vorbehalten; Konten mit eingeschränkten Rechten — auch die Rolle „Co-Administrator“ — können keine Verbindung erteilen. Wir zeichnen auf, wer sie wann für welchen Dienst erteilt hat, welche Datenarten freigegeben wurden und welche Abrufe erfolgt sind; diese Aufzeichnung steht dem Verantwortlichen in der Oberfläche unter „Konto → Verbindungen“ zur Verfügung, damit er seine Rechenschaftspflicht erfüllen und Auskunftsersuchen beantworten kann.",
+            "Der verbundene Dienst ist kein Unterauftragsverarbeiter von uns: Wir beauftragen ihn nicht, wählen ihn nicht aus und weisen ihn nicht an. Er verarbeitet die Daten aufgrund des Vertrags, den der Verantwortliche selbst mit ihm geschlossen hat. Für diese Verarbeitung, für ihre Rechtsgrundlage und für die Garantien der Übermittlung in ein Drittland ist deshalb der Verantwortliche zuständig; sie ist nicht Gegenstand dieser AVV.",
+            "Freitextfelder — Buchungsnotizen und der Inhalt von Gastnachrichten — sind von einer solchen Verbindung standardmäßig ausgenommen. Sie können besondere Kategorien personenbezogener Daten nach Art. 9 DSGVO enthalten, etwa Angaben zur Gesundheit. Der Verantwortliche muss sie bei der Erteilung gesondert freigeben; ohne diese Freigabe werden sie nicht übermittelt.",
+            "Der Verantwortliche kann eine erteilte Verbindung jederzeit in der Oberfläche trennen. Die Erneuerungstoken werden dabei gelöscht, und bei jedem weiteren Abruf wird geprüft, ob die Zustimmung noch besteht — ein getrennter Dienst kann deshalb sofort nichts mehr lesen, nicht erst nach Ablauf seines Zugangstokens.",
+          ],
+        },
       ],
     },
     {
@@ -124,6 +139,7 @@ export const avv: LegalDoc = {
         "Rollenbasierte Berechtigungen mit Datentrennung: Service- und Reinigungskräfte erhalten keine Finanz- und Vertriebsdaten, Eigentümer nur ihre eigenen Objekte; Gästedaten werden für nicht berechtigte Rollen maskiert",
         "Zwei-Faktor-Authentisierung (TOTP) für Konten verfügbar; Wiederanmeldung bei sicherheitskritischen Änderungen",
         "Protokoll der Anmeldungen mit Gerät, Zeitpunkt und IP-Adresse, einsehbar für den Verantwortlichen",
+        "Verbindungen zu externen Diensten kann nur ein Konto mit der Rolle „Administrator“ erteilen; jeder Abruf über eine solche Verbindung wird protokolliert (Werkzeug, Zeitpunkt, Umfang — ohne die Inhalte selbst) und ist für den Verantwortlichen einsehbar. Eine getrennte Verbindung verliert den Zugriff sofort: bei jedem Abruf wird geprüft, ob die Zustimmung noch besteht",
         "Begrenzung der Anfragehäufigkeit gegen automatisierte Angriffe, Prüfung von Signaturen eingehender Webhook-Aufrufe",
         "Verschlüsselte, außerhalb des Produktionssystems gelagerte Sicherungskopien mit regelmäßigem Wiederherstellungstest",
         "Getrennte Umgebungen für Entwicklung und Betrieb; Änderungen an der Datenbank ausschließlich über versionierte Migrationen",
@@ -152,7 +168,8 @@ export const avv: LegalDoc = {
         },
         {
           paragraphs: [
-            "Dienste, die der Verantwortliche selbst mit einem Dritten vereinbart (etwa ein Buchungsportal, mit dem er einen eigenen Vertrag hat), sind keine Unterauftragsverarbeitung, sondern eine von ihm veranlasste Übermittlung an einen eigenständig Verantwortlichen.",
+            "Dienste, die der Verantwortliche selbst mit einem Dritten vereinbart, sind keine Unterauftragsverarbeitung, sondern eine von ihm veranlasste Übermittlung. Das gilt für ein Buchungsportal, mit dem er einen eigenen Vertrag hat, ebenso wie für einen KI-Assistenten oder ein anderes Programm, das er über die Schnittstelle mit seinem Konto verbindet (siehe Abschnitt „Weisungen“).",
+            "Maßgeblich ist dabei nicht, über wessen Systeme die Daten fließen, sondern wer den Dienst hinzuzieht: Eine Unterauftragsverarbeitung entsteht, wenn WIR einen weiteren Dienstleister beauftragen, um unsere Leistung zu erbringen. Wählt der Verantwortliche den Dienst selbst aus und schließt er den Vertrag mit ihm, verarbeitet dieser Dienst für den Verantwortlichen — nicht für uns. Diese Abgrenzung entspricht der Vertragspraxis vergleichbarer Anbieter für vom Kunden verbundene Drittdienste.",
           ],
         },
       ],

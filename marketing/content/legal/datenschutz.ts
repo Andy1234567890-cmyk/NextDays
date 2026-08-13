@@ -148,6 +148,7 @@ export const datenschutz: LegalDoc = {
           titel: "Stripe",
           paragraphs: [
             "Kartenzahlungen und Auszahlungen laufen über Stripe Payments Europe, Limited, Irland. Dabei werden die für die Zahlung erforderlichen Daten (Betrag, Währung, Zahlungsmittel, Name, E-Mail-Adresse, Buchungsreferenz) sowie für Konten unserer Kunden die gesetzlich vorgeschriebenen Identifizierungsdaten (Inhaber, wirtschaftlich Berechtigte, Ausweisdaten, Bankverbindung) an Stripe übermittelt. Vollständige Kartendaten erreichen unsere Systeme nicht. Rechtsgrundlagen sind Art. 6 Abs. 1 lit. b DSGVO und, für Identifizierungs- und Geldwäschepflichten, Art. 6 Abs. 1 lit. c DSGVO. Einzelheiten regelt die [Datenschutzerklärung von Stripe](https://stripe.com/privacy).",
+            "Zahlungslinks für Zusatzleistungen: Stellt ein Betrieb seinem Gast eine Zusatzleistung (z. B. Reinigung oder Wäsche) über einen Zahlungslink in Rechnung, führt dieser Link auf eine von Stripe betriebene Zahlungsseite. Wir übermitteln dafür an Stripe die Bezeichnung der Leistung, den Betrag, die Währung sowie eine interne Referenz auf Buchung und Betrieb; das Firmenlogo des Betriebs wird an dessen Stripe-Konto übertragen, damit die Seite seine Marke zeigt. Auf der Zahlungsseite selbst erhebt Stripe die Zahlungs- und Gerätedaten des Gastes in eigener Verantwortlichkeit. An uns zurück gelangen nur der Zahlungsstatus, der Betrag, die einbehaltenen Beträge und die Kennungen der Zahlung — keine Kartendaten.",
           ],
         },
         {
@@ -217,7 +218,17 @@ export const datenschutz: LegalDoc = {
         {
           titel: "Rollen nach der KI-Verordnung",
           paragraphs: [
-            "Für die im Produkt eingebauten KI-Funktionen sind wir Betreiber im Sinne von Art. 3 Nr. 4 der KI-Verordnung; Anbieter der zugrunde liegenden Sprachmodelle sind die jeweiligen Modellanbieter. Nutzt ein Betrieb diese Funktionen im Rahmen seiner beruflichen Tätigkeit, ist er dafür seinerseits Betreiber und trifft ihn die Pflicht zur KI-Kompetenz nach Art. 4 der KI-Verordnung, die seit dem 2. Februar 2025 unabhängig von der Unternehmensgröße gilt. Wir unterstützen dabei durch Hinweise in der Anwendung und in unserem Hilfe-Center; die Schulung der eigenen Mitarbeitenden bleibt Aufgabe des Betriebs.",
+            "Für die im Produkt eingebauten KI-Funktionen sind wir Betreiber im Sinne von Art. 3 Nr. 4 der KI-Verordnung; Anbieter der zugrunde liegenden Sprachmodelle sind die jeweiligen Modellanbieter. Nutzt ein Betrieb diese Funktionen im Rahmen seiner beruflichen Tätigkeit, ist er dafür seinerseits Betreiber und trifft ihn die Pflicht zur KI-Kompetenz nach Art. 4 der KI-Verordnung, die seit dem 2. Februar 2025 unabhängig von der Unternehmensgröße gilt. Seit dem 27. Juli 2026 gilt sie in der Fassung der Verordnung (EU) 2026/1744: Anbieter und Betreiber ergreifen Maßnahmen, um die Entwicklung der KI-Kompetenz ihres Personals zu unterstützen; ein bestimmtes Niveau muss dabei ausdrücklich nicht garantiert werden. Wir unterstützen durch Hinweise in der Anwendung und in unserem Hilfe-Center; die Schulung der eigenen Mitarbeitenden bleibt Aufgabe des Betriebs.",
+            "Verbindet ein Betrieb sein Konto mit einem eigenen KI-Assistenten (siehe oben), ist er auch dafür Betreiber im Sinne der KI-Verordnung — er entscheidet über den Einsatz und formuliert die Anfragen. Die Schnittstelle selbst ist kein KI-System: sie liest Daten aus der Datenbank und gibt sie aus, ohne Ableitungen zu treffen; Erwägungsgrund 12 der KI-Verordnung grenzt solche Systeme ausdrücklich von KI ab.",
+          ],
+        },
+        {
+          titel: "Verbindung mit einem eigenen KI-Assistenten",
+          paragraphs: [
+            "Ein Betrieb kann sein Konto über eine Schnittstelle mit einem KI-Assistenten verbinden, den er selbst gewählt hat und mit dem er einen eigenen Vertrag hat — etwa Claude von Anthropic PBC, USA. Ist eine solche Verbindung erteilt, kann der Assistent auf Anfrage des Betriebs lesend abrufen: Belegung, Verfügbarkeit und Tagespreise; Buchungen mit Gastname, Aufenthaltszeitraum, Objekt, Buchungskanal, Status sowie Betrag und Währung, soweit die Rolle des abfragenden Kontos Beträge sehen darf; und die Übersicht der Konversationen im Posteingang. Ohne eine erteilte Verbindung findet keine Übermittlung statt.",
+            "Nicht übermittelt werden dabei E-Mail-Adresse und Telefonnummer der Gäste, Kartendaten, Bankverbindungen und Zahlungsbelege, Zugangscodes sowie Objektdossiers. Buchungsnotizen und der Inhalt von Gastnachrichten sind standardmäßig ausgenommen, weil sie Angaben zur Gesundheit oder andere besondere Kategorien nach Art. 9 DSGVO enthalten können; der Betrieb muss sie bei der Erteilung ausdrücklich und gesondert freigeben.",
+            "Die Verbindung kann nur ein Konto mit der Rolle „Administrator“ erteilen, nicht jedes Konto mit Zugang. Jeder Abruf wird protokolliert und ist für den Betrieb unter „Konto → Verbindungen“ einsehbar; er kann die Verbindung dort jederzeit trennen, und der Zugriff endet damit sofort.",
+            "Rechtlich ist diese Übermittlung eine Weisung des Betriebs an uns (Art. 28 Abs. 3 Buchstabe a DSGVO). Der Anbieter des Assistenten ist kein Unterauftragsverarbeiter von uns — wir beauftragen ihn nicht und weisen ihn nicht an; er verarbeitet die Daten aufgrund des Vertrags, den der Betrieb selbst mit ihm geschlossen hat. Für die Rechtsgrundlage dieser Verarbeitung, für die Information seiner Gäste und für die Garantien einer Übermittlung in ein Drittland ist deshalb der Betrieb verantwortlich.",
           ],
         },
         {
@@ -265,12 +276,20 @@ export const datenschutz: LegalDoc = {
         "Cloudflare, Inc. (USA) — DNS-Verwaltung für Kunden-Domains",
         "Iconify (api.iconify.design) — Symbole dieser Website",
       ],
+      unterpunkte: [
+        {
+          paragraphs: [
+            "Nicht in dieser Liste stehen Dienste, die ein Betrieb selbst mit einem Dritten vereinbart und über die Schnittstelle mit seinem Konto verbindet — etwa ein KI-Assistent wie Claude von Anthropic PBC, USA. Sie sind keine von uns beauftragten Dienstleister, sondern Empfänger auf Weisung des jeweiligen Betriebs; ohne dessen Verbindung fließen dorthin keine Daten. Anthropic ist nach der offiziellen Teilnehmerliste des US-Handelsministeriums nicht unter dem EU-US Data Privacy Framework zertifiziert; eine Übermittlung stützt sich daher auf die Standarddatenschutzklauseln, für die der jeweilige Betrieb als Verantwortlicher einzustehen hat.",
+          ],
+        },
+      ],
     },
     {
       heading: "Übermittlung in Drittländer",
       paragraphs: [
         "Die Verarbeitung findet grundsätzlich innerhalb der EU statt. Bei den oben genannten Diensten mit Sitz außerhalb der EU kann es zu einer Übermittlung in ein Drittland kommen.",
         "Für Groq, Inc. und Cloudflare, Inc. (USA) stützen wir die Übermittlung auf die Standarddatenschutzklauseln der Europäischen Kommission nach Art. 46 Abs. 2 lit. c DSGVO, soweit sich der Empfänger nicht auf einen Angemessenheitsbeschluss (EU-US Data Privacy Framework) berufen kann.",
+      "Vertragspartner der Zahlungsabwicklung ist Stripe Payments Europe, Limited (Irland). Soweit Stripe dabei auf die Stripe, LLC (USA) zurückgreift, ist diese unter dem EU-US Data Privacy Framework zertifiziert; die Übermittlung stützt sich insoweit auf den Angemessenheitsbeschluss der Europäischen Kommission nach Art. 45 DSGVO. Ergänzend gelten die Standarddatenschutzklauseln aus dem [Stripe-Auftragsverarbeitungsvertrag](https://stripe.com/legal/dpa).",
         "Für Channex.io Ltd (Vereinigtes Königreich) gilt der Angemessenheitsbeschluss der Europäischen Kommission für das Vereinigte Königreich; entfällt dieser, greifen die Standarddatenschutzklauseln.",
       ],
     },
