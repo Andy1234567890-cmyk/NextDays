@@ -71,68 +71,87 @@ const MAIN: readonly NavItem[] = [
   // sehen). Der Punkt steht deshalb NICHT zusätzlich in der Reservierungs-
   // Gruppe — sonst hätte die Sidebar ihn zweimal.
   { key: "tasks", href: "/reservierungen/aufgaben", icon: "ph:check-square", req: "view_own_tasks" },
+  // Preissteuerung ist Tagesgeschäft, kein Untermenü-Punkt: der Preis wird
+  // täglich nachgezogen. Steht deshalb flach unter Aufgaben und NICHT mehr in
+  // der Vertriebs-Gruppe — sonst stünde er zweimal.
+  { key: "dynamicPricing", href: "/dynamic-pricing", icon: "ph:lightning" },
 ];
 
 // Thematische Gruppen; werden zur Laufzeit nach Beherbergungsart gebaut.
 type NavGroup = { groupKey: string; icon: string; items: readonly NavItem[] };
 
-// Finanz-/Verwaltungspunkte der Betriebs-Gruppe (per owner_reporting gegated,
-// ADR-0009). Hotel und Ferienvermietung haben unterschiedliche Sätze:
+// Buchhaltung: EIGENE Gruppe, nicht mehr im Rumpf der Betriebs-Gruppe. Vorher
+// hingen dreizehn Finanzpunkte unter „Ferienwohnungen"/„Hotel" — die Gruppe war
+// eine 16 Einträge lange Liste, in der Objektstammdaten, Eigentümer und
+// Buchhaltung ununterscheidbar untereinander standen. Fachlich ist das ein
+// anderer Arbeitsplatz (und mit `owner_reporting` eine andere Berechtigung).
+//
+// Reihenfolge = der Belegfluss, nicht Alphabet oder Zufall:
+// Vorgang (Angebot → Rechnung → Mahnung → Ausgabe) · Zahlungsverkehr (Bank,
+// Kasse) · Buchhaltungsstamm (Kontenplan, Steuer) · Export (E-Rechnung, DATEV) ·
+// Auswertung (Berichte/Statistik) · Regeln zuletzt.
+//
+// Hotel und Ferienvermietung haben unterschiedliche Sätze:
 //  - Hotel folgt dem Casona-„Hotel"-Menü (Rechnungen … Statistik).
 //  - Ferienvermietung führt das buchhaltungslastige NextDays-Set.
-// Einstellungen wird separat als letzter Punkt der Gruppe angehängt.
 // Ziele zeigen auf real existierende Routen: Rechnungen = die Rechnungsliste
-// unter /buchhaltung (wie im Ferienvermietungs-Menü), Bankkonten = /buchhaltung/
-// bank, Schließzeiten = der Stop-Sell-Kalender (/stop-sell). Zahlungen/
-// Umsatz/Listen/Statistik haben eigene Routen (derzeit ComingSoon-Muster wie
+// unter /buchhaltung, Bankkonten = /buchhaltung/bank. Zahlungen/Umsatz/Listen/
+// Statistik haben eigene Routen (derzeit ComingSoon-Muster wie
 // /buchhaltung/berichte) — NIE auf Pfade ohne Route verlinken (404).
-const HOTEL_FINANCE: readonly NavItem[] = [
+const HOTEL_ACCOUNTING: readonly NavItem[] = [
   { key: "invoices", href: "/buchhaltung", icon: "ph:receipt", req: "owner_reporting" },
   { key: "payments", href: "/buchhaltung/zahlungen", icon: "ph:credit-card", req: "owner_reporting" },
-  // Ausgaben steht in BEIDEN Sätzen: Belege kommen in jedem Betrieb laufend
-  // rein. Im Ferienvermietungs-Satz sitzt der Punkt vor dem Mahnwesen, hier
-  // bei den übrigen Finanzpunkten — sonst hätte ein Hotel keine Ausgaben mehr.
+  // Ausgaben steht in BEIDEN Sätzen: Belege kommen in jedem Betrieb laufend rein.
   { key: "expenses", href: "/buchhaltung/ausgaben", icon: "ph:arrow-circle-down", req: "owner_reporting" },
-  { key: "revenue", href: "/buchhaltung/umsatz", icon: "ph:trend-up", req: "owner_reporting" },
   { key: "bankAccounts", href: "/buchhaltung/bank", icon: "ph:bank", req: "owner_reporting" },
-  { key: "lists", href: "/buchhaltung/listen", icon: "ph:list-checks", req: "owner_reporting" },
-  { key: "closingDates", href: "/stop-sell", icon: "ph:calendar-x", req: "owner_reporting" },
   { key: "cashBook", href: "/buchhaltung/kassenbuch", icon: "ph:wallet", req: "owner_reporting" },
+  { key: "revenue", href: "/buchhaltung/umsatz", icon: "ph:trend-up", req: "owner_reporting" },
   { key: "statistics", href: "/buchhaltung/statistik", icon: "ph:chart-bar", req: "owner_reporting" },
-  // Portal-Abzüge + Gebühren-Zuordnung. In BEIDEN Sätzen, weil jeder Betrieb
-  // über Portale verkauft — ein Hotel genauso wie eine Ferienvermietung.
-  { key: "billingRules", href: "/buchhaltung/abrechnungsregeln", icon: "ph:sliders-horizontal", req: "owner_reporting" },
+  { key: "lists", href: "/buchhaltung/listen", icon: "ph:list-checks", req: "owner_reporting" },
 ];
+// „Schließzeiten" (/stop-sell) stand hier früher als Hotel-Finanzpunkt und
+// zeigte damit auf dieselbe Route wie „Stop-Sell" in der Reservierungs-Gruppe:
+// derselbe Link zweimal in der Sidebar, einmal unter einem Namen, den die
+// Zielseite nicht führt. Ein gesperrter Zeitraum ist Belegungsarbeit, keine
+// Buchhaltung — der Punkt lebt nur noch in der Reservierungs-Gruppe.
 
-const VR_FINANCE: readonly NavItem[] = [
-  { key: "invoices", href: "/buchhaltung", icon: "ph:receipt", req: "owner_reporting" },
+const VR_ACCOUNTING: readonly NavItem[] = [
   { key: "quotes", href: "/buchhaltung/angebote", icon: "ph:file-text", req: "owner_reporting" },
-  { key: "expenses", href: "/buchhaltung/ausgaben", icon: "ph:arrow-circle-down", req: "owner_reporting" },
+  { key: "invoices", href: "/buchhaltung", icon: "ph:receipt", req: "owner_reporting" },
   { key: "dunning", href: "/buchhaltung/mahnwesen", icon: "ph:warning-circle", req: "owner_reporting" },
-  { key: "chartOfAccounts", href: "/buchhaltung/kontenplan", icon: "ph:tree-structure", req: "owner_reporting" },
+  { key: "expenses", href: "/buchhaltung/ausgaben", icon: "ph:arrow-circle-down", req: "owner_reporting" },
+  { key: "bank", href: "/buchhaltung/bank", icon: "ph:bank", req: "owner_reporting" },
   { key: "cashBook", href: "/buchhaltung/kassenbuch", icon: "ph:wallet", req: "owner_reporting" },
+  { key: "chartOfAccounts", href: "/buchhaltung/kontenplan", icon: "ph:tree-structure", req: "owner_reporting" },
   { key: "tax", href: "/buchhaltung/steuer", icon: "ph:percent", req: "owner_reporting" },
   { key: "eInvoice", href: "/buchhaltung/e-rechnung", icon: "ph:file-code", req: "owner_reporting" },
   { key: "datev", href: "/buchhaltung/datev", icon: "ph:export", req: "owner_reporting" },
-  { key: "bank", href: "/buchhaltung/bank", icon: "ph:bank", req: "owner_reporting" },
   { key: "reports", href: "/buchhaltung/berichte", icon: "ph:chart-line", req: "owner_reporting" },
-  // Siehe HOTEL_FINANCE: in beiden Sätzen, weil jeder Betrieb über Portale
-  // verkauft.
-  { key: "billingRules", href: "/buchhaltung/abrechnungsregeln", icon: "ph:sliders-horizontal", req: "owner_reporting" },
 ];
 
-// Betriebs-Gruppe „Hotel" (exakt das Casona-„Hotel"-Menü).
+// Portal-Abzüge + Gebühren-Zuordnung. Steht bei der Betriebsart, nicht in der
+// Buchhaltung: hier wird eingestellt, was ein Portal je Objekt einbehält —
+// eine Stammdaten-Regel des Objektbestands, die die Buchhaltung nur ANWENDET.
+// In BEIDEN Betriebs-Gruppen, weil jeder Betrieb über Portale verkauft.
+const BILLING_RULES: NavItem = {
+  key: "billingRules",
+  href: "/buchhaltung/abrechnungsregeln",
+  icon: "ph:sliders-horizontal",
+  req: "owner_reporting",
+};
+
+// Betriebs-Gruppe „Hotel": Stammdaten + Konditionen, ohne Buchhaltung.
 const HOTEL_GROUP: NavGroup = {
   groupKey: "hotel",
   icon: "ph:buildings",
   items: [
-    ...HOTEL_FINANCE,
+    BILLING_RULES,
     // Konditionen = Finanzbedingungen → wie der Backend-Endpunkt gegatet.
     { key: "settings", href: "/einstellungen", icon: "ph:gear", req: "manage_property_conditions" },
   ],
 };
 
-// Betriebs-Gruppe „Ferienwohnungen" (NextDays-Finanzsatz + Eigentümer).
+// Betriebs-Gruppe „Ferienwohnungen": Objekte + Eigentümer + Konditionen.
 const VR_GROUP: NavGroup = {
   groupKey: "vacationRentals",
   icon: "ph:house-line",
@@ -149,7 +168,7 @@ const VR_GROUP: NavGroup = {
       icon: "ph:chart-line-up",
       req: "owner_reporting",
     },
-    ...VR_FINANCE,
+    BILLING_RULES,
     { key: "settings", href: "/einstellungen", icon: "ph:gear", req: "manage_property_conditions" },
   ],
 };
@@ -167,9 +186,18 @@ function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] 
     ...(hotel ? HOTEL_GROUP : VR_GROUP),
     items: [propertiesItem, ...(hotel ? HOTEL_GROUP : VR_GROUP).items],
   };
-  // Genau die Betriebs-Gruppe der eingestellten Beherbergungsart.
+  // Buchhaltung als eigener Reiter, betriebsartabhängig bestückt.
+  const accountingGroup: NavGroup = {
+    groupKey: "accounting",
+    icon: "ph:calculator",
+    items: hotel ? HOTEL_ACCOUNTING : VR_ACCOUNTING,
+  };
+  // Reihenfolge der Sidebar: erst der Bestand (Objekte/Eigentümer), direkt
+  // darunter die Buchhaltung dazu, dann das Tagesgeschäft (Reservierungen,
+  // Gäste), dann der Verkauf, zuletzt die kontoweiten Werkzeuge.
   return [
     operationsGroup,
+    accountingGroup,
     {
       // Reservierungen (Casona-Muster): Übersicht · Gruppen · Stop-Sell ·
       // Einstellungen. Stop-Sell steuert die Buchbarkeit von Zeiträumen —
@@ -214,8 +242,8 @@ function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] 
         // Bewertungen aller Kanäle (Portale + myBestDays) — Vertriebsarbeit:
         // eine unbeantwortete Bewertung kostet Sichtbarkeit im Ranking.
         { key: "reviews", href: "/bewertungen", icon: "ph:star", req: "view_reviews" },
-        // Preissteuerung ist Vertriebsarbeit — gilt für Hotels wie FeWo.
-        { key: "dynamicPricing", href: "/dynamic-pricing", icon: "ph:lightning" },
+        // „dynamicPricing" steht jetzt oben in MAIN (unter Aufgaben) — hier
+        // NICHT wiederholen, sonst hätte die Sidebar den Punkt zweimal.
         { key: "websiteBuilder", href: "/website", icon: "ph:globe", req: "access_homepage_builder" },
       ],
     },
