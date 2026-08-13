@@ -26,7 +26,7 @@ bestätigt.
 """
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any, Final
 
 from supabase import Client
@@ -48,6 +48,17 @@ _NACHLAUF_TAGE: Final = 30
 # einen echten Lesestand übersehen würde — und das Häkchen im Posteingang ist
 # genau dann falsch, wenn es fehlt.
 _VORLAUF_TAGE: Final = 90
+
+# (Abstand in Tagen bis …, dann jeder X-te Tick). Der Tick läuft alle 5 Minuten,
+# ein Thread-Abruf kostet live 5,0 s — die Staffel hält die Abdeckung voll und
+# senkt nur die Frequenz für Aufenthalte, die weit weg sind. Aufsteigend gelesen,
+# der erste passende Eintrag gewinnt.
+_STAFFEL: Final = (
+    (1, 1),     # läuft gerade oder morgen  → jeder Tick
+    (7, 3),     # bis eine Woche            → ~15 min
+    (28, 12),   # bis vier Wochen           → ~1 h
+    (_VORLAUF_TAGE + _NACHLAUF_TAGE, 72),  # weiter weg → ~6 h
+)
 
 
 def gast_lesestand(thread: dict[str, Any]) -> tuple[str | None, str | None]:
@@ -72,6 +83,63 @@ def gast_lesestand(thread: dict[str, Any]) -> tuple[str | None, str | None]:
                 ota_zeitstempel_utc(eintrag.get("created_at")),
             )
     return None, None
+
+
+def _abstand_tage(heute: date, zeile: dict[str, Any]) -> int:
+    """Wie viele Tage der Aufenthalt von heute entfernt ist; 0 = läuft gerade.
+
+    Bei fehlender Angabe 0 (= „ganz nah", wird also immer geprüft): eine fehlende
+    Angabe darf nicht dazu führen, dass ein Thread seltener oder nie dran ist.
+    """
+    def _tag(wert: object) -> date | None:
+        if not isinstance(wert, str) or len(wert) < 10:
+            return None
+        try:
+            return date.fromisoformat(wert[:10])
+        except ValueError:
+            return None
+
+    an, ab = _tag(zeile.get("check_in")), _tag(zeile.get("check_out"))
+    if an is None or ab is None:
+        return 0
+    if an <= heute <= ab:
+        return 0
+    return (an - heute).days if heute < an else (heute - ab).days
+
+
+def _ist_diesmal_dran(heute: date, zeile: dict[str, Any]) -> bool:
+    """Ob dieser Thread in diesem Tick geprüft wird — gestaffelt nach Nähe.
+
+    WARUM GESTAFFELT (13.08.2026, live gemessen): Ein Thread-Abruf kostet 5,0 s
+    bei Airbnb. 19 Threads sind also ~95 s je Tick — und der Tick läuft alle fünf
+    Minuten. Beim Beta-Betrieb waren davon 8 abgereist und 8 hatten einen
+    Lesestand aus Februar bis Juli; sie lieferten Tick für Tick dieselbe Antwort.
+
+    Das Fenster zu kürzen war KEINE Option (siehe `_juengste_threads`: 3 Gäste
+    lasen nachweislich nach der Abreise). Also bleibt jeder Thread abgedeckt, nur
+    nicht jeder gleich oft:
+
+        läuft gerade / morgen   jeder Tick      — hier passiert die Korrespondenz
+        bis eine Woche          jeder 3. Tick   — ~15 min
+        bis vier Wochen         jeder 12. Tick  — ~1 h
+        weiter weg              jeder 72. Tick  — ~6 h
+
+    OHNE ZUSTAND, damit es keine neue Spalte braucht: entschieden wird aus der
+    Tick-Nummer (Minuten seit Mitternacht / 5) und einem Versatz aus dem
+    Bestätigungscode. Der Versatz verteilt die fernen Threads über verschiedene
+    Ticks — ohne ihn kämen alle 8 im selben Tick zusammen, und dieser eine Tick
+    wäre wieder so teuer wie vorher.
+    """
+    abstand = _abstand_tage(heute, zeile)
+    for grenze_tage, jeder_xte in _STAFFEL:
+        if abstand <= grenze_tage:
+            if jeder_xte <= 1:
+                return True
+            jetzt = datetime.now(UTC)
+            tick = (jetzt.hour * 60 + jetzt.minute) // 5
+            versatz = sum(str(zeile.get("external_ref") or "").encode())
+            return (tick + versatz) % jeder_xte == 0
+    return False
 
 
 class AirbnbLesestandMixin:
@@ -150,6 +218,22 @@ class AirbnbLesestandMixin:
                   deren Lesestand alle fünf Minuten abzufragen kostete 40 s je
                   Tick für eine Auskunft, die sich Monate lang nicht ändert.
 
+        DAS FENSTER WIRD NICHT ENGER GEZOGEN, SONDERN GESTAFFELT (13.08.2026):
+        Naheliegend wäre, den Nachlauf zu kürzen — nach der Abreise liest doch
+        niemand mehr. Die Daten sagen etwas anderes. Von 19 Threads mit Lesestand:
+
+            11  gelesen VOR der Anreise
+             5  gelesen während des Aufenthalts
+             3  gelesen NACH der Abreise      ← die gingen bei einem kurzen
+                                                Nachlauf verloren
+
+        Ein engeres Fenster hätte also echte Lesestände unterschlagen, und ein
+        fehlendes Häkchen im Posteingang ist eine Falschaussage (nicht bloss eine
+        Lücke). Deshalb bleibt die Abdeckung voll, und stattdessen sinkt die
+        HÄUFIGKEIT mit der Entfernung zum Aufenthalt: was heute passiert, wird
+        jeden Tick geprüft; was Wochen entfernt ist, seltener. Siehe
+        `_ist_diesmal_dran`.
+
         Buchungen ohne Datumsangabe bleiben drin — eine fehlende Angabe darf nicht
         dazu führen, dass etwas nie geprüft wird (Wurzel 4: keine Annahme an der
         Stelle einer fehlenden Angabe).
@@ -163,7 +247,7 @@ class AirbnbLesestandMixin:
         # Buchungen dazu.
         frisch = (
             db.table("reservations")
-            .select("external_ref")
+            .select("external_ref, check_in, check_out")
             .eq("channel", "airbnb")
             .gte("check_out", nachlauf)
             .lte("check_in", vorlauf)
@@ -171,7 +255,11 @@ class AirbnbLesestandMixin:
             .limit(grenze * 50)
             .execute()
         ).data or []
-        codes = [str(r["external_ref"]) for r in frisch if r.get("external_ref")]
+        codes = [
+            str(r["external_ref"])
+            for r in frisch
+            if r.get("external_ref") and _ist_diesmal_dran(heute, r)
+        ]
         if not codes:
             return {}
 

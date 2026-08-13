@@ -15,7 +15,8 @@ an, wenn die alte Verschwendung zurückkommt.
 from __future__ import annotations
 
 import time
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
+from unittest.mock import patch
 
 from src.features.channel_manager import airbnb_bestand_cache as cache
 from src.features.channel_manager.airbnb_bestand_zeitraum import bestandszeitraum
@@ -338,6 +339,104 @@ def test_fehlerantwort_wird_nicht_wiederholt() -> None:
         httpx.Client = echt  # type: ignore[misc]
 
     assert len(aufrufe) == 1, "eine Fehlerantwort darf NICHT wiederholt werden"
+
+
+def _treffer_ueber_einen_tag(zeile: dict[str, str], heute: date) -> int:
+    """In wie vielen der 288 Tagesticks dieser Thread dran wäre.
+
+    Eine Funktion statt einer Klasse in der Schleife: `fest` würde als
+    Closure-Variable erst beim Aufruf gelesen (ruff B023) — hier harmlos, aber
+    genau der Fehler, den die Regel verhindern soll.
+    """
+    import src.features.channel_manager.airbnb_lesestand as modul
+
+    gezaehlt = 0
+    for tick in range(288):
+        stunde, minute = divmod(tick * 5, 60)
+        with patch.object(modul, "datetime", _uhr(heute, stunde, minute)):
+            if modul._ist_diesmal_dran(heute, zeile):  # noqa: SLF001
+                gezaehlt += 1
+    return gezaehlt
+
+
+def _uhr(tag: date, stunde: int, minute: int) -> type[datetime]:
+    """Eine `datetime`-Klasse, deren `now()` einen festen Zeitpunkt liefert."""
+    fest = datetime(tag.year, tag.month, tag.day, stunde, minute, tzinfo=UTC)
+
+    class _Fest(datetime):
+        @classmethod
+        def now(cls, tz: object = None) -> datetime:  # noqa: ARG003
+            return fest
+
+    return _Fest
+
+
+def test_laufender_aufenthalt_wird_immer_geprueft() -> None:
+    """Wer JETZT da ist, wird in JEDEM Tick geprüft — ohne Ausnahme.
+
+    Die Staffelung darf genau dort nicht sparen, wo die Korrespondenz stattfindet.
+    Ein übersprungener Tick heisst hier: das Häkchen im Posteingang kommt bis zu
+    sechs Stunden zu spät.
+    """
+    from src.features.channel_manager.airbnb_lesestand import _ist_diesmal_dran
+
+    heute = date(2026, 8, 13)
+    laufend = {
+        "external_ref": "HMABC123",
+        "check_in": "2026-08-10",
+        "check_out": "2026-08-16",
+    }
+    assert _ist_diesmal_dran(heute, laufend)
+
+
+def test_fehlende_daten_werden_nie_uebersprungen() -> None:
+    """Ohne Datumsangabe gilt „ganz nah" — nie „nie" (Wurzel 4)."""
+    from src.features.channel_manager.airbnb_lesestand import _ist_diesmal_dran
+
+    heute = date(2026, 8, 13)
+    assert _ist_diesmal_dran(heute, {"external_ref": "HMX", "check_in": None,
+                                     "check_out": None})
+    assert _ist_diesmal_dran(heute, {"external_ref": "HMY"})
+
+
+def test_ferner_aufenthalt_wird_seltener_geprueft_aber_nie_nie() -> None:
+    """Ein ferner Thread läuft seltener — muss aber im Tagesverlauf drankommen.
+
+    „Seltener" und „nie" liegen einen Tippfehler auseinander; nur dieser Test
+    unterscheidet sie. Geprüft wird über alle 288 Ticks eines Tages.
+    """
+    heute = date(2026, 8, 13)
+    treffer = _treffer_ueber_einen_tag(
+        {
+            "external_ref": "HMFERN99",
+            "check_in": "2026-10-20",
+            "check_out": "2026-10-27",
+        },
+        heute,
+    )
+    assert treffer > 0, "ein ferner Thread darf nicht dauerhaft ausfallen"
+    assert treffer < 288, "ein ferner Thread darf nicht in jedem Tick laufen"
+
+
+def test_naeher_aufenthalt_laeuft_oefter_als_ferner() -> None:
+    """Die Staffel muss monoton sein: näher ⇒ häufiger."""
+    heute = date(2026, 8, 13)
+
+    def treffer(check_in: str, check_out: str) -> int:
+        return _treffer_ueber_einen_tag(
+            {
+                # gleicher Code ⇒ gleicher Versatz, damit nur die Nähe zählt
+                "external_ref": "HMGLEICH",
+                "check_in": check_in,
+                "check_out": check_out,
+            },
+            heute,
+        )
+
+    nah = treffer("2026-08-17", "2026-08-20")  # in 4 Tagen
+    mittel = treffer("2026-09-05", "2026-09-10")  # in ~3 Wochen
+    fern = treffer("2026-10-25", "2026-10-30")  # in ~10 Wochen
+    assert nah > mittel > fern, f"nicht monoton: {nah} / {mittel} / {fern}"
 
 
 def test_lesestand_fenster_hat_beide_raender() -> None:
