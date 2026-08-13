@@ -4636,6 +4636,49 @@
       "saved": "Feedback salvat.",
       "score": "Notă",
       "giveScore": "Acordă {score} din 5"
+    },
+    "bookingConditions": {
+      "title": "Condiții de rezervare",
+      "paymentPolicy": "Politica de plată",
+      "paymentFull": "{amount} se plătesc integral la rezervare.",
+      "paymentSplit": "{now} se plătesc la rezervare, {later} ca diferență.",
+      "balanceDue": "Scadent la {date}.",
+      "noCondition": "Nicio condiție de rezervare setată — suma totală este scadentă imediat.",
+      "cancellationPolicy": "Politica de anulare",
+      "mode": {
+        "non_refundable": "Nerambursabil.",
+        "refundable": "Rambursabil pe tranșe.",
+        "partial": "Parțial rambursabil."
+      },
+      "refundRule": "{percent} % rambursare la anulare cu cel puțin {days} zile înainte de sosire.",
+      "deposit": "Garanție",
+      "depositPreauth": "{amount} sunt preautorizați pe cardul oaspetelui.",
+      "depositManual": "{amount} garanție, încasată manual.",
+      "depositHold": "Reținută cu {days} zile înainte de sosire.",
+      "depositRelease": "Eliberare la {days} zile după plecare.",
+      "paymentRequest": "Solicitare de plată",
+      "plan": "Plan de plată",
+      "dueNow": "Scadent la rezervare",
+      "dueLater": "Diferență",
+      "dueLaterOn": "Diferență la {date}",
+      "transactions": "Tranzacții",
+      "noTransactions": "Nicio plată înregistrată încă.",
+      "txDue": "programat {date}",
+      "txType": {
+        "deposit": "Garanție",
+        "full": "Sumă totală",
+        "refund": "Rambursare",
+        "down_payment": "Avans",
+        "balance": "Diferență",
+        "addon": "Servicii suplimentare"
+      },
+      "txStatus": {
+        "pending": "deschisă",
+        "succeeded": "plătită",
+        "failed": "eșuată",
+        "refunded": "rambursată",
+        "partially_refunded": "parțial rambursată"
+      }
     }
   },
   "objects": {

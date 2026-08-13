@@ -4641,6 +4641,49 @@
       "saved": "Tilbagemelding gemt.",
       "score": "Vurdering",
       "giveScore": "Bedøm {score} ud af 5"
+    },
+    "bookingConditions": {
+      "title": "Bookingbetingelser",
+      "paymentPolicy": "Betalingspolitik",
+      "paymentFull": "{amount} forfalder fuldt ud ved booking.",
+      "paymentSplit": "{now} forfalder ved booking, {later} som restbetaling.",
+      "balanceDue": "Forfalder den {date}.",
+      "noCondition": "Ingen bookingbetingelse angivet — hele beløbet forfalder straks.",
+      "cancellationPolicy": "Afbestillingspolitik",
+      "mode": {
+        "non_refundable": "Ikke refunderbar.",
+        "refundable": "Refunderbar efter skala.",
+        "partial": "Delvist refunderbar."
+      },
+      "refundRule": "{percent} % refusion ved afbestilling mindst {days} dage før ankomst.",
+      "deposit": "Depositum",
+      "depositPreauth": "{amount} forhåndsgodkendes på gæstens kort.",
+      "depositManual": "{amount} i depositum, opkræves manuelt.",
+      "depositHold": "Tilbageholdes {days} dage før ankomst.",
+      "depositRelease": "Frigives {days} dage efter afrejse.",
+      "paymentRequest": "Betalingsanmodning",
+      "plan": "Betalingsplan",
+      "dueNow": "Forfalder ved booking",
+      "dueLater": "Restbetaling",
+      "dueLaterOn": "Restbetaling den {date}",
+      "transactions": "Transaktioner",
+      "noTransactions": "Ingen betaling registreret endnu.",
+      "txDue": "planlagt {date}",
+      "txType": {
+        "deposit": "Depositum",
+        "full": "Samlet beløb",
+        "refund": "Refusion",
+        "down_payment": "Udbetaling",
+        "balance": "Restbetaling",
+        "addon": "Tillægsydelser"
+      },
+      "txStatus": {
+        "pending": "åben",
+        "succeeded": "betalt",
+        "failed": "mislykkedes",
+        "refunded": "refunderet",
+        "partially_refunded": "delvist refunderet"
+      }
     }
   },
   "objects": {

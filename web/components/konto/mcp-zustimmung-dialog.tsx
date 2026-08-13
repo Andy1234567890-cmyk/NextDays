@@ -29,9 +29,14 @@ type Props = {
 // stimmt zu, was hier steht.
 const LESERECHTE = [
   { icon: "solar:calendar-bold-duotone", text: "Kalender und Verfügbarkeit" },
-  { icon: "solar:bookmark-bold-duotone", text: "Buchungen und Buchungsnotizen" },
-  { icon: "solar:chat-round-line-bold-duotone", text: "Posteingang aller Kanäle" },
+  { icon: "solar:bookmark-bold-duotone", text: "Buchungen mit Gastname und Zeitraum" },
+  { icon: "solar:chat-round-line-bold-duotone", text: "Posteingang aller Kanäle (Übersicht)" },
 ];
+
+// Der Freitext-Scope des Servers. Muss mit `SCOPE_FREITEXT` in
+// apps/api/.../mcp/oauth_service.py übereinstimmen — ein Tippfehler hier
+// führte zu „Unbekannte Scopes" und einem Abbruch mitten im Flow.
+const SCOPE_FREITEXT = "mcp:freetext";
 
 export function ZustimmungDialog({
   clientId,
@@ -43,14 +48,20 @@ export function ZustimmungDialog({
   host,
 }: Props) {
   const [laeuft, setLaeuft] = useState(false);
+  // Freitexte sind bewusst AUS als Voreinstellung (Art. 25 Abs. 2 DSGVO):
+  // Notizen und Gastnachrichten enthalten regelmäßig Gesundheitsangaben
+  // („Rollstuhl", „Allergie"). Wer sie braucht, schaltet sie zu — niemand
+  // überträgt sie versehentlich, weil ein Häkchen vorbelegt war.
+  const [freitexte, setFreitexte] = useState(false);
 
   async function erlauben() {
     setLaeuft(true);
+    const gewaehlt = freitexte ? `${scope} ${SCOPE_FREITEXT}` : scope;
     const res = await erteileZustimmung({
       client_id: clientId,
       redirect_uri: redirectUri,
       code_challenge: codeChallenge,
-      scope,
+      scope: gewaehlt,
       state,
       resource,
     });
@@ -94,11 +105,47 @@ export function ZustimmungDialog({
           </ul>
         </div>
 
+        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border p-4">
+          <input
+            type="checkbox"
+            checked={freitexte}
+            onChange={(e) => setFreitexte(e.target.checked)}
+            disabled={laeuft}
+            className="mt-0.5 size-4 shrink-0 accent-primary"
+          />
+          <span className="flex flex-col gap-1">
+            <span className="text-sm font-semibold">
+              Zusätzlich Freitexte freigeben
+            </span>
+            <span className="text-xs text-muted-foreground">
+              Buchungsnotizen und der Inhalt von Gastnachrichten. Diese Felder
+              enthalten häufig Angaben zur Gesundheit (etwa „Rollstuhl" oder
+              „Allergie") und sind deshalb besonders geschützt. Ohne diese
+              Freigabe sieht der Dienst nur, DASS eine Nachricht vorliegt —
+              nicht, was darin steht.
+            </span>
+          </span>
+        </label>
+
         <p className="rounded-2xl bg-muted p-4 text-xs text-muted-foreground">
           Es können keine Daten geändert, keine Nachrichten gesendet und keine
           Buchungen angelegt werden. Sichtbar ist ausschließlich, was Ihre Rolle
-          auch in der Oberfläche sieht. Sie können den Zugriff jederzeit unter
-          Konto → Verbindungen wieder trennen.
+          auch in der Oberfläche sieht. Die Daten werden dabei an{" "}
+          <span className="font-semibold text-foreground">{host}</span>{" "}
+          übertragen — bei Anbietern außerhalb der EU auch in ein Drittland. Sie
+          können den Zugriff jederzeit unter Konto → Verbindungen wieder
+          trennen; er endet dann sofort. Jeder Abruf wird dort protokolliert.
+        </p>
+
+        <p className="rounded-2xl border border-border p-4 text-xs text-muted-foreground">
+          <span className="font-semibold text-foreground">
+            Bitte einen Geschäftskunden-Zugang verwenden.
+          </span>{" "}
+          Für Gästedaten eignet sich nur ein Zugang, für den der Anbieter eine
+          Auftragsverarbeitung anbietet und eine Verwendung zum Training seiner
+          Modelle ausschließt — bei Claude sind das Team, Enterprise oder API.
+          Zugänge für private Nutzung erfüllen das in der Regel nicht. Wir
+          können nicht erkennen, welchen Zugang Sie verwenden.
         </p>
 
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

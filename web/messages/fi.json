@@ -4641,6 +4641,49 @@
       "saved": "Palaute tallennettu.",
       "score": "Arvosana",
       "giveScore": "Arvioi {score}/5"
+    },
+    "bookingConditions": {
+      "title": "Varausehdot",
+      "paymentPolicy": "Maksukäytäntö",
+      "paymentFull": "{amount} erääntyy kokonaisuudessaan varattaessa.",
+      "paymentSplit": "{now} erääntyy varattaessa, {later} loppumaksuna.",
+      "balanceDue": "Erääntyy {date}.",
+      "noCondition": "Varausehtoa ei ole määritetty — koko summa erääntyy heti.",
+      "cancellationPolicy": "Peruutusehdot",
+      "mode": {
+        "non_refundable": "Ei palautettavissa.",
+        "refundable": "Palautettavissa portaittain.",
+        "partial": "Osittain palautettavissa."
+      },
+      "refundRule": "{percent} %:n palautus peruttaessa vähintään {days} päivää ennen saapumista.",
+      "deposit": "Vakuusmaksu",
+      "depositPreauth": "{amount} esiautorisoidaan vieraan kortilta.",
+      "depositManual": "{amount} vakuusmaksu, peritään manuaalisesti.",
+      "depositHold": "Pidätetään {days} päivää ennen saapumista.",
+      "depositRelease": "Vapautetaan {days} päivää lähdön jälkeen.",
+      "paymentRequest": "Maksupyyntö",
+      "plan": "Maksusuunnitelma",
+      "dueNow": "Erääntyy varattaessa",
+      "dueLater": "Loppumaksu",
+      "dueLaterOn": "Loppumaksu {date}",
+      "transactions": "Tapahtumat",
+      "noTransactions": "Maksua ei ole vielä kirjattu.",
+      "txDue": "suunniteltu {date}",
+      "txType": {
+        "deposit": "Vakuusmaksu",
+        "full": "Kokonaissumma",
+        "refund": "Palautus",
+        "down_payment": "Ennakkomaksu",
+        "balance": "Loppumaksu",
+        "addon": "Lisäpalvelut"
+      },
+      "txStatus": {
+        "pending": "avoin",
+        "succeeded": "maksettu",
+        "failed": "epäonnistui",
+        "refunded": "palautettu",
+        "partially_refunded": "osittain palautettu"
+      }
     }
   },
   "objects": {

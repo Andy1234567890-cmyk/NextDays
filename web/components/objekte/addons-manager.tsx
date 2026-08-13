@@ -16,14 +16,18 @@ import { Card } from "@nextdays/ui/card";
 import { Input } from "@nextdays/ui/input";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { Textarea } from "@nextdays/ui/textarea";
+import { ZuAnderenObjekten } from "@/components/objekte/pricing/zu-anderen-objekten";
 import {
+  applyAddonToProperties,
   createAddon,
   deleteAddon,
+  listAddonLibrary,
   listAddons,
   updateAddon,
   uploadAddonMedia,
   type Addon,
   type AddonInput,
+  type AddonLibraryEntry,
   type AddonSurface,
 } from "@/lib/addons";
 import { formatCurrency } from "@/lib/currency";
@@ -88,6 +92,13 @@ export function AddonsManager({
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState<AddonInput | null>(null);
   const [busy, setBusy] = useState(false);
+  // Objekte, auf die dieselbe Zusatzleistung mitgeschrieben wird (Block „Zu
+  // anderen Objekten hinzufügen" — wie im Gebühren-/Steuer-Editor).
+  const [ziele, setZiele] = useState<string[]>([]);
+  // Übernahme einer schon woanders angelegten Leistung. `null` = Auswahl zu,
+  // sonst die geladene Bibliothek.
+  const [uebernahme, setUebernahme] = useState<AddonLibraryEntry[] | null>(null);
+  const [uebernahmeWaehrungFehlt, setUebernahmeWaehrungFehlt] = useState(false);
   const basisOptions = getBasisOptions(t);
   const surfaces = getSurfaces(t);
 
@@ -110,11 +121,46 @@ export function AddonsManager({
 
   function startCreate() {
     setEditing("new");
+    setZiele([]);
     setDraft(emptyDraft(items.length));
+  }
+
+  /** „Bestehende Zusatzleistung übernehmen": Bibliothek laden und zeigen. */
+  async function startPick() {
+    const res = await listAddonLibrary(propertyId);
+    if (!res.ok) {
+      toast.error(res.error);
+      return;
+    }
+    setUebernahmeWaehrungFehlt(res.data.currency === null);
+    setUebernahme(res.data.items);
+  }
+
+  /** Eine Leistung aus der Bibliothek als Entwurf übernehmen — der Betrieb
+   *  sieht vor dem Speichern, was er kopiert, und kann sie noch anpassen. */
+  function pick(entry: AddonLibraryEntry) {
+    const a = entry.addon;
+    setUebernahme(null);
+    setEditing("new");
+    setZiele([]);
+    setDraft({
+      name: { ...a.name },
+      description: { ...a.description },
+      media: [...a.media],
+      price: a.price,
+      basis: a.basis,
+      mandatory: a.mandatory,
+      appears_in: [...a.appears_in],
+      available_until: a.available_until,
+      tax_rate: a.tax_rate,
+      active: a.active,
+      sort_order: items.length,
+    });
   }
 
   function startEdit(a: Addon) {
     setEditing(a.id);
+    setZiele([]);
     setDraft({
       name: { ...a.name },
       description: { ...a.description },
@@ -133,6 +179,7 @@ export function AddonsManager({
   function cancel() {
     setEditing(null);
     setDraft(null);
+    setZiele([]);
   }
 
   function patch<K extends keyof AddonInput>(key: K, value: AddonInput[K]) {
@@ -155,14 +202,33 @@ export function AddonsManager({
       editing === "new"
         ? await createAddon(propertyId, draft)
         : await updateAddon(editing as string, draft);
-    setBusy(false);
-    if (res.ok) {
-      toast.success(t("addonsManager.toastSaved"));
-      cancel();
-      router.refresh();
-    } else {
+    if (!res.ok) {
+      setBusy(false);
       toast.error(res.error);
+      return;
     }
+    // Erst wenn diese Leistung steht, geht sie an die gewählten weiteren
+    // Objekte. Schlägt die Verteilung fehl (z. B. anderes Objekt rechnet in
+    // anderer Währung), bleibt die HIER gespeicherte Leistung gültig — der
+    // Fehler wird benannt statt verschluckt, und der Editor bleibt offen, damit
+    // die Auswahl nicht verloren ist.
+    if (ziele.length > 0) {
+      const verteilt = await applyAddonToProperties(res.data.id, ziele);
+      setBusy(false);
+      if (!verteilt.ok) {
+        toast.error(verteilt.error);
+        router.refresh();
+        return;
+      }
+      toast.success(
+        t("addonsManager.toastApplied", { count: verteilt.data.applied_to.length }),
+      );
+    } else {
+      setBusy(false);
+      toast.success(t("addonsManager.toastSaved"));
+    }
+    cancel();
+    router.refresh();
   }
 
   async function remove(id: string) {
@@ -199,13 +265,32 @@ export function AddonsManager({
             {t("addonsManager.subtitle")}
           </p>
         </div>
-        {editing === null && (
-          <Button onClick={startCreate}>
-            <Icon icon="ph:plus" className="size-4" />
-            {t("addonsManager.new")}
-          </Button>
+        {editing === null && uebernahme === null && (
+          <div className="flex gap-2">
+            {/* Der Zwischenschritt aus dem Gebühren-Editor: wer dieselbe
+                Leistung auf vielen Objekten führt, tippt sie nicht erneut ab. */}
+            <Button variant="outline" onClick={() => void startPick()}>
+              <Icon icon="ph:copy" className="size-4" />
+              {t("addonsManager.pickExisting")}
+            </Button>
+            <Button onClick={startCreate}>
+              <Icon icon="ph:plus" className="size-4" />
+              {t("addonsManager.new")}
+            </Button>
+          </div>
         )}
       </div>
+
+      {uebernahme !== null && (
+        <AddonUebernahme
+          items={uebernahme}
+          waehrungFehlt={uebernahmeWaehrungFehlt}
+          money={money}
+          basisLabel={(b) => basisOptions.find((x) => x.value === b)?.label ?? b}
+          onPick={pick}
+          onClose={() => setUebernahme(null)}
+        />
+      )}
 
       {editing !== null && draft && (
         <AddonForm
@@ -213,6 +298,9 @@ export function AddonsManager({
           editingId={editing === "new" ? null : (editing as string)}
           busy={busy}
           currency={currency}
+          propertyId={propertyId}
+          ziele={ziele}
+          onZieleChange={setZiele}
           onPatch={patch}
           onToggleSurface={toggleSurface}
           onMedia={onMedia}
@@ -290,6 +378,9 @@ function AddonForm({
   editingId,
   busy,
   currency,
+  propertyId,
+  ziele,
+  onZieleChange,
   onPatch,
   onToggleSurface,
   onMedia,
@@ -300,6 +391,10 @@ function AddonForm({
   editingId: string | null;
   busy: boolean;
   currency: string | null;
+  propertyId: string;
+  /** Weitere Objekte, auf die dieselbe Leistung mitgeschrieben wird. */
+  ziele: string[];
+  onZieleChange: (next: string[]) => void;
   onPatch: <K extends keyof AddonInput>(key: K, value: AddonInput[K]) => void;
   onToggleSurface: (s: AddonSurface) => void;
   onMedia: (addonId: string, file: File | undefined) => void;
@@ -489,6 +584,16 @@ function AddonForm({
         </div>
       </div>
 
+      {/* Derselbe Block wie im Gebühren-/Steuer-Editor, dieselbe Komponente:
+          dieselbe Zusatzleistung auf weitere Objekte übernehmen, statt sie
+          dort erneut abzutippen. Steht wie dort am Ende des Editors. */}
+      <ZuAnderenObjekten
+        propertyId={propertyId}
+        kind="addon"
+        selected={ziele}
+        onChange={onZieleChange}
+      />
+
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onCancel}>
           {t("addonsManager.cancel")}
@@ -497,6 +602,128 @@ function AddonForm({
           {busy ? t("addonsManager.saving") : t("addonsManager.save")}
         </Button>
       </div>
+    </Card>
+  );
+}
+
+/** „Bestehende Zusatzleistung übernehmen" — Gegenstück zu `GebuehrAuswahl`.
+ *
+ *  Zeigt, was der Betrieb auf ANDEREN Objekten schon angelegt hat; die Auswahl
+ *  landet als Entwurf im Formular, damit vor dem Speichern sichtbar ist, was
+ *  kopiert wird. Die Liste kommt tenant-gescopt vom Server, nicht im Browser
+ *  zusammengesucht — dort wird auch die Währung geprüft (ein DKK-Betrag ist auf
+ *  einem EUR-Objekt keine übernehmbare Zahl). */
+function AddonUebernahme({
+  items,
+  waehrungFehlt,
+  money,
+  basisLabel,
+  onPick,
+  onClose,
+}: {
+  items: AddonLibraryEntry[];
+  waehrungFehlt: boolean;
+  money: (v: number) => string;
+  basisLabel: (b: Addon["basis"]) => string;
+  onPick: (entry: AddonLibraryEntry) => void;
+  onClose: () => void;
+}) {
+  const t = useTranslations("objects");
+  const [suche, setSuche] = useState("");
+  const q = suche.trim().toLowerCase();
+  const gefiltert = q
+    ? items.filter((e) =>
+        Object.values(e.addon.name).some((n) => n.toLowerCase().includes(q)),
+      )
+    : items;
+
+  return (
+    <Card className="flex flex-col gap-4 p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h2 className="font-display text-lg font-extrabold">
+            {t("addonsManager.pickExistingTitle")}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t("addonsManager.pickExistingSubtitle")}
+          </p>
+        </div>
+        <Button variant="ghost" size="icon" onClick={onClose} aria-label={t("addonsManager.cancel")}>
+          <Icon icon="ph:x" className="size-4" />
+        </Button>
+      </div>
+
+      {/* Suchfeld nur, wenn es etwas zu durchsuchen gibt — ein leeres Feld über
+          einer leeren Liste ist eine Attrappe. */}
+      {items.length > 0 && (
+        <>
+          <div className="relative">
+            <Icon
+              icon="ph:magnifying-glass"
+              className="pointer-events-none absolute inset-y-0 left-3 my-auto size-4 text-muted-foreground"
+            />
+            <Input
+              value={suche}
+              onChange={(e) => setSuche(e.target.value)}
+              placeholder={t("addonsManager.pickExistingSearch")}
+              className="pl-9"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            {gefiltert.length === 0 ? (
+              <p className="rounded-(--radius) border border-border p-4 text-sm text-muted-foreground">
+                {t("addonsManager.pickExistingNoMatches")}
+              </p>
+            ) : (
+              gefiltert.map((eintrag) => (
+                <div
+                  key={eintrag.addon.id}
+                  className="flex items-start justify-between gap-3 rounded-(--radius) border border-border p-4"
+                >
+                  <div className="min-w-0 leading-tight">
+                    <p className="truncate font-semibold">
+                      {eintrag.addon.name.de ||
+                        eintrag.addon.name.en ||
+                        t("addonsManager.unnamed")}
+                    </p>
+                    <span className="mt-2 inline-flex w-fit items-center rounded-full bg-muted/60 px-3 py-1.5 text-sm">
+                      {money(eintrag.addon.price)} · {basisLabel(eintrag.addon.basis)}
+                    </span>
+                    {/* Woher sie stammt: bei zwei „Reinigung" der einzige
+                        Unterschied, den der Betrieb sieht. */}
+                    {eintrag.property_title && (
+                      <p className="mt-1 truncate text-xs text-muted-foreground">
+                        {t("addonsManager.pickExistingFrom", {
+                          title: eintrag.property_title,
+                        })}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={() => onPick(eintrag)}
+                  >
+                    {t("addonsManager.pickExistingAdd")}
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Warum nichts zur Auswahl steht, wird GESAGT statt weggelassen: ohne
+          Objektwährung ist kein Betrag übernehmbar, und „woanders noch nichts
+          angelegt" ist eine andere Aussage. */}
+      {items.length === 0 && (
+        <p className="rounded-(--radius) border border-border p-4 text-sm text-muted-foreground">
+          {waehrungFehlt
+            ? t("addonsManager.pickExistingNoCurrency")
+            : t("addonsManager.pickExistingEmpty")}
+        </p>
+      )}
     </Card>
   );
 }

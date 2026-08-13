@@ -4636,6 +4636,49 @@
       "saved": "Atsiliepimas išsaugotas.",
       "score": "Įvertinimas",
       "giveScore": "Įvertinti {score} iš 5"
+    },
+    "bookingConditions": {
+      "title": "Rezervavimo sąlygos",
+      "paymentPolicy": "Mokėjimo politika",
+      "paymentFull": "{amount} sumokama visa rezervuojant.",
+      "paymentSplit": "{now} sumokama rezervuojant, {later} kaip likutis.",
+      "balanceDue": "Terminas {date}.",
+      "noCondition": "Rezervavimo sąlyga nenustatyta — visa suma mokėtina iš karto.",
+      "cancellationPolicy": "Atšaukimo sąlygos",
+      "mode": {
+        "non_refundable": "Negrąžinama.",
+        "refundable": "Grąžinama pagal skalę.",
+        "partial": "Iš dalies grąžinama."
+      },
+      "refundRule": "{percent} % grąžinimas atšaukus likus bent {days} d. iki atvykimo.",
+      "deposit": "Užstatas",
+      "depositPreauth": "{amount} iš anksto rezervuojama svečio kortelėje.",
+      "depositManual": "{amount} užstato, renkama rankiniu būdu.",
+      "depositHold": "Sulaikoma {days} d. iki atvykimo.",
+      "depositRelease": "Atlaisvinama {days} d. po išvykimo.",
+      "paymentRequest": "Mokėjimo prašymas",
+      "plan": "Mokėjimo planas",
+      "dueNow": "Mokėtina rezervuojant",
+      "dueLater": "Likutis",
+      "dueLaterOn": "Likutis {date}",
+      "transactions": "Operacijos",
+      "noTransactions": "Mokėjimų dar neužregistruota.",
+      "txDue": "suplanuota {date}",
+      "txType": {
+        "deposit": "Užstatas",
+        "full": "Bendra suma",
+        "refund": "Grąžinimas",
+        "down_payment": "Avansas",
+        "balance": "Likutis",
+        "addon": "Papildomos paslaugos"
+      },
+      "txStatus": {
+        "pending": "atviras",
+        "succeeded": "apmokėtas",
+        "failed": "nepavyko",
+        "refunded": "grąžintas",
+        "partially_refunded": "iš dalies grąžintas"
+      }
     }
   },
   "objects": {

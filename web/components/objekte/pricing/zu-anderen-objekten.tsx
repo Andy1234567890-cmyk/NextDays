@@ -29,7 +29,12 @@ import {
 import { listProperties, type Property } from "@/lib/properties";
 
 /** Worauf sich die Übernahme bezieht — steuert nur den erklärenden Satz. */
-export type ZuAnderenObjektenArt = "fee" | "tax" | "promotion" | "season";
+export type ZuAnderenObjektenArt =
+  | "fee"
+  | "tax"
+  | "promotion"
+  | "season"
+  | "addon";
 
 export function ZuAnderenObjekten({
   propertyId,
@@ -40,7 +45,8 @@ export function ZuAnderenObjekten({
 }: {
   propertyId: string;
   /** Nur für den erklärenden Satz („dieselbe Gebühr" vs. „dieselbe Steuer" vs.
-   *  „dieselbe Promotion" vs. „dieselbe Saison") — die Mechanik ist identisch.
+   *  „dieselbe Promotion" vs. „dieselbe Saison" vs. „dieselbe Zusatzleistung")
+   *  — die Mechanik ist identisch.
    *  Ein neutraler Sammelbegriff („Posten") wäre Fachjargon, den der Betrieb
    *  nirgends sonst liest. */
   kind: ZuAnderenObjektenArt;
@@ -103,6 +109,7 @@ function hinweisSchluessel(kind: ZuAnderenObjektenArt): string {
   if (kind === "fee") return "pricingForm.applyToOthersFeeHint";
   if (kind === "tax") return "pricingForm.applyToOthersTaxHint";
   if (kind === "season") return "pricingForm.applyToOthersSeasonHint";
+  if (kind === "addon") return "pricingForm.applyToOthersAddonHint";
   return "pricingForm.applyToOthersPromoHint";
 }
 

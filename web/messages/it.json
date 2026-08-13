@@ -4636,6 +4636,49 @@
       "saved": "Riscontro salvato.",
       "score": "Valutazione",
       "giveScore": "Valuta {score} su 5"
+    },
+    "bookingConditions": {
+      "title": "Condizioni di prenotazione",
+      "paymentPolicy": "Politica di pagamento",
+      "paymentFull": "{amount} sono dovuti per intero alla prenotazione.",
+      "paymentSplit": "{now} sono dovuti alla prenotazione, {later} come saldo.",
+      "balanceDue": "Dovuto il {date}.",
+      "noCondition": "Nessuna condizione di prenotazione impostata — l’importo totale è dovuto subito.",
+      "cancellationPolicy": "Politica di cancellazione",
+      "mode": {
+        "non_refundable": "Non rimborsabile.",
+        "refundable": "Rimborsabile secondo scaglioni.",
+        "partial": "Parzialmente rimborsabile."
+      },
+      "refundRule": "{percent} % di rimborso in caso di cancellazione almeno {days} giorni prima dell’arrivo.",
+      "deposit": "Cauzione",
+      "depositPreauth": "{amount} vengono preautorizzati sulla carta dell’ospite.",
+      "depositManual": "{amount} di cauzione, incassati manualmente.",
+      "depositHold": "Trattenuta {days} giorni prima dell’arrivo.",
+      "depositRelease": "Rilascio {days} giorni dopo la partenza.",
+      "paymentRequest": "Richiesta di pagamento",
+      "plan": "Piano di pagamento",
+      "dueNow": "Dovuto alla prenotazione",
+      "dueLater": "Saldo",
+      "dueLaterOn": "Saldo il {date}",
+      "transactions": "Transazioni",
+      "noTransactions": "Nessun pagamento registrato finora.",
+      "txDue": "previsto {date}",
+      "txType": {
+        "deposit": "Cauzione",
+        "full": "Importo totale",
+        "refund": "Rimborso",
+        "down_payment": "Acconto",
+        "balance": "Saldo",
+        "addon": "Servizi extra"
+      },
+      "txStatus": {
+        "pending": "in sospeso",
+        "succeeded": "pagato",
+        "failed": "non riuscito",
+        "refunded": "rimborsato",
+        "partially_refunded": "parzialmente rimborsato"
+      }
     }
   },
   "objects": {

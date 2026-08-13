@@ -4641,6 +4641,49 @@
       "saved": "Resolución guardada.",
       "score": "Valoración",
       "giveScore": "Valorar {score} de 5"
+    },
+    "bookingConditions": {
+      "title": "Condiciones de reserva",
+      "paymentPolicy": "Política de pago",
+      "paymentFull": "{amount} se deben íntegramente al reservar.",
+      "paymentSplit": "{now} se deben al reservar, {later} como pago restante.",
+      "balanceDue": "Vence el {date}.",
+      "noCondition": "No hay condición de reserva definida: el importe total vence de inmediato.",
+      "cancellationPolicy": "Política de cancelación",
+      "mode": {
+        "non_refundable": "No reembolsable.",
+        "refundable": "Reembolsable según escala.",
+        "partial": "Parcialmente reembolsable."
+      },
+      "refundRule": "{percent} % de reembolso al cancelar al menos {days} días antes de la llegada.",
+      "deposit": "Fianza",
+      "depositPreauth": "{amount} se preautorizan en la tarjeta del huésped.",
+      "depositManual": "{amount} de fianza, cobrados manualmente.",
+      "depositHold": "Retenida {days} días antes de la llegada.",
+      "depositRelease": "Liberación {days} días después de la salida.",
+      "paymentRequest": "Solicitud de pago",
+      "plan": "Plan de pago",
+      "dueNow": "A pagar al reservar",
+      "dueLater": "Pago restante",
+      "dueLaterOn": "Pago restante el {date}",
+      "transactions": "Transacciones",
+      "noTransactions": "Aún no se ha registrado ningún pago.",
+      "txDue": "previsto {date}",
+      "txType": {
+        "deposit": "Fianza",
+        "full": "Importe total",
+        "refund": "Reembolso",
+        "down_payment": "Anticipo",
+        "balance": "Pago restante",
+        "addon": "Servicios adicionales"
+      },
+      "txStatus": {
+        "pending": "pendiente",
+        "succeeded": "pagado",
+        "failed": "fallido",
+        "refunded": "reembolsado",
+        "partially_refunded": "parcialmente reembolsado"
+      }
     }
   },
   "objects": {

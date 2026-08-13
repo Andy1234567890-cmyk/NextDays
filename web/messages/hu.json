@@ -4641,6 +4641,49 @@
       "saved": "Visszajelzés mentve.",
       "score": "Értékelés",
       "giveScore": "Értékelés {score} az 5-ből"
+    },
+    "bookingConditions": {
+      "title": "Foglalási feltételek",
+      "paymentPolicy": "Fizetési szabályzat",
+      "paymentFull": "{amount} teljes egészében esedékes a foglaláskor.",
+      "paymentSplit": "{now} a foglaláskor esedékes, {later} pedig fennmaradó összegként.",
+      "balanceDue": "Esedékes: {date}.",
+      "noCondition": "Nincs beállítva foglalási feltétel — a teljes összeg azonnal esedékes.",
+      "cancellationPolicy": "Lemondási szabályzat",
+      "mode": {
+        "non_refundable": "Nem visszatéríthető.",
+        "refundable": "Sávosan visszatéríthető.",
+        "partial": "Részben visszatéríthető."
+      },
+      "refundRule": "{percent} % visszatérítés legalább {days} nappal az érkezés előtti lemondás esetén.",
+      "deposit": "Kaució",
+      "depositPreauth": "{amount} előengedélyezésre kerül a vendég kártyáján.",
+      "depositManual": "{amount} kaució, manuálisan beszedve.",
+      "depositHold": "Zárolva {days} nappal az érkezés előtt.",
+      "depositRelease": "Feloldás {days} nappal a távozás után.",
+      "paymentRequest": "Fizetési felszólítás",
+      "plan": "Fizetési ütemterv",
+      "dueNow": "Foglaláskor esedékes",
+      "dueLater": "Fennmaradó összeg",
+      "dueLaterOn": "Fennmaradó összeg: {date}",
+      "transactions": "Tranzakciók",
+      "noTransactions": "Még nem rögzítettek fizetést.",
+      "txDue": "tervezett: {date}",
+      "txType": {
+        "deposit": "Kaució",
+        "full": "Teljes összeg",
+        "refund": "Visszatérítés",
+        "down_payment": "Előleg",
+        "balance": "Fennmaradó összeg",
+        "addon": "Kiegészítő szolgáltatások"
+      },
+      "txStatus": {
+        "pending": "nyitott",
+        "succeeded": "kifizetve",
+        "failed": "sikertelen",
+        "refunded": "visszatérítve",
+        "partially_refunded": "részben visszatérítve"
+      }
     }
   },
   "objects": {

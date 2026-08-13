@@ -4641,6 +4641,49 @@
       "saved": "Compte rendu enregistré.",
       "score": "Note",
       "giveScore": "Noter {score} sur 5"
+    },
+    "bookingConditions": {
+      "title": "Conditions de réservation",
+      "paymentPolicy": "Politique de paiement",
+      "paymentFull": "{amount} sont dus intégralement à la réservation.",
+      "paymentSplit": "{now} sont dus à la réservation, {later} en solde.",
+      "balanceDue": "Dû le {date}.",
+      "noCondition": "Aucune condition de réservation définie — le montant total est dû immédiatement.",
+      "cancellationPolicy": "Politique d’annulation",
+      "mode": {
+        "non_refundable": "Non remboursable.",
+        "refundable": "Remboursable selon barème.",
+        "partial": "Partiellement remboursable."
+      },
+      "refundRule": "{percent} % de remboursement en cas d’annulation au moins {days} jours avant l’arrivée.",
+      "deposit": "Caution",
+      "depositPreauth": "{amount} sont préautorisés sur la carte du client.",
+      "depositManual": "{amount} de caution, encaissés manuellement.",
+      "depositHold": "Retenue {days} jours avant l’arrivée.",
+      "depositRelease": "Libération {days} jours après le départ.",
+      "paymentRequest": "Demande de paiement",
+      "plan": "Échéancier de paiement",
+      "dueNow": "Dû à la réservation",
+      "dueLater": "Solde",
+      "dueLaterOn": "Solde le {date}",
+      "transactions": "Transactions",
+      "noTransactions": "Aucun paiement enregistré pour l’instant.",
+      "txDue": "prévu {date}",
+      "txType": {
+        "deposit": "Caution",
+        "full": "Montant total",
+        "refund": "Remboursement",
+        "down_payment": "Acompte",
+        "balance": "Solde",
+        "addon": "Services supplémentaires"
+      },
+      "txStatus": {
+        "pending": "en attente",
+        "succeeded": "payé",
+        "failed": "échoué",
+        "refunded": "remboursé",
+        "partially_refunded": "partiellement remboursé"
+      }
     }
   },
   "objects": {

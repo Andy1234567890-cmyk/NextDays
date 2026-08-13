@@ -4636,6 +4636,49 @@
       "saved": "Ir-rispons ġie salvat.",
       "score": "Punteġġ",
       "giveScore": "Agħti {score} minn 5"
+    },
+    "bookingConditions": {
+      "title": "Kundizzjonijiet tal-prenotazzjoni",
+      "paymentPolicy": "Politika tal-ħlas",
+      "paymentFull": "{amount} huma dovuti kollha mal-prenotazzjoni.",
+      "paymentSplit": "{now} huma dovuti mal-prenotazzjoni, {later} bħala l-bilanċ.",
+      "balanceDue": "Dovut fi {date}.",
+      "noCondition": "L-ebda kundizzjoni ta' prenotazzjoni mhija stabbilita — l-ammont sħiħ huwa dovut minnufih.",
+      "cancellationPolicy": "Politika ta' kanċellazzjoni",
+      "mode": {
+        "non_refundable": "Mhux rimborsabbli.",
+        "refundable": "Rimborsabbli skont skala.",
+        "partial": "Parzjalment rimborsabbli."
+      },
+      "refundRule": "{percent} % rimborż meta tikkanċella mill-inqas {days} ijiem qabel il-wasla.",
+      "deposit": "Depożitu",
+      "depositPreauth": "{amount} jiġu awtorizzati minn qabel fuq il-karta tal-mistieden.",
+      "depositManual": "{amount} depożitu, jinġabar manwalment.",
+      "depositHold": "Miżmum {days} ijiem qabel il-wasla.",
+      "depositRelease": "Jiġi rilaxxat {days} ijiem wara t-tluq.",
+      "paymentRequest": "Talba għal ħlas",
+      "plan": "Pjan ta' ħlas",
+      "dueNow": "Dovut mal-prenotazzjoni",
+      "dueLater": "Bilanċ",
+      "dueLaterOn": "Bilanċ fi {date}",
+      "transactions": "Tranżazzjonijiet",
+      "noTransactions": "Għadu ma ġie rreġistrat l-ebda ħlas.",
+      "txDue": "skedat {date}",
+      "txType": {
+        "deposit": "Depożitu",
+        "full": "Ammont totali",
+        "refund": "Rimborż",
+        "down_payment": "Ħlas bil-quddiem",
+        "balance": "Bilanċ",
+        "addon": "Servizzi addizzjonali"
+      },
+      "txStatus": {
+        "pending": "miftuħ",
+        "succeeded": "imħallas",
+        "failed": "falla",
+        "refunded": "rimborżat",
+        "partially_refunded": "parzjalment rimborżat"
+      }
     }
   },
   "objects": {

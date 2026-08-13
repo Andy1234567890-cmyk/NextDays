@@ -4636,6 +4636,49 @@
       "saved": "Återkoppling sparad.",
       "score": "Betyg",
       "giveScore": "Betygsätt {score} av 5"
+    },
+    "bookingConditions": {
+      "title": "Bokningsvillkor",
+      "paymentPolicy": "Betalningspolicy",
+      "paymentFull": "{amount} ska betalas i sin helhet vid bokning.",
+      "paymentSplit": "{now} ska betalas vid bokning, {later} som slutbetalning.",
+      "balanceDue": "Förfaller den {date}.",
+      "noCondition": "Inget bokningsvillkor angivet — hela beloppet förfaller omedelbart.",
+      "cancellationPolicy": "Avbokningspolicy",
+      "mode": {
+        "non_refundable": "Ej återbetalningsbar.",
+        "refundable": "Återbetalningsbar enligt skala.",
+        "partial": "Delvis återbetalningsbar."
+      },
+      "refundRule": "{percent} % återbetalning vid avbokning minst {days} dagar före ankomst.",
+      "deposit": "Deposition",
+      "depositPreauth": "{amount} förhandsgodkänns på gästens kort.",
+      "depositManual": "{amount} i deposition, tas ut manuellt.",
+      "depositHold": "Hålls kvar {days} dagar före ankomst.",
+      "depositRelease": "Frisläpps {days} dagar efter avresa.",
+      "paymentRequest": "Betalningsbegäran",
+      "plan": "Betalningsplan",
+      "dueNow": "Förfaller vid bokning",
+      "dueLater": "Slutbetalning",
+      "dueLaterOn": "Slutbetalning den {date}",
+      "transactions": "Transaktioner",
+      "noTransactions": "Ingen betalning registrerad ännu.",
+      "txDue": "planerad {date}",
+      "txType": {
+        "deposit": "Deposition",
+        "full": "Totalbelopp",
+        "refund": "Återbetalning",
+        "down_payment": "Handpenning",
+        "balance": "Slutbetalning",
+        "addon": "Tilläggstjänster"
+      },
+      "txStatus": {
+        "pending": "öppen",
+        "succeeded": "betald",
+        "failed": "misslyckades",
+        "refunded": "återbetald",
+        "partially_refunded": "delvis återbetald"
+      }
     }
   },
   "objects": {

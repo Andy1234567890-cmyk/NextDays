@@ -55,6 +55,20 @@ class Capability(StrEnum):
     # Gäste-Daten
     VIEW_GUEST_FULL = "view_guest_full"      # voller Name + Preise
     VIEW_GUEST_LIMITED = "view_guest_limited"  # nur Vorname / Belegungszeit
+    # Externe Verbindungen (MCP-Connector)
+    #
+    # Eine Verbindung gibt Gastdaten an einen Dienst AUSSERHALB unserer
+    # Systeme heraus (z. B. claude.ai) und ist damit datenschutzrechtlich die
+    # Weisung des Verantwortlichen, in ein Drittland zu übermitteln
+    # (Art. 28 Abs. 3 lit. a DSGVO). Eine solche Weisung kann nur erteilen,
+    # wer den Betrieb vertritt — nicht jeder, der ein Login hat. Ohne diese
+    # Trennung würde eine Reinigungskraft, die ihr PRIVATES Konto verbindet,
+    # eine Übermittlung ohne Weisung auslösen; nach Art. 28 Abs. 10 wären
+    # dann WIR für sie verantwortlich.
+    #
+    # Eigene Fähigkeit statt MANAGE_TENANT, damit ein Betrieb sie gezielt
+    # vergeben kann, ohne die gesamte Mandantenverwaltung mitzugeben.
+    MANAGE_CONNECTIONS = "manage_connections"
 
 
 # Volle Fähigkeiten (admin = alles).
@@ -217,6 +231,27 @@ _PM_CAPABILITIES: frozenset[Capability] = frozenset({
 
 def is_pm_capability(cap: Capability) -> bool:
     return cap in _PM_CAPABILITIES
+
+
+# Fähigkeiten, deren Guard die Rolle aus der DATENBANK lesen MUSS (Wurzel 7).
+#
+# Der rollenbasierte Schnellpfad in `require_permission` prüft `ctx.role` aus
+# dem JWT — eine entzogene Rolle gilt dort bis zum Token-Ablauf weiter. Für die
+# meisten Fähigkeiten ist das vertretbar (der Schaden endet mit dem Token). Für
+# eine Fähigkeit, die Gastdaten dauerhaft an einen EXTERNEN Dienst freigibt,
+# ist es das nicht: die erteilte Verbindung überlebt den Token um 30 Tage
+# (Refresh-Token), ein entzogenes Recht wirkt also nicht mehr.
+#
+# Kein PM-Dach für diese Fähigkeiten — sie sollen nicht am PM-Zugriff hängen,
+# nur an einer FRISCHEN Rollenprüfung.
+_DB_ROLLE_ERFORDERLICH: frozenset[Capability] = frozenset({
+    Capability.MANAGE_CONNECTIONS,
+})
+
+
+def braucht_db_rolle(cap: Capability) -> bool:
+    """Muss der Guard die Rolle frisch aus der DB lesen statt aus dem JWT?"""
+    return cap in _DB_ROLLE_ERFORDERLICH
 
 
 # Rollen, für die das PM-Dach überhaupt gilt: die PMS-Rollen, die im

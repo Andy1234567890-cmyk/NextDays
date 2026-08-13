@@ -4641,6 +4641,49 @@
       "saved": "Обратната връзка е запазена.",
       "score": "Оценка",
       "giveScore": "Оцени {score} от 5"
+    },
+    "bookingConditions": {
+      "title": "Условия за резервация",
+      "paymentPolicy": "Политика за плащане",
+      "paymentFull": "{amount} се дължат изцяло при резервация.",
+      "paymentSplit": "{now} се дължат при резервация, {later} като доплащане.",
+      "balanceDue": "Дължимо на {date}.",
+      "noCondition": "Не е зададено условие за резервация — цялата сума е дължима незабавно.",
+      "cancellationPolicy": "Политика за анулиране",
+      "mode": {
+        "non_refundable": "Невъзстановимо.",
+        "refundable": "Възстановимо по скала.",
+        "partial": "Частично възстановимо."
+      },
+      "refundRule": "{percent} % възстановяване при анулиране най-малко {days} дни преди пристигане.",
+      "deposit": "Депозит",
+      "depositPreauth": "{amount} се преоторизират върху картата на госта.",
+      "depositManual": "{amount} депозит, събира се ръчно.",
+      "depositHold": "Задържан {days} дни преди пристигане.",
+      "depositRelease": "Освобождаване {days} дни след отпътуване.",
+      "paymentRequest": "Искане за плащане",
+      "plan": "План за плащане",
+      "dueNow": "Дължимо при резервация",
+      "dueLater": "Доплащане",
+      "dueLaterOn": "Доплащане на {date}",
+      "transactions": "Транзакции",
+      "noTransactions": "Все още не е регистрирано плащане.",
+      "txDue": "планирано {date}",
+      "txType": {
+        "deposit": "Депозит",
+        "full": "Обща сума",
+        "refund": "Възстановяване",
+        "down_payment": "Първоначална вноска",
+        "balance": "Доплащане",
+        "addon": "Допълнителни услуги"
+      },
+      "txStatus": {
+        "pending": "отворено",
+        "succeeded": "платено",
+        "failed": "неуспешно",
+        "refunded": "възстановено",
+        "partially_refunded": "частично възстановено"
+      }
     }
   },
   "objects": {

@@ -300,6 +300,74 @@ export const kontoAbo: HelpCategory = {
             },
           ],
         },
+        {
+          slug: "ki-assistent-verbinden",
+          title: "KI-Assistenten verbinden",
+          excerpt:
+            "Ihr Konto mit Claude oder einem anderen Assistenten verbinden — was dabei übertragen wird und worauf Sie achten müssen.",
+          updated: "Stand: August 2026",
+          body: [
+            {
+              type: "p",
+              text: "Sie können Ihr myNextDays-Konto mit einem KI-Assistenten verbinden und dort Fragen zu Ihrem Betrieb stellen — etwa „Welche Objekte sind nächste Woche frei?“ oder „Zeig mir die Buchungen für August“. Der Assistent liest dabei nur; er kann nichts ändern, nichts senden und nichts buchen.",
+            },
+            { type: "h2", text: "Verbindung einrichten" },
+            {
+              type: "steps",
+              items: [
+                "Tragen Sie in Ihrem Assistenten die Adresse des Connectors ein (bei Claude unter Einstellungen → Connectors).",
+                "Klicken Sie dort auf „Verbinden“ — Sie landen in myNextDays.",
+                "Melden Sie sich an, falls Sie es noch nicht sind.",
+                "Prüfen Sie im Zustimmungsdialog, welcher Dienst anfragt und was er lesen darf.",
+                "Entscheiden Sie, ob Sie zusätzlich Freitexte freigeben (siehe unten).",
+                "Bestätigen Sie mit „Zugriff erlauben“.",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Verbinden kann nur ein Konto mit der Rolle „Administrator“. Das ist Absicht: Die Verbindung gibt Gästedaten an einen Dienst außerhalb von myNextDays heraus, und darüber soll nur entscheiden, wer den Betrieb vertritt.",
+            },
+            { type: "h2", text: "Was übertragen wird" },
+            {
+              type: "ul",
+              items: [
+                "Belegung, Verfügbarkeit und Tagespreise Ihrer Objekte.",
+                "Buchungen mit Gastname, Zeitraum, Objekt, Kanal und Status.",
+                "Beträge und Währung — aber nur, wenn Ihre Rolle Beträge auch in der Oberfläche sieht.",
+                "Die Übersicht Ihrer Konversationen im Posteingang.",
+              ],
+            },
+            {
+              type: "p",
+              text: "Nicht übertragen werden E-Mail-Adressen und Telefonnummern Ihrer Gäste, Kartendaten und Bankverbindungen, Zugangscodes und Objektdossiers.",
+            },
+            { type: "h2", text: "Freitexte: bewusst getrennt" },
+            {
+              type: "p",
+              text: "Buchungsnotizen und der Inhalt von Gastnachrichten sind standardmäßig ausgenommen. In solchen Feldern stehen häufig Angaben wie „Rollstuhl“ oder „Allergie“ — das sind Gesundheitsdaten, die besonders geschützt sind. Ohne die zusätzliche Freigabe sieht der Assistent nur, dass eine Nachricht vorliegt, nicht was darin steht.",
+            },
+            {
+              type: "note",
+              variant: "warn",
+              text: "Verwenden Sie einen Geschäftskunden-Zugang Ihres Assistenten (bei Claude: Team, Enterprise oder API). Nur dort sagt der Anbieter zu, die Daten im Auftrag zu verarbeiten und nicht für das Training seiner Modelle zu verwenden. Wir können nicht erkennen, welchen Zugang Sie nutzen.",
+            },
+            { type: "h2", text: "Überblick behalten und trennen" },
+            {
+              type: "p",
+              text: "Unter /konto/verbindungen sehen Sie alle erteilten Verbindungen und darunter ein Protokoll: welcher Dienst wann was gelesen hat, mit Umfang, aber ohne die Inhalte selbst. Diese Übersicht brauchen Sie, wenn ein Gast wissen möchte, wer seine Daten erhalten hat. Mit „Trennen“ endet der Zugriff sofort.",
+            },
+            { type: "h2", text: "Ihre Pflichten als Betrieb" },
+            {
+              type: "p",
+              text: "Sie schließen den Vertrag über den Assistenten selbst ab und sind für seinen Einsatz verantwortlich. Nennen Sie den Anbieter in Ihrer eigenen Datenschutzerklärung, und setzen Sie die Daten nur zur Abwicklung und Betreuung Ihrer Buchungen ein — nicht zur Bewertung von Personen oder für Werbung. Das verlangen auch die Buchungsportale für die von ihnen stammenden Daten.",
+            },
+            {
+              type: "p",
+              text: "Die KI-Verordnung verlangt außerdem, dass Sie Maßnahmen ergreifen, um die KI-Kompetenz Ihrer Mitarbeitenden zu unterstützen (Art. 4). Ein bestimmtes Niveau müssen Sie seit der Änderung vom 27. Juli 2026 ausdrücklich nicht garantieren — eine Einweisung, wer den Assistenten wofür nutzt und wo seine Grenzen liegen, genügt in der Regel.",
+            },
+          ],
+        },
       ],
     },
   ],

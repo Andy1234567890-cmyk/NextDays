@@ -4636,6 +4636,49 @@
       "saved": "Terugkoppeling opgeslagen.",
       "score": "Beoordeling",
       "giveScore": "Beoordeel {score} van 5"
+    },
+    "bookingConditions": {
+      "title": "Boekingsvoorwaarden",
+      "paymentPolicy": "Betalingsbeleid",
+      "paymentFull": "{amount} is volledig verschuldigd bij boeking.",
+      "paymentSplit": "{now} is verschuldigd bij boeking, {later} als restbetaling.",
+      "balanceDue": "Verschuldigd op {date}.",
+      "noCondition": "Geen boekingsvoorwaarde ingesteld — het volledige bedrag is direct verschuldigd.",
+      "cancellationPolicy": "Annuleringsbeleid",
+      "mode": {
+        "non_refundable": "Niet restitueerbaar.",
+        "refundable": "Restitueerbaar volgens staffel.",
+        "partial": "Gedeeltelijk restitueerbaar."
+      },
+      "refundRule": "{percent} % restitutie bij annulering minstens {days} dagen voor aankomst.",
+      "deposit": "Borg",
+      "depositPreauth": "{amount} wordt vooraf geautoriseerd op de kaart van de gast.",
+      "depositManual": "{amount} borg, handmatig geïnd.",
+      "depositHold": "Vastgehouden {days} dagen voor aankomst.",
+      "depositRelease": "Vrijgegeven {days} dagen na vertrek.",
+      "paymentRequest": "Betalingsverzoek",
+      "plan": "Betalingsplan",
+      "dueNow": "Verschuldigd bij boeking",
+      "dueLater": "Restbetaling",
+      "dueLaterOn": "Restbetaling op {date}",
+      "transactions": "Transacties",
+      "noTransactions": "Nog geen betaling geregistreerd.",
+      "txDue": "gepland {date}",
+      "txType": {
+        "deposit": "Borg",
+        "full": "Totaalbedrag",
+        "refund": "Restitutie",
+        "down_payment": "Aanbetaling",
+        "balance": "Restbetaling",
+        "addon": "Extra services"
+      },
+      "txStatus": {
+        "pending": "open",
+        "succeeded": "betaald",
+        "failed": "mislukt",
+        "refunded": "gerestitueerd",
+        "partially_refunded": "gedeeltelijk gerestitueerd"
+      }
     }
   },
   "objects": {

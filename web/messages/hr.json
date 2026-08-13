@@ -4641,6 +4641,49 @@
       "saved": "Povratna informacija spremljena.",
       "score": "Ocjena",
       "giveScore": "Ocijeni {score} od 5"
+    },
+    "bookingConditions": {
+      "title": "Uvjeti rezervacije",
+      "paymentPolicy": "Pravila plaćanja",
+      "paymentFull": "{amount} dospijeva u cijelosti pri rezervaciji.",
+      "paymentSplit": "{now} dospijeva pri rezervaciji, {later} kao doplata.",
+      "balanceDue": "Dospijeva {date}.",
+      "noCondition": "Nije postavljen uvjet rezervacije — cijeli iznos dospijeva odmah.",
+      "cancellationPolicy": "Pravila otkazivanja",
+      "mode": {
+        "non_refundable": "Bez povrata.",
+        "refundable": "Povrat prema ljestvici.",
+        "partial": "Djelomičan povrat."
+      },
+      "refundRule": "{percent} % povrata pri otkazivanju najmanje {days} dana prije dolaska.",
+      "deposit": "Polog",
+      "depositPreauth": "{amount} se predautorizira na kartici gosta.",
+      "depositManual": "{amount} pologa, naplaćuje se ručno.",
+      "depositHold": "Zadržano {days} dana prije dolaska.",
+      "depositRelease": "Oslobađanje {days} dana nakon odlaska.",
+      "paymentRequest": "Zahtjev za plaćanje",
+      "plan": "Plan plaćanja",
+      "dueNow": "Dospijeva pri rezervaciji",
+      "dueLater": "Doplata",
+      "dueLaterOn": "Doplata {date}",
+      "transactions": "Transakcije",
+      "noTransactions": "Još nije zabilježeno plaćanje.",
+      "txDue": "planirano {date}",
+      "txType": {
+        "deposit": "Polog",
+        "full": "Ukupan iznos",
+        "refund": "Povrat",
+        "down_payment": "Predujam",
+        "balance": "Doplata",
+        "addon": "Dodatne usluge"
+      },
+      "txStatus": {
+        "pending": "otvoreno",
+        "succeeded": "plaćeno",
+        "failed": "neuspjelo",
+        "refunded": "vraćeno",
+        "partially_refunded": "djelomično vraćeno"
+      }
     }
   },
   "objects": {

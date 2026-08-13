@@ -47,6 +47,24 @@ export async function trenneVerbindung(clientId: string): Promise<Result<null>> 
   );
 }
 
+export type McpZugriff = {
+  host: string;
+  werkzeug: string;
+  ziel_id: string | null;
+  anzahl: number;
+  scopes: string;
+  erfolg: boolean;
+  zeitpunkt: string;
+};
+
+// Das Zugriffsprotokoll (0388). Der Betrieb braucht es, um eine Auskunft nach
+// Art. 15 DSGVO erteilen zu können — ohne Aufzeichnung wäre die Antwort auf
+// „wer hat meine Daten bekommen?" ein Achselzucken.
+export async function listeZugriffe(): Promise<Result<McpZugriff[]>> {
+  const res = await call<{ items: McpZugriff[] }>("/mcp/zugriffe");
+  return res.ok ? { ok: true, data: res.data.items } : res;
+}
+
 export type ZustimmungEingabe = {
   client_id: string;
   redirect_uri: string;

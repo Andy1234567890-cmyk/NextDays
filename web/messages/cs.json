@@ -4641,6 +4641,49 @@
       "saved": "Zpětná vazba uložena.",
       "score": "Hodnocení",
       "giveScore": "Ohodnotit {score} z 5"
+    },
+    "bookingConditions": {
+      "title": "Podmínky rezervace",
+      "paymentPolicy": "Platební podmínky",
+      "paymentFull": "{amount} je splatná v plné výši při rezervaci.",
+      "paymentSplit": "{now} je splatná při rezervaci, {later} jako doplatek.",
+      "balanceDue": "Splatné {date}.",
+      "noCondition": "Není nastavena žádná rezervační podmínka — celá částka je splatná ihned.",
+      "cancellationPolicy": "Storno podmínky",
+      "mode": {
+        "non_refundable": "Nevratné.",
+        "refundable": "Vratné podle pásma.",
+        "partial": "Částečně vratné."
+      },
+      "refundRule": "{percent} % vrácení při zrušení nejméně {days} dní před příjezdem.",
+      "deposit": "Kauce",
+      "depositPreauth": "{amount} se předautorizuje na kartě hosta.",
+      "depositManual": "{amount} kauce, vybírá se ručně.",
+      "depositHold": "Zadrženo {days} dní před příjezdem.",
+      "depositRelease": "Uvolnění {days} dní po odjezdu.",
+      "paymentRequest": "Žádost o platbu",
+      "plan": "Platební plán",
+      "dueNow": "Splatné při rezervaci",
+      "dueLater": "Doplatek",
+      "dueLaterOn": "Doplatek dne {date}",
+      "transactions": "Transakce",
+      "noTransactions": "Zatím nebyla zaznamenána žádná platba.",
+      "txDue": "plánováno {date}",
+      "txType": {
+        "deposit": "Kauce",
+        "full": "Celková částka",
+        "refund": "Vrácení",
+        "down_payment": "Záloha",
+        "balance": "Doplatek",
+        "addon": "Doplňkové služby"
+      },
+      "txStatus": {
+        "pending": "otevřená",
+        "succeeded": "zaplacena",
+        "failed": "neúspěšná",
+        "refunded": "vrácena",
+        "partially_refunded": "částečně vrácena"
+      }
     }
   },
   "objects": {

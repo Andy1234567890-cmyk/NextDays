@@ -4636,6 +4636,49 @@
       "saved": "Podsumowanie zapisane.",
       "score": "Ocena",
       "giveScore": "Oceń {score} na 5"
+    },
+    "bookingConditions": {
+      "title": "Warunki rezerwacji",
+      "paymentPolicy": "Zasady płatności",
+      "paymentFull": "{amount} jest płatne w całości przy rezerwacji.",
+      "paymentSplit": "{now} jest płatne przy rezerwacji, {later} jako dopłata.",
+      "balanceDue": "Termin płatności: {date}.",
+      "noCondition": "Nie ustawiono warunku rezerwacji — cała kwota jest płatna natychmiast.",
+      "cancellationPolicy": "Zasady anulowania",
+      "mode": {
+        "non_refundable": "Bezzwrotne.",
+        "refundable": "Zwrotne według progów.",
+        "partial": "Częściowo zwrotne."
+      },
+      "refundRule": "{percent} % zwrotu przy anulowaniu co najmniej {days} dni przed przyjazdem.",
+      "deposit": "Kaucja",
+      "depositPreauth": "{amount} zostaje wstępnie zablokowane na karcie gościa.",
+      "depositManual": "{amount} kaucji, pobierane ręcznie.",
+      "depositHold": "Blokowana {days} dni przed przyjazdem.",
+      "depositRelease": "Zwolnienie {days} dni po wyjeździe.",
+      "paymentRequest": "Żądanie płatności",
+      "plan": "Plan płatności",
+      "dueNow": "Płatne przy rezerwacji",
+      "dueLater": "Dopłata",
+      "dueLaterOn": "Dopłata w dniu {date}",
+      "transactions": "Transakcje",
+      "noTransactions": "Nie zarejestrowano jeszcze żadnej płatności.",
+      "txDue": "zaplanowano {date}",
+      "txType": {
+        "deposit": "Kaucja",
+        "full": "Kwota całkowita",
+        "refund": "Zwrot",
+        "down_payment": "Zaliczka",
+        "balance": "Dopłata",
+        "addon": "Usługi dodatkowe"
+      },
+      "txStatus": {
+        "pending": "otwarta",
+        "succeeded": "opłacona",
+        "failed": "nieudana",
+        "refunded": "zwrócona",
+        "partially_refunded": "częściowo zwrócona"
+      }
     }
   },
   "objects": {

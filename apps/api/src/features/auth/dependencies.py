@@ -15,6 +15,7 @@ from .otp_service import OtpService
 from .owner_assignment_service import OwnerAssignmentService
 from .permissions import (
     Capability,
+    braucht_db_rolle,
     has_capability,
     is_pm_capability,
     pm_umbrella_applies,
@@ -110,6 +111,25 @@ def require_permission(cap: Capability) -> Callable[..., AuthContext]:
     PM-Capability (VIEW_CALENDAR) verlieren — das Eigentümer-Portal wäre dicht.
     Er behält exakt sein Rollen-Set, ohne Zuwachs.
     """
+
+    if braucht_db_rolle(cap):
+        # Rolle frisch aus der DB, aber OHNE PM-Dach: die Fähigkeit soll allein
+        # an einer aktuellen Rollenprüfung hängen (Wurzel 7). Nötig, weil die
+        # erteilte Verbindung den Token um 30 Tage überlebt — eine im JWT
+        # veraltete Rolle würde sonst dauerhaft wirken.
+        def _guard_db_rolle(
+            ctx: Annotated[AuthContext, Depends(get_current_user)],
+            service: AccountServiceDep,
+        ) -> AuthContext:
+            role, _ = service.role_and_permissions(ctx)
+            if not has_capability(role, cap):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Unzureichende Berechtigung.",
+                )
+            return ctx
+
+        return _guard_db_rolle
 
     if not is_pm_capability(cap):
         def _guard_role_only(

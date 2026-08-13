@@ -4636,6 +4636,49 @@
       "saved": "Retorno guardado.",
       "score": "Avaliação",
       "giveScore": "Avaliar {score} em 5"
+    },
+    "bookingConditions": {
+      "title": "Condições de reserva",
+      "paymentPolicy": "Política de pagamento",
+      "paymentFull": "{amount} são devidos na totalidade na reserva.",
+      "paymentSplit": "{now} são devidos na reserva, {later} como pagamento restante.",
+      "balanceDue": "Devido a {date}.",
+      "noCondition": "Nenhuma condição de reserva definida — o valor total é devido de imediato.",
+      "cancellationPolicy": "Política de cancelamento",
+      "mode": {
+        "non_refundable": "Não reembolsável.",
+        "refundable": "Reembolsável por escalões.",
+        "partial": "Parcialmente reembolsável."
+      },
+      "refundRule": "{percent} % de reembolso em caso de cancelamento pelo menos {days} dias antes da chegada.",
+      "deposit": "Caução",
+      "depositPreauth": "{amount} são pré-autorizados no cartão do hóspede.",
+      "depositManual": "{amount} de caução, cobrados manualmente.",
+      "depositHold": "Retida {days} dias antes da chegada.",
+      "depositRelease": "Libertação {days} dias após a partida.",
+      "paymentRequest": "Pedido de pagamento",
+      "plan": "Plano de pagamento",
+      "dueNow": "Devido na reserva",
+      "dueLater": "Pagamento restante",
+      "dueLaterOn": "Pagamento restante a {date}",
+      "transactions": "Transações",
+      "noTransactions": "Ainda não foi registado qualquer pagamento.",
+      "txDue": "previsto {date}",
+      "txType": {
+        "deposit": "Caução",
+        "full": "Valor total",
+        "refund": "Reembolso",
+        "down_payment": "Entrada",
+        "balance": "Pagamento restante",
+        "addon": "Serviços adicionais"
+      },
+      "txStatus": {
+        "pending": "pendente",
+        "succeeded": "pago",
+        "failed": "falhou",
+        "refunded": "reembolsado",
+        "partially_refunded": "parcialmente reembolsado"
+      }
     }
   },
   "objects": {

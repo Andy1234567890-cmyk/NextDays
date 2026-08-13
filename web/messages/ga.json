@@ -4641,6 +4641,49 @@
       "saved": "Aiseolas sábháilte.",
       "score": "Scór",
       "giveScore": "Tabhair {score} as 5"
+    },
+    "bookingConditions": {
+      "title": "Coinníollacha áirithinte",
+      "paymentPolicy": "Polasaí íocaíochta",
+      "paymentFull": "Tá {amount} iníoctha ina iomláine ag am na háirithinte.",
+      "paymentSplit": "Tá {now} iníoctha ag am na háirithinte, {later} mar iarmhéid.",
+      "balanceDue": "Dlite ar {date}.",
+      "noCondition": "Níl coinníoll áirithinte socraithe — tá an tsuim iomlán dlite láithreach.",
+      "cancellationPolicy": "Polasaí cealaithe",
+      "mode": {
+        "non_refundable": "Neamh-inaisíoctha.",
+        "refundable": "Inaisíoctha de réir scála.",
+        "partial": "Inaisíoctha go páirteach."
+      },
+      "refundRule": "Aisíoc {percent} % nuair a chealaítear {days} lá ar a laghad roimh theacht.",
+      "deposit": "Éarlais",
+      "depositPreauth": "Réamhúdaraítear {amount} ar chárta an aoi.",
+      "depositManual": "{amount} éarlaise, bailítear de láimh é.",
+      "depositHold": "Coinnithe {days} lá roimh theacht.",
+      "depositRelease": "Scaoiltear é {days} lá tar éis imeachta.",
+      "paymentRequest": "Iarratas íocaíochta",
+      "plan": "Plean íocaíochta",
+      "dueNow": "Dlite ag am na háirithinte",
+      "dueLater": "Iarmhéid",
+      "dueLaterOn": "Iarmhéid ar {date}",
+      "transactions": "Idirbhearta",
+      "noTransactions": "Níor taifeadadh íocaíocht go fóill.",
+      "txDue": "sceidealta {date}",
+      "txType": {
+        "deposit": "Éarlais",
+        "full": "Suim iomlán",
+        "refund": "Aisíoc",
+        "down_payment": "Réamhíocaíocht",
+        "balance": "Iarmhéid",
+        "addon": "Seirbhísí breise"
+      },
+      "txStatus": {
+        "pending": "oscailte",
+        "succeeded": "íoctha",
+        "failed": "theip air",
+        "refunded": "aisíoctha",
+        "partially_refunded": "aisíoctha go páirteach"
+      }
     }
   },
   "objects": {

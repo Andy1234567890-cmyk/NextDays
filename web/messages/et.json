@@ -4641,6 +4641,49 @@
       "saved": "Tagasiside salvestatud.",
       "score": "Hinne",
       "giveScore": "Hinda {score} viiest"
+    },
+    "bookingConditions": {
+      "title": "Broneerimistingimused",
+      "paymentPolicy": "Maksepoliitika",
+      "paymentFull": "{amount} kuulub broneerimisel täies ulatuses tasumisele.",
+      "paymentSplit": "{now} kuulub tasumisele broneerimisel, {later} lõppmaksena.",
+      "balanceDue": "Tähtaeg {date}.",
+      "noCondition": "Broneerimistingimust pole määratud — kogu summa kuulub kohe tasumisele.",
+      "cancellationPolicy": "Tühistamistingimused",
+      "mode": {
+        "non_refundable": "Ei kuulu tagastamisele.",
+        "refundable": "Tagastatav astmestiku alusel.",
+        "partial": "Osaliselt tagastatav."
+      },
+      "refundRule": "{percent} % tagastust tühistamisel vähemalt {days} päeva enne saabumist.",
+      "deposit": "Tagatisraha",
+      "depositPreauth": "{amount} eelautoriseeritakse külalise kaardil.",
+      "depositManual": "{amount} tagatisraha, kogutakse käsitsi.",
+      "depositHold": "Kinni peetud {days} päeva enne saabumist.",
+      "depositRelease": "Vabastatakse {days} päeva pärast lahkumist.",
+      "paymentRequest": "Maksetaotlus",
+      "plan": "Maksegraafik",
+      "dueNow": "Tasumisele broneerimisel",
+      "dueLater": "Lõppmakse",
+      "dueLaterOn": "Lõppmakse {date}",
+      "transactions": "Tehingud",
+      "noTransactions": "Makset pole veel registreeritud.",
+      "txDue": "kavandatud {date}",
+      "txType": {
+        "deposit": "Tagatisraha",
+        "full": "Kogusumma",
+        "refund": "Tagastus",
+        "down_payment": "Ettemaks",
+        "balance": "Lõppmakse",
+        "addon": "Lisateenused"
+      },
+      "txStatus": {
+        "pending": "avatud",
+        "succeeded": "makstud",
+        "failed": "ebaõnnestus",
+        "refunded": "tagastatud",
+        "partially_refunded": "osaliselt tagastatud"
+      }
     }
   },
   "objects": {

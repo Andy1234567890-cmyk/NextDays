@@ -4636,6 +4636,49 @@
       "saved": "Atgriezeniskā saite saglabāta.",
       "score": "Vērtējums",
       "giveScore": "Novērtēt {score} no 5"
+    },
+    "bookingConditions": {
+      "title": "Rezervācijas nosacījumi",
+      "paymentPolicy": "Maksājumu politika",
+      "paymentFull": "{amount} pilnā apmērā jāsamaksā rezervējot.",
+      "paymentSplit": "{now} jāsamaksā rezervējot, {later} kā atlikuma maksājums.",
+      "balanceDue": "Termiņš {date}.",
+      "noCondition": "Rezervācijas nosacījums nav iestatīts — visa summa jāsamaksā nekavējoties.",
+      "cancellationPolicy": "Atcelšanas noteikumi",
+      "mode": {
+        "non_refundable": "Nav atmaksājams.",
+        "refundable": "Atmaksājams pēc skalas.",
+        "partial": "Daļēji atmaksājams."
+      },
+      "refundRule": "{percent} % atmaksa, atceļot vismaz {days} dienas pirms ierašanās.",
+      "deposit": "Drošības nauda",
+      "depositPreauth": "{amount} tiek iepriekš autorizēti viesa kartē.",
+      "depositManual": "{amount} drošības nauda, tiek iekasēta manuāli.",
+      "depositHold": "Aizturēts {days} dienas pirms ierašanās.",
+      "depositRelease": "Atbrīvošana {days} dienas pēc izbraukšanas.",
+      "paymentRequest": "Maksājuma pieprasījums",
+      "plan": "Maksājumu plāns",
+      "dueNow": "Maksājams rezervējot",
+      "dueLater": "Atlikuma maksājums",
+      "dueLaterOn": "Atlikuma maksājums {date}",
+      "transactions": "Darījumi",
+      "noTransactions": "Maksājums vēl nav reģistrēts.",
+      "txDue": "plānots {date}",
+      "txType": {
+        "deposit": "Drošības nauda",
+        "full": "Kopsumma",
+        "refund": "Atmaksa",
+        "down_payment": "Pirmā iemaksa",
+        "balance": "Atlikuma maksājums",
+        "addon": "Papildpakalpojumi"
+      },
+      "txStatus": {
+        "pending": "atvērts",
+        "succeeded": "apmaksāts",
+        "failed": "neizdevās",
+        "refunded": "atmaksāts",
+        "partially_refunded": "daļēji atmaksāts"
+      }
     }
   },
   "objects": {

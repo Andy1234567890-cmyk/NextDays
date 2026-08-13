@@ -4662,6 +4662,49 @@
       "saved": "Resolution saved.",
       "score": "Score",
       "giveScore": "Rate {score} out of 5"
+    },
+    "bookingConditions": {
+      "title": "Booking conditions",
+      "paymentPolicy": "Payment policy",
+      "paymentFull": "{amount} is due in full at booking.",
+      "paymentSplit": "{now} is due at booking, {later} as the balance.",
+      "balanceDue": "Due on {date}.",
+      "noCondition": "No booking condition set — the full amount is due immediately.",
+      "cancellationPolicy": "Cancellation policy",
+      "mode": {
+        "non_refundable": "Non-refundable.",
+        "refundable": "Refundable on a sliding scale.",
+        "partial": "Partially refundable."
+      },
+      "refundRule": "{percent} % refund when cancelling at least {days} days before arrival.",
+      "deposit": "Security deposit",
+      "depositPreauth": "{amount} is pre-authorised on the guest's card.",
+      "depositManual": "{amount} deposit, collected manually.",
+      "depositHold": "Held {days} days before arrival.",
+      "depositRelease": "Released {days} days after departure.",
+      "paymentRequest": "Payment request",
+      "plan": "Payment plan",
+      "dueNow": "Due at booking",
+      "dueLater": "Balance",
+      "dueLaterOn": "Balance on {date}",
+      "transactions": "Transactions",
+      "noTransactions": "No payment recorded yet.",
+      "txDue": "scheduled {date}",
+      "txType": {
+        "deposit": "Security deposit",
+        "full": "Total amount",
+        "refund": "Refund",
+        "down_payment": "Down payment",
+        "balance": "Balance",
+        "addon": "Extras"
+      },
+      "txStatus": {
+        "pending": "open",
+        "succeeded": "paid",
+        "failed": "failed",
+        "refunded": "refunded",
+        "partially_refunded": "partially refunded"
+      }
     }
   },
   "objects": {

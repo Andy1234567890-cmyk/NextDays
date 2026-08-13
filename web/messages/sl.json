@@ -4636,6 +4636,49 @@
       "saved": "Povratna informacija shranjena.",
       "score": "Ocena",
       "giveScore": "Oceni {score} od 5"
+    },
+    "bookingConditions": {
+      "title": "Pogoji rezervacije",
+      "paymentPolicy": "Pravila plačila",
+      "paymentFull": "{amount} zapade v celoti ob rezervaciji.",
+      "paymentSplit": "{now} zapade ob rezervaciji, {later} kot doplačilo.",
+      "balanceDue": "Zapade {date}.",
+      "noCondition": "Pogoj rezervacije ni nastavljen — celoten znesek zapade takoj.",
+      "cancellationPolicy": "Pravila odpovedi",
+      "mode": {
+        "non_refundable": "Brez vračila.",
+        "refundable": "Vračljivo po lestvici.",
+        "partial": "Delno vračljivo."
+      },
+      "refundRule": "{percent} % vračila ob odpovedi najmanj {days} dni pred prihodom.",
+      "deposit": "Varščina",
+      "depositPreauth": "{amount} se predhodno odobri na kartici gosta.",
+      "depositManual": "{amount} varščine, pobrano ročno.",
+      "depositHold": "Zadržano {days} dni pred prihodom.",
+      "depositRelease": "Sprostitev {days} dni po odhodu.",
+      "paymentRequest": "Zahtevek za plačilo",
+      "plan": "Načrt plačil",
+      "dueNow": "Zapade ob rezervaciji",
+      "dueLater": "Doplačilo",
+      "dueLaterOn": "Doplačilo dne {date}",
+      "transactions": "Transakcije",
+      "noTransactions": "Plačilo še ni zabeleženo.",
+      "txDue": "načrtovano {date}",
+      "txType": {
+        "deposit": "Varščina",
+        "full": "Skupni znesek",
+        "refund": "Vračilo",
+        "down_payment": "Predplačilo",
+        "balance": "Doplačilo",
+        "addon": "Dodatne storitve"
+      },
+      "txStatus": {
+        "pending": "odprto",
+        "succeeded": "plačano",
+        "failed": "neuspešno",
+        "refunded": "vrnjeno",
+        "partially_refunded": "delno vrnjeno"
+      }
     }
   },
   "objects": {
