@@ -28,6 +28,7 @@ from __future__ import annotations
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import date
 from typing import TYPE_CHECKING, Any
 
 import httpx
@@ -140,6 +141,65 @@ def _json_or_none(resp: httpx.Response) -> dict[str, Any] | None:
     except ValueError:
         return None
     return body if isinstance(body, dict) else None
+
+
+def ohne_vergangenheit(
+    values: list[dict[str, Any]], *, heute: date | None = None
+) -> list[dict[str, Any]]:
+    """ARI-Werte auf ab-heute beschneiden — vergangene Tage nie senden.
+
+    WARUM ZENTRAL HIER UND NICHT IN DEN AUFRUFERN (13.08.2026, live gemessen):
+    Es gibt fünf Wege zu `POST /availability` und ebenso viele zu
+    `/restrictions`. Drei klemmten auf heute, zwei nicht — und die zwei ohne
+    Schutz waren genau die Retry-Pfade (`process_ari_outbox`,
+    `process_restriction_outbox`). Ein Retry schickte damit ungeklemmt, was der
+    Sofort-Push zuvor sauber geklemmt hatte, weil er die Nutzlast aus der rohen
+    Outbox-Zeile NEU aufbaut (`date_from = reservations.check_in`, bei einer
+    laufenden Buchung also gestern).
+
+    Channex quittierte das 356× zwischen dem 05.08. und 13.08. mit:
+
+        "warnings": ["Past date is not allowed.
+                      `date_from` was changed from 2026-08-12 to 2026-08-13"]
+
+    Es entstand kein Schaden, weil Channex nach vorn verschiebt statt abzulehnen.
+    Genau darin liegt das Risiko: unser Verhalten hing an einer Kulanz, die
+    nirgends zugesagt ist. Fällt sie weg, sind es 356 ABGELEHNTE Aufrufe, und
+    dann fehlt Verfügbarkeit im Portal — ein Fehler, der als „Channex spinnt"
+    ankommt, nicht als unser Datumsfehler.
+
+    Die Klemmung sitzt deshalb an der LETZTEN Station vor dem Absenden. Ein
+    sechster Aufrufer kann sie nicht mehr vergessen (die vierte Kopie in einem
+    Aufrufer wäre genau der Weg, auf dem sie ein zweites Mal vergessen wird).
+
+    Behandelt beide Channex-Formen: Einzeltag (`date`) und Spanne
+    (`date_from`/`date_to`). Ein Wert, der KOMPLETT in der Vergangenheit liegt,
+    fällt heraus; eine Spanne, die heute überlappt, beginnt bei heute. Werte ohne
+    Datumsfelder gehen unverändert durch — hier wird nur beschnitten, nicht
+    validiert (eine fehlende Angabe ist Sache des Aufrufers, nicht dieser Stelle).
+    """
+    grenze = (heute or date.today()).isoformat()
+    beschnitten: list[dict[str, Any]] = []
+    entfernt = 0
+    for wert in values:
+        tag = wert.get("date")
+        if isinstance(tag, str):
+            if tag[:10] < grenze:
+                entfernt += 1
+                continue
+            beschnitten.append(wert)
+            continue
+        von, bis = wert.get("date_from"), wert.get("date_to")
+        if not isinstance(von, str) or not isinstance(bis, str):
+            beschnitten.append(wert)
+            continue
+        if bis[:10] < grenze:
+            entfernt += 1
+            continue
+        beschnitten.append({**wert, "date_from": max(von[:10], grenze)})
+    if entfernt:
+        log.info("ari_vergangene_werte_verworfen", anzahl=entfernt, ab=grenze)
+    return beschnitten
 
 
 class ChannexError(Exception):
@@ -751,12 +811,31 @@ class ChannexClient(AirbnbActionsMixin, ListingSettingsMixin):
         """Verfügbarkeit setzen. `values` = Liste von Updates (s. Channex-ARI).
 
         Getrennt von Preisen senden (Channex priorisiert Availability-Queue).
+        Vergangene Tage werden hier zentral abgeschnitten (`ohne_vergangenheit`).
         """
-        return self.post("availability", json={"values": values})
+        return self._ari_senden("availability", values)
 
     def update_restrictions(self, values: list[dict[str, Any]]) -> dict[str, Any]:
-        """Preise + Restriktionen setzen (rate, min_stay_*, stop_sell, …)."""
-        return self.post("restrictions", json={"values": values})
+        """Preise + Restriktionen setzen (rate, min_stay_*, stop_sell, …).
+
+        Vergangene Tage werden hier zentral abgeschnitten (`ohne_vergangenheit`).
+        """
+        return self._ari_senden("restrictions", values)
+
+    def _ari_senden(
+        self, pfad: str, values: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """ARI-Werte beschneiden und senden — der gemeinsame Weg beider Endpunkte.
+
+        Bleibt nach dem Beschneiden NICHTS übrig, wird auch nicht gesendet: ein
+        `{"values": []}` verbraucht Budget und einen Round-Trip, um Channex zu
+        sagen, dass es nichts tun soll. Die Antwort ist dieselbe Form wie eine
+        echte Erfolgsmeldung, damit kein Aufrufer einen Sonderfall braucht.
+        """
+        beschnitten = ohne_vergangenheit(values)
+        if values and not beschnitten:
+            return {"data": [], "meta": {"message": "Nur vergangene Tage — nichts zu senden."}}
+        return self.post(pfad, json={"values": beschnitten})
 
     def get_availability(
         self, property_id: str, *, date_from: str, date_to: str

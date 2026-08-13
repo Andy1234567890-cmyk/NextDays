@@ -458,6 +458,27 @@ def test_to_booking_masks_customer_via_mixin() -> None:
 # umging das kontoweite Limit. Der Fix zieht ein Token PRO ECHTEM HTTP-CALL im
 # ChannexClient (before_call-Callback); erschöpftes Budget → ChannexBudgetExhausted.
 
+def _ari_wert_in_der_zukunft() -> dict[str, object]:
+    """Ein availability-Wert, dessen Zeitraum in der Zukunft liegt.
+
+    KEIN FESTES DATUM (13.08.2026): Hier stand „2026-06-23 bis 2026-06-25", und
+    das brach genau in dem Moment, als der Client anfing, vergangene Tage zentral
+    abzuschneiden (`ohne_vergangenheit`) — die Nutzlast wurde leer, und der Test
+    verlor die `property_id`, deren Weiterleitung er eigentlich prüft. Ein Test
+    für den BUDGET-Zähler darf nicht am Kalender hängen.
+    """
+    from datetime import date, timedelta
+
+    start = date.today() + timedelta(days=30)
+    return {
+        "property_id": "cx-prop",
+        "room_type_id": "cx-rt",
+        "date_from": start.isoformat(),
+        "date_to": (start + timedelta(days=2)).isoformat(),
+        "availability": 0,
+    }
+
+
 def _budget_client(*, allow: bool):  # noqa: ANN202
     """Realer ChannexClient mit gesetztem before_call. `allow=False` verweigert
     jedes Token (deny-all), damit KEIN echter HTTP-Call passiert. api_key gesetzt
@@ -491,10 +512,7 @@ def test_channex_client_raises_when_budget_exhausted_without_http() -> None:
     # httpx darf gar nicht erst aufgerufen werden — der Budget-Gate schlägt davor zu.
     with patch("httpx.Client") as httpx_client:
         try:
-            client.update_availability(
-                [{"property_id": "cx-prop", "room_type_id": "cx-rt",
-                  "date_from": "2026-06-23", "date_to": "2026-06-25", "availability": 0}]
-            )
+            client.update_availability([_ari_wert_in_der_zukunft()])
         except ChannexBudgetExhausted as exc:
             assert exc.retry_after >= 1
         else:
@@ -518,10 +536,7 @@ def test_channex_client_allows_and_hits_http_when_budget_free() -> None:
     resp.json.return_value = {"data": []}
     with patch("httpx.Client") as httpx_client:
         httpx_client.return_value.__enter__.return_value.request.return_value = resp
-        client.update_availability(
-            [{"property_id": "cx-prop", "room_type_id": "cx-rt",
-              "date_from": "2026-06-23", "date_to": "2026-06-25", "availability": 0}]
-        )
+        client.update_availability([_ari_wert_in_der_zukunft()])
     httpx_client.assert_called_once()  # Budget frei → echter Call läuft
     # genau ein Token für diesen einen Call, aus dem Availability-Topf
     assert calls == [("cx-prop", "availability")]
