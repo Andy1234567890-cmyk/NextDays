@@ -19,12 +19,17 @@ from __future__ import annotations
 from datetime import date, timedelta
 from typing import Any
 
+from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import get_service_client
 from src.features.calendar.schemas import DateRange
 from src.features.calendar.service import CalendarError, CalendarService
 from src.features.inbox.service import InboxService
 from src.features.reservations.service import ReservationError, ReservationsService
+
+from .oauth_service import SCOPE_FREITEXT
+
+log = get_logger("nextdays.mcp.tools")
 
 # Wurzel 8: harte Obergrenzen an JEDEM Werkzeug. Ein Modell fragt gern „alles" —
 # ohne Deckel wäre das ein Vollabzug des Bestands in den Kontext.
@@ -39,6 +44,20 @@ def _tage_pruefen(start: date, ende: date) -> None:
         raise ValueError("ende muss nach start liegen")
     if (ende - start).days > MAX_TAGE:
         raise ValueError(f"Zeitraum zu groß (max. {MAX_TAGE} Tage)")
+
+
+def _umfang(ergebnis: dict[str, Any]) -> int:
+    """Wie viele Datensätze gingen heraus? Für den Zugriffslog (0388).
+
+    Macht einen Massenabruf im Log sichtbar — „1 Buchung gelesen" und „100
+    Buchungen gelesen" sind für eine Auskunft nach Art. 15 DSGVO ein
+    Unterschied. Zählt die erste Liste im Ergebnis; findet sich keine, ist es
+    ein Einzelabruf (1).
+    """
+    for wert in ergebnis.values():
+        if isinstance(wert, list):
+            return len(wert)
+    return 1
 
 
 def _als_datum(wert: str | None, ersatz: date) -> date:
@@ -56,9 +75,68 @@ def _als_datum(wert: str | None, ersatz: date) -> date:
 class McpTools:
     """Werkzeug-Implementierungen über dem bestehenden Service-Layer."""
 
-    def __init__(self, ctx: AuthContext) -> None:
+    def __init__(
+        self,
+        ctx: AuthContext,
+        scopes: frozenset[str] = frozenset(),
+        client_id: str = "",
+    ) -> None:
         self._ctx = ctx
         self._db = get_service_client()
+        self._scopes = scopes
+        self._client_id = client_id
+
+    def _darf_freitext(self) -> bool:
+        """Sind Notizen und Nachrichtentexte für diese Verbindung freigegeben?
+
+        Getrennt vom Lese-Scope, weil in Freitexten regelmässig besondere
+        Kategorien nach Art. 9 DSGVO stehen (Gesundheit: „Rollstuhl",
+        „Allergie"). Die Weboberfläche zeigt sie jedem, der den Thread öffnen
+        darf — das ist dort richtig. Hier verlassen sie unsere Systeme, und
+        dafür braucht es die ausdrückliche Freigabe des Betriebs.
+        """
+        return SCOPE_FREITEXT in self._scopes
+
+    def _protokollieren(
+        self, werkzeug: str, *, ziel: str | None, anzahl: int, erfolg: bool
+    ) -> None:
+        """Den Abruf im Zugriffslog vermerken (0388).
+
+        Best-effort: Ein fehlgeschlagener Log darf die Antwort nicht kippen —
+        aber er wird geloggt, damit ein stiller Ausfall auffällt. Ohne die
+        Aufzeichnung könnte der Betrieb weder eine Auskunft nach Art. 15 DSGVO
+        erteilen noch seine Rechenschaftspflicht erfüllen.
+
+        Bewusst OHNE Inhalte: was abgerufen wurde, nicht was drinstand.
+        """
+        try:
+            self._db.table("mcp_access_log").insert({
+                "tenant_id": self._ctx.tenant_id,
+                "user_id": self._ctx.user_id or None,
+                "client_id": self._client_id,
+                "werkzeug": werkzeug,
+                "ziel_id": ziel,
+                "anzahl": anzahl,
+                "scopes": " ".join(sorted(self._scopes)),
+                "erfolg": erfolg,
+            }).execute()
+        except Exception:  # noqa: BLE001 — Nebenpfad, kippt den Hauptpfad nie
+            log.warning("mcp.zugriffslog_fehlgeschlagen", extra={
+                "werkzeug": werkzeug, "tenant_id": self._ctx.tenant_id,
+            })
+
+    @staticmethod
+    def _freitext_hinweis() -> str:
+        """Ehrlicher Platzhalter statt leerem Feld (Wurzel 4).
+
+        Ein stilles `null` liesse das Modell glauben, es gebe keine Notiz —
+        und der Nutzer bekäme „dazu ist nichts hinterlegt" statt „dafür fehlt
+        die Freigabe". Der Unterschied ist für ihn entscheidend.
+        """
+        return (
+            "[nicht freigegeben — Freitexte (Notizen, Nachrichten) sind für "
+            "diese Verbindung gesperrt. Freigabe unter Konto → Verbindungen.]"
+        )
 
     # -- Katalog ------------------------------------------------------------
 
@@ -66,13 +144,27 @@ class McpTools:
     def katalog() -> list[dict[str, Any]]:
         """Werkzeug-Beschreibungen für `tools/list`.
 
-        Die Beschreibungen sind für ein MODELL geschrieben, nicht für einen
-        Menschen: sie sagen, wann das Werkzeug das richtige ist und was die
+        Die `description` ist für ein MODELL geschrieben, nicht für einen
+        Menschen: sie sagt, wann das Werkzeug das richtige ist und was die
         Grenzen sind — sonst rät das Modell und ruft das falsche auf.
+
+        `title` ist dagegen der ANZEIGENAME für den Betrieb. Ohne ihn formt der
+        Client den technischen `name` um und zeigt „Kalender verfuegbarkeit" —
+        der `name` ist ASCII, weil er programmatisch adressiert wird. Die
+        Reihenfolge ist laut Spec `title` → `annotations.title` → `name`;
+        beide werden gesetzt, weil ältere Clients nur die Annotation kennen.
+
+        `readOnlyHint` ist hier keine Deko: alle sechs Werkzeuge lesen nur, und
+        der Client darf das dem Nutzer so anzeigen.
         """
         return [
             {
                 "name": "kalender_verfuegbarkeit",
+                "title": "Kalender-Verfügbarkeit",
+                "annotations": {
+                    "title": "Kalender-Verfügbarkeit",
+                    "readOnlyHint": True,
+                },
                 "description": (
                     "Belegung und freie Einheiten eines Objekts je Tag. "
                     "Liefert die ZAHL freier Einheiten (ein Objekt kann mehrere "
@@ -103,6 +195,8 @@ class McpTools:
             },
             {
                 "name": "buchungen_liste",
+                "title": "Buchungen",
+                "annotations": {"title": "Buchungen", "readOnlyHint": True},
                 "description": (
                     "Buchungen des Betriebs, neueste Anreise zuerst. Optional "
                     "auf ein Objekt und einen Anreise-Zeitraum eingegrenzt. "
@@ -123,6 +217,8 @@ class McpTools:
             },
             {
                 "name": "buchung_detail",
+                "title": "Buchung im Detail",
+                "annotations": {"title": "Buchung im Detail", "readOnlyHint": True},
                 "description": (
                     "Alle Angaben zu EINER Buchung: Gast, Zeitraum, Status, "
                     "Objekt, Beträge (rollenabhängig)."
@@ -135,6 +231,8 @@ class McpTools:
             },
             {
                 "name": "posteingang_liste",
+                "title": "Posteingang",
+                "annotations": {"title": "Posteingang", "readOnlyHint": True},
                 "description": (
                     "Konversationen ALLER Kanäle in einer Liste — Booking.com, "
                     "Airbnb, myBestDays-Marktplatz und übernommene Verläufe. "
@@ -154,9 +252,12 @@ class McpTools:
             },
             {
                 "name": "posteingang_verlauf",
+                "title": "Nachrichtenverlauf",
+                "annotations": {"title": "Nachrichtenverlauf", "readOnlyHint": True},
                 "description": (
                     "Nachrichtenverlauf EINER Konversation, chronologisch. "
-                    "Die thread_id stammt aus posteingang_liste."
+                    "Die thread_id stammt aus posteingang_liste. Erfordert die "
+                    "Freigabe für Freitexte in dieser Verbindung."
                 ),
                 "inputSchema": {
                     "type": "object",
@@ -166,9 +267,12 @@ class McpTools:
             },
             {
                 "name": "buchung_notizen",
+                "title": "Buchungsnotizen",
+                "annotations": {"title": "Buchungsnotizen", "readOnlyHint": True},
                 "description": (
                     "Interner Notiz-Verlauf einer Buchung (Autor, Zeit, Text). "
-                    "Erfordert das Recht, Notizen zu sehen — sonst leer."
+                    "Erfordert das Recht, Notizen zu sehen, UND die Freigabe "
+                    "für Freitexte in dieser Verbindung — sonst gesperrt."
                 ),
                 "inputSchema": {
                     "type": "object",
@@ -180,8 +284,25 @@ class McpTools:
 
     # -- Ausführung ---------------------------------------------------------
 
+    # Welches Argument die Ziel-ID trägt — je Werkzeug genau eines. Für den
+    # Zugriffslog: er soll sagen können, WELCHE Buchung abgerufen wurde.
+    _ZIEL_FELD = {
+        "kalender_verfuegbarkeit": "objekt_id",
+        "buchungen_liste": "objekt_id",
+        "buchung_detail": "buchung_id",
+        "posteingang_liste": None,
+        "posteingang_verlauf": "thread_id",
+        "buchung_notizen": "buchung_id",
+    }
+
     def ausfuehren(self, name: str, argumente: dict[str, Any]) -> dict[str, Any]:
-        """Ein Werkzeug aufrufen. Unbekannter Name → ValueError."""
+        """Ein Werkzeug aufrufen. Unbekannter Name → ValueError.
+
+        Protokolliert JEDEN Aufruf (0388) — auch den gescheiterten: ein
+        abgelehnter Zugriff ist für die Nachvollziehbarkeit so aussagekräftig
+        wie ein erfolgreicher. Der Log sitzt hier an EINER Stelle statt in
+        jedem der sechs Werkzeuge; sonst wäre er beim siebten vergessen.
+        """
         handler = {
             "kalender_verfuegbarkeit": self._kalender,
             "buchungen_liste": self._buchungen,
@@ -192,7 +313,18 @@ class McpTools:
         }.get(name)
         if handler is None:
             raise ValueError(f"Unbekanntes Werkzeug: {name}")
-        return handler(argumente)
+
+        feld = self._ZIEL_FELD.get(name)
+        ziel = str(argumente.get(feld) or "") or None if feld else None
+        try:
+            ergebnis = handler(argumente)
+        except Exception:
+            self._protokollieren(name, ziel=ziel, anzahl=0, erfolg=False)
+            raise
+        self._protokollieren(
+            name, ziel=ziel, anzahl=_umfang(ergebnis), erfolg=True
+        )
+        return ergebnis
 
     def _kalender(self, args: dict[str, Any]) -> dict[str, Any]:
         objekt_id = str(args.get("objekt_id") or "")
@@ -280,7 +412,7 @@ class McpTools:
             "status": d.status,
             "betrag": d.total_amount,
             "waehrung": d.currency,
-            "notiz": d.note,
+            "notiz": d.note if self._darf_freitext() else self._freitext_hinweis(),
         }
 
     def _posteingang(self, args: dict[str, Any]) -> dict[str, Any]:
@@ -289,6 +421,8 @@ class McpTools:
         service = InboxService(service_client=self._db)
         out = service.list_threads(self._ctx)
         threads = [t for t in out.items if not nur_ungelesen or not t.is_read]
+        darf_freitext = self._darf_freitext()
+        hinweis = self._freitext_hinweis()
         return {
             "anzahl": len(threads[:limit]),
             "threads": [
@@ -302,7 +436,11 @@ class McpTools:
                     "buchung_id": t.reservation_id,
                     "anreise": t.arrival_date,
                     "abreise": t.departure_date,
-                    "letzte_nachricht": t.last_message,
+                    # Die Vorschau ist bereits Nachrichteninhalt — sie fällt
+                    # unter denselben Scope wie der volle Verlauf.
+                    "letzte_nachricht": (
+                        t.last_message if darf_freitext else hinweis
+                    ),
                     "letzter_absender": t.last_sender,
                     # Zeitpunkt beim Portal (Wurzel 5b) — leer, wenn die Quelle
                     # ihn nicht liefert. Nie unsere eigene Uhr.
@@ -317,6 +455,12 @@ class McpTools:
         thread_id = str(args.get("thread_id") or "")
         if not thread_id:
             raise ValueError("thread_id fehlt")
+        if not self._darf_freitext():
+            # Nichts erst laden und dann verwerfen: der Verlauf besteht
+            # AUSSCHLIESSLICH aus Nachrichtentexten. Ohne Freigabe wird er gar
+            # nicht abgerufen (Art. 25 Abs. 1 — Datenminimierung schon in der
+            # Verarbeitung, nicht erst in der Ausgabe).
+            raise ValueError(self._freitext_hinweis())
         service = InboxService(service_client=self._db)
         out = service.get_messages(self._ctx, thread_id)
         return {
@@ -336,6 +480,10 @@ class McpTools:
         buchung_id = str(args.get("buchung_id") or "")
         if not buchung_id:
             raise ValueError("buchung_id fehlt")
+        if not self._darf_freitext():
+            # Wie beim Verlauf: eine Notiz IST der Freitext, ohne Freigabe wird
+            # sie nicht geladen.
+            raise ValueError(self._freitext_hinweis())
         service = ReservationsService(service_client=self._db)
         try:
             out = service.list_notes(self._ctx, buchung_id)

@@ -35,6 +35,26 @@ class VerbindungListe(BaseModel):
     items: list[Verbindung] = []
 
 
+class Zugriff(BaseModel):
+    """Ein protokollierter Abruf über eine Verbindung (0388).
+
+    Ohne Inhalte — nur WAS abgerufen wurde. Der Betrieb braucht das, um eine
+    Auskunft nach Art. 15 DSGVO erteilen zu können.
+    """
+
+    host: str
+    werkzeug: str
+    ziel_id: str | None = None
+    anzahl: int = 0
+    scopes: str = ""
+    erfolg: bool = True
+    zeitpunkt: str
+
+
+class ZugriffListe(BaseModel):
+    items: list[Zugriff] = []
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

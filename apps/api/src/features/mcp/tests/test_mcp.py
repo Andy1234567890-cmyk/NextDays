@@ -6,6 +6,9 @@ import pytest
 
 from src.core.config import Settings
 from src.features.mcp.oauth_service import (
+    SCOPE_FREITEXT,
+    SCOPE_LESEN,
+    UNTERSTUETZTE_SCOPES,
     McpOAuthService,
     OAuthError,
     _pkce_challenge,
@@ -126,6 +129,16 @@ def test_pkce_challenge_entspricht_rfc7636() -> None:
 # --- Code-Einlösung -----------------------------------------------------------
 
 def _code_anlegen(dienst: McpOAuthService, verifier: str) -> str:
+    """Wie im echten Flow: erst zustimmen, dann Code ausstellen.
+
+    Die Zustimmung gehört dazu — `token_pruefen` prüft sie gegen, damit ein
+    getrennter Client nicht noch eine Stunde weiterliest. Ein Test, der sie
+    überspringt, würde die Trennung stillschweigend wirkungslos machen.
+    """
+    dienst.zustimmen(
+        tenant_id="t1", user_id="u1",
+        client_id="https://claude.ai/x", scope="mcp:read",
+    )
     return dienst.code_ausstellen(
         tenant_id="t1", user_id="u1",
         client_id="https://claude.ai/x", redirect_uri="https://claude.ai/cb",
@@ -151,6 +164,34 @@ def test_code_einloesen_liefert_token() -> None:
     )
     assert nutzlast["tenant_id"] == "t1"
     assert nutzlast["sub"] == "u1"
+
+
+def test_getrennte_verbindung_sperrt_das_access_token_sofort() -> None:
+    """Trennen wirkt SOFORT, nicht erst nach Ablauf des Tokens.
+
+    Das Access-Token ist ein signiertes JWT mit einer Stunde Laufzeit. Ohne
+    Gegenprüfung der Zustimmung könnte ein getrennter Client noch bis zu 60
+    Minuten weiterlesen — „getrennt" wäre dann eine Falschaussage in der
+    Oberfläche und im AVV.
+    """
+    store: dict = {}
+    dienst = _dienst(store)
+    verifier = "c" * 64
+    code = _code_anlegen(dienst, verifier)
+    out = dienst.token_aus_code(
+        code=code, client_id="https://claude.ai/x",
+        redirect_uri="https://claude.ai/cb", verifier=verifier,
+    )
+    ressource = f"{_BASIS}/api/v1/mcp"
+    # Vorher: das Token trägt.
+    assert dienst.token_pruefen(out["access_token"], resource=ressource)["sub"] == "u1"
+
+    dienst.zustimmung_widerrufen("u1", "https://claude.ai/x")
+
+    # Nachher: dasselbe, unveränderte Token wird abgewiesen.
+    with pytest.raises(OAuthError) as fehler:
+        dienst.token_pruefen(out["access_token"], resource=ressource)
+    assert fehler.value.status_code == 401
 
 
 def test_code_nur_einmal_einloesbar() -> None:
@@ -384,6 +425,129 @@ def test_tools_list_ohne_anmeldung_moeglich() -> None:
     assert "kalender_verfuegbarkeit" in namen
 
 
+class _KontextStub:
+    """Minimaler AuthContext für die Werkzeug-Tests."""
+
+    user_id = "11111111-1111-1111-1111-111111111111"
+    tenant_id = "22222222-2222-2222-2222-222222222222"
+    role = None
+
+
+def _werkzeuge(*scopes: str) -> object:
+    """McpTools mit den angegebenen Scopes, ohne DB-Zugriff."""
+    from unittest.mock import patch
+
+    from src.features.mcp.tools import McpTools
+
+    with patch("src.features.mcp.tools.get_service_client", return_value=MagicMock()):
+        return McpTools(_KontextStub(), frozenset(scopes), "https://claude.ai/x")
+
+
+def test_freitext_ist_nicht_teil_des_lese_scopes() -> None:
+    """`mcp:read` allein gibt KEINE Notizen und keine Nachrichtentexte frei.
+
+    Freitexte enthalten regelmäßig Gesundheitsangaben („Rollstuhl",
+    „Allergie") — nach EuGH C-252/21 Rn. 89 macht ein einziges sensibles
+    Element das GESAMTE Feld zu Art.-9-Daten. Deshalb eigener Scope, default
+    aus (Art. 25 Abs. 2 DSGVO).
+    """
+    nur_lesen = _werkzeuge(SCOPE_LESEN)
+    assert nur_lesen._darf_freitext() is False  # noqa: SLF001
+
+    mit_freitext = _werkzeuge(SCOPE_LESEN, SCOPE_FREITEXT)
+    assert mit_freitext._darf_freitext() is True  # noqa: SLF001
+
+
+def test_verlauf_und_notizen_ohne_freigabe_gesperrt() -> None:
+    """Ohne Freitext-Scope wird gar nicht erst geladen (Art. 25 Abs. 1).
+
+    Und der Fehler MUSS erklären, warum — ein leeres Ergebnis liesse das
+    Modell „dazu ist nichts hinterlegt" antworten statt „dafür fehlt die
+    Freigabe" (Wurzel 4).
+    """
+    werkzeuge = _werkzeuge(SCOPE_LESEN)
+
+    for name, args in (
+        ("posteingang_verlauf", {"thread_id": "t1"}),
+        ("buchung_notizen", {"buchung_id": "b1"}),
+    ):
+        with pytest.raises(ValueError, match="nicht freigegeben"):
+            werkzeuge.ausfuehren(name, args)
+
+
+def test_freitext_scope_wird_unterstuetzt_und_ist_bekannt() -> None:
+    """Der Scope muss in der Liste stehen, sonst lehnt `/consent` ihn ab."""
+    assert SCOPE_FREITEXT in UNTERSTUETZTE_SCOPES
+    assert SCOPE_LESEN in UNTERSTUETZTE_SCOPES
+    # Zwei getrennte Werte — nicht versehentlich derselbe String.
+    assert SCOPE_FREITEXT != SCOPE_LESEN
+
+
+def test_umfang_zaehlt_die_ausgegebenen_datensaetze() -> None:
+    """Der Zugriffslog muss einen Massenabruf von einem Einzelabruf trennen."""
+    from src.features.mcp.tools import _umfang
+
+    assert _umfang({"anzahl": 3, "buchungen": [1, 2, 3]}) == 3
+    assert _umfang({"threads": []}) == 0
+    # Einzelabruf ohne Liste (buchung_detail) zählt als 1, nicht als 0.
+    assert _umfang({"id": "x", "gast": "y"}) == 1
+
+
+def test_consent_verlangt_verbindungs_recht() -> None:
+    """Nicht jeder eingeloggte Nutzer darf verbinden (Wurzel 9).
+
+    Eine Verbindung gibt Gastdaten an einen Dienst ausserhalb unserer Systeme
+    heraus — das ist die Weisung zur Drittlandübermittlung nach
+    Art. 28 Abs. 3 lit. a DSGVO. Ohne Recht: 401/403, nie 200.
+    """
+    antwort = client.post("/api/v1/mcp/consent", json={
+        "client_id": "https://claude.ai/oauth/mcp-oauth-client-metadata",
+        "redirect_uri": "https://claude.ai/api/mcp/auth_callback",
+        "code_challenge": "x" * 43,
+        "scope": SCOPE_LESEN,
+    })
+    # 503 = Ratelimit fail-closed ohne Redis (s. test_authorize_verlangt_pkce).
+    # Entscheidend ist: NIE 200 ohne Berechtigung.
+    assert antwort.status_code in (401, 403, 503)
+    assert antwort.status_code != 200
+
+
+def test_jedes_werkzeug_hat_anzeigenamen_mit_umlauten() -> None:
+    """Ohne `title` formt der Client den `name` um: „Kalender verfuegbarkeit".
+
+    Der `name` bleibt ASCII (er wird programmatisch adressiert), deshalb MUSS
+    der Anzeigename ein eigenes Feld sein. Reihenfolge laut Spec:
+    `title` → `annotations.title` → `name`; beide werden gesetzt, weil ältere
+    Clients nur die Annotation kennen.
+    """
+    antwort = client.post("/api/v1/mcp", json=_rpc("tools/list"))
+    werkzeuge = antwort.json()["result"]["tools"]
+    assert werkzeuge
+
+    for w in werkzeuge:
+        assert w["title"], f"{w['name']} ohne title"
+        assert w["annotations"]["title"] == w["title"]
+        # Nur lesende Werkzeuge — der Client darf das anzeigen.
+        assert w["annotations"]["readOnlyHint"] is True
+        # Der name bleibt maschinenlesbar, nicht der Anzeigetext.
+        assert w["name"].isascii()
+        assert w["name"] == w["name"].lower()
+
+    titel = {w["name"]: w["title"] for w in werkzeuge}
+    assert titel["kalender_verfuegbarkeit"] == "Kalender-Verfügbarkeit"
+
+
+def test_server_info_traegt_anzeigename_und_logo() -> None:
+    """Marke korrekt geschrieben, Icon eingebettet statt verlinkt."""
+    ergebnis = client.post("/api/v1/mcp", json=_rpc("initialize")).json()["result"]
+    info = ergebnis["serverInfo"]
+    assert info["name"] == "myNextDays"
+    assert info["title"] == "myNextDays"
+    # Data-URI: kein Netzabruf, keine Herkunftsprüfung nötig.
+    assert info["icons"][0]["src"].startswith("data:image/png;base64,")
+    assert info["icons"][0]["mimeType"] == "image/png"
+
+
 def test_tools_call_ohne_token_gibt_echten_401() -> None:
     """DER kritische Test.
 
@@ -446,7 +610,13 @@ def test_authorize_verlangt_pkce() -> None:
         "code_challenge": "",
         "response_type": "code",
     }, follow_redirects=False)
-    assert antwort.status_code == 400
+    # 503 ist hier KEIN Fehlschlag: ohne erreichbares Redis sperrt der
+    # Ratelimiter sensible Pfade bewusst fail-closed
+    # (`rate_limit_fail_closed_sensitive`). Der Test prüft, dass ohne PKCE
+    # NIE weitergeleitet wird — die Abweisung selbst darf aus beiden Gründen
+    # kommen. Ein hart auf 400 festgenagelter Test wäre abhängig davon, wie
+    # viele Tests vorher denselben Bucket benutzt haben.
+    assert antwort.status_code in (400, 503)
 
 
 def test_authorize_lehnt_plain_pkce_ab() -> None:
@@ -457,7 +627,8 @@ def test_authorize_lehnt_plain_pkce_ab() -> None:
         "code_challenge": "abc",
         "code_challenge_method": "plain",
     }, follow_redirects=False)
-    assert antwort.status_code == 400
+    # 503 = Ratelimit fail-closed ohne Redis, s. test_authorize_verlangt_pkce.
+    assert antwort.status_code in (400, 503)
 
 
 def test_discovery_nutzt_die_api_domain_nicht_das_dashboard() -> None:

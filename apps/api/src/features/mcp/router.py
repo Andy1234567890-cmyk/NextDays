@@ -18,8 +18,10 @@ niemanden übernimmt.
 """
 from __future__ import annotations
 
+import base64
 import json
 import secrets
+from pathlib import Path
 from typing import Annotated
 from urllib.parse import quote, urlencode, urlparse
 
@@ -31,6 +33,8 @@ from src.core.config import Settings, get_settings
 from src.core.logging import get_logger
 from src.core.security import AuthContext, CurrentUser
 from src.core.supabase import get_service_client
+from src.features.auth.dependencies import require_permission
+from src.features.auth.permissions import Capability
 
 from .oauth_service import (
     SCOPE_LESEN,
@@ -44,6 +48,8 @@ from .schemas import (
     SliceHealth,
     Verbindung,
     VerbindungListe,
+    Zugriff,
+    ZugriffListe,
 )
 from .tools import McpTools
 
@@ -67,7 +73,59 @@ PROTOKOLL_VERSION = "2025-06-18"
 _RPC_METHODE_UNBEKANNT = -32601
 _RPC_INTERNER_FEHLER = -32603
 
+# Obergrenze der Protokoll-Abfrage (Wurzel 8) — die Tabelle wächst mit jedem
+# Abruf, ein ungedeckeltes `limit` wäre ein Vollabzug.
+_ZUGRIFFE_MAX = 500
+
 _MEDIENTYP = "application/json"
+
+_STATIC = Path(__file__).parent / "static"
+
+
+def _logo_data_uri() -> str | None:
+    """Das 48px-Logo als `data:`-URI für `serverInfo.icons`.
+
+    Als Data-URI statt als URL, weil Clients ein Icon ohne Zugangsdaten laden
+    und die Herkunft prüfen sollen (Spec) — ein eingebettetes Bild braucht
+    beides nicht. Bei 48×48 sind das ~1,7 kB, vertretbar in jeder
+    `initialize`-Antwort; ein größeres Format gehörte hinter eine URL.
+
+    Fehlt die Datei, entfällt das Feld — ein Icon ist Beiwerk und darf den
+    Verbindungsaufbau nicht kippen.
+    """
+    pfad = _STATIC / "logo-48.png"
+    try:
+        roh = pfad.read_bytes()
+    except OSError:  # noqa: BLE001 — Beiwerk, nie den Hauptpfad kippen
+        log.warning("mcp.logo_fehlt", extra={"pfad": str(pfad)})
+        return None
+    return "data:image/png;base64," + base64.b64encode(roh).decode("ascii")
+
+
+def _server_info() -> dict:
+    """`serverInfo` für `initialize`.
+
+    `title` ist der Anzeigename, `name` bleibt die programmatische Kennung
+    (Spec: `BaseMetadata`). `icons`/`websiteUrl` sind erst ab Revision
+    2025-11-25 im Schema und werden von claude.ai derzeit nicht ausgewertet —
+    sie stehen hier, weil andere MCP-Clients sie schon heute rendern und es
+    ohne sie nie ein Logo geben kann.
+    """
+    info: dict = {
+        "name": "myNextDays",
+        "title": "myNextDays",
+        "version": "1.0.0",
+        "websiteUrl": "https://mynextdays.com",
+    }
+    logo = _logo_data_uri()
+    if logo:
+        info["icons"] = [
+            {"src": logo, "mimeType": "image/png", "sizes": ["48x48"]}
+        ]
+    return info
+
+
+_SERVER_INFO = _server_info()
 
 
 def _service(settings: Settings) -> McpOAuthService:
@@ -218,14 +276,27 @@ def authorize(
 @router.post("/mcp/consent")
 def consent(
     settings: Annotated[Settings, Depends(get_settings)],
-    ctx: CurrentUser,
+    ctx: Annotated[AuthContext, Depends(require_permission(Capability.MANAGE_CONNECTIONS))],
     req: ConsentRequest,
 ) -> ConsentResponse:
     """Zustimmung speichern und Code ausstellen; liefert das Rückleitungsziel.
 
-    Der Nutzer wird über sein PMS-JWT identifiziert (`CurrentUser`) — der Code
-    hängt damit an einem echten Konto samt Tenant, nicht an etwas, das der
-    Client behauptet (Wurzel 3). Das Dashboard leitet danach auf `weiter_zu`.
+    Der Nutzer wird über sein PMS-JWT identifiziert — der Code hängt damit an
+    einem echten Konto samt Tenant, nicht an etwas, das der Client behauptet
+    (Wurzel 3). Das Dashboard leitet danach auf `weiter_zu`.
+
+    AUTORISIERUNG, NICHT NUR AUTHENTIFIZIERUNG (Wurzel 9): Der Guard ist
+    `MANAGE_CONNECTIONS`, nicht `CurrentUser`. Eine Verbindung gibt Gastnamen
+    und komplette Nachrichtenverläufe an einen Dienst ausserhalb unserer
+    Systeme heraus — das ist die Weisung des Verantwortlichen zur Übermittlung
+    in ein Drittland (Art. 28 Abs. 3 lit. a DSGVO), und die kann nur erteilen,
+    wer den Betrieb vertritt. Ohne diese Prüfung könnte eine Reinigungskraft
+    ihr PRIVATES Konto verbinden; mangels Weisung wären wir für diese
+    Übermittlung nach Art. 28 Abs. 10 selbst verantwortlich.
+
+    Die Rolle kommt dabei aus der DB, nicht aus dem JWT (Wurzel 7): Die
+    erteilte Verbindung überlebt das Token um 30 Tage, ein entzogenes Recht
+    muss also sofort wirken.
     """
     if not ctx.tenant_id:
         raise HTTPException(400, "Kein Tenant im Konto.")
@@ -280,6 +351,42 @@ def verbindungen(ctx: CurrentUser) -> VerbindungListe:
             host=_host(str(z["client_id"])),
             scope=str(z.get("scope") or ""),
             erteilt_am=str(z.get("created_at") or ""),
+        )
+        for z in zeilen
+    ])
+
+
+@router.get("/mcp/zugriffe", response_model=ZugriffListe)
+def zugriffe(
+    ctx: Annotated[AuthContext, Depends(require_permission(Capability.MANAGE_CONNECTIONS))],
+    limit: int = 100,
+) -> ZugriffListe:
+    """Protokollierte Abrufe über Verbindungen dieses Betriebs (0388).
+
+    Tenant-weit, nicht nur die eigenen: Der Betrieb muss sehen können, was ALLE
+    Verbindungen abgerufen haben — sonst kann er eine Auskunft nach Art. 15
+    DSGVO nicht erteilen. Deshalb dieselbe Fähigkeit wie beim Erteilen; wer
+    keine Verbindung erlauben darf, sieht auch das Protokoll nicht.
+    """
+    obergrenze = min(max(limit, 1), _ZUGRIFFE_MAX)
+    zeilen = (
+        get_service_client()
+        .table("mcp_access_log")
+        .select("client_id, werkzeug, ziel_id, anzahl, scopes, erfolg, created_at")
+        .eq("tenant_id", ctx.tenant_id)
+        .order("created_at", desc=True)
+        .limit(obergrenze)
+        .execute()
+    ).data or []
+    return ZugriffListe(items=[
+        Zugriff(
+            host=_host(str(z.get("client_id") or "")),
+            werkzeug=str(z.get("werkzeug") or ""),
+            ziel_id=str(z["ziel_id"]) if z.get("ziel_id") else None,
+            anzahl=int(z.get("anzahl") or 0),
+            scopes=str(z.get("scopes") or ""),
+            erfolg=bool(z.get("erfolg")),
+            zeitpunkt=str(z.get("created_at") or ""),
         )
         for z in zeilen
     ])
@@ -374,8 +481,8 @@ def _www_authenticate(settings: Settings) -> str:
 
 def _kontext_aus_token(
     authorization: str | None, settings: Settings
-) -> AuthContext | None:
-    """Bearer-Token → Kontext. `None`, wenn kein gültiges Token vorliegt.
+) -> tuple[AuthContext, frozenset[str], str] | None:
+    """Bearer-Token → (Kontext, Scopes, client_id). `None` ohne gültiges Token.
 
     Kein Fehler bei ungültig: der Aufrufer entscheidet, ob dieser Request
     überhaupt Auth braucht (Lazy Authentication).
@@ -389,7 +496,7 @@ def _kontext_aus_token(
         )
     except (jwt.PyJWTError, OAuthError):
         return None
-    return AuthContext(
+    ctx = AuthContext(
         user_id=str(nutzlast.get("sub") or ""),
         tenant_id=str(nutzlast.get("tenant_id") or "") or None,
         # Die ROLLE kommt bewusst NICHT aus diesem Token: sie wird im Service
@@ -397,6 +504,10 @@ def _kontext_aus_token(
         # würde eine entzogene Berechtigung bis zum Ablauf weitergelten lassen.
         role=None,
     )
+    # Scopes AUS DEM TOKEN, nicht aus der Anfrage (Wurzel 3): sie stehen in der
+    # signierten Nutzlast und sind damit das, wozu der Betrieb zugestimmt hat.
+    scopes = frozenset(str(nutzlast.get("scope") or "").split())
+    return ctx, scopes, str(nutzlast.get("client_id") or "")
 
 
 @router.post("/mcp")
@@ -423,7 +534,10 @@ async def mcp_endpunkt(  # pylint: disable=too-many-return-statements
 
     methode = str(nachricht.get("method") or "")
     rpc_id = nachricht.get("id")
-    ctx = _kontext_aus_token(authorization, settings)
+    angemeldet = _kontext_aus_token(authorization, settings)
+    ctx = angemeldet[0] if angemeldet else None
+    scopes = angemeldet[1] if angemeldet else frozenset()
+    client_id = angemeldet[2] if angemeldet else ""
 
     # DER LAZY-AUTH-GATE. Muss VOR jeder Werkzeug-Ausführung stehen und ein
     # echter HTTP-401 sein — nur darauf zeigt Claude den Anmelde-Dialog.
@@ -447,7 +561,7 @@ async def mcp_endpunkt(  # pylint: disable=too-many-return-statements
                 "result": {
                     "protocolVersion": PROTOKOLL_VERSION,
                     "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "myNextDays", "version": "1.0.0"},
+                    "serverInfo": _SERVER_INFO,
                 },
             },
             headers={"Mcp-Session-Id": kennung},
@@ -468,7 +582,7 @@ async def mcp_endpunkt(  # pylint: disable=too-many-return-statements
         name = str(params.get("name") or "")
         argumente = params.get("arguments") or {}
         try:
-            ergebnis = McpTools(ctx).ausfuehren(name, argumente)
+            ergebnis = McpTools(ctx, scopes, client_id).ausfuehren(name, argumente)
         except ValueError as exc:
             # FACHLICHER Fehler (unbekanntes Werkzeug, fehlendes Argument,
             # fremde ID): als Werkzeug-Fehler zurück, nicht als Transportfehler.

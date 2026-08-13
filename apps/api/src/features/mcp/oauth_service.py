@@ -56,7 +56,24 @@ REFRESH_TOKEN_TTL_TAGE = 30
 # Scopes, die der MCP-Server kennt. Bewusst schmal und NUR lesend (Wurzel:
 # keine Omnibus-Scopes, „Scope Minimization" der Security-Spec).
 SCOPE_LESEN = "mcp:read"
-UNTERSTUETZTE_SCOPES = (SCOPE_LESEN,)
+
+# Freitexte sind ein EIGENER Scope, nicht Teil von `mcp:read` — und er ist
+# standardmässig AUS (Art. 25 Abs. 2 DSGVO: die datenschutzfreundlichste
+# Voreinstellung).
+#
+# Grund: Buchungsnotizen und Gastnachrichten sind inhaltlich unbegrenzt. In der
+# Praxis steht dort „Rollstuhl", „Allergie", „glutenfrei" — Gesundheitsdaten
+# nach Art. 9 DSGVO. Der EuGH legt das weit aus (C-252/21 Rn. 89): enthält ein
+# gemeinsam erhobener Datensatz EIN sensibles Element, ist das GESAMTE Feld an
+# Art. 9 zu messen. Für solche Daten trägt nur die ausdrückliche Einwilligung
+# (Art. 9 Abs. 2 lit. a) — die für einen Dienst in einem Drittland regelmässig
+# nicht vorliegt.
+#
+# Ein Betrieb, der diese Felder braucht, schaltet den Scope bewusst dazu. Wer
+# nur Belegung und Buchungen auswerten will, überträgt sie nie.
+SCOPE_FREITEXT = "mcp:freetext"
+
+UNTERSTUETZTE_SCOPES = (SCOPE_LESEN, SCOPE_FREITEXT)
 
 # Anthropic ruft aus diesem Bereich an; die CIMD-URL wird von UNS geholt.
 _CIMD_TIMEOUT_SEKUNDEN = 5.0
@@ -387,7 +404,8 @@ class McpOAuthService:
     # -- Token --------------------------------------------------------------
 
     def _access_token(
-        self, *, tenant_id: str, user_id: str, scope: str, resource: str
+        self, *, tenant_id: str, user_id: str, client_id: str,
+        scope: str, resource: str,
     ) -> str:
         jetzt = _jetzt()
         return jwt.encode(
@@ -399,6 +417,11 @@ class McpOAuthService:
                 "aud": resource or TOKEN_AUDIENCE,
                 "iss": self.basis_url(),
                 "tenant_id": tenant_id,
+                # WER fragt. Zwei Dinge hängen daran: die Gegenprüfung der
+                # Zustimmung (ein getrennter Client verliert sofort) und der
+                # Zugriffslog, der ohne sie nicht sagen könnte, welche
+                # Verbindung gelesen hat.
+                "client_id": client_id,
                 "scope": scope,
                 "iat": jetzt,
                 "exp": jetzt + timedelta(seconds=ACCESS_TOKEN_TTL_SEKUNDEN),
@@ -439,7 +462,7 @@ class McpOAuthService:
         resource = str(zeile.get("resource") or "")
         return {
             "access_token": self._access_token(
-                tenant_id=tenant_id, user_id=user_id,
+                tenant_id=tenant_id, user_id=user_id, client_id=client_id,
                 scope=scope, resource=resource,
             ),
             "token_type": "Bearer",
@@ -505,7 +528,7 @@ class McpOAuthService:
         resource = str(zeile.get("resource") or "")
         return {
             "access_token": self._access_token(
-                tenant_id=tenant_id, user_id=user_id,
+                tenant_id=tenant_id, user_id=user_id, client_id=client_id,
                 scope=scope, resource=resource,
             ),
             "token_type": "Bearer",
@@ -522,14 +545,54 @@ class McpOAuthService:
 
         Die Audience wird gegen die ERWARTETE Ressource geprüft: ein Token, das
         für einen anderen Dienst ausgestellt wurde, darf hier nichts öffnen.
+
+        ZUSÄTZLICH die Zustimmung gegenprüfen (Wurzel 3): Ein Access-Token ist
+        ein signiertes JWT und gilt eine Stunde — ohne diese Abfrage könnte ein
+        getrennter Client noch bis zu 60 Minuten weiterlesen. Der Nutzer, der
+        „Trennen" drückt, erwartet aber, dass der Zugriff SOFORT endet; alles
+        andere wäre eine Falschaussage in der Oberfläche und im AVV.
         """
-        return jwt.decode(
+        nutzlast = jwt.decode(
             token,
             self._secret(),
             algorithms=["HS256"],
             audience=resource or TOKEN_AUDIENCE,
             issuer=self.basis_url(),
         )
+        if not self._zustimmung_gilt(
+            str(nutzlast.get("sub") or ""), str(nutzlast.get("client_id") or "")
+        ):
+            raise OAuthError("invalid_token", "Verbindung wurde getrennt.", status_code=401)
+        return nutzlast
+
+    def _zustimmung_gilt(self, user_id: str, client_id: str) -> bool:
+        """Besteht die Zustimmung noch? Fail-CLOSED bei Zweifeln (Wurzel 5).
+
+        Ohne Nutzer oder Client gibt es nichts zu prüfen — und dann auch nichts
+        freizugeben. Ist die DB nicht erreichbar, wird ebenfalls gesperrt: ein
+        Leseweg, der bei Störung öffnet, ist kein Schutz.
+        """
+        if not user_id or not client_id:
+            return False
+        try:
+            zeilen = (
+                self._client()
+                .table("mcp_consents")
+                .select("user_id")
+                .eq("user_id", user_id)
+                .eq("client_id", client_id)
+                .is_("revoked_at", "null")
+                .limit(1)
+                .execute()
+            ).data or []
+        except OAuthError:
+            raise
+        except Exception:  # noqa: BLE001 — jede Störung sperrt, statt zu öffnen
+            log.warning("mcp.zustimmung_pruefung_fehlgeschlagen", extra={
+                "client_id": client_id,
+            })
+            return False
+        return bool(zeilen)
 
 
 def _pkce_challenge(verifier: str) -> str:
