@@ -125,6 +125,7 @@ import {
   deleteRatePlan,
   listRatePlans,
   setBasePrice,
+  updateRatePlan,
   type RatePlan,
 } from "@/lib/rates";
 import { useRealtime } from "@/lib/use-realtime";
@@ -2144,6 +2145,25 @@ function RatePlanList({
     return parts.length ? parts.join(" · ") : "1:1";
   };
 
+  // Portal-Freigabe umschalten. Sie war vorher eine EINBAHNSTRASSE: der Wizard
+  // fragt „Diesen Preis an die Buchungsportale senden" ab, die Plan-Liste zeigte
+  // das Ergebnis aber nirgends und bot keinen Weg zurück. Das PATCH-Feld gab es
+  // längst (`updateRatePlan`), nur keine Oberfläche dafür.
+  const toggleSend = async (p: RatePlan) => {
+    setBusy(p.id);
+    setErr(null);
+    const res = await updateRatePlan(p.id, { sendToPortals: !p.send_to_portals });
+    setBusy(null);
+    if (!res.ok) {
+      setErr(res.error);
+      return;
+    }
+    toast.success(
+      t(p.send_to_portals ? "pricingForm.planPortalOff" : "pricingForm.planPortalOn"),
+    );
+    onDeleted(); // lädt die Liste neu (derselbe Weg wie nach dem Löschen)
+  };
+
   const remove = async (id: string) => {
     // Löschen nimmt auch die Datumspreise des Plans mit — Fehlklick auf das
     // Trash-Icon darf das nicht still tun (Projekt-Muster: window.confirm).
@@ -2201,6 +2221,34 @@ function RatePlanList({
             <span className="w-28 shrink-0 text-right text-xs leading-4 text-muted-foreground">
               {t("pricingForm.planMinStay", { nights: p.min_stay })}
             </span>
+            {/* Portal-Freigabe: nur bei ZUSÄTZLICHEN Plänen. Der Grundpreis geht
+                ohnehin immer an die Portale (channels._selected_rate_plan_ids
+                nimmt ihn ungefragt mit) — dort wäre ein Schalter eine Lüge. */}
+            {plans.length > 1 && p.id !== plans[0]?.id ? (
+              <button
+                type="button"
+                disabled={busy === p.id}
+                onClick={() => void toggleSend(p)}
+                title={t(
+                  p.send_to_portals
+                    ? "pricingForm.planPortalOnHint"
+                    : "pricingForm.planPortalOffHint",
+                )}
+                className="shrink-0 rounded-full px-2 py-0.5 text-xs leading-4 transition-colors disabled:opacity-50"
+              >
+                <PreisChip>
+                  <Icon
+                    icon={p.send_to_portals ? "ph:broadcast" : "ph:prohibit"}
+                    className="size-3.5"
+                  />
+                  {t(
+                    p.send_to_portals
+                      ? "pricingForm.planPortalYes"
+                      : "pricingForm.planPortalNo",
+                  )}
+                </PreisChip>
+              </button>
+            ) : null}
             <PreisSymbolAktion
               icon="ph:trash"
               label={t("pricingForm.planDelete")}

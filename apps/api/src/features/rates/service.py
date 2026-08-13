@@ -352,6 +352,37 @@ class RatesService:
             raise RateError("Preisplan konnte nicht angelegt werden.", status_code=500)
         sync_currency = str(payload["currency"])
         self._sync_property(tenant_id, req.property_id, prop.get("title"), sync_currency)
+        # Dieselben zwei Nacharbeiten wie bei `set_base_price`/`update` — beim
+        # Anlegen fehlten sie (13.08.2026):
+        #
+        #   Reconcile  Ohne ihn bekommt der neue Plan seine Tageskurve erst beim
+        #              15-Minuten-Tick. Der Nutzer sieht bis dahin einen Plan ohne
+        #              Preise bei den Portalen.
+        #   Min-Stay   Der Wizard fragt den Mindestaufenthalt in Schritt 2 ab, aber
+        #              gepusht wurde nur der Rate-Plan-DEFAULT aus dem
+        #              Content-Sync. Den Wert, den Channex' Kalender anzeigt und
+        #              für Buchungen erzwingt, ist die per-Datum-Restriction —
+        #              genau die blieb ungesetzt.
+        try:
+            enqueue(
+                self._db(),
+                "reconcile_rate_plan_prices",
+                tenant_id=tenant_id,
+                payload={"tenant_id": tenant_id, "property_id": req.property_id},
+                dedup_key=dedup_key(
+                    tenant_id, req.property_id, "reconcile_rate_plan_prices"
+                ),
+            )
+        except Exception as exc:  # noqa: BLE001 — Einreihen kippt den Request nie
+            log.warning(
+                "rate_plan_created_reconcile_enqueue_failed",
+                tenant_id=tenant_id, error=str(exc)[:200],
+            )
+        if req.min_stay and req.min_stay > 1:
+            self._push_min_stay_restriction(
+                tenant_id, req.property_id, req.min_stay,
+                rate_plan_id=str(ins[0]["id"]),
+            )
         log.info("rate_plan_created", tenant_id=tenant_id, property_id=req.property_id)
         return self._row(ins[0])
 

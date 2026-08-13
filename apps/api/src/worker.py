@@ -259,6 +259,18 @@ def _handle_sync_property_content(
         property_id=payload["property_id"],
         currency=payload.get("currency") or None,
     )
+    # ERST JETZT zuordnen: der Kanal kann nur einen Rate-Plan mappen, den Channex
+    # schon kennt — und den legt `sync_content` eine Zeile darüber an. Ohne diesen
+    # Schritt blieb der Haken „an die Buchungsportale senden" wirkungslos, sobald
+    # der Kanal VOR dem Preisplan verbunden war (der Normalfall): das Mapping wird
+    # sonst nur beim Verbinden gebaut. Best effort — der Content-Sync ist das
+    # Wichtigere und darf daran nicht kippen (Wurzel 5, Nebenpfad).
+    try:
+        svc.freigegebene_plaene_zuordnen(
+            payload["tenant_id"], payload["property_id"]
+        )
+    except Exception as exc:  # noqa: BLE001 — Nebenpfad, kippt den Sync nie
+        log.warning("freigegebene_plaene_zuordnen_fehlgeschlagen", error=str(exc)[:200])
 
 
 def _handle_sync_property_taxes(

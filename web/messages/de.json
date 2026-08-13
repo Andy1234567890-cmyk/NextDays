@@ -262,6 +262,7 @@
       "distribution": "Vertrieb",
       "hotel": "Hotel",
       "vacationRentals": "Ferienwohnungen",
+      "accounting": "Buchhaltung",
       "guests": "Gäste",
       "tools": "Werkzeuge"
     },
@@ -4661,6 +4662,64 @@
       "saved": "Rückmeldung gespeichert.",
       "score": "Bewertung",
       "giveScore": "{score} von 5 bewerten"
+    },
+    "inboxSidebar": {
+      "title": "Reservierungen",
+      "count": "{count, plural, =0 {keine Buchung} one {# Buchung} other {# Buchungen}}",
+      "searchPlaceholder": "Gast, Objekt, Portal oder Referenz",
+      "cancel": "Abbrechen",
+      "filter": "Filter",
+      "search": "Suchen",
+      "loading": "Buchungen werden geladen …",
+      "empty": "Keine Buchung passt zu diesem Filter.",
+      "select": "Auswählen",
+      "selectAll": "Alle",
+      "selectRow": "Buchung von {guest} auswählen",
+      "exportSelected": "Export ({count})",
+      "export": "Sichtbare Buchungen als CSV exportieren",
+      "createBooking": "Buchung erstellen",
+      "reset": "Zurücksetzen",
+      "savePreset": "Filter-Einstellungen speichern",
+      "ownerStay": "Eigennutzung",
+      "bookedAtHint": "Beim Portal gebucht am",
+      "receivedAtHint": "Kein Buchungszeitpunkt vom Portal — das ist der Eingang bei uns",
+      "groups": {
+        "date": "Zeitraum",
+        "stay": "Aufenthalt",
+        "channels": "Kanäle",
+        "status": "Status",
+        "process": "Merkmale"
+      },
+      "date": {
+        "all": "Alle",
+        "today": "Heute belegt",
+        "upcoming": "Zukünftige",
+        "past": "Vergangene"
+      },
+      "stay": {
+        "checkin": "Anreise heute",
+        "checkout": "Abreise heute",
+        "hosting": "Aktuelle Gäste"
+      },
+      "process": {
+        "openBalance": "Offener Betrag",
+        "ownerStay": "Eigennutzung"
+      },
+      "csv": {
+        "reference": "Referenz",
+        "guest": "Gast",
+        "property": "Objekt",
+        "checkIn": "Anreise",
+        "checkOut": "Abreise",
+        "nights": "Nächte",
+        "guests": "Gäste",
+        "channel": "Kanal",
+        "status": "Status",
+        "total": "Gesamtbetrag",
+        "currency": "Währung",
+        "bookedAt": "Gebucht am (Portal)",
+        "receivedAt": "Eingang bei uns"
+      }
     }
   },
   "objects": {
@@ -5263,6 +5322,12 @@
       "planModeDerived": "Abgeleitet von {parent} · {offset}",
       "planDerivedPrice": "berechnet",
       "planMinStay": "Min. {nights} Nächte",
+      "planPortalYes": "An Portale",
+      "planPortalNo": "Nur direkt",
+      "planPortalOnHint": "Dieser Preis geht an die Buchungsportale. Klicken, um ihn nur für Direktbuchungen zu nutzen.",
+      "planPortalOffHint": "Dieser Preis gilt nur für Direktbuchungen. Klicken, um ihn an die Buchungsportale zu senden.",
+      "planPortalOn": "Preis geht jetzt an die Buchungsportale.",
+      "planPortalOff": "Preis gilt jetzt nur für Direktbuchungen.",
       "planDelete": "Löschen",
       "planDeleted": "Preisplan gelöscht.",
       "planCreated": "Preisplan angelegt.",

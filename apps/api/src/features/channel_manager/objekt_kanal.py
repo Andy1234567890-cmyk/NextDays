@@ -652,6 +652,101 @@ class ObjektKanalMixin:
         ).data or []
         return rows[0]["url"] if rows else None
 
+    def freigegebene_plaene_zuordnen(
+        self, tenant_id: str, property_id: str
+    ) -> dict[str, int]:
+        """Freigegebene Zusatz-Preispläne an JEDEM verbundenen Kanal zuordnen.
+
+        DIE LÜCKE, die das schliesst (13.08.2026): Der Haken „Diesen Preis an die
+        Buchungsportale senden" (`rate_plans.send_to_portals`, 0177) wird nur von
+        `channels._selected_rate_plan_ids` gelesen — und die läuft AUSSCHLIESSLICH
+        beim VERBINDEN eines Kanals. Wer den Kanal schon verbunden hatte und danach
+        einen Plan anlegte, bekam:
+
+            Channex-Rate-Plan angelegt            ✓
+            Zeile in channex_rate_plan_map        ✓
+            Preise/Restriktionen gepusht          ✓
+            Eintrag im rate_plans-Array des KANALS ✗
+
+        Der Plan lag also bei Channex, bekam Preise — und kein Portal las ihn.
+        `connect_channel` half nicht: es kehrt bei bestehender Verbindung früh
+        zurück, bevor das Mapping neu gebaut wird. Damit hing die Wirkung an der
+        Klick-Reihenfolge (Plan zuerst = wirkt, Kanal zuerst = wirkungslos), was
+        nirgends stand und niemand erzwang. Live bestätigt: 32 Pläne mit dem Haken,
+        davon 0 bei Channex.
+
+        Gebaut wird auf denselben Bausteinen wie der Portal-Aufschlag
+        (`_kanal_zuordnung_anlegen`): die OTA-Codes kommen aus dem BESTEHENDEN
+        Mapping des Kanals, nicht aus einem geratenen Wert. Ein Kanal ohne jede
+        Zuordnung wird übersprungen statt zu werfen — dieser Lauf hängt am
+        Content-Sync und darf ihn nicht kippen (Wurzel 5: Nebenpfad).
+
+        Rückgabe: was zugeordnet und was übersprungen wurde (für den Verlauf).
+        """
+        db = self._require_db()
+        offen = (
+            db.table("rate_plans")
+            .select("id, name")
+            .eq("property_id", property_id)
+            .eq("send_to_portals", True)
+            .is_("portal_scope", "null")
+            .execute()
+        ).data or []
+        if not offen:
+            return {"geprueft": 0, "zugeordnet": 0}
+
+        conns = (
+            db.table("channex_channel_connection")
+            .select("channex_channel_id, ota_portal_code")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .not_.is_("channex_channel_id", "null")
+            .execute()
+        ).data or []
+        if not conns:
+            return {"geprueft": len(offen), "zugeordnet": 0}
+
+        zugeordnet = 0
+        for conn in conns:
+            channel_id = str(conn["channex_channel_id"])
+            try:
+                aktuell = self._channex.get_channel(channel_id)
+            except ChannexError as exc:  # noqa: PERF203 — je Kanal einzeln
+                log.warning(
+                    "freigegebene_plaene_kanal_unlesbar",
+                    channel_id=channel_id, error=str(exc)[:200],
+                )
+                continue
+            attrs = (aktuell.get("data") or {}).get("attributes") or {}
+            bestand = attrs.get("rate_plans") or []
+            schon_da = {str(p.get("rate_plan_id")) for p in bestand}
+            for plan in offen:
+                cx = self._channex_id_for_local_plan(db, tenant_id, plan["id"])
+                if not cx or cx in schon_da:
+                    continue
+                try:
+                    self._kanal_zuordnung_anlegen(
+                        db, channel_id, cx, plan["id"], bestand=bestand,
+                    )
+                except (ChannelManagerError, ChannexError) as exc:
+                    # Ein Kanal ohne zuordenbare Rate (oder ein Portal, das die
+                    # Zuordnung ablehnt) darf die anderen nicht aufhalten.
+                    log.warning(
+                        "freigegebener_plan_nicht_zuordenbar",
+                        channel_id=channel_id, rate_plan_id=cx,
+                        portal=conn.get("ota_portal_code"),
+                        error=str(exc)[:200],
+                    )
+                    continue
+                zugeordnet += 1
+        if zugeordnet:
+            log.info(
+                "freigegebene_plaene_zugeordnet",
+                property_id=property_id, geprueft=len(offen),
+                zugeordnet=zugeordnet, kanaele=len(conns),
+            )
+        return {"geprueft": len(offen), "zugeordnet": zugeordnet}
+
     def _rate_plans_of_property(
         self, db: Client, tenant_id: str, property_id: str
     ) -> list[dict[str, Any]]:
