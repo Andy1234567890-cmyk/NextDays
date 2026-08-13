@@ -418,7 +418,9 @@ class ObjektKanalMixin:
             # nichts (live gemessen, siehe `create_channel_mapping`).
             if any(p.get("rate_plan_id") == nach_cx for p in plans):
                 return
-            self._kanal_zuordnung_anlegen(db, channel_id, nach_cx, nach_lokal)
+            self._kanal_zuordnung_anlegen(
+                db, channel_id, nach_cx, nach_lokal, bestand=plans,
+            )
             return
         try:
             self._channex.update_channel(channel_id, {"rate_plans": neu_plans})
@@ -427,7 +429,7 @@ class ObjektKanalMixin:
 
     def _kanal_zuordnung_anlegen(
         self, db: Client, channel_id: str, channex_rate_plan_id: str,
-        lokaler_plan_id: str,
+        lokaler_plan_id: str, *, bestand: list[dict[str, Any]] | None = None,
     ) -> None:
         """Den Kanal-Plan erstmalig am Kanal zuordnen (`POST …/mappings`).
 
@@ -435,11 +437,31 @@ class ObjektKanalMixin:
         gibt es nichts zu tauschen, und ohne diesen Schritt bliebe der Aufschlag
         eine reine Bildschirmangabe.
 
-        Airbnb nimmt GENAU EINE Rate je Anzeige („Airbnb allows you to map only
-        1 rate plan"), deshalb ist die Listing-ID der Schlüssel. Sie steht am
-        Objekt (`properties.airbnb_listing_id`); fehlt sie, ist das Objekt keine
-        Airbnb-Anzeige und es gibt nichts zuzuordnen — das wird gesagt, nicht
-        stillschweigend übergangen (Wurzel 5).
+        ZWEI PORTALE, ZWEI SCHLÜSSEL — und genau daran fehlte der halbe Weg
+        (13.08.2026): Diese Methode verlangte ZWINGEND eine
+        `properties.airbnb_listing_id` und sendete `{"listing_id": …}`. Für
+        Booking.com gab es damit keinen Pfad: der Aufschlag stand in der
+        Oberfläche und lief in eine Airbnb-Fehlermeldung, obwohl das Objekt gar
+        keine Airbnb-Anzeige sein musste.
+
+          Airbnb      GENAU EINE Rate je Anzeige („Airbnb allows you to map only
+                      1 rate plan") → Schlüssel ist die Listing-ID.
+          Booking &   MEHRERE Raten je Zimmer (live bei „Feriehus Rævehulen":
+          alle andere Standard Rate 64513248 UND Wochenrate 65402734) →
+                      Schlüssel ist das Paar `room_type_code` + `rate_plan_code`.
+
+        WOHER DIE CODES KOMMEN: aus dem BESTEHENDEN Kanal-Mapping (`bestand`),
+        nicht aus einem neuen `mapping_details`-Abruf und schon gar nicht aus
+        einer geratenen Zahl. Die Codes gehören dem Portal; wir kennen sie nur,
+        weil sie beim Verbinden gemappt wurden. Steht dort nichts, wird das
+        gesagt statt eine Zuordnung zu erfinden (Wurzel 4).
+
+        JEDE Rate des Portals bekommt den Kanal-Plan, nicht nur die erste: sonst
+        gilt der Aufschlag für die Standard Rate und die Wochenrate verkauft
+        weiter zum alten Preis. Der Channex-Skill warnt zusätzlich, dass eine
+        UNGEMAPPTE Rate eine Buchung verschluckt („if an unmapped rate is booked
+        on a connected channel, the reservation will not be sent through") —
+        deshalb darf keine Rate unbelegt zurückbleiben.
         """
         plan = (
             db.table("rate_plans")
@@ -458,33 +480,77 @@ class ObjektKanalMixin:
             .execute()
         ).data or []
         listing_id = prop[0].get("airbnb_listing_id") if prop else None
-        if not listing_id:
+
+        ziele = self._zuordnungs_ziele(bestand or [], listing_id)
+        if not ziele:
             raise ChannelManagerError(
-                "Dieses Objekt ist bei Airbnb noch nicht zugeordnet. Rufe es "
-                "zuerst unter „Synchronisierung“ bei Airbnb ab.",
+                "Für dieses Objekt ist an diesem Portal keine Rate zugeordnet. "
+                "Verbinde das Objekt zuerst unter „Synchronisierung“ mit dem "
+                "Portal.",
                 status_code=422,
             )
-        try:
-            self._channex.create_channel_mapping(  # type: ignore[attr-defined]
-                channel_id, channex_rate_plan_id, {"listing_id": str(listing_id)}
-            )
-        except ChannexError as exc:
-            # „rate plan already exists" ist kein Fehler, sondern der Zielzustand
-            # (Wurzel 2). Channex kennt die Zuordnung besser als unsere Sicht auf
-            # das Kanal-Objekt — daraus einen 422 an den Nutzer zu machen hieße,
-            # ein gelungenes Speichern als gescheitert zu melden.
-            if "already exists" in str(exc).lower():
-                log.info(
-                    "portal_adjustment_mapping_bestand_bereits",
-                    channel_id=channel_id, rate_plan_id=channex_rate_plan_id,
+        for settings in ziele:
+            try:
+                self._channex.create_channel_mapping(  # type: ignore[attr-defined]
+                    channel_id, channex_rate_plan_id, settings
                 )
-                return
-            raise self._wrap_channex(exc) from exc
-        log.info(
-            "portal_adjustment_mapping_angelegt",
-            channel_id=channel_id, rate_plan_id=channex_rate_plan_id,
-            listing_id=str(listing_id),
-        )
+            except ChannexError as exc:
+                # „rate plan already exists" ist kein Fehler, sondern der
+                # Zielzustand (Wurzel 2). Channex kennt die Zuordnung besser als
+                # unsere Sicht auf das Kanal-Objekt — daraus einen 422 an den
+                # Nutzer zu machen hieße, ein gelungenes Speichern als
+                # gescheitert zu melden.
+                if "already exists" in str(exc).lower():
+                    log.info(
+                        "portal_adjustment_mapping_bestand_bereits",
+                        channel_id=channel_id,
+                        rate_plan_id=channex_rate_plan_id,
+                    )
+                    continue
+                raise self._wrap_channex(exc) from exc
+            log.info(
+                "portal_adjustment_mapping_angelegt",
+                channel_id=channel_id, rate_plan_id=channex_rate_plan_id,
+                settings=settings,
+            )
+
+    @staticmethod
+    def _zuordnungs_ziele(
+        bestand: list[dict[str, Any]], airbnb_listing_id: object,
+    ) -> list[dict[str, Any]]:
+        """Die `settings`, unter denen der Kanal-Plan zugeordnet werden muss.
+
+        Gelesen wird aus den Einträgen, die schon am Kanal hängen — dort stehen
+        die Codes des Portals. Für Airbnb genügt die Listing-ID des Objekts, weil
+        dort nur EINE Rate je Anzeige möglich ist; sie wird auch dann genommen,
+        wenn der Kanal noch leer ist (das ist bei Airbnb der Normalfall nach
+        einem OAuth-Anschluss).
+
+        Rückgabe ist dedupliziert und stabil sortiert: dieselbe Rate zweimal
+        anzulegen wäre ein 422 „already exists" für nichts.
+        """
+        gesehen: set[tuple[str, ...]] = set()
+        ziele: list[dict[str, Any]] = []
+        for eintrag in bestand:
+            s = eintrag.get("settings") or {}
+            raum = s.get("room_type_code")
+            rate = s.get("rate_plan_code")
+            if raum is None or rate is None:
+                continue
+            # Codes sind bei Channex INTEGER (Skill: Strings landen unter
+            # „removed rates"). Als str vergleichen, im Payload den Originalwert
+            # weitergeben — er kam ohnehin von Channex.
+            schluessel = ("paar", str(raum), str(rate))
+            if schluessel in gesehen:
+                continue
+            gesehen.add(schluessel)
+            ziele.append({"room_type_code": raum, "rate_plan_code": rate})
+        if ziele:
+            return ziele
+        # Kein Paar im Bestand → Airbnb-Weg über die Listing-ID.
+        if airbnb_listing_id:
+            return [{"listing_id": str(airbnb_listing_id)}]
+        return []
 
     @staticmethod
     def _channex_id_for_local_plan(

@@ -1706,7 +1706,20 @@ function PortalAdjustmentsCard({
 
   const wert = (portal: string): number =>
     plans.find((pl) => pl.portal_scope === portal)?.offset_percent ?? 0;
-  const gesetzt = (conns ?? []).filter((c) => wert(c.portal_code) !== 0);
+  // JEDES verbundene Portal steht hier, auch mit 0 % — nicht nur die mit Wert.
+  // Vorher filterte diese Zeile auf `!== 0`, und damit war ein Portal ohne
+  // Aufschlag in der ganzen Oberfläche unsichtbar: der Kanal-Plan
+  // („Grundpreis · BookingCom", portal_scope) erscheint bewusst NICHT in der
+  // Preisplan-Liste (s. `verkaufsplaene`), also gab es überhaupt keine Stelle,
+  // an der man ihn sehen oder anfassen konnte.
+  //
+  // Alle verbundenen Kanäle zu zeigen ist zudem Branchenstandard (recherchiert
+  // 13.08.2026): Lodgify „set a mark-up for each OTA the rental is connected
+  // to", Guesty „for each booking channel, enter the percentage", Hostaway mit
+  // einer Alle-Kanäle-Tabelle, Cloudbeds mit einer Zeile je Zimmertyp. Kein
+  // Anbieter versteckt einen Kanal, weil sein Wert 0 ist — die Liste hängt an
+  // der VERBINDUNG, nicht am Vorhandensein eines Wertes.
+  const portale = conns ?? [];
 
   return (
     <>
@@ -1724,7 +1737,7 @@ function PortalAdjustmentsCard({
         {conns !== null && conns.length === 0 ? (
           <PreisLeer>{t("pricingForm.portalAdjustmentNone")}</PreisLeer>
         ) : (
-          gesetzt.map((c) => {
+          portale.map((c) => {
             const v = wert(c.portal_code);
             const logo = channelLogoLoose(c.portal_code) ?? channelLogoLoose(c.portal);
             return (
