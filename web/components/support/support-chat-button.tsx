@@ -11,6 +11,12 @@
 //
 // Muster wie bei Intercom/Crisp: runder Knopf, Ungelesen-Zähler als Badge,
 // verschwindet, während das Chat-Panel offen ist (sonst überdeckt er es).
+//
+// Er ist kein fester Bestandteil der Oberfläche: ein kleines x blendet ihn weg,
+// der Wunsch bleibt gespeichert. Zurück kommt er über „Hilfe holen" im
+// Konto-Menü — deshalb ist das Wegblenden keine Sackgasse. Das x liegt hinter
+// Hover/Fokus, damit der Normalfall (Chat öffnen) ein sauberer runder Knopf
+// bleibt; per Tastatur ist es über Fokus-innerhalb trotzdem erreichbar.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 
@@ -19,21 +25,32 @@ import { useSupportChat } from "./support-chat";
 export function SupportChatButton() {
   const t = useTranslations("supportChat");
   const chat = useSupportChat();
-  if (chat.offen) return null;
+  if (chat.offen || !chat.knopfSichtbar) return null;
   return (
-    <button
-      type="button"
-      onClick={chat.oeffnen}
-      aria-label={t("titel")}
-      title={t("titel")}
-      className="fixed bottom-6 right-6 z-50 inline-flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-    >
-      <Icon icon="ph:chat-circle-dots-fill" className="size-7" />
-      {chat.ungelesen > 0 && (
-        <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs font-semibold text-destructive-foreground">
-          {chat.ungelesen}
-        </span>
-      )}
-    </button>
+    <div className="group fixed bottom-6 right-6 z-50">
+      <button
+        type="button"
+        onClick={chat.oeffnen}
+        aria-label={t("titel")}
+        title={t("titel")}
+        className="inline-flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
+        <Icon icon="ph:chat-circle-dots-fill" className="size-7" />
+        {chat.ungelesen > 0 && (
+          <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-xs font-semibold text-destructive-foreground">
+            {chat.ungelesen}
+          </span>
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={chat.knopfAusblenden}
+        aria-label={t("knopfAusblenden")}
+        title={t("knopfAusblenden")}
+        className="absolute -left-1 -top-1 inline-flex size-6 items-center justify-center rounded-full border border-border bg-card text-muted-foreground opacity-0 shadow transition-opacity hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-focus-within:opacity-100 group-hover:opacity-100"
+      >
+        <Icon icon="ph:x" className="size-3.5" />
+      </button>
+    </div>
   );
 }

@@ -52,7 +52,14 @@ type SupportChatKontext = {
   schliessen: () => void;
   /** Konversationen mit ungelesener Team-Antwort (Badge-Zahl). */
   ungelesen: number;
+  /** Schwebt der Knopf unten rechts? Der Nutzer kann ihn wegblenden. */
+  knopfSichtbar: boolean;
+  knopfAusblenden: () => void;
 };
+
+// Der Wegblend-Wunsch überlebt den Seitenwechsel, sonst wäre er wirkungslos:
+// das Dashboard mountet den Provider bei jeder Navigation neu.
+const AUSGEBLENDET_KEY = "supportChat.knopfAusgeblendet";
 
 const Kontext = createContext<SupportChatKontext | null>(null);
 
@@ -73,6 +80,15 @@ export function SupportChatProvider({
 }) {
   const [offen, setOffen] = useState(false);
   const [ungelesen, setUngelesen] = useState(0);
+  // Start sichtbar, erst nach dem Lesen des gespeicherten Wunsches ggf. weg —
+  // sonst weicht der Server-HTML vom Client ab (Hydration).
+  const [knopfSichtbar, setKnopfSichtbar] = useState(true);
+
+  useEffect(() => {
+    setKnopfSichtbar(
+      window.localStorage.getItem(AUSGEBLENDET_KEY) !== "1",
+    );
+  }, []);
 
   const ungelesenLaden = useCallback(async () => {
     const res = await unreadSummary();
@@ -99,11 +115,22 @@ export function SupportChatProvider({
   const wert = useMemo<SupportChatKontext>(
     () => ({
       offen,
-      oeffnen: () => setOffen(true),
+      // Öffnen holt den Knopf zurück: sonst wäre der Weg über das Konto-Menü
+      // eine Einbahnstraße — Chat auf, Chat zu, Knopf wieder weg.
+      oeffnen: () => {
+        window.localStorage.removeItem(AUSGEBLENDET_KEY);
+        setKnopfSichtbar(true);
+        setOffen(true);
+      },
       schliessen: () => setOffen(false),
       ungelesen,
+      knopfSichtbar,
+      knopfAusblenden: () => {
+        window.localStorage.setItem(AUSGEBLENDET_KEY, "1");
+        setKnopfSichtbar(false);
+      },
     }),
-    [offen, ungelesen],
+    [offen, ungelesen, knopfSichtbar],
   );
 
   return (
