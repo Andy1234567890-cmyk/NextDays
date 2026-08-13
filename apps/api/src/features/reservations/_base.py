@@ -20,7 +20,7 @@ from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.dates import nights as _nights
-from src.core.einheiten_verfuegbar import freie_einheiten_spannen
+from src.core.einheiten_verfuegbar import einheiten_zahl, freie_einheiten_spannen
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
@@ -624,6 +624,31 @@ class ReservationsBase:
             raise ReservationError("Reservierung nicht gefunden.", status_code=404)
         return rows[0]
 
+    def _einzige_einheit(self, tenant_id: str, property_id: str) -> str | None:
+        """Die Einheit eines Objekts, wenn es GENAU EINE hat — zweite Quelle für
+        `_release_nights`, wenn `reservations.unit_id` fehlt.
+
+        Der Wert fehlt real: die Spalte ist nullable, trägt `on delete set null`
+        (0265), wird beim Anlegen nur konditional gesetzt und ist im Altbestand
+        vor 0265 durchgängig leer. Bei einem Objekt mit einer Einheit ist die
+        Zuordnung dann trotzdem eindeutig — es gibt nur eine Kandidatin.
+
+        `None` bei 0 oder mehreren Einheiten: dort ist nicht ableitbar, welche
+        Einheit die Buchung hielt (`availability` führt keine
+        `reservation_id`, die Zuordnung Buchung→Einheit steht ausschließlich
+        auf der Reservierung). Der Aufrufer entscheidet dann fail-closed.
+        """
+        rows = (
+            self._db()
+            .table("property_units")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .limit(2)
+            .execute()
+        ).data or []
+        return str(rows[0]["id"]) if len(rows) == 1 else None
+
     def _release_nights(
         self,
         tenant_id: str,
@@ -647,8 +672,18 @@ class ReservationsBase:
         einer fremden Buchung mit — der Schwesterpfad
         `channel_manager.bookings_sync._free_ota_nights` hat genau das live
         erlebt („Buchung B storniert, Buchung A verlor ihre Sperre") und ist
-        deshalb längst unit-genau. Fehlt der Wert (Altbestand ohne `unit_id`),
-        bleibt es beim objektweiten Verhalten von vorher.
+        deshalb längst unit-genau.
+
+        Fehlt der Wert, wird die Einheit über die BELEGTEN Kalenderzeilen
+        dieser Reservierung nachgeschlagen (`availability.reservation_id`).
+        Erst wenn auch das nichts liefert, bleibt es beim objektweiten
+        Verhalten — und das NUR bei einem Objekt mit genau einer Einheit.
+        Bei n > 1 Einheiten wird stattdessen gar nichts geöffnet und der Fall
+        protokolliert: `unit_id=None` würde dort die Nächte auf ALLEN Einheiten
+        freigeben und fremde Buchungen aus dem Kalender werfen (derselbe
+        Live-Fehler wie oben, nur über den Altbestands-Zweig). Lieber eine
+        Nacht zu wenig freigegeben (Umsatzverlust, sichtbar) als eine fremde
+        Buchung zerstört (Überbuchung, unsichtbar) — fail-closed.
 
         Freigegeben wird NUR für Tage, die keine andere aktive Buchung noch
         belegt (sonst Überbuchung), und NUR Zeilen, die wirklich eine BELEGUNG
@@ -662,6 +697,8 @@ class ReservationsBase:
         """
         if not nights:
             return
+        if not unit_id:
+            unit_id = self._einzige_einheit(tenant_id, property_id)
         still = self._days_still_booked_by_others(
             property_id, nights, reservation_id, unit_id
         )
@@ -696,12 +733,27 @@ class ReservationsBase:
                     .eq("status", "booked")
                     .execute()
                 )
+        elif einheiten_zahl(self._db(), tenant_id, property_id) > 1:
+            # Mehrere Einheiten, aber die eigene ist unbekannt (weder auf der
+            # Reservierung noch über die Belegung auffindbar): objektweites
+            # Öffnen würde hier die Nächte auf ALLEN Einheiten des Typs
+            # freigeben und die Sperren fremder Buchungen mitreißen. Nichts
+            # tun und laut protokollieren — der Kalender bleibt korrekt, der
+            # Datenfehler wird sichtbar, statt still eine Überbuchung zu bauen.
+            log.error(
+                "release_nights_ohne_einheit_uebersprungen",
+                property_id=property_id,
+                reservation_id=reservation_id,
+                naechte=len(release),
+            )
+            return
         else:
-            # Altbestand ohne bekannte Einheit: objektweit, aber ebenfalls nur
-            # belegte Zeilen. Vorher stand hier ein `upsert` — der konnte den
+            # Genau eine Einheit: objektweit == diese eine Einheit, das ist
+            # verhaltensgleich und deshalb unbedenklich. Nur belegte Zeilen.
+            # Vorher stand hier ein `upsert` — der konnte den
             # `status='booked'`-Filter gar nicht ausdrücken und legte für Tage
-            # ohne Zeile sogar neue 'open'-Zeilen an, auf ALLEN Einheiten des
-            # Typs. Ein `update` je Tag trifft genau die vorhandenen Zeilen.
+            # ohne Zeile sogar neue 'open'-Zeilen an. Ein `update` je Tag
+            # trifft genau die vorhandenen Zeilen.
             for d in release:
                 (
                     self._db()

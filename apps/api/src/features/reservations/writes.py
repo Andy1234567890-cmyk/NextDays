@@ -1039,6 +1039,17 @@ class WritesMixin(ReservationsBase):
         if not res.data:
             raise ReservationError("Reservierung nicht gefunden.", status_code=404)
         current = res.data[0]
+        # Owner-Scope (§4.2, Wurzel 9): derselbe Scope wie im Lese-Detailpfad
+        # (reads.py) — ein Eigentümer darf auch schreibend nur seine eigenen
+        # Objekte treffen. Aktuell greift schon die Rollen-Capability
+        # (owner hat kein MANAGE_CALENDAR), aber die destruktivste Operation
+        # der Slice darf nicht an einer einzigen Rollenzeile hängen: wird
+        # MANAGE_CALENDAR je an _OWNER vergeben oder ein Eigentümer zusätzlich
+        # als Co-Gastgeber mit `full` verknüpft, wäre sonst jede fremde Buchung
+        # des Tenants stornierbar.
+        owner_pids = self._owner_scope_pids(ctx)
+        if owner_pids is not None and current.get("property_id") not in owner_pids:
+            raise ReservationError("Reservierung nicht gefunden.", status_code=404)
         if current.get("status") == "cancelled":
             raise ReservationError(
                 "Reservierung ist bereits storniert.", status_code=409
@@ -1085,8 +1096,26 @@ class WritesMixin(ReservationsBase):
 
         # Belegte Nächte freigeben (nur die dieser Reservierung) — zentrale
         # Freigabe: gefiltert gegen Fremdbelegung, lokal + Channex + Recompute.
+        #
+        # NUR künftige Nächte: eine bereits verbrachte Nacht ist verbraucht,
+        # nicht wieder verkäuflich. Ohne diese Grenze meldete ein Storno am 4.
+        # Aufenthaltstag die Nächte 1–3 UND die laufende als frei an die
+        # Portale — das Portal verkauft die Nacht weiter, während der Gast im
+        # Zimmer liegt (Überbuchung). `move()` blockt den eingecheckten Gast
+        # deshalb ganz (Zeile 608); `cancel()` darf das nicht, ein Hotel muss
+        # einen Abbruch mitten im Aufenthalt buchen können — also wird hier
+        # statt des Verbots der Zeitraum beschnitten.
+        # Die heutige Nacht (Anreise heute) bleibt belegt: der Gast hat das
+        # Zimmer physisch, erst ab morgen ist es wieder verkäuflich.
         property_id = current["property_id"]
-        nights = _nights(_as_date(current["check_in"]), _as_date(current["check_out"]))
+        heute = datetime.now(UTC).date()
+        check_in, check_out = (
+            _as_date(current["check_in"]), _as_date(current["check_out"])
+        )
+        ab = max(check_in, heute + timedelta(days=1)) if current.get(
+            "checked_in_at"
+        ) else check_in
+        nights = [d for d in _nights(check_in, check_out) if d >= ab]
         self._release_nights(
             tenant_id, property_id, [d.isoformat() for d in nights], reservation_id,
             unit_id=current.get("unit_id"),
@@ -1133,14 +1162,30 @@ class WritesMixin(ReservationsBase):
                 PaymentsService,
             )
 
-            days_before = max(
-                0, (_as_date(current["check_in"]) - datetime.now(UTC).date()).days
-            )
-            PaymentsService(service_client=self._db()).refund_for_cancellation(
-                ctx,
-                reservation_id=reservation_id,
-                days_before_arrival=days_before,
-            )
+            # Der Policy-Refund staffelt nach Tagen VOR Anreise. Nach dem
+            # Check-in gibt es diesen Abstand nicht mehr — der Aufenthalt läuft,
+            # Nächte sind verbraucht. Vorher fing `max(0, …)` den negativen
+            # Abstand ab und lieferte 0, also exakt die Staffel „am Anreisetag
+            # storniert": ein Abbruch am 4. Tag wurde erstattet wie ein Storno
+            # vor der Anreise, bei `refundable` sogar zu 100 % trotz drei
+            # verbrauchter Nächte. Ein automatischer Refund ist hier die falsche
+            # Antwort (Wurzel 4: kein plausibler Ersatzwert) — die anteilige
+            # Abrechnung eines Abbruchs ist ein kaufmännischer Vorgang und läuft
+            # über die Zahlungsansicht/Buchhaltung.
+            if current.get("checked_in_at"):
+                log.info(
+                    "cancellation_refund_uebersprungen_aufenthalt_laeuft",
+                    reservation_id=reservation_id,
+                )
+            else:
+                days_before = (
+                    _as_date(current["check_in"]) - datetime.now(UTC).date()
+                ).days
+                PaymentsService(service_client=self._db()).refund_for_cancellation(
+                    ctx,
+                    reservation_id=reservation_id,
+                    days_before_arrival=days_before,
+                )
         except PaymentsError as exc:
             log.warning(
                 "cancellation_refund_failed",

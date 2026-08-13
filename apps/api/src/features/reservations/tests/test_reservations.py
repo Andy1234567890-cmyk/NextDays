@@ -1032,6 +1032,103 @@ def test_cancel_direct_booking_also_frees_days() -> None:
     assert log_rows[0]["ota_name"] is None
 
 
+def test_cancel_nach_checkin_haelt_verbrauchte_naechte_belegt() -> None:
+    """Abbruch mitten im Aufenthalt: der Storno gelingt, gibt aber NUR die
+    künftigen Nächte frei. Verbrauchte und die laufende Nacht bleiben belegt —
+    sonst verkauft das Portal die Nacht, in der der Gast noch im Zimmer liegt."""
+    heute = date.today()
+    store = _move_store(
+        check_in=(heute - timedelta(days=3)).isoformat(),
+        check_out=(heute + timedelta(days=2)).isoformat(),
+        checked_in_at=(heute - timedelta(days=3)).isoformat() + "T15:00:00Z",
+    )
+    store["availability"] = [
+        {"property_id": "p1", "unit_id": "unit-1",
+         "date": (heute + off).isoformat(), "status": "booked", "source": "booking"}
+        for off in (
+            timedelta(days=-3), timedelta(days=-2), timedelta(days=-1),
+            timedelta(0), timedelta(days=1),
+        )
+    ]
+    store["reservations"][0]["unit_id"] = "unit-1"
+    svc = _move_db(store)
+    out = svc.cancel(_CANCEL_CTX, RID, "Gast bricht ab")
+    assert out.status == "cancelled"
+    avail = {a["date"]: a["status"] for a in store["availability"]}
+    # Verbrauchte Nächte und die laufende bleiben belegt.
+    for off in (-3, -2, -1, 0):
+        tag = (heute + timedelta(days=off)).isoformat()
+        assert avail[tag] == "booked", f"{tag} darf nicht freigegeben werden"
+    # Erst ab morgen ist das Zimmer wieder verkäuflich.
+    assert avail[(heute + timedelta(days=1)).isoformat()] == "open"
+
+
+def test_cancel_ohne_einheit_bei_mehreren_einheiten_gibt_nichts_frei() -> None:
+    """Fehlt `unit_id` und hat das Objekt mehrere Einheiten, darf der Storno
+    NICHTS öffnen: objektweites Freigeben würde die Sperren der übrigen
+    Einheiten mitreißen (fremde Buchungen verlören ihren Kalendereintrag)."""
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["reservations"][0]["unit_id"] = None
+    store["property_units"] = [
+        {"id": "unit-1", "tenant_id": "t1", "property_id": "p1"},
+        {"id": "unit-2", "tenant_id": "t1", "property_id": "p1"},
+    ]
+    # Einheit 2 ist von einer FREMDEN Buchung belegt.
+    store["availability"] = [
+        {"property_id": "p1", "unit_id": "unit-1", "date": "2026-07-01",
+         "status": "booked", "source": "booking"},
+        {"property_id": "p1", "unit_id": "unit-2", "date": "2026-07-01",
+         "status": "booked", "source": "booking"},
+    ]
+    svc = _move_db(store)
+    out = svc.cancel(_CANCEL_CTX, RID, "Storno ohne Einheit")
+    assert out.status == "cancelled"
+    avail = {(a["unit_id"], a["date"]): a["status"] for a in store["availability"]}
+    assert avail[("unit-2", "2026-07-01")] == "booked"  # fremde Sperre unberührt
+    assert avail[("unit-1", "2026-07-01")] == "booked"  # fail-closed: nichts geöffnet
+
+
+def test_cancel_ohne_einheit_bei_einer_einheit_gibt_frei() -> None:
+    """Gegenprobe: bei genau EINER Einheit ist die Zuordnung eindeutig — der
+    Storno gibt frei wie bisher (kein Rückschritt für FeWo-Bestand)."""
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["reservations"][0]["unit_id"] = None
+    store["property_units"] = [
+        {"id": "unit-1", "tenant_id": "t1", "property_id": "p1"},
+    ]
+    store["availability"] = [
+        {"property_id": "p1", "unit_id": "unit-1", "date": "2026-07-01",
+         "status": "booked", "source": "booking"},
+        {"property_id": "p1", "unit_id": "unit-1", "date": "2026-07-02",
+         "status": "booked", "source": "booking"},
+    ]
+    svc = _move_db(store)
+    svc.cancel(_CANCEL_CTX, RID, "Storno FeWo")
+    avail = {a["date"]: a["status"] for a in store["availability"]}
+    assert avail["2026-07-01"] == "open"
+    assert avail["2026-07-02"] == "open"
+
+
+def test_cancel_owner_fremdes_objekt_404() -> None:
+    """Wurzel 9: der Storno prüft denselben Owner-Scope wie der Lesepfad —
+    ein Eigentümer darf eine Buchung an einem fremden Objekt nicht stornieren."""
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["users"] = [{"id": "own", "role": "owner", "permissions": _FULL_PERMS}]
+    # Der Eigentümer hängt an p2, die Buchung liegt auf p1.
+    store["owners"] = [{"id": "own-1", "tenant_id": "t1", "user_id": "own"}]
+    store["owner_properties"] = [{"owner_id": "own-1", "property_id": "p2"}]
+    svc = _move_db(store)
+    with pytest.raises(ReservationError) as exc:
+        svc.cancel(
+            AuthContext(user_id="own", tenant_id="t1", role="owner"),
+            RID, "Fremder Storno",
+        )
+    assert exc.value.status_code == 404
+    assert store["reservations"][0]["status"] == "confirmed"
+    avail = {(a["property_id"], a["date"]): a["status"] for a in store["availability"]}
+    assert avail[("p1", "2026-07-01")] == "booked"
+
+
 # --- Service: atomare Buchung (RPC 0104) --------------------------------------
 
 def _rpc_service(monkeypatch) -> tuple[ReservationsService, MagicMock]:  # noqa: ANN001
