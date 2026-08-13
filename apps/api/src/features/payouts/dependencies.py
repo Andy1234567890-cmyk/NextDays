@@ -8,6 +8,7 @@ from fastapi import Depends
 from src.core.supabase import get_service_client
 
 from .service import PayoutsService
+from .stripe_saldo import StripeSaldoService
 
 
 def get_payouts_service() -> PayoutsService:
@@ -19,3 +20,14 @@ def get_payouts_service() -> PayoutsService:
 
 
 PayoutsServiceDep = Annotated[PayoutsService, Depends(get_payouts_service)]
+
+
+def get_stripe_saldo_service() -> StripeSaldoService:
+    # service_role: tenant_billing_profile ist für Clients gesperrt (0169).
+    # Das verbundene Konto kommt aus dem Profil des Tenants im Token (Wurzel 3).
+    return StripeSaldoService(db=get_service_client())
+
+
+StripeSaldoServiceDep = Annotated[
+    StripeSaldoService, Depends(get_stripe_saldo_service)
+]

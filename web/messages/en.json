@@ -5946,7 +5946,15 @@
       "emptyCatalog": "No catalog for this property.",
       "pickPlaceholder": "Choose add-on …",
       "addAction": "Add",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Payment link",
+      "linkCreate": "Create payment link",
+      "linkBusy": "Creating …",
+      "linkCopy": "Copy link",
+      "linkCopied": "Payment link copied.",
+      "linkCopyFailed": "Copying failed — the link is shown below.",
+      "linkWithdraw": "Withdraw",
+      "linkWithdrawn": "Payment link withdrawn."
     },
     "ratesView": {
       "propertyLabel": "Property",
@@ -8224,5 +8232,55 @@
     "validTo": "Valid until",
     "validToInfo": "Leave empty while the rate applies. If the portal changes its rate, add a new one starting on the day of the change — the old one stays for earlier statements.",
     "validToOpen": "still running"
+  },
+  "abrechnung": {
+    "titel": "Billing",
+    "untertitel": "Your balance and your payouts.",
+    "laedt": "Loading …",
+    "aktualisieren": "Refresh",
+    "keinKonto": "You need a connected payment account to receive payouts.",
+    "kontoEinrichten": "Set up payment account",
+    "auszahlungAngestossen": "Payout of {betrag} initiated.",
+    "rhythmusGespeichert": "Schedule saved.",
+    "guthaben": {
+      "titel": "Your balance",
+      "hinweis": "What you collected yourself — extra services and direct bookings.",
+      "leer": "No balance yet.",
+      "verfuegbar": "Available",
+      "ausstehend": "Pending",
+      "auszahlen": "Request payout",
+      "nochNichtFreigeschaltet": "Payouts are not enabled for your account yet.",
+      "automatischHinweis": "Your balance is paid out automatically. To request a payout, set the schedule below to “On request only”.",
+      "ausstehendHinweis": "Pending funds become available after the settlement period."
+    },
+    "rhythmus": {
+      "titel": "Payout schedule",
+      "hinweis": "You decide when your balance goes to your bank account.",
+      "manual": "On request only",
+      "daily": "Daily",
+      "weekly": "Weekly (Thursdays)",
+      "monthly": "Monthly (on the 15th)"
+    },
+    "historie": {
+      "titel": "Recent payouts",
+      "leer": "No payout yet.",
+      "automatisch": "Automatic",
+      "beantragt": "Requested",
+      "angelegt": "Created {datum}",
+      "gutschrift": "Arrives {datum}"
+    },
+    "status": {
+      "paid": "Paid out",
+      "pending": "In progress",
+      "in_transit": "In transit",
+      "canceled": "Canceled",
+      "failed": "Failed"
+    },
+    "marktplatz": {
+      "titel": "Marketplace bookings",
+      "hinweis": "Bookings via myBestDays run through our account and are paid out after departure.",
+      "offen": "Open",
+      "ausgezahlt": "Paid out"
+    }
   }
 }

@@ -5925,7 +5925,15 @@
       "emptyCatalog": "Pro tento objekt není žádný katalog.",
       "pickPlaceholder": "Vybrat doplňkovou službu …",
       "addAction": "Přidat",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Platební odkaz",
+      "linkCreate": "Vytvořit platební odkaz",
+      "linkBusy": "Vytváří se …",
+      "linkCopy": "Kopírovat odkaz",
+      "linkCopied": "Platební odkaz zkopírován.",
+      "linkCopyFailed": "Kopírování se nezdařilo — odkaz je níže.",
+      "linkWithdraw": "Stáhnout",
+      "linkWithdrawn": "Platební odkaz stažen."
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -8203,5 +8211,55 @@
     "validTo": "Platí do",
     "validToInfo": "Ponechte prázdné, dokud sazba platí. Pokud portál svou sazbu změní, vytvořte novou ode dne změny — stará zůstane pro dřívější vyúčtování.",
     "validToOpen": "stále platí"
+  },
+  "abrechnung": {
+    "titel": "Vyúčtování",
+    "untertitel": "Tvůj zůstatek a výplaty.",
+    "laedt": "Načítá se …",
+    "aktualisieren": "Obnovit",
+    "keinKonto": "Pro výplaty potřebuješ připojený platební účet.",
+    "kontoEinrichten": "Nastavit platební účet",
+    "auszahlungAngestossen": "Výplata {betrag} zahájena.",
+    "rhythmusGespeichert": "Rytmus uložen.",
+    "guthaben": {
+      "titel": "Tvůj zůstatek",
+      "hinweis": "To, co jsi vybral sám — doplňkové služby a přímé rezervace.",
+      "leer": "Zatím žádný zůstatek.",
+      "verfuegbar": "K dispozici",
+      "ausstehend": "Čeká",
+      "auszahlen": "Požádat o výplatu",
+      "nochNichtFreigeschaltet": "Výplaty zatím nejsou pro tvůj účet povolené.",
+      "automatischHinweis": "Tvůj zůstatek se vyplácí automaticky. Pro výplatu na požádání nastav níže „Jen na požádání“.",
+      "ausstehendHinweis": "Čekající zůstatek bude k dispozici po zúčtovací lhůtě."
+    },
+    "rhythmus": {
+      "titel": "Rytmus výplat",
+      "hinweis": "Ty rozhoduješ, kdy zůstatek půjde na tvůj bankovní účet.",
+      "manual": "Jen na požádání",
+      "daily": "Denně",
+      "weekly": "Týdně (ve čtvrtek)",
+      "monthly": "Měsíčně (15. dne)"
+    },
+    "historie": {
+      "titel": "Poslední výplaty",
+      "leer": "Zatím žádná výplata.",
+      "automatisch": "Automatická",
+      "beantragt": "Vyžádaná",
+      "angelegt": "Vytvořeno {datum}",
+      "gutschrift": "Připsání {datum}"
+    },
+    "status": {
+      "paid": "Vyplaceno",
+      "pending": "Zpracovává se",
+      "in_transit": "Na cestě",
+      "canceled": "Zrušeno",
+      "failed": "Nezdařilo se"
+    },
+    "marktplatz": {
+      "titel": "Rezervace z tržiště",
+      "hinweis": "Rezervace přes myBestDays jdou přes náš účet a vyplácejí se po odjezdu.",
+      "offen": "Otevřeno",
+      "ausgezahlt": "Vyplaceno"
+    }
   }
 }

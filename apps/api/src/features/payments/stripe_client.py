@@ -8,6 +8,7 @@ leicht faken können (StripeClient wird injiziert/gepatcht).
 """
 from __future__ import annotations
 
+import io
 from collections.abc import Mapping
 from functools import lru_cache
 from typing import Any
@@ -413,3 +414,317 @@ def refund(
         options["stripe_account"] = direct_acct
     ref = stripe.v1.refunds.create(params=params, options=options or None)
     return {"id": ref.id, "status": ref.status}
+
+
+# --- Zusatzleistungen: Zahlungslink im verbundenen Konto ----------------------
+
+def create_addon_payment_link(
+    *,
+    acct: str,
+    currency: str,
+    amount_cents: int,
+    product_name: str,
+    application_fee_cents: int,
+    metadata: dict[str, str],
+    idempotency_key: str,
+    client: StripeClient | None = None,
+) -> dict[str, Any]:
+    """Zahlungslink für offene Zusatzleistungen — DIRECT CHARGE im Konto des Betriebs.
+
+    Alle drei Aufrufe (Preis, Link) laufen mit ``stripe_account``-Header, der
+    Charge entsteht also im verbundenen Konto: Das Geld wird dort gutgeschrieben
+    und von dort ausgezahlt. ``application_fee_amount`` ist der Anteil, den
+    Stripe daraus auf den Plattform-Saldo verbucht.
+
+    Warum ein Payment Link und keine Checkout-Session: Die Session-URL verfällt
+    nach 24 h — ein Link, den der Betrieb dem Gast per Nachricht schickt, wäre
+    dann tot. Payment Links bleiben gültig, bis wir sie deaktivieren.
+
+    Payment Links verlangen eine ECHTE Price-ID (``price_data`` gibt es dort
+    nicht, anders als bei Checkout-Sessions), deshalb der vorgeschaltete
+    ``prices.create`` mit ``product_data`` — Preis und Produkt entstehen im Konto
+    des Betriebs, nicht bei uns.
+
+    ``restrictions.completed_sessions.limit = 1`` macht den Link einmal
+    bezahlbar (Wurzel 2): Ein zweiter Gast-Klick nach erfolgreicher Zahlung
+    führt auf eine „nicht mehr verfügbar"-Seite statt zu einer zweiten
+    Belastung.
+    """
+    stripe = client or get_stripe()
+    opts_price: dict[str, Any] = {
+        "stripe_account": acct,
+        "idempotency_key": f"{idempotency_key}:price",
+    }
+    price = stripe.v1.prices.create(
+        params={
+            "currency": currency.lower(),
+            "unit_amount": amount_cents,
+            "product_data": {"name": product_name[:250]},
+        },
+        options=opts_price,
+    )
+    params: dict[str, Any] = {
+        "line_items": [{"price": price.id, "quantity": 1}],
+        "metadata": metadata,
+        # Metadata am Link wird auf jede Checkout-Session kopiert; für den
+        # PaymentIntent muss sie separat gesetzt werden, damit auch ein
+        # Refund-/Dispute-Fall die Herkunft kennt.
+        "payment_intent_data": {"metadata": metadata},
+        "restrictions": {"completed_sessions": {"limit": 1}},
+    }
+    if application_fee_cents > 0:
+        params["application_fee_amount"] = application_fee_cents
+    link = stripe.v1.payment_links.create(
+        params=params,
+        options={"stripe_account": acct, "idempotency_key": f"{idempotency_key}:link"},
+    )
+    return {
+        "id": link.id,
+        "url": link.url,
+        "price_id": price.id,
+        "product_id": str(price.product),
+        "active": bool(link.active),
+    }
+
+
+def deactivate_payment_link(
+    link_id: str, *, acct: str, client: StripeClient | None = None
+) -> None:
+    """Zahlungslink schließen (Gegenzustand zu create, Wurzel 1).
+
+    Nötig, sobald sich die offenen Positionen ändern oder der Betrieb den Link
+    zurückzieht — sonst bliebe eine bezahlbare URL im Umlauf, die auf einen
+    veralteten Betrag lautet.
+    """
+    stripe = client or get_stripe()
+    stripe.v1.payment_links.update(
+        link_id, params={"active": False}, options={"stripe_account": acct}
+    )
+
+
+def find_paid_session(
+    link_id: str, *, acct: str, client: StripeClient | None = None
+) -> dict[str, Any] | None:
+    """Bezahlte Checkout-Session zu einem Zahlungslink suchen (oder None).
+
+    Der Zahlungseingang kommt normalerweise per Webhook. Dieser Abgleich ist das
+    Netz darunter: Ist der Connect-Webhook nicht eingerichtet oder ein Event
+    verloren gegangen, bliebe die Zusatzleistung sonst dauerhaft „offen",
+    obwohl der Gast bezahlt hat. Wird beim Lesen eines offenen Links aufgerufen
+    — ein API-Call, kein Polling-Loop.
+    """
+    stripe = client or get_stripe()
+    sessions = stripe.v1.checkout.sessions.list(
+        params={"payment_link": link_id, "limit": 5},
+        options={"stripe_account": acct},
+    )
+    for session in sessions.data or []:
+        if getattr(session, "payment_status", None) == "paid":
+            return {
+                "id": session.id,
+                "payment_intent": getattr(session, "payment_intent", None),
+                "amount_total": getattr(session, "amount_total", None),
+                "currency": getattr(session, "currency", None),
+            }
+    return None
+
+
+# --- Saldo und Auszahlung des verbundenen Kontos ------------------------------
+
+def retrieve_balance(
+    *, acct: str, client: StripeClient | None = None
+) -> dict[str, list[dict[str, Any]]]:
+    """Saldo eines verbundenen Kontos: verfügbar / ausstehend je Währung.
+
+    ``available`` ist auszahlbar, ``pending`` liegt noch in der Abwicklungsfrist
+    (delay_days). Beides je Währung getrennt — ein Betrieb kann in mehreren
+    Währungen kassieren (27 EU-Länder, Wurzel 4).
+    """
+    stripe = client or get_stripe()
+    bal = stripe.v1.balance.retrieve(options={"stripe_account": acct})
+
+    def _liste(werte: Any) -> list[dict[str, Any]]:  # noqa: ANN401
+        return [
+            {"currency": str(w.currency), "amount_cents": int(w.amount)}
+            for w in (werte or [])
+        ]
+
+    return {
+        "available": _liste(getattr(bal, "available", None)),
+        "pending": _liste(getattr(bal, "pending", None)),
+    }
+
+
+def create_payout(
+    *,
+    acct: str,
+    amount_cents: int,
+    currency: str,
+    idempotency_key: str,
+    metadata: dict[str, str] | None = None,
+    client: StripeClient | None = None,
+) -> dict[str, Any]:
+    """Auszahlung des verbundenen Kontos auf dessen Bankkonto anstoßen.
+
+    Läuft mit ``stripe_account``-Header, ist also die Auszahlung DES BETRIEBS
+    aus SEINEM Saldo — kein Transfer von unserem Geld. Ohne ``destination``
+    nimmt Stripe das hinterlegte Standard-Bankkonto der Währung.
+
+    ``idempotency_key`` ist bei Geldbewegungen Pflicht (Wurzel 2): Doppelklick
+    oder Retry liefern dieselbe Auszahlung zurück statt einer zweiten.
+    """
+    stripe = client or get_stripe()
+    params: dict[str, Any] = {"amount": amount_cents, "currency": currency.lower()}
+    if metadata:
+        params["metadata"] = metadata
+    payout = stripe.v1.payouts.create(
+        params=params,
+        options={"stripe_account": acct, "idempotency_key": idempotency_key},
+    )
+    return {
+        "id": payout.id,
+        "amount_cents": int(payout.amount),
+        "currency": str(payout.currency),
+        "status": str(payout.status),
+        "arrival_date": getattr(payout, "arrival_date", None),
+    }
+
+
+def list_payouts(
+    *, acct: str, limit: int = 10, client: StripeClient | None = None
+) -> list[dict[str, Any]]:
+    """Letzte Auszahlungen des verbundenen Kontos (Historie für die Abrechnung)."""
+    stripe = client or get_stripe()
+    res = stripe.v1.payouts.list(
+        params={"limit": max(1, min(limit, 100))}, options={"stripe_account": acct}
+    )
+    return [
+        {
+            "id": p.id,
+            "amount_cents": int(p.amount),
+            "currency": str(p.currency),
+            "status": str(p.status),
+            "automatic": bool(getattr(p, "automatic", False)),
+            "created": int(p.created),
+            "arrival_date": getattr(p, "arrival_date", None),
+            "failure_message": getattr(p, "failure_message", None),
+        }
+        for p in (res.data or [])
+    ]
+
+
+def retrieve_payout_schedule(
+    *, acct: str, client: StripeClient | None = None
+) -> dict[str, Any]:
+    """Auszahlungs-Rhythmus + Auszahlbarkeit eines verbundenen Kontos.
+
+    ``interval`` ist Stripes Wahrheit, nicht unsere Kopie: manual (nur auf
+    Antrag) | daily | weekly | monthly.
+    """
+    stripe = client or get_stripe()
+    account = stripe.v1.accounts.retrieve(acct)
+    settings = getattr(account, "settings", None)
+    payouts = getattr(settings, "payouts", None) if settings else None
+    schedule = getattr(payouts, "schedule", None) if payouts else None
+    return {
+        "payouts_enabled": bool(getattr(account, "payouts_enabled", False)),
+        "interval": str(getattr(schedule, "interval", "") or ""),
+        "weekly_anchor": getattr(schedule, "weekly_anchor", None),
+        "monthly_anchor": getattr(schedule, "monthly_anchor", None),
+        "delay_days": getattr(schedule, "delay_days", None),
+    }
+
+
+def update_payout_schedule(
+    *,
+    acct: str,
+    interval: str,
+    weekly_anchor: str | None = None,
+    monthly_anchor: int | None = None,
+    client: StripeClient | None = None,
+) -> dict[str, Any]:
+    """Auszahlungs-Rhythmus des verbundenen Kontos setzen.
+
+    ``manual`` schaltet automatische Auszahlungen ab — das Guthaben bleibt
+    stehen, bis der Betrieb eine Auszahlung beantragt. Bei Custom Accounts
+    (Haftung liegt bei uns) darf die Plattform diesen Wert setzen; Stripe lehnt
+    ihn sonst mit einem klaren Fehler ab, den der Aufrufer weiterreicht statt
+    ihn zu verschlucken (Wurzel 5).
+    """
+    stripe = client or get_stripe()
+    schedule: dict[str, Any] = {"interval": interval}
+    if interval == "weekly" and weekly_anchor:
+        schedule["weekly_anchor"] = weekly_anchor
+    if interval == "monthly" and monthly_anchor:
+        schedule["monthly_anchor"] = monthly_anchor
+    stripe.v1.accounts.update(
+        acct, params={"settings": {"payouts": {"schedule": schedule}}}
+    )
+    return retrieve_payout_schedule(acct=acct, client=stripe)
+
+
+# --- Branding des verbundenen Kontos (Logo auf der Zahlseite) -----------------
+
+# Stripe akzeptiert als Branding-Datei ausschließlich JPEG und PNG. SVG/WebP —
+# bei uns erlaubte Logo-Formate — werden abgelehnt; der Aufrufer überspringt sie
+# mit einer klaren Meldung, statt einen Fehlschlag zu verschlucken (Wurzel 5).
+BRANDING_MIME = {"image/png", "image/jpeg"}
+# Obergrenze laut Stripe-Doku für Branding-Dateien (Wurzel 8: harte Grenze,
+# statt eine 5-MB-Datei ins offene Messer laufen zu lassen).
+BRANDING_MAX_BYTES = 512 * 1024
+
+
+def upload_branding_file(
+    *,
+    content: bytes,
+    filename: str,
+    purpose: str,
+    client: StripeClient | None = None,
+) -> str:
+    """Bilddatei auf dem PLATTFORM-Konto hochladen → Stripe-File-ID (``file_…``).
+
+    Bewusst OHNE ``stripe_account``-Header: Das anschließende
+    ``accounts.update`` läuft auf Plattform-Ebene und kennt nur Dateien, die
+    dort liegen. Eine im verbundenen Konto hochgeladene Datei wird beim Setzen
+    des Brandings mit „No such file upload" abgelehnt (live verifiziert).
+
+    ``purpose`` MUSS zum Zielfeld passen: ``business_icon`` für
+    ``branding.icon``, ``business_logo`` für ``branding.logo``. Stripe prüft das
+    und lehnt eine Datei mit dem falschen Zweck ab (ebenfalls live verifiziert)
+    — deshalb wird dasselbe Bild für beide Felder zweimal hochgeladen.
+    """
+    stripe = client or get_stripe()
+    # Das SDK baut den multipart/form-data-Request nur für ein DATEI-ÄHNLICHES
+    # Objekt; rohe Bytes (oder ein (Name, Bytes)-Tupel) lehnt Stripe mit
+    # „must be uploaded in a multipart/form-data request" ab. Der Name wird
+    # mitgegeben, weil Stripe daraus den Dateityp ableitet.
+    puffer = io.BytesIO(content)
+    puffer.name = filename
+    datei = stripe.v1.files.create(params={"file": puffer, "purpose": purpose})
+    return str(datei.id)
+
+
+def set_branding(
+    *,
+    acct: str,
+    icon_file_id: str | None = None,
+    logo_file_id: str | None = None,
+    client: StripeClient | None = None,
+) -> None:
+    """Branding des verbundenen Kontos setzen.
+
+    ``icon`` ist das kleine Rund-Symbol oben auf der Stripe-Zahlseite (dort, wo
+    ohne Branding ein grauer Platzhalter steht), ``logo`` die größere Marke in
+    Checkout/Rechnungen. Beide zeigen dasselbe Firmenlogo, solange der Betrieb
+    nur eines pflegt — ein zweites zu erfinden wäre ein Fantasiewert (Wurzel 4).
+    Nur gesetzte Felder werden übertragen; ein fehlendes bleibt unangetastet.
+    """
+    branding: dict[str, Any] = {}
+    if icon_file_id:
+        branding["icon"] = icon_file_id
+    if logo_file_id:
+        branding["logo"] = logo_file_id
+    if not branding:
+        return
+    stripe = client or get_stripe()
+    stripe.v1.accounts.update(acct, params={"settings": {"branding": branding}})

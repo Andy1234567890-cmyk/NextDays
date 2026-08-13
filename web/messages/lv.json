@@ -5920,7 +5920,15 @@
       "emptyCatalog": "Šim objektam kataloga nav.",
       "pickPlaceholder": "Izvēlieties papildpakalpojumu …",
       "addAction": "Pievienot",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Maksājuma saite",
+      "linkCreate": "Izveidot maksājuma saiti",
+      "linkBusy": "Izveido …",
+      "linkCopy": "Kopēt saiti",
+      "linkCopied": "Maksājuma saite nokopēta.",
+      "linkCopyFailed": "Neizdevās nokopēt — saite redzama zemāk.",
+      "linkWithdraw": "Atsaukt",
+      "linkWithdrawn": "Maksājuma saite atsaukta."
     },
     "ratesView": {
       "propertyLabel": "Objekts",
@@ -8198,5 +8206,55 @@
     "validTo": "Spēkā līdz",
     "validToInfo": "Atstājiet tukšu, kamēr likme ir spēkā. Ja portāls maina savu likmi, izveidojiet jaunu likmi no izmaiņu dienas — vecā paliek spēkā iepriekšējiem norēķiniem.",
     "validToOpen": "turpina darboties"
+  },
+  "abrechnung": {
+    "titel": "Norēķini",
+    "untertitel": "Tavs atlikums un izmaksas.",
+    "laedt": "Ielādē …",
+    "aktualisieren": "Atsvaidzināt",
+    "keinKonto": "Izmaksām nepieciešams pievienots maksājumu konts.",
+    "kontoEinrichten": "Izveidot maksājumu kontu",
+    "auszahlungAngestossen": "Izmaksa {betrag} uzsākta.",
+    "rhythmusGespeichert": "Ritms saglabāts.",
+    "guthaben": {
+      "titel": "Tavs atlikums",
+      "hinweis": "Tas, ko esi iekasējis pats — papildpakalpojumi un tiešās rezervācijas.",
+      "leer": "Atlikuma vēl nav.",
+      "verfuegbar": "Pieejams",
+      "ausstehend": "Gaida",
+      "auszahlen": "Pieprasīt izmaksu",
+      "nochNichtFreigeschaltet": "Izmaksas tavam kontam vēl nav aktivizētas.",
+      "automatischHinweis": "Tavs atlikums tiek izmaksāts automātiski. Lai pieprasītu izmaksu, zemāk izvēlies “Tikai pēc pieprasījuma”.",
+      "ausstehendHinweis": "Gaidošais atlikums kļūs pieejams pēc norēķinu perioda."
+    },
+    "rhythmus": {
+      "titel": "Izmaksu ritms",
+      "hinweis": "Tu izlem, kad atlikums nonāk tavā bankas kontā.",
+      "manual": "Tikai pēc pieprasījuma",
+      "daily": "Katru dienu",
+      "weekly": "Katru nedēļu (ceturtdienās)",
+      "monthly": "Katru mēnesi (15. datumā)"
+    },
+    "historie": {
+      "titel": "Pēdējās izmaksas",
+      "leer": "Izmaksu vēl nav bijis.",
+      "automatisch": "Automātiska",
+      "beantragt": "Pieprasīta",
+      "angelegt": "Izveidota {datum}",
+      "gutschrift": "Ieskaits {datum}"
+    },
+    "status": {
+      "paid": "Izmaksāts",
+      "pending": "Apstrādē",
+      "in_transit": "Ceļā",
+      "canceled": "Atcelts",
+      "failed": "Neizdevās"
+    },
+    "marktplatz": {
+      "titel": "Tirdzniecības vietas rezervācijas",
+      "hinweis": "Rezervācijas caur myBestDays iet caur mūsu kontu un tiek izmaksātas pēc izbraukšanas.",
+      "offen": "Atvērts",
+      "ausgezahlt": "Izmaksāts"
+    }
   }
 }

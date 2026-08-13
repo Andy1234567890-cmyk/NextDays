@@ -1217,3 +1217,169 @@ def test_sync_connect_fields_reraises_when_nothing_can_be_dropped() -> None:
     svc = PaymentsService(service_client=_connect_db("acct_x"), stripe=_FakeStripe())
     with pytest.raises(PaymentsError):
         svc.sync_connect_fields("t-1", "acct_x", {"individual": {"phone": "+49123"}})
+
+
+# --- Branding: Firmenlogo auf der Zahlseite des Gastes -----------------------
+# Das Logo kommt aus settings.branding des VERBUNDENEN Kontos. Ohne diesen Sync
+# zeigt die Stripe-Zahlseite den grauen Platzhalter, obwohl im Profil ein Logo
+# liegt (live gesehen am 13.08.2026).
+
+class _StorageBucket:
+    def __init__(self, dateien: dict[str, bytes]) -> None:
+        self._dateien = dateien
+        self.geladen: list[str] = []
+
+    def download(self, pfad: str) -> bytes:
+        self.geladen.append(pfad)
+        return self._dateien[pfad]
+
+
+class _Storage:
+    def __init__(self, bucket: _StorageBucket) -> None:
+        self._bucket = bucket
+
+    def from_(self, _name: str) -> _StorageBucket:
+        return self._bucket
+
+
+def _png(breite: int = 200, hoehe: int = 80) -> bytes:
+    """Echtes PNG — die Icon-Aufbereitung öffnet das Bild wirklich."""
+    from io import BytesIO
+
+    from PIL import Image
+
+    puffer = BytesIO()
+    Image.new("RGB", (breite, hoehe), (10, 20, 30)).save(puffer, format="PNG")
+    return puffer.getvalue()
+
+
+def _branding_db(logo_url: str | None, *, gesynct: str | None = None) -> _DB:
+    db = _DB()
+    db.store["tenant_billing_profile"] = [
+        {
+            "tenant_id": "t-1",
+            "stripe_account_id": "acct_own",
+            "company_logo_url": logo_url,
+            "stripe_branding_logo_url": gesynct,
+        }
+    ]
+    db.storage = _Storage(_StorageBucket({"t-1/logo.png": _png()}))
+    return db
+
+
+class _BrandingStripe:
+    """Zählt die Stripe-Aufrufe, damit Idempotenz beweisbar ist."""
+
+    def __init__(self) -> None:
+        self.dateien: list[dict] = []
+        self.branding: list[dict] = []
+        outer = self
+
+        class _Files:
+            @staticmethod
+            def create(params, options=None):  # noqa: ANN001, ANN205
+                outer.dateien.append({"params": params, "options": options})
+                return type("F", (), {"id": "file_1"})()
+
+        class _Accounts:
+            @staticmethod
+            def update(acct, params=None, options=None):  # noqa: ANN001, ANN205
+                outer.branding.append({"acct": acct, "params": params})
+                return type("A", (), {"id": acct})()
+
+        class _V1:
+            files = _Files()
+            accounts = _Accounts()
+
+        self.v1 = _V1()
+
+
+def test_branding_logo_wird_an_stripe_uebertragen() -> None:
+    db = _branding_db("https://x.test/storage/v1/object/public/company-logos/t-1/logo.png?v=ab12")
+    stripe = _BrandingStripe()
+    PaymentsService(service_client=db, stripe=stripe).sync_branding_logo("t-1", "acct_own")
+
+    # Zwei Uploads mit UNTERSCHIEDLICHEM Zweck: Stripe lehnt eine Datei ab, deren
+    # purpose nicht zum Zielfeld passt (live verifiziert).
+    zwecke = [d["params"]["purpose"] for d in stripe.dateien]
+    assert zwecke == ["business_logo", "business_icon"]
+    # Auf PLATTFORM-Ebene hochladen: accounts.update kennt sonst die Datei nicht.
+    assert all(d["options"] is None for d in stripe.dateien)
+    branding = stripe.branding[0]["params"]["settings"]["branding"]
+    # Icon = das kleine Rundsymbol oben auf der Zahlseite, Logo = die große Marke.
+    assert branding == {"icon": "file_1", "logo": "file_1"}
+    # Stand gemerkt → nächster Sync lädt nicht erneut hoch.
+    assert db.store["tenant_billing_profile"][0]["stripe_branding_logo_url"].endswith(
+        "logo.png?v=ab12"
+    )
+
+
+def test_branding_logo_zweiter_sync_laedt_nicht_erneut_hoch() -> None:
+    url = "https://x.test/storage/v1/object/public/company-logos/t-1/logo.png?v=ab12"
+    db = _branding_db(url, gesynct=url)
+    stripe = _BrandingStripe()
+    PaymentsService(service_client=db, stripe=stripe).sync_branding_logo("t-1", "acct_own")
+    assert stripe.dateien == []
+    assert stripe.branding == []
+
+
+def test_branding_icon_wird_quadratisch_aufbereitet() -> None:
+    """Stripe verlangt für das Symbol 1:1 — ein 200×80-Logo wird gepolstert,
+    NICHT beschnitten oder verzerrt."""
+    from io import BytesIO
+
+    from PIL import Image
+
+    db = _branding_db("https://x.test/storage/v1/object/public/company-logos/t-1/logo.png")
+    stripe = _BrandingStripe()
+    PaymentsService(service_client=db, stripe=stripe).sync_branding_logo("t-1", "acct_own")
+
+    icon = stripe.dateien[1]["params"]["file"]
+    icon.seek(0)
+    with Image.open(BytesIO(icon.read())) as bild:
+        assert bild.width == bild.height == 200
+
+
+def test_branding_kaputtes_bild_kippt_den_logo_sync_nicht() -> None:
+    """Unlesbare Bilddatei → kein 500. Das große Logo geht trotzdem raus, der
+    Grund fürs fehlende Symbol wird benannt."""
+    db = _branding_db("https://x.test/storage/v1/object/public/company-logos/t-1/logo.png")
+    db.storage = _Storage(_StorageBucket({"t-1/logo.png": b"kein-bild"}))
+    stripe = _BrandingStripe()
+    with pytest.raises(PaymentsError) as exc:
+        PaymentsService(service_client=db, stripe=stripe).sync_branding_logo(
+            "t-1", "acct_own"
+        )
+    assert exc.value.status_code == 422
+    assert stripe.branding[0]["params"]["settings"]["branding"] == {"logo": "file_1"}
+
+
+def test_branding_logo_svg_wird_klar_abgelehnt() -> None:
+    """Stripe nimmt nur PNG/JPEG — kein stiller Verzicht, sondern eine Ansage."""
+    db = _branding_db("https://x.test/storage/v1/object/public/company-logos/t-1/logo.svg")
+    stripe = _BrandingStripe()
+    with pytest.raises(PaymentsError) as exc:
+        PaymentsService(service_client=db, stripe=stripe).sync_branding_logo(
+            "t-1", "acct_own"
+        )
+    assert exc.value.status_code == 422
+    assert stripe.dateien == []
+
+
+def test_branding_logo_fremder_pfad_wird_abgelehnt() -> None:
+    """Eine Logo-Adresse aus einem fremden Tenant-Ordner wird nicht geladen."""
+    db = _branding_db("https://x.test/storage/v1/object/public/company-logos/t-2/logo.png")
+    stripe = _BrandingStripe()
+    with pytest.raises(PaymentsError) as exc:
+        PaymentsService(service_client=db, stripe=stripe).sync_branding_logo(
+            "t-1", "acct_own"
+        )
+    assert exc.value.status_code == 403
+    assert stripe.dateien == []
+
+
+def test_branding_logo_ohne_logo_ist_kein_fehler() -> None:
+    db = _branding_db(None)
+    stripe = _BrandingStripe()
+    PaymentsService(service_client=db, stripe=stripe).sync_branding_logo("t-1", "acct_own")
+    assert stripe.dateien == []

@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 PayoutInterval = Literal["daily", "weekly", "monthly"]
 
@@ -68,3 +68,64 @@ class PayoutOverview(BaseModel):
     summary: list[PayoutSummary]
     recent: list[PayoutRow]
     adjustments: list[PayoutAdjustmentRow]
+
+
+# --- Guthaben auf dem verbundenen Stripe-Konto -------------------------------
+#
+# Zweiter Topf neben dem Plattform-Ledger oben: was der Betrieb selbst kassiert
+# hat (Zusatzleistungen + Direktbuchungen als Direct Charge). Beträge in Cent,
+# Währung immer mitgeführt — ein Betrieb kann in mehreren Währungen kassieren.
+
+StripePayoutInterval = Literal["manual", "daily", "weekly", "monthly"]
+
+
+class StripeSaldoPosten(BaseModel):
+    """Saldo einer Währung."""
+
+    currency: str
+    amount_cents: int
+
+
+class StripeAuszahlung(BaseModel):
+    """Eine Auszahlung des verbundenen Kontos auf dessen Bankkonto."""
+
+    id: str
+    amount_cents: int
+    currency: str
+    status: str
+    # true = von Stripe nach Rhythmus ausgelöst, false = vom Betrieb beantragt.
+    automatic: bool
+    created: str | None = None
+    arrival_date: str | None = None
+    failure_message: str | None = None
+
+
+class StripeGuthaben(BaseModel):
+    """Was die Abrechnungs-Seite über das verbundene Konto braucht."""
+
+    konto_verbunden: bool
+    stripe_account_id: str | None = None
+    payouts_enabled: bool = False
+    # Rhythmus laut Stripe (leer, solange kein Konto verbunden ist).
+    interval: str = ""
+    weekly_anchor: str | None = None
+    monthly_anchor: int | None = None
+    verfuegbar: list[StripeSaldoPosten] = []
+    ausstehend: list[StripeSaldoPosten] = []
+    letzte_auszahlungen: list[StripeAuszahlung] = []
+
+
+class StripeAuszahlungAnfordern(BaseModel):
+    """Auszahlung beantragen. Ohne Betrag: das gesamte verfügbare Guthaben."""
+
+    currency: str
+    amount_cents: int | None = Field(default=None, gt=0)
+
+
+class StripeRhythmusUpdate(BaseModel):
+    """Auszahlungs-Rhythmus, den der Betrieb selbst wählt."""
+
+    interval: StripePayoutInterval
+    # Nur bei weekly/monthly relevant; Stripe ignoriert sie sonst.
+    weekly_anchor: str | None = None
+    monthly_anchor: int | None = Field(default=None, ge=1, le=31)

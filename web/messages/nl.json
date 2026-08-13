@@ -5920,7 +5920,15 @@
       "emptyCatalog": "Geen catalogus voor dit object.",
       "pickPlaceholder": "Extra service kiezen …",
       "addAction": "Toevoegen",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Betaallink",
+      "linkCreate": "Betaallink maken",
+      "linkBusy": "Wordt gemaakt …",
+      "linkCopy": "Link kopiëren",
+      "linkCopied": "Betaallink gekopieerd.",
+      "linkCopyFailed": "Kopiëren mislukt — de link staat hieronder.",
+      "linkWithdraw": "Intrekken",
+      "linkWithdrawn": "Betaallink ingetrokken."
     },
     "ratesView": {
       "propertyLabel": "Object",
@@ -8198,5 +8206,55 @@
     "validTo": "Geldig tot",
     "validToInfo": "Laat leeg zolang het tarief geldt. Wijzigt de portal zijn tarief, maak dan een nieuw tarief aan vanaf de dag van wijziging — het oude blijft bewaard voor eerdere afrekeningen.",
     "validToOpen": "loopt door"
+  },
+  "abrechnung": {
+    "titel": "Afrekening",
+    "untertitel": "Je saldo en je uitbetalingen.",
+    "laedt": "Laden …",
+    "aktualisieren": "Vernieuwen",
+    "keinKonto": "Voor uitbetalingen heb je een gekoppelde betaalrekening nodig.",
+    "kontoEinrichten": "Betaalrekening instellen",
+    "auszahlungAngestossen": "Uitbetaling van {betrag} gestart.",
+    "rhythmusGespeichert": "Ritme opgeslagen.",
+    "guthaben": {
+      "titel": "Je saldo",
+      "hinweis": "Wat je zelf hebt geïncasseerd — extra diensten en directe boekingen.",
+      "leer": "Nog geen saldo.",
+      "verfuegbar": "Beschikbaar",
+      "ausstehend": "In behandeling",
+      "auszahlen": "Uitbetaling aanvragen",
+      "nochNichtFreigeschaltet": "Uitbetalingen zijn nog niet vrijgegeven voor je account.",
+      "automatischHinweis": "Je saldo wordt automatisch uitbetaald. Wil je op aanvraag uitbetalen, zet het ritme hieronder op „Alleen op aanvraag”.",
+      "ausstehendHinweis": "Saldo in behandeling komt na de verwerkingstermijn beschikbaar."
+    },
+    "rhythmus": {
+      "titel": "Uitbetalingsritme",
+      "hinweis": "Jij bepaalt wanneer je saldo naar je bankrekening gaat.",
+      "manual": "Alleen op aanvraag",
+      "daily": "Dagelijks",
+      "weekly": "Wekelijks (donderdag)",
+      "monthly": "Maandelijks (op de 15e)"
+    },
+    "historie": {
+      "titel": "Laatste uitbetalingen",
+      "leer": "Nog geen uitbetaling.",
+      "automatisch": "Automatisch",
+      "beantragt": "Aangevraagd",
+      "angelegt": "Aangemaakt {datum}",
+      "gutschrift": "Bijschrijving {datum}"
+    },
+    "status": {
+      "paid": "Uitbetaald",
+      "pending": "In behandeling",
+      "in_transit": "Onderweg",
+      "canceled": "Geannuleerd",
+      "failed": "Mislukt"
+    },
+    "marktplatz": {
+      "titel": "Boekingen via de marktplaats",
+      "hinweis": "Boekingen via myBestDays lopen via onze rekening en worden na vertrek uitbetaald.",
+      "offen": "Open",
+      "ausgezahlt": "Uitbetaald"
+    }
   }
 }

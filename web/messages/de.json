@@ -6010,7 +6010,15 @@
       "emptyCatalog": "Kein Katalog für dieses Objekt.",
       "pickPlaceholder": "Zusatzleistung wählen …",
       "addAction": "Hinzufügen",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Zahlungslink",
+      "linkCreate": "Zahlungslink erstellen",
+      "linkBusy": "Wird erstellt …",
+      "linkCopy": "Link kopieren",
+      "linkCopied": "Zahlungslink kopiert.",
+      "linkCopyFailed": "Kopieren nicht möglich — der Link steht darunter.",
+      "linkWithdraw": "Zurückziehen",
+      "linkWithdrawn": "Zahlungslink zurückgezogen."
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -8790,6 +8798,56 @@
     "settings": {
       "title": "Erweiterte Einstellungen",
       "subtitle": "Was die Portale einbehalten und wem die Gebühren gehören. Beides entscheidet, welcher Betrag beim Eigentümer ankommt — dieselbe Konfiguration wie unter „Buchhaltung → Abrechnungsregeln“."
+    }
+  },
+  "abrechnung": {
+    "titel": "Abrechnung",
+    "untertitel": "Dein Guthaben und deine Auszahlungen.",
+    "laedt": "Lädt …",
+    "aktualisieren": "Aktualisieren",
+    "keinKonto": "Für Auszahlungen brauchst du ein verbundenes Zahlungskonto.",
+    "kontoEinrichten": "Zahlungskonto einrichten",
+    "auszahlungAngestossen": "Auszahlung über {betrag} angestoßen.",
+    "rhythmusGespeichert": "Rhythmus gespeichert.",
+    "guthaben": {
+      "titel": "Dein Guthaben",
+      "hinweis": "Was du selbst kassiert hast — Zusatzleistungen und Direktbuchungen.",
+      "leer": "Noch kein Guthaben vorhanden.",
+      "verfuegbar": "Verfügbar",
+      "ausstehend": "Ausstehend",
+      "auszahlen": "Auszahlung beantragen",
+      "nochNichtFreigeschaltet": "Auszahlungen sind für dein Konto noch nicht freigeschaltet.",
+      "automatischHinweis": "Dein Guthaben wird automatisch ausgezahlt. Für eine Auszahlung auf Antrag stelle den Rhythmus unten auf „Nur auf Antrag“.",
+      "ausstehendHinweis": "Ausstehendes Guthaben wird nach der Abwicklungsfrist verfügbar."
+    },
+    "rhythmus": {
+      "titel": "Auszahlungs-Rhythmus",
+      "hinweis": "Du entscheidest, wann dein Guthaben auf dein Bankkonto geht.",
+      "manual": "Nur auf Antrag",
+      "daily": "Täglich",
+      "weekly": "Wöchentlich (donnerstags)",
+      "monthly": "Monatlich (zum 15.)"
+    },
+    "historie": {
+      "titel": "Letzte Auszahlungen",
+      "leer": "Noch keine Auszahlung erfolgt.",
+      "automatisch": "Automatisch",
+      "beantragt": "Beantragt",
+      "angelegt": "Angelegt {datum}",
+      "gutschrift": "Gutschrift {datum}"
+    },
+    "status": {
+      "paid": "Ausgezahlt",
+      "pending": "In Bearbeitung",
+      "in_transit": "Unterwegs",
+      "canceled": "Storniert",
+      "failed": "Fehlgeschlagen"
+    },
+    "marktplatz": {
+      "titel": "Marktplatz-Buchungen",
+      "hinweis": "Buchungen über myBestDays laufen über unser Konto und werden nach der Abreise ausgezahlt.",
+      "offen": "Offen",
+      "ausgezahlt": "Ausgezahlt"
     }
   }
 }

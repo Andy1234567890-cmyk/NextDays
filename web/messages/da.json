@@ -5925,7 +5925,15 @@
       "emptyCatalog": "Intet katalog for denne bolig.",
       "pickPlaceholder": "Vælg tillægsydelse …",
       "addAction": "Tilføj",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Betalingslink",
+      "linkCreate": "Opret betalingslink",
+      "linkBusy": "Opretter …",
+      "linkCopy": "Kopiér link",
+      "linkCopied": "Betalingslink kopieret.",
+      "linkCopyFailed": "Kunne ikke kopiere — linket står nedenfor.",
+      "linkWithdraw": "Træk tilbage",
+      "linkWithdrawn": "Betalingslink trukket tilbage."
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -8203,5 +8211,55 @@
     "validTo": "Gyldig til",
     "validToInfo": "Lad feltet stå tomt, så længe satsen gælder. Ændrer portalen sin sats, opretter du en ny fra ændringsdagen — den gamle bevares til tidligere afregninger.",
     "validToOpen": "løber videre"
+  },
+  "abrechnung": {
+    "titel": "Afregning",
+    "untertitel": "Din saldo og dine udbetalinger.",
+    "laedt": "Indlæser …",
+    "aktualisieren": "Opdater",
+    "keinKonto": "Du skal have en tilknyttet betalingskonto for at få udbetalinger.",
+    "kontoEinrichten": "Opret betalingskonto",
+    "auszahlungAngestossen": "Udbetaling på {betrag} igangsat.",
+    "rhythmusGespeichert": "Rytme gemt.",
+    "guthaben": {
+      "titel": "Din saldo",
+      "hinweis": "Det, du selv har opkrævet — tillægsydelser og direkte bookinger.",
+      "leer": "Ingen saldo endnu.",
+      "verfuegbar": "Til rådighed",
+      "ausstehend": "Undervejs",
+      "auszahlen": "Anmod om udbetaling",
+      "nochNichtFreigeschaltet": "Udbetalinger er endnu ikke aktiveret for din konto.",
+      "automatischHinweis": "Din saldo udbetales automatisk. Vil du anmode om udbetaling, så vælg „Kun efter anmodning“ nedenfor.",
+      "ausstehendHinweis": "Saldo undervejs bliver til rådighed efter afviklingsperioden."
+    },
+    "rhythmus": {
+      "titel": "Udbetalingsrytme",
+      "hinweis": "Du bestemmer, hvornår din saldo sendes til din bankkonto.",
+      "manual": "Kun efter anmodning",
+      "daily": "Dagligt",
+      "weekly": "Ugentligt (torsdag)",
+      "monthly": "Månedligt (den 15.)"
+    },
+    "historie": {
+      "titel": "Seneste udbetalinger",
+      "leer": "Ingen udbetaling endnu.",
+      "automatisch": "Automatisk",
+      "beantragt": "Anmodet",
+      "angelegt": "Oprettet {datum}",
+      "gutschrift": "Indsættes {datum}"
+    },
+    "status": {
+      "paid": "Udbetalt",
+      "pending": "Behandles",
+      "in_transit": "Undervejs",
+      "canceled": "Annulleret",
+      "failed": "Mislykkedes"
+    },
+    "marktplatz": {
+      "titel": "Bookinger fra markedspladsen",
+      "hinweis": "Bookinger via myBestDays går gennem vores konto og udbetales efter afrejsen.",
+      "offen": "Åben",
+      "ausgezahlt": "Udbetalt"
+    }
   }
 }

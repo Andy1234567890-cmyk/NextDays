@@ -97,3 +97,37 @@ nur, geschrieben wird ausschließlich über die service_role (Wurzel 6).
   Abgesichert nur über `idempotency_key` — der bei Stripe nach 24 h abläuft.
 - PayPal plant gar keine Auszahlungszeile (Multiparty zahlt direkt an den
   Verkäufer) — Co-Gastgeber und Spenden greifen dort nicht.
+
+## Zweiter Topf: Guthaben auf dem verbundenen Konto (`stripe_saldo.py`)
+
+Alles oben beschreibt den PLATTFORM-Ledger (Marktplatz). Daneben steht das Geld,
+das der Betrieb **selbst** kassiert hat — Zusatzleistungen (0386) und
+Direktbuchungen laufen als Direct Charge in SEINEM verbundenen Konto. Dieses
+Geld war nie bei uns; ausgezahlt wird es von Stripe auf sein Bankkonto.
+
+Quelle ist durchgehend Stripe, nicht eine Kopie bei uns — auch der Rhythmus
+(`settings.payouts.schedule.interval`). Eine gespiegelte Kopie wäre irgendwann
+falsch, ohne dass es auffällt (Wurzel 4).
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET | `/payouts/guthaben` | Saldo (verfügbar/ausstehend je Währung), Rhythmus, letzte Auszahlungen |
+| POST | `/payouts/guthaben/auszahlung` | Auszahlung beantragen (Betrag optional = alles Verfügbare) |
+| PUT | `/payouts/guthaben/rhythmus` | `manual` \| `daily` \| `weekly` \| `monthly` |
+
+Schranken beim Antrag, alle fail-closed: Rhythmus muss `manual` sein (sonst plant
+Stripe den Saldo bereits selbst ein), `payouts_enabled` muss stehen, und der
+Betrag muss durch das **verfügbare** Guthaben gedeckt sein (`pending` zählt
+nicht). Der Idempotency-Key ist aus Konto, Währung, Betrag und Kalendertag
+gebildet — ein Doppelklick liefert dieselbe Auszahlung zurück.
+
+Scheitert Stripe, wird der Fehler durchgereicht (502). Ein leerer Saldo als
+Ersatzantwort wäre eine Falschaussage über fremdes Geld.
+
+### Voraussetzung am Stripe-Key
+
+`balance_read` (Saldo), Payouts-Schreibrecht und Connect-Accounts-Schreibrecht
+(Rhythmus) — jeweils auf verbundenen Konten. Fehlt eines, meldet die
+Abrechnungs-Seite den Stripe-Originaltext.
+
+Oberfläche: `/konto/abrechnung` (Nutzermenü → „Abrechnung").

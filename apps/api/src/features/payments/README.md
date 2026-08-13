@@ -39,6 +39,17 @@ Vertical Slice für Online-Zahlungen über **Stripe** (primäres Gateway) und
   Haftung wirklich — `on_behalf_of` tut das nachweislich NICHT.
 
   Voraussetzung: `stripe_charges_enabled = true`, sonst 409 (kein Fallback-Charge).
+- **Branding (Logo beim Bezahlen)** — das Logo, das der GAST auf der Zahlseite
+  sieht, kommt aus `settings.branding` des VERBUNDENEN Kontos, nicht aus unserer
+  DB. `PaymentsService.sync_branding_logo` überträgt `company_logo_url` dorthin
+  (bei jedem Profil-Sync und direkt nach dem Logo-Upload). Drei live gelernte
+  Regeln: die Datei muss auf **Plattform-Ebene** hochgeladen werden (im
+  verbundenen Konto hochgeladen → „No such file upload"), `purpose` muss zum
+  Zielfeld passen (`business_logo` für `logo`, `business_icon` für `icon`), und
+  das Icon verlangt **1:1 ab 128 px** — dafür wird das Logo serverseitig auf ein
+  Quadrat gepolstert (nie beschnitten, nie verzerrt). Stripe nimmt nur PNG/JPEG;
+  SVG/WebP werden mit klarer Meldung abgelehnt. `stripe_branding_logo_url`
+  (0387) merkt den Stand, damit nicht jeder Sync eine weitere Datei anlegt.
 - **Kaution** — manual-capture PaymentIntent (`properties.deposit_amount`):
   vorautorisieren, später `capture` (Schaden) oder `cancel` (Freigabe).
 - **Refund** — voll/teilweise; schreibt eine `refund`-Zahlung + Status-Update.

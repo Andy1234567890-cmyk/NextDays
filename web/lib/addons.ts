@@ -190,3 +190,51 @@ export async function uploadAddonMedia(
     return { ok: false, error: "Backend nicht erreichbar." };
   }
 }
+
+// --- Zahlungslink (Stripe) ---------------------------------------------------
+//
+// Der Gast bezahlt offene Zusatzleistungen über einen Stripe-Zahlungslink. Der
+// Charge entsteht IM VERBUNDENEN KONTO des Betriebs (Direct Charge): Das Geld
+// wird seinem Stripe-Saldo gutgeschrieben und von dort ausgezahlt
+// (/konto/abrechnung); die Plattform behält ihren Anteil beim Charge ein.
+
+export type Zahlungslink = {
+  id: string;
+  reservation_id: string;
+  url: string;
+  currency: string;
+  amount_cents: number;
+  application_fee_cents: number;
+  fee_bps: number;
+  status: "open" | "paid" | "cancelled";
+  positionen: number;
+  paid_at: string | null;
+  created_at: string | null;
+};
+
+/** Offener Zahlungslink der Buchung — `null`, wenn keiner offen ist.
+ *  Gleicht serverseitig mit Stripe ab, ob inzwischen bezahlt wurde. */
+export async function getZahlungslink(
+  reservationId: string,
+): Promise<Result<Zahlungslink | null>> {
+  return call(`/addons/reservations/${reservationId}/zahlungslink`);
+}
+
+/** Zahlungslink über alle offenen Zusatzleistungen erstellen (idempotent:
+ *  ein bestehender Link mit denselben Positionen wird zurückgegeben). */
+export async function createZahlungslink(
+  reservationId: string,
+): Promise<Result<Zahlungslink>> {
+  return call(`/addons/reservations/${reservationId}/zahlungslink`, {
+    method: "POST",
+  });
+}
+
+/** Offenen Zahlungslink zurückziehen (bei Stripe deaktivieren). */
+export async function deleteZahlungslink(
+  reservationId: string,
+): Promise<Result<null>> {
+  return call(`/addons/reservations/${reservationId}/zahlungslink`, {
+    method: "DELETE",
+  });
+}

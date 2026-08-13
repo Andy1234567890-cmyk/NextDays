@@ -5920,7 +5920,15 @@
       "emptyCatalog": "Nenhum catálogo para esta propriedade.",
       "pickPlaceholder": "Escolher serviço extra …",
       "addAction": "Adicionar",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Link de pagamento",
+      "linkCreate": "Criar link de pagamento",
+      "linkBusy": "A criar …",
+      "linkCopy": "Copiar link",
+      "linkCopied": "Link de pagamento copiado.",
+      "linkCopyFailed": "Não foi possível copiar — o link está abaixo.",
+      "linkWithdraw": "Retirar",
+      "linkWithdrawn": "Link de pagamento retirado."
     },
     "ratesView": {
       "propertyLabel": "Propriedade",
@@ -8198,5 +8206,55 @@
     "validTo": "Válida até",
     "validToInfo": "Deixe em branco enquanto a taxa for válida. Se o portal alterar a sua taxa, crie uma nova a partir do dia da alteração — a antiga mantém-se para extratos anteriores.",
     "validToOpen": "continua em vigor"
+  },
+  "abrechnung": {
+    "titel": "Faturação",
+    "untertitel": "O teu saldo e os teus pagamentos.",
+    "laedt": "A carregar …",
+    "aktualisieren": "Atualizar",
+    "keinKonto": "Para receberes pagamentos precisas de uma conta de pagamento associada.",
+    "kontoEinrichten": "Configurar conta de pagamento",
+    "auszahlungAngestossen": "Pagamento de {betrag} iniciado.",
+    "rhythmusGespeichert": "Ritmo guardado.",
+    "guthaben": {
+      "titel": "O teu saldo",
+      "hinweis": "O que cobraste tu — serviços adicionais e reservas diretas.",
+      "leer": "Ainda sem saldo.",
+      "verfuegbar": "Disponível",
+      "ausstehend": "Pendente",
+      "auszahlen": "Pedir pagamento",
+      "nochNichtFreigeschaltet": "Os pagamentos ainda não estão ativos para a tua conta.",
+      "automatischHinweis": "O teu saldo é pago automaticamente. Para pedir um pagamento, define o ritmo abaixo como «Apenas a pedido».",
+      "ausstehendHinweis": "O saldo pendente fica disponível após o prazo de liquidação."
+    },
+    "rhythmus": {
+      "titel": "Ritmo dos pagamentos",
+      "hinweis": "És tu que decides quando o saldo vai para a tua conta bancária.",
+      "manual": "Apenas a pedido",
+      "daily": "Diário",
+      "weekly": "Semanal (quintas-feiras)",
+      "monthly": "Mensal (dia 15)"
+    },
+    "historie": {
+      "titel": "Últimos pagamentos",
+      "leer": "Ainda sem pagamentos.",
+      "automatisch": "Automático",
+      "beantragt": "Pedido",
+      "angelegt": "Criado a {datum}",
+      "gutschrift": "Crédito a {datum}"
+    },
+    "status": {
+      "paid": "Pago",
+      "pending": "Em processamento",
+      "in_transit": "Em trânsito",
+      "canceled": "Cancelado",
+      "failed": "Falhou"
+    },
+    "marktplatz": {
+      "titel": "Reservas do marketplace",
+      "hinweis": "As reservas via myBestDays passam pela nossa conta e são pagas após a partida.",
+      "offen": "Em aberto",
+      "ausgezahlt": "Pago"
+    }
   }
 }

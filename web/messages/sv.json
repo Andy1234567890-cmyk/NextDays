@@ -5920,7 +5920,15 @@
       "emptyCatalog": "Ingen katalog för detta objekt.",
       "pickPlaceholder": "Välj tilläggstjänst …",
       "addAction": "Lägg till",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Betallänk",
+      "linkCreate": "Skapa betallänk",
+      "linkBusy": "Skapar …",
+      "linkCopy": "Kopiera länk",
+      "linkCopied": "Betallänk kopierad.",
+      "linkCopyFailed": "Kunde inte kopiera — länken visas nedan.",
+      "linkWithdraw": "Dra tillbaka",
+      "linkWithdrawn": "Betallänken har dragits tillbaka."
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -8198,5 +8206,55 @@
     "validTo": "Gäller till",
     "validToInfo": "Lämna tomt så länge satsen gäller. Ändrar portalen sin sats lägger du till en ny från ändringsdagen — den gamla behålls för tidigare avräkningar.",
     "validToOpen": "fortsätter gälla"
+  },
+  "abrechnung": {
+    "titel": "Avräkning",
+    "untertitel": "Ditt saldo och dina utbetalningar.",
+    "laedt": "Laddar …",
+    "aktualisieren": "Uppdatera",
+    "keinKonto": "Du behöver ett anslutet betalkonto för utbetalningar.",
+    "kontoEinrichten": "Skapa betalkonto",
+    "auszahlungAngestossen": "Utbetalning på {betrag} har startats.",
+    "rhythmusGespeichert": "Rytm sparad.",
+    "guthaben": {
+      "titel": "Ditt saldo",
+      "hinweis": "Det du själv har tagit betalt för — tilläggstjänster och direktbokningar.",
+      "leer": "Inget saldo ännu.",
+      "verfuegbar": "Tillgängligt",
+      "ausstehend": "Väntande",
+      "auszahlen": "Begär utbetalning",
+      "nochNichtFreigeschaltet": "Utbetalningar är ännu inte aktiverade för ditt konto.",
+      "automatischHinweis": "Ditt saldo betalas ut automatiskt. Vill du begära utbetalning väljer du ”Endast på begäran” nedan.",
+      "ausstehendHinweis": "Väntande saldo blir tillgängligt efter avvecklingstiden."
+    },
+    "rhythmus": {
+      "titel": "Utbetalningsrytm",
+      "hinweis": "Du bestämmer när ditt saldo går till ditt bankkonto.",
+      "manual": "Endast på begäran",
+      "daily": "Dagligen",
+      "weekly": "Veckovis (torsdagar)",
+      "monthly": "Månadsvis (den 15:e)"
+    },
+    "historie": {
+      "titel": "Senaste utbetalningar",
+      "leer": "Ingen utbetalning ännu.",
+      "automatisch": "Automatisk",
+      "beantragt": "Begärd",
+      "angelegt": "Skapad {datum}",
+      "gutschrift": "Insättning {datum}"
+    },
+    "status": {
+      "paid": "Utbetald",
+      "pending": "Behandlas",
+      "in_transit": "På väg",
+      "canceled": "Annullerad",
+      "failed": "Misslyckades"
+    },
+    "marktplatz": {
+      "titel": "Bokningar från marknadsplatsen",
+      "hinweis": "Bokningar via myBestDays går via vårt konto och betalas ut efter avresan.",
+      "offen": "Öppet",
+      "ausgezahlt": "Utbetalt"
+    }
   }
 }

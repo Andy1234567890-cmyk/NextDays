@@ -5920,7 +5920,15 @@
       "emptyCatalog": "Nessun catalogo per questa struttura.",
       "pickPlaceholder": "Scegli servizio extra …",
       "addAction": "Aggiungi",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Link di pagamento",
+      "linkCreate": "Crea link di pagamento",
+      "linkBusy": "Creazione …",
+      "linkCopy": "Copia link",
+      "linkCopied": "Link di pagamento copiato.",
+      "linkCopyFailed": "Copia non riuscita: il link è qui sotto.",
+      "linkWithdraw": "Revoca",
+      "linkWithdrawn": "Link di pagamento revocato."
     },
     "ratesView": {
       "propertyLabel": "Struttura",
@@ -8198,5 +8206,55 @@
     "validTo": "Valida fino al",
     "validToInfo": "Lascia vuoto finché l’aliquota è in vigore. Se il portale cambia la sua aliquota, creane una nuova a partire dal giorno della modifica — quella vecchia resta per i rendiconti precedenti.",
     "validToOpen": "ancora in corso"
+  },
+  "abrechnung": {
+    "titel": "Contabilità",
+    "untertitel": "Il tuo saldo e i tuoi pagamenti.",
+    "laedt": "Caricamento …",
+    "aktualisieren": "Aggiorna",
+    "keinKonto": "Per ricevere i pagamenti serve un conto di pagamento collegato.",
+    "kontoEinrichten": "Configura il conto di pagamento",
+    "auszahlungAngestossen": "Pagamento di {betrag} avviato.",
+    "rhythmusGespeichert": "Ritmo salvato.",
+    "guthaben": {
+      "titel": "Il tuo saldo",
+      "hinweis": "Quello che hai incassato tu — servizi aggiuntivi e prenotazioni dirette.",
+      "leer": "Ancora nessun saldo.",
+      "verfuegbar": "Disponibile",
+      "ausstehend": "In sospeso",
+      "auszahlen": "Richiedi pagamento",
+      "nochNichtFreigeschaltet": "I pagamenti non sono ancora abilitati per il tuo conto.",
+      "automatischHinweis": "Il tuo saldo viene pagato automaticamente. Per un pagamento su richiesta imposta il ritmo qui sotto su «Solo su richiesta».",
+      "ausstehendHinweis": "Il saldo in sospeso diventa disponibile dopo il periodo di regolamento."
+    },
+    "rhythmus": {
+      "titel": "Ritmo dei pagamenti",
+      "hinweis": "Decidi tu quando il saldo va sul tuo conto bancario.",
+      "manual": "Solo su richiesta",
+      "daily": "Ogni giorno",
+      "weekly": "Ogni settimana (giovedì)",
+      "monthly": "Ogni mese (il 15)"
+    },
+    "historie": {
+      "titel": "Ultimi pagamenti",
+      "leer": "Ancora nessun pagamento.",
+      "automatisch": "Automatico",
+      "beantragt": "Richiesto",
+      "angelegt": "Creato il {datum}",
+      "gutschrift": "Accredito il {datum}"
+    },
+    "status": {
+      "paid": "Pagato",
+      "pending": "In corso",
+      "in_transit": "In transito",
+      "canceled": "Annullato",
+      "failed": "Non riuscito"
+    },
+    "marktplatz": {
+      "titel": "Prenotazioni dal marketplace",
+      "hinweis": "Le prenotazioni tramite myBestDays passano dal nostro conto e vengono pagate dopo la partenza.",
+      "offen": "Aperto",
+      "ausgezahlt": "Pagato"
+    }
   }
 }

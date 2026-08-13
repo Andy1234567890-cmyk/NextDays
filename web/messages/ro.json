@@ -5920,7 +5920,15 @@
       "emptyCatalog": "Niciun catalog pentru această proprietate.",
       "pickPlaceholder": "Alege un serviciu suplimentar …",
       "addAction": "Adaugă",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Link de plată",
+      "linkCreate": "Creează link de plată",
+      "linkBusy": "Se creează …",
+      "linkCopy": "Copiază linkul",
+      "linkCopied": "Link de plată copiat.",
+      "linkCopyFailed": "Copierea nu a reușit — linkul este mai jos.",
+      "linkWithdraw": "Retrage",
+      "linkWithdrawn": "Link de plată retras."
     },
     "ratesView": {
       "propertyLabel": "Proprietate",
@@ -8198,5 +8206,55 @@
     "validTo": "Valabilă până la",
     "validToInfo": "Lăsați necompletat atât timp cât cota este valabilă. Dacă portalul își schimbă cota, adăugați una nouă începând din ziua modificării — cea veche rămâne pentru deconturile anterioare.",
     "validToOpen": "rămâne în vigoare"
+  },
+  "abrechnung": {
+    "titel": "Decontare",
+    "untertitel": "Soldul tău și plățile tale.",
+    "laedt": "Se încarcă …",
+    "aktualisieren": "Actualizează",
+    "keinKonto": "Pentru plăți ai nevoie de un cont de plată conectat.",
+    "kontoEinrichten": "Configurează contul de plată",
+    "auszahlungAngestossen": "Plata de {betrag} a fost inițiată.",
+    "rhythmusGespeichert": "Ritm salvat.",
+    "guthaben": {
+      "titel": "Soldul tău",
+      "hinweis": "Ce ai încasat tu — servicii suplimentare și rezervări directe.",
+      "leer": "Încă nu există sold.",
+      "verfuegbar": "Disponibil",
+      "ausstehend": "În așteptare",
+      "auszahlen": "Solicită plata",
+      "nochNichtFreigeschaltet": "Plățile nu sunt încă activate pentru contul tău.",
+      "automatischHinweis": "Soldul tău este plătit automat. Pentru o plată la cerere, setează mai jos „Doar la cerere”.",
+      "ausstehendHinweis": "Soldul în așteptare devine disponibil după perioada de decontare."
+    },
+    "rhythmus": {
+      "titel": "Ritmul plăților",
+      "hinweis": "Tu decizi când ajunge soldul în contul tău bancar.",
+      "manual": "Doar la cerere",
+      "daily": "Zilnic",
+      "weekly": "Săptămânal (joia)",
+      "monthly": "Lunar (pe 15)"
+    },
+    "historie": {
+      "titel": "Ultimele plăți",
+      "leer": "Încă nicio plată.",
+      "automatisch": "Automată",
+      "beantragt": "Solicitată",
+      "angelegt": "Creată {datum}",
+      "gutschrift": "Creditare {datum}"
+    },
+    "status": {
+      "paid": "Plătit",
+      "pending": "În curs",
+      "in_transit": "În tranzit",
+      "canceled": "Anulat",
+      "failed": "Eșuat"
+    },
+    "marktplatz": {
+      "titel": "Rezervări din marketplace",
+      "hinweis": "Rezervările prin myBestDays trec prin contul nostru și sunt plătite după plecare.",
+      "offen": "Deschis",
+      "ausgezahlt": "Plătit"
+    }
   }
 }

@@ -17,6 +17,7 @@ an Stripe (``int(round(amount * 100))``). PayPal (Multiparty) läuft parallel ü
 # pylint: disable=too-many-lines
 from __future__ import annotations
 
+import io
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from functools import lru_cache
@@ -61,6 +62,9 @@ from .schemas import (
 from .stripe_client import StripeNotConfiguredError, get_stripe
 
 log = get_logger("nextdays.payments")
+
+# Mindestkantenlänge, die Stripe für das Branding-Icon verlangt.
+_ICON_MIN_KANTE = 128
 
 
 class PaymentsError(Exception):
@@ -111,6 +115,39 @@ def _to_cents(amount: float) -> int:
     return int(round(amount * 100))
 
 
+
+
+def _quadratisch(content: bytes) -> bytes:
+    """Bild auf ein Quadrat polstern (PNG) — für das Stripe-Branding-Icon.
+
+    Stripe verlangt für ``settings.branding.icon`` ein Bild im Seitenverhältnis
+    1:1 und mindestens 128×128 (live verifiziert: „did not have the expected
+    aspect ratio of 1:1"). Firmenlogos sind fast nie quadratisch.
+
+    Das Logo wird dabei NICHT beschnitten und NICHT verzerrt — es wird auf einer
+    quadratischen Fläche zentriert. Ein Zuschnitt würde Teile der Marke
+    abschneiden, ein Verzerren sie entstellen; beides wäre eine stillschweigende
+    Veränderung fremden Markenmaterials.
+
+    Der Hintergrund ist transparent, wenn die Quelle Transparenz kennt, sonst
+    weiß — kein geratener Farbwert (Wurzel 4).
+    """
+    from PIL import Image  # noqa: PLC0415 — nur hier gebraucht
+
+    with Image.open(io.BytesIO(content)) as bild:
+        hat_alpha = bild.mode in ("RGBA", "LA") or "transparency" in bild.info
+        quelle = bild.convert("RGBA")
+        seite = max(quelle.width, quelle.height, _ICON_MIN_KANTE)
+        hintergrund = (0, 0, 0, 0) if hat_alpha else (255, 255, 255, 255)
+        flaeche = Image.new("RGBA", (seite, seite), hintergrund)
+        flaeche.paste(
+            quelle,
+            ((seite - quelle.width) // 2, (seite - quelle.height) // 2),
+            quelle,
+        )
+        puffer = io.BytesIO()
+        flaeche.save(puffer, format="PNG")
+        return puffer.getvalue()
 
 
 class PaymentsService:
@@ -542,6 +579,152 @@ class PaymentsService:
     # das deutet auf ein grundsätzlich kaputtes Update hin — dann lieber
     # fehlschlagen als endlos gegen Stripe laufen (Wurzel 8: harte Grenze).
     _MAX_REJECTED_FIELDS = 8
+
+    # Dateiendung → Content-Type für das Firmenlogo. Stripe akzeptiert als
+    # Branding nur PNG/JPEG; SVG und WebP sind bei uns erlaubt, dort aber nicht.
+    _LOGO_TYPEN = {
+        "png": "image/png",
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "webp": "image/webp",
+        "svg": "image/svg+xml",
+    }
+    _LOGO_BUCKET = "company-logos"
+
+    def sync_branding_logo(self, tenant_id: str, stripe_account_id: str) -> None:
+        """Firmenlogo als Branding des verbundenen Kontos setzen.
+
+        Das ist das Logo, das der GAST beim Bezahlen sieht — auf der Seite eines
+        Zahlungslinks, im Checkout und auf Stripe-Belegen. Es kommt
+        ausschließlich aus `settings.branding` des verbundenen Kontos; unser
+        `company_logo_url` allein bewirkt dort nichts (live belegt: Zahlseite
+        zeigte den grauen Platzhalter, obwohl im Profil ein Logo lag).
+
+        Idempotent (Wurzel 2): Ist dieselbe URL bereits übertragen, passiert
+        nichts — sonst legte jeder Profil-Sync eine weitere Datei im Konto des
+        Betriebs an.
+
+        Kein ausgehender Fetch auf die gespeicherte URL (Wurzel 8): Die Datei
+        wird über den Storage-Client am abgeleiteten Pfad geladen, und der Pfad
+        muss im Ordner DIESES Tenants liegen.
+        """
+        db = self._db_or_fail()
+        self._require_own_connect_account(tenant_id, stripe_account_id)
+        row = (
+            db.table("tenant_billing_profile")
+            .select("company_logo_url, stripe_branding_logo_url")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        url = str(row[0].get("company_logo_url") or "") if row else ""
+        if not url:
+            return
+        if row[0].get("stripe_branding_logo_url") == url:
+            return  # unverändert, nichts zu tun
+
+        pfad = self._logo_storage_pfad(url, tenant_id)
+        endung = pfad.rsplit(".", 1)[-1].lower()
+        content_type = self._LOGO_TYPEN.get(endung)
+        if content_type not in sc.BRANDING_MIME:
+            # Kein stiller Verzicht und keine Konvertierung ins Blaue hinein:
+            # der Betrieb erfährt, warum sein Logo beim Bezahlen fehlt.
+            raise PaymentsError(
+                "Der Zahlungsanbieter zeigt nur PNG- oder JPEG-Logos. Bitte lade "
+                "das Firmenlogo in einem dieser Formate hoch.",
+                status_code=422,
+            )
+        try:
+            content = db.storage.from_(self._LOGO_BUCKET).download(pfad)
+        except Exception as exc:  # noqa: BLE001 — Storage-Fehler einheitlich
+            log.warning(
+                "branding_logo_download_failed", tenant_id=tenant_id, error=str(exc)
+            )
+            raise PaymentsError(
+                "Das gespeicherte Firmenlogo konnte nicht gelesen werden.",
+                status_code=502,
+            ) from exc
+        if len(content) > sc.BRANDING_MAX_BYTES:
+            raise PaymentsError(
+                "Das Firmenlogo ist für den Zahlungsanbieter zu groß "
+                f"(max. {sc.BRANDING_MAX_BYTES // 1024} KB).",
+                status_code=422,
+            )
+        dateiname = pfad.rsplit("/", 1)[-1]
+        with _stripe_errors():
+            logo_id = sc.upload_branding_file(
+                content=content,
+                filename=dateiname,
+                purpose="business_logo",
+                client=self._stripe,
+            )
+        # Das Icon (das Rundsymbol auf der Zahlseite) verlangt ein QUADRATISCHES
+        # Bild ab 128×128. Lehnt Stripe es ab, bleibt das große Logo trotzdem
+        # gesetzt — und der Grund wird sichtbar gemeldet, statt still zu fehlen.
+        icon_id: str | None = None
+        icon_fehler: str | None = None
+        try:
+            icon_bytes = _quadratisch(content)
+            with _stripe_errors():
+                icon_id = sc.upload_branding_file(
+                    content=icon_bytes,
+                    filename="icon.png",
+                    purpose="business_icon",
+                    client=self._stripe,
+                )
+        except PaymentsError as exc:
+            icon_fehler = exc.message
+            log.warning(
+                "branding_icon_abgelehnt", tenant_id=tenant_id, error=exc.message
+            )
+        except OSError as exc:
+            # Pillow kann die Datei nicht lesen (kaputt, oder ein Format, das
+            # nur der Browser mag). Kein 500 auf einen Bild-Inhalt (Wurzel 8) —
+            # das große Logo geht trotzdem raus.
+            icon_fehler = "Das Logo konnte nicht als quadratisches Symbol aufbereitet werden."
+            log.warning(
+                "branding_icon_aufbereitung_fehlgeschlagen",
+                tenant_id=tenant_id,
+                error=str(exc),
+            )
+        with _stripe_errors():
+            sc.set_branding(
+                acct=stripe_account_id,
+                icon_file_id=icon_id,
+                logo_file_id=logo_id,
+                client=self._stripe,
+            )
+        db.table("tenant_billing_profile").update(
+            {"stripe_branding_logo_url": url}
+        ).eq("tenant_id", tenant_id).execute()
+        log.info(
+            "branding_logo_synced", tenant_id=tenant_id, account=stripe_account_id
+        )
+        if icon_fehler:
+            raise PaymentsError(
+                "Das Logo erscheint beim Bezahlen, aber nicht als Symbol: "
+                f"{icon_fehler}",
+                status_code=422,
+            )
+
+    def _logo_storage_pfad(self, url: str, tenant_id: str) -> str:
+        """Storage-Pfad aus der gespeicherten Logo-URL — im Ordner DIESES Tenants.
+
+        Die URL stammt aus unserer eigenen Tabelle, wird aber trotzdem geprüft:
+        ein Pfad außerhalb von `{tenant_id}/` wäre ein fremdes Objekt (Wurzel 3).
+        """
+        marker = f"/{self._LOGO_BUCKET}/"
+        if marker not in url:
+            raise PaymentsError(
+                "Die gespeicherte Logo-Adresse ist unbrauchbar.", status_code=422
+            )
+        pfad = url.split(marker, 1)[1].split("?", 1)[0]
+        if not pfad.startswith(f"{tenant_id}/") or ".." in pfad:
+            raise PaymentsError(
+                "Die gespeicherte Logo-Adresse gehört nicht zu diesem Betrieb.",
+                status_code=403,
+            )
+        return pfad
 
     def sync_connect_fields(
         self, tenant_id: str, stripe_account_id: str, fields: dict[str, Any]

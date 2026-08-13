@@ -5925,7 +5925,15 @@
       "emptyCatalog": "Níl aon chatalóg ann don áit seo.",
       "pickPlaceholder": "Roghnaigh seirbhís bhreise …",
       "addAction": "Cuir leis",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Nasc íocaíochta",
+      "linkCreate": "Cruthaigh nasc íocaíochta",
+      "linkBusy": "Á chruthú …",
+      "linkCopy": "Cóipeáil an nasc",
+      "linkCopied": "Cóipeáladh an nasc íocaíochta.",
+      "linkCopyFailed": "Theip ar an gcóipeáil — tá an nasc thíos.",
+      "linkWithdraw": "Tarraing siar",
+      "linkWithdrawn": "Tarraingíodh an nasc íocaíochta siar."
     },
     "ratesView": {
       "propertyLabel": "Maoin",
@@ -8203,5 +8211,55 @@
     "validTo": "Bailí go",
     "validToInfo": "Fág folamh fad a bhíonn an ráta i bhfeidhm. Má athraíonn an tairseach a ráta, cuir ceann nua leis ón lá a athraítear é — fanann an seancheann do ráitis níos luaithe.",
     "validToOpen": "ar siúl fós"
+  },
+  "abrechnung": {
+    "titel": "Socrú cuntas",
+    "untertitel": "Do iarmhéid agus d’íocaíochtaí.",
+    "laedt": "Á lódáil …",
+    "aktualisieren": "Athnuaigh",
+    "keinKonto": "Teastaíonn cuntas íocaíochta nasctha uait le haghaidh íocaíochtaí amach.",
+    "kontoEinrichten": "Cuir cuntas íocaíochta ar bun",
+    "auszahlungAngestossen": "Tosaíodh íocaíocht {betrag}.",
+    "rhythmusGespeichert": "Sábháladh an rithim.",
+    "guthaben": {
+      "titel": "D’iarmhéid",
+      "hinweis": "An méid a bhailigh tú féin — seirbhísí breise agus áirithintí díreacha.",
+      "leer": "Níl aon iarmhéid ann fós.",
+      "verfuegbar": "Ar fáil",
+      "ausstehend": "Ar feitheamh",
+      "auszahlen": "Iarr íocaíocht",
+      "nochNichtFreigeschaltet": "Níl íocaíochtaí amach cumasaithe do do chuntas fós.",
+      "automatischHinweis": "Íoctar d’iarmhéid amach go huathoibríoch. Le híocaíocht ar iarratas, roghnaigh „Ar iarratas amháin“ thíos.",
+      "ausstehendHinweis": "Bíonn iarmhéid ar feitheamh ar fáil tar éis na tréimhse socraithe."
+    },
+    "rhythmus": {
+      "titel": "Rithim na n-íocaíochtaí",
+      "hinweis": "Is tusa a shocraíonn cathain a théann d’iarmhéid chuig do chuntas bainc.",
+      "manual": "Ar iarratas amháin",
+      "daily": "Go laethúil",
+      "weekly": "Go seachtainiúil (Déardaoin)",
+      "monthly": "Go míosúil (an 15ú lá)"
+    },
+    "historie": {
+      "titel": "Íocaíochtaí is déanaí",
+      "leer": "Níl aon íocaíocht déanta fós.",
+      "automatisch": "Uathoibríoch",
+      "beantragt": "Iarrtha",
+      "angelegt": "Cruthaithe {datum}",
+      "gutschrift": "Creidmheas {datum}"
+    },
+    "status": {
+      "paid": "Íoctha",
+      "pending": "Á phróiseáil",
+      "in_transit": "Ar an mbealach",
+      "canceled": "Cealaithe",
+      "failed": "Theip air"
+    },
+    "marktplatz": {
+      "titel": "Áirithintí ón margadh",
+      "hinweis": "Téann áirithintí trí myBestDays trínár gcuntas agus íoctar iad tar éis imeachta.",
+      "offen": "Oscailte",
+      "ausgezahlt": "Íoctha"
+    }
   }
 }

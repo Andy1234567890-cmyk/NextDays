@@ -5920,7 +5920,15 @@
       "emptyCatalog": "Šiam objektui katalogo nėra.",
       "pickPlaceholder": "Pasirinkite papildomą paslaugą …",
       "addAction": "Pridėti",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Mokėjimo nuoroda",
+      "linkCreate": "Sukurti mokėjimo nuorodą",
+      "linkBusy": "Kuriama …",
+      "linkCopy": "Kopijuoti nuorodą",
+      "linkCopied": "Mokėjimo nuoroda nukopijuota.",
+      "linkCopyFailed": "Nepavyko nukopijuoti — nuoroda pateikta žemiau.",
+      "linkWithdraw": "Atšaukti",
+      "linkWithdrawn": "Mokėjimo nuoroda atšaukta."
     },
     "ratesView": {
       "propertyLabel": "Objektas",
@@ -8198,5 +8206,55 @@
     "validTo": "Galioja iki",
     "validToInfo": "Palikite tuščią, kol tarifas galioja. Jei portalas pakeičia savo tarifą, sukurkite naują nuo pakeitimo dienos — senasis lieka ankstesniems atsiskaitymams.",
     "validToOpen": "tęsiasi toliau"
+  },
+  "abrechnung": {
+    "titel": "Atsiskaitymai",
+    "untertitel": "Tavo likutis ir išmokos.",
+    "laedt": "Įkeliama …",
+    "aktualisieren": "Atnaujinti",
+    "keinKonto": "Išmokoms reikia prijungtos mokėjimų sąskaitos.",
+    "kontoEinrichten": "Sukurti mokėjimų sąskaitą",
+    "auszahlungAngestossen": "Išmoka {betrag} inicijuota.",
+    "rhythmusGespeichert": "Ritmas išsaugotas.",
+    "guthaben": {
+      "titel": "Tavo likutis",
+      "hinweis": "Tai, ką surinkai pats — papildomos paslaugos ir tiesioginiai užsakymai.",
+      "leer": "Likučio dar nėra.",
+      "verfuegbar": "Galima išmokėti",
+      "ausstehend": "Laukiama",
+      "auszahlen": "Prašyti išmokos",
+      "nochNichtFreigeschaltet": "Išmokos tavo sąskaitai dar neįjungtos.",
+      "automatischHinweis": "Tavo likutis išmokamas automatiškai. Jei nori išmokos pagal prašymą, žemiau pasirink „Tik pagal prašymą“.",
+      "ausstehendHinweis": "Laukiantis likutis tampa prieinamas pasibaigus atsiskaitymo terminui."
+    },
+    "rhythmus": {
+      "titel": "Išmokų ritmas",
+      "hinweis": "Tu sprendi, kada likutis keliauja į tavo banko sąskaitą.",
+      "manual": "Tik pagal prašymą",
+      "daily": "Kasdien",
+      "weekly": "Kas savaitę (ketvirtadieniais)",
+      "monthly": "Kas mėnesį (15 d.)"
+    },
+    "historie": {
+      "titel": "Paskutinės išmokos",
+      "leer": "Išmokų dar nebuvo.",
+      "automatisch": "Automatinė",
+      "beantragt": "Paprašyta",
+      "angelegt": "Sukurta {datum}",
+      "gutschrift": "Įskaitoma {datum}"
+    },
+    "status": {
+      "paid": "Išmokėta",
+      "pending": "Vykdoma",
+      "in_transit": "Pakeliui",
+      "canceled": "Atšaukta",
+      "failed": "Nepavyko"
+    },
+    "marktplatz": {
+      "titel": "Prekyvietės užsakymai",
+      "hinweis": "Užsakymai per myBestDays eina per mūsų sąskaitą ir išmokami po išvykimo.",
+      "offen": "Neapmokėta",
+      "ausgezahlt": "Išmokėta"
+    }
   }
 }

@@ -5925,7 +5925,15 @@
       "emptyCatalog": "Ei katalogia tälle kohteelle.",
       "pickPlaceholder": "Valitse lisäpalvelu …",
       "addAction": "Lisää",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Maksulinkki",
+      "linkCreate": "Luo maksulinkki",
+      "linkBusy": "Luodaan …",
+      "linkCopy": "Kopioi linkki",
+      "linkCopied": "Maksulinkki kopioitu.",
+      "linkCopyFailed": "Kopiointi ei onnistunut — linkki näkyy alla.",
+      "linkWithdraw": "Peru linkki",
+      "linkWithdrawn": "Maksulinkki peruttu."
     },
     "ratesView": {
       "propertyLabel": "Kohde",
@@ -8203,5 +8211,55 @@
     "validTo": "Voimassa asti",
     "validToInfo": "Jätä tyhjäksi niin kauan kuin prosentti on voimassa. Jos portaali muuttaa prosenttiaan, luo uusi prosentti muutospäivästä alkaen — vanha säilyy aiempia tilityksiä varten.",
     "validToOpen": "jatkuu edelleen"
+  },
+  "abrechnung": {
+    "titel": "Tilitys",
+    "untertitel": "Saldosi ja tilityksesi.",
+    "laedt": "Ladataan …",
+    "aktualisieren": "Päivitä",
+    "keinKonto": "Tilityksiä varten tarvitset liitetyn maksutilin.",
+    "kontoEinrichten": "Luo maksutili",
+    "auszahlungAngestossen": "Tilitys {betrag} käynnistetty.",
+    "rhythmusGespeichert": "Rytmi tallennettu.",
+    "guthaben": {
+      "titel": "Saldosi",
+      "hinweis": "Se, minkä olet itse perinyt — lisäpalvelut ja suorat varaukset.",
+      "leer": "Ei vielä saldoa.",
+      "verfuegbar": "Käytettävissä",
+      "ausstehend": "Odottaa",
+      "auszahlen": "Pyydä tilitystä",
+      "nochNichtFreigeschaltet": "Tilityksiä ei ole vielä avattu tilillesi.",
+      "automatischHinweis": "Saldosi tilitetään automaattisesti. Jos haluat tilityksen pyynnöstä, valitse alta ”Vain pyynnöstä”.",
+      "ausstehendHinweis": "Odottava saldo vapautuu selvitysajan jälkeen."
+    },
+    "rhythmus": {
+      "titel": "Tilitysrytmi",
+      "hinweis": "Sinä päätät, milloin saldo siirtyy pankkitilillesi.",
+      "manual": "Vain pyynnöstä",
+      "daily": "Päivittäin",
+      "weekly": "Viikoittain (torstaisin)",
+      "monthly": "Kuukausittain (15. päivä)"
+    },
+    "historie": {
+      "titel": "Viimeisimmät tilitykset",
+      "leer": "Ei vielä tilityksiä.",
+      "automatisch": "Automaattinen",
+      "beantragt": "Pyydetty",
+      "angelegt": "Luotu {datum}",
+      "gutschrift": "Tilillä {datum}"
+    },
+    "status": {
+      "paid": "Tilitetty",
+      "pending": "Käsittelyssä",
+      "in_transit": "Matkalla",
+      "canceled": "Peruttu",
+      "failed": "Epäonnistui"
+    },
+    "marktplatz": {
+      "titel": "Markkinapaikan varaukset",
+      "hinweis": "myBestDays-varaukset kulkevat tilimme kautta ja tilitetään lähdön jälkeen.",
+      "offen": "Avoinna",
+      "ausgezahlt": "Tilitetty"
+    }
   }
 }

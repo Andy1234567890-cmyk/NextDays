@@ -123,6 +123,28 @@ class ReservationAddonAdd(BaseModel):
     qty: int = Field(default=1, ge=1)
 
 
+class ZahlungslinkResponse(BaseModel):
+    """Stripe-Zahlungslink über die offenen Zusatzleistungen einer Buchung.
+
+    Beträge in Cent (kleinste Einheit), damit nichts über Float-Rundung
+    verloren geht. ``application_fee_cents`` ist der Anteil, den die Plattform
+    beim Charge einbehält (Satz ``fee_bps``, 500 = 5,00 %).
+    """
+
+    id: str
+    reservation_id: str
+    url: str
+    currency: str
+    amount_cents: int
+    application_fee_cents: int
+    fee_bps: int
+    status: str
+    # Anzahl der Zusatzleistungen, die dieser Link abdeckt.
+    positionen: int
+    paid_at: str | None = None
+    created_at: str | None = None
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

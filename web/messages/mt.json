@@ -5920,7 +5920,15 @@
       "emptyCatalog": "M'hemm l-ebda katalgu għal din il-proprjetà.",
       "pickPlaceholder": "Agħżel servizz addizzjonali …",
       "addAction": "Żid",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Link tal-ħlas",
+      "linkCreate": "Oħloq link tal-ħlas",
+      "linkBusy": "Qed jinħoloq …",
+      "linkCopy": "Ikkopja l-link",
+      "linkCopied": "Il-link tal-ħlas ġie kkupjat.",
+      "linkCopyFailed": "L-ikkupjar ma rnexxiex — il-link jidher hawn taħt.",
+      "linkWithdraw": "Irtira",
+      "linkWithdrawn": "Il-link tal-ħlas ġie rtirat."
     },
     "ratesView": {
       "propertyLabel": "Proprjetà",
@@ -8198,5 +8206,55 @@
     "validTo": "Valida sa",
     "validToInfo": "Ħalli vojt sakemm ir-rata tibqa' tapplika. Jekk il-portal ibiddel ir-rata tiegħu, daħħal waħda ġdida mill-jum tal-bidla — dik il-qadima tinżamm għar-rendikonti preċedenti.",
     "validToOpen": "tibqa' għaddejja"
+  },
+  "abrechnung": {
+    "titel": "Saldu",
+    "untertitel": "Il-bilanċ tiegħek u l-ħlasijiet tiegħek.",
+    "laedt": "Qed jitgħabba …",
+    "aktualisieren": "Aġġorna",
+    "keinKonto": "Għall-ħlasijiet lilek għandek bżonn kont tal-ħlas konness.",
+    "kontoEinrichten": "Waqqaf kont tal-ħlas",
+    "auszahlungAngestossen": "Il-ħlas ta’ {betrag} beda.",
+    "rhythmusGespeichert": "Ir-ritmu ġie salvat.",
+    "guthaben": {
+      "titel": "Il-bilanċ tiegħek",
+      "hinweis": "Dak li ġbart int stess — servizzi addizzjonali u prenotazzjonijiet diretti.",
+      "leer": "Għad m’hemmx bilanċ.",
+      "verfuegbar": "Disponibbli",
+      "ausstehend": "Pendenti",
+      "auszahlen": "Itlob ħlas",
+      "nochNichtFreigeschaltet": "Il-ħlasijiet għadhom mhux attivati għall-kont tiegħek.",
+      "automatischHinweis": "Il-bilanċ tiegħek jitħallas awtomatikament. Għal ħlas fuq talba, agħżel „Fuq talba biss” hawn taħt.",
+      "ausstehendHinweis": "Il-bilanċ pendenti jsir disponibbli wara l-perjodu ta’ saldu."
+    },
+    "rhythmus": {
+      "titel": "Ritmu tal-ħlasijiet",
+      "hinweis": "Int tiddeċiedi meta l-bilanċ imur fil-kont bankarju tiegħek.",
+      "manual": "Fuq talba biss",
+      "daily": "Kuljum",
+      "weekly": "Kull ġimgħa (il-Ħamis)",
+      "monthly": "Kull xahar (fil-15)"
+    },
+    "historie": {
+      "titel": "L-aħħar ħlasijiet",
+      "leer": "Għad ma sar l-ebda ħlas.",
+      "automatisch": "Awtomatiku",
+      "beantragt": "Mitlub",
+      "angelegt": "Maħluq {datum}",
+      "gutschrift": "Kreditu {datum}"
+    },
+    "status": {
+      "paid": "Imħallas",
+      "pending": "Qed jiġi pproċessat",
+      "in_transit": "Fi triqtu",
+      "canceled": "Ikkanċellat",
+      "failed": "Falla"
+    },
+    "marktplatz": {
+      "titel": "Prenotazzjonijiet mis-suq",
+      "hinweis": "Il-prenotazzjonijiet permezz ta’ myBestDays jgħaddu mill-kont tagħna u jitħallsu wara t-tluq.",
+      "offen": "Miftuħ",
+      "ausgezahlt": "Imħallas"
+    }
   }
 }

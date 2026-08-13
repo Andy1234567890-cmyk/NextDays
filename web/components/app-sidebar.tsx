@@ -624,9 +624,14 @@ export function AppSidebar({
                     {t("account.security")}
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="gap-3 px-3 py-2.5 text-sm [&>svg]:size-5">
-                  <Icon icon="ph:receipt" />
-                  {t("account.billing")}
+                <DropdownMenuItem
+                  asChild
+                  className="gap-3 px-3 py-2.5 text-sm [&>svg]:size-5"
+                >
+                  <Link href="/konto/abrechnung">
+                    <Icon icon="ph:receipt" />
+                    {t("account.billing")}
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {/* Live-Chat mit dem myNextDays-Team (Widget im Layout). */}

@@ -73,3 +73,54 @@ Beide bleiben für diesen Zweck **bewusst liegen** (kein Doppel-Mechanismus).
   Payment-Provider (primär Stripe, Revolut sekundär — ADR-0011) gilt „zahlbar bei
   Anreise" (manuell als paid markierbar); Anzeige/Buchung sind **nicht** an
   Payment blockiert.
+
+## Bezahlen: Zahlungslink (Stripe, 0386)
+
+Der Betrieb schickt dem Gast einen **Stripe Payment Link** über alle offenen
+Zusatzleistungen einer Buchung. `mark-paid` bleibt daneben bestehen (Barzahlung
+an der Rezeption), ist aber nicht mehr der einzige Weg.
+
+- **Geldfluss:** Direct Charge **im verbundenen Konto des Betriebs**
+  (`stripe_account`-Header). Der Charge gehört ihm — seine Währung, sein Name
+  auf der Kartenabrechnung, das Geld liegt auf SEINEM Stripe-Saldo und wird von
+  dort ausgezahlt (`/konto/abrechnung`). Die Plattform behält
+  `tenants.addon_fee_bps` (Default 500 = 5 %) als `application_fee` ein.
+- **Nicht mit dem Auszahlungslauf verwechseln:** `features/payouts` transferiert
+  nur Marktplatz-Buchungen (`channel='portal'`) vom PLATTFORM-Saldo. Eine
+  Zusatzleistung fließt nie über beide Wege.
+- **Warum Payment Link, nicht Checkout-Session:** Die Session-URL verfällt nach
+  24 h; ein Link, den der Betrieb per Nachricht verschickt, wäre dann tot.
+  Payment Links verlangen eine echte Price-ID (`price_data` gibt es dort nicht) —
+  deshalb legt `stripe_client.create_addon_payment_link` erst Preis + Produkt im
+  Konto des Betriebs an.
+- **Einmal bezahlbar:** `restrictions.completed_sessions.limit = 1`.
+- **Idempotenz:** höchstens EIN offener Link je Buchung (partieller
+  Unique-Index). Gleiche Positionen → derselbe Link; geänderte Positionen →
+  alter Link wird bei Stripe deaktiviert, dann ein neuer erzeugt.
+- **Zahlungseingang:** `checkout.session.completed` (Connect-Event, trägt
+  `account`). `zahlung.verbuche_checkout_session` filtert auf die eigene
+  Metadata, prüft das absendende Konto und den Betrag. Netz darunter: der
+  GET-Endpunkt gleicht einen offenen Link einmal mit Stripe ab — ohne das bliebe
+  eine bezahlte Leistung „offen", wenn der Connect-Webhook nicht zustellt.
+- **Beleg:** eine `payments`-Zeile mit `type='addon'` und `gateway_ref` = der
+  **Checkout-Session-ID** (nicht dem PaymentIntent). Über die PaymentIntent-ID
+  würde der `payment_intent.succeeded`-Pfad die BUCHUNG als bezahlt markieren
+  und eine Plattform-Auszahlung planen — beides wäre falsch.
+
+### Endpunkte
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET | `/addons/reservations/{id}/zahlungslink` | offener Link (oder `null`), mit Stripe-Abgleich |
+| POST | `/addons/reservations/{id}/zahlungslink` | Link erstellen (idempotent) |
+| DELETE | `/addons/reservations/{id}/zahlungslink` | Link zurückziehen |
+
+### Voraussetzung am Stripe-Key
+
+Ein *restricted key* (`rk_live_…`) braucht in der Spalte **Connect-
+Berechtigungen**: Prices/Products/Payment Links **Schreiben**, Checkout Sessions
+**Lesen**. Für Saldo und Auszahlung zusätzlich Balance **Lesen**, Payouts
+**Schreiben**, Payout Settings **Lesen**; für das Logo-Branding Files
+**Schreiben** (Plattform-Ebene genügt dort nicht — Connect setzen). Fehlt ein
+Recht, scheitert der Aufruf sichtbar mit dem Stripe-Originaltext; es gibt keinen
+stillen Ersatzweg.

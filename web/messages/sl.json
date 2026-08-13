@@ -5920,7 +5920,15 @@
       "emptyCatalog": "Za to nastanitev ni kataloga.",
       "pickPlaceholder": "Izberi dodatno storitev …",
       "addAction": "Dodaj",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Plačilna povezava",
+      "linkCreate": "Ustvari plačilno povezavo",
+      "linkBusy": "Ustvarjam …",
+      "linkCopy": "Kopiraj povezavo",
+      "linkCopied": "Plačilna povezava kopirana.",
+      "linkCopyFailed": "Kopiranje ni uspelo — povezava je spodaj.",
+      "linkWithdraw": "Umakni",
+      "linkWithdrawn": "Plačilna povezava umaknjena."
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -8198,5 +8206,55 @@
     "validTo": "Velja do",
     "validToInfo": "Pustite prazno, dokler stopnja velja. Če portal spremeni svojo stopnjo, dodajte novo z dnem spremembe — stara ostane za prejšnje obračune.",
     "validToOpen": "še velja"
+  },
+  "abrechnung": {
+    "titel": "Obračun",
+    "untertitel": "Tvoje dobroimetje in izplačila.",
+    "laedt": "Nalaganje …",
+    "aktualisieren": "Osveži",
+    "keinKonto": "Za izplačila potrebuješ povezan plačilni račun.",
+    "kontoEinrichten": "Nastavi plačilni račun",
+    "auszahlungAngestossen": "Izplačilo {betrag} sproženo.",
+    "rhythmusGespeichert": "Ritem shranjen.",
+    "guthaben": {
+      "titel": "Tvoje dobroimetje",
+      "hinweis": "To, kar si pobral sam — dodatne storitve in neposredne rezervacije.",
+      "leer": "Dobroimetja še ni.",
+      "verfuegbar": "Na voljo",
+      "ausstehend": "V obdelavi",
+      "auszahlen": "Zahtevaj izplačilo",
+      "nochNichtFreigeschaltet": "Izplačila za tvoj račun še niso omogočena.",
+      "automatischHinweis": "Tvoje dobroimetje se izplača samodejno. Za izplačilo na zahtevo spodaj izberi »Samo na zahtevo«.",
+      "ausstehendHinweis": "Dobroimetje v obdelavi bo na voljo po poravnalnem roku."
+    },
+    "rhythmus": {
+      "titel": "Ritem izplačil",
+      "hinweis": "Ti odločaš, kdaj gre dobroimetje na tvoj bančni račun.",
+      "manual": "Samo na zahtevo",
+      "daily": "Dnevno",
+      "weekly": "Tedensko (ob četrtkih)",
+      "monthly": "Mesečno (15. v mesecu)"
+    },
+    "historie": {
+      "titel": "Zadnja izplačila",
+      "leer": "Izplačila še ni bilo.",
+      "automatisch": "Samodejno",
+      "beantragt": "Zahtevano",
+      "angelegt": "Ustvarjeno {datum}",
+      "gutschrift": "Nakazilo {datum}"
+    },
+    "status": {
+      "paid": "Izplačano",
+      "pending": "V obdelavi",
+      "in_transit": "Na poti",
+      "canceled": "Preklicano",
+      "failed": "Ni uspelo"
+    },
+    "marktplatz": {
+      "titel": "Rezervacije s tržnice",
+      "hinweis": "Rezervacije prek myBestDays gredo prek našega računa in se izplačajo po odhodu.",
+      "offen": "Odprto",
+      "ausgezahlt": "Izplačano"
+    }
   }
 }

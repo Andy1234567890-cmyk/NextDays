@@ -5925,7 +5925,15 @@
       "emptyCatalog": "Aucun catalogue pour ce bien.",
       "pickPlaceholder": "Choisir un service supplémentaire …",
       "addAction": "Ajouter",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Lien de paiement",
+      "linkCreate": "Créer un lien de paiement",
+      "linkBusy": "Création …",
+      "linkCopy": "Copier le lien",
+      "linkCopied": "Lien de paiement copié.",
+      "linkCopyFailed": "Copie impossible — le lien est affiché ci-dessous.",
+      "linkWithdraw": "Retirer",
+      "linkWithdrawn": "Lien de paiement retiré."
     },
     "ratesView": {
       "propertyLabel": "Bien",
@@ -8203,5 +8211,55 @@
     "validTo": "Valable jusqu’au",
     "validToInfo": "Laissez vide tant que le taux s’applique. Si le portail modifie son taux, créez-en un nouveau à compter du jour du changement — l’ancien reste conservé pour les décomptes antérieurs.",
     "validToOpen": "toujours en cours"
+  },
+  "abrechnung": {
+    "titel": "Facturation",
+    "untertitel": "Votre solde et vos versements.",
+    "laedt": "Chargement …",
+    "aktualisieren": "Actualiser",
+    "keinKonto": "Un compte de paiement connecté est nécessaire pour recevoir des versements.",
+    "kontoEinrichten": "Configurer le compte de paiement",
+    "auszahlungAngestossen": "Versement de {betrag} lancé.",
+    "rhythmusGespeichert": "Rythme enregistré.",
+    "guthaben": {
+      "titel": "Votre solde",
+      "hinweis": "Ce que vous avez encaissé vous-même — services supplémentaires et réservations directes.",
+      "leer": "Aucun solde pour l’instant.",
+      "verfuegbar": "Disponible",
+      "ausstehend": "En attente",
+      "auszahlen": "Demander un versement",
+      "nochNichtFreigeschaltet": "Les versements ne sont pas encore activés pour votre compte.",
+      "automatischHinweis": "Votre solde est versé automatiquement. Pour un versement à la demande, choisissez « Uniquement sur demande » ci-dessous.",
+      "ausstehendHinweis": "Le solde en attente devient disponible après le délai de règlement."
+    },
+    "rhythmus": {
+      "titel": "Rythme des versements",
+      "hinweis": "Vous décidez quand votre solde part vers votre compte bancaire.",
+      "manual": "Uniquement sur demande",
+      "daily": "Quotidien",
+      "weekly": "Hebdomadaire (le jeudi)",
+      "monthly": "Mensuel (le 15)"
+    },
+    "historie": {
+      "titel": "Derniers versements",
+      "leer": "Aucun versement pour l’instant.",
+      "automatisch": "Automatique",
+      "beantragt": "Demandé",
+      "angelegt": "Créé le {datum}",
+      "gutschrift": "Crédité le {datum}"
+    },
+    "status": {
+      "paid": "Versé",
+      "pending": "En cours",
+      "in_transit": "En transit",
+      "canceled": "Annulé",
+      "failed": "Échoué"
+    },
+    "marktplatz": {
+      "titel": "Réservations de la place de marché",
+      "hinweis": "Les réservations via myBestDays passent par notre compte et sont versées après le départ.",
+      "offen": "En attente",
+      "ausgezahlt": "Versé"
+    }
   }
 }

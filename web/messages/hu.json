@@ -5925,7 +5925,15 @@
       "emptyCatalog": "Nincs katalógus ehhez a szálláshelyhez.",
       "pickPlaceholder": "Válasszon extra szolgáltatást …",
       "addAction": "Hozzáadás",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Fizetési link",
+      "linkCreate": "Fizetési link létrehozása",
+      "linkBusy": "Létrehozás …",
+      "linkCopy": "Link másolása",
+      "linkCopied": "Fizetési link kimásolva.",
+      "linkCopyFailed": "A másolás nem sikerült — a link lent látható.",
+      "linkWithdraw": "Visszavonás",
+      "linkWithdrawn": "Fizetési link visszavonva."
     },
     "ratesView": {
       "propertyLabel": "Ingatlan",
@@ -8203,5 +8211,55 @@
     "validTo": "Érvényes eddig",
     "validToInfo": "Hagyja üresen, amíg a kulcs érvényes. Ha a portál módosítja a kulcsát, hozzon létre egy újat a módosítás napjától — a régi megmarad a korábbi elszámolásokhoz.",
     "validToOpen": "továbbra is érvényes"
+  },
+  "abrechnung": {
+    "titel": "Elszámolás",
+    "untertitel": "Az egyenleged és a kifizetéseid.",
+    "laedt": "Betöltés …",
+    "aktualisieren": "Frissítés",
+    "keinKonto": "A kifizetésekhez összekapcsolt fizetési fiók szükséges.",
+    "kontoEinrichten": "Fizetési fiók beállítása",
+    "auszahlungAngestossen": "{betrag} összegű kifizetés elindítva.",
+    "rhythmusGespeichert": "Ütem mentve.",
+    "guthaben": {
+      "titel": "Az egyenleged",
+      "hinweis": "Amit te magad szedtél be — kiegészítő szolgáltatások és közvetlen foglalások.",
+      "leer": "Még nincs egyenleg.",
+      "verfuegbar": "Elérhető",
+      "ausstehend": "Függőben",
+      "auszahlen": "Kifizetés igénylése",
+      "nochNichtFreigeschaltet": "A kifizetések még nincsenek engedélyezve a fiókodhoz.",
+      "automatischHinweis": "Az egyenleged automatikusan kifizetésre kerül. Igény szerinti kifizetéshez állítsd lent „Csak igénylésre” értékre.",
+      "ausstehendHinweis": "A függőben lévő egyenleg az elszámolási idő után válik elérhetővé."
+    },
+    "rhythmus": {
+      "titel": "Kifizetési ütem",
+      "hinweis": "Te döntöd el, mikor kerül az egyenleged a bankszámládra.",
+      "manual": "Csak igénylésre",
+      "daily": "Naponta",
+      "weekly": "Hetente (csütörtökön)",
+      "monthly": "Havonta (15-én)"
+    },
+    "historie": {
+      "titel": "Legutóbbi kifizetések",
+      "leer": "Még nincs kifizetés.",
+      "automatisch": "Automatikus",
+      "beantragt": "Igényelt",
+      "angelegt": "Létrehozva {datum}",
+      "gutschrift": "Jóváírás {datum}"
+    },
+    "status": {
+      "paid": "Kifizetve",
+      "pending": "Feldolgozás alatt",
+      "in_transit": "Úton",
+      "canceled": "Törölve",
+      "failed": "Sikertelen"
+    },
+    "marktplatz": {
+      "titel": "Piactéri foglalások",
+      "hinweis": "A myBestDays-en keresztüli foglalások a mi számlánkon futnak, és elutazás után kerülnek kifizetésre.",
+      "offen": "Nyitott",
+      "ausgezahlt": "Kifizetve"
+    }
   }
 }

@@ -16,10 +16,14 @@ import {
   addReservationAddon,
   availableReservationAddons,
   cancelReservationAddon,
+  createZahlungslink,
+  deleteZahlungslink,
+  getZahlungslink,
   listReservationAddons,
   markReservationAddonPaid,
   type Addon,
   type ReservationAddon,
+  type Zahlungslink,
 } from "@/lib/addons";
 import { formatCurrency } from "@/lib/currency";
 import { useRealtime } from "@/lib/use-realtime";
@@ -59,15 +63,22 @@ export function ReservationAddonsSection({
   // Muster wie der Buchungs-Storno im Slider, kein blindes Ein-Klick-Entfernen.
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  // Stripe-Zahlungslink über die offenen Zusatzleistungen. null = keiner offen.
+  const [link, setLink] = useState<Zahlungslink | null>(null);
+  const [linkBusy, setLinkBusy] = useState(false);
 
   const money = (v: number) =>
     cur ? formatCurrency(v, cur) : v.toLocaleString(locale);
 
   async function reload() {
-    const [bought, avail] = await Promise.all([
+    const [bought, avail, zahlung] = await Promise.all([
       listReservationAddons(reservationId),
       availableReservationAddons(reservationId),
+      getZahlungslink(reservationId),
     ]);
+    // Der Link kommt serverseitig mit Stripe abgeglichen zurück; ein Fehler
+    // dabei darf die Liste nicht leeren (dann bleibt der letzte Stand stehen).
+    if (zahlung.ok) setLink(zahlung.data);
     if (bought.ok) {
       setPurchased(bought.data.items);
       if (bought.data.currency) setCur(bought.data.currency);
@@ -131,9 +142,45 @@ export function ReservationAddonsSection({
     }
   }
 
+  async function linkErstellen() {
+    setLinkBusy(true);
+    const res = await createZahlungslink(reservationId);
+    setLinkBusy(false);
+    if (!res.ok) {
+      toast.error(res.error);
+      return;
+    }
+    setLink(res.data);
+    await kopieren(res.data.url);
+  }
+
+  async function linkZurueckziehen() {
+    setLinkBusy(true);
+    const res = await deleteZahlungslink(reservationId);
+    setLinkBusy(false);
+    if (!res.ok) {
+      toast.error(res.error);
+      return;
+    }
+    setLink(null);
+    toast.success(t("reservationAddonsSection.linkWithdrawn"));
+  }
+
+  async function kopieren(url: string) {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success(t("reservationAddonsSection.linkCopied"));
+    } catch {
+      // Ohne Zwischenablage-Recht (unsicherer Kontext/Berechtigung verweigert)
+      // ist der Link nicht verloren — er steht sichtbar daneben.
+      toast.message(t("reservationAddonsSection.linkCopyFailed"));
+    }
+  }
+
   const total = purchased
     .filter((p) => p.status !== "cancelled")
     .reduce((s, p) => s + p.total, 0);
+  const offeneAnzahl = purchased.filter((p) => p.status === "pending").length;
 
   return (
     <div className="rounded-(--radius) border p-3">
@@ -249,6 +296,63 @@ export function ReservationAddonsSection({
         <p className="mb-3 text-sm text-muted-foreground">
           {t("reservationAddonsSection.emptyPurchased")}
         </p>
+      )}
+
+      {/* Zahlungslink: Der Gast bezahlt die offenen Zusatzleistungen per Karte.
+          Der Charge läuft im verbundenen Stripe-Konto des Betriebs, das Geld
+          wird dort gutgeschrieben und über Konto → Abrechnung ausgezahlt. */}
+      {(offeneAnzahl > 0 || link) && (
+        <div className="mb-3 flex flex-col gap-2 rounded-(--radius) border border-border p-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {t("reservationAddonsSection.linkTitle")}
+            </span>
+            {link ? (
+              <span className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void kopieren(link.url)}
+                >
+                  <Icon icon="ph:copy" className="size-4" />
+                  {t("reservationAddonsSection.linkCopy")}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void linkZurueckziehen()}
+                  disabled={linkBusy}
+                >
+                  {t("reservationAddonsSection.linkWithdraw")}
+                </Button>
+              </span>
+            ) : (
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => void linkErstellen()}
+                disabled={linkBusy || offeneAnzahl === 0}
+              >
+                <Icon icon="ph:link" className="size-4" />
+                {linkBusy
+                  ? t("reservationAddonsSection.linkBusy")
+                  : t("reservationAddonsSection.linkCreate")}
+              </Button>
+            )}
+          </div>
+          {link && (
+            <a
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="truncate text-xs text-accent hover:underline"
+            >
+              {link.url}
+            </a>
+          )}
+        </div>
       )}
 
       {/* Schnell-Hinzufügen aus dem Objekt-Katalog (jeder Kanal, auch OTA). */}

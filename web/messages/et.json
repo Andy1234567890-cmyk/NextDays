@@ -5925,7 +5925,15 @@
       "emptyCatalog": "Selle majutuse jaoks pole kataloogi.",
       "pickPlaceholder": "Vali lisateenus …",
       "addAction": "Lisa",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Makselink",
+      "linkCreate": "Loo makselink",
+      "linkBusy": "Loon …",
+      "linkCopy": "Kopeeri link",
+      "linkCopied": "Makselink kopeeritud.",
+      "linkCopyFailed": "Kopeerimine ebaõnnestus — link on allpool.",
+      "linkWithdraw": "Võta tagasi",
+      "linkWithdrawn": "Makselink võeti tagasi."
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -8203,5 +8211,55 @@
     "validTo": "Kehtib kuni",
     "validToInfo": "Jätke tühjaks, kuni määr kehtib. Kui portaal muudab oma määra, looge uus määr alates muutmise päevast — vana jääb varasemate arvelduste jaoks alles.",
     "validToOpen": "kehtib edasi"
+  },
+  "abrechnung": {
+    "titel": "Arveldus",
+    "untertitel": "Sinu jääk ja väljamaksed.",
+    "laedt": "Laadin …",
+    "aktualisieren": "Värskenda",
+    "keinKonto": "Väljamaksete jaoks on vaja ühendatud maksekontot.",
+    "kontoEinrichten": "Seadista maksekonto",
+    "auszahlungAngestossen": "Väljamakse {betrag} algatatud.",
+    "rhythmusGespeichert": "Rütm salvestatud.",
+    "guthaben": {
+      "titel": "Sinu jääk",
+      "hinweis": "See, mille oled ise sisse kasseerinud — lisateenused ja otsebroneeringud.",
+      "leer": "Jääki veel ei ole.",
+      "verfuegbar": "Saadaval",
+      "ausstehend": "Ootel",
+      "auszahlen": "Taotle väljamakset",
+      "nochNichtFreigeschaltet": "Väljamaksed ei ole sinu kontol veel avatud.",
+      "automatischHinweis": "Sinu jääk makstakse välja automaatselt. Taotluse alusel väljamakseks vali allpool „Ainult taotluse alusel“.",
+      "ausstehendHinweis": "Ootel jääk muutub kättesaadavaks pärast arveldusperioodi."
+    },
+    "rhythmus": {
+      "titel": "Väljamakse rütm",
+      "hinweis": "Sina otsustad, millal jääk sinu pangakontole liigub.",
+      "manual": "Ainult taotluse alusel",
+      "daily": "Iga päev",
+      "weekly": "Iga nädal (neljapäeviti)",
+      "monthly": "Iga kuu (15. kuupäeval)"
+    },
+    "historie": {
+      "titel": "Viimased väljamaksed",
+      "leer": "Väljamakseid veel ei ole.",
+      "automatisch": "Automaatne",
+      "beantragt": "Taotletud",
+      "angelegt": "Loodud {datum}",
+      "gutschrift": "Laekub {datum}"
+    },
+    "status": {
+      "paid": "Välja makstud",
+      "pending": "Töötlemisel",
+      "in_transit": "Teel",
+      "canceled": "Tühistatud",
+      "failed": "Ebaõnnestus"
+    },
+    "marktplatz": {
+      "titel": "Turuplatsi broneeringud",
+      "hinweis": "myBestDaysi kaudu tehtud broneeringud liiguvad meie konto kaudu ja makstakse välja pärast lahkumist.",
+      "offen": "Avatud",
+      "ausgezahlt": "Välja makstud"
+    }
   }
 }

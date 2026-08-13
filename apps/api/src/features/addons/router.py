@@ -13,7 +13,7 @@ from src.core.uploads import read_upload
 from src.features.auth.dependencies import require_permission
 from src.features.auth.permissions import Capability
 
-from .dependencies import AddonsServiceDep
+from .dependencies import AddonsServiceDep, AddonZahlungServiceDep
 from .schemas import (
     AddonCreate,
     AddonListResponse,
@@ -23,8 +23,10 @@ from .schemas import (
     ReservationAddonListResponse,
     ReservationAddonResponse,
     SliceHealth,
+    ZahlungslinkResponse,
 )
 from .service import AddonError
+from .zahlung import ZahlungslinkFehler
 
 _MANAGE = require_permission(  # noqa: N816  pylint: disable=invalid-name
     Capability.MANAGE_PROPERTIES
@@ -191,4 +193,66 @@ def cancel_reservation_addon(
     try:
         return service.cancel_reservation_addon(ctx, res_addon_id)
     except AddonError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Zahlungslink (Stripe, Direct Charge im Konto des Betriebs) ---------------
+#
+# Zugriff: MANAGE_PROPERTIES wie der übrige Slice. Wer eine Zusatzleistung
+# verkaufen darf, muss sie auch kassieren können — die Rezeption bucht das Extra
+# und schickt den Link. Keine Finanzdaten des Betriebs werden dabei sichtbar
+# (Saldo/Auszahlung liegen unter MANAGE_BILLING in /payouts).
+
+@router.get(
+    "/reservations/{reservation_id}/zahlungslink",
+    response_model=ZahlungslinkResponse | None,
+)
+def get_zahlungslink(
+    reservation_id: str,
+    service: AddonZahlungServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> ZahlungslinkResponse | None:
+    """Offenen Zahlungslink der Buchung — null, wenn keiner offen ist.
+
+    Gleicht dabei mit Stripe ab, ob inzwischen bezahlt wurde (Netz unter dem
+    Webhook)."""
+    try:
+        return service.lesen(ctx, reservation_id)
+    except ZahlungslinkFehler as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/reservations/{reservation_id}/zahlungslink",
+    response_model=ZahlungslinkResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_zahlungslink(
+    reservation_id: str,
+    service: AddonZahlungServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> ZahlungslinkResponse:
+    """Zahlungslink über alle offenen Zusatzleistungen der Buchung erstellen.
+
+    Idempotent: ein bereits offener Link mit denselben Positionen wird
+    zurückgegeben, statt einen zweiten zu erzeugen."""
+    try:
+        return service.erstellen(ctx, reservation_id)
+    except ZahlungslinkFehler as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete(
+    "/reservations/{reservation_id}/zahlungslink",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_zahlungslink(
+    reservation_id: str,
+    service: AddonZahlungServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> None:
+    """Offenen Zahlungslink zurückziehen (bei Stripe deaktivieren)."""
+    try:
+        service.zurueckziehen(ctx, reservation_id)
+    except ZahlungslinkFehler as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

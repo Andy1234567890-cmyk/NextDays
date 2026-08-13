@@ -154,14 +154,14 @@ flowchart TB
             OWNST["owner_statements — Auszahlungs-Abrechnung (Provision je Objekt, EU-Steuer/Reverse-Charge, Storno, Mehrwährung via ECB-Tageskurs)"]
             OWNRP["owner_reporting — Reporting für Eigentümer (0365): Bericht (Zeitraum × Objektauswahl × Währung) → Zahlung je Empfänger (5 Abschnitte, Snapshot) → Teilzahlung; geplante Berichte (Cron), wiederkehrende Posten, Bilanzstatistik. Rechnet AUSSCHLIESSLICH über owner_statements/common.py"]
             INBOXL["inbox — Threads (OTA + eigene Plattform), Versand, Vorlagen/KI + Wissensdatenbank, Platzhalter, Anhänge, geplante Nachrichten + planbare Automails (Zeit/Objekt-Zeitzone + Zuweisung Haus/Kanal + Auslöser Nachricht empfangen)"]
-            ADDON["addons — Zusatzleistungen/Upsells je Objekt (Medien, Basis, appears_in, wann-anzeigen); Verkauf via booking_engine + Gäste-Portal, Extra-Umsatz in Owner-Statement, Task-Trigger addon_purchased, Payment-gegatet"]
+            ADDON["addons — Zusatzleistungen/Upsells je Objekt (Medien, Basis, appears_in, wann-anzeigen); Verkauf via booking_engine + Gäste-Portal, Extra-Umsatz in Owner-Statement, Task-Trigger addon_purchased; Bezahlung per Stripe-Zahlungslink im verbundenen Konto des Betriebs (0386, zahlung.py) — Direct Charge, application_fee = tenants.addon_fee_bps"]
             PROP["properties — Objekt-Stammdaten, Fotos, Typ-Attribute, Adress-Split, Owner-Scope (RLS); zentrale Objektwährung (currency, 0161); pro-Kanal-Sichtbarkeit als eigene Achsen: Website (listed_on_website, 0162) + Plattform/Marktplatz (listed_on_marketplace, 0159), getrennt vom Lebenszyklus status; Portale-Zustand aus channex_property_map. PropertyResponse.channels = abgeleitete 3-Kanal-Chips (Website·Plattform·Portale, je active/paused/not_connected/error). Kanal-Steuerung auf ZWEI Ebenen (Lodgify-Muster): zentral /channels + pro Objekt /objekte/[id]/kanaele (property-channels.tsx: Website/Plattform-Toggles via PATCH, Portale-Zeilen togglen die OTA-Verbindung, Connect-Wizard mit presetPropertyId; Markup = Phase 2); dazu die Nachschlag-Ebene /objekte/[id]/synchronisierung (alle Portale eines Objekts mit den Extranet-Kennungen hotel_id | room_code) und /objekte/[id]/synchronisierung/[portal] (ein Portal: Kennungen, Verkaufsschalter, letzter Abgleich)"]
             PPORTAL["property_portal — Gastmodul je Objekt (Portal-Schalter, Türcode maskiert); Info-Texte in messaging"]
             RATES["rates — Saison-/Event-Preise, Rate-Plans, Aufschläge"]
             RES["reservations — Buchungen, Lifecycle, Gast-Maskierung (Daten-Split); nach Domäne geteilt (_base/reads/writes/service-Fassade), Objekt-Statistiken (KPIs + Tages-Sparklines + KPI-Detail) in property_stats.py"]
             GUE["guests — Enterprise-Gästeprofil (Adressen/Kontakte/Ausweise/Consents), Merge, DSGVO"]
             PAY["payments — Stripe Connect Custom (primär), Charge + Provision, Kaution, Refund, Webhooks; OTA-Gate; Revolut sekundär"]
-            POUT["payouts — Auszahlung nach Abreise, Verrechnung statt Rückholung; Cohost-Anteile"]
+            POUT["payouts — ZWEI Töpfe: Plattform-Ledger (Marktplatz, Auszahlung nach Abreise, Verrechnung statt Rückholung, Cohost-Anteile) + Guthaben auf dem verbundenen Stripe-Konto (stripe_saldo.py: Saldo, Auszahlung auf Antrag, Rhythmus manual/daily/weekly/monthly) → /konto/abrechnung"]
             SUB["subscriptions — Abo-Billing Tenant→myNextDays: Grundgebühr + Objekt-Staffel (graduated) + Zusatzmodule; Stripe Subscription/Checkout/Portal, Adaptive Pricing (27 EU); Modul-Entitlements"]
             CM["channel_manager — Channex (ARI-Push, Buchungs-Import, Webhooks, Hotel-ID-Flow, Stop-Sell, ARI-Outbox, Bewertungs-Spiegel channex_review via reviews_sync)"]
             BOOK["booking_engine — eigene Direktbuchungs-Strecke (provisionsfrei) + Buchungs-Widget"]
@@ -999,6 +999,21 @@ flowchart LR
   (Snapshot von Bezeichnung/Preis zum Kaufzeitpunkt — kein Nachträglich-
   Verändern). Verkauf über `booking_engine` + Gäste-Portal, fließt als
   Extra-Umsatz in das Owner-Statement, triggert die Aufgabe `addon_purchased`.
+- **`addon_payment_links` / `addon_payment_link_items`** (`0386`): Stripe
+  **Payment Link** je Buchung über alle offenen Zusatzleistungen. Der Charge
+  entsteht als **Direct Charge im verbundenen Konto des Betriebs** — das Geld
+  liegt auf SEINEM Stripe-Saldo und wird von dort ausgezahlt; die Plattform
+  behält `tenants.addon_fee_bps` (Default 500 = 5 %) als `application_fee` ein.
+  Höchstens ein offener Link je Buchung (partieller Unique-Index), bei Stripe
+  einmal bezahlbar (`completed_sessions.limit = 1`). Zahlungseingang über
+  `checkout.session.completed` (Connect-Event) plus Abgleich beim Lesen;
+  Beleg als `payments`-Zeile mit `type='addon'` und `gateway_ref` = Session-ID
+  (nicht PaymentIntent — sonst würde der Buchungs-Zahlpfad anspringen).
+  Sensibel: `revoke` + restriktive Policy, kein Realtime (die UI hört auf
+  `reservation_addons`).
+- **`tenant_billing_profile.stripe_branding_logo_url`** (`0387`): Stand des an
+  Stripe übertragenen Firmenlogos. Das Logo auf der Zahlseite des Gastes kommt
+  aus `settings.branding` des verbundenen Kontos, nicht aus unserer DB.
 
 ### Zahlungen & Stripe Connect (`0079`–`0083`)
 

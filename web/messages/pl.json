@@ -5920,7 +5920,15 @@
       "emptyCatalog": "Brak katalogu dla tego obiektu.",
       "pickPlaceholder": "Wybierz usługę dodatkową …",
       "addAction": "Dodaj",
-      "addBusy": "…"
+      "addBusy": "…",
+      "linkTitle": "Link do płatności",
+      "linkCreate": "Utwórz link do płatności",
+      "linkBusy": "Tworzenie …",
+      "linkCopy": "Kopiuj link",
+      "linkCopied": "Link do płatności skopiowany.",
+      "linkCopyFailed": "Nie udało się skopiować — link jest poniżej.",
+      "linkWithdraw": "Wycofaj",
+      "linkWithdrawn": "Link do płatności wycofany."
     },
     "ratesView": {
       "propertyLabel": "Obiekt",
@@ -8198,5 +8206,55 @@
     "validTo": "Obowiązuje do",
     "validToInfo": "Pozostaw puste, dopóki stawka obowiązuje. Jeśli portal zmieni swoją stawkę, dodaj nową od dnia zmiany — stara pozostanie dla wcześniejszych rozliczeń.",
     "validToOpen": "nadal obowiązuje"
+  },
+  "abrechnung": {
+    "titel": "Rozliczenie",
+    "untertitel": "Twoje saldo i wypłaty.",
+    "laedt": "Ładowanie …",
+    "aktualisieren": "Odśwież",
+    "keinKonto": "Do wypłat potrzebujesz połączonego konta płatniczego.",
+    "kontoEinrichten": "Skonfiguruj konto płatnicze",
+    "auszahlungAngestossen": "Wypłata {betrag} zainicjowana.",
+    "rhythmusGespeichert": "Rytm zapisany.",
+    "guthaben": {
+      "titel": "Twoje saldo",
+      "hinweis": "To, co sam zainkasowałeś — usługi dodatkowe i rezerwacje bezpośrednie.",
+      "leer": "Brak salda.",
+      "verfuegbar": "Dostępne",
+      "ausstehend": "Oczekujące",
+      "auszahlen": "Zleć wypłatę",
+      "nochNichtFreigeschaltet": "Wypłaty nie są jeszcze aktywne dla Twojego konta.",
+      "automatischHinweis": "Twoje saldo jest wypłacane automatycznie. Aby wypłacać na żądanie, ustaw poniżej „Tylko na żądanie”.",
+      "ausstehendHinweis": "Saldo oczekujące staje się dostępne po okresie rozliczeniowym."
+    },
+    "rhythmus": {
+      "titel": "Rytm wypłat",
+      "hinweis": "To Ty decydujesz, kiedy saldo trafia na Twoje konto bankowe.",
+      "manual": "Tylko na żądanie",
+      "daily": "Codziennie",
+      "weekly": "Co tydzień (w czwartki)",
+      "monthly": "Co miesiąc (15. dnia)"
+    },
+    "historie": {
+      "titel": "Ostatnie wypłaty",
+      "leer": "Brak wypłat.",
+      "automatisch": "Automatyczna",
+      "beantragt": "Na żądanie",
+      "angelegt": "Utworzono {datum}",
+      "gutschrift": "Uznanie {datum}"
+    },
+    "status": {
+      "paid": "Wypłacone",
+      "pending": "W realizacji",
+      "in_transit": "W drodze",
+      "canceled": "Anulowane",
+      "failed": "Nieudane"
+    },
+    "marktplatz": {
+      "titel": "Rezerwacje z marketplace",
+      "hinweis": "Rezerwacje przez myBestDays idą przez nasze konto i są wypłacane po wyjeździe.",
+      "offen": "Otwarte",
+      "ausgezahlt": "Wypłacone"
+    }
   }
 }

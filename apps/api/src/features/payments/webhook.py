@@ -27,6 +27,7 @@ from typing import Any
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.features.addons.zahlung import verbuche_checkout_session
 from src.features.donations.service import DonationsService
 from src.features.payouts.service import PayoutsService
 
@@ -84,8 +85,14 @@ def handle_stripe_event(
         return {"status": "duplicate"}
 
     obj = event["data"]["object"]
+    # Bei Events aus einem VERBUNDENEN Konto (Direct Charges, z. B. der
+    # Zahlungslink für Zusatzleistungen) trägt das Event `account`. Der Wert
+    # entscheidet mit, ob eine Zahlung zu unserem Link gehört (Wurzel 3).
+    account = _field(event, "account")
     try:
-        result = _dispatch_stripe_event(db, event_type, obj, now_iso)
+        result = _dispatch_stripe_event(
+            db, event_type, obj, now_iso, account=str(account) if account else None
+        )
     except Exception:
         # Verarbeitung fehlgeschlagen → Claim wieder freigeben, damit der
         # Stripe-Retry das Event erneut zustellt (sonst bliebe die Zahlung/
@@ -97,9 +104,20 @@ def handle_stripe_event(
 
 
 def _dispatch_stripe_event(
-    db: Client, event_type: str, obj: Mapping[str, Any], now_iso: str
+    db: Client,
+    event_type: str,
+    obj: Mapping[str, Any],
+    now_iso: str,
+    *,
+    account: str | None = None,
 ) -> dict[str, str] | None:
     match event_type:
+        case "checkout.session.completed":
+            # Zusatzleistungen, per Zahlungslink im verbundenen Konto bezahlt
+            # (0386). Der Aufruf filtert selbst auf seine Metadata und lässt
+            # fremde Checkout-Sessions unberührt.
+            if not verbuche_checkout_session(db, obj, account=account):
+                log.info("stripe_webhook_checkout_fremd", event_type=event_type)
         case "account.updated":
             _handle_account_updated(db, obj, now_iso)
         case "payment_intent.succeeded":
