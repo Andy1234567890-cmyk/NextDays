@@ -91,9 +91,42 @@ class _ReconnectingTransport(httpx.BaseTransport):
         self._inner.close()
 
 
+def _http2_abschalten(transport: object) -> None:
+    """HTTP/2 für diesen Transport abschalten — der synchrone HTTP/2-Stack ist
+    NICHT threadsicher.
+
+    supabase-py baut seine httpx-Clients mit ``http2=True``. Bei HTTP/2 laufen
+    alle gleichzeitigen Requests einer Verbindung als Streams über EINEN
+    gemeinsamen hpack-Header-Encoder, und httpcore serialisiert den Zugriff im
+    sync-Pfad nicht. FastAPI führt jede sync-Route/Dependency im Threadpool aus
+    — zwei Requests, die sich dieselbe Verbindung teilen, zerlegen dann die
+    Encoder-Tabelle:
+
+        RuntimeError: deque mutated during iteration
+        (hpack/table.py, aus h2 → httpcore/_sync/http2.py)
+
+    Live aufgetreten am 13.08.2026 im Auth-Pfad (``mfa_gate.rolle_aus_db``) →
+    500 auf beliebigen Requests, rein zufällig nach Parallelität. Kein Retry
+    hilft: Der Zustand ist eine Race, kein Verbindungsabbruch.
+
+    Über HTTP/1.1 bekommt jeder Request eine Verbindung exklusiv aus dem Pool —
+    kein geteilter Encoder, kein Race. Der Preis sind ein paar Verbindungen mehr
+    zu Kong; Multiplexing brauchen wir bei PostgREST-Aufrufen nicht.
+
+    Ein Lock um den Transport wäre die Alternative, würde aber ALLE DB-Zugriffe
+    des Prozesses serialisieren (Wurzel: Symptom statt Ursache).
+    """
+    pool = getattr(transport, "_pool", None)
+    if pool is not None and getattr(pool, "_http2", False):
+        # httpcore liest das Flag beim Öffnen jeder Verbindung. Frisch gebauter
+        # Client → Pool noch leer, es bleibt keine HTTP/2-Verbindung zurück.
+        pool._http2 = False  # noqa: SLF001  # pylint: disable=protected-access
+
+
 def _harden(client: Client) -> Client:
-    """Den httpx-Transport jeder Sub-Session des Clients gegen tote Keep-Alive-
-    Verbindungen absichern. Greift auf das vom supabase-py intern gebaute
+    """Den httpx-Transport jeder Sub-Session des Clients absichern: HTTP/2 aus
+    (nicht threadsicher, siehe ``_http2_abschalten``) und Retry gegen tote
+    Keep-Alive-Verbindungen. Greift auf das vom supabase-py intern gebaute
     httpx.Client zu (postgrest/auth/storage/functions haben je eine eigene)."""
     sessions = [
         getattr(getattr(client, attr, None), "session", None)
@@ -104,6 +137,7 @@ def _harden(client: Client) -> Client:
         if transport is not None and not isinstance(
             transport, _ReconnectingTransport
         ):
+            _http2_abschalten(transport)
             # supabase-py exponiert kein öffentliches Transport-API; der interne
             # httpx-Client wird nach Konstruktion gehärtet.
             session._transport = _ReconnectingTransport(transport)  # noqa: SLF001  # pylint: disable=protected-access
