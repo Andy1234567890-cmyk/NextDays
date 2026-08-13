@@ -213,6 +213,36 @@ def has_permission(role: UserRole | None, stored: object, perm: Permission) -> b
     return perm in effective_permissions(role, stored)
 
 
+def load_permission(
+    service_client: object, user_id: str | None, perm: Permission
+) -> bool:
+    """EINE Berechtigung eines Nutzers gegen die DB prüfen, fail-closed.
+
+    Die Rolle kommt aus `users`, nicht aus dem JWT: ein entzogenes Recht wirkt
+    sonst erst beim nächsten Token (Wurzel 7). Ohne Client, ohne Nutzer oder
+    ohne Treffer wird verneint — ein unbekannter Zustand darf nie Zugriff geben.
+
+    Für die Gast-/Betrags-Maskierung gibt es `guest_masking.load_guest_mask`;
+    dieser Helfer ist für einzelne, nicht-maskierende Rechte (etwa
+    PM_VIEW_NOTES), die sonst jeder Slice erneut aus `users` zusammensucht.
+    """
+    if service_client is None or not user_id:
+        return False
+    res = (
+        service_client.table("users")  # type: ignore[attr-defined]
+        .select("role, permissions")
+        .eq("id", user_id)
+        .limit(1)
+        .execute()
+    )
+    row = res.data[0] if res.data else {}
+    try:
+        role = UserRole(row["role"]) if row.get("role") else None
+    except ValueError:
+        role = None
+    return has_permission(role, row.get("permissions"), perm)
+
+
 def has_pm_access(role: UserRole | None, stored: object) -> bool:
     """Darf der Nutzer überhaupt ins PM-Modul (Dach-Recht ACCESS_PM_FEATURES)?
 

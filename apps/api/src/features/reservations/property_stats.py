@@ -24,8 +24,10 @@ from .schemas import (
     StatSeries,
 )
 
-# Wie viele Vergleichsperioden die KPI-Detailseite zeigt (4 davor).
-_COMPARE_PERIODS = 4
+# Wie viele Vergleichsperioden die KPI-Detailseite zeigt (4 davor). Öffentlich,
+# weil der Lesepfad daraus ableitet, wie weit `created_at` zurück geladen werden
+# muss — sonst stünden die Vergleichswerte still auf 0 (reads._stats_untergrenze).
+COMPARE_PERIODS = 4
 
 # Deutscher Kurz-Monat für Perioden-Label „10 Mai – 8 Jun".
 _MONTHS_DE = [
@@ -306,7 +308,7 @@ def compute_metric_detail(
     periods: list[StatComparePeriod] = []
     breakout: list[list[float]] = [[round(v, 2) for v in cur_daily]]
     lo, hi = date_from, date_to
-    for _ in range(_COMPARE_PERIODS):
+    for _ in range(COMPARE_PERIODS):
         hi = lo - timedelta(days=1)
         lo = hi - timedelta(days=span - 1)
         p_daily = _daily_series(rows, fn, lo, hi)

@@ -16,10 +16,11 @@ from supabase import Client
 
 from src.core.dates import merge_day_ranges
 from src.core.einheiten import AVAILABILITY_CONFLICT, je_einheit
-from src.core.einheiten_verfuegbar import freie_einheiten_spannen
+from src.core.einheiten_verfuegbar import einheiten_zahl, freie_einheiten_spannen
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import fetch_all_rows
+from src.features.auth.guest_masking import load_guest_mask
 from src.features.auth.owner_scope import is_owner, owner_property_ids
 from src.jobs.queue import try_enqueue_ari
 
@@ -34,6 +35,8 @@ from .schemas import (
     BulkEditResult,
     DateRange,
     DayAvailability,
+    FreieEinheitenResponse,
+    FreieEinheitenSpanne,
     MultiRestrictionRowsRequest,
     PriceOverrideRequest,
     RestrictionRow,
@@ -90,6 +93,51 @@ def _default_stop_sell_scope(row: dict) -> None:
     rückwärtskompatibel (all = alle Kanäle, wie bisher)."""
     row.setdefault("scope", "all")
     row.setdefault("channels", [])
+
+
+def _ohne_preise(days: list[DayAvailability]) -> list[DayAvailability]:
+    """Geldwerte aus den Tagen entfernen (Verfügbarkeit/Min-Stay bleiben).
+
+    `price_source="none"` statt des echten Ursprungs: sonst verriete das Feld,
+    dass es einen Preis GIBT und woher er stammt — für eine Rolle ohne
+    Betrags-Recht wäre das dieselbe Information einen Schritt später.
+    """
+    return [
+        d.model_copy(
+            update={"price": None, "price_source": "none", "price_factors": None}
+        )
+        for d in days
+    ]
+
+
+def _spannen_ohne_stop_sell(
+    spannen: list[tuple[date, date, int]], gestoppt: set[date]
+) -> list[tuple[date, date, int]]:
+    """Stop-Sell-Tage auf 0 freie Einheiten setzen und Spannen neu bilden.
+
+    Ein gestoppter Tag ist unverkäuflich, egal wie viele Einheiten der Kalender
+    freihat. Die Spannen werden dabei aufgebrochen und wieder zusammengefasst,
+    damit gleich bleibende Nachbartage EINE Spanne bilden — der ARI-Push setzt
+    je Spanne einen Range-Call ab, unnötig zerschnittene Spannen kosten Calls.
+    """
+    tage: list[tuple[date, int]] = []
+    for von, bis, frei in spannen:
+        tag = von
+        while tag <= bis:
+            tage.append((tag, 0 if tag in gestoppt else frei))
+            tag += timedelta(days=1)
+    if not tage:
+        return []
+    out: list[tuple[date, date, int]] = []
+    start, letzter_wert = tage[0][0], tage[0][1]
+    vorheriger = tage[0][0]
+    for tag, wert in tage[1:]:
+        if wert != letzter_wert:
+            out.append((start, vorheriger, letzter_wert))
+            start, letzter_wert = tag, wert
+        vorheriger = tag
+    out.append((start, vorheriger, letzter_wert))
+    return out
 
 
 class CalendarError(Exception):
@@ -170,21 +218,27 @@ class CalendarService:
         if not res:
             raise CalendarError("Objekt nicht gefunden.", status_code=404)
 
-    @staticmethod
-    def _strip_prices_for_owner(
-        ctx: AuthContext, days: list[DayAvailability]
+    def _darf_preise_sehen(self, ctx: AuthContext) -> bool:
+        """Betrags-Recht aus der DB (Rolle + effektive Permissions), fail-closed.
+
+        Früher hing das allein an `is_owner(ctx)` — damit sah JEDE andere Rolle
+        die vollen Tagespreise, auch `staff` und `cleaner`, die laut §4.3 keinen
+        Finanz-/Vertriebseinblick haben. `load_guest_mask` ist dieselbe Quelle,
+        die der reservations-Slice für Beträge nutzt (PM_BOOKING_TOTAL, von
+        HIDE_PRICES überstimmbar) und liest die Rolle aus der DB statt aus dem
+        evtl. veralteten JWT (Wurzel 7).
+        """
+        return load_guest_mask(self._client, ctx.user_id).amounts
+
+    def _strip_prices(
+        self, ctx: AuthContext, days: list[DayAvailability]
     ) -> list[DayAvailability]:
-        """Eigentümer haben kein Preis-Recht (§4.2, kein VIEW_GUEST_FULL) — die
-        Tagespreise/Preisfaktoren werden für sie entfernt (Verfügbarkeit +
-        Min-Stay + Belegung bleiben sichtbar)."""
-        if not is_owner(ctx):
+        """Tagespreise/Preisfaktoren entfernen, wenn die Rolle kein Betrags-Recht
+        hat (§4.2 owner, §4.3 staff/cleaner). Verfügbarkeit, Min-Stay und
+        Belegung bleiben sichtbar — nur der Geldwert fällt weg."""
+        if self._darf_preise_sehen(ctx):
             return days
-        return [
-            d.model_copy(
-                update={"price": None, "price_source": "none", "price_factors": None}
-            )
-            for d in days
-        ]
+        return _ohne_preise(days)
 
     def _resolver(self) -> "PricingResolver":
         """Zentraler Preis-Resolver (eine Preis-Wahrheit für Kalender + Quote)."""
@@ -205,7 +259,7 @@ class CalendarService:
         """
         self._require_own_property(ctx, property_id)
         days = self._days_for(property_id, rng)
-        return self._strip_prices_for_owner(ctx, days)
+        return self._strip_prices(ctx, days)
 
     def _days_for(self, property_id: str, rng: DateRange) -> list[DayAvailability]:
         """Tagesstatus + Preis + Min-Stay OHNE Scope-Prüfung — interner Helfer für
@@ -354,6 +408,9 @@ class CalendarService:
         # 1 Query: Stop-Sells aller Objekte im Zeitraum.
         stop_by_pid = self._list_stop_sell_bulk(pids, rng)
 
+        # EINMAL laden, nicht je Objekt: die Maske ist eine DB-Abfrage und für
+        # alle Objekte dieselbe (sie hängt am Nutzer, nicht am Objekt).
+        darf_preise = self._darf_preise_sehen(ctx)
         items: list[BoardProperty] = []
         for pid in pids:
             effective = {d.date.isoformat(): d for d in prices.get(pid, [])}
@@ -363,9 +420,10 @@ class CalendarService:
             items.append(
                 BoardProperty(
                     property_id=pid,
-                    # Owner sehen keine Preise — dann auch keine Währung nötig.
-                    currency=None if is_owner(ctx) else currency_by_pid.get(pid),
-                    days=self._strip_prices_for_owner(ctx, days),
+                    # Ohne Preis-Recht auch keine Währung — ein Währungslabel
+                    # ohne Betrag ist ein Rest, der nichts aussagt.
+                    currency=currency_by_pid.get(pid) if darf_preise else None,
+                    days=days if darf_preise else _ohne_preise(days),
                     stop_sell=stop_by_pid.get(pid, []),
                 )
             )
@@ -459,6 +517,60 @@ class CalendarService:
             available=not conflicts,
             conflicting_days=conflicts,
         )
+
+    def freie_einheiten(
+        self, ctx: AuthContext, property_id: str, rng: DateRange
+    ) -> FreieEinheitenResponse:
+        """Freie Einheiten je Zeitraum als ZAHL, tenant-/owner-gescoped.
+
+        `core.einheiten_verfuegbar.freie_einheiten_spannen` ist eine reine
+        Rechenfunktion für den ARI-Push: sie nimmt eine `tenant_id` entgegen,
+        prüft aber weder Kontext noch Rolle noch Objekt-Zuordnung — direkt
+        aufgerufen ließe sie sich mit einer geratenen `property_id` fremd
+        auslesen (Wurzel 3). Diese Methode ist der gescopete Weg dorthin.
+
+        Zusätzlich wird der STOP-SELL eingerechnet, den die Kernfunktion nicht
+        kennt: er lebt in einer eigenen Tabelle und taucht in `availability`
+        nicht auf, sperrt den Tag aber hart (dieselbe Lücke, die
+        `check_availability` für die 0/1-Sicht schließt). Ohne diesen Schritt
+        meldete der Reader freie Einheiten an einem Tag, der überall gesperrt
+        ist — und der ARI-Push machte daraus eine verkäufliche Nacht.
+        """
+        self._require_own_property(ctx, property_id)
+        if not ctx.tenant_id:
+            raise CalendarError("Kein Tenant im Konto.", status_code=400)
+        # `bis` ist bei freie_einheiten_spannen INKLUSIV, DateRange.end exklusiv.
+        letzter_tag = rng.end - timedelta(days=1)
+        gesamt = einheiten_zahl(self._db(), ctx.tenant_id, property_id)
+        roh = freie_einheiten_spannen(
+            self._db(), ctx.tenant_id, property_id, rng.start, letzter_tag
+        )
+        gestoppt = self._stop_sell_tage(property_id, rng)
+        spannen = [
+            FreieEinheitenSpanne(von=v, bis=b, frei=f, gesamt=gesamt)
+            for v, b, f in _spannen_ohne_stop_sell(roh, gestoppt)
+        ]
+        return FreieEinheitenResponse(
+            property_id=property_id, gesamt=gesamt, spannen=spannen
+        )
+
+    def _stop_sell_tage(self, property_id: str, rng: DateRange) -> set[date]:
+        """Objekt-weite Stop-Sell-Tage im Zeitraum (ohne plan-genaue Stopps).
+
+        Nur `rate_plan_id is null`: ein Stopp für EINEN Rate-Plan schließt den
+        Einheiten-Typ nicht — die anderen Pläne bleiben verkäuflich.
+        """
+        rows = (
+            self._db()
+            .table("stop_sell")
+            .select("date")
+            .eq("property_id", property_id)
+            .is_("rate_plan_id", "null")
+            .gte("date", rng.start.isoformat())
+            .lt("date", rng.end.isoformat())
+            .execute()
+        ).data or []
+        return {date.fromisoformat(str(r["date"])[:10]) for r in rows}
 
     def block(
         self,
@@ -1085,10 +1197,10 @@ class CalendarService:
         self, ctx: AuthContext, property_id: str, rng: DateRange
     ) -> list[dict[str, object]]:
         self._require_own_property(ctx, property_id)
-        # Eigentümer haben kein Preis-Recht (§4.2) — Saisonpreise bestehen NUR aus
-        # Preisen, daher für Owner leer (die anderen Kalender-Reads maskieren die
-        # Tagespreise über _strip_prices_for_owner; hier gibt es nichts anderes).
-        if is_owner(ctx):
+        # Ohne Betrags-Recht leer (§4.2 owner, §4.3 staff/cleaner): Saisonpreise
+        # bestehen AUSSCHLIESSLICH aus Preisen — anders als die Tagesreihe bleibt
+        # hier nach dem Maskieren nichts übrig, das man zeigen könnte.
+        if not self._darf_preise_sehen(ctx):
             return []
         res = (
             self._db()

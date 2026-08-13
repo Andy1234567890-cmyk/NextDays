@@ -52,6 +52,8 @@ from .features.host_profiles.router import router as host_profiles_router
 from .features.inbox import scheduler as inbox_scheduler
 from .features.inbox.router import router as inbox_router
 from .features.login_devices.router import router as login_devices_router
+from .features.mcp.router import discovery_router as mcp_discovery_router
+from .features.mcp.router import router as mcp_router
 from .features.media.router import router as media_router
 from .features.newsletter.router import router as newsletter_router
 from .features.notification_settings.router import (
@@ -122,6 +124,7 @@ _SLICE_ROUTERS = [
     host_profiles_router,
     inbox_router,
     login_devices_router,
+    mcp_router,
     notification_settings_router,
     privacy_settings_router,
     payments_router,
@@ -347,6 +350,12 @@ def create_app() -> FastAPI:
     for r in _SLICE_ROUTERS:
         api_v1.include_router(r)
     app.include_router(api_v1)
+
+    # OAuth-Discovery des MCP-Connectors: MUSS auf der Domain-Wurzel liegen.
+    # Clients (claude.ai) suchen `/.well-known/oauth-protected-resource`, nicht
+    # `/api/v1/.well-known/...` — unter dem Präfix fände die Erkennung nichts
+    # und die Verbindung schlüge mit „Couldn't reach the MCP server" fehl.
+    app.include_router(mcp_discovery_router)
 
     @app.get("/health", tags=["meta"])
     def health() -> dict[str, str]:

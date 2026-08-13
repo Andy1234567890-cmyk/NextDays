@@ -8,6 +8,15 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 from src.core.security import AuthContext
+from src.core.supabase import fetch_all_rows
+from src.features.auth.granular_permissions import Permission, load_permission
+from src.features.booking_conditions.plan import (
+    erste_zahlung,
+    kaution,
+    kondition_fuer,
+    restzahlung_faellig_am,
+    storno_regeln,
+)
 
 from ._base import (
     GuestMask,
@@ -19,11 +28,12 @@ from ._base import (
     load_guest_mask,
 )
 from .property_stats import (
-    DETAIL_METRICS as _DETAIL_METRICS,
-)
-from .property_stats import (
+    COMPARE_PERIODS,
     compute_metric_detail,
     compute_property_stats,
+)
+from .property_stats import (
+    DETAIL_METRICS as _DETAIL_METRICS,
 )
 from .schemas import (
     DashboardEntry,
@@ -31,20 +41,104 @@ from .schemas import (
     DashboardResponse,
     PropertyStats,
     QuoteItem,
+    ReservationConditions,
+    ReservationDeposit,
     ReservationDetail,
     ReservationInvoiceInfo,
     ReservationListResponse,
+    ReservationNote,
+    ReservationNoteListResponse,
+    ReservationRefundRule,
+    ReservationTransaction,
     StatMetricDetail,
     TimelineEvent,
     TimelineResponse,
 )
 
+# Obergrenzen (Wurzel 8): jeder unbegrenzte Bereich bekommt einen harten Deckel.
+# `_LIST_MAX_LIMIT` deckelt die explizit angeforderte Seitengröße;
+# `_STATS_MAX_SPAN_DAYS` den Aggregationszeitraum der Kennzahlen — beides sonst
+# ein offener Hebel, über den ein einzelner Aufruf den halben Bestand zieht.
+_LIST_MAX_LIMIT = 500
+_STATS_MAX_SPAN_DAYS = 1830  # 5 Jahre, wie calendar.DateRange.MAX_NIGHTS
+# Dashboard: KPIs vergleichen 30 Tage mit den 30 davor (59 Tage zurück); ein
+# Puffertag deckt Zeitzonen-/Tageswechsel ab.
+_DASHBOARD_RUECKBLICK_TAGE = 60
+# Die „anstehende Anreisen"-Liste der Startseite zeigt nur die nächsten Tage —
+# ohne Deckel geht bei gut gebuchten Betrieben der gesamte Zukunftsbestand raus.
+_DASHBOARD_UPCOMING_MAX = 50
+
+
+def _assert_stats_span(date_from: date, date_to: date) -> None:
+    """Zeitfenster der Kennzahlen prüfen: Richtung UND Länge.
+
+    Die Länge war bisher unbegrenzt — ein Aufruf mit `date_from=1900-01-01`
+    aggregiert über den gesamten Bestand und lädt ihn dafür komplett (Wurzel 8).
+    """
+    if date_to < date_from:
+        raise ReservationError(
+            "date_to muss nach date_from liegen.", status_code=422
+        )
+    if (date_to - date_from).days > _STATS_MAX_SPAN_DAYS:
+        raise ReservationError(
+            f"Zeitraum zu groß (max. {_STATS_MAX_SPAN_DAYS} Tage).",
+            status_code=422,
+        )
+
+
+def _stats_untergrenze(date_from: date, date_to: date) -> str:
+    """Früheste `created_at`-Grenze, ab der Kennzahlen-Zeilen geladen werden.
+
+    Die Aggregation ordnet Zeilen über das BUCHUNGSDATUM (`created_at`) zu, nicht
+    über den Aufenthalt (`property_stats._booked_on`). `compute_metric_detail`
+    bildet bis zu `COMPARE_PERIODS` gleich lange Vergleichsperioden VOR
+    `date_from` — deren Zeilen müssen mitgeladen werden, sonst stünden die
+    Vergleichswerte still auf 0 und jede Veränderungsrate wäre falsch.
+
+    Bewusst NUR eine Untergrenze, keine Obergrenze: `days_booked_ahead` misst die
+    weiteste ZUKÜNFTIGE Anreise (`check_in >= today`) aus Buchungen, die in der
+    Periode entstanden sind. Ein `created_at <= date_to`-Filter wäre dafür
+    unschädlich, ein `check_in`-Fenster dagegen würde die Kennzahl still kappen —
+    daher bleibt die Zukunft offen und nur der unbegrenzte Altbestand fällt weg.
+    """
+    spanne = (date_to - date_from).days + 1
+    return (date_from - timedelta(days=spanne * (COMPARE_PERIODS + 1))).isoformat()
+
 
 class ReadsMixin(ReservationsBase):
     """Lese-Endpunkte des reservations-Slice."""
 
-    def list(self, ctx: AuthContext, property_id: str | None = None) -> ReservationListResponse:
+    def list(
+        self,
+        ctx: AuthContext,
+        property_id: str | None = None,
+        *,
+        date_from: date | None = None,
+        date_to: date | None = None,
+        limit: int | None = None,
+    ) -> ReservationListResponse:
+        """Buchungsliste, tenant-/owner-gescoped und maskiert.
+
+        `date_from`/`date_to` filtern auf `check_in` IN DER DB (nicht erst in
+        Python), damit ein enger Zeitraum nicht erst den gesamten Bestand lädt.
+        Ohne Zeitraum wird über `fetch_all_rows` paginiert: ein ungedeckelter
+        PostgREST-Select liefert STILL nur `PGRST_DB_MAX_ROWS` (1000) Zeilen, und
+        das daraus gebildete `total` wäre eine Falschaussage — der Aufrufer sähe
+        eine plausible Zahl ohne Hinweis auf den Abschnitt (Wurzel 4/5).
+        `limit` deckelt bewusst NACH dem Laden nicht, sondern ersetzt die
+        Paginierung durch einen echten `.limit()`; `total` meldet dann die Zahl
+        der gelieferten Zeilen und `truncated=True` sagt, dass es mehr gibt.
+        """
         tenant_id = self._require_tenant(ctx)
+        if date_from and date_to and date_to < date_from:
+            raise ReservationError(
+                "date_to muss nach date_from liegen.", status_code=422
+            )
+        if limit is not None and (limit < 1 or limit > _LIST_MAX_LIMIT):
+            raise ReservationError(
+                f"limit muss zwischen 1 und {_LIST_MAX_LIMIT} liegen.",
+                status_code=422,
+            )
         # Owner-Scope (§4.2): Eigentümer sehen NUR Buchungen ihrer zugeordneten
         # Objekte. Leere Zuordnung → leere Liste (fail-closed).
         owner_pids = self._owner_scope_pids(ctx)
@@ -68,10 +162,26 @@ class ReadsMixin(ReservationsBase):
             query = query.in_("property_id", scoped)
         elif property_id:
             query = query.eq("property_id", property_id)
-        res = query.order("check_in", desc=True).execute()
+        if date_from:
+            query = query.gte("check_in", date_from.isoformat())
+        if date_to:
+            query = query.lte("check_in", date_to.isoformat())
+        # Stabile Sortierung ist Voraussetzung für fetch_all_rows: check_in ist
+        # nicht eindeutig, daher id als Tiebreaker — sonst kann eine Zeile über
+        # Seitengrenzen doppelt oder gar nicht erscheinen.
+        query = query.order("check_in", desc=True).order("id", desc=True)
+        truncated = False
+        if limit is not None:
+            rows = query.limit(limit + 1).execute().data or []
+            truncated = len(rows) > limit
+            rows = rows[:limit]
+        else:
+            rows = fetch_all_rows(query)
         mask = load_guest_mask(self._client, ctx.user_id)
-        items = [self._row(r, mask) for r in (res.data or [])]
-        return ReservationListResponse(items=items, total=len(items))
+        items = [self._row(r, mask) for r in rows]
+        return ReservationListResponse(
+            items=items, total=len(items), truncated=truncated
+        )
 
     def dashboard(self, ctx: AuthContext) -> DashboardResponse:
         """Startseiten-Kennzahlen aus echten Reservierungen (kein Fallback).
@@ -94,7 +204,19 @@ class ReadsMixin(ReservationsBase):
         )
         if owner_pids is not None:
             base_rows = base_rows.in_("property_id", owner_pids)
-        rows = base_rows.execute().data or []
+        # Nur nach UNTEN deckeln: die KPIs reichen 59 Tage zurück (Vorperiode),
+        # die „anstehend"-Liste dagegen beliebig weit in die Zukunft — eine
+        # Obergrenze würde sie still abschneiden. Ohne die Untergrenze lud die
+        # Startseite den GESAMTEN Buchungsbestand des Tenants und traf dabei den
+        # stillen 1000-Zeilen-Cap von PostgREST.
+        rows = fetch_all_rows(
+            base_rows.gte(
+                "check_out",
+                (date.today() - timedelta(days=_DASHBOARD_RUECKBLICK_TAGE)).isoformat(),
+            )
+            .order("check_in", desc=True)
+            .order("id", desc=True)
+        )
 
         # Objekttitel je property_id nachladen (Liste zeigt den Objektnamen).
         prop_ids = sorted({r["property_id"] for r in rows if r.get("property_id")})
@@ -150,7 +272,7 @@ class ReadsMixin(ReservationsBase):
         upcoming = sorted(
             (entry(r) for r in active if _as_date(r["check_in"]) > today),
             key=lambda e: e.check_in,
-        )
+        )[:_DASHBOARD_UPCOMING_MAX]
 
         # KPIs: laufende 30-Tage-Periode (inkl. heute) vs. die 30 Tage davor.
         cur_start = today - timedelta(days=29)  # 30 Tage inkl. heute
@@ -236,10 +358,7 @@ class ReadsMixin(ReservationsBase):
         → 404 (§4.2). Load und Scope bleiben zusammen (Wurzel 3)."""
         tenant_id = self._require_tenant(ctx)
         _require_uuid(property_id)
-        if date_to < date_from:
-            raise ReservationError(
-                "date_to muss nach date_from liegen.", status_code=422
-            )
+        _assert_stats_span(date_from, date_to)
 
         prop = (
             self._db()
@@ -256,14 +375,16 @@ class ReadsMixin(ReservationsBase):
         if owner_pids is not None and property_id not in owner_pids:
             raise ReservationError("Objekt nicht gefunden.", status_code=404)
 
-        rows = (
+        rows = fetch_all_rows(
             self._db()
             .table("reservations")
             .select("*")
             .eq("tenant_id", tenant_id)
             .eq("property_id", property_id)
-            .execute()
-        ).data or []
+            .gte("created_at", _stats_untergrenze(date_from, date_to))
+            .order("created_at", desc=True)
+            .order("id", desc=True)
+        )
         mask = load_guest_mask(self._client, ctx.user_id)
         return prop[0].get("title") or "", rows, mask.amounts
 
@@ -337,10 +458,7 @@ class ReadsMixin(ReservationsBase):
         Rückgabe: (rows, show_amounts, property_count). Leerer Owner-Scope oder
         eine Auswahl außerhalb des Scopes → (leer, …, 0)."""
         tenant_id = self._require_tenant(ctx)
-        if date_to < date_from:
-            raise ReservationError(
-                "date_to muss nach date_from liegen.", status_code=422
-            )
+        _assert_stats_span(date_from, date_to)
         # Fehl-IDs in der Auswahl → 404-Klasse „nicht gefunden" (kein 500 an die DB).
         for pid in property_ids or []:
             _require_uuid(pid)
@@ -362,14 +480,16 @@ class ReadsMixin(ReservationsBase):
         if not allowed:
             return [], load_guest_mask(self._client, ctx.user_id).amounts, 0
 
-        rows = (
+        rows = fetch_all_rows(
             self._db()
             .table("reservations")
             .select("*")
             .eq("tenant_id", tenant_id)
             .in_("property_id", sorted(allowed))
-            .execute()
-        ).data or []
+            .gte("created_at", _stats_untergrenze(date_from, date_to))
+            .order("created_at", desc=True)
+            .order("id", desc=True)
+        )
         mask = load_guest_mask(self._client, ctx.user_id)
         return rows, mask.amounts, len(allowed)
 
@@ -554,7 +674,160 @@ class ReadsMixin(ReservationsBase):
             guest_language=r.get("guest_language"),
             guest_country=r.get("guest_country"),
             created_at=r.get("created_at"),
+            booked_at=r.get("booked_at"),
+            archived_at=r.get("archived_at"),
+            # Konditionen des Portals (0384) — Geldbeträge stecken in der
+            # Storno-Staffel, deshalb folgt sie der Betrags-Maskierung.
+            ota_cancel_penalties=(
+                r.get("ota_cancel_penalties") if mask.amounts else None
+            ),
+            ota_notes=r.get("ota_notes"),
+            ota_details=r.get("ota_details"),
+            message_thread_id=self._message_thread_id(tenant_id, r),
         )
+
+    def _message_thread_id(self, tenant_id: str, r: dict) -> str | None:
+        """Thread-Kennung dieser Buchung im Posteingang — oder None.
+
+        Zwei Herkünfte, in dieser Reihenfolge:
+          1) OTA-Buchung: der Posteingang führt Threads über `channex_booking`,
+             und die Reservierung trägt deren ID (`source_channex_booking_id`).
+          2) Übernommener Bestand (0382): der Verlauf liegt je Buchung in
+             `reservation_nachricht_uebernahme`; der Posteingang adressiert ihn
+             als `ue:<reservation_id>`.
+
+        None heisst „zu dieser Buchung gibt es keine Korrespondenz" — die UI
+        zeigt dann keinen Nachrichten-Knopf, statt auf eine leere Ansicht zu
+        verlinken (Wurzel 4: kein Element ohne Wirkung).
+        """
+        # Der Posteingang adressiert einen Thread über die ID UNSERER
+        # Staging-Zeile (`channex_booking.id`). Die Buchung trägt dagegen die
+        # ID, die CHANNEX der Buchung gegeben hat (`channex_booking_id`) —
+        # beides sind UUIDs, weshalb ein Verwechseln nicht auffällt: der Link
+        # führte auf eine ID, die der Posteingang nicht kennt.
+        channex_id = r.get("source_channex_booking_id")
+        if channex_id:
+            thread = (
+                self._db()
+                .table("channex_booking")
+                .select("id")
+                .eq("tenant_id", tenant_id)
+                .eq("channex_booking_id", str(channex_id))
+                .limit(1)
+                .execute()
+            ).data
+            if thread:
+                return str(thread[0]["id"])
+        vorhanden = (
+            self._db()
+            .table("reservation_nachricht_uebernahme")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("reservation_id", r["id"])
+            .limit(1)
+            .execute()
+        ).data
+        return f"ue:{r['id']}" if vorhanden else None
+
+    def conditions(
+        self, ctx: AuthContext, reservation_id: str
+    ) -> ReservationConditions:
+        """Buchungskonditionen + Zahlungsstand einer Buchung.
+
+        Der Zahlungsplan wird NICHT hier gerechnet, sondern über den geteilten
+        Helfer `booking_conditions.plan` — dieselbe Rechnung, die der Gast beim
+        Checkout gesehen hat und die der Einzug vollzieht. Eine zweite Rechnung
+        an dieser Stelle wäre genau die Abweichung, die dem Gast „30 % jetzt"
+        zeigt und den vollen Betrag zieht.
+
+        Ohne gepflegte Kondition bleiben die Plan-Felder None (es gilt „alles
+        sofort fällig"), die Transaktionen kommen trotzdem — sie sind Tatsachen
+        und hängen an keiner Kondition. Beträge folgen der Betrags-Maskierung:
+        ohne Finanzeinblick (§4.3) liefert der Endpunkt gar keine Zahlen.
+        """
+        tenant_id = self._require_tenant(ctx)
+        _require_uuid(reservation_id)
+        # Scope wie im Detail-Pfad: Tenant UND (falls Eigentümer) Objektbindung.
+        # Ein eigener {id}-Endpunkt muss denselben Scope prüfen wie die Liste
+        # (Wurzel 9), sonst liest ein Eigentümer fremde Zahlungen.
+        r = self._load_owned(tenant_id, reservation_id)
+        owner_pids = self._owner_scope_pids(ctx)
+        if owner_pids is not None and r.get("property_id") not in owner_pids:
+            raise ReservationError("Reservierung nicht gefunden.", status_code=404)
+
+        mask = load_guest_mask(self._client, ctx.user_id)
+        if not mask.amounts:
+            return ReservationConditions()
+
+        total = float(r.get("total_amount") or 0)
+        currency = r.get("currency") or ""
+        db = self._db()
+
+        condition = kondition_fuer(
+            db, tenant_id=tenant_id, rate_plan_id=r.get("rate_plan_id")
+        )
+        antwort = ReservationConditions(currency=currency)
+        if condition is not None:
+            jetzt = erste_zahlung(condition, total)
+            rest = round(total - jetzt, 2)
+            faellig = (
+                restzahlung_faellig_am(condition, _as_date(r["check_in"]))
+                if rest > 0
+                else None
+            )
+            kaution_daten = kaution(condition, total)
+            antwort = ReservationConditions(
+                condition_name=condition.get("internal_name"),
+                installments=int(condition.get("installments") or 1),
+                due_now=jetzt,
+                due_later=max(rest, 0.0),
+                balance_due_date=faellig,
+                cancellation_mode=condition.get("cancellation_mode"),
+                refund_rules=[
+                    ReservationRefundRule(**regel)
+                    for regel in storno_regeln(db, str(condition["id"]))
+                ],
+                deposit=(
+                    ReservationDeposit(
+                        **kaution_daten,
+                        preauth_days_before_arrival=condition.get(
+                            "preauth_days_before_arrival"
+                        ),
+                        release_days_after_departure=condition.get(
+                            "release_days_after_departure"
+                        ),
+                    )
+                    if kaution_daten
+                    else None
+                ),
+                currency=currency,
+            )
+
+        # `payments` trägt selbst keine tenant_id (0008: Scope über die
+        # Reservierung). Die ID oben ist bereits tenant-geprüft geladen, damit
+        # ist der Filter auf reservation_id der vollständige Scope — ein
+        # `eq("tenant_id", …)` hier wäre ein Fehler auf eine Spalte, die es
+        # nicht gibt.
+        zahlungen = (
+            db.table("payments")
+            .select("id, amount, currency, type, status, due_at, created_at")
+            .eq("reservation_id", reservation_id)
+            .order("created_at", desc=False)
+            .execute()
+        ).data or []
+        antwort.transactions = [
+            ReservationTransaction(
+                id=str(p["id"]),
+                at=str(p.get("created_at") or ""),
+                amount=mask.amount(float(p.get("amount") or 0)),
+                currency=p.get("currency") or currency,
+                status=str(p.get("status") or ""),
+                type=str(p.get("type") or ""),
+                due_at=p.get("due_at"),
+            )
+            for p in zahlungen
+        ]
+        return antwort
 
     def timeline(self, ctx: AuthContext, reservation_id: str) -> TimelineResponse:
         """Chronologische Ereignis-Zeitleiste einer Buchung (Zeitleiste).
@@ -782,6 +1055,61 @@ class ReadsMixin(ReservationsBase):
         ).data
         photo = photos[0].get("url") if photos else None
         return title, photo
+
+    def _scoped_reservation(self, ctx: AuthContext, reservation_id: str) -> dict:
+        """Reservierung tenant- UND owner-gescoped laden (Wurzel 9).
+
+        `_load_owned` prüft nur den Tenant. Für Sub-Ressourcen (Notizen) muss
+        derselbe Scope gelten wie für den List-/Detail-Pfad, sonst liest ein
+        Eigentümer über die Notiz-Route Buchungen fremder Objekte.
+        """
+        tenant_id = self._require_tenant(ctx)
+        row = self._load_owned(tenant_id, reservation_id)
+        owner_pids = self._owner_scope_pids(ctx)
+        if owner_pids is not None and row.get("property_id") not in owner_pids:
+            raise ReservationError("Reservierung nicht gefunden.", status_code=404)
+        return row
+
+    def list_notes(
+        self, ctx: AuthContext, reservation_id: str
+    ) -> ReservationNoteListResponse:
+        """Notiz-Verlauf einer Buchung, neueste zuerst (0384).
+
+        Verlangt PM_VIEW_NOTES: eine interne Notiz ist Freitext des Betriebs
+        über einen Gast (Beschwerden, Zahlungsmoral) und gehört nicht zu den
+        Daten, die jede Rolle mit Kalenderzugriff sehen darf. Fehlt das Recht,
+        ist die Liste leer statt 403 — die Buchung selbst bleibt ja sichtbar,
+        nur dieser Abschnitt nicht.
+        """
+        self._scoped_reservation(ctx, reservation_id)
+        if not load_permission(self._client, ctx.user_id, Permission.PM_VIEW_NOTES):
+            return ReservationNoteListResponse(items=[], total=0)
+        rows = (
+            self._db()
+            .table("reservation_notes")
+            .select("*")
+            .eq("tenant_id", ctx.tenant_id)
+            .eq("reservation_id", reservation_id)
+            .order("created_at", desc=True)
+            .execute()
+        ).data or []
+        namen = self._user_names(
+            [r["author_id"] for r in rows if r.get("author_id")]
+        )
+        items = [
+            ReservationNote(
+                id=str(r["id"]),
+                reservation_id=reservation_id,
+                author_id=r.get("author_id"),
+                author_name=namen.get(r.get("author_id")) or None,
+                category=r.get("category"),
+                body=r.get("body") or "",
+                # Leer statt geraten, wenn die Spalte fehlt (Wurzel 5b).
+                created_at=str(r.get("created_at") or ""),
+            )
+            for r in rows
+        ]
+        return ReservationNoteListResponse(items=items, total=len(items))
 
     def _user_names(self, user_ids: list[str]) -> dict[str, str]:
         """full_name je Nutzer-ID (für „Zuständig" an Aufgaben-Events). Leere

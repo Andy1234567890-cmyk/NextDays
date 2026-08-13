@@ -99,6 +99,13 @@ class Settings(BaseSettings):
     # könnte ein einzelner eingeloggter Nutzer erhebliche Kosten verursachen —
     # Wurzel 8 verlangt hier einen eigenen, strengen Bucket.
     rate_limit_ai: str = "20/60"
+    # Der MCP-Connector (0385): `/mcp/token` löst Codes ein und rotiert
+    # Refresh-Token, `/mcp/authorize` holt ein fremdes CIMD-Dokument über einen
+    # ausgehenden Fetch. Beides ist durchprobierbar bzw. verstärkend, gehört
+    # also in einen eigenen strengen Bucket (Wurzel 8) — nicht in den Default.
+    # Der MCP-Endpunkt selbst (`/mcp`, Werkzeugaufrufe) bleibt bewusst im
+    # Default: ein Gespräch macht viele Aufrufe, 20/60 würde es abwürgen.
+    rate_limit_mcp_auth: str = "20/60"
     # AM STRENGSTEN: die 2FA-Verifikationspfade (Wurzel 8). Hier wird ein
     # Geheimnis GEPRUEFT — ein Wiederherstellungscode bzw. ein zweiter Faktor.
     # Der Default-Bucket (300/60) erlaubte 300 Rateversuche je Minute; das ist

@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from src.core.dates import merge_day_ranges
 from src.core.security import AuthContext
+from src.features.auth.granular_permissions import Permission
 from src.features.calendar.schemas import (
     AvailabilityStatus,
     BlockRequest,
@@ -208,8 +209,19 @@ class _FakeDB:
         return _Query(self._store, name)
 
 
+# Alle feingranularen Rechte — für den Standard-Testnutzer (admin) in `users`.
+# Die Preis-Maskierung liest Rolle+Rechte aus der DB (fail-closed), ein Store
+# ohne `users`-Zeile maskierte daher AUCH den Admin.
+_ALLE_RECHTE = [p.value for p in Permission]
+
+
 def _service(**tables: list[dict]) -> tuple[CalendarService, dict]:
     store: dict = dict(tables)
+    # Standard: u1 ist admin mit allen Rechten. Tests, die eine andere Rolle
+    # prüfen, überschreiben `users` per Schlüsselwort.
+    store.setdefault(
+        "users", [{"id": "u1", "role": "admin", "permissions": _ALLE_RECHTE}]
+    )
     return CalendarService(client=_FakeDB(store)), store
 
 
@@ -1249,22 +1261,147 @@ def test_owner_sees_only_assigned_property() -> None:
     assert exc.value.status_code == 404
 
 
-def test_owner_prices_stripped() -> None:
-    svc, _ = _service(
+def _preis_store(rolle: str, rechte: list[str]) -> tuple[CalendarService, dict]:
+    """Objekt p1 mit Basispreis + Override, Nutzer u1 in der gegebenen Rolle."""
+    return _service(
         properties=[{"id": "p1", "tenant_id": "t1"}],
         rate_plans=[{"base_price": 100.0, "min_stay": 2}],
         price_overrides=[{"date": "2026-05-01", "price": 150.0}],
         owner_property_assignments=[
             {"tenant_id": "t1", "user_id": "u1", "property_id": "p1"}
         ],
+        users=[{"id": "u1", "role": rolle, "permissions": rechte}],
     )
+
+
+def test_owner_prices_stripped() -> None:
+    svc, _ = _preis_store("owner", [])
     rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3))
-    # Admin sieht Preise; Owner nicht (kein Preis-Recht §4.2), aber min_stay bleibt.
-    admin_days = svc.get_availability(_ctx(), "p1", rng)
-    assert admin_days[0].price == 150.0
     owner_days = svc.get_availability(_ctx(role="owner"), "p1", rng)
+    # Kein Preis-Recht (§4.2) → keine Geldwerte, aber min_stay bleibt sichtbar.
     assert all(d.price is None and d.price_source == "none" for d in owner_days)
     assert all(d.min_stay == 2 for d in owner_days)
+
+
+def test_admin_sieht_preise() -> None:
+    svc, _ = _preis_store("admin", _ALLE_RECHTE)
+    rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3))
+    assert svc.get_availability(_ctx(), "p1", rng)[0].price == 150.0
+
+
+@pytest.mark.parametrize("rolle", ["staff", "cleaner"])
+def test_staff_und_cleaner_sehen_keine_preise(rolle: str) -> None:
+    """§4.3: kein Finanz-/Vertriebseinblick.
+
+    Die Maskierung hing früher allein an `is_owner(ctx)` — staff und cleaner
+    bekamen deshalb die vollen Tagespreise, obwohl ihnen das Betrags-Recht
+    (PM_BOOKING_TOTAL) fehlt. Ohne diesen Test fällt das nicht auf: die Rolle
+    darf den Kalender ja sehen, nur eben ohne Geldwerte.
+    """
+    svc, _ = _preis_store(rolle, [])
+    rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3))
+    tage = svc.get_availability(_ctx(role=rolle), "p1", rng)
+    assert all(d.price is None and d.price_source == "none" for d in tage)
+    assert all(d.min_stay == 2 for d in tage)
+    # Saisonpreise bestehen NUR aus Preisen → leer statt maskiert.
+    assert svc.list_season_prices(_ctx(role=rolle), "p1", rng) == []
+
+
+def test_staff_board_ohne_preis_und_waehrung() -> None:
+    """Ohne Betrags-Recht darf auch kein Währungslabel übrig bleiben."""
+    svc, _ = _service(
+        properties=[{"id": "p1", "tenant_id": "t1"}],
+        rate_plans=[{"property_id": "p1", "base_price": 100.0, "currency": "EUR"}],
+        users=[{"id": "u1", "role": "staff", "permissions": []}],
+    )
+    rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2))
+    board = svc.get_board(_ctx(role="staff"), ["p1"], rng)
+    assert board.items[0].currency is None
+    assert all(d.price is None for d in board.items[0].days)
+
+
+# --- Freie Einheiten als ZAHL (0265) -----------------------------------------
+
+def test_freie_einheiten_zaehlt_je_einheit() -> None:
+    """Drei Einheiten, eine davon an einem Tag gebucht → 2 frei, nicht 0."""
+    svc, _ = _service(
+        properties=[{"id": "p1", "tenant_id": "t1"}],
+        property_units=[
+            {"id": "e1", "tenant_id": "t1", "property_id": "p1", "position": 1},
+            {"id": "e2", "tenant_id": "t1", "property_id": "p1", "position": 2},
+            {"id": "e3", "tenant_id": "t1", "property_id": "p1", "position": 3},
+        ],
+        availability=[
+            {"property_id": "p1", "unit_id": "e1", "date": "2026-05-02",
+             "status": "booked"},
+        ],
+    )
+    rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 4))
+    out = svc.freie_einheiten(_ctx(), "p1", rng)
+    assert out.gesamt == 3
+    # 01.: 3 frei | 02.: 2 frei | 03.: 3 frei → drei Spannen.
+    assert [(s.von, s.bis, s.frei) for s in out.spannen] == [
+        (date(2026, 5, 1), date(2026, 5, 1), 3),
+        (date(2026, 5, 2), date(2026, 5, 2), 2),
+        (date(2026, 5, 3), date(2026, 5, 3), 3),
+    ]
+
+
+def test_freie_einheiten_stop_sell_setzt_auf_null() -> None:
+    """Stop-Sell lebt in einer eigenen Tabelle und fehlt in `availability`.
+
+    Ohne ihn meldete der Reader freie Einheiten an einem Tag, der überall
+    gesperrt ist — und der ARI-Push machte daraus eine verkäufliche Nacht.
+    """
+    svc, _ = _service(
+        properties=[{"id": "p1", "tenant_id": "t1"}],
+        property_units=[
+            {"id": "e1", "tenant_id": "t1", "property_id": "p1", "position": 1},
+            {"id": "e2", "tenant_id": "t1", "property_id": "p1", "position": 2},
+        ],
+        stop_sell=[{"property_id": "p1", "date": "2026-05-02", "rate_plan_id": None}],
+    )
+    rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 4))
+    out = svc.freie_einheiten(_ctx(), "p1", rng)
+    frei_je_tag = {s.von: s.frei for s in out.spannen}
+    assert frei_je_tag[date(2026, 5, 2)] == 0
+    # Nachbartage bleiben verkäuflich.
+    assert frei_je_tag[date(2026, 5, 1)] == 2
+
+
+def test_freie_einheiten_ohne_einheiten_zeile_faellt_auf_eins() -> None:
+    """Objekt ohne `property_units`-Zeile ist ein Datenfehler — er darf das
+    Objekt aber nicht kontolos aus dem Verkauf nehmen (Stückzahl 1)."""
+    svc, _ = _service(properties=[{"id": "p1", "tenant_id": "t1"}])
+    rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3))
+    out = svc.freie_einheiten(_ctx(), "p1", rng)
+    assert out.gesamt == 1
+    assert all(s.frei == 1 for s in out.spannen)
+
+
+def test_freie_einheiten_fremdes_objekt_404() -> None:
+    """Wurzel 3: die Kernfunktion prüft keinen Scope — diese Methode schon."""
+    svc, _ = _service(properties=[{"id": "p1", "tenant_id": "t1"}])
+    rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3))
+    with pytest.raises(CalendarError) as exc:
+        svc.freie_einheiten(_ctx(), "fremd", rng)
+    assert exc.value.status_code == 404
+
+
+def test_freie_einheiten_owner_scope() -> None:
+    """Owner sieht nur zugeordnete Objekte (§4.2) — auch hier."""
+    svc, _ = _service(
+        properties=[{"id": "p1", "tenant_id": "t1"}, {"id": "p2", "tenant_id": "t1"}],
+        owner_property_assignments=[
+            {"tenant_id": "t1", "user_id": "u1", "property_id": "p1"}
+        ],
+        users=[{"id": "u1", "role": "owner", "permissions": []}],
+    )
+    rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3))
+    svc.freie_einheiten(_ctx(role="owner"), "p1", rng)
+    with pytest.raises(CalendarError) as exc:
+        svc.freie_einheiten(_ctx(role="owner"), "p2", rng)
+    assert exc.value.status_code == 404
 
 
 def test_owner_board_filters_and_strips() -> None:
@@ -1275,6 +1412,7 @@ def test_owner_board_filters_and_strips() -> None:
         owner_property_assignments=[
             {"tenant_id": "t1", "user_id": "u1", "property_id": "p1"}
         ],
+        users=[{"id": "u1", "role": "owner", "permissions": []}],
     )
     rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2))
     board = svc.get_board(_ctx(role="owner"), ["p1", "p2"], rng)

@@ -11,6 +11,7 @@ from src.features.reservations.schemas import (
     GuestContact,
     ReservationChannel,
     ReservationCreate,
+    ReservationNoteCreate,
 )
 from src.features.reservations.service import ReservationError, ReservationsService
 from src.main import create_app
@@ -258,41 +259,62 @@ _FULL_PERMS = [
 _NO_PERMS: list[str] = []
 
 
+class _KettenQuery:
+    """Query-Stub, der JEDE Filter-/Sortiermethode auf sich selbst zurückgibt.
+
+    Bewusst kettenneutral statt fest verdrahteter `select→eq→execute`-Pfade: der
+    Lesepfad hängt je nach Rolle und Parametern unterschiedlich viele Glieder an
+    (`in_`, `gte`, `lte`, `order`, `limit`, `range`). Ein Stub, der nur eine
+    konkrete Kette kennt, liefert bei jeder Query-Änderung still eine leere Liste
+    — der Test schlägt dann fehl, ohne dass am Verhalten etwas falsch wäre.
+
+    `range(von, bis)` bedient `fetch_all_rows`: es schneidet echt zu, damit die
+    Paginierungsschleife terminiert (sonst liefe sie endlos über dieselbe Seite).
+    """
+
+    def __init__(self, rows: list[dict]) -> None:
+        self._rows = rows
+
+    def __getattr__(self, _name: str):  # noqa: ANN204 - Stub gibt sich selbst
+        return lambda *_a, **_k: self
+
+    def range(self, von: int, bis: int) -> "_KettenQuery":
+        return _KettenQuery(self._rows[von : bis + 1])
+
+    def limit(self, n: int) -> "_KettenQuery":
+        return _KettenQuery(self._rows[:n])
+
+    def execute(self) -> MagicMock:
+        res = MagicMock()
+        res.data = self._rows
+        return res
+
+
+def _tabellen_db(tabellen: dict[str, list[dict]]) -> MagicMock:
+    """Supabase-Double: je Tabellenname eine feste Zeilenmenge, Kette beliebig."""
+    db = MagicMock(name="supabase")
+    db.table.side_effect = lambda name: MagicMock(
+        **{"select.return_value": _KettenQuery(tabellen.get(name, []))}
+    )
+    return db
+
+
 def _dashboard_db(
     reservations: list[dict], properties: list[dict],
     *, user_role: str = "admin", user_perms: list[str] | None = None,
     owner_pids: list[str] | None = None,
-) -> MagicMock:
-    """Mockt die im dashboard() benutzten Ketten (reservations + properties +
+) -> ReservationsService:
+    """Mockt die im dashboard() benutzten Tabellen (reservations + properties +
     users + owner_property_assignments)."""
-    db = MagicMock(name="supabase")
-
-    def table(name: str) -> MagicMock:
-        t = MagicMock(name=f"table:{name}")
-        if name == "reservations":
-            # Owner-Scope hängt ein .in_(property_id, ...) an → beide Ketten
-            # (mit/ohne in_) auf dieselben Daten zeigen lassen.
-            base = t.select.return_value.eq.return_value
-            base.execute.return_value.data = reservations
-            base.in_.return_value.execute.return_value.data = reservations
-        elif name == "properties":
-            chain = t.select.return_value.eq.return_value.in_.return_value
-            chain.execute.return_value.data = properties
-        elif name == "users":
-            chain = t.select.return_value.eq.return_value.limit.return_value
-            perms = _FULL_PERMS if user_perms is None else user_perms
-            chain.execute.return_value.data = [
-                {"role": user_role, "permissions": perms}
-            ]
-        elif name == "owner_property_assignments":
-            chain = t.select.return_value.eq.return_value.eq.return_value
-            chain.execute.return_value.data = [
-                {"property_id": p} for p in (owner_pids or [])
-            ]
-        return t
-
-    db.table.side_effect = table
-    return ReservationsService(service_client=db)
+    perms = _FULL_PERMS if user_perms is None else user_perms
+    return ReservationsService(service_client=_tabellen_db({
+        "reservations": reservations,
+        "properties": properties,
+        "users": [{"role": user_role, "permissions": perms}],
+        "owner_property_assignments": [
+            {"property_id": p} for p in (owner_pids or [])
+        ],
+    }))
 
 
 def test_dashboard_buckets_and_kpis() -> None:
@@ -400,35 +422,16 @@ def _list_db(
     user_perms: list[str] | None = None,
     owner_pids: list[str] | None = None,
 ) -> ReservationsService:
-    """Mockt die in list() benutzten Ketten (reservations mit guests-Join + users
-    + owner_property_assignments für den Owner-Scope)."""
-    db = MagicMock(name="supabase")
-
-    def table(name: str) -> MagicMock:
-        t = MagicMock(name=f"table:{name}")
-        if name == "users":
-            chain = t.select.return_value.eq.return_value.limit.return_value
-            perms = _FULL_PERMS if user_perms is None else user_perms
-            chain.execute.return_value.data = [
-                {"role": user_role, "permissions": perms}
-            ]
-        elif name == "owner_property_assignments":
-            chain = t.select.return_value.eq.return_value.eq.return_value
-            chain.execute.return_value.data = [
-                {"property_id": p} for p in (owner_pids or [])
-            ]
-        else:
-            # Owner-Pfad hängt .in_() vor .order(); Nicht-Owner nutzt direkt
-            # .order(). Beide Ketten liefern dieselben reservations-Zeilen.
-            base = t.select.return_value.eq.return_value
-            base.order.return_value.execute.return_value.data = reservations
-            base.in_.return_value.order.return_value.execute.return_value.data = (
-                reservations
-            )
-        return t
-
-    db.table.side_effect = table
-    return ReservationsService(service_client=db)
+    """Mockt die in list() benutzten Tabellen (reservations mit guests-Join +
+    users + owner_property_assignments für den Owner-Scope)."""
+    perms = _FULL_PERMS if user_perms is None else user_perms
+    return ReservationsService(service_client=_tabellen_db({
+        "reservations": reservations,
+        "users": [{"role": user_role, "permissions": perms}],
+        "owner_property_assignments": [
+            {"property_id": p} for p in (owner_pids or [])
+        ],
+    }))
 
 
 _GUEST_ROW = {
@@ -650,6 +653,10 @@ class _MoveQuery:
         self._pending_insert = payload
         return self
 
+    def delete(self) -> "_MoveQuery":
+        self._pending_delete = True
+        return self
+
     def execute(self) -> MagicMock:
         if getattr(self, "_pending_insert", None) is not None:
             row = dict(self._pending_insert)
@@ -659,6 +666,13 @@ class _MoveQuery:
             res.data = [row]
             return res
         rows = [r for r in self._store.get(self._name, []) if self._match(r)]
+        if getattr(self, "_pending_delete", False):
+            # Wirklich aus dem Store entfernen (in-place, weil Tests eine
+            # Referenz auf die Liste halten): ein nur protokollierendes Delete
+            # könnte den Gegenzustand nicht beweisen — die Zeile stünde danach
+            # weiter da und der Test wäre wertlos.
+            uebrig = [r for r in self._store.get(self._name, []) if r not in rows]
+            self._store.setdefault(self._name, [])[:] = uebrig
         if getattr(self, "_pending_update", None) is not None:
             for r in rows:
                 r.update(self._pending_update)
@@ -719,6 +733,76 @@ def test_move_to_other_property_and_dates() -> None:
     avail = {(a["property_id"], a["date"]): a["status"] for a in store["availability"]}
     assert avail[("p1", "2026-07-01")] == "open"
     assert avail[("p2", "2026-07-10")] == "booked"
+
+
+def test_move_zieht_genehmigten_sperrantrag_mit() -> None:
+    """Ein Eigentümer-Aufenthalt aus genehmigtem Antrag (0353) wird verlängert:
+    der Antrag MUSS den neuen Zeitraum tragen. Bliebe er auf dem alten, gäbe
+    sein Widerruf die falschen Nächte frei (Wurzel 1)."""
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["reservations"][0].update({
+        "is_owner_stay": True, "block_request_id": "ba-1", "channel": "direct",
+    })
+    store["block_requests"] = [{
+        "id": "ba-1", "tenant_id": "t1", "property_id": "p1",
+        "start_date": "2026-07-01", "end_date": "2026-07-02",
+        "status": "approved",
+    }]
+    svc = _move_db(store)
+    svc.move(
+        AuthContext(user_id="u", tenant_id="t1", role="admin"),
+        RID,
+        ReservationMove(
+            property_id="p1", check_in=date(2026, 7, 1), check_out=date(2026, 7, 6)
+        ),
+    )
+    antrag = store["block_requests"][0]
+    assert antrag["start_date"] == "2026-07-01"
+    # end_date ist INKLUSIV (letzte Nacht) — check_out 06. → 05.
+    assert antrag["end_date"] == "2026-07-05"
+
+
+def test_move_ohne_antragsbezug_laesst_antraege_unberuehrt() -> None:
+    """Gegenprobe: eine gewöhnliche Buchung ohne block_request_id fasst keinen
+    Antrag an — auch nicht einen fremden im selben Zeitraum."""
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["block_requests"] = [{
+        "id": "ba-fremd", "tenant_id": "t1", "property_id": "p1",
+        "start_date": "2026-07-01", "end_date": "2026-07-02",
+        "status": "approved",
+    }]
+    svc = _move_db(store)
+    svc.move(
+        AuthContext(user_id="u", tenant_id="t1", role="admin"),
+        RID,
+        ReservationMove(
+            property_id="p1", check_in=date(2026, 7, 1), check_out=date(2026, 7, 6)
+        ),
+    )
+    assert store["block_requests"][0]["end_date"] == "2026-07-02"
+
+
+def test_move_zieht_nur_genehmigte_antraege_mit() -> None:
+    """Ein abgelehnter/widerrufener Antrag (status='rejected') beschreibt keine
+    gültige Sperre mehr und darf nicht nachgezogen werden."""
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["reservations"][0].update({
+        "is_owner_stay": True, "block_request_id": "ba-1", "channel": "direct",
+    })
+    store["block_requests"] = [{
+        "id": "ba-1", "tenant_id": "t1", "property_id": "p1",
+        "start_date": "2026-07-01", "end_date": "2026-07-02",
+        "status": "rejected",
+    }]
+    svc = _move_db(store)
+    svc.move(
+        AuthContext(user_id="u", tenant_id="t1", role="admin"),
+        RID,
+        ReservationMove(
+            property_id="p1", check_in=date(2026, 7, 1), check_out=date(2026, 7, 6)
+        ),
+    )
+    assert store["block_requests"][0]["end_date"] == "2026-07-02"
 
 
 def test_resize_in_place_ignores_own_days() -> None:
@@ -1643,3 +1727,89 @@ def test_timeline_masks_flow_amounts_and_message_for_cleaner() -> None:
     assert pay.detail["amount"] is None
     msg = next(e for e in tl.items if e.kind == "message")
     assert msg.detail["preview"] is None  # Nachrichtentext maskiert
+
+
+# --- Notiz-Verlauf je Buchung (0384) -----------------------------------------
+
+def _notiz_store(rolle: str = "admin", perms: list[str] | None = None) -> dict:
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["users"] = [
+        {"id": "u", "role": rolle,
+         "permissions": _FULL_PERMS if perms is None else perms}
+    ]
+    return store
+
+
+def test_notiz_anlegen_und_lesen() -> None:
+    """Jede Notiz ist ein eigener Eintrag — anlegen überschreibt nichts."""
+    svc = _move_db(_notiz_store())
+    ctx = AuthContext(user_id="u", tenant_id="t1", role="admin")
+    svc.add_note(ctx, RID, ReservationNoteCreate(body="Späte Anreise"))
+    svc.add_note(ctx, RID, ReservationNoteCreate(body="Hund dabei", category="gast"))
+    out = svc.list_notes(ctx, RID)
+    assert out.total == 2
+    assert {i.body for i in out.items} == {"Späte Anreise", "Hund dabei"}
+    assert {i.category for i in out.items} == {None, "gast"}
+
+
+def test_notiz_ohne_pm_view_notes_leer() -> None:
+    """Interner Freitext über einen Gast ist nicht für jede Rolle mit
+    Kalenderzugriff bestimmt: ohne PM_VIEW_NOTES bleibt die Liste leer,
+    die Buchung selbst aber sichtbar."""
+    store = _notiz_store(rolle="cleaner", perms=_NO_PERMS)
+    store["reservation_notes"] = [
+        {"id": "n1", "tenant_id": "t1", "reservation_id": RID,
+         "author_id": "u", "body": "Intern", "category": None,
+         "created_at": "2026-06-20T10:00:00+00:00"},
+    ]
+    svc = _move_db(store)
+    ctx = AuthContext(user_id="u", tenant_id="t1", role=None)
+    assert svc.list_notes(ctx, RID).total == 0
+
+
+def test_notiz_fremde_buchung_404() -> None:
+    """Wurzel 9: die Sub-Ressource prüft denselben Scope wie der List-Pfad."""
+    svc = _move_db(_notiz_store())
+    ctx = AuthContext(user_id="u", tenant_id="t1", role="admin")
+    with pytest.raises(ReservationError) as exc:
+        svc.list_notes(ctx, "11111111-1111-1111-1111-111111111111")
+    assert exc.value.status_code == 404
+
+
+def test_notiz_owner_scope() -> None:
+    """Eigentümer erreicht über die Notiz-Route keine fremden Objekte (§4.2)."""
+    store = _notiz_store(rolle="owner", perms=_NO_PERMS)
+    store["reservations"][0]["property_id"] = "p2"   # nicht zugeordnet
+    store["owner_property_assignments"] = [
+        {"tenant_id": "t1", "user_id": "u", "property_id": "p1"}
+    ]
+    svc = _move_db(store)
+    ctx = AuthContext(user_id="u", tenant_id="t1", role="owner")
+    with pytest.raises(ReservationError) as exc:
+        svc.list_notes(ctx, RID)
+    assert exc.value.status_code == 404
+
+
+def test_notiz_loeschen() -> None:
+    # Echte UUID als Notiz-ID: `delete_note` prüft die Form (_require_uuid),
+    # damit eine geratene ID einen 404 statt eines DB-500 erzeugt.
+    nid = "22222222-2222-2222-2222-222222222222"
+    store = _notiz_store()
+    store["reservation_notes"] = [
+        {"id": nid, "tenant_id": "t1", "reservation_id": RID, "author_id": "u",
+         "body": "Weg damit", "category": None,
+         "created_at": "2026-06-20T10:00:00+00:00"},
+    ]
+    svc = _move_db(store)
+    ctx = AuthContext(user_id="u", tenant_id="t1", role="admin")
+    assert svc.list_notes(ctx, RID).total == 1
+    svc.delete_note(ctx, RID, nid)
+    assert svc.list_notes(ctx, RID).total == 0
+
+
+def test_notiz_loeschen_unbekannt_404() -> None:
+    svc = _move_db(_notiz_store())
+    ctx = AuthContext(user_id="u", tenant_id="t1", role="admin")
+    with pytest.raises(ReservationError) as exc:
+        svc.delete_note(ctx, RID, "33333333-3333-3333-3333-333333333333")
+    assert exc.value.status_code == 404

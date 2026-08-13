@@ -43,7 +43,10 @@ from .schemas import (
     CheckOutRequest,
     CheckOutResponse,
     ReservationCreate,
+    ReservationGuestUpdate,
     ReservationMove,
+    ReservationNote,
+    ReservationNoteCreate,
     ReservationResponse,
 )
 
@@ -560,6 +563,67 @@ class WritesMixin(ReservationsBase):
         ).data or []
         return q[0]["id"] if q else None
 
+    def _sperrantrag_zeitraum_mitziehen(
+        self,
+        tenant_id: str,
+        current: dict,
+        check_in: date,
+        check_out: date,
+    ) -> None:
+        """Den genehmigten Sperrantrag auf den neuen Zeitraum nachziehen.
+
+        Ein Eigentümer-Aufenthalt entsteht seit 0353 als Reservierung mit
+        `block_request_id`. Wird er im Kalender verlängert oder verschoben
+        („der Eigentümer bleibt eine Woche länger"), beschreibt der Antrag
+        sonst weiter den ALTEN Zeitraum: der Widerruf gäbe die falschen Nächte
+        frei, die Kollisionsprüfung eines zweiten Antrags sähe den freien
+        Zeitraum als belegt und den belegten als frei, und der
+        EXCLUDE-Constraint schützte die neuen Tage nicht (Wurzel 1 — die
+        Aktion hat einen Gegenzustand, der mitgepflegt werden muss).
+
+        Ohne Antragsbezug (gewöhnliche Buchung, Eigennutzung ohne Antrag)
+        passiert nichts — das ist der Normalfall, kein fehlender Wert.
+
+        `block_requests` führt den Zeitraum INKLUSIV (`end_date` ist die letzte
+        Nacht, `daterange(start, end, '[]')` im EXCLUDE aus 0377), der Kalender
+        exklusiv. Deshalb `check_out - 1 Tag`.
+
+        Kollidiert der neue Zeitraum mit einem anderen genehmigten Antrag,
+        wirft der EXCLUDE-Constraint 23P01. Das ist ein echter fachlicher
+        Konflikt und wird als 409 gemeldet — NICHT verschluckt (Wurzel 5): die
+        Reservierung liegt dann bereits auf den neuen Tagen, während der Antrag
+        noch die alten trägt, und genau dieser Widerspruch muss sichtbar sein
+        statt still zu bleiben.
+        """
+        antrag_id = current.get("block_request_id")
+        if not antrag_id:
+            return
+        try:
+            self._db().table("block_requests").update(
+                {
+                    "start_date": check_in.isoformat(),
+                    "end_date": (check_out - timedelta(days=1)).isoformat(),
+                }
+            ).eq("id", str(antrag_id)).eq("tenant_id", tenant_id).eq(
+                # Nur ein GENEHMIGTER Antrag wird nachgezogen. Ein abgelehnter
+                # oder widerrufener hat mit dieser Belegung nichts mehr zu tun.
+                "status", "approved"
+            ).execute()
+        except APIError as exc:
+            if exc.code == "23P01":
+                raise ReservationError(
+                    "Der neue Zeitraum überschneidet sich mit einer anderen "
+                    "genehmigten Eigentümer-Sperre.",
+                    status_code=409,
+                ) from exc
+            raise
+        log.info(
+            "sperrantrag_zeitraum_mitgezogen",
+            block_request_id=str(antrag_id),
+            check_in=check_in.isoformat(),
+            check_out=check_out.isoformat(),
+        )
+
     def move(
         self, ctx: AuthContext, reservation_id: str, req: ReservationMove
     ) -> ReservationResponse:
@@ -926,6 +990,11 @@ class WritesMixin(ReservationsBase):
             self._recompute_dynamic_pricing(tenant_id, old_property)
         # Aufgaben der Regeln mitziehen statt neue anzulegen (Wurzel 1, 0272).
         self._sync_task_rules(tenant_id, reservation_id)
+        # Eigentümer-Aufenthalt aus einem genehmigten Antrag: der Antrag trägt
+        # den Zeitraum mit (Wurzel 1 — der Gegenzustand zur Verschiebung).
+        self._sperrantrag_zeitraum_mitziehen(
+            tenant_id, current, req.check_in, req.check_out
+        )
         # Provision nachziehen: ein Upsell (reprice) ändert den Umsatz, ein
         # Objektwechsel kann das Objekt in einen anderen Veröffentlichungs-
         # Status bringen — beides muss in der offenen Ledger-Zeile ankommen.
@@ -1283,6 +1352,237 @@ class WritesMixin(ReservationsBase):
         # Zeitleiste (0122): „eingecheckt".
         self._log_event(
             tenant_id, reservation_id, "checked_in", by_user_id=ctx.user_id
+        )
+        mask = load_guest_mask(self._client, ctx.user_id)
+        return self._row(self._load_owned(tenant_id, reservation_id), mask)
+
+    def add_note(
+        self, ctx: AuthContext, reservation_id: str, req: ReservationNoteCreate
+    ) -> ReservationNote:
+        """Eine Notiz an den VERLAUF der Buchung anhängen (0384).
+
+        Überschreibt nichts: anders als `update_note` (ein Feld an der Buchung)
+        entsteht hier je Eintrag eine eigene Zeile mit Autor und Zeitpunkt.
+        Der Scope ist derselbe wie im Lesepfad (Wurzel 9) — sonst hinge eine
+        Notiz an einer Buchung, die der Schreibende gar nicht sehen darf.
+        """
+        tenant_id = self._require_tenant(ctx)
+        self._scoped_reservation(ctx, reservation_id)
+        ins = (
+            self._db()
+            .table("reservation_notes")
+            .insert({
+                "tenant_id": tenant_id,
+                "reservation_id": reservation_id,
+                "author_id": ctx.user_id,
+                "body": req.body.strip(),
+                "category": req.category,
+            })
+            .execute()
+        )
+        if not ins.data:
+            raise ReservationError(
+                "Notiz konnte nicht gespeichert werden.", status_code=500
+            )
+        r = ins.data[0]
+        # Zeitleiste: NUR die Tatsache, nie der Inhalt — das Ereignis-Detail
+        # landet unmaskiert im Audit (wie bei update_note).
+        self._log_event(
+            tenant_id,
+            reservation_id,
+            "note_added",
+            by_user_id=ctx.user_id,
+            detail={"category": req.category or ""},
+        )
+        namen = self._user_names([ctx.user_id] if ctx.user_id else [])
+        return ReservationNote(
+            id=str(r["id"]),
+            reservation_id=reservation_id,
+            author_id=r.get("author_id"),
+            author_name=namen.get(ctx.user_id or "") or None,
+            category=r.get("category"),
+            body=r.get("body") or "",
+            # Der Zeitstempel kommt aus dem DB-Default. Fehlt er in der Antwort,
+            # bleibt das Feld LEER statt auf `now()` zu raten: unsere Uhr ist
+            # nicht der Zeitpunkt des Ereignisses (Wurzel 5b), und ein erfundener
+            # Wert wäre in der Liste von einem echten nicht zu unterscheiden.
+            created_at=str(r.get("created_at") or ""),
+        )
+
+    def delete_note(self, ctx: AuthContext, reservation_id: str, note_id: str) -> None:
+        """Eine Verlaufs-Notiz löschen (gleicher Scope wie das Anlegen)."""
+        tenant_id = self._require_tenant(ctx)
+        self._scoped_reservation(ctx, reservation_id)
+        _require_uuid(note_id)
+        weg = (
+            self._db()
+            .table("reservation_notes")
+            .delete()
+            .eq("id", note_id)
+            .eq("tenant_id", tenant_id)
+            .eq("reservation_id", reservation_id)
+            .execute()
+        )
+        if not weg.data:
+            raise ReservationError("Notiz nicht gefunden.", status_code=404)
+        self._log_event(
+            tenant_id, reservation_id, "note_deleted", by_user_id=ctx.user_id
+        )
+
+    def update_note(
+        self, ctx: AuthContext, reservation_id: str, note: str
+    ) -> ReservationResponse:
+        """Interne Notiz der Buchung setzen oder entfernen (leerer Text).
+
+        Bewusst ein eigener kleiner Pfad statt eines allgemeinen PATCH: eine
+        Notiz berührt weder Belegung noch Geld, braucht also keinen der
+        Kalender-Gegenzustände (Wurzel 1) — ein Sammel-PATCH auf `reservations`
+        wäre dagegen die Stelle, an der irgendwann `check_in` mitgeschrieben
+        wird, ohne die Nächte umzubuchen.
+        """
+        tenant_id = self._require_tenant(ctx)
+        current = self._load_owned(tenant_id, reservation_id)
+        sauber = (note or "").strip()
+        upd = (
+            self._db()
+            .table("reservations")
+            .update({"note": sauber or None})
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .execute()
+        )
+        if not upd.data:
+            raise ReservationError(
+                "Notiz konnte nicht gespeichert werden.", status_code=500
+            )
+        log.info(
+            "reservation_note_updated",
+            reservation_id=reservation_id,
+            by_user_id=ctx.user_id,
+            leer=not sauber,
+        )
+        # Zeitleiste: WAS in der Notiz steht, gehört nicht ins Ereignis-Detail
+        # (es landet dort unmaskiert im Audit) — nur die Tatsache der Änderung.
+        self._log_event(
+            tenant_id,
+            reservation_id,
+            "note_changed",
+            by_user_id=ctx.user_id,
+            detail={"cleared": not sauber, "had_note": bool(current.get("note"))},
+        )
+        mask = load_guest_mask(self._client, ctx.user_id)
+        return self._row(self._load_owned(tenant_id, reservation_id), mask)
+
+    def set_archived(
+        self, ctx: AuthContext, reservation_id: str, archived: bool
+    ) -> ReservationResponse:
+        """Buchung in die Ablage legen oder zurückholen (0383).
+
+        BEWUSST ohne jede Nebenwirkung: kein Statuswechsel, keine Freigabe von
+        Nächten, keine Meldung an die Portale. Archivieren ist eine Entscheidung
+        über die ARBEITSLISTE, nicht über den Vorgang — eine archivierte Buchung
+        belegt den Kalender weiter. Wer Nächte freigeben will, storniert; das ist
+        der Pfad mit Pflicht-Begründung, Audit und Channex-Rückgabe (Wurzel 1:
+        der Gegenzustand gehört zum Storno, nicht zur Ablage).
+
+        Idempotent: zweimal archivieren ändert nichts und wirft nicht (Wurzel 2 —
+        ein Doppelklick auf „Archivieren" ist der Normalfall, kein Fehler).
+        """
+        tenant_id = self._require_tenant(ctx)
+        current = self._load_owned(tenant_id, reservation_id)
+        schon_archiviert = current.get("archived_at") is not None
+        if schon_archiviert == archived:
+            mask = load_guest_mask(self._client, ctx.user_id)
+            return self._row(current, mask)
+
+        wert = datetime.now(UTC).isoformat() if archived else None
+        upd = (
+            self._db()
+            .table("reservations")
+            .update({"archived_at": wert})
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .execute()
+        )
+        if not upd.data:
+            raise ReservationError(
+                "Ablage konnte nicht gespeichert werden.", status_code=500
+            )
+        log.info(
+            "reservation_archived" if archived else "reservation_unarchived",
+            reservation_id=reservation_id,
+            by_user_id=ctx.user_id,
+        )
+        self._log_event(
+            tenant_id,
+            reservation_id,
+            "archived" if archived else "unarchived",
+            by_user_id=ctx.user_id,
+        )
+        mask = load_guest_mask(self._client, ctx.user_id)
+        return self._row(self._load_owned(tenant_id, reservation_id), mask)
+
+    def update_guest(
+        self, ctx: AuthContext, reservation_id: str, req: ReservationGuestUpdate
+    ) -> ReservationResponse:
+        """Gastdaten und erwartete Zeiten DIESER Buchung korrigieren.
+
+        Wirkt ausschließlich auf die Buchungszeile. Die Gästekartei (`guests`)
+        bleibt unberührt: derselbe Gast hängt an mehreren Buchungen, und eine
+        Korrektur an einer Buchung darf nicht rückwirkend die Historie der
+        anderen umschreiben.
+
+        Zeiten sind Erwartungswerte („voraussichtlich ab 16:00"), keine
+        Check-in-Tatsachen — `checked_in_at` bleibt davon unberührt (0091).
+        """
+        tenant_id = self._require_tenant(ctx)
+        current = self._load_owned(tenant_id, reservation_id)
+        if current.get("is_owner_stay"):
+            # Eine Eigennutzung hat keinen Gast, sondern einen Eigentümer +
+            # anwesende Person (0353/0354). Gastfelder dort zu setzen erzeugte
+            # zwei Wahrheiten über dieselbe Belegung.
+            raise ReservationError(
+                "Eigennutzung hat keinen Gast — Angaben laufen über den "
+                "Eigentümer-Aufenthalt.",
+                status_code=409,
+            )
+        werte = {
+            "guest_name": req.guest_name.strip(),
+            "guest_email": (req.guest_email or "").strip() or None,
+            "guest_phone": (req.guest_phone or "").strip() or None,
+            "guest_language": (req.guest_language or "").strip() or None,
+            "guest_country": (req.guest_country or "").strip() or None,
+            "checkin_time": req.checkin_time,
+            "checkout_time": req.checkout_time,
+        }
+        upd = (
+            self._db()
+            .table("reservations")
+            .update(werte)
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .execute()
+        )
+        if not upd.data:
+            raise ReservationError(
+                "Gastdaten konnten nicht gespeichert werden.", status_code=500
+            )
+        log.info(
+            "reservation_guest_updated",
+            reservation_id=reservation_id,
+            by_user_id=ctx.user_id,
+        )
+        # Nur WELCHE Felder sich geändert haben — keine Kontaktdaten ins Audit
+        # (Wurzel 3: der Datensplit gilt auch für die Zeitleiste).
+        geaendert = sorted(
+            feld for feld, wert in werte.items() if current.get(feld) != wert
+        )
+        self._log_event(
+            tenant_id,
+            reservation_id,
+            "guest_changed",
+            by_user_id=ctx.user_id,
+            detail={"fields": geaendert},
         )
         mask = load_guest_mask(self._client, ctx.user_id)
         return self._row(self._load_owned(tenant_id, reservation_id), mask)

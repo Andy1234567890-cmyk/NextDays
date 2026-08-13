@@ -28,6 +28,16 @@ class _Res:
         self.data = data
 
 
+# Tabellen der Nebenquellen des Posteingangs (Übernahme 0382, Marktplatz
+# 0181/0196). Sie liefern im Double per Default KEINE Zeilen — wer sie prüfen
+# will, übergibt `extra={...}`.
+_LEERE_TABELLEN = frozenset({
+    "reservation_nachricht_uebernahme",
+    "guest_message_threads",
+    "guest_messages",
+})
+
+
 class _FakeChannex:
     def __init__(
         self, messages=None,  # noqa: ANN001
@@ -105,9 +115,13 @@ class _FakeDB:
     def __init__(
         self, bookings, reservations,
         *, user_role="admin", user_perms=None, updates=None, nachrichten=None,
+        extra=None,
     ) -> None:  # noqa: ANN001
         self._bookings = bookings
         self._reservations = reservations
+        # Zeilen der Nebenquellen (Marktplatz, Übernahme) je Tabellenname.
+        # Default leer: ein Test, der sie nicht setzt, sieht sie auch nicht.
+        self._extra = extra or {}
         self._user_role = user_role
         self._user_perms = _PERMS_FULL if user_perms is None else user_perms
         # Der lokale Nachrichten-Spiegel (portal_messages) — speist Vorschau,
@@ -126,6 +140,13 @@ class _FakeDB:
             rows = self._bookings
         elif name == "portal_messages":
             rows = self._nachrichten
+        elif name in _LEERE_TABELLEN:
+            # Bewusst leer statt über den Sammel-Zweig: der Posteingang liest
+            # inzwischen aus mehreren Quellen (Übernahme 0382, Marktplatz
+            # 0181/0196). Fiele eine davon in den `else`-Zweig, bekäme sie die
+            # RESERVIERUNGS-Zeilen und erzeugte daraus Phantom-Threads — der
+            # Test zählte dann Threads, die es nicht gibt.
+            rows = self._extra.get(name, [])
         else:
             rows = self._reservations
         return _FakeQuery(name, rows, self.updates)
@@ -2206,3 +2227,90 @@ def test_gastsprache_kommt_aus_spalte_und_roher_payload() -> None:
     assert svc._gastsprache({"gast_sprache": "da", "gast_sprache_raw": "de"}) == "da"
     assert svc._gastsprache({"gast_sprache": None, "gast_sprache_raw": "de"}) == "de"
     assert svc._gastsprache({}) is None
+
+
+# --- myBestDays-Marktplatz im gemeinsamen Posteingang -------------------------
+
+_MB_THREAD = {
+    "id": "gt1",
+    "tenant_id": "t1",
+    "portal_guest_id": "pg1",
+    "property_id": "p1",
+    "reservation_id": "res-9",
+    "last_message_at": "2026-08-01T09:00:00+00:00",
+    "host_read_at": None,
+    "host_archived": False,
+    "created_at": "2026-07-20T08:00:00+00:00",
+    "portal_guests": {"name": "Mira Toft", "email": "m@x.dk", "phone": "+4520"},
+    "properties": {"title": "Feriehus"},
+    "reservations": {"check_in": "2026-08-10", "check_out": "2026-08-14",
+                     "guest_id": "g9"},
+}
+_MB_NACHRICHT = {
+    "id": "gm1", "thread_id": "gt1", "body": "Kommer sent",
+    "sender": "guest", "created_at": "2026-08-01T09:00:00+00:00",
+}
+
+
+def _mb_db(**kw):  # noqa: ANN003, ANN201
+    return _FakeDB([], [], extra={
+        "guest_message_threads": [dict(_MB_THREAD, **kw)],
+        "guest_messages": [_MB_NACHRICHT],
+    })
+
+
+def test_marktplatz_thread_erscheint_im_posteingang() -> None:
+    """myBestDays ist ein Kanal wie Booking — seine Konversationen gehören in
+    denselben Posteingang, nicht in eine zweite Oberfläche."""
+    svc = InboxService(service_client=_mb_db(), channex=_FakeChannex())
+    out = svc.list_threads(_CTX)
+    th = next(t for t in out.items if t.id.startswith("mb:"))
+    assert th.ota_name == "myBestDays"
+    assert th.guest_name == "Mira Toft"
+    assert th.property_title == "Feriehus"
+    assert th.reservation_id == "res-9"
+    assert th.last_message == "Kommer sent"
+    assert th.last_sender == "guest"
+    # Nie eine Channex-ID erfinden — dieser Thread lief nie über Channex.
+    assert th.channex_booking_id is None
+
+
+def test_marktplatz_ungelesen_wenn_gast_zuletzt_schrieb() -> None:
+    svc = InboxService(service_client=_mb_db(host_read_at=None), channex=_FakeChannex())
+    th = next(t for t in svc.list_threads(_CTX).items if t.id.startswith("mb:"))
+    assert th.is_read is False
+    # Nach dem Lesen (host_read_at neuer als die Nachricht) gilt er als gelesen.
+    svc2 = InboxService(
+        service_client=_mb_db(host_read_at="2026-08-02T10:00:00+00:00"),
+        channex=_FakeChannex(),
+    )
+    th2 = next(t for t in svc2.list_threads(_CTX).items if t.id.startswith("mb:"))
+    assert th2.is_read is True
+
+
+def test_marktplatz_verlauf_lesen() -> None:
+    svc = InboxService(service_client=_mb_db(), channex=_FakeChannex())
+    out = svc.get_messages(_CTX, "mb:gt1")
+    assert out.total == 1
+    assert out.items[0].message == "Kommer sent"
+    assert out.items[0].sender == "guest"
+    # Der Marktplatz läuft bei uns: created_at IST der Ereigniszeitpunkt.
+    assert out.items[0].sent_at == "2026-08-01T09:00:00+00:00"
+
+
+def test_marktplatz_fremder_thread_404() -> None:
+    """Load und Scope zusammen (Wurzel 3) — fremder Tenant erfährt nichts."""
+    svc = InboxService(service_client=_mb_db(tenant_id="fremd"), channex=_FakeChannex())
+    with pytest.raises(InboxError) as exc:
+        svc.get_messages(_CTX, "mb:gt1")
+    assert exc.value.status_code == 404
+
+
+def test_marktplatz_antwort_wird_abgelehnt() -> None:
+    """Der Marktplatz hat einen eigenen Sendeweg (host_messages, 0196) —
+    hier klar ablehnen, statt eine Nachricht zu schreiben, die der Gast nie
+    sieht (Wurzel 5)."""
+    svc = InboxService(service_client=_mb_db(), channex=_FakeChannex())
+    with pytest.raises(InboxError) as exc:
+        svc.send_message(_CTX, "mb:gt1", "Hallo")
+    assert exc.value.status_code == 422

@@ -103,6 +103,28 @@ class AvailabilityCheck(BaseModel):
     conflicting_days: list[date] = []
 
 
+class FreieEinheitenSpanne(BaseModel):
+    """Ein zusammenhängender Zeitraum mit gleichbleibender freier Stückzahl."""
+
+    von: date
+    bis: date  # INKLUSIV (anders als DateRange.end) — es ist eine Belegtspanne
+    frei: int
+    gesamt: int
+
+
+class FreieEinheitenResponse(BaseModel):
+    """Verfügbarkeit als ZAHL freier Einheiten, nicht als 0/1.
+
+    Ein Objekt ist ein Einheiten-TYP mit n ≥ 1 Einheiten (0265); die Portale
+    erwarten eine Stückzahl. Die Tagesreihe des Kalenders faltet das bewusst auf
+    einen Status je Tag zusammen (Anzeige), hier steht die echte Zahl.
+    """
+
+    property_id: str
+    gesamt: int
+    spannen: list[FreieEinheitenSpanne] = []
+
+
 class BoardProperty(BaseModel):
     """Ein Objekt im Batch-Kalender: Tagesdaten + Stop-Sells in einem Rutsch.
 

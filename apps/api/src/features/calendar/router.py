@@ -24,6 +24,7 @@ from .schemas import (
     BulkEditResult,
     DateRange,
     DayAvailability,
+    FreieEinheitenResponse,
     MultiRestrictionRowsRequest,
     PriceOverrideRequest,
     RestrictionRowsRequest,
@@ -124,6 +125,26 @@ def check(
 ) -> AvailabilityCheck:
     try:
         return service.check_availability(
+            ctx, property_id, DateRange(start=start, end=end)
+        )
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/freie-einheiten", response_model=FreieEinheitenResponse)
+def freie_einheiten(
+    service: CalendarServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    property_id: Annotated[str, Query()],
+    start: Annotated[date, Query()],
+    end: Annotated[date, Query()],
+) -> FreieEinheitenResponse:
+    """Freie Einheiten als ZAHL je Spanne (nicht 0/1) — inkl. Stop-Sell.
+
+    `end` ist wie überall im Kalender exklusiv; die gelieferten Spannen tragen
+    ein INKLUSIVES `bis`, weil sie Belegtzeiträume beschreiben."""
+    try:
+        return service.freie_einheiten(
             ctx, property_id, DateRange(start=start, end=end)
         )
     except CalendarError as exc:

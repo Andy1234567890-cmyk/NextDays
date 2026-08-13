@@ -19,11 +19,18 @@ from .schemas import (
     DashboardResponse,
     PropertyStats,
     RequestDecline,
+    ReservationArchiveUpdate,
     ReservationCancel,
+    ReservationConditions,
     ReservationCreate,
     ReservationDetail,
+    ReservationGuestUpdate,
     ReservationListResponse,
     ReservationMove,
+    ReservationNote,
+    ReservationNoteCreate,
+    ReservationNoteListResponse,
+    ReservationNoteUpdate,
     ReservationResponse,
     SliceHealth,
     StatMetricDetail,
@@ -155,9 +162,16 @@ def list_reservations(
     service: ReservationsServiceDep,
     ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
     property_id: Annotated[str | None, Query()] = None,
+    date_from: Annotated[date | None, Query()] = None,
+    date_to: Annotated[date | None, Query()] = None,
+    limit: Annotated[int | None, Query(ge=1, le=500)] = None,
 ) -> ReservationListResponse:
+    """Buchungsliste. `date_from`/`date_to` filtern auf die Anreise, `limit`
+    liefert nur die ersten n Zeilen und setzt `truncated`, wenn es mehr gibt."""
     try:
-        return service.list(ctx, property_id)
+        return service.list(
+            ctx, property_id, date_from=date_from, date_to=date_to, limit=limit
+        )
     except ReservationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -171,6 +185,21 @@ def reservation_detail(
     """Vollständige Reservierungs-Detailansicht (rechter Slider)."""
     try:
         return service.detail(ctx, reservation_id)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/{reservation_id}/conditions", response_model=ReservationConditions)
+def reservation_conditions(
+    reservation_id: str,
+    service: ReservationsServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+) -> ReservationConditions:
+    """Buchungskonditionen (Zahlungsplan, Storno-Staffel, Kaution) + die
+    Zahlungszeilen dieser Buchung. Gleicher Scope wie das Detail (Wurzel 9);
+    Beträge maskierungskonform — ohne Finanzeinblick kommt die Antwort leer."""
+    try:
+        return service.conditions(ctx, reservation_id)
     except ReservationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -223,6 +252,135 @@ def move_reservation(
     mit erneutem Doppelbuchungs-Schutz (409 bei Konflikt)."""
     try:
         return service.move(ctx, reservation_id, req)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/{reservation_id}/notes",
+    response_model=ReservationNoteListResponse,
+)
+def list_notes(
+    reservation_id: str,
+    service: ReservationsServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+) -> ReservationNoteListResponse:
+    """Notiz-Verlauf der Buchung (0384), neueste zuerst.
+
+    Ohne PM_VIEW_NOTES bleibt die Liste leer — die Buchung selbst ist ja
+    sichtbar, nur dieser Abschnitt nicht."""
+    try:
+        return service.list_notes(ctx, reservation_id)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/{reservation_id}/notes",
+    response_model=ReservationNote,
+    status_code=201,
+    dependencies=[
+        Depends(require_granular_permission(Permission.PM_VIEW_NOTES)),
+    ],
+)
+def add_note(
+    reservation_id: str,
+    req: ReservationNoteCreate,
+    service: ReservationsServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+) -> ReservationNote:
+    """Notiz an den Verlauf anhängen (überschreibt nichts)."""
+    try:
+        return service.add_note(ctx, reservation_id, req)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete(
+    "/{reservation_id}/notes/{note_id}",
+    status_code=204,
+    dependencies=[
+        Depends(require_granular_permission(Permission.PM_VIEW_NOTES)),
+    ],
+)
+def delete_note(
+    reservation_id: str,
+    note_id: str,
+    service: ReservationsServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+) -> None:
+    """Eine Verlaufs-Notiz löschen."""
+    try:
+        service.delete_note(ctx, reservation_id, note_id)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch(
+    "/{reservation_id}/note",
+    response_model=ReservationResponse,
+    dependencies=[
+        Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    ],
+)
+def update_note(
+    reservation_id: str,
+    req: ReservationNoteUpdate,
+    service: ReservationsServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> ReservationResponse:
+    """Interne Notiz der Buchung setzen (leerer Text entfernt sie)."""
+    try:
+        return service.update_note(ctx, reservation_id, req.note)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch(
+    "/{reservation_id}/guest",
+    response_model=ReservationResponse,
+    dependencies=[
+        Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    ],
+)
+def update_guest(
+    reservation_id: str,
+    req: ReservationGuestUpdate,
+    service: ReservationsServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> ReservationResponse:
+    """Gastdaten + erwartete Check-in-/Check-out-Zeit DIESER Buchung korrigieren.
+    Die Gästekartei bleibt unberührt (eine Buchung schreibt keine Stammdaten um)."""
+    try:
+        return service.update_guest(ctx, reservation_id, req)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch(
+    "/{reservation_id}/archive",
+    response_model=ReservationResponse,
+    dependencies=[
+        Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    ],
+)
+def set_archived(
+    reservation_id: str,
+    req: ReservationArchiveUpdate,
+    service: ReservationsServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> ReservationResponse:
+    """Buchung in die Ablage legen (`archived=true`) oder zurückholen.
+    Ohne Nebenwirkung auf Status, Belegung oder Portale — Nächte gibt nur der
+    Storno frei."""
+    try:
+        return service.set_archived(ctx, reservation_id, req.archived)
     except ReservationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

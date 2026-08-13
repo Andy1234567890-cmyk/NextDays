@@ -194,6 +194,14 @@ class ReservationResponse(BaseModel):
     # anwesende Person (siehe `_base.anzeigename`); hier steht der Grund, den
     # der Balken hinter dem Namen zeigt.
     stay_note: str | None = None
+    # Wann der Gast WIRKLICH gebucht hat (0291, Wurzel 5b). None = die Quelle
+    # hat es nicht geliefert; die UI zeigt dann `created_at` und benennt es als
+    # „Eingang bei uns" — niemals unsere Uhr als fremden Buchungszeitpunkt.
+    booked_at: str | None = None
+    created_at: str | None = None
+    # Ablage (0383): gesetzt = aus der Arbeitsliste genommen. Reine Ansichts-
+    # Entscheidung — Status, Belegung und Kalenderwirkung bleiben unverändert.
+    archived_at: str | None = None
 
 
 class QuoteItem(BaseModel):
@@ -255,6 +263,13 @@ class ReservationDetail(BaseModel):
     children: int = 0
     infants: int = 0
     pets: int = 0
+    # Eigentümer-Aufenthalt (0241). Das Feld FEHLTE hier, während der Lesepfad
+    # es setzte — Pydantic verwirft unbekannte Felder still, also kam im Detail
+    # immer `false` an: 34 Eigennutzungen wurden als Direktbuchung mit
+    # „Endpreis 0,00" dargestellt, samt Knopf „Gast einchecken" für einen Gast,
+    # den es nicht gibt. Genau die Klasse Fehler, die niemand als Bug erkennt,
+    # weil die Anzeige plausibel aussieht.
+    is_owner_stay: bool = False
     # Beträge (maskiert) + Quote-Aufschlüsselung
     currency: str = ""
     total_amount: float | None = None
@@ -279,6 +294,135 @@ class ReservationDetail(BaseModel):
     guest_language: str | None = None
     guest_country: str | None = None
     created_at: str | None = None
+    # Konditionen des PORTALS (0384) — für eine OTA-Buchung gilt die Staffel,
+    # die Booking/Airbnb dem Gast zugesagt hat, nicht unsere eigene Kondition.
+    # None = das Portal hat keine geliefert (NICHT „kostenfrei stornierbar").
+    ota_cancel_penalties: list[dict[str, object]] | None = None
+    ota_notes: str | None = None
+    ota_details: dict[str, object] | None = None
+    # Buchungszeitpunkt beim Portal (0291, Wurzel 5b) — None, wenn die Quelle
+    # ihn nicht geliefert hat. `created_at` ist NICHT sein Ersatz, sondern
+    # unser Eingang; die UI beschriftet beide unterschiedlich.
+    booked_at: str | None = None
+    # Ablage (0383) — siehe ReservationResponse.
+    archived_at: str | None = None
+    # Der Nachrichten-Thread dieser Buchung im Posteingang, falls es einen gibt:
+    # bei OTA-Buchungen die Channex-Booking-ID, bei einem übernommenen Bestand
+    # der Übernahme-Thread (`ue:<reservation_id>`). None = zu dieser Buchung
+    # existiert keine Korrespondenz — dann führt auch kein Link dorthin
+    # (kein Knopf, der auf eine leere Ansicht zeigt).
+    message_thread_id: str | None = None
+
+
+class ReservationRefundRule(BaseModel):
+    """Eine Stufe der Storno-Staffel: X % zurück, wenn ≥ Y Tage vor Anreise."""
+
+    refund_percent: float
+    days_before_arrival: int
+
+
+class ReservationDeposit(BaseModel):
+    """Kaution der geltenden Kondition — Betrag bereits ausgerechnet."""
+
+    amount: float
+    method: str | None = None
+    currency: str | None = None
+    preauth_days_before_arrival: int | None = None
+    release_days_after_departure: int | None = None
+
+
+class ReservationTransaction(BaseModel):
+    """Eine Zahlungszeile zur Buchung (payments): geplant ODER vollzogen.
+
+    `due_at` gesetzt = geplanter Termin, `at` = wann die Zeile bei uns entstand.
+    Beträge folgen der Betrags-Maskierung wie überall (None ohne Einblick)."""
+
+    id: str
+    at: str
+    amount: float | None = None
+    currency: str = ""
+    status: str = ""
+    type: str = ""
+    due_at: str | None = None
+
+
+class ReservationConditions(BaseModel):
+    """Buchungskonditionen + Zahlungsstand einer Buchung.
+
+    Quelle ist `booking_conditions` über den geteilten Helfer
+    `booking_conditions.plan` — dieselbe Rechnung, die der Gast-Checkout zeigt
+    und der Zahlungspfad vollzieht. Ohne gepflegte Kondition bleiben die
+    Plan-Felder None: dann gilt „alles sofort fällig", und genau das sagt die
+    UI dann auch, statt einen Plan zu erfinden (Wurzel 4).
+    """
+
+    condition_name: str | None = None
+    installments: int = 1
+    due_now: float | None = None
+    due_later: float | None = None
+    balance_due_date: date | None = None
+    cancellation_mode: str | None = None
+    refund_rules: list[ReservationRefundRule] = []
+    deposit: ReservationDeposit | None = None
+    transactions: list[ReservationTransaction] = []
+    currency: str = ""
+
+
+class ReservationNoteUpdate(BaseModel):
+    """Interne Notiz zur Buchung (leer = Notiz entfernen)."""
+
+    note: str = Field(default="", max_length=5000)
+
+
+class ReservationNoteCreate(BaseModel):
+    """Neue Notiz im VERLAUF der Buchung (0384).
+
+    Anders als `ReservationNoteUpdate` überschreibt sie nichts: jede Notiz ist
+    ein eigener Eintrag mit Autor und Zeit.
+    """
+
+    body: str = Field(min_length=1, max_length=5000)
+    category: str | None = Field(default=None, max_length=60)
+
+
+class ReservationNote(BaseModel):
+    """Ein Eintrag aus dem Notiz-Verlauf einer Buchung."""
+
+    id: str
+    reservation_id: str
+    author_id: str | None = None
+    author_name: str | None = None
+    category: str | None = None
+    body: str = ""
+    created_at: str
+
+
+class ReservationNoteListResponse(BaseModel):
+    items: list[ReservationNote] = []
+    total: int = 0
+
+
+class ReservationArchiveUpdate(BaseModel):
+    """Ablage-Zustand setzen (0383): true = archivieren, false = zurückholen."""
+
+    archived: bool
+
+
+class ReservationGuestUpdate(BaseModel):
+    """Gastdaten + erwartete Zeiten einer Buchung korrigieren.
+
+    Bewusst nur die Felder, die auf der Buchung selbst liegen — die Gästekartei
+    (`guests`) bleibt unberührt, sonst würde eine Tippfehler-Korrektur an EINER
+    Buchung die Stammdaten aller Buchungen dieses Gastes umschreiben.
+    """
+
+    guest_name: str = Field(min_length=1, max_length=255)
+    guest_email: str | None = Field(default=None, max_length=255)
+    guest_phone: str | None = Field(default=None, max_length=64)
+    guest_language: str | None = Field(default=None, max_length=16)
+    guest_country: str | None = Field(default=None, max_length=64)
+    checkin_time: str | None = Field(default=None, pattern=r"^\d{2}:\d{2}$")
+    checkout_time: str | None = Field(default=None, pattern=r"^\d{2}:\d{2}$")
 
 
 class CheckOutRequest(BaseModel):
@@ -305,6 +449,11 @@ class CheckOutResponse(BaseModel):
 class ReservationListResponse(BaseModel):
     items: list[ReservationResponse]
     total: int
+    # True, wenn ein `limit` die Antwort abgeschnitten hat und es weitere Zeilen
+    # gibt. Ohne dieses Feld liest sich eine gedeckelte Liste wie eine
+    # vollständige — genau die stille Falschaussage, die der 1000er-Cap von
+    # PostgREST vorher erzeugt hat.
+    truncated: bool = False
 
 
 class DashboardEntry(BaseModel):

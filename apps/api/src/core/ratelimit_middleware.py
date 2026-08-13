@@ -58,6 +58,7 @@ class _Buckets:
         self.listings_tenant = parse_limit(settings.rate_limit_listings_tenant)
         self.tenant = parse_limit(settings.rate_limit_tenant)
         self.ai = parse_limit(settings.rate_limit_ai)
+        self.mcp_auth = parse_limit(settings.rate_limit_mcp_auth)
         self.mfa = parse_limit(settings.rate_limit_mfa)
         self.mfa_status = parse_limit(settings.rate_limit_mfa_status)
         self.public_support = parse_limit(settings.rate_limit_public_support)
@@ -180,6 +181,13 @@ _REFRESH_PATHS = ("/auth/refresh", "/guest-auth/refresh")
 # verglichen wird.
 _AI_PATHS = ("/dashboard/voice", "/content/translate", "/uebersetzen")
 
+# OAuth-Vorgänge des MCP-Connectors (0385). `/mcp/token` löst Autorisierungs-
+# codes ein und rotiert Refresh-Token — beides durchprobierbar; `/mcp/authorize`
+# stößt einen ausgehenden Fetch auf eine fremde URL an (Verstärkung). Der
+# MCP-Endpunkt `/api/v1/mcp` SELBST steht bewusst NICHT hier: ein Gespräch macht
+# viele Werkzeugaufrufe, ein 20/60-Dach würde es mitten im Satz abwürgen.
+_MCP_AUTH_PATHS = ("/mcp/token", "/mcp/authorize", "/mcp/consent")
+
 # UNAUTHENTIFIZIERTE Kontaktaufnahme von der Marketing-Seite. Jeder Aufruf legt
 # einen Datensatz an bzw. schreibt in einen fremden Verlauf — im
 # Default-Bucket (300/60) wäre das ein bequemer Spam- und Token-Rateweg.
@@ -256,6 +264,9 @@ _BUCKET_REGELN: tuple[tuple[str, tuple[str, ...], str, bool], ...] = (
     ("public_support", _PUBLIC_SUPPORT_PATHS, "public_support", True),
     ("public_support", _NEWSLETTER_PATHS, "public_support", True),
     ("ai", _AI_PATHS, "ai", False),
+    # sensibel=True: bei Redis-Ausfall lieber abweisen als den Code-/Token-
+    # Tausch ungedeckelt durchlassen (fail-closed, Wurzel 5).
+    ("mcp_auth", _MCP_AUTH_PATHS, "mcp_auth", True),
     ("listings", _LISTINGS_PATHS, "listings", False),
 )
 
