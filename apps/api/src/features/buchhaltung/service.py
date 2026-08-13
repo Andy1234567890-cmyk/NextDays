@@ -1068,6 +1068,16 @@ class BuchhaltungService:
                     account.stripe_account_id,
                     iban=iban, account_holder=holder, country=country,
                 )
+            # Firmenlogo → Branding (Zahlseite des Gastes). Best effort: ein
+            # fehlendes/ungeeignetes Logo darf die Konto-Anlage nicht kippen.
+            try:
+                payments.sync_branding_logo(tenant_id, account.stripe_account_id)
+            except PaymentsError as exc:
+                log.warning(
+                    "branding_logo_sync_failed",
+                    tenant_id=tenant_id,
+                    error=exc.message,
+                )
             log.info(
                 "connect_account_created",
                 tenant_id=tenant_id,
@@ -1182,6 +1192,11 @@ class BuchhaltungService:
                         iban=iban, account_holder=holder, country=country,
                     )
             _step("external_account", _sync_bank)
+        # Firmenlogo → Branding des verbundenen Kontos. Ohne diesen Schritt zeigt
+        # die Stripe-Zahlseite des Gastes den grauen Platzhalter statt der Marke
+        # des Betriebs. Eigener Schritt: ein zu großes/falsch formatiertes Logo
+        # darf den KYC-Sync nicht kippen.
+        _step("branding", lambda: payments.sync_branding_logo(tenant_id, acct_id))
 
         self._set_stripe_sync_error(tenant_id, first_error)
 
@@ -1248,8 +1263,44 @@ class BuchhaltungService:
             ChannelManagerService(service_client=self._db).resync_all_content(tenant_id)
         except Exception as exc:  # noqa: BLE001 — Auto-Resync darf nie blockieren
             log.warning("logo_resync_failed", tenant_id=tenant_id, error=str(exc))
+        # Dasselbe Logo an den Zahlungsanbieter: es ist die Marke, die der Gast
+        # auf der Zahlseite sieht. Best effort — der Upload selbst ist gelungen.
+        # Das Ergebnis landet im sichtbaren Sync-Fehler, nicht im Nirgendwo.
+        self._sync_logo_zu_stripe(tenant_id)
         log.info("company_logo_uploaded", tenant_id=tenant_id)
         return self.get_company_profile(ctx)
+
+    def _sync_logo_zu_stripe(self, tenant_id: str) -> None:
+        """Frisch hochgeladenes Logo an das verbundene Stripe-Konto übertragen.
+
+        Ohne verbundenes Konto gibt es nichts zu tun (kommt beim Anlegen mit).
+        Fehler werden am Profil sichtbar gemacht (`stripe_sync_error`) statt
+        verschluckt — sonst fragt sich der Betrieb, warum der Gast beim Bezahlen
+        kein Logo sieht."""
+        from src.features.payments.service import (  # noqa: PLC0415
+            PaymentsError,
+            PaymentsService,
+        )
+
+        row = (
+            self._db.table("tenant_billing_profile")
+            .select("stripe_account_id")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        acct_id = row[0].get("stripe_account_id") if row else None
+        if not acct_id:
+            return
+        try:
+            PaymentsService(service_client=self._db).sync_branding_logo(
+                tenant_id, acct_id
+            )
+        except PaymentsError as exc:
+            log.warning(
+                "branding_logo_sync_failed", tenant_id=tenant_id, error=exc.message
+            )
+            self._set_stripe_sync_error(tenant_id, exc.message)
 
     def get_invoice(self, ctx: AuthContext, invoice_id: str) -> InvoiceResponse:
         tenant_id = self._require_tenant(ctx)
