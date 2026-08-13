@@ -769,6 +769,9 @@ export interface WorkerEreignis {
   dauer_ms: number | null;
   fehler_text: string | null;
   versuche: number | null;
+  /** Vom Menschen abgehakt (0392). Ein Fehler bleibt sonst für immer offen —
+   *  und eine Warnung, die nie verschwindet, wird übersehen. */
+  resolved: boolean;
   /**
    * WAS der Vorgang getan hat — „Reinigungsgebühr · 795,00 DKK · pro Buchung"
    * bzw. „12 geholt · 3 gespeichert". Aus dem echten Request-Body bzw. der
@@ -975,4 +978,51 @@ export async function getWebhookKennzahlen(
 /** Die vollständige Payload eines Eingangs — ungekürzt, plus resolution. */
 export async function getWebhookDetail(id: string): Promise<WebhookDetail> {
   return api<WebhookDetail>(`/platform/webhook/${id}`, { cache: "no-store" });
+}
+
+// --- Ereignisse abhaken (Webhook + Worker) -----------------------------------
+//
+// DER BEFUND (13.08.2026): `resolved` existierte beim Webhook-Verlauf seit jeher,
+// wurde aber NIE gesetzt — bei allen 603 Ereignissen stand `false`. Die Konsole
+// zeigte 18 Fehler dauerhaft als „Eingriff nötig", darunter vier
+// `deactivate_channel` vom Vortag, während live ALLE Booking-Kanäle wieder aktiv
+// waren. Eine Warnung, die nie verschwindet, wird zur Tapete: Stehen achtzehn
+// erledigte Einträge dauerhaft rot, übersieht man den einen, der heute zählt.
+
+/** Welcher Monitor — der einzige Unterschied ist der Pfad. */
+export type MonitorQuelle = "webhook" | "worker";
+
+export interface ErledigtZustand {
+  id: string;
+  resolved: boolean;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  /** Die Notiz, falls beim Abhaken eine hinterlassen wurde. */
+  notiz: string | null;
+}
+
+/** Ein Ereignis abhaken, optional mit Notiz. Idempotent: Ein zweiter Klick
+ *  überschreibt weder Zeitpunkt noch Bearbeiter. */
+export async function postEreignisErledigt(
+  quelle: MonitorQuelle,
+  id: string,
+  notiz: string | null,
+): Promise<ErledigtZustand> {
+  return api<ErledigtZustand>(`/platform/${quelle}/${id}/erledigen`, {
+    method: "POST",
+    body: { notiz },
+    cache: "no-store",
+  });
+}
+
+/** Ein versehentlich abgehaktes Ereignis wieder öffnen — ohne diesen Rückweg
+ *  liesse ein Fehlklick ein echtes Problem still verschwinden. */
+export async function postEreignisOffen(
+  quelle: MonitorQuelle,
+  id: string,
+): Promise<ErledigtZustand> {
+  return api<ErledigtZustand>(`/platform/${quelle}/${id}/oeffnen`, {
+    method: "POST",
+    cache: "no-store",
+  });
 }

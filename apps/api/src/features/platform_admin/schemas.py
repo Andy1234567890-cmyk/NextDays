@@ -766,6 +766,10 @@ class WorkerEreignis(BaseModel):
     # UNSERE Uhr. Bei richtung=empfangen der Eingang bei uns, nicht der
     # Zeitpunkt beim Portal (Wurzel 5b).
     erfasst_at: str
+    # Vom Menschen abgehakt (0392). Ein Fehler bleibt sonst für immer offen
+    # stehen, auch wenn der nächste Lauf längst durchlief — und eine Warnung,
+    # die nie verschwindet, wird übersehen.
+    resolved: bool = False
 
 
 class WorkerEreignisListe(BaseModel):
@@ -901,6 +905,27 @@ class WebhookKennzahlen(BaseModel):
     # aussehen, während vier Inserate stillstehen.
     handlungsbedarf: int = 0
     fehler_offen: int = 0
+
+
+class ErledigenRequest(BaseModel):
+    """Ein Ereignis abhaken, optional mit Notiz.
+
+    Die Notiz ist freiwillig — ein Pflichtfeld würde beim Aufräumen von achtzehn
+    Altlasten achtzehnmal „ok" produzieren und wäre damit wertlos.
+    """
+
+    notiz: str | None = Field(default=None, max_length=2000)
+
+
+class ErledigenResponse(BaseModel):
+    """Der Zustand nach dem Abhaken — was die Liste zum Neuzeichnen braucht."""
+
+    id: str
+    resolved: bool
+    resolved_at: str | None = None
+    resolved_by: str | None = None
+    #: Die Notiz, falls eine hinterlassen wurde. None = ohne Notiz erledigt.
+    notiz: str | None = None
 
 
 class WebhookDetail(BaseModel):

@@ -14,6 +14,7 @@
 // booking_new mitzieht — der häufigste Grund für eine neue Zeile.
 import { useCallback, useEffect, useState, useTransition } from "react";
 
+import { ErledigtKnopf } from "@/components/erledigt-knopf";
 import { useRealtime } from "@/lib/use-realtime";
 import type { WebhookEreignis } from "@/lib/backoffice";
 // Über Server Actions, NICHT direkt aus `lib/backoffice`: dessen `api()` liest
@@ -200,6 +201,10 @@ export function WebhookTabelle({
 
 function Zeile({ ereignis: e }: { ereignis: WebhookEreignis }) {
   const [offen, setOffen] = useState(false);
+  // Erledigt-Zustand lokal, damit die Zeile nach dem Abhaken sofort umspringt,
+  // ohne die ganze Liste neu zu laden (der Filter würde sonst springen).
+  const [erledigt, setErledigt] = useState(e.resolved);
+  const [notiz, setNotiz] = useState<string | null>(null);
   const [payload, setPayload] = useState<Record<string, unknown> | null>(null);
   const [resolution, setResolution] = useState<Record<string, unknown> | null>(
     null,
@@ -230,6 +235,9 @@ function Zeile({ ereignis: e }: { ereignis: WebhookEreignis }) {
   }
 
   const fehler = e.severity === "error";
+  // Nach dem Abhaken ist der Handlungsbedarf weg — die Server-Antwort trägt
+  // das Flag nicht neu, also hier ableiten statt die Liste neu zu laden.
+  const handlungsbedarf = e.handlungsbedarf && !erledigt;
   return (
     <>
       <tr
@@ -263,18 +271,48 @@ function Zeile({ ereignis: e }: { ereignis: WebhookEreignis }) {
         </td>
         <td className="py-2 pr-4">{e.betrieb ?? "—"}</td>
         <td className="py-2 pr-4">{e.objekt ?? "—"}</td>
-        <td className="py-2 whitespace-nowrap">
-          {e.handlungsbedarf ? (
-            <span className="font-semibold text-destructive">
-              Eingriff nötig
+        {/* Klicks im Status dürfen die Zeile nicht auf-/zuklappen — sonst
+            springt beim Abhaken die Payload auf. */}
+        <td
+          className="py-2 whitespace-nowrap"
+          onClick={(ev) => ev.stopPropagation()}
+        >
+          <div className="flex flex-col gap-1">
+            <span
+              className={
+                erledigt
+                  ? "text-xs text-muted-foreground"
+                  : handlungsbedarf
+                    ? "font-semibold text-destructive"
+                    : fehler
+                      ? "text-destructive"
+                      : "text-muted-foreground"
+              }
+            >
+              {erledigt
+                ? "erledigt"
+                : handlungsbedarf
+                  ? "Eingriff nötig"
+                  : fehler
+                    ? "Fehler"
+                    : "offen"}
             </span>
-          ) : fehler ? (
-            <span className="text-destructive">Fehler</span>
-          ) : e.resolved ? (
-            <span className="text-muted-foreground">erledigt</span>
-          ) : (
-            <span className="text-muted-foreground">offen</span>
-          )}
+            {/* Abhaken nur, wo es etwas zu tun gibt: Eine Bewertung oder eine
+                eingegangene Buchung ist kein Vorgang, den jemand abarbeitet —
+                ein Knopf an 457 solchen Zeilen wäre nur Lärm. */}
+            {fehler || handlungsbedarf || erledigt ? (
+              <ErledigtKnopf
+                quelle="webhook"
+                id={e.id}
+                resolved={erledigt}
+                notiz={notiz}
+                onGeaendert={(r, n) => {
+                  setErledigt(r);
+                  setNotiz(n);
+                }}
+              />
+            ) : null}
+          </div>
         </td>
       </tr>
 

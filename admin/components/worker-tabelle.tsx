@@ -14,6 +14,7 @@
 // lesbar). Der Server prüft `platform_admin` und liefert dann ALLES.
 import { useCallback, useEffect, useState, useTransition } from "react";
 
+import { ErledigtKnopf } from "@/components/erledigt-knopf";
 import { useRealtime } from "@/lib/use-realtime";
 import type { WorkerEreignis } from "@/lib/backoffice";
 // Über Server Actions, NICHT direkt aus `lib/backoffice`: dessen `api()` liest
@@ -241,6 +242,10 @@ function QuelleAnsicht({
 
 function Zeile({ ereignis: e }: { ereignis: WorkerEreignis }) {
   const [offen, setOffen] = useState(false);
+  // Erledigt-Zustand lokal, damit die Zeile nach dem Abhaken sofort umspringt,
+  // ohne die ganze Liste neu zu laden (der Filter würde sonst springen).
+  const [erledigt, setErledigt] = useState(Boolean(e.resolved));
+  const [notiz, setNotiz] = useState<string | null>(null);
   const [quelle, setQuelle] = useState<Record<string, unknown> | null>(null);
   const [detailFehler, setDetailFehler] = useState<string | null>(null);
   const [holt, starteHolen] = useTransition();
@@ -303,17 +308,39 @@ function Zeile({ ereignis: e }: { ereignis: WorkerEreignis }) {
         <td className="py-2 pr-4 text-right tabular-nums text-muted-foreground">
           {e.dauer_ms ?? "—"}
         </td>
-        <td className="py-2">
-          {fehler ? (
-            <span className="font-semibold text-destructive">Fehler</span>
-          ) : (
-            <span className="text-muted-foreground">ok</span>
-          )}
-          {e.versuche && e.versuche > 1 ? (
-            <span className="ml-2 text-xs text-muted-foreground">
-              {e.versuche}. Versuch
+        {/* Klicks im Status dürfen die Zeile nicht auf-/zuklappen. */}
+        <td className="py-2" onClick={(ev) => ev.stopPropagation()}>
+          <div className="flex flex-col gap-1">
+            <span>
+              {erledigt ? (
+                <span className="text-xs text-muted-foreground">erledigt</span>
+              ) : fehler ? (
+                <span className="font-semibold text-destructive">Fehler</span>
+              ) : (
+                <span className="text-muted-foreground">ok</span>
+              )}
+              {e.versuche && e.versuche > 1 ? (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {e.versuche}. Versuch
+                </span>
+              ) : null}
             </span>
-          ) : null}
+            {/* Nur an fehlgeschlagenen Läufen: Ein erfolgreicher Job ist kein
+                Vorgang, den jemand abarbeitet — bei 1947 „ok"-Zeilen wäre ein
+                Knopf an jeder davon reiner Lärm. */}
+            {fehler || erledigt ? (
+              <ErledigtKnopf
+                quelle="worker"
+                id={e.id}
+                resolved={erledigt}
+                notiz={notiz}
+                onGeaendert={(r, n) => {
+                  setErledigt(r);
+                  setNotiz(n);
+                }}
+              />
+            ) : null}
+          </div>
         </td>
       </tr>
 

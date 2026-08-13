@@ -14,6 +14,7 @@ from fastapi import APIRouter, HTTPException, Query, Request, status
 
 from src.core.security import CurrentPlatformAdmin, require_platform_write
 
+from . import ereignis_erledigen as erledigen_dienst
 from . import webhook_verlauf as webhook
 from . import worker_verlauf as worker
 from .dependencies import (
@@ -30,6 +31,8 @@ from .schemas import (
     DeployLog,
     DeployUebersicht,
     DeployVerlauf,
+    ErledigenRequest,
+    ErledigenResponse,
     FinanzUebersicht,
     ModerationDecision,
     ModerationList,
@@ -1014,6 +1017,129 @@ def webhook_ereignisse(  # noqa: PLR0913 — jeder Filter ist eine Achse der Ans
     )
     service.log_action(ctx, "webhook.events", request=request)
     return ergebnis
+
+
+# WICHTIG: die Erledigt-Routen VOR `/webhook/{ereignis_id}` — sonst schluckt die
+# Detail-Route den Pfad und „erledigen" landet nie beim richtigen Handler
+# (dasselbe Muster wie bei `/webhook/kennzahlen` weiter oben).
+@router.post("/webhook/{ereignis_id}/erledigen", response_model=ErledigenResponse)
+def webhook_erledigen(
+    ereignis_id: str,
+    req: ErledigenRequest,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    db: DeployDbDep,
+    request: Request,
+) -> ErledigenResponse:
+    """Ein Webhook-Ereignis abhaken.
+
+    Ohne diesen Weg blieb `resolved` auf `false` stehen — live bei ALLEN 603
+    Ereignissen — und die Liste zeigte 18 längst behobene Fehler dauerhaft als
+    „Eingriff nötig". Eine Warnung, die nie verschwindet, wird übersehen."""
+    try:
+        ergebnis = erledigen_dienst.erledigen(
+            db, ctx, erledigen_dienst.WEBHOOK, ereignis_id, notiz=req.notiz
+        )
+    except erledigen_dienst.ErledigenFehler as exc:
+        raise HTTPException(
+            status_code=exc.status_code, detail=exc.message
+        ) from exc
+    service.log_action(
+        ctx,
+        "webhook.resolve",
+        target_type="channex_webhook_event",
+        target_id=ereignis_id,
+        request=request,
+    )
+    return ErledigenResponse(**ergebnis)
+
+
+@router.post("/webhook/{ereignis_id}/oeffnen", response_model=ErledigenResponse)
+def webhook_wieder_oeffnen(
+    ereignis_id: str,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    db: DeployDbDep,
+    request: Request,
+) -> ErledigenResponse:
+    """Ein versehentlich abgehaktes Ereignis wieder öffnen — der Rückweg.
+
+    Ohne ihn wäre ein Fehlklick endgültig und liesse ein echtes Problem still
+    aus der Liste verschwinden."""
+    try:
+        ergebnis = erledigen_dienst.wieder_oeffnen(
+            db, ctx, erledigen_dienst.WEBHOOK, ereignis_id
+        )
+    except erledigen_dienst.ErledigenFehler as exc:
+        raise HTTPException(
+            status_code=exc.status_code, detail=exc.message
+        ) from exc
+    service.log_action(
+        ctx,
+        "webhook.reopen",
+        target_type="channex_webhook_event",
+        target_id=ereignis_id,
+        request=request,
+    )
+    return ErledigenResponse(**ergebnis)
+
+
+@router.post("/worker/{ereignis_id}/erledigen", response_model=ErledigenResponse)
+def worker_erledigen(
+    ereignis_id: str,
+    req: ErledigenRequest,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    db: DeployDbDep,
+    request: Request,
+) -> ErledigenResponse:
+    """Einen fehlgeschlagenen Job-Lauf abhaken.
+
+    Dasselbe wie beim Webhook-Monitor: Ein Fehler bleibt sonst für immer stehen,
+    auch wenn der nächste Lauf längst durchlief."""
+    try:
+        ergebnis = erledigen_dienst.erledigen(
+            db, ctx, erledigen_dienst.WORKER, ereignis_id, notiz=req.notiz
+        )
+    except erledigen_dienst.ErledigenFehler as exc:
+        raise HTTPException(
+            status_code=exc.status_code, detail=exc.message
+        ) from exc
+    service.log_action(
+        ctx,
+        "worker.resolve",
+        target_type="worker_ereignis",
+        target_id=ereignis_id,
+        request=request,
+    )
+    return ErledigenResponse(**ergebnis)
+
+
+@router.post("/worker/{ereignis_id}/oeffnen", response_model=ErledigenResponse)
+def worker_wieder_oeffnen(
+    ereignis_id: str,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    db: DeployDbDep,
+    request: Request,
+) -> ErledigenResponse:
+    """Einen versehentlich abgehakten Job-Lauf wieder öffnen."""
+    try:
+        ergebnis = erledigen_dienst.wieder_oeffnen(
+            db, ctx, erledigen_dienst.WORKER, ereignis_id
+        )
+    except erledigen_dienst.ErledigenFehler as exc:
+        raise HTTPException(
+            status_code=exc.status_code, detail=exc.message
+        ) from exc
+    service.log_action(
+        ctx,
+        "worker.reopen",
+        target_type="worker_ereignis",
+        target_id=ereignis_id,
+        request=request,
+    )
+    return ErledigenResponse(**ergebnis)
 
 
 @router.get("/webhook/{ereignis_id}", response_model=WebhookDetail)

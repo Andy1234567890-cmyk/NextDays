@@ -78,6 +78,9 @@ def _zeile(row: dict[str, Any], titel: dict[str, str]) -> WorkerEreignis:
         zusammenfassung=row.get("zusammenfassung"),
         kennzahlen=row.get("kennzahlen"),
         erfasst_at=str(row.get("erfasst_at")),
+        # 0392: abgehakt oder nicht. Ohne dieses Feld zeigte die Liste einen
+        # längst behobenen Fehler für immer als offen.
+        resolved=bool(row.get("resolved")),
     )
 
 
