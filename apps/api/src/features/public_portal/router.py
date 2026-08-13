@@ -13,8 +13,13 @@ from src.core.security import AuthContext
 from src.features.auth.dependencies import require_permission
 from src.features.auth.permissions import Capability
 
-from .dependencies import DienstleistungsServiceDep, PublicPortalServiceDep
+from .dependencies import (
+    DienstleistungsServiceDep,
+    OwnerFamilyServiceDep,
+    PublicPortalServiceDep,
+)
 from .dienstleistungen import DienstleistungError
+from .familie import FamilieError
 from .schemas import (
     BlockRequestCreate,
     BlockRequestItem,
@@ -33,6 +38,17 @@ from .schemas_dienstleistungen import (
     ServiceRequestItem,
     ServiceRequestList,
     ServiceTypeList,
+)
+from .schemas_familie import (
+    FamilienZugangCreate,
+    FamilienZugangCreated,
+    FamilienZugangItem,
+    FamilienZugangList,
+    FamilienZugangUpdate,
+    FreigabeAntragItem,
+    FreigabeAntragList,
+    FreigabeEntscheidung,
+    PortalRolleInfo,
 )
 from .service import PortalError
 
@@ -207,4 +223,203 @@ def my_service_requests(
     try:
         return service.my_service_requests(ctx)
     except DienstleistungError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Familienzugänge (0389) --------------------------------------------------
+# Der Eigentümer lädt Angehörige mit EIGENEM Login ein und legt je Person und
+# Objekt fest, was sie darf.
+#
+# WICHTIG — wer hier hineindarf: Alle folgenden Endpunkte hängen an
+# `REQUEST_BLOCK`, das Familienmitglieder ebenfalls haben. Die Capability allein
+# genügt hier also NICHT als Autorisierung (Wurzel 9: Authentifizierung ≠
+# Autorisierung). Zwei unabhängige Riegel im Service:
+#   * `_require_kein_mitglied` — wer selbst Familienzugang ist, verwaltet
+#     nichts. Ohne diesen Riegel bestünde ein Mitglied die Objekt-Prüfung
+#     mühelos (es DARF das Objekt ja sehen) und könnte jemanden einladen, dabei
+#     eine Stufe vergeben, die der Eigentümer nie erlaubt hat, und würde als
+#     `owner_user_id` selbst zum Freigabe-Anker.
+#   * `owner_user_id = ich` in `_eigene_zeile` und `_antrag_in_meinem_scope` —
+#     jeder Item-Zugriff prüft denselben Scope wie die Liste.
+# Der zweite allein sah lange aus, als genügte er (ein Mitglied ist für
+# niemanden Anker). Für die Einladung stimmte das nicht: dort ENTSTEHT der
+# Anker erst. Deshalb beide.
+
+
+@router.get("/familie/rolle", response_model=PortalRolleInfo)
+def familie_rolle(
+    service: OwnerFamilyServiceDep,
+    ctx: Annotated[AuthContext, Depends(_VIEW)],
+) -> PortalRolleInfo:
+    """Was ist der eingeloggte Portal-Nutzer, und was darf er?
+
+    Damit die Oberfläche keinen Menüpunkt zeigt, der in eine leere Liste oder
+    einen 403 führt. Bewusst an `VIEW_CALENDAR` (hat jeder Portal-Nutzer) und
+    nicht an `REQUEST_BLOCK`: Auch wer nichts verwalten darf, muss erfahren,
+    dass er nichts verwalten darf.
+
+    Die Antwort steuert nur die SICHTBARKEIT — jeder Endpunkt prüft seine
+    Rechte weiterhin selbst (Wurzel 9).
+    """
+    try:
+        return PortalRolleInfo(**service.eigene_rolle(ctx))
+    except FamilieError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/familie", response_model=FamilienZugangList)
+def familie_liste(
+    service: OwnerFamilyServiceDep,
+    portal: PublicPortalServiceDep,
+    ctx: Annotated[AuthContext, Depends(_BLOCK)],
+) -> FamilienZugangList:
+    """Die Familienzugänge, die DIESER Eigentümer vergeben hat."""
+    try:
+        ids = portal.owned_property_ids(ctx)
+        rows = service.liste(ctx, ids)
+    except (FamilieError, PortalError) as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    items = [
+        FamilienZugangItem(
+            id=str(r["id"]),
+            user_id=str(r["user_id"]),
+            property_id=str(r["property_id"]),
+            access=r["access"],
+            # Der eingebettete users-Datensatz kann fehlen, wenn der Login
+            # inzwischen gelöscht wurde — dann bleibt der Name leer statt zu
+            # raten (Wurzel 4).
+            email=(r.get("users") or {}).get("email"),
+            full_name=(r.get("users") or {}).get("full_name"),
+            created_at=r.get("created_at"),
+        )
+        for r in rows
+    ]
+    return FamilienZugangList(items=items, total=len(items))
+
+
+@router.post(
+    "/familie",
+    response_model=FamilienZugangCreated,
+    status_code=status.HTTP_201_CREATED,
+)
+def familie_einladen(
+    req: FamilienZugangCreate,
+    service: OwnerFamilyServiceDep,
+    portal: PublicPortalServiceDep,
+    ctx: Annotated[AuthContext, Depends(_BLOCK)],
+) -> FamilienZugangCreated:
+    """Ein Familienmitglied zu einem Objekt einladen.
+
+    Der Login entsteht über denselben Einladungsweg wie bei der Agentur
+    (`AuthService.invite`) — kein zweiter Mailpfad, der beim nächsten
+    Sicherheitsfix vergessen würde.
+    """
+    try:
+        # Objekt-Scope zuerst (Wurzel 3): sonst ließe sich über eine geratene
+        # property_id jemand in ein FREMDES Objekt einladen.
+        portal.require_own_property(ctx, req.property_id)
+        zeile, versendet = service.einladen(
+            ctx,
+            property_id=req.property_id,
+            email=str(req.email),
+            full_name=req.full_name,
+            access=req.access,
+            sprache=req.preferred_language,
+        )
+    except (FamilieError, PortalError) as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return FamilienZugangCreated(
+        zugang=FamilienZugangItem(
+            id=str(zeile["id"]),
+            user_id=str(zeile["user_id"]),
+            property_id=str(zeile["property_id"]),
+            access=zeile["access"],
+            email=str(req.email),
+            full_name=req.full_name,
+            created_at=zeile.get("created_at"),
+        ),
+        einladung_versendet=versendet,
+    )
+
+
+
+@router.get("/familie/freigaben", response_model=FreigabeAntragList)
+def freigaben_offen(
+    service: OwnerFamilyServiceDep,
+    ctx: Annotated[AuthContext, Depends(_BLOCK)],
+) -> FreigabeAntragList:
+    """Sperranträge der Familie, die auf meine Freigabe warten (Stufe 1)."""
+    try:
+        rows = service.offene_antraege(ctx)
+        namen = service.antragsteller_namen(rows)
+    except FamilieError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    items = [
+        FreigabeAntragItem(
+            id=str(r["id"]),
+            property_id=str(r["property_id"]),
+            unit_id=str(r["unit_id"]) if r.get("unit_id") else None,
+            start_date=str(r["start_date"]),
+            end_date=str(r["end_date"]),
+            reason=r.get("reason"),
+            created_at=r.get("created_at"),
+            requested_by=str(r["requested_by"]),
+            antragsteller=namen.get(str(r["requested_by"])),
+        )
+        for r in rows
+    ]
+    return FreigabeAntragList(items=items, total=len(items))
+
+
+@router.post("/familie/freigaben/{antrag_id}", status_code=status.HTTP_204_NO_CONTENT)
+def freigabe_entscheiden(
+    antrag_id: str,
+    req: FreigabeEntscheidung,
+    service: OwnerFamilyServiceDep,
+    ctx: Annotated[AuthContext, Depends(_BLOCK)],
+) -> None:
+    """Stufe 1 entscheiden.
+
+    Freigeben reicht den Antrag an die Agentur weiter; ablehnen beendet ihn —
+    die Agentur sieht ihn nie. In BEIDEN Fällen passiert am Kalender nichts:
+    die Reservierung entsteht erst bei der Genehmigung durch die Agentur.
+    """
+    try:
+        service.entscheiden(
+            ctx, antrag_id, freigeben=req.freigeben, note=req.note
+        )
+    except FamilieError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+@router.patch("/familie/{mitglied_id}", response_model=FamilienZugangItem)
+def familie_stufe_aendern(
+    mitglied_id: str,
+    req: FamilienZugangUpdate,
+    service: OwnerFamilyServiceDep,
+    ctx: Annotated[AuthContext, Depends(_BLOCK)],
+) -> FamilienZugangItem:
+    """Zugriffsstufe ändern — etwa Berichte nachträglich freigeben."""
+    try:
+        zeile = service.stufe_aendern(ctx, mitglied_id, req.access)
+    except FamilieError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return FamilienZugangItem(
+        id=str(zeile["id"]),
+        user_id=str(zeile["user_id"]),
+        property_id=str(zeile["property_id"]),
+        access=zeile["access"],
+        created_at=zeile.get("created_at"),
+    )
+
+
+@router.delete("/familie/{mitglied_id}", status_code=status.HTTP_204_NO_CONTENT)
+def familie_entfernen(
+    mitglied_id: str,
+    service: OwnerFamilyServiceDep,
+    ctx: Annotated[AuthContext, Depends(_BLOCK)],
+) -> None:
+    """Zugang entziehen — Familien-Zeile UND Objekt-Sichtbarkeit."""
+    try:
+        service.entfernen(ctx, mitglied_id)
+    except FamilieError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

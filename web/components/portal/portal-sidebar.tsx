@@ -37,13 +37,30 @@ import {
   SidebarTrigger,
 } from "@nextdays/ui/sidebar";
 
-type PortalNavItem = { key: string; href: string; icon: string };
+type PortalNavItem = {
+  key: string;
+  href: string;
+  icon: string;
+  /** Nur zeigen, wenn die Finanzberichte freigegeben sind (0389). */
+  braucht?: "berichte" | "zugaenge";
+};
 
 const NAV: readonly PortalNavItem[] = [
   { key: "overview", href: "/portal", icon: "ph:squares-four" },
   { key: "calendar", href: "/portal/kalender", icon: "ph:calendar-blank" },
-  { key: "reports", href: "/portal/berichte", icon: "ph:chart-line" },
+  {
+    key: "reports",
+    href: "/portal/berichte",
+    icon: "ph:chart-line",
+    braucht: "berichte",
+  },
   { key: "blockRequests", href: "/portal/sperrungen", icon: "ph:hand-palm" },
+  {
+    key: "familyAccess",
+    href: "/portal/zugaenge",
+    icon: "ph:users-three",
+    braucht: "zugaenge",
+  },
   { key: "meterReadings", href: "/portal/zaehlerstaende", icon: "ph:gauge" },
   { key: "services", href: "/portal/dienstleistungen", icon: "ph:broom" },
   {
@@ -53,7 +70,20 @@ const NAV: readonly PortalNavItem[] = [
   },
 ];
 
-export function PortalSidebar({ email = "" }: { email?: string }) {
+export function PortalSidebar({
+  email = "",
+  darfBerichte = true,
+  darfZugaenge = true,
+}: {
+  email?: string;
+  /** Aus GET /public-portal/familie/rolle. Voreinstellung `true`, weil der
+   *  Normalfall der Eigentümer selbst ist — und weil ein Ladefehler die
+   *  Navigation nicht leerräumen darf (Wurzel 5: „konnte nicht laden" ist
+   *  nicht „darf nicht"). Sicherheit hängt NICHT hieran: jeder Endpunkt prüft
+   *  seine Rechte selbst, ein sichtbarer Punkt führt höchstens zu 403. */
+  darfBerichte?: boolean;
+  darfZugaenge?: boolean;
+}) {
   const t = useTranslations("portal.nav");
   const tPortal = useTranslations("portal");
   const pathname = usePathname();
@@ -82,7 +112,11 @@ export function PortalSidebar({ email = "" }: { email?: string }) {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {NAV.map((item) => (
+              {NAV.filter(
+                (item) =>
+                  (item.braucht !== "berichte" || darfBerichte) &&
+                  (item.braucht !== "zugaenge" || darfZugaenge),
+              ).map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild

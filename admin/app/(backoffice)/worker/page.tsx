@@ -14,6 +14,7 @@ import {
   getWorkerKennzahlen,
   type WorkerEreignis,
   type WorkerKennzahlen,
+  type WorkerStillstand,
 } from "@/lib/backoffice";
 
 export default async function WorkerSeite() {
@@ -51,6 +52,34 @@ export default async function WorkerSeite() {
           ? `${kennzahlen.ereignisse} Vorgänge in ${kennzahlen.stunden} h · ${kennzahlen.fehler} Fehler`
           : "Jobs, Portal-Aufrufe und eingehende Webhooks"}
       </p>
+
+      {/* Stillstand steht GANZ oben — vor allen Zählwerken. Am 13.08.2026 stand
+          der Buchungs-Feed 16 Stunden still und diese Seite meldete „1000
+          Vorgänge · 0 Fehler": beide Zahlen stimmten, denn die Jobs liefen und
+          verzögerten sich nur ergebnislos (ein geplanter Ausgang, kein Fehler).
+          Ein Storno kam deshalb 16 h nicht an; bei einer NEUEN Buchung wäre es
+          eine Doppelbelegung geworden. Was ausbleibt, muss man sehen, ohne es
+          zu suchen. */}
+      {kennzahlen && kennzahlen.stillstand.length > 0 ? (
+        <div className="mt-5 rounded-lg border-2 border-destructive bg-destructive/5 p-4">
+          <p className="text-[0.9375rem] font-bold text-destructive">
+            {kennzahlen.stillstand.length === 1
+              ? "1 Kern-Job steht still"
+              : `${kennzahlen.stillstand.length} Kern-Jobs stehen still`}
+          </p>
+          <ul className="mt-2 flex flex-col gap-1.5">
+            {kennzahlen.stillstand.map((s) => (
+              <li key={s.vorgang} className="text-sm">
+                <span className="font-semibold">{s.beschreibung}</span>{" "}
+                <span className="text-muted-foreground">
+                  ({s.vorgang}) — {stillstandText(s)}, erwartet alle{" "}
+                  {Math.round(s.erwartet_alle_sekunden / 60)} min
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {/* Die Warteschlange steht oben, weil sie der Grund ist, aus dem jemand
           diese Seite öffnet: „hängt etwas?". Sie kommt aus `jobs` und nicht aus
@@ -146,6 +175,21 @@ export default async function WorkerSeite() {
       )}
     </div>
   );
+}
+
+/** Seit wann ein Job still ist — in Klartext statt in Sekunden.
+ *
+ *  `zuletzt = null` heißt: im Beobachtungsfenster kein einziger erfolgreicher
+ *  Lauf. Das wird auch so gesagt und nicht zu „seit 0 min still" geglättet —
+ *  ein erfundener Ersatzwert wäre hier die gefährlichste Aussage (Wurzel 4). */
+function stillstandText(s: WorkerStillstand): string {
+  if (s.still_seit_sekunden === null) {
+    return "kein erfolgreicher Lauf im Beobachtungsfenster";
+  }
+  const min = Math.round(s.still_seit_sekunden / 60);
+  if (min < 90) return `seit ${min} min kein Erfolg`;
+  const std = Math.round(min / 60);
+  return `seit ${std} h kein Erfolg`;
 }
 
 function Kachel({

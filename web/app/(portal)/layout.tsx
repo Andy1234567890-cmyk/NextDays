@@ -14,6 +14,7 @@ import { PortalSidebar } from "@/components/portal/portal-sidebar";
 import { PortalTopbar } from "@/components/portal/portal-topbar";
 import { RealtimeDebugPanel } from "@/components/realtime-debug-panel";
 import { SidebarInset, SidebarProvider } from "@nextdays/ui/sidebar";
+import { ladePortalRolle } from "@/lib/portal-familie";
 import { portalGuard } from "@/lib/rollen-guard";
 
 export default async function PortalLayout({
@@ -41,9 +42,20 @@ export default async function PortalLayout({
     );
   }
 
+  // Was dieser Zugang darf (0389). Ein Ladefehler räumt die Navigation NICHT
+  // leer: Voreinstellung ist der Normalfall „Eigentümer, darf alles". Das ist
+  // kein Sicherheitsloch — die Endpunkte prüfen selbst, ein überflüssiger
+  // Menüpunkt führt höchstens zu einem 403 (Wurzel 5: „konnte nicht laden" ist
+  // nicht „darf nicht").
+  const rolle = await ladePortalRolle();
+
   return (
     <SidebarProvider>
-      <PortalSidebar email={sitzung.me.email ?? ""} />
+      <PortalSidebar
+        email={sitzung.me.email ?? ""}
+        darfBerichte={rolle.ok ? rolle.data.darf_berichte : true}
+        darfZugaenge={rolle.ok ? rolle.data.darf_zugaenge : true}
+      />
       <SidebarInset>
         <PortalTopbar />
         <main className="flex min-w-0 flex-1 flex-col p-4 md:p-6">

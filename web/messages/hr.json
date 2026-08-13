@@ -1365,6 +1365,7 @@
   "portal": {
     "title": "Moj portal",
     "subtitle": "Pregled tvojih objekata, prihoda i obračuna.",
+    "subtitleNoFinance": "Pregled Vaših objekata.",
     "properties": {
       "title": "Moji objekti",
       "empty": "Trenutno ti nije dodijeljen nijedan objekt.",
@@ -1408,7 +1409,8 @@
         "pending": "U provjeri",
         "approved": "Odobreno",
         "rejected": "Odbijeno",
-        "cancelled": "Povučeno"
+        "ownerPending": "Čeka obitelj",
+        "ownerDeclined": "Odbio vlasnik"
       },
       "reason": "Razlog",
       "reasonPlaceholder": "Zašto bi trebalo biti blokirano? (npr. vlastito korištenje, majstori)",
@@ -1451,7 +1453,8 @@
       "blockRequests": "Blokade",
       "meterReadings": "Očitanja brojila",
       "services": "Usluge",
-      "notifications": "Obavijesti"
+      "notifications": "Obavijesti",
+      "familyAccess": "Pristupi"
     },
     "overview": {
       "occupancy": "Popunjenost",
@@ -1489,6 +1492,7 @@
         "label": "Nije moguće iskazati",
         "provision": "Za ovaj objekt nije postavljena provizija — uprava je mora dodati.",
         "provisionUngueltig": "Postavljena provizija je izvan raspona 0–100 %.",
+        "provisionZeitraum": "U razdoblju ovog boravka nije bio na snazi nijedan ugovor s vlasnikom — mjerodavan je datum odlaska.",
         "betrag": "Ovoj rezervaciji nedostaje ukupni iznos.",
         "naechte": "Razdoblje ove rezervacije nije važeće.",
         "waehrungVertrag": "Ugovorena fiksna naknada je u drugoj valuti od ove rezervacije — iznosi se ne pretvaraju."
@@ -1587,6 +1591,40 @@
         "draft": "U pripremi",
         "finalized": "Završeno",
         "cancelled": "Otkazano"
+      }
+    },
+    "family": {
+      "title": "Pristupi za obitelj i prijatelje",
+      "hint": "Daj svojim bližnjima vlastiti pristup umjesto da dijeliš lozinku. Za svaku osobu sam odlučuješ što smije vidjeti.",
+      "empty": "Još nije dodijeljen nijedan pristup.",
+      "remove": "Ukloni",
+      "removed": "Pristup uklonjen.",
+      "invite": {
+        "property": "Objekt",
+        "name": "Ime",
+        "email": "E-pošta",
+        "submit": "Pozovi",
+        "sending": "Šalje se pozivnica …",
+        "sent": "Pozivnica poslana.",
+        "linked": "Pristup je povezan s postojećim računom. Pozivnica nije poslana.",
+        "incomplete": "Unesi objekt, ime i e-poštu.",
+        "reportsLabel": "Otvori izvještaje",
+        "reportsHint": "Dodatno prihodi, obračun i isplata. Bez toga osoba vidi samo kalendar i blokade — bez iznosa."
+      },
+      "level": {
+        "use": "Korištenje",
+        "reports": "Korištenje i izvještaji",
+        "grantReports": "Otvori izvještaje",
+        "revokeReports": "Zatvori izvještaje"
+      },
+      "approvals": {
+        "title": "Želje tvoje obitelji",
+        "hint": "Tvoja obitelj želi sama koristiti ova razdoblja. Ako odobriš, želja ide agenciji — blokira se tek kad se ona složi.",
+        "approve": "Pošalji agenciji",
+        "decline": "Odbij",
+        "notePlaceholder": "Napomena (nije obvezno)",
+        "forwarded": "Proslijeđeno agenciji.",
+        "declined": "Odbijeno. Agencija za to neće saznati."
       }
     }
   },

@@ -12,7 +12,10 @@ export type Result<T> =
 
 async function call<T>(
   path: string,
-  opts: { method?: "GET" | "POST" | "DELETE"; body?: unknown } = {},
+  opts: {
+    method?: "GET" | "POST" | "PATCH" | "DELETE";
+    body?: unknown;
+  } = {},
 ): Promise<Result<T>> {
   const token = await currentToken();
   if (!token) return { ok: false, error: "Nicht angemeldet." };
@@ -82,5 +85,24 @@ export async function erteileZustimmung(
   return call<{ weiter_zu: string }>("/mcp/consent", {
     method: "POST",
     body: eingabe,
+  });
+}
+
+/** Freitexte einer BESTEHENDEN Verbindung zu- oder abschalten (0389).
+ *
+ * Bis dahin war der Umfang nur beim Verbinden wählbar — wer die Freitexte
+ * später brauchte, musste trennen und neu verbinden, während der Hinweis in
+ * den Werkzeugen selbst auf „Konto → Verbindungen" verwies.
+ *
+ * Das ABSCHALTEN löscht serverseitig die Erneuerungs-Token, damit es sofort
+ * wirkt: Der Scope steht im Zugangstoken und gälte sonst noch bis zu eine
+ * Stunde weiter. */
+export async function setzeUmfang(
+  clientId: string,
+  freitexte: boolean,
+): Promise<Result<{ scope: string }>> {
+  return call<{ scope: string }>("/mcp/verbindungen", {
+    method: "PATCH",
+    body: { client_id: clientId, freitexte },
   });
 }

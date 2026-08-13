@@ -207,6 +207,11 @@ type Aufenthalt = {
 const GRUND_KEYS: Record<string, string> = {
   provision: "calendar.payoutUnknown.provision",
   provision_ungueltig: "calendar.payoutUnknown.provisionUngueltig",
+  // Eigentümer und Vertrag existieren — der Vertrag gilt nur nicht für DIESEN
+  // Aufenthalt (Stichtag ist die Abreise, 0343). Ein eigener Grund, weil
+  // „Provision fehlt" hier in die Irre führt: live gesucht am 13.08.2026, als
+  // ein Vertrag ab 12.08. eine am 09.08. abgereiste Buchung nicht abdeckte.
+  provision_zeitraum: "calendar.payoutUnknown.provisionZeitraum",
   betrag: "calendar.payoutUnknown.betrag",
   naechte: "calendar.payoutUnknown.naechte",
   // Pauschale/Mindestprovision des Vertrags lauten auf eine andere Währung als

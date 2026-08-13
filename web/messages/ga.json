@@ -1365,6 +1365,7 @@
   "portal": {
     "title": "Mo thairseach",
     "subtitle": "Forléargas ar do réadmhaoin, do bhrabús agus do ráitis.",
+    "subtitleNoFinance": "Forbhreathnú ar do mhaoine.",
     "properties": {
       "title": "Mo réadmhaoin",
       "empty": "Níl aon réadmhaoin sannta duit faoi láthair.",
@@ -1408,7 +1409,8 @@
         "pending": "Á scrúdú",
         "approved": "Ceadaithe",
         "rejected": "Diúltaithe",
-        "cancelled": "Tarraingthe siar"
+        "ownerPending": "Ag fanacht leis an teaghlach",
+        "ownerDeclined": "Diúltaithe ag an úinéir"
       },
       "reason": "Cúis",
       "reasonPlaceholder": "Cén fáth ar cheart é a bhlocáil? (m.sh. úsáid phearsanta, ceardaithe)",
@@ -1451,7 +1453,8 @@
       "blockRequests": "Bacainní",
       "meterReadings": "Léamha méadair",
       "services": "Seirbhísí",
-      "notifications": "Fógraí"
+      "notifications": "Fógraí",
+      "familyAccess": "Rochtain"
     },
     "overview": {
       "occupancy": "Áitíocht",
@@ -1489,6 +1492,7 @@
         "label": "Ní féidir a áireamh",
         "provision": "Níl ráta coimisiúin socraithe don mhaoin seo — ní mór don lucht bainistíochta é a chur leis.",
         "provisionUngueltig": "Tá an ráta coimisiúin atá socraithe taobh amuigh de 0–100 %.",
+        "provisionZeitraum": "Ní raibh aon chonradh úinéara i bhfeidhm i rith na fanachta seo — is é dáta an imeachta atá cinntitheach.",
         "betrag": "Tá an tsuim iomlán in easnamh ar an áirithint seo.",
         "naechte": "Tá tréimhse na háirithinte seo neamhbhailí.",
         "waehrungVertrag": "Tá an táille sheasta ar comhaontaíodh i n-airgeadra difriúil ón áirithint seo — ní thiontaítear méideanna."
@@ -1587,6 +1591,40 @@
         "draft": "Á ullmhú",
         "finalized": "Críochnaithe",
         "cancelled": "Cealaithe"
+      }
+    },
+    "family": {
+      "title": "Rochtain do mhuintir agus do chairde",
+      "hint": "Tabhair a rochtain féin do do mhuintir seachas d'fhocal faire a roinnt. Socraíonn tú do gach duine cad is féidir leo a fheiceáil.",
+      "empty": "Níl aon rochtain tugtha go fóill.",
+      "remove": "Bain",
+      "removed": "Rochtain bainte.",
+      "invite": {
+        "property": "Réadmhaoin",
+        "name": "Ainm",
+        "email": "R-phost",
+        "submit": "Tabhair cuireadh",
+        "sending": "Cuireadh á sheoladh …",
+        "sent": "Cuireadh seolta.",
+        "linked": "Nascadh an rochtain leis an gcuntas atá ann cheana. Níor seoladh aon chuireadh.",
+        "incomplete": "Cuir réadmhaoin, ainm agus r-phost isteach.",
+        "reportsLabel": "Tabhair rochtain ar na tuairiscí",
+        "reportsHint": "Ina theannta sin brabús, ráitis agus íocaíochtaí. Gan é sin ní fheiceann an duine ach an féilire agus na tréimhsí spáráilte — gan aon suimeanna."
+      },
+      "level": {
+        "use": "Úsáid",
+        "reports": "Úsáid agus tuairiscí",
+        "grantReports": "Tabhair rochtain ar na tuairiscí",
+        "revokeReports": "Bain rochtain ar na tuairiscí"
+      },
+      "approvals": {
+        "title": "Iarratais ó do mhuintir",
+        "hint": "Ba mhaith le do mhuintir na tréimhsí seo a úsáid iad féin. Má cheadaíonn tú é, téann an t-iarratas chuig an ngníomhaireacht — ní spárálfar na dátaí go dtí go n-aontaíonn sí.",
+        "approve": "Chuig an ngníomhaireacht",
+        "decline": "Diúltaigh",
+        "notePlaceholder": "Nóta (roghnach)",
+        "forwarded": "Curtha ar aghaidh chuig an ngníomhaireacht.",
+        "declined": "Diúltaithe. Ní chloisfidh an ghníomhaireacht faoi."
       }
     }
   },

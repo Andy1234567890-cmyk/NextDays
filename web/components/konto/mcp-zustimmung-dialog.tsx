@@ -12,6 +12,7 @@ import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
+import { SCOPE_FREITEXT } from "@/lib/mcp-scopes";
 import { erteileZustimmung } from "@/lib/mcp-verbindungen";
 
 type Props = {
@@ -33,10 +34,8 @@ const LESERECHTE = [
   { icon: "solar:chat-round-line-bold-duotone", text: "Posteingang aller Kanäle (Übersicht)" },
 ];
 
-// Der Freitext-Scope des Servers. Muss mit `SCOPE_FREITEXT` in
-// apps/api/.../mcp/oauth_service.py übereinstimmen — ein Tippfehler hier
-// führte zu „Unbekannte Scopes" und einem Abbruch mitten im Flow.
-const SCOPE_FREITEXT = "mcp:freetext";
+// Der Freitext-Scope kommt aus `lib/mcp-scopes` — eine zweite Kopie hier war
+// genau die Sorte Duplikat, die beim nächsten Umbenennen auseinanderläuft.
 
 export function ZustimmungDialog({
   clientId,

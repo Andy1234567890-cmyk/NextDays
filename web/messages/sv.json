@@ -1360,6 +1360,7 @@
   "portal": {
     "title": "Min portal",
     "subtitle": "Översikt över dina objekt, intäkter och avräkningar.",
+    "subtitleNoFinance": "Översikt över dina objekt.",
     "properties": {
       "title": "Mina objekt",
       "empty": "Inga objekt är för närvarande tilldelade dig.",
@@ -1403,7 +1404,8 @@
         "pending": "Under granskning",
         "approved": "Godkänd",
         "rejected": "Avvisad",
-        "cancelled": "Återkallad"
+        "ownerPending": "Väntar på familjen",
+        "ownerDeclined": "Avvisad av ägaren"
       },
       "reason": "Anledning",
       "reasonPlaceholder": "Varför ska det spärras? (t.ex. eget bruk, hantverkare)",
@@ -1446,7 +1448,8 @@
       "blockRequests": "Spärrningar",
       "meterReadings": "Mätarställningar",
       "services": "Tjänster",
-      "notifications": "Aviseringar"
+      "notifications": "Aviseringar",
+      "familyAccess": "Åtkomster"
     },
     "overview": {
       "occupancy": "Beläggning",
@@ -1484,6 +1487,7 @@
         "label": "Kan inte redovisas",
         "provision": "Ingen provisionssats är angiven för detta objekt — förvaltningen måste lägga till den.",
         "provisionUngueltig": "Den angivna provisionssatsen ligger utanför 0–100 %.",
+        "provisionZeitraum": "Inget ägaravtal gällde under den här vistelsen — det är avresedatumet som avgör.",
         "betrag": "Denna bokning saknar totalbelopp.",
         "naechte": "Bokningens datumintervall är felaktigt.",
         "waehrungVertrag": "Den avtalade avgiften är i en annan valuta än denna bokning — belopp räknas inte om."
@@ -1582,6 +1586,40 @@
         "draft": "Under förberedelse",
         "finalized": "Avslutad",
         "cancelled": "Avbruten"
+      }
+    },
+    "family": {
+      "title": "Åtkomst för familj och vänner",
+      "hint": "Ge dina närstående en egen åtkomst i stället för att dela ditt lösenord. För varje person bestämmer du vad hen får se.",
+      "empty": "Ingen åtkomst har getts ännu.",
+      "remove": "Ta bort",
+      "removed": "Åtkomst borttagen.",
+      "invite": {
+        "property": "Objekt",
+        "name": "Namn",
+        "email": "E-post",
+        "submit": "Bjud in",
+        "sending": "Skickar inbjudan …",
+        "sent": "Inbjudan skickad.",
+        "linked": "Åtkomsten kopplades till det befintliga kontot. Ingen inbjudan skickades.",
+        "incomplete": "Ange objekt, namn och e-post.",
+        "reportsLabel": "Ge tillgång till rapporter",
+        "reportsHint": "Dessutom intäkter, avräkning och utbetalning. Utan detta ser personen bara kalendern och spärrarna — inga belopp."
+      },
+      "level": {
+        "use": "Användning",
+        "reports": "Användning och rapporter",
+        "grantReports": "Ge tillgång till rapporter",
+        "revokeReports": "Ta bort tillgång till rapporter"
+      },
+      "approvals": {
+        "title": "Önskemål från din familj",
+        "hint": "De här perioderna vill din familj använda själv. Godkänner du går önskemålet vidare till byrån — det spärras först när byrån säger ja.",
+        "approve": "Skicka till byrån",
+        "decline": "Avslå",
+        "notePlaceholder": "Kommentar (valfritt)",
+        "forwarded": "Vidarebefordrat till byrån.",
+        "declined": "Avslaget. Byrån får inte veta något om det."
       }
     }
   },

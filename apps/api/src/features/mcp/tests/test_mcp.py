@@ -128,21 +128,26 @@ def test_pkce_challenge_entspricht_rfc7636() -> None:
 
 # --- Code-Einlösung -----------------------------------------------------------
 
-def _code_anlegen(dienst: McpOAuthService, verifier: str) -> str:
+def _code_anlegen(
+    dienst: McpOAuthService, verifier: str, scope: str = "mcp:read"
+) -> str:
     """Wie im echten Flow: erst zustimmen, dann Code ausstellen.
 
     Die Zustimmung gehört dazu — `token_pruefen` prüft sie gegen, damit ein
     getrennter Client nicht noch eine Stunde weiterliest. Ein Test, der sie
     überspringt, würde die Trennung stillschweigend wirkungslos machen.
+
+    `scope` ist überschreibbar, damit auch der Freitext-Fall (0389) über
+    denselben Weg entsteht statt über eine handgebaute Fake-Zeile.
     """
     dienst.zustimmen(
         tenant_id="t1", user_id="u1",
-        client_id="https://claude.ai/x", scope="mcp:read",
+        client_id="https://claude.ai/x", scope=scope,
     )
     return dienst.code_ausstellen(
         tenant_id="t1", user_id="u1",
         client_id="https://claude.ai/x", redirect_uri="https://claude.ai/cb",
-        code_challenge=_pkce_challenge(verifier), scope="mcp:read",
+        code_challenge=_pkce_challenge(verifier), scope=scope,
         resource=f"{_BASIS}/api/v1/mcp",
     )
 
@@ -651,3 +656,95 @@ def test_ohne_public_api_url_klarer_fehler_statt_geratener_domain() -> None:
     with pytest.raises(OAuthError) as exc:
         McpOAuthService(_db(), s).basis_url()
     assert exc.value.status_code == 503
+
+
+# --- Umfang nachträglich ändern (0389) --------------------------------------
+
+
+def test_umfang_aendern_verlangt_verbindungs_recht() -> None:
+    """Freitexte zuzuschalten ist dieselbe Entscheidung wie das Verbinden.
+
+    Nachrichteninhalte und Notizen an einen Dienst ausserhalb unserer Systeme
+    zu geben, ist nach Art. 28 Abs. 3 lit. a DSGVO eine Weisung — sie darf
+    nicht davon abhängen, ob jemand zufällig eingeloggt ist (Wurzel 9).
+    """
+    antwort = client.patch("/api/v1/mcp/verbindungen", json={
+        "client_id": "https://claude.ai/oauth/mcp-oauth-client-metadata",
+        "freitexte": True,
+    })
+    # 503 = Ratelimit fail-closed ohne Redis (s. test_authorize_verlangt_pkce).
+    assert antwort.status_code in (401, 403, 503)
+    assert antwort.status_code != 200
+
+
+def test_umfang_entzug_schneidet_den_token_sofort_zu() -> None:
+    """Der ENTZUG der Freitexte muss sofort wirken, nicht in einer Stunde.
+
+    Der Scope steht IM Access-Token und gilt 60 Minuten. Nimmt der Nutzer die
+    Freitexte zurück, wäre die Zustimmungszeile sofort schmaler, das bereits
+    ausgestellte Token aber weiterhin breit — die Verbindung lieferte eine
+    Stunde lang Nachrichteninhalte, die niemand mehr freigegeben hat.
+
+    `token_pruefen` schneidet den Scope deshalb auf das zu, was die DB sagt.
+    """
+    store: dict = {}
+    dienst = _dienst(store)
+    verifier = "d" * 64
+    code = _code_anlegen(dienst, verifier, scope=f"{SCOPE_LESEN} {SCOPE_FREITEXT}")
+    out = dienst.token_aus_code(
+        code=code, client_id="https://claude.ai/x",
+        redirect_uri="https://claude.ai/cb", verifier=verifier,
+    )
+    ressource = f"{_BASIS}/api/v1/mcp"
+
+    # Vorher: die Freitexte sind im Token UND in der Zustimmung.
+    vorher = dienst.token_pruefen(out["access_token"], resource=ressource)
+    assert SCOPE_FREITEXT in vorher["scope"].split()
+
+    dienst.umfang_aendern(
+        user_id="u1", client_id="https://claude.ai/x", freitexte=False
+    )
+
+    # Nachher: dasselbe, unveraenderte Token traegt sie nicht mehr.
+    nachher = dienst.token_pruefen(out["access_token"], resource=ressource)
+    assert SCOPE_FREITEXT not in nachher["scope"].split()
+    assert SCOPE_LESEN in nachher["scope"].split()
+
+
+def test_umfang_zuschalten_wirkt_ohne_neu_zu_verbinden() -> None:
+    """Der eigentliche Zweck: Freitexte nachtraeglich freigeben.
+
+    Bisher musste man trennen und neu verbinden — waehrend der Werkzeug-Text
+    eine Freigabe „unter Konto → Verbindungen" versprach, die es nicht gab.
+    """
+    store: dict = {}
+    dienst = _dienst(store)
+    verifier = "e" * 64
+    code = _code_anlegen(dienst, verifier, scope=f"{SCOPE_LESEN} {SCOPE_FREITEXT}")
+    out = dienst.token_aus_code(
+        code=code, client_id="https://claude.ai/x",
+        redirect_uri="https://claude.ai/cb", verifier=verifier,
+    )
+    ressource = f"{_BASIS}/api/v1/mcp"
+
+    dienst.umfang_aendern(
+        user_id="u1", client_id="https://claude.ai/x", freitexte=False
+    )
+    assert SCOPE_FREITEXT not in dienst.token_pruefen(
+        out["access_token"], resource=ressource
+    )["scope"].split()
+
+    neuer = dienst.umfang_aendern(
+        user_id="u1", client_id="https://claude.ai/x", freitexte=True
+    )
+    assert SCOPE_FREITEXT in neuer.split()
+
+
+def test_umfang_unbekannter_verbindung_ist_404() -> None:
+    """Fail-closed: eine Verbindung, die es nicht gibt, wird nicht angelegt."""
+    dienst = _dienst({})
+    with pytest.raises(OAuthError) as fehler:
+        dienst.umfang_aendern(
+            user_id="u1", client_id="https://fremd.example/x", freitexte=True
+        )
+    assert fehler.value.status_code == 404

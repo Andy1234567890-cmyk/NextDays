@@ -1375,6 +1375,32 @@ class OwnersService:
             ).eq("user_id", str(row["user_id"])).eq(
                 "property_id", property_id
             ).execute()
+            # Dasselbe für die Familienzugänge, die dieser Eigentümer für
+            # DIESES Objekt vergeben hat (0389). Sie hängen an seinem Login,
+            # nicht am Eigentum, und blieben sonst mit voller Sicht stehen —
+            # auf ein Objekt, das ihrem Eigentümer nicht mehr gehört. Zuerst
+            # die Sicht, dann die Familien-Zeile: bricht es dazwischen ab,
+            # bleibt ein Zugang OHNE Sicht (harmlos) statt einer Sicht ohne
+            # Stufe, die im Code als „Eigentümer" gelesen würde.
+            familie = (
+                self._db.table("owner_family_members")
+                .select("user_id")
+                .eq("tenant_id", tenant_id)
+                .eq("owner_user_id", str(row["user_id"]))
+                .eq("property_id", property_id)
+                .execute()
+            ).data or []
+            for mitglied in {str(r["user_id"]) for r in familie}:
+                self._db.table("owner_property_assignments").delete().eq(
+                    "tenant_id", tenant_id
+                ).eq("user_id", mitglied).eq(
+                    "property_id", property_id
+                ).execute()
+            self._db.table("owner_family_members").delete().eq(
+                "tenant_id", tenant_id
+            ).eq("owner_user_id", str(row["user_id"])).eq(
+                "property_id", property_id
+            ).execute()
         log.info(
             "owner_property_unassigned",
             tenant_id=tenant_id,

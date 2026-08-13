@@ -1360,6 +1360,7 @@
   "portal": {
     "title": "Môj portál",
     "subtitle": "Prehľad vašich objektov, príjmov a vyúčtovaní.",
+    "subtitleNoFinance": "Prehľad Vašich objektov.",
     "properties": {
       "title": "Moje objekty",
       "empty": "Momentálne vám nie sú priradené žiadne objekty.",
@@ -1403,7 +1404,8 @@
         "pending": "V posudzovaní",
         "approved": "Schválená",
         "rejected": "Zamietnutá",
-        "cancelled": "Stiahnutá"
+        "ownerPending": "Čaká na rodinu",
+        "ownerDeclined": "Zamietnuté vlastníkom"
       },
       "reason": "Dôvod",
       "reasonPlaceholder": "Prečo by malo byť blokované? (napr. vlastné použitie, remeselníci)",
@@ -1446,7 +1448,8 @@
       "blockRequests": "Blokovania",
       "meterReadings": "Stavy meračov",
       "services": "Služby",
-      "notifications": "Upozornenia"
+      "notifications": "Upozornenia",
+      "familyAccess": "Prístupy"
     },
     "overview": {
       "occupancy": "Obsadenosť",
@@ -1484,6 +1487,7 @@
         "label": "Nedá sa vyčísliť",
         "provision": "Pre tento objekt nie je nastavená provízia — správa ju musí doplniť.",
         "provisionUngueltig": "Nastavená provízia je mimo rozsahu 0–100 %.",
+        "provisionZeitraum": "V období tohto pobytu neplatila žiadna zmluva s vlastníkom — rozhodujúci je dátum odchodu.",
         "betrag": "Pri tejto rezervácii chýba celková suma.",
         "naechte": "Obdobie tejto rezervácie je neplatné.",
         "waehrungVertrag": "Dohodnutý paušál je v inej valute ako táto rezervácia — sumy sa neprepočítavajú."
@@ -1582,6 +1586,40 @@
         "draft": "V príprave",
         "finalized": "Dokončené",
         "cancelled": "Zrušené"
+      }
+    },
+    "family": {
+      "title": "Prístupy pre rodinu a priateľov",
+      "hint": "Dajte svojim blízkym vlastný prístup namiesto zdieľania hesla. Pri každej osobe určíte, čo smie vidieť.",
+      "empty": "Zatiaľ nebol udelený žiadny prístup.",
+      "remove": "Odstrániť",
+      "removed": "Prístup odstránený.",
+      "invite": {
+        "property": "Objekt",
+        "name": "Meno",
+        "email": "E-mail",
+        "submit": "Pozvať",
+        "sending": "Odosiela sa pozvánka …",
+        "sent": "Pozvánka odoslaná.",
+        "linked": "Prístup bol prepojený s existujúcim účtom. Žiadna pozvánka nebola odoslaná.",
+        "incomplete": "Zadajte prosím objekt, meno a e-mail.",
+        "reportsLabel": "Sprístupniť správy",
+        "reportsHint": "Navyše príjmy, vyúčtovanie a výplata. Bez tohto oprávnenia vidí osoba len kalendár a blokácie — žiadne sumy."
+      },
+      "level": {
+        "use": "Užívanie",
+        "reports": "Užívanie a správy",
+        "grantReports": "Sprístupniť správy",
+        "revokeReports": "Odobrať správy"
+      },
+      "approvals": {
+        "title": "Želania vašej rodiny",
+        "hint": "Tieto termíny chce vaša rodina využiť sama. Ak ich schválite, želanie pôjde agentúre — zablokuje sa až vtedy, keď agentúra súhlasí.",
+        "approve": "Postúpiť agentúre",
+        "decline": "Zamietnuť",
+        "notePlaceholder": "Poznámka (nepovinné)",
+        "forwarded": "Postúpené agentúre.",
+        "declined": "Zamietnuté. Agentúra sa o tom nedozvie."
       }
     }
   },

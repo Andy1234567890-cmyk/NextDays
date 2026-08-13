@@ -35,6 +35,17 @@ class VerbindungListe(BaseModel):
     items: list[Verbindung] = []
 
 
+class UmfangAenderung(BaseModel):
+    """Freitexte einer bestehenden Verbindung zu- oder abschalten (0389).
+
+    Nur DIESE eine Achse ist nachträglich änderbar. Der Lese-Scope ist die
+    Grundlage der Verbindung — wer den nicht mehr will, trennt sie.
+    """
+
+    client_id: str
+    freitexte: bool
+
+
 class Zugriff(BaseModel):
     """Ein protokollierter Abruf über eine Verbindung (0388).
 

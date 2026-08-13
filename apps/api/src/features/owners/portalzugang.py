@@ -55,6 +55,34 @@ def portalzugang_entfernen(
             status_code=502,
         ) from exc
 
+    # Familienzugänge dieses Eigentümers ZUERST (0389), samt ihrer Sicht.
+    #
+    # Wurzel 1, und hier besonders heimtückisch: Die owner_family_members-Zeilen
+    # verschwinden ohnehin per Cascade (FK owner_user_id). Ihre
+    # owner_property_assignments tun das NICHT — und ein Login mit Objektsicht,
+    # aber OHNE Familien-Zeile ist im ganzen Code die Definition von „das ist
+    # der Eigentümer selbst": `_darf_berichte` gibt ihm die Finanzen frei,
+    # `_freigabe_stufe` schickt seine Sperranträge ohne Stufe 1 direkt an die
+    # Agentur. Löschen würde also RECHTE AUSWEITEN, statt sie zu entziehen.
+    familie = (
+        db.table("owner_family_members")
+        .select("user_id")
+        .eq("tenant_id", tenant_id)
+        .eq("owner_user_id", user_id)
+        .execute()
+    ).data or []
+    mitglieder = {str(r["user_id"]) for r in familie}
+    for mitglied in mitglieder:
+        db.table("owner_property_assignments").delete().eq(
+            "tenant_id", tenant_id
+        ).eq("user_id", mitglied).execute()
+    if mitglieder:
+        log.info(
+            "owner_familie_mitentfernt",
+            tenant_id=tenant_id,
+            anzahl=len(mitglieder),
+        )
+
     # Portal-Sicht (0058) zuerst: sie hängt am Login, nicht am Eigentümer, und
     # verschwindet daher nicht mit dessen Cascade. Bliebe sie stehen, trüge ein
     # später mit derselben Adresse angelegter Login die alte Objektsicht.

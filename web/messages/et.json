@@ -1365,6 +1365,7 @@
   "portal": {
     "title": "Minu portaal",
     "subtitle": "Ülevaade sinu objektidest, tuludest ja arveldustest.",
+    "subtitleNoFinance": "Ülevaade sinu objektidest.",
     "properties": {
       "title": "Minu objektid",
       "empty": "Sulle pole hetkel ühtegi objekti seotud.",
@@ -1408,7 +1409,8 @@
         "pending": "Läbivaatamisel",
         "approved": "Kinnitatud",
         "rejected": "Tagasi lükatud",
-        "cancelled": "Tagasi võetud"
+        "ownerPending": "Ootab peret",
+        "ownerDeclined": "Omanik lükkas tagasi"
       },
       "reason": "Põhjus",
       "reasonPlaceholder": "Miks tuleks blokeerida? (nt oma kasutus, käsitöölised)",
@@ -1451,7 +1453,8 @@
       "blockRequests": "Blokeeringud",
       "meterReadings": "Mõõdikute näidud",
       "services": "Teenused",
-      "notifications": "Teavitused"
+      "notifications": "Teavitused",
+      "familyAccess": "Ligipääsud"
     },
     "overview": {
       "occupancy": "Täituvus",
@@ -1489,6 +1492,7 @@
         "label": "Ei ole määratav",
         "provision": "Sellele objektile pole komisjonimäära määratud — haldus peab selle lisama.",
         "provisionUngueltig": "Määratud komisjonimäär on väljaspool vahemikku 0–100 %.",
+        "provisionZeitraum": "Selle peatumise perioodil ei kehtinud ühtegi omanikulepingut — määrav on lahkumiskuupäev.",
         "betrag": "Sellel broneeringul puudub kogusumma.",
         "naechte": "Selle broneeringu ajavahemik on vigane.",
         "waehrungVertrag": "Kokkulepitud püsitasu on teises valuutas kui see broneering — summasid ei teisendata."
@@ -1587,6 +1591,40 @@
         "draft": "Ettevalmistamisel",
         "finalized": "Lõpetatud",
         "cancelled": "Tühistatud"
+      }
+    },
+    "family": {
+      "title": "Ligipääsud perele ja sõpradele",
+      "hint": "Anna lähedastele oma ligipääs, selle asemel et parooli jagada. Iga inimese kohta otsustad ise, mida ta näha tohib.",
+      "empty": "Ühtki ligipääsu pole veel antud.",
+      "remove": "Eemalda",
+      "removed": "Ligipääs eemaldatud.",
+      "invite": {
+        "property": "Objekt",
+        "name": "Nimi",
+        "email": "E-post",
+        "submit": "Kutsu",
+        "sending": "Kutse saadetakse …",
+        "sent": "Kutse saadetud.",
+        "linked": "Ligipääs seoti olemasoleva kontoga. Kutset ei saadetud.",
+        "incomplete": "Palun sisesta objekt, nimi ja e-post.",
+        "reportsLabel": "Ava aruanded",
+        "reportsHint": "Lisaks tulud, arveldus ja väljamakse. Ilma selleta näeb inimene ainult kalendrit ja suletud perioode — mitte summasid."
+      },
+      "level": {
+        "use": "Kasutus",
+        "reports": "Kasutus ja aruanded",
+        "grantReports": "Ava aruanded",
+        "revokeReports": "Sulge aruanded"
+      },
+      "approvals": {
+        "title": "Sinu pere soovid",
+        "hint": "Neid perioode soovib sinu pere ise kasutada. Kui kiidad heaks, läheb soov agentuurile — suletakse alles siis, kui agentuur nõustub.",
+        "approve": "Saada agentuurile",
+        "decline": "Lükka tagasi",
+        "notePlaceholder": "Märkus (valikuline)",
+        "forwarded": "Edastatud agentuurile.",
+        "declined": "Tagasi lükatud. Agentuur sellest teada ei saa."
       }
     }
   },

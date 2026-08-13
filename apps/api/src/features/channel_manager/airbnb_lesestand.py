@@ -265,7 +265,12 @@ class AirbnbLesestandMixin:
 
         zeilen = (
             db.table("channex_booking")
-            .select("id, tenant_id, ota_reservation_code, guest_read_message_ref")
+            .select(
+                "id, tenant_id, ota_reservation_code, guest_read_message_ref, "
+                # Die gemerkte Thread-ID (0391): ist sie da, entfällt der
+                # 24-Etappen-Bestandsabruf für diese Zeile komplett.
+                "airbnb_thread_id"
+            )
             .eq("ota_name", "AirBNB")
             .in_("ota_reservation_code", codes)
             .order("booked_at", desc=True, nullsfirst=False)
@@ -302,9 +307,7 @@ class AirbnbLesestandMixin:
             return 0
         token = zugang[0]
 
-        # Bestätigungscode → Airbnb-Thread-ID. Ein Bestandsabruf statt eines
-        # Aufrufs je Buchung; die Reservierung führt `thread_id` mit.
-        threads = self._thread_ids_des_kontos(db, token)
+        threads = self._threads_zuordnen(db, tenant_id, zeilen, token)
 
         gesetzt = 0
         for zeile in zeilen:
@@ -329,6 +332,82 @@ class AirbnbLesestandMixin:
             )
             gesetzt += 1
         return gesetzt
+
+    def _threads_zuordnen(
+        self,
+        db: Client,
+        tenant_id: str,
+        zeilen: list[dict[str, Any]],
+        token: str,
+    ) -> dict[str, str]:
+        """Bestätigungscode → Thread-ID, ohne den Bestand unnötig zu holen.
+
+        DIE EINSPARUNG (13.08.2026): Vorher rief diese Zuordnung IMMER
+        `_thread_ids_des_kontos` — einen Rundflug über den gesamten
+        Airbnb-Bestand (live: 24 Etappen, 431 Buchungen). Der lief alle fünf
+        Minuten und lieferte jedes Mal dasselbe Ergebnis, während der Tick
+        `{"geprueft": 4, "gesetzt": 0}` meldete. `sync_bookings_feed` brauchte
+        dadurch ⌀55 s für „nichts zu tun".
+
+        Jetzt zählt, was an der Buchung steht (0391). Der teure Weg läuft nur
+        noch, wenn wirklich eine ID fehlt — und sein Ergebnis wird gemerkt, also
+        höchstens einmal je Buchung statt alle fünf Minuten.
+        """
+        threads = {
+            code: str(z["airbnb_thread_id"])
+            for z in zeilen
+            if z.get("airbnb_thread_id")
+            and (code := str(z.get("ota_reservation_code") or ""))
+        }
+        fehlend = [
+            z
+            for z in zeilen
+            if not z.get("airbnb_thread_id") and z.get("ota_reservation_code")
+        ]
+        if fehlend:
+            frisch = self._thread_ids_des_kontos(db, token)
+            threads.update(frisch)
+            self._thread_ids_merken(db, tenant_id, fehlend, frisch)
+        return threads
+
+    @staticmethod
+    def _thread_ids_merken(
+        db: Client,
+        tenant_id: str,
+        fehlend: list[dict[str, Any]],
+        gefunden: dict[str, str],
+    ) -> None:
+        """Frisch geholte Thread-IDs an der Buchung festhalten (0391).
+
+        Ohne das wäre der Bestandsabruf ein Dauerlauf: Er lief alle fünf Minuten
+        über 24 Etappen, um immer dieselbe Zuordnung zu ermitteln (live: 55 s je
+        Tick, `gesetzt: 0`). Gemerkt wird nur, was wirklich gefunden wurde —
+        eine Buchung ohne Thread bleibt NULL und wird beim nächsten Abruf erneut
+        versucht, statt mit einem Platzhalter als „erledigt" zu gelten
+        (Wurzel 4).
+
+        Best-effort: Schlägt das Schreiben fehl, ist nur der nächste Tick wieder
+        teuer — der Lesestand selbst wurde bereits geholt und darf daran nicht
+        scheitern (Wurzel 5: der Nebenpfad kippt den Hauptpfad nicht).
+        """
+        for zeile in fehlend:
+            thread_id = gefunden.get(str(zeile.get("ota_reservation_code") or ""))
+            if not thread_id:
+                continue
+            try:
+                (
+                    db.table("channex_booking")
+                    .update({"airbnb_thread_id": thread_id})
+                    .eq("tenant_id", tenant_id)
+                    .eq("id", zeile["id"])
+                    .execute()
+                )
+            # pylint: disable=broad-exception-caught
+            except Exception as exc:  # noqa: BLE001 — Nebenpfad, nie fatal
+                log.warning(
+                    "airbnb_thread_id_merken_fehlgeschlagen",
+                    buchung=zeile.get("id"), error=str(exc)[:200],
+                )
 
     def _thread_ids_des_kontos(self, db: Client, token: str) -> dict[str, str]:
         """Bestätigungscode → Airbnb-Thread-ID, für den ganzen Bestand.

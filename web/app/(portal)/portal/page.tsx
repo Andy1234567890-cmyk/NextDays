@@ -13,6 +13,7 @@ import {
   getOwnerProperties,
   getOwnerStatements,
 } from "@/lib/portal";
+import { ladePortalRolle } from "@/lib/portal-familie";
 
 export const dynamic = "force-dynamic";
 
@@ -42,10 +43,21 @@ export default async function PortalUebersichtPage({
   const art = sp.zeitraum === "jahr" ? "jahr" : "monat";
   const { von, bis } = zeitraum(art);
 
+  // Erst fragen, WAS dieser Zugang darf (0389). Ohne Berichte-Freigabe werden
+  // Einnahmen und Abrechnungen gar nicht erst abgerufen: Sie antworten dann
+  // mit 403, und ein 403 ist hier keine Störung, sondern der Normalzustand
+  // eines Familienzugangs — als roter Fehlerkasten gerendert sähe das aus, als
+  // sei die Anwendung kaputt.
+  const rolle = await ladePortalRolle();
+  // Bei einem Ladefehler wie bisher weitermachen (Wurzel 5: „konnte nicht
+  // laden" ist nicht „darf nicht"). Ein überflüssiger Abruf endet höchstens in
+  // einem 403, den die Fläche unten still behandelt.
+  const zeigtFinanzen = rolle.ok ? rolle.data.darf_berichte : true;
+
   const [objekte, einnahmen, abrechnungen] = await Promise.all([
     getOwnerProperties(),
-    getOwnerEarnings(von, bis),
-    getOwnerStatements(),
+    zeigtFinanzen ? getOwnerEarnings(von, bis) : null,
+    zeigtFinanzen ? getOwnerStatements() : null,
   ]);
 
   return (
@@ -53,12 +65,15 @@ export default async function PortalUebersichtPage({
       art={art}
       von={von}
       bis={bis}
+      zeigtFinanzen={zeigtFinanzen}
       properties={objekte.ok ? objekte.data.items : []}
       propertiesError={objekte.ok ? null : objekte.error}
-      earnings={einnahmen.ok ? einnahmen.data : null}
-      earningsError={einnahmen.ok ? null : einnahmen.error}
-      statements={abrechnungen.ok ? abrechnungen.data.items : []}
-      statementsError={abrechnungen.ok ? null : abrechnungen.error}
+      earnings={einnahmen?.ok ? einnahmen.data : null}
+      earningsError={!einnahmen || einnahmen.ok ? null : einnahmen.error}
+      statements={abrechnungen?.ok ? abrechnungen.data.items : []}
+      statementsError={
+        !abrechnungen || abrechnungen.ok ? null : abrechnungen.error
+      }
     />
   );
 }

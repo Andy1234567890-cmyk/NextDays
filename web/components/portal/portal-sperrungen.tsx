@@ -39,11 +39,18 @@ function gueltigesDatum(s: string): boolean {
   return d.toISOString().slice(0, 10) === s;
 }
 
+// Die drei Werte des Enums `block_request_status` (0014). „cancelled" stand
+// hier lange mit — den Wert gibt es weder in der DB noch in der Server-Whitelist
+// (calendar/sperrantraege.py), der Zweig war also nie erreichbar. Ein
+// unbekannter Status fällt unten ohnehin auf den Rohwert zurück.
+//
+// Die Freigabe-Stufe des Eigentümers (0389) steht bewusst NICHT hier: Sie ist
+// eine eigene Spalte (`owner_freigabe`), kein Status — der Antrag ist in dieser
+// Zeit ganz normal „offen", nur eben bei der Familie statt bei der Verwaltung.
 const STATUS_KEYS: Record<string, string> = {
   pending: "block.status.pending",
   approved: "block.status.approved",
   rejected: "block.status.rejected",
-  cancelled: "block.status.cancelled",
 };
 
 export function PortalSperrungen({
@@ -260,7 +267,16 @@ export function PortalSperrungen({
           <ul className="flex flex-col divide-y divide-border rounded-(--radius) border border-border">
             {liste.map((r) => {
               const objekt = properties.find((p) => p.id === r.property_id);
-              const statusKey = STATUS_KEYS[r.status];
+              // Stufe 1 (0389) hat Vorrang vor dem Status: Solange der Antrag
+              // bei der Familie liegt, ist „offen" die falsche Auskunft — der
+              // Antragsteller wartete sonst auf die Verwaltung, die den Antrag
+              // noch gar nicht kennt.
+              const statusKey =
+                r.owner_freigabe === "offen"
+                  ? "block.status.ownerPending"
+                  : r.owner_freigabe === "abgelehnt"
+                    ? "block.status.ownerDeclined"
+                    : STATUS_KEYS[r.status];
               return (
                 <li key={r.id} className="flex flex-wrap items-center gap-4 p-4">
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">

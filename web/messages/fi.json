@@ -1365,6 +1365,7 @@
   "portal": {
     "title": "Oma portaali",
     "subtitle": "Yleiskatsaus kohteistasi, tuloistasi ja tilityksistäsi.",
+    "subtitleNoFinance": "Yleiskatsaus kohteisiisi.",
     "properties": {
       "title": "Omat kohteet",
       "empty": "Sinulle ei ole tällä hetkellä liitetty kohteita.",
@@ -1408,7 +1409,8 @@
         "pending": "Käsittelyssä",
         "approved": "Hyväksytty",
         "rejected": "Hylätty",
-        "cancelled": "Peruttu"
+        "ownerPending": "Odottaa perhettä",
+        "ownerDeclined": "Omistaja hylkäsi"
       },
       "reason": "Syy",
       "reasonPlaceholder": "Miksi kohde tulisi estää? (esim. oma käyttö, käsityöläiset)",
@@ -1451,7 +1453,8 @@
       "blockRequests": "Varaukset (esto)",
       "meterReadings": "Mittarilukemat",
       "services": "Palvelut",
-      "notifications": "Ilmoitukset"
+      "notifications": "Ilmoitukset",
+      "familyAccess": "Käyttöoikeudet"
     },
     "overview": {
       "occupancy": "Käyttöaste",
@@ -1489,6 +1492,7 @@
         "label": "Ei ilmoitettavissa",
         "provision": "Tälle kohteelle ei ole määritetty välityspalkkiota — isännöinnin on lisättävä se.",
         "provisionUngueltig": "Määritetty välityspalkkio on välin 0–100 % ulkopuolella.",
+        "provisionZeitraum": "Tälle oleskelujaksolle ei ollut voimassa omistajasopimusta — ratkaiseva on lähtöpäivä.",
         "betrag": "Tästä varauksesta puuttuu kokonaissumma.",
         "naechte": "Tämän varauksen päivämäärät ovat virheellisiä.",
         "waehrungVertrag": "Sovittu kiinteä maksu on eri valuutassa kuin tämä varaus — summia ei muunneta."
@@ -1587,6 +1591,40 @@
         "draft": "Valmisteilla",
         "finalized": "Valmis",
         "cancelled": "Peruttu"
+      }
+    },
+    "family": {
+      "title": "Käyttöoikeudet perheelle ja ystäville",
+      "hint": "Anna läheisillesi oma käyttöoikeus sen sijaan, että jakaisit salasanasi. Päätät jokaisen kohdalla erikseen, mitä hän saa nähdä.",
+      "empty": "Käyttöoikeuksia ei ole vielä annettu.",
+      "remove": "Poista",
+      "removed": "Käyttöoikeus poistettu.",
+      "invite": {
+        "property": "Kohde",
+        "name": "Nimi",
+        "email": "Sähköposti",
+        "submit": "Kutsu",
+        "sending": "Lähetetään kutsua …",
+        "sent": "Kutsu lähetetty.",
+        "linked": "Käyttöoikeus liitettiin olemassa olevaan tiliin. Kutsua ei lähetetty.",
+        "incomplete": "Anna kohde, nimi ja sähköposti.",
+        "reportsLabel": "Avaa raportit",
+        "reportsHint": "Lisäksi tulot, tilitys ja maksu. Ilman tätä oikeutta henkilö näkee vain kalenterin ja sulut — ei summia."
+      },
+      "level": {
+        "use": "Käyttö",
+        "reports": "Käyttö ja raportit",
+        "grantReports": "Avaa raportit",
+        "revokeReports": "Sulje raportit"
+      },
+      "approvals": {
+        "title": "Perheesi toiveet",
+        "hint": "Perheesi haluaa käyttää näitä ajanjaksoja itse. Jos hyväksyt, toive menee agentuurille — sulku tulee voimaan vasta agentuurin hyväksynnällä.",
+        "approve": "Agentuurille",
+        "decline": "Hylkää",
+        "notePlaceholder": "Huomautus (valinnainen)",
+        "forwarded": "Välitetty agentuurille.",
+        "declined": "Hylätty. Agentuuri ei saa siitä tietoa."
       }
     }
   },

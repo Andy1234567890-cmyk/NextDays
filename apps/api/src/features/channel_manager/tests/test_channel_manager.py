@@ -125,10 +125,16 @@ def test_property_attrs_maps_property_type_for_channex() -> None:
 
 
 def test_channex_facility_ids_maps_and_drops_unknown() -> None:
+    from src.features.channel_manager.common import _CHANNEX_FACILITY
     from src.features.channel_manager.service import _channex_facility_ids
 
-    wifi = "ed553333-7f1f-434a-8c43-eb8fe96c5f54"
-    ac = "cc402cc0-696b-4bd6-a5d7-4adb060bc056"
+    # UUIDs aus dem Katalog, NICHT abgeschrieben: die Werte stammen aus einem
+    # fremden Katalog und wurden am 13.08.2026 komplett erneuert (die alten waren
+    # sämtlich ungültig). Ein fest einkodierter Wert prüft dann nur noch, ob
+    # jemand dieselbe Zahl zweimal getippt hat — hier geht es um die Logik
+    # (Abbildung, Unbekanntes weglassen, Duplikate, Reihenfolge).
+    wifi = _CHANNEX_FACILITY["wifi"]
+    ac = _CHANNEX_FACILITY["air_conditioning"]
     # Bekannte Slugs → UUIDs (Reihenfolge stabil).
     assert _channex_facility_ids(["wifi", "air_conditioning"]) == [wifi, ac]
     # Unbekannt → weggelassen (kein ungültiger Wert an Channex).
@@ -141,7 +147,9 @@ def test_channex_facility_ids_maps_and_drops_unknown() -> None:
 
 
 def test_property_attrs_includes_facilities() -> None:
-    wifi = "ed553333-7f1f-434a-8c43-eb8fe96c5f54"
+    from src.features.channel_manager.common import _CHANNEX_FACILITY
+
+    wifi = _CHANNEX_FACILITY["wifi"]
     attrs = ChannelManagerService._property_attrs(
         {"country": "DE", "amenities": ["wifi"]}
     )
@@ -1597,3 +1605,28 @@ def test_laengenpreis_prozent_rundet_ab_und_meldet_undarstellbares() -> None:
     )
     assert regel is None
     assert grund == "prozent_nicht_darstellbar"
+
+
+def test_facility_katalog_ist_eindeutig_und_vollstaendig() -> None:
+    """Formprüfung des Facility-Katalogs — der Wächter für einen stillen Ausfall.
+
+    Am 13.08.2026 waren ALLE 301 hinterlegten UUIDs veraltet: Channex quittiert
+    unbekannte Facility-IDs mit HTTP 200 und verwirft sie still, also hatte kein
+    einziges Objekt dort Ausstattung, ohne dass je ein Fehler sichtbar wurde.
+
+    Dieser Test kann die Gültigkeit gegen Channex NICHT prüfen (kein Netz im
+    Test) — er hält nur fest, was ohne Netz feststellbar ist: 301 Einträge,
+    saubere UUID-Form, keine doppelte ID. Eine doppelte ID hieße, dass zwei
+    Slugs auf dieselbe Facility zeigen — genau der Fehler, der beim Erneuern des
+    Katalogs per Position (statt per Titel) entstünde.
+    """
+    import re as _re
+
+    from src.features.channel_manager.common import _CHANNEX_FACILITY
+
+    assert len(_CHANNEX_FACILITY) == 301
+    uuid_form = _re.compile(r"^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$")
+    kaputt = [s for s, i in _CHANNEX_FACILITY.items() if not uuid_form.match(i)]
+    assert kaputt == []
+    doppelt = len(_CHANNEX_FACILITY) - len(set(_CHANNEX_FACILITY.values()))
+    assert doppelt == 0

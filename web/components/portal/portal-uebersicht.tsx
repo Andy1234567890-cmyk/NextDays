@@ -34,6 +34,7 @@ export function PortalUebersicht({
   art,
   von,
   bis,
+  zeigtFinanzen = true,
   properties,
   propertiesError,
   earnings,
@@ -44,6 +45,11 @@ export function PortalUebersicht({
   art: "monat" | "jahr";
   von: string;
   bis: string;
+  /** Darf dieser Zugang Finanzzahlen sehen (0389)? Ohne Freigabe entfallen
+   *  Kennzahlen, Abrechnungszeile und Zeitraum-Umschalter — sie alle hängen an
+   *  den Einnahmen, die ein Familienzugang ohne Berichte nicht abrufen darf.
+   *  Voreinstellung `true`: der Normalfall ist der Eigentümer selbst. */
+  zeigtFinanzen?: boolean;
   properties: PortalProperty[];
   propertiesError: string | null;
   earnings: PortalEarnings | null;
@@ -99,7 +105,11 @@ export function PortalUebersicht({
 
       <header className="flex flex-col gap-1">
         <h1 className="font-display text-3xl font-extrabold">{t("title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
+        <p className="text-sm text-muted-foreground">
+          {/* Ohne Finanzsicht keine Ankündigung von „Einnahmen und
+              Abrechnungen", die auf dieser Seite gar nicht stehen. */}
+          {t(zeigtFinanzen ? "subtitle" : "subtitleNoFinance")}
+        </p>
       </header>
 
       {fehler && (
@@ -108,7 +118,10 @@ export function PortalUebersicht({
         </div>
       )}
 
-      {/* Zeitraum-Umschalter — Monat/Jahr, wie im Branchenmuster wählbar. */}
+      {/* Zeitraum-Umschalter — Monat/Jahr, wie im Branchenmuster wählbar.
+          Ohne Finanzsicht steuert er nichts mehr (die Kennzahlen darunter sind
+          weg) und wäre ein Knopf ohne Wirkung. */}
+      {zeigtFinanzen ? (
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">
           {t("overview.period")}
@@ -131,67 +144,78 @@ export function PortalUebersicht({
           ))}
         </div>
       </div>
+      ) : null}
 
-      {/* Kennzahlen */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Kennzahl
-          icon="ph:chart-pie-slice"
-          label={t("overview.occupancy")}
-          hint={t("overview.occupancyHint")}
-          wert={belegung === null ? t("amountHidden") : `${belegung} %`}
-        />
-        <Kennzahl
-          icon="ph:moon"
-          label={t("overview.nights")}
-          wert={String(naechte)}
-        />
-        <Kennzahl
-          icon="ph:bookmark-simple"
-          label={t("overview.bookings")}
-          wert={String(buchungen)}
-        />
-        <Kennzahl
-          icon="ph:hand-coins"
-          label={t("overview.payout")}
-          hint={t("overview.payoutHint")}
-          // null = keine Beträge-Sicht → „—". Kein 0, kein erfundener Wert.
-          wert={
-            auszahlung === null
-              ? t("amountHidden")
-              : formatCurrency(auszahlung, waehrung, locale)
-          }
-        />
-      </div>
+      {/* Kennzahlen.
+          Ohne Berichte-Freigabe (0389) entfällt der ganze Block: Belegung,
+          Nächte und Buchungen werden aus den EINNAHMEN gerechnet, die dieser
+          Zugang nicht abrufen darf. Sie stünden dann konstant auf 0 — eine
+          Zahl, die wie eine Aussage aussieht („dein Haus war nie belegt"),
+          aber keine ist (Wurzel 4). Lieber nichts zeigen als etwas Falsches. */}
+      {zeigtFinanzen ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <Kennzahl
+            icon="ph:chart-pie-slice"
+            label={t("overview.occupancy")}
+            hint={t("overview.occupancyHint")}
+            wert={belegung === null ? t("amountHidden") : `${belegung} %`}
+          />
+          <Kennzahl
+            icon="ph:moon"
+            label={t("overview.nights")}
+            wert={String(naechte)}
+          />
+          <Kennzahl
+            icon="ph:bookmark-simple"
+            label={t("overview.bookings")}
+            wert={String(buchungen)}
+          />
+          <Kennzahl
+            icon="ph:hand-coins"
+            label={t("overview.payout")}
+            hint={t("overview.payoutHint")}
+            // null = keine Beträge-Sicht → „—". Kein 0, kein erfundener Wert.
+            wert={
+              auszahlung === null
+                ? t("amountHidden")
+                : formatCurrency(auszahlung, waehrung, locale)
+            }
+          />
+        </div>
+      ) : null}
 
-      {/* Letzte Abrechnung */}
-      <Card>
-        <CardContent className="flex flex-wrap items-center gap-4 py-4">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-            <Icon icon="ph:receipt" className="size-5" />
-          </span>
-          <div className="flex min-w-0 flex-1 flex-col">
-            <span className="text-xs text-muted-foreground">
-              {t("overview.latestStatement")}
+      {/* Letzte Abrechnung — nur mit Berichte-Freigabe (0389). Ohne sie
+          führte der Knopf „Berichte" auf eine Seite, die mit 403 antwortet. */}
+      {zeigtFinanzen ? (
+        <Card>
+          <CardContent className="flex flex-wrap items-center gap-4 py-4">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+              <Icon icon="ph:receipt" className="size-5" />
             </span>
-            <span className="truncate text-sm font-medium">
-              {letzte
-                ? `${letzte.period_from} – ${letzte.period_to}`
-                : t("overview.noStatement")}
-            </span>
-          </div>
-          {letzte && (
-            <span className="shrink-0 text-sm font-semibold">
-              {formatCurrency(letzte.owner_payout, letzte.currency, locale)}
-            </span>
-          )}
-          <Link
-            href="/portal/berichte"
-            className="shrink-0 rounded-full bg-secondary px-4 py-2 text-sm text-secondary-foreground transition-colors hover:bg-secondary/80"
-          >
-            {t("reports.title")}
-          </Link>
-        </CardContent>
-      </Card>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="text-xs text-muted-foreground">
+                {t("overview.latestStatement")}
+              </span>
+              <span className="truncate text-sm font-medium">
+                {letzte
+                  ? `${letzte.period_from} – ${letzte.period_to}`
+                  : t("overview.noStatement")}
+              </span>
+            </div>
+            {letzte && (
+              <span className="shrink-0 text-sm font-semibold">
+                {formatCurrency(letzte.owner_payout, letzte.currency, locale)}
+              </span>
+            )}
+            <Link
+              href="/portal/berichte"
+              className="shrink-0 rounded-full bg-secondary px-4 py-2 text-sm text-secondary-foreground transition-colors hover:bg-secondary/80"
+            >
+              {t("reports.title")}
+            </Link>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {/* Objekte */}
       <section className="flex flex-col gap-3">
@@ -246,20 +270,27 @@ export function PortalUebersicht({
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                        <span>
-                          {zeile?.nights ?? 0} · {t("overview.nights")}
-                        </span>
-                        <span className="font-semibold text-foreground">
-                          {zeile == null || zeile.payout === null
-                            ? t("amountHidden")
-                            : formatCurrency(
-                                zeile.payout,
-                                zeile.currency,
-                                locale,
-                              )}
-                        </span>
-                      </div>
+                      {/* Nächte und Auszahlung je Objekt stammen aus den
+                          Einnahmen. Ohne Berichte-Freigabe (0389) stünde hier
+                          „0 · Nächte" und „—" — eine Behauptung über die
+                          Belegung, die niemand geprüft hat. Die Zeile entfällt
+                          dann ganz; der Kalender-Knopf darunter bleibt. */}
+                      {zeigtFinanzen ? (
+                        <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                          <span>
+                            {zeile?.nights ?? 0} · {t("overview.nights")}
+                          </span>
+                          <span className="font-semibold text-foreground">
+                            {zeile == null || zeile.payout === null
+                              ? t("amountHidden")
+                              : formatCurrency(
+                                  zeile.payout,
+                                  zeile.currency,
+                                  locale,
+                                )}
+                          </span>
+                        </div>
+                      ) : null}
 
                       <Link
                         href={`/portal/kalender?objekt=${encodeURIComponent(p.id)}`}

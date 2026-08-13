@@ -46,6 +46,7 @@ from .schemas import (
     ConsentRequest,
     ConsentResponse,
     SliceHealth,
+    UmfangAenderung,
     Verbindung,
     VerbindungListe,
     Zugriff,
@@ -414,6 +415,51 @@ def verbindung_trennen(
 # ---------------------------------------------------------------------------
 # Token
 # ---------------------------------------------------------------------------
+
+@router.patch("/mcp/verbindungen", response_model=Verbindung)
+def verbindung_umfang(
+    settings: Annotated[Settings, Depends(get_settings)],
+    ctx: Annotated[
+        AuthContext, Depends(require_permission(Capability.MANAGE_CONNECTIONS))
+    ],
+    req: UmfangAenderung,
+) -> Verbindung:
+    """Freitexte einer bestehenden Verbindung zu- oder abschalten.
+
+    Bisher war der Umfang nur beim Verbinden wählbar; wer die Freitexte später
+    brauchte, musste trennen und neu verbinden. Der Hinweis in den Werkzeugen
+    versprach zugleich eine Freigabe „unter Konto → Verbindungen", die es dort
+    nicht gab — dieser Endpunkt löst das ein.
+
+    DERSELBE GUARD wie beim Verbinden (`MANAGE_CONNECTIONS`, Wurzel 9):
+    Freitexte sind Nachrichteninhalte und Notizen; sie zuzuschalten ist
+    dieselbe Entscheidung wie das Verbinden selbst, nur später getroffen.
+
+    Beim ABSCHALTEN werden zusätzlich die Refresh-Token gelöscht, damit die
+    Rücknahme sofort wirkt und nicht erst nach Ablauf des Access-Tokens.
+    """
+    dienst = _service(settings)
+    try:
+        neuer_scope = dienst.umfang_aendern(
+            user_id=ctx.user_id,
+            client_id=req.client_id,
+            freitexte=req.freitexte,
+        )
+    except OAuthError as exc:
+        raise HTTPException(
+            status_code=exc.status_code, detail=exc.beschreibung
+        ) from exc
+    log.info(
+        "mcp.umfang_geaendert",
+        extra={"client_id": req.client_id, "freitexte": req.freitexte},
+    )
+    return Verbindung(
+        client_id=req.client_id,
+        host=_host(req.client_id),
+        scope=neuer_scope,
+        erteilt_am="",
+    )
+
 
 @router.post("/mcp/token")
 def token(

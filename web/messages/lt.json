@@ -1360,6 +1360,7 @@
   "portal": {
     "title": "Mano portalas",
     "subtitle": "Jūsų objektų, pajamų ir ataskaitų apžvalga.",
+    "subtitleNoFinance": "Jūsų objektų apžvalga.",
     "properties": {
       "title": "Mano objektai",
       "empty": "Šiuo metu jums nepriskirtas nė vienas objektas.",
@@ -1403,7 +1404,8 @@
         "pending": "Peržiūrima",
         "approved": "Patvirtinta",
         "rejected": "Atmesta",
-        "cancelled": "Atšaukta"
+        "ownerPending": "Laukia šeimos",
+        "ownerDeclined": "Savininkas atmetė"
       },
       "reason": "Priežastis",
       "reasonPlaceholder": "Kodėl turėtų būti užblokuota? (pvz., naudojimas sau, meistrai)",
@@ -1446,7 +1448,8 @@
       "blockRequests": "Blokavimai",
       "meterReadings": "Skaitiklių rodmenys",
       "services": "Paslaugos",
-      "notifications": "Pranešimai"
+      "notifications": "Pranešimai",
+      "familyAccess": "Prieigos"
     },
     "overview": {
       "occupancy": "Užimtumas",
@@ -1484,6 +1487,7 @@
         "label": "Neįmanoma nustatyti",
         "provision": "Šiam objektui nenustatytas komisinis tarifas — administracija turi jį įrašyti.",
         "provisionUngueltig": "Nustatytas komisinis tarifas yra už 0–100 % ribų.",
+        "provisionZeitraum": "Šio apsistojimo laikotarpiu negaliojo jokia sutartis su savininku — lemiama yra išvykimo data.",
         "betrag": "Šiai rezervacijai nenurodyta bendra suma.",
         "naechte": "Šios rezervacijos laikotarpis netinkamas.",
         "waehrungVertrag": "Sutartas fiksuotas mokestis yra kita valiuta nei ši rezervacija — sumos neperskaičiuojamos."
@@ -1582,6 +1586,40 @@
         "draft": "Ruošiama",
         "finalized": "Baigta",
         "cancelled": "Atšaukta"
+      }
+    },
+    "family": {
+      "title": "Prieigos šeimai ir draugams",
+      "hint": "Suteik artimiesiems atskirą prieigą, užuot dalijęsis slaptažodžiu. Kiekvienam asmeniui pats nustatai, ką jis gali matyti.",
+      "empty": "Kol kas nesuteikta nė viena prieiga.",
+      "remove": "Pašalinti",
+      "removed": "Prieiga pašalinta.",
+      "invite": {
+        "property": "Objektas",
+        "name": "Vardas",
+        "email": "El. paštas",
+        "submit": "Pakviesti",
+        "sending": "Siunčiamas kvietimas …",
+        "sent": "Kvietimas išsiųstas.",
+        "linked": "Prieiga susieta su esama paskyra. Kvietimas nebuvo išsiųstas.",
+        "incomplete": "Nurodyk objektą, vardą ir el. paštą.",
+        "reportsLabel": "Suteikti prieigą prie ataskaitų",
+        "reportsHint": "Papildomai pajamos, atsiskaitymai ir išmokos. Be šio leidimo asmuo mato tik kalendorių ir blokavimus — jokių sumų."
+      },
+      "level": {
+        "use": "Naudojimas",
+        "reports": "Naudojimas ir ataskaitos",
+        "grantReports": "Suteikti prieigą prie ataskaitų",
+        "revokeReports": "Panaikinti prieigą prie ataskaitų"
+      },
+      "approvals": {
+        "title": "Tavo šeimos pageidavimai",
+        "hint": "Šiuos laikotarpius tavo šeima nori naudoti pati. Jei patvirtinsi, pageidavimas keliaus agentūrai — užblokuojama tik tada, kai ji pritaria.",
+        "approve": "Perduoti agentūrai",
+        "decline": "Atmesti",
+        "notePlaceholder": "Pastaba (nebūtina)",
+        "forwarded": "Perduota agentūrai.",
+        "declined": "Atmesta. Agentūra apie tai nesužinos."
       }
     }
   },

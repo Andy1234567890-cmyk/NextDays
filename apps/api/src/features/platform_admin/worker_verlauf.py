@@ -26,6 +26,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 
+from . import worker_stillstand
 from .schemas import (
     WorkerDetail,
     WorkerEreignis,
@@ -197,6 +198,10 @@ def kennzahlen(db: Client, *, stunden: int = 24) -> WorkerKennzahlen:
         fehler=sum(k.fehler for k in items),
         warteschlange=offen.count or 0,
         aufgegeben=tot.count or 0,
+        # Was AUSBLEIBT — die einzige Kennzahl hier, die kein Zählwerk ist.
+        # Alle übrigen zählen Geschehenes und standen beim 16-Stunden-Ausfall
+        # am 13.08.2026 auf „0 Fehler", während der Buchungs-Feed still war.
+        stillstand=worker_stillstand.stillstand(db),
     )
 
 

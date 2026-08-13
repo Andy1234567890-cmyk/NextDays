@@ -1365,6 +1365,7 @@
   "portal": {
     "title": "My portal",
     "subtitle": "Overview of your properties, earnings and statements.",
+    "subtitleNoFinance": "An overview of your properties.",
     "properties": {
       "title": "My properties",
       "empty": "No properties are assigned to you yet.",
@@ -1408,7 +1409,8 @@
         "pending": "Under review",
         "approved": "Approved",
         "rejected": "Rejected",
-        "cancelled": "Withdrawn"
+        "ownerPending": "Awaiting the family",
+        "ownerDeclined": "Declined by the owner"
       },
       "reason": "Reason",
       "reasonPlaceholder": "Why should it be blocked? (e.g. own use, tradespeople)",
@@ -1451,7 +1453,8 @@
       "blockRequests": "Blocks",
       "meterReadings": "Meter readings",
       "services": "Services",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "familyAccess": "Access"
     },
     "overview": {
       "occupancy": "Occupancy",
@@ -1489,6 +1492,7 @@
         "label": "Not available",
         "provision": "No commission rate is set for this property — your management company needs to add it.",
         "provisionUngueltig": "The commission rate on file is outside the 0–100% range.",
+        "provisionZeitraum": "No owner contract was in force for the period of this stay — the departure date is what counts.",
         "betrag": "This booking has no total amount.",
         "naechte": "This booking's date range is invalid.",
         "waehrungVertrag": "The agreed flat fee is in a different currency than this booking — amounts are not converted."
@@ -1587,6 +1591,40 @@
         "draft": "In preparation",
         "finalized": "Completed",
         "cancelled": "Cancelled"
+      }
+    },
+    "family": {
+      "title": "Access for family and friends",
+      "hint": "Give your relatives their own access instead of sharing your password. For each person you decide what they get to see.",
+      "empty": "No access granted yet.",
+      "remove": "Remove",
+      "removed": "Access removed.",
+      "invite": {
+        "property": "Property",
+        "name": "Name",
+        "email": "Email",
+        "submit": "Invite",
+        "sending": "Sending invitation …",
+        "sent": "Invitation sent.",
+        "linked": "The access was linked to the existing account. No invitation was sent.",
+        "incomplete": "Please enter property, name and email.",
+        "reportsLabel": "Share reports",
+        "reportsHint": "Additionally earnings, statements and payouts. Without this, the person only sees the calendar and blocked periods — no amounts."
+      },
+      "level": {
+        "use": "Use",
+        "reports": "Use and reports",
+        "grantReports": "Share reports",
+        "revokeReports": "Revoke reports"
+      },
+      "approvals": {
+        "title": "Requests from your family",
+        "hint": "Your family would like to use these periods themselves. If you approve, the request goes to the agency — the dates are only blocked once the agency agrees.",
+        "approve": "Send to agency",
+        "decline": "Decline",
+        "notePlaceholder": "Note (optional)",
+        "forwarded": "Forwarded to the agency.",
+        "declined": "Declined. The agency will not hear about it."
       }
     }
   },

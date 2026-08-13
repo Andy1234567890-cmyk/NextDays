@@ -1360,6 +1360,7 @@
   "portal": {
     "title": "Mój portal",
     "subtitle": "Przegląd Twoich obiektów, przychodów i rozliczeń.",
+    "subtitleNoFinance": "Przegląd Twoich obiektów.",
     "properties": {
       "title": "Moje obiekty",
       "empty": "Nie masz obecnie przypisanych żadnych obiektów.",
@@ -1403,7 +1404,8 @@
         "pending": "W trakcie weryfikacji",
         "approved": "Zatwierdzony",
         "rejected": "Odrzucony",
-        "cancelled": "Wycofany"
+        "ownerPending": "Oczekuje na rodzinę",
+        "ownerDeclined": "Odrzucone przez właściciela"
       },
       "reason": "Powód",
       "reasonPlaceholder": "Dlaczego ma zostać zablokowane? (np. użytek własny, fachowcy)",
@@ -1446,7 +1448,8 @@
       "blockRequests": "Blokady",
       "meterReadings": "Odczyty liczników",
       "services": "Usługi",
-      "notifications": "Powiadomienia"
+      "notifications": "Powiadomienia",
+      "familyAccess": "Dostępy"
     },
     "overview": {
       "occupancy": "Obłożenie",
@@ -1484,6 +1487,7 @@
         "label": "Nie do ustalenia",
         "provision": "Dla tego obiektu nie ustalono stawki prowizji — zarząd musi ją uzupełnić.",
         "provisionUngueltig": "Zapisana stawka prowizji jest poza zakresem 0–100 %.",
+        "provisionZeitraum": "W okresie tego pobytu nie obowiązywała żadna umowa z właścicielem — decyduje data wyjazdu.",
         "betrag": "W tej rezerwacji brakuje kwoty całkowitej.",
         "naechte": "Zakres dat tej rezerwacji jest nieprawidłowy.",
         "waehrungVertrag": "Ustalona opłata stała jest w innej walucie niż ta rezerwacja — kwoty nie są przeliczane."
@@ -1582,6 +1586,40 @@
         "draft": "W przygotowaniu",
         "finalized": "Zakończone",
         "cancelled": "Anulowane"
+      }
+    },
+    "family": {
+      "title": "Dostępy dla rodziny i przyjaciół",
+      "hint": "Daj bliskim własny dostęp, zamiast udostępniać swoje hasło. Dla każdej osoby sam ustalasz, co może zobaczyć.",
+      "empty": "Nie przyznano jeszcze żadnego dostępu.",
+      "remove": "Usuń",
+      "removed": "Dostęp usunięty.",
+      "invite": {
+        "property": "Obiekt",
+        "name": "Imię",
+        "email": "E-mail",
+        "submit": "Zaproś",
+        "sending": "Wysyłanie zaproszenia …",
+        "sent": "Zaproszenie wysłane.",
+        "linked": "Dostęp został powiązany z istniejącym kontem. Zaproszenie nie zostało wysłane.",
+        "incomplete": "Podaj obiekt, imię i adres e-mail.",
+        "reportsLabel": "Udostępnij raporty",
+        "reportsHint": "Dodatkowo przychody, rozliczenie i wypłata. Bez tego uprawnienia osoba widzi tylko kalendarz i blokady — bez kwot."
+      },
+      "level": {
+        "use": "Korzystanie",
+        "reports": "Korzystanie i raporty",
+        "grantReports": "Udostępnij raporty",
+        "revokeReports": "Cofnij raporty"
+      },
+      "approvals": {
+        "title": "Prośby Twojej rodziny",
+        "hint": "Te terminy Twoja rodzina chce wykorzystać sama. Jeśli je zatwierdzisz, prośba trafi do agencji — blokada powstaje dopiero po jej zgodzie.",
+        "approve": "Przekaż agencji",
+        "decline": "Odrzuć",
+        "notePlaceholder": "Uwaga (opcjonalnie)",
+        "forwarded": "Przekazano agencji.",
+        "declined": "Odrzucono. Agencja się o tym nie dowie."
       }
     }
   },

@@ -222,6 +222,14 @@ export type BlockRequest = {
   als_kuendigung_gewertet: boolean;
   /** Zu diesem Tag endet der Vertrag (erster Tag ohne Vertrag). */
   vertragsende_gesetzt_auf: string | null;
+  /** Stufe 1 der Freigabe (0389): „nicht_noetig" (mein eigener Antrag —
+   *  Normalfall), „offen" (wartet auf den Eigentümer), „freigegeben",
+   *  „abgelehnt". Ein Familienmitglied muss sehen, WO sein Antrag liegt:
+   *  „offen" allein hieße wahlweise „wartet auf die Familie" oder „wartet auf
+   *  die Verwaltung" — zwei sehr verschiedene Wartezeiten. */
+  owner_freigabe: string;
+  /** Begründung des Eigentümers bei Ablehnung. */
+  owner_decision_note: string | null;
 };
 
 export async function getBlockRequests(): Promise<

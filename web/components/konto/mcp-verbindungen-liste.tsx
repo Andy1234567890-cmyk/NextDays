@@ -11,7 +11,14 @@ import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
-import { trenneVerbindung, type McpVerbindung } from "@/lib/mcp-verbindungen";
+// Der Scope-Wert kommt aus einer Nachbardatei OHNE "use server": dort dürfen
+// nur async functions exportiert werden, ein `const` bräche erst beim Build.
+import { SCOPE_FREITEXT } from "@/lib/mcp-scopes";
+import {
+  setzeUmfang,
+  trenneVerbindung,
+  type McpVerbindung,
+} from "@/lib/mcp-verbindungen";
 
 function datumKurz(iso: string): string {
   if (!iso) return "";
@@ -32,6 +39,25 @@ export function VerbindungenListe({
 }) {
   const router = useRouter();
   const [laeuft, setLaeuft] = useState<string | null>(null);
+
+  async function umfangSetzen(clientId: string, freitexte: boolean) {
+    setLaeuft(clientId);
+    const res = await setzeUmfang(clientId, freitexte);
+    setLaeuft(null);
+    if (!res.ok) {
+      toast.error(res.error);
+      return;
+    }
+    toast.success(
+      freitexte
+        ? "Freitexte freigegeben."
+        : // Ehrlich benennen, was passiert: Der Entzug löscht die
+          // Erneuerungs-Token, damit er sofort wirkt und nicht erst nach
+          // Ablauf des aktuellen Zugangstokens.
+          "Freitexte gesperrt. Die Anwendung muss sich neu anmelden.",
+    );
+    router.refresh();
+  }
 
   async function trennen(clientId: string) {
     setLaeuft(clientId);
@@ -68,11 +94,37 @@ export function VerbindungenListe({
           key={v.client_id}
           className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
         >
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="truncate font-semibold">{v.host}</span>
-            <span className="text-xs text-muted-foreground">
-              Lesender Zugriff{v.erteilt_am ? ` · seit ${datumKurz(v.erteilt_am)}` : ""}
-            </span>
+          <div className="flex min-w-0 flex-col gap-2">
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <span className="truncate font-semibold">{v.host}</span>
+              <span className="text-xs text-muted-foreground">
+                Lesender Zugriff
+                {v.scope.split(" ").includes(SCOPE_FREITEXT)
+                  ? " · mit Freitexten"
+                  : ""}
+                {v.erteilt_am ? ` · seit ${datumKurz(v.erteilt_am)}` : ""}
+              </span>
+            </div>
+
+            {/* Freitexte nachträglich schalten (0389).
+                Vorher ging das nur beim Verbinden — wer sie später brauchte,
+                musste trennen und neu verbinden, während der Hinweis in den
+                Werkzeugen selbst auf „Konto → Verbindungen" verwies. */}
+            <label className="flex cursor-pointer items-start gap-2 text-xs">
+              <input
+                type="checkbox"
+                checked={v.scope.split(" ").includes(SCOPE_FREITEXT)}
+                onChange={(e) => umfangSetzen(v.client_id, e.target.checked)}
+                disabled={laeuft === v.client_id}
+                className="mt-0.5 size-3.5 shrink-0 accent-primary"
+              />
+              <span className="text-muted-foreground">
+                Freitexte freigeben — Nachrichteninhalte und Buchungsnotizen.
+                Diese Felder enthalten häufig Angaben zur Gesundheit und sind
+                deshalb besonders geschützt. Ohne die Freigabe sieht der Dienst
+                nur, DASS eine Nachricht vorliegt — nicht, was darin steht.
+              </span>
+            </label>
           </div>
           <Button
             variant="ghost"

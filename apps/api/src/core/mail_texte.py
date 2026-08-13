@@ -1857,6 +1857,108 @@ TEXTE: dict[str, dict[str, str]] = {
     # `{zeitraum}` ist ein bereits formatierter Datumsbereich; die Formatierung
     # selbst passiert in `mail_datum` in der Sprache des Empfängers, damit hier
     # keine 24. Datumsregel steht.
+    "sperrantrag.freigabe": {
+        "bg": "Желание за блокиране от Вашето семейство: {titel}",
+        "cs": "Přání blokace z Vaší rodiny: {titel}",
+        "da": "Spærreønske fra din familie: {titel}",
+        "de": "Sperrwunsch aus deiner Familie: {titel}",
+        "el": "Επιθυμία δέσμευσης από την οικογένειά σας: {titel}",
+        "en": "Block request from your family: {titel}",
+        "es": "Solicitud de bloqueo de tu familia: {titel}",
+        "et": "Sulgemissoov sinu perelt: {titel}",
+        "fi": "Sulkutoive perheeltäsi: {titel}",
+        "fr": "Souhait de blocage de ta famille : {titel}",
+        "ga": "Iarratas bactha ó do theaghlach: {titel}",
+        "hr": "Želja za blokadom iz Vaše obitelji: {titel}",
+        "hu": "Zárolási kérés a családodtól: {titel}",
+        "it": "Richiesta di blocco dalla tua famiglia: {titel}",
+        "lt": "Blokavimo pageidavimas iš Jūsų šeimos: {titel}",
+        "lv": "Bloķēšanas vēlme no Jūsu ģimenes: {titel}",
+        "mt": "Xewqa ta' mblukkar mill-familja tiegħek: {titel}",
+        "nl": "Blokkeerwens uit je familie: {titel}",
+        "pl": "Prośba o blokadę od Twojej rodziny: {titel}",
+        "pt": "Pedido de bloqueio da tua família: {titel}",
+        "ro": "Dorință de blocare din familia ta: {titel}",
+        "sk": "Želanie blokácie z Vašej rodiny: {titel}",
+        "sl": "Želja po blokadi iz Vaše družine: {titel}",
+        "sv": "Spärrönskemål från din familj: {titel}",
+    },
+    # Der Name des Antragstellers steht VORNE, statt ihn zu umschreiben („ein
+    # Zugang deiner Familie"): Das überträgt sich in jede der 24 Sprachen
+    # natürlich, und der Eigentümer liest sofort, WER etwas möchte.
+    #
+    # In cs/sk/sl/mt fehlt bewusst die Entsprechung von „selbst": Diese
+    # Sprachen bilden das mit einem Wort, das ein Geschlecht trägt (sám/huwa
+    # stess) und im Dict nicht beugbar ist. Ein maskuliner Default läse falsch,
+    # sobald die Tochter den Antrag stellt — der Satz ist ohne dieses Wort
+    # vollständig, also entfällt es dort (Wurzel 4: lieber weglassen als raten).
+    "sperrantrag.rumpf_freigabe": {
+        "bg": "{antragsteller} желае да ползва {titel} през периода {zeitraum}. "
+              "Желанието се изпраща към управлението едва след Вашето одобрение.",
+        "cs": "{antragsteller} chce {titel} využít v období {zeitraum}. "
+              "Přání se odešle správě až po Vašem schválení.",
+        "da": "{antragsteller} vil selv benytte {titel} i perioden {zeitraum}. "
+              "Ønsket sendes først til forvaltningen efter din godkendelse.",
+        "de": "{antragsteller} möchte {titel} im Zeitraum {zeitraum} selbst "
+              "nutzen. Der Wunsch geht erst nach deiner Freigabe an die "
+              "Verwaltung.",
+        "el": "Ο/Η {antragsteller} θέλει να χρησιμοποιήσει το {titel} για την "
+              "περίοδο {zeitraum}. Το αίτημα προωθείται στη διαχείριση μόνο "
+              "μετά την έγκρισή σας.",
+        "en": "{antragsteller} would like to use {titel} personally during "
+              "{zeitraum}. The request only goes to the management team after "
+              "your approval.",
+        "es": "{antragsteller} quiere usar {titel} personalmente durante el "
+              "periodo {zeitraum}. La solicitud se envía a la administración "
+              "solo después de tu aprobación.",
+        "et": "{antragsteller} soovib objekti {titel} ise kasutada perioodil "
+              "{zeitraum}. Soov läheb haldusele alles pärast sinu kinnitust.",
+        "fi": "{antragsteller} haluaa käyttää kohdetta {titel} itse ajalla "
+              "{zeitraum}. Toive menee hallinnolle vasta sinun hyväksyntäsi "
+              "jälkeen.",
+        "fr": "{antragsteller} souhaite utiliser {titel} personnellement sur "
+              "la période {zeitraum}. La demande n'est transmise à la gestion "
+              "qu'après ton accord.",
+        "ga": "Ba mhaith le {antragsteller} {titel} a úsáid go pearsanta le "
+              "linn {zeitraum}. Ní théann an t-iarratas chuig an mbainistíocht "
+              "ach tar éis duit é a cheadú.",
+        "hr": "{antragsteller} želi koristiti {titel} u razdoblju "
+              "{zeitraum}. Želja se šalje upravi tek nakon Vašeg odobrenja.",
+        "hu": "{antragsteller} maga szeretné használni a következőt: {titel} a "
+              "{zeitraum} időszakban. A kérés csak a jóváhagyásod után jut el "
+              "az üzemeltetéshez.",
+        "it": "{antragsteller} desidera utilizzare personalmente {titel} nel "
+              "periodo {zeitraum}. La richiesta viene inoltrata alla gestione "
+              "solo dopo la tua approvazione.",
+        "lt": "{antragsteller} nori pats naudotis objektu {titel} laikotarpiu "
+              "{zeitraum}. Pageidavimas administracijai perduodamas tik po "
+              "Jūsų patvirtinimo.",
+        "lv": "{antragsteller} vēlas pats izmantot objektu {titel} laikposmā "
+              "{zeitraum}. Vēlme tiek nosūtīta pārvaldei tikai pēc Jūsu "
+              "apstiprinājuma.",
+        "mt": "{antragsteller} jixtieq juża {titel} fil-perjodu "
+              "{zeitraum}. It-talba tintbagħat lill-amministrazzjoni biss wara "
+              "l-approvazzjoni tiegħek.",
+        "nl": "{antragsteller} wil {titel} in de periode {zeitraum} zelf "
+              "gebruiken. Het verzoek gaat pas na jouw goedkeuring naar het "
+              "beheer.",
+        "pl": "{antragsteller} chce samodzielnie korzystać z {titel} w okresie "
+              "{zeitraum}. Prośba trafia do zarządu dopiero po Twoim "
+              "zatwierdzeniu.",
+        "pt": "{antragsteller} pretende utilizar {titel} pessoalmente no "
+              "período {zeitraum}. O pedido só segue para a gestão após a tua "
+              "aprovação.",
+        "ro": "{antragsteller} dorește să folosească personal {titel} în "
+              "perioada {zeitraum}. Cererea ajunge la administrație abia după "
+              "aprobarea ta.",
+        "sk": "{antragsteller} chce {titel} využiť v období {zeitraum}. "
+              "Želanie sa odošle správe až po Vašom schválení.",
+        "sl": "{antragsteller} želi {titel} uporabljati v obdobju {zeitraum}. "
+              "Želja se pošlje upravi šele po Vaši odobritvi.",
+        "sv": "{antragsteller} vill själv använda {titel} under perioden "
+              "{zeitraum}. Önskemålet går till förvaltningen först efter ditt "
+              "godkännande.",
+    },
     "sperrantrag.rumpf_genehmigt": {
         "bg": "Вашата заявка за блокиране на {titel} ({zeitraum}) е одобрена.",
         "cs": "Vaše žádost o blokaci {titel} ({zeitraum}) byla schválena.",

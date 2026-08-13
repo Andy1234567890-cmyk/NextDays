@@ -1365,6 +1365,7 @@
   "portal": {
     "title": "Portálom",
     "subtitle": "Áttekintés az ingatlanaidról, bevételeidről és elszámolásaidról.",
+    "subtitleNoFinance": "Áttekintés az ingatlanjaidról.",
     "properties": {
       "title": "Ingatlanaim",
       "empty": "Jelenleg nincs hozzád rendelt ingatlan.",
@@ -1408,7 +1409,8 @@
         "pending": "Elbírálás alatt",
         "approved": "Jóváhagyva",
         "rejected": "Elutasítva",
-        "cancelled": "Visszavonva"
+        "ownerPending": "Családra vár",
+        "ownerDeclined": "A tulajdonos elutasította"
       },
       "reason": "Indok",
       "reasonPlaceholder": "Miért kell zárolni? (pl. saját használat, kivitelezők)",
@@ -1451,7 +1453,8 @@
       "blockRequests": "Zárolások",
       "meterReadings": "Óraállások",
       "services": "Szolgáltatások",
-      "notifications": "Értesítések"
+      "notifications": "Értesítések",
+      "familyAccess": "Hozzáférések"
     },
     "overview": {
       "occupancy": "Foglaltság",
@@ -1489,6 +1492,7 @@
         "label": "Nem meghatározható",
         "provision": "Ehhez az ingatlanhoz nincs jutalékkulcs megadva — a kezelőnek pótolnia kell.",
         "provisionUngueltig": "A megadott jutalékkulcs a 0–100 % határon kívül van.",
+        "provisionZeitraum": "Ennek a tartózkodásnak az időszakára nem volt érvényes tulajdonosi szerződés — a távozás dátuma a mérvadó.",
         "betrag": "Ebből a foglalásból hiányzik a teljes összeg.",
         "naechte": "A foglalás időszaka hibás.",
         "waehrungVertrag": "A megállapodott díj más valutában szerepel, mint ez a foglalás — az összegeket nem számítjuk át."
@@ -1587,6 +1591,40 @@
         "draft": "Előkészítés alatt",
         "finalized": "Lezárva",
         "cancelled": "Sztornózva"
+      }
+    },
+    "family": {
+      "title": "Hozzáférések családnak és barátoknak",
+      "hint": "Adj a hozzátartozóidnak saját hozzáférést ahelyett, hogy megosztanád a jelszavadat. Személyenként te döntöd el, mit láthatnak.",
+      "empty": "Még nincs kiadott hozzáférés.",
+      "remove": "Eltávolítás",
+      "removed": "Hozzáférés eltávolítva.",
+      "invite": {
+        "property": "Ingatlan",
+        "name": "Név",
+        "email": "E-mail",
+        "submit": "Meghívás",
+        "sending": "Meghívó küldése …",
+        "sent": "Meghívó elküldve.",
+        "linked": "A hozzáférés a meglévő fiókhoz lett kapcsolva. Nem ment ki meghívó.",
+        "incomplete": "Add meg az ingatlant, a nevet és az e-mail-címet.",
+        "reportsLabel": "Jelentések megosztása",
+        "reportsHint": "Ezen felül a bevétel, az elszámolás és a kifizetés. E nélkül az illető csak a naptárat és a zárolásokat látja, összegeket nem."
+      },
+      "level": {
+        "use": "Használat",
+        "reports": "Használat és jelentések",
+        "grantReports": "Jelentések megosztása",
+        "revokeReports": "Jelentések visszavonása"
+      },
+      "approvals": {
+        "title": "A családod kérései",
+        "hint": "Ezeket az időszakokat a családod maga szeretné használni. Ha jóváhagyod, a kérés az ügynökséghez kerül — a zárolás csak az ő beleegyezésükkel jön létre.",
+        "approve": "Küldés az ügynökségnek",
+        "decline": "Elutasítás",
+        "notePlaceholder": "Megjegyzés (nem kötelező)",
+        "forwarded": "Továbbítva az ügynökségnek.",
+        "declined": "Elutasítva. Az ügynökség nem értesül róla."
       }
     }
   },

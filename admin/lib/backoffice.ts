@@ -797,6 +797,23 @@ export interface WorkerKennzahl {
   dauer_max_ms: number | null;
 }
 
+/** Ein Kern-Job, der AUSBLEIBT — der Befund, den keine Fehlerzahl zeigt.
+ *
+ *  Am 13.08.2026 stand der Buchungs-Feed 16 Stunden still, während der Monitor
+ *  „0 Fehler" meldete: Die Jobs liefen, verzögerten sich aber jedes Mal
+ *  ergebnislos, und Verzögern ist ein geplanter Ausgang. Gemessen wird deshalb
+ *  der letzte ERFOLGREICHE Lauf. `zuletzt = null` heißt: im Fenster kein
+ *  einziger Erfolg. */
+export interface WorkerStillstand {
+  vorgang: string;
+  /** Klartext: was praktisch ausfällt, nicht der Job-Name. */
+  beschreibung: string;
+  zuletzt: string | null;
+  still_seit_sekunden: number | null;
+  erwartet_alle_sekunden: number;
+  ueberfaellig: boolean;
+}
+
 export interface WorkerKennzahlen {
   stunden: number;
   items: WorkerKennzahl[];
@@ -805,6 +822,9 @@ export interface WorkerKennzahlen {
   /** Was JETZT offen ist — aus `jobs`, nicht aus dem Verlauf (Wurzel 5b). */
   warteschlange: number;
   aufgegeben: number;
+  /** Überfällige Kern-Jobs. Leer = alles läuft. Die einzige Kennzahl, die ein
+   *  AUSBLEIBEN sichtbar macht — alle anderen zählen Geschehenes. */
+  stillstand: WorkerStillstand[];
 }
 
 export interface WorkerDetail {

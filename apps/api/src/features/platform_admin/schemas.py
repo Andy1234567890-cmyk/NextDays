@@ -792,6 +792,28 @@ class WorkerKennzahl(BaseModel):
     dauer_max_ms: int | None = None
 
 
+class WorkerStillstand(BaseModel):
+    """Ein Kern-Job, der AUSBLEIBT — der Befund, den keine Fehlerzahl zeigt.
+
+    Am 13.08.2026 stand der Buchungs-Feed 16 Stunden still, während der Monitor
+    „0 Fehler" meldete: Die Jobs liefen, verzögerten sich aber jedes Mal
+    ergebnislos, und Verzögern ist ein geplanter Ausgang. Gemessen wird deshalb
+    der letzte ERFOLGREICHE Lauf.
+
+    `zuletzt=None` heißt: im Beobachtungsfenster kein einziger Erfolg — entweder
+    steht der Job wirklich, oder das System ist frisch aufgesetzt. Kein
+    erfundener Ersatzwert (Wurzel 4).
+    """
+
+    vorgang: str
+    # Klartext fürs Backoffice: was praktisch ausfällt, nicht der Job-Name.
+    beschreibung: str
+    zuletzt: str | None = None
+    still_seit_sekunden: int | None = None
+    erwartet_alle_sekunden: int
+    ueberfaellig: bool = True
+
+
 class WorkerKennzahlen(BaseModel):
     stunden: int
     items: list[WorkerKennzahl]
@@ -801,6 +823,10 @@ class WorkerKennzahlen(BaseModel):
     # was passiert IST, nicht was ansteht (Wurzel 5b).
     warteschlange: int = 0
     aufgegeben: int = 0
+    # Kern-Jobs, die überfällig sind. Leer = alles läuft. Das ist die einzige
+    # Kennzahl, die ein AUSBLEIBEN sichtbar macht — alle anderen zählen, was
+    # passiert ist, und blieben beim Ausfall vom 13.08.2026 unauffällig.
+    stillstand: list[WorkerStillstand] = Field(default_factory=list)
 
 
 class WorkerDetail(BaseModel):

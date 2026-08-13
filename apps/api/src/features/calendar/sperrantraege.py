@@ -57,7 +57,12 @@ _SPALTEN = (
     "id, tenant_id, property_id, unit_id, requested_by, start_date, end_date, "
     "status, reason, decided_by, decided_at, decision_note, created_at, "
     # Vertragskündigung (0377).
-    "ist_kuendigung, als_kuendigung_gewertet, vertragsende_gesetzt_auf"
+    "ist_kuendigung, als_kuendigung_gewertet, vertragsende_gesetzt_auf, "
+    # Freigabe durch den Eigentümer (0389). Die Agentur sieht nur Anträge, die
+    # diese Stufe passiert haben — der Wert wird trotzdem mitgelesen, damit in
+    # der Oberfläche steht, ob die Familie zugestimmt hat oder ob es der
+    # Antrag des Eigentümers selbst war.
+    "owner_freigabe, owner_decided_by, owner_decided_at, owner_decision_note"
 )
 
 # Ein Antrag darf nicht beliebig weit in die Zukunft sperren — ein Tippfehler
@@ -118,6 +123,13 @@ class SperrantragService:
         `eq("tenant_id", …)` in DERSELBEN Abfrage ließe sich über eine geratene
         UUID der Sperrantrag eines fremden Mandanten lesen und entscheiden.
         Wurzel 9: derselbe Scope wie im List-Pfad, nicht bloß Authentifizierung.
+
+        Der `owner_freigabe`-Filter steht deshalb hier GENAUSO wie in `liste`:
+        Ohne ihn wäre die Freigabe-Stufe (0389) eine reine Anzeige-Kosmetik —
+        die Agentur sähe den offenen Antrag zwar nicht in ihrer Warteschlange,
+        könnte ihn aber über seine ID direkt genehmigen und damit die
+        Zustimmung des Eigentümers überspringen. Genau diese Sorte Lücke
+        beschreibt Wurzel 9.
         """
         tenant_id = self._tenant(ctx)
         rows = (
@@ -125,6 +137,7 @@ class SperrantragService:
             .select(_SPALTEN)
             .eq("id", antrag_id)
             .eq("tenant_id", tenant_id)
+            .in_("owner_freigabe", ["nicht_noetig", "freigegeben"])
             .limit(1)
             .execute()
         ).data or []
@@ -143,6 +156,20 @@ class SperrantragService:
             self._db.table("block_requests")
             .select(_SPALTEN)
             .eq("tenant_id", tenant_id)
+            # Stufe 1 (0389): Wünscht ein FAMILIENMITGLIED des Eigentümers eine
+            # Sperrzeit, muss erst der Eigentümer zustimmen. Bis dahin
+            # existiert der Antrag für die Agentur nicht — sie könnte ihn
+            # ohnehin nicht beurteilen (ob Tante Inge im Juli darf, weiß nur
+            # die Familie) und würde durch eine Genehmigung die Freigabe
+            # überspringen.
+            #
+            # Was die Agentur sieht:
+            #   nicht_noetig — Antrag des Eigentümers selbst (der Normalfall
+            #                  und der gesamte Altbestand)
+            #   freigegeben  — die Familie ist sich einig
+            # Was sie NIE sieht: 'offen' und 'abgelehnt'. Ein vom Eigentümer
+            # abgelehnter Antrag ist erledigt und erreicht sie nicht.
+            .in_("owner_freigabe", ["nicht_noetig", "freigegeben"])
         )
         if status:
             if status not in {"pending", "approved", "rejected"}:

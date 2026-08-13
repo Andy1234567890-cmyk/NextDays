@@ -106,6 +106,16 @@ KATALOG: tuple[Kategorie, ...] = (
     # bleibt ohnehin an.
     Kategorie("block_request", Tab.KONTO, "aktivitaet", _MAIL_SMS),
     Kategorie("block_decision", Tab.KONTO, "aktivitaet", _MAIL_SMS),
+    # --- Stufe 1 der Freigabe (0389) --------------------------------------
+    # Dritte Kategorie aus demselben Grund wie die beiden darueber: ein
+    # anderer EMPFAENGER. Diese geht an den EIGENTUEMER, dessen Familie eine
+    # Sperrzeit wuenscht — nicht an die Agentur (fuer die existiert der Antrag
+    # in diesem Zustand noch gar nicht) und nicht an den Antragsteller.
+    #
+    # Wer keine Familienzugaenge vergeben hat, bekommt hier nie etwas; die
+    # Kategorie steht trotzdem im Katalog, damit die Einstellung auffindbar
+    # ist, BEVOR der erste Antrag kommt.
+    Kategorie("block_freigabe", Tab.KONTO, "aktivitaet", _MAIL_SMS),
 )
 
 NACH_SCHLUESSEL: dict[str, Kategorie] = {k.schluessel: k for k in KATALOG}

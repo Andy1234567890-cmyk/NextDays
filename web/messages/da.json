@@ -1365,6 +1365,7 @@
   "portal": {
     "title": "Min portal",
     "subtitle": "Overblik over dine objekter, indtægter og afregninger.",
+    "subtitleNoFinance": "Overblik over dine boliger.",
     "properties": {
       "title": "Mine objekter",
       "empty": "Der er aktuelt ikke tildelt dig nogen objekter.",
@@ -1408,7 +1409,8 @@
         "pending": "Under behandling",
         "approved": "Godkendt",
         "rejected": "Afvist",
-        "cancelled": "Trukket tilbage"
+        "ownerPending": "Afventer familien",
+        "ownerDeclined": "Afvist af ejeren"
       },
       "reason": "Årsag",
       "reasonPlaceholder": "Hvorfor skal det spærres? (f.eks. egen brug, håndværkere)",
@@ -1451,7 +1453,8 @@
       "blockRequests": "Blokeringer",
       "meterReadings": "Målerstande",
       "services": "Ydelser",
-      "notifications": "Notifikationer"
+      "notifications": "Notifikationer",
+      "familyAccess": "Adgange"
     },
     "overview": {
       "occupancy": "Belægning",
@@ -1489,6 +1492,7 @@
         "label": "Kan ikke opgøres",
         "provision": "Der er ikke angivet en provisionssats for denne bolig — administrationen skal tilføje den.",
         "provisionUngueltig": "Den angivne provisionssats ligger uden for 0–100 %.",
+        "provisionZeitraum": "Der gjaldt ingen ejerkontrakt i denne opholdsperiode — det er afrejsedatoen, der er afgørende.",
         "betrag": "Denne booking mangler et samlet beløb.",
         "naechte": "Denne bookings datointerval er ugyldigt.",
         "waehrungVertrag": "Det aftalte gebyr er i en anden valuta end denne booking — beløb omregnes ikke."
@@ -1587,6 +1591,40 @@
         "draft": "Under udarbejdelse",
         "finalized": "Afsluttet",
         "cancelled": "Annulleret"
+      }
+    },
+    "family": {
+      "title": "Adgange til familie og venner",
+      "hint": "Giv dine nærmeste deres egen adgang i stedet for at dele din adgangskode. Du bestemmer for hver person, hvad de må se.",
+      "empty": "Der er endnu ikke givet nogen adgange.",
+      "remove": "Fjern",
+      "removed": "Adgang fjernet.",
+      "invite": {
+        "property": "Objekt",
+        "name": "Navn",
+        "email": "E-mail",
+        "submit": "Inviter",
+        "sending": "Inviterer …",
+        "sent": "Invitation sendt.",
+        "linked": "Adgangen blev knyttet til den eksisterende konto. Der blev ikke sendt nogen invitation.",
+        "incomplete": "Angiv objekt, navn og e-mail.",
+        "reportsLabel": "Giv adgang til rapporter",
+        "reportsHint": "Derudover indtægter, afregning og udbetaling. Uden denne adgang ser personen kun kalender og spærringer — ingen beløb."
+      },
+      "level": {
+        "use": "Brug",
+        "reports": "Brug og rapporter",
+        "grantReports": "Giv adgang til rapporter",
+        "revokeReports": "Fjern adgang til rapporter"
+      },
+      "approvals": {
+        "title": "Ønsker fra din familie",
+        "hint": "Disse perioder vil din familie gerne bruge selv. Godkender du, går ønsket videre til bureauet — der spærres først, når bureauet siger ja.",
+        "approve": "Send til bureauet",
+        "decline": "Afvis",
+        "notePlaceholder": "Bemærkning (valgfri)",
+        "forwarded": "Sendt videre til bureauet.",
+        "declined": "Afvist. Bureauet får ikke besked om det."
       }
     }
   },

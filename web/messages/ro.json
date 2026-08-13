@@ -1360,6 +1360,7 @@
   "portal": {
     "title": "Portalul meu",
     "subtitle": "Prezentare generală a proprietăților, veniturilor și deconturilor tale.",
+    "subtitleNoFinance": "Prezentare generală a proprietăților tale.",
     "properties": {
       "title": "Proprietățile mele",
       "empty": "În prezent nu îți este alocată nicio proprietate.",
@@ -1403,7 +1404,8 @@
         "pending": "În verificare",
         "approved": "Aprobată",
         "rejected": "Respinsă",
-        "cancelled": "Retrasă"
+        "ownerPending": "În așteptarea familiei",
+        "ownerDeclined": "Respins de proprietar"
       },
       "reason": "Motiv",
       "reasonPlaceholder": "De ce ar trebui blocat? (de ex. uz propriu, meseriași)",
@@ -1446,7 +1448,8 @@
       "blockRequests": "Blocări",
       "meterReadings": "Citiri contoare",
       "services": "Servicii",
-      "notifications": "Notificări"
+      "notifications": "Notificări",
+      "familyAccess": "Accesuri"
     },
     "overview": {
       "occupancy": "Ocupare",
@@ -1484,6 +1487,7 @@
         "label": "Nu se poate stabili",
         "provision": "Pentru această proprietate nu este stabilit un comision — administrația trebuie să îl completeze.",
         "provisionUngueltig": "Comisionul înregistrat este în afara intervalului 0–100 %.",
+        "provisionZeitraum": "În perioada acestui sejur nu era valabil niciun contract cu proprietarul — determinantă este data plecării.",
         "betrag": "Acestei rezervări îi lipsește suma totală.",
         "naechte": "Perioada acestei rezervări este invalidă.",
         "waehrungVertrag": "Tariful fix convenit este în altă monedă decât această rezervare — sumele nu se convertesc."
@@ -1582,6 +1586,40 @@
         "draft": "În pregătire",
         "finalized": "Finalizat",
         "cancelled": "Anulat"
+      }
+    },
+    "family": {
+      "title": "Accesuri pentru familie și prieteni",
+      "hint": "Oferă-le apropiaților un acces propriu în loc să îți împarți parola. Pentru fiecare persoană stabilești tu ce are voie să vadă.",
+      "empty": "Nu a fost acordat încă niciun acces.",
+      "remove": "Elimină",
+      "removed": "Acces eliminat.",
+      "invite": {
+        "property": "Proprietate",
+        "name": "Nume",
+        "email": "E-mail",
+        "submit": "Invită",
+        "sending": "Se trimite invitația …",
+        "sent": "Invitație trimisă.",
+        "linked": "Accesul a fost legat de contul existent. Nu a fost trimisă nicio invitație.",
+        "incomplete": "Indică proprietatea, numele și e-mailul.",
+        "reportsLabel": "Acordă acces la rapoarte",
+        "reportsHint": "În plus veniturile, decontul și plata. Fără acest drept, persoana vede doar calendarul și blocările — fără sume."
+      },
+      "level": {
+        "use": "Utilizare",
+        "reports": "Utilizare și rapoarte",
+        "grantReports": "Acordă acces la rapoarte",
+        "revokeReports": "Retrage accesul la rapoarte"
+      },
+      "approvals": {
+        "title": "Cererile familiei tale",
+        "hint": "Aceste perioade vrea familia ta să le folosească ea însăși. Dacă aprobi, cererea merge la agenție — blocarea are loc abia după acordul acesteia.",
+        "approve": "Trimite la agenție",
+        "decline": "Respinge",
+        "notePlaceholder": "Observație (opțional)",
+        "forwarded": "Trimis la agenție.",
+        "declined": "Respins. Agenția nu află nimic despre asta."
       }
     }
   },

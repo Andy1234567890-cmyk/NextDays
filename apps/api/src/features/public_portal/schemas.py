@@ -209,6 +209,16 @@ class BlockRequestItem(BaseModel):
     ist_kuendigung: bool = False
     als_kuendigung_gewertet: bool = False
     vertragsende_gesetzt_auf: date_ | None = None
+    # Stufe 1 der Freigabe (0389): 'nicht_noetig' (Antrag des Eigentümers
+    # selbst — der Normalfall und der gesamte Altbestand), 'offen',
+    # 'freigegeben', 'abgelehnt'. Ein Familienmitglied muss sehen, WO sein
+    # Antrag liegt: „offen" allein hieße sonst wahlweise „wartet auf die
+    # Familie" oder „wartet auf die Verwaltung" — zwei sehr verschiedene
+    # Aussagen mit sehr verschiedenen Wartezeiten.
+    owner_freigabe: str = "nicht_noetig"
+    # Begründung des Eigentümers bei Ablehnung. Der Antragsteller hat ein Recht
+    # darauf zu erfahren, warum — sonst wirkt die Ablehnung wie Willkür.
+    owner_decision_note: str | None = None
 
 
 class BlockRequestList(BaseModel):

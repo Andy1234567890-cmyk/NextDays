@@ -292,9 +292,34 @@ def test_calendar_payout_summiert_ohne_rundungsverlust() -> None:
 
 
 def test_calendar_ohne_provision_kein_erfundener_betrag() -> None:
-    """Wurzel 4: fehlt die Provision, gibt es KEINE Zahl — nur den Grund."""
+    """Wurzel 4: fehlt die Provision, gibt es KEINE Zahl — nur den Grund.
+
+    Der Eigentümer EXISTIERT hier (nur sein Satz ist leer), darum lautet der
+    Grund `provision_zeitraum`: Es fehlen keine Stammdaten, sondern ein für den
+    Aufenthalt geltender Vertrag. Die Unterscheidung kostete real eine
+    Fehlersuche (13.08.2026) — ein Vertrag ab dem 12.08. deckte eine am 09.08.
+    abgereiste Buchung nicht ab, und die pauschale Meldung „kein
+    Provisionssatz hinterlegt" schickte die Suche zu den Stammdaten.
+    """
     tables = _tables()
     tables["owners"][0]["default_commission_pct"] = None
+    res = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
+    assert all(d.owner_payout_per_night is None for d in res.days)
+    assert {d.owner_payout_unknown_reason for d in res.days} == {
+        "provision_zeitraum"
+    }
+
+
+def test_calendar_ohne_eigentuemer_nennt_die_stammdaten() -> None:
+    """Der GEGENFALL: gar kein Eigentümer-Datensatz → `provision`.
+
+    Beide Gründe führen zu „keine Zahl", aber zu verschiedenen Abhilfen:
+    hier fehlt der Eigentümer, dort der passende Vertrag. Eine Meldung, die
+    beides zusammenwirft, schickt den Leser an die falsche Stelle.
+    """
+    tables = _tables()
+    tables["owner_properties"] = []  # Objekt ohne Eigentümer
+    tables["owners"] = []
     res = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
     assert all(d.owner_payout_per_night is None for d in res.days)
     assert {d.owner_payout_unknown_reason for d in res.days} == {"provision"}

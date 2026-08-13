@@ -1360,6 +1360,7 @@
   "portal": {
     "title": "Il-portal tiegħi",
     "subtitle": "Ħarsa ġenerali tal-proprjetajiet, id-dħul u r-rendikonti tiegħek.",
+    "subtitleNoFinance": "Ħarsa ġenerali lejn il-proprjetajiet tiegħek.",
     "properties": {
       "title": "Il-proprjetajiet tiegħi",
       "empty": "Bħalissa m'għandekx proprjetajiet assenjati.",
@@ -1403,7 +1404,8 @@
         "pending": "Qed tiġi rivduta",
         "approved": "Approvata",
         "rejected": "Miċħuda",
-        "cancelled": "Irtirata"
+        "ownerPending": "Qed jistenna l-familja",
+        "ownerDeclined": "Miċħud mis-sid"
       },
       "reason": "Raġuni",
       "reasonPlaceholder": "Għaliex għandu jiġi mblukkat? (pereż. użu proprju, ħaddiema)",
@@ -1446,7 +1448,8 @@
       "blockRequests": "Imblukkar",
       "meterReadings": "Qari tal-arloġġi",
       "services": "Servizzi",
-      "notifications": "Notifiki"
+      "notifications": "Notifiki",
+      "familyAccess": "Aċċessi"
     },
     "overview": {
       "occupancy": "Okkupazzjoni",
@@ -1484,6 +1487,7 @@
         "label": "Ma jistax jiġi kkalkulat",
         "provision": "Għal din il-proprjetà ma hemmx rata ta' kommissjoni stabbilita — l-amministrazzjoni trid tiżidha.",
         "provisionUngueltig": "Ir-rata ta' kommissjoni rreġistrata hija barra mill-medda 0–100 %.",
+        "provisionZeitraum": "Għall-perjodu ta' din iż-żjara ma kien fis-seħħ ebda kuntratt mas-sid — dak li jgħodd hija d-data tat-tluq.",
         "betrag": "Din il-prenotazzjoni nieqsa mill-ammont totali.",
         "naechte": "Il-perjodu ta' din il-prenotazzjoni mhuwiex validu.",
         "waehrungVertrag": "It-tariffa fissa miftiehma hija f'munita differenti minn din il-prenotazzjoni — l-ammonti ma jiġux konvertiti."
@@ -1582,6 +1586,40 @@
         "draft": "Qed titħejja",
         "finalized": "Ikkompletata",
         "cancelled": "Ikkanċellata"
+      }
+    },
+    "family": {
+      "title": "Aċċessi għall-familja u l-ħbieb",
+      "hint": "Agħti lill-qraba tiegħek aċċess tagħhom minflok ma taqsam il-password tiegħek. Għal kull persuna tiddeċiedi int x'tista' tara.",
+      "empty": "Għadu ma ngħata l-ebda aċċess.",
+      "remove": "Neħħi",
+      "removed": "L-aċċess tneħħa.",
+      "invite": {
+        "property": "Proprjetà",
+        "name": "Isem",
+        "email": "E-mail",
+        "submit": "Stieden",
+        "sending": "Qed tintbagħat l-istedina …",
+        "sent": "L-istedina ntbagħtet.",
+        "linked": "L-aċċess ġie marbut mal-kont eżistenti. Ma ntbagħtet l-ebda stedina.",
+        "incomplete": "Jekk jogħġbok daħħal il-proprjetà, l-isem u l-e-mail.",
+        "reportsLabel": "Agħti aċċess għar-rapporti",
+        "reportsHint": "Barra minn hekk id-dħul, ir-rendikont u l-ħlas. Mingħajr dan il-permess il-persuna tara biss il-kalendarju u l-imblukkar — l-ebda ammont."
+      },
+      "level": {
+        "use": "Użu",
+        "reports": "Użu u rapporti",
+        "grantReports": "Agħti aċċess għar-rapporti",
+        "revokeReports": "Neħħi l-aċċess għar-rapporti"
+      },
+      "approvals": {
+        "title": "Talbiet tal-familja tiegħek",
+        "hint": "Il-familja tiegħek tixtieq tuża dawn il-perjodi hi stess. Jekk tapprova, it-talba tgħaddi lill-aġenzija — l-imblukkar iseħħ biss meta din taqbel.",
+        "approve": "Lill-aġenzija",
+        "decline": "Irrifjuta",
+        "notePlaceholder": "Nota (mhux obbligatorja)",
+        "forwarded": "Mgħoddija lill-aġenzija.",
+        "declined": "Irrifjutata. L-aġenzija mhijiex se tkun taf biha."
       }
     }
   },

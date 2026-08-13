@@ -5,7 +5,21 @@ Der eingeloggte Eigentümer sieht NUR seine zugeordneten Objekte
 darum wird der Owner-Scope hier EXPLIZIT durchgesetzt (fail-closed: keine
 Zuordnung → sieht nichts). Beträge/Gäste werden über guest_masking maskiert: ein
 Owner sieht Netto/Vorname, aber keinen Gastpreis/PII.
+
+ZUR DATEIGRÖSSE (pylint C0302, Grenze 1500): Die Datei lag mit 1483 Zeilen
+knapp darunter und ist mit den Familienzugängen (0389) darüber gerutscht. Was
+sich sinnvoll trennen ließ, IST getrennt — die gesamte Familien-Logik steht in
+`familie.py`, hier stehen nur noch die Aufruf-Hüllen.
+
+Der verbleibende Brocken ist der Auszahlungs-Apparat (`_payout_je_nacht`,
+`_vertrag_je_buchung`, `_portal_saetze_je_buchung`,
+`_auszahlung_einer_buchung`, ~260 Zeilen). Ihn auszulagern wäre ein eigener
+Umbau mit Regressionsrisiko in der ABRECHNUNG — also am falschen Ort in einem
+Auftrag über Familienzugänge. Er ist als eigene Aufgabe vorgemerkt; bis dahin
+trägt die Datei die Ausnahme mit dieser Begründung statt einer stillschweigend
+hochgesetzten Grenze in `pyproject.toml` (die würde für ALLE Module gelten).
 """
+# pylint: disable=too-many-lines
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -39,6 +53,7 @@ from src.features.owner_statements.gebuehren_quelle import (
     klassifikation_laden,
 )
 
+from .familie import darf_berichte, freigabe_stufe, melde_freigabe_noetig
 from .schemas import (
     BlockRequestCreate,
     BlockRequestItem,
@@ -180,15 +195,34 @@ def _als_datum(wert: object) -> date | None:
 
 
 def _provision_pflicht(
-    provisionen: dict[str, Decimal] | None, property_id: str
+    provisionen: dict[str, Decimal] | None,
+    property_id: str,
+    *,
+    hat_eigentuemer: bool = True,
 ) -> Decimal:
     """Provisionssatz des Objekts — fehlt er, ist das ein Datenfehler.
 
     Ein `0` als Ausweichwert wäre die teuerste Sorte Fallback: er zahlte dem
     Eigentümer im Kalender den vollen Payout aus, während die Abrechnung später
     die echte Provision abzieht. Zwei verschiedene Zahlen für dasselbe Geld.
+
+    ZWEI GRÜNDE, ZWEI MELDUNGEN — der Unterschied kostete real eine
+    Fehlersuche (13.08.2026): Die Meldung lautete pauschal „Objekt hat keinen
+    Eigentümer-Datensatz mit Provisionssatz". Tatsächlich existierten
+    Eigentümer UND Vertrag mit 20 %; der Vertrag galt nur ab dem 12.08., die
+    Buchung war am 09.08. abgereist. Wer die Meldung las, suchte an der
+    falschen Stelle — sie behauptete fehlende Stammdaten, wo in Wahrheit ein
+    Zeitraum nicht passte. Eine Diagnose, die in die Irre führt, ist schlimmer
+    als gar keine.
     """
     if not provisionen or property_id not in provisionen:
+        if hat_eigentuemer:
+            raise PayoutUnbekannt(
+                "provision_zeitraum",
+                "Für den Aufenthaltszeitraum gilt kein Eigentümer-Vertrag "
+                "(Stichtag ist die Abreise), und am Eigentümer ist kein "
+                "Standard-Provisionssatz hinterlegt.",
+            )
         raise PayoutUnbekannt(
             "provision",
             "Objekt hat keinen Eigentümer-Datensatz mit Provisionssatz.",
@@ -237,6 +271,34 @@ class PublicPortalService:
         if property_id not in self._owned_property_ids(ctx):
             raise PortalError("Objekt nicht gefunden.", status_code=404)
 
+    # Öffentliche Hüllen für den Familien-Slice (0389). Der Objekt-Scope ist
+    # dieselbe Wahrheit wie hier drin — ein zweiter Leser mit eigener Abfrage
+    # wäre eine Kopie, die auseinanderlaufen kann (Wurzel 3).
+    def owned_property_ids(self, ctx: AuthContext) -> list[str]:
+        """Objekte, die dieser Portal-Nutzer sehen darf."""
+        return self._owned_property_ids(ctx)
+
+    def require_own_property(self, ctx: AuthContext, property_id: str) -> None:
+        """404, wenn das Objekt nicht zu diesem Portal-Nutzer gehört."""
+        self._require_own(ctx, property_id)
+
+    def _darf_berichte(self, ctx: AuthContext) -> bool:
+        """Finanzfreigabe dieses Zugangs (0389) — Regel in `familie.py`."""
+        tenant_id, user_id = self._require(ctx)
+        return darf_berichte(self._db, tenant_id, user_id)
+
+    def _require_berichte(self, ctx: AuthContext) -> None:
+        """403 für Flächen, die OHNE Beträge sinnlos wären.
+
+        Der Kalender nutzt stattdessen `_darf_berichte` und unterdrückt nur die
+        Beträge — er bleibt auch ohne Finanzfreigabe nützlich.
+        """
+        if not self._darf_berichte(ctx):
+            raise PortalError(
+                "Für diesen Zugang sind die Berichte nicht freigegeben.",
+                status_code=403,
+            )
+
     # --- Objekte -------------------------------------------------------------
 
     def my_properties(self, ctx: AuthContext) -> PortalPropertyList:
@@ -271,13 +333,23 @@ class PublicPortalService:
 
         Der Gast-Verkaufspreis (`price`) läuft weiter über die Maske und ist
         für einen Eigentümer None (§4.2). Der Auszahlungsbetrag ist etwas
-        anderes: er ist SEIN Geld und darum kein Gastdatum — er hängt an
-        VIEW_OWNER_REPORTS (der Capability des Endpunkts), nicht an
+        anderes: er ist SEIN Geld und darum kein Gastdatum — er hängt nicht an
         `mask.amounts`. Sonst bekäme ein Eigentümer entweder nie einen Betrag
         zu sehen (mask.amounts ist für ihn per Default False) oder — hätte man
         stattdessen `price` durchgereicht — den Bruttopreis des Gastes.
+
+        FAMILIENZUGÄNGE (0389): Der Endpunkt hängt an VIEW_CALENDAR, nicht an
+        VIEW_OWNER_REPORTS — ein Familienmitglied der Stufe 'nutzung' kommt
+        also herein und SOLL das auch (es plant seine Nutzung). Der Payout
+        gehört ihm aber nicht: Über ein Jahr summiert ist er exakt der
+        Jahresumsatz, den `earnings` derselben Person mit 403 verweigert. Die
+        Beträge werden deshalb hier einzeln unterdrückt statt den Endpunkt zu
+        sperren — der Kalender bleibt sichtbar, das Geld nicht.
         """
         self._require_own(ctx, property_id)
+        # Nicht `_require_berichte`: das würde 403 werfen und den Kalender
+        # mitnehmen. Hier zählt nur, OB die Beträge mitgehen dürfen.
+        zeigt_payout = self._darf_berichte(ctx)
         mask = load_guest_mask(self._db, ctx.user_id)
         avail = {
             r["date"]: r.get("status") or "open"
@@ -318,9 +390,16 @@ class PublicPortalService:
                     # Gastpreis nur, wenn die Maske Beträge erlaubt (für den
                     # Eigentümer None — er sieht seinen Payout, nicht den Preis).
                     price=prices.get(iso) if mask.amounts else None,
-                    owner_payout_per_night=info.summe if info else None,
-                    currency=info.currency if info else None,
-                    owner_payout_unknown_reason=info.grund if info else None,
+                    # Ohne Berichte-Freigabe kein Betrag und keine Währung
+                    # (0389). `None` heißt in dieser Fläche „keine Sicht" und
+                    # wird als „—" gerendert — nie als 0 (Wurzel 4).
+                    owner_payout_per_night=(
+                        info.summe if info and zeigt_payout else None
+                    ),
+                    currency=info.currency if info and zeigt_payout else None,
+                    owner_payout_unknown_reason=(
+                        info.grund if info and zeigt_payout else None
+                    ),
                     # Erster Gast/Quelle nur als Kurzform für die Monatszelle —
                     # die vollständige Liste steht in `bookings`.
                     #
@@ -334,7 +413,10 @@ class PublicPortalService:
                     booking_source=(
                         gast_belegung.quelle if gast_belegung else None
                     ),
-                    bookings=[_buchung(b) for b in belegungen],
+                    bookings=[
+                        _buchung(b, zeigt_payout=zeigt_payout)
+                        for b in belegungen
+                    ],
                     units_booked=len(belegungen),
                     units_total=einheiten_gesamt,
                 )
@@ -801,7 +883,16 @@ class PublicPortalService:
                     channel_fee=r.get("channel_fee"),
                     addon_total=addons.get(str(r["id"])),
                     provision_pct=_provision_pflicht(
-                        provisionen, str(r["property_id"])
+                        provisionen,
+                        str(r["property_id"]),
+                        # Gibt es den Eigentümer? Dann liegt es nicht an
+                        # fehlenden Stammdaten, sondern daran, dass für den
+                        # Aufenthalt kein Vertrag galt — die Meldung muss das
+                        # unterscheiden, sonst sucht man an der falschen Stelle.
+                        hat_eigentuemer=self._owner_id_von_objekt(
+                            str(r["property_id"])
+                        )
+                        is not None,
                     ),
                     naechte=naechte,
                     currency=currency,
@@ -979,6 +1070,10 @@ class PublicPortalService:
         self, ctx: AuthContext, period_from: date, period_to: date
     ) -> PortalEarningsResponse:
         tenant_id, user_id = self._require(ctx)
+        # Familienzugänge sehen Finanzen nur, wenn der Eigentümer sie
+        # freigeschaltet hat (0389). Die Capability am Endpunkt genügt nicht:
+        # ein Familienmitglied trägt die Rolle `owner` und bekommt sie darüber.
+        self._require_berichte(ctx)
         mask = load_guest_mask(self._db, user_id)
         ids = self._owned_property_ids(ctx)
         currency = self._tenant_currency(tenant_id)
@@ -1066,6 +1161,13 @@ class PublicPortalService:
             for pid, zeilen in je_objekt.items()
         }
 
+        # Hat das Objekt überhaupt einen Eigentümer? Einmal je Objekt statt je
+        # Buchung — nur für die UNTERSCHEIDUNG der Fehlermeldung gebraucht
+        # („keine Stammdaten" vs. „Vertrag gilt für diesen Zeitraum nicht").
+        hat_eigentuemer_je_objekt = {
+            pid: self._owner_id_von_objekt(pid) is not None for pid in ids
+        }
+
         agg: dict[str, dict] = {
             pid: {
                 "nights": 0,
@@ -1108,7 +1210,13 @@ class PublicPortalService:
                             r.get("channel_fee"),
                             addons.get(str(r["id"])),
                         ),
-                        _provision_pflicht(provisionen, pid),
+                        _provision_pflicht(
+                            provisionen,
+                            pid,
+                            hat_eigentuemer=hat_eigentuemer_je_objekt.get(
+                                pid, True
+                            ),
+                        ),
                     )
             except PayoutUnbekannt as exc:
                 # Kein Ersatzwert: `total_amount or 0` hätte eine Buchung ohne
@@ -1158,6 +1266,11 @@ class PublicPortalService:
     def my_statements(self, ctx: AuthContext) -> PortalStatementList:
         """Finalisierte Statements der Owner, die mit diesem Login verknüpft sind."""
         tenant_id, user_id = self._require(ctx)
+        # Dieselbe Freigabe wie bei `earnings` (0389). Ein Familienmitglied
+        # bekäme hier zwar ohnehin eine leere Liste (es hat keine Zeile in
+        # `owners`), aber die Regel darf nicht von diesem Nebeneffekt abhängen:
+        # ändert sich die Verknüpfung einmal, wäre die Sperre still weg.
+        self._require_berichte(ctx)
         owner_ids = [
             str(r["id"])
             for r in (
@@ -1230,6 +1343,14 @@ class PublicPortalService:
         if req.end_date < req.start_date:
             raise PortalError("Enddatum vor Startdatum.", status_code=400)
         unit_id = self._require_own_unit(tenant_id, req.property_id, req.unit_id)
+        # Stufe 1 (0389): Stellt ein FAMILIENMITGLIED den Antrag, wartet er
+        # zuerst auf den Eigentümer und ist für die Agentur unsichtbar. Der
+        # Eigentümer selbst hat keine Familien-Zeile → 'nicht_noetig', sein
+        # Antrag geht wie bisher direkt an die Agentur (sich selbst zu
+        # genehmigen wäre ein Klick ohne Erkenntniswert).
+        freigabe, owner_user_id = freigabe_stufe(
+            self._db, tenant_id, user_id, req.property_id
+        )
         res = (
             self._db.table("block_requests")
             .insert(
@@ -1251,6 +1372,7 @@ class PublicPortalService:
                     # Datum sie wirksam wird, und trägt ihre eigene Wertung in
                     # `als_kuendigung_gewertet`.
                     "ist_kuendigung": req.ist_kuendigung,
+                    "owner_freigabe": freigabe,
                 }
             )
             .execute()
@@ -1258,9 +1380,20 @@ class PublicPortalService:
         if not res.data:
             raise PortalError("Antrag konnte nicht angelegt werden.", status_code=500)
         log.info(
-            "portal_block_requested", tenant_id=tenant_id, property_id=req.property_id
+            "portal_block_requested",
+            tenant_id=tenant_id,
+            property_id=req.property_id,
+            owner_freigabe=freigabe,
         )
-        self._melde_antrag(tenant_id, res.data[0])
+        if freigabe == "offen":
+            # Der Antrag wartet auf die Familie — die Agentur bekommt ihn erst
+            # nach der Freigabe zu sehen, also auch erst dann eine Meldung.
+            # Stattdessen wird der EIGENTÜMER benachrichtigt.
+            melde_freigabe_noetig(
+                self._db, tenant_id, owner_user_id, res.data[0]
+            )
+        else:
+            self._melde_antrag(tenant_id, res.data[0])
         return _block(res.data[0])
 
     def _require_own_unit(
@@ -1328,7 +1461,9 @@ class PublicPortalService:
                 # Vertragskündigung (0377) — der Eigentümer sieht, dass sein
                 # Antrag als Kündigung geführt wird und zu welchem Datum.
                 "ist_kuendigung, als_kuendigung_gewertet, "
-                "vertragsende_gesetzt_auf"
+                "vertragsende_gesetzt_auf, "
+                # Stufe 1 (0389) — wo der Antrag gerade liegt.
+                "owner_freigabe, owner_decision_note"
             )
             .eq("tenant_id", tenant_id)
             # Wurzel 3/9: der Eigentümer sieht NUR seine eigenen Anträge, nicht
@@ -1430,14 +1565,19 @@ def _pflicht_betrag(r: dict, spalte: str) -> Decimal:
     return Decimal(str(wert))
 
 
-def _buchung(b: _Belegung) -> PortalNightBooking:
-    """Interne Belegung → Antwortmodell. Nichts wird ergänzt oder ersetzt."""
+def _buchung(b: _Belegung, *, zeigt_payout: bool = True) -> PortalNightBooking:
+    """Interne Belegung → Antwortmodell. Nichts wird ergänzt oder ersetzt.
+
+    `zeigt_payout=False` für Familienzugänge ohne Berichte-Freigabe (0389):
+    Die Beträge je Buchung sind dieselbe Information wie die Tagessumme eine
+    Ebene höher — würde nur dort unterdrückt, stünde das Geld hier weiter drin.
+    """
     return PortalNightBooking(
         reservation_id=b.reservation_id,
         unit_id=b.unit_id,
-        owner_payout_per_night=b.betrag,
-        currency=b.currency,
-        payout_unknown_reason=b.grund,
+        owner_payout_per_night=b.betrag if zeigt_payout else None,
+        currency=b.currency if zeigt_payout else None,
+        payout_unknown_reason=b.grund if zeigt_payout else None,
         guest_first_name=b.gast,
         booking_source=b.quelle,
         is_owner_stay=b.eigennutzung,
@@ -1462,6 +1602,12 @@ def _block(r: dict) -> BlockRequestItem:
         created_at=str(r["created_at"]) if r.get("created_at") else None,
         ist_kuendigung=bool(r.get("ist_kuendigung")),
         als_kuendigung_gewertet=bool(r.get("als_kuendigung_gewertet")),
+        # Stufe 1 (0389). Ohne dieses Feld sähe ein Familienmitglied nur
+        # „offen" und wüsste nicht, WO sein Antrag liegt — bei der Familie
+        # oder schon bei der Verwaltung. „Verschwunden" ist die schlechteste
+        # aller Rückmeldungen.
+        owner_freigabe=r.get("owner_freigabe") or "nicht_noetig",
+        owner_decision_note=r.get("owner_decision_note"),
         vertragsende_gesetzt_auf=(
             date.fromisoformat(str(r["vertragsende_gesetzt_auf"])[:10])
             if r.get("vertragsende_gesetzt_auf")

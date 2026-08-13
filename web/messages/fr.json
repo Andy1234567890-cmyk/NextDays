@@ -1365,6 +1365,7 @@
   "portal": {
     "title": "Mon portail",
     "subtitle": "Aperçu de vos logements, revenus et relevés.",
+    "subtitleNoFinance": "Aperçu de tes logements.",
     "properties": {
       "title": "Mes logements",
       "empty": "Aucun logement ne vous est actuellement rattaché.",
@@ -1408,7 +1409,8 @@
         "pending": "En cours d'examen",
         "approved": "Approuvée",
         "rejected": "Refusée",
-        "cancelled": "Retirée"
+        "ownerPending": "En attente de la famille",
+        "ownerDeclined": "Refusé par le propriétaire"
       },
       "reason": "Motif",
       "reasonPlaceholder": "Pourquoi bloquer ? (par ex. usage personnel, artisans)",
@@ -1451,7 +1453,8 @@
       "blockRequests": "Blocages",
       "meterReadings": "Relevés de compteurs",
       "services": "Services",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "familyAccess": "Accès"
     },
     "overview": {
       "occupancy": "Occupation",
@@ -1489,6 +1492,7 @@
         "label": "Non calculable",
         "provision": "Aucun taux de commission n'est enregistré pour ce bien — la gestion doit le compléter.",
         "provisionUngueltig": "Le taux de commission enregistré est en dehors de 0–100 %.",
+        "provisionZeitraum": "Aucun contrat de propriétaire n'était en vigueur pendant ce séjour — c'est la date de départ qui fait foi.",
         "betrag": "Le montant total de cette réservation est manquant.",
         "naechte": "La période de cette réservation est incorrecte.",
         "waehrungVertrag": "Le forfait convenu est libellé dans une autre devise que cette réservation — les montants ne sont pas convertis."
@@ -1587,6 +1591,40 @@
         "draft": "En préparation",
         "finalized": "Terminé",
         "cancelled": "Annulé"
+      }
+    },
+    "family": {
+      "title": "Accès pour la famille et les amis",
+      "hint": "Donnez à vos proches leur propre accès au lieu de partager votre mot de passe. Pour chaque personne, vous décidez de ce qu'elle peut voir.",
+      "empty": "Aucun accès accordé pour le moment.",
+      "remove": "Retirer",
+      "removed": "Accès retiré.",
+      "invite": {
+        "property": "Logement",
+        "name": "Nom",
+        "email": "E-mail",
+        "submit": "Inviter",
+        "sending": "Invitation en cours …",
+        "sent": "Invitation envoyée.",
+        "linked": "L'accès a été rattaché au compte existant. Aucune invitation n'a été envoyée.",
+        "incomplete": "Veuillez indiquer le logement, le nom et l'e-mail.",
+        "reportsLabel": "Donner accès aux relevés",
+        "reportsHint": "En plus les revenus, le décompte et le versement. Sans cet accès, la personne ne voit que le calendrier et les blocages, sans aucun montant."
+      },
+      "level": {
+        "use": "Utilisation",
+        "reports": "Utilisation et relevés",
+        "grantReports": "Donner accès aux relevés",
+        "revokeReports": "Retirer l'accès aux relevés"
+      },
+      "approvals": {
+        "title": "Demandes de votre famille",
+        "hint": "Votre famille souhaite occuper elle-même ces périodes. Si vous validez, la demande part vers l'agence — le blocage n'a lieu qu'avec son accord.",
+        "approve": "Transmettre à l'agence",
+        "decline": "Refuser",
+        "notePlaceholder": "Remarque (facultative)",
+        "forwarded": "Transmis à l'agence.",
+        "declined": "Refusé. L'agence n'en sera pas informée."
       }
     }
   },

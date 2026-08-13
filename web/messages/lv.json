@@ -1360,6 +1360,7 @@
   "portal": {
     "title": "Mans portāls",
     "subtitle": "Pārskats par taviem objektiem, ieņēmumiem un norēķiniem.",
+    "subtitleNoFinance": "Jūsu objektu pārskats.",
     "properties": {
       "title": "Mani objekti",
       "empty": "Tev pašlaik nav piesaistīts neviens objekts.",
@@ -1403,7 +1404,8 @@
         "pending": "Tiek izskatīts",
         "approved": "Apstiprināts",
         "rejected": "Noraidīts",
-        "cancelled": "Atsaukts"
+        "ownerPending": "Gaida ģimeni",
+        "ownerDeclined": "Īpašnieks noraidīja"
       },
       "reason": "Iemesls",
       "reasonPlaceholder": "Kāpēc tas būtu jābloķē? (piem., paškā izmantošana, amatnieki)",
@@ -1446,7 +1448,8 @@
       "blockRequests": "Bloķējumi",
       "meterReadings": "Skaitītāju rādījumi",
       "services": "Pakalpojumi",
-      "notifications": "Paziņojumi"
+      "notifications": "Paziņojumi",
+      "familyAccess": "Piekļuves"
     },
     "overview": {
       "occupancy": "Aizņemtība",
@@ -1484,6 +1487,7 @@
         "label": "Nav nosakāms",
         "provision": "Šim objektam nav noteikta komisijas maksa — pārvaldībai tā jāpapildina.",
         "provisionUngueltig": "Noteiktā komisijas maksa ir ārpus diapazona 0–100 %.",
+        "provisionZeitraum": "Šīs uzturēšanās laikā nebija spēkā neviens līgums ar īpašnieku — noteicošais ir izbraukšanas datums.",
         "betrag": "Šai rezervācijai nav kopsummas.",
         "naechte": "Šīs rezervācijas periods nav derīgs.",
         "waehrungVertrag": "Nolīgtā fiksētā maksa ir citā valūtā, nekā šī rezervācija — summas netiek pārrēķinātas."
@@ -1582,6 +1586,40 @@
         "draft": "Tiek sagatavots",
         "finalized": "Pabeigts",
         "cancelled": "Atcelts"
+      }
+    },
+    "family": {
+      "title": "Piekļuves ģimenei un draugiem",
+      "hint": "Piešķir tuviniekiem savu piekļuvi, nevis dalies ar paroli. Katram cilvēkam pats nosaki, ko viņš drīkst redzēt.",
+      "empty": "Vēl nav piešķirta neviena piekļuve.",
+      "remove": "Noņemt",
+      "removed": "Piekļuve noņemta.",
+      "invite": {
+        "property": "Objekts",
+        "name": "Vārds",
+        "email": "E-pasts",
+        "submit": "Uzaicināt",
+        "sending": "Tiek sūtīts uzaicinājums …",
+        "sent": "Uzaicinājums nosūtīts.",
+        "linked": "Piekļuve tika sasaistīta ar esošo kontu. Uzaicinājums netika nosūtīts.",
+        "incomplete": "Lūdzu, norādi objektu, vārdu un e-pastu.",
+        "reportsLabel": "Atvērt atskaites",
+        "reportsHint": "Papildus ieņēmumi, norēķini un izmaksas. Bez tā cilvēks redz tikai kalendāru un bloķējumus — bez summām."
+      },
+      "level": {
+        "use": "Lietošana",
+        "reports": "Lietošana un atskaites",
+        "grantReports": "Atvērt atskaites",
+        "revokeReports": "Slēgt atskaites"
+      },
+      "approvals": {
+        "title": "Tavas ģimenes vēlmes",
+        "hint": "Šos periodus tava ģimene vēlas izmantot pati. Ja apstiprini, vēlme aiziet aģentūrai — bloķēts tiek tikai tad, kad tā piekrīt.",
+        "approve": "Nosūtīt aģentūrai",
+        "decline": "Noraidīt",
+        "notePlaceholder": "Piezīme (nav obligāta)",
+        "forwarded": "Pārsūtīts aģentūrai.",
+        "declined": "Noraidīts. Aģentūra par to neuzzinās."
       }
     }
   },

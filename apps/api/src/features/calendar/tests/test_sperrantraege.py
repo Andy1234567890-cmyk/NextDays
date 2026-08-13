@@ -397,6 +397,12 @@ def _tables(*, einheiten: int = 1, mit_eigentuemer: bool = True) -> dict[str, li
                 "end_date": "2026-03-03",  # INKLUSIV → 3 Nächte
                 "status": "pending",
                 "reason": "Eigennutzung",
+                # Wie der DB-Default (0389): ein Antrag des Eigentümers selbst
+                # braucht keine Familien-Freigabe und ist für die Agentur
+                # sofort sichtbar. Ohne das Feld filterte `_laden` die Zeile
+                # heraus — in der echten DB kann es NULL nicht geben
+                # (`not null default 'nicht_noetig'`).
+                "owner_freigabe": "nicht_noetig",
                 "created_at": "2026-02-01T00:00:00Z",
             },
             {
@@ -408,6 +414,7 @@ def _tables(*, einheiten: int = 1, mit_eigentuemer: bool = True) -> dict[str, li
                 "start_date": "2026-03-01",
                 "end_date": "2026-03-03",
                 "status": "pending",
+                "owner_freigabe": "nicht_noetig",
                 "created_at": "2026-02-01T00:00:00Z",
             },
         ],

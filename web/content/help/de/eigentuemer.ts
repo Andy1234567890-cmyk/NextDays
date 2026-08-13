@@ -181,5 +181,70 @@ export const eigentuemer: HelpCategory = {
         },
       ],
     },
+    {
+      heading: "Zugänge für Familie und Freunde",
+      articles: [
+        {
+          slug: "familienzugaenge",
+          title: "Familienmitgliedern einen eigenen Zugang geben",
+          excerpt:
+            "Angehörige bekommen einen eigenen Login statt ein geteiltes Passwort — und ihre Nutzungswünsche laufen erst über den Eigentümer.",
+          updated: "Stand: August 2026",
+          body: [
+            {
+              type: "p",
+              text: "Ein Ferienhaus gehört meist einer Familie, nicht einer einzelnen Person. Damit Ehepartner, Kinder oder Freunde nicht das Passwort des Eigentümers teilen müssen, kann der Eigentümer ihnen im Portal einen eigenen Zugang geben. Jeder Vorgang trägt dann den Namen dessen, der ihn ausgelöst hat.",
+            },
+            { type: "h2", text: "Zugang einrichten" },
+            {
+              type: "steps",
+              items: [
+                "Der Eigentümer öffnet im Portal den Bereich „Zugänge“.",
+                "Er wählt das Objekt, für das der Zugang gelten soll.",
+                "Er trägt Name und E-Mail-Adresse der Person ein.",
+                "Er entscheidet, ob die Person auch die Berichte sehen darf.",
+                "Die Person erhält eine Einladung per E-Mail und setzt ihr Passwort selbst.",
+              ],
+            },
+            { type: "h2", text: "Zwei Stufen: Nutzung oder Nutzung mit Berichten" },
+            {
+              type: "p",
+              text: "„Nutzung“ ist die Voreinstellung. Damit sieht die Person den Belegungskalender und kann Zeiträume für die eigene Nutzung beantragen — aber keine Beträge: weder Umsatz noch Abrechnung, weder Auszahlung noch den Verdienst je Nacht.",
+            },
+            {
+              type: "p",
+              text: "„Nutzung und Berichte“ gibt zusätzlich den vollen Finanzeinblick. Diese Stufe ist bewusst nicht vorbelegt: Umsatz und Auszahlung sind Geschäftsdaten des Eigentümers. Wer sie freigeben möchte, setzt das Häkchen bewusst — und kann es jederzeit wieder entziehen.",
+            },
+            { type: "h2", text: "Nutzungswünsche laufen über den Eigentümer" },
+            {
+              type: "p",
+              text: "Möchte ein Familienmitglied das Haus selbst nutzen, geht der Wunsch nicht direkt an die Verwaltung, sondern zuerst an den Eigentümer. Er sieht ihn im Portal unter „Sperrungen“ und entscheidet:",
+            },
+            {
+              type: "ul",
+              items: [
+                "Gibt er frei, geht der Wunsch an die Verwaltung — die endgültig entscheidet.",
+                "Lehnt er ab, ist der Wunsch beendet. Die Verwaltung erfährt davon nichts.",
+              ],
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Eine Freigabe sperrt noch keine Nächte. Das Objekt bleibt buchbar, bis die Verwaltung zugestimmt hat — erst dann wird der Zeitraum im Kalender belegt und an die Portale gemeldet.",
+            },
+            { type: "h2", text: "Zugang wieder entziehen" },
+            {
+              type: "p",
+              text: "Über „Entfernen“ endet der Zugang sofort: Die Person sieht das Objekt nicht mehr und kann nichts mehr beantragen. Ihr Login bleibt bestehen, falls sie Zugänge zu weiteren Objekten hat.",
+            },
+            {
+              type: "note",
+              variant: "info",
+              text: "Der Eigentümer selbst braucht keine Freigabe — seine eigenen Anträge gehen wie bisher direkt an die Verwaltung.",
+            },
+          ],
+        },
+      ],
+    },
   ],
 };

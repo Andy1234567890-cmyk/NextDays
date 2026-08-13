@@ -1360,6 +1360,7 @@
   "portal": {
     "title": "Mijn portaal",
     "subtitle": "Overzicht van je objecten, inkomsten en afrekeningen.",
+    "subtitleNoFinance": "Overzicht van je accommodaties.",
     "properties": {
       "title": "Mijn objecten",
       "empty": "Er zijn momenteel geen objecten aan jou toegewezen.",
@@ -1403,7 +1404,8 @@
         "pending": "In behandeling",
         "approved": "Goedgekeurd",
         "rejected": "Afgewezen",
-        "cancelled": "Ingetrokken"
+        "ownerPending": "Wacht op de familie",
+        "ownerDeclined": "Afgewezen door de eigenaar"
       },
       "reason": "Reden",
       "reasonPlaceholder": "Waarom moet het geblokkeerd worden? (bijv. eigen gebruik, vakmensen)",
@@ -1446,7 +1448,8 @@
       "blockRequests": "Blokkeringen",
       "meterReadings": "Meterstanden",
       "services": "Diensten",
-      "notifications": "Meldingen"
+      "notifications": "Meldingen",
+      "familyAccess": "Toegangen"
     },
     "overview": {
       "occupancy": "Bezetting",
@@ -1484,6 +1487,7 @@
         "label": "Niet te bepalen",
         "provision": "Voor dit object is geen commissiepercentage vastgelegd — het beheer moet dit aanvullen.",
         "provisionUngueltig": "Het vastgelegde commissiepercentage ligt buiten 0–100 %.",
+        "provisionZeitraum": "Voor de periode van dit verblijf gold geen eigenaarscontract — de vertrekdatum is bepalend.",
         "betrag": "Bij deze boeking ontbreekt het totaalbedrag.",
         "naechte": "De periode van deze boeking is onjuist.",
         "waehrungVertrag": "De afgesproken vaste vergoeding staat in een andere valuta dan deze boeking — bedragen worden niet omgerekend."
@@ -1582,6 +1586,40 @@
         "draft": "In voorbereiding",
         "finalized": "Afgerond",
         "cancelled": "Geannuleerd"
+      }
+    },
+    "family": {
+      "title": "Toegang voor familie en vrienden",
+      "hint": "Geef je naasten een eigen toegang in plaats van je wachtwoord te delen. Per persoon bepaal je wat diegene mag zien.",
+      "empty": "Nog geen toegang verleend.",
+      "remove": "Verwijderen",
+      "removed": "Toegang verwijderd.",
+      "invite": {
+        "property": "Object",
+        "name": "Naam",
+        "email": "E-mail",
+        "submit": "Uitnodigen",
+        "sending": "Uitnodiging versturen …",
+        "sent": "Uitnodiging verstuurd.",
+        "linked": "De toegang is gekoppeld aan het bestaande account. Er is geen uitnodiging verstuurd.",
+        "incomplete": "Vul object, naam en e-mail in.",
+        "reportsLabel": "Rapporten vrijgeven",
+        "reportsHint": "Daarnaast inkomsten, afrekening en uitbetaling. Zonder deze vrijgave ziet de persoon alleen de kalender en blokkeringen — geen bedragen."
+      },
+      "level": {
+        "use": "Gebruik",
+        "reports": "Gebruik en rapporten",
+        "grantReports": "Rapporten vrijgeven",
+        "revokeReports": "Rapporten intrekken"
+      },
+      "approvals": {
+        "title": "Verzoeken van je familie",
+        "hint": "Deze periodes wil je familie zelf gebruiken. Keur je goed, dan gaat het verzoek naar het agentschap — er wordt pas geblokkeerd als dat akkoord gaat.",
+        "approve": "Naar het agentschap",
+        "decline": "Afwijzen",
+        "notePlaceholder": "Opmerking (optioneel)",
+        "forwarded": "Doorgestuurd naar het agentschap.",
+        "declined": "Afgewezen. Het agentschap hoort er niets over."
       }
     }
   },

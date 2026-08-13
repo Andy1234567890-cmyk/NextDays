@@ -180,6 +180,64 @@ COHOST_CAPABILITIES: dict[str, frozenset[Capability]] = {
 }
 
 
+# --- Familienzugänge des Eigentümers (0389) ---------------------------------
+# Ein Ferienhaus gehört einer Familie. Der Eigentümer lädt Angehörige und
+# Freunde mit EIGENEM Login ein (statt sein Passwort zu teilen, was jeden
+# Vorgang urheberlos machte) und legt je Person und Objekt fest, was sie darf.
+#
+# Wie bei den Co-Gastgebern eine Matrix statt einer Rolle — hier aus zwei
+# zusätzlichen Gründen:
+#   * `user_role` ist global. `_PM_UMBRELLA_ROLES` (unten) enthält `owner`
+#     bewusst NICHT; eine neue owner-nahe Rolle, die man dort vergisst,
+#     verlöre VIEW_CALENDAR und das Portal antwortete 403.
+#   * Die Stufe ist PRO OBJEKT verschieden: die Tochter darf am Ferienhaus
+#     mitreden, am zweiten Objekt des Vaters nicht. Eine Rolle am Nutzer kann
+#     das konstruktiv nicht.
+# Ein Familienmitglied ist deshalb `role='owner'`; was es DARF, steht hier.
+
+# Nutzung: sehen, wann das Haus frei ist, und Zeiten für sich beantragen.
+# Der Antrag geht NICHT direkt an die Agentur, sondern erst an den Eigentümer
+# (block_requests.owner_freigabe, 0389).
+_FAMILIE_NUTZUNG: frozenset[Capability] = frozenset({
+    Capability.VIEW_CALENDAR,
+    Capability.REQUEST_BLOCK,
+    Capability.MANAGE_NOTIFICATION_PREFS,
+    # Nur Vorname/Belegungszeit (§4.2) — wer wann im Haus ist, gehört zur
+    # Nutzungsplanung; der volle Gastdatensatz nicht.
+    Capability.VIEW_GUEST_LIMITED,
+})
+
+# Nutzung + Berichte: zusätzlich Umsatz, Abrechnung, Auszahlung.
+#
+# Diese Stufe ist bewusst NICHT die Voreinstellung. Umsatz und Auszahlung sind
+# Geschäftsdaten des Eigentümers, keine Familienangelegenheit — ein Neffe, der
+# eine Woche im Juli möchte, braucht dafür keinen Blick auf den Jahresumsatz.
+# Wer sie vergeben will, schaltet sie bewusst zu (Art. 25 Abs. 2 DSGVO).
+_FAMILIE_NUTZUNG_BERICHTE: frozenset[Capability] = _FAMILIE_NUTZUNG | frozenset({
+    Capability.VIEW_OWNER_REPORTS,
+})
+
+OWNER_FAMILY_CAPABILITIES: dict[str, frozenset[Capability]] = {
+    "nutzung": _FAMILIE_NUTZUNG,
+    "nutzung_berichte": _FAMILIE_NUTZUNG_BERICHTE,
+}
+
+
+def owner_family_capabilities_for(access: str | None) -> frozenset[Capability]:
+    """Fähigkeiten einer Familien-Zugriffsstufe.
+
+    Fail-closed (Wurzel 5): unbekannte oder fehlende Stufe → LEERE Menge.
+    Ein Tippfehler in der DB darf nicht stillschweigend Rechte vergeben.
+    """
+    if not access:
+        return frozenset()
+    return OWNER_FAMILY_CAPABILITIES.get(access, frozenset())
+
+
+def owner_family_has_capability(access: str | None, cap: Capability) -> bool:
+    return cap in owner_family_capabilities_for(access)
+
+
 def cohost_capabilities_for(access: str | None) -> frozenset[Capability]:
     """Fähigkeiten einer Co-Gastgeber-Zugriffsstufe.
 

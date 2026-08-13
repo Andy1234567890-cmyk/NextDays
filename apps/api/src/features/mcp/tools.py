@@ -135,7 +135,9 @@ class McpTools:
         """
         return (
             "[nicht freigegeben — Freitexte (Notizen, Nachrichten) sind für "
-            "diese Verbindung gesperrt. Freigabe unter Konto → Verbindungen.]"
+            "diese Verbindung gesperrt. Freigabe unter Konto → Verbindungen "
+            "über das Häkchen 'Freitexte freigeben' an dieser Verbindung; "
+            "ein Neuverbinden ist dafür nicht nötig.]"
         )
 
     # -- Katalog ------------------------------------------------------------

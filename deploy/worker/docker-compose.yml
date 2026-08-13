@@ -52,8 +52,20 @@ services:
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
       SUPABASE_JWT_SECRET: ${JWT_SECRET}
-      # redis ist über supabase-internal (alias redis) erreichbar.
-      REDIS_URL: ${REDIS_URL:-redis://:${REDIS_PASSWORD}@redis:6379/0}
+      # Redis über den EINDEUTIGEN Containernamen, NICHT über den Alias `redis`.
+      #
+      # Der Alias ist mehrdeutig: im Netz `coolify` tragen ihn ZWEI Container —
+      # unser Redis und Coolifys eigenes `coolify-redis` (anderes Passwort).
+      # Docker verteilt per Round-Robin, gemessen landeten 5 von 6 Auflösungen
+      # beim falschen. Ergebnis: `AuthenticationError`, das Channex-Budget
+      # bekam kein Token, jeder Job wartete 3× 1 s vergeblich (3000 ms statt
+      # 20 ms) und 16 Stunden lang ging KEIN einziger Call an die Portale raus
+      # — ohne dass ein Job als Fehler zählte (Verzögern ist ein geplanter
+      # Ausgang). Live diagnostiziert am 13.08.2026.
+      #
+      # `nextdays-api` stand aus demselben Grund längst auf dem Containernamen;
+      # beim Worker war es nie nachgezogen worden.
+      REDIS_URL: ${REDIS_URL:-redis://:${REDIS_PASSWORD}@${REDIS_HOST:-redis-yih7d7kz4tkkgezqzg1zzjcs}:6379/0}
       # Channex-Zugang (aus Coolify-Env) — der Worker pusht ARI/Content an Channex.
       CHANNEX_API_KEY: ${CHANNEX_API_KEY:-}
       CHANNEX_BASE_URL: ${CHANNEX_BASE_URL:-}

@@ -1360,6 +1360,7 @@
   "portal": {
     "title": "Moj portal",
     "subtitle": "Pregled tvojih objektov, prihodkov in obračunov.",
+    "subtitleNoFinance": "Pregled Vaših objektov.",
     "properties": {
       "title": "Moji objekti",
       "empty": "Trenutno ti ni dodeljen noben objekt.",
@@ -1403,7 +1404,8 @@
         "pending": "V pregledu",
         "approved": "Odobreno",
         "rejected": "Zavrnjeno",
-        "cancelled": "Umaknjeno"
+        "ownerPending": "Čaka na družino",
+        "ownerDeclined": "Lastnik je zavrnil"
       },
       "reason": "Razlog",
       "reasonPlaceholder": "Zakaj naj bo blokirano? (npr. lastna uporaba, obrtniki)",
@@ -1446,7 +1448,8 @@
       "blockRequests": "Blokade",
       "meterReadings": "Stanja števcev",
       "services": "Storitve",
-      "notifications": "Obvestila"
+      "notifications": "Obvestila",
+      "familyAccess": "Dostopi"
     },
     "overview": {
       "occupancy": "Zasedenost",
@@ -1484,6 +1487,7 @@
         "label": "Ni mogoče izkazati",
         "provision": "Za ta objekt ni določene provizije — upravljanje jo mora dodati.",
         "provisionUngueltig": "Določena provizija je zunaj obsega 0–100 %.",
+        "provisionZeitraum": "V obdobju tega bivanja ni veljala nobena pogodba z lastnikom — odloča datum odhoda.",
         "betrag": "Tej rezervaciji manjka skupni znesek.",
         "naechte": "Obdobje te rezervacije ni veljavno.",
         "waehrungVertrag": "Dogovorjeni pavšal je v drugi valuti kot ta rezervacija — zneski se ne pretvarjajo."
@@ -1582,6 +1586,40 @@
         "draft": "V pripravi",
         "finalized": "Zaključeno",
         "cancelled": "Preklicano"
+      }
+    },
+    "family": {
+      "title": "Dostopi za družino in prijatelje",
+      "hint": "Svojim bližnjim daj lasten dostop, namesto da deliš geslo. Za vsako osebo sam določiš, kaj sme videti.",
+      "empty": "Zaenkrat ni dodeljen noben dostop.",
+      "remove": "Odstrani",
+      "removed": "Dostop odstranjen.",
+      "invite": {
+        "property": "Objekt",
+        "name": "Ime",
+        "email": "E-pošta",
+        "submit": "Povabi",
+        "sending": "Pošiljanje vabila …",
+        "sent": "Vabilo poslano.",
+        "linked": "Dostop je bil povezan z obstoječim računom. Vabilo ni bilo poslano.",
+        "incomplete": "Vnesi objekt, ime in e-pošto.",
+        "reportsLabel": "Odpri poročila",
+        "reportsHint": "Dodatno prihodki, obračun in izplačilo. Brez tega oseba vidi le koledar in blokade — brez zneskov."
+      },
+      "level": {
+        "use": "Uporaba",
+        "reports": "Uporaba in poročila",
+        "grantReports": "Odpri poročila",
+        "revokeReports": "Zapri poročila"
+      },
+      "approvals": {
+        "title": "Želje tvoje družine",
+        "hint": "Ta obdobja želi tvoja družina uporabiti sama. Če odobriš, gre želja k agenciji — blokira se šele, ko ta pritrdi.",
+        "approve": "Pošlji agenciji",
+        "decline": "Zavrni",
+        "notePlaceholder": "Opomba (neobvezno)",
+        "forwarded": "Posredovano agenciji.",
+        "declined": "Zavrnjeno. Agencija o tem ne izve."
       }
     }
   },

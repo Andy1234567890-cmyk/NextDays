@@ -1365,6 +1365,7 @@
   "portal": {
     "title": "Mi portal",
     "subtitle": "Resumen de tus alojamientos, ingresos y liquidaciones.",
+    "subtitleNoFinance": "Resumen de tus alojamientos.",
     "properties": {
       "title": "Mis alojamientos",
       "empty": "Actualmente no tienes alojamientos asignados.",
@@ -1408,7 +1409,8 @@
         "pending": "En revisión",
         "approved": "Aprobado",
         "rejected": "Rechazado",
-        "cancelled": "Retirado"
+        "ownerPending": "Pendiente de la familia",
+        "ownerDeclined": "Rechazado por el propietario"
       },
       "reason": "Motivo",
       "reasonPlaceholder": "¿Por qué debería bloquearse? (p. ej., uso propio, técnicos)",
@@ -1451,7 +1453,8 @@
       "blockRequests": "Bloqueos",
       "meterReadings": "Lecturas de contadores",
       "services": "Servicios",
-      "notifications": "Notificaciones"
+      "notifications": "Notificaciones",
+      "familyAccess": "Accesos"
     },
     "overview": {
       "occupancy": "Ocupación",
@@ -1489,6 +1492,7 @@
         "label": "No calculable",
         "provision": "No hay una tasa de comisión registrada para este alojamiento — la administración debe añadirla.",
         "provisionUngueltig": "La tasa de comisión registrada está fuera del rango 0–100 %.",
+        "provisionZeitraum": "Durante este alojamiento no había ningún contrato de propietario en vigor: la fecha determinante es la de salida.",
         "betrag": "Falta el importe total de esta reserva.",
         "naechte": "El periodo de esta reserva es incorrecto.",
         "waehrungVertrag": "La tarifa fija acordada está en una moneda distinta a la de esta reserva — los importes no se convierten."
@@ -1587,6 +1591,40 @@
         "draft": "En preparación",
         "finalized": "Finalizado",
         "cancelled": "Cancelado"
+      }
+    },
+    "family": {
+      "title": "Accesos para familia y amigos",
+      "hint": "Da a tus allegados un acceso propio en lugar de compartir tu contraseña. Para cada persona decides qué puede ver.",
+      "empty": "Aún no has concedido ningún acceso.",
+      "remove": "Quitar",
+      "removed": "Acceso eliminado.",
+      "invite": {
+        "property": "Alojamiento",
+        "name": "Nombre",
+        "email": "Correo electrónico",
+        "submit": "Invitar",
+        "sending": "Enviando invitación …",
+        "sent": "Invitación enviada.",
+        "linked": "El acceso se ha vinculado a la cuenta existente. No se ha enviado ninguna invitación.",
+        "incomplete": "Indica alojamiento, nombre y correo electrónico.",
+        "reportsLabel": "Dar acceso a los informes",
+        "reportsHint": "Además ingresos, liquidación y pago. Sin este permiso la persona solo ve el calendario y los bloqueos, sin importes."
+      },
+      "level": {
+        "use": "Uso",
+        "reports": "Uso e informes",
+        "grantReports": "Dar acceso a los informes",
+        "revokeReports": "Retirar el acceso a los informes"
+      },
+      "approvals": {
+        "title": "Peticiones de tu familia",
+        "hint": "Tu familia quiere usar estos periodos por su cuenta. Si lo apruebas, la petición pasa a la agencia; el bloqueo solo se aplica cuando ella da su visto bueno.",
+        "approve": "Enviar a la agencia",
+        "decline": "Rechazar",
+        "notePlaceholder": "Comentario (opcional)",
+        "forwarded": "Enviado a la agencia.",
+        "declined": "Rechazado. La agencia no se entera."
       }
     }
   },

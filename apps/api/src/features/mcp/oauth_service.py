@@ -314,6 +314,52 @@ class McpOAuthService:
             {"revoked_at": _jetzt().isoformat()}
         ).eq("user_id", user_id).eq("client_id", client_id).execute()
 
+    def umfang_aendern(
+        self, *, user_id: str, client_id: str, freitexte: bool
+    ) -> str:
+        """Freitexte einer BESTEHENDEN Verbindung zu- oder abschalten.
+
+        Gibt den neuen Scope zurück.
+
+        WARUM ÜBERHAUPT: Der Umfang wurde bisher nur beim Verbinden gewählt.
+        Wer die Freitexte später brauchte, musste trennen und neu verbinden —
+        und der Werkzeug-Hinweis versprach dabei eine Freigabe „unter Konto →
+        Verbindungen", die es dort nicht gab (gefunden 13.08.2026).
+
+        DER SCHARFE TEIL ist das ABSCHALTEN. Ein bereits ausgestellter
+        Access-Token trägt seinen Scope IM Token und lebt bis zu einer Stunde
+        weiter — eine Änderung nur an der Zustimmungszeile wäre für diese
+        Stunde wirkungslos, und die Oberfläche behauptete etwas Falsches.
+        Deshalb werden beim Entzug die Refresh-Token gelöscht: Der Client muss
+        die Zustimmung neu einholen, und `token_pruefen` prüft ohnehin bei
+        JEDEM Aufruf, ob die Zustimmung noch gilt (0388). Beim ZUSCHALTEN ist
+        das nicht nötig — ein alter Token kann dadurch nur weniger dürfen, nie
+        mehr.
+        """
+        neu = f"{SCOPE_LESEN} {SCOPE_FREITEXT}" if freitexte else SCOPE_LESEN
+        db = self._client()
+        geaendert = (
+            db.table("mcp_consents")
+            .update({"scope": neu})
+            .eq("user_id", user_id)
+            .eq("client_id", client_id)
+            .is_("revoked_at", "null")
+            .execute()
+        ).data
+        if not geaendert:
+            raise OAuthError(
+                "invalid_request",
+                "Verbindung nicht gefunden.",
+                status_code=404,
+            )
+        if not freitexte:
+            # Fail-closed: lieber eine Verbindung, die neu bestätigt werden
+            # muss, als eine, die noch eine Stunde lang Freitexte liefert.
+            db.table("mcp_refresh_tokens").delete().eq(
+                "user_id", user_id
+            ).eq("client_id", client_id).execute()
+        return neu
+
     # -- Autorisierungscode -------------------------------------------------
 
     def code_ausstellen(
@@ -559,11 +605,52 @@ class McpOAuthService:
             audience=resource or TOKEN_AUDIENCE,
             issuer=self.basis_url(),
         )
-        if not self._zustimmung_gilt(
+        erlaubt = self._zustimmung_scope(
             str(nutzlast.get("sub") or ""), str(nutzlast.get("client_id") or "")
-        ):
+        )
+        if erlaubt is None:
             raise OAuthError("invalid_token", "Verbindung wurde getrennt.", status_code=401)
+        # Den Token auf den AKTUELL zugestimmten Umfang zuschneiden.
+        #
+        # Der Scope steht IM Token und gilt eine Stunde. Nimmt der Nutzer die
+        # Freitexte zurück, wäre die Zustimmungszeile sofort schmaler, der
+        # ausgestellte Token aber weiterhin breit — bis zu 60 Minuten lang
+        # lieferte die Verbindung Inhalte, die niemand mehr freigegeben hat.
+        # Deshalb zählt hier die DB, nicht das Token: der Schnitt kann nur
+        # WEGNEHMEN, nie hinzufügen (Wurzel 3 — der Anfrage nicht vertrauen).
+        vom_token = set(str(nutzlast.get("scope") or "").split())
+        nutzlast["scope"] = " ".join(sorted(vom_token & set(erlaubt.split())))
         return nutzlast
+
+    def _zustimmung_scope(self, user_id: str, client_id: str) -> str | None:
+        """Der aktuell zugestimmte Scope, oder `None` wenn getrennt/unklar.
+
+        Fail-CLOSED (Wurzel 5): Ohne Nutzer/Client und bei jeder Störung gibt
+        es nichts freizugeben.
+        """
+        if not user_id or not client_id:
+            return None
+        try:
+            zeilen = (
+                self._client()
+                .table("mcp_consents")
+                .select("scope")
+                .eq("user_id", user_id)
+                .eq("client_id", client_id)
+                .is_("revoked_at", "null")
+                .limit(1)
+                .execute()
+            ).data or []
+        except OAuthError:
+            raise
+        except Exception:  # noqa: BLE001 — jede Störung sperrt, statt zu öffnen
+            log.warning("mcp.zustimmung_pruefung_fehlgeschlagen", extra={
+                "client_id": client_id,
+            })
+            return None
+        if not zeilen:
+            return None
+        return str(zeilen[0].get("scope") or SCOPE_LESEN)
 
     def _zustimmung_gilt(self, user_id: str, client_id: str) -> bool:
         """Besteht die Zustimmung noch? Fail-CLOSED bei Zweifeln (Wurzel 5).

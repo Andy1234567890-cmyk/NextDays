@@ -1365,6 +1365,7 @@
   "portal": {
     "title": "Mein Portal",
     "subtitle": "Übersicht über deine Objekte, Einnahmen und Abrechnungen.",
+    "subtitleNoFinance": "Übersicht über deine Objekte.",
     "properties": {
       "title": "Meine Objekte",
       "empty": "Dir sind aktuell keine Objekte zugeordnet.",
@@ -1408,7 +1409,8 @@
         "pending": "In Prüfung",
         "approved": "Genehmigt",
         "rejected": "Abgelehnt",
-        "cancelled": "Zurückgezogen"
+        "ownerPending": "Wartet auf die Familie",
+        "ownerDeclined": "Von der Familie abgelehnt"
       },
       "reason": "Grund",
       "reasonPlaceholder": "Warum soll gesperrt werden? (z. B. Eigennutzung, Handwerker)",
@@ -1451,7 +1453,8 @@
       "blockRequests": "Sperrungen",
       "meterReadings": "Zählerstände",
       "services": "Dienstleistungen",
-      "notifications": "Benachrichtigungen"
+      "notifications": "Benachrichtigungen",
+      "familyAccess": "Zugänge"
     },
     "overview": {
       "occupancy": "Belegung",
@@ -1489,6 +1492,7 @@
         "label": "Nicht ausweisbar",
         "provision": "Für dieses Objekt ist kein Provisionssatz hinterlegt — die Verwaltung muss ihn ergänzen.",
         "provisionUngueltig": "Der hinterlegte Provisionssatz liegt außerhalb von 0–100 %.",
+        "provisionZeitraum": "Für den Zeitraum dieses Aufenthalts gilt kein Eigentümer-Vertrag — maßgeblich ist das Abreisedatum.",
         "betrag": "Zu dieser Buchung fehlt der Gesamtbetrag.",
         "naechte": "Die Zeitraumangabe dieser Buchung ist fehlerhaft.",
         "waehrungVertrag": "Die vereinbarte Pauschale lautet auf eine andere Währung als diese Buchung — Beträge werden nicht umgerechnet."
@@ -1587,6 +1591,40 @@
         "draft": "In Vorbereitung",
         "finalized": "Abgeschlossen",
         "cancelled": "Storniert"
+      }
+    },
+    "family": {
+      "title": "Zugänge für Familie und Freunde",
+      "hint": "Gib Angehörigen einen eigenen Zugang, statt dein Passwort zu teilen. Du legst für jede Person fest, was sie sehen darf.",
+      "empty": "Noch keine Zugänge vergeben.",
+      "remove": "Entfernen",
+      "removed": "Zugang entfernt.",
+      "invite": {
+        "property": "Objekt",
+        "name": "Name",
+        "email": "E-Mail",
+        "submit": "Einladen",
+        "sending": "Wird eingeladen …",
+        "sent": "Einladung verschickt.",
+        "linked": "Der Zugang wurde mit dem bestehenden Konto verknüpft. Es ging keine Einladung raus.",
+        "incomplete": "Bitte Objekt, Name und E-Mail angeben.",
+        "reportsLabel": "Berichte freigeben",
+        "reportsHint": "Zusätzlich Umsatz, Abrechnung und Auszahlung. Ohne diese Freigabe sieht die Person nur Kalender und Sperrzeiten — keine Beträge."
+      },
+      "level": {
+        "use": "Nutzung",
+        "reports": "Nutzung und Berichte",
+        "grantReports": "Berichte freigeben",
+        "revokeReports": "Berichte entziehen"
+      },
+      "approvals": {
+        "title": "Wünsche deiner Familie",
+        "hint": "Diese Zeiträume möchte deine Familie selbst nutzen. Gibst du frei, geht der Wunsch an die Verwaltung — gesperrt wird erst, wenn die zustimmt.",
+        "approve": "An die Verwaltung",
+        "decline": "Ablehnen",
+        "notePlaceholder": "Anmerkung (optional)",
+        "forwarded": "Weitergeleitet an die Verwaltung.",
+        "declined": "Abgelehnt. Die Verwaltung erfährt davon nichts."
       }
     }
   },
