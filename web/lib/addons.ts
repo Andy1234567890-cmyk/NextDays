@@ -102,6 +102,39 @@ export async function deleteAddon(addonId: string): Promise<Result<null>> {
   return call(`/addons/${addonId}`, { method: "DELETE" });
 }
 
+/** Eine Zusatzleistung eines ANDEREN Objekts, übernehmbar auf dieses. */
+export type AddonLibraryEntry = {
+  addon: Addon;
+  property_id: string;
+  property_title: string | null;
+};
+
+/** Zusatzleistungen anderer Objekte, die auf DIESES übernehmbar sind
+ *  („Bestehende Zusatzleistung übernehmen"). Nur gleiche Währung; was hier
+ *  schon liegt, fehlt. `currency` null = am Objekt keine Währung hinterlegt,
+ *  dann ist die Liste leer (kein €-Fallback). */
+export async function listAddonLibrary(
+  propertyId: string,
+): Promise<
+  Result<{ items: AddonLibraryEntry[]; currency: string | null }>
+> {
+  return call(`/addons/properties/${propertyId}/library`);
+}
+
+/** Dieselbe Zusatzleistung auf weitere eigene Objekte übertragen (Block „Zu
+ *  anderen Objekten hinzufügen"). Kopie, keine Verknüpfung: spätere Änderungen
+ *  an der Quelle wandern nicht mit. Erneutes Anwenden aktualisiert die
+ *  vorhandene Zeile beim Ziel, statt eine Dublette anzulegen. */
+export async function applyAddonToProperties(
+  addonId: string,
+  propertyIds: string[],
+): Promise<Result<{ applied_to: string[] }>> {
+  return call(`/addons/${addonId}/apply`, {
+    method: "POST",
+    body: { property_ids: propertyIds },
+  });
+}
+
 /** Gekaufte Zusatzleistungen einer Reservierung (Dashboard-Sicht). `currency`
  *  kommt aus der Reservierung/dem Objekt (null = keine hinterlegt). */
 export async function listReservationAddons(

@@ -26,6 +26,7 @@ class _Query:
     def __init__(self, rows: list[dict]) -> None:
         self._rows = rows
         self._filters: list[tuple[str, object]] = []
+        self._in: tuple[str, list[str]] | None = None
 
     def select(self, *_c: object) -> _Query:
         return self
@@ -37,19 +38,29 @@ class _Query:
     def limit(self, _n: int) -> _Query:
         return self
 
+    def order(self, *_a: object, **_k: object) -> _Query:
+        return self
+
+    def in_(self, col: str, werte: list) -> _Query:
+        self._in = (col, [str(w) for w in werte])
+        return self
+
     def execute(self) -> _Result:
-        return _Result(
-            [
-                r
-                for r in self._rows
-                if all(str(r.get(c)) == str(v) for c, v in self._filters)
-            ]
-        )
+        treffer = [
+            r
+            for r in self._rows
+            if all(str(r.get(c)) == str(v) for c, v in self._filters)
+        ]
+        if self._in:
+            col, werte = self._in
+            treffer = [r for r in treffer if str(r.get(col)) in werte]
+        return _Result(treffer)
 
 
 class _DB:
-    def __init__(self, profile: list[dict]) -> None:
-        self.tables = {"tenant_billing_profile": profile}
+    def __init__(self, profile: list[dict], **weitere: list[dict]) -> None:
+        self.tables: dict[str, list[dict]] = {"tenant_billing_profile": profile}
+        self.tables.update(weitere)
 
     def table(self, name: str) -> _Query:
         return _Query(self.tables.get(name, []))
@@ -252,3 +263,142 @@ def test_rhythmus_manual_erlaubt_danach_die_auszahlung(stripe: _StripeFake) -> N
     svc.rhythmus_setzen(CTX, StripeRhythmusUpdate(interval="manual"))
     res = svc.auszahlung_anfordern(CTX, currency="DKK", amount_cents=None)
     assert res.amount_cents == 50000
+
+
+# --- Protokoll ---------------------------------------------------------------
+# „Damit der Kunde alles nachvollziehen kann": jede Bewegung, richtig sortiert
+# nach Richtung, mit der offenen Seite daneben.
+
+def _protokoll_db() -> _DB:
+    return _DB(
+        [{"tenant_id": "t1", "stripe_account_id": "acct_1"}],
+        addon_payment_links=[
+            {
+                "id": "lnk-1",
+                "tenant_id": "t1",
+                "reservation_id": "res-1",
+                "status": "paid",
+                "payment_intent_id": "pi_1",
+                "checkout_session_id": "cs_1",
+                "amount_cents": 30000,
+                "currency": "dkk",
+                "url": "https://buy.stripe.com/x",
+                "created_at": "2026-08-13T09:00:00Z",
+            },
+            {
+                "id": "lnk-2",
+                "tenant_id": "t1",
+                "reservation_id": "res-2",
+                "status": "open",
+                "amount_cents": 12500,
+                "currency": "dkk",
+                "url": "https://buy.stripe.com/offen",
+                "created_at": "2026-08-13T10:00:00Z",
+            },
+            {
+                "id": "lnk-fremd",
+                "tenant_id": "t2",
+                "reservation_id": "res-9",
+                "status": "open",
+                "amount_cents": 99900,
+                "currency": "dkk",
+                "url": "https://buy.stripe.com/fremd",
+                "created_at": "2026-08-13T10:00:00Z",
+            },
+        ],
+        addon_payment_link_items=[
+            {"link_id": "lnk-1", "reservation_addon_id": "ra-1"},
+            {"link_id": "lnk-2", "reservation_addon_id": "ra-2"},
+        ],
+        reservation_addons=[
+            {"id": "ra-1", "name": {"de": "Wäschepaket"}},
+            {"id": "ra-2", "name": {"de": "Frühstück"}},
+        ],
+    )
+
+
+_BEWEGUNGEN = [
+    {
+        "id": "txn_1", "typ": "charge", "amount_cents": 30000, "fee_cents": 800,
+        "net_cents": 29200, "currency": "dkk", "status": "available",
+        "created": 1754000000, "available_on": 1754200000,
+        "beschreibung": None, "quelle": {"id": "pi_1", "beschreibung": "Wäschepaket"},
+    },
+    {
+        "id": "txn_2", "typ": "payout", "amount_cents": -20000, "fee_cents": 0,
+        "net_cents": -20000, "currency": "dkk", "status": "paid",
+        "created": 1754100000, "available_on": None,
+        "beschreibung": "STRIPE PAYOUT", "quelle": {"id": "po_1", "beschreibung": None},
+    },
+    {
+        "id": "txn_3", "typ": "application_fee", "amount_cents": -1500,
+        "fee_cents": 0, "net_cents": -1500, "currency": "dkk",
+        "status": "available", "created": 1754050000, "available_on": None,
+        "beschreibung": None, "quelle": {"id": "fee_1", "beschreibung": None},
+    },
+]
+
+
+def test_protokoll_trennt_richtungen(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(st.sc, "list_balance_transactions", lambda **_k: _BEWEGUNGEN)
+    res = StripeSaldoService(_protokoll_db()).protokoll(CTX)
+    assert [e.id for e in res.eingang] == ["txn_1"]
+    # Auszahlung UND einbehaltene Plattform-Provision sind Ausgänge.
+    assert sorted(a.id for a in res.ausgang) == ["txn_2", "txn_3"]
+
+
+def test_protokoll_ordnet_zusatzleistung_zu(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Die Zeile muss beantworten „wofür war das?", nicht nur einen Betrag zeigen."""
+    monkeypatch.setattr(st.sc, "list_balance_transactions", lambda **_k: _BEWEGUNGEN)
+    res = StripeSaldoService(_protokoll_db()).protokoll(CTX)
+    eingang = res.eingang[0]
+    assert eingang.zusatzleistungen == ["Wäschepaket"]
+    assert eingang.reservation_id == "res-1"
+    # Gebühr und Netto stehen daneben — sonst stimmt die Summe nie mit dem Saldo.
+    assert (eingang.amount_cents, eingang.fee_cents, eingang.net_cents) == (
+        30000, 800, 29200
+    )
+
+
+def test_protokoll_zeigt_offene_forderungen_des_eigenen_betriebs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(st.sc, "list_balance_transactions", lambda **_k: _BEWEGUNGEN)
+    res = StripeSaldoService(_protokoll_db()).protokoll(CTX)
+    assert [o.id for o in res.offen] == ["lnk-2"]  # kein fremder Tenant, kein bezahlter
+    assert res.offen[0].positionen == ["Frühstück"]
+    assert res.offen[0].url.endswith("/offen")
+
+
+def test_protokoll_ohne_konto_zeigt_trotzdem_offene_posten(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Offene Forderungen stehen in UNSEREN Daten — sie hängen nicht am Konto."""
+    db = _protokoll_db()
+    db.tables["tenant_billing_profile"] = [{"tenant_id": "t1", "stripe_account_id": None}]
+    res = StripeSaldoService(db).protokoll(CTX)
+    assert res.konto_verbunden is False
+    assert [o.id for o in res.offen] == ["lnk-2"]
+
+
+def test_protokoll_stripe_ausfall_wird_nicht_verschluckt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def _kaputt(**_k: object) -> list:
+        raise RuntimeError("Stripe down")
+
+    monkeypatch.setattr(st.sc, "list_balance_transactions", _kaputt)
+    with pytest.raises(StripeSaldoFehler) as exc:
+        StripeSaldoService(_protokoll_db()).protokoll(CTX)
+    assert exc.value.status_code == 502
+
+
+def test_protokoll_unbekannter_typ_landet_im_eingang(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Positivliste für Ausgänge: ein neuer Stripe-Typ bleibt sichtbar, statt
+    aus dem Protokoll zu verschwinden."""
+    neu = [{**_BEWEGUNGEN[0], "id": "txn_neu", "typ": "irgendwas_neues"}]
+    monkeypatch.setattr(st.sc, "list_balance_transactions", lambda **_k: neu)
+    res = StripeSaldoService(_protokoll_db()).protokoll(CTX)
+    assert [e.id for e in res.eingang] == ["txn_neu"]

@@ -15,7 +15,10 @@ from src.features.auth.permissions import Capability
 
 from .dependencies import AddonsServiceDep, AddonZahlungServiceDep
 from .schemas import (
+    AddonApplyRequest,
+    AddonApplyResponse,
     AddonCreate,
+    AddonLibraryResponse,
     AddonListResponse,
     AddonResponse,
     AddonUpdate,
@@ -66,6 +69,43 @@ def create_addon(
 ) -> AddonResponse:
     try:
         return service.create(ctx, property_id, req)
+    except AddonError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/properties/{property_id}/library", response_model=AddonLibraryResponse)
+def get_addon_library(
+    property_id: str,
+    service: AddonsServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> AddonLibraryResponse:
+    """Zusatzleistungen anderer Objekte, die auf DIESES übernehmbar sind.
+
+    Speist „Bestehende Zusatzleistung übernehmen" — das Gegenstück zur
+    Gebühren-Bibliothek. Nur Objekte desselben Betriebs und derselben Währung;
+    was hier schon liegt, fehlt bewusst."""
+    try:
+        return AddonLibraryResponse(**service.addon_library(ctx, property_id))
+    except AddonError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/{addon_id}/apply", response_model=AddonApplyResponse)
+def apply_addon_to_properties(
+    addon_id: str,
+    req: AddonApplyRequest,
+    service: AddonsServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> AddonApplyResponse:
+    """Dieselbe Zusatzleistung auf weitere eigene Objekte übertragen.
+
+    Jede Ziel-ID wird einzeln tenant-gescopt; Währungskonflikte werden VOR dem
+    ersten Schreiben abgelehnt, nicht halb durchgelaufen. Ein zweiter Aufruf
+    aktualisiert die vorhandene Zeile, statt eine Dublette anzulegen."""
+    try:
+        return AddonApplyResponse(
+            **service.apply_addon_to_properties(ctx, addon_id, req.property_ids)
+        )
     except AddonError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

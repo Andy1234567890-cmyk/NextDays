@@ -29,10 +29,13 @@ import {
   auszahlungAnfordern,
   getGuthaben,
   getPlattformAuszahlungen,
+  getProtokoll,
   rhythmusSetzen,
   type Guthaben,
   type PayoutRhythmus,
   type PlattformUebersicht,
+  type Protokoll,
+  type ProtokollEintrag,
 } from "@/lib/abrechnung";
 import { formatCurrency } from "@/lib/currency";
 
@@ -43,6 +46,27 @@ const RHYTHMEN: PayoutRhythmus[] = ["manual", "daily", "weekly", "monthly"];
 // oder als falscher Nachbar-Status zu erscheinen.
 const STATUS_KEYS = ["paid", "pending", "in_transit", "canceled", "failed"];
 
+// Die drei Reiter. „Empfangen" und „Versendet" sind zwei Blicke auf dasselbe
+// Konto — getrennt, weil die Fragen verschieden sind: „Ist das Geld da?" gegen
+// „Was ist rausgegangen?".
+const REITER = ["abrechnung", "empfangen", "versendet"] as const;
+type Reiter = (typeof REITER)[number];
+
+// Stripe-Bewegungstypen, für die wir eine eigene Bezeichnung führen. Ein
+// unbekannter Typ wird ROH gezeigt, statt über einen fehlenden
+// Übersetzungsschlüssel zu stolpern oder als falscher Nachbar zu erscheinen.
+const TYP_KEYS = [
+  "charge",
+  "payment",
+  "payout",
+  "refund",
+  "payment_refund",
+  "application_fee",
+  "stripe_fee",
+  "adjustment",
+  "transfer",
+];
+
 function statusLabel(status: string, t: (key: string) => string): string {
   return STATUS_KEYS.includes(status) ? t(`status.${status}`) : status;
 }
@@ -52,13 +76,19 @@ export function KontoAbrechnung() {
   const locale = useLocale();
   const [guthaben, setGuthaben] = useState<Guthaben | null>(null);
   const [plattform, setPlattform] = useState<PlattformUebersicht | null>(null);
+  const [protokoll, setProtokoll] = useState<Protokoll | null>(null);
+  const [reiter, setReiter] = useState<Reiter>("abrechnung");
   const [fehler, setFehler] = useState<string | null>(null);
   const [laedt, setLaedt] = useState(true);
   const [busy, setBusy] = useState(false);
 
   const laden = useCallback(async () => {
     setLaedt(true);
-    const [g, p] = await Promise.all([getGuthaben(), getPlattformAuszahlungen()]);
+    const [g, p, pr] = await Promise.all([
+      getGuthaben(),
+      getPlattformAuszahlungen(),
+      getProtokoll(),
+    ]);
     if (g.ok) {
       setGuthaben(g.data);
       setFehler(null);
@@ -71,6 +101,7 @@ export function KontoAbrechnung() {
     // Der Marktplatz-Teil darf fehlen (z. B. ohne Portal-Buchungen) — er ist
     // eine Ergänzung, kein Grund, die Seite scheitern zu lassen.
     setPlattform(p.ok ? p.data : null);
+    setProtokoll(pr.ok ? pr.data : null);
     setLaedt(false);
   }, []);
 
@@ -143,7 +174,33 @@ export function KontoAbrechnung() {
         </div>
       )}
 
-      {guthaben && !guthaben.konto_verbunden && (
+      <nav className="flex flex-wrap gap-1 border-b border-border">
+        {REITER.map((r) => (
+          <button
+            key={r}
+            type="button"
+            onClick={() => setReiter(r)}
+            className={`-mb-px border-b-2 px-3 py-2 text-sm transition-colors ${
+              reiter === r
+                ? "border-primary font-medium text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {t(`reiter.${r}`)}
+          </button>
+        ))}
+      </nav>
+
+      {reiter !== "abrechnung" && (
+        <Bewegungen
+          protokoll={protokoll}
+          richtung={reiter === "empfangen" ? "eingang" : "ausgang"}
+          geld={geld}
+          locale={locale}
+        />
+      )}
+
+      {reiter === "abrechnung" && guthaben && !guthaben.konto_verbunden && (
         <Card>
           <CardContent className="flex flex-col items-start gap-3 p-5">
             <p className="text-sm text-foreground">{t("keinKonto")}</p>
@@ -154,7 +211,7 @@ export function KontoAbrechnung() {
         </Card>
       )}
 
-      {guthaben?.konto_verbunden && (
+      {reiter === "abrechnung" && guthaben?.konto_verbunden && (
         <>
           <Saldo
             guthaben={guthaben}
@@ -171,7 +228,9 @@ export function KontoAbrechnung() {
         </>
       )}
 
-      <Marktplatz uebersicht={plattform} geld={geld} />
+      {reiter === "abrechnung" && (
+        <Marktplatz uebersicht={plattform} geld={geld} />
+      )}
     </div>
   );
 }
@@ -415,5 +474,183 @@ function Marktplatz({
         </ul>
       </CardContent>
     </Card>
+  );
+}
+
+// --- Protokoll: empfangene bzw. versendete Zahlungen -------------------------
+//
+// Quelle ist Stripe selbst, damit auch Bewegungen auftauchen, die nie durch
+// unsere Oberfläche liefen (Erstattung im Stripe-Dashboard, Gebühr,
+// Rückbelastung). Im Eingang stehen zusätzlich die OFFENEN Forderungen — ohne
+// sie zeigte das Protokoll nur, was schon da ist, und nie, worauf der Betrieb
+// noch wartet.
+function Bewegungen({
+  protokoll,
+  richtung,
+  geld,
+  locale,
+}: {
+  protokoll: Protokoll | null;
+  richtung: "eingang" | "ausgang";
+  geld: (cents: number, currency: string) => string;
+  locale: string;
+}) {
+  const t = useTranslations("abrechnung");
+  const zeilen = richtung === "eingang" ? protokoll?.eingang : protokoll?.ausgang;
+  const offen = richtung === "eingang" ? (protokoll?.offen ?? []) : [];
+  const datum = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleString(locale) : "—";
+
+  return (
+    <div className="flex flex-col gap-4">
+      {offen.length > 0 && (
+        <Card>
+          <CardContent className="flex flex-col gap-3 p-5">
+            <div>
+              <h2 className="text-base font-semibold text-foreground">
+                {t("protokoll.offenTitel")}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {t("protokoll.offenHinweis")}
+              </p>
+            </div>
+            <ul className="flex flex-col gap-2">
+              {offen.map((p) => (
+                <li
+                  key={p.id}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-(--radius) border border-border p-3"
+                >
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate text-sm text-foreground">
+                      {p.positionen.length > 0
+                        ? p.positionen.join(", ")
+                        : t("protokoll.zusatzleistungen")}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {datum(p.created_at)}
+                    </span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-3">
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">
+                      {t("protokoll.statusOffen")}
+                    </span>
+                    <span className="text-sm font-medium text-foreground">
+                      {geld(p.amount_cents, p.currency)}
+                    </span>
+                    <a
+                      href={p.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-accent hover:underline"
+                    >
+                      {t("protokoll.zahlseite")}
+                    </a>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardContent className="flex flex-col gap-3 p-5">
+          <div>
+            <h2 className="text-base font-semibold text-foreground">
+              {t(richtung === "eingang" ? "protokoll.eingangTitel" : "protokoll.ausgangTitel")}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {t(
+                richtung === "eingang"
+                  ? "protokoll.eingangHinweis"
+                  : "protokoll.ausgangHinweis",
+              )}
+            </p>
+          </div>
+
+          {!zeilen || zeilen.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t("protokoll.leer")}</p>
+          ) : (
+            <ul className="flex flex-col">
+              {zeilen.map((z, i) => (
+                <li key={z.id}>
+                  {i > 0 && <Separator className="my-2" />}
+                  <Zeile eintrag={z} geld={geld} datum={datum} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function Zeile({
+  eintrag,
+  geld,
+  datum,
+}: {
+  eintrag: ProtokollEintrag;
+  geld: (cents: number, currency: string) => string;
+  datum: (iso: string | null) => string;
+}) {
+  const t = useTranslations("abrechnung");
+  const typLabel = TYP_KEYS.includes(eintrag.typ)
+    ? t(`protokoll.typ.${eintrag.typ}`)
+    : eintrag.typ;
+  // Gebühren nur zeigen, wenn welche anfielen — eine Zeile „Gebühr 0,00" ist
+  // Rauschen.
+  const mitGebuehr = eintrag.fee_cents !== 0;
+
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="min-w-0">
+        <p className="flex flex-wrap items-center gap-2 text-sm text-foreground">
+          <span>{typLabel}</span>
+          {eintrag.zusatzleistungen.length > 0 && (
+            <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">
+              {eintrag.zusatzleistungen.join(", ")}
+            </span>
+          )}
+          {eintrag.richtung === "eingang" && (
+            <span className="rounded-full bg-secondary px-2 py-0.5 text-xs">
+              {t("protokoll.statusBezahlt")}
+            </span>
+          )}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {datum(eintrag.created)}
+          {eintrag.beschreibung ? ` · ${eintrag.beschreibung}` : ""}
+          {eintrag.available_on
+            ? ` · ${t("protokoll.verfuegbarAb", { datum: datum(eintrag.available_on) })}`
+            : ""}
+        </p>
+        {eintrag.reservation_id && (
+          <Link
+            href={`/reservierungen/${eintrag.reservation_id}`}
+            className="text-xs text-accent hover:underline"
+          >
+            {t("protokoll.zurBuchung")}
+          </Link>
+        )}
+      </div>
+      <div className="shrink-0 text-right">
+        <p className="text-sm font-medium text-foreground">
+          {geld(eintrag.amount_cents, eintrag.currency)}
+        </p>
+        {mitGebuehr && (
+          <p className="text-xs text-muted-foreground">
+            {t("protokoll.gebuehr", {
+              betrag: geld(eintrag.fee_cents, eintrag.currency),
+            })}
+            {" · "}
+            {t("protokoll.netto", {
+              betrag: geld(eintrag.net_cents, eintrag.currency),
+            })}
+          </p>
+        )}
+      </div>
+    </div>
   );
 }

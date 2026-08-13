@@ -129,3 +129,63 @@ class StripeRhythmusUpdate(BaseModel):
     # Nur bei weekly/monthly relevant; Stripe ignoriert sie sonst.
     weekly_anchor: str | None = None
     monthly_anchor: int | None = Field(default=None, ge=1, le=31)
+
+
+# --- Protokoll: jede Geldbewegung des verbundenen Kontos ---------------------
+#
+# „Damit der Kunde alles nachvollziehen kann": eine Zeile je Bewegung, in beide
+# Richtungen. Quelle ist Stripe (das Konto selbst), angereichert um unsere
+# Zuordnung — welche Buchung, welche Zusatzleistung.
+
+ProtokollRichtung = Literal["eingang", "ausgang"]
+
+
+class ProtokollEintrag(BaseModel):
+    """Eine Geldbewegung auf dem Konto des Betriebs."""
+
+    id: str
+    # Stripe-Typ (charge, payment, payout, refund, application_fee, …) — roh,
+    # damit die Oberfläche unbekannte Typen anzeigen kann statt sie zu
+    # verschlucken.
+    typ: str
+    richtung: ProtokollRichtung
+    amount_cents: int
+    fee_cents: int
+    # Saldo-Wirkung nach Gebühren. Nur die Summe der net-Werte ergibt den Saldo.
+    net_cents: int
+    currency: str
+    status: str
+    created: str | None = None
+    # Ab wann der Betrag auszahlbar ist (Abwicklungsfrist).
+    available_on: str | None = None
+    beschreibung: str | None = None
+    # Zuordnung aus UNSEREN Daten, soweit vorhanden.
+    reservation_id: str | None = None
+    # Bezahlte Zusatzleistungen dieser Bewegung (Namen), für „Wofür war das?".
+    zusatzleistungen: list[str] = []
+
+
+class OffenerPosten(BaseModel):
+    """Eine noch NICHT bezahlte Forderung — ein offener Zahlungslink.
+
+    Gehört zum Reiter „Empfangene Zahlungen": Ohne die offene Seite zeigte das
+    Protokoll nur, was schon da ist, und nie, worauf der Betrieb noch wartet.
+    """
+
+    id: str
+    reservation_id: str
+    amount_cents: int
+    currency: str
+    url: str
+    positionen: list[str] = []
+    created_at: str | None = None
+
+
+class ProtokollAntwort(BaseModel):
+    """Protokoll je Richtung — getrennte Reiter „Empfangen"/„Versendet"."""
+
+    eingang: list[ProtokollEintrag] = []
+    ausgang: list[ProtokollEintrag] = []
+    # Offene Forderungen (noch nicht bezahlte Zahlungslinks).
+    offen: list[OffenerPosten] = []
+    konto_verbunden: bool = False

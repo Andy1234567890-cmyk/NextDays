@@ -28,6 +28,9 @@ from src.core.security import AuthContext
 from src.features.payments import stripe_client as sc
 
 from .schemas import (
+    OffenerPosten,
+    ProtokollAntwort,
+    ProtokollEintrag,
     StripeAuszahlung,
     StripeGuthaben,
     StripeRhythmusUpdate,
@@ -39,6 +42,27 @@ log = get_logger("nextdays.payouts.stripe")
 # Rhythmen, die wir anbieten. `manual` = keine automatische Auszahlung, das
 # Guthaben bleibt stehen, bis der Betrieb sie beantragt.
 ERLAUBTE_INTERVALLE = ("manual", "daily", "weekly", "monthly")
+
+# Stripe-Bewegungstypen, die GELD AUS dem Konto herausbewegen. Alles andere ist
+# ein Eingang. Bewusst als Positivliste: ein unbekannter neuer Typ landet dann
+# im Eingang und ist sichtbar, statt aus dem Protokoll zu verschwinden.
+AUSGANG_TYPEN = frozenset(
+    {
+        "payout",              # Auszahlung auf das eigene Bankkonto
+        "payout_failure",      # fehlgeschlagene Auszahlung (Rückbuchung)
+        "payout_cancel",
+        "refund",              # Erstattung an den Gast
+        "payment_refund",
+        "application_fee",     # an die Plattform abgeführte Provision
+        "adjustment",          # Rückbelastung/Chargeback
+        "stripe_fee",
+        "transfer",            # Weiterleitung an ein anderes Konto
+    }
+)
+
+# Obergrenze je Abruf. Ohne Deckel könnte ein langes Konto tausende Zeilen in
+# einem Request ziehen (Wurzel 8).
+MAX_PROTOKOLL = 100
 
 
 class StripeSaldoFehler(Exception):
@@ -270,3 +294,145 @@ class StripeSaldoService:
             interval=req.interval,
         )
         return self.guthaben(ctx)
+
+    # --- Protokoll ---------------------------------------------------------
+
+    def protokoll(self, ctx: AuthContext, *, limit: int = 50) -> ProtokollAntwort:
+        """Jede Geldbewegung des verbundenen Kontos, getrennt nach Richtung.
+
+        Quelle ist Stripe selbst — nicht unsere Kopie. Damit stimmt das
+        Protokoll auch für Bewegungen, die nie durch unsere Oberfläche liefen
+        (Erstattung im Stripe-Dashboard, Stripe-Gebühr, Rückbelastung).
+
+        Angereichert wird es aus unseren Daten: Zu einer Zahlung wird die
+        Buchung und die bezahlte Zusatzleistung dazugeschrieben, damit die Zeile
+        beantwortet „wofür war das?" statt nur einen Betrag zu zeigen.
+        """
+        tenant_id = self._tenant(ctx)
+        acct = self._konto(tenant_id)
+        offen = self._offene_posten(tenant_id)
+        if not acct:
+            # Ohne Konto gibt es keine Bewegungen — offene Forderungen aber
+            # sehr wohl (sie stehen in unseren Daten, nicht bei Stripe).
+            return ProtokollAntwort(konto_verbunden=False, offen=offen)
+        grenze = max(1, min(int(limit), MAX_PROTOKOLL))
+        try:
+            zeilen = sc.list_balance_transactions(acct=acct, limit=grenze)
+        except Exception as exc:
+            log.warning("stripe_protokoll_abruf_fehlgeschlagen", error=str(exc))
+            raise StripeSaldoFehler(
+                f"Das Protokoll konnte nicht geladen werden: {exc}", status_code=502
+            ) from exc
+
+        zuordnung = self._zuordnung(tenant_id, zeilen)
+        antwort = ProtokollAntwort(konto_verbunden=True, offen=offen)
+        for z in zeilen:
+            ausgang = str(z["typ"]) in AUSGANG_TYPEN
+            quelle = z.get("quelle") or {}
+            zuo = (
+                zuordnung.get(str(quelle.get("payment_intent") or ""))
+                or zuordnung.get(str(quelle.get("id") or ""))
+                or {}
+            )
+            eintrag = ProtokollEintrag(
+                id=str(z["id"]),
+                typ=str(z["typ"]),
+                richtung="ausgang" if ausgang else "eingang",
+                amount_cents=int(z["amount_cents"]),
+                fee_cents=int(z["fee_cents"]),
+                net_cents=int(z["net_cents"]),
+                currency=str(z["currency"]),
+                status=str(z["status"]),
+                created=_iso(z["created"]),
+                available_on=_iso(z.get("available_on")),
+                beschreibung=z.get("beschreibung")
+                or (z.get("quelle") or {}).get("beschreibung"),
+                reservation_id=zuo.get("reservation_id"),
+                zusatzleistungen=zuo.get("zusatzleistungen", []),
+            )
+            if ausgang:
+                antwort.ausgang.append(eintrag)
+            else:
+                antwort.eingang.append(eintrag)
+        return antwort
+
+    def _offene_posten(self, tenant_id: str) -> list[OffenerPosten]:
+        """Noch nicht bezahlte Zahlungslinks des Betriebs (Wurzel 3: nur eigene)."""
+        zeilen = (
+            self._db.table("addon_payment_links")
+            .select("id, reservation_id, amount_cents, currency, url, created_at")
+            .eq("tenant_id", tenant_id)
+            .eq("status", "open")
+            .order("created_at", desc=True)
+            .limit(MAX_PROTOKOLL)
+            .execute()
+        ).data or []
+        return [
+            OffenerPosten(
+                id=str(z["id"]),
+                reservation_id=str(z["reservation_id"]),
+                amount_cents=int(z["amount_cents"]),
+                currency=str(z["currency"]),
+                url=str(z["url"]),
+                positionen=self._positions_namen(str(z["id"])),
+                created_at=z.get("created_at"),
+            )
+            for z in zeilen
+        ]
+
+    def _zuordnung(self, tenant_id: str, zeilen: list[dict]) -> dict[str, dict]:
+        """Stripe-Quell-IDs → Buchung + bezahlte Zusatzleistungen (unsere Daten).
+
+        Gescopet auf den eigenen Betrieb (Wurzel 3): Eine Zeile aus einem
+        fremden Tenant darf hier nichts anreichern, selbst wenn die ID passte.
+        """
+        # Beide Kennungen sammeln: die Quelle selbst (Charge) UND ihren
+        # PaymentIntent — je nachdem, ob Stripe die Quelle mitliefern durfte.
+        ids: set[str] = set()
+        for z in zeilen:
+            quelle = z.get("quelle") or {}
+            for wert in (quelle.get("id"), quelle.get("payment_intent")):
+                if wert:
+                    ids.add(str(wert))
+        if not ids:
+            return {}
+        links = (
+            self._db.table("addon_payment_links")
+            .select("id, reservation_id, payment_intent_id, checkout_session_id")
+            .eq("tenant_id", tenant_id)
+            .eq("status", "paid")
+            .execute()
+        ).data or []
+        treffer: dict[str, dict] = {}
+        for link in links:
+            namen = self._positions_namen(str(link["id"]))
+            for ref in (link.get("payment_intent_id"), link.get("checkout_session_id")):
+                if ref and str(ref) in ids:
+                    treffer[str(ref)] = {
+                        "reservation_id": str(link["reservation_id"]),
+                        "zusatzleistungen": namen,
+                    }
+        return treffer
+
+    def _positions_namen(self, link_id: str) -> list[str]:
+        """Namen der Zusatzleistungen eines Links — für die Protokoll-Zeile."""
+        positionen = (
+            self._db.table("addon_payment_link_items")
+            .select("reservation_addon_id")
+            .eq("link_id", link_id)
+            .execute()
+        ).data or []
+        if not positionen:
+            return []
+        zeilen = (
+            self._db.table("reservation_addons")
+            .select("name")
+            .in_("id", [str(p["reservation_addon_id"]) for p in positionen])
+            .execute()
+        ).data or []
+        namen = []
+        for z in zeilen:
+            name = z.get("name") or {}
+            if isinstance(name, dict) and name:
+                namen.append(str(name.get("de") or next(iter(name.values()))))
+        return namen

@@ -130,4 +130,28 @@ Ersatzantwort wäre eine Falschaussage über fremdes Geld.
 (Rhythmus) — jeweils auf verbundenen Konten. Fehlt eines, meldet die
 Abrechnungs-Seite den Stripe-Originaltext.
 
-Oberfläche: `/konto/abrechnung` (Nutzermenü → „Abrechnung").
+### Protokoll (`GET /payouts/protokoll`)
+
+Jede Geldbewegung des verbundenen Kontos, getrennt nach Richtung — die Reiter
+„Empfangene Zahlungen" und „Versendete Zahlungen". Quelle ist Stripes
+`balance_transactions`, nicht unsere Kopie: So taucht auch auf, was nie durch
+unsere Oberfläche lief (Erstattung im Stripe-Dashboard, Stripe-Gebühr,
+Rückbelastung).
+
+`amount` / `fee` / `net` stehen nebeneinander, weil nur die Summe der
+**net**-Werte den Saldo ergibt. Die Richtung entscheidet eine **Positivliste**
+(`AUSGANG_TYPEN`): Ein unbekannter neuer Stripe-Typ landet damit im Eingang und
+bleibt sichtbar, statt aus dem Protokoll zu verschwinden.
+
+Angereichert aus unseren Daten: Zu einer Zahlung werden Buchung und bezahlte
+Zusatzleistungen dazugeschrieben (über `addon_payment_links.payment_intent_id` /
+`checkout_session_id`), damit die Zeile „wofür war das?" beantwortet.
+
+Dazu die OFFENE Seite: `offen` listet die noch unbezahlten Zahlungslinks des
+Betriebs (mit Betrag, Positionen und Zahlseite). Ohne sie zeigte das Protokoll
+nur, was schon da ist, und nie, worauf der Betrieb noch wartet. Sie stammt aus
+unseren Daten und erscheint deshalb auch, wenn (noch) kein Stripe-Konto
+verbunden ist.
+
+Oberfläche: `/konto/abrechnung` (Nutzermenü → „Abrechnung") mit drei Reitern:
+Abrechnung · Empfangene Zahlungen · Versendete Zahlungen.

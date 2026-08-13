@@ -113,6 +113,48 @@ def test_link_summiert_offene_positionen_und_behaelt_5_prozent(
     assert stripe.erstellt[0]["acct"] == "acct_1"
 
 
+def test_provision_bemisst_sich_am_netto_nicht_am_brutto(stripe: _StripeFake) -> None:
+    """Sonst zahlte ein dänischer Betrieb (25 %) mehr Provision als ein
+    luxemburgischer (17 %) — für denselben Nettopreis und dieselbe Leistung."""
+    db = _db(
+        reservation_addons=[
+            {
+                "id": "ra-1",
+                "tenant_id": "t1",
+                "reservation_id": "res-1",
+                "name": {"de": "Wäschepaket"},
+                "total": 300.0,      # brutto, inkl. 25 % dänischer USt
+                "tax_rate": 25.0,
+                "status": "pending",
+            }
+        ]
+    )
+    res = AddonZahlungService(db).erstellen(CTX, "res-1")
+    # Der Gast zahlt den vollen Bruttobetrag …
+    assert res.amount_cents == 30000
+    # … die Provision bemisst sich aber an 240,00 netto → 12,00 statt 15,00.
+    assert res.application_fee_cents == 1200
+
+
+def test_ohne_steuersatz_ist_brutto_gleich_netto(stripe: _StripeFake) -> None:
+    """Kein ausgewiesener Satz → nichts herausrechnen (kein geratener Default)."""
+    db = _db(
+        reservation_addons=[
+            {
+                "id": "ra-1",
+                "tenant_id": "t1",
+                "reservation_id": "res-1",
+                "name": {"de": "Transfer"},
+                "total": 100.0,
+                "tax_rate": None,
+                "status": "pending",
+            }
+        ]
+    )
+    res = AddonZahlungService(db).erstellen(CTX, "res-1")
+    assert (res.amount_cents, res.application_fee_cents) == (10000, 500)
+
+
 def test_zweiter_klick_gibt_denselben_link_zurueck(stripe: _StripeFake) -> None:
     svc = AddonZahlungService(_db())
     erst = svc.erstellen(CTX, "res-1")

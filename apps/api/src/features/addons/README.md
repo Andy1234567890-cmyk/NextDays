@@ -37,6 +37,16 @@ Beide bleiben für diesen Zweck **bewusst liegen** (kein Doppel-Mechanismus).
 - `PATCH /{addon_id}` — bearbeiten.
 - `DELETE /{addon_id}` — löschen.
 - `POST /{addon_id}/media` — ein Medium (Foto) hochladen (multipart), max. 5.
+- `GET /properties/{property_id}/library` — Zusatzleistungen **anderer** Objekte
+  des Betriebs, die auf dieses übernehmbar sind (Gegenstück zur Gebühren-
+  Bibliothek). Nur gleiche Währung; was hier schon liegt, fehlt bewusst. Ohne
+  Währung am Ziel ist die Liste leer und `currency` `null` — kein geratenes EUR.
+- `POST /{addon_id}/apply` — dieselbe Zusatzleistung auf weitere eigene Objekte
+  übertragen (Block „Zu anderen Objekten hinzufügen" im Editor). Jede Ziel-ID
+  einzeln tenant-gescopt (Wurzel 3), Währungskonflikte werden **vor** dem ersten
+  Schreiben abgelehnt, idempotent über die fachliche Signatur (Wurzel 2). Es ist
+  eine **Kopie, keine Verknüpfung**: spätere Änderungen an der Quelle wandern
+  nicht mit — wie bei Gebühren und Steuern. Logik in `verteilung.py`.
 - `GET /reservations/{reservation_id}` — gekaufte Extras (Dashboard-Sicht).
 - `GET /reservations/{reservation_id}/available` — aktive Katalog-Add-ons des
   Objekts dieser Reservierung (Schnell-Auswahl im Kalender-Detail).

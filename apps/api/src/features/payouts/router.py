@@ -22,6 +22,7 @@ from .schemas import (
     PayoutOverview,
     PayoutSettings,
     PayoutSettingsUpdate,
+    ProtokollAntwort,
     StripeAuszahlung,
     StripeAuszahlungAnfordern,
     StripeGuthaben,
@@ -122,6 +123,23 @@ def rhythmus_setzen(
     oder nur auf Antrag."""
     try:
         return service.rhythmus_setzen(ctx, req)
+    except StripeSaldoFehler as exc:
+        raise HTTPException(
+            status_code=exc.status_code, detail=exc.message
+        ) from exc
+
+
+@router.get("/protokoll", response_model=ProtokollAntwort)
+def get_protokoll(
+    ctx: _billing,
+    service: StripeSaldoServiceDep,
+    limit: int = Query(50, ge=1, le=100),
+) -> ProtokollAntwort:
+    """Jede Geldbewegung des verbundenen Kontos, getrennt nach Richtung —
+    empfangene Zahlungen und versendete Auszahlungen/Erstattungen. Angereichert
+    um Buchung und bezahlte Zusatzleistungen."""
+    try:
+        return service.protokoll(ctx, limit=limit)
     except StripeSaldoFehler as exc:
         raise HTTPException(
             status_code=exc.status_code, detail=exc.message

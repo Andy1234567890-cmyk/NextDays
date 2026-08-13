@@ -145,3 +145,53 @@ export async function getPlattformAuszahlungen(): Promise<
 > {
   return call("");
 }
+
+// --- Protokoll ---------------------------------------------------------------
+//
+// „Damit der Kunde alles nachvollziehen kann": jede Geldbewegung des
+// verbundenen Kontos, getrennt nach Richtung. Quelle ist Stripe selbst, damit
+// auch Bewegungen auftauchen, die nie durch unsere Oberfläche liefen
+// (Erstattung im Stripe-Dashboard, Gebühr, Rückbelastung).
+
+export type ProtokollEintrag = {
+  id: string;
+  /** Stripe-Typ (charge, payment, payout, refund, application_fee, …). */
+  typ: string;
+  richtung: "eingang" | "ausgang";
+  amount_cents: number;
+  fee_cents: number;
+  /** Saldo-Wirkung nach Gebühren. */
+  net_cents: number;
+  currency: string;
+  status: string;
+  created: string | null;
+  available_on: string | null;
+  beschreibung: string | null;
+  reservation_id: string | null;
+  /** Bezahlte Zusatzleistungen dieser Bewegung. */
+  zusatzleistungen: string[];
+};
+
+/** Noch nicht bezahlte Forderung — ein offener Zahlungslink. */
+export type OffenerPosten = {
+  id: string;
+  reservation_id: string;
+  amount_cents: number;
+  currency: string;
+  url: string;
+  positionen: string[];
+  created_at: string | null;
+};
+
+export type Protokoll = {
+  konto_verbunden: boolean;
+  eingang: ProtokollEintrag[];
+  ausgang: ProtokollEintrag[];
+  /** Offene Forderungen — ohne sie zeigte das Protokoll nur, was schon da ist. */
+  offen: OffenerPosten[];
+};
+
+/** Geldbewegungen des verbundenen Kontos (empfangen + versendet). */
+export async function getProtokoll(limit = 50): Promise<Result<Protokoll>> {
+  return call(`/protokoll?limit=${limit}`);
+}

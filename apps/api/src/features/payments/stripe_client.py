@@ -14,6 +14,7 @@ from functools import lru_cache
 from typing import Any
 
 try:
+    from stripe import PermissionError as _PermissionError
     from stripe import StripeClient
 except ImportError as exc:
     raise ImportError(
@@ -21,6 +22,9 @@ except ImportError as exc:
     ) from exc
 
 from src.core.config import get_settings
+from src.core.logging import get_logger
+
+log = get_logger("nextdays.payments.stripe")
 
 
 class StripeNotConfiguredError(RuntimeError):
@@ -728,3 +732,72 @@ def set_branding(
         return
     stripe = client or get_stripe()
     stripe.v1.accounts.update(acct, params={"settings": {"branding": branding}})
+
+
+def list_balance_transactions(
+    *, acct: str, limit: int = 50, client: StripeClient | None = None
+) -> list[dict[str, Any]]:
+    """Kontobewegungen des verbundenen Kontos — das Protokoll des Betriebs.
+
+    Eine Zeile je Geldbewegung, in BEIDE Richtungen: Zahlungseingang (charge/
+    payment), Auszahlung (payout), Erstattung (refund), einbehaltene
+    Plattform-Provision (application_fee) und Stripe-Gebühren.
+
+    ``amount`` ist der Bruttobetrag der Bewegung, ``fee`` die davon abgezogene
+    Gebühr, ``net`` die tatsächliche Saldo-Wirkung — nur so ergibt die Summe
+    das, was am Ende auf dem Konto steht. ``available_on`` sagt, ab wann der
+    Betrag auszahlbar ist (Abwicklungsfrist).
+    """
+    stripe = client or get_stripe()
+    params: dict[str, Any] = {"limit": max(1, min(limit, 100))}
+    try:
+        # Mit dem auslösenden Objekt: nur so steht in der Zeile, WOFÜR die
+        # Bewegung war (Charge → PaymentIntent → unsere Zusatzleistung).
+        res = stripe.v1.balance_transactions.list(
+            params={**params, "expand": ["data.source"]},
+            options={"stripe_account": acct},
+        )
+    except _PermissionError:
+        # Ein eingeschränkter API-Schlüssel ohne „Balance Transaction Sources:
+        # Read" darf die Quelle nicht mitlesen (live aufgetreten). Das Protokoll
+        # selbst ist dann trotzdem abrufbar — lieber ohne Zuordnung anzeigen als
+        # die ganze Seite scheitern lassen (Wurzel 5: Hauptpfad hält).
+        log.warning("balance_transactions_ohne_quelle", account=acct)
+        res = stripe.v1.balance_transactions.list(
+            params=params, options={"stripe_account": acct}
+        )
+
+    def _quelle(txn: Any) -> dict[str, Any]:  # noqa: ANN401
+        """Auslösendes Objekt (Charge/Payout/Refund) — ID, Text, PaymentIntent.
+
+        Ohne Expand liefert Stripe nur die ID als Zeichenkette; dann fehlt der
+        PaymentIntent, über den unsere Zuordnung zur Zusatzleistung läuft. Das
+        ist der Grund, warum das Recht „Balance Transaction Sources: Read" am
+        Schlüssel gesetzt sein sollte — ohne es bleibt die Zeile lesbar, aber
+        ohne Bezug.
+        """
+        src = getattr(txn, "source", None)
+        if isinstance(src, str) or src is None:
+            return {"id": src, "beschreibung": None, "payment_intent": None}
+        return {
+            "id": getattr(src, "id", None),
+            "beschreibung": getattr(src, "description", None),
+            "payment_intent": getattr(src, "payment_intent", None),
+        }
+
+    return [
+        {
+            "id": t.id,
+            "typ": str(t.type),
+            "amount_cents": int(t.amount),
+            "fee_cents": int(t.fee),
+            "net_cents": int(t.net),
+            "currency": str(t.currency),
+            "status": str(t.status),
+            "created": int(t.created),
+            "available_on": getattr(t, "available_on", None),
+            "beschreibung": getattr(t, "description", None),
+            "quelle": _quelle(t),
+        }
+        for t in (res.data or [])
+    ]

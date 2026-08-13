@@ -566,3 +566,166 @@ def test_catalog_currency_none_without_rate_plan() -> None:
     )
     svc = AddonsService(service_client=db)
     assert svc.list_for_property(_ctx(), "prop-1").currency is None
+
+
+# --- Verteilung: Bibliothek + „Zu anderen Objekten hinzufügen" ---------------
+#
+# Das Gegenstück zu Gebühren/Steuern für Zusatzleistungen: dieselbe Leistung
+# auf mehreren Objekten pflegen, ohne sie achtzehnmal abzutippen.
+
+
+def _verteil_db(**over: object) -> _DB:
+    """Zwei Objekte in EUR, eines in DKK, eines ganz ohne Rate-Plan."""
+    tables: dict[str, list[dict]] = {
+        "properties": [
+            {"id": "prop-1", "tenant_id": "t-1", "title": "Villa"},
+            {"id": "prop-2", "tenant_id": "t-1", "title": "Ferienhaus"},
+            {"id": "prop-dkk", "tenant_id": "t-1", "title": "Kornblomst"},
+            {"id": "prop-ohne", "tenant_id": "t-1", "title": "Neubau"},
+            {"id": "prop-fremd", "tenant_id": "t-2", "title": "Fremd"},
+        ],
+        "rate_plans": [
+            {"property_id": "prop-1", "currency": "EUR"},
+            {"property_id": "prop-2", "currency": "EUR"},
+            {"property_id": "prop-dkk", "currency": "DKK"},
+            {"property_id": "prop-fremd", "currency": "EUR"},
+        ],
+        "property_addons": [_catalog_row(price=12.0, basis="per_guest")],
+    }
+    tables.update(over)  # type: ignore[arg-type]
+    return _DB(tables)
+
+
+def test_apply_addon_copies_to_other_property() -> None:
+    db = _verteil_db()
+    svc = AddonsService(service_client=db)
+    res = svc.apply_addon_to_properties(_ctx(), "addon-1", ["prop-2"])
+    assert res["applied_to"] == ["prop-2"]
+    ziel = svc.list_for_property(_ctx(), "prop-2")
+    assert ziel.total == 1
+    kopie = ziel.items[0]
+    # Kopie, keine Verknüpfung: eigene Kennung, gleicher Inhalt.
+    assert kopie.id != "addon-1"
+    assert kopie.price == 12.0 and kopie.basis == "per_guest"
+    assert kopie.name == {"de": "Frühstück"}
+
+
+def test_apply_addon_is_idempotent() -> None:
+    """Wurzel 2: Doppelklick legt keine zweite „Frühstück"-Zeile an."""
+    db = _verteil_db()
+    svc = AddonsService(service_client=db)
+    svc.apply_addon_to_properties(_ctx(), "addon-1", ["prop-2"])
+    svc.apply_addon_to_properties(_ctx(), "addon-1", ["prop-2"])
+    assert svc.list_for_property(_ctx(), "prop-2").total == 1
+
+
+def test_apply_addon_rejects_other_currency_before_writing() -> None:
+    """Wurzel 4: 12 EUR sind nicht 12 DKK — und kein Ziel wird halb beschrieben."""
+    db = _verteil_db()
+    svc = AddonsService(service_client=db)
+    with pytest.raises(AddonError) as exc:
+        svc.apply_addon_to_properties(_ctx(), "addon-1", ["prop-2", "prop-dkk"])
+    assert exc.value.status_code == 422
+    # prop-2 stand VOR dem DKK-Objekt in der Liste und darf trotzdem leer sein.
+    assert svc.list_for_property(_ctx(), "prop-2").total == 0
+
+
+def test_apply_addon_rejects_property_without_currency() -> None:
+    db = _verteil_db()
+    svc = AddonsService(service_client=db)
+    with pytest.raises(AddonError) as exc:
+        svc.apply_addon_to_properties(_ctx(), "addon-1", ["prop-ohne"])
+    assert exc.value.status_code == 422
+
+
+def test_apply_addon_foreign_property_rejected() -> None:
+    """Wurzel 3: service_role umgeht RLS — jede Ziel-ID einzeln gescopt."""
+    db = _verteil_db()
+    svc = AddonsService(service_client=db)
+    with pytest.raises(AddonError) as exc:
+        svc.apply_addon_to_properties(_ctx(), "addon-1", ["prop-fremd"])
+    assert exc.value.status_code == 404
+    assert db.tables["property_addons"] == [
+        r for r in db.tables["property_addons"] if str(r["property_id"]) == "prop-1"
+    ]
+
+
+def test_apply_addon_foreign_addon_rejected() -> None:
+    db = _verteil_db()
+    svc = AddonsService(service_client=db)
+    fremd = AuthContext(user_id="u-2", tenant_id="t-2", role="admin")
+    with pytest.raises(AddonError) as exc:
+        svc.apply_addon_to_properties(fremd, "addon-1", ["prop-fremd"])
+    assert exc.value.status_code == 404
+
+
+def test_apply_addon_skips_source_property() -> None:
+    """Das Quellobjekt in der Zielliste ist ein No-op, kein Duplikat."""
+    db = _verteil_db()
+    svc = AddonsService(service_client=db)
+    res = svc.apply_addon_to_properties(_ctx(), "addon-1", ["prop-1"])
+    assert res["applied_to"] == []
+    assert svc.list_for_property(_ctx(), "prop-1").total == 1
+
+
+def test_addon_library_lists_other_properties_same_currency() -> None:
+    db = _verteil_db(
+        property_addons=[
+            _catalog_row(price=12.0, basis="per_guest"),
+            _catalog_row(
+                id="addon-dkk",
+                property_id="prop-dkk",
+                name={"de": "Wäschepaket"},
+                price=795.0,
+                basis="per_stay",
+            ),
+        ]
+    )
+    svc = AddonsService(service_client=db)
+    lib = svc.addon_library(_ctx(), "prop-2")
+    assert lib["currency"] == "EUR"
+    # Nur das EUR-Objekt; die DKK-Leistung ist kein übernehmbarer Betrag.
+    assert [e["addon"]["name"] for e in lib["items"]] == [{"de": "Frühstück"}]
+    assert lib["items"][0]["property_title"] == "Villa"
+
+
+def test_addon_library_hides_what_target_already_has() -> None:
+    db = _verteil_db(
+        property_addons=[
+            _catalog_row(price=12.0, basis="per_guest"),
+            _catalog_row(id="addon-2", property_id="prop-2", price=12.0, basis="per_guest"),
+        ]
+    )
+    svc = AddonsService(service_client=db)
+    assert svc.addon_library(_ctx(), "prop-2")["items"] == []
+
+
+def test_addon_library_dedupes_same_service_across_properties() -> None:
+    """Dieselbe Leistung auf zwei Objekten erscheint EINMAL in der Auswahl."""
+    db = _verteil_db(
+        property_addons=[
+            _catalog_row(price=12.0, basis="per_guest"),
+            _catalog_row(id="addon-2", property_id="prop-2", price=12.0, basis="per_guest"),
+        ]
+    )
+    svc = AddonsService(service_client=db)
+    # prop-ohne hat keine Währung → leer; also über ein drittes EUR-Objekt prüfen.
+    db.tables["rate_plans"].append({"property_id": "prop-ohne", "currency": "EUR"})
+    lib = svc.addon_library(_ctx(), "prop-ohne")
+    assert len(lib["items"]) == 1
+
+
+def test_addon_library_empty_without_target_currency() -> None:
+    """Ohne Währung am Ziel gibt es nichts zu übernehmen — kein geratenes EUR."""
+    db = _verteil_db()
+    svc = AddonsService(service_client=db)
+    lib = svc.addon_library(_ctx(), "prop-ohne")
+    assert lib["currency"] is None and lib["items"] == []
+
+
+def test_addon_library_foreign_property_rejected() -> None:
+    db = _verteil_db()
+    svc = AddonsService(service_client=db)
+    with pytest.raises(AddonError) as exc:
+        svc.addon_library(_ctx(), "prop-fremd")
+    assert exc.value.status_code == 404

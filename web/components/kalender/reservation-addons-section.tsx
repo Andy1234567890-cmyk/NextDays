@@ -343,14 +343,28 @@ export function ReservationAddonsSection({
             )}
           </div>
           {link && (
-            <a
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="truncate text-xs text-accent hover:underline"
-            >
-              {link.url}
-            </a>
+            <>
+              {/* Was der Betrieb wirklich bekommt. Vorher stand der
+                  Plattform-Anteil nur in der Server-Antwort — Entgelte müssen
+                  aber VOR der Nutzung klar sein (P2B-Verordnung). */}
+              <p className="text-xs text-muted-foreground">
+                {t("reservationAddonsSection.linkAufteilung", {
+                  brutto: money(link.amount_cents / 100),
+                  anteil: money(link.application_fee_cents / 100),
+                  prozent: (link.fee_bps / 100).toLocaleString(locale, {
+                    maximumFractionDigits: 2,
+                  }),
+                })}
+              </p>
+              <a
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate text-xs text-accent hover:underline"
+              >
+                {link.url}
+              </a>
+            </>
           )}
         </div>
       )}

@@ -93,6 +93,46 @@ class AddonListResponse(BaseModel):
     currency: str | None = None
 
 
+class AddonLibraryEntry(BaseModel):
+    """Eine Zusatzleistung eines ANDEREN Objekts, übernehmbar auf dieses.
+
+    `property_title` sagt, woher sie stammt — bei zwei gleich benannten
+    „Reinigung" ist das der einzige Unterschied, den der Betrieb sieht.
+    """
+
+    addon: AddonResponse
+    property_id: str
+    property_title: str | None = None
+
+
+class AddonLibraryResponse(BaseModel):
+    """Bibliothek der übernehmbaren Zusatzleistungen.
+
+    `currency` ist die Währung des ZIELOBJEKTS (aus seinem Rate-Plan). Ist sie
+    `None`, ist die Liste leer und die Oberfläche sagt warum — kein geratenes
+    EUR (Wurzel 4).
+    """
+
+    currency: str | None = None
+    items: list[AddonLibraryEntry]
+
+
+class AddonApplyRequest(BaseModel):
+    """Zielobjekte, auf die dieselbe Zusatzleistung übertragen wird.
+
+    Die Obergrenze ist eine harte Schranke gegen unbegrenzte Listen (Wurzel 8);
+    kein Betrieb pflegt in einem Zug mehr Objekte als das.
+    """
+
+    property_ids: list[str] = Field(default_factory=list, max_length=500)
+
+
+class AddonApplyResponse(BaseModel):
+    """Objekte, auf die die Zusatzleistung wirklich geschrieben wurde."""
+
+    applied_to: list[str]
+
+
 class ReservationAddonResponse(BaseModel):
     """Ein gekauftes Upsell (Snapshot + Status)."""
 

@@ -28,6 +28,7 @@ from .schemas import (
     ReservationAddonResponse,
     SliceHealth,
 )
+from .verteilung import VerteilungMixin
 
 log = get_logger("nextdays.addons")
 
@@ -50,7 +51,14 @@ class AddonError(Exception):
         self.status_code = status_code
 
 
-class AddonsService:
+class AddonsService(VerteilungMixin):
+    """Katalog, Verkauf und Verteilung der Zusatzleistungen.
+
+    Die Verteilung auf mehrere Objekte (Bibliothek + „Zu anderen Objekten
+    hinzufügen") liegt als Mixin in `verteilung.py` — dieselbe Trennung, die
+    `PropertiesService` für Gebühren und Steuern fährt.
+    """
+
     slice_name = "addons"
 
     IMAGE_BUCKET = "property-images"

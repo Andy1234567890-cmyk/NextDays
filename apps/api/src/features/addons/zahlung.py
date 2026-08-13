@@ -63,6 +63,28 @@ def _cent(betrag: Any) -> int:  # noqa: ANN401 — numeric aus der DB
     return int(round(float(betrag or 0) * 100))
 
 
+def _netto_cent(position: dict) -> int:
+    """Nettobetrag einer Position in Cent — Bemessungsgrundlage der Provision.
+
+    `total` ist der BRUTTObetrag inkl. der Steuer des Betriebs. Die Provision
+    wird bewusst auf den NETTObetrag gerechnet: Auf die Umsatzsteuer eines
+    fremden Betriebs Provision zu nehmen, benachteiligt Betriebe in
+    Hochsteuerländern (DK 25 %) gegenüber solchen mit niedrigerem Satz (LU 17 %)
+    — bei identischem Nettopreis und identischer Leistung von uns.
+
+    Ohne ausgewiesenen Steuersatz IST der Bruttobetrag der Nettobetrag; dann
+    wird nichts herausgerechnet (kein geratener Standardsatz, Wurzel 4).
+    """
+    brutto = _cent(position.get("total"))
+    satz = position.get("tax_rate")
+    if satz in (None, ""):
+        return brutto
+    teiler = 1 + float(satz) / 100
+    if teiler <= 0:
+        return brutto
+    return int(round(brutto / teiler))
+
+
 def _antwort(row: dict, *, positionen: int) -> ZahlungslinkResponse:
     return ZahlungslinkResponse(
         id=str(row["id"]),
@@ -159,7 +181,7 @@ class AddonZahlungService:
     def _offene_positionen(self, tenant_id: str, reservation_id: str) -> list[dict]:
         return (
             self._db.table("reservation_addons")
-            .select("id, name, total, status")
+            .select("id, name, total, tax_rate, status")
             .eq("tenant_id", tenant_id)
             .eq("reservation_id", reservation_id)
             .eq("status", AddonStatus.pending.value)
@@ -263,7 +285,9 @@ class AddonZahlungService:
                 "Der Buchung fehlt eine Währung — Zahlungslink nicht möglich.",
                 status_code=422,
             )
+        # Der GAST zahlt brutto; die Provision bemisst sich am Netto (s. o.).
         betrag = sum(_cent(p.get("total")) for p in offen)
+        netto = sum(_netto_cent(p) for p in offen)
         if betrag <= 0:
             raise ZahlungslinkFehler(
                 "Die offenen Zusatzleistungen ergeben keinen zahlbaren Betrag.",
@@ -282,7 +306,7 @@ class AddonZahlungService:
 
         acct = self._konto(tenant_id)
         bps = self._fee_bps(tenant_id)
-        fee = betrag * bps // 10000
+        fee = netto * bps // 10000
         titel = _titel(offen)
         try:
             link = sc.create_addon_payment_link(
