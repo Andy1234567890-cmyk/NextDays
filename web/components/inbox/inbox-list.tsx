@@ -22,6 +22,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 
 import { AiSettingsTab } from "@/components/inbox/ai-settings-tab";
@@ -92,7 +93,14 @@ export function InboxList({
   const [query, setQuery] = useState("");
   // Lokale Thread-Liste, damit Archivieren/Ungelesen sofort sichtbar werden.
   const [rows, setRows] = useState<InboxThread[]>(threads);
-  const [active, setActive] = useState<string | null>(threads[0]?.id ?? null);
+  // Deep-Link aus dem Buchungsdetail: `/posteingang?thread=<id>` öffnet genau
+  // diesen Verlauf. Ohne den Parameter bleibt es beim ersten Thread — der
+  // Posteingang soll nie leer starten.
+  const searchParams = useSearchParams();
+  const wunschThread = searchParams.get("thread");
+  const [active, setActive] = useState<string | null>(
+    wunschThread ?? threads[0]?.id ?? null,
+  );
   const [tab, setTab] = useState<TabKey>("tabInbox");
   // Signal an das Panel: Notizfeld öffnen (Zähler erzwingt erneutes Auslösen).
   const [openNoteSignal, setOpenNoteSignal] = useState(0);

@@ -23,12 +23,17 @@ BUCHUNG = "484c66f1-8bba-478e-8678-8a415f1f0cba"
 
 
 def payload(**patch: Any) -> dict[str, Any]:
-    """Eine echte Gastnachricht, wie Channex sie liefert."""
+    """Payload-Form einer Gastnachricht, wie Channex sie liefert.
+
+    Namen und Text sind erfunden: echte Gastdaten gehören nicht in den
+    Quellcode, auch nicht als Testfixture (sie landen sonst dauerhaft in der
+    Git-History). Geprüft wird die FORM, dafür genügt ein Platzhalter.
+    """
     roh = {
         "id": "d17f69e4-bb40-44bb-a00c-cf1f78201e93",
-        "meta": {"name": "Mathias", "role": "GUEST"},
+        "meta": {"name": "Testgast", "role": "GUEST"},
         "sender": "guest",
-        "message": "Guten Morgen liebe Jeanine,",
+        "message": "Guten Morgen, wann können wir einchecken?",
         "booking_id": BUCHUNG,
         "inserted_at": "2026-08-07T07:53:44.000000",
         "ota_message_id": "32120138668",
@@ -134,7 +139,7 @@ def test_gastnachricht_wird_gespeichert_ohne_zutun() -> None:
     assert zeile["tenant_id"] == TENANT
     assert zeile["thread_ref"] == THREAD
     assert zeile["sender"] == "guest"
-    assert zeile["body"] == "Guten Morgen liebe Jeanine,"
+    assert zeile["body"] == "Guten Morgen, wann können wir einchecken?"
 
 
 def test_zeitpunkt_kommt_vom_portal_nicht_von_unserer_uhr() -> None:

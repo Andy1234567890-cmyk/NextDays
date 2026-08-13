@@ -18,11 +18,12 @@ dieselbe Funktion `nachricht_spiegeln`. Ein zweiter, eigener Parser je Weg wäre
 genau die Sorte Doppelpflege, aus der die Zeitstempel-Bugs von 0291/0292
 entstanden sind: Der Feldname gehört EINMAL notiert, nicht an jeder Aufrufstelle.
 
-Gemessene Payload-Form (aus `channex_webhook_event`, Produktivkonto):
+Gemessene Payload-Form (aus `channex_webhook_event`; Werte hier erfunden — nie
+echte Gastdaten in den Quellcode, auch nicht als Beispiel):
     {"id": "d17f69e4-…",                      # Nachrichten-ID des Aggregators
-     "meta": {"name": "Mathias", "role": "GUEST"},
+     "meta": {"name": "<Vorname>", "role": "GUEST"},
      "sender": "guest",                       # 'guest' | 'property'
-     "message": "Guten Morgen liebe Jeanine, …",
+     "message": "<Nachrichtentext>",
      "booking_id": "484c66f1-…",              # NULL bei Support/Voranfrage
      "inserted_at": "2026-08-07T07:53:44.000000",
      "ota_message_id": "32120138668",         # ID BEIM PORTAL
@@ -30,8 +31,8 @@ Gemessene Payload-Form (aus `channex_webhook_event`, Produktivkonto):
      "message_thread_id": "d3082659-…"}
 
 ZUM ZEITSTEMPEL (Wurzel 5b): `inserted_at` ist hier ausnahmsweise die richtige
-Quelle — und das ist belegt, nicht angenommen. Die Nachricht oben trägt
-07:53:44 UTC; in der Airbnb-Oberfläche steht sie als „9:53 AM"
+Quelle — und das ist belegt, nicht angenommen. Die gemessene Nachricht trug
+07:53:44 UTC; in der Airbnb-Oberfläche stand sie als „9:53 AM"
 (Europe/Copenhagen, UTC+2). Der Wert beschreibt also den Zeitpunkt BEIM PORTAL,
 nicht unseren Eingang — anders als der gleichnamige Wert am Buchungs-Objekt,
 der Channex' eigenen Eingang meint. Es gibt kein zweites Zeitfeld im Payload;
