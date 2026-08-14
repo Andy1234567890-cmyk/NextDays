@@ -697,6 +697,7 @@ class Worker:
         self._last_live_feed_tick = 0.0
         self._last_deploy_tick = 0.0
         self._deploy_aktiv = False
+        self._deploy_task: asyncio.Task[None] | None = None
         self._last_balance_tick = 0.0
         self._last_payout_tick = 0.0
         self._last_commission_tick = 0.0
@@ -1415,33 +1416,32 @@ class Worker:
         self._enqueue_full_sync_nightly()
 
     async def _deploy_tick(self, loop_time: float) -> None:
-        """Coolify-Zustand nach public.deploy_spiegel schreiben.
+        """Coolify-Zustand nach public.deploy_spiegel schreiben (Ersatz fuer
+        Browser-Polling; Wechsel landen in `public.deploy_ereignis`, 0378).
 
-        Das ist der Ersatz fuer Polling im Browser: EIN Prozess fragt Coolify,
-        das Backoffice bekommt die Aenderung per Realtime-Push. Solange etwas
-        baut, wird eng nachgesehen — sonst ruhig.
-
-        Derselbe Aufruf schreibt bei jedem ZUSTANDSWECHSEL zusaetzlich eine
-        Zeile nach `public.deploy_ereignis` (0378) — den Verlauf, den der
-        fortgeschriebene Spiegel nicht halten kann. Bei einem Fehlschlag zieht
-        er dafuer das Build-Log und legt die extrahierte Ursache mit ab.
+        ENTKOPPELT (14.08.2026): Der Spiegel-Lauf macht Dutzende sequenzielle
+        Coolify-/GitHub-Aufrufe und darf NIE inline im Haupt-Loop laufen —
+        inline hielt er die Job-Aufnahme minutenlang auf (live: alle vier
+        Kern-Feeds >20 Min still). Ueberlappungs-Guard statt Warteschlange.
         """
-        takt = (
-            DEPLOY_TICK_AKTIV_SECONDS if self._deploy_aktiv
-            else DEPLOY_TICK_RUHE_SECONDS
-        )
+        aktiv = self._deploy_aktiv
+        takt = DEPLOY_TICK_AKTIV_SECONDS if aktiv else DEPLOY_TICK_RUHE_SECONDS
         if loop_time - self._last_deploy_tick < takt:
             return
+        if self._deploy_task is not None and not self._deploy_task.done():
+            return
         self._last_deploy_tick = loop_time
+        self._deploy_task = asyncio.create_task(self._deploy_spiegel_lauf())
+
+    async def _deploy_spiegel_lauf(self) -> None:
         try:
             from .features.platform_admin.deploy_spiegel import spiegel_aktualisieren
-
             self._deploy_aktiv = await asyncio.to_thread(
                 spiegel_aktualisieren, self._db
             )
         except Exception as exc:  # noqa: BLE001
-            # Best-effort: ein nicht erreichbares Coolify darf den Worker nicht
-            # kippen. Der Spiegel bleibt dann stehen, `geprueft_at` verraet es.
+            # Best-effort (Wurzel 5): ein totes Coolify darf den Worker nicht
+            # kippen; der Spiegel bleibt stehen, `geprueft_at` verraet es.
             log.warning("deploy_spiegel_fehler", error=str(exc))
 
     async def run(self) -> None:

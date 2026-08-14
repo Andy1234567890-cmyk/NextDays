@@ -22,7 +22,7 @@ das ist eine Aussage, die wir ohne Abruf nicht treffen dürfen.
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 
 import httpx
 
@@ -34,6 +34,34 @@ from .schemas import DeployRueckstand, OffenerCommit
 log = get_logger(__name__)
 
 _TIMEOUT = httpx.Timeout(20.0)
+
+# Antwortet GitHub mit 401/403, ist der ZUGANG kaputt (Token fehlt/ohne Rechte/
+# ratelimitiert) — kein Einzelfall, den der nächste Aufruf heilt. Ohne Pause
+# bestürmte der Deploy-Tick GitHub alle paar Sekunden mit denselben 403s
+# (live 14.08.2026: >100 Fehlversuche je Spiegel-Lauf, der Lauf brauchte
+# Minuten). Nach einem Auth-Fehler ruht GitHub deshalb prozessweit, bis die
+# Sperre abläuft; Coolify-Daten laufen unverändert weiter.
+_AUTH_STATUS = (401, 403)
+_AUTH_SPERRE = timedelta(minutes=15)
+_auth_pause: dict[str, datetime | None] = {"bis": None}
+
+
+def _auth_pause_aktiv() -> bool:
+    bis = _auth_pause["bis"]
+    return bis is not None and datetime.now(UTC) < bis
+
+
+def _auth_pause_setzen() -> None:
+    bis = datetime.now(UTC) + _AUTH_SPERRE
+    _auth_pause["bis"] = bis
+    log.warning("github_auth_pausiert", bis=bis.isoformat())
+
+
+def _ist_auth_fehler(exc: Exception) -> bool:
+    return (
+        isinstance(exc, httpx.HTTPStatusError)
+        and exc.response.status_code in _AUTH_STATUS
+    )
 
 # Wurzel 8: harte Obergrenze. Mehr als 100 Commits Rückstand sind ohnehin keine
 # Liste mehr, die jemand durchliest — die ZAHL bleibt trotzdem korrekt, weil
@@ -108,7 +136,7 @@ def main_sha() -> str | None:
     """Kopf-Commit von `main`. None, wenn nicht abrufbar."""
     kopf = _kopf()
     repo = _repo_pfad()
-    if kopf is None or not repo:
+    if kopf is None or not repo or _auth_pause_aktiv():
         return None
     try:
         with httpx.Client(timeout=_TIMEOUT) as client:
@@ -118,6 +146,8 @@ def main_sha() -> str | None:
             antwort.raise_for_status()
             wert = antwort.json().get("sha")
     except (httpx.HTTPError, ValueError) as exc:
+        if _ist_auth_fehler(exc):
+            _auth_pause_setzen()
         log.warning("github_main_sha_fehlgeschlagen", error=str(exc)[:200])
         return None
     return wert if isinstance(wert, str) else None
@@ -176,6 +206,8 @@ def _compare(repo: str, kopf: dict[str, str], basis: str, ziel: str) -> _Verglei
                     _dateien(client, repo, sha, kopf),
                 ))
     except (httpx.HTTPError, ValueError) as exc:
+        if _ist_auth_fehler(exc):
+            _auth_pause_setzen()
         log.warning("github_compare_fehlgeschlagen", repo=repo, error=str(exc)[:200])
         raise
     # Neueste zuerst — GitHub liefert chronologisch aufsteigend.
@@ -186,7 +218,14 @@ def _compare(repo: str, kopf: dict[str, str], basis: str, ziel: str) -> _Verglei
 def _dateien(
     client: httpx.Client, repo: str, sha: str, kopf: dict[str, str]
 ) -> list[str]:
-    """Geänderte Dateipfade eines Commits. Leer, wenn nicht abrufbar."""
+    """Geänderte Dateipfade eines Commits. Leer, wenn nicht abrufbar.
+
+    AUSSER bei 401/403: Ein Auth-Fehler ist systemisch — er trifft auch die
+    bis zu 99 folgenden Commit-Abrufe derselben Schleife. Weiterzumachen
+    hieße, GitHub hundertfach mit demselben kaputten Token anzufragen (live
+    14.08.2026, Minuten je Spiegel-Lauf). Er wird deshalb GEWORFEN und beendet
+    über `_compare` den ganzen Vergleich (`Sammler` markiert sich als tot).
+    """
     try:
         antwort = client.get(
             f"https://api.github.com/repos/{repo}/commits/{sha}", headers=kopf
@@ -194,6 +233,9 @@ def _dateien(
         antwort.raise_for_status()
         daten = antwort.json()
     except (httpx.HTTPError, ValueError) as exc:
+        if _ist_auth_fehler(exc):
+            _auth_pause_setzen()
+            raise
         log.warning(
             "github_commit_dateien_fehlgeschlagen", sha=sha[:8], error=str(exc)[:200]
         )
@@ -233,6 +275,8 @@ class Sammler:
             return "Kein ausgerollter Commit bekannt."
         if self._tot:
             return "GitHub nicht erreichbar."
+        if _auth_pause_aktiv():
+            return "GitHub-Zugang abgelehnt (Token prüfen) — pausiert."
         return None
 
     def fuer(self, ausgerollt: str | None, watch_paths: object) -> DeployRueckstand:
