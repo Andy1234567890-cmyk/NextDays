@@ -11,11 +11,13 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import {
   addReservationAddon,
   availableReservationAddons,
   cancelReservationAddon,
+  changeReservationAddonQty,
   createZahlungslink,
   deleteZahlungslink,
   getZahlungslink,
@@ -58,7 +60,17 @@ export function ReservationAddonsSection({
   // Objekt-Währung. Kein €-Fallback (Mehrwährung über 27 EU-Länder).
   const [cur, setCur] = useState<string | null>(currency);
   const [pick, setPick] = useState("");
+  // Menge als TEXT: ein leeres Feld beim Tippen muss erlaubt sein, ohne dass
+  // sofort eine 0 oder NaN im State steht.
+  const [menge, setMenge] = useState("1");
+  // Gästezahl der Buchung — die Vorbelegung für „pro Gast"-Leistungen. Kommt aus
+  // der Liste der gekauften Zusatzleistungen mit (`guests` in der Antwort).
+  const [gaeste, setGaeste] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
+  // Menge einer bereits gebuchten Position ändern (nur solange offen).
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editMenge, setEditMenge] = useState("1");
+  const [editBusy, setEditBusy] = useState(false);
   // Storno wird inline bestätigt (id der Zeile, die gerade nachfragt) — dasselbe
   // Muster wie der Buchungs-Storno im Slider, kein blindes Ein-Klick-Entfernen.
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -82,6 +94,8 @@ export function ReservationAddonsSection({
     if (bought.ok) {
       setPurchased(bought.data.items);
       if (bought.data.currency) setCur(bought.data.currency);
+      // Vorbelegung des Mengenfeldes bei „pro Gast" (siehe `waehlen`).
+      if (bought.data.guests != null) setGaeste(bought.data.guests);
     }
     if (avail.ok) {
       setCatalog(avail.data.items);
@@ -102,15 +116,55 @@ export function ReservationAddonsSection({
     onChange: () => void reload(),
   });
 
+  /** Auswahl gewechselt → Menge auf die Vorbelegung der Basis setzen.
+   *
+   *  „pro Gast" schlägt die Gästezahl der Buchung vor (der Normalfall: Wäsche
+   *  für alle), jede andere Basis 1. Der Vorschlag ist überschreibbar — genau
+   *  dafür gibt es das Feld: eine Buchung über 4 Personen bestellt oft nur 2
+   *  Wäschepakete. */
+  function waehlen(id: string) {
+    setPick(id);
+    const a = catalog.find((x) => x.id === id);
+    setMenge(
+      a?.basis === "per_guest" && gaeste && gaeste > 0 ? String(gaeste) : "1",
+    );
+  }
+
   async function add() {
     if (!pick) return;
+    const anzahl = Number(menge);
+    if (!Number.isInteger(anzahl) || anzahl < 1 || anzahl > 99) {
+      toast.error(t("reservationAddonsSection.qtyInvalid"));
+      return;
+    }
     setBusy(true);
-    const res = await addReservationAddon(reservationId, pick);
+    const res = await addReservationAddon(reservationId, pick, anzahl);
     setBusy(false);
     if (res.ok) {
       setPurchased(res.data.items);
       setPick("");
+      setMenge("1");
       toast.success(t("reservationAddonsSection.addSuccess"));
+      onChanged?.();
+    } else {
+      toast.error(res.error);
+    }
+  }
+
+  async function mengeSpeichern(id: string) {
+    const anzahl = Number(editMenge);
+    if (!Number.isInteger(anzahl) || anzahl < 1 || anzahl > 99) {
+      toast.error(t("reservationAddonsSection.qtyInvalid"));
+      return;
+    }
+    setEditBusy(true);
+    const res = await changeReservationAddonQty(id, anzahl);
+    setEditBusy(false);
+    if (res.ok) {
+      setEditId(null);
+      await reload();
+      toast.success(t("reservationAddonsSection.qtySaved"));
+      // Die Menge ändert die fällige Summe der Buchung → Detail neu rechnen.
       onChanged?.();
     } else {
       toast.error(res.error);
@@ -228,6 +282,23 @@ export function ReservationAddonsSection({
                   >
                     {money(p.total)}
                   </span>
+                  {/* Menge korrigieren, solange die Position offen ist. Ohne das
+                      ginge eine falsche Stückzahl nur über Storno + Neuanlage. */}
+                  {p.status === "pending" && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditId((c) => (c === p.id ? null : p.id));
+                        setEditMenge(String(p.qty));
+                        setConfirmId(null);
+                      }}
+                      aria-label={t("reservationAddonsSection.qtyEditAction")}
+                      title={t("reservationAddonsSection.qtyEditAction")}
+                      className="text-muted-foreground transition-colors hover:text-accent"
+                    >
+                      <Icon icon="ph:pencil-simple" className="size-4" />
+                    </button>
+                  )}
                   {p.status === "pending" && (
                     <button
                       type="button"
@@ -256,6 +327,44 @@ export function ReservationAddonsSection({
                   )}
                 </span>
               </div>
+              {editId === p.id && (
+                <div className="flex flex-wrap items-end justify-between gap-2 rounded-(--radius) border p-2">
+                  <label className="flex w-28 flex-col gap-1">
+                    <span className="text-xs text-muted-foreground">
+                      {t("reservationAddonsSection.qtyLabel")}
+                    </span>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={99}
+                      step={1}
+                      value={editMenge}
+                      onChange={(e) => setEditMenge(e.target.value)}
+                    />
+                  </label>
+                  <span className="flex shrink-0 gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditId(null)}
+                      disabled={editBusy}
+                    >
+                      {t("reservationAddonsSection.cancelAbort")}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => void mengeSpeichern(p.id)}
+                      disabled={editBusy}
+                    >
+                      {editBusy
+                        ? t("reservationAddonsSection.qtySaving")
+                        : t("reservationAddonsSection.qtySave")}
+                    </Button>
+                  </span>
+                </div>
+              )}
               {confirmId === p.id && (
                 <div className="flex flex-wrap items-center justify-between gap-2 rounded-(--radius) border border-destructive/30 p-2">
                   <p className="text-xs text-destructive">
@@ -369,22 +478,43 @@ export function ReservationAddonsSection({
         </div>
       )}
 
-      {/* Schnell-Hinzufügen aus dem Objekt-Katalog (jeder Kanal, auch OTA). */}
+      {/* Schnell-Hinzufügen aus dem Objekt-Katalog (jeder Kanal, auch OTA).
+          Die Menge steht daneben, weil sie bei „pro Gast" die Personenzahl IST:
+          eine Buchung über 4 Personen bestellt oft nur 2 Wäschepakete. Sie wird
+          mit der Gästezahl vorbelegt, sobald eine Leistung gewählt ist. */}
       {catalog.length > 0 ? (
-        <div className="flex items-center gap-2">
-          <NativeSelect
-            value={pick}
-            onChange={(e) => setPick(e.target.value)}
-            className="flex-1"
-          >
-            <option value="">{t("reservationAddonsSection.pickPlaceholder")}</option>
-            {catalog.map((a) => (
-              <option key={a.id} value={a.id}>
-                {localized(a.name, t("reservationAddonsSection.fallbackAddonName"))} ·{" "}
-                {money(a.price)}
-              </option>
-            ))}
-          </NativeSelect>
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="flex min-w-40 flex-1 flex-col gap-1">
+            <span className="text-xs text-muted-foreground">
+              {t("reservationAddonsSection.pickLabel")}
+            </span>
+            <NativeSelect value={pick} onChange={(e) => waehlen(e.target.value)}>
+              <option value="">{t("reservationAddonsSection.pickPlaceholder")}</option>
+              {catalog.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {localized(a.name, t("reservationAddonsSection.fallbackAddonName"))} ·{" "}
+                  {money(a.price)}
+                  {a.basis === "per_guest"
+                    ? ` ${t("reservationAddonsSection.perGuestSuffix")}`
+                    : ""}
+                </option>
+              ))}
+            </NativeSelect>
+          </label>
+          <label className="flex w-24 flex-col gap-1">
+            <span className="text-xs text-muted-foreground">
+              {t("reservationAddonsSection.qtyLabel")}
+            </span>
+            <Input
+              type="number"
+              min={1}
+              max={99}
+              step={1}
+              value={menge}
+              disabled={!pick}
+              onChange={(e) => setMenge(e.target.value)}
+            />
+          </label>
           <Button type="button" size="sm" onClick={() => void add()} disabled={!pick || busy}>
             <Icon icon="ph:plus" className="size-4" />
             {busy ? t("reservationAddonsSection.addBusy") : t("reservationAddonsSection.addAction")}

@@ -24,6 +24,7 @@ from .schemas import (
     AddonUpdate,
     ReservationAddonAdd,
     ReservationAddonListResponse,
+    ReservationAddonQty,
     ReservationAddonResponse,
     SliceHealth,
     ZahlungslinkResponse,
@@ -212,6 +213,27 @@ def mark_addon_paid(
     """Manuell als bezahlt markieren (solange kein Payment-Provider live ist)."""
     try:
         return service.mark_paid(ctx, res_addon_id)
+    except AddonError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch(
+    "/reservation-addons/{res_addon_id}/qty",
+    response_model=ReservationAddonResponse,
+)
+def change_addon_qty(
+    res_addon_id: str,
+    payload: ReservationAddonQty,
+    service: AddonsServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> ReservationAddonResponse:
+    """Menge einer offenen Zusatzleistung ändern; der Betrag wird neu gerechnet.
+
+    Der Fall, für den es das gibt: eine Buchung über 4 Personen bestellt nur 2
+    Wäschepakete. 409, wenn die Position bereits bezahlt, storniert oder auf
+    einer festgeschriebenen Rechnung steht."""
+    try:
+        return service.change_qty(ctx, res_addon_id, payload.qty)
     except AddonError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

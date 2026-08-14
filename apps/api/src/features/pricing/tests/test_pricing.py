@@ -500,7 +500,11 @@ def test_quote_short_stay_surcharge() -> None:
 
 
 def test_quote_includes_addon_per_guest() -> None:
-    # Frühstück 12/Gast, 2 Gäste, 2 Nächte → 24 als eigene Position.
+    # Frühstück 12/Person. Die MENGE ist die Personenzahl (seit 14.08.2026):
+    # `qty=2` heißt „für 2 Personen" → 24. Vorher rechnete die Basis
+    # `preis × guests × qty` und die Bestellmenge ließ sich nicht unter die
+    # Gästezahl der Buchung drücken — genau der Fall, den ein Betrieb laufend
+    # hat (4 Gäste, aber nur 2 Wäschepakete bestellt).
     addons = [
         {
             "id": "a-1",
@@ -517,11 +521,44 @@ def test_quote_includes_addon_per_guest() -> None:
             check_in=date(2026, 7, 1),
             check_out=date(2026, 7, 3),
             guests=2,
-            addons=[{"addon_id": "a-1", "qty": 1}],
+            addons=[{"addon_id": "a-1", "qty": 2}],
         )
     )
-    assert any(line.label == "Frühstück" and line.amount == 24.0 for line in q.lines)
+    # Das Label führt die Menge mit („Frühstück ×2") — sie ist jetzt die
+    # Personenzahl und gehört deshalb sichtbar an die Position.
+    assert any(
+        line.label.startswith("Frühstück") and line.amount == 24.0
+        for line in q.lines
+    )
     assert q.total == 224.0  # 200 Übernachtung + 24 Frühstück
+
+
+def test_quote_addon_per_guest_unter_der_gaestezahl() -> None:
+    """4 Gäste, aber nur 2 Frühstücke bestellt — der Auslöser der Änderung."""
+    addons = [
+        {
+            "id": "a-1",
+            "name": {"de": "Frühstück"},
+            "price": 12,
+            "basis": "per_guest",
+            "tax_rate": None,
+        }
+    ]
+    r = _resolver(base=100.0, addons=addons)
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 3),
+            guests=4,
+            addons=[{"addon_id": "a-1", "qty": 2}],
+        )
+    )
+    # 12 × 2 = 24 — nicht 12 × 4 Gäste × 2 = 96 (alte Regel).
+    assert any(
+        line.label.startswith("Frühstück") and line.amount == 24.0
+        for line in q.lines
+    )
 
 
 def test_quote_addon_with_tax() -> None:

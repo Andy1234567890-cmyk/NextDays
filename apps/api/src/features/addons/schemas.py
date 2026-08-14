@@ -154,13 +154,34 @@ class ReservationAddonListResponse(BaseModel):
     items: list[ReservationAddonResponse]
     total: float
     currency: str | None = None
+    # Gästezahl der Buchung — die Vorbelegung des Mengenfeldes bei „pro
+    # Gast"-Leistungen. Sie steht in der Reservierung, nicht am Add-on; ohne sie
+    # müsste die Oberfläche sie erraten oder eine zweite Abfrage stellen.
+    guests: int | None = None
 
 
 class ReservationAddonAdd(BaseModel):
-    """Schnell-Hinzufügen eines Katalog-Add-ons zu einer bestehenden Buchung."""
+    """Schnell-Hinzufügen eines Katalog-Add-ons zu einer bestehenden Buchung.
+
+    `qty = 0` heißt „nicht angegeben": der Server setzt dann die Vorbelegung der
+    Abrechnungsbasis ein (bei `per_guest` die Gästezahl der Buchung, sonst 1,
+    `pricing.vorbelegte_menge`). Der Default war früher 1 — damit hätte ein
+    Client, der die Menge gar nicht kennt, jede Wäsche-Buchung stillschweigend
+    auf eine Person gesetzt.
+    """
 
     addon_id: str
-    qty: int = Field(default=1, ge=1)
+    qty: int = Field(default=0, ge=0, le=99)
+
+
+class ReservationAddonQty(BaseModel):
+    """Menge einer bereits gebuchten Zusatzleistung ändern.
+
+    Die Obergrenze spiegelt `service._MAX_ADDON_QTY` (Wurzel 8) — ein Tippfehler
+    darf keine vierstellige Rechnung erzeugen.
+    """
+
+    qty: int = Field(ge=1, le=99)
 
 
 class ZahlungslinkResponse(BaseModel):

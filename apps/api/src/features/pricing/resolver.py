@@ -1122,7 +1122,6 @@ class PricingResolver:
                         else None
                     ),
                     nights=n,
-                    guests=req.guests,
                     qty=sel.qty,
                 )
                 if gross <= 0:

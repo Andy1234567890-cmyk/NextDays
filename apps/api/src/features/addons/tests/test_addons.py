@@ -8,31 +8,50 @@ from __future__ import annotations
 
 import pytest
 
-from src.features.addons.pricing import addon_net, addon_total
+from src.features.addons.pricing import addon_net, addon_total, vorbelegte_menge
 from src.features.addons.service import purchase_addons
 
 # --- Preis-Mathematik (reine Funktionen) -------------------------------------
 
 def test_addon_net_per_basis() -> None:
-    assert addon_net(50, "per_stay", nights=3, guests=2, qty=1) == 50
-    assert addon_net(20, "per_night", nights=3, guests=2, qty=1) == 60
-    assert addon_net(10, "per_guest", nights=3, guests=2, qty=1) == 20
-    assert addon_net(15, "per_unit", nights=3, guests=2, qty=4) == 60
+    assert addon_net(50, "per_stay", nights=3, qty=1) == 50
+    assert addon_net(20, "per_night", nights=3, qty=1) == 60
+    assert addon_net(15, "per_unit", nights=3, qty=4) == 60
+
+
+def test_per_guest_menge_ist_die_personenzahl() -> None:
+    """`per_guest` rechnet Preis × MENGE, nicht × Gästezahl × Menge.
+
+    Der reale Fall: eine Buchung über 4 Personen bestellt nur 2 Wäschepakete.
+    Mit der alten Regel (× guests × qty) war das unmöglich — qty=2 ergab 8
+    Pakete, und die Gästezahl ließ sich nicht unterschreiten.
+    """
+    assert addon_net(150, "per_guest", nights=2, qty=2) == 300
+    assert addon_net(150, "per_guest", nights=2, qty=4) == 600
+
+
+def test_vorbelegte_menge_folgt_der_basis() -> None:
+    assert vorbelegte_menge("per_guest", guests=4) == 4
+    assert vorbelegte_menge("per_stay", guests=4) == 1
+    assert vorbelegte_menge("per_night", guests=4) == 1
+    assert vorbelegte_menge("per_unit", guests=4) == 1
+    # Ohne belastbare Gästezahl mindestens 1 — nie 0 (keine Bestellung über nichts).
+    assert vorbelegte_menge("per_guest", guests=0) == 1
 
 
 def test_addon_net_qty_multiplies_per_stay() -> None:
     # qty als Mehrfachkauf auch bei per_stay/per_night/per_guest.
-    assert addon_net(50, "per_stay", nights=2, guests=2, qty=3) == 150
+    assert addon_net(50, "per_stay", nights=2, qty=3) == 150
 
 
 def test_addon_total_applies_tax() -> None:
-    net, gross = addon_total(100, "per_stay", 19, nights=2, guests=2, qty=1)
+    net, gross = addon_total(100, "per_stay", 19, nights=2, qty=1)
     assert net == 100.0
     assert gross == 119.0
 
 
 def test_addon_total_no_tax() -> None:
-    net, gross = addon_total(40, "per_night", None, nights=2, guests=1, qty=1)
+    net, gross = addon_total(40, "per_night", None, nights=2, qty=1)
     assert net == gross == 80.0
 
 
@@ -206,16 +225,45 @@ def test_purchase_books_addon_with_server_price(monkeypatch: pytest.MonkeyPatch)
         reservation_id="res-1",
         property_id="prop-1",
         surface="booking_engine",
-        selections=[("addon-1", 1)],
+        # qty=0 heißt „nicht angegeben" → der Server setzt die Vorbelegung der
+        # Basis ein (per_guest = Gästezahl).
+        selections=[("addon-1", 0)],
         nights=2,
         guests=3,
         check_in_iso="2026-07-01",
         is_before_checkin=True,
     )
     assert len(created) == 1
-    # per_guest 12 × 3 Gäste = 36, kein Client-Preis vertraut.
+    # per_guest 12 × Vorbelegung 3 = 36, kein Client-Preis vertraut.
     assert created[0]["total"] == 36.0
+    assert created[0]["qty"] == 3
     assert created[0]["status"] == "pending"
+
+
+def test_purchase_menge_unterschreitet_die_gaestezahl(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Der Auslöser dieser Änderung: 3 Gäste, aber nur 1 Wäschepaket bestellt."""
+    db = _DB({"property_addons": [_catalog_row()], "reservation_addons": [], "tasks": []})
+    monkeypatch.setattr(
+        "src.features.tasks.service.TasksService.generate_for_addon",
+        lambda *a, **k: None,
+    )
+    created = purchase_addons(
+        db,
+        tenant_id="t-1",
+        reservation_id="res-1",
+        property_id="prop-1",
+        surface="booking_engine",
+        selections=[("addon-1", 1)],
+        nights=2,
+        guests=3,
+        check_in_iso="2026-07-01",
+        is_before_checkin=True,
+    )
+    # 12 × 1 = 12 — nicht 12 × 3 Gäste × 1 = 36 (alte Regel).
+    assert created[0]["total"] == 12.0
+    assert created[0]["qty"] == 1
 
 
 def test_purchase_skips_wrong_surface(monkeypatch: pytest.MonkeyPatch) -> None:

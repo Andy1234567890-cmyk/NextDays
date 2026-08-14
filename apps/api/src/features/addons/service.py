@@ -8,7 +8,7 @@ serverseitiger Preisberechnung und Payment-gegatetem Zahlstatus.
 from __future__ import annotations
 
 import secrets
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 from postgrest.exceptions import APIError
 from supabase import Client
@@ -17,7 +17,7 @@ from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import public_storage_url
 
-from .pricing import addon_total
+from .pricing import addon_total, vorbelegte_menge
 from .schemas import (
     AddonCreate,
     AddonListResponse,
@@ -40,6 +40,12 @@ _RES_ADDON_COLS = (
     "id, reservation_id, addon_id, name, price, basis, tax_rate, qty, total, "
     "status, charged_at, created_at"
 )
+
+# Obergrenze der Menge je gebuchter Zusatzleistung (Wurzel 8: kein unbegrenzter
+# Bereich). Großzügig genug für jede reale Bestellung — ein Gruppenhaus mit 30
+# Betten bleibt darunter —, aber ein Tippfehler (1000 statt 10) läuft nicht als
+# vierstellige Rechnung durch.
+_MAX_ADDON_QTY = 99
 
 
 class AddonError(Exception):
@@ -229,9 +235,11 @@ class AddonsService(VerteilungMixin):
         items = [ReservationAddonResponse(**_res_addon_row(r)) for r in rows]
         total = round(sum(i.total for i in items), 2)
         currency = None
+        guests: int | None = None
         res_rows = (
             self._db.table("reservations")
-            .select("property_id, currency")
+            # `num_guests` speist die Mengen-Vorbelegung „pro Gast" im Frontend.
+            .select("property_id, currency, num_guests")
             .eq("tenant_id", tenant_id)
             .eq("id", reservation_id)
             .limit(1)
@@ -242,8 +250,10 @@ class AddonsService(VerteilungMixin):
             currency = res_rows[0].get("currency") or self._property_currency(
                 str(res_rows[0]["property_id"])
             )
+            roh = res_rows[0].get("num_guests")
+            guests = int(roh) if roh is not None else None
         return ReservationAddonListResponse(
-            items=items, total=total, currency=currency
+            items=items, total=total, currency=currency, guests=guests
         )
 
     def _own_reservation(self, tenant_id: str, reservation_id: str) -> dict:
@@ -288,8 +298,6 @@ class AddonsService(VerteilungMixin):
         (Dashboard/Agentur). Betrag serverseitig aus dem Katalog; löst den
         Task-Trigger aus. Verkaufsfläche „checkin" → keine appears_in-Schranke
         für den manuellen Verkauf durch die Hausverwaltung."""
-        from datetime import date  # noqa: PLC0415
-
         tenant_id = self._require_tenant(ctx)
         res = self._own_reservation(tenant_id, reservation_id)
         addon = self._addon_for_property(str(res["property_id"]), addon_id)
@@ -300,13 +308,17 @@ class AddonsService(VerteilungMixin):
         tax_rate = (
             float(addon["tax_rate"]) if addon.get("tax_rate") is not None else None
         )
+        basis = str(addon.get("basis") or "per_stay")
+        # Ohne Mengenangabe die Basis-Vorbelegung nehmen (per_guest = Gästezahl),
+        # sonst die gewünschte Menge. `qty=0` heißt „nicht angegeben" — eine echte
+        # 0 wäre keine Bestellung.
+        menge = int(qty) if int(qty) > 0 else vorbelegte_menge(basis, guests=guests)
         _net, gross = addon_total(
             float(addon.get("price") or 0),
-            str(addon.get("basis") or "per_stay"),
+            basis,
             tax_rate,
             nights=nights,
-            guests=guests,
-            qty=max(int(qty), 1),
+            qty=menge,
         )
         names = addon.get("name") or {}
         try:
@@ -317,9 +329,9 @@ class AddonsService(VerteilungMixin):
                     "addon_id": addon_id,
                     "name": names,
                     "price": float(addon.get("price") or 0),
-                    "basis": str(addon.get("basis") or "per_stay"),
+                    "basis": basis,
                     "tax_rate": tax_rate,
-                    "qty": max(int(qty), 1),
+                    "qty": menge,
                     "total": gross,
                     "status": AddonStatus.pending.value,
                 }
@@ -382,6 +394,100 @@ class AddonsService(VerteilungMixin):
         if not res.data:
             raise AddonError("Gekaufte Zusatzleistung nicht gefunden.", status_code=404)
         log.info("reservation_addon_marked_paid", tenant_id=tenant_id, id=res_addon_id)
+        return ReservationAddonResponse(**_res_addon_row(res.data[0]))
+
+    def change_qty(
+        self, ctx: AuthContext, res_addon_id: str, qty: int
+    ) -> ReservationAddonResponse:
+        """Menge einer OFFENEN Zusatzleistung ändern und neu bepreisen.
+
+        Der Anlass (14.08.2026): Eine Buchung über 4 Personen bestellt nur 2
+        Wäschepakete. Bis dahin ging das nur über Storno + Neuanlage — und weil
+        `per_guest` die Gästezahl multiplizierte, ließ sie sich dabei nicht
+        einmal unterschreiten. Ein falscher Betrag stand also entweder in der
+        Rechnung oder die Position fehlte ganz.
+
+        Neu berechnet wird IMMER serverseitig aus dem gespeicherten Preis und
+        der Basis der Zeile (nicht aus dem Katalog): Ändert der Betrieb später
+        seinen Katalogpreis, darf das eine bestehende Buchung nicht rückwirkend
+        verteuern. Ein Client-Betrag wird nicht angenommen (Wurzel 3).
+
+        Dieselben zwei Schranken wie beim Storno — bezahlt und festgeschrieben
+        abgerechnet ist unveränderlich (GoBD).
+        """
+        tenant_id = self._require_tenant(ctx)
+        menge = int(qty)
+        if menge < 1:
+            raise AddonError("Die Menge muss mindestens 1 sein.", status_code=422)
+        # Wurzel 8: harte Obergrenze. Ohne sie ließe sich über die Menge ein
+        # beliebig großer Betrag erzeugen (Tippfehler wie 1000 statt 10).
+        if menge > _MAX_ADDON_QTY:
+            raise AddonError(
+                f"Höchstens {_MAX_ADDON_QTY} Einheiten je Zusatzleistung.",
+                status_code=422,
+            )
+        rows = (
+            self._db.table("reservation_addons")
+            .select(_RES_ADDON_COLS)
+            .eq("tenant_id", tenant_id)
+            .eq("id", res_addon_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise AddonError("Gekaufte Zusatzleistung nicht gefunden.", status_code=404)
+        row = rows[0]
+        status = str(row.get("status"))
+        if status == AddonStatus.cancelled.value:
+            raise AddonError(
+                "Diese Zusatzleistung ist storniert und kann nicht mehr geändert "
+                "werden.",
+                status_code=409,
+            )
+        if status == AddonStatus.paid.value:
+            raise AddonError(
+                "Diese Zusatzleistung ist bereits als bezahlt markiert. Bitte "
+                "zuerst die Zahlung rückabwickeln bzw. erstatten.",
+                status_code=409,
+            )
+        self._assert_not_invoiced(tenant_id, str(row["reservation_id"]))
+
+        res_row = self._own_reservation(tenant_id, str(row["reservation_id"]))
+        check_in = date.fromisoformat(str(res_row["check_in"]))
+        check_out = date.fromisoformat(str(res_row["check_out"]))
+        nights = max((check_out - check_in).days, 1)
+        tax_rate = (
+            float(row["tax_rate"]) if row.get("tax_rate") is not None else None
+        )
+        _net, gross = addon_total(
+            float(row.get("price") or 0),
+            str(row.get("basis") or "per_stay"),
+            tax_rate,
+            nights=nights,
+            qty=menge,
+        )
+        res = (
+            self._db.table("reservation_addons")
+            .update({"qty": menge, "total": gross})
+            .eq("tenant_id", tenant_id)
+            .eq("id", res_addon_id)
+            # Nur solange offen: zwischen Lesen und Schreiben kann ein anderer
+            # Weg die Zeile bezahlt oder storniert haben (Wurzel 2).
+            .eq("status", AddonStatus.pending.value)
+            .execute()
+        )
+        if not res.data:
+            raise AddonError(
+                "Die Zusatzleistung wurde zwischenzeitlich geändert. Bitte die "
+                "Seite neu laden.",
+                status_code=409,
+            )
+        log.info(
+            "reservation_addon_qty_changed",
+            tenant_id=tenant_id,
+            id=res_addon_id,
+            qty=menge,
+        )
         return ReservationAddonResponse(**_res_addon_row(res.data[0]))
 
     def cancel_reservation_addon(
@@ -555,13 +661,17 @@ def purchase_addons(
         tax_rate = (
             float(addon["tax_rate"]) if addon.get("tax_rate") is not None else None
         )
+        basis = str(addon.get("basis") or "per_stay")
+        # Wie beim manuellen Hinzufügen: keine Menge angegeben → Vorbelegung der
+        # Basis (per_guest = Gästezahl). Der Gast wählt in der Buchungsstrecke
+        # eine Stückzahl; sie gilt jetzt als Personenzahl, nicht als Faktor.
+        menge = int(qty) if int(qty) > 0 else vorbelegte_menge(basis, guests=guests)
         _net, gross = addon_total(
             float(addon.get("price") or 0),
-            str(addon.get("basis") or "per_stay"),
+            basis,
             tax_rate,
             nights=nights,
-            guests=guests,
-            qty=max(int(qty), 1),
+            qty=menge,
         )
         names = addon.get("name") or {}
         labels.append(names.get("de") or next(iter(names.values()), "Zusatzleistung"))
@@ -572,9 +682,9 @@ def purchase_addons(
                 "addon_id": addon_id,
                 "name": names,
                 "price": float(addon.get("price") or 0),
-                "basis": str(addon.get("basis") or "per_stay"),
+                "basis": basis,
                 "tax_rate": tax_rate,
-                "qty": max(int(qty), 1),
+                "qty": menge,
                 "total": gross,
                 "status": AddonStatus.pending.value,
             }

@@ -140,7 +140,13 @@ export async function applyAddonToProperties(
 export async function listReservationAddons(
   reservationId: string,
 ): Promise<
-  Result<{ items: ReservationAddon[]; total: number; currency: string | null }>
+  Result<{
+    items: ReservationAddon[];
+    total: number;
+    currency: string | null;
+    /** Gästezahl der Buchung — Vorbelegung des Mengenfeldes bei „pro Gast". */
+    guests: number | null;
+  }>
 > {
   return call(`/addons/reservations/${reservationId}`);
 }
@@ -153,17 +159,41 @@ export async function availableReservationAddons(
 }
 
 /** Schnelltaste: eine Zusatzleistung zu einer bestehenden Buchung hinzufügen
- *  (auch bei OTA-Buchungen, z. B. Booking — provisionsfrei am OTA vorbei). */
+ *  (auch bei OTA-Buchungen, z. B. Booking — provisionsfrei am OTA vorbei).
+ *
+ *  `qty = 0` heißt „nicht angegeben": der Server setzt die Vorbelegung der
+ *  Abrechnungsbasis ein (bei „pro Gast" die Gästezahl der Buchung, sonst 1).
+ *  Eine übergebene Menge IST bei „pro Gast" die Personenzahl — nicht ein
+ *  Faktor obendrauf. */
 export async function addReservationAddon(
   reservationId: string,
   addonId: string,
-  qty = 1,
+  qty = 0,
 ): Promise<
-  Result<{ items: ReservationAddon[]; total: number; currency: string | null }>
+  Result<{
+    items: ReservationAddon[];
+    total: number;
+    currency: string | null;
+    /** Gästezahl der Buchung — Vorbelegung des Mengenfeldes bei „pro Gast". */
+    guests: number | null;
+  }>
 > {
   return call(`/addons/reservations/${reservationId}/addons`, {
     method: "POST",
     body: { addon_id: addonId, qty },
+  });
+}
+
+/** Menge einer OFFENEN Zusatzleistung ändern; der Betrag wird serverseitig neu
+ *  gerechnet. Der Fall: eine Buchung über 4 Personen bestellt nur 2
+ *  Wäschepakete. 409, wenn bereits bezahlt, storniert oder abgerechnet. */
+export async function changeReservationAddonQty(
+  resAddonId: string,
+  qty: number,
+): Promise<Result<ReservationAddon>> {
+  return call(`/addons/reservation-addons/${resAddonId}/qty`, {
+    method: "PATCH",
+    body: { qty },
   });
 }
 
