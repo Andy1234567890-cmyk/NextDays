@@ -733,10 +733,18 @@ class ReadsMixin(ReservationsBase):
     def _message_thread_id(self, tenant_id: str, r: dict) -> str | None:
         """Thread-Kennung dieser Buchung im Posteingang — oder None.
 
-        Zwei Herkünfte, in dieser Reihenfolge:
-          1) OTA-Buchung: der Posteingang führt Threads über `channex_booking`,
-             und die Reservierung trägt deren ID (`source_channex_booking_id`).
-          2) Übernommener Bestand (0382): der Verlauf liegt je Buchung in
+        Drei Herkünfte, in dieser Reihenfolge:
+          1) OTA-Buchung über Channex: der Posteingang führt Threads über
+             `channex_booking`, und die Reservierung trägt deren ID
+             (`source_channex_booking_id`).
+          2) Airbnb aus dem Historie-Import: dort steht im selben Feld NICHT die
+             Channex-UUID, sondern der Airbnb-Bestätigungscode (z. B.
+             „HMQTDAYHDS"). Der Thread existiert trotzdem — die Nachrichten
+             kommen über Channex und hängen an `channex_booking`, dessen
+             `ota_reservation_code` genau dieser Code ist. Ohne diesen Zweig
+             fehlte der Nachrichten-Knopf bei Airbnb-Buchungen, obwohl der
+             Verlauf im Posteingang sichtbar ist und beantwortet wird.
+          3) Übernommener Bestand (0382): der Verlauf liegt je Buchung in
              `reservation_nachricht_uebernahme`; der Posteingang adressiert ihn
              als `ue:<reservation_id>`.
 
@@ -757,6 +765,27 @@ class ReadsMixin(ReservationsBase):
                 .select("id")
                 .eq("tenant_id", tenant_id)
                 .eq("channex_booking_id", str(channex_id))
+                .limit(1)
+                .execute()
+            ).data
+            if thread:
+                return str(thread[0]["id"])
+            # Zweiter Versuch über den PORTAL-Code. Beim Airbnb-Historie-Import
+            # steht in `source_channex_booking_id` der Bestätigungscode, keine
+            # UUID — der Treffer oben bleibt dann leer, obwohl es den Thread
+            # gibt. Auch `external_ref` wird geprüft, weil dort derselbe Code
+            # steht und die beiden Felder je Importweg unterschiedlich gefüllt
+            # sind; genau EINE Auskunft zählt, deshalb dieselbe Abfrage.
+            codes = {
+                str(channex_id),
+                *([str(r["external_ref"])] if r.get("external_ref") else []),
+            }
+            thread = (
+                self._db()
+                .table("channex_booking")
+                .select("id")
+                .eq("tenant_id", tenant_id)
+                .in_("ota_reservation_code", sorted(codes))
                 .limit(1)
                 .execute()
             ).data
