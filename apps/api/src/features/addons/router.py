@@ -23,6 +23,7 @@ from .schemas import (
     AddonResponse,
     AddonUpdate,
     ReservationAddonAdd,
+    ReservationAddonCancel,
     ReservationAddonListResponse,
     ReservationAddonQty,
     ReservationAddonResponse,
@@ -210,9 +211,34 @@ def mark_addon_paid(
     service: AddonsServiceDep,
     ctx: Annotated[AuthContext, Depends(_MANAGE)],
 ) -> ReservationAddonResponse:
-    """Manuell als bezahlt markieren (solange kein Payment-Provider live ist)."""
+    """Manuell als bezahlt markieren (solange kein Payment-Provider live ist).
+
+    Nur aus „offen": eine stornierte Position wird nicht überschrieben (409),
+    ein zweiter Klick auf eine bezahlte ist ein No-op."""
     try:
         return service.mark_paid(ctx, res_addon_id)
+    except AddonError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/reservation-addons/{res_addon_id}/unmark-paid",
+    response_model=ReservationAddonResponse,
+)
+def unmark_addon_paid(
+    res_addon_id: str,
+    payload: ReservationAddonCancel,
+    service: AddonsServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> ReservationAddonResponse:
+    """Eine fälschlich gesetzte Bezahlt-Markierung zurücknehmen (→ offen).
+
+    Für die Fehleingabe, nicht für eine Rückzahlung: Der Grund ist Pflicht und
+    wird am Vorgang sowie in der Buchungs-Zeitleiste protokolliert. 409, wenn
+    die Position wirklich per Karte bezahlt wurde (dann erstatten) oder auf
+    einer festgeschriebenen Rechnung steht."""
+    try:
+        return service.unmark_paid(ctx, res_addon_id, payload.reason)
     except AddonError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -244,16 +270,21 @@ def change_addon_qty(
 )
 def cancel_reservation_addon(
     res_addon_id: str,
+    payload: ReservationAddonCancel,
     service: AddonsServiceDep,
     ctx: Annotated[AuthContext, Depends(_MANAGE)],
 ) -> ReservationAddonResponse:
     """Eine falsch gebuchte Zusatzleistung stornieren (status=cancelled).
 
     Kein DELETE: die Zeile bleibt als Beleg stehen und fällt aus Rechnung,
-    Eigentümer-Abrechnung und Gast-Portal heraus. 409, wenn schon bezahlt oder
-    bereits auf einer festgeschriebenen Rechnung."""
+    Eigentümer-Abrechnung und Gast-Portal heraus. Der Grund ist Pflicht und wird
+    am Vorgang sowie in der Buchungs-Zeitleiste protokolliert.
+
+    Auch eine manuell auf „bezahlt" gesetzte Position ist stornierbar. 409 nur,
+    wenn wirklich per Karte bezahlt wurde (dann erstatten) oder die Position auf
+    einer festgeschriebenen Rechnung steht."""
     try:
-        return service.cancel_reservation_addon(ctx, res_addon_id)
+        return service.cancel_reservation_addon(ctx, res_addon_id, payload.reason)
     except AddonError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

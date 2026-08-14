@@ -4347,7 +4347,14 @@
         "taskCreated": "Uzdevums izveidots",
         "message": "Ziņa",
         "payment": "Maksājums",
-        "addon": "Papildpakalpojums"
+        "addon": "Papildpakalpojums",
+        "archived": "Arhivēta",
+        "unarchived": "Izņemta no arhīva",
+        "noteChanged": "Piezīme mainīta",
+        "guestChanged": "Klienta dati mainīti",
+        "addonMarkedPaid": "Papildpakalpojums atzīmēts kā apmaksāts",
+        "addonUnmarkedPaid": "Atzīme „apmaksāts“ atsaukta",
+        "addonCancelled": "Papildpakalpojums atcelts"
       },
       "title": {
         "onProperty": " objektā {property}",
@@ -6010,7 +6017,7 @@
       "markPaidSuccess": "Atzīmēts kā apmaksāts.",
       "cancelAction": "Atcelt",
       "cancelBusy": "Atceļ…",
-      "cancelConfirm": "Vai tiešām atcelt šo papildpakalpojumu?",
+      "cancelConfirm": "Vai tiešām atcelt šo papildpakalpojumu? Summa tiks izņemta no rēķina un no īpašnieku norēķina.",
       "cancelSuccess": "Papildpakalpojums atcelts.",
       "addSuccess": "Papildpakalpojums pievienots.",
       "totalLabel": "Papildpakalpojumu summa",
@@ -6035,7 +6042,14 @@
       "qtySave": "Lietot",
       "qtySaving": "Saglabā …",
       "qtySaved": "Daudzums mainīts.",
-      "perGuestSuffix": "personai"
+      "perGuestSuffix": "personai",
+      "unmarkPaidAction": "Atsaukt atzīmi „apmaksāts“",
+      "unmarkPaidConfirm": "Vai tiešām atsaukt atzīmi „apmaksāts“? Papildpakalpojums pēc tam atkal tiks uzskaitīts kā neapmaksāts.",
+      "unmarkPaidSuccess": "Atzīme „apmaksāts“ atsaukta.",
+      "reasonLabel": "Iemesls",
+      "reasonPlaceholder": "piem., kļūdas dēļ atzīmēts kā apmaksāts",
+      "reasonRequired": "Lūdzu, norādiet iemeslu (vismaz 3 rakstzīmes).",
+      "reasonLogged": "Iemesls: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Objekts",

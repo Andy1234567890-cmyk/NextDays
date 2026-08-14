@@ -4347,7 +4347,14 @@
         "taskCreated": "Zadanie utworzone",
         "message": "Wiadomość",
         "payment": "Płatność",
-        "addon": "Usługa dodatkowa"
+        "addon": "Usługa dodatkowa",
+        "archived": "Zarchiwizowana",
+        "unarchived": "Przywrócona z archiwum",
+        "noteChanged": "Uwaga zmieniona",
+        "guestChanged": "Dane gościa zmienione",
+        "addonMarkedPaid": "Usługa dodatkowa oznaczona jako opłacona",
+        "addonUnmarkedPaid": "Wycofano oznaczenie „opłacone”",
+        "addonCancelled": "Usługa dodatkowa anulowana"
       },
       "title": {
         "onProperty": " w obiekcie {property}",
@@ -6010,7 +6017,7 @@
       "markPaidSuccess": "Oznaczono jako opłacone.",
       "cancelAction": "Anuluj",
       "cancelBusy": "Anulowanie…",
-      "cancelConfirm": "Czy na pewno anulować tę usługę dodatkową?",
+      "cancelConfirm": "Czy na pewno anulować tę usługę dodatkową? Kwota zostanie usunięta z faktury i z rozliczenia właściciela.",
       "cancelSuccess": "Usługa dodatkowa anulowana.",
       "addSuccess": "Dodano usługę dodatkową.",
       "totalLabel": "Suma usług dodatkowych",
@@ -6035,7 +6042,14 @@
       "qtySave": "Zastosuj",
       "qtySaving": "Zapisywanie …",
       "qtySaved": "Ilość zmieniona.",
-      "perGuestSuffix": "na osobę"
+      "perGuestSuffix": "na osobę",
+      "unmarkPaidAction": "Wycofaj oznaczenie „opłacone”",
+      "unmarkPaidConfirm": "Czy na pewno wycofać oznaczenie „opłacone”? Usługa dodatkowa będzie ponownie prowadzona jako otwarta.",
+      "unmarkPaidSuccess": "Oznaczenie „opłacone” zostało wycofane.",
+      "reasonLabel": "Powód",
+      "reasonPlaceholder": "np. omyłkowo oznaczone jako opłacone",
+      "reasonRequired": "Podaj powód (co najmniej 3 znaki).",
+      "reasonLogged": "Powód: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Obiekt",

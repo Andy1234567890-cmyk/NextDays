@@ -4352,7 +4352,14 @@
         "taskCreated": "Úkol vytvořen",
         "message": "Zpráva",
         "payment": "Platba",
-        "addon": "Doplňková služba"
+        "addon": "Doplňková služba",
+        "archived": "Archivováno",
+        "unarchived": "Vyjmuto z archivu",
+        "noteChanged": "Poznámka změněna",
+        "guestChanged": "Údaje o hostovi změněny",
+        "addonMarkedPaid": "Doplňková služba označena jako zaplacená",
+        "addonUnmarkedPaid": "Označení „zaplaceno“ zrušeno",
+        "addonCancelled": "Doplňková služba stornována"
       },
       "title": {
         "onProperty": " v objektu {property}",
@@ -6015,7 +6022,7 @@
       "markPaidSuccess": "Označeno jako zaplaceno.",
       "cancelAction": "Stornovat",
       "cancelBusy": "Stornuji…",
-      "cancelConfirm": "Opravdu tuto doplňkovou službu stornovat?",
+      "cancelConfirm": "Opravdu tuto doplňkovou službu stornovat? Částka vypadne z faktury a z vyúčtování vlastníka.",
       "cancelSuccess": "Doplňková služba byla stornována.",
       "addSuccess": "Doplňková služba přidána.",
       "totalLabel": "Součet doplňkových služeb",
@@ -6040,7 +6047,14 @@
       "qtySave": "Použít",
       "qtySaving": "Ukládá se …",
       "qtySaved": "Množství změněno.",
-      "perGuestSuffix": "na osobu"
+      "perGuestSuffix": "na osobu",
+      "unmarkPaidAction": "Zrušit označení „zaplaceno“",
+      "unmarkPaidConfirm": "Opravdu zrušit označení „zaplaceno“? Doplňková služba pak bude opět vedena jako otevřená.",
+      "unmarkPaidSuccess": "Označení „zaplaceno“ bylo zrušeno.",
+      "reasonLabel": "Důvod",
+      "reasonPlaceholder": "např. omylem označeno jako zaplaceno",
+      "reasonRequired": "Zadejte prosím důvod (nejméně 3 znaky).",
+      "reasonLogged": "Důvod: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Objekt",

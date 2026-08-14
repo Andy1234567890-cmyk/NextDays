@@ -4347,7 +4347,14 @@
         "taskCreated": "Úloha vytvorená",
         "message": "Správa",
         "payment": "Platba",
-        "addon": "Doplnková služba"
+        "addon": "Doplnková služba",
+        "archived": "Archivovaná",
+        "unarchived": "Vyňatá z archívu",
+        "noteChanged": "Poznámka zmenená",
+        "guestChanged": "Údaje zákazníka zmenené",
+        "addonMarkedPaid": "Doplnková služba označená ako zaplatená",
+        "addonUnmarkedPaid": "Označenie „zaplatené“ zrušené",
+        "addonCancelled": "Doplnková služba stornovaná"
       },
       "title": {
         "onProperty": " v objekte {property}",
@@ -6010,7 +6017,7 @@
       "markPaidSuccess": "Označené ako zaplatené.",
       "cancelAction": "Stornovať",
       "cancelBusy": "Stornujem…",
-      "cancelConfirm": "Naozaj stornovať túto doplnkovú službu?",
+      "cancelConfirm": "Naozaj stornovať túto doplnkovú službu? Suma vypadne z faktúry a z vyúčtovania vlastníka.",
       "cancelSuccess": "Doplnková služba bola stornovaná.",
       "addSuccess": "Doplnková služba pridaná.",
       "totalLabel": "Súčet doplnkových služieb",
@@ -6035,7 +6042,14 @@
       "qtySave": "Použiť",
       "qtySaving": "Ukladá sa …",
       "qtySaved": "Množstvo zmenené.",
-      "perGuestSuffix": "na osobu"
+      "perGuestSuffix": "na osobu",
+      "unmarkPaidAction": "Zrušiť označenie „zaplatené“",
+      "unmarkPaidConfirm": "Naozaj zrušiť označenie „zaplatené“? Doplnková služba bude potom opäť vedená ako otvorená.",
+      "unmarkPaidSuccess": "Označenie „zaplatené“ bolo zrušené.",
+      "reasonLabel": "Dôvod",
+      "reasonPlaceholder": "napr. omylom označené ako zaplatené",
+      "reasonRequired": "Zadajte dôvod (najmenej 3 znaky).",
+      "reasonLogged": "Dôvod: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Objekt",

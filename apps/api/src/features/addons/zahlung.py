@@ -397,34 +397,44 @@ class AddonZahlungService:
         self._zurueckziehen(link)
 
     def _zurueckziehen(self, link: dict) -> None:
-        """Bei Stripe deaktivieren UND bei uns schließen — in dieser Reihenfolge.
+        """Bei Stripe deaktivieren UND bei uns schließen (s. `schliesse_link`)."""
+        schliesse_link(self._db, link)
 
-        Erst Stripe: Scheitert das, bleibt der Link bei uns offen und sichtbar,
-        statt dass wir eine geschlossene Zeile führen, während die URL weiter
-        Geld annimmt (fail-closed, Wurzel 5).
-        """
-        try:
-            sc.deactivate_payment_link(
-                str(link["stripe_payment_link_id"]), acct=str(link["stripe_account_id"])
-            )
-        except Exception as exc:
-            log.warning(
-                "addon_zahlungslink_deaktivieren_fehlgeschlagen",
-                id=str(link["id"]),
-                error=str(exc),
-            )
-            raise ZahlungslinkFehler(
-                f"Stripe konnte den Zahlungslink nicht schließen: {exc}",
-                status_code=502,
-            ) from exc
-        (
-            self._db.table("addon_payment_links")
-            .update({"status": "cancelled"})
-            .eq("id", link["id"])
-            .eq("status", "open")
-            .execute()
+
+def schliesse_link(db: Client, link: dict) -> None:
+    """Bei Stripe deaktivieren UND bei uns schließen — in dieser Reihenfolge.
+
+    Erst Stripe: Scheitert das, bleibt der Link bei uns offen und sichtbar,
+    statt dass wir eine geschlossene Zeile führen, während die URL weiter
+    Geld annimmt (fail-closed, Wurzel 5).
+
+    Auf Modulebene, weil zwei Wege sie brauchen: das manuelle Zurückziehen
+    (`AddonZahlungService.zurueckziehen`) und das Storno einer Position
+    (`ziehe_link_zurueck_bei_storno`). Eine Kopie in der zweiten Aufrufstelle
+    hätte die Reihenfolge Stripe-zuerst irgendwann verloren.
+    """
+    try:
+        sc.deactivate_payment_link(
+            str(link["stripe_payment_link_id"]), acct=str(link["stripe_account_id"])
         )
-        log.info("addon_zahlungslink_zurueckgezogen", id=str(link["id"]))
+    except Exception as exc:
+        log.warning(
+            "addon_zahlungslink_deaktivieren_fehlgeschlagen",
+            id=str(link["id"]),
+            error=str(exc),
+        )
+        raise ZahlungslinkFehler(
+            f"Stripe konnte den Zahlungslink nicht schließen: {exc}",
+            status_code=502,
+        ) from exc
+    (
+        db.table("addon_payment_links")
+        .update({"status": "cancelled"})
+        .eq("id", link["id"])
+        .eq("status", "open")
+        .execute()
+    )
+    log.info("addon_zahlungslink_zurueckgezogen", id=str(link["id"]))
 
 
 def _titel(positionen: list[dict]) -> str:
@@ -464,6 +474,61 @@ def lade_link(db: Client, link_id: str) -> dict | None:
         .execute()
     ).data or []
     return rows[0] if rows else None
+
+
+def ziehe_link_zurueck_bei_storno(
+    db: Client, *, tenant_id: str, reservation_id: str, res_addon_id: str
+) -> bool:
+    """Offenen Zahlungslink schließen, wenn eine seiner Positionen storniert wird.
+
+    Wurzel 1 — der Gegenzustand: Ohne das bliebe nach dem Storno eine bezahlbare
+    Stripe-URL mit dem ALTEN Betrag im Umlauf. Der Betragsabgleich in
+    ``verbuche_zahlung`` macht das besonders heikel: Er vergleicht die bezahlte
+    Summe mit ``link.amount_cents`` und stimmt hier ja weiterhin — der Link wäre
+    also verbucht worden, während das Positions-Update ``.eq("status",
+    "pending")`` die stornierte Zeile bewusst überspringt. Ergebnis: echtes Geld
+    für eine Leistung, die aus Rechnung und Eigentümer-Abrechnung gefallen ist,
+    ohne dass jemand einen Fehler sieht.
+
+    Rückgabe: True, wenn ein Link geschlossen wurde (für das Log der Aufrufer).
+
+    NICHT best-effort: Scheitert das Schließen bei Stripe, wirft ``_zurueckziehen``
+    einen 502 und das Storno bricht ab (fail-closed, Wurzel 5). Lieber eine
+    Position, die noch storniert werden muss, als eine offene URL, die Geld für
+    eine stornierte Leistung annimmt. Deshalb läuft dieser Schritt VOR dem
+    Status-Wechsel.
+    """
+    links = (
+        db.table("addon_payment_links")
+        .select(_LINK_COLS)
+        .eq("tenant_id", tenant_id)
+        .eq("reservation_id", reservation_id)
+        .eq("status", "open")
+        .execute()
+    ).data or []
+    if not links:
+        return False
+    betroffen = (
+        db.table("addon_payment_link_items")
+        .select("link_id")
+        .in_("link_id", [str(link["id"]) for link in links])
+        .eq("reservation_addon_id", res_addon_id)
+        .execute()
+    ).data or []
+    if not betroffen:
+        # Der offene Link deckt diese Position nicht — sein Betrag bleibt richtig.
+        return False
+    ids = {str(b["link_id"]) for b in betroffen}
+    for link in links:
+        if str(link["id"]) in ids:
+            schliesse_link(db, link)
+    log.info(
+        "addon_zahlungslink_wegen_storno_geschlossen",
+        reservation_id=reservation_id,
+        res_addon_id=res_addon_id,
+        links=len(ids),
+    )
+    return True
 
 
 def verbuche_zahlung(

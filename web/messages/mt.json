@@ -4347,7 +4347,14 @@
         "taskCreated": "Kompitu maħluq",
         "message": "Messaġġ",
         "payment": "Ħlas",
-        "addon": "Servizz addizzjonali"
+        "addon": "Servizz addizzjonali",
+        "archived": "Arkivjata",
+        "unarchived": "Irkuprata mill-arkivju",
+        "noteChanged": "Rimarka mibdula",
+        "guestChanged": "Dejta tal-klijent mibdula",
+        "addonMarkedPaid": "Servizz addizzjonali mmarkat bħala mħallas",
+        "addonUnmarkedPaid": "Il-marka „mħallas” tneħħiet",
+        "addonCancelled": "Servizz addizzjonali kkanċellat"
       },
       "title": {
         "onProperty": " fuq {property}",
@@ -6010,7 +6017,7 @@
       "markPaidSuccess": "Immarkat bħala mħallas.",
       "cancelAction": "Ikkanċella",
       "cancelBusy": "Qed jiġi kkanċellat…",
-      "cancelConfirm": "Tassew tikkanċella dan is-servizz addizzjonali?",
+      "cancelConfirm": "Tassew tikkanċella dan is-servizz addizzjonali? L-ammont jaqa' barra mill-fattura u mir-rendikont tas-sid.",
       "cancelSuccess": "Is-servizz addizzjonali ġie kkanċellat.",
       "addSuccess": "Servizz addizzjonali miżjud.",
       "totalLabel": "Total tas-servizzi addizzjonali",
@@ -6035,7 +6042,14 @@
       "qtySave": "Applika",
       "qtySaving": "Qed jiġi salvat …",
       "qtySaved": "Il-kwantità nbidlet.",
-      "perGuestSuffix": "kull persuna"
+      "perGuestSuffix": "kull persuna",
+      "unmarkPaidAction": "Neħħi l-marka „mħallas”",
+      "unmarkPaidConfirm": "Tassew tneħħi l-marka „mħallas”? Is-servizz addizzjonali mbagħad jerġa' jiġi mniżżel bħala pendenti.",
+      "unmarkPaidSuccess": "Il-marka „mħallas” tneħħiet.",
+      "reasonLabel": "Raġuni",
+      "reasonPlaceholder": "eż. immarkat bħala mħallas bi żball",
+      "reasonRequired": "Jekk jogħġbok agħti raġuni (minimu 3 karattri).",
+      "reasonLogged": "Raġuni: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Proprjetà",

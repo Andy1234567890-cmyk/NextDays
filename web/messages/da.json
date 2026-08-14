@@ -4352,7 +4352,14 @@
         "taskCreated": "Opgave oprettet",
         "message": "Besked",
         "payment": "Betaling",
-        "addon": "Tillægsydelse"
+        "addon": "Tillægsydelse",
+        "archived": "Arkiveret",
+        "unarchived": "Hentet ud af arkivet",
+        "noteChanged": "Bemærkning ændret",
+        "guestChanged": "Kundedata ændret",
+        "addonMarkedPaid": "Tillægsydelse markeret som betalt",
+        "addonUnmarkedPaid": "Markeringen betalt er fjernet",
+        "addonCancelled": "Tillægsydelse annulleret"
       },
       "title": {
         "onProperty": " på {property}",
@@ -6015,7 +6022,7 @@
       "markPaidSuccess": "Markeret som betalt.",
       "cancelAction": "Annuller",
       "cancelBusy": "Annullerer…",
-      "cancelConfirm": "Skal denne tillægsydelse annulleres?",
+      "cancelConfirm": "Skal denne tillægsydelse annulleres? Beløbet falder ud af fakturaen og ejerafregningen.",
       "cancelSuccess": "Tillægsydelsen er annulleret.",
       "addSuccess": "Tillægsydelse tilføjet.",
       "totalLabel": "Sum af tillægsydelser",
@@ -6040,7 +6047,14 @@
       "qtySave": "Anvend",
       "qtySaving": "Gemmer …",
       "qtySaved": "Antal ændret.",
-      "perGuestSuffix": "pr. person"
+      "perGuestSuffix": "pr. person",
+      "unmarkPaidAction": "Fjern markeringen betalt",
+      "unmarkPaidConfirm": "Skal markeringen betalt fjernes? Tillægsydelsen står derefter som åben igen.",
+      "unmarkPaidSuccess": "Markeringen betalt er fjernet.",
+      "reasonLabel": "Årsag",
+      "reasonPlaceholder": "f.eks. markeret som betalt ved en fejl",
+      "reasonRequired": "Angiv en årsag (mindst 3 tegn).",
+      "reasonLogged": "Årsag: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Objekt",

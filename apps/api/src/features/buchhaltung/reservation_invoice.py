@@ -361,6 +361,105 @@ def _finalize_reservation_draft(
     }
 
 
+def rebuild_draft_for_reservation(
+    db: Client, tenant_id: str, reservation_id: str
+) -> bool:
+    """Einen noch NICHT nummerierten Rechnungsentwurf aus dem Bestand neu aufbauen.
+
+    Anlass (14.08.2026): Beim Storno einer Zusatzleistung wurde ein Entwurf
+    durchgelassen mit der Begründung, er werde „beim Check-out ohnehin neu aus
+    dem Bestand aufgebaut". Das ist NICHT der Fall — `_finalize_reservation_draft`
+    zieht nur die Nummer und übernimmt `gross_amount`/`paid_amount` unverändert,
+    die `invoice_line_items` bleiben stehen. Die stornierte Position wäre also als
+    nummerierte GoBD-Position auf der Rechnung gelandet.
+
+    Statt das Storno zu verbieten (der Entwurf ist ja gerade der noch änderbare
+    Zustand), wird der Entwurf hier mit den aktuellen Positionen neu geschrieben:
+    Positionen ersetzt, Summen und `paid_amount` neu gerechnet. Nummer, Status und
+    Debitor bleiben unberührt — es entsteht kein Beleg und keine Nummernkreis-Lücke.
+
+    Rückgabe: True, wenn ein Entwurf neu aufgebaut wurde; False, wenn keiner
+    existiert (dann gibt es nichts zu pflegen).
+
+    Fail-closed (Wurzel 5): Fehler werden nicht geschluckt, sondern als
+    `BuchhaltungError` weitergegeben — lieber bricht das Storno ab, als dass ein
+    Entwurf mit falschen Beträgen stehen bleibt und beim Check-out eine Nummer
+    bekommt.
+    """
+    existing = find_active_invoice(db, tenant_id, reservation_id)
+    if not existing or existing.get("invoice_number"):
+        # Kein Entwurf (oder schon nummeriert → der Aufrufer hat das längst
+        # abgelehnt; hier NICHT anfassen, GoBD).
+        return False
+    invoice_id = str(existing["id"])
+    try:
+        ctx = _load_context(db, tenant_id, reservation_id, pruefe_erstellbar=False)
+    except BuchhaltungError as exc:
+        # Bleibt nach dem Storno GAR KEINE fakturierbare Position übrig (422 aus
+        # `build_positions`), ist der Entwurf gegenstandslos — dann wird er NICHT
+        # halb aktualisiert stehen gelassen, sondern der Aufrufer erfährt davon.
+        # Ein Entwurf mit alten Positionen wäre die schlechtere Alternative: er
+        # bekäme beim Check-out eine Nummer.
+        log.warning(
+            "reservation_invoice_draft_rebuild_unmoeglich",
+            reservation_id=reservation_id,
+            invoice_id=invoice_id,
+            grund=exc.message,
+        )
+        raise
+    positions = ctx["positions"]
+    net_total = _q(sum((p["net_amount"] for p in positions), Decimal("0")))
+    tax_total = _q(sum((p["tax_amount"] for p in positions), Decimal("0")))
+    gross_total = _q(sum((p["gross_amount"] for p in positions), Decimal("0")))
+    # `paid_amount` zählt bezahlte Zusatzleistungen mit (s. `_load_context`) —
+    # wird eine Bezahlt-Markierung zurückgenommen, muss der Betrag hier sinken.
+    # Sonst schreibt `_finalize_reservation_draft` ein zu hohes „bereits bezahlt"
+    # als `paid_before` fest.
+    paid_total = _q(min(ctx["paid_amount"], gross_total))
+    try:
+        db.table("invoice_line_items").delete().eq("invoice_id", invoice_id).execute()
+        if positions:
+            db.table("invoice_line_items").insert(
+                [
+                    {
+                        "invoice_id": invoice_id,
+                        "position": pos,
+                        "description": p["description"],
+                        "quantity": str(p["quantity"]),
+                        "unit": p["unit"],
+                        "unit_price": str(p["unit_price"]),
+                        "tax_rate": str(p["tax_rate"]),
+                        "discount_percent": "0",
+                        "net_amount": str(p["net_amount"]),
+                        "tax_amount": str(p["tax_amount"]),
+                        "gross_amount": str(p["gross_amount"]),
+                    }
+                    for pos, p in enumerate(positions, start=1)
+                ]
+            ).execute()
+        db.table("invoices").update(
+            {
+                "net_amount": str(net_total),
+                "tax_amount": str(tax_total),
+                "gross_amount": str(gross_total),
+                "paid_amount": str(paid_total),
+            }
+        ).eq("id", invoice_id).eq("tenant_id", tenant_id).execute()
+    except APIError as exc:
+        raise BuchhaltungError(
+            f"Rechnungsentwurf konnte nicht aktualisiert werden: {exc.message}",
+            status_code=500,
+        ) from exc
+    log.info(
+        "reservation_invoice_draft_rebuilt",
+        reservation_id=reservation_id,
+        invoice_id=invoice_id,
+        positionen=len(positions),
+        gross=str(gross_total),
+    )
+    return True
+
+
 def find_active_invoice(db: Client, tenant_id: str, reservation_id: str) -> dict | None:
     """Aktive (nicht stornierte, nicht gelöschte) Rechnung zu einer Buchung."""
     rows = (
@@ -470,9 +569,20 @@ def ensure_customer_for_guest(db: Client, tenant_id: str, reservation: dict) -> 
     return ins.data[0]
 
 
-def _load_context(db: Client, tenant_id: str, reservation_id: str) -> dict:
-    """Buchung + Profil + Steuern + Addons laden und ALLE Regeln validieren
-    (gemeinsamer Unterbau von preview_for_reservation/create_from_reservation)."""
+def _load_context(
+    db: Client,
+    tenant_id: str,
+    reservation_id: str,
+    *,
+    pruefe_erstellbar: bool = True,
+) -> dict:
+    """Buchung + Profil + Steuern + Addons laden und die Regeln validieren
+    (gemeinsamer Unterbau von preview_for_reservation/create_from_reservation).
+
+    `pruefe_erstellbar=False` lässt die beiden Vorbedingungen des ERSTELLENS aus
+    (nicht storniert, eingecheckt) — für den Neuaufbau eines bereits bestehenden
+    Entwurfs, dessen Beträge auch vorher schon korrigierbar sein müssen. Alle
+    übrigen Prüfungen (Profil, Währung, Steuersatz) bleiben in Kraft."""
     rows = (
         db.table("reservations")
         .select("*, guests(name, first_name, last_name, email, phone)")
@@ -485,16 +595,23 @@ def _load_context(db: Client, tenant_id: str, reservation_id: str) -> dict:
         raise BuchhaltungError("Buchung nicht gefunden.", status_code=404)
     reservation = rows[0]
 
-    if reservation.get("status") == "cancelled":
-        raise BuchhaltungError(
-            "Stornierte Buchung kann nicht abgerechnet werden.", status_code=409
-        )
-    if not reservation.get("checked_in_at"):
-        raise BuchhaltungError(
-            "Der Gast ist noch nicht eingecheckt — Rechnungen aus Buchungen "
-            "sind erst nach dem Check-in möglich.",
-            status_code=409,
-        )
+    # Diese beiden Vorbedingungen gelten fürs ERSTELLEN einer Rechnung. Beim
+    # Neuaufbau eines schon vorhandenen Entwurfs (`rebuild_draft_for_reservation`)
+    # dürfen sie NICHT greifen: Der Entwurf existiert ja bereits, seine Beträge
+    # müssen auch dann noch korrigierbar sein, wenn der Gast noch nicht
+    # eingecheckt ist — sonst bliebe eine stornierte Position darin stehen und
+    # bekäme beim Check-out eine GoBD-Nummer.
+    if pruefe_erstellbar:
+        if reservation.get("status") == "cancelled":
+            raise BuchhaltungError(
+                "Stornierte Buchung kann nicht abgerechnet werden.", status_code=409
+            )
+        if not reservation.get("checked_in_at"):
+            raise BuchhaltungError(
+                "Der Gast ist noch nicht eingecheckt — Rechnungen aus Buchungen "
+                "sind erst nach dem Check-in möglich.",
+                status_code=409,
+            )
     profile_rows = (
         db.table("tenant_billing_profile")
         .select(

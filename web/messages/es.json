@@ -4352,7 +4352,14 @@
         "taskCreated": "Tarea creada",
         "message": "Mensaje",
         "payment": "Pago",
-        "addon": "Servicio adicional"
+        "addon": "Servicio adicional",
+        "archived": "Archivada",
+        "unarchived": "Recuperada del archivo",
+        "noteChanged": "Observación modificada",
+        "guestChanged": "Datos del huésped modificados",
+        "addonMarkedPaid": "Servicio adicional marcado como pagado",
+        "addonUnmarkedPaid": "Marca de pagado retirada",
+        "addonCancelled": "Servicio adicional anulado"
       },
       "title": {
         "onProperty": " en {property}",
@@ -6015,7 +6022,7 @@
       "markPaidSuccess": "Marcado como pagado.",
       "cancelAction": "Anular",
       "cancelBusy": "Anulando…",
-      "cancelConfirm": "¿Anular realmente este servicio adicional?",
+      "cancelConfirm": "¿Anular realmente este servicio adicional? El importe dejará de constar en la factura y en la liquidación de propietarios.",
       "cancelSuccess": "Servicio adicional anulado.",
       "addSuccess": "Extra añadido.",
       "totalLabel": "Total extras",
@@ -6040,7 +6047,14 @@
       "qtySave": "Aplicar",
       "qtySaving": "Guardando …",
       "qtySaved": "Cantidad modificada.",
-      "perGuestSuffix": "por persona"
+      "perGuestSuffix": "por persona",
+      "unmarkPaidAction": "Retirar la marca de pagado",
+      "unmarkPaidConfirm": "¿Retirar realmente la marca de pagado? El servicio adicional volverá a figurar como pendiente.",
+      "unmarkPaidSuccess": "Marca de pagado retirada.",
+      "reasonLabel": "Motivo",
+      "reasonPlaceholder": "p. ej., marcado como pagado por error",
+      "reasonRequired": "Indica un motivo (al menos 3 caracteres).",
+      "reasonLogged": "Motivo: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Propiedad",

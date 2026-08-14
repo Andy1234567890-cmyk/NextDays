@@ -4347,7 +4347,14 @@
         "taskCreated": "Attività creata",
         "message": "Messaggio",
         "payment": "Pagamento",
-        "addon": "Servizio aggiuntivo"
+        "addon": "Servizio aggiuntivo",
+        "archived": "Archiviata",
+        "unarchived": "Recuperata dall'archivio",
+        "noteChanged": "Nota modificata",
+        "guestChanged": "Dati del cliente modificati",
+        "addonMarkedPaid": "Servizio aggiuntivo contrassegnato come pagato",
+        "addonUnmarkedPaid": "Contrassegno di pagato rimosso",
+        "addonCancelled": "Servizio aggiuntivo annullato"
       },
       "title": {
         "onProperty": " su {property}",
@@ -6010,7 +6017,7 @@
       "markPaidSuccess": "Segnato come pagato.",
       "cancelAction": "Annulla",
       "cancelBusy": "Annullamento…",
-      "cancelConfirm": "Annullare davvero questo servizio aggiuntivo?",
+      "cancelConfirm": "Annullare davvero questo servizio aggiuntivo? L'importo verrà escluso dalla fattura e dal rendiconto proprietari.",
       "cancelSuccess": "Servizio aggiuntivo annullato.",
       "addSuccess": "Servizio extra aggiunto.",
       "totalLabel": "Totale servizi extra",
@@ -6035,7 +6042,14 @@
       "qtySave": "Applica",
       "qtySaving": "Salvataggio …",
       "qtySaved": "Quantità modificata.",
-      "perGuestSuffix": "a persona"
+      "perGuestSuffix": "a persona",
+      "unmarkPaidAction": "Rimuovi il contrassegno di pagato",
+      "unmarkPaidConfirm": "Rimuovere davvero il contrassegno di pagato? Il servizio aggiuntivo tornerà a essere considerato aperto.",
+      "unmarkPaidSuccess": "Contrassegno di pagato rimosso.",
+      "reasonLabel": "Motivo",
+      "reasonPlaceholder": "ad es. contrassegnato come pagato per errore",
+      "reasonRequired": "Indica un motivo (almeno 3 caratteri).",
+      "reasonLogged": "Motivo: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Struttura",

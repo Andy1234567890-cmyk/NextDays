@@ -4352,7 +4352,14 @@
         "taskCreated": "Tehtävä luotu",
         "message": "Viesti",
         "payment": "Maksu",
-        "addon": "Lisäpalvelu"
+        "addon": "Lisäpalvelu",
+        "archived": "Arkistoitu",
+        "unarchived": "Palautettu arkistosta",
+        "noteChanged": "Muistiinpanoa muutettu",
+        "guestChanged": "Asiakastietoja muutettu",
+        "addonMarkedPaid": "Lisäpalvelu merkitty maksetuksi",
+        "addonUnmarkedPaid": "Maksettu-merkintä poistettu",
+        "addonCancelled": "Lisäpalvelu peruttu"
       },
       "title": {
         "onProperty": " kohteessa {property}",
@@ -6015,7 +6022,7 @@
       "markPaidSuccess": "Merkitty maksetuksi.",
       "cancelAction": "Peruuta",
       "cancelBusy": "Perutaan…",
-      "cancelConfirm": "Perutaanko tämä lisäpalvelu?",
+      "cancelConfirm": "Perutaanko tämä lisäpalvelu? Summa poistuu laskulta ja omistajan tilityksestä.",
       "cancelSuccess": "Lisäpalvelu peruttu.",
       "addSuccess": "Lisäpalvelu lisätty.",
       "totalLabel": "Lisäpalveluiden summa",
@@ -6040,7 +6047,14 @@
       "qtySave": "Käytä",
       "qtySaving": "Tallennetaan …",
       "qtySaved": "Määrä muutettu.",
-      "perGuestSuffix": "per henkilö"
+      "perGuestSuffix": "per henkilö",
+      "unmarkPaidAction": "Poista maksettu-merkintä",
+      "unmarkPaidConfirm": "Poistetaanko maksettu-merkintä? Lisäpalvelu näkyy tämän jälkeen jälleen avoimena.",
+      "unmarkPaidSuccess": "Maksettu-merkintä poistettu.",
+      "reasonLabel": "Syy",
+      "reasonPlaceholder": "esim. merkitty maksetuksi vahingossa",
+      "reasonRequired": "Anna syy (vähintään 3 merkkiä).",
+      "reasonLogged": "Syy: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Kohde",

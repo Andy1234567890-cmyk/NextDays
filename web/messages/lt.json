@@ -4347,7 +4347,14 @@
         "taskCreated": "Užduotis sukurta",
         "message": "Žinutė",
         "payment": "Mokėjimas",
-        "addon": "Papildoma paslauga"
+        "addon": "Papildoma paslauga",
+        "archived": "Suarchyvuota",
+        "unarchived": "Ištraukta iš archyvo",
+        "noteChanged": "Pastaba pakeista",
+        "guestChanged": "Kliento duomenys pakeisti",
+        "addonMarkedPaid": "Papildoma paslauga pažymėta kaip apmokėta",
+        "addonUnmarkedPaid": "Žyma „apmokėta“ atšaukta",
+        "addonCancelled": "Papildoma paslauga atšaukta"
       },
       "title": {
         "onProperty": " objekte {property}",
@@ -6010,7 +6017,7 @@
       "markPaidSuccess": "Pažymėta kaip apmokėta.",
       "cancelAction": "Atšaukti",
       "cancelBusy": "Atšaukiama…",
-      "cancelConfirm": "Ar tikrai atšaukti šią papildomą paslaugą?",
+      "cancelConfirm": "Ar tikrai atšaukti šią papildomą paslaugą? Suma nebus įtraukta į sąskaitą ir savininko ataskaitą.",
       "cancelSuccess": "Papildoma paslauga atšaukta.",
       "addSuccess": "Papildoma paslauga pridėta.",
       "totalLabel": "Papildomų paslaugų suma",
@@ -6035,7 +6042,14 @@
       "qtySave": "Taikyti",
       "qtySaving": "Įrašoma …",
       "qtySaved": "Kiekis pakeistas.",
-      "perGuestSuffix": "asmeniui"
+      "perGuestSuffix": "asmeniui",
+      "unmarkPaidAction": "Atšaukti žymą „apmokėta“",
+      "unmarkPaidConfirm": "Ar tikrai atšaukti žymą „apmokėta“? Papildoma paslauga vėl bus laikoma neapmokėta.",
+      "unmarkPaidSuccess": "Žyma „apmokėta“ atšaukta.",
+      "reasonLabel": "Priežastis",
+      "reasonPlaceholder": "pvz., per klaidą pažymėta kaip apmokėta",
+      "reasonRequired": "Nurodykite priežastį (bent 3 simboliai).",
+      "reasonLogged": "Priežastis: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Objektas",

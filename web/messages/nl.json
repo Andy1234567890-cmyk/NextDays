@@ -4347,7 +4347,14 @@
         "taskCreated": "Taak aangemaakt",
         "message": "Bericht",
         "payment": "Betaling",
-        "addon": "Extra"
+        "addon": "Extra",
+        "archived": "Gearchiveerd",
+        "unarchived": "Uit archief gehaald",
+        "noteChanged": "Opmerking gewijzigd",
+        "guestChanged": "Klantgegevens gewijzigd",
+        "addonMarkedPaid": "Extra als betaald gemarkeerd",
+        "addonUnmarkedPaid": "Markering betaald ongedaan gemaakt",
+        "addonCancelled": "Extra geannuleerd"
       },
       "title": {
         "onProperty": " bij {property}",
@@ -6010,7 +6017,7 @@
       "markPaidSuccess": "Als betaald gemarkeerd.",
       "cancelAction": "Annuleren",
       "cancelBusy": "Annuleren…",
-      "cancelConfirm": "Deze extra dienst echt annuleren?",
+      "cancelConfirm": "Deze extra dienst echt annuleren? Het bedrag valt uit de factuur en de eigenaarsafrekening.",
       "cancelSuccess": "Extra dienst geannuleerd.",
       "addSuccess": "Extra service toegevoegd.",
       "totalLabel": "Totaal extra services",
@@ -6035,7 +6042,14 @@
       "qtySave": "Toepassen",
       "qtySaving": "Opslaan …",
       "qtySaved": "Aantal gewijzigd.",
-      "perGuestSuffix": "per persoon"
+      "perGuestSuffix": "per persoon",
+      "unmarkPaidAction": "Markering betaald ongedaan maken",
+      "unmarkPaidConfirm": "De markering betaald echt ongedaan maken? De extra dienst staat daarna weer als open.",
+      "unmarkPaidSuccess": "Markering betaald ongedaan gemaakt.",
+      "reasonLabel": "Reden",
+      "reasonPlaceholder": "bijv. per ongeluk als betaald gemarkeerd",
+      "reasonRequired": "Geef een reden op (minimaal 3 tekens).",
+      "reasonLogged": "Reden: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Object",

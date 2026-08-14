@@ -38,8 +38,14 @@ _ADDON_COLS = (
 )
 _RES_ADDON_COLS = (
     "id, reservation_id, addon_id, name, price, basis, tax_rate, qty, total, "
-    "status, charged_at, created_at"
+    "status, charged_at, created_at, cancel_reason, cancelled_by, cancelled_at"
 )
+
+# Grund-Freitext bei Storno/Rücknahme (0397). Die Grenzen spiegeln den
+# CHECK-Constraint der Spalte — ohne sie käme der Verstoß als roher 500 statt
+# als fachlicher 422 zurück.
+_REASON_MIN_LEN = 3
+_REASON_MAX_LEN = 500
 
 # Obergrenze der Menge je gebuchter Zusatzleistung (Wurzel 8: kein unbegrenzter
 # Bereich). Großzügig genug für jede reale Bestellung — ein Gruppenhaus mit 30
@@ -380,8 +386,27 @@ class AddonsService(VerteilungMixin):
         return rows[0]
 
     def mark_paid(self, ctx: AuthContext, res_addon_id: str) -> ReservationAddonResponse:
-        """Manuell als bezahlt markieren (solange kein Payment-Provider live ist)."""
+        """Manuell als bezahlt markieren (solange kein Payment-Provider live ist).
+
+        Nur aus ``pending``: Ohne diesen Filter überschrieb der Aufruf JEDEN
+        Status — auch ``cancelled``. Eine stornierte Position wäre damit per
+        Doppelklick wieder „bezahlt" gewesen, mitsamt Grund und Storno-Datum in
+        der Zeile (der Beleg hätte sich selbst widersprochen). Ein zweiter Klick
+        auf eine bereits bezahlte Position ist ein No-op und gibt die Zeile
+        zurück, statt ``charged_at`` auf jetzt zu verschieben (Wurzel 2: real
+        kommt alles doppelt).
+        """
         tenant_id = self._require_tenant(ctx)
+        row = self._own_res_addon(tenant_id, res_addon_id)
+        status = str(row.get("status"))
+        if status == AddonStatus.paid.value:
+            return ReservationAddonResponse(**_res_addon_row(row))
+        if status == AddonStatus.cancelled.value:
+            raise AddonError(
+                "Diese Zusatzleistung ist storniert. Bitte neu hinzufügen, statt "
+                "das Storno zu überschreiben.",
+                status_code=409,
+            )
         res = (
             self._db.table("reservation_addons")
             .update(
@@ -389,12 +414,370 @@ class AddonsService(VerteilungMixin):
             )
             .eq("tenant_id", tenant_id)
             .eq("id", res_addon_id)
+            # Zwischen Lesen und Schreiben kann ein anderer Weg die Zeile
+            # storniert oder bezahlt haben (Wurzel 2).
+            .eq("status", AddonStatus.pending.value)
             .execute()
         )
         if not res.data:
-            raise AddonError("Gekaufte Zusatzleistung nicht gefunden.", status_code=404)
+            raise AddonError(
+                "Die Zusatzleistung wurde zwischenzeitlich geändert. Bitte die "
+                "Seite neu laden.",
+                status_code=409,
+            )
         log.info("reservation_addon_marked_paid", tenant_id=tenant_id, id=res_addon_id)
+        self._log_timeline(
+            tenant_id,
+            str(row["reservation_id"]),
+            "addon_marked_paid",
+            ctx,
+            {"name": row.get("name") or {}, "total": float(row.get("total") or 0)},
+        )
         return ReservationAddonResponse(**_res_addon_row(res.data[0]))
+
+    def unmark_paid(
+        self, ctx: AuthContext, res_addon_id: str, reason: str
+    ) -> ReservationAddonResponse:
+        """Eine FÄLSCHLICH gesetzte Bezahlt-Markierung zurücknehmen (→ pending).
+
+        Der Anlass (14.08.2026, live): Bei einer Booking-Buchung wurde
+        „Wäschepaket, 600 DKK" versehentlich auf bezahlt gesetzt. Danach war die
+        Zeile eine Sackgasse — Storno und Mengenänderung lehnen eine bezahlte
+        Position beide mit 409 ab und verweisen auf eine Rückabwicklung, die es
+        als Route nicht gab.
+
+        Fachlich ist das die Korrektur einer FEHLEINGABE, nicht eine
+        Rückzahlung: Es ist kein Geld geflossen, das zurückfließen müsste — es
+        wurde nur der falsche Haken gesetzt. Danach ist die Position wieder
+        offen und kann normal storniert oder in der Menge geändert werden.
+
+        Deshalb zwei Schranken:
+        * War die Zahlung ECHT (per Zahlungslink über Stripe eingegangen, also
+          ``charged_at`` mit einem bezahlten Link), ist das keine Fehleingabe →
+          409. Sonst verschwände eine vereinnahmte Kartenzahlung aus der
+          Abrechnung, während das Geld auf dem Stripe-Konto liegt.
+        * Steht die Position auf einer festgeschriebenen Rechnung, gilt GoBD →
+          409 mit Verweis auf die Korrekturrechnung.
+
+        Der Grund ist Pflicht und landet am Datensatz UND in der Zeitleiste:
+        ein Betrag, der wieder offen wird, muss erklärbar bleiben.
+        """
+        tenant_id = self._require_tenant(ctx)
+        grund = self._pruefe_grund(reason)
+        row = self._own_res_addon(tenant_id, res_addon_id)
+        status = str(row.get("status"))
+        if status == AddonStatus.pending.value:
+            # Idempotent (Wurzel 2): schon offen → nichts zu tun.
+            return ReservationAddonResponse(**_res_addon_row(row))
+        if status == AddonStatus.cancelled.value:
+            raise AddonError(
+                "Diese Zusatzleistung ist storniert, nicht bezahlt.",
+                status_code=409,
+            )
+        self._assert_keine_echte_zahlung(tenant_id, row)
+        self._assert_not_invoiced(tenant_id, str(row["reservation_id"]))
+
+        res = (
+            self._db.table("reservation_addons")
+            .update(
+                {
+                    "status": AddonStatus.pending.value,
+                    # Der Zahl-Zeitpunkt gehörte zu einer Zahlung, die es nicht
+                    # gab — er darf nicht stehen bleiben (Wurzel 1: der
+                    # Gegenzustand wird mitgepflegt).
+                    "charged_at": None,
+                    "cancel_reason": grund,
+                    "cancelled_by": ctx.user_id,
+                    "cancelled_at": _now_iso(),
+                }
+            )
+            .eq("tenant_id", tenant_id)
+            .eq("id", res_addon_id)
+            .eq("status", AddonStatus.paid.value)
+            .execute()
+        )
+        if not res.data:
+            raise AddonError(
+                "Die Zusatzleistung wurde zwischenzeitlich geändert. Bitte die "
+                "Seite neu laden.",
+                status_code=409,
+            )
+        # Wurzel 1: Der Entwurf hat den Addon-Betrag als `paid_amount` mitgezählt
+        # (`status == 'paid'`); wieder offen muss er dort verschwinden, sonst
+        # schreibt der Check-out ein zu hohes „bereits bezahlt" fest. Auch hier
+        # steht die Änderung schon — ein Fehler wird geloggt, nicht als
+        # Fehlschlag des Vorgangs gemeldet (s. `_baue_rechnungsentwurf_neu`).
+        self._baue_rechnungsentwurf_neu(
+            tenant_id, str(row["reservation_id"]), storno_steht_schon=True
+        )
+        log.info(
+            "reservation_addon_unmarked_paid",
+            tenant_id=tenant_id,
+            id=res_addon_id,
+            by=ctx.user_id,
+        )
+        self._log_timeline(
+            tenant_id,
+            str(row["reservation_id"]),
+            "addon_unmarked_paid",
+            ctx,
+            {
+                "name": row.get("name") or {},
+                "total": float(row.get("total") or 0),
+                "reason": grund,
+            },
+        )
+        return ReservationAddonResponse(**_res_addon_row(res.data[0]))
+
+    def _pruefe_grund(self, reason: str) -> str:
+        """Pflicht-Grund prüfen und normalisieren.
+
+        Ein leerer oder aus Leerzeichen bestehender Grund wird abgelehnt (422),
+        nicht durch einen Platzhalter ersetzt: „kein Grund angegeben" als
+        Ersatztext wäre eine erfundene Auskunft und würde die Nachvollziehbar-
+        keit vortäuschen, um die es hier geht (Wurzel 4). Die Obergrenze
+        spiegelt den CHECK der Spalte (Wurzel 8).
+        """
+        grund = (reason or "").strip()
+        if len(grund) < _REASON_MIN_LEN:
+            raise AddonError(
+                f"Bitte einen Grund angeben (mindestens {_REASON_MIN_LEN} "
+                "Zeichen) — er wird am Vorgang protokolliert.",
+                status_code=422,
+            )
+        if len(grund) > _REASON_MAX_LEN:
+            raise AddonError(
+                f"Der Grund darf höchstens {_REASON_MAX_LEN} Zeichen haben.",
+                status_code=422,
+            )
+        return grund
+
+    def _own_res_addon(self, tenant_id: str, res_addon_id: str) -> dict:
+        """Eine gekaufte Zusatzleistung tenant-gescoped laden (Wurzel 3).
+
+        Load und Scope bleiben zusammen — die Service-Role umgeht RLS, ein
+        ungescopter Load nach ID würde fremde Buchungen ausliefern.
+        """
+        rows = (
+            self._db.table("reservation_addons")
+            .select(_RES_ADDON_COLS)
+            .eq("tenant_id", tenant_id)
+            .eq("id", res_addon_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise AddonError("Gekaufte Zusatzleistung nicht gefunden.", status_code=404)
+        return rows[0]
+
+    def _assert_keine_echte_zahlung(self, tenant_id: str, row: dict) -> None:
+        """409, wenn zu dieser Position eine ECHTE Kartenzahlung eingegangen ist.
+
+        Unterscheidet die beiden Fälle, die im Status ``paid`` zusammenfallen:
+        der manuell gesetzte Haken (Fehleingabe, rücknehmbar) und ein über den
+        Stripe-Zahlungslink wirklich eingegangener Betrag (nicht rücknehmbar —
+        dafür braucht es eine Erstattung, damit Geldfluss und Abrechnung nicht
+        auseinanderlaufen).
+
+        Geprüft wird genau DIESE Position (über die Link-Positionen, 0386), nicht
+        die Buchung: Eine Buchung kann mehrere Extras haben, von denen nur einige
+        über einen bezahlten Link liefen. Ein Filter auf die Reservierung hätte
+        die manuell falsch gehakte Position mitgesperrt, sobald irgendein
+        anderes Extra derselben Buchung per Karte bezahlt wurde — also genau die
+        Sackgasse wieder aufgebaut, die hier aufgelöst wird.
+
+        Geprüft werden `paid` UND `open`-Links (fail-closed, Wurzel 5): Unser
+        Link-Status ist NICHT die Wahrheit über den Geldfluss, sondern nur unser
+        Wissensstand. Zahlt der Gast per Karte und der Connect-Webhook stellt
+        nicht zu, bleibt der Link bei uns `open`, obwohl das Geld schon auf dem
+        Stripe-Konto liegt (genau dafür existiert der Nachlese-Abgleich in
+        `zahlung.lesen`). Ein Check nur auf `status='paid'` hätte in diesem Fall
+        nichts gefunden und die Rücknahme durchgelassen — 600 DKK vereinnahmt,
+        Position storniert, niemand sieht einen Fehler. Bei einem offenen Link
+        wird deshalb Stripe selbst gefragt.
+
+        Antwortet die Link-Tabelle nicht, wird NICHT zurückgenommen. Ein stilles
+        Durchwinken könnte eine vereinnahmte Zahlung aus der Abrechnung nehmen.
+        """
+        try:
+            links = (
+                self._db.table("addon_payment_links")
+                .select("id, status, stripe_payment_link_id, stripe_account_id")
+                .eq("tenant_id", tenant_id)
+                .eq("reservation_id", str(row["reservation_id"]))
+                .in_("status", ["paid", "open"])
+                .execute()
+            ).data or []
+            rows: list[dict] = []
+            if links:
+                rows = (
+                    self._db.table("addon_payment_link_items")
+                    .select("link_id, reservation_addon_id")
+                    .in_("link_id", [str(link["id"]) for link in links])
+                    .eq("reservation_addon_id", str(row["id"]))
+                    .execute()
+                ).data or []
+        except APIError as exc:
+            log.warning(
+                "addon_unmark_paid_link_check_failed",
+                reservation_id=row.get("reservation_id"),
+                error=str(exc)[:200],
+            )
+            raise AddonError(
+                "Zahlungsstand konnte nicht geprüft werden — Rücknahme "
+                "abgebrochen.",
+                status_code=503,
+            ) from exc
+        if not rows:
+            return
+        betroffene = {str(r["link_id"]) for r in rows}
+        for link in links:
+            if str(link["id"]) not in betroffene:
+                continue
+            if str(link.get("status")) == "paid":
+                raise self._bezahlt_fehler()
+            if self._stripe_sagt_bezahlt(link):
+                raise self._bezahlt_fehler()
+
+    @staticmethod
+    def _bezahlt_fehler() -> AddonError:
+        return AddonError(
+            "Diese Zusatzleistung wurde per Karte bezahlt. Bitte den Betrag "
+            "erstatten, statt die Markierung zurückzunehmen.",
+            status_code=409,
+        )
+
+    def _stripe_sagt_bezahlt(self, link: dict) -> bool:
+        """Liegt zu einem bei uns OFFENEN Link doch schon eine Zahlung bei Stripe?
+
+        Der Nachlese-Weg, den `zahlung.lesen` ohnehin fährt — hier als Sperre.
+        Fail-closed (Wurzel 5): Antwortet Stripe nicht, wird die Position als
+        „möglicherweise bezahlt" behandelt und die Rücknahme abgebrochen. Lieber
+        eine Position, die der Betrieb nach dem Abgleich erneut anfasst, als ein
+        vereinnahmter Betrag, der lautlos aus der Abrechnung fällt.
+        """
+        from src.features.payments import (  # noqa: PLC0415 — s. _schliesse_offenen_zahlungslink
+            stripe_client as sc,
+        )
+
+        try:
+            session = sc.find_paid_session(
+                str(link["stripe_payment_link_id"]),
+                acct=str(link["stripe_account_id"]),
+            )
+        except Exception as exc:  # noqa: BLE001 — jede Stripe-Störung sperrt
+            log.warning(
+                "addon_unmark_paid_stripe_abgleich_fehlgeschlagen",
+                link_id=str(link.get("id")),
+                error=str(exc)[:200],
+            )
+            raise AddonError(
+                "Der Zahlungsstand bei Stripe konnte nicht geprüft werden — "
+                "Vorgang abgebrochen. Bitte später erneut versuchen.",
+                status_code=503,
+            ) from exc
+        return session is not None
+
+    def _baue_rechnungsentwurf_neu(
+        self, tenant_id: str, reservation_id: str, *, storno_steht_schon: bool = False
+    ) -> None:
+        """Einen noch nicht nummerierten Rechnungsentwurf auf den neuen Stand ziehen.
+
+        Nummerierte Rechnungen sind hier nie betroffen — die lehnt
+        `_assert_not_invoiced` vorher mit 409 ab (GoBD). Der Entwurf ist genau
+        der Zustand, der sich noch ändern DARF, und muss es deshalb auch.
+
+        `storno_steht_schon=True` heißt: Der Statuswechsel ist BEREITS geschrieben
+        (der Neuaufbau muss danach laufen, sonst rechnet er den alten Stand). Ein
+        Fehler darf dann nicht als Fehlschlag des Vorgangs zurückgemeldet werden —
+        das Storno gilt ja. Sonst sähe der Nutzer einen roten Hinweis auf eine
+        Aktion, die stattgefunden hat, und würde sie erneut auslösen.
+        Stattdessen: laut loggen. Der Entwurf ist selbstheilend, weil jeder
+        weitere Vorgang an dieser Buchung ihn erneut aufbaut, und
+        `scripts/diagnose/addon-storno-pruefen.sh` findet den Rückstand.
+
+        Beide heutigen Aufrufer setzen das Flag, weil der Neuaufbau den NEUEN
+        Stand braucht und deshalb zwingend nach dem Schreiben läuft. Der
+        Default bleibt dennoch `False`: Ein künftiger Aufrufer, der VOR dem
+        Schreiben prüfen kann, soll hart abbrechen — das ist die sicherere
+        Voreinstellung, und sie muss bewusst abgewählt werden.
+        """
+        from src.features.buchhaltung.reservation_invoice import (  # noqa: PLC0415
+            BuchhaltungError,
+            rebuild_draft_for_reservation,
+        )
+
+        try:
+            rebuild_draft_for_reservation(self._db, tenant_id, reservation_id)
+        except BuchhaltungError as exc:
+            if not storno_steht_schon:
+                raise AddonError(exc.message, status_code=exc.status_code) from exc
+            log.error(
+                "addon_storno_rechnungsentwurf_nicht_aktualisiert",
+                reservation_id=reservation_id,
+                grund=exc.message,
+            )
+
+    def _schliesse_offenen_zahlungslink(
+        self, tenant_id: str, reservation_id: str, res_addon_id: str
+    ) -> None:
+        """Einen offenen Stripe-Zahlungslink über diese Position schließen.
+
+        Der Import liegt in der Methode, weil `zahlung` den Stripe-Client zieht:
+        auf Modulebene würde jeder Verkaufspfad, der nur `purchase_addons`
+        braucht (booking_engine, public_portal), Stripe mitladen.
+
+        NICHT best-effort (Wurzel 5): `ZahlungslinkFehler` wird in einen
+        `AddonError` übersetzt und bricht das Storno ab. Nur der Fall „kein Link
+        vorhanden" ist still — dann gibt es nichts zu schließen.
+        """
+        from .zahlung import (  # noqa: PLC0415 — bewusst lokal, s. Docstring
+            ZahlungslinkFehler,
+            ziehe_link_zurueck_bei_storno,
+        )
+
+        try:
+            ziehe_link_zurueck_bei_storno(
+                self._db,
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+                res_addon_id=res_addon_id,
+            )
+        except ZahlungslinkFehler as exc:
+            raise AddonError(exc.message, status_code=exc.status_code) from exc
+
+    def _log_timeline(
+        self,
+        tenant_id: str,
+        reservation_id: str,
+        kind: str,
+        ctx: AuthContext,
+        detail: dict,
+    ) -> None:
+        """Ein Ereignis in die Buchungs-Zeitleiste schreiben (0122).
+
+        Dieselbe Tabelle, die der Reservierungs-Slice schreibt — kein zweiter
+        Ereignis-Pfad. Best-effort (Wurzel 5): Die Zeitleiste ist eine
+        Anzeigeschicht; der Grund selbst steht am Datensatz und ist damit auch
+        ohne diese Zeile erhalten. Ein Log-Fehler darf ein Storno nicht kippen.
+        """
+        try:
+            self._db.table("reservation_events").insert(
+                {
+                    "tenant_id": tenant_id,
+                    "reservation_id": reservation_id,
+                    "kind": kind,
+                    "by_user_id": ctx.user_id,
+                    "detail": detail,
+                }
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — Zeitleiste ist best-effort
+            log.warning(
+                "addon_timeline_log_failed",
+                reservation_id=reservation_id,
+                kind=kind,
+                error=str(exc)[:200],
+            )
 
     def change_qty(
         self, ctx: AuthContext, res_addon_id: str, qty: int
@@ -426,17 +809,7 @@ class AddonsService(VerteilungMixin):
                 f"Höchstens {_MAX_ADDON_QTY} Einheiten je Zusatzleistung.",
                 status_code=422,
             )
-        rows = (
-            self._db.table("reservation_addons")
-            .select(_RES_ADDON_COLS)
-            .eq("tenant_id", tenant_id)
-            .eq("id", res_addon_id)
-            .limit(1)
-            .execute()
-        ).data or []
-        if not rows:
-            raise AddonError("Gekaufte Zusatzleistung nicht gefunden.", status_code=404)
-        row = rows[0]
+        row = self._own_res_addon(tenant_id, res_addon_id)
         status = str(row.get("status"))
         if status == AddonStatus.cancelled.value:
             raise AddonError(
@@ -446,8 +819,9 @@ class AddonsService(VerteilungMixin):
             )
         if status == AddonStatus.paid.value:
             raise AddonError(
-                "Diese Zusatzleistung ist bereits als bezahlt markiert. Bitte "
-                "zuerst die Zahlung rückabwickeln bzw. erstatten.",
+                "Diese Zusatzleistung ist als bezahlt markiert. Bitte zuerst die "
+                "Bezahlt-Markierung zurücknehmen (bei Fehleingabe) oder den "
+                "Betrag erstatten.",
                 status_code=409,
             )
         self._assert_not_invoiced(tenant_id, str(row["reservation_id"]))
@@ -491,7 +865,7 @@ class AddonsService(VerteilungMixin):
         return ReservationAddonResponse(**_res_addon_row(res.data[0]))
 
     def cancel_reservation_addon(
-        self, ctx: AuthContext, res_addon_id: str
+        self, ctx: AuthContext, res_addon_id: str, reason: str
     ) -> ReservationAddonResponse:
         """Eine versehentlich gebuchte Zusatzleistung stornieren (status=cancelled).
 
@@ -501,42 +875,56 @@ class AddonsService(VerteilungMixin):
         Unique-Index (0109) klammert stornierte Zeilen aus, dieselbe Leistung ist
         danach also erneut buchbar.
 
-        Zwei Schranken:
-        * Steht die Position schon auf einer FESTGESCHRIEBENEN Rechnung
-          (Nummer gezogen), wäre ein stilles Verschwinden ein GoBD-Bruch → 409 mit
-          dem Hinweis auf die Storno-Rechnung. Ein Entwurf (ohne Nummer) darf sich
-          noch ändern.
-        * Ein bereits BEZAHLTES Extra wird nicht stillschweigend storniert → 409,
-          weil sonst ein vereinnahmter Betrag ohne Rückzahlungsspur verschwindet.
+        Der GRUND ist Pflicht (0397) und landet am Datensatz sowie in der
+        Buchungs-Zeitleiste. Vorher protokollierte der Storno nur, DASS storniert
+        wurde — bei einem Betrag, der aus Rechnung und Eigentümer-Abrechnung
+        verschwindet, ließ sich später nicht mehr unterscheiden, ob die Leistung
+        nie erbracht, kulanz-erlassen oder falsch erfasst wurde.
+
+        Auch eine BEZAHLT markierte Position ist stornierbar (der Fall vom
+        14.08.2026): Vorher gab es hier nur einen 409 mit dem Verweis auf eine
+        Rückabwicklung, für die keine Route existierte — die Zeile war eine
+        Sackgasse. Ist wirklich Geld per Karte eingegangen, greift weiterhin die
+        Sperre (``_assert_keine_echte_zahlung``); dann ist eine Erstattung der
+        richtige Weg, nicht ein Storno, der den Betrag lautlos aus der
+        Abrechnung nimmt.
+
+        Bleibende Schranke: Steht die Position auf einer FESTGESCHRIEBENEN
+        Rechnung (Nummer gezogen), wäre ein stilles Verschwinden ein GoBD-Bruch →
+        409 mit dem Hinweis auf die Storno-Rechnung. Ein Entwurf (ohne Nummer)
+        darf sich noch ändern.
 
         Idempotent (Wurzel 2): ein zweites Storno derselben Zeile ist ein No-op und
         gibt die bereits stornierte Zeile zurück, statt 404/500 zu werfen.
         """
         tenant_id = self._require_tenant(ctx)
-        rows = (
-            self._db.table("reservation_addons")
-            .select(_RES_ADDON_COLS)
-            .eq("tenant_id", tenant_id)
-            .eq("id", res_addon_id)
-            .limit(1)
-            .execute()
-        ).data or []
-        if not rows:
-            raise AddonError("Gekaufte Zusatzleistung nicht gefunden.", status_code=404)
-        row = rows[0]
-        if str(row.get("status")) == AddonStatus.cancelled.value:
+        grund = self._pruefe_grund(reason)
+        row = self._own_res_addon(tenant_id, res_addon_id)
+        status = str(row.get("status"))
+        if status == AddonStatus.cancelled.value:
             return ReservationAddonResponse(**_res_addon_row(row))
-        if str(row.get("status")) == AddonStatus.paid.value:
-            raise AddonError(
-                "Diese Zusatzleistung ist bereits als bezahlt markiert. Bitte "
-                "zuerst die Zahlung rückabwickeln bzw. erstatten.",
-                status_code=409,
-            )
+        if status == AddonStatus.paid.value:
+            # Manuell gehakt → stornierbar. Echt per Karte bezahlt → 409.
+            self._assert_keine_echte_zahlung(tenant_id, row)
         self._assert_not_invoiced(tenant_id, str(row["reservation_id"]))
+        # Wurzel 1 — VOR dem Status-Wechsel: Deckt ein OFFENER Zahlungslink diese
+        # Position, muss er geschlossen werden, sonst nimmt seine URL weiter Geld
+        # für eine stornierte Leistung an. Scheitert das bei Stripe, bricht das
+        # Storno ab (fail-closed) statt die offene URL stehen zu lassen.
+        self._schliesse_offenen_zahlungslink(
+            tenant_id, str(row["reservation_id"]), res_addon_id
+        )
 
         res = (
             self._db.table("reservation_addons")
-            .update({"status": AddonStatus.cancelled.value})
+            .update(
+                {
+                    "status": AddonStatus.cancelled.value,
+                    "cancel_reason": grund,
+                    "cancelled_by": ctx.user_id,
+                    "cancelled_at": _now_iso(),
+                }
+            )
             .eq("tenant_id", tenant_id)
             .eq("id", res_addon_id)
             .neq("status", AddonStatus.cancelled.value)
@@ -544,16 +932,46 @@ class AddonsService(VerteilungMixin):
         )
         if not res.data:
             raise AddonError("Gekaufte Zusatzleistung nicht gefunden.", status_code=404)
+        # Wurzel 1 — NACH dem Statuswechsel, damit der Entwurf den neuen Stand
+        # sieht: Ein noch nicht nummerierter Rechnungsentwurf trägt die Position
+        # samt Betrag; `_finalize_reservation_draft` zieht beim Check-out nur die
+        # Nummer und übernimmt die Beträge unverändert. Ohne diesen Neuaufbau
+        # stünde die stornierte Position als nummerierte GoBD-Position auf der
+        # Rechnung.
+        self._baue_rechnungsentwurf_neu(
+            tenant_id, str(row["reservation_id"]), storno_steht_schon=True
+        )
         self._close_addon_task(tenant_id, row)
-        log.info("reservation_addon_cancelled", tenant_id=tenant_id, id=res_addon_id)
+        log.info(
+            "reservation_addon_cancelled",
+            tenant_id=tenant_id,
+            id=res_addon_id,
+            by=ctx.user_id,
+            war_bezahlt=status == AddonStatus.paid.value,
+        )
+        self._log_timeline(
+            tenant_id,
+            str(row["reservation_id"]),
+            "addon_cancelled",
+            ctx,
+            {
+                "name": row.get("name") or {},
+                "total": float(row.get("total") or 0),
+                "reason": grund,
+                "war_bezahlt": status == AddonStatus.paid.value,
+            },
+        )
         return ReservationAddonResponse(**_res_addon_row(res.data[0]))
 
     def _assert_not_invoiced(self, tenant_id: str, reservation_id: str) -> None:
         """409, wenn zur Buchung schon eine festgeschriebene Rechnung existiert.
 
         Festgeschrieben = Rechnungsnummer gezogen (GoBD). Entwürfe ohne Nummer
-        werden beim Check-out ohnehin neu aus dem Bestand aufgebaut und dürfen
-        sich daher noch ändern."""
+        dürfen sich noch ändern — aber NICHT, weil sie beim Check-out neu
+        aufgebaut würden: `_finalize_reservation_draft` zieht nur die Nummer und
+        übernimmt Positionen und Beträge unverändert (Fund vom 14.08.2026, die
+        alte Begründung hier war falsch). Der Aufrufer pflegt den Entwurf daher
+        selbst nach (`_baue_rechnungsentwurf_neu`)."""
         try:
             rows = (
                 self._db.table("invoices")
@@ -781,6 +1199,9 @@ def _res_addon_row(r: dict) -> dict:
         "status": r.get("status") or "pending",
         "charged_at": r.get("charged_at"),
         "created_at": r.get("created_at"),
+        "cancel_reason": r.get("cancel_reason"),
+        "cancelled_by": (str(r["cancelled_by"]) if r.get("cancelled_by") else None),
+        "cancelled_at": r.get("cancelled_at"),
     }
 
 

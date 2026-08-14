@@ -4352,7 +4352,14 @@
         "taskCreated": "Tasc cruthaithe",
         "message": "Teachtaireacht",
         "payment": "Íocaíocht",
-        "addon": "Seirbhís bhreise"
+        "addon": "Seirbhís bhreise",
+        "archived": "Cartlannaithe",
+        "unarchived": "Aisghafa ón chartlann",
+        "noteChanged": "Nóta athraithe",
+        "guestChanged": "Sonraí an chustaiméara athraithe",
+        "addonMarkedPaid": "Seirbhís bhreise marcáilte mar íoctha",
+        "addonUnmarkedPaid": "Baineadh an marc „íoctha”",
+        "addonCancelled": "Seirbhís bhreise cealaithe"
       },
       "title": {
         "onProperty": " ar {property}",
@@ -6015,7 +6022,7 @@
       "markPaidSuccess": "Marcáilte mar íoctha.",
       "cancelAction": "Cealaigh",
       "cancelBusy": "Á chealú…",
-      "cancelConfirm": "An bhfuil tú cinnte gur mhaith leat an tseirbhís bhreise seo a chealú?",
+      "cancelConfirm": "An bhfuil tú cinnte gur mhaith leat an tseirbhís bhreise seo a chealú? Fágfar an tsuim as an sonrasc agus as ráiteas an úinéara.",
       "cancelSuccess": "Seirbhís bhreise cealaithe.",
       "addSuccess": "Seirbhís bhreise curtha leis.",
       "totalLabel": "Iomlán na seirbhísí breise",
@@ -6040,7 +6047,14 @@
       "qtySave": "Cuir i bhfeidhm",
       "qtySaving": "Á shábháil …",
       "qtySaved": "Cainníocht athraithe.",
-      "perGuestSuffix": "in aghaidh an duine"
+      "perGuestSuffix": "in aghaidh an duine",
+      "unmarkPaidAction": "Bain an marc „íoctha”",
+      "unmarkPaidConfirm": "An bhfuil tú cinnte gur mhaith leat an marc „íoctha” a bhaint? Áirfear an tseirbhís bhreise ar feitheamh arís ina dhiaidh sin.",
+      "unmarkPaidSuccess": "Baineadh an marc „íoctha”.",
+      "reasonLabel": "Cúis",
+      "reasonPlaceholder": "m.sh. marcáilte mar íoctha trí dhearmad",
+      "reasonRequired": "Tabhair cúis le do thoil (3 charachtar ar a laghad).",
+      "reasonLogged": "Cúis: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Maoin",

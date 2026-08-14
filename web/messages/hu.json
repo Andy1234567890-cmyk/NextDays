@@ -4352,7 +4352,14 @@
         "taskCreated": "Feladat létrehozva",
         "message": "Üzenet",
         "payment": "Fizetés",
-        "addon": "Kiegészítő szolgáltatás"
+        "addon": "Kiegészítő szolgáltatás",
+        "archived": "Archiválva",
+        "unarchived": "Visszahozva az archívumból",
+        "noteChanged": "Megjegyzés módosítva",
+        "guestChanged": "Vendégadatok módosítva",
+        "addonMarkedPaid": "Kiegészítő szolgáltatás fizetettként megjelölve",
+        "addonUnmarkedPaid": "Fizetett jelölés visszavonva",
+        "addonCancelled": "Kiegészítő szolgáltatás lemondva"
       },
       "title": {
         "onProperty": " ezen: {property}",
@@ -6015,7 +6022,7 @@
       "markPaidSuccess": "Fizetettként megjelölve.",
       "cancelAction": "Lemondás",
       "cancelBusy": "Lemondás…",
-      "cancelConfirm": "Biztosan lemondja ezt a kiegészítő szolgáltatást?",
+      "cancelConfirm": "Biztosan lemondja ezt a kiegészítő szolgáltatást? Az összeg kiesik a számlából és a tulajdonosi elszámolásból.",
       "cancelSuccess": "A kiegészítő szolgáltatás lemondva.",
       "addSuccess": "Extra szolgáltatás hozzáadva.",
       "totalLabel": "Extra szolgáltatások összesen",
@@ -6040,7 +6047,14 @@
       "qtySave": "Alkalmaz",
       "qtySaving": "Mentés …",
       "qtySaved": "Mennyiség módosítva.",
-      "perGuestSuffix": "fő"
+      "perGuestSuffix": "fő",
+      "unmarkPaidAction": "Fizetett jelölés visszavonása",
+      "unmarkPaidConfirm": "Biztosan visszavonja a fizetett jelölést? A kiegészítő szolgáltatás ezután ismét nyitottként szerepel.",
+      "unmarkPaidSuccess": "A fizetett jelölés visszavonva.",
+      "reasonLabel": "Ok",
+      "reasonPlaceholder": "pl. tévedésből fizetettként megjelölve",
+      "reasonRequired": "Adjon meg egy okot (legalább 3 karakter).",
+      "reasonLogged": "Ok: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Ingatlan",

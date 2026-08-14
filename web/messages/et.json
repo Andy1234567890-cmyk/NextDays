@@ -4352,7 +4352,14 @@
         "taskCreated": "Ülesanne loodud",
         "message": "Sõnum",
         "payment": "Makse",
-        "addon": "Lisateenus"
+        "addon": "Lisateenus",
+        "archived": "Arhiveeritud",
+        "unarchived": "Arhiivist välja võetud",
+        "noteChanged": "Märkust muudetud",
+        "guestChanged": "Kliendiandmeid muudetud",
+        "addonMarkedPaid": "Lisateenus märgitud makstuks",
+        "addonUnmarkedPaid": "Makstuks märkimine võetud tagasi",
+        "addonCancelled": "Lisateenus tühistatud"
       },
       "title": {
         "onProperty": " objektil {property}",
@@ -6015,7 +6022,7 @@
       "markPaidSuccess": "Märgitud makstuks.",
       "cancelAction": "Tühista",
       "cancelBusy": "Tühistan…",
-      "cancelConfirm": "Kas tühistada see lisateenus?",
+      "cancelConfirm": "Kas tühistada see lisateenus? Summa jääb arvest ja omaniku arveldusest välja.",
       "cancelSuccess": "Lisateenus tühistatud.",
       "addSuccess": "Lisateenus lisatud.",
       "totalLabel": "Lisateenuste summa",
@@ -6040,7 +6047,14 @@
       "qtySave": "Rakenda",
       "qtySaving": "Salvestamine …",
       "qtySaved": "Kogus muudetud.",
-      "perGuestSuffix": "inimese kohta"
+      "perGuestSuffix": "inimese kohta",
+      "unmarkPaidAction": "Võta makstuks märkimine tagasi",
+      "unmarkPaidConfirm": "Kas võtta makstuks märkimine tõesti tagasi? Lisateenust käsitletakse seejärel taas avatuna.",
+      "unmarkPaidSuccess": "Makstuks märkimine võetud tagasi.",
+      "reasonLabel": "Põhjus",
+      "reasonPlaceholder": "nt kogemata makstuks märgitud",
+      "reasonRequired": "Palun märgi põhjus (vähemalt 3 tähemärki).",
+      "reasonLogged": "Põhjus: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Objekt",

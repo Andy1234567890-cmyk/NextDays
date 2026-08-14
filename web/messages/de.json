@@ -4377,7 +4377,10 @@
         "archived": "In die Ablage gelegt",
         "unarchived": "Aus der Ablage geholt",
         "noteChanged": "Notiz geändert",
-        "guestChanged": "Gastdaten geändert"
+        "guestChanged": "Gastdaten geändert",
+        "addonMarkedPaid": "Zusatzleistung als bezahlt markiert",
+        "addonUnmarkedPaid": "Bezahlt-Markierung zurückgenommen",
+        "addonCancelled": "Zusatzleistung storniert"
       },
       "title": {
         "onProperty": " auf {property}",
@@ -6161,7 +6164,7 @@
       "markPaidSuccess": "Als bezahlt markiert.",
       "cancelAction": "Stornieren",
       "cancelBusy": "Storniere…",
-      "cancelConfirm": "Diese Zusatzleistung wirklich stornieren?",
+      "cancelConfirm": "Diese Zusatzleistung wirklich stornieren? Der Betrag fällt aus Rechnung und Eigentümer-Abrechnung heraus.",
       "cancelSuccess": "Zusatzleistung storniert.",
       "addSuccess": "Zusatzleistung hinzugefügt.",
       "totalLabel": "Summe Zusatzleistungen",
@@ -6186,7 +6189,14 @@
       "qtySave": "Übernehmen",
       "qtySaving": "Wird gespeichert …",
       "qtySaved": "Menge geändert.",
-      "perGuestSuffix": "pro Person"
+      "perGuestSuffix": "pro Person",
+      "unmarkPaidAction": "Bezahlt-Markierung zurücknehmen",
+      "unmarkPaidConfirm": "Die Bezahlt-Markierung wirklich zurücknehmen? Die Zusatzleistung wird danach wieder als offen geführt.",
+      "unmarkPaidSuccess": "Bezahlt-Markierung zurückgenommen.",
+      "reasonLabel": "Grund",
+      "reasonPlaceholder": "z. B. versehentlich als bezahlt markiert",
+      "reasonRequired": "Bitte einen Grund angeben (mindestens 3 Zeichen).",
+      "reasonLogged": "Grund: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Objekt",

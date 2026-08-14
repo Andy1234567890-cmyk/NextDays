@@ -23,6 +23,7 @@ import {
   getZahlungslink,
   listReservationAddons,
   markReservationAddonPaid,
+  unmarkReservationAddonPaid,
   type Addon,
   type ReservationAddon,
   type Zahlungslink,
@@ -76,10 +77,31 @@ export function ReservationAddonsSection({
   const [editId, setEditId] = useState<string | null>(null);
   const [editMenge, setEditMenge] = useState("1");
   const [editBusy, setEditBusy] = useState(false);
-  // Storno wird inline bestätigt (id der Zeile, die gerade nachfragt) — dasselbe
-  // Muster wie der Buchungs-Storno im Slider, kein blindes Ein-Klick-Entfernen.
+  // Storno und Rücknahme der Bezahlt-Markierung werden inline bestätigt (id der
+  // Zeile, die gerade nachfragt) — dasselbe Muster wie der Buchungs-Storno im
+  // Slider, kein blindes Ein-Klick-Entfernen. `confirmKind` unterscheidet, WAS
+  // bestätigt wird: beide verlangen einen Grund, haben aber verschiedene Folgen
+  // (Position weg vs. Position wieder offen).
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [confirmKind, setConfirmKind] = useState<"cancel" | "unpaid">("cancel");
+  // Pflicht-Grund. Er wird am Vorgang und in der Buchungs-Zeitleiste
+  // protokolliert — ein Betrag, der aus Rechnung und Eigentümer-Abrechnung
+  // herausfällt, muss erklärbar bleiben.
+  const [grund, setGrund] = useState("");
   const [cancelling, setCancelling] = useState(false);
+  // Läuft gerade ein „als bezahlt markieren"? (id der Zeile) — verhindert den
+  // Doppelklick, den der Server jetzt mit 409 ablehnen würde.
+  const [paidBusy, setPaidBusy] = useState<string | null>(null);
+
+  /** Bestätigungsfeld für eine Zeile öffnen/schließen und den Grund leeren.
+   *  Der Grund wird bewusst NICHT zwischen zwei Zeilen mitgeschleppt — sonst
+   *  landet die Begründung der einen Position am Storno der anderen. */
+  function nachfragen(id: string, art: "cancel" | "unpaid") {
+    setConfirmId((c) => (c === id && confirmKind === art ? null : id));
+    setConfirmKind(art);
+    setGrund("");
+    setEditId(null);
+  }
   // Stripe-Zahlungslink über die offenen Zusatzleistungen. null = keiner offen.
   const [link, setLink] = useState<Zahlungslink | null>(null);
   const [linkBusy, setLinkBusy] = useState(false);
@@ -176,8 +198,17 @@ export function ReservationAddonsSection({
     }
   }
 
+  /** Als bezahlt markieren.
+   *
+   *  Mit Busy-Guard: Der Server lässt den Wechsel nur aus „offen" zu (damit ein
+   *  Storno nicht überschrieben wird). Bei einem Doppelklick verliert der zweite
+   *  Request dieses Rennen und bekäme einen 409 — der Nutzer sähe eine rote
+   *  Meldung, obwohl die Aktion geklappt hat. */
   async function markPaid(id: string) {
+    if (paidBusy) return;
+    setPaidBusy(id);
     const res = await markReservationAddonPaid(id);
+    setPaidBusy(null);
     if (res.ok) {
       await reload();
       toast.success(t("reservationAddonsSection.markPaidSuccess"));
@@ -186,19 +217,39 @@ export function ReservationAddonsSection({
     }
   }
 
-  async function cancelAddon(id: string) {
-    setCancelling(true);
-    const res = await cancelReservationAddon(id);
-    setCancelling(false);
-    setConfirmId(null);
-    if (res.ok) {
-      await reload();
-      toast.success(t("reservationAddonsSection.cancelSuccess"));
-      // Der Storno ändert die fällige Summe der Buchung → Detail neu rechnen.
-      onChanged?.();
-    } else {
-      toast.error(res.error);
+  /** Storno bzw. Rücknahme der Bezahlt-Markierung — beide mit Pflicht-Grund.
+   *
+   *  Die Länge wird schon hier geprüft, damit der Nutzer nicht erst nach einem
+   *  Server-Roundtrip erfährt, dass zwei Zeichen kein Grund sind; der Server
+   *  prüft dasselbe erneut (er ist die Wahrheit, nicht dieses Feld). */
+  async function bestaetigen(id: string) {
+    const text = grund.trim();
+    if (text.length < 3) {
+      toast.error(t("reservationAddonsSection.reasonRequired"));
+      return;
     }
+    setCancelling(true);
+    const res =
+      confirmKind === "unpaid"
+        ? await unmarkReservationAddonPaid(id, text)
+        : await cancelReservationAddon(id, text);
+    setCancelling(false);
+    if (!res.ok) {
+      // Das Feld bleibt offen: Der eingetippte Grund darf bei einem 409 nicht
+      // verloren gehen (der Nutzer müsste ihn sonst neu schreiben).
+      toast.error(res.error);
+      return;
+    }
+    setConfirmId(null);
+    setGrund("");
+    await reload();
+    toast.success(
+      confirmKind === "unpaid"
+        ? t("reservationAddonsSection.unmarkPaidSuccess")
+        : t("reservationAddonsSection.cancelSuccess"),
+    );
+    // Beides ändert die fällige Summe der Buchung → Detail neu rechnen.
+    onChanged?.();
   }
 
   async function linkErstellen() {
@@ -296,6 +347,7 @@ export function ReservationAddonsSection({
                         setEditId((c) => (c === p.id ? null : p.id));
                         setEditMenge(String(p.qty));
                         setConfirmId(null);
+                        setGrund("");
                       }}
                       aria-label={t("reservationAddonsSection.qtyEditAction")}
                       title={t("reservationAddonsSection.qtyEditAction")}
@@ -308,20 +360,35 @@ export function ReservationAddonsSection({
                     <button
                       type="button"
                       onClick={() => void markPaid(p.id)}
-                      className="text-xs font-medium text-accent hover:underline"
+                      disabled={paidBusy !== null}
+                      className="text-xs font-medium text-accent hover:underline disabled:opacity-50"
                     >
                       {t("reservationAddonsSection.markPaidAction")}
                     </button>
                   )}
-                  {/* Storno für falsch gebuchte Zusatzleistungen. Nur solange
-                      offen — Bezahltes wird über die Zahlung/Rechnung
-                      rückabgewickelt, nicht hier weggeklickt. */}
-                  {p.status === "pending" && (
+                  {/* Bezahlt-Markierung zurücknehmen: für den Fall, dass der
+                      Haken versehentlich gesetzt wurde. Ohne das war eine
+                      falsch als bezahlt markierte Position eine Sackgasse —
+                      Storno und Mengenänderung lehnten sie beide ab. Ist
+                      wirklich Geld per Karte eingegangen, lehnt der Server ab
+                      und verweist auf die Erstattung. */}
+                  {p.status === "paid" && (
                     <button
                       type="button"
-                      onClick={() =>
-                        setConfirmId((c) => (c === p.id ? null : p.id))
-                      }
+                      onClick={() => nachfragen(p.id, "unpaid")}
+                      disabled={cancelling}
+                      className="text-xs font-medium text-muted-foreground hover:text-accent hover:underline disabled:opacity-50"
+                    >
+                      {t("reservationAddonsSection.unmarkPaidAction")}
+                    </button>
+                  )}
+                  {/* Storno für falsch gebuchte Zusatzleistungen — auch für
+                      manuell auf „bezahlt" gesetzte (der Live-Fall). Die Zeile
+                      bleibt als Beleg stehen, der Betrag fällt heraus. */}
+                  {p.status !== "cancelled" && (
+                    <button
+                      type="button"
+                      onClick={() => nachfragen(p.id, "cancel")}
                       disabled={cancelling}
                       aria-label={t("reservationAddonsSection.cancelAction")}
                       title={t("reservationAddonsSection.cancelAction")}
@@ -370,17 +437,46 @@ export function ReservationAddonsSection({
                   </span>
                 </div>
               )}
+              {/* Bereits protokollierter Grund: steht dauerhaft an der Position,
+                  damit später niemand rätseln muss, warum der Betrag fehlt. */}
+              {p.cancel_reason && confirmId !== p.id && (
+                <p className="text-xs text-muted-foreground">
+                  {t("reservationAddonsSection.reasonLogged", {
+                    grund: p.cancel_reason,
+                  })}
+                  {p.cancelled_at
+                    ? ` · ${new Date(p.cancelled_at).toLocaleString(locale)}`
+                    : ""}
+                </p>
+              )}
               {confirmId === p.id && (
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-(--radius) border border-destructive/30 p-2">
+                <div className="flex flex-col gap-2 rounded-(--radius) border border-destructive/30 p-2">
                   <p className="text-xs text-destructive">
-                    {t("reservationAddonsSection.cancelConfirm")}
+                    {confirmKind === "unpaid"
+                      ? t("reservationAddonsSection.unmarkPaidConfirm")
+                      : t("reservationAddonsSection.cancelConfirm")}
                   </p>
-                  <span className="flex shrink-0 gap-2">
+                  <label className="flex flex-col gap-1">
+                    <span className="text-xs text-muted-foreground">
+                      {t("reservationAddonsSection.reasonLabel")}
+                    </span>
+                    <Input
+                      value={grund}
+                      maxLength={500}
+                      autoFocus
+                      placeholder={t("reservationAddonsSection.reasonPlaceholder")}
+                      onChange={(e) => setGrund(e.target.value)}
+                    />
+                  </label>
+                  <span className="flex flex-wrap justify-end gap-2">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => setConfirmId(null)}
+                      onClick={() => {
+                        setConfirmId(null);
+                        setGrund("");
+                      }}
                       disabled={cancelling}
                     >
                       {tc("cancel")}
@@ -389,12 +485,14 @@ export function ReservationAddonsSection({
                       type="button"
                       size="sm"
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      onClick={() => void cancelAddon(p.id)}
-                      disabled={cancelling}
+                      onClick={() => void bestaetigen(p.id)}
+                      disabled={cancelling || grund.trim().length < 3}
                     >
                       {cancelling
                         ? t("reservationAddonsSection.cancelBusy")
-                        : t("reservationAddonsSection.cancelAction")}
+                        : confirmKind === "unpaid"
+                          ? t("reservationAddonsSection.unmarkPaidAction")
+                          : t("reservationAddonsSection.cancelAction")}
                     </Button>
                   </span>
                 </div>

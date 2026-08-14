@@ -4347,7 +4347,14 @@
         "taskCreated": "Uppgift skapad",
         "message": "Meddelande",
         "payment": "Betalning",
-        "addon": "Tilläggstjänst"
+        "addon": "Tilläggstjänst",
+        "archived": "Arkiverad",
+        "unarchived": "Hämtad ur arkivet",
+        "noteChanged": "Anteckning ändrad",
+        "guestChanged": "Kunduppgifter ändrade",
+        "addonMarkedPaid": "Tilläggstjänst markerad som betald",
+        "addonUnmarkedPaid": "Betald-markeringen borttagen",
+        "addonCancelled": "Tilläggstjänst annullerad"
       },
       "title": {
         "onProperty": " på {property}",
@@ -6010,7 +6017,7 @@
       "markPaidSuccess": "Markerad som betald.",
       "cancelAction": "Annullera",
       "cancelBusy": "Annullerar…",
-      "cancelConfirm": "Vill du verkligen annullera denna tilläggstjänst?",
+      "cancelConfirm": "Vill du verkligen annullera denna tilläggstjänst? Beloppet faller bort från faktura och ägaravräkning.",
       "cancelSuccess": "Tilläggstjänsten har annullerats.",
       "addSuccess": "Tilläggstjänst tillagd.",
       "totalLabel": "Summa tilläggstjänster",
@@ -6035,7 +6042,14 @@
       "qtySave": "Tillämpa",
       "qtySaving": "Sparar …",
       "qtySaved": "Antalet har ändrats.",
-      "perGuestSuffix": "per person"
+      "perGuestSuffix": "per person",
+      "unmarkPaidAction": "Ta bort betald-markeringen",
+      "unmarkPaidConfirm": "Vill du verkligen ta bort betald-markeringen? Tilläggstjänsten förs därefter som öppen igen.",
+      "unmarkPaidSuccess": "Betald-markeringen har tagits bort.",
+      "reasonLabel": "Orsak",
+      "reasonPlaceholder": "t.ex. markerad som betald av misstag",
+      "reasonRequired": "Ange en orsak (minst 3 tecken).",
+      "reasonLogged": "Orsak: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Objekt",

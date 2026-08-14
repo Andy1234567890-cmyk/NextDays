@@ -4352,7 +4352,14 @@
         "taskCreated": "Tâche créée",
         "message": "Message",
         "payment": "Paiement",
-        "addon": "Option"
+        "addon": "Option",
+        "archived": "Archivée",
+        "unarchived": "Sortie des archives",
+        "noteChanged": "Remarque modifiée",
+        "guestChanged": "Données client modifiées",
+        "addonMarkedPaid": "Option marquée comme payée",
+        "addonUnmarkedPaid": "Mention payé annulée",
+        "addonCancelled": "Option annulée"
       },
       "title": {
         "onProperty": " sur {property}",
@@ -6015,7 +6022,7 @@
       "markPaidSuccess": "Marqué comme payé.",
       "cancelAction": "Annuler",
       "cancelBusy": "Annulation…",
-      "cancelConfirm": "Annuler vraiment ce service supplémentaire ?",
+      "cancelConfirm": "Annuler vraiment ce service supplémentaire ? Le montant sera retiré de la facture et du relevé propriétaire.",
       "cancelSuccess": "Service supplémentaire annulé.",
       "addSuccess": "Service supplémentaire ajouté.",
       "totalLabel": "Total services supplémentaires",
@@ -6040,7 +6047,14 @@
       "qtySave": "Appliquer",
       "qtySaving": "Enregistrement …",
       "qtySaved": "Quantité modifiée.",
-      "perGuestSuffix": "par personne"
+      "perGuestSuffix": "par personne",
+      "unmarkPaidAction": "Annuler la mention payé",
+      "unmarkPaidConfirm": "Annuler vraiment la mention payé ? Le service supplémentaire sera ensuite de nouveau considéré comme ouvert.",
+      "unmarkPaidSuccess": "Mention payé annulée.",
+      "reasonLabel": "Motif",
+      "reasonPlaceholder": "par ex. marqué comme payé par erreur",
+      "reasonRequired": "Veuillez indiquer un motif (au moins 3 caractères).",
+      "reasonLogged": "Motif : {grund}"
     },
     "ratesView": {
       "propertyLabel": "Bien",

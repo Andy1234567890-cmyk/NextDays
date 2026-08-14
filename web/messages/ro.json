@@ -4347,7 +4347,14 @@
         "taskCreated": "Sarcină creată",
         "message": "Mesaj",
         "payment": "Plată",
-        "addon": "Serviciu suplimentar"
+        "addon": "Serviciu suplimentar",
+        "archived": "Arhivată",
+        "unarchived": "Scoasă din arhivă",
+        "noteChanged": "Observație modificată",
+        "guestChanged": "Date client modificate",
+        "addonMarkedPaid": "Serviciu suplimentar marcat ca plătit",
+        "addonUnmarkedPaid": "Marcajul „plătit” a fost retras",
+        "addonCancelled": "Serviciu suplimentar anulat"
       },
       "title": {
         "onProperty": " la {property}",
@@ -6010,7 +6017,7 @@
       "markPaidSuccess": "Marcat ca plătit.",
       "cancelAction": "Anulează",
       "cancelBusy": "Se anulează…",
-      "cancelConfirm": "Anulați cu adevărat acest serviciu suplimentar?",
+      "cancelConfirm": "Anulați cu adevărat acest serviciu suplimentar? Suma iese din factură și din decontul proprietarului.",
       "cancelSuccess": "Serviciul suplimentar a fost anulat.",
       "addSuccess": "Serviciul suplimentar a fost adăugat.",
       "totalLabel": "Total servicii suplimentare",
@@ -6035,7 +6042,14 @@
       "qtySave": "Aplică",
       "qtySaving": "Se salvează …",
       "qtySaved": "Cantitate modificată.",
-      "perGuestSuffix": "de persoană"
+      "perGuestSuffix": "de persoană",
+      "unmarkPaidAction": "Retrage marcajul „plătit”",
+      "unmarkPaidConfirm": "Retrageți cu adevărat marcajul „plătit”? Serviciul suplimentar va fi trecut din nou ca deschis.",
+      "unmarkPaidSuccess": "Marcajul „plătit” a fost retras.",
+      "reasonLabel": "Motiv",
+      "reasonPlaceholder": "de ex. marcat ca plătit din greșeală",
+      "reasonRequired": "Indicați un motiv (minimum 3 caractere).",
+      "reasonLogged": "Motiv: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Proprietate",

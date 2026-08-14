@@ -53,6 +53,11 @@ export type ReservationAddon = {
   status: "pending" | "paid" | "cancelled";
   charged_at: string | null;
   created_at: string | null;
+  /** Grund für Storno bzw. Rücknahme der Bezahlt-Markierung (Pflicht auf dem
+   *  Schreibpfad; null bei Bestandszeilen und Gast-Käufen). */
+  cancel_reason: string | null;
+  cancelled_by: string | null;
+  cancelled_at: string | null;
 };
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -198,7 +203,8 @@ export async function changeReservationAddonQty(
 }
 
 /** Eine gekaufte Zusatzleistung manuell als bezahlt markieren (ohne Payment-
- *  Provider: „zahlbar bei Anreise"). */
+ *  Provider: „zahlbar bei Anreise"). Nur aus „offen" — eine stornierte Position
+ *  wird nicht überschrieben (409). */
 export async function markReservationAddonPaid(
   resAddonId: string,
 ): Promise<Result<ReservationAddon>> {
@@ -207,15 +213,37 @@ export async function markReservationAddonPaid(
   });
 }
 
+/** Eine fälschlich gesetzte Bezahlt-Markierung zurücknehmen (→ wieder offen).
+ *
+ *  Für die FEHLEINGABE, nicht für eine Rückzahlung: Es ist kein Geld geflossen,
+ *  es wurde nur der falsche Haken gesetzt. Der Grund ist Pflicht und wird am
+ *  Vorgang sowie in der Buchungs-Zeitleiste protokolliert. 409, wenn die
+ *  Position wirklich per Karte bezahlt wurde (dann erstatten) oder auf einer
+ *  festgeschriebenen Rechnung steht. */
+export async function unmarkReservationAddonPaid(
+  resAddonId: string,
+  reason: string,
+): Promise<Result<ReservationAddon>> {
+  return call(`/addons/reservation-addons/${resAddonId}/unmark-paid`, {
+    method: "POST",
+    body: { reason },
+  });
+}
+
 /** Eine falsch gebuchte Zusatzleistung stornieren (status=cancelled). Kein
  *  Löschen: die Position bleibt als Beleg stehen, fällt aber aus Rechnung,
- *  Eigentümer-Abrechnung und Gast-Portal heraus. 409, wenn bereits bezahlt oder
- *  schon auf einer festgeschriebenen Rechnung. */
+ *  Eigentümer-Abrechnung und Gast-Portal heraus.
+ *
+ *  Der Grund ist Pflicht (Protokoll am Vorgang + Zeitleiste). Auch eine manuell
+ *  auf „bezahlt" gesetzte Position ist stornierbar; 409 nur bei echter
+ *  Kartenzahlung oder festgeschriebener Rechnung. */
 export async function cancelReservationAddon(
   resAddonId: string,
+  reason: string,
 ): Promise<Result<ReservationAddon>> {
   return call(`/addons/reservation-addons/${resAddonId}/cancel`, {
     method: "POST",
+    body: { reason },
   });
 }
 

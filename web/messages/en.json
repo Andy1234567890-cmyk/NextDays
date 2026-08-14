@@ -4373,7 +4373,14 @@
         "taskCreated": "Task created",
         "message": "Message",
         "payment": "Payment",
-        "addon": "Add-on service"
+        "addon": "Add-on service",
+        "archived": "Archived",
+        "unarchived": "Restored from archive",
+        "noteChanged": "Note changed",
+        "guestChanged": "Customer data changed",
+        "addonMarkedPaid": "Add-on service marked as paid",
+        "addonUnmarkedPaid": "Paid mark undone",
+        "addonCancelled": "Add-on service cancelled"
       },
       "title": {
         "onProperty": " at {property}",
@@ -6036,7 +6043,7 @@
       "markPaidSuccess": "Marked as paid.",
       "cancelAction": "Cancel item",
       "cancelBusy": "Cancelling…",
-      "cancelConfirm": "Really cancel this add-on?",
+      "cancelConfirm": "Really cancel this add-on? The amount will drop out of the invoice and the owner statement.",
       "cancelSuccess": "Add-on cancelled.",
       "addSuccess": "Add-on added.",
       "totalLabel": "Total add-ons",
@@ -6061,7 +6068,14 @@
       "qtySave": "Apply",
       "qtySaving": "Saving …",
       "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "perGuestSuffix": "per person",
+      "unmarkPaidAction": "Undo paid mark",
+      "unmarkPaidConfirm": "Really undo the paid mark? The add-on will then be listed as open again.",
+      "unmarkPaidSuccess": "Paid mark undone.",
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "e.g. marked as paid by mistake",
+      "reasonRequired": "Please state a reason (at least 3 characters).",
+      "reasonLogged": "Reason: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Property",

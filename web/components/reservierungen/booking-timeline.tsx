@@ -51,6 +51,11 @@ const KIND_META: Record<
   unarchived: { icon: "ph:archive-box", labelKey: "kind.unarchived", tone: "text-foreground", cat: "booking" },
   note_changed: { icon: "ph:note-pencil", labelKey: "kind.noteChanged", tone: "text-foreground", cat: "booking" },
   guest_changed: { icon: "ph:user-gear", labelKey: "kind.guestChanged", tone: "text-foreground", cat: "booking" },
+  // Zusatzleistungen: Zahlstatus und Storno (0397). Kategorie „payment", weil es
+  // Geldbewegungen der Buchung betrifft — dort sucht der Betrieb sie.
+  addon_marked_paid: { icon: "ph:check-circle-fill", labelKey: "kind.addonMarkedPaid", tone: "text-success", cat: "payment" },
+  addon_unmarked_paid: { icon: "ph:arrow-u-up-left", labelKey: "kind.addonUnmarkedPaid", tone: "text-foreground", cat: "payment" },
+  addon_cancelled: { icon: "ph:x-circle-fill", labelKey: "kind.addonCancelled", tone: "text-destructive", cat: "payment" },
 };
 
 function useFilters(t: T): { key: Category; label: string }[] {
@@ -208,6 +213,16 @@ function cardRows(t: T, ev: TimelineEvent, currency: string, locale: string): [s
       push(t("bookingTimeline.row.service"), pickName(d.name));
       push(t("bookingTimeline.row.price"), money(d.price));
       push(t("bookingTimeline.row.status"), s(d.status));
+      break;
+    // Zahlstatus/Storno einer Zusatzleistung (0397). Der GRUND ist hier der
+    // eigentliche Inhalt: er erklärt, warum ein Betrag aus Rechnung und
+    // Eigentümer-Abrechnung herausgefallen ist.
+    case "addon_marked_paid":
+    case "addon_unmarked_paid":
+    case "addon_cancelled":
+      push(t("bookingTimeline.row.service"), pickName(d.name));
+      push(t("bookingTimeline.row.price"), money(d.total));
+      push(t("bookingTimeline.row.reason"), s(d.reason));
       break;
     default:
       break;

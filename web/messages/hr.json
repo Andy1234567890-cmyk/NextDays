@@ -4352,7 +4352,14 @@
         "taskCreated": "Zadatak izrađen",
         "message": "Poruka",
         "payment": "Plaćanje",
-        "addon": "Dodatna usluga"
+        "addon": "Dodatna usluga",
+        "archived": "Arhivirano",
+        "unarchived": "Izvađeno iz arhive",
+        "noteChanged": "Napomena promijenjena",
+        "guestChanged": "Podaci o gostu promijenjeni",
+        "addonMarkedPaid": "Dodatna usluga označena kao plaćena",
+        "addonUnmarkedPaid": "Oznaka „plaćeno” povučena",
+        "addonCancelled": "Dodatna usluga otkazana"
       },
       "title": {
         "onProperty": " na {property}",
@@ -6015,7 +6022,7 @@
       "markPaidSuccess": "Označeno kao plaćeno.",
       "cancelAction": "Otkaži",
       "cancelBusy": "Otkazujem…",
-      "cancelConfirm": "Želite li stvarno otkazati ovu dodatnu uslugu?",
+      "cancelConfirm": "Želite li stvarno otkazati ovu dodatnu uslugu? Iznos ispada iz računa i iz obračuna vlasnika.",
       "cancelSuccess": "Dodatna usluga otkazana.",
       "addSuccess": "Dodatna usluga dodana.",
       "totalLabel": "Ukupno dodatnih usluga",
@@ -6040,7 +6047,14 @@
       "qtySave": "Primijeni",
       "qtySaving": "Spremanje …",
       "qtySaved": "Količina promijenjena.",
-      "perGuestSuffix": "po osobi"
+      "perGuestSuffix": "po osobi",
+      "unmarkPaidAction": "Povuci oznaku „plaćeno”",
+      "unmarkPaidConfirm": "Želite li stvarno povući oznaku „plaćeno”? Dodatna usluga nakon toga se ponovno vodi kao otvorena.",
+      "unmarkPaidSuccess": "Oznaka „plaćeno” povučena.",
+      "reasonLabel": "Razlog",
+      "reasonPlaceholder": "npr. greškom označeno kao plaćeno",
+      "reasonRequired": "Unesite razlog (najmanje 3 znaka).",
+      "reasonLogged": "Razlog: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Objekt",

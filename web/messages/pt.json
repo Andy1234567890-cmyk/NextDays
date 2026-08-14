@@ -4347,7 +4347,14 @@
         "taskCreated": "Tarefa criada",
         "message": "Mensagem",
         "payment": "Pagamento",
-        "addon": "Serviço adicional"
+        "addon": "Serviço adicional",
+        "archived": "Arquivada",
+        "unarchived": "Retirada do arquivo",
+        "noteChanged": "Observação alterada",
+        "guestChanged": "Dados do cliente alterados",
+        "addonMarkedPaid": "Serviço adicional marcado como pago",
+        "addonUnmarkedPaid": "Marcação de pago retirada",
+        "addonCancelled": "Serviço adicional anulado"
       },
       "title": {
         "onProperty": " em {property}",
@@ -6010,7 +6017,7 @@
       "markPaidSuccess": "Marcado como pago.",
       "cancelAction": "Anular",
       "cancelBusy": "A anular…",
-      "cancelConfirm": "Anular mesmo este serviço adicional?",
+      "cancelConfirm": "Anular mesmo este serviço adicional? O valor deixa de constar na fatura e no extrato de proprietário.",
       "cancelSuccess": "Serviço adicional anulado.",
       "addSuccess": "Serviço extra adicionado.",
       "totalLabel": "Total de serviços extra",
@@ -6035,7 +6042,14 @@
       "qtySave": "Aplicar",
       "qtySaving": "A guardar …",
       "qtySaved": "Quantidade alterada.",
-      "perGuestSuffix": "por pessoa"
+      "perGuestSuffix": "por pessoa",
+      "unmarkPaidAction": "Retirar a marcação de pago",
+      "unmarkPaidConfirm": "Retirar mesmo a marcação de pago? O serviço adicional volta a constar como em aberto.",
+      "unmarkPaidSuccess": "Marcação de pago retirada.",
+      "reasonLabel": "Motivo",
+      "reasonPlaceholder": "p. ex. marcado como pago por engano",
+      "reasonRequired": "Indique um motivo (pelo menos 3 caracteres).",
+      "reasonLogged": "Motivo: {grund}"
     },
     "ratesView": {
       "propertyLabel": "Propriedade",

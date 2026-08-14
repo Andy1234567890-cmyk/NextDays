@@ -148,6 +148,12 @@ class ReservationAddonResponse(BaseModel):
     status: AddonStatus
     charged_at: str | None = None
     created_at: str | None = None
+    # Storno/Rücknahme der Bezahlt-Markierung (0397): Grund, Urheber, Zeitpunkt.
+    # Die Oberfläche zeigt sie unter der Position an — ein Betrag, der aus
+    # Rechnung und Eigentümer-Abrechnung herausfällt, muss erklärbar bleiben.
+    cancel_reason: str | None = None
+    cancelled_by: str | None = None
+    cancelled_at: str | None = None
 
 
 class ReservationAddonListResponse(BaseModel):
@@ -182,6 +188,21 @@ class ReservationAddonQty(BaseModel):
     """
 
     qty: int = Field(ge=1, le=99)
+
+
+class ReservationAddonCancel(BaseModel):
+    """Grund für Storno bzw. Rücknahme der Bezahlt-Markierung (0397).
+
+    Pflichtfeld: Ein Betrag, der aus Rechnung und Eigentümer-Abrechnung
+    herausfällt, muss nachvollziehbar bleiben. Freitext statt Auswahlliste, weil
+    die realen Gründe (falsch erfasst, Gast hat abbestellt, Kulanz,
+    Doppelerfassung, Leistung nicht erbracht) nicht abschließend aufzählbar sind
+    — eine Enum hätte beim ersten unpassenden Fall ein „sonstiges" erzwungen und
+    die Auskunft entwertet. Die Obergrenze spiegelt den CHECK der Spalte
+    (Wurzel 8).
+    """
+
+    reason: str = Field(min_length=3, max_length=500)
 
 
 class ZahlungslinkResponse(BaseModel):

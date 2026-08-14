@@ -918,7 +918,9 @@ class ReadsMixin(ReservationsBase):
                     kind=kind,
                     at=str(ev.get("created_at")),
                     by_user_id=ev.get("by_user_id"),
-                    detail=self._mask_event_detail(ev.get("detail") or {}, mask),
+                    detail=self._mask_event_detail(
+                        ev.get("detail") or {}, mask, kind
+                    ),
                     synthetic=False,
                 )
             )
@@ -1170,15 +1172,32 @@ class ReadsMixin(ReservationsBase):
         ).data or []
         return {row["id"]: (row.get("full_name") or "") for row in rows}
 
-    @staticmethod
-    def _mask_event_detail(detail: dict, mask: GuestMask) -> dict:
+    # Ereignisarten, deren `reason` ein Freitext ÜBER EINEN GELDBETRAG ist
+    # (Zusatzleistungen, 0397): „Kulanz 600 DKK erlassen", „Gast zahlt nur die
+    # Hälfte". Ihn ungefiltert zu zeigen würde den `total`-Filter unten wieder
+    # aufheben. Beim Buchungs-Storno (`cancelled`) bleibt der Grund sichtbar —
+    # dort ist er betriebliche Information, kein Betrag.
+    _MONEY_REASON_KINDS = frozenset(
+        {"addon_marked_paid", "addon_unmarked_paid", "addon_cancelled"}
+    )
+
+    @classmethod
+    def _mask_event_detail(
+        cls, detail: dict, mask: GuestMask, kind: str = ""
+    ) -> dict:
         """Betragsführende Detailfelder eines Events hinter der Betrags-Maske
         halten (Wurzel 4 — keine Beträge ohne Freigabe). Nicht-Geld-Felder
-        (Objekt-IDs, Kanal, Titel, Grund) bleiben unverändert."""
+        (Objekt-IDs, Kanal, Titel) bleiben unverändert; der `reason` nur bei
+        den Ereignisarten, in denen er keinen Betrag beschreibt."""
         if mask.amounts:
             return detail
         redacted = dict(detail)
-        for money_key in ("total_amount",):
+        if kind in cls._MONEY_REASON_KINDS and "reason" in redacted:
+            redacted["reason"] = None
+        # `total` tragen die Zusatzleistungs-Ereignisse (addons, 0397); ohne den
+        # Schlüssel hier hätte Personal ohne Finanzeinblick den Betrag einer
+        # stornierten Position in der Zeitleiste gelesen (§4.3).
+        for money_key in ("total_amount", "total"):
             if money_key in redacted:
                 redacted[money_key] = None
         return redacted
