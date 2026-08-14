@@ -20,7 +20,7 @@
 // Fehlen lat/lng, wird KEIN Punkt erfunden (Wurzel 4) — dann nur die Adresse als
 // Text + „In Karte öffnen"-Link. Fehlt der API-Key, wird das BENANNT statt eine
 // leere graue Fläche zu zeigen, die wie ein Defekt aussieht.
-import { APIProvider, Map, Marker } from "@vis.gl/react-google-maps";
+import { AdvancedMarker, APIProvider, Map } from "@vis.gl/react-google-maps";
 import { useTranslations } from "next-intl";
 
 import { Icon } from "@iconify/react";
@@ -87,7 +87,10 @@ export function PropertyLocation(p: LocationProps) {
                 mapId="nextdays-location"
                 style={{ width: "100%", height: "100%" }}
               >
-                <Marker position={{ lat, lng }} />
+                {/* AdvancedMarker statt des zum 21.02.2024 abgekündigten
+                    `Marker` (v3.56). Setzt `mapId` oben voraus — ohne die
+                    Karten-ID rendert Google die erweiterte Markierung nicht. */}
+                <AdvancedMarker position={{ lat, lng }} />
               </Map>
             </APIProvider>
           </div>

@@ -33,6 +33,17 @@ export interface CspOptions {
 const MAPS_SCRIPT = ["https://maps.googleapis.com"];
 const MAPS_CONNECT = ["https://maps.googleapis.com", "https://maps.gstatic.com"];
 const MAPS_IMG = ["https://maps.googleapis.com", "https://maps.gstatic.com", "https://*.googleusercontent.com"];
+// Maps lädt seine Schriften über ein Stylesheet von fonts.googleapis.com, das
+// wiederum die Dateien von fonts.gstatic.com holt — beide Direktiven sind in
+// Googles CSP-Doku ausdrücklich so genannt.
+//
+// Sie fehlten, obwohl script-/connect-/img-src längst freigegeben waren: die
+// Karte lud, aber jedes Stylesheet lief in „violates the following Content
+// Security Policy directive: style-src 'self' 'unsafe-inline'" (live in der
+// Browser-Konsole). Die Beschriftungen der Karte standen damit in der
+// Fallback-Schrift statt in Googles Roboto.
+const MAPS_STYLE = ["https://fonts.googleapis.com"];
+const MAPS_FONT = ["https://fonts.gstatic.com"];
 
 /** Baut den CSP-Header-Wert für eine App. */
 export function buildCsp(opts: CspOptions = {}): string {
@@ -52,12 +63,14 @@ export function buildCsp(opts: CspOptions = {}): string {
     ...(googleMaps ? MAPS_CONNECT : []),
   ].join(" ");
   const img = ["'self'", "data:", "blob:", "https:", ...(googleMaps ? MAPS_IMG : [])].join(" ");
+  const style = ["'self'", "'unsafe-inline'", ...(googleMaps ? MAPS_STYLE : [])].join(" ");
+  const font = ["'self'", "data:", ...(googleMaps ? MAPS_FONT : [])].join(" ");
   return [
     "default-src 'self'",
     `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ""}${scriptExtra}`,
-    "style-src 'self' 'unsafe-inline'",
+    `style-src ${style}`,
     `img-src ${img}`,
-    "font-src 'self' data:",
+    `font-src ${font}`,
     `connect-src ${connect}`,
     `frame-ancestors ${frameAncestors}`,
     "base-uri 'self'",

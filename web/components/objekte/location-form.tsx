@@ -6,9 +6,9 @@
 //  Slide-over-Editor. Basis-Adresse → eigene Spalten; Zusätze →
 //  type_attributes.location. Speicherung per updateProperty().
 import {
+  AdvancedMarker,
   APIProvider,
   Map,
-  Marker,
   useMap,
   useMapsLibrary,
 } from "@vis.gl/react-google-maps";
@@ -393,8 +393,10 @@ function AddressEditor({
                 style={{ width: "100%", height: "100%" }}
               >
                 <Recenter lat={a.lat} lng={a.lng} />
+                {/* AdvancedMarker statt des zum 21.02.2024 abgekündigten
+                    `Marker` (v3.56). Braucht die `mapId` oben. */}
                 {a.lat != null && a.lng != null && (
-                  <Marker position={{ lat: a.lat, lng: a.lng }} />
+                  <AdvancedMarker position={{ lat: a.lat, lng: a.lng }} />
                 )}
               </Map>
             </div>
