@@ -125,7 +125,12 @@ def liste(  # noqa: PLR0913 — jeder Filter ist eine eigene Achse der Ansicht
     if vorgang:
         query = query.eq("vorgang", vorgang)
     if nur_fehler:
-        query = query.eq("ergebnis", "fehler")
+        # Warnungen gehören dazu: sie sind offene Vorgänge, keine gelungenen.
+        # Wer „nur Auffälliges" filtert, sucht genau die Zeilen, an denen etwas
+        # zu tun ist — eine unbekannte Gebührenart (`ergebnis='warnung'`) ist
+        # so eine, auch wenn der Job selbst durchlief. Ohne sie hier wäre die
+        # Meldung im meistgenutzten Filter unsichtbar.
+        query = query.in_("ergebnis", ["fehler", "warnung"])
     if property_id:
         query = query.eq("property_id", property_id)
     res = (

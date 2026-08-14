@@ -139,7 +139,9 @@ export function WorkerTabelle({
             checked={nurFehler}
             onChange={(e) => setNurFehler(e.target.checked)}
           />
-          Nur Fehler
+          {/* „Offene" statt „Fehler": der Filter zeigt Fehler UND Warnungen —
+              beides sind Vorgänge, an denen jemand etwas zu tun hat. */}
+          Nur offene
         </label>
         <span className="text-sm text-muted-foreground">
           {gesamt} Vorgänge · Seite {seite} von {seiten}
@@ -302,12 +304,17 @@ function Zeile({ ereignis: e }: { ereignis: WorkerEreignis }) {
   }
 
   const fehler = e.ergebnis === "fehler";
+  // Eine Warnung ist kein Ausfall: der Vorgang lief durch, aber etwas blieb
+  // offen (z. B. eine Gebührenart, die kein Katalog auflöst — der Betrag ist
+  // übernommen, die Zuordnung fehlt). Eigene, ruhigere Farbe: rot neben echten
+  // Ausfällen würde beides entwerten, farblos wäre sie unsichtbar.
+  const warnung = e.ergebnis === "warnung";
   return (
     <>
       <tr
         onClick={aufklappen}
         className={`cursor-pointer border-b border-border/50 hover:bg-accent/5 ${
-          fehler ? "bg-destructive/5" : ""
+          fehler ? "bg-destructive/5" : warnung ? "bg-amber-500/5" : ""
         }`}
       >
         <td className="py-2 pr-4 whitespace-nowrap font-mono text-xs text-muted-foreground">
@@ -344,6 +351,10 @@ function Zeile({ ereignis: e }: { ereignis: WorkerEreignis }) {
                 <span className="text-xs text-muted-foreground">erledigt</span>
               ) : fehler ? (
                 <span className="font-semibold text-destructive">Fehler</span>
+              ) : warnung ? (
+                <span className="font-semibold text-amber-600 dark:text-amber-500">
+                  Offen
+                </span>
               ) : (
                 <span className="text-muted-foreground">ok</span>
               )}
@@ -353,10 +364,12 @@ function Zeile({ ereignis: e }: { ereignis: WorkerEreignis }) {
                 </span>
               ) : null}
             </span>
-            {/* Nur an fehlgeschlagenen Läufen: Ein erfolgreicher Job ist kein
-                Vorgang, den jemand abarbeitet — bei 1947 „ok"-Zeilen wäre ein
-                Knopf an jeder davon reiner Lärm. */}
-            {fehler || erledigt ? (
+            {/* Nur an fehlgeschlagenen Läufen und Warnungen: Ein erfolgreicher
+                Job ist kein Vorgang, den jemand abarbeitet — bei 1947
+                „ok"-Zeilen wäre ein Knopf an jeder davon reiner Lärm. Eine
+                Warnung dagegen IST ein Vorgang: sie bleibt offen, bis jemand
+                die fehlende Zuordnung nachgetragen hat. */}
+            {fehler || warnung || erledigt ? (
               <ErledigtKnopf
                 quelle="worker"
                 id={e.id}

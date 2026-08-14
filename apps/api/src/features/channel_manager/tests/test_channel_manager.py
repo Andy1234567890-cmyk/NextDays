@@ -663,8 +663,8 @@ def test_expedia_bekommt_nichts() -> None:
     assert diagnose["gebuehren_nicht_exportiert"] == 1
 
 
-def test_booking_nimmt_nur_prozent_und_zwar_inklusiv() -> None:
-    """Booking.com: nur Prozentwerte, und sie stecken IM Zimmerpreis."""
+def test_booking_steuer_nur_prozent_und_inklusiv() -> None:
+    """Booking.com-STEUERN: nur Prozentwerte, und sie stecken IM Zimmerpreis."""
     posten, diagnose = _abgaben(
         ota_abgaben.BOOKING,
         taxes=[
@@ -674,15 +674,42 @@ def test_booking_nimmt_nur_prozent_und_zwar_inklusiv() -> None:
              "mode": "amount", "value": 2, "chargeBasis": "PerPerson",
              "period": "PerNight"},
         ],
+        fees=[],
+    )
+    assert set(posten) == {"Kurtaxe %"}
+    assert posten["Kurtaxe %"].attrs["is_inclusive"] is True
+    assert diagnose["steuer_nicht_exportfaehig"] == ["b"]
+
+
+def test_booking_nimmt_feste_gebuehren_und_zwar_exklusiv() -> None:
+    """Booking.com-GEBÜHREN: auch feste Beträge, und getrennt ausgewiesen.
+
+    Gegen die Lodgify-Aussage „Fixed amounts are not exported" — die beschreibt
+    Lodgifys eigenen Weg, nicht den über Channex. Live belegt am 14.08.2026:
+    drei Objekte (Rævehulen, FeWo Lille Lægehus, Perlen Tversted) bekommen ihre
+    Booking-Buchungen mit UNSEREN deutschen Gebührennamen und Betrag zurück
+    (``rooms[].taxes``: „Reinigungsgebühr", ``is_inclusive: false``) — das kann
+    nur unser Sync geliefert haben.
+
+    ``is_inclusive: false`` ist der Kern: die Reinigungsgebühr ist NICHT im
+    Zimmerpreis enthalten. Bei ``true`` zöge Booking sie aus dem Nachtpreis
+    heraus statt sie zu addieren — der Gast zahlte weniger und die Gebühr wäre
+    nie eingezogen.
+    """
+    posten, diagnose = _abgaben(
+        ota_abgaben.BOOKING,
+        taxes=[],
         fees=[
             {"id": "fp", "name": "Service %", "amount": 5, "mode": "percent"},
             {"id": "fb", "name": "Reinigung", "amount": 50},
         ],
     )
-    assert set(posten) == {"Kurtaxe %", "Service %"}
-    assert all(p.attrs["is_inclusive"] is True for p in posten.values())
-    assert diagnose["steuer_nicht_exportfaehig"] == ["b"]
-    assert diagnose["gebuehr_kein_prozent"] == ["fb"]
+    assert set(posten) == {"Service %", "Reinigung"}
+    assert all(p.attrs["is_inclusive"] is False for p in posten.values())
+    assert posten["Reinigung"].attrs["logic"] == "per_booking"
+    # Kein „geht nicht raus"-Vermerk mehr — sonst stünde an der Gebühr wieder
+    # der Chip „Manuelle Synchronisierung · Booking.com" (abgaben_status).
+    assert "gebuehr_kein_prozent" not in diagnose
 
 
 def test_airbnb_nimmt_betragssteuer_nur_pro_gast_pro_nacht() -> None:

@@ -526,23 +526,108 @@ def test_leere_taxes_bei_booking_heisst_keine_gebuehren() -> None:
     assert booking_aufgeloeste_posten(_aufgeloest_raw([])) == []
 
 
-def test_unbekannte_art_wirft_statt_zu_verschlucken() -> None:
-    """Eine unbenannte Gebühr ist ein offener Punkt, kein 0,00.
+def test_unbekannte_art_wird_aufgenommen_statt_verworfen() -> None:
+    """Eine unbenannte Gebühr ist ein offener Punkt, kein 0,00 — und kein Stopp.
 
     Sie zu überspringen verlöre Geld, das der Gast bezahlt hat; sie zu raten
-    schlüge es der falschen Partei zu (Wurzel 4).
+    schlüge es der falschen Partei zu (Wurzel 4). Beides passiert nicht: der
+    Posten kommt unter `portal:<originaltext>` mit seinem ECHTEN Betrag durch.
+
+    Warum nicht mehr geworfen wird (Änderung 14.08.2026): der Anzeigename kommt
+    in der Sprache des Inserats, und weder Booking noch Channex dokumentieren
+    die vollständige Liste der Arten. Eine feste Namensliste ist deshalb
+    prinzipiell unvollständig — jede unbekannte Art blockierte die gesamte
+    Eigentümer-Abrechnung. Live betroffen: „Mehrwertsteuer (25%)" bei
+    Rævehulen und jedes dänische Inserat („Rengøringsgebyr").
+
+    Die Kategorie bleibt trotzdem ein offener Punkt: `gebuehren_zuordnen`
+    verlangt für JEDE Art die einmalige Zuordnung durch den Betrieb („Wem
+    gehören die Gebühren?"). Der Posten landet also im dafür vorgesehenen
+    Prozess statt in einem toten Winkel.
+    """
+    from src.features.owner_statements.gebuehren_quelle import (
+        booking_aufgeloeste_bezeichnungen,
+        booking_aufgeloeste_posten,
+    )
+
+    raw = _aufgeloest_raw(
+        [{"name": "Frühstückspauschale", "total_price": "50.00"}]
+    )
+    assert booking_aufgeloeste_posten(raw) == [
+        ("portal:frühstückspauschale", Decimal("50.00"))
+    ]
+    # Der Originaltext bleibt erhalten — er ist die einzige Information, die
+    # der Betrieb zum Zuordnen hat.
+    assert (
+        booking_aufgeloeste_bezeichnungen(raw)["portal:frühstückspauschale"]
+        == "Frühstückspauschale"
+    )
+
+
+def test_daenischer_name_ueber_sprachneutralen_schluessel() -> None:
+    """Ein Name in einer dritten Sprache wird über `charge_periods` erkannt.
+
+    Der Betrieb führt seine Inserate auf Dänisch; „Rengøringsgebyr" steht in
+    keiner Namensliste. Bookings Schlüssel `CLEANINGFEE` ist sprachneutral und
+    ordnet den Posten trotzdem der Reinigungsgebühr zu — nicht `portal:…`.
     """
     from src.features.owner_statements.gebuehren_quelle import (
         booking_aufgeloeste_posten,
     )
 
-    with pytest.raises(PayoutUnbekannt) as exc:
-        booking_aufgeloeste_posten(
-            _aufgeloest_raw(
-                [{"name": "Frühstückspauschale", "total_price": "50.00"}]
-            )
-        )
-    assert exc.value.grund == "gebuehr_nicht_zugeordnet"
+    raw = {
+        "rooms": [
+            {
+                "taxes": [
+                    {
+                        "name": "Rengøringsgebyr",
+                        "type": "Service Charge",
+                        "total_price": "795.00",
+                    }
+                ],
+                "meta": {
+                    "price_details": {},
+                    "charge_periods": {"CLEANINGFEE": [{"excluded": False}]},
+                },
+            }
+        ]
+    }
+    assert booking_aufgeloeste_posten(raw) == [
+        ("cleaning_fee", Decimal("795.00"))
+    ]
+
+
+def test_steuerzeile_ist_keine_gebuehr() -> None:
+    """`Value Added Tax (VAT)` gehört nicht in die Auszahlung des Eigentümers.
+
+    Live gemessen an Feriehus Rævehulen: Booking meldet die MwSt in derselben
+    `rooms[].taxes`-Liste wie die Gebühren. Bis 14.08.2026 warf sie
+    `gebuehr_nicht_zugeordnet` und blockierte damit die Abrechnung dieses
+    Objekts; als Gebühr verrechnet wäre sie dem Eigentümer zugeschlagen worden.
+
+    Erkannt am strukturierten `type`, nicht am Namen — der ist sprachabhängig.
+    """
+    from src.features.owner_statements.gebuehren_quelle import (
+        booking_aufgeloeste_posten,
+    )
+
+    raw = _aufgeloest_raw(
+        [
+            {
+                "name": "Reinigungsgebühr",
+                "type": "Service Charge",
+                "total_price": "795.00",
+            },
+            {
+                "name": "Mehrwertsteuer (25%)",
+                "type": "Value Added Tax (VAT)",
+                "total_price": "199.00",
+            },
+        ]
+    )
+    assert booking_aufgeloeste_posten(raw) == [
+        ("cleaning_fee", Decimal("795.00"))
+    ]
 
 
 def test_posten_ohne_gesamtbetrag_wirft() -> None:

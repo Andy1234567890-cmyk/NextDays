@@ -1900,6 +1900,12 @@ class BookingsSyncMixin:
                     "kind": "lodging",
                 }
             )
+        # Eine Art, die weder über den Namen noch über Bookings sprachneutralen
+        # Schlüssel aufzulösen war, läuft als `portal:<originaltext>` durch
+        # (gebuehren_quelle). Der Betrag stimmt und die Abrechnung läuft — aber
+        # die Kategorie ist offen, und niemand sieht ein Logfile. Darum als
+        # Ereignis in den Monitor, wo es abgehakt werden kann.
+        self._unbekannte_gebuehrenarten_melden(attrs, gebuehren or [])
         for art, betrag in gebuehren or []:
             items.append(
                 {
@@ -1916,6 +1922,55 @@ class BookingsSyncMixin:
                 }
             )
         return items
+
+    def _unbekannte_gebuehrenarten_melden(
+        self, attrs: dict[str, Any], gebuehren: list[tuple[str, Any]]
+    ) -> None:
+        """Unaufgelöste Gebührenarten als Monitor-Ereignis sichtbar machen.
+
+        WARUM ALS EREIGNIS UND NICHT NUR ALS LOGZEILE: Der Anzeigename einer
+        Booking-Gebühr kommt in der Sprache des INSERATS, und weder Booking noch
+        Channex dokumentieren die vollständige Liste ihrer Arten. Eine feste
+        Namensliste ist deshalb prinzipiell unvollständig — es ist eine Frage
+        der Zeit, bis eine neue Art oder Sprache auftaucht. Bis 14.08.2026
+        blockierte so ein Fall die gesamte Eigentümer-Abrechnung des Objekts
+        (live: „Mehrwertsteuer (25%)" bei Feriehus Rævehulen).
+
+        Seither läuft der Posten unter `portal:<text>` durch, damit die
+        Abrechnung nicht steht. Genau das macht die Meldung nötig: was nicht
+        mehr wehtut, fällt sonst niemandem auf. Im Monitor steht es neben den
+        übrigen Portal-Ereignissen und lässt sich abhaken, sobald die Art
+        nachgetragen ist.
+
+        Best effort wie der ganze Verlauf: eine fehlende Meldezeile darf den
+        Import einer Buchung nicht kippen (`worker_verlauf.merken` fängt selbst).
+        """
+        offen = sorted(
+            {art for art, _ in gebuehren if str(art).startswith("portal:")}
+        )
+        if not offen or self._db is None:
+            return
+        from src.jobs.worker_verlauf import merken
+
+        code = str(attrs.get("ota_reservation_code") or "?")
+        merken(
+            self._db,
+            richtung="eingang",
+            vorgang="portal_gebuehrenart_unbekannt",
+            # KEIN "error": die Buchung ist korrekt importiert und der Betrag
+            # stimmt. Offen ist nur die Kategorie — als Fehler gemeldet würde
+            # die Zeile im Monitor rot neben echten Ausfällen stehen.
+            ergebnis="warnung",
+            tenant_id=str(attrs.get("tenant_id") or "") or None,
+            quelle_tabelle="channex_booking",
+            zusammenfassung=(
+                f"{len(offen)} unbekannte Gebührenart(en) aus "
+                f"{attrs.get('ota_name') or 'einem Portal'} "
+                f"(Buchung {code}): {', '.join(offen)}. Betrag ist übernommen, "
+                "die Zuordnung fehlt."
+            ),
+            kennzahlen={"arten": offen, "buchung": code},
+        )
 
     @staticmethod
     def _to_float(value: object) -> float | None:

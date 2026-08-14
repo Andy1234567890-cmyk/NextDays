@@ -17,12 +17,19 @@ belegt (Lodgify Help-Center „Taxes and Fees applied in OTAs", englisches Origi
 |              | wird zu EINER Gebühr summiert;     | Nacht. Getrennt vom       |
 |              | gemischte Modelle → gar nicht      | Zimmerpreis ausgewiesen.  |
 |              |                                    | Hängt am Steuerszenario.  |
-| Booking.com  | NUR Prozent, im Zimmerpreis        | NUR Prozent, im           |
-|              | enthalten. Feste Beträge nicht.    | Zimmerpreis enthalten.    |
+| Booking.com  | Prozent UND feste Beträge, GETRENNT| NUR Prozent, im           |
+|              | ausgewiesen (nicht im Zimmerpreis).| Zimmerpreis enthalten.    |
 | Expedia      | nichts                             | nichts                    |
 | HomeAway/    | Prozent UND Betrag, getrennt       | Prozent UND Betrag,       |
 | Vrbo         | ausgewiesen, keine Summierung      | getrennt ausgewiesen      |
 +--------------+-----------------------------------+---------------------------+
+
+EINE ZEILE WEICHT BEWUSST VOM ARTIKEL AB: Booking.com nimmt über Channex auch
+FESTE Gebührenbeträge, obwohl Lodgify „Fixed amounts are not exported" schreibt.
+Der Artikel beschreibt Lodgifys eigenen Weg zum Portal, unserer läuft über
+Channex; belegt an echten Buchungen (14.08.2026, Beleg an
+`PORTAL_REGELN[BOOKING]`). Wo Messung und Artikel sich widersprechen, gilt die
+Messung.
 
 HomeAway/Vrbo ist verdrahtet, aber NICHT über einen festen Code: der
 Channex-Kanalkatalog führt den Kanal heute nicht (live geprüft 03.08.2026, 52
@@ -142,29 +149,43 @@ class PortalRegel:
     * `im_zimmerpreis` — `True`: Abgabe steckt im gesendeten Preis
       (`is_inclusive`), `False`: getrennt ausgewiesen. `None`: keine Aussage,
       die Pflege am Objekt gilt.
+    * `gebuehr_im_zimmerpreis` — dasselbe NUR für Gebühren, wenn es dort anders
+      ist als bei Steuern. `None` (der Normalfall) heißt „wie `im_zimmerpreis`".
+      Gebraucht für Booking.com: die Steuer steckt dort im Zimmerpreis, die
+      Gebühr wird getrennt ausgewiesen — Beleg an `PORTAL_REGELN[BOOKING]`.
     * `summieren` — Gebühren derselben Airbnb-Kategorie zu EINER zusammenfassen.
     * `grundlage_wirkt` — die Steuerbemessungsgrundlage wirkt bei diesem Portal.
       Sonst gilt: Steuern nur auf den Basispreis.
     """
 
     __slots__ = (
-        "gebuehren", "steuern", "im_zimmerpreis", "summieren", "grundlage_wirkt",
+        "gebuehren", "steuern", "im_zimmerpreis", "gebuehr_im_zimmerpreis",
+        "summieren", "grundlage_wirkt",
     )
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 — eine Achse je Regel, alle benannt
         self,
         *,
         gebuehren: str,
         steuern: str,
         im_zimmerpreis: bool | None,
+        gebuehr_im_zimmerpreis: bool | None = None,
         summieren: bool = False,
         grundlage_wirkt: bool = False,
     ) -> None:
         self.gebuehren = gebuehren
         self.steuern = steuern
         self.im_zimmerpreis = im_zimmerpreis
+        self.gebuehr_im_zimmerpreis = gebuehr_im_zimmerpreis
         self.summieren = summieren
         self.grundlage_wirkt = grundlage_wirkt
+
+    @property
+    def gebuehr_inklusiv(self) -> bool:
+        """`is_inclusive` einer GEBÜHR bei diesem Portal."""
+        if self.gebuehr_im_zimmerpreis is not None:
+            return self.gebuehr_im_zimmerpreis
+        return bool(self.im_zimmerpreis)
 
 
 PORTAL_REGELN: dict[str, PortalRegel] = {
@@ -176,9 +197,37 @@ PORTAL_REGELN: dict[str, PortalRegel] = {
         grundlage_wirkt=True,
     ),
     BOOKING: PortalRegel(
-        gebuehren="nur_prozent",
+        # GEBÜHREN: „alle", nicht „nur_prozent" — live widerlegt am 14.08.2026.
+        #
+        # Der Lodgify-Hilfeartikel sagt „Fixed amounts are not exported". Das
+        # gilt für LODGIFYS eigenen Weg zum Portal, nicht für den über Channex.
+        # Belegt an drei Objekten, deren Booking-Buchungen unsere DEUTSCHEN
+        # Gebührennamen mit Betrag zurückmelden — die kann nur unser Sync
+        # geliefert haben (Rævehulen, FeWo Lille Lægehus, Perlen Tversted;
+        # `rooms[].taxes`: „Reinigungsgebühr", „Resortgebühr", is_inclusive
+        # false). Ein fester Betrag kommt bei Booking.com über Channex also an.
+        #
+        # Die alte Regel ließ ihn aus dem Portal-Set fallen und setzte an jeder
+        # Festbetrags-Gebühr den Chip „Manuelle Synchronisierung · Booking.com"
+        # (abgaben_status). Der schickte den Betrieb ins Extranet für etwas, das
+        # der Sync längst überträgt — und ein Nachtrag dort berechnete die
+        # Gebühr dem Gast DOPPELT.
+        #
+        # Zum Gegenbild: Objekte, deren Buchungen ENGLISCHE Namen melden
+        # („Cleaning fee", is_inclusive true), haben die Posten im Booking-
+        # Extranet stehen; das ist die Konfiguration des Portals, nicht unsere.
+        #
+        # STEUERN bleiben bei „nur_prozent" und im Zimmerpreis: dafür gibt es
+        # keine Gegenmessung. Nur was belegt ist, wird geändert (Wurzel 4).
+        gebuehren="alle",
         steuern="nur_prozent",
         im_zimmerpreis=True,
+        # Die Gebühr geht EXKLUSIV raus — genau der Wert, der in allen drei
+        # belegten Fällen live durch die Kette lief. `is_inclusive: true` hieße
+        # laut Channex-Doku „steckt bereits im gesendeten Preis": Booking zöge
+        # den Betrag dann aus dem Nachtpreis heraus, statt ihn zu addieren — der
+        # Gast zahlte weniger und die Gebühr wäre nie eingezogen.
+        gebuehr_im_zimmerpreis=False,
     ),
     EXPEDIA: PortalRegel(
         gebuehren="keine",
@@ -620,7 +669,7 @@ def abgaben_je_portal(  # pylint: disable=too-many-locals
     # Nachtpreise verteilen (Wurzel 4). Channex nimmt sie stattdessen exakt als
     # eigenen Posten (`logic: per_booking` …) und addiert sie beim Portal. Der
     # Gast zahlt denselben Endpreis; die Aufschlüsselung ist genauer.
-    gebuehr_inklusiv = bool(regel.im_zimmerpreis)
+    gebuehr_inklusiv = regel.gebuehr_inklusiv
     if regel.gebuehren == "keine":
         if eigene_fees:
             diagnose["gebuehren_nicht_exportiert"] = len(eigene_fees)

@@ -80,7 +80,11 @@ from typing import Any
 
 from supabase import Client
 
+from src.core.logging import get_logger
+
 from .common import Gebuehr, PayoutUnbekannt, zu_decimal
+
+log = get_logger("nextdays.gebuehren_quelle")
 
 # Airbnbs Gebührenarten (``standard_fees_details.fee_type``) auf unsere
 # ``fee_classification.fee_type``-Werte. Die Zuordnung ist bewusst explizit und
@@ -119,6 +123,55 @@ _BOOKING_ARTEN = {
     "wäschegebühr": "linen_fee",
     "linen fee": "linen_fee",
 }
+
+# DER SPRACHNEUTRALE WEG — Booking führt dieselben Gebühren ein zweites Mal, als
+# Schlüssel in ``rooms[].meta.charge_periods``::
+#
+#     "charge_periods": {"RESORTFEE":   [{"from": "2026-05-25", ...}],
+#                        "CLEANINGFEE": [{"from": "2026-05-25", ...}]}
+#
+# Diese Schlüssel sind KONSTANT, egal in welcher Sprache das Inserat läuft. Live
+# belegt am 14.08.2026 über neun Booking-Buchungen von sechs Objekten: dieselben
+# ``CLEANINGFEE``/``RESORTFEE``-Schlüssel stehen sowohl an den Objekten, deren
+# Anzeigename deutsch ankommt („Reinigungsgebühr"), als auch an denen mit
+# englischem Namen („Cleaning fee").
+#
+# WARUM DAS GEBRAUCHT WIRD: der Anzeigename kommt in der Sprache des INSERATS.
+# Der Betrieb führt seine Objekte auf Dänisch — „Rengøringsgebyr" stand in
+# keiner Liste und hätte die Eigentümer-Abrechnung mit
+# ``gebuehr_nicht_zugeordnet`` blockiert (fail-closed, also kein falscher
+# Betrag, aber eben auch keine Abrechnung). Eine Namensliste je Sprache wäre bei
+# 24 Sprachen × Schreibweisen nie vollständig; der Schlüssel ist es von sich aus.
+#
+# Der Anzeigename bleibt trotzdem die ERSTE Stufe: er unterscheidet feiner, als
+# Bookings Schlüssel es können („Reinigungsgebühr" vs. „Endreinigungsgebühr"
+# fallen beide auf ``CLEANINGFEE``). Der Schlüssel ist das Auffangnetz für genau
+# die Fälle, in denen der Text unbekannt ist.
+_BOOKING_SCHLUESSEL_ARTEN = {
+    "CLEANINGFEE": "cleaning_fee",
+    "RESORTFEE": "resort",
+    "PETFEE": "pet_fee",
+    "LINENFEE": "linen_fee",
+    "MANAGEMENTFEE": "management_fee",
+    "COMMUNITYFEE": "community_fee",
+    "CITYTAX": "city_tax",
+    "TOURISTTAX": "city_tax",
+    "VAT": "vat",
+}
+
+# Steuern sind KEINE Gebühren und gehören nicht in die Auszahlungsrechnung des
+# Eigentümers — sie sind durchlaufender Posten. Booking meldet sie in derselben
+# Liste ``rooms[].taxes``, unterscheidbar am strukturierten ``type``-Feld
+# („Value Added Tax (VAT)"). Bis 14.08.2026 kannte der Leser nur Gebührennamen
+# und warf bei jeder Steuerzeile ``gebuehr_nicht_zugeordnet`` — die Abrechnung
+# von Feriehus Rævehulen war dadurch bereits blockiert („Mehrwertsteuer (25%)").
+_BOOKING_STEUER_TYPEN = frozenset({
+    "value added tax (vat)", "vat", "city tax", "tourist tax", "goods and "
+    "services tax (gst)", "gst", "sales tax", "tax",
+})
+# Die Arten aus `_BOOKING_SCHLUESSEL_ARTEN`, die Steuern sind — sie dürfen das
+# Auffangnetz für Gebühren nicht als Kandidat belegen.
+_STEUER_ARTEN = frozenset({"vat", "city_tax"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -498,16 +551,71 @@ def booking_aufgeloeste_posten(raw: object) -> list[tuple[str, Decimal]] | None:
             # Airbnb-Fall. Die Stelle existiert, ist aber nicht die Quelle.
             continue
         gefunden = True
+        # Die sprachneutralen Schlüssel DIESES Zimmers, als Auffangnetz für
+        # Anzeigenamen in einer Sprache, die die Namensliste nicht kennt.
+        schluessel = _booking_schluessel_arten(z)
         for p in posten:
             if not isinstance(p, dict):
                 continue
             text = str(p.get("name") or "").strip()
+            if _ist_booking_steuer(p):
+                # Steuer, keine Gebühr — gehört nicht in die Auszahlung des
+                # Eigentümers. Übersprungen statt gemeldet: eine korrekt
+                # gelieferte Steuerzeile ist kein unbekannter Posten.
+                continue
             art = _BOOKING_ARTEN.get(text.casefold())
             if art is None:
-                raise PayoutUnbekannt(
-                    "gebuehr_nicht_zugeordnet",
-                    f"Unbekannte Gebührenart „{text or '?'}“ aus der "
-                    "Booking.com-Preisaufstellung.",
+                # Zweite Stufe: aus `charge_periods`. Greift NUR, wenn dort
+                # genau EINE Art in Frage kommt — bei mehreren wäre die
+                # Zuordnung zum einzelnen Posten geraten (die beiden Listen sind
+                # nicht positionsgleich: live gemessen an FeWo Lille Lægehus,
+                # 3 Anzeigenamen gegen 1 Schlüssel).
+                nur_gebuehren = [a for a in schluessel if a not in _STEUER_ARTEN]
+                art = nur_gebuehren[0] if len(nur_gebuehren) == 1 else None
+                if art is not None:
+                    # Der Name ist neu, die Art geklärt: gehört in
+                    # `_BOOKING_ARTEN` nachgetragen, damit die Zuordnung nicht
+                    # dauerhaft am Auffangnetz hängt.
+                    log.info(
+                        "booking_gebuehr_name_unbekannt_schluessel_half",
+                        anzeigename=text,
+                        art=art,
+                        schluessel=sorted(schluessel),
+                    )
+            if art is None:
+                # DRITTE STUFE: die Gebühr trotzdem aufnehmen, unter einer aus
+                # ihrem Namen abgeleiteten Art (`portal:<text>`).
+                #
+                # Warum nicht weiter abweisen: der Anzeigename kommt in der
+                # Sprache des INSERATS, und weder Booking noch Channex
+                # dokumentieren die vollständige Liste der Arten. Eine feste
+                # Namensliste ist deshalb prinzipiell unvollständig — jede neue
+                # Sprache und jede neue Gebührenart hätte die Abrechnung des
+                # Eigentümers erneut blockiert (live: „Mehrwertsteuer (25%)" bei
+                # Rævehulen, „Rengøringsgebyr" bei jedem dänischen Inserat).
+                #
+                # Der Betrag ist dabei NICHT geraten — er steht als
+                # `total_price` im Payload. Unbekannt ist nur die Kategorie, und
+                # die muss der Betrieb ohnehin für JEDE Art einmal zuordnen
+                # („Wem gehören die Gebühren?", siehe `gebuehren_zuordnen`).
+                # Ein unbekannter Posten landet damit im dafür vorgesehenen
+                # Prozess, statt die ganze Abrechnung zu verhindern — und er
+                # bleibt sichtbar, weil er unter seinem Originaltext steht.
+                art = f"portal:{text.casefold()}" if text else "portal:unbenannt"
+                # WARNUNG, nicht info: hier ist eine Art angekommen, die weder
+                # die Namensliste noch Bookings Schlüssel auflösen konnten. Der
+                # Betrag stimmt und die Abrechnung läuft, aber die Kategorie
+                # ist offen — jemand muss nachsehen, was das Portal da schickt.
+                # Ohne diese Zeile wäre das Auffangnetz ein stiller Sammler
+                # (Wurzel 5: nichts verschlucken).
+                log.warning(
+                    "portal_gebuehrenart_unbekannt",
+                    portal="BookingCom",
+                    anzeigename=text or "(ohne Namen)",
+                    typ=str(p.get("type") or ""),
+                    preismodus=str(p.get("price_mode") or ""),
+                    schluessel=sorted(schluessel),
+                    art=art,
                 )
             betrag = zu_decimal(p.get("total_price"))
             if betrag is None:
@@ -517,6 +625,48 @@ def booking_aufgeloeste_posten(raw: object) -> list[tuple[str, Decimal]] | None:
                 )
             out.append((art, betrag))
     return out if gefunden else None
+
+
+def _ist_booking_steuer(posten: dict[str, Any]) -> bool:
+    """Ist dieser Posten aus ``rooms[].taxes`` eine STEUER statt einer Gebühr?
+
+    Entschieden am strukturierten ``type``-Feld, nicht am Anzeigenamen: der Typ
+    ist Bookings eigene Bezeichnung („Value Added Tax (VAT)", „Service Charge")
+    und damit sprachneutral, während der Name in der Sprache des Inserats kommt.
+
+    ACHTUNG, live gemessen: bei der Haustiergebühr steht der ANZEIGENAME im
+    Typ-Feld („Haustiergebühr"). Ein unbekannter Typ gilt deshalb NICHT als
+    Steuer — nur die ausdrücklich bekannten Steuertypen zählen (fail-closed in
+    die sichere Richtung: im Zweifel Gebühr, die wird zugeordnet und fällt bei
+    einem Fehler auf, statt still aus der Abrechnung zu verschwinden).
+    """
+    typ = str(posten.get("type") or "").strip().casefold()
+    return typ in _BOOKING_STEUER_TYPEN
+
+
+def _booking_schluessel_arten(zimmer: dict[str, Any]) -> list[str]:
+    """Die Gebührenarten aus ``meta.charge_periods`` — sprachneutral.
+
+    Nur die AKTIVEN: ein Eintrag mit ``excluded: true`` beschreibt eine Gebühr,
+    die Booking für dieses Objekt gerade NICHT erhebt (live gemessen an
+    Rævehulen, wo Resort und Reinigung ausgeschlossen sind und stattdessen
+    unsere über Channex gesendeten Posten ankommen). Ihn mitzuzählen würde das
+    Auffangnetz mehrdeutig machen und damit wirkungslos.
+    """
+    perioden = (zimmer.get("meta") or {}).get("charge_periods")
+    if not isinstance(perioden, dict):
+        return []
+    out: list[str] = []
+    for schluessel, spannen in perioden.items():
+        art = _BOOKING_SCHLUESSEL_ARTEN.get(str(schluessel).strip().upper())
+        if art is None or art in out:
+            continue
+        if isinstance(spannen, list) and all(
+            isinstance(s, dict) and s.get("excluded") is True for s in spannen
+        ):
+            continue
+        out.append(art)
+    return out
 
 
 def portal_posten(
@@ -570,6 +720,12 @@ def booking_aufgeloeste_bezeichnungen(raw: object) -> dict[str, str]:
     ``„Resortgebühr (Per night)"`` statt nur ``„Resortgebühr"``: bei einer
     Rückfrage zur Abrechnung ist die zweite Frage immer, wie das Portal auf die
     Summe kam. Die Angabe steht im Payload und wäre sonst verworfen.
+
+    Die Arten werden GENAUSO aufgelöst wie in ``booking_aufgeloeste_posten`` —
+    inklusive der unbekannten (``portal:<text>``). Täte sie das nicht, stünde
+    ausgerechnet an dem Posten, dessen Art wir nicht kennen, kein Klartext auf
+    der Rechnung; der Originaltext des Portals ist dort aber die einzige
+    Information, die der Betrieb zum Zuordnen hat.
     """
     if not isinstance(raw, dict):
         return {}
@@ -583,13 +739,20 @@ def booking_aufgeloeste_bezeichnungen(raw: object) -> dict[str, str]:
         posten = z.get("taxes")
         if not isinstance(posten, list):
             continue
+        schluessel = [
+            a for a in _booking_schluessel_arten(z) if a not in _STEUER_ARTEN
+        ]
         for p in posten:
             if not isinstance(p, dict):
                 continue
             text = str(p.get("name") or "").strip()
-            art = _BOOKING_ARTEN.get(text.casefold())
-            if not art or not text:
+            if not text or _ist_booking_steuer(p):
                 continue
+            art = _BOOKING_ARTEN.get(text.casefold())
+            if art is None:
+                art = schluessel[0] if len(schluessel) == 1 else None
+            if art is None:
+                art = f"portal:{text.casefold()}"
             modus = str(p.get("price_mode") or "").strip()
             out[art] = f"{text} ({modus})" if modus else text
     return out
