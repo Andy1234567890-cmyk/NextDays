@@ -4132,23 +4132,6 @@
         "recurring": "Eine regelmäßige Aufgabe folgt dem Kalender: Anfangsdatum, Häufigkeit und Dauer. Das System legt die Termine im Voraus an — unabhängig von Buchungen."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "PM-Module",
-      "groupHome": "Startseite",
-      "groupSettings": "Einstellungen",
-      "control": "Kontrollzentrum",
-      "properties": "Unterkünfte",
-      "tasks": "Aufgaben",
-      "photos": "Bilder",
-      "warnings": "Warnungen",
-      "timeline": "Zeitleiste",
-      "reporting": "Reporting für Eigentümer",
-      "guestModule": "Gastmodul",
-      "settings": "Ihre Einstellungen",
-      "team": "Team-Einstellungen",
-      "app": "App",
-      "slack": "Slack-Benachrichtigungen"
-    },
     "statsCards": {
       "noData": "No Data Found",
       "noAmountAccess": "Keine Betragsfreigabe für dieses Konto.",

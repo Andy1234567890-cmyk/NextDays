@@ -1,9 +1,7 @@
 import { TasksSubnav } from "@/components/reservierungen/tasks-subnav";
 
 // Layout des Aufgaben-Moduls: eigene linke Sub-Nav-Spalte („AUFGABEN") neben
-// dem Inhalt beim Klick auf „Aufgaben". Die globale PM-Nav wird
-// im Aufgaben-Bereich ausgeblendet (pm-module-shell.tsx), sonst stünden zwei
-// Nav-Spalten nebeneinander.
+// dem Inhalt beim Klick auf „Aufgaben".
 export default function AufgabenLayout({
   children,
 }: {

@@ -4127,23 +4127,6 @@
         "recurring": "O sarcină recurentă urmează calendarul: data de început, frecvența și durata. Sistemul creează aparițiile în avans — independent de rezervări."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "Module PM",
-      "groupHome": "Pagina de start",
-      "groupSettings": "Setări",
-      "control": "Centru de control",
-      "properties": "Proprietăți",
-      "tasks": "Sarcini",
-      "photos": "Fotografii",
-      "warnings": "Avertismente",
-      "timeline": "Cronologie",
-      "reporting": "Raportare pentru proprietari",
-      "guestModule": "Modulul pentru oaspeți",
-      "settings": "Setările dumneavoastră",
-      "team": "Setări echipă",
-      "app": "Aplicație",
-      "slack": "Notificări Slack"
-    },
     "statsCards": {
       "noData": "Nu au fost găsite date",
       "noAmountAccess": "Niciun acces la sume pentru acest cont.",

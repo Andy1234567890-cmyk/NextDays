@@ -4132,23 +4132,6 @@
         "recurring": "Korduv ülesanne järgib kalendrit: alguskuupäev, sagedus ja kestus. Süsteem loob korded ette — broningutest sõltumatult."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "PM-moodulid",
-      "groupHome": "Avaleht",
-      "groupSettings": "Seaded",
-      "control": "Juhtimiskeskus",
-      "properties": "Majutused",
-      "tasks": "Ülesanded",
-      "photos": "Pildid",
-      "warnings": "Hoiatused",
-      "timeline": "Ajajoon",
-      "reporting": "Omanike aruandlus",
-      "guestModule": "Külalismoodul",
-      "settings": "Teie seaded",
-      "team": "Meeskonna seaded",
-      "app": "Rakendus",
-      "slack": "Slacki teavitused"
-    },
     "statsCards": {
       "noData": "Andmeid ei leitud",
       "noAmountAccess": "Sellel kontol pole summade vaatamise õigust.",

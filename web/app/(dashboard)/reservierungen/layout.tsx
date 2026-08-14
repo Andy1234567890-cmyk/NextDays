@@ -1,17 +1,22 @@
-// Sub-Layout der PM-Fläche: links die feste Modul-Navigation, rechts der
-// jeweilige Seiteninhalt (Buchungen, Detail, …). Die Auth-Prüfung liegt bereits
-// im übergeordneten (dashboard)/layout — hier nur die Anordnung. Auf schmalen
-// Screens klappt die Nav über den Inhalt.
+// Sub-Layout der PM-Fläche. Reicht den Inhalt unverändert durch — die
+// Auth-Prüfung liegt im übergeordneten (dashboard)/layout.
 //
-// Im Objekt-Detailbereich (/reservierungen/unterkuenfte/{id}/…) blendet der
-// PmModuleShell die globale PM-Nav aus — dort zeigt das Objekt-Sub-Layout seine
-// eigene 6-Reiter-Navigation, damit nicht zwei Navspalten nebeneinander stehen.
-import { PmModuleShell } from "@/components/reservierungen/pm-module-shell";
-
+// FRÜHER STAND HIER EINE ZWEITE NAVIGATION (PmModuleShell/PmModuleNav):
+// „Kontrollzentrum · Unterkünfte · Aufgaben · Bilder · Warnungen · Zeitleiste ·
+// Reporting" plus „Einstellungen · Team · App · Slack". Sieben ihrer elf Punkte
+// standen wortgleich in der Haupt-Sidebar links daneben — zwei Navspalten
+// nebeneinander, die teils dieselben Ziele hatten. Entfernt am 14.08.2026 auf
+// ausdrückliche Ansage.
+//
+// Die vier Seiten, die ausschließlich dort verlinkt waren (/reservierungen/
+// bilder, /warnungen, /app, /slack), bleiben bestehen und sind weiterhin über
+// ihre Adresse erreichbar — bewusst ohne Menüeintrag (Entscheidung vom
+// 14.08.2026). Wer sie wieder sichtbar machen will, hängt sie in
+// components/app-sidebar.tsx ein, nicht in eine neue zweite Leiste.
 export default function ReservierungenLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <PmModuleShell>{children}</PmModuleShell>;
+  return <>{children}</>;
 }

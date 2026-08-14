@@ -4127,23 +4127,6 @@
         "recurring": "Pasikartojanti užduotis seka kalendorių: pradžios data, dažnumas ir trukmė. Sistema įvykius sukuria iš anksto — nepriklausomai nuo užsakymų."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "PV moduliai",
-      "groupHome": "Pradžia",
-      "groupSettings": "Nustatymai",
-      "control": "Valdymo centras",
-      "properties": "Apgyvendinimo vietos",
-      "tasks": "Užduotys",
-      "photos": "Nuotraukos",
-      "warnings": "Įspėjimai",
-      "timeline": "Laiko juosta",
-      "reporting": "Ataskaitos savininkams",
-      "guestModule": "Svečių modulis",
-      "settings": "Jūsų nustatymai",
-      "team": "Komandos nustatymai",
-      "app": "Programėlė",
-      "slack": "Slack pranešimai"
-    },
     "statsCards": {
       "noData": "Duomenų nerasta",
       "noAmountAccess": "Šiai paskyrai suminė informacija neprieinama.",

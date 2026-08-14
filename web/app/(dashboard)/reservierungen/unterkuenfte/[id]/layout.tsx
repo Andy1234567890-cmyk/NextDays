@@ -1,7 +1,6 @@
 // Objekt-Sub-Layout der PM-Fläche: links die 6-Reiter-Navigation + Objektkopf,
 // rechts der jeweilige Reiter-Inhalt. Server Component lädt das Objekt für den
 // Kopf (notFound bei ungültiger/fremder ID — getProperty ist tenant-scoped).
-// Die globale PM-Nav wird für diesen Zweig vom PmModuleShell ausgeblendet.
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 

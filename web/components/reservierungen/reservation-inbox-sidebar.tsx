@@ -4,10 +4,8 @@
 // die durchsuch- und filterbare Liste aller Buchungen, rechts das Detail der
 // gewählten. Ein Klick wechselt die Buchung, ohne die Liste zu verlassen.
 //
-// Warum die Liste hier und nicht die PM-Modul-Navigation steht: im Detail
-// arbeitet man an EINER Buchung und springt zur nächsten — genau das ist der
-// Posteingang. Die Modul-Navigation blendet PmModuleShell in diesem Bereich
-// deshalb aus (zwei Navspalten nebeneinander wären beides halb).
+// Warum hier die Liste steht: im Detail arbeitet man an EINER Buchung und
+// springt zur nächsten — genau das ist der Posteingang.
 //
 // Datenlage: ein listReservations()-Call speist die Liste, EIN Realtime-Abo
 // (Pflicht, CLAUDE.md) hält sie live — kein Polling, kein Reload nach eigener

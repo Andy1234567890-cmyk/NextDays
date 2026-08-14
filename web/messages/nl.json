@@ -4127,23 +4127,6 @@
         "recurring": "Een terugkerende taak volgt de kalender: startdatum, frequentie en duur. Het systeem maakt de afspraken vooruit aan — los van boekingen."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "PM-modules",
-      "groupHome": "Startpagina",
-      "groupSettings": "Instellingen",
-      "control": "Controlecentrum",
-      "properties": "Accommodaties",
-      "tasks": "Taken",
-      "photos": "Foto's",
-      "warnings": "Waarschuwingen",
-      "timeline": "Tijdlijn",
-      "reporting": "Rapportage voor eigenaren",
-      "guestModule": "Gastmodule",
-      "settings": "Jouw instellingen",
-      "team": "Teaminstellingen",
-      "app": "App",
-      "slack": "Slack-meldingen"
-    },
     "statsCards": {
       "noData": "Geen gegevens gevonden",
       "noAmountAccess": "Geen bedragvrijgave voor dit account.",

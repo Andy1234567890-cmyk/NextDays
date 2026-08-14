@@ -4132,23 +4132,6 @@
         "recurring": "Toistuva tehtävä seuraa kalenteria: aloituspäivä, toistuvuus ja kesto. Järjestelmä luo ajankohdat etukäteen varauksista riippumatta."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "PM-moduulit",
-      "groupHome": "Etusivu",
-      "groupSettings": "Asetukset",
-      "control": "Ohjauskeskus",
-      "properties": "Kohteet",
-      "tasks": "Tehtävät",
-      "photos": "Kuvat",
-      "warnings": "Varoitukset",
-      "timeline": "Aikajana",
-      "reporting": "Omistajaraportointi",
-      "guestModule": "Vierasmoduuli",
-      "settings": "Omat asetukset",
-      "team": "Tiimiasetukset",
-      "app": "Sovellus",
-      "slack": "Slack-ilmoitukset"
-    },
     "statsCards": {
       "noData": "Ei tietoja",
       "noAmountAccess": "Ei summien katseluoikeutta tälle tilille.",

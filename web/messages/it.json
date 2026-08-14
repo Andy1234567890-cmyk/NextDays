@@ -4127,23 +4127,6 @@
         "recurring": "Un'attività ricorrente segue il calendario: data di inizio, frequenza e durata. Il sistema crea gli appuntamenti in anticipo, indipendentemente dalle prenotazioni."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "Moduli PM",
-      "groupHome": "Pagina iniziale",
-      "groupSettings": "Impostazioni",
-      "control": "Centro di controllo",
-      "properties": "Alloggi",
-      "tasks": "Attività",
-      "photos": "Foto",
-      "warnings": "Avvisi",
-      "timeline": "Cronologia",
-      "reporting": "Report per i proprietari",
-      "guestModule": "Modulo ospiti",
-      "settings": "Le tue impostazioni",
-      "team": "Impostazioni team",
-      "app": "App",
-      "slack": "Notifiche Slack"
-    },
     "statsCards": {
       "noData": "Nessun dato trovato",
       "noAmountAccess": "Nessuna autorizzazione agli importi per questo account.",

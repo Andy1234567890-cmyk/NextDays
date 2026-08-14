@@ -1,6 +1,6 @@
 "use client";
 
-// Zweite (linke) Sidebar der Einstellungen-Fläche — analog zu PmModuleNav.
+// Zweite (linke) Sidebar der Einstellungen-Fläche.
 // Gruppe „Allgemeine Einstellungen" mit den Reitern Konditionen / Zahlungen.
 // Der aktive Reiter wird über usePathname bestimmt. Neue Einstellungs-Flächen
 // kommen als weiterer Reiter hierher, nicht als eigene Top-Level-Route.

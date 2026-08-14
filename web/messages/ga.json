@@ -4132,23 +4132,6 @@
         "recurring": "Leanann tasc athfhillteach an féilire: dáta tosaigh, minicíocht agus fad. Cruthaíonn an córas na hócáidí roimh ré — go neamhspleách ar áirithintí."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "Modúil PM",
-      "groupHome": "Leathanach baile",
-      "groupSettings": "Socruithe",
-      "control": "Lárionad rialaithe",
-      "properties": "Lóistíní",
-      "tasks": "Tascanna",
-      "photos": "Grianghraif",
-      "warnings": "Rabhaidh",
-      "timeline": "Amlíne",
-      "reporting": "Tuairisciú d'úinéirí",
-      "guestModule": "Modúl aíonna",
-      "settings": "Do chuid socruithe",
-      "team": "Socruithe foirne",
-      "app": "Aip",
-      "slack": "Fógraí Slack"
-    },
     "statsCards": {
       "noData": "Níor Aimsíodh Aon Sonraí",
       "noAmountAccess": "Níl cead méide ag an gcuntas seo.",

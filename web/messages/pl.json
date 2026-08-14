@@ -4127,23 +4127,6 @@
         "recurring": "Zadanie cykliczne podąża za kalendarzem: data początkowa, częstotliwość i czas trwania. System tworzy terminy z wyprzedzeniem — niezależnie od rezerwacji."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "Moduły PM",
-      "groupHome": "Strona główna",
-      "groupSettings": "Ustawienia",
-      "control": "Centrum kontroli",
-      "properties": "Obiekty",
-      "tasks": "Zadania",
-      "photos": "Zdjęcia",
-      "warnings": "Ostrzeżenia",
-      "timeline": "Oś czasu",
-      "reporting": "Raportowanie dla właścicieli",
-      "guestModule": "Moduł gościa",
-      "settings": "Twoje ustawienia",
-      "team": "Ustawienia zespołu",
-      "app": "Aplikacja",
-      "slack": "Powiadomienia Slack"
-    },
     "statsCards": {
       "noData": "Nie znaleziono danych",
       "noAmountAccess": "Brak dostępu do kwot dla tego konta.",

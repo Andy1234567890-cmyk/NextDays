@@ -4132,23 +4132,6 @@
         "recurring": "En tilbagevendende opgave følger kalenderen: startdato, hyppighed og varighed. Systemet opretter terminerne på forhånd — uafhængigt af reservationer."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "PM-moduler",
-      "groupHome": "Startside",
-      "groupSettings": "Indstillinger",
-      "control": "Kontrolcenter",
-      "properties": "Overnatningssteder",
-      "tasks": "Opgaver",
-      "photos": "Billeder",
-      "warnings": "Advarsler",
-      "timeline": "Tidslinje",
-      "reporting": "Rapportering til ejere",
-      "guestModule": "Gæstemodul",
-      "settings": "Dine indstillinger",
-      "team": "Teamindstillinger",
-      "app": "App",
-      "slack": "Slack-notifikationer"
-    },
     "statsCards": {
       "noData": "Ingen data fundet",
       "noAmountAccess": "Ingen beløbsadgang for denne konto.",

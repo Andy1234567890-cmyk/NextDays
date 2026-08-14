@@ -4132,23 +4132,6 @@
         "recurring": "Una tarea periódica sigue el calendario: fecha de inicio, frecuencia y duración. El sistema crea las citas por adelantado, con independencia de las reservas."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "Módulos PM",
-      "groupHome": "Inicio",
-      "groupSettings": "Ajustes",
-      "control": "Centro de control",
-      "properties": "Alojamientos",
-      "tasks": "Tareas",
-      "photos": "Fotos",
-      "warnings": "Avisos",
-      "timeline": "Cronología",
-      "reporting": "Informes para propietarios",
-      "guestModule": "Módulo de huéspedes",
-      "settings": "Tus ajustes",
-      "team": "Ajustes del equipo",
-      "app": "App",
-      "slack": "Notificaciones de Slack"
-    },
     "statsCards": {
       "noData": "No se han encontrado datos",
       "noAmountAccess": "Sin acceso a importes para esta cuenta.",

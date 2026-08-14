@@ -4132,23 +4132,6 @@
         "recurring": "Ponavljajući zadatak prati kalendar: datum početka, učestalost i trajanje. Sustav termine stvara unaprijed — neovisno o rezervacijama."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "PM moduli",
-      "groupHome": "Početna",
-      "groupSettings": "Postavke",
-      "control": "Kontrolni centar",
-      "properties": "Smještaji",
-      "tasks": "Zadaci",
-      "photos": "Slike",
-      "warnings": "Upozorenja",
-      "timeline": "Vremenska crta",
-      "reporting": "Izvještavanje za vlasnike",
-      "guestModule": "Modul za goste",
-      "settings": "Vaše postavke",
-      "team": "Postavke tima",
-      "app": "Aplikacija",
-      "slack": "Slack obavijesti"
-    },
     "statsCards": {
       "noData": "Nema pronađenih podataka",
       "noAmountAccess": "Nema pristupa iznosima za ovaj račun.",

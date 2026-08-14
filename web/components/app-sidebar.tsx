@@ -75,9 +75,9 @@ const MAIN: readonly NavItem[] = [
   { key: "calendar", href: "/kalender", icon: "ph:calendar-blank", req: "view_calendar" },
   { key: "inbox", href: "/posteingang", icon: "ph:chat-circle", req: "pm_chat" },
   // Buchungen (die Buchungstabelle /reservierungen) steht flach unter dem
-  // Posteingang statt im Modul-Menü der PM-Fläche (pm-module-nav.tsx): sie ist
-  // Tagesgeschäft und wurde im Untermenü erst nach zwei Klicks erreichbar.
-  // Der Punkt steht deshalb NICHT zusätzlich in der Reservierungs-Gruppe.
+  // Posteingang: sie ist Tagesgeschäft und war im früheren PM-Untermenü erst
+  // nach zwei Klicks erreichbar. Der Punkt steht deshalb NICHT zusätzlich in
+  // der Reservierungs-Gruppe.
   { key: "bookings", href: "/reservierungen", icon: "ph:bookmark-simple", req: "view_calendar", exact: true },
   // Aufgaben stehen flach unter dem Posteingang: sie sind Tagesgeschäft und
   // betreffen jede Rolle (auch Reinigung/Mitarbeiter, die die Buchhaltung nie

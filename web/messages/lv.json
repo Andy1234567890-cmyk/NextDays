@@ -4127,23 +4127,6 @@
         "recurring": "Regulārs uzdevums seko kalendāram: sākuma datums, biežums un ilgums. Sistēma izveido reizes iepriekš — neatkarīgi no rezervācijām."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "PM moduļi",
-      "groupHome": "Sākums",
-      "groupSettings": "Iestatījumi",
-      "control": "Kontroles centrs",
-      "properties": "Naktsmītnes",
-      "tasks": "Uzdevumi",
-      "photos": "Attēli",
-      "warnings": "Brīdinājumi",
-      "timeline": "Laika līnija",
-      "reporting": "Pārskati īpašniekiem",
-      "guestModule": "Viesu modulis",
-      "settings": "Jūsu iestatījumi",
-      "team": "Komandas iestatījumi",
-      "app": "Lietotne",
-      "slack": "Slack paziņojumi"
-    },
     "statsCards": {
       "noData": "Dati nav atrasti",
       "noAmountAccess": "Šim kontam nav piekļuves summām.",

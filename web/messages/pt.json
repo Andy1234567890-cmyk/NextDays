@@ -4127,23 +4127,6 @@
         "recurring": "Uma tarefa recorrente segue o calendário: data de início, frequência e duração. O sistema cria as ocorrências com antecedência — independentemente das reservas."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "Módulos PM",
-      "groupHome": "Página inicial",
-      "groupSettings": "Definições",
-      "control": "Centro de controlo",
-      "properties": "Alojamentos",
-      "tasks": "Tarefas",
-      "photos": "Fotos",
-      "warnings": "Avisos",
-      "timeline": "Cronologia",
-      "reporting": "Relatórios para proprietários",
-      "guestModule": "Módulo de hóspedes",
-      "settings": "As suas definições",
-      "team": "Definições da equipa",
-      "app": "App",
-      "slack": "Notificações Slack"
-    },
     "statsCards": {
       "noData": "Nenhum dado encontrado",
       "noAmountAccess": "Sem acesso a valores para esta conta.",

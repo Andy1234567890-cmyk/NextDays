@@ -4132,23 +4132,6 @@
         "recurring": "Opakovaný úkol jde podle kalendáře: datum začátku, frekvence a délka. Systém termíny zakládá dopředu — nezávisle na rezervacích."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "PM moduly",
-      "groupHome": "Domů",
-      "groupSettings": "Nastavení",
-      "control": "Kontrolní centrum",
-      "properties": "Ubytování",
-      "tasks": "Úkoly",
-      "photos": "Fotky",
-      "warnings": "Upozornění",
-      "timeline": "Časová osa",
-      "reporting": "Reporting pro vlastníky",
-      "guestModule": "Modul pro hosty",
-      "settings": "Vaše nastavení",
-      "team": "Nastavení týmu",
-      "app": "Aplikace",
-      "slack": "Slack oznámení"
-    },
     "statsCards": {
       "noData": "Nebyla nalezena žádná data",
       "noAmountAccess": "Pro tento účet není povoleno zobrazení částek.",

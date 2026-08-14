@@ -4132,23 +4132,6 @@
         "recurring": "A recurring task follows the calendar: start date, frequency and duration. The system creates the occurrences in advance — independently of bookings."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "PM modules",
-      "groupHome": "Home",
-      "groupSettings": "Settings",
-      "control": "Control centre",
-      "properties": "Accommodations",
-      "tasks": "Tasks",
-      "photos": "Images",
-      "warnings": "Warnings",
-      "timeline": "Timeline",
-      "reporting": "Owner reporting",
-      "guestModule": "Guest module",
-      "settings": "Your settings",
-      "team": "Team settings",
-      "app": "App",
-      "slack": "Slack notifications"
-    },
     "statsCards": {
       "noData": "No Data Found",
       "noAmountAccess": "No amount access for this account.",

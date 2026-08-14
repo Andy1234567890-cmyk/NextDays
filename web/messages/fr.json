@@ -4132,23 +4132,6 @@
         "recurring": "Une tâche récurrente suit le calendrier : date de début, fréquence et durée. Le système crée les occurrences à l'avance, indépendamment des réservations."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "Modules PM",
-      "groupHome": "Accueil",
-      "groupSettings": "Paramètres",
-      "control": "Centre de contrôle",
-      "properties": "Logements",
-      "tasks": "Tâches",
-      "photos": "Photos",
-      "warnings": "Alertes",
-      "timeline": "Chronologie",
-      "reporting": "Rapport pour les propriétaires",
-      "guestModule": "Module client",
-      "settings": "Vos paramètres",
-      "team": "Paramètres de l'équipe",
-      "app": "Application",
-      "slack": "Notifications Slack"
-    },
     "statsCards": {
       "noData": "Aucune donnée trouvée",
       "noAmountAccess": "Aucun accès aux montants pour ce compte.",

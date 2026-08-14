@@ -4127,23 +4127,6 @@
         "recurring": "Ponavljajoča naloga sledi koledarju: začetni datum, pogostost in trajanje. Sistem termine ustvari vnaprej — neodvisno od rezervacij."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "PM moduli",
-      "groupHome": "Domov",
-      "groupSettings": "Nastavitve",
-      "control": "Kontrolni center",
-      "properties": "Nastanitve",
-      "tasks": "Naloge",
-      "photos": "Slike",
-      "warnings": "Opozorila",
-      "timeline": "Časovnica",
-      "reporting": "Poročanje za lastnike",
-      "guestModule": "Gostov modul",
-      "settings": "Vaše nastavitve",
-      "team": "Nastavitve ekipe",
-      "app": "Aplikacija",
-      "slack": "Slack obvestila"
-    },
     "statsCards": {
       "noData": "Ni najdenih podatkov",
       "noAmountAccess": "Za ta račun ni dovoljenja za ogled zneskov.",

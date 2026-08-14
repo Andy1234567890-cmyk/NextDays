@@ -4127,23 +4127,6 @@
         "recurring": "En återkommande uppgift följer kalendern: startdatum, frekvens och längd. Systemet skapar tillfällena i förväg — oberoende av bokningar."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "PM-moduler",
-      "groupHome": "Startsida",
-      "groupSettings": "Inställningar",
-      "control": "Kontrollcenter",
-      "properties": "Boenden",
-      "tasks": "Uppgifter",
-      "photos": "Bilder",
-      "warnings": "Varningar",
-      "timeline": "Tidslinje",
-      "reporting": "Rapportering för ägare",
-      "guestModule": "Gästmodul",
-      "settings": "Dina inställningar",
-      "team": "Teaminställningar",
-      "app": "App",
-      "slack": "Slack-aviseringar"
-    },
     "statsCards": {
       "noData": "Inga data hittades",
       "noAmountAccess": "Inget beloppsåtkomst för detta konto.",

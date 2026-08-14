@@ -4127,23 +4127,6 @@
         "recurring": "Kompitu rikorrenti jsegwi l-kalendarju: data tal-bidu, frekwenza u tul. Is-sistema toħloq l-okkorrenzi bil-quddiem — indipendentement mir-riżervazzjonijiet."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "Moduli PM",
-      "groupHome": "Il-paġna ewlenija",
-      "groupSettings": "Settings",
-      "control": "Ċentru ta' kontroll",
-      "properties": "Akkomodazzjonijiet",
-      "tasks": "Kompiti",
-      "photos": "Ritratti",
-      "warnings": "Twissijiet",
-      "timeline": "Linja taż-żmien",
-      "reporting": "Rapportar għas-sidien",
-      "guestModule": "Modulu tal-mistieden",
-      "settings": "Is-settings tiegħek",
-      "team": "Settings tat-tim",
-      "app": "App",
-      "slack": "Notifiki Slack"
-    },
     "statsCards": {
       "noData": "L-ebda dejta misjuba",
       "noAmountAccess": "L-ebda aċċess għall-ammonti għal dan il-kont.",

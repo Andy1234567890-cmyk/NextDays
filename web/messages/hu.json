@@ -4132,23 +4132,6 @@
         "recurring": "Az ismétlődő feladat a naptárat követi: kezdődátum, gyakoriság és időtartam. A rendszer az alkalmakat előre létrehozza – a foglalásoktól függetlenül."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "PM-modulok",
-      "groupHome": "Kezdőlap",
-      "groupSettings": "Beállítások",
-      "control": "Vezérlőközpont",
-      "properties": "Ingatlanok",
-      "tasks": "Feladatok",
-      "photos": "Fotók",
-      "warnings": "Figyelmeztetések",
-      "timeline": "Idővonal",
-      "reporting": "Tulajdonosi jelentés",
-      "guestModule": "Vendégmodul",
-      "settings": "Az Ön beállításai",
-      "team": "Csapatbeállítások",
-      "app": "Alkalmazás",
-      "slack": "Slack-értesítések"
-    },
     "statsCards": {
       "noData": "Nincs találat",
       "noAmountAccess": "Ehhez a fiókhoz nincs összegmegtekintési jogosultság.",

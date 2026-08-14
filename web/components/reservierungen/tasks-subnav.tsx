@@ -1,9 +1,8 @@
 "use client";
 
 // Sub-Navigation des Aufgaben-Moduls (.. /tasks): eigene linke Sidebar mit
-// Überschrift „AUFGABEN" und 7 Reitern. Erscheint anstelle der globalen PM-Nav,
-// sobald man im Aufgaben-Bereich ist (Ausnahme in pm-module-shell.tsx). Aktiver
-// Reiter grau hinterlegt (wie Objekt-Sub-Nav).
+// Überschrift „AUFGABEN" und 7 Reitern. Aktiver Reiter grau hinterlegt (wie
+// Objekt-Sub-Nav).
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";

@@ -4127,23 +4127,6 @@
         "recurring": "Opakovaná úloha sa riadi kalendárom: dátum začiatku, frekvencia a trvanie. Systém termíny zakladá vopred — nezávisle od rezervácií."
       }
     },
-    "pmModuleNav": {
-      "navLabel": "PM moduly",
-      "groupHome": "Domov",
-      "groupSettings": "Nastavenia",
-      "control": "Kontrolné centrum",
-      "properties": "Ubytovania",
-      "tasks": "Úlohy",
-      "photos": "Fotografie",
-      "warnings": "Upozornenia",
-      "timeline": "Časová os",
-      "reporting": "Reporty pre vlastníkov",
-      "guestModule": "Hosťovský modul",
-      "settings": "Vaše nastavenia",
-      "team": "Nastavenia tímu",
-      "app": "Aplikácia",
-      "slack": "Slack notifikácie"
-    },
     "statsCards": {
       "noData": "Neboli nájdené žiadne dáta",
       "noAmountAccess": "Žiadne oprávnenie k sumám pre tento účet.",
