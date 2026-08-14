@@ -347,8 +347,11 @@ export function ReservationInboxSidebar({
 
   const aktiveFilter = filterCount(filter);
 
+  // Höhe kommt vom Eltern-Flex (siehe reservierungen/[id]/layout.tsx), nicht
+  // aus einer geschätzten `calc(100vh-…)`: die Liste füllt die Spalte und
+  // scrollt intern. `min-h-0` erlaubt das Schrumpfen im Flex-Container.
   return (
-    <aside className="flex w-full shrink-0 flex-col border-b lg:h-[calc(100vh-9rem)] lg:w-[19rem] lg:border-b-0 lg:border-r">
+    <aside className="flex min-h-0 w-full shrink-0 flex-col border-b lg:w-[19rem] lg:border-b-0 lg:border-r">
       {/* Kopf: Titel + Zähler, Filter, Suche */}
       {searchOpen ? (
         <div className="flex items-center gap-2 border-b px-3 py-2.5">
