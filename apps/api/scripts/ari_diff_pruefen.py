@@ -218,6 +218,13 @@ def main() -> int:
     print(f"{GRAU}Das sind unverkäufliche Nächte ohne Grund. Prüfe den "
           f"Erzeuger der Spanne: `date_to` muss der LETZTE betroffene Tag "
           f"sein, nicht der Tag danach.{AUS}")
+    print(f"{GRAU}Liegt der Tag genau EINEN hinter dem Sperr-Horizont "
+          f"(heute+730), ist er ein Nachhall des bis 14.08.2026 gesendeten "
+          f"`span_bis + 1`: über ihn hat seither niemand mehr etwas gesagt, "
+          f"also gilt bei den Portalen die alte Aussage weiter. Er "
+          f"verschwindet, sobald der wandernde Horizont ihn einholt und der "
+          f"Nachzug seine Sperrzeile schreibt — nicht durch einen neuen "
+          f"Push.{AUS}")
     print()
     return 1
 
