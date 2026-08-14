@@ -61,6 +61,75 @@ export function occupiesNight(res: Reservation, dayKey: string): boolean {
   return res.check_in <= dayKey && dayKey < res.check_out;
 }
 
+// --- Monatsgitter-Balken ----------------------------------------------------
+/** Ein Balkenstück in EINER Gitterwoche. Eine Buchung über einen Wochenwechsel
+ *  ergibt mehrere Stücke — ein CSS-Grid-Kind kann keine Zeile umbrechen. */
+export type BarSegment = {
+  res: Reservation;
+  /** Spalte 0–6 (Mo–So) innerhalb der Woche. */
+  col: number;
+  /** Belegte Spalten in dieser Woche (≥ 1). */
+  span: number;
+  /** Woche 0-basiert ab Gitterstart. */
+  week: number;
+  /** Anreisetag liegt in diesem Stück → linke Kante abgerundet. */
+  startsHere: boolean;
+  /** Letzte Nacht liegt in diesem Stück → rechte Kante abgerundet. */
+  endsHere: boolean;
+};
+
+/**
+ * Schneidet Buchungen auf die Wochenzeilen eines Monatsgitters zu.
+ *
+ * Gezeichnet werden NÄCHTE, nicht Kalendertage: der Abreisetag ist frei
+ * (`check_out` exklusiv, wie `occupiesNight`), sonst sähe ein am selben Tag
+ * anschließender Gast wie eine Doppelbuchung aus. Buchungen, die komplett
+ * ausserhalb des Gitters liegen, fallen raus; überlappende werden gekappt —
+ * ein Balken endet an der Gitterkante, statt sie zu überzeichnen.
+ */
+export function barSegments(
+  reservations: Reservation[],
+  gridStart: Date,
+  weeks: number,
+): BarSegment[] {
+  const out: BarSegment[] = [];
+  const total = weeks * 7;
+  const startMs = gridStart.getTime();
+
+  for (const res of reservations) {
+    if (res.status === "cancelled") continue;
+    const firstNight = parseKey(res.check_in);
+    // Letzte Nacht = check_out - 1 Tag. Bei check_in == check_out (0 Nächte)
+    // bleibt der Anreisetag als ein Feld sichtbar, statt zu verschwinden.
+    const lastNight = addDays(parseKey(res.check_out), -1);
+    if (lastNight.getTime() < firstNight.getTime()) continue;
+
+    const from = Math.round((firstNight.getTime() - startMs) / 86_400_000);
+    const to = Math.round((lastNight.getTime() - startMs) / 86_400_000);
+    if (to < 0 || from >= total) continue;
+
+    const clampedFrom = Math.max(0, from);
+    const clampedTo = Math.min(total - 1, to);
+
+    for (let i = clampedFrom; i <= clampedTo; ) {
+      const week = Math.floor(i / 7);
+      const col = i % 7;
+      const weekEnd = week * 7 + 6;
+      const segEnd = Math.min(clampedTo, weekEnd);
+      out.push({
+        res,
+        col,
+        span: segEnd - i + 1,
+        week,
+        startsHere: i === from,
+        endsHere: segEnd === to,
+      });
+      i = segEnd + 1;
+    }
+  }
+  return out;
+}
+
 // --- Auslastungs-Aggregat (frontend, kein neuer Endpunkt) -------------------
 export type OccupancyCell = {
   /** belegte Objekt-Nächte an diesem Tag (0..propertyCount). */

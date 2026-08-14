@@ -138,15 +138,19 @@ export function CalendarViews({
       </div>
 
       {/* Andere Views haben keine Board-Kopfzeile → eigene schlanke Zeile mit
-          dem Ansicht-Dropdown darüber. */}
-      {active !== "timeline" && (
+          dem Ansicht-Dropdown darüber. Ausnahme Monatsgitter: es hat eine
+          eigene Steuerzeile (Objektauswahl), dort gehört der Umschalter
+          HINEIN — sonst stünden zwei Auswahlfelder untereinander. */}
+      {active !== "timeline" && active !== "month" && (
         <>
           <div className="flex items-center">{viewSwitcher}</div>
           {active === "bookings" && <CalendarBookingsView properties={properties} />}
-          {active === "month" && <CalendarMonthGridView properties={properties} />}
           {active === "occupancy" && <CalendarOccupancyView properties={properties} />}
           {active === "rates" && <CalendarRatesView properties={properties} />}
         </>
+      )}
+      {active === "month" && (
+        <CalendarMonthGridView properties={properties} viewSwitcher={viewSwitcher} />
       )}
     </div>
   );
