@@ -54,6 +54,7 @@ def _db(
     claim_gewinnt: bool = True,
     nutzer: dict | None = None,
     letzte_anfrage: str | None = None,
+    benutzte_zeile: dict | None = None,
 ) -> MagicMock:
     """Supabase-Mock für den Token-Weg.
 
@@ -86,6 +87,12 @@ def _db(
     )
     # _tokens_entwerten: update(...).eq(user).eq(zweck).is_(used_at).execute()
     update_eq.eq.return_value.is_.return_value.execute.return_value.data = []
+    # bereits_eingeloest: select(...).eq(hash).eq(zweck).not_.is_(used_at).limit(1)
+    # Eigene Kette (`not_`), damit ein versehentlich gelockerter Filter im Test
+    # auffällt und nicht still die `_offene_zeile`-Kette trifft.
+    select_eq.eq.return_value.not_.is_.return_value.limit.return_value.execute.return_value.data = (
+        [benutzte_zeile] if benutzte_zeile else []
+    )
     db.table.return_value = tabelle
     return db
 
@@ -151,6 +158,57 @@ def test_gueltiger_token_ist_gueltig_und_wird_nicht_verbraucht() -> None:
     assert _service(db).ist_gueltig("geheim", ZWECK_INVITE) is True
     # Vorab-Prüfung darf den Token NICHT beanspruchen.
     db.table.return_value.update.assert_not_called()
+
+
+# --- „Schon registriert" → Anmeldung statt Warnseite ------------------------
+
+
+def test_eingeloester_token_wird_als_benutzt_erkannt() -> None:
+    """Der Live-Fall: zweiter Klick auf den Einladungslink in der Mail.
+
+    Die Person hat ihr Passwort längst gesetzt; „Link ungültig oder abgelaufen"
+    war für sie eine Sackgasse mit Warndreieck für einen normalen Vorgang.
+    """
+    db = _db(None, benutzte_zeile=_token_zeile(used_at=_zeit(timedelta(minutes=-5))))
+    assert _service(db).bereits_eingeloest("geheim", ZWECK_INVITE) is True
+
+
+def test_geratener_token_verraet_nichts() -> None:
+    """Kein Orakel (die Regel aus `ist_gueltig` gilt weiter).
+
+    Für einen Token, der nicht in der Tabelle steht, ist die Antwort `False` —
+    dieselbe wie für „ungültig" und „abgelaufen". Wer ein `True` auslösen kann,
+    kennt den echten Token bereits; er hatte die Mail.
+    """
+    assert _service(_db(None)).bereits_eingeloest("geraten", ZWECK_INVITE) is False
+
+
+def test_bereits_eingeloest_verbraucht_den_token_nicht() -> None:
+    db = _db(None, benutzte_zeile=_token_zeile(used_at=_zeit(timedelta(minutes=-5))))
+    _service(db).bereits_eingeloest("geheim", ZWECK_INVITE)
+    db.table.return_value.update.assert_not_called()
+
+
+def test_bereits_eingeloest_prueft_den_hash_byteweise() -> None:
+    """Ein fremder Hash in der Antwort darf NICHT als Treffer durchgehen.
+
+    Der Nachvergleich schließt aus, dass eine spätere Änderung der Abfrage
+    (Präfix-Match, ilike) unbemerkt zu einem lockereren Kriterium wird.
+    """
+    db = _db(
+        None,
+        benutzte_zeile=_token_zeile(
+            token_hash=hash_token("ein-anderer-token"),
+            used_at=_zeit(timedelta(minutes=-5)),
+        ),
+    )
+    assert _service(db).bereits_eingeloest("geheim", ZWECK_INVITE) is False
+
+
+@pytest.mark.parametrize("muell", ["", "   ", "ümläute-ÄÖÜ", "'; drop table x; --"])
+def test_bereits_eingeloest_wirft_bei_muell_keinen_500(muell: str) -> None:
+    """Angreiferkontrollierter Input darf keinen 500 auslösen (Wurzel 5)."""
+    assert _service(_db(None)).bereits_eingeloest(muell, ZWECK_INVITE) is False
 
 
 # --- Wurzel 2: doppelte Einlösung -------------------------------------------

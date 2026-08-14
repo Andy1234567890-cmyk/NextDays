@@ -94,8 +94,16 @@ export function PasswortFeld({
           type={sichtbar ? "text" : "password"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          required
-          minLength={PASSWORT_MIN_LAENGE}
+          // KEIN `required`/`minLength` am Input: Die Browser-Validierung
+          // blockiert `submit` STUMM — kein `onSubmit`, kein Netz-Aufruf, keine
+          // Meldung. Genau das war der Live-Fall (14.08.2026): ein Eigentümer
+          // setzte sein Passwort, die Seite blieb ohne Erfolg und ohne Fehler
+          // stehen. Zusätzlich widersprach `minLength=12` dem Server, der 8
+          // genügt — der Browser lehnte damit ab, was der Server annimmt.
+          // Geprüft wird stattdessen sichtbar: `passwortGenuegt` steuert die
+          // Meldung im Formular, die verbindliche Regel bleibt serverseitig
+          // (Wurzel 3).
+          aria-required
           autoComplete="new-password"
           autoFocus={autoFocus}
           aria-describedby={anforderungenZeigen ? hilfeId : undefined}

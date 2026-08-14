@@ -281,6 +281,46 @@ class EinladungService:
             self._db, zeile["user_id"], tenant_id=zeile.get("tenant_id")
         )
 
+    def bereits_eingeloest(self, token: str, zweck: str) -> bool:
+        """Wurde GENAU DIESER Token schon eingelöst (Passwort bereits gesetzt)?
+
+        Wozu: Klickt jemand ein zweites Mal auf den Einladungslink in der Mail,
+        soll er zur ANMELDUNG geführt werden statt auf „Link ungültig oder
+        abgelaufen" zu landen. Für ihn ist das kein Fehler — er hat sein Passwort
+        ja bereits angelegt; die Warnseite war eine Sackgasse mit einem
+        Warndreieck für einen völlig normalen Vorgang.
+
+        WARUM DAS KEIN ORAKEL IST (die Regel aus `ist_gueltig` gilt weiter):
+        `True` kommt AUSSCHLIESSLICH zurück, wenn der Token-Hash wirklich in der
+        Tabelle steht UND `used_at` gesetzt ist. Für einen geratenen Token ist
+        die Antwort `False` — dieselbe wie für „ungültig" und „abgelaufen", also
+        genau die ununterscheidbare Auskunft wie bisher. Wer ein `True`
+        auslösen kann, kennt den echten Token bereits; er hatte die Mail. Es
+        entsteht also kein Verzeichnis und kein Weg, Tokens durchzuprobieren.
+
+        Abgelaufen UND benutzt gibt bewusst `True`: Was zählt, ist die Tatsache,
+        dass das Passwort existiert — die Ablauffrist des Links ändert daran
+        nichts, und „melde dich an" ist auch dann die richtige Auskunft.
+        """
+        if not token or not token.strip():
+            return False
+        erwartet = hash_token(token)
+        rows = (
+            self._db.table("user_auth_tokens")
+            .select("token_hash, used_at")
+            .eq("token_hash", erwartet)
+            .eq("zweck", zweck)
+            .not_.is_("used_at", "null")
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            return False
+        # Byteweiser Nachvergleich wie in `_offene_zeile`: schließt aus, dass eine
+        # spätere Änderung der Abfrage unbemerkt zu einem lockereren Kriterium
+        # wird (Wurzel 5).
+        return secrets_match(rows[0].get("token_hash"), erwartet)
+
     def passwort_setzen(self, token: str, passwort: str, zweck: str) -> None:
         """Token einlösen und das neue Passwort in GoTrue setzen.
 

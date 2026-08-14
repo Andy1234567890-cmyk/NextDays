@@ -29,7 +29,16 @@ export type TokenErgebnis =
  *  geladen. Ihn als ungültig auszugeben wäre eine Falschaussage, die den
  *  Nutzer auf „neuen Link anfordern" schickt — und der neue Link liefe in
  *  dasselbe Limit (Wurzel 5b: kein plausibel aussehender Ersatzbefund). */
-export type PruefErgebnis = "gueltig" | "ungueltig" | "zuOft";
+export type PruefErgebnis =
+  | "gueltig"
+  | "ungueltig"
+  | "zuOft"
+  /** Dieser Link wurde schon eingelöst — das Passwort existiert. Die Seite
+   *  führt dann zur Anmeldung statt eine Warnseite zu zeigen: Wer ein zweites
+   *  Mal auf den Link in seiner Mail klickt, hat sich bereits registriert, und
+   *  „Link ungültig" wäre für ihn eine Sackgasse. Der Server meldet das nur bei
+   *  einem Treffer auf den echten Token (kein Orakel, s. Backend-Schema). */
+  | "schonBenutzt";
 
 /** Ordnet den HTTP-Status einem Anzeigezustand zu. Bewusst KEIN Durchreichen
  *  des Server-Textes an die Oberfläche: die Meldungen sind übersetzt (24
@@ -76,10 +85,12 @@ export async function tokenPruefen(
       ? "/auth/einladung/pruefen"
       : "/auth/passwort-neu/pruefen";
   try {
-    const res = await api<{ gueltig: boolean }>(
-      `${pfad}?token=${encodeURIComponent(token)}`,
-    );
-    return res.gueltig ? "gueltig" : "ungueltig";
+    const res = await api<{
+      gueltig: boolean;
+      bereits_eingeloest?: boolean;
+    }>(`${pfad}?token=${encodeURIComponent(token)}`);
+    if (res.gueltig) return "gueltig";
+    return res.bereits_eingeloest ? "schonBenutzt" : "ungueltig";
   } catch (exc) {
     if (exc instanceof ApiError && exc.status === 429) return "zuOft";
     return "gueltig"; // siehe oben — im Zweifel weiterlaufen lassen

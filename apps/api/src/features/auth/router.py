@@ -370,9 +370,23 @@ def einladung_pruefen(
     Liefert zusätzlich die Sprache des Eingeladenen, damit die Seite in
     derselben Sprache erscheint wie die Einladungsmail. Mehr gibt der Endpunkt
     über den Token NICHT preis (siehe `TokenPruefungResponse`).
+
+    `bereits_eingeloest` sagt der Seite, dass sie zur ANMELDUNG führen soll:
+    Wer ein zweites Mal auf den Link in seiner Mail klickt, hat sein Passwort
+    schon angelegt — „Link ungültig" wäre für ihn eine Sackgasse mit
+    Warndreieck für einen normalen Vorgang. Nur bei einem Treffer auf den
+    echten Token; ein geratener Token erfährt davon nichts.
     """
     gueltig, sprache = service.pruefen_mit_sprache(token, ZWECK_INVITE)
-    return TokenPruefungResponse(gueltig=gueltig, sprache=sprache)
+    return TokenPruefungResponse(
+        gueltig=gueltig,
+        sprache=sprache,
+        # Nur nachsehen, wenn der Token nicht (mehr) offen ist — bei einem
+        # gültigen Link ist die Frage beantwortet und der Extra-Query unnötig.
+        bereits_eingeloest=(
+            False if gueltig else service.bereits_eingeloest(token, ZWECK_INVITE)
+        ),
+    )
 
 
 @router.post("/einladung/annehmen", status_code=status.HTTP_204_NO_CONTENT)
@@ -414,10 +428,17 @@ def passwort_neu_pruefen(
 
     Gibt wie der Einladungs-Zwilling die Sprache des Empfängers mit zurück —
     die Reset-Mail ging in dieser Sprache raus, die Seite dahinter muss ihr
-    folgen.
+    folgen. Ebenso `bereits_eingeloest`: Wer seinen Reset-Link ein zweites Mal
+    öffnet, hat sein neues Passwort schon gesetzt und gehört zur Anmeldung.
     """
     gueltig, sprache = service.pruefen_mit_sprache(token, ZWECK_RESET)
-    return TokenPruefungResponse(gueltig=gueltig, sprache=sprache)
+    return TokenPruefungResponse(
+        gueltig=gueltig,
+        sprache=sprache,
+        bereits_eingeloest=(
+            False if gueltig else service.bereits_eingeloest(token, ZWECK_RESET)
+        ),
+    )
 
 
 @router.post("/passwort-neu", status_code=status.HTTP_204_NO_CONTENT)

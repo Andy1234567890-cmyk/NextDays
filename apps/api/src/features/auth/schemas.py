@@ -239,6 +239,14 @@ class TokenPruefungResponse(BaseModel):
     Letzt-Rückfall aus `core.mail_sprache.FALLBACK` (Englisch), damit die
     Antwort für geratene Tokens ununterscheidbar bleibt.
 
+    `bereits_eingeloest=true` heißt: GENAU DIESER Token wurde schon eingelöst,
+    das Passwort existiert also. Die Seite führt dann zur ANMELDUNG statt eine
+    Warnseite zu zeigen — für den Nutzer ist der zweite Klick auf den Link aus
+    der Mail kein Fehler. Das bricht die Ununterscheidbarkeit NICHT: `true`
+    setzt einen Treffer auf den echten Token-Hash voraus. Für einen geratenen
+    oder abgelaufenen Token bleibt die Antwort `false` — dieselbe wie bisher.
+    Wer ein `true` auslösen kann, kennt den Token bereits; er hatte die Mail.
+
     MEHR STEHT HIER BEWUSST NICHT (Wurzel 9): kein Name, keine E-Mail, keine
     Rolle, kein Tenant. Der Endpunkt ist öffentlich und unauthentifiziert; alles
     darüber hinaus wäre ein Verzeichnis über fremde Konten für jeden, der
@@ -247,6 +255,7 @@ class TokenPruefungResponse(BaseModel):
 
     gueltig: bool
     sprache: str
+    bereits_eingeloest: bool = False
 
 
 class SessionResponse(BaseModel):
