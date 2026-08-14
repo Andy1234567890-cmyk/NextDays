@@ -34,6 +34,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 
+from . import objekt_suche
 from .schemas import (
     WebhookDetail,
     WebhookEreignis,
@@ -138,13 +139,28 @@ def liste(  # noqa: PLR0913 — jeder Filter ist eine eigene Achse der Ansicht
     severity: str | None = None,
     nur_offen: bool = False,
     tenant_id: str | None = None,
+    suche: str | None = None,
 ) -> WebhookEreignisListe:
     """Die Eingänge, neueste zuerst — serverseitig paginiert.
 
     Sortiert nach `created_at`, UNSEREM Eingang: einen Portal-Zeitpunkt trägt die
     Tabelle nicht in einer Spalte, und den aus der Payload zu sortieren würde
     Ereignisse ohne ihn stillschweigend hinten einsortieren (Wurzel 5b).
+
+    `suche` trifft den OBJEKTNAMEN. Die Tabelle trägt ihn nicht, deshalb erst die
+    passenden `property_id`s bestimmen und dann darauf filtern.
     """
+    treffer_ids: list[str] | None = None
+    if suche and suche.strip():
+        treffer_ids = objekt_suche.property_ids_zu_suche(db, suche)
+        if not treffer_ids:
+            # Kein Objekt passt — also gibt es auch keine Eingänge dazu. Den
+            # Filter jetzt wegzulassen zeigte die ungefilterte Liste und sähe
+            # aus, als hätte das gesuchte Objekt all das ausgelöst (Wurzel 4).
+            return WebhookEreignisListe(
+                items=[], gesamt=0, offset=offset, limit=limit
+            )
+
     query = db.table(_TABELLE).select("*", count="exact")
     if event:
         query = query.eq("event", event)
@@ -154,6 +170,8 @@ def liste(  # noqa: PLR0913 — jeder Filter ist eine eigene Achse der Ansicht
         query = query.eq("resolved", False)
     if tenant_id:
         query = query.eq("tenant_id", tenant_id)
+    if treffer_ids is not None:
+        query = query.in_("property_id", treffer_ids)
     res = (
         query.order("created_at", desc=True)
         .range(offset, offset + limit - 1)

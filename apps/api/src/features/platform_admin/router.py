@@ -920,12 +920,15 @@ def worker_ereignisse(
     vorgang: str | None = None,
     nur_fehler: bool = False,
     property_id: str | None = None,
+    suche: str | None = Query(None, max_length=200),
 ) -> WorkerEreignisListe:
     """Der Worker-Verlauf, neueste zuerst.
 
     Serverseitig paginiert: die Tabelle wächst um ~1.400 Jobs und ~520
     Portal-Aufrufe je Tag (live gemessen) — ein „alles laden" wäre nach einer
     Woche ein Request über 13.000 Zeilen.
+
+    `suche` filtert auf den Objektnamen (Freitext, case-insensitiv).
     """
     ergebnis = worker.liste(
         db,
@@ -935,6 +938,7 @@ def worker_ereignisse(
         vorgang=vorgang,
         nur_fehler=nur_fehler,
         property_id=property_id,
+        suche=suche,
     )
     service.log_action(ctx, "worker.events", request=request)
     return ergebnis
@@ -1004,8 +1008,12 @@ def webhook_ereignisse(  # noqa: PLR0913 — jeder Filter ist eine Achse der Ans
     severity: str | None = None,
     nur_offen: bool = False,
     tenant_id: str | None = None,
+    suche: str | None = Query(None, max_length=200),
 ) -> WebhookEreignisListe:
-    """Die Portal-Eingänge, neueste zuerst — serverseitig paginiert."""
+    """Die Portal-Eingänge, neueste zuerst — serverseitig paginiert.
+
+    `suche` filtert auf den Objektnamen (Freitext, case-insensitiv).
+    """
     ergebnis = webhook.liste(
         db,
         limit=limit,
@@ -1014,6 +1022,7 @@ def webhook_ereignisse(  # noqa: PLR0913 — jeder Filter ist eine Achse der Ans
         severity=severity,
         nur_offen=nur_offen,
         tenant_id=tenant_id,
+        suche=suche,
     )
     service.log_action(ctx, "webhook.events", request=request)
     return ergebnis

@@ -844,6 +844,8 @@ export interface WorkerFilter {
   vorgang?: string;
   nurFehler?: boolean;
   propertyId?: string;
+  /** Freitext auf den OBJEKTNAMEN. Blendet Ereignisse ohne Objekt aus. */
+  suche?: string;
 }
 
 /** Der Worker-Verlauf, neueste zuerst. Serverseitig paginiert. */
@@ -858,6 +860,7 @@ export async function getWorkerEreignisse(
   if (filter.vorgang) p.set("vorgang", filter.vorgang);
   if (filter.nurFehler) p.set("nur_fehler", "true");
   if (filter.propertyId) p.set("property_id", filter.propertyId);
+  if (filter.suche?.trim()) p.set("suche", filter.suche.trim());
   return api<WorkerEreignisListe>(`/platform/worker/ereignisse?${p}`, {
     cache: "no-store",
   });
@@ -946,6 +949,8 @@ export interface WebhookFilter {
   severity?: string;
   nurOffen?: boolean;
   tenantId?: string;
+  /** Freitext auf den OBJEKTNAMEN. */
+  suche?: string;
 }
 
 /** Die Portal-Eingänge, neueste zuerst. Serverseitig paginiert. */
@@ -960,6 +965,7 @@ export async function getWebhookEreignisse(
   if (filter.severity) p.set("severity", filter.severity);
   if (filter.nurOffen) p.set("nur_offen", "true");
   if (filter.tenantId) p.set("tenant_id", filter.tenantId);
+  if (filter.suche?.trim()) p.set("suche", filter.suche.trim());
   return api<WebhookEreignisListe>(`/platform/webhook/ereignisse?${p}`, {
     cache: "no-store",
   });

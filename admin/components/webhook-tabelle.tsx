@@ -56,6 +56,16 @@ export function WebhookTabelle({
   const [nurFehler, setNurFehler] = useState(false);
   const [offset, setOffset] = useState(0);
   const [laedt, starteLaden] = useTransition();
+  // ZWEI Zustände für EIN Feld: `suchEingabe` folgt der Tastatur, `suche` löst
+  // die Abfrage aus. Ohne die Trennung liefe je Tastendruck ein Request — bei
+  // „Kornblomst" elf Stück, von denen zehn schon veraltet ankommen.
+  const [suchEingabe, setSuchEingabe] = useState("");
+  const [suche, setSuche] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => setSuche(suchEingabe.trim()), 300);
+    return () => clearTimeout(t);
+  }, [suchEingabe]);
 
   // EINE Ladefunktion für Filter, Blättern und Realtime — der Filter-Zustand
   // steckt in den Abhängigkeiten, damit ein Realtime-Ereignis nicht mit dem
@@ -69,13 +79,14 @@ export function WebhookTabelle({
           event: event || undefined,
           severity: nurFehler ? "error" : undefined,
           nurOffen,
+          suche: suche || undefined,
         });
         setItems(antwort.items);
         setGesamt(antwort.gesamt);
         setOffset(neuerOffset);
       });
     },
-    [offset, event, nurOffen, nurFehler],
+    [offset, event, nurOffen, nurFehler, suche],
   );
 
   // Filterwechsel setzt aufs erste Blatt zurück: Seite 4 eines anderen Filters
@@ -88,12 +99,13 @@ export function WebhookTabelle({
         event: event || undefined,
         severity: nurFehler ? "error" : undefined,
         nurOffen,
+        suche: suche || undefined,
       });
       setItems(antwort.items);
       setGesamt(antwort.gesamt);
       setOffset(0);
     });
-  }, [event, nurOffen, nurFehler]);
+  }, [event, nurOffen, nurFehler, suche]);
 
   useRealtime({
     table: "reservations",
@@ -109,6 +121,24 @@ export function WebhookTabelle({
   return (
     <div className="mt-8">
       <div className="flex flex-wrap items-center gap-3">
+        {/* Freitext statt Auswahlliste: heute sind es 43 Objekte, geplant sind
+            über 100 aus mehreren Betrieben — ein Dropdown, durch das man
+            scrollen muss, ist keine Suche. */}
+        <div className="relative">
+          <input
+            type="search"
+            value={suchEingabe}
+            onChange={(e) => setSuchEingabe(e.target.value)}
+            placeholder="Objekt suchen …"
+            aria-label="Nach Objektname suchen"
+            className="w-56 rounded-full border border-border bg-card px-4 py-2 text-sm"
+          />
+          {suchEingabe && suchEingabe.trim() !== suche ? (
+            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+              …
+            </span>
+          ) : null}
+        </div>
         <select
           value={event}
           onChange={(e) => setEvent(e.target.value)}
@@ -163,9 +193,11 @@ export function WebhookTabelle({
       {items.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-dashed border-border p-8 text-center">
           <p className="text-sm text-muted-foreground">
-            {nurOffen || nurFehler || event
-              ? "Kein Eingang passt zu diesem Filter."
-              : "Noch kein Eingang aufgezeichnet."}
+            {suche
+              ? `Kein Eingang für ein Objekt mit „${suche}“.`
+              : nurOffen || nurFehler || event
+                ? "Kein Eingang passt zu diesem Filter."
+                : "Noch kein Eingang aufgezeichnet."}
           </p>
         </div>
       ) : (

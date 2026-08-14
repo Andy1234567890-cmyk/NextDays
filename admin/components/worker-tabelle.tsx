@@ -48,6 +48,15 @@ export function WorkerTabelle({
   const [nurFehler, setNurFehler] = useState(false);
   const [offset, setOffset] = useState(0);
   const [laedt, starteLaden] = useTransition();
+  // ZWEI Zustände für EIN Feld: `suchEingabe` folgt der Tastatur, `suche` löst
+  // die Abfrage aus. Ohne die Trennung liefe je Tastendruck ein Request.
+  const [suchEingabe, setSuchEingabe] = useState("");
+  const [suche, setSuche] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => setSuche(suchEingabe.trim()), 300);
+    return () => clearTimeout(t);
+  }, [suchEingabe]);
 
   // EINE Ladefunktion für Filter, Blättern und Realtime — nicht drei. Der
   // Filter-Zustand steckt in den Abhängigkeiten, damit ein Realtime-Ereignis
@@ -60,13 +69,14 @@ export function WorkerTabelle({
           offset: neuerOffset,
           richtung: richtung || undefined,
           nurFehler,
+          suche: suche || undefined,
         });
         setItems(antwort.items);
         setGesamt(antwort.gesamt);
         setOffset(neuerOffset);
       });
     },
-    [offset, richtung, nurFehler],
+    [offset, richtung, nurFehler, suche],
   );
 
   // Filterwechsel setzt aufs erste Blatt zurück: Seite 4 eines anderen Filters
@@ -78,12 +88,13 @@ export function WorkerTabelle({
         offset: 0,
         richtung: richtung || undefined,
         nurFehler,
+        suche: suche || undefined,
       });
       setItems(antwort.items);
       setGesamt(antwort.gesamt);
       setOffset(0);
     });
-  }, [richtung, nurFehler]);
+  }, [richtung, nurFehler, suche]);
 
   // Neue Zeilen nur auf dem ERSTEN Blatt einspielen. Wer auf Seite 3 liest,
   // will nicht, dass ihm die Liste unter dem Finger wegläuft.
@@ -101,6 +112,16 @@ export function WorkerTabelle({
   return (
     <div className="mt-8">
       <div className="flex flex-wrap items-center gap-3">
+        {/* Freitext statt Auswahlliste: heute 43 Objekte, geplant über 100 aus
+            mehreren Betrieben — ein Dropdown zum Scrollen ist keine Suche. */}
+        <input
+          type="search"
+          value={suchEingabe}
+          onChange={(e) => setSuchEingabe(e.target.value)}
+          placeholder="Objekt suchen …"
+          aria-label="Nach Objektname suchen"
+          className="w-56 rounded-full border border-border bg-card px-4 py-2 text-sm"
+        />
         <select
           value={richtung}
           onChange={(e) => setRichtung(e.target.value)}
@@ -123,6 +144,11 @@ export function WorkerTabelle({
         <span className="text-sm text-muted-foreground">
           {gesamt} Vorgänge · Seite {seite} von {seiten}
           {laedt ? " · lädt …" : ""}
+          {/* Ohne diesen Satz sieht die geschrumpfte Liste wie ein Defekt aus:
+              die MEISTEN Vorgänge gelten keinem einzelnen Objekt (live 1.483
+              von 2.376 — Ticks, Feed-Läufe, Warteschlangen-Arbeit) und fallen
+              bei einer Objektsuche zwangsläufig weg. */}
+          {suche ? " · nur Vorgänge mit Objekt" : ""}
         </span>
         <div className="ml-auto flex gap-2">
           <button
@@ -147,9 +173,11 @@ export function WorkerTabelle({
       {items.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-dashed border-border p-8 text-center">
           <p className="text-sm text-muted-foreground">
-            {nurFehler || richtung
-              ? "Kein Vorgang passt zu diesem Filter."
-              : "Noch kein Vorgang aufgezeichnet."}
+            {suche
+              ? `Kein Vorgang für ein Objekt mit „${suche}“. Vorgänge ohne Objekt (Ticks, Feed-Läufe) blendet die Suche aus.`
+              : nurFehler || richtung
+                ? "Kein Vorgang passt zu diesem Filter."
+                : "Noch kein Vorgang aufgezeichnet."}
           </p>
         </div>
       ) : (

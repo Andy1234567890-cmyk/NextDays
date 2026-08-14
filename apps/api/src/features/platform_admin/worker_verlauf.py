@@ -26,7 +26,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 
-from . import worker_stillstand
+from . import objekt_suche, worker_stillstand
 from .schemas import (
     WorkerDetail,
     WorkerEreignis,
@@ -84,7 +84,7 @@ def _zeile(row: dict[str, Any], titel: dict[str, str]) -> WorkerEreignis:
     )
 
 
-def liste(
+def liste(  # noqa: PLR0913 — jeder Filter ist eine eigene Achse der Ansicht
     db: Client,
     *,
     limit: int = 100,
@@ -93,14 +93,33 @@ def liste(
     vorgang: str | None = None,
     nur_fehler: bool = False,
     property_id: str | None = None,
+    suche: str | None = None,
 ) -> WorkerEreignisListe:
     """Der Verlauf, neueste zuerst — serverseitig paginiert.
 
     Paginierung ist keine Bequemlichkeit: die Tabelle wächst um ~1.400 Jobs und
     ~520 Portal-Aufrufe je Tag (live gemessen). Ein „alles laden" wäre nach
     einer Woche ein Request über 13.000 Zeilen.
+
+    `suche` trifft den OBJEKTNAMEN. Anders als beim Webhook-Monitor tragen hier
+    die MEISTEN Zeilen gar keine `property_id` — live 1.483 von 2.376 (Ticks,
+    Feed-Läufe, Warteschlangen-Arbeit gelten keinem einzelnen Objekt). Eine
+    Suche blendet sie zwangsläufig aus; die Oberfläche benennt das, damit es
+    nicht wie ein Defekt aussieht.
     """
+    treffer_ids: list[str] | None = None
+    if suche and suche.strip():
+        treffer_ids = objekt_suche.property_ids_zu_suche(db, suche)
+        if not treffer_ids:
+            # Kein Objekt passt — den Filter jetzt wegzulassen zeigte die
+            # ungefilterte Liste (Wurzel 4).
+            return WorkerEreignisListe(
+                items=[], gesamt=0, offset=offset, limit=limit
+            )
+
     query = db.table(_TABELLE).select("*", count="exact")
+    if treffer_ids is not None:
+        query = query.in_("property_id", treffer_ids)
     if richtung:
         query = query.eq("richtung", richtung)
     if vorgang:
