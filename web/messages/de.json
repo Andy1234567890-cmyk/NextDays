@@ -321,7 +321,8 @@
     "extensions": "Erweiterungen",
     "announcements": "Neuerungen",
     "billingRules": "Abrechnungsregeln",
-    "ownerReporting": "Eigentümer-Reporting"
+    "ownerReporting": "Eigentümer-Reporting",
+    "inboxUngelesen": "Posteingang ({count} ungelesen)"
   },
   "exemption": {
     "labelNamed": "Steuerbefreit ({scheme}) — keine USt-ID nötig",

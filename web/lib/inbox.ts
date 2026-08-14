@@ -145,6 +145,18 @@ export async function listInboxThreads(
   return call<{ items: InboxThread[]; total: number }>(qs);
 }
 
+/**
+ * Zahl der offenen Konversationen — das Abzeichen am Sidebar-Punkt.
+ *
+ * Bewusst ein eigener Endpunkt und nicht `listInboxThreads().filter(…)`: die
+ * Sidebar steht auf JEDER Seite, und dafür 200 Threads samt Gastdaten,
+ * Vorschautexten und Profilbildern zu laden wäre eine Datenlast, die niemand
+ * anzeigt — dazu Gastdaten in einer Komponente, die sie nicht braucht.
+ */
+export async function getInboxUnreadCount(): Promise<Result<{ ungelesen: number }>> {
+  return call<{ ungelesen: number }>("/unread-count");
+}
+
 /** Lebenszyklus setzen: active (wiederherstellen) | archived | trashed | deleted. */
 export async function setInboxStatus(
   threadId: string,

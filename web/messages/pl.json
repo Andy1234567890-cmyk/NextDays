@@ -321,7 +321,8 @@
     "extensions": "Rozszerzenia",
     "announcements": "Nowości",
     "billingRules": "Zasady rozliczeń",
-    "ownerReporting": "Raporty dla właścicieli"
+    "ownerReporting": "Raporty dla właścicieli",
+    "inboxUngelesen": "Skrzynka odbiorcza ({count} nieprzeczytanych)"
   },
   "exemption": {
     "labelNamed": "Zwolniony z podatku ({scheme}) — NIP niepotrzebny",

@@ -321,7 +321,8 @@
     "extensions": "Laajennukset",
     "announcements": "Uutuudet",
     "ownerReporting": "Omistajaraportointi",
-    "billingRules": "Laskutussäännöt"
+    "billingRules": "Laskutussäännöt",
+    "inboxUngelesen": "Saapuneet ({count} lukematonta)"
   },
   "exemption": {
     "labelNamed": "Verovapaa ({scheme}) — ALV-numeroa ei tarvita",

@@ -321,7 +321,8 @@
     "extensions": "Proširenja",
     "announcements": "Novosti",
     "ownerReporting": "Izvješća za vlasnike",
-    "billingRules": "Pravila obračuna"
+    "billingRules": "Pravila obračuna",
+    "inboxUngelesen": "Ulazna pošta ({count} nepročitanih)"
   },
   "exemption": {
     "labelNamed": "Oslobođeno poreza ({scheme}) — PDV broj nije potreban",

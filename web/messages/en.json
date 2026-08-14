@@ -321,7 +321,8 @@
     "extensions": "Extensions",
     "announcements": "What's new",
     "billingRules": "Billing rules",
-    "ownerReporting": "Owner reporting"
+    "ownerReporting": "Owner reporting",
+    "inboxUngelesen": "Inbox ({count} unread)"
   },
   "exemption": {
     "labelNamed": "Tax-exempt ({scheme}) — no VAT ID required",

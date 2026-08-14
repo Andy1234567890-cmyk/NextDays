@@ -321,7 +321,8 @@
     "extensions": "Επεκτάσεις",
     "announcements": "Νέα",
     "ownerReporting": "Αναφορές ιδιοκτητών",
-    "billingRules": "Κανόνες εκκαθάρισης"
+    "billingRules": "Κανόνες εκκαθάρισης",
+    "inboxUngelesen": "Εισερχόμενα ({count} μη αναγνωσμένα)"
   },
   "exemption": {
     "labelNamed": "Απαλλαγή φόρου ({scheme}) — δεν απαιτείται ΑΦΜ",

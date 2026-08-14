@@ -321,7 +321,8 @@
     "extensions": "Breiseáin",
     "announcements": "Nuacht",
     "ownerReporting": "Tuairisciú d'úinéirí",
-    "billingRules": "Rialacha socraíochta"
+    "billingRules": "Rialacha socraíochta",
+    "inboxUngelesen": "Bosca isteach ({count} gan léamh)"
   },
   "exemption": {
     "labelNamed": "Díolúine cánach ({scheme}) — níl uimhir CBL ag teastáil",

@@ -321,7 +321,8 @@
     "extensions": "Tillägg",
     "announcements": "Nyheter",
     "billingRules": "Avräkningsregler",
-    "ownerReporting": "Ägarrapportering"
+    "ownerReporting": "Ägarrapportering",
+    "inboxUngelesen": "Inkorg ({count} olästa)"
   },
   "exemption": {
     "labelNamed": "Skattebefriad ({scheme}) — inget momsreg.nr krävs",

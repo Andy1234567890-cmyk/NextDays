@@ -321,7 +321,8 @@
     "extensions": "Uitbreidingen",
     "announcements": "Nieuws",
     "billingRules": "Afrekenregels",
-    "ownerReporting": "Eigenaarsrapportage"
+    "ownerReporting": "Eigenaarsrapportage",
+    "inboxUngelesen": "Postvak IN ({count} ongelezen)"
   },
   "exemption": {
     "labelNamed": "Vrijgesteld van belasting ({scheme}) — geen btw-nummer nodig",

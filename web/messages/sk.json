@@ -321,7 +321,8 @@
     "extensions": "Rozšírenia",
     "announcements": "Novinky",
     "billingRules": "Pravidlá vyúčtovania",
-    "ownerReporting": "Reporting pre vlastníkov"
+    "ownerReporting": "Reporting pre vlastníkov",
+    "inboxUngelesen": "Doručená pošta ({count} neprečítaných)"
   },
   "exemption": {
     "labelNamed": "Oslobodené od dane ({scheme}) — IČ DPH nie je potrebné",

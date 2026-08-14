@@ -559,6 +559,21 @@ class BulkUpdateResult(BaseModel):
     updated: int
 
 
+# --- Ungelesen-Zähler (Sidebar-Abzeichen) ------------------------------------
+class UnreadCount(BaseModel):
+    """Wie viele Konversationen warten auf eine Antwort?
+
+    Speist das Abzeichen am Sidebar-Punkt „Posteingang". Bewusst dieselbe
+    Ableitung wie die Liste (`InboxService._ist_gelesen`) statt eines eigenen
+    `count(is_read = false)`: das Flag allein bleibt nach dem ersten Öffnen für
+    immer `true`, und eine danach eingegangene Gastnachricht zählte nie mit.
+    Zwei Wahrheiten über denselben Zustand wären zudem die schlimmere Variante —
+    das Abzeichen zeigte eine Zahl, die die Liste daneben nicht bestätigt.
+    """
+
+    ungelesen: int
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

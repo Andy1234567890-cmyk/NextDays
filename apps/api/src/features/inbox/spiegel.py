@@ -13,18 +13,22 @@ anfällt.
 """
 from __future__ import annotations
 
-from typing import Final, NamedTuple
+from typing import TYPE_CHECKING, Any, Final, NamedTuple
 from urllib.parse import urlparse, urlunparse
 
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.core.security import AuthContext
 from src.features.channel_manager.common import (
     NUR_ANHANG_TEXT,
     ota_zeitstempel_utc,
 )
 
 from .schemas import InboxMessage
+
+if TYPE_CHECKING:
+    from .authz import InboxAccess
 
 log = get_logger("nextdays.inbox")
 
@@ -129,6 +133,35 @@ def _vorschau(m: InboxMessage) -> str:
 
 class SpiegelMixin:
     """Lesen und Nachtragen des lokalen Verlaufs."""
+
+    # Vom Service gestellt; hier nur deklariert, damit die Typprüfung den
+    # Zugriff kennt (dasselbe Muster wie in `PlanungMixin`).
+    list_threads: Any
+
+    def unread_count(
+        self, ctx: AuthContext, *, access: InboxAccess | None = None
+    ) -> int:
+        """Zahl fürs Sidebar-Abzeichen: offene Konversationen der AKTIVEN Ansicht.
+
+        Hier und nicht in `service.py`, weil der Lesestand (`_ist_gelesen`,
+        `_spiegel_stand`) in diesem Modul zu Hause ist — und weil `service.py`
+        mit dieser Methode über die pylint-Grenze von 1500 Zeilen lief.
+
+        Bewusst über `list_threads` statt über ein eigenes
+        `count(is_read = false)` in SQL. Der ausgelieferte Lesestand ist
+        ABGELEITET: das Flag allein steht nach dem ersten Öffnen für immer auf
+        `true`, und eine danach eingegangene Gastnachricht fiele aus einer
+        reinen Spaltenzählung heraus — das Abzeichen bliebe stumm, während in
+        der Liste daneben „ungelesen" steht. Eine zweite Zählweise wäre also
+        nicht schneller, sondern eine zweite Wahrheit über denselben Zustand.
+
+        Archiv und Papierkorb zählen nicht mit: das Abzeichen fordert zur
+        Arbeit auf, und was archiviert wurde, ist erledigt. Der Scope kommt aus
+        `access` und gilt unverändert (Wurzel 9) — wer nur zugewiesene Threads
+        sehen darf, bekommt auch nur deren Zahl.
+        """
+        liste = self.list_threads(ctx, status="active", access=access)
+        return sum(1 for t in liste.items if not t.is_read)
 
     @staticmethod
     def _vereinen(

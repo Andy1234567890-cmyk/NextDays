@@ -321,7 +321,8 @@
     "extensions": "Extensiones",
     "announcements": "Novedades",
     "billingRules": "Reglas de liquidación",
-    "ownerReporting": "Informes para propietarios"
+    "ownerReporting": "Informes para propietarios",
+    "inboxUngelesen": "Bandeja de entrada ({count} sin leer)"
   },
   "exemption": {
     "labelNamed": "Exento de impuestos ({scheme}) — no se requiere NIF/IVA",

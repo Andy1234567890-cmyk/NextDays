@@ -321,7 +321,8 @@
     "extensions": "Paplašinājumi",
     "announcements": "Jaunumi",
     "ownerReporting": "Īpašnieku pārskati",
-    "billingRules": "Norēķinu noteikumi"
+    "billingRules": "Norēķinu noteikumi",
+    "inboxUngelesen": "Iesūtne ({count} nelasītas)"
   },
   "exemption": {
     "labelNamed": "Atbrīvots no nodokļa ({scheme}) — PVN nr. nav vajadzīgs",

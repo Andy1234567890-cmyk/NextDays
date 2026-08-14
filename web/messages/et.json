@@ -321,7 +321,8 @@
     "extensions": "Laiendused",
     "announcements": "Uudised",
     "ownerReporting": "Omanike aruandlus",
-    "billingRules": "Arveldusreeglid"
+    "billingRules": "Arveldusreeglid",
+    "inboxUngelesen": "Sisendkaust ({count} lugemata)"
   },
   "exemption": {
     "labelNamed": "Maksuvaba ({scheme}) — KMKR-numbrit pole vaja",

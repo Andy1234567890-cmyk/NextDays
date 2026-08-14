@@ -321,7 +321,8 @@
     "extensions": "Rozšíření",
     "announcements": "Novinky",
     "billingRules": "Pravidla vyúčtování",
-    "ownerReporting": "Reporting pro vlastníky"
+    "ownerReporting": "Reporting pro vlastníky",
+    "inboxUngelesen": "Doručená pošta ({count} nepřečtených)"
   },
   "exemption": {
     "labelNamed": "Osvobozeno od daně ({scheme}) — DIČ není nutné",

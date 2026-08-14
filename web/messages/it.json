@@ -321,7 +321,8 @@
     "extensions": "Estensioni",
     "announcements": "Novità",
     "billingRules": "Regole di rendiconto",
-    "ownerReporting": "Report per proprietari"
+    "ownerReporting": "Report per proprietari",
+    "inboxUngelesen": "Posta in arrivo ({count} non lette)"
   },
   "exemption": {
     "labelNamed": "Esente da imposta ({scheme}) — nessuna P.IVA richiesta",

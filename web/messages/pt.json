@@ -321,7 +321,8 @@
     "extensions": "Extensões",
     "announcements": "Novidades",
     "billingRules": "Regras de acerto de contas",
-    "ownerReporting": "Relatórios para proprietários"
+    "ownerReporting": "Relatórios para proprietários",
+    "inboxUngelesen": "Caixa de entrada ({count} não lidas)"
   },
   "exemption": {
     "labelNamed": "Isento de imposto ({scheme}) — sem NIF/IVA necessário",

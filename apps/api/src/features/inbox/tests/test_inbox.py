@@ -2314,3 +2314,64 @@ def test_marktplatz_antwort_wird_abgelehnt() -> None:
     with pytest.raises(InboxError) as exc:
         svc.send_message(_CTX, "mb:gt1", "Hallo")
     assert exc.value.status_code == 422
+
+
+# --- Ungelesen-Zähler (Sidebar-Abzeichen) ------------------------------------
+def test_unread_count_zaehlt_gastnachricht_trotz_is_read_flag() -> None:
+    """Der Kern des Abzeichens: das Flag allein reicht NICHT.
+
+    `is_read` wird beim ersten Öffnen auf true gesetzt und bleibt dort für
+    immer. Schreibt der Gast danach erneut, zählte ein simples
+    `count(is_read = false)` diesen Thread nie mit — das Abzeichen bliebe
+    stumm, während die Liste daneben „ungelesen" anzeigt.
+    """
+    row = {**_booking_row(), "is_read": True, "read_at": "2026-08-06T10:00:00+00:00"}
+    nachrichten = [{
+        "tenant_id": "t1", "thread_ref": row["id"], "sender": "guest",
+        "body": "Noch eine Frage", "sent_at": "2026-08-06T14:55:55+00:00",
+    }]
+    svc = InboxService(
+        service_client=_FakeDB([row], [], nachrichten=nachrichten),
+        channex=_FakeChannex(),
+    )
+    assert svc.unread_count(_CTX) == 1
+
+
+def test_unread_count_eigene_antwort_erledigt_den_thread() -> None:
+    """Wer geantwortet hat, hat gelesen — der Thread zählt nicht mehr.
+
+    Ohne diese Regel forderte das Abzeichen zur Arbeit an Threads auf, die
+    längst beantwortet sind (live vier von neun).
+    """
+    row = {**_booking_row(), "is_read": False, "read_at": None}
+    nachrichten = [
+        {"tenant_id": "t1", "thread_ref": row["id"], "sender": "guest",
+         "body": "Frage", "sent_at": "2026-08-06T14:00:00+00:00"},
+        {"tenant_id": "t1", "thread_ref": row["id"], "sender": "property",
+         "body": "Antwort", "sent_at": "2026-08-06T15:00:00+00:00"},
+    ]
+    svc = InboxService(
+        service_client=_FakeDB([row], [], nachrichten=nachrichten),
+        channex=_FakeChannex(),
+    )
+    assert svc.unread_count(_CTX) == 0
+
+
+def test_unread_count_zaehlt_nur_die_aktive_ansicht() -> None:
+    """Archiviertes ist erledigt — das Abzeichen fordert zur Arbeit auf."""
+    offen = {**_booking_row(), "id": "th-offen", "is_read": False, "read_at": None}
+    archiviert = {
+        **_booking_row(), "id": "th-arch", "is_read": False, "read_at": None,
+        "inbox_status": "archived", "is_archived": True,
+    }
+    nachrichten = [
+        {"tenant_id": "t1", "thread_ref": "th-offen", "sender": "guest",
+         "body": "Frage", "sent_at": "2026-08-06T14:00:00+00:00"},
+        {"tenant_id": "t1", "thread_ref": "th-arch", "sender": "guest",
+         "body": "Alte Frage", "sent_at": "2026-08-01T14:00:00+00:00"},
+    ]
+    svc = InboxService(
+        service_client=_FakeDB([offen, archiviert], [], nachrichten=nachrichten),
+        channex=_FakeChannex(),
+    )
+    assert svc.unread_count(_CTX) == 1

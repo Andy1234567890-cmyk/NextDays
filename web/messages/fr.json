@@ -321,7 +321,8 @@
     "extensions": "Extensions",
     "announcements": "Nouveautés",
     "billingRules": "Règles de décompte",
-    "ownerReporting": "Rapports propriétaires"
+    "ownerReporting": "Rapports propriétaires",
+    "inboxUngelesen": "Boîte de réception ({count} non lues)"
   },
   "exemption": {
     "labelNamed": "Exonéré de taxe ({scheme}) — pas de n° de TVA requis",

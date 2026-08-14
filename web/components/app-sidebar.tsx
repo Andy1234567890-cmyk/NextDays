@@ -9,6 +9,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { Logo } from "@/components/logo";
+import { PosteingangAbzeichen } from "@/components/posteingang-abzeichen";
 import { useSupportChat } from "@/components/support/support-chat";
 import { logout } from "@/lib/auth";
 import { inLandVerfuegbar } from "@/lib/laender-funktionen";
@@ -494,6 +495,11 @@ export function AppSidebar({
                       </span>
                     </Link>
                   </SidebarMenuButton>
+                  {/* Nur der Posteingang trägt eine Zahl. Sie steht als
+                      Geschwister NEBEN dem Button, nicht darin: der Button ist
+                      `asChild` über einem <Link>, und ein zweites Kind darin
+                      bräche Radix' Single-Child-Regel. */}
+                  {item.key === "inbox" ? <PosteingangAbzeichen /> : null}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

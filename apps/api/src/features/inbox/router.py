@@ -50,6 +50,7 @@ from .schemas import (
     TeamMemberList,
     TemplateUpsert,
     ThreadFlagsUpdate,
+    UnreadCount,
 )
 from .service import InboxError, InboxService
 
@@ -116,6 +117,25 @@ def list_threads(
         return service.list_threads(
             ctx, unassigned=unassigned, status=status, access=access
         )
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/unread-count", response_model=UnreadCount)
+def unread_count(service: InboxServiceDep, bundle: _AccessDep) -> UnreadCount:
+    """Offene Konversationen — die Zahl am Sidebar-Punkt „Posteingang".
+
+    Steht VOR `/{thread_id}/…`-Routen, aber das genügt hier ohnehin nicht als
+    Begründung: FastAPI wählt die zuerst registrierte passende Route, und
+    `/unread-count` würde sonst als `thread_id` durchgehen.
+
+    Gleicher Zugangs-Dependency wie die Liste (`_AccessDep`) — dieselbe
+    Autorisierung UND derselbe Scope (Wurzel 9): wer nur zugewiesene Threads
+    sehen darf, bekommt auch nur deren Zahl.
+    """
+    ctx, access = bundle
+    try:
+        return UnreadCount(ungelesen=service.unread_count(ctx, access=access))
     except InboxError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

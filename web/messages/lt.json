@@ -321,7 +321,8 @@
     "extensions": "Papildymai",
     "announcements": "Naujienos",
     "ownerReporting": "Savininkų ataskaitos",
-    "billingRules": "Atsiskaitymo taisyklės"
+    "billingRules": "Atsiskaitymo taisyklės",
+    "inboxUngelesen": "Gauta ({count} neperskaitytų)"
   },
   "exemption": {
     "labelNamed": "Atleista nuo mokesčio ({scheme}) — PVM kodas nereikalingas",

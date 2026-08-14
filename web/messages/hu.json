@@ -321,7 +321,8 @@
     "extensions": "Kiegészítők",
     "announcements": "Újdonságok",
     "billingRules": "Elszámolási szabályok",
-    "ownerReporting": "Tulajdonosi jelentések"
+    "ownerReporting": "Tulajdonosi jelentések",
+    "inboxUngelesen": "Beérkezett üzenetek ({count} olvasatlan)"
   },
   "exemption": {
     "labelNamed": "Adómentes ({scheme}) — nincs szükség adószámra",

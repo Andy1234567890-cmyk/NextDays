@@ -321,7 +321,8 @@
     "extensions": "Udvidelser",
     "announcements": "Nyheder",
     "billingRules": "Afregningsregler",
-    "ownerReporting": "Rapportering til ejere"
+    "ownerReporting": "Rapportering til ejere",
+    "inboxUngelesen": "Indbakke ({count} ulæste)"
   },
   "exemption": {
     "labelNamed": "Momsfritaget ({scheme}) — intet momsnr. nødvendigt",

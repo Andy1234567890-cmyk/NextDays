@@ -321,7 +321,8 @@
     "extensions": "Estensjonijiet",
     "announcements": "Novitajiet",
     "ownerReporting": "Rappurtar għal sidien",
-    "billingRules": "Regoli tal-ikklerjar"
+    "billingRules": "Regoli tal-ikklerjar",
+    "inboxUngelesen": "Inbox ({count} mhux moqrija)"
   },
   "exemption": {
     "labelNamed": "Eżenti mit-taxxa ({scheme}) — l-ebda VAT meħtieġa",

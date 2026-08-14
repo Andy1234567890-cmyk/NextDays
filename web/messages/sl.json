@@ -321,7 +321,8 @@
     "extensions": "Razširitve",
     "announcements": "Novosti",
     "ownerReporting": "Poročila za lastnike",
-    "billingRules": "Pravila obračuna"
+    "billingRules": "Pravila obračuna",
+    "inboxUngelesen": "Prejeto ({count} neprebranih)"
   },
   "exemption": {
     "labelNamed": "Oproščeno davka ({scheme}) — ID za DDV ni potreben",

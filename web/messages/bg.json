@@ -321,7 +321,8 @@
     "extensions": "Разширения",
     "announcements": "Новости",
     "ownerReporting": "Отчети за собственици",
-    "billingRules": "Правила за разчитане"
+    "billingRules": "Правила за разчитане",
+    "inboxUngelesen": "Входяща поща ({count} непрочетени)"
   },
   "exemption": {
     "labelNamed": "Освободен от данък ({scheme}) — не е необходим ДДС номер",

@@ -321,7 +321,8 @@
     "extensions": "Extensii",
     "announcements": "Noutăți",
     "ownerReporting": "Rapoarte pentru proprietari",
-    "billingRules": "Reguli de decontare"
+    "billingRules": "Reguli de decontare",
+    "inboxUngelesen": "Mesaje primite ({count} necitite)"
   },
   "exemption": {
     "labelNamed": "Scutit de impozit ({scheme}) — nu este necesar cod TVA",
