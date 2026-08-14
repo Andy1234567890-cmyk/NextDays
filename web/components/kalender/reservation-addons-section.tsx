@@ -48,6 +48,11 @@ export function ReservationAddonsSection({
   onChanged?: () => void;
 }) {
   const t = useTranslations("calendar");
+  // „Abbrechen" für das Verwerfen einer Eingabe kommt aus `common` — der Text
+  // ist in allen 24 Sprachen gepflegt. Ein eigener Schlüssel im
+  // calendar-Namespace wäre eine zweite Kopie desselben Wortes, die beim
+  // nächsten Sprachfall auseinanderläuft.
+  const tc = useTranslations("common");
   const locale = useLocale();
   const STATUS_LABEL: Record<ReservationAddon["status"], string> = {
     pending: t("reservationAddonsSection.statusPending"),
@@ -350,7 +355,7 @@ export function ReservationAddonsSection({
                       onClick={() => setEditId(null)}
                       disabled={editBusy}
                     >
-                      {t("reservationAddonsSection.cancelAbort")}
+                      {tc("cancel")}
                     </Button>
                     <Button
                       type="button"
@@ -378,7 +383,7 @@ export function ReservationAddonsSection({
                       onClick={() => setConfirmId(null)}
                       disabled={cancelling}
                     >
-                      {t("reservationAddonsSection.cancelAbort")}
+                      {tc("cancel")}
                     </Button>
                     <Button
                       type="button"
