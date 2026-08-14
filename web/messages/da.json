@@ -4489,7 +4489,9 @@
       "guestCheckins": "Gæsteankomster",
       "revenue": "Omsætning",
       "totalRevenue": "Samlet omsætning",
-      "confirmedReservations": "Bekræftede reservationer"
+      "confirmedReservations": "Bekræftede reservationer",
+      "addonPaid": "Betalt",
+      "addonOpen": "Åben — opkræves ved check-in"
     },
     "mobileAppHint": "Opgavevisningen til farten er allerede tilgængelig responsivt på nettet (Mine opgaver + detaljer med foto-upload). En separat mobilapp følger som et selvstændigt projekt.",
     "guestModuleHint": "Med pre-check-in-formularen indsamler du alle dine gæsters data før ankomsten (legitimation, adresse, medrejsende, ankomsttid). Dette område bygges som et selvstændigt trin.",

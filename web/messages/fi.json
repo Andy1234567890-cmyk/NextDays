@@ -4489,7 +4489,9 @@
       "guestCheckins": "Vieraiden saapumiset",
       "revenue": "Liikevaihto",
       "totalRevenue": "Kokonaisliikevaihto",
-      "confirmedReservations": "Vahvistetut varaukset"
+      "confirmedReservations": "Vahvistetut varaukset",
+      "addonPaid": "Maksettu",
+      "addonOpen": "Avoin — peritään sisäänkirjautumisessa"
     },
     "mobileAppHint": "Tehtävänäkymä liikkeellä ollessa on jo saatavilla responsiivisesti verkossa (Omat tehtävät + tiedot kuvien lataamisella). Erillinen mobiilisovellus tulee omana projektinaan.",
     "guestModuleHint": "Ennakkoilmoittautumislomakkeella keräät ennen saapumista kaikki vieraidesi tiedot (henkilöllisyystodistus, osoite, matkakumppanit, saapumisaika). Tämä alue rakennetaan omana vaiheenaan.",

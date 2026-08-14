@@ -4489,7 +4489,9 @@
       "guestCheckins": "Teachtaí aíonna",
       "revenue": "Ioncam",
       "totalRevenue": "Ioncam iomlán",
-      "confirmedReservations": "Áirithintí deimhnithe"
+      "confirmedReservations": "Áirithintí deimhnithe",
+      "addonPaid": "Íoctha",
+      "addonOpen": "Ar oscailt — le bailiú ag an tseiceáil isteach"
     },
     "mobileAppHint": "Tá an t-amharc tascanna don bhóthar ar fáil cheana go freagrúil ar an ngréasán (Mo thascanna + sonraí le huaslódáil grianghraf). Leanfaidh aip mhóibíleach ar leith mar thionscadal dá cuid féin.",
     "guestModuleHint": "Leis an bhfoirm réamh-sheiceála bailíonn tú roimh theacht gach sonra faoi d'aíonna (cáipéis, seoladh, comhthaistealaithe, am teachta). Tógfar an limistéar seo mar chéim ar leith.",

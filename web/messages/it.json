@@ -4484,7 +4484,9 @@
       "guestCheckins": "Arrivi degli ospiti",
       "revenue": "Fatturato",
       "totalRevenue": "Fatturato totale",
-      "confirmedReservations": "Prenotazioni confermate"
+      "confirmedReservations": "Prenotazioni confermate",
+      "addonPaid": "Pagato",
+      "addonOpen": "Aperto — da incassare al check-in"
     },
     "mobileAppHint": "La vista attività per gli spostamenti è già disponibile in modo responsive sul web (Le mie attività + dettaglio con caricamento foto). Un'app mobile separata seguirà come progetto a sé.",
     "guestModuleHint": "Con il modulo di pre-check-in raccogli prima dell'arrivo tutti i dati dei tuoi ospiti (documento, indirizzo, accompagnatori, orario di arrivo). Quest'area verrà costruita come passaggio a sé.",

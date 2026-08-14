@@ -4484,7 +4484,9 @@
       "guestCheckins": "Gästincheckningar",
       "revenue": "Omsättning",
       "totalRevenue": "Total omsättning",
-      "confirmedReservations": "Bekräftade bokningar"
+      "confirmedReservations": "Bekräftade bokningar",
+      "addonPaid": "Betald",
+      "addonOpen": "Öppen — tas ut vid incheckning"
     },
     "mobileAppHint": "Uppgiftsvyn för på språng finns redan responsivt på webben (Mina uppgifter + detaljer med fotouppladdning). En separat mobilapp kommer som ett eget projekt.",
     "guestModuleHint": "Med förhandsincheckningsformuläret samlar du in alla dina gästers uppgifter före ankomsten (id-handling, adress, medresenärer, ankomsttid). Den här ytan byggs som ett eget steg.",

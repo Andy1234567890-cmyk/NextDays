@@ -4484,7 +4484,9 @@
       "guestCheckins": "Sosiri ale oaspeților",
       "revenue": "Venituri",
       "totalRevenue": "Cifra de afaceri totală",
-      "confirmedReservations": "Rezervări confirmate"
+      "confirmedReservations": "Rezervări confirmate",
+      "addonPaid": "Plătit",
+      "addonOpen": "Deschis — de încasat la check-in"
     },
     "mobileAppHint": "Vizualizarea sarcinilor pentru deplasări este deja disponibilă responsiv pe web (Sarcinile mele + detalii cu încărcare de fotografii). O aplicație mobilă separată va urma ca proiect propriu.",
     "guestModuleHint": "Cu formularul de pre-check-in colectați înainte de sosire toate datele oaspeților dvs. (act, adresă, însoțitori, ora sosirii). Această zonă va fi construită ca pas separat.",

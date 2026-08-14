@@ -4489,7 +4489,9 @@
       "guestCheckins": "Příjezdy hostů",
       "revenue": "Tržby",
       "totalRevenue": "Celkový obrat",
-      "confirmedReservations": "Potvrzené rezervace"
+      "confirmedReservations": "Potvrzené rezervace",
+      "addonPaid": "Zaplaceno",
+      "addonOpen": "Otevřeno — vybrat při příjezdu"
     },
     "mobileAppHint": "Zobrazení úkolů na cestách je již responzivně dostupné na webu (Moje úkoly + detail s nahráním fotek). Samostatná mobilní aplikace přijde jako vlastní projekt.",
     "guestModuleHint": "Pomocí formuláře pre-check-in získáte před příjezdem všechny údaje svých hostů (doklad, adresu, spolucestující, čas příjezdu). Tato část bude vybudována jako samostatný krok.",

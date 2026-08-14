@@ -4484,7 +4484,9 @@
       "guestCheckins": "Prihodi gostov",
       "revenue": "Promet",
       "totalRevenue": "Skupni promet",
-      "confirmedReservations": "Potrjene rezervacije"
+      "confirmedReservations": "Potrjene rezervacije",
+      "addonPaid": "Plačano",
+      "addonOpen": "Odprto — pobrati ob prijavi"
     },
     "mobileAppHint": "Pogled opravil za na pot je že odziven na spletu (Moja opravila + podrobnosti z nalaganjem fotografij). Ločena mobilna aplikacija bo sledila kot samostojen projekt.",
     "guestModuleHint": "Z obrazcem za predprijavo pred prihodom zberete vse podatke svojih gostov (dokument, naslov, sopotniki, čas prihoda). To področje bo zgrajeno kot samostojen korak.",

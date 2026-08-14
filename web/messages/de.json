@@ -4540,7 +4540,9 @@
       "guestCheckins": "Gäste-Check-ins",
       "revenue": "Umsatz",
       "totalRevenue": "Gesamtumsatz",
-      "confirmedReservations": "Bestätigte Reservierungen"
+      "confirmedReservations": "Bestätigte Reservierungen",
+      "addonPaid": "Bezahlt",
+      "addonOpen": "Offen — beim Check-in zu kassieren"
     },
     "mobileAppHint": "Die Aufgaben-Sicht für unterwegs ist bereits responsiv im Web verfügbar (Meine Aufgaben + Detail mit Foto-Upload). Eine separate mobile App folgt als eigener Auftrag.",
     "guestModuleHint": "Mit dem Pre-Check-in-Formular erfassen Sie vor der Anreise alle Daten Ihrer Gäste (Ausweis, Adresse, Mitreisende, Ankunftszeit). Diese Fläche wird als eigener Schritt aufgebaut.",

@@ -4489,7 +4489,9 @@
       "guestCheckins": "Entradas de huéspedes",
       "revenue": "Ingresos",
       "totalRevenue": "Ingresos totales",
-      "confirmedReservations": "Reservas confirmadas"
+      "confirmedReservations": "Reservas confirmadas",
+      "addonPaid": "Pagado",
+      "addonOpen": "Pendiente — cobrar en el check-in"
     },
     "mobileAppHint": "La vista de tareas para el día a día ya está disponible de forma responsive en la web (Mis tareas + detalle con subida de fotos). Una app móvil independiente llegará como proyecto propio.",
     "guestModuleHint": "Con el formulario de registro previo recoges antes de la llegada todos los datos de tus huéspedes (documento, dirección, acompañantes, hora de llegada). Esta área se construirá como un paso propio.",

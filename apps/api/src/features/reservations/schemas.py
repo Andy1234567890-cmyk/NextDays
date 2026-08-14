@@ -456,6 +456,25 @@ class ReservationListResponse(BaseModel):
     truncated: bool = False
 
 
+class DashboardAddon(BaseModel):
+    """Eine gebuchte Zusatzleistung, wie sie als Badge in der Zeile steht.
+
+    Bewusst OHNE Betrag: das Dashboard soll dem Team sagen, WAS vorzubereiten
+    ist (zwei Wäschepakete zum Check-in), nicht was es kostet. Ein Preis hier
+    müsste zusätzlich gegen `mask.amounts` gegated werden (§4.2) — für eine
+    Vorbereitungsliste ist er schlicht die falsche Information.
+    """
+
+    # Mehrsprachig wie im Katalog (Locale → Text). Die Sprachwahl trifft das
+    # Frontend, das die Locale des Betrachters kennt — serverseitig eine
+    # herauszugreifen hieße, sie zu raten.
+    name: dict[str, str] = Field(default_factory=dict)
+    qty: int
+    # Offen/bezahlt — ein offener Posten ist beim Check-in noch zu kassieren.
+    # Stornierte tauchen gar nicht erst auf.
+    paid: bool = False
+
+
 class DashboardEntry(BaseModel):
     """Eine Zeile in den Check-out/-in/Anstehend-Listen des Dashboards."""
 
@@ -469,6 +488,9 @@ class DashboardEntry(BaseModel):
     status: ReservationStatus
     # Eigentümer-Aufenthalt (0241): in den Listen sichtbar, aber kein Umsatz.
     is_owner_stay: bool = False
+    # Gebuchte Zusatzleistungen (Wäschepaket, Frühstück …). Leere Liste heißt
+    # „keine gebucht" — nicht „nicht geladen".
+    addons: list[DashboardAddon] = Field(default_factory=list)
 
 
 class DashboardKpi(BaseModel):

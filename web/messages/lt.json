@@ -4484,7 +4484,9 @@
       "guestCheckins": "Svečių atvykimai",
       "revenue": "Apyvarta",
       "totalRevenue": "Bendra apyvarta",
-      "confirmedReservations": "Patvirtintos rezervacijos"
+      "confirmedReservations": "Patvirtintos rezervacijos",
+      "addonPaid": "Apmokėta",
+      "addonOpen": "Neapmokėta — surinkti atvykus"
     },
     "mobileAppHint": "Užduočių rodinys kelyje jau prieinamas adaptyviai internete (Mano užduotys + detalės su nuotraukų įkėlimu). Atskira mobilioji programėlė bus atskiras projektas.",
     "guestModuleHint": "Išankstinės registracijos forma prieš atvykimą surenkate visus savo svečių duomenis (dokumentas, adresas, kartu keliaujantys, atvykimo laikas). Ši sritis bus kuriama kaip atskiras žingsnis.",

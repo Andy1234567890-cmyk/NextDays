@@ -3,7 +3,7 @@
 // Alle Werte stammen aus echten Reservierungen (Backend /reservations/dashboard);
 // fehlt etwas, zeigt die Karte ehrlich „nichts" statt erfundener Zahlen.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { Card, CardContent } from "@nextdays/ui/card";
@@ -11,9 +11,15 @@ import { ChannelLogo } from "@/components/channel-logo";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { OWNER_STAY_ICON } from "@/lib/calendar-status";
 import { formatCurrency } from "@/lib/currency";
+import { lokalisiert } from "@/lib/lokalisiert";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import { channelLabelLoose } from "@/lib/channel-logos";
-import type { Dashboard, DashboardEntry, DashboardKpi } from "@/lib/reservations";
+import type {
+  Dashboard,
+  DashboardAddon,
+  DashboardEntry,
+  DashboardKpi,
+} from "@/lib/reservations";
 
 function fmtDate(iso: string): string {
   // 2026-07-01 → 01.07.26
@@ -33,6 +39,44 @@ function ChangeBadge({ change }: { change: number | null }) {
       {up ? "+" : ""}
       {change} %
     </span>
+  );
+}
+
+// Gebuchte Zusatzleistungen der Buchung. Zeigt, was das Team vorzubereiten hat
+// („2× Wäschepaket"), und ob es beim Check-in noch zu kassieren ist: ein
+// offener Posten sticht farblich hervor, ein bezahlter bleibt ruhig.
+function AddonBadges({ addons }: { addons?: DashboardAddon[] }) {
+  const t = useTranslations("reservations");
+  const tc = useTranslations("calendar");
+  const locale = useLocale();
+  // Optional, nicht weil das Backend das Feld auslässt, sondern weil eine noch
+  // im Cache liegende Antwort von vor dieser Änderung es nicht kennt.
+  if (!addons?.length) return null;
+  return (
+    <div className="mt-1 flex flex-wrap gap-1">
+      {addons.map((a, i) => (
+        <span
+          key={`${a.name.de ?? ""}-${i}`}
+          title={a.paid ? t("dashboard.addonPaid") : t("dashboard.addonOpen")}
+          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+            a.paid
+              ? "bg-secondary text-muted-foreground"
+              : "bg-accent/15 text-accent"
+          }`}
+        >
+          <Icon
+            icon={a.paid ? "ph:check-circle" : "ph:sparkle"}
+            className="size-3"
+          />
+          {a.qty > 1 ? `${a.qty}× ` : ""}
+          {lokalisiert(
+            a.name,
+            locale,
+            tc("reservationAddonsSection.fallbackAddonName"),
+          )}
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -74,6 +118,7 @@ function EntryRow({ entry }: { entry: DashboardEntry }) {
           <p className="truncate text-xs text-muted-foreground">
             {channel} · {fmtDate(entry.check_in)} – {fmtDate(entry.check_out)}
           </p>
+          <AddonBadges addons={entry.addons} />
         </div>
         <Icon
           icon="ph:caret-right"

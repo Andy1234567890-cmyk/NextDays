@@ -4489,7 +4489,9 @@
       "guestCheckins": "Dolasci gostiju",
       "revenue": "Prihod",
       "totalRevenue": "Ukupan promet",
-      "confirmedReservations": "Potvrđene rezervacije"
+      "confirmedReservations": "Potvrđene rezervacije",
+      "addonPaid": "Plaćeno",
+      "addonOpen": "Otvoreno — naplatiti pri prijavi"
     },
     "mobileAppHint": "Prikaz zadataka za teren već je responzivno dostupan na webu (Moji zadaci + detalji s prijenosom fotografija). Zasebna mobilna aplikacija slijedi kao vlastiti projekt.",
     "guestModuleHint": "Obrascem za prethodnu prijavu prije dolaska prikupljate sve podatke svojih gostiju (dokument, adresu, suputnike, vrijeme dolaska). Ovo područje bit će izgrađeno kao zaseban korak.",

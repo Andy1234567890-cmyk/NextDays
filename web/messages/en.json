@@ -4510,7 +4510,9 @@
       "guestCheckins": "Guest check-ins",
       "revenue": "Revenue",
       "totalRevenue": "Total revenue",
-      "confirmedReservations": "Confirmed reservations"
+      "confirmedReservations": "Confirmed reservations",
+      "addonPaid": "Paid",
+      "addonOpen": "Open — to be collected at check-in"
     },
     "mobileAppHint": "The task view for on the go is already available responsively on the web (My tasks + detail with photo upload). A separate mobile app will follow as its own project.",
     "guestModuleHint": "With the pre-check-in form you collect all your guests' details before arrival (ID, address, fellow travellers, arrival time). This area is being built as a separate step.",

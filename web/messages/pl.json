@@ -4484,7 +4484,9 @@
       "guestCheckins": "Zameldowania gości",
       "revenue": "Przychód",
       "totalRevenue": "Łączny obrót",
-      "confirmedReservations": "Potwierdzone rezerwacje"
+      "confirmedReservations": "Potwierdzone rezerwacje",
+      "addonPaid": "Zapłacone",
+      "addonOpen": "Otwarte — do pobrania przy zameldowaniu"
     },
     "mobileAppHint": "Widok zadań w terenie jest już dostępny responsywnie w sieci (Moje zadania + szczegóły z przesyłaniem zdjęć). Osobna aplikacja mobilna powstanie jako oddzielny projekt.",
     "guestModuleHint": "Za pomocą formularza pre-check-in zbierasz przed przyjazdem wszystkie dane gości (dokument, adres, współpodróżni, godzina przyjazdu). Ten obszar powstanie jako osobny krok.",

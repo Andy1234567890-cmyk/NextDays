@@ -36,6 +36,7 @@ from .property_stats import (
     DETAIL_METRICS as _DETAIL_METRICS,
 )
 from .schemas import (
+    DashboardAddon,
     DashboardEntry,
     DashboardKpi,
     DashboardResponse,
@@ -67,6 +68,10 @@ _DASHBOARD_RUECKBLICK_TAGE = 60
 # Die „anstehende Anreisen"-Liste der Startseite zeigt nur die nächsten Tage —
 # ohne Deckel geht bei gut gebuchten Betrieben der gesamte Zukunftsbestand raus.
 _DASHBOARD_UPCOMING_MAX = 50
+# Zusatzleistungen werden für alle Dashboard-Zeilen in einem Zug geholt. Die
+# ID-Liste geht als `in_`-Filter in die URL — in Blöcken, damit sie bei einem
+# großen Bestand nicht die Längengrenze von PostgREST reißt.
+_ADDON_CHUNK = 200
 
 
 def _assert_stats_span(date_from: date, date_to: date) -> None:
@@ -244,6 +249,7 @@ class ReadsMixin(ReservationsBase):
 
         today = date.today()
         mask = load_guest_mask(self._client, ctx.user_id)
+        addons = self._dashboard_addons([r["id"] for r in rows])
 
         def entry(r: dict) -> DashboardEntry:
             name = anzeigename(r)
@@ -257,6 +263,7 @@ class ReadsMixin(ReservationsBase):
                 check_out=r["check_out"],
                 status=r["status"],
                 is_owner_stay=bool(r.get("is_owner_stay")),
+                addons=addons.get(r["id"], []),
             )
 
         active = [r for r in rows if r.get("status") != "cancelled"]
@@ -331,8 +338,45 @@ class ReadsMixin(ReservationsBase):
             currency=currency if mask.amounts else "",
         )
 
-    @staticmethod
+    def _dashboard_addons(
+        self, reservation_ids: list[str]
+    ) -> dict[str, list[DashboardAddon]]:
+        """Gebuchte Zusatzleistungen je Reservierung, für die Badges der Listen.
 
+        EIN Abruf für alle Zeilen des Dashboards statt einer Abfrage je Karte —
+        die Startseite lädt sonst bei 50 anstehenden Buchungen 50-mal nach.
+        Gechunkt, weil `in_` mit einer sehr langen ID-Liste die URL sprengt.
+
+        Stornierte Posten fehlen bewusst: sie sind nichts, was jemand
+        vorbereiten oder kassieren müsste. Der Name kommt aus dem Snapshot der
+        Zeile, nicht aus dem Katalog — sonst änderte eine spätere Umbenennung
+        rückwirkend, was an einer alten Buchung steht.
+        """
+        if not reservation_ids:
+            return {}
+        treffer: dict[str, list[DashboardAddon]] = {}
+        for i in range(0, len(reservation_ids), _ADDON_CHUNK):
+            teil = reservation_ids[i : i + _ADDON_CHUNK]
+            rows = (
+                self._db()
+                .table("reservation_addons")
+                .select("reservation_id, name, qty, status")
+                .in_("reservation_id", teil)
+                .neq("status", "cancelled")
+                .order("created_at")
+                .execute()
+            ).data or []
+            for r in rows:
+                treffer.setdefault(r["reservation_id"], []).append(
+                    DashboardAddon(
+                        name=r.get("name") or {},
+                        qty=int(r.get("qty") or 1),
+                        paid=r.get("status") == "paid",
+                    )
+                )
+        return treffer
+
+    @staticmethod
     def _empty_dashboard() -> DashboardResponse:
         """Leeres Dashboard (Owner ohne zugeordnete Objekte) — keine tenant-
         weiten Zahlen leaken, sondern ehrlich Null zeigen."""

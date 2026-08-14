@@ -4484,7 +4484,9 @@
       "guestCheckins": "Viesu reģistrēšanās",
       "revenue": "Apgrozījums",
       "totalRevenue": "Kopējais apgrozījums",
-      "confirmedReservations": "Apstiprinātas rezervācijas"
+      "confirmedReservations": "Apstiprinātas rezervācijas",
+      "addonPaid": "Apmaksāts",
+      "addonOpen": "Atvērts — iekasēt reģistrējoties"
     },
     "mobileAppHint": "Uzdevumu skats ceļā jau ir pieejams responsīvi tīmeklī (Mani uzdevumi + detaļas ar fotoattēlu augšupielādi). Atsevišķa mobilā lietotne sekos kā atsevišķs projekts.",
     "guestModuleHint": "Ar iepriekšējās reģistrācijas veidlapu pirms ierašanās apkopojat visus savu viesu datus (dokuments, adrese, līdzbraucēji, ierašanās laiks). Šī sadaļa tiks veidota kā atsevišķs solis.",

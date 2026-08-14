@@ -4489,7 +4489,9 @@
       "guestCheckins": "Vendégérkezések",
       "revenue": "Bevétel",
       "totalRevenue": "Teljes árbevétel",
-      "confirmedReservations": "Megerősített foglalások"
+      "confirmedReservations": "Megerősített foglalások",
+      "addonPaid": "Fizetve",
+      "addonOpen": "Nyitott — bejelentkezéskor beszedendő"
     },
     "mobileAppHint": "A feladatnézet útközbeni használatra már reszponzívan elérhető a weben (Feladataim + részletek fotófeltöltéssel). Külön mobilalkalmazás önálló projektként következik.",
     "guestModuleHint": "Az előzetes bejelentkezési űrlappal érkezés előtt összegyűjti vendégei összes adatát (okmány, cím, útitársak, érkezési idő). Ez a felület külön lépésként épül fel.",

@@ -4484,7 +4484,9 @@
       "guestCheckins": "Gastaankomsten",
       "revenue": "Omzet",
       "totalRevenue": "Totale omzet",
-      "confirmedReservations": "Bevestigde reserveringen"
+      "confirmedReservations": "Bevestigde reserveringen",
+      "addonPaid": "Betaald",
+      "addonOpen": "Open — te innen bij check-in"
     },
     "mobileAppHint": "De takenweergave voor onderweg is al responsive beschikbaar op het web (Mijn taken + detail met foto-upload). Een aparte mobiele app volgt als eigen project.",
     "guestModuleHint": "Met het pre-check-informulier verzamel je vóór aankomst alle gegevens van je gasten (identiteitsbewijs, adres, medereizigers, aankomsttijd). Dit onderdeel wordt als aparte stap gebouwd.",

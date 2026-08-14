@@ -4489,7 +4489,9 @@
       "guestCheckins": "Arrivées de clients",
       "revenue": "Chiffre d'affaires",
       "totalRevenue": "Chiffre d'affaires total",
-      "confirmedReservations": "Réservations confirmées"
+      "confirmedReservations": "Réservations confirmées",
+      "addonPaid": "Payé",
+      "addonOpen": "En attente — à encaisser à l'arrivée"
     },
     "mobileAppHint": "La vue des tâches en déplacement est déjà disponible de façon responsive sur le web (Mes tâches + détail avec téléversement de photos). Une application mobile distincte suivra dans un projet dédié.",
     "guestModuleHint": "Avec le formulaire de pré-enregistrement, vous collectez avant l'arrivée toutes les données de vos clients (pièce d'identité, adresse, accompagnants, heure d'arrivée). Cet espace sera construit comme une étape distincte.",

@@ -4484,7 +4484,9 @@
       "guestCheckins": "Wasliet tal-mistednin",
       "revenue": "Dħul",
       "totalRevenue": "Dħul totali",
-      "confirmedReservations": "Prenotazzjonijiet ikkonfermati"
+      "confirmedReservations": "Prenotazzjonijiet ikkonfermati",
+      "addonPaid": "Imħallas",
+      "addonOpen": "Miftuħ — jinġabar mal-check-in"
     },
     "mobileAppHint": "Il-veduta tal-kompiti waqt li tkun barra diġà hija disponibbli b'mod responsiv fuq il-web (Il-kompiti tiegħi + dettalji bit-tlugħ ta' ritratti). App mobbli separata se ssegwi bħala proġett għalih.",
     "guestModuleHint": "Bil-formola tal-pre-check-in tiġbor qabel il-wasla d-dettalji kollha tal-mistednin tiegħek (dokument, indirizz, sħab tal-vjaġġ, ħin tal-wasla). Din iż-żona se tinbena bħala pass separat.",

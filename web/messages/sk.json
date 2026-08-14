@@ -4484,7 +4484,9 @@
       "guestCheckins": "Príchody hostí",
       "revenue": "Tržby",
       "totalRevenue": "Celkový obrat",
-      "confirmedReservations": "Potvrdené rezervácie"
+      "confirmedReservations": "Potvrdené rezervácie",
+      "addonPaid": "Zaplatené",
+      "addonOpen": "Otvorené — vybrať pri príchode"
     },
     "mobileAppHint": "Zobrazenie úloh na cestách je už responzívne dostupné na webe (Moje úlohy + detail s nahraním fotiek). Samostatná mobilná aplikácia príde ako vlastný projekt.",
     "guestModuleHint": "Pomocou formulára pre-check-in získate pred príchodom všetky údaje svojich hostí (doklad, adresu, spolucestujúcich, čas príchodu). Táto časť bude vybudovaná ako samostatný krok.",

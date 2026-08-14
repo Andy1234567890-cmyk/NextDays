@@ -303,9 +303,10 @@ def _dashboard_db(
     reservations: list[dict], properties: list[dict],
     *, user_role: str = "admin", user_perms: list[str] | None = None,
     owner_pids: list[str] | None = None,
+    addons: list[dict] | None = None,
 ) -> ReservationsService:
     """Mockt die im dashboard() benutzten Tabellen (reservations + properties +
-    users + owner_property_assignments)."""
+    users + owner_property_assignments + reservation_addons)."""
     perms = _FULL_PERMS if user_perms is None else user_perms
     return ReservationsService(service_client=_tabellen_db({
         "reservations": reservations,
@@ -314,6 +315,7 @@ def _dashboard_db(
         "owner_property_assignments": [
             {"property_id": p} for p in (owner_pids or [])
         ],
+        "reservation_addons": addons or [],
     }))
 
 
@@ -358,6 +360,80 @@ def test_dashboard_buckets_and_kpis() -> None:
     # keine Vorperiode → ehrlich None statt erfundener 0 %
     assert out.checkins_30d.change_pct is None
     assert out.currency == "EUR"
+
+
+def test_dashboard_zeigt_gebuchte_zusatzleistungen() -> None:
+    """Badges an der Zeile: Menge und Zahlstatus, Stornos bleiben draußen.
+
+    Der Name kommt aus dem Snapshot der Zeile (mehrsprachig), nicht aus dem
+    Katalog — die Sprachwahl trifft das Frontend.
+    """
+    today = date.today()
+    iso = today.isoformat()
+    reservations = [
+        {"id": RID, "property_id": "p1", "channel": "booking", "status": "confirmed",
+         "check_in": iso, "check_out": (today + timedelta(days=2)).isoformat(),
+         "total_amount": 300, "currency": "EUR", "guests": {"name": "Anna"}},
+    ]
+    # Stornierte Posten fehlen hier, weil der Ausschluss als `.neq()` in der
+    # Query sitzt — der Ketten-Stub ignoriert Filter bewusst und gäbe sie sonst
+    # zurück. Dass der Filter gesetzt IST, prüft der Test darunter.
+    addons = [
+        {"reservation_id": RID, "name": {"de": "Wäschepaket"}, "qty": 2,
+         "status": "pending"},
+        {"reservation_id": RID, "name": {"de": "Frühstück"}, "qty": 4,
+         "status": "paid"},
+    ]
+    svc = _dashboard_db(
+        reservations, [{"id": "p1", "title": "Strandhaus"}], addons=addons
+    )
+    out = svc.dashboard(AuthContext(user_id="u1", tenant_id="t1", role="admin"))
+
+    zeile = out.checkins_today[0]
+    assert [(a.name["de"], a.qty, a.paid) for a in zeile.addons] == [
+        ("Wäschepaket", 2, False),
+        ("Frühstück", 4, True),
+    ]
+
+
+def test_dashboard_addons_schliesst_stornierte_aus() -> None:
+    """Der Storno-Ausschluss muss in der QUERY stehen, nicht im Nachfiltern.
+
+    Geprüft wird die abgesetzte Kette selbst: ohne `.neq("status",
+    "cancelled")` landete eine stornierte Zusatzleistung auf der
+    Vorbereitungsliste des Teams.
+    """
+    aufrufe: list[tuple] = []
+
+    class _Spion(_KettenQuery):
+        def neq(self, feld: str, wert: str) -> "_Spion":
+            aufrufe.append((feld, wert))
+            return self
+
+    db = MagicMock(name="supabase")
+    db.table.side_effect = lambda name: MagicMock(
+        **{"select.return_value": _Spion([]) if name == "reservation_addons"
+           else _KettenQuery({"users": [{"role": "admin",
+                                         "permissions": _FULL_PERMS}]}.get(name, []))}
+    )
+    svc = ReservationsService(service_client=db)
+    svc._dashboard_addons(["r1"])  # noqa: SLF001 - gezielter Blick auf die Query
+
+    assert ("status", "cancelled") in aufrufe
+
+
+def test_dashboard_ohne_zusatzleistungen_leere_liste() -> None:
+    """Keine gebuchte Leistung → leere Liste, nicht None (kein Badge-Block)."""
+    today = date.today()
+    reservations = [
+        {"id": RID, "property_id": "p1", "channel": "booking", "status": "confirmed",
+         "check_in": today.isoformat(),
+         "check_out": (today + timedelta(days=2)).isoformat(),
+         "total_amount": 300, "currency": "EUR", "guests": {"name": "Anna"}},
+    ]
+    svc = _dashboard_db(reservations, [{"id": "p1", "title": "Strandhaus"}])
+    out = svc.dashboard(AuthContext(user_id="u1", tenant_id="t1", role="admin"))
+    assert out.checkins_today[0].addons == []
 
 
 def test_dashboard_mixed_currency_suppresses_revenue() -> None:

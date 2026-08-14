@@ -4489,7 +4489,9 @@
       "guestCheckins": "Külaliste saabumised",
       "revenue": "Käive",
       "totalRevenue": "Kogukäive",
-      "confirmedReservations": "Kinnitatud broneeringud"
+      "confirmedReservations": "Kinnitatud broneeringud",
+      "addonPaid": "Makstud",
+      "addonOpen": "Avatud — koguda sisseregistreerimisel"
     },
     "mobileAppHint": "Ülesannete vaade liikvel olles on juba veebis reageeriv (Minu ülesanded + detailid fotode üleslaadimisega). Eraldi mobiilirakendus tuleb omaette projektina.",
     "guestModuleHint": "Eelregistreerimisvormiga kogud enne saabumist kõik oma külaliste andmed (dokument, aadress, kaasreisijad, saabumisaeg). See ala ehitatakse eraldi sammuna.",

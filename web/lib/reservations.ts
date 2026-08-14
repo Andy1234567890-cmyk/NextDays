@@ -217,6 +217,15 @@ async function call<T>(
 }
 
 // --- Dashboard --------------------------------------------------------------
+// Eine gebuchte Zusatzleistung als Badge. Ohne Betrag — das Dashboard sagt,
+// WAS vorzubereiten ist, nicht was es kostet.
+export type DashboardAddon = {
+  // Mehrsprachig (Locale → Text), aufgelöst über lib/lokalisiert.
+  name: Record<string, string>;
+  qty: number;
+  paid: boolean;
+};
+
 export type DashboardEntry = {
   reservation_id: string;
   guest_name: string;
@@ -228,6 +237,7 @@ export type DashboardEntry = {
   status: ReservationStatus;
   // Eigentümer-Aufenthalt (0241): in den Listen sichtbar, aber kein Umsatz.
   is_owner_stay: boolean;
+  addons: DashboardAddon[];
 };
 
 export type DashboardKpi = {
