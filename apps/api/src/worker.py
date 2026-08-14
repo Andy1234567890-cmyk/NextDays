@@ -31,6 +31,7 @@ from supabase import Client
 from src.core.config import get_settings
 from src.core.logging import configure_logging, get_logger
 from src.core.supabase import get_service_client
+from src.features.channel_manager.common import ist_demo_mapping
 from src.features.properties.vertragsende import vertragsenden_nachziehen
 from src.jobs import feed_nachpflege, worker_verlauf
 from src.jobs.channex_budget import BudgetDecision, ChannexBudget
@@ -1305,7 +1306,8 @@ class Worker:
         """Im nächtlichen UTC-Fenster je aktiver Channex-Property EINEN
         full_sync_property-Job pro Tag einreihen (Channex-Doku: „daily full
         update each night per property"; off-peak, gestaffelt). Dedup je
-        Property+Kalendertag → das 15-min-Tick-Fenster erzeugt keine Duplikate."""
+        Property+Kalendertag → das 15-min-Tick-Fenster erzeugt keine Duplikate.
+        Demo-Mappings bleiben draußen (No-op-Jobs zudecken den Monitor)."""
         now = datetime.now(UTC)
         if now.hour != FULL_SYNC_HOUR_UTC:
             return
@@ -1318,10 +1320,11 @@ class Worker:
         ).data or []
         # Geteilte Channex-Property (Hotel, 0158): EIN Full-Sync-Job je
         # CHANNEX-Property, nicht je Zimmer — der Handler synct alle Zimmer der
-        # Property gebündelt (sonst liefe der Voll-Push n-fach pro Nacht).
-        # Primär = älteste Map-Zeile (stabil).
+        # Property gebündelt. Primär = älteste Map-Zeile (stabil).
         by_channex: dict[str, dict] = {}
         for r in all_rows:
+            if ist_demo_mapping(r.get("channex_property_id")):
+                continue
             by_channex.setdefault(r["channex_property_id"], r)
         rows = list(by_channex.values())
         day = now.date().isoformat()
