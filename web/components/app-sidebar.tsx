@@ -58,6 +58,13 @@ type NavItem = {
   icon: string;
   req?: string;
   rollen?: readonly string[];
+  // exact=true: nur bei exakt gleichem Pfad aktiv. Nötig für Punkte, unter
+  // denen Unterseiten liegen, die die Sidebar NICHT führt (z. B. „Buchungen"
+  // auf /reservierungen — /reservierungen/bilder, /warnungen, /unterkuenfte
+  // stehen nur im Modul-Menü der PM-Fläche). Die Längster-Treffer-Regel in
+  // isActive() kennt nur Sidebar-Pfade und hätte „Buchungen" auf all diesen
+  // Unterseiten hervorgehoben.
+  exact?: boolean;
 };
 type AccommodationType = "vacation_rental" | "hotel";
 
@@ -66,6 +73,11 @@ const MAIN: readonly NavItem[] = [
   { key: "dashboard", href: "/", icon: "ph:squares-four" },
   { key: "calendar", href: "/kalender", icon: "ph:calendar-blank", req: "view_calendar" },
   { key: "inbox", href: "/posteingang", icon: "ph:chat-circle", req: "pm_chat" },
+  // Buchungen (die Buchungstabelle /reservierungen) steht flach unter dem
+  // Posteingang statt im Modul-Menü der PM-Fläche (pm-module-nav.tsx): sie ist
+  // Tagesgeschäft und wurde im Untermenü erst nach zwei Klicks erreichbar.
+  // Der Punkt steht deshalb NICHT zusätzlich in der Reservierungs-Gruppe.
+  { key: "bookings", href: "/reservierungen", icon: "ph:bookmark-simple", req: "view_calendar", exact: true },
   // Aufgaben stehen flach unter dem Posteingang: sie sind Tagesgeschäft und
   // betreffen jede Rolle (auch Reinigung/Mitarbeiter, die die Buchhaltung nie
   // sehen). Der Punkt steht deshalb NICHT zusätzlich in der Reservierungs-
@@ -391,8 +403,9 @@ export function AppSidebar({
     ...MAIN.map((i) => i.href),
     ...buildGroups(accommodationType).flatMap((g) => g.items.map((i) => i.href)),
   ];
-  const isActive = (href: string) => {
+  const isActive = ({ href, exact }: NavItem) => {
     if (href === "/") return pathname === "/";
+    if (exact) return pathname === href;
     if (!pathname.startsWith(href)) return false;
     return !alleHrefs.some(
       (other) =>
@@ -460,7 +473,7 @@ export function AppSidebar({
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
-                    isActive={isActive(item.href)}
+                    isActive={isActive(item)}
                     tooltip={t(item.key)}
                   >
                     <Link href={item.href}>
@@ -480,7 +493,7 @@ export function AppSidebar({
         {groups.map((group) => {
           const items = group.items.filter(canSee);
           if (items.length === 0) return null;
-          const groupActive = items.some((i) => isActive(i.href));
+          const groupActive = items.some((i) => isActive(i));
           return (
             <Collapsible
               key={group.groupKey}
@@ -507,7 +520,7 @@ export function AppSidebar({
                         <SidebarMenuItem key={item.href}>
                           <SidebarMenuButton
                             asChild
-                            isActive={isActive(item.href)}
+                            isActive={isActive(item)}
                             tooltip={t(item.key)}
                           >
                             <Link href={item.href}>

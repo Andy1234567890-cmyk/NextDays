@@ -33,7 +33,10 @@ const GROUPS: NavGroup[] = [
     titleKey: "groupHome",
     items: [
       { key: "control", labelKey: "control", href: "/reservierungen/kontrollzentrum", icon: "ph:squares-four", exact: true },
-      { key: "bookings", labelKey: "bookings", href: "/reservierungen", icon: "ph:bookmark-simple", exact: true },
+      // „Buchungen" (/reservierungen) zog am 14.08.2026 in die Haupt-Sidebar
+      // unter „Posteingang" (app-sidebar.tsx MAIN) — Tagesgeschäft, das nicht
+      // hinter zwei Klicks gehört. Hier NICHT wiederholen, sonst stünde der
+      // Punkt doppelt in der Navigation.
       { key: "properties", labelKey: "properties", href: "/reservierungen/unterkuenfte", icon: "ph:house-line" },
       { key: "tasks", labelKey: "tasks", href: "/reservierungen/aufgaben", icon: "ph:check-square" },
       { key: "photos", labelKey: "photos", href: "/reservierungen/bilder", icon: "ph:image" },
