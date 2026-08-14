@@ -127,6 +127,11 @@ pruefe "Widersprüchliche Zeilen (paid + Storno-Grund)" \
 #    Firmenprofil), gilt das Storno trotzdem und der Rückstand wird nur geloggt
 #    — genau der Fall, den diese Abfrage sichtbar macht. Sonst bekäme die
 #    stornierte Position beim Check-out eine GoBD-Nummer.
+#    Der Positionstext kommt aus `_addon_label`: Gastsprache vor de vor erstem
+#    Wert, plus ' ×N' bei qty > 1. Ein Gleichheits-Vergleich auf name->>'de'
+#    hätte deshalb jede Position mit Menge > 1 oder fremdsprachigem Gast
+#    übersehen — also genau dort 'OK: 0' gemeldet, wo der Rückstand liegt.
+#    Verglichen wird daher als PRÄFIX gegen JEDE Sprachvariante des Namens.
 pruefe "Stornierte Positionen auf einem Rechnungsentwurf" \
   "select count(*) from public.reservation_addons ra
      join public.invoices i on i.reservation_id = ra.reservation_id
@@ -134,8 +139,10 @@ pruefe "Stornierte Positionen auf einem Rechnungsentwurf" \
      join public.invoice_line_items li on li.invoice_id = i.id
     where ra.status = 'cancelled'
       and i.invoice_type = 'invoice' and i.invoice_number is null
-      and i.status <> 'cancelled' and i.deleted_at is null
-      and li.description = coalesce(ra.name->>'de', ra.name->>'en')" \
+      and i.status = 'draft' and coalesce(i.is_locked, false) = false
+      and i.deleted_at is null
+      and exists (select 1 from jsonb_each_text(ra.name) as n(k, v)
+                   where n.v <> '' and li.description like n.v || '%')" \
   "select i.id || ' | Entwurf | ' || li.description || ' | ' || li.gross_amount
      from public.reservation_addons ra
      join public.invoices i on i.reservation_id = ra.reservation_id
@@ -143,8 +150,10 @@ pruefe "Stornierte Positionen auf einem Rechnungsentwurf" \
      join public.invoice_line_items li on li.invoice_id = i.id
     where ra.status = 'cancelled'
       and i.invoice_type = 'invoice' and i.invoice_number is null
-      and i.status <> 'cancelled' and i.deleted_at is null
-      and li.description = coalesce(ra.name->>'de', ra.name->>'en')
+      and i.status = 'draft' and coalesce(i.is_locked, false) = false
+      and i.deleted_at is null
+      and exists (select 1 from jsonb_each_text(ra.name) as n(k, v)
+                   where n.v <> '' and li.description like n.v || '%')
     limit 20" \
   "Der Entwurfs-Neuaufbau ist ausgefallen (Log:
   addon_storno_rechnungsentwurf_nicht_aktualisiert). Ursache beheben und eine

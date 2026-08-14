@@ -47,6 +47,17 @@ _RES_ADDON_COLS = (
 _REASON_MIN_LEN = 3
 _REASON_MAX_LEN = 500
 
+# Die Spuren einer Storno-/Rücknahme-Handlung. Wird eine Zeile danach wieder in
+# einen normalen Zustand gebracht (bezahlt, Menge geändert), müssen sie weg —
+# sonst behauptet der Beleg einen Grund, der zum vorigen Vorgang gehörte, und die
+# Zeile widerspricht sich selbst (Wurzel 1). Als Konstante, damit kein
+# Schreibpfad eines der drei Felder vergisst.
+_STORNO_SPUREN_LEER = {
+    "cancel_reason": None,
+    "cancelled_by": None,
+    "cancelled_at": None,
+}
+
 # Obergrenze der Menge je gebuchter Zusatzleistung (Wurzel 8: kein unbegrenzter
 # Bereich). Großzügig genug für jede reale Bestellung — ein Gruppenhaus mit 30
 # Betten bleibt darunter —, aber ein Tippfehler (1000 statt 10) läuft nicht als
@@ -410,7 +421,16 @@ class AddonsService(VerteilungMixin):
         res = (
             self._db.table("reservation_addons")
             .update(
-                {"status": AddonStatus.paid.value, "charged_at": _now_iso()}
+                {
+                    "status": AddonStatus.paid.value,
+                    "charged_at": _now_iso(),
+                    # Wurzel 1: Die Rücknahme-Spuren gehören zum VORIGEN Vorgang.
+                    # Bleiben sie stehen, zeigt die bezahlte Zeile „Grund: falsch
+                    # erfasst" — eine Falschaussage am Beleg — und
+                    # `addon-storno-pruefen.sh` meldet für zwei normale Klicks
+                    # (zurücknehmen, dann bar bezahlt) einen DB-Direktzugriff.
+                    **_STORNO_SPUREN_LEER,
+                }
             )
             .eq("tenant_id", tenant_id)
             .eq("id", res_addon_id)

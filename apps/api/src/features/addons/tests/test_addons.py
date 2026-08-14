@@ -921,6 +921,26 @@ def test_mark_paid_ueberschreibt_kein_storno() -> None:
     assert db.tables["reservation_addons"][0]["status"] == "cancelled"
 
 
+def test_mark_paid_raeumt_die_ruecknahme_spuren_ab() -> None:
+    """Wurzel 1: Der Grund gehörte zum VORIGEN Vorgang und muss weg.
+
+    Zwei normale Klicks: Bezahlt-Markierung zurücknehmen („falsch erfasst"),
+    dann zahlt der Gast bar → als bezahlt markieren. Bliebe der Grund stehen,
+    zeigte die bezahlte Zeile „Grund: falsch erfasst" (Falschaussage am Beleg)
+    und `addon-storno-pruefen.sh` meldete für diesen Ablauf einen
+    DB-Direktzugriff."""
+    db = _cancel_db(addon_status="paid")
+    svc = AddonsService(service_client=db)
+    svc.unmark_paid(_ctx(), "ra-1", "Falsch erfasst")
+    res = svc.mark_paid(_ctx(), "ra-1")
+    assert res.status == "paid"
+    assert res.cancel_reason is None
+    assert res.cancelled_by is None
+    assert res.cancelled_at is None
+    zeile = db.tables["reservation_addons"][0]
+    assert zeile["cancel_reason"] is None
+
+
 def test_mark_paid_zweiter_klick_verschiebt_charged_at_nicht() -> None:
     """Wurzel 2: real kommt alles doppelt."""
     db = _cancel_db(addon_status="paid")
@@ -1004,6 +1024,50 @@ def test_cancel_addon_allowed_with_draft_invoice() -> None:
     assert not any("Wäschepaket" in b for b in beschreibungen)
     # Und die Summe des Entwurfs steht auf dem neuen Stand (nur Unterkunft).
     assert db.tables["invoices"][0]["gross_amount"] == "1000.00"
+
+
+def test_storno_ueberschreibt_keinen_handgeschriebenen_beleg() -> None:
+    """Nur ein echter Entwurf (draft, keine Nummer, nicht gesperrt) wird neu gebaut.
+
+    „Rechnung aus Buchung" erlaubt eigene Beschreibungen, Rabatte und manuelle
+    Beträge und trägt dieselbe reservation_id. Ein Gate nur auf die
+    Rechnungsnummer hätte diese Positionen beim Addon-Storno gelöscht und aus dem
+    Bestand neu erzeugt — ohne Warnung, während der Nutzer nur eine
+    Zusatzleistung storniert hat."""
+    for abweichung in (
+        {"status": "sent"},
+        {"status": "draft", "is_locked": True},
+    ):
+        db = _cancel_db(
+            invoices=[
+                {
+                    "id": "inv-1",
+                    "tenant_id": "t-1",
+                    "reservation_id": "res-1",
+                    "invoice_type": "invoice",
+                    "invoice_number": None,
+                    "deleted_at": None,
+                    **abweichung,
+                }
+            ]
+        )
+        db.tables["invoice_line_items"] = [
+            {
+                "invoice_id": "inv-1",
+                "position": 1,
+                "description": "Handgeschriebene Position",
+            }
+        ]
+        svc = AddonsService(service_client=db)
+        assert svc.cancel_reservation_addon(_ctx(), "ra-1", _GRUND).status == "cancelled"
+        # Der Beleg ist unangetastet.
+        assert db.tables["invoice_line_items"] == [
+            {
+                "invoice_id": "inv-1",
+                "position": 1,
+                "description": "Handgeschriebene Position",
+            }
+        ], abweichung
 
 
 def test_storno_gilt_auch_wenn_der_rechnungsentwurf_nicht_neu_gebaut_werden_kann(

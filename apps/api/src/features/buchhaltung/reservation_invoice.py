@@ -378,8 +378,14 @@ def rebuild_draft_for_reservation(
     Positionen ersetzt, Summen und `paid_amount` neu gerechnet. Nummer, Status und
     Debitor bleiben unberührt — es entsteht kein Beleg und keine Nummernkreis-Lücke.
 
+    Angefasst wird NUR ein echter Entwurf: `status='draft'`, keine Nummer, nicht
+    `is_locked` — dasselbe Gate, das `update_invoice_raw`/`delete_invoice` fahren.
+    Alles andere bleibt unberührt (auch ein handgeschriebener Beleg mit eigenen
+    Positionen, der dieselbe `reservation_id` trägt).
+
     Rückgabe: True, wenn ein Entwurf neu aufgebaut wurde; False, wenn keiner
-    existiert (dann gibt es nichts zu pflegen).
+    existiert oder er nicht angefasst werden darf (dann gibt es hier nichts zu
+    pflegen).
 
     Fail-closed (Wurzel 5): Fehler werden nicht geschluckt, sondern als
     `BuchhaltungError` weitergegeben — lieber bricht das Storno ab, als dass ein
@@ -387,9 +393,28 @@ def rebuild_draft_for_reservation(
     bekommt.
     """
     existing = find_active_invoice(db, tenant_id, reservation_id)
-    if not existing or existing.get("invoice_number"):
-        # Kein Entwurf (oder schon nummeriert → der Aufrufer hat das längst
-        # abgelehnt; hier NICHT anfassen, GoBD).
+    if not existing:
+        return False
+    # Dasselbe Gate wie `BuchhaltungService.update_invoice_raw`/`delete_invoice`:
+    # festgeschrieben = Nummer vergeben ODER Status ≠ draft ODER is_locked. Ein
+    # Check nur auf die Nummer hätte einen HANDGESCHRIEBENEN Entwurf
+    # überschrieben: „Rechnung aus Buchung" erlaubt eigene Beschreibungen,
+    # Rabatte und manuelle Beträge und trägt dieselbe reservation_id — der
+    # Neuaufbau hätte alle Positionen gelöscht und aus dem Bestand neu erzeugt,
+    # ohne Warnung, während der Nutzer nur eine Zusatzleistung storniert hat.
+    if (
+        existing.get("invoice_number")
+        or str(existing.get("status") or "") != "draft"
+        or bool(existing.get("is_locked"))
+    ):
+        log.info(
+            "reservation_invoice_draft_rebuild_uebersprungen",
+            reservation_id=reservation_id,
+            invoice_id=str(existing["id"]),
+            status=existing.get("status"),
+            hat_nummer=bool(existing.get("invoice_number")),
+            is_locked=bool(existing.get("is_locked")),
+        )
         return False
     invoice_id = str(existing["id"])
     try:
@@ -464,7 +489,7 @@ def find_active_invoice(db: Client, tenant_id: str, reservation_id: str) -> dict
     """Aktive (nicht stornierte, nicht gelöschte) Rechnung zu einer Buchung."""
     rows = (
         db.table("invoices")
-        .select("id, invoice_number, status, gross_amount, currency")
+        .select("id, invoice_number, status, gross_amount, currency, is_locked")
         .eq("tenant_id", tenant_id)
         .eq("reservation_id", reservation_id)
         .eq("invoice_type", "invoice")
