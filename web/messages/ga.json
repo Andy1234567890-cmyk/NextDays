@@ -2103,7 +2103,28 @@
     "access": {
       "keyStatus": "Stádas eochrach",
       "keyPlacement": "Suíomh fisiciúil",
-      "fromGuestModule": "Cothaítear cód dorais, féin-sheiceáil isteach agus WiFi sa mhodúl aíonna."
+      "loading": "Loading access details …",
+      "contactTitle": "Contact",
+      "contactName": "Contact person's name",
+      "contactPhone": "Contact person's phone number",
+      "maintenancePhone": "Maintenance phone (optional)",
+      "wifiTitle": "Wi-Fi",
+      "wifiDescription": "Network name and password of the property. If they stay empty, a template using these building blocks will not be sent.",
+      "wifiSsid": "Network name (SSID)",
+      "wifiPassword": "Wi-Fi password",
+      "wifiFieldPlaceholder": "e.g. router is in the hallway, network covers the whole house",
+      "selfCheckinTitle": "Self check-in",
+      "selfCheckinDescription": "Guests check in on their own (door code / key box).",
+      "doorInstructions": "Door access",
+      "doorInstructionsPlaceholder": "Explain to your guests how they get in (door code, key location, etc.).",
+      "doorCode": "Door code",
+      "codeVisibleFrom": "Code visible from",
+      "showCodeOnlyIfPaid": "Show code only after full payment",
+      "hideCodeUntilCheckin": "Show code only on arrival day",
+      "wifiTextTitle": "Connection note",
+      "wifiTextHint": "A full sentence for the guest — for example where the router is or how far the network reaches.",
+      "securityDeposit": "Security deposit",
+      "securityDepositInvalid": "Please enter a valid amount."
     },
     "keyStatus": {
       "agency_extra": "Eochair bhreise ag an ngníomhaireacht",
@@ -6026,7 +6047,15 @@
       "linkCopyFailed": "Theip ar an gcóipeáil — tá an nasc thíos.",
       "linkWithdraw": "Tarraing siar",
       "linkWithdrawn": "Tarraingíodh an nasc íocaíochta siar.",
-      "linkAufteilung": "Íocann an t-aoi {brutto} · as sin {prozent} % sciar an ardáin ({anteil}) · móide táillí an tsoláthraí íocaíochta"
+      "linkAufteilung": "Íocann an t-aoi {brutto} · as sin {prozent} % sciar an ardáin ({anteil}) · móide táillí an tsoláthraí íocaíochta",
+      "pickLabel": "Add-on",
+      "qtyLabel": "Quantity",
+      "qtyInvalid": "Please enter a quantity between 1 and 99.",
+      "qtyEditAction": "Change quantity",
+      "qtySave": "Apply",
+      "qtySaving": "Saving …",
+      "qtySaved": "Quantity changed.",
+      "perGuestSuffix": "per person"
     },
     "ratesView": {
       "propertyLabel": "Maoin",
@@ -6840,7 +6869,10 @@
       "enableManual": "Cumasaigh íocaíochtaí láimhe",
       "bic": "BIC / SWIFT",
       "bankName": "Ainm an bhainc",
-      "recipientName": "Ainm an fhaighteora"
+      "recipientName": "Ainm an fhaighteora",
+      "paymentTextLabel": "Payment note",
+      "paymentTextPlaceholder": "e.g. When transferring, please state the name of the holiday home and the arrival date.",
+      "taxRateLabel": "Default tax rate (%)"
     },
     "textTemplate": {
       "namePlaceholder": "m.sh. téacs caighdeánach luachana, meabhrúchán leibhéal 1...",
@@ -7357,7 +7389,20 @@
       "statusInvoiced": "Billeáilte",
       "statusPaid": "Íoctha",
       "statusMixed": "Ar feitheamh go páirteach",
-      "monthsEmptyPlain": "Níor tháinig aon choimisiúin ó thairseacha seachtracha go dtí seo."
+      "monthsEmptyPlain": "Níor tháinig aon choimisiúin ó thairseacha seachtracha go dtí seo.",
+      "entriesTitle": "Miondealú sealadach",
+      "entriesHint": "Sealadach: féadfar áirithintí na míosa seo a chur leis, a chur ar ceal nó a athrú fós. Is é an sonrasc atá ceangailteach.",
+      "entriesLoading": "Miondealú á lódáil …",
+      "entriesEmpty": "Níl aon mhíreanna aonair ann don mhí seo.",
+      "entriesFailed": "Níorbh fhéidir an miondealú a lódáil: {error}",
+      "entriesToggle": "Taispeáin an miondealú",
+      "colProperty": "Áit chónaithe",
+      "colGuest": "Aoi",
+      "colStay": "Fanacht",
+      "colChannel": "Tairseach",
+      "colRate": "Ráta",
+      "entryNoProperty": "Níl an áit chónaithe ann a thuilleadh",
+      "entrySum": "Iomlán"
     },
     "invoices": {
       "fees": "Táillí"

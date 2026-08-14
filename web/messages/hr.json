@@ -2103,7 +2103,28 @@
     "access": {
       "keyStatus": "Status ključa",
       "keyPlacement": "Fizičko mjesto",
-      "fromGuestModule": "Kod za vrata, samostalna prijava i WiFi uređuju se u gostinjskom modulu."
+      "loading": "Loading access details …",
+      "contactTitle": "Contact",
+      "contactName": "Contact person's name",
+      "contactPhone": "Contact person's phone number",
+      "maintenancePhone": "Maintenance phone (optional)",
+      "wifiTitle": "Wi-Fi",
+      "wifiDescription": "Network name and password of the property. If they stay empty, a template using these building blocks will not be sent.",
+      "wifiSsid": "Network name (SSID)",
+      "wifiPassword": "Wi-Fi password",
+      "wifiFieldPlaceholder": "e.g. router is in the hallway, network covers the whole house",
+      "selfCheckinTitle": "Self check-in",
+      "selfCheckinDescription": "Guests check in on their own (door code / key box).",
+      "doorInstructions": "Door access",
+      "doorInstructionsPlaceholder": "Explain to your guests how they get in (door code, key location, etc.).",
+      "doorCode": "Door code",
+      "codeVisibleFrom": "Code visible from",
+      "showCodeOnlyIfPaid": "Show code only after full payment",
+      "hideCodeUntilCheckin": "Show code only on arrival day",
+      "wifiTextTitle": "Connection note",
+      "wifiTextHint": "A full sentence for the guest — for example where the router is or how far the network reaches.",
+      "securityDeposit": "Security deposit",
+      "securityDepositInvalid": "Please enter a valid amount."
     },
     "keyStatus": {
       "agency_extra": "Rezervni ključ kod agencije",
@@ -6026,7 +6047,15 @@
       "linkCopyFailed": "Kopiranje nije uspjelo — poveznica je ispod.",
       "linkWithdraw": "Povuci",
       "linkWithdrawn": "Poveznica za plaćanje povučena.",
-      "linkAufteilung": "Gost plaća {brutto} · od toga {prozent} % udio platforme ({anteil}) · plus naknade pružatelja plaćanja"
+      "linkAufteilung": "Gost plaća {brutto} · od toga {prozent} % udio platforme ({anteil}) · plus naknade pružatelja plaćanja",
+      "pickLabel": "Add-on",
+      "qtyLabel": "Quantity",
+      "qtyInvalid": "Please enter a quantity between 1 and 99.",
+      "qtyEditAction": "Change quantity",
+      "qtySave": "Apply",
+      "qtySaving": "Saving …",
+      "qtySaved": "Quantity changed.",
+      "perGuestSuffix": "per person"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -6840,7 +6869,10 @@
       "enableManual": "Aktiviraj ručna plaćanja",
       "bic": "BIC / SWIFT",
       "bankName": "Naziv banke",
-      "recipientName": "Ime primatelja"
+      "recipientName": "Ime primatelja",
+      "paymentTextLabel": "Payment note",
+      "paymentTextPlaceholder": "e.g. When transferring, please state the name of the holiday home and the arrival date.",
+      "taxRateLabel": "Default tax rate (%)"
     },
     "textTemplate": {
       "namePlaceholder": "npr. standardni tekst ponude, opomena razina 1...",
@@ -7357,7 +7389,20 @@
       "statusInvoiced": "Obračunano",
       "statusPaid": "Plaćeno",
       "statusMixed": "Djelomično otvoreno",
-      "monthsEmptyPlain": "Dosad nema provizija putem vanjskih portala."
+      "monthsEmptyPlain": "Dosad nema provizija putem vanjskih portala.",
+      "entriesTitle": "Privremeni pregled",
+      "entriesHint": "Privremeni: rezervacije ovog mjeseca još se mogu dodati, otkazati ili promijeniti. Obvezujući je račun.",
+      "entriesLoading": "Učitavanje pregleda …",
+      "entriesEmpty": "Za ovaj mjesec nema pojedinačnih stavki.",
+      "entriesFailed": "Pregled nije bilo moguće učitati: {error}",
+      "entriesToggle": "Prikaži pregled",
+      "colProperty": "Objekt",
+      "colGuest": "Gost",
+      "colStay": "Boravak",
+      "colChannel": "Portal",
+      "colRate": "Stopa",
+      "entryNoProperty": "Objekt više ne postoji",
+      "entrySum": "Ukupno"
     },
     "invoices": {
       "fees": "Naknade"

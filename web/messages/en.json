@@ -2103,7 +2103,28 @@
     "access": {
       "keyStatus": "Key status",
       "keyPlacement": "Physical placement",
-      "fromGuestModule": "Door code, self check-in and Wi-Fi are maintained in the guest module."
+      "loading": "Loading access details …",
+      "contactTitle": "Contact",
+      "contactName": "Contact person's name",
+      "contactPhone": "Contact person's phone number",
+      "maintenancePhone": "Maintenance phone (optional)",
+      "wifiTitle": "Wi-Fi",
+      "wifiDescription": "Network name and password of the property. If they stay empty, a template using these building blocks will not be sent.",
+      "wifiSsid": "Network name (SSID)",
+      "wifiPassword": "Wi-Fi password",
+      "wifiFieldPlaceholder": "e.g. router is in the hallway, network covers the whole house",
+      "selfCheckinTitle": "Self check-in",
+      "selfCheckinDescription": "Guests check in on their own (door code / key box).",
+      "doorInstructions": "Door access",
+      "doorInstructionsPlaceholder": "Explain to your guests how they get in (door code, key location, etc.).",
+      "doorCode": "Door code",
+      "codeVisibleFrom": "Code visible from",
+      "showCodeOnlyIfPaid": "Show code only after full payment",
+      "hideCodeUntilCheckin": "Show code only on arrival day",
+      "wifiTextTitle": "Connection note",
+      "wifiTextHint": "A full sentence for the guest — for example where the router is or how far the network reaches.",
+      "securityDeposit": "Security deposit",
+      "securityDepositInvalid": "Please enter a valid amount."
     },
     "keyStatus": {
       "agency_extra": "Spare key at agency",
@@ -6047,7 +6068,15 @@
       "linkCopyFailed": "Copying failed — the link is shown below.",
       "linkWithdraw": "Withdraw",
       "linkWithdrawn": "Payment link withdrawn.",
-      "linkAufteilung": "Guest pays {brutto} · of which {prozent}% platform share ({anteil}) · plus payment provider fees"
+      "linkAufteilung": "Guest pays {brutto} · of which {prozent}% platform share ({anteil}) · plus payment provider fees",
+      "pickLabel": "Add-on",
+      "qtyLabel": "Quantity",
+      "qtyInvalid": "Please enter a quantity between 1 and 99.",
+      "qtyEditAction": "Change quantity",
+      "qtySave": "Apply",
+      "qtySaving": "Saving …",
+      "qtySaved": "Quantity changed.",
+      "perGuestSuffix": "per person"
     },
     "ratesView": {
       "propertyLabel": "Property",
@@ -6861,7 +6890,10 @@
       "enableManual": "Enable manual payments",
       "bic": "BIC / SWIFT",
       "bankName": "Bank name",
-      "recipientName": "Recipient name"
+      "recipientName": "Recipient name",
+      "paymentTextLabel": "Payment note",
+      "paymentTextPlaceholder": "e.g. When transferring, please state the name of the holiday home and the arrival date.",
+      "taxRateLabel": "Default tax rate (%)"
     },
     "textTemplate": {
       "namePlaceholder": "e.g. quote standard text, reminder level 1...",
@@ -7378,7 +7410,20 @@
       "statusInvoiced": "Billed",
       "statusPaid": "Paid",
       "statusMixed": "Partially outstanding",
-      "monthsEmptyPlain": "No commissions from external portals so far."
+      "monthsEmptyPlain": "No commissions from external portals so far.",
+      "entriesTitle": "Preliminary breakdown",
+      "entriesHint": "Preliminary: bookings for this month may still be added, cancelled or changed. The invoice is what counts.",
+      "entriesLoading": "Loading breakdown …",
+      "entriesEmpty": "There are no individual items for this month.",
+      "entriesFailed": "The breakdown could not be loaded: {error}",
+      "entriesToggle": "Show breakdown",
+      "colProperty": "Property",
+      "colGuest": "Guest",
+      "colStay": "Stay",
+      "colChannel": "Channel",
+      "colRate": "Rate",
+      "entryNoProperty": "Property no longer exists",
+      "entrySum": "Total"
     },
     "invoices": {
       "fees": "Fees"

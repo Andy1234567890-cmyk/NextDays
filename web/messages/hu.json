@@ -2103,7 +2103,28 @@
     "access": {
       "keyStatus": "Kulcs státusza",
       "keyPlacement": "Fizikai elhelyezés",
-      "fromGuestModule": "Az ajtókódot, az önálló bejelentkezést és a Wi-Fi-t a vendégmodulban kell karbantartani."
+      "loading": "Loading access details …",
+      "contactTitle": "Contact",
+      "contactName": "Contact person's name",
+      "contactPhone": "Contact person's phone number",
+      "maintenancePhone": "Maintenance phone (optional)",
+      "wifiTitle": "Wi-Fi",
+      "wifiDescription": "Network name and password of the property. If they stay empty, a template using these building blocks will not be sent.",
+      "wifiSsid": "Network name (SSID)",
+      "wifiPassword": "Wi-Fi password",
+      "wifiFieldPlaceholder": "e.g. router is in the hallway, network covers the whole house",
+      "selfCheckinTitle": "Self check-in",
+      "selfCheckinDescription": "Guests check in on their own (door code / key box).",
+      "doorInstructions": "Door access",
+      "doorInstructionsPlaceholder": "Explain to your guests how they get in (door code, key location, etc.).",
+      "doorCode": "Door code",
+      "codeVisibleFrom": "Code visible from",
+      "showCodeOnlyIfPaid": "Show code only after full payment",
+      "hideCodeUntilCheckin": "Show code only on arrival day",
+      "wifiTextTitle": "Connection note",
+      "wifiTextHint": "A full sentence for the guest — for example where the router is or how far the network reaches.",
+      "securityDeposit": "Security deposit",
+      "securityDepositInvalid": "Please enter a valid amount."
     },
     "keyStatus": {
       "agency_extra": "Pótkulcs az ügynökségnél",
@@ -6026,7 +6047,15 @@
       "linkCopyFailed": "A másolás nem sikerült — a link lent látható.",
       "linkWithdraw": "Visszavonás",
       "linkWithdrawn": "Fizetési link visszavonva.",
-      "linkAufteilung": "A vendég {brutto} fizet · ebből {prozent} % platformrész ({anteil}) · plusz a fizetési szolgáltató díjai"
+      "linkAufteilung": "A vendég {brutto} fizet · ebből {prozent} % platformrész ({anteil}) · plusz a fizetési szolgáltató díjai",
+      "pickLabel": "Add-on",
+      "qtyLabel": "Quantity",
+      "qtyInvalid": "Please enter a quantity between 1 and 99.",
+      "qtyEditAction": "Change quantity",
+      "qtySave": "Apply",
+      "qtySaving": "Saving …",
+      "qtySaved": "Quantity changed.",
+      "perGuestSuffix": "per person"
     },
     "ratesView": {
       "propertyLabel": "Ingatlan",
@@ -6840,7 +6869,10 @@
       "enableManual": "Manuális fizetések engedélyezése",
       "bic": "BIC / SWIFT",
       "bankName": "A bank neve",
-      "recipientName": "A kedvezményezett neve"
+      "recipientName": "A kedvezményezett neve",
+      "paymentTextLabel": "Payment note",
+      "paymentTextPlaceholder": "e.g. When transferring, please state the name of the holiday home and the arrival date.",
+      "taxRateLabel": "Default tax rate (%)"
     },
     "textTemplate": {
       "namePlaceholder": "pl. ajánlat alapszövege, felszólítás 1. szint...",
@@ -7357,7 +7389,20 @@
       "statusInvoiced": "Elszámolva",
       "statusPaid": "Kifizetve",
       "statusMixed": "Részben nyitott",
-      "monthsEmptyPlain": "Külső portálokon keresztül eddig nem keletkezett jutalék."
+      "monthsEmptyPlain": "Külső portálokon keresztül eddig nem keletkezett jutalék.",
+      "entriesTitle": "Előzetes kimutatás",
+      "entriesHint": "Előzetes: e hónap foglalásai még bővülhetnek, lemondhatók vagy módosíthatók. A számla a mérvadó.",
+      "entriesLoading": "Kimutatás betöltése …",
+      "entriesEmpty": "Ehhez a hónaphoz nincsenek egyedi tételek.",
+      "entriesFailed": "A kimutatást nem sikerült betölteni: {error}",
+      "entriesToggle": "Kimutatás megjelenítése",
+      "colProperty": "Szálláshely",
+      "colGuest": "Vendég",
+      "colStay": "Tartózkodás",
+      "colChannel": "Portál",
+      "colRate": "Kulcs",
+      "entryNoProperty": "A szálláshely már nem létezik",
+      "entrySum": "Összesen"
     },
     "invoices": {
       "fees": "Díjak"

@@ -2103,7 +2103,28 @@
     "access": {
       "keyStatus": "Statut des clés",
       "keyPlacement": "Emplacement physique",
-      "fromGuestModule": "Le code de porte, le check-in autonome et le Wi-Fi sont gérés dans le module client."
+      "loading": "Loading access details …",
+      "contactTitle": "Contact",
+      "contactName": "Contact person's name",
+      "contactPhone": "Contact person's phone number",
+      "maintenancePhone": "Maintenance phone (optional)",
+      "wifiTitle": "Wi-Fi",
+      "wifiDescription": "Network name and password of the property. If they stay empty, a template using these building blocks will not be sent.",
+      "wifiSsid": "Network name (SSID)",
+      "wifiPassword": "Wi-Fi password",
+      "wifiFieldPlaceholder": "e.g. router is in the hallway, network covers the whole house",
+      "selfCheckinTitle": "Self check-in",
+      "selfCheckinDescription": "Guests check in on their own (door code / key box).",
+      "doorInstructions": "Door access",
+      "doorInstructionsPlaceholder": "Explain to your guests how they get in (door code, key location, etc.).",
+      "doorCode": "Door code",
+      "codeVisibleFrom": "Code visible from",
+      "showCodeOnlyIfPaid": "Show code only after full payment",
+      "hideCodeUntilCheckin": "Show code only on arrival day",
+      "wifiTextTitle": "Connection note",
+      "wifiTextHint": "A full sentence for the guest — for example where the router is or how far the network reaches.",
+      "securityDeposit": "Security deposit",
+      "securityDepositInvalid": "Please enter a valid amount."
     },
     "keyStatus": {
       "agency_extra": "Clé supplémentaire à l'agence",
@@ -6026,7 +6047,15 @@
       "linkCopyFailed": "Copie impossible — le lien est affiché ci-dessous.",
       "linkWithdraw": "Retirer",
       "linkWithdrawn": "Lien de paiement retiré.",
-      "linkAufteilung": "Le client paie {brutto} · dont {prozent} % de part plateforme ({anteil}) · plus les frais du prestataire de paiement"
+      "linkAufteilung": "Le client paie {brutto} · dont {prozent} % de part plateforme ({anteil}) · plus les frais du prestataire de paiement",
+      "pickLabel": "Add-on",
+      "qtyLabel": "Quantity",
+      "qtyInvalid": "Please enter a quantity between 1 and 99.",
+      "qtyEditAction": "Change quantity",
+      "qtySave": "Apply",
+      "qtySaving": "Saving …",
+      "qtySaved": "Quantity changed.",
+      "perGuestSuffix": "per person"
     },
     "ratesView": {
       "propertyLabel": "Bien",
@@ -6840,7 +6869,10 @@
       "enableManual": "Activer les paiements manuels",
       "bic": "BIC / SWIFT",
       "bankName": "Nom de la banque",
-      "recipientName": "Nom du bénéficiaire"
+      "recipientName": "Nom du bénéficiaire",
+      "paymentTextLabel": "Payment note",
+      "paymentTextPlaceholder": "e.g. When transferring, please state the name of the holiday home and the arrival date.",
+      "taxRateLabel": "Default tax rate (%)"
     },
     "textTemplate": {
       "namePlaceholder": "p. ex. texte standard de devis, relance niveau 1...",
@@ -7357,7 +7389,20 @@
       "statusInvoiced": "Facturé",
       "statusPaid": "Payé",
       "statusMixed": "Partiellement en cours",
-      "monthsEmptyPlain": "Aucune commission via les portails externes pour le moment."
+      "monthsEmptyPlain": "Aucune commission via les portails externes pour le moment.",
+      "entriesTitle": "Détail provisoire",
+      "entriesHint": "Provisoire : des réservations de ce mois peuvent encore s'ajouter, être annulées ou modifiées. Seule la facture fait foi.",
+      "entriesLoading": "Chargement du détail …",
+      "entriesEmpty": "Aucun poste individuel pour ce mois.",
+      "entriesFailed": "Le détail n'a pas pu être chargé : {error}",
+      "entriesToggle": "Afficher le détail",
+      "colProperty": "Hébergement",
+      "colGuest": "Voyageur",
+      "colStay": "Séjour",
+      "colChannel": "Portail",
+      "colRate": "Taux",
+      "entryNoProperty": "Hébergement supprimé",
+      "entrySum": "Total"
     },
     "invoices": {
       "fees": "Frais"

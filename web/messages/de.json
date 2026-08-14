@@ -2103,7 +2103,28 @@
     "access": {
       "keyStatus": "Schlüssel-Status",
       "keyPlacement": "Physische Platzierung",
-      "fromGuestModule": "Türcode, Selbst-Check-in und WLAN werden im Gastmodul gepflegt."
+      "loading": "Zugangsdaten werden geladen …",
+      "contactTitle": "Kontakt",
+      "contactName": "Name der Kontaktperson",
+      "contactPhone": "Telefonnummer der Kontaktperson",
+      "maintenancePhone": "Wartungs-Telefon (optional)",
+      "wifiTitle": "WLAN",
+      "wifiDescription": "Netzwerkname und Passwort des Objekts. Bleiben sie leer, wird eine Vorlage mit diesen Bausteinen nicht gesendet.",
+      "wifiSsid": "Netzwerkname (SSID)",
+      "wifiPassword": "WLAN-Passwort",
+      "wifiFieldPlaceholder": "z. B. Router steht im Flur, Netz ist im ganzen Haus verfügbar",
+      "selfCheckinTitle": "Self-Check-in",
+      "selfCheckinDescription": "Gäste checken selbstständig ein (Türcode/Schlüsselbox).",
+      "doorInstructions": "Türzugang",
+      "doorInstructionsPlaceholder": "Erkläre deinen Gästen, wie sie Zutritt erhalten (Türcode, Schlüssellage usw.).",
+      "doorCode": "Türcode",
+      "codeVisibleFrom": "Code sichtbar ab",
+      "showCodeOnlyIfPaid": "Code erst nach vollständiger Zahlung zeigen",
+      "hideCodeUntilCheckin": "Code erst am Anreisetag zeigen",
+      "wifiTextTitle": "Verbindungshinweis",
+      "wifiTextHint": "Ein ganzer Satz für den Gast — etwa wo der Router steht oder wo das Netz reicht.",
+      "securityDeposit": "Kaution",
+      "securityDepositInvalid": "Bitte einen gültigen Betrag eingeben."
     },
     "keyStatus": {
       "agency_extra": "Extra-Schlüssel bei Agentur",
@@ -6172,7 +6193,15 @@
       "linkCopyFailed": "Kopieren nicht möglich — der Link steht darunter.",
       "linkWithdraw": "Zurückziehen",
       "linkWithdrawn": "Zahlungslink zurückgezogen.",
-      "linkAufteilung": "Gast zahlt {brutto} · davon {prozent} % Plattform-Anteil ({anteil}) · zzgl. Gebühren des Zahlungsanbieters"
+      "linkAufteilung": "Gast zahlt {brutto} · davon {prozent} % Plattform-Anteil ({anteil}) · zzgl. Gebühren des Zahlungsanbieters",
+      "pickLabel": "Zusatzleistung",
+      "qtyLabel": "Menge",
+      "qtyInvalid": "Bitte eine Menge zwischen 1 und 99 angeben.",
+      "qtyEditAction": "Menge ändern",
+      "qtySave": "Übernehmen",
+      "qtySaving": "Wird gespeichert …",
+      "qtySaved": "Menge geändert.",
+      "perGuestSuffix": "pro Person"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -6985,7 +7014,10 @@
       "enableManual": "Manuelle Zahlungen aktivieren",
       "bic": "BIC / SWIFT",
       "bankName": "Name der Bank",
-      "recipientName": "Name des Empfängers"
+      "recipientName": "Name des Empfängers",
+      "paymentTextLabel": "Zahlungshinweis",
+      "paymentTextPlaceholder": "z. B. Bitte gib bei der Überweisung den Namen des Ferienhauses und das Anreisedatum an.",
+      "taxRateLabel": "Standard-Steuersatz (%)"
     },
     "textTemplate": {
       "namePlaceholder": "z.B. Angebot Standardtext, Mahnung Stufe 1...",
@@ -7502,7 +7534,20 @@
       "statusInvoiced": "Abgerechnet",
       "statusPaid": "Bezahlt",
       "statusMixed": "Teilweise offen",
-      "monthsEmptyPlain": "Über externe Portale sind bisher keine Provisionen angefallen."
+      "monthsEmptyPlain": "Über externe Portale sind bisher keine Provisionen angefallen.",
+      "entriesTitle": "Vorläufige Aufstellung",
+      "entriesHint": "Vorläufig: Buchungen dieses Monats können noch hinzukommen, storniert oder geändert werden. Verbindlich ist die Rechnung.",
+      "entriesLoading": "Aufstellung wird geladen …",
+      "entriesEmpty": "Zu diesem Monat liegen keine Einzelposten vor.",
+      "entriesFailed": "Die Aufstellung konnte nicht geladen werden: {error}",
+      "entriesToggle": "Aufstellung anzeigen",
+      "colProperty": "Objekt",
+      "colGuest": "Gast",
+      "colStay": "Aufenthalt",
+      "colChannel": "Portal",
+      "colRate": "Satz",
+      "entryNoProperty": "Objekt nicht mehr vorhanden",
+      "entrySum": "Summe"
     },
     "invoices": {
       "fees": "Gebühren"

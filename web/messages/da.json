@@ -2103,7 +2103,28 @@
     "access": {
       "keyStatus": "Nøglestatus",
       "keyPlacement": "Fysisk placering",
-      "fromGuestModule": "Dørkode, selv-check-in og Wi-Fi vedligeholdes i gæstemodulet."
+      "loading": "Adgangsoplysninger indlæses …",
+      "contactTitle": "Kontakt",
+      "contactName": "Kontaktpersonens navn",
+      "contactPhone": "Kontaktpersonens telefonnummer",
+      "maintenancePhone": "Vedligeholdelsestelefon (valgfri)",
+      "wifiTitle": "Wi-Fi",
+      "wifiDescription": "Feriboligens netværksnavn og adgangskode. Er de tomme, sendes en skabelon med disse byggeklodser ikke.",
+      "wifiSsid": "Netværksnavn (SSID)",
+      "wifiPassword": "Wi-Fi-adgangskode",
+      "wifiFieldPlaceholder": "f.eks. routeren står i entreen, netværket dækker hele huset",
+      "selfCheckinTitle": "Selv-check-in",
+      "selfCheckinDescription": "Gæsterne tjekker selv ind (dørkode/nøgleboks).",
+      "doorInstructions": "Døradgang",
+      "doorInstructionsPlaceholder": "Forklar dine gæster, hvordan de får adgang (dørkode, nøgleplacering osv.).",
+      "doorCode": "Dørkode",
+      "codeVisibleFrom": "Kode synlig fra",
+      "showCodeOnlyIfPaid": "Vis først koden efter fuld betaling",
+      "hideCodeUntilCheckin": "Vis først koden på ankomstdagen",
+      "wifiTextTitle": "Forbindelsesnote",
+      "wifiTextHint": "En hel sætning til gæsten — f.eks. hvor routeren står, eller hvor langt netværket rækker.",
+      "securityDeposit": "Depositum",
+      "securityDepositInvalid": "Indtast venligst et gyldigt beløb."
     },
     "keyStatus": {
       "agency_extra": "Ekstranøgle hos bureau",
@@ -6026,7 +6047,15 @@
       "linkCopyFailed": "Kunne ikke kopiere — linket står nedenfor.",
       "linkWithdraw": "Træk tilbage",
       "linkWithdrawn": "Betalingslink trukket tilbage.",
-      "linkAufteilung": "Gæsten betaler {brutto} · heraf {prozent} % platformsandel ({anteil}) · plus betalingsudbyderens gebyrer"
+      "linkAufteilung": "Gæsten betaler {brutto} · heraf {prozent} % platformsandel ({anteil}) · plus betalingsudbyderens gebyrer",
+      "pickLabel": "Tillægsydelse",
+      "qtyLabel": "Antal",
+      "qtyInvalid": "Angiv venligst et antal mellem 1 og 99.",
+      "qtyEditAction": "Ret antal",
+      "qtySave": "Anvend",
+      "qtySaving": "Gemmer …",
+      "qtySaved": "Antal ændret.",
+      "perGuestSuffix": "pr. person"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -6840,7 +6869,10 @@
       "enableManual": "Aktivér manuelle betalinger",
       "bic": "BIC / SWIFT",
       "bankName": "Bankens navn",
-      "recipientName": "Modtagerens navn"
+      "recipientName": "Modtagerens navn",
+      "paymentTextLabel": "Betalingsnote",
+      "paymentTextPlaceholder": "f.eks. Angiv venligst feriehusets navn og ankomstdatoen ved overførslen.",
+      "taxRateLabel": "Standardskattesats (%)"
     },
     "textTemplate": {
       "namePlaceholder": "f.eks. standardtekst til tilbud, rykker niveau 1...",
@@ -7357,7 +7389,20 @@
       "statusInvoiced": "Afregnet",
       "statusPaid": "Betalt",
       "statusMixed": "Delvist udestående",
-      "monthsEmptyPlain": "Der er endnu ikke påløbet provision via eksterne portaler."
+      "monthsEmptyPlain": "Der er endnu ikke påløbet provision via eksterne portaler.",
+      "entriesTitle": "Foreløbig opgørelse",
+      "entriesHint": "Foreløbig: bookinger i denne måned kan stadig komme til, blive annulleret eller ændret. Fakturaen er bindende.",
+      "entriesLoading": "Opgørelsen indlæses …",
+      "entriesEmpty": "Der er ingen enkeltposter for denne måned.",
+      "entriesFailed": "Opgørelsen kunne ikke indlæses: {error}",
+      "entriesToggle": "Vis opgørelse",
+      "colProperty": "Objekt",
+      "colGuest": "Gæst",
+      "colStay": "Ophold",
+      "colChannel": "Portal",
+      "colRate": "Sats",
+      "entryNoProperty": "Objektet findes ikke længere",
+      "entrySum": "I alt"
     },
     "invoices": {
       "fees": "Gebyrer"

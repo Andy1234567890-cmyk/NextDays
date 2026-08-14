@@ -2103,7 +2103,28 @@
     "access": {
       "keyStatus": "Avaimen tila",
       "keyPlacement": "Fyysinen sijainti",
-      "fromGuestModule": "Ovikoodi, itsepalvelu-sisäänkirjautuminen ja WLAN ylläpidetään vierasmoduulissa."
+      "loading": "Loading access details …",
+      "contactTitle": "Contact",
+      "contactName": "Contact person's name",
+      "contactPhone": "Contact person's phone number",
+      "maintenancePhone": "Maintenance phone (optional)",
+      "wifiTitle": "Wi-Fi",
+      "wifiDescription": "Network name and password of the property. If they stay empty, a template using these building blocks will not be sent.",
+      "wifiSsid": "Network name (SSID)",
+      "wifiPassword": "Wi-Fi password",
+      "wifiFieldPlaceholder": "e.g. router is in the hallway, network covers the whole house",
+      "selfCheckinTitle": "Self check-in",
+      "selfCheckinDescription": "Guests check in on their own (door code / key box).",
+      "doorInstructions": "Door access",
+      "doorInstructionsPlaceholder": "Explain to your guests how they get in (door code, key location, etc.).",
+      "doorCode": "Door code",
+      "codeVisibleFrom": "Code visible from",
+      "showCodeOnlyIfPaid": "Show code only after full payment",
+      "hideCodeUntilCheckin": "Show code only on arrival day",
+      "wifiTextTitle": "Connection note",
+      "wifiTextHint": "A full sentence for the guest — for example where the router is or how far the network reaches.",
+      "securityDeposit": "Security deposit",
+      "securityDepositInvalid": "Please enter a valid amount."
     },
     "keyStatus": {
       "agency_extra": "Vara-avain agentuurilla",
@@ -6026,7 +6047,15 @@
       "linkCopyFailed": "Kopiointi ei onnistunut — linkki näkyy alla.",
       "linkWithdraw": "Peru linkki",
       "linkWithdrawn": "Maksulinkki peruttu.",
-      "linkAufteilung": "Vieras maksaa {brutto} · josta {prozent} % alustan osuutta ({anteil}) · lisäksi maksupalvelun kulut"
+      "linkAufteilung": "Vieras maksaa {brutto} · josta {prozent} % alustan osuutta ({anteil}) · lisäksi maksupalvelun kulut",
+      "pickLabel": "Add-on",
+      "qtyLabel": "Quantity",
+      "qtyInvalid": "Please enter a quantity between 1 and 99.",
+      "qtyEditAction": "Change quantity",
+      "qtySave": "Apply",
+      "qtySaving": "Saving …",
+      "qtySaved": "Quantity changed.",
+      "perGuestSuffix": "per person"
     },
     "ratesView": {
       "propertyLabel": "Kohde",
@@ -6840,7 +6869,10 @@
       "enableManual": "Ota manuaaliset maksut käyttöön",
       "bic": "BIC / SWIFT",
       "bankName": "Pankin nimi",
-      "recipientName": "Saajan nimi"
+      "recipientName": "Saajan nimi",
+      "paymentTextLabel": "Payment note",
+      "paymentTextPlaceholder": "e.g. When transferring, please state the name of the holiday home and the arrival date.",
+      "taxRateLabel": "Default tax rate (%)"
     },
     "textTemplate": {
       "namePlaceholder": "esim. tarjouksen vakioteksti, muistutus taso 1...",
@@ -7357,7 +7389,20 @@
       "statusInvoiced": "Laskutettu",
       "statusPaid": "Maksettu",
       "statusMixed": "Osittain avoin",
-      "monthsEmptyPlain": "Ulkoisista portaaleista ei ole toistaiseksi kertynyt provisioita."
+      "monthsEmptyPlain": "Ulkoisista portaaleista ei ole toistaiseksi kertynyt provisioita.",
+      "entriesTitle": "Alustava erittely",
+      "entriesHint": "Alustava: tämän kuukauden varauksia voi vielä tulla lisää, ne voidaan peruuttaa tai niitä voidaan muuttaa. Lasku on sitova.",
+      "entriesLoading": "Erittelyä ladataan …",
+      "entriesEmpty": "Tälle kuukaudelle ei ole yksittäisiä eriä.",
+      "entriesFailed": "Erittelyä ei voitu ladata: {error}",
+      "entriesToggle": "Näytä erittely",
+      "colProperty": "Kohde",
+      "colGuest": "Vieras",
+      "colStay": "Oleskelu",
+      "colChannel": "Portaali",
+      "colRate": "Prosentti",
+      "entryNoProperty": "Kohdetta ei enää ole",
+      "entrySum": "Yhteensä"
     },
     "invoices": {
       "fees": "Maksut"

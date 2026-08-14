@@ -2103,7 +2103,28 @@
     "access": {
       "keyStatus": "Stav klíčů",
       "keyPlacement": "Fyzické umístění",
-      "fromGuestModule": "Kód ke dveřím, samoobslužný check-in a Wi-Fi se spravují v modulu Hosté."
+      "loading": "Loading access details …",
+      "contactTitle": "Contact",
+      "contactName": "Contact person's name",
+      "contactPhone": "Contact person's phone number",
+      "maintenancePhone": "Maintenance phone (optional)",
+      "wifiTitle": "Wi-Fi",
+      "wifiDescription": "Network name and password of the property. If they stay empty, a template using these building blocks will not be sent.",
+      "wifiSsid": "Network name (SSID)",
+      "wifiPassword": "Wi-Fi password",
+      "wifiFieldPlaceholder": "e.g. router is in the hallway, network covers the whole house",
+      "selfCheckinTitle": "Self check-in",
+      "selfCheckinDescription": "Guests check in on their own (door code / key box).",
+      "doorInstructions": "Door access",
+      "doorInstructionsPlaceholder": "Explain to your guests how they get in (door code, key location, etc.).",
+      "doorCode": "Door code",
+      "codeVisibleFrom": "Code visible from",
+      "showCodeOnlyIfPaid": "Show code only after full payment",
+      "hideCodeUntilCheckin": "Show code only on arrival day",
+      "wifiTextTitle": "Connection note",
+      "wifiTextHint": "A full sentence for the guest — for example where the router is or how far the network reaches.",
+      "securityDeposit": "Security deposit",
+      "securityDepositInvalid": "Please enter a valid amount."
     },
     "keyStatus": {
       "agency_extra": "Náhradní klíč u agentury",
@@ -6026,7 +6047,15 @@
       "linkCopyFailed": "Kopírování se nezdařilo — odkaz je níže.",
       "linkWithdraw": "Stáhnout",
       "linkWithdrawn": "Platební odkaz stažen.",
-      "linkAufteilung": "Host platí {brutto} · z toho {prozent} % podíl platformy ({anteil}) · plus poplatky poskytovatele plateb"
+      "linkAufteilung": "Host platí {brutto} · z toho {prozent} % podíl platformy ({anteil}) · plus poplatky poskytovatele plateb",
+      "pickLabel": "Add-on",
+      "qtyLabel": "Quantity",
+      "qtyInvalid": "Please enter a quantity between 1 and 99.",
+      "qtyEditAction": "Change quantity",
+      "qtySave": "Apply",
+      "qtySaving": "Saving …",
+      "qtySaved": "Quantity changed.",
+      "perGuestSuffix": "per person"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -6840,7 +6869,10 @@
       "enableManual": "Aktivovat ruční platby",
       "bic": "BIC / SWIFT",
       "bankName": "Název banky",
-      "recipientName": "Jméno příjemce"
+      "recipientName": "Jméno příjemce",
+      "paymentTextLabel": "Payment note",
+      "paymentTextPlaceholder": "e.g. When transferring, please state the name of the holiday home and the arrival date.",
+      "taxRateLabel": "Default tax rate (%)"
     },
     "textTemplate": {
       "namePlaceholder": "např. standardní text nabídky, upomínka úroveň 1...",
@@ -7357,7 +7389,20 @@
       "statusInvoiced": "Vyúčtováno",
       "statusPaid": "Zaplaceno",
       "statusMixed": "Částečně otevřené",
-      "monthsEmptyPlain": "Zatím nevznikly žádné provize z externích portálů."
+      "monthsEmptyPlain": "Zatím nevznikly žádné provize z externích portálů.",
+      "entriesTitle": "Předběžný rozpis",
+      "entriesHint": "Předběžný: rezervace tohoto měsíce mohou ještě přibýt, být zrušeny nebo změněny. Závazná je faktura.",
+      "entriesLoading": "Načítání rozpisu …",
+      "entriesEmpty": "Pro tento měsíc nejsou žádné jednotlivé položky.",
+      "entriesFailed": "Rozpis se nepodařilo načíst: {error}",
+      "entriesToggle": "Zobrazit rozpis",
+      "colProperty": "Objekt",
+      "colGuest": "Host",
+      "colStay": "Pobyt",
+      "colChannel": "Portál",
+      "colRate": "Sazba",
+      "entryNoProperty": "Objekt již neexistuje",
+      "entrySum": "Celkem"
     },
     "invoices": {
       "fees": "Poplatky"

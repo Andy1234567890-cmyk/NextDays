@@ -2098,7 +2098,28 @@
     "access": {
       "keyStatus": "Status kluczy",
       "keyPlacement": "Fizyczne umiejscowienie",
-      "fromGuestModule": "Kod do drzwi, samodzielne zameldowanie i Wi-Fi są zarządzane w module gościa."
+      "loading": "Loading access details …",
+      "contactTitle": "Contact",
+      "contactName": "Contact person's name",
+      "contactPhone": "Contact person's phone number",
+      "maintenancePhone": "Maintenance phone (optional)",
+      "wifiTitle": "Wi-Fi",
+      "wifiDescription": "Network name and password of the property. If they stay empty, a template using these building blocks will not be sent.",
+      "wifiSsid": "Network name (SSID)",
+      "wifiPassword": "Wi-Fi password",
+      "wifiFieldPlaceholder": "e.g. router is in the hallway, network covers the whole house",
+      "selfCheckinTitle": "Self check-in",
+      "selfCheckinDescription": "Guests check in on their own (door code / key box).",
+      "doorInstructions": "Door access",
+      "doorInstructionsPlaceholder": "Explain to your guests how they get in (door code, key location, etc.).",
+      "doorCode": "Door code",
+      "codeVisibleFrom": "Code visible from",
+      "showCodeOnlyIfPaid": "Show code only after full payment",
+      "hideCodeUntilCheckin": "Show code only on arrival day",
+      "wifiTextTitle": "Connection note",
+      "wifiTextHint": "A full sentence for the guest — for example where the router is or how far the network reaches.",
+      "securityDeposit": "Security deposit",
+      "securityDepositInvalid": "Please enter a valid amount."
     },
     "keyStatus": {
       "agency_extra": "Dodatkowy klucz w agencji",
@@ -6021,7 +6042,15 @@
       "linkCopyFailed": "Nie udało się skopiować — link jest poniżej.",
       "linkWithdraw": "Wycofaj",
       "linkWithdrawn": "Link do płatności wycofany.",
-      "linkAufteilung": "Gość płaci {brutto} · w tym {prozent} % udziału platformy ({anteil}) · plus opłaty dostawcy płatności"
+      "linkAufteilung": "Gość płaci {brutto} · w tym {prozent} % udziału platformy ({anteil}) · plus opłaty dostawcy płatności",
+      "pickLabel": "Add-on",
+      "qtyLabel": "Quantity",
+      "qtyInvalid": "Please enter a quantity between 1 and 99.",
+      "qtyEditAction": "Change quantity",
+      "qtySave": "Apply",
+      "qtySaving": "Saving …",
+      "qtySaved": "Quantity changed.",
+      "perGuestSuffix": "per person"
     },
     "ratesView": {
       "propertyLabel": "Obiekt",
@@ -6835,7 +6864,10 @@
       "enableManual": "Włącz płatności ręczne",
       "bic": "BIC / SWIFT",
       "bankName": "Nazwa banku",
-      "recipientName": "Nazwa odbiorcy"
+      "recipientName": "Nazwa odbiorcy",
+      "paymentTextLabel": "Payment note",
+      "paymentTextPlaceholder": "e.g. When transferring, please state the name of the holiday home and the arrival date.",
+      "taxRateLabel": "Default tax rate (%)"
     },
     "textTemplate": {
       "namePlaceholder": "np. tekst standardowy oferty, wezwanie poziom 1...",
@@ -7352,7 +7384,20 @@
       "statusInvoiced": "Rozliczona",
       "statusPaid": "Opłacona",
       "statusMixed": "Częściowo nierozliczona",
-      "monthsEmptyPlain": "Dotychczas brak prowizji z portali zewnętrznych."
+      "monthsEmptyPlain": "Dotychczas brak prowizji z portali zewnętrznych.",
+      "entriesTitle": "Wstępne zestawienie",
+      "entriesHint": "Wstępne: rezerwacje z tego miesiąca mogą jeszcze dojść, zostać anulowane lub zmienione. Wiążąca jest faktura.",
+      "entriesLoading": "Wczytywanie zestawienia …",
+      "entriesEmpty": "Brak pozycji dla tego miesiąca.",
+      "entriesFailed": "Nie udało się wczytać zestawienia: {error}",
+      "entriesToggle": "Pokaż zestawienie",
+      "colProperty": "Obiekt",
+      "colGuest": "Gość",
+      "colStay": "Pobyt",
+      "colChannel": "Portal",
+      "colRate": "Stawka",
+      "entryNoProperty": "Obiekt już nie istnieje",
+      "entrySum": "Suma"
     },
     "invoices": {
       "fees": "Opłaty"

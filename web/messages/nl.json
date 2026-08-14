@@ -2098,7 +2098,28 @@
     "access": {
       "keyStatus": "Sleutelstatus",
       "keyPlacement": "Fysieke plaatsing",
-      "fromGuestModule": "Deurcode, zelf-check-in en wifi worden beheerd in de gastmodule."
+      "loading": "Loading access details …",
+      "contactTitle": "Contact",
+      "contactName": "Contact person's name",
+      "contactPhone": "Contact person's phone number",
+      "maintenancePhone": "Maintenance phone (optional)",
+      "wifiTitle": "Wi-Fi",
+      "wifiDescription": "Network name and password of the property. If they stay empty, a template using these building blocks will not be sent.",
+      "wifiSsid": "Network name (SSID)",
+      "wifiPassword": "Wi-Fi password",
+      "wifiFieldPlaceholder": "e.g. router is in the hallway, network covers the whole house",
+      "selfCheckinTitle": "Self check-in",
+      "selfCheckinDescription": "Guests check in on their own (door code / key box).",
+      "doorInstructions": "Door access",
+      "doorInstructionsPlaceholder": "Explain to your guests how they get in (door code, key location, etc.).",
+      "doorCode": "Door code",
+      "codeVisibleFrom": "Code visible from",
+      "showCodeOnlyIfPaid": "Show code only after full payment",
+      "hideCodeUntilCheckin": "Show code only on arrival day",
+      "wifiTextTitle": "Connection note",
+      "wifiTextHint": "A full sentence for the guest — for example where the router is or how far the network reaches.",
+      "securityDeposit": "Security deposit",
+      "securityDepositInvalid": "Please enter a valid amount."
     },
     "keyStatus": {
       "agency_extra": "Reservesleutel bij agentschap",
@@ -6021,7 +6042,15 @@
       "linkCopyFailed": "Kopiëren mislukt — de link staat hieronder.",
       "linkWithdraw": "Intrekken",
       "linkWithdrawn": "Betaallink ingetrokken.",
-      "linkAufteilung": "Gast betaalt {brutto} · waarvan {prozent}% platformaandeel ({anteil}) · plus kosten van de betaalprovider"
+      "linkAufteilung": "Gast betaalt {brutto} · waarvan {prozent}% platformaandeel ({anteil}) · plus kosten van de betaalprovider",
+      "pickLabel": "Add-on",
+      "qtyLabel": "Quantity",
+      "qtyInvalid": "Please enter a quantity between 1 and 99.",
+      "qtyEditAction": "Change quantity",
+      "qtySave": "Apply",
+      "qtySaving": "Saving …",
+      "qtySaved": "Quantity changed.",
+      "perGuestSuffix": "per person"
     },
     "ratesView": {
       "propertyLabel": "Object",
@@ -6835,7 +6864,10 @@
       "enableManual": "Handmatige betalingen inschakelen",
       "bic": "BIC / SWIFT",
       "bankName": "Naam van de bank",
-      "recipientName": "Naam van de ontvanger"
+      "recipientName": "Naam van de ontvanger",
+      "paymentTextLabel": "Payment note",
+      "paymentTextPlaceholder": "e.g. When transferring, please state the name of the holiday home and the arrival date.",
+      "taxRateLabel": "Default tax rate (%)"
     },
     "textTemplate": {
       "namePlaceholder": "bijv. standaardtekst offerte, aanmaning niveau 1...",
@@ -7352,7 +7384,20 @@
       "statusInvoiced": "Afgerekend",
       "statusPaid": "Betaald",
       "statusMixed": "Deels openstaand",
-      "monthsEmptyPlain": "Nog geen commissies via externe portalen."
+      "monthsEmptyPlain": "Nog geen commissies via externe portalen.",
+      "entriesTitle": "Voorlopig overzicht",
+      "entriesHint": "Voorlopig: boekingen van deze maand kunnen nog bijkomen, geannuleerd of gewijzigd worden. De factuur is bindend.",
+      "entriesLoading": "Overzicht wordt geladen …",
+      "entriesEmpty": "Er zijn geen afzonderlijke posten voor deze maand.",
+      "entriesFailed": "Het overzicht kon niet worden geladen: {error}",
+      "entriesToggle": "Overzicht tonen",
+      "colProperty": "Accommodatie",
+      "colGuest": "Gast",
+      "colStay": "Verblijf",
+      "colChannel": "Portaal",
+      "colRate": "Tarief",
+      "entryNoProperty": "Accommodatie bestaat niet meer",
+      "entrySum": "Totaal"
     },
     "invoices": {
       "fees": "Kosten"

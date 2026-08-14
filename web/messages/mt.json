@@ -2098,7 +2098,28 @@
     "access": {
       "keyStatus": "Status taċ-ċavetta",
       "keyPlacement": "Tqegħid fiżiku",
-      "fromGuestModule": "Il-kodiċi tal-bieb, is-self check-in u l-WiFi jinżammu fil-modulu tal-mistieden."
+      "loading": "Loading access details …",
+      "contactTitle": "Contact",
+      "contactName": "Contact person's name",
+      "contactPhone": "Contact person's phone number",
+      "maintenancePhone": "Maintenance phone (optional)",
+      "wifiTitle": "Wi-Fi",
+      "wifiDescription": "Network name and password of the property. If they stay empty, a template using these building blocks will not be sent.",
+      "wifiSsid": "Network name (SSID)",
+      "wifiPassword": "Wi-Fi password",
+      "wifiFieldPlaceholder": "e.g. router is in the hallway, network covers the whole house",
+      "selfCheckinTitle": "Self check-in",
+      "selfCheckinDescription": "Guests check in on their own (door code / key box).",
+      "doorInstructions": "Door access",
+      "doorInstructionsPlaceholder": "Explain to your guests how they get in (door code, key location, etc.).",
+      "doorCode": "Door code",
+      "codeVisibleFrom": "Code visible from",
+      "showCodeOnlyIfPaid": "Show code only after full payment",
+      "hideCodeUntilCheckin": "Show code only on arrival day",
+      "wifiTextTitle": "Connection note",
+      "wifiTextHint": "A full sentence for the guest — for example where the router is or how far the network reaches.",
+      "securityDeposit": "Security deposit",
+      "securityDepositInvalid": "Please enter a valid amount."
     },
     "keyStatus": {
       "agency_extra": "Ċavetta żejda għand l-aġenzija",
@@ -6021,7 +6042,15 @@
       "linkCopyFailed": "L-ikkupjar ma rnexxiex — il-link jidher hawn taħt.",
       "linkWithdraw": "Irtira",
       "linkWithdrawn": "Il-link tal-ħlas ġie rtirat.",
-      "linkAufteilung": "L-mistieden iħallas {brutto} · minnhom {prozent} % sehem tal-pjattaforma ({anteil}) · flimkien mat-tariffi tal-fornitur tal-ħlas"
+      "linkAufteilung": "L-mistieden iħallas {brutto} · minnhom {prozent} % sehem tal-pjattaforma ({anteil}) · flimkien mat-tariffi tal-fornitur tal-ħlas",
+      "pickLabel": "Add-on",
+      "qtyLabel": "Quantity",
+      "qtyInvalid": "Please enter a quantity between 1 and 99.",
+      "qtyEditAction": "Change quantity",
+      "qtySave": "Apply",
+      "qtySaving": "Saving …",
+      "qtySaved": "Quantity changed.",
+      "perGuestSuffix": "per person"
     },
     "ratesView": {
       "propertyLabel": "Proprjetà",
@@ -6835,7 +6864,10 @@
       "enableManual": "Attiva l-ħlasijiet manwali",
       "bic": "BIC / SWIFT",
       "bankName": "Isem tal-bank",
-      "recipientName": "Isem tal-benefiċjarju"
+      "recipientName": "Isem tal-benefiċjarju",
+      "paymentTextLabel": "Payment note",
+      "paymentTextPlaceholder": "e.g. When transferring, please state the name of the holiday home and the arrival date.",
+      "taxRateLabel": "Default tax rate (%)"
     },
     "textTemplate": {
       "namePlaceholder": "eż. test standard tal-kwotazzjoni, tfakkira livell 1...",
@@ -7352,7 +7384,20 @@
       "statusInvoiced": "Iffatturat",
       "statusPaid": "Imħallas",
       "statusMixed": "Parzjalment pendenti",
-      "monthsEmptyPlain": "S'issa ma ġġeneraw l-ebda kummissjonijiet permezz ta' portali esterni."
+      "monthsEmptyPlain": "S'issa ma ġġeneraw l-ebda kummissjonijiet permezz ta' portali esterni.",
+      "entriesTitle": "Analiżi provviżorja",
+      "entriesHint": "Provviżorja: il-bookings ta' dan ix-xahar jistgħu jiżdiedu, jiġu kkanċellati jew mibdula. Il-fattura hija dik li torbot.",
+      "entriesLoading": "Qed titgħabba l-analiżi …",
+      "entriesEmpty": "M'hemmx entrati individwali għal dan ix-xahar.",
+      "entriesFailed": "L-analiżi ma setgħetx titgħabba: {error}",
+      "entriesToggle": "Uri l-analiżi",
+      "colProperty": "Proprjetà",
+      "colGuest": "Mistieden",
+      "colStay": "Soġġorn",
+      "colChannel": "Portal",
+      "colRate": "Rata",
+      "entryNoProperty": "Il-proprjetà ma għadhiex teżisti",
+      "entrySum": "Total"
     },
     "invoices": {
       "fees": "Tariffi"

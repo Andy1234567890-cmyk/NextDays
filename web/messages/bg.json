@@ -2103,7 +2103,28 @@
     "access": {
       "keyStatus": "Статус на ключа",
       "keyPlacement": "Физическо разположение",
-      "fromGuestModule": "Кодът за вратата, самостоятелното настаняване и WiFi се поддържат в модула за гости."
+      "loading": "Loading access details …",
+      "contactTitle": "Contact",
+      "contactName": "Contact person's name",
+      "contactPhone": "Contact person's phone number",
+      "maintenancePhone": "Maintenance phone (optional)",
+      "wifiTitle": "Wi-Fi",
+      "wifiDescription": "Network name and password of the property. If they stay empty, a template using these building blocks will not be sent.",
+      "wifiSsid": "Network name (SSID)",
+      "wifiPassword": "Wi-Fi password",
+      "wifiFieldPlaceholder": "e.g. router is in the hallway, network covers the whole house",
+      "selfCheckinTitle": "Self check-in",
+      "selfCheckinDescription": "Guests check in on their own (door code / key box).",
+      "doorInstructions": "Door access",
+      "doorInstructionsPlaceholder": "Explain to your guests how they get in (door code, key location, etc.).",
+      "doorCode": "Door code",
+      "codeVisibleFrom": "Code visible from",
+      "showCodeOnlyIfPaid": "Show code only after full payment",
+      "hideCodeUntilCheckin": "Show code only on arrival day",
+      "wifiTextTitle": "Connection note",
+      "wifiTextHint": "A full sentence for the guest — for example where the router is or how far the network reaches.",
+      "securityDeposit": "Security deposit",
+      "securityDepositInvalid": "Please enter a valid amount."
     },
     "keyStatus": {
       "agency_extra": "Резервен ключ при агенцията",
@@ -6026,7 +6047,15 @@
       "linkCopyFailed": "Копирането не бе възможно — линкът е по-долу.",
       "linkWithdraw": "Оттегли",
       "linkWithdrawn": "Линкът за плащане е оттеглен.",
-      "linkAufteilung": "Гостът плаща {brutto} · от които {prozent} % дял на платформата ({anteil}) · плюс таксите на доставчика на плащания"
+      "linkAufteilung": "Гостът плаща {brutto} · от които {prozent} % дял на платформата ({anteil}) · плюс таксите на доставчика на плащания",
+      "pickLabel": "Add-on",
+      "qtyLabel": "Quantity",
+      "qtyInvalid": "Please enter a quantity between 1 and 99.",
+      "qtyEditAction": "Change quantity",
+      "qtySave": "Apply",
+      "qtySaving": "Saving …",
+      "qtySaved": "Quantity changed.",
+      "perGuestSuffix": "per person"
     },
     "ratesView": {
       "propertyLabel": "Обект",
@@ -6840,7 +6869,10 @@
       "enableManual": "Активиране на ръчните плащания",
       "bic": "BIC / SWIFT",
       "bankName": "Име на банката",
-      "recipientName": "Име на получателя"
+      "recipientName": "Име на получателя",
+      "paymentTextLabel": "Payment note",
+      "paymentTextPlaceholder": "e.g. When transferring, please state the name of the holiday home and the arrival date.",
+      "taxRateLabel": "Default tax rate (%)"
     },
     "textTemplate": {
       "namePlaceholder": "напр. стандартен текст за оферта, напомняне ниво 1...",
@@ -7357,7 +7389,20 @@
       "statusInvoiced": "Фактурирано",
       "statusPaid": "Платено",
       "statusMixed": "Частично открито",
-      "monthsEmptyPlain": "Досега няма начислени комисиони през външни портали."
+      "monthsEmptyPlain": "Досега няма начислени комисиони през външни портали.",
+      "entriesTitle": "Предварителна справка",
+      "entriesHint": "Предварителна: резервациите за този месец още могат да се добавят, отменят или променят. Обвързваща е фактурата.",
+      "entriesLoading": "Справката се зарежда …",
+      "entriesEmpty": "За този месец няма отделни позиции.",
+      "entriesFailed": "Справката не можа да бъде заредена: {error}",
+      "entriesToggle": "Покажи справката",
+      "colProperty": "Обект",
+      "colGuest": "Гост",
+      "colStay": "Престой",
+      "colChannel": "Портал",
+      "colRate": "Ставка",
+      "entryNoProperty": "Обектът вече не съществува",
+      "entrySum": "Общо"
     },
     "invoices": {
       "fees": "Такси"

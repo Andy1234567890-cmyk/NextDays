@@ -2103,7 +2103,28 @@
     "access": {
       "keyStatus": "Võtme staatus",
       "keyPlacement": "Füüsiline paiknemine",
-      "fromGuestModule": "Uksekoodi, iseseisvat sisseregistreerimist ja WiFit hallatakse külalismoodulis."
+      "loading": "Loading access details …",
+      "contactTitle": "Contact",
+      "contactName": "Contact person's name",
+      "contactPhone": "Contact person's phone number",
+      "maintenancePhone": "Maintenance phone (optional)",
+      "wifiTitle": "Wi-Fi",
+      "wifiDescription": "Network name and password of the property. If they stay empty, a template using these building blocks will not be sent.",
+      "wifiSsid": "Network name (SSID)",
+      "wifiPassword": "Wi-Fi password",
+      "wifiFieldPlaceholder": "e.g. router is in the hallway, network covers the whole house",
+      "selfCheckinTitle": "Self check-in",
+      "selfCheckinDescription": "Guests check in on their own (door code / key box).",
+      "doorInstructions": "Door access",
+      "doorInstructionsPlaceholder": "Explain to your guests how they get in (door code, key location, etc.).",
+      "doorCode": "Door code",
+      "codeVisibleFrom": "Code visible from",
+      "showCodeOnlyIfPaid": "Show code only after full payment",
+      "hideCodeUntilCheckin": "Show code only on arrival day",
+      "wifiTextTitle": "Connection note",
+      "wifiTextHint": "A full sentence for the guest — for example where the router is or how far the network reaches.",
+      "securityDeposit": "Security deposit",
+      "securityDepositInvalid": "Please enter a valid amount."
     },
     "keyStatus": {
       "agency_extra": "Lisavõti agentuuris",
@@ -6026,7 +6047,15 @@
       "linkCopyFailed": "Kopeerimine ebaõnnestus — link on allpool.",
       "linkWithdraw": "Võta tagasi",
       "linkWithdrawn": "Makselink võeti tagasi.",
-      "linkAufteilung": "Külaline maksab {brutto} · sellest {prozent} % platvormi osa ({anteil}) · lisaks makseteenuse tasud"
+      "linkAufteilung": "Külaline maksab {brutto} · sellest {prozent} % platvormi osa ({anteil}) · lisaks makseteenuse tasud",
+      "pickLabel": "Add-on",
+      "qtyLabel": "Quantity",
+      "qtyInvalid": "Please enter a quantity between 1 and 99.",
+      "qtyEditAction": "Change quantity",
+      "qtySave": "Apply",
+      "qtySaving": "Saving …",
+      "qtySaved": "Quantity changed.",
+      "perGuestSuffix": "per person"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -6840,7 +6869,10 @@
       "enableManual": "Luba käsitsi maksed",
       "bic": "BIC / SWIFT",
       "bankName": "Panga nimi",
-      "recipientName": "Saaja nimi"
+      "recipientName": "Saaja nimi",
+      "paymentTextLabel": "Payment note",
+      "paymentTextPlaceholder": "e.g. When transferring, please state the name of the holiday home and the arrival date.",
+      "taxRateLabel": "Default tax rate (%)"
     },
     "textTemplate": {
       "namePlaceholder": "nt pakkumise standardtekst, meeldetuletus tase 1...",
@@ -7357,7 +7389,20 @@
       "statusInvoiced": "Arveldatud",
       "statusPaid": "Makstud",
       "statusMixed": "Osaliselt avatud",
-      "monthsEmptyPlain": "Väliste portaalide kaudu ei ole seni komisjonitasusid tekkinud."
+      "monthsEmptyPlain": "Väliste portaalide kaudu ei ole seni komisjonitasusid tekkinud.",
+      "entriesTitle": "Esialgne koondaruanne",
+      "entriesHint": "Esialgne: selle kuu broneeringuid võib veel lisanduda, neid võidakse tühistada või muuta. Siduv on arve.",
+      "entriesLoading": "Koondaruande laadimine …",
+      "entriesEmpty": "Selle kuu kohta üksikkirjeid ei ole.",
+      "entriesFailed": "Koondaruannet ei õnnestunud laadida: {error}",
+      "entriesToggle": "Näita koondaruannet",
+      "colProperty": "Objekt",
+      "colGuest": "Külaline",
+      "colStay": "Viibimine",
+      "colChannel": "Portaal",
+      "colRate": "Määr",
+      "entryNoProperty": "Objekti enam ei ole",
+      "entrySum": "Kokku"
     },
     "invoices": {
       "fees": "Tasud"

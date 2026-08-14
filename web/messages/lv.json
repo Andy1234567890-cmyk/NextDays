@@ -2098,7 +2098,28 @@
     "access": {
       "keyStatus": "Atslēgas statuss",
       "keyPlacement": "Fiziskā novietošana",
-      "fromGuestModule": "Durvju kods, pašapkalpošanās reģistrēšanās un WLAN tiek pārvaldīti viesu modulī."
+      "loading": "Loading access details …",
+      "contactTitle": "Contact",
+      "contactName": "Contact person's name",
+      "contactPhone": "Contact person's phone number",
+      "maintenancePhone": "Maintenance phone (optional)",
+      "wifiTitle": "Wi-Fi",
+      "wifiDescription": "Network name and password of the property. If they stay empty, a template using these building blocks will not be sent.",
+      "wifiSsid": "Network name (SSID)",
+      "wifiPassword": "Wi-Fi password",
+      "wifiFieldPlaceholder": "e.g. router is in the hallway, network covers the whole house",
+      "selfCheckinTitle": "Self check-in",
+      "selfCheckinDescription": "Guests check in on their own (door code / key box).",
+      "doorInstructions": "Door access",
+      "doorInstructionsPlaceholder": "Explain to your guests how they get in (door code, key location, etc.).",
+      "doorCode": "Door code",
+      "codeVisibleFrom": "Code visible from",
+      "showCodeOnlyIfPaid": "Show code only after full payment",
+      "hideCodeUntilCheckin": "Show code only on arrival day",
+      "wifiTextTitle": "Connection note",
+      "wifiTextHint": "A full sentence for the guest — for example where the router is or how far the network reaches.",
+      "securityDeposit": "Security deposit",
+      "securityDepositInvalid": "Please enter a valid amount."
     },
     "keyStatus": {
       "agency_extra": "Rezerves atslēga pie aģentūras",
@@ -6021,7 +6042,15 @@
       "linkCopyFailed": "Neizdevās nokopēt — saite redzama zemāk.",
       "linkWithdraw": "Atsaukt",
       "linkWithdrawn": "Maksājuma saite atsaukta.",
-      "linkAufteilung": "Viesis maksā {brutto} · no tā {prozent} % platformas daļa ({anteil}) · plus maksājumu pakalpojuma komisijas"
+      "linkAufteilung": "Viesis maksā {brutto} · no tā {prozent} % platformas daļa ({anteil}) · plus maksājumu pakalpojuma komisijas",
+      "pickLabel": "Add-on",
+      "qtyLabel": "Quantity",
+      "qtyInvalid": "Please enter a quantity between 1 and 99.",
+      "qtyEditAction": "Change quantity",
+      "qtySave": "Apply",
+      "qtySaving": "Saving …",
+      "qtySaved": "Quantity changed.",
+      "perGuestSuffix": "per person"
     },
     "ratesView": {
       "propertyLabel": "Objekts",
@@ -6835,7 +6864,10 @@
       "enableManual": "Aktivizēt manuālos maksājumus",
       "bic": "BIC / SWIFT",
       "bankName": "Bankas nosaukums",
-      "recipientName": "Saņēmēja vārds"
+      "recipientName": "Saņēmēja vārds",
+      "paymentTextLabel": "Payment note",
+      "paymentTextPlaceholder": "e.g. When transferring, please state the name of the holiday home and the arrival date.",
+      "taxRateLabel": "Default tax rate (%)"
     },
     "textTemplate": {
       "namePlaceholder": "piem., piedāvājuma standarta teksts, atgādinājums 1. līmenis...",
@@ -7352,7 +7384,20 @@
       "statusInvoiced": "Norēķināts",
       "statusPaid": "Apmaksāts",
       "statusMixed": "Daļēji neapmaksāts",
-      "monthsEmptyPlain": "Līdz šim nav radušās komisijas maksas no ārējiem portāliem."
+      "monthsEmptyPlain": "Līdz šim nav radušās komisijas maksas no ārējiem portāliem.",
+      "entriesTitle": "Provizorisks pārskats",
+      "entriesHint": "Provizorisks: šā mēneša rezervācijas vēl var tikt pievienotas, atceltas vai mainītas. Saistošs ir rēķins.",
+      "entriesLoading": "Notiek pārskata ielāde …",
+      "entriesEmpty": "Par šo mēnesi nav atsevišķu pozīciju.",
+      "entriesFailed": "Pārskatu neizdevās ielādēt: {error}",
+      "entriesToggle": "Rādīt pārskatu",
+      "colProperty": "Objekts",
+      "colGuest": "Viesis",
+      "colStay": "Uzturēšanās",
+      "colChannel": "Portāls",
+      "colRate": "Likme",
+      "entryNoProperty": "Objekta vairs nav",
+      "entrySum": "Kopā"
     },
     "invoices": {
       "fees": "Maksas"

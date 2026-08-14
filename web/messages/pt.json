@@ -2098,7 +2098,28 @@
     "access": {
       "keyStatus": "Estado das chaves",
       "keyPlacement": "Colocação física",
-      "fromGuestModule": "O código da porta, o auto check-in e o Wi-Fi são geridos no módulo de hóspedes."
+      "loading": "Loading access details …",
+      "contactTitle": "Contact",
+      "contactName": "Contact person's name",
+      "contactPhone": "Contact person's phone number",
+      "maintenancePhone": "Maintenance phone (optional)",
+      "wifiTitle": "Wi-Fi",
+      "wifiDescription": "Network name and password of the property. If they stay empty, a template using these building blocks will not be sent.",
+      "wifiSsid": "Network name (SSID)",
+      "wifiPassword": "Wi-Fi password",
+      "wifiFieldPlaceholder": "e.g. router is in the hallway, network covers the whole house",
+      "selfCheckinTitle": "Self check-in",
+      "selfCheckinDescription": "Guests check in on their own (door code / key box).",
+      "doorInstructions": "Door access",
+      "doorInstructionsPlaceholder": "Explain to your guests how they get in (door code, key location, etc.).",
+      "doorCode": "Door code",
+      "codeVisibleFrom": "Code visible from",
+      "showCodeOnlyIfPaid": "Show code only after full payment",
+      "hideCodeUntilCheckin": "Show code only on arrival day",
+      "wifiTextTitle": "Connection note",
+      "wifiTextHint": "A full sentence for the guest — for example where the router is or how far the network reaches.",
+      "securityDeposit": "Security deposit",
+      "securityDepositInvalid": "Please enter a valid amount."
     },
     "keyStatus": {
       "agency_extra": "Chave extra na agência",
@@ -6021,7 +6042,15 @@
       "linkCopyFailed": "Não foi possível copiar — o link está abaixo.",
       "linkWithdraw": "Retirar",
       "linkWithdrawn": "Link de pagamento retirado.",
-      "linkAufteilung": "O hóspede paga {brutto} · dos quais {prozent} % de parte da plataforma ({anteil}) · mais taxas do fornecedor de pagamentos"
+      "linkAufteilung": "O hóspede paga {brutto} · dos quais {prozent} % de parte da plataforma ({anteil}) · mais taxas do fornecedor de pagamentos",
+      "pickLabel": "Add-on",
+      "qtyLabel": "Quantity",
+      "qtyInvalid": "Please enter a quantity between 1 and 99.",
+      "qtyEditAction": "Change quantity",
+      "qtySave": "Apply",
+      "qtySaving": "Saving …",
+      "qtySaved": "Quantity changed.",
+      "perGuestSuffix": "per person"
     },
     "ratesView": {
       "propertyLabel": "Propriedade",
@@ -6835,7 +6864,10 @@
       "enableManual": "Ativar pagamentos manuais",
       "bic": "BIC / SWIFT",
       "bankName": "Nome do banco",
-      "recipientName": "Nome do beneficiário"
+      "recipientName": "Nome do beneficiário",
+      "paymentTextLabel": "Payment note",
+      "paymentTextPlaceholder": "e.g. When transferring, please state the name of the holiday home and the arrival date.",
+      "taxRateLabel": "Default tax rate (%)"
     },
     "textTemplate": {
       "namePlaceholder": "p. ex. texto padrão de orçamento, aviso nível 1...",
@@ -7352,7 +7384,20 @@
       "statusInvoiced": "Faturada",
       "statusPaid": "Paga",
       "statusMixed": "Parcialmente em aberto",
-      "monthsEmptyPlain": "Ainda não foram geradas comissões através de portais externos."
+      "monthsEmptyPlain": "Ainda não foram geradas comissões através de portais externos.",
+      "entriesTitle": "Discriminação provisória",
+      "entriesHint": "Provisória: as reservas deste mês ainda podem ser acrescentadas, canceladas ou alteradas. A fatura é vinculativa.",
+      "entriesLoading": "A carregar a discriminação …",
+      "entriesEmpty": "Não existem itens individuais para este mês.",
+      "entriesFailed": "Não foi possível carregar a discriminação: {error}",
+      "entriesToggle": "Mostrar discriminação",
+      "colProperty": "Alojamento",
+      "colGuest": "Hóspede",
+      "colStay": "Estadia",
+      "colChannel": "Portal",
+      "colRate": "Taxa",
+      "entryNoProperty": "Alojamento já não existe",
+      "entrySum": "Total"
     },
     "invoices": {
       "fees": "Taxas"
