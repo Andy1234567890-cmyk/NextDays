@@ -1,0 +1,24 @@
+-- 0394 — Stop-Sell-Zeilen des Channex-ARI-Imports entfernen (14.08.2026).
+--
+-- Der ARI-Import las Channex' `GET /restrictions`-Readback als Portal-Wahrheit.
+-- Dort ist `stop_sell` aber ein ABGELEITETER Wert („Tag nicht verkaufbar") und
+-- spiegelte nur unser eigenes availability=0 (Buchung, Sperre, Vertragsende).
+-- Beim Extranet-/Airbnb-Storno entstand daraus ein Wettlauf: Nächte frei →
+-- Import las das noch nicht verarbeitete Echo → schrieb stop_sell-Zeilen
+-- source='channex' → der nächtliche Full-Sync pushte sie als ECHTE Stops
+-- zurück an Channex → der Readback bestätigte sie für immer. Drei aktive
+-- Objekte (Rævehulen 363, Dora 315, Grævlinge 223 Tage) waren dadurch seit
+-- dem 10.08.2026 auf allen Portalen unverkäuflich.
+--
+-- Der Import-Schreibpfad ist entfernt (bookings_sync._import_ari_single liest
+-- keine Restriktionen mehr); es gibt danach KEINEN legitimen Schreiber für
+-- source='channex' — jede künftige solche Zeile ist ein Regressionsbeweis
+-- (scripts/diagnose/stop-sell-echo-pruefen.sh schlägt dann an).
+--
+-- REIHENFOLGE: erst den Worker mit dem Code-Fix deployen, DANN diese Migration
+-- einspielen — der alte Import sät die Zeilen sonst binnen Minuten nach.
+-- Manuelle Stops des Betriebs (source='manual') bleiben unberührt. Nach der
+-- Bereinigung meldet der nächste Full-Sync je Objekt stop_sell=false über den
+-- ganzen Horizont an die Portale (full_sync liest die stop_sell-Tabelle).
+
+delete from public.stop_sell where source = 'channex';

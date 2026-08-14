@@ -1,23 +1,33 @@
-"""Ein Vertragsende darf nie als Stop-Sell zurückkommen (0378).
+"""Der ARI-Import schreibt NIE Stop-Sells und sperrt keine Storno-Freigabe zurück.
 
-DER LIVE-FEHLER, DEN DIESE DATEI FESTHÄLT (12.08.2026, Feriehus Kornblomst):
-Das Vertragsende sperrt die Nächte und meldet Channex `availability = 0`.
-Channex macht daraus für die OTAs einen Stop-Sell. Der nächste ARI-Import las
-diesen Stop-Sell als FREMDE Information zurück und schrieb 307 Zeilen mit
-`source='channex'` — vier Sekunden nach dem eigenen Push.
+ZWEI LIVE-FEHLER, DIE DIESE DATEI FESTHÄLT:
 
-Der Schaden war die AUSSAGE, nicht die Zeile: der Kalender zeigte
-„Stop-Sell · alle Kanäle" statt „Vertragsende". Damit stand dort ein Grund, den
-die Agentur selbst gesetzt haben könnte und mit einem Klick wieder aufhebt —
-dahinter steht aber ein beendeter Vertrag, der gar nicht aufhebbar sein darf,
-solange kein Vertrag existiert. Ein Vertragsende ist die komplette Abschaltung
-ab dem Zeitpunkt, keine Verkaufseinstellung.
+1. Vertragsende als Stop-Sell (12.08.2026, Feriehus Kornblomst, 0378): Das
+   Vertragsende sperrt die Nächte und meldet Channex `availability = 0`.
+   Channex' Readback macht daraus `stop_sell = true`, der Import schrieb 307
+   Zeilen `source='channex'` — vier Sekunden nach dem eigenen Push. Der
+   Kalender zeigte „Stop-Sell · alle Kanäle" statt „Vertragsende".
 
-Der Store filtert echt (eq/in_/gte/lt): eine Attrappe, die jede Kette
-durchwinkt, bestätigt auch den kaputten Filter — und genau der Filter IST hier
-die Prüfung.
+2. Storno-Echo-Kreis (entdeckt 14.08.2026): `GET /restrictions` liefert
+   `stop_sell` als ABGELEITETEN Wert („Tag nicht verkaufbar"), nicht die
+   gespeicherte Restriktion — für gebuchte Tage kam `true` zurück, obwohl wir
+   nachts `false` pushen. Beim Extranet-/Airbnb-Storno las der Import das noch
+   nicht verarbeitete Echo der freigegebenen Nächte, schrieb Stop-Sells, und
+   der nächtliche Full-Sync pushte sie als ECHTE Stops zurück — drei aktive
+   Objekte waren monatelang auf allen Portalen unverkäuflich
+   (Rævehulen/Dora/Grævlinge).
+
+Konsequenz: Der Import liest Restriktionen GAR NICHT mehr. Kein Guard, kein
+Filter — der Abruf selbst ist entfernt, weil er nur unser eigenes Echo lesen
+konnte (ein OTA kann Restriktionen bei Channex nicht setzen). Diese Tests
+beweisen den neuen Vertrag: kein `get_restrictions`-Aufruf, keine
+`stop_sell`-Schreibung, bestehende Zeilen bleiben unangetastet, und der
+Ping-Pong-Schutz deckt die Storno-Freigabe ab.
+
+Der Store filtert echt (eq/in_/gte/lt/or_): eine Attrappe, die jede Kette
+durchwinkt, bestätigte auch einen kaputten Schutz — der Filter IST die Prüfung.
 """
-from datetime import date
+from datetime import UTC, date, datetime
 from typing import Any
 
 from src.features.channel_manager.ari_push import AriPushMixin
@@ -116,8 +126,8 @@ class _Query:
         Der Ping-Pong-Schutz sucht damit frische/offene Push-Absichten
         (`created_at.gte.<cutoff>,status.eq.pending,status.eq.failed`). Würde die
         Attrappe das durchwinken, gälte JEDER Tag als „gerade selbst gepusht",
-        der Import überspränge alles, und der Test wäre grün, ohne den
-        Vertragsende-Filter je zu berühren.
+        der Import überspränge alles, und die Storno-Prüfung unten wäre grün,
+        ohne das Fenster je zu berühren.
         """
         gruppe: list[tuple[str, str, str]] = []
         for teil in ausdruck.split(","):
@@ -172,8 +182,8 @@ class _Query:
     def execute(self) -> _Result:
         rows = self._store.tabellen.setdefault(self._table, [])
         if self._modus in {"upsert", "insert"}:
-            # Der Import schreibt availability als LISTE (Tages-Batch) und
-            # stop_sell einzeln — beide Formen müssen ankommen.
+            # Der Import schreibt availability als LISTE (Tages-Batch) — auch
+            # Einzel-Dicts müssen ankommen.
             neu = (
                 self._payload
                 if isinstance(self._payload, list)
@@ -207,12 +217,16 @@ class _Store:
 
 
 class _Channex:
-    """Channex, das für die Vertragsende-Tage genau das liefert, was es live
-    liefert: `availability = 0` UND `stop_sell = true` — sein eigenes Echo
-    unseres Pushes."""
+    """Channex, das liefert, was es live liefert: `availability`-Zahlen — und
+    das bei einem Restriktions-Abruf SOFORT auffliegt.
 
-    def __init__(self, tage: list[date]) -> None:
-        self._tage = tage
+    `get_restrictions` existiert absichtlich als Falle: Der Import darf
+    Restriktionen nie wieder lesen, weil der Readback dort nur unser eigenes
+    Echo ist (stop_sell=true für jeden unverfügbaren Tag).
+    """
+
+    def __init__(self, avail_null_tage: list[date]) -> None:
+        self._tage = avail_null_tage
 
     def get_availability(self, *_a: object, **_k: object) -> dict[str, Any]:
         return {
@@ -222,25 +236,27 @@ class _Channex:
         }
 
     def get_restrictions(self, *_a: object, **_k: object) -> dict[str, Any]:
-        return {
-            "data": {
-                "rp-1": {
-                    t.isoformat(): {"stop_sell": True} for t in self._tage
-                },
-            }
-        }
+        raise AssertionError(
+            "Der ARI-Import darf get_restrictions nicht aufrufen — der "
+            "Readback ist unser eigenes Echo, kein Portal-Zustand."
+        )
 
 
 def _tage(von: date, anzahl: int) -> list[date]:
     return [date.fromordinal(von.toordinal() + i) for i in range(anzahl)]
 
 
-def _store(vertragsende_tage: list[date], stop_tage: list[date]) -> _Store:
+def _store(
+    vertragsende_tage: list[date],
+    stop_zeilen: list[dict[str, Any]] | None = None,
+    outbox_extra: list[dict[str, Any]] | None = None,
+    offene_tage: list[date] | None = None,
+) -> _Store:
     """Ein Objekt, das bei Channex gemanaged ist, Push-Historie hat und dessen
     Vertragsende-Nächte im Kalender stehen.
 
-    Beides ist nötig, damit der Import überhaupt bis zur Stop-Sell-Schleife
-    kommt: ohne `channex_property_map` bricht er als „nicht gemanaged" ab, ohne
+    Beides ist nötig, damit der Import überhaupt schreibt: ohne
+    `channex_property_map` bricht er als „nicht gemanaged" ab, ohne
     `ari_outbox`-`done` greift der Warm-up-Guard.
     """
     return _Store(
@@ -260,7 +276,8 @@ def _store(vertragsende_tage: list[date], stop_tage: list[date]) -> _Store:
                     "status": "done",
                     "created_at": "2025-01-01T00:00:00+00:00",
                     "payload": {},
-                }
+                },
+                *(outbox_extra or []),
             ],
             "availability": [
                 {
@@ -271,8 +288,18 @@ def _store(vertragsende_tage: list[date], stop_tage: list[date]) -> _Store:
                     "source": "contract_end",
                 }
                 for t in vertragsende_tage
+            ]
+            + [
+                {
+                    "property_id": PROPERTY,
+                    "unit_id": "u-1",
+                    "date": t.isoformat(),
+                    "status": "open",
+                    "source": "manual",
+                }
+                for t in (offene_tage or [])
             ],
-            "stop_sell": [],
+            "stop_sell": list(stop_zeilen or []),
             "property_units": [
                 {"id": "u-1", "property_id": PROPERTY, "tenant_id": TENANT}
             ],
@@ -294,75 +321,131 @@ def _geschriebene_stops(store: _Store) -> list[str]:
     )
 
 
-def _importieren(store: _Store, stop_tage: list[date]) -> dict[str, int]:
-    svc = _Sync(_Channex(stop_tage))
+def _importieren(
+    store: _Store, avail_null_tage: list[date], *, heute: date = ENDE
+) -> dict[str, int]:
+    svc = _Sync(_Channex(avail_null_tage))
     return svc._import_ari_single(  # noqa: SLF001
         store,
         TENANT,
         CHANNEX_PROPERTY,
         PROPERTY,
         {"rt-1"},
-        {"rp-1"},
         days_ahead=30,
-        today=ENDE,
+        today=heute,
     )
 
 
-def test_vertragsende_tage_werden_nicht_als_stop_sell_geschrieben() -> None:
-    """DER Fehler vom 12.08.2026: 307 `channex`-Zeilen auf Vertragsende-Nächten.
+def test_import_liest_keine_restrictions_und_schreibt_keine_stops() -> None:
+    """DER Vertrag nach dem 14.08.2026: kein Restriktions-Abruf, kein Stop-Sell.
 
-    Channex liefert für diese Tage `stop_sell = true` — aber das ist das Echo
-    unseres eigenen `availability = 0`, nicht der Wille eines Portals. Ohne
-    diesen Filter zeigte der Kalender „Stop-Sell" statt „Vertragsende".
+    Channex würde für die Vertragsende-Tage `stop_sell = true` melden — das ist
+    das Echo unseres eigenen `availability = 0`, nicht der Wille eines Portals.
+    `_Channex.get_restrictions` wirft deshalb: Schon der AUFRUF ist der Fehler.
     """
     tage = _tage(ENDE, 10)
-    store = _store(vertragsende_tage=tage, stop_tage=tage)
+    store = _store(vertragsende_tage=tage)
 
-    _importieren(store, tage)
+    ergebnis = _importieren(store, tage)
 
     assert _geschriebene_stops(store) == [], (
-        "Auf einer Vertragsende-Nacht darf KEIN Stop-Sell entstehen — der "
-        "Kalender nennt sonst den falschen Grund und lädt zum Aufheben ein."
+        "Der Import darf NIE eine stop_sell-Zeile anlegen — jede solche Zeile "
+        "wird vom Full-Sync als echter Stop zurückgepusht (Echo-Kreis)."
     )
     assert store.tabellen["stop_sell"] == []
-
-
-def test_echter_portal_stop_ohne_vertragsende_kommt_weiter_an() -> None:
-    """Die Umkehrprobe: der Filter darf nur Vertragsende-Tage ausnehmen.
-
-    Ohne diesen Test wäre ein Filter, der ALLE Stop-Sells verwirft, genauso
-    grün — und der echte OTA-Stop käme nie mehr bei uns an.
-    """
-    stop_tage = _tage(ENDE, 5)
-    store = _store(vertragsende_tage=[], stop_tage=stop_tage)
-
-    ergebnis = _importieren(store, stop_tage)
-
-    assert _geschriebene_stops(store) == [t.isoformat() for t in stop_tage]
-    assert ergebnis["stop_sell"] == len(stop_tage)
-
-
-def test_nur_die_vertragsende_tage_fallen_aus() -> None:
-    """Gemischter Zeitraum: der Filter arbeitet TAGGENAU, nicht pauschal.
-
-    Live ist genau das der Normalfall — das Vertragsende beginnt mitten im
-    gemeldeten Fenster, davor liegen offene Tage, die ein Portal wirklich
-    gestoppt haben kann.
-    """
-    frei = _tage(date(2026, 10, 4), 5)  # 04.–08.10., vor dem Vertragsende
-    gesperrt = _tage(ENDE, 5)  # 09.–13.10., Vertragsende
-    store = _store(vertragsende_tage=gesperrt, stop_tage=frei + gesperrt)
-    # Der Import startet am 04.10., damit beide Hälften im Fenster liegen.
-    svc = _Sync(_Channex(frei + gesperrt))
-    svc._import_ari_single(  # noqa: SLF001
-        store,
-        TENANT,
-        CHANNEX_PROPERTY,
-        PROPERTY,
-        {"rt-1"},
-        {"rp-1"},
-        days_ahead=30,
-        today=date(2026, 10, 4),
+    assert "stop_sell" not in ergebnis, (
+        "Der Import hat keinen stop_sell-Zähler mehr — gäbe es ihn, "
+        "existierte auch wieder ein Schreibpfad."
     )
 
-    assert _geschriebene_stops(store) == [t.isoformat() for t in frei]
+
+def test_bestehende_stop_zeilen_bleiben_unangetastet() -> None:
+    """Der Import hebt auch nichts mehr auf — die Aufheben-Richtung ist mit
+    der Setzen-Richtung entfernt.
+
+    Ein manueller Stop des Betriebs (source='manual') und eine noch nicht
+    bereinigte Alt-Zeile (source='channex', räumt Migration 0394) müssen den
+    Import unverändert überleben: Löschen dürfen nur clear_stop_sell bzw. die
+    Migration, nie ein Readback, der ohnehin nur Echos sieht.
+    """
+    manuell = {
+        "id": "s-1",
+        "property_id": PROPERTY,
+        "date": "2026-10-20",
+        "source": "manual",
+        "rate_plan_id": None,
+    }
+    alt_import = {
+        "id": "s-2",
+        "property_id": PROPERTY,
+        "date": "2026-10-21",
+        "source": "channex",
+        "rate_plan_id": None,
+    }
+    store = _store(vertragsende_tage=[], stop_zeilen=[manuell, alt_import])
+
+    _importieren(store, [])
+
+    assert store.tabellen["stop_sell"] == [manuell, alt_import]
+    assert _geschriebene_stops(store) == []
+
+
+def test_storno_freigabe_wird_nicht_zurueckgesperrt() -> None:
+    """Der Wettlauf beim Extranet-/Airbnb-Storno, Availability-Seite.
+
+    Der Storno gibt die Nächte lokal frei und legt die `availability=1`-Absicht
+    in die ari_outbox. Channex meldet für diese Tage noch `0` (unser altes
+    Echo, asynchron verarbeitet). Der Ping-Pong-Schutz
+    (`_eigene_availability_push_tage`) muss die frisch gepushten Tage vom
+    Import ausnehmen — sonst macht der Import die eben freigegebenen Nächte
+    wieder `blocked`, und der nächste Full-Sync zementiert die 0.
+    """
+    frei = _tage(date(2026, 10, 20), 3)
+    outbox = {
+        "id": "ob-storno",
+        "property_id": PROPERTY,
+        "status": "done",
+        "date_from": frei[0].isoformat(),
+        "date_to": frei[-1].isoformat(),
+        # Frisch: eben erst enqueued — muss im 30-Minuten-Fenster liegen.
+        "created_at": datetime.now(UTC).isoformat(),
+        "payload": {},
+    }
+    store = _store(
+        vertragsende_tage=[],
+        outbox_extra=[outbox],
+        offene_tage=frei,
+    )
+
+    _importieren(store, frei, heute=frei[0])
+
+    zurueckgesperrt = [
+        z
+        for tab, z in store.geschrieben
+        if tab == "availability" and z.get("status") == "blocked"
+    ]
+    assert zurueckgesperrt == [], (
+        "Frisch freigegebene Storno-Nächte dürfen nicht aus dem Channex-Echo "
+        "wieder gesperrt werden."
+    )
+
+
+def test_veraltete_echo_null_ohne_push_fenster_wird_uebernommen() -> None:
+    """Die Umkehrprobe zum Ping-Pong-Schutz: OHNE frische eigene Push-Absicht
+    ist eine Channex-0 ein echter externer Zustand und muss einlaufen.
+
+    Ohne diesen Test wäre ein Schutz, der ALLE Tage überspringt, genauso grün —
+    und ein echtes externes Schließen käme nie mehr bei uns an.
+    """
+    tage = _tage(date(2026, 11, 5), 2)
+    store = _store(vertragsende_tage=[], offene_tage=tage)
+
+    ergebnis = _importieren(store, tage, heute=tage[0])
+
+    gesperrt = sorted(
+        str(z["date"])
+        for tab, z in store.geschrieben
+        if tab == "availability" and z.get("status") == "blocked"
+    )
+    assert gesperrt == [t.isoformat() for t in tage]
+    assert ergebnis["availability"] == len(tage)

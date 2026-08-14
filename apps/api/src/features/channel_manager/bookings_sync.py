@@ -2060,15 +2060,18 @@ class BookingsSyncMixin:
         days_ahead: int = 365,
         today: date | None = None,
     ) -> dict[str, int]:
-        """Preise + Verfügbarkeit aus Channex importieren. availability 0/stop_sell
-        → blocked, >0 → open (NIE 'booked' überschreiben). rate → price_overrides;
-        stop_sell → stop_sell-Tabelle. Gechunkt (90 Tage). Mapping über die
+        """Verfügbarkeit aus Channex importieren: >0 → open, 0 → blocked (NIE
+        'booked' überschreiben). Gechunkt (90 Tage). Mapping über die
         channex_*_map-Tabellen; unbekannte UUIDs werden übersprungen.
 
+        NUR Verfügbarkeit. Preise und Restriktionen (stop_sell) werden bewusst
+        NICHT importiert — der Readback ist dort unser eigenes Echo, kein
+        Portal-Zustand (Begründung im Kommentar in `_import_ari_single`).
+
         Geteilte Channex-Property (Hotel, 0158): jedes Zimmer wird GETRENNT
-        importiert — Verfügbarkeit nur aus dem EIGENEN Room-Type, Stop-Sell nur
-        aus den EIGENEN Rate-Plans. Ein Aggregat über alle Room-Types wäre bei
-        Geschwister-Zimmern falsch (Twin-Wert überschriebe den Double-Kalender).
+        importiert — Verfügbarkeit nur aus dem EIGENEN Room-Type. Ein Aggregat
+        über alle Room-Types wäre bei Geschwister-Zimmern falsch (Twin-Wert
+        überschriebe den Double-Kalender).
 
         `property_id` grenzt den Lauf auf GENAU EIN Zimmer ein. Der Job wird je
         Zimmer eingereiht, weil ein Lauf über ein ganzes Hotel mehr Anfragen
@@ -2076,7 +2079,7 @@ class BookingsSyncMixin:
         Minute hergibt (20) — der Import brach dann jedes Mal beim selben Stand
         ab und begann von vorn: er wurde NIE fertig (live: Jobs vom 30.07. liefen
         am 01.08. noch im Kreis)."""
-        result = {"prices": 0, "availability": 0, "stop_sell": 0}
+        result = {"availability": 0}
         if not self._channex.is_configured or self._db is None:
             return result
         db = self._db
@@ -2103,23 +2106,9 @@ class BookingsSyncMixin:
                 r["channex_room_type_id"] for r in rt_rows
                 if r.get("channex_room_type_id")
             }
-            rp_filter: set[str] = set()
-            if rt_rows:
-                rp_filter = {
-                    r["channex_rate_plan_id"]
-                    for r in (
-                        db.table("channex_rate_plan_map")
-                        .select("channex_rate_plan_id")
-                        .eq("tenant_id", tenant_id)
-                        .in_("room_type_map_id", [r["id"] for r in rt_rows])
-                        .is_("deleted_at", "null")
-                        .execute()
-                    ).data or []
-                    if r.get("channex_rate_plan_id")
-                }
             part = self._import_ari_single(
                 db, tenant_id, channex_property_id, pm["property_id"],
-                rt_filter, rp_filter, days_ahead=days_ahead, today=today,
+                rt_filter, days_ahead=days_ahead, today=today,
             )
             for key in result:
                 result[key] += part[key]
@@ -2149,55 +2138,6 @@ class BookingsSyncMixin:
                     cur += timedelta(days=1)
         return tage
 
-    @staticmethod
-    def _eigene_stop_sell_push_tage(
-        db: Client, property_id: str, cutoff: str
-    ) -> set[str]:
-        """Tage, für die eine EIGENE Stop-Sell-Push-Absicht offen oder frisch ist.
-
-        BEIDE Push-Arten zählen. Der Delta-Pfad schreibt kind='stop_sell' mit
-        payload["spans"] = [[von, bis], …]; der nächtliche Full-Sync schreibt
-        kind='restriction_rows' mit payload["rows"] = [{date_from, date_to,
-        stop_sell, …}, …]. Wer nur auf 'stop_sell'/'spans' sieht, erkennt die
-        Full-Sync-Pushes NICHT als eigenes Echo und importiert sie als echten
-        OTA-Stop zurück (live: Kornblomst 09.-12.08.2026, Rævehulen
-        14.-19.08.2026 — beide aus einer lokalen Handsperre entstanden).
-
-        `cta_ctd` gehört bewusst NICHT dazu: dieser Push-Typ sendet ausschließlich
-        closed_to_arrival/closed_to_departure/min_stay/max_stay/rate, nie
-        stop_sell (`ari_push.push_restrictions_for_property`,
-        `_push_wochentag_feld`). Ihn mitzuzählen würde echte OTA-Stops
-        unterdrücken, statt Echos zu erkennen."""
-        tage: set[str] = set()
-        for r in (
-            db.table("ari_restriction_outbox")
-            .select("payload, kind, status, created_at")
-            .eq("property_id", property_id)
-            .in_("kind", ["stop_sell", "restriction_rows"])
-            .or_(f"created_at.gte.{cutoff},status.eq.pending,status.eq.failed")
-            .execute()
-        ).data or []:
-            payload = r.get("payload") or {}
-            spannen: list[tuple[str, str]] = [
-                (str(a), str(b)) for a, b in (payload.get("spans") or [])
-            ]
-            # Nur Zeilen mit stop_sell=True sind ein Stop-Sell-Echo; eine reine
-            # Preis-/min_stay-Zeile desselben Tages darf einen echten OTA-Stop
-            # nicht verdecken.
-            for row in payload.get("rows") or []:
-                if not (row or {}).get("stop_sell"):
-                    continue
-                von = row.get("date_from") or row.get("date")
-                bis = row.get("date_to") or row.get("date")
-                if von and bis:
-                    spannen.append((str(von), str(bis)))
-            for a, b in spannen:
-                cur, last = date.fromisoformat(a), date.fromisoformat(b)
-                while cur <= last:
-                    tage.add(cur.isoformat())
-                    cur += timedelta(days=1)
-        return tage
-
     def _import_ari_single(
         self,
         db: Client,
@@ -2205,15 +2145,14 @@ class BookingsSyncMixin:
         channex_property_id: str,
         property_id: str,
         rt_filter: set[str],
-        rp_filter: set[str],
         *,
         days_ahead: int,
         today: date | None,
     ) -> dict[str, int]:
-        """ARI-Import für EIN lokales Zimmer/Objekt einer (ggf. geteilten)
-        Channex-Property. rt_filter/rp_filter = die Channex-IDs DIESES Objekts;
-        fremde Room-Types/Rate-Plans der Geschwister werden übersprungen."""
-        result = {"prices": 0, "availability": 0, "stop_sell": 0}
+        """Verfügbarkeits-Import für EIN lokales Zimmer/Objekt einer (ggf.
+        geteilten) Channex-Property. rt_filter = die Channex-Room-Type-IDs
+        DIESES Objekts; fremde Room-Types der Geschwister werden übersprungen."""
+        result = {"availability": 0}
 
         # Nicht bei Channex gemanaged (kein aktives property_map) → Channex ist
         # NICHT die Verfügbarkeits-Wahrheit für dieses Objekt. Für ein gemanagtes
@@ -2377,213 +2316,36 @@ class BookingsSyncMixin:
                 ).execute()
                 result["availability"] += 1
 
-            # Preise + stop_sell (Restrictions)
-            try:
-                restr = self._channex.get_restrictions(
-                    channex_property_id,
-                    date_from=d_from,
-                    date_to=d_to,
-                    restrictions="rate,min_stay_arrival,stop_sell",
-                )
-                restr_ok = True
-            except ChannexError as exc:
-                log.warning("import_ari_restrictions_failed", error=exc.message)
-                restr = {"data": {}}
-                # fail-CLOSED (Wurzel 5): Ein fehlgeschlagener GET ist KEIN
-                # Beleg dafür, dass das Portal seine Stops aufgehoben hat. Ohne
-                # dieses Flag räumte der Aufhebungs-Pfad unten alle importierten
-                # Portal-Stops des Chunks weg — ein Lesefehler öffnete Tage, die
-                # das Portal gesperrt hat.
-                restr_ok = False
-            # WICHTIG: zurückgelesene OTA-Raten NICHT als price_override
-            # schreiben. price_override ist per Architektur die MANUELLE
-            # Host-Überschreibung und gewinnt im Resolver über dynamic_prices.
-            # Beim Import würde das einen Echo-Loop erzeugen: unsere eigenen
-            # gepushten Dynamic-Preise kämen als „manueller Override" zurück,
-            # verdeckten die Engine-Preise samt Faktor-Aufschlüsselung und
-            # frören sie als Festpreis ein. Die Preis-Wahrheit ist und bleibt
-            # der pricing-Resolver (override > dynamic > weekday > base);
-            # eingehende OTA-Raten sind kein manueller Override.
+            # KEIN Import von Preisen/Restriktionen — bewusste Entscheidung
+            # (14.08.2026), kein fehlendes Feature:
             #
-            # stop_sell: derselbe Echo-Loop droht auch hier. Ein manuell
-            # gesetzter Stop-Sell (source=manual, agency_id/reason) wird an
-            # Channex gepusht und kommt beim nächsten Import als stop_sell=1
-            # zurück — ununterscheidbar von einem echten OTA-Stop. Ein blinder
-            # Upsert würde die manuelle Zeile zu source=channex degradieren und
-            # agency_id/reason (z. B. TUI) auf NULL setzen. Daher: nur Tage
-            # schreiben, die NOCH KEINEN Eintrag haben (echter neuer OTA-Stop).
-            # Bestehende Tage — manual (eigenes Echo) wie channex (schon da) —
-            # werden übersprungen; das schützt die Herkunft UND ist idempotent
-            # (kein updated_at-Bump → keine Realtime-Event-Flut), analog zum
-            # Availability-Block oben.
-            stopped = {
-                d
-                for rate_plan, days in (restr.get("data") or {}).items()
-                # Nur die EIGENEN Rate-Plans dieses Zimmers (geteilte Property).
-                if not rp_filter or rate_plan in rp_filter
-                for d, vals in (days or {}).items()
-                if (vals or {}).get("stop_sell")
-            }
-            # Warm-up-Guard (Wurzel 4/5): ohne Push-Historie ist ein flächiger
-            # stop_sell der Channex-Default eines leeren Objekts, kein echter OTA-
-            # Stop → nicht importieren (sonst 365 anonyme channex-stop_sells, die
-            # alle Plattformen sperren). qty>0/echte Freigaben laufen darüber nicht.
-            # Der ECHTE Portal-Stand vor dem Warm-up-Guard — die Aufhebung unten
-            # muss darauf sehen, nicht auf das geleerte `stopped`, sonst löschte
-            # sie beim Warm-up alle bestehenden Import-Zeilen.
-            portal_stopped = set(stopped)
-            if stopped and not has_pushed:
-                log.info(
-                    "import_ari_stop_sell_suppressed_no_push_history",
-                    tenant_id=tenant_id, property_id=property_id,
-                    days=len(stopped),
-                )
-                stopped = set()
-            # Echo-Fenster für die AUFHEBUNG (Wurzel 2). `clear_stop_sell`
-            # löscht die lokale Zeile und pusht `stop_sell=false` asynchron;
-            # Channex verarbeitet ARI mit Sekunden-Verzug. Läuft der Import
-            # in dieses Fenster — oder hängt der false-Push noch in der
-            # Restriktions-Outbox —, liefert Channex den ALTEN `true`-Wert.
-            # Der Guard oben prüft nur, ob lokal ein Eintrag EXISTIERT; die
-            # Zeile wurde aber gerade gelöscht, also legte der Import den
-            # eben aufgehobenen Stop sofort wieder an. Für die Setzen-
-            # Richtung gibt es dieses Fenster längst (`recent_push_days`
-            # über `ari_outbox`) — für Restriktionen fehlte es.
-            eigene_push_tage = self._eigene_stop_sell_push_tage(
-                db, property_id, recent_cutoff
-            )
-            if stopped:
-                # Nur die OBJEKT-Ebene zählt als „schon gestoppt" — ein plan-
-                # genauer Hotel-Stopp (rate_plan_id gesetzt, 0152) darf den
-                # objekt-weiten Portal-Import nicht unterdrücken.
-                existing_stops = {
-                    r["date"]
-                    for r in (
-                        db.table("stop_sell")
-                        .select("date")
-                        .eq("property_id", property_id)
-                        .is_("rate_plan_id", "null")
-                        .in_("date", list(stopped))
-                        .execute()
-                    ).data
-                    or []
-                }
-                # Gebuchte Tage NIE als Stop-Sell schreiben: ein gebuchter Tag ist
-                # verkauft, ein Stop-Sell darüber verfälscht die Verfügbarkeits-
-                # Wahrheit. Auf 'stopped' gescopte Query (nicht existing_days aus
-                # dem Availability-Feed, das divergieren kann).
-                booked_days = {
-                    r["date"]
-                    for r in (
-                        db.table("availability")
-                        .select("date")
-                        .eq("property_id", property_id)
-                        .eq("status", "booked")
-                        .in_("date", list(stopped))
-                        .execute()
-                    ).data
-                    or []
-                }
-                # VERTRAGSENDE-TAGE NIE als Stop-Sell schreiben (0378).
-                #
-                # Das ist ein ECHO unserer eigenen Sperre, keine Information des
-                # Portals: `vertragsende_durchsetzen` meldet für diese Nächte
-                # `availability = 0`, Channex macht daraus für die OTAs einen
-                # Stop-Sell, und dieser Import las ihn als fremden Zustand
-                # zurück. Live gemessen (12.08.2026, Feriehus Kornblomst):
-                # Vertragszeile 11:10:07, danach 307 `source='channex'`-Zeilen
-                # um 11:10:11 — vier Sekunden später.
-                #
-                # Der Schaden ist die AUSSAGE, nicht die Zeile: der Kalender
-                # zeigte „Stop-Sell · alle Kanäle" statt „Vertragsende". Die
-                # Agentur sah eine Verkaufseinstellung, die sie selbst
-                # zurücknehmen kann — dahinter steht aber ein beendeter Vertrag,
-                # der gar nicht aufhebbar sein darf, solange kein Vertrag
-                # existiert.
-                #
-                # `eigene_push_tage` greift hier nicht: es deckt nur das
-                # Sekunden-Fenster eines noch laufenden Pushes ab. Ein
-                # Vertragsende steht für 730 Tage und wird jede Nacht neu
-                # nachgezogen — sein Echo kommt also lange nach dem Fenster.
-                vertragsende_tage = {
-                    r["date"]
-                    for r in (
-                        db.table("availability")
-                        .select("date")
-                        .eq("property_id", property_id)
-                        .eq("source", "contract_end")
-                        .eq("status", "blocked")
-                        .in_("date", list(stopped))
-                        .execute()
-                    ).data
-                    or []
-                }
-                if vertragsende_tage:
-                    log.info(
-                        "import_ari_stop_sell_vertragsende_uebersprungen",
-                        tenant_id=tenant_id,
-                        property_id=property_id,
-                        tage=len(vertragsende_tage),
-                    )
-                for d in stopped:
-                    if d in existing_stops or d in booked_days:
-                        continue
-                    if d in vertragsende_tage:
-                        continue
-                    if d in eigene_push_tage:
-                        # Unser eigener, noch nicht durchgelaufener Push — der
-                        # Channex-Wert ist hier veraltet, nicht die Wahrheit.
-                        continue
-                    db.table("stop_sell").upsert(
-                        {
-                            "tenant_id": tenant_id,
-                            "property_id": property_id,
-                            "date": d,
-                            "source": "channex",
-                        },
-                        on_conflict="property_id,date,rate_plan_id",
-                    ).execute()
-                    result["stop_sell"] += 1
-            # Gegenzustand (Wurzel 1): Ein FRÜHER importierter OTA-Stop, den das
-            # Portal inzwischen aufgehoben hat, muss auch bei uns verschwinden.
-            # Ohne diesen Schritt kannte der Import nur die Setzen-Richtung, und
-            # der nächtliche Full-Sync las die verwaiste Zeile und pushte
-            # `stop_sell: true` zurück an Channex — der extern aufgehobene Stop
-            # wurde jede Nacht neu verhängt und beim nächsten Import als „schon
-            # da" übersprungen. Ein geschlossener Kreis: der Tag blieb auf allen
-            # Portalen gesperrt, bis jemand die Zeile von Hand löschte.
+            # `GET /restrictions` liefert `stop_sell` als ABGELEITETEN Wert
+            # („Tag nicht verkaufbar“), nicht die gespeicherte Restriktion.
+            # Live bewiesen: für gebuchte Tage kam `stop_sell=true` zurück,
+            # obwohl wir jede Nacht `stop_sell=false` über den ganzen Horizont
+            # pushen (Feriehus Line, 02.–04.10.2026). Ein OTA kann Restriktionen
+            # bei Channex gar nicht setzen — das Einzige, was dieser Import je
+            # lesen konnte, war unser eigenes Echo (availability=0 aus Buchung,
+            # Handsperre oder Vertragsende).
             #
-            # Angefasst werden AUSSCHLIESSLICH eigene Import-Zeilen
-            # (source='channex', objektweit): manuelle Stopps des Betriebs und
-            # plan-genaue Hotel-Stopps bleiben unberührt.
-            if has_pushed and restr_ok:
-                verwaist = [
-                    r["id"]
-                    for r in (
-                        db.table("stop_sell")
-                        .select("id, date")
-                        .eq("property_id", property_id)
-                        .eq("source", "channex")
-                        .is_("rate_plan_id", "null")
-                        .gte("date", d_from)
-                        .lte("date", d_to)
-                        .execute()
-                    ).data
-                    or []
-                    # Ein Tag, für den gerade unser eigener Stop-Sell-Push
-                    # unterwegs ist, ist bei Channex noch nicht gesetzt — er
-                    # darf hier nicht als „vom Portal aufgehoben" gelten.
-                    if r["date"] not in portal_stopped
-                    and r["date"] not in eigene_push_tage
-                ]
-                for stop_id in verwaist:
-                    db.table("stop_sell").delete().eq("id", stop_id).execute()
-                if verwaist:
-                    log.info(
-                        "import_ari_stop_sell_aufgehoben",
-                        tenant_id=tenant_id, property_id=property_id,
-                        days=len(verwaist),
-                    )
+            # Beim Storno wurde daraus ein Wettlauf: Nächte freigegeben →
+            # Import las das noch nicht verarbeitete Echo → schrieb eine
+            # stop_sell-Zeile `source='channex'` → der nächtliche Full-Sync
+            # pushte sie als ECHTEN Stop zurück an Channex → der Readback
+            # bestätigte ihn für immer. Dieser geschlossene Kreis hat drei
+            # aktive Objekte monatelang auf allen Portalen unverkäuflich
+            # gemacht (Rævehulen/Dora/Grævlinge, gesät am 10.08.2026, entdeckt
+            # am 14.08.2026; Migration 0394 hat die Zeilen entfernt).
+            #
+            # Preise wurden aus demselben Grund nie übernommen: zurückgelesene
+            # OTA-Raten sind unsere eigenen gepushten Dynamic-Preise und kein
+            # manueller Override — als price_override eingefroren verdeckten
+            # sie den pricing-Resolver (override > dynamic > weekday > base).
+            #
+            # Die Stop-Sell-Wahrheit führt AUSSCHLIESSLICH das PMS
+            # (stop_sell-Tabelle, `source='manual'`, Push via set_/clear_stop_sell
+            # und Full-Sync). Wer hier wieder einen Restriktions-Import anbaut,
+            # baut den Echo-Kreis wieder an.
         return result
 
     def import_rooms_rates_for_property(

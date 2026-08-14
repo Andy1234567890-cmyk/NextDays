@@ -1557,7 +1557,7 @@ class ChannelsMixin:
 
         Sonst stünde der Kanal wieder auf „an", aber Verfügbarkeit/Preise am OTA
         wären so alt wie beim Abschalten. Nutzt die bestehenden, getesteten Pfade:
-        - import_ari_for_property gleicht Verfügbarkeit/Preise mit Channex ab,
+        - import_ari_for_property gleicht die Verfügbarkeit mit Channex ab,
         - recompute_property rechnet die dynamischen Preise neu (no-op, wenn DP
           aus) und pusht sie via push_rates_batch.
         Best-effort: ein Fehler darf den Toggle nicht nachträglich kippen — der
