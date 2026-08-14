@@ -804,17 +804,19 @@ class AuthService:
             accommodation_type=tenant_meta.get("accommodation_type"),
             account_type=tenant_meta.get("account_type"),
             default_language=tenant_meta.get("default_language"),
+            country=tenant_meta.get("country"),
         )
 
     def _tenant_meta(self, tenant_id: str | None) -> dict:
         # Mandanten-Metadaten in EINEM Abruf (0090 accommodation_type + 0180
-        # account_type + 0335 default_language) — steuert Navigation,
-        # Betriebsmodell/Billing und die Mail-Sprachkette.
+        # account_type + 0335 default_language + country) — steuert Navigation,
+        # Betriebsmodell/Billing, Mail-Sprachkette und die länderspezifischen
+        # Menüpunkte.
         if not tenant_id:
             return {}
         row = (
             self._service.table("tenants")
-            .select("accommodation_type, account_type, default_language")
+            .select("accommodation_type, account_type, default_language, country")
             .eq("id", tenant_id)
             .limit(1)
             .execute()

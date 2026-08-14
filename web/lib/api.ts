@@ -117,4 +117,10 @@ export type MeResponse = {
   // Empfänger ohne eigene Sprachwahl. null = nicht erfasst → Englisch; das ist
   // eine ehrliche Auskunft und KEIN Anlass, „de" anzunehmen (Wurzel 4).
   default_language: string | null;
+  // FIRMENSITZ des Betriebs (`tenants.country`, ISO-3166-1 alpha-2). Steuert,
+  // welche länderspezifischen Werkzeuge sichtbar sind (lib/laender-funktionen).
+  // Ausdrücklich NICHT die Anzeigesprache: der Beta-Betrieb sitzt in Dänemark
+  // und arbeitet auf Deutsch. null = nicht erfasst → länderspezifische Punkte
+  // bleiben verborgen, statt ein Land zu raten (Wurzel 4).
+  country: string | null;
 };

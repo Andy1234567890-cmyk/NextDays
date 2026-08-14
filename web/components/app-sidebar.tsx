@@ -11,6 +11,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { useSupportChat } from "@/components/support/support-chat";
 import { logout } from "@/lib/auth";
+import { inLandVerfuegbar } from "@/lib/laender-funktionen";
 
 import {
   Collapsible,
@@ -379,12 +380,17 @@ export function AppSidebar({
   permissions = [],
   capabilities = [],
   accommodationType = "vacation_rental",
+  country = null,
 }: {
   email?: string;
   role?: "admin" | "co_admin" | "owner" | "staff" | "cleaner" | null;
   permissions?: string[];
   capabilities?: string[];
   accommodationType?: AccommodationType;
+  // Firmensitz (ISO-3166-1 alpha-2) — blendet Werkzeuge aus, die hier nichts
+  // taugen (DATEV außerhalb Deutschlands). Bewusst das LAND und nicht die
+  // Sprache: der Beta-Betrieb sitzt in DK und arbeitet auf Deutsch.
+  country?: string | null;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -428,6 +434,11 @@ export function AppSidebar({
     // unbekannte oder fehlende Rolle (z. B. reine Supabase-OAuth-Sitzung ohne
     // FastAPI-Profil) sieht den Punkt nicht.
     if (item.rollen && !(role && item.rollen.includes(role))) return false;
+    // Länder-Gate ebenfalls VOR dem Admin-Kurzschluss: ein DATEV-Export taugt
+    // in Dänemark auch dem Admin nichts — das ist keine Frage der Rechte,
+    // sondern des Formats. Stünde es darunter, sähe genau der Nutzer, der den
+    // Betrieb führt, als Einziger den unbrauchbaren Punkt.
+    if (!inLandVerfuegbar(item.key, country)) return false;
     if (role === "admin") return true;
     if (item.req && !grantSet.has(item.req)) return false;
     // Eigentümer (§4.2) und Mitarbeiter/Dienstleister (§4.3) haben je ein

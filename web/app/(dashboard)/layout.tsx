@@ -120,6 +120,7 @@ export default async function DashboardLayout({
           permissions={permissions}
           capabilities={capabilities}
           accommodationType={accommodationType}
+          country={me?.country ?? null}
         />
         <SidebarInset>
           <Topbar />

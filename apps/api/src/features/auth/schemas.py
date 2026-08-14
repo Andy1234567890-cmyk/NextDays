@@ -331,6 +331,19 @@ class MeResponse(BaseModel):
     # Standardsprache des Betriebs (0335), zweite Stufe der Mail-Sprachkette.
     # None = nicht erfasst (→ Englisch), kein erfundener Default (Wurzel 4).
     default_language: str | None = None
+    # FIRMENSITZ des Betriebs (`tenants.country`, ISO-3166-1 alpha-2). Steuert,
+    # welche länderspezifischen Werkzeuge die Navigation zeigt — DATEV ist ein
+    # deutsches Format und in DK nutzlos.
+    #
+    # NICHT die Sprache: der Beta-Betrieb sitzt in Dänemark und arbeitet auf
+    # Deutsch. Wer die Locale als Land liest, blendet ihm ein DATEV ein, das
+    # sein Steuerberater nicht lesen kann — und einem deutschen Betrieb mit
+    # englischer Oberfläche wäre es umgekehrt weggenommen.
+    #
+    # None = nicht erfasst. Die Oberfläche zeigt dann die länderneutralen
+    # Punkte und verschweigt die spezifischen, statt ein Land zu raten
+    # (Wurzel 4).
+    country: str | None = None
 
 
 class AccommodationTypeUpdate(BaseModel):
