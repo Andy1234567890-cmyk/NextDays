@@ -36,14 +36,19 @@ class VerbindungListe(BaseModel):
 
 
 class UmfangAenderung(BaseModel):
-    """Freitexte einer bestehenden Verbindung zu- oder abschalten (0389).
+    """Umfang einer bestehenden Verbindung ändern (0389).
 
-    Nur DIESE eine Achse ist nachträglich änderbar. Der Lese-Scope ist die
+    Zwei zuschaltbare Achsen: Freitexte (Notizen/Nachrichteninhalte) und
+    Schreiben (Änderungen am operativen Geschäft). Der Lese-Scope ist die
     Grundlage der Verbindung — wer den nicht mehr will, trennt sie.
+
+    `schreiben=None` lässt die Schreib-Achse unverändert, damit ein Umschalten
+    der Freitexte eine erteilte Schreibfreigabe nicht stillschweigend entzieht.
     """
 
     client_id: str
     freitexte: bool
+    schreiben: bool | None = None
 
 
 class Zugriff(BaseModel):

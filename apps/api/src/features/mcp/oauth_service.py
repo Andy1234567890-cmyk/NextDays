@@ -53,8 +53,19 @@ CODE_TTL_SEKUNDEN = 60
 ACCESS_TOKEN_TTL_SEKUNDEN = 3600
 REFRESH_TOKEN_TTL_TAGE = 30
 
-# Scopes, die der MCP-Server kennt. Bewusst schmal und NUR lesend (Wurzel:
-# keine Omnibus-Scopes, „Scope Minimization" der Security-Spec).
+# Scopes, die der MCP-Server kennt.
+#
+# WAS BEWUSST FEHLT: ein Scope für den Konto-Bereich (`/konto` — Abo,
+# Rechnungen, Nutzerverwaltung, Sicherheit, API-Zugang und die MCP-Verbindungen
+# selbst). Dort sitzen die Rechtevergabe und die Geldflüsse DES BETRIEBS; ein
+# Assistent hat dort nichts verloren. Er ist nicht „standardmässig aus", es gibt
+# ihn NICHT — und kein Werkzeug, das ihn bediente. Was nicht existiert, kann
+# auch nicht versehentlich freigeschaltet werden.
+#
+# Der wichtigste Einzelfall darin: `/konto/verbindungen`. Könnte der Connector
+# seinen eigenen Scope ändern, wäre jede Begrenzung hier nur eine Bitte.
+# Rechteverwaltung erreicht man ausschliesslich als angemeldeter Mensch in der
+# Oberfläche.
 SCOPE_LESEN = "mcp:read"
 
 # Freitexte sind ein EIGENER Scope, nicht Teil von `mcp:read` — und er ist
@@ -73,7 +84,52 @@ SCOPE_LESEN = "mcp:read"
 # nur Belegung und Buchungen auswerten will, überträgt sie nie.
 SCOPE_FREITEXT = "mcp:freetext"
 
-UNTERSTUETZTE_SCOPES = (SCOPE_LESEN, SCOPE_FREITEXT)
+# Schreiben im OPERATIVEN Geschäft: Buchungen anlegen/verschieben/stornieren,
+# Kalender sperren, Preise und Restriktionen setzen, Aufgaben führen,
+# Gastnachrichten senden. NICHT im Konto (siehe oben).
+#
+# Eigener Scope statt Teil von `mcp:read`, weil der Unterschied zwischen Lesen
+# und Schreiben hier real ist: Diese Aufrufe gehen über Channex LIVE an die
+# Portale. Ein falsch gesetzter Preis steht binnen Minuten bei Booking.com, eine
+# irrtümliche Sperre kostet verkaufbare Nächte. Wer nur auswerten will, soll das
+# Risiko nie tragen — deshalb ist Schreiben zuschaltbar und AUS als Vorgabe
+# (Art. 25 Abs. 2 DSGVO, und schlicht kaufmännische Vernunft).
+SCOPE_SCHREIBEN = "mcp:write"
+
+UNTERSTUETZTE_SCOPES = (SCOPE_LESEN, SCOPE_FREITEXT, SCOPE_SCHREIBEN)
+
+
+def scope_bauen(*, freitexte: bool = False, schreiben: bool = False) -> str:
+    """Scope aus Achsen zusammensetzen — die EINE Stelle, die das tut.
+
+    Vorher wurde der Wert an drei Stellen per String-Verkettung gebaut, und der
+    Zustimmungsdialog hängte `mcp:freetext` an einen Scope an, der ihn schon
+    enthielt: live stand `mcp:read mcp:freetext mcp:freetext` in der Datenbank
+    (gefunden 14.08.2026). Harmlos in der Wirkung, aber ein Wert, der doppelt
+    dasteht, ist ein Wert, dem man nicht ansieht, ob er stimmt.
+
+    `mcp:read` ist immer dabei: eine Verbindung, die nichts lesen darf, hätte
+    keinen Zweck — und Schreiben ohne Lesen wäre blindes Schreiben.
+    """
+    teile = [SCOPE_LESEN]
+    if freitexte:
+        teile.append(SCOPE_FREITEXT)
+    if schreiben:
+        teile.append(SCOPE_SCHREIBEN)
+    return " ".join(teile)
+
+
+def scope_normalisieren(roh: str) -> str:
+    """Fremden/gewachsenen Scope auf die bekannten Achsen zurückführen.
+
+    Entfernt Doppelungen und Unbekanntes und stellt eine feste Reihenfolge her,
+    damit zwei gleiche Zustimmungen auch gleich AUSSEHEN.
+    """
+    vorhanden = set(roh.split())
+    return scope_bauen(
+        freitexte=SCOPE_FREITEXT in vorhanden,
+        schreiben=SCOPE_SCHREIBEN in vorhanden,
+    )
 
 # Anthropic ruft aus diesem Bereich an; die CIMD-URL wird von UNS geholt.
 _CIMD_TIMEOUT_SEKUNDEN = 5.0
@@ -296,13 +352,19 @@ class McpOAuthService:
     def zustimmen(
         self, *, tenant_id: str, user_id: str, client_id: str, scope: str
     ) -> None:
-        """Zustimmung erteilen (idempotent — Doppelklick ist real, Wurzel 2)."""
+        """Zustimmung erteilen (idempotent — Doppelklick ist real, Wurzel 2).
+
+        Der Scope wird NORMALISIERT gespeichert: Der Dialog liefert ihn als
+        zusammengesetzten String, und ein doppelt angehängter Wert stand live
+        auch doppelt in der Tabelle. Hier ist die letzte Stelle, an der das
+        auffallen kann — also fällt es hier auf.
+        """
         self._client().table("mcp_consents").upsert(
             {
                 "tenant_id": tenant_id,
                 "user_id": user_id,
                 "client_id": client_id,
-                "scope": scope,
+                "scope": scope_normalisieren(scope),
                 "revoked_at": None,
             },
             on_conflict="user_id,client_id",
@@ -315,9 +377,18 @@ class McpOAuthService:
         ).eq("user_id", user_id).eq("client_id", client_id).execute()
 
     def umfang_aendern(
-        self, *, user_id: str, client_id: str, freitexte: bool
+        self,
+        *,
+        user_id: str,
+        client_id: str,
+        freitexte: bool,
+        schreiben: bool | None = None,
     ) -> str:
-        """Freitexte einer BESTEHENDEN Verbindung zu- oder abschalten.
+        """Umfang einer BESTEHENDEN Verbindung ändern.
+
+        `schreiben=None` lässt die Schreib-Achse unverändert — so kann die
+        Oberfläche weiterhin nur die Freitexte umschalten, ohne die andere
+        Achse ungewollt zurückzusetzen.
 
         Gibt den neuen Scope zurück.
 
@@ -336,8 +407,21 @@ class McpOAuthService:
         das nicht nötig — ein alter Token kann dadurch nur weniger dürfen, nie
         mehr.
         """
-        neu = f"{SCOPE_LESEN} {SCOPE_FREITEXT}" if freitexte else SCOPE_LESEN
         db = self._client()
+        # Die Schreib-Achse nur anfassen, wenn sie mitgeschickt wurde — sonst
+        # den bestehenden Wert weiterführen. Ein Umschalten der Freitexte darf
+        # eine erteilte Schreibfreigabe nicht stillschweigend entziehen.
+        if schreiben is None:
+            bisher = self._zustimmung_scope(user_id, client_id)
+            if bisher is None:
+                raise OAuthError(
+                    "invalid_request",
+                    "Verbindung nicht gefunden.",
+                    status_code=404,
+                )
+            schreiben = SCOPE_SCHREIBEN in bisher.split()
+
+        neu = scope_bauen(freitexte=freitexte, schreiben=schreiben)
         geaendert = (
             db.table("mcp_consents")
             .update({"scope": neu})
@@ -352,7 +436,9 @@ class McpOAuthService:
                 "Verbindung nicht gefunden.",
                 status_code=404,
             )
-        if not freitexte:
+        # Jeder ENTZUG muss sofort wirken, nicht erst nach Ablauf des
+        # Zugangstokens — bei den Freitexten wie beim Schreiben.
+        if not freitexte or not schreiben:
             # Fail-closed: lieber eine Verbindung, die neu bestätigt werden
             # muss, als eine, die noch eine Stunde lang Freitexte liefert.
             db.table("mcp_refresh_tokens").delete().eq(

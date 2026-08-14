@@ -88,21 +88,27 @@ export async function erteileZustimmung(
   });
 }
 
-/** Freitexte einer BESTEHENDEN Verbindung zu- oder abschalten (0389).
+/** Umfang einer BESTEHENDEN Verbindung ändern (0389).
  *
- * Bis dahin war der Umfang nur beim Verbinden wählbar — wer die Freitexte
- * später brauchte, musste trennen und neu verbinden, während der Hinweis in
- * den Werkzeugen selbst auf „Konto → Verbindungen" verwies.
+ * Zwei Achsen: `freitexte` (Notizen, Nachrichteninhalte) und `schreiben`
+ * (Änderungen am operativen Geschäft). Bis dahin war der Umfang nur beim
+ * Verbinden wählbar — wer mehr brauchte, musste trennen und neu verbinden,
+ * während der Hinweis in den Werkzeugen auf „Konto → Verbindungen" verwies.
  *
- * Das ABSCHALTEN löscht serverseitig die Erneuerungs-Token, damit es sofort
+ * `schreiben` bleibt weg, wenn nur die Freitexte gemeint sind: Der Server
+ * führt die andere Achse dann unverändert weiter, statt sie stillschweigend
+ * zurückzusetzen.
+ *
+ * Jedes ABSCHALTEN löscht serverseitig die Erneuerungs-Token, damit es sofort
  * wirkt: Der Scope steht im Zugangstoken und gälte sonst noch bis zu eine
  * Stunde weiter. */
 export async function setzeUmfang(
   clientId: string,
   freitexte: boolean,
+  schreiben?: boolean,
 ): Promise<Result<{ scope: string }>> {
   return call<{ scope: string }>("/mcp/verbindungen", {
     method: "PATCH",
-    body: { client_id: clientId, freitexte },
+    body: { client_id: clientId, freitexte, schreiben },
   });
 }

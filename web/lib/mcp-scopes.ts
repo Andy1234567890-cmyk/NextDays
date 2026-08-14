@@ -14,3 +14,13 @@ export const SCOPE_LESEN = "mcp:read";
 
 /** Zusätzlich Nachrichteninhalte und Buchungsnotizen. */
 export const SCOPE_FREITEXT = "mcp:freetext";
+
+/**
+ * Zusätzlich ÄNDERN im operativen Geschäft: Kalender sperren, Preise setzen,
+ * Buchungen stornieren oder verschieben, Aufgaben führen, Nachrichten senden.
+ *
+ * NICHT im Konto — Abo, Rechnungen, Nutzerverwaltung, Sicherheit und die
+ * Verbindungen selbst haben gar kein Werkzeug und sind darum auch mit diesem
+ * Scope unerreichbar.
+ */
+export const SCOPE_SCHREIBEN = "mcp:write";

@@ -424,7 +424,7 @@ def verbindung_umfang(
     ],
     req: UmfangAenderung,
 ) -> Verbindung:
-    """Freitexte einer bestehenden Verbindung zu- oder abschalten.
+    """Freitexte und Schreibrecht einer bestehenden Verbindung schalten.
 
     Bisher war der Umfang nur beim Verbinden wählbar; wer die Freitexte später
     brauchte, musste trennen und neu verbinden. Der Hinweis in den Werkzeugen
@@ -432,10 +432,12 @@ def verbindung_umfang(
     nicht gab — dieser Endpunkt löst das ein.
 
     DERSELBE GUARD wie beim Verbinden (`MANAGE_CONNECTIONS`, Wurzel 9):
-    Freitexte sind Nachrichteninhalte und Notizen; sie zuzuschalten ist
-    dieselbe Entscheidung wie das Verbinden selbst, nur später getroffen.
+    Freitexte sind Nachrichteninhalte und Notizen, Schreiben verändert den
+    Verkauf auf allen Portalen. Beides zuzuschalten ist dieselbe Entscheidung
+    wie das Verbinden selbst, nur später getroffen — und beides darf nur, wer
+    den Betrieb vertritt.
 
-    Beim ABSCHALTEN werden zusätzlich die Refresh-Token gelöscht, damit die
+    Bei jedem ENTZUG werden zusätzlich die Refresh-Token gelöscht, damit die
     Rücknahme sofort wirkt und nicht erst nach Ablauf des Access-Tokens.
     """
     dienst = _service(settings)
@@ -444,6 +446,7 @@ def verbindung_umfang(
             user_id=ctx.user_id,
             client_id=req.client_id,
             freitexte=req.freitexte,
+            schreiben=req.schreiben,
         )
     except OAuthError as exc:
         raise HTTPException(
@@ -451,7 +454,11 @@ def verbindung_umfang(
         ) from exc
     log.info(
         "mcp.umfang_geaendert",
-        extra={"client_id": req.client_id, "freitexte": req.freitexte},
+        extra={
+            "client_id": req.client_id,
+            "freitexte": req.freitexte,
+            "schreiben": req.schreiben,
+        },
     )
     return Verbindung(
         client_id=req.client_id,
@@ -618,9 +625,14 @@ async def mcp_endpunkt(  # pylint: disable=too-many-return-statements
         return JSONResponse(None, status_code=202)
 
     if methode == "tools/list":
+        # MIT Scope: angeboten wird nur, was diese Verbindung auch ausführen
+        # darf. Eine Liste, die Schreibwerkzeuge zeigt, die dann am Riegel
+        # scheitern, wäre eine Falle für das Modell und für den Nutzer.
+        # Unangemeldet (Lazy Auth) bleiben die Lesewerkzeuge sichtbar — das ist
+        # der Katalog, den Claude vor der Anmeldung zeigt.
         return JSONResponse({
             "jsonrpc": "2.0", "id": rpc_id,
-            "result": {"tools": McpTools.katalog()},
+            "result": {"tools": McpTools.katalog(scopes)},
         })
 
     if methode == "tools/call":
