@@ -6048,14 +6048,14 @@
       "linkWithdraw": "Tarraing siar",
       "linkWithdrawn": "Tarraingíodh an nasc íocaíochta siar.",
       "linkAufteilung": "Íocann an t-aoi {brutto} · as sin {prozent} % sciar an ardáin ({anteil}) · móide táillí an tsoláthraí íocaíochta",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Seirbhís bhreise",
+      "qtyLabel": "Cainníocht",
+      "qtyInvalid": "Cuir isteach cainníocht idir 1 agus 99.",
+      "qtyEditAction": "Athraigh an chainníocht",
+      "qtySave": "Cuir i bhfeidhm",
+      "qtySaving": "Á shábháil …",
+      "qtySaved": "Cainníocht athraithe.",
+      "perGuestSuffix": "in aghaidh an duine"
     },
     "ratesView": {
       "propertyLabel": "Maoin",

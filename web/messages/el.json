@@ -6048,14 +6048,14 @@
       "linkWithdraw": "Απόσυρση",
       "linkWithdrawn": "Ο σύνδεσμος πληρωμής αποσύρθηκε.",
       "linkAufteilung": "Ο επισκέπτης πληρώνει {brutto} · εκ των οποίων {prozent} % μερίδιο πλατφόρμας ({anteil}) · συν χρεώσεις του παρόχου πληρωμών",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Πρόσθετη υπηρεσία",
+      "qtyLabel": "Ποσότητα",
+      "qtyInvalid": "Εισαγάγετε ποσότητα μεταξύ 1 και 99.",
+      "qtyEditAction": "Αλλαγή ποσότητας",
+      "qtySave": "Εφαρμογή",
+      "qtySaving": "Αποθήκευση …",
+      "qtySaved": "Η ποσότητα άλλαξε.",
+      "perGuestSuffix": "ανά άτομο"
     },
     "ratesView": {
       "propertyLabel": "Κατάλυμα",

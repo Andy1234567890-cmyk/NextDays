@@ -6043,14 +6043,14 @@
       "linkWithdraw": "Intrekken",
       "linkWithdrawn": "Betaallink ingetrokken.",
       "linkAufteilung": "Gast betaalt {brutto} · waarvan {prozent}% platformaandeel ({anteil}) · plus kosten van de betaalprovider",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Extra dienst",
+      "qtyLabel": "Aantal",
+      "qtyInvalid": "Voer een aantal tussen 1 en 99 in.",
+      "qtyEditAction": "Aantal wijzigen",
+      "qtySave": "Toepassen",
+      "qtySaving": "Opslaan …",
+      "qtySaved": "Aantal gewijzigd.",
+      "perGuestSuffix": "per persoon"
     },
     "ratesView": {
       "propertyLabel": "Object",

@@ -6048,14 +6048,14 @@
       "linkWithdraw": "Оттегли",
       "linkWithdrawn": "Линкът за плащане е оттеглен.",
       "linkAufteilung": "Гостът плаща {brutto} · от които {prozent} % дял на платформата ({anteil}) · плюс таксите на доставчика на плащания",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Допълнителна услуга",
+      "qtyLabel": "Количество",
+      "qtyInvalid": "Моля, въведете количество между 1 и 99.",
+      "qtyEditAction": "Промяна на количеството",
+      "qtySave": "Приложи",
+      "qtySaving": "Запазва се …",
+      "qtySaved": "Количеството е променено.",
+      "perGuestSuffix": "на човек"
     },
     "ratesView": {
       "propertyLabel": "Обект",

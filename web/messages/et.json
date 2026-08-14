@@ -6048,14 +6048,14 @@
       "linkWithdraw": "Võta tagasi",
       "linkWithdrawn": "Makselink võeti tagasi.",
       "linkAufteilung": "Külaline maksab {brutto} · sellest {prozent} % platvormi osa ({anteil}) · lisaks makseteenuse tasud",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Lisateenus",
+      "qtyLabel": "Kogus",
+      "qtyInvalid": "Palun sisesta kogus vahemikus 1 kuni 99.",
+      "qtyEditAction": "Muuda kogust",
+      "qtySave": "Rakenda",
+      "qtySaving": "Salvestamine …",
+      "qtySaved": "Kogus muudetud.",
+      "perGuestSuffix": "inimese kohta"
     },
     "ratesView": {
       "propertyLabel": "Objekt",

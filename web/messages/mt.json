@@ -6043,14 +6043,14 @@
       "linkWithdraw": "Irtira",
       "linkWithdrawn": "Il-link tal-ħlas ġie rtirat.",
       "linkAufteilung": "L-mistieden iħallas {brutto} · minnhom {prozent} % sehem tal-pjattaforma ({anteil}) · flimkien mat-tariffi tal-fornitur tal-ħlas",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Servizz addizzjonali",
+      "qtyLabel": "Kwantità",
+      "qtyInvalid": "Jekk jogħġbok daħħal kwantità bejn 1 u 99.",
+      "qtyEditAction": "Ibdel il-kwantità",
+      "qtySave": "Applika",
+      "qtySaving": "Qed jiġi salvat …",
+      "qtySaved": "Il-kwantità nbidlet.",
+      "perGuestSuffix": "kull persuna"
     },
     "ratesView": {
       "propertyLabel": "Proprjetà",

@@ -6043,14 +6043,14 @@
       "linkWithdraw": "Atšaukti",
       "linkWithdrawn": "Mokėjimo nuoroda atšaukta.",
       "linkAufteilung": "Svečias moka {brutto} · iš jų {prozent} % platformos dalis ({anteil}) · plius mokėjimų paslaugos mokesčiai",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Papildoma paslauga",
+      "qtyLabel": "Kiekis",
+      "qtyInvalid": "Įveskite kiekį nuo 1 iki 99.",
+      "qtyEditAction": "Keisti kiekį",
+      "qtySave": "Taikyti",
+      "qtySaving": "Įrašoma …",
+      "qtySaved": "Kiekis pakeistas.",
+      "perGuestSuffix": "asmeniui"
     },
     "ratesView": {
       "propertyLabel": "Objektas",

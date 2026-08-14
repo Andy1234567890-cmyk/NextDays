@@ -6043,14 +6043,14 @@
       "linkWithdraw": "Retrage",
       "linkWithdrawn": "Link de plată retras.",
       "linkAufteilung": "Oaspetele plătește {brutto} · din care {prozent} % partea platformei ({anteil}) · plus comisioanele procesatorului de plăți",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Serviciu suplimentar",
+      "qtyLabel": "Cantitate",
+      "qtyInvalid": "Introduceți o cantitate între 1 și 99.",
+      "qtyEditAction": "Modifică cantitatea",
+      "qtySave": "Aplică",
+      "qtySaving": "Se salvează …",
+      "qtySaved": "Cantitate modificată.",
+      "perGuestSuffix": "de persoană"
     },
     "ratesView": {
       "propertyLabel": "Proprietate",

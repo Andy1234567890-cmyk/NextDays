@@ -6043,14 +6043,14 @@
       "linkWithdraw": "Umakni",
       "linkWithdrawn": "Plačilna povezava umaknjena.",
       "linkAufteilung": "Gost plača {brutto} · od tega {prozent} % delež platforme ({anteil}) · plus provizije ponudnika plačil",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Dodatna storitev",
+      "qtyLabel": "Količina",
+      "qtyInvalid": "Vnesite količino med 1 in 99.",
+      "qtyEditAction": "Spremeni količino",
+      "qtySave": "Uporabi",
+      "qtySaving": "Shranjevanje …",
+      "qtySaved": "Količina spremenjena.",
+      "perGuestSuffix": "na osebo"
     },
     "ratesView": {
       "propertyLabel": "Objekt",

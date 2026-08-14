@@ -6048,14 +6048,14 @@
       "linkWithdraw": "Visszavonás",
       "linkWithdrawn": "Fizetési link visszavonva.",
       "linkAufteilung": "A vendég {brutto} fizet · ebből {prozent} % platformrész ({anteil}) · plusz a fizetési szolgáltató díjai",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Kiegészítő szolgáltatás",
+      "qtyLabel": "Mennyiség",
+      "qtyInvalid": "Adjon meg egy mennyiséget 1 és 99 között.",
+      "qtyEditAction": "Mennyiség módosítása",
+      "qtySave": "Alkalmaz",
+      "qtySaving": "Mentés …",
+      "qtySaved": "Mennyiség módosítva.",
+      "perGuestSuffix": "fő"
     },
     "ratesView": {
       "propertyLabel": "Ingatlan",

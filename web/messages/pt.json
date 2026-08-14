@@ -6043,14 +6043,14 @@
       "linkWithdraw": "Retirar",
       "linkWithdrawn": "Link de pagamento retirado.",
       "linkAufteilung": "O hóspede paga {brutto} · dos quais {prozent} % de parte da plataforma ({anteil}) · mais taxas do fornecedor de pagamentos",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Serviço adicional",
+      "qtyLabel": "Quantidade",
+      "qtyInvalid": "Introduza uma quantidade entre 1 e 99.",
+      "qtyEditAction": "Alterar quantidade",
+      "qtySave": "Aplicar",
+      "qtySaving": "A guardar …",
+      "qtySaved": "Quantidade alterada.",
+      "perGuestSuffix": "por pessoa"
     },
     "ratesView": {
       "propertyLabel": "Propriedade",

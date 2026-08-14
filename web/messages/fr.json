@@ -6048,14 +6048,14 @@
       "linkWithdraw": "Retirer",
       "linkWithdrawn": "Lien de paiement retiré.",
       "linkAufteilung": "Le client paie {brutto} · dont {prozent} % de part plateforme ({anteil}) · plus les frais du prestataire de paiement",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Service supplémentaire",
+      "qtyLabel": "Quantité",
+      "qtyInvalid": "Veuillez saisir une quantité entre 1 et 99.",
+      "qtyEditAction": "Modifier la quantité",
+      "qtySave": "Appliquer",
+      "qtySaving": "Enregistrement …",
+      "qtySaved": "Quantité modifiée.",
+      "perGuestSuffix": "par personne"
     },
     "ratesView": {
       "propertyLabel": "Bien",

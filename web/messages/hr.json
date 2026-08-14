@@ -6048,14 +6048,14 @@
       "linkWithdraw": "Povuci",
       "linkWithdrawn": "Poveznica za plaćanje povučena.",
       "linkAufteilung": "Gost plaća {brutto} · od toga {prozent} % udio platforme ({anteil}) · plus naknade pružatelja plaćanja",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Dodatna usluga",
+      "qtyLabel": "Količina",
+      "qtyInvalid": "Unesite količinu između 1 i 99.",
+      "qtyEditAction": "Promijeni količinu",
+      "qtySave": "Primijeni",
+      "qtySaving": "Spremanje …",
+      "qtySaved": "Količina promijenjena.",
+      "perGuestSuffix": "po osobi"
     },
     "ratesView": {
       "propertyLabel": "Objekt",

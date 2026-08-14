@@ -6048,14 +6048,14 @@
       "linkWithdraw": "Stáhnout",
       "linkWithdrawn": "Platební odkaz stažen.",
       "linkAufteilung": "Host platí {brutto} · z toho {prozent} % podíl platformy ({anteil}) · plus poplatky poskytovatele plateb",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Doplňková služba",
+      "qtyLabel": "Množství",
+      "qtyInvalid": "Zadejte prosím množství mezi 1 a 99.",
+      "qtyEditAction": "Změnit množství",
+      "qtySave": "Použít",
+      "qtySaving": "Ukládá se …",
+      "qtySaved": "Množství změněno.",
+      "perGuestSuffix": "na osobu"
     },
     "ratesView": {
       "propertyLabel": "Objekt",

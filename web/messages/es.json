@@ -6048,14 +6048,14 @@
       "linkWithdraw": "Retirar",
       "linkWithdrawn": "Enlace de pago retirado.",
       "linkAufteilung": "El huésped paga {brutto} · de los cuales {prozent} % de parte de la plataforma ({anteil}) · más comisiones del proveedor de pagos",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Servicio adicional",
+      "qtyLabel": "Cantidad",
+      "qtyInvalid": "Introduce una cantidad entre 1 y 99.",
+      "qtyEditAction": "Cambiar cantidad",
+      "qtySave": "Aplicar",
+      "qtySaving": "Guardando …",
+      "qtySaved": "Cantidad modificada.",
+      "perGuestSuffix": "por persona"
     },
     "ratesView": {
       "propertyLabel": "Propiedad",

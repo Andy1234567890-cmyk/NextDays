@@ -6048,14 +6048,14 @@
       "linkWithdraw": "Peru linkki",
       "linkWithdrawn": "Maksulinkki peruttu.",
       "linkAufteilung": "Vieras maksaa {brutto} · josta {prozent} % alustan osuutta ({anteil}) · lisäksi maksupalvelun kulut",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Lisäpalvelu",
+      "qtyLabel": "Määrä",
+      "qtyInvalid": "Anna määrä väliltä 1–99.",
+      "qtyEditAction": "Muuta määrää",
+      "qtySave": "Käytä",
+      "qtySaving": "Tallennetaan …",
+      "qtySaved": "Määrä muutettu.",
+      "perGuestSuffix": "per henkilö"
     },
     "ratesView": {
       "propertyLabel": "Kohde",

@@ -6043,14 +6043,14 @@
       "linkWithdraw": "Stiahnuť",
       "linkWithdrawn": "Platobný odkaz stiahnutý.",
       "linkAufteilung": "Hosť platí {brutto} · z toho {prozent} % podiel platformy ({anteil}) · plus poplatky poskytovateľa platieb",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Doplnková služba",
+      "qtyLabel": "Množstvo",
+      "qtyInvalid": "Zadajte množstvo od 1 do 99.",
+      "qtyEditAction": "Zmeniť množstvo",
+      "qtySave": "Použiť",
+      "qtySaving": "Ukladá sa …",
+      "qtySaved": "Množstvo zmenené.",
+      "perGuestSuffix": "na osobu"
     },
     "ratesView": {
       "propertyLabel": "Objekt",

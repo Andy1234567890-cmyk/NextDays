@@ -6043,14 +6043,14 @@
       "linkWithdraw": "Wycofaj",
       "linkWithdrawn": "Link do płatności wycofany.",
       "linkAufteilung": "Gość płaci {brutto} · w tym {prozent} % udziału platformy ({anteil}) · plus opłaty dostawcy płatności",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Usługa dodatkowa",
+      "qtyLabel": "Ilość",
+      "qtyInvalid": "Podaj ilość od 1 do 99.",
+      "qtyEditAction": "Zmień ilość",
+      "qtySave": "Zastosuj",
+      "qtySaving": "Zapisywanie …",
+      "qtySaved": "Ilość zmieniona.",
+      "perGuestSuffix": "na osobę"
     },
     "ratesView": {
       "propertyLabel": "Obiekt",

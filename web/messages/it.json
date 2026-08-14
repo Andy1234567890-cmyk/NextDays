@@ -6043,14 +6043,14 @@
       "linkWithdraw": "Revoca",
       "linkWithdrawn": "Link di pagamento revocato.",
       "linkAufteilung": "L’ospite paga {brutto} · di cui {prozent} % quota della piattaforma ({anteil}) · più le commissioni del fornitore di pagamento",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Servizio aggiuntivo",
+      "qtyLabel": "Quantità",
+      "qtyInvalid": "Inserisci una quantità compresa tra 1 e 99.",
+      "qtyEditAction": "Modifica quantità",
+      "qtySave": "Applica",
+      "qtySaving": "Salvataggio …",
+      "qtySaved": "Quantità modificata.",
+      "perGuestSuffix": "a persona"
     },
     "ratesView": {
       "propertyLabel": "Struttura",

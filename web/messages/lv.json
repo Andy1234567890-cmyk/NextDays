@@ -6043,14 +6043,14 @@
       "linkWithdraw": "Atsaukt",
       "linkWithdrawn": "Maksājuma saite atsaukta.",
       "linkAufteilung": "Viesis maksā {brutto} · no tā {prozent} % platformas daļa ({anteil}) · plus maksājumu pakalpojuma komisijas",
-      "pickLabel": "Add-on",
-      "qtyLabel": "Quantity",
-      "qtyInvalid": "Please enter a quantity between 1 and 99.",
-      "qtyEditAction": "Change quantity",
-      "qtySave": "Apply",
-      "qtySaving": "Saving …",
-      "qtySaved": "Quantity changed.",
-      "perGuestSuffix": "per person"
+      "pickLabel": "Papildpakalpojums",
+      "qtyLabel": "Daudzums",
+      "qtyInvalid": "Lūdzu, ievadiet daudzumu no 1 līdz 99.",
+      "qtyEditAction": "Mainīt daudzumu",
+      "qtySave": "Lietot",
+      "qtySaving": "Saglabā …",
+      "qtySaved": "Daudzums mainīts.",
+      "perGuestSuffix": "personai"
     },
     "ratesView": {
       "propertyLabel": "Objekts",
