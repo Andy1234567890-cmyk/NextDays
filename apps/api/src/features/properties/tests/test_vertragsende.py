@@ -771,3 +771,85 @@ def test_schema_lehnt_unsinn_ab() -> None:
 
     with pytest.raises(ValidationError):
         PropertyUpdate.model_validate({"contract_end_date": "kein-datum"})
+
+
+# --------------------------------------------------------------------------
+# Was an die Portale GEHT: die Bereichsgrenze
+# --------------------------------------------------------------------------
+
+@pytest.fixture()
+def gemeldet(monkeypatch: pytest.MonkeyPatch) -> list[dict]:
+    """Die ARI-Payloads abfangen, die `_push_stand` einreiht.
+
+    Über den Fake-Store geht das nicht: `try_enqueue_ari` schluckt jeden Fehler
+    (best-effort) und schreibt nichts in `jobs`, was der Store zurückgäbe. Ein
+    Assert auf die Tabelle wäre darum immer grün — auch bei falschen Grenzen.
+    """
+    from src.features.properties import vertragsende as modul
+
+    payloads: list[dict] = []
+    monkeypatch.setattr(
+        modul, "try_enqueue_ari",
+        lambda _db, _t, _p, _kind, fields, **_k: payloads.append(fields),
+    )
+    return payloads
+
+
+def test_push_endet_am_letzten_gesperrten_tag_nicht_am_tag_danach(
+    gemeldet: list[dict],
+) -> None:
+    """`date_to` ist der LETZTE gesperrte Tag — inklusiv, wie im ganzen ARI-Pfad.
+
+    Hier stand `span_bis + 1`. Der Sender liest den Bereich über `_iso_days`,
+    das beide Enden einschließt, und sperrte damit den Tag NACH dem Horizont
+    bei den Portalen mit, obwohl der eigene Kalender ihn nie gesehen hat.
+    Auffallen konnte das nur im Vergleich der gesendeten Payload mit der
+    `availability` — kein Nutzer meldet einen Tag, der zu viel zu ist.
+    """
+    store = _store()
+    vertragsende_durchsetzen(store, "t-1", "p-1", ENDE, heute=HEUTE)
+
+    assert gemeldet, "kein Stand an die Portale gemeldet"
+    letzter_sperrtag = _sperrtage(store)[-1]
+    assert max(f["date_to"] for f in gemeldet) == letzter_sperrtag
+
+
+def test_push_deckt_genau_die_gesperrten_tage_ab(gemeldet: list[dict]) -> None:
+    """Weder ein Tag zu viel noch einer zu wenig: die gemeldeten Bereiche
+    ergeben exakt die Menge der geschriebenen Sperrtage.
+
+    Der Test daneben prüft nur den oberen Rand; ein um eins verschobener
+    ANFANG bliebe dort unsichtbar.
+    """
+    store = _store()
+    vertragsende_durchsetzen(store, "t-1", "p-1", ENDE, heute=HEUTE)
+
+    gemeldete_tage: set[str] = set()
+    for f in gemeldet:
+        von = date.fromisoformat(f["date_from"])
+        bis = date.fromisoformat(f["date_to"])  # inklusiv
+        assert bis >= von, "leerer oder verdrehter Bereich"
+        tag = von
+        while tag <= bis:
+            gemeldete_tage.add(tag.isoformat())
+            tag = date.fromordinal(tag.toordinal() + 1)
+
+    assert gemeldete_tage == set(_sperrtage(store))
+
+
+def test_freigewordene_tage_werden_inklusiv_gemeldet(gemeldet: list[dict]) -> None:
+    """Auch der Gegenzustand (Wurzel 1) hält die Grenze ein.
+
+    Beim Zurücknehmen des Enddatums meldet `_push_stand` die freigewordenen
+    Tage. Ein Tag zu viel wäre hier die gefährlichere Richtung: er ginge als
+    VERKÄUFLICH an die Portale, obwohl er gesperrt bleibt.
+    """
+    store = _store()
+    vertragsende_durchsetzen(store, "t-1", "p-1", ENDE, heute=HEUTE)
+    letzter_sperrtag = _sperrtage(store)[-1]
+    gemeldet.clear()
+
+    vertragsende_durchsetzen(store, "t-1", "p-1", None, heute=HEUTE)
+
+    assert gemeldet, "Freigabe wurde nicht gemeldet"
+    assert max(f["date_to"] for f in gemeldet) == letzter_sperrtag

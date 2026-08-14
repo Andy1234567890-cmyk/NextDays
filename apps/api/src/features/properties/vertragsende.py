@@ -402,6 +402,14 @@ def _push_stand(
     `freie_einheiten_spannen` nimmt `bis` INKLUSIV und gibt inklusive Enden
     zurück, der übrige Slice rechnet exklusiv — umgerechnet wird genau hier.
 
+    `date_to` GEHT INKLUSIV RAUS, wie überall sonst im ARI-Pfad: der Sender
+    (`push_availability_for_property`) und der Outbox-Nachzug lesen die Spalte
+    über `_iso_days`, das beide Enden einschließt. Hier stand einmal
+    `span_bis + 1`; damit trug jeder Push einen Tag zu viel — der Tag NACH dem
+    Bereich wurde bei den Portalen mitgesperrt, obwohl er im eigenen Kalender
+    offen war. Live gesehen am 2028-08-13 (Horizont heute+729): Channex führte
+    ihn als geschlossen, die `availability` kannte ihn nicht.
+
     Best-effort (Wurzel 5): `try_enqueue_ari` schluckt ein nicht erreichbares
     Channex, der nächtliche Full-Sync ist der Backstop. Das Enddatum steht
     dann trotzdem in der DB und die Sperre im eigenen Kalender.
@@ -416,7 +424,7 @@ def _push_stand(
             "availability",
             {
                 "date_from": span_von.isoformat(),
-                "date_to": (span_bis + timedelta(days=1)).isoformat(),
+                "date_to": span_bis.isoformat(),
                 "availability": frei,
             },
         )

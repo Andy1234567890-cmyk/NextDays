@@ -265,6 +265,16 @@ def try_enqueue_ari(
     für ein Objekt einreihen. `fields` sind die kind-spezifischen Payload-Werte
     (date_from/date_to als ISO-Strings, availability/rate_cents/… je nach kind).
 
+    `date_to` IST INKLUSIV: der letzte betroffene Tag, nicht der Tag danach.
+    Das ist keine Wahl, sondern die Konvention der ganzen Kette — Sender
+    (`push_availability_for_property`), Outbox-Nachzug und Superseding lesen
+    den Bereich über `_iso_days`, das beide Enden einschließt. Wer intern
+    exklusiv rechnet, zieht HIER einen Tag ab (`end - timedelta(days=1)`), so
+    wie der Kalender-Slice es tut. Ein exklusiv übergebenes Ende sperrt sonst
+    stillschweigend einen Tag zu viel bei den Portalen, während der eigene
+    Kalender ihn offen führt — der Fehler fällt nur beim Vergleich der
+    gesendeten Payload mit der `availability` auf.
+
     WICHTIG zum Coalescing: standardmäßig KEIN dedup_key. Reine ARI-Pushes
     betreffen oft DISJUNKTE Zeiträume (zwei Blocks in verschiedenen Monaten; alte
     Freigabe + neue Belegung beim Umbuchen). Ein pauschaler dedup_key würde sie via
