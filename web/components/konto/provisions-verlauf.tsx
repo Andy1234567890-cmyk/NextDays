@@ -15,11 +15,14 @@
 // subscriptions/service.py `_einzugstag`, schemas.py `CommissionMonth`).
 import { Icon } from "@iconify/react";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 
+import { channelLabelLoose } from "@/lib/channel-logos";
 import { formatCurrency } from "@/lib/currency";
 import {
+  getCommissionEntries,
   getCommissionMonths,
+  type CommissionEntry,
   type CommissionMonth,
   type CommissionStatus,
 } from "@/lib/subscriptions";
@@ -89,11 +92,186 @@ function monatsName(period: string, locale: string): string {
   });
 }
 
+// Die aufgeklappte Aufstellung EINES Monats.
+//
+// Eigene Komponente, damit jeder Monat seinen eigenen Ladezustand hat: eine
+// gemeinsame `entries`-Variable im Elternteil zeigte beim Umschalten kurz die
+// Posten des vorigen Monats unter der neuen Überschrift.
+//
+// Geladen wird erst beim Aufklappen. Ein Betrieb mit drei Jahren Historie hätte
+// sonst 36 Abfragen beim Öffnen der Seite, für Daten, die niemand ansieht.
+function MonatsAufstellung({ period }: { period: string }) {
+  const locale = useLocale();
+  const t = useTranslations("account");
+  const [rows, setRows] = useState<CommissionEntry[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let aktiv = true;
+    void (async () => {
+      const res = await getCommissionEntries(period);
+      if (!aktiv) return;
+      if (res.ok) setRows(res.data);
+      else setError(res.error);
+    })();
+    // Ein zwischenzeitlich zugeklappter Monat darf seinen Zustand nicht mehr
+    // setzen — sonst warnt React über ein Update auf einer entfernten
+    // Komponente, und bei schnellem Auf/Zu gewinnt die langsamere Antwort.
+    return () => {
+      aktiv = false;
+    };
+  }, [period]);
+
+  const zeitraum = (e: CommissionEntry) => {
+    if (!e.check_in) return "—";
+    const von = new Date(e.check_in).toLocaleDateString(locale, {
+      day: "numeric",
+      month: "short",
+    });
+    if (!e.check_out) return von;
+    const bis = new Date(e.check_out).toLocaleDateString(locale, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+    return `${von} – ${bis}`;
+  };
+
+  if (error) {
+    return (
+      <p className="px-4 py-3 text-sm text-destructive">
+        {t("commissions.entriesFailed", { error })}
+      </p>
+    );
+  }
+  if (!rows) {
+    return (
+      <p className="flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground">
+        <Icon icon="svg-spinners:180-ring" className="size-4" />
+        {t("commissions.entriesLoading")}
+      </p>
+    );
+  }
+  if (rows.length === 0) {
+    return (
+      <p className="px-4 py-3 text-sm text-muted-foreground">
+        {t("commissions.entriesEmpty")}
+      </p>
+    );
+  }
+
+  // Summe nur bei EINER Währung — gemischte Beträge zu addieren wäre ein
+  // erfundener Kurs (Wurzel 4), dieselbe Regel wie in der Monatszeile.
+  const waehrungen = new Set(rows.map((r) => r.currency));
+  const summe =
+    waehrungen.size === 1
+      ? rows.reduce((s, r) => s + r.commission_amount, 0)
+      : null;
+
+  return (
+    <div className="bg-muted/30 px-4 py-4">
+      <div className="mb-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <h3 className="text-sm font-semibold">
+          {t("commissions.entriesTitle")}
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          {t("commissions.entriesHint")}
+        </p>
+      </div>
+      <div className="overflow-x-auto rounded-xl border border-border bg-card">
+        <table className="w-full min-w-[46rem] text-sm">
+          <thead>
+            <tr className="border-b border-border text-left text-xs text-muted-foreground">
+              <th className="px-3 py-2 font-medium">
+                {t("commissions.colProperty")}
+              </th>
+              <th className="px-3 py-2 font-medium">
+                {t("commissions.colGuest")}
+              </th>
+              <th className="px-3 py-2 font-medium">
+                {t("commissions.colStay")}
+              </th>
+              <th className="px-3 py-2 font-medium">
+                {t("commissions.colChannel")}
+              </th>
+              <th className="px-3 py-2 text-right font-medium">
+                {t("commissions.colGross")}
+              </th>
+              <th className="px-3 py-2 text-right font-medium">
+                {t("commissions.colRate")}
+              </th>
+              <th className="px-3 py-2 text-right font-medium">
+                {t("commissions.colCommission")}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((e) => (
+              <tr key={e.id} className="border-b border-border last:border-0">
+                <td className="px-3 py-2 font-medium">
+                  {/* Gelöschte Reservierung: die Provisionszeile bleibt als
+                      Forderung bestehen. Das wird benannt, statt eine leere
+                      Zelle zu zeigen, die wie ein Ladefehler aussieht. */}
+                  {e.property_title ?? (
+                    <span className="text-muted-foreground">
+                      {t("commissions.entryNoProperty")}
+                    </span>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-muted-foreground">
+                  {e.guest_name ?? "—"}
+                </td>
+                <td className="px-3 py-2 text-muted-foreground">
+                  {zeitraum(e)}
+                </td>
+                <td className="px-3 py-2 text-muted-foreground">
+                  {channelLabelLoose(e.channel)}
+                </td>
+                <td className="px-3 py-2 text-right text-muted-foreground tabular-nums">
+                  {formatCurrency(e.gross_amount, e.currency)}
+                </td>
+                <td className="px-3 py-2 text-right text-muted-foreground tabular-nums">
+                  {/* Der eingefrorene Satz DIESER Zeile, nicht der heutige
+                      Tarif — sonst zeigte eine Tarifänderung rückwirkend
+                      falsche Vergangenheit. */}
+                  {(e.rate * 100).toLocaleString(locale, {
+                    maximumFractionDigits: 2,
+                  })}{" "}
+                  %
+                </td>
+                <td className="px-3 py-2 text-right font-semibold tabular-nums">
+                  {formatCurrency(e.commission_amount, e.currency)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          {summe !== null && (
+            <tfoot>
+              <tr className="border-t border-border">
+                <td
+                  colSpan={6}
+                  className="px-3 py-2 text-right text-muted-foreground"
+                >
+                  {t("commissions.entrySum")}
+                </td>
+                <td className="px-3 py-2 text-right font-semibold tabular-nums">
+                  {formatCurrency(summe, rows[0].currency)}
+                </td>
+              </tr>
+            </tfoot>
+          )}
+        </table>
+      </div>
+    </div>
+  );
+}
+
 export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
   const locale = useLocale();
   const t = useTranslations("account");
   const [rows, setRows] = useState<CommissionMonth[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [offen, setOffen] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -101,6 +279,10 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
       if (res.ok) setRows(res.data);
       else setError(res.error);
     })();
+  }, []);
+
+  const umschalten = useCallback((period: string) => {
+    setOffen((v) => (v === period ? null : period));
   }, []);
 
   return (
@@ -177,13 +359,37 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
             <tbody>
               {rows.map((r) => {
                 const st = statusLabel(STATUS, r.status);
+                const auf = offen === r.period;
                 return (
+                  <Fragment key={r.period}>
                   <tr
-                    key={r.period}
-                    className="border-b border-border last:border-0"
+                    onClick={() => umschalten(r.period)}
+                    className="cursor-pointer border-b border-border last:border-0 hover:bg-muted/40"
                   >
                     <td className="px-4 py-3 font-medium">
-                      {monatsName(r.period, locale)}
+                      {/* Der Umschalter ist ein echter Button, nicht nur die
+                          klickbare Zeile: eine Zeile mit onClick erreicht man
+                          weder per Tab noch mit Enter, und Screenreader
+                          bekommen ohne aria-expanded nicht mit, dass sich
+                          darunter etwas öffnet. */}
+                      <button
+                        type="button"
+                        onClick={(ev) => {
+                          ev.stopPropagation();
+                          umschalten(r.period);
+                        }}
+                        aria-expanded={auf}
+                        aria-label={t("commissions.entriesToggle")}
+                        className="flex items-center gap-1.5 text-left font-medium hover:text-primary"
+                      >
+                        <Icon
+                          icon="lucide:chevron-right"
+                          className={`size-4 text-muted-foreground transition-transform ${
+                            auf ? "rotate-90" : ""
+                          }`}
+                        />
+                        {monatsName(r.period, locale)}
+                      </button>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {r.booking_count}
@@ -222,6 +428,14 @@ export function ProvisionsVerlauf({ onBack }: { onBack: () => void }) {
                       </span>
                     </td>
                   </tr>
+                  {auf && (
+                    <tr className="border-b border-border last:border-0">
+                      <td colSpan={6} className="p-0">
+                        <MonatsAufstellung period={r.period} />
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 );
               })}
             </tbody>

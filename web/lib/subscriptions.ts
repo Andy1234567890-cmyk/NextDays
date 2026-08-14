@@ -198,6 +198,44 @@ export async function getCommissionMonths(
   return call<CommissionMonth[]>(`/commission-months?limit=${limit}`);
 }
 
+/**
+ * Eine Buchung in der vorläufigen Aufstellung eines Monats.
+ *
+ * `rate` ist der eingefrorene Satz DIESER Zeile (dezimal, 0.005 = 0,5 %), nicht
+ * der heutige Tarifsatz — eine spätere Tarifänderung schreibt die Vergangenheit
+ * nicht um.
+ *
+ * Objekt, Gast und Zeitraum können fehlen: die Provisionszeile ist eine
+ * Forderung und überlebt eine gelöschte Reservierung. Dann bleibt das Feld leer,
+ * statt einen Ersatztext zu zeigen (Wurzel 4).
+ *
+ * `status` ist bewusst `string`: das Backend reicht den DB-Enum-Wert
+ * unverändert durch, ein Literal hier verspräche eine Prüfung, die zur Laufzeit
+ * niemand vornimmt — dieselbe Begründung wie bei `CommissionMonth.status`.
+ */
+export type CommissionEntry = {
+  id: string;
+  channel: string;
+  currency: string | null;
+  gross_amount: number;
+  rate: number;
+  commission_amount: number;
+  status: string;
+  booked_at: string;
+  property_title: string | null;
+  check_in: string | null;
+  check_out: string | null;
+  guest_name: string | null;
+};
+
+export async function getCommissionEntries(
+  period: string,
+): Promise<Result<CommissionEntry[]>> {
+  return call<CommissionEntry[]>(
+    `/commission-months/${encodeURIComponent(period)}/entries`,
+  );
+}
+
 // --- Rechnungsadresse + Rechnungsverlauf (Quelle: Stripe-Customer) ----------
 
 export type BillingAddress = {

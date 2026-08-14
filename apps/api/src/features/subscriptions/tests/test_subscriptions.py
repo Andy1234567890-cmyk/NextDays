@@ -43,6 +43,8 @@ class _Query:
     def __init__(self, rows: list[dict[str, Any]]) -> None:
         self._rows = rows
         self._filters: list[tuple[str, Any]] = []
+        self._in: list[tuple[str, set[Any]]] = []
+        self._range: tuple[int, int] | None = None
         self._count = False
 
     def select(self, *_a: Any, count: str | None = None, **_k: Any) -> _Query:
@@ -53,13 +55,36 @@ class _Query:
         self._filters.append((col, val))
         return self
 
+    def in_(self, col: str, werte: list[Any]) -> _Query:
+        """Mengenfilter — die Aufstellung lädt die Reservierungen so nach."""
+        self._in.append((col, set(werte)))
+        return self
+
+    def order(self, _col: str, *, desc: bool = False, **_k: Any) -> _Query:
+        """Sortierung wird nicht nachgebaut: die Aufstellung gruppiert und
+        summiert, das Ergebnis hängt nicht an der Reihenfolge. Die Methode muss
+        aber existieren, sonst bricht die Kette."""
+        return self
+
     def limit(self, _n: int) -> _Query:
+        return self
+
+    def range(self, von: int, bis: int) -> _Query:
+        """Seitenweises Lesen, wie `fetch_all_rows` es fährt (beide Enden
+        inklusiv). Echt umgesetzt, nicht als No-op: gäbe der Fake bei jeder
+        Seite dieselben Zeilen zurück, liefe die Schleife dort ewig."""
+        self._range = (von, bis)
         return self
 
     def _matched(self) -> list[dict[str, Any]]:
         out = self._rows
         for col, val in self._filters:
             out = [r for r in out if r.get(col) == val]
+        for col, werte in self._in:
+            out = [r for r in out if r.get(col) in werte]
+        if self._range is not None:
+            von, bis = self._range
+            out = out[von : bis + 1]
         return out
 
     def execute(self) -> Any:
@@ -1071,3 +1096,147 @@ def test_modul_dynamische_preise_buchen_und_kuendigen() -> None:
     weg = svc.remove_module(_CTX, module_key="dynamische_preise")
     assert weg.active is False
     assert db.store["tenant_module_entitlement"][0]["active"] is False
+
+
+# --- Vorläufige Aufstellung eines Monats (Einzelposten) ---------------------
+
+def _mit_provisionszeile(
+    db: _DB,
+    *,
+    zeile_id: str,
+    periode_created: str,
+    period: str | None = None,
+    tenant_id: str = "t1",
+    reservation_id: str = "r1",
+    currency: str = "DKK",
+) -> _DB:
+    db.store.setdefault("commission_ledger", []).append(
+        {
+            "id": zeile_id,
+            "tenant_id": tenant_id,
+            "reservation_id": reservation_id,
+            "channel": "booking",
+            "currency": currency,
+            "gross_amount": 2810.0,
+            "rate": 0.005,
+            "commission_amount": 14.05,
+            "status": "pending",
+            "period": period,
+            "created_at": periode_created,
+        }
+    )
+    return db
+
+
+def test_aufstellung_nimmt_offene_zeilen_ueber_created_at() -> None:
+    """Eine noch nicht fakturierte Zeile hat kein `period` — sie muss über den
+    Monat der Erfassung gefunden werden.
+
+    Genau so gruppiert `get_commission_months` die Monatssumme. Rechneten die
+    beiden Wege verschieden, zeigte die aufgeklappte Liste andere Zeilen, als
+    die Summe darüber zusammenfasst — der Kunde sähe eine Aufstellung, die
+    seine eigene Zwischensumme nicht ergibt.
+    """
+    db = _mit_provisionszeile(_DB(), zeile_id="c1", periode_created="2026-08-14T10:00:00Z")
+    eintraege = SubscriptionsService(service_client=db).get_commission_entries(
+        _CTX, "2026-08"
+    )
+    assert [e.id for e in eintraege] == ["c1"]
+    assert eintraege[0].commission_amount == 14.05
+
+
+def test_aufstellung_bevorzugt_period_vor_created_at() -> None:
+    """Ist die Zeile fakturiert, zählt `period` — nicht der Erfassungsmonat.
+
+    Eine im September nacherfasste August-Buchung gehört in den August; nach
+    `created_at` fiele sie in den falschen Monat.
+    """
+    db = _mit_provisionszeile(
+        _DB(), zeile_id="c1", periode_created="2026-09-02T10:00:00Z", period="2026-08"
+    )
+    svc = SubscriptionsService(service_client=db)
+    assert [e.id for e in svc.get_commission_entries(_CTX, "2026-08")] == ["c1"]
+    assert svc.get_commission_entries(_CTX, "2026-09") == []
+
+
+def test_aufstellung_zeigt_nur_den_eigenen_betrieb() -> None:
+    """Wurzel 3: der Tenant steckt in der Abfrage.
+
+    Die Aufstellung trägt Gastnamen und Objekttitel — sie ist die feinere
+    Auflösung derselben Daten, nicht eine harmlosere.
+    """
+    db = _mit_provisionszeile(_DB(), zeile_id="eigen", periode_created="2026-08-14T10:00:00Z")
+    _mit_provisionszeile(
+        db, zeile_id="fremd", periode_created="2026-08-14T10:00:00Z", tenant_id="t2"
+    )
+    eintraege = SubscriptionsService(service_client=db).get_commission_entries(
+        _CTX, "2026-08"
+    )
+    assert [e.id for e in eintraege] == ["eigen"]
+
+
+def test_aufstellung_uebernimmt_den_eingefrorenen_satz() -> None:
+    """Der Satz kommt aus der ZEILE, nicht aus `commission_rate()`.
+
+    Der Ledger friert ihn je Buchung ein. Läse die Aufstellung den heutigen
+    Tarif, schriebe eine spätere Satzänderung die Vergangenheit um — die alte
+    Rechnung und ihre Aufstellung wichen dann voneinander ab.
+    """
+    db = _DB()
+    db.store["commission_ledger"] = [
+        {
+            "id": "c1", "tenant_id": "t1", "reservation_id": "r1",
+            "channel": "booking", "currency": "DKK", "gross_amount": 1000.0,
+            "rate": 0.01,  # alter Satz, heute gilt 0,005
+            "commission_amount": 10.0, "status": "invoiced",
+            "period": "2026-08", "created_at": "2026-08-14T10:00:00Z",
+        }
+    ]
+    eintraege = SubscriptionsService(service_client=db).get_commission_entries(
+        _CTX, "2026-08"
+    )
+    assert eintraege[0].rate == 0.01
+    assert SubscriptionsService.commission_rate() == 0.005
+
+
+def test_aufstellung_haelt_geloeschte_reservierung_aus() -> None:
+    """Die Provisionszeile ist eine Forderung und überlebt ihre Buchung.
+
+    Fehlt die Reservierung, bleiben Objekt und Gast leer — kein Ersatztext,
+    der eine Buchung vortäuscht (Wurzel 4), und vor allem kein Absturz, der
+    die ganze Aufstellung unlesbar macht.
+    """
+    db = _mit_provisionszeile(
+        _DB(), zeile_id="c1", periode_created="2026-08-14T10:00:00Z",
+        reservation_id="weg",
+    )
+    eintraege = SubscriptionsService(service_client=db).get_commission_entries(
+        _CTX, "2026-08"
+    )
+    assert eintraege[0].property_title is None
+    assert eintraege[0].guest_name is None
+    assert eintraege[0].commission_amount == 14.05
+
+
+def test_aufstellung_summe_deckt_sich_mit_der_monatszeile() -> None:
+    """Die aufgeklappte Liste muss die Summe darüber ergeben.
+
+    Beide Wege laufen über dieselbe Periodenrechnung; dieser Test hält sie
+    aneinander fest, damit eine Änderung an einer Seite nicht unbemerkt
+    auseinanderläuft.
+    """
+    db = _DB()
+    for i in range(3):
+        _mit_provisionszeile(
+            db, zeile_id=f"c{i}", periode_created="2026-08-14T10:00:00Z",
+            reservation_id=f"r{i}",
+        )
+    svc = SubscriptionsService(service_client=db)
+    monate = svc.get_commission_months(_CTX)
+    august = next(m for m in monate if m.period == "2026-08")
+    eintraege = svc.get_commission_entries(_CTX, "2026-08")
+
+    assert august.booking_count == len(eintraege)
+    assert august.commission_total == round(
+        sum(e.commission_amount for e in eintraege), 2
+    )

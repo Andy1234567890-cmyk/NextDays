@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
@@ -22,6 +22,7 @@ from .schemas import (
     BillingAddress,
     CheckoutSessionRequest,
     CheckoutSessionResponse,
+    CommissionEntry,
     CommissionMonth,
     CommissionSummary,
     InvoiceRow,
@@ -196,6 +197,31 @@ def list_commission_months(
     """Provisionen je Abrechnungsmonat (neueste zuerst) mit Einzugsdatum."""
     try:
         return service.get_commission_months(ctx, limit=limit)
+    except SubscriptionsError as exc:
+        raise _handle(exc) from exc
+
+
+@router.get(
+    "/commission-months/{period}/entries",
+    response_model=list[CommissionEntry],
+)
+def list_commission_entries(
+    ctx: _billing,
+    service: ServiceDep,
+    period: Annotated[str, Path(pattern=r"^\d{4}-\d{2}$")],
+) -> list[CommissionEntry]:
+    """Die Einzelbuchungen EINES Monats — vorläufige Aufstellung zur Monatszeile.
+
+    Derselbe Guard wie die Monatsliste (`_billing`): die Aufstellung zeigt
+    dieselben Daten feiner aufgelöst, samt Gastname und Objekt. Eine schwächere
+    Autorisierung als beim Listen-Endpunkt wäre hier ein IDOR-in-role
+    (Wurzel 9).
+
+    `period` ist auf YYYY-MM gemustert — ein freier String ginge sonst
+    ungeprüft in die Filterrechnung.
+    """
+    try:
+        return service.get_commission_entries(ctx, period)
     except SubscriptionsError as exc:
         raise _handle(exc) from exc
 

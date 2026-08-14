@@ -238,6 +238,38 @@ class CommissionMonth(BaseModel):
     status: str  # pending | invoiced | paid (Enum) + mixed (uneinheitlicher Monat)
 
 
+class CommissionEntry(BaseModel):
+    """EINE Buchung in der vorläufigen Aufstellung eines Monats.
+
+    Warum die Einzelposten überhaupt herausgehen: die Monatszeile nennt nur
+    eine Summe. Ein Betrieb, der prüfen will, WORAUS die Provision entsteht,
+    hat sonst keinen Weg dorthin — die Rechnung kommt erst am 1. des
+    Folgemonats, und dort steht ebenfalls nur ein Betrag.
+
+    `rate` ist der Satz, mit dem DIESE Zeile gerechnet wurde (dezimal, 0.005 =
+    0,5 %), nicht der heutige Tarifsatz: der Ledger friert ihn je Buchung ein,
+    und eine spätere Tarifänderung darf die Vergangenheit nicht umschreiben.
+
+    `property_title` und `check_in` kommen über die Reservierung. Beide sind
+    optional, weil die Reservierung gelöscht sein kann, während die
+    Provisionszeile bleibt (sie ist eine Forderung). Fehlt sie, bleibt das Feld
+    leer — kein Ersatztext, der eine Buchung vortäuscht (Wurzel 4).
+    """
+
+    id: str
+    channel: str
+    currency: str | None = None
+    gross_amount: float
+    rate: float
+    commission_amount: float
+    status: str
+    booked_at: str  # ISO — wann die Provisionszeile entstand
+    property_title: str | None = None
+    check_in: str | None = None
+    check_out: str | None = None
+    guest_name: str | None = None
+
+
 class InvoiceRow(BaseModel):
     """Eine Rechnung aus Stripe. `total` in der Währung der Rechnung (nicht
     umgerechnet) — die UI rendert mit formatCurrency (Wurzel 4)."""

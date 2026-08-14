@@ -31,6 +31,7 @@ from src.features.owner_statements.tax import EU_COUNTRIES as _EU_LAENDER
 
 from .dynpricing import DynPricingBillingMixin
 from .errors import SubscriptionsError, field
+from .provisionsaufstellung import AufstellungMixin
 from .provisionsdeckel import ProvisionsdeckelMixin
 from .schemas import (
     DYNPRICING_MODULE_KEY,
@@ -82,7 +83,7 @@ _MODULE_PRICE_VARIANTS: dict[str, tuple[str, str | None]] = {
 _f = field
 
 
-class SubscriptionsService(DynPricingBillingMixin, ProvisionsdeckelMixin):
+class SubscriptionsService(DynPricingBillingMixin, ProvisionsdeckelMixin, AufstellungMixin):
     slice_name = "subscriptions"
 
     def __init__(
