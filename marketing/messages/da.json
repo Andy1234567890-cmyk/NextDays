@@ -68,6 +68,115 @@
     "eyebrow": "Platformen",
     "typenEyebrow": "Hvem den er til"
   },
+  "zielgruppen": {
+    "bildAlt": "myNextDays-grænseflade, eksempel {typ}",
+    "abschluss": "Uanset formen bliver alt styret i det samme system med det samme login.",
+    "typen": {
+      "hotel": {
+        "unterzeile": "Hotelsoftware med channel manager",
+        "text": "Små hoteller fører deres værelser som værelsestyper: hver type har sine enheder, og i belægningsplanen står hvert værelse for sig — med ankomst, afrejse og rengøring. Booking.com, Expedia og de øvrige bookingportaler får antallet af ledige enheder, ikke et ja/nej. Priser, minimumsophold og lukkedage passer du ét sted, og channel manageren fordeler dem til alle forbundne portaler. Faktura, betaling og gæstekommunikation ligger i samme system.",
+        "beleg": "Tilgængelighed som tal, ikke ja/nej."
+      },
+      "bnb": {
+        "unterzeile": "Bookingsystem til bed & breakfast",
+        "text": "Morgenmad, håndklæder, gebyr for kæledyr, sen ankomst: tillægsydelser hænger direkte på bookingen og står på gæstens faktura uden sideregnskab. Står du selv ved bordet i B&B'et, vil du ikke føre endnu en liste — forespørgsler, beskeder, betalinger og belægning samles ét sted, på computeren som på mobilen. Kortbetaling via Stripe er med, og din egen bookingside uden portalkommission også.",
+        "beleg": "Tillægsydelser afregnes automatisk."
+      },
+      "gaestehaus": {
+        "unterzeile": "Administration af gæstehuse med flere værelser",
+        "text": "Flere enheder under samme tag, én kalender: hvilken gæst der får hvilket værelse, bestemmer du indtil ankomsten, uden at oprette bookingen igen. Bygningen afgør, hvad portalerne ser under ét id; udstyr, fotos og priser passer du pr. værelsestype. Rengøringsopgaver følger ankomster og afrejser og ligger på teamets mobil — med eget login, der viser opgaver, ikke omsætning.",
+        "beleg": "Én bygning, ét portal-id."
+      },
+      "motel": {
+        "unterzeile": "Software til moteller og korte ophold",
+        "text": "Stor gennemstrømning, korte ophold, sene ankomster: ankomstinfo, adgangskoder og faktura går automatisk til gæsten — på det rette tidspunkt og i gæstens sprog, 24 sprog er klar. Værelser, der bliver fri igen, går af sig selv tilbage til alle portaler, og et stop-sell lukker dem overalt på én gang. I receptionen er dagsplanen nok: hvem kommer, hvem rejser, hvad er stadig åbent.",
+        "beleg": "Beskederne kører af sig selv."
+      },
+      "lodge": {
+        "unterzeile": "Udlejning af lodge, også fra mobilen",
+        "text": "Afsides er ikke afskåret: priser, minimumsophold, skiftedage og lukninger passer du på mobilen præcis som ved skrivebordet — samme kalender, samme booking, ingen mellemtilstand. Sæsonpriser sætter du i prisgitteret for et helt år i stedet for dag for dag, og rabatter for længere ophold når også portalerne. Selv uden reception ved gæsten, hvordan han kommer ind.",
+        "beleg": "Også undervejs, via appen."
+      },
+      "ferienwohnung": {
+        "unterzeile": "Channel manager til ferieboliger",
+        "text": "Én bolig, alle kanaler: Booking.com, Airbnb, Vrbo, vores eget marked myBestDays og direkte bookinger på din hjemmeside deler én kalender. Er en nat solgt, er den væk alle steder — dobbeltbookinger opstår ikke. Direkte bookinger med lav provision kan du fremme bevidst: egen prisstrategi, rabatter for længere ophold, automatiske beskeder fra booking til afrejse og kortbetaling direkte til din konto.",
+        "beleg": "Én kalender til alle kanaler."
+      },
+      "resort": {
+        "unterzeile": "Styr et resort med mange enheder",
+        "text": "Studios, suiter og villaer kører som egne typer med egne priser, faciliteter og belægningsregler — alle under én konto og én afregning. Så mange objekter og så mange enheder pr. type som du har behov for, uden at nogen skifter login. Reception, rengøring og ejere ser kun deres del; ejerafregninger laves pr. objekt med rapport i stedet for et regneark ved månedens slutning.",
+        "beleg": "Så mange objekter du vil per konto."
+      },
+      "huette": {
+        "unterzeile": "Hytteudlejning i sæsondrift",
+        "text": "Sæsondrift uden håndarbejde: lukkeperioder, skiftedage, minimums- og maksimumsophold sætter du én gang, og de gælder på alle portaler samtidig. Er hytten lukket om vinteren, er den lukket alle steder — uden login i fem extranet. Skiftedagen holdes fri mellem to bookinger, så rengøringen har tid, og ankomst- eller afrejsedage kan lukkes enkeltvis.",
+        "beleg": "En lukning gælder på alle portaler."
+      },
+      "pension": {
+        "unterzeile": "Pensionatsdrift med faktura og kurafgift",
+        "text": "Halvpension, kurafgift, faste gæster, betaling på stedet: tillæg og afgifter beregner systemet rigtigt for hver portal — også hvor portalen melder et nettobeløb, og du har brug for bruttoprisen. Fakturaer, kreditnotaer og åbne poster står i samme sag som bookingen, i dit lands valuta. Tilbagevendende gæster genkender du på deres historik i stedet for at søge i gamle mails.",
+        "beleg": "Afgifter pr. portal, korrekt beregnet."
+      },
+      "campingplatz": {
+        "unterzeile": "Campingpladsadministration med pladser",
+        "text": "Pladser, udlejningsvogne og glampingtelte er typer med antal: tyve ens pladser er én type med tyve enheder, ikke tyve kalendere. Tilgængelighed går til portalerne som et tal, så der aldrig sælges mere, end der er. Strøm, kurafgift eller hund afregner du pr. nat eller pr. ophold, og dagens ankomster står samlet i dagsplanen.",
+        "beleg": "Antal i stedet for tyve kalendere."
+      }
+    }
+  },
+  "faq": {
+    "eyebrow": "Ofte stillede spørgsmål",
+    "heading": "Spørgsmålene, der kommer før et systemskifte.",
+    "sub": "Hvad platformen gør, hvad den koster, og hvordan dine data er beskyttet — uden markedsføringssnak.",
+    "was": {
+      "frage": "Hvad er myNextDays helt præcist?",
+      "antwort": "myNextDays er et property management-system og en channel manager i ét — til hoteller, pensionater, gæstehuse, ferieboliger, campingpladser og bureauer. Kalender, reservationer, priser, portaler, direkte booking, gæstekommunikation, rengøring og afregning ligger i én flade med ét login i stedet for fire værktøjer, der intet ved om hinanden."
+    },
+    "portale": {
+      "frage": "Hvilke bookingportaler kan jeg koble til?",
+      "antwort": "Via vores connectivity-partner Channex når du 56 bookingplatforme, blandt andet Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda og Tripadvisor. Dertil kommer vores eget marked myBestDays, en booking-widget til din hjemmeside og regionale kanaler. Hver kanal tændes for sig: du bestemmer pr. objekt, hvor det er synligt."
+    },
+    "sync": {
+      "frage": "Hvor hurtigt synkroniseres der — og kan der opstå dobbeltbookinger?",
+      "antwort": "Synkroniseringen kører i begge retninger i realtid: en booking på én portal lukker natten alle andre steder, og ændrede priser eller minimumsophold går ud med det samme. Alle kanaler deler én kalender, så der opstår ikke en anden sandhed. Et stop-sell lukker overalt på én gang, ikke kun der hvor du sætter det."
+    },
+    "betriebsarten": {
+      "frage": "Passer det til et hotel og til ferieboliger på samme tid?",
+      "antwort": "Ja, det er samme model: hvert objekt er præcis én type — en værelsestype på hotellet eller en ferieudlejning — og under den hænger dens enheder. Et hotel med otte dobbelt- og fire enkeltværelser har to objekter med otte og fire enheder. Portalerne får antallet af ledige enheder, så fem ens studios ikke kræver fem kalendere."
+    },
+    "direkt": {
+      "frage": "Får jeg min egen bookingside uden portalkommission?",
+      "antwort": "Ja. Til hver konto hører en egen bookingportal, en widget til den eksisterende hjemmeside og en hjemmesidebygger med eget domæne. Direkte bookinger koster 0,5 % i stedet for de store portalers 15–18 %, kører på samme kalender og samme priser — og pengene går direkte ind på din konto."
+    },
+    "marktplatz": {
+      "frage": "Hvad er myBestDays?",
+      "antwort": "myBestDays er vores eget marked for gæster — en bookingkanal på lige fod med Booking.com og Airbnb, blot med markant lavere kommission. Objekter, du gør synlige der, vises på markedet og i myBestDays-appen til gæster. Den synlighed er en selvstændig knap, uafhængig af portalerne."
+    },
+    "zahlungen": {
+      "frage": "Hvordan fungerer betalinger, depositum og fakturaer?",
+      "antwort": "Onlinebetalinger går gennem Stripe ind på din egen konto: depositum, restbetaling eller sikkerhedsstillelse, med kort og de betalingsmetoder, Stripe tilbyder i gæstens land. Fakturaer og kreditnotaer opstår ud fra bookingen, i objektets valuta, med bogføringsklare eksporter. Portalgebyrer og afgifter beregnes rigtigt pr. portal — også hvor en portal kun melder et nettobeløb."
+    },
+    "laender": {
+      "frage": "Hvilke lande, valutaer og sprog dækker platformen?",
+      "antwort": "Ved starten den 1. september 2026 i 27 europæiske lande. Flade og gæstekommunikation findes på 24 sprog; gæsten læser sin bekræftelse på sit eget sprog. Valutaen hænger på objektet eller virksomheden — der er ingen euro-antagelse, kroner, złoty eller forint føres på samme måde."
+    },
+    "rollen": {
+      "frage": "Hvem ser hvilke data — ejere, rengøring, gæster?",
+      "antwort": "Hver rolle har sit eget login og ser kun sin del. Ejere ser deres objekter, deres belægning og udbetalinger, men ikke andres. Rengøringen ser opgaver med foto-checklister, ikke omsætning. Gæster har deres eget område med check-in, digital gæstemappe og beskeder."
+    },
+    "app": {
+      "frage": "Findes der en app?",
+      "antwort": "To, fordi gæst og drift har brug for forskellige ting: myNextDays-appen til drift, ejere og rengøring — kalender, bookinger og opgaver undervejs — og myBestDays-appen til gæster med søgning, booking, check-in og beskeder. Begge taler med samme system; intet kører på en kopi."
+    },
+    "sicherheit": {
+      "frage": "Hvad med databeskyttelse og sikkerhed?",
+      "antwort": "Bygget i Danmark, hostet i EU, GDPR-konform inklusive databehandleraftale. Hver virksomheds data er adskilt på databaseniveau, ikke kun i fladen. To-faktor-login er tilgængeligt, rollerettigheder begrænser adgangen til økonomi- og gæstedata, og hvert login kan spores i enhedshistorikken."
+    },
+    "preis": {
+      "frage": "Hvad koster myNextDays, og hvordan kommer jeg i gang?",
+      "antwort": "30 dage gratis, ingen bindingsperiode, ingen oprettelsesgebyr, opsigelse når som helst. Derefter et abonnement plus en lav kommission på formidlede bookinger. Tillægsmoduler som udvidet bogføring med DATEV-eksport, medarbejderstyring eller hotelfunktioner tilkøber du kun, hvis du har brug for dem. Opret objekt, forbind kanaler, kom i gang."
+    }
+  },
   "benefits": {
     "eyebrow": "Derfor myNextDays",
     "sub": "Tre ting, der virkelig tæller i udlejningshverdagen – det er dét, platformen er bygget til.",

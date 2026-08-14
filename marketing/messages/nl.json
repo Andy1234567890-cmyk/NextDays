@@ -68,6 +68,115 @@
     "eyebrow": "Het platform",
     "typenEyebrow": "Voor wie het is"
   },
+  "zielgruppen": {
+    "bildAlt": "myNextDays-interface, voorbeeld {typ}",
+    "abschluss": "Welke vorm ook — alles wordt in hetzelfde systeem beheerd, met dezelfde login.",
+    "typen": {
+      "hotel": {
+        "unterzeile": "Hotelsoftware met channel manager",
+        "text": "Kleine hotels voeren hun kamers als kamertypes: elk type heeft zijn eenheden, en in de bezettingsplanning staat elke kamer apart — met aankomst, vertrek en schoonmaak. Booking.com, Expedia en de andere boekingsportalen krijgen het aantal vrije eenheden, geen ja/nee. Prijzen, minimumverblijf en blokkades onderhoud je één keer, de channel manager verdeelt ze over alle verbonden portalen. Factuur, betaling en gastcommunicatie zitten in hetzelfde systeem.",
+        "beleg": "Beschikbaarheid als aantal, niet als ja/nee."
+      },
+      "bnb": {
+        "unterzeile": "Boekingssysteem voor bed & breakfast",
+        "text": "Ontbijt, handdoeken, huisdiertoeslag, late aankomst: extra's hangen direct aan de boeking en staan zonder bijrekening op de factuur van de gast. Wie zelf in de B&B aan tafel staat, wil geen tweede lijst bijhouden — aanvragen, berichten, betalingen en bezetting komen op één plek samen, op de computer én op de telefoon. Kaartbetaling via Stripe hoort erbij, net als je eigen boekingspagina zonder portaalcommissie.",
+        "beleg": "Extra's automatisch afgerekend."
+      },
+      "gaestehaus": {
+        "unterzeile": "Beheer voor gastenhuizen met meerdere kamers",
+        "text": "Meerdere eenheden onder één dak, één agenda: welke gast welke kamer krijgt bepaal je tot de aankomst, zonder de boeking opnieuw aan te maken. Het gebouw bepaalt wat de portalen onder één kenmerk zien; voorzieningen, foto's en prijzen onderhoud je per kamertype. Schoonmaaktaken volgen aankomsten en vertrekken en staan op de telefoon van het team — met een eigen login die taken toont, geen omzet.",
+        "beleg": "Één gebouw, één portaal-ID."
+      },
+      "motel": {
+        "unterzeile": "Software voor motels en korte verblijven",
+        "text": "Veel doorloop, korte verblijven, late aankomsten: aankomstinfo, toegangscodes en factuur gaan automatisch naar de gast — op het juiste moment en in zijn taal, 24 talen staan klaar. Kamers die weer vrij komen gaan zonder handeling terug naar alle portalen, en een stop-sell sluit ze overal tegelijk. Aan de receptie is de dagplanning genoeg: wie komt, wie gaat, wat is nog open.",
+        "beleg": "Berichten lopen van zelf."
+      },
+      "lodge": {
+        "unterzeile": "Lodge verhuren, ook vanaf je telefoon",
+        "text": "Afgelegen betekent niet afgesneden: prijzen, minimumverblijf, wisseldagen en blokkades beheer je op je telefoon net als aan je bureau — dezelfde agenda, dezelfde boeking, geen tussenstand. Seizoensprijzen zet je in het prijsraster voor een heel jaar in plaats van dag na dag, en kortingen voor langere verblijven bereiken ook de portalen. Ook zonder receptie weet de gast hoe hij binnenkomt.",
+        "beleg": "Ook onderweg, via de app."
+      },
+      "ferienwohnung": {
+        "unterzeile": "Channel manager voor vakantiewoningen",
+        "text": "Één woning, alle kanalen: Booking.com, Airbnb, Vrbo, onze eigen marktplaats myBestDays en directe boekingen op je website delen één agenda. Is een nacht verkocht, dan is hij overal weg — dubbele boekingen ontstaan niet. Directe boekingen met lage commissie kun je bewust voortrekken: eigen prijsstrategie, kortingen voor langere verblijven, automatische berichten van boeking tot vertrek en kaartbetaling rechtstreeks op je rekening.",
+        "beleg": "Één agenda voor alle kanalen."
+      },
+      "resort": {
+        "unterzeile": "Een resort met veel eenheden beheren",
+        "text": "Studio's, suites en villa's lopen als eigen types met eigen prijzen, voorzieningen en bezettingsregels — allemaal onder één account en één afrekening. Zoveel objecten en zoveel eenheden per type als je nodig hebt, zonder dat iemand van login wisselt. Receptie, schoonmaak en eigenaren zien alleen hun deel; eigenaarsafrekeningen ontstaan per object met rapport, in plaats van een spreadsheet aan het eind van de maand.",
+        "beleg": "Zoveel objecten per account als je wilt."
+      },
+      "huette": {
+        "unterzeile": "Huttenverhuur in seizoensbedrijf",
+        "text": "Seizoensbedrijf zonder handwerk: sluitingsperiodes, wisseldagen, minimum- en maximumverblijven zet je één keer, en ze gelden op alle portalen tegelijk. Is de hut in de winter dicht, dan is hij overal dicht — zonder inloggen in vijf extranetten. De wisseldag blijft vrij tussen twee boekingen zodat de schoonmaak tijd heeft, en aankomst- of vertrekdagen kun je afzonderlijk blokkeren.",
+        "beleg": "Één blokkade geldt op alle portalen."
+      },
+      "pension": {
+        "unterzeile": "Pensionbeheer met factuur en toeristenbelasting",
+        "text": "Halfpension, toeristenbelasting, vaste gasten, betaling ter plaatse: toeslagen en heffingen rekent het systeem per portaal correct af — ook waar het portaal een nettobedrag meldt en jij de brutoprijs nodig hebt. Facturen, creditnota's en openstaande posten staan in hetzelfde dossier als de boeking, in de valuta van je land. Terugkerende gasten herken je aan hun historie in plaats van in oude mails te zoeken.",
+        "beleg": "Heffingen per portaal, correct berekend."
+      },
+      "campingplatz": {
+        "unterzeile": "Campingbeheer met staanplaatsen",
+        "text": "Staanplaatsen, huurcaravans en glampingtenten zijn types met een aantal: twintig gelijke plaatsen zijn één type met twintig eenheden, geen twintig agenda's. Beschikbaarheid gaat als getal naar de portalen, zodat er nooit meer verkocht wordt dan er is. Stroom, toeristenbelasting of een hond reken je per nacht of per verblijf af, en de aankomsten van de dag staan gebundeld in de dagplanning.",
+        "beleg": "Een aantal in plaats van twintig agenda's."
+      }
+    }
+  },
+  "faq": {
+    "eyebrow": "Veelgestelde vragen",
+    "heading": "De vragen die vóór een systeemwissel komen.",
+    "sub": "Wat het platform doet, wat het kost en hoe je gegevens beschermd zijn — zonder marketingtaal.",
+    "was": {
+      "frage": "Wat is myNextDays precies?",
+      "antwort": "myNextDays is een property-management-systeem en een channel manager in één — voor hotels, pensions, gastenhuizen, vakantiewoningen, campings en agentschappen. Agenda, reserveringen, prijzen, portalen, directe boekingen, gastcommunicatie, schoonmaak en afrekening zitten in één omgeving met één login, in plaats van in vier tools die niets van elkaar weten."
+    },
+    "portale": {
+      "frage": "Welke boekingsportalen kan ik aansluiten?",
+      "antwort": "Via onze connectivity-partner Channex bereik je 56 boekingsplatformen, waaronder Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda en Tripadvisor. Daar komen onze eigen marktplaats myBestDays, een boekingswidget voor je website en regionale kanalen bij. Elk kanaal schakel je apart: je bepaalt per object waar het zichtbaar is."
+    },
+    "sync": {
+      "frage": "Hoe snel wordt er gesynchroniseerd — en zijn dubbele boekingen mogelijk?",
+      "antwort": "De synchronisatie loopt in beide richtingen in realtime: een boeking op één portaal blokkeert die nacht overal elders, en gewijzigde prijzen of minimumverblijven gaan direct de deur uit. Alle kanalen delen één agenda, dus er ontstaat geen tweede waarheid. Een stop-sell sluit alles tegelijk, niet alleen waar je hem zet."
+    },
+    "betriebsarten": {
+      "frage": "Past dit voor een hotel én voor vakantiewoningen?",
+      "antwort": "Ja, het is hetzelfde model: elk object is precies één type — een kamertype in het hotel of een vakantiewoning — en daaronder hangen zijn eenheden. Een hotel met acht tweepersoons- en vier eenpersoonskamers heeft twee objecten met acht en vier eenheden. De portalen krijgen het aantal vrije eenheden, zodat vijf gelijke studio's geen vijf agenda's nodig hebben."
+    },
+    "direkt": {
+      "frage": "Krijg ik een eigen boekingspagina zonder portaalcommissie?",
+      "antwort": "Ja. Bij elk account horen een eigen boekingsportaal, een widget voor je bestaande website en een websitebouwer met eigen domein. Directe boekingen kosten 0,5 % in plaats van de 15–18 % commissie van de grote portalen, lopen op dezelfde agenda en dezelfde prijzen — en het geld gaat direct naar jouw rekening."
+    },
+    "marktplatz": {
+      "frage": "Wat is myBestDays?",
+      "antwort": "myBestDays is onze eigen marktplaats voor gasten — een boekingskanaal op gelijke voet met Booking.com en Airbnb, maar met een veel lagere commissie. Objecten die je daar zichtbaar maakt, verschijnen op de marktplaats en in de myBestDays-app voor gasten. Die zichtbaarheid is een eigen schakelaar, los van de portalen."
+    },
+    "zahlungen": {
+      "frage": "Hoe werken betalingen, aanbetalingen en facturen?",
+      "antwort": "Online betalingen lopen via Stripe naar je eigen rekening: aanbetaling, restbetaling of waarborg, met kaart en de betaalmethoden die Stripe in het land van de gast aanbiedt. Facturen en creditnota's ontstaan uit de boeking, in de valuta van het object, met boekhoudklare exports. Portaalkosten en heffingen worden per portaal correct gerekend — ook waar een portaal alleen een nettobedrag meldt."
+    },
+    "laender": {
+      "frage": "In welke landen, valuta's en talen werkt het platform?",
+      "antwort": "Bij de start op 1 september 2026 in 27 Europese landen. Interface en gastcommunicatie zijn er in 24 talen; de gast leest zijn bevestiging in zijn eigen taal. De valuta hangt aan het object of aan het bedrijf — er is geen euro-aanname, kronen, złoty of forint worden net zo gevoerd."
+    },
+    "rollen": {
+      "frage": "Wie ziet welke gegevens — eigenaren, schoonmaak, gasten?",
+      "antwort": "Elke rol heeft een eigen login en ziet alleen zijn deel. Eigenaren zien hun objecten, de bezetting en uitbetalingen, maar niet die van anderen. De schoonmaak ziet taken met fotochecklists, geen omzet. Gasten hebben hun eigen omgeving met check-in, digitale gastenmap en berichten."
+    },
+    "app": {
+      "frage": "Is er een app?",
+      "antwort": "Twee, omdat gast en bedrijf iets anders nodig hebben: de myNextDays-app voor bedrijf, eigenaren en schoonmaak — agenda, boekingen en taken onderweg — en de myBestDays-app voor gasten met zoeken, boeken, check-in en berichten. Beide praten met hetzelfde systeem; niets loopt op een kopie."
+    },
+    "sicherheit": {
+      "frage": "Hoe zit het met privacy en veiligheid?",
+      "antwort": "Gebouwd in Denemarken, gehost in de EU, AVG-conform inclusief verwerkersovereenkomst. De gegevens van elk bedrijf zijn op databaseniveau gescheiden, niet alleen in de interface. Tweefactor-aanmelding is beschikbaar, rolrechten beperken de blik op financiële en gastgegevens, en elke aanmelding is terug te vinden in de apparaatgeschiedenis."
+    },
+    "preis": {
+      "frage": "Wat kost myNextDays en hoe begin ik?",
+      "antwort": "30 dagen gratis, geen minimumtermijn, geen instelkosten, altijd opzegbaar. Daarna een abonnement plus een lage commissie op boekingen die wij aanbrengen. Extra modules zoals uitgebreide boekhouding met DATEV-export, medewerkersbeheer of hotelfuncties neem je alleen als je ze nodig hebt. Object aanmaken, kanalen verbinden, beginnen."
+    }
+  },
   "benefits": {
     "eyebrow": "Waarom myNextDays",
     "sub": "Drie dingen die er in de dagelijkse verhuurpraktijk echt toe doen – daarvoor is dit platform gebouwd.",

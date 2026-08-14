@@ -68,6 +68,115 @@
     "eyebrow": "Platforma",
     "typenEyebrow": "Za koga je"
   },
+  "zielgruppen": {
+    "bildAlt": "Sučelje myNextDays, primjer {typ}",
+    "abschluss": "Kakav god bio oblik — svime upravljate u istom sustavu, uz istu prijavu.",
+    "typen": {
+      "hotel": {
+        "unterzeile": "Hotelski softver s channel managerom",
+        "text": "Mali hoteli vode sobe kao tipove soba: svaki tip nosi svoje jedinice, a u planu zauzetosti svaka soba stoji zasebno — s dolaskom, odlaskom i čišćenjem. Booking.com, Expedia i ostali portali dobivaju broj slobodnih jedinica, ne da/ne. Cijene, minimalni boravak i blokade unosiš jednom, a channel manager ih raspoređuje na sve povezane portale. Račun, plaćanje i komunikacija s gostom su u istom sustavu.",
+        "beleg": "Dostupnost kao broj, ne da/ne."
+      },
+      "bnb": {
+        "unterzeile": "Sustav rezervacija za bed & breakfast",
+        "text": "Doručak, ručnici, naknada za ljubimca, pozni dolazak: dodatne usluge vise izravno na rezervaciji i stoje na gostovom računu bez zasebnog obračuna. Kdo u B&B-u sam stoji uz stol, ne želi voditi drugi popis — upiti, poruke, plaćanja i zauzetost sastaju se na jednom mjestu, na računalu i na mobitelu. Plaćanje karticom preko Stripea je uključeno, kao i vlastita stranica za rezervacije bez provizije portala.",
+        "beleg": "Dodatne usluge obračunate automatski."
+      },
+      "gaestehaus": {
+        "unterzeile": "Upravljanje pansionima s više soba",
+        "text": "Više jedinica pod istim krovom, jedan kalendar: koji gost dobiva koju sobu, odlučuješ do dolaska, bez ponovnog unosa rezervacije. Zgrada odlučuje što portali vide pod jednom oznakom; opremu, fotografije i cijene vodiš po tipu sobe. Zadaci čišćenja slijede dolaske i odlaske i dolaze na mobitel ekipe — s vlastitom prijavom koja prikazuje zadatke, a ne prihode.",
+        "beleg": "Jedna zgrada, jedna oznaka portala."
+      },
+      "motel": {
+        "unterzeile": "Softver za motele i kratke boravke",
+        "text": "Velik promet, kratki boravci, pozni dolasci: informacije o dolasku, pristupni kodovi i račun idu gostu automatski — u pravom trenutku i na njegovom jeziku, spremna su 24 jezika. Sobe koje se oslobode same se vraćaju na sve portale, a stop-sell ih zatvara svugdje odjednom. Na recepciji je dovoljan dnevni plan: ko dolazi, ko odlazi, što je otvoreno.",
+        "beleg": "Poruke idu same."
+      },
+      "lodge": {
+        "unterzeile": "Iznajmljivanje lodgea, i s mobitela",
+        "text": "Osamljeno ne znači odrezano: cijene, minimalni boravak, dane izmjene i blokade vodiš na mobitelu isto kao za stolom — isti kalendar, ista rezervacija, bez međustanja. Sezonske cijene postavljaš u cjenovnoj mreži za cijelu godinu umjesto dan za danom, a popusti za dulje boravke stižu i na portale. I bez recepcije gost zna kako ući.",
+        "beleg": "I na putu, u aplikaciji."
+      },
+      "ferienwohnung": {
+        "unterzeile": "Channel manager za apartmane",
+        "text": "Jedan apartman, svi kanali: Booking.com, Airbnb, Vrbo, naš vlastiti marketplace myBestDays i direktne rezervacije s tvoje stranice dijele jedan kalendar. Prodana noć nestaje svugdje — dvostruke rezervacije ne nastaju. Direktne rezervacije s niskom provizijom možeš namjerno favorizirati: vlastita cjenovna strategija, popusti za dulje boravke, automatske poruke od rezervacije do odlaska i plaćanje karticom na tvoj račun.",
+        "beleg": "Jedan kalendar za sve kanale."
+      },
+      "resort": {
+        "unterzeile": "Upravljanje resortom s mnogo jedinica",
+        "text": "Studia, suite i vile idu kao vlastiti tipovi s vlastitim cijenama, opremom i pravilima zauzetosti — svi pod jednim računom i jednim obračunom. Koliko god objekata i koliko god jedinica po tipu treba, bez mijenjanja prijave. Recepcija, čišćenje i vlasnici vide samo svoj dio; obračuni vlasnicima nastaju po objektu s izvještajem, a ne kao tablica na kraju mjeseca.",
+        "beleg": "Koliko god objekata po računu."
+      },
+      "huette": {
+        "unterzeile": "Najam kućica u sezonskom radu",
+        "text": "Sezonski rad bez ručnog posla: zatvorena razdoblja, dani izmjene, minimalni i maksimalni boravci postavljaju se jednom i vrijede na svim portalima istovremeno. Ako je kućica zimi zatvorena, zatvorena je svugdje — bez prijave u pet ekstraneta. Dan izmjene ostaje slobodan između dvije rezervacije da čišćenje ima vremena, a dani dolaska ili odlaska mogu se blokirati pojedinačno.",
+        "beleg": "Jedna blokada vrijedi na svim portalima."
+      },
+      "pension": {
+        "unterzeile": "Vođenje pansiona s računom i turističkom taksom",
+        "text": "Polupansion, turistička taksa, stalni gosti, plaćanje na mjestu: nadoplate i takse sustav izračunava točno za svaki portal — i tamo gdje portal javlja neto iznos, a tebi treba bruto cijena. Računi, storna i otvorene pozicije stoje u istom predmetu kao rezervacija, u valuti tvoje zemlje. Goste koji se vraćaju prepoznaješ po povijesti, a ne pretragom starih e-mailova.",
+        "beleg": "Takse po portalu, točno izračunate."
+      },
+      "campingplatz": {
+        "unterzeile": "Upravljanje kampom s parcelama",
+        "text": "Parcele, kamp-prikolice za najam i glamping šatori su tipovi s količinom: dvadeset istih parcela je jedan tip s dvadeset jedinica, a ne dvadeset kalendara. Dostupnost ide na portale kao broj, da se nikad ne proda više nego što ima. Struju, turističku taksu ili psa obračunavaš po noći ili po boravku, a dolasci dana stoje skupljeni u dnevnom planu.",
+        "beleg": "Količina umjesto dvadeset kalendara."
+      }
+    }
+  },
+  "faq": {
+    "eyebrow": "Često pitana",
+    "heading": "Pitanja koja dolaze prije promjene sustava.",
+    "sub": "Što platforma radi, koliko košta i kako su zaštićeni tvoji podaci — bez marketinškog jezika.",
+    "was": {
+      "frage": "Što je myNextDays točno?",
+      "antwort": "myNextDays je sustav za upravljanje smještajem i channel manager u jednom — za hotele, pansione, apartmane, kampove i agencije. Kalendar, rezervacije, cijene, portali, direktna rezervacija, komunikacija s gostom, čišćenje i obračun nalaze se u jednom sučelju s jednom prijavom, umjesto u četiri alata koji ne znaju jedan o drugom."
+    },
+    "portale": {
+      "frage": "Koje rezervacijske portale mogu povezati?",
+      "antwort": "Preko našeg partnera za povezivost Channex dosežeš 56 rezervacijskih platformi, među njima Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda i Tripadvisor. Uz to dolaze naš vlastiti marketplace myBestDays, widget za rezervacije na tvojoj stranici i regionalni kanali. Svaki kanal uključuje se zasebno: odlučuješ po objektu gdje je vidljiv."
+    },
+    "sync": {
+      "frage": "Koliko brzo se sinkronizira — i mogu li nastati dvostruke rezervacije?",
+      "antwort": "Sinkronizacija ide u oba smjera u stvarnom vremenu: rezervacija na jednom portalu zatvara noć svugdje drugdje, a promijenjene cijene ili minimalni boravci izlaze odmah. Svi kanali dijele jedan kalendar, pa druga istina ne nastaje. Stop-sell zatvara svugdje odjednom, ne samo tamo gdje ga postaviš."
+    },
+    "betriebsarten": {
+      "frage": "Odgovara li to hotelu i apartmanima istovremeno?",
+      "antwort": "Da, isti je model: svaki objekt je točno jedan tip — tip sobe u hotelu ili odmarališni objekt — a pod njim vise njegove jedinice. Hotel s osam dvokrevetnih i četiri jednokrevetne sobe ima dva objekta s osam i četiri jedinice. Na portale ide broj slobodnih jedinica, da pet istih studia ne traži pet kalendara."
+    },
+    "direkt": {
+      "frage": "Dobivam li vlastitu stranicu za rezervacije bez provizije portala?",
+      "antwort": "Da. Svakom računu pripadaju vlastiti rezervacijski portal, widget za postojeću stranicu i graditelj web-stranica s vlastitom domenom. Direktne rezervacije koštaju 0,5 % umjesto 15–18 % provizije velikih portala, idu na istom kalendaru i istim cijenama — a novac ide direktno na tvoj račun."
+    },
+    "marktplatz": {
+      "frage": "Što je myBestDays?",
+      "antwort": "myBestDays je naš vlastiti marketplace za goste — rezervacijski kanal ravan Booking.comu i Airbnbu, samo s bitno nižom provizijom. Objekti koje tamo učiniš vidljivima pojavljuju se na marketplaceu i u myBestDays aplikaciji za goste. Ta vidljivost je vlastiti prekidač, neovisan od portala."
+    },
+    "zahlungen": {
+      "frage": "Kako rade plaćanja, predujmovi i računi?",
+      "antwort": "Online plaćanja idu preko Stripea na tvoj vlastiti račun: predujam, ostatak ili jamčevina, karticom i načinima koje Stripe nudi u zemlji gosta. Računi i storna nastaju iz rezervacije, u valuti objekta, s izvozima gotovima za knjigovodstvo. Provizije portala i takse računaju se točno po portalu — i tamo gdje portal javlja samo neto iznos."
+    },
+    "laender": {
+      "frage": "U kojim zemljama, valutama i jezicima platforma radi?",
+      "antwort": "Na startu 1. rujna 2026. u 27 europskih zemalja. Sučelje i komunikacija s gostom postoje na 24 jezika; gost čita potvrdu na svom jeziku. Valuta pripada objektu ili poslovanju — euro se ne pretpostavlja, krune, zloti ili forinte vode se isto."
+    },
+    "rollen": {
+      "frage": "Ko vidi koje podatke — vlasnici, čišćenje, gosti?",
+      "antwort": "Svaka rola ima vlastitu prijavu i vidi samo svoj dio. Vlasnici vide svoje objekte, njihovu zauzetost i isplate, ali ne tuđe. Čišćenje vidi zadatke s foto-listama, ne prihode. Gosti imaju vlastito područje s prijavom, digitalnim vodičem i porukama."
+    },
+    "app": {
+      "frage": "Postoji li aplikacija?",
+      "antwort": "Dvije, jer gost i poslovanje traže različito: aplikacija myNextDays za poslovanje, vlasnike i čišćenje — kalendar, rezervacije i zadaci u pokretu — i aplikacija myBestDays za goste s pretragom, rezervacijom, prijavom i porukama. Obje govore s istim sustavom; ništa ne radi na kopiji."
+    },
+    "sicherheit": {
+      "frage": "Kako stoji sa zaštitom podataka i sigurnošću?",
+      "antwort": "Građeno u Danskoj, hostirano u EU, u skladu s GDPR-om uključujući ugovor o obradi podataka. Podaci svakog poslovanja odvojeni su na razini baze podataka, ne samo u sučelju. Prijava s dva faktora je dostupna, prava po rolama ograničavaju uvid u financijske i podatke gostiju, a svaka prijava vidljiva je u povijesti uređaja."
+    },
+    "preis": {
+      "frage": "Koliko košta myNextDays i kako počinjem?",
+      "antwort": "30 dana besplatno, bez minimalnog trajanja, bez naknade za postavljanje, otkaz u svakom trenutku. Nakon toga pretplata plus niska provizija na rezervacije koje dovedemo. Dodatni moduli — prošireno knjigovodstvo s DATEV izvozom, upravljanje zaposlenima ili hotelske funkcije — dodaju se samo ako ti trebaju. Kreiraj objekt, poveži kanale, kreni."
+    }
+  },
   "benefits": {
     "eyebrow": "Zašto myNextDays",
     "sub": "Tri stvari koje uistinu čine razliku u svakodnevici iznajmljivanja — upravo za njih je platforma napravljena.",

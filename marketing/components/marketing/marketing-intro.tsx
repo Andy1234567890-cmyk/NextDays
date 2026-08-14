@@ -1,31 +1,17 @@
-// Intro — „Willkommen bei myNextDays" (Text links, Belege rechts) plus die
-// Zielgruppen-Reihe.
+// Intro — „Willkommen bei myNextDays" (Text links, Belege rechts).
 //
 // Referenz-UX (hostaway.com): zweispaltige Erklärsektion mit linksbündigem
-// Eyebrow-Heading-Block und einer Check-Liste als rechte Spalte; die
-// Zielgruppen stehen als flache Pill-Reihe unter einer eigenen Überschrift.
+// Eyebrow-Heading-Block und einer Check-Liste als rechte Spalte.
+//
+// Die Zielgruppen standen bis 14.08.2026 hier als flache Kachelreihe und sind
+// jetzt eine eigene Sektion mit gestapelten Karten:
+// components/marketing/marketing-zielgruppen.tsx.
 import { Icon } from "@/components/ui/icon";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
-import { TYPE_ICONS } from "@/components/marketing/property-type-icons";
 import { SectionHeading } from "@/components/marketing/section-kit";
 import { Button } from "@/components/ui/button";
-
-// Schlüssel, nicht Texte — die Namen der Objekttypen kommen aus messages
-// (intro.typen.*).
-const PROPERTY_TYPES = [
-  "hotel",
-  "bnb",
-  "gaestehaus",
-  "motel",
-  "lodge",
-  "ferienwohnung",
-  "resort",
-  "huette",
-  "pension",
-  "campingplatz",
-] as const;
 
 // Belegbare Aussagen statt Kundenzitat — Texte aus messages (intro.belege.*).
 const BELEGE = ["neu", "eu", "kanaele", "start"] as const;
@@ -64,30 +50,6 @@ export function MarketingIntro() {
                 <span className="text-muted-foreground">{t(`belege.${key}`)}</span>
               </li>
             ))}
-          </ul>
-        </div>
-      </div>
-
-      {/* Zielgruppen */}
-      <div className="border-t border-border">
-        <div className="mx-auto max-w-7xl px-6 py-16">
-          <SectionHeading eyebrow={t("typenEyebrow")} heading={t("reichweite")} />
-          {/* Kacheln mit eigenem Piktogramm je Objekttyp. Fünf Spalten, weil
-              genau zehn Typen aufgehen — in drei Spalten bliebe unten eine
-              einzelne Kachel als Waise stehen. */}
-          <ul className="mx-auto mt-10 grid max-w-5xl grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {PROPERTY_TYPES.map((type) => {
-              const TypeIcon = TYPE_ICONS[type];
-              return (
-                <li
-                  key={type}
-                  className="flex flex-col items-center gap-2.5 rounded-2xl bg-surface-warm px-3 py-5 text-center transition-colors hover:bg-surface-accent"
-                >
-                  <TypeIcon className="size-9 text-accent" />
-                  <span className="text-sm font-medium">{t(`typen.${type}`)}</span>
-                </li>
-              );
-            })}
           </ul>
         </div>
       </div>

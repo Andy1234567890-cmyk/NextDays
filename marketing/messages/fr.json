@@ -68,6 +68,115 @@
     "eyebrow": "La plateforme",
     "typenEyebrow": "À qui elle s'adresse"
   },
+  "zielgruppen": {
+    "bildAlt": "Interface myNextDays, exemple {typ}",
+    "abschluss": "Quelle que soit la forme — tout est géré dans le même système, avec le même identifiant.",
+    "typen": {
+      "hotel": {
+        "unterzeile": "Logiciel hôtelier avec channel manager",
+        "text": "Les petits hôtels gèrent leurs chambres par type : chaque type porte ses unités, et le plan d'occupation affiche chaque chambre séparément — arrivée, départ et ménage compris. Booking.com, Expedia et les autres portails reçoivent le nombre d'unités libres, pas un oui/non. Tarifs, séjour minimum et blocages se saisissent une seule fois, le channel manager les distribue à tous les portails connectés. Facture, paiement et messages aux clients restent dans le même système.",
+        "beleg": "La disponibilité est un nombre, pas un oui/non."
+      },
+      "bnb": {
+        "unterzeile": "Système de réservation pour chambres d'hôtes",
+        "text": "Petit-déjeuner, linge, supplément animaux, arrivée tardive : les prestations s'attachent à la réservation et figurent sur la facture du client sans calcul annexe. Quand on tient soi-même la maison d'hôtes, on ne veut pas d'une deuxième liste — demandes, messages, paiements et occupation se rejoignent au même endroit, sur l'ordinateur comme sur le téléphone. Le paiement par carte via Stripe est inclus, ainsi que votre page de réservation sans commission.",
+        "beleg": "Prestations facturées automatiquement."
+      },
+      "gaestehaus": {
+        "unterzeile": "Gestion de maisons d'hôtes à plusieurs chambres",
+        "text": "Plusieurs unités sous un même toit, un seul calendrier : qui obtient quelle chambre reste votre décision jusqu'à l'arrivée, sans recréer la réservation. Le bâtiment détermine ce que les portails voient sous un identifiant ; équipements, photos et tarifs se gèrent par type de chambre. Les tâches de ménage suivent les arrivées et les départs et arrivent sur le téléphone de l'équipe — avec un accès qui montre les tâches, pas le chiffre d'affaires.",
+        "beleg": "Un bâtiment, un identifiant portail."
+      },
+      "motel": {
+        "unterzeile": "Logiciel pour motels et séjours courts",
+        "text": "Beaucoup de rotation, séjours courts, arrivées tardives : informations d'arrivée, codes d'accès et facture partent automatiquement au client — au bon moment et dans sa langue, 24 langues disponibles. Les chambres à nouveau libres repartent d'elles-mêmes vers tous les portails, et un stop-sell les ferme partout à la fois. À la réception, le plan du jour suffit : qui arrive, qui part, ce qui reste ouvert.",
+        "beleg": "Les messages partent tout seuls."
+      },
+      "lodge": {
+        "unterzeile": "Louer un lodge, aussi depuis le téléphone",
+        "text": "Isolé ne veut pas dire coupé du monde : tarifs, séjour minimum, jours de rotation et blocages se gèrent depuis le téléphone comme au bureau — même calendrier, même réservation, aucun état intermédiaire. Les tarifs saisonniers se posent dans la grille pour une année entière au lieu d'être saisis jour après jour, et les remises de longue durée atteignent aussi les portails. Même sans réception, le client sait comment entrer.",
+        "beleg": "En déplacement aussi, dans l'app."
+      },
+      "ferienwohnung": {
+        "unterzeile": "Channel manager pour locations saisonnières",
+        "text": "Un logement, tous les canaux : Booking.com, Airbnb, Vrbo, notre place de marché myBestDays et les réservations directes de votre site partagent un calendrier. Dès qu'une nuit est vendue, elle disparaît partout — aucune double réservation possible. Vous pouvez favoriser volontairement les réservations directes à faible commission : stratégie tarifaire propre, remises pour longs séjours, messages automatiques de la réservation au départ et paiement par carte sur votre compte.",
+        "beleg": "Un calendrier pour tous les canaux."
+      },
+      "resort": {
+        "unterzeile": "Gérer un resort à nombreuses unités",
+        "text": "Studios, suites et villas fonctionnent comme des types distincts avec leurs tarifs, équipements et règles d'occupation — tous sous un compte et une seule facturation. Autant d'objets et autant d'unités par type que nécessaire, sans changer d'accès. Réception, ménage et propriétaires ne voient que leur part ; les décomptes propriétaires se font par objet, rapport inclus, au lieu d'un tableur en fin de mois.",
+        "beleg": "Autant d'objets par compte que nécessaire."
+      },
+      "huette": {
+        "unterzeile": "Location de chalets en saison",
+        "text": "Exploitation saisonnière sans travail manuel : périodes fermées, jours de rotation, séjours minimum et maximum se règlent une fois et s'appliquent sur tous les portails en même temps. Si le chalet ferme l'hiver, il ferme partout — sans se connecter à cinq extranets. Le jour de rotation reste libre entre deux réservations pour laisser le temps au ménage, et les jours d'arrivée ou de départ se bloquent séparément.",
+        "beleg": "Un blocage vaut sur tous les portails."
+      },
+      "pension": {
+        "unterzeile": "Gestion de pension avec facture et taxe de séjour",
+        "text": "Demi-pension, taxe de séjour, habitués, paiement sur place : le système calcule correctement suppléments et taxes pour chaque portail — y compris là où le portail annonce un montant net alors qu'il vous faut le prix brut. Factures, avoirs et postes ouverts se trouvent dans le même dossier que la réservation, dans la monnaie de votre pays. Les clients fidèles se reconnaissent à leur historique, sans fouiller d'anciens courriels.",
+        "beleg": "Taxes par portail, calculées juste."
+      },
+      "campingplatz": {
+        "unterzeile": "Gestion de camping avec emplacements",
+        "text": "Emplacements, caravanes de location et tentes glamping sont des types avec une quantité : vingt emplacements identiques font un type de vingt unités, pas vingt calendriers. La disponibilité part aux portails sous forme de nombre, pour ne jamais vendre plus que ce qui existe. Électricité, taxe de séjour ou chien se facturent à la nuit ou au séjour, et les arrivées du jour sont regroupées dans le plan du jour.",
+        "beleg": "Une quantité au lieu de vingt calendriers."
+      }
+    }
+  },
+  "faq": {
+    "eyebrow": "Questions fréquentes",
+    "heading": "Les questions qui précèdent un changement de système.",
+    "sub": "Ce que fait la plateforme, ce qu'elle coûte et comment vos données sont protégées — sans jargon marketing.",
+    "was": {
+      "frage": "Qu'est-ce que myNextDays exactement ?",
+      "antwort": "myNextDays est un système de gestion immobilière et un channel manager en un — pour hôtels, pensions, maisons d'hôtes, locations saisonnières, campings et agences. Calendrier, réservations, tarifs, portails, réservation directe, messages aux clients, ménage et facturation se trouvent dans une seule interface avec un seul identifiant, au lieu de quatre outils qui s'ignorent."
+    },
+    "portale": {
+      "frage": "Quels portails de réservation puis-je connecter ?",
+      "antwort": "Via notre partenaire de connectivité Channex, vous atteignez 56 plateformes de réservation, dont Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda et Tripadvisor. S'y ajoutent notre place de marché myBestDays, un widget de réservation pour votre site et des canaux régionaux. Chaque canal s'active séparément : vous décidez, par objet, où il est visible."
+    },
+    "sync": {
+      "frage": "À quelle vitesse la synchronisation se fait-elle — et les doubles réservations sont-elles possibles ?",
+      "antwort": "La synchronisation est bidirectionnelle et en temps réel : une réservation sur un portail bloque la nuit partout ailleurs, et les tarifs ou séjours minimum modifiés partent immédiatement. Tous les canaux partagent un calendrier, il n'y a donc pas de seconde vérité. Un stop-sell ferme partout à la fois, pas seulement là où vous l'appliquez."
+    },
+    "betriebsarten": {
+      "frage": "Est-ce adapté à un hôtel et à des locations saisonnières en même temps ?",
+      "antwort": "Oui, c'est le même modèle : chaque objet est exactement un type — un type de chambre à l'hôtel ou un logement de vacances — et ses unités se rattachent en dessous. Un hôtel avec huit chambres doubles et quatre simples a deux objets de huit et quatre unités. Les portails reçoivent le nombre d'unités libres, ainsi cinq studios identiques n'exigent pas cinq calendriers."
+    },
+    "direkt": {
+      "frage": "Ai-je une page de réservation sans commission de portail ?",
+      "antwort": "Oui. Chaque compte comprend son propre portail de réservation, un widget pour votre site existant et un créateur de site avec votre domaine. Les réservations directes coûtent 0,5 % au lieu des 15–18 % de commission des grands portails, utilisent le même calendrier et les mêmes tarifs — et l'argent arrive directement sur votre compte."
+    },
+    "marktplatz": {
+      "frage": "Qu'est-ce que myBestDays ?",
+      "antwort": "myBestDays est notre place de marché pour les voyageurs — un canal de réservation au même rang que Booking.com et Airbnb, mais avec une commission bien plus faible. Les objets que vous y rendez visibles apparaissent sur la place de marché et dans l'application myBestDays pour les clients. Cette visibilité est un interrupteur distinct, indépendant des portails."
+    },
+    "zahlungen": {
+      "frage": "Comment fonctionnent les paiements, acomptes et factures ?",
+      "antwort": "Les paiements en ligne passent par Stripe vers votre propre compte : acompte, solde ou caution, par carte et selon les moyens de paiement proposés par Stripe dans le pays du client. Factures et avoirs naissent de la réservation, dans la devise de l'objet, avec des exports prêts pour la comptabilité. Frais de portail et taxes sont calculés correctement portail par portail — même lorsqu'un portail ne communique qu'un montant net."
+    },
+    "laender": {
+      "frage": "Dans quels pays, devises et langues la plateforme fonctionne-t-elle ?",
+      "antwort": "Au lancement, le 1er septembre 2026, dans 27 pays européens. Interface et communication client existent en 24 langues ; le client lit sa confirmation dans sa langue. La devise appartient à l'objet ou à l'établissement — aucune présomption d'euro, couronnes, złoty ou forints sont traités de la même façon."
+    },
+    "rollen": {
+      "frage": "Qui voit quelles données — propriétaires, ménage, clients ?",
+      "antwort": "Chaque rôle a son propre accès et ne voit que sa part. Les propriétaires voient leurs objets, leur occupation et leurs versements, mais pas ceux des autres. Le ménage voit des tâches avec des check-lists photo, pas le chiffre d'affaires. Les clients disposent de leur espace avec check-in, livret d'accueil numérique et messages."
+    },
+    "app": {
+      "frage": "Existe-t-il une application ?",
+      "antwort": "Deux, parce que le client et l'exploitant ont des besoins différents : l'application myNextDays pour l'établissement, les propriétaires et le ménage — calendrier, réservations et tâches en déplacement — et l'application myBestDays pour les clients avec recherche, réservation, check-in et messages. Les deux parlent au même système ; rien ne tourne sur une copie."
+    },
+    "sicherheit": {
+      "frage": "Qu'en est-il de la protection des données et de la sécurité ?",
+      "antwort": "Développé au Danemark, hébergé dans l'UE, conforme au RGPD avec contrat de sous-traitance. Les données de chaque établissement sont séparées au niveau de la base de données, pas seulement dans l'interface. L'authentification à deux facteurs est disponible, les droits par rôle limitent l'accès aux données financières et clients, et chaque connexion est traçable dans l'historique des appareils."
+    },
+    "preis": {
+      "frage": "Combien coûte myNextDays et comment commencer ?",
+      "antwort": "30 jours gratuits, sans durée minimale, sans frais d'installation, résiliable à tout moment. Ensuite un abonnement plus une faible commission sur les réservations que nous apportons. Les modules complémentaires — comptabilité étendue avec export DATEV, gestion du personnel ou fonctions hôtelières — ne s'ajoutent que si vous en avez besoin. Créez un objet, connectez vos canaux, c'est parti."
+    }
+  },
   "benefits": {
     "eyebrow": "Pourquoi myNextDays",
     "sub": "Trois choses qui comptent vraiment au quotidien dans la location : c'est pour cela que la plateforme est faite.",

@@ -1,0 +1,102 @@
+[
+  {
+    "typ": "hotel",
+    "datei": "hotel.webp",
+    "zeigt": "Modernes Hotelzimmer mit Sesseln, Schreibtisch und Fernseher",
+    "direkt_url": "https://images.pexels.com/photos/18651505/pexels-photo-18651505.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "quelle_url": "https://www.pexels.com/photo/18651505/",
+    "lizenz": "Pexels License",
+    "lizenz_url": "https://www.pexels.com/license/",
+    "anbieter": "pexels"
+  },
+  {
+    "typ": "bnb",
+    "datei": "bnb.webp",
+    "zeigt": "Frühstückstablett mit Croissants auf einem gemachten Bett",
+    "direkt_url": "https://images.pexels.com/photos/6429527/pexels-photo-6429527.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "quelle_url": "https://www.pexels.com/photo/6429527/",
+    "lizenz": "Pexels License",
+    "lizenz_url": "https://www.pexels.com/license/",
+    "anbieter": "pexels"
+  },
+  {
+    "typ": "gaestehaus",
+    "datei": "gaestehaus.webp",
+    "zeigt": "Gästehaus aus Backstein mit Garten und Bäumen",
+    "direkt_url": "https://images.pexels.com/photos/7587467/pexels-photo-7587467.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "quelle_url": "https://www.pexels.com/photo/7587467/",
+    "lizenz": "Pexels License",
+    "lizenz_url": "https://www.pexels.com/license/",
+    "anbieter": "pexels"
+  },
+  {
+    "typ": "motel",
+    "datei": "motel.webp",
+    "zeigt": "Motel-Leuchtschild an einer Straße im Abendlicht",
+    "direkt_url": "https://images.pexels.com/photos/30171418/pexels-photo-30171418.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "quelle_url": "https://www.pexels.com/photo/30171418/",
+    "lizenz": "Pexels License",
+    "lizenz_url": "https://www.pexels.com/license/",
+    "anbieter": "pexels"
+  },
+  {
+    "typ": "lodge",
+    "datei": "lodge.webp",
+    "zeigt": "Lodge aus Holz mitten im Wald, von oben gesehen",
+    "direkt_url": "https://images.pexels.com/photos/18013524/pexels-photo-18013524.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "quelle_url": "https://www.pexels.com/photo/18013524/",
+    "lizenz": "Pexels License",
+    "lizenz_url": "https://www.pexels.com/license/",
+    "anbieter": "pexels"
+  },
+  {
+    "typ": "ferienwohnung",
+    "datei": "ferienwohnung.webp",
+    "zeigt": "Helles Wohnzimmer einer Ferienwohnung mit Balkontür",
+    "direkt_url": "https://images.pexels.com/photos/11167661/pexels-photo-11167661.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "quelle_url": "https://www.pexels.com/photo/11167661/",
+    "lizenz": "Pexels License",
+    "lizenz_url": "https://www.pexels.com/license/",
+    "anbieter": "pexels"
+  },
+  {
+    "typ": "resort",
+    "datei": "resort.webp",
+    "zeigt": "Resort-Pool mit Palmen und Liegen",
+    "direkt_url": "https://images.pexels.com/photos/6821435/pexels-photo-6821435.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "quelle_url": "https://www.pexels.com/photo/6821435/",
+    "lizenz": "Pexels License",
+    "lizenz_url": "https://www.pexels.com/license/",
+    "anbieter": "pexels"
+  },
+  {
+    "typ": "huette",
+    "datei": "huette.webp",
+    "zeigt": "Almhütte auf einer Wiese vor Bergen",
+    "direkt_url": "https://images.pexels.com/photos/7185634/pexels-photo-7185634.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "quelle_url": "https://www.pexels.com/photo/7185634/",
+    "lizenz": "Pexels License",
+    "lizenz_url": "https://www.pexels.com/license/",
+    "anbieter": "pexels"
+  },
+  {
+    "typ": "pension",
+    "datei": "pension.webp",
+    "zeigt": "Zimmer einer Pension mit hölzernem Bettkopfteil und Nachttischlampen",
+    "direkt_url": "https://images.pexels.com/photos/11757072/pexels-photo-11757072.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "quelle_url": "https://www.pexels.com/photo/11757072/",
+    "lizenz": "Pexels License",
+    "lizenz_url": "https://www.pexels.com/license/",
+    "anbieter": "pexels"
+  },
+  {
+    "typ": "campingplatz",
+    "datei": "campingplatz.webp",
+    "zeigt": "Campingplatz mit bunten Zelten zwischen Bäumen",
+    "direkt_url": "https://images.pexels.com/photos/10513799/pexels-photo-10513799.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "quelle_url": "https://www.pexels.com/photo/10513799/",
+    "lizenz": "Pexels License",
+    "lizenz_url": "https://www.pexels.com/license/",
+    "anbieter": "pexels"
+  }
+]

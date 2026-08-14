@@ -9,6 +9,7 @@ import { MarketingBenefits } from "@/components/marketing/marketing-benefits";
 
 import { MarketingCta } from "@/components/marketing/marketing-cta";
 import { MarketingEinblicke } from "@/components/marketing/marketing-einblicke";
+import { MarketingFaq } from "@/components/marketing/marketing-faq";
 import { MarketingFeatures } from "@/components/marketing/marketing-features";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { MarketingHero } from "@/components/marketing/marketing-hero";
@@ -20,6 +21,7 @@ import { MarketingStats } from "@/components/marketing/marketing-stats";
 import { MarketingTestimonials } from "@/components/marketing/marketing-testimonials";
 import { MarketingTrial } from "@/components/marketing/marketing-trial";
 import { MarketingUsecases } from "@/components/marketing/marketing-usecases";
+import { MarketingZielgruppen } from "@/components/marketing/marketing-zielgruppen";
 import { SectionWave } from "@/components/marketing/section-kit";
 
 // Titel/Beschreibung kommen aus dem Root-Layout (generateMetadata, meta.*) —
@@ -34,6 +36,9 @@ export default function MarketingPage() {
         <SectionWave from="text-background" to="bg-surface-warm" />
         <MarketingBenefits />
         <MarketingIntro />
+        {/* Zielgruppen als gestapelte Scroll-Karten — je Unterkunftsart eine
+            Karte mit Aufnahme aus der Software. */}
+        <MarketingZielgruppen />
         <MarketingFeatures />
         {/* Beweis nach der Funktionsliste: echte Aufnahmen aus der Software. */}
         <MarketingEinblicke />
@@ -50,6 +55,10 @@ export default function MarketingPage() {
             aktivieren (Komponente: components/marketing/marketing-stimmen.tsx,
             braucht eine Suspense-Grenze wegen useSearchParams). */}
         <MarketingTrial />
+        {/* Häufige Fragen vor dem Abschluss-CTA: wer hier noch zögert, sucht
+            eine Antwort, keinen weiteren Knopf. Trägt zusätzlich das
+            FAQPage-Schema für die Suchergebnisse. */}
+        <MarketingFaq />
         <SectionWave from="text-background" to="bg-surface-warm" />
         <MarketingCta />
       </main>

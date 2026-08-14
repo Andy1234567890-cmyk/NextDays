@@ -68,6 +68,115 @@
     "eyebrow": "Die Plattform",
     "typenEyebrow": "Zielgruppen"
   },
+  "zielgruppen": {
+    "bildAlt": "myNextDays-Oberfläche, Beispiel {typ}",
+    "abschluss": "Welche Form auch immer — verwaltet wird alles im selben System, mit demselben Login.",
+    "typen": {
+      "hotel": {
+        "unterzeile": "Hotelsoftware mit Channel-Manager",
+        "text": "Kleine Hotels führen ihre Zimmer als Zimmertypen: jeder Typ hat seine Einheiten, und im Belegungsplan steht jedes Zimmer einzeln — mit Anreise, Abreise und Reinigung. An Booking.com, Expedia und die übrigen Buchungsportale geht die Zahl der freien Einheiten, kein Ja/Nein. Preise, Mindestaufenthalt und Sperren pflegst du einmal, der Channel-Manager verteilt sie an alle verbundenen Portale. Rechnung, Zahlung und Gästekommunikation liegen im selben System.",
+        "beleg": "Verfügbarkeit als Zahl, nicht als Ja/Nein."
+      },
+      "bnb": {
+        "unterzeile": "Buchungssystem für Bed & Breakfast",
+        "text": "Frühstück, Handtücher, Haustiergebühr, späte Anreise: Zusatzleistungen hängen direkt an der Buchung und stehen ohne Nebenrechnung auf der Rechnung des Gastes. Wer im B&B selbst am Tisch steht, will keine zweite Liste führen — Anfragen, Nachrichten, Zahlungen und Belegung laufen an einer Stelle zusammen, am Rechner wie am Handy. Kartenzahlung über Stripe gehört dazu, ebenso die eigene Buchungsseite ohne Portalprovision.",
+        "beleg": "Zusatzleistungen automatisch abgerechnet."
+      },
+      "gaestehaus": {
+        "unterzeile": "Verwaltung für Gästehäuser mit mehreren Zimmern",
+        "text": "Mehrere Einheiten unter einem Dach, ein Kalender: welcher Gast welches Zimmer bekommt, entscheidest du bis zur Anreise, ohne die Buchung neu anzulegen. Das Gebäude bestimmt, was bei den Portalen unter einer Kennung zusammenläuft; Ausstattung, Fotos und Preise pflegst du je Zimmertyp. Reinigungsaufgaben hängen an An- und Abreisen und liegen auf dem Handy des Teams — mit eigenem Zugang, der nur Aufgaben zeigt, keine Umsätze.",
+        "beleg": "Ein Gebäude, eine Portal-Kennung."
+      },
+      "motel": {
+        "unterzeile": "Software für Motels und Kurzaufenthalte",
+        "text": "Viel Durchlauf, kurze Aufenthalte, späte Anreisen: Anreiseinformationen, Zugangsdaten und Rechnung gehen automatisch an den Gast — zur richtigen Zeit und in seiner Sprache, 24 Sprachen stehen bereit. Zimmer, die wieder frei sind, gehen ohne Zutun zurück an alle Portale, und ein Stop-Sell sperrt sie überall gleichzeitig. Am Empfang genügt der Tagesplan: wer kommt, wer geht, was ist noch offen.",
+        "beleg": "Nachrichten laufen von selbst."
+      },
+      "lodge": {
+        "unterzeile": "Lodge vermieten, auch vom Handy aus",
+        "text": "Abgelegen heißt nicht abgeschnitten: Preise, Mindestaufenthalt, Wechseltage und Sperren pflegst du am Handy genauso wie am Schreibtisch — derselbe Kalender, dieselbe Buchung, ohne Zwischenstand. Saisonpreise legst du im Preisraster für ein ganzes Jahr fest, statt Tag für Tag zu tippen, und Aufenthaltsrabatte gelten auch bei den Portalen. Ohne Empfang vor Ort weiß der Gast trotzdem, wie er hineinkommt.",
+        "beleg": "Auch unterwegs, per App."
+      },
+      "ferienwohnung": {
+        "unterzeile": "Channel-Manager für Ferienwohnungen",
+        "text": "Eine Wohnung, alle Kanäle: Booking.com, Airbnb, Vrbo, unser eigener Marktplatz myBestDays und die Direktbuchung auf deiner Website teilen einen Kalender. Ist eine Nacht verkauft, ist sie überall weg — Doppelbuchungen entstehen nicht. Provisionsarme Direktbuchungen kannst du gezielt bevorzugen: eigene Preisstrategie, Rabatte für längere Aufenthalte, automatische Nachrichten von der Buchung bis zur Abreise und Zahlung per Karte auf dein Konto.",
+        "beleg": "Ein Kalender für alle Kanäle."
+      },
+      "resort": {
+        "unterzeile": "Resort mit vielen Einheiten verwalten",
+        "text": "Studios, Suiten und Villen laufen als eigene Typen mit eigenen Preisen, Ausstattungen und Belegungsregeln — alle unter einem Konto und einer Abrechnung. Beliebig viele Objekte, beliebig viele Einheiten je Typ, ohne dass jemand zwischen Zugängen wechselt. Empfang, Reinigung und Eigentümer sehen jeweils nur ihren Teil; Eigentümer-Abrechnungen entstehen je Objekt samt Bericht, statt am Monatsende in einer Tabelle.",
+        "beleg": "Beliebig viele Objekte je Konto."
+      },
+      "huette": {
+        "unterzeile": "Hüttenvermietung im Saisonbetrieb",
+        "text": "Saisonbetrieb ohne Handarbeit: Sperrzeiten, Wechseltage, Mindest- und Höchstaufenthalte setzt du einmal, und sie gelten auf allen Portalen gleichzeitig. Ist die Hütte im Winter zu, ist sie überall zu — ohne Login in fünf Extranets. Zwischen zwei Buchungen bleibt der Wechseltag frei, damit die Reinigung Zeit hat, und Anreise- wie Abreisetage lassen sich einzeln sperren.",
+        "beleg": "Eine Sperre gilt auf allen Portalen."
+      },
+      "pension": {
+        "unterzeile": "Pensionsverwaltung mit Rechnung und Kurtaxe",
+        "text": "Halbpension, Kurtaxe, Stammgäste, Zahlung am Haus: Aufpreise und Abgaben rechnet das System je Portal richtig ab — auch dort, wo das Portal einen Netto-Betrag meldet und du den Bruttopreis brauchst. Rechnungen, Gutschriften und offene Posten stehen im selben Vorgang wie die Buchung, in der Währung deines Landes. Wiederkehrende Gäste erkennst du an ihrer Historie, statt in alten Mails zu suchen.",
+        "beleg": "Abgaben je Portal, korrekt gerechnet."
+      },
+      "campingplatz": {
+        "unterzeile": "Campingplatz-Verwaltung mit Stellplätzen",
+        "text": "Stellplätze, Mietwohnwagen und Glamping-Zelte sind Typen mit Stückzahl: zwanzig gleiche Plätze sind ein Typ mit zwanzig Einheiten, kein zwanzigfacher Kalender. Verfügbarkeit geht als Zahl an die Portale, damit nie mehr verkauft wird als da ist. Strom, Kurtaxe oder Hund rechnest du pro Nacht oder pro Aufenthalt ab, und die Anreisen des Tages stehen gebündelt im Tagesplan.",
+        "beleg": "Stückzahl statt zwanzig Kalender."
+      }
+    }
+  },
+  "faq": {
+    "eyebrow": "Häufige Fragen",
+    "heading": "Fragen, die vor einem Systemwechsel kommen.",
+    "sub": "Was die Plattform tut, was sie kostet und wie deine Daten geschützt sind — ohne Marketing-Sprech.",
+    "was": {
+      "frage": "Was ist myNextDays genau?",
+      "antwort": "myNextDays ist ein Property-Management-System und ein Channel-Manager in einem — für Hotels, Pensionen, Gästehäuser, Ferienwohnungen, Campingplätze und Agenturen. Kalender, Reservierungen, Preise, Portale, Direktbuchung, Gästekommunikation, Reinigung und Abrechnung liegen in einer Oberfläche mit einem Login, statt in vier Werkzeugen, die nichts voneinander wissen."
+    },
+    "portale": {
+      "frage": "Welche Buchungsportale kann ich anbinden?",
+      "antwort": "Über unseren Connectivity-Partner Channex erreichst du 56 Buchungsplattformen, darunter Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda und Tripadvisor. Dazu kommen unser eigener Marktplatz myBestDays, ein Buchungs-Widget für deine Website und regionale Kanäle. Jeder Kanal ist einzeln schaltbar: du entscheidest je Objekt, wo es sichtbar ist."
+    },
+    "sync": {
+      "frage": "Wie schnell wird synchronisiert — und sind Doppelbuchungen möglich?",
+      "antwort": "Der Abgleich läuft in beide Richtungen in Echtzeit: eine Buchung auf einem Portal sperrt die Nacht überall sonst, geänderte Preise und Mindestaufenthalte gehen sofort hinaus. Alle Kanäle teilen einen Kalender, deshalb entsteht keine zweite Wahrheit. Ein Stop-Sell sperrt überall gleichzeitig, nicht nur dort, wo du ihn setzt."
+    },
+    "betriebsarten": {
+      "frage": "Passt das für ein Hotel und für Ferienwohnungen gleichzeitig?",
+      "antwort": "Ja, es ist dasselbe Modell: Jedes Objekt ist genau ein Typ — ein Zimmertyp im Hotel oder eine Ferienunterkunft — und darunter hängen seine Einheiten. Ein Hotel mit acht Doppel- und vier Einzelzimmern hat zwei Objekte mit acht bzw. vier Einheiten. An die Portale geht die Zahl der freien Einheiten, damit fünf gleiche Studios nicht fünf Kalender brauchen."
+    },
+    "direkt": {
+      "frage": "Bekomme ich eine eigene Buchungsseite ohne Portalprovision?",
+      "antwort": "Ja. Zu jedem Konto gehören ein eigenes Buchungsportal, ein Widget für die bestehende Website und ein Website-Baukasten mit eigener Domain. Direktbuchungen kosten 0,5 % statt der 15–18 % Provision der großen Portale, laufen über denselben Kalender und dieselben Preise — und das Geld geht direkt auf dein Konto."
+    },
+    "marktplatz": {
+      "frage": "Was ist myBestDays?",
+      "antwort": "myBestDays ist unser eigener Marktplatz für Gäste — ein gleichrangiger Buchungskanal neben Booking.com und Airbnb, nur mit deutlich geringerer Provision. Objekte, die du dort sichtbar machst, erscheinen im Marktplatz und in der myBestDays-App für Gäste. Diese Sichtbarkeit ist ein eigener Schalter, unabhängig von den Portalen."
+    },
+    "zahlungen": {
+      "frage": "Wie laufen Zahlungen, Anzahlungen und Rechnungen?",
+      "antwort": "Online-Zahlungen laufen über Stripe auf dein eigenes Konto: Anzahlung, Restzahlung oder Kaution, per Karte und den Zahlarten, die Stripe im Land des Gastes anbietet. Rechnungen und Gutschriften entstehen aus der Buchung, in der Währung des Objekts, mit buchhaltungsfertigen Exporten. Portalgebühren und Abgaben werden je Portal richtig gerechnet — auch wenn ein Portal nur einen Netto-Betrag meldet."
+    },
+    "laender": {
+      "frage": "In welchen Ländern, Währungen und Sprachen funktioniert die Plattform?",
+      "antwort": "Zum Start am 1. September 2026 in 27 europäischen Ländern. Oberfläche und Gästekommunikation gibt es in 24 Sprachen; der Gast liest seine Bestätigung in seiner Sprache. Die Währung hängt am Objekt beziehungsweise am Betrieb — es gibt keine Euro-Annahme, Kronen, Złoty oder Forint werden genauso geführt."
+    },
+    "rollen": {
+      "frage": "Wer sieht welche Daten — Eigentümer, Reinigung, Gäste?",
+      "antwort": "Jede Rolle hat ihren eigenen Zugang und sieht nur ihren Teil. Eigentümer sehen ihre Objekte, deren Belegung und Auszahlungen, aber keine fremden. Die Reinigung sieht Aufgaben mit Foto-Checklisten, keine Umsätze. Gäste haben ihren eigenen Bereich mit Check-in, digitaler Gästemappe und Nachrichten."
+    },
+    "app": {
+      "frage": "Gibt es eine App?",
+      "antwort": "Zwei, weil Gast und Betrieb Verschiedenes brauchen: die myNextDays-App für Betrieb, Eigentümer und Reinigung — Kalender, Buchungen und Aufgaben von unterwegs — und die myBestDays-App für Gäste mit Suche, Buchung, Check-in und Nachrichten. Beide sprechen mit demselben System, nichts läuft auf einem Zweitstand."
+    },
+    "sicherheit": {
+      "frage": "Wie steht es um Datenschutz und Sicherheit?",
+      "antwort": "Gebaut in Dänemark, gehostet in der EU, DSGVO-konform samt Auftragsverarbeitungsvertrag. Die Daten jedes Betriebs sind auf Datenbankebene getrennt, nicht nur in der Oberfläche. Zwei-Faktor-Anmeldung ist verfügbar, Rollenrechte begrenzen den Blick auf Finanz- und Gästedaten, und jede Anmeldung ist im Geräteverlauf nachvollziehbar."
+    },
+    "preis": {
+      "frage": "Was kostet myNextDays und wie fange ich an?",
+      "antwort": "30 Tage kostenlos testen, keine Mindestlaufzeit, keine Einrichtungsgebühr, jederzeit kündbar. Danach ein Abo plus eine geringe Provision auf vermittelte Buchungen. Zusatzmodule wie erweiterte Buchhaltung mit DATEV-Export, Mitarbeiter-Management oder Hotel-Funktionen buchst du nur, wenn du sie brauchst. Objekt anlegen, Kanäle verbinden, loslegen."
+    }
+  },
   "benefits": {
     "eyebrow": "Warum myNextDays",
     "sub": "Drei Dinge, die im Vermietungsalltag wirklich zählen — dafür ist die Plattform gebaut.",
