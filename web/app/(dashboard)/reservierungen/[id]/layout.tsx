@@ -19,8 +19,15 @@ export default async function BookingDetailLayout({
 }) {
   const { id } = await params;
   const res = await listProperties();
+  // `photos[0]` ist das Titelbild: properties.photos spiegelt property_photos
+  // mit dem Cover an Position 1 (properties/service.py). Speist das Thumbnail
+  // je Zeile in der Liste links.
   const properties = res.ok
-    ? res.data.items.map((p) => ({ id: p.id, title: p.title }))
+    ? res.data.items.map((p) => ({
+        id: p.id,
+        title: p.title,
+        photo: p.photos[0] ?? null,
+      }))
     : [];
 
   return (

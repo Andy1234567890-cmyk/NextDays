@@ -48,10 +48,14 @@ import {
 } from "@/lib/reservations";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import { useRealtime } from "@/lib/use-realtime";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-/** Objekt-Stammdaten, die die Liste für Titel und Objektfilter braucht. */
-export type InboxProperty = { id: string; title: string };
+/** Objekt-Stammdaten, die die Liste für Titel, Thumbnail und Objektfilter
+ *  braucht. `photo` = Titelbild (properties.photos[0] — der Spiegel von
+ *  property_photos, Cover zuerst). Optional, weil derselbe Typ auch den
+ *  Buchungs-Wizard speist, der nur id/title braucht. */
+export type InboxProperty = { id: string; title: string; photo?: string | null };
 
 /** Zeitachsen-Filter (Lodgify „DATUM"): genau einer aktiv. */
 type DateScope = "all" | "today" | "upcoming" | "past";
@@ -195,6 +199,7 @@ export function ReservationInboxSidebar({
 }) {
   const t = useTranslations("reservations");
   const locale = useLocale();
+  const router = useRouter();
   const { channelLabel, statusLabel } = useCalendarLabels();
 
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -212,6 +217,13 @@ export function ReservationInboxSidebar({
   const titleOf = useMemo(() => {
     const map: Record<string, string> = {};
     for (const p of properties) map[p.id] = p.title;
+    return map;
+  }, [properties]);
+
+  // property_id → Titelbild (Thumbnail je Zeile).
+  const photoOf = useMemo(() => {
+    const map: Record<string, string | null> = {};
+    for (const p of properties) map[p.id] = p.photo ?? null;
     return map;
   }, [properties]);
 
@@ -235,6 +247,10 @@ export function ReservationInboxSidebar({
   }, [load]);
 
   useRealtime({ table: "reservations", onChange: load });
+  // Titel + Titelbild kommen serverseitig aus dem Layout — ein gewechseltes
+  // Cover oder ein umbenanntes Objekt erschiene sonst erst nach manuellem
+  // Reload. router.refresh() statt load(), weil load() nur die Buchungen holt.
+  useRealtime({ table: "properties", onChange: () => router.refresh() });
 
   // Gespeicherte Filter-Voreinstellung des Nutzers (Lodgify „Filter-
   // Einstellungen speichern"). Bewusst lokal: es ist eine Ansichtsvorliebe,
@@ -518,6 +534,7 @@ export function ReservationInboxSidebar({
             r={r}
             active={r.id === activeId}
             title={titleOf[r.property_id] ?? "—"}
+            photo={photoOf[r.property_id] ?? null}
             todayKey={todayKey}
             locale={locale}
             selectMode={selectMode}
@@ -655,6 +672,7 @@ function InboxRow({
   r,
   active,
   title,
+  photo,
   todayKey,
   locale,
   selectMode,
@@ -665,6 +683,7 @@ function InboxRow({
   r: Reservation;
   active: boolean;
   title: string;
+  photo: string | null;
   todayKey: string;
   locale: string;
   selectMode: boolean;
@@ -709,8 +728,13 @@ function InboxRow({
         href={`/reservierungen/${r.id}`}
         className="flex min-w-0 flex-1 items-start gap-2.5"
       >
-        <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-(--radius) bg-secondary text-muted-foreground">
-          <Icon icon="ph:image" className="size-4.5" />
+        <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-(--radius) bg-secondary text-muted-foreground">
+          {photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={photo} alt="" className="size-full object-cover" />
+          ) : (
+            <Icon icon="ph:image" className="size-4.5" />
+          )}
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-baseline justify-between gap-2">

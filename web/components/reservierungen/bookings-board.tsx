@@ -35,7 +35,14 @@ import { channelLabelLoose } from "@/lib/channel-logos";
 import { type Reservation, listReservations } from "@/lib/reservations";
 import { useRealtime } from "@/lib/use-realtime";
 
-type Prop = { id: string; title: string; property_type: PropertyType };
+type Prop = {
+  id: string;
+  title: string;
+  property_type: PropertyType;
+  /** Titelbild (properties.photos[0] = Cover, siehe page.tsx). null = keins
+   *  hinterlegt → Platzhalter-Icon statt eines erfundenen Ersatzbildes. */
+  photo: string | null;
+};
 
 type TabKey = "occupied" | "arrivals" | "departures" | "future" | "past";
 
@@ -99,6 +106,13 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
     return map;
   }, [properties]);
 
+  // property_id → Titelbild (Thumbnail in der Unterkunft-Spalte).
+  const photoOf = useMemo(() => {
+    const map: Record<string, string | null> = {};
+    for (const p of properties) map[p.id] = p.photo;
+    return map;
+  }, [properties]);
+
   const load = useCallback(async () => {
     const res = await listReservations();
     if (res.ok) setReservations(res.data.items);
@@ -110,6 +124,10 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
   }, [load]);
 
   useRealtime({ table: "reservations", onChange: load });
+  // Titel + Titelbild kommen serverseitig (page.tsx) — ein gewechseltes Cover
+  // oder ein umbenanntes Objekt erschiene sonst erst nach manuellem Reload.
+  // router.refresh() statt load(), weil load() nur die Reservierungen holt.
+  useRealtime({ table: "properties", onChange: () => router.refresh() });
 
   // Zähler je Reiter (aus demselben Datensatz — kein zweiter Call).
   const counts = useMemo(() => {
@@ -258,6 +276,7 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
                   key={r.id}
                   r={r}
                   title={titleOf[r.property_id] ?? "—"}
+                  photo={photoOf[r.property_id] ?? null}
                   todayKey={todayKey}
                   onOpen={() => router.push(`/reservierungen/${r.id}`)}
                   t={t}
@@ -294,12 +313,14 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
 function BookingRow({
   r,
   title,
+  photo,
   todayKey,
   onOpen,
   t,
 }: {
   r: Reservation;
   title: string;
+  photo: string | null;
   todayKey: string;
   onOpen: () => void;
   t: ReturnType<typeof useTranslations>;
@@ -333,7 +354,21 @@ function BookingRow({
           <Icon icon={sm.icon} className="size-4.5 text-muted-foreground" />
         </span>
       </td>
-      <td className="px-4 py-3 font-medium">{title}</td>
+      <td className="px-4 py-3 font-medium">
+        <span className="flex items-center gap-3">
+          <span className="size-10 shrink-0 overflow-hidden rounded-lg bg-secondary">
+            {photo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photo} alt="" className="size-full object-cover" />
+            ) : (
+              <span className="flex size-full items-center justify-center text-muted-foreground">
+                <Icon icon="ph:house-line" className="size-5" />
+              </span>
+            )}
+          </span>
+          <span className="min-w-0">{title}</span>
+        </span>
+      </td>
       <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
         {fmtDayShort(r.check_in, locale)} – {fmtDayShort(r.check_out, locale)}
         <span className="ml-2 text-xs">

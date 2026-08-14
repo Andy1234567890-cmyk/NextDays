@@ -20,10 +20,15 @@ export default async function ReservierungenPage() {
     );
   }
 
+  // `photos[0]` ist das Titelbild: die Reihenfolge des Arrays folgt dem
+  // is_cover-/sort_order-Rang aus property_photos, das Cover steht auf Position
+  // 1 (photos-manager.tsx). Gleicher Weg wie die Schwesterseite
+  // /reservierungen/unterkuenfte — kein zweiter Abruf je Objekt.
   const properties = res.data.items.map((p) => ({
     id: p.id,
     title: p.title,
     property_type: p.property_type,
+    photo: p.photos[0] ?? null,
   }));
 
   return <BookingsBoard properties={properties} />;
