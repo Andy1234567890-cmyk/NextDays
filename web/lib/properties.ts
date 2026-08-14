@@ -73,6 +73,11 @@ export type Property = {
   // echtes neues Kartei-Feld. Name/Typ/Adresse/Kapazität kommen aus dem Bestand
   // (title, property_type, house_number, max_guests, size_value).
   bfe_number: string | null;
+  /** Kaution je Objekt (Spalte seit 0082). Speist `{{security_deposit}}` in
+   *  Nachrichten-Vorlagen und die Stripe-Vorautorisierung. NICHT dasselbe wie
+   *  `type_attributes.policies.depositAmount` (Richtlinien-Text für den Gast)
+   *  oder `booking_conditions.deposit_amount` (Anzahlungsregel). */
+  deposit_amount: number | null;
   // Ende des Vermarktungsvertrags (0355) als ISO-Datum — der ERSTE Tag OHNE
   // Vertrag (Grenze ausschließlich): "2027-01-02" heißt, die Nacht 01.→02.01.
   // wird noch verkauft, die Nacht danach nicht mehr. Ab dem Tag ist das Objekt

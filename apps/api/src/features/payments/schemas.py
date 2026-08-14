@@ -156,6 +156,14 @@ class PaymentSettings(BaseModel):
     bank_name: str | None = None
     account_holder: str | None = None
 
+    # Zahlungshinweis + Standard-Steuersatz. Beide Spalten wurden schon gelesen
+    # (Eigentümer-Abrechnung; Platzhalter `{{payment_text}}` und `{{tax_rate}}`
+    # in Nachrichten-Vorlagen), aber von KEINEM Weg geschrieben — die
+    # Platzhalter blieben deshalb immer leer und legten jede Vorlage still, die
+    # sie benutzte („Feld ohne Wert", gefunden am 14.08.2026).
+    default_payment_text: str | None = None
+    default_tax_rate: float | None = None
+
 
 class PaymentSettingsResponse(PaymentSettings):
     """Wie PaymentSettings, plus abgeleiteter Stripe-Verbindungsstatus (read-only)

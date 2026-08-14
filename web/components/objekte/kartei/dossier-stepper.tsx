@@ -12,9 +12,20 @@ import { useCallback, useEffect, useState } from "react";
 import { DossierPdfButton } from "@/components/objekte/kartei/dossier-pdf-button";
 import { CheckboxField, DateField, NumberField, SelectField, TextField, nulled } from "@/components/objekte/kartei/fields";
 import { ListEditor } from "@/components/objekte/kartei/list-editor";
+import { LocalizedTextEditor } from "@/components/objekte/localized-text-editor";
+import { FeldMitPlatzhaltern, Shortcode } from "@/components/shared/shortcode";
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
+import { Input } from "@nextdays/ui/input";
 import { OverflowTabs } from "@nextdays/ui/overflow-tabs";
+import { Switch } from "@nextdays/ui/switch";
+import { type Messaging, readMessaging } from "@/lib/messaging-meta";
+import type { LocalizedText } from "@/lib/policy-meta";
+import {
+  type GuestPortalSettings,
+  getGuestPortal,
+  saveGuestPortal,
+} from "@/lib/property-portal";
 import {
   type AccessData,
   type DossierFull,
@@ -53,6 +64,13 @@ const STEP_KEYS = [
   "tradespeople", "marketing", "housebook", "listing",
 ] as const;
 
+// Uhrzeit-Auswahl für „Code sichtbar ab" (Viertelstunden-Raster).
+const TIME_OPTIONS = Array.from({ length: 24 * 4 }, (_, i) => {
+  const h = String(Math.floor(i / 4)).padStart(2, "0");
+  const m = String((i % 4) * 15).padStart(2, "0");
+  return `${h}:${m}`;
+});
+
 type T = ReturnType<typeof useTranslations>;
 
 export function DossierStepper({ property, initial }: { property: Property; initial: DossierFull }) {
@@ -80,7 +98,7 @@ export function DossierStepper({ property, initial }: { property: Property; init
       <Card className="p-6">
         {step === 0 && <Stufe1 t={t} property={property} owner={initial.owner} />}
         {step === 1 && <Stufe2 t={t} pid={pid} initial={initial.process} />}
-        {step === 2 && <Stufe3 t={t} pid={pid} initial={initial.access} />}
+        {step === 2 && <Stufe3 t={t} pid={pid} initial={initial.access} property={property} />}
         {step === 3 && <Stufe4 t={t} pid={pid} initial={initial.service_agreements} />}
         {step === 4 && <Stufe5 t={t} pid={pid} initial={initial} />}
         {step === 5 && <Stufe6 t={t} pid={pid} initial={initial.marketing} />}
@@ -126,6 +144,18 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h2 className="font-display text-lg font-extrabold">{title}</h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">{children}</div>
     </section>
+  );
+}
+
+/** Überschrift mit einer oder mehreren Platzhalter-Marken dahinter. */
+function TitelMitPlatzhaltern({ titel, codes }: { titel: string; codes: string[] }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <h2 className="font-display text-lg font-extrabold">{titel}</h2>
+      {codes.map((c) => (
+        <Shortcode key={c}>{c}</Shortcode>
+      ))}
+    </div>
   );
 }
 
@@ -290,17 +320,233 @@ function Stufe2({ t, pid, initial }: { t: T; pid: string; initial: ProcessData }
 }
 
 // --- Stufe 3: Zugang & Technik ---------------------------------------------
-function Stufe3({ t, pid, initial }: { t: T; pid: string; initial: AccessData }) {
+// DREI Quellen auf EINER Fläche (seit dem Wegfall des Gastmoduls, 14.08.2026):
+//   • Schlüssel        → property_dossier      (saveAccess)
+//   • Kontakt/WLAN/Code → property_guest_portal (saveGuestPortal)
+//   • WLAN-/Türtexte   → properties.type_attributes.messaging (updateProperty)
+// Die Datenhaltung bleibt getrennt (eine Wahrheit je Datenart) — nur die
+// Oberfläche ist eine. Vorher lagen Türcode und WLAN unter
+// /reservierungen/unterkuenfte/[id]/gastmodul, also in einem ANDEREN Hauptmenü
+// als der Türzugangs-Text unter /objekte/[id]/nachrichten. Wer den Zugang dort
+// pflegte, hatte keinen Anlass zu ahnen, dass `{{door_code}}` und
+// `{{wifi_ssid}}` woanders wohnen — und eine Vorlage mit diesen Platzhaltern
+// wurde deshalb NIE gesendet (Versand meldet „Feld ohne Wert", live 09.–14.08.2026).
+function Stufe3({
+  t,
+  pid,
+  initial,
+  property,
+}: {
+  t: T;
+  pid: string;
+  initial: AccessData;
+  property: Property;
+}) {
   const [d, setD] = useState<AccessData>(initial);
+  const [portal, setPortal] = useState<GuestPortalSettings | null>(null);
+  const [messaging, setMessaging] = useState<Messaging>(() =>
+    readMessaging(property.type_attributes),
+  );
+  // Frischer Property-Stand nach dem Speichern: sonst setzt ein zweites
+  // Speichern auf veraltetem `type_attributes` auf und verwirft die eben
+  // geschriebenen Texte (stale read).
+  const [prop, setProp] = useState<Property>(property);
+  // Kaution als TEXT im State: ein leeres Feld muss von „0" unterscheidbar
+  // bleiben (leer = keine Kaution → null, nicht 0,00).
+  const [kaution, setKaution] = useState(
+    property.deposit_amount == null ? "" : String(property.deposit_amount),
+  );
   const keyOpts = ["agency_extra", "owner_only"].map((k) => ({ value: k, label: t(`keyStatus.${k}`) }));
+
+  useEffect(() => {
+    let aktiv = true;
+    void (async () => {
+      const res = await getGuestPortal(pid);
+      if (aktiv && res.ok) setPortal(res.data);
+    })();
+    return () => {
+      aktiv = false;
+    };
+  }, [pid]);
+
+  const setP = <K extends keyof GuestPortalSettings>(key: K, value: GuestPortalSettings[K]) =>
+    setPortal((s) => (s ? { ...s, [key]: value } : s));
+  const setText = (key: keyof Messaging, value: LocalizedText) =>
+    setMessaging((m) => ({ ...m, [key]: value }));
+
+  async function speichern(): Promise<true | string> {
+    // Leeres Feld = keine Kaution (null). Eine unbrauchbare Eingabe wird
+    // abgewiesen, statt sie als 0 zu speichern — „Kaution: 0,00" behauptet
+    // etwas anderes als „keine Kaution" (Wurzel 4).
+    const betrag = kaution.trim().replace(",", ".");
+    if (betrag && !Number.isFinite(Number(betrag))) {
+      return t("access.securityDepositInvalid");
+    }
+    const [accessRes, portalRes, msgRes] = await Promise.all([
+      saveAccess(pid, nulled(d)),
+      portal ? saveGuestPortal(pid, portal) : Promise.resolve({ ok: true } as const),
+      updateProperty(pid, {
+        type_attributes: { ...prop.type_attributes, messaging },
+        deposit_amount: betrag ? Number(betrag) : null,
+      }),
+    ]);
+    if (msgRes.ok && "data" in msgRes) setProp(msgRes.data);
+    if (accessRes.ok && portalRes.ok && msgRes.ok) return true;
+    return (
+      (!accessRes.ok && accessRes.error) ||
+      (!portalRes.ok && "error" in portalRes && portalRes.error) ||
+      (!msgRes.ok && msgRes.error) ||
+      t("saved")
+    );
+  }
+
   return (
     <div className="flex flex-col gap-8">
-      <Section title={t("step.access")}>
-        <SelectField label={t("access.keyStatus")} value={d.key_status} onChange={(v) => setD({ ...d, key_status: v })} options={keyOpts} />
-        <TextField label={t("access.keyPlacement")} value={d.key_placement} onChange={(v) => setD({ ...d, key_placement: v })} />
-      </Section>
-      <Hint>{t("access.fromGuestModule")}</Hint>
-      <SaveBar t={t} onSave={async () => (await saveAccess(pid, nulled(d))).ok || t("saved")} />
+      <section className="flex flex-col gap-4">
+        <h2 className="font-display text-lg font-extrabold">{t("step.access")}</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <SelectField label={t("access.keyStatus")} value={d.key_status} onChange={(v) => setD({ ...d, key_status: v })} options={keyOpts} />
+          <TextField label={t("access.keyPlacement")} value={d.key_placement} onChange={(v) => setD({ ...d, key_placement: v })} />
+          {/* Kaution: die Spalte `properties.deposit_amount`, NICHT der
+              Richtlinien-Text und nicht die Anzahlungsregel der
+              Buchungsstrecke. Sie hatte bis 14.08.2026 kein Eingabefeld —
+              `{{security_deposit}}` war damit tot. */}
+          <FeldMitPlatzhaltern label={t("access.securityDeposit")} codes={["{{security_deposit}}"]}>
+            <Input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              value={kaution}
+              onChange={(e) => setKaution(e.target.value)}
+            />
+          </FeldMitPlatzhaltern>
+        </div>
+      </section>
+
+      {portal === null ? (
+        <p className="text-sm text-muted-foreground">{t("access.loading")}</p>
+      ) : (
+        <>
+          {/* Die Marken hängen hier am FELD, nicht an der Überschrift: die drei
+              Felder speisen verschiedene Platzhalter, und „Name der
+              Kontaktperson" speist gar keinen (steht in keinem `Kontext`-Feld,
+              feld_kontext.py). Eine Marke an der Überschrift behauptete, sie
+              gälte für alle drei. */}
+          <section className="flex flex-col gap-4">
+            <h2 className="font-display text-lg font-extrabold">{t("access.contactTitle")}</h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <TextField label={t("access.contactName")} value={portal.contact_name} onChange={(v) => setP("contact_name", v)} />
+              <FeldMitPlatzhaltern label={t("access.contactPhone")} codes={["{{property_phone}}"]}>
+                <Input
+                  value={portal.contact_phone ?? ""}
+                  onChange={(e) => setP("contact_phone", e.target.value || null)}
+                />
+              </FeldMitPlatzhaltern>
+              <FeldMitPlatzhaltern
+                label={t("access.maintenancePhone")}
+                codes={["{{emergency_phone}}", "{{emergency_contact}}"]}
+              >
+                <Input
+                  value={portal.maintenance_phone ?? ""}
+                  onChange={(e) => setP("maintenance_phone", e.target.value || null)}
+                />
+              </FeldMitPlatzhaltern>
+            </div>
+          </section>
+
+          {/* WLAN — zwei Ebenen, bewusst beide:
+              • Netz + Passwort STRUKTURIERT (property_guest_portal, 0296) — die
+                Heimat von {{wifi_ssid}}/{{wifi_password}} und Quelle des
+                WLAN-QR-Codes im Gastportal.
+              • Der FREITEXT (messaging.wifi, {{WifiInformation}}) daneben für
+                den ganzen Satz („Router steht im Flur"). */}
+          <section className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <h2 className="font-display text-lg font-extrabold">{t("access.wifiTitle")}</h2>
+              <p className="text-sm text-muted-foreground">{t("access.wifiDescription")}</p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <FeldMitPlatzhaltern label={t("access.wifiSsid")} codes={["{{wifi_ssid}}"]}>
+                <Input
+                  value={portal.wifi_ssid ?? ""}
+                  onChange={(e) => setP("wifi_ssid", e.target.value || null)}
+                />
+              </FeldMitPlatzhaltern>
+              <FeldMitPlatzhaltern label={t("access.wifiPassword")} codes={["{{wifi_password}}"]}>
+                <Input
+                  value={portal.wifi_password ?? ""}
+                  onChange={(e) => setP("wifi_password", e.target.value || null)}
+                />
+              </FeldMitPlatzhaltern>
+            </div>
+            <div className="flex flex-col gap-1">
+              <TitelMitPlatzhaltern
+                titel={t("access.wifiTextTitle")}
+                codes={["{{WifiInformation}}"]}
+              />
+              <p className="text-sm text-muted-foreground">{t("access.wifiTextHint")}</p>
+            </div>
+            <LocalizedTextEditor
+              value={messaging.wifi}
+              onChange={(v) => setText("wifi", v)}
+              placeholder={t("access.wifiFieldPlaceholder")}
+            />
+          </section>
+
+          <section className="flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="font-display text-lg font-extrabold">{t("access.selfCheckinTitle")}</h2>
+                <p className="text-sm text-muted-foreground">{t("access.selfCheckinDescription")}</p>
+              </div>
+              <Switch checked={portal.self_checkin} onCheckedChange={(v) => setP("self_checkin", v)} />
+            </div>
+
+            {portal.self_checkin && (
+              <div className="flex flex-col gap-4 border-t pt-4">
+                <div className="flex flex-col gap-2">
+                  <TitelMitPlatzhaltern
+                    titel={t("access.doorInstructions")}
+                    codes={["{{DoorInstructions}}"]}
+                  />
+                  <LocalizedTextEditor
+                    value={messaging.doorInstructions}
+                    onChange={(v) => setText("doorInstructions", v)}
+                    placeholder={t("access.doorInstructionsPlaceholder")}
+                  />
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <FeldMitPlatzhaltern label={t("access.doorCode")} codes={["{{door_code}}"]}>
+                    <Input
+                      value={portal.door_code ?? ""}
+                      onChange={(e) => setP("door_code", e.target.value || null)}
+                    />
+                  </FeldMitPlatzhaltern>
+                  <SelectField
+                    label={t("access.codeVisibleFrom")}
+                    value={portal.code_visible_from}
+                    onChange={(v) => setP("code_visible_from", v)}
+                    options={TIME_OPTIONS.map((z) => ({ value: z, label: z }))}
+                  />
+                </div>
+                <CheckboxField
+                  label={t("access.showCodeOnlyIfPaid")}
+                  checked={portal.show_code_only_if_paid}
+                  onChange={(v) => setP("show_code_only_if_paid", v)}
+                />
+                <CheckboxField
+                  label={t("access.hideCodeUntilCheckin")}
+                  checked={portal.hide_code_until_checkin}
+                  onChange={(v) => setP("hide_code_until_checkin", v)}
+                />
+              </div>
+            )}
+          </section>
+        </>
+      )}
+
+      <SaveBar t={t} onSave={speichern} />
     </div>
   );
 }

@@ -18,7 +18,12 @@ const ITEMS: { slug: string; titleKey: string; icon: string }[] = [
   { slug: "statistiken", titleKey: "tabs.statistics", icon: "ph:chart-bar" },
   { slug: "bilder", titleKey: "tabs.photos", icon: "ph:image" },
   { slug: "warnungen", titleKey: "tabs.warnings", icon: "ph:warning" },
-  { slug: "gastmodul", titleKey: "tabs.guestModule", icon: "ph:identification-card" },
+  // „Gastmodul" entfiel am 14.08.2026: Kontakt, WLAN, Self-Check-in und Türcode
+  // stehen jetzt in der Objektkartei, Stufe „Zugang & Technik"
+  // (/objekte/[id]/kartei). Sie lagen vorher in einem anderen Hauptmenü als der
+  // Türzugangs-Text (/objekte/[id]/nachrichten) — wer den dort pflegte, ahnte
+  // nicht, dass `{{door_code}}`/`{{wifi_ssid}}` woanders wohnen, und Vorlagen
+  // mit diesen Platzhaltern wurden nie gesendet.
   { slug: "gaestemappe", titleKey: "tabs.guestGuide", icon: "ph:book-open" },
 ];
 

@@ -15,8 +15,11 @@ from supabase import Client
 
 from src.core.countries import telefon_anzeigen
 from src.core.languages import sprach_name
+from src.core.logging import get_logger
 
 from .felder import Kontext, html_zu_text
+
+log = get_logger("nextdays.inbox.feld_kontext")
 
 # Objekt-Anweisungen (`/objekte/{id}/nachrichten`, mehrsprachig in
 # `properties.type_attributes.messaging`) → Platzhalter-Schlüssel. Das ist die
@@ -107,8 +110,10 @@ class FeldKontextMixin:
             return {}
         treffer = (
             db.table("reservations")
+            # `id` gehört dazu, seit `{{payment_link}}` den offenen
+            # Zahlungslink dieser Buchung nachschlägt (`_zahlungslink`).
             .select(
-                "checkin_time, checkout_time, paid_amount, guest_country, "
+                "id, checkin_time, checkout_time, paid_amount, guest_country, "
                 "quote_items"
             )
             .eq("tenant_id", tenant_id)
@@ -117,6 +122,42 @@ class FeldKontextMixin:
             .execute()
         ).data
         return treffer[0] if treffer else {}
+
+    @staticmethod
+    def _zahlungslink(db: Client, tenant_id: str, reservation_id: str | None) -> str | None:
+        """Die URL des OFFENEN Zahlungslinks dieser Buchung — sonst None.
+
+        NUR LESEN, nie erzeugen: Das Rendern einer Nachricht darf keinen
+        Seiteneffekt haben. Würde hier ein Stripe-Link angelegt, entstünden bei
+        jedem Vorschau-Aufruf und jedem Versandversuch neue Zahlungslinks, und
+        ein Retry (Wurzel 2) vervielfachte sie. Angelegt wird ausschließlich
+        bewusst über `POST /reservations/{id}/zahlungslink`
+        (`addons.zahlung.ZahlungslinkService.erstellen`).
+
+        Kein offener Link → None → der Versand meldet „Feld ohne Wert" und
+        sendet NICHT (Wurzel 4). Das ist richtig so: eine Zahlungsaufforderung
+        ohne Link ist für den Gast wertlos, und ein erfundener Ersatz gibt es
+        nicht. Der Betrieb erzeugt den Link auf der Buchungsseite und schickt
+        die Nachricht danach.
+        """
+        if not reservation_id:
+            return None
+        try:
+            rows = (
+                db.table("addon_payment_links")
+                .select("url")
+                .eq("tenant_id", tenant_id)
+                .eq("reservation_id", reservation_id)
+                .eq("status", "open")
+                .limit(1)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — ein Feld kippt nicht die Nachricht
+            # Best effort: fällt die Abfrage aus, gilt das Feld als leer. Der
+            # Versand meldet dann „Feld ohne Wert" statt einen 500 zu werfen.
+            log.warning("zahlungslink_lesen_fehlgeschlagen", error=str(exc)[:200])
+            return None
+        return str(rows[0]["url"]) if rows and rows[0].get("url") else None
 
     def _feld_kontext(self, db: Client, tenant_id: str, row: dict) -> Kontext:
         """Datengrundlage der Platzhalter für einen Thread.
@@ -243,6 +284,11 @@ class FeldKontextMixin:
             or customer.get("country"),
             paid_amount=reservierung.get("paid_amount"),
             quote_items=reservierung.get("quote_items"),
+            # Der offene Zahlungslink der Buchung (0386). Nur gelesen — siehe
+            # `_zahlungslink`: Rendern erzeugt keine Stripe-Objekte.
+            payment_link=self._zahlungslink(
+                db, tenant_id, reservierung.get("id")
+            ),
             property_country=prop.get("country") if prop else None,
             property_zip=prop.get("postal_code") if prop else None,
             property_lat=prop.get("lat") if prop else None,

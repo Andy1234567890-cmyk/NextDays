@@ -302,6 +302,14 @@ class PropertyUpdate(BaseModel):
     contract_end_date: date | None = None
     # Objektkartei (Lastenheft §6) — nur bfe_number, kein OTA-Sync (nicht in _CONTENT_FIELDS).
     bfe_number: str | None = None
+    # Kaution je Objekt (Spalte seit 0082). Sie war bis 14.08.2026 nur LESBAR:
+    # die Stripe-Vorautorisierung und der Platzhalter `{{security_deposit}}`
+    # lasen sie, aber kein Weg schrieb sie — der Platzhalter blieb deshalb immer
+    # leer und legte jede Vorlage still, die ihn benutzte („Feld ohne Wert").
+    # NICHT zu verwechseln mit `type_attributes.policies.depositAmount`
+    # (Richtlinien-Text für den Gast) und `booking_conditions.deposit_amount`
+    # (Anzahlungsregel der Buchungsstrecke) — drei verschiedene Dinge.
+    deposit_amount: float | None = None
     amenities: list[str] | None = None
     room_amenities: list[str] | None = None
 

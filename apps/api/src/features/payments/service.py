@@ -388,6 +388,12 @@ class PaymentsService:
         "bic",
         "bank_name",
         "account_holder",
+        # Zahlungshinweis + Standard-Steuersatz: gehören fachlich zur manuellen
+        # Zahlung (sie stehen in der Zahlungsaufforderung an den Gast) und sind
+        # keine Steuer-/Legal-Stammdaten. Bis 14.08.2026 hatte KEIN Weg sie
+        # geschrieben — `{{payment_text}}`/`{{tax_rate}}` waren damit tot.
+        "default_payment_text",
+        "default_tax_rate",
     )
 
     def get_payment_settings(self, ctx: AuthContext) -> PaymentSettingsResponse:

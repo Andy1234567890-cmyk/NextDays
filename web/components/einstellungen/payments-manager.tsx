@@ -16,6 +16,8 @@ import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
 import { Input } from "@nextdays/ui/input";
 import { Switch } from "@nextdays/ui/switch";
+import { Textarea } from "@nextdays/ui/textarea";
+import { Shortcode } from "@/components/shared/shortcode";
 import {
   type PaymentSettings,
   type PaymentSettingsResponse,
@@ -357,6 +359,45 @@ export function PaymentsManager({
                 disabled={pending}
                 onChange={(v) => set("account_holder", v)}
               />
+              {/* Zahlungshinweis + Steuersatz: die beiden Werte stehen in der
+                  Zahlungsaufforderung an den Gast und speisen die Platzhalter
+                  {{payment_text}} / {{tax_rate}}. Ohne Eingabefeld waren sie
+                  nicht pflegbar — eine Vorlage mit diesen Bausteinen wurde
+                  deshalb nie gesendet. */}
+              <label className="flex flex-col gap-1.5 sm:col-span-2">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium">{t("payments.paymentTextLabel")}</span>
+                  <Shortcode>{`{{payment_text}}`}</Shortcode>
+                </span>
+                <Textarea
+                  rows={3}
+                  value={form.default_payment_text ?? ""}
+                  disabled={pending}
+                  placeholder={t("payments.paymentTextPlaceholder")}
+                  onChange={(e) => set("default_payment_text", e.target.value || null)}
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium">{t("payments.taxRateLabel")}</span>
+                  <Shortcode>{`{{tax_rate}}`}</Shortcode>
+                </span>
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={form.default_tax_rate ?? ""}
+                  disabled={pending}
+                  onChange={(e) =>
+                    set(
+                      "default_tax_rate",
+                      e.target.value === "" ? null : Number(e.target.value),
+                    )
+                  }
+                />
+              </label>
               <div className="sm:col-span-2">
                 <Button disabled={pending} onClick={() => save()}>
                   Bankdaten speichern

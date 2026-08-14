@@ -29,6 +29,12 @@ export type PaymentSettings = {
   bic: string | null;
   bank_name: string | null;
   account_holder: string | null;
+  /** Zahlungshinweis für die Zahlungsaufforderung an den Gast — Platzhalter
+   *  `{{payment_text}}` (Lodgify: `{{BankAccountText}}`). */
+  default_payment_text: string | null;
+  /** Standard-Steuersatz in Prozent — Platzhalter `{{tax_rate}}`
+   *  (Lodgify: `{{TaxesPercentage}}`). */
+  default_tax_rate: number | null;
 };
 
 // Response = Einstellungen + abgeleiteter Stripe-/PayPal-Status (read-only).

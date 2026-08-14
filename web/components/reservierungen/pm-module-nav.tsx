@@ -40,7 +40,9 @@ const GROUPS: NavGroup[] = [
       { key: "warnings", labelKey: "warnings", href: "/reservierungen/warnungen", icon: "ph:warning" },
       { key: "timeline", labelKey: "timeline", href: "/kalender", icon: "ph:clock-clockwise" },
       { key: "reporting", labelKey: "reporting", href: "/buchhaltung/berichte", icon: "ph:chart-line" },
-      { key: "guestModule", labelKey: "guestModule", href: "/reservierungen/gastmodul", icon: "ph:identification-card" },
+      // „Gastmodul" entfiel am 14.08.2026 — die Seite war ein Platzhalter ohne
+      // Inhalt; die echten Felder stehen in der Objektkartei, Stufe „Zugang &
+      // Technik" (/objekte/[id]/kartei).
     ],
   },
   {
