@@ -12,6 +12,7 @@ from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger, mask_email
+from src.core.mail_sprache import normalisieren
 from src.core.security import AuthContext
 from src.core.supabase import load_scoped
 from src.features.properties.schemas import types_for_accommodation
@@ -700,6 +701,12 @@ class OwnersService:
         ).data or []
         if not res:
             raise OwnerError("Eigentümer nicht gefunden.", status_code=404)
+        # Die Sprache aus der Maske auf den frisch verknüpften Login spiegeln.
+        # Betrifft VOR ALLEM den Zweig „bestehender Login wird übernommen":
+        # dort läuft keine Einladung und damit auch nichts, was
+        # `preferred_language` sonst setzen würde — der Login behielte seine
+        # alte (oder gar keine) Sprache, und die Mails kämen falsch.
+        self._sprache_an_login(tenant_id, res[0])
         log.info(
             "owner_portalzugang_verknuepft",
             tenant_id=tenant_id,
@@ -756,6 +763,11 @@ class OwnersService:
             )
             if not res.data:
                 raise OwnerError("Eigentümer nicht gefunden.", status_code=404)
+            # Sprachwechsel in der Maske auf den Login durchreichen — sonst
+            # bliebe die Änderung wirkungslos: die Mail liest den Login, nicht
+            # die Partei-Zeile.
+            if "language" in changes:
+                self._sprache_an_login(tenant_id, res.data[0])
         log.info("owner_updated", tenant_id=tenant_id, owner_id=owner_id)
         antwort = self.get(ctx, owner_id)
         if neue_email is not None:
@@ -763,6 +775,48 @@ class OwnersService:
                 ctx, vorher, neue_email=neue_email, wechsel=wechsel
             )
         return antwort
+
+    def _sprache_an_login(self, tenant_id: str, row: dict) -> None:
+        """`owners.language` auf den verknüpften Login schreiben.
+
+        Mails an einen Eigentümer laufen über seinen LOGIN
+        (`users.preferred_language`, `core.mail_empfaenger`), nicht über die
+        Partei-Zeile `owners`. Das Dropdown der Maske schreibt aber nur
+        `owners.language` — beim Anlegen MIT Einladung reicht der Aufruf sie
+        zwar an `InviteRequest.preferred_language` durch, auf zwei anderen
+        Wegen jedoch nicht:
+
+          * ein BESTEHENDER Login wird verknüpft (keine Einladung, also nichts,
+            was `preferred_language` setzen würde),
+          * die Sprache wird SPÄTER in der Maske geändert (der Update-Pfad
+            fasste den Login nie an).
+
+        In beiden Fällen blieb die Auswahl wirkungslos und die Mail ging in der
+        alten Sprache raus. Das Dropdown ist die Quelle der Wahrheit; hier wird
+        sie auf den Login gespiegelt.
+
+        Ohne Login gibt es nichts zu spiegeln. Leere Sprache schreibt nichts:
+        NULL ist die Stufe, an der die Kette bewusst zur Betriebssprache
+        weitergeht — ein erfundener Wert wäre Wurzel 4.
+
+        Best-effort (Wurzel 5): ein Fehler kippt weder Anlage noch Speichern,
+        wird aber geloggt und beim nächsten Speichern nachgeholt.
+        """
+        user_id = row.get("user_id")
+        sprache = normalisieren(row.get("language"))
+        if not user_id or sprache is None:
+            return
+        try:
+            self._db.table("users").update(
+                {"preferred_language": sprache}
+            ).eq("tenant_id", tenant_id).eq("id", str(user_id)).execute()
+        except Exception as exc:  # noqa: BLE001 — Nebenpfad, kippt den Hauptpfad nicht
+            log.warning(
+                "owner_sprache_login_nicht_gespiegelt",
+                tenant_id=tenant_id,
+                user_id=str(user_id),
+                error=str(exc)[:200],
+            )
 
     def _geaenderte_email(self, vorher: dict, changes: dict) -> str | None:
         """Die NEUE Adresse, falls dieser Aufruf sie wirklich ändert — sonst None.
