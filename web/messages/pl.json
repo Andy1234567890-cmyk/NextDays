@@ -6204,7 +6204,9 @@
       "stillOpen": "Wciąż otwarte",
       "cancelReasonPlaceholder": "Powód anulowania (zostanie udokumentowany) …",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "openBooking": "Do pełnej rezerwacji",
+      "messageGuest": "Napisz do gościa"
     },
     "bulk": {
       "title": "Edycja zbiorcza",

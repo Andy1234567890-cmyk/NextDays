@@ -6204,7 +6204,9 @@
       "stillOpen": "Ancora aperti",
       "cancelReasonPlaceholder": "Motivo dell'annullamento (verrà documentato) …",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "openBooking": "Alla prenotazione completa",
+      "messageGuest": "Scrivi all'ospite"
     },
     "bulk": {
       "title": "Modifica in blocco",

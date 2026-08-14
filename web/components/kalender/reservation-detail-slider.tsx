@@ -8,6 +8,7 @@
 import { Icon } from "@iconify/react";
 import { useLocale, useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -72,6 +73,10 @@ export function ReservationDetailSlider({
   // Umsatz — Beträge, Rechnungs- und Zusatzleistungs-Aktionen entfallen hier,
   // weil es sie zu diesem Aufenthalt nicht gibt (kein leeres 0-Formular).
   const isOwnerStay = !!data?.is_owner_stay;
+  // Als Konstante, nicht im Callback abgelesen: TypeScript verengt `string |
+  // null` innerhalb eines Handlers nicht, und ein Cast würde die Prüfung nur
+  // stumm schalten.
+  const chatThreadId = data?.message_thread_id ?? null;
 
   const submitCancel = async () => {
     const ok = await d.submitCancel(reason);
@@ -149,13 +154,21 @@ export function ReservationDetailSlider({
                   : "Lädt…"}
             </h2>
             {data && (
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              /* Die Kennzeichnung führt zur vollständigen Buchung. Der Slider ist
+                 die Schnellansicht im Kalender; Zeitleiste, Zahlungen, Dokumente
+                 und Gastdaten stehen auf der Detailseite. Vorher war diese Zeile
+                 toter Text — man musste die Buchung über die Liste neu suchen. */
+              <Link
+                href={`/reservierungen/${data.id}`}
+                className="mt-0.5 block truncate text-xs text-muted-foreground transition-colors hover:text-accent hover:underline"
+                title={t("slider.openBooking")}
+              >
                 {data.external_ref ? `#${data.external_ref}` : data.id.slice(0, 8)}
                 {data.created_at
                   ? ` · ${fmtDate(data.created_at.slice(0, 10))}`
                   : ""}
                 {data.ota_name ? ` · ${channelLabelLoose(data.ota_name)}` : ""}
-              </p>
+              </Link>
             )}
           </div>
           <Button variant="outline" size="icon" onClick={onClose} aria-label={t("slider.close")}>
@@ -262,6 +275,35 @@ export function ReservationDetailSlider({
                   {data.checked_out_at &&
                     ` · Ausgecheckt am ${fmtDateTime(data.checked_out_at)}`}
                 </p>
+              )}
+
+              {/* Nachricht an den Gast. Bewusst AUSSERHALB der Check-in-Gruppe
+                  und auch bei stornierten Buchungen sichtbar: gerade dann muss
+                  der Betrieb den Gast erreichen können.
+                  Führt in den Posteingang-Thread — dort liegen Vorlagen,
+                  Übersetzung und Zuweisung; eine zweite Chat-Oberfläche im
+                  Slider wäre dieselbe Sache doppelt gepflegt. Gleiches Ziel und
+                  gleicher Parameter wie der Knopf auf der Buchungs-Detailseite
+                  (`booking-detail`), damit es EINEN Weg in den Verlauf gibt.
+                  `message_thread_id` kommt aus denselben Detaildaten, die dieser
+                  Slider ohnehin lädt — kein zweiter Abruf.
+                  Ohne Thread kein Knopf: die OTA hat dann nie eine Nachricht
+                  geliefert, und ein Link auf eine leere Ansicht wäre eine
+                  Sackgasse (Wurzel 4 — kein Ziel erfinden). */}
+              {chatThreadId && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() =>
+                    router.push(
+                      `/posteingang?thread=${encodeURIComponent(chatThreadId)}`,
+                    )
+                  }
+                >
+                  <Icon icon="ph:chat-circle-text" className="size-4" />
+                  {t("slider.messageGuest")}
+                </Button>
               )}
 
               {/* Check-in / Check-out (Front-Desk-Aktionen). Der Check-out

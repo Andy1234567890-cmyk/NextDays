@@ -6209,7 +6209,9 @@
       "stillOpen": "Veel avatud",
       "cancelReasonPlaceholder": "Tühistamise põhjus (dokumenteeritakse) …",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "openBooking": "Kogu broneeringu juurde",
+      "messageGuest": "Kirjuta külalisele"
     },
     "bulk": {
       "title": "Hulgimuutmine",

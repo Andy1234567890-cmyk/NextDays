@@ -6204,7 +6204,9 @@
       "stillOpen": "Nog open",
       "cancelReasonPlaceholder": "Reden van annulering (wordt gedocumenteerd) …",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "openBooking": "Naar de volledige boeking",
+      "messageGuest": "Gast berichten"
     },
     "bulk": {
       "title": "Bulkbewerking",

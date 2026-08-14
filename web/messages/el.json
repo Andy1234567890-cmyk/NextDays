@@ -6209,7 +6209,9 @@
       "stillOpen": "Ακόμη ανοιχτά",
       "cancelReasonPlaceholder": "Αιτία ακύρωσης (θα καταγραφεί) …",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "openBooking": "Στην πλήρη κράτηση",
+      "messageGuest": "Μήνυμα στον επισκέπτη"
     },
     "bulk": {
       "title": "Μαζική επεξεργασία",

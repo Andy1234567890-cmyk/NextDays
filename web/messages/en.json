@@ -6230,7 +6230,9 @@
       "stillOpen": "Still open",
       "cancelReasonPlaceholder": "Reason for the cancellation (will be recorded) …",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "openBooking": "To the full booking",
+      "messageGuest": "Message guest"
     },
     "bulk": {
       "title": "Bulk edit",

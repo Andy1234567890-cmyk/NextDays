@@ -6209,7 +6209,9 @@
       "stillOpen": "Aún abiertos",
       "cancelReasonPlaceholder": "Motivo de la cancelación (se documentará) …",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "openBooking": "Ir a la reserva completa",
+      "messageGuest": "Escribir al huésped"
     },
     "bulk": {
       "title": "Edición masiva",

@@ -6204,7 +6204,9 @@
       "stillOpen": "Għadhom miftuħa",
       "cancelReasonPlaceholder": "Raġuni tal-kanċellazzjoni (tiġi ddokumentata) …",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "openBooking": "Għall-prenotazzjoni sħiħa",
+      "messageGuest": "Ikteb lill-mistieden"
     },
     "bulk": {
       "title": "Editjar bl-ingrossa",

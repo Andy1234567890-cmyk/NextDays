@@ -6204,7 +6204,9 @@
       "stillOpen": "Vēl atvērti",
       "cancelReasonPlaceholder": "Atcelšanas iemesls (tiks dokumentēts) …",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "openBooking": "Uz pilno rezervāciju",
+      "messageGuest": "Rakstīt viesim"
     },
     "bulk": {
       "title": "Masveida rediģēšana",

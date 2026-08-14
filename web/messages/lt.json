@@ -6204,7 +6204,9 @@
       "stillOpen": "Dar neapmokėta",
       "cancelReasonPlaceholder": "Atšaukimo priežastis (bus fiksuojama) …",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "openBooking": "Peržiūrėti visą rezervaciją",
+      "messageGuest": "Rašyti svečiui"
     },
     "bulk": {
       "title": "Masinis redagavimas",

@@ -6209,7 +6209,9 @@
       "stillOpen": "Stadig åben",
       "cancelReasonPlaceholder": "Årsag til annullering (dokumenteres) …",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "openBooking": "Til hele bookingen",
+      "messageGuest": "Skriv til gæsten"
     },
     "bulk": {
       "title": "Masseredigering",

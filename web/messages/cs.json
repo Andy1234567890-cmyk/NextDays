@@ -6209,7 +6209,9 @@
       "stillOpen": "Stále otevřeno",
       "cancelReasonPlaceholder": "Důvod zrušení (bude zaznamenán) …",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "openBooking": "Na celou rezervaci",
+      "messageGuest": "Napsat hostovi"
     },
     "bulk": {
       "title": "Hromadná úprava",

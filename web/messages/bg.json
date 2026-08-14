@@ -6209,7 +6209,9 @@
       "stillOpen": "Все още открити",
       "cancelReasonPlaceholder": "Причина за анулирането (ще бъде документирана) …",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "openBooking": "Към цялата резервация",
+      "messageGuest": "Съобщение до госта"
     },
     "bulk": {
       "title": "Групова редакция",

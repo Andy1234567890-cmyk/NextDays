@@ -6209,7 +6209,9 @@
       "stillOpen": "Još otvoreno",
       "cancelReasonPlaceholder": "Razlog otkazivanja (bit će zabilježen) …",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "openBooking": "Na cijelu rezervaciju",
+      "messageGuest": "Napiši gostu"
     },
     "bulk": {
       "title": "Skupna izmjena",

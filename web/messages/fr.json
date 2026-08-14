@@ -6209,7 +6209,9 @@
       "stillOpen": "Encore ouverts",
       "cancelReasonPlaceholder": "Motif de l'annulation (sera documenté) …",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "openBooking": "Vers la réservation complète",
+      "messageGuest": "Écrire au client"
     },
     "bulk": {
       "title": "Édition groupée",

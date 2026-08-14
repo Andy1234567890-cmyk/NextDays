@@ -6209,7 +6209,9 @@
       "stillOpen": "Fós oscailte",
       "cancelReasonPlaceholder": "Cúis an chealaithe (déanfar é a dhoiciméadú) …",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "openBooking": "Go dtí an áirithint iomlán",
+      "messageGuest": "Scríobh chuig an aoi"
     },
     "bulk": {
       "title": "Eagarthóireacht ollmhór",
