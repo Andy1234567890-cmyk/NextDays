@@ -386,8 +386,14 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
               </p>
             )}
 
+            {/* Kachel-Trio. Auf schmalen Geräten UNTEREINANDER: drei Spalten
+                ließen bei 322px rund 100px je Kachel — „NICHT GEMELDET" und
+                „3.477,60 DKK" überlappten und wurden rechts abgeschnitten
+                (live gesehen). Ab `sm` ist genug Platz für die Dreier-Reihe;
+                `divide-y`/`sm:divide-x` zieht die Trennlinie in die jeweils
+                richtige Richtung. */}
             {!isOwnerStay && total != null && hatPreis && (
-              <div className="grid grid-cols-3 divide-x overflow-hidden rounded-(--radius) border">
+              <div className="grid grid-cols-1 divide-y overflow-hidden rounded-(--radius) border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
                 <Kachel
                   label={t("bookingDetail.paidTile")}
                   value={money(paid, data.currency)}
@@ -1115,14 +1121,19 @@ function Kachel({
   value: string;
   betont?: boolean;
 }) {
+  // `min-w-0` ist Pflicht: eine Grid-Spalte ist per Default `min-width:auto`
+  // und wächst über ihre Spur hinaus, statt den Text umbrechen zu lassen —
+  // genau so schob sich der Betrag über die Nachbarkachel. Der Betrag bleibt
+  // deshalb zusätzlich als EINE Einheit stehen (`whitespace-nowrap`) und
+  // schrumpft in der Schriftgröße, statt mitten in der Zahl zu brechen.
   return (
-    <div className="bg-secondary/40 px-3 py-2 text-center">
+    <div className="min-w-0 bg-secondary/40 px-3 py-2 text-center">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         {label}
       </p>
       <p
         className={
-          "font-display text-lg font-extrabold tabular-nums " +
+          "font-display text-base font-extrabold tabular-nums whitespace-nowrap sm:text-lg " +
           (betont ? "text-warning" : "")
         }
       >
