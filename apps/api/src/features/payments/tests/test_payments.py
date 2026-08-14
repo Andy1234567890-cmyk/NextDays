@@ -32,9 +32,32 @@ _needs_stripe = pytest.mark.skipif(
 )
 
 
-def _stripe() -> StripeClient | None:
+class _NoNetStripe:
+    """Client-Ersatz für Tests, die einen Guard VOR dem Stripe-Aufruf prüfen.
+
+    Vorher stand hier ``None`` — das schien harmlos ("kein Stripe"), bedeutet für
+    den Service aber das Gegenteil: ``PaymentsService(stripe=None)`` baut den
+    Client LAZY aus der Umgebung (service.py ``_stripe``-Property). Lag dort ein
+    Live-Key, sprachen genau diese Tests die echte Stripe-API an — am 14.08.2026
+    live als Serie von 400ern im Stripe-Log sichtbar (``No such destination:
+    'acct_test'``).
+
+    Dieser Fake macht die Absicht explizit: Wird er doch berührt, schlägt der
+    Test mit klarer Meldung fehl, statt still hinauszutelefonieren."""
+
+    def __getattr__(self, name: str) -> object:
+        raise AssertionError(
+            f"Test hat einen echten Stripe-Aufruf versucht (v1.{name}…). Dieser "
+            "Test soll VOR dem Stripe-Aufruf scheitern — greift der Guard nicht, "
+            "ist das der Bug. Für echte API-Tests: @_needs_stripe + sk_test_-Key."
+        )
+
+
+def _stripe() -> StripeClient | _NoNetStripe:
+    """Echter Test-Client (nur bei sk_test_-Key) oder ein Fake, der bei Benutzung
+    laut wird. NIE ``None`` — das würde den Lazy-Live-Pfad öffnen."""
     key = _stripe_key()
-    return StripeClient(key) if key else None
+    return StripeClient(key) if key else _NoNetStripe()
 
 
 def test_payments_health() -> None:
@@ -63,6 +86,57 @@ def test_stripe_not_configured_raises_clean_error(monkeypatch) -> None:  # noqa:
     assert exc.value.status_code == 503
     assert "nicht konfiguriert" in exc.value.message.lower()
     sc.get_stripe.cache_clear()
+
+
+def test_live_key_im_test_wird_gesperrt(monkeypatch) -> None:  # noqa: ANN001
+    """Regression 14.08.2026: Unter pytest darf get_stripe() NIEMALS einen
+    Live-Key-Client bauen.
+
+    Damals liefen echte PaymentIntent-Aufrufe ins Live-Konto (400er-Serie
+    ``No such destination: 'acct_test'``), weil ``stripe=None`` im Test den
+    Lazy-Pfad öffnet und dort ein ``rk_live_``-Key lag. Der Guard sitzt am
+    Nadelöhr, durch das ALLE Live-Ausgänge laufen — greift er, ist auch jeder
+    künftige Test mit erfasst."""
+    from src.features.payments import stripe_client as sc
+
+    for live_key in ("rk_live_abcdef123456", "sk_live_abcdef123456"):
+        sc.get_stripe.cache_clear()
+        monkeypatch.setattr(
+            get_settings().stripe_secret_key, "get_secret_value", lambda k=live_key: k
+        )
+        with pytest.raises(sc.StripeLiveKeyInTestError):
+            sc.get_stripe()
+    sc.get_stripe.cache_clear()
+
+
+def test_test_key_im_test_ist_erlaubt(monkeypatch) -> None:  # noqa: ANN001
+    """Gegenprobe: ein sk_test_/rk_test_-Key baut weiterhin einen Client — der
+    Guard sperrt gezielt LIVE, nicht die Sandbox (sonst wären die
+    @_needs_stripe-Tests tot)."""
+    from src.features.payments import stripe_client as sc
+
+    for test_key in ("sk_test_abcdef123456", "rk_test_abcdef123456"):
+        sc.get_stripe.cache_clear()
+        monkeypatch.setattr(
+            get_settings().stripe_secret_key, "get_secret_value", lambda k=test_key: k
+        )
+        assert sc.get_stripe() is not None
+    sc.get_stripe.cache_clear()
+
+
+def test_stripe_hilfsfunktion_gibt_nie_none(monkeypatch) -> None:  # noqa: ANN001
+    """``_stripe()`` darf nie ``None`` liefern.
+
+    ``PaymentsService(stripe=None)`` heißt „Client lazy aus der Umgebung bauen",
+    nicht „kein Stripe" — genau diese Zweideutigkeit war die Ursache der
+    Live-Aufrufe. Ohne Test-Key kommt daher ein Fake, der bei Benutzung wirft."""
+    monkeypatch.setattr(
+        get_settings().stripe_secret_key, "get_secret_value", lambda: "rk_live_x"
+    )
+    ersatz = _stripe()
+    assert ersatz is not None
+    with pytest.raises(AssertionError, match="echten Stripe-Aufruf"):
+        _ = ersatz.v1
 
 
 def test_stripe_invalid_request_becomes_clean_400() -> None:
@@ -293,19 +367,24 @@ def test_booking_payment_blocked_for_ota(channel, ota_name, channex_id) -> None:
 @pytest.mark.parametrize("channel", ["direct", "portal"])
 def test_booking_payment_allowed_for_own_channel_passes_gate(channel) -> None:  # noqa: ANN001
     """Eigene Kanäle (direct/portal ohne Channex-Marker) passieren das OTA-Gate.
-    Ohne Stripe-Key scheitert es erst danach am Account/Stripe — NICHT mit 409
-    'OTA'. Wir prüfen, dass NICHT das Gate (sondern ein anderer Grund) greift."""
+
+    Geprüft wird, dass das Gate NICHT greift — der Beweis ist, dass die Ausführung
+    bis zum Stripe-Aufruf vordringt und dort am Fake-Client scheitert (statt
+    vorher mit 409 'OTA' abzubrechen).
+
+    Vorher stand hier ein ``try/except PaymentsError`` mit ``stripe=_stripe()``,
+    das ohne Test-Key ``None`` lieferte: Dann baute der Service den Client aus der
+    Umgebung und rief die ECHTE Stripe-API — mit Live-Key die 400er-Serie vom
+    14.08.2026. Ein Test, dessen Aussage „irgendwo NACH dem Gate scheitern" ist,
+    darf nicht das Netz als Abbruchgrund nutzen."""
     db = _db_with_booking(charges_enabled=True)
     res = db.store["reservations"][0]
     res["channel"] = channel
     res["ota_name"] = None
     res["source_channex_booking_id"] = None
-    svc = PaymentsService(service_client=db, stripe=_stripe())
-    try:
+    svc = PaymentsService(service_client=db, stripe=_NoNetStripe())
+    with pytest.raises(AssertionError, match="echten Stripe-Aufruf"):
         svc.create_booking_payment(reservation_id="res-1")
-    except PaymentsError as exc:
-        # Erlaubt ist alles AUSSER der OTA-Ablehnung.
-        assert "über myNextDays ist hier keine Zahlung möglich" not in exc.message
 
 
 def _make_transfer_ready_account(stripe: StripeClient) -> str:

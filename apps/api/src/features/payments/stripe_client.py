@@ -9,6 +9,8 @@ leicht faken können (StripeClient wird injiziert/gepatcht).
 from __future__ import annotations
 
 import io
+import os
+import sys
 from collections.abc import Mapping
 from functools import lru_cache
 from typing import Any
@@ -35,17 +37,60 @@ class StripeNotConfiguredError(RuntimeError):
     Konfiguration) im Frontend klar sichtbar. Keine Fallbacks (Projektregel)."""
 
 
+class StripeLiveKeyInTestError(RuntimeError):
+    """Ein Test wollte mit einem LIVE-Key gegen die echte Stripe-API sprechen.
+
+    Live passiert (14.08.2026): `pytest` erzeugte über den ganzen Tag 400er im
+    Live-Log (`No such destination: 'acct_test'`, `reservation_id=res-1`,
+    `tenant_id=t1`). Ursache war kein einzelner Testfehler, sondern eine
+    Zweideutigkeit: `PaymentsService(stripe=None)` heißt im Produktivpfad „Client
+    lazy aus der Config bauen" — im Test hieß es unbeabsichtigt „nimm den Key aus
+    der Umgebung", und dort lag ein `rk_live_`. Die `sk_test_`-Prüfung der
+    Test-Datei griff nur für die mit `@_needs_stripe` markierten Fälle; vier
+    unmarkierte Tests reichten `None` durch bis in die echte API.
+
+    Geld floss nicht (Stripe wies `acct_test` bei der Validierung ab), aber
+    darauf darf man sich nicht verlassen: derselbe Pfad mit einer ECHTEN
+    `acct_`-ID in der Fake-DB wäre eine echte Belastung gewesen.
+
+    Deshalb sitzt die Sperre hier am Nadelöhr `get_stripe()` und nicht in der
+    Test-Datei: Alle Live-Ausgänge des Codes laufen durch diese eine Funktion,
+    also ist auch ein künftig neu geschriebener Test automatisch mit erfasst —
+    er kann nicht hinausrufen, ohne bewusst einen Fake zu injizieren
+    (fail-closed, Wurzel 5)."""
+
+
+def _in_pytest() -> bool:
+    """Läuft dieser Prozess unter pytest?
+
+    `PYTEST_CURRENT_TEST` setzt pytest je Test selbst; das `sys.modules`-Fallback
+    deckt Collection-/Import-Zeit ab, wo die Variable noch fehlt."""
+    return "PYTEST_CURRENT_TEST" in os.environ or "pytest" in sys.modules
+
+
 @lru_cache(maxsize=1)
 def get_stripe() -> StripeClient:
     """Gibt einen konfigurierten StripeClient zurück (einmaliges Init via lru_cache).
 
     Fehlt der Secret Key, wird klar fehlgeschlagen — nicht mit leerem Key ein
-    StripeClient gebaut, der später unverständlich scheitert."""
+    StripeClient gebaut, der später unverständlich scheitert.
+
+    Unter pytest ist ein LIVE-Key gesperrt (siehe StripeLiveKeyInTestError): Ein
+    Test darf die echte Stripe-API nur mit einem `sk_test_`/`rk_test_`-Key
+    erreichen, sonst gar nicht."""
     secret = get_settings().stripe_secret_key.get_secret_value()
     if not secret:
         raise StripeNotConfiguredError(
             "Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt). "
             "Bitte in der Umgebung (Coolify) setzen."
+        )
+    if _in_pytest() and not secret.startswith(("sk_test_", "rk_test_")):
+        raise StripeLiveKeyInTestError(
+            "Test wollte die echte Stripe-API mit einem NICHT-Test-Key "
+            f"('{secret[:8]}…') erreichen. Tests injizieren einen Fake-Client "
+            "(stripe=<Fake>) oder tragen @_needs_stripe und laufen nur mit "
+            "sk_test_-Key. stripe=None im Test bedeutet NICHT 'kein Stripe' — "
+            "der Service baut daraus den Client aus der Umgebung."
         )
     return StripeClient(
         secret,
