@@ -780,6 +780,52 @@ def test_compute_send_at_missing_anchor_is_none() -> None:
     assert InboxService._compute_send_at("booking", 0, "12:00", {}) is None
 
 
+def test_buchungs_automail_geht_nie_vor_der_buchung() -> None:
+    """„0 Tage nach Buchung um 09:00" darf nicht vor der Buchung liegen.
+
+    Der Tages-Pfad rechnet auf dem nackten DATUM und klebt die eingestellte
+    Uhrzeit darauf. Bei Versatz 0 ergab das für JEDE Buchung nach dieser Uhrzeit
+    einen Versand in der Vergangenheit — bei einer Buchung um 20:00 lag er elf
+    Stunden davor, war damit sofort fällig und ging im nächsten Tick raus. Die
+    eingestellte Uhrzeit war wirkungslos; wer 09:00 wählt, um nachts nicht zu
+    stören, wurde genau darin verletzt.
+    """
+    th = {"booked_at": "2026-08-15T20:00:00+00:00"}
+    dt = InboxService._compute_send_at(
+        "booking", 0, "09:00", th, offset_unit="days", offset_value=0
+    )
+    assert dt == datetime(2026, 8, 15, 20, 0, tzinfo=UTC)
+
+
+def test_buchungs_automail_behaelt_erreichbare_uhrzeit() -> None:
+    """Liegt die Uhrzeit noch VOR der Buchung, bleibt sie maßgeblich.
+
+    Gegenprobe zum Test darüber: der Riegel darf die Uhrzeit nicht pauschal
+    überschreiben, sondern nur, wenn sie in der Vergangenheit läge.
+    """
+    th = {"booked_at": "2026-08-15T02:00:00+00:00"}
+    dt = InboxService._compute_send_at(
+        "booking", 0, "09:00", th, offset_unit="days", offset_value=0
+    )
+    assert dt == datetime(2026, 8, 15, 9, 0, tzinfo=UTC)
+
+
+def test_versatz_ausserhalb_des_datumsbereichs_ist_none() -> None:
+    """Ein unsinniger Versatz legt nur SICH still, nicht die ganze Buchung.
+
+    `offset_value` nahm jede Zahl an; die Datumsrechnung brach dann mit
+    OverflowError ab. Ungefangen riss das die Schleife über alle Regeln der
+    Buchung mit — die übrigen Automails blieben ungeplant und der Gegenzustand
+    (`_offene_stornieren`) lief nie (Wurzel 1). Der Import-Pfad fängt breit,
+    also passierte das still.
+    """
+    th = {"arrival_date": "2026-07-10", "departure_date": "2026-07-14"}
+    dt = InboxService._compute_send_at(
+        "arrival", 0, "09:00", th, offset_unit="days", offset_value=999_999_999
+    )
+    assert dt is None
+
+
 def test_compute_send_at_stunden_vor_anreise() -> None:
     """Stunden rechnen vom Bezugszeitpunkt, nicht vom Kalendertag.
 
@@ -2375,3 +2421,53 @@ def test_unread_count_zaehlt_nur_die_aktive_ansicht() -> None:
         channex=_FakeChannex(),
     )
     assert svc.unread_count(_CTX) == 1
+
+
+# --- Fehlereinstufung beim Automail-Versand (15.08.2026) ---------------------
+# `failed` ist eine Sackgasse: es steht nicht in UEBERSCHREIBBAR, und der
+# Unique-Index (automation_id, thread_id) verhindert eine zweite Zeile. Was hier
+# falsch als endgültig gilt, erreicht den Gast NIE — ohne Fehlermeldung, weil
+# kein Endpunkt `last_error` ausliefert.
+def test_channex_stoerung_bleibt_wiederholbar() -> None:
+    """Ein 5xx/429 ist eine Aussage über den Moment, nicht über die Nachricht.
+
+    Der Typ kommt hier nicht als `ChannexError` an: `send_message` übersetzt ihn
+    in einen `InboxError`, und der Client normalisiert 5xx zuvor auf 502. Die
+    alte `isinstance(exc, ChannexError)`-Prüfung lief deshalb ins Leere — live
+    standen zwei Automails mit „Service Temporary Unavailable" auf `failed`.
+    """
+    assert InboxService._fehlerzustand(
+        InboxError("Service Temporary Unavailable", status_code=502)
+    )["status"] == "pending"
+    assert InboxService._fehlerzustand(
+        InboxError("Too Many Requests", status_code=429)
+    )["status"] == "pending"
+
+
+def test_fehlendes_feld_wird_erneut_versucht() -> None:
+    """`FeldFehlt` ist nachpflegbar, also kein endgültiger Fehler.
+
+    Die Architektur rendert bewusst erst beim Versand, weil der Türcode oft erst
+    kurz davor entsteht. Live: vier Anreise-Automails scheiterten am 14.08. um
+    06:00 an fehlenden Türcodes, die um 12:05 gepflegt wurden — sechs Stunden
+    vor dem Check-in. Ein Neuversuch hätte alle vier Gäste erreicht.
+    """
+    zustand = InboxService._fehlerzustand(FeldFehlt(["door_code", "wifi_ssid"]))
+    assert zustand["status"] == "pending"
+    assert "door_code" in zustand["last_error"]
+
+
+def test_endgueltige_fehler_bleiben_endgueltig() -> None:
+    """Gegenprobe: ein 4xx wird auch beim zehnten Versuch nicht besser.
+
+    Sonst kreiste eine Nachricht bis zur Nachzügler-Grenze und verdeckte dabei
+    ihren eigenen Grund.
+    """
+    assert InboxService._fehlerzustand(
+        InboxError("Dieser Buchungskanal überträgt keine Gastnachrichten.",
+                   status_code=409)
+    )["status"] == "failed"
+    assert InboxService._fehlerzustand(
+        InboxError("Ungültige Anfrage", status_code=400)
+    )["status"] == "failed"
+    assert InboxService._fehlerzustand(ValueError("kaputt"))["status"] == "failed"

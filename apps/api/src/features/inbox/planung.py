@@ -495,40 +495,69 @@ class PlanungMixin:
         betrag = offset_days if offset_value is None else offset_value
         zone = _zeitzone(timezone_name) if timezone_name else UTC
 
-        if offset_unit in ("minutes", "hours") and anker_zeitpunkt is not None:
-            # Echter Zeitpunkt + echte Dauer. Bewusst NICHT über die lokale
-            # Wanduhr: `timedelta` auf einem zonebehafteten datetime rechnet die
-            # Wanduhr weiter und bestimmt den Offset am Ergebnis neu — über eine
-            # DST-Umstellung hinweg wären „6 Stunden" dann real 5 oder 7.
-            schritt = (
-                timedelta(minutes=betrag)
-                if offset_unit == "minutes"
-                else timedelta(hours=betrag)
+        exakt = offset_unit in ("minutes", "hours") and anker_zeitpunkt is not None
+        lokal = datetime.combine(d, time(0, 0), tzinfo=zone)
+        if not exakt:
+            # send_time aus DB ist "HH:MM[:SS]"; ohne Angabe Mitternacht.
+            quelle = send_time or (anker_uhrzeit if offset_unit != "days" else None)
+            gelesen = PlanungMixin._uhrzeit(quelle)
+            if gelesen is None:
+                # Unbrauchbare Uhrzeit (etwa das von Postgres akzeptierte
+                # '24:00'): nicht planen statt den ganzen Lauf mit einem
+                # ValueError abzubrechen. Vorher riss EINE solche Regel die
+                # komplette Neuplanung des Betriebs mit (Wurzel 5).
+                log.warning("automail_ungueltige_uhrzeit", uhrzeit=str(quelle)[:16])
+                return None
+            hh, mm = gelesen
+            lokal = datetime.combine(d, time(hh, mm), tzinfo=zone)
+
+        # Ein Versatz, der aus dem Datumsbereich läuft, wirft OverflowError statt
+        # None zu liefern. Ungefangen riss er nicht nur DIESE Regel ab, sondern
+        # die ganze Schleife in `_plan_thread` — alle übrigen Regeln der Buchung
+        # blieben ungeplant, und der Gegenzustand (`_offene_stornieren`) lief nie
+        # (Wurzel 1). Der Import-Pfad fängt breit, also passierte das still.
+        try:
+            if exakt:
+                # Echter Zeitpunkt + echte Dauer. Bewusst NICHT über die lokale
+                # Wanduhr: `timedelta` auf einem zonebehafteten datetime rechnet
+                # die Wanduhr weiter und bestimmt den Offset am Ergebnis neu —
+                # über eine DST-Umstellung hinweg wären „6 Stunden" real 5 oder 7.
+                schritt = (
+                    timedelta(minutes=betrag)
+                    if offset_unit == "minutes"
+                    else timedelta(hours=betrag)
+                )
+                return (anker_zeitpunkt + schritt).astimezone(UTC)
+            if offset_unit == "minutes":
+                lokal += timedelta(minutes=betrag)
+            elif offset_unit == "hours":
+                lokal += timedelta(hours=betrag)
+            else:
+                lokal += timedelta(days=betrag)
+            # In UTC umrechnen: die Spalte send_at ist timestamptz, und der
+            # Scheduler vergleicht gegen datetime.now(UTC).
+            ergebnis = lokal.astimezone(UTC)
+            # Ein Anker mit ECHTEM Zeitpunkt (nur „Buchung") darf nie vor sich
+            # selbst liegen. Der Tages-Pfad rechnet auf dem nackten DATUM und
+            # klebt die eingestellte Uhrzeit darauf — bei Versatz 0 ergab das
+            # für jede Buchung nach dieser Uhrzeit einen Versand in der
+            # VERGANGENHEIT: „0 Tage nach Buchung um 09:00" bei einer Buchung um
+            # 20:00 wurde auf 09:00 desselben Tages gelegt, elf Stunden davor.
+            # Die Zeile stand damit sofort als fällig da und ging im nächsten
+            # Tick raus — die eingestellte Uhrzeit war wirkungslos, und wer
+            # 09:00 wählt, um nachts nicht zu stören, wurde genau darin
+            # verletzt. Kein erfundener Ersatzwert (Wurzel 4): gerechnet wird
+            # mit dem Anker selbst, dem frühestmöglichen zulässigen Zeitpunkt.
+            if anker_zeitpunkt is not None and ergebnis < anker_zeitpunkt:
+                ergebnis = anker_zeitpunkt.astimezone(UTC)
+            return ergebnis
+        except (OverflowError, ValueError, OSError):
+            log.warning(
+                "automail_versatz_ausserhalb_bereich",
+                offset_unit=offset_unit,
+                offset=betrag,
             )
-            return (anker_zeitpunkt + schritt).astimezone(UTC)
-
-        # send_time aus DB ist "HH:MM[:SS]"; ohne Angabe Mitternacht.
-        quelle = send_time or (anker_uhrzeit if offset_unit != "days" else None)
-        gelesen = PlanungMixin._uhrzeit(quelle)
-        if gelesen is None:
-            # Unbrauchbare Uhrzeit (etwa das von Postgres akzeptierte '24:00'):
-            # nicht planen statt den ganzen Lauf mit einem ValueError abzubrechen.
-            # Vorher riss EINE solche Regel die komplette Neuplanung des Betriebs
-            # mit — alle Automails blieben still stehen (Wurzel 5).
-            log.warning("automail_ungueltige_uhrzeit", uhrzeit=str(quelle)[:16])
             return None
-        hh, mm = gelesen
-
-        lokal = datetime.combine(d, time(hh, mm), tzinfo=zone)
-        if offset_unit == "minutes":
-            lokal += timedelta(minutes=betrag)
-        elif offset_unit == "hours":
-            lokal += timedelta(hours=betrag)
-        else:
-            lokal += timedelta(days=betrag)
-        # In UTC umrechnen: die Spalte send_at ist timestamptz, und der Scheduler
-        # vergleicht gegen datetime.now(UTC).
-        return lokal.astimezone(UTC)
 
     @staticmethod
     def _uhrzeit(quelle: object) -> tuple[int, int] | None:
@@ -700,6 +729,7 @@ class PlanungMixin:
     def _einplanen(
         db: Client, tenant_id: str, automation: dict, thread_id: str,
         body: str, send_at: datetime, *, status: str = "pending",
+        wiederbeleben: bool = True,
     ) -> None:
         """Eine geplante Automail je (Automation, Thread) schreiben ODER
         aktualisieren — aber NIE eine, die schon raus ist.
@@ -711,7 +741,24 @@ class PlanungMixin:
         eingefügt. Läuft parallel eine zweite Planung, fängt der Unique-Index
         (automation_scheduled_unique) den Einfüge-Versuch ab — der Konflikt ist
         dann die richtige Antwort und kein Fehler.
+
+        `wiederbeleben=False` nimmt 'cancelled' aus den überschreibbaren
+        Zuständen. Für DATUMS-Regeln ist die Wiederbelebung richtig: eine
+        zurückgenommene Stornierung soll ihre Automails zurückbekommen, und der
+        Zeitpunkt liegt ohnehin fest. Für die ABWESENHEITSANTWORT
+        (`message_received`) ist sie ein Doppelversand: dort ist die Zeile keine
+        Vorausplanung, sondern die Quittung „für diesen Thread schon
+        geantwortet". Wird sie später storniert (Umbuchung, Storno, oder der
+        `veraltet`-Sweep in `replan_tenant`), hob die nächste eingehende
+        Gastnachricht sie zurück auf 'pending' — und der Gast bekam dieselbe
+        Abwesenheitsantwort ein zweites Mal. Der Unique-Index schützt gegen zwei
+        ZEILEN, nicht gegen zweimal SENDEN über dieselbe Zeile.
         """
+        zustaende = (
+            UEBERSCHREIBBAR
+            if wiederbeleben
+            else tuple(s for s in UEBERSCHREIBBAR if s != "cancelled")
+        )
         getroffen = (
             db.table("automation_scheduled_message")
             .update(
@@ -725,7 +772,7 @@ class PlanungMixin:
             .eq("tenant_id", tenant_id)
             .eq("automation_id", automation["id"])
             .eq("thread_id", thread_id)
-            .in_("status", list(UEBERSCHREIBBAR))
+            .in_("status", list(zustaende))
             .execute()
         ).data
         if getroffen:
@@ -1154,8 +1201,13 @@ class PlanungMixin:
         sonst UTC. Ohne Zeitzone ist ein Fenster wie „22:00–06:00" für ein Objekt
         in Athen um zwei Stunden verschoben; das steht als Hinweis am Objekt.
 
-        Mehrfaches Feuern ist durch den Unique-Index (automation_id, thread_id)
-        ausgeschlossen: eine Automation antwortet je Konversation genau einmal.
+        Mehrfaches Feuern verhindert die Zeile selbst: sie bleibt als Quittung
+        „für diesen Thread schon geantwortet" stehen, und `_einplanen` läuft
+        hier mit `wiederbeleben=False`. Der Unique-Index (automation_id,
+        thread_id) allein reicht dafür NICHT — er verhindert eine zweite Zeile,
+        nicht ein zweites Senden über dieselbe. Wurde die Quittung zwischendurch
+        storniert (Umbuchung, Storno, `veraltet`-Sweep), hob die nächste
+        Gastnachricht sie sonst zurück auf 'pending'.
         """
         if self._db is None:
             return 0
@@ -1183,7 +1235,10 @@ class PlanungMixin:
             )
             if not body:
                 continue
-            self._einplanen(db, tenant_id, a, thread_id, body, jetzt_utc)
+            self._einplanen(
+                db, tenant_id, a, thread_id, body, jetzt_utc,
+                wiederbeleben=False,
+            )
             planned += 1
         if planned:
             log.info(
@@ -1279,17 +1334,47 @@ class PlanungMixin:
         Minuten löschte damit still alle in dieser Zeit fälligen Automails
         (Wurzel 5: Kontroll-Signal nicht verschlucken).
 
-        Endgültige Fehler bleiben 'failed': ein fehlender Feldwert (FeldFehlt)
-        oder ein 4xx wird auch beim zehnten Versuch nicht besser, und ein
-        endloser Neuversuch verdeckte den Grund."""
+        Endgültige Fehler bleiben 'failed': ein 4xx des Portals wird auch beim
+        zehnten Versuch nicht besser, und ein endloser Neuversuch verdeckte den
+        Grund.
+
+        ZWEI Korrekturen vom 15.08.2026, beide live belegt:
+
+        1. Der Typ kommt hier NICHT als `ChannexError` an. `send_message`
+           übersetzt jeden `ChannexError` in einen `InboxError`
+           (`service.py`, „raise InboxError(exc.message, status_code=…)"), und
+           `channex_client` normalisiert 5xx zuvor auf 502. Die Prüfung lief
+           deshalb ins Leere: live standen zwei Automails mit „Service
+           Temporary Unavailable" auf `failed` — eine Störung von Minuten,
+           endgültig verloren. Geprüft wird jetzt der STATUSCODE, egal welche
+           Hülle ihn trägt.
+
+        2. `FeldFehlt` ist NICHT endgültig. Die Architektur rendert bewusst
+           erst beim Versand, weil „der Türcode oft erst kurz davor entsteht"
+           (`service.send_message`, `felder`-Modulkopf) — der Wert kann sich
+           bis zur letzten Minute ändern. Live: vier Anreise-Automails
+           scheiterten am 14.08. um 06:00 an fehlenden Türcodes, die um 12:05
+           gepflegt wurden — sechs Stunden vor dem Check-in. Ein Neuversuch
+           hätte alle vier Gäste erreicht; stattdessen war `failed` die
+           Endstation (nicht in `UEBERSCHREIBBAR`, und der Unique-Index
+           verhindert eine zweite Zeile).
+
+        Damit ein fehlendes Feld nicht ewig kreist, gilt die Nachzügler-Grenze:
+        `dispatch_due_automations` liest nur, was jünger als
+        NACHZUEGLER_STUNDEN ist, und `replan_tenant` storniert Älteres. Der
+        Neuversuch läuft also höchstens bis dahin — genau das Fenster, in dem
+        eine Nachpflege den Gast noch erreicht.
+        """
         from src.features.channel_manager.channex_client import (  # noqa: PLC0415
             ChannexBudgetExhausted,
-            ChannexError,
         )
 
-        transient = isinstance(exc, ChannexBudgetExhausted) or (
-            isinstance(exc, ChannexError)
-            and (exc.status_code == 429 or exc.status_code >= 500)
+        from .felder import FeldFehlt  # noqa: PLC0415 — Zirkularität vermeiden
+
+        status_code = getattr(exc, "status_code", None)
+        transient = isinstance(exc, (ChannexBudgetExhausted, FeldFehlt)) or (
+            isinstance(status_code, int)
+            and (status_code == 429 or status_code >= 500)
         )
         return {
             "status": "pending" if transient else "failed",

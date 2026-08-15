@@ -25,6 +25,7 @@ from src.features.guests.identity import (
     resolve_or_create_guest,
 )
 from src.features.notification_settings.ereignisse import melde_buchungs_ereignis
+from src.features.tasks.engine import sync_nach_id
 from src.jobs.queue import try_enqueue_recompute
 
 from .ari_push import _group_iso_days_to_ranges
@@ -1184,6 +1185,13 @@ class BookingsSyncMixin:
                 db.table("reservations").update(cancel_update).eq(
                     "id", existing[0]["id"]
                 ).execute()
+                # Gegenzustand zur Stornierung (Wurzel 1): die für diese Buchung
+                # erzeugten Aufgaben wegräumen bzw. auf 'cancelled' setzen —
+                # sonst steht die Reinigung für einen Aufenthalt, den es nicht
+                # mehr gibt, weiter auf dem Handy der Reinigungskraft.
+                # `sync_for_reservation` erkennt den Storno am Status und ruft
+                # `_on_cancelled`; manuelle Aufgaben bleiben unangetastet.
+                sync_nach_id(db, tenant_id, str(existing[0]["id"]))
             elif local_property_id is not None:
                 # Bestandsimport (CSV/Lodgify): eine bereits stornierte Buchung,
                 # die wir noch nicht kennen, TROTZDEM als storniert anlegen —
@@ -1548,6 +1556,19 @@ class BookingsSyncMixin:
         try_enqueue_recompute(db, tenant_id, property_id)
         if existing and old_property_id and old_property_id != property_id:
             try_enqueue_recompute(db, tenant_id, old_property_id)
+        # Planmäßige Aufgaben (0272) — derselbe Trigger, den Direktbuchungen
+        # längst haben (`reservations._base._sync_task_rules`). Dieser Pfad rief
+        # ihn bis 15.08.2026 NICHT: live standen 235 Portalbuchungen genau 1
+        # regelerzeugten Aufgabe gegenüber, während 34 Direktbuchungen 55
+        # erzeugten. Für einen Betrieb, dessen Buchungen über die Portale
+        # kommen, entstand also für KEINE Anreise eine Reinigung.
+        #
+        # Der Aufruf steht bewusst NACH der Kalenderpflege und deckt BEIDE
+        # Zweige ab (Neuanlage wie Modifikation): `sync_for_reservation` ist
+        # idempotent und verschiebend — eine Umbuchung verschiebt die vorhandene
+        # Aufgabe, statt eine zweite anzulegen (Wurzel 1/2).
+        if reservation_id:
+            sync_nach_id(db, tenant_id, str(reservation_id))
         return True
 
     def _record_portal_finanzen_safe(  # noqa: PLR0913 — benannte Eingänge

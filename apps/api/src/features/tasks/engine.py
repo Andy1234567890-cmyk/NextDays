@@ -489,6 +489,50 @@ def sync_for_reservation(
     return touched
 
 
+def sync_nach_id(db: Client, tenant_id: str, reservation_id: str) -> int:
+    """Wie `sync_for_reservation`, aber lädt die Reservierung selbst.
+
+    Für Schreibpfade, die keine Service-Instanz haben — allen voran der
+    OTA-Import (`channel_manager.bookings_sync`). Der schreibt Reservierungen
+    direkt per `db.table("reservations")` und rief die Regel-Engine bis 15.08.
+    NICHT auf: live entstanden aus 235 Portalbuchungen ganze 1 Aufgabe, während
+    34 Direktbuchungen 55 erzeugten. Für einen Betrieb, dessen Buchungen über
+    die Portale kommen, war die Aufgaben-Automatik damit wirkungslos — und mit
+    ihr beide Gegenrichtungen (Wurzel 1): eine Umbuchung ließ die Reinigung am
+    alten Datum stehen, eine Stornierung ließ sie ganz stehen.
+
+    Best-effort wie im manuellen Pfad (`reservations._base._sync_task_rules`):
+    eine Aufgabe, die nicht entstehen konnte, darf den bereits vollzogenen
+    Import NICHT zurückdrehen. Der Fehler wird geloggt, `POST
+    /tasks/sync-reservation/{id}` holt ihn nach.
+
+    Der Load ist auf den Mandanten gescopt (Wurzel 3) — die Service-Rolle
+    umgeht RLS, ein Load allein per ID wäre eine offene Mandantengrenze.
+    """
+    try:
+        rows = (
+            db.table("reservations")
+            .select(
+                "id, property_id, status, check_in, check_out, "
+                "checkin_time, checkout_time, created_at"
+            )
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            return 0
+        return sync_for_reservation(db, tenant_id, rows[0])
+    except Exception as exc:  # noqa: BLE001 — Aufgaben sind der Nebenpfad
+        log.warning(
+            "task_rules_sync_failed",
+            reservation_id=reservation_id,
+            error=str(exc)[:200],
+        )
+        return 0
+
+
 def _on_cancelled(db: Client, tenant_id: str, reservation_id: str) -> int:
     """Storno-Gegenzustand (Wurzel 1).
 

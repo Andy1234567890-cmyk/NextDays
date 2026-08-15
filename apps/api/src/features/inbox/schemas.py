@@ -8,7 +8,7 @@ hilft beim Beantworten. Threads sind mit der lokalen Reservierung verknüpft.
 from typing import Literal
 
 import nh3
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 # --- Allowlist für Vorlagen-HTML (Wurzel 8) ---------------------------------
 # Eigene Liste im Slice statt Import aus announcements/site_config: die
@@ -394,6 +394,16 @@ class AiSettings(BaseModel):
 # window_days/window_from/window_to: das Zeitfenster, in dem der Auslöser
 # überhaupt feuern DARF (für eine Abwesenheitsantwort also die geschlossenen
 # Zeiten, nicht die Bürozeiten).
+
+# Obergrenze des Versatzes (Wurzel 8). Zwei Jahre in Tagen decken jede sinnvolle
+# Regel ab — „ein Jahr nach Abreise" als Wiederkehr-Erinnerung ist das Äußerste,
+# was ein Betrieb plant. Ohne Grenze nahm das Feld jede Zahl an, und ein Wert
+# wie 999999999 ließ die Datumsrechnung mit OverflowError abbrechen: das riss
+# die Planung ALLER Regeln dieser Buchung mit, still (Import-Pfad fängt breit).
+# Bei Minuten/Stunden ist die Grenze großzügig, aber ebenfalls endlich.
+_MAX_VERSATZ = 730
+
+
 class AutomationBase(BaseModel):
     name: str
     # booking_new|before_checkin|after_checkin|before_checkout|after_checkout|
@@ -401,11 +411,11 @@ class AutomationBase(BaseModel):
     trigger: str
     # Abgeleitet aus `trigger`; in der Anfrage ignoriert (nur Ausgabe).
     anchor: str = "arrival"    # arrival|departure|booking
-    offset_days: int = 0
+    offset_days: int = Field(default=0, ge=-_MAX_VERSATZ, le=_MAX_VERSATZ)
     # Versatz zum Anker in der gewählten Einheit. `offset_days` bleibt für den
     # Bestand erhalten und wird bei Tages-Regeln mitgeschrieben (0303).
     offset_unit: Literal["minutes", "hours", "days"] = "days"
-    offset_value: int = 0
+    offset_value: int = Field(default=0, ge=-_MAX_VERSATZ, le=_MAX_VERSATZ)
     # None = keine feste Uhrzeit. Bei Tagen heißt das Mitternacht des Ankertags;
     # bei Stunden/Minuten bestimmt der Versatz die Zeit ohnehin selbst.
     send_time: str | None = None  # "HH:MM"
