@@ -530,6 +530,22 @@ def sync_nach_id(db: Client, tenant_id: str, reservation_id: str) -> int:
             reservation_id=reservation_id,
             error=str(exc)[:200],
         )
+        # In den Verlauf: eine ausgefallene Reinigung fällt sonst erst auf,
+        # wenn niemand geputzt hat. Best-effort im Best-effort — schlägt auch
+        # das Protokollieren fehl, bleibt es bei der Log-Zeile.
+        from src.jobs import worker_verlauf  # noqa: PLC0415 — Zirkularität
+
+        worker_verlauf.merken(
+            db,
+            richtung="intern",
+            vorgang="aufgaben_regeln",
+            ergebnis="fehler",
+            tenant_id=tenant_id,
+            quelle_tabelle="reservations",
+            quelle_id=reservation_id,
+            fehler_text=str(exc)[:2000],
+            zusammenfassung="Planmäßige Aufgaben konnten nicht erzeugt werden",
+        )
         return 0
 
 

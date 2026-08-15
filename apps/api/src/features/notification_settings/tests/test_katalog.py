@@ -93,10 +93,35 @@ def test_marketing_spalten_enthalten_kein_konto_feld() -> None:
         assert not any(spalte.startswith(f"{s}_") for s in konto_schluessel)
 
 
-def test_jede_kategorie_bietet_email() -> None:
-    """Ohne E-Mail-Kanal wäre eine Kategorie nicht zustellbar."""
+def test_jede_versendende_kategorie_bietet_email() -> None:
+    """Wer überhaupt nach draußen geht, muss E-Mail können.
+
+    SMS allein wäre nicht zustellbar: nicht jeder hinterlegt eine Nummer, und
+    ein Betrieb, der nur SMS abwählt, verlöre die Meldung ganz.
+
+    Eine Kategorie OHNE Kanäle ist davon ausgenommen und kein Versehen: sie
+    geht ausschließlich in die Glocke (Kanal.INAPP läuft immer mit, ohne
+    Präferenzspalte). Das ist der richtige Weg für Meldungen, die eine STÖRUNG
+    beschreiben — die trifft viele Vorgänge gleichzeitig, und eine Mail je
+    Vorgang wäre eine Flut genau dann, wenn der Betrieb Ruhe zum Beheben
+    braucht (`zustellproblem`, 15.08.2026).
+    """
     for kategorie in KATALOG:
+        if not kategorie.kanaele:
+            continue
         assert Kanal.EMAIL in kategorie.kanaele
+
+
+def test_kategorie_ohne_kanaele_erzeugt_keine_spalten() -> None:
+    """Gegenprobe: eine reine Glocken-Kategorie darf das Schema nicht anfassen.
+
+    `SPALTEN` leitet sich aus den Kanälen ab. Trüge die Kategorie welche, kämen
+    Präferenzspalten hinzu, die es in der Tabelle nicht gibt — jede Abfrage
+    liefe auf einen Spaltenfehler.
+    """
+    ohne = [k for k in KATALOG if not k.kanaele]
+    for kategorie in ohne:
+        assert not [s for s in SPALTEN if s.startswith(f"{kategorie.schluessel}_")]
 
 
 def test_defaults_entsprechen_airbnb() -> None:

@@ -503,3 +503,85 @@ def _nur_vorname(name: str | None) -> str | None:
         return None
     erstes = name.strip().split(" ")[0].strip()
     return erstes or None
+
+
+# --- Zustellprobleme (15.08.2026) -------------------------------------------
+SCHLUESSEL_ZUSTELLPROBLEM = "zustellproblem"
+
+# Wer im Betrieb erfaehrt, dass eine Gastnachricht haengengeblieben ist.
+# Bewusst NUR die Leitung: ein Eigentuemer kann den Tuercode nicht nachtragen,
+# und eine Reinigungskraft erst recht nicht. Wer die Meldung nicht beheben
+# kann, soll sie auch nicht bekommen (Wurzel 9 — kein Datenausgang an Rollen,
+# die ihn nicht brauchen).
+_ZUSTELL_ROLLEN = ("admin", "co_admin")
+
+
+def _betriebsleitung(db: Client, tenant_id: str) -> set[str]:
+    """Login-Nutzer der Betriebsleitung. Leere Menge = niemand (fail-closed)."""
+    zeilen = (
+        db.table("users")
+        .select("id")
+        .eq("tenant_id", tenant_id)
+        .in_("role", list(_ZUSTELL_ROLLEN))
+        .execute()
+    ).data or []
+    return {str(z["id"]) for z in zeilen if z.get("id")}
+
+
+def melde_zustellproblem(
+    db: Client,
+    *,
+    tenant_id: str,
+    quelle_id: str,
+    grund: str,
+    endgueltig: bool,
+    property_id: str | None = None,
+) -> None:
+    """„Eine Nachricht an einen Gast konnte nicht zugestellt werden."
+
+    WOZU: Bis hierher erfuhr der Betrieb davon GAR NICHT. Der Grund stand in
+    `last_error` — einer Spalte, die kein Endpunkt ausliefert und kein Abo
+    abhoert; die Liste der geplanten Nachrichten filtert zudem auf 'pending',
+    blendet Fehlgeschlagenes also aus. Live waren so 14 Gaeste ohne ihre
+    Anreise-Info (Tuercode, WLAN), ohne dass es jemand sehen konnte.
+
+    NUR GLOCKE, keine Mail/SMS: die Kategorie traegt bewusst keine Kanaele
+    (s. `katalog.zustellproblem`). Der Ausloeser ist meist eine Stoerung, die
+    viele Nachrichten gleichzeitig trifft — eine Mail je Nachricht waere eine
+    Flut genau im falschen Moment.
+
+    ENTDOPPLUNG ueber die Quellzeile: derselbe Fehlschlag meldet einmal. Ein
+    Neuversuch, der wieder scheitert, hebt die Meldung nicht erneut — sie steht
+    ja noch ungelesen da (partieller UNIQUE-Index auf `gelesen_am is null`).
+
+    `endgueltig` trennt die beiden Faelle im Text, weil sie verschieden
+    dringend sind: „wird erneut versucht" darf man liegen lassen, „nicht
+    zugestellt" nicht.
+    """
+    try:
+        empfaenger = _betriebsleitung(db, tenant_id)
+        if not empfaenger:
+            return
+        dispatcher = _dispatcher(db)
+        for user_id in sorted(empfaenger):
+            dispatcher.sende(
+                user_id=user_id,
+                schluessel=SCHLUESSEL_ZUSTELLPROBLEM,
+                betreff=(
+                    "Nachricht nicht zugestellt"
+                    if endgueltig
+                    else "Nachricht verzoegert"
+                ),
+                text=grund[:500],
+                tenant_id=tenant_id,
+                property_id=property_id,
+                ziel_pfad="/posteingang",
+                dedup_key=f"zustellproblem:{quelle_id}",
+            )
+    except Exception as exc:  # noqa: BLE001 — Meldung kippt den Versand nie
+        log.warning(
+            "zustellproblem_meldung_fehlgeschlagen",
+            tenant_id=tenant_id,
+            quelle_id=quelle_id,
+            error=str(exc)[:200],
+        )

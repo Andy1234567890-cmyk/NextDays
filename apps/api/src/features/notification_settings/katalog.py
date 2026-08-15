@@ -116,6 +116,24 @@ KATALOG: tuple[Kategorie, ...] = (
     # Kategorie steht trotzdem im Katalog, damit die Einstellung auffindbar
     # ist, BEVOR der erste Antrag kommt.
     Kategorie("block_freigabe", Tab.KONTO, "aktivitaet", _MAIL_SMS),
+    # --- Zustellprobleme (15.08.2026) -------------------------------------
+    # „Eine Nachricht an einen Gast konnte nicht zugestellt werden."
+    #
+    # KEINE Kanaele — und das ist der ganze Punkt. Die Kategorie erzeugt damit
+    # KEINE Praeferenzspalten, taucht in den Einstellungen nicht auf und geht
+    # ausschliesslich in die Glocke (Kanal.INAPP laeuft immer, s. oben).
+    #
+    # Warum bewusst ohne Mail und SMS: der Ausloeser ist typischerweise eine
+    # STOERUNG, und die trifft viele Nachrichten gleichzeitig. Eine Portal-
+    # Stoerung von Minuten haette so eine Mailflut ausgeloest — ausgerechnet
+    # in dem Moment, in dem der Betrieb Ruhe braucht, um sie zu beheben. Die
+    # Glocke sammelt still und zeigt beim Hinsehen den Stand.
+    #
+    # Warum trotzdem nicht abwaehlbar: ein Gast, der seinen Tuercode nie
+    # bekommen hat, steht vor der Tuer. Das ist keine Marketing-Meldung, die
+    # man wegschalten koennen soll — es ist der einzige Weg, auf dem der
+    # Betrieb ueberhaupt davon erfaehrt (bis hierher gab es keinen).
+    Kategorie("zustellproblem", Tab.KONTO, "aktivitaet", ()),
 )
 
 NACH_SCHLUESSEL: dict[str, Kategorie] = {k.schluessel: k for k in KATALOG}

@@ -445,3 +445,81 @@ def test_katalog_kennt_die_neuen_schluessel() -> None:
     # E-Mail beim Eigentuemer nicht abwaehlbar (vertragliche Kerninformation).
     assert NACH_SCHLUESSEL[ereignisse.SCHLUESSEL_BUCHUNG].email_pflicht is True
     assert NACH_SCHLUESSEL[ereignisse.SCHLUESSEL_AUFGABE].email_pflicht is False
+
+
+# --- Zustellprobleme (15.08.2026) -------------------------------------------
+# Bis hierher erfuhr der Betrieb NIE, dass eine Gastnachricht haengengeblieben
+# war: der Grund stand in `last_error`, einer Spalte ohne Endpunkt und ohne Abo.
+# Live blieben so 14 Gaeste ohne ihre Anreise-Info (Tuercode, WLAN).
+def _zustell_tables() -> dict[str, list[dict]]:
+    return {
+        "users": [
+            {"id": "chef", "tenant_id": "t-1", "role": "admin"},
+            {"id": "vize", "tenant_id": "t-1", "role": "co_admin"},
+            {"id": "putzkraft", "tenant_id": "t-1", "role": "cleaner"},
+            {"id": "eigentuemer", "tenant_id": "t-1", "role": "owner"},
+            {"id": "fremder-chef", "tenant_id": "t-999", "role": "admin"},
+        ],
+    }
+
+
+def test_zustellproblem_geht_nur_an_die_betriebsleitung(
+    dispatcher: _Dispatcher,
+) -> None:
+    """Nur wer den Fehler beheben KANN, bekommt die Meldung.
+
+    Ein Eigentuemer kann keinen Tuercode nachtragen, eine Reinigungskraft erst
+    recht nicht — und beide haetten damit Einblick in Zustellvorgaenge, die sie
+    nichts angehen (Wurzel 9). Ein Chef eines FREMDEN Mandanten schon gar nicht
+    (Wurzel 3).
+    """
+    ereignisse.melde_zustellproblem(
+        _DB(_zustell_tables()), tenant_id="t-1", quelle_id="msg-1",
+        grund="Diese Felder haben keinen Wert: door_code", endgueltig=True,
+    )
+    empfaenger = {a["user_id"] for a in dispatcher.aufrufe}
+    assert empfaenger == {"chef", "vize"}
+
+
+def test_zustellproblem_nennt_den_grund_und_fuehrt_zum_posteingang(
+    dispatcher: _Dispatcher,
+) -> None:
+    """Die Meldung muss den GRUND tragen und klickbar sein.
+
+    Eine Glocke, die nur „etwas ging schief" sagt, verlagert die Sucharbeit auf
+    den Betrieb — genau das war der Zustand vorher.
+    """
+    ereignisse.melde_zustellproblem(
+        _DB(_zustell_tables()), tenant_id="t-1", quelle_id="msg-1",
+        grund="Diese Felder haben keinen Wert: door_code", endgueltig=True,
+    )
+    aufruf = dispatcher.aufrufe[0]
+    assert "door_code" in aufruf["text"]
+    assert aufruf["ziel_pfad"] == "/posteingang"
+    # Wurzel 2: derselbe Fehlschlag meldet einmal, nicht bei jedem Neuversuch.
+    assert aufruf["dedup_key"] == "zustellproblem:msg-1"
+
+
+def test_zustellproblem_ohne_kanaele_geht_nur_in_die_glocke() -> None:
+    """Keine Mail, keine SMS — sonst waere eine Stoerung eine Mailflut.
+
+    Der Ausloeser trifft typischerweise viele Nachrichten gleichzeitig. Die
+    Kategorie traegt deshalb bewusst KEINE Kanaele und erzeugt damit auch keine
+    Praeferenzspalten in `notification_settings`.
+    """
+    from src.features.notification_settings.katalog import NACH_SCHLUESSEL, SPALTEN
+
+    assert NACH_SCHLUESSEL["zustellproblem"].kanaele == ()
+    assert not [s for s in SPALTEN if s.startswith("zustellproblem")]
+
+
+def test_zustellproblem_kippt_den_versand_nicht(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Wurzel 5: die Meldung ist Nebenpfad. Ein toter Dispatcher darf den
+    Versand-Tick nicht mitreissen."""
+    monkeypatch.setattr(ereignisse, "_dispatcher", lambda _db: _Dispatcher(fehler=True))
+    ereignisse.melde_zustellproblem(
+        _DB(_zustell_tables()), tenant_id="t-1", quelle_id="msg-1",
+        grund="egal", endgueltig=True,
+    )  # darf nicht werfen

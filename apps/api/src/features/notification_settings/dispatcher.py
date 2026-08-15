@@ -34,6 +34,7 @@ from src.core.mail_layout import (
 from src.core.mail_sprache import aufloesen
 from src.core.mail_texte import text as mail_text
 from src.features.auth.sms import SmsError, send_sms
+from src.jobs import worker_verlauf
 
 from .katalog import NACH_SCHLUESSEL, Kanal
 from .service import NotificationSettingsService
@@ -384,6 +385,19 @@ class NotificationDispatcher:
             # Spezifisch gefangen (Wurzel 5): der andere Kanal laeuft weiter,
             # der Fehlschlag bleibt aber sichtbar — kein stiller Erfolg.
             ergebnis.fehlgeschlagen[kanal.value] = exc.message
+            # ... und in den Verlauf, denn „sichtbar im Ergebnis" reichte nicht:
+            # KEIN Aufrufer wertet `Zustellung` aus, alle sechs fangen breit und
+            # verwerfen den Rueckgabewert. Eine nicht zugestellte Pflicht-Mail
+            # (Buchung, Storno) hinterliess damit nur eine Log-Zeile.
+            worker_verlauf.merken(
+                self._db,
+                richtung="ausgang",
+                vorgang=f"benachrichtigung_{kanal.value}",
+                ergebnis="fehler",
+                tenant_id=tenant_id,
+                fehler_text=exc.message[:2000],
+                zusammenfassung=f"Benachrichtigung nicht zugestellt: {betreff}"[:2000],
+            )
             return
         ergebnis.gesendet.append(kanal.value)
 

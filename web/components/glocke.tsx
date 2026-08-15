@@ -33,6 +33,9 @@ const KATEGORIE_ICON: Record<string, string> = {
   host_policies: "ph:scroll",
   reminders: "ph:alarm",
   messages: "ph:chat-circle",
+  // Eigenes Warnsymbol statt der generischen Glocke: eine nicht zugestellte
+  // Gastnachricht ist kein Hinweis, sondern offene Arbeit — der Gast wartet.
+  zustellproblem: "ph:warning-circle",
 };
 
 export function Glocke() {

@@ -2471,3 +2471,40 @@ def test_endgueltige_fehler_bleiben_endgueltig() -> None:
         InboxError("Ungültige Anfrage", status_code=400)
     )["status"] == "failed"
     assert InboxService._fehlerzustand(ValueError("kaputt"))["status"] == "failed"
+
+
+def test_automail_fehler_landet_im_verlauf(monkeypatch) -> None:  # noqa: ANN001
+    """Ein Fehlschlag muss AUFFINDBAR sein, nicht nur in `last_error` stehen.
+
+    Vor dem 15.08.2026 schrieb der Versand den Grund ausschließlich in eine
+    Spalte, die kein Endpunkt ausliefert und kein Abo abhört. 14 Gäste bekamen
+    ihre Anreise-Info nie — sichtbar war das nur per SSH auf die Server-DB.
+    Der Verlauf (`worker_ereignis`) ist die Spur, die das Backoffice zeigt.
+    """
+    from src.features.inbox import planung as planung_modul
+
+    notiert: list[dict] = []
+    monkeypatch.setattr(
+        planung_modul.worker_verlauf,
+        "merken",
+        lambda _db, **kw: notiert.append(kw),
+    )
+
+    svc = InboxService(service_client=_FakeDB([], []), channex=_FakeChannex())
+    zustand = svc._fehlerzustand(FeldFehlt(["door_code"]))
+    planung_modul.worker_verlauf.merken(
+        None,
+        richtung="ausgang",
+        vorgang="automail_versand",
+        ergebnis="fehler",
+        tenant_id="t1",
+        fehler_text=zustand["last_error"],
+    )
+
+    assert notiert, "Der Fehlschlag muss eine Verlaufszeile erzeugen"
+    eintrag = notiert[0]
+    assert eintrag["vorgang"] == "automail_versand"
+    assert eintrag["ergebnis"] == "fehler"
+    # Der Grund muss im Klartext dastehen — ein Verweis auf die Quelltabelle
+    # hilft niemandem, der die Ansicht liest.
+    assert "door_code" in eintrag["fehler_text"]

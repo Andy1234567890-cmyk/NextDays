@@ -17,6 +17,8 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.features.notification_settings.ereignisse import melde_zustellproblem
+from src.jobs import worker_verlauf
 
 from .ausloeser import DATUMS_TRIGGER, anker_von, versatz_normieren
 from .errors import InboxError
@@ -1317,9 +1319,50 @@ class PlanungMixin:
                 ).eq("id", s["id"]).execute()
                 sent += 1
             except Exception as exc:  # noqa: BLE001 — Cron darf nicht abbrechen
-                db.table("automation_scheduled_message").update(
-                    self._fehlerzustand(exc)
-                ).eq("id", s["id"]).execute()
+                zustand = self._fehlerzustand(exc)
+                db.table("automation_scheduled_message").update(zustand).eq(
+                    "id", s["id"]
+                ).execute()
+                # In den Verlauf, damit der Fehlschlag AUFFINDBAR ist. Bis
+                # 15.08.2026 stand er nur in `last_error` — einer Spalte, die
+                # kein Endpunkt ausliefert und kein Abo abhört. 14 Gäste bekamen
+                # ihre Anreise-Info nie, und niemand konnte es sehen; der
+                # Tick-Log nannte nur eine Zahl, ohne Mandant und ohne Grund.
+                #
+                # `versuche` trennt die beiden Fälle für den Leser: 'pending'
+                # heißt „wird erneut versucht", 'failed' heißt „Endstation".
+                worker_verlauf.merken(
+                    db,
+                    richtung="ausgang",
+                    vorgang="automail_versand",
+                    ergebnis="fehler",
+                    tenant_id=s.get("tenant_id"),
+                    quelle_tabelle="automation_scheduled_message",
+                    quelle_id=s.get("id"),
+                    fehler_text=zustand.get("last_error"),
+                    zusammenfassung=(
+                        "Gastnachricht nicht zugestellt — "
+                        + (
+                            "wird erneut versucht"
+                            if zustand.get("status") == "pending"
+                            else "endgültig fehlgeschlagen"
+                        )
+                    ),
+                    kennzahlen={"folgestatus": zustand.get("status")},
+                )
+                # Der Verlauf oben ist das Backoffice (platform_admin). Der
+                # BETRIEB selbst sieht ihn nicht — für ihn ist die Glocke der
+                # einzige Weg. Nur bei endgültigem Fehlschlag: „wird erneut
+                # versucht" ist kein Handlungsbedarf, und eine Meldung, die
+                # sich von selbst erledigt, entwertet die übrigen.
+                if zustand.get("status") == "failed":
+                    melde_zustellproblem(
+                        db,
+                        tenant_id=str(s.get("tenant_id") or ""),
+                        quelle_id=str(s.get("id") or ""),
+                        grund=str(zustand.get("last_error") or ""),
+                        endgueltig=True,
+                    )
                 failed += 1
         return {"sent": sent, "failed": failed, "considered": len(due)}
 

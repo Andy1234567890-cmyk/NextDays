@@ -23,6 +23,8 @@ from datetime import UTC, datetime, timedelta
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import get_service_client
+from src.features.notification_settings.ereignisse import melde_zustellproblem
+from src.jobs import worker_verlauf
 
 log = get_logger("nextdays.inbox.scheduler")
 
@@ -90,6 +92,31 @@ def _send_now(scheduled_id: str) -> None:
             {"status": "failed", "last_error": str(exc)[:500]}
         ).eq("id", scheduled_id).execute()
         log.error("scheduled_failed", id=scheduled_id, error=str(exc))
+        # Auch der manuell geplante Versand gehört in den Verlauf: `last_error`
+        # allein liest niemand, und `list_scheduled` filtert auf 'pending' —
+        # eine fehlgeschlagene Zeile verschwindet damit aus der Oberfläche,
+        # statt den Grund zu zeigen.
+        worker_verlauf.merken(
+            db,
+            richtung="ausgang",
+            vorgang="nachricht_geplant_versand",
+            ergebnis="fehler",
+            tenant_id=s.get("tenant_id"),
+            quelle_tabelle="inbox_scheduled_message",
+            quelle_id=scheduled_id,
+            fehler_text=str(exc)[:2000],
+            zusammenfassung="Geplante Nachricht nicht zugestellt",
+        )
+        # Und an die Glocke des Betriebs — der Verlauf oben ist Backoffice-only.
+        # Hier ohne Statusprüfung: dieser Pfad kennt keinen Neuversuch, jeder
+        # Fehlschlag ist endgültig.
+        melde_zustellproblem(
+            db,
+            tenant_id=str(s.get("tenant_id") or ""),
+            quelle_id=str(scheduled_id),
+            grund=str(exc)[:500],
+            endgueltig=True,
+        )
 
 
 async def _wait_and_send(scheduled_id: str, send_at: str) -> None:
