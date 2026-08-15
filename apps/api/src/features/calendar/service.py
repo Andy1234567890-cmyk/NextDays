@@ -110,36 +110,6 @@ def _ohne_preise(days: list[DayAvailability]) -> list[DayAvailability]:
     ]
 
 
-def _spannen_ohne_stop_sell(
-    spannen: list[tuple[date, date, int]], gestoppt: set[date]
-) -> list[tuple[date, date, int]]:
-    """Stop-Sell-Tage auf 0 freie Einheiten setzen und Spannen neu bilden.
-
-    Ein gestoppter Tag ist unverkäuflich, egal wie viele Einheiten der Kalender
-    freihat. Die Spannen werden dabei aufgebrochen und wieder zusammengefasst,
-    damit gleich bleibende Nachbartage EINE Spanne bilden — der ARI-Push setzt
-    je Spanne einen Range-Call ab, unnötig zerschnittene Spannen kosten Calls.
-    """
-    tage: list[tuple[date, int]] = []
-    for von, bis, frei in spannen:
-        tag = von
-        while tag <= bis:
-            tage.append((tag, 0 if tag in gestoppt else frei))
-            tag += timedelta(days=1)
-    if not tage:
-        return []
-    out: list[tuple[date, date, int]] = []
-    start, letzter_wert = tage[0][0], tage[0][1]
-    vorheriger = tage[0][0]
-    for tag, wert in tage[1:]:
-        if wert != letzter_wert:
-            out.append((start, vorheriger, letzter_wert))
-            start, letzter_wert = tag, wert
-        vorheriger = tag
-    out.append((start, vorheriger, letzter_wert))
-    return out
-
-
 class CalendarError(Exception):
     """Fachlicher Kalender-Fehler; vom Router auf HTTP-Status gemappt."""
 
@@ -529,12 +499,14 @@ class CalendarService:
         aufgerufen ließe sie sich mit einer geratenen `property_id` fremd
         auslesen (Wurzel 3). Diese Methode ist der gescopete Weg dorthin.
 
-        Zusätzlich wird der STOP-SELL eingerechnet, den die Kernfunktion nicht
-        kennt: er lebt in einer eigenen Tabelle und taucht in `availability`
-        nicht auf, sperrt den Tag aber hart (dieselbe Lücke, die
-        `check_availability` für die 0/1-Sicht schließt). Ohne diesen Schritt
-        meldete der Reader freie Einheiten an einem Tag, der überall gesperrt
-        ist — und der ARI-Push machte daraus eine verkäufliche Nacht.
+        Der STOP-SELL steckt seit dem 15.08.2026 in `freie_einheiten_spannen`
+        selbst und wird hier NICHT mehr nachgerechnet. Vorher lag die
+        Verrechnung allein in dieser Anzeigemethode — der ARI-Push rief die
+        rohen Spannen und meldete an Booking.com weiterhin einen Bestand > 0,
+        obwohl der Tag gesperrt war. Genau daran ging eine Sperre live verloren
+        (siehe Modul-Docstring von `core.einheiten_verfuegbar`). Eine zweite
+        Verrechnung an dieser Stelle wäre jetzt doppelt gemoppelt und würde die
+        eine Wahrheit wieder aufspalten.
         """
         self._require_own_property(ctx, property_id)
         if not ctx.tenant_id:
@@ -542,13 +514,11 @@ class CalendarService:
         # `bis` ist bei freie_einheiten_spannen INKLUSIV, DateRange.end exklusiv.
         letzter_tag = rng.end - timedelta(days=1)
         gesamt = einheiten_zahl(self._db(), ctx.tenant_id, property_id)
-        roh = freie_einheiten_spannen(
-            self._db(), ctx.tenant_id, property_id, rng.start, letzter_tag
-        )
-        gestoppt = self._stop_sell_tage(property_id, rng)
         spannen = [
             FreieEinheitenSpanne(von=v, bis=b, frei=f, gesamt=gesamt)
-            for v, b, f in _spannen_ohne_stop_sell(roh, gestoppt)
+            for v, b, f in freie_einheiten_spannen(
+                self._db(), ctx.tenant_id, property_id, rng.start, letzter_tag
+            )
         ]
         return FreieEinheitenResponse(
             property_id=property_id, gesamt=gesamt, spannen=spannen
@@ -979,6 +949,11 @@ class CalendarService:
             merge_day_ranges(days, end_exclusive=False),
             stop_sell=True,
         )
+        # Und die Stückzahl hinterher (Wurzel 1): die stop_sell-Restriction
+        # allein lässt `/availability` unverändert stehen, und Booking.com
+        # verkauft, solange dort ein Bestand > 0 gemeldet ist. NACH dem Upsert,
+        # damit `freie_einheiten_spannen` den gerade gesetzten Stopp sieht.
+        self._push_einheiten_stand(property_id, rng)
         log.info(
             "calendar_stop_sell_set",
             property_id=property_id,
@@ -1087,6 +1062,12 @@ class CalendarService:
             merge_day_ranges(open_days, end_exclusive=False),
             stop_sell=False,
         )
+        # Gegenstück zu `set_stop_sell` (Wurzel 1): die Stückzahl stand während
+        # des Stopps auf 0 und muss beim Aufheben zurück auf die echte Zahl
+        # freier Einheiten — sonst bleibt das Objekt bei den Portalen
+        # unverkäuflich, obwohl der Stopp weg ist. NACH dem DELETE, damit
+        # `freie_einheiten_spannen` den neuen Stand sieht.
+        self._push_einheiten_stand(property_id, rng)
         log.info(
             "calendar_stop_sell_cleared",
             property_id=property_id,
@@ -1139,6 +1120,12 @@ class CalendarService:
             ).gte("date", today.isoformat()).execute()
             self._push_channex_stop_sell(
                 pid, merge_day_ranges(days, end_exclusive=False), stop_sell=False
+            )
+            # Auch hier die Stückzahl nachziehen (Wurzel 1) — sonst bleiben die
+            # geöffneten Tage bei den Portalen auf 0 stehen. Der Zeitraum deckt
+            # genau die aufgehobenen Tage ab; `DateRange.end` ist exklusiv.
+            self._push_einheiten_stand(
+                pid, DateRange(start=days[0], end=days[-1] + timedelta(days=1))
             )
             total_days += len(days)
         log.info(

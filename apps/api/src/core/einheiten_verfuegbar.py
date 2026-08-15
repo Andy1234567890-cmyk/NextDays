@@ -21,6 +21,55 @@ Gezählt wird je EINHEIT: `availability` trägt seit 0266 eine `unit_id`, also
 ist die freie Stückzahl eines Tages die Zahl der Einheiten minus der Einheiten
 mit belegtem oder gesperrtem Tag. Eine Buchung nimmt damit nur ihre eigene
 Einheit aus dem Verkauf, nicht den ganzen Typ.
+
+STOP-SELL GEHÖRT HIER HINEIN, nicht nur in die Anzeige (15.08.2026). Ein
+objektweiter Stop-Sell steht in der eigenen Tabelle `stop_sell`, nicht als
+Kalender-Status. Er ging deshalb ausschließlich als `stop_sell`-Restriction auf
+RATE-PLAN-Ebene an Channex, während `/availability` für dieselben Tage
+unverändert die freie Stückzahl meldete. Booking.com sieht beide Signale und
+verkauft, wenn der Bestand > 0 ist: live passiert an „Feriehus Rævehulen" — der
+Stop-Sell 15.–21.08. stand seit dem 10.08. bei Channex, `/availability` meldete
+für denselben Zeitraum durchgehend `1`, und am 14.08. kam eine Booking.com-
+Buchung über 17.–27.08. herein. Die Regel „Stop-Sell sperrt überall" war damit
+gebrochen (Wurzel 1: der Gegenzustand wurde nicht mitgepflegt).
+
+Die Verrechnung stand bereits in `calendar.service._spannen_ohne_stop_sell`,
+aber nur im LESEPFAD der Oberfläche — die drei ARI-Push-Pfade
+(`calendar`, `reservations._push_einheiten_stand`, `bookings_sync`) riefen die
+rohen Spannen. Genau die Zwei-Antworten-Lage, die der Docstring von
+`_push_einheiten_stand` verbietet. Deshalb ist der Stop-Sell jetzt Teil DIESER
+Funktion: wer die freie Stückzahl fragt, bekommt sie unverkäuflichkeits-bereinigt,
+ohne dass jede Aufrufstelle daran denken muss.
+
+ALLE REGELN, DIE EINE NACHT UNVERKÄUFLICH MACHEN — hier vollständig, weil eine
+vergessene Regel exakt den Schaden oben erzeugt (Portal verkauft, was gesperrt
+ist). Wer eine neue Regel baut, trägt sie hier ein UND sorgt dafür, dass sie in
+dieser Funktion ankommt:
+
+    Regel              Wo sie steht                        Abgedeckt über
+    ─────────────────────────────────────────────────────────────────────────
+    Buchung            availability.status='booked'        _GESPERRT
+    Handsperre         availability.status='blocked'       _GESPERRT
+    Vertragsende       availability.status='blocked'       _GESPERRT
+                       (source='contract_end', 0355)
+    Sperrantrag        availability.status='blocked'       _GESPERRT
+                       (genehmigt, sperrantraege.py)
+    iCal-Fremdbelegung availability.status='booked'        _GESPERRT
+    Objektweiter       stop_sell (EIGENE Tabelle,          _stop_sell_tage
+    Stop-Sell          rate_plan_id IS NULL)
+
+Der Bauplan dahinter: Fünf der sechs Regeln schreiben echte Kalenderzeilen und
+sind deshalb automatisch dabei. Stop-Sell ist die EINZIGE, die in einer eigenen
+Tabelle lebt — und genau die fiel durch. Eine neue Regel gehört bevorzugt in
+`availability`; braucht sie eine eigene Tabelle, MUSS sie hier explizit
+eingerechnet werden.
+
+NICHT hier hinein gehören zwei Nachbarn, die etwas anderes tun:
+  * plan-genauer Stop-Sell (`stop_sell.rate_plan_id` gesetzt) — er schließt
+    EINEN Rate-Plan, nicht den Einheiten-Typ; die übrigen Pläne bleiben
+    verkäuflich. Er wirkt allein über die stop_sell-Restriction.
+  * `property_sales_pause` / `properties.status` — die schalten das INSERAT
+    (`objekt_verkauf.py`), nicht einzelne Tage. Kein Datum, keine Stückzahl.
 """
 from __future__ import annotations
 
@@ -28,7 +77,8 @@ from datetime import date, timedelta
 
 from supabase import Client
 
-# Kalender-Status, die eine Nacht unverkäuflich machen.
+# Kalender-Status, die eine Nacht unverkäuflich machen. Deckt Buchung,
+# Handsperre, Vertragsende, Sperrantrag und iCal ab — siehe Tabelle oben.
 _GESPERRT = ("booked", "blocked")
 
 
@@ -72,26 +122,56 @@ def _belegte_einheiten_je_tag(
     return belegt
 
 
+def _stop_sell_tage(
+    db: Client, property_id: str, von: date, bis: date
+) -> set[str]:
+    """Objektweite Stop-Sell-Tage im Zeitraum (ISO-Tage).
+
+    Nur `rate_plan_id is null`: ein Stopp für EINEN Rate-Plan schließt den
+    Einheiten-Typ nicht, die übrigen Pläne bleiben verkäuflich. Ein solcher
+    plan-genauer Stopp wirkt allein über die `stop_sell`-Restriction.
+    """
+    rows = (
+        db.table("stop_sell")
+        .select("date")
+        .eq("property_id", property_id)
+        .is_("rate_plan_id", "null")
+        .gte("date", von.isoformat())
+        .lte("date", bis.isoformat())
+        .execute()
+    ).data or []
+    return {str(r["date"])[:10] for r in rows}
+
+
 def freie_einheiten_spannen(
     db: Client, tenant_id: str, property_id: str, von: date, bis: date
 ) -> list[tuple[date, date, int]]:
-    """Zusammenhängende Spannen gleicher freier Stückzahl im Zeitraum.
+    """Zusammenhängende Spannen gleicher VERKÄUFLICHER Stückzahl im Zeitraum.
 
     Gibt [(von, bis, zahl), …] zurück — genau die Form, die der ARI-Push braucht
     (ein Range-Call je Wert statt ein Call je Tag).
+
+    Ein objektweiter Stop-Sell-Tag zählt als 0, egal wie viele Einheiten der
+    Kalender freihat: er ist unverkäuflich, und der Bestand ist das Signal, auf
+    das Booking.com hört (siehe Modul-Docstring).
     """
     if bis < von:
         return []
     gesamt = einheiten_zahl(db, tenant_id, property_id)
     belegt = _belegte_einheiten_je_tag(db, property_id, von, bis)
+    gestoppt = _stop_sell_tage(db, property_id, von, bis)
 
     spannen: list[tuple[date, date, int]] = []
     start = von
     tag = von
     letzter: int | None = None
     while tag <= bis:
-        besetzt = belegt.get(tag.isoformat(), set())
-        frei = 0 if "*" in besetzt else max(0, gesamt - len(besetzt))
+        iso = tag.isoformat()
+        besetzt = belegt.get(iso, set())
+        if iso in gestoppt or "*" in besetzt:
+            frei = 0
+        else:
+            frei = max(0, gesamt - len(besetzt))
         if letzter is None:
             letzter, start = frei, tag
         elif frei != letzter:
