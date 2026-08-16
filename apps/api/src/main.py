@@ -37,6 +37,9 @@ from .features.cohosts.router import router as cohosts_router
 from .features.content.router import router as content_router
 from .features.crm.router import router as crm_router
 from .features.dashboard.router import router as dashboard_router
+from .features.dashboard_layout.router import (
+    router as dashboard_layout_router,
+)
 from .features.diagnostics.router import router as diagnostics_router
 from .features.donations.router import router as donations_router
 from .features.external_calendar.router import router as external_calendar_router
@@ -169,6 +172,7 @@ _SLICE_ROUTERS = [
     travel_agencies_router,
     crm_router,
     dashboard_router,
+    dashboard_layout_router,
     content_router,
     whatsapp_router,
 ]
