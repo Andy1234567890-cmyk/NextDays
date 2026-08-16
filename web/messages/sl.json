@@ -4030,7 +4030,6 @@
     },
     "bookingsBoard": {
       "title": "Rezervacije",
-      "totalCount": "{count, plural, one {# rezervacija} two {# rezervaciji} few {# rezervacije} other {# rezervacij}} skupaj",
       "tabs": {
         "occupied": "Zasedeno",
         "arrivals": "Prihodi",
@@ -4042,18 +4041,33 @@
       "entriesCount": "{count, plural, one {# vnos} two {# vnosa} few {# vnosi} other {# vnosov}}",
       "columns": {
         "status": "Status",
-        "accommodation": "Nastanitev",
-        "dates": "Datumi",
-        "source": "Vir",
-        "guests": "Gostje",
-        "paid": "Plačano",
-        "reference": "Referenca"
+        "calendar": "Koledar",
+        "details": "Podrobnosti",
+        "contact": "Stik",
+        "guestName": "Ime gosta",
+        "checkIn": "Datum prihoda",
+        "checkOut": "Datum odhoda",
+        "channel": "Kanal",
+        "totalPrice": "Skupna cena",
+        "listing": "Nastanitev"
       },
-      "emptyState": "V tem zavihku ni rezervacij.",
+      "emptyState": "Ni najdenih rezervacij.",
       "loading": "Nalaganje …",
-      "nights": "{count, plural, one {# nočitev} two {# nočitvi} few {# nočitve} other {# nočitev}}",
-      "children": "{count, plural, one {# otrok} two {# otroka} few {# otroci} other {# otrok}}",
-      "ownerStay": "Eigennutzung"
+      "ownerStay": "Eigennutzung",
+      "limit": "Omejitev ({count})",
+      "limitAll": "Vse",
+      "columnsMenu": "Stolpci",
+      "exportMenu": "Izvoz",
+      "exportCsv": "Prenesi CSV",
+      "add": "Dodaj",
+      "quickFilters": "Hitri filtri",
+      "quickFiltersAll": "Vse rezervacije",
+      "moreFilters": "Več filtrov",
+      "allStatuses": "Vsi statusi",
+      "openCalendar": "Odpri v koledarju",
+      "openDetails": "Odpri podrobnosti",
+      "openContact": "Odpri gosta",
+      "noContact": "Ni povezanega gosta"
     },
     "kpiDetail": {
       "metric": {

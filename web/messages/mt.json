@@ -4030,7 +4030,6 @@
     },
     "bookingsBoard": {
       "title": "Prenotazzjonijiet",
-      "totalCount": "{count, plural, one {# prenotazzjoni} two {# prenotazzjonijiet} few {# prenotazzjonijiet} many {# prenotazzjoni} other {# prenotazzjoni}} b'kollox",
       "tabs": {
         "occupied": "Okkupat",
         "arrivals": "Waslijiet",
@@ -4041,19 +4040,34 @@
       "searchPlaceholder": "Mistieden, proprjetà, referenza…",
       "entriesCount": "{count, plural, one {# entrata} two {# entrati} few {# entrati} many {# entrata} other {# entrata}}",
       "columns": {
-        "status": "Status",
-        "accommodation": "Akkomodazzjoni",
-        "dates": "Dati",
-        "source": "Sors",
-        "guests": "Mistednin",
-        "paid": "Imħallas",
-        "reference": "Referenza"
+        "status": "Stat",
+        "calendar": "Kalendarju",
+        "details": "Dettalji",
+        "contact": "Kuntatt",
+        "guestName": "Isem il-mistieden",
+        "checkIn": "Data tal-wasla",
+        "checkOut": "Data tat-tluq",
+        "channel": "Kanal",
+        "totalPrice": "Prezz totali",
+        "listing": "Post"
       },
-      "emptyState": "L-ebda prenotazzjoni f'din it-tab.",
+      "emptyState": "Ma nstabet l-ebda riżervazzjoni.",
       "loading": "Qed jitgħabba…",
-      "nights": "{count, plural, one {# lejl} two {# iljieli} few {# iljieli} many {# lejl} other {# lejl}}",
-      "children": "{count, plural, one {# tifel/tifla} two {# tfal} few {# tfal} many {# tifel/tifla} other {# tifel/tifla}}",
-      "ownerStay": "Eigennutzung"
+      "ownerStay": "Eigennutzung",
+      "limit": "Limitu ({count})",
+      "limitAll": "Kollha",
+      "columnsMenu": "Kolonni",
+      "exportMenu": "Esportazzjoni",
+      "exportCsv": "Niżżel CSV",
+      "add": "Żid",
+      "quickFilters": "Filtri mgħaġġla",
+      "quickFiltersAll": "Ir-riżervazzjonijiet kollha",
+      "moreFilters": "Aktar filtri",
+      "allStatuses": "L-istati kollha",
+      "openCalendar": "Iftaħ fil-kalendarju",
+      "openDetails": "Iftaħ id-dettalji",
+      "openContact": "Iftaħ il-mistieden",
+      "noContact": "L-ebda mistieden marbut"
     },
     "kpiDetail": {
       "metric": {

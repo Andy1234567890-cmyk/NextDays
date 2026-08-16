@@ -4030,7 +4030,6 @@
     },
     "bookingsBoard": {
       "title": "Reservas",
-      "totalCount": "{count, plural, one {# reserva} many {# reservas} other {# reservas}} no total",
       "tabs": {
         "occupied": "Ocupado",
         "arrivals": "Chegadas",
@@ -4042,18 +4041,33 @@
       "entriesCount": "{count, plural, one {# entrada} many {# entradas} other {# entradas}}",
       "columns": {
         "status": "Estado",
-        "accommodation": "Alojamento",
-        "dates": "Datas",
-        "source": "Origem",
-        "guests": "Hóspedes",
-        "paid": "Pago",
-        "reference": "Referência"
+        "calendar": "Calendário",
+        "details": "Detalhes",
+        "contact": "Contacto",
+        "guestName": "Nome do hóspede",
+        "checkIn": "Data de entrada",
+        "checkOut": "Data de saída",
+        "channel": "Canal",
+        "totalPrice": "Preço total",
+        "listing": "Alojamento"
       },
-      "emptyState": "Não há reservas neste separador.",
+      "emptyState": "Nenhuma reserva encontrada.",
       "loading": "A carregar…",
-      "nights": "{count, plural, one {# noite} many {# noites} other {# noites}}",
-      "children": "{count, plural, one {# criança} many {# crianças} other {# crianças}}",
-      "ownerStay": "Eigennutzung"
+      "ownerStay": "Eigennutzung",
+      "limit": "Limite ({count})",
+      "limitAll": "Todas",
+      "columnsMenu": "Colunas",
+      "exportMenu": "Exportar",
+      "exportCsv": "Transferir CSV",
+      "add": "Adicionar",
+      "quickFilters": "Filtros rápidos",
+      "quickFiltersAll": "Todas as reservas",
+      "moreFilters": "Mais filtros",
+      "allStatuses": "Todos os estados",
+      "openCalendar": "Abrir no calendário",
+      "openDetails": "Abrir detalhes",
+      "openContact": "Abrir hóspede",
+      "noContact": "Sem hóspede associado"
     },
     "kpiDetail": {
       "metric": {

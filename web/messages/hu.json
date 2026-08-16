@@ -4035,7 +4035,6 @@
     },
     "bookingsBoard": {
       "title": "Foglalások",
-      "totalCount": "{count, plural, one {# foglalás} other {# foglalás}} összesen",
       "tabs": {
         "occupied": "Foglalt",
         "arrivals": "Érkezések",
@@ -4046,19 +4045,34 @@
       "searchPlaceholder": "Vendég, ingatlan, hivatkozás…",
       "entriesCount": "{count, plural, one {# bejegyzés} other {# bejegyzés}}",
       "columns": {
-        "status": "Státusz",
-        "accommodation": "Ingatlan",
-        "dates": "Dátumok",
-        "source": "Forrás",
-        "guests": "Vendégek",
-        "paid": "Fizetve",
-        "reference": "Hivatkozás"
+        "status": "Állapot",
+        "calendar": "Naptár",
+        "details": "Részletek",
+        "contact": "Kapcsolat",
+        "guestName": "Vendég neve",
+        "checkIn": "Érkezés dátuma",
+        "checkOut": "Távozás dátuma",
+        "channel": "Csatorna",
+        "totalPrice": "Teljes ár",
+        "listing": "Szálláshely"
       },
-      "emptyState": "Nincs foglalás ebben a fülben.",
+      "emptyState": "Nem található foglalás.",
       "loading": "Betöltés…",
-      "nights": "{count, plural, one {# éjszaka} other {# éjszaka}}",
-      "children": "{count, plural, one {# gyerek} other {# gyerek}}",
-      "ownerStay": "Eigennutzung"
+      "ownerStay": "Eigennutzung",
+      "limit": "Korlát ({count})",
+      "limitAll": "Mind",
+      "columnsMenu": "Oszlopok",
+      "exportMenu": "Exportálás",
+      "exportCsv": "CSV letöltése",
+      "add": "Hozzáadás",
+      "quickFilters": "Gyorsszűrők",
+      "quickFiltersAll": "Összes foglalás",
+      "moreFilters": "További szűrők",
+      "allStatuses": "Összes állapot",
+      "openCalendar": "Megnyitás a naptárban",
+      "openDetails": "Részletek megnyitása",
+      "openContact": "Vendég megnyitása",
+      "noContact": "Nincs társított vendég"
     },
     "kpiDetail": {
       "metric": {

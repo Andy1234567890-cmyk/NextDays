@@ -4030,7 +4030,6 @@
     },
     "bookingsBoard": {
       "title": "Bokningar",
-      "totalCount": "{count, plural, one {# bokning} other {# bokningar}} totalt",
       "tabs": {
         "occupied": "Belagt",
         "arrivals": "Ankomster",
@@ -4042,18 +4041,33 @@
       "entriesCount": "{count, plural, one {# post} other {# poster}}",
       "columns": {
         "status": "Status",
-        "accommodation": "Boende",
-        "dates": "Datum",
-        "source": "Källa",
-        "guests": "Gäster",
-        "paid": "Betalt",
-        "reference": "Referens"
+        "calendar": "Kalender",
+        "details": "Detaljer",
+        "contact": "Kontakt",
+        "guestName": "Gästens namn",
+        "checkIn": "Ankomstdatum",
+        "checkOut": "Avresedatum",
+        "channel": "Kanal",
+        "totalPrice": "Totalpris",
+        "listing": "Boende"
       },
-      "emptyState": "Inga bokningar i denna flik.",
+      "emptyState": "Inga bokningar hittades.",
       "loading": "Laddar…",
-      "nights": "{count, plural, one {# natt} other {# nätter}}",
-      "children": "{count, plural, one {# barn} other {# barn}}",
-      "ownerStay": "Eigennutzung"
+      "ownerStay": "Eigennutzung",
+      "limit": "Gräns ({count})",
+      "limitAll": "Alla",
+      "columnsMenu": "Kolumner",
+      "exportMenu": "Export",
+      "exportCsv": "Hämta CSV",
+      "add": "Lägg till",
+      "quickFilters": "Snabbfilter",
+      "quickFiltersAll": "Alla bokningar",
+      "moreFilters": "Fler filter",
+      "allStatuses": "Alla statusar",
+      "openCalendar": "Öppna i kalendern",
+      "openDetails": "Öppna detaljer",
+      "openContact": "Öppna gäst",
+      "noContact": "Ingen gäst kopplad"
     },
     "kpiDetail": {
       "metric": {

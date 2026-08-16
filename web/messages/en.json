@@ -4035,7 +4035,6 @@
     },
     "bookingsBoard": {
       "title": "Bookings",
-      "totalCount": "{count, plural, one {# booking} other {# bookings}} in total",
       "tabs": {
         "occupied": "Occupied",
         "arrivals": "Arrivals",
@@ -4047,18 +4046,33 @@
       "entriesCount": "{count, plural, one {# entry} other {# entries}}",
       "columns": {
         "status": "Status",
-        "accommodation": "Accommodation",
-        "dates": "Dates",
-        "source": "Source",
-        "guests": "Guests",
-        "paid": "Paid",
-        "reference": "Reference"
+        "calendar": "Calendar",
+        "details": "Details",
+        "contact": "Contact",
+        "guestName": "Guest name",
+        "checkIn": "Check-in date",
+        "checkOut": "Check-out date",
+        "channel": "Channel",
+        "totalPrice": "Total price",
+        "listing": "Listing"
       },
-      "emptyState": "No bookings in this tab.",
+      "emptyState": "No bookings found.",
       "loading": "Loading…",
-      "nights": "{count, plural, one {# night} other {# nights}}",
-      "children": "{count, plural, one {# child} other {# children}}",
-      "ownerStay": "Eigennutzung"
+      "ownerStay": "Eigennutzung",
+      "limit": "Limit ({count})",
+      "limitAll": "All",
+      "columnsMenu": "Columns",
+      "exportMenu": "Export",
+      "exportCsv": "Download CSV",
+      "add": "Add",
+      "quickFilters": "Quick filters",
+      "quickFiltersAll": "All bookings",
+      "moreFilters": "More filters",
+      "allStatuses": "All statuses",
+      "openCalendar": "Open in calendar",
+      "openDetails": "Open details",
+      "openContact": "Open guest",
+      "noContact": "No guest linked"
     },
     "kpiDetail": {
       "metric": {

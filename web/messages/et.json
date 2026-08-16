@@ -4035,7 +4035,6 @@
     },
     "bookingsBoard": {
       "title": "Broneeringud",
-      "totalCount": "{count, plural, one {# broneering} other {# broneeringut}} kokku",
       "tabs": {
         "occupied": "Hõivatud",
         "arrivals": "Saabumised",
@@ -4046,19 +4045,34 @@
       "searchPlaceholder": "Külaline, objekt, viide…",
       "entriesCount": "{count, plural, one {# kanne} other {# kannet}}",
       "columns": {
-        "status": "Staatus",
-        "accommodation": "Majutus",
-        "dates": "Kuupäevad",
-        "source": "Allikas",
-        "guests": "Külalised",
-        "paid": "Makstud",
-        "reference": "Viide"
+        "status": "Olek",
+        "calendar": "Kalender",
+        "details": "Üksikasjad",
+        "contact": "Kontakt",
+        "guestName": "Külalise nimi",
+        "checkIn": "Saabumiskuupäev",
+        "checkOut": "Lahkumiskuupäev",
+        "channel": "Kanal",
+        "totalPrice": "Koguhind",
+        "listing": "Objekt"
       },
-      "emptyState": "Selles vahekaardis broneeringuid pole.",
+      "emptyState": "Broneeringuid ei leitud.",
       "loading": "Laadib…",
-      "nights": "{count, plural, one {# öö} other {# ööd}}",
-      "children": "{count, plural, one {# laps} other {# last}}",
-      "ownerStay": "Eigennutzung"
+      "ownerStay": "Eigennutzung",
+      "limit": "Piirang ({count})",
+      "limitAll": "Kõik",
+      "columnsMenu": "Veerud",
+      "exportMenu": "Eksport",
+      "exportCsv": "Laadi CSV alla",
+      "add": "Lisa",
+      "quickFilters": "Kiirfiltrid",
+      "quickFiltersAll": "Kõik broneeringud",
+      "moreFilters": "Rohkem filtreid",
+      "allStatuses": "Kõik olekud",
+      "openCalendar": "Ava kalendris",
+      "openDetails": "Ava üksikasjad",
+      "openContact": "Ava külaline",
+      "noContact": "Külalist pole seotud"
     },
     "kpiDetail": {
       "metric": {

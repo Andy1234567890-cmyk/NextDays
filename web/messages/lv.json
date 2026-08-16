@@ -4030,7 +4030,6 @@
     },
     "bookingsBoard": {
       "title": "Rezervācijas",
-      "totalCount": "Kopā {count, plural, zero {# rezervāciju} one {# rezervācija} other {# rezervācijas}}",
       "tabs": {
         "occupied": "Aizņemts",
         "arrivals": "Ierašanās",
@@ -4042,18 +4041,33 @@
       "entriesCount": "{count, plural, zero {# ierakstu} one {# ieraksts} other {# ieraksti}}",
       "columns": {
         "status": "Statuss",
-        "accommodation": "Naktsmītne",
-        "dates": "Datumi",
-        "source": "Avots",
-        "guests": "Viesi",
-        "paid": "Apmaksāts",
-        "reference": "Atsauce"
+        "calendar": "Kalendārs",
+        "details": "Detaļas",
+        "contact": "Kontakts",
+        "guestName": "Viesa vārds",
+        "checkIn": "Ierašanās datums",
+        "checkOut": "Izbraukšanas datums",
+        "channel": "Kanāls",
+        "totalPrice": "Kopējā cena",
+        "listing": "Objekts"
       },
-      "emptyState": "Šajā cilnē nav rezervāciju.",
+      "emptyState": "Rezervācijas nav atrastas.",
       "loading": "Ielādē…",
-      "nights": "{count, plural, zero {# nakšu} one {# nakts} other {# naktis}}",
-      "children": "{count, plural, zero {# bērnu} one {# bērns} other {# bērni}}",
-      "ownerStay": "Eigennutzung"
+      "ownerStay": "Eigennutzung",
+      "limit": "Ierobežojums ({count})",
+      "limitAll": "Visi",
+      "columnsMenu": "Kolonnas",
+      "exportMenu": "Eksports",
+      "exportCsv": "Lejupielādēt CSV",
+      "add": "Pievienot",
+      "quickFilters": "Ātrie filtri",
+      "quickFiltersAll": "Visas rezervācijas",
+      "moreFilters": "Vairāk filtru",
+      "allStatuses": "Visi statusi",
+      "openCalendar": "Atvērt kalendārā",
+      "openDetails": "Atvērt detaļas",
+      "openContact": "Atvērt viesi",
+      "noContact": "Nav piesaistīta viesa"
     },
     "kpiDetail": {
       "metric": {

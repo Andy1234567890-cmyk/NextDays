@@ -4030,7 +4030,6 @@
     },
     "bookingsBoard": {
       "title": "Rezervacijos",
-      "totalCount": "iš viso {count, plural, one {# rezervacija} few {# rezervacijos} other {# rezervacijų}}",
       "tabs": {
         "occupied": "Užimta",
         "arrivals": "Atvykimai",
@@ -4042,18 +4041,33 @@
       "entriesCount": "{count, plural, one {# įrašas} few {# įrašai} other {# įrašų}}",
       "columns": {
         "status": "Būsena",
-        "accommodation": "Apgyvendinimo vieta",
-        "dates": "Datos",
-        "source": "Šaltinis",
-        "guests": "Svečiai",
-        "paid": "Apmokėta",
-        "reference": "Numeris"
+        "calendar": "Kalendorius",
+        "details": "Išsami informacija",
+        "contact": "Kontaktas",
+        "guestName": "Svečio vardas",
+        "checkIn": "Atvykimo data",
+        "checkOut": "Išvykimo data",
+        "channel": "Kanalas",
+        "totalPrice": "Bendra kaina",
+        "listing": "Objektas"
       },
-      "emptyState": "Šioje skiltyje rezervacijų nėra.",
+      "emptyState": "Rezervacijų nerasta.",
       "loading": "Įkeliama…",
-      "nights": "{count, plural, one {# naktis} few {# naktys} other {# naktų}}",
-      "children": "{count, plural, one {# vaikas} few {# vaikai} other {# vaikų}}",
-      "ownerStay": "Eigennutzung"
+      "ownerStay": "Eigennutzung",
+      "limit": "Riba ({count})",
+      "limitAll": "Visi",
+      "columnsMenu": "Stulpeliai",
+      "exportMenu": "Eksportas",
+      "exportCsv": "Atsisiųsti CSV",
+      "add": "Pridėti",
+      "quickFilters": "Greitieji filtrai",
+      "quickFiltersAll": "Visos rezervacijos",
+      "moreFilters": "Daugiau filtrų",
+      "allStatuses": "Visos būsenos",
+      "openCalendar": "Atidaryti kalendoriuje",
+      "openDetails": "Atidaryti išsamią informaciją",
+      "openContact": "Atidaryti svečią",
+      "noContact": "Nėra susieto svečio"
     },
     "kpiDetail": {
       "metric": {

@@ -4035,7 +4035,6 @@
     },
     "bookingsBoard": {
       "title": "Κρατήσεις",
-      "totalCount": "{count, plural, one {# κράτηση} other {# κρατήσεις}} συνολικά",
       "tabs": {
         "occupied": "Κατειλημμένα",
         "arrivals": "Αφίξεις",
@@ -4047,18 +4046,33 @@
       "entriesCount": "{count, plural, one {# εγγραφή} other {# εγγραφές}}",
       "columns": {
         "status": "Κατάσταση",
-        "accommodation": "Κατάλυμα",
-        "dates": "Ημερομηνίες",
-        "source": "Πηγή",
-        "guests": "Επισκέπτες",
-        "paid": "Πληρωμένο",
-        "reference": "Κωδικός αναφοράς"
+        "calendar": "Ημερολόγιο",
+        "details": "Λεπτομέρειες",
+        "contact": "Επικοινωνία",
+        "guestName": "Όνομα επισκέπτη",
+        "checkIn": "Ημερομηνία άφιξης",
+        "checkOut": "Ημερομηνία αναχώρησης",
+        "channel": "Κανάλι",
+        "totalPrice": "Συνολική τιμή",
+        "listing": "Κατάλυμα"
       },
-      "emptyState": "Καμία κράτηση σε αυτή την καρτέλα.",
+      "emptyState": "Δεν βρέθηκαν κρατήσεις.",
       "loading": "Φόρτωση…",
-      "nights": "{count, plural, one {# διανυκτέρευση} other {# διανυκτερεύσεις}}",
-      "children": "{count, plural, one {# παιδί} other {# παιδιά}}",
-      "ownerStay": "Eigennutzung"
+      "ownerStay": "Eigennutzung",
+      "limit": "Όριο ({count})",
+      "limitAll": "Όλα",
+      "columnsMenu": "Στήλες",
+      "exportMenu": "Εξαγωγή",
+      "exportCsv": "Λήψη CSV",
+      "add": "Προσθήκη",
+      "quickFilters": "Γρήγορα φίλτρα",
+      "quickFiltersAll": "Όλες οι κρατήσεις",
+      "moreFilters": "Περισσότερα φίλτρα",
+      "allStatuses": "Όλες οι καταστάσεις",
+      "openCalendar": "Άνοιγμα στο ημερολόγιο",
+      "openDetails": "Άνοιγμα λεπτομερειών",
+      "openContact": "Άνοιγμα επισκέπτη",
+      "noContact": "Δεν έχει συνδεθεί επισκέπτης"
     },
     "kpiDetail": {
       "metric": {

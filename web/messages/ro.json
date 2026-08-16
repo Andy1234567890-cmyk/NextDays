@@ -4030,7 +4030,6 @@
     },
     "bookingsBoard": {
       "title": "Rezervări",
-      "totalCount": "{count, plural, one {# rezervare} few {# rezervări} other {# de rezervări}} în total",
       "tabs": {
         "occupied": "Ocupat",
         "arrivals": "Sosiri",
@@ -4041,19 +4040,34 @@
       "searchPlaceholder": "Oaspete, proprietate, referință…",
       "entriesCount": "{count, plural, one {# intrare} few {# intrări} other {# de intrări}}",
       "columns": {
-        "status": "Status",
-        "accommodation": "Proprietate",
-        "dates": "Date",
-        "source": "Sursă",
-        "guests": "Oaspeți",
-        "paid": "Plătit",
-        "reference": "Referință"
+        "status": "Stare",
+        "calendar": "Calendar",
+        "details": "Detalii",
+        "contact": "Contact",
+        "guestName": "Numele oaspetelui",
+        "checkIn": "Data sosirii",
+        "checkOut": "Data plecării",
+        "channel": "Canal",
+        "totalPrice": "Preț total",
+        "listing": "Unitate"
       },
-      "emptyState": "Nicio rezervare în această filă.",
+      "emptyState": "Nu s-au găsit rezervări.",
       "loading": "Se încarcă…",
-      "nights": "{count, plural, one {# noapte} few {# nopți} other {# de nopți}}",
-      "children": "{count, plural, one {# copil} few {# copii} other {# de copii}}",
-      "ownerStay": "Eigennutzung"
+      "ownerStay": "Eigennutzung",
+      "limit": "Limită ({count})",
+      "limitAll": "Toate",
+      "columnsMenu": "Coloane",
+      "exportMenu": "Export",
+      "exportCsv": "Descarcă CSV",
+      "add": "Adaugă",
+      "quickFilters": "Filtre rapide",
+      "quickFiltersAll": "Toate rezervările",
+      "moreFilters": "Mai multe filtre",
+      "allStatuses": "Toate stările",
+      "openCalendar": "Deschide în calendar",
+      "openDetails": "Deschide detaliile",
+      "openContact": "Deschide oaspetele",
+      "noContact": "Niciun oaspete asociat"
     },
     "kpiDetail": {
       "metric": {

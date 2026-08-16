@@ -4035,7 +4035,6 @@
     },
     "bookingsBoard": {
       "title": "Varaukset",
-      "totalCount": "{count, plural, one {# varaus} other {# varausta}} yhteensä",
       "tabs": {
         "occupied": "Varattu",
         "arrivals": "Saapumiset",
@@ -4047,18 +4046,33 @@
       "entriesCount": "{count, plural, one {# merkintä} other {# merkintää}}",
       "columns": {
         "status": "Tila",
-        "accommodation": "Majoitus",
-        "dates": "Päivämäärät",
-        "source": "Lähde",
-        "guests": "Vieraat",
-        "paid": "Maksettu",
-        "reference": "Viite"
+        "calendar": "Kalenteri",
+        "details": "Tiedot",
+        "contact": "Yhteystiedot",
+        "guestName": "Vieraan nimi",
+        "checkIn": "Saapumispäivä",
+        "checkOut": "Lähtöpäivä",
+        "channel": "Kanava",
+        "totalPrice": "Kokonaishinta",
+        "listing": "Kohde"
       },
-      "emptyState": "Ei varauksia tässä välilehdessä.",
+      "emptyState": "Varauksia ei löytynyt.",
       "loading": "Ladataan…",
-      "nights": "{count, plural, one {# yö} other {# yötä}}",
-      "children": "{count, plural, one {# lapsi} other {# lasta}}",
-      "ownerStay": "Eigennutzung"
+      "ownerStay": "Eigennutzung",
+      "limit": "Raja ({count})",
+      "limitAll": "Kaikki",
+      "columnsMenu": "Sarakkeet",
+      "exportMenu": "Vienti",
+      "exportCsv": "Lataa CSV",
+      "add": "Lisää",
+      "quickFilters": "Pikasuodattimet",
+      "quickFiltersAll": "Kaikki varaukset",
+      "moreFilters": "Lisää suodattimia",
+      "allStatuses": "Kaikki tilat",
+      "openCalendar": "Avaa kalenterissa",
+      "openDetails": "Avaa tiedot",
+      "openContact": "Avaa vieras",
+      "noContact": "Ei liitettyä vierasta"
     },
     "kpiDetail": {
       "metric": {

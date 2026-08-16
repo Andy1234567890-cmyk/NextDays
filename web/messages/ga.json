@@ -4035,7 +4035,6 @@
     },
     "bookingsBoard": {
       "title": "Áirithintí",
-      "totalCount": "{count, plural, one {# áirithint} two {# áirithint} few {# áirithint} many {# n-áirithint} other {# áirithint}} san iomlán",
       "tabs": {
         "occupied": "Curtha in áirithe",
         "arrivals": "Teachtanna",
@@ -4047,18 +4046,33 @@
       "entriesCount": "{count, plural, one {# iontráil} two {# iontráil} few {# iontráil} many {# n-iontráil} other {# iontráil}}",
       "columns": {
         "status": "Stádas",
-        "accommodation": "Lóistín",
-        "dates": "Dátaí",
-        "source": "Foinse",
-        "guests": "Aíonna",
-        "paid": "Íoctha",
-        "reference": "Tagairt"
+        "calendar": "Féilire",
+        "details": "Sonraí",
+        "contact": "Teagmháil",
+        "guestName": "Ainm an aoi",
+        "checkIn": "Dáta seiceála isteach",
+        "checkOut": "Dáta seiceála amach",
+        "channel": "Cainéal",
+        "totalPrice": "Praghas iomlán",
+        "listing": "Áit chónaithe"
       },
-      "emptyState": "Níl aon áirithint sa chluaisín seo.",
+      "emptyState": "Níor aimsíodh aon áirithint.",
       "loading": "Á lódáil…",
-      "nights": "{count, plural, one {# oíche} two {# oíche} few {# oíche} many {# n-oíche} other {# oíche}}",
-      "children": "{count, plural, one {# pháiste} two {# pháiste} few {# pháiste} many {# bpáiste} other {# páiste}}",
-      "ownerStay": "Eigennutzung"
+      "ownerStay": "Eigennutzung",
+      "limit": "Teorainn ({count})",
+      "limitAll": "Uile",
+      "columnsMenu": "Colúin",
+      "exportMenu": "Easpórtáil",
+      "exportCsv": "Íoslódáil CSV",
+      "add": "Cuir leis",
+      "quickFilters": "Scagairí tapa",
+      "quickFiltersAll": "Gach áirithint",
+      "moreFilters": "Tuilleadh scagairí",
+      "allStatuses": "Gach stádas",
+      "openCalendar": "Oscail san fhéilire",
+      "openDetails": "Oscail sonraí",
+      "openContact": "Oscail aoi",
+      "noContact": "Níl aoi nasctha"
     },
     "kpiDetail": {
       "metric": {

@@ -4035,7 +4035,6 @@
     },
     "bookingsBoard": {
       "title": "Резервации",
-      "totalCount": "{count, plural, one {# резервация} other {# резервации}} общо",
       "tabs": {
         "occupied": "Заети",
         "arrivals": "Настанявания",
@@ -4047,18 +4046,33 @@
       "entriesCount": "{count, plural, one {# запис} other {# записа}}",
       "columns": {
         "status": "Статус",
-        "accommodation": "Обект",
-        "dates": "Дати",
-        "source": "Източник",
-        "guests": "Гости",
-        "paid": "Платено",
-        "reference": "Референция"
+        "calendar": "Календар",
+        "details": "Детайли",
+        "contact": "Контакт",
+        "guestName": "Име на госта",
+        "checkIn": "Дата на настаняване",
+        "checkOut": "Дата на напускане",
+        "channel": "Канал",
+        "totalPrice": "Обща цена",
+        "listing": "Обект"
       },
-      "emptyState": "Няма резервации в този раздел.",
+      "emptyState": "Не са намерени резервации.",
       "loading": "Зареждане…",
-      "nights": "{count, plural, one {# нощувка} other {# нощувки}}",
-      "children": "{count, plural, one {# дете} other {# деца}}",
-      "ownerStay": "Eigennutzung"
+      "ownerStay": "Eigennutzung",
+      "limit": "Лимит ({count})",
+      "limitAll": "Всички",
+      "columnsMenu": "Колони",
+      "exportMenu": "Експорт",
+      "exportCsv": "Изтегли CSV",
+      "add": "Добавяне",
+      "quickFilters": "Бързи филтри",
+      "quickFiltersAll": "Всички резервации",
+      "moreFilters": "Още филтри",
+      "allStatuses": "Всички статуси",
+      "openCalendar": "Отвори в календара",
+      "openDetails": "Отвори детайлите",
+      "openContact": "Отвори госта",
+      "noContact": "Няма свързан гост"
     },
     "kpiDetail": {
       "metric": {

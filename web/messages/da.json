@@ -4035,7 +4035,6 @@
     },
     "bookingsBoard": {
       "title": "Bookinger",
-      "totalCount": "{count, plural, one {# booking} other {# bookinger}} i alt",
       "tabs": {
         "occupied": "Optaget",
         "arrivals": "Ankomster",
@@ -4047,18 +4046,33 @@
       "entriesCount": "{count, plural, one {# post} other {# poster}}",
       "columns": {
         "status": "Status",
-        "accommodation": "Overnatningssted",
-        "dates": "Datoer",
-        "source": "Kilde",
-        "guests": "Gæster",
-        "paid": "Betalt",
-        "reference": "Reference"
+        "calendar": "Kalender",
+        "details": "Detaljer",
+        "contact": "Kontakt",
+        "guestName": "Gæstenavn",
+        "checkIn": "Ankomstdato",
+        "checkOut": "Afrejsedato",
+        "channel": "Kanal",
+        "totalPrice": "Samlet pris",
+        "listing": "Bolig"
       },
-      "emptyState": "Ingen bookinger under denne fane.",
+      "emptyState": "Ingen bookinger fundet.",
       "loading": "Indlæser…",
-      "nights": "{count, plural, one {# nat} other {# nætter}}",
-      "children": "{count, plural, one {# barn} other {# børn}}",
-      "ownerStay": "Eigennutzung"
+      "ownerStay": "Eigennutzung",
+      "limit": "Grænse ({count})",
+      "limitAll": "Alle",
+      "columnsMenu": "Kolonner",
+      "exportMenu": "Eksport",
+      "exportCsv": "Hent CSV",
+      "add": "Tilføj",
+      "quickFilters": "Hurtigfiltre",
+      "quickFiltersAll": "Alle bookinger",
+      "moreFilters": "Flere filtre",
+      "allStatuses": "Alle statusser",
+      "openCalendar": "Åbn i kalender",
+      "openDetails": "Åbn detaljer",
+      "openContact": "Åbn gæst",
+      "noContact": "Ingen gæst tilknyttet"
     },
     "kpiDetail": {
       "metric": {

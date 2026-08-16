@@ -4030,7 +4030,6 @@
     },
     "bookingsBoard": {
       "title": "Boekingen",
-      "totalCount": "{count, plural, one {# boeking} other {# boekingen}} totaal",
       "tabs": {
         "occupied": "Bezet",
         "arrivals": "Aankomsten",
@@ -4042,18 +4041,33 @@
       "entriesCount": "{count, plural, one {# item} other {# items}}",
       "columns": {
         "status": "Status",
-        "accommodation": "Accommodatie",
-        "dates": "Data",
-        "source": "Bron",
-        "guests": "Gasten",
-        "paid": "Betaald",
-        "reference": "Referentie"
+        "calendar": "Agenda",
+        "details": "Details",
+        "contact": "Contact",
+        "guestName": "Naam gast",
+        "checkIn": "Aankomstdatum",
+        "checkOut": "Vertrekdatum",
+        "channel": "Kanaal",
+        "totalPrice": "Totaalprijs",
+        "listing": "Accommodatie"
       },
-      "emptyState": "Geen boekingen in dit tabblad.",
+      "emptyState": "Geen boekingen gevonden.",
       "loading": "Laden…",
-      "nights": "{count, plural, one {# nacht} other {# nachten}}",
-      "children": "{count, plural, one {# kind} other {# kinderen}}",
-      "ownerStay": "Eigennutzung"
+      "ownerStay": "Eigennutzung",
+      "limit": "Limiet ({count})",
+      "limitAll": "Alle",
+      "columnsMenu": "Kolommen",
+      "exportMenu": "Export",
+      "exportCsv": "CSV downloaden",
+      "add": "Toevoegen",
+      "quickFilters": "Snelfilters",
+      "quickFiltersAll": "Alle boekingen",
+      "moreFilters": "Meer filters",
+      "allStatuses": "Alle statussen",
+      "openCalendar": "In agenda openen",
+      "openDetails": "Details openen",
+      "openContact": "Gast openen",
+      "noContact": "Geen gast gekoppeld"
     },
     "kpiDetail": {
       "metric": {

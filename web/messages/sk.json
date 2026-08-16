@@ -4030,7 +4030,6 @@
     },
     "bookingsBoard": {
       "title": "Rezervácie",
-      "totalCount": "spolu {count, plural, one {# rezervácia} few {# rezervácie} other {# rezervácií}}",
       "tabs": {
         "occupied": "Obsadené",
         "arrivals": "Príchody",
@@ -4042,18 +4041,33 @@
       "entriesCount": "{count, plural, one {# záznam} few {# záznamy} other {# záznamov}}",
       "columns": {
         "status": "Stav",
-        "accommodation": "Ubytovanie",
-        "dates": "Dátumy",
-        "source": "Zdroj",
-        "guests": "Hostia",
-        "paid": "Zaplatené",
-        "reference": "Referencia"
+        "calendar": "Kalendár",
+        "details": "Podrobnosti",
+        "contact": "Kontakt",
+        "guestName": "Meno hosťa",
+        "checkIn": "Dátum príchodu",
+        "checkOut": "Dátum odchodu",
+        "channel": "Kanál",
+        "totalPrice": "Celková cena",
+        "listing": "Objekt"
       },
-      "emptyState": "V tejto záložke nie sú žiadne rezervácie.",
+      "emptyState": "Nenašli sa žiadne rezervácie.",
       "loading": "Načítava sa…",
-      "nights": "{count, plural, one {# noc} few {# noci} other {# nocí}}",
-      "children": "{count, plural, one {# dieťa} few {# deti} other {# detí}}",
-      "ownerStay": "Eigennutzung"
+      "ownerStay": "Eigennutzung",
+      "limit": "Limit ({count})",
+      "limitAll": "Všetko",
+      "columnsMenu": "Stĺpce",
+      "exportMenu": "Export",
+      "exportCsv": "Stiahnuť CSV",
+      "add": "Pridať",
+      "quickFilters": "Rýchle filtre",
+      "quickFiltersAll": "Všetky rezervácie",
+      "moreFilters": "Ďalšie filtre",
+      "allStatuses": "Všetky stavy",
+      "openCalendar": "Otvoriť v kalendári",
+      "openDetails": "Otvoriť podrobnosti",
+      "openContact": "Otvoriť hosťa",
+      "noContact": "Nie je priradený hosť"
     },
     "kpiDetail": {
       "metric": {
