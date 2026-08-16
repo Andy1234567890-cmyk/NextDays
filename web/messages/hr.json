@@ -797,7 +797,7 @@
     "showOriginal": "Prikaži izvornik",
     "translatedFrom": "Prevedeno s jezika {sprache}",
     "formatStrike": "Prekriženo",
-    "fieldsButton": "{{Rezervirana mjesta}}",
+    "fieldsButton": "'{{'Rezervirana mjesta'}}'",
     "langBase": "Osnovna verzija",
     "langBaseHint": "Ide svakom gostu čiji jezik nema vlastitu verziju.",
     "subjectLabel": "Predmet",
@@ -810,7 +810,11 @@
     "autoEditContent": "Uredi sadržaj",
     "autoPanelCreate": "Kreiraj",
     "quickEmpty": "Još nema brzih odgovora.",
-    "autoTextRequired": "Tekst je obavezan."
+    "autoTextRequired": "Tekst je obavezan.",
+    "translateFromBase": "Prevedi iz osnovne verzije",
+    "translateCheckHint": "Strojno prevedeno — provjerite prije spremanja.",
+    "translateBaseEmpty": "Osnovna verzija je prazna.",
+    "translateOverwrite": "Ova verzija bit će prebrisana. Nastaviti?"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp još nije povezan. Unesite pristupne podatke (Meta Cloud API) u postavkama poslužitelja, nakon toga je slanje aktivno.",

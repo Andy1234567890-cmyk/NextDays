@@ -3,12 +3,13 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 
-from src.core.languages import alle_sprachen
+from src.core.languages import alle_sprachen, basis_sprache
 from src.core.security import AuthContext, get_current_user, require_internal_cron_secret
 from src.core.supabase import get_service_client
 from src.core.uploads import read_upload
 
 from .authz import InboxAccess
+from .fassung_uebersetzen import fassung_uebersetzen
 from .felder import FELDER, FeldFehlt
 from .schemas import (
     AiReplyResponse,
@@ -51,6 +52,8 @@ from .schemas import (
     TeamMemberList,
     TemplateUpsert,
     ThreadFlagsUpdate,
+    TranslateFassungRequest,
+    TranslateFassungResponse,
     UnreadCount,
 )
 from .service import InboxError, InboxService
@@ -97,6 +100,15 @@ def require_inbox_config(
 # (ctx, access)-Bündel: Access-geschützt bzw. Config-geschützt.
 _AccessDep = Annotated[tuple[AuthContext, InboxAccess], Depends(require_inbox_access)]
 _ConfigDep = Annotated[tuple[AuthContext, InboxAccess], Depends(require_inbox_config)]
+
+# Sprache der OBERFLÄCHE des Betriebs (Sprachumschalter, nicht `Accept-Language`
+# — siehe `available_languages`). Der Default steht am Parameter (`= None`),
+# NICHT hier: FastAPI verbietet einen Default innerhalb von `Annotated[...]`.
+_SprachParam = Query(
+    min_length=2,
+    max_length=5,
+    description="ISO-639-1 der Oberflächensprache; steuert nur die Sprachnamen.",
+)
 
 router = APIRouter(prefix="/inbox", tags=["inbox"])
 
@@ -495,18 +507,36 @@ def list_message_languages(
 
 
 @router.get("/languages/available", response_model=LanguageOptionList)
-def available_languages(bundle: _AccessDep) -> LanguageOptionList:
+def available_languages(
+    bundle: _AccessDep,
+    sprache: Annotated[str | None, _SprachParam] = None,
+) -> LanguageOptionList:
     """Auswahlliste für „Neue Sprache hinzufügen" — der Katalog des Servers.
 
     Anders als beim Platzhalter-Katalog kommt der NAME hier mit: welche Sprachen
-    wir führen, ist eine Datenaussage. Er steht in der Sprache der Oberfläche des
-    Betriebs? Nein — bewusst deutsch/englisch aus `core.languages`, der einen
-    Quelle; eine dritte Liste von Sprachnamen in 24 Sprachdateien zu pflegen wäre
-    genau die Vervielfachung, die CLAUDE.md verbietet.
+    wir führen, ist eine Datenaussage. Eine dritte Liste von Sprachnamen in 24
+    Sprachdateien zu pflegen wäre genau die Vervielfachung, die CLAUDE.md
+    verbietet — `core.languages` ist die eine Quelle.
+
+    `sprache` ist die Sprache der OBERFLÄCHE des Betriebs, nicht die der
+    gepflegten Fassungen. Ohne sie stünde im Auswahlmenü eines englischen oder
+    italienischen Betriebs „Englisch, Italienisch, Niederländisch" — deutsche
+    Namen in einer nicht-deutschen Oberfläche. Bewusst als Query-Parameter und
+    nicht aus `Accept-Language` gelesen: der Header trägt die
+    BROWSER-Einstellung, die Oberfläche folgt aber dem Sprachumschalter
+    (dasselbe Muster wie `announcements`).
+
+    `core.languages` führt zwei Namen je Code (deutsch/englisch). Für jede
+    andere Oberflächensprache ist Englisch die belegte Fassung — kein
+    erfundener Name in einer dritten Sprache (Wurzel 4).
     """
     _ctx, _access = bundle
+    basis = basis_sprache(sprache)
     return LanguageOptionList(
-        items=[LanguageOption(code=c, name=n) for c, n in alle_sprachen()]
+        items=[
+            LanguageOption(code=c, name=n)
+            for c, n in alle_sprachen(sprache="de" if basis == "de" else "en")
+        ]
     )
 
 
@@ -541,6 +571,34 @@ def remove_message_language(
         return service.remove_message_language(ctx, code)
     except InboxError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/languages/translate", response_model=TranslateFassungResponse)
+def translate_fassung(
+    req: TranslateFassungRequest, bundle: _ConfigDep
+) -> TranslateFassungResponse:
+    """Grundfassung maschinell in eine Zielsprache übersetzen (Google v2).
+
+    `_ConfigDep`, nicht `_AccessDep`: der Aufruf kostet Geld beim Dienst und
+    liefert Text, der als Gastnachricht hinausgeht. Wer nur lesen darf, löst
+    keine kostenpflichtigen Fremdaufrufe aus (Wurzel 9).
+
+    Gespeichert wird NICHTS — die Antwort landet im Editor, der Betreiber prüft
+    und speichert selbst.
+    """
+    _ctx, _access = bundle
+    try:
+        body, subject = fassung_uebersetzen(
+            body=req.body,
+            subject=req.subject,
+            ziel=req.target,
+            format=req.format,
+        )
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return TranslateFassungResponse(
+        body=body, subject=subject, lang=basis_sprache(req.target) or req.target
+    )
 
 
 # --- Platzhalter (Felder) ----------------------------------------------------

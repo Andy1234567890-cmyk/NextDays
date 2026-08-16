@@ -797,7 +797,7 @@
     "showOriginal": "Uri l-oriġinal",
     "translatedFrom": "Tradott mill-{sprache}",
     "formatStrike": "Ingassat",
-    "fieldsButton": "{{Sostituti}}",
+    "fieldsButton": "'{{'Sostituti'}}'",
     "langBase": "Verżjoni bażika",
     "langBaseHint": "Tintbagħat lil kull mistieden li l-lingwa tiegħu ma għandhiex verżjoni tagħha.",
     "subjectLabel": "Suġġett",
@@ -810,7 +810,11 @@
     "autoEditContent": "Editja l-kontenut",
     "autoPanelCreate": "Oħloq",
     "quickEmpty": "Għadha ebda tweġiba mgħaġġla.",
-    "autoTextRequired": "Hemm bżonn test."
+    "autoTextRequired": "Hemm bżonn test.",
+    "translateFromBase": "Ittraduċi mill-verżjoni bażi",
+    "translateCheckHint": "Tradott awtomatikament — iċċekkja qabel tissejvja.",
+    "translateBaseEmpty": "Il-verżjoni bażi hija vojta.",
+    "translateOverwrite": "Din il-verżjoni se tinkiteb fuqha. Tkompli?"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp għadu mhux imqabbad. Daħħal il-kredenzjali (Meta Cloud API) fis-settings tas-server, imbagħad il-konsenja tkun attiva.",

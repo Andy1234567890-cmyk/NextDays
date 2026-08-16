@@ -272,6 +272,21 @@ class LanguageOptionList(BaseModel):
     items: list[LanguageOption] = []
 
 
+class TranslateFassungRequest(BaseModel):
+    """Grundfassung, die in eine Zielsprache übersetzt werden soll."""
+
+    body: str = ""
+    subject: str | None = None
+    target: str
+    format: Literal["html", "text"] = "html"
+
+
+class TranslateFassungResponse(BaseModel):
+    body: str = ""
+    subject: str | None = None
+    lang: str
+
+
 # --- Vorlagen ---------------------------------------------------------------
 class TemplateText(BaseModel):
     """Sprachfassung einer Vorlage (Betreff + Inhalt in EINER Sprache).

@@ -797,7 +797,7 @@
     "showOriginal": "Show original",
     "translatedFrom": "Translated from {sprache}",
     "formatStrike": "Strikethrough",
-    "fieldsButton": "{{Placeholders}}",
+    "fieldsButton": "'{{'Placeholders'}}'",
     "langBase": "Base version",
     "langBaseHint": "Sent to every guest whose language has no version of its own.",
     "subjectLabel": "Subject",
@@ -810,7 +810,11 @@
     "autoEditContent": "Edit content",
     "autoPanelCreate": "Create",
     "quickEmpty": "No quick reply yet.",
-    "autoTextRequired": "A message text is required."
+    "autoTextRequired": "A message text is required.",
+    "translateFromBase": "Translate from base version",
+    "translateCheckHint": "Machine-translated — please check before saving.",
+    "translateBaseEmpty": "The base version is empty.",
+    "translateOverwrite": "This version will be overwritten. Continue?"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is not connected yet. Add the credentials (Meta Cloud API) in the server settings to activate sending.",

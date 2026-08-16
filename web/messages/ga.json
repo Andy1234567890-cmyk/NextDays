@@ -797,7 +797,7 @@
     "showOriginal": "Taispeáin an bunleagan",
     "translatedFrom": "Aistrithe ó {sprache}",
     "formatStrike": "Líne tríd",
-    "fieldsButton": "{{Ionadchoinneálaithe}}",
+    "fieldsButton": "'{{'Ionadchoinneálaithe'}}'",
     "langBase": "Bunleagan",
     "langBaseHint": "Seoltar chuig gach aoi nach bhfuil leagan dá theanga féin ann.",
     "subjectLabel": "Ábhar",
@@ -810,7 +810,11 @@
     "autoEditContent": "Cuir an t-ábhar in eagar",
     "autoPanelCreate": "Cruthaigh",
     "quickEmpty": "Níl freagra tapa ar bith fós.",
-    "autoTextRequired": "Tá téacs riachtanach."
+    "autoTextRequired": "Tá téacs riachtanach.",
+    "translateFromBase": "Aistrigh ón mbunleagan",
+    "translateCheckHint": "Meaisínaistriúchán — seiceáil roimh shábháil.",
+    "translateBaseEmpty": "Tá an bunleagan folamh.",
+    "translateOverwrite": "Forscríobhfar an leagan seo. Ar aghaidh?"
   },
   "whatsapp": {
     "notConfigured": "Níl WhatsApp nasctha fós. Cuir na dintiúir (Meta Cloud API) i socruithe an fhreastalaí, ansin beidh an seoladh gníomhach.",

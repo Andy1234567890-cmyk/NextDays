@@ -797,7 +797,7 @@
     "showOriginal": "Näytä alkuperäinen",
     "translatedFrom": "Käännetty kielestä {sprache}",
     "formatStrike": "Yliviivaus",
-    "fieldsButton": "{{Paikkamerkit}}",
+    "fieldsButton": "'{{'Paikkamerkit'}}'",
     "langBase": "Perusversio",
     "langBaseHint": "Lähetetään kaikille vieraille, joiden kielellä ei ole omaa versiota.",
     "subjectLabel": "Aihe",
@@ -810,7 +810,11 @@
     "autoEditContent": "Muokkaa sisältöä",
     "autoPanelCreate": "Luo",
     "quickEmpty": "Ei vielä pikavastauksia.",
-    "autoTextRequired": "Teksti on pakollinen."
+    "autoTextRequired": "Teksti on pakollinen.",
+    "translateFromBase": "Käännä perusversiosta",
+    "translateCheckHint": "Konekäännetty — tarkista ennen tallennusta.",
+    "translateBaseEmpty": "Perusversio on tyhjä.",
+    "translateOverwrite": "Tämä versio korvataan. Jatketaanko?"
   },
   "whatsapp": {
     "notConfigured": "WhatsAppia ei ole vielä yhdistetty. Syötä tunnukset (Meta Cloud API) palvelimen asetuksiin, niin lähetys on käytössä.",

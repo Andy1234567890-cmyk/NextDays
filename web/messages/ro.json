@@ -797,7 +797,7 @@
     "showOriginal": "Afișează originalul",
     "translatedFrom": "Tradus din {sprache}",
     "formatStrike": "Tăiat",
-    "fieldsButton": "{{Substituenți}}",
+    "fieldsButton": "'{{'Substituenți'}}'",
     "langBase": "Versiune de bază",
     "langBaseHint": "Se trimite fiecărui oaspete a cărui limbă nu are versiune proprie.",
     "subjectLabel": "Subiect",
@@ -810,7 +810,11 @@
     "autoEditContent": "Editează conținutul",
     "autoPanelCreate": "Creează",
     "quickEmpty": "Încă niciun răspuns rapid.",
-    "autoTextRequired": "Este necesar un text."
+    "autoTextRequired": "Este necesar un text.",
+    "translateFromBase": "Tradu din versiunea de bază",
+    "translateCheckHint": "Traducere automată — verificați înainte de salvare.",
+    "translateBaseEmpty": "Versiunea de bază este goală.",
+    "translateOverwrite": "Această versiune va fi suprascrisă. Continuați?"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nu este încă conectat. Introduceți datele de acces (Meta Cloud API) în setările serverului, apoi trimiterea este activă.",

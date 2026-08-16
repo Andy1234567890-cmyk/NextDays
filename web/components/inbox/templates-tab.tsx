@@ -231,6 +231,10 @@ export function TemplatesTab() {
           onAktiv={setAktiv}
           fassungen={fassungen}
           namen={namen}
+          onSpracheHinzugefuegt={(liste, code) => {
+            setSprachen(liste);
+            setAktiv(code);
+          }}
         />
         {aktiv === GRUNDFASSUNG && sprachen.length > 0 && (
           <p className="text-xs text-muted-foreground">{t("langBaseHint")}</p>
@@ -249,6 +253,8 @@ export function TemplatesTab() {
           hoeheSchluessel="inbox.vorlage.hoehe"
           testId="inbox-template-textarea"
           platzhalter={t("templateBody")}
+          uebersetzenZiel={aktiv === GRUNDFASSUNG ? undefined : aktiv}
+          grundfassung={fassungen[GRUNDFASSUNG]}
         />
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="flex justify-end gap-2">

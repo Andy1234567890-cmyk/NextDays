@@ -797,7 +797,7 @@
     "showOriginal": "Vis original",
     "translatedFrom": "Oversat fra {sprache}",
     "formatStrike": "Gennemstreget",
-    "fieldsButton": "{{Pladsholdere}}",
+    "fieldsButton": "'{{'Pladsholdere'}}'",
     "langBase": "Grundversion",
     "langBaseHint": "Sendes til alle gæster, hvis sprog ikke har sin egen version.",
     "subjectLabel": "Emne",
@@ -810,7 +810,11 @@
     "autoEditContent": "Rediger indhold",
     "autoPanelCreate": "Opret",
     "quickEmpty": "Endnu ingen hurtigsvar.",
-    "autoTextRequired": "Der skal være en tekst."
+    "autoTextRequired": "Der skal være en tekst.",
+    "translateFromBase": "Oversæt fra grundversion",
+    "translateCheckHint": "Maskinoversat — kontrollér før du gemmer.",
+    "translateBaseEmpty": "Grundversionen er tom.",
+    "translateOverwrite": "Denne version overskrives. Fortsæt?"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp er endnu ikke forbundet. Angiv adgangsoplysningerne (Meta Cloud API) i serverindstillingerne, så er afsendelse aktiv.",

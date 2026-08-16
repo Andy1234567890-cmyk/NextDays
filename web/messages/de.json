@@ -797,7 +797,7 @@
     "showOriginal": "Original anzeigen",
     "translatedFrom": "Aus {sprache} übersetzt",
     "formatStrike": "Durchgestrichen",
-    "fieldsButton": "{{Platzhalter}}",
+    "fieldsButton": "'{{'Platzhalter'}}'",
     "langBase": "Grundfassung",
     "langBaseHint": "Geht an jeden Gast, dessen Sprache keine eigene Fassung hat.",
     "subjectLabel": "Betreff",
@@ -810,7 +810,11 @@
     "autoEditContent": "Inhalt bearbeiten",
     "autoPanelCreate": "Erstellen",
     "quickEmpty": "Noch keine Schnellantwort angelegt.",
-    "autoTextRequired": "Ein Text ist nötig."
+    "autoTextRequired": "Ein Text ist nötig.",
+    "translateFromBase": "Aus Grundfassung übersetzen",
+    "translateCheckHint": "Maschinell übersetzt — bitte vor dem Speichern prüfen.",
+    "translateBaseEmpty": "Die Grundfassung ist leer.",
+    "translateOverwrite": "Diese Fassung wird überschrieben. Fortfahren?"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp ist noch nicht verbunden. Zugangsdaten (Meta Cloud API) in den Server-Einstellungen hinterlegen, dann ist der Versand aktiv.",

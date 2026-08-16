@@ -797,7 +797,7 @@
     "showOriginal": "Origineel tonen",
     "translatedFrom": "Vertaald uit het {sprache}",
     "formatStrike": "Doorgehaald",
-    "fieldsButton": "{{Plaatsaanduidingen}}",
+    "fieldsButton": "'{{'Plaatsaanduidingen'}}'",
     "langBase": "Basisversie",
     "langBaseHint": "Gaat naar elke gast wiens taal geen eigen versie heeft.",
     "subjectLabel": "Onderwerp",
@@ -810,7 +810,11 @@
     "autoEditContent": "Inhoud bewerken",
     "autoPanelCreate": "Aanmaken",
     "quickEmpty": "Nog geen snel antwoord.",
-    "autoTextRequired": "Er is een tekst nodig."
+    "autoTextRequired": "Er is een tekst nodig.",
+    "translateFromBase": "Vertalen vanuit basisversie",
+    "translateCheckHint": "Machinaal vertaald — controleer vóór het opslaan.",
+    "translateBaseEmpty": "De basisversie is leeg.",
+    "translateOverwrite": "Deze versie wordt overschreven. Doorgaan?"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is nog niet verbonden. Voer de inloggegevens (Meta Cloud API) in de serverinstellingen in, dan is verzending actief.",

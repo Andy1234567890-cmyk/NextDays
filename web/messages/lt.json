@@ -797,7 +797,7 @@
     "showOriginal": "Rodyti originalą",
     "translatedFrom": "Išversta iš {sprache}",
     "formatStrike": "Perbrauktas",
-    "fieldsButton": "{{Vietaženkliai}}",
+    "fieldsButton": "'{{'Vietaženkliai'}}'",
     "langBase": "Pagrindinė versija",
     "langBaseHint": "Išsiunčiama kiekvienam svečiui, kurio kalba neturi savo versijos.",
     "subjectLabel": "Tema",
@@ -810,7 +810,11 @@
     "autoEditContent": "Redaguoti turinį",
     "autoPanelCreate": "Sukurti",
     "quickEmpty": "Greitų atsakymų dar nėra.",
-    "autoTextRequired": "Reikalingas tekstas."
+    "autoTextRequired": "Reikalingas tekstas.",
+    "translateFromBase": "Versti iš pagrindinės versijos",
+    "translateCheckHint": "Mašininis vertimas — patikrinkite prieš išsaugant.",
+    "translateBaseEmpty": "Pagrindinė versija tuščia.",
+    "translateOverwrite": "Ši versija bus perrašyta. Tęsti?"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp dar neprijungtas. Įveskite prisijungimo duomenis (Meta Cloud API) serverio nustatymuose, tada siuntimas bus aktyvus.",

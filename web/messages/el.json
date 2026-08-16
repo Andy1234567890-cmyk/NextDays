@@ -797,7 +797,7 @@
     "showOriginal": "Εμφάνιση πρωτοτύπου",
     "translatedFrom": "Μεταφράστηκε από {sprache}",
     "formatStrike": "Διαγραμμένο",
-    "fieldsButton": "{{Σύμβολα}}",
+    "fieldsButton": "'{{'Σύμβολα'}}'",
     "langBase": "Βασική έκδοση",
     "langBaseHint": "Αποστέλλεται σε κάθε επισκέπτη του οποίου η γλώσσα δεν έχει δική της έκδοση.",
     "subjectLabel": "Θέμα",
@@ -810,7 +810,11 @@
     "autoEditContent": "Επεξεργασία περιεχομένου",
     "autoPanelCreate": "Δημιουργία",
     "quickEmpty": "Δεν υπάρχουν γρήγορες απαντήσεις.",
-    "autoTextRequired": "Απαιτείται κείμενο."
+    "autoTextRequired": "Απαιτείται κείμενο.",
+    "translateFromBase": "Μετάφραση από τη βασική έκδοση",
+    "translateCheckHint": "Αυτόματη μετάφραση — ελέγξτε πριν την αποθήκευση.",
+    "translateBaseEmpty": "Η βασική έκδοση είναι κενή.",
+    "translateOverwrite": "Αυτή η έκδοση θα αντικατασταθεί. Συνέχεια;"
   },
   "whatsapp": {
     "notConfigured": "Το WhatsApp δεν έχει συνδεθεί ακόμη. Καταχωρίστε τα διαπιστευτήρια (Meta Cloud API) στις ρυθμίσεις του διακομιστή και η αποστολή θα ενεργοποιηθεί.",

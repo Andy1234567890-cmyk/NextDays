@@ -707,6 +707,10 @@ function InhaltBearbeiten({
           onAktiv={setAktiv}
           fassungen={fassungen}
           namen={namen}
+          onSpracheHinzugefuegt={(liste, code) => {
+            setSprachen(liste);
+            setAktiv(code);
+          }}
         />
         {aktiv === GRUNDFASSUNG && sprachen.length > 0 && (
           <p className="text-xs text-muted-foreground">{t("langBaseHint")}</p>
@@ -723,6 +727,8 @@ function InhaltBearbeiten({
           hoeheSchluessel="inbox.automation.hoehe"
           testId="inbox-automation-panel-textarea"
           platzhalter={t("autoMessage")}
+          uebersetzenZiel={aktiv === GRUNDFASSUNG ? undefined : aktiv}
+          grundfassung={fassungen[GRUNDFASSUNG]}
         />
         {fehler && <p className="text-sm text-destructive">{fehler}</p>}
       </div>

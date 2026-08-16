@@ -3,6 +3,8 @@
 // Posteingang: Server-Actions gegen den FastAPI-inbox-Slice (/api/v1/inbox).
 // Threads werden aus importierten OTA-Buchungen abgeleitet (Portal, Gast,
 // Reservierungsbezug). Business-Logik im Backend.
+import { getLocale } from "next-intl/server";
+
 import { ApiError, api } from "@/lib/api";
 import type { Zeitraum } from "@/lib/reservations";
 import { currentToken } from "@/lib/session-token";
@@ -379,10 +381,25 @@ export async function listMessageLanguages(): Promise<
   return call<{ items: MessageLanguage[] }>("/languages");
 }
 
+/**
+ * Der Sprachkatalog des Servers — die Auswahl hinter „Sprache hinzufügen".
+ *
+ * Die Oberflächensprache geht als `?sprache=` mit, sonst stünden in einer
+ * englischen oder italienischen Oberfläche die deutschen Sprachnamen
+ * („Englisch, Italienisch" statt „English, Italian"). `getLocale()` ist das
+ * Ergebnis der EINEN Auflösungskette des Projekts (`i18n/aufloesung.ts`) —
+ * hier wird sie angewendet, nicht neu erfunden (Muster: `lib/announcements`).
+ *
+ * Betrifft NUR die Namen. Welche Sprachen der Betrieb pflegt und welche
+ * Fassungen es gibt, hängt am Tenant und ändert sich mit der Oberfläche nicht.
+ */
 export async function listAvailableLanguages(): Promise<
   Result<{ items: LanguageOption[] }>
 > {
-  return call<{ items: LanguageOption[] }>("/languages/available");
+  const locale = await getLocale();
+  return call<{ items: LanguageOption[] }>(
+    `/languages/available?sprache=${encodeURIComponent(locale)}`,
+  );
 }
 
 export async function addMessageLanguage(
@@ -407,6 +424,29 @@ export async function removeMessageLanguage(
 ): Promise<Result<{ items: MessageLanguage[] }>> {
   return call<{ items: MessageLanguage[] }>(`/languages/${code}`, {
     method: "DELETE",
+  });
+}
+
+export type TranslatedFassung = {
+  body: string;
+  subject: string | null;
+  lang: string;
+};
+
+export async function translateFassung(input: {
+  body: string;
+  subject?: string | null;
+  target: string;
+  format?: "html" | "text";
+}): Promise<Result<TranslatedFassung>> {
+  return call<TranslatedFassung>("/languages/translate", {
+    method: "POST",
+    body: {
+      body: input.body,
+      subject: input.subject ?? null,
+      target: input.target,
+      format: input.format ?? "html",
+    },
   });
 }
 

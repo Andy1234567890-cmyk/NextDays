@@ -82,6 +82,7 @@ export function SchnellantwortenAnsicht({
         vorlage={ansicht.vorlage}
         sprachen={sprachen}
         namen={namen}
+        onSpracheHinzugefuegt={setSprachen}
         onFertig={async () => {
           await load();
           setAnsicht("liste");
@@ -167,6 +168,7 @@ function Bearbeiten({
   vorlage,
   sprachen,
   namen,
+  onSpracheHinzugefuegt,
   onFertig,
   onAbbrechen,
 }: {
@@ -174,6 +176,9 @@ function Bearbeiten({
   vorlage: MessageTemplate | null;
   sprachen: MessageLanguage[];
   namen: Record<string, string>;
+  /** Neue Sprache im Editor angelegt — die Liste wandert nach oben, damit
+   *  auch die Übersicht den neuen Reiter kennt. */
+  onSpracheHinzugefuegt: (sprachen: MessageLanguage[]) => void;
   onFertig: () => void | Promise<void>;
   onAbbrechen: () => void;
 }) {
@@ -252,6 +257,10 @@ function Bearbeiten({
           onAktiv={setAktiv}
           fassungen={fassungen}
           namen={namen}
+          onSpracheHinzugefuegt={(liste, code) => {
+            onSpracheHinzugefuegt(liste);
+            setAktiv(code);
+          }}
         />
         {aktiv === GRUNDFASSUNG && sprachen.length > 0 && (
           <p className="text-xs text-muted-foreground">{t("langBaseHint")}</p>
@@ -265,6 +274,8 @@ function Bearbeiten({
           hoeheSchluessel="inbox.schnellantwort.hoehe"
           testId="inbox-schnellantwort-textarea"
           platzhalter={t("templateBody")}
+          uebersetzenZiel={aktiv === GRUNDFASSUNG ? undefined : aktiv}
+          grundfassung={fassungen[GRUNDFASSUNG]}
         />
         {fehler && <p className="text-sm text-destructive">{fehler}</p>}
         {vorlage && (

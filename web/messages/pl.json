@@ -797,7 +797,7 @@
     "showOriginal": "Pokaż oryginał",
     "translatedFrom": "Przetłumaczono z języka {sprache}",
     "formatStrike": "Przekreślenie",
-    "fieldsButton": "{{Symbole}}",
+    "fieldsButton": "'{{'Symbole'}}'",
     "langBase": "Wersja podstawowa",
     "langBaseHint": "Trafia do każdego gościa, którego język nie ma własnej wersji.",
     "subjectLabel": "Temat",
@@ -810,7 +810,11 @@
     "autoEditContent": "Edytuj treść",
     "autoPanelCreate": "Utwórz",
     "quickEmpty": "Brak szybkich odpowiedzi.",
-    "autoTextRequired": "Treść jest wymagana."
+    "autoTextRequired": "Treść jest wymagana.",
+    "translateFromBase": "Przetłumacz z wersji podstawowej",
+    "translateCheckHint": "Tłumaczenie maszynowe — sprawdź przed zapisaniem.",
+    "translateBaseEmpty": "Wersja podstawowa jest pusta.",
+    "translateOverwrite": "Ta wersja zostanie nadpisana. Kontynuować?"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nie jest jeszcze połączony. Wprowadź dane dostępowe (Meta Cloud API) w ustawieniach serwera, aby aktywować wysyłkę.",

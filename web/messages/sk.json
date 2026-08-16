@@ -797,7 +797,7 @@
     "showOriginal": "Zobraziť originál",
     "translatedFrom": "Preložené z jazyka {sprache}",
     "formatStrike": "Prečiarknuté",
-    "fieldsButton": "{{Zástupné symboly}}",
+    "fieldsButton": "'{{'Zástupné symboly'}}'",
     "langBase": "Základná verzia",
     "langBaseHint": "Odošle sa každému hosťovi, ktorého jazyk nemá vlastnú verziu.",
     "subjectLabel": "Predmet",
@@ -810,7 +810,11 @@
     "autoEditContent": "Upraviť obsah",
     "autoPanelCreate": "Vytvoriť",
     "quickEmpty": "Zatiaľ žiadna rýchla odpoveď.",
-    "autoTextRequired": "Text je povinný."
+    "autoTextRequired": "Text je povinný.",
+    "translateFromBase": "Preložiť zo základnej verzie",
+    "translateCheckHint": "Strojový preklad — pred uložením skontrolujte.",
+    "translateBaseEmpty": "Základná verzia je prázdna.",
+    "translateOverwrite": "Táto verzia bude prepísaná. Pokračovať?"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp zatiaľ nie je prepojený. Zadajte prístupové údaje (Meta Cloud API) v nastaveniach servera, potom bude odosielanie aktívne.",

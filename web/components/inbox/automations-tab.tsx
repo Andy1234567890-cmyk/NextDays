@@ -623,6 +623,10 @@ export function AutomationsTab() {
               onAktiv={setAktiveSprache}
               fassungen={fassungen}
               namen={sprachNamen}
+              onSpracheHinzugefuegt={(liste, code) => {
+                setSprachen(liste);
+                setAktiveSprache(code);
+              }}
             />
             {aktiveSprache === GRUNDFASSUNG && sprachen.length > 0 && (
               <p className="text-xs text-muted-foreground">{t("langBaseHint")}</p>
@@ -642,6 +646,10 @@ export function AutomationsTab() {
               hoeheSchluessel="inbox.automation.hoehe"
               testId="inbox-automation-textarea"
               platzhalter={t("autoMessage")}
+              uebersetzenZiel={
+                aktiveSprache === GRUNDFASSUNG ? undefined : aktiveSprache
+              }
+              grundfassung={fassungen[GRUNDFASSUNG]}
             />
           </>
         )}

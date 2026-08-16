@@ -797,7 +797,7 @@
     "showOriginal": "Eredeti megjelenítése",
     "translatedFrom": "Fordítva erről: {sprache}",
     "formatStrike": "Áthúzott",
-    "fieldsButton": "{{Helyőrzők}}",
+    "fieldsButton": "'{{'Helyőrzők'}}'",
     "langBase": "Alapváltozat",
     "langBaseHint": "Minden olyan vendégnek elmegy, akinek a nyelvéhez nincs saját változat.",
     "subjectLabel": "Tárgy",
@@ -810,7 +810,11 @@
     "autoEditContent": "Tartalom szerkesztése",
     "autoPanelCreate": "Létrehozás",
     "quickEmpty": "Még nincs gyors válasz.",
-    "autoTextRequired": "Szöveg megadása kötelező."
+    "autoTextRequired": "Szöveg megadása kötelező.",
+    "translateFromBase": "Fordítás az alapváltozatból",
+    "translateCheckHint": "Gépi fordítás — mentés előtt ellenőrizze.",
+    "translateBaseEmpty": "Az alapváltozat üres.",
+    "translateOverwrite": "Ez a változat felülíródik. Folytatja?"
   },
   "whatsapp": {
     "notConfigured": "A WhatsApp még nincs csatlakoztatva. Adja meg a hozzáférési adatokat (Meta Cloud API) a kiszolgáló beállításaiban, ezután a küldés aktív.",

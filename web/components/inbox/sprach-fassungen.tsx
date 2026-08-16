@@ -24,15 +24,22 @@
 //   `"text"` — AUTOMAIL-REGELN. `message_automation.message` hat keine
 //     HTML-Spalte; der Text geht als Klartext raus. Der Editor liefert hier
 //     direkt Klartext, damit kein Markup beim Gast landet.
+import { Icon } from "@iconify/react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Input } from "@nextdays/ui/input";
+import { NativeSelect } from "@nextdays/ui/native-select";
 import {
   ComposerEditor,
   type ComposerGriff,
 } from "@/components/inbox/composer-editor";
 import { FeldDialogKnopf } from "@/components/inbox/feld-picker";
-import type { MessageLanguage } from "@/lib/inbox";
+import {
+  type MessageLanguage,
+  addMessageLanguage,
+  translateFassung,
+} from "@/lib/inbox";
 
 /** Kennung des Reiters „ohne Sprache". Kein Sprachcode kann so heißen (zwei
  *  Kleinbuchstaben, serverseitig per CHECK erzwungen) — deshalb ist die
@@ -59,6 +66,7 @@ export function SprachReiter({
   onAktiv,
   fassungen,
   namen,
+  onSpracheHinzugefuegt,
 }: {
   sprachen: MessageLanguage[];
   aktiv: string;
@@ -68,11 +76,49 @@ export function SprachReiter({
   /** Sprachcode → ausgeschriebener Name (Katalog des Servers). Fehlt einer,
    *  steht der Code da — kein erfundener Name (Wurzel 4). */
   namen?: Record<string, string>;
+  /** Der Betrieb führt jetzt eine Sprache mehr. Der Aufrufer übernimmt die
+   *  neue Liste und schaltet auf den frischen Reiter. Fehlt der Handler, gibt
+   *  es kein Plus — dann ist die Leiste reine Anzeige. */
+  onSpracheHinzugefuegt?: (
+    sprachen: MessageLanguage[],
+    neuerCode: string,
+  ) => void;
 }) {
   const t = useTranslations("inbox");
+  const [waehlen, setWaehlen] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [fehler, setFehler] = useState<string | null>(null);
 
-  // Ohne verwaltete Sprachen ist ein einzelner Reiter „Grundfassung" nur Lärm.
-  if (sprachen.length === 0) return null;
+  // Die Auswahl hinter dem Plus kommt aus `namen` — der Katalog des Servers,
+  // den jeder Editor ohnehin lädt (`listAvailableLanguages`). Bewusst kein
+  // zweiter Prop: eine parallele Katalog-Liste würde beim nächsten Editor
+  // vergessen, und das Plus wäre dort still leer.
+  // Schon gepflegte Sprachen stehen nicht mehr zur Wahl — sie erneut
+  // anzubieten sähe aus, als könnte man sie zweimal führen.
+  const offen = Object.entries(namen ?? {})
+    .filter(([code]) => !sprachen.some((s) => s.code === code))
+    .map(([code, name]) => ({ code, name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const mitPlus = Boolean(onSpracheHinzugefuegt) && offen.length > 0;
+
+  async function hinzufuegen(code: string) {
+    if (!code || pending) return;
+    setFehler(null);
+    setPending(true);
+    const res = await addMessageLanguage(code);
+    setPending(false);
+    if (!res.ok) {
+      setFehler(res.error);
+      return;
+    }
+    setWaehlen(false);
+    onSpracheHinzugefuegt?.(res.data.items, code);
+  }
+
+  // Ohne verwaltete Sprachen UND ohne Plus wäre ein einzelner Reiter
+  // „Grundfassung" nur Lärm. Mit Plus bleibt die Leiste stehen: sonst gäbe es
+  // im Editor keinen Weg zur ersten Sprache.
+  if (sprachen.length === 0 && !mitPlus) return null;
 
   const reiter = [
     { schluessel: GRUNDFASSUNG, label: t("langBase") },
@@ -110,6 +156,129 @@ export function SprachReiter({
           />
         </button>
       ))}
+
+      {/* Der Weg zur nächsten Sprache steht DA, wo die Sprachen stehen. Vorher
+          lag er nur im Automatisieren-Panel unter „Sprachen verwalten" — wer
+          eine Vorlage bearbeitete, sah drei Reiter und keinen Weg zum vierten. */}
+      {mitPlus &&
+        (waehlen ? (
+          <NativeSelect
+            autoFocus
+            value=""
+            disabled={pending}
+            onChange={(e) => void hinzufuegen(e.target.value)}
+            onBlur={() => setWaehlen(false)}
+            aria-label={t("langAdd")}
+            className="my-1 h-8 w-44 text-sm"
+          >
+            <option value="">{t("langAdd")}</option>
+            {offen.map((o) => (
+              <option key={o.code} value={o.code}>
+                {o.name}
+              </option>
+            ))}
+          </NativeSelect>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setWaehlen(true)}
+            title={t("langAdd")}
+            aria-label={t("langAdd")}
+            className="-mb-px flex items-center gap-1 border-b-2 border-transparent px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <Icon icon="ph:plus" className="size-4" />
+            {t("langAdd")}
+          </button>
+        ))}
+
+      {fehler && (
+        <span className="px-2 text-sm text-destructive">{fehler}</span>
+      )}
+    </div>
+  );
+}
+
+/** „Aus Grundfassung übersetzen" — steht in jedem Sprachreiter, nie in der
+ *  Grundfassung selbst (die IST die Quelle).
+ *
+ *  Das Ergebnis wird NICHT gespeichert, sondern in den Editor gesetzt: der
+ *  Betreiber prüft und speichert selbst. Maschinelle Übersetzungen von
+ *  Hausregeln und Stornobedingungen ungesehen scharf zu schalten wäre bei
+ *  rechtlich relevanten Texten nicht vertretbar.
+ *
+ *  Steht in der Fassung schon etwas, wird vorher gefragt — sonst wäre ein
+ *  Fehlklick der stille Verlust einer von Hand gepflegten Fassung (Wurzel 1). */
+export function UebersetzenKnopf({
+  ziel,
+  quelle,
+  ziel_fassung,
+  onErgebnis,
+  format,
+  mitBetreff,
+}: {
+  ziel: string;
+  quelle: Fassung | undefined;
+  ziel_fassung: Fassung | undefined;
+  onErgebnis: (f: Fassung) => void;
+  format: "html" | "text";
+  mitBetreff: boolean;
+}) {
+  const t = useTranslations("inbox");
+  const [laeuft, setLaeuft] = useState(false);
+  const [fehler, setFehler] = useState<string | null>(null);
+
+  const quelleLeer = !fassungGefuellt(quelle);
+
+  async function uebersetzen() {
+    if (!quelle || quelleLeer || laeuft) return;
+    if (
+      fassungGefuellt(ziel_fassung) &&
+      !window.confirm(t("translateOverwrite"))
+    ) {
+      return;
+    }
+    setFehler(null);
+    setLaeuft(true);
+    const res = await translateFassung({
+      body: quelle.body,
+      subject: mitBetreff ? quelle.subject : null,
+      target: ziel,
+      format,
+    });
+    setLaeuft(false);
+    if (!res.ok) {
+      setFehler(res.error);
+      return;
+    }
+    onErgebnis({
+      subject: res.data.subject ?? (mitBetreff ? ziel_fassung?.subject ?? "" : ""),
+      body: res.data.body,
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => void uebersetzen()}
+          disabled={laeuft || quelleLeer}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 py-1.5 text-sm font-medium text-accent transition-colors hover:bg-accent/20 disabled:opacity-50"
+        >
+          <Icon
+            icon={laeuft ? "ph:circle-notch" : "ph:translate"}
+            className={"size-4 " + (laeuft ? "animate-spin" : "")}
+          />
+          {t("translateFromBase")}
+        </button>
+        {/* Die Einschränkung steht DA, nicht im Hilfeartikel: der Text kommt
+            maschinell und geht an Gäste. Wer ihn nicht liest, verschickt ihn
+            ungeprüft. */}
+        <span className="text-xs text-muted-foreground">
+          {quelleLeer ? t("translateBaseEmpty") : t("translateCheckHint")}
+        </span>
+      </div>
+      {fehler && <p className="text-sm text-destructive">{fehler}</p>}
     </div>
   );
 }
@@ -123,6 +292,8 @@ export function FassungFelder({
   platzhalter,
   format = "html",
   mitBetreff = true,
+  uebersetzenZiel,
+  grundfassung,
 }: {
   fassung: Fassung;
   onChange: (f: Fassung) => void;
@@ -134,10 +305,25 @@ export function FassungFelder({
   /** Der Betreff gilt nur für E-Mail. Wo er (noch) nichts bewirkt, bleibt das
    *  Feld weg statt leer dazustehen. */
   mitBetreff?: boolean;
+  /** Sprachcode dieser Fassung. Fehlt er (Grundfassung), gibt es keinen
+   *  Übersetzen-Knopf — die Grundfassung ist die Quelle, nicht das Ziel. */
+  uebersetzenZiel?: string;
+  /** Die Quelle für den Übersetzen-Knopf. */
+  grundfassung?: Fassung;
 }) {
   const t = useTranslations("inbox");
   return (
     <div className="flex flex-col gap-2">
+      {uebersetzenZiel && (
+        <UebersetzenKnopf
+          ziel={uebersetzenZiel}
+          quelle={grundfassung}
+          ziel_fassung={fassung}
+          onErgebnis={onChange}
+          format={format}
+          mitBetreff={mitBetreff}
+        />
+      )}
       {mitBetreff && (
         <>
           <label className="text-sm font-medium" htmlFor={`${hoeheSchluessel}-betreff`}>

@@ -797,7 +797,7 @@
     "showOriginal": "Покажи оригинала",
     "translatedFrom": "Преведено от {sprache}",
     "formatStrike": "Зачертано",
-    "fieldsButton": "{{Заместители}}",
+    "fieldsButton": "'{{'Заместители'}}'",
     "langBase": "Основна версия",
     "langBaseHint": "Изпраща се на всеки гост, чийто език няма собствена версия.",
     "subjectLabel": "Тема",
@@ -810,7 +810,11 @@
     "autoEditContent": "Редактиране на съдържанието",
     "autoPanelCreate": "Създаване",
     "quickEmpty": "Все още няма бърз отговор.",
-    "autoTextRequired": "Необходим е текст."
+    "autoTextRequired": "Необходим е текст.",
+    "translateFromBase": "Превод от основната версия",
+    "translateCheckHint": "Машинен превод — проверете преди запазване.",
+    "translateBaseEmpty": "Основната версия е празна.",
+    "translateOverwrite": "Тази версия ще бъде презаписана. Да продължим ли?"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp още не е свързан. Въведете данните за достъп (Meta Cloud API) в настройките на сървъра, след което изпращането е активно.",

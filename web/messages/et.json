@@ -797,7 +797,7 @@
     "showOriginal": "Näita originaali",
     "translatedFrom": "Tõlgitud keelest {sprache}",
     "formatStrike": "Läbikriipsutatud",
-    "fieldsButton": "{{Kohatäited}}",
+    "fieldsButton": "'{{'Kohatäited'}}'",
     "langBase": "Põhiversioon",
     "langBaseHint": "Saadetakse igale külalisele, kelle keeles pole eraldi versiooni.",
     "subjectLabel": "Teema",
@@ -810,7 +810,11 @@
     "autoEditContent": "Muuda sisu",
     "autoPanelCreate": "Loo",
     "quickEmpty": "Kiirvastuseid veel pole.",
-    "autoTextRequired": "Tekst on kohustuslik."
+    "autoTextRequired": "Tekst on kohustuslik.",
+    "translateFromBase": "Tõlgi põhiversioonist",
+    "translateCheckHint": "Masintõlge — kontrollige enne salvestamist.",
+    "translateBaseEmpty": "Põhiversioon on tühi.",
+    "translateOverwrite": "See versioon kirjutatakse üle. Kas jätkata?"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp pole veel ühendatud. Sisesta juurdepääsuandmed (Meta Cloud API) serveri seadetesse, siis on saatmine aktiivne.",
