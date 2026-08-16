@@ -51,6 +51,8 @@ log = get_logger("nextdays.benachrichtigungs_ereignisse")
 SCHLUESSEL_AUFGABE = "task_assigned"
 SCHLUESSEL_BUCHUNG = "owner_booking"
 SCHLUESSEL_LEISTUNG = "owner_service"
+# Dieselbe Buchung, anderer Empfaenger: der BETRIEB statt des Eigentuemers.
+SCHLUESSEL_BETRIEB_BUCHUNG = "betrieb_buchung"
 
 # Die Ereignisarten, ueber die der Eigentuemer informiert wird. Bewusst eine
 # geschlossene Menge: `checked_in`/`repriced` & Co. sind Betriebsvorgaenge, mit
@@ -247,10 +249,18 @@ def melde_buchungs_ereignis(  # noqa: PLR0913 — ein Ereignis mit seinen Felder
     quelle: str | None = None,
     kanal: str | None = None,
 ) -> None:
-    """Buchungseingang / Aenderung / Storno an den Eigentuemer des Objekts.
+    """Buchungseingang / Aenderung / Storno an Eigentuemer UND Betrieb.
 
     `kind` sind die Ereignisarten der Zeitleiste (0122): created | moved |
     cancelled. Alles andere wird ignoriert — der Aufrufer muss nicht filtern.
+
+    ZWEI Empfaengerkreise mit je eigener Kategorie, weil sie unabhaengig
+    abschaltbar sein muessen: `owner_booking` an die Eigentuemer DIESES Objekts
+    (vertragliche Kerninformation, Mail nicht abwaehlbar) und
+    `betrieb_buchung` an die Betriebsleitung (Tagesgeschaeft, Mail abwaehlbar).
+    Bis hierher gab es nur den ersten Kreis — ein Property-Manager, der nicht
+    zufaellig auch als Eigentuemer eingetragen war, erfuhr von einer neuen
+    Portal-Buchung ueberhaupt nichts.
 
     Der Inhalt respektiert den Datensplit (Wurzel 3): NUR Vorname und Quelle
     gehen mit, nie der Gast-Gesamtpreis und nie Kontaktdaten. Der Aufrufer
@@ -261,11 +271,18 @@ def melde_buchungs_ereignis(  # noqa: PLR0913 — ein Ereignis mit seinen Felder
         return
     if not property_id:
         # Ohne Objektbezug gibt es keinen Eigentuemer — und „an alle Owner des
-        # Mandanten" waere ein Datenleck (fremde Objekte).
+        # Mandanten" waere ein Datenleck (fremde Objekte). Auch die
+        # Betriebsmeldung bleibt aus: ohne Objekt gaebe es keinen Titel und
+        # keinen Weg, die Meldung sinnvoll zu beschriften.
         return
     try:
+        # Beide Kreise getrennt ermittelt. Die Eigentuemer-Menge darf leer sein,
+        # ohne die Betriebsmeldung zu verhindern — ein Objekt ohne hinterlegten
+        # Eigentuemer ist der Normalfall bei einem selbst verwalteten Betrieb,
+        # und frueher fiel hier deshalb ALLES aus (`if not empfaenger: return`).
         empfaenger = eigentuemer_nutzer_ids(db, tenant_id, property_id)
-        if not empfaenger:
+        betrieb = _betriebsleitung(db, tenant_id) - empfaenger
+        if not empfaenger and not betrieb:
             return
         vorname = _nur_vorname(gast_vorname)
         objekt = _objekt_titel(db, tenant_id, property_id)
@@ -280,16 +297,36 @@ def melde_buchungs_ereignis(  # noqa: PLR0913 — ein Ereignis mit seinen Felder
             if t
         )
         dispatcher = _dispatcher(db)
-        for user_id in sorted(empfaenger):
+        # (Empfaenger, Kategorie, dedup-Praefix) statt zweier kopierter
+        # Bloecke: bis auf den Katalog-Schluessel — und damit die
+        # Abwaehlbarkeit der Mail — ist die Meldung fuer beide Kreise dieselbe.
+        #
+        # Der Eigentuemer-Kreis behaelt das alte Praefix `buchung`. Ein neues
+        # haette die 30 ungelesenen Meldungen im Live-Bestand entwertet: der
+        # UNIQUE-Index laeuft ueber (user_id, dedup_key), ein Re-Sync derselben
+        # Buchung haette also neben der alten Zeile eine zweite angelegt statt
+        # sie zu erkennen (Wurzel 2). Die Kreise sind ohnehin disjunkt
+        # (`betrieb` ist um `empfaenger` bereinigt), deshalb genuegt das
+        # eigene Praefix fuer den neuen Kreis.
+        versand = (
+            *((uid, SCHLUESSEL_BUCHUNG, "buchung") for uid in sorted(empfaenger)),
+            *(
+                (uid, SCHLUESSEL_BETRIEB_BUCHUNG, SCHLUESSEL_BETRIEB_BUCHUNG)
+                for uid in sorted(betrieb)
+            ),
+        )
+        for user_id, schluessel, dedup_praefix in versand:
             dispatcher.sende(
                 user_id=user_id,
-                schluessel=SCHLUESSEL_BUCHUNG,
-                # Derselbe `sende()`-Aufruf speist die Glocke UND eine E-Mail
-                # (`owner_booking` ist email_pflicht). Die Glocke bekommt den
-                # fertigen Satz, die Mail den Katalog-Schluessel — sie geht in
-                # der Sprache des jeweiligen Eigentuemers raus, und im Fan-out
-                # ueber mehrere Eigentuemer kann die je Empfaenger verschieden
-                # sein.
+                schluessel=schluessel,
+                # Derselbe `sende()`-Aufruf speist die Glocke UND eine E-Mail.
+                # Ob die Mail rausgeht, entscheidet die Kategorie: bei
+                # `owner_booking` immer (email_pflicht), bei
+                # `betrieb_buchung` nur, solange der Betrieb sie nicht
+                # abgewaehlt hat. Die Glocke bekommt den fertigen Satz, die
+                # Mail den Katalog-Schluessel — sie geht in der Sprache des
+                # jeweiligen Empfaengers raus, die im Fan-out je Empfaenger
+                # verschieden sein kann.
                 betreff=mail_text(
                     _BUCHUNG_BETREFF_KEY[kind], _GLOCKEN_SPRACHE, objekt=objekt
                 ),
@@ -315,18 +352,17 @@ def melde_buchungs_ereignis(  # noqa: PLR0913 — ein Ereignis mit seinen Felder
                 ),
                 tenant_id=tenant_id,
                 # `/portal/buchungen/{id}` gab es in KEINER App — derselbe
-                # 404 wie bei der Aufgaben-Meldung oben. Empfänger sind
-                # Eigentümer des Mandanten (`eigentuemer_nutzer_ids`), also
-                # Nutzer des PMS mit Owner-Rolle; deren Buchungsdetail ist
-                # `/reservierungen/{id}` (der Rollen-Datensplit §4.2 greift
-                # dort serverseitig, die Seite zeigt dem Owner nur, was er
-                # sehen darf).
+                # 404 wie bei der Aufgaben-Meldung oben. Beide Kreise sind
+                # Nutzer des PMS (Eigentuemer bzw. Betriebsleitung), ihr
+                # Buchungsdetail ist `/reservierungen/{id}`. Ein Pfad genuegt
+                # fuer beide: der Rollen-Datensplit §4.2 greift dort
+                # serverseitig, die Seite zeigt jedem nur, was er sehen darf.
                 ziel_pfad=f"/reservierungen/{reservation_id}",
                 property_id=property_id,
                 # Wurzel 2: Der Schluessel beschreibt das EREIGNIS, nicht den
                 # Versandzeitpunkt. Webhook-Redelivery und Re-Sync erzeugen
                 # denselben Schluessel und laufen am UNIQUE-Index auf.
-                dedup_key=f"buchung:{kind}:{reservation_id}",
+                dedup_key=f"{dedup_praefix}:{kind}:{reservation_id}",
             )
     except Exception as exc:  # noqa: BLE001 — Nebenpfad, darf die Buchung nicht kippen
         log.warning(

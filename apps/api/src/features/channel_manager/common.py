@@ -970,6 +970,77 @@ def ota_uhrzeit(wert: object) -> str | None:
 # „HH:MM" — als 24-h-Uhrzeit am Anfang (Channex) oder nach dem T (Airbnb).
 _UHRZEIT: Final = re.compile(r"(?:[01]\d|2[0-3]):[0-5]\d")
 
+# Wo die Portale die An-/Abreisezeit ablegen — je Eintrag (Anreise, Abreise).
+# NEUE KANÄLE TRAGEN SICH HIER EIN, nicht an der Lesestelle: genau daran ist es
+# schon einmal gescheitert (Airbnbs Zeit fiel durch, weil jede Lesestelle ihre
+# eigene Schlüsselauswahl hatte). Reihenfolge = Verlässlichkeit: Channex'
+# dokumentierte Felder zuerst, die durchgereichte Rohnutzlast danach.
+_ZEIT_PFADE: Final[tuple[tuple[tuple[str, ...], tuple[str, ...]], ...]] = (
+    (("arrival_hour",), ("departure_hour",)),
+    (("checkin_time",), ("checkout_time",)),
+    # Airbnb: die Zeit steckt NUR in der durchgereichten Original-Nutzlast.
+    # Live an 22 von 22 Buchungen belegt (15.08.2026): `arrival_hour` war
+    # überall None, während hier '2026-10-16T16:00+02:00[Europe/Copenhagen]'
+    # stand. Booking.com liefert an keiner dieser Stellen etwas — es überträgt
+    # im Reservierungs-Feed gar keine Gast-ETA (belegt an 67 Buchungen und in
+    # Booking.coms `ResGuest`-Referenz, die nur `@ResGuestRPH` führt).
+    (
+        ("raw_message", "reservation", "check_in_datetime"),
+        ("raw_message", "reservation", "check_out_datetime"),
+    ),
+)
+
+
+def _pfad_wert(attrs: dict[str, Any], pfad: tuple[str, ...]) -> object:
+    """Einen verschachtelten Wert holen; jeder fehlende Zwischenschritt → None.
+
+    `raw_message` kommt je nach Feed-Weg als dict ODER als JSON-Text an (der
+    Webhook reicht das Objekt durch, die Staging-Zeile speichert es als Text).
+    Beides muss hier durch, sonst hinge die Zeit davon ab, auf welchem Weg die
+    Buchung hereinkam.
+    """
+    aktuell: object = attrs
+    for schluessel in pfad:
+        if isinstance(aktuell, str):
+            try:
+                aktuell = json.loads(aktuell)
+            except (ValueError, TypeError):
+                return None
+        if not isinstance(aktuell, dict):
+            return None
+        aktuell = aktuell.get(schluessel)
+    return aktuell
+
+
+def ota_an_abreisezeit(attrs: dict[str, Any]) -> tuple[str | None, str | None]:
+    """Erwartete An-/Abreisezeit einer Portal-Buchung → („HH:MM"|None, …).
+
+    EINE Stelle für alle Kanäle. Vorher las jede Lesestelle ihre eigene Auswahl
+    an Schlüsseln, und Airbnbs Zeit fiel überall durch: sie steht weder in
+    `checkin_time` noch in `arrival_hour`, sondern in der durchgereichten
+    Original-Nutzlast. Ergebnis live: Die Airbnb-Zeiten kamen nur über den
+    DIREKTABRUF herein und fehlten jeder Buchung aus dem Feed.
+
+    ACHTUNG bei der Deutung: Was hier zurückkommt, ist bei Airbnb die HAUSREGEL
+    des Objekts („Check-in ab 16:00"), die das Portal in jede Buchung schreibt —
+    live 21× „16:00/10:00" und 1× „15:00/10:00" über 22 Buchungen. Es ist NICHT
+    die vom Gast angekündigte Ankunft. Wer den Wert anzeigt, muss ihn als
+    Hausregel benennen (Wurzel 5b: fremde Angabe ≠ eigene Behauptung).
+
+    Fehlt beides, bleibt es None — kein geratener Ersatz (Wurzel 4). Für die
+    Automation greift danach der Objekt-Rückfall (`_zeiten_vom_objekt`).
+    """
+    an: str | None = None
+    ab: str | None = None
+    for pfad_an, pfad_ab in _ZEIT_PFADE:
+        if an is None:
+            an = ota_uhrzeit(_pfad_wert(attrs, pfad_an))
+        if ab is None:
+            ab = ota_uhrzeit(_pfad_wert(attrs, pfad_ab))
+        if an is not None and ab is not None:
+            break
+    return an, ab
+
 
 def kanal_plan_id(eintrag: dict[str, Any]) -> str | None:
     """Kanal-ID, falls dieser Channex-Rate-Plan ein KANALRATE ist — sonst None.

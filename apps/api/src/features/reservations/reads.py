@@ -1,4 +1,7 @@
-"""Reservations-Service: Lesepfad (Liste, Dashboard, Statistiken, Detail).
+"""Reservations-Service: Lesepfad (Liste, Statistiken, Detail).
+
+Das Dashboard der Startseite liegt in `dashboard.py` — es zog die Datei über
+die 1500-Zeilen-Grenze von pylint.
 
 Mixin auf `ReservationsBase`; `service.py` komponiert es in `ReservationsService`.
 Alle Methoden sind tenant-/owner-gescoped (§4.2) und maskierungskonform (§4).
@@ -36,10 +39,6 @@ from .property_stats import (
     DETAIL_METRICS as _DETAIL_METRICS,
 )
 from .schemas import (
-    DashboardAddon,
-    DashboardEntry,
-    DashboardKpi,
-    DashboardResponse,
     PropertyStats,
     QuoteItem,
     ReservationConditions,
@@ -62,16 +61,6 @@ from .schemas import (
 # ein offener Hebel, über den ein einzelner Aufruf den halben Bestand zieht.
 _LIST_MAX_LIMIT = 500
 _STATS_MAX_SPAN_DAYS = 1830  # 5 Jahre, wie calendar.DateRange.MAX_NIGHTS
-# Dashboard: KPIs vergleichen 30 Tage mit den 30 davor (59 Tage zurück); ein
-# Puffertag deckt Zeitzonen-/Tageswechsel ab.
-_DASHBOARD_RUECKBLICK_TAGE = 60
-# Die „anstehende Anreisen"-Liste der Startseite zeigt nur die nächsten Tage —
-# ohne Deckel geht bei gut gebuchten Betrieben der gesamte Zukunftsbestand raus.
-_DASHBOARD_UPCOMING_MAX = 50
-# Zusatzleistungen werden für alle Dashboard-Zeilen in einem Zug geholt. Die
-# ID-Liste geht als `in_`-Filter in die URL — in Blöcken, damit sie bei einem
-# großen Bestand nicht die Längengrenze von PostgREST reißt.
-_ADDON_CHUNK = 200
 
 
 def _assert_stats_span(date_from: date, date_to: date) -> None:
@@ -186,210 +175,6 @@ class ReadsMixin(ReservationsBase):
         items = [self._row(r, mask) for r in rows]
         return ReservationListResponse(
             items=items, total=len(items), truncated=truncated
-        )
-
-    def dashboard(self, ctx: AuthContext) -> DashboardResponse:
-        """Startseiten-Kennzahlen aus echten Reservierungen (kein Fallback).
-
-        Listen: heutige Check-outs/-ins und die nächsten anstehenden Anreisen.
-        KPIs: Check-ins, Umsatz und bestätigte Reservierungen der letzten 30
-        Tage, jeweils mit prozentualer Veränderung gegenüber den 30 Tagen davor.
-        """
-        tenant_id = self._require_tenant(ctx)
-        # Owner-Scope (§4.2): KPIs + Listen nur über die eigenen Objekte, damit
-        # ein Eigentümer nicht den tenant-weiten Umsatz/Buchungsfluss sieht.
-        owner_pids = self._owner_scope_pids(ctx)
-        if owner_pids is not None and not owner_pids:
-            return self._empty_dashboard()
-        base_rows = (
-            self._db()
-            .table("reservations")
-            .select("*, guests(name), owners(name)")
-            .eq("tenant_id", tenant_id)
-        )
-        if owner_pids is not None:
-            base_rows = base_rows.in_("property_id", owner_pids)
-        # Nur nach UNTEN deckeln: die KPIs reichen 59 Tage zurück (Vorperiode),
-        # die „anstehend"-Liste dagegen beliebig weit in die Zukunft — eine
-        # Obergrenze würde sie still abschneiden. Ohne die Untergrenze lud die
-        # Startseite den GESAMTEN Buchungsbestand des Tenants und traf dabei den
-        # stillen 1000-Zeilen-Cap von PostgREST.
-        rows = fetch_all_rows(
-            base_rows.gte(
-                "check_out",
-                (date.today() - timedelta(days=_DASHBOARD_RUECKBLICK_TAGE)).isoformat(),
-            )
-            .order("check_in", desc=True)
-            .order("id", desc=True)
-        )
-
-        # Objekttitel je property_id nachladen (Liste zeigt den Objektnamen).
-        prop_ids = sorted({r["property_id"] for r in rows if r.get("property_id")})
-        titles: dict[str, str] = {}
-        if prop_ids:
-            props = (
-                self._db()
-                .table("properties")
-                .select("id, title")
-                .eq("tenant_id", tenant_id)
-                .in_("id", prop_ids)
-                .execute()
-            ).data or []
-            for p in props:
-                titles[p["id"]] = p.get("title") or ""
-
-        # Währung trägt die Reservierung selbst (properties hat keine currency-Spalte).
-        # Betreibt ein Tenant Objekte in mehreren Währungen, darf der Umsatz NICHT
-        # zu einer Mischsumme mit beliebigem Label addiert werden (wie R4 für die
-        # Kalender-KPIs): nur bei GENAU EINER Währung im Datensatz gibt es eine
-        # echte Umsatzzahl, sonst mixed_currency → keine Umsatz-KPI.
-        currencies = {r["currency"] for r in rows if r.get("currency")}
-        currency = next(iter(currencies)) if len(currencies) == 1 else ""
-        mixed_currency = len(currencies) > 1
-
-        today = date.today()
-        mask = load_guest_mask(self._client, ctx.user_id)
-        addons = self._dashboard_addons([r["id"] for r in rows])
-
-        def entry(r: dict) -> DashboardEntry:
-            name = anzeigename(r)
-            return DashboardEntry(
-                reservation_id=r["id"],
-                guest_name=mask.name(name) or "",
-                property_title=titles.get(r["property_id"], ""),
-                channel=r["channel"],
-                ota_name=mask.source_value(r.get("ota_name")),
-                check_in=r["check_in"],
-                check_out=r["check_out"],
-                status=r["status"],
-                is_owner_stay=bool(r.get("is_owner_stay")),
-                addons=addons.get(r["id"], []),
-            )
-
-        active = [r for r in rows if r.get("status") != "cancelled"]
-
-        checkouts_today = sorted(
-            (entry(r) for r in active if _as_date(r["check_out"]) == today),
-            key=lambda e: e.check_out,
-        )
-        checkins_today = sorted(
-            (entry(r) for r in active if _as_date(r["check_in"]) == today),
-            key=lambda e: e.check_in,
-        )
-        upcoming = sorted(
-            (entry(r) for r in active if _as_date(r["check_in"]) > today),
-            key=lambda e: e.check_in,
-        )[:_DASHBOARD_UPCOMING_MAX]
-
-        # KPIs: laufende 30-Tage-Periode (inkl. heute) vs. die 30 Tage davor.
-        cur_start = today - timedelta(days=29)  # 30 Tage inkl. heute
-        prev_start = today - timedelta(days=59)
-
-        def in_window(r: dict, start: date, end: date) -> bool:
-            ci = _as_date(r["check_in"])
-            return start <= ci <= end
-
-        cur = [r for r in active if in_window(r, cur_start, today)]
-        prev = [r for r in active if in_window(r, prev_start, cur_start - timedelta(days=1))]
-
-        def kpi(cur_val: float, prev_val: float) -> DashboardKpi:
-            if prev_val == 0:
-                return DashboardKpi(value=cur_val, change_pct=None)
-            change = (cur_val - prev_val) / prev_val * 100
-            return DashboardKpi(value=cur_val, change_pct=round(change, 1))
-
-        checkins_30d = kpi(len(cur), len(prev))
-        # Umsatz-KPI NUR für Nutzer mit Betrags-Sichtbarkeit (mask.amounts).
-        # Ein Owner ohne PM_BOOKING_TOTAL darf laut §4.2 keinen Gesamtpreis sehen —
-        # weder einzeln (überall sonst gegated) noch aggregiert hier. Sonst würde
-        # der aggregierte 30-Tage-Umsatz seiner Objekte die Preis-Maskierung
-        # durchlöchern. None statt eines maskierten 0-Werts (kein erfundener Betrag).
-        # Bei gemischten Währungen ebenfalls None — eine addierte Mischsumme mit
-        # einem beliebig herausgegriffenen Label wäre schlicht falsch.
-        # Eigentümer-Aufenthalte (0241) sind KEIN Umsatz. Ihr Betrag ist zwar
-        # per CHECK 0, sie werden hier trotzdem ausdrücklich ausgeschlossen —
-        # der Ausschluss soll an der Zahl hängen, nicht an der Annahme, dass
-        # die Spalte schon 0 sein wird.
-        def umsatz(zeilen: list[dict]) -> float:
-            return sum(
-                float(r.get("total_amount") or 0)
-                for r in zeilen
-                if not r.get("is_owner_stay")
-            )
-
-        revenue_30d = (
-            kpi(umsatz(cur), umsatz(prev))
-            if mask.amounts and not mixed_currency
-            else None
-        )
-        confirmed_30d = kpi(
-            sum(1 for r in cur if r.get("status") == "confirmed"),
-            sum(1 for r in prev if r.get("status") == "confirmed"),
-        )
-
-        return DashboardResponse(
-            today=today,
-            checkouts_today=checkouts_today,
-            checkins_today=checkins_today,
-            upcoming=upcoming,
-            checkins_30d=checkins_30d,
-            revenue_30d=revenue_30d,
-            confirmed_30d=confirmed_30d,
-            currency=currency if mask.amounts else "",
-        )
-
-    def _dashboard_addons(
-        self, reservation_ids: list[str]
-    ) -> dict[str, list[DashboardAddon]]:
-        """Gebuchte Zusatzleistungen je Reservierung, für die Badges der Listen.
-
-        EIN Abruf für alle Zeilen des Dashboards statt einer Abfrage je Karte —
-        die Startseite lädt sonst bei 50 anstehenden Buchungen 50-mal nach.
-        Gechunkt, weil `in_` mit einer sehr langen ID-Liste die URL sprengt.
-
-        Stornierte Posten fehlen bewusst: sie sind nichts, was jemand
-        vorbereiten oder kassieren müsste. Der Name kommt aus dem Snapshot der
-        Zeile, nicht aus dem Katalog — sonst änderte eine spätere Umbenennung
-        rückwirkend, was an einer alten Buchung steht.
-        """
-        if not reservation_ids:
-            return {}
-        treffer: dict[str, list[DashboardAddon]] = {}
-        for i in range(0, len(reservation_ids), _ADDON_CHUNK):
-            teil = reservation_ids[i : i + _ADDON_CHUNK]
-            rows = (
-                self._db()
-                .table("reservation_addons")
-                .select("reservation_id, name, qty, status")
-                .in_("reservation_id", teil)
-                .neq("status", "cancelled")
-                .order("created_at")
-                .execute()
-            ).data or []
-            for r in rows:
-                treffer.setdefault(r["reservation_id"], []).append(
-                    DashboardAddon(
-                        name=r.get("name") or {},
-                        qty=int(r.get("qty") or 1),
-                        paid=r.get("status") == "paid",
-                    )
-                )
-        return treffer
-
-    @staticmethod
-    def _empty_dashboard() -> DashboardResponse:
-        """Leeres Dashboard (Owner ohne zugeordnete Objekte) — keine tenant-
-        weiten Zahlen leaken, sondern ehrlich Null zeigen."""
-        zero = DashboardKpi(value=0, change_pct=None)
-        return DashboardResponse(
-            today=date.today(),
-            checkouts_today=[],
-            checkins_today=[],
-            upcoming=[],
-            checkins_30d=zero,
-            revenue_30d=zero,
-            confirmed_30d=zero,
-            currency="",
         )
 
     def _load_property_stats_rows(
@@ -1000,7 +785,14 @@ class ReadsMixin(ReservationsBase):
         #    Tabellen (Aufgaben, Nachrichten, Zahlungen, Zusatzleistungen). Jede
         #    Quelle liefert ein synthetisches Event aus ihrem created_at — so zeigt
         #    die Zeitleiste den ganzen Vorgang, nicht nur den Lifecycle.
-        events.extend(self._flow_events(reservation_id, mask))
+        events.extend(
+            self._flow_events(
+                reservation_id,
+                mask,
+                str(r.get("source_channex_booking_id") or ""),
+                r.get("channel"),
+            )
+        )
 
         # Neueste zuerst.
         events.sort(key=lambda e: e.at, reverse=True)
@@ -1011,8 +803,68 @@ class ReadsMixin(ReservationsBase):
             items=events,
         )
 
+    def _portal_nachrichten(
+        self, channex_booking_id: str, mask: GuestMask, kanal: str | None
+    ) -> list[TimelineEvent]:
+        """Der Gast-Host-Verlauf aus dem Portal-Chat (Booking/Airbnb).
+
+        Eigene Methode, weil die Verknüpfung eine ANDERE ist als bei allen
+        übrigen Flow-Quellen: `portal_messages` hängt über `booking_ref` an der
+        CHANNEX-Buchung, nicht über `reservation_id` an der Reservierung. Wer
+        das übersieht, filtert ins Leere und hält den Verlauf für leer — genau
+        das war der Fehler.
+
+        ZEITPUNKT (Wurzel 5b): eingeordnet wird über `sent_at` — wann die
+        Nachricht im PORTAL stand. `created_at` ist unser Feed-Eingang und liegt
+        bei nachgeholten Verläufen Monate daneben (live: drei Nachrichten vom
+        08.06.2026 kamen am 15.08. herein, alle mit derselben `created_at`).
+        Danach zu sortieren hieße, den Verlauf in falscher Reihenfolge zu
+        zeigen. Fehlt `sent_at`, fällt die Zeile auf `created_at` zurück und ist
+        damit wenigstens einsortiert.
+        """
+        if not channex_booking_id:
+            return []
+        zeilen = (
+            self._db()
+            .table("portal_messages")
+            .select("id, sender, body, sent_at, created_at")
+            .eq("booking_ref", channex_booking_id)
+            .order("sent_at", desc=False)
+            .execute()
+        ).data or []
+        out: list[TimelineEvent] = []
+        for m in zeilen:
+            zeitpunkt = m.get("sent_at") or m.get("created_at")
+            if not zeitpunkt:
+                continue
+            body = mask.contact_value(m.get("body"))
+            out.append(TimelineEvent(
+                id=f"pmsg:{m['id']}",
+                kind="message",
+                at=str(zeitpunkt),
+                detail={
+                    "sender": m.get("sender"),
+                    # Der Kanal kommt aus der BUCHUNG (`reservations.channel`),
+                    # nicht aus einer Annahme über diese Tabelle. Hier stand
+                    # hart `"portal"` — das Frontend übersetzt das zu
+                    # „myBestDays", also unserem eigenen Marktplatz, und eine
+                    # Booking.com-Nachricht wurde als myBestDays ausgewiesen
+                    # (live 16.08.2026, Buchung 6766972124). Ein erfundener Wert
+                    # ist auch dann falsch, wenn er plausibel aussieht
+                    # (Wurzel 4); fehlt der Kanal, bleibt das Feld leer.
+                    "channel": kanal,
+                    "preview": (body[:120] if isinstance(body, str) else None),
+                },
+                synthetic=True,
+            ))
+        return out
+
     def _flow_events(
-        self, reservation_id: str, mask: GuestMask
+        self,
+        reservation_id: str,
+        mask: GuestMask,
+        channex_booking_id: str = "",
+        kanal: str | None = None,
     ) -> list[TimelineEvent]:
         """Synthetische Events aus allen an der Buchung hängenden Tabellen —
         der komplette Flow (Aufgaben/Nachrichten/Zahlungen/Add-ons). Jede Zeile
@@ -1020,9 +872,13 @@ class ReadsMixin(ReservationsBase):
         (Grund: Personal/Cleaner ohne Finanz-/Kontakt-Einblick, §4.3, Wurzel 3).
 
         Scope (Wurzel 3): der Aufrufer hat die Reservierung bereits tenant-/owner-
-        scoped geladen; diese Tabellen (messages/tasks/payments/reservation_addons)
-        haben KEINE eigene tenant_id-Spalte, sondern hängen per FK an genau dieser
-        Reservierung — deshalb reicht der reservation_id-Filter (kein tenant_id)."""
+        scoped geladen; diese Tabellen (tasks/payments/reservation_addons) haben
+        KEINE eigene tenant_id-Spalte, sondern hängen per FK an genau dieser
+        Reservierung — deshalb reicht der reservation_id-Filter (kein tenant_id).
+
+        `channex_booking_id` ist die Klammer zu den Portal-Nachrichten: sie
+        hängen NICHT an der Reservierung, sondern per `booking_ref` an der
+        Channex-Buchung (siehe `_portal_nachrichten`)."""
         out: list[TimelineEvent] = []
 
         def rows(table: str, cols: str) -> list[dict]:
@@ -1056,6 +912,16 @@ class ReadsMixin(ReservationsBase):
 
         # Nachrichten → „Nachricht" (Gast↔Host). Der Nachrichtentext ist Kontakt-
         # inhalt → nur mit Kontakt-Freigabe zeigen, sonst nur „Nachricht" + Kanal.
+        #
+        # ZWEI QUELLEN, und die zweite trägt live ALLES: `messages` ist die
+        # Tabelle für eigene Direktnachrichten und steht systemweit auf 0 Zeilen,
+        # während `portal_messages` 495 Zeilen hat — jeden Gast-Host-Verlauf aus
+        # Booking/Airbnb. Die Zeitleiste las nur `messages` und zeigte deshalb
+        # bei einer Portalbuchung ausschließlich „Buchung erstellt", obwohl der
+        # Chat fünf Nachrichten hatte (live: Pia Koller, 16.08.2026). Der
+        # Verlauf ist der Zweck dieser Ansicht — er darf nicht an der
+        # Tabellenwahl scheitern.
+        out.extend(self._portal_nachrichten(channex_booking_id, mask, kanal))
         for m in rows("messages", "id, sender, body, channel, created_at"):
             if not m.get("created_at"):
                 continue

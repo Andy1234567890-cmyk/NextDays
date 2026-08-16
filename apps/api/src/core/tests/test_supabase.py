@@ -5,7 +5,9 @@ import pytest
 
 from src.core.config import Settings, get_settings
 from src.core.supabase import (
+    _CONNECT_TIMEOUT_S,
     _MAX_RETRIES,
+    _harden,
     _ReconnectingTransport,
     _zustandslose_optionen,
     public_storage_url,
@@ -202,3 +204,49 @@ def test_storage_public_base_ohne_konfiguration_schlaegt_fehl() -> None:
                         supabase_public_url="")
     with pytest.raises(RuntimeError, match="SUPABASE_PUBLIC_URL"):
         _ = settings.storage_public_base
+
+
+def test_connect_timeout_wird_nicht_wiederholt() -> None:
+    """Ein Verbindungs-TIMEOUT ist keine tote Keep-Alive-Verbindung.
+
+    Der Retry existiert für den Fall, dass Kong eine idle Verbindung geschlossen
+    hat — dann hilft ein zweiter Versuch sofort. Läuft dagegen schon der
+    Verbindungsaufbau in die Zeitgrenze, ist der Host weg; jeder weitere
+    Versuch verlängert nur die Wartezeit des Aufrufers um dieselbe Spanne.
+    Live am 16.08.2026 hing daran der halbe Server, weil das Auth-Gate auf
+    jeder Route wartet.
+    """
+    req = _req()
+    inner = _ScriptedTransport(
+        httpx.ConnectTimeout("timed out", request=req),
+        httpx.Response(200),
+    )
+    with pytest.raises(httpx.ConnectTimeout):
+        _ReconnectingTransport(inner).handle_request(req)
+    assert inner.calls == 1
+
+
+def test_sessions_bekommen_eine_zeitgrenze() -> None:
+    """Jede Sub-Session des Clients trägt eine Connect-Zeitgrenze.
+
+    supabase-py setzt keine; ohne sie wartet ein Request, bis das
+    Betriebssystem den TCP-Verbindungsaufbau aufgibt (live 75 s). Geprüft wird
+    das Ergebnis von `_harden` an einem Doppel mit denselben Attributen, die
+    ein echter Client hat — der echte Client bräuchte eine Verbindung.
+    """
+    class _Session:
+        def __init__(self) -> None:
+            self.timeout = httpx.Timeout(None)
+            self._transport = httpx.HTTPTransport()
+
+    class _Client:
+        def __init__(self) -> None:
+            self.postgrest = type("P", (), {"session": _Session()})()
+            self.auth = type("A", (), {"session": _Session()})()
+
+    client = _harden(_Client())  # type: ignore[arg-type]
+    for teil in (client.postgrest, client.auth):
+        assert teil.session.timeout.connect == _CONNECT_TIMEOUT_S
+        # Der Retry-Wrapper bleibt zusätzlich bestehen — die Härtung ersetzt
+        # ihn nicht, sie ergänzt sie.
+        assert isinstance(teil.session._transport, _ReconnectingTransport)  # noqa: SLF001

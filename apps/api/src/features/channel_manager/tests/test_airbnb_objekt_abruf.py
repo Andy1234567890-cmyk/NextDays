@@ -161,6 +161,16 @@ def test_weitere_felder_aus_echter_antwort() -> None:
     )
     assert gesetzt["check_in_from"] == "16:00"
     assert gesetzt["check_out_until"] == "10:00"
+    # EIN Speicherort: die Zeiten landen unter `policies` — dort liest die
+    # Maske, die Automail und der Channex-Content. Auf der Wurzelebene stehen
+    # sie NICHT mehr; die frühere Doppelablage lief auseinander, sobald der
+    # Betrieb die Zeit in der Maske änderte (Feriehus Oluf: 15:00 unter
+    # `policies`, 16:00 an der Wurzel).
+    gespeichert = (tabelle.geschrieben or {})["type_attributes"]
+    assert gespeichert["policies"]["checkInTime"] == "16:00"
+    assert gespeichert["policies"]["checkOutTime"] == "10:00"
+    assert "check_in_from" not in gespeichert
+    assert "check_out_until" not in gespeichert
     assert gesetzt["pets_allowed"] is True
     assert gesetzt["pets_max"] == 1
     assert gesetzt["smoking_allowed"] is False
@@ -177,7 +187,8 @@ def test_gepflegte_werte_bleiben() -> None:
     """Wurzel 1: was der Betrieb selbst eingestellt hat, überschreibt der Abruf
     NICHT — sonst setzt jeder Abruf die eigene Hausregel zurück."""
     tabelle = _FakeTable([{"type_attributes": {
-        "check_in_from": "14:00", "pets_allowed": False, "max_nights": 30,
+        "policies": {"checkInTime": "14:00"},
+        "pets_allowed": False, "max_nights": 30,
     }}])
     gesetzt = M._weitere_felder_uebernehmen(  # noqa: SLF001
         M(), _FakeDb(tabelle), "p1", PREIS, REGELN, BUCHUNG,
@@ -185,9 +196,12 @@ def test_gepflegte_werte_bleiben() -> None:
     assert "check_in_from" not in gesetzt
     assert "pets_allowed" not in gesetzt
     assert "max_nights" not in gesetzt
-    # Der eigene Wert steht unverändert in der DB.
+    # Der eigene Wert steht unverändert in der DB — geprüft wird jetzt der EINE
+    # Ort. Die Abreisezeit war leer und darf ergänzt werden: „nicht
+    # überschreiben" heißt nicht „nichts ergänzen".
     neu = (tabelle.geschrieben or {})["type_attributes"]
-    assert neu["check_in_from"] == "14:00"
+    assert neu["policies"]["checkInTime"] == "14:00"
+    assert neu["policies"]["checkOutTime"] == "10:00"
     assert neu["pets_allowed"] is False
 
 

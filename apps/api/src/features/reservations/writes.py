@@ -409,6 +409,14 @@ class WritesMixin(ReservationsBase):
             "guest_phone": req.contact.phone or None,
             "guest_language": req.contact.language or None,
             "guest_country": req.contact.country or None,
+            # Buchungszeitpunkt. Hier ist unsere Uhr zulässigerweise der echte
+            # Zeitpunkt (anders als bei einer OTA-Buchung, wo `created_at` nur
+            # unsere Verarbeitung beschreibt, Wurzel 5b): dieser Pfad legt eine
+            # Buchung bei UNS an — am Telefon aufgenommen, im Backoffice
+            # eingetragen —, der Vorgang selbst passiert in diesem Moment. Ohne
+            # die Zeile trugen 36 Direktbuchungen live gar keinen Zeitpunkt und
+            # fehlten in jeder Sortierung „nach Eingang".
+            "booked_at": datetime.now(UTC).isoformat(),
         }
         try:
             ins = (

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query
 
 from src.core.security import CurrentUser, require_internal_cron_secret
 from src.core.supabase import get_service_client
+from src.core.zeitraum import STANDARD_ZEITRAUM
 from src.features.auth.dependencies import (
     require_granular_permission,
     require_permission,
@@ -16,6 +17,11 @@ from src.features.auth.permissions import Capability
 from .schemas import (
     CheckOutRequest,
     CheckOutResponse,
+    DashboardFenster,
+    DashboardKpiMetrik,
+    DashboardKpiResponse,
+    DashboardListe,
+    DashboardListeResponse,
     DashboardResponse,
     PropertyStats,
     RequestDecline,
@@ -63,6 +69,48 @@ def dashboard(
 ) -> DashboardResponse:
     try:
         return service.dashboard(ctx)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/dashboard/kpi", response_model=DashboardKpiResponse)
+def dashboard_kpi(
+    service: ReservationsServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    metrik: Annotated[DashboardKpiMetrik, Query()],
+    zeitraum: Annotated[str, Query()] = STANDARD_ZEITRAUM,
+) -> DashboardKpiResponse:
+    """EINE Kachel der Startseite für einen gewählten Zeitraum nachladen.
+
+    Steht VOR `/{reservation_id}` — sonst nähme FastAPI „dashboard" als ID.
+    Gleiche Fähigkeit wie `/dashboard`: es ist derselbe Wert, nur anders
+    gefenstert, also gilt derselbe Zugang (Wurzel 9).
+
+    `zeitraum` ist einer aus `core.zeitraum.ZEITRAEUME` (7d | 30d | 3m | 12m);
+    ein unbekannter Wert wird mit 422 abgewiesen statt still auf den Standard
+    gedreht — sonst zeigte die Kachel „12 Monate" die Zahlen von 30 Tagen.
+    """
+    try:
+        return service.dashboard_kpi(ctx, metrik, zeitraum)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/dashboard/liste", response_model=DashboardListeResponse)
+def dashboard_liste(
+    service: ReservationsServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    liste: Annotated[DashboardListe, Query()],
+    fenster: Annotated[DashboardFenster, Query()] = DashboardFenster.heute,
+) -> DashboardListeResponse:
+    """EINE Listen-Karte der Startseite für ein gewähltes Zeitfenster.
+
+    Steht wie `/dashboard/kpi` VOR `/{reservation_id}`. Gleiche Fähigkeit und
+    gleicher Owner-Scope wie `/dashboard` — es sind dieselben Zeilen, nur
+    anders gefenstert (Wurzel 9).
+    """
+    try:
+        return service.dashboard_liste(ctx, liste, fenster)
     except ReservationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

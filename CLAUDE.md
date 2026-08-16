@@ -206,6 +206,18 @@ App-Wechsel (`lib/appwechsel.ts`), keine Navigation.
 
 ## Qualitätsgate (vor „fertig")
 - `pytest` grün; `ruff check` sauber; `pylint` 10.00/10 auf geänderten Modulen.
+- **NIE den vollen `pytest` wiederholt laufen lassen.** Geprüft wird der
+  BERÜHRTE Slice (`uv run pytest src/features/<slice> -q`) — der volle Lauf
+  über 3300 Tests EINMAL vor dem Commit, sonst nie. Kein Testlauf im
+  Hintergrund (`run_in_background`), weil er dort weiterläuft, während schon
+  der nächste startet, und niemand ihn abräumt.
+  Ausdrückliche Anweisung vom 16.08.2026: *„bist du dumm was nutzt du mein
+  ganzen RAM"* — vorausgegangen waren vier Gesamtläufe hintereinander plus
+  einer im Hintergrund, für eine Änderung an EINEM Slice, dessen 137 Tests in
+  8 Sekunden durchlaufen. Der Rechner des Nutzers ist kein CI-Runner.
+  Dasselbe gilt für jeden anderen teuren Lauf: `pylint` NUR auf die geänderten
+  Dateien, nie über das ganze Paket. Läuft doch einmal etwas im Hintergrund,
+  wird es im selben Zug beendet (`pkill -f pytest`), nicht liegen gelassen.
 - Frontend: `tsc --noEmit` in apps/web UND builder ohne Fehler.
 - Frontend: `bun run lint` (ESLint) in jeder berührten App **fehlerfrei** —
   Regeln zentral in `packages/eslint-config`, App-Ausnahmen in der jeweiligen

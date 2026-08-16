@@ -13,6 +13,7 @@ import { PaymentsStatusBanner } from "@/components/zahlungen/payments-status-ban
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card, CardContent } from "@nextdays/ui/card";
 import { getMe } from "@/lib/auth";
+import { getNachrichtenKennzahlen } from "@/lib/inbox";
 import { getOnboarding } from "@/lib/onboarding";
 import { getDashboard } from "@/lib/reservations";
 
@@ -44,7 +45,13 @@ export default async function DashboardPage() {
     );
   }
 
-  const dashboard = await getDashboard();
+  // Beide Quellen der Startseite parallel. Die Nachrichten-Kennzahlen sind
+  // NICHT kritisch: wer keinen Zugang zum Posteingang hat, bekommt dort eine
+  // Absage — dann entfällt der Abschnitt, statt die ganze Seite zu kippen.
+  const [dashboard, kennzahlen] = await Promise.all([
+    getDashboard(),
+    getNachrichtenKennzahlen(),
+  ]);
   if (!dashboard.ok) {
     return (
       <Card className="border-dashed">
@@ -63,6 +70,14 @@ export default async function DashboardPage() {
 
   return (
     <>
+      {/* `properties` speist die Objekt-Zahlen, `reservations` alle
+          Reservierungskarten und KPIs.
+          BEWUSST OHNE `portal_messages`/`channex_booking`: beide haben für
+          `authenticated` weder `select`-Grant noch Publikationsmitgliedschaft
+          (live geprüft), ein Abo darauf wäre eine stumme Attrappe. Der Grant
+          ist hier auch nicht nachzuholen — es sind Gastkonversationen, und ein
+          tenant-weites Leserecht gäbe sie jeder Rolle frei (Wurzel 6). Der
+          Nachrichten-Abschnitt aktualisiert daher beim Seitenaufruf. */}
       <RealtimeRefresh tables={["reservations", "properties", "availability"]} />
       {/* Zahlungs-Status ist Sache der Konto-Führung (MANAGE_BILLING, wie der
           Backend-Endpunkt). Angestellte ohne diese Fähigkeit dürfen den Banner
@@ -72,7 +87,10 @@ export default async function DashboardPage() {
           <PaymentsStatusBanner />
         </Suspense>
       )}
-      <ReservationsDashboard data={dashboard.data} />
+      <ReservationsDashboard
+        data={dashboard.data}
+        nachrichten={kennzahlen.ok ? kennzahlen.data : null}
+      />
     </>
   );
 }

@@ -36,6 +36,7 @@ from .common import (
     ist_bestandsimport,
     kanal_plan_id,
     log,
+    ota_an_abreisezeit,
     ota_buchungszeitpunkt,
     ota_cancel_penalties,
     ota_notes_text,
@@ -1286,6 +1287,7 @@ class BookingsSyncMixin:
                 tenant_id=tenant_id, property_id=property_id,
                 arrival=arrival, departure=departure,
             )
+        an_zeit, ab_zeit = ota_an_abreisezeit(attrs)
         row = {
             "tenant_id": tenant_id,
             "property_id": property_id,
@@ -1329,10 +1331,13 @@ class BookingsSyncMixin:
             # ein Portal ein Feld, kommt es mit, statt bis zum nächsten Bericht
             # unbemerkt verloren zu gehen.
             **gastfelder_uebernehmen(customer),
-            # Policy-Zeiten + Preisaufschlüsselung aus der OTA-Payload (sofern
-            # vorhanden; kein Erfinden — fehlt ein Feld, bleibt es leer).
-            "checkin_time": attrs.get("checkin_time"),
-            "checkout_time": attrs.get("checkout_time"),
+            # An-/Abreisezeit über den EINEN Helfer, der alle Kanalformen kennt
+            # (`ota_an_abreisezeit`). Vorher stand hier nur `attrs["checkin_time"]`,
+            # und Airbnbs Zeit fiel durch: sie steckt in der durchgereichten
+            # Original-Nutzlast, nicht in Channex' normalisierten Feldern.
+            # Kein Erfinden: fehlt sie, bleibt leer (Wurzel 4).
+            "checkin_time": an_zeit,
+            "checkout_time": ab_zeit,
             "quote_items": self._booking_quote_items(attrs),
             "external_url": attrs.get("ota_url") or attrs.get("external_url"),
             # Zahlungsweg + Portalprovision (0240). Ohne payment_collect weiß

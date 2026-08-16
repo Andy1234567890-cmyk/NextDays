@@ -39,6 +39,27 @@ _MAX_RETRIES = 2
 # (Wurzel 2). Vor der Antwort ist jede Methode sicher wiederholbar.
 _SICHERE_METHODEN = frozenset({"GET", "HEAD", "OPTIONS"})
 
+# Zeitgrenzen JEDES Supabase-Aufrufs. supabase-py setzt keine — httpx nimmt dann
+# seinen Default von 5 s, und der greift nur, solange der Client ihn mitgibt;
+# ein Request ohne eigenen Timeout wartet, bis das Betriebssystem den
+# TCP-Verbindungsaufbau aufgibt. Genau das passierte live am 16.08.2026: der
+# Connect zu Kong lief 75 s ins Leere (`[Errno 60] Operation timed out`), die
+# Anfrage hing so lange in einem Threadpool-Worker, und weil das Auth-Gate auf
+# JEDER geschützten Route eine DB-Runde macht, hing der halbe Server mit.
+#
+# Getrennte Werte, weil die Phasen Verschiedenes bedeuten: ein Verbindungsaufbau
+# zu einem erreichbaren Kong dauert Millisekunden — zieht er sich, ist der Host
+# weg, und länger zu warten bringt nichts. Eine Antwort darf dagegen dauern
+# (Aggregationen über viele Zeilen), deshalb dort großzügiger.
+_CONNECT_TIMEOUT_S = 5.0
+_READ_TIMEOUT_S = 30.0
+_SUPABASE_TIMEOUT = httpx.Timeout(
+    connect=_CONNECT_TIMEOUT_S,
+    read=_READ_TIMEOUT_S,
+    write=_READ_TIMEOUT_S,
+    pool=_CONNECT_TIMEOUT_S,
+)
+
 
 class _ReconnectingTransport(httpx.BaseTransport):
     """Wiederholt Requests, deren Keep-Alive-Verbindung serverseitig geschlossen
@@ -133,6 +154,12 @@ def _harden(client: Client) -> Client:
         for attr in ("postgrest", "auth", "storage", "functions")
     ]
     for session in sessions:
+        if session is None:
+            continue
+        # Zeitgrenze auf der Session, nicht je Aufruf: sie gilt damit für JEDEN
+        # Request dieser Sub-Session, auch für die, die supabase-py intern
+        # absetzt und an die niemand einen eigenen Timeout heranreicht.
+        session.timeout = _SUPABASE_TIMEOUT
         transport = getattr(session, "_transport", None)
         if transport is not None and not isinstance(
             transport, _ReconnectingTransport

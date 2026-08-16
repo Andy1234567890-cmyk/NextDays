@@ -238,6 +238,10 @@ export type DashboardEntry = {
   // Eigentümer-Aufenthalt (0241): in den Listen sichtbar, aber kein Umsatz.
   is_owner_stay: boolean;
   addons: DashboardAddon[];
+  /** Buchungszeitpunkt aus der QUELLE (Wurzel 5b), nie unser Feed-Eingang. */
+  booked_at: string | null;
+  /** Thread im Posteingang; null = keine Korrespondenz → kein Knopf. */
+  message_thread_id: string | null;
 };
 
 export type DashboardKpi = {
@@ -250,17 +254,100 @@ export type Dashboard = {
   checkouts_today: DashboardEntry[];
   checkins_today: DashboardEntry[];
   upcoming: DashboardEntry[];
+  // Was zuletzt hereinkam, sortiert nach Buchungszeitpunkt.
+  neu_eingegangen: DashboardEntry[];
+  // Wer heute im Haus ist (Abreisetag zählt nicht mit — der steht bei den
+  // Check-outs und wäre sonst doppelt gezählt).
+  im_haus: DashboardEntry[];
+  // Angefragt, noch nicht entschieden, Aufenthalt noch nicht vorbei.
+  freigabe_noetig: DashboardEntry[];
+  // Die ECHTEN Anzahlen: die Listen darüber schneiden bei 50 ab, `length` wäre
+  // dort das Limit und nicht die Anzahl.
+  upcoming_gesamt: number;
+  im_haus_gesamt: number;
+  neu_gesamt: number;
+  freigabe_gesamt: number;
   checkins_30d: DashboardKpi;
   // null, wenn der Nutzer keine Beträge sehen darf (Owner ohne PM_BOOKING_TOTAL,
   // Daten-Split §4.2) — die Umsatz-Kachel wird dann nicht gerendert.
   revenue_30d: DashboardKpi | null;
+  // Umsatz je zahlender Buchung; dieselbe Sichtbarkeitsregel wie revenue_30d.
+  revenue_per_booking_30d: DashboardKpi | null;
   confirmed_30d: DashboardKpi;
   currency: string;
+  objekte_gesamt: number;
+  objekte_inaktiv: number;
+  objekte_entwurf: number;
 };
 
 /** Startseiten-Kennzahlen (echte Daten, im Backend berechnet). */
 export async function getDashboard(): Promise<Result<Dashboard>> {
   return call("/reservations/dashboard");
+}
+
+/** Welche KPI-Kachel der Startseite nachgeladen wird (Backend-Enum). */
+export type DashboardKpiMetrik =
+  | "checkins"
+  | "revenue"
+  | "revenue_per_booking"
+  | "confirmed";
+
+/** Die wählbaren Auswertungszeiträume (Backend: core.zeitraum.ZEITRAEUME). */
+export type Zeitraum = "7d" | "30d" | "3m" | "12m";
+
+export type DashboardKpiAntwort = {
+  metrik: DashboardKpiMetrik;
+  zeitraum: string;
+  tage: number;
+  // null = diesen Wert gibt es für diesen Nutzer/diese Daten nicht (Beträge
+  // maskiert, gemischte Währungen, keine zahlende Buchung im Fenster).
+  kpi: DashboardKpi | null;
+  currency: string;
+};
+
+/** Welche Listen-Karte der Startseite nachgeladen wird (Backend-Enum). */
+export type DashboardListe =
+  | "checkouts"
+  | "checkins"
+  | "freigabe"
+  | "upcoming"
+  | "im_haus";
+
+/** Zeitfenster einer Listen-Karte, gerechnet ab heute (Backend-Enum). */
+export type DashboardFenster = "heute" | "7d" | "30d" | "alle";
+
+export type DashboardListeAntwort = {
+  liste: DashboardListe;
+  fenster: DashboardFenster;
+  // Die ungedeckelte Anzahl — die Kachel zeigt sie; `items` schneidet bei 50 ab.
+  gesamt: number;
+  items: DashboardEntry[];
+};
+
+/** EINE Listen-Karte für ein gewähltes Zeitfenster nachladen. */
+export async function getDashboardListe(
+  liste: DashboardListe,
+  fenster: DashboardFenster,
+): Promise<Result<DashboardListeAntwort>> {
+  return call(
+    `/reservations/dashboard/liste?liste=${liste}&fenster=${fenster}`,
+  );
+}
+
+/**
+ * EINE Kachel für einen gewählten Zeitraum nachladen.
+ *
+ * Eigener Aufruf statt eines Neuladens der ganzen Startseite: die Kacheln sind
+ * einzeln umschaltbar, und ein Umschalten soll nicht Listen, Zusatzleistungen
+ * und Objektzahlen mitziehen.
+ */
+export async function getDashboardKpi(
+  metrik: DashboardKpiMetrik,
+  zeitraum: Zeitraum,
+): Promise<Result<DashboardKpiAntwort>> {
+  return call(
+    `/reservations/dashboard/kpi?metrik=${metrik}&zeitraum=${zeitraum}`,
+  );
 }
 
 /** Reservierung anlegen. Belegt im Backend die Kalendertage (booked). */

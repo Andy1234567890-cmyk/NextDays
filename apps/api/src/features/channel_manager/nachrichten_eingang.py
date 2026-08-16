@@ -233,6 +233,11 @@ class NachrichtenEingangMixin:
             "booking_ref": booking_ref,
             "portal_thread_ref": portal_thread,
             "raw": payload,
+            # Dies ist der EINGANGSpfad — die Nachricht kam über den
+            # Aggregator zu uns (0400). Ohne die Angabe griffe der
+            # Spalten-Default `manuell`, und jede Gastnachricht sähe aus, als
+            # hätte sie jemand im Betrieb geschrieben.
+            "quelle": "portal",
             **felder,
         }
         try:

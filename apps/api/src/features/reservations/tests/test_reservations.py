@@ -1,5 +1,5 @@
 """Tests für den reservations-Slice (Anlegen + Double-Booking-Schutz)."""
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from unittest.mock import MagicMock
 
 import pytest
@@ -8,6 +8,9 @@ from fastapi.testclient import TestClient
 from src.core.security import AuthContext
 from src.features.reservations._base import anzeigename
 from src.features.reservations.schemas import (
+    DashboardFenster,
+    DashboardKpiMetrik,
+    DashboardListe,
     GuestContact,
     ReservationChannel,
     ReservationCreate,
@@ -287,6 +290,12 @@ class _KettenQuery:
     def execute(self) -> MagicMock:
         res = MagicMock()
         res.data = self._rows
+        # `count` wird ausdrücklich gesetzt, weil ein MagicMock hier sonst ein
+        # weiteres MagicMock liefert — `int(...)` darauf wirft TypeError, und
+        # der Test schlüge an einer Stelle fehl, die mit ihm nichts zu tun hat.
+        # Der Stub filtert nicht, die Zahl ist also die Gesamtmenge der Tabelle;
+        # was gefiltert werden MUSS, prüfen die Query-Spione weiter unten.
+        res.count = len(self._rows)
         return res
 
 
@@ -422,6 +431,157 @@ def test_dashboard_addons_schliesst_stornierte_aus() -> None:
     assert ("status", "cancelled") in aufrufe
 
 
+def test_dashboard_neu_eingegangen_sortiert_nach_buchungszeitpunkt() -> None:
+    """„Neu eingegangen" ordnet nach BUCHUNG, nicht nach Aufenthalt.
+
+    Die Anreisen stehen hier bewusst in umgekehrter Reihenfolge zu den
+    Buchungszeitpunkten: sortierte die Karte (wie die drei Listen darüber) nach
+    `check_in`, käme genau die falsche Reihenfolge heraus.
+    """
+    today = date.today()
+    iso = lambda d: d.isoformat()  # noqa: E731
+    reservations = [
+        # zuerst gebucht, reist zuletzt an
+        {"id": RID, "property_id": "p1", "channel": "booking", "status": "confirmed",
+         "check_in": iso(today + timedelta(days=30)),
+         "check_out": iso(today + timedelta(days=33)),
+         "booked_at": "2026-08-10T09:00:00+00:00",
+         "total_amount": 300, "currency": "EUR", "guests": {"name": "Anna"}},
+        # zuletzt gebucht, reist zuerst an
+        {"id": "r2", "property_id": "p1", "channel": "airbnb", "status": "confirmed",
+         "check_in": iso(today + timedelta(days=2)),
+         "check_out": iso(today + timedelta(days=4)),
+         "booked_at": "2026-08-14T18:30:00+00:00",
+         "total_amount": 200, "currency": "EUR", "guests": {"name": "Bea"}},
+    ]
+    svc = _dashboard_db(reservations, [{"id": "p1", "title": "Strandhaus"}])
+    out = svc.dashboard(AuthContext(user_id="u1", tenant_id="t1", role="admin"))
+
+    assert [e.reservation_id for e in out.neu_eingegangen] == ["r2", RID]
+    assert out.neu_eingegangen[0].booked_at is not None
+    # Die Aufenthaltslisten bleiben nach Aufenthalt sortiert (Gegenprobe).
+    assert [e.reservation_id for e in out.upcoming] == ["r2", RID]
+
+
+def test_dashboard_im_haus_ohne_abreisetag() -> None:
+    """„Im Haus" zaehlt den Abreisetag NICHT mit.
+
+    Wer heute auscheckt, steht bereits in `checkouts_today`. Zaehlte er hier
+    mit, waere derselbe Gast in zwei Kacheln — und die Summe der Kacheln waere
+    groesser als die Zahl der Gaeste.
+    """
+    today = date.today()
+    iso = lambda d: d.isoformat()  # noqa: E731
+    reservations = [
+        # reist heute ab → gehoert zu checkouts_today, NICHT zu im_haus
+        {"id": RID, "property_id": "p1", "channel": "booking", "status": "confirmed",
+         "check_in": iso(today - timedelta(days=3)), "check_out": iso(today),
+         "total_amount": 300, "currency": "EUR", "guests": {"name": "Anna"}},
+        # heute angereist, bleibt → im Haus
+        {"id": "r2", "property_id": "p1", "channel": "airbnb", "status": "confirmed",
+         "check_in": iso(today), "check_out": iso(today + timedelta(days=2)),
+         "total_amount": 200, "currency": "EUR", "guests": {"name": "Bea"}},
+        # mittendrin → im Haus
+        {"id": "r3", "property_id": "p1", "channel": "booking", "status": "confirmed",
+         "check_in": iso(today - timedelta(days=2)),
+         "check_out": iso(today + timedelta(days=1)),
+         "total_amount": 150, "currency": "EUR", "guests": {"name": "Cem"}},
+    ]
+    svc = _dashboard_db(reservations, [{"id": "p1", "title": "Strandhaus"}])
+    out = svc.dashboard(AuthContext(user_id="u1", tenant_id="t1", role="admin"))
+
+    assert {e.reservation_id for e in out.im_haus} == {"r2", "r3"}
+    assert out.im_haus_gesamt == 2
+    assert [e.reservation_id for e in out.checkouts_today] == [RID]
+
+
+def test_dashboard_zaehler_sind_nicht_die_listenlaenge() -> None:
+    """Die Kachel zeigt die ECHTE Anzahl, nicht den Deckel der Liste.
+
+    Live standen auf der Startseite zweimal „50", weil beide Listen am
+    Limit hingen und die Kachel `len(liste)` zeigte — eine Zahl, die in
+    Wahrheit das Limit war (Wurzel 4).
+    """
+    today = date.today()
+    iso = lambda d: d.isoformat()  # noqa: E731
+    # 60 kuenftige Anreisen: mehr als _DASHBOARD_UPCOMING_MAX (50).
+    reservations = [
+        {"id": f"r{i}", "property_id": "p1", "channel": "booking",
+         "status": "confirmed",
+         "check_in": iso(today + timedelta(days=i + 1)),
+         "check_out": iso(today + timedelta(days=i + 3)),
+         "total_amount": 100, "currency": "EUR", "guests": {"name": f"G{i}"}}
+        for i in range(60)
+    ]
+    svc = _dashboard_db(reservations, [{"id": "p1", "title": "Strandhaus"}])
+    out = svc.dashboard(AuthContext(user_id="u1", tenant_id="t1", role="admin"))
+
+    assert len(out.upcoming) == 50  # Liste gedeckelt …
+    assert out.upcoming_gesamt == 60  # … Zahl ehrlich
+
+
+def test_dashboard_neu_eingegangen_filtert_auf_buchungszeitpunkt() -> None:
+    """Der Zeitfilter muss in der QUERY über `booked_at` laufen.
+
+    Zwei Fehler wären hier unsichtbar, weil beide plausibel aussehen: ein
+    Filter über `created_at` (Wurzel 5b — unsere Verarbeitung statt des
+    Buchungsereignisses) und ein Filter über `check_in`/`check_out` (dann
+    fehlte eine gestern eingegangene Buchung für einen vergangenen Aufenthalt,
+    also genau der Fall, für den die eigene Abfrage existiert). Geprüft wird
+    deshalb die abgesetzte Kette, nicht das Ergebnis — der Ketten-Stub filtert
+    bewusst nicht.
+    """
+    aufrufe: list[tuple] = []
+
+    class _Spion(_KettenQuery):
+        def gte(self, feld: str, wert: str) -> "_Spion":
+            aufrufe.append((feld, wert))
+            return self
+
+    db = MagicMock(name="supabase")
+    db.table.side_effect = lambda name: MagicMock(
+        **{"select.return_value": _Spion([]) if name == "reservations"
+           else _KettenQuery({"users": [{"role": "admin",
+                                         "permissions": _FULL_PERMS}]}.get(name, []))}
+    )
+    svc = ReservationsService(service_client=db)
+    svc._dashboard_neu_rows("t1", None)  # noqa: SLF001 - gezielter Blick auf die Query
+
+    assert [feld for feld, _ in aufrufe] == ["booked_at"]
+    # Fenster: 30 Tage zurück (das größte, das die Startseite anbietet), und
+    # als Zeitpunkt, nicht als reines Datum — sonst schnitte die Karte am
+    # Tagesbeginn statt vor 30×24 h.
+    grenze = datetime.fromisoformat(aufrufe[0][1])
+    assert grenze.tzinfo is not None
+    stunden = (datetime.now(UTC) - grenze).total_seconds() / 3600
+    assert 719.9 < stunden < 720.1
+
+
+def test_dashboard_neu_eingegangen_owner_scope() -> None:
+    """Owner-Scope (§4.2) gilt auch für die neue Liste, nicht nur für die alten.
+
+    Ohne die `in_`-Einschränkung sähe ein Eigentümer im Eingangsbild die
+    Buchungen FREMDER Objekte — dieselbe Lücke, die Wurzel 9 für Detailrouten
+    beschreibt, nur auf der Startseite.
+    """
+    aufrufe: list[tuple] = []
+
+    class _Spion(_KettenQuery):
+        def in_(self, feld: str, werte: list) -> "_Spion":  # noqa: ANN001
+            aufrufe.append((feld, list(werte)))
+            return self
+
+    db = MagicMock(name="supabase")
+    db.table.side_effect = lambda name: MagicMock(
+        **{"select.return_value": _Spion([]) if name == "reservations"
+           else _KettenQuery([])}
+    )
+    svc = ReservationsService(service_client=db)
+    svc._dashboard_neu_rows("t1", ["p1", "p2"])  # noqa: SLF001
+
+    assert ("property_id", ["p1", "p2"]) in aufrufe
+
+
 def test_dashboard_ohne_zusatzleistungen_leere_liste() -> None:
     """Keine gebuchte Leistung → leere Liste, nicht None (kein Badge-Block)."""
     today = date.today()
@@ -462,6 +622,294 @@ def test_dashboard_mixed_currency_suppresses_revenue() -> None:
     # Zähl-KPIs bleiben korrekt.
     assert out.checkins_30d.value == 2
     assert out.confirmed_30d.value == 2
+
+
+def test_dashboard_freigabe_noetig_nur_offene_und_nicht_abgelaufene() -> None:
+    """„Freigabe nötig" zeigt offene Anfragen, deren Aufenthalt noch zählt.
+
+    Zwei Abgrenzungen, die beide leicht falsch herum sind: eine bestätigte
+    Buchung gehört NICHT in die Karte (sie verlangt keine Entscheidung), und
+    eine offene Anfrage für einen längst vergangenen Zeitraum ebenso wenig —
+    dort wäre die verlangte Handlung wirkungslos.
+    """
+    today = date.today()
+    iso = lambda d: d.isoformat()  # noqa: E731
+    reservations = [
+        # offen, Aufenthalt in der Zukunft → gehört hinein
+        {"id": RID, "property_id": "p1", "channel": "direct", "status": "pending",
+         "check_in": iso(today + timedelta(days=4)),
+         "check_out": iso(today + timedelta(days=6)),
+         "total_amount": 100, "currency": "EUR", "guests": {"name": "Anna"}},
+        # offen, aber abgereist → keine offene Aufgabe mehr
+        {"id": "r2", "property_id": "p1", "channel": "direct", "status": "pending",
+         "check_in": iso(today - timedelta(days=10)),
+         "check_out": iso(today - timedelta(days=8)),
+         "total_amount": 100, "currency": "EUR", "guests": {"name": "Bea"}},
+        # bestätigt → verlangt keine Entscheidung
+        {"id": "r3", "property_id": "p1", "channel": "direct", "status": "confirmed",
+         "check_in": iso(today + timedelta(days=2)),
+         "check_out": iso(today + timedelta(days=3)),
+         "total_amount": 100, "currency": "EUR", "guests": {"name": "Cem"}},
+    ]
+    svc = _dashboard_db(reservations, [{"id": "p1", "title": "Strandhaus"}])
+    out = svc.dashboard(AuthContext(user_id="u1", tenant_id="t1", role="admin"))
+    assert [e.reservation_id for e in out.freigabe_noetig] == [RID]
+    assert out.freigabe_gesamt == 1
+
+
+def test_dashboard_umsatz_je_buchung_ohne_eigentuemer_aufenthalte() -> None:
+    """Der Schnitt teilt durch die ZAHLENDEN Buchungen, nicht durch alle.
+
+    Ein Eigentümer-Aufenthalt (0241) trägt keinen Umsatz. Zählte er im Nenner
+    mit, sänke der ausgewiesene Schnitt mit jedem Eigenbeleg — eine Zahl, die
+    plausibel aussieht und trotzdem falsch ist (Wurzel 4).
+    """
+    today = date.today()
+    iso = lambda d: d.isoformat()  # noqa: E731
+    reservations = [
+        {"id": RID, "property_id": "p1", "channel": "booking", "status": "confirmed",
+         "check_in": iso(today - timedelta(days=3)), "check_out": iso(today),
+         "total_amount": 300, "currency": "EUR", "guests": {"name": "Anna"}},
+        {"id": "r2", "property_id": "p1", "channel": "booking", "status": "confirmed",
+         "check_in": iso(today - timedelta(days=2)),
+         "check_out": iso(today + timedelta(days=1)),
+         "total_amount": 100, "currency": "EUR", "guests": {"name": "Bea"}},
+        # Eigentümer-Aufenthalt: kein Umsatz, also auch kein Nenner
+        {"id": "r3", "property_id": "p1", "channel": "direct", "status": "confirmed",
+         "check_in": iso(today - timedelta(days=1)),
+         "check_out": iso(today + timedelta(days=2)),
+         "total_amount": 0, "currency": "EUR", "is_owner_stay": True,
+         "owners": {"name": "Eigentümer"}},
+    ]
+    svc = _dashboard_db(reservations, [{"id": "p1", "title": "Strandhaus"}])
+    out = svc.dashboard(AuthContext(user_id="u1", tenant_id="t1", role="admin"))
+    assert out.revenue_30d.value == 400
+    # 400 / 2 zahlende Buchungen — nicht 400 / 3 Check-ins.
+    assert out.revenue_per_booking_30d.value == 200
+    assert out.checkins_30d.value == 3
+
+
+def test_dashboard_umsatz_je_buchung_folgt_der_betrags_maskierung() -> None:
+    """Der Schnitt ist ein Betrag und unterliegt derselben Sichtbarkeit.
+
+    Ohne diese Kopplung wäre er das Leck, durch das ein Eigentümer ohne
+    PM_BOOKING_TOTAL den maskierten Umsatz doch erführe: Schnitt × Buchungen.
+    """
+    today = date.today()
+    iso = lambda d: d.isoformat()  # noqa: E731
+    reservations = [
+        {"id": RID, "property_id": "p1", "channel": "booking", "status": "confirmed",
+         "check_in": iso(today - timedelta(days=3)), "check_out": iso(today),
+         "total_amount": 300, "currency": "EUR", "guests": {"name": "Anna"}},
+    ]
+    svc = _dashboard_db(
+        reservations, [{"id": "p1", "title": "Strandhaus"}],
+        user_role="owner", user_perms=_NO_PERMS, owner_pids=["p1"],
+    )
+    out = svc.dashboard(AuthContext(user_id="u", tenant_id="t1", role="owner"))
+    assert out.revenue_30d is None
+    assert out.revenue_per_booking_30d is None
+
+
+def test_dashboard_objekte_zaehlt_je_status_und_im_owner_scope() -> None:
+    """Die Objekt-Zahlen entstehen als drei gefilterte Zählungen, nicht als
+    eine Gesamtzahl, aus der die Oberfläche schätzt — und der Owner-Scope
+    (§4.2) hängt an jeder von ihnen, sonst zeigte die Karte einem Eigentümer
+    den Bestand des ganzen Betriebs.
+    """
+    status_filter: list[tuple] = []
+    scopes: list[tuple] = []
+
+    class _Spion(_KettenQuery):
+        def eq(self, feld: str, wert: str) -> "_Spion":
+            if feld == "status":
+                status_filter.append((feld, wert))
+            return self
+
+        def in_(self, feld: str, werte: list) -> "_Spion":  # noqa: ANN001
+            scopes.append((feld, list(werte)))
+            return self
+
+    db = MagicMock(name="supabase")
+    db.table.side_effect = lambda name: MagicMock(
+        **{"select.return_value": _Spion([]) if name == "properties"
+           else _KettenQuery([])}
+    )
+    svc = ReservationsService(service_client=db)
+    zahlen = svc._dashboard_objekte("t1", ["p1", "p2"])  # noqa: SLF001
+
+    # Gesamt ohne Status-Filter, dazu genau die zwei Status-Zählungen.
+    assert [wert for _, wert in status_filter] == ["inactive", "draft"]
+    # Owner-Scope auf ALLEN drei Zählungen, nicht nur auf der ersten.
+    assert scopes == [("id", ["p1", "p2"])] * 3
+    assert set(zahlen) == {"objekte_gesamt", "objekte_inaktiv", "objekte_entwurf"}
+
+
+def test_dashboard_kpi_gleiche_zahl_wie_die_startseite() -> None:
+    """Die Kachel im Standard-Zeitraum MUSS zeigen, was die Startseite zeigt.
+
+    Zwei Wege zu derselben Zahl sind zwei Wahrheiten, wenn sie zwei Formeln
+    haben: die Kachel stünde nach dem Umschalten auf „30 Tage" auf einem
+    anderen Wert als beim Laden derselben Seite — und niemand wüsste, welcher
+    stimmt. Der Test hält beide Wege an dieselbe Rechnung.
+    """
+    today = date.today()
+    iso = lambda d: d.isoformat()  # noqa: E731
+    reservations = [
+        {"id": RID, "property_id": "p1", "channel": "booking", "status": "confirmed",
+         "check_in": iso(today - timedelta(days=3)), "check_out": iso(today),
+         "total_amount": 300, "currency": "EUR", "guests": {"name": "Anna"}},
+        {"id": "r2", "property_id": "p1", "channel": "airbnb", "status": "confirmed",
+         "check_in": iso(today - timedelta(days=1)),
+         "check_out": iso(today + timedelta(days=2)),
+         "total_amount": 200, "currency": "EUR", "guests": {"name": "Bea"}},
+    ]
+    svc = _dashboard_db(reservations, [{"id": "p1", "title": "Strandhaus"}])
+    ctx = AuthContext(user_id="u1", tenant_id="t1", role="admin")
+    seite = svc.dashboard(ctx)
+
+    for metrik, erwartet in [
+        (DashboardKpiMetrik.checkins, seite.checkins_30d),
+        (DashboardKpiMetrik.revenue, seite.revenue_30d),
+        (DashboardKpiMetrik.revenue_per_booking, seite.revenue_per_booking_30d),
+        (DashboardKpiMetrik.confirmed, seite.confirmed_30d),
+    ]:
+        kachel = svc.dashboard_kpi(ctx, metrik, "30d")
+        assert kachel.kpi == erwartet, metrik
+        assert kachel.tage == 30
+        assert kachel.zeitraum == "30d"
+
+
+def test_dashboard_kpi_fenster_folgt_dem_zeitraum() -> None:
+    """Der gewählte Zeitraum MUSS bis in die Abfrage durchschlagen.
+
+    Bliebe das Ladefenster bei den 60 Tagen der Startseite, zeigte „12 Monate"
+    stillschweigend zwei Monate — eine Zahl, die plausibel aussieht und
+    trotzdem falsch ist. Geprüft wird deshalb die abgesetzte Kette: die
+    Untergrenze muss zwei volle Perioden zurückreichen (aktuelle + Vergleich).
+    """
+    grenzen: list[tuple] = []
+
+    class _Spion(_KettenQuery):
+        def gte(self, feld: str, wert: str) -> "_Spion":
+            grenzen.append((feld, wert))
+            return self
+
+    db = MagicMock(name="supabase")
+    db.table.side_effect = lambda name: MagicMock(
+        **{"select.return_value": _Spion([]) if name == "reservations"
+           else _KettenQuery({"users": [{"role": "admin",
+                                         "permissions": _FULL_PERMS}]}.get(name, []))}
+    )
+    svc = ReservationsService(service_client=db)
+    svc.dashboard_kpi(
+        AuthContext(user_id="u1", tenant_id="t1", role="admin"),
+        DashboardKpiMetrik.checkins,
+        "12m",
+    )
+
+    assert [feld for feld, _ in grenzen] == ["check_in"]
+    # 365 Tage aktuelle Periode + 365 Vorperiode, inklusive heute.
+    assert grenzen[0][1] == (date.today() - timedelta(days=729)).isoformat()
+
+
+def test_dashboard_kpi_unbekannter_zeitraum_wird_abgewiesen() -> None:
+    """Ein unbekannter Zeitraum ist 422, kein stiller Rückfall auf 30 Tage —
+    sonst zeigte die Kachel „12 Monate" die Zahlen eines Monats."""
+    svc = _dashboard_db([], [])
+    with pytest.raises(ReservationError) as exc:
+        svc.dashboard_kpi(
+            AuthContext(user_id="u1", tenant_id="t1", role="admin"),
+            DashboardKpiMetrik.checkins,
+            "42d",
+        )
+    assert exc.value.status_code == 422
+
+
+def test_dashboard_kpi_owner_ohne_betraege_bekommt_keinen_umsatz() -> None:
+    """Die Betrags-Maskierung (§4.2) gilt auf dem Nachlade-Weg genauso.
+
+    Ohne diese Prüfung wäre der Selektor die Umgehung: die Startseite blendet
+    die Umsatz-Kachel für einen Owner ohne PM_BOOKING_TOTAL aus, ein direkter
+    Aufruf von `/dashboard/kpi?metrik=revenue` lieferte den Betrag trotzdem
+    (Wurzel 9 — derselbe Scope auf Listen- und Einzelweg).
+    """
+    today = date.today()
+    iso = lambda d: d.isoformat()  # noqa: E731
+    reservations = [
+        {"id": RID, "property_id": "p1", "channel": "booking", "status": "confirmed",
+         "check_in": iso(today - timedelta(days=3)), "check_out": iso(today),
+         "total_amount": 300, "currency": "EUR", "guests": {"name": "Anna"}},
+    ]
+    svc = _dashboard_db(
+        reservations, [{"id": "p1", "title": "Strandhaus"}],
+        user_role="owner", user_perms=_NO_PERMS, owner_pids=["p1"],
+    )
+    ctx = AuthContext(user_id="u", tenant_id="t1", role="owner")
+    assert svc.dashboard_kpi(ctx, DashboardKpiMetrik.revenue, "30d").kpi is None
+    assert svc.dashboard_kpi(
+        ctx, DashboardKpiMetrik.revenue_per_booking, "30d"
+    ).kpi is None
+    # Zähl-KPIs bleiben sichtbar — maskiert sind Beträge, nicht Mengen.
+    assert svc.dashboard_kpi(ctx, DashboardKpiMetrik.checkins, "30d").kpi is not None
+
+
+def test_dashboard_liste_fenster_je_liste_auf_eigener_achse() -> None:
+    """Jede Liste fenstert auf IHRER Datumsachse.
+
+    Eine gemeinsame Achse wäre kürzer und falsch: „nächste 7 Tage" heißt bei
+    den Abreisen abreisende Gäste (`check_out`), bei den Anreisen anreisende
+    (`check_in`). Dieselbe Buchung gehört je nach Karte in ein anderes Fenster.
+    """
+    today = date.today()
+    iso = lambda d: d.isoformat()  # noqa: E731
+    reservations = [
+        # reist heute an, in 20 Tagen ab → heute Check-in, nicht heute Check-out
+        {"id": RID, "property_id": "p1", "channel": "booking", "status": "confirmed",
+         "check_in": iso(today), "check_out": iso(today + timedelta(days=20)),
+         "total_amount": 100, "currency": "EUR", "guests": {"name": "Anna"}},
+        # reist in 3 Tagen ab (war vorher da) → im 7-Tage-Abreisefenster
+        {"id": "r2", "property_id": "p1", "channel": "booking", "status": "confirmed",
+         "check_in": iso(today - timedelta(days=2)),
+         "check_out": iso(today + timedelta(days=3)),
+         "total_amount": 100, "currency": "EUR", "guests": {"name": "Bea"}},
+    ]
+    svc = _dashboard_db(reservations, [{"id": "p1", "title": "Strandhaus"}])
+    ctx = AuthContext(user_id="u1", tenant_id="t1", role="admin")
+
+    heute_ein = svc.dashboard_liste(ctx, DashboardListe.checkins, DashboardFenster.heute)
+    assert [e.reservation_id for e in heute_ein.items] == [RID]
+
+    sieben_aus = svc.dashboard_liste(ctx, DashboardListe.checkouts, DashboardFenster.d7)
+    assert [e.reservation_id for e in sieben_aus.items] == ["r2"]
+
+    # „im Haus" heute: beide sind da, der Abreisetag zählt bei keinem mit.
+    im_haus = svc.dashboard_liste(ctx, DashboardListe.im_haus, DashboardFenster.heute)
+    assert {e.reservation_id for e in im_haus.items} == {RID, "r2"}
+    assert im_haus.gesamt == 2
+
+
+def test_dashboard_liste_owner_ohne_objekte_bekommt_nichts() -> None:
+    """Fail-closed wie im Dashboard: ein Eigentümer ohne zugeordnetes Objekt
+    darf über den Nachlade-Weg keine tenant-weite Liste bekommen (Wurzel 9)."""
+    today = date.today()
+    iso = lambda d: d.isoformat()  # noqa: E731
+    reservations = [
+        {"id": RID, "property_id": "p1", "channel": "booking", "status": "confirmed",
+         "check_in": iso(today), "check_out": iso(today + timedelta(days=2)),
+         "total_amount": 100, "currency": "EUR", "guests": {"name": "Anna"}},
+    ]
+    svc = _dashboard_db(
+        reservations, [{"id": "p1", "title": "Strandhaus"}],
+        user_role="owner", user_perms=_NO_PERMS, owner_pids=[],
+    )
+    antwort = svc.dashboard_liste(
+        AuthContext(user_id="u", tenant_id="t1", role="owner"),
+        DashboardListe.checkins,
+        DashboardFenster.heute,
+    )
+    assert antwort.items == []
+    assert antwort.gesamt == 0
 
 
 def test_dashboard_owner_revenue_masked() -> None:
@@ -1712,6 +2160,77 @@ def test_timeline_synthesizes_base_events_for_old_booking() -> None:
     assert all(e.synthetic for e in tl.items)
     # Neueste zuerst: checked_in (Juli) vor created (Juni).
     assert tl.items[0].at > tl.items[-1].at
+
+
+def test_timeline_zeigt_den_portal_chat() -> None:
+    """Der Gast-Host-Verlauf steht in `portal_messages`, nicht in `messages`.
+
+    DER VORFALL (16.08.2026): Bei einer Booking.com-Buchung zeigte die
+    Zeitleiste ausschliesslich „Buchung erstellt", obwohl der Portal-Chat fuenf
+    Nachrichten hatte — darunter die Anreise-Info, die morgens um 06:00:38
+    nachweislich rausging. Grund: `_flow_events` las `messages` ueber
+    `reservation_id`. Diese Tabelle ist live LEER (0 Zeilen); der ganze Verlauf
+    liegt in `portal_messages`, verknuepft ueber `booking_ref` mit der
+    CHANNEX-Buchung. Wer nach `reservation_id` filtert, filtert ins Leere.
+
+    Geprueft wird ausserdem die Einordnung ueber `sent_at` (Wurzel 5b): eine im
+    Juni im Portal geschriebene Nachricht, die erst im August bei uns eintraf,
+    gehoert an ihren Juni-Platz — nicht an den Feed-Eingang.
+    """
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["reservations"][0].update({
+        "created_at": "2026-06-01T09:00:00+00:00",
+        "source_channex_booking_id": "cb-1",
+        "channel": "booking",
+    })
+    store["portal_messages"] = [
+        {"id": "pm-1", "booking_ref": "cb-1", "sender": "property",
+         "body": "Dear Pia, thank you for your booking",
+         "sent_at": "2026-06-08T13:58:13+00:00",
+         "created_at": "2026-08-15T06:47:35+00:00"},
+        {"id": "pm-2", "booking_ref": "cb-1", "sender": "guest",
+         "body": "I'd like to request check-in at 16:00 - 17:00. Is this ok?",
+         "sent_at": "2026-06-08T13:58:52+00:00",
+         "created_at": "2026-08-15T06:47:35+00:00"},
+        # Fremde Buchung — darf NICHT in dieser Zeitleiste auftauchen.
+        {"id": "pm-3", "booking_ref": "cb-fremd", "sender": "guest",
+         "body": "gehoert woanders hin",
+         "sent_at": "2026-06-09T10:00:00+00:00",
+         "created_at": "2026-06-09T10:00:00+00:00"},
+    ]
+    svc = _move_db(store)
+    tl = svc.timeline(AuthContext(user_id="u", tenant_id="t1", role="admin"), RID)
+    nachrichten = [e for e in tl.items if e.kind == "message"]
+    assert len(nachrichten) == 2
+    absender = {e.detail.get("sender") for e in nachrichten}
+    assert absender == {"property", "guest"}
+    # Einordnung ueber sent_at (Juni), nicht ueber created_at (August).
+    assert all(e.at.startswith("2026-06-08") for e in nachrichten)
+    # DER KANAL KOMMT AUS DER BUCHUNG, nie aus einer Annahme (Wurzel 4).
+    # Hier stand einmal hart "portal" — das Frontend uebersetzt das zu
+    # „myBestDays", also unserem EIGENEN Marktplatz, und eine Booking.com-
+    # Nachricht erschien als myBestDays (live 16.08.2026). Das ist zugleich ein
+    # Bruch der Marken-Grenze: myBestDays ist der Marktplatz, Booking.com ein
+    # fremdes Portal.
+    assert {e.detail.get("channel") for e in nachrichten} == {"booking"}
+
+
+def test_timeline_ohne_channex_buchung_keine_fremden_nachrichten() -> None:
+    """Eine Direktbuchung hat keine `source_channex_booking_id`.
+
+    Ohne den Leerlauf-Riegel wuerde der Filter auf einen leeren `booking_ref`
+    laufen — im schlimmsten Fall mit fremden Zeilen als Treffer. Hier darf
+    schlicht nichts kommen.
+    """
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["portal_messages"] = [
+        {"id": "pm-1", "booking_ref": "cb-fremd", "sender": "guest",
+         "body": "fremd", "sent_at": "2026-06-08T13:58:13+00:00",
+         "created_at": "2026-06-08T13:58:13+00:00"},
+    ]
+    svc = _move_db(store)
+    tl = svc.timeline(AuthContext(user_id="u", tenant_id="t1", role="admin"), RID)
+    assert [e for e in tl.items if e.kind == "message"] == []
 
 
 def test_timeline_real_event_wins_over_synthetic() -> None:

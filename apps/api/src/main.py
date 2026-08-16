@@ -6,6 +6,7 @@ Startet keinen Server beim Import (PROJECT.md). Lokaler Start via uvicorn:
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
+import httpx
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -89,6 +90,12 @@ from .features.tasks.router import router as tasks_router
 from .features.taxpayer.router import router as taxpayer_router
 from .features.travel_agencies.router import router as travel_agencies_router
 from .features.whatsapp.router import router as whatsapp_router
+
+# Wie lange ein Client warten soll, bevor er einen wegen Nichterreichbarkeit
+# der Datenbank abgewiesenen Aufruf wiederholt (`Retry-After` bei 503). Kurz
+# genug, dass eine Sekundenstörung nicht als Ausfall durchschlägt, lang genug,
+# dass ein wirklich toter Host nicht sofort neu angestürmt wird.
+_RETRY_AFTER_S = 5
 
 _SLICE_ROUTERS = [
     auth_router,
@@ -318,6 +325,44 @@ def create_app() -> FastAPI:
             status_code=500,
             content={"detail": "internal_error", "request_id": rid},
             headers={"X-Request-Id": rid} if rid else None,
+        )
+
+    # Die Datenbank war nicht erreichbar — das ist KEIN Programmfehler, sondern
+    # ein vorübergehend nicht verfügbarer Dienst. Als 500 gemeldet heißt es für
+    # den Nutzer „da ist etwas kaputt" und für jeden Client „nicht erneut
+    # versuchen"; beides ist falsch. 503 + `Retry-After` sagt die Wahrheit und
+    # erlaubt einen zweiten Versuch.
+    #
+    # Live am 16.08.2026: der TCP-Connect zu Kong lief in einen Timeout. Weil
+    # das Auth-Gate auf jeder geschützten Route eine DB-Runde macht, kippten
+    # `/auth/me` und `/dashboard/onboarding` gleichzeitig mit 500 — die
+    # Oberfläche zeigte „Interner Fehler" statt „Dienst gerade nicht
+    # erreichbar".
+    #
+    # `TransportError` deckt Verbindungsaufbau, Timeouts, Netzwerk- und
+    # Protokollabbrüche ab — ausdrücklich NICHT `HTTPStatusError`: eine
+    # geantwortete 4xx/5xx der Datenbank ist ein echter Fehler und bleibt einer.
+    @app.exception_handler(httpx.TransportError)
+    async def _db_nicht_erreichbar(request: Request, exc: httpx.TransportError):  # noqa: ANN202
+        rid = getattr(request.state, "request_id", None)
+        # `warning`, nicht `exception`: der Stacktrace einer Netzstörung ist bei
+        # jedem Vorkommen derselbe und sagt nichts über die Ursache. Der Typ
+        # (ConnectTimeout vs. ReadTimeout) unterscheidet „Host weg" von „Abfrage
+        # zu langsam" — das ist die Information, die zählt.
+        log.warning(
+            "datenbank_nicht_erreichbar",
+            path=request.url.path,
+            error=type(exc).__name__,
+            request_id=rid,
+        )
+        _merke_fehlerursache(rid, exc)
+        headers = {"Retry-After": str(_RETRY_AFTER_S)}
+        if rid:
+            headers["X-Request-Id"] = rid
+        return JSONResponse(
+            status_code=503,
+            content={"detail": "service_unavailable", "request_id": rid},
+            headers=headers,
         )
 
     # Ein Pfad-/Query-Parameter, den der Client frei setzt, landet ungeprüft als

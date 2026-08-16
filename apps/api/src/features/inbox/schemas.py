@@ -587,3 +587,43 @@ class UnreadCount(BaseModel):
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"
+
+
+# --- Nachrichten-Kennzahlen (Startseite) -------------------------------------
+class NachrichtenKennzahl(BaseModel):
+    """Eine Zahl der Nachrichten-Sektion mit ihrem Tagesschnitt und Vergleich."""
+
+    value: int
+    # Schnitt je Tag über den Zeitraum — die Kachel daneben zeigt ihn separat.
+    per_day: float
+    # Veränderung in Prozent ggü. der gleich langen Vorperiode; None, wenn es
+    # keine Vorperiode gab (keine erfundenen +100 %, wie DashboardKpi).
+    change_pct: float | None = None
+
+
+class NachrichtenKennzahlen(BaseModel):
+    """Die Kennzahlen des Portal-Postfachs für die Startseite.
+
+    Ausdrücklich NUR das Portal-/OTA-Postfach (`portal_messages`):
+    Marktplatz-Threads und WhatsApp sind eigene Töpfe mit eigenen
+    Richtungsfeldern, und drei Zählweisen in einer Zahl zu mischen wäre
+    irreführend.
+    """
+
+    gesendet: NachrichtenKennzahl
+    empfangen: NachrichtenKennzahl
+    # Nur, was der Automail-Dispatch selbst als `quelle='automation'`
+    # geschrieben hat (0400). Vor dieser Migration ist die Quelle einer
+    # Nachricht nicht rekonstruierbar — der Altbestand zählt daher nicht mit.
+    automation: NachrichtenKennzahl
+    ungelesen: int
+    # Die ungelesenen Konversationen selbst, nicht nur ihre Zahl: die Karte
+    # auf der Startseite soll zeigen, WER wartet — eine Zahl allein zwingt zu
+    # einem weiteren Klick, bevor man weiß, ob es dringend ist. Gedeckelt,
+    # `ungelesen` bleibt die vollständige Zahl.
+    ungelesen_threads: list[InboxThread] = Field(default_factory=list)
+    # Welcher Zeitraum gerechnet wurde (Schlüssel wie "30d") und wie viele
+    # Tage das sind. Beides mit, damit die Oberfläche ihre Auswahl bestätigt
+    # bekommt statt sie nur zu vermuten.
+    zeitraum: str
+    tage: int

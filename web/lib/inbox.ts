@@ -4,6 +4,7 @@
 // Threads werden aus importierten OTA-Buchungen abgeleitet (Portal, Gast,
 // Reservierungsbezug). Business-Logik im Backend.
 import { ApiError, api } from "@/lib/api";
+import type { Zeitraum } from "@/lib/reservations";
 import { currentToken } from "@/lib/session-token";
 
 export type InboxThread = {
@@ -134,6 +135,33 @@ async function call<T>(
 
 export type InboxStatus = "active" | "archived" | "trashed";
 
+/**
+ * Die wählbaren Zeiträume — dieselbe Menge wie bei den Reservierungs-Kacheln
+ * (Backend: `core.zeitraum.ZEITRAEUME`). Alias auf den dort definierten Typ,
+ * damit es nicht zwei Unions gibt, die auseinanderlaufen können.
+ */
+export type NachrichtenZeitraum = Zeitraum;
+
+export type NachrichtenKennzahl = {
+  value: number;
+  /** Schnitt je Tag über den Zeitraum — eigene Kachel daneben. */
+  per_day: number;
+  /** null = keine Vorperiode; dann steht „—" statt erfundener +100 %. */
+  change_pct: number | null;
+};
+
+export type NachrichtenKennzahlen = {
+  gesendet: NachrichtenKennzahl;
+  empfangen: NachrichtenKennzahl;
+  /** Nur, was der Automail-Dispatch selbst als solches geschrieben hat (0400). */
+  automation: NachrichtenKennzahl;
+  ungelesen: number;
+  /** Die ersten offenen Konversationen; `ungelesen` bleibt die volle Zahl. */
+  ungelesen_threads: InboxThread[];
+  zeitraum: string;
+  tage: number;
+};
+
 /** OTA-Gäste-Threads des aktuellen Tenants (aktiv | archiviert | Papierkorb). */
 export async function listInboxThreads(
   opts: { unassigned?: boolean; status?: InboxStatus } = {},
@@ -155,6 +183,20 @@ export async function listInboxThreads(
  */
 export async function getInboxUnreadCount(): Promise<Result<{ ungelesen: number }>> {
   return call<{ ungelesen: number }>("/unread-count");
+}
+
+/**
+ * Nachrichten-Kennzahlen der Startseite (gesendet/empfangen/Automation).
+ *
+ * Ausdrücklich nur das Portal-Postfach — Marktplatz und WhatsApp sind eigene
+ * Töpfe mit eigenen Richtungsfeldern, und drei Zählweisen in einer Zahl wären
+ * irreführend. `zeitraum` ist eine geschlossene Menge; ein unbekannter Wert
+ * wird vom Backend mit 422 abgewiesen statt still auf 30 Tage zu fallen.
+ */
+export async function getNachrichtenKennzahlen(
+  zeitraum: NachrichtenZeitraum = "30d",
+): Promise<Result<NachrichtenKennzahlen>> {
+  return call<NachrichtenKennzahlen>(`/kennzahlen?zeitraum=${zeitraum}`);
 }
 
 /** Lebenszyklus setzen: active (wiederherstellen) | archived | trashed | deleted. */

@@ -1284,14 +1284,30 @@ class AirbnbObjektAbrufMixin:
 
         gesetzt: dict[str, Any] = {}
         # Check-in/-out: Airbnb liefert Stunden als Zahl oder "FLEXIBLE".
+        #
+        # NUR NACH `policies` — nie zusätzlich auf die Wurzelebene. Vorher
+        # standen dieselben Zeiten doppelt (`check_in_from`/`check_out_until`
+        # hier, `policies.checkInTime`/`checkOutTime` in `_airbnb_in_maske`),
+        # und die Objekt-Maske pflegt nur `policies`. Ändert der Betrieb die
+        # Zeit dort, blieb die Wurzelebene auf dem Import-Stand stehen: live
+        # trug „Feriehus Oluf" 15:00 unter `policies` und 16:00 an der Wurzel
+        # (16.08.2026). Gelesen wird ausschließlich `policies` — Automail
+        # (`inbox/service.py:_zeiten_vom_objekt`), Channex-Content
+        # (`content_builder`/`content_sync`) und die Maske. Die Wurzel-Schlüssel
+        # las NIEMAND; sie erzeugten nur eine zweite, stumme Wahrheit (Wurzel 1:
+        # ein zweiter Zustand, den keiner mitpflegt).
         checkin = self._stunde(buchung.get("check_in_time_start"))
         checkout = self._stunde(buchung.get("check_out_time"))
-        if checkin is not None and not vorhanden.get("check_in_from"):
-            neu["check_in_from"] = f"{checkin:02d}:00"
-            gesetzt["check_in_from"] = neu["check_in_from"]
-        if checkout is not None and not vorhanden.get("check_out_until"):
-            neu["check_out_until"] = f"{checkout:02d}:00"
-            gesetzt["check_out_until"] = neu["check_out_until"]
+        policies_zeit = dict(vorhanden.get("policies") or {})
+        vorher_zeit = dict(policies_zeit)
+        if checkin is not None and not policies_zeit.get("checkInTime"):
+            policies_zeit["checkInTime"] = f"{checkin:02d}:00"
+            gesetzt["check_in_from"] = policies_zeit["checkInTime"]
+        if checkout is not None and not policies_zeit.get("checkOutTime"):
+            policies_zeit["checkOutTime"] = f"{checkout:02d}:00"
+            gesetzt["check_out_until"] = policies_zeit["checkOutTime"]
+        if policies_zeit != vorher_zeit:
+            neu["policies"] = policies_zeit
 
         # Haustiere: Airbnb sagt es ausdrücklich, inkl. Anzahl.
         kontrollen = buchung.get("guest_controls") or {}

@@ -93,6 +93,22 @@ KATALOG: tuple[Kategorie, ...] = (
     # vertragliche Kerninformation des Eigentuemers (wie guest_policies).
     Kategorie("owner_booking", Tab.KONTO, "aktivitaet", _MAIL_SMS, email_pflicht=True),
     Kategorie("owner_service", Tab.KONTO, "aufgaben", _MAIL_SMS),
+    # --- Betrieb: Buchungseingang (16.08.2026) ----------------------------
+    # Wieder eine eigene Kategorie und kein Mitbenutzen von `owner_booking` —
+    # aus demselben Grund wie oben, dem EMPFAENGER: `owner_booking` geht an den
+    # Eigentuemer des betroffenen Objekts, diese hier an den BETRIEB (Admin /
+    # Property-Manager), der alle Objekte fuehrt. Wer nicht als Eigentuemer
+    # eingetragen war, erfuhr von einer neuen Portal-Buchung bisher gar nichts:
+    # `melde_buchungs_ereignis` kennt als Empfaenger ausschliesslich
+    # `eigentuemer_nutzer_ids`.
+    #
+    # email_pflicht NEIN, und das ist der Unterschied zu `owner_booking`: fuer
+    # den Eigentuemer ist die Buchung an seinem Objekt die vertragliche
+    # Kerninformation, fuer den Betrieb ist sie Tagesgeschaeft. Ein Betrieb mit
+    # 200 Buchungen im Monat muss den Mail-Kanal abwaehlen duerfen — die Glocke
+    # bleibt ohnehin an (INAPP ist nicht abwaehlbar), und genau sie ist hier
+    # gemeint.
+    Kategorie("betrieb_buchung", Tab.KONTO, "aktivitaet", _MAIL_SMS),
     # --- Sperr-Antrags-Workflow (0332) ------------------------------------
     # Wieder getrennte Kategorien wegen der EMPFAENGER: „block_request" geht an
     # die Entscheider der Agentur (APPROVE_BLOCK), „block_decision" an den

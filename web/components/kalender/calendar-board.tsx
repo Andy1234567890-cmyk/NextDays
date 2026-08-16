@@ -6,6 +6,7 @@
 // Zeiträume als Balken. Scrollt INNERHALB des Containers (kein Seiten-Overflow).
 import { Icon } from "@iconify/react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -611,7 +612,14 @@ export function CalendarBoard({
   const [resByProp, setResByProp] = useState<Record<string, Reservation[]>>({});
   // Aktuell geöffnetes Buchungsdetail (per Klick auf einen Balken).
   // Geöffnetes Buchungsdetail: nur die Reservierungs-ID (Slider lädt die Daten).
-  const [detail, setDetail] = useState<string | null>(null);
+  // Startwert aus `?reservation=<id>`: der Deep-Link wird aus Posteingang und
+  // Startseite gesetzt und war bis dahin wirkungslos — der Kalender öffnete
+  // sich einfach ohne die Buchung, auf die verlinkt wurde (Wurzel 4: kein
+  // Element ohne Wirkung).
+  const suchParams = useSearchParams();
+  const [detail, setDetail] = useState<string | null>(
+    suchParams.get("reservation"),
+  );
   const [loading, setLoading] = useState(false);
   // Ladefehler des Belegungs-Boards (z. B. 403) sichtbar machen statt still
   // leere Tage zu rendern (Wurzel 5).

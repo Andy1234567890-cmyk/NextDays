@@ -1313,7 +1313,19 @@ class PlanungMixin:
                 continue
             try:
                 ctx = AuthContext(user_id="cron", tenant_id=s["tenant_id"])
-                self.send_message(ctx, s["thread_id"], s["body"], enforce_reply=False)
+                # `quelle="automation"` (0400): ohne sie ist diese Nachricht im
+                # Spiegel von einer handgeschriebenen nicht zu unterscheiden —
+                # sie läuft durch dieselbe `send_message`, und das Portal-Echo
+                # trägt für beide `sender='property'`. Die Kennzahl „per
+                # Automation gesendet" hängt allein daran.
+                #
+                # Der Zwilling oben (`inbox_scheduled_message`) bleibt bewusst
+                # beim Default `manuell`: eine von Hand terminierte Nachricht
+                # ist keine Automation, nur eine spätere Handnachricht.
+                self.send_message(
+                    ctx, s["thread_id"], s["body"],
+                    enforce_reply=False, quelle="automation",
+                )
                 db.table("automation_scheduled_message").update(
                     {"status": "sent"}
                 ).eq("id", s["id"]).execute()

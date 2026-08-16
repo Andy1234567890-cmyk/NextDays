@@ -261,6 +261,103 @@ def test_storno_und_umzug_sind_eigene_meldungen(dispatcher: _Dispatcher) -> None
     assert arten == {"created", "moved", "cancelled"}
 
 
+def _tables_mit_leitung() -> dict[str, list[dict]]:
+    """Wie `_tables()`, aber mit besetzter Betriebsleitung.
+
+    Die Basis-Fixture laesst `role` bewusst leer — dort gibt es also gar keine
+    Leitung, und die Bestandstests pruefen weiter nur den Eigentuemer-Kreis.
+    """
+    tables = _tables()
+    tables["users"] = [
+        {"id": "staff-1", "tenant_id": "t-1", "role": "staff"},
+        {"id": "owner-portal", "tenant_id": "t-1", "role": "owner"},
+        {"id": "owner-abrechnung", "tenant_id": "t-1", "role": "owner"},
+        {"id": "chef-1", "tenant_id": "t-1", "role": "admin"},
+        {"id": "chef-2", "tenant_id": "t-1", "role": "co_admin"},
+        {"id": "putzkraft", "tenant_id": "t-1", "role": "cleaner"},
+        {"id": "fremd-chef", "tenant_id": "t-999", "role": "admin"},
+    ]
+    return tables
+
+
+def test_buchung_meldet_auch_an_den_betrieb(dispatcher: _Dispatcher) -> None:
+    """Der Grund fuer die neue Kategorie: der Betrieb erfuhr bisher nichts.
+
+    Erreicht werden admin/co_admin — nicht staff, nicht cleaner (die koennen
+    mit der Meldung nichts anfangen, Wurzel 9) und niemand aus einem fremden
+    Mandanten (Wurzel 3).
+    """
+    ereignisse.melde_buchungs_ereignis(
+        _DB(_tables_mit_leitung()), tenant_id="t-1", reservation_id="r-1",
+        kind="created", property_id="p-1", gast_vorname="Anna", quelle="Airbnb",
+    )
+    assert {a["user_id"] for a in dispatcher.aufrufe} == {
+        "owner-portal", "owner-abrechnung", "chef-1", "chef-2",
+    }
+    nach_nutzer = {a["user_id"]: a["schluessel"] for a in dispatcher.aufrufe}
+    assert nach_nutzer["chef-1"] == ereignisse.SCHLUESSEL_BETRIEB_BUCHUNG
+    assert nach_nutzer["owner-portal"] == ereignisse.SCHLUESSEL_BUCHUNG
+
+
+def test_betrieb_erfaehrt_es_auch_ohne_hinterlegten_eigentuemer(
+    dispatcher: _Dispatcher,
+) -> None:
+    """Der haeufigste Fall — ein selbst verwalteter Betrieb.
+
+    Frueher brach `melde_buchungs_ereignis` bei leerer Eigentuemer-Menge ab
+    (`if not empfaenger: return`) und meldete GAR nichts.
+    """
+    tables = _tables_mit_leitung()
+    tables["owner_property_assignments"] = []
+    tables["owners"] = []
+    ereignisse.melde_buchungs_ereignis(
+        _DB(tables), tenant_id="t-1", reservation_id="r-1", kind="created",
+        property_id="p-1", quelle="Booking.com",
+    )
+    assert {a["user_id"] for a in dispatcher.aufrufe} == {"chef-1", "chef-2"}
+
+
+def test_eigentuemer_der_zugleich_chef_ist_bekommt_eine_meldung(
+    dispatcher: _Dispatcher,
+) -> None:
+    """Keine Dopplung, wenn jemand in beiden Kreisen steht.
+
+    Bei einem kleinen Betrieb ist der Inhaber oft beides. Zwei Zeilen in der
+    Glocke fuer dieselbe Buchung waeren schlicht ein Fehler; er bekommt die
+    Eigentuemer-Meldung, weil die die verbindlichere ist (Mail nicht
+    abwaehlbar).
+    """
+    tables = _tables_mit_leitung()
+    tables["users"] = [
+        {"id": "owner-portal", "tenant_id": "t-1", "role": "admin"},
+    ]
+    tables["owners"] = []
+    ereignisse.melde_buchungs_ereignis(
+        _DB(tables), tenant_id="t-1", reservation_id="r-1", kind="created",
+        property_id="p-1", quelle="Airbnb",
+    )
+    assert [a["user_id"] for a in dispatcher.aufrufe] == ["owner-portal"]
+    assert dispatcher.aufrufe[0]["schluessel"] == ereignisse.SCHLUESSEL_BUCHUNG
+
+
+def test_betriebsmeldung_hat_eigenen_dedup_key(dispatcher: _Dispatcher) -> None:
+    """Der Eigentuemer-Kreis behaelt sein altes Praefix `buchung`.
+
+    Ein neues haette die ungelesenen Meldungen im Live-Bestand entwertet: der
+    UNIQUE-Index laeuft ueber (user_id, dedup_key), ein Re-Sync haette also
+    eine zweite Zeile angelegt statt die vorhandene zu erkennen (Wurzel 2).
+    """
+    db = _DB(_tables_mit_leitung())
+    for _ in range(3):  # Redelivery
+        ereignisse.melde_buchungs_ereignis(
+            db, tenant_id="t-1", reservation_id="r-1", kind="created",
+            property_id="p-1", quelle="Airbnb",
+        )
+    nach_nutzer = {a["user_id"]: a["dedup_key"] for a in dispatcher.aufrufe}
+    assert nach_nutzer["owner-portal"] == "buchung:created:r-1"
+    assert nach_nutzer["chef-1"] == "betrieb_buchung:created:r-1"
+
+
 def test_betriebsereignisse_gehen_den_eigentuemer_nichts_an(
     dispatcher: _Dispatcher,
 ) -> None:

@@ -181,8 +181,14 @@ class SpiegelMixin:
     def _spiegel_schreiben(
         self, db: Client, tenant_id: str, thread_id: str, cbid: str,
         items: list[InboxMessage],
+        *, quelle: str = "portal",
     ) -> None:
         """Den geholten Verlauf lokal spiegeln (`portal_messages`, 0293).
+
+        `quelle` (0400) sagt, WER die Zeile ausgelöst hat — der Default
+        `portal` gilt für den Verlaufs-Abgleich, der fremde Nachrichten vom
+        Aggregator holt. Der Sendepfad übergibt `manuell` bzw. `automation`;
+        nur dort ist der Auslöser bekannt.
 
         Der Spiegel speist die Vorschauzeile der Thread-Liste: EIN Query für
         alle Threads statt ein Portal-Request pro Zeile. Er wurde bisher nur
@@ -206,6 +212,14 @@ class SpiegelMixin:
                 "sender": m.sender,
                 "body": _vorschau(m),
                 "sent_at": m.sent_at,
+                # Woher die Nachricht kam (0400). Der Aufrufer weiß es: der
+                # Sendepfad kennt seinen Auslöser (Hand oder Automation), der
+                # Verlaufs-Abgleich holt fremde Zeilen vom Portal. An der
+                # Nachricht selbst ist es sonst nicht mehr feststellbar —
+                # Automail und Handnachricht laufen durch dieselbe
+                # `send_message` und kommen beide als `sender='property'`
+                # zurück.
+                "quelle": quelle,
                 # Die Bild-URLs mit in den Spiegel: sonst ist das Foto weg,
                 # sobald der Verlauf aus ihm allein kommt — bei einem Ausfall
                 # des Portals und bei Threads ohne `channex_booking_id`. Dann

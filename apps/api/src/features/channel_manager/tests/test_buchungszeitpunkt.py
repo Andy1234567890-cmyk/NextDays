@@ -15,6 +15,8 @@ plausiblen falschen Zeitpunkt zu behaupten (Wurzel 4).
 """
 from __future__ import annotations
 
+import json
+
 from src.features.channel_manager.common import ota_buchungszeitpunkt
 
 
@@ -106,3 +108,89 @@ def test_ohne_uhrzeit_kein_ersatzwert() -> None:
     assert ota_uhrzeit("") is None
     assert ota_uhrzeit(None) is None
     assert ota_uhrzeit("demnächst") is None
+
+
+def test_airbnb_zeit_kommt_aus_der_durchgereichten_nutzlast() -> None:
+    """Der Fall, der lange durchfiel (15.08.2026).
+
+    Channex normalisiert Airbnbs An-/Abreisezeit NICHT: `arrival_hour` und
+    `checkin_time` sind dort leer. Die Zeit steht in der durchgereichten
+    Original-Nutzlast. Live an 22 von 22 Buchungen gemessen — der Import las
+    nur `attrs["checkin_time"]` und schrieb deshalb überall NULL, während
+    dieselbe Buchung über den Airbnb-Direktabruf eine Zeit bekam. Wer die
+    Reihenfolge hier ändert, bricht genau das wieder.
+    """
+    from src.features.channel_manager.common import ota_an_abreisezeit
+
+    attrs = {
+        "ota_name": "AirBNB",
+        "arrival_hour": None,
+        "checkin_time": None,
+        "raw_message": {
+            "reservation": {
+                "check_in_datetime": "2026-10-16T16:00+02:00[Europe/Copenhagen]",
+                "check_out_datetime": "2026-10-23T10:00+02:00[Europe/Copenhagen]",
+            }
+        },
+    }
+    assert ota_an_abreisezeit(attrs) == ("16:00", "10:00")
+
+
+def test_raw_message_auch_als_json_text() -> None:
+    """`raw_message` kommt je nach Weg als dict ODER als JSON-Text herein.
+
+    Der Webhook reicht das Objekt durch, die Staging-Zeile speichert Text.
+    Ohne beides hinge die Zeit davon ab, auf welchem Weg die Buchung kam.
+    """
+    from src.features.channel_manager.common import ota_an_abreisezeit
+
+    attrs = {
+        "raw_message": json.dumps(
+            {"reservation": {"check_in_datetime": "2026-10-16T15:00+02:00[Europe/Oslo]"}}
+        )
+    }
+    assert ota_an_abreisezeit(attrs)[0] == "15:00"
+
+
+def test_channex_feld_gewinnt_vor_der_rohnutzlast() -> None:
+    """Das normalisierte Feld steht zuerst: es ist das dokumentierte."""
+    from src.features.channel_manager.common import ota_an_abreisezeit
+
+    attrs = {
+        "arrival_hour": "18:30",
+        "raw_message": {
+            "reservation": {
+                "check_in_datetime": "2026-10-16T16:00+02:00[Europe/Copenhagen]"
+            }
+        },
+    }
+    assert ota_an_abreisezeit(attrs)[0] == "18:30"
+
+
+def test_booking_ohne_zeit_bleibt_leer() -> None:
+    """Booking.com überträgt die Gast-ETA im Reservierungs-Feed NICHT.
+
+    Belegt in zwei Richtungen: live an 67 von 67 Buchungen (`arrival_hour`
+    null, kein `TimeSpan`, kein `ResGuest@ArrivalTime` in der Nutzlast) und in
+    Booking.coms eigener `ResGuest`-Referenz, die als einziges Attribut
+    `@ResGuestRPH` führt. Die ETA gibt es dort nur über das separate Produkt
+    „Online Check-in API", nicht über den Feed, den ein Channel-Manager holt.
+
+    Hier steht deshalb None — NICHT die Hausregel des Objekts (die greift erst
+    eine Ebene höher, in `_zeiten_vom_objekt`) und nicht die Zeit eines anderen
+    Portals (Wurzel 4). Bookings `time` ist der BUCHUNGSzeitpunkt und darf hier
+    nie durchrutschen.
+    """
+    from src.features.channel_manager.common import ota_an_abreisezeit
+
+    attrs = {
+        "ota_name": "BookingCom",
+        "arrival_hour": None,
+        "raw_message": {
+            "id": "5778403810",
+            "date": "2026-01-04",
+            "time": "17:16:38",
+            "rooms": [{"arrival_date": "2026-08-05", "departure_date": "2026-08-12"}],
+        },
+    }
+    assert ota_an_abreisezeit(attrs) == (None, None)

@@ -38,6 +38,7 @@ from .schemas import (
     MessageLanguageList,
     MessageTemplate,
     MessageTemplateList,
+    NachrichtenKennzahlen,
     NoteCreate,
     RenderRequest,
     RenderResponse,
@@ -136,6 +137,34 @@ def unread_count(service: InboxServiceDep, bundle: _AccessDep) -> UnreadCount:
     ctx, access = bundle
     try:
         return UnreadCount(ungelesen=service.unread_count(ctx, access=access))
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/kennzahlen", response_model=NachrichtenKennzahlen)
+def nachrichten_kennzahlen(
+    service: InboxServiceDep,
+    bundle: _AccessDep,
+    zeitraum: str = "30d",
+) -> NachrichtenKennzahlen:
+    """Nachrichten-Kennzahlen der Startseite (gesendet/empfangen/Automation).
+
+    Steht wie `/unread-count` VOR den `/{thread_id}`-Routen — sonst nähme
+    FastAPI „kennzahlen" als Thread-ID.
+
+    `zeitraum` ist einer aus `kennzahlen.ZEITRAEUME` (7d | 30d | 3m | 12m);
+    ein unbekannter Wert wird mit 422 abgewiesen, nicht still auf den Standard
+    gedreht. Bewusst eine geschlossene Menge statt freier Tageszahl — sonst
+    wäre der Zeitraum ein offener Hebel (Wurzel 8).
+
+    Gleicher Zugangs-Dependency wie die Liste (Wurzel 9): die Zahlen sind eine
+    Aggregation derselben Nachrichten, also gilt derselbe Scope.
+    """
+    ctx, access = bundle
+    try:
+        return service.nachrichten_kennzahlen(
+            ctx, zeitraum=zeitraum, access=access
+        )
     except InboxError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

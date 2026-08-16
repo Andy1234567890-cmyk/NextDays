@@ -26,6 +26,10 @@ def test_inbox_health() -> None:
 class _Res:
     def __init__(self, data) -> None:  # noqa: ANN001
         self.data = data
+        # Wie PostgREST mit `count="exact"`: die Zahl ALLER Treffer des
+        # Filters, unabhängig von einem `.limit()`. Hier ist beides gleich —
+        # das Double deckelt nicht.
+        self.count = len(data)
 
 
 # Tabellen der Nebenquellen des Posteingangs (Übernahme 0382, Marktplatz
@@ -35,6 +39,10 @@ _LEERE_TABELLEN = frozenset({
     "reservation_nachricht_uebernahme",
     "guest_message_threads",
     "guest_messages",
+    # Das Versandprotokoll der Automail — Quelle der Kennzahl „per Automation
+    # gesendet". Ohne diesen Eintrag bekäme sie die RESERVIERUNGS-Zeilen und
+    # zählte Buchungen als versendete Nachrichten.
+    "automation_scheduled_message",
 })
 
 
@@ -162,6 +170,7 @@ class _FakeQuery:
         self._patch = None
         self._insert = None
         self._sort: list = []
+        self._bereich: list[tuple[str, str, str]] = []
 
     def select(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
         return self
@@ -202,6 +211,17 @@ class _FakeQuery:
         self._eq.setdefault("__lte__", (col, val))
         return self
 
+    def gte(self, col, val):  # noqa: ANN001, ANN201
+        # Echt filtern, nicht durchreichen: die Nachrichten-Kennzahlen grenzen
+        # allein hierüber den Zeitraum ein. Ein no-op-`gte` zählte jede Zeile
+        # mit und der Test wäre grün, obwohl der Zeitraum nicht wirkt.
+        self._bereich.append((col, val, "gte"))
+        return self
+
+    def lt(self, col, val):  # noqa: ANN001, ANN201
+        self._bereich.append((col, val, "lt"))
+        return self
+
     def or_(self, ausdruck):  # noqa: ANN001, ANN201
         # Nicht ausgewertet, nur festgehalten: die Massenaktualisierung filtert
         # darüber auf die letzte Aktivität, und der Test prüft den Ausdruck.
@@ -217,6 +237,15 @@ class _FakeQuery:
             if col in ("__lte__", "__or__"):
                 continue
             rows = [r for r in rows if r.get(col) == val]
+        # Zeitraum-Grenzen als Zeichenkettenvergleich — ISO-8601 in derselben
+        # Schreibweise sortiert lexikografisch wie chronologisch.
+        for col, wert, art in self._bereich:
+            rows = [
+                r
+                for r in rows
+                if r.get(col) is not None
+                and (str(r[col]) >= wert if art == "gte" else str(r[col]) < wert)
+            ]
         for col, desc in reversed(self._sort):
             rows = sorted(rows, key=lambda r, c=col: (r.get(c) is None, r.get(c) or ""),
                           reverse=desc)
@@ -1042,6 +1071,32 @@ def test_ohne_hausregel_bleibt_die_zeit_leer() -> None:
     """Kein Objekt, keine Regel → None statt einer erfundenen Uhrzeit."""
     assert InboxService._zeiten_vom_objekt(None, None, None) == (None, None)
     assert InboxService._zeiten_vom_objekt({}, None, None) == (None, None)
+
+
+def test_detailansicht_haengt_die_hausregel_an() -> None:
+    """Die Anzeige rechts muss DIESELBE Kette laufen wie die Automation.
+
+    DER VORFALL (16.08.2026): Bei jeder Booking.com-Buchung stand rechts
+    „Geschätzte Anreisezeit: —", während die Anreise-Mail zur SELBEN Buchung
+    „16:00" einsetzte. Grund: `get_reservation_detail` rief nur `_ota_zeiten`,
+    die Automation zusätzlich `_zeiten_vom_objekt`. Booking überträgt im
+    Reservierungs-Feed keine Gast-ETA (belegt an 67 Buchungen und in
+    Booking.coms `ResGuest`-Referenz, die nur `@ResGuestRPH` führt) — die Zeit
+    steht dort ausschließlich am Objekt.
+
+    Dieser Test hält die Reihenfolge fest: buchungsbezogener Wert gewinnt, die
+    Hausregel füllt nur, was leer blieb.
+    """
+    prop = {"type_attributes": {"policies": {"checkInTime": "16:00",
+                                             "checkOutTime": "10:00"}}}
+    # Booking-Buchung: nichts in der Nutzlast, nichts an der Reservierung.
+    roh, res = InboxService._ota_zeiten({}, {})
+    assert (roh, res) == (None, None)
+    assert InboxService._zeiten_vom_objekt(prop, roh, res) == ("16:00", "10:00")
+
+    # Airbnb-Buchung mit eigener Zeit: die gewinnt, die Hausregel ergänzt nur.
+    roh, res = InboxService._ota_zeiten({}, {"checkin_time": "18:30"})
+    assert InboxService._zeiten_vom_objekt(prop, roh, res) == ("18:30", "10:00")
 
 
 def test_automation_matches_empty_means_all() -> None:
@@ -2508,3 +2563,232 @@ def test_automail_fehler_landet_im_verlauf(monkeypatch) -> None:  # noqa: ANN001
     # Der Grund muss im Klartext dastehen — ein Verweis auf die Quelltabelle
     # hilft niemandem, der die Ansicht liest.
     assert "door_code" in eintrag["fehler_text"]
+
+
+# --- Nachrichten-Kennzahlen (Startseite) -------------------------------------
+
+
+def _nachricht(sender: str, tage_her: float, *, quelle: str = "manuell") -> dict:
+    """Eine Spiegel-Zeile mit `sent_at` vor N Tagen (UTC, ISO-8601)."""
+    from datetime import UTC, timedelta
+
+    zeitpunkt = datetime.now(UTC) - timedelta(days=tage_her)
+    return {
+        "tenant_id": "t1",
+        "thread_ref": "th1",
+        "message_ref": f"m-{sender}-{tage_her}-{quelle}",
+        "sender": sender,
+        "quelle": quelle,
+        "body": "…",
+        "sent_at": zeitpunkt.isoformat(),
+    }
+
+
+def test_kennzahlen_trennen_richtung_und_zeitraum() -> None:
+    """Gesendet/empfangen getrennt, und nur die letzten 30 Tage.
+
+    Die Zeilen bei 45 Tagen gehören in die VORPERIODE und dürfen die aktuelle
+    Zahl nicht erhöhen — sie speisen den Prozentvergleich.
+    """
+    nachrichten = [
+        _nachricht("property", 1),
+        _nachricht("property", 10),
+        _nachricht("guest", 5),
+        # Vorperiode (31–60 Tage): zählt NICHT zur aktuellen Zahl.
+        _nachricht("property", 45),
+        # Älter als beide Perioden: fällt ganz raus.
+        _nachricht("property", 100),
+        _nachricht("guest", 100),
+    ]
+    svc = InboxService(
+        service_client=_FakeDB([], [], nachrichten=nachrichten),
+        channex=_FakeChannex(),
+    )
+    out = svc.nachrichten_kennzahlen(_CTX)
+
+    assert out.gesendet.value == 2
+    assert out.empfangen.value == 1
+    assert out.tage == 30
+    # 2 gesendet gegen 1 in der Vorperiode → +100 %.
+    assert out.gesendet.change_pct == 100.0
+    # Ohne Vorperiode KEIN Prozentwert (kein erfundenes +100 %).
+    assert out.empfangen.change_pct is None
+
+
+def _automail(tage_her: float, *, status: str = "sent") -> dict:
+    """Eine Zeile des Automail-Versandprotokolls, vor N Tagen zugestellt."""
+    from datetime import UTC, timedelta
+
+    zeitpunkt = datetime.now(UTC) - timedelta(days=tage_her)
+    return {
+        "id": f"a-{tage_her}-{status}",
+        "tenant_id": "t1",
+        "status": status,
+        "updated_at": zeitpunkt.isoformat(),
+    }
+
+
+def test_kennzahlen_automation_zaehlt_das_versandprotokoll() -> None:
+    """Automation zählt über `automation_scheduled_message`, nicht den Spiegel.
+
+    Am Spiegel ist die Automail nicht erkennbar: sie läuft durch dieselbe
+    `send_message` wie eine Handnachricht und kommt als `sender='property'`
+    zurück. Live standen darum 0 „per Automation gesendet", obwohl 57
+    Nachrichten nachweislich raus waren — jede trug den Spaltendefault
+    `manuell`, weil der Sendepfad die Quelle noch nicht mitschrieb.
+
+    Nur zugestellte Zeilen zählen: `pending` ist noch nicht gesendet,
+    `failed` ist NIE gesendet worden.
+    """
+    protokoll = [
+        _automail(2),
+        _automail(3),
+        _automail(4, status="failed"),
+        _automail(5, status="pending"),
+        # Vorperiode (31–60 Tage) — speist nur den Prozentvergleich.
+        _automail(45),
+        # Älter als beide Perioden: fällt ganz raus.
+        _automail(100),
+    ]
+    svc = InboxService(
+        service_client=_FakeDB(
+            [], [],
+            nachrichten=[_nachricht("property", 2), _nachricht("property", 3)],
+            extra={"automation_scheduled_message": protokoll},
+        ),
+        channex=_FakeChannex(),
+    )
+    out = svc.nachrichten_kennzahlen(_CTX)
+
+    assert out.automation.value == 2
+    # 2 gegen 1 in der Vorperiode → +100 %.
+    assert out.automation.change_pct == 100.0
+    # Die Gesendet-Zahl bleibt davon unberührt (eigene Quelle).
+    assert out.gesendet.value == 2
+
+
+def test_kennzahlen_automation_ohne_protokoll_ist_null() -> None:
+    """Ohne zugestellte Automail steht 0 — nicht die Gesendet-Zahl.
+
+    Der Fehler wäre, mangels eigener Quelle auf `sender='property'`
+    zurückzufallen: dann zeigte die Kachel jede Handnachricht als Automation.
+    """
+    svc = InboxService(
+        service_client=_FakeDB(
+            [], [], nachrichten=[_nachricht("property", 2)],
+        ),
+        channex=_FakeChannex(),
+    )
+    out = svc.nachrichten_kennzahlen(_CTX)
+
+    assert out.gesendet.value == 1
+    assert out.automation.value == 0
+    assert out.automation.change_pct is None
+
+
+def test_kennzahlen_tagesschnitt() -> None:
+    """Der Schnitt je Tag ist die Zahl durch die Tage des Zeitraums."""
+    nachrichten = [_nachricht("guest", i + 1) for i in range(15)]
+    svc = InboxService(
+        service_client=_FakeDB([], [], nachrichten=nachrichten),
+        channex=_FakeChannex(),
+    )
+    out = svc.nachrichten_kennzahlen(_CTX)
+
+    assert out.empfangen.value == 15
+    assert out.empfangen.per_day == 0.5  # 15 / 30
+
+
+def test_automail_dispatch_markiert_die_quelle(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Der ECHTE Automail-Dispatch muss `quelle='automation'` durchreichen.
+
+    Ohne diesen Parameter ist die Nachricht im Spiegel von einer
+    handgeschriebenen nicht mehr zu unterscheiden (beide tragen
+    `sender='property'`), und die Kennzahl bliebe für immer 0 — ein Fehler,
+    den man an der Zahl nicht sieht, weil 0 plausibel aussieht.
+
+    Gegenprobe im selben Lauf: der Zwilling `inbox_scheduled_message` (von
+    Hand terminiert) darf NICHT als Automation zählen.
+    """
+    from datetime import UTC, timedelta
+
+    # `status`/`send_at` müssen stimmen: beide Dispatcher wählen nach
+    # `status='pending'` + fälligem `send_at` und claimen die Zeile über
+    # genau diese Felder.
+    faellig = {
+        "id": "s1", "tenant_id": "t1", "thread_id": "th1", "body": "Hallo",
+        "status": "pending",
+        "send_at": (datetime.now(UTC) - timedelta(hours=1)).isoformat(),
+    }
+
+    class _DB(_FakeDB):
+        def table(self, name):  # noqa: ANN001, ANN201
+            if name in (
+                "automation_scheduled_message", "inbox_scheduled_message"
+            ):
+                return _FakeQuery(name, [faellig], self.updates)
+            return super().table(name)
+
+    aufrufe: list[dict] = []
+    svc = InboxService(service_client=_DB([], []), channex=_FakeChannex())
+    monkeypatch.setattr(
+        InboxService,
+        "send_message",
+        lambda _self, _ctx, thread_id, body, **kw: aufrufe.append(
+            {"thread_id": thread_id, "body": body, **kw}
+        ),
+    )
+
+    svc.dispatch_due_automations()
+    assert aufrufe, "Der Dispatch muss die fällige Automail senden"
+    assert aufrufe[0]["quelle"] == "automation"
+
+    aufrufe.clear()
+    svc.dispatch_due_scheduled()
+    assert aufrufe, "Der Dispatch muss die fällige Handnachricht senden"
+    # Default `manuell` — eine von Hand terminierte Nachricht ist keine
+    # Automation, nur eine spätere Handnachricht.
+    assert aufrufe[0].get("quelle") is None
+
+
+def test_kennzahlen_zeitraum_waehlbar() -> None:
+    """Der gewählte Zeitraum muss die Zahl UND den Tagesschnitt ändern.
+
+    Ohne echte Wirkung wäre das Dropdown eine Attrappe: die Karte hieße
+    „12 Monate" und zeigte die Zahlen von 30 Tagen.
+    """
+    nachrichten = [
+        _nachricht("guest", 3),    # in allen Zeiträumen
+        _nachricht("guest", 20),   # ab 30d
+        _nachricht("guest", 60),   # ab 3m
+        _nachricht("guest", 200),  # nur 12m
+    ]
+    svc = InboxService(
+        service_client=_FakeDB([], [], nachrichten=nachrichten),
+        channex=_FakeChannex(),
+    )
+    gezaehlt = {
+        z: svc.nachrichten_kennzahlen(_CTX, zeitraum=z).empfangen.value
+        for z in ("7d", "30d", "3m", "12m")
+    }
+    assert gezaehlt == {"7d": 1, "30d": 2, "3m": 3, "12m": 4}
+
+    # Der Schnitt teilt durch die Tage DIESES Zeitraums, nicht durch 30.
+    out = svc.nachrichten_kennzahlen(_CTX, zeitraum="7d")
+    assert out.tage == 7
+    assert out.zeitraum == "7d"
+    assert out.empfangen.per_day == round(1 / 7, 1)
+
+
+def test_kennzahlen_unbekannter_zeitraum_faellt_nicht_zurueck() -> None:
+    """Ein unbekannter Zeitraum ist ein 422, kein stiller Standard.
+
+    Fiele er auf 30 Tage zurück, zeigte die Karte plausible Zahlen für einen
+    Zeitraum, den niemand gewählt hat — ein Fehler, den man nicht sieht.
+    """
+    svc = InboxService(service_client=_FakeDB([], []), channex=_FakeChannex())
+    with pytest.raises(InboxError) as exc:
+        svc.nachrichten_kennzahlen(_CTX, zeitraum="99y")
+    assert exc.value.status_code == 422

@@ -1,7 +1,8 @@
 """Reservations-Service: Fassade.
 
 Komponiert Schreib- und Lesepfad zu `ReservationsService`. Nach Domäne
-aufgeteilt (siehe `_base.py`, `reads.py`, `writes.py`, `property_stats.py`) —
+aufgeteilt (siehe `_base.py`, `reads.py`, `writes.py`, `dashboard.py`,
+`property_stats.py`) —
 die öffentliche Oberfläche (Klassenname, Methodennamen) bleibt unverändert, alle
 Aufrufstellen (Router, Tests) importieren weiter aus diesem Modul.
 
@@ -17,6 +18,7 @@ from ._base import (
     _map_booking_conflict,
     load_guest_mask,
 )
+from .dashboard import DashboardMixin
 from .reads import ReadsMixin
 from .writes import WritesMixin
 
@@ -28,5 +30,5 @@ __all__ = [
 ]
 
 
-class ReservationsService(WritesMixin, ReadsMixin):
+class ReservationsService(WritesMixin, ReadsMixin, DashboardMixin):
     """Reservations-Slice: Schreib- + Lesepfad über der geteilten Basis."""

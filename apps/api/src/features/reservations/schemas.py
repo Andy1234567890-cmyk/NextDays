@@ -4,7 +4,7 @@ Bildet die reservations- und guests-Tabellen ab. Eine Reservierung belegt
 den Zeitraum [check_in, check_out) im Kalender (availability=booked) → der
 Double-Booking-Schutz aus dem calendar-Slice greift.
 """
-from datetime import date
+from datetime import date, datetime
 from enum import StrEnum
 
 from pydantic import BaseModel, Field, model_validator
@@ -491,6 +491,16 @@ class DashboardEntry(BaseModel):
     # Gebuchte Zusatzleistungen (Wäschepaket, Frühstück …). Leere Liste heißt
     # „keine gebucht" — nicht „nicht geladen".
     addons: list[DashboardAddon] = Field(default_factory=list)
+    # Wann die Buchung getätigt wurde (Quell-Zeitstempel, Wurzel 5b): beim
+    # Portal `ota_buchungszeitpunkt`, bei Direkt/Marktplatz unsere Anlage — nie
+    # der Feed-Eingang. Trägt die Liste „Neu eingegangen"; in den nach
+    # Aufenthalt sortierten Listen bleibt es ungenutzt.
+    booked_at: datetime | None = None
+    # Thread-Kennung im Posteingang (`/posteingang?thread=…`) oder None.
+    # None heißt „zu dieser Buchung gibt es keine Korrespondenz" — die Zeile
+    # zeigt dann keinen Nachrichten-Knopf, statt auf eine leere Ansicht zu
+    # verlinken (Wurzel 4: kein Element ohne Wirkung).
+    message_thread_id: str | None = None
 
 
 class DashboardKpi(BaseModel):
@@ -507,12 +517,107 @@ class DashboardResponse(BaseModel):
     checkouts_today: list[DashboardEntry]
     checkins_today: list[DashboardEntry]
     upcoming: list[DashboardEntry]
+    # Was zuletzt hereinkam — sortiert nach BUCHUNGS-Zeitpunkt, nicht nach
+    # Aufenthalt. Die drei Listen darüber beantworten „wer kommt/geht heute",
+    # diese beantwortet „was ist seit meinem letzten Blick passiert".
+    neu_eingegangen: list[DashboardEntry] = Field(default_factory=list)
+    # Wer heute im Haus ist: angereist, Abreise noch nicht erreicht. Der
+    # Abreisetag zählt nicht mit — wer heute auscheckt, steht in
+    # `checkouts_today` und wäre sonst doppelt gezählt.
+    im_haus: list[DashboardEntry] = Field(default_factory=list)
+    # Reservierungen, die noch auf eine Entscheidung warten (`status='pending'`)
+    # und deren Aufenthalt noch nicht vorbei ist. Eine abgelaufene Anfrage ist
+    # keine Aufgabe mehr — sie in der Karte „Freigabe nötig" zu zeigen hieße,
+    # eine Handlung zu verlangen, die nichts mehr bewirkt.
+    freigabe_noetig: list[DashboardEntry] = Field(default_factory=list)
+    # Die ECHTEN Anzahlen. Die Listen oben schneiden bei 50 ab, `len(liste)`
+    # wäre dort also das Limit und nicht die Anzahl — live stand deshalb
+    # zweimal „50" auf der Startseite (Wurzel 4: kein plausibler Ersatzwert).
+    upcoming_gesamt: int = 0
+    im_haus_gesamt: int = 0
+    neu_gesamt: int = 0
+    freigabe_gesamt: int = 0
     checkins_30d: DashboardKpi
     # None, wenn der Nutzer keine Beträge sehen darf (Owner ohne PM_BOOKING_TOTAL,
     # Daten-Split §4.2 „kein Gesamtpreis") — kein maskierter 0-Betrag erfunden.
     revenue_30d: DashboardKpi | None = None
+    # Umsatz je Buchung im selben Zeitfenster. Eigener Wert und nicht im
+    # Frontend aus `revenue_30d / checkins_30d` gerechnet: der Nenner ist NICHT
+    # `checkins_30d` — Eigentümer-Aufenthalte zählen als Check-in, aber nicht
+    # als Umsatzbuchung, die Division ergäbe also einen zu kleinen Schnitt.
+    # Dieselbe Sichtbarkeitsregel wie `revenue_30d` (Betrag = Betrag).
+    revenue_per_booking_30d: DashboardKpi | None = None
     confirmed_30d: DashboardKpi
     currency: str = ""
+    # Objektbestand des Betriebs (Owner: nur seine). „Entwurf" ist bei uns das,
+    # was Hostaway „incomplete" nennt: angelegt, aber nicht verkaufsfertig.
+    objekte_gesamt: int = 0
+    objekte_inaktiv: int = 0
+    objekte_entwurf: int = 0
+
+
+class DashboardKpiMetrik(StrEnum):
+    """Welche Kachel der Startseite nachgeladen wird.
+
+    Geschlossene Menge statt freiem Feldnamen: sonst wäre der Parameter ein
+    Hebel, mit dem sich beliebige Spalten aggregieren ließen (Wurzel 8).
+    """
+
+    checkins = "checkins"
+    revenue = "revenue"
+    revenue_per_booking = "revenue_per_booking"
+    confirmed = "confirmed"
+
+
+class DashboardKpiResponse(BaseModel):
+    """Eine einzelne KPI-Kachel für einen gewählten Zeitraum."""
+
+    metrik: DashboardKpiMetrik
+    # Der gerechnete Zeitraum und seine Tageszahl — beides mit, damit die
+    # Oberfläche ihre Auswahl BESTÄTIGT bekommt statt sie nur zu vermuten.
+    zeitraum: str
+    tage: int
+    # None heißt „diesen Wert gibt es für dich/diese Daten nicht" (Owner ohne
+    # Betrags-Sichtbarkeit, gemischte Währungen, keine zahlende Buchung im
+    # Fenster) — nie ein maskierter 0-Wert.
+    kpi: DashboardKpi | None = None
+    currency: str = ""
+
+
+class DashboardListe(StrEnum):
+    """Welche Liste der Startseite nachgeladen wird."""
+
+    checkouts = "checkouts"
+    checkins = "checkins"
+    freigabe = "freigabe"
+    upcoming = "upcoming"
+    im_haus = "im_haus"
+
+
+class DashboardFenster(StrEnum):
+    """Das Zeitfenster einer Liste, gerechnet ab heute.
+
+    Geschlossene Menge (Wurzel 8): „alle" ist der einzige unbegrenzte Wert und
+    trifft trotzdem auf den Listen-Deckel, ein freier Tageswert wäre ein
+    offener Hebel in die Zukunft.
+    """
+
+    heute = "heute"
+    d7 = "7d"
+    d30 = "30d"
+    alle = "alle"
+
+
+class DashboardListeResponse(BaseModel):
+    """Eine nachgeladene Liste der Startseite samt ihrer echten Anzahl."""
+
+    liste: DashboardListe
+    fenster: DashboardFenster
+    # Die UNGEDECKELTE Anzahl — die Kachel zeigt sie. `len(items)` wäre bei
+    # vollem Fenster das Limit und nicht die Anzahl (live stand deshalb
+    # zweimal „50" auf der Startseite).
+    gesamt: int = 0
+    items: list[DashboardEntry] = Field(default_factory=list)
 
 
 class ChannelBreakdown(BaseModel):
