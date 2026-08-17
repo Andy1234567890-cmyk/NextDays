@@ -267,17 +267,13 @@ export function ListenKarte({
     <Card>
       <CardContent className="flex flex-col gap-4 p-6">
         <div className="flex items-start justify-between gap-3">
-          {/* `min-w-0` + `truncate`: ohne beides bricht der Titel zwischen
-              Icon und Selektor um („Ø gesendet" stand zweizeilig) und zieht
-              die Kopfzeile in die Höhe — die Karten einer Reihe waren dann
-              unterschiedlich hoch. Gekürzt wird sichtbar mit „…", der volle
-              Text steht im `title`-Attribut. */}
-          <div className="flex min-w-0 items-center gap-2 text-muted-foreground">
-            <Icon icon={icon} className="size-5 shrink-0" />
-            <h3
-              title={title}
-              className="truncate whitespace-nowrap font-semibold text-foreground"
-            >
+          {/* Der Titel bleibt einzeilig, aber vollständig: eine Stufe kleiner
+              statt gekürzt. Abgeschnitten („Ø gese…") war er nicht mehr
+              lesbar, umgebrochen zog er die Kopfzeile in die Höhe und die
+              Karten einer Reihe wurden unterschiedlich hoch. */}
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Icon icon={icon} className="size-4 shrink-0" />
+            <h3 className="whitespace-nowrap text-sm font-semibold text-foreground">
               {title}
             </h3>
           </div>
