@@ -252,7 +252,13 @@ API), dann `MFA_SMS_AVAILABLE=true` setzen und die API neu deployen.
 |---|---|---|---|
 | `NEXT_PUBLIC_API_URL` | API-Basis-URL | nein | Coolify-Env (`is_buildtime`) |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable | nein | Coolify-Env (`is_buildtime`) |
+| `NEXT_PUBLIC_SITE_URL` | eigener öffentlicher Origin (Canonical/Sitemap) | nein | Coolify-Env (`is_buildtime`) |
+| `NEXT_PUBLIC_GASTGEBER_URL` | Origin von `gastgeber/` (**myBestDays für Gastgeber**), Ziel der Gastgeber-Einstiege. **Nicht** die myNextDays-Domain (andere Marke) und nicht die Plattform selbst | nein | Coolify-Env (`is_buildtime`) |
 | `NIXPACKS_NODE_VERSION` | Node-Version | nein | Coolify-Env |
+
+Fehlt `NEXT_PUBLIC_GASTGEBER_URL`, verlinken die „myBestDays für Gastgeber"-Einstiege
+auf den relativen Pfad `/anmelden` der Plattform (sichtbar 404) statt still auf eine
+geratene Domain — bewusst so, damit die fehlende Variable auffällt (Wurzel 4).
 
 ## App: `nextdays-builder` (White-Label-Site-Renderer, `builder/`)
 

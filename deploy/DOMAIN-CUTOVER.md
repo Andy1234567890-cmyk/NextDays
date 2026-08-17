@@ -65,9 +65,75 @@ führen dieselben Knöpfe wieder in die App — kein Marketing-Baustein wird ang
 
 - Code-Fallbacks (Schritt 8) zeigen weiter auf `…sslip.io` — funktioniert, ist aber
   nicht das Zielbild.
-- `mybestdays.dk` (Plattform) und die Redirect-Domänen sind unberührt.
 - Die übrigen `.com`-Domänen (`.net`, `.org`, `mynextdays.de`, `mybestdays.*`)
   liegen weiter auf DanDomain-Parking.
+
+## Status: mybestdays.dk ist LIVE (17.08.2026)
+
+myBestDays (Marktplatz + Gastgeber-Dashboard) läuft unter der eigenen Domäne.
+Anders als bei `mynextdays.com` liegt DNS hier auf **Cloudflare** — die Zone
+musste neu angelegt werden, weil DanDomain die NS-Umstellung sonst verweigert
+(„Domænet eksisterer ikke på navneserveren": der Registrar prüft VOR dem
+Umstellen, ob die Zone auf dem Ziel-NS existiert). Reihenfolge ist also:
+Zone anlegen → Records setzen → dann erst NS beim Registrar.
+
+| Domain | App (Coolify) | HTTPS | Zertifikat |
+|---|---|---|---|
+| `mybestdays.dk` | nextdays-plattform (id 3) | 200 | Let's Encrypt, bis 15.11.2026 |
+| `www.mybestdays.dk` | nextdays-plattform | 200 | Let's Encrypt |
+| `gastgeber.mybestdays.dk` | nextdays-gastgeber (id 12) | 307 → `/anmelden` | Let's Encrypt |
+
+DNS: drei A-Records auf `65.21.144.136`, TTL 300. Das DanDomain-Wildcard `*`
+wurde beim Zonen-Import NICHT übernommen — es hätte `gastgeber.` mit der
+Parking-IP überdeckt und gegen jeden eigenen Record gewonnen.
+
+Nameserver: `devin.ns.cloudflare.com`, `yolanda.ns.cloudflare.com`. Die Zone
+steht in der Cloudflare-API weiter auf `status: pending`; das ist nur deren
+eigene Prüfschleife und ohne Wirkung auf die Auflösung (Registry und beide
+Resolver liefern korrekt).
+
+### Cloudflare-Proxy ist hier AN (anders als bei mynextdays.com)
+
+Nach Ausstellung der Zertifikate wurde der Proxy für alle drei Records
+aktiviert. Grund: Lighthouse wies 6.110 ms Dokumentlatenz aus, weil jeder
+Request direkt an Hetzner ging — ohne Edge-Cache, ohne Kompression.
+
+| Einstellung | Wert |
+|---|---|
+| Proxy | an (orange), alle drei Records |
+| SSL/TLS | **Full (strict)** — Pflicht, sobald der Proxy davor steht |
+| Always Use HTTPS | an |
+| Brotli, HTTP/3, Early Hints | an |
+| HSTS | `max-age=31536000; includeSubDomains` |
+
+Die Reihenfolge ist zwingend: **grau bis das Zertifikat steht, dann orange.**
+Bei aktivem Proxy terminiert Cloudflare das TLS, und die
+Let's-Encrypt-HTTP-01-Challenge von Coolify schlägt fehl.
+
+`cf-cache-status: DYNAMIC` auf dem HTML ist gewollt — die Seiten sind
+personalisiert. Gecacht werden die statischen Assets.
+
+### Env-Variablen (Coolify, nextdays-api id 8)
+
+`CORS_ORIGINS` und `TRUSTED_HOSTS` um `mybestdays.dk`, `www.mybestdays.dk` und
+`gastgeber.mybestdays.dk` ergänzt (sslip.io-Hosts blieben drin);
+`MARKETPLACE_BASE_URL` von der sslip.io-Adresse auf `https://mybestdays.dk`.
+
+### Stolperstein: Labels wirken erst nach dem Deploy
+
+Nach dem Eintragen der Domains antwortete `mybestdays.dk` mit Traefiks eigenem
+`404 page not found` — DNS und Routing stimmten, aber der LAUFENDE Container
+trug nur seine alte sslip.io-Route. Die neuen Labels liegen in
+`applications.custom_labels` und erreichen Traefik erst über einen Deploy
+(`POST /api/v1/deploy?uuid=…&force=true`; der GET-Endpunkt existiert nicht mehr).
+Prüfen lässt sich das direkt am Container:
+`docker inspect <name> --format '{{range $k,$v := .Config.Labels}}…' | grep rule=Host`.
+
+### Bewusst nicht gemacht
+
+Bild-Uploads werden weiterhin unverändert gespeichert (13 Endpunkte in
+`apps/api`, kein Resize/WebP/EXIF-Stripping; Lighthouse: 2.192 KiB Einsparung
+möglich). Auf Entscheidung des Nutzers offen gelassen.
 
 ## Ist-Zustand (Erhebung vor dem Cutover)
 
