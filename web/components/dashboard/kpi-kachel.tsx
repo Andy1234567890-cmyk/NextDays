@@ -152,7 +152,7 @@ function KachelRahmen({
               Reservierungen") brach sie um und rutschte neben die Zahl.
               Kein `truncate` auf der Zahl — ein Betrag mit Tausendern und
               Währungskürzel ist abgeschnitten keine Zahl mehr. */}
-          <p className="font-display text-3xl font-extrabold leading-none tabular-nums">
+          <p className="font-display break-words text-2xl font-extrabold leading-tight tabular-nums">
             {display}
           </p>
           <div className="mt-1 flex items-end justify-between gap-2">
