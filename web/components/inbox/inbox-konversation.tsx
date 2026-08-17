@@ -991,8 +991,17 @@ export function Conversation({
             />
             {/* Werkzeuge links MIT Text (Lodgify beschriftet sie ebenfalls —
                 drei namenlose Icons neben dem Senden-Knopf raten sich schlecht),
-                der Text weicht erst in schmalen Spalten. */}
-            <div className="flex items-center gap-1.5 px-2 pb-2">
+                der Text weicht erst in schmalen Spalten.
+
+                `@container` + `@xl:`: die Beschriftungen hängen an der Breite
+                DIESER Leiste, nicht am Fenster. Mit `xl:` erschienen sie, sobald
+                der Bildschirm breit genug war — die Konversation steht aber
+                zwischen Liste und Buchungspanel und ist dann trotzdem schmal.
+                Ergebnis: die Knöpfe liefen aus der Karte heraus und „Senden"
+                lag über dem Panel daneben.
+                `flex-wrap` als zweite Sicherung: lieber eine zweite Zeile als
+                ein Knopf, den niemand trifft. */}
+            <div className="@container flex flex-wrap items-center gap-1.5 px-2 pb-2">
               <Button
                 type="button"
                 variant="ghost"
@@ -1001,7 +1010,7 @@ export function Conversation({
                 onClick={() => setShowTemplates((v) => !v)}
               >
                 <Icon icon="ph:note" className="size-4" />
-                <span className="hidden xl:inline">{t("tabTemplates")}</span>
+                <span className="hidden @xl:inline">{t("tabTemplates")}</span>
               </Button>
               <Button
                 data-testid="inbox-ai-reply-button"
@@ -1016,7 +1025,7 @@ export function Conversation({
                   icon={aiLoading ? "ph:spinner" : "ph:sparkle"}
                   className={"size-4 " + (aiLoading ? "animate-spin" : "")}
                 />
-                <span className="hidden xl:inline">{t("aiSuggest")}</span>
+                <span className="hidden @xl:inline">{t("aiSuggest")}</span>
               </Button>
               {/* Geplant senden (Uhr) */}
               <Button
@@ -1027,7 +1036,7 @@ export function Conversation({
                 onClick={() => setShowSchedule((v) => !v)}
               >
                 <Icon icon="ph:clock" className="size-4" />
-                <span className="hidden xl:inline">{t("scheduleSend")}</span>
+                <span className="hidden @xl:inline">{t("scheduleSend")}</span>
               </Button>
               {/* Anhang. Der Text im Feld reist als Begleitnachricht mit, damit
                   „Hier die Anfahrt:" und die Datei beim Gast zusammen ankommen. */}
@@ -1043,7 +1052,7 @@ export function Conversation({
                   icon={anhangLaeuft ? "ph:spinner" : "ph:paperclip"}
                   className={"size-4 " + (anhangLaeuft ? "animate-spin" : "")}
                 />
-                <span className="hidden xl:inline">{t("attach")}</span>
+                <span className="hidden @xl:inline">{t("attach")}</span>
               </Button>
               <input
                 ref={dateiFeld}
