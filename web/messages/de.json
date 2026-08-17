@@ -4636,6 +4636,8 @@
       "deleteAria": "Auswahl löschen",
       "completed": "{done} Aufgaben abgeschlossen.",
       "completedPartly": "{done} abgeschlossen, {skipped} übersprungen (Foto fehlt oder kein Zugriff).",
+      "assigned": "{done} Aufgaben zugewiesen.",
+      "assignedPartly": "{done} zugewiesen, {skipped} übersprungen (kein Zugriff).",
       "deleted": "{done} Aufgaben gelöscht.",
       "deletedPartly": "{done} gelöscht, {skipped} übersprungen (kein Zugriff)."
     },
@@ -4942,6 +4944,14 @@
       "mealPlan": "Verpflegung",
       "notes": "Hinweise des Portals",
       "policies": "Richtlinien im Wortlaut"
+    },
+    "zustaendig": {
+      "label": "Zuständig",
+      "niemand": "Niemand zugewiesen",
+      "unbekannt": "Bisherige Zuweisung",
+      "gesetzt": "Zuständigkeit geändert",
+      "abgezogen": "Zuweisung zurückgenommen",
+      "aktion": "Zuweisen an …"
     }
   },
   "objects": {

@@ -100,6 +100,20 @@ def _dispatcher(db: Client) -> NotificationDispatcher:
 # --- Aufgaben ---------------------------------------------------------------
 
 
+def _aufgaben_dedup(
+    art: str, task_id: str, assignee_id: str, vorgang: str | None
+) -> str:
+    """Entdopplungs-Schluessel einer Aufgaben-Meldung.
+
+    Ohne `vorgang`: je Aufgabe und Empfaenger genau eine offene Meldung — das
+    ist der Normalfall bei der Neuanlage. Mit `vorgang` zaehlt zusaetzlich
+    das einzelne Ereignis, damit ein Hin und Her (A → B → A) den Empfaenger
+    wirklich zweimal erreicht.
+    """
+    basis = f"{art}:{task_id}:{assignee_id}"
+    return f"{basis}:{vorgang}" if vorgang else basis
+
+
 def melde_aufgaben_zuweisung(
     db: Client,
     *,
@@ -108,6 +122,7 @@ def melde_aufgaben_zuweisung(
     assignee_id: str | None,
     titel: str,
     property_id: str | None = None,
+    vorgang: str | None = None,
 ) -> None:
     """„Dir wurde eine Aufgabe zugewiesen."
 
@@ -117,6 +132,18 @@ def melde_aufgaben_zuweisung(
     task_id wuerde die zweite Zuweisung an A stumm schlucken. Wird dagegen
     dieselbe Aufgabe mehrfach gespeichert, ohne dass sich der Zustaendige
     aendert, greift die Entdopplung wie gewollt.
+
+    `vorgang` unterscheidet zwei Zuweisungen an DENSELBEN Empfaenger. Der
+    Empfaenger allein im Schluessel reicht dafuer naemlich nicht: der
+    UNIQUE-Index `notifications_dedup_offen_uq` laeuft ueber
+    `(user_id, dedup_key) where gelesen_am is null` — bei A → B → A trifft die
+    zweite Meldung an A auf die erste, noch UNGELESENE, und wird verschluckt.
+    Und weil `_glocke_entdoppelt` fuer alle Kanaele abbricht, faellt mit der
+    Glocke auch die Mail aus: A saehe nur „Aufgabe nicht mehr bei dir" und
+    erfuehre von der Rueckgabe nie. Der Aufrufer reicht deshalb etwas durch,
+    das den VORGANG unterscheidet (z. B. den Aenderungs-Zeitstempel).
+    Ohne `vorgang` bleibt der Schluessel wie bisher — fuer die Neuanlage, wo
+    es je Aufgabe nur einen geben kann, ist das richtig.
 
     Ohne `assignee_id` passiert NICHTS: eine unzugewiesene Aufgabe hat keinen
     Empfaenger, und „an alle" waere geraten (Wurzel 4).
@@ -176,11 +203,78 @@ def melde_aufgaben_zuweisung(
             # schönere Adresse würde die alten Links endgültig brechen.
             ziel_pfad=f"/aufgaben/{task_id}",
             property_id=property_id,
-            dedup_key=f"aufgabe_zugewiesen:{task_id}:{assignee_id}",
+            dedup_key=_aufgaben_dedup(
+                "aufgabe_zugewiesen", task_id, assignee_id, vorgang
+            ),
         )
     except Exception as exc:  # noqa: BLE001 — Nebenpfad, darf die Aufgabe nicht kippen
         log.warning(
             "aufgaben_benachrichtigung_fehlgeschlagen",
+            task_id=task_id, error=str(exc)[:200],
+        )
+
+
+def melde_aufgaben_entzug(
+    db: Client,
+    *,
+    tenant_id: str,
+    task_id: str,
+    assignee_id: str | None,
+    titel: str,
+    property_id: str | None = None,
+    vorgang: str | None = None,
+) -> None:
+    """„Diese Aufgabe ist nicht mehr deine." — an den BISHERIGEN Zustaendigen.
+
+    Der Gegenzustand zur Zuweisung (Wurzel 1): eine umverteilte Aufgabe
+    verschwindet sonst wortlos aus der Liste dessen, der sie bis eben hatte.
+    Er sieht sie nicht mehr, weiss aber nichts davon — und haelt sie im
+    Zweifel weiter fuer seine, waehrend sie ein Kollege schon erledigt.
+
+    Bewusst dieselbe Katalog-Kategorie wie die Zuweisung (`task_assigned`):
+    es ist dieselbe Sache aus der Gegenrichtung, an denselben Empfaenger.
+    Eine eigene Kategorie liesse den Entzug einzeln abschalten — dann bekaeme
+    jemand die Zuweisungen, aber nie die Entzuege, und seine Liste waere
+    dauerhaft falsch.
+
+    `dedup_key` traegt Aufgabe UND Empfaenger, analog zur Zuweisung: wird eine
+    Aufgabe A → B → A geschoben, ist der zweite Entzug bei A ein echtes neues
+    Ereignis und darf nicht entdoppelt werden.
+    """
+    if not assignee_id:
+        return
+    try:
+        if not _gehoert_zum_tenant(db, assignee_id, tenant_id):
+            log.warning(
+                "aufgaben_entzug_fremder_empfaenger",
+                tenant_id=tenant_id, task_id=task_id,
+            )
+            return
+        _dispatcher(db).sende(
+            user_id=assignee_id,
+            schluessel=SCHLUESSEL_AUFGABE,
+            betreff=mail_text(
+                "benachrichtigung.aufgabe_entzogen",
+                _GLOCKEN_SPRACHE,
+                titel=_aufgaben_titel(titel, _GLOCKEN_SPRACHE),
+            ),
+            betreff_key="benachrichtigung.aufgabe_entzogen",
+            betreff_werte={"titel": _titel_wert(titel)},
+            text="",
+            tenant_id=tenant_id,
+            # Kein Ziel-Pfad: die Aufgabe ist fuer diesen Empfaenger nicht mehr
+            # sichtbar (er faellt aus dem Assignee-Filter, als Mitarbeiter
+            # womoeglich ganz aus dem Objekt-Scope). Ein Link, der ihn ins 404
+            # oder in ein „nicht gefunden" fuehrt, waere schlechter als keiner.
+            ziel_pfad=None,
+            property_id=property_id,
+            dedup_key=_aufgaben_dedup(
+                "aufgabe_entzogen", task_id, assignee_id, vorgang
+            ),
+        )
+    except Exception as exc:  # noqa: BLE001 — Nebenpfad, darf die Aufgabe nicht kippen
+        log.warning(
+            "aufgaben_entzug_benachrichtigung_fehlgeschlagen",
             task_id=task_id, error=str(exc)[:200],
         )
 

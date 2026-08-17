@@ -4589,6 +4589,8 @@
       "deleteAria": "Obriši odabrano",
       "completed": "Završeno zadataka: {done}.",
       "completedPartly": "Završeno {done}, preskočeno {skipped} (nedostaje fotografija ili pristup).",
+      "assigned": "Dodijeljeno zadataka: {done}.",
+      "assignedPartly": "Dodijeljeno {done}, preskočeno {skipped} (nema pristupa).",
       "deleted": "Obrisano zadataka: {done}.",
       "deletedPartly": "Obrisano {done}, preskočeno {skipped} (nema pristupa)."
     },
@@ -4806,6 +4808,14 @@
         "refunded": "vraćeno",
         "partially_refunded": "djelomično vraćeno"
       }
+    },
+    "zustaendig": {
+      "label": "Odgovorna osoba",
+      "niemand": "Nitko nije dodijeljen",
+      "unbekannt": "Dosadašnja dodjela",
+      "gesetzt": "Dodjela promijenjena",
+      "abgezogen": "Dodjela povučena",
+      "aktion": "Dodijeli …"
     }
   },
   "objects": {

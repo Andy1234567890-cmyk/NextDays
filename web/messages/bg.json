@@ -4589,6 +4589,8 @@
       "deleteAria": "Изтриване на избраните",
       "completed": "{done} задачи приключени.",
       "completedPartly": "{done} приключени, {skipped} пропуснати (липсва снимка или няма достъп).",
+      "assigned": "{done} задачи назначени.",
+      "assignedPartly": "{done} назначени, {skipped} пропуснати (няма достъп).",
       "deleted": "{done} задачи изтрити.",
       "deletedPartly": "{done} изтрити, {skipped} пропуснати (няма достъп)."
     },
@@ -4806,6 +4808,14 @@
         "refunded": "възстановено",
         "partially_refunded": "частично възстановено"
       }
+    },
+    "zustaendig": {
+      "label": "Изпълнител",
+      "niemand": "Няма назначен",
+      "unbekannt": "Досегашно назначение",
+      "gesetzt": "Изпълнителят е променен",
+      "abgezogen": "Назначението е оттеглено",
+      "aktion": "Възлагане на …"
     }
   },
   "objects": {

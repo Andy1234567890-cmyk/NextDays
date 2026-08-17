@@ -18,7 +18,7 @@ import { TaskPopover } from "@/components/reservierungen/task-popover";
 import { CHANNEL_META } from "@/lib/calendar-channels";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";
 import type { AvailabilitySource } from "@/lib/calendar";
-import { listTenantUsers } from "@/lib/account";
+import { mitarbeiterOptionen } from "@/lib/mitarbeiter-optionen";
 import { UNASSIGNED } from "@/lib/aufgaben-konstanten";
 import { channelLabelLoose } from "@/lib/channel-logos";
 import {
@@ -27,6 +27,7 @@ import {
   type TaskListItem,
   getTaskCalendar,
   listRules,
+  listTaskAssignees,
 } from "@/lib/tasks";
 import { useRealtime } from "@/lib/use-realtime";
 
@@ -187,8 +188,11 @@ export function TasksCalendar() {
     [year, month],
   );
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  // `stillLaden` wie in `team-tasks`: ein Realtime-Ereignis tauscht die
+  // Balken aus, ohne die ganze Timeline durch einen Ladezustand zu ersetzen.
+  // Sonst baut sich der Monat bei jeder fremden Statusmeldung neu auf.
+  const load = useCallback(async (stillLaden = false) => {
+    if (!stillLaden) setLoading(true);
     // Mehrfachauswahl wirkt wirklich: vorher wurde der Nutzerfilter nur bei
     // GENAU einer Auswahl an den Server gegeben, jede weitere blieb folgenlos.
     const res = await getTaskCalendar(from, to, {
@@ -206,6 +210,10 @@ export function TasksCalendar() {
     setLoading(false);
   }, [from, to, userFilter, ruleFilter]);
 
+  const stillNachladen = useCallback(() => {
+    void load(true);
+  }, [load]);
+
   useEffect(() => {
     void load();
   }, [load]);
@@ -213,15 +221,12 @@ export function TasksCalendar() {
   useEffect(() => {
     void (async () => {
       const [tenantUsers, autoRules] = await Promise.all([
-        listTenantUsers(),
+        listTaskAssignees(),
         listRules("auto"),
       ]);
       if (tenantUsers.ok) {
         setUsers([
-          ...tenantUsers.data.map((u) => ({
-            value: u.user_id,
-            label: u.full_name ?? u.email ?? u.user_id,
-          })),
+          ...mitarbeiterOptionen(tenantUsers.data),
           { value: UNASSIGNED, label: t("aufgabenFilter.unassignedOption") },
         ]);
       }
@@ -231,8 +236,11 @@ export function TasksCalendar() {
     })();
   }, [t]);
 
-  useRealtime({ table: "tasks", onChange: load });
-  useRealtime({ table: "reservations", onChange: load });
+  // `stillNachladen` statt `load`: `onChange` reicht das Ereignis als Argument
+  // durch — `onChange: load` machte daraus das `stillLaden`-Flag. Das wäre
+  // hier zwar zufällig richtig, aber aus dem falschen Grund.
+  useRealtime({ table: "tasks", onChange: stillNachladen });
+  useRealtime({ table: "reservations", onChange: stillNachladen });
 
   const shift = (delta: number) => {
     const d = new Date(Date.UTC(year, month + delta, 1));
@@ -633,18 +641,19 @@ export function TasksCalendar() {
           onClose={() => setCreateCell(null)}
           onCreated={() => {
             setCreateCell(null);
-            load();
+            stillNachladen();
           }}
         />
       )}
 
       {taskPop && (
         <TaskPopover
+          darfZuweisen
           task={taskPop}
           onClose={() => setTaskPop(null)}
           onDeleted={() => {
             setTaskPop(null);
-            load();
+            stillNachladen();
           }}
           onPhotos={() => {
             setPhotoTaskId(taskPop.id);
@@ -655,9 +664,10 @@ export function TasksCalendar() {
 
       {photoTaskId && (
         <TaskDetailModal
+          darfZuweisen
           taskId={photoTaskId}
           onClose={() => setPhotoTaskId(null)}
-          onChanged={load}
+          onChanged={stillNachladen}
         />
       )}
 

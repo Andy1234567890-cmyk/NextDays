@@ -4584,6 +4584,8 @@
       "deleteAria": "Zmazať vybrané",
       "completed": "Dokončených úloh: {done}.",
       "completedPartly": "Dokončených {done}, preskočených {skipped} (chýba foto alebo prístup).",
+      "assigned": "Priradených úloh: {done}.",
+      "assignedPartly": "Priradených {done}, preskočených {skipped} (chýba prístup).",
       "deleted": "Zmazaných úloh: {done}.",
       "deletedPartly": "Zmazaných {done}, preskočených {skipped} (chýba prístup)."
     },
@@ -4801,6 +4803,14 @@
         "refunded": "vrátená",
         "partially_refunded": "čiastočne vrátená"
       }
+    },
+    "zustaendig": {
+      "label": "Zodpovedná osoba",
+      "niemand": "Nikto nie je priradený",
+      "unbekannt": "Doterajšie priradenie",
+      "gesetzt": "Priradenie zmenené",
+      "abgezogen": "Priradenie zrušené",
+      "aktion": "Priradiť …"
     }
   },
   "objects": {

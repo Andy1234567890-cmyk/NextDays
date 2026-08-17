@@ -76,6 +76,69 @@ export async function listTeamTasks(statusBucket?: string): Promise<Result<TaskL
   return call(`/tasks/team${q}`);
 }
 
+/** Wer kann Zuständige:r einer Aufgabe sein?
+ *
+ * Eigener Endpunkt statt `/auth/account/users`: dort stehen ALLE Nutzer des
+ * Betriebs, auch Eigentümer — die haben `view_own_tasks` aber nicht und
+ * könnten eine ihnen zugewiesene Aufgabe nie öffnen. Der Server leitet die
+ * Menge aus der Capability ab und filtert gesperrte Zugänge.
+ *
+ * Kein `permissions`-Feld: die Rechte fremder Konten gehören nicht in eine
+ * Auswahlliste (Wurzel 9).
+ */
+export type Mitarbeiter = {
+  user_id: string;
+  email: string | null;
+  full_name: string | null;
+  role: string;
+};
+
+export async function listTaskAssignees(): Promise<Result<Mitarbeiter[]>> {
+  return call("/tasks/assignees");
+}
+
+/**
+ * Auswahl-Beschriftung, gleiche Logik wie `web/lib/mitarbeiter-optionen.ts`:
+ * bei mehrdeutigem Namen kommt die E-Mail dazu. Im Beta-Betrieb tragen zwei
+ * Konten denselben `full_name`; ohne diese Unterscheidung wählt man blind.
+ */
+export function mitarbeiterOptionen(
+  users: Mitarbeiter[],
+): { value: string; label: string }[] {
+  const aktiv = users;
+  const proName = new Map<string, number>();
+  for (const u of aktiv) {
+    const name = u.full_name?.trim();
+    if (name) proName.set(name, (proName.get(name) ?? 0) + 1);
+  }
+  return aktiv.map((u) => {
+    const name = u.full_name?.trim();
+    if (!name) return { value: u.user_id, label: u.email ?? u.user_id };
+    const mehrdeutig = (proName.get(name) ?? 0) > 1;
+    return {
+      value: u.user_id,
+      label: mehrdeutig && u.email ? `${name} (${u.email})` : name,
+    };
+  });
+}
+
+/**
+ * Zuständigen einer bestehenden Aufgabe setzen oder abziehen (MANAGE_TASKS).
+ *
+ * `null` nimmt die Zuweisung zurück. Der Server prüft, ob der Empfänger die
+ * Aufgabe überhaupt sehen könnte (Objekt-Freigabe) — eine Zuweisung ins
+ * Nichts scheitert mit 422 statt still durchzugehen.
+ */
+export async function setTaskAssignee(
+  taskId: string,
+  assigneeId: string | null,
+): Promise<Result<TaskDetail>> {
+  return call(`/tasks/${encodeURIComponent(taskId)}/assignee`, {
+    method: "PATCH",
+    body: { assignee_id: assigneeId },
+  });
+}
+
 /** Aufgaben-Status setzen (nur MANAGE_TASKS). */
 export async function setTaskStatus(
   taskId: string,

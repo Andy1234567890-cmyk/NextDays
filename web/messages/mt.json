@@ -4584,6 +4584,8 @@
       "deleteAria": "Ħassar l-għażla",
       "completed": "{done} kompiti lesti.",
       "completedPartly": "{done} lesti, {skipped} maqbuża (nieqes ritratt jew l-ebda aċċess).",
+      "assigned": "{done} kompiti assenjati.",
+      "assignedPartly": "{done} assenjati, {skipped} maqbuża (l-ebda aċċess).",
       "deleted": "{done} kompiti mħassra.",
       "deletedPartly": "{done} imħassra, {skipped} maqbuża (l-ebda aċċess)."
     },
@@ -4801,6 +4803,14 @@
         "refunded": "rimborżat",
         "partially_refunded": "parzjalment rimborżat"
       }
+    },
+    "zustaendig": {
+      "label": "Responsabbli",
+      "niemand": "Ħadd mhu assenjat",
+      "unbekannt": "Assenjazzjoni preċedenti",
+      "gesetzt": "Ir-responsabbli nbidel",
+      "abgezogen": "L-assenjazzjoni tneħħiet",
+      "aktion": "Assenja lil …"
     }
   },
   "objects": {

@@ -36,6 +36,7 @@ import {
   completeTask,
   deleteTaskCost,
   getTaskDetail,
+  setTaskAssignee,
   setTaskResolution,
   setTaskStatus,
   toggleChecklistItem,
@@ -43,6 +44,7 @@ import {
   uploadTaskPhoto,
 } from "@/lib/tasks";
 import { AUFGABEN_STATUS, naechsteZustaende } from "@/lib/aufgaben-status";
+import { ZustaendigAuswahl } from "./zustaendig-auswahl";
 import { formatCurrency } from "@/lib/currency";
 
 export function TaskDetailInhalt({
@@ -50,6 +52,7 @@ export function TaskDetailInhalt({
   onClose,
   onChanged,
   onNichtGefunden,
+  darfZuweisen = false,
 }: {
   taskId: string;
   /** Gesetzt = Modal-Rahmen: zeigt das Schließen-Kreuz und schließt nach dem
@@ -62,6 +65,13 @@ export function TaskDetailInhalt({
    *  Aufrufer NICHT unterscheiden (sonst verrät die Meldung, dass es die
    *  Aufgabe gibt). */
   onNichtGefunden?: () => void;
+  /** Darf der Betrachter Aufgaben VERTEILEN (`manage_tasks`)?
+   *
+   *  Bewusst eine Prop und keine Prüfung hier drin: dieselbe Komponente zeigt
+   *  die Aufgabe der Reinigungskraft, die ihre eigene Arbeit meldet, aber
+   *  nichts umverteilt. Wer das Recht hat, weiß der Aufrufer — der Server
+   *  prüft es ohnehin erneut (`MANAGE_TASKS`). */
+  darfZuweisen?: boolean;
 }) {
   const t = useTranslations("reservations");
   const locale = useLocale();
@@ -119,6 +129,18 @@ export function TaskDetailInhalt({
     const res = await setTaskStatus(taskId, next);
     setSaving(false);
     uebernehmen(res, t(`taskStatusChanged.${next}`));
+  };
+
+  const zustaendigenSetzen = async (neu: string | null) => {
+    setSaving(true);
+    const res = await setTaskAssignee(taskId, neu);
+    setSaving(false);
+    uebernehmen(
+      res,
+      neu === null
+        ? t("zustaendig.abgezogen")
+        : t("zustaendig.gesetzt"),
+    );
   };
 
   const punktUmschalten = async (itemId: string, done: boolean) => {
@@ -267,10 +289,21 @@ export function TaskDetailInhalt({
               {t("taskDetailModal.inBooking", { ref: detail.reservation_ref })}
             </Link>
           )}
-          {detail.assignee_name && (
-            <p className="text-xs text-muted-foreground">
-              {t("taskDetailModal.assignedTo", { name: detail.assignee_name })}
-            </p>
+          {darfZuweisen ? (
+            <div className="pt-1">
+              <ZustaendigAuswahl
+                wert={detail.assignee_id}
+                onWechsel={zustaendigenSetzen}
+                laedt={saving}
+                propertyId={detail.property_id}
+              />
+            </div>
+          ) : (
+            detail.assignee_name && (
+              <p className="text-xs text-muted-foreground">
+                {t("taskDetailModal.assignedTo", { name: detail.assignee_name })}
+              </p>
+            )
           )}
         </div>
         {onClose && (

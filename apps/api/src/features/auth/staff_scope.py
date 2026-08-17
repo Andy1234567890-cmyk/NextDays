@@ -16,12 +16,19 @@ from supabase import Client
 from src.core.security import AuthContext
 
 # Operative Rollen, deren Objektsicht über staff_property_assignments läuft.
-_STAFF_ROLES = frozenset({"staff", "cleaner"})
+# Öffentlich, weil auch Schreibpfade sie brauchen: wer einem Nutzer eine Aufgabe
+# zuweist, muss wissen, ob dessen Rolle überhaupt am Objekt-Scope hängt
+# (tasks._require_own_assignee). Eine zweite Kopie derselben Menge wäre die
+# Stelle, an der beide auseinanderlaufen.
+STAFF_ROLES = frozenset({"staff", "cleaner"})
+
+# Altname, solange interne Aufrufer ihn tragen.
+_STAFF_ROLES = STAFF_ROLES
 
 
 def is_staff(ctx: AuthContext) -> bool:
     """Eingeloggter Mitarbeiter/Dienstleister (nur freigegebene Objekte)."""
-    return ctx.role in _STAFF_ROLES
+    return ctx.role in STAFF_ROLES
 
 
 def staff_property_ids(db: Client, ctx: AuthContext) -> set[str]:

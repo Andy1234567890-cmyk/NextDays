@@ -21,7 +21,14 @@ import { TaskDetailInhalt } from "./task-detail-inhalt";
 
 const MEINE_AUFGABEN = "/reservierungen/aufgaben/meine";
 
-export function AufgabeSeite({ taskId }: { taskId: string }) {
+export function AufgabeSeite({
+  taskId,
+  darfZuweisen = false,
+}: {
+  taskId: string;
+  /** Kommt serverseitig aus `/auth/me` (Route). */
+  darfZuweisen?: boolean;
+}) {
   const t = useTranslations("reservations");
   const [weg, setWeg] = useState(false);
   // Stabil, damit der Ladeeffekt im Inhalt nicht bei jedem Rendern neu läuft.
@@ -62,7 +69,11 @@ export function AufgabeSeite({ taskId }: { taskId: string }) {
             </Button>
           </div>
         ) : (
-          <TaskDetailInhalt taskId={taskId} onNichtGefunden={nichtGefunden} />
+          <TaskDetailInhalt
+            taskId={taskId}
+            onNichtGefunden={nichtGefunden}
+            darfZuweisen={darfZuweisen}
+          />
         )}
       </div>
     </div>

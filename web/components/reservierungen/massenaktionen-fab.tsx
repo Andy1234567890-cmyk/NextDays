@@ -1,7 +1,8 @@
 "use client";
 
-// Massenaktionen des Aufgaben-Moduls: zwei schwebende Knöpfe unten rechts,
-// sichtbar sobald Zeilen ausgewählt sind (✓ abschließen, 🗑 löschen).
+// Massenaktionen des Aufgaben-Moduls: schwebende Knöpfe unten rechts,
+// sichtbar sobald Zeilen ausgewählt sind (👤 zuweisen, ✓ abschließen,
+// 🗑 löschen).
 //
 // Der Server prüft jede Aufgabe EINZELN (Objekt-Scope, Foto-Pflicht) und meldet
 // zurück, wie viele übersprungen wurden — diese Zahl wird hier auch angezeigt.
@@ -12,18 +13,23 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { bulkCompleteTasks, bulkDeleteTasks } from "@/lib/tasks";
+import { bulkAssignTasks, bulkCompleteTasks, bulkDeleteTasks } from "@/lib/tasks";
+import { ZustaendigAuswahl } from "./zustaendig-auswahl";
 
 export function MassenaktionenFab({
   ids,
   onDone,
   allowComplete = true,
   allowDelete = true,
+  allowAssign = false,
 }: {
   ids: string[];
   onDone: () => void;
   allowComplete?: boolean;
   allowDelete?: boolean;
+  /** Nur dort, wo der Betrachter verteilen darf (Teamaufgaben). In „Meine
+   *  Aufgaben" wäre es Selbstbedienung an fremder Arbeit. */
+  allowAssign?: boolean;
 }) {
   const t = useTranslations("reservations");
   const [busy, setBusy] = useState(false);
@@ -45,6 +51,28 @@ export function MassenaktionenFab({
             skipped: res.data.skipped,
           })
         : t("massenaktionen.completed", { done: res.data.completed }),
+    );
+    onDone();
+  };
+
+  const assign = async (neu: string | null) => {
+    setBusy(true);
+    const res = await bulkAssignTasks(ids, neu);
+    setBusy(false);
+    if (!res.ok) {
+      toast.error(res.error);
+      return;
+    }
+    // Wie beim Abschließen: übersprungene Zeilen werden GENANNT. Der Server
+    // überspringt, was der Empfänger nicht sehen könnte (fehlende
+    // Objekt-Freigabe) — „alle zugewiesen" zu melden wäre eine Lüge.
+    toast.success(
+      res.data.skipped > 0
+        ? t("massenaktionen.assignedPartly", {
+            done: res.data.assigned,
+            skipped: res.data.skipped,
+          })
+        : t("massenaktionen.assigned", { done: res.data.assigned }),
     );
     onDone();
   };
@@ -73,6 +101,21 @@ export function MassenaktionenFab({
       <span className="rounded-full bg-foreground px-3 py-1.5 text-xs font-medium text-background shadow-lg">
         {t("massenaktionen.selected", { count: ids.length })}
       </span>
+      {allowAssign && (
+        // `aktionsModus`: der Selektor ist hier ein BEFEHL, kein Zustand. Er
+        // zeigt dauerhaft „Zuweisen an …" und meldet jede Wahl — auch
+        // „Niemand". Ohne diesen Modus stünde er auf dem leeren Wert, und
+        // genau die Wahl „Niemand zugewiesen" löste kein `onChange` aus: das
+        // Abziehen einer Zuweisung für mehrere Aufgaben wäre über die
+        // Oberfläche unerreichbar gewesen, obwohl der Endpunkt es kann.
+        <ZustaendigAuswahl
+          wert={null}
+          onWechsel={assign}
+          laedt={busy}
+          kompakt
+          aktionsModus
+        />
+      )}
       {allowComplete && (
         <button
           type="button"

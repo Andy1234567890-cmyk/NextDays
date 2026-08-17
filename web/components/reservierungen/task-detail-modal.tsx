@@ -17,10 +17,13 @@ export function TaskDetailModal({
   taskId,
   onClose,
   onChanged,
+  darfZuweisen = false,
 }: {
   taskId: string;
   onClose: () => void;
   onChanged?: () => void;
+  /** Durchgereicht an den Inhalt: nur wer verteilen darf, sieht die Auswahl. */
+  darfZuweisen?: boolean;
 }) {
   // Escape schließt. Ohne das ist ein Overlay auf dem Desktop eine Falle: der
   // Klick daneben ist die einzige Tür, und die trifft man auf einem vollen
@@ -49,6 +52,7 @@ export function TaskDetailModal({
           taskId={taskId}
           onClose={onClose}
           onChanged={onChanged}
+          darfZuweisen={darfZuweisen}
         />
       </div>
     </div>

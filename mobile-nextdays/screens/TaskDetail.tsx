@@ -2,6 +2,10 @@
 // Der Zuständige kann die Aufgabe abschließen (/complete); Foto-Pflicht wird
 // serverseitig erzwungen (422). KEINE Gast-PII/Beträge (§4.3). Abschluss-Button
 // gegen Doppel-Tap gesperrt (Wurzel 2).
+//
+// Wer VERTEILT (manage_tasks), kann den Zuständigen hier auch wechseln. Für
+// die Reinigungskraft bleibt die Zeile reine Anzeige: ihr Weg aus einer
+// Aufgabe ist die Vertretungsanfrage, nicht das Umhängen an einen Kollegen.
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCallback, useEffect, useState } from "react";
@@ -10,9 +14,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/ui/Icon";
 import { Btn, Chip, Col, Row, Spinner, Txt } from "@/components/ui/kit";
-import { EmptyState } from "@/components/ui/patterns";
+import { EmptyState, Sheet } from "@/components/ui/patterns";
+import { useAuth } from "@/contexts/AuthContext";
+import { can } from "@/lib/permissions";
 import { useRealtime } from "@/lib/realtime";
-import { completeTask, getTaskDetail, type TaskDetail as Detail } from "@/lib/tasks";
+import {
+  completeTask,
+  getTaskDetail,
+  listTaskAssignees,
+  mitarbeiterOptionen,
+  setTaskAssignee,
+  type TaskDetail as Detail,
+} from "@/lib/tasks";
 import type { RootStackParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -23,9 +36,14 @@ export default function TaskDetail() {
   const route = useRoute<RouteProp<RootStackParamList, "TaskDetail">>();
   const { id } = route.params;
 
+  const { me } = useAuth();
+  const darfZuweisen = can(me, "manage_tasks");
+
   const [detail, setDetail] = useState<Detail | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [leute, setLeute] = useState<{ value: string; label: string }[]>([]);
+  const [auswahlOffen, setAuswahlOffen] = useState(false);
 
   const load = useCallback(async () => {
     const res = await getTaskDetail(id);
@@ -37,9 +55,37 @@ export default function TaskDetail() {
     load();
   }, [load]);
 
+  // Die Auswahlliste holt nur, wer sie braucht: ohne `manage_tasks` wäre es
+  // eine Namensliste des Betriebs ohne Zweck (§4.3).
+  useEffect(() => {
+    if (!darfZuweisen) return;
+    listTaskAssignees().then((r) => {
+      if (r.ok) setLeute(mitarbeiterOptionen(r.data));
+    });
+  }, [darfZuweisen]);
+
   // Genau diese Aufgabe: ändert ein Kollege Status oder Zuweisung, zieht die
   // Ansicht nach, ohne dass der Nutzer zurück und wieder hinein muss.
   useRealtime({ table: "tasks", filter: `id=eq.${id}`, onChange: load });
+
+  // Ein Sheet, KEIN `Alert.alert` mit einem Button je Person: die
+  // React-Native-Bridge unterstützt auf Android nur drei Buttons
+  // (neutral/negative/positive) und verwirft alles darüber stillschweigend.
+  // Bei 25 Mitarbeitern sähe ein Android-Nutzer drei Namen und weder
+  // „Niemand" noch „Abbrechen" — auf iOS stapelt der Alert bei so vielen
+  // Einträgen zwar, wird aber unbedienbar. Das Sheet gibt es bereits
+  // (`components/ui/patterns`), es scrollt und trägt beliebig viele Zeilen.
+  const setzeZustaendigen = async (neu: string | null) => {
+    setAuswahlOffen(false);
+    setSaving(true);
+    const res = await setTaskAssignee(id, neu);
+    setSaving(false);
+    if (!res.ok) {
+      Alert.alert("Zuweisung nicht möglich", res.error);
+      return;
+    }
+    setDetail(res.data);
+  };
 
   const complete = async () => {
     if (saving) return; // Doppel-Tap-Sperre
@@ -93,6 +139,35 @@ export default function TaskDetail() {
               Nach Abschluss ist eine QA-Freigabe nötig.
             </Txt>
           )}
+          {darfZuweisen ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Zuständige Person ändern"
+              onPress={() => setAuswahlOffen(true)}
+              disabled={saving}
+              style={({ pressed }) => ({
+                marginTop: 4,
+                paddingVertical: 10,
+                paddingHorizontal: 14,
+                borderRadius: t.radius.pill,
+                borderWidth: 1,
+                borderColor: t.palette.line,
+                alignSelf: "flex-start",
+                opacity: pressed || saving ? 0.6 : 1,
+              })}
+            >
+              <Row gap={8} style={{ alignItems: "center" }}>
+                <Icon n="user" s={16} sw={2} c={t.palette.ink} />
+                <Txt v="sm">{detail.assignee_name ?? "Niemand zugewiesen"}</Txt>
+              </Row>
+            </Pressable>
+          ) : (
+            detail.assignee_name && (
+              <Txt v="sm" soft>
+                Zuständig: {detail.assignee_name}
+              </Txt>
+            )
+          )}
         </Col>
 
         {detail.checklist.length > 0 && (
@@ -130,6 +205,53 @@ export default function TaskDetail() {
           </>
         )}
       </ScrollView>
+
+      <Sheet
+        open={auswahlOffen}
+        onClose={() => setAuswahlOffen(false)}
+        header={<Txt v="h2">Zuständig</Txt>}
+      >
+        <Col gap={0}>
+          {leute.map((u) => (
+            <Pressable
+              key={u.value}
+              accessibilityRole="button"
+              onPress={() => setzeZustaendigen(u.value)}
+              style={({ pressed }) => ({
+                paddingVertical: 15,
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <Row gap={10} style={{ alignItems: "center" }}>
+                <Icon
+                  n={detail.assignee_id === u.value ? "check" : "dot"}
+                  s={18}
+                  sw={2}
+                  c={
+                    detail.assignee_id === u.value
+                      ? t.palette.ink
+                      : t.palette.faint
+                  }
+                />
+                <Txt v="title">{u.label}</Txt>
+              </Row>
+            </Pressable>
+          ))}
+          <View style={{ height: 1, backgroundColor: t.palette.line }} />
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setzeZustaendigen(null)}
+            style={({ pressed }) => ({
+              paddingVertical: 15,
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <Txt v="title" soft>
+              Niemand zuweisen
+            </Txt>
+          </Pressable>
+        </Col>
+      </Sheet>
 
       {!done && (
         <View

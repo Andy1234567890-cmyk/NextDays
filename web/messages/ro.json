@@ -4584,6 +4584,8 @@
       "deleteAria": "Șterge selecția",
       "completed": "{done} sarcini finalizate.",
       "completedPartly": "{done} finalizate, {skipped} omise (lipsă foto sau fără acces).",
+      "assigned": "{done} sarcini atribuite.",
+      "assignedPartly": "{done} atribuite, {skipped} omise (fără acces).",
       "deleted": "{done} sarcini șterse.",
       "deletedPartly": "{done} șterse, {skipped} omise (fără acces)."
     },
@@ -4801,6 +4803,14 @@
         "refunded": "rambursată",
         "partially_refunded": "parțial rambursată"
       }
+    },
+    "zustaendig": {
+      "label": "Responsabil",
+      "niemand": "Nimeni atribuit",
+      "unbekannt": "Atribuire anterioară",
+      "gesetzt": "Responsabil modificat",
+      "abgezogen": "Atribuire retrasă",
+      "aktion": "Atribuie lui …"
     }
   },
   "objects": {

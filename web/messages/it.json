@@ -4584,6 +4584,8 @@
       "deleteAria": "Elimina selezione",
       "completed": "{done} attività completate.",
       "completedPartly": "{done} completate, {skipped} saltate (foto mancante o nessun accesso).",
+      "assigned": "{done} attività assegnate.",
+      "assignedPartly": "{done} assegnate, {skipped} saltate (nessun accesso).",
       "deleted": "{done} attività eliminate.",
       "deletedPartly": "{done} eliminate, {skipped} saltate (nessun accesso)."
     },
@@ -4801,6 +4803,14 @@
         "refunded": "rimborsato",
         "partially_refunded": "parzialmente rimborsato"
       }
+    },
+    "zustaendig": {
+      "label": "Responsabile",
+      "niemand": "Nessun assegnatario",
+      "unbekannt": "Assegnazione precedente",
+      "gesetzt": "Responsabile modificato",
+      "abgezogen": "Assegnazione rimossa",
+      "aktion": "Assegna a …"
     }
   },
   "objects": {

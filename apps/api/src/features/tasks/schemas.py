@@ -88,11 +88,45 @@ class TaskStatusUpdate(BaseModel):
     status: TaskStatus
 
 
+class TaskAssigneeUpdate(BaseModel):
+    """Zuständigen einer BESTEHENDEN Aufgabe setzen oder abziehen.
+
+    Bewusst nullable: „niemand zuständig" ist ein gültiger Zielzustand, kein
+    fehlender Wert. Wer eine Fehlzuweisung zurücknehmen will, braucht dafür
+    einen Weg — sonst bliebe nur, die Aufgabe zu löschen und neu anzulegen.
+    """
+
+    assignee_id: str | None = None
+
+
 class BulkTaskRequest(BaseModel):
     """Auswahl für die Massenaktionen (Abschließen/Löschen). Die Obergrenze
     steht im Service (`TasksService.BULK_MAX`) — Wurzel 8."""
 
     ids: list[str] = Field(min_length=1, max_length=200)
+
+
+class TaskAssigneeOption(BaseModel):
+    """Ein möglicher Zuständiger für die Auswahlliste.
+
+    Bewusst KEIN `permissions`-Feld: eine Auswahlliste braucht Name, Mail und
+    Rolle — die Rechte fremder Konten auszuliefern wäre Aufklärung für eine
+    Rechteausweitung (Wurzel 9).
+
+    `email` ist drin, weil Namen sich doppeln: im Beta-Betrieb tragen zwei
+    Konten „Torsten Ågaard". Ohne Unterscheidungsmerkmal wählt man blind.
+    """
+
+    user_id: str
+    full_name: str | None = None
+    email: str | None = None
+    role: str
+
+
+class BulkAssignRequest(BulkTaskRequest):
+    """Mehrere Aufgaben auf einmal zuweisen (Team-Liste, Mehrfachauswahl)."""
+
+    assignee_id: str | None = None
 
 
 # --- angereicherte Sichten (Team/Kalender) ---
@@ -256,6 +290,22 @@ class Substitution(BaseModel):
     accepted_by: str | None = None
     status: SubstitutionStatus
     note: str | None = None
+
+
+class SubstitutionListItem(Substitution):
+    """Eine offene Anfrage, wie sie ein möglicher Vertreter sieht.
+
+    Ohne Titel und Objekt ist eine Anfrage nicht entscheidbar — „willst du
+    Aufgabe 8f3c… übernehmen?" beantwortet niemand. Kein Gast-Name, kein
+    Betrag (§4.3).
+    """
+
+    title: str
+    property_title: str | None = None
+    property_id: str | None = None
+    start_at: datetime | None = None
+    end_at: datetime | None = None
+    requested_by_name: str | None = None
 
 
 # --- Inventar (§2.5, auch unterkunftslos) ---

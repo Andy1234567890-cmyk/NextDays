@@ -4584,6 +4584,8 @@
       "deleteAria": "Radera valda",
       "completed": "{done} uppgifter slutförda.",
       "completedPartly": "{done} slutförda, {skipped} överhoppade (foto saknas eller ingen behörighet).",
+      "assigned": "{done} uppgifter tilldelade.",
+      "assignedPartly": "{done} tilldelade, {skipped} överhoppade (ingen behörighet).",
       "deleted": "{done} uppgifter raderade.",
       "deletedPartly": "{done} raderade, {skipped} överhoppade (ingen behörighet)."
     },
@@ -4801,6 +4803,14 @@
         "refunded": "återbetald",
         "partially_refunded": "delvis återbetald"
       }
+    },
+    "zustaendig": {
+      "label": "Ansvarig",
+      "niemand": "Ingen tilldelad",
+      "unbekannt": "Tidigare tilldelning",
+      "gesetzt": "Ansvarig ändrad",
+      "abgezogen": "Tilldelning borttagen",
+      "aktion": "Tilldela …"
     }
   },
   "objects": {

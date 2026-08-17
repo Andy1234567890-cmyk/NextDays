@@ -4584,6 +4584,8 @@
       "deleteAria": "Usuń wybrane",
       "completed": "Zakończono zadań: {done}.",
       "completedPartly": "Zakończono {done}, pominięto {skipped} (brak zdjęcia lub dostępu).",
+      "assigned": "Przypisano zadań: {done}.",
+      "assignedPartly": "Przypisano {done}, pominięto {skipped} (brak dostępu).",
       "deleted": "Usunięto zadań: {done}.",
       "deletedPartly": "Usunięto {done}, pominięto {skipped} (brak dostępu)."
     },
@@ -4801,6 +4803,14 @@
         "refunded": "zwrócona",
         "partially_refunded": "częściowo zwrócona"
       }
+    },
+    "zustaendig": {
+      "label": "Osoba odpowiedzialna",
+      "niemand": "Nikomu nieprzypisane",
+      "unbekannt": "Dotychczasowe przypisanie",
+      "gesetzt": "Zmieniono osobę odpowiedzialną",
+      "abgezogen": "Cofnięto przypisanie",
+      "aktion": "Przypisz do …"
     }
   },
   "objects": {

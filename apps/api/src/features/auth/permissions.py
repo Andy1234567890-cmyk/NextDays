@@ -87,6 +87,11 @@ _CO_ADMIN: frozenset[Capability] = frozenset({
     # Fähigkeit könnte co_admin den Aufgaben-Kalender öffnen, aber keine
     # einzelne Aufgabe. Die Implikation manage⊇own gehört ins Rollen-Set.
     Capability.VIEW_OWN_TASKS,
+    # Dieselbe Implikation für die Vertretung: `accept`/`decline` hängen an
+    # REQUEST_SUBSTITUTE. Ohne sie konnte ein co_admin eine Vertretungsanfrage
+    # seines Teams weder annehmen noch ablehnen — die Anfrage blieb offen
+    # liegen, obwohl er derjenige ist, der operativ einspringt.
+    Capability.REQUEST_SUBSTITUTE,
     Capability.MANAGE_CALENDAR,
     Capability.VIEW_CALENDAR,
     Capability.APPROVE_BLOCK,

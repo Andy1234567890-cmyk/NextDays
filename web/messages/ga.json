@@ -4589,6 +4589,8 @@
       "deleteAria": "Scrios an rogha",
       "completed": "{done} tasc críochnaithe.",
       "completedPartly": "{done} críochnaithe, {skipped} scipeáilte (grianghraf ar iarraidh nó gan rochtain).",
+      "assigned": "{done} tasc sannta.",
+      "assignedPartly": "{done} sannta, {skipped} scipeáilte (gan rochtain).",
       "deleted": "{done} tasc scriosta.",
       "deletedPartly": "{done} scriosta, {skipped} scipeáilte (gan rochtain)."
     },
@@ -4806,6 +4808,14 @@
         "refunded": "aisíoctha",
         "partially_refunded": "aisíoctha go páirteach"
       }
+    },
+    "zustaendig": {
+      "label": "Sannta do",
+      "niemand": "Gan duine sannta",
+      "unbekannt": "Sannadh roimhe seo",
+      "gesetzt": "Athraíodh an sannadh",
+      "abgezogen": "Baineadh an sannadh",
+      "aktion": "Sann do …"
     }
   },
   "objects": {

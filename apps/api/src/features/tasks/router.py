@@ -22,6 +22,7 @@ from src.features.auth.dependencies import require_permission
 from src.features.auth.permissions import Capability, has_capability
 
 from .schemas import (
+    BulkAssignRequest,
     BulkTaskRequest,
     ChecklistItemCreate,
     ChecklistItemToggle,
@@ -34,8 +35,11 @@ from .schemas import (
     RuleListItem,
     RuleUpdate,
     SliceHealth,
+    SubstitutionListItem,
     SubstitutionRequest,
     Task,
+    TaskAssigneeOption,
+    TaskAssigneeUpdate,
     TaskCalendarResponse,
     TaskCostCreate,
     TaskCreate,
@@ -152,6 +156,31 @@ def update_task_status(
     """
     try:
         return service.set_status(_tenant(ctx), task_id, req.status, ctx)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch("/{task_id}/assignee", response_model=TaskDetail)
+def update_task_assignee(
+    task_id: str,
+    req: TaskAssigneeUpdate,
+    service: TasksServiceDep,
+    ctx: Annotated[
+        AuthContext, Depends(require_permission(Capability.MANAGE_TASKS))
+    ],
+) -> TaskDetail:
+    """Zuständigen einer bestehenden Aufgabe setzen, wechseln oder abziehen.
+
+    `MANAGE_TASKS` und nicht `VIEW_OWN_TASKS`: wer arbeitet, meldet seinen
+    Zustand (das ist der Endpunkt darüber) — wer VERTEILT, führt den Betrieb.
+    Eine Reinigungskraft, die sich fremde Aufgaben selbst zuschieben kann,
+    wäre keine Zuweisung mehr. Ihr Weg heraus ist die Vertretungsanfrage.
+
+    `assignee_id: null` nimmt die Zuweisung zurück — ein gültiger Zielzustand,
+    kein fehlender Wert.
+    """
+    try:
+        return service.set_assignee(_tenant(ctx), task_id, req.assignee_id, ctx)
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -287,15 +316,62 @@ def accept_substitution(
         AuthContext, Depends(require_permission(Capability.REQUEST_SUBSTITUTE))
     ],
 ) -> dict[str, str]:
-    """Eine Vertretungsanfrage annehmen.
+    """Eine Vertretungsanfrage annehmen — die Aufgabe wechselt dabei zu mir.
 
     Ohne diesen Endpunkt war das Feature eine Sackgasse: eine Vertretung ließ
     sich anfragen, aber von niemandem annehmen. Dieselbe Fähigkeit wie das
     Anfragen — wer vertreten werden darf, darf auch vertreten.
+
+    Bis 17.08.2026 quittierte die Annahme nur die Anfrage und ließ die Aufgabe
+    beim Vertretenen stehen; seither schreibt sie `tasks.assignee_id` mit um.
     """
     try:
-        sub = service.accept_substitution(_tenant(ctx), substitution_id, ctx.user_id)
+        sub = service.accept_substitution(
+            _tenant(ctx), substitution_id, ctx.user_id, ctx
+        )
         return {"id": sub.id, "status": sub.status.value}
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/substitution/{substitution_id}/decline")
+def decline_substitution(
+    substitution_id: str,
+    service: TasksServiceDep,
+    ctx: Annotated[
+        AuthContext, Depends(require_permission(Capability.REQUEST_SUBSTITUTE))
+    ],
+) -> dict[str, str]:
+    """Eine Vertretungsanfrage ablehnen.
+
+    Den Zustand `declined` kennt das Enum seit 0019, einen Weg dorthin gab es
+    nie: eine ausgeschlagene Anfrage blieb ewig offen und stand jedem Kollegen
+    weiter in der Liste. Die Aufgabe bleibt dabei, wo sie ist.
+    """
+    try:
+        sub = service.decline_substitution(
+            _tenant(ctx), substitution_id, ctx.user_id, ctx
+        )
+        return {"id": sub.id, "status": sub.status.value}
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/substitution", response_model=list[SubstitutionListItem])
+def list_substitutions(
+    service: TasksServiceDep,
+    ctx: Annotated[
+        AuthContext, Depends(require_permission(Capability.REQUEST_SUBSTITUTE))
+    ],
+) -> list[SubstitutionListItem]:
+    """Offene Vertretungsanfragen, die ich übernehmen könnte.
+
+    Ohne diese Liste war die Vertretung unerreichbar — man hätte die ID einer
+    Anfrage bereits kennen müssen, um sie annehmen zu können. Eigene Anfragen
+    fallen raus, der Objekt-Scope gilt wie überall (Wurzel 9).
+    """
+    try:
+        return service.list_substitutions(_tenant(ctx), ctx.user_id, ctx)
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -341,6 +417,27 @@ def _darf_benoten(
     return has_capability(ctx.role, Capability.MANAGE_TASKS)
 
 
+@router.get("/assignees", response_model=list[TaskAssigneeOption])
+def list_assignees(
+    service: TasksServiceDep,
+    ctx: Annotated[AuthContext, Depends(_manage())],
+    property_id: str | None = None,
+) -> list[TaskAssigneeOption]:
+    """Wer kann Zuständige:r einer Aufgabe sein?
+
+    NICHT `/auth/account/users` — die Liste ist für die Hauptkontakt-Auswahl
+    gedacht und enthält alle Nutzer des Betriebs, auch Eigentümer. Ein `owner`
+    hat `VIEW_OWN_TASKS` aber nicht: eine ihm zugewiesene Aufgabe könnte er
+    nie öffnen. Live standen dadurch 23 Eigentümer neben 2 wirklich
+    berechtigten Personen in der Auswahl — und 11 Aufgaben auf Konten, die sie
+    nie zu sehen bekamen.
+    """
+    try:
+        return service.moegliche_zustaendige(_tenant(ctx), property_id)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.get("/team", response_model=list[TaskListItem])
 def team_tasks(
     service: TasksServiceDep,
@@ -367,6 +464,24 @@ def bulk_complete(
     Foto-Pflicht-Pfad wie der Einzelabschluss (Wurzel 9)."""
     try:
         return service.bulk_complete(_tenant(ctx), req.ids, ctx.user_id, ctx)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/bulk/assign")
+def bulk_assign(
+    req: BulkAssignRequest,
+    service: TasksServiceDep,
+    ctx: Annotated[AuthContext, Depends(_manage())],
+) -> dict[str, int]:
+    """Auswahl einem Mitarbeiter zuweisen (oder die Zuweisung abziehen).
+
+    Jede Aufgabe durchläuft denselben Scope- und Freigabe-Pfad wie die
+    Einzel-Zuweisung (Wurzel 9). Was daran scheitert, kommt als `skipped`
+    zurück statt den ganzen Aufruf zu kippen.
+    """
+    try:
+        return service.bulk_assign(_tenant(ctx), req.ids, req.assignee_id, ctx)
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

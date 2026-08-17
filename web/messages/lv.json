@@ -4584,6 +4584,8 @@
       "deleteAria": "Dzēst atlasītos",
       "completed": "Pabeigti {done} uzdevumi.",
       "completedPartly": "Pabeigti {done}, izlaisti {skipped} (trūkst foto vai nav piekļuves).",
+      "assigned": "Piešķirti {done} uzdevumi.",
+      "assignedPartly": "Piešķirti {done}, izlaisti {skipped} (nav piekļuves).",
       "deleted": "Dzēsti {done} uzdevumi.",
       "deletedPartly": "Dzēsti {done}, izlaisti {skipped} (nav piekļuves)."
     },
@@ -4801,6 +4803,14 @@
         "refunded": "atmaksāts",
         "partially_refunded": "daļēji atmaksāts"
       }
+    },
+    "zustaendig": {
+      "label": "Atbildīgais",
+      "niemand": "Neviens nav piešķirts",
+      "unbekannt": "Iepriekšējais piešķīrums",
+      "gesetzt": "Atbildīgais mainīts",
+      "abgezogen": "Piešķīrums atsaukts",
+      "aktion": "Piešķirt …"
     }
   },
   "objects": {

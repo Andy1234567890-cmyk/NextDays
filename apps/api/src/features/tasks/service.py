@@ -25,9 +25,18 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.auth.owner_scope import is_owner, owner_property_ids
-from src.features.auth.staff_scope import is_staff, staff_property_ids
+from src.features.auth.permissions import Capability, has_capability
+from src.features.auth.schemas import UserRole
+from src.features.auth.staff_scope import (
+    STAFF_ROLES as _STAFF_ROLLEN,
+)
+from src.features.auth.staff_scope import (
+    is_staff,
+    staff_property_ids,
+)
 from src.features.media.service import sign_task_photo
 from src.features.notification_settings.ereignisse import (
+    melde_aufgaben_entzug,
     melde_aufgaben_zuweisung,
     melde_dienstleistung_erledigt,
 )
@@ -60,9 +69,11 @@ from .schemas import (
     RuleUpdate,
     SliceHealth,
     Substitution,
+    SubstitutionListItem,
     SubstitutionRequest,
     SubstitutionStatus,
     Task,
+    TaskAssigneeOption,
     TaskCalendarResponse,
     TaskCalendarRow,
     TaskCost,
@@ -116,7 +127,7 @@ class TasksService:
         # FK-Ziele müssen dem Tenant gehören (Wurzel 3).
         if req.property_id:
             self._require_own_properties(tenant_id, [req.property_id])
-        self._require_own_assignee(tenant_id, req.assignee_id)
+        self._require_own_assignee(tenant_id, req.assignee_id, req.property_id)
         row = self._insert(
             "tasks",
             {
@@ -507,9 +518,67 @@ class TasksService:
         log.info("substitution_requested", task_id=req.task_id, by=user_id)
         return Substitution(**{k: row.get(k) for k in Substitution.model_fields})
 
+    def _offene_anfrage(self, tenant_id: str, substitution_id: str) -> dict[str, object]:
+        """Eine Anfrage laden, die noch entscheidbar ist.
+
+        Der Status-Guard ist der Punkt: ohne ihn liesse sich eine bereits
+        angenommene Anfrage erneut „annehmen" und der Vertreter damit
+        ueberschreiben — die Aufgabe waere bei jemandem gelandet, mit dem
+        niemand gerechnet hat.
+        """
+        rows = (
+            self._db()
+            .table("task_substitutions")
+            .select("id, task_id, requested_by, status")
+            .eq("id", substitution_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not rows:
+            raise TaskError("Vertretungsanfrage nicht gefunden.", status_code=404)
+        if str(rows[0].get("status") or "") != SubstitutionStatus.requested.value:
+            raise TaskError(
+                "Diese Vertretungsanfrage ist bereits entschieden.",
+                status_code=409,
+            )
+        return rows[0]
+
     def accept_substitution(
-        self, tenant_id: str, substitution_id: str, accepted_by: str
+        self,
+        tenant_id: str,
+        substitution_id: str,
+        accepted_by: str,
+        ctx: AuthContext | None = None,
     ) -> Substitution:
+        """Vertretung annehmen — und die Aufgabe dabei WIRKLICH uebernehmen.
+
+        Bis hierher setzte diese Methode nur `status='accepted'`. Die Aufgabe
+        selbst blieb beim urspruenglich Zustaendigen: sie tauchte beim
+        Vertreter in `/tasks/mine` nie auf, beim Vertretenen dafuer weiter.
+        Zwei Leute mit derselben Aufgabe, keiner davon der, der sie
+        uebernommen hat — das Feature sah funktionsfaehig aus und war es nie
+        (Wurzel 1: die Aktion hatte einen Gegenzustand, den niemand pflegte).
+
+        Reihenfolge: ZUERST die Anfrage claimen (`update … .eq("status",
+        "requested")`), dann die Aufgabe umschreiben. Andersherum — und so
+        stand es hier zuerst — verliert das Rennen der Falsche: nehmen C und D
+        gleichzeitig an, laufen beide durch `_offene_anfrage`, beide rufen
+        `set_assignee`, und wer dort ZULETZT schreibt, bekommt die Aufgabe;
+        den Claim gewinnt aber, wer beim Quittieren ZUERST ist. Ergebnis waere
+        gewesen: Aufgabe bei C, Anfrage sagt D, C bekommt ein 409 „du hast sie
+        nicht bekommen" — und beide Benachrichtigungen sind raus. Der Claim
+        MUSS deshalb der Riegel sein, nicht die Reihenfolge (Wurzel 2).
+
+        Kippt das Umschreiben danach, wird der Claim zurueckgerollt: eine
+        quittierte Anfrage ohne Wirkung waere schlimmer als eine offene
+        (Wurzel 1).
+        """
+        anfrage = self._offene_anfrage(tenant_id, substitution_id)
+        if str(anfrage.get("requested_by") or "") == accepted_by:
+            raise TaskError(
+                "Man kann sich nicht selbst vertreten.", status_code=422
+            )
         res = (
             self._db()
             .table("task_substitutions")
@@ -521,13 +590,166 @@ class TasksService:
             )
             .eq("id", substitution_id)
             .eq("tenant_id", tenant_id)
+            .eq("status", SubstitutionStatus.requested.value)
             .execute()
         )
         if not res.data:
-            raise TaskError("Vertretungsanfrage nicht gefunden.", status_code=404)
+            # Zwischen Laden und Claim hat jemand anderes angenommen.
+            raise TaskError(
+                "Diese Vertretungsanfrage ist bereits entschieden.",
+                status_code=409,
+            )
+        try:
+            self.set_assignee(
+                tenant_id, str(anfrage["task_id"]), accepted_by, ctx
+            )
+        except TaskError:
+            # Gegenzustand (Wurzel 1): der Claim war eine Zusage, die nicht
+            # eingeloest werden konnte — sie wird zurueckgenommen, damit ein
+            # anderer Kollege die Anfrage noch annehmen kann. Bewusst NUR
+            # `TaskError` (fachliche Ablehnung wie fehlende Objekt-Freigabe);
+            # ein echter Programmfehler fliegt durch und laesst den Claim
+            # stehen, statt ihn stillschweigend wegzuraeumen (Wurzel 5).
+            self._db().table("task_substitutions").update(
+                {
+                    "status": SubstitutionStatus.requested.value,
+                    "accepted_by": None,
+                }
+            ).eq("id", substitution_id).eq("tenant_id", tenant_id).execute()
+            raise
+        log.info(
+            "substitution_accepted",
+            substitution_id=substitution_id, task_id=anfrage["task_id"],
+            by=accepted_by,
+        )
         return Substitution(
             **{k: res.data[0].get(k) for k in Substitution.model_fields}
         )
+
+    def decline_substitution(
+        self,
+        tenant_id: str,
+        substitution_id: str,
+        declined_by: str,
+        ctx: AuthContext | None = None,
+    ) -> Substitution:
+        """Vertretung ablehnen.
+
+        Das Enum kennt `declined` seit 0019, einen Weg dorthin gab es nie —
+        eine ausgeschlagene Anfrage blieb ewig „offen" und stand jedem
+        Kollegen weiter in der Liste. Die Aufgabe wechselt hierbei NICHT den
+        Zustaendigen: sie bleibt, wo sie war.
+
+        `ctx` ist Pflicht fuer den Scope, nicht Beiwerk: `list_substitutions`
+        blendet Anfragen zu nicht freigegebenen Objekten aus, `accept` erbt
+        den Scope ueber `set_assignee` — `decline` haette sonst als einziger
+        Pfad nur den Tenant geprueft. Ein Mitarbeiter koennte eine Anfrage
+        abwuergen, die er nicht einmal sehen darf: die Bitte um Vertretung
+        waere erledigt, ohne dass jemand einspringt, und der Fragende erfaehrt
+        es nicht (Wurzel 9 — der Item-Pfad darf nicht mehr hergeben als die
+        Liste).
+        """
+        anfrage = self._offene_anfrage(tenant_id, substitution_id)
+        # Wirft 404, wenn die Aufgabe ausserhalb des eigenen Objekt-Scopes
+        # liegt — dieselbe Meldung wie „gibt es nicht", kein Orakel.
+        self.get_detail(tenant_id, str(anfrage["task_id"]), ctx)
+        res = (
+            self._db()
+            .table("task_substitutions")
+            .update({"status": SubstitutionStatus.declined.value})
+            .eq("id", substitution_id)
+            .eq("tenant_id", tenant_id)
+            .eq("status", SubstitutionStatus.requested.value)
+            .execute()
+        )
+        if not res.data:
+            raise TaskError(
+                "Diese Vertretungsanfrage ist bereits entschieden.",
+                status_code=409,
+            )
+        log.info(
+            "substitution_declined",
+            substitution_id=substitution_id, by=declined_by,
+        )
+        return Substitution(
+            **{k: res.data[0].get(k) for k in Substitution.model_fields}
+        )
+
+    def list_substitutions(
+        self, tenant_id: str, user_id: str, ctx: AuthContext | None = None
+    ) -> list[SubstitutionListItem]:
+        """Offene Vertretungsanfragen, die ich uebernehmen KOENNTE.
+
+        Ohne diese Liste war das Feature unerreichbar: es gab keinen Weg, von
+        einer Anfrage zu erfahren — man haette ihre ID bereits kennen muessen.
+
+        Eigene Anfragen fallen raus (man vertritt sich nicht selbst), und der
+        Objekt-Scope gilt wie ueberall: eine Anfrage zu einer Aufgabe an einem
+        Objekt, das mir nicht freigegeben ist, koennte ich ohnehin nicht
+        uebernehmen — sie zu zeigen waere eine leere Einladung (Wurzel 9).
+        """
+        offen = (
+            self._db()
+            .table("task_substitutions")
+            .select("id, task_id, requested_by, accepted_by, status, note")
+            .eq("tenant_id", tenant_id)
+            .eq("status", SubstitutionStatus.requested.value)
+            .execute()
+        ).data or []
+        fremd = [r for r in offen if str(r.get("requested_by") or "") != user_id]
+        if not fremd:
+            return []
+        aufgaben = {
+            str(t["id"]): t
+            for t in (
+                self._db()
+                .table("tasks")
+                .select("id, title, property_id, start_at, end_at")
+                .eq("tenant_id", tenant_id)
+                .in_("id", [str(r["task_id"]) for r in fremd])
+                .execute()
+            ).data
+            or []
+        }
+        erlaubt: set[str] | None = None
+        if ctx is not None and is_staff(ctx):
+            erlaubt = staff_property_ids(self._db(), ctx)
+        titel = self._property_titles(
+            tenant_id,
+            {
+                str(t["property_id"])
+                for t in aufgaben.values()
+                if t.get("property_id")
+            },
+        )
+        namen = self._user_names(
+            tenant_id, {str(r["requested_by"]) for r in fremd}
+        )
+        items: list[SubstitutionListItem] = []
+        for r in fremd:
+            aufgabe = aufgaben.get(str(r["task_id"]))
+            if aufgabe is None:
+                continue
+            prop = aufgabe.get("property_id")
+            if erlaubt is not None and prop is not None and str(prop) not in erlaubt:
+                continue
+            items.append(
+                SubstitutionListItem(
+                    id=str(r["id"]),
+                    task_id=str(r["task_id"]),
+                    requested_by=str(r["requested_by"]),
+                    accepted_by=r.get("accepted_by"),
+                    status=SubstitutionStatus(r["status"]),
+                    note=r.get("note"),
+                    title=str(aufgabe.get("title") or ""),
+                    property_id=str(prop) if prop else None,
+                    property_title=titel.get(str(prop)) if prop else None,
+                    start_at=aufgabe.get("start_at"),
+                    end_at=aufgabe.get("end_at"),
+                    requested_by_name=namen.get(str(r["requested_by"])),
+                )
+            )
+        return items
 
     # --- Inventar (§2.5) ---
 
@@ -969,6 +1191,182 @@ class TasksService:
             tenant_id=tenant_id, task_id=task_id, von=aktuell, nach=status.value,
         )
         return self.get_detail(tenant_id, task_id, ctx)
+
+    # --- Zuständigen setzen -----------------------------------------------
+
+    def moegliche_zustaendige(
+        self, tenant_id: str, property_id: str | None = None
+    ) -> list[TaskAssigneeOption]:
+        """Wer kann überhaupt Zuständige:r einer Aufgabe sein?
+
+        NICHT alle Nutzer des Betriebs. Ein `owner` hat `VIEW_OWN_TASKS`
+        nicht — er könnte eine ihm zugewiesene Aufgabe nie öffnen. Ihn zur
+        Auswahl zu stellen erzeugt eine Zuweisung, die im Nichts endet: live
+        standen 11 Aufgaben auf Eigentümer-Konten, die sie nie zu sehen
+        bekamen, und die Auswahlliste zeigte 23 Eigentümer neben 2 wirklich
+        berechtigten Personen.
+
+        Die Menge kommt aus der CAPABILITY, nicht aus einer hier
+        abgeschriebenen Rollenliste: wer `VIEW_OWN_TASKS` hat, kann eine
+        Aufgabe annehmen und abschließen. Verschiebt sich die Rechte-Matrix,
+        verschiebt sich diese Liste mit — eine kopierte Rollenmenge wäre die
+        Stelle, an der beide auseinanderlaufen.
+
+        Gesperrte Zugänge fallen raus (`deactivated_at`): wer sich nicht
+        anmelden kann, erledigt nichts.
+
+        Mit `property_id` fällt zusätzlich raus, wer für DIESES Objekt keine
+        Freigabe hat — dieselbe Prüfung, die `_require_own_assignee` beim
+        Schreiben macht. Ohne sie stünde jemand zur Auswahl, dessen Wahl
+        anschließend mit 422 abgelehnt wird: die Liste verspräche etwas, das
+        der Schreibpfad verweigert. Bei der Massen-Zuweisung wäre es schlimmer
+        — dort verschwinden die Einzelgründe hinter einem „N übersprungen".
+        """
+        rows = (
+            self._db()
+            .table("users")
+            .select("id, email, full_name, role, deactivated_at")
+            .eq("tenant_id", tenant_id)
+            .order("full_name")
+            .execute()
+        ).data or []
+        # Nur einmal laden, nicht je Nutzer (die Liste hat schnell 25 Zeilen).
+        freigegeben: set[str] | None = None
+        if property_id is not None:
+            freigegeben = {
+                str(r["user_id"])
+                for r in (
+                    self._db()
+                    .table("staff_property_assignments")
+                    .select("user_id")
+                    .eq("tenant_id", tenant_id)
+                    .eq("property_id", property_id)
+                    .execute()
+                ).data
+                or []
+            }
+        optionen: list[TaskAssigneeOption] = []
+        for r in rows:
+            if r.get("deactivated_at"):
+                continue
+            rolle = str(r.get("role") or "")
+            try:
+                darf = has_capability(UserRole(rolle), Capability.VIEW_OWN_TASKS)
+            except ValueError:
+                # Unbekannte Rolle: fail-closed (Wurzel 6). Lieber jemand
+                # fehlt in der Liste, als dass eine Aufgabe bei einem Konto
+                # landet, dessen Rechte niemand kennt.
+                darf = False
+            if not darf:
+                continue
+            if (
+                freigegeben is not None
+                and rolle in _STAFF_ROLLEN
+                and str(r["id"]) not in freigegeben
+            ):
+                continue
+            optionen.append(
+                TaskAssigneeOption(
+                    user_id=str(r["id"]),
+                    full_name=r.get("full_name"),
+                    email=r.get("email"),
+                    role=rolle,
+                )
+            )
+        return optionen
+
+    def set_assignee(
+        self,
+        tenant_id: str,
+        task_id: str,
+        assignee_id: str | None,
+        ctx: AuthContext | None = None,
+    ) -> TaskDetail:
+        """Zuständigen einer bestehenden Aufgabe setzen, wechseln oder abziehen.
+
+        Bis hierher war `assignee_id` ein Einweg-Feld: gesetzt beim Anlegen,
+        danach nie wieder beschreibbar. Eine Fehlzuweisung ließ sich nur
+        beheben, indem man die Aufgabe löschte und neu anlegte — mitsamt
+        Checkliste, Fotos und Historie.
+
+        Scope wie `get_detail` (Wurzel 9), Empfänger-Prüfung inklusive
+        Objekt-Freigabe (`_require_own_assignee`).
+
+        Beide Meldungen tragen einen `vorgang`-Stempel: ohne ihn liefe ein
+        Wechsel A→B→A in die Entdopplung. Der Schlüssel enthält zwar den
+        Empfänger, aber der UNIQUE-Index greift über OFFENE Meldungen — A's
+        zweite Zuweisung träfe auf seine erste, noch ungelesene, und fiele
+        samt Mail aus. Der Zeitstempel macht jeden Wechsel unterscheidbar.
+        """
+        detail = self.get_detail(tenant_id, task_id, ctx)
+        neu = assignee_id or None
+        alt = detail.assignee_id or None
+        if neu == alt:
+            # Idempotent (Wurzel 2): derselbe Empfänger ist kein Wechsel — und
+            # löst deshalb auch keine zweite Mail aus.
+            return detail
+        self._require_own_assignee(tenant_id, neu, detail.property_id)
+        self._db().table("tasks").update({"assignee_id": neu}).eq(
+            "id", task_id
+        ).eq("tenant_id", tenant_id).execute()
+        # Ein Stempel je Wechsel — nicht je Empfänger (siehe Docstring).
+        vorgang = datetime.now(UTC).isoformat(timespec="seconds")
+        log.info(
+            "task_zustaendiger_gesetzt",
+            tenant_id=tenant_id, task_id=task_id, von=alt, nach=neu,
+        )
+        melde_aufgaben_zuweisung(
+            self._db(),
+            tenant_id=tenant_id,
+            task_id=task_id,
+            assignee_id=neu,
+            titel=detail.title,
+            property_id=detail.property_id,
+            vorgang=vorgang,
+        )
+        # Der bisherige Zuständige erfährt, dass die Aufgabe weg ist (Wurzel 1):
+        # sie verschwindet sonst wortlos aus seiner Liste, und er hält sie
+        # womöglich weiter für seine.
+        if alt:
+            melde_aufgaben_entzug(
+                self._db(),
+                tenant_id=tenant_id,
+                task_id=task_id,
+                assignee_id=alt,
+                titel=detail.title,
+                property_id=detail.property_id,
+                vorgang=vorgang,
+            )
+        return self.get_detail(tenant_id, task_id, ctx)
+
+    def bulk_assign(
+        self,
+        tenant_id: str,
+        ids: list[str],
+        assignee_id: str | None,
+        ctx: AuthContext | None = None,
+    ) -> dict[str, int]:
+        """Mehrere Aufgaben auf einmal zuweisen.
+
+        Jede Aufgabe läuft durch denselben Einzelpfad — inklusive Scope- und
+        Freigabe-Prüfung (Wurzel 9). Was daran scheitert, wird gezählt statt
+        den ganzen Aufruf zu kippen: bei 40 markierten Zeilen ist „drei davon
+        gingen nicht" brauchbarer als ein pauschaler 422.
+        """
+        sauber = self._clean_bulk_ids(ids)
+        zugewiesen = 0
+        uebersprungen = 0
+        for task_id in sauber:
+            try:
+                self.set_assignee(tenant_id, task_id, assignee_id, ctx)
+                zugewiesen += 1
+            except TaskError:
+                uebersprungen += 1
+        log.info(
+            "tasks_bulk_zugewiesen",
+            tenant_id=tenant_id, zugewiesen=zugewiesen, uebersprungen=uebersprungen,
+        )
+        return {"assigned": zugewiesen, "skipped": uebersprungen}
 
     # --- Checklisten-Punkt abhaken (0360) ---------------------------------
 
@@ -1608,13 +2006,29 @@ class TasksService:
         if len(owned) != len(clean):
             raise TaskError("Unbekanntes Objekt referenziert.", status_code=422)
 
-    def _require_own_assignee(self, tenant_id: str, assignee_id: str | None) -> None:
+    def _require_own_assignee(
+        self,
+        tenant_id: str,
+        assignee_id: str | None,
+        property_id: str | None = None,
+    ) -> None:
+        """Der Empfänger muss existieren UND die Aufgabe sehen können.
+
+        Die zweite Hälfte ist der Grund für `property_id`: der Lesepfad
+        (`list_own_tasks`, `get_detail`) blendet für staff/cleaner jede
+        objektgebundene Aufgabe aus, deren Objekt ihnen nicht über
+        `staff_property_assignments` freigegeben ist. Prüfte der SCHREIBpfad
+        das nicht mit, ginge die Zuweisung durch, die Mail ginge raus — und
+        beim Empfänger wäre die Aufgabe unsichtbar. Der Item-Pfad muss denselben
+        Scope prüfen wie die Liste (Wurzel 9); ein Fehlschlag ist hier ehrlicher
+        als eine Zuweisung ins Nichts.
+        """
         if not assignee_id:
             return
         owned = (
             self._db()
             .table("users")
-            .select("id")
+            .select("id, role")
             .eq("tenant_id", tenant_id)
             .eq("id", assignee_id)
             .limit(1)
@@ -1622,6 +2036,28 @@ class TasksService:
         ).data
         if not owned:
             raise TaskError("Unbekannter Mitarbeiter referenziert.", status_code=422)
+        if property_id is None:
+            # Pool-Aufgabe ohne Objektbezug: für jede Rolle sichtbar.
+            return
+        if str(owned[0].get("role") or "") not in _STAFF_ROLLEN:
+            # admin/co_admin/owner hängen nicht an staff_property_assignments.
+            return
+        frei = (
+            self._db()
+            .table("staff_property_assignments")
+            .select("property_id")
+            .eq("tenant_id", tenant_id)
+            .eq("user_id", assignee_id)
+            .eq("property_id", property_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not frei:
+            raise TaskError(
+                "Dieser Mitarbeiter ist nicht für das Objekt der Aufgabe "
+                "freigegeben und würde sie nicht sehen.",
+                status_code=422,
+            )
 
     # --- intern ---
 

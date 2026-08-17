@@ -33,8 +33,10 @@ export function MyTasksList() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  // Realtime aktualisiert still (siehe team-tasks): kein Ladezustand über
+  // einer Liste, die schon dasteht.
+  const load = useCallback(async (stillLaden = false) => {
+    if (!stillLaden) setLoading(true);
     const res = await listMyTasks({
       status_bucket: tab,
       property_ids: propFilter,
@@ -59,14 +61,18 @@ export function MyTasksList() {
     })();
   }, []);
 
-  useRealtime({ table: "tasks", onChange: load });
+  const stillNachladen = useCallback(() => {
+    void load(true);
+  }, [load]);
+
+  useRealtime({ table: "tasks", onChange: stillNachladen });
 
   const complete = async (taskId: string) => {
     const res = await completeTask(taskId);
     if (!res.ok) toast.error(res.error);
     else {
       toast.success(t("myTasksList.completed"));
-      load();
+      stillNachladen();
     }
   };
 
@@ -113,7 +119,7 @@ export function MyTasksList() {
         allowDelete={false}
         onDone={() => {
           setSelected([]);
-          load();
+          stillNachladen();
         }}
       />
 
@@ -121,7 +127,7 @@ export function MyTasksList() {
         <TaskDetailModal
           taskId={openId}
           onClose={() => setOpenId(null)}
-          onChanged={load}
+          onChanged={stillNachladen}
         />
       )}
     </div>

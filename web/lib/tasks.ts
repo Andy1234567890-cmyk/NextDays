@@ -320,6 +320,24 @@ export async function setTaskStatus(
 }
 
 /**
+ * Zuständigen einer bestehenden Aufgabe setzen, wechseln oder abziehen.
+ *
+ * `null` nimmt die Zuweisung zurück — ein gültiger Zielzustand, kein
+ * fehlender Wert. Der Server prüft dabei, ob der Empfänger die Aufgabe
+ * überhaupt sehen könnte (Objekt-Freigabe); eine Zuweisung ins Nichts
+ * scheitert mit 422 statt still durchzugehen.
+ */
+export async function setTaskAssignee(
+  taskId: string,
+  assigneeId: string | null,
+): Promise<Result<TaskDetail>> {
+  return call(`/tasks/${encodeURIComponent(taskId)}/assignee`, {
+    method: "PATCH",
+    body: { assignee_id: assigneeId },
+  });
+}
+
+/**
  * Einen Checklisten-Punkt abhaken oder das Häkchen zurücknehmen (0360).
  *
  * Bewusst mit explizitem `done` statt eines Umschalters: zwei Geräte, die
@@ -421,6 +439,45 @@ export async function bulkCompleteTasks(
   ids: string[],
 ): Promise<Result<{ completed: number; skipped: number }>> {
   return call("/tasks/bulk/complete", { method: "POST", body: { ids } });
+}
+
+/**
+ * Wer kann Zuständige:r einer Aufgabe sein?
+ *
+ * Bewusst NICHT `listTenantUsers()` aus `lib/account`: die Liste ist für die
+ * Hauptkontakt-Auswahl gedacht und enthält alle Nutzer des Betriebs. Ein
+ * Eigentümer hat `view_own_tasks` aber nicht — eine ihm zugewiesene Aufgabe
+ * könnte er nie öffnen. Der Server leitet die Menge aus der Capability ab,
+ * nicht aus einer hier abgeschriebenen Rollenliste.
+ */
+export type TaskAssigneeOption = {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  role: string;
+};
+
+export async function listTaskAssignees(
+  propertyId?: string | null,
+): Promise<Result<TaskAssigneeOption[]>> {
+  // Mit Objekt: der Server blendet zusätzlich aus, wer für dieses Objekt
+  // keine Freigabe hat. Ohne Objekt (Filterleisten, Regel-Editor) bleibt es
+  // bei „wer kann grundsätzlich Aufgaben übernehmen".
+  const q = propertyId
+    ? `?property_id=${encodeURIComponent(propertyId)}`
+    : "";
+  return call(`/tasks/assignees${q}`);
+}
+
+/** Auswahl einem Mitarbeiter zuweisen (`null` zieht die Zuweisung ab). */
+export async function bulkAssignTasks(
+  ids: string[],
+  assigneeId: string | null,
+): Promise<Result<{ assigned: number; skipped: number }>> {
+  return call("/tasks/bulk/assign", {
+    method: "POST",
+    body: { ids, assignee_id: assigneeId },
+  });
 }
 
 /** Auswahl löschen. */

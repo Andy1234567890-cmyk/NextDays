@@ -4589,6 +4589,8 @@
       "deleteAria": "Kijelöltek törlése",
       "completed": "{done} feladat befejezve.",
       "completedPartly": "{done} befejezve, {skipped} kihagyva (hiányzó fotó vagy nincs hozzáférés).",
+      "assigned": "{done} feladat hozzárendelve.",
+      "assignedPartly": "{done} hozzárendelve, {skipped} kihagyva (nincs hozzáférés).",
       "deleted": "{done} feladat törölve.",
       "deletedPartly": "{done} törölve, {skipped} kihagyva (nincs hozzáférés)."
     },
@@ -4806,6 +4808,14 @@
         "refunded": "visszatérítve",
         "partially_refunded": "részben visszatérítve"
       }
+    },
+    "zustaendig": {
+      "label": "Felelős",
+      "niemand": "Nincs hozzárendelve senki",
+      "unbekannt": "Korábbi hozzárendelés",
+      "gesetzt": "Felelős módosítva",
+      "abgezogen": "Hozzárendelés visszavonva",
+      "aktion": "Hozzárendelés …"
     }
   },
   "objects": {

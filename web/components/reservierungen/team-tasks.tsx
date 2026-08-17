@@ -12,7 +12,7 @@ import { AufgabenReiter } from "@/components/reservierungen/aufgaben-reiter";
 import { AufgabenTabelle } from "@/components/reservierungen/aufgaben-tabelle";
 import { MassenaktionenFab } from "@/components/reservierungen/massenaktionen-fab";
 import { TaskDetailModal } from "@/components/reservierungen/task-detail-modal";
-import { listTenantUsers } from "@/lib/account";
+import { mitarbeiterOptionen } from "@/lib/mitarbeiter-optionen";
 import { UNASSIGNED } from "@/lib/aufgaben-konstanten";
 import { listProperties } from "@/lib/properties";
 import {
@@ -21,6 +21,7 @@ import {
   deleteTask,
   listRules,
   listTeamTasks,
+  listTaskAssignees,
 } from "@/lib/tasks";
 import { useRealtime } from "@/lib/use-realtime";
 
@@ -40,8 +41,13 @@ export function TeamTasks() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  // `stillLaden`: eine Aktualisierung durch Realtime tauscht nur die Zeilen
+  // aus, sie zeigt KEINEN Ladezustand. Sonst ersetzte jedes Ereignis — auch
+  // die eigene Zuweisung — die ganze Tabelle durch „Lade…" und baute sie neu
+  // auf: die Seite wirkt wie neu geladen, obwohl sich eine Zelle geändert
+  // hat. Der Ladezustand gehört zur ERSTEN Anzeige, nicht zur Pflege.
+  const load = useCallback(async (stillLaden = false) => {
+    if (!stillLaden) setLoading(true);
     const res = await listTeamTasks({
       status_bucket: tab,
       property_ids: propFilter,
@@ -52,6 +58,10 @@ export function TeamTasks() {
     else toast.error(res.error);
     setLoading(false);
   }, [tab, propFilter, userFilter, ruleFilter]);
+
+  const stillNachladen = useCallback(() => {
+    void load(true);
+  }, [load]);
 
   useEffect(() => {
     void load();
@@ -64,7 +74,7 @@ export function TeamTasks() {
     void (async () => {
       const [props, tenantUsers, autoRules] = await Promise.all([
         listProperties(),
-        listTenantUsers(),
+        listTaskAssignees(),
         listRules("auto"),
       ]);
       if (props.ok) {
@@ -74,10 +84,7 @@ export function TeamTasks() {
       }
       if (tenantUsers.ok) {
         setUsers([
-          ...tenantUsers.data.map((u) => ({
-            value: u.user_id,
-            label: u.full_name ?? u.email ?? u.user_id,
-          })),
+          ...mitarbeiterOptionen(tenantUsers.data),
           { value: UNASSIGNED, label: t("aufgabenFilter.unassignedOption") },
         ]);
       }
@@ -87,14 +94,14 @@ export function TeamTasks() {
     })();
   }, [t]);
 
-  useRealtime({ table: "tasks", onChange: load });
+  useRealtime({ table: "tasks", onChange: stillNachladen });
 
   const complete = async (taskId: string) => {
     const res = await completeTask(taskId);
     if (!res.ok) toast.error(res.error);
     else {
       toast.success(t("teamTasks.completed"));
-      load();
+      stillNachladen();
     }
   };
 
@@ -103,7 +110,7 @@ export function TeamTasks() {
     if (!res.ok) toast.error(res.error);
     else {
       toast.success(t("teamTasks.deleted"));
-      load();
+      stillNachladen();
     }
   };
 
@@ -171,18 +178,20 @@ export function TeamTasks() {
       )}
 
       <MassenaktionenFab
+        allowAssign
         ids={selected}
         onDone={() => {
+          // Nur die Auswahl leeren — die Zeilen zieht das Realtime-Abo nach.
           setSelected([]);
-          load();
         }}
       />
 
       {openId && (
         <TaskDetailModal
+          darfZuweisen
           taskId={openId}
           onClose={() => setOpenId(null)}
-          onChanged={load}
+          onChanged={stillNachladen}
         />
       )}
     </div>

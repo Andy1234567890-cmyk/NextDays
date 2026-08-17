@@ -22,7 +22,7 @@ import { Input } from "@nextdays/ui/input";
 import { MultiSelect } from "@nextdays/ui/multi-select";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { Switch } from "@nextdays/ui/switch";
-import { listTenantUsers } from "@/lib/account";
+import { mitarbeiterOptionen } from "@/lib/mitarbeiter-optionen";
 import {
   END_TRIGGER,
   FREQUENZEN,
@@ -43,6 +43,7 @@ import {
   getRule,
   listRules,
   updateRule,
+  listTaskAssignees,
 } from "@/lib/tasks";
 
 type Opt = { value: string; label: string };
@@ -102,19 +103,14 @@ export function RuleEditorPage({
   const load = useCallback(async () => {
     const [props, tenantUsers, tpl] = await Promise.all([
       listProperties(),
-      listTenantUsers(),
+      listTaskAssignees(),
       listRules("template"),
     ]);
     if (props.ok) {
       setProperties(props.data.items.map((p) => ({ value: p.id, label: p.title })));
     }
     if (tenantUsers.ok) {
-      setUsers(
-        tenantUsers.data.map((u) => ({
-          value: u.user_id,
-          label: u.full_name ?? u.email ?? u.user_id,
-        })),
-      );
+      setUsers(mitarbeiterOptionen(tenantUsers.data));
     }
     if (tpl.ok) {
       setTemplates(tpl.data.map((r) => ({ value: r.id, label: r.name })));

@@ -4589,6 +4589,8 @@
       "deleteAria": "Kustuta valitud",
       "completed": "{done} ülesannet lõpetatud.",
       "completedPartly": "{done} lõpetatud, {skipped} vahele jäetud (foto puudub või puudub ligipääs).",
+      "assigned": "{done} ülesannet määratud.",
+      "assignedPartly": "{done} määratud, {skipped} vahele jäetud (puudub ligipääs).",
       "deleted": "{done} ülesannet kustutatud.",
       "deletedPartly": "{done} kustutatud, {skipped} vahele jäetud (puudub ligipääs)."
     },
@@ -4806,6 +4808,14 @@
         "refunded": "tagastatud",
         "partially_refunded": "osaliselt tagastatud"
       }
+    },
+    "zustaendig": {
+      "label": "Vastutaja",
+      "niemand": "Kedagi pole määratud",
+      "unbekannt": "Senine määrang",
+      "gesetzt": "Vastutaja muudetud",
+      "abgezogen": "Määrang tühistatud",
+      "aktion": "Määra …"
     }
   },
   "objects": {

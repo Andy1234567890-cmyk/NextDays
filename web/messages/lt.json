@@ -4584,6 +4584,8 @@
       "deleteAria": "Ištrinti pasirinktas",
       "completed": "Užbaigta užduočių: {done}.",
       "completedPartly": "Užbaigta {done}, praleista {skipped} (trūksta nuotraukos arba nėra prieigos).",
+      "assigned": "Priskirta užduočių: {done}.",
+      "assignedPartly": "Priskirta {done}, praleista {skipped} (nėra prieigos).",
       "deleted": "Ištrinta užduočių: {done}.",
       "deletedPartly": "Ištrinta {done}, praleista {skipped} (nėra prieigos)."
     },
@@ -4801,6 +4803,14 @@
         "refunded": "grąžintas",
         "partially_refunded": "iš dalies grąžintas"
       }
+    },
+    "zustaendig": {
+      "label": "Atsakingas",
+      "niemand": "Niekam nepriskirta",
+      "unbekannt": "Ankstesnis priskyrimas",
+      "gesetzt": "Priskyrimas pakeistas",
+      "abgezogen": "Priskyrimas atšauktas",
+      "aktion": "Priskirti …"
     }
   },
   "objects": {

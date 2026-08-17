@@ -39,8 +39,10 @@ export function TasksInspection() {
   const [gross, setGross] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  // Realtime aktualisiert still (siehe team-tasks): kein Ladezustand über
+  // einer Liste, die schon dasteht.
+  const load = useCallback(async (stillLaden = false) => {
+    if (!stillLaden) setLoading(true);
     const res = await listInspection(tab, propFilter);
     if (res.ok) setRows(res.data);
     else toast.error(res.error);
@@ -62,7 +64,11 @@ export function TasksInspection() {
     })();
   }, []);
 
-  useRealtime({ table: "tasks", onChange: load });
+  const stillNachladen = useCallback(() => {
+    void load(true);
+  }, [load]);
+
+  useRealtime({ table: "tasks", onChange: stillNachladen });
 
   const decide = async (id: string, approved: boolean) => {
     const res = await inspectTask(id, approved);
@@ -73,7 +79,7 @@ export function TasksInspection() {
           ? t("tasksInspection.toastApproved")
           : t("tasksInspection.toastRejected"),
       );
-      load();
+      stillNachladen();
     }
   };
 

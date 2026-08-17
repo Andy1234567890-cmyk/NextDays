@@ -1,16 +1,29 @@
 "use client";
 
 // Aufgaben-Popup im Kalender (Klick auf einen Aufgaben-Balken). Zeigt Titel,
-// Objekt, Assignee, Zeitfenster, Priorität und Status. Aktionen: „Ansehen"
-// (öffnet das Detail-Modal mit Checkliste) + „Löschen".
+// Objekt, Zeitfenster, Priorität und Status. Aktionen: Zuständige:n setzen,
+// „Ansehen" (öffnet das Detail-Modal mit Checkliste) + „Löschen".
+//
+// Der Zuständigen-Selektor sitzt bewusst HIER: der Kalender färbt genau die
+// unzugewiesenen Aufgaben rot an (`tasks-calendar.tsx`, „ph:warning-circle").
+// Bis 17.08.2026 mahnte er damit etwas an, wogegen er keinen Weg anbot — der
+// Klick auf den roten Balken führte in ein Popup, das den fehlenden
+// Zuständigen nur bestätigte.
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
-import { deleteTask, type TaskListItem, type TaskStatus } from "@/lib/tasks";
+import {
+  deleteTask,
+  setTaskAssignee,
+  type TaskListItem,
+  type TaskStatus,
+} from "@/lib/tasks";
 import { AUFGABEN_STATUS } from "@/lib/aufgaben-status";
+import { ZustaendigAuswahl } from "./zustaendig-auswahl";
 
 // Beschriftung aus der geteilten Zuordnung (lib/aufgaben-status). Vorher stand
 // hier eine eigene switch-Kopie, die den vierten Zustand nicht gekannt hätte.
@@ -24,14 +37,40 @@ export function TaskPopover({
   onClose,
   onDeleted,
   onPhotos,
+  darfZuweisen = false,
 }: {
   task: TaskListItem;
   onClose: () => void;
   onDeleted: () => void;
   onPhotos: () => void;
+
+  /** Eigener Guard statt „der Kalender ist ohnehin MANAGE_TASKS-geschützt":
+   *  diese Komponente kennt ihren Aufrufer nicht. Heute gibt es genau einen,
+   *  morgen einen zweiten — und dann stünde die Auswahl ungeschützt da. */
+  darfZuweisen?: boolean;
 }) {
   const t = useTranslations("reservations");
   const locale = useLocale();
+  const [busy, setBusy] = useState(false);
+
+  const zuweisen = async (neu: string | null) => {
+    setBusy(true);
+    const res = await setTaskAssignee(task.id, neu);
+    setBusy(false);
+    if (!res.ok) {
+      toast.error(res.error);
+      return;
+    }
+    toast.success(
+      neu === null ? t("zustaendig.abgezogen") : t("zustaendig.gesetzt"),
+    );
+    // KEIN manuelles Nachladen: der Kalender hört auf `tasks`
+    // (`tasks-calendar.tsx`, Grant + Publikation live geprüft). Ein
+    // zusätzliches `load()` liefe dasselbe zweimal — und weil `load` ein
+    // `setLoading(true)` setzt, blitzte die ganze Timeline weg und käme neu,
+    // obwohl sich EIN Balken geändert hat.
+    onClose();
+  };
   // „Ansehen" führt zum Objekt. Bei Zusatzleistungs-Aufgaben direkt zum
   // Zusatzleistungen-Reiter, sonst zur Objektübersicht. Ohne Objekt kein Link.
   const viewHref = task.property_id
@@ -73,9 +112,7 @@ export function TaskPopover({
           {task.property_title && (
             <p className="font-semibold">{task.property_title}</p>
           )}
-          {task.assignee_name && (
-            <p className="font-semibold">{task.assignee_name}</p>
-          )}
+
           <p>
             <span className="font-medium">{t("taskPopover.fromLabel")}</span>{" "}
             {fmt(task.start_at ?? task.due_at)}
@@ -97,6 +134,21 @@ export function TaskPopover({
             )}
           </p>
         </div>
+
+        {darfZuweisen ? (
+          <div className="mt-3">
+            <ZustaendigAuswahl
+              wert={task.assignee_id}
+              onWechsel={zuweisen}
+              laedt={busy}
+              propertyId={task.property_id}
+            />
+          </div>
+        ) : (
+          task.assignee_name && (
+            <p className="mt-2 text-sm font-semibold">{task.assignee_name}</p>
+          )
+        )}
 
         <div className="mt-4 flex flex-wrap justify-end gap-2">
           <Button variant="outline" size="sm" onClick={onPhotos}>

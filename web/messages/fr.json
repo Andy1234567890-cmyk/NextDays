@@ -4589,6 +4589,8 @@
       "deleteAria": "Supprimer la sélection",
       "completed": "{done} tâches terminées.",
       "completedPartly": "{done} terminées, {skipped} ignorées (photo manquante ou accès refusé).",
+      "assigned": "{done} tâches attribuées.",
+      "assignedPartly": "{done} attribuées, {skipped} ignorées (accès refusé).",
       "deleted": "{done} tâches supprimées.",
       "deletedPartly": "{done} supprimées, {skipped} ignorées (accès refusé)."
     },
@@ -4806,6 +4808,14 @@
         "refunded": "remboursé",
         "partially_refunded": "partiellement remboursé"
       }
+    },
+    "zustaendig": {
+      "label": "Responsable",
+      "niemand": "Personne d’attribué",
+      "unbekannt": "Attribution précédente",
+      "gesetzt": "Responsable modifié",
+      "abgezogen": "Attribution retirée",
+      "aktion": "Attribuer à …"
     }
   },
   "objects": {

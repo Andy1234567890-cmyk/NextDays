@@ -4610,6 +4610,8 @@
       "deleteAria": "Delete selection",
       "completed": "{done} tasks completed.",
       "completedPartly": "{done} completed, {skipped} skipped (photo missing or no access).",
+      "assigned": "{done} tasks assigned.",
+      "assignedPartly": "{done} assigned, {skipped} skipped (no access).",
       "deleted": "{done} tasks deleted.",
       "deletedPartly": "{done} deleted, {skipped} skipped (no access)."
     },
@@ -4827,6 +4829,14 @@
         "refunded": "refunded",
         "partially_refunded": "partially refunded"
       }
+    },
+    "zustaendig": {
+      "label": "Assigned to",
+      "niemand": "Nobody assigned",
+      "unbekannt": "Previous assignee",
+      "gesetzt": "Assignee changed",
+      "abgezogen": "Assignment removed",
+      "aktion": "Assign to …"
     }
   },
   "objects": {

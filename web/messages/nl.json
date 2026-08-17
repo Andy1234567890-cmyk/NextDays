@@ -4584,6 +4584,8 @@
       "deleteAria": "Selectie verwijderen",
       "completed": "{done} taken afgerond.",
       "completedPartly": "{done} afgerond, {skipped} overgeslagen (foto ontbreekt of geen toegang).",
+      "assigned": "{done} taken toegewezen.",
+      "assignedPartly": "{done} toegewezen, {skipped} overgeslagen (geen toegang).",
       "deleted": "{done} taken verwijderd.",
       "deletedPartly": "{done} verwijderd, {skipped} overgeslagen (geen toegang)."
     },
@@ -4801,6 +4803,14 @@
         "refunded": "gerestitueerd",
         "partially_refunded": "gedeeltelijk gerestitueerd"
       }
+    },
+    "zustaendig": {
+      "label": "Verantwoordelijke",
+      "niemand": "Niemand toegewezen",
+      "unbekannt": "Vorige toewijzing",
+      "gesetzt": "Verantwoordelijke gewijzigd",
+      "abgezogen": "Toewijzing ingetrokken",
+      "aktion": "Toewijzen aan …"
     }
   },
   "objects": {

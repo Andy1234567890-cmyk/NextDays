@@ -12,8 +12,8 @@ import { toast } from "sonner";
 import { Button } from "@nextdays/ui/button";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { Switch } from "@nextdays/ui/switch";
-import { listTenantUsers } from "@/lib/account";
-import { createTask } from "@/lib/tasks";
+import { mitarbeiterOptionen } from "@/lib/mitarbeiter-optionen";
+import { createTask, listTaskAssignees } from "@/lib/tasks";
 
 const PRIO_KEYS = ["low", "minor", "medium", "high", "urgent"] as const;
 
@@ -49,14 +49,9 @@ export function TaskCreatePopup({
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    void listTenantUsers().then((r) => {
+    void listTaskAssignees().then((r) => {
       if (r.ok) {
-        setUsers(
-          r.data.map((u) => ({
-            value: u.user_id,
-            label: u.full_name ?? u.email ?? u.user_id,
-          })),
-        );
+        setUsers(mitarbeiterOptionen(r.data));
       }
     });
   }, []);

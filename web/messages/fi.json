@@ -4589,6 +4589,8 @@
       "deleteAria": "Poista valitut",
       "completed": "{done} tehtävää valmiina.",
       "completedPartly": "{done} valmista, {skipped} ohitettu (kuva puuttuu tai ei oikeuksia).",
+      "assigned": "{done} tehtävää osoitettu.",
+      "assignedPartly": "{done} osoitettu, {skipped} ohitettu (ei oikeuksia).",
       "deleted": "{done} tehtävää poistettu.",
       "deletedPartly": "{done} poistettu, {skipped} ohitettu (ei oikeuksia)."
     },
@@ -4806,6 +4808,14 @@
         "refunded": "palautettu",
         "partially_refunded": "osittain palautettu"
       }
+    },
+    "zustaendig": {
+      "label": "Vastuuhenkilö",
+      "niemand": "Ei ketään",
+      "unbekannt": "Aiempi vastuuhenkilö",
+      "gesetzt": "Vastuuhenkilö vaihdettu",
+      "abgezogen": "Vastuu poistettu",
+      "aktion": "Määrää vastuuhenkilö …"
     }
   },
   "objects": {

@@ -4589,6 +4589,8 @@
       "deleteAria": "Smazat vybrané",
       "completed": "Dokončeno: {done}.",
       "completedPartly": "Dokončeno {done}, přeskočeno {skipped} (chybí foto nebo chybí přístup).",
+      "assigned": "Přiřazeno: {done}.",
+      "assignedPartly": "Přiřazeno {done}, přeskočeno {skipped} (chybí přístup).",
       "deleted": "Smazáno: {done}.",
       "deletedPartly": "Smazáno {done}, přeskočeno {skipped} (chybí přístup)."
     },
@@ -4806,6 +4808,14 @@
         "refunded": "vrácena",
         "partially_refunded": "částečně vrácena"
       }
+    },
+    "zustaendig": {
+      "label": "Přiřazeno",
+      "niemand": "Nikdo nepřiřazen",
+      "unbekannt": "Dosavadní přiřazení",
+      "gesetzt": "Přiřazení změněno",
+      "abgezogen": "Přiřazení zrušeno",
+      "aktion": "Přiřadit …"
     }
   },
   "objects": {

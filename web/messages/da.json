@@ -4589,6 +4589,8 @@
       "deleteAria": "Slet valgte",
       "completed": "{done} opgaver afsluttet.",
       "completedPartly": "{done} afsluttet, {skipped} sprunget over (manglende foto eller adgang).",
+      "assigned": "{done} opgaver tildelt.",
+      "assignedPartly": "{done} tildelt, {skipped} sprunget over (manglende adgang).",
       "deleted": "{done} opgaver slettet.",
       "deletedPartly": "{done} slettet, {skipped} sprunget over (ingen adgang)."
     },
@@ -4806,6 +4808,14 @@
         "refunded": "refunderet",
         "partially_refunded": "delvist refunderet"
       }
+    },
+    "zustaendig": {
+      "label": "Ansvarlig",
+      "niemand": "Ingen tildelt",
+      "unbekannt": "Hidtidig tildeling",
+      "gesetzt": "Ansvarlig ændret",
+      "abgezogen": "Tildeling fjernet",
+      "aktion": "Tildel til …"
     }
   },
   "objects": {

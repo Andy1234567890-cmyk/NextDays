@@ -544,7 +544,14 @@ def _tables(**extra: list[dict]) -> dict[str, list[dict]]:
         ],
         "properties": [{"id": "p1", "tenant_id": "T", "title": "Haus", "currency": "DKK"}],
         "tenants": [{"id": "T", "currency": "EUR"}],
-        "users": [{"id": "u1", "tenant_id": "T", "full_name": "Reinigung"}],
+        # `role` steht hier, weil der Schreibpfad sie liest: nur staff/cleaner
+        # hängen am Objekt-Scope, admin/co_admin/owner nicht
+        # (`_require_own_assignee`).
+        "users": [
+            {"id": "u1", "tenant_id": "T", "full_name": "Reinigung", "role": "cleaner"},
+            {"id": "u2", "tenant_id": "T", "full_name": "Zweite", "role": "cleaner"},
+            {"id": "a1", "tenant_id": "T", "full_name": "Chefin", "role": "admin"},
+        ],
         "checklist_items": [],
         "checklist_photos": [],
         "task_costs": [],
@@ -744,3 +751,369 @@ def test_rueckmeldung_ganz_leer_wird_abgelehnt() -> None:
             "T", "t1", TaskResolutionUpsert(note="   "), _admin(), darf_benoten=True
         )
     assert exc.value.status_code == 422
+
+
+# --- Zuweisung an einen Mitarbeiter (17.08.2026) ---------------------------
+#
+# Bis hierher war `assignee_id` ein Einweg-Feld: gesetzt beim Anlegen, danach
+# unveränderlich. Diese Tests halten die drei Eigenschaften fest, an denen der
+# neue Pfad hängt — Scope, Objekt-Freigabe, Gegenzustand.
+
+
+def test_zuweisen_setzt_den_zustaendigen() -> None:
+    """u2 ist cleaner MIT Freigabe für p1 — der Normalfall."""
+    db = _FakeDB(
+        _tables(
+            staff_property_assignments=[
+                {"tenant_id": "T", "user_id": "u1", "property_id": "p1"},
+                {"tenant_id": "T", "user_id": "u2", "property_id": "p1"},
+            ]
+        )
+    )
+    svc = TasksService(client=db)
+    d = svc.set_assignee("T", "t1", "u2", _admin())
+    assert d.assignee_id == "u2"
+
+
+def test_zuweisung_zuruecknehmen_ist_erlaubt() -> None:
+    """`None` ist ein Zielzustand, kein fehlender Wert.
+
+    Ohne diesen Weg bliebe eine Fehlzuweisung für immer stehen — die Aufgabe
+    müsste gelöscht und neu angelegt werden, mitsamt Checkliste und Historie.
+    """
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    d = svc.set_assignee("T", "t1", None, _admin())
+    assert d.assignee_id is None
+
+
+def test_zuweisen_an_denselben_ist_idempotent(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Derselbe Empfänger ist kein Wechsel — und löst keine zweite Mail aus."""
+    gerufen: list[str] = []
+    monkeypatch.setattr(
+        "src.features.tasks.service.melde_aufgaben_zuweisung",
+        lambda *a, **k: gerufen.append("mail"),
+    )
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    d = svc.set_assignee("T", "t1", "u1", _admin())
+    assert d.assignee_id == "u1"
+    assert gerufen == []
+
+
+def test_zuweisen_an_fremden_mitarbeiter_ist_422() -> None:
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    with pytest.raises(TaskError) as exc:
+        svc.set_assignee("T", "t1", "fremd", _admin())
+    assert exc.value.status_code == 422
+
+
+def test_zuweisen_ohne_objekt_freigabe_ist_422() -> None:
+    """Der Schreibpfad prüft, was der Lesepfad filtert (Wurzel 9).
+
+    Ohne diese Prüfung ginge die Zuweisung durch, die Mail ginge raus — und
+    beim Empfänger wäre die Aufgabe unsichtbar, weil `list_own_tasks` sie am
+    fehlenden `staff_property_assignments`-Eintrag ausblendet.
+    """
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    with pytest.raises(TaskError) as exc:
+        # u2 ist cleaner, hat aber keine Freigabe für p1.
+        svc.set_assignee("T", "t1", "u2", _admin())
+    assert exc.value.status_code == 422
+    assert "Objekt" in exc.value.message
+
+
+def test_zuweisen_an_admin_braucht_keine_objekt_freigabe() -> None:
+    """admin/co_admin/owner hängen nicht an staff_property_assignments."""
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    d = svc.set_assignee("T", "t1", "a1", _admin())
+    assert d.assignee_id == "a1"
+
+
+def test_zuweisen_fremder_mandant_ist_404() -> None:
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    with pytest.raises(TaskError) as exc:
+        svc.set_assignee("FREMD", "t1", "a1", _admin())
+    assert exc.value.status_code == 404
+
+
+def test_zuweisen_meldet_neuem_und_altem_zustaendigen(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Beide Richtungen (Wurzel 1).
+
+    Nur den Neuen zu benachrichtigen ließe den Bisherigen im Glauben, die
+    Aufgabe sei weiter seine — sie verschwindet wortlos aus seiner Liste.
+    """
+    neu: list[str | None] = []
+    weg: list[str | None] = []
+    monkeypatch.setattr(
+        "src.features.tasks.service.melde_aufgaben_zuweisung",
+        lambda *a, **k: neu.append(k.get("assignee_id")),
+    )
+    monkeypatch.setattr(
+        "src.features.tasks.service.melde_aufgaben_entzug",
+        lambda *a, **k: weg.append(k.get("assignee_id")),
+    )
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    svc.set_assignee("T", "t1", "a1", _admin())
+    assert neu == ["a1"]
+    assert weg == ["u1"]
+
+
+def test_bulk_zuweisen_zaehlt_uebersprungene() -> None:
+    """Was am Scope scheitert, wird gezählt statt den ganzen Aufruf zu kippen."""
+    db = _FakeDB(
+        _tables(
+            tasks=[
+                {"id": "t1", "tenant_id": "T", "title": "A", "status": "open",
+                 "property_id": "p1", "assignee_id": None},
+                {"id": "t2", "tenant_id": "T", "title": "B", "status": "open",
+                 "property_id": "p1", "assignee_id": None},
+            ]
+        )
+    )
+    svc = TasksService(client=db)
+    res = svc.bulk_assign("T", ["t1", "t2", "gibtsnicht"], "a1", _admin())
+    assert res == {"assigned": 2, "skipped": 1}
+
+
+# --- Vertretung (§4.3) -----------------------------------------------------
+
+
+def _mit_anfrage() -> _FakeDB:
+    return _FakeDB(
+        _tables(
+            task_substitutions=[
+                {"id": "s1", "tenant_id": "T", "task_id": "t1",
+                 "requested_by": "u1", "accepted_by": None,
+                 "status": "requested", "note": None}
+            ]
+        )
+    )
+
+
+def test_vertretung_annehmen_schreibt_den_zustaendigen_um() -> None:
+    """Der Kern des Features — und genau das, was vorher fehlte.
+
+    Vorher setzte `accept` nur `status='accepted'`: die Aufgabe blieb beim
+    Vertretenen, tauchte beim Vertreter nie auf, und zwei Leute hielten
+    dieselbe Aufgabe für ihre.
+    """
+    db = _mit_anfrage()
+    svc = TasksService(client=db)
+    sub = svc.accept_substitution("T", "s1", "a1", _admin())
+    assert sub.status.value == "accepted"
+    assert db.tables["tasks"][0]["assignee_id"] == "a1"
+
+
+def test_vertretung_sich_selbst_ist_422() -> None:
+    db = _mit_anfrage()
+    svc = TasksService(client=db)
+    with pytest.raises(TaskError) as exc:
+        svc.accept_substitution("T", "s1", "u1", _cleaner())
+    assert exc.value.status_code == 422
+
+
+def test_vertretung_zweimal_annehmen_ist_409() -> None:
+    """Ohne Status-Guard ließe sich der Vertreter nachträglich überschreiben."""
+    db = _mit_anfrage()
+    svc = TasksService(client=db)
+    svc.accept_substitution("T", "s1", "a1", _admin())
+    with pytest.raises(TaskError) as exc:
+        svc.accept_substitution("T", "s1", "u2", _admin())
+    assert exc.value.status_code == 409
+
+
+def test_vertretung_ablehnen_laesst_die_aufgabe_stehen() -> None:
+    db = _mit_anfrage()
+    svc = TasksService(client=db)
+    sub = svc.decline_substitution("T", "s1", "a1")
+    assert sub.status.value == "declined"
+    assert db.tables["tasks"][0]["assignee_id"] == "u1"
+
+
+def test_offene_anfragen_ohne_eigene() -> None:
+    """Man vertritt sich nicht selbst — die eigene Anfrage fällt raus."""
+    db = _mit_anfrage()
+    svc = TasksService(client=db)
+    assert svc.list_substitutions("T", "u1", _cleaner()) == []
+    fremd = svc.list_substitutions("T", "a1", _admin())
+    assert len(fremd) == 1
+    # Ohne Titel und Objekt wäre eine Anfrage nicht entscheidbar.
+    assert fremd[0].title == "Endreinigung"
+    assert fremd[0].property_title == "Haus"
+    assert fremd[0].requested_by_name == "Reinigung"
+
+
+def test_auswahlliste_zeigt_keine_eigentuemer() -> None:
+    """Ein `owner` hat VIEW_OWN_TASKS nicht — er könnte die Aufgabe nie öffnen.
+
+    Live standen 23 Eigentümer neben 2 berechtigten Personen in der Auswahl,
+    und 11 Aufgaben lagen auf Eigentümer-Konten, die sie nie zu sehen bekamen.
+    """
+    db = _FakeDB(
+        _tables(
+            users=[
+                {"id": "u1", "tenant_id": "T", "full_name": "Reinigung",
+                 "role": "cleaner", "email": "r@x.dk"},
+                {"id": "a1", "tenant_id": "T", "full_name": "Chefin",
+                 "role": "admin", "email": "c@x.dk"},
+                {"id": "o1", "tenant_id": "T", "full_name": "Eigentümer",
+                 "role": "owner", "email": "o@x.dk"},
+            ]
+        )
+    )
+    svc = TasksService(client=db)
+    ids = {o.user_id for o in svc.moegliche_zustaendige("T")}
+    assert ids == {"u1", "a1"}
+
+
+def test_auswahlliste_ohne_gesperrte_und_ohne_fremde_rolle() -> None:
+    """Gesperrt = kein Login = keine Arbeit. Unbekannte Rolle: fail-closed."""
+    db = _FakeDB(
+        _tables(
+            users=[
+                {"id": "u1", "tenant_id": "T", "full_name": "Aktiv",
+                 "role": "cleaner", "email": "a@x.dk"},
+                {"id": "u9", "tenant_id": "T", "full_name": "Gesperrt",
+                 "role": "cleaner", "email": "g@x.dk",
+                 "deactivated_at": "2026-08-01T00:00:00Z"},
+                {"id": "u8", "tenant_id": "T", "full_name": "Fremd",
+                 "role": "hausmeister", "email": "f@x.dk"},
+            ]
+        )
+    )
+    svc = TasksService(client=db)
+    assert {o.user_id for o in svc.moegliche_zustaendige("T")} == {"u1"}
+
+
+# --- Nachträge aus dem Review (17.08.2026) ---------------------------------
+
+
+def test_vertretung_ablehnen_ohne_objekt_scope_ist_404() -> None:
+    """`decline` prüft denselben Scope wie die Liste (Wurzel 9).
+
+    Vorher nahm die Methode kein `ctx` und filterte nur auf den Mandanten:
+    ein Mitarbeiter konnte eine Anfrage abwürgen, die er nicht einmal sehen
+    darf — die Bitte um Vertretung wäre erledigt, ohne dass jemand einspringt.
+    """
+    db = _FakeDB(
+        _tables(
+            tasks=[
+                {"id": "t1", "tenant_id": "T", "title": "X", "status": "open",
+                 "property_id": "p9", "assignee_id": "u1"},
+            ],
+            task_substitutions=[
+                {"id": "s1", "tenant_id": "T", "task_id": "t1",
+                 "requested_by": "u1", "accepted_by": None,
+                 "status": "requested", "note": None},
+            ],
+        )
+    )
+    svc = TasksService(client=db)
+    # u1 ist cleaner und hat nur p1 frei, die Aufgabe hängt an p9.
+    with pytest.raises(TaskError) as exc:
+        svc.decline_substitution("T", "s1", "u1", _cleaner())
+    assert exc.value.status_code == 404
+    # Die Anfrage bleibt offen — sie wurde nicht heimlich entschieden.
+    assert db.tables["task_substitutions"][0]["status"] == "requested"
+
+
+def test_vertretung_annehmen_claimt_vor_dem_umschreiben() -> None:
+    """Der Claim ist der Riegel, nicht die Reihenfolge (Wurzel 2).
+
+    Scheitert das Umschreiben fachlich, wird der Claim zurückgerollt — sonst
+    stünde eine quittierte Anfrage ohne Wirkung da, die niemand mehr annehmen
+    kann.
+    """
+    db = _FakeDB(
+        _tables(
+            tasks=[
+                {"id": "t1", "tenant_id": "T", "title": "X", "status": "open",
+                 "property_id": "p1", "assignee_id": "u1"},
+            ],
+            task_substitutions=[
+                {"id": "s1", "tenant_id": "T", "task_id": "t1",
+                 "requested_by": "u1", "accepted_by": None,
+                 "status": "requested", "note": None},
+            ],
+            # u2 ist cleaner OHNE Freigabe für p1 → set_assignee wirft 422.
+            staff_property_assignments=[
+                {"tenant_id": "T", "user_id": "u1", "property_id": "p1"},
+            ],
+        )
+    )
+    svc = TasksService(client=db)
+    with pytest.raises(TaskError) as exc:
+        svc.accept_substitution("T", "s1", "u2", _admin())
+    assert exc.value.status_code == 422
+    zeile = db.tables["task_substitutions"][0]
+    assert zeile["status"] == "requested"
+    assert zeile["accepted_by"] is None
+    assert db.tables["tasks"][0]["assignee_id"] == "u1"
+
+
+def test_auswahlliste_beruecksichtigt_objekt_freigabe() -> None:
+    """Wer nicht freigegeben ist, steht gar nicht erst zur Wahl.
+
+    Sonst verspricht die Liste etwas, das `_require_own_assignee` gleich
+    darauf mit 422 ablehnt — bei der Massen-Zuweisung sogar wortlos als
+    „N übersprungen".
+    """
+    db = _FakeDB(
+        _tables(
+            users=[
+                {"id": "u1", "tenant_id": "T", "full_name": "Frei",
+                 "role": "cleaner", "email": "f@x.dk"},
+                {"id": "u2", "tenant_id": "T", "full_name": "Nicht frei",
+                 "role": "cleaner", "email": "n@x.dk"},
+                {"id": "a1", "tenant_id": "T", "full_name": "Chefin",
+                 "role": "admin", "email": "c@x.dk"},
+            ],
+            staff_property_assignments=[
+                {"tenant_id": "T", "user_id": "u1", "property_id": "p1"},
+            ],
+        )
+    )
+    svc = TasksService(client=db)
+    # Ohne Objekt: beide Reinigungskräfte plus Chefin.
+    assert {o.user_id for o in svc.moegliche_zustaendige("T")} == {
+        "u1", "u2", "a1",
+    }
+    # Mit Objekt p1: u2 fällt raus, die Chefin bleibt (hängt nicht am Scope).
+    assert {o.user_id for o in svc.moegliche_zustaendige("T", "p1")} == {
+        "u1", "a1",
+    }
+
+
+def test_umweisung_hin_und_zurueck_meldet_zweimal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A→B→A muss A wirklich zweimal erreichen.
+
+    Der Entdopplungs-Schlüssel trägt den Empfänger, aber der UNIQUE-Index
+    greift über OFFENE Meldungen: ohne einen Vorgangs-Stempel liefe A's
+    zweite Zuweisung auf seine erste, noch ungelesene — und fiele samt Mail
+    aus.
+    """
+    schluessel: list[str | None] = []
+    monkeypatch.setattr(
+        "src.features.tasks.service.melde_aufgaben_zuweisung",
+        lambda *a, **k: schluessel.append(k.get("vorgang")),
+    )
+    monkeypatch.setattr(
+        "src.features.tasks.service.melde_aufgaben_entzug",
+        lambda *a, **k: None,
+    )
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    svc.set_assignee("T", "t1", "a1", _admin())
+    svc.set_assignee("T", "t1", "u1", _admin())
+    assert len(schluessel) == 2
+    assert all(v for v in schluessel), "jeder Wechsel braucht einen Stempel"
