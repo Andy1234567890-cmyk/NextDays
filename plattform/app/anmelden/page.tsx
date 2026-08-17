@@ -1,4 +1,5 @@
 // Anmelden/Registrieren für Portal-Gäste. Bereits eingeloggt → direkt ins Konto.
+import { sicheresZiel } from "@nextdays/auth/weiterleitung";
 import { redirect } from "next/navigation";
 
 import { AnmeldenForm } from "@/components/anmelden-form";
@@ -12,7 +13,9 @@ export default async function AnmeldenPage({
 }) {
   const { weiter } = await searchParams;
   // Nur interne Pfade als Weiterleitungsziel zulassen (kein Open-Redirect).
-  const ziel = weiter && weiter.startsWith("/") ? weiter : "/konto";
+  // `startsWith("/")` allein reichte NICHT: "//fremde-domain.tld" beginnt mit
+  // "/", ist aber eine absolute URL auf eine fremde Origin.
+  const ziel = sicheresZiel(weiter, "/konto");
 
   if (await isGuestLoggedIn()) redirect(ziel);
 

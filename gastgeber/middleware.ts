@@ -11,7 +11,16 @@ export function middleware(req: NextRequest) {
   // Upload /api/objekte/…/fotos) machen ihre eigene Auth über den Host-Cookie
   // (readToken); ein Redirect würde POST/multipart-Requests kaputt machen
   // (Next.js: „Failed to find Server Action").
-  if (pathname.startsWith("/anmelden") || pathname.startsWith("/api/")) {
+  // Die Co-Gastgeber-Einladung gehört ebenfalls hierher: der Empfänger ist per
+  // Definition noch NICHT eingeloggt (oft ohne Konto), und ihr Datenabruf ist
+  // bewusst public (`lib/cohost-einladung.ts` → `public: true`). Ohne diese
+  // Ausnahme lief er auf /anmelden und hat die Einladung nie gesehen — der
+  // Absichtskommentar in der Seite war durch diese Denylist funktionslos.
+  if (
+    pathname.startsWith("/anmelden") ||
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/co-gastgeber/einladung/")
+  ) {
     return NextResponse.next();
   }
 

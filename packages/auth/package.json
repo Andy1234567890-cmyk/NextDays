@@ -7,7 +7,8 @@
   "exports": {
     "./server": "./src/server.ts",
     "./errors": "./src/errors.ts",
-    "./types": "./src/types.ts"
+    "./types": "./src/types.ts",
+    "./weiterleitung": "./src/weiterleitung.ts"
   },
   "peerDependencies": {
     "next": ">=15.5.0"

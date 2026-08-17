@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { gastgeberRegistrierungUrl } from "@/lib/gastgeber-link";
 import { clearGuestSession } from "@/lib/guest-session";
 
 export function KontoButton({
@@ -64,10 +65,7 @@ export function KontoButton({
             <div className="my-1 border-t border-border" />
             <Eintrag href="/hilfe" icon="ph:question" label="Hilfe-Center" />
             <a
-              href={
-                process.env.NEXT_PUBLIC_GASTGEBER_URL ??
-                "https://mynextdays.com"
-              }
+              href={gastgeberRegistrierungUrl()}
               className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-secondary"
             >
               <Icon icon="ph:house-line" className="size-5 text-muted-foreground" />

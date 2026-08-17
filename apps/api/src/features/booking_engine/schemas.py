@@ -5,6 +5,7 @@ legt Gastbuchungen an. KEIN JWT — die tenant_id wird aus der Property abgeleit
 Double-Booking-Schutz + Realtime-Push an Channex laufen serverseitig.
 """
 from datetime import date
+from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
@@ -79,6 +80,32 @@ class PublicListingDetail(PublicListing):
 class PublicListingListResponse(BaseModel):
     items: list[PublicListing] = []
     total: int = 0
+
+
+class PublicDestination(BaseModel):
+    """Ein echtes Reiseziel aus dem Bestand — Stadt oder Land, in dem wirklich
+    buchbare Objekte liegen, mit deren Anzahl. Ersetzt die vorher hartkodierte
+    Vorschlagsliste des Suchfelds (Paris/Bangkok/Tokio ohne ein Objekt dort).
+
+    `label` ist die anzeigefertige Bezeichnung („Skagen, Dänemark"), `query` der
+    Wert, mit dem die Suche wirklich trifft. Land ohne Namen (unbekannter Code)
+    wird NICHT geraten — dann steht nur die Stadt (Wurzel 4)."""
+
+    art: Literal["city", "country"]
+    label: str
+    query: str
+    city: str | None = None
+    country: str | None = None
+    country_name: str | None = None
+    count: int = 0
+    # Name der selbst gezeichneten Illustration (ohne Pfad/Endung), abgeleitet aus
+    # Objekttyp + Lage — siehe reiseziel_motiv.py. Serverseitig entschieden, damit
+    # Plattform, App und White-Label-Seiten dasselbe Bild je Ort zeigen.
+    motiv: str = "land"
+
+
+class PublicDestinationListResponse(BaseModel):
+    items: list[PublicDestination] = []
 
 
 class SitemapEntry(BaseModel):

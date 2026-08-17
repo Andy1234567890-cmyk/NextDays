@@ -1,5 +1,6 @@
 // Login/Registrierung des Gastgebers. Server Component: prüft serverseitig, ob
 // schon eingeloggt (getMe) → dann direkt ins Dashboard.
+import { sicheresZiel } from "@nextdays/auth/weiterleitung";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
@@ -17,7 +18,9 @@ export default async function AnmeldenPage({
   searchParams: Promise<{ weiter?: string }>;
 }) {
   const { weiter } = await searchParams;
-  const ziel = weiter && weiter.startsWith("/") ? weiter : "/";
+  // Nur interne Pfade: `startsWith("/")` allein liess "//fremde-domain.tld"
+  // durch (protokoll-relative URL = fremde Origin).
+  const ziel = sicheresZiel(weiter, "/");
 
   const me = await getMe();
   if (me?.tenant_id) redirect(ziel);

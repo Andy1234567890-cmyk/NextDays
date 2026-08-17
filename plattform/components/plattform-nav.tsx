@@ -9,14 +9,11 @@ import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { gastgeberRegistrierungUrl } from "@/lib/gastgeber-link";
+
 import { Logo } from "./logo";
 import { SprachWaehrungModal } from "./sprach-waehrung-modal";
 import { SuchLeiste } from "./such-leiste";
-
-// Ziel des "myBestDays für Gastgeber"-Buttons: die Marketing-/Gastgeber-Seite.
-const GASTGEBER_URL =
-  process.env.NEXT_PUBLIC_GASTGEBER_URL ??
-  "https://mynextdays.com";
 
 // Tab-Zeile wie Airbnb (All / Homes / Experiences / Services) mit Icon.
 const TABS = [
@@ -121,7 +118,7 @@ export function PlattformNav({ kontoSlot }: { kontoSlot?: React.ReactNode }) {
 
         <div className="flex shrink-0 items-center gap-2">
           <Link
-            href={GASTGEBER_URL}
+            href={gastgeberRegistrierungUrl()}
             className="hidden rounded-full px-4 py-2 text-sm font-medium hover:bg-secondary sm:block"
           >
             myBestDays für Gastgeber

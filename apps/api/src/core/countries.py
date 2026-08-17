@@ -130,6 +130,14 @@ _NAME_TO_CODE.update({
 })
 
 
+def known_country_codes() -> frozenset[str]:
+    """Alle bekannten ISO-2-Codes (27 EU + CH/GB).
+
+    Für Aufrufer, die je Land ein eigenes Asset/Label führen und dabei nicht
+    auseinanderlaufen dürfen (z. B. die Länderflaggen der Reiseziel-Vorschläge)."""
+    return _VALID_CODES
+
+
 def is_iso2_country(value: str | None) -> bool:
     return isinstance(value, str) and value.upper() in _VALID_CODES
 
@@ -147,3 +155,36 @@ def normalize_country(value: str | None) -> str | None:
     if v.upper() in _VALID_CODES:
         return v.upper()
     return _NAME_TO_CODE.get(v.lower())
+
+
+def country_name(code: str | None, *, englisch: bool = False) -> str | None:
+    """ISO-2-Code → Landesname („DK" → „Dänemark"). Unbekannt/leer → None.
+
+    Gegenrichtung zu ``normalize_country``: gebraucht überall, wo der ISO-Code
+    aus der DB einem Menschen gezeigt oder gegen seine Eingabe geprüft wird —
+    `properties.country` speichert „DK", der Gast sucht „Dänemark"."""
+    if not isinstance(code, str):
+        return None
+    eintrag = _COUNTRIES.get(code.strip().upper())
+    if eintrag is None:
+        return None
+    return eintrag[1] if englisch else eintrag[0]
+
+
+def country_codes_matching(text: str | None) -> frozenset[str]:
+    """Freitext-Fragment → alle ISO-2-Codes, deren Name damit beginnt.
+
+    Für die Freitextsuche: „Däne" trifft DK, „Deutsch" trifft DE. Präfix statt
+    Teilstring, weil ein Teilstring über 29 Länder zu falschen Treffern führt
+    („land" läge in Deutschland, Finnland, Irland, Polen …). Ein vollständiger
+    Code oder Name kommt über ``normalize_country`` ohnehin schon an."""
+    if not isinstance(text, str):
+        return frozenset()
+    fragment = text.strip().lower()
+    if not fragment:
+        return frozenset()
+    return frozenset(
+        code
+        for code, (de, en) in _COUNTRIES.items()
+        if de.lower().startswith(fragment) or en.lower().startswith(fragment)
+    )

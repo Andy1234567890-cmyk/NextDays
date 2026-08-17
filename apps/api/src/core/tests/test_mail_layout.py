@@ -32,8 +32,10 @@ _FIRMA = {
     "company_registration_number": "46615182",
     "company_contact_email": "info@mynextdays.dk",
     "company_contact_phone": "+45 93 90 39 91",
+    # Marktplatz = myBestDays und der läuft unter .dk (DanDomain). `.com` gehört
+    # uns NICHT (GoDaddy-Fremddomain, am 17.08.2026 nachgemessen).
     "marketing_base_url": "https://www.mynextdays.com",
-    "marketplace_base_url": "https://www.mybestdays.com",
+    "marketplace_base_url": "https://www.mybestdays.dk",
 }
 
 
@@ -135,9 +137,9 @@ def test_logo_reist_als_cid_anhang_mit() -> None:
     """Das Bild haengt IN der Mail — keine URL, kein erreichbarer Host noetig.
 
     Der erste Bau nutzte eine gehostete URL; live (08.08.2026) blieb in Apple
-    Mail ein leerer Rahmen. `www.mybestdays.com` liefert ein selbstsigniertes
-    Zertifikat, und lokal/Staging gibt es ueberhaupt keine oeffentliche
-    Adresse — eine URL kann dort nie funktionieren.
+    Mail ein leerer Rahmen (die damals gemessene Adresse trug ein
+    selbstsigniertes Zertifikat), und lokal/Staging gibt es ueberhaupt keine
+    oeffentliche Adresse — eine URL kann dort nie funktionieren.
     """
     mail = mail_rendern(_inhalt(), settings=_settings())
     assert f'src="cid:{LOGO_CID}"' in mail.html

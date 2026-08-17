@@ -229,6 +229,90 @@ def test_listings_guests_and_query_filter() -> None:
     assert {i.id for i in svc.list_listings(q="Berlin").items} == {"p-active2"}
 
 
+def test_listings_query_findet_land_ueber_namen() -> None:
+    """Die Suche nach dem Landesnamen MUSS treffen, obwohl in der DB nur der
+    ISO-Code steht („DE"). Vorher verglich der Filter „deutschland" gegen „de"
+    und fand nie etwas — die Landessuche war komplett wirkungslos."""
+    svc = _service()
+    aktive = {"p-active", "p-active2"}
+    assert {i.id for i in svc.list_listings(q="Deutschland").items} == aktive
+    assert {i.id for i in svc.list_listings(q="Germany").items} == aktive
+    # Tipp-Fragment (Präfix) trifft ebenfalls, damit die Vorschläge live filtern.
+    assert {i.id for i in svc.list_listings(q="Deutsch").items} == aktive
+    # Der Code selbst bleibt gültig.
+    assert {i.id for i in svc.list_listings(q="DE").items} == aktive
+
+
+def test_listings_query_land_ohne_treffer() -> None:
+    """Ein anderes Land darf NICHT treffen — kein Ersatzverhalten (Wurzel 4)."""
+    assert _service().list_listings(q="Dänemark").items == []
+
+
+def test_destinations_nur_echte_ziele_mit_anzahl() -> None:
+    """Vorgeschlagen wird NUR, was es im Bestand gibt (Bug: hartkodierte Liste
+    zeigte Paris/Bangkok/Tokio ohne ein Objekt dort)."""
+    res = _service().list_destinations()
+    staedte = {z.label: z.count for z in res.items if z.art == "city"}
+    laender = {z.label: z.count for z in res.items if z.art == "country"}
+    assert staedte == {"Sylt, Deutschland": 1, "Berlin, Deutschland": 1}
+    assert laender == {"Deutschland": 2}  # draft zählt nicht mit
+    assert all("Paris" not in z.label for z in res.items)
+    # Jedes Land trägt SEINE Flagge, nicht ein geteiltes Welt-Symbol.
+    land = next(z for z in res.items if z.art == "country")
+    assert land.motiv == "land-de"
+
+
+def test_destinations_query_filtert_stadt_und_land() -> None:
+    svc = _service()
+    nur_berlin = svc.list_destinations(q="berl")
+    assert [z.label for z in nur_berlin.items] == ["Berlin, Deutschland"]
+    # Landesname trifft das Land UND seine Städte.
+    per_land = svc.list_destinations(q="Deutschland")
+    assert {z.label for z in per_land.items} == {
+        "Deutschland", "Sylt, Deutschland", "Berlin, Deutschland",
+    }
+    assert svc.list_destinations(q="Dänemark").items == []
+
+
+def test_destinations_query_wirft_keine_ziele_ohne_treffer() -> None:
+    assert _service().list_destinations(q="Atlantis").items == []
+
+
+def test_destinations_limit_greift_und_wird_validiert() -> None:
+    from src.features.booking_engine.service import BookingEngineError
+
+    svc = _service()
+    assert len(svc.list_destinations(limit=1).items) == 1
+    for ungueltig in (0, 51):
+        try:
+            svc.list_destinations(limit=ungueltig)
+        except BookingEngineError as exc:
+            assert exc.status_code == 422
+        else:
+            raise AssertionError(f"limit={ungueltig} muss 422 werfen")
+
+
+def test_destinations_tenant_filter() -> None:
+    """White-Label-Seite sieht nur ihre eigenen Ziele."""
+    res = _service().list_destinations(tenant="t2")
+    assert [z.label for z in res.items if z.art == "city"] == ["Berlin, Deutschland"]
+
+
+def test_destinations_unbekannter_landcode_ohne_erfundenes_land() -> None:
+    """Unbekannter ISO-Code → nur die Stadt, kein geratenes Land, kein nackter
+    Code im Gästetext (Wurzel 4)."""
+    prop = {
+        "id": "p-xx", "tenant_id": "t1", "title": "Haus", "description": None,
+        "property_type": "ferienhaus", "city": "Nirgendwo", "country": "XX",
+        "lat": None, "lng": None, "max_guests": 2, "amenities": [], "photos": [],
+        "type_attributes": {}, "status": "active",
+        "listed_on_marketplace": True, "moderation_status": "approved",
+    }
+    res = _service(properties=[prop]).list_destinations()
+    assert [z.label for z in res.items] == ["Nirgendwo"]
+    assert all(z.art != "country" for z in res.items)
+
+
 def test_listing_detail_active_and_rounded_coords() -> None:
     d = _service().listing_detail("p-active")
     assert d.id == "p-active"

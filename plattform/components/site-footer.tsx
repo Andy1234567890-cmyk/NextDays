@@ -4,37 +4,45 @@
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 
+import { gastgeberRegistrierungUrl } from "@/lib/gastgeber-link";
+
 import { ReiseInspirationen } from "./reise-inspirationen";
 
-const SPALTEN = [
+// Link-Spalten. `href` NUR dort, wo das Ziel wirklich existiert — der Rest ist
+// bewusst Text ohne Link. Vorher hing an JEDEM Eintrag ein `href="#"`, also 15
+// Links, die aussahen wie Navigation und nichts taten (genau das, was der
+// Kommentar bei den Rechtslinks unten schon verbot).
+const SPALTEN: { titel: string; links: { label: string; href?: string }[] }[] = [
   {
     titel: "Unterstützung",
     links: [
-      "Hilfe-Center",
-      "Sicherheitsinformationen",
-      "Stornierungsoptionen",
-      "Barrierefreiheit",
-      "Problem melden",
+      { label: "Hilfe-Center", href: "/hilfe" },
+      { label: "Sicherheitsinformationen" },
+      { label: "Stornierungsoptionen" },
+      { label: "Barrierefreiheit" },
+      { label: "Problem melden" },
     ],
   },
   {
     titel: "Gastgeben",
     links: [
-      "Unterkunft inserieren",
-      "Erlebnis anbieten",
-      "Schutz für Gastgeber:innen",
-      "Infos für Gastgeber:innen",
-      "Community-Forum",
+      // Beide führen zur myBestDays-Gastgeber-Registrierung (gastgeber/,
+      // ADR-0015) — nicht auf die myNextDays-Seite (andere Marke, das PMS).
+      { label: "Unterkunft inserieren", href: gastgeberRegistrierungUrl() },
+      { label: "Erlebnis anbieten" },
+      { label: "Schutz für Gastgeber:innen" },
+      { label: "Infos für Gastgeber:innen", href: gastgeberRegistrierungUrl() },
+      { label: "Community-Forum" },
     ],
   },
   {
     titel: "myBestDays",
     links: [
-      "Neuigkeiten",
-      "Pressebereich",
-      "Karriere",
-      "Geschenkkarten",
-      "Über uns",
+      { label: "Neuigkeiten" },
+      { label: "Pressebereich" },
+      { label: "Karriere" },
+      { label: "Geschenkkarten" },
+      { label: "Über uns" },
     ],
   },
 ];
@@ -68,13 +76,19 @@ export function SiteFooter() {
               <p className="text-sm font-semibold">{spalte.titel}</p>
               <ul className="mt-4 flex flex-col gap-3">
                 {spalte.links.map((link) => (
-                  <li key={link}>
-                    <Link
-                      href="#"
-                      className="text-sm text-muted-foreground hover:text-foreground hover:underline"
-                    >
-                      {link}
-                    </Link>
+                  <li key={link.label}>
+                    {link.href ? (
+                      <Link
+                        href={link.href}
+                        className="text-sm text-muted-foreground hover:text-foreground hover:underline"
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">
+                        {link.label}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>

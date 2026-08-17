@@ -28,6 +28,7 @@ from src.features.booking_conditions.plan import (
 )
 from src.features.guest_blocks.service import GuestBlockService
 
+from .reiseziele import land_treffer, ziele_aus_objekten
 from .schemas import (
     GuestContact,
     PostBookingAddonRequest,
@@ -38,6 +39,7 @@ from .schemas import (
     PublicCancellation,
     PublicDay,
     PublicDeposit,
+    PublicDestinationListResponse,
     PublicListing,
     PublicListingDetail,
     PublicListingListResponse,
@@ -66,6 +68,10 @@ _PUBLIC_PROPERTY_COLUMNS = (
 # (je Objekt ein Resolver-Lauf) und die Antwortgröße. Über diesem Wert wird
 # getruncated + geloggt (keine stille Begrenzung).
 _MAX_LISTING_RESULTS = 200
+
+# Max. Reiseziel-Vorschläge je Anfrage (harte Obergrenze, Wurzel 8): das Suchfeld
+# zeigt eine kurze Liste, ein beliebig großes `limit` wäre ein Report-Endpunkt.
+_MAX_DESTINATION_RESULTS = 50
 
 # Max. Objekte in der öffentlichen Sitemap. Deckelt den JWT-losen Sitemap-Endpunkt
 # (Wurzel 8); Suchmaschinen holen Sitemaps sowieso paginiert, 50k ist das
@@ -279,12 +285,18 @@ class BookingEngineService:
 
         if q:
             needle = q.strip().lower()
+            # `properties.country` ist ein ISO-2-Code („DK"), der Gast tippt aber
+            # den Landesnamen („Dänemark"). Ohne diese Auflösung fand die Suche
+            # nach dem Land NIE etwas — ein Teilstring-Vergleich gegen „dk" trifft
+            # keinen Ländernamen. Dieselbe Auflösung wie die Reiseziel-Vorschläge
+            # (EIN Helfer, damit Liste und Vorschläge nicht auseinanderlaufen).
+            laender = land_treffer(needle)
             rows = [
                 r
                 for r in rows
                 if needle in (r.get("title") or "").lower()
                 or needle in (r.get("city") or "").lower()
-                or needle in (r.get("country") or "").lower()
+                or (r.get("country") or "").upper() in laender
             ]
 
         # Standortsuche: nach Entfernung filtern UND sortieren. Objekte ohne
@@ -342,6 +354,43 @@ class BookingEngineService:
             for r in rows
         ]
         return PublicListingListResponse(items=items, total=len(items))
+
+    # -- Reiseziele (Vorschläge des Suchfelds) --------------------------------
+    def list_destinations(
+        self,
+        *,
+        q: str | None = None,
+        tenant: str | None = None,
+        limit: int = 8,
+    ) -> PublicDestinationListResponse:
+        """Echte Reiseziele aus dem Bestand: Städte und Länder, in denen buchbare
+        Objekte liegen, nach Anzahl sortiert.
+
+        Ersetzt die hartkodierte Vorschlagsliste im Suchfeld. Dieselben
+        Sichtbarkeitsregeln wie ``list_listings`` (active + Marktplatz-Flag +
+        Moderation beim zentralen Marktplatz), damit kein Ziel vorgeschlagen wird,
+        das die Suche danach leer lässt. Die Aggregation selbst steht in
+        ``reiseziele`` (inkl. Landesnamen-Auflösung und Motiv-Wahl)."""
+        if limit < 1 or limit > _MAX_DESTINATION_RESULTS:
+            raise BookingEngineError(
+                f"limit muss zwischen 1 und {_MAX_DESTINATION_RESULTS} liegen",
+                status_code=422,
+            )
+        query = (
+            self._db()
+            .table("properties")
+            .select("city, country, property_type, lat, lng")
+            .eq("status", "active")
+        )
+        if tenant is None:
+            query = query.eq("listed_on_marketplace", True)
+            query = query.eq("moderation_status", "approved")
+        else:
+            query = query.eq("tenant_id", tenant)
+        rows = fetch_all_rows(query.order("city"))
+        return PublicDestinationListResponse(
+            items=ziele_aus_objekten(rows, q=q, limit=limit)
+        )
 
     def _unavailable_property_ids(
         self, property_ids: list[str], start: date, end: date

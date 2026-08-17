@@ -20,11 +20,16 @@ gehostete URL ergibt die kleinste Mail, setzt aber einen öffentlich erreichbare
 Host mit gültigem Zertifikat voraus. Genau daran scheiterte der erste Versuch,
 live belegt am 08.08.2026: die Testmail zeigte in Apple Mail nur den leeren
 Rahmen. Nachgemessen ergab sich zweierlei — `www.mynextdays.com` liefert das
-Logo zwar mit 200/image/png aus, `www.mybestdays.com` antwortet aber mit einem
-SELBSTSIGNIERTEN Zertifikat, und kein Mail-Client lädt darüber ein Bild. Dazu
-kommt, dass lokal und auf Staging überhaupt keine öffentliche Adresse existiert.
-Eine Einbindung, die nur in einer von drei Umgebungen und nur für eine von zwei
-Marken funktioniert, ist keine.
+Logo zwar mit 200/image/png aus, die damals für den Marktplatz eingetragene
+Adresse antwortete aber mit einem SELBSTSIGNIERTEN Zertifikat, und kein
+Mail-Client lädt darüber ein Bild. Dazu kommt, dass lokal und auf Staging
+überhaupt keine öffentliche Adresse existiert. Eine Einbindung, die nur in einer
+von drei Umgebungen und nur für eine von zwei Marken funktioniert, ist keine.
+Nachtrag 17.08.2026: jene Adresse war eine `.com` und gehört uns nicht (fremder
+Registrar). Der Marktplatz myBestDays läuft unter **`mybestdays.dk`** — `.dk` ist
+Pflicht, `.com` ist für diese Marke in der Konfiguration immer ein Fehler. Der
+Messwert bleibt gültig, nur seine Deutung war falsch; am Ergebnis ändert es
+nichts: der CID-Anhang bleibt der einzige Weg ohne Host-Abhängigkeit.
 
 Der CID-Anhang hat diese Abhängigkeit nicht: das Bild liegt IN der Mail, braucht
 keinen erreichbaren Host, kein Zertifikat und keine konfigurierte Domain — es

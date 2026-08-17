@@ -2,21 +2,27 @@
 // Dropdowns — Reiseziel-Vorschläge, Kalender (Today/Tomorrow/Wochenende +
 // Monatsansicht) und Gäste-Zähler (Erwachsene/Kinder/Kleinkinder/Haustiere) —
 // plus roter Such-Button. Die gewählten Werte fließen als Query in die Suche.
+// „Wohin" ist ein echtes Textfeld (Freitext → ?q), seine Vorschläge kommen aus
+// dem Bestand (lib/reiseziele.ts), nicht aus einer Liste im Code.
 "use client";
 
 import { Icon } from "@iconify/react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-const ZIEL_VORSCHLAEGE = [
-  { icon: "ph:navigation-arrow", ort: "In der Nähe", text: "Finde heraus, was es in deiner Nähe gibt.", nahbei: true },
-  { icon: "ph:eiffel-tower", ort: "Paris, Frankreich", text: "Wegen Sehenswürdigkeiten wie dem Eiffelturm" },
-  { icon: "ph:sun-horizon", ort: "Barcelona, Spanien", text: "Beliebtes Reiseziel am Strand" },
-  { icon: "ph:moon-stars", ort: "Bangkok, Thailand", text: "Wegen des pulsierenden Nachtlebens" },
-  { icon: "ph:shrine", ort: "Tokio, Japan", text: "Wegen der atemberaubenden Architektur" },
-  { icon: "ph:buildings", ort: "Hamburg, Deutschland", text: "Wegen Sehenswürdigkeiten wie der Speicherstadt" },
-  { icon: "ph:fork-knife", ort: "Rom, Italien", text: "Wegen der erstklassigen Restaurants" },
-];
+import { type Reiseziel, ladeReiseziele } from "@/lib/reiseziele";
+
+// „In der Nähe" ist der einzige feste Eintrag (Geräte-Standort, kein Ort aus dem
+// Bestand). Alle übrigen Vorschläge kommen aus /booking-engine/destinations —
+// echte Städte/Länder mit buchbaren Objekten. Eine hartkodierte Städteliste war
+// der Bug: sie zeigte Paris/Bangkok/Tokio, wo es kein Objekt gibt, und
+// verschwieg jedes real vorhandene Ziel.
+const NAHBEI = {
+  icon: "ph:navigation-arrow",
+  ort: "In der Nähe",
+  text: "Finde heraus, was es in deiner Nähe gibt.",
+};
 
 const WOCHENTAGE = ["S", "M", "D", "M", "D", "F", "S"];
 const MONATE = [
@@ -65,6 +71,9 @@ export function SuchLeiste() {
     monat: heute.getMonth(),
   });
   const ref = useRef<HTMLDivElement>(null);
+  const zielInput = useRef<HTMLInputElement>(null);
+  const [ziele, setZiele] = useState<Reiseziel[]>([]);
+  const [zieleLaden, setZieleLaden] = useState(false);
 
   const gaesteGesamt =
     gaeste.erwachsene + gaeste.kinder + gaeste.kleinkinder;
@@ -88,20 +97,40 @@ export function SuchLeiste() {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  function waehleZiel(vorschlag: { ort: string; nahbei?: boolean }) {
-    if (vorschlag.nahbei) {
-      if (typeof navigator !== "undefined" && navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          () => setZiel("In deiner Nähe"),
-          () => setZiel("In der Nähe"),
-        );
-      } else {
-        setZiel("In der Nähe");
-      }
-      setAktiv("wann");
-      return;
+  // Vorschläge serverseitig zur Eingabe holen (entprellt), solange „Wohin"
+  // offen ist. Der Server filtert Stadt UND Landesname — die Liste im Client zu
+  // filtern war der zweite Teil des Bugs, weil dort nur Fantasie-Orte lagen.
+  useEffect(() => {
+    if (aktiv !== "wohin") return;
+    const begriff = ziel ?? "";
+    const abbruch = new AbortController();
+    setZieleLaden(true);
+    const timer = setTimeout(() => {
+      ladeReiseziele(begriff, 8, abbruch.signal)
+        .then(setZiele)
+        .finally(() => setZieleLaden(false));
+    }, 200);
+    return () => {
+      clearTimeout(timer);
+      abbruch.abort();
+      setZieleLaden(false);
+    };
+  }, [aktiv, ziel]);
+
+  function waehleNahbei() {
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        () => setZiel("In deiner Nähe"),
+        () => setZiel("In der Nähe"),
+      );
+    } else {
+      setZiel("In der Nähe");
     }
-    setZiel(vorschlag.ort);
+    setAktiv("wann");
+  }
+
+  function waehleZiel(vorschlag: Reiseziel) {
+    setZiel(vorschlag.query);
     setAktiv("wann");
   }
 
@@ -128,6 +157,8 @@ export function SuchLeiste() {
     setKalMonat({ jahr: d.getFullYear(), monat: d.getMonth() });
   }
 
+  const zielSuche = (ziel ?? "").trim().length > 0;
+
   const gaesteLabel =
     gaesteGesamt > 0
       ? `${gaesteGesamt} Gäste${gaeste.haustiere > 0 ? ", Haustier" : ""}`
@@ -141,25 +172,40 @@ export function SuchLeiste() {
           (aktiv ? "border-accent/40 shadow-lg" : "border-border")
         }
       >
-        {/* Wohin */}
-        <button
-          type="button"
-          onClick={() => setAktiv(aktiv === "wohin" ? null : "wohin")}
+        {/* Wohin — echtes Textfeld: Freitext geht als ?q an die Suche */}
+        <div
+          role="presentation"
+          onClick={() => {
+            setAktiv("wohin");
+            zielInput.current?.focus();
+          }}
           className={
-            "flex-1 rounded-full px-8 py-[0.9375rem] text-left transition-colors hover:bg-secondary " +
+            "min-w-0 flex-1 cursor-text rounded-full px-8 py-[0.9375rem] text-left transition-colors hover:bg-secondary " +
             (aktiv === "wohin" ? "bg-secondary" : "")
           }
         >
-          <span className="block pb-0.5 text-xs font-semibold leading-4">Wohin</span>
-          <span
-            className={
-              "block truncate text-sm leading-[1.125rem] " +
-              (ziel ? "font-medium text-foreground" : "text-muted-foreground")
-            }
+          <label
+            htmlFor="such-ziel"
+            className="block cursor-text pb-0.5 text-xs font-semibold leading-4"
           >
-            {ziel ?? "Reiseziele suchen"}
-          </span>
-        </button>
+            Wohin
+          </label>
+          <input
+            id="such-ziel"
+            ref={zielInput}
+            type="text"
+            autoComplete="off"
+            value={ziel ?? ""}
+            onChange={(e) => setZiel(e.target.value)}
+            onFocus={() => setAktiv("wohin")}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") suchen();
+              if (e.key === "Escape") setAktiv(null);
+            }}
+            placeholder="Reiseziele suchen"
+            className="block w-full truncate border-0 bg-transparent p-0 text-sm font-medium leading-[1.125rem] text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground"
+          />
+        </div>
         <span className="h-8 w-px shrink-0 bg-border" />
 
         {/* Wann */}
@@ -214,34 +260,69 @@ export function SuchLeiste() {
         </button>
       </div>
 
-      {/* Dropdown: Reiseziele */}
+      {/* Dropdown: Reiseziele (echte Ziele aus dem Bestand) */}
       {aktiv === "wohin" && (
-        <div className="absolute left-0 top-full z-50 mt-3 w-full max-w-md overflow-hidden rounded-3xl border border-border bg-card shadow-xl">
+        <div className="absolute left-0 top-full z-50 mt-3 max-h-[26rem] w-full max-w-md overflow-y-auto rounded-3xl border border-border bg-card shadow-xl">
           <div className="p-6">
             <p className="mb-4 text-sm font-semibold text-muted-foreground">
-              Vorgeschlagene Reiseziele
+              {zielSuche ? "Passende Reiseziele" : "Vorgeschlagene Reiseziele"}
             </p>
             <ul className="flex flex-col">
-              {ZIEL_VORSCHLAEGE.map((vorschlag) => (
-                <li key={vorschlag.ort}>
+              {!zielSuche && (
+                <li>
+                  <button
+                    type="button"
+                    onClick={waehleNahbei}
+                    className="flex w-full items-center gap-4 rounded-xl p-2 text-left transition-colors hover:bg-secondary"
+                  >
+                    <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-secondary text-accent">
+                      <Icon icon={NAHBEI.icon} className="size-6" />
+                    </span>
+                    <span>
+                      <span className="block font-medium">{NAHBEI.ort}</span>
+                      <span className="block text-sm text-muted-foreground">
+                        {NAHBEI.text}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              )}
+              {ziele.map((vorschlag) => (
+                <li key={`${vorschlag.art}-${vorschlag.label}`}>
                   <button
                     type="button"
                     onClick={() => waehleZiel(vorschlag)}
                     className="flex w-full items-center gap-4 rounded-xl p-2 text-left transition-colors hover:bg-secondary"
                   >
-                    <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-secondary text-accent">
-                      <Icon icon={vorschlag.icon} className="size-6" />
-                    </span>
+                    <Image
+                      src={vorschlag.bild}
+                      alt=""
+                      width={48}
+                      height={48}
+                      className="size-12 shrink-0 rounded-xl border border-border object-cover"
+                    />
                     <span>
-                      <span className="block font-medium">{vorschlag.ort}</span>
+                      <span className="block font-medium">{vorschlag.label}</span>
                       <span className="block text-sm text-muted-foreground">
-                        {vorschlag.text}
+                        {vorschlag.count === 1
+                          ? "1 Unterkunft"
+                          : `${vorschlag.count} Unterkünfte`}
                       </span>
                     </span>
                   </button>
                 </li>
               ))}
             </ul>
+            {/* Leer-/Ladezustand statt eines stumm leeren Kastens. */}
+            {ziele.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                {zieleLaden
+                  ? "Reiseziele werden geladen …"
+                  : zielSuche
+                    ? "Kein Reiseziel gefunden. Enter sucht trotzdem im Titel."
+                    : "Noch keine Reiseziele verfügbar."}
+              </p>
+            )}
           </div>
         </div>
       )}

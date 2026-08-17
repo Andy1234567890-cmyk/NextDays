@@ -16,6 +16,7 @@ from .schemas import (
     PublicAvailabilityResponse,
     PublicBookingRequest,
     PublicBookingResponse,
+    PublicDestinationListResponse,
     PublicListingDetail,
     PublicListingListResponse,
     PublicQuoteRequest,
@@ -74,6 +75,22 @@ def listings(
             lng=lng,
             radius_km=radius_km,
         )
+    except BookingEngineError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/destinations", response_model=PublicDestinationListResponse)
+def destinations(
+    service: BookingEngineServiceDep,
+    q: Annotated[str | None, Query(max_length=100)] = None,
+    tenant: Annotated[str | None, Query()] = None,
+    limit: Annotated[int, Query(ge=1, le=50)] = 8,
+) -> PublicDestinationListResponse:
+    """Echte Reiseziele (Städte/Länder mit buchbaren Objekten) für die Vorschläge
+    im Suchfeld. `q` filtert Stadt- und Landesname. Dieselbe Sichtbarkeit wie
+    ``/listings`` — es wird nichts vorgeschlagen, was die Suche leer lässt."""
+    try:
+        return service.list_destinations(q=q, tenant=tenant, limit=limit)
     except BookingEngineError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

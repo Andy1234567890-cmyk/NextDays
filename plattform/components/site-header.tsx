@@ -3,13 +3,10 @@
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 
+import { gastgeberRegistrierungUrl } from "@/lib/gastgeber-link";
+
 import { Logo } from "./logo";
 import { SprachWaehrungModal } from "./sprach-waehrung-modal";
-
-// Ziel des "myBestDays für Gastgeber"-Buttons: die Marketing-/Gastgeber-Seite.
-const GASTGEBER_URL =
-  process.env.NEXT_PUBLIC_GASTGEBER_URL ??
-  "https://mynextdays.com";
 
 // kontoSlot: der Konto-Button wird serverseitig gerendert (liest die HttpOnly-
 // Session) und als Slot übergeben. So bleibt SiteHeader synchron und lässt sich
@@ -52,7 +49,7 @@ export function SiteHeader({
               Startseiten-Navigation). */}
           <SprachWaehrungModal />
           <Link
-            href={GASTGEBER_URL}
+            href={gastgeberRegistrierungUrl()}
             className="hidden rounded-full px-4 py-2 text-sm font-medium hover:bg-secondary sm:block"
           >
             myBestDays für Gastgeber
