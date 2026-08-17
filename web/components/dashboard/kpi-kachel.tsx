@@ -145,17 +145,20 @@ function KachelRahmen({
             label={t("dashboard.zeitraum.label", { kachel: title })}
           />
         </div>
-        <div className="mt-auto flex items-end justify-between gap-3">
-          <div className="min-w-0">
-            {/* Kein `truncate`: ein Betrag mit Tausendern und Währungskürzel
-                („246.307,02 DKK") lief in der Vierer-Reihe sonst ins „…" —
-                eine abgeschnittene Zahl ist keine Zahl. */}
-            <p className="font-display text-3xl font-extrabold leading-none tabular-nums">
-              {display}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">{unitLabel}</p>
+        <div className="mt-auto">
+          {/* Die Zahl steht allein in ihrer Zeile, Beschriftung und Veränderung
+              darunter. Vorher teilten sich Zahl UND Beschriftung eine Spalte
+              neben der Veränderung: bei einer langen Beschriftung („Bestätigte
+              Reservierungen") brach sie um und rutschte neben die Zahl.
+              Kein `truncate` auf der Zahl — ein Betrag mit Tausendern und
+              Währungskürzel ist abgeschnitten keine Zahl mehr. */}
+          <p className="font-display text-3xl font-extrabold leading-none tabular-nums">
+            {display}
+          </p>
+          <div className="mt-1 flex items-end justify-between gap-2">
+            <p className="text-sm text-muted-foreground">{unitLabel}</p>
+            <ChangeBadge change={change} />
           </div>
-          <ChangeBadge change={change} />
         </div>
         {/* Ein fehlgeschlagenes Nachladen wird GESAGT. Stillschweigend den
             alten Wert unter dem neuen Zeitraum stehen zu lassen wäre die
