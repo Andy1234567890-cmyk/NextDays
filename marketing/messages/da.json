@@ -1,479 +1,910 @@
 {
-  "meta": {
-    "title": "myNextDays – Platformen for udlejere af feriebolig",
-    "description": "Platformen til hoteller, bureauer og udlejere af ferieboliger: channel manager, kalender, direkte booking, gæstekommunikation og afregning ét sted. Bygget i Danmark, hostet i EU. Fra 19,90 € om måneden. Prøv gratis i 30 dage."
+ "meta": {
+  "title": "myNextDays – Platformen for udlejere af feriebolig",
+  "description": "Platformen til hoteller, bureauer og udlejere af ferieboliger: channel manager, kalender, direkte booking, gæstekommunikation og afregning ét sted. Bygget i Danmark, hostet i EU. Fra 19,90 € om måneden. Prøv gratis i 30 dage."
+ },
+ "nav": {
+  "funktionen": "Funktioner",
+  "preise": "Priser",
+  "kanaele": "Kanaler",
+  "kunden": "Kunder",
+  "ressourcen": "Ressourcer",
+  "sprache": "Sprog",
+  "spracheWaehlen": "Vælg sprog",
+  "anmelden": "Log ind",
+  "kostenlosStarten": "Start gratis",
+  "sprachModalTitel": "Sprog og region",
+  "sprachModalHeading": "Vælg et sprog",
+  "sprachModalHinweis": "Dit valg gælder for denne hjemmeside og overføres til din konto.",
+  "schliessen": "Luk",
+  "suche": "Søg efter et sprog",
+  "keinTreffer": "Intet sprog fundet.",
+  "menuOeffnen": "Åbn menu",
+  "menuSchliessen": "Luk menu",
+  "menuCtaTitel": "Vil du hellere se det?",
+  "menuCtaText": "Se softwaren — med rigtige data, uden tilmelding.",
+  "menuCtaKnopf": "Se demoen",
+  "menuSpalte": {
+   "kern": "Salg",
+   "gast": "Gæst & penge",
+   "betrieb": "Drift"
   },
-  "nav": {
-    "funktionen": "Funktioner",
-    "preise": "Priser",
-    "kanaele": "Kanaler",
-    "kunden": "Kunder",
-    "ressourcen": "Ressourcer",
-    "sprache": "Sprog",
-    "spracheWaehlen": "Vælg sprog",
-    "anmelden": "Log ind",
-    "kostenlosStarten": "Start gratis",
-    "sprachModalTitel": "Sprog og region",
-    "sprachModalHeading": "Vælg et sprog",
-    "sprachModalHinweis": "Dit valg gælder for denne hjemmeside og overføres til din konto.",
-    "schliessen": "Luk",
-    "suche": "Søg efter et sprog",
-    "keinTreffer": "Intet sprog fundet."
+  "menuBildAlt": "Belægningsplan i myNextDays"
+ },
+ "hero": {
+  "trustNeu": "Nyt i 2026",
+  "trustVermieter": "af udlejere, til udlejere",
+  "trustAirsmil": "powered by AirSmil",
+  "trustEu": "Hostet i EU (GDPR)",
+  "headlinePre": "Flere",
+  "headlineHighlight": "bookinger",
+  "headlinePost": "mindre besvær.",
+  "subline": "Platformen til hoteller, bureauer og udlejere af ferieboliger: channel manager, kalender, direkte booking, gæstekommunikation og afregning ét sted – bygget af udlejere, der kender hverdagen.",
+  "ctaTrial": "Prøv gratis i 30 dage",
+  "ctaDemo": "Se demo",
+  "kanaeleLabel": "Forbundet med de store bookingplatforme",
+  "eyebrow": "Platformen for udlejere af ferieboliger",
+  "kanaeleEyebrow": "Salgskanaler",
+  "aufnahmeBelegungsplan": "Belægningsplan i myNextDays: otte ferieboliger med bookinger fra Booking.com, Airbnb, Vrbo, markedspladsen og direkte bookinger",
+  "aufnahmeHotel": "Belægningsplan for et hotel i myNextDays: tolv værelser, hvert som sin egen bookbare enhed",
+  "aufnahmeObjekte": "Boligoversigt i myNextDays med billeder, status og synlighed pr. kanal",
+  "aufnahmeKanaele": "Kanalstyring i myNextDays: forbundne bookingportaler og den egne markedsplads"
+ },
+ "intro": {
+  "heading": "Velkommen til myNextDays.",
+  "p1": "Et komplet property management system plus channel manager – til hoteller, bureauer og udlejere af ferieboliger. Uafhængigt og fair i stedet for koncernkompleksitet og enterprise-priser.",
+  "p2": "Øg din belægning, gør hverdagen enklere og skab fantastiske gæsteoplevelser – uden kompleksiteten og enterprise-priserne fra de store systemer.",
+  "p3": "Alt ét sted, smart automatisering og forbindelse til alle vigtige kanaler – plus din egen bookingportal med lav kommission. Sådan vokser din forretning med mere kontrol og mindre besvær.",
+  "cta": "Udforsk funktionerne",
+  "reichweite": "Skabt til enhver overnatningsvirksomhed.",
+  "typen": {
+   "hotel": "Hotel",
+   "bnb": "B&B",
+   "gaestehaus": "Gæstehus",
+   "motel": "Motel",
+   "lodge": "Lodge",
+   "ferienwohnung": "Ferielejlighed",
+   "resort": "Resort",
+   "huette": "Hytte",
+   "pension": "Pensionat",
+   "campingplatz": "Campingplads"
+  },
+  "belegeHeading": "Det kan du regne med",
+  "belege": {
+   "neu": "Nyt i 2026 – udviklet af aktive udlejere, powered by AirSmil",
+   "eu": "Bygget i Danmark, hostet i EU og GDPR-compliant",
+   "kanaele": "56 bookingplatforme tilsluttet",
+   "start": "Lancering den 1. september 2026 i 27 europæiske lande, 24 sprog"
+  },
+  "eyebrow": "Platformen",
+  "typenEyebrow": "Hvem den er til"
+ },
+ "zielgruppen": {
+  "bildAlt": "myNextDays-grænseflade, eksempel {typ}",
+  "abschluss": "Uanset formen bliver alt styret i det samme system med det samme login.",
+  "typen": {
+   "hotel": {
+    "unterzeile": "Hotelsoftware med channel manager",
+    "text": "Små hoteller fører deres værelser som værelsestyper: hver type har sine enheder, og i belægningsplanen står hvert værelse for sig — med ankomst, afrejse og rengøring. Booking.com, Expedia og de øvrige bookingportaler får antallet af ledige enheder, ikke et ja/nej. Priser, minimumsophold og lukkedage passer du ét sted, og channel manageren fordeler dem til alle forbundne portaler. Faktura, betaling og gæstekommunikation ligger i samme system.",
+    "beleg": "Tilgængelighed som tal, ikke ja/nej."
+   },
+   "bnb": {
+    "unterzeile": "Bookingsystem til bed & breakfast",
+    "text": "Morgenmad, håndklæder, gebyr for kæledyr, sen ankomst: tillægsydelser hænger direkte på bookingen og står på gæstens faktura uden sideregnskab. Står du selv ved bordet i B&B'et, vil du ikke føre endnu en liste — forespørgsler, beskeder, betalinger og belægning samles ét sted, på computeren som på mobilen. Kortbetaling via Stripe er med, og din egen bookingside uden portalkommission også.",
+    "beleg": "Tillægsydelser afregnes automatisk."
+   },
+   "gaestehaus": {
+    "unterzeile": "Administration af gæstehuse med flere værelser",
+    "text": "Flere enheder under samme tag, én kalender: hvilken gæst der får hvilket værelse, bestemmer du indtil ankomsten, uden at oprette bookingen igen. Bygningen afgør, hvad portalerne ser under ét id; udstyr, fotos og priser passer du pr. værelsestype. Rengøringsopgaver følger ankomster og afrejser og ligger på teamets mobil — med eget login, der viser opgaver, ikke omsætning.",
+    "beleg": "Én bygning, ét portal-id."
+   },
+   "motel": {
+    "unterzeile": "Software til moteller og korte ophold",
+    "text": "Stor gennemstrømning, korte ophold, sene ankomster: ankomstinfo, adgangskoder og faktura går automatisk til gæsten — på det rette tidspunkt og i gæstens sprog, 24 sprog er klar. Værelser, der bliver fri igen, går af sig selv tilbage til alle portaler, og et stop-sell lukker dem overalt på én gang. I receptionen er dagsplanen nok: hvem kommer, hvem rejser, hvad er stadig åbent.",
+    "beleg": "Beskederne kører af sig selv."
+   },
+   "lodge": {
+    "unterzeile": "Udlejning af lodge, også fra mobilen",
+    "text": "Afsides er ikke afskåret: priser, minimumsophold, skiftedage og lukninger passer du på mobilen præcis som ved skrivebordet — samme kalender, samme booking, ingen mellemtilstand. Sæsonpriser sætter du i prisgitteret for et helt år i stedet for dag for dag, og rabatter for længere ophold når også portalerne. Selv uden reception ved gæsten, hvordan han kommer ind.",
+    "beleg": "Også undervejs, via appen."
+   },
+   "ferienwohnung": {
+    "unterzeile": "Channel manager til ferieboliger",
+    "text": "Én bolig, alle kanaler: Booking.com, Airbnb, Vrbo, vores eget marked myBestDays og direkte bookinger på din hjemmeside deler én kalender. Er en nat solgt, er den væk alle steder — dobbeltbookinger opstår ikke. Direkte bookinger med lav provision kan du fremme bevidst: egen prisstrategi, rabatter for længere ophold, automatiske beskeder fra booking til afrejse og kortbetaling direkte til din konto.",
+    "beleg": "Én kalender til alle kanaler."
+   },
+   "resort": {
+    "unterzeile": "Styr et resort med mange enheder",
+    "text": "Studios, suiter og villaer kører som egne typer med egne priser, faciliteter og belægningsregler — alle under én konto og én afregning. Så mange objekter og så mange enheder pr. type som du har behov for, uden at nogen skifter login. Reception, rengøring og ejere ser kun deres del; ejerafregninger laves pr. objekt med rapport i stedet for et regneark ved månedens slutning.",
+    "beleg": "Så mange objekter du vil per konto."
+   },
+   "huette": {
+    "unterzeile": "Hytteudlejning i sæsondrift",
+    "text": "Sæsondrift uden håndarbejde: lukkeperioder, skiftedage, minimums- og maksimumsophold sætter du én gang, og de gælder på alle portaler samtidig. Er hytten lukket om vinteren, er den lukket alle steder — uden login i fem extranet. Skiftedagen holdes fri mellem to bookinger, så rengøringen har tid, og ankomst- eller afrejsedage kan lukkes enkeltvis.",
+    "beleg": "En lukning gælder på alle portaler."
+   },
+   "pension": {
+    "unterzeile": "Pensionatsdrift med faktura og kurafgift",
+    "text": "Halvpension, kurafgift, faste gæster, betaling på stedet: tillæg og afgifter beregner systemet rigtigt for hver portal — også hvor portalen melder et nettobeløb, og du har brug for bruttoprisen. Fakturaer, kreditnotaer og åbne poster står i samme sag som bookingen, i dit lands valuta. Tilbagevendende gæster genkender du på deres historik i stedet for at søge i gamle mails.",
+    "beleg": "Afgifter pr. portal, korrekt beregnet."
+   },
+   "campingplatz": {
+    "unterzeile": "Campingpladsadministration med pladser",
+    "text": "Pladser, udlejningsvogne og glampingtelte er typer med antal: tyve ens pladser er én type med tyve enheder, ikke tyve kalendere. Tilgængelighed går til portalerne som et tal, så der aldrig sælges mere, end der er. Strøm, kurafgift eller hund afregner du pr. nat eller pr. ophold, og dagens ankomster står samlet i dagsplanen.",
+    "beleg": "Antal i stedet for tyve kalendere."
+   }
+  }
+ },
+ "faq": {
+  "eyebrow": "Ofte stillede spørgsmål",
+  "heading": "Spørgsmålene, der kommer før et systemskifte.",
+  "sub": "Hvad platformen gør, hvad den koster, og hvordan dine data er beskyttet — uden markedsføringssnak.",
+  "was": {
+   "frage": "Hvad er myNextDays helt præcist?",
+   "antwort": "myNextDays er et property management-system og en channel manager i ét — til hoteller, pensionater, gæstehuse, ferieboliger, campingpladser og bureauer. Kalender, reservationer, priser, portaler, direkte booking, gæstekommunikation, rengøring og afregning ligger i én flade med ét login i stedet for fire værktøjer, der intet ved om hinanden."
+  },
+  "portale": {
+   "frage": "Hvilke bookingportaler kan jeg koble til?",
+   "antwort": "Du når 56 bookingplatforme, blandt andet Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda og Tripadvisor. Dertil kommer vores eget marked myBestDays, en booking-widget til din hjemmeside og regionale kanaler. Hver kanal tændes for sig: du bestemmer pr. objekt, hvor det er synligt."
+  },
+  "sync": {
+   "frage": "Hvor hurtigt synkroniseres der — og kan der opstå dobbeltbookinger?",
+   "antwort": "Synkroniseringen kører i begge retninger i realtid: en booking på én portal lukker natten alle andre steder, og ændrede priser eller minimumsophold går ud med det samme. Alle kanaler deler én kalender, så der opstår ikke en anden sandhed. Et stop-sell lukker overalt på én gang, ikke kun der hvor du sætter det."
+  },
+  "betriebsarten": {
+   "frage": "Passer det til et hotel og til ferieboliger på samme tid?",
+   "antwort": "Ja, det er samme model: hvert objekt er præcis én type — en værelsestype på hotellet eller en ferieudlejning — og under den hænger dens enheder. Et hotel med otte dobbelt- og fire enkeltværelser har to objekter med otte og fire enheder. Portalerne får antallet af ledige enheder, så fem ens studios ikke kræver fem kalendere."
+  },
+  "direkt": {
+   "frage": "Får jeg min egen bookingside uden portalkommission?",
+   "antwort": "Ja. Til hver konto hører en egen bookingportal, en widget til den eksisterende hjemmeside og en hjemmesidebygger med eget domæne. Direkte bookinger koster 0,5 % i stedet for de store portalers 15–18 %, kører på samme kalender og samme priser — og pengene går direkte ind på din konto."
+  },
+  "marktplatz": {
+   "frage": "Hvad er myBestDays?",
+   "antwort": "myBestDays er vores eget marked for gæster — en bookingkanal på lige fod med Booking.com og Airbnb, blot med markant lavere kommission. Objekter, du gør synlige der, vises på markedet og i myBestDays-appen til gæster. Den synlighed er en selvstændig knap, uafhængig af portalerne."
+  },
+  "zahlungen": {
+   "frage": "Hvordan fungerer betalinger, depositum og fakturaer?",
+   "antwort": "Onlinebetalinger går gennem Stripe ind på din egen konto: depositum, restbetaling eller sikkerhedsstillelse, med kort og de betalingsmetoder, Stripe tilbyder i gæstens land. Fakturaer og kreditnotaer opstår ud fra bookingen, i objektets valuta, med bogføringsklare eksporter. Portalgebyrer og afgifter beregnes rigtigt pr. portal — også hvor en portal kun melder et nettobeløb."
+  },
+  "laender": {
+   "frage": "Hvilke lande, valutaer og sprog dækker platformen?",
+   "antwort": "Ved starten den 1. september 2026 i 27 europæiske lande. Flade og gæstekommunikation findes på 24 sprog; gæsten læser sin bekræftelse på sit eget sprog. Valutaen hænger på objektet eller virksomheden — der er ingen euro-antagelse, kroner, złoty eller forint føres på samme måde."
+  },
+  "rollen": {
+   "frage": "Hvem ser hvilke data — ejere, rengøring, gæster?",
+   "antwort": "Hver rolle har sit eget login og ser kun sin del. Ejere ser deres objekter, deres belægning og udbetalinger, men ikke andres. Rengøringen ser opgaver med foto-checklister, ikke omsætning. Gæster har deres eget område med check-in, digital gæstemappe og beskeder."
+  },
+  "app": {
+   "frage": "Findes der en app?",
+   "antwort": "To, fordi gæst og drift har brug for forskellige ting: myNextDays-appen til drift, ejere og rengøring — kalender, bookinger og opgaver undervejs — og myBestDays-appen til gæster med søgning, booking, check-in og beskeder. Begge taler med samme system; intet kører på en kopi."
+  },
+  "sicherheit": {
+   "frage": "Hvad med databeskyttelse og sikkerhed?",
+   "antwort": "Bygget i Danmark, hostet i EU, GDPR-konform inklusive databehandleraftale. Hver virksomheds data er adskilt på databaseniveau, ikke kun i fladen. To-faktor-login er tilgængeligt, rollerettigheder begrænser adgangen til økonomi- og gæstedata, og hvert login kan spores i enhedshistorikken."
+  },
+  "preis": {
+   "frage": "Hvad koster myNextDays, og hvordan kommer jeg i gang?",
+   "antwort": "30 dage gratis, ingen bindingsperiode, ingen oprettelsesgebyr, opsigelse når som helst. Derefter et abonnement plus en lav kommission på formidlede bookinger. Tillægsmoduler som udvidet bogføring med DATEV-eksport, medarbejderstyring eller hotelfunktioner tilkøber du kun, hvis du har brug for dem. Opret objekt, forbind kanaler, kom i gang."
+  }
+ },
+ "benefits": {
+  "eyebrow": "Derfor myNextDays",
+  "sub": "Tre ting, der virkelig tæller i udlejningshverdagen – det er dét, platformen er bygget til.",
+  "heading": "Flere bookinger. Mindre arbejde.",
+  "buchungen": {
+   "title": "Få flere bookinger",
+   "text": "Vær synlig på alle de store kanaler og på din egen hjemmeside. Én central kalender holder alt synkront – slut med dobbeltbookinger."
+  },
+  "betrieb": {
+   "title": "Forenkl driften",
+   "text": "Styr boliger, bookinger, rengøring og afregning ét sted – ved skrivebordet eller på farten."
+  },
+  "fair": {
+   "title": "Fair & europæisk",
+   "text": "En gennemskuelig pris uden enterprise-forhindringer, bygget i Danmark, hostet i EU efter GDPR. Personlig support fra det team, der selv bruger softwaren."
+  },
+  "preisBanner": {
+   "eyebrow": "Pris",
+   "heading": "Alt til din overnatningsvirksomhed ét sted",
+   "text": "30 dage gratis. Ingen bindingsperiode. Kan opsiges når som helst (4 uger til udgangen af måneden).",
+   "proMonat": "om måneden"
+  }
+ },
+ "trial": {
+  "eyebrow": "Prøv gratis",
+  "heading": "Prøv myNextDays gratis i 30 dage.",
+  "sub": "Ingen bindingsperiode. Kan opsiges når som helst. Udfyld blot denne korte formular:",
+  "seitenHeading": "Alt til din overnatningsvirksomhed ét sted – mere kontrol, mindre besvær.",
+  "perks": {
+   "buchungen": {
+    "title": "Flere bookinger",
+    "text": "via alle de store kanaler og din egen portal, uden dobbeltbookinger."
+   },
+   "kontrolle": {
+    "title": "Fuld kontrol",
+    "text": "over check-ins, bookinger og fakturaer ét sted."
+   },
+   "freiheit": {
+    "title": "Mere frihed",
+    "text": "styr din bolig fra mobilen, uanset hvor du er."
+   }
+  },
+  "vorname": "Fornavn",
+  "nachname": "Efternavn",
+  "email": "E-mail",
+  "emailPlatzhalter": "navn@eksempel.dk",
+  "einwilligung": "Ja tak, jeg vil gerne modtage nyheder, webinarinvitationer og tilbud fra myNextDays i ny og næ. Du kan til enhver tid trække dit samtykke tilbage.",
+  "absenden": "Kom i gang",
+  "dankeTitel": "Mange tak!",
+  "dankeText": "Vi vender tilbage til dig inden længe."
+ },
+ "features": {
+  "heading": "Ét system. Ét login.",
+  "baldBadge": "Kommer snart",
+  "hinweis": "Basisfakturering er med fra lanceringen. Udvidet bogføring (DATEV-eksport), medarbejderstyring, markedspladsen for leverandører og hotelfunktioner er tilkøbsmoduler.",
+  "eyebrow": "Funktioner",
+  "sub": "Ét login til virksomheden, ejerne, gæsterne og rengøringen – hver rolle ser præcis sit eget område.",
+  "alleAnsehen": "Udforsk alle funktioner i den gratis prøveperiode",
+  "neu": {
+   "title": "myNextDays AI & avatar",
+   "text": "Avatar og stemmestyring, en AI-concierge til gæsternes spørgsmål og priser, der følger sæson og efterspørgsel."
+  },
+  "gruppen": {
+   "pms": {
+    "title": "Property management",
+    "items": "Central multikalender, belægningsplan, reservationer, opgaver, bolig- og faciliteterdata"
+   },
+   "channel": {
+    "title": "Channel manager",
+    "items": "56 bookingplatforme, Airbnb, Booking.com, Expedia, Vrbo, Google, tovejssynkronisering i realtid"
+   },
+   "direkt": {
+    "title": "Direkte booking",
+    "items": "Egen bookingportal, booking-widget, hjemmesidebygger, eget domæne, 0,5 % i stedet for 15–18 % OTA-kommission"
+   },
+   "preise": {
+    "title": "Priser & omsætning",
+    "items": "Dynamiske priser med min./maks., rate plans pr. bolig, sæson- og belægningslogik, manuelle priser går forud"
+   },
+   "gaeste": {
+    "title": "Gæsteoplevelse",
+    "items": "Digital gæstemappe, AI-concierge, online check-in, automatiske beskeder, 24 sprog"
+   },
+   "zahlungen": {
+    "title": "Betalinger & afregning",
+    "items": "Onlinebetalinger, depositum, sikkerhedsstillelse, basisfakturaer, bogføringsklare eksporter"
+   },
+   "team": {
+    "title": "Team & roller",
+    "items": "Ejerlogin med udbetalinger, rengøringslogin med fotochecklister, opgaver, adskilte rettigheder"
+   },
+   "app": {
+    "title": "Mobilapp",
+    "items": "Native app med separate logins til ejere, gæster og rengøring – styr driften på farten"
+   },
+   "auswertungen": {
+    "title": "Analyser",
+    "items": "Belægning, omsætning, ADR, automatiske rapporter, kanalsammenligning, metasøgning kommer snart"
+   }
+  }
+ },
+ "ki": {
+  "eyebrow": "AI & stemme",
+  "heading": "Platformen tager rutinen fra dig.",
+  "sub": "Styr det håndfrit, lad gæsternes spørgsmål besvare sig selv, hold priserne i bevægelse – uden at lære en eneste klikvej.",
+  "voice": {
+   "title": "Avatar / stemmestyring",
+   "text": "Styr det håndfrit med stemmen og lad en avatar svare: tjek belægningen, håndtér bookinger og opgaver, ændr priser – mens du er på farten eller gør en bolig klar."
+  },
+  "concierge": {
+   "title": "En AI-concierge til dine gæster",
+   "text": "Den digitale gæstemappe svarer selv på wi-fi-kode, nøgleboks, skraldespande og lokale tips – på 24 sprog, døgnet rundt."
+  },
+  "preise": {
+   "title": "Priser, der tænker med",
+   "text": "Sæt en basispris med minimum og maksimum pr. bolig; døgnpriserne følger sæson, belægning og efterspørgsel. Manuelle priser går altid forud."
+  },
+  "cta": "Se funktionerne",
+  "blaseFrage": "Hvordan ser belægningen ud i næste uge?",
+  "blaseAntwort": "18 ud af 24 nætter booket. To huller i weekenden – skal prisen sættes ned?",
+  "eingabe": "Spørg myNextDays …",
+  "baldBadge": "Kommer snart"
+ },
+ "integrationen": {
+  "eyebrow": "Rækkevidde",
+  "heading": "56 bookingplatforme – én flade.",
+  "p1": "Du fordeler ledighed, priser og restriktioner til 56 bookingplatforme – heriblandt Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda og Tripadvisor. Tovejssynkronisering i realtid: en booking på én portal spærrer natten alle andre steder.",
+  "p2": "Oveni kommer dit eget salg: bookingportalen med lav kommission på myBestDays, en booking-widget til din hjemmeside og regionale kanaler, du kan slå til enkeltvis. Hver kanal styres separat – du bestemmer, hvor en bolig er synlig.",
+  "cta": "Forbind kanaler i prøveperioden"
+ },
+ "testimonials": {
+  "eyebrow": "Bag platformen",
+  "heading": "Derfor byggede vi myNextDays.",
+  "gruenderin": {
+   "quote": "myNextDays er vokset ud af vores egen udlejningshverdag hos AirSmil – vi bygger præcis den software, vi selv havde brug for.",
+   "name": "Jeanine Ågaard",
+   "location": "Stifter, myNextDays / AirSmil"
+  }
+ },
+ "stimmen": {
+  "eyebrow": "Stemmer fra praksis",
+  "heading": "Hvad værterne fortæller.",
+  "vorschauHinweis": "Layout-forhåndsvisning med eksempeltekst – her kommer senere ægte, godkendte citater.",
+  "zurueck": "Forrige udtalelse",
+  "vor": "Næste udtalelse",
+  "zeigeStimme": "Vis udtalelse {nummer}"
+ },
+ "stats": {
+  "eyebrow": "Tal, vi kan dokumentere",
+  "heading": "Udlejningsplatformen, bygget af folk, der selv lejer ud.",
+  "sub": "Lancering den 1. september 2026 i 27 lande.",
+  "laender": {
+   "value": "27",
+   "label": "Lande",
+   "text": "Europæiske lande ved lanceringen"
+  },
+  "sprachen": {
+   "value": "24",
+   "label": "Sprog",
+   "text": "Brugerflade og gæstekommunikation"
+  },
+  "kanaele": {
+   "value": "56",
+   "label": "Platforme",
+   "text": "Tilsluttede bookingplatforme"
+  },
+  "hosting": {
+   "value": "100 %",
+   "label": "EU-hosting",
+   "text": "Bygget i Danmark, GDPR-compliant"
+  },
+  "vermieter": {
+   "label": "Udviklet af udlejere",
+   "text": "Ud af den virkelige udlejningshverdag hos AirSmil"
+  }
+ },
+ "usecases": {
+  "eyebrow": "Dem vi bygger til",
+  "heading": "Tre slags virksomheder, én platform.",
+  "sub": "En feriebolig, et hotelværelse eller en hel portefølje – samme flade, sat sammen forskelligt efter driften.",
+  "ferienobjekt": {
+   "label": "Feriebolig",
+   "title": "Sommerhus & ferielejlighed",
+   "text": "En eller flere boliger, du selv lejer ud – uden reception, men med nøgleoverdragelser, rengøring og gæstespørgsmål.",
+   "punkte": {
+    "kanaele": "Portaler og din egen hjemmeside i én kalender",
+    "kalender": "Planlæg rengøring og overdragelser pr. bolig",
+    "gaeste": "Online check-in og digital gæstemappe på 24 sprog"
+   }
+  },
+  "hotel": {
+   "label": "Hotel & pensionat",
+   "title": "Værelser, ikke containere",
+   "text": "Hvert værelse er sin egen bookbare enhed med egne rater – ingen omvej over værelseskategorier med antal.",
+   "punkte": {
+    "zimmer": "Ledighed pr. værelse ud på alle portaler",
+    "raten": "Rate plans pr. værelse, afledte eller manuelle",
+    "rezeption": "Dagsoverblik over ankomster og afrejser"
+   }
+  },
+  "agentur": {
+   "label": "Bureau & administration",
+   "title": "Portefølje med flere ejere",
+   "text": "Du administrerer andres boliger: adskilt afregning, eget login pr. ejer, klare tal for hver bolig.",
+   "punkte": {
+    "portfolio": "Alle boliger i én belægningsplan",
+    "eigentuemer": "Ejerlogin med belægning og udbetalinger",
+    "abrechnung": "Kontoudtog og kommissioner pr. bolig"
+   }
+  }
+ },
+ "footer": {
+  "claim": "Platformen for udlejere af ferieboliger – flere bookinger, mindre besvær.",
+  "appLaden": "Hent appen",
+  "spalten": {
+   "produkt": "Produkt",
+   "loesungen": "Løsninger",
+   "ressourcen": "Ressourcer",
+   "unternehmen": "Virksomhed"
+  },
+  "produkt": {
+   "pms": "Property management",
+   "channelManager": "Channel manager",
+   "direktbuchung": "Direkte booking",
+   "zahlungen": "Betalinger",
+   "mobileApp": "Mobilapp"
+  },
+  "loesungen": {
+   "hotels": "Hoteller",
+   "bnb": "B&B'er",
+   "gaestehaeuser": "Gæstehuse",
+   "ferienwohnungen": "Ferieboliger",
+   "campingplaetze": "Campingpladser"
+  },
+  "ressourcen": {
+   "blog": "Blog",
+   "hilfeCenter": "Hjælpecenter",
+   "webinare": "Webinarer",
+   "leitfaeden": "Guides",
+   "api": "API-dokumentation"
+  },
+  "unternehmen": {
+   "ueberUns": "Om os",
+   "karriere": "Karriere",
+   "partner": "Partnere",
+   "kontakt": "Kontakt",
+   "presse": "Presse"
+  },
+  "copyright": "© 2026 myNextDays. Alle rettigheder forbeholdes.",
+  "agb": "Betingelser",
+  "datenschutz": "Privatliv",
+  "impressum": "Juridisk information",
+  "cookies": "Cookiepolitik",
+  "avv": "Databehandling"
+ },
+ "abschluss": {
+  "heading": "Klar til at styre din overnatningsvirksomhed ét sted?",
+  "sub": "Prøv gratis i 30 dage – ingen bindingsperiode, intet oprettelsesgebyr, kan opsiges når som helst.",
+  "ctaPrimaer": "Prøv gratis i 30 dage",
+  "ctaSekundaer": "Se priser"
+ },
+ "chat": {
+  "titel": "Spørgsmål? Vi er her.",
+  "untertitel": "Svar som regel inden for få timer.",
+  "name": "Navn",
+  "email": "E-mail",
+  "telefon": "Telefon (valgfrit)",
+  "nachricht": "Din besked",
+  "absenden": "Send besked",
+  "sendet": "Sender …",
+  "platzhalter": "Skriv en besked …",
+  "senden": "Send",
+  "oeffnen": "Åbn chat",
+  "schliessen": "Luk chat",
+  "hinweis": "Vi bruger kun dine oplysninger til at svare på denne henvendelse.",
+  "fehler": "Det gik ikke. Prøv venligst igen senere."
+ },
+ "einblicke": {
+  "eyebrow": "Indblik",
+  "heading": "Sådan arbejder myNextDays i virkeligheden",
+  "sub": "Ingen tegnede visninger — optagelser fra en kørende drift med rigtige bookinger fra alle kanaler.",
+  "hotel": {
+   "title": "Hotel og feriebolig i én grænseflade",
+   "text": "Hvert værelse er sin egen bookbare enhed — samme model som ved et feriehus. Belægningsplanen viser ankomster, ophold og afrejser pr. enhed, med belægning, omsætning og gennemsnitspris pr. nat i perioden."
+  },
+  "objekte": {
+   "title": "Synlighed pr. kanal, ikke én kontakt til det hele",
+   "text": "Website, markedsplads og bookingportaler er tre adskilte akser. En bolig kan køre videre på dit eget site, mens den er sat på pause på portalerne — synligt på et øjeblik, skiftes med ét klik."
+  },
+  "kanaele": {
+   "title": "Tilslut portaler og behold din egen kanal",
+   "text": "Booking.com, Airbnb og andre portaler hænger på den samme tilgængelighed som den direkte booking. En booket nat spærrer alle steder — uden dobbeltbooking, uden manuel efterbehandling."
+  }
+ },
+ "preise": {
+  "meta": {
+   "titel": "Priser — én pakke, alt inkluderet | myNextDays",
+   "beschreibung": "Én pakke med det fulde funktionsomfang, betalt efter antal enheder. Ingen bindingsperiode, intet oprettelsesgebyr, 30 dage gratis — kanaler, direkte booking, gæstekommunikation og afregning er med."
   },
   "hero": {
-    "trustNeu": "Nyt i 2026",
-    "trustVermieter": "af udlejere, til udlejere",
-    "trustAirsmil": "powered by AirSmil",
-    "trustEu": "Hostet i EU (GDPR)",
-    "headlinePre": "Flere",
-    "headlineHighlight": "bookinger",
-    "headlinePost": "mindre besvær.",
-    "subline": "Platformen til hoteller, bureauer og udlejere af ferieboliger: channel manager, kalender, direkte booking, gæstekommunikation og afregning ét sted – bygget af udlejere, der kender hverdagen.",
-    "ctaTrial": "Prøv gratis i 30 dage",
-    "ctaDemo": "Se demo",
-    "kanaeleLabel": "Forbundet med de store bookingplatforme",
-    "eyebrow": "Platformen for udlejere af ferieboliger",
-    "kanaeleEyebrow": "Salgskanaler",
-    "aufnahmeBelegungsplan": "Belægningsplan i myNextDays: otte ferieboliger med bookinger fra Booking.com, Airbnb, Vrbo, markedspladsen og direkte bookinger",
-    "aufnahmeHotel": "Belægningsplan for et hotel i myNextDays: tolv værelser, hvert som sin egen bookbare enhed",
-    "aufnahmeObjekte": "Boligoversigt i myNextDays med billeder, status og synlighed pr. kanal",
-    "aufnahmeKanaele": "Kanalstyring i myNextDays: forbundne bookingportaler og den egne markedsplads"
+   "eyebrow": "Priser",
+   "headlinePre": "Én pakke.",
+   "headlineHighlight": "Alt indeholdt.",
+   "sub": "Ingen pakkegåde: alle funktioner er med, uanset om du driver ét feriehus eller tolv værelsestyper. Du betaler efter antal enheder — og jo flere du har, jo billigere bliver hver enkelt.",
+   "testen": "30 dage gratis",
+   "laufzeit": "Ingen bindingsperiode",
+   "einrichtung": "Intet oprettelsesgebyr",
+   "eu": "EU-hostet, GDPR"
   },
-  "intro": {
-    "heading": "Velkommen til myNextDays.",
-    "p1": "Et komplet property management system plus channel manager – til hoteller, bureauer og udlejere af ferieboliger. Uafhængigt og fair i stedet for koncernkompleksitet og enterprise-priser.",
-    "p2": "Øg din belægning, gør hverdagen enklere og skab fantastiske gæsteoplevelser – uden kompleksiteten og enterprise-priserne fra de store systemer.",
-    "p3": "Alt ét sted, smart automatisering og forbindelse til alle vigtige kanaler – plus din egen bookingportal med lav kommission. Sådan vokser din forretning med mere kontrol og mindre besvær.",
-    "cta": "Udforsk funktionerne",
-    "reichweite": "Skabt til enhver overnatningsvirksomhed.",
-    "typen": {
-      "hotel": "Hotel",
-      "bnb": "B&B",
-      "gaestehaus": "Gæstehus",
-      "motel": "Motel",
-      "lodge": "Lodge",
-      "ferienwohnung": "Ferielejlighed",
-      "resort": "Resort",
-      "huette": "Hytte",
-      "pension": "Pensionat",
-      "campingplatz": "Campingplads"
-    },
-    "belegeHeading": "Det kan du regne med",
-    "belege": {
-      "neu": "Nyt i 2026 – udviklet af aktive udlejere, powered by AirSmil",
-      "eu": "Bygget i Danmark, hostet i EU og GDPR-compliant",
-      "kanaele": "56 bookingplatforme tilsluttet",
-      "start": "Lancering den 1. september 2026 i 27 europæiske lande, 24 sprog"
-    },
-    "eyebrow": "Platformen",
-    "typenEyebrow": "Hvem den er til"
+  "rechner": {
+   "einTarif": "Én pakke, fuldt omfang",
+   "objekte": "Enheder",
+   "reglerLabel": "Indstil antal enheder",
+   "wenigerLabel": "Én enhed færre",
+   "mehrLabel": "Én enhed mere",
+   "proMonat": "pr. måned",
+   "schnitt": "Det er {betrag} pr. enhed om måneden.",
+   "grundgebuehr": "Grundgebyr (inkl. 1. enhed)",
+   "weitereObjekte": "{anzahl, plural, =1 {én enhed mere} other {# enheder mere}} × {jeObjekt}",
+   "netto": "Alle beløb er ekskl. moms. Månedlig afregning, kan opsiges når som helst.",
+   "ctaTesten": "Prøv 30 dage gratis",
+   "ctaDemo": "Se demoen",
+   "inklusivTitel": "Med i enhver pakke",
+   "inklusivSub": "Ingen funktioner, der først begynder i en dyrere pakke — det her er hele omfanget.",
+   "nichtAbrufbar": "Priserne kan ikke hentes lige nu",
+   "nichtAbrufbarText": "Prislisten kunne ikke indlæses. Genindlæs siden, eller skriv til os — så oplyser vi prisen for dit antal enheder.",
+   "direktfrei": "0 % kommission på bookinger via din egen hjemmeside"
   },
-  "zielgruppen": {
-    "bildAlt": "myNextDays-grænseflade, eksempel {typ}",
-    "abschluss": "Uanset formen bliver alt styret i det samme system med det samme login.",
-    "typen": {
-      "hotel": {
-        "unterzeile": "Hotelsoftware med channel manager",
-        "text": "Små hoteller fører deres værelser som værelsestyper: hver type har sine enheder, og i belægningsplanen står hvert værelse for sig — med ankomst, afrejse og rengøring. Booking.com, Expedia og de øvrige bookingportaler får antallet af ledige enheder, ikke et ja/nej. Priser, minimumsophold og lukkedage passer du ét sted, og channel manageren fordeler dem til alle forbundne portaler. Faktura, betaling og gæstekommunikation ligger i samme system.",
-        "beleg": "Tilgængelighed som tal, ikke ja/nej."
-      },
-      "bnb": {
-        "unterzeile": "Bookingsystem til bed & breakfast",
-        "text": "Morgenmad, håndklæder, gebyr for kæledyr, sen ankomst: tillægsydelser hænger direkte på bookingen og står på gæstens faktura uden sideregnskab. Står du selv ved bordet i B&B'et, vil du ikke føre endnu en liste — forespørgsler, beskeder, betalinger og belægning samles ét sted, på computeren som på mobilen. Kortbetaling via Stripe er med, og din egen bookingside uden portalkommission også.",
-        "beleg": "Tillægsydelser afregnes automatisk."
-      },
-      "gaestehaus": {
-        "unterzeile": "Administration af gæstehuse med flere værelser",
-        "text": "Flere enheder under samme tag, én kalender: hvilken gæst der får hvilket værelse, bestemmer du indtil ankomsten, uden at oprette bookingen igen. Bygningen afgør, hvad portalerne ser under ét id; udstyr, fotos og priser passer du pr. værelsestype. Rengøringsopgaver følger ankomster og afrejser og ligger på teamets mobil — med eget login, der viser opgaver, ikke omsætning.",
-        "beleg": "Én bygning, ét portal-id."
-      },
-      "motel": {
-        "unterzeile": "Software til moteller og korte ophold",
-        "text": "Stor gennemstrømning, korte ophold, sene ankomster: ankomstinfo, adgangskoder og faktura går automatisk til gæsten — på det rette tidspunkt og i gæstens sprog, 24 sprog er klar. Værelser, der bliver fri igen, går af sig selv tilbage til alle portaler, og et stop-sell lukker dem overalt på én gang. I receptionen er dagsplanen nok: hvem kommer, hvem rejser, hvad er stadig åbent.",
-        "beleg": "Beskederne kører af sig selv."
-      },
-      "lodge": {
-        "unterzeile": "Udlejning af lodge, også fra mobilen",
-        "text": "Afsides er ikke afskåret: priser, minimumsophold, skiftedage og lukninger passer du på mobilen præcis som ved skrivebordet — samme kalender, samme booking, ingen mellemtilstand. Sæsonpriser sætter du i prisgitteret for et helt år i stedet for dag for dag, og rabatter for længere ophold når også portalerne. Selv uden reception ved gæsten, hvordan han kommer ind.",
-        "beleg": "Også undervejs, via appen."
-      },
-      "ferienwohnung": {
-        "unterzeile": "Channel manager til ferieboliger",
-        "text": "Én bolig, alle kanaler: Booking.com, Airbnb, Vrbo, vores eget marked myBestDays og direkte bookinger på din hjemmeside deler én kalender. Er en nat solgt, er den væk alle steder — dobbeltbookinger opstår ikke. Direkte bookinger med lav provision kan du fremme bevidst: egen prisstrategi, rabatter for længere ophold, automatiske beskeder fra booking til afrejse og kortbetaling direkte til din konto.",
-        "beleg": "Én kalender til alle kanaler."
-      },
-      "resort": {
-        "unterzeile": "Styr et resort med mange enheder",
-        "text": "Studios, suiter og villaer kører som egne typer med egne priser, faciliteter og belægningsregler — alle under én konto og én afregning. Så mange objekter og så mange enheder pr. type som du har behov for, uden at nogen skifter login. Reception, rengøring og ejere ser kun deres del; ejerafregninger laves pr. objekt med rapport i stedet for et regneark ved månedens slutning.",
-        "beleg": "Så mange objekter du vil per konto."
-      },
-      "huette": {
-        "unterzeile": "Hytteudlejning i sæsondrift",
-        "text": "Sæsondrift uden håndarbejde: lukkeperioder, skiftedage, minimums- og maksimumsophold sætter du én gang, og de gælder på alle portaler samtidig. Er hytten lukket om vinteren, er den lukket alle steder — uden login i fem extranet. Skiftedagen holdes fri mellem to bookinger, så rengøringen har tid, og ankomst- eller afrejsedage kan lukkes enkeltvis.",
-        "beleg": "En lukning gælder på alle portaler."
-      },
-      "pension": {
-        "unterzeile": "Pensionatsdrift med faktura og kurafgift",
-        "text": "Halvpension, kurafgift, faste gæster, betaling på stedet: tillæg og afgifter beregner systemet rigtigt for hver portal — også hvor portalen melder et nettobeløb, og du har brug for bruttoprisen. Fakturaer, kreditnotaer og åbne poster står i samme sag som bookingen, i dit lands valuta. Tilbagevendende gæster genkender du på deres historik i stedet for at søge i gamle mails.",
-        "beleg": "Afgifter pr. portal, korrekt beregnet."
-      },
-      "campingplatz": {
-        "unterzeile": "Campingpladsadministration med pladser",
-        "text": "Pladser, udlejningsvogne og glampingtelte er typer med antal: tyve ens pladser er én type med tyve enheder, ikke tyve kalendere. Tilgængelighed går til portalerne som et tal, så der aldrig sælges mere, end der er. Strøm, kurafgift eller hund afregner du pr. nat eller pr. ophold, og dagens ankomster står samlet i dagsplanen.",
-        "beleg": "Antal i stedet for tyve kalendere."
-      }
-    }
+  "provisionen": {
+   "eyebrow": "Kommission",
+   "heading": "Hvad koster en booking?",
+   "sub": "Det afhænger af, hvor gæsten kommer fra. Tre veje, tre satser — mere er der ikke.",
+   "direktTitel": "Gæsten booker hos dig",
+   "direktText": "Via din egen hjemmeside eller dit bookingformular. Af det tager vi intet. Kun gebyret fra din betalingsudbyder er tilbage.",
+   "direktWert": "0 %",
+   "portaleTitel": "Gæsten kommer fra Booking, Airbnb m.fl.",
+   "portaleText": "Vi beregner 0,5 % af bookingens værdi, én gang om måneden på din faktura. Hvad portalen selv beholder, er uafhængigt af det.",
+   "marktplatzTitel": "Gæsten kommer via myBestDays",
+   "marktplatzText": "Vores egen markedsplads. Her finder gæster dig, som ikke kender dig endnu. Vi skaffer bookingen, opkræver pengene og udbetaler dem til dig — for det beholder vi 8 %. Der kommer ikke flere omkostninger.",
+   "deckel": "Og der er et loft: for bookinger fra portaler betaler du aldrig mere end {betrag} om måneden."
+  },
+  "module": {
+   "eyebrow": "Tilvalgsmoduler",
+   "heading": "Tilkøb kun det, du reelt bruger.",
+   "sub": "Grundpakken dækker hverdagen. Disse moduler skal du kun bruge, hvis din drift har brug for dem — kan tilkøbes og opsiges månedligt.",
+   "buchhaltungTitel": "Bogføring",
+   "buchhaltungText": "Faktura- og eksportlogik til revisoren, med DATEV- og e-conomic-eksport.",
+   "mitarbeiterTitel": "Medarbejdere",
+   "mitarbeiterText": "Vagt- og opgaveplanlægning til rengøring, reception og teknik.",
+   "hotelTitel": "Hotel",
+   "hotelText": "Receptionsdrift med front desk — til huse med flere værelsestyper. Afregnes pr. værelse, ikke pr. hus.",
+   "dynamischTitel": "Dynamiske priser",
+   "dynamischText": "Dine priser tilpasser sig selv: til belægning, sæson og forudbestilling. Der beregnes kun af bookinger, der opstår, mens modulet kører.",
+   "proMonat": "pr. måned",
+   "oder": "eller",
+   "jeNutzer": "pr. bruger pr. måned",
+   "jeZimmer": "pr. værelse pr. måned",
+   "vomUmsatz": "af bookingomsætningen",
+   "hinweis": "Moduler kan til- og fravælges månedligt — adgangen virker straks, afregningen sker forholdsmæssigt."
+  },
+  "vergleich": {
+   "eyebrow": "Sammenligning",
+   "heading": "Hvad andre tager for det samme antal enheder.",
+   "sub": "Månedspriser ved {objekte} enheder, fra udbydernes officielle prissider. Vi sammenligner den pakke, der dækker vores funktionsomfang.",
+   "unsereRechnung": "Grundgebyr + enhedstrin",
+   "proMonat": "/måned",
+   "ohnePreis": "ikke offentliggjort",
+   "fussnote": "Pr. {stand}, aflæst direkte på udbydernes prissider. Der vises månedspriser uden årsbinding; hvor en udbyder markedsfører årsprisen, står den i beregningen. Uden ansvar — udbyderens aktuelle prisliste er gældende.",
+   "ersparnis": "{prozent} % billigere end gennemsnittet"
   },
   "faq": {
-    "eyebrow": "Ofte stillede spørgsmål",
-    "heading": "Spørgsmålene, der kommer før et systemskifte.",
-    "sub": "Hvad platformen gør, hvad den koster, og hvordan dine data er beskyttet — uden markedsføringssnak.",
-    "was": {
-      "frage": "Hvad er myNextDays helt præcist?",
-      "antwort": "myNextDays er et property management-system og en channel manager i ét — til hoteller, pensionater, gæstehuse, ferieboliger, campingpladser og bureauer. Kalender, reservationer, priser, portaler, direkte booking, gæstekommunikation, rengøring og afregning ligger i én flade med ét login i stedet for fire værktøjer, der intet ved om hinanden."
-    },
-    "portale": {
-      "frage": "Hvilke bookingportaler kan jeg koble til?",
-      "antwort": "Du når 56 bookingplatforme, blandt andet Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda og Tripadvisor. Dertil kommer vores eget marked myBestDays, en booking-widget til din hjemmeside og regionale kanaler. Hver kanal tændes for sig: du bestemmer pr. objekt, hvor det er synligt."
-    },
-    "sync": {
-      "frage": "Hvor hurtigt synkroniseres der — og kan der opstå dobbeltbookinger?",
-      "antwort": "Synkroniseringen kører i begge retninger i realtid: en booking på én portal lukker natten alle andre steder, og ændrede priser eller minimumsophold går ud med det samme. Alle kanaler deler én kalender, så der opstår ikke en anden sandhed. Et stop-sell lukker overalt på én gang, ikke kun der hvor du sætter det."
-    },
-    "betriebsarten": {
-      "frage": "Passer det til et hotel og til ferieboliger på samme tid?",
-      "antwort": "Ja, det er samme model: hvert objekt er præcis én type — en værelsestype på hotellet eller en ferieudlejning — og under den hænger dens enheder. Et hotel med otte dobbelt- og fire enkeltværelser har to objekter med otte og fire enheder. Portalerne får antallet af ledige enheder, så fem ens studios ikke kræver fem kalendere."
-    },
-    "direkt": {
-      "frage": "Får jeg min egen bookingside uden portalkommission?",
-      "antwort": "Ja. Til hver konto hører en egen bookingportal, en widget til den eksisterende hjemmeside og en hjemmesidebygger med eget domæne. Direkte bookinger koster 0,5 % i stedet for de store portalers 15–18 %, kører på samme kalender og samme priser — og pengene går direkte ind på din konto."
-    },
-    "marktplatz": {
-      "frage": "Hvad er myBestDays?",
-      "antwort": "myBestDays er vores eget marked for gæster — en bookingkanal på lige fod med Booking.com og Airbnb, blot med markant lavere kommission. Objekter, du gør synlige der, vises på markedet og i myBestDays-appen til gæster. Den synlighed er en selvstændig knap, uafhængig af portalerne."
-    },
-    "zahlungen": {
-      "frage": "Hvordan fungerer betalinger, depositum og fakturaer?",
-      "antwort": "Onlinebetalinger går gennem Stripe ind på din egen konto: depositum, restbetaling eller sikkerhedsstillelse, med kort og de betalingsmetoder, Stripe tilbyder i gæstens land. Fakturaer og kreditnotaer opstår ud fra bookingen, i objektets valuta, med bogføringsklare eksporter. Portalgebyrer og afgifter beregnes rigtigt pr. portal — også hvor en portal kun melder et nettobeløb."
-    },
-    "laender": {
-      "frage": "Hvilke lande, valutaer og sprog dækker platformen?",
-      "antwort": "Ved starten den 1. september 2026 i 27 europæiske lande. Flade og gæstekommunikation findes på 24 sprog; gæsten læser sin bekræftelse på sit eget sprog. Valutaen hænger på objektet eller virksomheden — der er ingen euro-antagelse, kroner, złoty eller forint føres på samme måde."
-    },
-    "rollen": {
-      "frage": "Hvem ser hvilke data — ejere, rengøring, gæster?",
-      "antwort": "Hver rolle har sit eget login og ser kun sin del. Ejere ser deres objekter, deres belægning og udbetalinger, men ikke andres. Rengøringen ser opgaver med foto-checklister, ikke omsætning. Gæster har deres eget område med check-in, digital gæstemappe og beskeder."
-    },
-    "app": {
-      "frage": "Findes der en app?",
-      "antwort": "To, fordi gæst og drift har brug for forskellige ting: myNextDays-appen til drift, ejere og rengøring — kalender, bookinger og opgaver undervejs — og myBestDays-appen til gæster med søgning, booking, check-in og beskeder. Begge taler med samme system; intet kører på en kopi."
-    },
-    "sicherheit": {
-      "frage": "Hvad med databeskyttelse og sikkerhed?",
-      "antwort": "Bygget i Danmark, hostet i EU, GDPR-konform inklusive databehandleraftale. Hver virksomheds data er adskilt på databaseniveau, ikke kun i fladen. To-faktor-login er tilgængeligt, rollerettigheder begrænser adgangen til økonomi- og gæstedata, og hvert login kan spores i enhedshistorikken."
-    },
-    "preis": {
-      "frage": "Hvad koster myNextDays, og hvordan kommer jeg i gang?",
-      "antwort": "30 dage gratis, ingen bindingsperiode, ingen oprettelsesgebyr, opsigelse når som helst. Derefter et abonnement plus en lav kommission på formidlede bookinger. Tillægsmoduler som udvidet bogføring med DATEV-eksport, medarbejderstyring eller hotelfunktioner tilkøber du kun, hvis du har brug for dem. Opret objekt, forbind kanaler, kom i gang."
-    }
+   "eyebrow": "Ofte stillede spørgsmål",
+   "heading": "Spørgsmål om prisen",
+   "sub": "Det udlejere vil vide før et skifte — kort og uden småt med småt.",
+   "laufzeit": {
+    "frage": "Er der en bindingsperiode?",
+    "antwort": "Nej. Abonnementet løber månedligt og kan opsiges med fire ugers varsel til udgangen af måneden. De første 30 dage er gratis, uden betalingsoplysninger."
+   },
+   "objektzahl": {
+    "frage": "Hvad sker der, når jeg tilføjer enheder?",
+    "antwort": "Du betaler for det antal enheder, du har bestilt. Kommer der en til, beregnes tillægget forholdsmæssigt og kan bruges straks; næste trin i trappen gælder automatisk, når du når det."
+   },
+   "waehrung": {
+    "frage": "Hvilken valuta afregnes der i?",
+    "antwort": "Vi afregner i euro som ankervaluta; betaler du i en anden valuta, omregnes der ved betalingen til dagens kurs. Dine gæster betaler uanset dette i din enheds valuta."
+   },
+   "steuern": {
+    "frage": "Er priserne med eller uden moms?",
+    "antwort": "Alle nævnte beløb er netto. Momsen afhænger af dit land; med et gyldigt momsnummer inden for EU afregnes uden moms (omvendt betalingspligt)."
+   },
+   "umzug": {
+    "frage": "Kan jeg tage mine data med?",
+    "antwort": "Ja. Enheder, priser og belægninger kan importeres, og portalerne forbindes på ny. Teamet hjælper med opsætningen — uden ekstra betaling."
+   },
+   "kuendigung": {
+    "frage": "Hvad sker der efter en opsigelse?",
+    "antwort": "Dine enheder kan bookes perioden ud. Derefter har du fortsat adgang til dine data og kan eksportere dem; der slettes først, når du beder om det."
+   }
   },
-  "benefits": {
-    "eyebrow": "Derfor myNextDays",
-    "sub": "Tre ting, der virkelig tæller i udlejningshverdagen – det er dét, platformen er bygget til.",
-    "heading": "Flere bookinger. Mindre arbejde.",
-    "buchungen": {
-      "title": "Få flere bookinger",
-      "text": "Vær synlig på alle de store kanaler og på din egen hjemmeside. Én central kalender holder alt synkront – slut med dobbeltbookinger."
-    },
-    "betrieb": {
-      "title": "Forenkl driften",
-      "text": "Styr boliger, bookinger, rengøring og afregning ét sted – ved skrivebordet eller på farten."
-    },
-    "fair": {
-      "title": "Fair & europæisk",
-      "text": "En gennemskuelig pris uden enterprise-forhindringer, bygget i Danmark, hostet i EU efter GDPR. Personlig support fra det team, der selv bruger softwaren."
-    },
-    "preisBanner": {
-      "eyebrow": "Pris",
-      "heading": "Alt til din overnatningsvirksomhed ét sted",
-      "text": "30 dage gratis. Ingen bindingsperiode. Kan opsiges når som helst (4 uger til udgangen af måneden).",
-      "preis": "19,90 €",
-      "proMonat": "om måneden",
-      "tarif": "Én pris til alle, inkl. 1 bolig",
-      "objekte": "Hver ekstra bolig +6/5/4 € (faldende)",
-      "provision": "Eksterne kanaler 0,5 % · egen portal 8 %",
-      "cta": "Se priser"
-    }
-  },
-  "trial": {
-    "eyebrow": "Prøv gratis",
-    "heading": "Prøv myNextDays gratis i 30 dage.",
-    "sub": "Ingen bindingsperiode. Kan opsiges når som helst. Udfyld blot denne korte formular:",
-    "seitenHeading": "Alt til din overnatningsvirksomhed ét sted – mere kontrol, mindre besvær.",
-    "perks": {
-      "buchungen": {
-        "title": "Flere bookinger",
-        "text": "via alle de store kanaler og din egen portal, uden dobbeltbookinger."
-      },
-      "kontrolle": {
-        "title": "Fuld kontrol",
-        "text": "over check-ins, bookinger og fakturaer ét sted."
-      },
-      "freiheit": {
-        "title": "Mere frihed",
-        "text": "styr din bolig fra mobilen, uanset hvor du er."
-      }
-    },
-    "vorname": "Fornavn",
-    "nachname": "Efternavn",
-    "email": "E-mail",
-    "emailPlatzhalter": "navn@eksempel.dk",
-    "einwilligung": "Ja tak, jeg vil gerne modtage nyheder, webinarinvitationer og tilbud fra myNextDays i ny og næ. Du kan til enhver tid trække dit samtykke tilbage.",
-    "absenden": "Kom i gang",
-    "dankeTitel": "Mange tak!",
-    "dankeText": "Vi vender tilbage til dig inden længe."
-  },
-  "features": {
-    "heading": "Ét system. Ét login.",
-    "baldBadge": "Kommer snart",
-    "hinweis": "Basisfakturering er med fra lanceringen. Udvidet bogføring (DATEV-eksport), medarbejderstyring, markedspladsen for leverandører og hotelfunktioner er tilkøbsmoduler.",
-    "eyebrow": "Funktioner",
-    "sub": "Ét login til virksomheden, ejerne, gæsterne og rengøringen – hver rolle ser præcis sit eget område.",
-    "alleAnsehen": "Udforsk alle funktioner i den gratis prøveperiode",
-    "neu": {
-      "title": "myNextDays AI & avatar",
-      "text": "Avatar og stemmestyring, en AI-concierge til gæsternes spørgsmål og priser, der følger sæson og efterspørgsel."
-    },
-    "gruppen": {
-      "pms": {
-        "title": "Property management",
-        "items": "Central multikalender, belægningsplan, reservationer, opgaver, bolig- og faciliteterdata"
-      },
-      "channel": {
-        "title": "Channel manager",
-        "items": "56 bookingplatforme, Airbnb, Booking.com, Expedia, Vrbo, Google, tovejssynkronisering i realtid"
-      },
-      "direkt": {
-        "title": "Direkte booking",
-        "items": "Egen bookingportal, booking-widget, hjemmesidebygger, eget domæne, 0,5 % i stedet for 15–18 % OTA-kommission"
-      },
-      "preise": {
-        "title": "Priser & omsætning",
-        "items": "Dynamiske priser med min./maks., rate plans pr. bolig, sæson- og belægningslogik, manuelle priser går forud"
-      },
-      "gaeste": {
-        "title": "Gæsteoplevelse",
-        "items": "Digital gæstemappe, AI-concierge, online check-in, automatiske beskeder, 24 sprog"
-      },
-      "zahlungen": {
-        "title": "Betalinger & afregning",
-        "items": "Onlinebetalinger, depositum, sikkerhedsstillelse, basisfakturaer, bogføringsklare eksporter"
-      },
-      "team": {
-        "title": "Team & roller",
-        "items": "Ejerlogin med udbetalinger, rengøringslogin med fotochecklister, opgaver, adskilte rettigheder"
-      },
-      "app": {
-        "title": "Mobilapp",
-        "items": "Native app med separate logins til ejere, gæster og rengøring – styr driften på farten"
-      },
-      "auswertungen": {
-        "title": "Analyser",
-        "items": "Belægning, omsætning, ADR, automatiske rapporter, kanalsammenligning, metasøgning kommer snart"
-      }
-    }
-  },
-  "ki": {
-    "eyebrow": "AI & stemme",
-    "heading": "Platformen tager rutinen fra dig.",
-    "sub": "Styr det håndfrit, lad gæsternes spørgsmål besvare sig selv, hold priserne i bevægelse – uden at lære en eneste klikvej.",
-    "voice": {
-      "title": "Avatar / stemmestyring",
-      "text": "Styr det håndfrit med stemmen og lad en avatar svare: tjek belægningen, håndtér bookinger og opgaver, ændr priser – mens du er på farten eller gør en bolig klar."
-    },
-    "concierge": {
-      "title": "En AI-concierge til dine gæster",
-      "text": "Den digitale gæstemappe svarer selv på wi-fi-kode, nøgleboks, skraldespande og lokale tips – på 24 sprog, døgnet rundt."
-    },
-    "preise": {
-      "title": "Priser, der tænker med",
-      "text": "Sæt en basispris med minimum og maksimum pr. bolig; døgnpriserne følger sæson, belægning og efterspørgsel. Manuelle priser går altid forud."
-    },
-    "cta": "Se funktionerne",
-    "blaseFrage": "Hvordan ser belægningen ud i næste uge?",
-    "blaseAntwort": "18 ud af 24 nætter booket. To huller i weekenden – skal prisen sættes ned?",
-    "eingabe": "Spørg myNextDays …",
-    "baldBadge": "Kommer snart"
-  },
-  "integrationen": {
-    "eyebrow": "Rækkevidde",
-    "heading": "56 bookingplatforme – én flade.",
-    "p1": "Du fordeler ledighed, priser og restriktioner til 56 bookingplatforme – heriblandt Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda og Tripadvisor. Tovejssynkronisering i realtid: en booking på én portal spærrer natten alle andre steder.",
-    "p2": "Oveni kommer dit eget salg: bookingportalen med lav kommission på myBestDays, en booking-widget til din hjemmeside og regionale kanaler, du kan slå til enkeltvis. Hver kanal styres separat – du bestemmer, hvor en bolig er synlig.",
-    "cta": "Forbind kanaler i prøveperioden"
-  },
-  "testimonials": {
-    "eyebrow": "Bag platformen",
-    "heading": "Derfor byggede vi myNextDays.",
-    "gruenderin": {
-      "quote": "myNextDays er vokset ud af vores egen udlejningshverdag hos AirSmil – vi bygger præcis den software, vi selv havde brug for.",
-      "name": "Jeanine Ågaard",
-      "location": "Stifter, myNextDays / AirSmil"
-    }
-  },
-  "stimmen": {
-    "eyebrow": "Stemmer fra praksis",
-    "heading": "Hvad værterne fortæller.",
-    "vorschauHinweis": "Layout-forhåndsvisning med eksempeltekst – her kommer senere ægte, godkendte citater.",
-    "zurueck": "Forrige udtalelse",
-    "vor": "Næste udtalelse",
-    "zeigeStimme": "Vis udtalelse {nummer}"
-  },
-  "stats": {
-    "eyebrow": "Tal, vi kan dokumentere",
-    "heading": "Udlejningsplatformen, bygget af folk, der selv lejer ud.",
-    "sub": "Lancering den 1. september 2026 i 27 lande.",
-    "laender": {
-      "value": "27",
-      "label": "Lande",
-      "text": "Europæiske lande ved lanceringen"
-    },
-    "sprachen": {
-      "value": "24",
-      "label": "Sprog",
-      "text": "Brugerflade og gæstekommunikation"
-    },
-    "kanaele": {
-      "value": "56",
-      "label": "Platforme",
-      "text": "Tilsluttede bookingplatforme"
-    },
-    "hosting": {
-      "value": "100 %",
-      "label": "EU-hosting",
-      "text": "Bygget i Danmark, GDPR-compliant"
-    },
-    "vermieter": {
-      "label": "Udviklet af udlejere",
-      "text": "Ud af den virkelige udlejningshverdag hos AirSmil"
-    }
-  },
-  "usecases": {
-    "eyebrow": "Dem vi bygger til",
-    "heading": "Tre slags virksomheder, én platform.",
-    "sub": "En feriebolig, et hotelværelse eller en hel portefølje – samme flade, sat sammen forskelligt efter driften.",
-    "ferienobjekt": {
-      "label": "Feriebolig",
-      "title": "Sommerhus & ferielejlighed",
-      "text": "En eller flere boliger, du selv lejer ud – uden reception, men med nøgleoverdragelser, rengøring og gæstespørgsmål.",
-      "punkte": {
-        "kanaele": "Portaler og din egen hjemmeside i én kalender",
-        "kalender": "Planlæg rengøring og overdragelser pr. bolig",
-        "gaeste": "Online check-in og digital gæstemappe på 24 sprog"
-      }
-    },
-    "hotel": {
-      "label": "Hotel & pensionat",
-      "title": "Værelser, ikke containere",
-      "text": "Hvert værelse er sin egen bookbare enhed med egne rater – ingen omvej over værelseskategorier med antal.",
-      "punkte": {
-        "zimmer": "Ledighed pr. værelse ud på alle portaler",
-        "raten": "Rate plans pr. værelse, afledte eller manuelle",
-        "rezeption": "Dagsoverblik over ankomster og afrejser"
-      }
-    },
-    "agentur": {
-      "label": "Bureau & administration",
-      "title": "Portefølje med flere ejere",
-      "text": "Du administrerer andres boliger: adskilt afregning, eget login pr. ejer, klare tal for hver bolig.",
-      "punkte": {
-        "portfolio": "Alle boliger i én belægningsplan",
-        "eigentuemer": "Ejerlogin med belægning og udbetalinger",
-        "abrechnung": "Kontoudtog og kommissioner pr. bolig"
-      }
-    }
-  },
-  "footer": {
-    "claim": "Platformen for udlejere af ferieboliger – flere bookinger, mindre besvær.",
-    "appLaden": "Hent appen",
-    "spalten": {
-      "produkt": "Produkt",
-      "loesungen": "Løsninger",
-      "ressourcen": "Ressourcer",
-      "unternehmen": "Virksomhed"
-    },
-    "produkt": {
-      "pms": "Property management",
-      "channelManager": "Channel manager",
-      "direktbuchung": "Direkte booking",
-      "zahlungen": "Betalinger",
-      "mobileApp": "Mobilapp"
-    },
-    "loesungen": {
-      "hotels": "Hoteller",
-      "bnb": "B&B'er",
-      "gaestehaeuser": "Gæstehuse",
-      "ferienwohnungen": "Ferieboliger",
-      "campingplaetze": "Campingpladser"
-    },
-    "ressourcen": {
-      "blog": "Blog",
-      "hilfeCenter": "Hjælpecenter",
-      "webinare": "Webinarer",
-      "leitfaeden": "Guides",
-      "api": "API-dokumentation"
-    },
-    "unternehmen": {
-      "ueberUns": "Om os",
-      "karriere": "Karriere",
-      "partner": "Partnere",
-      "kontakt": "Kontakt",
-      "presse": "Presse"
-    },
-    "copyright": "© 2026 myNextDays. Alle rettigheder forbeholdes.",
-    "agb": "Betingelser",
-    "datenschutz": "Privatliv",
-    "impressum": "Juridisk information",
-    "cookies": "Cookiepolitik",
-    "avv": "Databehandling"
-  },
-  "abschluss": {
-    "heading": "Klar til at styre din overnatningsvirksomhed ét sted?",
-    "sub": "Prøv gratis i 30 dage – ingen bindingsperiode, intet oprettelsesgebyr, kan opsiges når som helst.",
-    "ctaPrimaer": "Prøv gratis i 30 dage",
-    "ctaSekundaer": "Se priser"
-  },
-  "chat": {
-    "titel": "Spørgsmål? Vi er her.",
-    "untertitel": "Svar som regel inden for få timer.",
-    "name": "Navn",
-    "email": "E-mail",
-    "telefon": "Telefon (valgfrit)",
-    "nachricht": "Din besked",
-    "absenden": "Send besked",
-    "sendet": "Sender …",
-    "platzhalter": "Skriv en besked …",
-    "senden": "Send",
-    "oeffnen": "Åbn chat",
-    "schliessen": "Luk chat",
-    "hinweis": "Vi bruger kun dine oplysninger til at svare på denne henvendelse.",
-    "fehler": "Det gik ikke. Prøv venligst igen senere."
-  },
-  "einblicke": {
-    "eyebrow": "Indblik",
-    "heading": "Sådan arbejder myNextDays i virkeligheden",
-    "sub": "Ingen tegnede visninger — optagelser fra en kørende drift med rigtige bookinger fra alle kanaler.",
-    "hotel": {
-      "title": "Hotel og feriebolig i én grænseflade",
-      "text": "Hvert værelse er sin egen bookbare enhed — samme model som ved et feriehus. Belægningsplanen viser ankomster, ophold og afrejser pr. enhed, med belægning, omsætning og gennemsnitspris pr. nat i perioden."
-    },
-    "objekte": {
-      "title": "Synlighed pr. kanal, ikke én kontakt til det hele",
-      "text": "Website, markedsplads og bookingportaler er tre adskilte akser. En bolig kan køre videre på dit eget site, mens den er sat på pause på portalerne — synligt på et øjeblik, skiftes med ét klik."
-    },
-    "kanaele": {
-      "title": "Tilslut portaler og behold din egen kanal",
-      "text": "Booking.com, Airbnb og andre portaler hænger på den samme tilgængelighed som den direkte booking. En booket nat spærrer alle steder — uden dobbeltbooking, uden manuel efterbehandling."
-    }
+  "teaser": {
+   "cta": "Se alle priser",
+   "abObjekt": "Hver yderligere enhed fra {betrag}",
+   "provision": "Egen hjemmeside {direkt} · portaler {portale}",
+   "tarif": "Én pakke til alle, inkl. 1. enhed"
   }
+ },
+ "funktionen": {
+  "rahmen": {
+   "ctaTesten": "Prøv 30 dage gratis",
+   "ctaDemo": "Se demoen",
+   "weiter": "Videre til de andre funktioner",
+   "mehr": "Se",
+   "bereich": {
+    "verkauf": "Salg",
+    "gast": "Gæst & penge",
+    "betrieb": "Drift"
+   }
+  },
+  "uebersicht": {
+   "metaTitel": "Funktioner — alt til udlejning og hotel | myNextDays",
+   "metaBeschreibung": "Kalender, kanalmanager, direkte booking, gæstekommunikation, betalinger, priser, team, app og rapporter — ét system, med i enhver pakke.",
+   "eyebrow": "Funktioner",
+   "headline": "Alt hverdagen kræver. I ét system.",
+   "sub": "Ni områder, ét login. Alle hører til grundpakken — intet begynder først i en dyrere pakke.",
+   "bereichSub": {
+    "verkauf": "Vær synlig og få bookinger",
+    "gast": "Fra første kontakt til pengene er inde",
+    "betrieb": "Hvem gør hvad — og hvad kom der ud af det"
+   }
+  },
+  "pms": {
+   "metaBeschreibung": "Én kalender til alle enheder: belægningsplan, reservationer, opgaver og enhedsdata ét sted — til feriehuse og hoteller.",
+   "headline": "Én kalender til alt, du lejer ud.",
+   "sub": "Belægning, reservationer og enhedsdata ligger ét sted — uanset om det er ét feriehus eller tolv værelsestyper med flere enheder.",
+   "bildAlt": "Belægningsplan med bookinger fra flere kanaler",
+   "bildAltBlock": "Hotellets belægningsplan med værelsestyper",
+   "nutzen": {
+    "a": {
+     "titel": "Alt på ét blik",
+     "text": "Belægningsplanen viser hver enhed, hver booking og hver spærring i én visning — med farve pr. kanal."
+    },
+    "b": {
+     "titel": "Book på sekunder",
+     "text": "Opret, flyt eller annuller en reservation uden at skifte visning. Frigivne nætter sælges igen med det samme."
+    },
+    "c": {
+     "titel": "Enhedsdata, der gælder overalt",
+     "text": "Faciliteter, billeder og regler vedligeholder du én gang — portalerne og din egen hjemmeside får dem automatisk."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Én enhedstype, flere enheder — korrekt afbildet.",
+     "text": "Fem ens studios er én type med fem enheder, ikke fem gange det samme. Ledigheden går ud som et tal, præcis som portalerne forventer.",
+     "punkte": {
+      "a": "Enheder pr. type",
+      "b": "Bygning samler flere typer",
+      "c": "Ledighed som tal, ikke ja/nej"
+     }
+    }
+   }
+  },
+  "channel": {
+   "metaBeschreibung": "Kanalmanager til feriebolig og hotel: Airbnb, Booking.com, Expedia, Vrbo og Google synkroniseret i realtid — uden dobbeltbookinger.",
+   "headline": "Én kalender. Alle bookingportaler.",
+   "sub": "Ledighed, priser og indhold går i realtid ud til portalerne, bookinger kommer retur i samme takt. Dobbeltbookinger opstår slet ikke.",
+   "bildAlt": "Kanaloversigt med tilsluttede bookingportaler",
+   "bildAltBlock": "Belægningsplan med bookinger fra flere kanaler",
+   "nutzen": {
+    "a": {
+     "titel": "56 portaler",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google og mange flere — via én grænseflade, ikke hjemmelavede løsninger."
+    },
+    "b": {
+     "titel": "To veje, én takt",
+     "text": "Det, du ændrer her, er synligt der på sekunder. Det, der bookes der, spærrer nætterne her med det samme."
+    },
+    "c": {
+     "titel": "Hver portal for sig",
+     "text": "Priser, tillæg og regler gælder pr. portal — ingen fælles sats, bare fordi det ville være nemmere."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Stop-sell virker overalt. Uden at tænke over det.",
+     "text": "Spærrer du en dato, er den lukket på hver tilsluttet portal. Ingen efterredigering i fem extranets, ingen glemt kanal i weekenden.",
+     "punkte": {
+      "a": "Øjeblikkelig spærring på alle kanaler",
+      "b": "Minimumsophold pr. portal",
+      "c": "Log: hvad gik ud hvornår"
+     }
+    }
+   }
+  },
+  "direkt": {
+   "metaBeschreibung": "Egen bookinghjemmeside, bookingwidget og eget domæne — direkte bookinger uden portalprovision, med betaling og bekræftelse.",
+   "headline": "Bookinger, der er helt dine.",
+   "sub": "Din egen bookingside med ledighed, priser og betaling. Af dem tager vi ingen provision — portalerne tager 15 til 18 procent.",
+   "bildAlt": "Enhedsside med bookingflow",
+   "bildAltBlock": "Kanaloversigt med egen hjemmeside og markedsplads",
+   "nutzen": {
+    "a": {
+     "titel": "Hjemmeside uden bureau",
+     "text": "Byggesæt med skabeloner, eget domæne, billeder og tekster fra dine enhedsdata — online på en eftermiddag."
+    },
+    "b": {
+     "titel": "Widget til din side",
+     "text": "Har du allerede en hjemmeside? Så sætter du blot bookingflowet ind og beholder dit design."
+    },
+    "c": {
+     "titel": "Betalt med det samme",
+     "text": "Depositum, restbetaling og sikkerhed kører automatisk — gæsten får sin bekræftelse uden din indblanding."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Markedspladsen giver dig gæster, der ikke kender dig.",
+     "text": "myBestDays er vores egen markedsplads. Her står du ved siden af andre boliger uden at passe et system mere — samme enheder, samme kalender.",
+     "punkte": {
+      "a": "Kan slås til pr. kanal",
+      "b": "Én kalender til det hele",
+      "c": "8 % all-in i stedet for portalprovision"
+     }
+    }
+   }
+  },
+  "gaeste": {
+   "metaBeschreibung": "Digital gæstemappe, online check-in, automatiske beskeder og AI-concierge på 24 sprog — fra første kontakt til afrejse.",
+   "headline": "Pas på gæsterne uden at skrive hele dagen.",
+   "sub": "Beskeder sendes automatisk på rette tidspunkt, conciergen svarer på 24 sprog — og du læser det hele i én indbakke.",
+   "bildAlt": "Indbakke med gæstebeskeder fra flere kanaler",
+   "bildAltBlock": "Mobilvisning med belægning og beskeder",
+   "nutzen": {
+    "a": {
+     "titel": "Én indbakke",
+     "text": "Airbnb, Booking, e-mail og WhatsApp lander i ét forløb — med bookingen ved siden af, ikke i fire apps."
+    },
+    "b": {
+     "titel": "Beskeder på rette tid",
+     "text": "Bekræftelse, ankomstinfo, dørkode, anmeldelsesbesked: sat op én gang, derefter af sig selv."
+    },
+    "c": {
+     "titel": "Check-in på forhånd",
+     "text": "Gæsten udfylder sine oplysninger før ankomst. Du tager imod i stedet for at taste skemaer."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Gæstemappen erstatter mappen i entréen.",
+     "text": "Wi-Fi-kode, affaldsdage, spisesteder og husregler — digitalt, på gæstens sprog, altid til at rette.",
+     "punkte": {
+      "a": "24 sprog",
+      "b": "Dørkoder på rette tidspunkt",
+      "c": "Tips fra området"
+     }
+    }
+   }
+  },
+  "zahlungen": {
+   "metaBeschreibung": "Onlinebetalinger, depositum, sikkerhedsstillelse og eksport klar til bogholderiet — pengene ind uden rykkere.",
+   "headline": "Pengene kommer ind, uden at du render efter dem.",
+   "sub": "Depositum ved booking, rest før ankomst, sikkerhed dækket — trukket automatisk og dokumenteret i bookingen.",
+   "bildAlt": "Booking med betalingsstatus og bilag",
+   "bildAltBlock": "Oversigt med omsætning og udbetalinger",
+   "nutzen": {
+    "a": {
+     "titel": "Betal som vanligt",
+     "text": "Kort, Apple Pay, Google Pay, PayPal og lokale metoder — gæsten vælger det, han kender."
+    },
+    "b": {
+     "titel": "Regler i stedet for rykkere",
+     "text": "Hvornår hvad forfalder, sætter du én gang. Manglende betalinger ser du, før gæsten ankommer."
+    },
+    "c": {
+     "titel": "Klar til bogholderiet",
+     "text": "Fakturaer opstår ud fra bookingen, eksporter passer til revisoren — uden regneark i hånden."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Ejerne ser selv deres afregning.",
+     "text": "Hver ejer har sit eget login med belægning, indtægter og udbetalinger. Det sparer månedsmailen med regnearket.",
+     "punkte": {
+      "a": "Eget login pr. ejer",
+      "b": "Afregning pr. enhed",
+      "c": "Kun læseadgang"
+     }
+    }
+   }
+  },
+  "preise": {
+   "metaBeschreibung": "Dynamiske priser med min./maks., prisplaner pr. enhed, sæson- og belægningslogik — mere omsætning uden dagligt håndarbejde.",
+   "headline": "Priser, der passer sig selv.",
+   "sub": "Sæson, belægning, forudbestilling og ugedag indgår automatisk. Dine grænser forbliver dine: under minimum sker der intet.",
+   "bildAlt": "Prisoversigt med dynamiske priser pr. nat",
+   "bildAltBlock": "Belægningsplan med priser pr. nat",
+   "nutzen": {
+    "a": {
+     "titel": "Min. og maks. gælder",
+     "text": "Du sætter rammen, systemet bevæger sig indeni — ingen pris, du ikke ville have."
+    },
+    "b": {
+     "titel": "Prisplaner pr. enhed",
+     "text": "Ikke-refunderbar, tidlig booking, langtid: flere priser pr. enhed, hver med egne regler."
+    },
+    "c": {
+     "titel": "Håndsat pris vinder",
+     "text": "En pris, du selv har sat, bliver stående. Automatikken overskriver aldrig en bevidst beslutning."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Rabatter og tillæg går også ud til portalerne.",
+     "text": "Uge- og månedsrabatter, tidlig-booking-kampagner og tillæg vises der, hvor de er tilladt — ikke kun i din egen visning.",
+     "punkte": {
+      "a": "Rabat efter opholdslængde",
+      "b": "Kampagner med periode",
+      "c": "Tillæg pr. kanal"
+     }
+    }
+   }
+  },
+  "team": {
+   "metaBeschreibung": "Roller til ejere, rengøring, medarbejdere og bureauer — hver ser kun sit område, med opgaver og fotochecklister.",
+   "headline": "Alle ser præcis det, de skal bruge.",
+   "sub": "Ejere ser deres enheder, rengøringen sine opgaver, medarbejdere deres område. Økonomi bliver, hvor den hører hjemme.",
+   "bildAlt": "Opgaveoversigt med ansvarlige",
+   "bildAltBlock": "Reservationsliste med ansvarlige",
+   "nutzen": {
+    "a": {
+     "titel": "Roller frem for aftaler",
+     "text": "Rettigheder hænger på rollen, ikke på tillid. Et rengøringslogin kommer aldrig til omsætningen."
+    },
+    "b": {
+     "titel": "Opgaver med bevis",
+     "text": "Checklister med billeder viser, at boligen blev overdraget — med tidspunkt."
+    },
+    "c": {
+     "titel": "Fordeles automatisk",
+     "text": "Efter hver afrejse opstår rengøringen af sig selv, med frist inden næste ankomst."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Bureauer driver flere virksomheder side om side.",
+     "text": "Udlejer du for andre, styrer du flere ejere i én konto — med adskilte afregninger og egne logins.",
+     "punkte": {
+      "a": "Flere ejere",
+      "b": "Adskilt afregning",
+      "c": "Rettigheder pr. person"
+     }
+    }
+   }
+  },
+  "app": {
+   "metaBeschreibung": "Native app til drift, ejere, gæster og rengøring — belægning, opgaver og beskeder undervejs.",
+   "headline": "Din drift er med i lommen.",
+   "sub": "Tjek belægning, opret booking, svar på beskeder, luk opgaver — fra telefonen, uden computer.",
+   "bildAlt": "Mobilapp med belægning og opgaver",
+   "bildAltBlock": "Overblik over driften ved skrivebordet",
+   "nutzen": {
+    "a": {
+     "titel": "Til hver rolle",
+     "text": "Ejere, rengøring og drift har hver deres visning — samme app, forskellige rettigheder."
+    },
+    "b": {
+     "titel": "Beskeder, der tæller",
+     "text": "Ny booking, afbestilling, gæstespørgsmål: du får det at vide straks, uden at åbne appen."
+    },
+    "c": {
+     "titel": "Også til gæster",
+     "text": "Gæster finder gæstemappe, check-in og beskeder i myBestDays-appen."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "To apps, fordi det er to verdener.",
+     "text": "myNextDays driver virksomheden, myBestDays tilhører gæsten. Adskilte apps betyder: ingen gæst lander nogensinde i dine tal.",
+     "punkte": {
+      "a": "myNextDays til driften",
+      "b": "myBestDays til gæsten",
+      "c": "iOS og Android"
+     }
+    }
+   }
+  },
+  "auswertungen": {
+   "metaBeschreibung": "Belægning, omsætning, ADR og kanalsammenligning — rapporter, der viser hvorfor, ikke kun hvad der skete.",
+   "headline": "Tal, man kan beslutte ud fra.",
+   "sub": "Belægning, omsætning og gennemsnitspris pr. enhed, periode og kanal — ved siden af hinanden i stedet for i fem eksporter.",
+   "bildAlt": "Rapport med belægning og omsætning",
+   "bildAltBlock": "Hotellets belægningsplan som datagrundlag",
+   "nutzen": {
+    "a": {
+     "titel": "Sammenlign kanaler",
+     "text": "Hvad giver Booking, hvad giver din egen side? Regnet med provision, ikke kun på omsætning."
+    },
+    "b": {
+     "titel": "Pr. enhed",
+     "text": "Hvilken enhed bærer sig selv, og hvilken gør ikke — synligt på belægning og gennemsnitspris."
+    },
+    "c": {
+     "titel": "Rapporter af sig selv",
+     "text": "Månedsrapporter går automatisk til dig og dine ejere som PDF i det vante format."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Fortid og udsigt i én visning.",
+     "text": "Ved siden af det, der var, står det, der er booket — så du i februar ser, om sommeren holder, i stedet for at opdage det i juli.",
+     "punkte": {
+      "a": "Bookingstand fremad",
+      "b": "Sammenligning med sidste år",
+      "c": "Eksport til revisoren"
+     }
+    }
+   }
+  }
+ }
 }

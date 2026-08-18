@@ -1,479 +1,597 @@
 {
-  "meta": {
-    "title": "myNextDays – A platform nyaralószállás-kiadóknak",
-    "description": "A platform szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak: channel manager, naptár, közvetlen foglalás, vendégkommunikáció és számlázás egy helyen. Dániában fejlesztve, EU-s tárhelyen. 19,90 €/hó-tól. 30 napig ingyenes."
+ "meta": {
+  "title": "myNextDays – A platform nyaralószállás-kiadóknak",
+  "description": "A platform szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak: channel manager, naptár, közvetlen foglalás, vendégkommunikáció és számlázás egy helyen. Dániában fejlesztve, EU-s tárhelyen. 19,90 €/hó-tól. 30 napig ingyenes."
+ },
+ "nav": {
+  "funktionen": "Funkciók",
+  "preise": "Árak",
+  "kanaele": "Csatornák",
+  "kunden": "Ügyfelek",
+  "ressourcen": "Források",
+  "sprache": "Nyelv",
+  "spracheWaehlen": "Nyelv kiválasztása",
+  "anmelden": "Bejelentkezés",
+  "kostenlosStarten": "Kezdje ingyen",
+  "sprachModalTitel": "Nyelv és régió",
+  "sprachModalHeading": "Válasszon nyelvet",
+  "sprachModalHinweis": "A választás erre a weboldalra érvényes, és átkerül a fiókjába is.",
+  "schliessen": "Bezárás",
+  "suche": "Nyelv keresése",
+  "keinTreffer": "Nincs találat.",
+  "menuOeffnen": "Menü megnyitása",
+  "menuSchliessen": "Menü bezárása",
+  "menuCtaTitel": "Inkább egyszer látnád?",
+  "menuCtaText": "Nézd meg a szoftvert valódi adatokkal, regisztráció nélkül.",
+  "menuCtaKnopf": "Demó megtekintése",
+  "menuSpalte": {
+   "kern": "Értékesítés",
+   "gast": "Vendég és pénz",
+   "betrieb": "Működés"
   },
-  "nav": {
-    "funktionen": "Funkciók",
-    "preise": "Árak",
-    "kanaele": "Csatornák",
-    "kunden": "Ügyfelek",
-    "ressourcen": "Források",
-    "sprache": "Nyelv",
-    "spracheWaehlen": "Nyelv kiválasztása",
-    "anmelden": "Bejelentkezés",
-    "kostenlosStarten": "Kezdje ingyen",
-    "sprachModalTitel": "Nyelv és régió",
-    "sprachModalHeading": "Válasszon nyelvet",
-    "sprachModalHinweis": "A választás erre a weboldalra érvényes, és átkerül a fiókjába is.",
-    "schliessen": "Bezárás",
-    "suche": "Nyelv keresése",
-    "keinTreffer": "Nincs találat."
+  "menuBildAlt": "Foglaltsági terv a myNextDaysben"
+ },
+ "hero": {
+  "trustNeu": "Újdonság 2026",
+  "trustVermieter": "kiadóktól kiadóknak",
+  "trustAirsmil": "powered by AirSmil",
+  "trustEu": "EU-s tárhely (GDPR)",
+  "headlinePre": "Több",
+  "headlineHighlight": "foglalás",
+  "headlinePost": "kevesebb munkával.",
+  "subline": "A platform szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak: channel manager, naptár, közvetlen foglalás, vendégkommunikáció és számlázás egy helyen – olyan kiadók fejlesztették, akik ismerik a mindennapokat.",
+  "ctaTrial": "30 napig ingyen kipróbálom",
+  "ctaDemo": "Demó megtekintése",
+  "kanaeleLabel": "Összekötve a nagy foglalási platformokkal",
+  "eyebrow": "Platform nyaralószállás-kiadóknak",
+  "kanaeleEyebrow": "Értékesítési csatornák",
+  "aufnahmeBelegungsplan": "A myNextDays foglaltsági terve: nyolc nyaralóingatlan foglalásokkal a Booking.comról, az Airbnb-ről, a Vrbóról, a piactérről és közvetlen foglalásokkal",
+  "aufnahmeHotel": "Egy szálloda foglaltsági terve a myNextDaysben: tizenkét szoba, mindegyik önálló foglalható egységként",
+  "aufnahmeObjekte": "Szálláshely-áttekintés a myNextDaysben fotókkal, állapottal és csatornánkénti láthatósággal",
+  "aufnahmeKanaele": "Csatornakezelés a myNextDaysben: összekapcsolt foglalási portálok és a saját piactér"
+ },
+ "intro": {
+  "heading": "Üdvözöljük a myNextDays világában.",
+  "p1": "Teljes értékű Property Management System és channel manager egyben – szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak. Függetlenül és tisztességesen, vállalati bonyolultság és enterprise árak nélkül.",
+  "p2": "Növelje a kihasználtságot, egyszerűsítse a mindennapokat, és nyújtson kiváló vendégélményt – a nagy rendszerek bonyolultsága és enterprise árai nélkül.",
+  "p3": "Minden eszköz egy helyen, okos automatizálás és kapcsolat minden fontos csatornával – ráadásul saját, alacsony jutalékú foglalási portál. Így nő a vállalkozása több kontrollal és kevesebb ráfordítással.",
+  "cta": "Funkciók felfedezése",
+  "reichweite": "Minden szálláshelyre megalkotva.",
+  "typen": {
+   "hotel": "Szálloda",
+   "bnb": "B&B",
+   "gaestehaus": "Vendégház",
+   "motel": "Motel",
+   "lodge": "Lodge",
+   "ferienwohnung": "Nyaralóapartman",
+   "resort": "Resort",
+   "huette": "Faház",
+   "pension": "Panzió",
+   "campingplatz": "Kemping"
+  },
+  "belegeHeading": "Amire számíthat",
+  "belege": {
+   "neu": "Újdonság 2026 – aktív kiadók fejlesztik, powered by AirSmil",
+   "eu": "Dániában fejlesztve, EU-s tárhelyen és GDPR-megfelelően",
+   "kanaele": "56 csatlakoztatott foglalási platform",
+   "start": "Indulás 2026. szeptember 1-jén, 27 európai országban, 24 nyelven"
+  },
+  "eyebrow": "A platform",
+  "typenEyebrow": "Kinek szól"
+ },
+ "zielgruppen": {
+  "bildAlt": "myNextDays felület, példa: {typ}",
+  "abschluss": "Bármilyen a forma — mindent ugyanabban a rendszerben kezelsz, ugyanazzal a belépéssel.",
+  "typen": {
+   "hotel": {
+    "unterzeile": "Hotelszoftver channel managerrel",
+    "text": "A kis hotelek szobatípusonként vezetik a szobáikat: minden típus a saját egységeit viszi, a foglaltsági terven pedig minden szoba külön áll — érkezéssel, elutazással és takarítással. A Booking.com, az Expedia és a többi portál a szabad egységek számát kapja, nem igent/nemet. Árakat, minimum tartózkodást és zárásokat egyszer állítasz be, a channel manager pedig szétosztja őket minden összekapcsolt portálra. Számla, fizetés és vendégkommunikáció ugyanabban a rendszerben van.",
+    "beleg": "Az elérhetőség szám, nem igen/nem."
+   },
+   "bnb": {
+    "unterzeile": "Foglalási rendszer bed & breakfast szállásokhoz",
+    "text": "Reggeli, törölköző, állatdíj, késői érkezés: a kiegészítő szolgáltatások közvetlenül a foglaláson maradnak, és külön számolás nélkül kerülnek a vendég számlájára. Aki maga áll a B&B-ben az asztal mellett, nem akar második listát vezetni — megkeresések, üzenetek, fizetések és foglaltság egy helyen futnak össze, számítógépen és telefonon is. A Stripe-on keresztüli kártyás fizetés is benne van, ahogy a saját foglalási oldal portáljutalék nélkül.",
+    "beleg": "A kiegészítők számlázása automatikus."
+   },
+   "gaestehaus": {
+    "unterzeile": "Vendégházak kezelése több szobával",
+    "text": "Több egység egy tető alatt, egy naptár: melyik vendég melyik szobát kapja, az érkezésig te döntöd el, a foglalás újbóli felvétele nélkül. Az épület dönti el, mit látnak a portálok egy azonosító alatt; a felszerelést, fotókat és árakat szobatípusonként vezeted. A takarítási feladatok az érkezéseket és elutazásokat követik, és a csapat telefonján landolnak — saját belépéssel, amely feladatokat mutat, nem bevételt.",
+    "beleg": "Egy épület, egy portál-azonosító."
+   },
+   "motel": {
+    "unterzeile": "Szoftver motelekhez és rövid tartózkodáshoz",
+    "text": "Sok átfutás, rövid tartózkodás, késői érkezés: az érkezési adatok, belépőkódok és a számla automatikusan mennek a vendégnek — a megfelelő pillanatban és az ő nyelvén, 24 nyelv áll készen. A felszabaduló szobák maguktól visszakerülnek minden portálra, egy stop-sell pedig mindenhol egyszerre bezárja őket. A recepción elég a napi terv: ki jön, ki megy, mi van még nyitva.",
+    "beleg": "A üzenetek maguktól futnak."
+   },
+   "lodge": {
+    "unterzeile": "Lodge kiadása, telefonról is",
+    "text": "A távoli nem jelent elzártat: árakat, minimum tartózkodást, váltónapokat és zárásokat telefonon ugyanúgy kezelsz, mint az asztalnál — ugyanaz a naptár, ugyanaz a foglalás, nincs félkész állapot. A szezonárakat az árrácsban egy egész évre állítod be, nem napról napra, és a hosszabb tartózkodás kedvezményei a portálokra is eljutnak. Recepció nélkül is tudja a vendég, hogyan jut be.",
+    "beleg": "Útközben is, az appban."
+   },
+   "ferienwohnung": {
+    "unterzeile": "Channel manager nyaralóapartmanokhoz",
+    "text": "Egy lakás, minden csatorna: a Booking.com, az Airbnb, a Vrbo, a saját myBestDays piacterünk és a weboldalad közvetlen foglalásai egy naptáron osztoznak. Ha egy éjszaka elment, mindenhol elment — dupla foglalás nem keletkezik. Az alacsony jutalékú közvetlen foglalásokat szándékosan előnyben részesítheted: saját árstratégia, kedvezmények hosszabb tartózkodásra, automatikus üzenetek a foglalástól az elutazásig és kártyás fizetés a te számládra.",
+    "beleg": "Egy naptár minden csatornára."
+   },
+   "resort": {
+    "unterzeile": "Resort kezelése sok egységgel",
+    "text": "A stúdiók, lakosztályok és villák saját típusként futnak saját árakkal, felszereléssel és foglaltsági szabályokkal — mind egy fiók és egy elszámolás alatt. Akárhány objektum és akárhány egység típusonként, anélkül hogy bárki belépést váltana. A recepció, a takarítás és a tulajdonosok csak a saját részüket látják; a tulajdonosi elszámolások objektumonként készülnek jelentéssel, nem táblázatként a hónap végén.",
+    "beleg": "Fiókonként akárhány objektum."
+   },
+   "huette": {
+    "unterzeile": "Faházak bérbeadása szezonális üzemben",
+    "text": "Szezonális üzem kézi munka nélkül: a zárt időszakokat, váltónapokat, minimum és maximum éjszakákat egyszer állítod be, és minden portálon egyszerre érvényesek. Ha a ház télen zárva, mindenhol zárva van — öt extranetbe való belépés nélkül. A váltónap két foglalás között szabadon marad, hogy a takarításnak legyen ideje, az érkezési vagy elutazási napok pedig külön is zárhatók.",
+    "beleg": "Egy zárás minden portálon érvényes."
+   },
+   "pension": {
+    "unterzeile": "Panziókezelés számlával és idegenforgalmi adóval",
+    "text": "Félpanzió, idegenforgalmi adó, visszatérő vendégek, helyszíni fizetés: a felárakat és adókat a rendszer portálonként helyesen számolja — ott is, ahol a portál nettó összeget jelent, neked pedig a bruttó árra van szükséged. A számlák, jóváírások és nyitott tételek ugyanabban az ügyben állnak, mint a foglalás, az országod pénznemében. A visszatérő vendégeket az előzményeikről ismered fel, nem régi levelek keresésével.",
+    "beleg": "Adók portálonként, helyesen számolva."
+   },
+   "campingplatz": {
+    "unterzeile": "Kempingkezelés parcellákkal",
+    "text": "A parcellák, bérelhető lakókocsik és glamping sátrak darabszámmal bíró típusok: húsz egyforma parcella egy típus húsz egységgel, nem húsz naptár. A szabad kapacitás számként megy a portálokra, hogy soha ne adj el többet, mint amennyi van. Az áramot, idegenforgalmi adót vagy kutyát éjszakánként vagy tartózkodásonként számolod el, a napi érkezések pedig összegyűjtve állnak a napi tervben.",
+    "beleg": "Darabszám húsz naptár helyett."
+   }
+  }
+ },
+ "faq": {
+  "eyebrow": "Gyakori kérdések",
+  "heading": "A kérdések, amelyek rendszerváltás előtt jönnek.",
+  "sub": "Mit tud a platform, mennyibe kerül és hogyan védjük az adataidat — marketingnyelv nélkül.",
+  "was": {
+   "frage": "Mi is pontosan a myNextDays?",
+   "antwort": "A myNextDays egy szálláskezelő rendszer és egy channel manager egyben — hotelekhez, panziókhoz, vendégházakhoz, nyaralóapartmanokhoz, kempingekhez és ügynökségekhez. Naptár, foglalások, árak, portálok, közvetlen foglalás, vendégkommunikáció, takarítás és elszámolás egy felületen, egy belépéssel van, nem négy eszközben, amelyek nem tudnak egymásról."
+  },
+  "portale": {
+   "frage": "Mely foglalási portálokat kapcsolhatom be?",
+   "antwort": "56 foglalási platformot érsz el, köztük a Booking.comot, az Airbnb-t, az Expediát, a Vrbót, a Google-t, az Agodát és a Tripadvisort. Ehhez jön saját piacterünk, a myBestDays, egy foglalási widget a weboldaladra és regionális csatornák. Minden csatorna külön kapcsolható: objektumonként te döntöd el, hol látszik."
+  },
+  "sync": {
+   "frage": "Milyen gyorsan szinkronizál — és előfordulhat dupla foglalás?",
+   "antwort": "A szinkron mindkét irányban valós időben fut: egy foglalás az egyik portálon mindenhol máshol lezárja az éjszakát, a módosított árak vagy minimum éjszakák pedig azonnal kimennek. Minden csatorna egy naptáron osztozik, így nem keletkezik második igazság. Egy stop-sell mindenhol egyszerre zár, nem csak ott, ahol beállítod."
+  },
+  "betriebsarten": {
+   "frage": "Megfelel egy hotelnek és nyaralóapartmanoknak egyszerre?",
+   "antwort": "Igen, ugyanaz a modell: minden objektum pontosan egy típus — szobatípus a hotelben vagy egy nyaralószállás —, alatta pedig az egységei állnak. Egy hotel nyolc kétágyas és négy egyágyas szobával két objektum nyolc, illetve négy egységgel. A portálokra a szabad egységek száma megy, így öt egyforma stúdióhoz nem kell öt naptár."
+  },
+  "direkt": {
+   "frage": "Kapok saját foglalási oldalt portáljutalék nélkül?",
+   "antwort": "Igen. Minden fiókhoz tartozik saját foglalási portál, egy widget a meglévő weboldalra és egy weboldal-építő saját domainnel. A közvetlen foglalás 0,5 %-ba kerül a nagy portálok 15–18 %-os jutaléka helyett, ugyanazon a naptáron és ugyanazokkal az árakkal fut — a pénz pedig közvetlenül a te számládra megy."
+  },
+  "marktplatz": {
+   "frage": "Mi az a myBestDays?",
+   "antwort": "A myBestDays a saját piacterünk vendégeknek — foglalási csatorna a Booking.com és az Airbnb szintjén, csak jóval alacsonyabb jutalékkal. Az ott láthatóvá tett objektumok megjelennek a piactéren és a vendégeknek szóló myBestDays appban. Ez a láthatóság önálló kapcsoló, a portáloktól függetlenül."
+  },
+  "zahlungen": {
+   "frage": "Hogyan működnek a fizetések, előlegek és számlák?",
+   "antwort": "Az online fizetés Stripe-on keresztül a saját számládra megy: előleg, végösszeg vagy kaució, kártyával és azokkal a fizetési módokkal, amiket a Stripe a vendég országában kínál. A számlák és jóváírások a foglalásból keletkeznek, az objektum pénznemében, könyvelésre kész exportokkal. A portáldíjakat és adókat portálonként helyesen számoljuk — ott is, ahol a portál csak nettó összeget jelent."
+  },
+  "laender": {
+   "frage": "Mely országokban, pénznemekben és nyelveken működik a platform?",
+   "antwort": "Az induláskor, 2026. szeptember 1-jén, 27 európai országban. A felület és a vendégkommunikáció 24 nyelven elérhető; a vendég a saját nyelvén olvassa a visszaigazolást. A pénznem az objektumhoz vagy a vállalkozáshoz tartozik — nincs euró-feltételezés, a korona, a złoty vagy a forint ugyanúgy fut."
+  },
+  "rollen": {
+   "frage": "Ki milyen adatot lát — tulajdonosok, takarítás, vendégek?",
+   "antwort": "Minden szerepnek saját belépése van, és csak a saját részét látja. A tulajdonosok a saját objektumaikat, azok foglaltságát és kifizetéseit látják, másokét nem. A takarítás fotós ellenőrzőlistás feladatokat lát, bevételt nem. A vendégeknek saját területük van check-innel, digitális vendégmappával és üzenetekkel."
+  },
+  "app": {
+   "frage": "Van alkalmazás?",
+   "antwort": "Kettő, mert a vendég és az üzemeltetés másra vágyik: a myNextDays app az üzemeltetésnek, a tulajdonosoknak és a takarításnak — naptár, foglalások és feladatok útközben —, valamint a myBestDays app a vendégeknek kereséssel, foglalással, check-innel és üzenetekkel. Mindkettő ugyanazzal a rendszerrel beszél; semmi nem fut másolaton."
+  },
+  "sicherheit": {
+   "frage": "Mi a helyzet az adatvédelemmel és a biztonsággal?",
+   "antwort": "Dániában épült, az EU-ban üzemel, GDPR-megfelelő adatfeldolgozási szerződéssel együtt. Minden vállalkozás adatai adatbázis szinten vannak elválasztva, nem csak a felületen. Kétfaktoros belépés elérhető, a szerepkör-jogosultságok korlátozzák a pénzügyi és vendégadatokhoz való hozzáférést, és minden belépés visszakövethető az eszköznaplóban."
+  },
+  "preis": {
+   "frage": "Mennyibe kerül a myNextDays, és hogyan kezdek hozzá?",
+   "antwort": "30 nap ingyen, kötelező futamidő nélkül, telepítési díj nélkül, bármikor felmondható. Utána előfizetés plusz alacsony jutalék az általunk hozott foglalásokra. A kiegészítő modulokat — bővített könyvelés DATEV-exporttal, munkatárs-kezelés vagy hotelfunkciók — csak akkor veszed hozzá, ha kellenek. Objektum létrehozása, csatornák összekötése, indulás."
+  }
+ },
+ "benefits": {
+  "eyebrow": "Miért a myNextDays",
+  "sub": "Három dolog, ami a szálláskiadás mindennapjaiban igazán számít — pontosan ezekre épül a platform.",
+  "heading": "Több foglalás. Kevesebb munka.",
+  "buchungen": {
+   "title": "Szerezzen több foglalást",
+   "text": "Legyen látható minden nagy csatornán és a saját weboldalán is. Egy központi naptár mindent szinkronban tart – vége a dupla foglalásoknak."
+  },
+  "betrieb": {
+   "title": "Egyszerűsítse a működést",
+   "text": "Kezelje a szálláshelyeket, foglalásokat, takarítást és számlázást egy helyről – az íróasztalnál vagy mobilon útközben."
+  },
+  "fair": {
+   "title": "Tisztességes és európai",
+   "text": "Átlátható ár enterprise akadályok nélkül, Dániában fejlesztve, EU-s tárhelyen, GDPR szerint. Személyes támogatás attól a csapattól, amely maga is használja a szoftvert."
+  },
+  "preisBanner": {
+   "eyebrow": "Ár",
+   "heading": "Minden a szálláshelyéhez, egy helyen",
+   "text": "30 napig ingyenes. Nincs minimális futamidő. Bármikor felmondható (4 hét a hónap végére).",
+   "proMonat": "havonta"
+  }
+ },
+ "trial": {
+  "eyebrow": "Ingyenes próba",
+  "heading": "Próbálja ki a myNextDayst 30 napig ingyen.",
+  "sub": "Nincs minimális futamidő. Bármikor felmondható. Csak töltse ki ezt a rövid űrlapot:",
+  "seitenHeading": "Minden a szálláshelyéhez egy helyen – több kontroll, kevesebb munka.",
+  "perks": {
+   "buchungen": {
+    "title": "Több foglalás",
+    "text": "minden nagy csatornán és a saját portálján, dupla foglalások nélkül."
+   },
+   "kontrolle": {
+    "title": "Teljes kontroll",
+    "text": "a check-inek, foglalások és számlák felett, egy helyen."
+   },
+   "freiheit": {
+    "title": "Több szabadság",
+    "text": "kezelje szálláshelyét mobilról, bárhonnan."
+   }
+  },
+  "vorname": "Keresztnév",
+  "nachname": "Vezetéknév",
+  "email": "E-mail",
+  "emailPlatzhalter": "nev@pelda.hu",
+  "einwilligung": "Igen, szeretnék alkalmanként híreket, webinárium-meghívókat és ajánlatokat kapni a myNextDaystől. Hozzájárulását bármikor visszavonhatja.",
+  "absenden": "Vágjunk bele",
+  "dankeTitel": "Köszönjük!",
+  "dankeText": "Hamarosan jelentkezünk Önnél."
+ },
+ "features": {
+  "heading": "Egy rendszer. Egy belépés.",
+  "baldBadge": "Hamarosan",
+  "hinweis": "Az alapszámlázás induláskor elérhető. A kibővített könyvelés (DATEV-export), a munkatárs-kezelés, a szolgáltatói piactér és a szállodai funkciók kiegészítő modulok.",
+  "eyebrow": "Funkciók",
+  "sub": "Egy belépés az üzemeltetésnek, a tulajdonosoknak, a vendégeknek és a takarításnak — minden szerep pontosan a saját területét látja.",
+  "alleAnsehen": "Fedezze fel az összes funkciót a próbaidőszakban",
+  "neu": {
+   "title": "myNextDays MI és avatar",
+   "text": "Avatar és hangvezérlés, MI-concierge a vendégkérdésekre, és árak, amelyek követik a szezont és a keresletet."
+  },
+  "gruppen": {
+   "pms": {
+    "title": "Property Management",
+    "items": "Központi multinaptár, foglaltsági terv, foglalások, feladatok, szálláshely- és felszereltségi adatok"
+   },
+   "channel": {
+    "title": "Channel manager",
+    "items": "56 foglalási platform, Airbnb, Booking.com, Expedia, Vrbo, Google, valós idejű kétirányú szinkron"
+   },
+   "direkt": {
+    "title": "Közvetlen foglalás",
+    "items": "Saját foglalási portál, foglalási widget, weboldal-építő, saját domain, 0,5 % a 15–18 %-os OTA-jutalék helyett"
+   },
+   "preise": {
+    "title": "Árak és bevétel",
+    "items": "Dinamikus árazás min./max. értékkel, rate plan szálláshelyenként, szezon- és kihasználtsági logika, a kézi árak elsőbbséget élveznek"
+   },
+   "gaeste": {
+    "title": "Vendégélmény",
+    "items": "Digitális vendégkönyv, MI-concierge, online check-in, automatikus üzenetek, 24 nyelv"
+   },
+   "zahlungen": {
+    "title": "Fizetés és számlázás",
+    "items": "Online fizetés, előlegek, kauciók, alapszámlák, könyvelésre kész exportok"
+   },
+   "team": {
+    "title": "Csapat és szerepek",
+    "items": "Tulajdonosi belépés kifizetésekkel, takarítói belépés fotós ellenőrzőlistákkal, feladatok, elkülönített jogosultságok"
+   },
+   "app": {
+    "title": "Mobilalkalmazás",
+    "items": "Natív alkalmazás külön belépéssel tulajdonosoknak, vendégeknek és takarításnak, üzemeltetés útközben is"
+   },
+   "auswertungen": {
+    "title": "Kimutatások",
+    "items": "Kihasználtság, bevétel, ADR, automatikus riportok, csatorna-összehasonlítás, metakeresés hamarosan"
+   }
+  }
+ },
+ "ki": {
+  "eyebrow": "MI és hang",
+  "heading": "A platform leveszi a válláról a rutint.",
+  "sub": "Vezérelje kézhasználat nélkül, hagyja, hogy a vendégkérdések maguktól megválaszolódjanak, tartsa mozgásban az árakat — anélkül, hogy kattintási útvonalakat kellene megtanulnia.",
+  "voice": {
+   "title": "Avatar / hangvezérlés",
+   "text": "Vezérelje hanggal, kézhasználat nélkül, és hagyja, hogy egy avatar válaszoljon: kérdezze le a foglaltságot, kezelje a foglalásokat és feladatokat, módosítsa az árakat – útközben vagy éppen amikor egy szálláshelyet készít elő."
+  },
+  "concierge": {
+   "title": "MI-concierge a vendégeinek",
+   "text": "A digitális vendégkönyv magától megválaszolja a Wi-Fi-jelszót, a kulcsdobozt, a szemetesek kérdését és a helyi tippeket — 24 nyelven, a nap 24 órájában."
+  },
+  "preise": {
+   "title": "Árak, amelyek együtt gondolkodnak",
+   "text": "Állítson be alapárat min./max. értékkel szálláshelyenként; az éjszakai árak követik a szezont, a kihasználtságot és a keresletet. A kézi árak mindig elsőbbséget élveznek."
+  },
+  "cta": "Funkciók megtekintése",
+  "blaseFrage": "Milyen a kihasználtság jövő héten?",
+  "blaseAntwort": "24 éjszakából 18 foglalt. Két rés a hétvégén – csökkentsük az árat?",
+  "eingabe": "Kérdezze a myNextDayst …",
+  "baldBadge": "Hamarosan"
+ },
+ "integrationen": {
+  "eyebrow": "Elérés",
+  "heading": "56 foglalási platform – egyetlen felület.",
+  "p1": "Szabad kapacitást, árakat és korlátozásokat oszt szét 56 foglalási platformra – köztük az Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda és Tripadvisor felé. Valós idejű kétirányú szinkron: egy foglalás az egyik portálon mindenhol máshol lezárja az adott éjszakát.",
+  "p2": "Ehhez jön a saját értékesítése: az alacsony jutalékú foglalási portál a myBestDaysen, egy foglalási widget a weboldalára, valamint regionális csatornák, amelyeket egyenként kapcsolhat be. Minden csatorna külön vezérelhető – Ön dönti el, hol legyen látható egy szálláshely.",
+  "cta": "Csatornák összekötése a próbaidőszakban"
+ },
+ "testimonials": {
+  "eyebrow": "A platform mögött",
+  "heading": "Miért építettük a myNextDayst.",
+  "gruenderin": {
+   "quote": "A myNextDays a saját, AirSmilnél szerzett szálláskiadói mindennapjainkból nőtt ki – pontosan azt a szoftvert építjük, amelyre nekünk is szükségünk lett volna.",
+   "name": "Jeanine Ågaard",
+   "location": "A myNextDays / AirSmil alapítója"
+  }
+ },
+ "stimmen": {
+  "eyebrow": "Hangok a gyakorlatból",
+  "heading": "Mit mondanak a szállásadók.",
+  "vorschauHinweis": "Elrendezés-előnézet mintaszövegekkel – itt később valódi, jóváhagyott idézetek szerepelnek.",
+  "zurueck": "Előző vélemény",
+  "vor": "Következő vélemény",
+  "zeigeStimme": "{nummer}. vélemény megjelenítése"
+ },
+ "stats": {
+  "eyebrow": "Számok, amelyeket bizonyítani tudunk",
+  "heading": "A kiadói platform, amelyet olyan emberek építettek, akik maguk is szállást adnak ki.",
+  "sub": "Indulás 2026. szeptember 1-jén, 27 országban.",
+  "laender": {
+   "value": "27",
+   "label": "Ország",
+   "text": "Európai ország az induláskor"
+  },
+  "sprachen": {
+   "value": "24",
+   "label": "Nyelv",
+   "text": "Felület és vendégkommunikáció"
+  },
+  "kanaele": {
+   "value": "56",
+   "label": "Platform",
+   "text": "Csatlakoztatott foglalási platform"
+  },
+  "hosting": {
+   "value": "100 %",
+   "label": "EU-s tárhely",
+   "text": "Dániában fejlesztve, GDPR-megfelelően"
+  },
+  "vermieter": {
+   "label": "Kiadók fejlesztették",
+   "text": "Az AirSmil valódi szálláskiadói mindennapjaiból"
+  }
+ },
+ "usecases": {
+  "eyebrow": "Kiknek építjük",
+  "heading": "Háromféle működés, egy platform.",
+  "sub": "Nyaralószállás, szállodai szoba vagy teljes portfólió — ugyanaz a felület, működési formánként másképp összeállítva.",
+  "ferienobjekt": {
+   "label": "Nyaralószállás",
+   "title": "Nyaralóházak és apartmanok",
+   "text": "Egy vagy több szálláshely, amelyet Ön ad ki — recepció nélkül, viszont átadásokkal, takarítással és vendégkérdésekkel.",
+   "punkte": {
+    "kanaele": "Portálok és a saját weboldal egyetlen naptárban",
+    "kalender": "Takarítás és átadás tervezése szálláshelyenként",
+    "gaeste": "Online check-in és digitális vendégkönyv 24 nyelven"
+   }
+  },
+  "hotel": {
+   "label": "Szálloda és panzió",
+   "title": "Szobák, nem konténerek",
+   "text": "Minden szoba önálló foglalható egység saját árakkal — nincs kerülőút darabszámos szobakategóriákon át.",
+   "punkte": {
+    "zimmer": "Szobaszintű elérhetőség minden portálra",
+    "raten": "Rate plan szobánként, származtatva vagy kézzel",
+    "rezeption": "Napi áttekintés az érkezésekről és távozásokról"
+   }
+  },
+  "agentur": {
+   "label": "Ügynökség és kezelés",
+   "title": "Több tulajdonos portfóliója",
+   "text": "Mások szálláshelyeit kezeli: elkülönített elszámolás, saját belépés minden tulajdonosnak, világos számok szálláshelyenként.",
+   "punkte": {
+    "portfolio": "Minden szálláshely egyetlen foglaltsági tervben",
+    "eigentuemer": "Tulajdonosi belépés foglaltsággal és kifizetésekkel",
+    "abrechnung": "Kimutatások és jutalékok szálláshelyenként"
+   }
+  }
+ },
+ "footer": {
+  "claim": "A platform nyaralószállás-kiadóknak – több foglalás, kevesebb munka.",
+  "appLaden": "Alkalmazás letöltése",
+  "spalten": {
+   "produkt": "Termék",
+   "loesungen": "Megoldások",
+   "ressourcen": "Források",
+   "unternehmen": "Vállalat"
+  },
+  "produkt": {
+   "pms": "Property Management",
+   "channelManager": "Channel manager",
+   "direktbuchung": "Közvetlen foglalás",
+   "zahlungen": "Fizetés",
+   "mobileApp": "Mobilalkalmazás"
+  },
+  "loesungen": {
+   "hotels": "Szállodák",
+   "bnb": "B&B-k",
+   "gaestehaeuser": "Vendégházak",
+   "ferienwohnungen": "Nyaralóapartmanok",
+   "campingplaetze": "Kempingek"
+  },
+  "ressourcen": {
+   "blog": "Blog",
+   "hilfeCenter": "Súgóközpont",
+   "webinare": "Webináriumok",
+   "leitfaeden": "Útmutatók",
+   "api": "API-dokumentáció"
+  },
+  "unternehmen": {
+   "ueberUns": "Rólunk",
+   "karriere": "Karrier",
+   "partner": "Partnerek",
+   "kontakt": "Kapcsolat",
+   "presse": "Sajtó"
+  },
+  "copyright": "© 2026 myNextDays. Minden jog fenntartva.",
+  "agb": "ÁSZF",
+  "datenschutz": "Adatvédelem",
+  "impressum": "Impresszum",
+  "cookies": "Cookie-szabályzat",
+  "avv": "Adatfeldolgozás"
+ },
+ "abschluss": {
+  "heading": "Készen áll, hogy egy helyről irányítsa a szálláshelyét?",
+  "sub": "Próbálja ki 30 napig ingyen — nincs minimális futamidő, nincs beállítási díj, bármikor felmondható.",
+  "ctaPrimaer": "30 napig ingyen kipróbálom",
+  "ctaSekundaer": "Árak megtekintése"
+ },
+ "chat": {
+  "titel": "Kérdése van? Itt vagyunk.",
+  "untertitel": "Általában néhány órán belül válaszolunk.",
+  "name": "Név",
+  "email": "E-mail",
+  "telefon": "Telefon (nem kötelező)",
+  "nachricht": "Az Ön üzenete",
+  "absenden": "Üzenet küldése",
+  "sendet": "Küldés folyamatban …",
+  "platzhalter": "Írjon üzenetet …",
+  "senden": "Küldés",
+  "oeffnen": "Csevegés megnyitása",
+  "schliessen": "Csevegés bezárása",
+  "hinweis": "Adatait kizárólag arra használjuk, hogy válaszoljunk erre a megkeresésre.",
+  "fehler": "Ez nem sikerült. Kérjük, próbálja meg később újra."
+ },
+ "einblicke": {
+  "eyebrow": "Belülről",
+  "heading": "Így működik valójában a myNextDays",
+  "sub": "Semmilyen rajzolt nézet — felvételek egy működő üzemből, valódi foglalásokkal minden csatornáról.",
+  "hotel": {
+   "title": "Szálloda és nyaralóingatlan egyetlen felületen",
+   "text": "Minden szoba önálló foglalható egység — ugyanaz a modell, mint a nyaralóháznál. A foglaltsági terv egységenként mutatja az érkezéseket, tartózkodásokat és távozásokat, a kihasználtsággal, a bevétellel és az időszak átlagos éjszakai árával együtt."
+  },
+  "objekte": {
+   "title": "Csatornánkénti láthatóság, nem egyetlen kapcsoló mindenre",
+   "text": "A weboldal, a piactér és a foglalási portálok három külön tengely. Egy szálláshely futhat a saját oldalán, miközben a portálokon szünetel — egy pillantásra látszik, egy kattintással átkapcsolható."
+  },
+  "kanaele": {
+   "title": "Kösse be a portálokat, és tartsa meg a saját értékesítési útvonalát",
+   "text": "A Booking.com, az Airbnb és a többi portál ugyanarra a szabad kapacitásra épül, mint a közvetlen foglalás. Egy lefoglalt éjszaka mindenhol zárol — túlfoglalás nélkül, kézi utómunka nélkül."
+  }
+ },
+ "preise": {
+  "meta": {
+   "titel": "Árak — egy csomag, minden benne | myNextDays",
+   "beschreibung": "Egy csomag a teljes funkciókörrel, az ingatlanok száma alapján fizetve. Nincs minimális futamidő, nincs belépési díj, 30 nap ingyen — csatornák, közvetlen foglalás, vendégkommunikáció és számlázás benne."
   },
   "hero": {
-    "trustNeu": "Újdonság 2026",
-    "trustVermieter": "kiadóktól kiadóknak",
-    "trustAirsmil": "powered by AirSmil",
-    "trustEu": "EU-s tárhely (GDPR)",
-    "headlinePre": "Több",
-    "headlineHighlight": "foglalás",
-    "headlinePost": "kevesebb munkával.",
-    "subline": "A platform szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak: channel manager, naptár, közvetlen foglalás, vendégkommunikáció és számlázás egy helyen – olyan kiadók fejlesztették, akik ismerik a mindennapokat.",
-    "ctaTrial": "30 napig ingyen kipróbálom",
-    "ctaDemo": "Demó megtekintése",
-    "kanaeleLabel": "Összekötve a nagy foglalási platformokkal",
-    "eyebrow": "Platform nyaralószállás-kiadóknak",
-    "kanaeleEyebrow": "Értékesítési csatornák",
-    "aufnahmeBelegungsplan": "A myNextDays foglaltsági terve: nyolc nyaralóingatlan foglalásokkal a Booking.comról, az Airbnb-ről, a Vrbóról, a piactérről és közvetlen foglalásokkal",
-    "aufnahmeHotel": "Egy szálloda foglaltsági terve a myNextDaysben: tizenkét szoba, mindegyik önálló foglalható egységként",
-    "aufnahmeObjekte": "Szálláshely-áttekintés a myNextDaysben fotókkal, állapottal és csatornánkénti láthatósággal",
-    "aufnahmeKanaele": "Csatornakezelés a myNextDaysben: összekapcsolt foglalási portálok és a saját piactér"
+   "eyebrow": "Árak",
+   "headlinePre": "Egy csomag.",
+   "headlineHighlight": "Minden benne.",
+   "sub": "Nincs csomagrejtvény: minden funkció benne van, akár egy nyaralót kezelsz, akár tizenkét szobatípust. Az ingatlanok száma alapján fizetsz — és minél több van, annál olcsóbb egy-egy.",
+   "testen": "30 nap ingyen",
+   "laufzeit": "Nincs minimális futamidő",
+   "einrichtung": "Nincs belépési díj",
+   "eu": "EU-s tárhely, GDPR"
   },
-  "intro": {
-    "heading": "Üdvözöljük a myNextDays világában.",
-    "p1": "Teljes értékű Property Management System és channel manager egyben – szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak. Függetlenül és tisztességesen, vállalati bonyolultság és enterprise árak nélkül.",
-    "p2": "Növelje a kihasználtságot, egyszerűsítse a mindennapokat, és nyújtson kiváló vendégélményt – a nagy rendszerek bonyolultsága és enterprise árai nélkül.",
-    "p3": "Minden eszköz egy helyen, okos automatizálás és kapcsolat minden fontos csatornával – ráadásul saját, alacsony jutalékú foglalási portál. Így nő a vállalkozása több kontrollal és kevesebb ráfordítással.",
-    "cta": "Funkciók felfedezése",
-    "reichweite": "Minden szálláshelyre megalkotva.",
-    "typen": {
-      "hotel": "Szálloda",
-      "bnb": "B&B",
-      "gaestehaus": "Vendégház",
-      "motel": "Motel",
-      "lodge": "Lodge",
-      "ferienwohnung": "Nyaralóapartman",
-      "resort": "Resort",
-      "huette": "Faház",
-      "pension": "Panzió",
-      "campingplatz": "Kemping"
-    },
-    "belegeHeading": "Amire számíthat",
-    "belege": {
-      "neu": "Újdonság 2026 – aktív kiadók fejlesztik, powered by AirSmil",
-      "eu": "Dániában fejlesztve, EU-s tárhelyen és GDPR-megfelelően",
-      "kanaele": "56 csatlakoztatott foglalási platform",
-      "start": "Indulás 2026. szeptember 1-jén, 27 európai országban, 24 nyelven"
-    },
-    "eyebrow": "A platform",
-    "typenEyebrow": "Kinek szól"
+  "rechner": {
+   "einTarif": "Egy csomag, teljes tartalom",
+   "objekte": "Ingatlanok",
+   "reglerLabel": "Állítsd be az ingatlanok számát",
+   "wenigerLabel": "Eggyel kevesebb ingatlan",
+   "mehrLabel": "Eggyel több ingatlan",
+   "proMonat": "havonta",
+   "schnitt": "Ez {betrag} ingatlanonként havonta.",
+   "grundgebuehr": "Alapdíj (az 1. ingatlannal)",
+   "weitereObjekte": "{anzahl, plural, =1 {egy további ingatlan} other {# további ingatlan}} × {jeObjekt}",
+   "netto": "Minden összeg nettó, áfa nélkül. Havi számlázás, bármikor felmondható.",
+   "ctaTesten": "30 nap ingyenes próba",
+   "ctaDemo": "Demó megtekintése",
+   "inklusivTitel": "Minden csomagban benne",
+   "inklusivSub": "Semmi, ami csak drágább csomagban indulna — ez a teljes tartalom.",
+   "nichtAbrufbar": "Az árak most nem érhetők el",
+   "nichtAbrufbarText": "Az árlistát nem sikerült betölteni. Töltsd újra az oldalt, vagy írj nekünk — megmondjuk az árat a te ingatlanszámodra.",
+   "direktfrei": "0 % jutalék a saját weboldaladon keresztüli foglalásokra"
   },
-  "zielgruppen": {
-    "bildAlt": "myNextDays felület, példa: {typ}",
-    "abschluss": "Bármilyen a forma — mindent ugyanabban a rendszerben kezelsz, ugyanazzal a belépéssel.",
-    "typen": {
-      "hotel": {
-        "unterzeile": "Hotelszoftver channel managerrel",
-        "text": "A kis hotelek szobatípusonként vezetik a szobáikat: minden típus a saját egységeit viszi, a foglaltsági terven pedig minden szoba külön áll — érkezéssel, elutazással és takarítással. A Booking.com, az Expedia és a többi portál a szabad egységek számát kapja, nem igent/nemet. Árakat, minimum tartózkodást és zárásokat egyszer állítasz be, a channel manager pedig szétosztja őket minden összekapcsolt portálra. Számla, fizetés és vendégkommunikáció ugyanabban a rendszerben van.",
-        "beleg": "Az elérhetőség szám, nem igen/nem."
-      },
-      "bnb": {
-        "unterzeile": "Foglalási rendszer bed & breakfast szállásokhoz",
-        "text": "Reggeli, törölköző, állatdíj, késői érkezés: a kiegészítő szolgáltatások közvetlenül a foglaláson maradnak, és külön számolás nélkül kerülnek a vendég számlájára. Aki maga áll a B&B-ben az asztal mellett, nem akar második listát vezetni — megkeresések, üzenetek, fizetések és foglaltság egy helyen futnak össze, számítógépen és telefonon is. A Stripe-on keresztüli kártyás fizetés is benne van, ahogy a saját foglalási oldal portáljutalék nélkül.",
-        "beleg": "A kiegészítők számlázása automatikus."
-      },
-      "gaestehaus": {
-        "unterzeile": "Vendégházak kezelése több szobával",
-        "text": "Több egység egy tető alatt, egy naptár: melyik vendég melyik szobát kapja, az érkezésig te döntöd el, a foglalás újbóli felvétele nélkül. Az épület dönti el, mit látnak a portálok egy azonosító alatt; a felszerelést, fotókat és árakat szobatípusonként vezeted. A takarítási feladatok az érkezéseket és elutazásokat követik, és a csapat telefonján landolnak — saját belépéssel, amely feladatokat mutat, nem bevételt.",
-        "beleg": "Egy épület, egy portál-azonosító."
-      },
-      "motel": {
-        "unterzeile": "Szoftver motelekhez és rövid tartózkodáshoz",
-        "text": "Sok átfutás, rövid tartózkodás, késői érkezés: az érkezési adatok, belépőkódok és a számla automatikusan mennek a vendégnek — a megfelelő pillanatban és az ő nyelvén, 24 nyelv áll készen. A felszabaduló szobák maguktól visszakerülnek minden portálra, egy stop-sell pedig mindenhol egyszerre bezárja őket. A recepción elég a napi terv: ki jön, ki megy, mi van még nyitva.",
-        "beleg": "A üzenetek maguktól futnak."
-      },
-      "lodge": {
-        "unterzeile": "Lodge kiadása, telefonról is",
-        "text": "A távoli nem jelent elzártat: árakat, minimum tartózkodást, váltónapokat és zárásokat telefonon ugyanúgy kezelsz, mint az asztalnál — ugyanaz a naptár, ugyanaz a foglalás, nincs félkész állapot. A szezonárakat az árrácsban egy egész évre állítod be, nem napról napra, és a hosszabb tartózkodás kedvezményei a portálokra is eljutnak. Recepció nélkül is tudja a vendég, hogyan jut be.",
-        "beleg": "Útközben is, az appban."
-      },
-      "ferienwohnung": {
-        "unterzeile": "Channel manager nyaralóapartmanokhoz",
-        "text": "Egy lakás, minden csatorna: a Booking.com, az Airbnb, a Vrbo, a saját myBestDays piacterünk és a weboldalad közvetlen foglalásai egy naptáron osztoznak. Ha egy éjszaka elment, mindenhol elment — dupla foglalás nem keletkezik. Az alacsony jutalékú közvetlen foglalásokat szándékosan előnyben részesítheted: saját árstratégia, kedvezmények hosszabb tartózkodásra, automatikus üzenetek a foglalástól az elutazásig és kártyás fizetés a te számládra.",
-        "beleg": "Egy naptár minden csatornára."
-      },
-      "resort": {
-        "unterzeile": "Resort kezelése sok egységgel",
-        "text": "A stúdiók, lakosztályok és villák saját típusként futnak saját árakkal, felszereléssel és foglaltsági szabályokkal — mind egy fiók és egy elszámolás alatt. Akárhány objektum és akárhány egység típusonként, anélkül hogy bárki belépést váltana. A recepció, a takarítás és a tulajdonosok csak a saját részüket látják; a tulajdonosi elszámolások objektumonként készülnek jelentéssel, nem táblázatként a hónap végén.",
-        "beleg": "Fiókonként akárhány objektum."
-      },
-      "huette": {
-        "unterzeile": "Faházak bérbeadása szezonális üzemben",
-        "text": "Szezonális üzem kézi munka nélkül: a zárt időszakokat, váltónapokat, minimum és maximum éjszakákat egyszer állítod be, és minden portálon egyszerre érvényesek. Ha a ház télen zárva, mindenhol zárva van — öt extranetbe való belépés nélkül. A váltónap két foglalás között szabadon marad, hogy a takarításnak legyen ideje, az érkezési vagy elutazási napok pedig külön is zárhatók.",
-        "beleg": "Egy zárás minden portálon érvényes."
-      },
-      "pension": {
-        "unterzeile": "Panziókezelés számlával és idegenforgalmi adóval",
-        "text": "Félpanzió, idegenforgalmi adó, visszatérő vendégek, helyszíni fizetés: a felárakat és adókat a rendszer portálonként helyesen számolja — ott is, ahol a portál nettó összeget jelent, neked pedig a bruttó árra van szükséged. A számlák, jóváírások és nyitott tételek ugyanabban az ügyben állnak, mint a foglalás, az országod pénznemében. A visszatérő vendégeket az előzményeikről ismered fel, nem régi levelek keresésével.",
-        "beleg": "Adók portálonként, helyesen számolva."
-      },
-      "campingplatz": {
-        "unterzeile": "Kempingkezelés parcellákkal",
-        "text": "A parcellák, bérelhető lakókocsik és glamping sátrak darabszámmal bíró típusok: húsz egyforma parcella egy típus húsz egységgel, nem húsz naptár. A szabad kapacitás számként megy a portálokra, hogy soha ne adj el többet, mint amennyi van. Az áramot, idegenforgalmi adót vagy kutyát éjszakánként vagy tartózkodásonként számolod el, a napi érkezések pedig összegyűjtve állnak a napi tervben.",
-        "beleg": "Darabszám húsz naptár helyett."
-      }
-    }
+  "provisionen": {
+   "eyebrow": "Jutalékok",
+   "heading": "Mennyibe kerül egy foglalás?",
+   "sub": "Attól függ, honnan érkezik a vendég. Három út, három kulcs — több nincs.",
+   "direktTitel": "A vendég nálad foglal",
+   "direktText": "A saját weboldaladon vagy foglalási űrlapodon keresztül. Ebből semmit nem viszünk el. Csak a fizetési szolgáltatód díja marad.",
+   "direktWert": "0 %",
+   "portaleTitel": "A vendég a Bookingról, Airbnb-ről és társaiktól jön",
+   "portaleText": "A foglalás értékének 0,5 %-át számítjuk fel, havonta egyszer a számládon. Amit maga a portál tart vissza, attól független.",
+   "marktplatzTitel": "A vendég a myBestDaysen át jön",
+   "marktplatzText": "A saját piacterünk. Itt olyan vendégek találnak rád, akik még nem ismernek. Mi hozzuk a foglalást, beszedjük a pénzt és kifizetjük neked — ezért 8 %-ot tartunk meg. További költség nincs.",
+   "deckel": "És van felső határ: portálos foglalásokért soha nem fizetsz többet, mint {betrag} havonta."
+  },
+  "module": {
+   "eyebrow": "Kiegészítő modulok",
+   "heading": "Csak azt vedd hozzá, amire tényleg szükséged van.",
+   "sub": "Az alapcsomag lefedi a mindennapokat. Ezek a modulok csak akkor kellenek, ha a működésed megkívánja — havonta rendelhetők és mondhatók le.",
+   "buchhaltungTitel": "Könyvelés",
+   "buchhaltungText": "Számlázási és exportlogika a könyvelőnek, DATEV és e-conomic exporttal.",
+   "mitarbeiterTitel": "Munkatársak",
+   "mitarbeiterText": "Műszak- és feladattervezés takarításhoz, recepcióhoz és karbantartáshoz.",
+   "hotelTitel": "Hotel",
+   "hotelText": "Recepciós működés front deskkel — több szobatípusú házakhoz. Szobánként számlázva, nem házanként.",
+   "dynamischTitel": "Dinamikus árak",
+   "dynamischText": "Az áraid maguktól igazodnak: a kihasználtsághoz, a szezonhoz és az előfoglalási időhöz. Csak a modul futása alatt keletkező foglalások után számolunk.",
+   "proMonat": "havonta",
+   "oder": "vagy",
+   "jeNutzer": "felhasználónként havonta",
+   "jeZimmer": "szobánként havonta",
+   "vomUmsatz": "a foglalási bevételből",
+   "hinweis": "A modulok havonta be- és kikapcsolhatók — a hozzáférés azonnal él, a számlázás arányos."
+  },
+  "vergleich": {
+   "eyebrow": "Összehasonlítás",
+   "heading": "Mennyit kérnek mások ugyanennyi ingatlanért.",
+   "sub": "Havi árak {objekte} ingatlannál, a szolgáltatók hivatalos ároldalairól. Azt a csomagot hasonlítjuk, amely a mi funkciókörünket fedi le.",
+   "unsereRechnung": "Alapdíj + ingatlansávok",
+   "proMonat": "/hó",
+   "ohnePreis": "nincs közzétéve",
+   "fussnote": "{stand} állapot, közvetlenül a szolgáltatók ároldalairól leolvasva. Havi árak éves elköteleződés nélkül szerepelnek; ahol a szolgáltató az éves árat hirdeti, az a számításban áll. Garancia nélkül — a szolgáltató mindenkori árlistája az irányadó.",
+   "ersparnis": "{prozent} %-kal az átlag alatt"
   },
   "faq": {
-    "eyebrow": "Gyakori kérdések",
-    "heading": "A kérdések, amelyek rendszerváltás előtt jönnek.",
-    "sub": "Mit tud a platform, mennyibe kerül és hogyan védjük az adataidat — marketingnyelv nélkül.",
-    "was": {
-      "frage": "Mi is pontosan a myNextDays?",
-      "antwort": "A myNextDays egy szálláskezelő rendszer és egy channel manager egyben — hotelekhez, panziókhoz, vendégházakhoz, nyaralóapartmanokhoz, kempingekhez és ügynökségekhez. Naptár, foglalások, árak, portálok, közvetlen foglalás, vendégkommunikáció, takarítás és elszámolás egy felületen, egy belépéssel van, nem négy eszközben, amelyek nem tudnak egymásról."
-    },
-    "portale": {
-      "frage": "Mely foglalási portálokat kapcsolhatom be?",
-      "antwort": "56 foglalási platformot érsz el, köztük a Booking.comot, az Airbnb-t, az Expediát, a Vrbót, a Google-t, az Agodát és a Tripadvisort. Ehhez jön saját piacterünk, a myBestDays, egy foglalási widget a weboldaladra és regionális csatornák. Minden csatorna külön kapcsolható: objektumonként te döntöd el, hol látszik."
-    },
-    "sync": {
-      "frage": "Milyen gyorsan szinkronizál — és előfordulhat dupla foglalás?",
-      "antwort": "A szinkron mindkét irányban valós időben fut: egy foglalás az egyik portálon mindenhol máshol lezárja az éjszakát, a módosított árak vagy minimum éjszakák pedig azonnal kimennek. Minden csatorna egy naptáron osztozik, így nem keletkezik második igazság. Egy stop-sell mindenhol egyszerre zár, nem csak ott, ahol beállítod."
-    },
-    "betriebsarten": {
-      "frage": "Megfelel egy hotelnek és nyaralóapartmanoknak egyszerre?",
-      "antwort": "Igen, ugyanaz a modell: minden objektum pontosan egy típus — szobatípus a hotelben vagy egy nyaralószállás —, alatta pedig az egységei állnak. Egy hotel nyolc kétágyas és négy egyágyas szobával két objektum nyolc, illetve négy egységgel. A portálokra a szabad egységek száma megy, így öt egyforma stúdióhoz nem kell öt naptár."
-    },
-    "direkt": {
-      "frage": "Kapok saját foglalási oldalt portáljutalék nélkül?",
-      "antwort": "Igen. Minden fiókhoz tartozik saját foglalási portál, egy widget a meglévő weboldalra és egy weboldal-építő saját domainnel. A közvetlen foglalás 0,5 %-ba kerül a nagy portálok 15–18 %-os jutaléka helyett, ugyanazon a naptáron és ugyanazokkal az árakkal fut — a pénz pedig közvetlenül a te számládra megy."
-    },
-    "marktplatz": {
-      "frage": "Mi az a myBestDays?",
-      "antwort": "A myBestDays a saját piacterünk vendégeknek — foglalási csatorna a Booking.com és az Airbnb szintjén, csak jóval alacsonyabb jutalékkal. Az ott láthatóvá tett objektumok megjelennek a piactéren és a vendégeknek szóló myBestDays appban. Ez a láthatóság önálló kapcsoló, a portáloktól függetlenül."
-    },
-    "zahlungen": {
-      "frage": "Hogyan működnek a fizetések, előlegek és számlák?",
-      "antwort": "Az online fizetés Stripe-on keresztül a saját számládra megy: előleg, végösszeg vagy kaució, kártyával és azokkal a fizetési módokkal, amiket a Stripe a vendég országában kínál. A számlák és jóváírások a foglalásból keletkeznek, az objektum pénznemében, könyvelésre kész exportokkal. A portáldíjakat és adókat portálonként helyesen számoljuk — ott is, ahol a portál csak nettó összeget jelent."
-    },
-    "laender": {
-      "frage": "Mely országokban, pénznemekben és nyelveken működik a platform?",
-      "antwort": "Az induláskor, 2026. szeptember 1-jén, 27 európai országban. A felület és a vendégkommunikáció 24 nyelven elérhető; a vendég a saját nyelvén olvassa a visszaigazolást. A pénznem az objektumhoz vagy a vállalkozáshoz tartozik — nincs euró-feltételezés, a korona, a złoty vagy a forint ugyanúgy fut."
-    },
-    "rollen": {
-      "frage": "Ki milyen adatot lát — tulajdonosok, takarítás, vendégek?",
-      "antwort": "Minden szerepnek saját belépése van, és csak a saját részét látja. A tulajdonosok a saját objektumaikat, azok foglaltságát és kifizetéseit látják, másokét nem. A takarítás fotós ellenőrzőlistás feladatokat lát, bevételt nem. A vendégeknek saját területük van check-innel, digitális vendégmappával és üzenetekkel."
-    },
-    "app": {
-      "frage": "Van alkalmazás?",
-      "antwort": "Kettő, mert a vendég és az üzemeltetés másra vágyik: a myNextDays app az üzemeltetésnek, a tulajdonosoknak és a takarításnak — naptár, foglalások és feladatok útközben —, valamint a myBestDays app a vendégeknek kereséssel, foglalással, check-innel és üzenetekkel. Mindkettő ugyanazzal a rendszerrel beszél; semmi nem fut másolaton."
-    },
-    "sicherheit": {
-      "frage": "Mi a helyzet az adatvédelemmel és a biztonsággal?",
-      "antwort": "Dániában épült, az EU-ban üzemel, GDPR-megfelelő adatfeldolgozási szerződéssel együtt. Minden vállalkozás adatai adatbázis szinten vannak elválasztva, nem csak a felületen. Kétfaktoros belépés elérhető, a szerepkör-jogosultságok korlátozzák a pénzügyi és vendégadatokhoz való hozzáférést, és minden belépés visszakövethető az eszköznaplóban."
-    },
-    "preis": {
-      "frage": "Mennyibe kerül a myNextDays, és hogyan kezdek hozzá?",
-      "antwort": "30 nap ingyen, kötelező futamidő nélkül, telepítési díj nélkül, bármikor felmondható. Utána előfizetés plusz alacsony jutalék az általunk hozott foglalásokra. A kiegészítő modulokat — bővített könyvelés DATEV-exporttal, munkatárs-kezelés vagy hotelfunkciók — csak akkor veszed hozzá, ha kellenek. Objektum létrehozása, csatornák összekötése, indulás."
-    }
+   "eyebrow": "Gyakori kérdések",
+   "heading": "Kérdések az árról",
+   "sub": "Amit a szállásadók tudni akarnak váltás előtt — röviden, apróbetűs rész nélkül.",
+   "laufzeit": {
+    "frage": "Van minimális futamidő?",
+    "antwort": "Nincs. Az előfizetés havi, és négy hetes felmondási idővel a hónap végére mondható fel. Az első 30 nap ingyenes, fizetési adatok nélkül."
+   },
+   "objektzahl": {
+    "frage": "Mi történik, ha ingatlant veszek fel?",
+    "antwort": "A megrendelt ingatlanszám után fizetsz. Ha egy ingatlan hozzáadódik, a különbözetet arányosan számoljuk, és azonnal használható; a következő sáv automatikusan lép életbe, amint eléred."
+   },
+   "waehrung": {
+    "frage": "Milyen pénznemben történik a számlázás?",
+    "antwort": "Euróban számlázunk mint horgonypénznemben; ha más pénznemben fizetsz, a fizetéskor napi árfolyamon váltunk. A vendégeid ettől függetlenül az ingatlanod pénznemében fizetnek."
+   },
+   "steuern": {
+    "frage": "Az árak adóval vagy anélkül értendők?",
+    "antwort": "Minden feltüntetett összeg nettó. Az áfa az országodtól függ; érvényes EU-s adószámmal adó nélkül számlázunk (fordított adózás)."
+   },
+   "umzug": {
+    "frage": "Áthozhatom az adataimat?",
+    "antwort": "Igen. Az ingatlanok, árak és foglaltságok importálhatók, a portálokat pedig újra összekötjük. A csapat segít a beállításban — felár nélkül."
+   },
+   "kuendigung": {
+    "frage": "Mi történik a felmondás után?",
+    "antwort": "Az ingatlanjaid a kifizetett időszak végéig értékesíthetők maradnak. Utána is hozzáférsz az adataidhoz és exportálhatod őket; semmit nem törlünk, amíg nem kéred."
+   }
   },
-  "benefits": {
-    "eyebrow": "Miért a myNextDays",
-    "sub": "Három dolog, ami a szálláskiadás mindennapjaiban igazán számít — pontosan ezekre épül a platform.",
-    "heading": "Több foglalás. Kevesebb munka.",
-    "buchungen": {
-      "title": "Szerezzen több foglalást",
-      "text": "Legyen látható minden nagy csatornán és a saját weboldalán is. Egy központi naptár mindent szinkronban tart – vége a dupla foglalásoknak."
-    },
-    "betrieb": {
-      "title": "Egyszerűsítse a működést",
-      "text": "Kezelje a szálláshelyeket, foglalásokat, takarítást és számlázást egy helyről – az íróasztalnál vagy mobilon útközben."
-    },
-    "fair": {
-      "title": "Tisztességes és európai",
-      "text": "Átlátható ár enterprise akadályok nélkül, Dániában fejlesztve, EU-s tárhelyen, GDPR szerint. Személyes támogatás attól a csapattól, amely maga is használja a szoftvert."
-    },
-    "preisBanner": {
-      "eyebrow": "Ár",
-      "heading": "Minden a szálláshelyéhez, egy helyen",
-      "text": "30 napig ingyenes. Nincs minimális futamidő. Bármikor felmondható (4 hét a hónap végére).",
-      "preis": "19,90 €",
-      "proMonat": "havonta",
-      "tarif": "Egy csomag mindenkinek, 1 szálláshellyel",
-      "objekte": "Minden további szálláshely +6/5/4 € (sávosan csökkenő)",
-      "provision": "Külső csatornák 0,5 % · saját portál 8 %",
-      "cta": "Árak megtekintése"
-    }
-  },
-  "trial": {
-    "eyebrow": "Ingyenes próba",
-    "heading": "Próbálja ki a myNextDayst 30 napig ingyen.",
-    "sub": "Nincs minimális futamidő. Bármikor felmondható. Csak töltse ki ezt a rövid űrlapot:",
-    "seitenHeading": "Minden a szálláshelyéhez egy helyen – több kontroll, kevesebb munka.",
-    "perks": {
-      "buchungen": {
-        "title": "Több foglalás",
-        "text": "minden nagy csatornán és a saját portálján, dupla foglalások nélkül."
-      },
-      "kontrolle": {
-        "title": "Teljes kontroll",
-        "text": "a check-inek, foglalások és számlák felett, egy helyen."
-      },
-      "freiheit": {
-        "title": "Több szabadság",
-        "text": "kezelje szálláshelyét mobilról, bárhonnan."
-      }
-    },
-    "vorname": "Keresztnév",
-    "nachname": "Vezetéknév",
-    "email": "E-mail",
-    "emailPlatzhalter": "nev@pelda.hu",
-    "einwilligung": "Igen, szeretnék alkalmanként híreket, webinárium-meghívókat és ajánlatokat kapni a myNextDaystől. Hozzájárulását bármikor visszavonhatja.",
-    "absenden": "Vágjunk bele",
-    "dankeTitel": "Köszönjük!",
-    "dankeText": "Hamarosan jelentkezünk Önnél."
-  },
-  "features": {
-    "heading": "Egy rendszer. Egy belépés.",
-    "baldBadge": "Hamarosan",
-    "hinweis": "Az alapszámlázás induláskor elérhető. A kibővített könyvelés (DATEV-export), a munkatárs-kezelés, a szolgáltatói piactér és a szállodai funkciók kiegészítő modulok.",
-    "eyebrow": "Funkciók",
-    "sub": "Egy belépés az üzemeltetésnek, a tulajdonosoknak, a vendégeknek és a takarításnak — minden szerep pontosan a saját területét látja.",
-    "alleAnsehen": "Fedezze fel az összes funkciót a próbaidőszakban",
-    "neu": {
-      "title": "myNextDays MI és avatar",
-      "text": "Avatar és hangvezérlés, MI-concierge a vendégkérdésekre, és árak, amelyek követik a szezont és a keresletet."
-    },
-    "gruppen": {
-      "pms": {
-        "title": "Property Management",
-        "items": "Központi multinaptár, foglaltsági terv, foglalások, feladatok, szálláshely- és felszereltségi adatok"
-      },
-      "channel": {
-        "title": "Channel manager",
-        "items": "56 foglalási platform, Airbnb, Booking.com, Expedia, Vrbo, Google, valós idejű kétirányú szinkron"
-      },
-      "direkt": {
-        "title": "Közvetlen foglalás",
-        "items": "Saját foglalási portál, foglalási widget, weboldal-építő, saját domain, 0,5 % a 15–18 %-os OTA-jutalék helyett"
-      },
-      "preise": {
-        "title": "Árak és bevétel",
-        "items": "Dinamikus árazás min./max. értékkel, rate plan szálláshelyenként, szezon- és kihasználtsági logika, a kézi árak elsőbbséget élveznek"
-      },
-      "gaeste": {
-        "title": "Vendégélmény",
-        "items": "Digitális vendégkönyv, MI-concierge, online check-in, automatikus üzenetek, 24 nyelv"
-      },
-      "zahlungen": {
-        "title": "Fizetés és számlázás",
-        "items": "Online fizetés, előlegek, kauciók, alapszámlák, könyvelésre kész exportok"
-      },
-      "team": {
-        "title": "Csapat és szerepek",
-        "items": "Tulajdonosi belépés kifizetésekkel, takarítói belépés fotós ellenőrzőlistákkal, feladatok, elkülönített jogosultságok"
-      },
-      "app": {
-        "title": "Mobilalkalmazás",
-        "items": "Natív alkalmazás külön belépéssel tulajdonosoknak, vendégeknek és takarításnak, üzemeltetés útközben is"
-      },
-      "auswertungen": {
-        "title": "Kimutatások",
-        "items": "Kihasználtság, bevétel, ADR, automatikus riportok, csatorna-összehasonlítás, metakeresés hamarosan"
-      }
-    }
-  },
-  "ki": {
-    "eyebrow": "MI és hang",
-    "heading": "A platform leveszi a válláról a rutint.",
-    "sub": "Vezérelje kézhasználat nélkül, hagyja, hogy a vendégkérdések maguktól megválaszolódjanak, tartsa mozgásban az árakat — anélkül, hogy kattintási útvonalakat kellene megtanulnia.",
-    "voice": {
-      "title": "Avatar / hangvezérlés",
-      "text": "Vezérelje hanggal, kézhasználat nélkül, és hagyja, hogy egy avatar válaszoljon: kérdezze le a foglaltságot, kezelje a foglalásokat és feladatokat, módosítsa az árakat – útközben vagy éppen amikor egy szálláshelyet készít elő."
-    },
-    "concierge": {
-      "title": "MI-concierge a vendégeinek",
-      "text": "A digitális vendégkönyv magától megválaszolja a Wi-Fi-jelszót, a kulcsdobozt, a szemetesek kérdését és a helyi tippeket — 24 nyelven, a nap 24 órájában."
-    },
-    "preise": {
-      "title": "Árak, amelyek együtt gondolkodnak",
-      "text": "Állítson be alapárat min./max. értékkel szálláshelyenként; az éjszakai árak követik a szezont, a kihasználtságot és a keresletet. A kézi árak mindig elsőbbséget élveznek."
-    },
-    "cta": "Funkciók megtekintése",
-    "blaseFrage": "Milyen a kihasználtság jövő héten?",
-    "blaseAntwort": "24 éjszakából 18 foglalt. Két rés a hétvégén – csökkentsük az árat?",
-    "eingabe": "Kérdezze a myNextDayst …",
-    "baldBadge": "Hamarosan"
-  },
-  "integrationen": {
-    "eyebrow": "Elérés",
-    "heading": "56 foglalási platform – egyetlen felület.",
-    "p1": "Szabad kapacitást, árakat és korlátozásokat oszt szét 56 foglalási platformra – köztük az Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda és Tripadvisor felé. Valós idejű kétirányú szinkron: egy foglalás az egyik portálon mindenhol máshol lezárja az adott éjszakát.",
-    "p2": "Ehhez jön a saját értékesítése: az alacsony jutalékú foglalási portál a myBestDaysen, egy foglalási widget a weboldalára, valamint regionális csatornák, amelyeket egyenként kapcsolhat be. Minden csatorna külön vezérelhető – Ön dönti el, hol legyen látható egy szálláshely.",
-    "cta": "Csatornák összekötése a próbaidőszakban"
-  },
-  "testimonials": {
-    "eyebrow": "A platform mögött",
-    "heading": "Miért építettük a myNextDayst.",
-    "gruenderin": {
-      "quote": "A myNextDays a saját, AirSmilnél szerzett szálláskiadói mindennapjainkból nőtt ki – pontosan azt a szoftvert építjük, amelyre nekünk is szükségünk lett volna.",
-      "name": "Jeanine Ågaard",
-      "location": "A myNextDays / AirSmil alapítója"
-    }
-  },
-  "stimmen": {
-    "eyebrow": "Hangok a gyakorlatból",
-    "heading": "Mit mondanak a szállásadók.",
-    "vorschauHinweis": "Elrendezés-előnézet mintaszövegekkel – itt később valódi, jóváhagyott idézetek szerepelnek.",
-    "zurueck": "Előző vélemény",
-    "vor": "Következő vélemény",
-    "zeigeStimme": "{nummer}. vélemény megjelenítése"
-  },
-  "stats": {
-    "eyebrow": "Számok, amelyeket bizonyítani tudunk",
-    "heading": "A kiadói platform, amelyet olyan emberek építettek, akik maguk is szállást adnak ki.",
-    "sub": "Indulás 2026. szeptember 1-jén, 27 országban.",
-    "laender": {
-      "value": "27",
-      "label": "Ország",
-      "text": "Európai ország az induláskor"
-    },
-    "sprachen": {
-      "value": "24",
-      "label": "Nyelv",
-      "text": "Felület és vendégkommunikáció"
-    },
-    "kanaele": {
-      "value": "56",
-      "label": "Platform",
-      "text": "Csatlakoztatott foglalási platform"
-    },
-    "hosting": {
-      "value": "100 %",
-      "label": "EU-s tárhely",
-      "text": "Dániában fejlesztve, GDPR-megfelelően"
-    },
-    "vermieter": {
-      "label": "Kiadók fejlesztették",
-      "text": "Az AirSmil valódi szálláskiadói mindennapjaiból"
-    }
-  },
-  "usecases": {
-    "eyebrow": "Kiknek építjük",
-    "heading": "Háromféle működés, egy platform.",
-    "sub": "Nyaralószállás, szállodai szoba vagy teljes portfólió — ugyanaz a felület, működési formánként másképp összeállítva.",
-    "ferienobjekt": {
-      "label": "Nyaralószállás",
-      "title": "Nyaralóházak és apartmanok",
-      "text": "Egy vagy több szálláshely, amelyet Ön ad ki — recepció nélkül, viszont átadásokkal, takarítással és vendégkérdésekkel.",
-      "punkte": {
-        "kanaele": "Portálok és a saját weboldal egyetlen naptárban",
-        "kalender": "Takarítás és átadás tervezése szálláshelyenként",
-        "gaeste": "Online check-in és digitális vendégkönyv 24 nyelven"
-      }
-    },
-    "hotel": {
-      "label": "Szálloda és panzió",
-      "title": "Szobák, nem konténerek",
-      "text": "Minden szoba önálló foglalható egység saját árakkal — nincs kerülőút darabszámos szobakategóriákon át.",
-      "punkte": {
-        "zimmer": "Szobaszintű elérhetőség minden portálra",
-        "raten": "Rate plan szobánként, származtatva vagy kézzel",
-        "rezeption": "Napi áttekintés az érkezésekről és távozásokról"
-      }
-    },
-    "agentur": {
-      "label": "Ügynökség és kezelés",
-      "title": "Több tulajdonos portfóliója",
-      "text": "Mások szálláshelyeit kezeli: elkülönített elszámolás, saját belépés minden tulajdonosnak, világos számok szálláshelyenként.",
-      "punkte": {
-        "portfolio": "Minden szálláshely egyetlen foglaltsági tervben",
-        "eigentuemer": "Tulajdonosi belépés foglaltsággal és kifizetésekkel",
-        "abrechnung": "Kimutatások és jutalékok szálláshelyenként"
-      }
-    }
-  },
-  "footer": {
-    "claim": "A platform nyaralószállás-kiadóknak – több foglalás, kevesebb munka.",
-    "appLaden": "Alkalmazás letöltése",
-    "spalten": {
-      "produkt": "Termék",
-      "loesungen": "Megoldások",
-      "ressourcen": "Források",
-      "unternehmen": "Vállalat"
-    },
-    "produkt": {
-      "pms": "Property Management",
-      "channelManager": "Channel manager",
-      "direktbuchung": "Közvetlen foglalás",
-      "zahlungen": "Fizetés",
-      "mobileApp": "Mobilalkalmazás"
-    },
-    "loesungen": {
-      "hotels": "Szállodák",
-      "bnb": "B&B-k",
-      "gaestehaeuser": "Vendégházak",
-      "ferienwohnungen": "Nyaralóapartmanok",
-      "campingplaetze": "Kempingek"
-    },
-    "ressourcen": {
-      "blog": "Blog",
-      "hilfeCenter": "Súgóközpont",
-      "webinare": "Webináriumok",
-      "leitfaeden": "Útmutatók",
-      "api": "API-dokumentáció"
-    },
-    "unternehmen": {
-      "ueberUns": "Rólunk",
-      "karriere": "Karrier",
-      "partner": "Partnerek",
-      "kontakt": "Kapcsolat",
-      "presse": "Sajtó"
-    },
-    "copyright": "© 2026 myNextDays. Minden jog fenntartva.",
-    "agb": "ÁSZF",
-    "datenschutz": "Adatvédelem",
-    "impressum": "Impresszum",
-    "cookies": "Cookie-szabályzat",
-    "avv": "Adatfeldolgozás"
-  },
-  "abschluss": {
-    "heading": "Készen áll, hogy egy helyről irányítsa a szálláshelyét?",
-    "sub": "Próbálja ki 30 napig ingyen — nincs minimális futamidő, nincs beállítási díj, bármikor felmondható.",
-    "ctaPrimaer": "30 napig ingyen kipróbálom",
-    "ctaSekundaer": "Árak megtekintése"
-  },
-  "chat": {
-    "titel": "Kérdése van? Itt vagyunk.",
-    "untertitel": "Általában néhány órán belül válaszolunk.",
-    "name": "Név",
-    "email": "E-mail",
-    "telefon": "Telefon (nem kötelező)",
-    "nachricht": "Az Ön üzenete",
-    "absenden": "Üzenet küldése",
-    "sendet": "Küldés folyamatban …",
-    "platzhalter": "Írjon üzenetet …",
-    "senden": "Küldés",
-    "oeffnen": "Csevegés megnyitása",
-    "schliessen": "Csevegés bezárása",
-    "hinweis": "Adatait kizárólag arra használjuk, hogy válaszoljunk erre a megkeresésre.",
-    "fehler": "Ez nem sikerült. Kérjük, próbálja meg később újra."
-  },
-  "einblicke": {
-    "eyebrow": "Belülről",
-    "heading": "Így működik valójában a myNextDays",
-    "sub": "Semmilyen rajzolt nézet — felvételek egy működő üzemből, valódi foglalásokkal minden csatornáról.",
-    "hotel": {
-      "title": "Szálloda és nyaralóingatlan egyetlen felületen",
-      "text": "Minden szoba önálló foglalható egység — ugyanaz a modell, mint a nyaralóháznál. A foglaltsági terv egységenként mutatja az érkezéseket, tartózkodásokat és távozásokat, a kihasználtsággal, a bevétellel és az időszak átlagos éjszakai árával együtt."
-    },
-    "objekte": {
-      "title": "Csatornánkénti láthatóság, nem egyetlen kapcsoló mindenre",
-      "text": "A weboldal, a piactér és a foglalási portálok három külön tengely. Egy szálláshely futhat a saját oldalán, miközben a portálokon szünetel — egy pillantásra látszik, egy kattintással átkapcsolható."
-    },
-    "kanaele": {
-      "title": "Kösse be a portálokat, és tartsa meg a saját értékesítési útvonalát",
-      "text": "A Booking.com, az Airbnb és a többi portál ugyanarra a szabad kapacitásra épül, mint a közvetlen foglalás. Egy lefoglalt éjszaka mindenhol zárol — túlfoglalás nélkül, kézi utómunka nélkül."
-    }
+  "teaser": {
+   "cta": "Összes ár megtekintése",
+   "abObjekt": "Minden további ingatlan {betrag}-tól",
+   "provision": "Saját weboldal {direkt} · portálok {portale}",
+   "tarif": "Egy csomag mindenkinek, az 1. ingatlannal"
   }
+ }
 }

@@ -1,479 +1,910 @@
 {
-  "meta": {
-    "title": "myNextDays – The platform for holiday rental hosts",
-    "description": "The platform for hotels, agencies and holiday rental hosts: channel manager, calendar, direct booking, guest messaging and accounting in one place. Built in Denmark, hosted in the EU. From €19.90 per month. Free for 30 days."
+ "meta": {
+  "title": "myNextDays – The platform for holiday rental hosts",
+  "description": "The platform for hotels, agencies and holiday rental hosts: channel manager, calendar, direct booking, guest messaging and accounting in one place. Built in Denmark, hosted in the EU. From €19.90 per month. Free for 30 days."
+ },
+ "nav": {
+  "funktionen": "Features",
+  "preise": "Pricing",
+  "kanaele": "Channels",
+  "kunden": "Customers",
+  "ressourcen": "Resources",
+  "sprache": "Language",
+  "spracheWaehlen": "Choose language",
+  "anmelden": "Log in",
+  "kostenlosStarten": "Start for free",
+  "sprachModalTitel": "Language and region",
+  "sprachModalHeading": "Choose a language",
+  "sprachModalHinweis": "Your choice applies to this website and carries over to your account.",
+  "schliessen": "Close",
+  "suche": "Search for a language",
+  "keinTreffer": "No language found.",
+  "menuOeffnen": "Open menu",
+  "menuSchliessen": "Close menu",
+  "menuCtaTitel": "Rather see it once?",
+  "menuCtaText": "Take a look at the software — with real data, no sign-up.",
+  "menuCtaKnopf": "See the demo",
+  "menuSpalte": {
+   "kern": "Selling",
+   "gast": "Guests & money",
+   "betrieb": "Operations"
   },
-  "nav": {
-    "funktionen": "Features",
-    "preise": "Pricing",
-    "kanaele": "Channels",
-    "kunden": "Customers",
-    "ressourcen": "Resources",
-    "sprache": "Language",
-    "spracheWaehlen": "Choose language",
-    "anmelden": "Log in",
-    "kostenlosStarten": "Start for free",
-    "sprachModalTitel": "Language and region",
-    "sprachModalHeading": "Choose a language",
-    "sprachModalHinweis": "Your choice applies to this website and carries over to your account.",
-    "schliessen": "Close",
-    "suche": "Search for a language",
-    "keinTreffer": "No language found."
+  "menuBildAlt": "Booking calendar in myNextDays"
+ },
+ "hero": {
+  "trustNeu": "New in 2026",
+  "trustVermieter": "by hosts, for hosts",
+  "trustAirsmil": "powered by AirSmil",
+  "trustEu": "EU-hosted (GDPR)",
+  "headlinePre": "More",
+  "headlineHighlight": "bookings",
+  "headlinePost": "less effort.",
+  "subline": "The platform for hotels, agencies and holiday rental hosts: channel manager, calendar, direct booking, guest messaging and accounting in one place — built by hosts who know the daily routine.",
+  "ctaTrial": "Start 30 days free",
+  "ctaDemo": "Watch demo",
+  "kanaeleLabel": "Connected to the major booking platforms",
+  "eyebrow": "The platform for holiday rental hosts",
+  "kanaeleEyebrow": "Distribution channels",
+  "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
+  "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
+  "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
+  "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+ },
+ "intro": {
+  "heading": "Welcome to myNextDays.",
+  "p1": "A full property management system plus channel manager — for hotels, agencies and holiday rental hosts. Independent and fair, instead of corporate complexity and enterprise pricing.",
+  "p2": "Increase your occupancy, simplify daily work and create great guest experiences — without the complexity and the enterprise pricing of the big systems.",
+  "p3": "Everything in one place, smart automation and connections to every important channel — plus your own low-commission booking portal. Your business grows with more control and less effort.",
+  "cta": "Explore features",
+  "reichweite": "Made for every accommodation.",
+  "belegeHeading": "What you can rely on",
+  "belege": {
+   "neu": "New in 2026 — developed by active hosts, powered by AirSmil",
+   "eu": "Built in Denmark, hosted in the EU and GDPR-compliant",
+   "kanaele": "56 booking platforms connected",
+   "start": "Launching 1 September 2026 in 27 European countries, 24 languages"
+  },
+  "typen": {
+   "hotel": "Hotel",
+   "bnb": "B&B",
+   "gaestehaus": "Guest house",
+   "motel": "Motel",
+   "lodge": "Lodge",
+   "ferienwohnung": "Holiday rental",
+   "resort": "Resort",
+   "huette": "Cabin",
+   "pension": "Inn",
+   "campingplatz": "Campsite"
+  },
+  "eyebrow": "The platform",
+  "typenEyebrow": "Who it is for"
+ },
+ "zielgruppen": {
+  "bildAlt": "myNextDays interface, example {typ}",
+  "abschluss": "Whatever the shape — it is all managed in the same system, with the same login.",
+  "typen": {
+   "hotel": {
+    "unterzeile": "Hotel software with channel manager",
+    "text": "Small hotels run their rooms as room types: every type carries its units, and the occupancy plan lists each room on its own — with arrival, departure and housekeeping. Booking.com, Expedia and the other booking portals receive the number of free units, not a yes/no. Prices, minimum stay and blocks are maintained once, and the channel manager distributes them to every connected portal. Invoice, payment and guest messaging live in the same system.",
+    "beleg": "Availability as a number, not yes/no."
+   },
+   "bnb": {
+    "unterzeile": "Booking system for bed & breakfasts",
+    "text": "Breakfast, towels, pet fee, late arrival: extras stay attached to the booking and appear on the guest's invoice without a side calculation. If you run the B&B yourself, you don't want a second list — enquiries, messages, payments and availability come together in one place, on the desktop and on your phone. Card payments via Stripe are included, as is your own booking page without portal commission.",
+    "beleg": "Extras billed automatically."
+   },
+   "gaestehaus": {
+    "unterzeile": "Management for guest houses with several rooms",
+    "text": "Several units under one roof, one calendar: which guest gets which room stays your decision until arrival, without recreating the booking. The building decides what the portals see under one identifier; amenities, photos and prices are maintained per room type. Housekeeping tasks follow arrivals and departures and land on the team's phone — with their own login that shows tasks, not revenue.",
+    "beleg": "One building, one portal ID."
+   },
+   "motel": {
+    "unterzeile": "Software for motels and short stays",
+    "text": "High turnover, short stays, late arrivals: arrival details, access codes and the invoice reach the guest automatically — at the right moment and in their language, with 24 languages ready. Rooms that free up go back to every portal without a keystroke, and a stop-sell closes them everywhere at once. At the front desk the day plan is enough: who arrives, who leaves, what is still open.",
+    "beleg": "Messages run by themselves."
+   },
+   "lodge": {
+    "unterzeile": "Rent out a lodge, from your phone too",
+    "text": "Remote does not mean cut off: prices, minimum stay, changeover days and blocks are managed on your phone exactly as at the desk — same calendar, same booking, no intermediate state. Seasonal rates are set in the rate grid for a whole year instead of typed day by day, and length-of-stay discounts reach the portals as well. Even without a reception, the guest knows how to get in.",
+    "beleg": "On the road too, in the app."
+   },
+   "ferienwohnung": {
+    "unterzeile": "Channel manager for holiday apartments",
+    "text": "One apartment, every channel: Booking.com, Airbnb, Vrbo, our own myBestDays marketplace and direct bookings on your website share a single calendar. Once a night is sold it is gone everywhere — double bookings cannot happen. Low-commission direct bookings can be favoured on purpose: your own pricing strategy, discounts for longer stays, automated messages from booking to departure, and card payments straight to your account.",
+    "beleg": "One calendar for every channel."
+   },
+   "resort": {
+    "unterzeile": "Manage a resort with many units",
+    "text": "Studios, suites and villas run as their own types with their own prices, amenities and occupancy rules — all under one account and one invoice. As many properties and as many units per type as you need, without anyone switching logins. Front desk, housekeeping and owners each see only their part; owner statements are produced per property including a report, instead of a spreadsheet at month's end.",
+    "beleg": "As many properties per account as you need."
+   },
+   "huette": {
+    "unterzeile": "Cabin rental in seasonal operation",
+    "text": "Seasonal operation without handwork: closed periods, changeover days, minimum and maximum stays are set once and apply on every portal at the same time. If the cabin is closed in winter, it is closed everywhere — no logging into five extranets. The changeover day stays free between two bookings so housekeeping has time, and arrival or departure days can be blocked individually.",
+    "beleg": "One block applies on every portal."
+   },
+   "pension": {
+    "unterzeile": "Guesthouse administration with invoices and tourist tax",
+    "text": "Half board, tourist tax, regulars, payment on site: the system calculates surcharges and levies correctly for each portal — including where the portal reports a net amount and you need the gross price. Invoices, credit notes and open items sit in the same record as the booking, in your country's currency. Returning guests are recognised by their history instead of a search through old emails.",
+    "beleg": "Levies per portal, calculated correctly."
+   },
+   "campingplatz": {
+    "unterzeile": "Campsite management with pitches",
+    "text": "Pitches, rental caravans and glamping tents are types with a count: twenty identical pitches are one type with twenty units, not twenty calendars. Availability goes to the portals as a number so you never sell more than you have. Electricity, tourist tax or a dog are charged per night or per stay, and the day's arrivals are bundled in the day plan.",
+    "beleg": "A count instead of twenty calendars."
+   }
+  }
+ },
+ "faq": {
+  "eyebrow": "Frequently asked",
+  "heading": "The questions that come before switching systems.",
+  "sub": "What the platform does, what it costs and how your data is protected — without marketing speak.",
+  "was": {
+   "frage": "What exactly is myNextDays?",
+   "antwort": "myNextDays is a property management system and a channel manager in one — for hotels, guesthouses, holiday apartments, campsites and agencies. Calendar, reservations, prices, portals, direct bookings, guest messaging, housekeeping and billing sit in one interface with one login, instead of four tools that know nothing about each other."
+  },
+  "portale": {
+   "frage": "Which booking portals can I connect?",
+   "antwort": "You reach 56 booking platforms, among them Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda and Tripadvisor. On top of that come our own myBestDays marketplace, a booking widget for your website and regional channels. Every channel is switched separately: you decide per property where it is visible."
+  },
+  "sync": {
+   "frage": "How fast does it sync — and can double bookings happen?",
+   "antwort": "The sync runs both ways in real time: a booking on one portal blocks that night everywhere else, and changed prices or minimum stays go out immediately. All channels share one calendar, so no second truth appears. A stop-sell closes availability everywhere at once, not only where you set it."
+  },
+  "betriebsarten": {
+   "frage": "Does it fit a hotel and holiday apartments at the same time?",
+   "antwort": "Yes, it is the same model: every property is exactly one type — a room type in a hotel or a holiday rental — and its units sit underneath. A hotel with eight double and four single rooms has two properties with eight and four units. The portals receive the number of free units, so five identical studios don't need five calendars."
+  },
+  "direkt": {
+   "frage": "Do I get my own booking page without portal commission?",
+   "antwort": "Yes. Every account includes its own booking portal, a widget for your existing website and a website builder with your own domain. Direct bookings cost 0.5 % instead of the 15–18 % commission of the large portals, run on the same calendar and the same prices — and the money goes straight to your account."
+  },
+  "marktplatz": {
+   "frage": "What is myBestDays?",
+   "antwort": "myBestDays is our own marketplace for guests — a booking channel on equal footing with Booking.com and Airbnb, only at a much lower commission. Properties you make visible there appear in the marketplace and in the myBestDays guest app. That visibility is its own switch, independent of the portals."
+  },
+  "zahlungen": {
+   "frage": "How do payments, deposits and invoices work?",
+   "antwort": "Online payments run through Stripe into your own account: deposit, balance or security deposit, by card and the payment methods Stripe offers in the guest's country. Invoices and credit notes come out of the booking, in the property's currency, with accounting-ready exports. Portal fees and levies are calculated correctly per portal — even where a portal only reports a net amount."
+  },
+  "laender": {
+   "frage": "Which countries, currencies and languages does the platform cover?",
+   "antwort": "At launch on 1 September 2026 in 27 European countries. Interface and guest communication come in 24 languages; the guest reads the confirmation in their own language. Currency belongs to the property or the business — there is no euro assumption, kroner, złoty or forint are handled the same way."
+  },
+  "rollen": {
+   "frage": "Who sees which data — owners, housekeeping, guests?",
+   "antwort": "Every role has its own login and sees only its part. Owners see their properties, their occupancy and payouts, but nobody else's. Housekeeping sees tasks with photo checklists, not revenue. Guests have their own area with check-in, the digital guest guide and messages."
+  },
+  "app": {
+   "frage": "Is there an app?",
+   "antwort": "Two, because guests and operators need different things: the myNextDays app for the business, owners and housekeeping — calendar, bookings and tasks on the road — and the myBestDays app for guests with search, booking, check-in and messages. Both talk to the same system; nothing runs on a second copy."
+  },
+  "sicherheit": {
+   "frage": "What about data protection and security?",
+   "antwort": "Built in Denmark, hosted in the EU, GDPR-compliant including a data processing agreement. Each business's data is separated at database level, not just in the interface. Two-factor sign-in is available, role permissions limit access to financial and guest data, and every sign-in is traceable in the device history."
+  },
+  "preis": {
+   "frage": "What does myNextDays cost and how do I start?",
+   "antwort": "30 days free, no minimum term, no setup fee, cancel any time. After that a subscription plus a small commission on bookings we bring in. Add-on modules such as extended accounting with DATEV export, staff management or hotel functions are only added if you need them. Create a property, connect your channels, go."
+  }
+ },
+ "benefits": {
+  "eyebrow": "Why myNextDays",
+  "sub": "Three things that really matter in the daily rental routine — that is what the platform is built for.",
+  "heading": "More bookings. Less work.",
+  "buchungen": {
+   "title": "Win more bookings",
+   "text": "Be visible across every major channel and on your own website. One central calendar keeps everything in sync — no more double bookings."
+  },
+  "betrieb": {
+   "title": "Simplify operations",
+   "text": "Run properties, bookings, housekeeping and accounting from one place — at your desk or on the move."
+  },
+  "fair": {
+   "title": "Fair & European",
+   "text": "A transparent price without enterprise hurdles, built in Denmark, hosted in the EU under GDPR. Personal support from the team that uses the software itself."
+  },
+  "preisBanner": {
+   "eyebrow": "Pricing",
+   "heading": "Everything your property needs, in one place",
+   "text": "Free for 30 days. No minimum term. Cancel any time (four weeks to the end of the month).",
+   "proMonat": "per month"
+  }
+ },
+ "trial": {
+  "eyebrow": "Free trial",
+  "heading": "Try myNextDays free for 30 days.",
+  "sub": "No minimum term. Cancel any time. Just fill in this short form:",
+  "seitenHeading": "Everything your property needs in one place — more control, less effort.",
+  "perks": {
+   "buchungen": {
+    "title": "More bookings",
+    "text": "across every major channel and your own portal, without double bookings."
+   },
+   "kontrolle": {
+    "title": "Full control",
+    "text": "over check-ins, bookings and invoices in one place."
+   },
+   "freiheit": {
+    "title": "More freedom",
+    "text": "manage your property from your phone, wherever you are."
+   }
+  },
+  "vorname": "First name",
+  "nachname": "Last name",
+  "email": "Email",
+  "emailPlatzhalter": "name@example.com",
+  "einwilligung": "Yes, I would like to receive occasional news, webinar invitations and offers from myNextDays. You can withdraw your consent at any time.",
+  "absenden": "Get started",
+  "dankeTitel": "Thank you!",
+  "dankeText": "We will be in touch shortly."
+ },
+ "features": {
+  "heading": "One system. One login.",
+  "baldBadge": "Coming soon",
+  "hinweis": "Basic invoicing is included at launch. Advanced accounting (DATEV export), staff management, the service provider marketplace and hotel features are add-on modules.",
+  "eyebrow": "Features",
+  "sub": "One login for the business, owners, guests and housekeeping — every role sees exactly its own area.",
+  "alleAnsehen": "Explore every feature in the free trial",
+  "neu": {
+   "title": "myNextDays AI & avatar",
+   "text": "Avatar and voice control, an AI concierge for guest questions, and rates that follow season and demand."
+  },
+  "gruppen": {
+   "pms": {
+    "title": "Property management",
+    "items": "Central multi-calendar, occupancy plan, reservations, tasks, property and amenity data"
+   },
+   "channel": {
+    "title": "Channel manager",
+    "items": "56 booking platforms, Airbnb, Booking.com, Expedia, Vrbo, Google, real-time two-way sync"
+   },
+   "direkt": {
+    "title": "Direct booking",
+    "items": "Your own booking portal, booking widget, website builder, own domain, 0.5% instead of 15–18% OTA commission"
+   },
+   "preise": {
+    "title": "Rates & revenue",
+    "items": "Dynamic pricing with min/max, rate plans per property, season and occupancy logic, manual rates take precedence"
+   },
+   "gaeste": {
+    "title": "Guest experience",
+    "items": "Digital guest guide, AI concierge, online check-in, automated messages, 24 languages"
+   },
+   "zahlungen": {
+    "title": "Payments & accounting",
+    "items": "Online payments, deposits, security deposits, basic invoicing, accounting-ready exports"
+   },
+   "team": {
+    "title": "Team & roles",
+    "items": "Owner login with payouts, housekeeping login with photo checklists, tasks, separated permissions"
+   },
+   "app": {
+    "title": "Mobile app",
+    "items": "Native app with separate logins for owners, guests and housekeeping, run the business on the move"
+   },
+   "auswertungen": {
+    "title": "Insights",
+    "items": "Occupancy, revenue, ADR, automatic reports, channel comparison, metasearch coming soon"
+   }
+  }
+ },
+ "ki": {
+  "eyebrow": "AI & voice",
+  "heading": "The platform takes the routine off your hands.",
+  "sub": "Run it hands-free, let guest questions answer themselves, keep rates moving — without learning a single click path.",
+  "voice": {
+   "title": "Avatar / voice control",
+   "text": "Run it hands-free by voice and let an avatar answer: check occupancy, manage bookings and tasks, change rates – while you are on the road or getting a property ready."
+  },
+  "concierge": {
+   "title": "An AI concierge for your guests",
+   "text": "The digital guest guide answers the Wi-Fi password, the key box, the bins and local tips by itself — in 24 languages, around the clock."
+  },
+  "preise": {
+   "title": "Rates that think along",
+   "text": "Set a base rate with a minimum and maximum per property; nightly rates follow season, occupancy and demand. Manual rates always take precedence."
+  },
+  "cta": "See the features",
+  "blaseFrage": "How is occupancy next week?",
+  "blaseAntwort": "18 of 24 nights booked. Two gaps at the weekend — lower the rate?",
+  "eingabe": "Ask myNextDays …",
+  "baldBadge": "Coming soon"
+ },
+ "integrationen": {
+  "eyebrow": "Reach",
+  "heading": "56 booking platforms – one interface.",
+  "p1": "You distribute availability, rates and restrictions to 56 booking platforms — including Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda and Tripadvisor. Two-way sync in real time: a booking on one portal blocks that night everywhere else.",
+  "p2": "On top of that comes your own distribution: the low-commission booking portal on myBestDays, a booking widget for your website and regional channels you can switch on individually. Every channel is controlled separately — you decide where a property is visible.",
+  "cta": "Connect channels in the free trial"
+ },
+ "testimonials": {
+  "eyebrow": "Behind the platform",
+  "heading": "Why we built myNextDays.",
+  "gruenderin": {
+   "quote": "myNextDays grew out of our own rental business at AirSmil — we are building exactly the software we wish we had had.",
+   "name": "Jeanine Ågaard",
+   "location": "Founder, myNextDays / AirSmil"
+  }
+ },
+ "stimmen": {
+  "eyebrow": "Voices from the field",
+  "heading": "What hosts tell us.",
+  "vorschauHinweis": "Layout preview with placeholder text – real, approved quotes will appear here.",
+  "zurueck": "Previous testimonial",
+  "vor": "Next testimonial",
+  "zeigeStimme": "Show testimonial {nummer}"
+ },
+ "stats": {
+  "eyebrow": "Numbers we can prove",
+  "heading": "The rental platform, built by people who rent out themselves.",
+  "sub": "Launching 1 September 2026 in 27 countries.",
+  "laender": {
+   "value": "27",
+   "label": "Countries",
+   "text": "European countries at launch"
+  },
+  "sprachen": {
+   "value": "24",
+   "label": "Languages",
+   "text": "Interface and guest messaging"
+  },
+  "kanaele": {
+   "value": "56",
+   "label": "Platforms",
+   "text": "Connected booking platforms"
+  },
+  "hosting": {
+   "value": "100%",
+   "label": "EU hosting",
+   "text": "Built in Denmark, GDPR-compliant"
+  },
+  "vermieter": {
+   "label": "Built by hosts",
+   "text": "Out of the real rental routine at AirSmil"
+  }
+ },
+ "usecases": {
+  "eyebrow": "Who we build for",
+  "heading": "Three kinds of business, one platform.",
+  "sub": "A holiday rental, a hotel room or an entire portfolio — the same interface, put together differently for each operation.",
+  "ferienobjekt": {
+   "label": "Holiday rental",
+   "title": "Holiday homes & apartments",
+   "text": "One or several properties you rent out yourself — no front desk, but handovers, cleaning and guest questions.",
+   "punkte": {
+    "kanaele": "Portals and your own website in one calendar",
+    "kalender": "Plan cleaning and handovers per property",
+    "gaeste": "Online check-in and digital guest guide in 24 languages"
+   }
+  },
+  "hotel": {
+   "label": "Hotel & guesthouse",
+   "title": "Rooms, not containers",
+   "text": "Every room is its own bookable unit with its own rates — no detour via room categories with quantities.",
+   "punkte": {
+    "zimmer": "Room-level availability across every portal",
+    "raten": "Rate plans per room, derived or manual",
+    "rezeption": "Daily overview of arrivals and departures"
+   }
+  },
+  "agentur": {
+   "label": "Agency & management",
+   "title": "A portfolio of several owners",
+   "text": "You manage other people’s properties: separate statements, a login per owner, clear figures for each property.",
+   "punkte": {
+    "portfolio": "Every property in one occupancy plan",
+    "eigentuemer": "Owner login with occupancy and payouts",
+    "abrechnung": "Statements and commissions per property"
+   }
+  }
+ },
+ "footer": {
+  "claim": "The platform for holiday rental hosts — more bookings, less effort.",
+  "appLaden": "Download the app",
+  "spalten": {
+   "produkt": "Product",
+   "loesungen": "Solutions",
+   "ressourcen": "Resources",
+   "unternehmen": "Company"
+  },
+  "produkt": {
+   "pms": "Property management",
+   "channelManager": "Channel manager",
+   "direktbuchung": "Direct booking",
+   "zahlungen": "Payments",
+   "mobileApp": "Mobile app"
+  },
+  "loesungen": {
+   "hotels": "Hotels",
+   "bnb": "B&Bs",
+   "gaestehaeuser": "Guest houses",
+   "ferienwohnungen": "Holiday rentals",
+   "campingplaetze": "Campsites"
+  },
+  "ressourcen": {
+   "blog": "Blog",
+   "hilfeCenter": "Help centre",
+   "webinare": "Webinars",
+   "leitfaeden": "Guides",
+   "api": "API documentation"
+  },
+  "unternehmen": {
+   "ueberUns": "About us",
+   "karriere": "Careers",
+   "partner": "Partners",
+   "kontakt": "Contact",
+   "presse": "Press"
+  },
+  "copyright": "© 2026 myNextDays. All rights reserved.",
+  "agb": "Terms",
+  "datenschutz": "Privacy",
+  "impressum": "Legal notice",
+  "cookies": "Cookie policy",
+  "avv": "Data processing"
+ },
+ "abschluss": {
+  "heading": "Ready to run your property from one place?",
+  "sub": "Try it free for 30 days — no minimum term, no setup fee, cancel any time.",
+  "ctaPrimaer": "Start 30 days free",
+  "ctaSekundaer": "See pricing"
+ },
+ "chat": {
+  "titel": "Questions? We are here.",
+  "untertitel": "Usually answered within a few hours.",
+  "name": "Name",
+  "email": "Email",
+  "telefon": "Phone (optional)",
+  "nachricht": "Your message",
+  "absenden": "Send message",
+  "sendet": "Sending …",
+  "platzhalter": "Write a message …",
+  "senden": "Send",
+  "oeffnen": "Open chat",
+  "schliessen": "Close chat",
+  "hinweis": "We use your details only to reply to this enquiry.",
+  "fehler": "That did not work. Please try again later."
+ },
+ "einblicke": {
+  "eyebrow": "Inside the product",
+  "heading": "How myNextDays actually works",
+  "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
+  "hotel": {
+   "title": "Hotels and holiday rentals in one interface",
+   "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
+  },
+  "objekte": {
+   "title": "Visibility per channel, not one switch for everything",
+   "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
+  },
+  "kanaele": {
+   "title": "Connect portals and keep your own direct channel",
+   "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
+  }
+ },
+ "preise": {
+  "meta": {
+   "titel": "Pricing — one plan, everything included | myNextDays",
+   "beschreibung": "One plan with the full feature set, priced by the number of properties. No minimum term, no setup fee, 30 days free — channels, direct booking, guest messaging and billing included."
   },
   "hero": {
-    "trustNeu": "New in 2026",
-    "trustVermieter": "by hosts, for hosts",
-    "trustAirsmil": "powered by AirSmil",
-    "trustEu": "EU-hosted (GDPR)",
-    "headlinePre": "More",
-    "headlineHighlight": "bookings",
-    "headlinePost": "less effort.",
-    "subline": "The platform for hotels, agencies and holiday rental hosts: channel manager, calendar, direct booking, guest messaging and accounting in one place — built by hosts who know the daily routine.",
-    "ctaTrial": "Start 30 days free",
-    "ctaDemo": "Watch demo",
-    "kanaeleLabel": "Connected to the major booking platforms",
-    "eyebrow": "The platform for holiday rental hosts",
-    "kanaeleEyebrow": "Distribution channels",
-    "aufnahmeBelegungsplan": "myNextDays occupancy board: eight holiday properties with bookings from Booking.com, Airbnb, Vrbo, the marketplace and direct reservations",
-    "aufnahmeHotel": "myNextDays occupancy board for a hotel: twelve rooms, each its own bookable unit",
-    "aufnahmeObjekte": "Property overview in myNextDays with photos, status and per-channel visibility",
-    "aufnahmeKanaele": "Channel management in myNextDays: connected booking portals and the own marketplace"
+   "eyebrow": "Pricing",
+   "headlinePre": "One plan.",
+   "headlineHighlight": "Everything in.",
+   "sub": "No package puzzle: every feature is included, whether you run one holiday flat or twelve room types. You pay by the number of properties — and the more you have, the cheaper each one gets.",
+   "testen": "30 days free",
+   "laufzeit": "No minimum term",
+   "einrichtung": "No setup fee",
+   "eu": "EU-hosted, GDPR"
   },
-  "intro": {
-    "heading": "Welcome to myNextDays.",
-    "p1": "A full property management system plus channel manager — for hotels, agencies and holiday rental hosts. Independent and fair, instead of corporate complexity and enterprise pricing.",
-    "p2": "Increase your occupancy, simplify daily work and create great guest experiences — without the complexity and the enterprise pricing of the big systems.",
-    "p3": "Everything in one place, smart automation and connections to every important channel — plus your own low-commission booking portal. Your business grows with more control and less effort.",
-    "cta": "Explore features",
-    "reichweite": "Made for every accommodation.",
-    "belegeHeading": "What you can rely on",
-    "belege": {
-      "neu": "New in 2026 — developed by active hosts, powered by AirSmil",
-      "eu": "Built in Denmark, hosted in the EU and GDPR-compliant",
-      "kanaele": "56 booking platforms connected",
-      "start": "Launching 1 September 2026 in 27 European countries, 24 languages"
-    },
-    "typen": {
-      "hotel": "Hotel",
-      "bnb": "B&B",
-      "gaestehaus": "Guest house",
-      "motel": "Motel",
-      "lodge": "Lodge",
-      "ferienwohnung": "Holiday rental",
-      "resort": "Resort",
-      "huette": "Cabin",
-      "pension": "Inn",
-      "campingplatz": "Campsite"
-    },
-    "eyebrow": "The platform",
-    "typenEyebrow": "Who it is for"
+  "rechner": {
+   "einTarif": "One plan, full scope",
+   "objekte": "Properties",
+   "reglerLabel": "Set the number of properties",
+   "wenigerLabel": "One property fewer",
+   "mehrLabel": "One property more",
+   "proMonat": "per month",
+   "schnitt": "That is {betrag} per property per month.",
+   "grundgebuehr": "Base fee (incl. 1st property)",
+   "weitereObjekte": "{anzahl, plural, =1 {one more property} other {# more properties}} × {jeObjekt}",
+   "netto": "All amounts excluding VAT. Billed monthly, cancel any time.",
+   "ctaTesten": "Start 30 days free",
+   "ctaDemo": "See the demo",
+   "inklusivTitel": "Included in every plan",
+   "inklusivSub": "Nothing that only starts in a pricier tier — this is the entire scope.",
+   "nichtAbrufbar": "Prices unavailable right now",
+   "nichtAbrufbarText": "The price list could not be loaded. Please reload the page or write to us — we will tell you the price for your number of properties.",
+   "direktfrei": "0 % commission on bookings through your own website"
   },
-  "zielgruppen": {
-    "bildAlt": "myNextDays interface, example {typ}",
-    "abschluss": "Whatever the shape — it is all managed in the same system, with the same login.",
-    "typen": {
-      "hotel": {
-        "unterzeile": "Hotel software with channel manager",
-        "text": "Small hotels run their rooms as room types: every type carries its units, and the occupancy plan lists each room on its own — with arrival, departure and housekeeping. Booking.com, Expedia and the other booking portals receive the number of free units, not a yes/no. Prices, minimum stay and blocks are maintained once, and the channel manager distributes them to every connected portal. Invoice, payment and guest messaging live in the same system.",
-        "beleg": "Availability as a number, not yes/no."
-      },
-      "bnb": {
-        "unterzeile": "Booking system for bed & breakfasts",
-        "text": "Breakfast, towels, pet fee, late arrival: extras stay attached to the booking and appear on the guest's invoice without a side calculation. If you run the B&B yourself, you don't want a second list — enquiries, messages, payments and availability come together in one place, on the desktop and on your phone. Card payments via Stripe are included, as is your own booking page without portal commission.",
-        "beleg": "Extras billed automatically."
-      },
-      "gaestehaus": {
-        "unterzeile": "Management for guest houses with several rooms",
-        "text": "Several units under one roof, one calendar: which guest gets which room stays your decision until arrival, without recreating the booking. The building decides what the portals see under one identifier; amenities, photos and prices are maintained per room type. Housekeeping tasks follow arrivals and departures and land on the team's phone — with their own login that shows tasks, not revenue.",
-        "beleg": "One building, one portal ID."
-      },
-      "motel": {
-        "unterzeile": "Software for motels and short stays",
-        "text": "High turnover, short stays, late arrivals: arrival details, access codes and the invoice reach the guest automatically — at the right moment and in their language, with 24 languages ready. Rooms that free up go back to every portal without a keystroke, and a stop-sell closes them everywhere at once. At the front desk the day plan is enough: who arrives, who leaves, what is still open.",
-        "beleg": "Messages run by themselves."
-      },
-      "lodge": {
-        "unterzeile": "Rent out a lodge, from your phone too",
-        "text": "Remote does not mean cut off: prices, minimum stay, changeover days and blocks are managed on your phone exactly as at the desk — same calendar, same booking, no intermediate state. Seasonal rates are set in the rate grid for a whole year instead of typed day by day, and length-of-stay discounts reach the portals as well. Even without a reception, the guest knows how to get in.",
-        "beleg": "On the road too, in the app."
-      },
-      "ferienwohnung": {
-        "unterzeile": "Channel manager for holiday apartments",
-        "text": "One apartment, every channel: Booking.com, Airbnb, Vrbo, our own myBestDays marketplace and direct bookings on your website share a single calendar. Once a night is sold it is gone everywhere — double bookings cannot happen. Low-commission direct bookings can be favoured on purpose: your own pricing strategy, discounts for longer stays, automated messages from booking to departure, and card payments straight to your account.",
-        "beleg": "One calendar for every channel."
-      },
-      "resort": {
-        "unterzeile": "Manage a resort with many units",
-        "text": "Studios, suites and villas run as their own types with their own prices, amenities and occupancy rules — all under one account and one invoice. As many properties and as many units per type as you need, without anyone switching logins. Front desk, housekeeping and owners each see only their part; owner statements are produced per property including a report, instead of a spreadsheet at month's end.",
-        "beleg": "As many properties per account as you need."
-      },
-      "huette": {
-        "unterzeile": "Cabin rental in seasonal operation",
-        "text": "Seasonal operation without handwork: closed periods, changeover days, minimum and maximum stays are set once and apply on every portal at the same time. If the cabin is closed in winter, it is closed everywhere — no logging into five extranets. The changeover day stays free between two bookings so housekeeping has time, and arrival or departure days can be blocked individually.",
-        "beleg": "One block applies on every portal."
-      },
-      "pension": {
-        "unterzeile": "Guesthouse administration with invoices and tourist tax",
-        "text": "Half board, tourist tax, regulars, payment on site: the system calculates surcharges and levies correctly for each portal — including where the portal reports a net amount and you need the gross price. Invoices, credit notes and open items sit in the same record as the booking, in your country's currency. Returning guests are recognised by their history instead of a search through old emails.",
-        "beleg": "Levies per portal, calculated correctly."
-      },
-      "campingplatz": {
-        "unterzeile": "Campsite management with pitches",
-        "text": "Pitches, rental caravans and glamping tents are types with a count: twenty identical pitches are one type with twenty units, not twenty calendars. Availability goes to the portals as a number so you never sell more than you have. Electricity, tourist tax or a dog are charged per night or per stay, and the day's arrivals are bundled in the day plan.",
-        "beleg": "A count instead of twenty calendars."
-      }
-    }
+  "provisionen": {
+   "eyebrow": "Commission",
+   "heading": "What does a booking cost?",
+   "sub": "That depends on where the guest comes from. Three routes, three rates — that is all.",
+   "direktTitel": "The guest books with you",
+   "direktText": "Through your own website or booking form. We take nothing from that. Only your payment provider's fee remains.",
+   "direktWert": "0 %",
+   "portaleTitel": "The guest comes from Booking, Airbnb & co.",
+   "portaleText": "We charge 0.5 % of the booking value, once a month on your invoice. Whatever the channel itself keeps is separate from this.",
+   "marktplatzTitel": "The guest comes via myBestDays",
+   "marktplatzText": "Our own marketplace. Here guests find you who do not know you yet. We bring the booking, collect the money and pay it out to you — for that we keep 8 %. There are no further costs.",
+   "deckel": "And there is a cap: for bookings from channels you never pay more than {betrag} a month."
+  },
+  "module": {
+   "eyebrow": "Add-on modules",
+   "heading": "Add only what you actually need.",
+   "sub": "The base plan covers the everyday work. You only need these modules if your business needs them — bookable monthly, cancellable monthly.",
+   "buchhaltungTitel": "Accounting",
+   "buchhaltungText": "Invoicing and export logic for your tax advisor, with DATEV and e-conomic export.",
+   "mitarbeiterTitel": "Staff",
+   "mitarbeiterText": "Shift and assignment planning for housekeeping, reception and maintenance.",
+   "hotelTitel": "Hotel",
+   "hotelText": "Reception operations with a front desk — for houses with several room types. Billed per room, not per house.",
+   "dynamischTitel": "Dynamic pricing",
+   "dynamischText": "Your prices adjust by themselves: to occupancy, season and lead time. Charged only on bookings created while the module is running.",
+   "proMonat": "per month",
+   "oder": "or",
+   "jeNutzer": "per user per month",
+   "jeZimmer": "per room per month",
+   "vomUmsatz": "of booking revenue",
+   "hinweis": "Modules can be added and cancelled monthly — access takes effect immediately, billing is pro rata."
+  },
+  "vergleich": {
+   "eyebrow": "Comparison",
+   "heading": "What others charge for the same number of properties.",
+   "sub": "Monthly prices for {objekte} properties, taken from the providers' official pricing pages. We compare the plan that matches our feature set.",
+   "unsereRechnung": "Base fee + property tiers",
+   "proMonat": "/month",
+   "ohnePreis": "not published",
+   "fussnote": "As of {stand}, read directly from the providers' pricing pages. Monthly prices without annual commitment are shown; where a provider advertises the annual price, it appears in the calculation column. Without warranty — the provider's current price list prevails.",
+   "ersparnis": "{prozent} % below the average"
   },
   "faq": {
-    "eyebrow": "Frequently asked",
-    "heading": "The questions that come before switching systems.",
-    "sub": "What the platform does, what it costs and how your data is protected — without marketing speak.",
-    "was": {
-      "frage": "What exactly is myNextDays?",
-      "antwort": "myNextDays is a property management system and a channel manager in one — for hotels, guesthouses, holiday apartments, campsites and agencies. Calendar, reservations, prices, portals, direct bookings, guest messaging, housekeeping and billing sit in one interface with one login, instead of four tools that know nothing about each other."
-    },
-    "portale": {
-      "frage": "Which booking portals can I connect?",
-      "antwort": "You reach 56 booking platforms, among them Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda and Tripadvisor. On top of that come our own myBestDays marketplace, a booking widget for your website and regional channels. Every channel is switched separately: you decide per property where it is visible."
-    },
-    "sync": {
-      "frage": "How fast does it sync — and can double bookings happen?",
-      "antwort": "The sync runs both ways in real time: a booking on one portal blocks that night everywhere else, and changed prices or minimum stays go out immediately. All channels share one calendar, so no second truth appears. A stop-sell closes availability everywhere at once, not only where you set it."
-    },
-    "betriebsarten": {
-      "frage": "Does it fit a hotel and holiday apartments at the same time?",
-      "antwort": "Yes, it is the same model: every property is exactly one type — a room type in a hotel or a holiday rental — and its units sit underneath. A hotel with eight double and four single rooms has two properties with eight and four units. The portals receive the number of free units, so five identical studios don't need five calendars."
-    },
-    "direkt": {
-      "frage": "Do I get my own booking page without portal commission?",
-      "antwort": "Yes. Every account includes its own booking portal, a widget for your existing website and a website builder with your own domain. Direct bookings cost 0.5 % instead of the 15–18 % commission of the large portals, run on the same calendar and the same prices — and the money goes straight to your account."
-    },
-    "marktplatz": {
-      "frage": "What is myBestDays?",
-      "antwort": "myBestDays is our own marketplace for guests — a booking channel on equal footing with Booking.com and Airbnb, only at a much lower commission. Properties you make visible there appear in the marketplace and in the myBestDays guest app. That visibility is its own switch, independent of the portals."
-    },
-    "zahlungen": {
-      "frage": "How do payments, deposits and invoices work?",
-      "antwort": "Online payments run through Stripe into your own account: deposit, balance or security deposit, by card and the payment methods Stripe offers in the guest's country. Invoices and credit notes come out of the booking, in the property's currency, with accounting-ready exports. Portal fees and levies are calculated correctly per portal — even where a portal only reports a net amount."
-    },
-    "laender": {
-      "frage": "Which countries, currencies and languages does the platform cover?",
-      "antwort": "At launch on 1 September 2026 in 27 European countries. Interface and guest communication come in 24 languages; the guest reads the confirmation in their own language. Currency belongs to the property or the business — there is no euro assumption, kroner, złoty or forint are handled the same way."
-    },
-    "rollen": {
-      "frage": "Who sees which data — owners, housekeeping, guests?",
-      "antwort": "Every role has its own login and sees only its part. Owners see their properties, their occupancy and payouts, but nobody else's. Housekeeping sees tasks with photo checklists, not revenue. Guests have their own area with check-in, the digital guest guide and messages."
-    },
-    "app": {
-      "frage": "Is there an app?",
-      "antwort": "Two, because guests and operators need different things: the myNextDays app for the business, owners and housekeeping — calendar, bookings and tasks on the road — and the myBestDays app for guests with search, booking, check-in and messages. Both talk to the same system; nothing runs on a second copy."
-    },
-    "sicherheit": {
-      "frage": "What about data protection and security?",
-      "antwort": "Built in Denmark, hosted in the EU, GDPR-compliant including a data processing agreement. Each business's data is separated at database level, not just in the interface. Two-factor sign-in is available, role permissions limit access to financial and guest data, and every sign-in is traceable in the device history."
-    },
-    "preis": {
-      "frage": "What does myNextDays cost and how do I start?",
-      "antwort": "30 days free, no minimum term, no setup fee, cancel any time. After that a subscription plus a small commission on bookings we bring in. Add-on modules such as extended accounting with DATEV export, staff management or hotel functions are only added if you need them. Create a property, connect your channels, go."
-    }
+   "eyebrow": "Common questions",
+   "heading": "Questions about price",
+   "sub": "What hosts want to know before switching — short and without small print.",
+   "laufzeit": {
+    "frage": "Is there a minimum term?",
+    "antwort": "No. The subscription runs monthly and can be cancelled with four weeks' notice to the end of the month. The first 30 days are free, with no payment details."
+   },
+   "objektzahl": {
+    "frage": "What happens when I add properties?",
+    "antwort": "You pay for the number of properties you booked. When one is added, the extra amount is charged pro rata and is usable immediately; the next tier applies automatically once you reach it."
+   },
+   "waehrung": {
+    "frage": "Which currency is billed?",
+    "antwort": "We bill in euros as the anchor currency; if you pay in another currency, checkout converts at the current rate. Your guests pay in your property's currency regardless."
+   },
+   "steuern": {
+    "frage": "Are prices with or without tax?",
+    "antwort": "All amounts shown are net. VAT depends on your country; with a valid VAT ID inside the EU we bill without tax (reverse charge)."
+   },
+   "umzug": {
+    "frage": "Can I bring my data with me?",
+    "antwort": "Yes. Properties, rates and bookings can be imported, and the channels are reconnected. Our team helps with the setup — at no extra cost."
+   },
+   "kuendigung": {
+    "frage": "What happens after cancelling?",
+    "antwort": "Your properties stay bookable until the end of the paid period. After that you still reach your data and can export it; nothing is deleted until you ask for it."
+   }
   },
-  "benefits": {
-    "eyebrow": "Why myNextDays",
-    "sub": "Three things that really matter in the daily rental routine — that is what the platform is built for.",
-    "heading": "More bookings. Less work.",
-    "buchungen": {
-      "title": "Win more bookings",
-      "text": "Be visible across every major channel and on your own website. One central calendar keeps everything in sync — no more double bookings."
-    },
-    "betrieb": {
-      "title": "Simplify operations",
-      "text": "Run properties, bookings, housekeeping and accounting from one place — at your desk or on the move."
-    },
-    "fair": {
-      "title": "Fair & European",
-      "text": "A transparent price without enterprise hurdles, built in Denmark, hosted in the EU under GDPR. Personal support from the team that uses the software itself."
-    },
-    "preisBanner": {
-      "eyebrow": "Pricing",
-      "heading": "Everything your property needs, in one place",
-      "text": "Free for 30 days. No minimum term. Cancel any time (four weeks to the end of the month).",
-      "preis": "€19.90",
-      "proMonat": "per month",
-      "tarif": "One plan for everyone, incl. 1 property",
-      "objekte": "Each additional property +€6/5/4 (sliding scale)",
-      "provision": "External channels 0.5% · own portal 8%",
-      "cta": "See pricing"
-    }
-  },
-  "trial": {
-    "eyebrow": "Free trial",
-    "heading": "Try myNextDays free for 30 days.",
-    "sub": "No minimum term. Cancel any time. Just fill in this short form:",
-    "seitenHeading": "Everything your property needs in one place — more control, less effort.",
-    "perks": {
-      "buchungen": {
-        "title": "More bookings",
-        "text": "across every major channel and your own portal, without double bookings."
-      },
-      "kontrolle": {
-        "title": "Full control",
-        "text": "over check-ins, bookings and invoices in one place."
-      },
-      "freiheit": {
-        "title": "More freedom",
-        "text": "manage your property from your phone, wherever you are."
-      }
-    },
-    "vorname": "First name",
-    "nachname": "Last name",
-    "email": "Email",
-    "emailPlatzhalter": "name@example.com",
-    "einwilligung": "Yes, I would like to receive occasional news, webinar invitations and offers from myNextDays. You can withdraw your consent at any time.",
-    "absenden": "Get started",
-    "dankeTitel": "Thank you!",
-    "dankeText": "We will be in touch shortly."
-  },
-  "features": {
-    "heading": "One system. One login.",
-    "baldBadge": "Coming soon",
-    "hinweis": "Basic invoicing is included at launch. Advanced accounting (DATEV export), staff management, the service provider marketplace and hotel features are add-on modules.",
-    "eyebrow": "Features",
-    "sub": "One login for the business, owners, guests and housekeeping — every role sees exactly its own area.",
-    "alleAnsehen": "Explore every feature in the free trial",
-    "neu": {
-      "title": "myNextDays AI & avatar",
-      "text": "Avatar and voice control, an AI concierge for guest questions, and rates that follow season and demand."
-    },
-    "gruppen": {
-      "pms": {
-        "title": "Property management",
-        "items": "Central multi-calendar, occupancy plan, reservations, tasks, property and amenity data"
-      },
-      "channel": {
-        "title": "Channel manager",
-        "items": "56 booking platforms, Airbnb, Booking.com, Expedia, Vrbo, Google, real-time two-way sync"
-      },
-      "direkt": {
-        "title": "Direct booking",
-        "items": "Your own booking portal, booking widget, website builder, own domain, 0.5% instead of 15–18% OTA commission"
-      },
-      "preise": {
-        "title": "Rates & revenue",
-        "items": "Dynamic pricing with min/max, rate plans per property, season and occupancy logic, manual rates take precedence"
-      },
-      "gaeste": {
-        "title": "Guest experience",
-        "items": "Digital guest guide, AI concierge, online check-in, automated messages, 24 languages"
-      },
-      "zahlungen": {
-        "title": "Payments & accounting",
-        "items": "Online payments, deposits, security deposits, basic invoicing, accounting-ready exports"
-      },
-      "team": {
-        "title": "Team & roles",
-        "items": "Owner login with payouts, housekeeping login with photo checklists, tasks, separated permissions"
-      },
-      "app": {
-        "title": "Mobile app",
-        "items": "Native app with separate logins for owners, guests and housekeeping, run the business on the move"
-      },
-      "auswertungen": {
-        "title": "Insights",
-        "items": "Occupancy, revenue, ADR, automatic reports, channel comparison, metasearch coming soon"
-      }
-    }
-  },
-  "ki": {
-    "eyebrow": "AI & voice",
-    "heading": "The platform takes the routine off your hands.",
-    "sub": "Run it hands-free, let guest questions answer themselves, keep rates moving — without learning a single click path.",
-    "voice": {
-      "title": "Avatar / voice control",
-      "text": "Run it hands-free by voice and let an avatar answer: check occupancy, manage bookings and tasks, change rates – while you are on the road or getting a property ready."
-    },
-    "concierge": {
-      "title": "An AI concierge for your guests",
-      "text": "The digital guest guide answers the Wi-Fi password, the key box, the bins and local tips by itself — in 24 languages, around the clock."
-    },
-    "preise": {
-      "title": "Rates that think along",
-      "text": "Set a base rate with a minimum and maximum per property; nightly rates follow season, occupancy and demand. Manual rates always take precedence."
-    },
-    "cta": "See the features",
-    "blaseFrage": "How is occupancy next week?",
-    "blaseAntwort": "18 of 24 nights booked. Two gaps at the weekend — lower the rate?",
-    "eingabe": "Ask myNextDays …",
-    "baldBadge": "Coming soon"
-  },
-  "integrationen": {
-    "eyebrow": "Reach",
-    "heading": "56 booking platforms – one interface.",
-    "p1": "You distribute availability, rates and restrictions to 56 booking platforms — including Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda and Tripadvisor. Two-way sync in real time: a booking on one portal blocks that night everywhere else.",
-    "p2": "On top of that comes your own distribution: the low-commission booking portal on myBestDays, a booking widget for your website and regional channels you can switch on individually. Every channel is controlled separately — you decide where a property is visible.",
-    "cta": "Connect channels in the free trial"
-  },
-  "testimonials": {
-    "eyebrow": "Behind the platform",
-    "heading": "Why we built myNextDays.",
-    "gruenderin": {
-      "quote": "myNextDays grew out of our own rental business at AirSmil — we are building exactly the software we wish we had had.",
-      "name": "Jeanine Ågaard",
-      "location": "Founder, myNextDays / AirSmil"
-    }
-  },
-  "stimmen": {
-    "eyebrow": "Voices from the field",
-    "heading": "What hosts tell us.",
-    "vorschauHinweis": "Layout preview with placeholder text – real, approved quotes will appear here.",
-    "zurueck": "Previous testimonial",
-    "vor": "Next testimonial",
-    "zeigeStimme": "Show testimonial {nummer}"
-  },
-  "stats": {
-    "eyebrow": "Numbers we can prove",
-    "heading": "The rental platform, built by people who rent out themselves.",
-    "sub": "Launching 1 September 2026 in 27 countries.",
-    "laender": {
-      "value": "27",
-      "label": "Countries",
-      "text": "European countries at launch"
-    },
-    "sprachen": {
-      "value": "24",
-      "label": "Languages",
-      "text": "Interface and guest messaging"
-    },
-    "kanaele": {
-      "value": "56",
-      "label": "Platforms",
-      "text": "Connected booking platforms"
-    },
-    "hosting": {
-      "value": "100%",
-      "label": "EU hosting",
-      "text": "Built in Denmark, GDPR-compliant"
-    },
-    "vermieter": {
-      "label": "Built by hosts",
-      "text": "Out of the real rental routine at AirSmil"
-    }
-  },
-  "usecases": {
-    "eyebrow": "Who we build for",
-    "heading": "Three kinds of business, one platform.",
-    "sub": "A holiday rental, a hotel room or an entire portfolio — the same interface, put together differently for each operation.",
-    "ferienobjekt": {
-      "label": "Holiday rental",
-      "title": "Holiday homes & apartments",
-      "text": "One or several properties you rent out yourself — no front desk, but handovers, cleaning and guest questions.",
-      "punkte": {
-        "kanaele": "Portals and your own website in one calendar",
-        "kalender": "Plan cleaning and handovers per property",
-        "gaeste": "Online check-in and digital guest guide in 24 languages"
-      }
-    },
-    "hotel": {
-      "label": "Hotel & guesthouse",
-      "title": "Rooms, not containers",
-      "text": "Every room is its own bookable unit with its own rates — no detour via room categories with quantities.",
-      "punkte": {
-        "zimmer": "Room-level availability across every portal",
-        "raten": "Rate plans per room, derived or manual",
-        "rezeption": "Daily overview of arrivals and departures"
-      }
-    },
-    "agentur": {
-      "label": "Agency & management",
-      "title": "A portfolio of several owners",
-      "text": "You manage other people’s properties: separate statements, a login per owner, clear figures for each property.",
-      "punkte": {
-        "portfolio": "Every property in one occupancy plan",
-        "eigentuemer": "Owner login with occupancy and payouts",
-        "abrechnung": "Statements and commissions per property"
-      }
-    }
-  },
-  "footer": {
-    "claim": "The platform for holiday rental hosts — more bookings, less effort.",
-    "appLaden": "Download the app",
-    "spalten": {
-      "produkt": "Product",
-      "loesungen": "Solutions",
-      "ressourcen": "Resources",
-      "unternehmen": "Company"
-    },
-    "produkt": {
-      "pms": "Property management",
-      "channelManager": "Channel manager",
-      "direktbuchung": "Direct booking",
-      "zahlungen": "Payments",
-      "mobileApp": "Mobile app"
-    },
-    "loesungen": {
-      "hotels": "Hotels",
-      "bnb": "B&Bs",
-      "gaestehaeuser": "Guest houses",
-      "ferienwohnungen": "Holiday rentals",
-      "campingplaetze": "Campsites"
-    },
-    "ressourcen": {
-      "blog": "Blog",
-      "hilfeCenter": "Help centre",
-      "webinare": "Webinars",
-      "leitfaeden": "Guides",
-      "api": "API documentation"
-    },
-    "unternehmen": {
-      "ueberUns": "About us",
-      "karriere": "Careers",
-      "partner": "Partners",
-      "kontakt": "Contact",
-      "presse": "Press"
-    },
-    "copyright": "© 2026 myNextDays. All rights reserved.",
-    "agb": "Terms",
-    "datenschutz": "Privacy",
-    "impressum": "Legal notice",
-    "cookies": "Cookie policy",
-    "avv": "Data processing"
-  },
-  "abschluss": {
-    "heading": "Ready to run your property from one place?",
-    "sub": "Try it free for 30 days — no minimum term, no setup fee, cancel any time.",
-    "ctaPrimaer": "Start 30 days free",
-    "ctaSekundaer": "See pricing"
-  },
-  "chat": {
-    "titel": "Questions? We are here.",
-    "untertitel": "Usually answered within a few hours.",
-    "name": "Name",
-    "email": "Email",
-    "telefon": "Phone (optional)",
-    "nachricht": "Your message",
-    "absenden": "Send message",
-    "sendet": "Sending …",
-    "platzhalter": "Write a message …",
-    "senden": "Send",
-    "oeffnen": "Open chat",
-    "schliessen": "Close chat",
-    "hinweis": "We use your details only to reply to this enquiry.",
-    "fehler": "That did not work. Please try again later."
-  },
-  "einblicke": {
-    "eyebrow": "Inside the product",
-    "heading": "How myNextDays actually works",
-    "sub": "Not illustrations — captures from a live operation with real bookings from every channel.",
-    "hotel": {
-      "title": "Hotels and holiday rentals in one interface",
-      "text": "Every room is its own bookable unit — the same model as a holiday home. The occupancy board shows arrivals, stays and departures per unit, with occupancy, revenue and average nightly rate for the period."
-    },
-    "objekte": {
-      "title": "Visibility per channel, not one switch for everything",
-      "text": "Website, marketplace and booking portals are three separate axes. A property can stay live on your own site while it is paused on the portals — visible at a glance, switched in one click."
-    },
-    "kanaele": {
-      "title": "Connect portals and keep your own direct channel",
-      "text": "Booking.com, Airbnb and other portals share the same availability as your direct bookings. A booked night blocks everywhere — no double bookings, no manual reconciliation."
-    }
+  "teaser": {
+   "cta": "See all prices",
+   "abObjekt": "Every further property from {betrag}",
+   "provision": "Own website {direkt} · channels {portale}",
+   "tarif": "One plan for everyone, incl. 1st property"
   }
+ },
+ "funktionen": {
+  "rahmen": {
+   "ctaTesten": "Start 30 days free",
+   "ctaDemo": "See the demo",
+   "weiter": "On to the other features",
+   "mehr": "View",
+   "bereich": {
+    "verkauf": "Selling",
+    "gast": "Guests & money",
+    "betrieb": "Operations"
+   }
+  },
+  "uebersicht": {
+   "metaTitel": "Features — everything for rentals and hotels | myNextDays",
+   "metaBeschreibung": "Calendar, channel manager, direct booking, guest messaging, payments, pricing, team, app and reporting — one system, included in every plan.",
+   "eyebrow": "Features",
+   "headline": "Everything the day needs. In one system.",
+   "sub": "Nine areas, one login. Each of them belongs to the base plan — nothing starts only in a pricier package.",
+   "bereichSub": {
+    "verkauf": "Be visible and get bookings",
+    "gast": "From first contact to money received",
+    "betrieb": "Who does what — and what came of it"
+   }
+  },
+  "pms": {
+   "metaBeschreibung": "One calendar for every property: availability plan, reservations, tasks and property data in one place — for holiday rentals and hotels.",
+   "headline": "One calendar for everything you rent out.",
+   "sub": "Occupancy, reservations and property data live in one place — whether one holiday flat or twelve room types with several units.",
+   "bildAlt": "Availability plan with bookings from several channels",
+   "bildAltBlock": "Hotel availability plan with room types",
+   "nutzen": {
+    "a": {
+     "titel": "Everything at a glance",
+     "text": "The availability plan shows every unit, every booking and every block in one view — colour-coded by channel."
+    },
+    "b": {
+     "titel": "Book in seconds",
+     "text": "Create, move or cancel a reservation without switching views. Freed nights go back on sale immediately."
+    },
+    "c": {
+     "titel": "Property data that applies everywhere",
+     "text": "Amenities, photos and rules are maintained once — the channels and your own website get them automatically."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "One property, several units — mapped properly.",
+     "text": "Five identical studios are one type with five units, not a property maintained five times. Availability goes out as a number, exactly as the channels expect it.",
+     "punkte": {
+      "a": "Units per property type",
+      "b": "A building bundles several types",
+      "c": "Availability as a number, not yes/no"
+     }
+    }
+   }
+  },
+  "channel": {
+   "metaBeschreibung": "Channel manager for holiday rentals and hotels: Airbnb, Booking.com, Expedia, Vrbo and Google in sync in real time — no double bookings.",
+   "headline": "One calendar. Every booking channel.",
+   "sub": "Availability, rates and content go out to the channels in real time, bookings come back in the same beat. Double bookings never happen.",
+   "bildAlt": "Channel overview with connected booking platforms",
+   "bildAltBlock": "Availability plan with bookings from several channels",
+   "nutzen": {
+    "a": {
+     "titel": "56 platforms",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google and many more — connected through one interface, not through workarounds."
+    },
+    "b": {
+     "titel": "Two ways, one beat",
+     "text": "What you change here is visible there within seconds. What is booked there blocks the nights here at once."
+    },
+    "c": {
+     "titel": "Every channel on its own",
+     "text": "Rates, surcharges and rules apply per channel — no single setting that has to be the same everywhere just because it would be easier."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Stop-sell works everywhere. Without thinking.",
+     "text": "Block a date and it is closed on every connected channel. No follow-up in five extranets, no forgotten channel at the weekend.",
+     "punkte": {
+      "a": "Instant block on all channels",
+      "b": "Minimum stay per channel",
+      "c": "Log: what went out when"
+     }
+    }
+   }
+  },
+  "direkt": {
+   "metaBeschreibung": "Your own booking website, booking widget and domain — direct bookings without channel commission, including payment and confirmation.",
+   "headline": "Bookings that are entirely yours.",
+   "sub": "Your own booking site with availability, rates and payment. We take no commission on those — the channels take 15 to 18 percent.",
+   "bildAlt": "Property page with booking flow",
+   "bildAltBlock": "Channel overview with own website and marketplace",
+   "nutzen": {
+    "a": {
+     "titel": "A website without an agency",
+     "text": "Builder with templates, your own domain, photos and texts from your property data — online in an afternoon."
+    },
+    "b": {
+     "titel": "Widget for your site",
+     "text": "Already have a website? Then you only drop the booking flow in and keep your design."
+    },
+    "c": {
+     "titel": "Paid right away",
+     "text": "Deposit, balance and security deposit run automatically — the guest gets the confirmation without you lifting a finger."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "The marketplace brings you guests who do not know you.",
+     "text": "myBestDays is our own marketplace. You appear there next to other places without maintaining a second system — same properties, same calendar.",
+     "punkte": {
+      "a": "Switchable per channel",
+      "b": "One calendar for everything",
+      "c": "8 % all-in instead of channel commission"
+     }
+    }
+   }
+  },
+  "gaeste": {
+   "metaBeschreibung": "Digital guest guide, online check-in, automated messages and an AI concierge in 24 languages — from first contact to departure.",
+   "headline": "Look after guests without typing all day.",
+   "sub": "Messages go out automatically at the right moment, the concierge answers questions in 24 languages — and you read it all in one inbox.",
+   "bildAlt": "Inbox with guest messages from several channels",
+   "bildAltBlock": "Mobile view with occupancy and messages",
+   "nutzen": {
+    "a": {
+     "titel": "One inbox",
+     "text": "Airbnb, Booking, email and WhatsApp land in one thread — with the booking next to it, instead of in four apps."
+    },
+    "b": {
+     "titel": "Messages at the right time",
+     "text": "Confirmation, arrival details, door code, review request: set up once, then by itself."
+    },
+    "c": {
+     "titel": "Check-in beforehand",
+     "text": "The guest fills in their details before arrival. You welcome them instead of copying forms."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "The guest guide replaces the folder in the hallway.",
+     "text": "Wi-Fi password, bin day, restaurant tips and house rules — digital, in the guest's language, editable at any time.",
+     "punkte": {
+      "a": "24 languages",
+      "b": "Door codes at the right moment",
+      "c": "Tips from the area"
+     }
+    }
+   }
+  },
+  "zahlungen": {
+   "metaBeschreibung": "Online payments, deposits, security deposits and accounting-ready exports — money in without chasing it.",
+   "headline": "Money arrives without you chasing it.",
+   "sub": "Deposit on booking, balance before arrival, security deposit covered — collected automatically and documented in the booking.",
+   "bildAlt": "Booking with payment status and receipts",
+   "bildAltBlock": "Overview with revenue and payouts",
+   "nutzen": {
+    "a": {
+     "titel": "Paying as usual",
+     "text": "Card, Apple Pay, Google Pay, PayPal and local methods — the guest picks what they know."
+    },
+    "b": {
+     "titel": "Rules instead of reminders",
+     "text": "You define once what is due when. Missing payments are visible before the guest arrives."
+    },
+    "c": {
+     "titel": "Ready for the books",
+     "text": "Invoices come from the booking, exports fit your accountant — no spreadsheets by hand."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Owners see their statement themselves.",
+     "text": "Every owner has their own login with occupancy, revenue and payouts. That saves the monthly email with a spreadsheet attached.",
+     "punkte": {
+      "a": "Own login per owner",
+      "b": "Statement per property",
+      "c": "Read-only, no changes"
+     }
+    }
+   }
+  },
+  "preise": {
+   "metaBeschreibung": "Dynamic pricing with min./max., rate plans per property, season and occupancy logic — more revenue without daily handiwork.",
+   "headline": "Prices that look after themselves.",
+   "sub": "Season, occupancy, lead time and weekday feed in automatically. Your limits stay your limits: nothing goes below the minimum.",
+   "bildAlt": "Rate grid with dynamic prices per night",
+   "bildAltBlock": "Availability plan with prices per night",
+   "nutzen": {
+    "a": {
+     "titel": "Min and max hold",
+     "text": "You set the frame, the system moves inside it — no price you did not want."
+    },
+    "b": {
+     "titel": "Rate plans per property",
+     "text": "Non-refundable, early bird, long stay: several rates per property, each with its own rules."
+    },
+    "c": {
+     "titel": "Manual entry wins",
+     "text": "A price you set by hand stays. Automation never overwrites a deliberate decision."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Discounts and surcharges go out to the channels too.",
+     "text": "Weekly and monthly discounts, early-bird promotions and surcharges are published where they are allowed — not only in your own view.",
+     "punkte": {
+      "a": "Length-of-stay discounts",
+      "b": "Promotions with a period",
+      "c": "Surcharges per channel"
+     }
+    }
+   }
+  },
+  "team": {
+   "metaBeschreibung": "Roles for owners, housekeeping, staff and agencies — everyone sees only their area, with tasks and photo checklists.",
+   "headline": "Everyone sees exactly what they need.",
+   "sub": "Owners see their properties, housekeeping their jobs, staff their area. Finances stay where they belong.",
+   "bildAlt": "Task overview with responsibilities",
+   "bildAltBlock": "Reservation list with responsibilities",
+   "nutzen": {
+    "a": {
+     "titel": "Roles instead of arrangements",
+     "text": "Rights hang on the role, not on trust. A housekeeping login never reaches revenue."
+    },
+    "b": {
+     "titel": "Tasks with proof",
+     "text": "Checklists with photos show that the flat was handed over — including the time."
+    },
+    "c": {
+     "titel": "Assigned automatically",
+     "text": "After every departure the cleaning job appears by itself, with a deadline before the next arrival."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Agencies run several businesses side by side.",
+     "text": "Whoever rents out for others manages several owners in one account — with separate statements and their own logins.",
+     "punkte": {
+      "a": "Several owners",
+      "b": "Separate statements",
+      "c": "Rights per person"
+     }
+    }
+   }
+  },
+  "app": {
+   "metaBeschreibung": "Native app for the business, owners, guests and housekeeping — occupancy, tasks and messages on the go.",
+   "headline": "Your business fits in your pocket.",
+   "sub": "Check occupancy, create a booking, answer a message, tick off a task — from your phone, without a laptop.",
+   "bildAlt": "Mobile app with occupancy and tasks",
+   "bildAltBlock": "Overview of the business at the desk",
+   "nutzen": {
+    "a": {
+     "titel": "For every role",
+     "text": "Owners, housekeeping and the business each have their own view — same app, different rights."
+    },
+    "b": {
+     "titel": "Alerts that matter",
+     "text": "New booking, cancellation, guest question: you know at once, without opening the app."
+    },
+    "c": {
+     "titel": "For guests too",
+     "text": "Guests find the guest guide, check-in and messages in the myBestDays app."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Two apps, because two worlds.",
+     "text": "myNextDays runs the business, myBestDays belongs to the guest. Separate apps means no guest ever ends up in your figures.",
+     "punkte": {
+      "a": "myNextDays for the business",
+      "b": "myBestDays for the guest",
+      "c": "iOS and Android"
+     }
+    }
+   }
+  },
+  "auswertungen": {
+   "metaBeschreibung": "Occupancy, revenue, ADR and channel comparison — reports that show why, not just what happened.",
+   "headline": "Numbers you can decide on.",
+   "sub": "Occupancy, revenue and average rate per property, period and channel — side by side instead of in five exports.",
+   "bildAlt": "Report with occupancy and revenue",
+   "bildAltBlock": "Hotel availability plan as the data behind it",
+   "nutzen": {
+    "a": {
+     "titel": "Compare channels",
+     "text": "What does Booking bring in, what does your own site? Calculated with commission, not just by revenue."
+    },
+    "b": {
+     "titel": "Per property",
+     "text": "Which property carries itself and which does not — visible in occupancy and average rate."
+    },
+    "c": {
+     "titel": "Reports by themselves",
+     "text": "Monthly reports go out to you and your owners automatically, as a PDF in the familiar layout."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Past and outlook in one view.",
+     "text": "Next to what has been stands what is booked — so in February you can see whether the summer holds, instead of noticing it in July.",
+     "punkte": {
+      "a": "Bookings on the books ahead",
+      "b": "Comparison to last year",
+      "c": "Export for your accountant"
+     }
+    }
+   }
+  }
+ }
 }

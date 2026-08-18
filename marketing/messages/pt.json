@@ -1,479 +1,597 @@
 {
-  "meta": {
-    "title": "myNextDays – A plataforma para quem aluga alojamento local",
-    "description": "A plataforma para hotéis, agências e anfitriões de alojamento local: channel manager, calendário, reserva direta, comunicação com hóspedes e faturação num só lugar. Criada na Dinamarca, alojada na UE. A partir de 19,90 €/mês. 30 dias grátis."
+ "meta": {
+  "title": "myNextDays – A plataforma para quem aluga alojamento local",
+  "description": "A plataforma para hotéis, agências e anfitriões de alojamento local: channel manager, calendário, reserva direta, comunicação com hóspedes e faturação num só lugar. Criada na Dinamarca, alojada na UE. A partir de 19,90 €/mês. 30 dias grátis."
+ },
+ "nav": {
+  "funktionen": "Funcionalidades",
+  "preise": "Preços",
+  "kanaele": "Canais",
+  "kunden": "Clientes",
+  "ressourcen": "Recursos",
+  "sprache": "Idioma",
+  "spracheWaehlen": "Escolher idioma",
+  "anmelden": "Iniciar sessão",
+  "kostenlosStarten": "Começar gratuitamente",
+  "sprachModalTitel": "Idioma e região",
+  "sprachModalHeading": "Escolha um idioma",
+  "sprachModalHinweis": "A sua escolha aplica-se a este site e é assumida na sua conta.",
+  "schliessen": "Fechar",
+  "suche": "Procurar um idioma",
+  "keinTreffer": "Nenhum idioma encontrado.",
+  "menuOeffnen": "Abrir menu",
+  "menuSchliessen": "Fechar menu",
+  "menuCtaTitel": "Prefere ver uma vez?",
+  "menuCtaText": "Veja o software com dados reais, sem registo.",
+  "menuCtaKnopf": "Ver a demonstração",
+  "menuSpalte": {
+   "kern": "Venda",
+   "gast": "Hóspede e dinheiro",
+   "betrieb": "Operação"
   },
-  "nav": {
-    "funktionen": "Funcionalidades",
-    "preise": "Preços",
-    "kanaele": "Canais",
-    "kunden": "Clientes",
-    "ressourcen": "Recursos",
-    "sprache": "Idioma",
-    "spracheWaehlen": "Escolher idioma",
-    "anmelden": "Iniciar sessão",
-    "kostenlosStarten": "Começar gratuitamente",
-    "sprachModalTitel": "Idioma e região",
-    "sprachModalHeading": "Escolha um idioma",
-    "sprachModalHinweis": "A sua escolha aplica-se a este site e é assumida na sua conta.",
-    "schliessen": "Fechar",
-    "suche": "Procurar um idioma",
-    "keinTreffer": "Nenhum idioma encontrado."
+  "menuBildAlt": "Plano de ocupação no myNextDays"
+ },
+ "hero": {
+  "trustNeu": "Novidade 2026",
+  "trustVermieter": "de anfitriões para anfitriões",
+  "trustAirsmil": "powered by AirSmil",
+  "trustEu": "Alojada na UE (RGPD)",
+  "headlinePre": "Mais",
+  "headlineHighlight": "reservas",
+  "headlinePost": "menos trabalho.",
+  "subline": "A plataforma para hotéis, agências e anfitriões de alojamento local: channel manager, calendário, reserva direta, comunicação com hóspedes e faturação num só lugar, criada por anfitriões que conhecem o dia a dia.",
+  "ctaTrial": "Experimentar 30 dias grátis",
+  "ctaDemo": "Ver demonstração",
+  "kanaeleLabel": "Ligada às grandes plataformas de reservas",
+  "eyebrow": "A plataforma para quem aluga alojamento local",
+  "kanaeleEyebrow": "Canais de venda",
+  "aufnahmeBelegungsplan": "Plano de ocupação do myNextDays: oito alojamentos de férias com reservas do Booking.com, Airbnb, Vrbo, do marketplace e diretas",
+  "aufnahmeHotel": "Plano de ocupação de um hotel no myNextDays: doze quartos, cada um como unidade reservável própria",
+  "aufnahmeObjekte": "Vista geral dos alojamentos no myNextDays com fotos, estado e visibilidade por canal",
+  "aufnahmeKanaele": "Gestão de canais no myNextDays: portais de reservas ligados e o marketplace próprio"
+ },
+ "intro": {
+  "heading": "Bem-vindo à myNextDays.",
+  "p1": "Um property management system completo com channel manager, para hotéis, agências e anfitriões de alojamento local. Independente e justa, sem a complexidade e os preços enterprise dos grandes grupos.",
+  "p2": "Aumente a sua ocupação, simplifique o dia a dia e ofereça experiências memoráveis aos hóspedes, sem a complexidade nem os preços enterprise dos grandes sistemas.",
+  "p3": "Tudo num só lugar, automatização inteligente e ligação a todos os canais que interessam, além do seu próprio portal de reservas com comissões baixas. O seu negócio cresce com mais controlo e menos esforço.",
+  "cta": "Descobrir as funcionalidades",
+  "reichweite": "Feita para cada alojamento.",
+  "typen": {
+   "hotel": "Hotel",
+   "bnb": "B&B",
+   "gaestehaus": "Casa de hóspedes",
+   "motel": "Motel",
+   "lodge": "Lodge",
+   "ferienwohnung": "Alojamento de férias",
+   "resort": "Resort",
+   "huette": "Cabana",
+   "pension": "Pensão",
+   "campingplatz": "Parque de campismo"
+  },
+  "belegeHeading": "Aquilo com que pode contar",
+  "belege": {
+   "neu": "Novidade 2026: desenvolvida por anfitriões no ativo, powered by AirSmil",
+   "eu": "Criada na Dinamarca, alojada na UE e em conformidade com o RGPD",
+   "kanaele": "56 plataformas de reservas ligadas",
+   "start": "Lançamento a 1 de setembro de 2026 em 27 países europeus e 24 idiomas"
+  },
+  "eyebrow": "A plataforma",
+  "typenEyebrow": "Para quem é"
+ },
+ "zielgruppen": {
+  "bildAlt": "Interface myNextDays, exemplo {typ}",
+  "abschluss": "Qualquer que seja a forma — tudo é gerido no mesmo sistema, com o mesmo acesso.",
+  "typen": {
+   "hotel": {
+    "unterzeile": "Software hoteleiro com channel manager",
+    "text": "Os hotéis pequenos gerem os quartos como tipos: cada tipo tem as suas unidades e o plano de ocupação mostra cada quarto em separado — com chegada, saída e limpeza. Booking.com, Expedia e os restantes portais recebem o número de unidades livres, não um sim/não. Preços, estadia mínima e bloqueios definem-se uma vez e o channel manager distribui-os por todos os portais ligados. Fatura, pagamento e comunicação com o hóspede ficam no mesmo sistema.",
+    "beleg": "Disponibilidade como número, não como sim/não."
+   },
+   "bnb": {
+    "unterzeile": "Sistema de reservas para bed & breakfast",
+    "text": "Pequeno-almoço, toalhas, taxa de animais, chegada tardia: os extras ficam ligados à reserva e aparecem na fatura do hóspede sem contas à parte. Quem trata do B&B pessoalmente não quer uma segunda lista — pedidos, mensagens, pagamentos e ocupação juntam-se num só lugar, no computador e no telemóvel. O pagamento por cartão via Stripe está incluído, tal como a tua própria página de reservas sem comissão de portal.",
+    "beleg": "Extras faturados automaticamente."
+   },
+   "gaestehaus": {
+    "unterzeile": "Gestão de casas de hóspedes com vários quartos",
+    "text": "Várias unidades sob o mesmo teto, um calendário: que hóspede fica em que quarto decides até à chegada, sem criar a reserva de novo. O edifício determina o que os portais veem sob um identificador; equipamento, fotos e preços tratam-se por tipo de quarto. As tarefas de limpeza seguem as chegadas e saídas e chegam ao telemóvel da equipa — com um acesso que mostra tarefas, não receitas.",
+    "beleg": "Um edifício, um identificador de portal."
+   },
+   "motel": {
+    "unterzeile": "Software para motéis e estadias curtas",
+    "text": "Muita rotação, estadias curtas, chegadas tardias: informações de chegada, códigos de acesso e fatura chegam ao hóspede automaticamente — no momento certo e na sua língua, com 24 idiomas prontos. Os quartos que voltam a estar livres regressam sozinhos a todos os portais, e um stop-sell fecha-os em todos ao mesmo tempo. Na receção basta o plano do dia: quem chega, quem sai, o que está pendente.",
+    "beleg": "As mensagens seguem sozinhas."
+   },
+   "lodge": {
+    "unterzeile": "Arrendar uma lodge, também pelo telemóvel",
+    "text": "Isolado não é desligado: preços, estadia mínima, dias de mudança e bloqueios geres no telemóvel como na secretária — o mesmo calendário, a mesma reserva, sem estados intermédios. Os preços de época definem-se na grelha para um ano inteiro em vez de dia a dia, e os descontos por estadias longas chegam também aos portais. Mesmo sem receção, o hóspede sabe como entrar.",
+    "beleg": "Também em viagem, pela app."
+   },
+   "ferienwohnung": {
+    "unterzeile": "Channel manager para alojamento local",
+    "text": "Um apartamento, todos os canais: Booking.com, Airbnb, Vrbo, o nosso marketplace myBestDays e as reservas diretas do teu site partilham um calendário. Vendida uma noite, desaparece em todos — reservas duplicadas não acontecem. Podes favorecer de propósito as reservas diretas de baixa comissão: estratégia de preços própria, descontos para estadias longas, mensagens automáticas da reserva até à saída e pagamento por cartão na tua conta.",
+    "beleg": "Um calendário para todos os canais."
+   },
+   "resort": {
+    "unterzeile": "Gerir um resort com muitas unidades",
+    "text": "Estúdios, suites e villas funcionam como tipos próprios com preços, equipamentos e regras de ocupação próprios — todos numa conta e numa só faturação. Tantos alojamentos e tantas unidades por tipo quantos precisares, sem ninguém mudar de acesso. Receção, limpeza e proprietários veem apenas a sua parte; os acertos com proprietários surgem por alojamento com relatório, em vez de uma folha de cálculo no fim do mês.",
+    "beleg": "Tantos alojamentos por conta quantos quiseres."
+   },
+   "huette": {
+    "unterzeile": "Aluguer de cabanas em época",
+    "text": "Época sem trabalho manual: períodos fechados, dias de mudança, estadias mínimas e máximas definem-se uma vez e valem em todos os portais ao mesmo tempo. Se a cabana fecha no inverno, fecha em todo o lado — sem entrar em cinco extranets. O dia de mudança fica livre entre duas reservas para a limpeza ter tempo, e os dias de chegada ou saída bloqueiam-se separadamente.",
+    "beleg": "Um bloqueio vale em todos os portais."
+   },
+   "pension": {
+    "unterzeile": "Gestão de pensões com fatura e taxa turística",
+    "text": "Meia pensão, taxa turística, clientes habituais, pagamento no local: o sistema calcula suplementos e taxas corretamente por portal — mesmo onde o portal comunica um valor líquido e tu precisas do preço bruto. Faturas, notas de crédito e valores em aberto ficam no mesmo processo da reserva, na moeda do teu país. Os hóspedes que voltam reconheces pelo histórico, sem procurar em e-mails antigos.",
+    "beleg": "Taxas por portal, calculadas certas."
+   },
+   "campingplatz": {
+    "unterzeile": "Gestão de parques de campismo com lugares",
+    "text": "Lugares, caravanas de aluguer e tendas de glamping são tipos com quantidade: vinte lugares iguais são um tipo com vinte unidades, não vinte calendários. A disponibilidade vai para os portais como número, para nunca vender mais do que existe. Eletricidade, taxa turística ou cão cobram-se por noite ou por estadia, e as chegadas do dia ficam reunidas no plano diário.",
+    "beleg": "Uma quantidade em vez de vinte calendários."
+   }
+  }
+ },
+ "faq": {
+  "eyebrow": "Perguntas frequentes",
+  "heading": "As perguntas que surgem antes de mudar de sistema.",
+  "sub": "O que a plataforma faz, quanto custa e como os teus dados estão protegidos — sem linguagem de marketing.",
+  "was": {
+   "frage": "O que é exatamente o myNextDays?",
+   "antwort": "O myNextDays é um sistema de gestão de propriedades e um channel manager num só — para hotéis, pensões, casas de hóspedes, alojamento local, parques de campismo e agências. Calendário, reservas, preços, portais, reserva direta, comunicação com o hóspede, limpeza e faturação ficam numa única interface com um só acesso, em vez de quatro ferramentas que se ignoram."
+  },
+  "portale": {
+   "frage": "Que portais de reservas posso ligar?",
+   "antwort": "Chegas a 56 plataformas de reservas, entre elas Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda e Tripadvisor. Juntam-se o nosso marketplace myBestDays, um widget de reservas para o teu site e canais regionais. Cada canal liga-se em separado: decides por alojamento onde ele está visível."
+  },
+  "sync": {
+   "frage": "Com que rapidez sincroniza — e podem acontecer reservas duplicadas?",
+   "antwort": "A sincronização é nos dois sentidos e em tempo real: uma reserva num portal bloqueia essa noite em todos os outros, e preços ou estadias mínimas alterados saem de imediato. Todos os canais partilham um calendário, por isso não surge uma segunda verdade. Um stop-sell fecha em todos ao mesmo tempo, não só onde o aplicas."
+  },
+  "betriebsarten": {
+   "frage": "Serve para um hotel e para alojamento local ao mesmo tempo?",
+   "antwort": "Sim, é o mesmo modelo: cada alojamento é exatamente um tipo — um tipo de quarto no hotel ou um alojamento de férias — e por baixo ficam as suas unidades. Um hotel com oito quartos duplos e quatro individuais tem dois alojamentos com oito e quatro unidades. Os portais recebem o número de unidades livres, para que cinco estúdios iguais não precisem de cinco calendários."
+  },
+  "direkt": {
+   "frage": "Tenho uma página de reservas própria sem comissão de portal?",
+   "antwort": "Sim. Cada conta inclui o seu portal de reservas, um widget para o site existente e um construtor de sites com domínio próprio. As reservas diretas custam 0,5 % em vez dos 15–18 % de comissão dos grandes portais, usam o mesmo calendário e os mesmos preços — e o dinheiro entra diretamente na tua conta."
+  },
+  "marktplatz": {
+   "frage": "O que é o myBestDays?",
+   "antwort": "O myBestDays é o nosso marketplace para hóspedes — um canal de reservas ao mesmo nível do Booking.com e do Airbnb, apenas com uma comissão muito mais baixa. Os alojamentos que tornas visíveis lá aparecem no marketplace e na app myBestDays para hóspedes. Essa visibilidade é um interruptor próprio, independente dos portais."
+  },
+  "zahlungen": {
+   "frage": "Como funcionam pagamentos, sinais e faturas?",
+   "antwort": "Os pagamentos online passam pelo Stripe para a tua própria conta: sinal, pagamento final ou caução, por cartão e pelos métodos que o Stripe oferece no país do hóspede. Faturas e notas de crédito nascem da reserva, na moeda do alojamento, com exportações prontas para contabilidade. Taxas de portal e impostos são calculados corretamente por portal — mesmo onde um portal só comunica um valor líquido."
+  },
+  "laender": {
+   "frage": "Em que países, moedas e idiomas funciona a plataforma?",
+   "antwort": "No arranque, a 1 de setembro de 2026, em 27 países europeus. Interface e comunicação com o hóspede existem em 24 idiomas; o hóspede lê a confirmação na sua língua. A moeda pertence ao alojamento ou ao negócio — não se presume o euro, coroas, złoty ou forints são geridos da mesma forma."
+  },
+  "rollen": {
+   "frage": "Quem vê que dados — proprietários, limpeza, hóspedes?",
+   "antwort": "Cada função tem o seu acesso e vê apenas a sua parte. Os proprietários veem os seus alojamentos, a ocupação e os seus acertos, mas não os de outros. A limpeza vê tarefas com listas de verificação com fotos, não receitas. Os hóspedes têm a sua área com check-in, guia digital e mensagens."
+  },
+  "app": {
+   "frage": "Existe uma app?",
+   "antwort": "Duas, porque hóspede e operação precisam de coisas diferentes: a app myNextDays para o negócio, proprietários e limpeza — calendário, reservas e tarefas em movimento — e a app myBestDays para hóspedes com pesquisa, reserva, check-in e mensagens. Ambas falam com o mesmo sistema; nada corre sobre uma cópia."
+  },
+  "sicherheit": {
+   "frage": "E quanto à proteção de dados e à segurança?",
+   "antwort": "Construído na Dinamarca, alojado na UE, conforme o RGPD incluindo contrato de subcontratação. Os dados de cada negócio estão separados a nível de base de dados, não apenas na interface. A autenticação em dois fatores está disponível, as permissões por função limitam o acesso a dados financeiros e de hóspedes, e cada início de sessão é rastreável no histórico de dispositivos."
+  },
+  "preis": {
+   "frage": "Quanto custa o myNextDays e como começo?",
+   "antwort": "30 dias grátis, sem prazo mínimo, sem taxa de instalação, cancelável a qualquer momento. Depois uma subscrição mais uma comissão reduzida sobre as reservas que trazemos. Módulos adicionais — contabilidade ampliada com exportação DATEV, gestão de pessoal ou funções de hotel — só se juntam se precisares. Cria um alojamento, liga os canais, avança."
+  }
+ },
+ "benefits": {
+  "eyebrow": "Porquê a myNextDays",
+  "sub": "Três coisas que contam mesmo no dia a dia do alojamento: é para isso que a plataforma foi feita.",
+  "heading": "Mais reservas. Menos trabalho.",
+  "buchungen": {
+   "title": "Conquistar mais reservas",
+   "text": "Esteja visível em todos os grandes canais e no seu próprio site. Um calendário central mantém tudo sincronizado: acabaram-se as reservas duplicadas."
+  },
+  "betrieb": {
+   "title": "Simplificar a operação",
+   "text": "Faça a gestão de alojamentos, reservas, limpezas e faturação num só lugar, na secretária ou em movimento."
+  },
+  "fair": {
+   "title": "Justa e europeia",
+   "text": "Um preço transparente sem barreiras enterprise, criada na Dinamarca e alojada na UE segundo o RGPD. Apoio pessoal da equipa que usa o software no seu próprio dia a dia."
+  },
+  "preisBanner": {
+   "eyebrow": "Preço",
+   "heading": "Tudo o que o seu alojamento precisa, num só lugar",
+   "text": "30 dias grátis. Sem período mínimo. Cancele quando quiser (4 semanas antes do fim do mês).",
+   "proMonat": "por mês"
+  }
+ },
+ "trial": {
+  "eyebrow": "Teste gratuito",
+  "heading": "Experimente a myNextDays 30 dias grátis.",
+  "sub": "Sem período mínimo. Cancele quando quiser. Basta preencher este pequeno formulário:",
+  "seitenHeading": "Tudo o que o seu alojamento precisa num só lugar: mais controlo, menos esforço.",
+  "perks": {
+   "buchungen": {
+    "title": "Mais reservas",
+    "text": "em todos os grandes canais e no seu próprio portal, sem reservas duplicadas."
+   },
+   "kontrolle": {
+    "title": "Controlo total",
+    "text": "sobre check-ins, reservas e faturas num só lugar."
+   },
+   "freiheit": {
+    "title": "Mais liberdade",
+    "text": "faça a gestão do seu alojamento pelo telemóvel, esteja onde estiver."
+   }
+  },
+  "vorname": "Nome próprio",
+  "nachname": "Apelido",
+  "email": "E-mail",
+  "emailPlatzhalter": "nome@exemplo.pt",
+  "einwilligung": "Sim, quero receber ocasionalmente novidades, convites para webinars e ofertas da myNextDays. Pode retirar o seu consentimento a qualquer momento.",
+  "absenden": "Começar agora",
+  "dankeTitel": "Muito obrigado!",
+  "dankeText": "Entramos em contacto consigo muito em breve."
+ },
+ "features": {
+  "heading": "Um sistema. Um acesso.",
+  "baldBadge": "Em breve",
+  "hinweis": "A faturação base está incluída no lançamento. A contabilidade avançada (exportação DATEV), a gestão de colaboradores, o marketplace de prestadores e as funcionalidades para hotelaria são módulos adicionais.",
+  "eyebrow": "Funcionalidades",
+  "sub": "Um acesso para o negócio, os proprietários, os hóspedes e as limpezas: cada perfil vê exatamente a sua área.",
+  "alleAnsehen": "Descobrir todas as funcionalidades no teste gratuito",
+  "neu": {
+   "title": "myNextDays IA e avatar",
+   "text": "Avatar e comandos de voz, concierge com IA para as perguntas dos hóspedes e tarifas que acompanham a época e a procura."
+  },
+  "gruppen": {
+   "pms": {
+    "title": "Property management",
+    "items": "Multicalendário central, mapa de ocupação, reservas, tarefas, dados do alojamento e comodidades"
+   },
+   "channel": {
+    "title": "Channel manager",
+    "items": "56 plataformas de reservas, Airbnb, Booking.com, Expedia, Vrbo, Google, sincronização bidirecional em tempo real"
+   },
+   "direkt": {
+    "title": "Reserva direta",
+    "items": "Portal de reservas próprio, widget de reservas, construtor de sites, domínio próprio, 0,5 % em vez de 15–18 % de comissão OTA"
+   },
+   "preise": {
+    "title": "Tarifas e receita",
+    "items": "Preços dinâmicos com mín./máx., rate plans por alojamento, lógica de época e ocupação, as tarifas manuais têm prioridade"
+   },
+   "gaeste": {
+    "title": "Experiência do hóspede",
+    "items": "Guia digital do hóspede, concierge com IA, check-in online, mensagens automáticas, 24 idiomas"
+   },
+   "zahlungen": {
+    "title": "Pagamentos e faturação",
+    "items": "Pagamentos online, sinais, cauções, faturação base, exportações prontas para a contabilidade"
+   },
+   "team": {
+    "title": "Equipa e perfis",
+    "items": "Acesso de proprietário com pagamentos, acesso de limpeza com checklists com fotografias, tarefas, permissões separadas"
+   },
+   "app": {
+    "title": "Aplicação móvel",
+    "items": "Aplicação nativa com acessos próprios para proprietários, hóspedes e limpezas, gira o negócio onde quer que esteja"
+   },
+   "auswertungen": {
+    "title": "Análises",
+    "items": "Ocupação, receita, ADR, relatórios automáticos, comparação de canais, metapesquisa em breve"
+   }
+  }
+ },
+ "ki": {
+  "eyebrow": "IA e voz",
+  "heading": "A plataforma trata da rotina por si.",
+  "sub": "Comande tudo sem usar as mãos, deixe as perguntas dos hóspedes responderem-se sozinhas e as tarifas acompanharem o mercado, sem ter de aprender um único percurso de cliques.",
+  "voice": {
+   "title": "Avatar / comando por voz",
+   "text": "Comande tudo por voz e deixe um avatar responder: consulte a ocupação, faça a gestão de reservas e tarefas, altere tarifas, enquanto está a caminho ou a preparar um alojamento."
+  },
+  "concierge": {
+   "title": "Um concierge com IA para os seus hóspedes",
+   "text": "O guia digital do hóspede responde sozinho sobre a palavra-passe do Wi-Fi, a caixa de chaves, o lixo e as dicas locais, em 24 idiomas e 24 horas por dia."
+  },
+  "preise": {
+   "title": "Tarifas que pensam consigo",
+   "text": "Defina um preço base com mínimo e máximo por alojamento; os preços por noite acompanham a época, a ocupação e a procura. As tarifas manuais têm sempre prioridade."
+  },
+  "cta": "Ver as funcionalidades",
+  "blaseFrage": "Como está a ocupação na próxima semana?",
+  "blaseAntwort": "18 de 24 noites ocupadas. Dois espaços livres no fim de semana: baixamos o preço?",
+  "eingabe": "Pergunte à myNextDays …",
+  "baldBadge": "Em breve"
+ },
+ "integrationen": {
+  "eyebrow": "Alcance",
+  "heading": "56 plataformas de reservas, um único ecrã.",
+  "p1": "Distribui disponibilidade, tarifas e restrições por 56 plataformas de reservas, entre elas Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda e Tripadvisor. Sincronização bidirecional em tempo real: uma reserva num portal bloqueia essa noite em todos os outros.",
+  "p2": "A isto junta-se a sua própria venda: o portal de reservas com comissões baixas na myBestDays, um widget de reservas para o seu site e canais regionais que pode ativar um a um. Cada canal é controlado em separado: é você que decide onde um alojamento fica visível.",
+  "cta": "Ligar canais no teste gratuito"
+ },
+ "testimonials": {
+  "eyebrow": "Por trás da plataforma",
+  "heading": "Porque criámos a myNextDays.",
+  "gruenderin": {
+   "quote": "A myNextDays nasceu do nosso próprio dia a dia de alojamento na AirSmil: estamos a criar exatamente o software de que teríamos precisado.",
+   "name": "Jeanine Ågaard",
+   "location": "Fundadora da myNextDays / AirSmil"
+  }
+ },
+ "stimmen": {
+  "eyebrow": "Vozes do terreno",
+  "heading": "O que dizem os anfitriões.",
+  "vorschauHinweis": "Pré-visualização do layout com textos de exemplo: aqui aparecerão depois citações reais e aprovadas.",
+  "zurueck": "Testemunho anterior",
+  "vor": "Testemunho seguinte",
+  "zeigeStimme": "Mostrar testemunho {nummer}"
+ },
+ "stats": {
+  "eyebrow": "Números que conseguimos provar",
+  "heading": "A plataforma de alojamento, criada por quem aluga.",
+  "sub": "Lançamento a 1 de setembro de 2026 em 27 países.",
+  "laender": {
+   "value": "27",
+   "label": "Países",
+   "text": "Países europeus no lançamento"
+  },
+  "sprachen": {
+   "value": "24",
+   "label": "Idiomas",
+   "text": "Interface e comunicação com os hóspedes"
+  },
+  "kanaele": {
+   "value": "56",
+   "label": "Plataformas",
+   "text": "Plataformas de reservas ligadas"
+  },
+  "hosting": {
+   "value": "100 %",
+   "label": "Alojamento na UE",
+   "text": "Criada na Dinamarca, em conformidade com o RGPD"
+  },
+  "vermieter": {
+   "label": "Criada por anfitriões",
+   "text": "Nascida do dia a dia real do alojamento na AirSmil"
+  }
+ },
+ "usecases": {
+  "eyebrow": "Para quem construímos",
+  "heading": "Três tipos de negócio, uma plataforma.",
+  "sub": "Um alojamento de férias, um quarto de hotel ou uma carteira inteira: a mesma interface, montada de forma diferente para cada negócio.",
+  "ferienobjekt": {
+   "label": "Alojamento de férias",
+   "title": "Casas e apartamentos de férias",
+   "text": "Um ou vários alojamentos que aluga por conta própria: sem receção, mas com entregas de chaves, limpezas e perguntas de hóspedes.",
+   "punkte": {
+    "kanaele": "Portais e o seu próprio site num único calendário",
+    "kalender": "Planeie limpezas e entregas por alojamento",
+    "gaeste": "Check-in online e guia digital do hóspede em 24 idiomas"
+   }
+  },
+  "hotel": {
+   "label": "Hotel e pensão",
+   "title": "Quartos, não contentores",
+   "text": "Cada quarto é uma unidade reservável própria com as suas tarifas: sem desvios por categorias de quarto com quantidades.",
+   "punkte": {
+    "zimmer": "Disponibilidade ao nível do quarto em todos os portais",
+    "raten": "Rate plans por quarto, derivados ou manuais",
+    "rezeption": "Visão diária de chegadas e partidas"
+   }
+  },
+  "agentur": {
+   "label": "Agência e gestão",
+   "title": "Uma carteira com vários proprietários",
+   "text": "Faz a gestão de alojamentos de terceiros: contas separadas, um acesso por proprietário e números claros para cada alojamento.",
+   "punkte": {
+    "portfolio": "Todos os alojamentos num único mapa de ocupação",
+    "eigentuemer": "Acesso de proprietário com ocupação e pagamentos",
+    "abrechnung": "Extratos e comissões por alojamento"
+   }
+  }
+ },
+ "footer": {
+  "claim": "A plataforma para quem aluga alojamento local: mais reservas, menos trabalho.",
+  "appLaden": "Transferir a aplicação",
+  "spalten": {
+   "produkt": "Produto",
+   "loesungen": "Soluções",
+   "ressourcen": "Recursos",
+   "unternehmen": "Empresa"
+  },
+  "produkt": {
+   "pms": "Property management",
+   "channelManager": "Channel manager",
+   "direktbuchung": "Reserva direta",
+   "zahlungen": "Pagamentos",
+   "mobileApp": "Aplicação móvel"
+  },
+  "loesungen": {
+   "hotels": "Hotéis",
+   "bnb": "B&B",
+   "gaestehaeuser": "Casas de hóspedes",
+   "ferienwohnungen": "Alojamentos de férias",
+   "campingplaetze": "Parques de campismo"
+  },
+  "ressourcen": {
+   "blog": "Blogue",
+   "hilfeCenter": "Centro de ajuda",
+   "webinare": "Webinars",
+   "leitfaeden": "Guias",
+   "api": "Documentação da API"
+  },
+  "unternehmen": {
+   "ueberUns": "Sobre nós",
+   "karriere": "Carreiras",
+   "partner": "Parceiros",
+   "kontakt": "Contacto",
+   "presse": "Imprensa"
+  },
+  "copyright": "© 2026 myNextDays. Todos os direitos reservados.",
+  "agb": "Termos e condições",
+  "datenschutz": "Privacidade",
+  "impressum": "Informação legal",
+  "cookies": "Política de cookies",
+  "avv": "Tratamento de dados"
+ },
+ "abschluss": {
+  "heading": "Pronto para gerir o seu alojamento a partir de um só lugar?",
+  "sub": "Experimente 30 dias grátis: sem período mínimo, sem custos de ativação e cancele quando quiser.",
+  "ctaPrimaer": "Experimentar 30 dias grátis",
+  "ctaSekundaer": "Ver preços"
+ },
+ "chat": {
+  "titel": "Dúvidas? Estamos aqui.",
+  "untertitel": "Normalmente respondemos em poucas horas.",
+  "name": "Nome",
+  "email": "E-mail",
+  "telefon": "Telefone (opcional)",
+  "nachricht": "A sua mensagem",
+  "absenden": "Enviar mensagem",
+  "sendet": "A enviar …",
+  "platzhalter": "Escreva uma mensagem …",
+  "senden": "Enviar",
+  "oeffnen": "Abrir o chat",
+  "schliessen": "Fechar o chat",
+  "hinweis": "Usamos os seus dados apenas para responder a este pedido.",
+  "fehler": "Não resultou. Tente novamente mais tarde."
+ },
+ "einblicke": {
+  "eyebrow": "Por dentro",
+  "heading": "Como o myNextDays funciona realmente",
+  "sub": "Nada de vistas desenhadas — imagens de uma operação a decorrer, com reservas reais de todos os canais.",
+  "hotel": {
+   "title": "Hotel e alojamento de férias numa só interface",
+   "text": "Cada quarto é uma unidade reservável própria — o mesmo modelo da casa de férias. O plano de ocupação mostra chegadas, estadias e partidas por unidade, com ocupação, receita e preço médio por noite no período."
+  },
+  "objekte": {
+   "title": "Visibilidade por canal, não um interruptor para tudo",
+   "text": "Site, marketplace e portais de reservas são três eixos separados. Um alojamento pode continuar ativo no seu próprio site enquanto está pausado nos portais — visível num relance, comutável num clique."
+  },
+  "kanaele": {
+   "title": "Ligar portais e manter o seu canal direto",
+   "text": "Booking.com, Airbnb e outros portais assentam na mesma disponibilidade da reserva direta. Uma noite reservada bloqueia em todo o lado — sem sobre-reservas, sem correções manuais."
+  }
+ },
+ "preise": {
+  "meta": {
+   "titel": "Preços — um plano, tudo incluído | myNextDays",
+   "beschreibung": "Um plano com todas as funcionalidades, pago consoante o número de alojamentos. Sem período mínimo, sem taxa de adesão, 30 dias grátis — canais, reserva direta, comunicação com hóspedes e faturação incluídos."
   },
   "hero": {
-    "trustNeu": "Novidade 2026",
-    "trustVermieter": "de anfitriões para anfitriões",
-    "trustAirsmil": "powered by AirSmil",
-    "trustEu": "Alojada na UE (RGPD)",
-    "headlinePre": "Mais",
-    "headlineHighlight": "reservas",
-    "headlinePost": "menos trabalho.",
-    "subline": "A plataforma para hotéis, agências e anfitriões de alojamento local: channel manager, calendário, reserva direta, comunicação com hóspedes e faturação num só lugar, criada por anfitriões que conhecem o dia a dia.",
-    "ctaTrial": "Experimentar 30 dias grátis",
-    "ctaDemo": "Ver demonstração",
-    "kanaeleLabel": "Ligada às grandes plataformas de reservas",
-    "eyebrow": "A plataforma para quem aluga alojamento local",
-    "kanaeleEyebrow": "Canais de venda",
-    "aufnahmeBelegungsplan": "Plano de ocupação do myNextDays: oito alojamentos de férias com reservas do Booking.com, Airbnb, Vrbo, do marketplace e diretas",
-    "aufnahmeHotel": "Plano de ocupação de um hotel no myNextDays: doze quartos, cada um como unidade reservável própria",
-    "aufnahmeObjekte": "Vista geral dos alojamentos no myNextDays com fotos, estado e visibilidade por canal",
-    "aufnahmeKanaele": "Gestão de canais no myNextDays: portais de reservas ligados e o marketplace próprio"
+   "eyebrow": "Preços",
+   "headlinePre": "Um plano.",
+   "headlineHighlight": "Tudo incluído.",
+   "sub": "Sem puzzle de pacotes: todas as funcionalidades estão incluídas, quer gira um alojamento local quer doze tipos de quarto. Paga consoante o número de alojamentos — e quantos mais tiver, mais barato fica cada um.",
+   "testen": "30 dias grátis",
+   "laufzeit": "Sem período mínimo",
+   "einrichtung": "Sem taxa de adesão",
+   "eu": "Alojado na UE, RGPD"
   },
-  "intro": {
-    "heading": "Bem-vindo à myNextDays.",
-    "p1": "Um property management system completo com channel manager, para hotéis, agências e anfitriões de alojamento local. Independente e justa, sem a complexidade e os preços enterprise dos grandes grupos.",
-    "p2": "Aumente a sua ocupação, simplifique o dia a dia e ofereça experiências memoráveis aos hóspedes, sem a complexidade nem os preços enterprise dos grandes sistemas.",
-    "p3": "Tudo num só lugar, automatização inteligente e ligação a todos os canais que interessam, além do seu próprio portal de reservas com comissões baixas. O seu negócio cresce com mais controlo e menos esforço.",
-    "cta": "Descobrir as funcionalidades",
-    "reichweite": "Feita para cada alojamento.",
-    "typen": {
-      "hotel": "Hotel",
-      "bnb": "B&B",
-      "gaestehaus": "Casa de hóspedes",
-      "motel": "Motel",
-      "lodge": "Lodge",
-      "ferienwohnung": "Alojamento de férias",
-      "resort": "Resort",
-      "huette": "Cabana",
-      "pension": "Pensão",
-      "campingplatz": "Parque de campismo"
-    },
-    "belegeHeading": "Aquilo com que pode contar",
-    "belege": {
-      "neu": "Novidade 2026: desenvolvida por anfitriões no ativo, powered by AirSmil",
-      "eu": "Criada na Dinamarca, alojada na UE e em conformidade com o RGPD",
-      "kanaele": "56 plataformas de reservas ligadas",
-      "start": "Lançamento a 1 de setembro de 2026 em 27 países europeus e 24 idiomas"
-    },
-    "eyebrow": "A plataforma",
-    "typenEyebrow": "Para quem é"
+  "rechner": {
+   "einTarif": "Um plano, âmbito completo",
+   "objekte": "Alojamentos",
+   "reglerLabel": "Definir o número de alojamentos",
+   "wenigerLabel": "Menos um alojamento",
+   "mehrLabel": "Mais um alojamento",
+   "proMonat": "por mês",
+   "schnitt": "São {betrag} por alojamento e por mês.",
+   "grundgebuehr": "Taxa base (1.º alojamento incluído)",
+   "weitereObjekte": "{anzahl, plural, =1 {mais um alojamento} other {mais # alojamentos}} × {jeObjekt}",
+   "netto": "Valores sem IVA. Faturação mensal, cancelável a qualquer momento.",
+   "ctaTesten": "Experimentar 30 dias grátis",
+   "ctaDemo": "Ver a demonstração",
+   "inklusivTitel": "Incluído em qualquer plano",
+   "inklusivSub": "Nada que só comece num pacote mais caro — este é todo o âmbito.",
+   "nichtAbrufbar": "Preços indisponíveis de momento",
+   "nichtAbrufbarText": "Não foi possível carregar a lista de preços. Recarregue a página ou escreva-nos — indicamos o preço para o seu número de alojamentos.",
+   "direktfrei": "0 % de comissão nas reservas pelo seu próprio site"
   },
-  "zielgruppen": {
-    "bildAlt": "Interface myNextDays, exemplo {typ}",
-    "abschluss": "Qualquer que seja a forma — tudo é gerido no mesmo sistema, com o mesmo acesso.",
-    "typen": {
-      "hotel": {
-        "unterzeile": "Software hoteleiro com channel manager",
-        "text": "Os hotéis pequenos gerem os quartos como tipos: cada tipo tem as suas unidades e o plano de ocupação mostra cada quarto em separado — com chegada, saída e limpeza. Booking.com, Expedia e os restantes portais recebem o número de unidades livres, não um sim/não. Preços, estadia mínima e bloqueios definem-se uma vez e o channel manager distribui-os por todos os portais ligados. Fatura, pagamento e comunicação com o hóspede ficam no mesmo sistema.",
-        "beleg": "Disponibilidade como número, não como sim/não."
-      },
-      "bnb": {
-        "unterzeile": "Sistema de reservas para bed & breakfast",
-        "text": "Pequeno-almoço, toalhas, taxa de animais, chegada tardia: os extras ficam ligados à reserva e aparecem na fatura do hóspede sem contas à parte. Quem trata do B&B pessoalmente não quer uma segunda lista — pedidos, mensagens, pagamentos e ocupação juntam-se num só lugar, no computador e no telemóvel. O pagamento por cartão via Stripe está incluído, tal como a tua própria página de reservas sem comissão de portal.",
-        "beleg": "Extras faturados automaticamente."
-      },
-      "gaestehaus": {
-        "unterzeile": "Gestão de casas de hóspedes com vários quartos",
-        "text": "Várias unidades sob o mesmo teto, um calendário: que hóspede fica em que quarto decides até à chegada, sem criar a reserva de novo. O edifício determina o que os portais veem sob um identificador; equipamento, fotos e preços tratam-se por tipo de quarto. As tarefas de limpeza seguem as chegadas e saídas e chegam ao telemóvel da equipa — com um acesso que mostra tarefas, não receitas.",
-        "beleg": "Um edifício, um identificador de portal."
-      },
-      "motel": {
-        "unterzeile": "Software para motéis e estadias curtas",
-        "text": "Muita rotação, estadias curtas, chegadas tardias: informações de chegada, códigos de acesso e fatura chegam ao hóspede automaticamente — no momento certo e na sua língua, com 24 idiomas prontos. Os quartos que voltam a estar livres regressam sozinhos a todos os portais, e um stop-sell fecha-os em todos ao mesmo tempo. Na receção basta o plano do dia: quem chega, quem sai, o que está pendente.",
-        "beleg": "As mensagens seguem sozinhas."
-      },
-      "lodge": {
-        "unterzeile": "Arrendar uma lodge, também pelo telemóvel",
-        "text": "Isolado não é desligado: preços, estadia mínima, dias de mudança e bloqueios geres no telemóvel como na secretária — o mesmo calendário, a mesma reserva, sem estados intermédios. Os preços de época definem-se na grelha para um ano inteiro em vez de dia a dia, e os descontos por estadias longas chegam também aos portais. Mesmo sem receção, o hóspede sabe como entrar.",
-        "beleg": "Também em viagem, pela app."
-      },
-      "ferienwohnung": {
-        "unterzeile": "Channel manager para alojamento local",
-        "text": "Um apartamento, todos os canais: Booking.com, Airbnb, Vrbo, o nosso marketplace myBestDays e as reservas diretas do teu site partilham um calendário. Vendida uma noite, desaparece em todos — reservas duplicadas não acontecem. Podes favorecer de propósito as reservas diretas de baixa comissão: estratégia de preços própria, descontos para estadias longas, mensagens automáticas da reserva até à saída e pagamento por cartão na tua conta.",
-        "beleg": "Um calendário para todos os canais."
-      },
-      "resort": {
-        "unterzeile": "Gerir um resort com muitas unidades",
-        "text": "Estúdios, suites e villas funcionam como tipos próprios com preços, equipamentos e regras de ocupação próprios — todos numa conta e numa só faturação. Tantos alojamentos e tantas unidades por tipo quantos precisares, sem ninguém mudar de acesso. Receção, limpeza e proprietários veem apenas a sua parte; os acertos com proprietários surgem por alojamento com relatório, em vez de uma folha de cálculo no fim do mês.",
-        "beleg": "Tantos alojamentos por conta quantos quiseres."
-      },
-      "huette": {
-        "unterzeile": "Aluguer de cabanas em época",
-        "text": "Época sem trabalho manual: períodos fechados, dias de mudança, estadias mínimas e máximas definem-se uma vez e valem em todos os portais ao mesmo tempo. Se a cabana fecha no inverno, fecha em todo o lado — sem entrar em cinco extranets. O dia de mudança fica livre entre duas reservas para a limpeza ter tempo, e os dias de chegada ou saída bloqueiam-se separadamente.",
-        "beleg": "Um bloqueio vale em todos os portais."
-      },
-      "pension": {
-        "unterzeile": "Gestão de pensões com fatura e taxa turística",
-        "text": "Meia pensão, taxa turística, clientes habituais, pagamento no local: o sistema calcula suplementos e taxas corretamente por portal — mesmo onde o portal comunica um valor líquido e tu precisas do preço bruto. Faturas, notas de crédito e valores em aberto ficam no mesmo processo da reserva, na moeda do teu país. Os hóspedes que voltam reconheces pelo histórico, sem procurar em e-mails antigos.",
-        "beleg": "Taxas por portal, calculadas certas."
-      },
-      "campingplatz": {
-        "unterzeile": "Gestão de parques de campismo com lugares",
-        "text": "Lugares, caravanas de aluguer e tendas de glamping são tipos com quantidade: vinte lugares iguais são um tipo com vinte unidades, não vinte calendários. A disponibilidade vai para os portais como número, para nunca vender mais do que existe. Eletricidade, taxa turística ou cão cobram-se por noite ou por estadia, e as chegadas do dia ficam reunidas no plano diário.",
-        "beleg": "Uma quantidade em vez de vinte calendários."
-      }
-    }
+  "provisionen": {
+   "eyebrow": "Comissões",
+   "heading": "Quanto custa uma reserva?",
+   "sub": "Depende de onde vem o hóspede. Três caminhos, três taxas — nada mais.",
+   "direktTitel": "O hóspede reserva consigo",
+   "direktText": "Pelo seu próprio site ou pelo seu formulário de reserva. Daí não retiramos nada. Fica apenas a taxa do seu prestador de pagamentos.",
+   "direktWert": "0 %",
+   "portaleTitel": "O hóspede vem do Booking, Airbnb e afins",
+   "portaleText": "Cobramos 0,5 % do valor da reserva, uma vez por mês na sua fatura. O que o portal retém é independente disto.",
+   "marktplatzTitel": "O hóspede vem pelo myBestDays",
+   "marktplatzText": "O nosso marketplace. Aqui encontram-no hóspedes que ainda não o conhecem. Trazemos a reserva, cobramos o dinheiro e pagamos-lho — por isso ficamos com 8 %. Não há mais custos.",
+   "deckel": "E há um limite: nas reservas de portais nunca paga mais de {betrag} por mês."
+  },
+  "module": {
+   "eyebrow": "Módulos adicionais",
+   "heading": "Junte apenas o que precisa mesmo.",
+   "sub": "O plano base cobre o dia a dia. Só precisa destes módulos se o seu negócio precisar deles — contratam-se e cancelam-se mensalmente.",
+   "buchhaltungTitel": "Contabilidade",
+   "buchhaltungText": "Lógica de faturação e exportação para o contabilista, com exportação DATEV e e-conomic.",
+   "mitarbeiterTitel": "Colaboradores",
+   "mitarbeiterText": "Planeamento de turnos e tarefas para limpeza, receção e manutenção.",
+   "hotelTitel": "Hotel",
+   "hotelText": "Operação de receção com front desk — para casas com vários tipos de quarto. Faturado por quarto, não por casa.",
+   "dynamischTitel": "Preços dinâmicos",
+   "dynamischText": "Os seus preços ajustam-se sozinhos: à ocupação, à época e à antecedência. Só é cobrado sobre reservas criadas enquanto o módulo está ativo.",
+   "proMonat": "por mês",
+   "oder": "ou",
+   "jeNutzer": "por utilizador e por mês",
+   "jeZimmer": "por quarto e por mês",
+   "vomUmsatz": "da receita das reservas",
+   "hinweis": "Os módulos podem ser ativados e cancelados mensalmente — o acesso é imediato, a faturação proporcional."
+  },
+  "vergleich": {
+   "eyebrow": "Comparação",
+   "heading": "O que os outros cobram pelo mesmo número de alojamentos.",
+   "sub": "Preços mensais com {objekte} alojamentos, retirados das páginas de preços oficiais. Comparamos o plano que cobre o nosso âmbito de funcionalidades.",
+   "unsereRechnung": "Taxa base + escalões por alojamento",
+   "proMonat": "/mês",
+   "ohnePreis": "não publicado",
+   "fussnote": "Em {stand}, consultado diretamente nas páginas de preços dos fornecedores. Indicam-se preços mensais sem fidelização anual; quando um fornecedor publicita o preço anual, este consta do cálculo. Sem garantia — prevalece a lista de preços atual do fornecedor.",
+   "ersparnis": "{prozent} % abaixo da média"
   },
   "faq": {
-    "eyebrow": "Perguntas frequentes",
-    "heading": "As perguntas que surgem antes de mudar de sistema.",
-    "sub": "O que a plataforma faz, quanto custa e como os teus dados estão protegidos — sem linguagem de marketing.",
-    "was": {
-      "frage": "O que é exatamente o myNextDays?",
-      "antwort": "O myNextDays é um sistema de gestão de propriedades e um channel manager num só — para hotéis, pensões, casas de hóspedes, alojamento local, parques de campismo e agências. Calendário, reservas, preços, portais, reserva direta, comunicação com o hóspede, limpeza e faturação ficam numa única interface com um só acesso, em vez de quatro ferramentas que se ignoram."
-    },
-    "portale": {
-      "frage": "Que portais de reservas posso ligar?",
-      "antwort": "Chegas a 56 plataformas de reservas, entre elas Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda e Tripadvisor. Juntam-se o nosso marketplace myBestDays, um widget de reservas para o teu site e canais regionais. Cada canal liga-se em separado: decides por alojamento onde ele está visível."
-    },
-    "sync": {
-      "frage": "Com que rapidez sincroniza — e podem acontecer reservas duplicadas?",
-      "antwort": "A sincronização é nos dois sentidos e em tempo real: uma reserva num portal bloqueia essa noite em todos os outros, e preços ou estadias mínimas alterados saem de imediato. Todos os canais partilham um calendário, por isso não surge uma segunda verdade. Um stop-sell fecha em todos ao mesmo tempo, não só onde o aplicas."
-    },
-    "betriebsarten": {
-      "frage": "Serve para um hotel e para alojamento local ao mesmo tempo?",
-      "antwort": "Sim, é o mesmo modelo: cada alojamento é exatamente um tipo — um tipo de quarto no hotel ou um alojamento de férias — e por baixo ficam as suas unidades. Um hotel com oito quartos duplos e quatro individuais tem dois alojamentos com oito e quatro unidades. Os portais recebem o número de unidades livres, para que cinco estúdios iguais não precisem de cinco calendários."
-    },
-    "direkt": {
-      "frage": "Tenho uma página de reservas própria sem comissão de portal?",
-      "antwort": "Sim. Cada conta inclui o seu portal de reservas, um widget para o site existente e um construtor de sites com domínio próprio. As reservas diretas custam 0,5 % em vez dos 15–18 % de comissão dos grandes portais, usam o mesmo calendário e os mesmos preços — e o dinheiro entra diretamente na tua conta."
-    },
-    "marktplatz": {
-      "frage": "O que é o myBestDays?",
-      "antwort": "O myBestDays é o nosso marketplace para hóspedes — um canal de reservas ao mesmo nível do Booking.com e do Airbnb, apenas com uma comissão muito mais baixa. Os alojamentos que tornas visíveis lá aparecem no marketplace e na app myBestDays para hóspedes. Essa visibilidade é um interruptor próprio, independente dos portais."
-    },
-    "zahlungen": {
-      "frage": "Como funcionam pagamentos, sinais e faturas?",
-      "antwort": "Os pagamentos online passam pelo Stripe para a tua própria conta: sinal, pagamento final ou caução, por cartão e pelos métodos que o Stripe oferece no país do hóspede. Faturas e notas de crédito nascem da reserva, na moeda do alojamento, com exportações prontas para contabilidade. Taxas de portal e impostos são calculados corretamente por portal — mesmo onde um portal só comunica um valor líquido."
-    },
-    "laender": {
-      "frage": "Em que países, moedas e idiomas funciona a plataforma?",
-      "antwort": "No arranque, a 1 de setembro de 2026, em 27 países europeus. Interface e comunicação com o hóspede existem em 24 idiomas; o hóspede lê a confirmação na sua língua. A moeda pertence ao alojamento ou ao negócio — não se presume o euro, coroas, złoty ou forints são geridos da mesma forma."
-    },
-    "rollen": {
-      "frage": "Quem vê que dados — proprietários, limpeza, hóspedes?",
-      "antwort": "Cada função tem o seu acesso e vê apenas a sua parte. Os proprietários veem os seus alojamentos, a ocupação e os seus acertos, mas não os de outros. A limpeza vê tarefas com listas de verificação com fotos, não receitas. Os hóspedes têm a sua área com check-in, guia digital e mensagens."
-    },
-    "app": {
-      "frage": "Existe uma app?",
-      "antwort": "Duas, porque hóspede e operação precisam de coisas diferentes: a app myNextDays para o negócio, proprietários e limpeza — calendário, reservas e tarefas em movimento — e a app myBestDays para hóspedes com pesquisa, reserva, check-in e mensagens. Ambas falam com o mesmo sistema; nada corre sobre uma cópia."
-    },
-    "sicherheit": {
-      "frage": "E quanto à proteção de dados e à segurança?",
-      "antwort": "Construído na Dinamarca, alojado na UE, conforme o RGPD incluindo contrato de subcontratação. Os dados de cada negócio estão separados a nível de base de dados, não apenas na interface. A autenticação em dois fatores está disponível, as permissões por função limitam o acesso a dados financeiros e de hóspedes, e cada início de sessão é rastreável no histórico de dispositivos."
-    },
-    "preis": {
-      "frage": "Quanto custa o myNextDays e como começo?",
-      "antwort": "30 dias grátis, sem prazo mínimo, sem taxa de instalação, cancelável a qualquer momento. Depois uma subscrição mais uma comissão reduzida sobre as reservas que trazemos. Módulos adicionais — contabilidade ampliada com exportação DATEV, gestão de pessoal ou funções de hotel — só se juntam se precisares. Cria um alojamento, liga os canais, avança."
-    }
+   "eyebrow": "Perguntas frequentes",
+   "heading": "Perguntas sobre o preço",
+   "sub": "O que os anfitriões querem saber antes de mudar — breve e sem letras pequenas.",
+   "laufzeit": {
+    "frage": "Existe um período mínimo?",
+    "antwort": "Não. A subscrição é mensal e pode ser cancelada com quatro semanas de aviso para o fim do mês. Os primeiros 30 dias são grátis, sem dados de pagamento."
+   },
+   "objektzahl": {
+    "frage": "O que acontece se acrescentar alojamentos?",
+    "antwort": "Paga pelo número de alojamentos contratados. Se acrescentar um, o valor adicional é calculado proporcionalmente e fica logo utilizável; o escalão seguinte aplica-se automaticamente assim que o atingir."
+   },
+   "waehrung": {
+    "frage": "Em que moeda é faturado?",
+    "antwort": "Faturamos em euros como moeda de referência; se pagar noutra moeda, o pagamento converte à taxa do dia. Os seus hóspedes pagam, independentemente disso, na moeda do seu alojamento."
+   },
+   "steuern": {
+    "frage": "Os preços são com ou sem impostos?",
+    "antwort": "Todos os valores indicados são líquidos. O IVA depende do seu país; com número de IVA válido dentro da UE, a faturação é sem imposto (autoliquidação)."
+   },
+   "umzug": {
+    "frage": "Posso trazer os meus dados?",
+    "antwort": "Sim. Alojamentos, preços e ocupações podem ser importados e os portais são ligados de novo. A equipa ajuda na configuração — sem custo adicional."
+   },
+   "kuendigung": {
+    "frage": "O que acontece após o cancelamento?",
+    "antwort": "Os seus alojamentos continuam vendáveis até ao fim do período pago. Depois mantém o acesso aos dados e pode exportá-los; nada é apagado até o solicitar."
+   }
   },
-  "benefits": {
-    "eyebrow": "Porquê a myNextDays",
-    "sub": "Três coisas que contam mesmo no dia a dia do alojamento: é para isso que a plataforma foi feita.",
-    "heading": "Mais reservas. Menos trabalho.",
-    "buchungen": {
-      "title": "Conquistar mais reservas",
-      "text": "Esteja visível em todos os grandes canais e no seu próprio site. Um calendário central mantém tudo sincronizado: acabaram-se as reservas duplicadas."
-    },
-    "betrieb": {
-      "title": "Simplificar a operação",
-      "text": "Faça a gestão de alojamentos, reservas, limpezas e faturação num só lugar, na secretária ou em movimento."
-    },
-    "fair": {
-      "title": "Justa e europeia",
-      "text": "Um preço transparente sem barreiras enterprise, criada na Dinamarca e alojada na UE segundo o RGPD. Apoio pessoal da equipa que usa o software no seu próprio dia a dia."
-    },
-    "preisBanner": {
-      "eyebrow": "Preço",
-      "heading": "Tudo o que o seu alojamento precisa, num só lugar",
-      "text": "30 dias grátis. Sem período mínimo. Cancele quando quiser (4 semanas antes do fim do mês).",
-      "preis": "19,90 €",
-      "proMonat": "por mês",
-      "tarif": "Um único plano para todos, inclui 1 alojamento",
-      "objekte": "Cada alojamento adicional +6/5/4 € (escala decrescente)",
-      "provision": "Canais externos 0,5 % · portal próprio 8 %",
-      "cta": "Ver preços"
-    }
-  },
-  "trial": {
-    "eyebrow": "Teste gratuito",
-    "heading": "Experimente a myNextDays 30 dias grátis.",
-    "sub": "Sem período mínimo. Cancele quando quiser. Basta preencher este pequeno formulário:",
-    "seitenHeading": "Tudo o que o seu alojamento precisa num só lugar: mais controlo, menos esforço.",
-    "perks": {
-      "buchungen": {
-        "title": "Mais reservas",
-        "text": "em todos os grandes canais e no seu próprio portal, sem reservas duplicadas."
-      },
-      "kontrolle": {
-        "title": "Controlo total",
-        "text": "sobre check-ins, reservas e faturas num só lugar."
-      },
-      "freiheit": {
-        "title": "Mais liberdade",
-        "text": "faça a gestão do seu alojamento pelo telemóvel, esteja onde estiver."
-      }
-    },
-    "vorname": "Nome próprio",
-    "nachname": "Apelido",
-    "email": "E-mail",
-    "emailPlatzhalter": "nome@exemplo.pt",
-    "einwilligung": "Sim, quero receber ocasionalmente novidades, convites para webinars e ofertas da myNextDays. Pode retirar o seu consentimento a qualquer momento.",
-    "absenden": "Começar agora",
-    "dankeTitel": "Muito obrigado!",
-    "dankeText": "Entramos em contacto consigo muito em breve."
-  },
-  "features": {
-    "heading": "Um sistema. Um acesso.",
-    "baldBadge": "Em breve",
-    "hinweis": "A faturação base está incluída no lançamento. A contabilidade avançada (exportação DATEV), a gestão de colaboradores, o marketplace de prestadores e as funcionalidades para hotelaria são módulos adicionais.",
-    "eyebrow": "Funcionalidades",
-    "sub": "Um acesso para o negócio, os proprietários, os hóspedes e as limpezas: cada perfil vê exatamente a sua área.",
-    "alleAnsehen": "Descobrir todas as funcionalidades no teste gratuito",
-    "neu": {
-      "title": "myNextDays IA e avatar",
-      "text": "Avatar e comandos de voz, concierge com IA para as perguntas dos hóspedes e tarifas que acompanham a época e a procura."
-    },
-    "gruppen": {
-      "pms": {
-        "title": "Property management",
-        "items": "Multicalendário central, mapa de ocupação, reservas, tarefas, dados do alojamento e comodidades"
-      },
-      "channel": {
-        "title": "Channel manager",
-        "items": "56 plataformas de reservas, Airbnb, Booking.com, Expedia, Vrbo, Google, sincronização bidirecional em tempo real"
-      },
-      "direkt": {
-        "title": "Reserva direta",
-        "items": "Portal de reservas próprio, widget de reservas, construtor de sites, domínio próprio, 0,5 % em vez de 15–18 % de comissão OTA"
-      },
-      "preise": {
-        "title": "Tarifas e receita",
-        "items": "Preços dinâmicos com mín./máx., rate plans por alojamento, lógica de época e ocupação, as tarifas manuais têm prioridade"
-      },
-      "gaeste": {
-        "title": "Experiência do hóspede",
-        "items": "Guia digital do hóspede, concierge com IA, check-in online, mensagens automáticas, 24 idiomas"
-      },
-      "zahlungen": {
-        "title": "Pagamentos e faturação",
-        "items": "Pagamentos online, sinais, cauções, faturação base, exportações prontas para a contabilidade"
-      },
-      "team": {
-        "title": "Equipa e perfis",
-        "items": "Acesso de proprietário com pagamentos, acesso de limpeza com checklists com fotografias, tarefas, permissões separadas"
-      },
-      "app": {
-        "title": "Aplicação móvel",
-        "items": "Aplicação nativa com acessos próprios para proprietários, hóspedes e limpezas, gira o negócio onde quer que esteja"
-      },
-      "auswertungen": {
-        "title": "Análises",
-        "items": "Ocupação, receita, ADR, relatórios automáticos, comparação de canais, metapesquisa em breve"
-      }
-    }
-  },
-  "ki": {
-    "eyebrow": "IA e voz",
-    "heading": "A plataforma trata da rotina por si.",
-    "sub": "Comande tudo sem usar as mãos, deixe as perguntas dos hóspedes responderem-se sozinhas e as tarifas acompanharem o mercado, sem ter de aprender um único percurso de cliques.",
-    "voice": {
-      "title": "Avatar / comando por voz",
-      "text": "Comande tudo por voz e deixe um avatar responder: consulte a ocupação, faça a gestão de reservas e tarefas, altere tarifas, enquanto está a caminho ou a preparar um alojamento."
-    },
-    "concierge": {
-      "title": "Um concierge com IA para os seus hóspedes",
-      "text": "O guia digital do hóspede responde sozinho sobre a palavra-passe do Wi-Fi, a caixa de chaves, o lixo e as dicas locais, em 24 idiomas e 24 horas por dia."
-    },
-    "preise": {
-      "title": "Tarifas que pensam consigo",
-      "text": "Defina um preço base com mínimo e máximo por alojamento; os preços por noite acompanham a época, a ocupação e a procura. As tarifas manuais têm sempre prioridade."
-    },
-    "cta": "Ver as funcionalidades",
-    "blaseFrage": "Como está a ocupação na próxima semana?",
-    "blaseAntwort": "18 de 24 noites ocupadas. Dois espaços livres no fim de semana: baixamos o preço?",
-    "eingabe": "Pergunte à myNextDays …",
-    "baldBadge": "Em breve"
-  },
-  "integrationen": {
-    "eyebrow": "Alcance",
-    "heading": "56 plataformas de reservas, um único ecrã.",
-    "p1": "Distribui disponibilidade, tarifas e restrições por 56 plataformas de reservas, entre elas Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda e Tripadvisor. Sincronização bidirecional em tempo real: uma reserva num portal bloqueia essa noite em todos os outros.",
-    "p2": "A isto junta-se a sua própria venda: o portal de reservas com comissões baixas na myBestDays, um widget de reservas para o seu site e canais regionais que pode ativar um a um. Cada canal é controlado em separado: é você que decide onde um alojamento fica visível.",
-    "cta": "Ligar canais no teste gratuito"
-  },
-  "testimonials": {
-    "eyebrow": "Por trás da plataforma",
-    "heading": "Porque criámos a myNextDays.",
-    "gruenderin": {
-      "quote": "A myNextDays nasceu do nosso próprio dia a dia de alojamento na AirSmil: estamos a criar exatamente o software de que teríamos precisado.",
-      "name": "Jeanine Ågaard",
-      "location": "Fundadora da myNextDays / AirSmil"
-    }
-  },
-  "stimmen": {
-    "eyebrow": "Vozes do terreno",
-    "heading": "O que dizem os anfitriões.",
-    "vorschauHinweis": "Pré-visualização do layout com textos de exemplo: aqui aparecerão depois citações reais e aprovadas.",
-    "zurueck": "Testemunho anterior",
-    "vor": "Testemunho seguinte",
-    "zeigeStimme": "Mostrar testemunho {nummer}"
-  },
-  "stats": {
-    "eyebrow": "Números que conseguimos provar",
-    "heading": "A plataforma de alojamento, criada por quem aluga.",
-    "sub": "Lançamento a 1 de setembro de 2026 em 27 países.",
-    "laender": {
-      "value": "27",
-      "label": "Países",
-      "text": "Países europeus no lançamento"
-    },
-    "sprachen": {
-      "value": "24",
-      "label": "Idiomas",
-      "text": "Interface e comunicação com os hóspedes"
-    },
-    "kanaele": {
-      "value": "56",
-      "label": "Plataformas",
-      "text": "Plataformas de reservas ligadas"
-    },
-    "hosting": {
-      "value": "100 %",
-      "label": "Alojamento na UE",
-      "text": "Criada na Dinamarca, em conformidade com o RGPD"
-    },
-    "vermieter": {
-      "label": "Criada por anfitriões",
-      "text": "Nascida do dia a dia real do alojamento na AirSmil"
-    }
-  },
-  "usecases": {
-    "eyebrow": "Para quem construímos",
-    "heading": "Três tipos de negócio, uma plataforma.",
-    "sub": "Um alojamento de férias, um quarto de hotel ou uma carteira inteira: a mesma interface, montada de forma diferente para cada negócio.",
-    "ferienobjekt": {
-      "label": "Alojamento de férias",
-      "title": "Casas e apartamentos de férias",
-      "text": "Um ou vários alojamentos que aluga por conta própria: sem receção, mas com entregas de chaves, limpezas e perguntas de hóspedes.",
-      "punkte": {
-        "kanaele": "Portais e o seu próprio site num único calendário",
-        "kalender": "Planeie limpezas e entregas por alojamento",
-        "gaeste": "Check-in online e guia digital do hóspede em 24 idiomas"
-      }
-    },
-    "hotel": {
-      "label": "Hotel e pensão",
-      "title": "Quartos, não contentores",
-      "text": "Cada quarto é uma unidade reservável própria com as suas tarifas: sem desvios por categorias de quarto com quantidades.",
-      "punkte": {
-        "zimmer": "Disponibilidade ao nível do quarto em todos os portais",
-        "raten": "Rate plans por quarto, derivados ou manuais",
-        "rezeption": "Visão diária de chegadas e partidas"
-      }
-    },
-    "agentur": {
-      "label": "Agência e gestão",
-      "title": "Uma carteira com vários proprietários",
-      "text": "Faz a gestão de alojamentos de terceiros: contas separadas, um acesso por proprietário e números claros para cada alojamento.",
-      "punkte": {
-        "portfolio": "Todos os alojamentos num único mapa de ocupação",
-        "eigentuemer": "Acesso de proprietário com ocupação e pagamentos",
-        "abrechnung": "Extratos e comissões por alojamento"
-      }
-    }
-  },
-  "footer": {
-    "claim": "A plataforma para quem aluga alojamento local: mais reservas, menos trabalho.",
-    "appLaden": "Transferir a aplicação",
-    "spalten": {
-      "produkt": "Produto",
-      "loesungen": "Soluções",
-      "ressourcen": "Recursos",
-      "unternehmen": "Empresa"
-    },
-    "produkt": {
-      "pms": "Property management",
-      "channelManager": "Channel manager",
-      "direktbuchung": "Reserva direta",
-      "zahlungen": "Pagamentos",
-      "mobileApp": "Aplicação móvel"
-    },
-    "loesungen": {
-      "hotels": "Hotéis",
-      "bnb": "B&B",
-      "gaestehaeuser": "Casas de hóspedes",
-      "ferienwohnungen": "Alojamentos de férias",
-      "campingplaetze": "Parques de campismo"
-    },
-    "ressourcen": {
-      "blog": "Blogue",
-      "hilfeCenter": "Centro de ajuda",
-      "webinare": "Webinars",
-      "leitfaeden": "Guias",
-      "api": "Documentação da API"
-    },
-    "unternehmen": {
-      "ueberUns": "Sobre nós",
-      "karriere": "Carreiras",
-      "partner": "Parceiros",
-      "kontakt": "Contacto",
-      "presse": "Imprensa"
-    },
-    "copyright": "© 2026 myNextDays. Todos os direitos reservados.",
-    "agb": "Termos e condições",
-    "datenschutz": "Privacidade",
-    "impressum": "Informação legal",
-    "cookies": "Política de cookies",
-    "avv": "Tratamento de dados"
-  },
-  "abschluss": {
-    "heading": "Pronto para gerir o seu alojamento a partir de um só lugar?",
-    "sub": "Experimente 30 dias grátis: sem período mínimo, sem custos de ativação e cancele quando quiser.",
-    "ctaPrimaer": "Experimentar 30 dias grátis",
-    "ctaSekundaer": "Ver preços"
-  },
-  "chat": {
-    "titel": "Dúvidas? Estamos aqui.",
-    "untertitel": "Normalmente respondemos em poucas horas.",
-    "name": "Nome",
-    "email": "E-mail",
-    "telefon": "Telefone (opcional)",
-    "nachricht": "A sua mensagem",
-    "absenden": "Enviar mensagem",
-    "sendet": "A enviar …",
-    "platzhalter": "Escreva uma mensagem …",
-    "senden": "Enviar",
-    "oeffnen": "Abrir o chat",
-    "schliessen": "Fechar o chat",
-    "hinweis": "Usamos os seus dados apenas para responder a este pedido.",
-    "fehler": "Não resultou. Tente novamente mais tarde."
-  },
-  "einblicke": {
-    "eyebrow": "Por dentro",
-    "heading": "Como o myNextDays funciona realmente",
-    "sub": "Nada de vistas desenhadas — imagens de uma operação a decorrer, com reservas reais de todos os canais.",
-    "hotel": {
-      "title": "Hotel e alojamento de férias numa só interface",
-      "text": "Cada quarto é uma unidade reservável própria — o mesmo modelo da casa de férias. O plano de ocupação mostra chegadas, estadias e partidas por unidade, com ocupação, receita e preço médio por noite no período."
-    },
-    "objekte": {
-      "title": "Visibilidade por canal, não um interruptor para tudo",
-      "text": "Site, marketplace e portais de reservas são três eixos separados. Um alojamento pode continuar ativo no seu próprio site enquanto está pausado nos portais — visível num relance, comutável num clique."
-    },
-    "kanaele": {
-      "title": "Ligar portais e manter o seu canal direto",
-      "text": "Booking.com, Airbnb e outros portais assentam na mesma disponibilidade da reserva direta. Uma noite reservada bloqueia em todo o lado — sem sobre-reservas, sem correções manuais."
-    }
+  "teaser": {
+   "cta": "Ver todos os preços",
+   "abObjekt": "Cada alojamento adicional a partir de {betrag}",
+   "provision": "Site próprio {direkt} · portais {portale}",
+   "tarif": "Um plano para todos, 1.º alojamento incluído"
   }
+ }
 }

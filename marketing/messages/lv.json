@@ -1,479 +1,597 @@
 {
-  "meta": {
-    "title": "myNextDays – platforma brīvdienu mājokļu iznomātājiem",
-    "description": "Platforma viesnīcām, aģentūrām un brīvdienu mājokļu iznomātājiem: kanālu pārvaldnieks, kalendārs, tiešās rezervācijas, saziņa ar viesiem un norēķini vienuviet. Izstrādāts Dānijā, mitināts ES. No 19,90 € mēnesī. 30 dienas bez maksas."
+ "meta": {
+  "title": "myNextDays – platforma brīvdienu mājokļu iznomātājiem",
+  "description": "Platforma viesnīcām, aģentūrām un brīvdienu mājokļu iznomātājiem: kanālu pārvaldnieks, kalendārs, tiešās rezervācijas, saziņa ar viesiem un norēķini vienuviet. Izstrādāts Dānijā, mitināts ES. No 19,90 € mēnesī. 30 dienas bez maksas."
+ },
+ "nav": {
+  "funktionen": "Funkcijas",
+  "preise": "Cenas",
+  "kanaele": "Kanāli",
+  "kunden": "Klienti",
+  "ressourcen": "Resursi",
+  "sprache": "Valoda",
+  "spracheWaehlen": "Izvēlieties valodu",
+  "anmelden": "Pieteikties",
+  "kostenlosStarten": "Sāciet bez maksas",
+  "sprachModalTitel": "Valoda un reģions",
+  "sprachModalHeading": "Izvēlieties valodu",
+  "sprachModalHinweis": "Izvēle attiecas uz šo vietni un tiek pārņemta jūsu kontā.",
+  "schliessen": "Aizvērt",
+  "suche": "Meklēt valodu",
+  "keinTreffer": "Neviena valoda nav atrasta.",
+  "menuOeffnen": "Atvērt izvēlni",
+  "menuSchliessen": "Aizvērt izvēlni",
+  "menuCtaTitel": "Labāk reizi redzēt?",
+  "menuCtaText": "Apskati programmatūru ar īstiem datiem, bez reģistrācijas.",
+  "menuCtaKnopf": "Skatīt demo",
+  "menuSpalte": {
+   "kern": "Pārdošana",
+   "gast": "Viesis un nauda",
+   "betrieb": "Darbība"
   },
-  "nav": {
-    "funktionen": "Funkcijas",
-    "preise": "Cenas",
-    "kanaele": "Kanāli",
-    "kunden": "Klienti",
-    "ressourcen": "Resursi",
-    "sprache": "Valoda",
-    "spracheWaehlen": "Izvēlieties valodu",
-    "anmelden": "Pieteikties",
-    "kostenlosStarten": "Sāciet bez maksas",
-    "sprachModalTitel": "Valoda un reģions",
-    "sprachModalHeading": "Izvēlieties valodu",
-    "sprachModalHinweis": "Izvēle attiecas uz šo vietni un tiek pārņemta jūsu kontā.",
-    "schliessen": "Aizvērt",
-    "suche": "Meklēt valodu",
-    "keinTreffer": "Neviena valoda nav atrasta."
+  "menuBildAlt": "Noslodzes plāns myNextDays"
+ },
+ "hero": {
+  "trustNeu": "Jaunums 2026. gadā",
+  "trustVermieter": "iznomātāju veidots iznomātājiem",
+  "trustAirsmil": "powered by AirSmil",
+  "trustEu": "Mitināts ES (VDAR)",
+  "headlinePre": "Vairāk",
+  "headlineHighlight": "rezervāciju",
+  "headlinePost": "mazāk darba.",
+  "subline": "Platforma viesnīcām, aģentūrām un brīvdienu mājokļu iznomātājiem: kanālu pārvaldnieks, kalendārs, tiešās rezervācijas, saziņa ar viesiem un norēķini vienuviet – veidota iznomātājiem, kuri pārzina ikdienu.",
+  "ctaTrial": "30 dienas bez maksas",
+  "ctaDemo": "Skatiet demonstrāciju",
+  "kanaeleLabel": "Savienots ar lielākajām rezervāciju platformām",
+  "eyebrow": "Platforma brīvdienu mājokļu iznomātājiem",
+  "kanaeleEyebrow": "Pārdošanas kanāli",
+  "aufnahmeBelegungsplan": "myNextDays noslogojuma plāns: astoņi brīvdienu objekti ar rezervācijām no Booking.com, Airbnb, Vrbo, tirgus laukuma un tiešajām rezervācijām",
+  "aufnahmeHotel": "Viesnīcas noslogojuma plāns myNextDays: divpadsmit numuri, katrs kā atsevišķa rezervējama vienība",
+  "aufnahmeObjekte": "Objektu pārskats myNextDays ar fotoattēliem, statusu un redzamību pa kanāliem",
+  "aufnahmeKanaele": "Kanālu pārvaldība myNextDays: pievienotie rezervāciju portāli un pašu tirgus laukums"
+ },
+ "intro": {
+  "heading": "Laipni lūdzam myNextDays.",
+  "p1": "Pilnvērtīga Property Management sistēma kopā ar kanālu pārvaldnieku – viesnīcām, aģentūrām un brīvdienu mājokļu iznomātājiem. Neatkarīgi un godīgi, nevis korporatīva sarežģītība un enterprise cenas.",
+  "p2": "Palieliniet noslodzi, vienkāršojiet ikdienu un sniedziet viesiem lieliskas atmiņas – bez lielo sistēmu sarežģītības un enterprise cenām.",
+  "p3": "Viss vienuviet, gudra automatizācija un savienojums ar visiem svarīgajiem kanāliem – tam klāt jūsu paša rezervāciju portāls ar zemu komisiju. Tā jūsu bizness aug ar lielāku kontroli un mazāku piepūli.",
+  "cta": "Iepazīstiet funkcijas",
+  "reichweite": "Veidots ikvienai naktsmītnei.",
+  "typen": {
+   "hotel": "Viesnīca",
+   "bnb": "B&B",
+   "gaestehaus": "Viesu nams",
+   "motel": "Motelis",
+   "lodge": "Lodža",
+   "ferienwohnung": "Brīvdienu dzīvoklis",
+   "resort": "Kūrorts",
+   "huette": "Namiņš",
+   "pension": "Pansija",
+   "campingplatz": "Kempings"
+  },
+  "belegeHeading": "Uz ko varat paļauties",
+  "belege": {
+   "neu": "Jaunums 2026. gadā – izstrādāts aktīvu iznomātāju, powered by AirSmil",
+   "eu": "Izstrādāts Dānijā, mitināts ES un atbilst VDAR",
+   "kanaele": "56 pievienotas rezervāciju platformas",
+   "start": "Starts 2026. gada 1. septembrī 27 Eiropas valstīs, 24 valodās"
+  },
+  "eyebrow": "Platforma",
+  "typenEyebrow": "Kam tā domāta"
+ },
+ "zielgruppen": {
+  "bildAlt": "myNextDays saskarne, piemērs {typ}",
+  "abschluss": "Lai kāda būtu forma — visu pārvalda vienā sistēmā, ar vienu pieteikšanos.",
+  "typen": {
+   "hotel": {
+    "unterzeile": "Viesnīcu programmatūra ar channel manager",
+    "text": "Mazās viesnīcas numurus ved kā numuru tipus: katrs tips nes savas vienības, un noslogojuma plānā katrs numurs ir atsevišķi — ar ierašanos, izbraukšanu un uzkopšanu. Booking.com, Expedia un pārējie portāli saņem brīvo vienību skaitu, nevis jā/nē. Cenas, minimālo uzturēšanos un slēgumus ievadi vienreiz, un channel manager tos izsūta visiem pieslēgtajiem portāliem. Rēķins, maksājums un saziņa ar viesi ir vienā sistēmā.",
+    "beleg": "Pieejamība kā skaitlis, nevis jā/nē."
+   },
+   "bnb": {
+    "unterzeile": "Rezervāciju sistēma bed & breakfast",
+    "text": "Brokastis, dvieļi, maksa par dzīvnieku, vēla ierašanās: papildpakalpojumi paliek pie rezervācijas un nonāk viesa rēķinā bez atsevišķas rēķināšanas. Kas B&B stāv pie galda pats, negrib otru sarakstu — pieprasījumi, ziņas, maksājumi un noslogojums satiekas vienā vietā, datorā un telefonā. Kartes maksājums caur Stripe ir iekļauts, tāpat kā paša rezervāciju lapa bez portāla komisijas.",
+    "beleg": "Papildpakalpojumi tiek norēķināti automātiski."
+   },
+   "gaestehaus": {
+    "unterzeile": "Viesu namu pārvaldība ar vairākiem numuriem",
+    "text": "Vairākas vienības zem viena jumta, viens kalendārs: kurš viesis saņem kuru numuru, izlem līdz ierašanās brīdim, bez rezervācijas ievadīšanas no jauna. Ēka nosaka, ko portāli redz zem viena identifikatora; aprīkojumu, fotoattēlus un cenas ved pēc numura tipa. Uzkopšanas uzdevumi seko ierašanās un izbraukšanas reizēm un nonāk komandas telefonā — ar savu pieteikšanos, kas rāda uzdevumus, nevis ieņēmumus.",
+    "beleg": "Viena ēka, viens portāla identifikators."
+   },
+   "motel": {
+    "unterzeile": "Programmatūra moteļiem un īsām naktsmītnēm",
+    "text": "Liela plūsma, īsas uzturēšanās, vēlas ierašanās: ierašanās informācija, piekļuves kodi un rēķins nonāk pie viesa automātiski — īstajā brīdī un viņa valodā, gatavas ir 24 valodas. Numuri, kas atbrīvojas, paši atgriežas visos portālos, un viens stop-sell tos aizver visur vienlaikus. Reģistratūrā pietiek ar dienas plānu: kas ierodas, kas aizbrauc, kas vēl ir atvērts.",
+    "beleg": "Ziņas aiziet pašas."
+   },
+   "lodge": {
+    "unterzeile": "Lodge izīrēšana arī no telefona",
+    "text": "Nomaļš nenozīmē nogriezts: cenas, minimālo uzturēšanos, maiņas dienas un slēgumus pārvaldi telefonā tāpat kā pie galda — tas pats kalendārs, tā pati rezervācija, bez starpstāvokļa. Sezonas cenas uzstādi cenu tīklā uz visu gadu, nevis dienu pēc dienas, un atlaides ilgākām uzturēšanās reizēm nonāk arī portālos. Arī bez reģistratūras viesis zina, kā iekļūt iekšā.",
+    "beleg": "Arī ceļā, lietotnē."
+   },
+   "ferienwohnung": {
+    "unterzeile": "Channel manager brīvdienu dzīvokļiem",
+    "text": "Viens dzīvoklis, visi kanāli: Booking.com, Airbnb, Vrbo, mūsu paša tirgus myBestDays un tiešās rezervācijas no tavas vietnes dala vienu kalendāru. Pārdota nakts pazūd visur — dubultas rezervācijas nerodas. Tiešās rezervācijas ar zemu komisiju vari mērķtiecīgi veicināt: pati cenu stratēģija, atlaides ilgākām uzturēšanās reizēm, automātiskas ziņas no rezervācijas līdz izbraukšanai un kartes maksājums tavā kontā.",
+    "beleg": "Viens kalendārs visiem kanāliem."
+   },
+   "resort": {
+    "unterzeile": "Resorta pārvaldība ar daudzām vienībām",
+    "text": "Studijas, apartamenti un villas darbojas kā atsevišķi tipi ar savām cenām, aprīkojumu un noslogojuma noteikumiem — visi zem viena konta un vienas norēķinu kārtības. Cik objektu un cik vienību uz tipu vajag, nevienam nemainot pieteikšanos. Reģistratūra, uzkopšana un īpašnieki redz tikai savu daļu; īpašnieku norēķini rodas pa objektiem kopā ar atskaiti, nevis kā izklājlapa mēneša beigās.",
+    "beleg": "Cik objektu kontā vien vajag."
+   },
+   "huette": {
+    "unterzeile": "Namiņu izīrēšana sezonas darbā",
+    "text": "Sezonas darbs bez roku darba: slēgtos periodus, maiņas dienas, minimālās un maksimālās naktis uzstādi vienreiz, un tie darbojas visos portālos vienlaikus. Ja namiņš ziemā ir slēgts, tas ir slēgts visur — bez pieteikšanās piecos ekstranetos. Maiņas diena starp divām rezervācijām paliek brīva, lai uzkopšanai būtu laiks, un ierašanās vai izbraukšanas dienas var slēgt atsevišķi.",
+    "beleg": "Viens slēgums darbojas visos portālos."
+   },
+   "pension": {
+    "unterzeile": "Pansijas pārvaldība ar rēķinu un tūrisma nodevu",
+    "text": "Puspansija, tūrisma nodeva, pastāvīgie viesi, maksa uz vietas: piemaksas un nodevas sistēma aprēķina pareizi katram portālam — arī tur, kur portāls ziņo neto summu, bet tev vajag bruto cenu. Rēķini, kredītrēķini un atvērtās pozīcijas atrodas tajā pašā lietā kā rezervācija, tavas valsts valūtā. Atgriežošos viesus pazīsti pēc viņu vēstures, nevis meklējot vecās vēstulēs.",
+    "beleg": "Nodevas pa portāliem, pareizi aprēķinātas."
+   },
+   "campingplatz": {
+    "unterzeile": "Kempinga pārvaldība ar vietām",
+    "text": "Vietas, nomas treileri un glamping teltis ir tipi ar skaitu: divdesmit vienādas vietas ir viens tips ar divdesmit vienībām, nevis divdesmit kalendāri. Pieejamība nonāk portālos kā skaitlis, lai nekad netiktu pārdots vairāk, nekā ir. Elektrību, tūrisma nodevu vai suni norēķini par nakti vai par uzturēšanos, un dienas ierašanās stāv kopā dienas plānā.",
+    "beleg": "Skaits, nevis divdesmit kalendāri."
+   }
+  }
+ },
+ "faq": {
+  "eyebrow": "Biežāk uzdotie jautājumi",
+  "heading": "Jautājumi, kas rodas pirms sistēmas maiņas.",
+  "sub": "Ko platforma dara, cik tā maksā un kā tiek aizsargāti tavi dati — bez mārketinga valodas.",
+  "was": {
+   "frage": "Kas tieši ir myNextDays?",
+   "antwort": "myNextDays ir naktsmītņu pārvaldības sistēma un channel manager vienā — viesnīcām, pansijām, viesu namiem, brīvdienu dzīvokļiem, kempingiem un aģentūrām. Kalendārs, rezervācijas, cenas, portāli, tiešā rezervācija, saziņa ar viesi, uzkopšana un norēķini atrodas vienā saskarnē ar vienu pieteikšanos, nevis četros rīkos, kas viens par otru neko nezina."
+  },
+  "portale": {
+   "frage": "Kurus rezervāciju portālus varu pieslēgt?",
+   "antwort": "Tu sasniedz 56 rezervāciju platformas, tostarp Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda un Tripadvisor. Klāt nāk mūsu paša tirgus myBestDays, rezervāciju logrīks tavai vietnei un reģionālie kanāli. Katrs kanāls tiek ieslēgts atsevišķi: pie katra objekta izlem, kur tas ir redzams."
+  },
+  "sync": {
+   "frage": "Cik ātri notiek sinhronizācija — un vai iespējamas dubultas rezervācijas?",
+   "antwort": "Sinhronizācija notiek abos virzienos reāllaikā: rezervācija vienā portālā aizver nakti visur citur, un mainītās cenas vai minimālā uzturēšanās aiziet uzreiz. Visi kanāli dala vienu kalendāru, tāpēc otrā patiesība nerodas. Stop-sell aizver visur vienlaikus, ne tikai tur, kur to iestati."
+  },
+  "betriebsarten": {
+   "frage": "Vai tas piemērots viesnīcai un brīvdienu dzīvokļiem vienlaikus?",
+   "antwort": "Jā, modelis ir tas pats: katrs objekts ir tieši viens tips — numura tips viesnīcā vai brīvdienu naktsmītne — un zem tā ir tā vienības. Viesnīcai ar astoņiem divvietīgiem un četriem vienvietīgiem numuriem ir divi objekti ar astoņām un četrām vienībām. Uz portāliem aiziet brīvo vienību skaits, lai piecas vienādas studijas neprasītu piecus kalendārus."
+  },
+  "direkt": {
+   "frage": "Vai saņemu savu rezervāciju lapu bez portāla komisijas?",
+   "antwort": "Jā. Katram kontam pieder savs rezervāciju portāls, logrīks esošajai vietnei un vietņu veidotājs ar savu domēnu. Tiešās rezervācijas maksā 0,5 % vietā 15–18 % lielo portālu komisijas, darbojas tajā pašā kalendārā un ar tām pašām cenām — un nauda nonāk tieši tavā kontā."
+  },
+  "marktplatz": {
+   "frage": "Kas ir myBestDays?",
+   "antwort": "myBestDays ir mūsu paša tirgus viesiem — rezervāciju kanāls līdzvērtīgi Booking.com un Airbnb, tikai ar būtiski zemāku komisiju. Objekti, kurus tur padari redzamus, parādās tirgū un viesu myBestDays lietotnē. Šī redzamība ir atsevišķs slēdzis, neatkarīgs no portāliem."
+  },
+  "zahlungen": {
+   "frage": "Kā darbojas maksājumi, avansi un rēķini?",
+   "antwort": "Tiešsaistes maksājumi iet caur Stripe uz tavu paša kontu: avanss, atlikums vai drošības nauda, ar karti un tiem maksājuma veidiem, ko Stripe piedāvā viesa valstī. Rēķini un kredītrēķini rodas no rezervācijas, objekta valūtā, ar grāmatvedībai gataviem eksportiem. Portālu maksas un nodevas tiek aprēķinātas pareizi katram portālam — arī tur, kur portāls ziņo tikai neto summu."
+  },
+  "laender": {
+   "frage": "Kurās valstīs, valūtās un valodās platforma darbojas?",
+   "antwort": "Startā 2026. gada 1. septembrī 27 Eiropas valstīs. Saskarne un saziņa ar viesi ir 24 valodās; viesis lasa apstiprinājumu savā valodā. Valūta pieder objektam vai uzņēmumam — eiro netiek pieņemts par pašsaprotamu, kronas, zloti vai forinti tiek vesti tāpat."
+  },
+  "rollen": {
+   "frage": "Kas redz kādus datus — īpašnieki, uzkopšana, viesi?",
+   "antwort": "Katrai lomai ir sava pieteikšanās, un tā redz tikai savu daļu. Īpašnieki redz savus objektus, to noslogojumu un izmaksas, bet ne citu. Uzkopšana redz uzdevumus ar foto kontrolsarakstiem, ne ieņēmumus. Viesiem ir sava zona ar reģistrāciju, digitālo viesu mapi un ziņām."
+  },
+  "app": {
+   "frage": "Vai ir lietotne?",
+   "antwort": "Divas, jo viesim un uzņēmumam vajag dažādas lietas: myNextDays lietotne uzņēmumam, īpašniekiem un uzkopšanai — kalendārs, rezervācijas un uzdevumi ceļā — un myBestDays lietotne viesiem ar meklēšanu, rezervāciju, reģistrāciju un ziņām. Abas runā ar to pašu sistēmu; nekas nedarbojas uz kopijas."
+  },
+  "sicherheit": {
+   "frage": "Kā ar datu aizsardzību un drošību?",
+   "antwort": "Būvēts Dānijā, mitināts ES, atbilst GDPR, tostarp ar datu apstrādes līgumu. Katra uzņēmuma dati ir atdalīti datubāzes līmenī, ne tikai saskarnē. Divfaktoru pieteikšanās ir pieejama, lomu tiesības ierobežo piekļuvi finanšu un viesu datiem, un katra pieteikšanās ir izsekojama ierīču vēsturē."
+  },
+  "preis": {
+   "frage": "Cik maksā myNextDays un kā sākt?",
+   "antwort": "30 dienas bez maksas, bez minimālā termiņa, bez ieviešanas maksas, atteikties var jebkurā laikā. Pēc tam abonements plus neliela komisija par rezervācijām, ko atvedam. Papildmoduļus — paplašinātu grāmatvedību ar DATEV eksportu, darbinieku pārvaldību vai viesnīcu funkcijas — pievieno tikai tad, ja tie vajadzīgi. Izveido objektu, pieslēdz kanālus, sāc."
+  }
+ },
+ "benefits": {
+  "eyebrow": "Kāpēc myNextDays",
+  "sub": "Trīs lietas, kas iznomāšanas ikdienā patiešām ir svarīgas — tieši tām platforma ir veidota.",
+  "heading": "Vairāk rezervāciju. Mazāk darba.",
+  "buchungen": {
+   "title": "Iegūstiet vairāk rezervāciju",
+   "text": "Esiet redzami visos lielākajos kanālos un savā mājaslapā. Viens centrālais kalendārs uztur visu sinhronizētu – dubultajām rezervācijām pienācis gals."
+  },
+  "betrieb": {
+   "title": "Vienkāršojiet ikdienas darbu",
+   "text": "Pārvaldiet objektus, rezervācijas, uzkopšanu un norēķinus vienuviet – pie darbagalda vai ceļā."
+  },
+  "fair": {
+   "title": "Godīgi un eiropeiski",
+   "text": "Caurspīdīga cena bez enterprise šķēršļiem, izstrādāts Dānijā, mitināts ES saskaņā ar VDAR. Personīgs atbalsts no komandas, kas programmatūru lieto pati."
+  },
+  "preisBanner": {
+   "eyebrow": "Cena",
+   "heading": "Viss jūsu naktsmītnei vienuviet",
+   "text": "30 dienas bez maksas. Bez minimālā termiņa. Atteikšanās jebkurā brīdī (4 nedēļas līdz mēneša beigām).",
+   "proMonat": "mēnesī"
+  }
+ },
+ "trial": {
+  "eyebrow": "Bezmaksas izmēģinājums",
+  "heading": "Izmēģiniet myNextDays 30 dienas bez maksas.",
+  "sub": "Bez minimālā termiņa. Atteikšanās jebkurā brīdī. Vienkārši aizpildiet šo īso veidlapu:",
+  "seitenHeading": "Viss jūsu naktsmītnei vienuviet – vairāk kontroles, mazāk darba.",
+  "perks": {
+   "buchungen": {
+    "title": "Vairāk rezervāciju",
+    "text": "visos lielākajos kanālos un jūsu portālā, bez dubultajām rezervācijām."
+   },
+   "kontrolle": {
+    "title": "Pilnīga kontrole",
+    "text": "pār reģistrēšanos, rezervācijām un rēķiniem vienuviet."
+   },
+   "freiheit": {
+    "title": "Vairāk brīvības",
+    "text": "pārvaldiet savu naktsmītni telefonā, lai kur atrastos."
+   }
+  },
+  "vorname": "Vārds",
+  "nachname": "Uzvārds",
+  "email": "E-pasts",
+  "emailPlatzhalter": "vards@piemers.lv",
+  "einwilligung": "Jā, es vēlos laiku pa laikam saņemt jaunumus, ielūgumus uz vebināriem un myNextDays piedāvājumus. Piekrišanu varat atsaukt jebkurā brīdī.",
+  "absenden": "Sāciet tūlīt",
+  "dankeTitel": "Liels paldies!",
+  "dankeText": "Drīzumā sazināsimies ar jums."
+ },
+ "features": {
+  "heading": "Viena sistēma. Viena pieteikšanās.",
+  "baldBadge": "Drīzumā",
+  "hinweis": "Pamata rēķini ir iekļauti jau no starta. Paplašinātā grāmatvedība (DATEV eksports), darbinieku pārvaldība, pakalpojumu sniedzēju tirgus un viesnīcu funkcijas ir papildu moduļi.",
+  "eyebrow": "Funkcijas",
+  "sub": "Viena piekļuve uzņēmumam, īpašniekiem, viesiem un uzkopšanai — katra loma redz tieši savu jomu.",
+  "alleAnsehen": "Iepazīstiet visas funkcijas bezmaksas izmēģinājumā",
+  "neu": {
+   "title": "myNextDays MI un avatars",
+   "text": "Avatars un balss vadība, MI konsjeržs viesu jautājumiem un cenas, kas pielāgojas sezonai un pieprasījumam."
+  },
+  "gruppen": {
+   "pms": {
+    "title": "Property Management",
+    "items": "Centrālais daudzobjektu kalendārs, noslodzes plāns, rezervācijas, uzdevumi, objektu un aprīkojuma dati"
+   },
+   "channel": {
+    "title": "Kanālu pārvaldnieks",
+    "items": "56 rezervāciju platformas, Airbnb, Booking.com, Expedia, Vrbo, Google, divvirzienu sinhronizācija reāllaikā"
+   },
+   "direkt": {
+    "title": "Tiešā rezervācija",
+    "items": "Savs rezervāciju portāls, rezervāciju logrīks, mājaslapu veidotājs, savs domēns, 0,5 % 15–18 % OTA komisijas vietā"
+   },
+   "preise": {
+    "title": "Cenas un ieņēmumi",
+    "items": "Dinamiskās cenas ar min./maks., cenu plāni katram objektam, sezonas un noslodzes loģika, manuālajām cenām ir prioritāte"
+   },
+   "gaeste": {
+    "title": "Viesu pieredze",
+    "items": "Digitālā viesu mape, MI konsjeržs, tiešsaistes reģistrēšanās, automātiskās ziņas, 24 valodas"
+   },
+   "zahlungen": {
+    "title": "Maksājumi un norēķini",
+    "items": "Tiešsaistes maksājumi, avansi, drošības naudas, pamata rēķini, grāmatvedībai gatavi eksporti"
+   },
+   "team": {
+    "title": "Komanda un lomas",
+    "items": "Īpašnieka pieteikšanās ar izmaksām, uzkopšanas pieteikšanās ar foto kontrolsarakstiem, uzdevumi, nodalītas tiesības"
+   },
+   "app": {
+    "title": "Mobilā lietotne",
+    "items": "Vietējā lietotne ar atsevišķām pieteikšanās iespējām īpašniekiem, viesiem un uzkopšanai, vadiet biznesu ceļā"
+   },
+   "auswertungen": {
+    "title": "Analītika",
+    "items": "Noslodze, ieņēmumi, ADR, automātiskās atskaites, kanālu salīdzinājums, metameklēšana drīzumā"
+   }
+  }
+ },
+ "ki": {
+  "eyebrow": "MI un balss",
+  "heading": "Platforma pārņem rutīnu jūsu vietā.",
+  "sub": "Vadiet ar balsi, ļaujiet viesu jautājumiem atbildēt pašiem, bet cenām sekot tirgum — nemācoties nevienu klikšķi.",
+  "voice": {
+   "title": "Avatars / balss vadība",
+   "text": "Vadiet ar balsi un ļaujiet avataram atbildēt: pārbaudiet noslodzi, pārvaldiet rezervācijas un uzdevumus, mainiet cenas – kamēr esat ceļā vai sagatavojat objektu."
+  },
+  "concierge": {
+   "title": "MI konsjeržs jūsu viesiem",
+   "text": "Digitālā viesu mape pati atbild par Wi-Fi paroli, atslēgu kastīti, atkritumu konteineriem un vietējiem ieteikumiem — 24 valodās, visu diennakti."
+  },
+  "preise": {
+   "title": "Cenas, kas domā līdzi",
+   "text": "Nosakiet bāzes cenu ar min. un maks. katram objektam; nakts cenas seko sezonai, noslodzei un pieprasījumam. Manuālajām cenām vienmēr ir prioritāte."
+  },
+  "cta": "Skatīt funkcijas",
+  "blaseFrage": "Kāda ir noslodze nākamnedēļ?",
+  "blaseAntwort": "Aizņemtas 18 no 24 naktīm. Divas brīvas vietas nedēļas nogalē – varbūt samazināt cenu?",
+  "eingabe": "Jautājiet myNextDays …",
+  "baldBadge": "Drīzumā"
+ },
+ "integrationen": {
+  "eyebrow": "Sasniedzamība",
+  "heading": "56 rezervāciju platformas – viena saskarne.",
+  "p1": "Jūs izplatāt pieejamību, cenas un ierobežojumus uz 56 rezervāciju platformām – to vidū Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda un Tripadvisor. Divvirzienu sinhronizācija reāllaikā: rezervācija vienā portālā bloķē šo nakti visur citur.",
+  "p2": "Tam klāt nāk jūsu pašu pārdošana: zemas komisijas rezervāciju portāls myBestDays platformā, rezervāciju logrīks jūsu mājaslapai un reģionālie kanāli, kurus varat ieslēgt pa vienam. Katrs kanāls tiek vadīts atsevišķi – jūs izlemjat, kur objekts ir redzams.",
+  "cta": "Savienojiet kanālus bezmaksas izmēģinājumā"
+ },
+ "testimonials": {
+  "eyebrow": "Aiz platformas",
+  "heading": "Kāpēc mēs izveidojām myNextDays.",
+  "gruenderin": {
+   "quote": "myNextDays radās no mūsu pašu iznomāšanas ikdienas AirSmil – mēs veidojam tieši to programmatūru, kas mums pašiem būtu bijusi vajadzīga.",
+   "name": "Jeanine Ågaard",
+   "location": "myNextDays / AirSmil dibinātāja"
+  }
+ },
+ "stimmen": {
+  "eyebrow": "Balsis no prakses",
+  "heading": "Ko stāsta naktsmītņu saimnieki.",
+  "vorschauHinweis": "Izkārtojuma priekšskatījums ar paraugtekstiem – vēlāk šeit būs īstas, apstiprinātas atsauksmes.",
+  "zurueck": "Iepriekšējā atsauksme",
+  "vor": "Nākamā atsauksme",
+  "zeigeStimme": "Rādīt atsauksmi {nummer}"
+ },
+ "stats": {
+  "eyebrow": "Skaitļi, ko varam pierādīt",
+  "heading": "Iznomātāju platforma, ko veidojuši cilvēki, kas paši iznomā.",
+  "sub": "Starts 2026. gada 1. septembrī 27 valstīs.",
+  "laender": {
+   "value": "27",
+   "label": "Valstis",
+   "text": "Eiropas valstis startā"
+  },
+  "sprachen": {
+   "value": "24",
+   "label": "Valodas",
+   "text": "Saskarne un saziņa ar viesiem"
+  },
+  "kanaele": {
+   "value": "56",
+   "label": "Platformas",
+   "text": "Pievienotas rezervāciju platformas"
+  },
+  "hosting": {
+   "value": "100 %",
+   "label": "ES mitināšana",
+   "text": "Izstrādāts Dānijā, atbilst VDAR"
+  },
+  "vermieter": {
+   "label": "Izstrādājuši iznomātāji",
+   "text": "No īstas iznomāšanas ikdienas AirSmil"
+  }
+ },
+ "usecases": {
+  "eyebrow": "Kam mēs veidojam",
+  "heading": "Trīs darbības veidi, viena platforma.",
+  "sub": "Brīvdienu objekts, viesnīcas numurs vai vesels portfelis — tā pati saskarne, katram uzņēmumam saliktā citādi.",
+  "ferienobjekt": {
+   "label": "Brīvdienu mājoklis",
+   "title": "Brīvdienu mājas un dzīvokļi",
+   "text": "Viens vai vairāki objekti, ko iznomājat paši — bez reģistratūras, toties ar atslēgu nodošanu, uzkopšanu un viesu jautājumiem.",
+   "punkte": {
+    "kanaele": "Portāli un sava mājaslapa vienā kalendārā",
+    "kalender": "Uzkopšanas un nodošanas plānošana katram objektam",
+    "gaeste": "Tiešsaistes reģistrēšanās un digitālā viesu mape 24 valodās"
+   }
+  },
+  "hotel": {
+   "label": "Viesnīca un pansija",
+   "title": "Numuri, nevis konteineri",
+   "text": "Katrs numurs ir atsevišķa rezervējama vienība ar savām cenām — bez apkārtceļa caur numuru kategorijām ar skaitiem.",
+   "punkte": {
+    "zimmer": "Pieejamība katram numuram visos portālos",
+    "raten": "Cenu plāni katram numuram, atvasināti vai manuāli",
+    "rezeption": "Dienas pārskats par ierašanos un izbraukšanu"
+   }
+  },
+  "agentur": {
+   "label": "Aģentūra un pārvaldība",
+   "title": "Vairāku īpašnieku portfelis",
+   "text": "Jūs pārvaldāt svešus objektus: atsevišķi norēķini, sava piekļuve katram īpašniekam, skaidri skaitļi katram objektam.",
+   "punkte": {
+    "portfolio": "Visi objekti vienā noslodzes plānā",
+    "eigentuemer": "Īpašnieka pieteikšanās ar noslodzi un izmaksām",
+    "abrechnung": "Konta izraksti un komisijas katram objektam"
+   }
+  }
+ },
+ "footer": {
+  "claim": "Platforma brīvdienu mājokļu iznomātājiem – vairāk rezervāciju, mazāk darba.",
+  "appLaden": "Lejupielādēt lietotni",
+  "spalten": {
+   "produkt": "Produkts",
+   "loesungen": "Risinājumi",
+   "ressourcen": "Resursi",
+   "unternehmen": "Uzņēmums"
+  },
+  "produkt": {
+   "pms": "Property Management",
+   "channelManager": "Kanālu pārvaldnieks",
+   "direktbuchung": "Tiešā rezervācija",
+   "zahlungen": "Maksājumi",
+   "mobileApp": "Mobilā lietotne"
+  },
+  "loesungen": {
+   "hotels": "Viesnīcas",
+   "bnb": "B&B",
+   "gaestehaeuser": "Viesu nami",
+   "ferienwohnungen": "Brīvdienu dzīvokļi",
+   "campingplaetze": "Kempingi"
+  },
+  "ressourcen": {
+   "blog": "Blogs",
+   "hilfeCenter": "Palīdzības centrs",
+   "webinare": "Vebināri",
+   "leitfaeden": "Ceļveži",
+   "api": "API dokumentācija"
+  },
+  "unternehmen": {
+   "ueberUns": "Par mums",
+   "karriere": "Karjera",
+   "partner": "Partneri",
+   "kontakt": "Kontakti",
+   "presse": "Presei"
+  },
+  "copyright": "© 2026 myNextDays. Visas tiesības aizsargātas.",
+  "agb": "Noteikumi",
+  "datenschutz": "Privātums",
+  "impressum": "Juridiskā informācija",
+  "cookies": "Sīkdatņu politika",
+  "avv": "Datu apstrāde"
+ },
+ "abschluss": {
+  "heading": "Vai esat gatavi vadīt savu naktsmītni no vienas vietas?",
+  "sub": "30 dienas bez maksas — bez minimālā termiņa, bez uzstādīšanas maksas, atteikšanās jebkurā brīdī.",
+  "ctaPrimaer": "30 dienas bez maksas",
+  "ctaSekundaer": "Skatīt cenas"
+ },
+ "chat": {
+  "titel": "Jautājumi? Mēs esam šeit.",
+  "untertitel": "Parasti atbildam dažu stundu laikā.",
+  "name": "Vārds",
+  "email": "E-pasts",
+  "telefon": "Tālrunis (neobligāti)",
+  "nachricht": "Jūsu ziņa",
+  "absenden": "Sūtīt ziņu",
+  "sendet": "Notiek sūtīšana …",
+  "platzhalter": "Uzrakstiet ziņu …",
+  "senden": "Sūtīt",
+  "oeffnen": "Atvērt tērzēšanu",
+  "schliessen": "Aizvērt tērzēšanu",
+  "hinweis": "Jūsu datus izmantojam tikai, lai atbildētu uz šo pieprasījumu.",
+  "fehler": "Neizdevās. Lūdzu, mēģiniet vēlreiz vēlāk."
+ },
+ "einblicke": {
+  "eyebrow": "Ieskats",
+  "heading": "Kā myNextDays patiešām strādā",
+  "sub": "Nekādu zīmētu skatu — uzņēmumi no reāli strādājoša objekta ar īstām rezervācijām no visiem kanāliem.",
+  "hotel": {
+   "title": "Viesnīca un brīvdienu objekts vienā saskarnē",
+   "text": "Katrs numurs ir atsevišķa rezervējama vienība — tāds pats modelis kā brīvdienu mājai. Noslogojuma plāns rāda ierašanās, uzturēšanās un izbraukšanas pa vienībām, kā arī noslogojumu, apgrozījumu un vidējo cenu par nakti periodā."
+  },
+  "objekte": {
+   "title": "Redzamība katram kanālam atsevišķi, nevis viens slēdzis visam",
+   "text": "Tīmekļa vietne, tirgus laukums un rezervāciju portāli ir trīs atsevišķas asis. Objekts var palikt aktīvs jūsu pašu vietnē, kamēr portālos tas ir apturēts — redzams uzreiz, pārslēdzams ar vienu klikšķi."
+  },
+  "kanaele": {
+   "title": "Pievienojiet portālus un saglabājiet savu pārdošanas kanālu",
+   "text": "Booking.com, Airbnb un citi portāli balstās uz to pašu pieejamību, kas tiešā rezervācija. Rezervēta nakts bloķē visur — bez dubultām rezervācijām un bez manuāla darba pēc tam."
+  }
+ },
+ "preise": {
+  "meta": {
+   "titel": "Cenas — viens plāns, viss iekļauts | myNextDays",
+   "beschreibung": "Viens plāns ar pilnu funkciju klāstu, maksa pēc objektu skaita. Bez minimālā termiņa, bez uzstādīšanas maksas, 30 dienas bez maksas — kanāli, tiešās rezervācijas, saziņa ar viesiem un norēķini iekļauti."
   },
   "hero": {
-    "trustNeu": "Jaunums 2026. gadā",
-    "trustVermieter": "iznomātāju veidots iznomātājiem",
-    "trustAirsmil": "powered by AirSmil",
-    "trustEu": "Mitināts ES (VDAR)",
-    "headlinePre": "Vairāk",
-    "headlineHighlight": "rezervāciju",
-    "headlinePost": "mazāk darba.",
-    "subline": "Platforma viesnīcām, aģentūrām un brīvdienu mājokļu iznomātājiem: kanālu pārvaldnieks, kalendārs, tiešās rezervācijas, saziņa ar viesiem un norēķini vienuviet – veidota iznomātājiem, kuri pārzina ikdienu.",
-    "ctaTrial": "30 dienas bez maksas",
-    "ctaDemo": "Skatiet demonstrāciju",
-    "kanaeleLabel": "Savienots ar lielākajām rezervāciju platformām",
-    "eyebrow": "Platforma brīvdienu mājokļu iznomātājiem",
-    "kanaeleEyebrow": "Pārdošanas kanāli",
-    "aufnahmeBelegungsplan": "myNextDays noslogojuma plāns: astoņi brīvdienu objekti ar rezervācijām no Booking.com, Airbnb, Vrbo, tirgus laukuma un tiešajām rezervācijām",
-    "aufnahmeHotel": "Viesnīcas noslogojuma plāns myNextDays: divpadsmit numuri, katrs kā atsevišķa rezervējama vienība",
-    "aufnahmeObjekte": "Objektu pārskats myNextDays ar fotoattēliem, statusu un redzamību pa kanāliem",
-    "aufnahmeKanaele": "Kanālu pārvaldība myNextDays: pievienotie rezervāciju portāli un pašu tirgus laukums"
+   "eyebrow": "Cenas",
+   "headlinePre": "Viens plāns.",
+   "headlineHighlight": "Viss iekļauts.",
+   "sub": "Nekādu pakešu mīklu: katra funkcija ir iekļauta — vai tu pārvaldi vienu brīvdienu māju vai divpadsmit numuru tipus. Maksā pēc objektu skaita, un jo vairāk to ir, jo lētāks kļūst katrs.",
+   "testen": "30 dienas bez maksas",
+   "laufzeit": "Bez minimālā termiņa",
+   "einrichtung": "Bez uzstādīšanas maksas",
+   "eu": "Mitināts ES, GDPR"
   },
-  "intro": {
-    "heading": "Laipni lūdzam myNextDays.",
-    "p1": "Pilnvērtīga Property Management sistēma kopā ar kanālu pārvaldnieku – viesnīcām, aģentūrām un brīvdienu mājokļu iznomātājiem. Neatkarīgi un godīgi, nevis korporatīva sarežģītība un enterprise cenas.",
-    "p2": "Palieliniet noslodzi, vienkāršojiet ikdienu un sniedziet viesiem lieliskas atmiņas – bez lielo sistēmu sarežģītības un enterprise cenām.",
-    "p3": "Viss vienuviet, gudra automatizācija un savienojums ar visiem svarīgajiem kanāliem – tam klāt jūsu paša rezervāciju portāls ar zemu komisiju. Tā jūsu bizness aug ar lielāku kontroli un mazāku piepūli.",
-    "cta": "Iepazīstiet funkcijas",
-    "reichweite": "Veidots ikvienai naktsmītnei.",
-    "typen": {
-      "hotel": "Viesnīca",
-      "bnb": "B&B",
-      "gaestehaus": "Viesu nams",
-      "motel": "Motelis",
-      "lodge": "Lodža",
-      "ferienwohnung": "Brīvdienu dzīvoklis",
-      "resort": "Kūrorts",
-      "huette": "Namiņš",
-      "pension": "Pansija",
-      "campingplatz": "Kempings"
-    },
-    "belegeHeading": "Uz ko varat paļauties",
-    "belege": {
-      "neu": "Jaunums 2026. gadā – izstrādāts aktīvu iznomātāju, powered by AirSmil",
-      "eu": "Izstrādāts Dānijā, mitināts ES un atbilst VDAR",
-      "kanaele": "56 pievienotas rezervāciju platformas",
-      "start": "Starts 2026. gada 1. septembrī 27 Eiropas valstīs, 24 valodās"
-    },
-    "eyebrow": "Platforma",
-    "typenEyebrow": "Kam tā domāta"
+  "rechner": {
+   "einTarif": "Viens plāns, pilns apjoms",
+   "objekte": "Objekti",
+   "reglerLabel": "Iestati objektu skaitu",
+   "wenigerLabel": "Par vienu objektu mazāk",
+   "mehrLabel": "Par vienu objektu vairāk",
+   "proMonat": "mēnesī",
+   "schnitt": "Tas ir {betrag} par objektu mēnesī.",
+   "grundgebuehr": "Pamatmaksa (ieskaitot 1. objektu)",
+   "weitereObjekte": "{anzahl, plural, zero {# objektu papildus} =1 {viens objekts papildus} other {# objekti papildus}} × {jeObjekt}",
+   "netto": "Visas summas bez PVN. Ikmēneša norēķini, atteikties var jebkurā brīdī.",
+   "ctaTesten": "Izmēģini 30 dienas bez maksas",
+   "ctaDemo": "Skatīt demo",
+   "inklusivTitel": "Iekļauts katrā plānā",
+   "inklusivSub": "Nekā, kas sāktos tikai dārgākā paketē — šis ir viss apjoms.",
+   "nichtAbrufbar": "Cenas pašlaik nav pieejamas",
+   "nichtAbrufbarText": "Cenrādi neizdevās ielādēt. Pārlādē lapu vai raksti mums — pateiksim cenu tavam objektu skaitam.",
+   "direktfrei": "0 % komisijas maksa par rezervācijām tavā mājaslapā"
   },
-  "zielgruppen": {
-    "bildAlt": "myNextDays saskarne, piemērs {typ}",
-    "abschluss": "Lai kāda būtu forma — visu pārvalda vienā sistēmā, ar vienu pieteikšanos.",
-    "typen": {
-      "hotel": {
-        "unterzeile": "Viesnīcu programmatūra ar channel manager",
-        "text": "Mazās viesnīcas numurus ved kā numuru tipus: katrs tips nes savas vienības, un noslogojuma plānā katrs numurs ir atsevišķi — ar ierašanos, izbraukšanu un uzkopšanu. Booking.com, Expedia un pārējie portāli saņem brīvo vienību skaitu, nevis jā/nē. Cenas, minimālo uzturēšanos un slēgumus ievadi vienreiz, un channel manager tos izsūta visiem pieslēgtajiem portāliem. Rēķins, maksājums un saziņa ar viesi ir vienā sistēmā.",
-        "beleg": "Pieejamība kā skaitlis, nevis jā/nē."
-      },
-      "bnb": {
-        "unterzeile": "Rezervāciju sistēma bed & breakfast",
-        "text": "Brokastis, dvieļi, maksa par dzīvnieku, vēla ierašanās: papildpakalpojumi paliek pie rezervācijas un nonāk viesa rēķinā bez atsevišķas rēķināšanas. Kas B&B stāv pie galda pats, negrib otru sarakstu — pieprasījumi, ziņas, maksājumi un noslogojums satiekas vienā vietā, datorā un telefonā. Kartes maksājums caur Stripe ir iekļauts, tāpat kā paša rezervāciju lapa bez portāla komisijas.",
-        "beleg": "Papildpakalpojumi tiek norēķināti automātiski."
-      },
-      "gaestehaus": {
-        "unterzeile": "Viesu namu pārvaldība ar vairākiem numuriem",
-        "text": "Vairākas vienības zem viena jumta, viens kalendārs: kurš viesis saņem kuru numuru, izlem līdz ierašanās brīdim, bez rezervācijas ievadīšanas no jauna. Ēka nosaka, ko portāli redz zem viena identifikatora; aprīkojumu, fotoattēlus un cenas ved pēc numura tipa. Uzkopšanas uzdevumi seko ierašanās un izbraukšanas reizēm un nonāk komandas telefonā — ar savu pieteikšanos, kas rāda uzdevumus, nevis ieņēmumus.",
-        "beleg": "Viena ēka, viens portāla identifikators."
-      },
-      "motel": {
-        "unterzeile": "Programmatūra moteļiem un īsām naktsmītnēm",
-        "text": "Liela plūsma, īsas uzturēšanās, vēlas ierašanās: ierašanās informācija, piekļuves kodi un rēķins nonāk pie viesa automātiski — īstajā brīdī un viņa valodā, gatavas ir 24 valodas. Numuri, kas atbrīvojas, paši atgriežas visos portālos, un viens stop-sell tos aizver visur vienlaikus. Reģistratūrā pietiek ar dienas plānu: kas ierodas, kas aizbrauc, kas vēl ir atvērts.",
-        "beleg": "Ziņas aiziet pašas."
-      },
-      "lodge": {
-        "unterzeile": "Lodge izīrēšana arī no telefona",
-        "text": "Nomaļš nenozīmē nogriezts: cenas, minimālo uzturēšanos, maiņas dienas un slēgumus pārvaldi telefonā tāpat kā pie galda — tas pats kalendārs, tā pati rezervācija, bez starpstāvokļa. Sezonas cenas uzstādi cenu tīklā uz visu gadu, nevis dienu pēc dienas, un atlaides ilgākām uzturēšanās reizēm nonāk arī portālos. Arī bez reģistratūras viesis zina, kā iekļūt iekšā.",
-        "beleg": "Arī ceļā, lietotnē."
-      },
-      "ferienwohnung": {
-        "unterzeile": "Channel manager brīvdienu dzīvokļiem",
-        "text": "Viens dzīvoklis, visi kanāli: Booking.com, Airbnb, Vrbo, mūsu paša tirgus myBestDays un tiešās rezervācijas no tavas vietnes dala vienu kalendāru. Pārdota nakts pazūd visur — dubultas rezervācijas nerodas. Tiešās rezervācijas ar zemu komisiju vari mērķtiecīgi veicināt: pati cenu stratēģija, atlaides ilgākām uzturēšanās reizēm, automātiskas ziņas no rezervācijas līdz izbraukšanai un kartes maksājums tavā kontā.",
-        "beleg": "Viens kalendārs visiem kanāliem."
-      },
-      "resort": {
-        "unterzeile": "Resorta pārvaldība ar daudzām vienībām",
-        "text": "Studijas, apartamenti un villas darbojas kā atsevišķi tipi ar savām cenām, aprīkojumu un noslogojuma noteikumiem — visi zem viena konta un vienas norēķinu kārtības. Cik objektu un cik vienību uz tipu vajag, nevienam nemainot pieteikšanos. Reģistratūra, uzkopšana un īpašnieki redz tikai savu daļu; īpašnieku norēķini rodas pa objektiem kopā ar atskaiti, nevis kā izklājlapa mēneša beigās.",
-        "beleg": "Cik objektu kontā vien vajag."
-      },
-      "huette": {
-        "unterzeile": "Namiņu izīrēšana sezonas darbā",
-        "text": "Sezonas darbs bez roku darba: slēgtos periodus, maiņas dienas, minimālās un maksimālās naktis uzstādi vienreiz, un tie darbojas visos portālos vienlaikus. Ja namiņš ziemā ir slēgts, tas ir slēgts visur — bez pieteikšanās piecos ekstranetos. Maiņas diena starp divām rezervācijām paliek brīva, lai uzkopšanai būtu laiks, un ierašanās vai izbraukšanas dienas var slēgt atsevišķi.",
-        "beleg": "Viens slēgums darbojas visos portālos."
-      },
-      "pension": {
-        "unterzeile": "Pansijas pārvaldība ar rēķinu un tūrisma nodevu",
-        "text": "Puspansija, tūrisma nodeva, pastāvīgie viesi, maksa uz vietas: piemaksas un nodevas sistēma aprēķina pareizi katram portālam — arī tur, kur portāls ziņo neto summu, bet tev vajag bruto cenu. Rēķini, kredītrēķini un atvērtās pozīcijas atrodas tajā pašā lietā kā rezervācija, tavas valsts valūtā. Atgriežošos viesus pazīsti pēc viņu vēstures, nevis meklējot vecās vēstulēs.",
-        "beleg": "Nodevas pa portāliem, pareizi aprēķinātas."
-      },
-      "campingplatz": {
-        "unterzeile": "Kempinga pārvaldība ar vietām",
-        "text": "Vietas, nomas treileri un glamping teltis ir tipi ar skaitu: divdesmit vienādas vietas ir viens tips ar divdesmit vienībām, nevis divdesmit kalendāri. Pieejamība nonāk portālos kā skaitlis, lai nekad netiktu pārdots vairāk, nekā ir. Elektrību, tūrisma nodevu vai suni norēķini par nakti vai par uzturēšanos, un dienas ierašanās stāv kopā dienas plānā.",
-        "beleg": "Skaits, nevis divdesmit kalendāri."
-      }
-    }
+  "provisionen": {
+   "eyebrow": "Komisijas",
+   "heading": "Cik maksā viena rezervācija?",
+   "sub": "Tas atkarīgs no tā, no kurienes nāk viesis. Trīs ceļi, trīs likmes — vairāk nav.",
+   "direktTitel": "Viesis rezervē pie tevis",
+   "direktText": "Caur tavu mājaslapu vai rezervācijas formu. No tā mēs neņemam neko. Paliek tikai tava maksājumu pakalpojuma maksa.",
+   "direktWert": "0 %",
+   "portaleTitel": "Viesis nāk no Booking, Airbnb un citiem",
+   "portaleText": "Aprēķinām 0,5 % no rezervācijas vērtības, reizi mēnesī tavā rēķinā. Tas, ko patur pats portāls, no tā nav atkarīgs.",
+   "marktplatzTitel": "Viesis nāk caur myBestDays",
+   "marktplatzText": "Mūsu pašu tirgus vieta. Šeit tevi atrod viesi, kas tevi vēl nepazīst. Mēs atnesam rezervāciju, iekasējam naudu un izmaksājam to tev — par to paturam 8 %. Citu izmaksu nav.",
+   "deckel": "Un ir griesti: par portālu rezervācijām nekad nemaksā vairāk par {betrag} mēnesī."
+  },
+  "module": {
+   "eyebrow": "Papildmoduļi",
+   "heading": "Pievieno tikai to, kas tiešām vajadzīgs.",
+   "sub": "Pamatplāns sedz ikdienu. Šie moduļi vajadzīgi tikai tad, ja to prasa tava darbība — pieslēdz un atslēdz katru mēnesi.",
+   "buchhaltungTitel": "Grāmatvedība",
+   "buchhaltungText": "Rēķinu un eksporta loģika grāmatvedim, ar DATEV un e-conomic eksportu.",
+   "mitarbeiterTitel": "Darbinieki",
+   "mitarbeiterText": "Maiņu un darbu plānošana uzkopšanai, reģistratūrai un tehniskajam dienestam.",
+   "hotelTitel": "Viesnīca",
+   "hotelText": "Reģistratūras darbs ar front desk — mājām ar vairākiem numuru tipiem. Rēķina par numuru, nevis par māju.",
+   "dynamischTitel": "Dinamiskās cenas",
+   "dynamischText": "Tavas cenas pielāgojas pašas: noslodzei, sezonai un rezervēšanas laikam. Aprēķina tikai par rezervācijām, kas rodas, kamēr modulis darbojas.",
+   "proMonat": "mēnesī",
+   "oder": "vai",
+   "jeNutzer": "par lietotāju mēnesī",
+   "jeZimmer": "par numuru mēnesī",
+   "vomUmsatz": "no rezervāciju apgrozījuma",
+   "hinweis": "Moduļus var ieslēgt un izslēgt ik mēnesi — piekļuve darbojas uzreiz, rēķins ir proporcionāls."
+  },
+  "vergleich": {
+   "eyebrow": "Salīdzinājums",
+   "heading": "Cik ņem citi par tādu pašu objektu skaitu.",
+   "sub": "Mēneša cenas ar {objekte} objektiem, no pakalpojumu sniedzēju oficiālajām cenu lapām. Salīdzinām plānu, kas sedz mūsu funkciju apjomu.",
+   "unsereRechnung": "Pamatmaksa + objektu pakāpes",
+   "proMonat": "/mēn.",
+   "ohnePreis": "nav publicēts",
+   "fussnote": "Stāvoklis uz {stand}, nolasīts tieši no pakalpojumu sniedzēju cenu lapām. Norādītas mēneša cenas bez gada saistībām; ja sniedzējs reklamē gada cenu, tā redzama aprēķinā. Bez garantijas — noteicošais ir sniedzēja aktuālais cenrādis.",
+   "ersparnis": "par {prozent} % lētāk nekā vidēji"
   },
   "faq": {
-    "eyebrow": "Biežāk uzdotie jautājumi",
-    "heading": "Jautājumi, kas rodas pirms sistēmas maiņas.",
-    "sub": "Ko platforma dara, cik tā maksā un kā tiek aizsargāti tavi dati — bez mārketinga valodas.",
-    "was": {
-      "frage": "Kas tieši ir myNextDays?",
-      "antwort": "myNextDays ir naktsmītņu pārvaldības sistēma un channel manager vienā — viesnīcām, pansijām, viesu namiem, brīvdienu dzīvokļiem, kempingiem un aģentūrām. Kalendārs, rezervācijas, cenas, portāli, tiešā rezervācija, saziņa ar viesi, uzkopšana un norēķini atrodas vienā saskarnē ar vienu pieteikšanos, nevis četros rīkos, kas viens par otru neko nezina."
-    },
-    "portale": {
-      "frage": "Kurus rezervāciju portālus varu pieslēgt?",
-      "antwort": "Tu sasniedz 56 rezervāciju platformas, tostarp Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda un Tripadvisor. Klāt nāk mūsu paša tirgus myBestDays, rezervāciju logrīks tavai vietnei un reģionālie kanāli. Katrs kanāls tiek ieslēgts atsevišķi: pie katra objekta izlem, kur tas ir redzams."
-    },
-    "sync": {
-      "frage": "Cik ātri notiek sinhronizācija — un vai iespējamas dubultas rezervācijas?",
-      "antwort": "Sinhronizācija notiek abos virzienos reāllaikā: rezervācija vienā portālā aizver nakti visur citur, un mainītās cenas vai minimālā uzturēšanās aiziet uzreiz. Visi kanāli dala vienu kalendāru, tāpēc otrā patiesība nerodas. Stop-sell aizver visur vienlaikus, ne tikai tur, kur to iestati."
-    },
-    "betriebsarten": {
-      "frage": "Vai tas piemērots viesnīcai un brīvdienu dzīvokļiem vienlaikus?",
-      "antwort": "Jā, modelis ir tas pats: katrs objekts ir tieši viens tips — numura tips viesnīcā vai brīvdienu naktsmītne — un zem tā ir tā vienības. Viesnīcai ar astoņiem divvietīgiem un četriem vienvietīgiem numuriem ir divi objekti ar astoņām un četrām vienībām. Uz portāliem aiziet brīvo vienību skaits, lai piecas vienādas studijas neprasītu piecus kalendārus."
-    },
-    "direkt": {
-      "frage": "Vai saņemu savu rezervāciju lapu bez portāla komisijas?",
-      "antwort": "Jā. Katram kontam pieder savs rezervāciju portāls, logrīks esošajai vietnei un vietņu veidotājs ar savu domēnu. Tiešās rezervācijas maksā 0,5 % vietā 15–18 % lielo portālu komisijas, darbojas tajā pašā kalendārā un ar tām pašām cenām — un nauda nonāk tieši tavā kontā."
-    },
-    "marktplatz": {
-      "frage": "Kas ir myBestDays?",
-      "antwort": "myBestDays ir mūsu paša tirgus viesiem — rezervāciju kanāls līdzvērtīgi Booking.com un Airbnb, tikai ar būtiski zemāku komisiju. Objekti, kurus tur padari redzamus, parādās tirgū un viesu myBestDays lietotnē. Šī redzamība ir atsevišķs slēdzis, neatkarīgs no portāliem."
-    },
-    "zahlungen": {
-      "frage": "Kā darbojas maksājumi, avansi un rēķini?",
-      "antwort": "Tiešsaistes maksājumi iet caur Stripe uz tavu paša kontu: avanss, atlikums vai drošības nauda, ar karti un tiem maksājuma veidiem, ko Stripe piedāvā viesa valstī. Rēķini un kredītrēķini rodas no rezervācijas, objekta valūtā, ar grāmatvedībai gataviem eksportiem. Portālu maksas un nodevas tiek aprēķinātas pareizi katram portālam — arī tur, kur portāls ziņo tikai neto summu."
-    },
-    "laender": {
-      "frage": "Kurās valstīs, valūtās un valodās platforma darbojas?",
-      "antwort": "Startā 2026. gada 1. septembrī 27 Eiropas valstīs. Saskarne un saziņa ar viesi ir 24 valodās; viesis lasa apstiprinājumu savā valodā. Valūta pieder objektam vai uzņēmumam — eiro netiek pieņemts par pašsaprotamu, kronas, zloti vai forinti tiek vesti tāpat."
-    },
-    "rollen": {
-      "frage": "Kas redz kādus datus — īpašnieki, uzkopšana, viesi?",
-      "antwort": "Katrai lomai ir sava pieteikšanās, un tā redz tikai savu daļu. Īpašnieki redz savus objektus, to noslogojumu un izmaksas, bet ne citu. Uzkopšana redz uzdevumus ar foto kontrolsarakstiem, ne ieņēmumus. Viesiem ir sava zona ar reģistrāciju, digitālo viesu mapi un ziņām."
-    },
-    "app": {
-      "frage": "Vai ir lietotne?",
-      "antwort": "Divas, jo viesim un uzņēmumam vajag dažādas lietas: myNextDays lietotne uzņēmumam, īpašniekiem un uzkopšanai — kalendārs, rezervācijas un uzdevumi ceļā — un myBestDays lietotne viesiem ar meklēšanu, rezervāciju, reģistrāciju un ziņām. Abas runā ar to pašu sistēmu; nekas nedarbojas uz kopijas."
-    },
-    "sicherheit": {
-      "frage": "Kā ar datu aizsardzību un drošību?",
-      "antwort": "Būvēts Dānijā, mitināts ES, atbilst GDPR, tostarp ar datu apstrādes līgumu. Katra uzņēmuma dati ir atdalīti datubāzes līmenī, ne tikai saskarnē. Divfaktoru pieteikšanās ir pieejama, lomu tiesības ierobežo piekļuvi finanšu un viesu datiem, un katra pieteikšanās ir izsekojama ierīču vēsturē."
-    },
-    "preis": {
-      "frage": "Cik maksā myNextDays un kā sākt?",
-      "antwort": "30 dienas bez maksas, bez minimālā termiņa, bez ieviešanas maksas, atteikties var jebkurā laikā. Pēc tam abonements plus neliela komisija par rezervācijām, ko atvedam. Papildmoduļus — paplašinātu grāmatvedību ar DATEV eksportu, darbinieku pārvaldību vai viesnīcu funkcijas — pievieno tikai tad, ja tie vajadzīgi. Izveido objektu, pieslēdz kanālus, sāc."
-    }
+   "eyebrow": "Biežākie jautājumi",
+   "heading": "Jautājumi par cenu",
+   "sub": "Ko izīrētāji vēlas zināt pirms maiņas — īsi un bez sīkā druka.",
+   "laufzeit": {
+    "frage": "Vai ir minimālais termiņš?",
+    "antwort": "Nē. Abonements darbojas pa mēnesim un to var izbeigt ar četru nedēļu brīdinājumu uz mēneša beigām. Pirmās 30 dienas ir bez maksas, bez maksājumu datiem."
+   },
+   "objektzahl": {
+    "frage": "Kas notiek, kad pievienoju objektus?",
+    "antwort": "Maksā par pasūtīto objektu skaitu. Kad pievienojas objekts, piemaksu aprēķina proporcionāli un tā uzreiz lietojama; nākamā pakāpe sāk darboties automātiski, tiklīdz to sasniedz."
+   },
+   "waehrung": {
+    "frage": "Kādā valūtā notiek norēķini?",
+    "antwort": "Norēķināmies eiro kā enkurvalūtā; ja maksā citā valūtā, maksājums tiek pārrēķināts pēc dienas kursa. Tavi viesi neatkarīgi no tā maksā tava objekta valūtā."
+   },
+   "steuern": {
+    "frage": "Vai cenas ir ar nodokli?",
+    "antwort": "Visas norādītās summas ir bez nodokļa. PVN atkarīgs no tavas valsts; ar derīgu ES PVN numuru rēķinu izrakstām bez nodokļa (apgrieztā maksāšana)."
+   },
+   "umzug": {
+    "frage": "Vai varu paņemt līdzi savus datus?",
+    "antwort": "Jā. Objektus, cenas un noslodzi var importēt, bet portālus pievieno no jauna. Komanda palīdz iestatīšanā — bez piemaksas."
+   },
+   "kuendigung": {
+    "frage": "Kas notiek pēc atteikšanās?",
+    "antwort": "Tavi objekti paliek pārdošanā līdz apmaksātā perioda beigām. Pēc tam joprojām piekļūsti saviem datiem un vari tos eksportēt; nekas netiek dzēsts, kamēr to nelūdz."
+   }
   },
-  "benefits": {
-    "eyebrow": "Kāpēc myNextDays",
-    "sub": "Trīs lietas, kas iznomāšanas ikdienā patiešām ir svarīgas — tieši tām platforma ir veidota.",
-    "heading": "Vairāk rezervāciju. Mazāk darba.",
-    "buchungen": {
-      "title": "Iegūstiet vairāk rezervāciju",
-      "text": "Esiet redzami visos lielākajos kanālos un savā mājaslapā. Viens centrālais kalendārs uztur visu sinhronizētu – dubultajām rezervācijām pienācis gals."
-    },
-    "betrieb": {
-      "title": "Vienkāršojiet ikdienas darbu",
-      "text": "Pārvaldiet objektus, rezervācijas, uzkopšanu un norēķinus vienuviet – pie darbagalda vai ceļā."
-    },
-    "fair": {
-      "title": "Godīgi un eiropeiski",
-      "text": "Caurspīdīga cena bez enterprise šķēršļiem, izstrādāts Dānijā, mitināts ES saskaņā ar VDAR. Personīgs atbalsts no komandas, kas programmatūru lieto pati."
-    },
-    "preisBanner": {
-      "eyebrow": "Cena",
-      "heading": "Viss jūsu naktsmītnei vienuviet",
-      "text": "30 dienas bez maksas. Bez minimālā termiņa. Atteikšanās jebkurā brīdī (4 nedēļas līdz mēneša beigām).",
-      "preis": "19,90 €",
-      "proMonat": "mēnesī",
-      "tarif": "Viens plāns visiem, ieskaitot 1 objektu",
-      "objekte": "Katrs nākamais objekts +6/5/4 € (dilstoša skala)",
-      "provision": "Ārējie kanāli 0,5 % · savs portāls 8 %",
-      "cta": "Skatīt cenas"
-    }
-  },
-  "trial": {
-    "eyebrow": "Bezmaksas izmēģinājums",
-    "heading": "Izmēģiniet myNextDays 30 dienas bez maksas.",
-    "sub": "Bez minimālā termiņa. Atteikšanās jebkurā brīdī. Vienkārši aizpildiet šo īso veidlapu:",
-    "seitenHeading": "Viss jūsu naktsmītnei vienuviet – vairāk kontroles, mazāk darba.",
-    "perks": {
-      "buchungen": {
-        "title": "Vairāk rezervāciju",
-        "text": "visos lielākajos kanālos un jūsu portālā, bez dubultajām rezervācijām."
-      },
-      "kontrolle": {
-        "title": "Pilnīga kontrole",
-        "text": "pār reģistrēšanos, rezervācijām un rēķiniem vienuviet."
-      },
-      "freiheit": {
-        "title": "Vairāk brīvības",
-        "text": "pārvaldiet savu naktsmītni telefonā, lai kur atrastos."
-      }
-    },
-    "vorname": "Vārds",
-    "nachname": "Uzvārds",
-    "email": "E-pasts",
-    "emailPlatzhalter": "vards@piemers.lv",
-    "einwilligung": "Jā, es vēlos laiku pa laikam saņemt jaunumus, ielūgumus uz vebināriem un myNextDays piedāvājumus. Piekrišanu varat atsaukt jebkurā brīdī.",
-    "absenden": "Sāciet tūlīt",
-    "dankeTitel": "Liels paldies!",
-    "dankeText": "Drīzumā sazināsimies ar jums."
-  },
-  "features": {
-    "heading": "Viena sistēma. Viena pieteikšanās.",
-    "baldBadge": "Drīzumā",
-    "hinweis": "Pamata rēķini ir iekļauti jau no starta. Paplašinātā grāmatvedība (DATEV eksports), darbinieku pārvaldība, pakalpojumu sniedzēju tirgus un viesnīcu funkcijas ir papildu moduļi.",
-    "eyebrow": "Funkcijas",
-    "sub": "Viena piekļuve uzņēmumam, īpašniekiem, viesiem un uzkopšanai — katra loma redz tieši savu jomu.",
-    "alleAnsehen": "Iepazīstiet visas funkcijas bezmaksas izmēģinājumā",
-    "neu": {
-      "title": "myNextDays MI un avatars",
-      "text": "Avatars un balss vadība, MI konsjeržs viesu jautājumiem un cenas, kas pielāgojas sezonai un pieprasījumam."
-    },
-    "gruppen": {
-      "pms": {
-        "title": "Property Management",
-        "items": "Centrālais daudzobjektu kalendārs, noslodzes plāns, rezervācijas, uzdevumi, objektu un aprīkojuma dati"
-      },
-      "channel": {
-        "title": "Kanālu pārvaldnieks",
-        "items": "56 rezervāciju platformas, Airbnb, Booking.com, Expedia, Vrbo, Google, divvirzienu sinhronizācija reāllaikā"
-      },
-      "direkt": {
-        "title": "Tiešā rezervācija",
-        "items": "Savs rezervāciju portāls, rezervāciju logrīks, mājaslapu veidotājs, savs domēns, 0,5 % 15–18 % OTA komisijas vietā"
-      },
-      "preise": {
-        "title": "Cenas un ieņēmumi",
-        "items": "Dinamiskās cenas ar min./maks., cenu plāni katram objektam, sezonas un noslodzes loģika, manuālajām cenām ir prioritāte"
-      },
-      "gaeste": {
-        "title": "Viesu pieredze",
-        "items": "Digitālā viesu mape, MI konsjeržs, tiešsaistes reģistrēšanās, automātiskās ziņas, 24 valodas"
-      },
-      "zahlungen": {
-        "title": "Maksājumi un norēķini",
-        "items": "Tiešsaistes maksājumi, avansi, drošības naudas, pamata rēķini, grāmatvedībai gatavi eksporti"
-      },
-      "team": {
-        "title": "Komanda un lomas",
-        "items": "Īpašnieka pieteikšanās ar izmaksām, uzkopšanas pieteikšanās ar foto kontrolsarakstiem, uzdevumi, nodalītas tiesības"
-      },
-      "app": {
-        "title": "Mobilā lietotne",
-        "items": "Vietējā lietotne ar atsevišķām pieteikšanās iespējām īpašniekiem, viesiem un uzkopšanai, vadiet biznesu ceļā"
-      },
-      "auswertungen": {
-        "title": "Analītika",
-        "items": "Noslodze, ieņēmumi, ADR, automātiskās atskaites, kanālu salīdzinājums, metameklēšana drīzumā"
-      }
-    }
-  },
-  "ki": {
-    "eyebrow": "MI un balss",
-    "heading": "Platforma pārņem rutīnu jūsu vietā.",
-    "sub": "Vadiet ar balsi, ļaujiet viesu jautājumiem atbildēt pašiem, bet cenām sekot tirgum — nemācoties nevienu klikšķi.",
-    "voice": {
-      "title": "Avatars / balss vadība",
-      "text": "Vadiet ar balsi un ļaujiet avataram atbildēt: pārbaudiet noslodzi, pārvaldiet rezervācijas un uzdevumus, mainiet cenas – kamēr esat ceļā vai sagatavojat objektu."
-    },
-    "concierge": {
-      "title": "MI konsjeržs jūsu viesiem",
-      "text": "Digitālā viesu mape pati atbild par Wi-Fi paroli, atslēgu kastīti, atkritumu konteineriem un vietējiem ieteikumiem — 24 valodās, visu diennakti."
-    },
-    "preise": {
-      "title": "Cenas, kas domā līdzi",
-      "text": "Nosakiet bāzes cenu ar min. un maks. katram objektam; nakts cenas seko sezonai, noslodzei un pieprasījumam. Manuālajām cenām vienmēr ir prioritāte."
-    },
-    "cta": "Skatīt funkcijas",
-    "blaseFrage": "Kāda ir noslodze nākamnedēļ?",
-    "blaseAntwort": "Aizņemtas 18 no 24 naktīm. Divas brīvas vietas nedēļas nogalē – varbūt samazināt cenu?",
-    "eingabe": "Jautājiet myNextDays …",
-    "baldBadge": "Drīzumā"
-  },
-  "integrationen": {
-    "eyebrow": "Sasniedzamība",
-    "heading": "56 rezervāciju platformas – viena saskarne.",
-    "p1": "Jūs izplatāt pieejamību, cenas un ierobežojumus uz 56 rezervāciju platformām – to vidū Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda un Tripadvisor. Divvirzienu sinhronizācija reāllaikā: rezervācija vienā portālā bloķē šo nakti visur citur.",
-    "p2": "Tam klāt nāk jūsu pašu pārdošana: zemas komisijas rezervāciju portāls myBestDays platformā, rezervāciju logrīks jūsu mājaslapai un reģionālie kanāli, kurus varat ieslēgt pa vienam. Katrs kanāls tiek vadīts atsevišķi – jūs izlemjat, kur objekts ir redzams.",
-    "cta": "Savienojiet kanālus bezmaksas izmēģinājumā"
-  },
-  "testimonials": {
-    "eyebrow": "Aiz platformas",
-    "heading": "Kāpēc mēs izveidojām myNextDays.",
-    "gruenderin": {
-      "quote": "myNextDays radās no mūsu pašu iznomāšanas ikdienas AirSmil – mēs veidojam tieši to programmatūru, kas mums pašiem būtu bijusi vajadzīga.",
-      "name": "Jeanine Ågaard",
-      "location": "myNextDays / AirSmil dibinātāja"
-    }
-  },
-  "stimmen": {
-    "eyebrow": "Balsis no prakses",
-    "heading": "Ko stāsta naktsmītņu saimnieki.",
-    "vorschauHinweis": "Izkārtojuma priekšskatījums ar paraugtekstiem – vēlāk šeit būs īstas, apstiprinātas atsauksmes.",
-    "zurueck": "Iepriekšējā atsauksme",
-    "vor": "Nākamā atsauksme",
-    "zeigeStimme": "Rādīt atsauksmi {nummer}"
-  },
-  "stats": {
-    "eyebrow": "Skaitļi, ko varam pierādīt",
-    "heading": "Iznomātāju platforma, ko veidojuši cilvēki, kas paši iznomā.",
-    "sub": "Starts 2026. gada 1. septembrī 27 valstīs.",
-    "laender": {
-      "value": "27",
-      "label": "Valstis",
-      "text": "Eiropas valstis startā"
-    },
-    "sprachen": {
-      "value": "24",
-      "label": "Valodas",
-      "text": "Saskarne un saziņa ar viesiem"
-    },
-    "kanaele": {
-      "value": "56",
-      "label": "Platformas",
-      "text": "Pievienotas rezervāciju platformas"
-    },
-    "hosting": {
-      "value": "100 %",
-      "label": "ES mitināšana",
-      "text": "Izstrādāts Dānijā, atbilst VDAR"
-    },
-    "vermieter": {
-      "label": "Izstrādājuši iznomātāji",
-      "text": "No īstas iznomāšanas ikdienas AirSmil"
-    }
-  },
-  "usecases": {
-    "eyebrow": "Kam mēs veidojam",
-    "heading": "Trīs darbības veidi, viena platforma.",
-    "sub": "Brīvdienu objekts, viesnīcas numurs vai vesels portfelis — tā pati saskarne, katram uzņēmumam saliktā citādi.",
-    "ferienobjekt": {
-      "label": "Brīvdienu mājoklis",
-      "title": "Brīvdienu mājas un dzīvokļi",
-      "text": "Viens vai vairāki objekti, ko iznomājat paši — bez reģistratūras, toties ar atslēgu nodošanu, uzkopšanu un viesu jautājumiem.",
-      "punkte": {
-        "kanaele": "Portāli un sava mājaslapa vienā kalendārā",
-        "kalender": "Uzkopšanas un nodošanas plānošana katram objektam",
-        "gaeste": "Tiešsaistes reģistrēšanās un digitālā viesu mape 24 valodās"
-      }
-    },
-    "hotel": {
-      "label": "Viesnīca un pansija",
-      "title": "Numuri, nevis konteineri",
-      "text": "Katrs numurs ir atsevišķa rezervējama vienība ar savām cenām — bez apkārtceļa caur numuru kategorijām ar skaitiem.",
-      "punkte": {
-        "zimmer": "Pieejamība katram numuram visos portālos",
-        "raten": "Cenu plāni katram numuram, atvasināti vai manuāli",
-        "rezeption": "Dienas pārskats par ierašanos un izbraukšanu"
-      }
-    },
-    "agentur": {
-      "label": "Aģentūra un pārvaldība",
-      "title": "Vairāku īpašnieku portfelis",
-      "text": "Jūs pārvaldāt svešus objektus: atsevišķi norēķini, sava piekļuve katram īpašniekam, skaidri skaitļi katram objektam.",
-      "punkte": {
-        "portfolio": "Visi objekti vienā noslodzes plānā",
-        "eigentuemer": "Īpašnieka pieteikšanās ar noslodzi un izmaksām",
-        "abrechnung": "Konta izraksti un komisijas katram objektam"
-      }
-    }
-  },
-  "footer": {
-    "claim": "Platforma brīvdienu mājokļu iznomātājiem – vairāk rezervāciju, mazāk darba.",
-    "appLaden": "Lejupielādēt lietotni",
-    "spalten": {
-      "produkt": "Produkts",
-      "loesungen": "Risinājumi",
-      "ressourcen": "Resursi",
-      "unternehmen": "Uzņēmums"
-    },
-    "produkt": {
-      "pms": "Property Management",
-      "channelManager": "Kanālu pārvaldnieks",
-      "direktbuchung": "Tiešā rezervācija",
-      "zahlungen": "Maksājumi",
-      "mobileApp": "Mobilā lietotne"
-    },
-    "loesungen": {
-      "hotels": "Viesnīcas",
-      "bnb": "B&B",
-      "gaestehaeuser": "Viesu nami",
-      "ferienwohnungen": "Brīvdienu dzīvokļi",
-      "campingplaetze": "Kempingi"
-    },
-    "ressourcen": {
-      "blog": "Blogs",
-      "hilfeCenter": "Palīdzības centrs",
-      "webinare": "Vebināri",
-      "leitfaeden": "Ceļveži",
-      "api": "API dokumentācija"
-    },
-    "unternehmen": {
-      "ueberUns": "Par mums",
-      "karriere": "Karjera",
-      "partner": "Partneri",
-      "kontakt": "Kontakti",
-      "presse": "Presei"
-    },
-    "copyright": "© 2026 myNextDays. Visas tiesības aizsargātas.",
-    "agb": "Noteikumi",
-    "datenschutz": "Privātums",
-    "impressum": "Juridiskā informācija",
-    "cookies": "Sīkdatņu politika",
-    "avv": "Datu apstrāde"
-  },
-  "abschluss": {
-    "heading": "Vai esat gatavi vadīt savu naktsmītni no vienas vietas?",
-    "sub": "30 dienas bez maksas — bez minimālā termiņa, bez uzstādīšanas maksas, atteikšanās jebkurā brīdī.",
-    "ctaPrimaer": "30 dienas bez maksas",
-    "ctaSekundaer": "Skatīt cenas"
-  },
-  "chat": {
-    "titel": "Jautājumi? Mēs esam šeit.",
-    "untertitel": "Parasti atbildam dažu stundu laikā.",
-    "name": "Vārds",
-    "email": "E-pasts",
-    "telefon": "Tālrunis (neobligāti)",
-    "nachricht": "Jūsu ziņa",
-    "absenden": "Sūtīt ziņu",
-    "sendet": "Notiek sūtīšana …",
-    "platzhalter": "Uzrakstiet ziņu …",
-    "senden": "Sūtīt",
-    "oeffnen": "Atvērt tērzēšanu",
-    "schliessen": "Aizvērt tērzēšanu",
-    "hinweis": "Jūsu datus izmantojam tikai, lai atbildētu uz šo pieprasījumu.",
-    "fehler": "Neizdevās. Lūdzu, mēģiniet vēlreiz vēlāk."
-  },
-  "einblicke": {
-    "eyebrow": "Ieskats",
-    "heading": "Kā myNextDays patiešām strādā",
-    "sub": "Nekādu zīmētu skatu — uzņēmumi no reāli strādājoša objekta ar īstām rezervācijām no visiem kanāliem.",
-    "hotel": {
-      "title": "Viesnīca un brīvdienu objekts vienā saskarnē",
-      "text": "Katrs numurs ir atsevišķa rezervējama vienība — tāds pats modelis kā brīvdienu mājai. Noslogojuma plāns rāda ierašanās, uzturēšanās un izbraukšanas pa vienībām, kā arī noslogojumu, apgrozījumu un vidējo cenu par nakti periodā."
-    },
-    "objekte": {
-      "title": "Redzamība katram kanālam atsevišķi, nevis viens slēdzis visam",
-      "text": "Tīmekļa vietne, tirgus laukums un rezervāciju portāli ir trīs atsevišķas asis. Objekts var palikt aktīvs jūsu pašu vietnē, kamēr portālos tas ir apturēts — redzams uzreiz, pārslēdzams ar vienu klikšķi."
-    },
-    "kanaele": {
-      "title": "Pievienojiet portālus un saglabājiet savu pārdošanas kanālu",
-      "text": "Booking.com, Airbnb un citi portāli balstās uz to pašu pieejamību, kas tiešā rezervācija. Rezervēta nakts bloķē visur — bez dubultām rezervācijām un bez manuāla darba pēc tam."
-    }
+  "teaser": {
+   "cta": "Skatīt visas cenas",
+   "abObjekt": "Katrs nākamais objekts no {betrag}",
+   "provision": "Sava mājaslapa {direkt} · portāli {portale}",
+   "tarif": "Viens plāns visiem, ieskaitot 1. objektu"
   }
+ }
 }
