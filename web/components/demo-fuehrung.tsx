@@ -14,12 +14,17 @@
 // weiterklicken — das ist der Unterschied zu einer Aufzeichnung und der Grund,
 // warum wir die echte Anwendung zeigen und keinen Schnappschuss.
 //
-// Warum die Schritte NICHT selbst navigieren: ein Sprung, den der Besucher
-// nicht ausgelöst hat, wirkt wie ein Fehler, und auf einer langsam ladenden
-// Seite steht die Blase dann an einer leeren Fläche. Stattdessen zeigt jeder
-// Schritt auf den Menüpunkt, den man klicken WÜRDE — der Besucher behält die
-// Hand am Steuer.
+// Die Führung ÖFFNET die Seiten. Eine Vorführung, die nur auf Menüpunkte
+// zeigt, zeigt das Menü — nicht das Produkt: der Besucher liest, dass es einen
+// Belegungsplan gibt, sieht ihn aber nie. Jeder Schritt mit `pfad` navigiert
+// deshalb dorthin, bevor seine Sprechblase erscheint.
+//
+// Zwei Schritte navigieren NICHT: „Preise" und „Portale" liegen in Bereichen,
+// die die Vorführung sperrt (`lib/demo-sperre`, Backend-Riegel `demo_gate`).
+// Dorthin zu springen brächte eine Fehlerseite mitten in der Führung. Sie
+// erklären am Menüpunkt und sagen, dass er im eigenen Betrieb offen ist.
 import { Icon } from "@iconify/react";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 // Abgeschlossen/abgebrochen wird lokal vermerkt. Kein Server-Zustand: alle
@@ -32,6 +37,10 @@ type Schritt = {
    *  Schritt mittig gezeigt statt übersprungen — ein stiller Sprung wäre für
    *  den Besucher ein Loch in der Zählung. */
   ziel?: string;
+  /** Seite, die dieser Schritt öffnet. Fehlt sie, bleibt die Führung stehen —
+   *  entweder weil der Schritt nichts zu zeigen hat (Begrüßung, Schluss) oder
+   *  weil der Bereich in der Vorführung gesperrt ist. */
+  pfad?: string;
   titel: string;
   text: string;
 };
@@ -46,6 +55,7 @@ const SCHRITTE: readonly Schritt[] = [
   },
   {
     ziel: "dashboard",
+    pfad: "/",
     titel: "Die Übersicht",
     text:
       "Anreisen und Abreisen des Tages, offene Freigaben, anstehende " +
@@ -53,6 +63,7 @@ const SCHRITTE: readonly Schritt[] = [
   },
   {
     ziel: "calendar",
+    pfad: "/kalender",
     titel: "Der Belegungsplan",
     text:
       "Alle Objekte in einer Zeitachse: wer kommt, wer bleibt, wo ist frei. " +
@@ -61,6 +72,7 @@ const SCHRITTE: readonly Schritt[] = [
   },
   {
     ziel: "inbox",
+    pfad: "/posteingang",
     titel: "Ein Posteingang für alle Portale",
     text:
       "Booking.com, Airbnb und der eigene Marktplatz laufen in EINEN " +
@@ -68,6 +80,7 @@ const SCHRITTE: readonly Schritt[] = [
   },
   {
     ziel: "bookings",
+    pfad: "/reservierungen",
     titel: "Buchungen",
     text:
       "Jede Reservierung mit Gast, Zahlungen, Zusatzleistungen und ihrer " +
@@ -75,6 +88,7 @@ const SCHRITTE: readonly Schritt[] = [
   },
   {
     ziel: "properties",
+    pfad: "/objekte",
     titel: "Objekte und Einheiten",
     text:
       "Ein Objekt ist ein Typ mit einer oder mehreren gleichen Einheiten — " +
@@ -90,7 +104,8 @@ const SCHRITTE: readonly Schritt[] = [
     text:
       "Saisons, Wochenendaufschläge und Rabatte nach Aufenthaltsdauer liegen " +
       "am Objekt; die dynamische Steuerung passt Tagespreise nach Auslastung " +
-      "und Vorlauf an. Was hier steht, geht an alle Portale.",
+      "und Vorlauf an. Was hier steht, geht an alle Portale. In der Vorführung " +
+      "ist dieser Bereich zu — im eigenen Betrieb steht er offen.",
   },
   {
     ziel: "channelManager",
@@ -98,9 +113,13 @@ const SCHRITTE: readonly Schritt[] = [
     text:
       "Verfügbarkeit, Preise und Restriktionen gehen an Booking.com, Airbnb, " +
       "Expedia und die übrigen. Eine Sperre hier sperrt überall — " +
-      "Doppelbuchungen entstehen genau dort, wo das nicht so ist.",
+      "Doppelbuchungen entstehen genau dort, wo das nicht so ist. Auch dieser " +
+      "Bereich bleibt in der Vorführung geschlossen.",
   },
   {
+    // Zurueck auf die Uebersicht: der Besucher soll die Fuehrung dort verlassen,
+    // wo er sie begonnen hat, und nicht auf der letzten Unterseite stehen.
+    pfad: "/",
     titel: "Das war die Runde",
     text:
       "Schauen Sie sich in Ruhe weiter um — Sie können nichts kaputt machen. " +
@@ -112,6 +131,8 @@ const SCHRITTE: readonly Schritt[] = [
 type Kasten = { top: number; left: number; width: number; height: number };
 
 export function DemoFuehrung({ voranmeldungUrl }: { voranmeldungUrl: string }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [offen, setOffen] = useState(false);
   const [nr, setNr] = useState(0);
   const [kasten, setKasten] = useState<Kasten | null>(null);
@@ -126,8 +147,20 @@ export function DemoFuehrung({ voranmeldungUrl }: { voranmeldungUrl: string }) {
     return () => window.clearTimeout(t);
   }, []);
 
-  // Position des aktuellen Ziels messen — bei jedem Schritt, bei Größenänderung
-  // und beim Scrollen, sonst wandert die Blase vom Element weg.
+  // Die Seite des Schritts öffnen. `router.push` und kein `<Link>`: der
+  // Wechsel gehört zum Weiter-Klick, nicht zu einem eigenen Bedienelement.
+  //
+  // Nur wenn der Pfad wirklich abweicht — ein `push` auf die Seite, auf der man
+  // schon steht, setzt bei Next.js den Scroll zurück und ließe die Blase
+  // sichtbar hüpfen.
+  useEffect(() => {
+    if (!offen) return;
+    const pfad = SCHRITTE[nr]?.pfad;
+    if (pfad && pfad !== pathname) router.push(pfad);
+  }, [offen, nr, pathname, router]);
+
+  // Position des aktuellen Ziels messen — bei jedem Schritt, nach jedem
+  // Seitenwechsel, bei Größenänderung und beim Scrollen.
   const messen = useCallback(() => {
     const ziel = SCHRITTE[nr]?.ziel;
     if (!ziel) {
@@ -143,16 +176,25 @@ export function DemoFuehrung({ voranmeldungUrl }: { voranmeldungUrl: string }) {
     setKasten({ top: r.top, left: r.left, width: r.width, height: r.height });
   }, [nr]);
 
+  // `pathname` in den Abhängigkeiten: nach einer Navigation baut sich das
+  // Layout neu auf, und ohne erneutes Messen stünde die Blase an der Position
+  // der alten Seite.
   useEffect(() => {
     if (!offen) return;
     messen();
+    // Zweiter Versuch nach kurzer Frist: die neue Seite rendert asynchron, und
+    // die erste Messung trifft mitunter noch das Layout von davor. Billiger und
+    // robuster als auf ein Fertig-Signal von Next.js zu warten, das es für
+    // Client-Navigation nicht gibt.
+    const nachmessen = window.setTimeout(messen, 350);
     window.addEventListener("resize", messen);
     window.addEventListener("scroll", messen, true);
     return () => {
+      window.clearTimeout(nachmessen);
       window.removeEventListener("resize", messen);
       window.removeEventListener("scroll", messen, true);
     };
-  }, [offen, messen]);
+  }, [offen, messen, pathname]);
 
   const beenden = useCallback(() => {
     setOffen(false);
