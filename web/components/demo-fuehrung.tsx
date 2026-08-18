@@ -367,10 +367,14 @@ export function DemoFuehrung({ voranmeldungUrl }: { voranmeldungUrl: string }) {
           )}
 
           {letzter ? (
+            // IM SELBEN Tab zurueck auf die Marketing-Seite. Vorher stand hier
+            // `target="_blank"`: der Besucher blieb in der Vorfuehrung stehen und
+            // bekam die Voranmeldung in einem zweiten Tab — zwei offene Fenster,
+            // und der Weg nach vorn lag im hinteren. Am ENDE der Fuehrung ist die
+            // Vorfuehrung erledigt; hier gehoert der Besucher zurueck dorthin, wo
+            // er sich vormerken kann.
             <a
               href={voranmeldungUrl}
-              target="_blank"
-              rel="noopener noreferrer"
               onClick={beenden}
               className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
             >
