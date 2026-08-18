@@ -62,6 +62,24 @@ export const AGB_URL = "/agb";
 export const HILFE_URL = APP_ERREICHBAR ? `${DASHBOARD_URL}/hilfe` : "";
 
 /**
+ * Basis-URL der Vorführung — EIGENE Variable, nicht `NEXT_PUBLIC_APP_URL`.
+ *
+ * Warum getrennt: `NEXT_PUBLIC_APP_URL` schaltet ALLE Knöpfe ins Dashboard
+ * („Anmelden", „Kostenlos starten"). Das ist die Start-Entscheidung der
+ * Plattform und hat mit der Vorführung nichts zu tun — die kann man zeigen,
+ * lange bevor sich jemand registrieren darf. Mit einer eigenen Variablen ist
+ * die Demo einzeln schaltbar, ohne den Start vorzuziehen.
+ *
+ * Fällt auf `NEXT_PUBLIC_APP_URL` zurück, wenn gesetzt: nach dem Start braucht
+ * es keine zweite Variable mehr, und eine vergessene wäre ein toter Knopf.
+ */
+export const DEMO_BASIS = (
+  process.env.NEXT_PUBLIC_DEMO_URL ??
+  process.env.NEXT_PUBLIC_APP_URL ??
+  ""
+).replace(/\/$/, "");
+
+/**
  * Ziel des Knopfs „Demo ansehen" (0407).
  *
  * Führt in die ECHTE Anwendung, angemeldet im Vorführ-Mandanten — kein
@@ -69,16 +87,8 @@ export const HILFE_URL = APP_ERREICHBAR ? `${DASHBOARD_URL}/hilfe` : "";
  * in `docs/ANALYSE-storylane-technik.md`). Der Zugang kann ausschließlich
  * lesen; jede schreibende Anfrage wird serverseitig abgelehnt (`demo_gate`).
  *
- * Vor dem Start dasselbe Verhalten wie alle anderen Knöpfe: Voranmelde-Popup
- * statt eines Ziels, das der Besucher nicht benutzen kann. Der Grund ist hier
- * derselbe wie bei LOGIN_URL — nur die Begründung ist eine andere: die
- * Vorführung FUNKTIONIERT technisch schon, aber sie zeigt einen Betrieb mit
- * erfundenen Buchungen. Vor dem offiziellen Start ist das eher verwirrend als
- * überzeugend.
- *
- * Zum Start: `NEXT_PUBLIC_APP_URL` setzen — dann führt der Knopf in die Demo,
- * ohne dass hier etwas geändert werden muss.
+ * Ohne gesetzte `DEMO_BASIS` fällt der Knopf auf das Voranmelde-Popup zurück —
+ * dasselbe Verhalten wie bei allen anderen, damit kein Besucher auf einer
+ * Adresse landet, die er nicht benutzen kann.
  */
-export const DEMO_URL = APP_ERREICHBAR
-  ? `${DASHBOARD_URL}/demo`
-  : VORANMELDUNG_ZIEL;
+export const DEMO_URL = DEMO_BASIS ? `${DEMO_BASIS}/demo` : VORANMELDUNG_ZIEL;
