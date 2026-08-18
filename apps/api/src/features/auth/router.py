@@ -922,7 +922,9 @@ def mfa_status(
     try:
         faktoren = service.faktoren(ctx.user_id)
         rolle = service.rolle_aus_db(ctx.user_id)
-        pflicht = service.pflicht_pruefen(ctx.user_id, rolle=rolle)
+        pflicht = service.pflicht_pruefen(
+            ctx.user_id, rolle=rolle, tenant_id=ctx.tenant_id
+        )
         return MfaStatusResponse(
             factors=[
                 MfaFactor(

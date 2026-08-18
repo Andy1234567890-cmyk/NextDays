@@ -186,14 +186,34 @@ class MfaService:
         )
         return res.data[0].get("role") if res.data else None
 
-    def pflicht_pruefen(self, user_id: str, *, rolle: str | None) -> MfaPflicht:
+    def pflicht_pruefen(
+        self, user_id: str, *, rolle: str | None, tenant_id: str | None = None
+    ) -> MfaPflicht:
         """Muss dieser Nutzer einen zweiten Faktor haben, und ist er faellig?
 
         Setzt die Frist beim ERSTEN Kontakt eines pflichtigen Kontos ohne
         Faktor (nicht vorab fuer alle) — so laeuft sie ab dem ersten Login und
         nicht ab dem Zeitpunkt der Migration, an dem niemand die Aufforderung
         gesehen haette.
+
+        AUSNAHME VORFUEHR-MANDANT (0407): dort gibt es keine Pflicht. Der
+        Vorfuehr-Zugang traegt Rolle `admin` und waere damit pflichtig — aber
+        einrichten KANN ihn niemand: das Enrollment ist ein Schreibvorgang, den
+        der Demo-Riegel ablehnt. Die Folge waere, dass sich die Vorfuehrung nach
+        Ablauf der Frist selbst abschaltet (gemessen: Frist lief auf den
+        23.08.2026) und jeder Besucher einen 401 saehe. Eine Pflicht, die
+        strukturell nicht erfuellbar ist, ist keine Sicherheitsmassnahme,
+        sondern eine Zeitbombe.
+
+        Der Zugang ist dadurch nicht schwaecher geschuetzt: er kann
+        ausschliesslich lesen, und was er liest, ist ein Bestand aus erfundenen
+        Buchungen.
         """
+        if tenant_id and self._ist_demo_mandant(tenant_id):
+            return MfaPflicht(
+                pflichtig=False, hat_faktor=False, erzwingen=False, grace_until=None
+            )
+
         if rolle not in PFLICHT_ROLLEN:
             return MfaPflicht(
                 pflichtig=False, hat_faktor=False, erzwingen=False, grace_until=None
@@ -215,6 +235,31 @@ class MfaService:
             erzwingen=_now() >= grace_until,
             grace_until=grace_until,
         )
+
+    def _ist_demo_mandant(self, tenant_id: str) -> bool:
+        """Ist das der oeffentliche Vorfuehr-Mandant? (0407)
+
+        Ein Lesefehler heisst NICHT „Demo": faellt die Abfrage aus, gilt die
+        Pflicht weiter. Das ist die sichere Richtung — im Zweifel mahnen statt
+        eine Pflicht stillschweigend fallen zu lassen (Wurzel 5).
+        """
+        try:
+            res = (
+                self._db.table("tenants")
+                .select("is_demo")
+                .eq("id", tenant_id)
+                .limit(1)
+                .execute()
+            )
+        except Exception as exc:  # noqa: BLE001 — im Zweifel gilt die Pflicht
+            log.warning(
+                "mfa_demo_pruefung_fehlgeschlagen",
+                tenant_id=tenant_id,
+                error=str(exc)[:200],
+            )
+            return False
+        rows = res.data or []
+        return bool(rows and rows[0].get("is_demo"))
 
     def _grace_holen_oder_setzen(self, user_id: str) -> datetime:
         """Die Frist dieses Nutzers. Fehlt sie, wird sie JETZT + GRACE_DAUER

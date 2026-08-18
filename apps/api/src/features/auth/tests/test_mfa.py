@@ -326,3 +326,101 @@ def test_alte_totp_endpunkte_sind_stillgelegt() -> None:
     for pfad in ("/api/v1/auth/totp/enroll", "/api/v1/auth/totp/verify"):
         resp = client.post(pfad, json={"code": "123456"})
         assert resp.status_code == 410, (pfad, resp.status_code)
+
+
+# --- Vorfuehr-Mandant: keine Pflicht (0407) --------------------------------
+
+
+class _TenantKette:  # pylint: disable=too-few-public-methods
+    """Kettenbare Abfrage, die eine `tenants`-Zeile liefert oder wirft."""
+
+    def __init__(self, zeilen: list | Exception) -> None:
+        self._zeilen = zeilen
+
+    def select(self, *_a: object, **_k: object) -> "_TenantKette":
+        return self
+
+    def eq(self, *_a: object) -> "_TenantKette":
+        return self
+
+    def limit(self, _n: int) -> "_TenantKette":
+        return self
+
+    def execute(self) -> object:
+        if isinstance(self._zeilen, Exception):
+            raise self._zeilen
+        return SimpleNamespace(data=self._zeilen)
+
+
+class _TenantDB:  # pylint: disable=too-few-public-methods
+    def __init__(self, zeilen: list | Exception) -> None:
+        self._zeilen = zeilen
+        self.gefragt: list[str] = []
+
+    def table(self, name: str) -> _TenantKette:
+        self.gefragt.append(name)
+        return _TenantKette(self._zeilen)
+
+
+def test_demo_mandant_hat_keine_mfa_pflicht() -> None:
+    """Der Vorfuehr-Zugang traegt Rolle `admin` und waere damit pflichtig.
+
+    Einrichten KANN ihn niemand — das Enrollment ist ein Schreibvorgang, den
+    der Demo-Riegel ablehnt. Ohne diese Ausnahme schaltete sich die
+    Vorfuehrung nach Ablauf der Frist selbst ab (gemessen: 23.08.2026).
+    """
+    from src.features.auth.mfa_service import MfaService
+
+    db = _TenantDB([{"is_demo": True}])
+    pflicht = MfaService(db).pflicht_pruefen(  # type: ignore[arg-type]
+        "u-1", rolle="admin", tenant_id="t-demo"
+    )
+    assert pflicht.pflichtig is False
+    assert pflicht.erzwingen is False
+    assert pflicht.grace_until is None
+
+
+def test_normaler_mandant_bleibt_pflichtig() -> None:
+    """Ein zahlender Betrieb ist unberuehrt — dort gilt die Pflicht weiter."""
+    from datetime import UTC, datetime, timedelta
+
+    from src.features.auth.mfa_service import MfaService
+
+    db = _TenantDB([{"is_demo": False}])
+    dienst = MfaService(db)  # type: ignore[arg-type]
+    dienst.hat_faktor = lambda _u: False  # type: ignore[method-assign]
+    dienst._grace_holen_oder_setzen = (  # type: ignore[method-assign]  # noqa: SLF001
+        lambda _u: datetime.now(UTC) + timedelta(days=3)
+    )
+    pflicht = dienst.pflicht_pruefen("u-1", rolle="admin", tenant_id="t-echt")
+    assert pflicht.pflichtig is True
+
+
+def test_lesefehler_laesst_die_pflicht_stehen() -> None:
+    """Faellt die Demo-Pruefung aus, gilt die Pflicht weiter (sichere Richtung).
+
+    Andere Richtung als beim demo_gate: dort waere fail-open die Erlaubnis zu
+    schreiben, hier waere es das stillschweigende Fallenlassen einer Pflicht.
+    """
+    from datetime import UTC, datetime, timedelta
+
+    from src.features.auth.mfa_service import MfaService
+
+    db = _TenantDB(RuntimeError("DB weg"))
+    dienst = MfaService(db)  # type: ignore[arg-type]
+    dienst.hat_faktor = lambda _u: False  # type: ignore[method-assign]
+    dienst._grace_holen_oder_setzen = (  # type: ignore[method-assign]  # noqa: SLF001
+        lambda _u: datetime.now(UTC) + timedelta(days=3)
+    )
+    pflicht = dienst.pflicht_pruefen("u-1", rolle="admin", tenant_id="t-demo")
+    assert pflicht.pflichtig is True
+
+
+def test_ohne_tenant_keine_demo_abfrage() -> None:
+    """Ohne Mandant gibt es nichts zu pruefen — und keine DB-Runde."""
+    from src.features.auth.mfa_service import MfaService
+
+    db = _TenantDB([{"is_demo": True}])
+    dienst = MfaService(db)  # type: ignore[arg-type]
+    dienst.pflicht_pruefen("u-1", rolle="staff", tenant_id=None)
+    assert "tenants" not in db.gefragt

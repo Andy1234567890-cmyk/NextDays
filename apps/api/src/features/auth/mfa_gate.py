@@ -96,7 +96,9 @@ def mfa_zugang_pruefen(request: Request, ctx: AuthContext) -> None:
     # Rolle darf nicht bis zum Token-Ablauf weitergelten).
     try:
         rolle = service.rolle_aus_db(ctx.user_id)
-        pflicht = service.pflicht_pruefen(ctx.user_id, rolle=rolle)
+        pflicht = service.pflicht_pruefen(
+            ctx.user_id, rolle=rolle, tenant_id=ctx.tenant_id
+        )
     except MfaError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

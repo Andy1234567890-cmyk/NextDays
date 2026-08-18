@@ -95,8 +95,15 @@ export default async function DashboardLayout({
   // Bei einem Fehler wird NICHT gemahnt: eine Mahnung auf Verdacht waere eine
   // Falschaussage (Wurzel 4/5).
   const mfa = await getMfaStatus();
+  // In der Vorfuehrung nicht mahnen (0407): einrichten KANN der Besucher den
+  // zweiten Faktor nicht — das Enrollment ist ein Schreibvorgang, den der
+  // Demo-Riegel ablehnt. Eine Mahnung mit Frist, die niemand erfuellen kann,
+  // ist eine Aufforderung ins Leere und sieht nach einem Defekt aus.
   const zweiterFaktorFehlt =
-    mfa.ok && mfa.data.mfa_required && !mfa.data.mfa_enrolled;
+    !me?.is_demo &&
+    mfa.ok &&
+    mfa.data.mfa_required &&
+    !mfa.data.mfa_enrolled;
   // Echte Restfrist aus dem Backend (ISO) — nie selbst berechnet.
   const mfaFrist = mfa.ok ? mfa.data.mfa_grace_until : null;
 
@@ -113,8 +120,17 @@ export default async function DashboardLayout({
             unterbrochen werden, Eigentümer sind durch den Redirect oben
             (Zeile 66) ohnehin schon draußen. Das Gate steht HIER, weil das
             Layout die Rolle bereits kennt und die Komponente sonst für jede
-            Rolle einen Server-Aufruf auslösen würde. */}
-        {(role === "admin" || role === "co_admin") && <AnkuendigungPopup />}
+            Rolle einen Server-Aufruf auslösen würde.
+
+            NICHT in der Vorführung (0407): das Popup quittiert beim Schließen
+            serverseitig, dass es gelesen wurde — ein Schreibvorgang, den der
+            Demo-Riegel mit 405 ablehnt. Das Popup blieb dadurch stehen und
+            versperrte die ganze Vorführung. Es hier auszulassen ist auch
+            fachlich richtig: eine Produktankündigung an das eigene Team hat
+            einen Interessenten nicht zu unterbrechen. */}
+        {!me?.is_demo && (role === "admin" || role === "co_admin") && (
+          <AnkuendigungPopup />
+        )}
         <AppSidebar
           email={email}
           role={role}
