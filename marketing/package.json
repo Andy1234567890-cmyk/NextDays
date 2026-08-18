@@ -12,7 +12,6 @@
     "icons": "node scripts/generate-icon-set.mjs"
   },
   "dependencies": {
-    "@nextdays/anbieter": "workspace:*",
     "@radix-ui/react-label": "^2.1.10",
     "@radix-ui/react-slot": "^1.2.3",
     "class-variance-authority": "^0.7.1",
