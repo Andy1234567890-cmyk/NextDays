@@ -2,6 +2,8 @@
 // Rechtshinweisen und Social-Links. Figma: schwarzer Footer am Seitenende.
 import { Icon } from "@/components/ui/icon";
 import { useTranslations } from "next-intl";
+
+import { FUNKTIONEN } from "@/content/funktionen";
 import Link from "next/link";
 
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -29,6 +31,16 @@ const FOOTER_COLUMNS = [
     links: ["ueberUns", "karriere", "partner", "kontakt", "presse"],
   },
 ] as const;
+
+// Footer-Schlüssel der Produkt-Spalte → Funktions-Unterseite. Aus FUNKTIONEN
+// abgeleitet, damit ein geänderter Slug nicht hier vergessen wird.
+const PRODUKT_ZIELE: Record<string, string> = {
+  pms: `/funktionen/${FUNKTIONEN.find((f) => f.key === "pms")?.slug ?? ""}`,
+  channelManager: `/funktionen/${FUNKTIONEN.find((f) => f.key === "channel")?.slug ?? ""}`,
+  direktbuchung: `/funktionen/${FUNKTIONEN.find((f) => f.key === "direkt")?.slug ?? ""}`,
+  zahlungen: `/funktionen/${FUNKTIONEN.find((f) => f.key === "zahlungen")?.slug ?? ""}`,
+  mobileApp: `/funktionen/${FUNKTIONEN.find((f) => f.key === "app")?.slug ?? ""}`,
+};
 
 const SOCIALS = [
   { icon: "ph:facebook-logo", label: "Facebook" },
@@ -95,8 +107,12 @@ export function MarketingFooter() {
                 {col.links.map((link) => {
                   // Nur echte Ziele verlinken; alles andere bleibt Platzhalter (#).
                   // HILFE_URL ist vor dem Start leer (Dashboard nicht öffentlich).
+                  // Die Produkt-Spalte zeigt seit den Funktions-Unterseiten auf
+                  // echte Seiten — vorher stand dort fünfmal „#", also fünf
+                  // Links, die nichts taten.
                   const href =
-                    link === "hilfeCenter" && HILFE_URL ? HILFE_URL : "#";
+                    PRODUKT_ZIELE[link] ??
+                    (link === "hilfeCenter" && HILFE_URL ? HILFE_URL : "#");
                   return (
                     <li key={link}>
                       <Link
