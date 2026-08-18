@@ -999,9 +999,14 @@ export function Conversation({
                 zwischen Liste und Buchungspanel und ist dann trotzdem schmal.
                 Ergebnis: die Knöpfe liefen aus der Karte heraus und „Senden"
                 lag über dem Panel daneben.
-                `flex-wrap` als zweite Sicherung: lieber eine zweite Zeile als
-                ein Knopf, den niemand trifft. */}
-            <div className="@container flex flex-wrap items-center gap-1.5 px-2 pb-2">
+                Umbruch NUR bei den Werkzeugen, nicht in der ganzen Leiste:
+                lag „Senden" mit im `flex-wrap`, rutschte es in eine zweite Zeile,
+                sobald die vier beschrifteten Knöpfe die Breite füllten — der
+                Absende-Knopf stand dann unter statt neben ihnen. Jetzt umbrechen
+                die Werkzeuge innerhalb ihrer eigenen Gruppe, und „Senden" bleibt
+                als letzter Block immer auf der ersten Zeile rechts. */}
+            <div className="@container flex items-start gap-1.5 px-2 pb-2">
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
               <Button
                 type="button"
                 variant="ghost"
@@ -1067,8 +1072,8 @@ export function Conversation({
                   if (datei) anhangHochladen(datei);
                 }}
               />
-              <span className="flex-1" />
-              <Button data-testid="inbox-composer-send-button" type="button" onClick={() => send(text)} disabled={sending || !text.trim()}>
+              </div>
+              <Button className="shrink-0" data-testid="inbox-composer-send-button" type="button" onClick={() => send(text)} disabled={sending || !text.trim()}>
                 <Icon
                   icon={sending ? "ph:spinner" : "ph:paper-plane-tilt"}
                   className={"size-4 " + (sending ? "animate-spin" : "")}
