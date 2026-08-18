@@ -211,6 +211,11 @@ _NEWSLETTER_PATHS = ("/newsletter/subscribe", "/newsletter/confirm",
 # Öffentliche Such-/Kalender-Endpunkte → Scraper-Schutz pro IP. Der iCal-Export
 # ist nicht eingeloggt (ein Kalender-Client schickt kein JWT).
 _LISTINGS_PATHS = (
+    # Öffentliche Preisliste der Marketing-Seite (nicht eingeloggt): reines
+    # Lesen unserer eigenen Preise, im Service zusätzlich TTL-gecacht. Gehört
+    # in den Scraper-Bucket, nicht in den Default — und fail-OPEN ist hier
+    # richtig: ein Redis-Ausfall darf die Preisseite nicht abschalten.
+    "/subscriptions/public/",
     "/booking-engine/listings",
     "/booking-engine/availability",
     "/calendar",

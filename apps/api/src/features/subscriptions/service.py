@@ -31,11 +31,11 @@ from src.features.owner_statements.tax import EU_COUNTRIES as _EU_LAENDER
 
 from .dynpricing import DynPricingBillingMixin
 from .errors import SubscriptionsError, field
+from .preisliste import PreislisteMixin
 from .provisionsaufstellung import AufstellungMixin
 from .provisionsdeckel import ProvisionsdeckelMixin
 from .schemas import (
-    DYNPRICING_MODULE_KEY,
-    DYNPRICING_RATE,
+    COMMISSION_RATE_STANDARD,
     GRUNDTARIF_LOOKUP_KEY,
     MODULE_KEYS,
     MODULE_PRICE_LOOKUP,
@@ -45,19 +45,12 @@ from .schemas import (
     CommissionSummary,
     InvoiceRow,
     ModuleEntitlement,
-    ModulePrice,
-    PriceTier,
-    PricingResponse,
     SliceHealth,
     SubscriptionStatusResponse,
 )
 
 log = get_logger("nextdays.subscriptions")
 
-# Externe Provision (Preisliste Abschnitt 2) — NICHT magisch im Code verstreut
-# (Wurzel 4). Einheitlich 0,5 %, unabhängig von der Objektzahl; die frühere
-# Staffel (1 % bis 100 Objekte, 0,5 % ab 101) ist abgeschafft.
-COMMISSION_RATE_STANDARD = 0.005
 _ISO_LAND_LAENGE = 2  # ISO-3166-1 alpha-2
 _DEZEMBER = 12  # Jahreswechsel beim Einzugstag
 # OTA-Kanäle, für die die externe Provision anfällt (dieselbe Menge wie im
@@ -67,23 +60,18 @@ EXTERNAL_CHANNELS = frozenset(
     {"booking", "airbnb", "vrbo", "ota_other"}
 )
 
-# module_key -> (lookup_key, per-unit-Label). Deckt alle im UI wählbaren Preise.
-_MODULE_PRICE_VARIANTS: dict[str, tuple[str, str | None]] = {
-    "modul3_buchhaltung": ("modul3_flat", None),
-    "modul4_mitarbeiter": ("modul4_flat", None),
-    "modul4_per_seat": ("modul4_per_seat", "Nutzer"),
-    "modul6_hotel": ("modul6_flat", None),
-    "modul6_per_room": ("modul6_per_room", "Zimmer"),
-}
-
-
 # `_f` und `SubscriptionsError` leben in errors.py, damit die ausgelagerten
 # Abrechnungs-Mixins sie ohne Zirkelbezug importieren können. Hier nur als
 # eingeführte Namen weitergereicht (Router und Tests importieren sie von hier).
 _f = field
 
 
-class SubscriptionsService(DynPricingBillingMixin, ProvisionsdeckelMixin, AufstellungMixin):
+class SubscriptionsService(
+    DynPricingBillingMixin,
+    ProvisionsdeckelMixin,
+    AufstellungMixin,
+    PreislisteMixin,
+):
     slice_name = "subscriptions"
 
     def __init__(
@@ -745,88 +733,6 @@ class SubscriptionsService(DynPricingBillingMixin, ProvisionsdeckelMixin, Aufste
             if _f(price, "lookup_key") == GRUNDTARIF_LOOKUP_KEY:
                 return it
         return None
-
-    # -- Preise für die UI (echte Stripe-Beträge, Wurzel 4) -----------------
-    def get_pricing(self) -> PricingResponse:
-        """Liest die tatsächlichen Beträge aus Stripe (nie Frontend-Hardcode).
-        Grundtarif als Tier-Liste, Module als Einzelpreise. Fehlt ein Preis,
-        klar fehlschlagen (Preisliste nicht geseedet)."""
-        try:
-            res = self._stripe.v1.prices.list(
-                params={
-                    "lookup_keys": [GRUNDTARIF_LOOKUP_KEY],
-                    "active": True,
-                    "limit": 1,
-                    "expand": ["data.tiers"],
-                }
-            )
-        except _StripeError as exc:
-            raise self._stripe_err(exc) from exc
-        data = getattr(res, "data", None) or []
-        if not data:
-            raise SubscriptionsError(
-                "Grundtarif-Preis nicht gefunden (Preisliste seeden).",
-                status_code=503,
-            )
-        gt = data[0]
-        currency = (_f(gt, "currency", "") or "").upper()
-        tiers = [
-            PriceTier(
-                up_to=_f(t, "up_to"),
-                flat_amount=_f(t, "flat_amount"),
-                unit_amount=_f(t, "unit_amount"),
-            )
-            for t in (_f(gt, "tiers", []) or [])
-        ]
-        modules: list[ModulePrice] = []
-        for mkey, (lookup, label) in _MODULE_PRICE_VARIANTS.items():
-            try:
-                mres = self._stripe.v1.prices.list(
-                    params={
-                        "lookup_keys": [lookup],
-                        "active": True,
-                        "limit": 1,
-                        "expand": ["data.tiers"],
-                    }
-                )
-            except _StripeError as exc:
-                raise self._stripe_err(exc) from exc
-            mdata = getattr(mres, "data", None) or []
-            if not mdata:
-                continue  # Modul-Preis fehlt → weglassen (nicht raten)
-            mtiers = [
-                PriceTier(
-                    up_to=_f(t, "up_to"),
-                    flat_amount=_f(t, "flat_amount"),
-                    unit_amount=_f(t, "unit_amount"),
-                )
-                for t in (_f(mdata[0], "tiers", []) or [])
-            ]
-            modules.append(
-                ModulePrice(
-                    module_key=mkey,
-                    lookup_key=lookup,
-                    unit_amount=int(_f(mdata[0], "unit_amount", 0) or 0),
-                    per_unit_label=label,
-                    tiers=mtiers or None,
-                )
-            )
-        # Nutzungsabhängige Module haben keinen Stripe-Preis (der Betrag
-        # entsteht erst je Buchung im Ledger). Sie stehen trotzdem im Katalog,
-        # damit die UI sie anbieten kann — mit Prozentsatz statt Betrag.
-        modules.append(
-            ModulePrice(
-                module_key=DYNPRICING_MODULE_KEY,
-                lookup_key="",
-                unit_amount=0,
-                per_unit_label=None,
-                tiers=None,
-                usage_percent=DYNPRICING_RATE * 100,
-            )
-        )
-        return PricingResponse(
-            currency=currency, grundtarif_tiers=tiers, modules=modules
-        )
 
     # -- Rechnungsadresse + Rechnungen (Quelle: Stripe) ---------------------
     def get_billing_address(self, ctx: AuthContext) -> BillingAddress:

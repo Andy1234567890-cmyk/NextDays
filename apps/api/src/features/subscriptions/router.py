@@ -30,6 +30,7 @@ from .schemas import (
     ModuleToggleRequest,
     PortalSessionResponse,
     PricingResponse,
+    PublicPricingResponse,
     QuantityChangeRequest,
     QuantityChangeResponse,
     SliceHealth,
@@ -63,6 +64,27 @@ def get_pricing(ctx: _billing, service: ServiceDep) -> PricingResponse:
     """Echte Stripe-Beträge für die Billing-UI (kein Frontend-Hardcode)."""
     try:
         return service.get_pricing()
+    except SubscriptionsError as exc:
+        raise _handle(exc) from exc
+
+
+# ÖFFENTLICH (kein Login): die Preisliste für die Marketing-Preisseite.
+#
+# Warum ohne Auth: die Seite muss die echten Beträge zeigen, BEVOR jemand ein
+# Konto hat — der geschützte `/pricing` oben verlangt MANAGE_BILLING und wäre
+# dort nicht aufrufbar. Die Alternative (Beträge in den 24 Sprachdateien
+# hinschreiben) ist genau der Hardcode, den Wurzel 4 verbietet.
+#
+# Was ihn trägt: die Antwort enthält AUSSCHLIESSLICH unsere eigene Preisliste —
+# keine Tenant-Daten, keine IDs, nichts, was ein Scope schützen müsste. Der
+# Verstärkungs-Aspekt (jeder Aufruf = sechs Stripe-Abfragen) ist im Service
+# durch den TTL-Cache geschlossen, der Scraper-Aspekt durch den
+# `listings`-Bucket des Rate-Limiters (240/60 pro IP, core/ratelimit_middleware).
+@router.get("/public/pricing", response_model=PublicPricingResponse)
+def get_public_pricing(service: ServiceDep) -> PublicPricingResponse:
+    """Preisliste + Provisionskonditionen für die öffentliche Preisseite."""
+    try:
+        return service.get_public_pricing()
     except SubscriptionsError as exc:
         raise _handle(exc) from exc
 

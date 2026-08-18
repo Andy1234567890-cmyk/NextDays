@@ -40,6 +40,21 @@ MODULE_KEYS = frozenset(
 # und würde EUR-, DKK- und GBP-Buchungen zu einer sinnlosen Summe addieren
 # (implizit Kurs 1:1). myNextDays verkauft in 24 Ländern → die Währung gehört
 # an jede einzelne Zeile (Wurzel 4). Gleiche Mechanik wie die OTA-Provision.
+# Externe Provision (Preisliste Abschnitt 2) — einheitlich 0,5 %, unabhängig
+# von der Objektzahl; die frühere Staffel (1 % bis 100 Objekte, 0,5 % ab 101)
+# ist abgeschafft. Liegt hier bei den übrigen Sätzen, damit sowohl die
+# Abrechnung (`service.py`) als auch die Preisliste (`preisliste.py`) DENSELBEN
+# Wert lesen und kein Zirkelimport entsteht.
+COMMISSION_RATE_STANDARD = 0.005
+
+# Standardsatz der myBestDays-Marktplatz-Provision in Basispunkten (800 = 8 %).
+# Quelle der Wahrheit für den EINZELNEN Betrieb bleibt `tenants.platform_fee_bps`
+# (Migration 0180, Spalten-Default 800) — dieser Wert ist der öffentlich
+# beworbene Standard und MUSS mit dem Spalten-Default übereinstimmen. Genau das
+# prüft `tests/test_public_pricing.py` gegen die Migration, damit die Preisseite
+# nicht irgendwann einen Satz bewirbt, den das System nicht abrechnet.
+MARKETPLACE_FEE_BPS_STANDARD = 800
+
 DYNPRICING_MODULE_KEY = "dynamische_preise"
 DYNPRICING_RATE = 0.005  # 0,5 % als Faktor (wie commission_ledger.rate)
 
@@ -147,6 +162,33 @@ class PricingResponse(BaseModel):
     currency: str
     grundtarif_tiers: list[PriceTier]
     modules: list[ModulePrice]
+
+
+class PublicPricingResponse(BaseModel):
+    """Preisliste für die ÖFFENTLICHE Marketing-Preisseite (kein Login).
+
+    Erweitert `PricingResponse` um die Konditionen, die auf der Preisseite
+    genannt werden müssen und NICHT in Stripe liegen: die beiden
+    Provisionssätze und der Monatsdeckel der Portal-Provision. Ohne sie müsste
+    die Marketing-App „8 %"/„0,5 %"/„250 €" selbst hinschreiben — genau der
+    Hardcode, den Wurzel 4 verbietet.
+
+    Der Deckel trägt seine Währung mit (EUR-Anker, `COMMISSION_CAP_CURRENCY`):
+    ein Betrag ohne Währung wäre in 24 Ländern eine andere Zahl.
+    """
+
+    currency: str
+    grundtarif_tiers: list[PriceTier]
+    modules: list[ModulePrice]
+    # Provision des myBestDays-Marktplatzes: wird direkt beim Zahlungseingang
+    # als Stripe-application_fee einbehalten (payments-Slice), erscheint also
+    # nie im Ledger.
+    commission_marketplace_percent: float
+    # Provision externer Portale (Booking/Airbnb/Expedia & Co.), nachgelagert
+    # über den Ledger fakturiert.
+    commission_external_percent: float
+    commission_external_cap_amount: float
+    commission_external_cap_currency: str
 
 
 class CommissionRow(BaseModel):
