@@ -17,6 +17,7 @@ import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { fuehrungZuruecksetzen } from "@/components/demo-fuehrung";
 import { Logo } from "@/components/logo";
 import { demoSitzungHolen } from "@/lib/auth";
 
@@ -32,6 +33,11 @@ export default function DemoSeite() {
   useEffect(() => {
     if (gestartet.current) return;
     gestartet.current = true;
+    // Jeder Aufruf dieser Seite ist ein NEUER Besuch — der Knopf „Demo ansehen"
+    // auf der Marketing-Seite fuehrt genau hierher. Die Fuehrung soll deshalb
+    // wieder von vorn laufen, auch wenn ein frueherer Durchlauf sie im Browser
+    // als gesehen markiert hat.
+    fuehrungZuruecksetzen();
     void (async () => {
       const res = await demoSitzungHolen();
       if (res.ok) {

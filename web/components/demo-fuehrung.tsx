@@ -30,14 +30,14 @@ import { useCallback, useEffect, useState } from "react";
 // Abgeschlossen/abgebrochen wird lokal vermerkt. Kein Server-Zustand: alle
 // Besucher teilen denselben Demo-Nutzer, ein serverseitiges "gesehen" hätte
 // die Führung nach dem ersten Besucher für alle abgeschaltet.
-const SCHLUESSEL = "nd_demo_fuehrung_v1";
+export const SCHLUESSEL = "nd_demo_fuehrung_v1";
 
 // Der LAUFENDE Schritt, ebenfalls lokal. Nötig, weil die Führung Seiten öffnet:
 // bei jedem Routenwechsel baut React diese Komponente neu auf, und ein Zustand
 // im Speicher wäre dabei weg — die Führung brach nach dem ersten „Weiter" ab
 // und liess sich auch nicht neu starten, weil der Neustart-Klick sofort
 // navigierte und sich damit selbst zuruecksetzte.
-const LAUF = "nd_demo_fuehrung_schritt";
+export const LAUF = "nd_demo_fuehrung_schritt";
 
 type Schritt = {
   /** `data-tour`-Wert des Elements, an dem die Blase hängt. Fehlt es, wird der
@@ -147,6 +147,19 @@ function laufLesen(): number | null {
   const nr = Number.parseInt(wert, 10);
   if (Number.isNaN(nr) || nr < 0 || nr >= SCHRITTE.length) return null;
   return nr;
+}
+
+/** Den Fuehrungs-Zustand loeschen, damit sie beim naechsten Aufruf neu startet.
+ *
+ * Fuer den Einstieg ueber `/demo`: wer von der Marketing-Seite auf „Demo
+ * ansehen" klickt, beginnt einen NEUEN Besuch — die Marke aus einem frueheren
+ * Durchlauf darf den Start dann nicht verhindern. Ohne dieses Zuruecksetzen
+ * sah ein wiederkehrender Besucher die Fuehrung nie wieder, obwohl er
+ * ausdruecklich neu eingestiegen ist.
+ */
+export function fuehrungZuruecksetzen(): void {
+  window.localStorage.removeItem(SCHLUESSEL);
+  window.localStorage.removeItem(LAUF);
 }
 
 type Kasten = { top: number; left: number; width: number; height: number };
