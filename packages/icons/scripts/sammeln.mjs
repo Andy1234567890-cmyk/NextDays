@@ -27,16 +27,21 @@ import { fileURLToPath } from "node:url";
 const HIER = dirname(fileURLToPath(import.meta.url));
 const WURZEL = resolve(HIER, "../../..");
 
-// Die Anwendungen, die Icons verwenden. `mobile-*` fehlen bewusst: React Native
-// nutzt kein Iconify.
+// Die Anwendungen, die das Buendel NUTZEN. `mobile-*` fehlen bewusst: React
+// Native nutzt kein Iconify.
+//
+// NICHT dabei: marketing, builder, storybook. Sie bauen mit isoliertem
+// Docker-Kontext (Coolify `base_directory` = die App selbst) und koennen ein
+// Workspace-Paket nicht aufloesen — `bun install --frozen-lockfile` bricht ab
+// (live erlebt, 18.08.2026). Sie holen ihre Icons weiter vom Dienst; zusammen
+// sind es 187 Verwendungen, und keine in einer Ansicht mit Sprachwechsel.
+// Ihr Build-Modell dafuer umzustellen waere eine groessere Aenderung als der
+// Nutzen.
 const APPS = [
   "web",
   "plattform",
   "admin",
   "gastgeber",
-  "marketing",
-  "builder",
-  "storybook",
   "packages/ui",
 ];
 

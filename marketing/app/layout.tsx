@@ -11,7 +11,6 @@ import { SupportChat } from "@/components/support-chat";
 import { VoranmeldungPopup } from "@/components/voranmeldung-popup";
 
 import type { Metadata } from "next";
-import { IconsRegistrieren } from "@nextdays/icons/registrierung";
 
 // Schriften liegen LOKAL im Repo (marketing/fonts/) — kein Google-Download,
 // garantiert verfügbar, DSGVO-konform. Beide sind SIL-OFL-lizenziert.
@@ -42,8 +41,6 @@ export default async function RootLayout({
   return (
     <html lang={locale}>
       <body className={`${inter.variable} ${fraunces.variable} antialiased`}>
-        {/* Icons lokal registrieren, bevor das erste Icon rendert (0410). */}
-        <IconsRegistrieren />
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
           {/* Auf JEDER Seite erreichbar, auch in den Rechtsdokumenten. */}
