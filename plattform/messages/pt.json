@@ -18,7 +18,8 @@
       "hausboot": "Casas-barco",
       "hotel": "Hotéis",
       "zimmer": "Quartos"
-    }
+    },
+    "alleAnzeigen": "Ver todos"
   },
   "inserat": {
     "gaesteZahl": "{count, plural, one {# hóspede} other {# hóspedes}}",
@@ -56,7 +57,8 @@
     "einloesen": "Aplicar",
     "codeAngewendet": "Código promocional aplicado.",
     "codeUngueltig": "Este código promocional não se aplica a esta reserva.",
-    "gesamt": "Total"
+    "gesamt": "Total",
+    "verfuegbarkeitPruefen": "Ver disponibilidade"
   },
   "checkout": {
     "titel": "Confirmar e pagar",
@@ -516,5 +518,37 @@
     "nd_books": "Livros",
     "nd_childrens_books_toys": "Livros e brinquedos infantis",
     "nd_childrens_dinnerware": "Louça infantil"
+  },
+  "nav": {
+    "suchen": "Procurar",
+    "merkzettel": "Favoritos",
+    "buchungen": "Viagens",
+    "nachrichten": "Mensagens",
+    "konto": "Conta",
+    "anmelden": "Iniciar sessão",
+    "gastgeber": "myBestDays para anfitriões",
+    "unterkuenfte": "Alojamentos",
+    "erlebnisse": "Experiências",
+    "services": "Serviços"
+  },
+  "mobil": {
+    "sucheOeffnen": "Para onde quer ir?",
+    "sucheZiel": "Onde",
+    "sucheDatum": "Datas",
+    "sucheGaeste": "Hóspedes",
+    "schliessen": "Fechar",
+    "zurueck": "Voltar",
+    "weiter": "Seguinte",
+    "suchen": "Procurar",
+    "loeschen": "Limpar",
+    "teilen": "Partilhar",
+    "merken": "Guardar",
+    "bildZaehler": "{aktuell} / {gesamt}",
+    "verfuegbarkeitPruefen": "Ver disponibilidade",
+    "zusammenfassungAnzeigen": "Mostrar detalhes",
+    "zusammenfassungVerbergen": "Ocultar detalhes",
+    "mehrAnzeigen": "Mostrar mais",
+    "wenigerAnzeigen": "Mostrar menos",
+    "menue": "Menu"
   }
 }

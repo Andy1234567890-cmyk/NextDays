@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",
+    "@nextdays/anbieter": "workspace:*",
     "@nextdays/auth": "workspace:*",
     "@nextdays/currency": "workspace:*",
     "@nextdays/diagnostics": "workspace:*",

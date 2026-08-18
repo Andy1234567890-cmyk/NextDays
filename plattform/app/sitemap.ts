@@ -4,22 +4,29 @@
 // gar nicht erst — sie tauchen hier also nie auf.
 import type { MetadataRoute } from "next";
 
+import { LEGAL_DOCUMENT_SLUGS } from "@/content/legal/dokumente";
 import { envUrl } from "@/lib/backend-basis";
 import { ladeSitemapInserate } from "@/lib/inserate";
 
 // envUrl statt `?? …`: ein leeres Build-Arg ergäbe URLs ohne Host.
 const SITE_URL = envUrl(process.env.NEXT_PUBLIC_SITE_URL, "http://localhost:3100");
 
-// Öffentliche statische Seiten (immer indexierbar).
-const STATISCH = ["", "/agb"];
+// Öffentliche statische Seiten (immer indexierbar). /agb ist bewusst NICHT
+// dabei: der Pfad leitet dauerhaft auf /rechtliches/nutzungsbedingungen um,
+// eine Weiterleitung gehört nicht in die Sitemap.
+const STATISCH = [
+  "",
+  "/rechtliches",
+  ...LEGAL_DOCUMENT_SLUGS.map((slug) => `/rechtliches/${slug}`),
+];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const inserate = await ladeSitemapInserate();
 
   const statisch: MetadataRoute.Sitemap = STATISCH.map((pfad) => ({
     url: `${SITE_URL}${pfad}`,
-    changeFrequency: "daily",
-    priority: pfad === "" ? 1 : 0.5,
+    changeFrequency: pfad === "" ? "daily" : "monthly",
+    priority: pfad === "" ? 1 : 0.3,
   }));
 
   const objekte: MetadataRoute.Sitemap = inserate.map((i) => ({

@@ -18,7 +18,8 @@
       "hausboot": "Báid chónaithe",
       "hotel": "Óstáin",
       "zimmer": "Seomraí"
-    }
+    },
+    "alleAnzeigen": "Taispeáin uile"
   },
   "inserat": {
     "gaesteZahl": "{count, plural, one {# aoi} two {# aoi} few {# aoi} many {# aoi} other {# aoi}}",
@@ -56,7 +57,8 @@
     "einloesen": "Cuir i bhfeidhm",
     "codeAngewendet": "Cód lascaine curtha i bhfeidhm.",
     "codeUngueltig": "Ní bhaineann an cód lascaine seo leis an áirithint seo.",
-    "gesamt": "Iomlán"
+    "gesamt": "Iomlán",
+    "verfuegbarkeitPruefen": "Seiceáil an fáil"
   },
   "checkout": {
     "titel": "Deimhnigh agus íoc",
@@ -516,5 +518,37 @@
     "nd_books": "Leabhair",
     "nd_childrens_books_toys": "Leabhair agus bréagáin do pháistí",
     "nd_childrens_dinnerware": "Miasa do pháistí"
+  },
+  "nav": {
+    "suchen": "Cuardaigh",
+    "merkzettel": "Liostaí mianta",
+    "buchungen": "Turais",
+    "nachrichten": "Teachtaireachtaí",
+    "konto": "Cuntas",
+    "anmelden": "Logáil isteach",
+    "gastgeber": "myBestDays d'óstaigh",
+    "unterkuenfte": "Cóiríocht",
+    "erlebnisse": "Taithí",
+    "services": "Seirbhísí"
+  },
+  "mobil": {
+    "sucheOeffnen": "Cá háit ar mhaith leat dul?",
+    "sucheZiel": "Cá háit",
+    "sucheDatum": "Dátaí",
+    "sucheGaeste": "Aíonna",
+    "schliessen": "Dún",
+    "zurueck": "Ar ais",
+    "weiter": "Ar aghaidh",
+    "suchen": "Cuardaigh",
+    "loeschen": "Glan",
+    "teilen": "Comhroinn",
+    "merken": "Sábháil",
+    "bildZaehler": "{aktuell} / {gesamt}",
+    "verfuegbarkeitPruefen": "Seiceáil an fáil",
+    "zusammenfassungAnzeigen": "Taispeáin sonraí",
+    "zusammenfassungVerbergen": "Cuir sonraí i bhfolach",
+    "mehrAnzeigen": "Taispeáin níos mó",
+    "wenigerAnzeigen": "Taispeáin níos lú",
+    "menue": "Roghchlár"
   }
 }

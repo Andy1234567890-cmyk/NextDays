@@ -18,7 +18,8 @@
       "hausboot": "Domy na wodzie",
       "hotel": "Hotele",
       "zimmer": "Pokoje"
-    }
+    },
+    "alleAnzeigen": "Pokaż wszystkie"
   },
   "inserat": {
     "gaesteZahl": "{count, plural, one {# gość} few {# gości} many {# gości} other {# gości}}",
@@ -56,7 +57,8 @@
     "einloesen": "Zastosuj",
     "codeAngewendet": "Kod promocyjny zastosowany.",
     "codeUngueltig": "Ten kod promocyjny nie dotyczy tej rezerwacji.",
-    "gesamt": "Łącznie"
+    "gesamt": "Łącznie",
+    "verfuegbarkeitPruefen": "Sprawdź dostępność"
   },
   "checkout": {
     "titel": "Potwierdź i zapłać",
@@ -516,5 +518,37 @@
     "nd_books": "Książki",
     "nd_childrens_books_toys": "Książki i zabawki dla dzieci",
     "nd_childrens_dinnerware": "Naczynia dla dzieci"
+  },
+  "nav": {
+    "suchen": "Szukaj",
+    "merkzettel": "Listy życzeń",
+    "buchungen": "Podróże",
+    "nachrichten": "Wiadomości",
+    "konto": "Konto",
+    "anmelden": "Zaloguj się",
+    "gastgeber": "myBestDays dla gospodarzy",
+    "unterkuenfte": "Noclegi",
+    "erlebnisse": "Atrakcje",
+    "services": "Usługi"
+  },
+  "mobil": {
+    "sucheOeffnen": "Gdzie chcesz jechać?",
+    "sucheZiel": "Gdzie",
+    "sucheDatum": "Daty",
+    "sucheGaeste": "Goście",
+    "schliessen": "Zamknij",
+    "zurueck": "Wstecz",
+    "weiter": "Dalej",
+    "suchen": "Szukaj",
+    "loeschen": "Wyczyść",
+    "teilen": "Udostępnij",
+    "merken": "Zapisz",
+    "bildZaehler": "{aktuell} / {gesamt}",
+    "verfuegbarkeitPruefen": "Sprawdź dostępność",
+    "zusammenfassungAnzeigen": "Pokaż szczegóły",
+    "zusammenfassungVerbergen": "Ukryj szczegóły",
+    "mehrAnzeigen": "Pokaż więcej",
+    "wenigerAnzeigen": "Pokaż mniej",
+    "menue": "Menu"
   }
 }

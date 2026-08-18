@@ -18,7 +18,8 @@
       "hausboot": "Husbåtar",
       "hotel": "Hotell",
       "zimmer": "Rum"
-    }
+    },
+    "alleAnzeigen": "Visa alla"
   },
   "inserat": {
     "gaesteZahl": "{count, plural, one {# gäst} other {# gäster}}",
@@ -56,7 +57,8 @@
     "einloesen": "Använd",
     "codeAngewendet": "Kampanjkoden har använts.",
     "codeUngueltig": "Den här kampanjkoden gäller inte för denna bokning.",
-    "gesamt": "Totalt"
+    "gesamt": "Totalt",
+    "verfuegbarkeitPruefen": "Se tillgänglighet"
   },
   "checkout": {
     "titel": "Bekräfta och betala",
@@ -516,5 +518,37 @@
     "nd_books": "Böcker",
     "nd_childrens_books_toys": "Barnböcker och leksaker",
     "nd_childrens_dinnerware": "Barnservis"
+  },
+  "nav": {
+    "suchen": "Sök",
+    "merkzettel": "Önskelistor",
+    "buchungen": "Resor",
+    "nachrichten": "Meddelanden",
+    "konto": "Konto",
+    "anmelden": "Logga in",
+    "gastgeber": "myBestDays för värdar",
+    "unterkuenfte": "Boenden",
+    "erlebnisse": "Upplevelser",
+    "services": "Tjänster"
+  },
+  "mobil": {
+    "sucheOeffnen": "Vart vill du resa?",
+    "sucheZiel": "Vart",
+    "sucheDatum": "Datum",
+    "sucheGaeste": "Gäster",
+    "schliessen": "Stäng",
+    "zurueck": "Tillbaka",
+    "weiter": "Nästa",
+    "suchen": "Sök",
+    "loeschen": "Rensa",
+    "teilen": "Dela",
+    "merken": "Spara",
+    "bildZaehler": "{aktuell} / {gesamt}",
+    "verfuegbarkeitPruefen": "Se tillgänglighet",
+    "zusammenfassungAnzeigen": "Visa detaljer",
+    "zusammenfassungVerbergen": "Dölj detaljer",
+    "mehrAnzeigen": "Visa mer",
+    "wenigerAnzeigen": "Visa mindre",
+    "menue": "Meny"
   }
 }

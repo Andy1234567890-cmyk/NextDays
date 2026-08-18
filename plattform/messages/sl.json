@@ -18,7 +18,8 @@
       "hausboot": "Bivalne barke",
       "hotel": "Hoteli",
       "zimmer": "Sobe"
-    }
+    },
+    "alleAnzeigen": "Prikaži vse"
   },
   "inserat": {
     "gaesteZahl": "{count, plural, one {# gost} two {# gosta} few {# gostje} other {# gostov}}",
@@ -56,7 +57,8 @@
     "einloesen": "Uporabi",
     "codeAngewendet": "Promocijska koda uporabljena.",
     "codeUngueltig": "Ta promocijska koda za to rezervacijo ne velja.",
-    "gesamt": "Skupaj"
+    "gesamt": "Skupaj",
+    "verfuegbarkeitPruefen": "Preveri razpoložljivost"
   },
   "checkout": {
     "titel": "Potrdi in plačaj",
@@ -516,5 +518,37 @@
     "nd_books": "Knjige",
     "nd_childrens_books_toys": "Otroške knjige in igrače",
     "nd_childrens_dinnerware": "Otroška posoda"
+  },
+  "nav": {
+    "suchen": "Iskanje",
+    "merkzettel": "Seznami želja",
+    "buchungen": "Potovanja",
+    "nachrichten": "Sporočila",
+    "konto": "Račun",
+    "anmelden": "Prijava",
+    "gastgeber": "myBestDays za gostitelje",
+    "unterkuenfte": "Nastanitve",
+    "erlebnisse": "Doživetja",
+    "services": "Storitve"
+  },
+  "mobil": {
+    "sucheOeffnen": "Kam želite?",
+    "sucheZiel": "Kam",
+    "sucheDatum": "Datumi",
+    "sucheGaeste": "Gostje",
+    "schliessen": "Zapri",
+    "zurueck": "Nazaj",
+    "weiter": "Naprej",
+    "suchen": "Iskanje",
+    "loeschen": "Počisti",
+    "teilen": "Deli",
+    "merken": "Shrani",
+    "bildZaehler": "{aktuell} / {gesamt}",
+    "verfuegbarkeitPruefen": "Preveri razpoložljivost",
+    "zusammenfassungAnzeigen": "Prikaži podrobnosti",
+    "zusammenfassungVerbergen": "Skrij podrobnosti",
+    "mehrAnzeigen": "Prikaži več",
+    "wenigerAnzeigen": "Prikaži manj",
+    "menue": "Meni"
   }
 }

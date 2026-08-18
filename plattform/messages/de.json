@@ -18,7 +18,8 @@
       "hausboot": "Hausboote",
       "hotel": "Hotels",
       "zimmer": "Zimmer"
-    }
+    },
+    "alleAnzeigen": "Alle anzeigen"
   },
   "inserat": {
     "gaesteZahl": "{count, plural, one {# Gast} other {# Gäste}}",
@@ -56,7 +57,8 @@
     "einloesen": "Einlösen",
     "codeAngewendet": "Aktionscode angewendet.",
     "codeUngueltig": "Dieser Aktionscode gilt für diese Buchung nicht.",
-    "gesamt": "Gesamt"
+    "gesamt": "Gesamt",
+    "verfuegbarkeitPruefen": "Verfügbarkeit prüfen"
   },
   "checkout": {
     "titel": "Bestätigen und bezahlen",
@@ -516,5 +518,37 @@
     "nd_books": "Bücher",
     "nd_childrens_books_toys": "Kinderbücher und Spielzeug",
     "nd_childrens_dinnerware": "Kindergeschirr"
+  },
+  "nav": {
+    "suchen": "Suchen",
+    "merkzettel": "Merkzettel",
+    "buchungen": "Buchungen",
+    "nachrichten": "Nachrichten",
+    "konto": "Konto",
+    "anmelden": "Anmelden",
+    "gastgeber": "myBestDays für Gastgeber",
+    "unterkuenfte": "Unterkünfte",
+    "erlebnisse": "Erlebnisse",
+    "services": "Services"
+  },
+  "mobil": {
+    "sucheOeffnen": "Wohin möchtest du?",
+    "sucheZiel": "Wohin",
+    "sucheDatum": "Datum",
+    "sucheGaeste": "Gäste",
+    "schliessen": "Schließen",
+    "zurueck": "Zurück",
+    "weiter": "Weiter",
+    "suchen": "Suchen",
+    "loeschen": "Löschen",
+    "teilen": "Teilen",
+    "merken": "Merken",
+    "bildZaehler": "{aktuell} / {gesamt}",
+    "verfuegbarkeitPruefen": "Verfügbarkeit prüfen",
+    "zusammenfassungAnzeigen": "Details anzeigen",
+    "zusammenfassungVerbergen": "Details verbergen",
+    "mehrAnzeigen": "Mehr anzeigen",
+    "wenigerAnzeigen": "Weniger anzeigen",
+    "menue": "Menü"
   }
 }

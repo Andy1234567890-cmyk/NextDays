@@ -18,7 +18,8 @@
       "hausboot": "Къщи-лодки",
       "hotel": "Хотели",
       "zimmer": "Стаи"
-    }
+    },
+    "alleAnzeigen": "Показване на всички"
   },
   "inserat": {
     "gaesteZahl": "{count, plural, one {# гост} other {# гости}}",
@@ -56,7 +57,8 @@
     "einloesen": "Приложи",
     "codeAngewendet": "Промо кодът е приложен.",
     "codeUngueltig": "Този промо код не важи за тази резервация.",
-    "gesamt": "Общо"
+    "gesamt": "Общо",
+    "verfuegbarkeitPruefen": "Проверка на свободните дати"
   },
   "checkout": {
     "titel": "Потвърди и плати",
@@ -516,5 +518,37 @@
     "nd_books": "Книги",
     "nd_childrens_books_toys": "Детски книги и играчки",
     "nd_childrens_dinnerware": "Детски съдове"
+  },
+  "nav": {
+    "suchen": "Търсене",
+    "merkzettel": "Списъци с желания",
+    "buchungen": "Пътувания",
+    "nachrichten": "Съобщения",
+    "konto": "Профил",
+    "anmelden": "Вход",
+    "gastgeber": "myBestDays за домакини",
+    "unterkuenfte": "Настанявания",
+    "erlebnisse": "Преживявания",
+    "services": "Услуги"
+  },
+  "mobil": {
+    "sucheOeffnen": "Къде искате да отидете?",
+    "sucheZiel": "Къде",
+    "sucheDatum": "Дати",
+    "sucheGaeste": "Гости",
+    "schliessen": "Затвори",
+    "zurueck": "Назад",
+    "weiter": "Напред",
+    "suchen": "Търсене",
+    "loeschen": "Изчисти",
+    "teilen": "Сподели",
+    "merken": "Запази",
+    "bildZaehler": "{aktuell} / {gesamt}",
+    "verfuegbarkeitPruefen": "Проверка на свободните дати",
+    "zusammenfassungAnzeigen": "Покажи подробности",
+    "zusammenfassungVerbergen": "Скрий подробностите",
+    "mehrAnzeigen": "Покажи повече",
+    "wenigerAnzeigen": "Покажи по-малко",
+    "menue": "Меню"
   }
 }

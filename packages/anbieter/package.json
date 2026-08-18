@@ -1,0 +1,10 @@
+{
+  "name": "@nextdays/anbieter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Firmen-, Register- und Kontaktdaten der myNextDays ApS. Single Source (Wurzel 4) für ALLE Rechtstexte und Impressen aller Apps. ADR-0016.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

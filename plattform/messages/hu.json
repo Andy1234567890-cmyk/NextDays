@@ -18,7 +18,8 @@
       "hausboot": "Lakóhajók",
       "hotel": "Hotelek",
       "zimmer": "Szobák"
-    }
+    },
+    "alleAnzeigen": "Összes megjelenítése"
   },
   "inserat": {
     "gaesteZahl": "{count, plural, one {# vendég} other {# vendég}}",
@@ -56,7 +57,8 @@
     "einloesen": "Beváltás",
     "codeAngewendet": "A kedvezménykód érvényes.",
     "codeUngueltig": "Ez a kedvezménykód erre a foglalásra nem érvényes.",
-    "gesamt": "Összesen"
+    "gesamt": "Összesen",
+    "verfuegbarkeitPruefen": "Elérhetőség ellenőrzése"
   },
   "checkout": {
     "titel": "Megerősítés és fizetés",
@@ -516,5 +518,37 @@
     "nd_books": "Könyvek",
     "nd_childrens_books_toys": "Gyerekkönyvek és játékok",
     "nd_childrens_dinnerware": "Gyerekétkészlet"
+  },
+  "nav": {
+    "suchen": "Keresés",
+    "merkzettel": "Kívánságlisták",
+    "buchungen": "Utazások",
+    "nachrichten": "Üzenetek",
+    "konto": "Fiók",
+    "anmelden": "Bejelentkezés",
+    "gastgeber": "myBestDays szállásadóknak",
+    "unterkuenfte": "Szállások",
+    "erlebnisse": "Élmények",
+    "services": "Szolgáltatások"
+  },
+  "mobil": {
+    "sucheOeffnen": "Hová szeretnél utazni?",
+    "sucheZiel": "Hová",
+    "sucheDatum": "Dátumok",
+    "sucheGaeste": "Vendégek",
+    "schliessen": "Bezárás",
+    "zurueck": "Vissza",
+    "weiter": "Tovább",
+    "suchen": "Keresés",
+    "loeschen": "Törlés",
+    "teilen": "Megosztás",
+    "merken": "Mentés",
+    "bildZaehler": "{aktuell} / {gesamt}",
+    "verfuegbarkeitPruefen": "Elérhetőség ellenőrzése",
+    "zusammenfassungAnzeigen": "Részletek megjelenítése",
+    "zusammenfassungVerbergen": "Részletek elrejtése",
+    "mehrAnzeigen": "Több megjelenítése",
+    "wenigerAnzeigen": "Kevesebb megjelenítése",
+    "menue": "Menü"
   }
 }

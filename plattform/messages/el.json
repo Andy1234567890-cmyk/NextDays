@@ -18,7 +18,8 @@
       "hausboot": "Πλωτά σπίτια",
       "hotel": "Ξενοδοχεία",
       "zimmer": "Δωμάτια"
-    }
+    },
+    "alleAnzeigen": "Εμφάνιση όλων"
   },
   "inserat": {
     "gaesteZahl": "{count, plural, one {# επισκέπτης} other {# επισκέπτες}}",
@@ -56,7 +57,8 @@
     "einloesen": "Εφαρμογή",
     "codeAngewendet": "Ο κωδικός εφαρμόστηκε.",
     "codeUngueltig": "Αυτός ο κωδικός δεν ισχύει για αυτήν την κράτηση.",
-    "gesamt": "Σύνολο"
+    "gesamt": "Σύνολο",
+    "verfuegbarkeitPruefen": "Έλεγχος διαθεσιμότητας"
   },
   "checkout": {
     "titel": "Επιβεβαίωση και πληρωμή",
@@ -516,5 +518,37 @@
     "nd_books": "Βιβλία",
     "nd_childrens_books_toys": "Παιδικά βιβλία και παιχνίδια",
     "nd_childrens_dinnerware": "Παιδικά σερβίτσια"
+  },
+  "nav": {
+    "suchen": "Αναζήτηση",
+    "merkzettel": "Λίστες επιθυμιών",
+    "buchungen": "Ταξίδια",
+    "nachrichten": "Μηνύματα",
+    "konto": "Λογαριασμός",
+    "anmelden": "Σύνδεση",
+    "gastgeber": "myBestDays για οικοδεσπότες",
+    "unterkuenfte": "Καταλύματα",
+    "erlebnisse": "Εμπειρίες",
+    "services": "Υπηρεσίες"
+  },
+  "mobil": {
+    "sucheOeffnen": "Πού θέλετε να πάτε;",
+    "sucheZiel": "Πού",
+    "sucheDatum": "Ημερομηνίες",
+    "sucheGaeste": "Επισκέπτες",
+    "schliessen": "Κλείσιμο",
+    "zurueck": "Πίσω",
+    "weiter": "Επόμενο",
+    "suchen": "Αναζήτηση",
+    "loeschen": "Εκκαθάριση",
+    "teilen": "Κοινοποίηση",
+    "merken": "Αποθήκευση",
+    "bildZaehler": "{aktuell} / {gesamt}",
+    "verfuegbarkeitPruefen": "Έλεγχος διαθεσιμότητας",
+    "zusammenfassungAnzeigen": "Εμφάνιση λεπτομερειών",
+    "zusammenfassungVerbergen": "Απόκρυψη λεπτομερειών",
+    "mehrAnzeigen": "Εμφάνιση περισσότερων",
+    "wenigerAnzeigen": "Εμφάνιση λιγότερων",
+    "menue": "Μενού"
   }
 }

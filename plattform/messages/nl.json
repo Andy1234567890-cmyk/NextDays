@@ -18,7 +18,8 @@
       "hausboot": "Woonboten",
       "hotel": "Hotels",
       "zimmer": "Kamers"
-    }
+    },
+    "alleAnzeigen": "Alles weergeven"
   },
   "inserat": {
     "gaesteZahl": "{count, plural, one {# gast} other {# gasten}}",
@@ -56,7 +57,8 @@
     "einloesen": "Toepassen",
     "codeAngewendet": "Actiecode toegepast.",
     "codeUngueltig": "Deze actiecode geldt niet voor deze boeking.",
-    "gesamt": "Totaal"
+    "gesamt": "Totaal",
+    "verfuegbarkeitPruefen": "Beschikbaarheid bekijken"
   },
   "checkout": {
     "titel": "Bevestigen en betalen",
@@ -516,5 +518,37 @@
     "nd_books": "Boeken",
     "nd_childrens_books_toys": "Kinderboeken en speelgoed",
     "nd_childrens_dinnerware": "Kinderservies"
+  },
+  "nav": {
+    "suchen": "Zoeken",
+    "merkzettel": "Verlanglijstjes",
+    "buchungen": "Reizen",
+    "nachrichten": "Berichten",
+    "konto": "Account",
+    "anmelden": "Inloggen",
+    "gastgeber": "myBestDays voor hosts",
+    "unterkuenfte": "Verblijven",
+    "erlebnisse": "Ervaringen",
+    "services": "Diensten"
+  },
+  "mobil": {
+    "sucheOeffnen": "Waar wil je naartoe?",
+    "sucheZiel": "Waar",
+    "sucheDatum": "Data",
+    "sucheGaeste": "Gasten",
+    "schliessen": "Sluiten",
+    "zurueck": "Terug",
+    "weiter": "Volgende",
+    "suchen": "Zoeken",
+    "loeschen": "Wissen",
+    "teilen": "Delen",
+    "merken": "Opslaan",
+    "bildZaehler": "{aktuell} / {gesamt}",
+    "verfuegbarkeitPruefen": "Beschikbaarheid bekijken",
+    "zusammenfassungAnzeigen": "Details weergeven",
+    "zusammenfassungVerbergen": "Details verbergen",
+    "mehrAnzeigen": "Meer weergeven",
+    "wenigerAnzeigen": "Minder weergeven",
+    "menue": "Menu"
   }
 }

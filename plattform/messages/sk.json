@@ -18,7 +18,8 @@
       "hausboot": "Hausbóty",
       "hotel": "Hotely",
       "zimmer": "Izby"
-    }
+    },
+    "alleAnzeigen": "Zobraziť všetko"
   },
   "inserat": {
     "gaesteZahl": "{count, plural, one {# hosť} few {# hostia} many {# hostí} other {# hostí}}",
@@ -56,7 +57,8 @@
     "einloesen": "Použiť",
     "codeAngewendet": "Promo kód použitý.",
     "codeUngueltig": "Tento promo kód sa na túto rezerváciu nevzťahuje.",
-    "gesamt": "Celkom"
+    "gesamt": "Celkom",
+    "verfuegbarkeitPruefen": "Skontrolovať dostupnosť"
   },
   "checkout": {
     "titel": "Potvrdiť a zaplatiť",
@@ -516,5 +518,37 @@
     "nd_books": "Knihy",
     "nd_childrens_books_toys": "Detské knihy a hračky",
     "nd_childrens_dinnerware": "Detský riad"
+  },
+  "nav": {
+    "suchen": "Hľadať",
+    "merkzettel": "Zoznamy prianí",
+    "buchungen": "Cesty",
+    "nachrichten": "Správy",
+    "konto": "Konto",
+    "anmelden": "Prihlásiť sa",
+    "gastgeber": "myBestDays pre hostiteľov",
+    "unterkuenfte": "Ubytovanie",
+    "erlebnisse": "Zážitky",
+    "services": "Služby"
+  },
+  "mobil": {
+    "sucheOeffnen": "Kam chcete ísť?",
+    "sucheZiel": "Kam",
+    "sucheDatum": "Termín",
+    "sucheGaeste": "Hostia",
+    "schliessen": "Zavrieť",
+    "zurueck": "Späť",
+    "weiter": "Ďalej",
+    "suchen": "Hľadať",
+    "loeschen": "Vymazať",
+    "teilen": "Zdieľať",
+    "merken": "Uložiť",
+    "bildZaehler": "{aktuell} / {gesamt}",
+    "verfuegbarkeitPruefen": "Skontrolovať dostupnosť",
+    "zusammenfassungAnzeigen": "Zobraziť podrobnosti",
+    "zusammenfassungVerbergen": "Skryť podrobnosti",
+    "mehrAnzeigen": "Zobraziť viac",
+    "wenigerAnzeigen": "Zobraziť menej",
+    "menue": "Ponuka"
   }
 }

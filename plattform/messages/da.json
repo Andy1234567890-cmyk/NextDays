@@ -18,7 +18,8 @@
       "hausboot": "Husbåde",
       "hotel": "Hoteller",
       "zimmer": "Værelser"
-    }
+    },
+    "alleAnzeigen": "Vis alle"
   },
   "inserat": {
     "gaesteZahl": "{count, plural, one {# gæst} other {# gæster}}",
@@ -56,7 +57,8 @@
     "einloesen": "Brug",
     "codeAngewendet": "Rabatkode anvendt.",
     "codeUngueltig": "Denne rabatkode gælder ikke for denne booking.",
-    "gesamt": "I alt"
+    "gesamt": "I alt",
+    "verfuegbarkeitPruefen": "Se ledige datoer"
   },
   "checkout": {
     "titel": "Bekræft og betal",
@@ -516,5 +518,37 @@
     "nd_books": "Bøger",
     "nd_childrens_books_toys": "Børnebøger og legetøj",
     "nd_childrens_dinnerware": "Børneservice"
+  },
+  "nav": {
+    "suchen": "Søg",
+    "merkzettel": "Ønskelister",
+    "buchungen": "Rejser",
+    "nachrichten": "Beskeder",
+    "konto": "Konto",
+    "anmelden": "Log ind",
+    "gastgeber": "myBestDays for værter",
+    "unterkuenfte": "Boliger",
+    "erlebnisse": "Oplevelser",
+    "services": "Services"
+  },
+  "mobil": {
+    "sucheOeffnen": "Hvor skal du hen?",
+    "sucheZiel": "Hvor",
+    "sucheDatum": "Datoer",
+    "sucheGaeste": "Gæster",
+    "schliessen": "Luk",
+    "zurueck": "Tilbage",
+    "weiter": "Næste",
+    "suchen": "Søg",
+    "loeschen": "Ryd",
+    "teilen": "Del",
+    "merken": "Gem",
+    "bildZaehler": "{aktuell} / {gesamt}",
+    "verfuegbarkeitPruefen": "Se ledige datoer",
+    "zusammenfassungAnzeigen": "Vis detaljer",
+    "zusammenfassungVerbergen": "Skjul detaljer",
+    "mehrAnzeigen": "Vis mere",
+    "wenigerAnzeigen": "Vis mindre",
+    "menue": "Menu"
   }
 }

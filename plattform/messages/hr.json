@@ -18,7 +18,8 @@
       "hausboot": "Kuće na vodi",
       "hotel": "Hoteli",
       "zimmer": "Sobe"
-    }
+    },
+    "alleAnzeigen": "Prikaži sve"
   },
   "inserat": {
     "gaesteZahl": "{count, plural, one {# gost} few {# gosta} other {# gostiju}}",
@@ -56,7 +57,8 @@
     "einloesen": "Primijeni",
     "codeAngewendet": "Promo kod primijenjen.",
     "codeUngueltig": "Ovaj promo kod ne vrijedi za ovu rezervaciju.",
-    "gesamt": "Ukupno"
+    "gesamt": "Ukupno",
+    "verfuegbarkeitPruefen": "Provjeri dostupnost"
   },
   "checkout": {
     "titel": "Potvrdi i plati",
@@ -516,5 +518,37 @@
     "nd_books": "Knjige",
     "nd_childrens_books_toys": "Dječje knjige i igračke",
     "nd_childrens_dinnerware": "Dječje posuđe"
+  },
+  "nav": {
+    "suchen": "Traži",
+    "merkzettel": "Liste želja",
+    "buchungen": "Putovanja",
+    "nachrichten": "Poruke",
+    "konto": "Račun",
+    "anmelden": "Prijava",
+    "gastgeber": "myBestDays za domaćine",
+    "unterkuenfte": "Smještaj",
+    "erlebnisse": "Doživljaji",
+    "services": "Usluge"
+  },
+  "mobil": {
+    "sucheOeffnen": "Kamo želite putovati?",
+    "sucheZiel": "Kamo",
+    "sucheDatum": "Datumi",
+    "sucheGaeste": "Gosti",
+    "schliessen": "Zatvori",
+    "zurueck": "Natrag",
+    "weiter": "Dalje",
+    "suchen": "Traži",
+    "loeschen": "Očisti",
+    "teilen": "Podijeli",
+    "merken": "Sačuvaj",
+    "bildZaehler": "{aktuell} / {gesamt}",
+    "verfuegbarkeitPruefen": "Provjeri dostupnost",
+    "zusammenfassungAnzeigen": "Prikaži detalje",
+    "zusammenfassungVerbergen": "Sakrij detalje",
+    "mehrAnzeigen": "Prikaži više",
+    "wenigerAnzeigen": "Prikaži manje",
+    "menue": "Izbornik"
   }
 }

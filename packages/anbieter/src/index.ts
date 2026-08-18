@@ -1,7 +1,11 @@
 // Anbieter-/Registerdaten der myNextDays ApS.
 //
-// EINZIGE QUELLE DER WAHRHEIT für Firmen-, Register- und Kontaktdaten in dieser
-// App — keine verstreuten Kopien in Komponenten oder Rechtstexten. Alle
+// EINZIGE QUELLE DER WAHRHEIT für Firmen-, Register- und Kontaktdaten in ALLEN
+// Apps des Monorepos — keine verstreuten Kopien in Komponenten oder
+// Rechtstexten. Lag bis 18.08.2026 in marketing/content/legal/anbieter.ts und
+// damit nur einer App zur Verfügung; mit den Rechtstexten des myBestDays-
+// Marktplatzes (plattform) brauchte sie eine zweite App, und zwei Kopien von
+// Registerdaten sind zwei Wahrheiten. Alle
 // Angaben sind am 30.07.2026 gegen die amtlichen Register geprüft:
 //   · Firma, Adresse, Rechtsform, Telefon, Branche → cvrapi.dk (CVR 46615182)
 //   · Adresse Hirtshalsvej 21, 9881 Bindslev       → Dataforsyningen/DAWA (aktiv)
@@ -66,5 +70,42 @@ export const AUFSICHTSBEHOERDE = {
   website: "https://www.datatilsynet.dk",
 } as const;
 
-/** Gemeinsames Stand-Datum aller Rechtsdokumente dieser App. */
+/** Gemeinsames Stand-Datum der Rechtsdokumente der Marketing-Site.
+ *  Die Rechtstexte des Marktplatzes (plattform) tragen ihr eigenes, je Sprache
+ *  formuliertes Stand-Datum — dort steht es in der jeweiligen Sprachfassung. */
 export const RECHTSSTAND = "Stand: 6. August 2026";
+
+/** Die Marke, unter der der Marktplatz für Gäste und Gastgeber auftritt.
+ *  Betreiberin ist dieselbe Gesellschaft; myBestDays ist keine eigene
+ *  juristische Person (Marken-Grenze myNextDays/myBestDays, CLAUDE.md). */
+export const MARKTPLATZ_MARKE = "myBestDays";
+
+/** Anschrift als eine Zeile — für Fließtext in Rechtsdokumenten. */
+export const ANBIETER_ANSCHRIFT =
+  `${ANBIETER.strasse}, ${ANBIETER.ort}, ${ANBIETER.land}`;
+
+/** Koordinator für digitale Dienste (Artikel 49 der Verordnung (EU) 2022/2065)
+ *  am Sitz der Gesellschaft. Am 18.08.2026 gegen die Liste der Europäischen
+ *  Kommission geprüft (digital-strategy.ec.europa.eu/en/policies/dsa-dscs):
+ *  für Dänemark ist die Digitaliseringsstyrelsen benannt. */
+export const DSA_KOORDINATOR = {
+  name: "Digitaliseringsstyrelsen",
+  land: "Dänemark",
+  website: "https://digst.dk/tilsyn/digitale-formidlingstjenester-dsa/",
+} as const;
+
+/** Zuständige Verbraucherschlichtungsstelle am Sitz (Dänemark).
+ *  Am 18.08.2026 live gegen naevneneshus.dk geprüft: Anschrift Toldboden 2,
+ *  8800 Viborg; die Stelle heißt inzwischen „Mæglingsteamet for
+ *  Forbrugerklager og Forbrugerklagenævnet" (früher „Center for
+ *  Klageløsning"). Die EU-Plattform für Online-Streitbeilegung ist durch die
+ *  Verordnung (EU) 2024/3228 aufgehoben und außer Betrieb — sie darf NICHT
+ *  mehr als Weg genannt oder verlinkt werden. */
+export const VERBRAUCHERSCHLICHTUNG = {
+  name: "Mæglingsteamet for Forbrugerklager og Forbrugerklagenævnet",
+  traeger: "Nævnenes Hus",
+  strasse: "Toldboden 2",
+  ort: "8800 Viborg",
+  land: "Dänemark",
+  website: "https://naevneneshus.dk",
+} as const;

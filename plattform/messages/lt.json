@@ -18,7 +18,8 @@
       "hausboot": "Namai-laivai",
       "hotel": "Viešbučiai",
       "zimmer": "Kambariai"
-    }
+    },
+    "alleAnzeigen": "Rodyti visus"
   },
   "inserat": {
     "gaesteZahl": "{count, plural, one {# svečias} few {# svečiai} many {# svečio} other {# svečių}}",
@@ -56,7 +57,8 @@
     "einloesen": "Taikyti",
     "codeAngewendet": "Akcijos kodas pritaikytas.",
     "codeUngueltig": "Šis akcijos kodas šiai rezervacijai netaikomas.",
-    "gesamt": "Iš viso"
+    "gesamt": "Iš viso",
+    "verfuegbarkeitPruefen": "Tikrinti laisvas datas"
   },
   "checkout": {
     "titel": "Patvirtink ir apmokėk",
@@ -516,5 +518,37 @@
     "nd_books": "Knygos",
     "nd_childrens_books_toys": "Vaikiškos knygos ir žaislai",
     "nd_childrens_dinnerware": "Vaikiški indai"
+  },
+  "nav": {
+    "suchen": "Paieška",
+    "merkzettel": "Norų sąrašai",
+    "buchungen": "Kelionės",
+    "nachrichten": "Pranešimai",
+    "konto": "Paskyra",
+    "anmelden": "Prisijungti",
+    "gastgeber": "myBestDays šeimininkams",
+    "unterkuenfte": "Apgyvendinimas",
+    "erlebnisse": "Įspūdžiai",
+    "services": "Paslaugos"
+  },
+  "mobil": {
+    "sucheOeffnen": "Kur norite keliauti?",
+    "sucheZiel": "Kur",
+    "sucheDatum": "Datos",
+    "sucheGaeste": "Svečiai",
+    "schliessen": "Uždaryti",
+    "zurueck": "Atgal",
+    "weiter": "Toliau",
+    "suchen": "Ieškoti",
+    "loeschen": "Išvalyti",
+    "teilen": "Dalintis",
+    "merken": "Išsaugoti",
+    "bildZaehler": "{aktuell} / {gesamt}",
+    "verfuegbarkeitPruefen": "Tikrinti laisvas datas",
+    "zusammenfassungAnzeigen": "Rodyti išsamiau",
+    "zusammenfassungVerbergen": "Slėpti išsamią informaciją",
+    "mehrAnzeigen": "Rodyti daugiau",
+    "wenigerAnzeigen": "Rodyti mažiau",
+    "menue": "Meniu"
   }
 }

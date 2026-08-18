@@ -18,7 +18,8 @@
       "hausboot": "Asuntolaivat",
       "hotel": "Hotellit",
       "zimmer": "Huoneet"
-    }
+    },
+    "alleAnzeigen": "Näytä kaikki"
   },
   "inserat": {
     "gaesteZahl": "{count, plural, one {# vieras} other {# vierasta}}",
@@ -56,7 +57,8 @@
     "einloesen": "Käytä",
     "codeAngewendet": "Kampanjakoodi käytetty.",
     "codeUngueltig": "Tämä kampanjakoodi ei koske tätä varausta.",
-    "gesamt": "Yhteensä"
+    "gesamt": "Yhteensä",
+    "verfuegbarkeitPruefen": "Tarkista saatavuus"
   },
   "checkout": {
     "titel": "Vahvista ja maksa",
@@ -516,5 +518,37 @@
     "nd_books": "Kirjoja",
     "nd_childrens_books_toys": "Lastenkirjoja ja leluja",
     "nd_childrens_dinnerware": "Lasten astiat"
+  },
+  "nav": {
+    "suchen": "Haku",
+    "merkzettel": "Toivelistat",
+    "buchungen": "Matkat",
+    "nachrichten": "Viestit",
+    "konto": "Tili",
+    "anmelden": "Kirjaudu sisään",
+    "gastgeber": "myBestDays isännille",
+    "unterkuenfte": "Kohteet",
+    "erlebnisse": "Kokemukset",
+    "services": "Palvelut"
+  },
+  "mobil": {
+    "sucheOeffnen": "Minne haluat matkustaa?",
+    "sucheZiel": "Minne",
+    "sucheDatum": "Päivämäärät",
+    "sucheGaeste": "Vieraat",
+    "schliessen": "Sulje",
+    "zurueck": "Takaisin",
+    "weiter": "Seuraava",
+    "suchen": "Hae",
+    "loeschen": "Tyhjennä",
+    "teilen": "Jaa",
+    "merken": "Tallenna",
+    "bildZaehler": "{aktuell} / {gesamt}",
+    "verfuegbarkeitPruefen": "Tarkista saatavuus",
+    "zusammenfassungAnzeigen": "Näytä tiedot",
+    "zusammenfassungVerbergen": "Piilota tiedot",
+    "mehrAnzeigen": "Näytä enemmän",
+    "wenigerAnzeigen": "Näytä vähemmän",
+    "menue": "Valikko"
   }
 }

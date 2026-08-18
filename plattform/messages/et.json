@@ -18,7 +18,8 @@
       "hausboot": "Paatmajad",
       "hotel": "Hotellid",
       "zimmer": "Toad"
-    }
+    },
+    "alleAnzeigen": "Näita kõiki"
   },
   "inserat": {
     "gaesteZahl": "{count, plural, one {# külaline} other {# külalist}}",
@@ -56,7 +57,8 @@
     "einloesen": "Rakenda",
     "codeAngewendet": "Sooduskood rakendatud.",
     "codeUngueltig": "See sooduskood ei kehti selle broneeringu puhul.",
-    "gesamt": "Kokku"
+    "gesamt": "Kokku",
+    "verfuegbarkeitPruefen": "Kontrolli saadavust"
   },
   "checkout": {
     "titel": "Kinnita ja maksa",
@@ -516,5 +518,37 @@
     "nd_books": "Raamatud",
     "nd_childrens_books_toys": "Lasteraamatud ja mänguasjad",
     "nd_childrens_dinnerware": "Lastenõud"
+  },
+  "nav": {
+    "suchen": "Otsi",
+    "merkzettel": "Soovinimekirjad",
+    "buchungen": "Reisid",
+    "nachrichten": "Sõnumid",
+    "konto": "Konto",
+    "anmelden": "Logi sisse",
+    "gastgeber": "myBestDays võõrustajatele",
+    "unterkuenfte": "Majutus",
+    "erlebnisse": "Kogemused",
+    "services": "Teenused"
+  },
+  "mobil": {
+    "sucheOeffnen": "Kuhu soovid minna?",
+    "sucheZiel": "Kuhu",
+    "sucheDatum": "Kuupäevad",
+    "sucheGaeste": "Külalised",
+    "schliessen": "Sulge",
+    "zurueck": "Tagasi",
+    "weiter": "Edasi",
+    "suchen": "Otsi",
+    "loeschen": "Tühjenda",
+    "teilen": "Jaga",
+    "merken": "Salvesta",
+    "bildZaehler": "{aktuell} / {gesamt}",
+    "verfuegbarkeitPruefen": "Kontrolli saadavust",
+    "zusammenfassungAnzeigen": "Näita üksikasju",
+    "zusammenfassungVerbergen": "Peida üksikasjad",
+    "mehrAnzeigen": "Näita rohkem",
+    "wenigerAnzeigen": "Näita vähem",
+    "menue": "Menüü"
   }
 }
