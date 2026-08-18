@@ -226,6 +226,24 @@ jobs:
             [ "$a" = "$b" ] || { echo "$p: $a (bestdays) != $b (nextdays)"; exit 1; }
           done
 
+  marketing-konsistenz:
+    name: Marketing (bewusste Kopien)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Kopien decken sich mit ihrer Quelle
+        # marketing baut ISOLIERT (Coolify base_directory /marketing, eigenes
+        # bun.lock) und kann deshalb keine @nextdays/*-Packages importieren —
+        # ein `workspace:*`-Eintrag lässt dort `bun install --frozen-lockfile`
+        # scheitern. Die geteilte Logik liegt darum als Kopie mit
+        # SCHWESTERDATEI-Kopf vor, wie bei den zwei Mobile-Apps (ADR-0019).
+        # Drift wäre teuer: `tarif.ts` rechnet die Objekt-Staffel — läuft die
+        # Kopie auseinander, zeigt die öffentliche Preisseite einen ANDEREN
+        # Preis als der Tarifrechner im Konto, und beide Zahlen sehen plausibel
+        # aus.
+        run: bash scripts/marketing/kopien-pruefen.sh
+
   # ────────────────────────────────────────────────────────────────────────
   # Welche Coolify-Apps berührt der Push? Ermittelt EINMAL, genutzt von images
   # (welche Builds laufen) und deploy (welche Apps live gehen). Vorher baute
@@ -439,7 +457,7 @@ jobs:
   # ────────────────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to Coolify
-    needs: [betroffen, api, packages, frontends, kanal-enums, mobile, mobile-konsistenz, images]
+    needs: [betroffen, api, packages, frontends, kanal-enums, mobile, mobile-konsistenz, marketing-konsistenz, images]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:

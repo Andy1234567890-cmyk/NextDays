@@ -170,6 +170,10 @@
       "name": "@nextdays/security-headers",
       "version": "0.1.0",
     },
+    "packages/tarif": {
+      "name": "@nextdays/tarif",
+      "version": "0.1.0",
+    },
     "packages/ui": {
       "name": "@nextdays/ui",
       "version": "0.1.0",
@@ -326,6 +330,7 @@
         "@nextdays/diagnostics": "workspace:*",
         "@nextdays/icons": "workspace:*",
         "@nextdays/security-headers": "workspace:*",
+        "@nextdays/tarif": "workspace:*",
         "@nextdays/ui": "workspace:*",
         "@radix-ui/react-accordion": "1.2.14",
         "@radix-ui/react-alert-dialog": "1.1.17",
@@ -736,6 +741,8 @@
     "@nextdays/laender": ["@nextdays/laender@workspace:packages/laender"],
 
     "@nextdays/security-headers": ["@nextdays/security-headers@workspace:packages/security-headers"],
+
+    "@nextdays/tarif": ["@nextdays/tarif@workspace:packages/tarif"],
 
     "@nextdays/ui": ["@nextdays/ui@workspace:packages/ui"],
 

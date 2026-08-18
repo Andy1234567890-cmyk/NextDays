@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { staffelPosten, staffelPreisCent } from "@nextdays/tarif";
 import { Button } from "@nextdays/ui/button";
 import { formatCurrency } from "@/lib/currency";
 import {
@@ -49,114 +50,43 @@ const ENTHALTEN: readonly { icon: string; text: string }[] = [
 // eigenes buchbares Modul (0,5 % vom Buchungsumsatz, /erweiterungen) — in der
 // Inklusiv-Liste wäre es eine falsche Zusage.
 
-// Wettbewerbspreise, recherchiert 29.07.2026 von den OFFIZIELLEN Preisseiten.
-// Jede Zahl trägt ihre Quelle — wer sie später prüft, muss nicht raten. Nur
-// belegte Werte; wo ein Anbieter keine Preise veröffentlicht, steht das so da
-// (kein geschätzter Betrag, Wurzel 4).
-//
-// Referenz ist bewusst der Tarif, der UNSEREN Funktionsumfang abdeckt: bei
-// Lodgify ist das Ultimate (Reinigung/Aufgaben + Eigentümer-Reporting stecken
-// erst dort), nicht Starter für 68 € ohne Channel Manager.
-// NOCH NICHT GERENDERT: die Vergleichstabelle fehlt in der Oberfläche, die
-// recherchierten Zahlen stehen aber bereits belegt hier. Unterstrich = bewusst
-// (noch) unbenutzt, kein Versehen.
-const _WETTBEWERB: readonly {
-  name: string;
-  tarif: string;
-  preis20: number | null; // EUR/Monat bei 20 Objekten, null = nicht veröffentlicht
-  hinweis: string;
-  quelle: string;
-}[] = [
-  {
-    name: "Smoobu",
-    tarif: "Professional",
-    preis20: 210.4,
-    hinweis: "28 € + 19 × 9,60 €; Aufgaben nur über Schreib-Konten (12 €/Monat)",
-    quelle: "smoobu.com/de/preise",
-  },
-  {
-    name: "Lodgify",
-    tarif: "Ultimate",
-    preis20: 335,
-    hinweis: "Reinigung & Aufgaben erst ab Ultimate; Professional 261 €",
-    quelle: "lodgify.com/pricing",
-  },
-  {
-    name: "Apaleo",
-    tarif: "PMS",
-    preis20: 400,
-    hinweis: "8 €/Zimmer, aber Mindestpreis 400 €; Channel Manager kostet extra",
-    quelle: "apaleo.com/pricing",
-  },
-  {
-    name: "Hostaway",
-    tarif: "auf Anfrage",
-    preis20: null,
-    hinweis: "veröffentlicht keine Preise",
-    quelle: "hostaway.com/pricing",
-  },
-  {
-    name: "Cloudbeds",
-    tarif: "auf Anfrage",
-    preis20: null,
-    hinweis: "veröffentlicht keine Preise",
-    quelle: "cloudbeds.com/pricing",
-  },
-];
+// Die recherchierten Wettbewerbspreise standen hier als unbenutzter Block
+// (`_WETTBEWERB`) für eine Vergleichstabelle, die in dieser Oberfläche nie
+// gerendert wurde. Sie liegen jetzt dort, wo sie GEZEIGT werden: in
+// `marketing/content/wettbewerb.ts`, samt Quelle, Rechenweg und Stand. Zwei
+// Datensätze recherchierter Fremdpreise wären der klassische Drift-Fall — einer
+// wird nachgepflegt, der andere behauptet weiter etwas Veraltetes.
 
 /**
- * Monatspreis für `anzahl` Objekte nach Stripe-`graduated`-Logik.
- *
- * Jeder Tier gilt NUR für die Objekte innerhalb seiner Spanne: `flat_amount`
- * fällt einmal an, sobald der Tier erreicht ist, `unit_amount` je Objekt in
- * dieser Spanne. Rückgabe in Cent — oder null, wenn die Staffel unvollständig
- * ist (dann zeigen wir keinen erfundenen Preis).
+ * Monatspreis für `anzahl` Objekte in Cent — die Arithmetik liegt im geteilten
+ * Paket `@nextdays/tarif`, weil die öffentliche Preisseite dieselbe Staffel
+ * rechnet. Zwei Fassungen zeigten früher oder später zwei verschiedene Preise
+ * für denselben Tarif (Wurzel 4).
  */
 function preisFuer(pricing: Pricing, anzahl: number): number | null {
-  if (pricing.grundtarif_tiers.length === 0) return null;
-  return rechnungsPosten(pricing, anzahl).reduce((s, p) => s + p.cent, 0);
+  return staffelPreisCent(pricing.grundtarif_tiers, anzahl);
 }
 
 /**
- * Die einzelnen Positionen der Rechnung für `anzahl` Objekte — nur die Tiers,
- * die tatsächlich greifen. Bei 5 Objekten entsteht also keine Zeile für
- * „51–100", die den Nutzer nichts angeht.
- *
- * Einzige Quelle der Staffel-Arithmetik: `preisFuer` summiert genau diese
- * Posten. So können Aufschlüsselung und Endbetrag nicht auseinanderlaufen.
+ * Dieselben Positionen, aber beschriftet: das Paket liefert die Zahlen (welche
+ * Stufe greift, mit wie vielen Objekten), der Text entsteht hier — er ist
+ * sprachabhängig, die Rechnung nicht.
  */
 function rechnungsPosten(
   pricing: Pricing,
   anzahl: number,
 ): { text: string; cent: number }[] {
-  const posten: { text: string; cent: number }[] = [];
-  let untergrenze = 0; // bereits abgedeckte Objekte
-  for (const t of pricing.grundtarif_tiers) {
-    if (untergrenze >= anzahl) break;
-    const obergrenze = t.up_to ?? anzahl;
-    const inDiesemTier = Math.min(anzahl, obergrenze) - untergrenze;
-    if (inDiesemTier > 0) {
-      if (t.flat_amount != null) {
-        posten.push({
-          text: "Grundgebühr (inkl. 1. Objekt)",
-          cent: t.flat_amount,
-        });
-      }
-      if (t.unit_amount != null) {
-        // Stückpreis über formatCurrency — kein €-Hardcode (Wurzel 4).
-        const je = formatCurrency(t.unit_amount / 100, pricing.currency);
-        posten.push({
+  return staffelPosten(pricing.grundtarif_tiers, anzahl).map((p) =>
+    p.art === "grundgebuehr"
+      ? { text: "Grundgebühr (inkl. 1. Objekt)", cent: p.cent }
+      : {
+          // Stückpreis über formatCurrency — kein €-Hardcode (Wurzel 4).
           text:
-            `${inDiesemTier} ${inDiesemTier === 1 ? "weiteres Objekt" : "weitere Objekte"}` +
-            ` × ${je}`,
-          cent: t.unit_amount * inDiesemTier,
-        });
-      }
-    }
-    if (t.up_to == null) break;
-    untergrenze = t.up_to;
-  }
-  return posten;
+            `${p.anzahl} ${p.anzahl === 1 ? "weiteres Objekt" : "weitere Objekte"}` +
+            ` × ${formatCurrency(p.jeObjektCent / 100, pricing.currency)}`,
+          cent: p.cent,
+        },
+  );
 }
 
 export function TarifRechner({ onBack }: { onBack: () => void }) {

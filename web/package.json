@@ -22,6 +22,7 @@
     "@nextdays/diagnostics": "workspace:*",
     "@nextdays/icons": "workspace:*",
     "@nextdays/security-headers": "workspace:*",
+    "@nextdays/tarif": "workspace:*",
     "@nextdays/ui": "workspace:*",
     "@radix-ui/react-accordion": "1.2.14",
     "@radix-ui/react-alert-dialog": "1.1.17",

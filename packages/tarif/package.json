@@ -1,0 +1,10 @@
+{
+  "name": "@nextdays/tarif",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Die Arithmetik der Objekt-Staffel (Stripe graduated). Eine Quelle für Dashboard-Tarifrechner UND Marketing-Preisseite — zwei Kopien liefen sonst auseinander und der Kunde sähe zwei verschiedene Preise (Wurzel 4). ADR-0016.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
