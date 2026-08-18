@@ -95,6 +95,10 @@ def eigennutzungen_entfernen(
     bleibt der Import einseitig (owners → reservations) und dieses Modul
     unabhängig vom Service, der es benutzt.
     """
+    from src.features.reservations.schemas import (  # noqa: PLC0415
+        CancelParty,
+        CancelReasonCode,
+    )
     from src.features.reservations.service import (  # noqa: PLC0415
         ReservationError,
         ReservationsService,
@@ -105,7 +109,18 @@ def eigennutzungen_entfernen(
         if stay.get("status") == "cancelled":
             continue
         try:
-            reservations.cancel(ctx, str(stay["id"]), _STORNO_GRUND)
+            reservations.cancel(
+                ctx,
+                str(stay["id"]),
+                _STORNO_GRUND,
+                # Partei ist der EIGENTÜMER, nicht der Betrieb, der die
+                # Löschung anklickt: storniert wird ausschließlich SEINE
+                # Eigennutzung, und sie fällt mit ihm weg. Eine Provision hängt
+                # an einer Eigennutzung ohnehin nicht — die Zuordnung muss
+                # trotzdem stimmen, weil sie in der Historie stehen bleibt.
+                partei=CancelParty.eigentuemer,
+                reason_code=CancelReasonCode.eigennutzung_aufgeloest,
+            )
         except ReservationError as exc:
             # Der Storno ist die Voraussetzung für die Nächte-Freigabe.
             # Scheitert er (z. B. Aufenthalt bereits ausgecheckt), darf der

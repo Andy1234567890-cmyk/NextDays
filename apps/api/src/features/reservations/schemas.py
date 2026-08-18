@@ -34,6 +34,50 @@ class ReservationStatus(StrEnum):
     completed = "completed"
 
 
+class CancelParty(StrEnum):
+    """WESSEN Sphäre einen Storno ausgelöst hat (0410).
+
+    Spiegelt `public.cancel_party` 1:1. Der Wert steuert ab Etappe 3, ob die
+    8 %-Marktplatz-Provision bei uns bleibt oder zurückgebucht wird — deshalb
+    gibt es hier bewusst KEINEN Wert „unbekannt": wer nicht zuordenbar ist,
+    wird nicht storniert, und Bestandszeilen bleiben in der DB `null`
+    (Wurzel 4/5). `agentur` ist vorgesehen, wird heute aber von keinem
+    Storno-Pfad gesetzt: der Co-Gastgeber-Zugang hat keinen Weg zu
+    `ReservationsService.cancel` (und keinen eigenen Rollenwert im
+    AuthContext).
+    """
+
+    gast = "gast"
+    eigentuemer = "eigentuemer"
+    agentur = "agentur"
+    betrieb = "betrieb"
+    # „Der Storno kam über das PORTAL zu uns" (OTA-Feed, gesetzt von
+    # channel_manager/bookings_sync). NICHT „das Portal hat entschieden" und
+    # NICHT „niemanden trifft ein Verschulden": Booking/Airbnb melden nur
+    # `cancelled`, nie den Auslöser. Aus diesem Wert eine Schuldfrage abzuleiten
+    # hiesse, sie aus einer Information zu ziehen, die es nicht gibt (0412).
+    portal = "portal"
+    system = "system"
+
+
+class CancelReasonCode(StrEnum):
+    """Kategorie des Storno-Grundes (0410) — ZUSÄTZLICH zum Pflicht-Freitext
+    `cancel_reason`, nicht an seiner Stelle. Spiegelt
+    `public.cancel_reason_code`."""
+
+    gast_wunsch = "gast_wunsch"
+    zahlung_ausgeblieben = "zahlung_ausgeblieben"
+    objekt_nicht_verfuegbar = "objekt_nicht_verfuegbar"
+    schaden_instandsetzung = "schaden_instandsetzung"
+    eigennutzung = "eigennutzung"
+    eigennutzung_aufgeloest = "eigennutzung_aufgeloest"
+    doppelbuchung = "doppelbuchung"
+    verdacht_betrug = "verdacht_betrug"
+    portal_storno = "portal_storno"
+    system_rollback = "system_rollback"
+    sonstiges = "sonstiges"
+
+
 class GuestBreakdown(BaseModel):
     """Gäste-Aufschlüsselung (Schritt 1)."""
 
@@ -152,9 +196,17 @@ class ReservationMove(BaseModel):
 
 
 class ReservationCancel(BaseModel):
-    """Storno mit Pflicht-Begründung (wird dokumentiert/auditiert)."""
+    """Storno mit Pflicht-Begründung (wird dokumentiert/auditiert).
+
+    Die PARTEI kommt bewusst NICHT aus dem Request: sie wird serverseitig aus
+    der Rolle des Aufrufers abgeleitet (Wurzel 3 — wer storniert hat, darf der
+    Client nicht behaupten, sonst schiebt ein Betrieb seinen eigenen Storno auf
+    den Gast und behält die Provision). Der Grund-CODE ist dagegen eine echte
+    Angabe des Nutzers und optional; die Pflichtangabe bleibt der Freitext.
+    """
 
     reason: str = Field(min_length=1)
+    reason_code: CancelReasonCode | None = None
 
 
 class RequestDecline(BaseModel):

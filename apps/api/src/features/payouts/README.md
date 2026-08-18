@@ -42,7 +42,10 @@ Gastgeber-Anteil abgezogen; ohne Sperre wäre auch er doppelt geflossen.
    aus einer Neuberechnung. **Kautionen sind ausgenommen** (`type='deposit'`) —
    sie sind kein Umsatz und würden die Zeile der Buchung überschreiben.
 2. **Fällig werden** — `faelligkeit.py`: Basis ist `checked_out_at`, ersatzweise
-   `check_out` + 1 Tag Nachtragefrist. Darauf der Rhythmus des Betriebs
+   `check_out` + 1 Tag Nachtragefrist, **plus die Karenz** (`karenz_tage`, 0411 —
+   Default `KARENZ_TAGE` = 3, je Betrieb in `payout_settings`). Die Karenz gilt
+   auf BEIDEN Pfaden, auch bei eingetragenem Checkout: läge sie nur auf dem
+   Fallback, umgeht sie jeder, der auscheckt. Darauf der Rhythmus des Betriebs
    (täglich / wöchentlich Do / monatlich zum 15.).
 3. **Auszahlen** — `fuehre_lauf_aus` (Worker, stündlich): Holds freigeben,
    offene Verrechnungsposten abziehen, Rest transferieren. Fehler isolieren je
@@ -81,7 +84,7 @@ payments↔payouts zu verschärfen.
   Transfer per `source_transaction` an den Zahlungseingang.
 - `payout_adjustments` — offene Forderungen gegen den Betrieb, Teilverrechnung
   über mehrere Auszahlungen möglich.
-- `payout_settings` — Rhythmus, `paused`.
+- `payout_settings` — Rhythmus, `paused`, `karenz_tage` (Prüffrist).
 - `payout_holds` — Zurückhaltung bei Prüfung. Für Clients komplett gesperrt.
 
 Alle vier mit RLS + `revoke ... from anon, authenticated`; `authenticated` liest
@@ -92,7 +95,20 @@ nur, geschrieben wird ausschließlich über die service_role (Wurzel 6).
 - (erledigt) `charge.dispute.created` legt jetzt einen 45-Tage-Hold an
   (`payments/webhook.py::_halte_auszahlung_zurueck`).
 - `payout_settings.paused` ist über kein API schreibbar (nur Plattform-seitig
-  gedacht, Endpunkt fehlt).
+  gedacht, Endpunkt fehlt). Dasselbe gilt für `karenz_tage`: bewusst nicht in
+  `PayoutSettingsUpdate` — ein Betrieb, der seine eigene Prüffrist auf 0 setzen
+  könnte, hätte keine. Abweichende Konditionen werden bis auf Weiteres direkt an
+  der Spalte gesetzt.
+- (erledigt) Die Karenz ist in der Oberfläche benannt. Die drei
+  Rhythmus-Hinweise (`gastgeber/messages/*.json`, `azRhythmus*Hinweis`,
+  45 Sprachen) beziehen sich jetzt auf die FREIGABE statt auf die Abreise, und
+  `azKarenzHinweis` nennt die Frist mit `{tage}`. Vorher sagte der Text „Einen
+  Tag nach der Abreise", während der Verlauf daneben das `due_at` mit Karenz
+  zeigte — vier Tage später.
+- (erledigt) `overview()` liefert `charge_modell` mit; die Oberfläche zeigt für
+  Destination-Zeilen „direkt ausgezahlt" statt „geplant". Vorher stand dort ein
+  Fälligkeitsdatum, das nie eintritt (der Lauf filtert auf `separate`) — für
+  Geld, das der Betrieb längst hat.
 - Zwischen `create_transfer` und dem Status-Update gibt es kein `processing`.
   Abgesichert nur über `idempotency_key` — der bei Stripe nach 24 h abläuft.
 - PayPal plant gar keine Auszahlungszeile (Multiparty zahlt direkt an den

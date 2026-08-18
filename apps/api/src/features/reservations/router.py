@@ -44,6 +44,7 @@ from .schemas import (
     TimelineResponse,
 )
 from .service import ReservationError, ReservationsService
+from .storno_partei import partei_aus_rolle
 
 router = APIRouter(prefix="/reservations", tags=["reservations"])
 
@@ -449,9 +450,20 @@ def cancel_reservation(
     ],
 ) -> ReservationResponse:
     """Reservierung stornieren — Begründung ist Pflicht und wird auditiert.
-    Kanal-agnostisch; gibt die belegten Tage frei (auch an Channex zurück)."""
+    Kanal-agnostisch; gibt die belegten Tage frei (auch an Channex zurück).
+
+    Die Storno-PARTEI leitet der Server aus der Rolle ab (0410) und nimmt sie
+    NICHT aus dem Body: sie entscheidet später über die Marktplatz-Provision,
+    und ein Betrieb darf seinen eigenen Storno nicht als Gast-Storno ausgeben
+    (Wurzel 3)."""
     try:
-        return service.cancel(ctx, reservation_id, req.reason)
+        return service.cancel(
+            ctx,
+            reservation_id,
+            req.reason,
+            partei=partei_aus_rolle(ctx.role),
+            reason_code=req.reason_code,
+        )
     except ReservationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

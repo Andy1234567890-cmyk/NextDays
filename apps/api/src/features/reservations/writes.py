@@ -40,6 +40,8 @@ from ._base import (
     log,
 )
 from .schemas import (
+    CancelParty,
+    CancelReasonCode,
     CheckOutRequest,
     CheckOutResponse,
     ReservationCreate,
@@ -1071,6 +1073,8 @@ class WritesMixin(ReservationsBase):
         reservation_id: str,
         reason: str,
         *,
+        partei: CancelParty,
+        reason_code: CancelReasonCode | None = None,
         by_user_id: str | None | object = _ACTOR_FROM_CTX,
     ) -> ReservationResponse:
         """Reservierung stornieren — kanal-agnostisch (Direkt, eigene Plattform,
@@ -1092,9 +1096,37 @@ class WritesMixin(ReservationsBase):
         (cancelled_by/by_user_id sind FK auf public.users) → der Auslöser bleibt
         leer statt eine FK-Verletzung (500) auszulösen. So bleibt _release_nights
         die EINE Freigabestelle (Wurzel 1), ohne den Ablauf zu duplizieren.
+
+        `partei` ist PFLICHT und hat bewusst keinen Default (0410). Sie sagt,
+        WESSEN Sphäre storniert hat, und entscheidet ab Etappe 3 über die
+        8 %-Marktplatz-Provision. Ein Default hier hieße: der nächste neue
+        Aufrufer schreibt stillschweigend die bequemste Partei in eine
+        Geldentscheidung. Genau das war die Lücke, die `cancelled_by` hatte —
+        dort steht beim Gast-Storno NULL, ununterscheidbar von „unbekannt".
+        Deshalb: keine Partei → TypeError beim Aufruf, nicht „unbekannt" in der
+        DB (Wurzel 4/5).
+
+        `reason_code` kategorisiert den Grund ZUSÄTZLICH zum Pflicht-Freitext
+        `reason`; er ist optional, weil nicht jeder Storno-Weg eine Kategorie
+        kennt — dann bleibt die Spalte null und nichts wird erfunden.
         """
         actor_user_id = (
             ctx.user_id if by_user_id is _ACTOR_FROM_CTX else by_user_id
+        )
+        # Ein Aufrufer ohne Type-Checking (MCP-Werkzeug, Job) könnte hier einen
+        # rohen String übergeben. Ein Wert, den das DB-Enum nicht kennt, würde
+        # den INSERT erst nach dem bereits vollzogenen Status-Update kippen —
+        # also VOR dem ersten Seiteneffekt prüfen (Wurzel 5, fail-closed).
+        try:
+            partei_wert = CancelParty(partei)
+        except ValueError as exc:
+            raise ReservationError(
+                f"Unbekannte Storno-Partei {partei!r} — zulässig sind: "
+                f"{', '.join(p.value for p in CancelParty)}.",
+                status_code=500,
+            ) from exc
+        code_wert = (
+            CancelReasonCode(reason_code) if reason_code is not None else None
         )
         tenant_id = self._require_tenant(ctx)
         _require_uuid(reservation_id)
@@ -1159,6 +1191,8 @@ class WritesMixin(ReservationsBase):
                     "status": "cancelled",
                     "cancel_reason": clean_reason,
                     "cancelled_by": actor_user_id,
+                    "cancelled_by_party": partei_wert.value,
+                    "cancel_reason_code": code_wert.value if code_wert else None,
                     "cancelled_at": now,
                 }
             )
@@ -1219,6 +1253,8 @@ class WritesMixin(ReservationsBase):
                     "tenant_id": tenant_id,
                     "reservation_id": reservation_id,
                     "by_user_id": actor_user_id,
+                    "cancelled_by_party": partei_wert.value,
+                    "cancel_reason_code": code_wert.value if code_wert else None,
                     "reason": clean_reason,
                     "channel": current.get("channel"),
                     "ota_name": current.get("ota_name"),
@@ -1290,6 +1326,8 @@ class WritesMixin(ReservationsBase):
             "reservation_cancelled",
             reservation_id=reservation_id,
             by_user_id=actor_user_id,
+            partei=partei_wert.value,
+            reason_code=code_wert.value if code_wert else None,
             channel=current.get("channel"),
         )
         # Zeitleiste (0122): „storniert" — mit Begründung (in der Zeitleiste
@@ -1299,7 +1337,12 @@ class WritesMixin(ReservationsBase):
             reservation_id,
             "cancelled",
             by_user_id=actor_user_id,
-            detail={"reason": clean_reason, "channel": current.get("channel")},
+            detail={
+                "reason": clean_reason,
+                "partei": partei_wert.value,
+                "reason_code": code_wert.value if code_wert else None,
+                "channel": current.get("channel"),
+            },
         )
         full = (
             self._db()

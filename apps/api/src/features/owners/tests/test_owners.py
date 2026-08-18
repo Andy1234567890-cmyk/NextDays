@@ -1565,3 +1565,40 @@ def test_by_property_route_steht_vor_der_platzhalter_route() -> None:
     assert pfade.index("/owners/by-property/{property_id}") < pfade.index(
         "/owners/{owner_id}"
     )
+
+
+# --- Storno-Partei beim Auflösen der Eigennutzungen (0410) -------------------
+
+def test_eigennutzung_wird_als_eigentuemer_storniert(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """0410 — die aufgelöste Eigennutzung trägt den EIGENTÜMER als Partei.
+
+    Angeklickt hat die Löschung der Betrieb, storniert wird aber ausschliesslich
+    SEINE Eigennutzung, die mit ihm wegfällt. Die Zuordnung bleibt in der
+    append-only Historie stehen, auch wenn der Eigentümer selbst gelöscht ist —
+    deshalb muss sie stimmen, nicht bloss vorhanden sein.
+    """
+    from unittest.mock import MagicMock  # noqa: PLC0415
+
+    from src.features.owners.eigennutzungen import (  # noqa: PLC0415
+        eigennutzungen_entfernen,
+    )
+
+    reservations = MagicMock(name="ReservationsService")
+    monkeypatch.setattr(
+        "src.features.reservations.service.ReservationsService", reservations
+    )
+    db = MagicMock(name="supabase")
+    ctx = AuthContext(user_id="admin-1", tenant_id="t-1", role="admin")
+    eigennutzungen_entfernen(
+        db,
+        ctx,
+        "t-1",
+        "own-1",
+        [{"id": "66666666-6666-4666-8666-666666666666", "status": "confirmed"}],
+        fehler=OwnerError,
+    )
+    kwargs = reservations.return_value.cancel.call_args.kwargs
+    assert kwargs["partei"].value == "eigentuemer"
+    assert kwargs["reason_code"].value == "eigennutzung_aufgeloest"

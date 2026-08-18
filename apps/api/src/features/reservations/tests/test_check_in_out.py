@@ -11,7 +11,7 @@ import pytest
 
 from src.core.security import AuthContext
 from src.features.buchhaltung.service import BuchhaltungError
-from src.features.reservations.schemas import CheckOutRequest
+from src.features.reservations.schemas import CancelParty, CheckOutRequest
 from src.features.reservations.service import ReservationError, ReservationsService
 
 CTX = AuthContext(user_id="u1", tenant_id="t1")
@@ -120,7 +120,9 @@ def test_non_uuid_reservation_id_is_404_not_500() -> None:
     for action in (
         lambda: service.detail(CTX, "einstellungen"),
         lambda: service.check_in(CTX, "einstellungen"),
-        lambda: service.cancel(CTX, "einstellungen", "Grund"),
+        lambda: service.cancel(
+            CTX, "einstellungen", "Grund", partei=CancelParty.betrieb
+        ),
     ):
         with pytest.raises(ReservationError) as exc:
             action()

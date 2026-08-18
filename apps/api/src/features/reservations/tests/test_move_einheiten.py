@@ -23,6 +23,7 @@ import pytest
 from src.core.security import AuthContext
 from src.features.reservations._base import ReservationError
 from src.features.reservations.schemas import (
+    CancelParty,
     ReservationCreate,
     ReservationMove,
 )
@@ -450,7 +451,7 @@ def test_storno_gibt_die_eigene_einheit_frei_trotz_schwesterbuchung() -> None:
     svc = _move_db(store)
     svc.cancel(
         AuthContext(user_id="u", tenant_id="t1", role="admin"),
-        RID, "Gast hat abgesagt",
+        RID, "Gast hat abgesagt", partei=CancelParty.betrieb,
     )
     # Eigene Einheit frei …
     assert _status(store, "u-p1-a", "2026-07-01") == "open"
@@ -472,7 +473,7 @@ def test_storno_pusht_freie_einheit_trotz_schwesterbuchung() -> None:
         calls = _pushes_abfangen(svc, mp)
         svc.cancel(
             AuthContext(user_id="u", tenant_id="t1", role="admin"),
-            RID, "Gast hat abgesagt",
+            RID, "Gast hat abgesagt", partei=CancelParty.betrieb,
         )
     frei = _belegt_pushes(calls, "p1")
     assert frei, "keine Freigabe an die Portale gemeldet"
@@ -511,7 +512,7 @@ def test_storno_laesst_sperre_auf_der_eigenen_einheit_stehen(quelle: str) -> Non
     svc = _move_db(store)
     svc.cancel(
         AuthContext(user_id="u", tenant_id="t1", role="admin"),
-        RID, "Gast hat abgesagt",
+        RID, "Gast hat abgesagt", partei=CancelParty.betrieb,
     )
     assert _status(store, "u-p1-a", "2026-07-01") == "open"
     assert _status(store, "u-p1-a", "2026-07-02") == "blocked", (

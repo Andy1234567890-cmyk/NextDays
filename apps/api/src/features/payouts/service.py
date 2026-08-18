@@ -19,9 +19,11 @@ from src.core.security import AuthContext
 from src.features.payments import stripe_client as sc
 
 from .faelligkeit import (
+    KARENZ_TAGE,
     FaelligkeitFehler,
     berechne_aufteilung,
     faellig_ab,
+    pruefe_karenz,
     transfer_group,
     verrechne,
 )
@@ -76,6 +78,25 @@ class PayoutsService:
             .execute()
         ).data
         return rows[0]["interval"] if rows else STANDARD_INTERVALL
+
+    def _karenz_tage(self, tenant_id: str) -> int:
+        """Prüffrist dieses Betriebs in Tagen (0411).
+
+        Ohne `payout_settings`-Zeile gilt der Default `KARENZ_TAGE` — dasselbe
+        Muster wie `STANDARD_INTERVALL`. Das ist KEIN erfundener Ersatzwert: die
+        fehlende Zeile heisst „nichts abweichend vereinbart", und die
+        Standardkondition ist eine echte Vereinbarung, kein Ratewert.
+        """
+        rows = (
+            self._db.table("payout_settings")
+            .select("karenz_tage")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not rows or rows[0].get("karenz_tage") is None:
+            return KARENZ_TAGE
+        return pruefe_karenz(int(rows[0]["karenz_tage"]))
 
     def _pausiert(self, tenant_id: str) -> bool:
         rows = (
@@ -135,6 +156,7 @@ class PayoutsService:
                 checked_out_at=checked_out_at,
                 check_out=check_out,
                 intervall=self._intervall(tenant_id),
+                karenz_tage=self._karenz_tage(tenant_id),
             )
         except FaelligkeitFehler as exc:
             raise PayoutsError(
@@ -604,13 +626,15 @@ class PayoutsService:
         tenant_id = self._tenant(ctx)
         rows = (
             self._db.table("payout_settings")
-            .select("interval, paused, paused_reason")
+            .select("interval, paused, paused_reason, karenz_tage")
             .eq("tenant_id", tenant_id)
             .limit(1)
             .execute()
         ).data
         if not rows:
-            return PayoutSettings(interval=STANDARD_INTERVALL)
+            return PayoutSettings(
+                interval=STANDARD_INTERVALL, karenz_tage=KARENZ_TAGE
+            )
         return PayoutSettings(**rows[0])
 
     def update_settings(
@@ -641,7 +665,7 @@ class PayoutsService:
             .select(
                 "id, reservation_id, gross_amount_cents, platform_fee_cents,"
                 " donation_cents, cohost_cents, net_amount_cents, currency,"
-                " status, due_at, paid_at"
+                " status, due_at, paid_at, charge_modell"
             )
             .eq("tenant_id", tenant_id)
             .order("due_at", desc=True)

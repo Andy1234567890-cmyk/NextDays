@@ -224,6 +224,7 @@ export function AuszahlungenTab({
           <RhythmusWahl
             aktiv={uebersicht.settings.interval}
             gesperrt={uebersicht.settings.paused}
+            karenzTage={uebersicht.settings.karenz_tage}
             onWahl={(i) => void rhythmusWaehlen(i)}
           />
           <Summen uebersicht={uebersicht} />
@@ -373,16 +374,26 @@ function BankKarte({
 function RhythmusWahl({
   aktiv,
   gesperrt,
+  karenzTage,
   onWahl,
 }: {
   aktiv: PayoutInterval;
   gesperrt: boolean;
+  karenzTage: number;
   onWahl: (i: PayoutInterval) => void;
 }) {
   const t = useTranslations("konto");
   return (
     <section className="mt-10">
       <h3 className="font-medium">{t("azRhythmusTitel")}</h3>
+      {/* Die Prüffrist steht ÜBER der Wahl, weil sie vor dem Rhythmus greift:
+          erst läuft sie ab, dann bestimmt der Rhythmus den Zahltag. Ohne diese
+          Zeile widersprechen sich Text und Datum in der Liste unten. */}
+      {karenzTage > 0 && (
+        <p className="mt-2 text-sm text-muted-foreground">
+          {t("azKarenzHinweis", { tage: karenzTage })}
+        </p>
+      )}
       <div className="mt-4 space-y-3">
         {RHYTHMEN.map((r) => {
           const gewaehlt = aktiv === r.key;
@@ -477,10 +488,22 @@ function Verlauf({ zeilen }: { zeilen: AuszahlungsZeile[] }) {
       </h3>
       <ul className="mt-4 divide-y divide-border">
         {zeilen.map((z) => {
+          // Destination Charge: das Geld ging beim Kassieren direkt an den
+          // Betrieb. Eine solche Zeile wird nie ausgezahlt und ihr `due_at`
+          // tritt nie ein — „geplant am <Datum>" wäre hier eine Falschaussage
+          // über Geld, das längst da ist.
+          const direkt =
+            z.charge_modell === "destination" && z.status !== "paid";
           const eintrag = STATUS_SCHLUESSEL[z.status];
           // Unbekannter Status: den rohen Wert zeigen statt ihn zu erfinden.
-          const statusText = eintrag ? t(eintrag.key) : z.status;
-          const statusTon = eintrag?.ton ?? "bg-muted text-muted-foreground";
+          const statusText = direkt
+            ? t("azStatusDirekt")
+            : eintrag
+              ? t(eintrag.key)
+              : z.status;
+          const statusTon = direkt
+            ? "bg-emerald-100 text-emerald-800"
+            : (eintrag?.ton ?? "bg-muted text-muted-foreground");
           const datum = z.paid_at ?? z.due_at;
           return (
             <li key={z.id} className="flex items-center justify-between gap-4 py-4">

@@ -18,6 +18,27 @@ from datetime import UTC, date, datetime, timedelta
 # bliebe das Geld dauerhaft liegen.
 NACHTRAGEFRIST_TAGE = 1
 
+# Karenz nach der Abreise, BEVOR die Auszahlung überhaupt fällig werden kann.
+#
+# WOZU: Zwischen Zahlung und Auszahlung liegt fremdes Geld auf unserem Saldo.
+# Genau in diesem Fenster kommen die Ereignisse, die den Betrag noch verändern —
+# Gastbeschwerde, Schadensmeldung, verkürzter Aufenthalt, Chargeback. Ist das
+# Geld schon beim Betrieb, holt es niemand zurück (kein Bankeinzug, Wurzel 1);
+# liegt es noch bei uns, ist die Korrektur eine Buchung.
+#
+# WARUM NICHT NUR DIE NACHTRAGEFRIST: Die deckt einen anderen Fall ab — einen
+# NICHT eingetragenen Checkout. Sie greift deshalb nur auf dem Fallback-Pfad.
+# Die Karenz gilt immer, auch bei tadellos eingetragenem Checkout.
+#
+# Der Wert ist nur der DEFAULT: geführt wird er je Betrieb in
+# `payout_settings.karenz_tage` (0411), damit Sonderkonditionen möglich sind,
+# ohne Code zu ändern.
+KARENZ_TAGE = 3
+
+# Obergrenze der Karenz — dieselbe Zahl steht als CHECK an der Spalte (0411).
+# Wurzel 8: ein unbegrenzter Wert wäre eine Auszahlung, die nie fällig wird.
+KARENZ_TAGE_MAX = 30
+
 # Booking zahlt wöchentlich donnerstags. 0=Montag … 3=Donnerstag.
 WOECHENTLICH_WOCHENTAG = 3
 
@@ -73,25 +94,59 @@ class Aufteilung:
             )
 
 
+def pruefe_karenz(karenz_tage: int) -> int:
+    """Die Karenz auf einen zulässigen Wert prüfen — fail-closed (Wurzel 5).
+
+    Ein negativer Wert zöge die Fälligkeit VOR die Abreise und zahlte mitten im
+    Aufenthalt aus; ein sehr großer ließe die Auszahlung praktisch nie fällig
+    werden. Beides ist ein Datenfehler, kein Anlass für einen stillschweigend
+    zurechtgebogenen Wert (kein `max(0, …)`, Wurzel 4).
+    """
+    if not isinstance(karenz_tage, int) or isinstance(karenz_tage, bool):
+        raise FaelligkeitFehler(
+            f"Karenz muss eine ganze Zahl von Tagen sein, nicht "
+            f"{type(karenz_tage).__name__}.",
+            status_code=500,
+        )
+    if karenz_tage < 0 or karenz_tage > KARENZ_TAGE_MAX:
+        raise FaelligkeitFehler(
+            f"Karenz {karenz_tage} liegt außerhalb von 0–{KARENZ_TAGE_MAX} "
+            "Tagen.",
+            status_code=422,
+        )
+    return karenz_tage
+
+
 def basis_faelligkeit(
     *,
     checked_out_at: datetime | None,
     check_out: date | None,
+    karenz_tage: int,
 ) -> datetime:
     """Ab wann eine Auszahlung frühestens fällig ist.
 
     Der TATSÄCHLICHE Checkout hat Vorrang — er ist der Beleg, dass der
     Aufenthalt vorbei ist. Fehlt er, gilt das geplante Abreisedatum plus
     Nachtragefrist (sonst bliebe Geld liegen, wenn niemand auscheckt).
+
+    Die KARENZ kommt auf BEIDE Pfade. Läge sie nur auf dem Fallback, hätte ein
+    Betrieb es in der Hand, sie zu umgehen: Checkout eintragen → Geld ohne
+    Prüffrist. Genau der Fall, für den die Frist da ist (Schaden fällt erst am
+    Tag nach der Abreise auf), wäre dann der ungeschützte.
+
+    `karenz_tage` ist Pflicht und hat keinen Default. Ein Default 0 hier wäre
+    ein stiller Fallback auf „keine Prüffrist" — und der fällt niemandem auf,
+    weil das Geld ja fließt (Wurzel 4).
     """
+    pruefe_karenz(karenz_tage)
     if checked_out_at is not None:
-        return checked_out_at
+        return checked_out_at + timedelta(days=karenz_tage)
     if check_out is None:
         raise FaelligkeitFehler(
             "Buchung hat weder Checkout noch Abreisedatum.", status_code=422
         )
     return datetime.combine(
-        check_out + timedelta(days=NACHTRAGEFRIST_TAGE),
+        check_out + timedelta(days=NACHTRAGEFRIST_TAGE + karenz_tage),
         datetime.min.time(),
         tzinfo=UTC,
     )
@@ -119,14 +174,26 @@ def faellig_ab(
     checked_out_at: datetime | None,
     check_out: date | None,
     intervall: str,
+    karenz_tage: int,
 ) -> datetime:
     """Fälligkeitszeitpunkt nach dem gewählten Rhythmus (Booking-Modell).
 
-    * ``daily``   — einen Tag nach Abreise
-    * ``weekly``  — der nächste Donnerstag nach der Abreise
+    Gerechnet ab dem Ende der Karenz, nicht ab der Abreise:
+
+    * ``daily``   — einen Tag nach Ende der Karenz
+    * ``weekly``  — der nächste Donnerstag danach
     * ``monthly`` — der 15. des Folgemonats
+
+    Die Karenz sitzt bewusst in `basis_faelligkeit` und NICHT hier: würde jeder
+    Rhythmus sie selbst verrechnen, wirkte dieselbe Frist je Rhythmus anders
+    (bei ``monthly`` verschöbe sie im Grenzfall um einen ganzen Monat, ohne dass
+    das jemand beabsichtigt hätte).
     """
-    basis = basis_faelligkeit(checked_out_at=checked_out_at, check_out=check_out)
+    basis = basis_faelligkeit(
+        checked_out_at=checked_out_at,
+        check_out=check_out,
+        karenz_tage=karenz_tage,
+    )
 
     if intervall == "daily":
         return basis + timedelta(days=1)

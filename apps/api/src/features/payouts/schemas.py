@@ -6,6 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from .faelligkeit import KARENZ_TAGE
+
 PayoutInterval = Literal["daily", "weekly", "monthly"]
 
 
@@ -15,10 +17,21 @@ class PayoutSettings(BaseModel):
     interval: PayoutInterval = "weekly"
     paused: bool = False
     paused_reason: str | None = None
+    # Prüffrist nach der Abreise, bevor überhaupt ausgezahlt wird (0411).
+    # Ausgeliefert, damit der Betrieb sieht, WANN sein Geld kommt — der Rhythmus
+    # allein („donnerstags") wäre ohne diese Zahl eine falsche Auskunft.
+    karenz_tage: int = KARENZ_TAGE
 
 
 class PayoutSettingsUpdate(BaseModel):
-    """Rhythmus ändern. ``paused`` setzt nur die Plattform, nie der Betrieb."""
+    """Rhythmus ändern.
+
+    ``paused`` und ``karenz_tage`` fehlen hier ABSICHTLICH: beide sind der
+    Risikopuffer der Plattform, nicht Einstellungen des Betriebs. Ein Betrieb,
+    der seine eigene Prüffrist auf 0 setzen könnte, hätte keine Prüffrist
+    (Wurzel 3 — Scope serverseitig, nicht über das Weglassen eines Feldes im
+    Frontend).
+    """
 
     interval: PayoutInterval
 
@@ -37,6 +50,13 @@ class PayoutRow(BaseModel):
     status: str
     due_at: datetime
     paid_at: datetime | None = None
+    # Wie die Zahlung dieser Buchung geflossen ist (0220). `destination` heisst:
+    # der Betrag ging beim Kassieren DIREKT auf das Verbundkonto des Betriebs —
+    # es gibt keine Auszahlung durch uns, und diese Zeile wird nie ausgezahlt
+    # (`fuehre_lauf_aus` filtert auf `separate`). Ohne dieses Feld zeigte die
+    # Oberfläche für solche Zeilen ewig „geplant" samt einem Fälligkeitsdatum,
+    # das nie eintritt — Geld, das der Betrieb längst hat.
+    charge_modell: str | None = None
 
 
 class PayoutAdjustmentRow(BaseModel):

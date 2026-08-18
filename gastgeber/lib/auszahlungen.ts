@@ -19,6 +19,17 @@ export interface AuszahlungsEinstellung {
   interval: PayoutInterval;
   paused: boolean;
   paused_reason: string | null;
+  /**
+   * Prüffrist in Tagen nach der Abreise, bevor die Auszahlung fällig wird
+   * (Backend 0411). Setzt die Plattform, nicht der Betrieb — deshalb nur
+   * lesend: `setzeAuszahlungsRhythmus` schickt sie bewusst nicht mit.
+   *
+   * Wird im Tab als `azKarenzHinweis` angezeigt; die Rhythmus-Hinweise
+   * beziehen sich deshalb auf die FREIGABE (Ende der Frist), nicht auf die
+   * Abreise. Vorher stand dort "Einen Tag nach der Abreise", während der
+   * Verlauf daneben das `due_at` mit Frist zeigte — vier Tage später.
+   */
+  karenz_tage: number;
 }
 
 export interface AuszahlungsZeile {
@@ -33,6 +44,13 @@ export interface AuszahlungsZeile {
   status: PayoutStatus;
   due_at: string;
   paid_at: string | null;
+  /**
+   * Wie die Zahlung geflossen ist. `destination` = der Betrag ging beim
+   * Kassieren direkt auf das Verbundkonto des Betriebs; eine solche Zeile wird
+   * NIE ausgezahlt (der Lauf filtert auf `separate`) und ihr `due_at` tritt
+   * nie ein. Die Oberfläche zeigt dafür „direkt ausgezahlt" statt „geplant".
+   */
+  charge_modell: "separate" | "destination" | null;
 }
 
 /** Ein Verrechnungsposten — wird von der nächsten Auszahlung einbehalten. */

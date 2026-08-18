@@ -593,6 +593,27 @@ def test_zuruecknehmen_gibt_naechte_frei() -> None:
     assert _belegte_tage(tables) == []
 
 
+def test_zuruecknehmen_vermerkt_den_betrieb_als_storno_partei() -> None:
+    """0410 — WER hat storniert? Hier der BETRIEB, nicht der Eigentümer.
+
+    Beantragt hat die Sperre der Eigentümer; zurückgenommen wird die
+    GENEHMIGUNG, und die trägt nur admin/co_admin (Capability APPROVE_BLOCK).
+    Stünde hier `eigentuemer`, sähe es in der Storno-Historie aus, als hätte er
+    seine Sperre selbst zurückgezogen — eine Falschaussage, auf deren Grundlage
+    ab Etappe 3 über Provision entschieden wird.
+    """
+    tables = _tables()
+    svc = _svc(tables)
+    svc.genehmigen(_ctx(), ANTRAG, _entscheidung())
+    svc.zuruecknehmen(_ctx(), ANTRAG, _entscheidung("doch nicht"))
+    storniert = [
+        r for r in tables["reservations"] if r.get("status") == "cancelled"
+    ]
+    assert storniert, "keine stornierte Eigennutzung gefunden"
+    assert storniert[0]["cancelled_by_party"] == "betrieb"
+    assert storniert[0]["cancel_reason_code"] == "eigennutzung_aufgeloest"
+
+
 def test_zuruecknehmen_trifft_nur_die_eigene_eigennutzung() -> None:
     """WURZEL 1 — nur der EIGENE Gegenzustand.
 

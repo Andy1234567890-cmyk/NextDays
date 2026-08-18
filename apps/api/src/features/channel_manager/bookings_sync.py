@@ -1014,6 +1014,12 @@ class BookingsSyncMixin:
             "check_in": attrs.get("arrival_date"),
             "check_out": attrs.get("departure_date"),
             "status": "cancelled",
+            # Wie im Update-Pfad oben (0410): der Storno kam über das Portal.
+            # Hier ist es sogar der ganze Grund, warum die Zeile entsteht — sie
+            # kommt bereits storniert aus dem Feed. Ein `null` wäre an dieser
+            # Stelle die schlechtere Angabe: wir WISSEN, woher der Storno kam.
+            "cancelled_by_party": "portal",
+            "cancel_reason_code": "portal_storno",
             "total_amount": total,
             "currency": attrs.get("currency")
             or self._property_currency(db, property_id),
@@ -1174,7 +1180,23 @@ class BookingsSyncMixin:
                 )
                 return True
             if existing:
-                cancel_update: dict[str, Any] = {"status": "cancelled"}
+                cancel_update: dict[str, Any] = {
+                    "status": "cancelled",
+                    # WER storniert hat (0410). `portal` heisst hier: der Storno
+                    # kam über das PORTAL zu uns — Booking/Airbnb melden im Feed
+                    # nur „cancelled", nicht ob Gast oder Gastgeber ihn
+                    # ausgelöst hat. Das ist trotzdem eine echte Angabe und
+                    # nicht dasselbe wie `null`: null hiesse „nicht erfasst",
+                    # und ohne diese Zeile wäre jeder laufende OTA-Storno von
+                    # einem Altbestands-Storno nicht zu unterscheiden.
+                    #
+                    # NICHT als „kein Verschulden" lesen: dahinter kann ein
+                    # Gast-Storno stecken. Für die 8 %-Provision spielt es
+                    # ohnehin keine Rolle — die hängt an channel='portal'
+                    # (myBestDays), OTA-Buchungen tragen keine platform_fees.
+                    "cancelled_by_party": "portal",
+                    "cancel_reason_code": "portal_storno",
+                }
                 # Von UNS abgeleitetes Portal-bezahlt zurücknehmen (Wurzel 1):
                 # das Portal erstattet beim Storno im Regelfall — eine
                 # stornierte Buchung darf nicht als „bezahlt" in Statistiken

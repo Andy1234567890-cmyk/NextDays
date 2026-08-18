@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from src.core.security import AuthContext
 from src.features.reservations._base import anzeigename
 from src.features.reservations.schemas import (
+    CancelParty,
     DashboardFenster,
     DashboardKpiMetrik,
     DashboardListe,
@@ -1557,7 +1558,7 @@ _CANCEL_CTX = AuthContext(user_id="u", tenant_id="t1", role="admin")
 def test_cancel_sets_status_frees_days_and_audits() -> None:
     store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
     svc = _move_db(store)
-    out = svc.cancel(_CANCEL_CTX, RID, "Gast hat abgesagt")
+    out = svc.cancel(_CANCEL_CTX, RID, "Gast hat abgesagt", partei=CancelParty.betrieb)
     assert out.status == "cancelled"
     # Reservierungs-Storno-Felder gesetzt.
     r = next(x for x in store["reservations"] if x["id"] == RID)
@@ -1588,7 +1589,7 @@ def test_cancel_rejects_ota_booking() -> None:
     )
     svc = _move_db(store)
     with pytest.raises(ReservationError) as exc:
-        svc.cancel(_CANCEL_CTX, RID, "Gast hat abgesagt")
+        svc.cancel(_CANCEL_CTX, RID, "Gast hat abgesagt", partei=CancelParty.betrieb)
     assert exc.value.status_code == 409
     assert "OTA" in exc.value.message
     # Nichts freigegeben — Tage bleiben belegt.
@@ -1600,7 +1601,7 @@ def test_cancel_requires_reason() -> None:
     store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
     svc = _move_db(store)
     with pytest.raises(ReservationError) as exc:
-        svc.cancel(_CANCEL_CTX, RID, "   ")
+        svc.cancel(_CANCEL_CTX, RID, "   ", partei=CancelParty.betrieb)
     assert exc.value.status_code == 422
     # Nichts storniert, keine Audit-Zeile.
     assert store["reservations"][0]["status"] == "confirmed"
@@ -1613,7 +1614,7 @@ def test_cancel_already_cancelled_409() -> None:
     )
     svc = _move_db(store)
     with pytest.raises(ReservationError) as exc:
-        svc.cancel(_CANCEL_CTX, RID, "nochmal")
+        svc.cancel(_CANCEL_CTX, RID, "nochmal", partei=CancelParty.betrieb)
     assert exc.value.status_code == 409
 
 
@@ -1621,7 +1622,7 @@ def test_cancel_unknown_404() -> None:
     store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
     svc = _move_db(store)
     with pytest.raises(ReservationError) as exc:
-        svc.cancel(_CANCEL_CTX, "nope", "Grund")
+        svc.cancel(_CANCEL_CTX, "nope", "Grund", partei=CancelParty.betrieb)
     assert exc.value.status_code == 404
 
 
@@ -1633,7 +1634,7 @@ def test_cancel_direct_booking_also_frees_days() -> None:
     for a in store["availability"]:
         a["source"] = "direct"
     svc = _move_db(store)
-    out = svc.cancel(_CANCEL_CTX, RID, "Storno Direktbuchung")
+    out = svc.cancel(_CANCEL_CTX, RID, "Storno Direktbuchung", partei=CancelParty.betrieb)
     assert out.status == "cancelled"
     log_rows = store.get("reservation_cancellation_log", [])
     assert log_rows[0]["channel"] == "direct"
@@ -1660,7 +1661,7 @@ def test_cancel_nach_checkin_haelt_verbrauchte_naechte_belegt() -> None:
     ]
     store["reservations"][0]["unit_id"] = "unit-1"
     svc = _move_db(store)
-    out = svc.cancel(_CANCEL_CTX, RID, "Gast bricht ab")
+    out = svc.cancel(_CANCEL_CTX, RID, "Gast bricht ab", partei=CancelParty.betrieb)
     assert out.status == "cancelled"
     avail = {a["date"]: a["status"] for a in store["availability"]}
     # Verbrauchte Nächte und die laufende bleiben belegt.
@@ -1689,7 +1690,7 @@ def test_cancel_ohne_einheit_bei_mehreren_einheiten_gibt_nichts_frei() -> None:
          "status": "booked", "source": "booking"},
     ]
     svc = _move_db(store)
-    out = svc.cancel(_CANCEL_CTX, RID, "Storno ohne Einheit")
+    out = svc.cancel(_CANCEL_CTX, RID, "Storno ohne Einheit", partei=CancelParty.betrieb)
     assert out.status == "cancelled"
     avail = {(a["unit_id"], a["date"]): a["status"] for a in store["availability"]}
     assert avail[("unit-2", "2026-07-01")] == "booked"  # fremde Sperre unberührt
@@ -1711,7 +1712,7 @@ def test_cancel_ohne_einheit_bei_einer_einheit_gibt_frei() -> None:
          "status": "booked", "source": "booking"},
     ]
     svc = _move_db(store)
-    svc.cancel(_CANCEL_CTX, RID, "Storno FeWo")
+    svc.cancel(_CANCEL_CTX, RID, "Storno FeWo", partei=CancelParty.betrieb)
     avail = {a["date"]: a["status"] for a in store["availability"]}
     assert avail["2026-07-01"] == "open"
     assert avail["2026-07-02"] == "open"
@@ -1729,7 +1730,7 @@ def test_cancel_owner_fremdes_objekt_404() -> None:
     with pytest.raises(ReservationError) as exc:
         svc.cancel(
             AuthContext(user_id="own", tenant_id="t1", role="owner"),
-            RID, "Fremder Storno",
+            RID, "Fremder Storno", partei=CancelParty.eigentuemer,
         )
     assert exc.value.status_code == 404
     assert store["reservations"][0]["status"] == "confirmed"
@@ -2128,6 +2129,7 @@ def test_cancel_keeps_days_still_booked_by_ota() -> None:
         AuthContext(user_id="u", tenant_id="t1", role="admin"),
         "22222222-2222-4222-8222-222222222222",
         "Testgrund",
+        partei=CancelParty.betrieb,
     )
     avail = {r["date"]: r["status"] for r in store["availability"]}
     # 01. wird frei (nur lokal belegt), 02. bleibt booked (OTA belegt ihn noch).

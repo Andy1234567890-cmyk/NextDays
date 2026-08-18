@@ -1038,6 +1038,10 @@ class SperrantragService:
         ).data or []
         if not rows:
             return
+        from src.features.reservations.schemas import (  # noqa: PLC0415
+            CancelParty,
+            CancelReasonCode,
+        )
         from src.features.reservations.service import (  # noqa: PLC0415
             ReservationsService,
         )
@@ -1050,7 +1054,14 @@ class SperrantragService:
         # eigene, wahre Aussage).
         grund = (note or "").strip() or f"{_STORNO_GRUND} ({antrag_id})"
         ReservationsService(service_client=self._db).cancel(
-            ctx, str(rows[0]["id"]), grund
+            ctx,
+            str(rows[0]["id"]),
+            grund,
+            # Der BETRIEB nimmt hier seine eigene Genehmigung zurück (die
+            # Capability APPROVE_BLOCK hat nur admin/co_admin) — nicht der
+            # Eigentümer, der die Sperre beantragt hatte.
+            partei=CancelParty.betrieb,
+            reason_code=CancelReasonCode.eigennutzung_aufgeloest,
         )
 
     # --- Zustandswechsel -----------------------------------------------------

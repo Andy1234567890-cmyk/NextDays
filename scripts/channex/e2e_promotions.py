@@ -858,6 +858,10 @@ def _reservierung_entfernen(db: Client, ctx: AuthContext, reservation_id: str) -
     Audit-Eintrag daran, bleibt sie storniert stehen — dann ist der Kalender
     trotzdem frei, und das ist der Punkt, auf den es ankommt.
     """
+    from src.features.reservations.schemas import (  # noqa: PLC0415
+        CancelParty,
+        CancelReasonCode,
+    )
     from src.features.reservations.service import ReservationsService  # noqa: PLC0415
 
     # `by_user_id=None`: der E2E-Kontext ist kein echter Benutzer, und eine
@@ -872,7 +876,16 @@ def _reservierung_entfernen(db: Client, ctx: AuthContext, reservation_id: str) -
         .execute()
     ).data
     if zeile and str(zeile[0].get("status")) != "cancelled":
-        svc.cancel(ctx, reservation_id, "E2E-Testlauf Promotions", by_user_id=None)
+        svc.cancel(
+            ctx,
+            reservation_id,
+            "E2E-Testlauf Promotions",
+            # Aufräumen des Testlaufs — unsere eigene Automatik, kein Mensch
+            # (0410; `partei` ist Pflicht, ohne sie bricht der Aufruf).
+            partei=CancelParty.system,
+            reason_code=CancelReasonCode.system_rollback,
+            by_user_id=None,
+        )
     try:
         db.table("reservations").delete().eq("id", reservation_id).execute()
     except Exception as exc:  # noqa: BLE001 — Storno ist der wichtige Teil

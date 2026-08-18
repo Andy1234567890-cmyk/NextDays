@@ -15,6 +15,7 @@ from pydantic import ValidationError
 
 from src.core.security import AuthContext
 from src.features.reservations.schemas import (
+    CancelParty,
     ReservationChannel,
     ReservationCreate,
     ReservationMove,
@@ -208,6 +209,7 @@ def test_storno_entfernt_offene_provision(subs: MagicMock) -> None:
         AuthContext(user_id="u", tenant_id="t1", role="admin"),
         RID,
         "Gast hat abgesagt",
+        partei=CancelParty.betrieb,
     )
     subs.return_value.cancel_commission.assert_called_once_with(
         "t1", reservation_id=RID

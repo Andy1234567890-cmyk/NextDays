@@ -61,6 +61,7 @@ from src.features.auth.granular_permissions import (
     load_permission,
 )
 from src.features.auth.permissions import Capability, effective_capabilities
+from src.features.auth.schemas import UserRole
 from src.features.calendar.schemas import BlockRequest, DateRange
 from src.features.calendar.service import CalendarError, CalendarService
 from src.features.inbox.errors import InboxError
@@ -68,6 +69,7 @@ from src.features.inbox.service import InboxService
 from src.features.rates.service import RateError, RatesService
 from src.features.reservations.schemas import ReservationNoteCreate
 from src.features.reservations.service import ReservationError, ReservationsService
+from src.features.reservations.storno_partei import partei_aus_rolle
 from src.features.tasks.service import TaskError, TasksService
 
 from .grenzen import (
@@ -642,9 +644,22 @@ class McpTools(StammdatenMixin, VertriebMixin):
         # Oberfläche wäre der ganze PM-Bereich dicht, über MCP hätte derselbe
         # Nutzer weiter sperren und Preise setzen können.
         self._laden()
+        # Als ENUM, nicht als str: `effective_permissions` kürzt für Admins per
+        # `if role is UserRole.admin` ab — ein IDENTITÄTSvergleich. Ein reines
+        # "admin" (so kam es aus `_laden`) trifft ihn nicht, obwohl
+        # `"admin" == UserRole.admin` gilt. Folge war, dass `has_pm_access` für
+        # JEDEN Admin False lieferte (seine `users.permissions` sind leer — der
+        # Backfill aus 0022 erfasste nur Bestands-Admins, `register()` schreibt
+        # `[]`, und ein Admin ist über die Benutzerverwaltung nie Ziel einer
+        # Rechtevergabe). `effective_capabilities` zog ihm daraufhin ALLE
+        # PM-Fähigkeiten ab — VIEW_CALENDAR eingeschlossen, also auch das
+        # LESEN: `buchungen_liste`, `kalender_verfuegbarkeit`, `preise_lesen`
+        # antworteten „Ihre Rolle darf das nicht". Der FastAPI-Pfad war nie
+        # betroffen, weil `AccountService.role_and_permissions` das Enum liefert.
+        rolle = self._rolle_enum()
         erlaubt = effective_capabilities(
-            self._rolle(),
-            has_pm_access=has_pm_access(self._rolle(), self._rechte_cache),
+            rolle,
+            has_pm_access=has_pm_access(rolle, self._rechte_cache),
         )
         if any(c not in erlaubt for c in wz.caps):
             raise ValueError(
@@ -692,6 +707,19 @@ class McpTools(StammdatenMixin, VertriebMixin):
         """
         self._laden()
         return self._rolle_cache  # type: ignore[return-value]
+
+    def _rolle_enum(self) -> UserRole | None:
+        """Die Rolle als `UserRole` — für alles, was mit dem Enum vergleicht.
+
+        Fail-closed (Wurzel 5): ein unbekannter Rollenwert ergibt `None` und
+        damit ein leeres Fähigkeiten-Set, nicht die zuletzt gültige Rolle.
+        `_rolle()` bleibt daneben bestehen und liefert weiter den Rohwert für
+        `ctx()` — dort erwartet `AuthContext.role` ein `str | None`.
+        """
+        try:
+            return UserRole(self._rolle())
+        except ValueError:
+            return None
 
     def _laden(self) -> None:
         """Rolle UND gespeicherte Rechte einmal je Aufruf holen.
@@ -1150,8 +1178,14 @@ class McpTools(StammdatenMixin, VertriebMixin):
         buchung_id = _pflicht(args, "buchung_id")
         grund = _pflicht(args, "grund")
         try:
+            ctx = self.ctx()
             out = ReservationsService(service_client=self._db).cancel(
-                self.ctx(), buchung_id, grund
+                ctx,
+                buchung_id,
+                grund,
+                # Dasselbe Ableiten wie im Router: das Werkzeug handelt im
+                # Namen des angemeldeten Nutzers, nicht als „System".
+                partei=partei_aus_rolle(ctx.role),
             )
         except ReservationError as exc:
             raise ValueError(exc.message) from exc

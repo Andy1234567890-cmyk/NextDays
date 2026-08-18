@@ -1,5 +1,6 @@
 """Tests für den MCP-Connector: OAuth-Flow, Discovery und Werkzeuge."""
 from datetime import UTC, date, datetime, timedelta
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -895,6 +896,110 @@ def test_schreib_zeitraum_ist_gedeckelt() -> None:
         }
     )
     assert (gerade_noch.end - gerade_noch.start).days == MAX_SCHREIB_TAGE
+
+
+def test_storno_werkzeug_setzt_die_partei_aus_der_db_rolle() -> None:
+    """0410 — auch der Storno über Claude sagt, WER storniert hat.
+
+    Das Werkzeug handelt im Namen des angemeldeten Nutzers, nicht als
+    „System": ein Betrieb, der hier storniert, muss in der Historie als
+    `betrieb` stehen — sonst schlägt das Regelwerk ab Etappe 4 den falschen
+    Provisionsentscheid vor. Die Rolle kommt dabei aus der DB (Wurzel 7), nicht
+    aus dem Token: `AuthContext.role` ist beim MCP absichtlich leer, und
+    `partei_aus_rolle(None)` wäre fail-closed ein 403.
+    """
+    from unittest.mock import patch
+
+    from src.features.mcp.tools import McpTools
+
+    db = MagicMock(name="supabase")
+    # Die Rolle, die `_laden()` aus der users-Zeile holt.
+    # Rolle UND granulare Rechte, wie `_laden()`/`load_permission` sie aus der
+    # users-Zeile holen. `permissions` ist LEER — genau so sehen die Zeilen aller
+    # Tenant-Admins in der Praxis aus (DB-Default `[]`, `register()` schreibt
+    # nichts hinein, und ein Admin ist über die Benutzerverwaltung nie Ziel
+    # einer Rechtevergabe). Der Admin muss trotzdem durchkommen: seine Rechte
+    # hängen an der ROLLE, nicht an der Liste.
+    kette = db.table.return_value.select.return_value.eq.return_value
+    kette.limit.return_value.execute.return_value.data = [
+        {"role": "admin", "permissions": []}
+    ]
+    reservations = MagicMock(name="ReservationsService")
+    reservations.return_value.cancel.return_value = SimpleNamespace(
+        id="res-1", status="cancelled"
+    )
+    with (
+        patch("src.features.mcp.tools.get_service_client", return_value=db),
+        patch("src.features.mcp.tools.ReservationsService", reservations),
+    ):
+        wz = McpTools(_kontext(), frozenset({SCOPE_LESEN, SCOPE_SCHREIBEN}), _BASIS)
+        wz.ausfuehren(
+            "buchung_stornieren",
+            {"buchung_id": "res-1", "grund": "Gast hat abgesagt"},
+        )
+    kwargs = reservations.return_value.cancel.call_args.kwargs
+    assert kwargs["partei"].value == "betrieb"
+
+
+def test_admin_mit_leeren_rechten_darf_pm_werkzeuge_nutzen() -> None:
+    """Der Admin-Kurzschluss muss auch über MCP greifen — auch beim LESEN.
+
+    Gefunden am 18.08.2026: `_laden()` legte die Rolle als reinen `str` ab,
+    `effective_permissions` prüft den Admin-Fall aber per
+    `if role is UserRole.admin` — ein Identitätsvergleich, den ein `str` nie
+    trifft. Da `users.permissions` bei Admins leer ist, war `has_pm_access`
+    False und `effective_capabilities` zog alle PM-Fähigkeiten ab. Weil
+    `_PM_CAPABILITIES` auch VIEW_CALENDAR und VIEW_OWN_TASKS enthält, war der
+    Connector für Admins praktisch tot: `buchungen_liste` und
+    `kalender_verfuegbarkeit` antworteten „Ihre Rolle darf das nicht".
+
+    Der Test prüft die Rechte-Auflösung direkt, nicht einen einzelnen Aufruf —
+    sonst wäre er beim nächsten neuen Werkzeug wieder blind.
+    """
+    from unittest.mock import patch
+
+    from src.features.auth.granular_permissions import has_pm_access
+    from src.features.auth.permissions import effective_capabilities
+    from src.features.mcp.tools import McpTools
+
+    db = MagicMock(name="supabase")
+    kette = db.table.return_value.select.return_value.eq.return_value
+    kette.limit.return_value.execute.return_value.data = [
+        {"role": "admin", "permissions": []}
+    ]
+    with patch("src.features.mcp.tools.get_service_client", return_value=db):
+        wz = McpTools(_kontext(), frozenset({SCOPE_LESEN, SCOPE_SCHREIBEN}), _BASIS)
+        wz._laden()  # noqa: SLF001
+        rolle = wz._rolle_enum()  # noqa: SLF001
+        erlaubt = effective_capabilities(
+            rolle,
+            has_pm_access=has_pm_access(rolle, wz._rechte_cache),  # noqa: SLF001
+        )
+
+    assert Capability.VIEW_CALENDAR in erlaubt, "Lesen war blockiert"
+    assert Capability.MANAGE_CALENDAR in erlaubt, "Schreiben war blockiert"
+    assert Capability.VIEW_OWN_TASKS in erlaubt
+
+
+def test_unbekannte_rolle_bleibt_ohne_faehigkeiten() -> None:
+    """Fail-closed: der Enum-Umweg darf keine unbekannte Rolle durchlassen."""
+    from unittest.mock import patch
+
+    from src.features.auth.permissions import effective_capabilities
+    from src.features.mcp.tools import McpTools
+
+    db = MagicMock(name="supabase")
+    kette = db.table.return_value.select.return_value.eq.return_value
+    kette.limit.return_value.execute.return_value.data = [
+        {"role": "hausmeister", "permissions": []}
+    ]
+    with patch("src.features.mcp.tools.get_service_client", return_value=db):
+        wz = McpTools(_kontext(), frozenset({SCOPE_LESEN}), _BASIS)
+        wz._laden()  # noqa: SLF001
+        assert wz._rolle_enum() is None  # noqa: SLF001
+        assert not effective_capabilities(
+            wz._rolle_enum(), has_pm_access=False  # noqa: SLF001
+        )
 
 
 def test_scope_wird_nie_doppelt_gespeichert() -> None:

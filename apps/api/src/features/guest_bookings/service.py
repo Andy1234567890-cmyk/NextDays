@@ -30,6 +30,7 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import escape_like
+from src.features.reservations.schemas import CancelParty, CancelReasonCode
 from src.features.reservations.service import (
     ReservationError,
     ReservationsService,
@@ -360,7 +361,19 @@ class GuestBookingsService:
         try:
             res = ReservationsService(
                 service_client=self._db()
-            ).cancel(ctx, reservation_id, clean_reason, by_user_id=None)
+            ).cancel(
+                ctx,
+                reservation_id,
+                clean_reason,
+                # Der Gast selbst — und das ist der Grund, warum 0410
+                # überhaupt gebraucht wurde: `by_user_id=None` schreibt in
+                # `cancelled_by` NULL (ein Portal-Gast ist keine users-Zeile),
+                # damit war ein Gast-Storno von „Auslöser unbekannt" nicht mehr
+                # zu unterscheiden. Die Partei sagt es jetzt ausdrücklich.
+                partei=CancelParty.gast,
+                reason_code=CancelReasonCode.gast_wunsch,
+                by_user_id=None,
+            )
         except ReservationError as exc:
             raise GuestBookingsError(
                 exc.message, status_code=exc.status_code
