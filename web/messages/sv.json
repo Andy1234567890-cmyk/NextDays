@@ -814,7 +814,66 @@
     "translateFromBase": "Översätt från grundversion",
     "translateCheckHint": "Maskinöversatt — kontrollera innan du sparar.",
     "translateBaseEmpty": "Grundversionen är tom.",
-    "translateOverwrite": "Den här versionen skrivs över. Fortsätta?"
+    "translateOverwrite": "Den här versionen skrivs över. Fortsätta?",
+    "anfrageArt": {
+      "inquiry": "Förfrågan",
+      "reservation_request": "Bokningsförfrågan",
+      "alteration_request": "Ändringsönskemål"
+    },
+    "anfrageAktion": {
+      "annehmen": "Acceptera",
+      "ablehnen": "Avböj",
+      "vorab_genehmigen": "Förhandsgodkänn",
+      "sonderpreis": "Skicka erbjudande",
+      "alteration_annehmen": "Acceptera ändring",
+      "alteration_ablehnen": "Avböj ändring",
+      "alteration_zuruecknehmen": "Dra tillbaka förfrågan"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "Datumen är upptagna",
+      "not_a_good_fit": "Passar inte boendet",
+      "waiting_for_better_reservation": "Väntar på en annan bokning",
+      "not_comfortable": "Känner mig inte bekväm"
+    },
+    "anfrageNaechte": "{n} nätter",
+    "anfrageGaeste": "{n} gäster",
+    "anfragePayout": "Utbetalning",
+    "anfrageFristRest": "Du kan svara i {zeit} till",
+    "anfrageFristAbgelaufen": "Svarstiden har gått ut — portalen beslutar själv",
+    "anfrageStunden": "{n} tim",
+    "anfrageMinuten": "{n} min",
+    "anfrageBereitsEntschieden": "Den här förfrågan är redan besvarad.",
+    "anfrageOhneChannexId": "Portalreferensen saknas — förfrågan kan inte längre besvaras.",
+    "anfrageGrundLabel": "Skäl till avböjandet",
+    "anfrageNachrichtOptional": "Meddelande till gästen (valfritt)",
+    "anfrageAblehnenBestaetigen": "Skicka avböjande",
+    "anfrageBetragLabel": "Erbjudandets totalpris",
+    "anfrageAngebotSenden": "Skicka erbjudande",
+    "anfrageBetragUngueltig": "Ange ett belopp större än 0.",
+    "eventFact": {
+      "anfrageArt": "Typ",
+      "anfrageObjekt": "Boende",
+      "anfrageAnreise": "Ankomst",
+      "anfrageAbreise": "Avresa",
+      "anfrageNaechte": "Nätter",
+      "anfrageGaeste": "Gäster",
+      "anfrageErwachsene": "Vuxna",
+      "anfrageKinder": "Barn",
+      "anfrageKleinkinder": "Spädbarn",
+      "anfrageTiere": "Husdjur",
+      "anfragePayout": "Utbetalning",
+      "anfrageWaehrung": "Valuta",
+      "anfrageFrist": "Svara senast"
+    },
+    "anfrageBeantwortet": "Den här förfrågan är redan besvarad. Portalen har den aktuella statusen.",
+    "anfrageStatus": {
+      "active": "Öppen",
+      "accepted": "Accepterad",
+      "declined": "Avböjd",
+      "expired": "Utgången",
+      "withdrawn": "Tillbakadragen",
+      "cancelled": "Avbokad"
+    }
   },
   "whatsapp": {
     "notConfigured": "WhatsApp är ännu inte anslutet. Ange inloggningsuppgifterna (Meta Cloud API) i serverinställningarna, då är utskicket aktivt.",

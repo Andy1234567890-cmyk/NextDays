@@ -14,6 +14,8 @@ from .felder import FELDER, FeldFehlt
 from .schemas import (
     AiReplyResponse,
     AiSettings,
+    AnfrageDetail,
+    AnfrageEntscheidung,
     AssignRequest,
     Attachment,
     AttachmentList,
@@ -252,6 +254,37 @@ def send_message(
         # antwortete ein Vorlagentext mit unbesetztem Feld mit „Internal Server
         # Error" statt zu sagen, welches Feld fehlt (Wurzel 5).
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.get("/{thread_id}/anfrage", response_model=AnfrageDetail)
+def get_anfrage(
+    thread_id: str, service: InboxServiceDep, bundle: _AccessDep
+) -> AnfrageDetail:
+    """Die Anfrage-Karte über dem Chat (Frist, Betrag, mögliche Aktionen)."""
+    ctx, _access = bundle
+    try:
+        return service.anfrage_detail(ctx, thread_id)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/{thread_id}/anfrage/entscheiden")
+def entscheide_anfrage(
+    thread_id: str,
+    req: AnfrageEntscheidung,
+    service: InboxServiceDep,
+    bundle: _AccessDep,
+) -> dict:
+    """Eine Airbnb-Anfrage annehmen, ablehnen oder vorab genehmigen.
+
+    Geht an Airbnb, nicht nur in unsere Tabelle — die lokale Quittung allein
+    ließe den Gast bis zum Auto-Decline warten.
+    """
+    ctx, _access = bundle
+    try:
+        return service.anfrage_entscheiden(ctx, thread_id, req)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.get("/{thread_id}/reservation", response_model=ReservationDetail)

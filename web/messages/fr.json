@@ -814,7 +814,66 @@
     "translateFromBase": "Traduire depuis la version de base",
     "translateCheckHint": "Traduction automatique — à vérifier avant d'enregistrer.",
     "translateBaseEmpty": "La version de base est vide.",
-    "translateOverwrite": "Cette version sera remplacée. Continuer ?"
+    "translateOverwrite": "Cette version sera remplacée. Continuer ?",
+    "anfrageArt": {
+      "inquiry": "Demande",
+      "reservation_request": "Demande de réservation",
+      "alteration_request": "Demande de modification"
+    },
+    "anfrageAktion": {
+      "annehmen": "Accepter",
+      "ablehnen": "Refuser",
+      "vorab_genehmigen": "Pré-approuver",
+      "sonderpreis": "Envoyer une offre",
+      "alteration_annehmen": "Accepter la modification",
+      "alteration_ablehnen": "Refuser la modification",
+      "alteration_zuruecknehmen": "Retirer la demande"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "Dates non disponibles",
+      "not_a_good_fit": "Ne convient pas au logement",
+      "waiting_for_better_reservation": "En attente d'une autre réservation",
+      "not_comfortable": "Je ne me sens pas à l'aise"
+    },
+    "anfrageNaechte": "{n} nuits",
+    "anfrageGaeste": "{n} voyageurs",
+    "anfragePayout": "Versement",
+    "anfrageFristRest": "Vous pouvez encore répondre pendant {zeit}",
+    "anfrageFristAbgelaufen": "Délai de réponse dépassé — le portail décide lui-même",
+    "anfrageStunden": "{n} h",
+    "anfrageMinuten": "{n} min",
+    "anfrageBereitsEntschieden": "Cette demande a déjà reçu une réponse.",
+    "anfrageOhneChannexId": "La référence du portail manque — cette demande ne peut plus recevoir de réponse.",
+    "anfrageGrundLabel": "Motif du refus",
+    "anfrageNachrichtOptional": "Message au voyageur (facultatif)",
+    "anfrageAblehnenBestaetigen": "Envoyer le refus",
+    "anfrageBetragLabel": "Prix total de l'offre",
+    "anfrageAngebotSenden": "Envoyer l'offre",
+    "anfrageBetragUngueltig": "Veuillez saisir un montant supérieur à 0.",
+    "eventFact": {
+      "anfrageArt": "Type",
+      "anfrageObjekt": "Logement",
+      "anfrageAnreise": "Arrivée",
+      "anfrageAbreise": "Départ",
+      "anfrageNaechte": "Nuits",
+      "anfrageGaeste": "Voyageurs",
+      "anfrageErwachsene": "Adultes",
+      "anfrageKinder": "Enfants",
+      "anfrageKleinkinder": "Bébés",
+      "anfrageTiere": "Animaux",
+      "anfragePayout": "Versement",
+      "anfrageWaehrung": "Devise",
+      "anfrageFrist": "Répondre avant"
+    },
+    "anfrageBeantwortet": "Cette demande a déjà reçu une réponse. Le portail détient le statut actuel.",
+    "anfrageStatus": {
+      "active": "Ouverte",
+      "accepted": "Acceptée",
+      "declined": "Refusée",
+      "expired": "Expirée",
+      "withdrawn": "Retirée",
+      "cancelled": "Annulée"
+    }
   },
   "whatsapp": {
     "notConfigured": "WhatsApp n'est pas encore connecté. Renseignez les identifiants (Meta Cloud API) dans les paramètres du serveur pour activer l'envoi.",

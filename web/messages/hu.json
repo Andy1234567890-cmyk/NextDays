@@ -814,7 +814,66 @@
     "translateFromBase": "Fordítás az alapváltozatból",
     "translateCheckHint": "Gépi fordítás — mentés előtt ellenőrizze.",
     "translateBaseEmpty": "Az alapváltozat üres.",
-    "translateOverwrite": "Ez a változat felülíródik. Folytatja?"
+    "translateOverwrite": "Ez a változat felülíródik. Folytatja?",
+    "anfrageArt": {
+      "inquiry": "Érdeklődés",
+      "reservation_request": "Foglalási kérés",
+      "alteration_request": "Módosítási kérés"
+    },
+    "anfrageAktion": {
+      "annehmen": "Elfogadás",
+      "ablehnen": "Elutasítás",
+      "vorab_genehmigen": "Előzetes jóváhagyás",
+      "sonderpreis": "Ajánlat küldése",
+      "alteration_annehmen": "Módosítás elfogadása",
+      "alteration_ablehnen": "Módosítás elutasítása",
+      "alteration_zuruecknehmen": "Kérés visszavonása"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "A dátumok foglaltak",
+      "not_a_good_fit": "Nem illik a szálláshoz",
+      "waiting_for_better_reservation": "Másik foglalásra várok",
+      "not_comfortable": "Nem érzem jól magam vele"
+    },
+    "anfrageNaechte": "{n} éjszaka",
+    "anfrageGaeste": "{n} vendég",
+    "anfragePayout": "Kifizetés",
+    "anfrageFristRest": "Még {zeit} ideig válaszolhatsz",
+    "anfrageFristAbgelaufen": "A válaszadási határidő lejárt — a portál maga dönt",
+    "anfrageStunden": "{n} ó",
+    "anfrageMinuten": "{n} p",
+    "anfrageBereitsEntschieden": "Erre a kérésre már válaszoltak.",
+    "anfrageOhneChannexId": "Hiányzik a portál hivatkozása — erre a kérésre már nem lehet válaszolni.",
+    "anfrageGrundLabel": "Az elutasítás oka",
+    "anfrageNachrichtOptional": "Üzenet a vendégnek (nem kötelező)",
+    "anfrageAblehnenBestaetigen": "Elutasítás küldése",
+    "anfrageBetragLabel": "Az ajánlat teljes ára",
+    "anfrageAngebotSenden": "Ajánlat küldése",
+    "anfrageBetragUngueltig": "Adj meg 0-nál nagyobb összeget.",
+    "eventFact": {
+      "anfrageArt": "Típus",
+      "anfrageObjekt": "Szállás",
+      "anfrageAnreise": "Érkezés",
+      "anfrageAbreise": "Távozás",
+      "anfrageNaechte": "Éjszakák",
+      "anfrageGaeste": "Vendégek",
+      "anfrageErwachsene": "Felnőttek",
+      "anfrageKinder": "Gyerekek",
+      "anfrageKleinkinder": "Csecsemők",
+      "anfrageTiere": "Háziállatok",
+      "anfragePayout": "Kifizetés",
+      "anfrageWaehrung": "Pénznem",
+      "anfrageFrist": "Válasz eddig"
+    },
+    "anfrageBeantwortet": "Erre az érdeklődésre már válaszoltak. Az aktuális állapotot a portál vezeti.",
+    "anfrageStatus": {
+      "active": "Nyitott",
+      "accepted": "Elfogadva",
+      "declined": "Elutasítva",
+      "expired": "Lejárt",
+      "withdrawn": "Visszavonva",
+      "cancelled": "Törölve"
+    }
   },
   "whatsapp": {
     "notConfigured": "A WhatsApp még nincs csatlakoztatva. Adja meg a hozzáférési adatokat (Meta Cloud API) a kiszolgáló beállításaiban, ezután a küldés aktív.",

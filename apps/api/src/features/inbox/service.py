@@ -29,6 +29,8 @@ from src.features.guests.identity import (
 )
 
 # Der Nachrichten-Spiegel (`portal_messages`): lesen, nachtragen, Signal setzen.
+from . import anfragen
+from .anfragen import AnfragenMixin
 from .anhaenge import AnhangWissenMixin
 from .automationen import AutomationenMixin
 from .errors import InboxError
@@ -62,6 +64,19 @@ log = get_logger("nextdays.inbox")
 
 # Vor dem Beginn jeder echten Zeitangabe — Sortier-Ersatz für Unlesbares.
 _URZEIT: Final = datetime.min.replace(tzinfo=UTC)
+
+# Die Präfixe der Nebenquellen. Ihre Thread-IDs sind KEINE
+# `channex_booking.id`, gehen aber durch dieselben Routen — `.eq("id", …)`
+# schickt sie an PostgREST, das mit einem Typfehler (22P02) antwortet. Daraus
+# wurde ein 422 „ungueltiger_parameter", obwohl die fachlich richtige Antwort
+# 404 ist: die Zeile gibt es dort schlicht nicht.
+#
+# Bewusst eine Präfix-Liste statt einer UUID-Prüfung: die Thread-IDs des
+# regulären Pfades sind zwar UUIDs, aber das ist eine Eigenschaft der Daten,
+# nicht des Vertrags — eine `_ist_uuid`-Schranke hätte jede Nicht-UUID
+# abgewiesen und damit auch legitime Aufrufe, deren Zeile einfach fehlt.
+_NEBENQUELLEN_PRAEFIXE: tuple[str, ...] = ("anfrage:", "mb:", "ue:", "wa:")
+
 
 def _als_zeitpunkt(wert: str | None) -> datetime:
     """ISO-Zeichenkette → Zeitpunkt zum VERGLEICHEN (nie zum Anzeigen).
@@ -104,6 +119,7 @@ class InboxService(
     AnhangWissenMixin,
     FeldKontextMixin,
     NebenquellenMixin,
+    AnfragenMixin,
     AutomationenMixin,
     KennzahlenMixin,
     SpiegelMixin,
@@ -519,6 +535,18 @@ class InboxService(
         nicht zugewiesener Thread bewusst als 404 (nicht 403) — die Existenz wird
         nicht preisgegeben. `scope_user_id` ist die user_id des Anfragenden.
         """
+        # Nebenquellen-IDs tragen einen Präfix (`anfrage:`, `mb:`, `ue:`, `wa:`)
+        # und sind damit keine UUID. `.eq("id", …)` schickt sie trotzdem an
+        # PostgREST, das mit 22P02 antwortet — daraus wurde ein 422
+        # („ungueltiger_parameter"), obwohl die fachlich richtige Antwort ein
+        # 404 ist: in `channex_booking` gibt es diese Zeile schlicht nicht.
+        #
+        # Live sichtbar (18.08.2026): das Öffnen eines Anfrage-Threads erzeugte
+        # zwei 422 pro Aufruf (`/scheduled`, `/attachments`), weil beide diesen
+        # Ladepfad nehmen. Der Client fragt inzwischen gar nicht mehr — aber die
+        # Absicherung gehört hierher, nicht in die Oberfläche (Wurzel 3).
+        if thread_id.startswith(_NEBENQUELLEN_PRAEFIXE):
+            raise InboxError("Konversation nicht gefunden.", status_code=404)
         res = (
             db.table("channex_booking")
             .select("*")
@@ -1005,6 +1033,34 @@ class InboxService(
         text = (message or "").strip()
         if not text:
             raise InboxError("Nachricht darf nicht leer sein.", status_code=422)
+        # Airbnb-Anfrage (0398): die EINZIGE Nebenquelle, die einen echten
+        # Sendeweg HAT — der Chat hängt am Channex-Thread statt an einer
+        # Buchung. Sie muss deshalb VOR `_nebenquelle_antwort_ablehnen`
+        # abzweigen, sonst würde die Antwort an einen wartenden Gast mit 422
+        # abgewiesen. Die Berechtigung wird hier genauso geprüft wie unten,
+        # nur ohne `_load_thread_scoped` — das fände die Zeile nicht, weil sie
+        # nicht in `channex_booking` steht.
+        if anfragen.ist_anfrage(thread_id):
+            db, tenant_id = self._require(ctx)
+            if enforce_reply:
+                zugang = self.access(ctx)
+                if not zugang.can_reply:
+                    raise InboxError(
+                        "Keine Berechtigung zum Senden.", status_code=403
+                    )
+                # Wurzel 9: derselbe Scope wie im Listenpfad. „assigned" zeigt
+                # keine Anfragen an, also darf dort auch nicht geantwortet
+                # werden.
+                if zugang.scope != "all":
+                    raise InboxError("Thread nicht gefunden.", status_code=404)
+            try:
+                return anfragen.antwort_senden(
+                    db, tenant_id, thread_id, text, self._channex
+                )
+            except ChannexError as exc:
+                raise InboxError(
+                    exc.message, status_code=exc.status_code
+                ) from exc
         # Nebenquellen-Threads: `_load_thread` fände sie ohnehin nicht (404) —
         # hier wird der GRUND genannt, statt „nicht gefunden" zu behaupten.
         self._nebenquelle_antwort_ablehnen(thread_id)

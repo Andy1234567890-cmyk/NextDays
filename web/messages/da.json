@@ -814,7 +814,66 @@
     "translateFromBase": "Oversæt fra grundversion",
     "translateCheckHint": "Maskinoversat — kontrollér før du gemmer.",
     "translateBaseEmpty": "Grundversionen er tom.",
-    "translateOverwrite": "Denne version overskrives. Fortsæt?"
+    "translateOverwrite": "Denne version overskrives. Fortsæt?",
+    "anfrageArt": {
+      "inquiry": "Forespørgsel",
+      "reservation_request": "Bookinganmodning",
+      "alteration_request": "Ændringsønske"
+    },
+    "anfrageAktion": {
+      "annehmen": "Accepter",
+      "ablehnen": "Afvis",
+      "vorab_genehmigen": "Forhåndsgodkend",
+      "sonderpreis": "Send særtilbud",
+      "alteration_annehmen": "Accepter ændring",
+      "alteration_ablehnen": "Afvis ændring",
+      "alteration_zuruecknehmen": "Træk anmodning tilbage"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "Datoerne er optaget",
+      "not_a_good_fit": "Passer ikke til boligen",
+      "waiting_for_better_reservation": "Venter på en anden booking",
+      "not_comfortable": "Er ikke tryg ved det"
+    },
+    "anfrageNaechte": "{n} nætter",
+    "anfrageGaeste": "{n} gæster",
+    "anfragePayout": "Udbetaling",
+    "anfrageFristRest": "Du kan svare i {zeit} endnu",
+    "anfrageFristAbgelaufen": "Svarfristen er udløbet — portalen afgør selv",
+    "anfrageStunden": "{n} t",
+    "anfrageMinuten": "{n} min",
+    "anfrageBereitsEntschieden": "Denne forespørgsel er allerede besvaret.",
+    "anfrageOhneChannexId": "Portalreferencen mangler for denne forespørgsel — den kan ikke længere besvares.",
+    "anfrageGrundLabel": "Årsag til afvisning",
+    "anfrageNachrichtOptional": "Besked til gæsten (valgfri)",
+    "anfrageAblehnenBestaetigen": "Send afvisning",
+    "anfrageBetragLabel": "Tilbuddets samlede pris",
+    "anfrageAngebotSenden": "Send tilbud",
+    "anfrageBetragUngueltig": "Indtast et beløb større end 0.",
+    "eventFact": {
+      "anfrageArt": "Type",
+      "anfrageObjekt": "Bolig",
+      "anfrageAnreise": "Ankomst",
+      "anfrageAbreise": "Afrejse",
+      "anfrageNaechte": "Nætter",
+      "anfrageGaeste": "Gæster",
+      "anfrageErwachsene": "Voksne",
+      "anfrageKinder": "Børn",
+      "anfrageKleinkinder": "Spædbørn",
+      "anfrageTiere": "Kæledyr",
+      "anfragePayout": "Udbetaling",
+      "anfrageWaehrung": "Valuta",
+      "anfrageFrist": "Svar inden"
+    },
+    "anfrageBeantwortet": "Der er allerede svaret på denne forespørgsel. Portalen har den aktuelle status.",
+    "anfrageStatus": {
+      "active": "Åben",
+      "accepted": "Accepteret",
+      "declined": "Afvist",
+      "expired": "Udløbet",
+      "withdrawn": "Trukket tilbage",
+      "cancelled": "Annulleret"
+    }
   },
   "whatsapp": {
     "notConfigured": "WhatsApp er endnu ikke forbundet. Angiv adgangsoplysningerne (Meta Cloud API) i serverindstillingerne, så er afsendelse aktiv.",

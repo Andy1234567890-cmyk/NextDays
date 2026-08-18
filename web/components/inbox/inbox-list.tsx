@@ -51,6 +51,7 @@ import {
   whatsAppToThread,
 } from "@/components/inbox/inbox-whatsapp-threads";
 import { istUebernahme } from "@/components/inbox/inbox-uebernahme-threads";
+import { istAnfrageThread } from "@/lib/inbox-anfrage-typen";
 import { WhatsAppChat } from "@/components/inbox/whatsapp-panel";
 import { Button } from "@nextdays/ui/button";
 import { DatePicker } from "@nextdays/ui/date-picker";
@@ -958,9 +959,11 @@ export function InboxList({
             </div>
 
             {/* Spalte 3: Reservierungs-Panel (nur für OTA-Threads; WhatsApp hat im
-            inbox-Slice keinen Reservierungskontext). */}
+            inbox-Slice keinen Reservierungskontext, und eine noch offene
+            Airbnb-Anfrage IST keine Reservierung — ihr Kontext steht in der
+            Anfrage-Karte über dem Chat). */}
             <div className="col-span-12 hidden min-h-0 flex-col overflow-y-auto rounded-2xl border border-border bg-card lg:col-span-4 lg:flex xl:col-span-4">
-              {current && !isWhatsApp(current.id) ? (
+              {current && !isWhatsApp(current.id) && !istAnfrageThread(current.id) ? (
                 <ReservationPanel
                   key={`${current.id}-res`}
                   thread={current}

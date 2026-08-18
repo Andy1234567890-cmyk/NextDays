@@ -788,3 +788,85 @@ def melde_gastnachricht(
             thread_id=thread_id,
             error=str(exc)[:200],
         )
+
+
+# --- Offene Airbnb-Anfrage (0398) -------------------------------------------
+
+SCHLUESSEL_ANFRAGE = "anfrage_offen"
+
+# Die Anfragearten, ueber die gemeldet wird — dieselben drei, die der
+# Posteingang als Thread fuehrt. Eine geschlossene Menge, damit ein neues
+# Ereignis des Aggregators nicht stillschweigend als „Anfrage" gemeldet wird.
+_ANFRAGE_TITEL = {
+    "inquiry": "Neue Voranfrage",
+    "reservation_request": "Neue Buchungsanfrage",
+    "alteration_request": "Aenderungswunsch zu einer Buchung",
+}
+
+
+def melde_offene_anfrage(
+    db: Client,
+    *,
+    tenant_id: str,
+    thread_id: str,
+    art: str,
+    property_id: str | None = None,
+    objekt: str | None = None,
+    zeitraum: str | None = None,
+) -> None:
+    """„Eine Anfrage wartet auf eine Entscheidung."
+
+    WOZU DIESE MELDUNG ZUSAETZLICH ZUR GASTNACHRICHT:
+    Beides sieht in der Glocke aehnlich aus, ist aber fachlich verschieden.
+    Eine Gastnachricht kann man morgen beantworten. Eine Anfrage laeuft AB —
+    Airbnb lehnt nach der in `non_response_at` genannten Frist selbst ab, und
+    die Untaetigkeit ist damit die Antwort. Ausserdem gibt es Anfragen ohne
+    jede Nachricht: dann meldet `melde_gastnachricht` gar nichts, und ohne
+    diese Meldung erfuehre der Betrieb ueberhaupt nichts von dem Vorgang.
+
+    NUR DIE LEITUNG, wie beim Zustellproblem: eine Reinigungskraft kann eine
+    Buchungsanfrage nicht entscheiden, und Preis/Zeitraum gehoeren nicht in
+    Rollen, die sie nicht brauchen (Wurzel 9).
+
+    ENTDOPPLUNG ueber den THREAD: Webhook und Live-Feed-Tick liefern dieselbe
+    Anfrage zweimal (live nachgemessen), und der Tick wiederholt sein Fenster
+    alle fuenf Minuten. Der `dedup_key` beschreibt deshalb den VORGANG, nicht
+    den Versandzeitpunkt (Wurzel 2).
+
+    KEINE FRIST IM TEXT: Der Countdown gehoert in die Oberflaeche, die ihn
+    fortlaufend neu rechnet. Eine gespeicherte Glockenzeile mit „noch 3
+    Stunden" waere morgen eine Falschaussage — sie steht ja unveraendert da.
+    """
+    try:
+        empfaenger = _betriebsleitung(db, tenant_id)
+        if not empfaenger:
+            return
+        titel = _ANFRAGE_TITEL.get(art)
+        if titel is None:
+            # Kein erfundener Sammelbegriff: eine unbekannte Art ist ein
+            # Hinweis auf neues Portal-Verhalten, das wir sehen wollen.
+            log.info("anfrage_meldung_unbekannte_art", art=art)
+            return
+        text = " · ".join(t for t in (objekt, zeitraum) if t)
+        dispatcher = _dispatcher(db)
+        for user_id in sorted(empfaenger):
+            dispatcher.sende(
+                user_id=user_id,
+                schluessel=SCHLUESSEL_ANFRAGE,
+                betreff=titel,
+                text=text,
+                tenant_id=tenant_id,
+                property_id=property_id,
+                # Direkt in den Thread: von dort aus ist die Anfrage in einem
+                # Klick entscheidbar.
+                ziel_pfad=f"/posteingang/{thread_id}",
+                thread_ref=thread_id,
+                dedup_key=f"anfrage:{thread_id}",
+            )
+    except Exception as exc:  # noqa: BLE001 — Meldung kippt den Eingang nie
+        log.warning(
+            "anfrage_meldung_fehlgeschlagen",
+            tenant_id=tenant_id,
+            thread_id=thread_id,
+            error=str(exc)[:200],
+        )

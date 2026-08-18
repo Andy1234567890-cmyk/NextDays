@@ -105,6 +105,69 @@ class InboxThread(BaseModel):
     assigned_user_name: str | None = None
 
 
+class AnfrageDetail(BaseModel):
+    """Eine offene Airbnb-Anfrage über dem Chat (0398).
+
+    Alle Werte kommen aus der Airbnb-Payload; keiner wird ersetzt, wenn er
+    fehlt (Wurzel 4). Beträge bleiben TEXT, wie das Portal sie liefert — eine
+    Umrechnung in Zahlen wäre die Stelle, an der aus „2906.80" ein
+    Rundungsfehler wird.
+    """
+
+    thread_id: str
+    event_id: str
+    # inquiry | reservation_request | alteration_request
+    art: str
+    # Die für DIESE Art erlaubten Aktionen — die Oberfläche zeigt nur sie.
+    aktionen: list[str] = []
+    beantwortbar: bool = False
+    # Warum nicht beantwortbar. Entweder der Status DES PORTALS ("accepted",
+    # "declined", "expired", "withdrawn", "cancelled") oder — wenn das Portal
+    # schweigt — unsere eigene Aussage ("beantwortet", "keine_channex_id").
+    # Kürzel, kein Satz: die Worte macht die Oberfläche (24 Sprachen).
+    grund_gesperrt: str | None = None
+    # "portal" = Airbnb sagt es (System-Nachricht im Thread, `meta.status`);
+    # "abgeleitet" = wir schließen es aus dem Verlauf. Die Oberfläche macht
+    # den Unterschied sichtbar, statt eine Vermutung wie eine Auskunft
+    # aussehen zu lassen (Wurzel 5b).
+    status_quelle: str = "abgeleitet"
+    # Airbnbs `non_response_at`: wann die Anfrage von selbst abläuft. None =
+    # das Portal nennt keine Frist; dann zeigt die Oberfläche keinen Countdown
+    # statt einer geratenen 24-Stunden-Regel (Wurzel 5b).
+    frist: str | None = None
+    objekt: str | None = None
+    gastname: str | None = None
+    anreise: str | None = None
+    abreise: str | None = None
+    naechte: str | None = None
+    gaeste: str | None = None
+    erwachsene: str | None = None
+    kinder: str | None = None
+    kleinkinder: str | None = None
+    tiere: str | None = None
+    # Airbnbs `payout_amount` — der NETTO-Auszahlbetrag, nicht der Gastpreis.
+    # Der Feldname sagt das ausdrücklich, damit ihn niemand als Umsatz liest.
+    payout_betrag: str | None = None
+    waehrung: str | None = None
+
+
+class AnfrageEntscheidung(BaseModel):
+    """Die Entscheidung des Betriebs zu einer Anfrage.
+
+    Spiegelt `channel_manager.schemas.AirbnbAnfrageAntwort` — der Posteingang
+    reicht sie unverändert dorthin durch, statt eine zweite Sendelogik zu
+    bauen. Eine rohe `resolution` nimmt auch dieser Weg NICHT entgegen
+    (Wurzel 3).
+    """
+
+    aktion: str
+    grund: str | None = None
+    nachricht_an_gast: str | None = None
+    nachricht_an_airbnb: str | None = None
+    sofortbuchung_sperren: bool = False
+    gesamtpreis_minor: int | None = None
+
+
 class InboxListResponse(BaseModel):
     items: list[InboxThread] = []
     total: int = 0

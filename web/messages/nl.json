@@ -814,7 +814,66 @@
     "translateFromBase": "Vertalen vanuit basisversie",
     "translateCheckHint": "Machinaal vertaald — controleer vóór het opslaan.",
     "translateBaseEmpty": "De basisversie is leeg.",
-    "translateOverwrite": "Deze versie wordt overschreven. Doorgaan?"
+    "translateOverwrite": "Deze versie wordt overschreven. Doorgaan?",
+    "anfrageArt": {
+      "inquiry": "Aanvraag",
+      "reservation_request": "Boekingsverzoek",
+      "alteration_request": "Wijzigingsverzoek"
+    },
+    "anfrageAktion": {
+      "annehmen": "Accepteren",
+      "ablehnen": "Afwijzen",
+      "vorab_genehmigen": "Vooraf goedkeuren",
+      "sonderpreis": "Speciale aanbieding sturen",
+      "alteration_annehmen": "Wijziging accepteren",
+      "alteration_ablehnen": "Wijziging afwijzen",
+      "alteration_zuruecknehmen": "Verzoek intrekken"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "Data zijn bezet",
+      "not_a_good_fit": "Past niet bij de accommodatie",
+      "waiting_for_better_reservation": "Wacht op een andere boeking",
+      "not_comfortable": "Voel me er niet prettig bij"
+    },
+    "anfrageNaechte": "{n} nachten",
+    "anfrageGaeste": "{n} gasten",
+    "anfragePayout": "Uitbetaling",
+    "anfrageFristRest": "Je kunt nog {zeit} reageren",
+    "anfrageFristAbgelaufen": "Antwoordtermijn verstreken — het portaal beslist zelf",
+    "anfrageStunden": "{n} u",
+    "anfrageMinuten": "{n} min",
+    "anfrageBereitsEntschieden": "Deze aanvraag is al beantwoord.",
+    "anfrageOhneChannexId": "De portaalreferentie ontbreekt — deze aanvraag kan niet meer worden beantwoord.",
+    "anfrageGrundLabel": "Reden voor afwijzing",
+    "anfrageNachrichtOptional": "Bericht aan de gast (optioneel)",
+    "anfrageAblehnenBestaetigen": "Afwijzing versturen",
+    "anfrageBetragLabel": "Totaalprijs van de aanbieding",
+    "anfrageAngebotSenden": "Aanbieding versturen",
+    "anfrageBetragUngueltig": "Voer een bedrag groter dan 0 in.",
+    "eventFact": {
+      "anfrageArt": "Type",
+      "anfrageObjekt": "Accommodatie",
+      "anfrageAnreise": "Aankomst",
+      "anfrageAbreise": "Vertrek",
+      "anfrageNaechte": "Nachten",
+      "anfrageGaeste": "Gasten",
+      "anfrageErwachsene": "Volwassenen",
+      "anfrageKinder": "Kinderen",
+      "anfrageKleinkinder": "Baby's",
+      "anfrageTiere": "Huisdieren",
+      "anfragePayout": "Uitbetaling",
+      "anfrageWaehrung": "Valuta",
+      "anfrageFrist": "Antwoord vóór"
+    },
+    "anfrageBeantwortet": "Deze aanvraag is al beantwoord. De actuele status staat bij het portaal.",
+    "anfrageStatus": {
+      "active": "Open",
+      "accepted": "Geaccepteerd",
+      "declined": "Afgewezen",
+      "expired": "Verlopen",
+      "withdrawn": "Ingetrokken",
+      "cancelled": "Geannuleerd"
+    }
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is nog niet verbonden. Voer de inloggegevens (Meta Cloud API) in de serverinstellingen in, dan is verzending actief.",

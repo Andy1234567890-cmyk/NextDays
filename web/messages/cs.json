@@ -814,7 +814,66 @@
     "translateFromBase": "Přeložit ze základní verze",
     "translateCheckHint": "Strojový překlad — před uložením zkontrolujte.",
     "translateBaseEmpty": "Základní verze je prázdná.",
-    "translateOverwrite": "Tato verze bude přepsána. Pokračovat?"
+    "translateOverwrite": "Tato verze bude přepsána. Pokračovat?",
+    "anfrageArt": {
+      "inquiry": "Dotaz",
+      "reservation_request": "Žádost o rezervaci",
+      "alteration_request": "Žádost o změnu"
+    },
+    "anfrageAktion": {
+      "annehmen": "Přijmout",
+      "ablehnen": "Odmítnout",
+      "vorab_genehmigen": "Předběžně schválit",
+      "sonderpreis": "Poslat nabídku",
+      "alteration_annehmen": "Přijmout změnu",
+      "alteration_ablehnen": "Odmítnout změnu",
+      "alteration_zuruecknehmen": "Stáhnout žádost"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "Termín je obsazený",
+      "not_a_good_fit": "Nehodí se k objektu",
+      "waiting_for_better_reservation": "Čekám na jinou rezervaci",
+      "not_comfortable": "Necítím se s tím dobře"
+    },
+    "anfrageNaechte": "{n} nocí",
+    "anfrageGaeste": "{n} hostů",
+    "anfragePayout": "Výplata",
+    "anfrageFristRest": "Odpovědět můžete ještě {zeit}",
+    "anfrageFristAbgelaufen": "Lhůta pro odpověď vypršela — portál rozhodne sám",
+    "anfrageStunden": "{n} h",
+    "anfrageMinuten": "{n} min",
+    "anfrageBereitsEntschieden": "Tato žádost už byla zodpovězena.",
+    "anfrageOhneChannexId": "Chybí reference portálu — na tuto žádost už nelze odpovědět.",
+    "anfrageGrundLabel": "Důvod odmítnutí",
+    "anfrageNachrichtOptional": "Zpráva pro hosta (nepovinné)",
+    "anfrageAblehnenBestaetigen": "Odeslat odmítnutí",
+    "anfrageBetragLabel": "Celková cena nabídky",
+    "anfrageAngebotSenden": "Odeslat nabídku",
+    "anfrageBetragUngueltig": "Zadejte částku větší než 0.",
+    "eventFact": {
+      "anfrageArt": "Typ",
+      "anfrageObjekt": "Objekt",
+      "anfrageAnreise": "Příjezd",
+      "anfrageAbreise": "Odjezd",
+      "anfrageNaechte": "Noci",
+      "anfrageGaeste": "Hosté",
+      "anfrageErwachsene": "Dospělí",
+      "anfrageKinder": "Děti",
+      "anfrageKleinkinder": "Kojenci",
+      "anfrageTiere": "Zvířata",
+      "anfragePayout": "Výplata",
+      "anfrageWaehrung": "Měna",
+      "anfrageFrist": "Odpovědět do"
+    },
+    "anfrageBeantwortet": "Na tento dotaz už bylo odpovězeno. Aktuální stav vede portál.",
+    "anfrageStatus": {
+      "active": "Otevřené",
+      "accepted": "Přijato",
+      "declined": "Odmítnuto",
+      "expired": "Vypršelo",
+      "withdrawn": "Staženo",
+      "cancelled": "Zrušeno"
+    }
   },
   "whatsapp": {
     "notConfigured": "WhatsApp zatím není propojen. Zadejte přístupové údaje (Meta Cloud API) v nastavení serveru, poté bude odesílání aktivní.",

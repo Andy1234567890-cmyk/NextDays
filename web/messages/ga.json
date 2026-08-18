@@ -814,7 +814,66 @@
     "translateFromBase": "Aistrigh ón mbunleagan",
     "translateCheckHint": "Meaisínaistriúchán — seiceáil roimh shábháil.",
     "translateBaseEmpty": "Tá an bunleagan folamh.",
-    "translateOverwrite": "Forscríobhfar an leagan seo. Ar aghaidh?"
+    "translateOverwrite": "Forscríobhfar an leagan seo. Ar aghaidh?",
+    "anfrageArt": {
+      "inquiry": "Fiosrúchán",
+      "reservation_request": "Iarratas áirithinte",
+      "alteration_request": "Iarratas athraithe"
+    },
+    "anfrageAktion": {
+      "annehmen": "Glac leis",
+      "ablehnen": "Diúltaigh",
+      "vorab_genehmigen": "Réamhcheadaigh",
+      "sonderpreis": "Seol tairiscint",
+      "alteration_annehmen": "Glac leis an athrú",
+      "alteration_ablehnen": "Diúltaigh don athrú",
+      "alteration_zuruecknehmen": "Tarraing an t-iarratas siar"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "Níl na dátaí ar fáil",
+      "not_a_good_fit": "Ní oireann sé don áit",
+      "waiting_for_better_reservation": "Ag fanacht le háirithint eile",
+      "not_comfortable": "Nílim compordach leis"
+    },
+    "anfrageNaechte": "{n} oíche",
+    "anfrageGaeste": "{n} aoi",
+    "anfragePayout": "Íocaíocht",
+    "anfrageFristRest": "Is féidir leat freagra a thabhairt ar feadh {zeit} fós",
+    "anfrageFristAbgelaufen": "Tá an spriocam freagartha caite — socraíonn an tairseach í féin",
+    "anfrageStunden": "{n} u",
+    "anfrageMinuten": "{n} nóim",
+    "anfrageBereitsEntschieden": "Tugadh freagra ar an iarratas seo cheana.",
+    "anfrageOhneChannexId": "Tá tagairt na tairsí ar iarraidh — ní féidir freagra a thabhairt a thuilleadh.",
+    "anfrageGrundLabel": "Cúis an diúltaithe",
+    "anfrageNachrichtOptional": "Teachtaireacht chuig an aoi (roghnach)",
+    "anfrageAblehnenBestaetigen": "Seol an diúltú",
+    "anfrageBetragLabel": "Praghas iomlán na tairisceana",
+    "anfrageAngebotSenden": "Seol an tairiscint",
+    "anfrageBetragUngueltig": "Cuir isteach suim níos mó ná 0.",
+    "eventFact": {
+      "anfrageArt": "Cineál",
+      "anfrageObjekt": "Áit",
+      "anfrageAnreise": "Teacht isteach",
+      "anfrageAbreise": "Imeacht",
+      "anfrageNaechte": "Oícheanta",
+      "anfrageGaeste": "Aíonna",
+      "anfrageErwachsene": "Daoine fásta",
+      "anfrageKinder": "Páistí",
+      "anfrageKleinkinder": "Naíonáin",
+      "anfrageTiere": "Peataí",
+      "anfragePayout": "Íocaíocht",
+      "anfrageWaehrung": "Airgeadra",
+      "anfrageFrist": "Freagair faoi"
+    },
+    "anfrageBeantwortet": "Tugadh freagra ar an bhfiosrúchán seo cheana. Tá an stádas reatha ag an tairseach.",
+    "anfrageStatus": {
+      "active": "Oscailte",
+      "accepted": "Glactha",
+      "declined": "Diúltaithe",
+      "expired": "As feidhm",
+      "withdrawn": "Tarraingthe siar",
+      "cancelled": "Curtha ar ceal"
+    }
   },
   "whatsapp": {
     "notConfigured": "Níl WhatsApp nasctha fós. Cuir na dintiúir (Meta Cloud API) i socruithe an fhreastalaí, ansin beidh an seoladh gníomhach.",

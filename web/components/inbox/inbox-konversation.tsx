@@ -17,6 +17,8 @@ import {
 } from "react";
 
 import { ComposerEditor } from "@/components/inbox/composer-editor";
+import { AnfrageKarte } from "@/components/inbox/inbox-anfrage";
+import { istAnfrageThread } from "@/lib/inbox-anfrage-typen";
 import { istUebernahme } from "@/components/inbox/inbox-uebernahme-threads";
 import {
   sprachName,
@@ -153,12 +155,21 @@ export function Conversation({
     setLoading(false);
   }, [thread.id]);
 
+  // Geplante Nachrichten und Anhänge hängen an einer BUCHUNG
+  // (`inbox_scheduled_message.thread_id` / `inbox_attachment.thread_id` sind
+  // UUIDs von `channex_booking`). Eine Anfrage hat dort keine Zeile, ihre
+  // Thread-ID ist `anfrage:<uuid>` — der Aufruf lief serverseitig in einen
+  // 422 („ungueltiger_parameter"), zweimal bei jedem Öffnen. Das Ergebnis
+  // wäre ohnehin leer gewesen; hier wird deshalb gar nicht erst gefragt,
+  // statt einen erwartbaren Fehler zu erzeugen und zu verschlucken (Wurzel 5).
   const loadScheduled = useCallback(async () => {
+    if (istAnfrageThread(thread.id)) return;
     const res = await listScheduled(thread.id);
     if (res.ok) setScheduled(res.data.items);
   }, [thread.id]);
 
   const loadAnhaenge = useCallback(async () => {
+    if (istAnfrageThread(thread.id)) return;
     const res = await listAttachments(thread.id);
     if (res.ok) setAnhaenge(res.data.items);
   }, [thread.id]);
@@ -561,6 +572,15 @@ export function Conversation({
           </div>
         </div>
       </div>
+
+      {/* Anfrage-Karte (0398): nur bei Airbnb-Anfragen. Sie steht ZWISCHEN
+          Kopf und Verlauf, weil sie beides verbindet — der Gastgeber liest die
+          Frage des Gastes und entscheidet an derselben Stelle. Bis hierher lag
+          die Entscheidung in einer technischen Ereignisliste, in der der Chat
+          gar nicht vorkam. */}
+      {istAnfrageThread(thread.id) && (
+        <AnfrageKarte threadId={thread.id} onEntschieden={onNext} />
+      )}
 
       {/* Verlauf */}
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
@@ -1209,7 +1229,20 @@ function EventCard({
   const t = useTranslations("inbox");
   const [offen, setOffen] = useState(false);
   const gebucht = message.event_title === "bookingReceived";
-  const titel = gebucht ? t("eventBookingReceived") : t("eventStatusChanged");
+  // Eine Portal-ANFRAGE (0398) ist der dritte Fall neben Buchungseingang und
+  // Statuswechsel. Ohne diesen Zweig fiel sie in den `else` und stand als
+  // „Reservierungsstatus geändert" im Verlauf — eine Falschaussage: es gibt
+  // noch gar keine Reservierung, deren Status sich ändern könnte.
+  const anfrageArt = message.event_title;
+  const istAnfrage =
+    anfrageArt === "inquiry" ||
+    anfrageArt === "reservation_request" ||
+    anfrageArt === "alteration_request";
+  const titel = gebucht
+    ? t("eventBookingReceived")
+    : istAnfrage
+      ? t(`anfrageArt.${anfrageArt}`)
+      : t("eventStatusChanged");
   const fakten = message.event_facts ?? [];
   // Statuswechsel: der rohe Enum-Wert kommt aus dem Backend, die Worte hier.
   const status =
@@ -1218,7 +1251,7 @@ function EventCard({
       : message.event_detail === "modified"
         ? t("filterStatusModified")
         : message.event_detail;
-  const aufklappbar = gebucht ? fakten.length > 0 : Boolean(status);
+  const aufklappbar = gebucht || istAnfrage ? fakten.length > 0 : Boolean(status);
 
   return (
     <div
@@ -1226,12 +1259,20 @@ function EventCard({
         "rounded-2xl border px-3 py-2 " +
         (gebucht
           ? "border-emerald-500/30 bg-emerald-500/5"
-          : "border-border bg-muted/40")
+          : istAnfrage
+            ? "border-amber-500/30 bg-amber-500/5"
+            : "border-border bg-muted/40")
       }
     >
       <div className="flex items-center gap-2 text-sm">
         <Icon
-          icon={gebucht ? "ph:chat-circle-text" : "ph:arrows-left-right"}
+          icon={
+            gebucht
+              ? "ph:chat-circle-text"
+              : istAnfrage
+                ? "ph:question"
+                : "ph:arrows-left-right"
+          }
           className="size-4 shrink-0 text-muted-foreground"
         />
         <span className="text-muted-foreground">{titel}</span>
@@ -1243,7 +1284,7 @@ function EventCard({
             · {uhrzeit(message.sent_at, locale)}
           </span>
         )}
-        {gebucht && message.event_channel && (
+        {(gebucht || istAnfrage) && message.event_channel && (
           <span className="flex items-center gap-1 truncate font-medium text-emerald-600 dark:text-emerald-400">
             <Icon icon="ph:check-circle" className="size-4 shrink-0" />
             {message.event_channel}
@@ -1262,7 +1303,7 @@ function EventCard({
       </div>
       {offen && (
         <div className="mt-2 space-y-1 border-t border-border/60 pt-2 text-sm">
-          {!gebucht && status && <p>{status}</p>}
+          {!gebucht && !istAnfrage && status && <p>{status}</p>}
           {fakten.map((f) => (
             <p key={f.label} className="flex flex-wrap gap-x-2">
               <span className="text-muted-foreground">{eventFaktLabel(t, f.label)}</span>
@@ -1293,6 +1334,13 @@ function eventFaktLabel(t: ReturnType<typeof useTranslations>, label: string) {
     case "importedAt":
       return t("eventFactImportedAt");
     default:
+      // Anfrage-Fakten (0398) tragen ihr eigenes Kürzel und ihren eigenen
+      // Katalog-Eintrag — sie kommen aus derselben `event_facts`-Liste, sind
+      // aber keine Reservierungs-Angaben. Ohne diesen Zweig stünde in der
+      // Karte das rohe `anfrageObjekt` statt „Objekt".
+      if (label.startsWith("anfrage")) {
+        return t(`eventFact.${label}`);
+      }
       return label;
   }
 }

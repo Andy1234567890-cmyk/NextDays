@@ -8,6 +8,10 @@ import { getLocale } from "next-intl/server";
 import { ApiError, api } from "@/lib/api";
 import type { Zeitraum } from "@/lib/reservations";
 import { currentToken } from "@/lib/session-token";
+import type {
+  AnfrageAktion,
+  AnfrageDetail,
+} from "@/lib/inbox-anfrage-typen";
 
 export type InboxThread = {
   id: string;
@@ -331,6 +335,36 @@ export async function getInboxReservation(
   threadId: string,
 ): Promise<Result<ReservationDetail>> {
   return call<ReservationDetail>(`/${threadId}/reservation`);
+}
+
+/** Die Anfrage-Karte über dem Chat. */
+export async function getAnfrage(
+  threadId: string,
+): Promise<Result<AnfrageDetail>> {
+  return call<AnfrageDetail>(`/${threadId}/anfrage`);
+}
+
+/**
+ * Die Anfrage bei Airbnb entscheiden. Geht ans Portal, nicht nur in unsere
+ * Tabelle — eine rein lokale Quittung ließe den Gast bis zum Auto-Decline
+ * warten.
+ */
+export async function entscheideAnfrage(
+  threadId: string,
+  input: {
+    aktion: AnfrageAktion;
+    grund?: string;
+    nachricht_an_gast?: string;
+    nachricht_an_airbnb?: string;
+    sofortbuchung_sperren?: boolean;
+    /** GANZZAHL in Minor Units (10000 = 100,00) — nie Haupteinheiten. */
+    gesamtpreis_minor?: number;
+  },
+): Promise<Result<Record<string, unknown>>> {
+  return call<Record<string, unknown>>(`/${threadId}/anfrage/entscheiden`, {
+    method: "POST",
+    body: input,
+  });
 }
 
 /** Konversations-Flags setzen (Favorit/Notiz/Lesen/Archiv/Erinnerung). */

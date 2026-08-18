@@ -814,7 +814,66 @@
     "translateFromBase": "Μετάφραση από τη βασική έκδοση",
     "translateCheckHint": "Αυτόματη μετάφραση — ελέγξτε πριν την αποθήκευση.",
     "translateBaseEmpty": "Η βασική έκδοση είναι κενή.",
-    "translateOverwrite": "Αυτή η έκδοση θα αντικατασταθεί. Συνέχεια;"
+    "translateOverwrite": "Αυτή η έκδοση θα αντικατασταθεί. Συνέχεια;",
+    "anfrageArt": {
+      "inquiry": "Αίτημα",
+      "reservation_request": "Αίτημα κράτησης",
+      "alteration_request": "Αίτημα αλλαγής"
+    },
+    "anfrageAktion": {
+      "annehmen": "Αποδοχή",
+      "ablehnen": "Απόρριψη",
+      "vorab_genehmigen": "Προέγκριση",
+      "sonderpreis": "Αποστολή προσφοράς",
+      "alteration_annehmen": "Αποδοχή αλλαγής",
+      "alteration_ablehnen": "Απόρριψη αλλαγής",
+      "alteration_zuruecknehmen": "Απόσυρση αιτήματος"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "Οι ημερομηνίες δεν είναι διαθέσιμες",
+      "not_a_good_fit": "Δεν ταιριάζει στο κατάλυμα",
+      "waiting_for_better_reservation": "Περιμένω άλλη κράτηση",
+      "not_comfortable": "Δεν νιώθω άνετα"
+    },
+    "anfrageNaechte": "{n} διανυκτερεύσεις",
+    "anfrageGaeste": "{n} επισκέπτες",
+    "anfragePayout": "Πληρωμή",
+    "anfrageFristRest": "Μπορείτε να απαντήσετε ακόμη για {zeit}",
+    "anfrageFristAbgelaufen": "Η προθεσμία απάντησης έληξε — η πύλη αποφασίζει μόνη της",
+    "anfrageStunden": "{n} ώ",
+    "anfrageMinuten": "{n} λ",
+    "anfrageBereitsEntschieden": "Αυτό το αίτημα έχει ήδη απαντηθεί.",
+    "anfrageOhneChannexId": "Λείπει η αναφορά της πύλης — δεν είναι πλέον δυνατή η απάντηση.",
+    "anfrageGrundLabel": "Λόγος απόρριψης",
+    "anfrageNachrichtOptional": "Μήνυμα προς τον επισκέπτη (προαιρετικό)",
+    "anfrageAblehnenBestaetigen": "Αποστολή απόρριψης",
+    "anfrageBetragLabel": "Συνολική τιμή προσφοράς",
+    "anfrageAngebotSenden": "Αποστολή προσφοράς",
+    "anfrageBetragUngueltig": "Εισαγάγετε ποσό μεγαλύτερο από 0.",
+    "eventFact": {
+      "anfrageArt": "Τύπος",
+      "anfrageObjekt": "Κατάλυμα",
+      "anfrageAnreise": "Άφιξη",
+      "anfrageAbreise": "Αναχώρηση",
+      "anfrageNaechte": "Διανυκτερεύσεις",
+      "anfrageGaeste": "Επισκέπτες",
+      "anfrageErwachsene": "Ενήλικες",
+      "anfrageKinder": "Παιδιά",
+      "anfrageKleinkinder": "Βρέφη",
+      "anfrageTiere": "Κατοικίδια",
+      "anfragePayout": "Πληρωμή",
+      "anfrageWaehrung": "Νόμισμα",
+      "anfrageFrist": "Απάντηση έως"
+    },
+    "anfrageBeantwortet": "Σε αυτό το αίτημα έχει ήδη απαντηθεί. Την τρέχουσα κατάσταση τηρεί η πύλη.",
+    "anfrageStatus": {
+      "active": "Ανοιχτό",
+      "accepted": "Αποδεκτό",
+      "declined": "Απορρίφθηκε",
+      "expired": "Έληξε",
+      "withdrawn": "Αποσύρθηκε",
+      "cancelled": "Ακυρώθηκε"
+    }
   },
   "whatsapp": {
     "notConfigured": "Το WhatsApp δεν έχει συνδεθεί ακόμη. Καταχωρίστε τα διαπιστευτήρια (Meta Cloud API) στις ρυθμίσεις του διακομιστή και η αποστολή θα ενεργοποιηθεί.",

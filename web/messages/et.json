@@ -814,7 +814,66 @@
     "translateFromBase": "Tõlgi põhiversioonist",
     "translateCheckHint": "Masintõlge — kontrollige enne salvestamist.",
     "translateBaseEmpty": "Põhiversioon on tühi.",
-    "translateOverwrite": "See versioon kirjutatakse üle. Kas jätkata?"
+    "translateOverwrite": "See versioon kirjutatakse üle. Kas jätkata?",
+    "anfrageArt": {
+      "inquiry": "Päring",
+      "reservation_request": "Broneerimistaotlus",
+      "alteration_request": "Muutmistaotlus"
+    },
+    "anfrageAktion": {
+      "annehmen": "Nõustu",
+      "ablehnen": "Keeldu",
+      "vorab_genehmigen": "Kinnita eelnevalt",
+      "sonderpreis": "Saada pakkumine",
+      "alteration_annehmen": "Nõustu muudatusega",
+      "alteration_ablehnen": "Keeldu muudatusest",
+      "alteration_zuruecknehmen": "Võta taotlus tagasi"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "Kuupäevad on hõivatud",
+      "not_a_good_fit": "Ei sobi majutusega",
+      "waiting_for_better_reservation": "Ootan teist broneeringut",
+      "not_comfortable": "Ei tunne end sellega hästi"
+    },
+    "anfrageNaechte": "{n} ööd",
+    "anfrageGaeste": "{n} külalist",
+    "anfragePayout": "Väljamakse",
+    "anfrageFristRest": "Saate vastata veel {zeit}",
+    "anfrageFristAbgelaufen": "Vastamise tähtaeg on möödas — portaal otsustab ise",
+    "anfrageStunden": "{n} t",
+    "anfrageMinuten": "{n} min",
+    "anfrageBereitsEntschieden": "Sellele päringule on juba vastatud.",
+    "anfrageOhneChannexId": "Portaali viide puudub — sellele päringule ei saa enam vastata.",
+    "anfrageGrundLabel": "Keeldumise põhjus",
+    "anfrageNachrichtOptional": "Sõnum külalisele (valikuline)",
+    "anfrageAblehnenBestaetigen": "Saada keeldumine",
+    "anfrageBetragLabel": "Pakkumise koguhind",
+    "anfrageAngebotSenden": "Saada pakkumine",
+    "anfrageBetragUngueltig": "Sisestage summa, mis on suurem kui 0.",
+    "eventFact": {
+      "anfrageArt": "Tüüp",
+      "anfrageObjekt": "Majutus",
+      "anfrageAnreise": "Saabumine",
+      "anfrageAbreise": "Lahkumine",
+      "anfrageNaechte": "Ööd",
+      "anfrageGaeste": "Külalised",
+      "anfrageErwachsene": "Täiskasvanud",
+      "anfrageKinder": "Lapsed",
+      "anfrageKleinkinder": "Imikud",
+      "anfrageTiere": "Lemmikloomad",
+      "anfragePayout": "Väljamakse",
+      "anfrageWaehrung": "Valuuta",
+      "anfrageFrist": "Vasta hiljemalt"
+    },
+    "anfrageBeantwortet": "Sellele päringule on juba vastatud. Ajakohast olekut haldab portaal.",
+    "anfrageStatus": {
+      "active": "Avatud",
+      "accepted": "Vastu võetud",
+      "declined": "Tagasi lükatud",
+      "expired": "Aegunud",
+      "withdrawn": "Tagasi võetud",
+      "cancelled": "Tühistatud"
+    }
   },
   "whatsapp": {
     "notConfigured": "WhatsApp pole veel ühendatud. Sisesta juurdepääsuandmed (Meta Cloud API) serveri seadetesse, siis on saatmine aktiivne.",

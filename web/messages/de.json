@@ -814,7 +814,66 @@
     "translateFromBase": "Aus Grundfassung übersetzen",
     "translateCheckHint": "Maschinell übersetzt — bitte vor dem Speichern prüfen.",
     "translateBaseEmpty": "Die Grundfassung ist leer.",
-    "translateOverwrite": "Diese Fassung wird überschrieben. Fortfahren?"
+    "translateOverwrite": "Diese Fassung wird überschrieben. Fortfahren?",
+    "anfrageArt": {
+      "inquiry": "Anfrage",
+      "reservation_request": "Buchungsanfrage",
+      "alteration_request": "Änderungswunsch"
+    },
+    "anfrageAktion": {
+      "annehmen": "Annehmen",
+      "ablehnen": "Ablehnen",
+      "vorab_genehmigen": "Im Voraus bestätigen",
+      "sonderpreis": "Angebot machen",
+      "alteration_annehmen": "Änderung annehmen",
+      "alteration_ablehnen": "Änderung ablehnen",
+      "alteration_zuruecknehmen": "Anfrage zurückziehen"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "Termin ist belegt",
+      "not_a_good_fit": "Passt nicht zum Objekt",
+      "waiting_for_better_reservation": "Warte auf eine andere Buchung",
+      "not_comfortable": "Fühle mich damit unwohl"
+    },
+    "anfrageNaechte": "{n} Nächte",
+    "anfrageGaeste": "{n} Gäste",
+    "anfragePayout": "Auszahlung",
+    "anfrageFristRest": "Antwort noch {zeit} möglich",
+    "anfrageFristAbgelaufen": "Antwortfrist abgelaufen — das Portal entscheidet selbst",
+    "anfrageStunden": "{n} Std.",
+    "anfrageMinuten": "{n} Min.",
+    "anfrageBereitsEntschieden": "Diese Anfrage wurde bereits beantwortet.",
+    "anfrageOhneChannexId": "Zu dieser Anfrage fehlt die Portal-Kennung — sie kann nicht mehr beantwortet werden.",
+    "anfrageGrundLabel": "Grund der Ablehnung",
+    "anfrageNachrichtOptional": "Nachricht an den Gast (optional)",
+    "anfrageAblehnenBestaetigen": "Ablehnung senden",
+    "anfrageBetragLabel": "Gesamtpreis des Angebots",
+    "anfrageAngebotSenden": "Angebot senden",
+    "anfrageBetragUngueltig": "Bitte einen Betrag größer als 0 eingeben.",
+    "eventFact": {
+      "anfrageArt": "Art",
+      "anfrageObjekt": "Objekt",
+      "anfrageAnreise": "Anreise",
+      "anfrageAbreise": "Abreise",
+      "anfrageNaechte": "Nächte",
+      "anfrageGaeste": "Gäste",
+      "anfrageErwachsene": "Erwachsene",
+      "anfrageKinder": "Kinder",
+      "anfrageKleinkinder": "Kleinkinder",
+      "anfrageTiere": "Haustiere",
+      "anfragePayout": "Auszahlung",
+      "anfrageWaehrung": "Währung",
+      "anfrageFrist": "Antwortfrist"
+    },
+    "anfrageBeantwortet": "Auf diese Anfrage wurde bereits geantwortet. Den aktuellen Stand führt das Portal.",
+    "anfrageStatus": {
+      "active": "Offen",
+      "accepted": "Angenommen",
+      "declined": "Abgelehnt",
+      "expired": "Abgelaufen",
+      "withdrawn": "Zurückgezogen",
+      "cancelled": "Storniert"
+    }
   },
   "whatsapp": {
     "notConfigured": "WhatsApp ist noch nicht verbunden. Zugangsdaten (Meta Cloud API) in den Server-Einstellungen hinterlegen, dann ist der Versand aktiv.",

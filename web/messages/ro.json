@@ -814,7 +814,66 @@
     "translateFromBase": "Tradu din versiunea de bază",
     "translateCheckHint": "Traducere automată — verificați înainte de salvare.",
     "translateBaseEmpty": "Versiunea de bază este goală.",
-    "translateOverwrite": "Această versiune va fi suprascrisă. Continuați?"
+    "translateOverwrite": "Această versiune va fi suprascrisă. Continuați?",
+    "anfrageArt": {
+      "inquiry": "Solicitare",
+      "reservation_request": "Cerere de rezervare",
+      "alteration_request": "Cerere de modificare"
+    },
+    "anfrageAktion": {
+      "annehmen": "Acceptă",
+      "ablehnen": "Respinge",
+      "vorab_genehmigen": "Aprobă în avans",
+      "sonderpreis": "Trimite ofertă",
+      "alteration_annehmen": "Acceptă modificarea",
+      "alteration_ablehnen": "Respinge modificarea",
+      "alteration_zuruecknehmen": "Retrage cererea"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "Datele nu sunt disponibile",
+      "not_a_good_fit": "Nu se potrivește proprietății",
+      "waiting_for_better_reservation": "Aștept altă rezervare",
+      "not_comfortable": "Nu mă simt confortabil"
+    },
+    "anfrageNaechte": "{n} nopți",
+    "anfrageGaeste": "{n} oaspeți",
+    "anfragePayout": "Plată",
+    "anfrageFristRest": "Mai poți răspunde încă {zeit}",
+    "anfrageFristAbgelaufen": "Termenul de răspuns a expirat — portalul decide singur",
+    "anfrageStunden": "{n} h",
+    "anfrageMinuten": "{n} min",
+    "anfrageBereitsEntschieden": "La această cerere s-a răspuns deja.",
+    "anfrageOhneChannexId": "Lipsește referința portalului — nu se mai poate răspunde la această cerere.",
+    "anfrageGrundLabel": "Motivul respingerii",
+    "anfrageNachrichtOptional": "Mesaj pentru oaspete (opțional)",
+    "anfrageAblehnenBestaetigen": "Trimite respingerea",
+    "anfrageBetragLabel": "Prețul total al ofertei",
+    "anfrageAngebotSenden": "Trimite oferta",
+    "anfrageBetragUngueltig": "Introdu o sumă mai mare decât 0.",
+    "eventFact": {
+      "anfrageArt": "Tip",
+      "anfrageObjekt": "Proprietate",
+      "anfrageAnreise": "Sosire",
+      "anfrageAbreise": "Plecare",
+      "anfrageNaechte": "Nopți",
+      "anfrageGaeste": "Oaspeți",
+      "anfrageErwachsene": "Adulți",
+      "anfrageKinder": "Copii",
+      "anfrageKleinkinder": "Bebeluși",
+      "anfrageTiere": "Animale",
+      "anfragePayout": "Plată",
+      "anfrageWaehrung": "Monedă",
+      "anfrageFrist": "Răspunde până la"
+    },
+    "anfrageBeantwortet": "La această solicitare s-a răspuns deja. Portalul deține starea actuală.",
+    "anfrageStatus": {
+      "active": "Deschisă",
+      "accepted": "Acceptată",
+      "declined": "Respinsă",
+      "expired": "Expirată",
+      "withdrawn": "Retrasă",
+      "cancelled": "Anulată"
+    }
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nu este încă conectat. Introduceți datele de acces (Meta Cloud API) în setările serverului, apoi trimiterea este activă.",

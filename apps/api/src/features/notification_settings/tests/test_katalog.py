@@ -33,6 +33,7 @@ MIGRATIONEN = (
     "0332_sperrantrag_genehmigung.sql",
     "0390_benachrichtigung_block_freigabe.sql",
     "0399_betrieb_buchungsbenachrichtigung.sql",
+    "0408_benachrichtigung_offene_anfrage.sql",
 )
 
 

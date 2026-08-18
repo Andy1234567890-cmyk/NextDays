@@ -147,14 +147,24 @@ export function StatusBadge({ status }: { status: string }) {
   const t = useTranslations("inbox");
   const key = status.trim().toLowerCase();
   if (key === "new" || !key) return null;
+  // Portal-ANFRAGEN (0398) tragen ihre Art als Status — sie sind keine
+  // Buchung, deren Status sich geändert hätte. Ohne diesen Zweig fiel der
+  // rohe Enum-Wert durch (`else: status`) und in der Liste stand „inquiry",
+  // noch dazu in Grün wie eine bestätigte Buchung (Wurzel 4: kein roher
+  // DB-Wert in der Oberfläche).
+  const istAnfrage =
+    key === "inquiry" ||
+    key === "reservation_request" ||
+    key === "alteration_request";
   const farbe =
     key === "cancelled"
       ? "bg-destructive/10 text-destructive"
-      : key === "modified"
+      : key === "modified" || istAnfrage
         ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
         : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
-  const label =
-    key === "cancelled"
+  const label = istAnfrage
+    ? t(`anfrageArt.${key}`)
+    : key === "cancelled"
       ? t("filterStatusCancelled")
       : key === "modified"
         ? t("filterStatusModified")

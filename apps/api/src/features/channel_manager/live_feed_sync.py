@@ -221,7 +221,68 @@ class LiveFeedSyncMixin:
                 live_feed_event_id=live_id, tenant_id=tenant_id,
                 property_id=property_id,
             )
+            # Die Anfrage MELDEN, nicht nur loggen (0398). Ein Logeintrag
+            # erreicht niemanden im Betrieb, und Airbnb lehnt nach der in
+            # `non_response_at` genannten Frist selbst ab — eine unbemerkte
+            # Anfrage ist damit eine verlorene Buchung ohne jede Spur.
+            #
+            # Erst NACH dem erfolgreichen Insert: der Thread des Posteingangs
+            # heisst `anfrage:<id unserer Zeile>`, den gibt es vorher nicht.
+            self._anfrage_melden(str(tenant_id), attrs.get("payload") or {}, event)
         return True
+
+    def _anfrage_melden(
+        self, tenant_id: str, payload: dict[str, Any], event: str
+    ) -> None:
+        """Glocke + Mail fuer eine neu eingetroffene Anfrage.
+
+        Best-effort (Wurzel 5): der Tick darf daran nie kippen — die Anfrage
+        steht dann trotzdem im Posteingang, nur die Meldung fehlt.
+
+        Die Zeile wird ueber die Channex-Ereignis-ID zurueckgelesen statt aus
+        dem Insert-Ergebnis: derselbe Vorgang kommt auf ZWEI Wegen herein
+        (Webhook zuerst, Tick danach), und gemeldet werden soll der Thread, den
+        der Posteingang auch fuehrt — sonst zeigt die Glocke auf einen zweiten,
+        gleich aussehenden Eintrag.
+        """
+        if self._db is None:
+            return
+        try:
+            from src.features.inbox import anfragen  # noqa: PLC0415
+            from src.features.notification_settings.ereignisse import (  # noqa: PLC0415
+                melde_offene_anfrage,
+            )
+
+            live_id = anfragen.live_feed_id_aus(payload)
+            if not live_id:
+                return
+            zeilen = (
+                self._db.table("channex_webhook_event")
+                .select("id, property_id")
+                .eq("tenant_id", tenant_id)
+                .eq("live_feed_event_id", live_id)
+                .limit(1)
+                .execute()
+            ).data or []
+            if not zeilen:
+                return
+
+            details = anfragen.details_aus(payload)
+            an = details.get("checkin_date")
+            ab = details.get("checkout_date")
+            melde_offene_anfrage(
+                self._db,
+                tenant_id=tenant_id,
+                thread_id=anfragen.thread_id_fuer(str(zeilen[0]["id"])),
+                art=event,
+                property_id=zeilen[0].get("property_id"),
+                objekt=details.get("listing_name"),
+                # Der Zeitraum als Rohwerte des Portals — kein Datumsformat
+                # erfinden, das die Sprache des Empfaengers nicht kennt.
+                zeitraum=f"{an} – {ab}" if an and ab else None,
+            )
+        except Exception as exc:  # noqa: BLE001 — der Tick darf nie kippen
+            log.warning("anfrage_melden_fehlgeschlagen", error=str(exc)[:200])
 
     def _journal_ereignis_bekannt(self, tenant_id: str, live_id: str) -> bool:
         """Haben wir dieses Ereignis schon? Gescopt auf den Tenant (Wurzel 3)."""

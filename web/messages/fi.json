@@ -814,7 +814,66 @@
     "translateFromBase": "Käännä perusversiosta",
     "translateCheckHint": "Konekäännetty — tarkista ennen tallennusta.",
     "translateBaseEmpty": "Perusversio on tyhjä.",
-    "translateOverwrite": "Tämä versio korvataan. Jatketaanko?"
+    "translateOverwrite": "Tämä versio korvataan. Jatketaanko?",
+    "anfrageArt": {
+      "inquiry": "Tiedustelu",
+      "reservation_request": "Varauspyyntö",
+      "alteration_request": "Muutospyyntö"
+    },
+    "anfrageAktion": {
+      "annehmen": "Hyväksy",
+      "ablehnen": "Hylkää",
+      "vorab_genehmigen": "Esihyväksy",
+      "sonderpreis": "Lähetä tarjous",
+      "alteration_annehmen": "Hyväksy muutos",
+      "alteration_ablehnen": "Hylkää muutos",
+      "alteration_zuruecknehmen": "Peru pyyntö"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "Päivät eivät ole vapaana",
+      "not_a_good_fit": "Ei sovi kohteeseen",
+      "waiting_for_better_reservation": "Odotan toista varausta",
+      "not_comfortable": "En koe sitä hyväksi"
+    },
+    "anfrageNaechte": "{n} yötä",
+    "anfrageGaeste": "{n} vierasta",
+    "anfragePayout": "Maksu",
+    "anfrageFristRest": "Voit vastata vielä {zeit}",
+    "anfrageFristAbgelaufen": "Vastausaika umpeutui — portaali päättää itse",
+    "anfrageStunden": "{n} t",
+    "anfrageMinuten": "{n} min",
+    "anfrageBereitsEntschieden": "Tähän pyyntöön on jo vastattu.",
+    "anfrageOhneChannexId": "Portaalin viite puuttuu — pyyntöön ei voi enää vastata.",
+    "anfrageGrundLabel": "Hylkäyksen syy",
+    "anfrageNachrichtOptional": "Viesti vieraalle (valinnainen)",
+    "anfrageAblehnenBestaetigen": "Lähetä hylkäys",
+    "anfrageBetragLabel": "Tarjouksen kokonaishinta",
+    "anfrageAngebotSenden": "Lähetä tarjous",
+    "anfrageBetragUngueltig": "Anna summa, joka on suurempi kuin 0.",
+    "eventFact": {
+      "anfrageArt": "Tyyppi",
+      "anfrageObjekt": "Kohde",
+      "anfrageAnreise": "Saapuminen",
+      "anfrageAbreise": "Lähtö",
+      "anfrageNaechte": "Yöt",
+      "anfrageGaeste": "Vieraat",
+      "anfrageErwachsene": "Aikuiset",
+      "anfrageKinder": "Lapset",
+      "anfrageKleinkinder": "Vauvat",
+      "anfrageTiere": "Lemmikit",
+      "anfragePayout": "Maksu",
+      "anfrageWaehrung": "Valuutta",
+      "anfrageFrist": "Vastaa viimeistään"
+    },
+    "anfrageBeantwortet": "Tähän tiedusteluun on jo vastattu. Ajantasainen tila on portaalissa.",
+    "anfrageStatus": {
+      "active": "Avoin",
+      "accepted": "Hyväksytty",
+      "declined": "Hylätty",
+      "expired": "Vanhentunut",
+      "withdrawn": "Peruttu",
+      "cancelled": "Peruutettu"
+    }
   },
   "whatsapp": {
     "notConfigured": "WhatsAppia ei ole vielä yhdistetty. Syötä tunnukset (Meta Cloud API) palvelimen asetuksiin, niin lähetys on käytössä.",

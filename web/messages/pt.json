@@ -814,7 +814,66 @@
     "translateFromBase": "Traduzir a partir da versão base",
     "translateCheckHint": "Tradução automática — verifique antes de guardar.",
     "translateBaseEmpty": "A versão base está vazia.",
-    "translateOverwrite": "Esta versão será substituída. Continuar?"
+    "translateOverwrite": "Esta versão será substituída. Continuar?",
+    "anfrageArt": {
+      "inquiry": "Pedido",
+      "reservation_request": "Pedido de reserva",
+      "alteration_request": "Pedido de alteração"
+    },
+    "anfrageAktion": {
+      "annehmen": "Aceitar",
+      "ablehnen": "Recusar",
+      "vorab_genehmigen": "Aprovar previamente",
+      "sonderpreis": "Enviar oferta",
+      "alteration_annehmen": "Aceitar a alteração",
+      "alteration_ablehnen": "Recusar a alteração",
+      "alteration_zuruecknehmen": "Retirar o pedido"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "As datas não estão disponíveis",
+      "not_a_good_fit": "Não se adequa ao alojamento",
+      "waiting_for_better_reservation": "À espera de outra reserva",
+      "not_comfortable": "Não me sinto confortável"
+    },
+    "anfrageNaechte": "{n} noites",
+    "anfrageGaeste": "{n} hóspedes",
+    "anfragePayout": "Pagamento",
+    "anfrageFristRest": "Ainda pode responder durante {zeit}",
+    "anfrageFristAbgelaufen": "Prazo de resposta terminado — o portal decide sozinho",
+    "anfrageStunden": "{n} h",
+    "anfrageMinuten": "{n} min",
+    "anfrageBereitsEntschieden": "Este pedido já foi respondido.",
+    "anfrageOhneChannexId": "Falta a referência do portal — este pedido já não pode ser respondido.",
+    "anfrageGrundLabel": "Motivo da recusa",
+    "anfrageNachrichtOptional": "Mensagem ao hóspede (opcional)",
+    "anfrageAblehnenBestaetigen": "Enviar recusa",
+    "anfrageBetragLabel": "Preço total da oferta",
+    "anfrageAngebotSenden": "Enviar oferta",
+    "anfrageBetragUngueltig": "Introduza um valor superior a 0.",
+    "eventFact": {
+      "anfrageArt": "Tipo",
+      "anfrageObjekt": "Alojamento",
+      "anfrageAnreise": "Check-in",
+      "anfrageAbreise": "Check-out",
+      "anfrageNaechte": "Noites",
+      "anfrageGaeste": "Hóspedes",
+      "anfrageErwachsene": "Adultos",
+      "anfrageKinder": "Crianças",
+      "anfrageKleinkinder": "Bebés",
+      "anfrageTiere": "Animais",
+      "anfragePayout": "Pagamento",
+      "anfrageWaehrung": "Moeda",
+      "anfrageFrist": "Responder até"
+    },
+    "anfrageBeantwortet": "Este pedido já foi respondido. O portal tem o estado atual.",
+    "anfrageStatus": {
+      "active": "Aberto",
+      "accepted": "Aceite",
+      "declined": "Recusado",
+      "expired": "Expirado",
+      "withdrawn": "Retirado",
+      "cancelled": "Cancelado"
+    }
   },
   "whatsapp": {
     "notConfigured": "O WhatsApp ainda não está ligado. Introduza as credenciais (Meta Cloud API) nas definições do servidor para ativar o envio.",

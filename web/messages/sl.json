@@ -814,7 +814,66 @@
     "translateFromBase": "Prevedi iz osnovne različice",
     "translateCheckHint": "Strojno prevedeno — preverite pred shranjevanjem.",
     "translateBaseEmpty": "Osnovna različica je prazna.",
-    "translateOverwrite": "Ta različica bo prepisana. Nadaljevati?"
+    "translateOverwrite": "Ta različica bo prepisana. Nadaljevati?",
+    "anfrageArt": {
+      "inquiry": "Povpraševanje",
+      "reservation_request": "Zahteva za rezervacijo",
+      "alteration_request": "Zahteva za spremembo"
+    },
+    "anfrageAktion": {
+      "annehmen": "Sprejmi",
+      "ablehnen": "Zavrni",
+      "vorab_genehmigen": "Vnaprej odobri",
+      "sonderpreis": "Pošlji ponudbo",
+      "alteration_annehmen": "Sprejmi spremembo",
+      "alteration_ablehnen": "Zavrni spremembo",
+      "alteration_zuruecknehmen": "Umakni zahtevo"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "Termini so zasedeni",
+      "not_a_good_fit": "Ne ustreza nastanitvi",
+      "waiting_for_better_reservation": "Čakam na drugo rezervacijo",
+      "not_comfortable": "S tem se ne počutim dobro"
+    },
+    "anfrageNaechte": "{n} nočitev",
+    "anfrageGaeste": "{n} gostov",
+    "anfragePayout": "Izplačilo",
+    "anfrageFristRest": "Odgovorite lahko še {zeit}",
+    "anfrageFristAbgelaufen": "Rok za odgovor je potekel — portal odloči sam",
+    "anfrageStunden": "{n} h",
+    "anfrageMinuten": "{n} min",
+    "anfrageBereitsEntschieden": "Na to zahtevo je že bilo odgovorjeno.",
+    "anfrageOhneChannexId": "Manjka sklic portala — na to zahtevo ni več mogoče odgovoriti.",
+    "anfrageGrundLabel": "Razlog za zavrnitev",
+    "anfrageNachrichtOptional": "Sporočilo gostu (neobvezno)",
+    "anfrageAblehnenBestaetigen": "Pošlji zavrnitev",
+    "anfrageBetragLabel": "Skupna cena ponudbe",
+    "anfrageAngebotSenden": "Pošlji ponudbo",
+    "anfrageBetragUngueltig": "Vnesite znesek, večji od 0.",
+    "eventFact": {
+      "anfrageArt": "Vrsta",
+      "anfrageObjekt": "Nastanitev",
+      "anfrageAnreise": "Prihod",
+      "anfrageAbreise": "Odhod",
+      "anfrageNaechte": "Nočitve",
+      "anfrageGaeste": "Gostje",
+      "anfrageErwachsene": "Odrasli",
+      "anfrageKinder": "Otroci",
+      "anfrageKleinkinder": "Dojenčki",
+      "anfrageTiere": "Hišni ljubljenčki",
+      "anfragePayout": "Izplačilo",
+      "anfrageWaehrung": "Valuta",
+      "anfrageFrist": "Odgovor do"
+    },
+    "anfrageBeantwortet": "Na to povpraševanje je že bilo odgovorjeno. Aktualno stanje vodi portal.",
+    "anfrageStatus": {
+      "active": "Odprto",
+      "accepted": "Sprejeto",
+      "declined": "Zavrnjeno",
+      "expired": "Poteklo",
+      "withdrawn": "Umaknjeno",
+      "cancelled": "Preklicano"
+    }
   },
   "whatsapp": {
     "notConfigured": "WhatsApp še ni povezan. Vnesite dostopne podatke (Meta Cloud API) v nastavitvah strežnika, nato bo pošiljanje aktivno.",

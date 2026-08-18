@@ -814,7 +814,66 @@
     "translateFromBase": "Превод от основната версия",
     "translateCheckHint": "Машинен превод — проверете преди запазване.",
     "translateBaseEmpty": "Основната версия е празна.",
-    "translateOverwrite": "Тази версия ще бъде презаписана. Да продължим ли?"
+    "translateOverwrite": "Тази версия ще бъде презаписана. Да продължим ли?",
+    "anfrageArt": {
+      "inquiry": "Запитване",
+      "reservation_request": "Заявка за резервация",
+      "alteration_request": "Заявка за промяна"
+    },
+    "anfrageAktion": {
+      "annehmen": "Приеми",
+      "ablehnen": "Откажи",
+      "vorab_genehmigen": "Одобри предварително",
+      "sonderpreis": "Изпрати оферта",
+      "alteration_annehmen": "Приеми промяната",
+      "alteration_ablehnen": "Откажи промяната",
+      "alteration_zuruecknehmen": "Оттегли заявката"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "Датите са заети",
+      "not_a_good_fit": "Не е подходящо за обекта",
+      "waiting_for_better_reservation": "Изчаквам друга резервация",
+      "not_comfortable": "Не се чувствам комфортно"
+    },
+    "anfrageNaechte": "{n} нощувки",
+    "anfrageGaeste": "{n} гости",
+    "anfragePayout": "Изплащане",
+    "anfrageFristRest": "Можете да отговорите още {zeit}",
+    "anfrageFristAbgelaufen": "Срокът за отговор изтече — порталът решава сам",
+    "anfrageStunden": "{n} ч",
+    "anfrageMinuten": "{n} мин",
+    "anfrageBereitsEntschieden": "На това запитване вече е отговорено.",
+    "anfrageOhneChannexId": "Липсва референцията на портала — на това запитване вече не може да се отговори.",
+    "anfrageGrundLabel": "Причина за отказа",
+    "anfrageNachrichtOptional": "Съобщение до госта (по избор)",
+    "anfrageAblehnenBestaetigen": "Изпрати отказа",
+    "anfrageBetragLabel": "Обща цена на офертата",
+    "anfrageAngebotSenden": "Изпрати офертата",
+    "anfrageBetragUngueltig": "Въведете сума, по-голяма от 0.",
+    "eventFact": {
+      "anfrageArt": "Тип",
+      "anfrageObjekt": "Обект",
+      "anfrageAnreise": "Настаняване",
+      "anfrageAbreise": "Напускане",
+      "anfrageNaechte": "Нощувки",
+      "anfrageGaeste": "Гости",
+      "anfrageErwachsene": "Възрастни",
+      "anfrageKinder": "Деца",
+      "anfrageKleinkinder": "Бебета",
+      "anfrageTiere": "Домашни любимци",
+      "anfragePayout": "Изплащане",
+      "anfrageWaehrung": "Валута",
+      "anfrageFrist": "Отговор до"
+    },
+    "anfrageBeantwortet": "На това запитване вече е отговорено. Актуалният статус е в портала.",
+    "anfrageStatus": {
+      "active": "Отворено",
+      "accepted": "Прието",
+      "declined": "Отхвърлено",
+      "expired": "Изтекло",
+      "withdrawn": "Оттеглено",
+      "cancelled": "Анулирано"
+    }
   },
   "whatsapp": {
     "notConfigured": "WhatsApp още не е свързан. Въведете данните за достъп (Meta Cloud API) в настройките на сървъра, след което изпращането е активно.",

@@ -814,7 +814,66 @@
     "translateFromBase": "Tulkot no pamatversijas",
     "translateCheckHint": "Mašīntulkojums — pārbaudiet pirms saglabāšanas.",
     "translateBaseEmpty": "Pamatversija ir tukša.",
-    "translateOverwrite": "Šī versija tiks pārrakstīta. Turpināt?"
+    "translateOverwrite": "Šī versija tiks pārrakstīta. Turpināt?",
+    "anfrageArt": {
+      "inquiry": "Pieprasījums",
+      "reservation_request": "Rezervācijas pieprasījums",
+      "alteration_request": "Izmaiņu pieprasījums"
+    },
+    "anfrageAktion": {
+      "annehmen": "Pieņemt",
+      "ablehnen": "Noraidīt",
+      "vorab_genehmigen": "Apstiprināt iepriekš",
+      "sonderpreis": "Nosūtīt piedāvājumu",
+      "alteration_annehmen": "Pieņemt izmaiņas",
+      "alteration_ablehnen": "Noraidīt izmaiņas",
+      "alteration_zuruecknehmen": "Atsaukt pieprasījumu"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "Datumi nav pieejami",
+      "not_a_good_fit": "Neatbilst īpašumam",
+      "waiting_for_better_reservation": "Gaidu citu rezervāciju",
+      "not_comfortable": "Nejūtos ērti"
+    },
+    "anfrageNaechte": "{n} naktis",
+    "anfrageGaeste": "{n} viesi",
+    "anfragePayout": "Izmaksa",
+    "anfrageFristRest": "Varat atbildēt vēl {zeit}",
+    "anfrageFristAbgelaufen": "Atbildes termiņš beidzies — portāls lemj pats",
+    "anfrageStunden": "{n} h",
+    "anfrageMinuten": "{n} min",
+    "anfrageBereitsEntschieden": "Uz šo pieprasījumu jau ir atbildēts.",
+    "anfrageOhneChannexId": "Trūkst portāla atsauces — uz šo pieprasījumu vairs nevar atbildēt.",
+    "anfrageGrundLabel": "Noraidījuma iemesls",
+    "anfrageNachrichtOptional": "Ziņa viesim (neobligāti)",
+    "anfrageAblehnenBestaetigen": "Nosūtīt noraidījumu",
+    "anfrageBetragLabel": "Piedāvājuma kopējā cena",
+    "anfrageAngebotSenden": "Nosūtīt piedāvājumu",
+    "anfrageBetragUngueltig": "Ievadiet summu, kas lielāka par 0.",
+    "eventFact": {
+      "anfrageArt": "Veids",
+      "anfrageObjekt": "Īpašums",
+      "anfrageAnreise": "Ierašanās",
+      "anfrageAbreise": "Izbraukšana",
+      "anfrageNaechte": "Naktis",
+      "anfrageGaeste": "Viesi",
+      "anfrageErwachsene": "Pieaugušie",
+      "anfrageKinder": "Bērni",
+      "anfrageKleinkinder": "Zīdaiņi",
+      "anfrageTiere": "Mājdzīvnieki",
+      "anfragePayout": "Izmaksa",
+      "anfrageWaehrung": "Valūta",
+      "anfrageFrist": "Atbildēt līdz"
+    },
+    "anfrageBeantwortet": "Uz šo pieprasījumu jau ir atbildēts. Aktuālo statusu uztur portāls.",
+    "anfrageStatus": {
+      "active": "Atvērts",
+      "accepted": "Pieņemts",
+      "declined": "Noraidīts",
+      "expired": "Beidzies",
+      "withdrawn": "Atsaukts",
+      "cancelled": "Atcelts"
+    }
   },
   "whatsapp": {
     "notConfigured": "WhatsApp vēl nav savienots. Ievadiet piekļuves datus (Meta Cloud API) servera iestatījumos, tad sūtīšana būs aktīva.",

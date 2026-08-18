@@ -814,7 +814,66 @@
     "translateFromBase": "Translate from base version",
     "translateCheckHint": "Machine-translated — please check before saving.",
     "translateBaseEmpty": "The base version is empty.",
-    "translateOverwrite": "This version will be overwritten. Continue?"
+    "translateOverwrite": "This version will be overwritten. Continue?",
+    "anfrageArt": {
+      "inquiry": "Inquiry",
+      "reservation_request": "Booking request",
+      "alteration_request": "Change request"
+    },
+    "anfrageAktion": {
+      "annehmen": "Accept",
+      "ablehnen": "Decline",
+      "vorab_genehmigen": "Pre-approve",
+      "sonderpreis": "Send special offer",
+      "alteration_annehmen": "Accept change",
+      "alteration_ablehnen": "Decline change",
+      "alteration_zuruecknehmen": "Withdraw request"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "Dates are not available",
+      "not_a_good_fit": "Not a good fit",
+      "waiting_for_better_reservation": "Waiting for another booking",
+      "not_comfortable": "Not comfortable with it"
+    },
+    "anfrageNaechte": "{n} nights",
+    "anfrageGaeste": "{n} guests",
+    "anfragePayout": "Payout",
+    "anfrageFristRest": "You can still reply for {zeit}",
+    "anfrageFristAbgelaufen": "Reply window closed — the portal decides on its own",
+    "anfrageStunden": "{n} h",
+    "anfrageMinuten": "{n} min",
+    "anfrageBereitsEntschieden": "This request has already been answered.",
+    "anfrageOhneChannexId": "The portal reference for this request is missing — it can no longer be answered.",
+    "anfrageGrundLabel": "Reason for declining",
+    "anfrageNachrichtOptional": "Message to the guest (optional)",
+    "anfrageAblehnenBestaetigen": "Send decline",
+    "anfrageBetragLabel": "Total price of the offer",
+    "anfrageAngebotSenden": "Send offer",
+    "anfrageBetragUngueltig": "Please enter an amount greater than 0.",
+    "eventFact": {
+      "anfrageArt": "Type",
+      "anfrageObjekt": "Property",
+      "anfrageAnreise": "Check-in",
+      "anfrageAbreise": "Check-out",
+      "anfrageNaechte": "Nights",
+      "anfrageGaeste": "Guests",
+      "anfrageErwachsene": "Adults",
+      "anfrageKinder": "Children",
+      "anfrageKleinkinder": "Infants",
+      "anfrageTiere": "Pets",
+      "anfragePayout": "Payout",
+      "anfrageWaehrung": "Currency",
+      "anfrageFrist": "Reply by"
+    },
+    "anfrageBeantwortet": "This inquiry has already been answered. The portal holds the current status.",
+    "anfrageStatus": {
+      "active": "Open",
+      "accepted": "Accepted",
+      "declined": "Declined",
+      "expired": "Expired",
+      "withdrawn": "Withdrawn",
+      "cancelled": "Cancelled"
+    }
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is not connected yet. Add the credentials (Meta Cloud API) in the server settings to activate sending.",

@@ -814,7 +814,66 @@
     "translateFromBase": "Versti iš pagrindinės versijos",
     "translateCheckHint": "Mašininis vertimas — patikrinkite prieš išsaugant.",
     "translateBaseEmpty": "Pagrindinė versija tuščia.",
-    "translateOverwrite": "Ši versija bus perrašyta. Tęsti?"
+    "translateOverwrite": "Ši versija bus perrašyta. Tęsti?",
+    "anfrageArt": {
+      "inquiry": "Užklausa",
+      "reservation_request": "Rezervacijos prašymas",
+      "alteration_request": "Pakeitimo prašymas"
+    },
+    "anfrageAktion": {
+      "annehmen": "Priimti",
+      "ablehnen": "Atmesti",
+      "vorab_genehmigen": "Patvirtinti iš anksto",
+      "sonderpreis": "Siųsti pasiūlymą",
+      "alteration_annehmen": "Priimti pakeitimą",
+      "alteration_ablehnen": "Atmesti pakeitimą",
+      "alteration_zuruecknehmen": "Atšaukti prašymą"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "Datos užimtos",
+      "not_a_good_fit": "Netinka objektui",
+      "waiting_for_better_reservation": "Laukiu kitos rezervacijos",
+      "not_comfortable": "Jaučiuosi nepatogiai"
+    },
+    "anfrageNaechte": "{n} naktys",
+    "anfrageGaeste": "{n} svečiai",
+    "anfragePayout": "Išmoka",
+    "anfrageFristRest": "Dar galite atsakyti {zeit}",
+    "anfrageFristAbgelaufen": "Atsakymo terminas baigėsi — portalas sprendžia pats",
+    "anfrageStunden": "{n} val.",
+    "anfrageMinuten": "{n} min.",
+    "anfrageBereitsEntschieden": "Į šią užklausą jau atsakyta.",
+    "anfrageOhneChannexId": "Trūksta portalo nuorodos — į šią užklausą nebegalima atsakyti.",
+    "anfrageGrundLabel": "Atmetimo priežastis",
+    "anfrageNachrichtOptional": "Žinutė svečiui (neprivaloma)",
+    "anfrageAblehnenBestaetigen": "Siųsti atmetimą",
+    "anfrageBetragLabel": "Bendra pasiūlymo kaina",
+    "anfrageAngebotSenden": "Siųsti pasiūlymą",
+    "anfrageBetragUngueltig": "Įveskite sumą, didesnę nei 0.",
+    "eventFact": {
+      "anfrageArt": "Tipas",
+      "anfrageObjekt": "Objektas",
+      "anfrageAnreise": "Atvykimas",
+      "anfrageAbreise": "Išvykimas",
+      "anfrageNaechte": "Naktys",
+      "anfrageGaeste": "Svečiai",
+      "anfrageErwachsene": "Suaugusieji",
+      "anfrageKinder": "Vaikai",
+      "anfrageKleinkinder": "Kūdikiai",
+      "anfrageTiere": "Augintiniai",
+      "anfragePayout": "Išmoka",
+      "anfrageWaehrung": "Valiuta",
+      "anfrageFrist": "Atsakyti iki"
+    },
+    "anfrageBeantwortet": "Į šią užklausą jau atsakyta. Dabartinę būseną tvarko portalas.",
+    "anfrageStatus": {
+      "active": "Atvira",
+      "accepted": "Priimta",
+      "declined": "Atmesta",
+      "expired": "Nebegalioja",
+      "withdrawn": "Atšaukta",
+      "cancelled": "Anuliuota"
+    }
   },
   "whatsapp": {
     "notConfigured": "WhatsApp dar neprijungtas. Įveskite prisijungimo duomenis (Meta Cloud API) serverio nustatymuose, tada siuntimas bus aktyvus.",

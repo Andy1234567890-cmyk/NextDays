@@ -814,7 +814,66 @@
     "translateFromBase": "Ittraduċi mill-verżjoni bażi",
     "translateCheckHint": "Tradott awtomatikament — iċċekkja qabel tissejvja.",
     "translateBaseEmpty": "Il-verżjoni bażi hija vojta.",
-    "translateOverwrite": "Din il-verżjoni se tinkiteb fuqha. Tkompli?"
+    "translateOverwrite": "Din il-verżjoni se tinkiteb fuqha. Tkompli?",
+    "anfrageArt": {
+      "inquiry": "Talba",
+      "reservation_request": "Talba għal riżervazzjoni",
+      "alteration_request": "Talba għal bidla"
+    },
+    "anfrageAktion": {
+      "annehmen": "Aċċetta",
+      "ablehnen": "Irrifjuta",
+      "vorab_genehmigen": "Approva minn qabel",
+      "sonderpreis": "Ibgħat offerta",
+      "alteration_annehmen": "Aċċetta l-bidla",
+      "alteration_ablehnen": "Irrifjuta l-bidla",
+      "alteration_zuruecknehmen": "Irtira t-talba"
+    },
+    "anfrageGrund": {
+      "dates_not_available": "Id-dati mhumiex disponibbli",
+      "not_a_good_fit": "Ma jaqbilx mal-proprjetà",
+      "waiting_for_better_reservation": "Qed nistenna riżervazzjoni oħra",
+      "not_comfortable": "Ma nħossnix komdu"
+    },
+    "anfrageNaechte": "{n} iljieli",
+    "anfrageGaeste": "{n} mistednin",
+    "anfragePayout": "Ħlas",
+    "anfrageFristRest": "Għadek tista' twieġeb għal {zeit}",
+    "anfrageFristAbgelaufen": "Il-ħin għat-tweġiba skada — il-portal jiddeċiedi waħdu",
+    "anfrageStunden": "{n} s",
+    "anfrageMinuten": "{n} min",
+    "anfrageBereitsEntschieden": "Din it-talba diġà ġiet imwieġba.",
+    "anfrageOhneChannexId": "Ir-referenza tal-portal hija nieqsa — din it-talba ma tistax tibqa' tiġi mwieġba.",
+    "anfrageGrundLabel": "Raġuni tar-rifjut",
+    "anfrageNachrichtOptional": "Messaġġ lill-mistieden (mhux obbligatorju)",
+    "anfrageAblehnenBestaetigen": "Ibgħat ir-rifjut",
+    "anfrageBetragLabel": "Prezz totali tal-offerta",
+    "anfrageAngebotSenden": "Ibgħat l-offerta",
+    "anfrageBetragUngueltig": "Daħħal ammont akbar minn 0.",
+    "eventFact": {
+      "anfrageArt": "Tip",
+      "anfrageObjekt": "Proprjetà",
+      "anfrageAnreise": "Wasla",
+      "anfrageAbreise": "Tluq",
+      "anfrageNaechte": "Iljieli",
+      "anfrageGaeste": "Mistednin",
+      "anfrageErwachsene": "Adulti",
+      "anfrageKinder": "Tfal",
+      "anfrageKleinkinder": "Trabi",
+      "anfrageTiere": "Annimali",
+      "anfragePayout": "Ħlas",
+      "anfrageWaehrung": "Munita",
+      "anfrageFrist": "Wieġeb sa"
+    },
+    "anfrageBeantwortet": "Din it-talba diġà ġiet imwieġba. Il-portal għandu l-istatus attwali.",
+    "anfrageStatus": {
+      "active": "Miftuħa",
+      "accepted": "Aċċettata",
+      "declined": "Rifjutata",
+      "expired": "Skadut",
+      "withdrawn": "Irtirata",
+      "cancelled": "Ikkanċellata"
+    }
   },
   "whatsapp": {
     "notConfigured": "WhatsApp għadu mhux imqabbad. Daħħal il-kredenzjali (Meta Cloud API) fis-settings tas-server, imbagħad il-konsenja tkun attiva.",

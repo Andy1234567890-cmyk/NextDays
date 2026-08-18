@@ -150,6 +150,13 @@ KATALOG: tuple[Kategorie, ...] = (
     # man wegschalten koennen soll — es ist der einzige Weg, auf dem der
     # Betrieb ueberhaupt davon erfaehrt (bis hierher gab es keinen).
     Kategorie("zustellproblem", Tab.KONTO, "aktivitaet", ()),
+    # Eine offene Portal-Anfrage (Voranfrage, Buchungsanfrage,
+    # Aenderungswunsch, 0398). E-MAIL IST PFLICHT und das ist keine Willkuer:
+    # Anders als bei einer Gastnachricht ist Nichtstun hier eine ENTSCHEIDUNG —
+    # Airbnb lehnt nach Ablauf der Frist selbst ab. Wer die Meldung abschalten
+    # koennte, verloere Buchungen, ohne je zu erfahren, dass es sie gab. SMS
+    # bleibt waehlbar, weil die Frist knapp sein kann.
+    Kategorie("anfrage_offen", Tab.KONTO, "aktivitaet", _MAIL_SMS, email_pflicht=True),
 )
 
 NACH_SCHLUESSEL: dict[str, Kategorie] = {k.schluessel: k for k in KATALOG}

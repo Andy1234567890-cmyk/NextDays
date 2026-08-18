@@ -8,6 +8,10 @@ was über Channex lief. Konversationen anderer Herkunft haben eigene Tabellen:
 * `guest_message_threads`/`guest_messages` (0181/0196) — der myBestDays-
   Marktplatz, ein Buchungskanal wie Booking oder Airbnb, den wir selbst
   betreiben.
+* `channex_webhook_event` (0284/0398) — offene Airbnb-Anfragen (Voranfrage,
+  Buchungsanfrage, Änderungswunsch). Sie sind KEINE Buchung und haben deshalb
+  keine `channex_booking`-Zeile, verlangen aber innerhalb von 24 Stunden eine
+  Entscheidung.
 
 Sie werden GELESEN und in die `InboxThread`-Form gebracht; es wandert nichts
 (`channex_booking.channex_booking_id` ist NOT NULL + unique — dort hineinzu-
@@ -24,7 +28,7 @@ from __future__ import annotations
 
 from supabase import Client
 
-from . import marktplatz, uebernahme
+from . import anfragen, marktplatz, uebernahme
 from .errors import InboxError
 from .schemas import InboxMessagesResponse, InboxThread
 
@@ -32,9 +36,8 @@ from .schemas import InboxMessagesResponse, InboxThread
 class NebenquellenMixin:
     """Threads der Nicht-Channex-Quellen für `list_threads`."""
 
-    @staticmethod
     def _nebenquelle_verlauf(
-        db: Client, tenant_id: str, thread_id: str, *, scope: str
+        self, db: Client, tenant_id: str, thread_id: str, *, scope: str
     ) -> InboxMessagesResponse | None:
         """Verlauf, wenn der Thread aus einer Nebenquelle stammt — sonst `None`.
 
@@ -46,6 +49,23 @@ class NebenquellenMixin:
             return uebernahme.verlauf_antwort(
                 db, tenant_id, thread_id, scope=scope
             )
+        if anfragen.ist_anfrage(thread_id):
+            # Scope wie in der Liste (Wurzel 9): ein Nutzer mit
+            # „assigned"-Posteingang sieht Anfragen dort nicht, also auch hier
+            # nicht — sonst wäre die Detailansicht offener als die Liste.
+            if scope != "all":
+                raise InboxError("Thread nicht gefunden.", status_code=404)
+            # Der Channex-Client wandert mit: nur ueber ihn kommt der
+            # VOLLSTAENDIGE Nachrichtentext (der Spiegel traegt den
+            # Webhook-Anschnitt). `getattr`, weil dieses Mixin den Client nicht
+            # deklariert — er gehoert dem Service.
+            antwort = anfragen.verlauf_antwort(
+                db, tenant_id, thread_id,
+                client=getattr(self, "_channex", None),
+            )
+            if not antwort.items:
+                raise InboxError("Thread nicht gefunden.", status_code=404)
+            return antwort
         if marktplatz.ist_marktplatz(thread_id):
             # Scope wie in der Liste (Wurzel 9): sonst wäre die Detailansicht
             # offener als die Liste, die diesen Thread gar nicht zeigt.
@@ -110,5 +130,12 @@ class NebenquellenMixin:
                 t for t in marktplatz.threads_lesen(db, tenant_id)
                 if t.is_archived == archiv
             )
+
+        # Airbnb-Anfragen: eine OFFENE Anfrage ist per Definition unerledigt und
+        # gehört nur in die aktive Ansicht. Beantwortete werden gar nicht erst
+        # gelesen — sie sind entweder zur Buchung geworden (eigener Thread) oder
+        # abgelehnt.
+        if status == "active":
+            out.extend(anfragen.threads_lesen(db, tenant_id))
 
         return out
