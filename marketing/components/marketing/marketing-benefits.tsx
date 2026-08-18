@@ -4,8 +4,7 @@
 // jede mit einem Line-Icon in einem hell getönten Kreis, darunter eine kurze,
 // fette Aussage. Keine Karten-Rahmen, keine Kennzahlen-Kacheln — die Ruhe
 // entsteht durch viel Weißraum und die gleiche Höhe der drei Spalten.
-import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 
 import {
   IllustrationBookings,
@@ -13,7 +12,7 @@ import {
   IllustrationOperations,
 } from "@/components/marketing/illustrations";
 import { SectionHeading } from "@/components/marketing/section-kit";
-import { Button } from "@/components/ui/button";
+import { PreisTeaser } from "@/components/preise/preis-teaser";
 
 // Nur Schlüssel + Illustration; die Texte kommen aus messages (benefits.*).
 // Bewusst OHNE Kennzahlen: das Produkt startet erst am 01.09.2026, es gibt
@@ -26,6 +25,9 @@ const BENEFITS = [
 
 export function MarketingBenefits() {
   const t = useTranslations("benefits");
+  // Die Sprache wird an den Teaser durchgegeben: er formatiert Beträge und
+  // darf sie nicht in deutscher Schreibweise an 23 andere Sprachen liefern.
+  const locale = useLocale();
 
   return (
     <>
@@ -49,39 +51,10 @@ export function MarketingBenefits() {
         </div>
       </section>
 
-      {/* Preis-Teaser — eine Karte auf warmem Grund, Preis rechts als
-          eigenständiger Block (Referenz: Hostaways Preis-/CTA-Bänder liegen
-          immer als abgesetzte Karte in der Sektionsfläche, nicht randlos). */}
-      <section id="preise" className="bg-surface-warm pb-24">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="grid items-center gap-10 rounded-3xl border border-border bg-card px-8 py-10 shadow-soft lg:grid-cols-[1.6fr_1fr] lg:px-12">
-            <div>
-              <p className="eyebrow">{t("preisBanner.eyebrow")}</p>
-              <h3 className="mt-4 font-display text-2xl font-semibold leading-tight sm:text-3xl">
-                {t("preisBanner.heading")}
-              </h3>
-              <p className="mt-4 text-muted-foreground">{t("preisBanner.text")}</p>
-            </div>
-
-            <div className="flex flex-col items-start gap-2 rounded-2xl bg-surface-accent p-6">
-              <p className="whitespace-nowrap">
-                <span className="font-display text-4xl font-semibold text-accent">
-                  {t("preisBanner.preis")}
-                </span>
-                <span className="ml-1.5 text-base font-semibold">
-                  {t("preisBanner.proMonat")}
-                </span>
-              </p>
-              <p className="text-sm font-medium">{t("preisBanner.tarif")}</p>
-              <p className="text-sm text-muted-foreground">{t("preisBanner.objekte")}</p>
-              <p className="text-sm text-muted-foreground">{t("preisBanner.provision")}</p>
-              <Button asChild variant="accent" className="mt-4 w-full">
-                <Link href="#testen">{t("preisBanner.cta")}</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Preis-Teaser: eigene Komponente, weil die Beträge SERVERSEITIG aus
+          der Preisliste kommen (kein Betrag in den 24 Sprachdateien) und von
+          hier auf die Preisseite /preise führen. */}
+      <PreisTeaser locale={locale} />
     </>
   );
 }

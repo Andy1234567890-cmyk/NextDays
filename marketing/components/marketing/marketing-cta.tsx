@@ -58,7 +58,7 @@ export function MarketingCta() {
                 variant="outline"
                 className="border-accent-foreground/40 bg-transparent text-accent-foreground hover:bg-accent-foreground/10"
               >
-                <Link href="#preise">{t("ctaSekundaer")}</Link>
+                <Link href="/preise">{t("ctaSekundaer")}</Link>
               </Button>
             </div>
           </div>
