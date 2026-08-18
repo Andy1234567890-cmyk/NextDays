@@ -244,7 +244,7 @@ export default function ItemsCard({
                   <div className="max-h-100 overflow-y-auto p-4">
                     {loadingSavedServices ? (
                       <div className="flex items-center gap-2 p-2">
-                        <Icon icon="lucide:loader2" className="h-4 w-4 animate-spin" />
+                        <Icon icon="lucide:loader-circle" className="h-4 w-4 animate-spin" />
                         <span>{t('itemsCard.loadingServices')}</span>
                       </div>
                     ) : (

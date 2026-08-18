@@ -760,7 +760,7 @@ export function InvoiceListView({
                                 )}
                                 {invoice.status === 'draft' && (
                                   <DropdownMenuItem className="text-red-600">
-                                    <Icon icon="lucide:trash2" className="mr-2 h-4 w-4" />
+                                    <Icon icon="lucide:trash-2" className="mr-2 h-4 w-4" />
                                     {t('InvoiceListView.actionDelete')}
                                   </DropdownMenuItem>
                                 )}

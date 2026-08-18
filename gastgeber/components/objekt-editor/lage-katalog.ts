@@ -15,7 +15,7 @@ export const LOCATION_FEATURES: LagekatalogEintrag[] = [
   { slug: "private_entrance", icon: "ph:door" },
   { slug: "resort_access", icon: "ph:buildings" },
   { slug: "ski_in_ski_out", icon: "ph:person-simple-ski" },
-  { slug: "waterfront", icon: "ph:water" },
+  { slug: "waterfront", icon: "ph:drop" },
 ];
 
 // „Scenic views" — 21 Aussichten (Airbnb-Reihenfolge).

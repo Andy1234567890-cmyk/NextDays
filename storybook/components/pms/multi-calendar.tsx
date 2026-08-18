@@ -127,7 +127,7 @@ const PROPERTY_TYPE_CONFIG: Record<
   appartement: { icon: "ph:buildings", label: "Appartement" },
   glamping: { icon: "ph:tent", label: "Glamping" },
   tiny_house: { icon: "ph:house-line", label: "Tiny House" },
-  stellplatz: { icon: "ph:caravan", label: "Stellplatz" },
+  stellplatz: { icon: "ph:van", label: "Stellplatz" },
   hausboot: { icon: "ph:sailboat", label: "Hausboot" },
 };
 

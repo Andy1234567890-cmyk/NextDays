@@ -214,7 +214,7 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
               >
                 {lockingPeriod ? (
                   <>
-                    <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
+                    <Icon icon="lucide:loader-circle" className="mr-2 h-4 w-4 animate-spin" />
                     {t('ManualLockManager.locking')}
                   </>
                 ) : (
@@ -276,7 +276,7 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
                 >
                   {lockingIndividual ? (
                     <>
-                      <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
+                      <Icon icon="lucide:loader-circle" className="mr-2 h-4 w-4 animate-spin" />
                       {t('ManualLockManager.locking')}
                     </>
                   ) : (

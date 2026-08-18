@@ -1,0 +1,22 @@
+{
+  "name": "@nextdays/icons",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Alle benutzten Iconify-Icons als lokales Bündel. Ohne dieses Paket holt @iconify/react jedes Icon zur Laufzeit von api.iconify.design — fällt der Dienst aus oder blockiert ein Browser-Plugin die Domain, ist die Oberfläche icon-los. ADR-0016.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./registrierung": "./src/registrierung.tsx"
+  },
+  "scripts": {
+    "sammeln": "node scripts/sammeln.mjs"
+  },
+  "devDependencies": {
+    "@iconify/json": "^2.2.0",
+    "@iconify/react": "6.0.2"
+  },
+  "peerDependencies": {
+    "@iconify/react": "*",
+    "react": "*"
+  }
+}

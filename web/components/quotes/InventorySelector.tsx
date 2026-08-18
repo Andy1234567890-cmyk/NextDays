@@ -187,7 +187,7 @@ export default function InventorySelector({
           {/* Loading State */}
           {loading && (
             <div className="flex items-center justify-center py-8">
-              <Icon icon="lucide:loader2" className="h-6 w-6 animate-spin text-accent" />
+              <Icon icon="lucide:loader-circle" className="h-6 w-6 animate-spin text-accent" />
               <span className="ml-2 text-gray-600">{t("loadingInventory")}</span>
             </div>
           )}

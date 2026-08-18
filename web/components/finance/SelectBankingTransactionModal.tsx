@@ -598,7 +598,7 @@ export default function SelectBankingTransactionModal({
           <div className="rounded-lg border bg-white" style={{ height: '500px' }}>
             {loading ? (
               <div className="flex h-full items-center justify-center">
-                <Icon icon="lucide:loader2" className="h-8 w-8 animate-spin" />
+                <Icon icon="lucide:loader-circle" className="h-8 w-8 animate-spin" />
                 <span className="ml-2">{t('SelectBankingTransactionModal.loadingTransactions')}</span>
               </div>
             ) : filteredTransactions.length === 0 ? (

@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import { textrichtung } from "@/i18n/locales";
 
 import "./globals.css";
+import { IconsRegistrieren } from "@nextdays/icons/registrierung";
 
 // Titel und Beschreibung sprachabhängig: Sie stehen im Browser-Tab und in der
 // Lesezeichenliste — ein fest deutscher Titel wäre dort auch für einen
@@ -31,6 +32,8 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={textrichtung(locale)}>
       <body className="font-sans antialiased">
+        {/* Icons lokal registrieren, bevor das erste Icon rendert (0410). */}
+        <IconsRegistrieren />
         <NextIntlClientProvider>
           {children}
           <Toaster richColors position="top-right" />

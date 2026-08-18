@@ -899,7 +899,7 @@ function AddCustomerModal({
                             onClick={() => removeContactPerson(index)}
                             className="h-6 px-2 text-red-600 hover:text-red-700"
                           >
-                            <Icon icon="lucide:trash2" className="h-3 w-3" />
+                            <Icon icon="lucide:trash-2" className="h-3 w-3" />
                           </Button>
                         )}
                       </div>
@@ -1025,7 +1025,7 @@ function AddCustomerModal({
                   disabled={loading}
                   className="bg-accent hover:bg-accent/90"
                 >
-                  {loading && <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />}
+                  {loading && <Icon icon="lucide:loader-circle" className="mr-2 h-4 w-4 animate-spin" />}
                   {t('AddCustomerModal.submitAddCustomer')}
                 </Button>
               </DialogFooter>

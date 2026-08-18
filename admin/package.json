@@ -14,13 +14,14 @@
     "@iconify/react": "6.0.2",
     "@nextdays/auth": "workspace:*",
     "@nextdays/currency": "workspace:*",
+    "@nextdays/icons": "workspace:*",
     "@nextdays/security-headers": "workspace:*",
     "@nextdays/ui": "workspace:*",
+    "@supabase/supabase-js": "2.108.2",
     "next": "^15.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "sonner": "2.0.7",
-    "@supabase/supabase-js": "2.108.2"
+    "sonner": "2.0.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",

@@ -410,7 +410,7 @@ export default function NewProductModal({
                         aria-label={t("removeUnit")}
                         onClick={() => setPartUnities(list => list.filter((_, i) => i !== idx))}
                       >
-                        <Icon icon="lucide:trash2" className="h-4 w-4" />
+                        <Icon icon="lucide:trash-2" className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -495,7 +495,7 @@ export default function NewProductModal({
                 }
               }}
             >
-              {saving ? <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {saving ? <Icon icon="lucide:loader-circle" className="mr-2 h-4 w-4 animate-spin" /> : null}
               Speichern
             </Button>
           </div>

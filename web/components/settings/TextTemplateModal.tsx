@@ -483,7 +483,7 @@ vielen Dank für Ihre Anfrage. Anbei erhalten Sie unser Angebot..."
               disabled={loading || !formData.name.trim() || !formData.text.trim()}
               className="min-w-30 bg-accent text-white hover:bg-teal-700"
             >
-              {loading && <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />}
+              {loading && <Icon icon="lucide:loader-circle" className="mr-2 h-4 w-4 animate-spin" />}
               {template ? 'Speichern' : 'Erstellen'}
             </Button>
           </div>

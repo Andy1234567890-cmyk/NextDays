@@ -242,7 +242,7 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
                     </>
                   ) : (
                     <>
-                      <Icon icon="lucide:bar-chart3" className="mr-2 h-4 w-4" />
+                      <Icon icon="lucide:chart-bar" className="mr-2 h-4 w-4" />
                       {t('ComplianceDashboard.refresh')}
                     </>
                   )}

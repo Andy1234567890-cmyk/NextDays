@@ -126,7 +126,7 @@ export function DatenschutzAbschnitt({
                 hint={t("dsDatenExportText")}
               />
               <VorbereitungZeile
-                icon="solar:cookie-line-duotone"
+                icon="ph:cookie"
                 label={t("dsCookies")}
                 hint={t("dsCookiesText")}
               />

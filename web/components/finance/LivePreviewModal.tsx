@@ -840,7 +840,7 @@ export function LivePreviewModal({
                             className="w-full bg-accent hover:bg-teal-700"
                           >
                             {sending ? (
-                              <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
+                              <Icon icon="lucide:loader-circle" className="mr-2 h-4 w-4 animate-spin" />
                             ) : (
                               <Icon icon="lucide:download" className="mr-2 h-4 w-4" />
                             )}
@@ -1383,7 +1383,7 @@ export function LivePreviewModal({
             {loadingEInvoiceData ? (
               <div className="flex h-full items-center justify-center">
                 <div className="flex items-center gap-3 text-gray-500">
-                  <Icon icon="lucide:loader2" className="h-6 w-6 animate-spin" />
+                  <Icon icon="lucide:loader-circle" className="h-6 w-6 animate-spin" />
                   <span>
                     {t('LivePreviewModal.loading', {
                       docType: documentLabels[documentType] || t('LivePreviewModal.docType.generic'),

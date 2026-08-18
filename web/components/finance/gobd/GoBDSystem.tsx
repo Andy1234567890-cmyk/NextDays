@@ -43,7 +43,7 @@ export function GoBDSystem({ companyId, userRole = 'user', className }: GoBDSyst
     {
       id: 'dashboard',
       label: t('GoBDSystem.tabDashboard'),
-      icon: <Icon icon="lucide:bar-chart3" className="h-4 w-4" />,
+      icon: <Icon icon="lucide:chart-bar" className="h-4 w-4" />,
       component: <ComplianceDashboard companyId={companyId} userRole={userRole} />,
     },
     {

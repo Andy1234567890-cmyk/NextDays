@@ -16,7 +16,7 @@ export async function VorbereitungAbschnitt({ titelKey }: { titelKey: string }) 
       <div className="flex flex-col items-start gap-4 rounded-2xl border border-border p-8">
         <span className="flex size-12 items-center justify-center rounded-xl bg-muted">
           <Icon
-            icon="solar:hammer-line-duotone"
+            icon="ph:hammer"
             className="size-6 text-muted-foreground"
           />
         </span>

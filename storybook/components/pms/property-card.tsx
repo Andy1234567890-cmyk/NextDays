@@ -58,7 +58,7 @@ const PROPERTY_TYPE_ICON: Record<PropertyType, string> = {
   appartement: "ph:buildings",
   glamping: "ph:tent",
   tiny_house: "ph:house-line",
-  stellplatz: "ph:caravan",
+  stellplatz: "ph:van",
   hausboot: "ph:sailboat",
 };
 

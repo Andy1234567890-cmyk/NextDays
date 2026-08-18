@@ -8,10 +8,10 @@ import { useEffect, useRef, useState } from "react";
 
 const ZIEL_VORSCHLAEGE = [
   { icon: "ph:navigation-arrow", ort: "In der Nähe", text: "Finde heraus, was es in deiner Nähe gibt.", nahbei: true },
-  { icon: "ph:eiffel-tower", ort: "Paris, Frankreich", text: "Wegen Sehenswürdigkeiten wie dem Eiffelturm" },
+  { icon: "ph:buildings", ort: "Paris, Frankreich", text: "Wegen Sehenswürdigkeiten wie dem Eiffelturm" },
   { icon: "ph:sun-horizon", ort: "Barcelona, Spanien", text: "Beliebtes Reiseziel am Strand" },
   { icon: "ph:moon-stars", ort: "Bangkok, Thailand", text: "Wegen des pulsierenden Nachtlebens" },
-  { icon: "ph:shrine", ort: "Tokio, Japan", text: "Wegen der atemberaubenden Architektur" },
+  { icon: "ph:bank", ort: "Tokio, Japan", text: "Wegen der atemberaubenden Architektur" },
   { icon: "ph:buildings", ort: "Hamburg, Deutschland", text: "Wegen Sehenswürdigkeiten wie der Speicherstadt" },
   { icon: "ph:fork-knife", ort: "Rom, Italien", text: "Wegen der erstklassigen Restaurants" },
 ];

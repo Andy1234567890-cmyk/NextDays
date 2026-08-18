@@ -725,7 +725,7 @@ export default function NewCustomerModal({
                   : 'border border-gray-200 bg-white text-gray-600 hover:text-gray-800'
               }`}
             >
-              <Icon icon="lucide:building2" className="h-4 w-4" />
+              <Icon icon="lucide:building-2" className="h-4 w-4" />
               {t('NewCustomerModal.typeOrganisation')}
             </button>
           </div>
@@ -2054,7 +2054,7 @@ export default function NewCustomerModal({
               }}
             >
               {saving || loading ? (
-                <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
+                <Icon icon="lucide:loader-circle" className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
               {loading ? t('NewCustomerModal.savingButton') : t('NewCustomerModal.saveButton')}
             </Button>

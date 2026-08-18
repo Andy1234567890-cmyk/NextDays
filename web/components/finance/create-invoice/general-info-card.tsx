@@ -103,7 +103,7 @@ export function InvoiceHeaderBar({
               disabled={loading}
             >
               {loading ? (
-                <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
+                <Icon icon="lucide:loader-circle" className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Icon icon="lucide:save" className="mr-2 h-4 w-4" />
               )}
@@ -127,7 +127,7 @@ export function InvoiceHeaderBar({
               disabled={loading}
             >
               {loading ? (
-                <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
+                <Icon icon="lucide:loader-circle" className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Icon icon="lucide:send" className="mr-2 h-4 w-4" />
               )}

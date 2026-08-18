@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
+import { IconsRegistrieren } from "@nextdays/icons/registrierung";
 
 // Schriften liegen LOKAL im Repo (apps/web/fonts/) — kein Google-Download,
 // garantiert verfügbar, DSGVO-konform. Beide sind SIL-OFL-lizenziert.
@@ -37,6 +38,8 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={`${inter.variable} ${fraunces.variable} antialiased`}>
+        {/* Icons lokal registrieren, bevor das erste Icon rendert (0410). */}
+        <IconsRegistrieren />
         <NextIntlClientProvider>
           <ThemeProvider
             attribute="class"

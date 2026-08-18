@@ -29,7 +29,7 @@ import { SuchLeiste } from "./such-leiste";
 const TABS = [
   { icon: "ph:squares-four", key: "unterkuenfte" },
   { icon: "ph:sparkle", key: "erlebnisse" },
-  { icon: "ph:concierge-bell", key: "services" },
+  { icon: "ph:bell-ringing", key: "services" },
 ];
 
 export function PlattformNav({ kontoSlot }: { kontoSlot?: React.ReactNode }) {

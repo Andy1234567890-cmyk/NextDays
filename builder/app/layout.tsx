@@ -12,6 +12,7 @@ import type { Metadata } from "next";
 import { getSiteContext } from "@/lib/site-context";
 
 import "./globals.css";
+import { IconsRegistrieren } from "@nextdays/icons/registrierung";
 
 const DEFAULT_TITLE = "myNextDays — Unterkünfte finden & buchen";
 const DEFAULT_DESCRIPTION =
@@ -49,7 +50,9 @@ export default async function RootLayout({
 
   return (
     <html lang="de" style={brandStyle as CSSProperties}>
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        {/* Icons lokal registrieren, bevor das erste Icon rendert (0410). */}
+        <IconsRegistrieren />{children}</body>
     </html>
   );
 }

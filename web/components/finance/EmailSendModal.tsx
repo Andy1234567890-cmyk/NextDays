@@ -1142,7 +1142,7 @@ export function EmailSendModal({
                         className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700"
                         title={t('EmailSendModal.attachments.removeTitle')}
                       >
-                        <Icon icon="lucide:trash2" className="h-4 w-4" />
+                        <Icon icon="lucide:trash-2" className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}
@@ -1167,7 +1167,7 @@ export function EmailSendModal({
                     >
                       {uploadingFile ? (
                         <>
-                          <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
+                          <Icon icon="lucide:loader-circle" className="mr-2 h-4 w-4 animate-spin" />
                           {t('EmailSendModal.attachments.uploading')}
                         </>
                       ) : (
@@ -1235,7 +1235,7 @@ export function EmailSendModal({
               >
                 {sending ? (
                   <>
-                    <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
+                    <Icon icon="lucide:loader-circle" className="mr-2 h-4 w-4 animate-spin" />
                     {t('EmailSendModal.footer.sending')}
                   </>
                 ) : (

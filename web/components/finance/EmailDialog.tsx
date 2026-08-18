@@ -161,7 +161,7 @@ export function EmailDialog({ isOpen, onClose, invoice, companyId }: EmailDialog
             >
               {sending ? (
                 <>
-                  <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
+                  <Icon icon="lucide:loader-circle" className="mr-2 h-4 w-4 animate-spin" />
                   {t('EmailDialog.sending')}
                 </>
               ) : (

@@ -9,6 +9,7 @@ import type { Metadata } from "next";
 import { Toaster } from "sonner";
 
 import "./globals.css";
+import { IconsRegistrieren } from "@nextdays/icons/registrierung";
 
 export const metadata: Metadata = {
   title: "myNextDays — Backoffice",
@@ -22,6 +23,8 @@ export default function RootLayout({
   return (
     <html lang="de">
       <body className="font-sans antialiased">
+        {/* Icons lokal registrieren, bevor das erste Icon rendert (0410). */}
+        <IconsRegistrieren />
         {children}
         <Toaster richColors position="top-right" />
       </body>

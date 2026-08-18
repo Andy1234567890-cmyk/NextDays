@@ -182,7 +182,7 @@ export default function NewCategoryModal({
               disabled={Boolean(saving) || !isValid()}
               onClick={handleSave}
             >
-              {saving ? <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {saving ? <Icon icon="lucide:loader-circle" className="mr-2 h-4 w-4 animate-spin" /> : null}
               {t('NewCategoryModal.submit')}
             </Button>
           </div>

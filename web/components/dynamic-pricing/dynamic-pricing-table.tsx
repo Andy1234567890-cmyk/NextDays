@@ -56,7 +56,13 @@ const CHANNEL_LOGO: Record<string, { label: string; icon: string }> = {
   BookingCom: { label: "Booking.com", icon: "simple-icons:bookingdotcom" },
   AirBNB: { label: "Airbnb", icon: "simple-icons:airbnb" },
   Expedia: { label: "Expedia", icon: "simple-icons:expedia" },
-  VRBO: { label: "Vrbo", icon: "simple-icons:vrbo" },
+  // Vrbo: simple-icons fuehrt die Marke nicht. Das ECHTE Logo liegt als
+  // /channels/vrbo.svg und steht in `lib/channel-logos.ts` — diese Tabelle
+  // rendert aber ueber <Icon> und kann nur Iconify-Namen. Bis die Zelle auf
+  // die zentrale Logo-Quelle umgestellt ist, steht hier ein neutrales
+  // Zeichen statt eines nachgezeichneten Markenlogos (Projektregel: Logos
+  // nur echt, sonst keins).
+  VRBO: { label: "Vrbo", icon: "ph:house-line" },
   OpenChannel: { label: "Testkanal", icon: "ph:plug-fill" },
 };
 
