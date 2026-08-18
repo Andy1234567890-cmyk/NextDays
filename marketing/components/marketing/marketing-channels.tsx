@@ -8,7 +8,12 @@
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 
+// myBestDays steht ZUERST und nicht am Ende der Fremdportale: es ist unser
+// eigener Marktplatz und ein gleichrangiger Vertriebskanal — wer myNextDays
+// bucht, bekommt ihn ohne Zusatzvertrag. Genau das ist das Verkaufsargument,
+// das die Reihe sonst nicht erzählt.
 const CHANNELS = [
+  { src: "/marketing/channels/mybestdays.png", alt: "myBestDays" },
   { src: "/marketing/channels/booking-com.svg", alt: "Booking.com" },
   { src: "/marketing/channels/airbnb.png", alt: "Airbnb" },
   { src: "/marketing/channels/expedia.svg", alt: "Expedia" },
@@ -33,17 +38,21 @@ export function MarketingChannels() {
         {/* Karten mit Original-Logofarben: die Exporte bringen eigene weiße
             Hintergrundflächen mit — jeder CSS-Filter würde sie als Blöcke
             sichtbar machen. */}
-        <div className="mt-5 grid grid-cols-3 gap-3 sm:gap-4 lg:grid-cols-6">
+        {/* Flex statt Grid, seit myBestDays als siebtes Logo dazukam: bei
+            sieben Karten in einem 3-spaltigen Raster steht die letzte allein
+            am linken Rand. `flex-wrap` mit fester Kartenbreite bricht
+            genauso um, zentriert die angebrochene Reihe aber. */}
+        <div className="mt-5 flex flex-wrap justify-center gap-3 sm:gap-4">
           {CHANNELS.map((ch) => (
             <div
               key={ch.alt}
-              className="flex h-16 items-center justify-center rounded-xl border border-border bg-card px-4 shadow-card transition hover:shadow-soft"
+              className="flex h-16 w-[calc((100%-1.5rem)/3)] items-center justify-center rounded-xl border border-border bg-card px-4 shadow-card transition hover:shadow-soft sm:w-[calc((100%-2rem)/3)] lg:w-[calc((100%-6*1rem)/7)]"
             >
               <Image
                 src={ch.src}
                 alt={ch.alt}
-                width={181}
-                height={68}
+                width={303}
+                height={120}
                 className="h-full w-auto object-contain py-3"
               />
             </div>
