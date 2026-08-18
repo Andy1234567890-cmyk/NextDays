@@ -184,6 +184,7 @@ def get_current_user(
     )
     _mfa_gate(request, ctx)
     _aktiv_gate(ctx)
+    _demo_gate(request, ctx)
     return ctx
 
 
@@ -203,6 +204,25 @@ def _aktiv_gate(ctx: AuthContext) -> None:
     from src.features.auth.aktiv_gate import aktiv_zugang_pruefen  # noqa: PLC0415
 
     aktiv_zugang_pruefen(ctx)
+
+
+def _demo_gate(request: Request, ctx: AuthContext) -> None:
+    """Der NUR-LESE-Riegel für den öffentlichen Demo-Mandanten (0407).
+
+    Sitzt hier und nicht in den Routen: das Demo-Konto ist öffentlich
+    anmeldbar, und von 536 schreibenden Routen tragen 76 gar keinen
+    Rollen-Guard. Geprüft wird deshalb die METHODE an der einen Stelle, die
+    jeder geschützte Endpunkt durchläuft — damit ist auch jede künftige Route
+    ohne Guard gedeckt.
+
+    Import in der Funktion, weil `features.auth` seinerseits `core.security`
+    importiert.
+    """
+    from src.features.auth.demo_gate import (  # noqa: PLC0415
+        demo_schreibzugriff_pruefen,
+    )
+
+    demo_schreibzugriff_pruefen(request.method, ctx)
 
 
 def _mfa_gate(request: Request, ctx: AuthContext) -> None:
