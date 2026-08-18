@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { DeployLog } from "@/lib/backoffice";
 import { logHolen } from "@/lib/deploy-actions";
 import { type RealtimePayload, useRealtime } from "@/lib/use-realtime";
+import { uhrzeit } from "@/lib/datum";
 
 const LAEUFT = new Set(["queued", "in_progress"]);
 
@@ -136,7 +137,7 @@ export function DeployLogAnsicht({
               >
                 {z.zeit ? (
                   <span className="mr-3 select-none text-muted-foreground">
-                    {new Date(z.zeit).toLocaleTimeString("de-DE")}
+                    {uhrzeit(z.zeit)}
                   </span>
                 ) : null}
                 {z.text}

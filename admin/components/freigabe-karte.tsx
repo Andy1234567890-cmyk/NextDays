@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import type { ModerationProperty } from "@/lib/backoffice";
 import { ablehnen, freigeben } from "@/lib/moderation-actions";
+import { datumZeit } from "@/lib/datum";
 
 export function FreigabeKarte({
   objekt,
@@ -85,7 +86,7 @@ export function FreigabeKarte({
           {objekt.moderation_submitted_at && (
             <p className="mt-1 text-xs text-muted-foreground">
               Eingereicht am{" "}
-              {new Date(objekt.moderation_submitted_at).toLocaleString("de-DE")}
+              {datumZeit(objekt.moderation_submitted_at)}
             </p>
           )}
           {objekt.moderation_note && (

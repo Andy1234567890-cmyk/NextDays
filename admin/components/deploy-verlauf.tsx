@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 
 import type { DeployEreignis } from "@/lib/backoffice";
 import { useRealtime } from "@/lib/use-realtime";
+import { datumZeit } from "@/lib/datum";
 
 /** Farbe UND Text — Status nie nur über Farbe (WCAG 1.4.1). */
 const STATUS: Record<string, { label: string; stil: string }> = {
@@ -219,7 +220,7 @@ export function DeployVerlaufListe({
                   {e.erkannt_at ? (
                     <span
                       className="text-xs text-muted-foreground"
-                      title={`Vom Worker bemerkt: ${new Date(e.erkannt_at).toLocaleString("de-DE")}`}
+                      title={`Vom Worker bemerkt: ${datumZeit(e.erkannt_at)}`}
                     >
                       erkannt {seit(jetzt - new Date(e.erkannt_at).getTime())}
                     </span>

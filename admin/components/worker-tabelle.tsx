@@ -20,6 +20,7 @@ import type { WorkerEreignis } from "@/lib/backoffice";
 // Über Server Actions, NICHT direkt aus `lib/backoffice`: dessen `api()` liest
 // den Bearer aus einem httpOnly-Cookie und ist aus dem Browser nicht
 // erreichbar — der Direktaufruf lief in 401 („Details nicht ladbar.").
+import { datumZeit } from "@/lib/datum";
 import {
   workerDetailHolen,
   workerEreignisseHolen,
@@ -318,7 +319,7 @@ function Zeile({ ereignis: e }: { ereignis: WorkerEreignis }) {
         }`}
       >
         <td className="py-2 pr-4 whitespace-nowrap font-mono text-xs text-muted-foreground">
-          {new Date(e.erfasst_at).toLocaleString("de-DE")}
+          {datumZeit(e.erfasst_at)}
         </td>
         <td className="py-2 pr-4 text-muted-foreground">{e.richtung}</td>
         <td className="py-2 pr-4 font-mono text-xs">{e.vorgang}</td>
