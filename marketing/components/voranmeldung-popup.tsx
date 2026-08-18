@@ -52,6 +52,20 @@ export function VoranmeldungPopup() {
   const [fehler, setFehler] = useState<string | null>(null);
   const [fertig, setFertig] = useState<string | null>(null);
 
+  // Aufruf MIT dem Anker in der URL (#voranmeldung) — der Weg von ausserhalb
+  // dieser App. Das Demo-Band im Dashboard verlinkt hierher; ohne diese Pruefung
+  // laege der Besucher auf der Startseite, und das Popup blieb zu, weil der
+  // Klick-Abfang unten nur INNERHALB der Marketing-Seite greift.
+  useEffect(() => {
+    if (!VOR_DEM_START) return;
+    if (window.location.hash !== VORANMELDUNG_ZIEL) return;
+    setQuelle("popup_extern");
+    setOffen(true);
+    // Anker aus der Adresse entfernen: sonst oeffnet ein Neuladen der Seite das
+    // Popup wieder, obwohl der Besucher es geschlossen hat.
+    window.history.replaceState(null, "", window.location.pathname);
+  }, []);
+
   // Klicks auf App-Links abfangen (Capture-Phase, damit Next.js' Router nicht
   // vorher navigiert).
   useEffect(() => {

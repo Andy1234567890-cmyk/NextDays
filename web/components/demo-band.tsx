@@ -15,7 +15,25 @@
 // in der es gebraucht wird. Stattdessen ist es flach und ruhig gehalten.
 import { Icon } from "@iconify/react";
 
-export function DemoBand({ registrierungsUrl }: { registrierungsUrl: string }) {
+// Vor dem Start fuehrt der Knopf NICHT in eine Registrierung, sondern auf die
+// Marketing-Seite mit dem Anker `#voranmeldung` — dort faengt das
+// Voranmelde-Popup ihn ab und fragt die E-Mail ab. Ein `/signup` waere hier
+// falsch: solange die Voranmeldung laeuft, kann sich niemand selbst ein Konto
+// anlegen, und der Besucher landete in einem Formular ohne Zweck.
+//
+// Der Anker gehoert zur Marketing-App, nicht zu dieser: das Popup lebt in deren
+// Layout. Deshalb eine absolute URL statt eines Router-Links.
+const MARKETING_URL = (
+  process.env.NEXT_PUBLIC_MARKETING_URL ?? "https://mynextdays.com"
+).replace(/\/$/, "");
+
+export const VORANMELDUNG_URL = `${MARKETING_URL}/#voranmeldung`;
+
+export function DemoBand({
+  registrierungsUrl = VORANMELDUNG_URL,
+}: {
+  registrierungsUrl?: string;
+}) {
   return (
     <div
       // `role="note"`, nicht `alert`: es ist eine dauerhafte Randbedingung,
@@ -31,11 +49,16 @@ export function DemoBand({ registrierungsUrl }: { registrierungsUrl: string }) {
       <span className="text-muted-foreground">
         Ein echter Betrieb mit Beispieldaten. Ansehen ja, speichern nein.
       </span>
+      {/* Neuer Tab: wer sich vormerken laesst, soll die Vorfuehrung nicht
+          verlieren — sonst ist der Weg zurueck ein erneuter Demo-Login und
+          damit ein weiterer Treffer im Rate-Limit. */}
       <a
         href={registrierungsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
         className="font-semibold underline underline-offset-4"
       >
-        Eigenen Betrieb anlegen
+        Zugang vormerken
       </a>
     </div>
   );
