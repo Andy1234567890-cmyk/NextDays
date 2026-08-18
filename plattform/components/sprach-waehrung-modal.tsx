@@ -26,7 +26,14 @@ import {
 // Ein Jahr — dieselbe Lebensdauer wie im Gastgeber-Dashboard.
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
-export function SprachWaehrungModal() {
+export function SprachWaehrungModal({
+  variante = "icon",
+}: {
+  /** `icon` = Globus in der Kopfzeile. `text` = Globus + Sprachname, für die
+   *  Fußzeile. EIN Modal, zwei Auslöser — in der Fußzeile stand vorher ein
+   *  `<button>` ohne onClick, also eine Attrappe, die eine Sprachwahl versprach. */
+  variante?: "icon" | "text";
+}) {
   const t = useTranslations("sprache");
   const router = useRouter();
   const aktiv = useLocale();
@@ -55,17 +62,37 @@ export function SprachWaehrungModal() {
 
   return (
     <>
-      <button
-        type="button"
-        aria-label={t("waehlen")}
-        onClick={() => setOffen(true)}
-        className="flex size-10 items-center justify-center rounded-full transition-colors hover:bg-secondary"
-      >
-        <Icon icon="ph:globe" className="size-5" />
-      </button>
+      {variante === "text" ? (
+        <button
+          type="button"
+          onClick={() => setOffen(true)}
+          className="flex min-h-11 items-center gap-1.5 text-sm font-medium hover:underline sm:min-h-0"
+        >
+          <Icon icon="ph:globe" className="size-4" />
+          {/* Sprachname als Endonym + Sprachcode — aus dem AKTIVEN Locale, nicht
+              als fester Text. Vorher stand hier „Deutsch (DE)" im Code, auch
+              wenn die Seite gerade griechisch war. */}
+          {LOCALE_LABELS[aktiv as Locale] ?? aktiv} ({aktiv.toUpperCase()})
+        </button>
+      ) : (
+        <button
+          type="button"
+          aria-label={t("waehlen")}
+          onClick={() => setOffen(true)}
+          className="flex size-11 items-center justify-center rounded-full transition-colors hover:bg-secondary md:size-10"
+        >
+          <Icon icon="ph:globe" className="size-5" />
+        </button>
+      )}
 
       {offen && (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-foreground/40 p-4 sm:p-8">
+        // `items-start` ist Pflicht, NICHT `items-stretch`: bei stretch bekommt
+        // das Panel die Höhe des Bildschirms zugewiesen, sein Inhalt (24
+        // Sprachen einspaltig) ist aber höher — dann läuft die Liste unten aus
+        // dem gefärbten Kasten heraus und stand ohne Hintergrund über der Seite
+        // (live gesehen am 18.08.2026). `min-h-full` am Panel füllt den
+        // Bildschirm, ohne die Höhe zu erzwingen.
+        <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto overscroll-contain bg-foreground/40 sm:p-8">
           {/* Klick auf den Backdrop schließt */}
           <button
             type="button"
@@ -73,21 +100,29 @@ export function SprachWaehrungModal() {
             onClick={() => setOffen(false)}
             className="fixed inset-0 -z-10 cursor-default"
           />
-          <div className="relative w-full max-w-4xl rounded-3xl bg-card p-6 shadow-2xl sm:p-8">
-            <button
-              type="button"
-              aria-label={t("schliessen")}
-              onClick={() => setOffen(false)}
-              className="absolute left-5 top-5 flex size-8 items-center justify-center rounded-full hover:bg-secondary"
-            >
-              <Icon icon="ph:x" className="size-5" />
-            </button>
+          <div
+            className="relative min-h-full w-full max-w-4xl bg-card shadow-2xl sm:min-h-0 sm:rounded-3xl"
+            style={{ paddingBottom: "calc(1rem + var(--safe-b))" }}
+          >
+            {/* Kopfzeile mobil mitlaufend: einspaltig sind das 24 Einträge, und
+                ein Schließen-Knopf, der nach dem ersten Wisch aus dem Bild ist,
+                lässt den Gast im Modal sitzen. Ab sm bleibt er wie bisher als
+                Kreis in der Ecke. */}
+            <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border bg-card px-3 py-2 sm:static sm:border-0 sm:px-8 sm:pb-0 sm:pt-8">
+              <button
+                type="button"
+                aria-label={t("schliessen")}
+                onClick={() => setOffen(false)}
+                className="flex size-11 shrink-0 items-center justify-center rounded-full hover:bg-secondary sm:size-8"
+              >
+                <Icon icon="ph:x" className="size-5" />
+              </button>
+              <h3 className="font-display text-lg font-semibold sm:ml-2 sm:text-xl">
+                {t("titel")}
+              </h3>
+            </div>
 
-            <h3 className="mb-6 mt-6 font-display text-xl font-semibold sm:mt-2">
-              {t("titel")}
-            </h3>
-
-            <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="mt-4 grid gap-2 px-4 sm:mt-6 sm:grid-cols-3 sm:px-8 lg:grid-cols-4">
               {LOCALES.map((locale) => (
                 <button
                   key={locale}
@@ -95,7 +130,7 @@ export function SprachWaehrungModal() {
                   onClick={() => waehle(locale)}
                   aria-current={locale === aktiv}
                   className={
-                    "rounded-xl border px-4 py-3 text-left transition-colors hover:bg-secondary " +
+                    "min-h-14 rounded-xl border px-4 py-3 text-left transition-colors hover:bg-secondary " +
                     (locale === aktiv ? "border-foreground" : "border-transparent")
                   }
                 >
@@ -109,7 +144,7 @@ export function SprachWaehrungModal() {
               ))}
             </div>
 
-            <p className="mt-6 border-t border-border pt-4 text-sm text-muted-foreground">
+            <p className="mx-4 mt-6 border-t border-border pt-4 text-sm text-muted-foreground sm:mx-8">
               <Icon icon="ph:info" className="mr-1 inline size-4" />
               {t("waehrungHinweis")}
             </p>
