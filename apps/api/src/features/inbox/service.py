@@ -1183,6 +1183,42 @@ class InboxService(
         db.table("channex_booking").update(patch).eq("tenant_id", tenant_id).eq(
             "id", thread_id
         ).execute()
+        if is_read:
+            # Gegenzustand (Wurzel 1): die Glocke meldete diese Konversation
+            # (0406). Wer den Thread liest, hat die Meldung erledigt — bliebe
+            # sie stehen, leuchtete die Glocke fuer bereits Getanes, und das
+            # Sidebar-Abzeichen kaeme nie wieder herunter (es hoert auf
+            # `notifications`, nicht auf `channex_booking`).
+            self._glocke_stilllegen(db, tenant_id, thread_id)
+
+    @staticmethod
+    def _glocke_stilllegen(db: Client, tenant_id: str, thread_id: str) -> None:
+        """Offene Glocken-Meldungen zu diesem Thread als gelesen markieren.
+
+        Fuer ALLE Nutzer des Betriebs, nicht nur den Lesenden: die Meldung ging
+        an die Betriebsleitung, und die Konversation ist gelesen, sobald EINER
+        sie geoeffnet hat. Bliebe sie bei den Kollegen stehen, arbeiteten drei
+        Leute dieselbe Nachricht ab.
+
+        Nur ungelesene (`gelesen_am is null`) — genau der partielle Index aus
+        0406. Best-effort: schlaegt es fehl, ist der Thread trotzdem gelesen;
+        die Glocke haengt dann nach, kippt aber nicht den Hauptpfad
+        (Wurzel 5).
+        """
+        try:
+            (
+                db.table("notifications")
+                .update({"gelesen_am": datetime.now(UTC).isoformat()})
+                .eq("tenant_id", tenant_id)
+                .eq("thread_ref", thread_id)
+                .is_("gelesen_am", "null")
+                .execute()
+            )
+        except Exception as exc:  # noqa: BLE001 — Nebenpfad kippt das Lesen nicht
+            log.warning(
+                "glocke_stilllegen_fehlgeschlagen",
+                thread_id=thread_id, error=str(exc)[:200],
+            )
 
     # --- Lebenszyklus: Archiv / Papierkorb / Löschen ------------------------
     _SET_STATUSES = ("active", "archived", "trashed", "deleted")

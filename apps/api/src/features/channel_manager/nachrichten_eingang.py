@@ -532,8 +532,80 @@ class NachrichtenEingangMixin:
                     .eq("id", thread_id)
                     .execute()
                 )
+                # Glocke (0406). An DIESER Bedingung und keiner anderen: sie
+                # ist die einzige Stelle im Eingang, die eine echte neue
+                # Gastnachricht von der Wiederholung des Journal-Ticks
+                # unterscheidet. Eine Meldung im Fuenf-Minuten-Takt waere
+                # schlimmer als keine.
+                self._glocke_melden(tenant_id, thread_id)
         except Exception as exc:  # noqa: BLE001 — Signal kippt den Eingang nicht
             log.warning(
                 "nachricht_signal_fehlgeschlagen",
                 thread_id=thread_id, error=str(exc)[:200],
             )
+
+    def _glocke_melden(self, tenant_id: str, thread_id: str) -> None:
+        """Die Betriebsleitung ueber eine neue Gastnachricht benachrichtigen.
+
+        Lokaler Import wie ueberall bei `ereignisse` (Zyklus: der Melder kennt
+        den Dispatcher, der Dispatcher den Katalog).
+
+        Absender und Vorschau kommen aus dem gerade geschriebenen Spiegel statt
+        aus dem Rohsatz: dort stehen sie bereits normalisiert, und faellt die
+        Abfrage aus, meldet die Glocke eben ohne Namen — das ist besser als
+        keine Meldung (Wurzel 5: der Nebenpfad kippt den Eingang nicht).
+        """
+        from src.features.notification_settings.ereignisse import (  # noqa: PLC0415
+            melde_gastnachricht,
+        )
+
+        absender, vorschau = self._nachricht_vorschau(tenant_id, thread_id)
+        melde_gastnachricht(
+            self._db,
+            tenant_id=tenant_id,
+            thread_id=thread_id,
+            absender=absender,
+            vorschau=vorschau,
+        )
+
+    def _nachricht_vorschau(
+        self, tenant_id: str, thread_id: str
+    ) -> tuple[str | None, str | None]:
+        """(Gastname, Textanfang) der juengsten Gastnachricht dieses Threads."""
+        if self._db is None:
+            return (None, None)
+        try:
+            zeilen = (
+                self._db.table("portal_messages")
+                .select("body")
+                .eq("tenant_id", tenant_id)
+                .eq("thread_ref", thread_id)
+                .eq("sender", "guest")
+                .order("sent_at", desc=True)
+                .limit(1)
+                .execute()
+            ).data or []
+            body = str(zeilen[0].get("body") or "") if zeilen else None
+            gast = (
+                self._db.table("channex_booking")
+                .select("customer")
+                .eq("tenant_id", tenant_id)
+                .eq("id", thread_id)
+                .limit(1)
+                .execute()
+            ).data or []
+            kunde = gast[0].get("customer") if gast else None
+            name = None
+            if isinstance(kunde, dict):
+                voll = " ".join(
+                    str(kunde.get(t) or "").strip()
+                    for t in ("name", "surname")
+                ).strip()
+                name = voll or None
+            return (name, body)
+        except Exception as exc:  # noqa: BLE001 — Vorschau ist Beiwerk
+            log.warning(
+                "nachricht_vorschau_fehlgeschlagen",
+                thread_id=thread_id, error=str(exc)[:200],
+            )
+            return (None, None)

@@ -715,3 +715,76 @@ def melde_zustellproblem(
             quelle_id=quelle_id,
             error=str(exc)[:200],
         )
+
+
+# --- Neue Gastnachricht im Posteingang (0406) -------------------------------
+
+SCHLUESSEL_NACHRICHT = "messages"
+
+# Wer im Betrieb erfaehrt, dass ein Gast geschrieben hat. Wie beim
+# Zustellproblem nur die Leitung: eine Reinigungskraft kann auf eine
+# Gastanfrage nicht antworten, und der Nachrichtentext gehoert nicht in Rollen,
+# die ihn nicht brauchen (Wurzel 9).
+_NACHRICHT_ROLLEN = _ZUSTELL_ROLLEN
+
+# Vorschau in der Glocke. Kurz genug, dass die Meldung eine Zeile bleibt, lang
+# genug, um zu erkennen, worum es geht.
+_VORSCHAU_ZEICHEN = 140
+
+
+def melde_gastnachricht(
+    db: Client,
+    *,
+    tenant_id: str,
+    thread_id: str,
+    absender: str | None = None,
+    vorschau: str | None = None,
+) -> None:
+    """„Ein Gast hat geschrieben." — Glocke fuer eine NEUE Gastnachricht.
+
+    WOZU: Die Kategorie `messages` steht seit jeher im Katalog, wurde aber von
+    keiner Stelle ausgeloest — die Glocke schwieg zu Nachrichten, und das
+    Sidebar-Abzeichen hoerte auf ein Signal, das es nicht gab. Wer nicht
+    zufaellig in den Posteingang schaute, erfuhr von einer Gastanfrage nichts.
+
+    NUR ECHTE NEUZUGAENGE: Der Aufrufer entscheidet das
+    (`nachrichten_eingang`, Bedingung `sender == "guest" and neu`). Der
+    Journal-Tick spiegelt alle fuenf Minuten dasselbe Fenster erneut; ohne
+    diese Unterscheidung meldete jede Nachricht im Dauertakt.
+
+    ENTDOPPLUNG ueber den THREAD, nicht die Nachricht: schreibt ein Gast
+    dreimal hintereinander, ist das EIN offener Vorgang und gehoert einmal
+    gemeldet. Der partielle UNIQUE-Index greift nur auf ungelesene Meldungen —
+    hat der Betrieb den Thread gelesen und der Gast schreibt erneut, meldet es
+    wieder.
+
+    `thread_ref` traegt den Bezug (0406), damit
+    `InboxService.update_thread_flags` die Meldung beim Lesen stilllegen kann.
+    """
+    try:
+        empfaenger = _betriebsleitung(db, tenant_id)
+        if not empfaenger:
+            return
+        dispatcher = _dispatcher(db)
+        titel = (
+            f"Neue Nachricht von {absender}" if absender else "Neue Gastnachricht"
+        )
+        text = (vorschau or "").strip()[:_VORSCHAU_ZEICHEN]
+        for user_id in sorted(empfaenger):
+            dispatcher.sende(
+                user_id=user_id,
+                schluessel=SCHLUESSEL_NACHRICHT,
+                betreff=titel,
+                text=text,
+                tenant_id=tenant_id,
+                ziel_pfad=f"/posteingang/{thread_id}",
+                thread_ref=thread_id,
+                dedup_key=f"nachricht:{thread_id}",
+            )
+    except Exception as exc:  # noqa: BLE001 — Meldung kippt den Eingang nie
+        log.warning(
+            "gastnachricht_meldung_fehlgeschlagen",
+            tenant_id=tenant_id,
+            thread_id=thread_id,
+            error=str(exc)[:200],
+        )

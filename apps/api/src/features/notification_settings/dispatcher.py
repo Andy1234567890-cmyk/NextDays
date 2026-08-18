@@ -150,6 +150,7 @@ class NotificationDispatcher:
         tenant_id: str | None = None,
         ziel_pfad: str | None = None,
         property_id: str | None = None,
+        thread_ref: str | None = None,
         dedup_key: str | None = None,
         inapp: bool = True,
         betreff_key: str | None = None,
@@ -217,7 +218,8 @@ class NotificationDispatcher:
             self._glocke(
                 tenant_id=tenant_id, user_id=user_id, kategorie=schluessel,
                 titel=betreff, text=text, ziel_pfad=ziel_pfad,
-                property_id=property_id, dedup_key=dedup_key, ergebnis=ergebnis,
+                property_id=property_id, thread_ref=thread_ref,
+                dedup_key=dedup_key, ergebnis=ergebnis,
             )
             if _glocke_entdoppelt(ergebnis):
                 # DIE ENTDOPPLUNG GILT FUER ALLE KANAELE, nicht nur die Glocke.
@@ -278,6 +280,7 @@ class NotificationDispatcher:
         text: str,
         ziel_pfad: str | None,
         property_id: str | None,
+        thread_ref: str | None,
         dedup_key: str | None,
         ergebnis: Zustellung,
     ) -> None:
@@ -300,6 +303,9 @@ class NotificationDispatcher:
             "text": text or None,
             "ziel_pfad": ziel_pfad,
             "property_id": property_id,
+            # Bezug auf die Konversation (0406): erlaubt, die Meldung beim
+            # Lesen des Threads stillzulegen, ohne `ziel_pfad` zu zerlegen.
+            "thread_ref": thread_ref,
             "dedup_key": dedup_key,
         }
         try:

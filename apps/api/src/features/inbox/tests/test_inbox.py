@@ -1,4 +1,5 @@
 from datetime import datetime
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -2792,3 +2793,70 @@ def test_kennzahlen_unbekannter_zeitraum_faellt_nicht_zurueck() -> None:
     with pytest.raises(InboxError) as exc:
         svc.nachrichten_kennzahlen(_CTX, zeitraum="99y")
     assert exc.value.status_code == 422
+
+
+# --------------------------------------------------------------------------
+# Glocke stilllegen beim Lesen (0406)
+# --------------------------------------------------------------------------
+
+
+class _GlockenKette:  # pylint: disable=too-few-public-methods
+    """Kettenbare Abfrage, die Filter und Patch protokolliert."""
+
+    def __init__(self, protokoll: list, tabelle: str) -> None:
+        self._protokoll = protokoll
+        self._tabelle = tabelle
+        self._patch: dict | None = None
+        self._filter: list[tuple[str, object]] = []
+
+    def update(self, patch: dict) -> "_GlockenKette":
+        self._patch = patch
+        return self
+
+    def eq(self, feld: str, wert: object) -> "_GlockenKette":
+        self._filter.append((feld, wert))
+        return self
+
+    def is_(self, feld: str, wert: object) -> "_GlockenKette":
+        self._filter.append((feld, wert))
+        return self
+
+    def execute(self) -> object:
+        self._protokoll.append((self._tabelle, tuple(self._filter), self._patch))
+        return SimpleNamespace(data=[])
+
+
+class _GlockenDB:  # pylint: disable=too-few-public-methods
+    def __init__(self) -> None:
+        self.protokoll: list = []
+
+    def table(self, name: str) -> _GlockenKette:
+        return _GlockenKette(self.protokoll, name)
+
+
+def test_glocke_stilllegen_scoped_auf_tenant_und_thread() -> None:
+    """Nur offene Meldungen DIESES Threads in DIESEM Betrieb.
+
+    Ohne den Tenant-Filter griffe die Service-Rolle mandantenuebergreifend
+    (Wurzel 3); ohne `gelesen_am is null` schriebe sie den Zeitpunkt bereits
+    gelesener Meldungen neu.
+    """
+    db = _GlockenDB()
+    InboxService._glocke_stilllegen(db, "t-1", "thr-9")  # noqa: SLF001
+
+    tabelle, filter_, patch = db.protokoll[0]
+    assert tabelle == "notifications"
+    assert ("tenant_id", "t-1") in filter_
+    assert ("thread_ref", "thr-9") in filter_
+    assert ("gelesen_am", "null") in filter_
+    assert patch is not None and patch.get("gelesen_am")
+
+
+def test_glocke_stilllegen_kippt_das_lesen_nicht() -> None:
+    """Faellt die Glocke aus, ist der Thread trotzdem gelesen (Wurzel 5)."""
+
+    class _Kaputt:  # pylint: disable=too-few-public-methods
+        def table(self, _name: str) -> object:
+            raise RuntimeError("DB weg")
+
+    InboxService._glocke_stilllegen(_Kaputt(), "t-1", "thr-9")  # noqa: SLF001
