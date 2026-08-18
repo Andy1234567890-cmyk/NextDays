@@ -295,6 +295,18 @@ class Settings(BaseSettings):
     # Repo/Log. Im Dev leer → ein lokaler Default greift (nur lokal nutzbar).
     site_draft_secret: SecretStr = SecretStr("")
 
+    # --- Vorfuehr-Zugang der Marketing-Seite („Demo ansehen", 0407) ---
+    # Zugangsdaten des Vorfuehr-Mandanten. Der Besucher erfaehrt sie NIE: der
+    # Endpunkt `/auth/demo` meldet serverseitig an und gibt nur die Session
+    # heraus. Leer = der Endpunkt antwortet 503 (kein erfundener Fallback,
+    # Wurzel 4) — die Marketing-Seite blendet den Knopf dann aus.
+    # `demo_tenant_id` ist die Gegenprobe: das ausgestellte Token MUSS diesen
+    # Mandanten tragen, sonst wurde am Konto etwas verstellt und der Endpunkt
+    # gibt nichts heraus (fail-closed).
+    demo_login: str = ""
+    demo_passwort: SecretStr = SecretStr("")
+    demo_tenant_id: str = ""
+
     # --- WhatsApp (Meta WhatsApp Cloud API) ---
     # access_token: permanenter System-User-Token (Meta Business).
     # phone_number_id: ID der WhatsApp-Business-Telefonnummer (Graph API).
@@ -357,7 +369,10 @@ class Settings(BaseSettings):
     smtp_starttls: bool = True
     # Sandbox: kein echter SMTP-Call, die Mail wird nur geloggt (lokale Tests/Dev
     # ohne Mailserver). Im Prod IMMER false, sonst würde nichts real versendet.
-    mail_sandbox: bool = False
+    # NICHT direkt lesen — der wirksame Wert ist `mail_sandbox` (Property unten),
+    # das lokal von selbst greift. Dieses Feld hebt den lokalen Riegel nur auf,
+    # wenn man den Produktivversand vom eigenen Rechner ausdrücklich will.
+    mail_sandbox_override: bool | None = None
 
     # Öffentliche Adresse des Plattform-Backoffice (admin/). Wird für die
     # Einladungslinks des Backoffice-Teams gebraucht; fehlt sie, schlägt die
@@ -507,6 +522,26 @@ class Settings(BaseSettings):
     @property
     def is_local(self) -> bool:
         return self.app_env == "local"
+
+    @property
+    def mail_sandbox(self) -> bool:
+        """Ob der Versand nur geloggt statt real zugestellt wird.
+
+        Fail-CLOSED lokal (Wurzel 5): auf dem Entwicklerrechner ist die Sandbox an,
+        OHNE dass jemand daran denken muss. Der Riegel hing vorher an einer eigenen
+        Variable mit Default `False`; wer sie in seiner `.env` nicht setzte, aber die
+        echten SMTP-Daten drin hatte, versendete von lokal aus über den
+        Produktions-Mailserver. Real passiert (18.08.2026): 70 Mails aus Testläufen
+        an die Fixture-Adressen `vater@example.dk`/`a@b.de` gingen DKIM-signiert
+        raus und blieben tagelang in der Postfix-Queue hängen — Reputationsschaden
+        für eine Domain, deren DMARC-Berichte bis dahin sauber waren.
+
+        `MAIL_SANDBOX_OVERRIDE` hebt das bewusst auf (echter Versand von lokal);
+        ausserhalb von `local` entscheidet es allein, Default aus = echter Versand.
+        """
+        if self.mail_sandbox_override is not None:
+            return self.mail_sandbox_override
+        return self.is_local
 
     @property
     def cors_origin_list(self) -> list[str]:

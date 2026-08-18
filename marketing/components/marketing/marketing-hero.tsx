@@ -15,7 +15,7 @@ import Link from "next/link";
 import { AppAufnahme } from "@/components/marketing/app-aufnahme";
 import { MarketingChannels } from "@/components/marketing/marketing-channels";
 import { Button } from "@/components/ui/button";
-import { SIGNUP_URL } from "@/lib/app-url";
+import { SIGNUP_URL, DEMO_URL } from "@/lib/app-url";
 
 // Trust-Streifen unter der Unterzeile — Schlüssel, nicht Texte (hero.trust*).
 const TRUST = ["trustNeu", "trustVermieter", "trustAirsmil", "trustEu"] as const;
@@ -83,7 +83,7 @@ export function MarketingHero() {
               <Link href={SIGNUP_URL}>{t("ctaTrial")}</Link>
             </Button>
             <Button asChild size="lg" variant="default" className="min-w-40 text-base">
-              <Link href="#demo" className="gap-2">
+              <Link href={DEMO_URL} className="gap-2">
                 <Icon icon="ph:play-circle" className="size-5" />
                 {t("ctaDemo")}
               </Link>

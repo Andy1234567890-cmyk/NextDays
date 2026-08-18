@@ -334,6 +334,11 @@ class MeResponse(BaseModel):
     # Beherbergungsart des Mandanten (0090): steuert die Navigation
     # (Objekte vs. Zimmer, Eigentümer-Modul nur bei Ferienvermietung).
     accommodation_type: str | None = None
+    # Vorfuehr-Mandant (0407): die Oberflaeche zeigt darauf ein durchgaengiges
+    # Band „Vorfuehrung — Aenderungen sind abgeschaltet". Ohne diesen Hinweis
+    # wirkt die Software defekt, sobald ein Klick nichts tut: der Riegel
+    # antwortet mit 405, und das sieht wie ein Fehler aus, nicht wie Schutz.
+    is_demo: bool = False
     # Betriebsmodell (0180): 'pms' (Abo, apps/web) oder 'marketplace' (8%-Fee,
     # plattform/). Steuert, welche Oberfläche/welches Billing gilt.
     account_type: str | None = None

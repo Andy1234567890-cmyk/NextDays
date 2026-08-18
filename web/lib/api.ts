@@ -112,6 +112,9 @@ export type MeResponse = {
   permissions: string[];  // Feingranulare Berechtigungen (für UI-Gating)
   // Beherbergungsart des Mandanten (Migration 0090): steuert die Navigation.
   accommodation_type: AccommodationType | null;
+  /** Vorfuehr-Mandant (0407): Oberflaeche zeigt das Demo-Band, Schreiben ist
+   *  serverseitig abgeschaltet. */
+  is_demo?: boolean;
   // Standardsprache des BETRIEBS (Migration 0335): zweite Stufe der
   // Mail-Sprachkette (eigene Wahl → Betrieb → Englisch). Sie gilt für jeden
   // Empfänger ohne eigene Sprachwahl. null = nicht erfasst → Englisch; das ist

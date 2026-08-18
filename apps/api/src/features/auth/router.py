@@ -16,6 +16,7 @@ from src.core.uploads import read_upload
 from src.features.login_devices.dependencies import LoginDeviceServiceDep
 from src.features.login_devices.service import LoginDeviceService
 
+from . import demo_zugang as demo
 from .dependencies import (
     AccountServiceDep,
     AuthServiceDep,
@@ -182,6 +183,69 @@ def login(
     except AuthError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
     _record_device(resp, request, settings, devices)
+    return resp
+
+
+@router.post("/demo", response_model=LoginResponse)
+def demo_zugang(
+    request: Request,
+    service: AuthServiceDep,
+    settings: SettingsDep,
+) -> LoginResponse:
+    """Eine Session fuer den Vorfuehr-Mandanten — ohne Anmeldung des Besuchers.
+
+    Fuer den Knopf „Demo ansehen" auf der Marketing-Seite: der Besucher landet
+    in der ECHTEN Anwendung statt in einem eingefrorenen Schnappschuss (siehe
+    docs/ANALYSE-storylane-technik.md — kein Anbieter kann das, weil keiner ein
+    eigenes Backend hat).
+
+    OEFFENTLICH, absichtlich: es gibt nichts zu authentifizieren, das ist der
+    Zweck. Die Zugangsdaten kennt nur der Server (`DEMO_LOGIN`/
+    `DEMO_PASSWORT`); der Besucher bekommt ausschliesslich die fertige Session.
+    Stuenden sie auf der Seite, waeren sie in jedem Screenshot und in jeder
+    Suchmaschine — und dauerhaft gueltig.
+
+    Die Session ist echt und traegt Rolle `admin`, kann aber nichts aendern:
+    `demo_gate` (0407) lehnt fuer Nutzer eines Demo-Mandanten jede nicht-lesende
+    Methode ab, auch auf den 76 Routen ohne Rollen-Guard.
+
+    Rate-Limit: eigener Bucket `auth_public` (ratelimit_middleware), damit der
+    Endpunkt nicht als kostenloser Token-Automat dient.
+
+    2FA: der Vorfuehr-Zugang hat bewusst keine — sonst waere die Demo nicht
+    ohne Zutun erreichbar. Kommt trotzdem eine MFA-Aufforderung zurueck, ist am
+    Konto etwas verstellt, und der Endpunkt gibt nichts heraus (fail-closed).
+    """
+    try:
+        login, passwort, erwarteter_tenant = demo.demo_zugangsdaten()
+        resp = service.login(
+            LoginRequest(email=login, password=passwort),
+            _client_user_agent(request),
+        )
+        demo.session_pruefen(
+            mfa_required=resp.mfa_required, hat_session=resp.session is not None
+        )
+        # Der Mandant steht im TOKEN, nicht in der Antwort: `LoginResponse`
+        # traegt bewusst keine Nutzerdaten. Die Claims sind ohnehin die
+        # verlaesslichere Quelle — sie sind es, die der API-Guard spaeter liest.
+        claims = _claims(resp.session.access_token, settings) or {}
+        meta = claims.get("app_metadata")
+        demo.tenant_pruefen(
+            erwarteter_tenant,
+            (meta or {}).get("tenant_id") if isinstance(meta, dict) else None,
+            user_id=str(claims.get("sub") or "(unbekannt)"),
+        )
+    except demo.DemoZugangFehler as exc:
+        raise demo.als_http_fehler(exc) from exc
+    except AuthError as exc:
+        # Der Vorfuehr-Zugang ist Betriebssache, kein Nutzerfehler: ein falsches
+        # Passwort in der Umgebung ist eine Stoerung (503), keine Ablehnung
+        # (401) — sonst suchte man den Fehler beim Besucher.
+        demo.login_fehler_melden(exc.message)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Die Vorfuehrung ist gerade nicht erreichbar.",
+        ) from exc
     return resp
 
 

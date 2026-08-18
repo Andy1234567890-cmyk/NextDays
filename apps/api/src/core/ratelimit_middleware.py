@@ -144,6 +144,12 @@ _AUTH_PUBLIC_PATHS = (
     "/auth/einladung/annehmen",
     "/auth/passwort-vergessen",
     "/auth/passwort-neu",
+    # Vorfuehr-Zugang der Marketing-Seite (0407): stellt OHNE Anmeldung eine
+    # echte Session aus. Genau deshalb hier und nicht im laxeren Login-Bucket —
+    # ungebremst waere der Endpunkt ein kostenloser Token-Automat, und jede
+    # Anfrage kostet einen GoTrue-Login. Die Session kann nichts aendern
+    # (demo_gate), aber sie kann lesen, und das ist Last.
+    "/auth/demo",
 )
 
 # EINGELOGGTE Endpunkte, die eine Einladungsmail an eine FREMDE Adresse

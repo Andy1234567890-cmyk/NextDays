@@ -29,6 +29,8 @@ export interface MeResponse {
   capabilities: string[];
   permissions: string[];
   accommodation_type: string | null;
+  /** Vorfuehr-Mandant (0407). */
+  is_demo?: boolean;
   account_type: string | null;
 }
 

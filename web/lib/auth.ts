@@ -93,6 +93,44 @@ export async function login(
  *
  *  Ohne diesen Schritt bliebe das alte aal1-Cookie stehen und jede Route
  *  antwortete weiter 401 — der Nutzer käme trotz gelöstem Faktor nicht rein. */
+/**
+ * Vorführ-Zugang: Session für den Demo-Mandanten holen und setzen (0407).
+ *
+ * Der Besucher kommt von der Marketing-Seite und hat keine Zugangsdaten — die
+ * kennt nur das Backend (`DEMO_LOGIN`/`DEMO_PASSWORT`), und es gibt sie nicht
+ * heraus. Diese Action ruft `/auth/demo` und legt die zurückgegebene Session in
+ * dieselben httpOnly-Cookies wie ein normaler Login.
+ *
+ * Der Zugang kann ausschließlich LESEN: der Riegel `demo_gate` (0407) lehnt
+ * serverseitig jede nicht-lesende Anfrage eines Demo-Mandanten ab — auf allen
+ * 536 schreibenden Routen, auch auf den 76 ohne Rollen-Guard.
+ *
+ * Kein `sessionUebernehmen`: das nimmt eine fertige Session vom Client an
+ * (2FA-Fall) und prüft ihre Herkunft nicht. Hier holt der Server sie selbst.
+ */
+export async function demoSitzungHolen(): Promise<
+  { ok: true } | { ok: false; error: string }
+> {
+  try {
+    const res = await api<LoginResponse>("/auth/demo", { method: "POST" });
+    if (res.mfa_required || !res.session) {
+      // Kein Schein-Erfolg: ohne Session gibt es keine Vorführung, und der
+      // Grund gehört benannt statt in einen leeren Dashboard-Aufruf zu münden.
+      return { ok: false, error: "Die Vorführung ist gerade nicht verfügbar." };
+    }
+    await persistSession(res.session, COOKIES);
+    return { ok: true };
+  } catch (exc) {
+    return {
+      ok: false,
+      error:
+        exc instanceof ApiError
+          ? exc.message
+          : "Die Vorführung ist gerade nicht erreichbar.",
+    };
+  }
+}
+
 export async function sessionUebernehmen(session: {
   access_token: string;
   refresh_token: string;

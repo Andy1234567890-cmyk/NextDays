@@ -21,6 +21,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 // Der Sprach-Assistent ist abgeschaltet (siehe unten) — Import bewusst nicht
 // vorhanden, damit kein toter Code im Bundle landet.
 import { RealtimeDebugPanel } from "@/components/realtime-debug-panel";
+import { DemoBand } from "@/components/demo-band";
 import { Topbar } from "@/components/topbar";
 import { SupportChatButton } from "@/components/support/support-chat-button";
 import { SupportChatProvider } from "@/components/support/support-chat";
@@ -123,6 +124,9 @@ export default async function DashboardLayout({
           country={me?.country ?? null}
         />
         <SidebarInset>
+          {/* Ueber allem, auch ueber der Topbar: der Besucher soll wissen, wo
+              er ist, BEVOR er etwas anklickt (0407). */}
+          {me?.is_demo && <DemoBand registrierungsUrl="/signup" />}
           <Topbar />
           {/* Inhaltsbereich — hier kommen später KPI-Kacheln & Charts hinein. */}
           <main className="flex min-w-0 flex-1 flex-col p-4 md:p-6">

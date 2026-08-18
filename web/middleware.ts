@@ -53,6 +53,11 @@ function ueberspringen(pathname: string): boolean {
     pathname.startsWith("/einladung") ||
     pathname.startsWith("/passwort-vergessen") ||
     pathname.startsWith("/passwort-neu") ||
+    // Vorfuehr-Zugang (0407): der Besucher kommt von der Marketing-Seite und
+    // hat noch keine Sitzung — die Seite holt sie sich selbst. Eine Erneuerung
+    // waere hier nicht nur nutzlos, sondern falsch: sie wuerde eine vorhandene
+    // Sitzung eines ECHTEN Betriebs verlaengern, bevor die Demo sie ersetzt.
+    pathname.startsWith("/demo") ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/api/")
   );

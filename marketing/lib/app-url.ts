@@ -60,3 +60,25 @@ export const AGB_URL = "/agb";
 // keinen öffentlichen Zugang — der Link entfällt dann (siehe Footer, der leere
 // Ziele auslässt, statt auf eine tote Adresse zu zeigen).
 export const HILFE_URL = APP_ERREICHBAR ? `${DASHBOARD_URL}/hilfe` : "";
+
+/**
+ * Ziel des Knopfs „Demo ansehen" (0407).
+ *
+ * Führt in die ECHTE Anwendung, angemeldet im Vorführ-Mandanten — kein
+ * eingefrorener Schnappschuss, wie ihn Storylane & Co. ausliefern (Vergleich
+ * in `docs/ANALYSE-storylane-technik.md`). Der Zugang kann ausschließlich
+ * lesen; jede schreibende Anfrage wird serverseitig abgelehnt (`demo_gate`).
+ *
+ * Vor dem Start dasselbe Verhalten wie alle anderen Knöpfe: Voranmelde-Popup
+ * statt eines Ziels, das der Besucher nicht benutzen kann. Der Grund ist hier
+ * derselbe wie bei LOGIN_URL — nur die Begründung ist eine andere: die
+ * Vorführung FUNKTIONIERT technisch schon, aber sie zeigt einen Betrieb mit
+ * erfundenen Buchungen. Vor dem offiziellen Start ist das eher verwirrend als
+ * überzeugend.
+ *
+ * Zum Start: `NEXT_PUBLIC_APP_URL` setzen — dann führt der Knopf in die Demo,
+ * ohne dass hier etwas geändert werden muss.
+ */
+export const DEMO_URL = APP_ERREICHBAR
+  ? `${DASHBOARD_URL}/demo`
+  : VORANMELDUNG_ZIEL;
