@@ -46,10 +46,20 @@ _DASHBOARD_RUECKBLICK_TAGE = 60
 # Die „anstehende Anreisen"-Liste der Startseite zeigt nur die nächsten Tage —
 # ohne Deckel geht bei gut gebuchten Betrieben der gesamte Zukunftsbestand raus.
 _DASHBOARD_UPCOMING_MAX = 50
-# Zusatzleistungen werden für alle Dashboard-Zeilen in einem Zug geholt. Die
-# ID-Liste geht als `in_`-Filter in die URL — in Blöcken, damit sie bei einem
-# großen Bestand nicht die Längengrenze von PostgREST reißt.
-_ADDON_CHUNK = 200
+# Blockgroesse fuer `in_`-Filter auf UUID-Listen (Zusatzleistungen, Threads,
+# uebernommene Verlaeufe): die Liste geht als Filter in die URL und reisst bei
+# grossem Bestand die Laengengrenze.
+#
+# Gemessen gegen die Live-Instanz (18.08.2026): 200 UUIDs ergeben 7.519 Zeichen
+# Adresse und gehen durch, 250 ergeben 9.369 und liefern HTTP 414 „URI too
+# long" — Kong deckelt bei 8 KB. 100 UUIDs sind rund 3.800 Zeichen und lassen
+# damit die Haelfte als Reserve fuer laengere Tabellen-/Spaltennamen und
+# zusaetzliche Filter.
+#
+# Warum 100 und nicht die vorher hier stehenden 200: die lagen nur 500 Zeichen
+# unter der Grenze. Das hielt, solange die Adresse kurz war, und waere beim
+# naechsten zusaetzlichen Filter unbemerkt gekippt.
+_ID_CHUNK = 100
 # „Neu eingegangen": Fenster in TAGEN über den Buchungszeitpunkt. Geladen wird
 # das GRÖSSTE Fenster (30 Tage); die Startseite bietet darin 24 h / 7 / 30 Tage
 # zur Auswahl und filtert die kürzeren selbst. Ein Nachladen je Umschalten
@@ -625,13 +635,20 @@ class DashboardMixin(ReservationsBase):
                     treffer[res_id] = str(zeile["id"])
         # 3) Übernommener Bestand (0382): der Verlauf hängt an der Reservierung.
         offen = [r["id"] for r in rows if r["id"] not in treffer]
-        if offen:
+        # Blockweise wie in `_threads_laden` — und aus demselben Grund: die
+        # ID-Liste geht als `in_`-Filter in die URL. Ungeblockt riss sie die
+        # Laengengrenze und der Aufruf endete mit HTTP 414 „URI too long", was
+        # als `internal_error` im Dashboard ankam („Dashboard konnte nicht
+        # geladen werden"). Ausgeloest hat es ein Bestand von 242 Buchungen:
+        # bei 36 Zeichen je UUID sind das ueber 9.000 Zeichen Adresse.
+        for i in range(0, len(offen), _ID_CHUNK):
+            block = offen[i : i + _ID_CHUNK]
             vorhanden = (
                 self._db()
                 .table("reservation_nachricht_uebernahme")
                 .select("reservation_id")
                 .eq("tenant_id", tenant_id)
-                .in_("reservation_id", offen)
+                .in_("reservation_id", block)
                 .execute()
             ).data or []
             for zeile in vorhanden:
@@ -648,8 +665,8 @@ class DashboardMixin(ReservationsBase):
         von PostgREST.
         """
         gefunden: list[dict] = []
-        for i in range(0, len(werte), _ADDON_CHUNK):
-            block = werte[i : i + _ADDON_CHUNK]
+        for i in range(0, len(werte), _ID_CHUNK):
+            block = werte[i : i + _ID_CHUNK]
             gefunden.extend(
                 (
                     self._db()
@@ -764,8 +781,8 @@ class DashboardMixin(ReservationsBase):
         if not reservation_ids:
             return {}
         treffer: dict[str, list[DashboardAddon]] = {}
-        for i in range(0, len(reservation_ids), _ADDON_CHUNK):
-            teil = reservation_ids[i : i + _ADDON_CHUNK]
+        for i in range(0, len(reservation_ids), _ID_CHUNK):
+            teil = reservation_ids[i : i + _ID_CHUNK]
             rows = (
                 self._db()
                 .table("reservation_addons")
