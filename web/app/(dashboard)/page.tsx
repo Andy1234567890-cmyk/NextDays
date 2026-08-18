@@ -82,7 +82,13 @@ export default async function DashboardPage() {
       {/* Zahlungs-Status ist Sache der Konto-Führung (MANAGE_BILLING, wie der
           Backend-Endpunkt). Angestellte ohne diese Fähigkeit dürfen den Banner
           gar nicht sehen — sonst käme für sie nur ein 403-Fehler (Wurzel 3). */}
-      {me?.capabilities.includes("manage_billing") && (
+      {/* In der Vorfuehrung nicht: der Banner forderte auf, Auszahlungen
+          einzurichten ("um Objekte anzulegen und Buchungen zu empfangen") —
+          beides kann ein Demo-Besucher nicht, und beides ist im gezeigten
+          Betrieb langst passiert. Er lieferte damit eine Aufgabe, die weder
+          erfuellbar noch noetig ist, und liess die Vorfuehrung wie ein halb
+          eingerichtetes Konto aussehen. */}
+      {!me?.is_demo && me?.capabilities.includes("manage_billing") && (
         <Suspense fallback={null}>
           <PaymentsStatusBanner />
         </Suspense>

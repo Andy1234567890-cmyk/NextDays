@@ -491,14 +491,18 @@ export function AppSidebar({
               {mainItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   {istDemo && istGesperrt(item.href) ? (
-                    <DemoGesperrt icon={item.icon} label={t(item.key)} />
+                    <DemoGesperrt
+                      icon={item.icon}
+                      label={t(item.key)}
+                      tourKey={item.key}
+                    />
                   ) : (
                   <SidebarMenuButton
                     asChild
                     isActive={isActive(item)}
                     tooltip={t(item.key)}
                   >
-                    <Link href={item.href}>
+                    <Link href={item.href} data-tour={item.key}>
                       <Icon icon={item.icon} />
                       <span className="font-display font-normal">
                         {t(item.key)}
@@ -550,6 +554,7 @@ export function AppSidebar({
                             <DemoGesperrt
                               icon={item.icon}
                               label={t(item.key)}
+                              tourKey={item.key}
                             />
                           ) : (
                           <SidebarMenuButton
@@ -557,7 +562,7 @@ export function AppSidebar({
                             isActive={isActive(item)}
                             tooltip={t(item.key)}
                           >
-                            <Link href={item.href}>
+                            <Link href={item.href} data-tour={item.key}>
                               <Icon icon={item.icon} />
                               <span className="font-display font-normal">
                                 {t(item.key)}
@@ -780,9 +785,18 @@ export function AppSidebar({
  * fokussierbar-aber-wirkungslos, und Screenreader kündigten eine Schaltfläche
  * an, die nichts tut. Der Punkt trägt stattdessen `title` als Erklärung.
  */
-function DemoGesperrt({ icon, label }: { icon: string; label: string }) {
+function DemoGesperrt({
+  icon,
+  label,
+  tourKey,
+}: {
+  icon: string;
+  label: string;
+  tourKey?: string;
+}) {
   return (
     <div
+      data-tour={tourKey}
       title="In der Vorführung gesperrt — im eigenen Betrieb voll verfügbar"
       aria-disabled="true"
       className="flex h-8 w-full items-center gap-2 rounded-(--radius) px-2 text-sm text-sidebar-foreground/50"

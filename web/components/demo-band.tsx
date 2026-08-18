@@ -15,6 +15,8 @@
 // in der es gebraucht wird. Stattdessen ist es flach und ruhig gehalten.
 import { Icon } from "@iconify/react";
 
+import { DemoFuehrung } from "@/components/demo-fuehrung";
+
 // Vor dem Start fuehrt der Knopf NICHT in eine Registrierung, sondern auf die
 // Marketing-Seite mit dem Anker `#voranmeldung` — dort faengt das
 // Voranmelde-Popup ihn ab und fragt die E-Mail ab. Ein `/signup` waere hier
@@ -49,6 +51,10 @@ export function DemoBand({
       <span className="text-muted-foreground">
         Ein echter Betrieb mit Beispieldaten. Ansehen ja, speichern nein.
       </span>
+      {/* Die gefuehrte Runde. Sie startet beim ersten Besuch von selbst; hier
+          steht der Weg zurueck, wenn jemand sie geschlossen hat. */}
+      <DemoFuehrung voranmeldungUrl={registrierungsUrl} />
+
       {/* Neuer Tab: wer sich vormerken laesst, soll die Vorfuehrung nicht
           verlieren — sonst ist der Weg zurueck ein erneuter Demo-Login und
           damit ein weiterer Treffer im Rate-Limit. */}
