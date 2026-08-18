@@ -32,6 +32,13 @@ import { useCallback, useEffect, useState } from "react";
 // die Führung nach dem ersten Besucher für alle abgeschaltet.
 const SCHLUESSEL = "nd_demo_fuehrung_v1";
 
+// Der LAUFENDE Schritt, ebenfalls lokal. Nötig, weil die Führung Seiten öffnet:
+// bei jedem Routenwechsel baut React diese Komponente neu auf, und ein Zustand
+// im Speicher wäre dabei weg — die Führung brach nach dem ersten „Weiter" ab
+// und liess sich auch nicht neu starten, weil der Neustart-Klick sofort
+// navigierte und sich damit selbst zuruecksetzte.
+const LAUF = "nd_demo_fuehrung_schritt";
+
 type Schritt = {
   /** `data-tour`-Wert des Elements, an dem die Blase hängt. Fehlt es, wird der
    *  Schritt mittig gezeigt statt übersprungen — ein stiller Sprung wäre für
@@ -128,6 +135,20 @@ const SCHRITTE: readonly Schritt[] = [
   },
 ];
 
+/** Laufenden Schritt lesen; `null`, wenn keine Führung aktiv ist.
+ *
+ * Ein Wert ausserhalb der Liste wird verworfen statt gezeigt: nach einer
+ * Änderung an den Schritten läge im Browser eines wiederkehrenden Besuchers
+ * sonst eine Nummer, die es nicht mehr gibt — die Blase wäre leer.
+ */
+function laufLesen(): number | null {
+  const wert = window.localStorage.getItem(LAUF);
+  if (wert === null) return null;
+  const nr = Number.parseInt(wert, 10);
+  if (Number.isNaN(nr) || nr < 0 || nr >= SCHRITTE.length) return null;
+  return nr;
+}
+
 type Kasten = { top: number; left: number; width: number; height: number };
 
 export function DemoFuehrung({ voranmeldungUrl }: { voranmeldungUrl: string }) {
@@ -137,13 +158,30 @@ export function DemoFuehrung({ voranmeldungUrl }: { voranmeldungUrl: string }) {
   const [nr, setNr] = useState(0);
   const [kasten, setKasten] = useState<Kasten | null>(null);
 
-  // Erststart. `useEffect` statt Rendern-mit-localStorage: der Wert existiert
-  // auf dem Server nicht, und ein Zugriff im Render bräche die Hydration.
+  // Fortsetzen oder erstmals starten. `useEffect` statt Rendern-mit-
+  // localStorage: der Wert existiert auf dem Server nicht, und ein Zugriff im
+  // Render bräche die Hydration.
+  //
+  // Der Fortsetz-Zweig deckt den Fall ab, dass ein Seitenwechsel diese
+  // Komponente neu montiert — dann ist der Zustand im Speicher weg, und ohne
+  // ihn wäre die Führung nach dem ersten „Weiter" beendet und liesse sich auch
+  // nicht neu starten (der Neustart-Klick navigierte und setzte sich selbst
+  // zurück). Bleibt die Komponente montiert, trägt der State ohnehin.
   useEffect(() => {
+    const lauf = laufLesen();
+    if (lauf !== null) {
+      setNr(lauf);
+      setOffen(true);
+      return;
+    }
     if (window.localStorage.getItem(SCHLUESSEL)) return;
-    // Kleine Verzögerung: die Sidebar muss gerendert sein, sonst findet der
-    // erste Schritt sein Ziel nicht und die Blase springt sichtbar nach.
-    const t = window.setTimeout(() => setOffen(true), 900);
+    // Kleine Verzögerung beim ERSTEN Aufruf: die Sidebar muss gerendert sein,
+    // sonst findet der erste Schritt sein Ziel nicht und die Blase springt
+    // sichtbar nach. Beim Fortsetzen entfällt sie — dort steht das Layout schon.
+    const t = window.setTimeout(() => {
+      window.localStorage.setItem(LAUF, "0");
+      setOffen(true);
+    }, 900);
     return () => window.clearTimeout(t);
   }, []);
 
@@ -196,9 +234,18 @@ export function DemoFuehrung({ voranmeldungUrl }: { voranmeldungUrl: string }) {
     };
   }, [offen, messen, pathname]);
 
+  /** Schritt wechseln — Zustand mitschreiben, damit er die Navigation übersteht. */
+  const gehe = useCallback((ziel: number) => {
+    setNr(ziel);
+    window.localStorage.setItem(LAUF, String(ziel));
+  }, []);
+
   const beenden = useCallback(() => {
     setOffen(false);
     setNr(0);
+    // Beide Marken: `LAUF` beendet den Durchlauf, `SCHLUESSEL` verhindert den
+    // automatischen Neustart beim nächsten Seitenaufruf.
+    window.localStorage.removeItem(LAUF);
     window.localStorage.setItem(SCHLUESSEL, "1");
   }, []);
 
@@ -217,6 +264,7 @@ export function DemoFuehrung({ voranmeldungUrl }: { voranmeldungUrl: string }) {
       <button
         type="button"
         onClick={() => {
+          window.localStorage.setItem(LAUF, "0");
           setNr(0);
           setOffen(true);
         }}
@@ -297,7 +345,7 @@ export function DemoFuehrung({ voranmeldungUrl }: { voranmeldungUrl: string }) {
           {nr > 0 && (
             <button
               type="button"
-              onClick={() => setNr((v) => v - 1)}
+              onClick={() => gehe(nr - 1)}
               aria-label="Vorheriger Schritt"
               className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
             >
@@ -318,7 +366,7 @@ export function DemoFuehrung({ voranmeldungUrl }: { voranmeldungUrl: string }) {
           ) : (
             <button
               type="button"
-              onClick={() => setNr((v) => v + 1)}
+              onClick={() => gehe(nr + 1)}
               className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
             >
               Weiter
