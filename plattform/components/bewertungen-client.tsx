@@ -135,10 +135,10 @@ export function BewertungenClient({
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6 sm:gap-8">
       {/* Formular */}
       {form && (
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="rounded-2xl border border-border bg-card p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold">
               {form.reviewId ? "Bewertung bearbeiten" : "Aufenthalt bewerten"}
@@ -147,7 +147,7 @@ export function BewertungenClient({
               type="button"
               onClick={() => setForm(null)}
               aria-label="Schließen"
-              className="text-muted-foreground hover:text-foreground"
+              className="flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
             >
               <Icon icon="ph:x" className="size-5" />
             </button>
@@ -184,7 +184,7 @@ export function BewertungenClient({
             onChange={(e) => setForm({ ...form, text: e.target.value })}
             rows={4}
             placeholder="Wie war dein Aufenthalt? (optional)"
-            className="mt-4 w-full resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-ring"
+            className="mt-4 w-full resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-base outline-none focus:border-ring sm:text-sm"
           />
 
           {fehler && (
@@ -197,7 +197,7 @@ export function BewertungenClient({
             type="button"
             onClick={absenden}
             disabled={busy}
-            className="mt-4 flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+            className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60 sm:w-auto"
           >
             {busy && <Icon icon="ph:spinner" className="size-4 animate-spin" />}
             {form.reviewId ? "Änderungen speichern" : "Bewertung abgeben"}
@@ -215,7 +215,7 @@ export function BewertungenClient({
             {offen.map((b) => (
               <div
                 key={b.reservation_id}
-                className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4"
+                className="flex flex-col items-start gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:gap-4"
               >
                 <div className="size-16 shrink-0 overflow-hidden rounded-xl bg-secondary">
                   {b.photo ? (
@@ -240,7 +240,7 @@ export function BewertungenClient({
                 <button
                   type="button"
                   onClick={() => starteNeu(b)}
-                  className="flex shrink-0 items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground hover:opacity-90"
+                  className="flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-accent px-5 text-sm font-medium text-accent-foreground hover:opacity-90 sm:w-auto"
                 >
                   <Icon icon="ph:star" className="size-4" />
                   Bewerten
@@ -257,7 +257,7 @@ export function BewertungenClient({
           Deine Bewertungen
         </h2>
         {reviews.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-12 text-center">
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-6 text-center sm:p-12">
             <span className="flex size-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
               <Icon icon="ph:star" className="size-7" />
             </span>
@@ -270,7 +270,7 @@ export function BewertungenClient({
             {reviews.map((r) => (
               <div
                 key={r.id}
-                className="rounded-2xl border border-border bg-card p-5"
+                className="rounded-2xl border border-border bg-card p-4 sm:p-5"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -295,7 +295,7 @@ export function BewertungenClient({
                   <button
                     type="button"
                     onClick={() => starteBearbeiten(r)}
-                    className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium hover:bg-secondary"
+                    className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-border px-3 text-xs font-medium hover:bg-secondary"
                   >
                     <Icon icon="ph:pencil-simple" className="size-3.5" />
                     Bearbeiten

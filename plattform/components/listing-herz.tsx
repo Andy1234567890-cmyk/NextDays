@@ -91,21 +91,27 @@ export function ListingHerz({
   }
 
   return (
-    <div ref={ref} className="absolute right-3 top-3" onClick={stop}>
+    <div ref={ref} className="absolute right-2 top-2 sm:right-3 sm:top-3" onClick={stop}>
+      {/* Trefferfläche und Optik getrennt: der Knopf ist 40 px (Touch-Größe —
+          das Herz liegt auf einem Link, der beim Danebentippen die Detailseite
+          öffnet statt zu merken), der sichtbare Kreis nur 36 px. Bei ~155 px
+          Kartenbreite nimmt ein 40-px-Kreis sonst ein Viertel des Bildes ein. */}
       <button
         type="button"
         onClick={oeffnen}
         aria-label={gemerkt ? "Gemerkt" : "Merken"}
-        className="flex size-9 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur-sm transition hover:bg-black/40"
+        className="flex size-10 items-center justify-center md:size-9"
       >
-        <Icon
-          icon={gemerkt ? "ph:heart-fill" : "ph:heart"}
-          className={"size-5" + (gemerkt ? " text-accent" : "")}
-        />
+        <span className="flex size-9 items-center justify-center rounded-full bg-black/25 text-white backdrop-blur-sm transition group-hover:bg-black/40">
+          <Icon
+            icon={gemerkt ? "ph:heart-fill" : "ph:heart"}
+            className={"size-5" + (gemerkt ? " text-accent" : "")}
+          />
+        </span>
       </button>
 
       {offen && (
-        <div className="absolute right-0 top-full z-40 mt-2 w-60 rounded-2xl border border-border bg-card p-3 text-foreground shadow-lg">
+        <div className="absolute right-0 top-full z-40 mt-2 w-60 max-w-[calc(100vw-2rem)] rounded-2xl border border-border bg-card p-3 text-foreground shadow-lg">
           <p className="px-1 pb-2 text-sm font-medium">In Merkliste speichern</p>
           {fehler && (
             <p className="mb-2 rounded-lg bg-accent/10 px-2 py-1.5 text-xs text-accent">
@@ -154,7 +160,7 @@ export function ListingHerz({
               type="submit"
               disabled={busy || !neu.trim()}
               aria-label="Anlegen"
-              className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground disabled:opacity-50"
+              className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground disabled:opacity-50 md:size-8"
             >
               <Icon icon="ph:plus" className="size-4" />
             </button>

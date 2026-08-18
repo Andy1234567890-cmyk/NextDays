@@ -1,13 +1,21 @@
-// Sticky-Navigation der Plattform — Layout exakt wie Airbnb: Logo links,
-// zentrierte Tab-Zeile (Unterkünfte · Erlebnisse · Services) mit Icons, darunter
-// die große Such-Leiste; rechts „für Gastgeber" + Konto-/Login-Menü. Beim
-// Scrollen kollabiert die große Leiste zu einer kompakten Pille in der Kopfzeile.
+// Sticky-Navigation der Plattform.
+//   ab md  — Logo links, zentrierte Tab-Zeile (Unterkünfte · Erlebnisse ·
+//            Services), darunter die große Such-Leiste; rechts „für Gastgeber"
+//            + Konto-/Login-Menü. Beim Scrollen kollabiert die große Leiste zu
+//            einer kompakten Pille in der Kopfzeile.
+//   unter md — Logo + Konto in einer schmalen Zeile, darunter die Such-Pille und
+//            eine wischbare Chip-Reihe der Kanäle. Beides bleibt beim Scrollen
+//            stehen: mobil war die Tab-Zeile `hidden md:block`, also gar nicht
+//            vorhanden, und die Suche kollabierte in ein Element, das es unter
+//            md ebenfalls nicht gab — der Gast hatte nach dem ersten Scroll
+//            keinen Weg zurück in die Suche.
 "use client";
 
 import { Icon } from "@iconify/react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { gastgeberRegistrierungUrl } from "@/lib/gastgeber-link";
 
@@ -15,15 +23,18 @@ import { Logo } from "./logo";
 import { SprachWaehrungModal } from "./sprach-waehrung-modal";
 import { SuchLeiste } from "./such-leiste";
 
-// Tab-Zeile wie Airbnb (All / Homes / Experiences / Services) mit Icon.
+// Kanal-Zeile (Unterkünfte / Erlebnisse / Services) mit Icon. Die Labels kommen
+// aus dem `nav`-Namespace — vorher standen sie deutsch im Code, in einer App mit
+// 24 Sprachdateien.
 const TABS = [
-  { icon: "ph:squares-four", label: "Unterkünfte" },
-  { icon: "ph:sparkle", label: "Erlebnisse" },
-  { icon: "ph:concierge-bell", label: "Services" },
+  { icon: "ph:squares-four", key: "unterkuenfte" },
+  { icon: "ph:sparkle", key: "erlebnisse" },
+  { icon: "ph:concierge-bell", key: "services" },
 ];
 
 export function PlattformNav({ kontoSlot }: { kontoSlot?: React.ReactNode }) {
-  // Gescrollt? Dann kollabiert die große Such-Leiste zur kompakten Pille.
+  const t = useTranslations("nav");
+  // Gescrollt? Dann kollabiert die große Such-Leiste zur kompakten Pille (ab md).
   const [gescrollt, setGescrollt] = useState(false);
   // Manuell wieder aufgeklappt (Klick auf die kompakte Pille im gescrollten
   // Zustand) — zeigt die große Leiste, ohne nach oben zu scrollen.
@@ -54,13 +65,13 @@ export function PlattformNav({ kontoSlot }: { kontoSlot?: React.ReactNode }) {
           type="button"
           aria-label="Suche schließen"
           onClick={() => setManuellOffen(false)}
-          className="fixed inset-0 -z-10 cursor-default"
+          className="fixed inset-0 -z-10 cursor-default md:block"
         />
       ) : null}
 
       {/* Kopfzeile: Logo links · Tabs+Suche mittig · Gastgeber+Konto rechts */}
-      <div className="relative flex h-20 w-full items-center justify-between gap-4 px-6 md:px-10 2xl:px-20">
-        <Link href="/" className="flex shrink-0 items-center">
+      <div className="relative flex h-16 w-full items-center justify-between gap-3 px-4 md:h-20 md:gap-4 md:px-10 2xl:px-20">
+        <Link href="/" className="flex min-h-11 shrink-0 items-center">
           <Logo />
         </Link>
 
@@ -78,7 +89,7 @@ export function PlattformNav({ kontoSlot }: { kontoSlot?: React.ReactNode }) {
               >
                 {TABS.map((tab, i) => (
                   <button
-                    key={tab.label}
+                    key={tab.key}
                     type="button"
                     className={
                       "flex items-center gap-2 border-b-2 pb-1 pt-1 text-sm font-medium transition-colors " +
@@ -88,7 +99,7 @@ export function PlattformNav({ kontoSlot }: { kontoSlot?: React.ReactNode }) {
                     }
                   >
                     <Icon icon={tab.icon} className="size-6" />
-                    {tab.label}
+                    {t(tab.key)}
                   </button>
                 ))}
               </motion.nav>
@@ -119,38 +130,58 @@ export function PlattformNav({ kontoSlot }: { kontoSlot?: React.ReactNode }) {
         <div className="flex shrink-0 items-center gap-2">
           <Link
             href={gastgeberRegistrierungUrl()}
-            className="hidden rounded-full px-4 py-2 text-sm font-medium hover:bg-secondary sm:block"
+            className="hidden rounded-full px-4 py-2 text-sm font-medium hover:bg-secondary lg:block"
           >
-            myBestDays für Gastgeber
+            {t("gastgeber")}
           </Link>
-          {/* Globus: Sprache & Währung (wie Airbnb). */}
+          {/* Globus: Sprache & Währung. */}
           <SprachWaehrungModal />
-          {/* Konto-/Login-Menü (serverseitig gerendert, HttpOnly-Session). */}
+          {/* Konto-/Login-Menü (serverseitig gerendert, HttpOnly-Session).
+              Mobil ist es der einzige Weg zu „für Gastgeber" und Hilfe. */}
           {kontoSlot}
         </div>
       </div>
 
-      {/* Große Such-Leiste unter der Kopfzeile (Airbnb: zentriert, breit). */}
-      <AnimatePresence initial={false}>
-        {grossOffen ? (
-          <motion.div
-            key="suche"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className={
-              gescrollt
-                ? "absolute inset-x-0 top-full border-b border-border bg-background shadow-md"
-                : ""
-            }
-          >
-            <div className="mx-auto max-w-4xl px-6 pb-6 pt-2">
-              <SuchLeiste />
-            </div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      {/* Such-Leiste unter der Kopfzeile.
+          Mobil IMMER sichtbar (`md:hidden` greift nur im kollabierten Zustand),
+          ab md kollabierend wie bisher. Die Ein-/Ausblendung läuft als
+          CSS-Übergang statt über AnimatePresence, weil dasselbe Element in zwei
+          Layouts lebt — ein Exit-Animations-Baum, der mobil nie beendet wird,
+          hinterlässt sonst eine leere, aber klickbare Fläche. */}
+      <div
+        className={
+          (grossOffen ? "" : "md:hidden ") +
+          (gescrollt
+            ? "md:absolute md:inset-x-0 md:top-full md:border-b md:border-border md:bg-background md:shadow-md"
+            : "")
+        }
+      >
+        <div className="mx-auto max-w-4xl px-4 pb-2 pt-1 md:px-6 md:pb-6 md:pt-2">
+          <SuchLeiste />
+        </div>
+
+        {/* Kanal-Chips (nur mobil) — wischbar, mit Schnapp-Punkten. */}
+        <nav
+          aria-label={t("unterkuenfte")}
+          className="band-scroll flex snap-x gap-2 overflow-x-auto px-4 pb-3 md:hidden"
+        >
+          {TABS.map((tab, i) => (
+            <button
+              key={tab.key}
+              type="button"
+              className={
+                "flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors " +
+                (i === 0
+                  ? "border-foreground bg-secondary text-foreground"
+                  : "border-border text-muted-foreground")
+              }
+            >
+              <Icon icon={tab.icon} className="size-5" />
+              {t(tab.key)}
+            </button>
+          ))}
+        </nav>
+      </div>
     </header>
   );
 }

@@ -49,3 +49,40 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+/* Mobil-Fundament: der untere Sicherheitsabstand des Geräts (iPhone-Home-Balken)
+   als Variable, damit fixe untere Leisten und der Inhalt darunter mit DEMSELBEN
+   Wert rechnen. Ohne den Fallback `0px` fällt `calc()` komplett aus. */
+:root {
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  /* Höhe der fixen unteren Tab-Leiste (nur < md sichtbar). */
+  --tabbar-h: 4rem;
+}
+
+/* Kein sichtbarer Scrollbalken an Wisch-Bändern (Karten-Reihen, Chip-Leisten).
+   Als Utility, weil dieselbe Kombination sonst an sechs Stellen inline stand. */
+@utility band-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Platz für die fixe untere Tab-Leiste. Nur unter md, weil die Leiste ab md
+   nicht gerendert wird — sonst klebt auf Desktop ein toter 4-rem-Streifen. */
+@utility tabbar-abstand {
+  padding-bottom: calc(var(--tabbar-h) + var(--safe-b));
+  @media (width >= 48rem) {
+    padding-bottom: 0;
+  }
+}
+
+/* Wie `tabbar-abstand`, zusätzlich um die feste Aktionsleiste (Preis + CTA) —
+   auf der Inserat-Seite liegen ZWEI feste Leisten übereinander. */
+@utility aktionsleiste-abstand {
+  padding-bottom: calc(var(--tabbar-h) + var(--safe-b) + 4.5rem);
+  @media (width >= 48rem) {
+    padding-bottom: 0;
+  }
+}

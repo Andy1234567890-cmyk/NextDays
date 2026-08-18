@@ -82,7 +82,7 @@ export function AnmeldenForm({ weiter }: { weiter: string }) {
                 setHinweis(null);
               }}
               className={
-                "flex-1 rounded-full py-2 text-sm font-medium transition-colors " +
+                "min-h-11 flex-1 rounded-full text-sm font-medium transition-colors " +
                 (modus === m
                   ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground")
@@ -115,6 +115,7 @@ export function AnmeldenForm({ weiter }: { weiter: string }) {
           type="email"
           required
           autoComplete="email"
+          inputMode="email"
         />
 
         {modus !== "reset" && (
@@ -158,7 +159,7 @@ export function AnmeldenForm({ weiter }: { weiter: string }) {
         <button
           type="submit"
           disabled={busy}
-          className="flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
         >
           {busy && <Icon icon="ph:spinner" className="size-5 animate-spin" />}
           {modus === "login"
@@ -178,7 +179,7 @@ export function AnmeldenForm({ weiter }: { weiter: string }) {
               setFehler(null);
               setHinweis(null);
             }}
-            className="hover:text-foreground hover:underline"
+            className="inline-flex min-h-11 items-center px-3 hover:text-foreground hover:underline"
           >
             Passwort vergessen?
           </button>
@@ -191,7 +192,7 @@ export function AnmeldenForm({ weiter }: { weiter: string }) {
               setFehler(null);
               setHinweis(null);
             }}
-            className="hover:text-foreground hover:underline"
+            className="inline-flex min-h-11 items-center px-3 hover:text-foreground hover:underline"
           >
             Zurück zur Anmeldung
           </button>
@@ -209,6 +210,7 @@ function Feld({
   type,
   required,
   autoComplete,
+  inputMode,
 }: {
   label: string;
   icon: string;
@@ -217,11 +219,14 @@ function Feld({
   type: string;
   required?: boolean;
   autoComplete?: string;
+  /** Mobile Tastatur-Variante — ohne sie tippt der Gast eine E-Mail auf der
+   *  Buchstabentastatur ohne @ und die Telefonnummer ohne Ziffernblock. */
+  inputMode?: "text" | "email" | "tel";
 }) {
   return (
     <label className="flex flex-col gap-1.5">
       <span className="text-sm font-medium">{label}</span>
-      <span className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 focus-within:border-ring">
+      <span className="flex min-h-12 items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 focus-within:border-ring">
         <Icon icon={icon} className="size-5 text-muted-foreground" />
         <input
           value={value}
@@ -229,7 +234,11 @@ function Feld({
           type={type}
           required={required}
           autoComplete={autoComplete}
-          className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          inputMode={inputMode}
+          // text-base ist Pflicht: unter 16 px zoomt iOS Safari beim Fokus in
+          // das Feld hinein, danach sitzt die Seite verschoben und der
+          // Anmelden-Knopf liegt außerhalb. Ab sm wieder 14 px.
+          className="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground sm:text-sm"
         />
       </span>
     </label>

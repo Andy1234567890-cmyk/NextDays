@@ -85,9 +85,9 @@ export default async function KontoPage() {
 
   return (
     <KontoShell titel="Übersicht" breit>
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6 sm:gap-8">
         {/* Akzent-Hero */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-accent via-accent to-primary p-6 sm:p-8">
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-accent via-accent to-primary p-5 sm:p-8">
           <div
             aria-hidden
             className="absolute inset-0 opacity-30 mix-blend-soft-light"
@@ -97,24 +97,24 @@ export default async function KontoPage() {
             }}
           />
           <div className="relative">
-            <p className="font-display text-2xl font-semibold text-white sm:text-3xl">
+            <p className="font-display text-xl font-semibold text-white sm:text-3xl">
               {vorname ? `Willkommen zurück, ${vorname}.` : "Willkommen zurück."}
             </p>
             <p className="mt-1 max-w-md text-sm text-white/85">
               Hier verwaltest du deine Reisen, Nachrichten und gemerkten
               Unterkünfte bei myBestDays.
             </p>
-            <div className="mt-5 flex flex-wrap gap-3">
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-primary transition-opacity hover:opacity-90"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-primary transition-opacity hover:opacity-90"
               >
                 <Icon icon="ph:magnifying-glass" className="size-4" />
                 Unterkunft finden
               </Link>
               <Link
                 href="/buchungen"
-                className="inline-flex items-center gap-2 rounded-full border border-white/60 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/15"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/60 px-5 text-sm font-semibold text-white transition-colors hover:bg-white/15"
               >
                 <Icon icon="ph:calendar-check" className="size-4" />
                 Meine Buchungen
@@ -133,7 +133,7 @@ export default async function KontoPage() {
               href={`/buchungen/${naechste.id}`}
               className="group flex flex-col gap-4 overflow-hidden rounded-2xl border border-border bg-card transition-shadow hover:shadow-md sm:flex-row"
             >
-              <div className="relative h-44 w-full shrink-0 overflow-hidden bg-secondary sm:h-auto sm:w-64">
+              <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden bg-secondary sm:aspect-auto sm:h-auto sm:w-64">
                 {naechste.property.photo ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -153,7 +153,7 @@ export default async function KontoPage() {
                   </span>
                 )}
               </div>
-              <div className="flex min-w-0 flex-1 flex-col justify-center gap-2 p-5">
+              <div className="flex min-w-0 flex-1 flex-col justify-center gap-2 p-4 sm:p-5">
                 <div className="flex flex-wrap items-center gap-2">
                   <StatusBadge status={naechste.status} />
                 </div>
@@ -192,7 +192,7 @@ export default async function KontoPage() {
               </div>
             </Link>
           ) : (
-            <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-10 text-center">
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-6 text-center sm:p-10">
               <span className="flex size-14 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
                 <Icon icon="ph:suitcase-rolling" className="size-7" />
               </span>
@@ -201,7 +201,7 @@ export default async function KontoPage() {
               </p>
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground hover:opacity-90"
               >
                 <Icon icon="ph:magnifying-glass" className="size-4" />
                 Unterkunft finden
@@ -215,12 +215,12 @@ export default async function KontoPage() {
           <h2 className="mb-3 font-display text-lg font-semibold">
             Schnellzugriff
           </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             {KACHELN.map((k) => (
               <Link
                 key={k.href}
                 href={k.href}
-                className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-border bg-card p-5 transition-shadow hover:shadow-md"
+                className="group relative flex flex-col gap-2 overflow-hidden rounded-2xl border border-border bg-card p-4 transition-shadow hover:shadow-md sm:gap-3 sm:p-5"
               >
                 <span
                   className="flex size-11 items-center justify-center rounded-xl text-white"
@@ -237,7 +237,9 @@ export default async function KontoPage() {
                 )}
                 <div>
                   <p className="font-medium">{k.titel}</p>
-                  <p className="mt-0.5 text-sm text-muted-foreground">{k.text}</p>
+                  <p className="mt-0.5 hidden text-sm text-muted-foreground sm:block">
+                    {k.text}
+                  </p>
                 </div>
                 <Icon
                   icon="ph:arrow-right"

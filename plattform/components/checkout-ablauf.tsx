@@ -96,7 +96,7 @@ export function CheckoutAblauf({
 
   if (zustand.kind === "fertig") {
     return (
-      <div className="flex flex-col items-start gap-3 rounded-2xl border border-emerald-300 bg-emerald-50 p-6 dark:border-emerald-800 dark:bg-emerald-950/40">
+      <div className="flex flex-col items-start gap-3 rounded-2xl border border-emerald-300 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-950/40 sm:p-6">
         <Icon icon="ph:check-circle" className="size-8 text-emerald-700" />
         <h2 className="font-display text-xl font-semibold">
           {t("fertigTitel")}
@@ -242,7 +242,7 @@ export function CheckoutAblauf({
               type="button"
               onClick={buchenUndBezahlen}
               disabled={zustand.kind === "bucht"}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-accent px-7 py-3 font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+              className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-accent px-5 font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
             >
               {zustand.kind === "bucht" ? (
                 <Icon icon="ph:spinner" className="size-5 animate-spin" />
@@ -274,7 +274,7 @@ function Abschnitt({
   return (
     <section
       className={
-        "rounded-2xl border p-6 " +
+        "rounded-2xl border p-4 sm:p-6 " +
         (aktiv ? "border-border shadow-sm" : "border-border")
       }
     >
@@ -333,7 +333,9 @@ function Feld({
         value={wert}
         autoComplete={autoComplete}
         onChange={(e) => onChange(e.target.value)}
-        className="h-11 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-foreground"
+        // text-base ist Pflicht: unter 16 px zoomt iOS Safari beim Fokus in das
+        // Feld, danach sitzt die ganze Seite verschoben. Ab sm wieder 14 px.
+        className="h-12 rounded-xl border border-border bg-background px-3 text-base outline-none focus:border-foreground sm:h-11 sm:text-sm"
       />
     </label>
   );

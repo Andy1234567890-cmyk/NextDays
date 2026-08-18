@@ -20,7 +20,7 @@ export default async function AnmeldenPage({
   if (await isGuestLoggedIn()) redirect(ziel);
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
+    <div className="flex min-h-[100dvh] flex-col md:flex-row">
       {/* Markenspalte */}
       <div className="relative hidden flex-1 flex-col justify-between bg-primary p-12 text-primary-foreground md:flex">
         <Logo variant="light" />
@@ -68,13 +68,15 @@ export default async function AnmeldenPage({
         </div>
       </div>
 
-      {/* Formularspalte */}
-      <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
-        <div className="mb-8 md:hidden">
+      {/* Formularspalte. Mobil trägt sie die ganze Seite: die Markenspalte ist
+          `hidden md:flex`, damit das Formular im ersten Bildschirm steht statt
+          hinter einem Werbeblock. */}
+      <div className="flex flex-1 flex-col items-center justify-center px-4 py-8 sm:px-6 sm:py-12">
+        <div className="mb-6 md:hidden">
           <Logo />
         </div>
         <AnmeldenForm weiter={ziel} />
-        <p className="mt-8 max-w-md text-center text-xs text-muted-foreground">
+        <p className="mt-6 max-w-md text-center text-xs text-muted-foreground sm:mt-8">
           Mit der Anmeldung stimmst du den Nutzungsbedingungen und der
           Datenschutzerklärung von myBestDays zu.
         </p>

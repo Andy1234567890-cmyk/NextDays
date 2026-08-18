@@ -174,7 +174,7 @@ function PayForm({
         type="button"
         onClick={handlePay}
         disabled={!stripe || submitting}
-        className="flex items-center justify-center gap-2 rounded-full bg-primary px-7 py-3 font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-7 font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60 sm:w-auto sm:self-start"
       >
         {submitting ? (
           <Icon icon="ph:spinner" className="size-5 animate-spin" />

@@ -62,7 +62,7 @@ function Zaehler({
           aria-label={verringern}
           disabled={wert <= min}
           onClick={() => onChange(Math.max(min, wert - 1))}
-          className="flex size-8 items-center justify-center rounded-full border border-border text-lg leading-none disabled:opacity-40"
+          className="flex size-11 items-center justify-center rounded-full border border-border text-lg leading-none disabled:opacity-40 md:size-8"
         >
           −
         </button>
@@ -72,7 +72,7 @@ function Zaehler({
           aria-label={erhoehen}
           disabled={wert >= max}
           onClick={() => onChange(Math.min(max, wert + 1))}
-          className="flex size-8 items-center justify-center rounded-full border border-border text-lg leading-none disabled:opacity-40"
+          className="flex size-11 items-center justify-center rounded-full border border-border text-lg leading-none disabled:opacity-40 md:size-8"
         >
           +
         </button>
@@ -85,7 +85,15 @@ function Zaehler({
 // sinnlos hoch — mehr als vier Tiere ist ein Fall für den Gastgeber-Kontakt.
 const MAX_TIERE = 4;
 
-export function BuchungsWidget({ listing }: { listing: Listing }) {
+export function BuchungsWidget({
+  listing,
+  rahmenlos = false,
+}: {
+  listing: Listing;
+  /** Ohne eigenen Kasten/Schatten — für die Nutzung im mobilen Blatt, das den
+   *  Rahmen schon mitbringt. */
+  rahmenlos?: boolean;
+}) {
   const t = useTranslations("widget");
   const router = useRouter();
   const [checkIn, setCheckIn] = useState("");
@@ -184,7 +192,13 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-lg">
+    <div
+      className={
+        rahmenlos
+          ? ""
+          : "rounded-2xl border border-border bg-card p-4 shadow-lg sm:p-6"
+      }
+    >
       {/* Kopf: mit gewähltem Zeitraum der GESAMTPREIS (so macht es Airbnb), ohne
           Zeitraum der Nachtpreis als „ab"-Angabe. */}
       <p className="mb-4">
@@ -213,8 +227,11 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
           (belegt ? "border-destructive" : "border-border")
         }
       >
+        {/* Zwei Spalten bleiben, aber die Zellen dürfen nicht schrumpfen: bei
+            360 px passte „tt.mm.jjjj" plus Kalendersymbol sonst nicht mehr und
+            der Wert wurde abgeschnitten. */}
         <div className="grid grid-cols-2 divide-x divide-border border-b border-border">
-          <label className="p-3">
+          <label className="min-w-0 p-3">
             <span className="block text-[0.625rem] font-semibold uppercase tracking-wide">
               {t("checkIn")}
             </span>
@@ -222,10 +239,10 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
               type="date"
               value={checkIn}
               onChange={(e) => setCheckIn(e.target.value)}
-              className="w-full bg-transparent text-sm text-foreground outline-none"
+              className="w-full bg-transparent text-base text-foreground outline-none sm:text-sm"
             />
           </label>
-          <label className="p-3">
+          <label className="min-w-0 p-3">
             <span className="block text-[0.625rem] font-semibold uppercase tracking-wide">
               {t("checkOut")}
             </span>
@@ -234,7 +251,7 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
               value={checkOut}
               min={checkIn || undefined}
               onChange={(e) => setCheckOut(e.target.value)}
-              className="w-full bg-transparent text-sm text-foreground outline-none"
+              className="w-full bg-transparent text-base text-foreground outline-none sm:text-sm"
             />
           </label>
         </div>

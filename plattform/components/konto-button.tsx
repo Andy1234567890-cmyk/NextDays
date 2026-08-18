@@ -45,7 +45,7 @@ export function KontoButton({
           type="button"
           onClick={() => setOffen((o) => !o)}
           aria-label="Menü"
-          className="flex items-center gap-2 rounded-full border border-border py-1.5 pl-3 pr-1.5 hover:shadow-sm"
+          className="flex min-h-11 items-center gap-2 rounded-full border border-border pl-3 pr-1.5 hover:shadow-sm"
         >
           <Icon icon="ph:list" className="size-4" />
           <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -54,11 +54,11 @@ export function KontoButton({
         </button>
 
         {offen && (
-          <div className="absolute right-0 top-full z-[70] mt-2 w-64 overflow-hidden rounded-2xl border border-border bg-card py-2 shadow-lg">
+          <div className="absolute right-0 top-full z-[70] mt-2 w-64 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-border bg-card py-2 shadow-lg">
             <Link
               href="/anmelden"
               onClick={() => setOffen(false)}
-              className="block px-4 py-2.5 text-sm font-semibold hover:bg-secondary"
+              className="flex min-h-11 items-center px-4 text-sm font-semibold hover:bg-secondary"
             >
               Anmelden oder registrieren
             </Link>
@@ -66,7 +66,7 @@ export function KontoButton({
             <Eintrag href="/hilfe" icon="ph:question" label="Hilfe-Center" />
             <a
               href={gastgeberRegistrierungUrl()}
-              className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-secondary"
+              className="flex min-h-11 items-center gap-3 px-4 text-sm hover:bg-secondary"
             >
               <Icon icon="ph:house-line" className="size-5 text-muted-foreground" />
               Gastgeber werden
@@ -85,7 +85,7 @@ export function KontoButton({
       <button
         type="button"
         onClick={() => setOffen((o) => !o)}
-        className="relative flex items-center gap-2 rounded-full border border-border py-1.5 pl-3 pr-1.5 hover:shadow-sm"
+        className="relative flex min-h-11 items-center gap-2 rounded-full border border-border pl-3 pr-1.5 hover:shadow-sm"
       >
         <Icon icon="ph:list" className="size-4" />
         <span className="flex size-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
@@ -99,7 +99,7 @@ export function KontoButton({
       </button>
 
       {offen && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-60 overflow-hidden rounded-2xl border border-border bg-card py-2 shadow-lg">
+        <div className="absolute right-0 top-full z-50 mt-2 w-60 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-border bg-card py-2 shadow-lg">
           {name && (
             <div className="border-b border-border px-4 pb-2 pt-1">
               <p className="truncate text-sm font-semibold">{name}</p>
@@ -120,6 +120,17 @@ export function KontoButton({
           <Eintrag href="/merkzettel" icon="ph:heart" label="Merkzettel" />
           <Eintrag href="/bewertungen" icon="ph:star" label="Bewertungen" />
           <div className="my-1 border-t border-border" />
+          {/* Hilfe und der Gastgeber-Einstieg hingen nur an der Kopfzeile
+              (`hidden lg:block`) — mobil gab es angemeldet keinen Weg dorthin. */}
+          <Eintrag href="/hilfe" icon="ph:question" label="Hilfe-Center" />
+          <a
+            href={gastgeberRegistrierungUrl()}
+            className="flex min-h-11 items-center gap-3 px-4 text-sm hover:bg-secondary"
+          >
+            <Icon icon="ph:house-line" className="size-5 text-muted-foreground" />
+            Gastgeber werden
+          </a>
+          <div className="my-1 border-t border-border" />
           <button
             type="button"
             onClick={async () => {
@@ -128,7 +139,7 @@ export function KontoButton({
               router.replace("/");
               router.refresh();
             }}
-            className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
+            className="flex min-h-11 w-full items-center gap-3 px-4 text-left text-sm text-muted-foreground hover:bg-secondary hover:text-foreground"
           >
             <Icon icon="ph:sign-out" className="size-5" />
             Abmelden
@@ -153,7 +164,7 @@ function Eintrag({
   return (
     <Link
       href={href}
-      className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm hover:bg-secondary"
+      className="flex min-h-11 items-center justify-between gap-3 px-4 text-sm hover:bg-secondary"
     >
       <span className="flex items-center gap-3">
         <Icon icon={icon} className="size-5 text-muted-foreground" />

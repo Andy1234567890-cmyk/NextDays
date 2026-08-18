@@ -84,7 +84,7 @@ export function AufenthaltAnsicht({ reservationId }: { reservationId: string }) 
   }
   if (phase.kind === "error") {
     return (
-      <div className="rounded-2xl border border-accent/40 bg-accent/10 p-6 text-sm text-accent">
+      <div className="rounded-2xl border border-accent/40 bg-accent/10 p-4 text-sm text-accent sm:p-6">
         {phase.msg}
       </div>
     );
@@ -94,10 +94,10 @@ export function AufenthaltAnsicht({ reservationId }: { reservationId: string }) 
   const eingecheckt = Boolean(s.checked_in_at);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5 sm:gap-6">
       {/* Kopf */}
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
-        <div className="h-48 w-full bg-secondary">
+        <div className="aspect-[16/9] w-full bg-secondary sm:aspect-auto sm:h-48">
           {s.header_image_path ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -111,8 +111,8 @@ export function AufenthaltAnsicht({ reservationId }: { reservationId: string }) 
             </span>
           )}
         </div>
-        <div className="p-5">
-          <h2 className="font-display text-xl font-semibold">
+        <div className="p-4 sm:p-5">
+          <h2 className="font-display text-lg font-semibold sm:text-xl">
             {s.property_title}
           </h2>
           {s.property_address && (
@@ -126,7 +126,7 @@ export function AufenthaltAnsicht({ reservationId }: { reservationId: string }) 
 
       {/* Self-Check-in */}
       {s.self_checkin && (
-        <div className="rounded-2xl border border-border bg-card p-5">
+        <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
           {eingecheckt ? (
             <div className="flex items-center gap-3 text-emerald-700">
               <Icon icon="ph:check-circle-fill" className="size-6" />
@@ -152,7 +152,7 @@ export function AufenthaltAnsicht({ reservationId }: { reservationId: string }) 
                 type="button"
                 onClick={checkIn}
                 disabled={checkinBusy}
-                className="mt-4 flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+                className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60 sm:w-auto"
               >
                 {checkinBusy && (
                   <Icon icon="ph:spinner" className="size-4 animate-spin" />
@@ -165,13 +165,13 @@ export function AufenthaltAnsicht({ reservationId }: { reservationId: string }) 
       )}
 
       {/* Türcode */}
-      <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
         <div className="flex items-center gap-2">
           <Icon icon="ph:password" className="size-5" />
           <p className="font-medium">Zugangscode</p>
         </div>
         {s.door_code ? (
-          <p className="mt-3 font-display text-3xl font-semibold tracking-widest">
+          <p className="mt-3 break-all font-display text-2xl font-semibold tracking-widest sm:text-3xl">
             {s.door_code}
           </p>
         ) : (
@@ -190,7 +190,7 @@ export function AufenthaltAnsicht({ reservationId }: { reservationId: string }) 
           return (
             <div
               key={blk.key}
-              className="rounded-2xl border border-border bg-card p-5"
+              className="rounded-2xl border border-border bg-card p-4 sm:p-5"
             >
               <div className="flex items-center gap-2">
                 <Icon icon={blk.icon} className="size-5 text-muted-foreground" />
@@ -206,7 +206,7 @@ export function AufenthaltAnsicht({ reservationId }: { reservationId: string }) 
 
       {/* Kontakte */}
       {(s.contact_name || s.contact_phone || s.maintenance_phone) && (
-        <div className="rounded-2xl border border-border bg-card p-5">
+        <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
           <p className="font-medium">Kontakt</p>
           <div className="mt-3 flex flex-col gap-2 text-sm">
             {s.contact_name && (

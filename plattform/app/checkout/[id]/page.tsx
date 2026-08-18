@@ -20,8 +20,9 @@ import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ladeAngebotServer } from "@/lib/angebot-server";
+import type { Angebot } from "@/lib/buchung";
 import { ladeInserat } from "@/lib/inserate";
-import { formatCurrency } from "@/lib/listings";
+import { type Listing, formatCurrency } from "@/lib/listings";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("checkout");
@@ -122,7 +123,44 @@ export default async function CheckoutPage({
 
   return (
     <Rahmen titel={t("titel")} zurueck={zurueck} zurueckLabel={t("zurueck")}>
-      <div className="grid gap-12 lg:grid-cols-[1fr_24rem]">
+      <div className="grid gap-8 lg:grid-cols-[1fr_24rem] lg:gap-12">
+        {/* Zusammenfassung mobil GANZ OBEN und aufklappbar.
+            Vorher stand sie als zweite Grid-Spalte unter dem Bezahlablauf: auf
+            dem Handy hat der Gast damit Kontaktdaten eingegeben und bezahlt,
+            bevor irgendwo eine Summe stand. `<details>` statt Client-State,
+            weil die Seite eine Server-Component ist und Auf-/Zuklappen nichts
+            ist, was React verwalten muss. */}
+        <details className="order-first rounded-2xl border border-border bg-card lg:hidden">
+          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
+            <span className="text-sm font-semibold">
+              {t("gesamt", { waehrung })}
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="font-semibold">
+                {formatCurrency(angebot.total, waehrung)}
+              </span>
+              <Icon
+                icon="ph:caret-down"
+                className="size-4 text-muted-foreground"
+              />
+            </span>
+          </summary>
+          <div className="border-t border-border px-4 pb-4 pt-2">
+            <Zusammenfassung
+              listing={listing}
+              foto={foto}
+              angebot={angebot}
+              waehrung={waehrung}
+              zeitraum={zeitraum}
+              zurueck={zurueck}
+              guests={guests}
+              pets={pets}
+              volleRueckgabe={volleRueckgabe}
+              kompakt
+            />
+          </div>
+        </details>
+
         <CheckoutAblauf
           daten={{
             propertyId: id,
@@ -135,112 +173,21 @@ export default async function CheckoutPage({
           angebot={angebot}
         />
 
-        {/* Rechte Spalte: Zusammenfassung */}
-        <div className="lg:relative">
+        {/* Rechte Spalte ab lg: dieselbe Zusammenfassung, mitlaufend */}
+        <div className="hidden lg:relative lg:block">
           <div className="lg:sticky lg:top-28">
             <div className="rounded-2xl border border-border bg-card p-6">
-              <div className="flex gap-4 border-b border-border pb-5">
-                {foto ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={foto}
-                    alt=""
-                    className="size-24 shrink-0 rounded-xl object-cover"
-                  />
-                ) : (
-                  <PhotoPlaceholder
-                    hue={listing.hue}
-                    className="size-24 shrink-0 rounded-xl"
-                  />
-                )}
-                <div className="min-w-0">
-                  <p className="line-clamp-2 font-medium leading-snug">
-                    {listing.titel}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {listing.ort}
-                  </p>
-                  {listing.bewertung != null && (
-                    <p className="mt-1 flex items-center gap-1 text-sm">
-                      <Icon icon="ph:star-fill" className="size-3.5" />
-                      {format.number(listing.bewertung, {
-                        minimumFractionDigits: 1,
-                        maximumFractionDigits: 2,
-                      })}
-                      {listing.anzahlBewertungen != null &&
-                        ` (${listing.anzahlBewertungen})`}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Stornobedingung — nur wenn der Betrieb eine gepflegt hat. */}
-              {volleRueckgabe && (
-                <div className="border-b border-border py-5">
-                  <p className="text-sm font-semibold">{t("stornoTitel")}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {t("stornoVoll", {
-                      tage: volleRueckgabe.days_before_arrival,
-                    })}
-                  </p>
-                </div>
-              )}
-
-              <div className="flex items-start justify-between border-b border-border py-5">
-                <div>
-                  <p className="text-sm font-semibold">{t("datum")}</p>
-                  <p className="text-sm text-muted-foreground">{zeitraum}</p>
-                </div>
-                <Link href={zurueck} className="text-sm font-medium underline">
-                  {t("aendern")}
-                </Link>
-              </div>
-
-              <div className="flex items-start justify-between border-b border-border py-5">
-                <div>
-                  <p className="text-sm font-semibold">{t("gaeste")}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {t("gaesteZahl", { count: guests })}
-                    {pets > 0 && ` · ${t("tiereZahl", { count: pets })}`}
-                  </p>
-                </div>
-                <Link href={zurueck} className="text-sm font-medium underline">
-                  {t("aendern")}
-                </Link>
-              </div>
-
-              <div className="pt-5">
-                <p className="text-sm font-semibold">{t("preisDetails")}</p>
-                <div className="mt-3 flex flex-col gap-2 text-sm">
-                  {angebot.lines.map((zeile, i) => (
-                    <div
-                      key={`${zeile.label}-${i}`}
-                      className="flex justify-between gap-4"
-                    >
-                      <span className={zeile.amount < 0 ? "text-emerald-700" : ""}>
-                        {zeile.label}
-                      </span>
-                      <span className={zeile.amount < 0 ? "text-emerald-700" : ""}>
-                        {formatCurrency(zeile.amount, waehrung)}
-                      </span>
-                    </div>
-                  ))}
-                  <div className="mt-2 flex justify-between border-t border-border pt-3 font-semibold">
-                    <span>{t("gesamt", { waehrung })}</span>
-                    <span>{formatCurrency(angebot.total, waehrung)}</span>
-                  </div>
-                  {angebot.deposit && (
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      {t("kautionHinweis", {
-                        betrag: formatCurrency(
-                          angebot.deposit.amount,
-                          angebot.deposit.currency || waehrung,
-                        ),
-                      })}
-                    </p>
-                  )}
-                </div>
-              </div>
+              <Zusammenfassung
+                listing={listing}
+                foto={foto}
+                angebot={angebot}
+                waehrung={waehrung}
+                zeitraum={zeitraum}
+                zurueck={zurueck}
+                guests={guests}
+                pets={pets}
+                volleRueckgabe={volleRueckgabe}
+              />
             </div>
           </div>
         </div>
@@ -263,22 +210,26 @@ function Rahmen({
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader compact />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">
-        <div className="mb-8 flex items-center gap-4">
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-5 sm:px-6 sm:py-8">
+        <div className="mb-6 flex items-center gap-2 sm:mb-8 sm:gap-4">
           <Link
             href={zurueck}
             aria-label={zurueckLabel}
-            className="flex size-10 items-center justify-center rounded-full hover:bg-secondary"
+            className="-ml-2 flex size-11 shrink-0 items-center justify-center rounded-full hover:bg-secondary sm:ml-0 sm:size-10"
           >
             <Icon icon="ph:arrow-left" className="size-5" />
           </Link>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">
+          <h1 className="font-display text-xl font-semibold tracking-tight sm:text-2xl">
             {titel}
           </h1>
         </div>
         {children}
       </main>
-      <SiteFooter />
+      {/* Im Bezahlfluss mobil KEINE Fußzeile: darunter hingen ~30 Links plus die
+          Städte-Liste — unmittelbar unter dem Bezahlknopf. Ab md bleibt sie. */}
+      <div className="hidden md:block">
+        <SiteFooter />
+      </div>
     </div>
   );
 }
@@ -299,5 +250,148 @@ function Hinweis({
         {linkText}
       </Link>
     </div>
+  );
+}
+
+/** Preis-/Aufenthaltszusammenfassung. EINE Quelle für beide Darstellungen:
+ *  mobil im aufklappbaren `<details>` oben, ab lg als mitlaufende Spalte.
+ *  `kompakt` verkleinert nur das Vorschaubild, damit bei 360 px Titel und Ort
+ *  daneben noch lesbar bleiben. */
+async function Zusammenfassung({
+  listing,
+  foto,
+  angebot,
+  waehrung,
+  zeitraum,
+  zurueck,
+  guests,
+  pets,
+  volleRueckgabe,
+  kompakt = false,
+}: {
+  listing: Listing;
+  foto: string | undefined;
+  angebot: Angebot;
+  waehrung: string;
+  zeitraum: string;
+  zurueck: string;
+  guests: number;
+  pets: number;
+  volleRueckgabe: { days_before_arrival: number } | undefined;
+  kompakt?: boolean;
+}) {
+  const [t, format] = await Promise.all([
+    getTranslations("checkout"),
+    getFormatter(),
+  ]);
+  const bild = kompakt ? "size-20" : "size-24";
+
+  return (
+    <>
+      <div className="flex gap-4 border-b border-border pb-5">
+        {foto ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={foto}
+            alt=""
+            className={`${bild} shrink-0 rounded-xl object-cover`}
+          />
+        ) : (
+          <PhotoPlaceholder
+            hue={listing.hue}
+            className={`${bild} shrink-0 rounded-xl`}
+          />
+        )}
+        <div className="min-w-0">
+          <p className="line-clamp-2 font-medium leading-snug">
+            {listing.titel}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{listing.ort}</p>
+          {listing.bewertung != null && (
+            <p className="mt-1 flex items-center gap-1 text-sm">
+              <Icon icon="ph:star-fill" className="size-3.5" />
+              {format.number(listing.bewertung, {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 2,
+              })}
+              {listing.anzahlBewertungen != null &&
+                ` (${listing.anzahlBewertungen})`}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Stornobedingung — nur wenn der Betrieb eine gepflegt hat. */}
+      {volleRueckgabe && (
+        <div className="border-b border-border py-5">
+          <p className="text-sm font-semibold">{t("stornoTitel")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("stornoVoll", { tage: volleRueckgabe.days_before_arrival })}
+          </p>
+        </div>
+      )}
+
+      <div className="flex items-start justify-between gap-3 border-b border-border py-5">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold">{t("datum")}</p>
+          <p className="text-sm text-muted-foreground">{zeitraum}</p>
+        </div>
+        <Link href={zurueck} className="shrink-0 text-sm font-medium underline">
+          {t("aendern")}
+        </Link>
+      </div>
+
+      <div className="flex items-start justify-between gap-3 border-b border-border py-5">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold">{t("gaeste")}</p>
+          <p className="text-sm text-muted-foreground">
+            {t("gaesteZahl", { count: guests })}
+            {pets > 0 && ` \u00b7 ${t("tiereZahl", { count: pets })}`}
+          </p>
+        </div>
+        <Link href={zurueck} className="shrink-0 text-sm font-medium underline">
+          {t("aendern")}
+        </Link>
+      </div>
+
+      <div className="pt-5">
+        <p className="text-sm font-semibold">{t("preisDetails")}</p>
+        <div className="mt-3 flex flex-col gap-2 text-sm">
+          {angebot.lines.map((zeile, i) => (
+            <div
+              key={`${zeile.label}-${i}`}
+              className="flex justify-between gap-4"
+            >
+              <span className={zeile.amount < 0 ? "text-emerald-700" : ""}>
+                {zeile.label}
+              </span>
+              <span
+                className={
+                  "shrink-0 " + (zeile.amount < 0 ? "text-emerald-700" : "")
+                }
+              >
+                {formatCurrency(zeile.amount, waehrung)}
+              </span>
+            </div>
+          ))}
+          <div className="mt-2 flex justify-between gap-4 border-t border-border pt-3 font-semibold">
+            <span>{t("gesamt", { waehrung })}</span>
+            <span className="shrink-0">
+              {formatCurrency(angebot.total, waehrung)}
+            </span>
+          </div>
+          {angebot.deposit && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t("kautionHinweis", {
+                betrag: formatCurrency(
+                  angebot.deposit.amount,
+                  angebot.deposit.currency || waehrung,
+                ),
+              })}
+            </p>
+          )}
+        </div>
+      </div>
+    </>
   );
 }

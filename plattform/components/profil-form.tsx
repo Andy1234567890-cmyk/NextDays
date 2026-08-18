@@ -6,6 +6,7 @@ import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { Select } from "@/components/select";
 import { type GuestMe, guestUpdateMe } from "@/lib/guest-auth";
 import { clearGuestSession } from "@/lib/guest-session";
 
@@ -59,7 +60,7 @@ export function ProfilForm({ me }: { me: GuestMe }) {
   return (
     <form
       onSubmit={speichern}
-      className="rounded-2xl border border-border bg-card p-6"
+      className="rounded-2xl border border-border bg-card p-4 sm:p-6"
     >
       <h2 className="font-display text-lg font-semibold">Profil</h2>
       <p className="mt-1 text-sm text-muted-foreground">
@@ -71,7 +72,7 @@ export function ProfilForm({ me }: { me: GuestMe }) {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-ring"
+            className="min-h-12 w-full rounded-xl border border-border bg-background px-3 text-base outline-none focus:border-ring sm:min-h-0 sm:py-2.5 sm:text-sm"
           />
         </Feld>
         <Feld label="Telefon">
@@ -79,22 +80,23 @@ export function ProfilForm({ me }: { me: GuestMe }) {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             type="tel"
-            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-ring"
+            className="min-h-12 w-full rounded-xl border border-border bg-background px-3 text-base outline-none focus:border-ring sm:min-h-0 sm:py-2.5 sm:text-sm"
           />
         </Feld>
         <Feld label="E-Mail">
           <input
             value={me.email}
             disabled
-            className="w-full rounded-xl border border-border bg-secondary px-3 py-2.5 text-sm text-muted-foreground"
+            className="min-h-12 w-full rounded-xl border border-border bg-secondary px-3 text-base text-muted-foreground sm:min-h-0 sm:py-2.5 sm:text-sm"
           />
         </Feld>
         <div />
         <Feld label="Sprache">
-          <select
+          <Select
             value={locale}
             onChange={(e) => setLocale(e.target.value)}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-ring"
+            wrapperClassName="w-full"
+            className="min-h-12 w-full rounded-xl sm:min-h-0 sm:py-2.5"
           >
             <option value="">Keine Angabe</option>
             {LOCALES.map((l) => (
@@ -102,13 +104,14 @@ export function ProfilForm({ me }: { me: GuestMe }) {
                 {l.label}
               </option>
             ))}
-          </select>
+          </Select>
         </Feld>
         <Feld label="Währung">
-          <select
+          <Select
             value={currency}
             onChange={(e) => setCurrency(e.target.value)}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-ring"
+            wrapperClassName="w-full"
+            className="min-h-12 w-full rounded-xl sm:min-h-0 sm:py-2.5"
           >
             <option value="">Keine Angabe</option>
             {CURRENCIES.map((c) => (
@@ -116,7 +119,7 @@ export function ProfilForm({ me }: { me: GuestMe }) {
                 {c}
               </option>
             ))}
-          </select>
+          </Select>
         </Feld>
       </div>
 
@@ -125,7 +128,7 @@ export function ProfilForm({ me }: { me: GuestMe }) {
           type="checkbox"
           checked={marketing}
           onChange={(e) => setMarketing(e.target.checked)}
-          className="mt-0.5 size-4 rounded border-border accent-accent"
+          className="mt-0.5 size-5 shrink-0 rounded border-border accent-accent sm:size-4"
         />
         <span className="text-sm text-muted-foreground">
           Ich möchte Angebote und Reise-Inspirationen per E-Mail erhalten.
@@ -144,11 +147,11 @@ export function ProfilForm({ me }: { me: GuestMe }) {
         </p>
       )}
 
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mt-6 flex flex-col-reverse items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <button
           type="submit"
           disabled={busy}
-          className="flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
         >
           {busy && <Icon icon="ph:spinner" className="size-4 animate-spin" />}
           Speichern
@@ -160,7 +163,7 @@ export function ProfilForm({ me }: { me: GuestMe }) {
             router.replace("/");
             router.refresh();
           }}
-          className="flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+          className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-border px-5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
         >
           <Icon icon="ph:sign-out" className="size-4" />
           Abmelden

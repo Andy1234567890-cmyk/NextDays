@@ -16,9 +16,9 @@ export function ObjektBewertungen({ daten }: { daten: PropertyReviews }) {
   const schnitt = daten.category_averages;
 
   return (
-    <div className="border-t border-border py-6">
+    <div className="border-t border-border py-5 sm:py-6">
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="font-display text-xl font-semibold">
+        <h2 className="font-display text-lg font-semibold sm:text-xl">
           <Icon icon="ph:star-fill" className="mb-1 inline size-5 text-accent" />{" "}
           {daten.average.toLocaleString("de-DE")}
         </h2>
@@ -34,7 +34,7 @@ export function ObjektBewertungen({ daten }: { daten: PropertyReviews }) {
             if (wert == null) return null;
             return (
               <div key={k.key} className="flex items-center gap-3">
-                <span className="w-32 shrink-0 text-sm text-muted-foreground">
+                <span className="w-24 shrink-0 text-sm text-muted-foreground sm:w-32">
                   {k.label}
                 </span>
                 <span className="h-1 flex-1 overflow-hidden rounded-full bg-secondary">

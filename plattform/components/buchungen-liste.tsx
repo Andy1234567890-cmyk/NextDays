@@ -79,7 +79,7 @@ export function BuchungenListe({
   const items = cache[tab] ?? [];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5 sm:gap-6">
       <div className="flex gap-1 rounded-full bg-secondary p-1">
         {TABS.map((t) => (
           <button
@@ -87,7 +87,7 @@ export function BuchungenListe({
             type="button"
             onClick={() => wechsle(t.key)}
             className={
-              "flex-1 rounded-full py-2 text-sm font-medium transition-colors " +
+              "min-h-11 flex-1 rounded-full px-2 text-sm font-medium transition-colors " +
               (tab === t.key
                 ? "bg-card text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground")
@@ -110,7 +110,7 @@ export function BuchungenListe({
           Lädt…
         </div>
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-12 text-center">
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-6 text-center sm:p-12">
           <span className="flex size-14 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
             <Icon icon="ph:suitcase-rolling" className="size-7" />
           </span>
@@ -119,14 +119,14 @@ export function BuchungenListe({
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 sm:gap-4">
           {items.map((b) => (
             <div key={b.id} className="flex flex-col gap-2">
               <BuchungKarte b={b} />
               {tab === "past" && bewertet !== null && !bewertet.has(b.id) && (
                 <Link
                   href={`/bewertungen?reservation=${b.id}`}
-                  className="self-start rounded-full border border-border px-4 py-1.5 text-sm font-medium hover:bg-secondary"
+                  className="inline-flex min-h-11 items-center self-start rounded-full border border-border px-4 text-sm font-medium hover:bg-secondary"
                 >
                   <Icon icon="ph:star" className="mb-0.5 mr-1 inline size-4" />
                   Aufenthalt bewerten
@@ -147,7 +147,7 @@ function BuchungKarte({ b }: { b: BookingListItem }) {
       href={`/buchungen/${b.id}`}
       className="group flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 transition-shadow hover:shadow-md sm:flex-row sm:items-center"
     >
-      <div className="h-40 w-full shrink-0 overflow-hidden rounded-xl bg-secondary sm:size-28">
+      <div className="aspect-[16/9] w-full shrink-0 overflow-hidden rounded-xl bg-secondary sm:aspect-auto sm:size-28">
         {b.property.photo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -178,7 +178,7 @@ function BuchungKarte({ b }: { b: BookingListItem }) {
         </p>
       </div>
 
-      <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+      <div className="flex shrink-0 flex-row-reverse items-center justify-end gap-2 sm:flex-col sm:items-end">
         {b.total_amount != null ? (
           <span className="font-semibold">
             {formatCurrency(b.total_amount, waehrung)}

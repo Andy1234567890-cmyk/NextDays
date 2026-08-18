@@ -100,19 +100,19 @@ export function MerkzettelClient({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5 sm:gap-6">
       {/* Neue Liste */}
-      <form onSubmit={anlegen} className="flex gap-2">
+      <form onSubmit={anlegen} className="flex flex-col gap-2 sm:flex-row">
         <input
           value={neueListe}
           onChange={(e) => setNeueListe(e.target.value)}
           placeholder="Neue Merkliste (z. B. Sommer 2026)"
-          className="w-full rounded-full border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-ring"
+          className="min-h-12 w-full rounded-full border border-border bg-card px-4 text-base outline-none focus:border-ring sm:min-h-0 sm:py-2.5 sm:text-sm"
         />
         <button
           type="submit"
           disabled={busy || !neueListe.trim()}
-          className="flex shrink-0 items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+          className="flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60 sm:min-h-0 sm:py-2.5"
         >
           <Icon icon="ph:plus" className="size-4" />
           Anlegen
@@ -126,7 +126,7 @@ export function MerkzettelClient({
       )}
 
       {lists.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-12 text-center">
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-6 text-center sm:p-12">
           <span className="flex size-14 items-center justify-center rounded-2xl bg-accent/10 text-accent">
             <Icon icon="ph:heart" className="size-7" />
           </span>
@@ -137,12 +137,12 @@ export function MerkzettelClient({
       ) : (
         <>
           {/* Listen-Chips */}
-          <div className="flex flex-wrap gap-2">
+          <div className="band-scroll -mx-4 flex snap-x gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
             {lists.map((l) => (
               <div
                 key={l.id}
                 className={
-                  "group flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors " +
+                  "group flex min-h-11 shrink-0 snap-start items-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm transition-colors " +
                   (l.id === aktivId
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border bg-card hover:bg-secondary")
@@ -170,11 +170,11 @@ export function MerkzettelClient({
                   aria-label="Liste löschen"
                   onClick={() => listeLoeschen(l.id)}
                   className={
-                    "opacity-60 hover:opacity-100 " +
+                    "flex size-8 items-center justify-center rounded-full opacity-60 hover:opacity-100 " +
                     (l.id === aktivId ? "" : "text-muted-foreground")
                   }
                 >
-                  <Icon icon="ph:x" className="size-3.5" />
+                  <Icon icon="ph:x" className="size-4" />
                 </button>
               </div>
             ))}
@@ -187,7 +187,7 @@ export function MerkzettelClient({
               Lädt…
             </div>
           ) : detail && detail.items.length > 0 ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
               {detail.items.map((item) => (
                 <div key={item.property_id} className="group flex flex-col gap-3">
                   <div className="relative aspect-square overflow-hidden rounded-2xl bg-secondary">
@@ -209,7 +209,7 @@ export function MerkzettelClient({
                       type="button"
                       aria-label="Aus Merkzettel entfernen"
                       onClick={() => itemEntfernen(item.property_id)}
-                      className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-full bg-card/95 text-accent shadow-sm hover:bg-card"
+                      className="absolute right-3 top-3 flex size-11 items-center justify-center rounded-full bg-card/95 text-accent shadow-sm hover:bg-card md:size-8"
                     >
                       <Icon icon="ph:heart-fill" className="size-4" />
                     </button>
@@ -252,7 +252,7 @@ export function MerkzettelClient({
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-12 text-center">
+            <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-6 text-center sm:p-12">
               <span className="flex size-14 items-center justify-center rounded-2xl bg-accent/10 text-accent">
                 <Icon icon="ph:heart-break" className="size-7" />
               </span>

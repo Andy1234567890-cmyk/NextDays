@@ -2,6 +2,20 @@
 // WebSocket, kein Polling). Abonniert guest_messages (Filter thread_id des
 // offenen Chats) UND guest_message_threads (Filter portal_guest_id) und pflegt
 // den State inkrementell aus payload.new — KEIN Vollreload nach eigener Aktion.
+//
+// Zwei Layouts:
+//   ab md  — Liste links, Verlauf rechts (zwei Spalten, feste Höhe).
+//   unter md — Master/Detail wie jede Messenger-App: erst die Liste, Antippen
+//              öffnet den Verlauf als eigene Ansicht mit Zurück-Pfeil.
+// Vorher stapelten mobil BEIDE Bereiche untereinander: man scrollte durch eine
+// 18-rem-Liste, um zu einem Verlauf zu kommen, der nicht sagte, zu welcher
+// Unterkunft er gehört. Zusätzlich sprang der erste Thread automatisch auf —
+// mobil landete man also in einem Chat, ohne die Liste gesehen zu haben.
+//
+// Der offene Verlauf hängt an einem History-Eintrag (#chat): damit schließt ihn
+// die Zurück-Wischgeste des Geräts, statt die ganze Seite zu verlassen. Ein
+// Hash statt eines Query-Parameters, weil er den Next-Router nicht auslöst und
+// die Realtime-Abos deshalb nicht neu aufgebaut werden.
 "use client";
 
 import { Icon } from "@iconify/react";
@@ -31,6 +45,11 @@ export function NachrichtenClient({
   const [aktivId, setAktivId] = useState<string | null>(
     initialThreadId ?? initialThreads[0]?.id ?? null,
   );
+  // Mobil: ist der Verlauf als eigene Ansicht offen? Startet nur offen, wenn
+  // gezielt ein Thread angefragt wurde (?reservation=…).
+  const [mobilChatOffen, setMobilChatOffen] = useState(
+    Boolean(initialThreadId),
+  );
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [ladeMsg, setLadeMsg] = useState(false);
   const [entwurf, setEntwurf] = useState("");
@@ -55,6 +74,33 @@ export function NachrichtenClient({
       aktiv = false;
     };
   }, [aktivId]);
+
+  // Zurück-Geste/-Taste des Geräts schließt den Verlauf statt die Seite.
+  useEffect(() => {
+    function onPop() {
+      setMobilChatOffen(false);
+    }
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  function oeffneThread(id: string) {
+    setAktivId(id);
+    setMobilChatOffen(true);
+    if (window.location.hash !== "#chat") {
+      window.history.pushState(null, "", "#chat");
+    }
+  }
+
+  function schliesseThread() {
+    if (window.location.hash === "#chat") {
+      // Über die History zurück, damit kein toter Eintrag stehen bleibt; das
+      // popstate-Ereignis setzt den Zustand.
+      window.history.back();
+      return;
+    }
+    setMobilChatOffen(false);
+  }
 
   // Ans Ende scrollen bei neuen Nachrichten.
   useEffect(() => {
@@ -130,13 +176,18 @@ export function NachrichtenClient({
   const aktiverThread = threads.find((t) => t.id === aktivId) ?? null;
 
   return (
-    <div className="grid gap-0 overflow-hidden rounded-2xl border border-border bg-card md:grid-cols-[20rem_1fr] md:h-[36rem]">
-      {/* Thread-Liste */}
-      <div className="border-b border-border md:border-b-0 md:border-r">
+    <div className="grid gap-0 overflow-hidden rounded-2xl border border-border bg-card md:h-[36rem] md:grid-cols-[20rem_1fr]">
+      {/* Thread-Liste — mobil die erste Ansicht, ab md die linke Spalte */}
+      <div
+        className={
+          "border-border md:block md:border-b-0 md:border-r " +
+          (mobilChatOffen ? "hidden" : "block")
+        }
+      >
         <div className="border-b border-border px-4 py-3">
           <p className="font-medium">Konversationen</p>
         </div>
-        <div className="max-h-72 overflow-y-auto md:max-h-full">
+        <div className="overflow-y-auto md:max-h-full">
           {threads.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
               <span className="flex size-11 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
@@ -151,9 +202,9 @@ export function NachrichtenClient({
               <button
                 key={t.id}
                 type="button"
-                onClick={() => setAktivId(t.id)}
+                onClick={() => oeffneThread(t.id)}
                 className={
-                  "flex w-full items-start gap-3 border-b border-border px-4 py-3 text-left transition-colors " +
+                  "flex min-h-16 w-full items-start gap-3 border-b border-border px-4 py-3 text-left transition-colors " +
                   (t.id === aktivId ? "bg-secondary" : "hover:bg-secondary/60")
                 }
               >
@@ -181,16 +232,30 @@ export function NachrichtenClient({
         </div>
       </div>
 
-      {/* Chat */}
-      <div className="flex min-h-[24rem] flex-col md:min-h-0">
+      {/* Chat — mobil die zweite Ansicht (volle Höhe), ab md die rechte Spalte */}
+      <div
+        className={
+          "h-[calc(100dvh-13rem)] min-h-[18rem] flex-col md:flex md:h-auto md:min-h-0 " +
+          (mobilChatOffen ? "flex" : "hidden")
+        }
+      >
         {aktivId ? (
           <>
-            <div className="border-b border-border px-5 py-3">
-              <p className="font-medium">
+            <div className="flex shrink-0 items-center gap-1 border-b border-border px-2 py-2 md:px-5 md:py-3">
+              {/* Zurück nur mobil — ab md steht die Liste ja daneben. */}
+              <button
+                type="button"
+                onClick={schliesseThread}
+                aria-label="Zurück zu den Konversationen"
+                className="flex size-11 shrink-0 items-center justify-center rounded-full hover:bg-secondary md:hidden"
+              >
+                <Icon icon="ph:arrow-left" className="size-5" />
+              </button>
+              <p className="min-w-0 truncate font-medium">
                 {aktiverThread?.property_title ?? "Unterkunft"}
               </p>
             </div>
-            <div className="flex-1 space-y-3 overflow-y-auto p-5">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-4 md:p-5">
               {ladeMsg ? (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Icon icon="ph:spinner" className="size-5 animate-spin" />
@@ -236,19 +301,19 @@ export function NachrichtenClient({
             </div>
             <form
               onSubmit={absenden}
-              className="flex items-center gap-2 border-t border-border p-3"
+              className="flex shrink-0 items-center gap-2 border-t border-border p-3"
             >
               <input
                 value={entwurf}
                 onChange={(e) => setEntwurf(e.target.value)}
                 placeholder="Nachricht schreiben…"
-                className="w-full rounded-full border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-ring"
+                className="min-h-12 w-full rounded-full border border-border bg-background px-4 text-base outline-none focus:border-ring md:min-h-0 md:py-2.5 md:text-sm"
               />
               <button
                 type="submit"
                 disabled={sende || !entwurf.trim()}
                 aria-label="Senden"
-                className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground hover:opacity-90 disabled:opacity-50"
+                className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground hover:opacity-90 disabled:opacity-50 md:size-10"
               >
                 {sende ? (
                   <Icon icon="ph:spinner" className="size-5 animate-spin" />
@@ -260,7 +325,7 @@ export function NachrichtenClient({
           </>
         ) : (
           <div className="flex flex-1 items-center justify-center p-8 text-center text-sm text-muted-foreground">
-            Wähle links eine Konversation.
+            Wähle eine Konversation.
           </div>
         )}
       </div>

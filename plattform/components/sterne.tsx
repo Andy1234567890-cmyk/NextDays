@@ -41,7 +41,9 @@ export function SterneWahl({
           onClick={() => onChange(n)}
           onMouseEnter={() => setHover(n)}
           onMouseLeave={() => setHover(0)}
-          className="text-accent transition-transform hover:scale-110"
+          // Die Ikone ist 2 rem, die Trefferfläche muss 44 px sein — sonst
+          // vergibt ein Daumen auf dem Handy regelmäßig einen Stern zu wenig.
+          className="flex size-11 items-center justify-center text-accent transition-transform hover:scale-110"
         >
           <Icon icon={n <= anzeige ? "ph:star-fill" : "ph:star"} className={size} />
         </button>

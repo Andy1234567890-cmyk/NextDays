@@ -28,7 +28,10 @@ def _settings(**over: object) -> Settings:
         "smtp_from_address": "info@mynextdays.dk",
         "smtp_from_name": "myNextDays",
         "smtp_starttls": True,
-        "mail_sandbox": False,
+        # Der Sandbox-Riegel greift lokal von selbst (app_env-Default "local").
+        # Die Versand-Tests wollen aber den ECHTEN Pfad prüfen, darum hier
+        # ausdrücklich aufheben — der Netzwerk-Call ist per Mock auf _deliver aus.
+        "mail_sandbox_override": False,
     }
     base.update(over)
     return Settings(**base)  # type: ignore[arg-type]
@@ -78,11 +81,29 @@ def test_empty_recipient_raises_422() -> None:
 
 
 def test_sandbox_does_not_call_smtp() -> None:
-    svc = MailService(_settings(mail_sandbox=True))
+    svc = MailService(_settings(mail_sandbox_override=True))
     svc._deliver = MagicMock()  # type: ignore[method-assign]
     mid = svc.send(_msg())
     svc._deliver.assert_not_called()
     assert mid.startswith("<") and "mynextdays.dk" in mid
+
+
+def test_sandbox_greift_lokal_ohne_zutun() -> None:
+    """Der eigentliche Riegel: auf dem Entwicklerrechner ist die Sandbox an, auch
+    wenn niemand `MAIL_SANDBOX_OVERRIDE` setzt und echte SMTP-Daten in der .env
+    stehen. Genau diese Lücke hat 70 Mails an Fixture-Adressen real versendet."""
+    s = _settings(mail_sandbox_override=None, app_env="local")
+    assert s.mail_sandbox is True
+    svc = MailService(s)
+    svc._deliver = MagicMock()  # type: ignore[method-assign]
+    svc.send(_msg())
+    svc._deliver.assert_not_called()
+
+
+def test_produktion_versendet_echt() -> None:
+    """Gegenprobe: ausserhalb von `local` bleibt der Versand real — der Riegel
+    darf die Produktion nicht stillegen."""
+    assert _settings(mail_sandbox_override=None, app_env="production").mail_sandbox is False
 
 
 # --- W5: SMTP-Fehler wird als MailError re-raised, nie verschluckt ----------

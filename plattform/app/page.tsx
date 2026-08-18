@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 
 import { KontoMenu } from "@/components/konto-menu";
 import { ListingReihe } from "@/components/listing-reihe";
+import { TabLeisteMobil } from "@/components/mobil/tab-leiste-mobil";
 import { PlattformNav } from "@/components/plattform-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { ladeReihen } from "@/lib/inserate";
@@ -24,11 +25,11 @@ export default async function SuchePage({
   ]);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="tabbar-abstand flex min-h-screen flex-col">
       <PlattformNav kontoSlot={<KontoMenu />} />
 
       <main className="flex-1">
-        <div className="w-full px-6 md:px-10 2xl:px-20 py-4">
+        <div className="w-full px-4 py-3 sm:px-6 sm:py-4 md:px-10 2xl:px-20">
           {reihen.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-24 text-center">
               <p className="font-display text-xl font-semibold">
@@ -47,6 +48,7 @@ export default async function SuchePage({
       </main>
 
       <SiteFooter />
+      <TabLeisteMobil />
     </div>
   );
 }

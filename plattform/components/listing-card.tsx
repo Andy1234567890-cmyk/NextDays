@@ -25,7 +25,7 @@ export function ListingCard({
 }) {
   const foto = listing.fotos[0];
   return (
-    <Link href={`/inserat/${listing.id}`} className="group flex flex-col gap-3">
+    <Link href={`/inserat/${listing.id}`} className="group flex flex-col gap-2 sm:gap-3">
       <div className="relative aspect-square overflow-hidden rounded-2xl">
         {foto ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -41,7 +41,7 @@ export function ListingCard({
           />
         )}
         {listing.istFavorit && (
-          <span className="absolute left-3 top-3 rounded-full bg-card/95 px-3 py-1 text-xs font-semibold">
+          <span className="absolute left-2 top-2 rounded-full bg-card/95 px-2 py-0.5 text-[0.625rem] font-semibold sm:left-3 sm:top-3 sm:px-3 sm:py-1 sm:text-xs">
             Gäste-Favorit
           </span>
         )}
@@ -49,7 +49,7 @@ export function ListingCard({
       </div>
 
       <div className="flex items-start justify-between gap-2">
-        <p className="font-medium leading-snug">{listing.titel}</p>
+        <p className="text-sm font-medium leading-snug sm:text-base">{listing.titel}</p>
         {listing.bewertung != null && (
           <span className="flex shrink-0 items-center gap-1 rounded-lg bg-primary px-1.5 py-0.5 text-xs font-bold text-primary-foreground">
             {listing.bewertung.toLocaleString("de-DE", {
@@ -61,7 +61,7 @@ export function ListingCard({
       </div>
 
       {listing.bewertung != null && (
-        <p className="-mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <p className="-mt-1 flex items-center gap-1.5 text-[0.6875rem] text-muted-foreground sm:-mt-2 sm:text-xs">
           <span className="font-medium text-foreground">
             {scoreWort(listing.bewertung)}
           </span>
@@ -71,10 +71,15 @@ export function ListingCard({
         </p>
       )}
 
-      <p className={listing.bewertung != null ? "-mt-1 text-sm text-muted-foreground" : "-mt-2 text-sm text-muted-foreground"}>
+      <p
+        className={
+          "text-xs text-muted-foreground sm:text-sm " +
+          (listing.bewertung != null ? "-mt-1" : "-mt-1 sm:-mt-2")
+        }
+      >
         {listing.ort}
       </p>
-      <p className="-mt-1 text-sm">
+      <p className="-mt-0.5 text-xs sm:-mt-1 sm:text-sm">
         {listing.preisProNacht != null ? (
           <>
             <span className="font-semibold">

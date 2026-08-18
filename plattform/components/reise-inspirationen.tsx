@@ -4,6 +4,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 const TABS = ["Beliebt", "An der Küste", "Historisch", "Seenähe", "Berge", "Aktivitäten"];
 
@@ -64,26 +65,38 @@ const ZIELE: Record<string, { ort: string; typ: string }[]> = {
   ],
 };
 
+// Mobil erst sechs Ziele: 12 Städte in zwei Spalten sind dort zwei
+// Bildschirmlängen, bevor die Fußzeilen-Links überhaupt anfangen.
+const MOBIL_LIMIT = 6;
+
 export function ReiseInspirationen() {
+  const t = useTranslations("mobil");
   const [aktiv, setAktiv] = useState(TABS[0]);
+  const [alleZeigen, setAlleZeigen] = useState(false);
   const ziele = ZIELE[aktiv] ?? [];
+  const mehrVorhanden = ziele.length > MOBIL_LIMIT;
 
   return (
     <section>
-      <div className="w-full px-6 md:px-10 2xl:px-20 py-12">
-        <h2 className="font-display text-2xl font-semibold tracking-tight">
+      <div className="w-full px-4 py-8 sm:px-6 sm:py-12 md:px-10 2xl:px-20">
+        <h2 className="font-display text-xl font-semibold tracking-tight sm:text-2xl">
           Inspirationen für zukünftige Reisen
         </h2>
 
-        {/* Tab-Filter — Unterstreichung nur beim aktiven Tab */}
-        <div className="mt-4 flex gap-6 overflow-x-auto">
+        {/* Tab-Filter — Unterstreichung nur beim aktiven Tab. Mobil wischbar
+            mit Schnapp-Punkten und ohne sichtbaren Scrollbalken (der lief
+            vorher als grauer Streifen quer unter den Tabs durch). */}
+        <div className="band-scroll -mx-4 mt-4 flex snap-x gap-6 overflow-x-auto px-4 sm:mx-0 sm:px-0">
           {TABS.map((tab) => (
             <button
               key={tab}
               type="button"
-              onClick={() => setAktiv(tab)}
+              onClick={() => {
+                setAktiv(tab);
+                setAlleZeigen(false);
+              }}
               className={
-                "shrink-0 border-b-2 pb-3 text-sm font-medium transition-colors " +
+                "min-h-11 min-w-11 shrink-0 snap-start border-b-2 pb-3 text-center text-sm font-medium transition-colors " +
                 (aktiv === tab
                   ? "border-accent text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground")
@@ -94,17 +107,32 @@ export function ReiseInspirationen() {
           ))}
         </div>
 
-        {/* Ziel-Raster */}
-        <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-3 lg:grid-cols-6">
-          {ziele.map((ziel) => (
-            <a key={`${ziel.ort}-${ziel.typ}`} href="#" className="group">
-              <p className="text-sm font-semibold group-hover:underline">
-                {ziel.ort}
-              </p>
+        {/* Ziel-Raster. Die Ziele sind Platzhalter bis zum Backend, deshalb
+            bewusst OHNE Link-Ziel: ein `href="#"` sähe wie Navigation aus und
+            täte nichts. */}
+        <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 sm:gap-y-5 lg:grid-cols-6">
+          {ziele.map((ziel, i) => (
+            <div
+              key={`${ziel.ort}-${ziel.typ}`}
+              className={
+                !alleZeigen && i >= MOBIL_LIMIT ? "hidden sm:block" : ""
+              }
+            >
+              <p className="text-sm font-semibold">{ziel.ort}</p>
               <p className="text-sm text-muted-foreground">{ziel.typ}</p>
-            </a>
+            </div>
           ))}
         </div>
+
+        {mehrVorhanden && (
+          <button
+            type="button"
+            onClick={() => setAlleZeigen((v) => !v)}
+            className="mt-4 flex min-h-11 items-center gap-1 text-sm font-medium underline sm:hidden"
+          >
+            {alleZeigen ? t("wenigerAnzeigen") : t("mehrAnzeigen")}
+          </button>
+        )}
       </div>
     </section>
   );

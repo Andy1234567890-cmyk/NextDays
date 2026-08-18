@@ -72,6 +72,20 @@ v=DKIM1;k=rsa;t=s;s=email;p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkpV+ctgL
 > Start mit `p=quarantine` (verdächtige Mails in Spam). Wenn nach ein paar Wochen
 > die DMARC-Reports sauber sind → auf `p=reject` verschärfen.
 
+> **Wohin die Reports gehen (Stand 18.08.2026):** `rua`/`ruf` zeigen auf
+> `postmaster@mynextdays.dk`; dieser Alias geht seit 18.08.2026 auf
+> **`developer@mynextdays.dk`** (vorher `info@`, das den Kundenposteingang mit
+> täglich 5–10 Provider-Berichten zulief). `abuse@`/`hostmaster@` liegen weiter
+> auf `info@`.
+>
+> **Offen — zwei Änderungen am Record selbst (Cloudflare, von Hand):**
+> 1. `rua=mailto:developer@mynextdays.dk` statt über den Alias-Umweg.
+> 2. **`ruf=` streichen.** Forensic Reports enthalten Kopien einzelner
+>    fehlgeschlagener Mails samt Header/Inhalt — bei fremdem Spoofing also
+>    Nachrichten Dritter, bei eigener Fehlkonfiguration eine Mail PRO Fehlschlag.
+>    Google versendet sie ohnehin nie. Zielwert:
+>    `v=DMARC1; p=quarantine; rua=mailto:developer@mynextdays.dk; fo=1`
+
 ### PTR / Reverse-DNS — NICHT im DNS-Panel, sondern in der Hetzner-Konsole
 | IP | PTR-Ziel |
 |---|---|

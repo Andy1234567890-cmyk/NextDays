@@ -21,7 +21,7 @@ function Result() {
   const pending = status === "pending" || status === "processing";
 
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center gap-4 px-4 py-12 text-center sm:px-6 sm:py-16">
       <Icon
         icon={ok ? "ph:check-circle" : pending ? "ph:clock" : "ph:warning-circle"}
         className={
@@ -29,7 +29,7 @@ function Result() {
           (ok ? "text-emerald-600" : pending ? "text-amber-500" : "text-red-600")
         }
       />
-      <h1 className="font-display text-2xl font-semibold tracking-tight">
+      <h1 className="font-display text-xl font-semibold tracking-tight sm:text-2xl">
         {ok
           ? t("rueckkehrOkTitel")
           : pending

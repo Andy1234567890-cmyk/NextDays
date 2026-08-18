@@ -81,10 +81,10 @@ export const LOCALE_REGIONS: Record<Locale, string> = {
 // die Gast-Seite teilt ihn NICHT mit dem PMS (web) oder dem Gastgeber-Dashboard.
 export const LOCALE_COOKIE = "nd_gast_locale";
 
-// Anzeige-Währung des Gastes (reine Präferenz — die Abrechnung läuft immer in
-// der Objektwährung, Wurzel 4). Eigenes Cookie, weil Sprache ≠ Währung: ein
-// Deutscher, der in Dänemark bucht, will Deutsch und DKK sehen können.
-export const CURRENCY_COOKIE = "nd_gast_currency";
+// KEIN Währungs-Cookie. Es gab hier eines (`nd_gast_currency`), das nie
+// geschrieben und nie gelesen wurde — die Anzeige-Währung ist keine Präferenz
+// des Gastes, sondern die Währung der Unterkunft (Wurzel 4: keine Umrechnung
+// ohne echte Kurse). Ein Cookie dafür wäre der Anfang genau dieser Umrechnung.
 
 export function isLocale(value: string | undefined | null): value is Locale {
   return !!value && (LOCALES as readonly string[]).includes(value);

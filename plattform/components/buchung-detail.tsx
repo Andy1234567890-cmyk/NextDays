@@ -124,7 +124,7 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
   }
   if (phase.kind === "error") {
     return (
-      <div className="rounded-2xl border border-accent/40 bg-accent/10 p-6 text-sm text-accent">
+      <div className="rounded-2xl border border-accent/40 bg-accent/10 p-4 text-sm text-accent sm:p-6">
         {phase.msg}
       </div>
     );
@@ -136,10 +136,10 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
     b.status === "completed" || b.status === "checked_out";
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5 sm:gap-6">
       {/* Kopf: Objekt + Foto + Status */}
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
-        <div className="h-56 w-full bg-secondary">
+        <div className="aspect-[16/9] w-full bg-secondary sm:aspect-auto sm:h-56">
           {b.property.photo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -153,7 +153,7 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
             </span>
           )}
         </div>
-        <div className="p-5">
+        <div className="p-4 sm:p-5">
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge status={b.status} />
             <PaymentBadge status={b.payment_status} />
@@ -170,8 +170,9 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
         </div>
       </div>
 
-      {/* Aktions-Links */}
-      <div className="flex flex-wrap gap-3">
+      {/* Aktions-Links — mobil eine wischbare Reihe (umgebrochen waren das drei
+          Zeilen), ab sm wie bisher umbrechend. */}
+      <div className="band-scroll -mx-4 flex snap-x gap-3 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         <Aktion
           href={`/aufenthalt/${b.id}`}
           icon="ph:house"
@@ -197,7 +198,7 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
           type="button"
           onClick={() => setTab("details")}
           className={
-            "flex-1 rounded-full py-2 text-sm font-medium transition-colors " +
+            "min-h-11 flex-1 rounded-full px-2 text-sm font-medium transition-colors " +
             (tab === "details"
               ? "bg-card text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground")
@@ -209,7 +210,7 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
           type="button"
           onClick={ladeVerlauf}
           className={
-            "flex-1 rounded-full py-2 text-sm font-medium transition-colors " +
+            "min-h-11 flex-1 rounded-full px-2 text-sm font-medium transition-colors " +
             (tab === "verlauf"
               ? "bg-card text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground")
@@ -222,7 +223,7 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
       {tab === "details" ? (
         <>
           {/* Eckdaten */}
-          <div className="grid gap-4 rounded-2xl border border-border bg-card p-5 sm:grid-cols-2">
+          <div className="grid gap-4 rounded-2xl border border-border bg-card p-4 sm:grid-cols-2 sm:p-5">
             <Info label="Zeitraum" wert={formatRange(b.check_in, b.check_out)} />
             <Info
               label="Gäste"
@@ -253,7 +254,7 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
           </div>
 
           {b.note && (
-            <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
               <p className="text-sm font-medium">Hinweis</p>
               <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">
                 {b.note}
@@ -262,20 +263,20 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
           )}
 
           {/* Preisaufschlüsselung */}
-          <div className="rounded-2xl border border-border bg-card p-5">
+          <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
             <p className="font-medium">Aufschlüsselung</p>
             <div className="mt-4 flex flex-col gap-2 text-sm">
               {b.quote_items.length > 0 ? (
                 b.quote_items.map((q, i) => (
                   <div
                     key={`${q.label}-${i}`}
-                    className="flex items-center justify-between"
+                    className="flex items-start justify-between gap-3"
                   >
-                    <span className="text-muted-foreground">
+                    <span className="min-w-0 text-muted-foreground">
                       {q.label}
                       {q.quantity && q.quantity > 1 ? ` × ${q.quantity}` : ""}
                     </span>
-                    <span>
+                    <span className="shrink-0 tabular-nums">
                       {q.amount != null
                         ? formatCurrency(q.amount, waehrung)
                         : "—"}
@@ -288,7 +289,7 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
                 </p>
               )}
 
-              <div className="mt-2 flex items-center justify-between border-t border-border pt-3 font-semibold">
+              <div className="mt-2 flex items-center justify-between gap-3 border-t border-border pt-3 font-semibold">
                 <span>Gesamt</span>
                 <span>
                   {b.total_amount != null
@@ -296,7 +297,7 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
                     : "—"}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-muted-foreground">
+              <div className="flex items-center justify-between gap-3 text-muted-foreground">
                 <span>Bereits bezahlt</span>
                 <span>
                   {b.paid_amount != null
@@ -305,7 +306,7 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
                 </span>
               </div>
               {b.balance_due != null && b.balance_due > 0 && (
-                <div className="flex items-center justify-between font-semibold text-accent">
+                <div className="flex items-center justify-between gap-3 font-semibold text-accent">
                   <span>Offener Betrag</span>
                   <span>{formatCurrency(b.balance_due, waehrung)}</span>
                 </div>
@@ -315,7 +316,7 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
 
           {/* Storno */}
           {b.can_cancel && (
-            <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
               <p className="font-medium">Buchung stornieren</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Prüfe die Stornobedingungen deines Gastgebers, bevor du
@@ -332,7 +333,7 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
           )}
         </>
       ) : (
-        <div className="rounded-2xl border border-border bg-card p-5">
+        <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
           {timelineBusy ? (
             <div className="flex items-center gap-2 py-6 text-muted-foreground">
               <Icon icon="ph:spinner" className="size-5 animate-spin" />
@@ -367,8 +368,11 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
 
       {/* Storno-Dialog */}
       {stornoOffen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 sm:items-center sm:p-4">
+          <div
+            className="max-h-[90dvh] w-full max-w-md overflow-y-auto overscroll-contain rounded-t-3xl border border-border bg-card p-5 shadow-xl sm:rounded-2xl sm:p-6"
+            style={{ paddingBottom: "calc(1.25rem + var(--safe-b))" }}
+          >
             <h3 className="font-display text-lg font-semibold">
               Buchung stornieren?
             </h3>
@@ -381,7 +385,7 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
                 value={grund}
                 onChange={(e) => setGrund(e.target.value)}
                 rows={3}
-                className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring"
+                className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-base outline-none focus:border-ring sm:text-sm"
                 placeholder="z. B. geänderte Reisepläne"
               />
             </label>
@@ -390,12 +394,12 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
                 {stornoFehler}
               </p>
             )}
-            <div className="mt-5 flex justify-end gap-3">
+            <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={() => setStornoOffen(false)}
                 disabled={stornoBusy}
-                className="rounded-full border border-border px-5 py-2.5 text-sm font-medium hover:bg-secondary"
+                className="min-h-12 rounded-full border border-border px-5 text-sm font-medium hover:bg-secondary"
               >
                 Abbrechen
               </button>
@@ -403,7 +407,7 @@ export function BuchungDetailAnsicht({ id }: { id: string }) {
                 type="button"
                 onClick={stornieren}
                 disabled={stornoBusy}
-                className="flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground hover:opacity-90 disabled:opacity-60"
+                className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-accent px-5 text-sm font-medium text-accent-foreground hover:opacity-90 disabled:opacity-60"
               >
                 {stornoBusy && (
                   <Icon icon="ph:spinner" className="size-4 animate-spin" />
@@ -430,7 +434,7 @@ function Aktion({
   return (
     <Link
       href={href}
-      className="flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-sm font-medium hover:shadow-sm"
+      className="flex min-h-11 shrink-0 snap-start items-center gap-2 whitespace-nowrap rounded-full border border-border bg-card px-4 text-sm font-medium hover:shadow-sm"
     >
       <Icon icon={icon} className="size-4" />
       {label}

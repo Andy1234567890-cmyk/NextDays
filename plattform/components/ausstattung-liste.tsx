@@ -26,8 +26,8 @@ export function AusstattungListe({ slugs }: { slugs: readonly string[] }) {
   const sichtbar = alle ? zeilen : zeilen.slice(0, ZEIGE_ZUERST);
 
   return (
-    <div className="border-b border-border py-6">
-      <h2 className="font-display text-xl font-semibold">
+    <div className="border-b border-border py-5 sm:py-6">
+      <h2 className="font-display text-lg font-semibold sm:text-xl">
         {tInserat("ausstattungTitel")}
       </h2>
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -42,7 +42,7 @@ export function AusstattungListe({ slugs }: { slugs: readonly string[] }) {
         <button
           type="button"
           onClick={() => setAlle((v) => !v)}
-          className="mt-6 rounded-lg border border-foreground px-6 py-3 text-sm font-medium transition-colors hover:bg-secondary"
+          className="mt-6 min-h-12 w-full rounded-lg border border-foreground px-6 text-sm font-medium transition-colors hover:bg-secondary sm:w-auto"
         >
           {alle
             ? tInserat("ausstattungWeniger")
