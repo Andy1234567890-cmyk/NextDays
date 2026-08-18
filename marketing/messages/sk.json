@@ -45,7 +45,7 @@
     "p2": "Zvýšte obsadenosť, zjednodušte každodennú prácu a doprajte hosťom skvelý zážitok – bez zložitosti a enterprise cien veľkých systémov.",
     "p3": "Všetky nástroje na jednom mieste, inteligentná automatizácia a napojenie na všetky dôležité kanály – k tomu vlastný rezervačný portál s nízkou províziou. Vaše podnikanie rastie s väčšou kontrolou a menšou námahou.",
     "cta": "Objaviť funkcie",
-    "reichweite": "Vytvorené pre každé malé ubytovanie.",
+    "reichweite": "Vytvorené pre každé ubytovanie.",
     "typen": {
       "hotel": "Hotel",
       "bnb": "B&B",
@@ -62,7 +62,7 @@
     "belege": {
       "neu": "Novinka 2026 – vyvíjané aktívnymi prenajímateľmi, powered by AirSmil",
       "eu": "Vyvinuté v Dánsku, hostované v EÚ a v súlade s GDPR",
-      "kanaele": "56 rezervačných portálov cez nášho konektivitného partnera Channex",
+      "kanaele": "56 pripojených rezervačných portálov",
       "start": "Štart 1. septembra 2026 v 27 európskych krajinách, 24 jazykov"
     },
     "eyebrow": "Platforma",
@@ -134,7 +134,7 @@
     },
     "portale": {
       "frage": "Ktoré rezervačné portály môžem pripojiť?",
-      "antwort": "Cez nášho konektivitného partnera Channex dosiahnete 56 rezervačných platforiem, medzi nimi Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda a Tripadvisor. K tomu náš vlastný marketplace myBestDays, rezervačný widget pre váš web a regionálne kanály. Každý kanál sa zapína zvlášť: rozhodujete pri každom objekte, kde je vidieť."
+      "antwort": "Dosiahnete 56 rezervačných platforiem, medzi nimi Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda a Tripadvisor. K tomu náš vlastný marketplace myBestDays, rezervačný widget pre váš web a regionálne kanály. Každý kanál sa zapína zvlášť: rozhodujete pri každom objekte, kde je vidieť."
     },
     "sync": {
       "frage": "Ako rýchlo sa synchronizuje — a môžu vzniknúť dvojité rezervácie?",
@@ -251,7 +251,7 @@
       },
       "channel": {
         "title": "Channel manager",
-        "items": "56 rezervačných portálov cez Channex, Airbnb, Booking.com, Expedia, Vrbo, Google, obojsmerná synchronizácia v reálnom čase"
+        "items": "56 rezervačných portálov, Airbnb, Booking.com, Expedia, Vrbo, Google, obojsmerná synchronizácia v reálnom čase"
       },
       "direkt": {
         "title": "Priame rezervácie",
@@ -308,7 +308,7 @@
   "integrationen": {
     "eyebrow": "Dosah",
     "heading": "56 rezervačných portálov – jedno rozhranie.",
-    "p1": "Cez nášho konektivitného partnera Channex rozposielate dostupnosť, ceny a reštrikcie na 56 rezervačných portálov – okrem iného Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda a Tripadvisor. Obojsmerná synchronizácia v reálnom čase: rezervácia na jednom portáli zablokuje danú noc všade inde.",
+    "p1": "Rozposielate dostupnosť, ceny a reštrikcie na 56 rezervačných portálov – okrem iného Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda a Tripadvisor. Obojsmerná synchronizácia v reálnom čase: rezervácia na jednom portáli zablokuje danú noc všade inde.",
     "p2": "K tomu prichádza váš vlastný predaj: rezervačný portál na myBestDays s nízkou províziou, rezervačný widget pre váš web a regionálne kanály, ktoré zapínate jednotlivo. Každý kanál riadite zvlášť – vy rozhodujete, kde je objekt viditeľný.",
     "cta": "Prepojte kanály v testovacej verzii"
   },
@@ -346,7 +346,7 @@
     "kanaele": {
       "value": "56",
       "label": "Portálov",
-      "text": "Rezervačných portálov cez Channex"
+      "text": "Pripojených rezervačných portálov"
     },
     "hosting": {
       "value": "100 %",

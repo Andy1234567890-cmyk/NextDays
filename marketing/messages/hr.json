@@ -45,7 +45,7 @@
     "p2": "Povećajte popunjenost, pojednostavnite svakodnevicu i pružite izvrsna iskustva gostima – bez složenosti i enterprise cijena velikih sustava.",
     "p3": "Sve na jednom mjestu, pametna automatizacija i povezanost sa svim važnim kanalima – uz vlastiti portal za rezervacije s niskom provizijom. Tako vaš posao raste uz više kontrole i manje truda.",
     "cta": "Otkrijte funkcije",
-    "reichweite": "Napravljeno za svaki mali smještaj.",
+    "reichweite": "Napravljeno za svaki smještaj.",
     "typen": {
       "hotel": "Hotel",
       "bnb": "B&B",
@@ -62,7 +62,7 @@
     "belege": {
       "neu": "Novo 2026. – razvijeno od aktivnih iznajmljivača, powered by AirSmil",
       "eu": "Razvijeno u Danskoj, hostano u EU i usklađeno s GDPR-om",
-      "kanaele": "56 platformi za rezervacije preko našeg partnera za povezivost Channex",
+      "kanaele": "56 povezanih platformi za rezervacije",
       "start": "Početak 1. rujna 2026. u 27 europskih zemalja, 24 jezika"
     },
     "eyebrow": "Platforma",
@@ -134,7 +134,7 @@
     },
     "portale": {
       "frage": "Koje rezervacijske portale mogu povezati?",
-      "antwort": "Preko našeg partnera za povezivost Channex dosežeš 56 rezervacijskih platformi, među njima Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda i Tripadvisor. Uz to dolaze naš vlastiti marketplace myBestDays, widget za rezervacije na tvojoj stranici i regionalni kanali. Svaki kanal uključuje se zasebno: odlučuješ po objektu gdje je vidljiv."
+      "antwort": "Dosežeš 56 rezervacijskih platformi, među njima Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda i Tripadvisor. Uz to dolaze naš vlastiti marketplace myBestDays, widget za rezervacije na tvojoj stranici i regionalni kanali. Svaki kanal uključuje se zasebno: odlučuješ po objektu gdje je vidljiv."
     },
     "sync": {
       "frage": "Koliko brzo se sinkronizira — i mogu li nastati dvostruke rezervacije?",
@@ -251,7 +251,7 @@
       },
       "channel": {
         "title": "Channel manager",
-        "items": "56 platformi za rezervacije preko Channexa, Airbnb, Booking.com, Expedia, Vrbo, Google, dvosmjerna sinkronizacija u stvarnom vremenu"
+        "items": "56 platformi za rezervacije, Airbnb, Booking.com, Expedia, Vrbo, Google, dvosmjerna sinkronizacija u stvarnom vremenu"
       },
       "direkt": {
         "title": "Izravna rezervacija",
@@ -308,7 +308,7 @@
   "integrationen": {
     "eyebrow": "Doseg",
     "heading": "56 platformi za rezervacije – jedno sučelje.",
-    "p1": "Preko našeg partnera za povezivost Channex raspoređujete dostupnost, cijene i restrikcije na 56 platformi za rezervacije – među njima Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda i Tripadvisor. Dvosmjerna sinkronizacija u stvarnom vremenu: rezervacija na jednom portalu blokira tu noć svugdje drugdje.",
+    "p1": "Dostupnost, cijene i restrikcije raspoređujete na 56 platformi za rezervacije – među njima Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda i Tripadvisor. Dvosmjerna sinkronizacija u stvarnom vremenu: rezervacija na jednom portalu blokira tu noć svugdje drugdje.",
     "p2": "Uz to dolazi i vaša vlastita prodaja: portal za rezervacije s niskom provizijom na myBestDays, widget za rezervacije za vašu stranicu i regionalni kanali koje uključujete pojedinačno. Svaki se kanal vodi zasebno – vi odlučujete gdje je objekt vidljiv.",
     "cta": "Povežite kanale u besplatnom probnom razdoblju"
   },
@@ -346,7 +346,7 @@
     "kanaele": {
       "value": "56",
       "label": "Platformi",
-      "text": "Platformi za rezervacije preko Channexa"
+      "text": "Povezanih platformi za rezervacije"
     },
     "hosting": {
       "value": "100 %",

@@ -45,7 +45,7 @@
     "p2": "Tõsta täituvust, lihtsusta igapäevatööd ja paku suurepäraseid külaliskogemusi – ilma suurte süsteemide keerukuse ja enterprise-hindadeta.",
     "p3": "Kõik ühes kohas, nutikas automatiseerimine ja ühendused kõigi oluliste kanalitega – lisaks sinu enda madala komisjonitasuga broneerimisportaal. Nii kasvab sinu äri suurema kontrolli ja väiksema vaevaga.",
     "cta": "Avasta funktsioonid",
-    "reichweite": "Loodud igale väiksele majutusettevõttele.",
+    "reichweite": "Loodud igale majutusettevõttele.",
     "typen": {
       "hotel": "Hotell",
       "bnb": "B&B",
@@ -62,7 +62,7 @@
     "belege": {
       "neu": "Uus 2026 – välja töötatud tegevväljaüürijate poolt, powered by AirSmil",
       "eu": "Ehitatud Taanis, majutatud EL-is ja vastab isikuandmete kaitse üldmäärusele (GDPR)",
-      "kanaele": "56 broneerimisplatvormi meie ühenduspartneri Channexi kaudu",
+      "kanaele": "56 broneerimisplatvormi ühendatud",
       "start": "Käivitub 1. septembril 2026 27 Euroopa riigis, 24 keeles"
     },
     "eyebrow": "Platvorm",
@@ -134,7 +134,7 @@
     },
     "portale": {
       "frage": "Milliseid broneerimisportaale saan ühendada?",
-      "antwort": "Meie ühenduspartneri Channexi kaudu jõuad 56 broneerimisplatvormini, nende hulgas Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda ja Tripadvisor. Lisaks tulevad meie oma turg myBestDays, broneerimisvidin sinu veebilehele ja piirkondlikud kanalid. Iga kanal lülitatakse eraldi: otsustad iga objekti puhul, kus see nähtav on."
+      "antwort": "Jõuad 56 broneerimisplatvormini, nende hulgas Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda ja Tripadvisor. Lisaks tulevad meie oma turg myBestDays, broneerimisvidin sinu veebilehele ja piirkondlikud kanalid. Iga kanal lülitatakse eraldi: otsustad iga objekti puhul, kus see nähtav on."
     },
     "sync": {
       "frage": "Kui kiiresti sünkroonitakse — ja kas topeltbroneeringud on võimalikud?",
@@ -251,7 +251,7 @@
       },
       "channel": {
         "title": "Channel manager",
-        "items": "56 broneerimisplatvormi Channexi kaudu, Airbnb, Booking.com, Expedia, Vrbo, Google, kahesuunaline sünkroonimine reaalajas"
+        "items": "56 broneerimisplatvormi, Airbnb, Booking.com, Expedia, Vrbo, Google, kahesuunaline sünkroonimine reaalajas"
       },
       "direkt": {
         "title": "Otsebroneering",
@@ -308,7 +308,7 @@
   "integrationen": {
     "eyebrow": "Ulatus",
     "heading": "56 broneerimisplatvormi – üks vaade.",
-    "p1": "Meie ühenduspartneri Channexi kaudu jagad saadavust, hindu ja piiranguid 56 broneerimisplatvormile – nende hulgas Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda ja Tripadvisor. Kahesuunaline sünkroonimine reaalajas: broneering ühes portaalis sulgeb selle öö kõikjal mujal.",
+    "p1": "Jagad saadavust, hindu ja piiranguid 56 broneerimisplatvormile – nende hulgas Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda ja Tripadvisor. Kahesuunaline sünkroonimine reaalajas: broneering ühes portaalis sulgeb selle öö kõikjal mujal.",
     "p2": "Lisaks sinu enda müük: madala komisjonitasuga broneerimisportaal myBestDaysis, broneerimisvidin sinu veebisaidile ja piirkondlikud kanalid, mida saad ükshaaval sisse lülitada. Iga kanalit juhitakse eraldi – sina otsustad, kus objekt on nähtav.",
     "cta": "Ühenda kanalid prooviperioodil"
   },
@@ -346,7 +346,7 @@
     "kanaele": {
       "value": "56",
       "label": "Platvormi",
-      "text": "Broneerimisplatvormi Channexi kaudu"
+      "text": "Ühendatud broneerimisplatvormi"
     },
     "hosting": {
       "value": "100 %",

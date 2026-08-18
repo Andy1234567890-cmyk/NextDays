@@ -66,7 +66,7 @@ export function MarketingBenefits() {
             {/* Linke Spalte: Text */}
             <div>
               <h3 className="font-display text-2xl font-semibold sm:text-3xl">
-                Alles für deine kleine Unterkunft an einem Ort
+                Alles für deine Unterkunft an einem Ort
               </h3>
               <p className="mt-4 text-sm text-foreground">
                 30 Tage kostenlos. Keine Mindestlaufzeit. Jederzeit kündbar.

@@ -45,7 +45,7 @@
     "p2": "Aumenta tu ocupación, simplifica el día a día y ofrece experiencias memorables a tus huéspedes, sin la complejidad ni los precios enterprise de los grandes sistemas.",
     "p3": "Todo en un solo lugar, automatización inteligente y conexión con todos los canales importantes, además de tu propio portal de reservas con comisiones mínimas. Tu negocio crece con más control y menos esfuerzo.",
     "cta": "Descubre las funciones",
-    "reichweite": "Hecha para cada alojamiento pequeño.",
+    "reichweite": "Hecha para cada alojamiento.",
     "typen": {
       "hotel": "Hotel",
       "bnb": "B&B",
@@ -62,7 +62,7 @@
     "belege": {
       "neu": "Novedad 2026: desarrollada por anfitriones en activo, powered by AirSmil",
       "eu": "Creada en Dinamarca, alojada en la UE y conforme al RGPD",
-      "kanaele": "56 plataformas de reservas a través de nuestro socio de conectividad Channex",
+      "kanaele": "56 plataformas de reservas conectadas",
       "start": "Lanzamiento el 1 de septiembre de 2026 en 27 países europeos y 24 idiomas"
     },
     "eyebrow": "La plataforma",
@@ -134,7 +134,7 @@
     },
     "portale": {
       "frage": "¿Qué portales de reserva puedo conectar?",
-      "antwort": "A través de nuestro socio de conectividad Channex llegas a 56 plataformas de reserva, entre ellas Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda y Tripadvisor. A eso se suman nuestro marketplace myBestDays, un widget de reservas para tu web y canales regionales. Cada canal se activa por separado: decides por alojamiento dónde es visible."
+      "antwort": "Llegas a 56 plataformas de reserva, entre ellas Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda y Tripadvisor. A eso se suman nuestro marketplace myBestDays, un widget de reservas para tu web y canales regionales. Cada canal se activa por separado: decides por alojamiento dónde es visible."
     },
     "sync": {
       "frage": "¿Con qué rapidez se sincroniza — y pueden darse dobles reservas?",
@@ -251,7 +251,7 @@
       },
       "channel": {
         "title": "Channel manager",
-        "items": "56 plataformas de reservas a través de Channex, Airbnb, Booking.com, Expedia, Vrbo, Google, sincronización bidireccional en tiempo real"
+        "items": "56 plataformas de reservas, Airbnb, Booking.com, Expedia, Vrbo, Google, sincronización bidireccional en tiempo real"
       },
       "direkt": {
         "title": "Reserva directa",
@@ -308,7 +308,7 @@
   "integrationen": {
     "eyebrow": "Alcance",
     "heading": "56 plataformas de reservas, una sola pantalla.",
-    "p1": "A través de nuestro socio de conectividad Channex distribuyes disponibilidad, tarifas y restricciones a 56 plataformas de reservas, entre ellas Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda y Tripadvisor. Sincronización bidireccional en tiempo real: una reserva en un portal bloquea esa noche en todos los demás.",
+    "p1": "Distribuyes disponibilidad, tarifas y restricciones a 56 plataformas de reservas, entre ellas Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda y Tripadvisor. Sincronización bidireccional en tiempo real: una reserva en un portal bloquea esa noche en todos los demás.",
     "p2": "A eso se suma tu propia venta: el portal de reservas con comisiones mínimas en myBestDays, un widget de reservas para tu web y canales regionales que puedes activar uno a uno. Cada canal se controla por separado: tú decides dónde es visible cada alojamiento.",
     "cta": "Conecta canales en la prueba gratuita"
   },
@@ -346,7 +346,7 @@
     "kanaele": {
       "value": "56",
       "label": "Plataformas",
-      "text": "Plataformas de reservas a través de Channex"
+      "text": "Plataformas de reservas conectadas"
     },
     "hosting": {
       "value": "100 %",

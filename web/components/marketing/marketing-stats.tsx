@@ -26,7 +26,7 @@ export function MarketingStats() {
         {/* Links: Überschrift, Sterne, Review-Logos */}
         <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
           <h2 className="font-display text-3xl font-semibold tracking-tight">
-            Jede Stunde wählt eine kleine
+            Jede Stunde wählt eine weitere
             <br className="hidden sm:block" /> Unterkunft myNextDays.
           </h2>
 

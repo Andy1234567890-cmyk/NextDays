@@ -45,7 +45,7 @@
     "p2": "Padidinkite užimtumą, supaprastinkite kasdienybę ir suteikite svečiams puikių įspūdžių – be didelių sistemų sudėtingumo ir enterprise kainų.",
     "p3": "Viskas vienoje vietoje, išmanus automatizavimas ir ryšys su visais svarbiais kanalais – prie to dar ir savas rezervacijų portalas su maža komisija. Taip jūsų verslas auga su didesne kontrole ir mažesnėmis pastangomis.",
     "cta": "Susipažinkite su funkcijomis",
-    "reichweite": "Sukurta kiekvienam mažam apgyvendinimo objektui.",
+    "reichweite": "Sukurta kiekvienam apgyvendinimo objektui.",
     "typen": {
       "hotel": "Viešbutis",
       "bnb": "B&B",
@@ -62,7 +62,7 @@
     "belege": {
       "neu": "Nauja 2026 m. – sukurta aktyvių nuomotojų, powered by AirSmil",
       "eu": "Sukurta Danijoje, talpinama ES ir atitinka BDAR",
-      "kanaele": "56 rezervacijų platformos per mūsų jungiamumo partnerį Channex",
+      "kanaele": "56 prijungtos rezervacijų platformos",
       "start": "Startas 2026 m. rugsėjo 1 d. 27 Europos šalyse, 24 kalbomis"
     },
     "eyebrow": "Platforma",
@@ -134,7 +134,7 @@
     },
     "portale": {
       "frage": "Kuriuos rezervacijų portalus galiu prijungti?",
-      "antwort": "Per mūsų jungiamumo partnerį Channex pasiekiate 56 rezervacijų platformas, tarp jų Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda ir Tripadvisor. Prie to prisideda mūsų pačių prekyvietė myBestDays, rezervacijų valdiklis jūsų svetainei ir regioniniai kanalai. Kiekvienas kanalas įjungiamas atskirai: prie kiekvieno objekto sprendžiate, kur jis matomas."
+      "antwort": "Pasiekiate 56 rezervacijų platformas, tarp jų Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda ir Tripadvisor. Prie to prisideda mūsų pačių prekyvietė myBestDays, rezervacijų valdiklis jūsų svetainei ir regioniniai kanalai. Kiekvienas kanalas įjungiamas atskirai: prie kiekvieno objekto sprendžiate, kur jis matomas."
     },
     "sync": {
       "frage": "Kaip greitai sinchronizuojama — ir ar galimos dvigubos rezervacijos?",
@@ -251,7 +251,7 @@
       },
       "channel": {
         "title": "Kanalų valdymo sistema",
-        "items": "56 rezervacijų platformos per Channex, Airbnb, Booking.com, Expedia, Vrbo, Google, dvipusis sinchronizavimas realiuoju laiku"
+        "items": "56 rezervacijų platformos, Airbnb, Booking.com, Expedia, Vrbo, Google, dvipusis sinchronizavimas realiuoju laiku"
       },
       "direkt": {
         "title": "Tiesioginė rezervacija",
@@ -308,7 +308,7 @@
   "integrationen": {
     "eyebrow": "Pasiekiamumas",
     "heading": "56 rezervacijų platformos – viena sąsaja.",
-    "p1": "Per mūsų jungiamumo partnerį Channex paskirstote laisvas vietas, kainas ir apribojimus 56 rezervacijų platformoms – tarp jų Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda ir Tripadvisor. Dvipusis sinchronizavimas realiuoju laiku: rezervacija viename portale užblokuoja tą naktį visur kitur.",
+    "p1": "Laisvas vietas, kainas ir apribojimus paskirstote 56 rezervacijų platformoms – tarp jų Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda ir Tripadvisor. Dvipusis sinchronizavimas realiuoju laiku: rezervacija viename portale užblokuoja tą naktį visur kitur.",
     "p2": "Prie to prisideda ir jūsų pačių pardavimai: mažos komisijos rezervacijų portalas myBestDays platformoje, rezervacijų valdiklis jūsų svetainei ir regioniniai kanalai, kuriuos įjungiate po vieną. Kiekvienas kanalas valdomas atskirai – jūs sprendžiate, kur objektas matomas.",
     "cta": "Prijunkite kanalus nemokamo bandymo metu"
   },
@@ -346,7 +346,7 @@
     "kanaele": {
       "value": "56",
       "label": "Platformos",
-      "text": "Rezervacijų platformos per Channex"
+      "text": "Prijungtos rezervacijų platformos"
     },
     "hosting": {
       "value": "100 %",

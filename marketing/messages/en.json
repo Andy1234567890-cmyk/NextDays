@@ -45,12 +45,12 @@
     "p2": "Increase your occupancy, simplify daily work and create great guest experiences — without the complexity and the enterprise pricing of the big systems.",
     "p3": "Everything in one place, smart automation and connections to every important channel — plus your own low-commission booking portal. Your business grows with more control and less effort.",
     "cta": "Explore features",
-    "reichweite": "Made for every small accommodation.",
+    "reichweite": "Made for every accommodation.",
     "belegeHeading": "What you can rely on",
     "belege": {
       "neu": "New in 2026 — developed by active hosts, powered by AirSmil",
       "eu": "Built in Denmark, hosted in the EU and GDPR-compliant",
-      "kanaele": "56 booking platforms through our connectivity partner Channex",
+      "kanaele": "56 booking platforms connected",
       "start": "Launching 1 September 2026 in 27 European countries, 24 languages"
     },
     "typen": {
@@ -134,7 +134,7 @@
     },
     "portale": {
       "frage": "Which booking portals can I connect?",
-      "antwort": "Through our connectivity partner Channex you reach 56 booking platforms, among them Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda and Tripadvisor. On top of that come our own myBestDays marketplace, a booking widget for your website and regional channels. Every channel is switched separately: you decide per property where it is visible."
+      "antwort": "You reach 56 booking platforms, among them Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda and Tripadvisor. On top of that come our own myBestDays marketplace, a booking widget for your website and regional channels. Every channel is switched separately: you decide per property where it is visible."
     },
     "sync": {
       "frage": "How fast does it sync — and can double bookings happen?",
@@ -251,7 +251,7 @@
       },
       "channel": {
         "title": "Channel manager",
-        "items": "56 booking platforms through Channex, Airbnb, Booking.com, Expedia, Vrbo, Google, real-time two-way sync"
+        "items": "56 booking platforms, Airbnb, Booking.com, Expedia, Vrbo, Google, real-time two-way sync"
       },
       "direkt": {
         "title": "Direct booking",
@@ -308,7 +308,7 @@
   "integrationen": {
     "eyebrow": "Reach",
     "heading": "56 booking platforms – one interface.",
-    "p1": "Through our connectivity partner Channex you distribute availability, rates and restrictions to 56 booking platforms — including Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda and Tripadvisor. Two-way sync in real time: a booking on one portal blocks that night everywhere else.",
+    "p1": "You distribute availability, rates and restrictions to 56 booking platforms — including Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda and Tripadvisor. Two-way sync in real time: a booking on one portal blocks that night everywhere else.",
     "p2": "On top of that comes your own distribution: the low-commission booking portal on myBestDays, a booking widget for your website and regional channels you can switch on individually. Every channel is controlled separately — you decide where a property is visible.",
     "cta": "Connect channels in the free trial"
   },
@@ -346,7 +346,7 @@
     "kanaele": {
       "value": "56",
       "label": "Platforms",
-      "text": "Booking platforms through Channex"
+      "text": "Connected booking platforms"
     },
     "hosting": {
       "value": "100%",

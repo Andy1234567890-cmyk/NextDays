@@ -45,7 +45,7 @@
     "p2": "Żid l-okkupanza tiegħek, issimplifika x-xogħol ta' kuljum u offri esperjenzi mill-aqwa lill-mistednin – mingħajr il-kumplessità u l-prezzijiet enterprise tas-sistemi l-kbar.",
     "p3": "Għodod ċentrali, awtomazzjoni intelliġenti u konnessjoni ma' kull kanal importanti – flimkien mal-portal tal-booking tiegħek stess b'kummissjoni baxxa. Hekk in-negozju tiegħek jikber b'aktar kontroll u inqas xogħol.",
     "cta": "Skopri l-funzjonijiet",
-    "reichweite": "Maħluqa għal kull akkomodazzjoni żgħira.",
+    "reichweite": "Maħluqa għal kull akkomodazzjoni.",
     "typen": {
       "hotel": "Lukanda",
       "bnb": "B&B",
@@ -62,7 +62,7 @@
     "belege": {
       "neu": "Ġdid fl-2026 – żviluppata minn sidien attivi, powered by AirSmil",
       "eu": "Mibnija fid-Danimarka, ospitata fl-UE u konformi mal-GDPR",
-      "kanaele": "56 pjattaforma tal-booking permezz tas-sieħeb tal-konnettività tagħna Channex",
+      "kanaele": "56 pjattaforma tal-booking konnessi",
       "start": "Tnedija fl-1 ta' Settembru 2026 f'27 pajjiż Ewropew, bi 24 lingwa"
     },
     "eyebrow": "Il-pjattaforma",
@@ -134,7 +134,7 @@
     },
     "portale": {
       "frage": "Liema portali tal-booking nista' ngħaqqad?",
-      "antwort": "Permezz tas-sieħeb tal-konnettività tagħna Channex tilħaq 56 pjattaforma ta' booking, fosthom Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda u Tripadvisor. Jiżdiedu s-suq tagħna stess myBestDays, widget tal-booking għas-sit tiegħek u kanali reġjonali. Kull kanal jinxtegħel għalih: tiddeċiedi għal kull proprjetà fejn tidher."
+      "antwort": "Tilħaq 56 pjattaforma ta' booking, fosthom Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda u Tripadvisor. Jiżdiedu s-suq tagħna stess myBestDays, widget tal-booking għas-sit tiegħek u kanali reġjonali. Kull kanal jinxtegħel għalih: tiddeċiedi għal kull proprjetà fejn tidher."
     },
     "sync": {
       "frage": "Kemm hu mgħaġġel is-sync — u jistgħu jseħħu bookings doppji?",
@@ -251,7 +251,7 @@
       },
       "channel": {
         "title": "Channel manager",
-        "items": "56 pjattaforma tal-booking permezz ta' Channex, Airbnb, Booking.com, Expedia, Vrbo, Google, sinkronizzazzjoni fiż-żewġ direzzjonijiet f'ħin reali"
+        "items": "56 pjattaforma tal-booking, Airbnb, Booking.com, Expedia, Vrbo, Google, sinkronizzazzjoni fiż-żewġ direzzjonijiet f'ħin reali"
       },
       "direkt": {
         "title": "Booking dirett",
@@ -308,7 +308,7 @@
   "integrationen": {
     "eyebrow": "Firxa",
     "heading": "56 pjattaforma tal-booking – interfaċċa waħda.",
-    "p1": "Permezz tas-sieħeb tal-konnettività tagħna Channex tqassam id-disponibbiltà, il-prezzijiet u r-restrizzjonijiet lil 56 pjattaforma tal-booking – fosthom Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda u Tripadvisor. Sinkronizzazzjoni fiż-żewġ direzzjonijiet f'ħin reali: booking fuq portal wieħed jimblokka dak il-lejl kullimkien ieħor.",
+    "p1": "Tqassam id-disponibbiltà, il-prezzijiet u r-restrizzjonijiet lil 56 pjattaforma tal-booking – fosthom Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda u Tripadvisor. Sinkronizzazzjoni fiż-żewġ direzzjonijiet f'ħin reali: booking fuq portal wieħed jimblokka dak il-lejl kullimkien ieħor.",
     "p2": "Ma' dan jiżdied id-distribuzzjoni tiegħek stess: il-portal tal-booking b'kummissjoni baxxa fuq myBestDays, widget tal-booking għas-sit tiegħek u kanali reġjonali li tista' tixgħel wieħed wieħed. Kull kanal jinkontrolla separatament – int tiddeċiedi fejn tidher propjetà.",
     "cta": "Qabbad il-kanali fil-prova"
   },
@@ -346,7 +346,7 @@
     "kanaele": {
       "value": "56",
       "label": "Pjattaformi",
-      "text": "Pjattaformi tal-booking permezz ta' Channex"
+      "text": "Pjattaformi tal-booking konnessi"
     },
     "hosting": {
       "value": "100 %",

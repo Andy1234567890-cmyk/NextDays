@@ -45,7 +45,7 @@
     "p2": "Ardaigh do ráta áitíochta, simpligh an obair laethúil agus cuir eispéiris den scoth ar fáil do na haíonna – gan chastacht ná praghsanna enterprise na gcóras mór.",
     "p3": "Uirlisí lárnacha, uathoibriú cliste agus nasc le gach cainéal tábhachtach – móide do thairseach áirithinte féin le coimisiún íseal. Fásann do ghnó le níos mó smachta agus níos lú stró.",
     "cta": "Faigh amach faoi na gnéithe",
-    "reichweite": "Déanta do gach áit chónaithe bheag.",
+    "reichweite": "Déanta do gach áit chónaithe.",
     "typen": {
       "hotel": "Óstán",
       "bnb": "B&B",
@@ -62,7 +62,7 @@
     "belege": {
       "neu": "Nua in 2026 – forbartha ag óstaigh ghníomhacha, powered by AirSmil",
       "eu": "Tógtha sa Danmhairg, óstáilte san AE agus i gcomhréir le GDPR",
-      "kanaele": "56 ardán áirithinte trínár bpáirtí nascachta Channex",
+      "kanaele": "56 ardán áirithinte ceangailte",
       "start": "Seoladh ar an 1 Meán Fómhair 2026 i 27 dtír Eorpacha, i 24 teanga"
     },
     "eyebrow": "An t-ardán",
@@ -134,7 +134,7 @@
     },
     "portale": {
       "frage": "Cé na tairseacha áirithinte is féidir liom a nascadh?",
-      "antwort": "Trínár bpáirtí nascachta Channex sroicheann tú 56 ardán áirithinte, ina measc Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda agus Tripadvisor. Ina theannta sin tá ár margadh féin myBestDays, giuirléid áirithinte do do shuíomh agus cainéil réigiúnacha. Cuirtear gach cainéal ar siúl ar leithligh: socraíonn tú in aghaidh gach áite cá bhfuil sé le feiceáil."
+      "antwort": "Sroicheann tú 56 ardán áirithinte, ina measc Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda agus Tripadvisor. Ina theannta sin tá ár margadh féin myBestDays, giuirléid áirithinte do do shuíomh agus cainéil réigiúnacha. Cuirtear gach cainéal ar siúl ar leithligh: socraíonn tú in aghaidh gach áite cá bhfuil sé le feiceáil."
     },
     "sync": {
       "frage": "Cé chomh tapa a shioncronaíonn sé — agus an féidir áirithintí dúbailte tarlú?",
@@ -251,7 +251,7 @@
       },
       "channel": {
         "title": "Channel manager",
-        "items": "56 ardán áirithinte trí Channex, Airbnb, Booking.com, Expedia, Vrbo, Google, sioncronú déthreoch fíor-ama"
+        "items": "56 ardán áirithinte, Airbnb, Booking.com, Expedia, Vrbo, Google, sioncronú déthreoch fíor-ama"
       },
       "direkt": {
         "title": "Áirithint dhíreach",
@@ -308,7 +308,7 @@
   "integrationen": {
     "eyebrow": "Raon",
     "heading": "56 ardán áirithinte – comhéadan amháin.",
-    "p1": "Trínár bpáirtí nascachta Channex dáileann tú infhaighteacht, rátaí agus srianta ar 56 ardán áirithinte – ina measc Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda agus Tripadvisor. Sioncronú déthreoch fíor-ama: cuireann áirithint ar thairseach amháin bac ar an oíche sin i ngach áit eile.",
+    "p1": "Dáileann tú infhaighteacht, rátaí agus srianta ar 56 ardán áirithinte – ina measc Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda agus Tripadvisor. Sioncronú déthreoch fíor-ama: cuireann áirithint ar thairseach amháin bac ar an oíche sin i ngach áit eile.",
     "p2": "Anuas air sin tagann do dháileachán féin: an tairseach áirithinte le coimisiún íseal ar myBestDays, giuirléid áirithinte do do shuíomh gréasáin agus cainéil réigiúnacha is féidir leat a chur ar siúl ceann ar cheann. Rialaítear gach cainéal ar leithligh – is tusa a shocraíonn cá bhfuil áitreabh le feiceáil.",
     "cta": "Ceangail cainéil sa triail saor in aisce"
   },
@@ -346,7 +346,7 @@
     "kanaele": {
       "value": "56",
       "label": "Ardáin",
-      "text": "Ardáin áirithinte trí Channex"
+      "text": "Ardáin áirithinte ceangailte"
     },
     "hosting": {
       "value": "100 %",

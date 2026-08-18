@@ -32,7 +32,7 @@ export function MarketingHero() {
           <h1 className="font-display text-4xl font-semibold leading-tight tracking-tight sm:text-5xl lg:text-6xl">
             Eine starke Plattform für{" "}
             <span className="relative whitespace-nowrap text-accent">
-              kleine Unterkünfte
+              Unterkünfte jeder Größe
               <svg
                 aria-hidden
                 viewBox="0 0 300 20"

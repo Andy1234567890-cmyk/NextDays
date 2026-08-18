@@ -45,7 +45,7 @@
     "p2": "Nosta käyttöastettasi, helpota arkeasi ja tarjoa upeita vieraskokemuksia – ilman suurten järjestelmien monimutkaisuutta ja enterprise-hintoja.",
     "p3": "Kaikki yhdessä paikassa, älykäs automaatio ja yhteydet kaikkiin tärkeisiin kanaviin – lisäksi oma matalan provision varausportaalisi. Näin liiketoimintasi kasvaa suuremmalla hallinnalla ja pienemmällä vaivalla.",
     "cta": "Tutustu ominaisuuksiin",
-    "reichweite": "Tehty jokaiselle pienelle majoituskohteelle.",
+    "reichweite": "Tehty jokaiselle majoituskohteelle.",
     "typen": {
       "hotel": "Hotelli",
       "bnb": "B&B",
@@ -62,7 +62,7 @@
     "belege": {
       "neu": "Uutta 2026 – kehitetty aktiivisten vuokraajien voimin, powered by AirSmil",
       "eu": "Rakennettu Tanskassa, isännöity EU:ssa ja GDPR-yhteensopiva",
-      "kanaele": "56 varausalustaa yhteyskumppanimme Channexin kautta",
+      "kanaele": "56 varausalustaa liitettynä",
       "start": "Julkaisu 1. syyskuuta 2026 27 Euroopan maassa, 24 kielellä"
     },
     "eyebrow": "Alusta",
@@ -134,7 +134,7 @@
     },
     "portale": {
       "frage": "Mitkä varausportaalit voin kytkeä?",
-      "antwort": "Yhteyskumppanimme Channexin kautta tavoitat 56 varausalustaa, muun muassa Booking.comin, Airbnb:n, Expedian, Vrbon, Googlen, Agodan ja Tripadvisorin. Lisäksi tulevat oma markkinapaikkamme myBestDays, varauswidget verkkosivullesi ja alueelliset kanavat. Jokainen kanava kytketään erikseen: päätät kohteittain, missä se näkyy."
+      "antwort": "Tavoitat 56 varausalustaa, muun muassa Booking.comin, Airbnb:n, Expedian, Vrbon, Googlen, Agodan ja Tripadvisorin. Lisäksi tulevat oma markkinapaikkamme myBestDays, varauswidget verkkosivullesi ja alueelliset kanavat. Jokainen kanava kytketään erikseen: päätät kohteittain, missä se näkyy."
     },
     "sync": {
       "frage": "Kuinka nopeasti synkronointi tapahtuu — ja voiko tuplavarauksia syntyä?",
@@ -251,7 +251,7 @@
       },
       "channel": {
         "title": "Channel manager",
-        "items": "56 varausalustaa Channexin kautta, Airbnb, Booking.com, Expedia, Vrbo, Google, kaksisuuntainen synkronointi reaaliajassa"
+        "items": "56 varausalustaa, Airbnb, Booking.com, Expedia, Vrbo, Google, kaksisuuntainen synkronointi reaaliajassa"
       },
       "direkt": {
         "title": "Suoravaraus",
@@ -308,7 +308,7 @@
   "integrationen": {
     "eyebrow": "Näkyvyys",
     "heading": "56 varausalustaa – yksi näkymä.",
-    "p1": "Yhteyskumppanimme Channexin kautta jaat saatavuuden, hinnat ja rajoitukset 56 varausalustalle – mukaan lukien Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda ja Tripadvisor. Kaksisuuntainen synkronointi reaaliajassa: yhdessä portaalissa tehty varaus sulkee yön kaikkialta muualta.",
+    "p1": "Jaat saatavuuden, hinnat ja rajoitukset 56 varausalustalle – mukaan lukien Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda ja Tripadvisor. Kaksisuuntainen synkronointi reaaliajassa: yhdessä portaalissa tehty varaus sulkee yön kaikkialta muualta.",
     "p2": "Lisäksi oma myyntisi: matalan provision varausportaali myBestDaysissa, varaus-widget verkkosivuillesi ja alueelliset kanavat, jotka voit kytkeä päälle yksitellen. Jokaista kanavaa ohjataan erikseen – sinä päätät, missä kohde näkyy.",
     "cta": "Yhdistä kanavat kokeilujaksolla"
   },
@@ -346,7 +346,7 @@
     "kanaele": {
       "value": "56",
       "label": "Alustaa",
-      "text": "Varausalustaa Channexin kautta"
+      "text": "Liitettyä varausalustaa"
     },
     "hosting": {
       "value": "100 %",

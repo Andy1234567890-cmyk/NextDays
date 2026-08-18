@@ -45,7 +45,7 @@
     "p2": "Növelje a kihasználtságot, egyszerűsítse a mindennapokat, és nyújtson kiváló vendégélményt – a nagy rendszerek bonyolultsága és enterprise árai nélkül.",
     "p3": "Minden eszköz egy helyen, okos automatizálás és kapcsolat minden fontos csatornával – ráadásul saját, alacsony jutalékú foglalási portál. Így nő a vállalkozása több kontrollal és kevesebb ráfordítással.",
     "cta": "Funkciók felfedezése",
-    "reichweite": "Minden kisebb szálláshelyre megalkotva.",
+    "reichweite": "Minden szálláshelyre megalkotva.",
     "typen": {
       "hotel": "Szálloda",
       "bnb": "B&B",
@@ -62,7 +62,7 @@
     "belege": {
       "neu": "Újdonság 2026 – aktív kiadók fejlesztik, powered by AirSmil",
       "eu": "Dániában fejlesztve, EU-s tárhelyen és GDPR-megfelelően",
-      "kanaele": "56 foglalási platform Channex konnektivitási partnerünkön keresztül",
+      "kanaele": "56 csatlakoztatott foglalási platform",
       "start": "Indulás 2026. szeptember 1-jén, 27 európai országban, 24 nyelven"
     },
     "eyebrow": "A platform",
@@ -134,7 +134,7 @@
     },
     "portale": {
       "frage": "Mely foglalási portálokat kapcsolhatom be?",
-      "antwort": "Connectivity-partnerünkön, a Channexen keresztül 56 foglalási platformot érsz el, köztük a Booking.comot, az Airbnb-t, az Expediát, a Vrbót, a Google-t, az Agodát és a Tripadvisort. Ehhez jön saját piacterünk, a myBestDays, egy foglalási widget a weboldaladra és regionális csatornák. Minden csatorna külön kapcsolható: objektumonként te döntöd el, hol látszik."
+      "antwort": "56 foglalási platformot érsz el, köztük a Booking.comot, az Airbnb-t, az Expediát, a Vrbót, a Google-t, az Agodát és a Tripadvisort. Ehhez jön saját piacterünk, a myBestDays, egy foglalási widget a weboldaladra és regionális csatornák. Minden csatorna külön kapcsolható: objektumonként te döntöd el, hol látszik."
     },
     "sync": {
       "frage": "Milyen gyorsan szinkronizál — és előfordulhat dupla foglalás?",
@@ -251,7 +251,7 @@
       },
       "channel": {
         "title": "Channel manager",
-        "items": "56 foglalási platform a Channexen keresztül, Airbnb, Booking.com, Expedia, Vrbo, Google, valós idejű kétirányú szinkron"
+        "items": "56 foglalási platform, Airbnb, Booking.com, Expedia, Vrbo, Google, valós idejű kétirányú szinkron"
       },
       "direkt": {
         "title": "Közvetlen foglalás",
@@ -308,7 +308,7 @@
   "integrationen": {
     "eyebrow": "Elérés",
     "heading": "56 foglalási platform – egyetlen felület.",
-    "p1": "Channex konnektivitási partnerünkön keresztül szabad kapacitást, árakat és korlátozásokat oszt szét 56 foglalási platformra – köztük az Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda és Tripadvisor felé. Valós idejű kétirányú szinkron: egy foglalás az egyik portálon mindenhol máshol lezárja az adott éjszakát.",
+    "p1": "Szabad kapacitást, árakat és korlátozásokat oszt szét 56 foglalási platformra – köztük az Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda és Tripadvisor felé. Valós idejű kétirányú szinkron: egy foglalás az egyik portálon mindenhol máshol lezárja az adott éjszakát.",
     "p2": "Ehhez jön a saját értékesítése: az alacsony jutalékú foglalási portál a myBestDaysen, egy foglalási widget a weboldalára, valamint regionális csatornák, amelyeket egyenként kapcsolhat be. Minden csatorna külön vezérelhető – Ön dönti el, hol legyen látható egy szálláshely.",
     "cta": "Csatornák összekötése a próbaidőszakban"
   },
@@ -346,7 +346,7 @@
     "kanaele": {
       "value": "56",
       "label": "Platform",
-      "text": "Foglalási platform a Channexen keresztül"
+      "text": "Csatlakoztatott foglalási platform"
     },
     "hosting": {
       "value": "100 %",

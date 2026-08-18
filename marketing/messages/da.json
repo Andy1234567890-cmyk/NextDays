@@ -45,7 +45,7 @@
     "p2": "Øg din belægning, gør hverdagen enklere og skab fantastiske gæsteoplevelser – uden kompleksiteten og enterprise-priserne fra de store systemer.",
     "p3": "Alt ét sted, smart automatisering og forbindelse til alle vigtige kanaler – plus din egen bookingportal med lav kommission. Sådan vokser din forretning med mere kontrol og mindre besvær.",
     "cta": "Udforsk funktionerne",
-    "reichweite": "Skabt til enhver lille overnatningsvirksomhed.",
+    "reichweite": "Skabt til enhver overnatningsvirksomhed.",
     "typen": {
       "hotel": "Hotel",
       "bnb": "B&B",
@@ -62,7 +62,7 @@
     "belege": {
       "neu": "Nyt i 2026 – udviklet af aktive udlejere, powered by AirSmil",
       "eu": "Bygget i Danmark, hostet i EU og GDPR-compliant",
-      "kanaele": "56 bookingplatforme via vores connectivity-partner Channex",
+      "kanaele": "56 bookingplatforme tilsluttet",
       "start": "Lancering den 1. september 2026 i 27 europæiske lande, 24 sprog"
     },
     "eyebrow": "Platformen",
@@ -134,7 +134,7 @@
     },
     "portale": {
       "frage": "Hvilke bookingportaler kan jeg koble til?",
-      "antwort": "Via vores connectivity-partner Channex når du 56 bookingplatforme, blandt andet Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda og Tripadvisor. Dertil kommer vores eget marked myBestDays, en booking-widget til din hjemmeside og regionale kanaler. Hver kanal tændes for sig: du bestemmer pr. objekt, hvor det er synligt."
+      "antwort": "Du når 56 bookingplatforme, blandt andet Booking.com, Airbnb, Expedia, Vrbo, Google, Agoda og Tripadvisor. Dertil kommer vores eget marked myBestDays, en booking-widget til din hjemmeside og regionale kanaler. Hver kanal tændes for sig: du bestemmer pr. objekt, hvor det er synligt."
     },
     "sync": {
       "frage": "Hvor hurtigt synkroniseres der — og kan der opstå dobbeltbookinger?",
@@ -251,7 +251,7 @@
       },
       "channel": {
         "title": "Channel manager",
-        "items": "56 bookingplatforme via Channex, Airbnb, Booking.com, Expedia, Vrbo, Google, tovejssynkronisering i realtid"
+        "items": "56 bookingplatforme, Airbnb, Booking.com, Expedia, Vrbo, Google, tovejssynkronisering i realtid"
       },
       "direkt": {
         "title": "Direkte booking",
@@ -308,7 +308,7 @@
   "integrationen": {
     "eyebrow": "Rækkevidde",
     "heading": "56 bookingplatforme – én flade.",
-    "p1": "Via vores connectivity-partner Channex fordeler du ledighed, priser og restriktioner til 56 bookingplatforme – heriblandt Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda og Tripadvisor. Tovejssynkronisering i realtid: en booking på én portal spærrer natten alle andre steder.",
+    "p1": "Du fordeler ledighed, priser og restriktioner til 56 bookingplatforme – heriblandt Airbnb, Booking.com, Expedia, Vrbo, Google, Agoda og Tripadvisor. Tovejssynkronisering i realtid: en booking på én portal spærrer natten alle andre steder.",
     "p2": "Oveni kommer dit eget salg: bookingportalen med lav kommission på myBestDays, en booking-widget til din hjemmeside og regionale kanaler, du kan slå til enkeltvis. Hver kanal styres separat – du bestemmer, hvor en bolig er synlig.",
     "cta": "Forbind kanaler i prøveperioden"
   },
@@ -346,7 +346,7 @@
     "kanaele": {
       "value": "56",
       "label": "Platforme",
-      "text": "Bookingplatforme via Channex"
+      "text": "Tilsluttede bookingplatforme"
     },
     "hosting": {
       "value": "100 %",

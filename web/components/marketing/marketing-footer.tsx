@@ -57,7 +57,7 @@ export async function MarketingFooter() {
           <div>
             <Logo heightRem={2.25} dark />
             <p className="mt-4 max-w-xs text-sm text-primary-foreground/70">
-              Eine starke Plattform für kleine Unterkünfte – mehr Buchungen,
+              Eine starke Plattform für Unterkünfte jeder Größe – mehr Buchungen,
               weniger Arbeit.
             </p>
             <div className="mt-6 flex flex-col gap-3">
