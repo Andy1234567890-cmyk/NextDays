@@ -125,3 +125,114 @@ def test_methode_wird_gross_geschrieben_verglichen() -> None:
         with pytest.raises(HTTPException) as exc:
             demo_schreibzugriff_pruefen("post", _ctx())
     assert exc.value.status_code == 405
+
+
+# ---------------------------------------------------------------------------
+# Bereichs-Sperre (0408)
+# ---------------------------------------------------------------------------
+# Anders als der Schreib-Riegel gilt sie auch fuer LESENDE Anfragen: die
+# gesperrten Bereiche sollen gar nicht einsehbar sein. Geprueft wird deshalb
+# genau die Trennung — gesperrter Pfad vs. erlaubter Pfad, Demo vs. Kunde.
+from src.features.auth.demo_gate import (  # noqa: E402
+    GESPERRTE_PRAEFIXE,
+    demo_bereich_pruefen,
+)
+
+GESPERRT_BEISPIELE = (
+    "/api/v1/buchhaltung",
+    "/api/v1/buchhaltung/zahlungen",
+    "/api/v1/channel-manager/mappings",
+    "/api/v1/owners/17",
+    "/api/v1/owner-reporting/monat",
+    "/api/v1/subscriptions/aktuell",
+)
+ERLAUBT_BEISPIELE = (
+    "/api/v1/calendar/monat",
+    "/api/v1/reservations",
+    "/api/v1/inbox/threads",
+    "/api/v1/properties",
+    "/api/v1/dashboard",
+)
+
+
+@pytest.mark.parametrize("pfad", GESPERRT_BEISPIELE)
+def test_demo_sieht_gesperrten_bereich_nicht(pfad: str) -> None:
+    """403 auch beim LESEN — der Bereich ist nicht freigegeben."""
+    with patch(
+        "src.features.auth.demo_gate.get_service_client",
+        return_value=_client([{"is_demo": True}]),
+    ):
+        with pytest.raises(HTTPException) as exc:
+            demo_bereich_pruefen(pfad, _ctx())
+    assert exc.value.status_code == 403
+
+
+@pytest.mark.parametrize("pfad", ERLAUBT_BEISPIELE)
+def test_demo_darf_freigegebene_bereiche_sehen(pfad: str) -> None:
+    """Was die Vorfuehrung zeigen SOLL, bleibt unberuehrt."""
+    with patch(
+        "src.features.auth.demo_gate.get_service_client",
+        return_value=_client([{"is_demo": True}]),
+    ):
+        demo_bereich_pruefen(pfad, _ctx())
+
+
+@pytest.mark.parametrize("pfad", GESPERRT_BEISPIELE)
+def test_zahlender_betrieb_sieht_alles(pfad: str) -> None:
+    """Der Riegel darf NUR den Vorfuehr-Mandanten treffen."""
+    with patch(
+        "src.features.auth.demo_gate.get_service_client",
+        return_value=_client([{"is_demo": False}]),
+    ):
+        demo_bereich_pruefen(pfad, _ctx("t-echt"))
+
+
+def test_praefix_endet_am_segment() -> None:
+    """`/owners` darf nicht `/owners-public` mitsperren.
+
+    Ohne die Segmentgrenze sperrte ein kurzer Praefix fremde Bereiche mit —
+    ein Fehler, der erst auffaellt, wenn ein Kunde etwas nicht mehr sieht.
+    """
+    with patch(
+        "src.features.auth.demo_gate.get_service_client",
+        return_value=_client([{"is_demo": True}]),
+    ):
+        demo_bereich_pruefen("/api/v1/owners-public/liste", _ctx())
+
+
+def test_bereich_lesefehler_sperrt_nicht() -> None:
+    """DB-Ausfall darf ZAHLENDE Betriebe nicht aussperren.
+
+    Andere Richtung als beim Schreib-Riegel, und zwar bewusst: dort waere
+    fail-open die Erlaubnis zu schreiben; hier waere fail-closed eine Sperre
+    fuer Kunden, sobald die Abfrage einmal nicht antwortet.
+    """
+    with patch(
+        "src.features.auth.demo_gate.get_service_client",
+        return_value=_client(RuntimeError("DB weg")),
+    ):
+        demo_bereich_pruefen("/api/v1/buchhaltung", _ctx())
+
+
+def test_api_client_token_ist_nicht_betroffen() -> None:
+    """Hinter einem Client-Credentials-Token steht kein Demo-Besucher."""
+    ctx = AuthContext(
+        user_id="c-1", tenant_id="t-demo", role=None, api_scopes=frozenset({"x"})
+    )
+    with patch(
+        "src.features.auth.demo_gate.get_service_client",
+        return_value=_client(RuntimeError("darf nicht abgefragt werden")),
+    ):
+        demo_bereich_pruefen("/api/v1/buchhaltung", ctx)
+
+
+def test_jeder_gesperrte_praefix_greift() -> None:
+    """Gegenprobe ueber die ganze Liste — kein Eintrag ist toter Text."""
+    with patch(
+        "src.features.auth.demo_gate.get_service_client",
+        return_value=_client([{"is_demo": True}]),
+    ):
+        for praefix in GESPERRTE_PRAEFIXE:
+            with pytest.raises(HTTPException) as exc:
+                demo_bereich_pruefen(f"/api/v1{praefix}/irgendwas", _ctx())
+            assert exc.value.status_code == 403, praefix

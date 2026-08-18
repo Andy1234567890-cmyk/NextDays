@@ -8,6 +8,8 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
+import { istGesperrt } from "@/lib/demo-sperre";
+
 import { Logo } from "@/components/logo";
 import { PosteingangAbzeichen } from "@/components/posteingang-abzeichen";
 import { useSupportChat } from "@/components/support/support-chat";
@@ -382,6 +384,7 @@ export function AppSidebar({
   capabilities = [],
   accommodationType = "vacation_rental",
   country = null,
+  istDemo = false,
 }: {
   email?: string;
   role?: "admin" | "co_admin" | "owner" | "staff" | "cleaner" | null;
@@ -392,6 +395,10 @@ export function AppSidebar({
   // taugen (DATEV außerhalb Deutschlands). Bewusst das LAND und nicht die
   // Sprache: der Beta-Betrieb sitzt in DK und arbeitet auf Deutsch.
   country?: string | null;
+  // Vorführ-Zugang (0408): gesperrte Bereiche bleiben SICHTBAR, werden aber
+  // als nicht öffenbar markiert. Ausblenden würde den Umfang der Software
+  // verstecken; der Schutz selbst liegt ohnehin im Backend (`demo_gate`).
+  istDemo?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -483,6 +490,9 @@ export function AppSidebar({
             <SidebarMenu>
               {mainItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
+                  {istDemo && istGesperrt(item.href) ? (
+                    <DemoGesperrt icon={item.icon} label={t(item.key)} />
+                  ) : (
                   <SidebarMenuButton
                     asChild
                     isActive={isActive(item)}
@@ -495,6 +505,7 @@ export function AppSidebar({
                       </span>
                     </Link>
                   </SidebarMenuButton>
+                  )}
                   {/* Nur der Posteingang trägt eine Zahl. Sie steht als
                       Geschwister NEBEN dem Button, nicht darin: der Button ist
                       `asChild` über einem <Link>, und ein zweites Kind darin
@@ -535,6 +546,12 @@ export function AppSidebar({
                     <SidebarMenu>
                       {items.map((item) => (
                         <SidebarMenuItem key={item.href}>
+                          {istDemo && istGesperrt(item.href) ? (
+                            <DemoGesperrt
+                              icon={item.icon}
+                              label={t(item.key)}
+                            />
+                          ) : (
                           <SidebarMenuButton
                             asChild
                             isActive={isActive(item)}
@@ -547,6 +564,7 @@ export function AppSidebar({
                               </span>
                             </Link>
                           </SidebarMenuButton>
+                          )}
                         </SidebarMenuItem>
                       ))}
                     </SidebarMenu>
@@ -628,40 +646,88 @@ export function AppSidebar({
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  asChild
+                  asChild={!istDemo}
+                  disabled={istDemo}
                   className="gap-3 px-3 py-2.5 text-sm [&>svg]:size-5"
                 >
-                  <Link href="/konto">
-                    <Icon icon="ph:user-circle" />
-                    {t("account.myAccount")}
-                  </Link>
+                  {istDemo ? (
+                    <span className="flex items-center gap-3">
+                      <Icon icon="ph:user-circle" />
+                      {t("account.myAccount")}
+                      <span
+                        aria-hidden="true"
+                        className="ml-auto size-2 shrink-0 rounded-full bg-sky-500"
+                      />
+                    </span>
+                  ) : (
+                    <Link href="/konto">
+                      <Icon icon="ph:user-circle" />
+                      {t("account.myAccount")}
+                    </Link>
+                  )}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  asChild
+                  asChild={!istDemo}
+                  disabled={istDemo}
                   className="gap-3 px-3 py-2.5 text-sm [&>svg]:size-5"
                 >
-                  <Link href="/konto/nutzer">
-                    <Icon icon="ph:users" />
-                    {t("account.users")}
-                  </Link>
+                  {istDemo ? (
+                    <span className="flex items-center gap-3">
+                      <Icon icon="ph:users" />
+                      {t("account.users")}
+                      <span
+                        aria-hidden="true"
+                        className="ml-auto size-2 shrink-0 rounded-full bg-sky-500"
+                      />
+                    </span>
+                  ) : (
+                    <Link href="/konto/nutzer">
+                      <Icon icon="ph:users" />
+                      {t("account.users")}
+                    </Link>
+                  )}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  asChild
+                  asChild={!istDemo}
+                  disabled={istDemo}
                   className="gap-3 px-3 py-2.5 text-sm [&>svg]:size-5"
                 >
-                  <Link href="/konto/sicherheit">
-                    <Icon icon="ph:shield-check" />
-                    {t("account.security")}
-                  </Link>
+                  {istDemo ? (
+                    <span className="flex items-center gap-3">
+                      <Icon icon="ph:shield-check" />
+                      {t("account.security")}
+                      <span
+                        aria-hidden="true"
+                        className="ml-auto size-2 shrink-0 rounded-full bg-sky-500"
+                      />
+                    </span>
+                  ) : (
+                    <Link href="/konto/sicherheit">
+                      <Icon icon="ph:shield-check" />
+                      {t("account.security")}
+                    </Link>
+                  )}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  asChild
+                  asChild={!istDemo}
+                  disabled={istDemo}
                   className="gap-3 px-3 py-2.5 text-sm [&>svg]:size-5"
                 >
-                  <Link href="/konto/abrechnung">
-                    <Icon icon="ph:receipt" />
-                    {t("account.billing")}
-                  </Link>
+                  {istDemo ? (
+                    <span className="flex items-center gap-3">
+                      <Icon icon="ph:receipt" />
+                      {t("account.billing")}
+                      <span
+                        aria-hidden="true"
+                        className="ml-auto size-2 shrink-0 rounded-full bg-sky-500"
+                      />
+                    </span>
+                  ) : (
+                    <Link href="/konto/abrechnung">
+                      <Icon icon="ph:receipt" />
+                      {t("account.billing")}
+                    </Link>
+                  )}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {/* Live-Chat mit dem myNextDays-Team (Widget im Layout). */}
@@ -700,5 +766,36 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
+  );
+}
+
+/** Ein Menüpunkt, der in der Vorführung nicht geöffnet werden kann (0408).
+ *
+ * Sichtbar, aber nicht klickbar — der Besucher soll den Umfang der Software
+ * sehen und zugleich erkennen, wo die Vorführung endet. Ein ausgeblendeter
+ * Punkt würde beides verhindern: er lässt das Produkt kleiner wirken und wirft
+ * die Frage auf, warum das Menü so kurz ist.
+ *
+ * `div` statt `button`: es gibt keine Aktion. Ein deaktivierter Button wäre
+ * fokussierbar-aber-wirkungslos, und Screenreader kündigten eine Schaltfläche
+ * an, die nichts tut. Der Punkt trägt stattdessen `title` als Erklärung.
+ */
+function DemoGesperrt({ icon, label }: { icon: string; label: string }) {
+  return (
+    <div
+      title="In der Vorführung gesperrt — im eigenen Betrieb voll verfügbar"
+      aria-disabled="true"
+      className="flex h-8 w-full items-center gap-2 rounded-(--radius) px-2 text-sm text-sidebar-foreground/50"
+    >
+      <Icon icon={icon} className="shrink-0" />
+      <span className="truncate font-display font-normal">{label}</span>
+      {/* Der blaue Punkt ist die eigentliche Botschaft: hier ist etwas, das
+          freischaltbar ist — kein Fehler und kein fehlendes Recht. Deshalb
+          blau (Hinweis) und nicht rot (Sperre) oder grau (unwichtig). */}
+      <span
+        aria-hidden="true"
+        className="ml-auto size-2 shrink-0 rounded-full bg-sky-500 group-data-[collapsible=icon]:hidden"
+      />
+    </div>
   );
 }

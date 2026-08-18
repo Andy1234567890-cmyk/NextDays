@@ -132,3 +132,24 @@ def login_fehler_melden(meldung: str) -> None:
     findet, statt es beim Besucher zu suchen.
     """
     log.error("demo_zugang_login_fehlgeschlagen", error=meldung[:200])
+
+
+def ist_vorfuehrung(tenant_id: str | None) -> bool:
+    """Ist das der oeffentliche Vorfuehr-Mandant? (0407)
+
+    Fuer Endpunkte, die im Demo WENIGER ausliefern sollen, statt abzulehnen —
+    etwa der Geraeteverlauf, der sonst die IP-Adressen aller Besucher zeigte.
+
+    Vergleich gegen die konfigurierte `DEMO_TENANT_ID` und NICHT per Abfrage
+    gegen `tenants.is_demo`: dieser Weg kostet keine DB-Runde und ist damit
+    auch in Listen-Endpunkten bezahlbar. Der Riegel `demo_gate` fragt weiter die
+    DB — dort ist die Wahrheit wichtiger als die Ersparnis, weil er einen
+    Schreibzugriff verhindert.
+
+    Ist nichts konfiguriert, gibt es keine Vorfuehrung: dann ist die Antwort
+    `False`, und alle Endpunkte verhalten sich wie immer.
+    """
+    if not tenant_id:
+        return False
+    erwartet = (get_settings().demo_tenant_id or "").strip()
+    return bool(erwartet) and tenant_id == erwartet

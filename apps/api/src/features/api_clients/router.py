@@ -15,6 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from src.core.security import AuthContext
 from src.core.supabase import get_service_client
+from src.features.auth import demo_zugang
 from src.features.auth.dependencies import require_permission
 from src.features.auth.permissions import Capability
 
@@ -53,6 +54,19 @@ def health(service: ServiceDep) -> SliceHealth:
 
 @router.get("/api-clients", response_model=list[ApiClientResponse])
 def list_clients(ctx: _admin, service: ServiceDep) -> list[ApiClientResponse]:
+    """Integrationszugaenge des Betriebs.
+
+    NICHT im Vorfuehr-Mandanten (0407): der Zugang ist oeffentlich, und hier
+    stehen die Kennungen der Maschinen-Zugaenge samt Scopes und erlaubten
+    Objekten. Heute ist die Liste dort leer — genau deshalb wird sie jetzt
+    geschlossen und nicht erst, wenn der erste Zugang entsteht und ihn niemand
+    mehr im Blick hat.
+
+    Leere Liste statt 403: es ist eine Anzeige. Ein Fehler liesse die
+    Einstellungsseite der Vorfuehrung kaputt aussehen.
+    """
+    if demo_zugang.ist_vorfuehrung(ctx.tenant_id):
+        return []
     try:
         rows = service.list_clients(ctx)
     except ApiClientError as exc:

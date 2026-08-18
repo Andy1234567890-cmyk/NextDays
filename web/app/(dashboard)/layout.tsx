@@ -138,6 +138,7 @@ export default async function DashboardLayout({
           capabilities={capabilities}
           accommodationType={accommodationType}
           country={me?.country ?? null}
+          istDemo={Boolean(me?.is_demo)}
         />
         <SidebarInset>
           {/* Ueber allem, auch ueber der Topbar: der Besucher soll wissen, wo

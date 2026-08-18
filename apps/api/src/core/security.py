@@ -207,7 +207,10 @@ def _aktiv_gate(ctx: AuthContext) -> None:
 
 
 def _demo_gate(request: Request, ctx: AuthContext) -> None:
-    """Der NUR-LESE-Riegel für den öffentlichen Demo-Mandanten (0407).
+    """Die beiden Riegel für den öffentlichen Demo-Mandanten (0407/0408).
+
+    Zwei Fragen, zwei Prüfungen: Ist der BEREICH überhaupt freigegeben (0408,
+    gilt auch für Leseanfragen)? Und darf diese METHODE etwas ändern (0407)?
 
     Sitzt hier und nicht in den Routen: das Demo-Konto ist öffentlich
     anmeldbar, und von 536 schreibenden Routen tragen 76 gar keinen
@@ -219,9 +222,13 @@ def _demo_gate(request: Request, ctx: AuthContext) -> None:
     importiert.
     """
     from src.features.auth.demo_gate import (  # noqa: PLC0415
+        demo_bereich_pruefen,
         demo_schreibzugriff_pruefen,
     )
 
+    # Bereichs-Sperre VOR der Methodenprüfung: ein gesperrter Bereich nennt
+    # denselben Grund, egal ob gelesen oder geschrieben wird (0408).
+    demo_bereich_pruefen(request.url.path, ctx)
     demo_schreibzugriff_pruefen(request.method, ctx)
 
 

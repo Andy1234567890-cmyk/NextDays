@@ -306,7 +306,21 @@ def me(ctx: CurrentUser, service: AuthServiceDep) -> MeResponse:
 @router.get("/sessions", response_model=list[SessionInfo])
 def list_sessions(ctx: CurrentUser, service: AuthServiceDep) -> list[SessionInfo]:
     """Aktive Sitzungen des eingeloggten Nutzers (Geräteverlauf). Scope steckt
-    serverseitig in der RPC (nur ctx.user_id) — kein Client-Parameter."""
+    serverseitig in der RPC (nur ctx.user_id) — kein Client-Parameter.
+
+    NICHT im Vorfuehr-Mandanten (0407): dort teilen ALLE Besucher denselben
+    Zugang, und der Verlauf traegt IP-Adressen. Jeder Besucher saehe die IPs
+    aller anderen — personenbezogene Daten Dritter, ausgeloest durch nichts als
+    einen Klick auf „Demo ansehen". Gemessen am 18.08.2026: die Liste enthielt
+    die Adressen aller vorherigen Aufrufe.
+
+    Leere Liste statt 403: der Geraeteverlauf ist eine Anzeige, keine Aktion.
+    Ein Fehler an dieser Stelle liesse die Kontoseite der Vorfuehrung kaputt
+    aussehen — leer ist die wahre Aussage („keine Sitzungen, die dich
+    betreffen").
+    """
+    if demo.ist_vorfuehrung(ctx.tenant_id):
+        return []
     return service.list_sessions(ctx)
 
 

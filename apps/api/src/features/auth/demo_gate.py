@@ -120,3 +120,122 @@ def demo_schreibzugriff_pruefen(methode: str, ctx: AuthContext) -> None:
             status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
             detail=_ABGELEHNT,
         )
+
+
+# ---------------------------------------------------------------------------
+# Gesperrte Bereiche (0408)
+# ---------------------------------------------------------------------------
+# Manche Bereiche sollen in der Vorführung gar nicht EINSEHBAR sein, nicht bloß
+# unveränderlich: Buchhaltung, Eigentümer-Reporting, Kanalmanager, Konto samt
+# Abrechnung, Werkzeuge. Es sind die Bereiche mit Finanz-, Vertrags- und
+# Zugangsdaten — in der Demo stehen dort Beispielwerte, aber die Oberfläche
+# zeigt daneben Preise, Provisionen und Portal-Zugänge, die kein anonymer
+# Besucher sehen soll.
+#
+# WARUM DER RIEGEL IM BACKEND SITZT UND NICHT NUR IN DER SIDEBAR:
+# Ein ausgegrauter Menüpunkt ist Optik. Wer die URL kennt (`/buchhaltung`) oder
+# die Netzwerkkonsole öffnet, ruft `/api/v1/buchhaltung/...` direkt auf und
+# bekommt die Daten trotzdem. Gesperrt ist ein Bereich erst, wenn die API ihn
+# verweigert — die Oberfläche macht die Sperre nur SICHTBAR.
+#
+# WARUM PRÄFIXE UND KEINE ROUTEN-LISTE:
+# Ein Bereich besteht aus Dutzenden Endpunkten, und es kommen laufend welche
+# dazu. Eine Liste einzelner Routen wäre am Tag ihrer Erstellung veraltet; ein
+# Präfix deckt auch jede künftige Unterseite (`/channel-manager/<neu>`).
+GESPERRTE_PRAEFIXE: tuple[str, ...] = (
+    "/buchhaltung",          # Buchhaltung samt Abrechnungsregeln
+    "/owner-reporting",      # Eigentümer-Reporting
+    "/owner-statements",     # Eigentümer-Abrechnungen
+    "/owner-billing",        # Eigentümer-Abrechnung
+    "/owners",               # Eigentümer
+    "/channel-manager",      # Kanalmanager mit ALLEN Unterseiten
+    "/site-config",          # Website-Baukasten
+    "/subscriptions",        # Konto/Abrechnung des Betriebs
+    "/payouts",              # Auszahlungen
+    "/payments",             # Zahlungen
+    "/taxpayer",             # Steuerliche Angaben
+    "/travel-agencies",      # Reisebüros
+    "/crm",                  # Firmen/Kategorien
+    "/login-devices",        # Konto: Geräteverlauf
+    "/privacy-settings",     # Konto: Datenschutz
+)
+
+_BEREICH_GESPERRT = (
+    "Dieser Bereich ist in der Vorführung nicht freigegeben. "
+    "Im eigenen Betrieb steht er vollständig zur Verfügung."
+)
+
+
+def demo_bereich_pruefen(pfad: str, ctx: AuthContext) -> None:
+    """Wirft 403, wenn ein Demo-Besucher einen gesperrten Bereich aufruft.
+
+    Anders als `demo_schreibzugriff_pruefen` gilt das auch für LESENDE
+    Anfragen — der Bereich soll gar nicht einsehbar sein.
+
+    Hier ist 403 richtig und nicht 405: die Methode ist in Ordnung, der Zugang
+    fehlt. Die Oberfläche baut daraus den Hinweis „in der Vorführung gesperrt".
+
+    Reihenfolge im Aufrufer: dieser Riegel läuft VOR der Methodenprüfung, damit
+    ein gesperrter Bereich denselben Grund nennt, egal ob gelesen oder
+    geschrieben wird.
+    """
+    if ctx.api_scopes is not None:
+        return
+    if not ctx.tenant_id:
+        return
+    if not _pfad_gesperrt(pfad):
+        return
+    if not _ist_demo_mandant(ctx):
+        return
+    log.info(
+        "demo_gate_bereich_abgewiesen",
+        tenant_id=ctx.tenant_id,
+        user_id=ctx.user_id,
+        pfad=pfad,
+    )
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=_BEREICH_GESPERRT,
+    )
+
+
+def _pfad_gesperrt(pfad: str) -> bool:
+    """Liegt der Pfad in einem gesperrten Bereich?
+
+    Verglichen wird ohne das Versions-Präfix, damit die Liste die fachlichen
+    Pfade nennt und nicht `/api/v1/...` wiederholt. Der Vergleich endet am
+    Segment (`/owners` trifft `/owners/17`, aber nicht `/owners-public`).
+    """
+    rest = pfad.split("/api/v1", 1)[-1] if "/api/v1" in pfad else pfad
+    return any(
+        rest == p or rest.startswith(p + "/") for p in GESPERRTE_PRAEFIXE
+    )
+
+
+def _ist_demo_mandant(ctx: AuthContext) -> bool:
+    """Fragt `tenants.is_demo`; ein Lesefehler sperrt NICHT.
+
+    Andere Richtung als beim Schreib-Riegel, und zwar bewusst: dort wäre
+    fail-open die Erlaubnis zu schreiben, hier wäre fail-closed eine Sperre für
+    ZAHLENDE Betriebe, sobald die Abfrage einmal nicht antwortet. Ein Demo-
+    Besucher, der bei einem DB-Ausfall kurz die Buchhaltung sieht, ist das
+    kleinere Übel als ein Kunde, der seine nicht mehr sieht.
+    """
+    try:
+        res = (
+            get_service_client()
+            .table("tenants")
+            .select("is_demo")
+            .eq("id", ctx.tenant_id)
+            .limit(1)
+            .execute()
+        )
+    except Exception as exc:  # noqa: BLE001 — Störung darf Kunden nicht sperren
+        log.warning(
+            "demo_gate_bereich_lesefehler",
+            tenant_id=ctx.tenant_id,
+            error=str(exc)[:200],
+        )
+        return False
+    rows = res.data or []
+    return bool(rows and rows[0].get("is_demo"))
