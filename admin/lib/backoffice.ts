@@ -63,6 +63,10 @@ export interface TenantSummary {
   property_count: number;
   active_property_count: number;
   user_count: number;
+  /** Sperre (0405). null = aktiv. */
+  deactivated_at: string | null;
+  deactivated_by: string | null;
+  deactivation_reason: string | null;
 }
 
 export interface TenantDetail extends TenantSummary {

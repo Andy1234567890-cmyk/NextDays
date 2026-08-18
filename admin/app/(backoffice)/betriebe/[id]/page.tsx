@@ -3,8 +3,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BetriebSperre } from "@/components/betrieb-sperre";
 import { ApiError } from "@/lib/api-server";
-import { getTenant, getUsers, getVorgaenge } from "@/lib/backoffice";
+import {
+  getPlatformMe,
+  getTenant,
+  getUsers,
+  getVorgaenge,
+} from "@/lib/backoffice";
 
 // Quelle als Badge — Farbe allein wäre ein WCAG-1.4.1-Verstoß, daher Text.
 const QUELLE_LABEL: Record<string, string> = {
@@ -28,7 +34,8 @@ export default async function BetriebSeite({
     if (exc instanceof ApiError && exc.status === 404) notFound();
     throw exc;
   }
-  const [nutzer, vorgaenge] = await Promise.all([
+  const [me, nutzer, vorgaenge] = await Promise.all([
+    getPlatformMe(),
     getUsers({ tenantId: id, limit: 100 }),
     // Fachliche Historie aus bestehenden Protokollen — nichts wird
     // zusätzlich aufgezeichnet, nur zusammengeführt.
@@ -80,6 +87,14 @@ export default async function BetriebSeite({
           </div>
         ))}
       </div>
+
+      <BetriebSperre
+        tenantId={betrieb.id}
+        name={betrieb.name}
+        gesperrtSeit={betrieb.deactivated_at}
+        grund={betrieb.deactivation_reason}
+        darfEntscheiden={me.can_write}
+      />
 
       <section className="mt-10">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">

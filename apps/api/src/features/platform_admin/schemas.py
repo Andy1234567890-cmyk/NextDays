@@ -155,6 +155,66 @@ class TenantSummary(BaseModel):
     property_count: int = 0
     active_property_count: int = 0
     user_count: int = 0
+    # Sperre (0405). NULL = aktiv; der Zeitpunkt beantwortet zusätzlich
+    # „seit wann" und ist in der Oberfläche benennbar.
+    deactivated_at: datetime | None = None
+    deactivated_by: str | None = None
+    deactivation_reason: str | None = None
+
+
+class BetriebSperrenRequest(BaseModel):
+    """Grund der Sperre (0405).
+
+    Pflichtfeld: eine Sperre ohne Grund ist im Nachhinein nicht mehr
+    aufzuklären — weder für den Kollegen im Backoffice noch gegenüber dem
+    Betrieb, der anruft. Der Grund steht im Audit-Log und in der Oberfläche,
+    wird dem Gesperrten aber NICHT ausgeliefert.
+    """
+
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class BetriebSperreResponse(BaseModel):
+    """Ergebnis einer Sperre/Entsperrung.
+
+    ``login_gesperrt`` benennt, ob der Anmeldedienst (GoTrue) übernommen hat.
+    Der Wert wird durchgereicht statt verschluckt: das DB-Feld und das
+    aktiv_gate halten den Zugang auch ohne GoTrue dicht, aber der Direktpfad
+    gegen GoTrue bliebe offen — das muss sichtbar sein (Wurzel 5).
+    """
+
+    id: str
+    deactivated_at: datetime | None = None
+    deactivation_reason: str | None = None
+    betroffene_nutzer: int = 0
+    login_gesperrt: int = 0
+
+
+class BetriebLoeschenRequest(BaseModel):
+    """Löschen verlangt den getippten Betriebsnamen als Bestätigung (0405).
+
+    Nicht als Schutz gegen Angreifer (wer den Endpunkt erreicht, ist
+    Plattform-Admin), sondern gegen den Fehlgriff: der Vorgang ist
+    unumkehrbar und nimmt Buchungen, Zahlungen und Bilder mit.
+    """
+
+    name_bestaetigung: str = Field(min_length=1, max_length=200)
+
+
+class BetriebLoeschenResponse(BaseModel):
+    """Was tatsächlich gelöscht wurde — je Ebene gezählt.
+
+    Zählwerte statt „ok": ein Löschvorgang, der die Hälfte stehen lässt, sähe
+    sonst aus wie ein vollständiger (Wurzel 5). ``hinweise`` benennt, was
+    NICHT mitgelöscht werden konnte (Stripe-Abo, Portal-Mappings).
+    """
+
+    id: str
+    name: str
+    reservierungen: int = 0
+    objekte: int = 0
+    nutzer: int = 0
+    hinweise: list[str] = Field(default_factory=list)
 
 
 class TenantList(BaseModel):

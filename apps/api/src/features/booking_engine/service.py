@@ -270,6 +270,13 @@ class BookingEngineService:
             # nach Prüfung. OTA/Website sind davon bewusst NICHT betroffen —
             # deshalb steht diese Bedingung nur in diesem Zweig.
             query = query.eq("moderation_status", "approved")
+            # Betriebs-Sperre (0405): der gesperrte Betrieb fällt komplett vom
+            # Marktplatz. Nur auf dem zentralen Marktplatz — die White-Label-
+            # Seite eines Betriebs ist SEINE Fläche; wer dort landet, hat den
+            # Betrieb bereits direkt angesteuert.
+            gesperrt = self._gesperrte_betriebe()
+            if gesperrt:
+                query = query.not_.in_("tenant_id", gesperrt)
         if tenant:
             query = query.eq("tenant_id", tenant)
         if property_ids:
@@ -385,12 +392,40 @@ class BookingEngineService:
         if tenant is None:
             query = query.eq("listed_on_marketplace", True)
             query = query.eq("moderation_status", "approved")
+            # Betriebs-Sperre (0405) — wie in list_listings, sonst schlüge das
+            # Suchfeld ein Ziel vor, dessen Objekte die Suche danach ausblendet.
+            gesperrt = self._gesperrte_betriebe()
+            if gesperrt:
+                query = query.not_.in_("tenant_id", gesperrt)
         else:
             query = query.eq("tenant_id", tenant)
         rows = fetch_all_rows(query.order("city"))
         return PublicDestinationListResponse(
             items=ziele_aus_objekten(rows, q=q, limit=limit)
         )
+
+    def _gesperrte_betriebe(self) -> list[str]:
+        """IDs plattformseitig gesperrter Betriebe (0405).
+
+        Ein gesperrter Betrieb verschwindet vom Marktplatz — sonst bliebe er
+        dort buchbar, obwohl niemand mehr auf die Buchung reagieren kann
+        (seine Nutzer kommen nicht mehr rein, aktiv_gate). Der Filter sitzt
+        hier und NICHT auf `properties`, damit die Objekte des Betriebs
+        unverändert bleiben: nach dem Entsperren steht wieder genau der
+        Zustand, den der Betrieb selbst gesetzt hatte.
+
+        PostgREST kann den Betrieb nicht joinen, deshalb zwei Abfragen. Die
+        Liste ist im Normalfall leer und der Index (0405) partiell — der
+        Aufwand fällt praktisch nur an, wenn wirklich Betriebe gesperrt sind.
+        """
+        res = (
+            self._db()
+            .table("tenants")
+            .select("id")
+            .not_.is_("deactivated_at", "null")
+            .execute()
+        )
+        return [str(r["id"]) for r in (res.data or []) if r.get("id")]
 
     def _unavailable_property_ids(
         self, property_ids: list[str], start: date, end: date

@@ -96,6 +96,11 @@ _TENANT_COLUMNS = (
     "account_type",
     "business_type",
     "created_at",
+    # Sperre (0405): das Backoffice muss sehen, ob ein Betrieb stillgelegt ist,
+    # seit wann und warum — sonst wäre die Sperre eine unsichtbare Wirkung.
+    "deactivated_at",
+    "deactivated_by",
+    "deactivation_reason",
 )
 
 

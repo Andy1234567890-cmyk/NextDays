@@ -63,6 +63,13 @@ export default async function BetriebeSeite({
                     >
                       {t.name}
                     </Link>
+                    {/* Text statt Farbe allein — WCAG 1.4.1, wie beim
+                        Quelle-Badge der Detailseite. */}
+                    {t.deactivated_at && (
+                      <span className="ml-2 rounded-full bg-foreground px-2 py-0.5 text-[0.6875rem] font-semibold text-background">
+                        Gesperrt
+                      </span>
+                    )}
                   </td>
                   <td className="py-3 pr-4 text-muted-foreground">
                     {t.country ?? "—"}

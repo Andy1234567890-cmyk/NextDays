@@ -14,9 +14,11 @@ from fastapi import APIRouter, HTTPException, Query, Request, status
 
 from src.core.security import CurrentPlatformAdmin, require_platform_write
 
+from . import betrieb_sperre as betrieb
 from . import ereignis_erledigen as erledigen_dienst
 from . import webhook_verlauf as webhook
 from . import worker_verlauf as worker
+from .betrieb_sperre import BetriebNameFalsch
 from .dependencies import (
     DeployDbDep,
     DeployServiceDep,
@@ -25,6 +27,10 @@ from .dependencies import (
 )
 from .schemas import (
     AuditList,
+    BetriebLoeschenRequest,
+    BetriebLoeschenResponse,
+    BetriebSperrenRequest,
+    BetriebSperreResponse,
     BuchungDetail,
     BuchungList,
     DeployEreignisListe,
@@ -156,6 +162,103 @@ def get_tenant(
         tenant_id=tenant_id,
         request=request,
     )
+    return result
+
+
+@router.post("/tenants/{tenant_id}/sperren", response_model=BetriebSperreResponse)
+def sperre_betrieb(
+    tenant_id: str,
+    daten: BetriebSperrenRequest,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+) -> BetriebSperreResponse:
+    """Einen Betrieb stilllegen. Nur platform_admin (0405).
+
+    Wirkung: kein Login mehr (myNextDays-PMS und myBestDays-Gastgeber laufen
+    ueber denselben Anmeldeweg), und alle Objekte des Betriebs verschwinden vom
+    myBestDays-Marktplatz. Der Vertrieb ueber Portale und die eigene Website
+    des Betriebs sind NICHT betroffen — dort ist myBestDays nicht Herausgeber
+    und kann nicht fuer den Betrieb entscheiden.
+
+    Der Grund ist Pflicht (Schema): eine Sperre ohne Grund laesst sich spaeter
+    weder gegenueber dem Betrieb noch im Team aufklaeren.
+    """
+    require_platform_write(ctx)
+    result = betrieb.betrieb_sperren(
+        service.db,
+        ctx,
+        tenant_id,
+        reason=daten.reason.strip(),
+        protokoll=service.log_action,
+    )
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Betrieb nicht gefunden."
+        )
+    return result
+
+
+@router.post(
+    "/tenants/{tenant_id}/entsperren", response_model=BetriebSperreResponse
+)
+def entsperre_betrieb(
+    tenant_id: str,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+) -> BetriebSperreResponse:
+    """Die Sperre eines Betriebs aufheben. Nur platform_admin (0405)."""
+    require_platform_write(ctx)
+    result = betrieb.betrieb_entsperren(
+        service.db, ctx, tenant_id, protokoll=service.log_action
+    )
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Betrieb nicht gefunden."
+        )
+    return result
+
+
+@router.post(
+    "/tenants/{tenant_id}/loeschen", response_model=BetriebLoeschenResponse
+)
+def loesche_betrieb(
+    tenant_id: str,
+    daten: BetriebLoeschenRequest,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+) -> BetriebLoeschenResponse:
+    """Einen Betrieb endgueltig loeschen. Nur platform_admin (0405). UNUMKEHRBAR.
+
+    Nimmt Reservierungen, Objekte, Nutzer und alle kaskadierenden Daten mit.
+    Der Betriebsname muss getippt bestaetigt werden (422 bei Abweichung) —
+    Schutz gegen den Fehlgriff, nicht gegen Angreifer.
+
+    POST statt DELETE, weil der Vorgang eine Nutzlast braucht (die
+    Bestaetigung) und ein Ergebnis liefert, das gelesen werden muss: was
+    geloescht wurde und was NICHT mitgehen konnte (Stripe-Abo,
+    Portal-Mappings, Bilder im Storage).
+    """
+    require_platform_write(ctx)
+    try:
+        result = betrieb.betrieb_loeschen(
+            service.db,
+            ctx,
+            tenant_id,
+            name_bestaetigung=daten.name_bestaetigung,
+            protokoll=service.log_action,
+        )
+    except BetriebNameFalsch as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Der eingegebene Name stimmt nicht mit dem Betrieb ueberein.",
+        ) from exc
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Betrieb nicht gefunden."
+        )
     return result
 
 

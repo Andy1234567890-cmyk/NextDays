@@ -22,6 +22,12 @@ wirkt die RLS. Deshalb ist der GoTrue-Bann nicht optional, sondern der Teil, der
 diesen Weg schließt: er entzieht dem Refresh-Token die Verlängerung, sodass das
 Zeitfenster mit dem alten Access-Token abläuft und sich kein neues holen lässt.
 
+ZWEI EBENEN, EIN RIEGEL (0405):
+Geprüft wird der ZUGANG (`users.deactivated_at`, 0356) UND der BETRIEB
+(`tenants.deactivated_at`, 0405). Ein gesperrter Betrieb sperrt damit alle
+seine Nutzer auf einmal — auch solche, die er nach der Sperre noch anlegen
+würde. Die Betriebs-Sperre kommt zuerst, weil sie die umfassendere Aussage ist.
+
 Bewusst in einem eigenen Modul (wie `mfa_gate`): `core.security` darf
 `features.auth` nicht auf Modulebene importieren (Zirkel), und der Riegel soll
 für sich testbar sein.
@@ -53,6 +59,7 @@ def aktiv_zugang_pruefen(ctx: AuthContext) -> None:
     """
     if ctx.api_scopes is not None:
         return
+    _betrieb_pruefen(ctx)
     dienst = AccountService(
         anon_client=get_service_client(), service_client=get_service_client()
     )
@@ -71,4 +78,49 @@ def aktiv_zugang_pruefen(ctx: AuthContext) -> None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Dieser Zugang ist deaktiviert.",
+        )
+
+
+def _betrieb_pruefen(ctx: AuthContext) -> None:
+    """Wirft 401, wenn der BETRIEB dieses Tokens gesperrt ist (0405).
+
+    Trägt das Token keinen Betrieb (Plattform-Zugänge), gibt es nichts zu
+    prüfen. Der Lesefehler wird wie beim Zugang behandelt: Störung (503), nicht
+    Sperre (401) — ein Datenbankausfall darf nicht als Kontosperre erscheinen
+    (Wurzel 4/5).
+
+    Der Grund der Sperre steht bewusst NICHT in der Antwort: er ist für das
+    Backoffice erfasst, nicht für den Gesperrten (0405).
+    """
+    if not ctx.tenant_id:
+        return
+    try:
+        res = (
+            get_service_client()
+            .table("tenants")
+            .select("deactivated_at")
+            .eq("id", ctx.tenant_id)
+            .limit(1)
+            .execute()
+        )
+    except Exception as exc:  # noqa: BLE001 — Störung ≠ Sperre, sichtbar melden
+        log.warning(
+            "aktiv_gate_betrieb_lesefehler",
+            tenant_id=ctx.tenant_id,
+            error=str(exc)[:200],
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Betrieb konnte nicht geprüft werden.",
+        ) from exc
+    rows = res.data or []
+    if rows and rows[0].get("deactivated_at"):
+        log.info(
+            "aktiv_gate_betrieb_abgewiesen",
+            tenant_id=ctx.tenant_id,
+            user_id=ctx.user_id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Dieser Betrieb ist gesperrt.",
         )

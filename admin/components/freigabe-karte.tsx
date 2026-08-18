@@ -96,24 +96,37 @@ export function FreigabeKarte({
           )}
         </div>
 
-        {darfEntscheiden && objekt.moderation_status === "pending" && (
+        {/* Die Entscheidung ist KEIN Einbahnvorgang: ein einmal freigegebenes
+            Objekt muss sich wieder vom Marktplatz nehmen lassen (etwa weil der
+            Gastgeber es nachträglich verändert hat), ein abgelehntes wieder
+            freigeben lassen. Vorher standen die Knöpfe nur bei "pending" — ein
+            freigegebenes Objekt war im Backoffice nicht mehr erreichbar. */}
+        {darfEntscheiden && (
           <div className="flex shrink-0 flex-col gap-2">
-            <button
-              type="button"
-              disabled={laeuft}
-              onClick={() => void entscheiden(true)}
-              className="rounded-full bg-foreground px-5 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
-              Freigeben
-            </button>
-            <button
-              type="button"
-              disabled={laeuft}
-              onClick={() => setGrundOffen((o) => !o)}
-              className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold transition-colors hover:border-foreground disabled:opacity-50"
-            >
-              Ablehnen
-            </button>
+            {objekt.moderation_status !== "approved" && (
+              <button
+                type="button"
+                disabled={laeuft}
+                onClick={() => void entscheiden(true)}
+                className="rounded-full bg-foreground px-5 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {objekt.moderation_status === "rejected"
+                  ? "Wieder freigeben"
+                  : "Freigeben"}
+              </button>
+            )}
+            {objekt.moderation_status !== "rejected" && (
+              <button
+                type="button"
+                disabled={laeuft}
+                onClick={() => setGrundOffen((o) => !o)}
+                className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold transition-colors hover:border-foreground disabled:opacity-50"
+              >
+                {objekt.moderation_status === "approved"
+                  ? "Vom Marktplatz nehmen"
+                  : "Ablehnen"}
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -122,7 +135,9 @@ export function FreigabeKarte({
         <div className="mt-5 border-t border-border pt-5">
           <label className="block">
             <span className="mb-1.5 block text-sm text-muted-foreground">
-              Begründung (wird dem Gastgeber angezeigt)
+              {objekt.moderation_status === "approved"
+                ? "Grund der Deaktivierung (wird dem Gastgeber angezeigt)"
+                : "Begründung (wird dem Gastgeber angezeigt)"}
             </span>
             <textarea
               value={grund}
@@ -140,7 +155,11 @@ export function FreigabeKarte({
               onClick={() => void entscheiden(false)}
               className="rounded-full bg-foreground px-5 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-50"
             >
-              {laeuft ? "Wird gesendet …" : "Ablehnung senden"}
+              {laeuft
+                ? "Wird gesendet …"
+                : objekt.moderation_status === "approved"
+                  ? "Vom Marktplatz nehmen"
+                  : "Ablehnung senden"}
             </button>
             <button
               type="button"
