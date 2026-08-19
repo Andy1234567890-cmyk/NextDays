@@ -35,21 +35,25 @@ case "$befehl" in
     echo "Tester der Gruppe $GRUPPE:"
     # Es gibt keinen `tester:list --group`; die Gruppenliste oben zeigt die
     # Anzahl. Steht dort 0, bekommt niemand eine Einladung.
-    firebase appdistribution:testers:list --project "$PROJEKT" 2>/dev/null \
-      || echo "  (Einzelauflistung nicht verfuegbar — Anzahl siehe Tabelle)"
+    # `testers:list` nimmt die Gruppe als ARGUMENT (nicht als Flag) und zeigt
+    # dann nur deren Mitglieder — genau die, die eine Verteilung erreicht.
+    firebase appdistribution:testers:list "$GRUPPE" --project "$PROJEKT"
     ;;
   hinzu)
     [ "$#" -gt 0 ] || { echo "Mindestens eine Mailadresse angeben." >&2; exit 1; }
-    # Erst als Tester im Projekt anlegen, dann der Gruppe zuordnen. Der zweite
-    # Schritt allein genuegt nicht fuer unbekannte Adressen.
-    firebase appdistribution:testers:add "$@" --project "$PROJEKT"
-    firebase appdistribution:group:add "$GRUPPE" "$@" --project "$PROJEKT"
+    # EIN Aufruf: `testers:add` legt im Projekt an UND ordnet der Gruppe zu.
+    # Es gibt kein `group:add` (firebase-tools 14.x) — die Zuordnung laeuft
+    # ausschliesslich ueber --group-alias. Ohne das Flag landen die Adressen im
+    # Projekt, aber in KEINER Gruppe, und der Verteil-Schritt erreicht sie nicht.
+    firebase appdistribution:testers:add "$@" \
+      --group-alias "$GRUPPE" --project "$PROJEKT"
     echo "✓ $# Adresse(n) in $GRUPPE. Die Einladung geht beim NAECHSTEN Build raus;"
     echo "  fuer den letzten Build: Firebase Console → App Distribution → Release → Testers."
     ;;
   entfernen)
     [ "$#" -gt 0 ] || { echo "Mindestens eine Mailadresse angeben." >&2; exit 1; }
-    firebase appdistribution:group:remove "$GRUPPE" "$@" --project "$PROJEKT"
+    firebase appdistribution:testers:remove "$@" \
+      --group-alias "$GRUPPE" --project "$PROJEKT"
     echo "✓ aus $GRUPPE entfernt (bleibt als Tester im Projekt)."
     ;;
   *)
