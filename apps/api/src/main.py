@@ -20,6 +20,9 @@ from .core.logging import configure_logging, get_logger
 from .core.ratelimit_middleware import RateLimitMiddleware
 from .core.request_context import merke_ursache as _merke_fehlerursache
 from .core.request_context import neue_request_id
+from .features.account_deletion.router import (
+    router as account_deletion_router,
+)
 from .features.addons.router import router as addons_router
 from .features.announcements.router import (
     platform_router as announcements_platform_router,
@@ -150,6 +153,7 @@ _SLICE_ROUTERS = [
     # Zugehöriger Kunden-Lesepfad — tenant-gescopt, nicht übergreifend.
     announcements_router,
     subscriptions_router,
+    account_deletion_router,
     newsletter_router,
     support_router,
     property_taxes_router,

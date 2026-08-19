@@ -346,6 +346,20 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
+      // Eigener Abschnitt, weil Google Play ihn abgleicht: die Löschseite muss
+      // in der Datenschutzerklärung genannt sein und dieselbe Adresse tragen
+      // wie im Datensicherheitsformular. Ein Abschnitt „Ihre Rechte", der die
+      // Löschung nur als DSGVO-Artikel erwähnt, genügt der Prüfung nicht —
+      // gefordert ist der konkrete, benannte Weg.
+      heading: "Konto und App-Daten löschen",
+      paragraphs: [
+        "Die Löschung Ihres Kontos können Sie jederzeit selbst beantragen — in der App unter ‚Profil → Konto‘ oder über unser Formular im Web:",
+        "[mynextdays.com/konto-loeschen](https://mynextdays.com/konto-loeschen)",
+        "Der Weg im Web funktioniert bewusst auch dann, wenn Sie die App nicht mehr installiert haben oder sich nicht mehr anmelden können. Zum Schutz vor Missbrauch geschieht das in zwei Schritten: Sie tragen die E-Mail-Adresse Ihres Kontos ein und erhalten an genau diese Adresse einen Bestätigungslink. Erst dessen Aufruf macht den Antrag gültig — eine eingetragene Adresse allein bewirkt nichts. Wir bearbeiten den Antrag innerhalb von 30 Tagen und antworten per E-Mail.",
+        "Mit dem Konto löschen wir Ihre Zugangsdaten, Ihr Profil, Ihre Objekt- und Kalenderdaten sowie Ihre Nachrichten. Nicht gelöscht werden Unterlagen, für die eine gesetzliche Aufbewahrungspflicht besteht — insbesondere Rechnungen und Buchungsbelege abgerechneter Zeiträume (Buchführungspflicht nach dänischem Recht, in der Regel fünf Jahre). Diese Unterlagen werden für die Dauer der Frist gesperrt, also ausschließlich zur Erfüllung dieser Pflicht aufbewahrt und danach gelöscht.",
+      ],
+    },
+    {
       heading: "Sicherheit der Verarbeitung",
       paragraphs: [
         "Wir sichern die Verarbeitung durch technische und organisatorische Maßnahmen nach Art. 32 DSGVO ab, insbesondere: durchgehende Transportverschlüsselung (TLS), mandantenbezogene Zugriffsregeln direkt in der Datenbank, rollenbasierte Berechtigungen mit Trennung von Finanz- und Servicedaten, optionale Zwei-Faktor-Authentisierung, Begrenzung von Anmeldeversuchen, verschlüsselte Sicherungskopien mit regelmäßigem Wiederherstellungstest sowie Protokollierung sicherheitsrelevanter Ereignisse.",

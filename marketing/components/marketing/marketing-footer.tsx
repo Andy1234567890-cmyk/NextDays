@@ -8,6 +8,7 @@ import Link from "next/link";
 
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Logo } from "@/components/logo";
+import { ANBIETER } from "@/content/legal/anbieter";
 import { RECHTSDOKUMENTE } from "@/content/legal";
 import { AGB_URL, HILFE_URL } from "@/lib/app-url";
 
@@ -20,7 +21,13 @@ const FOOTER_COLUMNS = [
   },
   {
     key: "loesungen",
-    links: ["hotels", "bnb", "gaestehaeuser", "ferienwohnungen", "campingplaetze"],
+    links: [
+      "hotels",
+      "bnb",
+      "gaestehaeuser",
+      "ferienwohnungen",
+      "campingplaetze",
+    ],
   },
   {
     key: "ressourcen",
@@ -42,11 +49,31 @@ const PRODUKT_ZIELE: Record<string, string> = {
   mobileApp: `/funktionen/${FUNKTIONEN.find((f) => f.key === "app")?.slug ?? ""}`,
 };
 
+// Unternehmens-Spalte → echte Seite. Bis eben zeigte „Über uns" auf „#";
+// die Seite gibt es jetzt (app/ueber-uns), der Rest der Spalte noch nicht.
+const UNTERNEHMEN_ZIELE: Record<string, string> = {
+  ueberUns: "/ueber-uns",
+};
+
+// Social-Profile aus den Anbieterdaten (EINE Quelle, `content/legal/anbieter`)
+// — vorher zeigten alle vier Symbole auf „#". YouTube ist raus: den Kanal gibt
+// es nicht.
 const SOCIALS = [
-  { icon: "ph:facebook-logo", label: "Facebook" },
-  { icon: "ph:instagram-logo", label: "Instagram" },
-  { icon: "ph:youtube-logo", label: "YouTube" },
-  { icon: "ph:linkedin-logo", label: "LinkedIn" },
+  {
+    icon: "ph:facebook-logo",
+    label: "Facebook",
+    href: ANBIETER.social.facebook,
+  },
+  {
+    icon: "ph:instagram-logo",
+    label: "Instagram",
+    href: ANBIETER.social.instagram,
+  },
+  {
+    icon: "ph:linkedin-logo",
+    label: "LinkedIn",
+    href: ANBIETER.social.linkedin,
+  },
 ] as const;
 
 // Übersetzungsschlüssel je Rechtsdokument — die Registry liefert die Route,
@@ -74,6 +101,12 @@ export function MarketingFooter() {
       label: t(RECHTS_KEYS[eintrag.doc.slug]),
       href: `/${eintrag.doc.slug}`,
     })),
+    // Konto-Löschung (0413). Steht NICHT in RECHTSDOKUMENTE, weil das kein
+    // Rechtsdokument ist, sondern ein Formular — hängt aber hier, weil Google
+    // Play verlangt, dass der Weg „prominently featured and easily
+    // discoverable" ist. Der Footer ist auf jeder Seite; ein Link, den man
+    // nur über die Suche findet, erfüllt die Anforderung nicht.
+    { label: t("kontoLoeschen"), href: "/konto-loeschen" },
   ];
 
   return (
@@ -112,6 +145,7 @@ export function MarketingFooter() {
                   // Links, die nichts taten.
                   const href =
                     PRODUKT_ZIELE[link] ??
+                    UNTERNEHMEN_ZIELE[link] ??
                     (link === "hilfeCenter" && HILFE_URL ? HILFE_URL : "#");
                   return (
                     <li key={link}>
@@ -148,14 +182,16 @@ export function MarketingFooter() {
             <LanguageSwitcher dark />
             <div className="flex items-center gap-3">
               {SOCIALS.map((s) => (
-                <Link
+                <a
                   key={s.label}
-                  href="#"
+                  href={s.href}
                   aria-label={s.label}
+                  target="_blank"
+                  rel="noreferrer noopener"
                   className="text-primary-foreground/70 transition-colors hover:text-primary-foreground"
                 >
                   <Icon icon={s.icon} className="size-5" />
-                </Link>
+                </a>
               ))}
             </div>
           </div>

@@ -49,6 +49,14 @@ export const ANBIETER = {
   // Backend-Umgebung (Coolify + apps/api/.env) gleichlautend füllen.
   ustId: null as string | null,
   direktion: ["Jeanine Ågaard", "Torsten Ågaard"],
+  // Öffentliche Profile — nur was es wirklich gibt. Kein YouTube-Eintrag,
+  // solange es keinen Kanal gibt: ein Symbol, das auf „#" zeigt, ist ein
+  // toter Link im Footer jeder Seite.
+  social: {
+    linkedin: "https://www.linkedin.com/company/mynextdays",
+    instagram: "https://www.instagram.com/mynextdays/",
+    facebook: "https://www.facebook.com/mynextdays.dk",
+  },
 } as const;
 
 /** Ein Satz mit der vollständigen Firmierung — für Rechtstexte. */
