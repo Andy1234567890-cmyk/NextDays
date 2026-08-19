@@ -21,6 +21,7 @@ SICHERHEITSAUFLAGEN (offene TODO, bewusst dokumentiert):
   Re-Auth (aktuelles Passwort) und Doppel-Opt-in an die neue Adresse (Wurzel 7).
   Das ist ein eigener, noch nicht gebauter Flow (siehe ``update_profile``).
 """
+from pydantic import SecretStr
 from supabase import Client
 from supabase_auth.errors import AuthError as GoTrueAuthError
 
@@ -34,6 +35,8 @@ from src.core.logging import get_logger, mask_email
 from src.core.security import GuestContext
 
 from .schemas import (
+    GuestKontoLoeschenRequest,
+    GuestKontoLoeschenResponse,
     GuestLoginRequest,
     GuestMessageResponse,
     GuestPasswordResetRequest,
@@ -297,6 +300,78 @@ class GuestAuthService:
         if isinstance(currency, str):
             data["preferred_currency"] = currency.upper()
         return data
+
+    # --- Konto löschen (Apple 5.1.1(v)) ------------------------------------
+
+    def konto_loeschen(
+        self, ctx: GuestContext, req: GuestKontoLoeschenRequest
+    ) -> GuestKontoLoeschenResponse:
+        """Eigenes Gast-Konto löschen.
+
+        Apple verlangt diesen Weg IN der App, sobald man dort ein Konto anlegen
+        kann (Guideline 5.1.1(v)); Google verlangt zusätzlich den Web-Weg.
+
+        Anders als beim Betriebs-Konto ist hier die SOFORTIGE Löschung richtig:
+        am Gast-Login hängt kein Beleg. Was am Gast hängt, gehört dem Gastgeber —
+        die Buchung selbst, die Gästekartei des Betriebs, Rechnungen. Das bleibt
+        bestehen, und der Gast MUSS das wissen; deshalb trägt die Antwort den
+        Hinweis (Wurzel 4: keine stillschweigende Halbwahrheit).
+
+        Reihenfolge: erst der Auth-Login (danach ist keine Anmeldung mehr
+        möglich), dann die `portal_guests`-Zeile. Sie hängt per
+        `on delete cascade` am Auth-User, wird hier aber ausdrücklich mitgelöscht,
+        damit kein Halbzustand entsteht, wenn die Kaskade einmal nicht greift.
+
+        Die Passwort-Rückfrage läuft über einen echten Login-Versuch mit der
+        eigenen Adresse — dieselbe Prüfung wie in `login`, mit derselben
+        Trennung: eine STÖRUNG ist keine Ablehnung (503, nicht 401), sonst sähe
+        ein GoTrue-Ausfall wie ein falsches Passwort aus (Wurzel 5).
+        """
+        zeile = self._own_guest_row(ctx)
+        email = (zeile.get("email") or "").strip()
+        if not email:
+            raise GuestAuthError("Konto nicht gefunden.", status_code=404)
+        self._passwort_pruefen(email, req.password)
+
+        try:
+            self._service.auth.admin.delete_user(ctx.guest_id)
+        except Exception as exc:  # noqa: BLE001 — SDK-Fehler einheitlich melden
+            log.warning(
+                "guest_konto_auth_delete_failed",
+                guest_id=ctx.guest_id,
+                error=str(exc)[:200],
+            )
+            raise GuestAuthError(
+                "Das Konto konnte nicht gelöscht werden. Bitte erneut versuchen.",
+                status_code=502,
+            ) from exc
+
+        self._service.table("portal_guests").delete().eq("id", ctx.guest_id).execute()
+        log.info("guest_konto_geloescht", guest_id=ctx.guest_id)
+        return GuestKontoLoeschenResponse(
+            geloescht=True,
+            detail="Dein Konto wurde gelöscht.",
+            hinweis=(
+                "Bereits getätigte Buchungen bleiben beim jeweiligen Gastgeber "
+                "bestehen — sie sind ein Vertrag und unterliegen gesetzlichen "
+                "Aufbewahrungsfristen. Für Fragen dazu wende dich an den "
+                "Gastgeber."
+            ),
+        )
+
+    def _passwort_pruefen(self, email: str, passwort: SecretStr) -> None:
+        """Re-Auth über einen Login-Versuch. Falsch → 401, Störung → 503."""
+        try:
+            res = self._anon.auth.sign_in_with_password(
+                {"email": email, "password": passwort.get_secret_value()}
+            )
+        except (GoTrueAuthError, *TRANSPORT_FEHLER) as exc:
+            if stoerung_oder_ablehnung(exc):
+                log.warning("guest_reauth_stoerung", error=str(exc))
+                raise GuestAuthError(STOERUNG_MELDUNG, status_code=503) from exc
+            raise GuestAuthError("Passwort ist falsch.", status_code=401) from exc
+        if res.session is None:
+            raise GuestAuthError("Passwort ist falsch.", status_code=401)
 
     def _own_guest_row(self, ctx: GuestContext) -> dict:
         """Die EIGENE portal_guests-Zeile laden (Load+Scope zusammen, Wurzel 3).

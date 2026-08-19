@@ -7,7 +7,7 @@ from decimal import Decimal
 # Echter Import (kein TYPE_CHECKING): Pydantic löst die Annotationen zur
 # Laufzeit auf, ein reiner Typprüf-Import wäre hier ein NameError beim Bauen des
 # Modells.
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -998,3 +998,41 @@ class WebhookDetail(BaseModel):
     ereignis: WebhookEreignis | None = None
     payload: dict[str, Any] | None = None
     resolution: dict[str, Any] | None = None
+
+class LoeschantragZeile(BaseModel):
+    """Ein Löschantrag aus dem öffentlichen Web-Formular (0413).
+
+    `user_id`/`tenant_id` sind None, wenn zu der Adresse KEIN Konto gefunden
+    wurde. Das ist ein gültiger Antrag und kein Fehler — er wird mit Hinweis
+    abgelehnt, statt still zu verschwinden.
+    """
+
+    id: str
+    email: str
+    status: str
+    locale: str | None = None
+    grund: str | None = None
+    beantragt_am: str | None = None
+    bestaetigt_am: str | None = None
+    erledigt_am: str | None = None
+    notiz: str | None = None
+    user_id: str | None = None
+    tenant_id: str | None = None
+
+
+class LoeschantragListe(BaseModel):
+    items: list[LoeschantragZeile]
+    total: int
+
+
+class LoeschantragAbschlussRequest(BaseModel):
+    """Antrag schließen. Die Notiz ist Pflicht — bei BEIDEN Zielstatus.
+
+    Bei `rejected` erzwingt sie zusätzlich der DB-Trigger aus 0413. Auch bei
+    `done` steht sie hier, weil „erledigt" ohne Angabe, was gelöscht wurde,
+    später nicht mehr aufklärbar ist — und gegenüber dem Antragsteller nicht
+    belegbar (DSGVO Art. 12 Abs. 4).
+    """
+
+    status: Literal["done", "rejected"]
+    notiz: str = Field(min_length=3, max_length=2000)

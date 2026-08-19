@@ -2237,6 +2237,395 @@ TEXTE: dict[str, dict[str, str]] = {
               "gränssnittet. Ta bort det i ditt Airbnb-konto under "
               "Fotorundtur: {raeume}",
     },
+    "konto_loeschung.bestaetigung.betreff": {
+        "bg": "Потвърдете заявката за изтриване на профила",
+        "cs": "Potvrďte žádost o smazání účtu",
+        "da": "Bekræft anmodningen om sletning af konto",
+        "de": "Löschung deines Kontos bestätigen",
+        "el": "Επιβεβαιώστε το αίτημα διαγραφής λογαριασμού",
+        "en": "Confirm your account deletion request",
+        "es": "Confirma la solicitud de eliminación de tu cuenta",
+        "et": "Kinnita konto kustutamise taotlus",
+        "fi": "Vahvista tilin poistopyyntö",
+        "fr": "Confirmez la demande de suppression de compte",
+        "ga": "Deimhnigh an t-iarratas ar scriosadh cuntais",
+        "hr": "Potvrdite zahtjev za brisanje računa",
+        "hu": "Igazolja a fiók törlési kérelmét",
+        "it": "Conferma la richiesta di cancellazione dell'account",
+        "lt": "Patvirtinkite paskyros ištrynimo prašymą",
+        "lv": "Apstipriniet konta dzēšanas pieprasījumu",
+        "mt": "Ikkonferma t-talba għat-tħassir tal-kont",
+        "nl": "Bevestig je verzoek om accountverwijdering",
+        "pl": "Potwierdź wniosek o usunięcie konta",
+        "pt": "Confirme o pedido de eliminação da conta",
+        "ro": "Confirmați cererea de ștergere a contului",
+        "sk": "Potvrďte žiadosť o vymazanie účtu",
+        "sl": "Potrdite zahtevo za izbris računa",
+        "sv": "Bekräfta begäran om radering av konto",
+    },
+    "konto_loeschung.bestaetigung.absatz_1": {
+        "bg": "Здравейте,",
+        "cs": "Dobrý den,",
+        "da": "Hej,",
+        "de": "Hallo,",
+        "el": "Γεια σας,",
+        "en": "Hello,",
+        "es": "Hola:",
+        "et": "Tere,",
+        "fi": "Hei,",
+        "fr": "Bonjour,",
+        "ga": "Dia duit,",
+        "hr": "Zdravo,",
+        "hu": "Jó napot,",
+        "it": "Ciao,",
+        "lt": "Sveiki,",
+        "lv": "Sveiki,",
+        "mt": "Bonġu,",
+        "nl": "Hallo,",
+        "pl": "Dzień dobry,",
+        "pt": "Olá,",
+        "ro": "Bună ziua,",
+        "sk": "Dobrý deň,",
+        "sl": "Zdravo,",
+        "sv": "Hej,",
+    },
+    "konto_loeschung.bestaetigung.absatz_2": {
+        "bg": "Получихме заявка за изтриване на профила, свързан с този имейл адрес. За да я "
+              "обработим, ни трябва вашето потвърждение.",
+        "cs": "Obdrželi jsme žádost o smazání účtu spojeného s touto e-mailovou adresou. Ke "
+              "zpracování potřebujeme vaše potvrzení.",
+        "da": "Vi har modtaget en anmodning om at slette kontoen, der er knyttet til denne "
+              "e-mailadresse. For at behandle den har vi brug for din bekræftelse.",
+        "de": "Wir haben einen Antrag erhalten, das Konto zu dieser E-Mail-Adresse zu löschen. Um "
+              "ihn zu bearbeiten, brauchen wir deine Bestätigung.",
+        "el": "Λάβαμε αίτημα διαγραφής του λογαριασμού που συνδέεται με αυτή τη διεύθυνση email. "
+              "Για να το επεξεργαστούμε, χρειαζόμαστε την επιβεβαίωσή σας.",
+        "en": "We received a request to delete the account linked to this email address. To "
+              "process it, we need your confirmation.",
+        "es": "Hemos recibido una solicitud para eliminar la cuenta vinculada a esta dirección de "
+              "correo. Para tramitarla necesitamos tu confirmación.",
+        "et": "Saime taotluse kustutada selle e-posti aadressiga seotud konto. Selle töötlemiseks "
+              "vajame teie kinnitust.",
+        "fi": "Saimme pyynnön poistaa tähän sähköpostiosoitteeseen liitetty tili. Käsittely "
+              "edellyttää vahvistustasi.",
+        "fr": "Nous avons reçu une demande de suppression du compte associé à cette adresse "
+              "e-mail. Pour la traiter, nous avons besoin de votre confirmation.",
+        "ga": "Fuaireamar iarratas ar an gcuntas atá nasctha leis an seoladh ríomhphoist seo a "
+              "scriosadh. Chun é a phróiseáil, teastaíonn do dheimhniú uainn.",
+        "hr": "Primili smo zahtjev za brisanje računa povezanog s ovom e-mail adresom. Za obradu "
+              "nam je potrebna vaša potvrda.",
+        "hu": "Kérelmet kaptunk az ehhez az e-mail-címhez tartozó fiók törlésére. A feldolgozáshoz "
+              "szükségünk van a megerősítésére.",
+        "it": "Abbiamo ricevuto una richiesta di cancellazione dell'account collegato a questo "
+              "indirizzo email. Per elaborarla ci serve la tua conferma.",
+        "lt": "Gavome prašymą ištrinti paskyrą, susietą su šiuo el. pašto adresu. Kad jį "
+              "apdorotume, reikia jūsų patvirtinimo.",
+        "lv": "Saņēmām pieprasījumu dzēst kontu, kas saistīts ar šo e-pasta adresi. Lai to "
+              "apstrādātu, nepieciešams jūsu apstiprinājums.",
+        "mt": "Irċevejna talba biex inħassru l-kont marbut ma' din l-indirizz tal-email. Biex "
+              "nipproċessawha, għandna bżonn il-konferma tiegħek.",
+        "nl": "We hebben een verzoek ontvangen om het account bij dit e-mailadres te verwijderen. "
+              "Om het te verwerken hebben we je bevestiging nodig.",
+        "pl": "Otrzymaliśmy wniosek o usunięcie konta powiązanego z tym adresem e-mail. Do jego "
+              "rozpatrzenia potrzebujemy Twojego potwierdzenia.",
+        "pt": "Recebemos um pedido para eliminar a conta associada a este endereço de e-mail. Para "
+              "o processar, precisamos da sua confirmação.",
+        "ro": "Am primit o cerere de ștergere a contului asociat acestei adrese de e-mail. Pentru "
+              "a o procesa, avem nevoie de confirmarea dumneavoastră.",
+        "sk": "Dostali sme žiadosť o vymazanie účtu spojeného s touto e-mailovou adresou. Na jej "
+              "spracovanie potrebujeme vaše potvrdenie.",
+        "sl": "Prejeli smo zahtevo za izbris računa, povezanega s tem e-poštnim naslovom. Za "
+              "obravnavo potrebujemo vašo potrditev.",
+        "sv": "Vi har fått en begäran om att radera kontot som är kopplat till denna e-postadress. "
+              "För att behandla den behöver vi din bekräftelse.",
+    },
+    "konto_loeschung.bestaetigung.absatz_3": {
+        "bg": "Ако сте подали заявката, потвърдете я с бутона по-долу. След това ще я проверим и "
+              "ще ви отговорим по имейл.",
+        "cs": "Pokud jste žádost podali vy, potvrďte ji tlačítkem níže. Poté ji zkontrolujeme a "
+              "odpovíme vám e-mailem.",
+        "da": "Hvis du har sendt anmodningen, skal du bekræfte den med knappen nedenfor. Derefter "
+              "gennemgår vi den og svarer dig på e-mail.",
+        "de": "Wenn du den Antrag gestellt hast, bestätige ihn mit dem Knopf unten. Wir prüfen ihn "
+              "anschließend und melden uns per E-Mail.",
+        "el": "Εάν υποβάλατε το αίτημα, επιβεβαιώστε το με το κουμπί παρακάτω. Στη συνέχεια θα το "
+              "εξετάσουμε και θα σας απαντήσουμε με email.",
+        "en": "If you made this request, confirm it with the button below. We will then review it "
+              "and get back to you by email.",
+        "es": "Si has hecho la solicitud, confírmala con el botón de abajo. Después la revisaremos "
+              "y te responderemos por correo.",
+        "et": "Kui esitasite taotluse, kinnitage see allpool oleva nupuga. Seejärel vaatame selle "
+              "läbi ja vastame teile e-posti teel.",
+        "fi": "Jos teit pyynnön, vahvista se alla olevalla painikkeella. Käsittelemme sen ja "
+              "vastaamme sinulle sähköpostilla.",
+        "fr": "Si vous êtes à l'origine de cette demande, confirmez-la avec le bouton ci-dessous. "
+              "Nous l'examinerons ensuite et vous répondrons par e-mail.",
+        "ga": "Má rinne tú an iarratas seo, deimhnigh é leis an gcnaipe thíos. Déanfaimid "
+              "athbhreithniú air ansin agus rachaimid i dteagmháil leat trí ríomhphost.",
+        "hr": "Ako ste vi poslali zahtjev, potvrdite ga tipkom u nastavku. Zatim ćemo ga "
+              "pregledati i odgovoriti vam e-poštom.",
+        "hu": "Ha Ön kérte, igazolja az alábbi gombbal. Ezután megvizsgáljuk, és e-mailben "
+              "válaszolunk.",
+        "it": "Se hai inviato tu la richiesta, confermala con il pulsante qui sotto. La "
+              "esamineremo e ti risponderemo per email.",
+        "lt": "Jei prašymą pateikėte jūs, patvirtinkite jį mygtuku žemiau. Tada jį peržiūrėsime ir "
+              "atsakysime el. paštu.",
+        "lv": "Ja pieprasījumu iesniedzāt jūs, apstipriniet to ar zemāk esošo pogu. Pēc tam mēs to "
+              "izskatīsim un atbildēsim jums e-pastā.",
+        "mt": "Jekk int għamilt it-talba, ikkonfermaha bil-buttuna hawn taħt. Imbagħad nirrevedu u "
+              "nweġbuk bl-email.",
+        "nl": "Als jij het verzoek hebt gedaan, bevestig het dan met de knop hieronder. We "
+              "bekijken het daarna en reageren per e-mail.",
+        "pl": "Jeśli to Ty złożyłeś wniosek, potwierdź go przyciskiem poniżej. Następnie go "
+              "rozpatrzymy i odpowiemy e-mailem.",
+        "pt": "Se foi você que fez o pedido, confirme-o com o botão abaixo. Depois analisamo-lo e "
+              "responderemos por e-mail.",
+        "ro": "Dacă dumneavoastră ați făcut cererea, confirmați-o cu butonul de mai jos. O vom "
+              "analiza apoi și vă vom răspunde prin e-mail.",
+        "sk": "Ak ste žiadosť podali vy, potvrďte ju tlačidlom nižšie. Potom ju posúdime a "
+              "odpovieme vám e-mailom.",
+        "sl": "Če ste zahtevo poslali vi, jo potrdite z gumbom spodaj. Nato jo bomo pregledali in "
+              "vam odgovorili po e-pošti.",
+        "sv": "Om du har gjort begäran bekräftar du den med knappen nedan. Därefter granskar vi "
+              "den och svarar via e-post.",
+    },
+    "konto_loeschung.bestaetigung.knopf": {
+        "bg": "Потвърждаване на изтриването",
+        "cs": "Potvrdit smazání",
+        "da": "Bekræft sletning",
+        "de": "Löschung bestätigen",
+        "el": "Επιβεβαίωση διαγραφής",
+        "en": "Confirm deletion",
+        "es": "Confirmar eliminación",
+        "et": "Kinnita kustutamine",
+        "fi": "Vahvista poisto",
+        "fr": "Confirmer la suppression",
+        "ga": "Deimhnigh an scriosadh",
+        "hr": "Potvrdi brisanje",
+        "hu": "Törlés megerősítése",
+        "it": "Conferma la cancellazione",
+        "lt": "Patvirtinti ištrynimą",
+        "lv": "Apstiprināt dzēšanu",
+        "mt": "Ikkonferma t-tħassir",
+        "nl": "Verwijdering bevestigen",
+        "pl": "Potwierdź usunięcie",
+        "pt": "Confirmar eliminação",
+        "ro": "Confirmați ștergerea",
+        "sk": "Potvrdiť vymazanie",
+        "sl": "Potrdi izbris",
+        "sv": "Bekräfta radering",
+    },
+    "konto_loeschung.bestaetigung.hinweis_frist": {
+        "bg": "Линкът е валиден 24 часа.",
+        "cs": "Odkaz je platný 24 hodin.",
+        "da": "Linket er gyldigt i 24 timer.",
+        "de": "Der Link ist 24 Stunden gültig.",
+        "el": "Ο σύνδεσμος ισχύει για 24 ώρες.",
+        "en": "The link is valid for 24 hours.",
+        "es": "El enlace es válido durante 24 horas.",
+        "et": "Link kehtib 24 tundi.",
+        "fi": "Linkki on voimassa 24 tuntia.",
+        "fr": "Le lien est valable 24 heures.",
+        "ga": "Tá an nasc bailí ar feadh 24 uair an chloig.",
+        "hr": "Veza je važeća 24 sata.",
+        "hu": "A link 24 óráig érvényes.",
+        "it": "Il link è valido per 24 ore.",
+        "lt": "Nuoroda galioja 24 valandas.",
+        "lv": "Saite ir derīga 24 stundas.",
+        "mt": "Il-link huwa validu għal 24 siegħa.",
+        "nl": "De link is 24 uur geldig.",
+        "pl": "Link jest ważny 24 godziny.",
+        "pt": "O link é válido durante 24 horas.",
+        "ro": "Linkul este valabil 24 de ore.",
+        "sk": "Odkaz je platný 24 hodín.",
+        "sl": "Povezava je veljavna 24 ur.",
+        "sv": "Länken är giltig i 24 timmar.",
+    },
+    "konto_loeschung.bestaetigung.hinweis_nicht_ich": {
+        "bg": "Ако не сте подавали тази заявка, просто игнорирайте този имейл — профилът ви остава "
+              "без промяна. Никой не може да изтрие профил само с имейл адрес.",
+        "cs": "Pokud jste tuto žádost nepodali, tento e-mail ignorujte – váš účet zůstane "
+              "nezměněn. Nikdo nemůže smazat účet pouze pomocí e-mailové adresy.",
+        "da": "Hvis du ikke har sendt denne anmodning, kan du blot ignorere denne e-mail – din "
+              "konto forbliver uændret. Ingen kan slette en konto med en e-mailadresse alene.",
+        "de": "Wenn du diesen Antrag nicht gestellt hast, ignoriere diese E-Mail einfach — dein "
+              "Konto bleibt unverändert. Niemand kann ein Konto allein mit einer E-Mail-Adresse "
+              "löschen.",
+        "el": "Εάν δεν κάνατε αυτό το αίτημα, απλώς αγνοήστε αυτό το email — ο λογαριασμός σας "
+              "παραμένει αμετάβλητος. Κανείς δεν μπορεί να διαγράψει λογαριασμό μόνο με μια "
+              "διεύθυνση email.",
+        "en": "If you did not make this request, simply ignore this email — your account stays "
+              "unchanged. Nobody can delete an account with an email address alone.",
+        "es": "Si no has hecho esta solicitud, ignora este correo: tu cuenta permanece sin "
+              "cambios. Nadie puede eliminar una cuenta solo con una dirección de correo.",
+        "et": "Kui te seda taotlust ei esitanud, ignoreerige seda e-kirja – teie konto jääb "
+              "muutumatuks. Keegi ei saa kontot kustutada ainult e-posti aadressi abil.",
+        "fi": "Jos et tehnyt tätä pyyntöä, voit jättää tämän viestin huomiotta – tilisi pysyy "
+              "muuttumattomana. Kukaan ei voi poistaa tiliä pelkän sähköpostiosoitteen avulla.",
+        "fr": "Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet e-mail : "
+              "votre compte reste inchangé. Personne ne peut supprimer un compte avec une seule "
+              "adresse e-mail.",
+        "ga": "Mura ndearna tú an iarratas seo, déan neamhaird den ríomhphost seo — fanann do "
+              "chuntas gan athrú. Ní féidir le duine ar bith cuntas a scriosadh le seoladh "
+              "ríomhphoist amháin.",
+        "hr": "Ako niste poslali ovaj zahtjev, jednostavno ignorirajte ovu e-poštu – vaš račun "
+              "ostaje nepromijenjen. Nitko ne može izbrisati račun samo pomoću e-mail adrese.",
+        "hu": "Ha nem Ön kérte ezt, egyszerűen hagyja figyelmen kívül ezt az e-mailt – a fiókja "
+              "változatlan marad. Senki nem törölhet fiókot csupán egy e-mail-címmel.",
+        "it": "Se non hai inviato questa richiesta, ignora questa email: il tuo account resta "
+              "invariato. Nessuno può cancellare un account con il solo indirizzo email.",
+        "lt": "Jei šio prašymo nepateikėte, tiesiog nepaisykite šio el. laiško – jūsų paskyra "
+              "lieka nepakitusi. Niekas negali ištrinti paskyros vien tik pagal el. pašto adresą.",
+        "lv": "Ja neesat iesniedzis šo pieprasījumu, vienkārši ignorējiet šo e-pastu – jūsu konts "
+              "paliek nemainīgs. Neviens nevar dzēst kontu, izmantojot tikai e-pasta adresi.",
+        "mt": "Jekk ma għamiltx din it-talba, sempliċiment injora dan l-email — il-kont tiegħek "
+              "jibqa' l-istess. Ħadd ma jista' jħassar kont bl-indirizz tal-email biss.",
+        "nl": "Als je dit verzoek niet hebt gedaan, negeer deze e-mail dan — je account blijft "
+              "ongewijzigd. Niemand kan een account verwijderen met alleen een e-mailadres.",
+        "pl": "Jeśli nie składałeś tego wniosku, po prostu zignoruj tę wiadomość — Twoje konto "
+              "pozostaje bez zmian. Nikt nie może usunąć konta wyłącznie na podstawie adresu "
+              "e-mail.",
+        "pt": "Se não fez este pedido, ignore este e-mail — a sua conta permanece inalterada. "
+              "Ninguém pode eliminar uma conta apenas com um endereço de e-mail.",
+        "ro": "Dacă nu ați făcut această cerere, ignorați acest e-mail — contul dumneavoastră "
+              "rămâne neschimbat. Nimeni nu poate șterge un cont doar cu o adresă de e-mail.",
+        "sk": "Ak ste túto žiadosť nepodali, tento e-mail ignorujte – váš účet zostáva nezmenený. "
+              "Nikto nemôže vymazať účet len pomocou e-mailovej adresy.",
+        "sl": "Če te zahteve niste poslali, to e-pošto preprosto prezrite – vaš račun ostaja "
+              "nespremenjen. Nihče ne more izbrisati računa zgolj z e-poštnim naslovom.",
+        "sv": "Om du inte har gjort denna begäran kan du bortse från det här e-postmeddelandet – "
+              "ditt konto förblir oförändrat. Ingen kan radera ett konto med enbart en "
+              "e-postadress.",
+    },
+    # Anmeldecode des Gastes (Marktplatz-App, Airbnb-Muster: E-Mail → Code).
+    # Der Code steht im Betreff, weil der Gast ihn dann in der Vorschau der
+    # Mail-App liest, ohne sie zu öffnen — genau so machen es Airbnb und
+    # Booking.com. Die Zeitangabe fehlt in HINWEIS_EINMAL bewusst: die
+    # Gültigkeitsdauer steckt in der GoTrue-Konfiguration (MAILER_OTP_EXP),
+    # nicht in unserem Code. Eine Minutenzahl hier wäre eine Zusage, die wir
+    # nicht einhalten (Wurzel 4).
+    "gast_code.betreff": {
+        "bg": "Твоят код за вход: {code}",
+        "cs": "Tvůj přihlašovací kód: {code}",
+        "da": "Din login-kode: {code}",
+        "de": "Dein Anmeldecode: {code}",
+        "el": "Ο κωδικός σύνδεσής σου: {code}",
+        "en": "Your sign-in code: {code}",
+        "es": "Tu código de acceso: {code}",
+        "et": "Sinu sisselogimiskood: {code}",
+        "fi": "Kirjautumiskoodisi: {code}",
+        "fr": "Ton code de connexion : {code}",
+        "ga": "Do chód sínithe isteach: {code}",
+        "hr": "Tvoj kod za prijavu: {code}",
+        "hu": "A bejelentkezési kódod: {code}",
+        "it": "Il tuo codice di accesso: {code}",
+        "lt": "Tavo prisijungimo kodas: {code}",
+        "lv": "Tavs pieteikšanās kods: {code}",
+        "mt": "Il-kodiċi tad-dħul tiegħek: {code}",
+        "nl": "Je inlogcode: {code}",
+        "pl": "Twój kod logowania: {code}",
+        "pt": "O teu código de acesso: {code}",
+        "ro": "Codul tău de conectare: {code}",
+        "sk": "Tvoj prihlasovací kód: {code}",
+        "sl": "Tvoja koda za prijavo: {code}",
+        "sv": "Din inloggningskod: {code}",
+    },
+    "gast_code.absatz_1": {
+        "bg": "Въведи този код в приложението myBestDays, за да влезеш или да създадеш акаунт:",
+        "cs": "Zadej tento kód v aplikaci myBestDays, abys se přihlásil nebo si vytvořil účet:",
+        "da": "Indtast denne kode i myBestDays-appen for at logge ind eller oprette en konto:",
+        "de": "Gib diesen Code in der myBestDays-App ein, um dich anzumelden oder ein Konto "
+              "anzulegen:",
+        "el": "Καταχώρισε αυτόν τον κωδικό στην εφαρμογή myBestDays για να συνδεθείς ή να "
+              "δημιουργήσεις λογαριασμό:",
+        "en": "Enter this code in the myBestDays app to sign in or create an account:",
+        "es": "Introduce este código en la app de myBestDays para iniciar sesión o crear una "
+              "cuenta:",
+        "et": "Sisesta see kood myBestDays rakenduses, et sisse logida või konto luua:",
+        "fi": "Syötä tämä koodi myBestDays-sovelluksessa kirjautuaksesi sisään tai luodaksesi "
+              "tilin:",
+        "fr": "Saisis ce code dans l'application myBestDays pour te connecter ou créer un compte :",
+        "ga": "Cuir an cód seo isteach san aip myBestDays chun sínigh isteach nó cuntas a chruthú:",
+        "hr": "Unesi ovaj kod u aplikaciji myBestDays kako bi se prijavio ili otvorio račun:",
+        "hu": "Írd be ezt a kódot a myBestDays alkalmazásba a bejelentkezéshez vagy fiók "
+              "létrehozásához:",
+        "it": "Inserisci questo codice nell'app myBestDays per accedere o creare un account:",
+        "lt": "Įvesk šį kodą myBestDays programėlėje, kad prisijungtum arba sukurtum paskyrą:",
+        "lv": "Ievadi šo kodu myBestDays lietotnē, lai pieteiktos vai izveidotu kontu:",
+        "mt": "Daħħal dan il-kodiċi fl-app myBestDays biex tidħol jew toħloq kont:",
+        "nl": "Voer deze code in de myBestDays-app in om in te loggen of een account aan te maken:",
+        "pl": "Wpisz ten kod w aplikacji myBestDays, aby się zalogować lub utworzyć konto:",
+        "pt": "Introduz este código na app myBestDays para iniciar sessão ou criar uma conta:",
+        "ro": "Introdu acest cod în aplicația myBestDays pentru a te conecta sau a crea un cont:",
+        "sk": "Zadaj tento kód v aplikácii myBestDays, aby si sa prihlásil alebo si vytvoril "
+              "konto:",
+        "sl": "Vnesi to kodo v aplikaciji myBestDays, da se prijaviš ali ustvariš račun:",
+        "sv": "Ange den här koden i myBestDays-appen för att logga in eller skapa ett konto:",
+    },
+    "gast_code.hinweis_einmal": {
+        "bg": "Кодът е валиден само еднократно и изтича след кратко време.",
+        "cs": "Kód platí jen jednou a po krátké době vyprší.",
+        "da": "Koden kan kun bruges én gang og udløber efter kort tid.",
+        "de": "Der Code gilt nur einmal und läuft nach kurzer Zeit ab.",
+        "el": "Ο κωδικός ισχύει μόνο μία φορά και λήγει μετά από λίγο.",
+        "en": "The code works only once and expires after a short time.",
+        "es": "El código sirve una sola vez y caduca al poco tiempo.",
+        "et": "Kood kehtib ainult üks kord ja aegub varsti.",
+        "fi": "Koodi toimii vain kerran ja vanhenee pian.",
+        "fr": "Le code ne fonctionne qu'une fois et expire au bout d'un court délai.",
+        "ga": "Ní oibríonn an cód ach uair amháin agus rachaidh sé in éag go luath.",
+        "hr": "Kod vrijedi samo jednom i istječe nakon kratkog vremena.",
+        "hu": "A kód csak egyszer használható, és rövid idő után lejár.",
+        "it": "Il codice è valido una sola volta e scade dopo poco tempo.",
+        "lt": "Kodas veikia tik vieną kartą ir netrukus nustoja galioti.",
+        "lv": "Kods darbojas tikai vienu reizi un pēc neilga laika beidzas.",
+        "mt": "Il-kodiċi jaħdem darba biss u jiskadi wara ftit ħin.",
+        "nl": "De code werkt maar één keer en verloopt na korte tijd.",
+        "pl": "Kod działa tylko raz i po krótkim czasie traci ważność.",
+        "pt": "O código só funciona uma vez e expira depois de pouco tempo.",
+        "ro": "Codul funcționează o singură dată și expiră după scurt timp.",
+        "sk": "Kód platí len raz a po krátkom čase vyprší.",
+        "sl": "Koda velja samo enkrat in po kratkem času preneha veljati.",
+        "sv": "Koden fungerar bara en gång och upphör att gälla efter kort tid.",
+    },
+    "gast_code.hinweis_nicht_ich": {
+        "bg": "Ако не си поискал код, просто игнорирай това писмо — без кода никой не може да "
+              "влезе.",
+        "cs": "Pokud jsi o kód nežádal, tento e-mail ignoruj – bez kódu se nikdo nepřihlásí.",
+        "da": "Hvis du ikke har bedt om en kode, kan du ignorere denne e-mail – uden koden kan "
+              "ingen logge ind.",
+        "de": "Wenn du keinen Code angefordert hast, ignoriere diese E-Mail — ohne den Code kann "
+              "sich niemand anmelden.",
+        "el": "Αν δεν ζήτησες κωδικό, αγνόησε αυτό το μήνυμα — χωρίς τον κωδικό δεν μπορεί να "
+              "συνδεθεί κανείς.",
+        "en": "If you did not request a code, ignore this email — nobody can sign in without it.",
+        "es": "Si no has pedido un código, ignora este correo: sin él nadie puede iniciar sesión.",
+        "et": "Kui sa koodi ei küsinud, eira seda kirja — ilma koodita ei saa keegi sisse logida.",
+        "fi": "Jos et pyytänyt koodia, voit ohittaa tämän viestin — ilman koodia kukaan ei pääse "
+              "kirjautumaan.",
+        "fr": "Si tu n'as pas demandé de code, ignore cet e-mail : sans lui, personne ne peut se "
+              "connecter.",
+        "ga": "Mura n-iarr tú cód, déan neamhaird den ríomhphost seo — ní féidir le duine ar bith "
+              "sínigh isteach gan é.",
+        "hr": "Ako nisi zatražio kod, zanemari ovu poruku — bez koda se nitko ne može prijaviti.",
+        "hu": "Ha nem kértél kódot, hagyd figyelmen kívül ezt az e-mailt — nélküle senki nem tud "
+              "bejelentkezni.",
+        "it": "Se non hai richiesto un codice, ignora questa e-mail: senza di esso nessuno può "
+              "accedere.",
+        "lt": "Jei kodo neprašei, tiesiog ignoruok šį laišką — be jo niekas negali prisijungti.",
+        "lv": "Ja neesi pieprasījis kodu, ignorē šo e-pastu — bez tā neviens nevar pieteikties.",
+        "mt": "Jekk ma tlabtx kodiċi, injora din l-email — mingħajru ħadd ma jista jidħol.",
+        "nl": "Heb je geen code aangevraagd? Negeer deze e-mail — zonder code kan niemand "
+              "inloggen.",
+        "pl": "Jeśli nie prosiłeś o kod, zignoruj tę wiadomość — bez niego nikt się nie zaloguje.",
+        "pt": "Se não pediste um código, ignora este e-mail: sem ele ninguém consegue iniciar "
+              "sessão.",
+        "ro": "Dacă nu ai cerut un cod, ignoră acest e-mail — fără el nimeni nu se poate conecta.",
+        "sk": "Ak si o kód nežiadal, tento e-mail ignoruj – bez kódu sa nikto neprihlási.",
+        "sl": "Če kode nisi zahteval, to sporočilo prezri — brez nje se nihče ne more prijaviti.",
+        "sv": "Om du inte har begärt någon kod kan du ignorera det här mejlet – utan koden kan "
+              "ingen logga in.",
+    },
 }
 
 

@@ -83,6 +83,11 @@ _AUTH_PATHS = (
     "/guest-auth/login",
     "/guest-auth/register",
     "/guest-auth/password-reset",
+    # Anmeldung per Einmal-Code (19.08.2026). BEIDE Richtungen gehören in den
+    # strengen Bucket: `/guest-auth/code` schickt eine Mail an ein FREMDES
+    # Postfach (Spam-Verstärker), `/guest-auth/code/verify` prüft ein Geheimnis
+    # (durchprobierbar). Der Teilstring deckt beide plus `/code/profil`.
+    "/guest-auth/code",
     # Einladung ins Backoffice annehmen: öffentlich (die eingeladene Person hat
     # noch keine Sitzung) und setzt ein Passwort — also derselbe strenge Bucket
     # wie ein Login, sonst wäre der Token-Raum durchprobierbar.
@@ -208,6 +213,15 @@ _PUBLIC_SUPPORT_PATHS = ("/support/public",)
 _NEWSLETTER_PATHS = ("/newsletter/subscribe", "/newsletter/confirm",
                      "/newsletter/unsubscribe")
 
+# Öffentlicher Löschantrag (Play-Store-Pflicht, 0413). Genau dieselbe Gefahr wie
+# beim Newsletter, nur mit höherem Schaden: jeder Aufruf kann eine Mail an eine
+# FREMDE Adresse auslösen, und der Bestätigungs-Endpunkt ist ein Token, den man
+# durchprobieren kann. Ohne eigenes Dach wäre das Formular ein Mailversender
+# gegen beliebige Postfächer (Wurzel 8). Fail-closed wie der Newsletter: lieber
+# einen Antrag abweisen als bei Redis-Ausfall ungedeckelt Mails verschicken.
+_KONTO_LOESCHUNG_PATHS = ("/account-deletion/request",
+                          "/account-deletion/confirm")
+
 # Öffentliche Such-/Kalender-Endpunkte → Scraper-Schutz pro IP. Der iCal-Export
 # ist nicht eingeloggt (ein Kalender-Client schickt kein JWT).
 _LISTINGS_PATHS = (
@@ -274,6 +288,7 @@ _BUCKET_REGELN: tuple[tuple[str, tuple[str, ...], str, bool], ...] = (
     ("payments", ("/payments/",), "payments", True),
     ("public_support", _PUBLIC_SUPPORT_PATHS, "public_support", True),
     ("public_support", _NEWSLETTER_PATHS, "public_support", True),
+    ("public_support", _KONTO_LOESCHUNG_PATHS, "public_support", True),
     ("ai", _AI_PATHS, "ai", False),
     # sensibel=True: bei Redis-Ausfall lieber abweisen als den Code-/Token-
     # Tausch ungedeckelt durchlassen (fail-closed, Wurzel 5).

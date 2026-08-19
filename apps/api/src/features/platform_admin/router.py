@@ -16,6 +16,7 @@ from src.core.security import CurrentPlatformAdmin, require_platform_write
 
 from . import betrieb_sperre as betrieb
 from . import ereignis_erledigen as erledigen_dienst
+from . import loeschantraege
 from . import webhook_verlauf as webhook
 from . import worker_verlauf as worker
 from .betrieb_sperre import BetriebNameFalsch
@@ -40,6 +41,9 @@ from .schemas import (
     ErledigenRequest,
     ErledigenResponse,
     FinanzUebersicht,
+    LoeschantragAbschlussRequest,
+    LoeschantragListe,
+    LoeschantragZeile,
     ModerationDecision,
     ModerationList,
     ModerationProperty,
@@ -1272,3 +1276,69 @@ def webhook_detail(
         request=request,
     )
     return ergebnis
+
+# ── Löschanträge aus dem öffentlichen Formular (0413) ────────────────────────
+# Die öffentliche Seite nimmt Anträge an; ohne diese Ansicht wäre sie eine
+# Attrappe — Anträge lägen in einer Tabelle, die niemand ansieht, und die
+# DSGVO-Monatsfrist (Art. 12 Abs. 3) liefe trotzdem.
+
+
+@router.get("/account-deletions", response_model=LoeschantragListe)
+def liste_loeschantraege(
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    nur_offen: bool = True,
+    limit: int = 50,
+) -> LoeschantragListe:
+    """Bestätigte Löschanträge, älteste zuerst. Nur platform_admin.
+
+    Älteste zuerst, weil hier eine gesetzliche Frist läuft: der dringendste
+    Antrag ist der, der am längsten liegt.
+
+    `pending`-Anträge erscheinen NIE — dort hat niemand den Postfach-Besitz
+    nachgewiesen, die Adresse kann fremd eingetippt sein.
+    """
+    return loeschantraege.liste(service.db, nur_offen=nur_offen, limit=limit)
+
+
+@router.post(
+    "/account-deletions/{antrag_id}/abschliessen",
+    response_model=LoeschantragZeile,
+)
+def schliesse_loeschantrag(
+    antrag_id: str,
+    daten: LoeschantragAbschlussRequest,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+) -> LoeschantragZeile:
+    """Antrag als erledigt oder abgelehnt schließen. Nur platform_admin.
+
+    Löscht NICHTS: das Schließen führt den Vorgang buchhalterisch. Die
+    eigentliche Löschung eines Betriebs ist ein getrennter Schritt
+    (`/tenants/{id}/loeschen`) — ein Endpunkt, der beides täte, würde aus einem
+    Häkchen im Backoffice die Vernichtung eines Betriebs machen.
+    """
+    require_platform_write(ctx)
+    try:
+        result = loeschantraege.abschliessen(
+            service.db,
+            ctx,
+            antrag_id,
+            status=daten.status,
+            notiz=daten.notiz,
+            protokoll=service.log_action,
+            request=request,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
+    if result is None:
+        # Nicht gefunden ODER nicht mehr offen — beides ist für den Aufrufer
+        # dasselbe: an diesem Antrag gibt es nichts mehr zu tun.
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Antrag nicht gefunden oder bereits abgeschlossen.",
+        )
+    return result

@@ -5,6 +5,7 @@ from fastapi import Depends
 
 from src.core.supabase import get_anon_client, get_service_client
 
+from .codeanmeldung import GuestCodeService
 from .service import GuestAuthService
 
 
@@ -16,3 +17,13 @@ def get_guest_auth_service() -> GuestAuthService:
 
 
 GuestAuthServiceDep = Annotated[GuestAuthService, Depends(get_guest_auth_service)]
+
+
+def get_guest_code_service() -> GuestCodeService:
+    return GuestCodeService(
+        anon_client=get_anon_client(),
+        service_client=get_service_client(),
+    )
+
+
+GuestCodeServiceDep = Annotated[GuestCodeService, Depends(get_guest_code_service)]

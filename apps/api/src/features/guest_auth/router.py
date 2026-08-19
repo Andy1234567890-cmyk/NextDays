@@ -10,11 +10,17 @@ from fastapi import APIRouter, HTTPException, status
 
 from src.core.security import CurrentGuest
 
-from .dependencies import GuestAuthServiceDep
+from .dependencies import GuestAuthServiceDep, GuestCodeServiceDep
 from .schemas import (
+    GuestCodeAnfrageRequest,
+    GuestCodeAntwort,
+    GuestCodePruefenRequest,
+    GuestKontoLoeschenRequest,
+    GuestKontoLoeschenResponse,
     GuestLoginRequest,
     GuestMessageResponse,
     GuestPasswordResetRequest,
+    GuestProfilAnlegenRequest,
     GuestProfileResponse,
     GuestProfileUpdateRequest,
     GuestRefreshRequest,
@@ -102,5 +108,73 @@ def update_me(
     Doppel-Opt-in (Wurzel 7) und ist ein eigener Flow."""
     try:
         return service.update_profile(ctx, req)
+    except GuestAuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/me", response_model=GuestKontoLoeschenResponse)
+def delete_me(
+    req: GuestKontoLoeschenRequest,
+    ctx: CurrentGuest,
+    service: GuestAuthServiceDep,
+) -> GuestKontoLoeschenResponse:
+    """Eigenes Gast-Konto löschen (Apple 5.1.1(v), Google Play).
+
+    Mit Passwort-Rückfrage: ein gekapertes Token allein darf kein Konto
+    vernichten (Wurzel 7). Bereits getätigte Buchungen bleiben beim Gastgeber —
+    die Antwort sagt das ausdrücklich.
+    """
+    try:
+        return service.konto_loeschen(ctx, req)
+    except GuestAuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Anmeldung per Einmal-Code (Airbnb-Muster, 19.08.2026) ------------------
+#
+# Alle drei Routen liegen im STRENGEN auth-Bucket (ratelimit_middleware:
+# `/guest-auth/code` als Teilstring): die erste schickt Mail an ein fremdes
+# Postfach, die zweite prüft ein Geheimnis.
+
+
+@router.post("/code", response_model=GuestCodeAntwort)
+def code_anfordern(
+    req: GuestCodeAnfrageRequest, service: GuestCodeServiceDep
+) -> GuestCodeAntwort:
+    """Schritt 1: Einmal-Code an die Adresse schicken.
+
+    Antwortet IMMER gleich — ob die Adresse ein Konto hat, verrät diese Route
+    nicht (Kontenaufzählung). Public: der Gast hat noch kein Token.
+    """
+    try:
+        return service.code_anfordern(req)
+    except GuestAuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/code/verify", response_model=GuestSessionResponse)
+def code_pruefen(
+    req: GuestCodePruefenRequest, service: GuestCodeServiceDep
+) -> GuestSessionResponse:
+    """Schritt 2: Code → Session. `profil_fehlt=true` heißt: Name fehlt noch."""
+    try:
+        return service.code_pruefen(req)
+    except GuestAuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/code/profil", response_model=GuestProfileResponse)
+def profil_anlegen(
+    req: GuestProfilAnlegenRequest,
+    ctx: CurrentGuest,
+    service: GuestCodeServiceDep,
+) -> GuestProfileResponse:
+    """Schritt 3 (nur bei Erstanmeldung): Name zum eigenen Konto nachtragen.
+
+    Verlangt das Gast-Token aus Schritt 2 und schreibt ausschließlich die eigene
+    Zeile (guest_id aus dem Token, Wurzel 3/9) — es gibt keine id im Pfad.
+    """
+    try:
+        return service.profil_anlegen(ctx, req)
     except GuestAuthError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
