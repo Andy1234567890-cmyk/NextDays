@@ -27,6 +27,10 @@ export const NIC: Record<string, string> = {
   check: "M5 12.5l4.5 4.5L19 7",
   clock: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 8v4.5l3 1.8",
   card: "M3 7.5h18v9H3zM3 11h18M7 14h3",
+  // ACHTUNG: ein echter Euro-Glyph. NUR verwenden, wo tatsächlich Euro gemeint
+  // ist — nicht als Symbol für „Geld/Umsatz". Der Betrieb kann in Kronen,
+  // Zloty oder Forint rechnen; dann ist dieses Zeichen eine Falschaussage
+  // (CLAUDE.md Wurzel 4). Für Beträge allgemein: `card`.
   euro: "M16 7.5c-1-1.2-2.6-2-4.3-2C8.5 5.5 6 8.4 6 12s2.5 6.5 5.7 6.5c1.7 0 3.3-.8 4.3-2M5 10.5h7M5 13.5h6",
   grid: "M4 4.5h6.5v6.5H4zM13.5 4.5H20v6.5h-6.5zM4 13.5h6.5V20H4zM13.5 13.5H20V20h-6.5z",
   list: "M8 6.5h12M8 12h12M8 17.5h12M4 6.5h.01M4 12h.01M4 17.5h.01",

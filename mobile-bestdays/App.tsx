@@ -24,6 +24,7 @@ import GuestAccount from "@/screens/GuestAccount";
 import GuestLogin from "@/screens/GuestLogin";
 import ListingDetail from "@/screens/ListingDetail";
 import TripDetail from "@/screens/TripDetail";
+import GuestMessages from "@/screens/GuestMessages";
 import WishlistDetail from "@/screens/WishlistDetail";
 import { marke } from "@/theme/marke";
 import { ThemeProvider } from "@/theme/ThemeProvider";
@@ -52,6 +53,9 @@ const linking: LinkingOptions<RootStackParamList> = {
       TripDetail: "reisen/:id",
       WishlistDetail: "merkliste/:id",
       Checkin: "checkin/:reservationId",
+      // Ohne Parameter die Liste, mit Buchung direkt der Verlauf. Der Pfad ist
+      // so geschnitten, dass er später 1:1 als Universal Link taugt.
+      GuestMessages: "nachrichten",
       GuestTabs: {
         screens: {
           Discover: "suche",
@@ -88,6 +92,7 @@ function Root() {
             <Stack.Screen name="TripDetail" component={TripDetail} />
             <Stack.Screen name="WishlistDetail" component={WishlistDetail} />
             <Stack.Screen name="GuestAccount" component={GuestAccount} />
+            <Stack.Screen name="GuestMessages" component={GuestMessages} />
           </>
         ) : (
           <Stack.Screen name="GuestLogin" component={GuestLogin} />

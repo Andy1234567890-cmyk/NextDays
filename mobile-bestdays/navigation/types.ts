@@ -37,4 +37,9 @@ export type RootStackParamList = {
   TripDetail: { id: string };
   // Eine Merkliste des Gastes (guest-wishlist).
   WishlistDetail: { id: string; name?: string };
+  // Nachrichten an den Gastgeber (guest-messages). OHNE Parameter: die Liste
+  // aller Verläufe (aus dem Profil). MIT `reservationId`: direkt der Verlauf zu
+  // dieser Buchung (aus dem Buchungsdetail) — der Thread wird dabei idempotent
+  // geholt bzw. angelegt.
+  GuestMessages: { reservationId?: string } | undefined;
 };

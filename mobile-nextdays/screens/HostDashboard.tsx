@@ -1,73 +1,101 @@
-// Gastgeber · Übersicht. Echte KPIs + heutige An-/Abreisen + Anstehendes aus
-// GET /api/v1/reservations/dashboard (dieselbe Quelle wie das Web-Dashboard).
+// Gastgeber · Übersicht. Dieselbe Startseite wie im Web-Dashboard und aus
+// denselben zwei Quellen: GET /api/v1/reservations/dashboard (Reservierungen,
+// Kennzahlen, Objektbestand) und GET /api/v1/inbox/kennzahlen (Nachrichten).
+//
 // Lade-/Fehler-/Leerzustand getrennt. KEIN Demo-Fallback: eine Übersicht mit
 // lauter Nullen ist von einem echten ruhigen Tag nicht zu unterscheiden und
 // gibt dem Gastgeber falsche Sicherheit über seinen Betrieb (Wurzel 4). Ist das
 // Backend nicht erreichbar, steht das da — mit Wiederholen.
 // Beträge/Währung aus den Daten (§4.2: revenue_30d = null → keine Umsatz-Kachel).
 //
-// Der Screen zeigt ALLE Felder, die der Endpoint liefert: bis Juli 2026 fielen
-// `checkins_30d` sowie Kanal, Status und der zweite Datumswert jeder Zeile
-// stillschweigend unter den Tisch — die Übersicht wirkte leer, obwohl die
-// Antwort voll war.
-import { useCallback, useEffect, useMemo, useState } from "react";
+// Der Screen zeigt ALLE Felder, die die Endpunkte liefern. Zweimal war er
+// dahinter zurück, ohne dass es auffiel: bis Juli 2026 fehlten `checkins_30d`
+// sowie Kanal, Status und der zweite Datumswert jeder Zeile; bis August 2026
+// fehlten die Listen „Freigabe nötig" und „Gäste im Haus", der Umsatz je
+// Buchung, die Zeitraum-/Zeitfenster-Umschaltung, die gebuchten
+// Zusatzleistungen, der gesamte Nachrichten-Block und der Objektbestand. Beide
+// Male sah die App nicht kaputt aus, sondern nur leer — deshalb steht der
+// Vergleich mit dem Contract in `lib/dashboard.ts` ausdrücklich dabei.
+import { useCallback, useEffect, useState } from "react";
 import { Image, Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { BuchungsPanel } from "@/components/buchung/BuchungsPanel";
+import { BuchungsReiter } from "@/components/dashboard/BuchungsReiter";
+import { KennzahlenAbschnitt } from "@/components/dashboard/KennzahlenAbschnitt";
 import { Icon, type IconName } from "@/components/ui/Icon";
-import { Avatar, Btn, Card, Col, Divider, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Avatar, Btn, Col, Row, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState } from "@/components/ui/patterns";
-import { KanalMarke } from "@/components/KanalMarke";
 import { useAuth } from "@/contexts/AuthContext";
-import { channelMeta } from "@/lib/calendar-channels";
-import { formatCurrency } from "@/lib/currency";
-import { getDashboard, type Dashboard, type DashboardEntry } from "@/lib/dashboard";
-import type { ReservationStatus } from "@/lib/reservations";
+import { initialenAus } from "@/lib/initialen";
+import { getDashboard, type Dashboard } from "@/lib/dashboard";
+import { heuteLabel } from "@/lib/kalendertag";
+import { getInboxUnreadCount } from "@/lib/inbox";
 import { useRealtime } from "@/lib/realtime";
-import { portalLabel } from "@/lib/portal-logos";
 import { useTheme } from "@/theme/ThemeProvider";
 
-// Wie viele Zeilen je Block direkt sichtbar sind. „Anstehend" umfasst beim
-// echten Betrieb dreistellig viele Buchungen — die alle in eine ScrollView zu
-// rendern ist weder lesbar noch flüssig. Der Rest führt in die Buchungsliste.
-const MAX_ZEILEN = 5;
-
-const MONATE = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
-
-const STATUS_LABEL: Record<ReservationStatus, string> = {
-  pending: "Angefragt",
-  confirmed: "Bestätigt",
-  cancelled: "Storniert",
-  completed: "Abgeschlossen",
-};
-
-// Status → Badge-Farbe, identisch zur Buchungsliste (ein Statusbild in der App).
-const STATUS_TONE: Record<ReservationStatus, { bg: string; fg: string }> = {
-  confirmed: { bg: "#E6F4EA", fg: "#1E7A46" },
-  completed: { bg: "#E6F4EA", fg: "#1E7A46" },
-  pending: { bg: "#FCF0DA", fg: "#9A6B12" },
-  cancelled: { bg: "#FBE4E4", fg: "#B02A2A" },
-};
-
-function tagKurz(iso: string): string {
-  const [, m, d] = iso.split("-");
-  return `${Number(d)}. ${MONATE[Number(m) - 1]}`;
+/**
+ * Tageszeit-Begrüßung wie in den Apps der Branche („Good morning, Gus").
+ *
+ * Bewusst ohne Namen: `/auth/me` liefert die E-Mail, keinen Vornamen — „Guten
+ * Morgen, info@airsmil.dk" wäre keine Anrede. Steht der Name eines Tages im
+ * Contract, kommt er hier dazu.
+ */
+function begruessung(): string {
+  const stunde = new Date().getHours();
+  if (stunde < 11) return "Guten Morgen";
+  if (stunde < 18) return "Guten Tag";
+  return "Guten Abend";
 }
 
-function heuteLabel(iso: string): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString("de-DE", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-}
-
-// Nächte aus den beiden ISO-Tagen. Reine UTC-Rechnung: die Daten sind Kalender-
-// tage ohne Zeitzone, `new Date("2026-08-01")` ist bereits UTC-Mitternacht.
-function naechte(inIso: string, outIso: string): number {
-  const ms = Date.parse(outIso) - Date.parse(inIso);
-  return Math.max(0, Math.round(ms / 86_400_000));
+/**
+ * Eine antippbare Hinweiszeile. `leise` für Bestandsangaben (Objekte), sonst
+ * hervorgehoben — ein Handlungsbedarf soll sich von einer Zahl unterscheiden.
+ */
+function HinweisZeile({
+  icon,
+  text,
+  onPress,
+  leise,
+}: {
+  icon: IconName;
+  text: string;
+  onPress: () => void;
+  leise?: boolean;
+}) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={text}
+      onPress={onPress}
+      style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+    >
+      <Row
+        gap={10}
+        style={{
+          alignItems: "center",
+          paddingVertical: 12,
+          paddingHorizontal: 14,
+          borderRadius: t.radius.card,
+          borderWidth: 1,
+          borderColor: leise ? t.palette.line : t.palette.accent,
+          backgroundColor: leise ? "transparent" : t.palette.accentSoft,
+        }}
+      >
+        <Icon
+          n={icon}
+          s={17}
+          sw={1.9}
+          c={leise ? t.palette.soft : t.palette.accent}
+        />
+        <Txt v="sm" numberOfLines={2} style={{ flex: 1 }}>
+          {text}
+        </Txt>
+        <Icon n="fwd" s={15} sw={2} c={t.palette.faint} />
+      </Row>
+    </Pressable>
+  );
 }
 
 export default function HostDashboard({ navigation }: { navigation: any }) {
@@ -75,40 +103,67 @@ export default function HostDashboard({ navigation }: { navigation: any }) {
   const insets = useSafeAreaInsets();
   const { me } = useAuth();
   const [data, setData] = useState<Dashboard | null>(null);
+  // Offene Konversationen. null = der Posteingang ist für diese Rolle nicht
+  // zugänglich (der Endpunkt sagt ab) — dann entfällt der Hinweis, statt „0"
+  // zu behaupten, obwohl nichts geladen wurde.
+  const [ungelesen, setUngelesen] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Zählt jede erfolgreiche Grundabfrage. Die Unterblöcke halten eigenen Zustand
+  // (gewähltes Fenster, nachgeladene Zeilen) und erkennen daran, dass frische
+  // Grunddaten da sind — ohne die Zählung würden sie den Stand ihres
+  // Erstabrufs weiterzeigen, während die Zahlen darüber sich ändern.
+  const [version, setVersion] = useState(0);
+  const [offeneBuchung, setOffeneBuchung] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const res = await getDashboard();
+    // Beide Quellen parallel. Die Zahl der offenen Konversationen ist NICHT
+    // kritisch: wer keinen Zugang zum Posteingang hat, bekommt dort eine Absage
+    // — dann entfällt der Hinweis, statt die ganze Übersicht zu kippen.
+    const [res, offen] = await Promise.all([
+      getDashboard(),
+      getInboxUnreadCount(),
+    ]);
     if (res.ok) {
       setData(res.data);
       setError(null);
+      setVersion((v) => v + 1);
     } else {
       // Kein Ersatzdatensatz: sonst zeigt die App „0 Buchungen" für einen
       // Betrieb, dessen Zahlen sie schlicht nicht kennt.
       setData(null);
       setError(res.error);
     }
+    setUngelesen(offen.ok ? offen.data.ungelesen : null);
   }, []);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  // Realtime: Buchungsänderungen → KPIs/Listen debounced neu laden (400ms wie
-  // Web). reservations speist alle Zahlen dieser Übersicht.
+  // Realtime: Buchungsänderungen → Kennzahlen/Listen debounced neu laden (400 ms
+  // wie Web). `reservations` speist die Reservierungszahlen, `properties` den
+  // Objektbestand.
+  // Ohne `availability`, anders als im Web: keine Zahl dieser Übersicht hängt
+  // daran, das Abo würde nur die Grundabfrage bei jeder Kalendersperre erneut
+  // auslösen (Wurzel 4 — kein Element ohne Wirkung).
   useRealtime({ table: "reservations", onChange: load });
+  useRealtime({ table: "properties", onChange: load });
 
   const zuBuchungen = useCallback(() => navigation.navigate("Reservations"), [navigation]);
-  const zurBuchung = useCallback(
-    (id: string) => navigation.navigate("ReservationDetail", { id }),
+  // Die Buchung öffnet als Panel ÜBER der Übersicht — kein Screen-Wechsel,
+  // damit der Blick auf den Tag beim Schließen erhalten bleibt.
+  const zurBuchung = useCallback((id: string) => setOffeneBuchung(id), []);
+  const zumThread = useCallback(
+    (threadId: string) => navigation.navigate("HostInbox", { threadId }),
     [navigation],
   );
-
-  // Anstehendes wird chronologisch erwartet, nicht in Antwortreihenfolge —
-  // sonst steht in „die nächsten fünf" irgendetwas aus dem Herbst.
-  const anstehend = useMemo(
-    () => [...(data?.upcoming ?? [])].sort((a, b) => a.check_in.localeCompare(b.check_in)),
-    [data],
+  const zumPosteingang = useCallback(() => navigation.navigate("HostInbox"), [navigation]);
+  const zuObjekten = useCallback(() => navigation.navigate("Listings"), [navigation]);
+  // Offene Anfragen sind die Buchungsliste mit gesetztem Status-Filter — keine
+  // eigene Seite: es sind dieselben Buchungen, nur eine Teilmenge.
+  const zuAnfragen = useCallback(
+    () => navigation.navigate("Reservations", { status: "pending" }),
+    [navigation],
   );
 
   if (error) {
@@ -131,17 +186,27 @@ export default function HostDashboard({ navigation }: { navigation: any }) {
     );
   }
 
-  const revenue = data.revenue_30d;
-
   return (
-    <View style={{ flex: 1, backgroundColor: t.palette.bg }}>
+    // Die Safe-Area sitzt AUSSEN, nicht im `contentContainerStyle`.
+    //
+    // Vorher stand sie im Scroll-Inhalt: der Scrollbereich reichte damit bis
+    // unter die Statusleiste, und beim Scrollen wanderten Reiter und Karten über
+    // die Uhrzeit und die Dynamic Island — Text auf Text. Aussen beginnt der
+    // Scrollbereich unter der Leiste, und nichts kann mehr darunter geraten.
+    // So machen es auch die übrigen acht Screens dieser App; das Dashboard war
+    // der einzige Ausreisser.
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: t.palette.bg,
+        paddingTop: insets.top,
+      }}
+    >
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 24,
-          // Echte Safe-Area statt hartkodierter 60 — sonst rutscht die
-          // Titelzeile unter Notch/Dynamic Island (gerätabhängig).
-          paddingTop: insets.top + 12,
-          gap: 22,
+          paddingTop: 12,
+          gap: 26,
           paddingBottom: insets.bottom + 40,
         }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
@@ -165,276 +230,96 @@ export default function HostDashboard({ navigation }: { navigation: any }) {
               hitSlop={10}
               style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
             >
-              <Avatar s={34} icon="user" />
+              {/* Bild bzw. Initialen statt anonymem Symbol — Letzteres sah
+                  aus wie ein Bild, das nicht geladen hat. */}
+              <Avatar
+                s={34}
+                src={me?.avatar_url ?? undefined}
+                initialen={initialenAus(me?.full_name, me?.email)}
+              />
             </Pressable>
           </Row>
           <Col gap={4}>
-            <Txt v="display">Übersicht</Txt>
+            <Txt v="display">{begruessung()}</Txt>
             <Txt v="body" soft numberOfLines={1}>
               {[heuteLabel(data.today), me?.email].filter(Boolean).join(" · ")}
+            </Txt>
+            {/* Der Tag in einer Zeile: was heute passiert, bevor irgendeine
+                Liste geöffnet werden muss. */}
+            <Txt v="sm" soft numberOfLines={1}>
+              {[
+                `${data.checkins_today.length} an`,
+                `${data.checkouts_today.length} ab`,
+                `${data.im_haus_gesamt} im Haus`,
+              ].join(" · ")}
             </Txt>
           </Col>
         </Col>
 
-        {/* Drei Kennzahlen, EIN Bauplan: gleiche Kachel, gleiche Schriftgröße,
-            gleicher Innenabstand. Der Umsatz steht oben und über die volle
-            Breite, weil ein formatierter Betrag nicht in eine Drittelspalte
-            passt — nicht, weil er größer gesetzt wäre. Fehlt die
-            Betrags-Sicht (§4.2), entfällt die Kachel ersatzlos (kein 0-Betrag). */}
-        {/* Der Zeitraum gilt für alle drei Kennzahlen — einmal genannt statt
-            dreimal in Labels, die dann abgeschnitten werden. */}
-        <Col gap={12}>
-          <Txt v="eyebrow" soft>
-            Letzte 30 Tage
-          </Txt>
+        {/* Handlungsbedarf. Nur, wenn es welchen GIBT — eine Zeile „0 offene
+            Anfragen" ist keine Information, sie kostet nur Platz und
+            Aufmerksamkeit. */}
+        {(data.freigabe_gesamt > 0 || (ungelesen ?? 0) > 0) && (
+          <Col gap={8}>
+            {data.freigabe_gesamt > 0 && (
+              <HinweisZeile
+                icon="clock"
+                text={`${data.freigabe_gesamt} ${data.freigabe_gesamt === 1 ? "Anfrage wartet" : "Anfragen warten"} auf Freigabe`}
+                onPress={zuAnfragen}
+              />
+            )}
+            {(ungelesen ?? 0) > 0 && (
+              <HinweisZeile
+                icon="chat"
+                text={`${ungelesen} offene ${ungelesen === 1 ? "Konversation" : "Konversationen"}`}
+                onPress={zumPosteingang}
+              />
+            )}
+          </Col>
+        )}
 
-          {revenue && (
-            <KpiKarte
-              icon="euro"
-              wert={formatCurrency(revenue.value, data.currency)}
-              label="Umsatz"
-              change={revenue.change_pct}
-            />
-          )}
-
-        {/* alignItems: "stretch" hebt die Zentrierung aus `Row` auf — sonst wird
-            die Kachel ohne Trend-Zeile kürzer als ihre Nachbarin. */}
-          <Row gap={12} style={{ alignItems: "stretch" }}>
-            <KpiKarte
-              icon="key"
-              wert={`${Math.round(data.checkins_30d.value)}`}
-              label="Check-ins"
-              change={data.checkins_30d.change_pct}
-            />
-            <KpiKarte
-              icon="check"
-              wert={`${Math.round(data.confirmed_30d.value)}`}
-              label="Bestätigt"
-              change={data.confirmed_30d.change_pct}
-            />
-          </Row>
-        </Col>
-
-        <Block
-          titel="Heute · Anreisen"
-          icon="key"
-          eintraege={data.checkins_today}
-          leer="Heute reist niemand an."
-          datumsfeld="check_in"
+        <BuchungsReiter
+          data={data}
+          datenVersion={version}
           onZeile={zurBuchung}
-        />
-        <Block
-          titel="Heute · Abreisen"
-          icon="logout"
-          eintraege={data.checkouts_today}
-          leer="Heute reist niemand ab."
-          datumsfeld="check_out"
-          onZeile={zurBuchung}
-        />
-        <Block
-          titel="Anstehend"
-          icon="cal"
-          eintraege={anstehend}
-          leer="Nichts Anstehendes."
-          datumsfeld="check_in"
-          onZeile={zurBuchung}
+          onNachrichten={zumThread}
           onAlle={zuBuchungen}
         />
+
+        <KennzahlenAbschnitt data={data} />
+
+        {/* Objektbestand als eine Zeile, nicht als Kachelreihe: gesamt, inaktiv
+            und Entwurf sind Einrichtungszahlen — man arbeitet mit ihnen unter
+            „Inserate", nicht auf der Tagesübersicht. */}
+        <HinweisZeile
+          icon="home"
+          text={`${data.objekte_gesamt} ${data.objekte_gesamt === 1 ? "Objekt" : "Objekte"}${
+            data.objekte_inaktiv || data.objekte_entwurf
+              ? ` · ${[
+                  data.objekte_inaktiv ? `${data.objekte_inaktiv} inaktiv` : null,
+                  data.objekte_entwurf ? `${data.objekte_entwurf} Entwurf` : null,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}`
+              : ""
+          }`}
+          onPress={zuObjekten}
+          leise
+        />
       </ScrollView>
-    </View>
-  );
-}
 
-// Kennzahl-Kachel — EIN Bauplan für alle drei. `flex: 1` greift nur, wenn sie
-// in einer Row steht (die beiden unteren); über die volle Breite (Umsatz) hat
-// es keine Wirkung. So sehen alle Kennzahlen gleich aus, egal wo sie stehen.
-function KpiKarte({
-  icon,
-  wert,
-  label,
-  change,
-}: {
-  icon: IconName;
-  wert: string;
-  label: string;
-  change: number | null;
-}) {
-  const t = useTheme();
-  return (
-    <Card style={{ flex: 1, padding: 16 }}>
-      <Col gap={6}>
-        <Row gap={6} style={{ alignItems: "center" }}>
-          <Icon n={icon} s={15} sw={1.8} c={t.palette.soft} />
-          <Txt v="xs" soft numberOfLines={1} style={{ flex: 1 }}>
-            {label}
-          </Txt>
-        </Row>
-        <Txt v="h1" numberOfLines={1}>
-          {wert}
-        </Txt>
-        <Trend change={change} />
-      </Col>
-    </Card>
-  );
-}
-
-// Vergleich zur Vorperiode. `null` heißt: es GIBT keine Vorperiode — dann steht
-// hier nichts statt eines erfundenen 0-%-Werts (Wurzel 4).
-function Trend({ change }: { change: number | null }) {
-  const t = useTheme();
-  if (change === null) return null;
-  const rauf = change >= 0;
-  return (
-    <Row gap={4} style={{ alignItems: "center" }}>
-      {/* Icon kennt keine style-Prop — das Drehen für „abwärts" passiert im
-          umschließenden View. */}
-      <View style={rauf ? undefined : { transform: [{ rotate: "180deg" }] }}>
-        <Icon n="arrowup" s={12} sw={2.2} c={rauf ? "#1F8A5B" : t.palette.accent} />
-      </View>
-      <Txt v="xs" color={rauf ? "#1F8A5B" : t.palette.accent}>
-        {Math.abs(Math.round(change))} % zur Vorperiode
-      </Txt>
-    </Row>
-  );
-}
-
-function Block({
-  titel,
-  icon,
-  eintraege,
-  leer,
-  datumsfeld,
-  onZeile,
-  onAlle,
-}: {
-  titel: string;
-  icon: IconName;
-  eintraege: DashboardEntry[];
-  leer: string;
-  datumsfeld: "check_in" | "check_out";
-  onZeile: (id: string) => void;
-  onAlle?: () => void;
-}) {
-  const t = useTheme();
-  const sichtbar = eintraege.slice(0, MAX_ZEILEN);
-  const rest = eintraege.length - sichtbar.length;
-
-  return (
-    <Col gap={12}>
-      <Row gap={8} style={{ alignItems: "center" }}>
-        <Icon n={icon} s={18} sw={1.8} c={t.palette.ink} />
-        <Txt v="h2" style={{ flex: 1 }}>
-          {titel}
-        </Txt>
-        {/* Die Anzahl gehört in die Überschrift: sonst sieht der Block mit 5
-            gezeigten Zeilen aus wie „5", obwohl 172 anstehen. */}
-        <Txt v="sm" soft>
-          {eintraege.length}
-        </Txt>
-      </Row>
-
-      {eintraege.length === 0 ? (
-        <Txt v="body" soft>
-          {leer}
-        </Txt>
-      ) : (
-        <Card>
-          {sichtbar.map((e, i) => (
-            <View key={e.reservation_id}>
-              {i > 0 && <Divider />}
-              <Zeile eintrag={e} datumsfeld={datumsfeld} onPress={() => onZeile(e.reservation_id)} />
-            </View>
-          ))}
-          {rest > 0 && onAlle && (
-            <>
-              <Divider />
-              <Pressable
-                accessibilityRole="button"
-                onPress={onAlle}
-                style={({ pressed }) => ({
-                  paddingVertical: 14,
-                  paddingHorizontal: 16,
-                  opacity: pressed ? 0.6 : 1,
-                })}
-              >
-                <Row gap={6} style={{ alignItems: "center", justifyContent: "center" }}>
-                  <Txt v="sm" style={{ fontFamily: t.fonts.semibold }}>
-                    Weitere {rest} in den Buchungen
-                  </Txt>
-                  <Icon n="fwd" s={14} sw={2} c={t.palette.ink} />
-                </Row>
-              </Pressable>
-            </>
-          )}
-        </Card>
+      {offeneBuchung && (
+        <BuchungsPanel
+          reservationId={offeneBuchung}
+          heuteIso={data.today}
+          onClose={() => setOffeneBuchung(null)}
+          onGeaendert={load}
+          onNachrichtOeffnen={(threadId) => {
+            setOffeneBuchung(null);
+            navigation.navigate("HostInbox", { threadId });
+          }}
+        />
       )}
-    </Col>
-  );
-}
-
-// Eine Buchungszeile. Zeigt alles, was der Endpoint je Eintrag liefert:
-// Gast, Objekt, Zeitraum + Nächte, Herkunft (ota_name vor Kanal-Label) und
-// Status. Tippen führt ins Buchungsdetail.
-function Zeile({
-  eintrag,
-  datumsfeld,
-  onPress,
-}: {
-  eintrag: DashboardEntry;
-  datumsfeld: "check_in" | "check_out";
-  onPress: () => void;
-}) {
-  const t = useTheme();
-  const kanal = channelMeta(eintrag.channel);
-  // Echte Herkunft zuerst: „Booking.com" statt des internen Kanal-Kürzels.
-  const herkunft = portalLabel(eintrag.ota_name) || kanal.label;
-  const tone = STATUS_TONE[eintrag.status];
-  const n = naechte(eintrag.check_in, eintrag.check_out);
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => ({ paddingVertical: 14, paddingHorizontal: 16, opacity: pressed ? 0.7 : 1 })}
-    >
-      <Row gap={12} style={{ alignItems: "center" }}>
-        <View>
-          <Avatar s={40} icon="user" />
-          {/* Herkunft als Marke — derselbe Baustein wie in Buchungsliste und
-              Buchungsdetail, damit ein Kanal überall gleich aussieht. */}
-          <View style={{ position: "absolute", right: -6, bottom: -4 }}>
-            <KanalMarke channel={eintrag.channel} hoehe={18} />
-          </View>
-        </View>
-
-        <Col gap={3} style={{ flex: 1 }}>
-          <Row gap={8} style={{ alignItems: "center" }}>
-            <Txt v="title" numberOfLines={1} style={{ flex: 1 }}>
-              {eintrag.guest_name || "Gast"}
-            </Txt>
-            <View
-              style={{
-                paddingHorizontal: 8,
-                paddingVertical: 3,
-                borderRadius: t.radius.pill,
-                backgroundColor: tone.bg,
-              }}
-            >
-              <Txt v="xs" color={tone.fg} style={{ fontFamily: t.fonts.semibold }}>
-                {STATUS_LABEL[eintrag.status]}
-              </Txt>
-            </View>
-          </Row>
-          <Txt v="sm" soft numberOfLines={1}>
-            {eintrag.property_title}
-          </Txt>
-          <Txt v="xs" soft numberOfLines={1}>
-            {tagKurz(eintrag[datumsfeld])} · {n} {n === 1 ? "Nacht" : "Nächte"} · {herkunft}
-          </Txt>
-        </Col>
-
-        <Icon n="fwd" s={16} sw={2} c={t.palette.faint} />
-      </Row>
-    </Pressable>
+    </View>
   );
 }

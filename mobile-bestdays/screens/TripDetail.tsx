@@ -231,6 +231,22 @@ export default function TripDetail() {
           </Row>
         )}
 
+        {/* Der Weg zum Gastgeber gehört an die BUCHUNG: hier weiß man, worum es
+            geht, und die Frage entsteht beim Lesen der Details („wo ist der
+            Schlüssel?"). Auch bei einer stornierten Buchung sichtbar — offene
+            Fragen enden nicht mit dem Storno. */}
+        <Trennlinie />
+        <Btn
+          variant="dark"
+          block
+          icon="chat"
+          onPress={() =>
+            navigation.navigate("GuestMessages", { reservationId: id })
+          }
+        >
+          Gastgeber schreiben
+        </Btn>
+
         {/* Storno nur, wenn der Server es erlaubt. */}
         {buchung.can_cancel && !storniert && (
           <>

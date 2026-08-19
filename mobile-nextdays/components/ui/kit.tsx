@@ -33,6 +33,7 @@ export function Txt({
   accent,
   style,
   numberOfLines,
+  selectable,
   children,
 }: {
   v?: TxtVariant;
@@ -42,6 +43,13 @@ export function Txt({
   accent?: boolean;
   style?: StyleProp<TextStyle>;
   numberOfLines?: number;
+  /**
+   * Text zum Markieren/Kopieren freigeben. Gebraucht für Werte, die man
+   * WEITERGEBEN muss und nicht abtippen sollte: TOTP-Schlüssel,
+   * Wiederherstellungscodes, Portal-Kennungen. Standard bleibt aus — ein
+   * markierbarer Fließtext fängt Wischgesten ab.
+   */
+  selectable?: boolean;
   children: React.ReactNode;
 }) {
   const t = useTheme();
@@ -55,7 +63,11 @@ export function Txt({
           ? t.palette.faint
           : t.palette.ink);
   return (
-    <Text numberOfLines={numberOfLines} style={[t.type[v], { color: c }, style]}>
+    <Text
+      numberOfLines={numberOfLines}
+      selectable={selectable}
+      style={[t.type[v], { color: c }, style]}
+    >
       {children}
     </Text>
   );
@@ -120,6 +132,10 @@ export function Btn({
   icon,
   iconR,
   onPress,
+  // Gesperrt, solange die Aktion läuft. Ohne das löst ein zweiter Druck
+  // denselben Vorgang erneut aus — bei Check-out oder Storno ist das kein
+  // Schönheitsfehler, sondern ein doppelter Seiteneffekt (Wurzel 2).
+  disabled,
   style,
 }: {
   children: React.ReactNode;
@@ -128,6 +144,7 @@ export function Btn({
   icon?: IconName;
   iconR?: IconName;
   onPress?: () => void;
+  disabled?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
   const t = useTheme();
@@ -146,6 +163,8 @@ export function Btn({
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
+      accessibilityState={{ disabled: !!disabled }}
       style={({ pressed }) => [
         {
           flexDirection: "row",
@@ -159,7 +178,7 @@ export function Btn({
           backgroundColor: bg,
           borderWidth: variant === "outline" ? 1 : 0,
           borderColor: t.palette.line,
-          opacity: pressed ? 0.88 : 1,
+          opacity: disabled ? 0.45 : pressed ? 0.88 : 1,
         },
         block ? { alignSelf: "stretch" } : undefined,
         style,
@@ -303,7 +322,22 @@ export function Star({ s = 13 }: { s?: number }) {
   return <Icon n="star" s={s} c={t.palette.star} sw={0} />;
 }
 
-export function Avatar({ s = 40, src, icon = "user" }: { s?: number; src?: string; icon?: IconName }) {
+export function Avatar({
+  s = 40,
+  src,
+  icon = "user",
+  initialen,
+}: {
+  s?: number;
+  src?: string;
+  icon?: IconName;
+  /**
+   * Fällt zurück auf INITIALEN, wenn kein Bild hinterlegt ist. Ein anonymes
+   * Personen-Symbol sieht aus wie ein Bild, das nicht geladen hat — Initialen
+   * sagen dagegen „hier ist kein Bild", ohne einen Fehler vorzutäuschen.
+   */
+  initialen?: string;
+}) {
   const t = useTheme();
   return (
     <View
@@ -319,6 +353,16 @@ export function Avatar({ s = 40, src, icon = "user" }: { s?: number; src?: strin
     >
       {src ? (
         <Image source={{ uri: src }} style={{ width: s, height: s }} />
+      ) : initialen ? (
+        <Text
+          style={{
+            fontFamily: t.fonts.semibold,
+            fontSize: s * 0.36,
+            color: t.palette.soft,
+          }}
+        >
+          {initialen}
+        </Text>
       ) : (
         <Icon n={icon} s={s * 0.5} c={t.palette.soft} />
       )}

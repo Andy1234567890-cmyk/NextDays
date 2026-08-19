@@ -352,7 +352,23 @@ export function Sheet({
               <Icon n="x" s={20} sw={2} c={t.palette.ink} />
             </Pressable>
           </Row>
-          {children}
+          {/* Der Inhalt SCROLLT. Vorher stand er direkt im Sheet, mit
+              `maxHeight`: was darüber hinausging, war abgeschnitten und mit
+              keiner Geste erreichbar — in dieser App traf es den Storno-Dialog
+              mit langer Begründung. `flexShrink: 1` statt `flex: 1`, damit ein
+              kurzes Sheet weiterhin nur so hoch wird wie sein Inhalt.
+              Das horizontale Padding sitzt hier und nicht in jedem Aufrufer,
+              sonst klebt der Text am Rand, während die Kopfzeile eingerückt ist.
+              Gleicher Stand wie mobile-nextdays (die Datei ist bewusst eine
+              Kopie, ADR-0019 — dieselbe Korrektur gehört in beide). */}
+          <ScrollView
+            style={{ flexShrink: 1 }}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 10 }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {children}
+          </ScrollView>
         </Animated.View>
       </View>
     </Modal>

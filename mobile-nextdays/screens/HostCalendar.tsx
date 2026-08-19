@@ -9,10 +9,13 @@
 // type_attributes.currency); fehlt der Preis → leere Zelle, kein Fantasiewert.
 // §4.3: staff/cleaner haben kein VIEW_CALENDAR → HostTabs zeigt den Tab gar
 // nicht; das Backend maskiert zusätzlich.
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { BuchungsPanel } from "@/components/buchung/BuchungsPanel";
 import { Icon } from "@/components/ui/Icon";
 import { Card, Col, Photo, Row, Spinner, Txt } from "@/components/ui/kit";
 import { getBoard, type BoardProperty, type DayAvailability } from "@/lib/calendar";
@@ -33,10 +36,13 @@ import {
   type MatrixBar,
   type MatrixDay,
 } from "@/lib/calendar-matrix";
+import { KANAELE, channelMeta } from "@/lib/calendar-channels";
 import { currencySymbol, formatCurrency } from "@/lib/currency";
+import { heuteIso } from "@/lib/kalendertag";
 import { listProperties, propertyTypeLabel, type Property } from "@/lib/properties";
 import { useRealtime } from "@/lib/realtime";
 import { listReservations, type Reservation } from "@/lib/reservations";
+import type { HostTabParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
 
 const WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
@@ -69,6 +75,13 @@ function propertyLabel(p: Property): string {
 export default function HostCalendar() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
+
+  // Angetippte Buchung → Panel von rechts. Bis August 2026 waren die
+  // Belegungsbalken reine Flächen ohne `onPress`: der Kalender zeigte, WER
+  // wann da ist, und es gab von dort keinen Weg in die Buchung — man musste
+  // sie in der Liste erneut suchen.
+  const [offeneBuchung, setOffeneBuchung] = useState<string | null>(null);
+  const navigation = useNavigation<NativeStackNavigationProp<HostTabParamList>>();
 
   const [props, setProps] = useState<Property[] | null>(null);
   const [propErr, setPropErr] = useState<string | null>(null);
@@ -271,6 +284,7 @@ export default function HostCalendar() {
           properties={props ?? []}
           board={matrixBoard}
           reservations={matrixRes}
+          onBuchung={setOffeneBuchung}
           start={matrixStart}
           end={matrixEnd}
           onPrev={() => setMatrixMonth((m) => shiftMonth(m, -1))}
@@ -304,10 +318,28 @@ export default function HostCalendar() {
               availByIso={availByIso}
               reservations={reservations}
               currency={currency}
+              onBuchung={setOffeneBuchung}
             />
           ))}
           <Legend />
         </ScrollView>
+      )}
+
+      {/* Das Panel liegt ÜBER dem Kalender, nicht an seiner Stelle: nach dem
+          Schließen steht derselbe Monat mit derselben Scrollposition da.
+          `onGeaendert` lädt den sichtbaren Blick neu — ein Check-in oder Storno
+          verändert Balken und Verfügbarkeit (Wurzel 1). */}
+      {offeneBuchung && (
+        <BuchungsPanel
+          reservationId={offeneBuchung}
+          heuteIso={heuteIso()}
+          onClose={() => setOffeneBuchung(null)}
+          onGeaendert={view === "matrix" ? loadMatrix : load}
+          onNachrichtOeffnen={(threadId) => {
+            setOffeneBuchung(null);
+            navigation.navigate("HostInbox", { threadId });
+          }}
+        />
       )}
     </View>
   );
@@ -332,6 +364,7 @@ function MatrixCalendar({
   onNext,
   onToday,
   onPickMonth,
+  onBuchung,
   bottomInset,
 }: {
   properties: Property[];
@@ -343,6 +376,7 @@ function MatrixCalendar({
   onNext: () => void;
   onToday: () => void;
   onPickMonth: (m: MonthKey) => void;
+  onBuchung: (reservationId: string) => void;
   bottomInset: number;
 }) {
   const t = useTheme();
@@ -541,6 +575,7 @@ function MatrixCalendar({
                   gridWidth={gridWidth}
                   nameCol={nameCol}
                   expanded={expanded}
+                  onBuchung={onBuchung}
                 />
               ))}
             </View>
@@ -593,6 +628,7 @@ function MatrixRow({
   gridWidth,
   nameCol,
   expanded,
+  onBuchung,
 }: {
   property: Property;
   bp: BoardProperty | undefined;
@@ -601,6 +637,7 @@ function MatrixRow({
   gridWidth: number;
   nameCol: number;
   expanded: boolean;
+  onBuchung: (reservationId: string) => void;
 }) {
   const t = useTheme();
   const byIso = useMemo(() => availIndex(bp?.days ?? []), [bp]);
@@ -662,20 +699,36 @@ function MatrixRow({
 
         {/* Balken-Overlay: absolute Positionierung über den Zellen. */}
         {bars.map((b, i) => (
-          <MatrixBarView key={`${b.reservationId}-${i}`} bar={b} />
+          <MatrixBarView
+            key={`${b.reservationId}-${i}`}
+            bar={b}
+            onPress={() => onBuchung(b.reservationId)}
+          />
         ))}
       </View>
     </Row>
   );
 }
 
-function MatrixBarView({ bar }: { bar: MatrixBar }) {
+function MatrixBarView({
+  bar,
+  onPress,
+}: {
+  bar: MatrixBar;
+  onPress: () => void;
+}) {
   const t = useTheme();
   const left = bar.startCol * DAY_COL + 2;
   const width = (bar.endCol - bar.startCol + 1) * DAY_COL - 4;
   return (
-    <View
-      style={{
+    // Wie im Monatsgitter: der Balken IST der Weg in die Buchung. `hitSlop`
+    // vergrößert die Trefferfläche des 22 Punkte hohen Streifens.
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Buchung ${bar.label} öffnen`}
+      onPress={onPress}
+      hitSlop={{ top: 8, bottom: 8 }}
+      style={({ pressed }) => ({
         position: "absolute",
         top: 26,
         left,
@@ -689,7 +742,8 @@ function MatrixBarView({ bar }: { bar: MatrixBar }) {
         borderBottomRightRadius: bar.clipEnd ? 0 : 6,
         justifyContent: "center",
         paddingHorizontal: 6,
-      }}
+        opacity: pressed ? 0.65 : 1,
+      })}
     >
       <Txt
         v="xs"
@@ -699,7 +753,7 @@ function MatrixBarView({ bar }: { bar: MatrixBar }) {
       >
         {bar.label}
       </Txt>
-    </View>
+    </Pressable>
   );
 }
 
@@ -778,11 +832,13 @@ function MonthGrid({
   availByIso,
   reservations,
   currency,
+  onBuchung,
 }: {
   month: MonthKey;
   availByIso: Map<string, DayAvailability>;
   reservations: Reservation[];
   currency: string | null;
+  onBuchung: (reservationId: string) => void;
 }) {
   const cells = useMemo(() => buildMonthCells(month.year, month.month0, availByIso), [month, availByIso]);
   const segments = useMemo(() => buildBarSegments(cells, reservations), [cells, reservations]);
@@ -814,6 +870,7 @@ function MonthGrid({
               cells={rowCells}
               segments={rowSegs}
               currency={currency}
+              onBuchung={onBuchung}
             />
           );
         })}
@@ -855,10 +912,12 @@ function WeekRow({
   cells,
   segments,
   currency,
+  onBuchung,
 }: {
   cells: GridCell[];
   segments: BarSegment[];
   currency: string | null;
+  onBuchung: (reservationId: string) => void;
 }) {
   const t = useTheme();
   const sym = currencySymbol(currency);
@@ -943,16 +1002,24 @@ function WeekRow({
         const leftPct = (s.startCol / 7) * 100;
         const widthPct = ((s.endCol - s.startCol + 1) / 7) * 100;
         return (
-          <View
+          // Antippen öffnet die Buchung. `hitSlop` nach oben/unten, weil ein
+          // 22 Punkte hoher Balken unter der Fingerkuppe sonst schwer zu
+          // treffen ist (Apple nennt 44 Punkte als Mindestmaß).
+          <Pressable
             key={`${s.reservationId}-${i}`}
-            style={{
+            accessibilityRole="button"
+            accessibilityLabel={`Buchung ${s.label} öffnen`}
+            onPress={() => onBuchung(s.reservationId)}
+            hitSlop={{ top: 8, bottom: 8 }}
+            style={({ pressed }) => ({
               position: "absolute",
               top: BAR_TOP + s.lane * (BAR_HEIGHT + BAR_GAP),
               left: `${leftPct}%`,
               width: `${widthPct}%`,
               height: BAR_HEIGHT,
               paddingHorizontal: 3,
-            }}
+              opacity: pressed ? 0.65 : 1,
+            })}
           >
             <View
               style={{
@@ -970,7 +1037,7 @@ function WeekRow({
                 {s.label}
               </Txt>
             </View>
-          </View>
+          </Pressable>
         );
       })}
     </View>
@@ -1000,22 +1067,26 @@ function layoutBars(segments: BarSegment[]): {
 
 // --- Legende / Zustände -----------------------------------------------------
 
+// Legende der Balkenfarben. Quelle ist die Kanal-Meta, NICHT eine eigene Liste:
+// vorher standen hier fünf Kanäle mit ihren Hex-Werten abgeschrieben — `website`
+// und „Anderes Portal" fehlten, und ihre Balken erschienen im Kalender in einer
+// Farbe, die die Legende nicht erklärte.
 function Legend() {
-  const items: { label: string; color: string }[] = [
-    { label: "Direkt", color: "#2F6F4F" },
-    { label: "myBestDays", color: "#8A5CF6" },
-    { label: "Booking", color: "#1B4E9B" },
-    { label: "Airbnb", color: "#E24E5B" },
-    { label: "Vrbo", color: "#2E7DB5" },
-  ];
   return (
     <Row style={{ flexWrap: "wrap", justifyContent: "center", gap: 14, paddingTop: 4 }}>
-      {items.map((it) => (
-        <Row key={it.label} gap={6}>
-          <View style={{ width: 12, height: 12, borderRadius: 4, backgroundColor: it.color }} />
-          <Txt v="xs" soft>{it.label}</Txt>
-        </Row>
-      ))}
+      {KANAELE.map((k) => {
+        const meta = channelMeta(k);
+        return (
+          <Row key={k} gap={6}>
+            <View
+              style={{ width: 12, height: 12, borderRadius: 4, backgroundColor: meta.bar }}
+            />
+            <Txt v="xs" soft>
+              {meta.label}
+            </Txt>
+          </Row>
+        );
+      })}
     </Row>
   );
 }

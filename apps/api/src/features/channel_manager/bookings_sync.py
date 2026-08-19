@@ -1360,7 +1360,9 @@ class BookingsSyncMixin:
             # Kein Erfinden: fehlt sie, bleibt leer (Wurzel 4).
             "checkin_time": an_zeit,
             "checkout_time": ab_zeit,
-            "quote_items": self._booking_quote_items(attrs),
+            # Der Gesamtbetrag geht MIT: die Aufstellung prüft sich gegen ihn
+            # und liefert nichts, wenn sie nicht aufgeht (siehe Docstring).
+            "quote_items": self._booking_quote_items(attrs, total_amount),
             "external_url": attrs.get("ota_url") or attrs.get("external_url"),
             # Zahlungsweg + Portalprovision (0240). Ohne payment_collect weiß
             # niemand, ob noch Geld einzuziehen ist — die Rezeption fragt sonst
@@ -1883,7 +1885,9 @@ class BookingsSyncMixin:
             return None
         return summe
 
-    def _booking_quote_items(self, attrs: dict[str, Any]) -> list[dict[str, Any]]:
+    def _booking_quote_items(
+        self, attrs: dict[str, Any], total_amount: float | None = None
+    ) -> list[dict[str, Any]]:
         """Preisaufschlüsselung [{label, amount, kind}] aus einem Channex-Booking.
 
         DIESE POSITIONEN LANDEN AUF DER RECHNUNG — deshalb müssen sie dieselben
@@ -1909,6 +1913,26 @@ class BookingsSyncMixin:
         unsere Art — NIE der Rate-Plan-Name: der trug bis 0367 „Grundpreis (von
         Airbnb)", und ein Booking-Gast las damit ein fremdes Portal in seiner
         eigenen Bestätigung.
+
+        3. Die Summe der Zeilen ging bei einzelnen Buchungen NICHT auf (live am
+           19.08.2026: 5 von 96 Aufstellungen, zusammen 6.666,11 DKK). Bei drei
+           Booking-Buchungen fehlte in `amount` genau die Reinigungsgebühr
+           (1.275,00), die in `rooms[].taxes` steht; bei zwei Airbnb-Buchungen
+           war die ausgewiesene Übernachtung GRÖSSER als der Gesamtbetrag, weil
+           dort `amount` der Netto-Payout ist und die Positionen Gastpreise sind.
+
+           `is_inclusive` erklärt das NICHT: es gibt Buchungen mit `true`, deren
+           Summe aufgeht, und drei mit `true`, deren nicht — an 16 Live-Payloads
+           geprüft. Es gibt in der Nutzlast kein Merkmal, aus dem sich eine Regel
+           ableiten liesse. Deshalb wird hier NICHT interpretiert, sondern
+           GEPRÜFT: geht die Summe nicht auf, gibt es keine Aufstellung.
+
+           Warum lieber keine als eine: diese Positionen landen auf der Rechnung.
+           Eine Aufstellung, deren Zeilen sich zu einem anderen Betrag addieren
+           als die Rechnungssumme, erzeugt eine Rückfrage, die niemand
+           beantworten kann — und im schlechteren Fall eine Zahlung über den
+           falschen Betrag. Ohne Aufstellung steht dort die Summe allein; das ist
+           dieselbe Auskunft wie bisher bei unbekanntem Format.
 
         Fehlt die Struktur ganz, bleibt die Liste leer — keine erfundenen Posten
         (Wurzel 4).
@@ -1969,7 +1993,48 @@ class BookingsSyncMixin:
                     "kind": "fee",
                 }
             )
-        return items
+        return self._geprueft(items, total_amount, attrs)
+
+    @staticmethod
+    def _summe(items: list[dict[str, Any]]) -> float:
+        return round(sum(float(i.get("amount") or 0) for i in items), 2)
+
+    def _geprueft(
+        self,
+        items: list[dict[str, Any]],
+        total_amount: float | None,
+        attrs: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        """Die Aufstellung nur zurückgeben, wenn ihre Summe den Gesamtbetrag trifft.
+
+        Ein Cent Toleranz: die Beträge kommen als Text aus der Nutzlast und
+        werden über `float` geführt: eine Aufstellung wegen 0,004 zu verwerfen
+        wäre Unsinn. Zwei Cent Abweichung sind dagegen kein Rundungsproblem.
+
+        Ohne Gesamtbetrag (Aufruf ohne den Parameter, etwa aus einem Test) wird
+        NICHT geprüft — dann ist die Bezugsgrösse unbekannt, und eine Prüfung
+        gegen eine Unbekannte wäre eine Behauptung.
+        """
+        if not items or total_amount is None:
+            return items
+        summe = self._summe(items)
+        if abs(summe - round(float(total_amount), 2)) <= 0.01:
+            return items
+        # Sichtbar machen, nicht verschlucken: die Zahlen stehen im Log, damit
+        # der Fall nachrechenbar ist, ohne die Nutzlast erneut zu suchen.
+        log.warning(
+            "quote_items_summe_geht_nicht_auf",
+            booking_id=attrs.get("booking_id") or attrs.get("id"),
+            ota_name=attrs.get("ota_name"),
+            ota_reservation_code=attrs.get("ota_reservation_code"),
+            summe_der_posten=summe,
+            gesamtbetrag=round(float(total_amount), 2),
+            differenz=round(summe - float(total_amount), 2),
+            posten=[
+                {"label": i.get("label"), "amount": i.get("amount")} for i in items
+            ],
+        )
+        return []
 
     def _unbekannte_gebuehrenarten_melden(
         self, attrs: dict[str, Any], gebuehren: list[tuple[str, Any]]

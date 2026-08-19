@@ -352,7 +352,22 @@ export function Sheet({
               <Icon n="x" s={20} sw={2} c={t.palette.ink} />
             </Pressable>
           </Row>
-          {children}
+          {/* Der Inhalt SCROLLT. Vorher stand er direkt im Sheet: was über
+              `maxHeight` hinausging, war abgeschnitten und mit keiner Geste
+              erreichbar — bei einer Liste mit zwanzig Vorlagen also die Hälfte.
+              `flexShrink: 1` statt `flex: 1`, damit ein kurzer Inhalt das Sheet
+              weiterhin nur so hoch macht, wie er ist.
+              Das horizontale Padding sitzt hier und nicht in jedem Aufrufer:
+              sonst klebt der Text am Rand, während die Kopfzeile eingerückt
+              ist — genau so sah es aus. */}
+          <ScrollView
+            style={{ flexShrink: 1 }}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 10 }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {children}
+          </ScrollView>
         </Animated.View>
       </View>
     </Modal>

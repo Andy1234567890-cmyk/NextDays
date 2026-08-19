@@ -27,6 +27,17 @@ const CHANNELS: Record<ReservationChannel, ChannelMeta> = {
   ota_other: { label: "Anderes Portal", bar: "#52525B", text: "#FFFFFF" },
 };
 
+/**
+ * Alle Kanäle in Anzeige-Reihenfolge — für die Legende des Kalenders.
+ *
+ * Bewusst hier und nicht im Screen: die Legende trug ihre fünf Kanäle samt
+ * Hex-Farben als eigene Liste. Sie kannte damit `website` und „Anderes Portal"
+ * nicht, und eine Farbänderung hätte an zwei Stellen gepflegt werden müssen —
+ * ein Balken ohne Legendeneintrag ist genau der stille Fehler, den die
+ * Kanal-Kette (CLAUDE.md: Enum → Meta → UI) verhindern soll.
+ */
+export const KANAELE = Object.keys(CHANNELS) as ReservationChannel[];
+
 export function channelMeta(channel: ReservationChannel): ChannelMeta {
   return CHANNELS[channel] ?? CHANNELS.direct;
 }

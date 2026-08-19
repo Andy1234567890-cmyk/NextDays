@@ -72,6 +72,18 @@ export function onTokenChange(listener: TokenListener): () => void {
   return () => tokenListeners.delete(listener);
 }
 
+/**
+ * Der Refresh-Token der laufenden Sitzung.
+ *
+ * Exportiert für die 2FA-Einrichtung: sie läuft GoTrue-NATIV (0341), also über
+ * `supabase-js`, und dieser Client braucht eine echte Session
+ * (`setSession({ access_token, refresh_token })`). Was GoTrue selbst kann, wird
+ * nicht durch die FastAPI gespiegelt — sonst gäbe es zwei Wahrheiten.
+ */
+export async function getRefreshTokenFuerMfa(): Promise<string | null> {
+  return getRefreshToken();
+}
+
 async function getRefreshToken(): Promise<string | null> {
   if (cachedRefresh === undefined) cachedRefresh = await readAccount(REFRESH_ACCOUNT);
   return cachedRefresh;

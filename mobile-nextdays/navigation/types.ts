@@ -5,7 +5,10 @@ import type { NavigatorScreenParams } from "@react-navigation/native";
 export type HostTabParamList = {
   Dashboard: undefined;
   Calendar: undefined;
-  Reservations: undefined;
+  // status: mit welchem Status-Filter die Buchungsliste öffnet. Die Übersicht
+  // führt so auf „offene Anfragen", ohne dass es dafür eine zweite Seite mit
+  // denselben Zeilen gibt.
+  Reservations: { status?: "pending" | "confirmed" | "cancelled" | "completed" } | undefined;
   Tasks: undefined;
   // threadId: Deep-Link mynextdays://inbox/:threadId öffnet diesen Thread.
   HostInbox: { threadId?: string } | undefined;

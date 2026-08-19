@@ -77,6 +77,17 @@ AUFLOESBARE_EVENTS: Final[frozenset[str]] = frozenset(
     {EVENT_RESERVATION_REQUEST, EVENT_INQUIRY, EVENT_ALTERATION_REQUEST}
 )
 
+# Airbnbs eigene Meldung, dass eine Änderungsanfrage BESTÄTIGT wurde. Sie
+# entsteht erst bei der Bestätigung und liegt danach in `channex_booking.raw`
+# (live gemessen 19.08.2026 an HMDPNRZJAN, 07:43:57Z).
+#
+# NICHT verwechseln mit `status`/`status_type` in der Anfrage-Payload: die
+# tragen schon beim EINGANG „modified"/„accept" — sie beschreiben die
+# gewünschte Änderung, nicht deren Annahme. Als Guard genommen hätten sie jeden
+# Änderungswunsch sofort als „schon bestätigt" abgewiesen und den Knopf
+# totgelegt.
+ALTERATION_BESTAETIGT_MELDUNG: Final = "reservation_alteration_confirmation"
+
 # Airbnb begrenzt die Nachrichten an Gast und an Airbnb. Das Dokument nennt für
 # `instant_book_welcome_message` 200 Zeichen; für die Ablehnungsnachrichten
 # nennt es KEINE Grenze. Wir kappen deshalb nicht, sondern lehnen zu lange Texte

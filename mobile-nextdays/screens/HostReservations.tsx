@@ -14,11 +14,14 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { KanalMarke } from "@/components/KanalMarke";
+import { BuchungsPanel } from "@/components/buchung/BuchungsPanel";
 import { Icon } from "@/components/ui/Icon";
 import { Col, Photo, Row, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState } from "@/components/ui/patterns";
+import { STATUS_LABEL, STATUS_TONE, anzeigeStatus } from "@/lib/buchungsstatus";
 import { channelMeta } from "@/lib/calendar-channels";
 import { formatCurrency } from "@/lib/currency";
+import { MONATE, heuteIso, naechte } from "@/lib/kalendertag";
 import { listProperties, type Property } from "@/lib/properties";
 import {
   listReservations,
@@ -27,21 +30,6 @@ import {
   type ReservationStatus,
 } from "@/lib/reservations";
 import { useTheme } from "@/theme/ThemeProvider";
-
-const STATUS_LABEL: Record<ReservationStatus, string> = {
-  pending: "Angefragt",
-  confirmed: "Bestätigt",
-  cancelled: "Storniert",
-  completed: "Abgeschlossen",
-};
-
-// Status → Badge-Farbe (grün bestätigt/abgeschlossen, gelb angefragt, rot storno).
-const STATUS_TONE: Record<ReservationStatus, { bg: string; fg: string }> = {
-  confirmed: { bg: "#E6F4EA", fg: "#1E7A46" },
-  completed: { bg: "#E6F4EA", fg: "#1E7A46" },
-  pending: { bg: "#FCF0DA", fg: "#9A6B12" },
-  cancelled: { bg: "#FBE4E4", fg: "#B02A2A" },
-};
 
 // Filter-Dimensionen (Chips wie im Mockup).
 type StatusFilter = "all" | ReservationStatus;
@@ -53,25 +41,16 @@ const STATUS_FILTERS: { key: StatusFilter; label: string }[] = [
   { key: "completed", label: "Abgeschlossen" },
 ];
 
-const MONTHS = [
-  "Jan", "Feb", "Mär", "Apr", "Mai", "Jun",
-  "Jul", "Aug", "Sep", "Okt", "Nov", "Dez",
-];
 
 // Zeitraum kompakt: Jahr und Monat nur nennen, wenn sie sich unterscheiden —
 // „26. Dez 2026 – 28. Dez 2026" ist dreimal dieselbe Information.
 function fmtRange(inIso: string, outIso: string): string {
   const [y1, m1, d1] = inIso.split("-");
   const [y2, m2, d2] = outIso.split("-");
-  const mo = (m: string) => MONTHS[Number(m) - 1];
+  const mo = (m: string) => MONATE[Number(m) - 1];
   if (y1 === y2 && m1 === m2) return `${Number(d1)}.–${Number(d2)}. ${mo(m2)} ${y2}`;
   if (y1 === y2) return `${Number(d1)}. ${mo(m1)} – ${Number(d2)}. ${mo(m2)} ${y2}`;
   return `${Number(d1)}. ${mo(m1)} ${y1} – ${Number(d2)}. ${mo(m2)} ${y2}`;
-}
-
-// Nächte aus den beiden Kalendertagen (UTC — die Werte tragen keine Zeitzone).
-function naechte(inIso: string, outIso: string): number {
-  return Math.max(0, Math.round((Date.parse(outIso) - Date.parse(inIso)) / 86_400_000));
 }
 
 // Buchungsref.: external_ref (OTA) oder kurze Groß-ID als Fallback (echte Daten).
@@ -80,17 +59,31 @@ function bookingRef(r: Reservation): string {
   return `#${r.id.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
 }
 
-export default function HostReservations({ navigation }: { navigation: any }) {
+export default function HostReservations({
+  navigation,
+  route,
+}: {
+  navigation: any;
+  route?: { params?: { status?: ReservationStatus } };
+}) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState<Reservation[] | null>(null);
   const [props, setProps] = useState<Property[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  // Vorgabe aus der Navigation (Übersicht → „Anfragen warten auf Freigabe").
+  // Nur als STARTWERT: danach gehört der Filter dem Nutzer, ein späteres
+  // Zurücksetzen auf den Parameter würde seine Auswahl überschreiben.
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(
+    route?.params?.status ?? "all",
+  );
   const [channelFilter, setChannelFilter] = useState<ReservationChannel | "all">("all");
   const [propFilter, setPropFilter] = useState<string | "all">("all");
   const [newestFirst, setNewestFirst] = useState(true);
+  // Angetippte Buchung → Panel. Kein Screen-Wechsel: die gesetzten Filter und
+  // die Scrollposition sollen erhalten bleiben.
+  const [offeneBuchung, setOffeneBuchung] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const [r, p] = await Promise.all([listReservations(), listProperties()]);
@@ -238,10 +231,27 @@ export default function HostReservations({ navigation }: { navigation: any }) {
             key={r.id}
             r={r}
             property={propById.get(r.property_id)}
-            onPress={() => navigation.navigate("ReservationDetail", { id: r.id })}
+            onPress={() => setOffeneBuchung(r.id)}
           />
         ))}
       </ScrollView>
+
+      {/* Dasselbe Panel wie im Kalender — es öffnet ÜBER der Liste, damit Suche,
+          Filter und Scrollposition beim Schließen erhalten bleiben. Vorher
+          navigierte die Zeile auf einen eigenen Detail-Screen, der weder
+          Check-in noch Storno kannte. */}
+      {offeneBuchung && (
+        <BuchungsPanel
+          reservationId={offeneBuchung}
+          heuteIso={heuteIso()}
+          onClose={() => setOffeneBuchung(null)}
+          onGeaendert={load}
+          onNachrichtOeffnen={(threadId) => {
+            setOffeneBuchung(null);
+            navigation.navigate("HostInbox", { threadId });
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -256,7 +266,10 @@ function BookingCard({
   onPress: () => void;
 }) {
   const t = useTheme();
-  const tone = STATUS_TONE[r.status];
+  // Der ANZEIGE-Status, nicht der rohe: ein eingecheckter Gast steht als „Im
+  // Haus" da, nicht als „Bestätigt" (0091).
+  const status = anzeigeStatus(r.status, r.checked_in_at, r.checked_out_at);
+  const tone = STATUS_TONE[status];
   const n = naechte(r.check_in, r.check_out);
 
   return (
@@ -312,7 +325,7 @@ function BookingCard({
               }}
             >
               <Txt v="xs" color={tone.fg} style={{ fontFamily: t.fonts.semibold }}>
-                {STATUS_LABEL[r.status]}
+                {STATUS_LABEL[status]}
               </Txt>
             </View>
           </Row>

@@ -32,6 +32,28 @@ export type Me = {
   capabilities: string[];
   permissions: string[];
   accommodation_type: string | null;
+  /**
+   * Vorführ-Mandant (0407). Dieser Zugang darf NICHTS ändern: der Riegel im
+   * Backend (`demo_gate`) lehnt jede schreibende Anfrage mit 405 ab.
+   *
+   * Die App MUSS das anzeigen. Ohne den Hinweis erlebt man es als Defekt — man
+   * tippt „Senden", es passiert nichts, und der Schluss ist „die App ist
+   * kaputt". Genau so ist es hier aufgefallen. Das Web zeigt dafür ein Band
+   * (`web/components/demo-band.tsx`), die App jetzt ebenfalls.
+   */
+  is_demo: boolean;
+  /**
+   * Anzeigename und Profilbild. NICHT aus `/auth/me` — das liefert nur die
+   * E-Mail (deshalb stand in Kopfzeilen und Avataren bisher ein anonymes
+   * Personen-Symbol). Beides kommt aus `/auth/account`, EINMAL je Sitzung
+   * nachgeladen und hier gehalten: sonst bräuchte jeder Screen mit Avatar einen
+   * eigenen Aufruf für zwei Felder.
+   *
+   * `null` heißt „nicht hinterlegt" bzw. „noch nicht geladen" — die Oberfläche
+   * zeigt dann Initialen aus der E-Mail, nie einen erfundenen Namen.
+   */
+  full_name?: string | null;
+  avatar_url?: string | null;
 };
 
 type Status = "loading" | "signedOut" | "signedIn";
@@ -62,6 +84,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const data = await api<Me>("/auth/me");
       setMe(data);
+      // Name und Bild nachladen — best effort. Scheitert es, bleibt die Sitzung
+      // gültig: der Zugang hängt an `/auth/me`, nicht an einem Anzeigenamen.
+      try {
+        const konto = await api<{ full_name: string | null; avatar_url: string | null }>(
+          "/auth/account",
+        );
+        setMe((prev) =>
+          prev
+            ? {
+                ...prev,
+                full_name: konto.full_name,
+                avatar_url: konto.avatar_url,
+              }
+            : prev,
+        );
+      } catch {
+        // Kein Name — die Oberfläche fällt auf die E-Mail zurück.
+      }
       return true;
     } catch {
       setMe(null);

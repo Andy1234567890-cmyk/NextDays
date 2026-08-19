@@ -21,6 +21,7 @@ from src.features.channel_manager.airbnb_anfragen import (
     AUFLOESBARE_EVENTS,
 )
 from src.features.inbox import anfragen
+from src.features.inbox.schemas import AnfrageEntscheidung
 
 # --- Payload-Formen, wie sie live in der Tabelle liegen ---------------------
 # Der Live-Feed-Tick legt `booking_details` FLACH ab.
@@ -264,4 +265,182 @@ def test_bekannte_status_geschlossen() -> None:
     """Die Menge ist bewusst geschlossen — sonst raet die Anzeige."""
     assert anfragen.BEKANNTE_STATUS == frozenset(
         {"active", "accepted", "declined", "expired", "withdrawn", "cancelled"}
+    )
+
+
+# --- Zeitpunkt der Gasthandlung (19.08.2026) --------------------------------
+# Ein Änderungswunsch bringt KEINE Chat-Nachricht mit: der Gast klickt in der
+# Airbnb-App auf „Änderung anfragen". Solange der Zeitpunkt allein am Chat hing,
+# blieb `letzte_aktivitaet` leer — und zeitlose Threads fallen ans ENDE der
+# absteigenden Sortierung. Live stand die dringendste Anfrage deshalb ganz unten
+# im Posteingang, wurde dort nicht gefunden und lief am PMS vorbei.
+#
+# Die Formen unten sind die live gemessenen (beide Eingangswege derselben
+# Anfrage vom 18.08.2026), die Werte erfunden.
+_RESERVIERUNG = {
+    "booked_at": "2026-08-18T19:31:29.296Z",
+    "created_at": "2026-08-18T19:51:50.218Z",
+    "updated_at": "2026-08-18T19:51:50.218Z",
+    "status": "modified",
+}
+
+ALTERATION_LIVE_FEED = {
+    "bms": {"raw_message": {"reservation": _RESERVIERUNG}},
+    "message_thread_id": "thread-alt",
+}
+
+ALTERATION_WEBHOOK = {
+    "event": "alteration_request",
+    # Channex' eigener Eingang — zehn Sekunden nach Airbnbs Ereignis.
+    "timestamp": "2026-08-18T19:52:00.857575Z",
+    "payload": {
+        "bms": {"raw_message": {"reservation": _RESERVIERUNG}},
+        "message_thread_id": "thread-alt",
+    },
+}
+
+
+def test_aenderungswunsch_traegt_airbnbs_zeitpunkt() -> None:
+    """Ohne diesen Wert fiel der Thread ans Listenende (kein Chat)."""
+    assert (
+        anfragen.gasthandlung_aus(ALTERATION_LIVE_FEED)
+        == "2026-08-18T19:51:50.218Z"
+    )
+
+
+def test_zeitpunkt_aus_beiden_payload_formen() -> None:
+    assert anfragen.gasthandlung_aus(ALTERATION_WEBHOOK) == anfragen.gasthandlung_aus(
+        ALTERATION_LIVE_FEED
+    )
+
+
+def test_aenderung_schlaegt_urspruengliche_buchung() -> None:
+    """`updated_at` ist das Ereignis, nicht die Buchung, die geändert wird."""
+    nur_gebucht = {"bms": {"raw_message": {"reservation": {
+        "booked_at": "2026-08-18T19:31:29.296Z",
+    }}}}
+    assert anfragen.gasthandlung_aus(nur_gebucht) == "2026-08-18T19:31:29.296Z"
+    # Mit `updated_at` gewinnt der spätere Änderungszeitpunkt.
+    assert anfragen.gasthandlung_aus(ALTERATION_LIVE_FEED) > anfragen.gasthandlung_aus(
+        nur_gebucht
+    )
+
+
+def test_channex_eingang_ist_keine_quelle() -> None:
+    """Wurzel 5b: `payload.timestamp` ist der Eingang des Aggregators."""
+    ohne_reservierung = {
+        "event": "alteration_request",
+        "timestamp": "2026-08-18T19:52:00.857575Z",
+        "payload": {"message_thread_id": "thread-alt"},
+    }
+    assert anfragen.gasthandlung_aus(ohne_reservierung) is None
+
+
+def test_voranfrage_hat_keinen_eigenen_zeitpunkt() -> None:
+    """Live geprüft: eine Voranfrage trägt keines der Felder — dort liefert
+    die erste Gastnachricht den Zeitpunkt, die es bei ihr immer gibt."""
+    assert anfragen.gasthandlung_aus(PAYLOAD_LIVE_FEED) is None
+    assert anfragen.gasthandlung_aus(PAYLOAD_WEBHOOK) is None
+
+
+def test_kein_zeitpunkt_wird_erfunden() -> None:
+    assert anfragen.gasthandlung_aus(None) is None
+    assert anfragen.gasthandlung_aus({}) is None
+    assert anfragen.gasthandlung_aus({"bms": "kaputt"}) is None
+    assert anfragen.gasthandlung_aus({"bms": {"raw_message": {"reservation": {}}}}) is None
+
+
+def test_juengster_vergleicht_zeitpunkte_nicht_zeichen() -> None:
+    """„Z" > „+" im Zeichenvergleich — ein String-`max` kehrte die Reihenfolge
+    genau dann um, wenn PostgREST (`+00:00`) und `ota_zeitstempel_utc` (`Z`)
+    gemischt auftreten."""
+    # DERSELBE Zeitpunkt in beiden Schreibweisen: identischer Prefix, die
+    # Zeichenketten gehen erst am Trennzeichen auseinander („+" = 0x2B gegen
+    # „Z" = 0x5A). Der Zeichenvergleich hält den Portal-Wert deshalb für den
+    # späteren, obwohl beide dieselbe Millisekunde meinen — die Sortierung
+    # bekäme bei Gleichstand eine Reihenfolge, die es nicht gibt.
+    aus_postgrest = "2026-08-18T19:51:50.218+00:00"
+    aus_portal = "2026-08-18T19:51:50.218Z"
+    assert aus_postgrest < aus_portal, "Vergleich hängt am Trennzeichen"
+    # Als Zeitpunkte sind beide gleich. `max` ist stabil und nimmt bei
+    # Gleichstand den ERSTEN — daran hängt, dass der Wert nicht zufällig
+    # zwischen zwei Schreibweisen springt.
+    assert anfragen._juengster(aus_postgrest, aus_portal) == aus_postgrest
+    assert anfragen._juengster(aus_portal, aus_postgrest) == aus_portal
+
+    # Und der Fall, der die Reihenfolge wirklich kippen kann: der
+    # PostgREST-Wert ist eine Sekunde SPÄTER, verliert aber sobald der
+    # Portal-Wert in derselben Sekunde mehr Millisekunden trägt.
+    spaeter_postgrest = "2026-08-18T19:51:51+00:00"
+    frueher_portal = "2026-08-18T19:51:50.999Z"
+    assert anfragen._juengster(frueher_portal, spaeter_postgrest) == spaeter_postgrest
+
+
+def test_juengster_ohne_werte_bleibt_leer() -> None:
+    assert anfragen._juengster(None, None) is None
+    assert anfragen._juengster() is None
+
+
+# --- Die Entscheidung braucht den DB-Client (19.08.2026) ---------------------
+# `anfrage_entscheiden` baute den channel_manager-Service mit
+# `ChannelManagerService()` — ohne `service_client`. Dessen erster Schritt ist
+# `_require_db()`, also schlug JEDER Klick auf „annehmen"/„ablehnen" mit
+# 500 „Datenbank nicht verfügbar." fehl, bevor überhaupt etwas an Airbnb ging.
+# Live gemeldet beim Annehmen eines Änderungswunsches; ein Seitenneuladen half
+# nicht, weil der Fehler nicht am Zustand hing, sondern an jedem Aufruf.
+def test_entscheidung_reicht_den_db_client_weiter(monkeypatch) -> None:
+    from src.core.security import AuthContext
+    from src.features.channel_manager import service as cm_service
+    from src.features.inbox.service import InboxService
+
+    gesehen: dict[str, object] = {}
+
+    class DienstAttrappe:
+        def __init__(self, *, service_client=None, channex=None) -> None:
+            gesehen["service_client"] = service_client
+            gesehen["channex"] = channex
+
+        def airbnb_anfrage_beantworten(self, _ctx, event_id, antwort) -> dict:
+            gesehen["event_id"] = event_id
+            gesehen["aktion"] = antwort.aktion
+            return {"ok": True}
+
+    monkeypatch.setattr(cm_service, "ChannelManagerService", DienstAttrappe)
+
+    db = object()
+    dienst = InboxService(service_client=db)  # type: ignore[arg-type]
+    ctx = AuthContext(
+        user_id="u1", tenant_id="t1", role="admin", permissions=frozenset()
+    )
+    monkeypatch.setattr(
+        InboxService,
+        "access",
+        lambda _self, _ctx: anfragen_access_alles(),
+    )
+
+    ergebnis = dienst.anfrage_entscheiden(
+        ctx,
+        anfragen.thread_id_fuer("ev-1"),
+        AnfrageEntscheidung(aktion="alteration_annehmen"),
+    )
+
+    assert ergebnis == {"ok": True}
+    # Der Kern: der Service bekommt DENSELBEN Client, den der Posteingang hält.
+    assert gesehen["service_client"] is db
+    assert gesehen["event_id"] == "ev-1"
+    assert gesehen["aktion"] == "alteration_annehmen"
+
+
+def anfragen_access_alles():
+    """Ein Zugang, der alles darf — die Rechteprüfung ist hier nicht das Thema."""
+    from src.features.auth.guest_masking import mask_for
+    from src.features.inbox.authz import InboxAccess
+
+    return InboxAccess(
+        can_access=True,
+        scope="all",
+        can_reply=True,
+        can_assign=True,
+        can_manage_config=True,
+        mask=mask_for("admin", frozenset()),
     )

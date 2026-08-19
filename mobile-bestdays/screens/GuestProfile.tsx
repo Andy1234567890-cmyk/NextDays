@@ -77,6 +77,14 @@ export default function GuestProfile() {
             onPress={() => navigation.navigate("GuestAccount")}
           />
           <ListRow icon="suitcase" label="Meine Reisen" onPress={() => navigation.navigate("GuestTabs", { screen: "Trips" })} />
+          {/* Ohne diesen Weg findet man eine Antwort des Gastgebers nur, wenn
+              man zufällig die richtige Buchung öffnet. */}
+          <ListRow
+            icon="chat"
+            label="Nachrichten"
+            hint="Verläufe mit deinen Gastgebern"
+            onPress={() => navigation.navigate("GuestMessages")}
+          />
           <ListRow
             icon="heart"
             label="Wunschlisten"

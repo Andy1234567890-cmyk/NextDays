@@ -39,6 +39,10 @@ export default function HostLogin() {
     if (!res.ok) setError(res.error);
   };
 
+  // Der Text IN den Feldern bleibt linksbündig, obwohl der Screen mittig
+  // ausgerichtet ist: zentrierter Eingabetext wandert beim Tippen mit jedem
+  // Zeichen, und die Einfügemarke sitzt nie da, wo man sie erwartet. Die Felder
+  // selbst laufen über die volle Breite und stehen damit ohnehin auf der Mitte.
   const field = {
     backgroundColor: t.palette.surface,
     borderWidth: 1,
@@ -62,13 +66,15 @@ export default function HostLogin() {
         gap: 28,
       }}
     >
-      <Col gap={10}>
+      <Col gap={10} style={{ alignItems: "center" }}>
         <Image
           source={t.marke.logo}
-          style={{ height: 44, width: 160, resizeMode: "contain", alignSelf: "flex-start" }}
+          style={{ height: 44, width: 160, resizeMode: "contain", alignSelf: "center" }}
         />
-        <Txt v="display">Gastgeber-Login</Txt>
-        <Txt v="body" soft>
+        <Txt v="display" style={{ textAlign: "center" }}>
+          Gastgeber-Login
+        </Txt>
+        <Txt v="body" soft style={{ textAlign: "center" }}>
           Melde dich mit deinem Betriebskonto an — dasselbe wie im Dashboard.
         </Txt>
       </Col>
@@ -97,7 +103,7 @@ export default function HostLogin() {
           returnKeyType="go"
         />
         {error && (
-          <Txt v="sm" color={t.palette.accent}>
+          <Txt v="sm" color={t.palette.accent} style={{ textAlign: "center" }}>
             {error}
           </Txt>
         )}

@@ -40,6 +40,7 @@ eigene Uhr als fremdes Ereignis auszugeben.
 """
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any, Final
 
 from supabase import Client
@@ -204,6 +205,81 @@ def frist_aus(payload: dict[str, Any] | None) -> str | None:
     einer geratenen Frist.
     """
     return _text(details_aus(payload).get("non_response_at"))
+
+
+def _juengster(*werte: str | None) -> str | None:
+    """Der jüngste von mehreren Zeitpunkten — `None`, wenn keiner da ist.
+
+    Verglichen wird der ZEITPUNKT, nicht die Zeichenkette. Die Quellen hier
+    schreiben dieselbe Sekunde unterschiedlich (`…+00:00` aus PostgREST, `…Z`
+    aus `ota_zeitstempel_utc`), und im Zeichenvergleich ist „Z" > „+" — ein
+    `max()` über die Strings kehrte die Reihenfolge genau dann um, wenn die
+    Formate gemischt auftreten. Dieselbe Falle steht in
+    `service._als_zeitpunkt` beschrieben; hier ist sie ohne Import auf die
+    beiden Fälle dieses Moduls beschränkt.
+    """
+    vorhanden = [w for w in werte if w]
+    if not vorhanden:
+        return None
+
+    def als_zeitpunkt(wert: str) -> datetime:
+        try:
+            gelesen = datetime.fromisoformat(wert.replace("Z", "+00:00"))
+        except ValueError:
+            return datetime.min.replace(tzinfo=UTC)
+        return gelesen if gelesen.tzinfo else gelesen.replace(tzinfo=UTC)
+
+    return max(vorhanden, key=als_zeitpunkt)
+
+
+def gasthandlung_aus(payload: dict[str, Any] | None) -> str | None:
+    """WANN der Gast diese Anfrage beim Portal gestellt hat — nie unsere Uhr.
+
+    WARUM DAS EIN EIGENER GRIFF IST: Ohne ihn hing der Zeitpunkt einer Anfrage
+    ALLEIN am Chat (`portal_messages.sent_at`). Ein Änderungswunsch bringt aber
+    gar keine Chat-Nachricht mit — der Gast klickt in der Airbnb-App auf
+    „Änderung anfragen", er schreibt nichts. Damit blieb `letzte_aktivitaet`
+    leer, und weil zeitlose Threads ans ENDE einer absteigenden Sortierung
+    fallen, stand die dringendste Anfrage im Posteingang ganz unten.
+
+    Live passiert (19.08.2026): Lars Larsson bat für „Feriehus Britt" um
+    1 → 8 Personen. Die Gastgeberin suchte die Anfrage im Posteingang, fand sie
+    nicht und bestätigte sie direkt bei Airbnb; erst danach entdeckte sie sie
+    als letzten Eintrag der Liste. Die Anfrage lief also am PMS vorbei, obwohl
+    sie darin die ganze Zeit vorhanden war.
+
+    DAS FELD IST GEMESSEN, NICHT GERATEN (dieselbe Anfrage, beide
+    Payload-Formen): `bms.raw_message.reservation.updated_at` trug
+    `2026-08-18T19:51:50.218Z` — Airbnbs Zeitpunkt der ÄNDERUNG. Daneben steht
+    `booked_at` (19:31:29Z), der Zeitpunkt der ursprünglichen Buchung; er ist
+    der Rückfall, wenn Airbnb kein `updated_at` mitschickt. Beide sind
+    Fremdereignisse und damit zulässig (Wurzel 5b).
+
+    Bewusst NICHT `payload.timestamp` (2026-08-18T19:52:00Z): das ist Channex'
+    Eingang, zehn Sekunden nach Airbnbs Ereignis — der Aggregator ist keine
+    Quelle für den Zeitpunkt einer Gasthandlung. Ebenso nicht unser
+    `created_at`.
+
+    Eine Voranfrage trägt keines dieser Felder (live geprüft: alle leer). Dort
+    bleibt es bei `None` — ihren Zeitpunkt liefert die erste Gastnachricht, die
+    es bei ihr immer gibt.
+    """
+    reservierung = _kern(payload).get("bms")
+    if not isinstance(reservierung, dict):
+        return None
+    roh = reservierung.get("raw_message")
+    if not isinstance(roh, dict):
+        return None
+    innen = roh.get("reservation")
+    if not isinstance(innen, dict):
+        return None
+    # `updated_at` zuerst: bei einem Änderungswunsch ist die ÄNDERUNG das
+    # Ereignis, nicht die Buchung, die geändert wird.
+    for feld in ("updated_at", "booked_at"):
+        wert = ota_zeitstempel_utc(innen.get(feld))
+        if wert:
+            return wert
+    return None
 
 
 def _gastname(details: dict[str, Any]) -> str | None:
@@ -395,9 +471,20 @@ def threads_lesen(db: Client, tenant_id: str) -> list[InboxThread]:
         letzte = chat.get("letzte") or {}
         prop_id = _text(zeile.get("property_id"))
 
-        # Wurzel 5b: der Zeitpunkt kommt aus dem Chat (beim Portal entstanden),
-        # NIE aus `created_at` (unsere Schreibzeit). Ohne Chat bleibt er leer.
-        letzte_aktivitaet = _text(letzte.get("sent_at")) or _text(chat.get("erste_gast"))
+        # Wurzel 5b: der Zeitpunkt kommt aus dem Chat ODER aus der
+        # Anfrage-Payload — beides beim Portal entstanden, NIE aus `created_at`
+        # (unsere Schreibzeit). Der jüngere von beiden gewinnt, denn beide sind
+        # Ereignisse in DIESEM Thread: schreibt der Gast nach seinem
+        # Änderungswunsch noch etwas, ist die Nachricht das Neuere; klickt er
+        # nur auf „Änderung anfragen" (kein Chat), trägt die Payload den
+        # Zeitpunkt allein. Vorher stand hier nur der Chat, weshalb ein
+        # chatloser Änderungswunsch ohne jeden Zeitpunkt ans Listenende fiel —
+        # s. `gasthandlung_aus`.
+        letzte_aktivitaet = _juengster(
+            _text(letzte.get("sent_at")),
+            _text(chat.get("erste_gast")),
+            gasthandlung_aus(payload),
+        )
 
         items.append(
             InboxThread(
@@ -574,14 +661,18 @@ def verlauf_antwort(
     event = str(zeile.get("event") or "")
     frist = frist_aus(payload)
 
-    # Die Anfrage als Ereignis. `sent_at` bleibt LEER, wenn kein Chat den
-    # Zeitpunkt liefert — `created_at` ist unsere Uhr (Wurzel 5b).
+    # Die Anfrage als Ereignis. `sent_at` kommt aus der Payload (Airbnbs Uhr,
+    # s. `gasthandlung_aus`) und bleibt LEER, wenn das Portal keinen Zeitpunkt
+    # mitschickt — `created_at` ist unsere Uhr (Wurzel 5b). Der Wert entscheidet
+    # hier auch die EINSORTIERUNG: `_chronologisch` schiebt zeitlose Einträge
+    # ans Ende, ein Änderungswunsch ohne ihn stand also unter dem Chat, den er
+    # ausgelöst hat.
     items: list[InboxMessage] = [
         InboxMessage(
             id=f"anfrage-{zeile['id']}",
             message="",
             sender="event",
-            sent_at=None,
+            sent_at=gasthandlung_aus(payload),
             event_title=event,
             event_detail=_text(details.get("listing_name")),
             event_facts=_fakten(event, details, frist),
@@ -949,12 +1040,23 @@ class AnfragenMixin:
             ChannelManagerService,
         )
 
+        # Den DB-Client MITGEBEN: `ChannelManagerService()` ohne
+        # `service_client` hat kein `self._db`, und sein erster Schritt ist
+        # `_require_db()` — die Entscheidung schlug deshalb ausnahmslos mit 500
+        # „Datenbank nicht verfügbar." fehl, bevor überhaupt etwas an Airbnb
+        # ging (live 19.08.2026 beim Annehmen eines Änderungswunsches). Der
+        # Posteingang hält denselben Service-Client, den die Route dort per
+        # Dependency baut; ihn weiterzureichen ist derselbe Zustand, keine
+        # zweite Quelle. Channex wandert mit, damit der Trace-Sink des
+        # Posteingangs erhalten bleibt statt einen zweiten Client aufzubauen.
+        db, _ = self._require(ctx)
         event_id = event_id_aus(thread_id)
         antwort = AirbnbAnfrageAntwort(**entscheidung.model_dump())
         try:
-            return ChannelManagerService().airbnb_anfrage_beantworten(
-                ctx, event_id, antwort
+            dienst = ChannelManagerService(
+                service_client=db, channex=getattr(self, "_channex", None)
             )
+            return dienst.airbnb_anfrage_beantworten(ctx, event_id, antwort)
         except ChannelManagerError as exc:
             # Den Status der Gegenseite durchreichen, nicht auf 500 verflachen:
             # 409 („schon beantwortet") und 422 („Aktion passt nicht") sind

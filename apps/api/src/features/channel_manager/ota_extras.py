@@ -612,7 +612,12 @@ class OtaExtrasMixin:
         db = self._require_db()
         zeilen = (
             db.table("channex_webhook_event")
-            .select("id, event, severity, resolved, live_feed_event_id, property_id")
+            # `payload` mit: daraus liest der Alteration-Guard den
+            # Bestätigungscode, um den Portal-Stand gegenzuprüfen.
+            .select(
+                "id, event, severity, resolved, live_feed_event_id, "
+                "property_id, payload"
+            )
             .eq("id", event_id)
             .eq("tenant_id", tenant_id)
             .limit(1)
@@ -648,6 +653,77 @@ class OtaExtrasMixin:
             )
         return tenant_id, zeile
 
+    def _alteration_schon_beim_portal_bestaetigt(
+        self, tenant_id: str, payload: dict[str, Any] | None
+    ) -> bool:
+        """Hat Airbnb diese Änderung schon bestätigt — ohne unsere Beteiligung?
+
+        WOZU: Der `resolved`-Guard kennt nur UNSERE Quittung. Bestätigt der
+        Betrieb die Änderung direkt in der Airbnb-App (weil er sie bei uns nicht
+        fand), steht sie hier weiter als offen — ein Klick auf „annehmen" schickt
+        dieselbe Entscheidung ein zweites Mal ans Portal.
+
+        Live passiert (19.08.2026): Lars Larsson bat für „Feriehus Britt" um
+        1 → 8 Personen. Die Anfrage stand wegen der Sortierung am Listenende,
+        wurde nicht gefunden und in der Airbnb-App bestätigt. Bei uns blieb sie
+        offen.
+
+        DER BELEG IST AIRBNBS EIGENE MELDUNG, nicht ein Statusfeld: `status` und
+        `status_type` stehen schon in der EINGEHENDEN Anfrage auf
+        „modified"/„accept" — sie beschreiben die gewünschte Änderung, nicht
+        deren Annahme. Nachweisbar ist die Bestätigung erst an der Meldung
+        `reservation_alteration_confirmation`, die Airbnb DANACH schickt und die
+        in `channex_booking.raw` landet (live gemessen an HMDPNRZJAN: die
+        Anfrage kam 19:51:50Z, die Bestätigung erst am Folgetag 07:43:57Z).
+
+        Fail-OPEN mit Absicht (anders als sonst): Findet diese Prüfung nichts —
+        keine Buchung, kein Code, DB-Fehler —, darf sie den Antwortweg NICHT
+        blockieren. Eine offene Anfrage läuft bei Airbnb nach ~24 h in die
+        automatische Ablehnung; ein Guard, der bei Unklarheit sperrt, kostet dem
+        Betrieb die Buchung. Der eigentliche Doppelklick-Schutz bleibt der
+        `resolved`-Guard plus der UNIQUE-Backstop (0284) — das hier ist die
+        zusätzliche Sicherung gegen den Weg AM PMS VORBEI.
+        """
+        from .airbnb_anfragen import ALTERATION_BESTAETIGT_MELDUNG
+
+        kern = payload.get("payload") if isinstance(payload, dict) else None
+        quelle = kern if isinstance(kern, dict) else payload
+        bms = quelle.get("bms") if isinstance(quelle, dict) else None
+        roh = bms.get("raw_message") if isinstance(bms, dict) else None
+        reservierung = roh.get("reservation") if isinstance(roh, dict) else None
+        code = reservierung.get("confirmation_code") if isinstance(reservierung, dict) else None
+        if not isinstance(code, str) or not code.strip():
+            return False
+
+        db = self._require_db()
+        try:
+            zeilen = (
+                db.table("channex_booking")
+                .select("raw")
+                # Wurzel 3: der Code allein ist kein Scope — Airbnb-Codes sind
+                # nicht global eindeutig gegen fremde Mandanten.
+                .eq("tenant_id", tenant_id)
+                .eq("ota_reservation_code", code.strip())
+                .limit(1)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — fail-open, s. Docstring
+            log.warning(
+                "alteration_portalstatus_lesen_fehlgeschlagen",
+                confirmation_code=code[:32], error=str(exc)[:200],
+            )
+            return False
+        if not zeilen:
+            return False
+
+        roh_meldung = zeilen[0].get("raw")
+        if isinstance(roh_meldung, dict):
+            roh_meldung = roh_meldung.get("raw_message")
+        return (
+            isinstance(roh_meldung, str)
+            and ALTERATION_BESTAETIGT_MELDUNG in roh_meldung
+        )
+
     def airbnb_anfrage_beantworten(
         self, ctx: AuthContext, event_id: str, antwort: AirbnbAnfrageAntwort
     ) -> dict[str, Any]:
@@ -659,9 +735,22 @@ class OtaExtrasMixin:
         """
         from . import airbnb_anfragen as aa
 
-        _tenant_id, zeile = self._require_airbnb_anfrage(ctx, event_id)
+        tenant_id, zeile = self._require_airbnb_anfrage(ctx, event_id)
         aktion = str(antwort.aktion)
         event = str(zeile.get("event"))
+
+        # Wurzel 2, zweiter Weg: Der `resolved`-Guard oben kennt nur UNSERE
+        # Quittung. Wurde die Änderung direkt in der Airbnb-App bestätigt, ist
+        # sie beim Portal erledigt und hier trotzdem offen — ohne diese Prüfung
+        # ginge dieselbe Entscheidung ein zweites Mal raus.
+        if event == aa.EVENT_ALTERATION_REQUEST:
+            payload = zeile.get("payload") if isinstance(zeile, dict) else None
+            if self._alteration_schon_beim_portal_bestaetigt(tenant_id, payload):
+                raise ChannelManagerError(
+                    "Diese Änderung wurde bereits direkt bei Airbnb bestätigt. "
+                    "Sie ist dort erledigt und braucht keine Antwort mehr.",
+                    status_code=409,
+                )
 
         # Jede Aktion passt zu genau EINER Anfrageart — sonst würde etwa ein
         # „alteration_annehmen" auf eine Voranfrage erst bei Airbnb auffallen.

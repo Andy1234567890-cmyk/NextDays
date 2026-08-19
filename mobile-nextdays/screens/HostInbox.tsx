@@ -20,19 +20,42 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { DemoBand } from "@/components/DemoBand";
+import { ZeitWahl, type ZeitOption } from "@/components/dashboard/ZeitWahl";
+import { AnfrageKarte } from "@/components/inbox/AnfrageKarte";
+import {
+  aktiveFilter,
+  FilterSheet,
+  LEER_FILTER,
+  type InboxFilter,
+} from "@/components/inbox/FilterSheet";
+import { VerwaltenSheet } from "@/components/inbox/VerwaltenSheet";
+import { AntwortWerkzeuge } from "@/components/inbox/AntwortWerkzeuge";
+import { VorgangSheet } from "@/components/inbox/VorgangSheet";
 import { Icon } from "@/components/ui/Icon";
-import { Chip, Col, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Card, Chip, Col, Divider, Row, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState } from "@/components/ui/patterns";
+import { useAuth } from "@/contexts/AuthContext";
 import { channelMeta } from "@/lib/calendar-channels";
+import { formatCurrency } from "@/lib/currency";
+import { inboxAccessFor } from "@/lib/inbox-access";
 import { portalLabel } from "@/lib/portal-logos";
 import {
+  getAnfrage,
   getInboxMessages,
+  getInboxReservation,
+  istAnfrageThread,
+  istBuchungsThread,
   listInboxThreads,
   markInboxThreadRead,
+  nachAktivitaet,
   NUR_ANHANG_TEXT,
   sendInboxMessage,
+  type AnfrageDetail,
+  translateText,
   type InboxMessage,
   type InboxThread,
+  type ReservationDetail,
 } from "@/lib/inbox";
 import type { ReservationChannel } from "@/lib/reservations";
 import type { HostTabParamList } from "@/navigation/types";
@@ -52,6 +75,14 @@ export default function HostInbox() {
 
 // --- Thread-Liste ---
 
+// Die drei Ansichten des Posteingangs. Getrennte MENGEN des Servers, keine
+// Filter: der Parameter `status` entscheidet, was überhaupt geliefert wird.
+const ANSICHTEN: ZeitOption<"active" | "archived" | "trashed">[] = [
+  { wert: "active", label: "Posteingang", lang: "Posteingang" },
+  { wert: "archived", label: "Archiv", lang: "Archiv" },
+  { wert: "trashed", label: "Papierkorb", lang: "Papierkorb" },
+];
+
 function ThreadList({
   onOpen,
   autoOpenId,
@@ -64,11 +95,27 @@ function ThreadList({
   const [threads, setThreads] = useState<InboxThread[] | null>(null);
   // Deep-Link nur EINMAL öffnen (nicht bei jedem Realtime-Reload erneut).
   const [autoOpened, setAutoOpened] = useState(false);
+  // Die drei Ansichten des Web-Posteingangs. Der Server filtert (Parameter
+  // `status`), nicht die App: Archiv und Papierkorb sind eigene Mengen, und sie
+  // clientseitig aus der aktiven Liste zu schneiden würde Threads zeigen, die
+  // der Server gar nicht geliefert hat.
+  const [ansicht, setAnsicht] = useState<"active" | "archived" | "trashed">(
+    "active",
+  );
+  // Ein Objekt statt fünf Einzelwerten: das Sheet bekommt und setzt es als
+  // Ganzes, „Zurücksetzen" ist damit eine Zuweisung und keine Aufzählung.
+  const [filter, setFilter] = useState<InboxFilter>(LEER_FILTER);
+  const [filterOffen, setFilterOffen] = useState(false);
+  const [verwaltenOffen, setVerwaltenOffen] = useState(false);
+  const { me } = useAuth();
+  // Verwalten hängt an `inbox_manage_config` — wer es nicht hat, sieht den
+  // Zugang gar nicht (nicht ausgegraut: ein Knopf, der nie geht, ist Ballast).
+  const access = useMemo(() => inboxAccessFor(me), [me]);
 
   const load = useCallback(async () => {
-    const res = await listInboxThreads();
+    const res = await listInboxThreads({ status: ansicht });
     setThreads(res.ok ? res.data.items : []);
-  }, []);
+  }, [ansicht]);
 
   useEffect(() => {
     load();
@@ -95,8 +142,6 @@ function ThreadList({
   // Tabs oder per Zug-zum-Aktualisieren (RefreshControl).
 
   const [query, setQuery] = useState("");
-  const [readFilter, setReadFilter] = useState<"all" | "unread">("all");
-  const [channelFilter, setChannelFilter] = useState<string | "all">("all");
 
   const channels = useMemo(() => {
     const set = new Set<string>();
@@ -104,23 +149,77 @@ function ThreadList({
     return [...set];
   }, [threads]);
 
+  const gesetzteFilter = aktiveFilter(filter);
+  // Was gerade gilt, als kurzer Text neben dem Knopf. Nur die eingrenzenden
+  // Angaben, nicht die Sortierung — sie schränkt nichts ein.
+  const filterText = useMemo(() => {
+    const teile: string[] = [];
+    if (filter.kanal !== "all") teile.push(portalLabel(filter.kanal));
+    if (filter.lesestand === "unread") teile.push("ungelesen");
+    if (filter.nurZugewiesen) teile.push("zugewiesen");
+    if (filter.nurFavoriten) teile.push("Favoriten");
+    return teile.join(" · ");
+  }, [filter]);
+
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return (threads ?? []).filter((th) => {
-      if (readFilter === "unread" && th.is_read) return false;
-      if (channelFilter !== "all" && th.ota_name !== channelFilter) return false;
+    const gefiltert = (threads ?? []).filter((th) => {
+      if (filter.lesestand === "unread" && th.is_read) return false;
+      if (filter.kanal !== "all" && th.ota_name !== filter.kanal) return false;
+      if (filter.nurZugewiesen && !th.assigned_user_id) return false;
+      if (filter.nurFavoriten && !th.is_starred) return false;
       if (q) {
         const hay = `${th.guest_name ?? ""} ${th.property_title ?? ""} ${th.ota_reservation_code ?? ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [threads, query, readFilter, channelFilter]);
+    // Kopie sortieren, nie die Zustandsliste selbst (`sort` mutiert).
+    return [...gefiltert].sort((a, b) => {
+      if (filter.sortierung === "anreise") {
+        // Ohne Anreisedatum nach hinten, statt es als „1970" vorne einzureihen.
+        const av = a.arrival_date ?? "9999-12-31";
+        const bv = b.arrival_date ?? "9999-12-31";
+        return av.localeCompare(bv);
+      }
+      if (filter.sortierung === "name") {
+        return (a.guest_name ?? "").localeCompare(b.guest_name ?? "", "de");
+      }
+      // Neueste zuerst — die Regel steht in `lib/inbox.nachAktivitaet`,
+      // damit sie prüfbar ist und nicht in dieser Ansicht vergraben liegt.
+      return nachAktivitaet(a, b);
+    });
+  }, [threads, query, filter]);
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
+      <DemoBand />
       <Col style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 14, gap: 16 }}>
-        <Txt v="display">Nachrichten</Txt>
+        <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
+          <Txt v="display">Nachrichten</Txt>
+          {/* Dieselbe Auswahl wie der Zeitraum der Übersicht — die Ansicht ist
+              keine Filterpille, sondern der Wechsel in eine andere Menge. */}
+          <Row style={{ gap: 4, alignItems: "center" }}>
+            {access.canManageConfig && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Posteingang verwalten"
+                onPress={() => setVerwaltenOffen(true)}
+                hitSlop={8}
+                style={({ pressed }) => ({ padding: 8, opacity: pressed ? 0.6 : 1 })}
+              >
+                <Icon n="cog" s={20} sw={2} c={t.palette.ink} />
+              </Pressable>
+            )}
+            <ZeitWahl
+              optionen={ANSICHTEN}
+              wert={ansicht}
+              onWechsel={setAnsicht}
+              label="Ansicht"
+              laedt={!threads}
+            />
+          </Row>
+        </Row>
 
         {/* Suchleiste */}
         <Row
@@ -145,22 +244,43 @@ function ThreadList({
           />
         </Row>
 
-        {/* Filter-Chips: Kanal + Konversationsstatus */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <Row gap={8} style={{ paddingRight: 20 }}>
-            <FilterChip label="Alle Kanäle" active={channelFilter === "all"} onPress={() => setChannelFilter("all")} />
-            {channels.map((c) => (
-              <FilterChip
-                key={c}
-                label={portalLabel(c)}
-                active={channelFilter === c}
-                onPress={() => setChannelFilter((v) => (v === c ? "all" : c))}
-              />
-            ))}
-            <FilterChip label="Alle" active={readFilter === "all"} onPress={() => setReadFilter("all")} />
-            <FilterChip label="Ungelesen" active={readFilter === "unread"} onPress={() => setReadFilter("unread")} />
+        {/* Ein Knopf statt zehn Pillen: die Zahl sagt, wie viele Filter gesetzt
+            sind — ohne sie wüsste man nicht, warum die Liste kurz ist. */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Filter"
+          onPress={() => setFilterOffen(true)}
+          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+        >
+          <Row style={{ gap: 8, alignItems: "center" }}>
+            <Icon n="sliders" s={16} sw={2} c={t.palette.ink} />
+            <Txt v="sm" style={{ fontFamily: t.fonts.semibold }}>
+              Filter
+            </Txt>
+            {gesetzteFilter > 0 && (
+              <View
+                style={{
+                  minWidth: 18,
+                  height: 18,
+                  paddingHorizontal: 5,
+                  borderRadius: 999,
+                  backgroundColor: t.palette.ink,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Txt v="xs" color={t.palette.bg}>
+                  {gesetzteFilter}
+                </Txt>
+              </View>
+            )}
+            {/* Was gerade gilt, in Worten — sonst muss man das Sheet öffnen, um
+                es zu erfahren. */}
+            <Txt v="xs" soft numberOfLines={1} style={{ flexShrink: 1 }}>
+              {filterText}
+            </Txt>
           </Row>
-        </ScrollView>
+        </Pressable>
       </Col>
 
       {!threads && <Spinner />}
@@ -172,7 +292,13 @@ function ThreadList({
         {threads && visible.length === 0 && (
           <EmptyState
             icon="chat"
-            titel="Keine Konversationen"
+            titel={
+              ansicht === "archived"
+                ? "Archiv ist leer"
+                : ansicht === "trashed"
+                  ? "Papierkorb ist leer"
+                  : "Keine Konversationen"
+            }
             text="Für diese Filter liegt gerade nichts vor."
           />
         )}
@@ -183,6 +309,19 @@ function ThreadList({
           </View>
         ))}
       </ScrollView>
+
+      <VerwaltenSheet
+        open={verwaltenOffen}
+        onClose={() => setVerwaltenOffen(false)}
+      />
+
+      <FilterSheet
+        open={filterOffen}
+        onClose={() => setFilterOffen(false)}
+        filter={filter}
+        onFilter={setFilter}
+        kanaele={channels}
+      />
     </View>
   );
 }
@@ -305,7 +444,10 @@ function ThreadRow({ thread, onPress }: { thread: InboxThread; onPress: () => vo
                 <Chip variant={thread.status === "confirmed" ? "accent" : "ghost"}>{statusLabel}</Chip>
               )}
             </Row>
-            <Txt v="xs" soft>{relTime(thread.updated_at)}</Txt>
+            {/* Der Portal-Zeitpunkt, nicht unsere Schreibzeit. Fehlt er,
+                gibt `relTime` einen leeren Text zurück — besser als ein
+                plausibler falscher Zeitpunkt (Wurzel 4). */}
+            <Txt v="xs" soft>{relTime(thread.letzte_aktivitaet)}</Txt>
           </Row>
 
           {(thread.property_title || thread.arrival_date) && (
@@ -336,24 +478,6 @@ function ThreadRow({ thread, onPress }: { thread: InboxThread; onPress: () => vo
   );
 }
 
-function FilterChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
-  const t = useTheme();
-  return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: active ? t.palette.ink : t.palette.line,
-        backgroundColor: active ? t.palette.ink : t.palette.surface,
-      }}
-    >
-      <Txt v="sm" color={active ? t.palette.surface : t.palette.ink}>{label}</Txt>
-    </Pressable>
-  );
-}
 
 // --- Chat eines Threads ---
 
@@ -361,10 +485,70 @@ function FilterChip({ label, active, onPress }: { label: string; active: boolean
 // Rollback sie eindeutig entfernen kann.
 let tempSeq = 0;
 
+/**
+ * Eine Detailzeile der Buchung. Gibt `null` zurück, wenn der Wert fehlt: ein
+ * serverseitig maskiertes Feld (kein Kontaktrecht) soll die Zeile GAR NICHT
+ * zeigen, statt eine leere Beschriftung dastehen zu lassen.
+ */
+function detailZeile(
+  t: ReturnType<typeof useTheme>,
+  label: string,
+  wert: string | null,
+) {
+  if (!wert) return null;
+  return (
+    <Row key={label} style={{ justifyContent: "space-between", gap: 12 }}>
+      <Txt v="sm" soft>
+        {label}
+      </Txt>
+      <Txt v="sm" numberOfLines={1} style={{ flexShrink: 1, textAlign: "right" }}>
+        {wert}
+      </Txt>
+    </Row>
+  );
+}
+
+// Ab wann eine Nachricht gekürzt wird. Gemessen an den echten Automails dieses
+// Betriebs: die Anreise-Info hat rund 40 Zeilen, eine normale Gastantwort zwei
+// bis vier. 12 angezeigte Zeilen zeigen den Anfang und lassen den Rest des
+// Verlaufs sichtbar.
+const LANG_AB_ZEICHEN = 420;
+
+function istLang(text: string): boolean {
+  return text.length > LANG_AB_ZEICHEN;
+}
+
 function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => void }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
+  const { me } = useAuth();
+  // Rechte aus GET /auth/me, gespiegelt aus web/lib/inbox-access.ts. Die
+  // MASKIERUNG der Felder macht der Server; hier hängen nur die AKTIONEN dran.
+  const access = useMemo(() => inboxAccessFor(me), [me]);
   const [messages, setMessages] = useState<InboxMessage[] | null>(null);
+  // Eine Anfrage ist kein Chat mit Verlauf, sondern eine Entscheidung mit Frist
+  // — sie steht deshalb ÜBER dem Verlauf, nicht darin.
+  const [anfrage, setAnfrage] = useState<AnfrageDetail | null>(null);
+  const [reservierung, setReservierung] = useState<ReservationDetail | null>(null);
+  const [detailsOffen, setDetailsOffen] = useState(false);
+  // Übersetzung je Nachricht — Schalter unter der Blase, wie bei Airbnb und
+  // Booking. Nie automatisch beim Öffnen: das kostet je Zeichen und übersetzt
+  // Nachrichten, die niemand liest.
+  //
+  // Das Ergebnis wird NICHT gespeichert. Es ist eine Lesehilfe, keine
+  // Tatsache — geschrieben hat der Gast sein Original, und das bleibt die
+  // Quelle (Wurzel 4).
+  const [uebersetzt, setUebersetzt] = useState<Record<string, string>>({});
+  // Welche langen Nachrichten der Nutzer aufgeklappt hat.
+  const [entfaltet, setEntfaltet] = useState<Record<string, boolean>>({});
+  const [uebersetzeGerade, setUebersetzeGerade] = useState<string | null>(null);
+  const [hinweis, setHinweis] = useState<string | null>(null);
+  const [vorgangOffen, setVorgangOffen] = useState(false);
+  const [werkzeugeOffen, setWerkzeugeOffen] = useState(false);
+  // Zahl der geplanten Nachrichten: markiert den Werkzeug-Knopf mit einem Punkt.
+  // Ein Punkt, keine Zahl — die genaue Menge steht im Sheet, hier zählt nur
+  // „da liegt etwas in der Warteschlange".
+  const [geplantZahl, setGeplantZahl] = useState(0);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const verlauf = useRef<ScrollView>(null);
@@ -380,6 +564,41 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
   useEffect(() => {
     load();
   }, [load]);
+
+  // Anfrage-Detail: NUR für Anfrage-Threads. Für eine gewöhnliche Buchung
+  // antwortet der Endpunkt 404 — ihn dort zu rufen, wäre eine Fehlermeldung je
+  // geöffnetem Thread.
+  const anfrageLaden = useCallback(async () => {
+    if (!istAnfrageThread(thread.id)) {
+      setAnfrage(null);
+      return;
+    }
+    const res = await getAnfrage(thread.id);
+    setAnfrage(res.ok ? res.data : null);
+  }, [thread.id]);
+
+  useEffect(() => {
+    anfrageLaden();
+  }, [anfrageLaden]);
+
+  // Buchungsdetails nur für Buchungs-Threads. Das betrifft nicht nur Anfragen:
+  // ein Marktplatz- (`mb:`), Übernahme- (`ue:`) oder WhatsApp-Thread (`wa:`)
+  // hat ebenfalls keine `channex_booking`-Zeile, auf die der Endpunkt zeigen
+  // könnte. Vorher lief der Aufruf dort in einen Fehler, der still als „keine
+  // Details" endete — und der Knopf im Vorgang-Sheet fehlte ohne Erklärung.
+  useEffect(() => {
+    if (!istBuchungsThread(thread.id)) {
+      setReservierung(null);
+      return;
+    }
+    let aktuell = true;
+    getInboxReservation(thread.id).then((res) => {
+      if (aktuell) setReservierung(res.ok ? res.data : null);
+    });
+    return () => {
+      aktuell = false;
+    };
+  }, [thread.id]);
 
   // Geöffnet heißt gelesen — dasselbe Verhalten wie im Web
   // (`web/components/inbox/inbox-list.tsx`). Die App zeigte den Verlauf und
@@ -429,6 +648,28 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
   // nicht mehr von selbst — der Verlauf lädt beim Öffnen des Threads und nach
   // dem eigenen Senden neu.
 
+  /** Eine Nachricht übersetzen bzw. das Original zurückholen (Wechsel). */
+  const umschaltenUebersetzung = async (id: string, text: string) => {
+    if (uebersetzt[id]) {
+      setUebersetzt((prev) => {
+        const rest = { ...prev };
+        delete rest[id];
+        return rest;
+      });
+      return;
+    }
+    setUebersetzeGerade(id);
+    // Zielsprache ist die Sprache des Betrachters — der Betrieb liest in
+    // seiner, nicht in der des Gastes.
+    const res = await translateText(text, "de");
+    setUebersetzeGerade(null);
+    if (!res.ok) {
+      setHinweis(res.error);
+      return;
+    }
+    setUebersetzt((prev) => ({ ...prev, [id]: res.data.text }));
+  };
+
   const send = async () => {
     const text = draft.trim();
     if (!text || sending) return; // Doppel-Tap-Sperre (Wurzel 2)
@@ -464,7 +705,10 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
       style={{ flex: 1, backgroundColor: t.palette.bg }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Row style={{ paddingTop: insets.top + 8, paddingHorizontal: 12, paddingBottom: 10, gap: 6, alignItems: "center" }}>
+      <View style={{ paddingTop: insets.top }}>
+        <DemoBand />
+      </View>
+      <Row style={{ paddingTop: 8, paddingHorizontal: 12, paddingBottom: 10, gap: 6, alignItems: "center" }}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Zurück"
@@ -484,6 +728,15 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
             </Txt>
           )}
         </Col>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Vorgang"
+          onPress={() => setVorgangOffen(true)}
+          hitSlop={10}
+          style={({ pressed }) => ({ padding: 8, opacity: pressed ? 0.6 : 1 })}
+        >
+          <Icon n="more" s={20} sw={2} c={t.palette.ink} />
+        </Pressable>
       </Row>
 
       {!messages && <Spinner />}
@@ -498,6 +751,75 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
           amEnde.current = rest < 80; // Toleranz: „praktisch unten"
         }}
       >
+        {/* Die Anfrage steht ÜBER dem Verlauf: sie ist die Handlung, um die es
+            geht, und ihre Frist läuft ab — der Chat darunter ist Beiwerk. */}
+        {anfrage && (
+          <AnfrageKarte
+            detail={anfrage}
+            darfEntscheiden={access.canReply}
+            onEntschieden={() => {
+              // Nach der Entscheidung beides neu holen: das Portal setzt den
+              // Status, und die Bestätigung erscheint als Nachricht im Verlauf.
+              anfrageLaden();
+              load();
+            }}
+          />
+        )}
+
+        {detailsOffen && reservierung && (
+          <Card style={{ gap: 8 }}>
+            <Txt v="sm" style={{ fontFamily: t.fonts.semibold }}>
+              Buchung
+            </Txt>
+            <Divider />
+            {detailZeile(t, "Objekt", reservierung.listing_name)}
+            {detailZeile(t, "Anreise", reservierung.check_in)}
+            {detailZeile(t, "Abreise", reservierung.check_out)}
+            {detailZeile(
+              t,
+              "Nächte",
+              reservierung.nights != null ? String(reservierung.nights) : null,
+            )}
+            {detailZeile(
+              t,
+              "Gäste",
+              reservierung.adults != null
+                ? `${reservierung.adults}${
+                    reservierung.children ? ` + ${reservierung.children}` : ""
+                  }`
+                : null,
+            )}
+            {/* Kontakt und Beträge kommen serverseitig maskiert: fehlt dem
+                Betrachter die Sicht, steht hier `null` und die Zeile entfällt.
+                Kein Ersatztext, kein „—" (Wurzel 4). */}
+            {detailZeile(t, "E-Mail", reservierung.guest_email)}
+            {detailZeile(t, "Telefon", reservierung.guest_phone)}
+            {detailZeile(
+              t,
+              "Gesamt",
+              reservierung.total_amount != null && reservierung.currency
+                ? formatCurrency(reservierung.total_amount, reservierung.currency)
+                : null,
+            )}
+            {detailZeile(
+              t,
+              "Bezahlt",
+              reservierung.paid_amount != null && reservierung.currency
+                ? formatCurrency(reservierung.paid_amount, reservierung.currency)
+                : null,
+            )}
+            {detailZeile(t, "Portal", reservierung.ota_name)}
+            {detailZeile(t, "Portal-Code", reservierung.ota_reservation_code)}
+            {/* Erklärt leere Gastfelder, statt sie als „nicht vorhanden"
+                dastehen zu lassen. */}
+            {reservierung.is_imported && (
+              <Txt v="xs" soft>
+                Aus einem Bestands-Import — Gastdaten liegen beim Portal.
+              </Txt>
+            )}
+          </Card>
+        )}
+
         {messages?.map((m, i) => {
           const mine = m.sender === "property";
           const note = m.sender === "note";
@@ -528,10 +850,68 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
                         : t.palette.surface2,
                   }}
                 >
-                  <Txt v="body" color={mine && !note ? t.palette.bg : t.palette.ink}>
-                    {m.message}
+                  <Txt
+                    v="body"
+                    color={mine && !note ? t.palette.bg : t.palette.ink}
+                    {...(m.id && !entfaltet[m.id] && istLang(m.message)
+                      ? { numberOfLines: 12 }
+                      : {})}
+                  >
+                    {/* Übersetzt, solange der Schalter an ist — das Original
+                        bleibt einen Tipp entfernt. */}
+                    {(m.id && uebersetzt[m.id]) || m.message}
                   </Txt>
+                  {/* Automails sind lang (Anreise-Infos, Rabattlisten,
+                      Checkout-Regeln). Ungekürzt füllt EINE Nachricht den
+                      Bildschirm, und der Verlauf ist nicht mehr zu lesen. */}
+                  {m.id && istLang(m.message) && (
+                    <Pressable
+                      onPress={() =>
+                        setEntfaltet((prev) => ({
+                          ...prev,
+                          [m.id!]: !prev[m.id!],
+                        }))
+                      }
+                      hitSlop={6}
+                      style={({ pressed }) => ({
+                        marginTop: 6,
+                        opacity: pressed ? 0.6 : 1,
+                      })}
+                    >
+                      <Txt
+                        v="xs"
+                        color={
+                          mine && !note ? t.palette.bg : t.palette.soft
+                        }
+                        style={{ textDecorationLine: "underline" }}
+                      >
+                        {entfaltet[m.id] ? "Weniger" : "Mehr anzeigen"}
+                      </Txt>
+                    </Pressable>
+                  )}
                 </View>
+              )}
+
+              {/* Nur bei GASTnachrichten mit Text: die eigene übersetzt niemand,
+                  und eine interne Notiz ist ohnehin in der eigenen Sprache. */}
+              {!mine && !note && !!m.message.trim() && m.id && (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => umschaltenUebersetzung(m.id!, m.message)}
+                  hitSlop={6}
+                  style={({ pressed }) => ({
+                    marginTop: 4,
+                    opacity: pressed ? 0.6 : 1,
+                  })}
+                >
+                  <Txt v="xs" soft style={{ textDecorationLine: "underline" }}>
+                    {uebersetzeGerade === m.id
+                      ? "Übersetzt …"
+                      : uebersetzt[m.id]
+                        ? "Original anzeigen"
+                        : "Übersetzen"}
+                  </Txt>
+                </Pressable>
               )}
 
               {/* Bildanhänge. Die URLs hat der Server auf https + bekannten
@@ -555,17 +935,134 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
         })}
       </ScrollView>
 
+      {/* Ohne Antwortrecht KEIN Eingabefeld.
+          Vorher stand es für jeden da: ein Mitarbeiter ohne `inbox_reply` tippte
+          eine Antwort, drückte senden und bekam erst dort einen Fehler — die
+          Arbeit war weg. Der Server hat das immer schon abgewiesen; falsch war
+          das Versprechen der Oberfläche.
+          Eine Anfrage hat ebenfalls kein Chat-Feld: dort wird entschieden, nicht
+          geplaudert (die Antwort an den Gast steckt in der Karte oben). */}
+      {/* Im Vorführ-Zugang GAR KEIN Eingabefeld: der Server lehnt das Senden mit
+          405 ab. Ein Feld, in das man tippen kann und dessen Senden nichts tut,
+          ist die schlechteste aller Varianten — genau daran ist es aufgefallen. */}
+      {me?.is_demo ? (
+        <Row
+          style={{
+            padding: 16,
+            paddingBottom: insets.bottom + 12,
+            borderTopWidth: 1,
+            borderTopColor: t.palette.line,
+            backgroundColor: t.palette.surface,
+            gap: 8,
+          }}
+        >
+          <Icon n="lock" s={16} sw={2} c={t.palette.soft} />
+          <Txt v="sm" soft style={{ flexShrink: 1 }}>
+            Vorführung: Antworten, Vorlagen und KI-Vorschläge sind abgeschaltet.
+          </Txt>
+        </Row>
+      ) : !access.canReply ? (
+        <Row
+          style={{
+            padding: 16,
+            paddingBottom: insets.bottom + 12,
+            borderTopWidth: 1,
+            borderTopColor: t.palette.line,
+            backgroundColor: t.palette.surface,
+            gap: 8,
+          }}
+        >
+          <Icon n="lock" s={16} sw={2} c={t.palette.soft} />
+          <Txt v="sm" soft>
+            Du kannst mitlesen, aber nicht antworten.
+          </Txt>
+        </Row>
+      ) : anfrage ? (
+        <Row
+          style={{
+            padding: 16,
+            paddingBottom: insets.bottom + 12,
+            borderTopWidth: 1,
+            borderTopColor: t.palette.line,
+            backgroundColor: t.palette.surface,
+            gap: 8,
+          }}
+        >
+          <Icon n="info" s={16} sw={2} c={t.palette.soft} />
+          <Txt v="sm" soft>
+            Anfrage — die Antwort geht über die Entscheidung oben.
+          </Txt>
+        </Row>
+      ) : (
+      <View
+        style={{
+          borderTopWidth: 1,
+          borderTopColor: t.palette.line,
+          backgroundColor: t.palette.surface,
+        }}
+      >
+        {/* Kurzer Hinweis statt eines Alerts: ein fehlgeschlagenes Übersetzen
+            darf den Lesefluss nicht mit einem Dialog unterbrechen. */}
+        {hinweis && (
+          <Pressable onPress={() => setHinweis(null)} style={{ padding: 12 }}>
+            <Txt v="xs" color={t.palette.accent}>
+              {hinweis}
+            </Txt>
+          </Pressable>
+        )}
+        <AntwortWerkzeuge
+          threadId={thread.id}
+          entwurf={draft}
+          offen={werkzeugeOffen}
+          onSchliessen={() => setWerkzeugeOffen(false)}
+          onEntwurf={setDraft}
+          onGeplant={() => {
+            setDraft("");
+            setHinweis("Nachricht ist eingeplant.");
+          }}
+          onGeplantZahl={setGeplantZahl}
+        />
       <Row
         style={{
           padding: 12,
           paddingBottom: insets.bottom + 8,
           gap: 8,
           alignItems: "flex-end",
-          borderTopWidth: 1,
-          borderTopColor: t.palette.line,
-          backgroundColor: t.palette.surface,
         }}
       >
+        {/* Werkzeuge: ein Knopf statt vier Chips über dem Feld. Der Punkt zeigt,
+            dass für diesen Vorgang etwas geplant ist — sonst wüsste das
+            niemand, ohne das Sheet zu öffnen. */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Antwort-Werkzeuge"
+          onPress={() => setWerkzeugeOffen(true)}
+          hitSlop={8}
+          style={({ pressed }) => ({
+            width: 42,
+            height: 42,
+            borderRadius: 999,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: t.palette.bg,
+            opacity: pressed ? 0.6 : 1,
+          })}
+        >
+          <Icon n="plus" s={20} sw={2} c={t.palette.ink} />
+          {geplantZahl > 0 && (
+            <View
+              style={{
+                position: "absolute",
+                top: 8,
+                right: 8,
+                width: 8,
+                height: 8,
+                borderRadius: 999,
+                backgroundColor: t.palette.accent,
+              }}
+            />
+          )}
+        </Pressable>
         <TextInput
           style={{
             flex: 1,
@@ -584,22 +1081,49 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
           multiline
           editable={!sending}
         />
+        {/* Zwei klare Zustände statt einer halbdurchsichtigen Farbe: leer =
+            ruhige Fläche mit dunklem Pfeil, bereit = gefüllt. Eine auf 50 %
+            gestellte Akzentfarbe wird zu blassem Rosa — das sah nicht
+            „inaktiv" aus, sondern nach einem Fehler in der Farbe. */}
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Senden"
           onPress={send}
           disabled={sending || !draft.trim()}
           style={{
             width: 42,
             height: 42,
             borderRadius: 999,
-            backgroundColor: t.palette.accent,
+            backgroundColor: draft.trim() ? t.palette.ink : t.palette.surface2,
             alignItems: "center",
             justifyContent: "center",
-            opacity: sending || !draft.trim() ? 0.5 : 1,
           }}
         >
-          <Icon n="send" s={20} c="#fff" />
+          <Icon
+            n="send"
+            s={20}
+            c={draft.trim() ? t.palette.bg : t.palette.faint}
+          />
         </Pressable>
       </Row>
+      </View>
+      )}
+
+      <VorgangSheet
+        open={vorgangOffen}
+        onClose={() => setVorgangOffen(false)}
+        thread={thread}
+        access={access}
+        hatDetails={!!reservierung}
+        onDetails={() => setDetailsOffen((v) => !v)}
+        onGeaendert={(verlassen) => {
+          // Nach einem Status-Wechsel gehört der Thread nicht mehr in diese
+          // Ansicht — zurück zur Liste, die sich beim Aufbau neu holt. Sonst
+          // stünde man in einem Verlauf, den die Liste nicht mehr führt.
+          if (verlassen) onBack();
+          else load();
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }

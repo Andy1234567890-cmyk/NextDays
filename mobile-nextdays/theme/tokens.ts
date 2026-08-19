@@ -55,8 +55,13 @@ export function lightPalette(accent: string): Palette {
     line: "rgba(24,22,20,0.12)",
     accent,
     accentInk: "#FFFFFF",
-    // CSS: color-mix(accent 12%, #fff) — als statische Annäherung gerendert.
-    accentSoft: mix(accent, "#FFFFFF", 0.12),
+    // CSS: color-mix(accent 12%, #fff) — 12 % Akzent auf Weiß, also eine SANFTE
+    // Tönung. Der dritte Parameter von `mix` ist der Anteil der ZWEITEN Farbe:
+    // mit 0.12 kamen 88 % Akzent heraus, und jede Fläche, die „accentSoft"
+    // benutzte, war knallig statt sanft — im Dashboard leuchtete ein Hinweis
+    // „1 offene Konversation" wie eine Warnung, und ein offener Zusatzposten
+    // ebenso. Deshalb 0.88.
+    accentSoft: mix(accent, "#FFFFFF", 0.88),
     star: "#181614",
   };
 }
@@ -73,7 +78,9 @@ export function darkPalette(accent: string): Palette {
     line: "rgba(255,255,255,0.14)",
     accent,
     accentInk: "#FFFFFF",
-    accentSoft: mix(accent, "#1C1A18", 0.24),
+    // Wie in der Light-Palette: der Anteil gehört der zweiten Farbe. 24 %
+    // Akzent auf dem dunklen Grund heißt 0.76.
+    accentSoft: mix(accent, "#1C1A18", 0.76),
     star: "#F4F1ED",
   };
 }
