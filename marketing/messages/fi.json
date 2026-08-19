@@ -7,7 +7,7 @@
   "funktionen": "Ominaisuudet",
   "preise": "Hinnat",
   "kanaele": "Kanavat",
-  "kunden": "Asiakkaat",
+  "ueberUns": "Tietoa meistä",
   "ressourcen": "Aineistot",
   "sprache": "Kieli",
   "spracheWaehlen": "Valitse kieli",
@@ -425,7 +425,7 @@
   "ressourcen": {
    "blog": "Blogi",
    "hilfeCenter": "Ohjekeskus",
-   "webinare": "Webinaarit",
+   "status": "Järjestelmän tila",
    "leitfaeden": "Oppaat",
    "api": "API-dokumentaatio"
   },
@@ -441,7 +441,8 @@
   "datenschutz": "Tietosuoja",
   "impressum": "Oikeudelliset tiedot",
   "cookies": "Evästekäytäntö",
-  "avv": "Tietojenkäsittely"
+  "avv": "Tietojenkäsittely",
+  "kontoLoeschen": "Poista tili"
  },
  "abschluss": {
   "heading": "Valmis hoitamaan majoituskohteesi yhdestä paikasta?",
@@ -593,5 +594,1014 @@
    "provision": "Oma sivusto {direkt} · portaalit {portale}",
    "tarif": "Yksi paketti kaikille, sis. 1. kohteen"
   }
+ },
+ "ueberUns": {
+  "meta": {
+   "titel": "Tietoa meistä — myNextDays",
+   "beschreibung": "myNextDays ApS Bindslevistä Tanskasta: miksi toimivat vuokranantajat rakensivat oman majoituksen hallintajärjestelmän kanavanhallinnalla, minkä puolesta seisomme ja ketkä ovat sen takana."
+  },
+  "hero": {
+   "eyebrow": "Tietoa meistä",
+   "headlinePre": "Vuokraamme itsekin. Siksi on olemassa",
+   "headlineHighlight": "myNextDays",
+   "sub": "myNextDays ApS on omistajavetoinen yritys Bindslevistä Pohjois-Jyllannista. Vuokraamme omia lomakohteitamme — ja rakensimme alustan, jota arjessa jäimme kaipaamaan: kalenteri, kanavat, vieraat, maksut ja tilitys yhdessä paikassa.",
+   "sitz": "Kotipaikka Tanskassa",
+   "eu": "EU:ssa isännöity, GDPR-yhteensopiva",
+   "start": "Julkaisu 1. syyskuuta 2026",
+   "sprachen": "27 maata, 24 kieltä",
+   "ctaTrial": "Kokeile 30 päivää ilmaiseksi",
+   "ctaKontakt": "Kirjoita meille"
+  },
+  "warum": {
+   "eyebrow": "Miksi olemme olemassa",
+   "heading": "Syntyi omasta vuokrausarjesta.",
+   "p1": "Jokainen vuokraaja tuntee illan, jona sama viikko on myyty kahdesti, koska yksi kanava ei koskaan saanut sulkua. Siinä lopetimme työkalun etsimisen ja aloimme rakentaa sellaista.",
+   "p2": "Olemassa olevat järjestelmät oli tehty hotelliketjuille — monimutkaisuudella ja hinnalla, jota muutaman kohteen yritys ei kanna — tai ne loppuivat juuri siihen, mistä oikea työ alkaa: tilitykseen, omistajiin, siivoukseen ja veroihin 27 maassa.",
+   "p3": "myNextDays on vastaus siihen: täysimittainen majoituksen hallintajärjestelmä kanavanhallinnalla yrityksille, jotka hoitavat kohteensa itse — yksittäisestä lomamökistä hotelliin, jossa on useita huonetyyppejä.",
+   "bildFerienobjekt": "Lomamökki rannikolla",
+   "bildHotel": "Hotellihuone sijattuine vuoteineen"
+  },
+  "bento": {
+   "eyebrow": "Mitä taustalla on",
+   "heading": "Lukuja, jotka voimme todistaa.",
+   "sub": "Ei asiakasmääriä eikä arvosteluja: alusta avataan 1. syyskuuta 2026. Tässä esitetyt asiat voi tarkistaa itse tuotteesta.",
+   "vermieter": {
+    "titel": "Vuokranantajien rakentama, ei piirustuspöydällä",
+    "text": "Jokainen toiminto pyörii ensin omassa vuokrausliiketoiminnassamme ja vasta sitten tuotteessa. Se, mikä ei siellä arjessa kestä, ei päädy julkaisuun.",
+    "bildAlt": "Vuokraustoimiston tiimi työssä"
+   },
+   "laender": {
+    "wert": "27",
+    "titel": "Euroopan maata",
+    "text": "Kunkin maan valuutalla, verokannoilla ja säännöillä — ei yhdellä eurolomakkeella kaikille."
+   },
+   "sprachen": {
+    "wert": "24",
+    "titel": "Kieltä",
+    "text": "Käyttöliittymä, vieraviestintä ja juridiset tekstit, ei vain etusivu."
+   },
+   "kanaele": {
+    "wert": "56",
+    "titel": "Varauskanavaa",
+    "text": "Booking.com, Airbnb, Expedia, Vrbo ja monia muita yhden yhteyden kautta."
+   },
+   "eu": {
+    "titel": "Rakennettu EU:ssa, ylläpidetty EU:ssa",
+    "text": "Palvelimet ja data sijaitsevat Euroopan unionissa, toiminta noudattaa GDPR:ää ja käsittely on sovittu kirjallisesti. Vierasdataa hallitsevalle yritykselle se ei ole alaviite vaan edellytys."
+   }
+  },
+  "zeitleiste": {
+   "eyebrow": "Tie tähän asti",
+   "heading": "Lyhyt historia, tarkistettavat askeleet.",
+   "sub": "Olemme nuoria — ja kirjaamme mieluummin neljä todennettua vaihetta kuin keksityn historian.",
+   "airsmil": {
+    "datum": "Lähtökohta",
+    "titel": "Arki omassa yrityksessä",
+    "text": "Omat kohteet useassa kanavassa yhtä aikaa: kaksinkertainen työ, myöhässä tulleet sulut, tilitys taulukossa. Näistä kitkoista syntyi vaatimuslista."
+   },
+   "gruendung": {
+    "datum": "1. heinäkuuta 2026",
+    "titel": "myNextDays ApS perustettiin",
+    "text": "Merkitty Tanskan yritysrekisteriin numerolla CVR 46615182, kotipaikkana Bindslev Pohjois-Jyllannissa."
+   },
+   "beta": {
+    "datum": "Kesä 2026",
+    "titel": "Beta oikeilla kohteilla",
+    "text": "Varaukset tulevat sisään suoraan kanavista, ja hinnat, saatavuus sekä sulut kulkevat samaa reittiä takaisin — oikeilla kohteilla ja oikeilla vierailla, ei testiympäristössä."
+   },
+   "start": {
+    "datum": "1. syyskuuta 2026",
+    "titel": "Julkaisu 27 maassa",
+    "text": "24 kielellä, monivaluuttaisena, myBestDays-markkinapaikan ja kahden sovelluksen kanssa — yritykselle ja vieraalle."
+   }
+  },
+  "marken": {
+   "eyebrow": "Kaksi brändiä, yksi alusta",
+   "heading": "myNextDays yritykselle, myBestDays vieraalle.",
+   "sub": "Molemmat kuuluvat myNextDays ApS:lle ja toimivat samalla tekniikalla — ne erottaa se, kuka niitä käyttää.",
+   "nextdays": {
+    "rolle": "Yrityksille",
+    "text": "Hallintajärjestelmä ja kanavanhallinta: paikka, jossa yritys hoitaa kohteensa, asettaa hintansa ja tilittää rahansa.",
+    "punkte": {
+     "kalender": "Varaustilanne kaikista kohteista ja yksiköistä, reaaliaikaisena",
+     "portale": "Yksi yhteys kaikkiin kanaviin — saatavuus, hinnat ja sulut lähtevät kaikkialle samaan aikaan",
+     "geld": "Maksut, laskut, provisiot ja omistajatilitykset",
+     "team": "Oma sovellus omistajille, henkilöstölle ja siivoukselle"
+    }
+   },
+   "bestdays": {
+    "rolle": "Vieraille",
+    "text": "Oma markkinapaikkamme: vieraat löytävät sieltä samat kohteet ja varaavat suoraan yritykseltä — selvästi pienemmällä provisiolla kuin suurten kanavien kautta.",
+    "punkte": {
+     "direkt": "Varaus suoraan yritykseltä, ilman välikättä",
+     "provision": "Pienempi provisio kuin suurissa kanavissa",
+     "app": "Oma sovellus hakuun, varaukseen ja oleskeluun"
+    }
+   },
+   "hinweis": "Kohde myydään molempia reittejä yhtä aikaa — lisäksi Booking.comin, Airbnb:n ja muiden kanavien kautta. Minkä kanavan yritys kytkee päälle, se päättää kanava kerrallaan."
+  },
+  "werte": {
+   "eyebrow": "Periaatteet",
+   "heading": "Millä meitä saa mitata.",
+   "sub": "Kuusi kohtaa, jotka voi tarkistaa tuotteesta ja asiakirjoistamme — ei aiejulistuksia.",
+   "doppelbuchung": {
+    "titel": "Ei päällekkäisvarauksia",
+    "text": "Meillä saatavuus on vapaiden yksiköiden määrä, ei rasti ruudussa. Se kulkee reaaliaikaisesti jokaiseen kanavaan, ja sulku sulkee kaikkialla — ei vain siellä, mihin se syötettiin."
+   },
+   "preise": {
+    "titel": "Hinnat, jotka tiedät etukäteen",
+    "text": "Yksi paketti, ei määräaikaa eikä käyttöönottomaksua. Se, mikä maksaa lisää, näkyy summineen hinnoittelusivulla, ei myyntipuhelussa."
+   },
+   "europa": {
+    "titel": "Eurooppa ei ole käännösprojekti",
+    "text": "27 maata tarkoittaa 27 valuuttaa, verokantaa ja ilmoitusvelvollisuutta — aina laskuun, vieraalle lähtevään sähköpostiin ja maksuun asti. Jos tieto puuttuu, sanomme sen sen sijaan että täyttäisimme uskottavan arvon."
+   },
+   "daten": {
+    "titel": "Data pysyy EU:ssa",
+    "text": "Toiminta ja palvelimet Euroopan unionissa, GDPR perustana, käsittelysopimus vakiona. Yrityksessä vierasdataa näkevät vain ne roolit, jotka sitä tarvitsevat."
+   },
+   "unabhaengig": {
+    "titel": "Omistajavetoinen",
+    "text": "Takanamme ei ole konsernia eikä ulkoa annettua tiekarttaa. Mitä rakennetaan seuraavaksi, päätämme yhdessä niiden yritysten kanssa, jotka käyttävät ohjelmistoa päivittäin."
+   },
+   "selbst": {
+    "titel": "Käytämme sitä itse",
+    "text": "Omat kohteemme pyörivät samalla alustalla kuin asiakkaidemme. Virhe osuu ensin meihin — rehellisin laadunvarmistus, jonka tunnemme."
+   }
+  },
+  "menschen": {
+   "eyebrow": "Ihmiset takana",
+   "heading": "Pieni, tavoitettava, käytännöstä.",
+   "sub": "myNextDays ApS:n johto sellaisena kuin se on merkitty Tanskan yritysrekisteriin.",
+   "jeanine": {
+    "rolle": "Perustaja ja toimitusjohtaja",
+    "text": "Johtaa omaa vuokrausliiketoimintaamme ja tuo arjen vieraiden, kanavien ja siivouksen kanssa jokaiseen tuotepäätökseen."
+   },
+   "torsten": {
+    "rolle": "Johtaja",
+    "text": "Pitää langat käsissään ja tukee tiimiä juuri siellä, missä apua tarvitaan. Tuo mukanaan monipuolisen käytännön kokemuksensa löytääkseen taustalla nopeita ja käytännöllisiä ratkaisuja."
+   }
+  },
+  "unternehmen": {
+   "eyebrow": "Yritys",
+   "heading": "Kenen kanssa asioit.",
+   "firma": "Yritys",
+   "sitz": "Osoite",
+   "register": "Yritysrekisteri",
+   "ustId": "ALV-tunniste",
+   "direktion": "Johto",
+   "impressum": "Palveluntarjoajan täydet tiedot",
+   "kontaktTitel": "Suora yhteys",
+   "kontaktText": "Kysymyksiä tuotteesta, toisesta järjestelmästä siirtymisestä tai yhteistyöstä? Vastaaja käyttää ohjelmistoa itse."
+  }
+ },
+ "funktionen": {
+  "rahmen": {
+   "ctaTesten": "Kokeile 30 päivää ilmaiseksi",
+   "ctaDemo": "Katso esittely",
+   "weiter": "Eteenpäin muihin ominaisuuksiin",
+   "mehr": "Katso",
+   "bereich": {
+    "verkauf": "Myynti",
+    "gast": "Vieras ja raha",
+    "betrieb": "Toiminta"
+   },
+   "reiterHeading": "Mitä siihen tarkalleen sisältyy?"
+  },
+  "uebersicht": {
+   "metaTitel": "Ominaisuudet — kaikki vuokraukseen ja hotelliin | myNextDays",
+   "metaBeschreibung": "Kalenteri, channel manager, suoravaraus, vieraiden viestintä, maksut, hinnat, tiimi, sovellus ja raportit — yhdessä järjestelmässä, mukana jokaisessa paketissa.",
+   "eyebrow": "Ominaisuudet",
+   "headline": "Kaikki, mitä arki vaatii. Yhdessä järjestelmässä.",
+   "sub": "Yhdeksän aluetta, yksi kirjautuminen. Jokainen niistä kuuluu peruspakettiin — mitään ei ole piilotettu kalliimpaan pakettiin.",
+   "bereichSub": {
+    "verkauf": "Näy ja saa varauksia",
+    "gast": "Ensimmäisestä yhteydenotosta rahan saapumiseen",
+    "betrieb": "Kuka tekee mitä — ja mitä siitä seurasi"
+   }
+  },
+  "pms": {
+   "metaBeschreibung": "Yksi kalenteri kaikille kohteille: varaustilanne, varaukset, tehtävät ja kohdetiedot samassa paikassa — lomamajoituksille ja hotelleille.",
+   "headline": "Yksi kalenteri kaikelle, mitä vuokraat.",
+   "sub": "Varaustilanne, varaukset ja kohdetiedot ovat samassa paikassa — olipa kyse yhdestä loma-asunnosta tai kahdestatoista huonetyypistä useilla yksiköillä.",
+   "bildAlt": "Varaustilanne, jossa varauksia useasta kanavasta",
+   "nutzen": {
+    "a": {
+     "titel": "Kaikki yhdellä silmäyksellä",
+     "text": "Varaustilanne näyttää jokaisen yksikön, jokaisen varauksen ja jokaisen sulun yhdessä näkymässä — värillä kanavan mukaan."
+    },
+    "b": {
+     "titel": "Varaus sekunneissa",
+     "text": "Luo, siirrä tai peruuta varaus näkymää vaihtamatta. Vapautuvat yöt menevät heti uudelleen myyntiin."
+    },
+    "c": {
+     "titel": "Kohdetiedot, jotka pätevät kaikkialla",
+     "text": "Varustelun, kuvat ja säännöt hoidat kerran — portaalit ja omat verkkosivusi saavat ne automaattisesti."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Yksi kohde, useita yksiköitä — kuvattuna oikein.",
+     "text": "Viisi samanlaista studiota on yksi tyyppi viidellä yksiköllä, ei viisi kertaa hoidettu kohde. Saatavuus on luku, juuri sellaisena kuin portaalit sitä odottavat.",
+     "punkte": {
+      "a": "Yksiköt kohdetyypeittäin",
+      "b": "Rakennus kokoaa useita tyyppejä",
+      "c": "Saatavuus lukuna, ei kyllä/ei"
+     }
+    }
+   },
+   "bildAltBlock": "Hotellin varaustilanne huonetyypeittäin",
+   "reiter": {
+    "kalender": {
+     "titel": "Varaustilanne",
+     "heading": "Jokainen yksikkö, jokainen yö, yksi kuva.",
+     "text": "Näkymä esittää varaukset, sulut ja vapaat yöt rinnakkain — värillä kanavan mukaan ja vieraan nimellä. Vetämällä siirrät varauksen, klikkaus luo uuden.",
+     "punkte": {
+      "a": "Väri kanavan mukaan",
+      "b": "Vedä ja pudota",
+      "c": "Jopa 500 kohdetta"
+     }
+    },
+    "einheiten": {
+     "titel": "Yksiköt",
+     "heading": "Viisi samanlaista studiota on yksi tyyppi.",
+     "text": "Hoidat tyypin ja kerrot, montako yksikköä siitä on. Portaalit saavat kappalemäärän, eivät kyllä/ei-saatavuutta — juuri niin kuin ne sitä odottavat.",
+     "punkte": {
+      "a": "Tyyppi luotu",
+      "b": "Yksiköt asetettu",
+      "c": "Kappalemäärä portaaleihin"
+     }
+    },
+    "reservierung": {
+     "titel": "Varaukset",
+     "heading": "Tiedustelusta lähtöön.",
+     "text": "Jokaisella varauksella on oma historiansa: maksut, viestit, tehtävät ja muutokset ovat samassa paikassa — jäljitettävissä viikkojen jälkeenkin.",
+     "punkte": {
+      "a": "Historia varauskohtaisesti",
+      "b": "Muutokset kirjattu",
+      "c": "Peruutus syyn kanssa"
+     }
+    },
+    "objektdaten": {
+     "titel": "Kohdetiedot",
+     "heading": "Hoida kerran, pätee kaikkialla.",
+     "text": "Varustelu, kuvat, säännöt ja kuvaukset ovat kohteessa. Sieltä ne menevät portaaleihin ja omille verkkosivuillesi — ilman toista ylläpitoa.",
+     "punkte": {
+      "a": "Kuvat ja varustelu",
+      "b": "Talon säännöt",
+      "c": "Jaetaan automaattisesti"
+     }
+    }
+   }
+  },
+  "channel": {
+   "metaBeschreibung": "Channel manager loma-asunnolle ja hotellille: Airbnb, Booking.com, Expedia, Vrbo ja Google synkassa reaaliajassa — ilman tuplavarauksia.",
+   "headline": "Yksi kalenteri. Kaikki varausalustat.",
+   "sub": "Saatavuus, hinnat ja sisällöt menevät portaaleihin reaaliajassa, varaukset tulevat takaisin samassa tahdissa. Tuplavarauksia ei synny alun alkaenkaan.",
+   "bildAlt": "Kanavanäkymä liitetyistä varausalustoista",
+   "nutzen": {
+    "a": {
+     "titel": "56 alustaa",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google ja monta muuta — liitetty yhden rajapinnan kautta, ei virityksillä."
+    },
+    "b": {
+     "titel": "Kaksi suuntaa, yksi tahti",
+     "text": "Mitä muutat täällä, näkyy siellä sekunneissa. Mitä siellä varataan, sulkee täällä yöt heti."
+    },
+    "c": {
+     "titel": "Jokainen portaali erikseen",
+     "text": "Hinnat, lisämaksut ja säännöt pätevät portaalikohtaisesti — ei yhtä hinnastoa, jonka pitää olla kaikkialla sama vain siksi, että se olisi helpompaa."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Stop-sell pätee kaikkialla. Ilman miettimistä.",
+     "text": "Kun sulet päivän, se on kiinni jokaisessa liitetyssä portaalissa. Ei jälkikäsityötä viidessä extranetissä, ei viikonloppuna unohtunutta kanavaa.",
+     "punkte": {
+      "a": "Välitön sulku kaikissa kanavissa",
+      "b": "Vähimmäisyöpyminen portaalikohtaisesti",
+      "c": "Loki: mitä lähti ja milloin"
+     }
+    }
+   },
+   "bildAltBlock": "Varaustilanne, jossa varauksia useasta portaalista",
+   "reiter": {
+    "portale": {
+     "titel": "Portaalit",
+     "heading": "56 alustaa yhdessä rajapinnassa.",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google ja myBestDays käyttävät samaa liitäntää. Uusi portaali on yhteys, ei projekti.",
+     "punkte": {
+      "a": "Airbnb",
+      "b": "Booking.com",
+      "c": "myBestDays"
+     }
+    },
+    "sync": {
+     "titel": "Synkronointi reaaliajassa",
+     "heading": "Mitä täällä tapahtuu, on siellä sekunneissa.",
+     "text": "Saatavuus, hinnat ja rajoitukset lähtevät heti; varaukset tulevat takaisin samassa tahdissa ja sulkevat yöt ennen kuin kukaan voi varata kahdesti.",
+     "punkte": {
+      "a": "Saatavuus",
+      "b": "Hinnat",
+      "c": "Rajoitukset"
+     }
+    },
+    "stopsell": {
+     "titel": "Stop-sell",
+     "heading": "Yksi klikkaus sulkee kaikki kanavat.",
+     "text": "Yksi sulku pätee kaikkialla — ei neljässä extranetissä peräkkäin. Loki näyttää, mitä lähti ja milloin ja mitä portaali vastasi.",
+     "punkte": {
+      "a": "Sulku asetettu",
+      "b": "Lähetetty kaikkiin kanaviin",
+      "c": "Loki tarkistettu"
+     }
+    },
+    "regeln": {
+     "titel": "Säännöt portaalikohtaisesti",
+     "heading": "Jokainen portaali saa olla erilainen.",
+     "text": "Lisämaksut, vähimmäisyöpymiset ja peruutussäännöt asetat kanavittain. Ei yhteistä hinnastoa vain siksi, ettei järjestelmä muuhun kykene.",
+     "punkte": {
+      "a": "Lisämaksu kanavittain",
+      "b": "Vähimmäisyöpyminen",
+      "c": "Peruutusaika"
+     }
+    }
+   }
+  },
+  "direkt": {
+   "metaBeschreibung": "Oma varaussivusto, varaus-widget ja oma verkkotunnus — suoravarauksia ilman portaaliprovisiota, maksun ja vahvistuksen kanssa.",
+   "headline": "Varauksia, jotka ovat kokonaan sinun.",
+   "sub": "Oma varaussivusi saatavuuden, hintojen ja maksun kanssa. Sen kautta tulevista varauksista emme ota provisiota — portaalit ottavat 15–18 prosenttia.",
+   "bildAlt": "Kohdesivu varauspolun kanssa",
+   "nutzen": {
+    "a": {
+     "titel": "Verkkosivut ilman toimistoa",
+     "text": "Sivueditori pohjilla, oma verkkotunnus, kuvat ja tekstit kohdetiedoistasi — verkossa yhdessä iltapäivässä."
+    },
+    "b": {
+     "titel": "Widget omille sivuillesi",
+     "text": "Onko sinulla jo verkkosivut? Silloin liität niihin vain varauspolun ja pidät oman ilmeesi."
+    },
+    "c": {
+     "titel": "Maksu tulee heti",
+     "text": "Ennakkomaksu, loppumaksu ja vakuus kulkevat automaattisesti — vieras saa vahvistuksensa ilman sinun työtäsi."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Markkinapaikka tuo vieraita, jotka eivät tunne sinua.",
+     "text": "myBestDays on oma markkinapaikkamme. Siellä olet muiden majoituskohteiden rinnalla ilman toista ylläpidettävää järjestelmää — samat kohteet, sama kalenteri.",
+     "punkte": {
+      "a": "Kytkettävissä kanavittain",
+      "b": "Yksi kalenteri kaikelle",
+      "c": "8 % kaikki mukana portaaliprovision sijaan"
+     }
+    }
+   },
+   "bildAltBlock": "Kanavanäkymä omista verkkosivuista ja markkinapaikasta",
+   "reiter": {
+    "website": {
+     "titel": "Varaussivusto",
+     "heading": "Sinun sivusi, sinun varauksesi.",
+     "text": "Pohjat, oma verkkotunnus, kuvat ja tekstit kohdetiedoista. Vieras varaa suoraan sinulta — ilman kiertotietä portaalin kautta.",
+     "punkte": {
+      "a": "Pohjat",
+      "b": "Oma verkkotunnus",
+      "c": "Monikielinen"
+     }
+    },
+    "widget": {
+     "titel": "Varaus-widget",
+     "heading": "Verkkosivuille, jotka sinulla jo on.",
+     "text": "Yksi osa nykyisellä sivullasi: saatavuus, hinta ja maksu, omassa ilmeessäsi. Ei muuttoa, ei uutta projektia.",
+     "punkte": {
+      "a": "Koodi lisätty",
+      "b": "Ilme peritty",
+      "c": "Ensimmäinen varaus"
+     }
+    },
+    "marktplatz": {
+     "titel": "myBestDays",
+     "heading": "Markkinapaikkamme tuo uusia vieraita.",
+     "text": "Kohteesi ovat omalla markkinapaikallamme muiden majoituskohteiden rinnalla — samat tiedot, sama kalenteri, yksi klikkaus päälle.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "zahlung": {
+     "titel": "Maksu",
+     "heading": "Maksettu ennen kuin vieras saapuu.",
+     "text": "Ennakkomaksu varauksen yhteydessä, loppuosa ennen saapumista, vakuus turvattuna. Vieras saa vahvistuksen ja laskun automaattisesti.",
+     "punkte": {
+      "a": "Ennakkomaksu",
+      "b": "Loppumaksu",
+      "c": "Vakuus"
+     }
+    }
+   }
+  },
+  "gaeste": {
+   "metaBeschreibung": "Digitaalinen vieraskansio, verkkosisäänkirjautuminen, automaattiset viestit ja tekoälyconcierge 24 kielellä — ensimmäisestä yhteydenotosta lähtöön.",
+   "headline": "Hoida vieraat ilman jatkuvaa naputtelua.",
+   "sub": "Viestit kulkevat automaattisesti oikeaan aikaan, kysymyksiin vastaa concierge 24 kielellä — ja sinä luet kaiken yhdessä saapuneet-näkymässä.",
+   "bildAlt": "Saapuneet-näkymä vieraiden viesteillä useasta kanavasta",
+   "nutzen": {
+    "a": {
+     "titel": "Yksi saapuneet-näkymä",
+     "text": "Airbnb, Booking, sähköposti ja WhatsApp päätyvät samaan keskusteluun — varaus vieressä, ei neljässä sovelluksessa."
+    },
+    "b": {
+     "titel": "Viestit oikeaan aikaan",
+     "text": "Vahvistus, saapumistiedot, kulkukoodi, arviointipyyntö: kerran asetettu, sen jälkeen itsestään."
+    },
+    "c": {
+     "titel": "Sisäänkirjautuminen etukäteen",
+     "text": "Vieras täyttää tietonsa ennen saapumista. Sinä otat hänet vastaan etkä naputtele lomakkeita."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Vieraskansio korvaa kansion eteisessä.",
+     "text": "Wi-Fi-salasana, jätteiden keräys, ravintolavinkit ja talon säännöt — digitaalisesti, vieraan kielellä, milloin tahansa muutettavissa.",
+     "punkte": {
+      "a": "24 kieltä",
+      "b": "Kulkukoodit oikeaan aikaan",
+      "c": "Vinkit lähiseudulta"
+     }
+    }
+   },
+   "bildAltBlock": "Mobiilinäkymä varaustilanteesta ja viesteistä",
+   "reiter": {
+    "posteingang": {
+     "titel": "Saapuneet",
+     "heading": "Airbnb, Booking, sähköposti ja WhatsApp samassa keskustelussa.",
+     "text": "Kaikki yhtä varausta koskevat viestit ovat yhdessä — kontekstin, pohjien ja käännöksen kanssa. Kukaan ei enää etsi neljästä sovelluksesta.",
+     "punkte": {
+      "a": "Vieras",
+      "b": "Milloin sisäänkirjautuminen on mahdollista?",
+      "c": "Klo 15 alkaen — lähetän koodin sinulle huomenna aamulla."
+     }
+    },
+    "automatisch": {
+     "titel": "Automaattiset viestit",
+     "heading": "Oikeaan aikaan, ilman muistutusta.",
+     "text": "Vahvistus, saapumistiedot, kulkukoodi, arviointipyyntö: kerran asetettu, sen jälkeen itsestään — vieraan kielellä.",
+     "punkte": {
+      "a": "Vahvistus lähetetty",
+      "b": "Saapumistiedot ajastettu",
+      "c": "Arviointipyyntö"
+     }
+    },
+    "checkin": {
+     "titel": "Verkkosisäänkirjautuminen",
+     "heading": "Tiedot ennen saapumista, ei ovella.",
+     "text": "Vieras täyttää matkustajatiedot ja henkilöllisyystodistuksen etukäteen. Sinä otat hänet vastaan etkä naputtele lomakkeita — ja täytät ilmoitusvelvollisuuden.",
+     "punkte": {
+      "a": "Matkustajatiedot",
+      "b": "Henkilöllisyystodistus",
+      "c": "Allekirjoitus"
+     }
+    },
+    "mappe": {
+     "titel": "Vieraskansio",
+     "heading": "Kaikki, mitä vieraan täytyy tietää.",
+     "text": "Wi-Fi, talon säännöt, jätteiden keräys ja vinkit lähiseudulta — digitaalisesti, milloin tahansa muutettavissa, 24 kielellä.",
+     "punkte": {
+      "a": "Vieras",
+      "b": "Missä Wi-Fi-salasana on?",
+      "c": "Vieraskansiossa — lähetin sinulle linkin."
+     }
+    }
+   }
+  },
+  "zahlungen": {
+   "metaBeschreibung": "Verkkomaksut, ennakkomaksut, vakuudet ja kirjanpitovalmiit viennit — rahan saapuminen ja laskutus ilman jälkityötä.",
+   "headline": "Raha tulee perille ilman perässä juoksemista.",
+   "sub": "Ennakkomaksu varauksen yhteydessä, loppuosa ennen saapumista, vakuus turvattuna — veloitetaan automaattisesti ja kirjataan varaukseen.",
+   "bildAlt": "Varaus maksun tilan ja tositteiden kanssa",
+   "nutzen": {
+    "a": {
+     "titel": "Maksaminen tuttuun tapaan",
+     "text": "Kortti, Apple Pay, Google Pay, PayPal ja paikalliset tavat — vieras valitsee sen, jonka tuntee."
+    },
+    "b": {
+     "titel": "Sääntöjä, ei muistutuksia",
+     "text": "Milloin ja kuinka paljon erääntyy, määrität kerran. Puuttuvat maksut näet ennen kuin vieras saapuu."
+    },
+    "c": {
+     "titel": "Valmis kirjanpitoon",
+     "text": "Laskut syntyvät varauksesta, viennit sopivat tilitoimistolle — ilman käsin tehtyjä taulukoita."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Omistajat näkevät tilityksensä itse.",
+     "text": "Jokaisella omistajalla on oma kirjautuminen varaustilanteen, tuottojen ja tilitysten kanssa. Se säästää kuukausittaisen sähköpostin liitetaulukon kanssa.",
+     "punkte": {
+      "a": "Oma kirjautuminen jokaiselle omistajalle",
+      "b": "Tilitys kohteittain",
+      "c": "Vain luku, ei muutoksia"
+     }
+    }
+   },
+   "bildAltBlock": "Näkymä myynnistä ja tilityksistä",
+   "reiter": {
+    "online": {
+     "titel": "Verkkomaksut",
+     "heading": "Kortti, lompakko, PayPal.",
+     "text": "Vieras maksaa tavalla, jonka tuntee. Raha menee tilillesi, tila näkyy varauksessa.",
+     "punkte": {
+      "a": "Avoin summa",
+      "b": "Ennakkomaksu",
+      "c": "Loppumaksu"
+     }
+    },
+    "plaene": {
+     "titel": "Maksusuunnitelmat",
+     "heading": "Sinä päätät, mikä erääntyy milloin.",
+     "text": "Ennakkomaksu, loppumaksu ja vakuus noudattavat sääntöjäsi — tarvittaessa eri tavalla kohteittain ja kanavittain.",
+     "punkte": {
+      "a": "Sääntö luotu",
+      "b": "Ennakkomaksu kirjattu",
+      "c": "Loppumaksu avoinna"
+     }
+    },
+    "rechnungen": {
+     "titel": "Laskut",
+     "heading": "Varauksesta, ei taulukosta.",
+     "text": "Laskut ja hyvityslaskut syntyvät oikeista luvuista, verokannan ja numerosarjan kanssa. Viennit sopivat tilitoimistolle.",
+     "punkte": {
+      "a": "Numerosarja",
+      "b": "Verokannat",
+      "c": "Vienti"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Omistajatilitys",
+     "heading": "Tuotot, kulut, tilitys.",
+     "text": "Jokainen omistaja näkee kohteensa varaustilanteen, tuottojen ja tilitysten kanssa — omana kirjautumisena eikä kuukausittaisena sähköpostina.",
+     "punkte": {
+      "a": "Tuotot",
+      "b": "Kulut",
+      "c": "Tilitys"
+     }
+    }
+   }
+  },
+  "preise": {
+   "metaBeschreibung": "Dynaamiset hinnat min./maks.-rajoin, rate plan -hinnastot kohteittain, sesonki- ja käyttöastelogiikka — enemmän myyntiä ilman päivittäistä käsityötä.",
+   "headline": "Hinnat, jotka huolehtivat itsestään.",
+   "sub": "Sesonki, käyttöaste, varausaika ja viikonpäivä vaikuttavat automaattisesti. Sinun rajasi pysyvät sinun rajoinasi: minimin alle ei mennä.",
+   "bildAlt": "Hintaruudukko dynaamisilla hinnoilla yötä kohti",
+   "nutzen": {
+    "a": {
+     "titel": "Min. ja maks. pätevät",
+     "text": "Sinä annat raamit, järjestelmä liikkuu niiden sisällä — ei hintaa, jota et halunnut."
+    },
+    "b": {
+     "titel": "Rate plan -hinnastot kohteittain",
+     "text": "Ei peruutettavissa, ennakkovaraus, pitkäaikainen: useita hinnastoja kohteittain, jokaisella omat säännöt."
+    },
+    "c": {
+     "titel": "Käsin syötetty menee edelle",
+     "text": "Käsin asetettu hinta jää voimaan. Automatiikka ei koskaan ylikirjoita tietoista päätöstä."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Alennukset ja lisämaksut lähtevät myös portaaleihin.",
+     "text": "Viikko- ja kuukausialennukset, ennakkovarauskampanjat ja lisät esitetään siellä, missä ne ovat sallittuja — ei vain omassa näkymässäsi.",
+     "punkte": {
+      "a": "Oleskelun pituuden alennukset",
+      "b": "Kampanjat aikavälillä",
+      "c": "Lisämaksut kanavittain"
+     }
+    }
+   },
+   "bildAltBlock": "Varaustilanne hinnoilla yötä kohti",
+   "reiter": {
+    "dynamisch": {
+     "titel": "Dynaamiset hinnat",
+     "heading": "Käyttöaste, sesonki, varausaika.",
+     "text": "Hinta liikkuu minimisi ja maksimisi välillä — kysynnän, viikonpäivän ja varausajan mukaan, joka yö uudelleen laskettuna.",
+     "punkte": {
+      "a": "Minimi",
+      "b": "Maksimi",
+      "c": "Kysyntä"
+     }
+    },
+    "raten": {
+     "titel": "Rate plan -hinnastot",
+     "heading": "Useita hintoja samalle kohteelle.",
+     "text": "Ei peruutettavissa, ennakkovaraus, pitkäaikainen: jokaisella hinnastolla omat ehtonsa — ja jokainen menee niihin portaaleihin, jotka sitä tukevat.",
+     "punkte": {
+      "a": "Hinnasto luotu",
+      "b": "Ehdot asetettu",
+      "c": "Portaaleihin"
+     }
+    },
+    "rabatte": {
+     "titel": "Alennukset",
+     "heading": "Pidempään, halvemmalla.",
+     "text": "Viikko- ja kuukausialennukset, kampanjat aikavälillä, lisät lyhyistä oleskeluista — näkyvät suoraan kalenterissa.",
+     "punkte": {
+      "a": "Viikkoalennus",
+      "b": "Kuukausialennus",
+      "c": "Kampanja"
+     }
+    },
+    "grenzen": {
+     "titel": "Sinun rajasi",
+     "heading": "Automatiikalla ei koskaan ole viimeinen sana.",
+     "text": "Itse asettamasi hinta jää voimaan. Ja minimisi alle ei mennä — ei edes tyhjällä kalenterilla.",
+     "punkte": {
+      "a": "Minimi",
+      "b": "Käsin syöttö",
+      "c": "Etusija"
+     }
+    }
+   }
+  },
+  "team": {
+   "metaBeschreibung": "Roolit omistajille, siivoukselle, työntekijöille ja välitystoimistolle — jokainen näkee vain oman alueensa, tehtävien ja kuvatarkistuslistojen kanssa.",
+   "headline": "Jokainen näkee juuri sen, mitä tarvitsee.",
+   "sub": "Omistajat näkevät kohteensa, siivous omat työnsä, työntekijät oman alueensa. Talousluvut pysyvät siellä, minne ne kuuluvat.",
+   "bildAlt": "Tehtävänäkymä vastuineen",
+   "nutzen": {
+    "a": {
+     "titel": "Rooleja, ei sopimista",
+     "text": "Oikeudet seuraavat roolia, eivät luottamusta. Siivouksen tunnus ei pääse myyntilukuihin."
+    },
+    "b": {
+     "titel": "Tehtävät todisteen kanssa",
+     "text": "Kuvin varustetut tarkistuslistat osoittavat, että asunto on luovutettu — kellonaika mukaan lukien."
+    },
+    "c": {
+     "titel": "Jaetaan automaattisesti",
+     "text": "Joka lähdön jälkeen siivous syntyy itsestään, määräaikana seuraava saapuminen."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Välitystoimistot hoitavat useita yrityksiä rinnakkain.",
+     "text": "Se, joka vuokraa muiden puolesta, hallinnoi useita omistajia yhdellä tilillä — eriytetyin tilityksin ja omin tunnuksin.",
+     "punkte": {
+      "a": "Useita omistajia",
+      "b": "Eriytetty tilitys",
+      "c": "Oikeudet henkilöittäin"
+     }
+    }
+   },
+   "bildAltBlock": "Varauslista vastuineen",
+   "reiter": {
+    "rollen": {
+     "titel": "Roolit",
+     "heading": "Jokainen näkee oman alueensa.",
+     "text": "Välitystoimisto, omistaja, työntekijä, siivous: oikeudet seuraavat roolia. Myyntiluvut näkee vain se, jonka pitää ne nähdä.",
+     "punkte": {
+      "a": "Rooli valittu",
+      "b": "Kohteet kohdennettu",
+      "c": "Oikeudet tarkistettu"
+     }
+    },
+    "aufgaben": {
+     "titel": "Tehtävät",
+     "heading": "Siivous syntyy itsestään.",
+     "text": "Joka lähdön jälkeen tehtävä on suunnitelmassa, määräaikana seuraava saapuminen. Se merkitään tehdyksi kuvatarkistuslistalla.",
+     "punkte": {
+      "a": "Lähtö kirjattu",
+      "b": "Siivous suunniteltu",
+      "c": "Kuvat ladattu"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Omistajat",
+     "heading": "Oma kirjautuminen kuukausisähköpostin sijaan.",
+     "text": "Omistajat näkevät kohteidensa varaustilanteen, tuotot ja tilitykset — lukien, ilman mahdollisuutta puuttua toimintaan.",
+     "punkte": {
+      "a": "Varaustilanne",
+      "b": "Tuotot",
+      "c": "Tilitys"
+     }
+    },
+    "agentur": {
+     "titel": "Välitystoimisto",
+     "heading": "Useita yrityksiä yhdellä tilillä.",
+     "text": "Se, joka vuokraa muiden puolesta, hoitaa useita omistajia rinnakkain — eriytetyt tilitykset, eriytetyt tunnukset, yksi kalenteri.",
+     "punkte": {
+      "a": "Useita omistajia",
+      "b": "Eriytetty tilitys",
+      "c": "Yksi kirjautuminen"
+     }
+    }
+   }
+  },
+  "app": {
+   "metaBeschreibung": "Natiivi sovellus yritykselle, omistajille, vieraille ja siivoukselle — varaustilanne, tehtävät ja viestit liikkeellä.",
+   "headline": "Toimintasi mahtuu taskuun.",
+   "sub": "Tarkista varaustilanne, luo varaus, vastaa viestiin, merkitse tehtävä tehdyksi — puhelimesta, ilman läppäriä.",
+   "bildAlt": "Mobiilisovellus varaustilanteen ja tehtävien kanssa",
+   "nutzen": {
+    "a": {
+     "titel": "Jokaiselle roolille",
+     "text": "Omistajilla, siivouksella ja yrityksellä on oma näkymänsä — sama sovellus, eri oikeudet."
+    },
+    "b": {
+     "titel": "Ilmoitukset, joilla on merkitystä",
+     "text": "Uusi varaus, peruutus, vieraan kysymys: saat tiedon heti, ilman että avaat sovellusta."
+    },
+    "c": {
+     "titel": "Myös vieraille",
+     "text": "Vieraat löytävät vieraskansion, sisäänkirjautumisen ja viestit myBestDays-sovelluksesta."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Kaksi sovellusta, koska kaksi maailmaa.",
+     "text": "myNextDays hoitaa toiminnan, myBestDays kuuluu vieraalle. Erilliset sovellukset tarkoittavat: yksikään vieras ei koskaan päädy sinun lukuihisi.",
+     "punkte": {
+      "a": "myNextDays yritykselle",
+      "b": "myBestDays vieraalle",
+      "c": "iOS ja Android"
+     }
+    }
+   },
+   "bildAltBlock": "Yrityksen näkymä työpöydällä",
+   "reiter": {
+    "betrieb": {
+     "titel": "Toiminta liikkeellä",
+     "heading": "Varaustilanne ja varaukset hallussa.",
+     "text": "Tarkista kalenteri, luo varaus, muuta hintaa — puhelimesta, samoista tiedoista kuin työpöydän ääressä.",
+     "punkte": {
+      "a": "Kalenteri",
+      "b": "Varaukset",
+      "c": "Hinnat"
+     }
+    },
+    "meldungen": {
+     "titel": "Ilmoitukset",
+     "heading": "Saat tiedon heti.",
+     "text": "Uusi varaus, peruutus tai vieraan kysymys saapuu ilmoituksena — yhdellä napautuksella olet varauksessa.",
+     "punkte": {
+      "a": "Varaus",
+      "b": "Uusi varaus heinäkuussa",
+      "c": "Peruutus 12.–14.8."
+     }
+    },
+    "gast": {
+     "titel": "Vieraalle",
+     "heading": "myBestDays-sovellus.",
+     "text": "Vieraat löytävät varauksen, vieraskansion, sisäänkirjautumisen ja viestit omasta sovelluksestaan — erillään sinun sovelluksestasi.",
+     "punkte": {
+      "a": "Varaus",
+      "b": "Vieraskansio",
+      "c": "Sisäänkirjautuminen"
+     }
+    },
+    "rollen": {
+     "titel": "Tiimille",
+     "heading": "Siivous ja omistajat.",
+     "text": "Siivoojat näkevät omat työnsä tarkistuslistan kanssa, omistajat kohteensa. Sama sovellus, eri oikeudet.",
+     "punkte": {
+      "a": "Työ avoinna",
+      "b": "Tarkistuslista tehty",
+      "c": "Kuvat lähetetty"
+     }
+    }
+   }
+  },
+  "auswertungen": {
+   "metaBeschreibung": "Käyttöaste, myynti, ADR ja kanavavertailu — raportteja, jotka näyttävät mistä se johtuu, eivät vain sitä mitä tapahtui.",
+   "headline": "Lukuja, joilla voi tehdä päätöksen.",
+   "sub": "Käyttöaste, myynti ja keskihinta kohteittain, ajanjaksoittain ja kanavittain — rinnakkain eikä viidessä viennissä.",
+   "bildAlt": "Raportti käyttöasteesta ja myynnistä",
+   "nutzen": {
+    "a": {
+     "titel": "Vertaa kanavia",
+     "text": "Mitä tuo Booking, mitä omat verkkosivut? Laskettuna provisio mukaan, ei vain myynnin perusteella."
+    },
+    "b": {
+     "titel": "Kohteittain",
+     "text": "Mikä kohde kantaa itsensä, mikä ei — näkyy käyttöasteesta ja keskihinnasta."
+    },
+    "c": {
+     "titel": "Raportit itsestään",
+     "text": "Kuukausiraportit lähtevät automaattisesti sinulle ja omistajillesi, PDF:nä tutussa rakenteessa."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Menneet ja tuleva samassa näkymässä.",
+     "text": "Sen vierellä, mitä oli, on se, mikä on varattu — niin näet helmikuussa, kantaako kesä, sen sijaan että huomaisit sen heinäkuussa.",
+     "punkte": {
+      "a": "Varaustilanne eteenpäin",
+      "b": "Vertailu edellisvuoteen",
+      "c": "Vienti tilitoimistolle"
+     }
+    }
+   },
+   "bildAltBlock": "Hotellin varaustilanne tietopohjana",
+   "reiter": {
+    "auslastung": {
+     "titel": "Käyttöaste",
+     "heading": "Kuinka täynnä oikeasti on?",
+     "text": "Käyttöaste kohteittain, kuukausittain ja kanavittain — verrattuna edellisvuoteen, ei mututuntumalla.",
+     "punkte": {
+      "a": "Käyttöaste",
+      "b": "Edellisvuosi",
+      "c": "Kohteittain"
+     }
+    },
+    "kanaele": {
+     "titel": "Kanavavertailu",
+     "heading": "Mitä mikä kanava tuo?",
+     "text": "Myynti provision jälkeen kanavittain: Booking, Airbnb, omat verkkosivut, myBestDays — rinnakkain eikä viidessä viennissä.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "berichte": {
+     "titel": "Raportit",
+     "heading": "Tulevat itsestään.",
+     "text": "Kuukausiraportit lähtevät automaattisesti sinulle ja omistajillesi, PDF:nä tutussa rakenteessa.",
+     "punkte": {
+      "a": "Raportti luotu",
+      "b": "Lähetetty omistajille",
+      "c": "Arkistoon tallennettu"
+     }
+    },
+    "ausblick": {
+     "titel": "Näkymä eteenpäin",
+     "heading": "Mikä on jo varattu.",
+     "text": "Sen vierellä, mitä oli, on varaustilanne eteenpäin — niin näet helmikuussa, kantaako kesä.",
+     "punkte": {
+      "a": "Varattu",
+      "b": "Tiedusteltu",
+      "c": "Vapaa"
+     }
+    }
+   }
+  }
+ },
+ "kontakt": {
+  "meta": {
+   "titel": "Yhteystiedot — myNextDays",
+   "beschreibung": "Näin tavoitat myNextDaysin: yleiset kysymykset ja myynti osoitteeseen {info}, tekniset tiedustelut osoitteeseen {technik}, puhelimitse numerossa {telefon} — tai suoraan lomakkeella."
+  },
+  "hero": {
+   "eyebrow": "Yhteystiedot",
+   "headlinePre": "Kerro, mistä on kysymys —",
+   "headlineHighlight": "me vastaamme",
+   "sub": "Kysymyksiä tuotteesta, siirtymisestä toisesta järjestelmästä, liittämisestä API:n kautta tai yhteistyöstä: valitse asiasi, ja viesti menee suoraan niille ihmisille, jotka tuntevat sen.",
+   "sitz": "Toimipaikka Bindslevissä, Tanskassa",
+   "sprachen": "Ohjelmisto 24 kielellä",
+   "eu": "EU:ssa isännöity, GDPR:n mukainen"
+  },
+  "wege": {
+   "eyebrow": "Tavat tavoittaa meidät",
+   "heading": "Kuka hoitaa asiasi?",
+   "sub": "Kaksi postilaatikkoa ja yksi chat. Kaupalliset asiat ja kaikki ennen aloitusta menevät yleiseen postilaatikkoon, kaikki tekninen suoraan kehitystiimille — niin mikään ei jää jonoon, jota kukaan ei katso.",
+   "allgemein": {
+    "titel": "Tuote, hinnat ja myynti",
+    "text": "Haluatko tietää, sopiiko myNextDays yrityksellesi, mitä toisesta järjestelmästä siirtyminen tarkoittaa tai miten laskutus ja tilaus toimivat? Tämä on oikea reitti — myös lehdistölle, kumppanuuksille ja tietosuojatiedusteluille.",
+    "aktion": "Kirjoita viesti"
+   },
+   "technik": {
+    "titel": "Tekniikka, API ja tietoturva",
+    "text": "Jokin ei toimi, yhteys varausportaaliin takkuaa, kehität meidän API:ta vasten tai olet löytänyt tietoturva-aukon? Nämä tiedustelut menevät suoraan kehitystiimille eivätkä myynnin kautta.",
+    "aktion": "Kirjoita viesti"
+   },
+   "hilfe": {
+    "titel": "Ohjeet ja chat",
+    "text": "Ohjeet jokaiseen osa-alueeseen löytyvät ohjekeskuksesta. Ja jos on kiire: joka sivun oikeassa alakulmassa on chat, jossa vastaa oikea ihminen — ilman tiliä ja ilman kirjautumista.",
+    "aktion": "Ohjekeskukseen",
+    "chatHinweis": "Chat joka sivun oikeassa alakulmassa"
+   }
+  },
+  "formular": {
+   "eyebrow": "Viesti",
+   "heading": "Kirjoita meille",
+   "sub": "Yksi lomake kaikkeen — asiasi ratkaisee, kuka sen saa.",
+   "ablaufTitel": "Mitä sen jälkeen tapahtuu",
+   "ablauf": {
+    "eingang": {
+     "titel": "Viesti lähtee",
+     "text": "Oman postipalvelimemme kautta Tanskassa — ei kolmannen osapuolen lomakepalvelua, jonka käsien läpi tietosi kulkevat."
+    },
+    "zuordnung": {
+     "titel": "Se päätyy oikeaan postilaatikkoon",
+     "text": "Kaupalliset asiat osoitteeseen {info}, tekniset osoitteeseen {technik}. Kumpi se on, sen päättää palvelimemme asiasi perusteella."
+    },
+    "antwort": {
+     "titel": "Vastaamme sinulle suoraan",
+     "text": "Tavallisena sähköpostina siihen osoitteeseen, jonka kirjoitat tähän — voit vastata siihen suoraan."
+    }
+   },
+   "hinweisPostfach": "Kaksi postilaatikkoa, jotta mikään ei jää odottamaan: {info} kaikkeen kaupalliseen, {technik} kaikkeen tekniseen. Kumpi siitä tulee, sen määrää palvelimemme asiasi perusteella — tämä lomake ei voi määrittää kohdetta.",
+   "thema": "Mistä on kysymys?",
+   "themen": {
+    "allgemein": "Yleinen kysymys",
+    "vertrieb": "Tuote, hinnat ja myynti",
+    "abrechnung": "Lasku ja tilaus",
+    "technik": "Tekninen ongelma",
+    "api": "API ja kehittäjät",
+    "partner": "Kumppanuus",
+    "presse": "Lehdistö ja media",
+    "datenschutz": "Tietosuoja",
+    "sicherheit": "Ilmoita tietoturva-aukosta"
+   },
+   "zielAllgemein": "Menee osoitteeseen {email}",
+   "zielTechnik": "Menee osoitteeseen {email} — kehitystiimillemme",
+   "name": "Nimi",
+   "email": "Sähköposti",
+   "emailPlatzhalter": "nimi@esimerkki.fi",
+   "firma": "Yritys",
+   "telefon": "Puhelin",
+   "optional": "valinnainen",
+   "nachricht": "Viestisi",
+   "nachrichtPlatzhalter": "Kuvaile asiaasi — mitä tarkemmin, sitä osuvampi vastaus.",
+   "absenden": "Lähetä viesti",
+   "laeuft": "Lähetetään …",
+   "dankeTitel": "Perillä.",
+   "nochEine": "Kirjoita uusi viesti",
+   "fehlerAllgemein": "Tämä ei onnistunut. Yritä myöhemmin uudelleen.",
+   "fehlerPruefung": "Turvatarkistus ei onnistunut. Lataa sivu uudelleen ja lähetä viesti vielä kerran.",
+   "fehlerFelder": "Tarkista tietosi: nimi, sähköpostiosoite ja vähintään 20 merkin viesti ovat pakollisia.",
+   "fehlerZuOft": "Tästä yhteydestä on tullut liian monta viestiä. Odota hetki ja yritä uudelleen.",
+   "fehlerSpaeter": "Viestiä ei voi juuri nyt toimittaa. Yritä myöhemmin uudelleen tai kirjoita suoraan osoitteeseen {email}.",
+   "datenschutzHinweis": "Käytämme tietojasi vain vastatessamme tähän tiedusteluun. Lisää <link>tietosuojaselosteessa</link>.",
+   "recaptchaHinweis": "Tämä lomake on suojattu reCAPTCHAlla. Googlen <datenschutz>tietosuojakäytäntö</datenschutz> ja <bedingungen>käyttöehdot</bedingungen> ovat voimassa."
+  },
+  "anschrift": {
+   "eyebrow": "Osoite",
+   "heading": "Näin tavoitat meidät suoraan",
+   "firmaEyebrow": "Yritystiedot",
+   "firmaHeading": "Kenen kanssa olet tekemisissä",
+   "firmaText": "Sitä, kuka on sopimuskumppani, ei pitäisi joutua etsimään pienestä tekstistä. Siksi rekisteritiedot ovat tässä — samat kuin oikeudellisissa tiedoissa.",
+   "firma": "Yritys",
+   "register": "Rekisteri",
+   "ustId": "Arvonlisäverotunniste",
+   "direktion": "Johto",
+   "impressum": "Katso oikeudelliset tiedot",
+   "datenschutz": "Katso tietosuojaseloste"
+  },
+  "faq": {
+   "eyebrow": "Usein kysytyt",
+   "heading": "Kysymyksiä yhteydenotosta",
+   "sub": "Kuka vastaa, kuinka kauan se kestää ja mitä tiedoillesi tapahtuu.",
+   "wer": {
+    "frage": "Kuka minulle vastaa?",
+    "antwort": "Ihminen tiimistä, ei numerolla varustettu tikettijärjestelmä. myNextDays on omistajavetoinen: kaupallisiin kysymyksiin vastaa joku, joka käyttää ohjelmistoa itse päivittäin, teknisiin kehitystiimi."
+   },
+   "postfach": {
+    "frage": "Mistä tiedän, mihin viestini päätyy?",
+    "antwort": "Valintakentän alla näkyy jokaisen asian kohdalla kohdeosoite. Yleiset, kaupalliset ja toimitukselliset asiat menevät osoitteeseen {info}, tekniset tiedustelut, API-kysymykset ja tietoturvailmoitukset osoitteeseen {technik}. Jaon tekee palvelimemme — lomake ei voi nimetä postilaatikkoa, jottei sitä voisi käyttää väärin vieraiden viestien lähetystienä."
+   },
+   "sprache": {
+    "frage": "Millä kielellä voin kirjoittaa?",
+    "antwort": "Kirjoita sillä kielellä, jolla luet tätä sivua — näemme sen tiedustelussasi ja vastaamme sillä, sikäli kuin osaamme. Saksaksi, tanskaksi ja englanniksi vastaamme aina."
+   },
+   "dauer": {
+    "frage": "Kuinka kauan vastaus kestää?",
+    "antwort": "Yleensä muutaman tunnin sisällä, viikonloppuina ja pyhäpäivinä se voi kestää pidempään. Tietoturvailmoituksista pätee: ne ovat kehitystiimillä ilman kiertotietä myynnin kautta."
+   },
+   "telefon": {
+    "frage": "Voinko myös soittaa?",
+    "antwort": "Kyllä, numeroon {telefon}. Puhelu on nopein tie kaikelle, mikä on parempi keskustella kuin kirjoittaa — teknisissä häiriöissä viesti on silti usein parempi, koska virheilmoitukset ja kuvakaappaukset voi liittää mukaan."
+   },
+   "bestaetigung": {
+    "frage": "Saanko sähköpostiin vastaanottovahvistuksen?",
+    "antwort": "Ei, tarkoituksella emme lähetä. Automaattinen vahvistus menisi mihin tahansa osoitteeseen, joka tähän kirjoitetaan — siten postipalvelintamme voisi käyttää vieraisiin postilaatikoihin kirjoittamiseen. Vahvistus näkyy siksi tässä sivulla heti, kun viesti on saapunut. Tietojasi käytämme yksinomaan vastatessamme tähän tiedusteluun."
+   }
+  }
+ },
+ "help": {
+  "heroTitle": "Miten voimme auttaa?",
+  "heroSubtitle": "Hae tietopankista tai löydä vaihe vaiheelta -ratkaisuja arkeesi myNextDaysin kanssa.",
+  "searchPlaceholder": "Mitä etsit?",
+  "searchAria": "Hae ohjeista",
+  "contact": "Contact",
+  "home": "Ohjeiden etusivu",
+  "articles": "{count, plural, one {# artikkeli} other {# artikkelia}}",
+  "collectionKbTitle": "Tietopankki",
+  "collectionKbDesc": "Kaikki kohteista, hinnoista, kalenterista, portaaleista ja tilistäsi.",
+  "collectionUsecasesTitle": "Käyttötapaukset",
+  "collectionUsecasesDesc": "Vaihe vaiheelta -ratkaisut tavallisiin arjen tilanteisiin.",
+  "helpfulQuestion": "Oliko tästä artikkelista apua?",
+  "helpfulYes": "Kyllä",
+  "helpfulNo": "Ei",
+  "helpfulThanks": "Kiitos palautteesta!",
+  "related": "Lisää artikkeleita luokassa {category}",
+  "searchTitle": "Haku",
+  "results": "{count, plural, one {# tulos haulle ”{query}”} other {# tulosta haulle ”{query}”}}",
+  "noResultsTitle": "Artikkeleita ei löytynyt",
+  "noResultsHintPre": "Kokeile muita hakusanoja tai",
+  "noResultsHintLink": "selaa luokkia",
+  "browseCategories": "Selaa luokkia",
+  "brandTitle": "myNextDays-ohje"
  }
 }

@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Kif nistgħu ngħinu?",
-    "heroSubtitle": "Fittex fil-bażi tal-għarfien jew sib soluzzjonijiet pass pass għax-xogħol tiegħek ta' kuljum b'myNextDays.",
-    "searchPlaceholder": "X'qed tfittex?",
-    "searchAria": "Fittex fl-għajnuna",
-    "contact": "Contact",
-    "home": "Bidu tal-għajnuna",
-    "articles": "{count, plural, one {# artiklu} two {# artikli} few {# artikli} many {# artiklu} other {# artiklu}}",
-    "collectionKbTitle": "Bażi tal-għarfien",
-    "collectionKbDesc": "Kollox dwar il-proprjetajiet, il-prezzijiet, il-kalendarju, il-portali u l-kont tiegħek.",
-    "collectionUsecasesTitle": "Każijiet ta' użu",
-    "collectionUsecasesDesc": "Soluzzjonijiet pass pass għal sitwazzjonijiet tipiċi ta' kuljum.",
-    "helpfulQuestion": "Dan l-artiklu kien ta' għajnuna?",
-    "helpfulYes": "Iva",
-    "helpfulNo": "Le",
-    "helpfulThanks": "Grazzi tal-feedback tiegħek!",
-    "related": "Aktar artikli f'{category}",
-    "searchTitle": "Fittex",
-    "results": "{count, plural, one {# riżultat għal „{query}“} two {# riżultati għal „{query}“} few {# riżultati għal „{query}“} many {# riżultat għal „{query}“} other {# riżultat għal „{query}“}}",
-    "noResultsTitle": "Ma nstab l-ebda artiklu",
-    "noResultsHintPre": "Ipprova termini ta' tfittxija oħra jew",
-    "noResultsHintLink": "fittex fil-kategoriji",
-    "browseCategories": "Fittex fil-kategoriji",
-    "brandTitle": "Għajnuna myNextDays"
-  },
   "common": {
     "save": "Issejvja",
     "cancel": "Ikkanċella",
@@ -1420,7 +1395,10 @@
     "commissionableNo": "Le — mingħajr kummissjoni",
     "infoAria": "Spjegazzjoni dwar {feld}",
     "rulesPageTitle": "Regoli tal-ikklerjar",
-    "rulesPageIntro": "X’iżommu l-portali għal kull prenotazzjoni u ta’ min huma t-tariffi. It-tnejn jiddeterminaw liema ammont fl-aħħar jidħol fir-rendikont tal-kummissjoni tas-sidien tiegħek."
+    "rulesPageIntro": "X’iżommu l-portali għal kull prenotazzjoni u ta’ min huma t-tariffi. It-tnejn jiddeterminaw liema ammont fl-aħħar jidħol fir-rendikont tal-kummissjoni tas-sidien tiegħek.",
+    "endsSalesHint": "Attenzjoni: b’dan tintemm ukoll id-distribuzzjoni. Mill-{date} il-proprjetà ma tinbiegħx aktar fuq ebda kanal — lanqas fuq Booking.com, Airbnb u myBestDays. Għal sempliċi bidla fit-tariffa, żid kuntratt segwenti li jibda dakinhar.",
+    "effectReleased": "{property}: id-distribuzzjoni tkompli — it-tmiem tal-kuntratt tneħħa u l-iljieli jistgħu jinbiegħu mill-ġdid.",
+    "effectBlocked": "{property}: id-distribuzzjoni tintemm fi {date} — {nights} iljieli mblukkati u rtirati mill-portali."
   },
   "portal": {
     "title": "Il-portal tiegħi",
@@ -4535,7 +4513,10 @@
       "photos": "Ritratti",
       "noPhotosFound": "Għal din il-prenotazzjoni ma nstab l-ebda ritratt.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "permezz ta’ {channel}",
+      "receivedOn": "waslet għandna fi {date}",
+      "bookedOn": "prenotata fi {date}"
     },
     "dashboard": {
       "todayCheckouts": "Check-outs",

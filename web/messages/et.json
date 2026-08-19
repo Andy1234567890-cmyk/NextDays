@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Kuidas saame aidata?",
-    "heroSubtitle": "Otsi teadmusbaasist või leia samm-sammult lahendusi igapäevatööks myNextDaysiga.",
-    "searchPlaceholder": "Mida otsid?",
-    "searchAria": "Otsi abist",
-    "contact": "Contact",
-    "home": "Abikeskuse avaleht",
-    "articles": "{count, plural, one {# artikkel} other {# artiklit}}",
-    "collectionKbTitle": "Teadmusbaas",
-    "collectionKbDesc": "Kõik objektide, hindade, kalendri, portaalide ja teie konto kohta.",
-    "collectionUsecasesTitle": "Kasutusnäited",
-    "collectionUsecasesDesc": "Samm-sammult lahendused tavapärastele igapäevastele olukordadele.",
-    "helpfulQuestion": "Kas sellest artiklist oli abi?",
-    "helpfulYes": "Jah",
-    "helpfulNo": "Ei",
-    "helpfulThanks": "Aitäh tagasiside eest!",
-    "related": "Rohkem artikleid kategoorias {category}",
-    "searchTitle": "Otsi",
-    "results": "{count, plural, one {# tulemus otsingule „{query}“} other {# tulemust otsingule „{query}“}}",
-    "noResultsTitle": "Artikleid ei leitud",
-    "noResultsHintPre": "Proovi teisi otsingusõnu või",
-    "noResultsHintLink": "sirvi kategooriaid",
-    "browseCategories": "Sirvi kategooriaid",
-    "brandTitle": "myNextDays abi"
-  },
   "common": {
     "save": "Salvesta",
     "cancel": "Tühista",
@@ -4540,7 +4515,10 @@
       "photos": "Fotod",
       "noPhotosFound": "Selle broneeringu kohta pilte ei leitud.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "kanali {channel} kaudu",
+      "receivedOn": "meile saabus {date}",
+      "bookedOn": "broneeritud {date}"
     },
     "dashboard": {
       "todayCheckouts": "Väljaregistreerimised",

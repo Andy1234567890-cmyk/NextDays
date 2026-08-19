@@ -1177,7 +1177,7 @@ internen Preisdetails). Preis kommt aus dem Pricing-Resolver.
 | `GET`   | `/api/v1/booking-engine/listings/{id}?start&end`            | Detail eines active Objekts (`404` wenn nicht active): Beschreibung, Fotos, Ausstattung, ungefähre Lage (gerundete lat/lng), Preis via Resolver                                                                  |
 | `GET`   | `/api/v1/booking-engine/availability?property_id&start&end` | Öffentliche Tagesverfügbarkeit (buchbar/belegt)                                                                                                                                                                  |
 | `POST`  | `/api/v1/booking-engine/quote`                              | Preisaufschlüsselung VOR der Buchung (`property_id`, Zeitraum, `guests`, `pets`, `addons`) — dieselbe Rechnung wie die Buchung, inkl. Gebühren und Abgaben. Antwort trägt zusätzlich `pets_allowed`/`max_guests`; Überbelegung und Tiere ohne Erlaubnis → `422` |
-| `POST`  | `/api/v1/booking-engine/reservations`                       | Gastbuchung (Double-Booking-Schutz `409`, sperrt Kalender + Channex-Push). Body kann `guests`, `pets` + `addons` (Auswahl) enthalten → Zusatzleistungen werden serverseitig bepreist + als `reservation_addons` angelegt |
+| `POST`  | `/api/v1/booking-engine/reservations`                       | **Sofortbuchung: erst zahlen, dann Buchung (0409).** Antwortet mit `status="zahlung_offen"`, `zahlung_erforderlich=true`, `client_secret`, `publishable_key`, `stripe_account` und legt NOCH KEINE Reservierung an — die entsteht erst, wenn der Stripe-Webhook die Zahlung einlöst. Anfrage-Objekte (`is_request=true`) laufen weiter ohne Zahlung. Body kann `guests`, `pets` + `addons` enthalten → serverseitig bepreist. Double-Booking-Schutz `409` beim Einlösen; der Zeitraum ist während des Bezahlens NICHT reserviert |
 | `GET`   | `/api/v1/booking-engine/reservations/{id}/addons?email`     | Nach-Buchung-Sicht des Gasts: buchbare `guest_portal`-Zusatzleistungen (unter Beachtung der „wann anzeigen"-Regel) + bereits gekaufte. Verifikation über die Buchungs-E-Mail                                     |
 | `POST`  | `/api/v1/booking-engine/reservations/{id}/addons`           | Nachträglicher Add-on-Kauf durch den Gast (`email` + `addons`); serverseitig bepreist, Verkaufsfläche `guest_portal`                                                                                             |
 
@@ -1212,6 +1212,42 @@ Abrechnungsbasis: `per_stay` · `per_night` · `per_guest` · `per_unit`. Verkau
 provisionsfrei am OTA vorbei; **Zahlstatus** `pending`/`paid`/`cancelled`. Beim
 Kauf: Auto-Aufgabe (Task-Trigger `addon_purchased`) + Extra-Umsatz im
 Owner-Statement. Preise werden **immer serverseitig** aus dem Katalog berechnet.
+
+---
+
+## guest_auth (Konto des Marktplatz-Gastes — implementiert)
+
+Auth-Welt der **Demand-Seite** (`/plattform`, myBestDays-App), strikt getrennt von
+der Tenant-Auth (`/auth`): ein Portal-Gast ist ein `auth.users`-Eintrag OHNE
+`tenant_id`/`role` plus eine `portal_guests`-Zeile. `me`-Routen verlangen ein
+Gast-Token und sind über die eigene `guest_id` gescopet (Wurzel 3/9).
+
+| Methode  | Pfad                                | Beschreibung                                                                                       |
+| -------- | ----------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `POST`   | `/api/v1/guest-auth/register`       | Konto mit E-Mail + Passwort (public)                                                                |
+| `POST`   | `/api/v1/guest-auth/login`          | E-Mail + Passwort → Session (kein MFA für Gäste)                                                     |
+| `POST`   | `/api/v1/guest-auth/refresh`        | Refresh-Token → frische Session                                                                     |
+| `POST`   | `/api/v1/guest-auth/password-reset` | Reset-Mail anstoßen; antwortet IMMER neutral (kein Existenz-Leak)                                    |
+| `POST`   | `/api/v1/guest-auth/code`           | **Anmeldung per Einmal-Code, Schritt 1:** Code an die Adresse schicken. Antwort ist für bekannte und unbekannte Adressen IDENTISCH |
+| `POST`   | `/api/v1/guest-auth/code/verify`    | **Schritt 2:** Code → Session. `profil_fehlt=true` heißt: Erstanmeldung, der Name fehlt noch          |
+| `POST`   | `/api/v1/guest-auth/code/profil`    | **Schritt 3** (nur Erstanmeldung, Gast-Token): Name (+ optional Telefon) nachtragen → Profil          |
+| `GET`    | `/api/v1/guest-auth/me`             | eigenes Profil                                                                                      |
+| `PATCH`  | `/api/v1/guest-auth/me`             | Profilfelder ändern (E-Mail NICHT — eigener Re-Auth-Flow, Wurzel 7)                                  |
+| `DELETE` | `/api/v1/guest-auth/me`             | eigenes Konto löschen (mit Passwort-Rückfrage, Apple 5.1.1(v))                                        |
+
+**Warum es den Code-Weg gibt (19.08.2026):** In der myBestDays-App konnte ein Gast
+buchen, ohne Konto und ohne Zahlung. Airbnb macht die Reihenfolge umgekehrt
+(`/book/stays/…` ohne Anmeldung zeigt „1. Logge dich ein oder registriere dich →
+2. Füge eine Zahlungsart hinzu → 3. Überprüfe deine Anfrage"); genau diese
+Reihenfolge hat der App-Checkout jetzt.
+
+Der Code kommt von **GoTrue selbst** (`generate_link` → `email_otp`) und wird von
+GoTrue geprüft (`verify_otp`) — Ablauffrist und Einmal-Verwendung liegen damit
+dort, wo auch der Angreifer einloggt (Wurzel 7), nicht in einer eigenen Tabelle.
+Versendet wird die Mail über unseren Mailweg (24 Sprachen, `gast_code.*`).
+Betriebsauflage: `MAILER_OTP_EXP` und `MAILER_OTP_LENGTH` am Auth-Container setzen
+— ohne sie gilt der GoTrue-Default (bis 24 h), und deshalb nennt die Mail bewusst
+keine Frist. Alle `/guest-auth/code*`-Pfade liegen im strengen `auth`-Ratelimit.
 
 ---
 
@@ -2791,3 +2827,119 @@ aktualisiert nach jeder Aktion über `revalidatePath`.
 `/[id]`) mit `admin/lib/announcements.ts`; Empfang
 `web/app/(dashboard)/neuerungen` und das Popup über `web/lib/announcements.ts`
 (`listAnnouncements`, `popupAnnouncement`, `quittiereAnnouncement`).
+
+## contact — Kontaktformular der Marketing-Seite (`/api/v1/contact`)
+
+Der Weg vom Besucher der Marketing-Seite (`marketing/app/kontakt`) in eines von
+**zwei** Postfächern. Der Slice hat **keine Tabelle**: er nimmt eine Nachricht
+an, bewertet sie und schickt sie über den eigenen Mailcow-SMTP an uns. Eine
+zweite Ablage, die niemand liest, wäre nur ein weiterer Ort mit
+personenbezogenen Daten; der Zustellnachweis ist die Message-ID im Log
+(`kontakt_gesendet`).
+
+| Methode | Pfad                       | Zweck                                              |
+| ------- | -------------------------- | -------------------------------------------------- |
+| `POST`  | `/api/v1/contact/message`  | Nachricht an das zuständige Postfach — **ohne Auth** |
+
+**Öffentlich und zwingend öffentlich:** wer uns schreiben will, hat kein Konto.
+Der Schutz liegt deshalb woanders — Rate-Limit-Bucket `public_support`
+(20/60/IP, fail-closed), serverseitig bewertetes reCAPTCHA, Honigtopf-Feld,
+harte Längengrenzen und eine immer gleiche Antwort.
+
+### Wohin die Nachricht geht (Wurzel 3)
+
+Das Formular schickt **nur ein Thema-Kürzel**, niemals eine Zieladresse. Gäbe es
+ein Zielfeld, wäre der Endpunkt ein offenes Mail-Relay über unsere
+DKIM-signierte Domain. Die Tabelle steht in
+`apps/api/src/features/contact/themen.py`:
+
+| `thema`                                                           | Postfach                       |
+| ----------------------------------------------------------------- | ------------------------------ |
+| `allgemein`, `vertrieb`, `abrechnung`, `presse`, `partner`, `datenschutz` | `CONTACT_RECIPIENT_GENERAL` (info@)      |
+| `technik`, `api`, `sicherheit`                                    | `CONTACT_RECIPIENT_TECHNICAL` (developer@) |
+
+`datenschutz` gehört ins allgemeine Postfach, weil `info@` die in Impressum und
+Datenschutzerklärung **veröffentlichte** Adresse ist — eine Auskunftsanfrage
+woanders hinzuleiten würde der eigenen Erklärung widersprechen.
+
+Fehlt die Variable des zuständigen Postfachs, antwortet der Endpunkt `503`. Es
+gibt **keinen Rückfall** auf das andere Postfach (Wurzel 4): eine
+Sicherheitsmeldung im kaufmännischen Posteingang ist schlimmer als eine klar
+abgewiesene. Ein neues Thema ohne Eintrag in `EMPFAENGERART` fällt im Test
+`test_jedes_thema_hat_einen_empfaenger` auf, nicht im Betrieb.
+
+### Felder
+
+| Feld            | Pflicht | Grenze        |
+| --------------- | ------- | ------------- |
+| `name`          | ja      | 2–120         |
+| `email`         | ja      | `EmailStr`    |
+| `thema`         | ja      | Enum, s. o.   |
+| `nachricht`     | ja      | 20–5000       |
+| `firma`         | nein    | ≤ 160         |
+| `telefon`       | nein    | ≤ 40          |
+| `locale`        | nein    | ≤ 10          |
+| `captcha_token` | s. u.   | ≤ 4000        |
+| `website`       | —       | ≤ 200 — **Honigtopf**, muss leer bleiben |
+
+`name` und `nachricht` werden zusätzlich gegen reinen Leerraum geprüft: 200
+Leerzeichen erfüllen `min_length` und ergäben eine leere Mail im Postfach.
+
+### Spamschutz in drei Stufen
+
+1. **Honigtopf** (`website`) — im Formular ein Feld abseits der Bildfläche, das
+   kein Mensch sieht. Gefüllt → **keine** Mail, **kein** Google-Aufruf, aber
+   dieselbe Antwort wie im Erfolgsfall. Ein Bot darf nicht erfahren, dass er
+   erkannt wurde, sonst lässt der nächste Lauf das Feld weg.
+2. **reCAPTCHA Enterprise** (`core/captcha.py`, Google Cloud). Die Seite holt
+   per `grecaptcha.enterprise.execute(siteKey, {action: "kontakt"})` ein Token,
+   der Server lässt es bewerten:
+   `POST https://recaptchaenterprise.googleapis.com/v1/projects/{RECAPTCHA_PROJECT_ID}/assessments?key={RECAPTCHA_API_KEY}`.
+   Abgewiesen wird bei ungültigem/abgelaufenem Token, **abweichender Aktion**
+   (sonst wäre ein Token von einer harmlosen Seite überall verwendbar) und
+   Score unter `RECAPTCHA_MIN_SCORE` (Standard 0.5). Kostenlos bis 10.000
+   Bewertungen/Monat je Organisation — deshalb der eigene Rate-Limit-Bucket.
+   **Fail-CLOSED:** Netzwerkfehler, unerwartete Antwort oder fehlende Schlüssel
+   ergeben `502`/`503`, nie ein stilles „bestanden".
+   Lokal greift `Settings.captcha_sandbox` (gleiche Bauart wie `mail_sandbox`):
+   Das Token wird nur protokolliert. Ausserhalb von `local` entscheidet allein
+   `CAPTCHA_SANDBOX_OVERRIDE`, Default aus.
+3. **Rate-Limit** — `/contact/message` liegt im Bucket `public_support`.
+
+### Antworten
+
+| Status | Bedeutung                                                                       |
+| ------ | ------------------------------------------------------------------------------- |
+| `200`  | angenommen — immer derselbe Text, auch beim Honigtopf-Treffer                    |
+| `403`  | Captcha fehlt, ist abgelaufen, trägt eine fremde Aktion oder liegt unter dem Score |
+| `422`  | Feldgrenze verletzt oder unbekanntes `thema` (kein Default, Wurzel 4)           |
+| `429`  | Rate-Limit                                                                      |
+| `502`  | Captcha nicht prüfbar **oder** Mailversand fehlgeschlagen                       |
+| `503`  | Postfach bzw. reCAPTCHA nicht konfiguriert                                      |
+
+`502` beim Mailversand ist Absicht (Wurzel 5): wer „erhalten" liest, wartet auf
+eine Antwort — kam die Mail nie an, wartet er vergeblich.
+
+### Die interne Mail
+
+Gerendert über `core.mail_layout` (Marke myNextDays, Logo als CID), Betreff
+`[Kontakt] <Anliegen> — <Name>`, **`Reply-To` = Adresse des Besuchers**: die
+Antwort-Taste im Postfach landet damit beim Absender, nicht bei uns. Der Freitext
+läuft durch das Escaping des Layouts (Wurzel 8) und wird zeilenweise in Absätze
+zerlegt, weil `\n` in HTML zusammenfällt. Die Mail ist deutsch — sie landet im
+eigenen Postfach und ist keine Nachricht an den Besucher; die Sprache der
+Anfrage steht **im** Text.
+
+**Keine Eingangsbestätigung an den Absender.** Sie ginge an eine frei
+eingetippte Adresse und machte unseren Mailserver zum Werkzeug, um fremde
+Postfächer anzuschreiben — dieselbe Überlegung, aus der Voranmeldung
+(`newsletter`) und Löschantrag (`account_deletion`) ein Double-Opt-in haben. Die
+Bestätigung steht auf der Seite.
+
+**Frontend:** `marketing/app/kontakt/page.tsx` mit
+`marketing/components/kontakt/*`, Anbindung `marketing/lib/kontakt.ts` (direkt
+gegen die FastAPI, damit deren Rate-Limit und Google die IP des BESUCHERS sehen)
+und `marketing/lib/captcha.ts` (lädt das Google-Skript erst beim ersten Anfassen
+des Formulars). Die beiden Postfächer stehen in
+`marketing/content/legal/anbieter.ts` (`email`, `emailTechnik`) — in den 24
+Sprachdateien stehen nur die Platzhalter `{info}`/`{technik}`.

@@ -7,7 +7,7 @@
   "funktionen": "Funktioner",
   "preise": "Priser",
   "kanaele": "Kanaler",
-  "kunden": "Kunder",
+  "ueberUns": "Om os",
   "ressourcen": "Ressourcer",
   "sprache": "Sprog",
   "spracheWaehlen": "Vælg sprog",
@@ -425,7 +425,7 @@
   "ressourcen": {
    "blog": "Blog",
    "hilfeCenter": "Hjælpecenter",
-   "webinare": "Webinarer",
+   "status": "Systemstatus",
    "leitfaeden": "Guides",
    "api": "API-dokumentation"
   },
@@ -441,7 +441,8 @@
   "datenschutz": "Privatliv",
   "impressum": "Juridisk information",
   "cookies": "Cookiepolitik",
-  "avv": "Databehandling"
+  "avv": "Databehandling",
+  "kontoLoeschen": "Slet konto"
  },
  "abschluss": {
   "heading": "Klar til at styre din overnatningsvirksomhed ét sted?",
@@ -604,7 +605,8 @@
     "verkauf": "Salg",
     "gast": "Gæst & penge",
     "betrieb": "Drift"
-   }
+   },
+   "reiterHeading": "Hvad ligger der bag?"
   },
   "uebersicht": {
    "metaTitel": "Funktioner — alt til udlejning og hotel | myNextDays",
@@ -623,7 +625,6 @@
    "headline": "Én kalender til alt, du lejer ud.",
    "sub": "Belægning, reservationer og enhedsdata ligger ét sted — uanset om det er ét feriehus eller tolv værelsestyper med flere enheder.",
    "bildAlt": "Belægningsplan med bookinger fra flere kanaler",
-   "bildAltBlock": "Hotellets belægningsplan med værelsestyper",
    "nutzen": {
     "a": {
      "titel": "Alt på ét blik",
@@ -648,6 +649,49 @@
       "c": "Ledighed som tal, ikke ja/nej"
      }
     }
+   },
+   "bildAltBlock": "Hotellets belægningsplan med værelsestyper",
+   "reiter": {
+    "kalender": {
+     "titel": "Belægningsplan",
+     "heading": "Hver enhed, hver nat, ét billede.",
+     "text": "Planen viser bookinger, spærringer og ledige nætter side om side — med farve pr. kanal og gæstens navn. Træk flytter en booking, et klik opretter en ny.",
+     "punkte": {
+      "a": "Farve pr. kanal",
+      "b": "Træk og slip",
+      "c": "Op til 500 enheder"
+     }
+    },
+    "einheiten": {
+     "titel": "Enheder",
+     "heading": "Fem ens studios er én type.",
+     "text": "Du vedligeholder typen og angiver, hvor mange enheder der er af den. Portalerne får et antal, ikke en ja/nej-ledighed — præcis som de forventer.",
+     "punkte": {
+      "a": "Type oprettet",
+      "b": "Enheder sat",
+      "c": "Antal til portalerne"
+     }
+    },
+    "reservierung": {
+     "titel": "Reservationer",
+     "heading": "Fra forespørgsel til afrejse.",
+     "text": "Hver booking har sit forløb: betalinger, beskeder, opgaver og ændringer står ét sted — også til at følge uger senere.",
+     "punkte": {
+      "a": "Forløb pr. booking",
+      "b": "Ændringer logget",
+      "c": "Afbestilling med begrundelse"
+     }
+    },
+    "objektdaten": {
+     "titel": "Enhedsdata",
+     "heading": "Vedligehold én gang, gælder overalt.",
+     "text": "Faciliteter, billeder, regler og beskrivelser ligger på enheden. Derfra går de ud til portalerne og til din egen hjemmeside — uden dobbelt arbejde.",
+     "punkte": {
+      "a": "Billeder og faciliteter",
+      "b": "Husregler",
+      "c": "Fordeles automatisk"
+     }
+    }
    }
   },
   "channel": {
@@ -655,7 +699,6 @@
    "headline": "Én kalender. Alle bookingportaler.",
    "sub": "Ledighed, priser og indhold går i realtid ud til portalerne, bookinger kommer retur i samme takt. Dobbeltbookinger opstår slet ikke.",
    "bildAlt": "Kanaloversigt med tilsluttede bookingportaler",
-   "bildAltBlock": "Belægningsplan med bookinger fra flere kanaler",
    "nutzen": {
     "a": {
      "titel": "56 portaler",
@@ -680,6 +723,49 @@
       "c": "Log: hvad gik ud hvornår"
      }
     }
+   },
+   "bildAltBlock": "Belægningsplan med bookinger fra flere kanaler",
+   "reiter": {
+    "portale": {
+     "titel": "Portaler",
+     "heading": "56 portaler på én grænseflade.",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google og myBestDays hænger på samme forbindelse. En ny portal er en forbindelse, ikke et projekt.",
+     "punkte": {
+      "a": "Airbnb",
+      "b": "Booking.com",
+      "c": "myBestDays"
+     }
+    },
+    "sync": {
+     "titel": "Realtidssynk",
+     "heading": "Det, der sker her, er der på sekunder.",
+     "text": "Ledighed, priser og restriktioner går ud med det samme; bookinger kommer retur i samme takt og spærrer nætterne, før nogen kan booke to gange.",
+     "punkte": {
+      "a": "Ledighed",
+      "b": "Priser",
+      "c": "Restriktioner"
+     }
+    },
+    "stopsell": {
+     "titel": "Stop-sell",
+     "heading": "Ét klik lukker alle kanaler.",
+     "text": "En spærring gælder overalt — ikke i fire extranets efter hinanden. Loggen viser, hvad der gik ud hvornår, og hvad portalen svarede.",
+     "punkte": {
+      "a": "Spærring sat",
+      "b": "Sendt til alle kanaler",
+      "c": "Log kontrolleret"
+     }
+    },
+    "regeln": {
+     "titel": "Regler pr. portal",
+     "heading": "Hver portal må gerne være forskellig.",
+     "text": "Tillæg, minimumsophold og afbestillingsregler sætter du pr. kanal. Ingen fælles sats, bare fordi et system ikke kan andet.",
+     "punkte": {
+      "a": "Tillæg pr. kanal",
+      "b": "Minimumsophold",
+      "c": "Afbestillingsfrist"
+     }
+    }
    }
   },
   "direkt": {
@@ -687,7 +773,6 @@
    "headline": "Bookinger, der er helt dine.",
    "sub": "Din egen bookingside med ledighed, priser og betaling. Af dem tager vi ingen provision — portalerne tager 15 til 18 procent.",
    "bildAlt": "Enhedsside med bookingflow",
-   "bildAltBlock": "Kanaloversigt med egen hjemmeside og markedsplads",
    "nutzen": {
     "a": {
      "titel": "Hjemmeside uden bureau",
@@ -712,6 +797,49 @@
       "c": "8 % all-in i stedet for portalprovision"
      }
     }
+   },
+   "bildAltBlock": "Kanaloversigt med egen hjemmeside og markedsplads",
+   "reiter": {
+    "website": {
+     "titel": "Bookinghjemmeside",
+     "heading": "Din side, dine bookinger.",
+     "text": "Skabeloner, eget domæne, billeder og tekster fra enhedsdataene. Gæsten booker direkte hos dig — uden omvej om en portal.",
+     "punkte": {
+      "a": "Skabeloner",
+      "b": "Eget domæne",
+      "c": "Flersproget"
+     }
+    },
+    "widget": {
+     "titel": "Bookingwidget",
+     "heading": "Til den hjemmeside, du allerede har.",
+     "text": "En byggeklods på din nuværende side: ledighed, pris og betaling, i dit design. Ingen flytning, intet nyt projekt.",
+     "punkte": {
+      "a": "Kode indsat",
+      "b": "Design overtaget",
+      "c": "Første booking"
+     }
+    },
+    "marktplatz": {
+     "titel": "myBestDays",
+     "heading": "Vores markedsplads giver nye gæster.",
+     "text": "Dine enheder står på vores egen markedsplads ved siden af andre boliger — samme data, samme kalender, ét klik for at slå til.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "zahlung": {
+     "titel": "Betaling",
+     "heading": "Betalt, før gæsten ankommer.",
+     "text": "Depositum ved booking, rest før ankomst, sikkerhed dækket. Gæsten får bekræftelse og faktura automatisk.",
+     "punkte": {
+      "a": "Depositum",
+      "b": "Restbetaling",
+      "c": "Sikkerhed"
+     }
+    }
    }
   },
   "gaeste": {
@@ -719,7 +847,6 @@
    "headline": "Pas på gæsterne uden at skrive hele dagen.",
    "sub": "Beskeder sendes automatisk på rette tidspunkt, conciergen svarer på 24 sprog — og du læser det hele i én indbakke.",
    "bildAlt": "Indbakke med gæstebeskeder fra flere kanaler",
-   "bildAltBlock": "Mobilvisning med belægning og beskeder",
    "nutzen": {
     "a": {
      "titel": "Én indbakke",
@@ -744,6 +871,49 @@
       "c": "Tips fra området"
      }
     }
+   },
+   "bildAltBlock": "Mobilvisning med belægning og beskeder",
+   "reiter": {
+    "posteingang": {
+     "titel": "Indbakke",
+     "heading": "Airbnb, Booking, mail og WhatsApp i ét forløb.",
+     "text": "Alle beskeder til en booking står samlet — med kontekst, skabeloner og oversættelse. Ingen leder mere i fire apps.",
+     "punkte": {
+      "a": "Gæst",
+      "b": "Hvornår kan jeg checke ind?",
+      "c": "Fra kl. 15 — koden sender jeg til dig i morgen tidlig."
+     }
+    },
+    "automatisch": {
+     "titel": "Automatiske beskeder",
+     "heading": "På rette tid, uden påmindelse.",
+     "text": "Bekræftelse, ankomstinfo, dørkode, anmeldelsesbesked: sat op én gang, derefter af sig selv — på gæstens sprog.",
+     "punkte": {
+      "a": "Bekræftelse sendt",
+      "b": "Ankomstinfo planlagt",
+      "c": "Anmeldelsesbesked"
+     }
+    },
+    "checkin": {
+     "titel": "Online check-in",
+     "heading": "Oplysninger før ankomst, ikke i døren.",
+     "text": "Gæsten udfylder registreringsdata og legitimation på forhånd. Du tager imod i stedet for at taste skemaer — og opfylder registreringspligten.",
+     "punkte": {
+      "a": "Registreringsdata",
+      "b": "Legitimation",
+      "c": "Underskrift"
+     }
+    },
+    "mappe": {
+     "titel": "Gæstemappe",
+     "heading": "Alt, gæsten skal vide.",
+     "text": "Wi-Fi, husregler, affaldsdage og tips fra området — digitalt, altid til at rette, på 24 sprog.",
+     "punkte": {
+      "a": "Gæst",
+      "b": "Hvor er Wi-Fi-koden?",
+      "c": "I gæstemappen — jeg har sendt dig linket."
+     }
+    }
    }
   },
   "zahlungen": {
@@ -751,7 +921,6 @@
    "headline": "Pengene kommer ind, uden at du render efter dem.",
    "sub": "Depositum ved booking, rest før ankomst, sikkerhed dækket — trukket automatisk og dokumenteret i bookingen.",
    "bildAlt": "Booking med betalingsstatus og bilag",
-   "bildAltBlock": "Oversigt med omsætning og udbetalinger",
    "nutzen": {
     "a": {
      "titel": "Betal som vanligt",
@@ -776,6 +945,49 @@
       "c": "Kun læseadgang"
      }
     }
+   },
+   "bildAltBlock": "Oversigt med omsætning og udbetalinger",
+   "reiter": {
+    "online": {
+     "titel": "Onlinebetalinger",
+     "heading": "Kort, wallet, PayPal.",
+     "text": "Gæsten betaler med den metode, han kender. Pengene går ind på din konto, statussen står i bookingen.",
+     "punkte": {
+      "a": "Udestående beløb",
+      "b": "Depositum",
+      "c": "Restbetaling"
+     }
+    },
+    "plaene": {
+     "titel": "Betalingsplaner",
+     "heading": "Hvornår hvad forfalder, bestemmer du.",
+     "text": "Depositum, restbetaling og sikkerhed følger dine regler — forskelligt pr. enhed og kanal, hvis det er nødvendigt.",
+     "punkte": {
+      "a": "Regel oprettet",
+      "b": "Depositum bogført",
+      "c": "Restbetaling udestående"
+     }
+    },
+    "rechnungen": {
+     "titel": "Fakturaer",
+     "heading": "Ud fra bookingen, ikke fra regnearket.",
+     "text": "Fakturaer og kreditnotaer opstår ud fra de rigtige tal, med momssats og nummerserie. Eksporter passer til revisoren.",
+     "punkte": {
+      "a": "Nummerserie",
+      "b": "Momssatser",
+      "c": "Eksport"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Ejerafregning",
+     "heading": "Indtægter, omkostninger, udbetaling.",
+     "text": "Hver ejer ser sine enheder med belægning, indtægter og udbetalinger — som eget login i stedet for en månedsmail.",
+     "punkte": {
+      "a": "Indtægter",
+      "b": "Omkostninger",
+      "c": "Udbetaling"
+     }
+    }
    }
   },
   "preise": {
@@ -783,7 +995,6 @@
    "headline": "Priser, der passer sig selv.",
    "sub": "Sæson, belægning, forudbestilling og ugedag indgår automatisk. Dine grænser forbliver dine: under minimum sker der intet.",
    "bildAlt": "Prisoversigt med dynamiske priser pr. nat",
-   "bildAltBlock": "Belægningsplan med priser pr. nat",
    "nutzen": {
     "a": {
      "titel": "Min. og maks. gælder",
@@ -808,6 +1019,49 @@
       "c": "Tillæg pr. kanal"
      }
     }
+   },
+   "bildAltBlock": "Belægningsplan med priser pr. nat",
+   "reiter": {
+    "dynamisch": {
+     "titel": "Dynamiske priser",
+     "heading": "Belægning, sæson, forudbestilling.",
+     "text": "Prisen bevæger sig mellem dit minimum og maksimum — efter efterspørgsel, ugedag og forudbestilling, regnet om hver nat.",
+     "punkte": {
+      "a": "Minimum",
+      "b": "Maksimum",
+      "c": "Efterspørgsel"
+     }
+    },
+    "raten": {
+     "titel": "Prisplaner",
+     "heading": "Flere priser for den samme enhed.",
+     "text": "Ikke-refunderbar, tidlig booking, langtid: hver pris med egne betingelser — og hver går ud til de portaler, der understøtter den.",
+     "punkte": {
+      "a": "Pris oprettet",
+      "b": "Betingelser sat",
+      "c": "Ud til portalerne"
+     }
+    },
+    "rabatte": {
+     "titel": "Rabatter",
+     "heading": "Bliv længere, betal mindre.",
+     "text": "Uge- og månedsrabatter, kampagner med periode, tillæg for korte ophold — synligt direkte i kalenderen.",
+     "punkte": {
+      "a": "Ugerabat",
+      "b": "Månedsrabat",
+      "c": "Kampagne"
+     }
+    },
+    "grenzen": {
+     "titel": "Dine grænser",
+     "heading": "Automatikken har aldrig det sidste ord.",
+     "text": "En pris, du selv sætter, bliver stående. Og under dit minimum sker der intet — heller ikke med en tom kalender.",
+     "punkte": {
+      "a": "Minimum",
+      "b": "Håndsat pris",
+      "c": "Forrang"
+     }
+    }
    }
   },
   "team": {
@@ -815,7 +1069,6 @@
    "headline": "Alle ser præcis det, de skal bruge.",
    "sub": "Ejere ser deres enheder, rengøringen sine opgaver, medarbejdere deres område. Økonomi bliver, hvor den hører hjemme.",
    "bildAlt": "Opgaveoversigt med ansvarlige",
-   "bildAltBlock": "Reservationsliste med ansvarlige",
    "nutzen": {
     "a": {
      "titel": "Roller frem for aftaler",
@@ -840,6 +1093,49 @@
       "c": "Rettigheder pr. person"
      }
     }
+   },
+   "bildAltBlock": "Reservationsliste med ansvarlige",
+   "reiter": {
+    "rollen": {
+     "titel": "Roller",
+     "heading": "Hver ser sit område.",
+     "text": "Bureau, ejer, medarbejder, rengøring: rettigheder hænger på rollen. Omsætningen ser kun den, der skal se den.",
+     "punkte": {
+      "a": "Rolle valgt",
+      "b": "Enheder tilknyttet",
+      "c": "Rettigheder kontrolleret"
+     }
+    },
+    "aufgaben": {
+     "titel": "Opgaver",
+     "heading": "Rengøringen opstår af sig selv.",
+     "text": "Efter hver afrejse står opgaven i planen, med frist inden næste ankomst. Den afsluttes med en fotocheckliste.",
+     "punkte": {
+      "a": "Afrejse registreret",
+      "b": "Rengøring planlagt",
+      "c": "Billeder uploadet"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Ejere",
+     "heading": "Eget login i stedet for månedsmail.",
+     "text": "Ejere ser belægning, indtægter og udbetalinger for deres enheder — kun læseadgang, uden at kunne gribe ind i driften.",
+     "punkte": {
+      "a": "Belægning",
+      "b": "Indtægter",
+      "c": "Udbetaling"
+     }
+    },
+    "agentur": {
+     "titel": "Bureau",
+     "heading": "Flere virksomheder i én konto.",
+     "text": "Udlejer du for andre, driver du flere ejere side om side — adskilte afregninger, adskilte logins, én kalender.",
+     "punkte": {
+      "a": "Flere ejere",
+      "b": "Adskilt afregning",
+      "c": "Ét login"
+     }
+    }
    }
   },
   "app": {
@@ -847,7 +1143,6 @@
    "headline": "Din drift er med i lommen.",
    "sub": "Tjek belægning, opret booking, svar på beskeder, luk opgaver — fra telefonen, uden computer.",
    "bildAlt": "Mobilapp med belægning og opgaver",
-   "bildAltBlock": "Overblik over driften ved skrivebordet",
    "nutzen": {
     "a": {
      "titel": "Til hver rolle",
@@ -872,6 +1167,49 @@
       "c": "iOS og Android"
      }
     }
+   },
+   "bildAltBlock": "Overblik over driften ved skrivebordet",
+   "reiter": {
+    "betrieb": {
+     "titel": "Drift undervejs",
+     "heading": "Belægning og bookinger under kontrol.",
+     "text": "Tjek kalenderen, opret en booking, ret en pris — fra telefonen, på samme data som ved skrivebordet.",
+     "punkte": {
+      "a": "Kalender",
+      "b": "Bookinger",
+      "c": "Priser"
+     }
+    },
+    "meldungen": {
+     "titel": "Beskeder",
+     "heading": "Du får det at vide straks.",
+     "text": "Ny booking, afbestilling eller gæstespørgsmål kommer som en notifikation — med et tryk er du inde i bookingen.",
+     "punkte": {
+      "a": "Booking",
+      "b": "Ny booking i juli",
+      "c": "Afbestilling for 12.–14.08."
+     }
+    },
+    "gast": {
+     "titel": "Til gæsten",
+     "heading": "myBestDays-appen.",
+     "text": "Gæster finder booking, gæstemappe, check-in og beskeder i deres egen app — adskilt fra din.",
+     "punkte": {
+      "a": "Booking",
+      "b": "Gæstemappe",
+      "c": "Check-in"
+     }
+    },
+    "rollen": {
+     "titel": "Til teamet",
+     "heading": "Rengøring og ejere.",
+     "text": "Rengøringspersonalet ser sine opgaver med checkliste, ejerne deres enheder. Samme app, forskellige rettigheder.",
+     "punkte": {
+      "a": "Opgave åben",
+      "b": "Checkliste udført",
+      "c": "Billeder sendt"
+     }
+    }
    }
   },
   "auswertungen": {
@@ -879,7 +1217,6 @@
    "headline": "Tal, man kan beslutte ud fra.",
    "sub": "Belægning, omsætning og gennemsnitspris pr. enhed, periode og kanal — ved siden af hinanden i stedet for i fem eksporter.",
    "bildAlt": "Rapport med belægning og omsætning",
-   "bildAltBlock": "Hotellets belægningsplan som datagrundlag",
    "nutzen": {
     "a": {
      "titel": "Sammenlign kanaler",
@@ -904,7 +1241,367 @@
       "c": "Eksport til revisoren"
      }
     }
+   },
+   "bildAltBlock": "Hotellets belægningsplan som datagrundlag",
+   "reiter": {
+    "auslastung": {
+     "titel": "Belægning",
+     "heading": "Hvor fuldt er der egentlig?",
+     "text": "Belægning pr. enhed, måned og kanal — sammenlignet med sidste år, ikke som mavefornemmelse.",
+     "punkte": {
+      "a": "Belægning",
+      "b": "Sidste år",
+      "c": "Pr. enhed"
+     }
+    },
+    "kanaele": {
+     "titel": "Kanalsammenligning",
+     "heading": "Hvad giver hvilken kanal?",
+     "text": "Omsætning efter provision pr. kanal: Booking, Airbnb, egen hjemmeside, myBestDays — ved siden af hinanden i stedet for i fem eksporter.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "berichte": {
+     "titel": "Rapporter",
+     "heading": "Kommer af sig selv.",
+     "text": "Månedsrapporter går automatisk til dig og dine ejere som PDF i det vante format.",
+     "punkte": {
+      "a": "Rapport oprettet",
+      "b": "Sendt til ejer",
+      "c": "Lagt i arkivet"
+     }
+    },
+    "ausblick": {
+     "titel": "Udsigt",
+     "heading": "Hvad der allerede er booket.",
+     "text": "Ved siden af det, der var, står bookingstanden fremad — så du i februar ser, om sommeren holder.",
+     "punkte": {
+      "a": "Booket",
+      "b": "Forespurgt",
+      "c": "Ledigt"
+     }
+    }
    }
   }
+ },
+ "ueberUns": {
+  "meta": {
+   "titel": "Om os — myNextDays",
+   "beschreibung": "myNextDays ApS fra Bindslev i Danmark: hvorfor aktive udlejere byggede deres eget property management-system med channel manager, hvad vi står for, og hvem der står bag."
+  },
+  "hero": {
+   "eyebrow": "Om os",
+   "headlinePre": "Vi udlejer selv. Derfor findes",
+   "headlineHighlight": "myNextDays",
+   "sub": "myNextDays ApS er en ejerledet virksomhed fra Bindslev i Nordjylland. Vi udlejer vores egne feriehuse — og har bygget den platform, vi selv manglede i hverdagen: kalender, portaler, gæster, betalinger og afregning ét sted.",
+   "sitz": "Hjemsted i Danmark",
+   "eu": "EU-hostet, GDPR-sikker",
+   "start": "Start den 1. september 2026",
+   "sprachen": "27 lande, 24 sprog",
+   "ctaTrial": "Prøv gratis i 30 dage",
+   "ctaKontakt": "Skriv til os"
+  },
+  "warum": {
+   "eyebrow": "Derfor findes vi",
+   "heading": "Opstået i vores egen udlejningshverdag.",
+   "p1": "Alle, der udlejer, kender aftenen, hvor den samme uge er solgt to gange, fordi en portal aldrig fik spærringen. Der holdt vi op med at lede efter et værktøj og begyndte at bygge et.",
+   "p2": "De eksisterende systemer var enten lavet til hotelkæder — med en kompleksitet og en pris, ingen virksomhed med en håndfuld boliger kan bære — eller de stoppede præcis dér, hvor arbejdet begynder: ved afregning, ejere, rengøring og skat i 27 lande.",
+   "p3": "myNextDays er svaret: et komplet property management-system med channel manager til virksomheder, der selv driver deres boliger — fra det enkelte feriehus til hotellet med flere værelsestyper.",
+   "bildFerienobjekt": "Feriehus ved kysten",
+   "bildHotel": "Hotelværelse med redt seng"
+  },
+  "bento": {
+   "eyebrow": "Det bag ved",
+   "heading": "Tal, vi kan dokumentere.",
+   "sub": "Ingen kundetal og ingen anmeldelser: platformen starter den 1. september 2026. Det, der står her, kan ses efter i selve produktet.",
+   "vermieter": {
+    "titel": "Bygget af udlejere, ikke på et tegnebræt",
+    "text": "Hver funktion kører i vores egen udlejning, før den kommer i produktet. Det, der ikke holder i hverdagen dér, bliver ikke leveret.",
+    "bildAlt": "Team i et udlejningsbureau på arbejde"
+   },
+   "laender": {
+    "wert": "27",
+    "titel": "Europæiske lande",
+    "text": "Med det enkelte lands valuta, momssatser og regler — ikke én euroformular til alle."
+   },
+   "sprachen": {
+    "wert": "24",
+    "titel": "Sprog",
+    "text": "Brugerflade, gæstekommunikation og juridiske tekster, ikke kun forsiden."
+   },
+   "kanaele": {
+    "wert": "56",
+    "titel": "Bookingportaler",
+    "text": "Booking.com, Airbnb, Expedia, Vrbo og mange flere via én forbindelse."
+   },
+   "eu": {
+    "titel": "Bygget i EU, drevet i EU",
+    "text": "Servere og data ligger i EU, driften følger GDPR, og databehandlingen er aftalt skriftligt. For en virksomhed med gæstedata er det ikke en fodnote, men en forudsætning."
+   }
+  },
+  "zeitleiste": {
+   "eyebrow": "Vejen hertil",
+   "heading": "Kort historie, kontrollerbare skridt.",
+   "sub": "Vi er unge — og skriver hellere fire dokumenterede etaper end en opdigtet historie.",
+   "airsmil": {
+    "datum": "Udgangspunktet",
+    "titel": "Hverdagen i vores egen virksomhed",
+    "text": "Egne feriehuse på flere portaler samtidig: dobbelt arbejde, forsinkede spærringer, afregning i et regneark. De gnidninger blev til kravlisten."
+   },
+   "gruendung": {
+    "datum": "1. juli 2026",
+    "titel": "myNextDays ApS stiftet",
+    "text": "Registreret i Det Centrale Virksomhedsregister under CVR-nr. 46615182 med hjemsted i Bindslev i Nordjylland."
+   },
+   "beta": {
+    "datum": "Sommeren 2026",
+    "titel": "Beta med rigtige boliger",
+    "text": "Bookinger kommer live ind fra portalerne, priser, ledighed og spærringer går samme vej tilbage — med rigtige boliger og rigtige gæster, ikke i et testmiljø."
+   },
+   "start": {
+    "datum": "1. september 2026",
+    "titel": "Start i 27 lande",
+    "text": "På 24 sprog, med flere valutaer, markedspladsen myBestDays og de to apps til virksomheden og gæsten."
+   }
+  },
+  "marken": {
+   "eyebrow": "To brands, én platform",
+   "heading": "myNextDays til virksomheden, myBestDays til gæsten.",
+   "sub": "Begge hører til myNextDays ApS og kører på samme teknik — det, der adskiller dem, er hvem der bruger dem.",
+   "nextdays": {
+    "rolle": "Til virksomheder",
+    "text": "Property management-systemet og channel manageren: stedet, hvor en virksomhed driver sine boliger, sætter sine priser og afregner sine penge.",
+    "punkte": {
+     "kalender": "Belægningsplan på tværs af alle boliger og enheder, i realtid",
+     "portale": "Én forbindelse til alle portaler — ledighed, priser og spærringer går ud alle steder samtidig",
+     "geld": "Betalinger, fakturaer, provisioner og ejerafregning",
+     "team": "Egen app til ejere, medarbejdere og rengøring"
+    }
+   },
+   "bestdays": {
+    "rolle": "Til gæster",
+    "text": "Vores egen markedsplads: gæster finder de samme boliger og booker direkte hos virksomheden — til væsentligt lavere provision end via de store portaler.",
+    "punkte": {
+     "direkt": "Booking direkte hos virksomheden, uden mellemled",
+     "provision": "Lavere provision end på de store portaler",
+     "app": "Egen app til søgning, booking og opholdet"
+    }
+   },
+   "hinweis": "En bolig sælges ad begge veje samtidig — dertil via Booking.com, Airbnb og de øvrige portaler. Hvilken kanal der er slået til, bestemmer virksomheden kanal for kanal."
+  },
+  "werte": {
+   "eyebrow": "Principper",
+   "heading": "Det, vi vil måles på.",
+   "sub": "Seks punkter, der kan efterprøves i produktet og i vores dokumenter — ikke hensigtserklæringer.",
+   "doppelbuchung": {
+    "titel": "Ingen dobbeltbookinger",
+    "text": "Ledighed er hos os et antal frie enheder, ikke et flueben. Den går i realtid til hver portal, og en spærring spærrer alle steder — ikke kun dér, hvor den blev sat."
+   },
+   "preise": {
+    "titel": "Priser, man kender på forhånd",
+    "text": "Én pakke, ingen bindingsperiode, intet oprettelsesgebyr. Det, der koster ekstra, står med beløb på prissiden, ikke i en salgssamtale."
+   },
+   "europa": {
+    "titel": "Europa er ikke et oversættelsesprojekt",
+    "text": "27 lande betyder 27 valutaer, momssatser og indberetningspligter — helt ud i faktura, gæstemail og udbetaling. Mangler vi en oplysning, siger vi det i stedet for at indsætte et sandsynligt tal."
+   },
+   "daten": {
+    "titel": "Data bliver i EU",
+    "text": "Drift og servere i EU, GDPR som grundlag, databehandleraftale som standard. I virksomheden ser kun de roller gæstedata, som har brug for dem."
+   },
+   "unabhaengig": {
+    "titel": "Ejerledet",
+    "text": "Ingen koncern bag os og ingen køreplan udefra. Hvad der bygges næste gang, bestemmer vi sammen med de virksomheder, der bruger softwaren dagligt."
+   },
+   "selbst": {
+    "titel": "Vi bruger det selv",
+    "text": "Vores egne boliger kører på samme platform som vores kunders. En fejl rammer os først — den ærligste kvalitetssikring, vi kender."
+   }
+  },
+  "menschen": {
+   "eyebrow": "Menneskene bag",
+   "heading": "Små, tilgængelige, fra praksis.",
+   "sub": "Direktionen i myNextDays ApS, som den er registreret i CVR.",
+   "jeanine": {
+    "rolle": "Stifter og direktør",
+    "text": "Driver vores egen udlejning og tager hverdagen med gæster, portaler og rengøring med ind i hver produktbeslutning."
+   },
+   "torsten": {
+    "rolle": "Direktør",
+    "text": "Holder trådene sammen og støtter teamet præcis dér, hvor der er behov. Bidrager med sin brede praktiske erfaring for at finde hurtige og pragmatiske løsninger i baggrunden."
+   }
+  },
+  "unternehmen": {
+   "eyebrow": "Virksomheden",
+   "heading": "Hvem du har med at gøre.",
+   "firma": "Virksomhed",
+   "sitz": "Adresse",
+   "register": "Virksomhedsregister",
+   "ustId": "Momsnummer",
+   "direktion": "Direktion",
+   "impressum": "Fulde oplysninger om udbyderen",
+   "kontaktTitel": "Direkte kontakt",
+   "kontaktText": "Spørgsmål om produktet, om skiftet fra et andet system eller om samarbejde? Den, der svarer, bruger selv softwaren."
+  }
+ },
+ "kontakt": {
+  "meta": {
+   "titel": "Kontakt — myNextDays",
+   "beschreibung": "Sådan får du kontakt til myNextDays: generelle spørgsmål og salg på {info}, tekniske henvendelser på {technik}, telefonisk på {telefon} — eller direkte via formularen."
+  },
+  "hero": {
+   "eyebrow": "Kontakt",
+   "headlinePre": "Sig hvad det handler om —",
+   "headlineHighlight": "vi svarer",
+   "sub": "Spørgsmål om produktet, om skift fra et andet system, om tilslutning via vores API eller om samarbejde: vælg dit emne, så lander beskeden direkte hos dem, der kender det.",
+   "sitz": "Hjemsted i Bindslev, Danmark",
+   "sprachen": "Software på 24 sprog",
+   "eu": "Hostet i EU, GDPR-overholdende"
+  },
+  "wege": {
+   "eyebrow": "Vejene til os",
+   "heading": "Hvem tager sig af din henvendelse?",
+   "sub": "To postkasser og en chat. Kommercielle spørgsmål og alt før du starter går til den generelle postkasse, alt teknisk direkte til udviklingsholdet — så intet ender i en kø, ingen ser på.",
+   "allgemein": {
+    "titel": "Produkt, priser & salg",
+    "text": "Vil du vide, om myNextDays passer til din virksomhed, hvad et skift fra et andet system betyder, eller hvordan faktura og abonnement fungerer? Så er det vejen — også for presse, partnerskaber og oplysninger om databeskyttelse.",
+    "aktion": "Skriv en besked"
+   },
+   "technik": {
+    "titel": "Teknik, API & sikkerhed",
+    "text": "Noget virker ikke, en portalforbindelse hænger, du udvikler mod vores API, eller du har fundet et sikkerhedshul? Disse henvendelser går direkte til udviklingsholdet og ikke gennem salg.",
+    "aktion": "Skriv en besked"
+   },
+   "hilfe": {
+    "titel": "Hjælp & chat",
+    "text": "Vejledninger til hvert område ligger i Hjælpecenteret. Og skal det gå hurtigt: nederst til højre på hver side er der en chat, hvor et rigtigt menneske svarer — uden konto og uden login.",
+    "aktion": "Til Hjælpecenteret",
+    "chatHinweis": "Chat nederst til højre på hver side"
+   }
+  },
+  "formular": {
+   "eyebrow": "Besked",
+   "heading": "Skriv til os",
+   "sub": "Én formular til alt — dit emne bestemmer, hvem der får den.",
+   "ablaufTitel": "Hvad der sker bagefter",
+   "ablauf": {
+    "eingang": {
+     "titel": "Beskeden sendes",
+     "text": "Via vores egen mailserver i Danmark — ingen formulartjeneste fra tredjepart, hvis hænder dine oplysninger går igennem."
+    },
+    "zuordnung": {
+     "titel": "Den lander i den rette postkasse",
+     "text": "Kommercielt hos {info}, teknisk hos {technik}. Hvilken det er, afgør vores server ud fra dit emne."
+    },
+    "antwort": {
+     "titel": "Vi svarer dig direkte",
+     "text": "Som en almindelig e-mail til den adresse, du skriver her — du kan bare svare på den."
+    }
+   },
+   "hinweisPostfach": "To postkasser, så intet bliver liggende: {info} til alt kommercielt, {technik} til alt teknisk. Hvilken det bliver, bestemmer vores server ud fra dit emne — denne formular kan ikke angive en modtager.",
+   "thema": "Hvad handler det om?",
+   "themen": {
+    "allgemein": "Generelt spørgsmål",
+    "vertrieb": "Produkt, priser & salg",
+    "abrechnung": "Faktura & abonnement",
+    "technik": "Teknisk problem",
+    "api": "API & udviklere",
+    "partner": "Partnerskab",
+    "presse": "Presse & medier",
+    "datenschutz": "Databeskyttelse",
+    "sicherheit": "Anmeld et sikkerhedshul"
+   },
+   "zielAllgemein": "Går til {email}",
+   "zielTechnik": "Går til {email} — vores udviklingshold",
+   "name": "Navn",
+   "email": "E-mail",
+   "emailPlatzhalter": "navn@eksempel.dk",
+   "firma": "Virksomhed",
+   "telefon": "Telefon",
+   "optional": "valgfrit",
+   "nachricht": "Din besked",
+   "nachrichtPlatzhalter": "Beskriv din henvendelse — jo mere præcist, jo bedre passer svaret.",
+   "absenden": "Send besked",
+   "laeuft": "Sender …",
+   "dankeTitel": "Modtaget.",
+   "nochEine": "Skriv en besked mere",
+   "fehlerAllgemein": "Det lykkedes ikke. Prøv igen senere.",
+   "fehlerPruefung": "Sikkerhedstjekket blev ikke godkendt. Genindlæs siden, og send beskeden igen.",
+   "fehlerFelder": "Tjek dine oplysninger: navn, e-mail og en besked på mindst 20 tegn er påkrævet.",
+   "fehlerZuOft": "Der er kommet for mange beskeder fra denne forbindelse. Vent et øjeblik, og prøv igen.",
+   "fehlerSpaeter": "Beskeden kan ikke leveres lige nu. Prøv igen senere, eller skriv direkte til {email}.",
+   "datenschutzHinweis": "Vi bruger kun dine oplysninger til at svare på denne henvendelse. Læs mere i vores <link>privatlivspolitik</link>.",
+   "recaptchaHinweis": "Denne formular er beskyttet af reCAPTCHA. Googles <datenschutz>privatlivspolitik</datenschutz> og <bedingungen>servicevilkår</bedingungen> gælder."
+  },
+  "anschrift": {
+   "eyebrow": "Adresse",
+   "heading": "Sådan får du direkte kontakt",
+   "firmaEyebrow": "Virksomhedsoplysninger",
+   "firmaHeading": "Hvem du har med at gøre",
+   "firmaText": "Man skal ikke lede i det små for at finde ud af, hvem aftaleparten er. Derfor står registeroplysningerne her — de samme som i kolofonen.",
+   "firma": "Virksomhed",
+   "register": "Register",
+   "ustId": "Momsnummer",
+   "direktion": "Direktion",
+   "impressum": "Se kolofon",
+   "datenschutz": "Se privatlivspolitik"
+  },
+  "faq": {
+   "eyebrow": "Ofte stillede spørgsmål",
+   "heading": "Spørgsmål om at komme i kontakt",
+   "sub": "Hvem der svarer, hvor lang tid det tager, og hvad der sker med dine oplysninger.",
+   "wer": {
+    "frage": "Hvem svarer mig?",
+    "antwort": "Et menneske fra holdet, ikke et sagssystem med et nummer. myNextDays er ejerledet: kommercielle spørgsmål besvares af en, der selv bruger softwaren i det daglige, tekniske af udviklingsholdet."
+   },
+   "postfach": {
+    "frage": "Hvordan ved jeg, hvor min besked lander?",
+    "antwort": "Under emnefeltet står modtageradressen for hver henvendelse. Generelle, kommercielle og redaktionelle henvendelser går til {info}; tekniske henvendelser, API-spørgsmål og sikkerhedsanmeldelser til {technik}. Vores server foretager tildelingen — formularen kan ikke angive en postkasse, så den ikke kan misbruges til at sende beskeder til fremmede."
+   },
+   "sprache": {
+    "frage": "Hvilket sprog kan jeg skrive på?",
+    "antwort": "Skriv på det sprog, du læser denne side på — vi kan se det i din henvendelse og svarer på det, så langt vi kan. Dansk, tysk og engelsk svarer vi altid på."
+   },
+   "dauer": {
+    "frage": "Hvor lang tid tager et svar?",
+    "antwort": "Som regel inden for få timer; i weekender og på helligdage kan det tage længere. For sikkerhedsanmeldelser gælder: de ligger hos udviklingsholdet uden omvej gennem salg."
+   },
+   "telefon": {
+    "frage": "Kan jeg også ringe?",
+    "antwort": "Ja, på {telefon}. Et opkald er hurtigst til alt, der er lettere at tale om end at skrive — ved tekniske fejl er en besked ofte alligevel bedre, fordi fejlmeddelelser og skærmbilleder kan vedhæftes."
+   },
+   "bestaetigung": {
+    "frage": "Får jeg en kvittering på e-mail?",
+    "antwort": "Nej, bevidst ikke. En automatisk kvittering ville gå til hver adresse, der skrives her — dermed kunne man bruge vores mailserver til at skrive til fremmede postkasser. Kvitteringen står derfor her på siden, så snart beskeden er kommet frem. Dine oplysninger bruger vi udelukkende til at svare på denne henvendelse."
+   }
+  }
+ },
+ "help": {
+  "heroTitle": "Hvordan kan vi hjælpe?",
+  "heroSubtitle": "Søg i vidensbasen, eller find trin-for-trin-løsninger til din hverdag med myNextDays.",
+  "searchPlaceholder": "Hvad leder du efter?",
+  "searchAria": "Søg i hjælpen",
+  "contact": "Kontakt",
+  "home": "Hjælp forside",
+  "articles": "{count, plural, one {# artikel} other {# artikler}}",
+  "collectionKbTitle": "Vidensbase",
+  "collectionKbDesc": "Alt om boliger, priser, kalender, portaler og din konto.",
+  "collectionUsecasesTitle": "Anvendelser",
+  "collectionUsecasesDesc": "Trin-for-trin-løsninger til typiske situationer i hverdagen.",
+  "helpfulQuestion": "Var denne artikel nyttig?",
+  "helpfulYes": "Ja",
+  "helpfulNo": "Nej",
+  "helpfulThanks": "Tak for din tilbagemelding!",
+  "related": "Flere artikler i {category}",
+  "searchTitle": "Søgning",
+  "results": "{count, plural, one {# resultat for “{query}”} other {# resultater for “{query}”}}",
+  "noResultsTitle": "Ingen artikler fundet",
+  "noResultsHintPre": "Prøv andre søgeord, eller",
+  "noResultsHintLink": "gennemse kategorierne",
+  "browseCategories": "Gennemse kategorier",
+  "brandTitle": "myNextDays Hjælp"
  }
 }

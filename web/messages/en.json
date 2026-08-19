@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "How can we help?",
-    "heroSubtitle": "Search the knowledge base or find step-by-step solutions for your day-to-day work with myNextDays.",
-    "searchPlaceholder": "What are you looking for?",
-    "searchAria": "Search help",
-    "contact": "Contact",
-    "home": "Help home",
-    "articles": "{count, plural, one {# article} other {# articles}}",
-    "collectionKbTitle": "Knowledge base",
-    "collectionKbDesc": "Everything about properties, pricing, calendar, portals and your account.",
-    "collectionUsecasesTitle": "Use cases",
-    "collectionUsecasesDesc": "Step-by-step solutions for common everyday scenarios.",
-    "helpfulQuestion": "Was this article helpful?",
-    "helpfulYes": "Yes",
-    "helpfulNo": "No",
-    "helpfulThanks": "Thanks for your feedback!",
-    "related": "More articles in {category}",
-    "searchTitle": "Search",
-    "results": "{count, plural, one {# result for “{query}”} other {# results for “{query}”}}",
-    "noResultsTitle": "No articles found",
-    "noResultsHintPre": "Try different search terms or ",
-    "noResultsHintLink": "browse the categories",
-    "browseCategories": "Browse categories",
-    "brandTitle": "myNextDays help"
-  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -4560,8 +4535,11 @@
       "openGuestCard": "Open guest card",
       "photos": "Photos",
       "noPhotosFound": "No images were found for this booking.",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStay": "Owner stay",
+      "ownerStayHint": "No revenue — no invoice, no commission, not part of the owner statement.",
+      "viaChannel": "via {channel}",
+      "receivedOn": "received by us on {date}",
+      "bookedOn": "booked on {date}"
     },
     "dashboard": {
       "todayCheckouts": "Check-outs",

@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Miben segíthetünk?",
-    "heroSubtitle": "Keressen a tudásbázisban, vagy találjon lépésről lépésre megoldásokat a myNextDays mindennapi használatához.",
-    "searchPlaceholder": "Mit keres?",
-    "searchAria": "Keresés a súgóban",
-    "contact": "Contact",
-    "home": "Súgó kezdőlap",
-    "articles": "{count, plural, other {# cikk}}",
-    "collectionKbTitle": "Tudásbázis",
-    "collectionKbDesc": "Minden a szálláshelyekről, árakról, naptárról, portálokról és a fiókjáról.",
-    "collectionUsecasesTitle": "Alkalmazási példák",
-    "collectionUsecasesDesc": "Lépésről lépésre megoldások tipikus mindennapi helyzetekre.",
-    "helpfulQuestion": "Hasznos volt ez a cikk?",
-    "helpfulYes": "Igen",
-    "helpfulNo": "Nem",
-    "helpfulThanks": "Köszönjük a visszajelzést!",
-    "related": "További cikkek ebben: {category}",
-    "searchTitle": "Keresés",
-    "results": "{count, plural, other {# találat erre: „{query}”}}",
-    "noResultsTitle": "Nem található cikk",
-    "noResultsHintPre": "Próbálkozzon más keresőszavakkal, vagy",
-    "noResultsHintLink": "böngéssze a kategóriákat",
-    "browseCategories": "Kategóriák böngészése",
-    "brandTitle": "myNextDays súgó"
-  },
   "common": {
     "save": "Mentés",
     "cancel": "Mégse",
@@ -4540,7 +4515,10 @@
       "photos": "Fotók",
       "noPhotosFound": "Ehhez a foglaláshoz nem található kép.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "a következő csatornán: {channel}",
+      "receivedOn": "hozzánk beérkezett: {date}",
+      "bookedOn": "foglalás dátuma: {date}"
     },
     "dashboard": {
       "todayCheckouts": "Kijelentkezések",

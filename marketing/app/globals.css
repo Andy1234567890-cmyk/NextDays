@@ -355,3 +355,17 @@ h1, h2, h3 {
   text-transform: uppercase;
   color: var(--accent);
 }
+
+/* reCAPTCHA-Abzeichen ausblenden.
+   Google hängt es an den Rand unten rechts — genau dort sitzt schon der
+   Support-Chat dieser Seite, die beiden würden übereinander liegen. Das
+   Ausblenden ist von Google ausdrücklich erlaubt, SOLANGE die Nennung
+   („geschützt durch reCAPTCHA", Datenschutz + Bedingungen) sichtbar im Ablauf
+   steht. Sie steht unter dem Absenden-Knopf des Kontaktformulars
+   (components/kontakt/kontakt-formular.tsx) — wer diese Regel entfernt oder
+   verschiebt, muss sie dort ebenfalls prüfen.
+   `visibility` statt `display: none`: das Abzeichen ist ein iframe, dessen
+   Skript weiterläuft; ausgeblendet, nicht entfernt. */
+.grecaptcha-badge {
+  visibility: hidden;
+}

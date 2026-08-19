@@ -20,6 +20,7 @@ import {
   type Pricing,
   type SubscriptionStatus,
 } from "@/lib/subscriptions";
+import { HILFE_URL } from "@/lib/marketing-url";
 
 type Loaded = {
   canManage: boolean;
@@ -145,7 +146,7 @@ export function ErweiterungenListe() {
         <p className="mt-1 text-sm text-muted-foreground">
           Wir bauen laufend weiter. Schreiben Sie uns, was Ihnen fehlt — über den
           Support-Chat im Konto-Menü oder{" "}
-          <a href="/hilfe" className="underline" target="_blank" rel="noopener noreferrer">
+          <a href={HILFE_URL} className="underline" target="_blank" rel="noopener noreferrer">
             im Hilfe-Center
           </a>
           .

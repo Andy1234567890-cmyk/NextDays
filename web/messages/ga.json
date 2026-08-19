@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Conas is féidir linn cabhrú?",
-    "heroSubtitle": "Cuardaigh an bunachar eolais nó aimsigh réitigh céim ar chéim do do chuid oibre laethúla le myNextDays.",
-    "searchPlaceholder": "Cad atá á lorg agat?",
-    "searchAria": "Cuardaigh sa chabhair",
-    "contact": "Contact",
-    "home": "Tús na cabhrach",
-    "articles": "{count, plural, one {# alt} two {# alt} few {# alt} many {# n-alt} other {# alt}}",
-    "collectionKbTitle": "Bunachar eolais",
-    "collectionKbDesc": "Gach rud faoi áiteanna, praghsanna, an féilire, tairseacha agus do chuntas.",
-    "collectionUsecasesTitle": "Cásanna úsáide",
-    "collectionUsecasesDesc": "Réitigh céim ar chéim do chásanna coitianta laethúla.",
-    "helpfulQuestion": "An raibh an t-alt seo cabhrach?",
-    "helpfulYes": "Tá",
-    "helpfulNo": "Níl",
-    "helpfulThanks": "Go raibh maith agat as an aiseolas!",
-    "related": "Tuilleadh alt i {category}",
-    "searchTitle": "Cuardach",
-    "results": "{count, plural, one {# toradh do „{query}“} two {# thoradh do „{query}“} few {# thoradh do „{query}“} many {# dtoradh do „{query}“} other {# toradh do „{query}“}}",
-    "noResultsTitle": "Níor aimsíodh aon alt",
-    "noResultsHintPre": "Bain triail as téarmaí cuardaigh eile nó",
-    "noResultsHintLink": "brabhsáil na catagóirí",
-    "browseCategories": "Brabhsáil na catagóirí",
-    "brandTitle": "Cabhair myNextDays"
-  },
   "common": {
     "save": "Sábháil",
     "cancel": "Cealaigh",
@@ -4540,7 +4515,10 @@
       "photos": "Grianghraif",
       "noPhotosFound": "Níor aimsíodh aon ghrianghraf don áirithint seo.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "trí {channel}",
+      "receivedOn": "faighte againn ar {date}",
+      "bookedOn": "curtha in áirithe ar {date}"
     },
     "dashboard": {
       "todayCheckouts": "Seiceáil amach",

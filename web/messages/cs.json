@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Jak vám můžeme pomoci?",
-    "heroSubtitle": "Prohledejte znalostní bázi nebo najděte řešení krok za krokem pro každodenní práci s myNextDays.",
-    "searchPlaceholder": "Co hledáte?",
-    "searchAria": "Hledat v nápovědě",
-    "contact": "Contact",
-    "home": "Úvod nápovědy",
-    "articles": "{count, plural, one {# článek} few {# články} many {# článku} other {# článků}}",
-    "collectionKbTitle": "Znalostní báze",
-    "collectionKbDesc": "Vše o objektech, cenách, kalendáři, portálech a vašem účtu.",
-    "collectionUsecasesTitle": "Případy použití",
-    "collectionUsecasesDesc": "Řešení krok za krokem pro běžné každodenní situace.",
-    "helpfulQuestion": "Byl tento článek užitečný?",
-    "helpfulYes": "Ano",
-    "helpfulNo": "Ne",
-    "helpfulThanks": "Děkujeme za zpětnou vazbu!",
-    "related": "Další články v kategorii {category}",
-    "searchTitle": "Hledat",
-    "results": "{count, plural, one {# výsledek pro „{query}“} few {# výsledky pro „{query}“} many {# výsledku pro „{query}“} other {# výsledků pro „{query}“}}",
-    "noResultsTitle": "Nebyly nalezeny žádné články",
-    "noResultsHintPre": "Zkuste jiné hledané výrazy nebo",
-    "noResultsHintLink": "projděte si kategorie",
-    "browseCategories": "Procházet kategorie",
-    "brandTitle": "Nápověda myNextDays"
-  },
   "common": {
     "save": "Uložit",
     "cancel": "Zrušit",
@@ -4540,7 +4515,10 @@
       "photos": "Fotky",
       "noPhotosFound": "K této rezervaci nebyly nalezeny žádné obrázky.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "přes {channel}",
+      "receivedOn": "přijato u nás dne {date}",
+      "bookedOn": "rezervováno dne {date}"
     },
     "dashboard": {
       "todayCheckouts": "Odhlášení",

@@ -38,10 +38,17 @@ const nextConfig: NextConfig = {
     // Ausnahme scheitert die Hydration im Dev-Server komplett — die Seite sieht
     // fertig aus, aber NICHTS ist klickbar (Feature-Tabs, Formular). In
     // Produktion bleibt die CSP unverändert streng.
+    // reCAPTCHA Enterprise (Spamschutz des Kontaktformulars) lädt sein Skript
+    // von www.google.com, dessen Unter-Ressourcen von www.gstatic.com, und
+    // zeigt die Aufgabe — wenn nötig — in einem iframe von www.google.com. Alle
+    // drei Freigaben sind dafür da und für nichts anderes; ohne sie blockt der
+    // Browser den Schutz und das Formular nimmt nichts an (die API weist ohne
+    // Token fail-closed ab).
+    const RECAPTCHA_HOSTS = "https://www.google.com https://www.gstatic.com";
     const scriptSrc =
       process.env.NODE_ENV === "production"
-        ? "script-src 'self' 'unsafe-inline'"
-        : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+        ? `script-src 'self' 'unsafe-inline' ${RECAPTCHA_HOSTS}`
+        : `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${RECAPTCHA_HOSTS}`;
     const csp = [
       "default-src 'self'",
       scriptSrc,
@@ -49,6 +56,10 @@ const nextConfig: NextConfig = {
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
       `connect-src 'self' https:${apiOrigin && !apiOrigin.startsWith("https:") ? ` ${apiOrigin}` : ""}`,
+      // Nur google.com: das reCAPTCHA-Aufgabenfenster. `frame-ancestors 'none'`
+      // bleibt unberührt — WIR dürfen weiterhin von niemandem eingebettet
+      // werden, das ist die andere Richtung.
+      `frame-src 'self' https://www.google.com`,
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

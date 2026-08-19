@@ -33,6 +33,14 @@ export const ANBIETER = {
   ort: "9881 Bindslev",
   land: "Dänemark",
   email: "info@mynextdays.dk",
+  // Technisches Postfach für Entwickler-, Störungs- und Sicherheitsmeldungen
+  // (Kontaktseite, 0414). Bewusst getrennt von `email`: `info@` ist die im
+  // Impressum und in der Datenschutzerklärung veröffentlichte Adresse und muss
+  // dort auch stehen bleiben — eine Störungsmeldung gehört aber nicht in den
+  // kaufmännischen Posteingang. Dieselbe Aufteilung führt die API in
+  // CONTACT_RECIPIENT_GENERAL / CONTACT_RECIPIENT_TECHNICAL; wer hier etwas
+  // ändert, ändert es dort mit.
+  emailTechnik: "developer@mynextdays.dk",
   telefon: "+45 93 90 39 91",
   // E.164 für den tel:-Link — ohne Leerzeichen.
   telefonE164: "+4593903991",

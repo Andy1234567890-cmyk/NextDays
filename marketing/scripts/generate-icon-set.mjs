@@ -10,7 +10,12 @@
 import { readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const ROOTS = ["components", "app"];
+// `content` gehört dazu, seit das Hilfe-Center hier liegt: seine Kategorie-Icons
+// stehen als `icon: "ph:…"` in den Inhaltsdateien (content/help/<locale>/…), nicht
+// im Komponenten-Code. Ohne diesen Pfad fehlten sie im Satz und jede
+// Kategorie-Kachel hätte ein leeres SVG gerendert — sichtbar erst im Browser,
+// weil ein fehlender Schlüssel nur `undefined` liefert und nicht wirft.
+const ROOTS = ["components", "app", "content"];
 const OUT = "components/ui/icon-set.ts";
 
 function walk(dir) {
@@ -57,7 +62,7 @@ writeFileSync(
   OUT,
   `// GENERIERT von scripts/generate-icon-set.mjs — nicht von Hand bearbeiten.
 // Quelle: @iconify-json/ph ${collection.info?.version ?? ""} (Phosphor, MIT).
-// Enthält nur die in components/ und app/ verwendeten Icons.
+// Enthält nur die in components/, app/ und content/ verwendeten Icons.
 export const ICON_VIEWBOX = "0 0 ${collection.width ?? 256} ${collection.height ?? 256}";
 
 export const ICON_SET = {

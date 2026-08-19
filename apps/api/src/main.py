@@ -37,6 +37,7 @@ from .features.calendar.router import router as calendar_router
 from .features.channel_manager.router import router as channel_manager_router
 from .features.channel_manager.sandbox_ota import router as sandbox_ota_router
 from .features.cohosts.router import router as cohosts_router
+from .features.contact.router import router as contact_router
 from .features.content.router import router as content_router
 from .features.crm.router import router as crm_router
 from .features.dashboard.router import router as dashboard_router
@@ -155,6 +156,9 @@ _SLICE_ROUTERS = [
     subscriptions_router,
     account_deletion_router,
     newsletter_router,
+    # Kontaktformular der Marketing-Seite (0414) — öffentlich, Bucket
+    # `public_support`, reCAPTCHA-geprüft.
+    contact_router,
     support_router,
     property_taxes_router,
     taxpayer_router,

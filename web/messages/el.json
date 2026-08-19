@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Πώς μπορούμε να βοηθήσουμε;",
-    "heroSubtitle": "Αναζητήστε στη βάση γνώσεων ή βρείτε λύσεις βήμα προς βήμα για την καθημερινότητά σας με το myNextDays.",
-    "searchPlaceholder": "Τι αναζητάτε;",
-    "searchAria": "Αναζήτηση στη βοήθεια",
-    "contact": "Contact",
-    "home": "Αρχική βοήθειας",
-    "articles": "{count, plural, one {# άρθρο} other {# άρθρα}}",
-    "collectionKbTitle": "Βάση γνώσεων",
-    "collectionKbDesc": "Όλα για τα καταλύματα, τις τιμές, το ημερολόγιο, τις πύλες και τον λογαριασμό σας.",
-    "collectionUsecasesTitle": "Περιπτώσεις χρήσης",
-    "collectionUsecasesDesc": "Λύσεις βήμα προς βήμα για τυπικές καθημερινές καταστάσεις.",
-    "helpfulQuestion": "Σας βοήθησε αυτό το άρθρο;",
-    "helpfulYes": "Ναι",
-    "helpfulNo": "Όχι",
-    "helpfulThanks": "Ευχαριστούμε για τα σχόλιά σας!",
-    "related": "Περισσότερα άρθρα στην κατηγορία {category}",
-    "searchTitle": "Αναζήτηση",
-    "results": "{count, plural, one {# αποτέλεσμα για «{query}»} other {# αποτελέσματα για «{query}»}}",
-    "noResultsTitle": "Δεν βρέθηκαν άρθρα",
-    "noResultsHintPre": "Δοκιμάστε άλλους όρους αναζήτησης ή",
-    "noResultsHintLink": "περιηγηθείτε στις κατηγορίες",
-    "browseCategories": "Περιήγηση στις κατηγορίες",
-    "brandTitle": "Βοήθεια myNextDays"
-  },
   "common": {
     "save": "Αποθήκευση",
     "cancel": "Άκυρο",
@@ -4540,7 +4515,10 @@
       "photos": "Φωτογραφίες",
       "noPhotosFound": "Δεν βρέθηκαν εικόνες για αυτή την κράτηση.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "μέσω {channel}",
+      "receivedOn": "παραλήφθηκε από εμάς στις {date}",
+      "bookedOn": "κρατήθηκε στις {date}"
     },
     "dashboard": {
       "todayCheckouts": "Αναχωρήσεις",

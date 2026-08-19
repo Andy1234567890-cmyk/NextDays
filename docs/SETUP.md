@@ -72,6 +72,32 @@ REDIS_URL=redis://redis:6379/0
 > Secrets werden im Code als `SecretStr` geladen — **niemals** echte `.env`-Dateien
 > committen (durch `.gitignore` abgesichert).
 
+Für das **Kontaktformular** der Marketing-Seite (`/api/v1/contact`) kommen zwei
+Gruppen dazu. Fehlt eine davon, antwortet der Endpunkt `503` statt ungeprüft
+anzunehmen (Wurzel 4/5):
+
+```ini
+# Zwei Postfächer, zwei Zuständigkeiten. Die Zuordnung Thema → Postfach steht im
+# Code (features/contact/themen.py), die Adressen hier. Kein Rückfall auf das
+# jeweils andere Postfach.
+CONTACT_RECIPIENT_GENERAL=info@<DEINE_DOMAIN>
+CONTACT_RECIPIENT_TECHNICAL=developer@<DEINE_DOMAIN>
+
+# reCAPTCHA Enterprise (Google Cloud). Schlüssel Typ „Website", Bewertungsart
+# score-based; danach die reCAPTCHA-Enterprise-API im Projekt aktivieren und
+# einen darauf beschränkten API-Schlüssel anlegen. RECAPTCHA_SITE_KEY ist
+# derselbe Wert wie NEXT_PUBLIC_RECAPTCHA_SITE_KEY in marketing.
+RECAPTCHA_PROJECT_ID=
+RECAPTCHA_API_KEY=
+RECAPTCHA_SITE_KEY=
+RECAPTCHA_MIN_SCORE=0.5
+```
+
+Lokal braucht man keinen davon: `APP_ENV=local` schaltet `captcha_sandbox` ein
+(gleiche Bauart wie `mail_sandbox`), das Token wird nur protokolliert. Ausserhalb
+von `local` gibt es keine Sandbox aus Versehen — dort entscheidet allein
+`CAPTCHA_SANDBOX_OVERRIDE`, Default aus.
+
 ## 4. Backend + Redis starten
 
 ```bash
@@ -122,6 +148,48 @@ Wichtige Variablen in `.env.local` (Details in `apps/web/.env.example`):
 | `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase (Auth/Realtime) |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Karten |
 | `GOOGLE_FONTS_API_KEY` | **server-only** — Google-Fonts-Katalog im Page-Builder (Proxy `/api/google-fonts`); ohne Key antwortet der Font-Picker mit 503 |
+
+## marketing (`marketing/` — Landingpage, 24 Sprachen)
+
+Eigenständige Next.js-App mit **eigener** `bun.lock`; sie nutzt bewusst KEINE
+`@nextdays/*`-Workspace-Pakete (ADR-0016), damit ihr Dockerfile ohne
+Root-Kontext baut.
+
+```bash
+cd marketing
+bun install
+bun run dev                  # → http://localhost:3001
+```
+
+| Variable | Zweck |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | FastAPI-Backend. Gebraucht für Support-Chat, Voranmeldung, Konto-Löschung und **Kontaktformular** — diese drei sprechen DIREKT mit der API, damit deren IP-Rate-Limit die IP des Besuchers sieht. Betrieb: die Marketing-Domain muss in `CORS_ORIGINS` der API stehen. |
+| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | Öffentlicher reCAPTCHA-Enterprise-Schlüssel für `/kontakt`. Muss mit `RECAPTCHA_SITE_KEY` der API übereinstimmen, sonst hält Google jedes Token für ungültig. Leer = lokal kein Captcha (die API riegelt über ihre Sandbox ab). |
+| `NEXT_PUBLIC_APP_URL` | Dashboard-Adresse. Leer, solange die Plattform nicht öffentlich ist — die Knöpfe lösen dann das Voranmelde-Popup aus statt in ein unbenutzbares Login zu führen. |
+| `NEXT_PUBLIC_DEMO_URL` | Vorführ-Zugang („Demo ansehen"), einzeln schaltbar. |
+| `NEXT_PUBLIC_STATUS_URL` | Öffentliche Statusseite im Footer. Leer = Eintrag entfällt. |
+| `NEXT_PUBLIC_SITE_URL` | Öffentliche Adresse DIESER Seite — Grundlage für `sitemap.xml`, `robots.txt`, `llms.txt` und `metadataBase`. Vorgabe ist die Impressumsadresse (`content/legal/anbieter.ts`); auf Staging setzen, damit die Sitemap nicht Produktions-URLs meldet. |
+
+> **Kein `next build` auf dem Entwicklerrechner** — siehe CLAUDE.md. Geprüft wird
+> mit `bunx tsc --noEmit` und `bun run lint`; den Build fährt Coolify.
+
+**Hilfe-Center**: liegt in dieser App (`app/hilfe`), Inhalte als typisierte
+TS-Module unter `content/help/<locale>/` (24 Sprachen, gleiche Slugs, nur Texte
+übersetzt), Illustrationen in `public/help/illustrations/<kategorie-slug>.svg`.
+Es war früher Teil der `web`-App und damit nur über die Dashboard-Domain
+erreichbar — obwohl es keinen Login verlangt. Links aus dem Dashboard dorthin
+laufen über `web/lib/marketing-url.ts`.
+
+**Suchmaschinen & KI-Assistenten**: `app/sitemap.ts`, `app/robots.ts` und
+`app/llms.txt/route.ts` werden aus den Registries (`content/funktionen`,
+`content/help`, `content/legal`) erzeugt, nicht von Hand gepflegt — eine
+getippte Liste wäre nach dem nächsten Artikel still unvollständig. Alle drei
+brauchen `NEXT_PUBLIC_SITE_URL`. Ausgeschlossen sind die Suchergebnisseite und
+die Ziele von Einmal-Links aus E-Mails (in Sitemap UND robots.txt).
+
+Neue Icons: `bun run icons` (erzeugt `components/ui/icon-set.ts` aus
+`@iconify-json/ph`, nur die tatsächlich verwendeten). Ohne den Lauf ist ein neuer
+`ph:*`-Name ein Typfehler.
 
 ## builder (`builder/` — White-Label-Site-Renderer)
 

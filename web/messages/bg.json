@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Как можем да помогнем?",
-    "heroSubtitle": "Търсете в базата знания или намерете решения стъпка по стъпка за ежедневната си работа с myNextDays.",
-    "searchPlaceholder": "Какво търсите?",
-    "searchAria": "Търсене в помощта",
-    "contact": "Contact",
-    "home": "Начало на помощта",
-    "articles": "{count, plural, one {# статия} other {# статии}}",
-    "collectionKbTitle": "База знания",
-    "collectionKbDesc": "Всичко за обектите, цените, календара, порталите и вашия акаунт.",
-    "collectionUsecasesTitle": "Приложения",
-    "collectionUsecasesDesc": "Решения стъпка по стъпка за типични ежедневни ситуации.",
-    "helpfulQuestion": "Тази статия полезна ли беше?",
-    "helpfulYes": "Да",
-    "helpfulNo": "Не",
-    "helpfulThanks": "Благодарим за обратната връзка!",
-    "related": "Още статии в {category}",
-    "searchTitle": "Търсене",
-    "results": "{count, plural, one {# резултат за „{query}“} other {# резултата за „{query}“}}",
-    "noResultsTitle": "Няма намерени статии",
-    "noResultsHintPre": "Опитайте с други думи за търсене или",
-    "noResultsHintLink": "разгледайте категориите",
-    "browseCategories": "Разглеждане на категориите",
-    "brandTitle": "Помощ на myNextDays"
-  },
   "common": {
     "save": "Запазване",
     "cancel": "Отказ",
@@ -4540,7 +4515,10 @@
       "photos": "Снимки",
       "noPhotosFound": "За тази резервация не бяха намерени снимки.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "чрез {channel}",
+      "receivedOn": "получена при нас на {date}",
+      "bookedOn": "резервирана на {date}"
     },
     "dashboard": {
       "todayCheckouts": "Напускания",

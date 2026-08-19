@@ -45,7 +45,10 @@ import { DEMO_URL, LOGIN_URL, SIGNUP_URL } from "@/lib/app-url";
 const NAV_LINKS = [
   { key: "preise", href: "/preise" },
   { key: "kanaele", href: "/#kanaele" },
-  { key: "kunden", href: "/#kunden" },
+  // „Über uns" statt des früheren Ankers „Kunden": zum Start gibt es keine
+  // Kundenstimmen, auf die der Sprung zeigen könnte — die Über-uns-Seite ist
+  // das, was ein Interessent an dieser Stelle sucht.
+  { key: "ueberUns", href: "/ueber-uns" },
   { key: "ressourcen", href: "/#ressourcen" },
 ] as const;
 

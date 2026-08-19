@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Kako vam možemo pomoći?",
-    "heroSubtitle": "Pretražite bazu znanja ili pronađite rješenja korak po korak za svakodnevni rad s myNextDaysom.",
-    "searchPlaceholder": "Što tražite?",
-    "searchAria": "Pretraži pomoć",
-    "contact": "Contact",
-    "home": "Početna stranica pomoći",
-    "articles": "{count, plural, one {# članak} few {# članka} other {# članaka}}",
-    "collectionKbTitle": "Baza znanja",
-    "collectionKbDesc": "Sve o objektima, cijenama, kalendaru, portalima i vašem računu.",
-    "collectionUsecasesTitle": "Primjeri primjene",
-    "collectionUsecasesDesc": "Rješenja korak po korak za uobičajene svakodnevne situacije.",
-    "helpfulQuestion": "Je li vam ovaj članak bio koristan?",
-    "helpfulYes": "Da",
-    "helpfulNo": "Ne",
-    "helpfulThanks": "Hvala na povratnoj informaciji!",
-    "related": "Više članaka u kategoriji {category}",
-    "searchTitle": "Pretraga",
-    "results": "{count, plural, one {# rezultat za „{query}”} few {# rezultata za „{query}”} other {# rezultata za „{query}”}}",
-    "noResultsTitle": "Nije pronađen nijedan članak",
-    "noResultsHintPre": "Pokušajte s drugim pojmovima ili",
-    "noResultsHintLink": "pregledajte kategorije",
-    "browseCategories": "Pregledaj kategorije",
-    "brandTitle": "Pomoć myNextDays"
-  },
   "common": {
     "save": "Spremi",
     "cancel": "Odustani",
@@ -4540,7 +4515,10 @@
       "photos": "Fotografije",
       "noPhotosFound": "Za ovu rezervaciju nisu pronađene slike.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "putem kanala {channel}",
+      "receivedOn": "primljeno kod nas {date}",
+      "bookedOn": "rezervirano {date}"
     },
     "dashboard": {
       "todayCheckouts": "Odjave",

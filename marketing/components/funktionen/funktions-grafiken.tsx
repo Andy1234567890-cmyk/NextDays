@@ -283,11 +283,51 @@ export function GrafikBelegung({ titel, punkte }: Props) {
 }
 
 /** Rückfallgrafik: die Zeichnung der Funktionsgruppe, groß auf getönter Fläche. */
-export function GrafikZeichnung({ gruppe }: { gruppe: string }) {
+/** Zeichnung der Funktionsgruppe mit den drei Stichpunkten als Karten.
+ *
+ *  Vorher war das eine 4:3-Fläche mit EINEM kleinen Symbol darin — im
+ *  Reiter-Panel, das selbst schon eine getönte Fläche ist, ergab das zwei
+ *  ineinander liegende rosa Kästen mit einem Icon in der Mitte und sonst
+ *  nichts („hier ist kein Bild", 19.08.2026). Die Zeichnung ist jetzt der
+ *  Kopf einer Karte, die auch die drei Punkte des Reiters trägt — dieselben
+ *  Mittel wie die übrigen Grafiken hier, nur ohne erfundene Oberfläche für
+ *  Funktionen, von denen es keine Aufnahme gibt. */
+export function GrafikZeichnung({
+  gruppe,
+  titel,
+  punkte,
+}: Props & { gruppe: string }) {
   const Illustration = GRUPPEN_ILLUSTRATION[gruppe];
   return (
-    <div className="flex aspect-[4/3] items-center justify-center rounded-3xl bg-surface-accent text-accent">
-      {Illustration ? <Illustration className="size-48" /> : null}
+    <div className="rounded-3xl border border-border bg-card p-6 shadow-float">
+      <div className="flex items-center gap-4">
+        <span className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-surface-accent text-accent">
+          {Illustration ? <Illustration className="size-9" /> : null}
+        </span>
+        <p className="font-display text-base font-semibold">{titel}</p>
+      </div>
+      <ul className="mt-5 flex flex-col gap-2.5">
+        {punkte.map((p) => (
+          <li
+            key={p}
+            className="flex items-center gap-3 rounded-2xl bg-surface-warm px-4 py-3"
+          >
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
+              <svg viewBox="0 0 24 24" aria-hidden className="size-3.5">
+                <path
+                  d="m5 12 5 5 9-10"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <span className="text-sm font-medium">{p}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

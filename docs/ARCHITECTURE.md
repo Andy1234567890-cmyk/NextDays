@@ -89,7 +89,7 @@ C4Container
     Person(guest, "Gast", "Bucht über Portal/Widget")
 
     Container_Boundary(nd, "NextDays") {
-        Container(marketing, "Marketing-Website", "Next.js (entkoppelt)", "Landing/Pricing/Blog — KEINE PMS/Auth-Kopplung (ADR-0002)")
+        Container(marketing, "Marketing-Website", "Next.js (entkoppelt)", "Landing/Pricing/Kontakt + oeffentliches Hilfe-Center (24 Sprachen) — KEINE PMS/Auth-Kopplung (ADR-0002)")
         Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portale (Coolify-App)")
         Container(mobile_bestdays, "myBestDays-App", "React Native 0.86 + React Navigation (mobile-bestdays)", "Native Marktplatz-App für Gäste (iOS/Android); teilt das FastAPI-Backend (/api/v1)")
         Container(mobile_nextdays, "myNextDays-App", "React Native 0.86 + React Navigation (mobile-nextdays)", "Native PMS-App für den Betrieb, Eigentümer und Mitarbeiter (iOS/Android)")
@@ -173,6 +173,7 @@ flowchart TB
             REV["reviews — Bewertungs-Cockpit des Betriebs: EINE Liste über alle Kanäle (public.reviews = myBestDays 1..5 + channex_review = Portale 0..10, normalisiert auf UnifiedReview), antworten (Portal zuerst, dann Spiegel), Betrieb→Gast (Zwei-Wege), Automatik (Auto-Bewertung + Gast-Erinnerung, review_automation/-_log), Zwei-Wege-Sichtbarkeit (publication.py, 14 Tage). OTA-Bewertungen sind INTERN — öffentlich nur eigene, verifizierte myBestDays-Bewertungen"]
             GREV["guest_reviews — Gast-Seite des Marktplatzes: öffentlicher, MASKIERTER Lesepfad je Objekt und je Betrieb (speist Listing-Sterne, Inserat-Abschnitt, Website-Block), abgeben/ändern mit Nachweis eines abgeschlossenen Aufenthalts"]
             SITE["site_config — Page-Builder: Branding, Custom-Domains (Cloudflare for SaaS), Seiten + Blöcke (Page-Builder), Templates, Draft-Token; öffentlicher by-domain-Resolver (s. §12)"]
+            CONTACT["contact — Kontaktformular der Marketing-Seite: EIN öffentlicher Endpunkt (/contact/message) ohne eigene Tabelle. Der Client schickt nur ein Thema-Kürzel, der Server wählt daraus das Postfach (themen.py: info@ kaufmännisch/redaktionell, developer@ technisch) — ein Zielfeld wäre ein offenes Mail-Relay über unsere DKIM-Domain. Spamschutz dreistufig: Honigtopf → core/captcha (reCAPTCHA Enterprise, SERVERSEITIG bewertet, fail-closed) → Bucket public_support. Keine Eingangsbestätigung an den Absender (sonst Mailversand an fremde Adressen auf Zuruf)"]
             MCP["mcp — KI-Connector (claude.ai): OAuth-2.1-Authorization-Server mit CIMD + PKCE (kein client_credentials, kein DCR) und Streamable-HTTP-Endpunkt mit sechs NUR-LESEND-Werkzeugen. Ruft denselben Service-Layer wie die Web-UI — keine zweite Fachlogik, damit Tenant-/Owner-Scope und Rollen-Split automatisch gelten (s. docs/MCP-CONNECTOR.md)"]
         end
         subgraph SCAFFOLD["Slices als Gerüst (Health-only) — Logik folgt lt. Roadmap"]
@@ -1826,14 +1827,17 @@ ist transaktional und bekommt stattdessen `Auto-Submitted: auto-generated`
 `notification_settings/dispatcher` (alle Glocken-Kategorien),
 `reviews/automation` (Gast-Erinnerung, myBestDays), `newsletter/service`,
 `platform_admin/team_service` (Backoffice-Einladung/-Reset),
-`calendar/sperrantraege` und `channel_manager/airbnb_zimmer_push`.
+`calendar/sperrantraege`, `channel_manager/airbnb_zimmer_push` und
+`contact/service` (Kontaktformular der Marketing-Seite → info@/developer@; die
+einzige dieser Mails, die an UNS geht statt an einen Nutzer, und die einzige mit
+`Reply-To` auf einen Fremden).
 
 **Slices (Auswahl, namentlich):** `auth` · `properties` · `rates` · `pricing` ·
 `calendar` · `reservations` · `guests` · `inbox` · `whatsapp` · `payments` ·
 `channel_manager` · `booking_engine` · `addons` · `owners` · `owner_statements` ·
 `buchhaltung` · `travel_agencies` · `reviews` · `guest_reviews` · `site_config` ·
 `ocr` · `public_portal` · `tasks` · `crm` · `dashboard` · `content` ·
-`notification_settings` · `announcements`. Der Ordner
+`notification_settings` · `announcements` · `contact`. Der Ordner
 `apps/api/src/features/` führt darüber hinaus weitere Slice-Bausteine
 (`platform_admin`, `support`, `payouts`, `subscriptions`, `guest_*`, …) —
 Router-Prefixe je unter `/api/v1`. Zwei Slices mounten **zwei** Router:
@@ -1909,12 +1913,30 @@ apps/web/                # Next.js — App-Gerüst (Dashboard/Portal)
 │   ├── (portal)/portal/ # Eigentümer-Fläche (Rolle owner) mit eigener Sidebar:
 │   │                    #   kalender · berichte · sperrungen · zaehlerstaende
 │   │                    #   · dienstleistungen · benachrichtigungen
-│   └── (public)/marketing/   # Öffentliche Marketing-Landingpage (kein Auth-Gate)
+│   └── (public)/        # Ohne Auth-Gate: marketing/ (alte Landingpage) · agb/
+│                        #   Das Hilfe-Center lag hier und liegt jetzt in
+│                        #   marketing/app/hilfe — es braucht keinen Login und
+│                        #   war auf der Dashboard-Domain praktisch unsichtbar.
 ├── components/marketing/     # Sektions-Komponenten der Landingpage (Hero, Trial, …)
 ├── public/marketing/channels/ # Buchungskanal-Logos (Booking.com, Airbnb, …)
 ├── public/marketing/reviews/  # Review-Plattform-Logos (Capterra, Trustpilot, …)
+├── lib/marketing-url.ts # EINE Quelle für Links auf die Marketing-App
+│                        #   (Hilfe-Center, Voranmelde-Anker) — absolute URLs,
+│                        #   weil diese Ziele nicht mehr in dieser App liegen
 ├── lib/rollen-guard.ts  # Serverseitige Weiche (dashboard) ↔ (portal), Wurzel 9
 └── lib/supabase/        # Browser- + Server-Client (@supabase/ssr)
+
+marketing/               # Marketing-Website + Hilfe-Center (eigene Coolify-App,
+│                        #   eigenes bun.lock, KEINE @nextdays/*-Workspace-Pakete)
+├── app/hilfe/           # Öffentliches Hilfe-Center: Start · [category] ·
+│                        #   [category]/[article] · suche
+├── app/kontakt/         # Kontaktformular (Thema → info@/developer@, serverseitig)
+├── app/sitemap.ts       # aus content/funktionen + content/help + content/legal
+├── app/robots.ts        # Crawl-Regeln, verweist auf die Sitemap
+├── app/llms.txt/        # Wegweiser für KI-Assistenten (llmstxt.org)
+├── content/help/<loc>/  # Hilfe-Artikel als typisierte TS-Module, 24 Sprachen
+├── components/help/     # Hilfe-UI (Header, Kacheln, Suche, Breadcrumbs)
+└── public/help/illustrations/  # je Kategorie-Slug eine SVG-Illustration
 
 apps/storybook/          # Design-System + Auth-Proxy (eigenes Package, eigene Coolify-App)
 ├── app/                 # Next.js App Router (Auth-Hülle vor dem Storybook)

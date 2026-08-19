@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
 import { Logo } from "@/components/logo";
+import { HILFE_URL } from "@/lib/marketing-url";
 
 const FOOTER_COLUMNS = [
   {
@@ -81,7 +82,9 @@ export async function MarketingFooter() {
               <ul className="mt-4 flex flex-col gap-3">
                 {col.links.map((link) => {
                   // Nur echte Ziele verlinken; alles andere bleibt Platzhalter (#).
-                  const href = link === "Hilfe-Center" ? "/hilfe" : "#";
+                  // Das Hilfe-Center liegt in der Marketing-App, nicht hier —
+                  // seit dem Umzug waere "/hilfe" in dieser App ein 404.
+                  const href = link === "Hilfe-Center" ? HILFE_URL : "#";
                   return (
                     <li key={link}>
                       <Link

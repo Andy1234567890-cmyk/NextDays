@@ -7,7 +7,7 @@
   "funktionen": "Funkciók",
   "preise": "Árak",
   "kanaele": "Csatornák",
-  "kunden": "Ügyfelek",
+  "ueberUns": "Rólunk",
   "ressourcen": "Források",
   "sprache": "Nyelv",
   "spracheWaehlen": "Nyelv kiválasztása",
@@ -425,7 +425,7 @@
   "ressourcen": {
    "blog": "Blog",
    "hilfeCenter": "Súgóközpont",
-   "webinare": "Webináriumok",
+   "status": "Rendszerállapot",
    "leitfaeden": "Útmutatók",
    "api": "API-dokumentáció"
   },
@@ -441,7 +441,8 @@
   "datenschutz": "Adatvédelem",
   "impressum": "Impresszum",
   "cookies": "Cookie-szabályzat",
-  "avv": "Adatfeldolgozás"
+  "avv": "Adatfeldolgozás",
+  "kontoLoeschen": "Fiók törlése"
  },
  "abschluss": {
   "heading": "Készen áll, hogy egy helyről irányítsa a szálláshelyét?",
@@ -593,5 +594,1014 @@
    "provision": "Saját weboldal {direkt} · portálok {portale}",
    "tarif": "Egy csomag mindenkinek, az 1. ingatlannal"
   }
+ },
+ "ueberUns": {
+  "meta": {
+   "titel": "Rólunk — myNextDays",
+   "beschreibung": "A dániai Bindslevben működő myNextDays ApS: miért építettek aktív kiadók saját ingatlankezelő rendszert channel managerrel, mi mellett állunk ki, és kik állnak mögötte."
+  },
+  "hero": {
+   "eyebrow": "Rólunk",
+   "headlinePre": "Mi magunk is kiadunk. Ezért létezik a",
+   "headlineHighlight": "myNextDays",
+   "sub": "A myNextDays ApS tulajdonosok által vezetett vállalkozás a észak-jyllandi Bindslevben. Saját nyaralóingatlanokat adunk ki — és megépítettük azt a platformot, amely a mindennapokban hiányzott: naptár, csatornák, vendégek, fizetések és elszámolás egy helyen.",
+   "sitz": "Székhely Dániában",
+   "eu": "EU-s tárhely, GDPR-megfelelés",
+   "start": "Indulás 2026. szeptember 1-jén",
+   "sprachen": "27 ország, 24 nyelv",
+   "ctaTrial": "30 napig ingyen kipróbálom",
+   "ctaKontakt": "Írjon nekünk"
+  },
+  "warum": {
+   "eyebrow": "Miért vagyunk",
+   "heading": "A saját kiadói mindennapokból nőtt ki.",
+   "p1": "Aki kiad, ismeri azt az estét, amikor ugyanazt a hetet kétszer adták el, mert az egyik csatorna sosem kapta meg a zárást. Itt hagytuk abba az eszközkeresést, és kezdtünk el egyet építeni.",
+   "p2": "A meglévő rendszerek vagy szállodaláncokra készültek — olyan bonyolultsággal és árral, amelyet néhány ingatlant kezelő vállalkozás nem bír el —, vagy pontosan ott értek véget, ahol az igazi munka kezdődik: elszámolás, tulajdonosok, takarítás és adók 27 országban.",
+   "p3": "A myNextDays erre a válasz: teljes értékű ingatlankezelő rendszer channel managerrel azoknak, akik maguk viszik az ingatlanjaikat — az egyetlen nyaralóháztól a több szobatípusos szállodáig.",
+   "bildFerienobjekt": "Nyaralóház a tengerparton",
+   "bildHotel": "Szállodai szoba bevetett ággyal"
+  },
+  "bento": {
+   "eyebrow": "Ami mögötte van",
+   "heading": "Számok, amelyeket igazolni tudunk.",
+   "sub": "Nincsenek ügyfélszámok és értékelések: a platform 2026. szeptember 1-jén indul. Ami itt szerepel, magában a termékben ellenőrizhető.",
+   "vermieter": {
+    "titel": "Kiadók építették, nem rajzasztalnál",
+    "text": "Minden funkció előbb a saját kiadásunkban fut, és csak utána kerül a termékbe. Ami ott a mindennapokban nem állja meg a helyét, nem jelenik meg.",
+    "bildAlt": "Egy bérbeadó ügynökség csapata munka közben"
+   },
+   "laender": {
+    "wert": "27",
+    "titel": "Európai ország",
+    "text": "Az adott ország pénznemével, adókulcsaival és szabályaival — nem egyetlen eurós űrlappal mindenkinek."
+   },
+   "sprachen": {
+    "wert": "24",
+    "titel": "Nyelv",
+    "text": "Felület, vendégkommunikáció és jogi szövegek, nem csak a nyitóoldal."
+   },
+   "kanaele": {
+    "wert": "56",
+    "titel": "Foglalási portál",
+    "text": "Booking.com, Airbnb, Expedia, Vrbo és sok más egyetlen kapcsolaton keresztül."
+   },
+   "eu": {
+    "titel": "Az EU-ban épült, az EU-ban üzemel",
+    "text": "A kiszolgálók és az adatok az Európai Unióban vannak, az üzemeltetés a GDPR-t követi, az adatfeldolgozás pedig írásban szabályozott. Vendégadatokat kezelő vállalkozásnál ez nem lábjegyzet, hanem feltétel."
+   }
+  },
+  "zeitleiste": {
+   "eyebrow": "Az idáig vezető út",
+   "heading": "Rövid történet, ellenőrizhető lépések.",
+   "sub": "Fiatalok vagyunk — és inkább négy igazolt szakaszt írunk le, mint kitalált történelmet.",
+   "airsmil": {
+    "datum": "A kiindulópont",
+    "titel": "A mindennapok a saját vállalkozásban",
+    "text": "Saját ingatlanok több csatornán egyszerre: kétszeres munka, késve érkező zárások, elszámolás táblázatban. Ezekből a súrlódásokból lett a követelménylista."
+   },
+   "gruendung": {
+    "datum": "2026. július 1.",
+    "titel": "A myNextDays ApS megalapítása",
+    "text": "Bejegyezve a dán cégnyilvántartásba CVR 46615182 számon, székhelye Bindslev, Észak-Jylland."
+   },
+   "beta": {
+    "datum": "2026 nyara",
+    "titel": "Béta valódi ingatlanokkal",
+    "text": "A foglalások élőben érkeznek a csatornákról, az árak, a szabad kapacitás és a zárások ugyanazon az úton mennek vissza — valódi ingatlanokkal és valódi vendégekkel, nem tesztkörnyezetben."
+   },
+   "start": {
+    "datum": "2026. szeptember 1.",
+    "titel": "Indulás 27 országban",
+    "text": "24 nyelven, több pénznemmel, a myBestDays piactérrel és a két alkalmazással a vállalkozás és a vendég számára."
+   }
+  },
+  "marken": {
+   "eyebrow": "Két márka, egy platform",
+   "heading": "myNextDays a vállalkozásnak, myBestDays a vendégnek.",
+   "sub": "Mindkettő a myNextDays ApS-hez tartozik, és ugyanazon a technikán fut — az választja el őket, hogy ki használja.",
+   "nextdays": {
+    "rolle": "Vállalkozásoknak",
+    "text": "Az ingatlankezelő rendszer és a channel manager: az a hely, ahol a vállalkozás viszi az ingatlanjait, árat szab és elszámol.",
+    "punkte": {
+     "kalender": "Foglaltsági terv minden ingatlanra és egységre, valós időben",
+     "portale": "Egyetlen kapcsolat minden portálhoz — kapacitás, árak és zárások mindenhová egyszerre mennek",
+     "geld": "Fizetések, számlák, jutalékok és tulajdonosi elszámolás",
+     "team": "Saját alkalmazás tulajdonosoknak, munkatársaknak és takarításnak"
+    }
+   },
+   "bestdays": {
+    "rolle": "Vendégeknek",
+    "text": "Saját piacterünk: a vendégek ugyanazokat az ingatlanokat találják, és közvetlenül a vállalkozásnál foglalnak — jóval alacsonyabb jutalékkal, mint a nagy portálokon.",
+    "punkte": {
+     "direkt": "Foglalás közvetlenül a vállalkozásnál, közvetítő nélkül",
+     "provision": "Alacsonyabb jutalék, mint a nagy portálokon",
+     "app": "Saját alkalmazás a kereséshez, a foglaláshoz és a tartózkodáshoz"
+    }
+   },
+   "hinweis": "Egy ingatlan mindkét úton egyszerre eladható — emellett a Booking.comon, az Airbnb-n és a többi portálon. Hogy melyik csatorna van bekapcsolva, azt a vállalkozás dönti el csatornánként."
+  },
+  "werte": {
+   "eyebrow": "Alapelvek",
+   "heading": "Ezeken mérjenek minket.",
+   "sub": "Hat pont, amely a termékben és a dokumentumainkban ellenőrizhető — nem szándéknyilatkozat.",
+   "doppelbuchung": {
+    "titel": "Nincs kettős foglalás",
+    "text": "Nálunk a szabad kapacitás a szabad egységek száma, nem pipa. Valós időben megy minden portálra, a zárás pedig mindenhol zár — nem csak ott, ahol beírták."
+   },
+   "preise": {
+    "titel": "Előre ismert árak",
+    "text": "Egy csomag, hűségidő és belépési díj nélkül. Ami külön kerül pénzbe, összeggel szerepel az árak oldalon, nem egy értékesítési beszélgetésben."
+   },
+   "europa": {
+    "titel": "Európa nem fordítási projekt",
+    "text": "27 ország azt jelenti: 27 pénznem, adókulcs és adatszolgáltatási kötelezettség — egészen a számláig, a vendégnek küldött e-mailig és a kifizetésig. Ha hiányzik egy adat, azt megmondjuk, nem írunk be helyette valószínű értéket."
+   },
+   "daten": {
+    "titel": "Az adatok az EU-ban maradnak",
+    "text": "Üzemeltetés és kiszolgálók az Európai Unióban, a GDPR az alap, adatfeldolgozási szerződés alapértelmezésben. A vállalkozáson belül a vendégadatokat csak azok a szerepkörök látják, amelyeknek szükségük van rájuk."
+   },
+   "unabhaengig": {
+    "titel": "Tulajdonosok vezetik",
+    "text": "Nincs mögöttünk konszern és nincs kívülről kapott ütemterv. Hogy mi épül legközelebb, azt azokkal a vállalkozásokkal döntjük el, amelyek naponta használják a szoftvert."
+   },
+   "selbst": {
+    "titel": "Mi magunk is használjuk",
+    "text": "Saját ingatlanjaink ugyanazon a platformon futnak, mint az ügyfeleinké. A hiba minket ér el először — ez a legőszintébb minőségbiztosítás, amit ismerünk."
+   }
+  },
+  "menschen": {
+   "eyebrow": "Az emberek mögötte",
+   "heading": "Kicsik, elérhetők, a gyakorlatból.",
+   "sub": "A myNextDays ApS vezetése a dán cégnyilvántartás szerint.",
+   "jeanine": {
+    "rolle": "Alapító és ügyvezető",
+    "text": "Vezeti a saját kiadói vállalkozásunkat, és minden termékdöntésbe beviszi a vendégekkel, portálokkal és takarítással teli mindennapokat."
+   },
+   "torsten": {
+    "rolle": "Ügyvezető",
+    "text": "Összefogja a szálakat, és pontosan ott támogatja a csapatot, ahol éppen szükség van rá. Sokoldalú gyakorlati tapasztalatát hozza be, hogy a háttérben gyors és pragmatikus megoldásokat találjon."
+   }
+  },
+  "unternehmen": {
+   "eyebrow": "Vállalkozás",
+   "heading": "Kivel áll kapcsolatban.",
+   "firma": "Vállalkozás",
+   "sitz": "Cím",
+   "register": "Cégnyilvántartás",
+   "ustId": "Közösségi adószám",
+   "direktion": "Vezetés",
+   "impressum": "Teljes szolgáltatói adatok az impresszumban",
+   "kontaktTitel": "Közvetlen elérés",
+   "kontaktText": "Kérdés a termékről, egy másik rendszerről való váltásról vagy az együttműködésről? Az válaszol, aki maga is használja a szoftvert."
+  }
+ },
+ "funktionen": {
+  "rahmen": {
+   "ctaTesten": "30 napig ingyen kipróbálom",
+   "ctaDemo": "Demó megtekintése",
+   "weiter": "Tovább a többi funkcióhoz",
+   "mehr": "Megnézem",
+   "bereich": {
+    "verkauf": "Értékesítés",
+    "gast": "Vendég és pénz",
+    "betrieb": "Működés"
+   },
+   "reiterHeading": "Mi van pontosan mögötte?"
+  },
+  "uebersicht": {
+   "metaTitel": "Funkciók — minden a kiadáshoz és a szállodához | myNextDays",
+   "metaBeschreibung": "Naptár, channel manager, közvetlen foglalás, vendégkommunikáció, fizetés, árazás, csapat, alkalmazás és kimutatások — egy rendszerben, minden tarifában benne.",
+   "eyebrow": "Funkciók",
+   "headline": "Minden, amit a hétköznap kíván. Egy rendszerben.",
+   "sub": "Kilenc terület, egy belépés. Mindegyik az alaptarifához tartozik — nincs semmi, ami csak drágább csomagban indul.",
+   "bereichSub": {
+    "verkauf": "Láthatóvá válni és foglalásokat kapni",
+    "gast": "Az első kapcsolattól a beérkező pénzig",
+    "betrieb": "Ki mit csinál — és mit hozott"
+   }
+  },
+  "pms": {
+   "metaBeschreibung": "Egy naptár minden ingatlanhoz: foglaltsági terv, foglalások, feladatok és ingatlanadatok egy helyen — nyaralószállásokhoz és szállodákhoz.",
+   "headline": "Egy naptár mindenre, amit kiadsz.",
+   "sub": "A foglaltság, a foglalások és az ingatlanadatok egy helyen vannak — akár egy nyaralóapartman, akár tizenkét szobatípus több egységgel.",
+   "bildAlt": "Foglaltsági terv több csatornából érkező foglalásokkal",
+   "nutzen": {
+    "a": {
+     "titel": "Minden egy pillantásra",
+     "text": "A foglaltsági terv minden egységet, minden foglalást és minden zárást egy nézetben mutat — csatornánkénti színnel."
+    },
+    "b": {
+     "titel": "Foglalás másodpercek alatt",
+     "text": "Foglalást felvenni, áthelyezni vagy lemondani a nézet váltása nélkül. A felszabaduló éjszakák azonnal újra eladásra kerülnek."
+    },
+    "c": {
+     "titel": "Ingatlanadatok, amelyek mindenhol érvényesek",
+     "text": "A felszereltséget, a fotókat és a szabályokat egyszer kezeled — a portálok és a saját weboldalad automatikusan megkapják."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Egy ingatlan, több egység — helyesen leképezve.",
+     "text": "Öt egyforma stúdió egy típus öt egységgel, nem ötször kezelt ingatlan. Számként szabadok, pontosan úgy, ahogy a portálok várják.",
+     "punkte": {
+      "a": "Egységek ingatlantípusonként",
+      "b": "Az épület több típust fog össze",
+      "c": "Szabad kapacitás számként, nem igen/nem"
+     }
+    }
+   },
+   "bildAltBlock": "Egy szálloda foglaltsági terve szobatípusokkal",
+   "reiter": {
+    "kalender": {
+     "titel": "Foglaltsági terv",
+     "heading": "Minden egység, minden éjszaka, egy kép.",
+     "text": "A terv a foglalásokat, a zárásokat és a szabad éjszakákat egymás mellett mutatja — csatornánkénti színnel és a vendég nevével. Húzással áthelyezel egy foglalást, egy kattintás újat vesz fel.",
+     "punkte": {
+      "a": "Szín csatornánként",
+      "b": "Fogd és vidd",
+      "c": "500 ingatlanig"
+     }
+    },
+    "einheiten": {
+     "titel": "Egységek",
+     "heading": "Öt egyforma stúdió egy típus.",
+     "text": "A típust kezeled, és megadod, hány egység van belőle. A portálok darabszámot kapnak, nem igen/nem szabad kapacitást — pontosan úgy, ahogy várják.",
+     "punkte": {
+      "a": "Típus felvéve",
+      "b": "Egységek beállítva",
+      "c": "Darabszám a portáloknak"
+     }
+    },
+    "reservierung": {
+     "titel": "Foglalások",
+     "heading": "Az érdeklődéstől az elutazásig.",
+     "text": "Minden foglalásnak megvan a története: fizetések, üzenetek, feladatok és módosítások egy helyen állnak — hetekkel később is követhetően.",
+     "punkte": {
+      "a": "Történet foglalásonként",
+      "b": "Módosítások naplózva",
+      "c": "Lemondás indoklással"
+     }
+    },
+    "objektdaten": {
+     "titel": "Ingatlanadatok",
+     "heading": "Egyszer kezeled, mindenhol érvényes.",
+     "text": "A felszereltség, a fotók, a szabályok és a leírások az ingatlanon vannak. Onnan mennek a portálokra és a saját weboldaladra — második kezelés nélkül.",
+     "punkte": {
+      "a": "Fotók és felszereltség",
+      "b": "Házirend",
+      "c": "Automatikusan szétosztva"
+     }
+    }
+   }
+  },
+  "channel": {
+   "metaBeschreibung": "Channel manager nyaralóapartmanhoz és szállodához: Airbnb, Booking.com, Expedia, Vrbo és Google valós időben szinkronban — dupla foglalás nélkül.",
+   "headline": "Egy naptár. Minden foglalási platform.",
+   "sub": "A szabad kapacitás, az árak és a tartalmak valós időben mennek a portálokra, a foglalások ugyanabban a ritmusban jönnek vissza. Dupla foglalás így nem is keletkezik.",
+   "bildAlt": "Csatorna-áttekintés az összekapcsolt foglalási platformokkal",
+   "nutzen": {
+    "a": {
+     "titel": "56 platform",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google és sok további — egyetlen csatlakozáson keresztül, nem barkácsmegoldásokkal."
+    },
+    "b": {
+     "titel": "Két irány, egy ritmus",
+     "text": "Amit itt módosítasz, ott másodperceken belül látszik. Amit ott lefoglalnak, az itt azonnal lezárja az éjszakákat."
+    },
+    "c": {
+     "titel": "Minden portál külön",
+     "text": "Az árak, a felárak és a szabályok portálonként érvényesek — nincs olyan tétel, aminek mindenhol egyeznie kell csak azért, mert így egyszerűbb lenne."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "A Stop-Sell mindenhol hat. Gondolkodás nélkül.",
+     "text": "Ha lezársz egy dátumot, minden összekapcsolt portálon zárva van. Nincs utólagos kezelés öt extranetben, nincs elfeledett csatorna a hétvégén.",
+     "punkte": {
+      "a": "Azonnali zárás minden csatornán",
+      "b": "Minimum tartózkodás portálonként",
+      "c": "Napló: mi és mikor ment ki"
+     }
+    }
+   },
+   "bildAltBlock": "Foglaltsági terv több portál foglalásaival",
+   "reiter": {
+    "portale": {
+     "titel": "Portálok",
+     "heading": "56 platform egyetlen csatlakozáson.",
+     "text": "Az Airbnb, a Booking.com, az Expedia, a Vrbo, a Google és a myBestDays ugyanazon a csatlakozáson függ. Egy új portál egy kapcsolat, nem projekt.",
+     "punkte": {
+      "a": "Airbnb",
+      "b": "Booking.com",
+      "c": "myBestDays"
+     }
+    },
+    "sync": {
+     "titel": "Valós idejű szinkron",
+     "heading": "Ami itt történik, ott másodpercek alatt megvan.",
+     "text": "A szabad kapacitás, az árak és a korlátozások azonnal kimennek; a foglalások ugyanabban a ritmusban jönnek vissza, és lezárják az éjszakákat, mielőtt bárki kétszer foglalhatna.",
+     "punkte": {
+      "a": "Szabad kapacitás",
+      "b": "Árak",
+      "c": "Korlátozások"
+     }
+    },
+    "stopsell": {
+     "titel": "Stop-Sell",
+     "heading": "Egy kattintás minden csatornát bezár.",
+     "text": "Egy zárás mindenhol érvényes — nem négy extranetben egymás után. A napló megmutatja, mi és mikor ment ki, és mit válaszolt a portál.",
+     "punkte": {
+      "a": "Zárás beállítva",
+      "b": "Elküldve minden csatornára",
+      "c": "Napló ellenőrizve"
+     }
+    },
+    "regeln": {
+     "titel": "Szabályok portálonként",
+     "heading": "Minden portál lehet más.",
+     "text": "A felárakat, a minimum tartózkodásokat és a lemondási szabályokat csatornánként állítod be. Nincs közös tétel csak azért, mert egy rendszer másképp nem tudja.",
+     "punkte": {
+      "a": "Felár csatornánként",
+      "b": "Minimum tartózkodás",
+      "c": "Lemondási határidő"
+     }
+    }
+   }
+  },
+  "direkt": {
+   "metaBeschreibung": "Saját foglalási weboldal, foglalási widget és saját domain — közvetlen foglalások portáljutalék nélkül, fizetéssel és visszaigazolással.",
+   "headline": "Foglalások, amelyek teljesen a tieid.",
+   "sub": "A saját foglalási oldalad szabad kapacitással, árakkal és fizetéssel. Az ezen keresztüli foglalásokra nem számítunk fel jutalékot — a portálok 15 és 18 százalék között vesznek el.",
+   "bildAlt": "Ingatlanoldal foglalási folyamattal",
+   "nutzen": {
+    "a": {
+     "titel": "Weboldal ügynökség nélkül",
+     "text": "Építő sablonokkal, saját domain, fotók és szövegek az ingatlanadataidból — egy délután alatt online."
+    },
+    "b": {
+     "titel": "Widget a saját oldaladra",
+     "text": "Már van weboldalad? Akkor csak a foglalási folyamatot teszed bele, és megtartod a saját dizájnodat."
+    },
+    "c": {
+     "titel": "A fizetés azonnal megtörténik",
+     "text": "Az előleg, a hátralék és a kaució automatikusan futnak — a vendég beavatkozás nélkül megkapja a visszaigazolását."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "A piactér olyan vendégeket hoz, akik nem ismernek.",
+     "text": "A myBestDays a saját piacterünk. Ott más szállások mellett szerepelsz, második rendszer kezelése nélkül — ugyanazok az ingatlanok, ugyanaz a naptár.",
+     "punkte": {
+      "a": "Csatornánként külön kapcsolható",
+      "b": "Egy naptár mindenre",
+      "c": "8 % minden benne a portáljutalék helyett"
+     }
+    }
+   },
+   "bildAltBlock": "Csatorna-áttekintés saját weboldallal és piactérrel",
+   "reiter": {
+    "website": {
+     "titel": "Foglalási weboldal",
+     "heading": "A te oldalad, a te foglalásaid.",
+     "text": "Sablonok, saját domain, fotók és szövegek az ingatlanadatokból. A vendég közvetlenül nálad foglal — portál közbeiktatása nélkül.",
+     "punkte": {
+      "a": "Sablonok",
+      "b": "Saját domain",
+      "c": "Többnyelvű"
+     }
+    },
+    "widget": {
+     "titel": "Foglalási widget",
+     "heading": "A weboldalra, ami már megvan.",
+     "text": "Egy elem a meglévő oldaladon: szabad kapacitás, ár és fizetés, a te dizájnodban. Nincs átköltözés, nincs új projekt.",
+     "punkte": {
+      "a": "Kód beillesztve",
+      "b": "Dizájn átvéve",
+      "c": "Első foglalás"
+     }
+    },
+    "marktplatz": {
+     "titel": "myBestDays",
+     "heading": "A piacterünk új vendégeket hoz.",
+     "text": "Az ingatlanaid a saját piacterünkön szerepelnek más szállások mellett — ugyanazok az adatok, ugyanaz a naptár, egy kattintás a bekapcsoláshoz.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "zahlung": {
+     "titel": "Fizetés",
+     "heading": "Kifizetve, mielőtt a vendég megérkezik.",
+     "text": "Előleg foglaláskor, hátralék érkezés előtt, kaució biztosítva. A vendég automatikusan megkapja a visszaigazolást és a számlát.",
+     "punkte": {
+      "a": "Előleg",
+      "b": "Hátralék",
+      "c": "Kaució"
+     }
+    }
+   }
+  },
+  "gaeste": {
+   "metaBeschreibung": "Digitális vendégkönyv, online check-in, automatikus üzenetek és MI-concierge 24 nyelven — az első kapcsolattól az elutazásig.",
+   "headline": "Vendégeket kísérni, folyamatos gépelés nélkül.",
+   "sub": "Az üzenetek automatikusan mennek a megfelelő pillanatban, a kérdésekre a concierge válaszol 24 nyelven — te pedig mindent egy postafiókban olvasol.",
+   "bildAlt": "Postafiók több csatornából érkező vendégüzenetekkel",
+   "nutzen": {
+    "a": {
+     "titel": "Egy postafiók",
+     "text": "Az Airbnb, a Booking, az e-mail és a WhatsApp egy beszélgetésbe kerül — a foglalással együtt, nem négy alkalmazásban."
+    },
+    "b": {
+     "titel": "Üzenetek a megfelelő időben",
+     "text": "Visszaigazolás, érkezési tudnivalók, ajtókód, értékelési kérés: egyszer beállítod, utána magától megy."
+    },
+    "c": {
+     "titel": "Check-in előre",
+     "text": "A vendég érkezés előtt kitölti az adatait. Te fogadod őt, nem űrlapokat írsz át."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "A vendégkönyv leváltja az előszobai mappát.",
+     "text": "Wi-Fi-jelszó, szemétszállítás, éttermi tippek és házirend — digitálisan, a vendég nyelvén, bármikor módosíthatóan.",
+     "punkte": {
+      "a": "24 nyelv",
+      "b": "Ajtókódok a megfelelő pillanatban",
+      "c": "Tippek a környékről"
+     }
+    }
+   },
+   "bildAltBlock": "Mobil nézet foglaltsággal és üzenetekkel",
+   "reiter": {
+    "posteingang": {
+     "titel": "Postafiók",
+     "heading": "Airbnb, Booking, e-mail és WhatsApp egy beszélgetésben.",
+     "text": "Egy foglalás minden üzenete együtt áll — kontextussal, sablonokkal és fordítással. Senki nem keresgél többé négy alkalmazásban.",
+     "punkte": {
+      "a": "Vendég",
+      "b": "Mikor lehetséges a check-in?",
+      "c": "15 órától — a kódot holnap reggel küldöm."
+     }
+    },
+    "automatisch": {
+     "titel": "Automatikus üzenetek",
+     "heading": "A megfelelő időben, emlékeztető nélkül.",
+     "text": "Visszaigazolás, érkezési tudnivalók, ajtókód, értékelési kérés: egyszer beállítod, utána magától megy — a vendég nyelvén.",
+     "punkte": {
+      "a": "Visszaigazolás elküldve",
+      "b": "Érkezési tudnivaló beütemezve",
+      "c": "Értékelési kérés"
+     }
+    },
+    "checkin": {
+     "titel": "Online check-in",
+     "heading": "Adatok érkezés előtt, nem az ajtóban.",
+     "text": "A vendég előre kitölti a bejelentőadatokat és az igazolványt. Te fogadod őt, nem űrlapokat írsz át — és teljesíted a bejelentési kötelezettséget.",
+     "punkte": {
+      "a": "Bejelentőadatok",
+      "b": "Igazolvány",
+      "c": "Aláírás"
+     }
+    },
+    "mappe": {
+     "titel": "Vendégkönyv",
+     "heading": "Minden, amit a vendégnek tudnia kell.",
+     "text": "Wi-Fi, házirend, szemétszállítás és tippek a környékről — digitálisan, bármikor módosíthatóan, 24 nyelven.",
+     "punkte": {
+      "a": "Vendég",
+      "b": "Hol van a Wi-Fi-jelszó?",
+      "c": "A vendégkönyvben — elküldtem a linket."
+     }
+    }
+   }
+  },
+  "zahlungen": {
+   "metaBeschreibung": "Online fizetés, előlegek, kauciók és könyvelésre kész exportok — beérkező pénz és elszámolás utómunka nélkül.",
+   "headline": "A pénz megjön, anélkül hogy utána szaladnál.",
+   "sub": "Előleg foglaláskor, hátralék érkezés előtt, kaució biztosítva — automatikusan beszedve és a foglalásban dokumentálva.",
+   "bildAlt": "Foglalás fizetési állapottal és bizonylatokkal",
+   "nutzen": {
+    "a": {
+     "titel": "Fizetés a megszokott módon",
+     "text": "Kártya, Apple Pay, Google Pay, PayPal és helyi megoldások — a vendég azt választja, amit ismer."
+    },
+    "b": {
+     "titel": "Szabályok emlékeztetők helyett",
+     "text": "Hogy mikor mennyi esedékes, egyszer határozod meg. A hiányzó fizetéseket még a vendég érkezése előtt látod."
+    },
+    "c": {
+     "titel": "Készen a könyvelésre",
+     "text": "A számlák a foglalásból keletkeznek, az exportok illeszkednek a könyvelőhöz — kézi táblázatok nélkül."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "A tulajdonosok maguk látják az elszámolásukat.",
+     "text": "Minden tulajdonosnak saját belépése van foglaltsággal, bevételekkel és kifizetésekkel. Ez megkíméli a havi e-mailt a csatolt táblázattal.",
+     "punkte": {
+      "a": "Saját belépés tulajdonosonként",
+      "b": "Elszámolás ingatlanonként",
+      "c": "Csak olvasás, beavatkozás nélkül"
+     }
+    }
+   },
+   "bildAltBlock": "Áttekintés bevételekkel és kifizetésekkel",
+   "reiter": {
+    "online": {
+     "titel": "Online fizetés",
+     "heading": "Kártya, wallet, PayPal.",
+     "text": "A vendég azzal a módszerrel fizet, amit ismer. A pénz a te számládra megy, az állapot a foglalásban áll.",
+     "punkte": {
+      "a": "Nyitott összeg",
+      "b": "Előleg",
+      "c": "Hátralék"
+     }
+    },
+    "plaene": {
+     "titel": "Fizetési tervek",
+     "heading": "Hogy mikor mi esedékes, te döntöd el.",
+     "text": "Az előleg, a hátralék és a kaució a te szabályaidat követik — ingatlanonként és csatornánként eltérően, ha kell.",
+     "punkte": {
+      "a": "Szabály felvéve",
+      "b": "Előleg könyvelve",
+      "c": "Hátralék nyitott"
+     }
+    },
+    "rechnungen": {
+     "titel": "Számlák",
+     "heading": "A foglalásból, nem a táblázatból.",
+     "text": "A számlák és a jóváírások a valós számokból keletkeznek, adókulccsal és számlaszámkörrel. Az exportok illeszkednek a könyvelőhöz.",
+     "punkte": {
+      "a": "Számlaszámkör",
+      "b": "Adókulcsok",
+      "c": "Export"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Tulajdonosi elszámolás",
+     "heading": "Bevételek, költségek, kifizetés.",
+     "text": "Minden tulajdonos látja az ingatlanait foglaltsággal, bevételekkel és kifizetésekkel — saját belépéssel, nem havi e-mailként.",
+     "punkte": {
+      "a": "Bevételek",
+      "b": "Költségek",
+      "c": "Kifizetés"
+     }
+    }
+   }
+  },
+  "preise": {
+   "metaBeschreibung": "Dinamikus árazás min./max. értékkel, rate planok ingatlanonként, szezon- és kihasználtsági logika — több bevétel napi kézi munka nélkül.",
+   "headline": "Árak, amelyek magukról gondoskodnak.",
+   "sub": "A szezon, a kihasználtság, az előrefoglalási idő és a hét napja automatikusan beépül. A határaid a te határaid maradnak: a minimum alá nem megy semmi.",
+   "bildAlt": "Árrács éjszakánkénti dinamikus árakkal",
+   "nutzen": {
+    "a": {
+     "titel": "A min. és a max. érvényes",
+     "text": "Te adod meg a keretet, a rendszer abban mozog — nincs ár, amit nem akartál."
+    },
+    "b": {
+     "titel": "Rate planok ingatlanonként",
+     "text": "Nem visszatéríthető, korai foglaló, hosszú tartózkodás: több tétel ingatlanonként, mindegyik saját szabályokkal."
+    },
+    "c": {
+     "titel": "A kézi bevitel elsőbbséget élvez",
+     "text": "A kézzel beállított ár megmarad. Az automatika soha nem írja felül a tudatos döntést."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "A kedvezmények és a felárak a portálokra is mennek.",
+     "text": "A heti és havi kedvezmények, a korai foglalói akciók és a felárak ott jelennek meg, ahol engedélyezettek — nem csak a te nézetedben.",
+     "punkte": {
+      "a": "Tartózkodáshossz-kedvezmények",
+      "b": "Akciók időszakkal",
+      "c": "Felárak csatornánként"
+     }
+    }
+   },
+   "bildAltBlock": "Foglaltsági terv éjszakánkénti árakkal",
+   "reiter": {
+    "dynamisch": {
+     "titel": "Dinamikus árazás",
+     "heading": "Kihasználtság, szezon, előrefoglalási idő.",
+     "text": "Az ár a minimumod és a maximumod között mozog — a kereslet, a hét napja és az előrefoglalási idő szerint, minden éjszakára újraszámolva.",
+     "punkte": {
+      "a": "Minimum",
+      "b": "Maximum",
+      "c": "Kereslet"
+     }
+    },
+    "raten": {
+     "titel": "Rate planok",
+     "heading": "Több ár ugyanarra az ingatlanra.",
+     "text": "Nem visszatéríthető, korai foglaló, hosszú tartózkodás: minden tétel saját feltételekkel — és mindegyik kimegy azokra a portálokra, amelyek támogatják.",
+     "punkte": {
+      "a": "Tétel felvéve",
+      "b": "Feltételek beállítva",
+      "c": "A portálokra"
+     }
+    },
+    "rabatte": {
+     "titel": "Kedvezmények",
+     "heading": "Maradj hosszabban, fizess kevesebbet.",
+     "text": "Heti és havi kedvezmények, akciók időszakkal, felárak rövid tartózkodásra — közvetlenül a naptárban láthatóan.",
+     "punkte": {
+      "a": "Heti kedvezmény",
+      "b": "Havi kedvezmény",
+      "c": "Akció"
+     }
+    },
+    "grenzen": {
+     "titel": "A te határaid",
+     "heading": "Az automatikának soha nincs utolsó szava.",
+     "text": "Az ár, amit magad állítasz be, megmarad. És a minimumod alá nem megy semmi — üres naptárnál sem.",
+     "punkte": {
+      "a": "Minimum",
+      "b": "Kézi bevitel",
+      "c": "Elsőbbség"
+     }
+    }
+   }
+  },
+  "team": {
+   "metaBeschreibung": "Szerepek tulajdonosoknak, takarításnak, munkatársaknak és ügynökségnek — mindenki csak a saját területét látja, feladatokkal és fotós ellenőrzőlistákkal.",
+   "headline": "Mindenki pontosan azt látja, amire szüksége van.",
+   "sub": "A tulajdonosok az ingatlanaikat látják, a takarítás a beosztásait, a munkatársak a saját területüket. A pénzügyek ott maradnak, ahová tartoznak.",
+   "bildAlt": "Feladat-áttekintés felelősségekkel",
+   "nutzen": {
+    "a": {
+     "titel": "Szerepek megbeszélések helyett",
+     "text": "A jogok a szerephez tartoznak, nem a bizalomhoz. Egy takarítói belépés nem jut el a bevételekhez."
+    },
+    "b": {
+     "titel": "Feladatok bizonyítékkal",
+     "text": "A fotós ellenőrzőlisták megmutatják, hogy a lakást átadták — az időponttal együtt."
+    },
+    "c": {
+     "titel": "Automatikusan szétosztva",
+     "text": "Minden elutazás után a takarítás magától létrejön, határidővel a következő érkezésig."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Az ügynökségek több vállalkozást vezetnek egymás mellett.",
+     "text": "Aki másoknak ad ki, több tulajdonost kezel egy fiókban — elkülönített elszámolásokkal és saját belépésekkel.",
+     "punkte": {
+      "a": "Több tulajdonos",
+      "b": "Elkülönített elszámolás",
+      "c": "Jogok személyenként"
+     }
+    }
+   },
+   "bildAltBlock": "Foglalási lista felelősségekkel",
+   "reiter": {
+    "rollen": {
+     "titel": "Szerepek",
+     "heading": "Mindenki a saját területét látja.",
+     "text": "Ügynökség, tulajdonos, munkatárs, takarítás: a jogok a szerephez tartoznak. A bevételeket csak az látja, akinek látnia kell.",
+     "punkte": {
+      "a": "Szerep kiválasztva",
+      "b": "Ingatlanok hozzárendelve",
+      "c": "Jogok ellenőrizve"
+     }
+    },
+    "aufgaben": {
+     "titel": "Feladatok",
+     "heading": "A takarítás magától létrejön.",
+     "text": "Minden elutazás után a feladat ott van a tervben, határidővel a következő érkezésig. Fotós ellenőrzőlistával zárul le.",
+     "punkte": {
+      "a": "Elutazás rögzítve",
+      "b": "Takarítás beütemezve",
+      "c": "Fotók feltöltve"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Tulajdonosok",
+     "heading": "Saját belépés havi e-mail helyett.",
+     "text": "A tulajdonosok látják ingatlanaik foglaltságát, bevételeit és kifizetéseit — olvasva, a működésbe való beavatkozás lehetősége nélkül.",
+     "punkte": {
+      "a": "Foglaltság",
+      "b": "Bevételek",
+      "c": "Kifizetés"
+     }
+    },
+    "agentur": {
+     "titel": "Ügynökség",
+     "heading": "Több vállalkozás egy fiókban.",
+     "text": "Aki másoknak ad ki, több tulajdonost vezet egymás mellett — elkülönített elszámolások, elkülönített belépések, egy naptár.",
+     "punkte": {
+      "a": "Több tulajdonos",
+      "b": "Elkülönített elszámolás",
+      "c": "Egy belépés"
+     }
+    }
+   }
+  },
+  "app": {
+   "metaBeschreibung": "Natív alkalmazás az üzemeltetésnek, tulajdonosoknak, vendégeknek és a takarításnak — foglaltság, feladatok és üzenetek útközben.",
+   "headline": "A vállalkozásod belefér a zsebedbe.",
+   "sub": "Foglaltságot ellenőrizni, foglalást felvenni, üzenetre válaszolni, feladatot kipipálni — telefonról, laptop nélkül.",
+   "bildAlt": "Mobilalkalmazás foglaltsággal és feladatokkal",
+   "nutzen": {
+    "a": {
+     "titel": "Minden szerephez",
+     "text": "A tulajdonosoknak, a takarításnak és az üzemeltetésnek saját nézete van — ugyanaz az alkalmazás, más jogok."
+    },
+    "b": {
+     "titel": "Értesítések, amelyek számítanak",
+     "text": "Új foglalás, lemondás, vendégkérdés: azonnal megtudod, az alkalmazás megnyitása nélkül."
+    },
+    "c": {
+     "titel": "A vendégeknek is",
+     "text": "A vendégek a vendégkönyvet, a check-int és az üzeneteket a myBestDays alkalmazásban találják."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Két alkalmazás, mert két világ.",
+     "text": "A myNextDays vezeti a vállalkozást, a myBestDays a vendégé. A külön alkalmazás azt jelenti: egy vendég sem jut el a számaidhoz.",
+     "punkte": {
+      "a": "myNextDays a vállalkozásnak",
+      "b": "myBestDays a vendégnek",
+      "c": "iOS és Android"
+     }
+    }
+   },
+   "bildAltBlock": "A vállalkozás áttekintése az íróasztalnál",
+   "reiter": {
+    "betrieb": {
+     "titel": "Üzemeltetés útközben",
+     "heading": "A foglaltság és a foglalások kézben.",
+     "text": "Naptárt ellenőrizni, foglalást felvenni, árat módosítani — telefonról, ugyanazon az adatállományon, mint az íróasztalnál.",
+     "punkte": {
+      "a": "Naptár",
+      "b": "Foglalások",
+      "c": "Árak"
+     }
+    },
+    "meldungen": {
+     "titel": "Értesítések",
+     "heading": "Azonnal megtudod.",
+     "text": "Az új foglalás, a lemondás vagy a vendégkérdés értesítésként érkezik — egy koppintással a foglalásban vagy.",
+     "punkte": {
+      "a": "Foglalás",
+      "b": "Új foglalás júliusban",
+      "c": "Lemondás 08. 12–14-re"
+     }
+    },
+    "gast": {
+     "titel": "A vendégnek",
+     "heading": "A myBestDays alkalmazás.",
+     "text": "A vendégek a foglalást, a vendégkönyvet, a check-int és az üzeneteket a saját alkalmazásukban találják — a tiédtől elkülönítve.",
+     "punkte": {
+      "a": "Foglalás",
+      "b": "Vendégkönyv",
+      "c": "Check-in"
+     }
+    },
+    "rollen": {
+     "titel": "A csapatnak",
+     "heading": "Takarítás és tulajdonosok.",
+     "text": "A takarítók a beosztásaikat látják ellenőrzőlistával, a tulajdonosok az ingatlanaikat. Ugyanaz az alkalmazás, más jogok.",
+     "punkte": {
+      "a": "Beosztás nyitott",
+      "b": "Ellenőrzőlista kész",
+      "c": "Fotók elküldve"
+     }
+    }
+   }
+  },
+  "auswertungen": {
+   "metaBeschreibung": "Kihasználtság, bevétel, ADR és csatorna-összehasonlítás — riportok, amelyek megmutatják, min múlik, nem csak azt, hogy mi történt.",
+   "headline": "Számok, amelyekből döntés lesz.",
+   "sub": "Kihasználtság, bevétel és átlagár ingatlanonként, időszakonként és csatornánként — egymás mellett, nem öt exportban.",
+   "bildAlt": "Kimutatás kihasználtsággal és bevétellel",
+   "nutzen": {
+    "a": {
+     "titel": "Csatornák összehasonlítása",
+     "text": "Mit hoz a Booking, és mit a saját weboldal? Jutalékkal számolva, nem csak bevétel szerint."
+    },
+    "b": {
+     "titel": "Ingatlanonként",
+     "text": "Melyik ingatlan hozza ki magát, és melyik nem — a kihasználtságon és az átlagáron látszik."
+    },
+    "c": {
+     "titel": "Riportok maguktól",
+     "text": "A havi riportok automatikusan mennek neked és a tulajdonosaidnak, PDF-ként a megszokott felépítésben."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "A múlt és a kilátás egy nézetben.",
+     "text": "Amellett, ami volt, ott áll az is, ami már le van foglalva — így februárban látod, hogy a nyár kihozza-e, nem júliusban veszed észre.",
+     "punkte": {
+      "a": "Foglalási állás előre",
+      "b": "Összehasonlítás az előző évvel",
+      "c": "Export a könyvelőnek"
+     }
+    }
+   },
+   "bildAltBlock": "Egy szálloda foglaltsági terve adatalapként",
+   "reiter": {
+    "auslastung": {
+     "titel": "Kihasználtság",
+     "heading": "Mennyire van tele valójában?",
+     "text": "Kihasználtság ingatlanonként, hónaponként és csatornánként — az előző évhez mérve, nem megérzésből.",
+     "punkte": {
+      "a": "Kihasználtság",
+      "b": "Előző év",
+      "c": "Ingatlanonként"
+     }
+    },
+    "kanaele": {
+     "titel": "Csatorna-összehasonlítás",
+     "heading": "Melyik csatorna mit hoz?",
+     "text": "Jutalék utáni bevétel csatornánként: Booking, Airbnb, saját weboldal, myBestDays — egymás mellett, nem öt exportban.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "berichte": {
+     "titel": "Riportok",
+     "heading": "Maguktól jönnek.",
+     "text": "A havi riportok automatikusan mennek neked és a tulajdonosaidnak, PDF-ként a megszokott felépítésben.",
+     "punkte": {
+      "a": "Riport elkészült",
+      "b": "Elküldve a tulajdonosoknak",
+      "c": "Archívumba került"
+     }
+    },
+    "ausblick": {
+     "titel": "Kilátás",
+     "heading": "Ami már le van foglalva.",
+     "text": "Amellett, ami volt, ott áll a foglalási állás előre — így februárban látod, hogy a nyár kihozza-e.",
+     "punkte": {
+      "a": "Lefoglalva",
+      "b": "Érdeklődés",
+      "c": "Szabad"
+     }
+    }
+   }
+  }
+ },
+ "kontakt": {
+  "meta": {
+   "titel": "Kapcsolat — myNextDays",
+   "beschreibung": "Így érheti el a myNextDays-t: általános kérdések és értékesítés a {info} címre, technikai megkeresések a {technik} címre, telefonon a {telefon} számon — vagy közvetlenül az űrlapon."
+  },
+  "hero": {
+   "eyebrow": "Kapcsolat",
+   "headlinePre": "Mondja el, miről van szó —",
+   "headlineHighlight": "mi válaszolunk",
+   "sub": "Kérdések a termékről, egy másik rendszerről való átállásról, az API-nkon keresztüli csatlakozásról vagy az együttműködésről: válassza ki a témát, és az üzenet közvetlenül azokhoz kerül, akik értenek hozzá.",
+   "sitz": "Székhely: Bindslev, Dánia",
+   "sprachen": "Szoftver 24 nyelven",
+   "eu": "EU-ban hosztolt, GDPR-megfelelő"
+  },
+  "wege": {
+   "eyebrow": "Így érhet el minket",
+   "heading": "Ki foglalkozik az Ön kérdésével?",
+   "sub": "Két postafiók és egy csevegés. A kereskedelmi ügyek és minden, ami az indulás előtt van, az általános postafiókba kerül, minden technikai kérdés közvetlenül a fejlesztőcsapathoz — így semmi nem landol olyan várólistán, amelyet senki nem néz.",
+   "allgemein": {
+    "titel": "Termék, árak és értékesítés",
+    "text": "Tudni szeretné, hogy a myNextDays illik-e az Ön vállalkozásához, mit jelent egy másik rendszerről való átállás, vagy hogyan működik a számla és az előfizetés? Ez a helyes út — a sajtó, a partnerségek és az adatvédelmi megkeresések számára is.",
+    "aktion": "Üzenet írása"
+   },
+   "technik": {
+    "titel": "Technika, API és biztonság",
+    "text": "Valami nem működik, egy portálkapcsolat akadozik, az API-nkra fejleszt, vagy biztonsági rést talált? Ezek a megkeresések közvetlenül a fejlesztőcsapathoz jutnak, nem az értékesítésen keresztül.",
+    "aktion": "Üzenet írása"
+   },
+   "hilfe": {
+    "titel": "Súgó és csevegés",
+    "text": "Minden területhez tartozó útmutató megtalálható a Súgóközpontban. És ha gyorsan kell: minden oldal jobb alsó sarkában van egy csevegés, amelyben egy valódi személy válaszol — fiók és bejelentkezés nélkül.",
+    "aktion": "A Súgóközpontba",
+    "chatHinweis": "Csevegés minden oldal jobb alsó sarkában"
+   }
+  },
+  "formular": {
+   "eyebrow": "Üzenet",
+   "heading": "Írjon nekünk",
+   "sub": "Egy űrlap mindenre — a téma dönti el, ki kapja meg.",
+   "ablaufTitel": "Mi történik ezután",
+   "ablauf": {
+    "eingang": {
+     "titel": "Az üzenet elindul",
+     "text": "A saját dániai levelezőszerverünkön keresztül — nem harmadik fél űrlapszolgáltatásán, amelynek a kezén átfolynak az Ön adatai."
+    },
+    "zuordnung": {
+     "titel": "A megfelelő postafiókba kerül",
+     "text": "A kereskedelmi ügyek a {info} címre, a technikaiak a {technik} címre. Hogy melyik lesz, azt a szerverünk dönti el az Ön témája alapján."
+    },
+    "antwort": {
+     "titel": "Közvetlenül válaszolunk Önnek",
+     "text": "Rendes e-mailben arra a címre, amelyet itt megad — egyszerűen válaszolhat rá."
+    }
+   },
+   "hinweisPostfach": "Két postafiók, hogy semmi ne maradjon elfekve: {info} minden kereskedelmi ügyhez, {technik} minden technikai kérdéshez. Hogy melyik lesz, azt a szerverünk határozza meg az Ön témája alapján — ez az űrlap nem adhat meg címzettet.",
+   "thema": "Miről van szó?",
+   "themen": {
+    "allgemein": "Általános kérdés",
+    "vertrieb": "Termék, árak és értékesítés",
+    "abrechnung": "Számla és előfizetés",
+    "technik": "Technikai probléma",
+    "api": "API és fejlesztők",
+    "partner": "Partnerség",
+    "presse": "Sajtó és média",
+    "datenschutz": "Adatvédelem",
+    "sicherheit": "Biztonsági rés bejelentése"
+   },
+   "zielAllgemein": "A {email} címre megy",
+   "zielTechnik": "A {email} címre megy — a fejlesztőcsapatunkhoz",
+   "name": "Név",
+   "email": "E-mail",
+   "emailPlatzhalter": "nev@pelda.hu",
+   "firma": "Vállalkozás",
+   "telefon": "Telefon",
+   "optional": "opcionális",
+   "nachricht": "Az Ön üzenete",
+   "nachrichtPlatzhalter": "Írja le a megkeresését — minél pontosabban, annál találóbb a válasz.",
+   "absenden": "Üzenet küldése",
+   "laeuft": "Küldés folyamatban …",
+   "dankeTitel": "Megérkezett.",
+   "nochEine": "További üzenet írása",
+   "fehlerAllgemein": "Ez nem sikerült. Kérjük, próbálja meg később újra.",
+   "fehlerPruefung": "A biztonsági ellenőrzés nem sikerült. Kérjük, töltse be újra az oldalt, és küldje el az üzenetet még egyszer.",
+   "fehlerFelder": "Kérjük, ellenőrizze az adatait: név, e-mail és legalább 20 karakteres üzenet szükséges.",
+   "fehlerZuOft": "Erről a kapcsolatról túl sok üzenet érkezett. Kérjük, várjon egy pillanatot, és próbálja meg újra.",
+   "fehlerSpaeter": "Az üzenetet most nem lehet elküldeni. Kérjük, próbálja meg később újra, vagy írjon közvetlenül a következő címre: {email}.",
+   "datenschutzHinweis": "Az Ön adatait csak arra használjuk, hogy erre a megkeresésre válaszoljunk. Bővebben az <link>adatvédelmi nyilatkozatban</link>.",
+   "recaptchaHinweis": "Ezt az űrlapot a reCAPTCHA védi. A Google <datenschutz>adatvédelmi nyilatkozata</datenschutz> és <bedingungen>felhasználási feltételei</bedingungen> érvényesek."
+  },
+  "anschrift": {
+   "eyebrow": "Cím",
+   "heading": "Így ér el minket közvetlenül",
+   "firmaEyebrow": "Céges adatok",
+   "firmaHeading": "Kivel van dolga",
+   "firmaText": "Nem kellene az apró betűs részben keresni, ki a szerződő partner. Ezért állnak itt a nyilvántartási adatok — ugyanazok, mint az impresszumban.",
+   "firma": "Cég",
+   "register": "Nyilvántartás",
+   "ustId": "Közösségi adószám",
+   "direktion": "Ügyvezetés",
+   "impressum": "Impresszum megtekintése",
+   "datenschutz": "Adatvédelem megtekintése"
+  },
+  "faq": {
+   "eyebrow": "Gyakori kérdések",
+   "heading": "Kérdések a kapcsolatfelvételről",
+   "sub": "Ki válaszol, meddig tart, és mi történik az Ön adataival.",
+   "wer": {
+    "frage": "Ki válaszol nekem?",
+    "antwort": "Egy ember a csapatból, nem pedig egy sorszámos ticketrendszer. A myNextDays tulajdonos által vezetett: a kereskedelmi kérdésekre olyan valaki válaszol, aki maga is napi szinten használja a szoftvert, a technikaiakra a fejlesztőcsapat."
+   },
+   "postfach": {
+    "frage": "Honnan tudom, hova kerül az üzenetem?",
+    "antwort": "A választómező alatt minden témánál ott áll a célcím. Az általános, kereskedelmi és szerkesztőségi ügyek a {info} címre mennek, a technikai megkeresések, az API-kérdések és a biztonsági bejelentések a {technik} címre. A hozzárendelést a szerverünk végzi — az űrlap nem nevezhet meg postafiókot, hogy ne lehessen idegen üzenetek küldési útjaként visszaélni vele."
+   },
+   "sprache": {
+    "frage": "Milyen nyelven írhatok?",
+    "antwort": "Írjon azon a nyelven, amelyen ezt az oldalt olvassa — látjuk a megkeresésében, és azon válaszolunk, amennyire tudjuk. Németül, dánul és angolul mindig válaszolunk."
+   },
+   "dauer": {
+    "frage": "Meddig tart a válasz?",
+    "antwort": "Általában néhány órán belül, hétvégén és munkaszüneti napokon hosszabb ideig tarthat. A biztonsági bejelentésekre igaz: az értékesítés megkerülésével közvetlenül a fejlesztőcsapatnál landolnak."
+   },
+   "telefon": {
+    "frage": "Telefonálhatok is?",
+    "antwort": "Igen, a {telefon} számon. A hívás a leggyorsabb út mindenhez, amit jobb megbeszélni, mint megírni — technikai hibák esetén azonban egy üzenet gyakran mégis jobb, mert hibaüzeneteket és képernyőfotókat lehet csatolni."
+   },
+   "bestaetigung": {
+    "frage": "Kapok e-mailben visszaigazolást a beérkezésről?",
+    "antwort": "Nem, szándékosan nem. Egy automatikus visszaigazolás minden ide beírt címre elmenne — ezzel a levelezőszerverünket idegen postafiókok megírására lehetne használni. A visszaigazolás ezért itt, az oldalon jelenik meg, amint az üzenet megérkezett. Az Ön adatait kizárólag arra használjuk, hogy erre a megkeresésre válaszoljunk."
+   }
+  }
+ },
+ "help": {
+  "heroTitle": "Miben segíthetünk?",
+  "heroSubtitle": "Keressen a tudásbázisban, vagy találjon lépésről lépésre megoldásokat a myNextDays mindennapi használatához.",
+  "searchPlaceholder": "Mit keres?",
+  "searchAria": "Keresés a súgóban",
+  "contact": "Contact",
+  "home": "Súgó kezdőlap",
+  "articles": "{count, plural, other {# cikk}}",
+  "collectionKbTitle": "Tudásbázis",
+  "collectionKbDesc": "Minden a szálláshelyekről, árakról, naptárról, portálokról és a fiókjáról.",
+  "collectionUsecasesTitle": "Alkalmazási példák",
+  "collectionUsecasesDesc": "Lépésről lépésre megoldások tipikus mindennapi helyzetekre.",
+  "helpfulQuestion": "Hasznos volt ez a cikk?",
+  "helpfulYes": "Igen",
+  "helpfulNo": "Nem",
+  "helpfulThanks": "Köszönjük a visszajelzést!",
+  "related": "További cikkek ebben: {category}",
+  "searchTitle": "Keresés",
+  "results": "{count, plural, other {# találat erre: „{query}”}}",
+  "noResultsTitle": "Nem található cikk",
+  "noResultsHintPre": "Próbálkozzon más keresőszavakkal, vagy",
+  "noResultsHintLink": "böngéssze a kategóriákat",
+  "browseCategories": "Kategóriák böngészése",
+  "brandTitle": "myNextDays súgó"
  }
 }

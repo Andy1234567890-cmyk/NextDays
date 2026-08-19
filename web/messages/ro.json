@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Cum vă putem ajuta?",
-    "heroSubtitle": "Căutați în baza de cunoștințe sau găsiți soluții pas cu pas pentru activitatea zilnică cu myNextDays.",
-    "searchPlaceholder": "Ce căutați?",
-    "searchAria": "Caută în ajutor",
-    "contact": "Contact",
-    "home": "Pagina de ajutor",
-    "articles": "{count, plural, one {# articol} few {# articole} other {# de articole}}",
-    "collectionKbTitle": "Bază de cunoștințe",
-    "collectionKbDesc": "Totul despre proprietăți, prețuri, calendar, portaluri și contul dvs.",
-    "collectionUsecasesTitle": "Cazuri de utilizare",
-    "collectionUsecasesDesc": "Soluții pas cu pas pentru situații tipice din activitatea zilnică.",
-    "helpfulQuestion": "V-a fost util acest articol?",
-    "helpfulYes": "Da",
-    "helpfulNo": "Nu",
-    "helpfulThanks": "Vă mulțumim pentru feedback!",
-    "related": "Mai multe articole în {category}",
-    "searchTitle": "Căutare",
-    "results": "{count, plural, one {# rezultat pentru „{query}”} few {# rezultate pentru „{query}”} other {# de rezultate pentru „{query}”}}",
-    "noResultsTitle": "Niciun articol găsit",
-    "noResultsHintPre": "Încercați alți termeni de căutare sau",
-    "noResultsHintLink": "răsfoiți categoriile",
-    "browseCategories": "Răsfoiește categoriile",
-    "brandTitle": "Ajutor myNextDays"
-  },
   "common": {
     "save": "Salvează",
     "cancel": "Anulează",
@@ -1420,7 +1395,10 @@
     "commissionableNo": "Nu — fără comision",
     "infoAria": "Explicație pentru: {feld}",
     "rulesPageTitle": "Reguli de decontare",
-    "rulesPageIntro": "Ce rețin portalurile pentru fiecare rezervare și cui aparțin taxele. Ambele determină suma care ajunge în final în decontul de comision al proprietarilor dumneavoastră."
+    "rulesPageIntro": "Ce rețin portalurile pentru fiecare rezervare și cui aparțin taxele. Ambele determină suma care ajunge în final în decontul de comision al proprietarilor dumneavoastră.",
+    "endsSalesHint": "Atenție: astfel se încheie și comercializarea. Începând cu {date}, proprietatea nu mai este vândută pe niciun canal — nici pe Booking.com, Airbnb sau pe myBestDays. Pentru o simplă schimbare de tarif, adaugă în schimb un contract următor care începe în acea zi.",
+    "effectReleased": "{property}: comercializarea continuă — încheierea contractului a fost anulată și nopțile sunt din nou disponibile la vânzare.",
+    "effectBlocked": "{property}: comercializarea se încheie pe {date} — {nights} nopți blocate și retrase de pe portaluri."
   },
   "portal": {
     "title": "Portalul meu",
@@ -4535,7 +4513,10 @@
       "photos": "Fotografii",
       "noPhotosFound": "Nu au fost găsite fotografii pentru această rezervare.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "prin {channel}",
+      "receivedOn": "primită la noi pe {date}",
+      "bookedOn": "rezervată pe {date}"
     },
     "dashboard": {
       "todayCheckouts": "Check-out-uri",

@@ -7,7 +7,7 @@
   "funktionen": "Funktionen",
   "preise": "Preise",
   "kanaele": "Kanäle",
-  "kunden": "Kunden",
+  "ueberUns": "Über uns",
   "ressourcen": "Ressourcen",
   "sprache": "Sprache",
   "spracheWaehlen": "Sprache wählen",
@@ -57,6 +57,13 @@
   "p3": "Zentrale Werkzeuge, smarte Automatisierung und die Anbindung an alle wichtigen Kanäle – dazu dein eigenes, provisionsarmes Buchungsportal. So wächst dein Geschäft mit mehr Kontrolle und weniger Aufwand.",
   "cta": "Funktionen entdecken",
   "reichweite": "Für jede Unterkunft gemacht.",
+  "belegeHeading": "Worauf du dich verlassen kannst",
+  "belege": {
+   "neu": "Neu 2026 – von aktiven Vermietern entwickelt, powered by AirSmil",
+   "eu": "In Dänemark gebaut, EU-gehostet und DSGVO-konform",
+   "kanaele": "56 Buchungsplattformen angebunden",
+   "start": "Start am 1. September 2026 in 27 europäischen Ländern, 24 Sprachen"
+  },
   "typen": {
    "hotel": "Hotel",
    "bnb": "B&B",
@@ -68,13 +75,6 @@
    "huette": "Hütte",
    "pension": "Pension",
    "campingplatz": "Campingplatz"
-  },
-  "belegeHeading": "Worauf du dich verlassen kannst",
-  "belege": {
-   "neu": "Neu 2026 – von aktiven Vermietern entwickelt, powered by AirSmil",
-   "eu": "In Dänemark gebaut, EU-gehostet und DSGVO-konform",
-   "kanaele": "56 Buchungsplattformen angebunden",
-   "start": "Start am 1. September 2026 in 27 europäischen Ländern, 24 Sprachen"
   },
   "eyebrow": "Die Plattform",
   "typenEyebrow": "Zielgruppen"
@@ -425,7 +425,7 @@
   "ressourcen": {
    "blog": "Blog",
    "hilfeCenter": "Hilfe-Center",
-   "webinare": "Webinare",
+   "status": "Systemstatus",
    "leitfaeden": "Leitfäden",
    "api": "API-Dokumentation"
   },
@@ -441,7 +441,8 @@
   "datenschutz": "Datenschutz",
   "impressum": "Impressum",
   "cookies": "Cookie-Richtlinie",
-  "avv": "Auftragsverarbeitung"
+  "avv": "Auftragsverarbeitung",
+  "kontoLoeschen": "Konto löschen"
  },
  "abschluss": {
   "heading": "Bereit, deine Unterkunft an einem Ort zu steuern?",
@@ -1285,5 +1286,322 @@
     }
    }
   }
+ },
+ "ueberUns": {
+  "meta": {
+   "titel": "Über uns — myNextDays",
+   "beschreibung": "myNextDays ApS aus Bindslev in Dänemark: warum aktive Vermieter ein eigenes Property-Management-System mit Channel-Manager gebaut haben, wofür wir stehen und wer dahintersteht."
+  },
+  "hero": {
+   "eyebrow": "Über uns",
+   "headlinePre": "Wir vermieten selbst. Deshalb gibt es",
+   "headlineHighlight": "myNextDays",
+   "sub": "myNextDays ApS ist ein inhabergeführtes Unternehmen aus Bindslev in Nordjütland. Wir vermieten eigene Ferienobjekte — und haben die Plattform gebaut, die uns im Alltag gefehlt hat: Kalender, Portale, Gäste, Zahlungen und Abrechnung an einem Ort.",
+   "sitz": "Sitz in Dänemark",
+   "eu": "EU-gehostet, DSGVO-konform",
+   "start": "Start am 1. September 2026",
+   "sprachen": "27 Länder, 24 Sprachen",
+   "ctaTrial": "30 Tage kostenlos testen",
+   "ctaKontakt": "Schreib uns"
+  },
+  "warum": {
+   "eyebrow": "Warum es uns gibt",
+   "heading": "Aus dem eigenen Vermietungsalltag entstanden.",
+   "p1": "Wer vermietet, kennt den Abend, an dem dieselbe Woche zweimal verkauft ist, weil ein Portal die Sperre nicht bekommen hat. Genau da haben wir aufgehört, nach einem Werkzeug zu suchen, und angefangen, eines zu bauen.",
+   "p2": "Die vorhandenen Systeme waren entweder für Hotelketten gemacht — mit einer Komplexität und Preisen, die kein Betrieb mit ein paar Objekten trägt — oder sie hörten dort auf, wo die eigentliche Arbeit anfängt: bei Abrechnung, Eigentümern, Reinigung und Steuern in 27 Ländern.",
+   "p3": "myNextDays ist die Antwort darauf: ein vollständiges Property-Management-System mit Channel-Manager, für Betriebe, die ihre Objekte selbst führen — vom einzelnen Ferienhaus bis zum Hotel mit mehreren Zimmertypen.",
+   "bildFerienobjekt": "Ferienhaus an der Küste",
+   "bildHotel": "Hotelzimmer mit gemachtem Bett"
+  },
+  "bento": {
+   "eyebrow": "Was dahintersteckt",
+   "heading": "Größen, die wir belegen können.",
+   "sub": "Keine Kundenzahlen und keine Bewertungen: die Plattform startet am 1. September 2026. Was hier steht, lässt sich am Produkt nachsehen.",
+   "vermieter": {
+    "titel": "Von Vermietern gebaut, nicht am Reißbrett",
+    "text": "Jede Funktion läuft zuerst im eigenen Vermietungsbetrieb, bevor sie in das Produkt kommt. Was dort im Alltag nicht trägt, wird nicht ausgeliefert.",
+    "bildAlt": "Team einer Vermietungsagentur bei der Arbeit"
+   },
+   "laender": {
+    "wert": "27",
+    "titel": "Europäische Länder",
+    "text": "Mit der Währung, den Steuersätzen und den Regeln des jeweiligen Landes — nicht mit einem Euro-Formular für alle."
+   },
+   "sprachen": {
+    "wert": "24",
+    "titel": "Sprachen",
+    "text": "Oberfläche, Gästekommunikation und Rechtstexte, nicht nur die Startseite."
+   },
+   "kanaele": {
+    "wert": "56",
+    "titel": "Buchungsplattformen",
+    "text": "Booking.com, Airbnb, Expedia, Vrbo und viele weitere über eine Anbindung."
+   },
+   "eu": {
+    "titel": "In der EU gebaut, in der EU betrieben",
+    "text": "Server und Daten liegen in der Europäischen Union, der Betrieb folgt der DSGVO, und die Auftragsverarbeitung ist schriftlich geregelt. Für einen Betrieb, der Gästedaten verwaltet, ist das keine Fußnote, sondern Voraussetzung."
+   }
+  },
+  "zeitleiste": {
+   "eyebrow": "Der Weg bis hierher",
+   "heading": "Kurze Geschichte, nachprüfbare Schritte.",
+   "sub": "Wir sind jung — und schreiben lieber vier belegte Etappen hin als eine erfundene Historie.",
+   "airsmil": {
+    "datum": "Der Ausgangspunkt",
+    "titel": "Der Alltag im eigenen Betrieb",
+    "text": "Eigene Ferienobjekte über mehrere Portale gleichzeitig: doppelte Pflege, verspätete Sperren, Abrechnung in der Tabelle. Aus diesen Reibungen wurde die Anforderungsliste."
+   },
+   "gruendung": {
+    "datum": "1. Juli 2026",
+    "titel": "myNextDays ApS gegründet",
+    "text": "Eingetragen im dänischen Handelsregister unter CVR-nr. 46615182, mit Sitz in Bindslev in Nordjütland."
+   },
+   "beta": {
+    "datum": "Sommer 2026",
+    "titel": "Beta mit echten Objekten",
+    "text": "Buchungen laufen live von den Portalen herein, Preise, Verfügbarkeit und Sperren denselben Weg zurück — mit echten Objekten und echten Gästen, nicht in einer Testumgebung."
+   },
+   "start": {
+    "datum": "1. September 2026",
+    "titel": "Start in 27 Ländern",
+    "text": "In 24 Sprachen, mit Mehrwährung, dem Marktplatz myBestDays und den beiden Apps für Betrieb und Gast."
+   }
+  },
+  "marken": {
+   "eyebrow": "Zwei Marken, eine Plattform",
+   "heading": "myNextDays für den Betrieb, myBestDays für den Gast.",
+   "sub": "Beide gehören zur myNextDays ApS und laufen auf derselben Technik — getrennt ist, wer sie benutzt.",
+   "nextdays": {
+    "rolle": "Für Betriebe",
+    "text": "Das Property-Management-System und der Channel-Manager: der Ort, an dem ein Betrieb seine Objekte führt, seine Preise setzt und sein Geld abrechnet.",
+    "punkte": {
+     "kalender": "Belegungsplan über alle Objekte und Einheiten, in Echtzeit",
+     "portale": "Eine Anbindung für alle Portale — Verfügbarkeit, Preise und Sperren gehen überall gleichzeitig hin",
+     "geld": "Zahlungen, Rechnungen, Provisionen und Eigentümer-Abrechnung",
+     "team": "Eigene App für Inhaber, Mitarbeiter und Reinigung"
+    }
+   },
+   "bestdays": {
+    "rolle": "Für Gäste",
+    "text": "Unser eigener Marktplatz: Gäste finden dort dieselben Objekte und buchen direkt beim Betrieb — zu deutlich geringerer Provision als über die großen Portale.",
+    "punkte": {
+     "direkt": "Buchung direkt beim Betrieb, ohne Zwischenhändler",
+     "provision": "Geringere Provision als bei den großen Portalen",
+     "app": "Eigene App für die Suche, die Buchung und den Aufenthalt"
+    }
+   },
+   "hinweis": "Ein Objekt wird über beide Wege gleichzeitig verkauft — dazu über Booking.com, Airbnb und die übrigen Portale. Welcher Kanal an ist, entscheidet der Betrieb je Kanal einzeln."
+  },
+  "werte": {
+   "eyebrow": "Grundsätze",
+   "heading": "Woran wir uns messen lassen.",
+   "sub": "Sechs Punkte, die man am Produkt und an unseren Dokumenten nachprüfen kann — keine Absichtserklärungen.",
+   "doppelbuchung": {
+    "titel": "Keine Doppelbuchungen",
+    "text": "Verfügbarkeit ist bei uns eine Zahl freier Einheiten, kein Häkchen. Sie geht in Echtzeit an jedes Portal, und eine Sperre sperrt überall — nicht nur dort, wo sie eingetragen wurde."
+   },
+   "preise": {
+    "titel": "Preise, die man vorher kennt",
+    "text": "Ein Tarif, keine Mindestlaufzeit, keine Einrichtungsgebühr. Was zusätzlich kostet, steht mit Betrag auf der Preisseite, nicht im Verkaufsgespräch."
+   },
+   "europa": {
+    "titel": "Europa ist kein Übersetzungsprojekt",
+    "text": "27 Länder heißen 27 Währungen, Steuersätze und Meldepflichten — bis in Rechnung, Gästemail und Auszahlung. Wo uns eine Angabe fehlt, sagen wir das, statt einen plausiblen Wert einzusetzen."
+   },
+   "daten": {
+    "titel": "Daten bleiben in der EU",
+    "text": "Betrieb und Server in der Europäischen Union, DSGVO als Grundlage, Auftragsverarbeitungsvertrag als Standard. Gastdaten sehen im Betrieb nur die Rollen, die sie brauchen."
+   },
+   "unabhaengig": {
+    "titel": "Inhabergeführt",
+    "text": "Kein Konzern im Rücken und keine Roadmap von außen. Was als Nächstes gebaut wird, entscheiden wir mit den Betrieben, die die Software täglich benutzen."
+   },
+   "selbst": {
+    "titel": "Wir benutzen es selbst",
+    "text": "Unsere eigenen Objekte laufen auf derselben Plattform wie die unserer Kunden. Ein Fehler trifft uns damit zuerst — das ist die ehrlichste Qualitätssicherung, die wir kennen."
+   }
+  },
+  "menschen": {
+   "eyebrow": "Die Menschen dahinter",
+   "heading": "Klein, erreichbar, aus der Praxis.",
+   "sub": "Die im dänischen Handelsregister eingetragene Direktion der myNextDays ApS.",
+   "jeanine": {
+    "rolle": "Gründerin und Direktorin",
+    "text": "Führt den eigenen Vermietungsbetrieb und bringt den Alltag mit Gästen, Portalen und Reinigung in jede Produktentscheidung ein."
+   },
+   "torsten": {
+    "rolle": "Direktor",
+    "text": "Verantwortet Technik und Betrieb der Plattform: Portal-Anbindungen, Zahlungen, Sicherheit und die Infrastruktur in der EU."
+   }
+  },
+  "unternehmen": {
+   "eyebrow": "Unternehmen",
+   "heading": "Mit wem du es zu tun hast.",
+   "firma": "Unternehmen",
+   "sitz": "Anschrift",
+   "register": "Handelsregister",
+   "ustId": "Umsatzsteuer-Identifikationsnummer",
+   "direktion": "Direktion",
+   "impressum": "Vollständige Anbieterangaben im Impressum",
+   "kontaktTitel": "Direkter Draht",
+   "kontaktText": "Fragen zum Produkt, zum Wechsel von einem anderen System oder zur Zusammenarbeit? Es antwortet jemand, der die Software selbst benutzt."
+  }
+ },
+ "kontakt": {
+  "meta": {
+   "titel": "Kontakt — myNextDays",
+   "beschreibung": "So erreichst du myNextDays: allgemeine Fragen und Vertrieb an {info}, technische Anfragen an {technik}, telefonisch unter {telefon} — oder direkt über das Formular."
+  },
+  "hero": {
+   "eyebrow": "Kontakt",
+   "headlinePre": "Sag uns, worum es geht —",
+   "headlineHighlight": "wir antworten",
+   "sub": "Fragen zum Produkt, zum Wechsel von einem anderen System, zur Anbindung über unsere API oder zur Zusammenarbeit: Wähle dein Anliegen, und die Nachricht landet direkt bei den Leuten, die sich damit auskennen.",
+   "sitz": "Sitz in Bindslev, Dänemark",
+   "sprachen": "Software in 24 Sprachen",
+   "eu": "EU-gehostet, DSGVO-konform"
+  },
+  "wege": {
+   "eyebrow": "Wege zu uns",
+   "heading": "Wer ist für dein Anliegen zuständig?",
+   "sub": "Zwei Postfächer und ein Chat. Kaufmännisches und alles vor dem Start geht an das allgemeine Postfach, alles Technische direkt an das Entwicklerteam — so landet nichts in einer Warteschlange, in die niemand schaut.",
+   "allgemein": {
+    "titel": "Produkt, Preise & Vertrieb",
+    "text": "Du willst wissen, ob myNextDays zu deinem Betrieb passt, was der Wechsel von einem anderen System bedeutet oder wie Rechnung und Abo laufen? Das ist der richtige Weg — auch für Presse, Partnerschaften und Datenschutzauskünfte.",
+    "aktion": "Nachricht schreiben"
+   },
+   "technik": {
+    "titel": "Technik, API & Sicherheit",
+    "text": "Etwas funktioniert nicht, eine Portal-Verbindung hakt, du entwickelst gegen unsere API oder hast eine Sicherheitslücke gefunden? Diese Anfragen gehen direkt an das Entwicklerteam und nicht über den Vertrieb.",
+    "aktion": "Nachricht schreiben"
+   },
+   "hilfe": {
+    "titel": "Hilfe & Chat",
+    "text": "Anleitungen zu jedem Bereich stehen im Hilfe-Center. Und wenn es schnell gehen soll: unten rechts auf jeder Seite ist ein Chat, in dem eine echte Person antwortet — ohne Konto und ohne Anmeldung.",
+    "aktion": "Zum Hilfe-Center",
+    "chatHinweis": "Chat unten rechts auf jeder Seite"
+   }
+  },
+  "formular": {
+   "eyebrow": "Nachricht",
+   "heading": "Schreib uns",
+   "sub": "Ein Formular für alles — dein Anliegen entscheidet, wer es bekommt.",
+   "ablaufTitel": "Was danach passiert",
+   "ablauf": {
+    "eingang": {
+     "titel": "Die Nachricht geht raus",
+     "text": "Über unseren eigenen Mailserver in Dänemark — kein Formulardienst eines Dritten, durch dessen Hände deine Angaben laufen."
+    },
+    "zuordnung": {
+     "titel": "Sie landet im richtigen Postfach",
+     "text": "Kaufmännisches bei {info}, Technisches bei {technik}. Welches es ist, entscheidet unser Server anhand deines Anliegens."
+    },
+    "antwort": {
+     "titel": "Wir antworten dir direkt",
+     "text": "Als normale E-Mail an die Adresse, die du hier einträgst — du kannst einfach darauf zurückschreiben."
+    }
+   },
+   "hinweisPostfach": "Zwei Postfächer, damit nichts liegen bleibt: {info} für alles Kaufmännische, {technik} für alles Technische. Welches es wird, bestimmt unser Server anhand deines Anliegens — dieses Formular kann kein Ziel angeben.",
+   "thema": "Worum geht es?",
+   "themen": {
+    "allgemein": "Allgemeine Frage",
+    "vertrieb": "Produkt, Preise & Vertrieb",
+    "abrechnung": "Rechnung & Abo",
+    "technik": "Technisches Problem",
+    "api": "API & Entwickler",
+    "partner": "Partnerschaft",
+    "presse": "Presse & Medien",
+    "datenschutz": "Datenschutz",
+    "sicherheit": "Sicherheitslücke melden"
+   },
+   "zielAllgemein": "Geht an {email}",
+   "zielTechnik": "Geht an {email} — unser Entwicklerteam",
+   "name": "Name",
+   "email": "E-Mail",
+   "emailPlatzhalter": "name@beispiel.de",
+   "firma": "Betrieb",
+   "telefon": "Telefon",
+   "optional": "optional",
+   "nachricht": "Deine Nachricht",
+   "nachrichtPlatzhalter": "Beschreibe dein Anliegen — je genauer, desto passender die Antwort.",
+   "absenden": "Nachricht senden",
+   "laeuft": "Wird gesendet …",
+   "dankeTitel": "Angekommen.",
+   "nochEine": "Weitere Nachricht schreiben",
+   "fehlerAllgemein": "Das hat nicht geklappt. Bitte versuche es später erneut.",
+   "fehlerPruefung": "Die Sicherheitsprüfung ist nicht durchgegangen. Bitte lade die Seite neu und sende die Nachricht noch einmal.",
+   "fehlerFelder": "Bitte prüfe deine Angaben: Name, E-Mail und eine Nachricht mit mindestens 20 Zeichen sind nötig.",
+   "fehlerZuOft": "Von dieser Verbindung kamen zu viele Nachrichten. Bitte warte einen Moment und versuche es erneut.",
+   "fehlerSpaeter": "Die Nachricht lässt sich gerade nicht zustellen. Bitte versuche es später erneut oder schreibe direkt an {email}.",
+   "datenschutzHinweis": "Wir nutzen deine Angaben nur, um auf diese Anfrage zu antworten. Näheres in der <link>Datenschutzerklärung</link>.",
+   "recaptchaHinweis": "Dieses Formular ist durch reCAPTCHA geschützt. Es gelten die <datenschutz>Datenschutzerklärung</datenschutz> und die <bedingungen>Nutzungsbedingungen</bedingungen> von Google."
+  },
+  "anschrift": {
+   "eyebrow": "Anschrift",
+   "heading": "So erreichst du uns direkt",
+   "firmaEyebrow": "Firmendaten",
+   "firmaHeading": "Mit wem du es zu tun hast",
+   "firmaText": "Wer der Vertragspartner ist, sollte man nicht im Kleingedruckten suchen müssen. Deshalb stehen die Registerdaten hier — dieselben wie im Impressum.",
+   "firma": "Unternehmen",
+   "register": "Register",
+   "ustId": "Umsatzsteuer-Identifikationsnummer",
+   "direktion": "Direktion",
+   "impressum": "Impressum ansehen",
+   "datenschutz": "Datenschutz ansehen"
+  },
+  "faq": {
+   "eyebrow": "Häufige Fragen",
+   "heading": "Fragen zur Kontaktaufnahme",
+   "sub": "Wer antwortet, wie lange es dauert und was mit deinen Angaben passiert.",
+   "wer": {
+    "frage": "Wer antwortet mir?",
+    "antwort": "Ein Mensch aus dem Team, nicht ein Ticketsystem mit Nummer. myNextDays ist inhabergeführt: Auf kaufmännische Fragen antwortet jemand, der die Software selbst im Alltag benutzt, auf technische das Entwicklerteam."
+   },
+   "postfach": {
+    "frage": "Woher weiß ich, wo meine Nachricht landet?",
+    "antwort": "Unter dem Auswahlfeld steht bei jedem Anliegen die Zieladresse. Allgemeine, kaufmännische und redaktionelle Anliegen gehen an {info}, technische Anfragen, API-Fragen und Sicherheitsmeldungen an {technik}. Die Zuordnung trifft unser Server — das Formular kann kein Postfach benennen, damit es sich nicht als Versandweg für fremde Nachrichten missbrauchen lässt."
+   },
+   "sprache": {
+    "frage": "In welcher Sprache kann ich schreiben?",
+    "antwort": "Schreib in der Sprache, in der du diese Seite liest — wir sehen sie in deiner Anfrage und antworten darin, soweit wir es können. Deutsch, Dänisch und Englisch beantworten wir immer."
+   },
+   "dauer": {
+    "frage": "Wie lange dauert eine Antwort?",
+    "antwort": "In der Regel innerhalb weniger Stunden, an Wochenenden und Feiertagen kann es länger dauern. Für Sicherheitsmeldungen gilt: Sie liegen ohne Umweg über den Vertrieb beim Entwicklerteam."
+   },
+   "telefon": {
+    "frage": "Kann ich auch anrufen?",
+    "antwort": "Ja, unter {telefon}. Ein Anruf ist der schnellste Weg für alles, was man besser bespricht als schreibt — bei technischen Störungen ist eine Nachricht trotzdem oft besser, weil sich Fehlermeldungen und Bildschirmfotos anhängen lassen."
+   },
+   "bestaetigung": {
+    "frage": "Bekomme ich eine Eingangsbestätigung per E-Mail?",
+    "antwort": "Nein, bewusst nicht. Eine automatische Bestätigung ginge an jede Adresse, die hier eingetippt wird — damit könnte man unseren Mailserver benutzen, um fremde Postfächer anzuschreiben. Die Bestätigung steht deshalb hier auf der Seite, sobald die Nachricht angekommen ist. Deine Angaben nutzen wir ausschließlich, um auf diese Anfrage zu antworten."
+   }
+  }
+ },
+ "help": {
+  "heroTitle": "Wie können wir helfen?",
+  "heroSubtitle": "Durchsuchen Sie die Wissensdatenbank oder finden Sie Schritt-für-Schritt-Lösungen für Ihren Alltag mit myNextDays.",
+  "searchPlaceholder": "Wonach suchen Sie?",
+  "searchAria": "Hilfe durchsuchen",
+  "contact": "Kontakt",
+  "home": "Hilfe-Start",
+  "articles": "{count, plural, one {# Artikel} other {# Artikel}}",
+  "collectionKbTitle": "Wissensdatenbank",
+  "collectionKbDesc": "Alles über Objekte, Preise, Kalender, Portale und Ihr Konto.",
+  "collectionUsecasesTitle": "Anwendungsfälle",
+  "collectionUsecasesDesc": "Schritt-für-Schritt-Lösungen für typische Szenarien im Alltag.",
+  "helpfulQuestion": "War dieser Artikel hilfreich?",
+  "helpfulYes": "Ja",
+  "helpfulNo": "Nein",
+  "helpfulThanks": "Danke für Ihre Rückmeldung!",
+  "related": "Weitere Artikel in {category}",
+  "searchTitle": "Suche",
+  "results": "{count, plural, one {# Ergebnis für „{query}“} other {# Ergebnisse für „{query}“}}",
+  "noResultsTitle": "Keine Artikel gefunden",
+  "noResultsHintPre": "Versuchen Sie es mit anderen Suchbegriffen oder ",
+  "noResultsHintLink": "durchstöbern Sie die Kategorien",
+  "browseCategories": "Kategorien durchstöbern",
+  "brandTitle": "myNextDays Hilfe"
  }
 }

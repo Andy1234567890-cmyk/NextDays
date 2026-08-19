@@ -25,6 +25,7 @@ import {
   type Pricing,
   type SubscriptionStatus,
 } from "@/lib/subscriptions";
+import { hilfeUrl } from "@/lib/marketing-url";
 
 const MAX_OBJEKTE = 500;
 
@@ -422,7 +423,7 @@ export function TarifRechner({ onBack }: { onBack: () => void }) {
               eine begonnene Tarifänderung nicht verloren geht. */}
           <div className="flex justify-center">
             <a
-              href="/hilfe/konto-abo"
+              href={hilfeUrl("konto-abo")}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-muted px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/70"

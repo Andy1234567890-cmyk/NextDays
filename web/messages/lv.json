@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Kā varam palīdzēt?",
-    "heroSubtitle": "Meklējiet zināšanu bāzē vai atrodiet soli pa solim risinājumus ikdienas darbam ar myNextDays.",
-    "searchPlaceholder": "Ko meklējat?",
-    "searchAria": "Meklēt palīdzībā",
-    "contact": "Contact",
-    "home": "Palīdzības sākums",
-    "articles": "{count, plural, zero {# rakstu} one {# raksts} other {# raksti}}",
-    "collectionKbTitle": "Zināšanu bāze",
-    "collectionKbDesc": "Viss par objektiem, cenām, kalendāru, portāliem un jūsu kontu.",
-    "collectionUsecasesTitle": "Lietošanas gadījumi",
-    "collectionUsecasesDesc": "Soli pa solim risinājumi ikdienas tipiskām situācijām.",
-    "helpfulQuestion": "Vai šis raksts bija noderīgs?",
-    "helpfulYes": "Jā",
-    "helpfulNo": "Nē",
-    "helpfulThanks": "Paldies par atsauksmi!",
-    "related": "Vairāk rakstu kategorijā {category}",
-    "searchTitle": "Meklēt",
-    "results": "{count, plural, zero {# rezultātu vaicājumam “{query}”} one {# rezultāts vaicājumam “{query}”} other {# rezultāti vaicājumam “{query}”}}",
-    "noResultsTitle": "Raksti nav atrasti",
-    "noResultsHintPre": "Mēģiniet citus meklēšanas vārdus vai",
-    "noResultsHintLink": "pārlūkojiet kategorijas",
-    "browseCategories": "Pārlūkot kategorijas",
-    "brandTitle": "myNextDays palīdzība"
-  },
   "common": {
     "save": "Saglabāt",
     "cancel": "Atcelt",
@@ -1420,7 +1395,10 @@
     "commissionableNo": "Nē — bez komisijas",
     "infoAria": "Skaidrojums par lauku {feld}",
     "rulesPageTitle": "Norēķinu noteikumi",
-    "rulesPageIntro": "Ko portāli ietur par katru rezervāciju un kam pieder maksas. Abi nosaka, kāda summa galu galā nonāk jūsu īpašnieku komisijas maksas aprēķinā."
+    "rulesPageIntro": "Ko portāli ietur par katru rezervāciju un kam pieder maksas. Abi nosaka, kāda summa galu galā nonāk jūsu īpašnieku komisijas maksas aprēķinā.",
+    "endsSalesHint": "Uzmanību: līdz ar to beidzas arī pārdošana. No {date} objekts vairs netiek pārdots nevienā kanālā — arī ne Booking.com, Airbnb vai myBestDays. Ja vēlaties tikai mainīt tarifu, izveidojiet turpinājuma līgumu, kas sākas tajā dienā.",
+    "effectReleased": "{property}: pārdošana turpinās — līguma beigas ir atceltas un naktis atkal ir pārdodamas.",
+    "effectBlocked": "{property}: pārdošana beidzas {date} — bloķētas naktis: {nights}, tās noņemtas no portāliem."
   },
   "portal": {
     "title": "Mans portāls",
@@ -4535,7 +4513,10 @@
       "photos": "Attēli",
       "noPhotosFound": "Šai rezervācijai attēli nav atrasti.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "caur {channel}",
+      "receivedOn": "saņemta pie mums {date}",
+      "bookedOn": "rezervēta {date}"
     },
     "dashboard": {
       "todayCheckouts": "Izrakstīšanās",

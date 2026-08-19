@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Come possiamo aiutarla?",
-    "heroSubtitle": "Consulti la base di conoscenza o trovi soluzioni passo passo per il suo lavoro quotidiano con myNextDays.",
-    "searchPlaceholder": "Che cosa sta cercando?",
-    "searchAria": "Cerca nell’aiuto",
-    "contact": "Contact",
-    "home": "Pagina iniziale dell’aiuto",
-    "articles": "{count, plural, one {# articolo} other {# articoli}}",
-    "collectionKbTitle": "Base di conoscenza",
-    "collectionKbDesc": "Tutto su alloggi, prezzi, calendario, portali e il suo account.",
-    "collectionUsecasesTitle": "Casi d’uso",
-    "collectionUsecasesDesc": "Soluzioni passo passo per le situazioni tipiche di ogni giorno.",
-    "helpfulQuestion": "Questo articolo le è stato utile?",
-    "helpfulYes": "Sì",
-    "helpfulNo": "No",
-    "helpfulThanks": "Grazie per il suo riscontro!",
-    "related": "Altri articoli in {category}",
-    "searchTitle": "Ricerca",
-    "results": "{count, plural, one {# risultato per «{query}»} other {# risultati per «{query}»}}",
-    "noResultsTitle": "Nessun articolo trovato",
-    "noResultsHintPre": "Provi con altri termini di ricerca oppure",
-    "noResultsHintLink": "sfogli le categorie",
-    "browseCategories": "Sfoglia le categorie",
-    "brandTitle": "Guida myNextDays"
-  },
   "common": {
     "save": "Salva",
     "cancel": "Annulla",
@@ -1420,7 +1395,10 @@
     "commissionableNo": "No — esente da commissione",
     "infoAria": "Spiegazione di {feld}",
     "rulesPageTitle": "Regole di rendiconto",
-    "rulesPageIntro": "Quanto trattengono i portali per prenotazione e a chi spettano i supplementi. Insieme determinano l'importo che alla fine finisce nel rendiconto delle provvigioni dei suoi proprietari."
+    "rulesPageIntro": "Quanto trattengono i portali per prenotazione e a chi spettano i supplementi. Insieme determinano l'importo che alla fine finisce nel rendiconto delle provvigioni dei suoi proprietari.",
+    "endsSalesHint": "Attenzione: con questo termina anche la commercializzazione. Dal {date} l'oggetto non viene più venduto su nessun canale — nemmeno su Booking.com, Airbnb o su myBestDays. Per un semplice cambio di tariffa crei invece un contratto successivo a partire da quel giorno.",
+    "effectReleased": "{property}: la commercializzazione continua — la fine del contratto è stata annullata e le notti sono di nuovo vendibili.",
+    "effectBlocked": "{property}: la commercializzazione termina il {date} — {nights} notti bloccate e ritirate dai portali."
   },
   "portal": {
     "title": "Il mio portale",
@@ -4535,7 +4513,10 @@
       "photos": "Foto",
       "noPhotosFound": "Per questa prenotazione non è stata trovata alcuna foto.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "tramite {channel}",
+      "receivedOn": "arrivata da noi il {date}",
+      "bookedOn": "prenotata il {date}"
     },
     "dashboard": {
       "todayCheckouts": "Check-out",

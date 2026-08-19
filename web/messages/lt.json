@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Kaip galime padėti?",
-    "heroSubtitle": "Ieškokite žinių bazėje arba raskite žingsnis po žingsnio sprendimus kasdieniam darbui su myNextDays.",
-    "searchPlaceholder": "Ko ieškote?",
-    "searchAria": "Ieškoti pagalboje",
-    "contact": "Contact",
-    "home": "Pagalbos pradžia",
-    "articles": "{count, plural, one {# straipsnis} few {# straipsniai} many {# straipsnio} other {# straipsnių}}",
-    "collectionKbTitle": "Žinių bazė",
-    "collectionKbDesc": "Viskas apie objektus, kainas, kalendorių, portalus ir jūsų paskyrą.",
-    "collectionUsecasesTitle": "Naudojimo atvejai",
-    "collectionUsecasesDesc": "Žingsnis po žingsnio sprendimai tipinėms kasdienėms situacijoms.",
-    "helpfulQuestion": "Ar šis straipsnis buvo naudingas?",
-    "helpfulYes": "Taip",
-    "helpfulNo": "Ne",
-    "helpfulThanks": "Ačiū už atsiliepimą!",
-    "related": "Daugiau straipsnių kategorijoje {category}",
-    "searchTitle": "Paieška",
-    "results": "{count, plural, one {# rezultatas užklausai „{query}“} few {# rezultatai užklausai „{query}“} many {# rezultato užklausai „{query}“} other {# rezultatų užklausai „{query}“}}",
-    "noResultsTitle": "Straipsnių nerasta",
-    "noResultsHintPre": "Pabandykite kitus paieškos žodžius arba",
-    "noResultsHintLink": "naršykite kategorijas",
-    "browseCategories": "Naršyti kategorijas",
-    "brandTitle": "myNextDays pagalba"
-  },
   "common": {
     "save": "Išsaugoti",
     "cancel": "Atšaukti",
@@ -1420,7 +1395,10 @@
     "commissionableNo": "Ne — be komisinių",
     "infoAria": "Lauko {feld} paaiškinimas",
     "rulesPageTitle": "Atsiskaitymo taisyklės",
-    "rulesPageIntro": "Ką portalai išskaito nuo kiekvienos rezervacijos ir kam priklauso mokesčiai. Abu dalykai nulemia, kokia suma galiausiai atsiranda jūsų savininkų komisinių apyskaitoje."
+    "rulesPageIntro": "Ką portalai išskaito nuo kiekvienos rezervacijos ir kam priklauso mokesčiai. Abu dalykai nulemia, kokia suma galiausiai atsiranda jūsų savininkų komisinių apyskaitoje.",
+    "endsSalesHint": "Dėmesio: kartu baigiasi ir pardavimas. Nuo {date} objektas nebebus parduodamas nė viename kanale — taip pat nei Booking.com, nei Airbnb, nei myBestDays. Jei norite tik pakeisti tarifą, sukurkite tęstinę sutartį, kuri prasideda tą dieną.",
+    "effectReleased": "{property}: pardavimas tęsiasi — sutarties pabaiga atšaukta ir naktys vėl parduodamos.",
+    "effectBlocked": "{property}: pardavimas baigiasi {date} — užblokuota naktų: {nights}, jos pašalintos iš portalų."
   },
   "portal": {
     "title": "Mano portalas",
@@ -4535,7 +4513,10 @@
       "photos": "Nuotraukos",
       "noPhotosFound": "Šiai rezervacijai nuotraukų nerasta.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "per {channel}",
+      "receivedOn": "gauta pas mus {date}",
+      "bookedOn": "rezervuota {date}"
     },
     "dashboard": {
       "todayCheckouts": "Išvykimai",

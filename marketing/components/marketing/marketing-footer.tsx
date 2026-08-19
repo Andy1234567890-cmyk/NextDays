@@ -10,7 +10,8 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { Logo } from "@/components/logo";
 import { ANBIETER } from "@/content/legal/anbieter";
 import { RECHTSDOKUMENTE } from "@/content/legal";
-import { AGB_URL, HILFE_URL } from "@/lib/app-url";
+import { AGB_URL, STATUS_URL } from "@/lib/app-url";
+import { SystemStatus } from "./system-status";
 
 // Spalten: Übersetzungsschlüssel, keine fertigen Texte. `href` nur, wo es ein
 // echtes Ziel gibt — der Rest bleibt bewusst Platzhalter (#).
@@ -31,7 +32,7 @@ const FOOTER_COLUMNS = [
   },
   {
     key: "ressourcen",
-    links: ["blog", "hilfeCenter", "webinare", "leitfaeden", "api"],
+    links: ["blog", "hilfeCenter", "status", "leitfaeden", "api"],
   },
   {
     key: "unternehmen",
@@ -50,9 +51,22 @@ const PRODUKT_ZIELE: Record<string, string> = {
 };
 
 // Unternehmens-Spalte → echte Seite. Bis eben zeigte „Über uns" auf „#";
-// die Seite gibt es jetzt (app/ueber-uns), der Rest der Spalte noch nicht.
+// die Seite gibt es jetzt (app/ueber-uns), „Kontakt" seit 0414 auch
+// (app/kontakt). Karriere, Partner und Presse noch nicht.
 const UNTERNEHMEN_ZIELE: Record<string, string> = {
   ueberUns: "/ueber-uns",
+  kontakt: "/kontakt",
+};
+
+// Ressourcen-Spalte → echte Seite. Das Hilfe-Center liegt seit dem Umzug in
+// DIESER App (`app/hilfe`) und ist damit ein normaler interner Link. Vorher
+// hing er an `HILFE_URL`, also an `NEXT_PUBLIC_APP_URL` — der Variable, die
+// den Start der Registrierung schaltet. Weil die leer ist, zeigte der Link
+// auf "#": das Hilfe-Center war 24-sprachig fertig und aus dem Footer nicht
+// erreichbar. Zwei verschiedene Dinge an einem Schalter, deshalb jetzt
+// getrennt.
+const RESSOURCEN_ZIELE: Record<string, string> = {
+  hilfeCenter: "/hilfe",
 };
 
 // Social-Profile aus den Anbieterdaten (EINE Quelle, `content/legal/anbieter`)
@@ -139,14 +153,25 @@ export function MarketingFooter() {
               <ul className="mt-4 flex flex-col gap-3">
                 {col.links.map((link) => {
                   // Nur echte Ziele verlinken; alles andere bleibt Platzhalter (#).
-                  // HILFE_URL ist vor dem Start leer (Dashboard nicht öffentlich).
                   // Die Produkt-Spalte zeigt seit den Funktions-Unterseiten auf
                   // echte Seiten — vorher stand dort fünfmal „#", also fünf
                   // Links, die nichts taten.
+                  // Der Systemstatus ist kein normaler Link: er zeigt einen
+                  // Live-Punkt und fuehrt auf eine FREMDE Adresse (Kuma).
+                  // Ohne gesetzte STATUS_URL entfaellt der Eintrag ganz,
+                  // statt als "#" dazustehen.
+                  if (link === "status") {
+                    return STATUS_URL ? (
+                      <li key={link}>
+                        <SystemStatus label={t("ressourcen.status")} />
+                      </li>
+                    ) : null;
+                  }
                   const href =
                     PRODUKT_ZIELE[link] ??
                     UNTERNEHMEN_ZIELE[link] ??
-                    (link === "hilfeCenter" && HILFE_URL ? HILFE_URL : "#");
+                    RESSOURCEN_ZIELE[link] ??
+                    "#";
                   return (
                     <li key={link}>
                       <Link

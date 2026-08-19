@@ -7,7 +7,7 @@
   "funktionen": "Funcții",
   "preise": "Prețuri",
   "kanaele": "Canale",
-  "kunden": "Clienți",
+  "ueberUns": "Despre noi",
   "ressourcen": "Resurse",
   "sprache": "Limbă",
   "spracheWaehlen": "Alege limba",
@@ -425,7 +425,7 @@
   "ressourcen": {
    "blog": "Blog",
    "hilfeCenter": "Centru de ajutor",
-   "webinare": "Webinare",
+   "status": "Starea sistemului",
    "leitfaeden": "Ghiduri",
    "api": "Documentație API"
   },
@@ -441,7 +441,8 @@
   "datenschutz": "Confidențialitate",
   "impressum": "Informații legale",
   "cookies": "Politica de cookie-uri",
-  "avv": "Prelucrarea datelor"
+  "avv": "Prelucrarea datelor",
+  "kontoLoeschen": "Ștergeți contul"
  },
  "abschluss": {
   "heading": "Ești gata să îți conduci cazarea dintr-un singur loc?",
@@ -593,5 +594,1014 @@
    "provision": "Site propriu {direkt} · portaluri {portale}",
    "tarif": "Un plan pentru toți, prima proprietate inclusă"
   }
+ },
+ "ueberUns": {
+  "meta": {
+   "titel": "Despre noi — myNextDays",
+   "beschreibung": "myNextDays ApS din Bindslev, Danemarca: de ce niște gazde active și-au construit propriul sistem de administrare a proprietăților cu channel manager, ce susținem și cine se află în spate."
+  },
+  "hero": {
+   "eyebrow": "Despre noi",
+   "headlinePre": "Închiriem și noi. De aceea există",
+   "headlineHighlight": "myNextDays",
+   "sub": "myNextDays ApS este o companie condusă de proprietari, cu sediul în Bindslev, în nordul Iutlandei. Închiriem propriile proprietăți de vacanță — și am construit platforma care ne lipsea zi de zi: calendar, canale, oaspeți, plăți și decontare într-un singur loc.",
+   "sitz": "Sediu în Danemarca",
+   "eu": "Găzduit în UE, conform GDPR",
+   "start": "Lansare la 1 septembrie 2026",
+   "sprachen": "27 de țări, 24 de limbi",
+   "ctaTrial": "Încearcă 30 de zile gratuit",
+   "ctaKontakt": "Scrie-ne"
+  },
+  "warum": {
+   "eyebrow": "De ce existăm",
+   "heading": "Născut din propria activitate de închiriere.",
+   "p1": "Cine închiriază cunoaște seara în care aceeași săptămână a fost vândută de două ori pentru că un canal nu a primit niciodată blocarea. Acolo am încetat să căutăm un instrument și am început să construim unul.",
+   "p2": "Sistemele existente erau fie făcute pentru lanțuri hoteliere — cu o complexitate și un preț pe care nicio afacere cu câteva proprietăți nu le duce — fie se opreau exact acolo unde începe munca adevărată: decontare, proprietari, curățenie și taxe în 27 de țări.",
+   "p3": "myNextDays este răspunsul: un sistem complet de administrare a proprietăților cu channel manager, pentru afaceri care își conduc singure proprietățile — de la o singură casă de vacanță până la un hotel cu mai multe tipuri de camere.",
+   "bildFerienobjekt": "Casă de vacanță la malul mării",
+   "bildHotel": "Cameră de hotel cu patul făcut"
+  },
+  "bento": {
+   "eyebrow": "Ce stă în spate",
+   "heading": "Cifre pe care le putem dovedi.",
+   "sub": "Fără număr de clienți și fără recenzii: platforma pornește la 1 septembrie 2026. Ce scrie aici se poate verifica chiar în produs.",
+   "vermieter": {
+    "titel": "Construit de gazde, nu la planșetă",
+    "text": "Fiecare funcție rulează întâi în propria noastră activitate de închiriere și abia apoi ajunge în produs. Ce nu rezistă acolo în practică nu este livrat.",
+    "bildAlt": "Echipa unei agenții de închirieri la lucru"
+   },
+   "laender": {
+    "wert": "27",
+    "titel": "Țări europene",
+    "text": "Cu moneda, cotele de taxe și regulile fiecărei țări — nu cu un singur formular în euro pentru toți."
+   },
+   "sprachen": {
+    "wert": "24",
+    "titel": "Limbi",
+    "text": "Interfață, comunicare cu oaspeții și texte juridice, nu doar pagina de start."
+   },
+   "kanaele": {
+    "wert": "56",
+    "titel": "Portaluri de rezervare",
+    "text": "Booking.com, Airbnb, Expedia, Vrbo și multe altele printr-o singură conexiune."
+   },
+   "eu": {
+    "titel": "Construit în UE, operat în UE",
+    "text": "Serverele și datele se află în Uniunea Europeană, operarea respectă GDPR, iar prelucrarea este reglementată în scris. Pentru o afacere care administrează date ale oaspeților, asta nu e o notă de subsol, ci o condiție."
+   }
+  },
+  "zeitleiste": {
+   "eyebrow": "Drumul de până acum",
+   "heading": "Istorie scurtă, pași verificabili.",
+   "sub": "Suntem tineri — și preferăm patru etape documentate în locul unei istorii inventate.",
+   "airsmil": {
+    "datum": "Punctul de plecare",
+    "titel": "Cotidianul în propria afacere",
+    "text": "Proprietăți proprii pe mai multe canale simultan: muncă dublă, blocări întârziate, decontare într-un tabel. Din aceste frecări a ieșit lista de cerințe."
+   },
+   "gruendung": {
+    "datum": "1 iulie 2026",
+    "titel": "Înființarea myNextDays ApS",
+    "text": "Înregistrată în registrul danez al companiilor cu numărul CVR 46615182, cu sediul în Bindslev, nordul Iutlandei."
+   },
+   "beta": {
+    "datum": "Vara 2026",
+    "titel": "Beta cu proprietăți reale",
+    "text": "Rezervările intră în direct de pe canale, iar prețurile, disponibilitatea și blocările merg înapoi pe același drum — cu proprietăți și oaspeți reali, nu într-un mediu de test."
+   },
+   "start": {
+    "datum": "1 septembrie 2026",
+    "titel": "Lansare în 27 de țări",
+    "text": "În 24 de limbi, cu mai multe monede, cu piața myBestDays și cele două aplicații, pentru afacere și pentru oaspete."
+   }
+  },
+  "marken": {
+   "eyebrow": "Două mărci, o platformă",
+   "heading": "myNextDays pentru afacere, myBestDays pentru oaspete.",
+   "sub": "Ambele aparțin myNextDays ApS și rulează pe aceeași tehnică — le desparte cine le folosește.",
+   "nextdays": {
+    "rolle": "Pentru afaceri",
+    "text": "Sistemul de administrare și channel managerul: locul în care o afacere își conduce proprietățile, își stabilește prețurile și își decontează banii.",
+    "punkte": {
+     "kalender": "Plan de ocupare pentru toate proprietățile și unitățile, în timp real",
+     "portale": "O singură conexiune pentru toate portalurile — disponibilitatea, prețurile și blocările pleacă peste tot deodată",
+     "geld": "Plăți, facturi, comisioane și deconturi către proprietari",
+     "team": "Aplicație proprie pentru proprietari, personal și curățenie"
+    }
+   },
+   "bestdays": {
+    "rolle": "Pentru oaspeți",
+    "text": "Piața noastră: oaspeții găsesc acolo aceleași proprietăți și rezervă direct la afacere — cu un comision mult mai mic decât prin portalurile mari.",
+    "punkte": {
+     "direkt": "Rezervare direct la afacere, fără intermediar",
+     "provision": "Comision mai mic decât pe portalurile mari",
+     "app": "Aplicație proprie pentru căutare, rezervare și sejur"
+    }
+   },
+   "hinweis": "O proprietate se vinde pe ambele căi în același timp — plus prin Booking.com, Airbnb și celelalte portaluri. Ce canal este pornit decide afacerea, canal cu canal."
+  },
+  "werte": {
+   "eyebrow": "Principii",
+   "heading": "După ce vrem să fim judecați.",
+   "sub": "Șase puncte care se pot verifica în produs și în documentele noastre — nu declarații de intenție.",
+   "doppelbuchung": {
+    "titel": "Fără suprarezervări",
+    "text": "La noi disponibilitatea este un număr de unități libere, nu o bifă. Ajunge în timp real la fiecare portal, iar o blocare blochează peste tot — nu doar acolo unde a fost introdusă."
+   },
+   "preise": {
+    "titel": "Prețuri știute dinainte",
+    "text": "Un singur abonament, fără durată minimă și fără taxă de instalare. Ce costă în plus apare cu suma pe pagina de prețuri, nu într-o discuție de vânzare."
+   },
+   "europa": {
+    "titel": "Europa nu e un proiect de traducere",
+    "text": "27 de țări înseamnă 27 de monede, cote de taxe și obligații de raportare — până în factură, e-mailul către oaspete și plată. Dacă ne lipsește un dată, o spunem în loc să punem o valoare plauzibilă."
+   },
+   "daten": {
+    "titel": "Datele rămân în UE",
+    "text": "Operare și servere în Uniunea Europeană, GDPR ca bază, contract de prelucrare ca standard. În afacere, datele oaspeților sunt vizibile doar rolurilor care au nevoie de ele."
+   },
+   "unabhaengig": {
+    "titel": "Condusă de proprietari",
+    "text": "Niciun grup în spate și nicio foaie de parcurs impusă din afară. Ce construim mai departe decidem împreună cu afacerile care folosesc software-ul zilnic."
+   },
+   "selbst": {
+    "titel": "Îl folosim noi înșine",
+    "text": "Proprietățile noastre rulează pe aceeași platformă ca ale clienților. O eroare ne lovește primii — cel mai onest control al calității pe care îl cunoaștem."
+   }
+  },
+  "menschen": {
+   "eyebrow": "Oamenii din spate",
+   "heading": "Mici, accesibili, din practică.",
+   "sub": "Conducerea myNextDays ApS, așa cum este înscrisă în registrul danez al companiilor.",
+   "jeanine": {
+    "rolle": "Fondatoare și director",
+    "text": "Conduce propria noastră activitate de închiriere și aduce cotidianul cu oaspeți, portaluri și curățenie în fiecare decizie despre produs."
+   },
+   "torsten": {
+    "rolle": "Director",
+    "text": "Ține toate firele laolaltă și sprijină echipa exact acolo unde este nevoie. Își aduce experiența practică variată pentru a găsi soluții rapide și pragmatice în fundal."
+   }
+  },
+  "unternehmen": {
+   "eyebrow": "Companie",
+   "heading": "Cu cine ai de-a face.",
+   "firma": "Companie",
+   "sitz": "Adresă",
+   "register": "Registrul companiilor",
+   "ustId": "Cod de înregistrare în scopuri de TVA",
+   "direktion": "Conducere",
+   "impressum": "Date complete despre furnizor",
+   "kontaktTitel": "Contact direct",
+   "kontaktText": "Întrebări despre produs, despre trecerea de la alt sistem sau despre colaborare? Răspunde cineva care folosește el însuși software-ul."
+  }
+ },
+ "funktionen": {
+  "rahmen": {
+   "ctaTesten": "Încearcă 30 de zile gratuit",
+   "ctaDemo": "Vezi demonstrația",
+   "weiter": "Mai departe la celelalte funcții",
+   "mehr": "Vezi",
+   "bereich": {
+    "verkauf": "Vânzare",
+    "gast": "Oaspete și bani",
+    "betrieb": "Operare"
+   },
+   "reiterHeading": "Ce se află exact în spate?"
+  },
+  "uebersicht": {
+   "metaTitel": "Funcții — tot pentru închiriere și hotel | myNextDays",
+   "metaBeschreibung": "Calendar, channel manager, rezervare directă, comunicare cu oaspeții, plăți, tarife, echipă, aplicație și analize — într-un singur sistem, incluse în fiecare tarif.",
+   "eyebrow": "Funcții",
+   "headline": "Tot ce cere ziua de lucru. Într-un singur sistem.",
+   "sub": "Nouă domenii, un singur cont. Fiecare face parte din tariful de bază — nu există nimic care începe abia într-un pachet mai scump.",
+   "bereichSub": {
+    "verkauf": "Să fii vizibil și să primești rezervări",
+    "gast": "De la primul contact până la încasare",
+    "betrieb": "Cine face ce — și ce a adus"
+   }
+  },
+  "pms": {
+   "metaBeschreibung": "Un calendar pentru toate proprietățile: plan de ocupare, rezervări, sarcini și date despre proprietăți într-un singur loc — pentru cazări de vacanță și hoteluri.",
+   "headline": "Un calendar pentru tot ce închiriezi.",
+   "sub": "Ocuparea, rezervările și datele proprietăților stau într-un singur loc — fie un apartament de vacanță, fie douăsprezece tipuri de cameră cu mai multe unități.",
+   "bildAlt": "Plan de ocupare cu rezervări din mai multe canale",
+   "nutzen": {
+    "a": {
+     "titel": "Totul într-o privire",
+     "text": "Planul de ocupare arată fiecare unitate, fiecare rezervare și fiecare blocare într-o singură vedere — cu o culoare pe canal."
+    },
+    "b": {
+     "titel": "Rezervi în câteva secunde",
+     "text": "Creezi, muți sau anulezi o rezervare fără să schimbi vederea. Nopțile eliberate se vând imediat din nou."
+    },
+    "c": {
+     "titel": "Date de proprietate valabile peste tot",
+     "text": "Dotările, fotografiile și regulile le întreții o singură dată — portalurile și propriul tău site le primesc automat."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "O proprietate, mai multe unități — reprezentate corect.",
+     "text": "Cinci studiouri identice sunt un tip cu cinci unități, nu o proprietate întreținută de cinci ori. Sunt disponibile ca număr, exact așa cum se așteaptă portalurile.",
+     "punkte": {
+      "a": "Unități per tip de proprietate",
+      "b": "Clădirea grupează mai multe tipuri",
+      "c": "Disponibilitate ca număr, nu ca da/nu"
+     }
+    }
+   },
+   "bildAltBlock": "Planul de ocupare al unui hotel cu tipuri de cameră",
+   "reiter": {
+    "kalender": {
+     "titel": "Plan de ocupare",
+     "heading": "Fiecare unitate, fiecare noapte, o singură imagine.",
+     "text": "Planul arată rezervările, blocările și nopțile libere una lângă alta — cu o culoare pe canal și numele oaspetelui. Tragerea mută o rezervare, un clic creează una nouă.",
+     "punkte": {
+      "a": "Culoare pe canal",
+      "b": "Trage și lasă",
+      "c": "Până la 500 de proprietăți"
+     }
+    },
+    "einheiten": {
+     "titel": "Unități",
+     "heading": "Cinci studiouri identice sunt un tip.",
+     "text": "Întreții tipul și spui câte unități există din el. Portalurile primesc un număr de unități, nu o disponibilitate da/nu — exact așa cum se așteaptă.",
+     "punkte": {
+      "a": "Tip creat",
+      "b": "Unități setate",
+      "c": "Numărul de unități către portaluri"
+     }
+    },
+    "reservierung": {
+     "titel": "Rezervări",
+     "heading": "De la cerere până la plecare.",
+     "text": "Fiecare rezervare are istoricul ei: plățile, mesajele, sarcinile și modificările stau într-un singur loc — de urmărit și săptămâni mai târziu.",
+     "punkte": {
+      "a": "Istoric pe rezervare",
+      "b": "Modificări consemnate",
+      "c": "Anulare cu motiv"
+     }
+    },
+    "objektdaten": {
+     "titel": "Date despre proprietate",
+     "heading": "Întreții o dată, e valabil peste tot.",
+     "text": "Dotările, fotografiile, regulile și descrierile stau la proprietate. De acolo merg la portaluri și pe propriul tău site — fără o a doua întreținere.",
+     "punkte": {
+      "a": "Fotografii și dotări",
+      "b": "Regulile casei",
+      "c": "Distribuite automat"
+     }
+    }
+   }
+  },
+  "channel": {
+   "metaBeschreibung": "Channel manager pentru apartament de vacanță și hotel: Airbnb, Booking.com, Expedia, Vrbo și Google sincronizate în timp real — fără rezervări duble.",
+   "headline": "Un calendar. Toate platformele de rezervări.",
+   "sub": "Disponibilitatea, tarifele și conținutul merg în timp real către portaluri, iar rezervările se întorc în același ritm. Rezervările duble nici nu apar.",
+   "bildAlt": "Prezentarea canalelor cu platformele de rezervări conectate",
+   "nutzen": {
+    "a": {
+     "titel": "56 de platforme",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google și multe altele — conectate printr-o singură interfață, nu prin soluții improvizate."
+    },
+    "b": {
+     "titel": "Două direcții, un ritm",
+     "text": "Ce schimbi aici se vede acolo în câteva secunde. Ce se rezervă acolo blochează aici imediat nopțile."
+    },
+    "c": {
+     "titel": "Fiecare portal separat",
+     "text": "Tarifele, majorările și regulile se aplică per portal — nicio valoare care trebuie să fie aceeași peste tot doar pentru că ar fi mai simplu."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Stop-Sell are efect peste tot. Fără să te gândești.",
+     "text": "Dacă blochezi o dată, e închisă pe fiecare portal conectat. Fără întreținere ulterioară în cinci extranete, fără canal uitat în weekend.",
+     "punkte": {
+      "a": "Blocare imediată pe toate canalele",
+      "b": "Ședere minimă per portal",
+      "c": "Jurnal: ce a plecat și când"
+     }
+    }
+   },
+   "bildAltBlock": "Plan de ocupare cu rezervări de pe mai multe portaluri",
+   "reiter": {
+    "portale": {
+     "titel": "Portaluri",
+     "heading": "56 de platforme la o singură interfață.",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google și myBestDays stau pe aceeași conexiune. Un portal nou este o conectare, nu un proiect.",
+     "punkte": {
+      "a": "Airbnb",
+      "b": "Booking.com",
+      "c": "myBestDays"
+     }
+    },
+    "sync": {
+     "titel": "Sincronizare în timp real",
+     "heading": "Ce se întâmplă aici, acolo e în câteva secunde.",
+     "text": "Disponibilitatea, tarifele și restricțiile pleacă imediat; rezervările se întorc în același ritm și blochează nopțile înainte ca cineva să poată rezerva de două ori.",
+     "punkte": {
+      "a": "Disponibilitate",
+      "b": "Tarife",
+      "c": "Restricții"
+     }
+    },
+    "stopsell": {
+     "titel": "Stop-Sell",
+     "heading": "Un clic închide toate canalele.",
+     "text": "O blocare este valabilă peste tot — nu în patru extranete unul după altul. Jurnalul arată ce a plecat, când, și ce a răspuns portalul.",
+     "punkte": {
+      "a": "Blocare setată",
+      "b": "Trimisă către toate canalele",
+      "c": "Jurnal verificat"
+     }
+    },
+    "regeln": {
+     "titel": "Reguli per portal",
+     "heading": "Fiecare portal poate fi diferit.",
+     "text": "Majorările, șederile minime și regulile de anulare le setezi per canal. Nicio valoare comună doar pentru că un sistem nu poate altfel.",
+     "punkte": {
+      "a": "Majorare per canal",
+      "b": "Ședere minimă",
+      "c": "Termen de anulare"
+     }
+    }
+   }
+  },
+  "direkt": {
+   "metaBeschreibung": "Site propriu de rezervări, widget de rezervare și domeniu propriu — rezervări directe fără comision de portal, cu plată și confirmare.",
+   "headline": "Rezervări care îți aparțin complet.",
+   "sub": "Propria ta pagină de rezervare, cu disponibilitate, tarife și plată. Pentru rezervările prin ea nu luăm comision — portalurile iau între 15 și 18 la sută.",
+   "bildAlt": "Pagina proprietății cu procesul de rezervare",
+   "nutzen": {
+    "a": {
+     "titel": "Site fără agenție",
+     "text": "Constructor cu șabloane, domeniu propriu, fotografii și texte din datele proprietăților tale — online într-o singură după-amiază."
+    },
+    "b": {
+     "titel": "Widget pentru site-ul tău",
+     "text": "Ai deja un site? Atunci pui doar procesul de rezervare în el și îți păstrezi designul."
+    },
+    "c": {
+     "titel": "Se plătește imediat",
+     "text": "Avansul, restul plății și garanția merg automat — oaspetele primește confirmarea fără intervenția ta."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Marketplace-ul îți aduce oaspeți care nu te cunosc.",
+     "text": "myBestDays este propriul nostru marketplace. Acolo apari lângă alte cazări, fără să întreții un al doilea sistem — aceleași proprietăți, același calendar.",
+     "punkte": {
+      "a": "Activabil separat pe fiecare canal",
+      "b": "Un calendar pentru tot",
+      "c": "8 % totul inclus în loc de comision de portal"
+     }
+    }
+   },
+   "bildAltBlock": "Prezentarea canalelor cu site propriu și marketplace",
+   "reiter": {
+    "website": {
+     "titel": "Site de rezervări",
+     "heading": "Pagina ta, rezervările tale.",
+     "text": "Șabloane, domeniu propriu, fotografii și texte din datele proprietăților. Oaspetele rezervă direct la tine — fără ocol prin vreun portal.",
+     "punkte": {
+      "a": "Șabloane",
+      "b": "Domeniu propriu",
+      "c": "Multilingv"
+     }
+    },
+    "widget": {
+     "titel": "Widget de rezervare",
+     "heading": "Pentru site-ul pe care îl ai deja.",
+     "text": "Un element pe pagina ta existentă: disponibilitate, tarif și plată, în designul tău. Fără mutare, fără proiect nou.",
+     "punkte": {
+      "a": "Cod inserat",
+      "b": "Design preluat",
+      "c": "Prima rezervare"
+     }
+    },
+    "marktplatz": {
+     "titel": "myBestDays",
+     "heading": "Marketplace-ul nostru aduce oaspeți noi.",
+     "text": "Proprietățile tale apar pe propriul nostru marketplace lângă alte cazări — aceleași date, același calendar, un clic pentru activare.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "zahlung": {
+     "titel": "Plată",
+     "heading": "Plătit înainte ca oaspetele să sosească.",
+     "text": "Avans la rezervare, restul înainte de sosire, garanție asigurată. Oaspetele primește automat confirmarea și factura.",
+     "punkte": {
+      "a": "Avans",
+      "b": "Restul plății",
+      "c": "Garanție"
+     }
+    }
+   }
+  },
+  "gaeste": {
+   "metaBeschreibung": "Ghid digital al oaspetelui, check-in online, mesaje automate și concierge AI în 24 de limbi — de la primul contact până la plecare.",
+   "headline": "Ai grijă de oaspeți fără să scrii încontinuu.",
+   "sub": "Mesajele pleacă automat la momentul potrivit, la întrebări răspunde concierge-ul în 24 de limbi — iar tu citești totul într-o singură căsuță de mesaje.",
+   "bildAlt": "Căsuță de mesaje cu mesaje de la oaspeți din mai multe canale",
+   "nutzen": {
+    "a": {
+     "titel": "O singură căsuță de mesaje",
+     "text": "Airbnb, Booking, e-mailul și WhatsApp ajung într-o singură conversație — cu rezervarea alături, nu în patru aplicații."
+    },
+    "b": {
+     "titel": "Mesaje la momentul potrivit",
+     "text": "Confirmare, informații de sosire, cod de acces, invitație la recenzie: configurezi o dată, apoi merge singur."
+    },
+    "c": {
+     "titel": "Check-in înainte",
+     "text": "Oaspetele își completează datele înainte de sosire. Tu îl primești, în loc să transcrii formulare."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Ghidul oaspetelui înlocuiește mapa din hol.",
+     "text": "Parola Wi-Fi, colectarea deșeurilor, recomandări de restaurante și regulile casei — digital, în limba oaspetelui, oricând de modificat.",
+     "punkte": {
+      "a": "24 de limbi",
+      "b": "Coduri de acces la momentul potrivit",
+      "c": "Recomandări din zonă"
+     }
+    }
+   },
+   "bildAltBlock": "Vedere mobilă cu ocupare și mesaje",
+   "reiter": {
+    "posteingang": {
+     "titel": "Căsuță de mesaje",
+     "heading": "Airbnb, Booking, e-mail și WhatsApp într-o singură conversație.",
+     "text": "Toate mesajele unei rezervări stau împreună — cu context, șabloane și traducere. Nimeni nu mai caută în patru aplicații.",
+     "punkte": {
+      "a": "Oaspete",
+      "b": "Când este posibil check-in-ul?",
+      "c": "De la ora 15 — codul ți-l trimit mâine dimineață."
+     }
+    },
+    "automatisch": {
+     "titel": "Mesaje automate",
+     "heading": "La momentul potrivit, fără memento.",
+     "text": "Confirmare, informații de sosire, cod de acces, invitație la recenzie: configurezi o dată, apoi merge singur — în limba oaspetelui.",
+     "punkte": {
+      "a": "Confirmare trimisă",
+      "b": "Informație de sosire programată",
+      "c": "Invitație la recenzie"
+     }
+    },
+    "checkin": {
+     "titel": "Check-in online",
+     "heading": "Date înainte de sosire, nu la ușă.",
+     "text": "Oaspetele completează din timp datele de înregistrare și actul de identitate. Tu îl primești, în loc să transcrii formulare — și îndeplinești obligația de raportare.",
+     "punkte": {
+      "a": "Date de înregistrare",
+      "b": "Act de identitate",
+      "c": "Semnătură"
+     }
+    },
+    "mappe": {
+     "titel": "Ghidul oaspetelui",
+     "heading": "Tot ce trebuie să știe oaspetele.",
+     "text": "Wi-Fi, regulile casei, colectarea deșeurilor și recomandări din zonă — digital, oricând de modificat, în 24 de limbi.",
+     "punkte": {
+      "a": "Oaspete",
+      "b": "Unde este parola Wi-Fi?",
+      "c": "În ghidul oaspetelui — ți-am trimis linkul."
+     }
+    }
+   }
+  },
+  "zahlungen": {
+   "metaBeschreibung": "Plăți online, avansuri, garanții și exporturi pregătite pentru contabilitate — încasare și decontare fără muncă suplimentară.",
+   "headline": "Banii ajung fără să alergi după ei.",
+   "sub": "Avans la rezervare, restul înainte de sosire, garanție asigurată — încasate automat și documentate în rezervare.",
+   "bildAlt": "Rezervare cu starea plății și documente",
+   "nutzen": {
+    "a": {
+     "titel": "Plata ca de obicei",
+     "text": "Card, Apple Pay, Google Pay, PayPal și metode locale — oaspetele alege ce cunoaște."
+    },
+    "b": {
+     "titel": "Reguli în loc de memento-uri",
+     "text": "Când și cât este scadent stabilești o singură dată. Plățile lipsă le vezi înainte ca oaspetele să sosească."
+    },
+    "c": {
+     "titel": "Gata pentru contabilitate",
+     "text": "Facturile apar din rezervare, exporturile se potrivesc contabilului — fără tabele făcute de mână."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Proprietarii își văd singuri decontul.",
+     "text": "Fiecare proprietar are contul lui, cu ocupare, venituri și plăți. Asta scutește e-mailul lunar cu tabelul atașat.",
+     "punkte": {
+      "a": "Cont propriu pentru fiecare proprietar",
+      "b": "Decont pe proprietate",
+      "c": "Doar citire, fără intervenții"
+     }
+    }
+   },
+   "bildAltBlock": "Prezentare cu venituri și plăți",
+   "reiter": {
+    "online": {
+     "titel": "Plăți online",
+     "heading": "Card, wallet, PayPal.",
+     "text": "Oaspetele plătește cu metoda pe care o cunoaște. Banii ajung în contul tău, starea stă în rezervare.",
+     "punkte": {
+      "a": "Sumă deschisă",
+      "b": "Avans",
+      "c": "Restul plății"
+     }
+    },
+    "plaene": {
+     "titel": "Planuri de plată",
+     "heading": "Când e scadent ce, decizi tu.",
+     "text": "Avansul, restul plății și garanția urmează regulile tale — diferite pe proprietate și pe canal, dacă e nevoie.",
+     "punkte": {
+      "a": "Regulă creată",
+      "b": "Avans înregistrat",
+      "c": "Restul plății deschis"
+     }
+    },
+    "rechnungen": {
+     "titel": "Facturi",
+     "heading": "Din rezervare, nu din tabel.",
+     "text": "Facturile și notele de credit apar din cifrele reale, cu cota de taxă și seria de numerotare. Exporturile se potrivesc contabilului.",
+     "punkte": {
+      "a": "Serie de numerotare",
+      "b": "Cote de taxă",
+      "c": "Export"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Decont pentru proprietari",
+     "heading": "Venituri, costuri, plată.",
+     "text": "Fiecare proprietar vede proprietățile lui cu ocupare, venituri și plăți — ca un cont propriu, nu ca un e-mail lunar.",
+     "punkte": {
+      "a": "Venituri",
+      "b": "Costuri",
+      "c": "Plată"
+     }
+    }
+   }
+  },
+  "preise": {
+   "metaBeschreibung": "Prețuri dinamice cu min./max., rate plans pe proprietate, logică de sezon și ocupare — mai mult venit fără muncă manuală zilnică.",
+   "headline": "Tarife care se ocupă singure de ele.",
+   "sub": "Sezonul, ocuparea, timpul până la sosire și ziua săptămânii intră automat în calcul. Limitele tale rămân limitele tale: sub minim nu coboară nimic.",
+   "bildAlt": "Grilă de tarife cu prețuri dinamice pe noapte",
+   "nutzen": {
+    "a": {
+     "titel": "Min. și max. se respectă",
+     "text": "Tu dai cadrul, sistemul se mișcă în el — niciun tarif pe care nu l-ai vrut."
+    },
+    "b": {
+     "titel": "Rate plans pe proprietate",
+     "text": "Nerambursabil, rezervare timpurie, ședere lungă: mai multe tarife pe proprietate, fiecare cu reguli proprii."
+    },
+    "c": {
+     "titel": "Introducerea manuală are prioritate",
+     "text": "Un tarif setat manual rămâne. Automatizarea nu suprascrie niciodată o decizie conștientă."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Reducerile și majorările merg și către portaluri.",
+     "text": "Reducerile săptămânale și lunare, acțiunile pentru rezervări timpurii și majorările sunt afișate acolo unde sunt permise — nu doar în vederea ta.",
+     "punkte": {
+      "a": "Reduceri după durata șederii",
+      "b": "Acțiuni cu perioadă",
+      "c": "Majorări pe canal"
+     }
+    }
+   },
+   "bildAltBlock": "Plan de ocupare cu prețuri pe noapte",
+   "reiter": {
+    "dynamisch": {
+     "titel": "Prețuri dinamice",
+     "heading": "Ocupare, sezon, timp până la sosire.",
+     "text": "Prețul se mișcă între minimul și maximul tău — după cerere, ziua săptămânii și timpul până la sosire, recalculat pentru fiecare noapte.",
+     "punkte": {
+      "a": "Minim",
+      "b": "Maxim",
+      "c": "Cerere"
+     }
+    },
+    "raten": {
+     "titel": "Rate plans",
+     "heading": "Mai multe tarife pentru aceeași proprietate.",
+     "text": "Nerambursabil, rezervare timpurie, ședere lungă: fiecare tarif cu condiții proprii — și fiecare merge la portalurile care îl susțin.",
+     "punkte": {
+      "a": "Tarif creat",
+      "b": "Condiții setate",
+      "c": "Către portaluri"
+     }
+    },
+    "rabatte": {
+     "titel": "Reduceri",
+     "heading": "Stai mai mult, plătești mai puțin.",
+     "text": "Reduceri săptămânale și lunare, acțiuni cu perioadă, majorări pentru șederi scurte — vizibile direct în calendar.",
+     "punkte": {
+      "a": "Reducere săptămânală",
+      "b": "Reducere lunară",
+      "c": "Acțiune"
+     }
+    },
+    "grenzen": {
+     "titel": "Limitele tale",
+     "heading": "Automatizarea nu are niciodată ultimul cuvânt.",
+     "text": "Un tarif setat de tine rămâne. Și sub minimul tău nu coboară nimic — nici cu calendarul gol.",
+     "punkte": {
+      "a": "Minim",
+      "b": "Introducere manuală",
+      "c": "Prioritate"
+     }
+    }
+   }
+  },
+  "team": {
+   "metaBeschreibung": "Roluri pentru proprietari, curățenie, angajați și agenție — fiecare vede doar zona lui, cu sarcini și liste de verificare foto.",
+   "headline": "Fiecare vede exact ce îi trebuie.",
+   "sub": "Proprietarii văd proprietățile lor, curățenia intervențiile ei, angajații zona lor. Finanțele rămân acolo unde le e locul.",
+   "bildAlt": "Prezentarea sarcinilor cu responsabilități",
+   "nutzen": {
+    "a": {
+     "titel": "Roluri în loc de înțelegeri",
+     "text": "Drepturile țin de rol, nu de încredere. Un cont de curățenie nu ajunge la venituri."
+    },
+    "b": {
+     "titel": "Sarcini cu dovadă",
+     "text": "Listele de verificare cu fotografii arată că locuința a fost predată — inclusiv momentul."
+    },
+    "c": {
+     "titel": "Distribuite automat",
+     "text": "După fiecare plecare, curățenia apare de la sine, cu termen până la următoarea sosire."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Agențiile conduc mai multe afaceri în paralel.",
+     "text": "Cine închiriază pentru alții administrează mai mulți proprietari într-un singur cont — cu deconturi separate și conturi proprii.",
+     "punkte": {
+      "a": "Mai mulți proprietari",
+      "b": "Decont separat",
+      "c": "Drepturi pe persoană"
+     }
+    }
+   },
+   "bildAltBlock": "Lista rezervărilor cu responsabilități",
+   "reiter": {
+    "rollen": {
+     "titel": "Roluri",
+     "heading": "Fiecare vede zona lui.",
+     "text": "Agenție, proprietar, angajat, curățenie: drepturile țin de rol. Veniturile le vede doar cine trebuie să le vadă.",
+     "punkte": {
+      "a": "Rol ales",
+      "b": "Proprietăți atribuite",
+      "c": "Drepturi verificate"
+     }
+    },
+    "aufgaben": {
+     "titel": "Sarcini",
+     "heading": "Curățenia apare de la sine.",
+     "text": "După fiecare plecare, sarcina stă în plan, cu termen până la următoarea sosire. Se închide cu o listă de verificare foto.",
+     "punkte": {
+      "a": "Plecare înregistrată",
+      "b": "Curățenie programată",
+      "c": "Fotografii încărcate"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Proprietari",
+     "heading": "Cont propriu în loc de e-mail lunar.",
+     "text": "Proprietarii văd ocuparea, veniturile și plățile proprietăților lor — doar citind, fără să poată interveni în operare.",
+     "punkte": {
+      "a": "Ocupare",
+      "b": "Venituri",
+      "c": "Plată"
+     }
+    },
+    "agentur": {
+     "titel": "Agenție",
+     "heading": "Mai multe afaceri într-un singur cont.",
+     "text": "Cine închiriază pentru alții conduce mai mulți proprietari în paralel — deconturi separate, conturi separate, un singur calendar.",
+     "punkte": {
+      "a": "Mai mulți proprietari",
+      "b": "Decont separat",
+      "c": "Un singur cont"
+     }
+    }
+   }
+  },
+  "app": {
+   "metaBeschreibung": "Aplicație nativă pentru unitate, proprietari, oaspeți și curățenie — ocupare, sarcini și mesaje din mers.",
+   "headline": "Afacerea ta încape în buzunar.",
+   "sub": "Verifici ocuparea, creezi o rezervare, răspunzi la un mesaj, bifezi o sarcină — de pe telefon, fără laptop.",
+   "bildAlt": "Aplicație mobilă cu ocupare și sarcini",
+   "nutzen": {
+    "a": {
+     "titel": "Pentru fiecare rol",
+     "text": "Proprietarii, curățenia și operarea au fiecare vederea lor — aceeași aplicație, drepturi diferite."
+    },
+    "b": {
+     "titel": "Notificări care contează",
+     "text": "Rezervare nouă, anulare, întrebare de la oaspete: afli imediat, fără să deschizi aplicația."
+    },
+    "c": {
+     "titel": "Și pentru oaspeți",
+     "text": "Oaspeții găsesc ghidul oaspetelui, check-in-ul și mesajele în aplicația myBestDays."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Două aplicații, pentru că sunt două lumi.",
+     "text": "myNextDays conduce afacerea, myBestDays îi aparține oaspetelui. Aplicații separate înseamnă: niciun oaspete nu ajunge vreodată la cifrele tale.",
+     "punkte": {
+      "a": "myNextDays pentru afacere",
+      "b": "myBestDays pentru oaspete",
+      "c": "iOS și Android"
+     }
+    }
+   },
+   "bildAltBlock": "Prezentarea afacerii la birou",
+   "reiter": {
+    "betrieb": {
+     "titel": "Operare din mers",
+     "heading": "Ocuparea și rezervările sub control.",
+     "text": "Verifici calendarul, creezi o rezervare, schimbi un tarif — de pe telefon, pe aceleași date ca la birou.",
+     "punkte": {
+      "a": "Calendar",
+      "b": "Rezervări",
+      "c": "Tarife"
+     }
+    },
+    "meldungen": {
+     "titel": "Notificări",
+     "heading": "Afli imediat.",
+     "text": "Rezervarea nouă, anularea sau întrebarea unui oaspete sosesc ca notificare — cu o atingere ești în rezervare.",
+     "punkte": {
+      "a": "Rezervare",
+      "b": "Rezervare nouă în iulie",
+      "c": "Anulare pentru 12–14.08."
+     }
+    },
+    "gast": {
+     "titel": "Pentru oaspete",
+     "heading": "Aplicația myBestDays.",
+     "text": "Oaspeții găsesc rezervarea, ghidul oaspetelui, check-in-ul și mesajele în propria lor aplicație — separată de a ta.",
+     "punkte": {
+      "a": "Rezervare",
+      "b": "Ghidul oaspetelui",
+      "c": "Check-in"
+     }
+    },
+    "rollen": {
+     "titel": "Pentru echipă",
+     "heading": "Curățenie și proprietari.",
+     "text": "Personalul de curățenie vede intervențiile lui cu listă de verificare, proprietarii proprietățile lor. Aceeași aplicație, drepturi diferite.",
+     "punkte": {
+      "a": "Intervenție deschisă",
+      "b": "Listă de verificare finalizată",
+      "c": "Fotografii trimise"
+     }
+    }
+   }
+  },
+  "auswertungen": {
+   "metaBeschreibung": "Ocupare, venituri, ADR și comparație între canale — rapoarte care arată de ce se întâmplă, nu doar ce s-a întâmplat.",
+   "headline": "Cifre din care poate ieși o decizie.",
+   "sub": "Ocupare, venituri și preț mediu pe proprietate, perioadă și canal — una lângă alta, nu în cinci exporturi.",
+   "bildAlt": "Analiză cu ocupare și venituri",
+   "nutzen": {
+    "a": {
+     "titel": "Compară canalele",
+     "text": "Ce aduce Booking, ce aduce site-ul propriu? Calculat cu comision, nu doar după venit."
+    },
+    "b": {
+     "titel": "Pe proprietate",
+     "text": "Care proprietate se susține și care nu — se vede din ocupare și din prețul mediu."
+    },
+    "c": {
+     "titel": "Rapoarte de la sine",
+     "text": "Rapoartele lunare merg automat la tine și la proprietarii tăi, ca PDF în structura obișnuită."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Trecutul și perspectiva într-o singură vedere.",
+     "text": "Lângă ce a fost stă ce este deja rezervat — așa vezi în februarie dacă vara se susține, în loc să observi în iulie.",
+     "punkte": {
+      "a": "Stadiul rezervărilor înainte",
+      "b": "Comparație cu anul trecut",
+      "c": "Export pentru contabil"
+     }
+    }
+   },
+   "bildAltBlock": "Planul de ocupare al unui hotel ca bază de date",
+   "reiter": {
+    "auslastung": {
+     "titel": "Ocupare",
+     "heading": "Cât de plin este de fapt?",
+     "text": "Ocuparea pe proprietate, lună și canal — comparativ cu anul trecut, nu din intuiție.",
+     "punkte": {
+      "a": "Ocupare",
+      "b": "Anul trecut",
+      "c": "Pe proprietate"
+     }
+    },
+    "kanaele": {
+     "titel": "Comparație între canale",
+     "heading": "Ce aduce fiecare canal?",
+     "text": "Venitul după comision pe canal: Booking, Airbnb, site propriu, myBestDays — unul lângă altul, nu în cinci exporturi.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "berichte": {
+     "titel": "Rapoarte",
+     "heading": "Vin de la sine.",
+     "text": "Rapoartele lunare merg automat la tine și la proprietarii tăi, ca PDF în structura obișnuită.",
+     "punkte": {
+      "a": "Raport creat",
+      "b": "Trimis proprietarilor",
+      "c": "Arhivat"
+     }
+    },
+    "ausblick": {
+     "titel": "Perspectivă",
+     "heading": "Ce este deja rezervat.",
+     "text": "Lângă ce a fost stă stadiul rezervărilor înainte — așa vezi în februarie dacă vara se susține.",
+     "punkte": {
+      "a": "Rezervat",
+      "b": "Cerere",
+      "c": "Liber"
+     }
+    }
+   }
+  }
+ },
+ "kontakt": {
+  "meta": {
+   "titel": "Contact — myNextDays",
+   "beschreibung": "Cum ne puteți contacta la myNextDays: întrebări generale și vânzări la adresa {info}, solicitări tehnice la adresa {technik}, telefonic la {telefon} — sau direct prin formular."
+  },
+  "hero": {
+   "eyebrow": "Contact",
+   "headlinePre": "Spuneți-ne despre ce este vorba —",
+   "headlineHighlight": "vă răspundem",
+   "sub": "Întrebări despre produs, despre trecerea de la un alt sistem, despre conectarea prin API-ul nostru sau despre colaborare: alegeți subiectul dumneavoastră, iar mesajul ajunge direct la oamenii care se pricep la el.",
+   "sitz": "Sediul în Bindslev, Danemarca",
+   "sprachen": "Software în 24 de limbi",
+   "eu": "Găzduit în UE, conform GDPR"
+  },
+  "wege": {
+   "eyebrow": "Căi către noi",
+   "heading": "Cine se ocupă de solicitarea dumneavoastră?",
+   "sub": "Două cutii poștale și un chat. Chestiunile comerciale și tot ce ține de perioada de dinaintea începerii merg la cutia poștală generală, tot ce este tehnic direct la echipa de dezvoltare — astfel nimic nu ajunge într-o coadă la care nu se uită nimeni.",
+   "allgemein": {
+    "titel": "Produs, prețuri și vânzări",
+    "text": "Vreți să știți dacă myNextDays se potrivește unității dumneavoastră, ce înseamnă trecerea de la un alt sistem sau cum funcționează factura și abonamentul? Aceasta este calea potrivită — și pentru presă, parteneriate și solicitări privind protecția datelor.",
+    "aktion": "Scrieți un mesaj"
+   },
+   "technik": {
+    "titel": "Tehnic, API și securitate",
+    "text": "Ceva nu funcționează, o conexiune cu un portal de rezervări se blochează, dezvoltați pe API-ul nostru sau ați găsit o vulnerabilitate de securitate? Aceste solicitări merg direct la echipa de dezvoltare și nu prin departamentul de vânzări.",
+    "aktion": "Scrieți un mesaj"
+   },
+   "hilfe": {
+    "titel": "Ajutor și chat",
+    "text": "Ghidurile pentru fiecare domeniu se află în Centrul de ajutor. Iar dacă trebuie să fie rapid: în dreapta jos, pe fiecare pagină, există un chat în care răspunde o persoană reală — fără cont și fără autentificare.",
+    "aktion": "Către Centrul de ajutor",
+    "chatHinweis": "Chat în dreapta jos, pe fiecare pagină"
+   }
+  },
+  "formular": {
+   "eyebrow": "Mesaj",
+   "heading": "Scrieți-ne",
+   "sub": "Un singur formular pentru tot — subiectul dumneavoastră decide cine îl primește.",
+   "ablaufTitel": "Ce se întâmplă mai departe",
+   "ablauf": {
+    "eingang": {
+     "titel": "Mesajul pleacă",
+     "text": "Prin serverul nostru de e-mail din Danemarca — nu printr-un serviciu de formulare al unui terț, prin mâinile căruia să treacă datele dumneavoastră."
+    },
+    "zuordnung": {
+     "titel": "Ajunge în cutia poștală potrivită",
+     "text": "Chestiunile comerciale la adresa {info}, cele tehnice la adresa {technik}. Care dintre ele este, decide serverul nostru pe baza subiectului dumneavoastră."
+    },
+    "antwort": {
+     "titel": "Vă răspundem direct",
+     "text": "Ca un e-mail obișnuit la adresa pe care o introduceți aici — puteți pur și simplu să răspundeți la el."
+    }
+   },
+   "hinweisPostfach": "Două cutii poștale, ca nimic să nu rămână nerezolvat: {info} pentru tot ce este comercial, {technik} pentru tot ce este tehnic. Care dintre ele va fi, stabilește serverul nostru pe baza subiectului dumneavoastră — acest formular nu poate indica o destinație.",
+   "thema": "Despre ce este vorba?",
+   "themen": {
+    "allgemein": "Întrebare generală",
+    "vertrieb": "Produs, prețuri și vânzări",
+    "abrechnung": "Factură și abonament",
+    "technik": "Problemă tehnică",
+    "api": "API și dezvoltatori",
+    "partner": "Parteneriat",
+    "presse": "Presă și media",
+    "datenschutz": "Protecția datelor",
+    "sicherheit": "Raportați o vulnerabilitate de securitate"
+   },
+   "zielAllgemein": "Merge la adresa {email}",
+   "zielTechnik": "Merge la adresa {email} — echipa noastră de dezvoltare",
+   "name": "Nume",
+   "email": "E-mail",
+   "emailPlatzhalter": "nume@exemplu.ro",
+   "firma": "Firmă",
+   "telefon": "Telefon",
+   "optional": "opțional",
+   "nachricht": "Mesajul dumneavoastră",
+   "nachrichtPlatzhalter": "Descrieți solicitarea dumneavoastră — cu cât mai exact, cu atât mai potrivit răspunsul.",
+   "absenden": "Trimiteți mesajul",
+   "laeuft": "Se trimite …",
+   "dankeTitel": "A ajuns.",
+   "nochEine": "Scrieți alt mesaj",
+   "fehlerAllgemein": "Nu a funcționat. Vă rugăm să încercați din nou mai târziu.",
+   "fehlerPruefung": "Verificarea de securitate nu a reușit. Vă rugăm să reîncărcați pagina și să trimiteți mesajul din nou.",
+   "fehlerFelder": "Vă rugăm să verificați datele dumneavoastră: sunt necesare numele, e-mailul și un mesaj de cel puțin 20 de caractere.",
+   "fehlerZuOft": "De la această conexiune au venit prea multe mesaje. Vă rugăm să așteptați un moment și să încercați din nou.",
+   "fehlerSpaeter": "Mesajul nu poate fi livrat în acest moment. Vă rugăm să încercați din nou mai târziu sau să scrieți direct la {email}.",
+   "datenschutzHinweis": "Folosim datele dumneavoastră doar pentru a răspunde la această solicitare. Detalii în <link>politica de confidențialitate</link>.",
+   "recaptchaHinweis": "Acest formular este protejat prin reCAPTCHA. Se aplică <datenschutz>politica de confidențialitate</datenschutz> și <bedingungen>termenii de utilizare</bedingungen> ai Google."
+  },
+  "anschrift": {
+   "eyebrow": "Adresă",
+   "heading": "Cum ne puteți contacta direct",
+   "firmaEyebrow": "Date despre firmă",
+   "firmaHeading": "Cu cine aveți de-a face",
+   "firmaText": "Nimeni nu ar trebui să caute în textul scris cu litere mici cine este partenerul contractual. De aceea, datele de înregistrare stau aici — aceleași ca în informațiile legale.",
+   "firma": "Companie",
+   "register": "Registru",
+   "ustId": "Cod de identificare în scopuri de TVA",
+   "direktion": "Conducere",
+   "impressum": "Vedeți informațiile legale",
+   "datenschutz": "Vedeți politica de confidențialitate"
+  },
+  "faq": {
+   "eyebrow": "Întrebări frecvente",
+   "heading": "Întrebări despre contactare",
+   "sub": "Cine răspunde, cât durează și ce se întâmplă cu datele dumneavoastră.",
+   "wer": {
+    "frage": "Cine îmi răspunde?",
+    "antwort": "Un om din echipă, nu un sistem de tichete cu număr. myNextDays este condus de proprietar: la întrebările comerciale răspunde cineva care folosește el însuși software-ul în fiecare zi, la cele tehnice echipa de dezvoltare."
+   },
+   "postfach": {
+    "frage": "De unde știu unde ajunge mesajul meu?",
+    "antwort": "Sub câmpul de selecție este afișată adresa de destinație pentru fiecare solicitare. Solicitările generale, comerciale și redacționale merg la adresa {info}, solicitările tehnice, întrebările despre API și raportările de securitate la adresa {technik}. Repartizarea o face serverul nostru — formularul nu poate indica o cutie poștală, pentru ca să nu poată fi folosit abuziv ca mijloc de trimitere a mesajelor către terți."
+   },
+   "sprache": {
+    "frage": "În ce limbă pot scrie?",
+    "antwort": "Scrieți în limba în care citiți această pagină — o vedem în solicitarea dumneavoastră și răspundem în ea, în măsura în care putem. La germană, daneză și engleză răspundem întotdeauna."
+   },
+   "dauer": {
+    "frage": "Cât durează un răspuns?",
+    "antwort": "De regulă în câteva ore, în weekend și în zilele de sărbătoare poate dura mai mult. Pentru raportările de securitate: acestea ajung la echipa de dezvoltare fără ocolul prin vânzări."
+   },
+   "telefon": {
+    "frage": "Pot să sun și telefonic?",
+    "antwort": "Da, la {telefon}. Un apel este cea mai rapidă cale pentru tot ce se discută mai bine decât se scrie — în cazul defecțiunilor tehnice un mesaj este totuși adesea mai bun, pentru că se pot atașa mesaje de eroare și capturi de ecran."
+   },
+   "bestaetigung": {
+    "frage": "Primesc o confirmare de primire prin e-mail?",
+    "antwort": "Nu, în mod intenționat nu. O confirmare automată ar merge la orice adresă tastată aici — cu aceasta s-ar putea folosi serverul nostru de e-mail pentru a scrie în cutiile poștale ale altora. De aceea confirmarea apare aici, pe pagină, imediat ce mesajul a ajuns. Datele dumneavoastră le folosim exclusiv pentru a răspunde la această solicitare."
+   }
+  }
+ },
+ "help": {
+  "heroTitle": "Cum vă putem ajuta?",
+  "heroSubtitle": "Căutați în baza de cunoștințe sau găsiți soluții pas cu pas pentru activitatea zilnică cu myNextDays.",
+  "searchPlaceholder": "Ce căutați?",
+  "searchAria": "Caută în ajutor",
+  "contact": "Contact",
+  "home": "Pagina de ajutor",
+  "articles": "{count, plural, one {# articol} few {# articole} other {# de articole}}",
+  "collectionKbTitle": "Bază de cunoștințe",
+  "collectionKbDesc": "Totul despre proprietăți, prețuri, calendar, portaluri și contul dvs.",
+  "collectionUsecasesTitle": "Cazuri de utilizare",
+  "collectionUsecasesDesc": "Soluții pas cu pas pentru situații tipice din activitatea zilnică.",
+  "helpfulQuestion": "V-a fost util acest articol?",
+  "helpfulYes": "Da",
+  "helpfulNo": "Nu",
+  "helpfulThanks": "Vă mulțumim pentru feedback!",
+  "related": "Mai multe articole în {category}",
+  "searchTitle": "Căutare",
+  "results": "{count, plural, one {# rezultat pentru „{query}”} few {# rezultate pentru „{query}”} other {# de rezultate pentru „{query}”}}",
+  "noResultsTitle": "Niciun articol găsit",
+  "noResultsHintPre": "Încercați alți termeni de căutare sau",
+  "noResultsHintLink": "răsfoiți categoriile",
+  "browseCategories": "Răsfoiește categoriile",
+  "brandTitle": "Ajutor myNextDays"
  }
 }

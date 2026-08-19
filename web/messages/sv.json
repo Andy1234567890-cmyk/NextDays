@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Hur kan vi hjälpa till?",
-    "heroSubtitle": "Sök i kunskapsbasen eller hitta steg-för-steg-lösningar för din vardag med myNextDays.",
-    "searchPlaceholder": "Vad letar du efter?",
-    "searchAria": "Sök i hjälpen",
-    "contact": "Contact",
-    "home": "Hjälpens startsida",
-    "articles": "{count, plural, one {# artikel} other {# artiklar}}",
-    "collectionKbTitle": "Kunskapsbas",
-    "collectionKbDesc": "Allt om boenden, priser, kalender, portaler och ditt konto.",
-    "collectionUsecasesTitle": "Användningsfall",
-    "collectionUsecasesDesc": "Steg-för-steg-lösningar för vanliga vardagssituationer.",
-    "helpfulQuestion": "Var den här artikeln till hjälp?",
-    "helpfulYes": "Ja",
-    "helpfulNo": "Nej",
-    "helpfulThanks": "Tack för din återkoppling!",
-    "related": "Fler artiklar i {category}",
-    "searchTitle": "Sök",
-    "results": "{count, plural, one {# träff för ”{query}”} other {# träffar för ”{query}”}}",
-    "noResultsTitle": "Inga artiklar hittades",
-    "noResultsHintPre": "Prova andra sökord eller",
-    "noResultsHintLink": "bläddra bland kategorierna",
-    "browseCategories": "Bläddra bland kategorier",
-    "brandTitle": "myNextDays Hjälp"
-  },
   "common": {
     "save": "Spara",
     "cancel": "Avbryt",
@@ -1420,7 +1395,10 @@
     "commissionableNo": "Nej — provisionsfri",
     "infoAria": "Förklaring till {feld}",
     "rulesPageTitle": "Avräkningsregler",
-    "rulesPageIntro": "Vad portalerna behåller per bokning och vem avgifterna tillhör. Tillsammans avgör de vilket belopp som till slut hamnar i dina ägares provisionsavräkning."
+    "rulesPageIntro": "Vad portalerna behåller per bokning och vem avgifterna tillhör. Tillsammans avgör de vilket belopp som till slut hamnar i dina ägares provisionsavräkning.",
+    "endsSalesHint": "Observera: därmed upphör även försäljningen. Från och med {date} säljs objektet inte längre i någon kanal — inte heller på Booking.com, Airbnb eller på myBestDays. För enbart ett prisbyte skapar du i stället ett efterföljande avtal från den dagen.",
+    "effectReleased": "{property}: försäljningen fortsätter — avtalsslutet har upphävts och nätterna är säljbara igen.",
+    "effectBlocked": "{property}: försäljningen upphör den {date} — {nights} nätter blockerade och borttagna från portalerna."
   },
   "portal": {
     "title": "Min portal",
@@ -4535,7 +4513,10 @@
       "photos": "Bilder",
       "noPhotosFound": "Inga bilder hittades för denna bokning.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "via {channel}",
+      "receivedOn": "inkommen hos oss den {date}",
+      "bookedOn": "bokad den {date}"
     },
     "dashboard": {
       "todayCheckouts": "Utcheckningar",

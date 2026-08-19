@@ -56,10 +56,13 @@ export const SIGNUP_URL = APP_ERREICHBAR
  */
 export const AGB_URL = "/agb";
 
-// Das Hilfe-Center liegt weiter in der web-App. Vor dem Start gibt es dorthin
-// keinen öffentlichen Zugang — der Link entfällt dann (siehe Footer, der leere
-// Ziele auslässt, statt auf eine tote Adresse zu zeigen).
-export const HILFE_URL = APP_ERREICHBAR ? `${DASHBOARD_URL}/hilfe` : "";
+// Das Hilfe-Center ist KEINE App-URL mehr: es liegt seit dem Umzug in dieser
+// App unter `/hilfe` und wird als normaler interner Link angesprochen. Die
+// frühere Konstante hing an `NEXT_PUBLIC_APP_URL` und war damit an die Frage
+// gekoppelt, ob sich jemand registrieren kann — mit der Folge, dass das
+// fertige, 24-sprachige Hilfe-Center aus dem Footer auf "#" zeigte. Wer hier
+// eine `HILFE_URL` sucht: es gibt keine, der Pfad steht direkt im Footer und
+// in `components/kontakt/kontakt-wege.tsx`.
 
 /**
  * Basis-URL der Vorführung — EIGENE Variable, nicht `NEXT_PUBLIC_APP_URL`.
@@ -92,3 +95,53 @@ export const DEMO_BASIS = (
  * Adresse landet, die er nicht benutzen kann.
  */
 export const DEMO_URL = DEMO_BASIS ? `${DEMO_BASIS}/demo` : VORANMELDUNG_ZIEL;
+
+/**
+ * Öffentliche Statusseite (Uptime Kuma).
+ *
+ * Ersetzt im Footer den Platzhalter „Webinare", der auf `#` zeigte — also ein
+ * Link war, der nichts tat. Ein Statuslink ist an dieser Stelle das, was
+ * Besucher bei einer Betriebssoftware wirklich suchen: läuft es gerade.
+ *
+ * KEIN Fallback auf die interne Coolify-Adresse (`*.sslip.io`). Die wäre
+ * schlechter als kein Link: sie nennt die Server-IP im Klartext, trägt ein
+ * Zertifikat auf einen Fremd-Hostnamen und ändert sich beim nächsten Deploy.
+ * Ist die Variable leer, entfällt der Eintrag (Wurzel 4 — kein erfundener
+ * Ersatzwert; der Footer lässt leere Ziele bereits aus).
+ *
+ * Gesetzt wird sie in Coolify als `NEXT_PUBLIC_STATUS_URL` auf
+ * `https://status.mynextdays.com`, sobald der DNS-Eintrag steht und Coolify
+ * ein Zertifikat dafür ausgestellt hat. Anleitung samt Reihenfolge:
+ * `docs/STATUSSEITE.md`.
+ *
+ * Bis dahin bleibt sie leer und der Footer-Eintrag entfällt — bewusst, denn
+ * ein Link auf eine Domain ohne DNS ist ein Fehler, den der Besucher uns
+ * zuschreibt.
+ */
+export const STATUS_URL = (process.env.NEXT_PUBLIC_STATUS_URL ?? "").replace(
+  /\/$/,
+  "",
+);
+
+/**
+ * Adresse, die der SERVER abfragt — getrennt von `STATUS_URL`.
+ *
+ * Zwei Variablen, weil es zwei verschiedene Dinge sind: `STATUS_URL` ist der
+ * Link, den ein Besucher anklickt (muss öffentlich und hübsch sein),
+ * `STATUS_BASIS` ist die Adresse, unter der unser eigener Server Kuma
+ * erreicht. Die darf die interne Coolify-Adresse sein, denn sie erscheint
+ * nirgends im Browser — die Route in `app/api/status` gibt nur die verdichtete
+ * Lage heraus, nie die Kuma-Antwort.
+ *
+ * Praktischer Nutzen der Trennung: der Statuspunkt funktioniert schon, bevor
+ * `status.mynextdays.com` im DNS steht. Fällt `STATUS_SERVER_URL` weg, greift
+ * `NEXT_PUBLIC_STATUS_URL` — nach dem Umzug braucht es keine zweite Variable.
+ *
+ * KEIN eingebauter Standardwert: eine hier hartcodierte `sslip.io`-Adresse
+ * würde beim nächsten Coolify-Deploy still ins Leere zeigen (Wurzel 4).
+ */
+export const STATUS_BASIS = (
+  process.env.STATUS_SERVER_URL ??
+  process.env.NEXT_PUBLIC_STATUS_URL ??
+  ""
+).replace(/\/$/, "");

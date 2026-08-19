@@ -429,6 +429,40 @@ class Settings(BaseSettings):
     company_contact_email: str = ""
     company_contact_phone: str = ""
 
+    # --- Kontaktformular der Marketing-Seite (0414) ----------------------------
+    # Zwei Postfächer, weil zwei Zuständigkeiten: allgemeine/kaufmännische
+    # Anliegen landen bei info@, technische bei developer@. Die Zuordnung
+    # entscheidet AUSSCHLIESSLICH der Server (Wurzel 3) — das Formular schickt
+    # nur ein Thema-Kürzel, niemals eine Zieladresse. Ohne diese Werte nimmt das
+    # Formular nichts an (503): eine geratene Zieladresse wäre eine Anfrage, die
+    # ins Leere geht, ohne dass es jemand merkt (Wurzel 4).
+    contact_recipient_general: str = ""
+    contact_recipient_technical: str = ""
+
+    # --- reCAPTCHA Enterprise (Google Cloud) ----------------------------------
+    # Spamschutz des öffentlichen Kontaktformulars. Score-basierter (unsichtbarer)
+    # Schlüssel: die Seite holt per `grecaptcha.enterprise.execute` ein Token, der
+    # Server lässt es von Google bewerten
+    # (POST https://recaptchaenterprise.googleapis.com/v1/projects/<id>/assessments?key=<api_key>).
+    # Bewertet wird SERVERSEITIG — ein Token, das nur der Client prüft, ist kein
+    # Schutz. Kostenlos bis 10.000 Bewertungen/Monat je Organisation.
+    # project_id = Google-Cloud-Projekt, api_key = API-Schlüssel mit Zugriff auf
+    # die reCAPTCHA-Enterprise-API, site_key = der öffentliche Schlüssel, der auch
+    # im Frontend steht (NEXT_PUBLIC_RECAPTCHA_SITE_KEY) — beide müssen dieselbe
+    # Kennung tragen, sonst ist jedes Token ungültig.
+    recaptcha_project_id: str = ""
+    recaptcha_api_key: SecretStr = SecretStr("")
+    recaptcha_site_key: str = ""
+    recaptcha_base_url: str = "https://recaptchaenterprise.googleapis.com/v1"
+    # Ab welchem Score die Anfrage als menschlich gilt. 0.5 ist der von Google
+    # dokumentierte Ausgangswert; 1.0 = sicher Mensch, 0.0 = sicher Bot.
+    recaptcha_min_score: float = 0.5
+    # Sandbox: Token wird NICHT bei Google geprüft, nur protokolliert. Gleiche
+    # Bauart wie `mail_sandbox` und aus demselben Grund — lokal darf niemand
+    # daran denken müssen, und lokal gibt es keine Schlüssel. Der wirksame Wert
+    # ist die Property `captcha_sandbox`.
+    captcha_sandbox_override: bool | None = None
+
     # --- Brevo (Newsletter/Marketing, getrennt vom eigenen Mailserver) --------
     # Der eigene Mailcow bleibt für Transaktionsmails zuständig; Brevo ist NUR
     # der Marketing-Kanal (Listenpflege, Kampagnen). Ohne Schlüssel läuft die
@@ -541,6 +575,40 @@ class Settings(BaseSettings):
         """
         if self.mail_sandbox_override is not None:
             return self.mail_sandbox_override
+        return self.is_local
+
+    @property
+    def captcha_configured(self) -> bool:
+        """Bewertung ist möglich, wenn Projekt, API-Schlüssel UND Site-Key stehen.
+
+        Alle drei sind nötig: ohne Projekt gibt es keinen Endpunkt, ohne
+        API-Schlüssel keinen Zugang, und ohne Site-Key kann Google das Token
+        nicht der richtigen Kennung zuordnen (jedes Token gilt dann als
+        ungültig). Fehlt eins, ist der Schutz NICHT vorhanden — das entscheidet
+        `captcha_sandbox`, nicht ein stilles Durchlassen.
+        """
+        return bool(
+            self.recaptcha_project_id.strip()
+            and self.recaptcha_api_key.get_secret_value().strip()
+            and self.recaptcha_site_key.strip()
+        )
+
+    @property
+    def captcha_sandbox(self) -> bool:
+        """Ob das Token nur protokolliert statt bei Google bewertet wird.
+
+        Lokal an, ohne dass jemand daran denken muss — dieselbe Bauart wie
+        `mail_sandbox` und aus demselben Grund: auf dem Entwicklerrechner gibt es
+        keine reCAPTCHA-Schlüssel, und ein Formular, das lokal grundsätzlich 503
+        antwortet, wird nicht getestet.
+
+        AUSSERHALB von `local` gibt es KEINE Sandbox aus Versehen: dort
+        entscheidet allein `CAPTCHA_SANDBOX_OVERRIDE`, Default aus. Fehlen die
+        Schlüssel in Produktion, ist das ein Konfigurationsfehler und das
+        Formular sagt das (503) — es nimmt nicht ungeprüft an (Wurzel 5).
+        """
+        if self.captcha_sandbox_override is not None:
+            return self.captcha_sandbox_override
         return self.is_local
 
     @property

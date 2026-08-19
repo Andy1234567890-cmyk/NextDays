@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Hvordan kan vi hjælpe?",
-    "heroSubtitle": "Søg i vidensbasen, eller find trin-for-trin-løsninger til din hverdag med myNextDays.",
-    "searchPlaceholder": "Hvad leder du efter?",
-    "searchAria": "Søg i hjælpen",
-    "contact": "Kontakt",
-    "home": "Hjælp forside",
-    "articles": "{count, plural, one {# artikel} other {# artikler}}",
-    "collectionKbTitle": "Vidensbase",
-    "collectionKbDesc": "Alt om boliger, priser, kalender, portaler og din konto.",
-    "collectionUsecasesTitle": "Anvendelser",
-    "collectionUsecasesDesc": "Trin-for-trin-løsninger til typiske situationer i hverdagen.",
-    "helpfulQuestion": "Var denne artikel nyttig?",
-    "helpfulYes": "Ja",
-    "helpfulNo": "Nej",
-    "helpfulThanks": "Tak for din tilbagemelding!",
-    "related": "Flere artikler i {category}",
-    "searchTitle": "Søgning",
-    "results": "{count, plural, one {# resultat for “{query}”} other {# resultater for “{query}”}}",
-    "noResultsTitle": "Ingen artikler fundet",
-    "noResultsHintPre": "Prøv andre søgeord, eller",
-    "noResultsHintLink": "gennemse kategorierne",
-    "browseCategories": "Gennemse kategorier",
-    "brandTitle": "myNextDays Hjælp"
-  },
   "common": {
     "save": "Gem",
     "cancel": "Annuller",
@@ -4540,7 +4515,10 @@
       "photos": "Billeder",
       "noPhotosFound": "Der blev ikke fundet billeder til denne booking.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "via {channel}",
+      "receivedOn": "modtaget hos os den {date}",
+      "bookedOn": "booket den {date}"
     },
     "dashboard": {
       "todayCheckouts": "Check-outs",

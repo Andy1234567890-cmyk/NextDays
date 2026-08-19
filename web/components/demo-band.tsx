@@ -16,6 +16,7 @@
 import { Icon } from "@iconify/react";
 
 import { DemoFuehrung } from "@/components/demo-fuehrung";
+import { VORANMELDUNG_URL } from "@/lib/marketing-url";
 
 // Vor dem Start fuehrt der Knopf NICHT in eine Registrierung, sondern auf die
 // Marketing-Seite mit dem Anker `#voranmeldung` — dort faengt das
@@ -24,12 +25,10 @@ import { DemoFuehrung } from "@/components/demo-fuehrung";
 // anlegen, und der Besucher landete in einem Formular ohne Zweck.
 //
 // Der Anker gehoert zur Marketing-App, nicht zu dieser: das Popup lebt in deren
-// Layout. Deshalb eine absolute URL statt eines Router-Links.
-const MARKETING_URL = (
-  process.env.NEXT_PUBLIC_MARKETING_URL ?? "https://mynextdays.com"
-).replace(/\/$/, "");
-
-export const VORANMELDUNG_URL = `${MARKETING_URL}/#voranmeldung`;
+// Layout. Deshalb eine absolute URL statt eines Router-Links — gebildet in
+// lib/marketing-url, wo auch die Hilfe-Adressen liegen (EINE Quelle fuer die
+// Marketing-Basis).
+export { VORANMELDUNG_URL };
 
 export function DemoBand({
   registrierungsUrl = VORANMELDUNG_URL,

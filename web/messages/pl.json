@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Jak możemy pomóc?",
-    "heroSubtitle": "Przeszukaj bazę wiedzy lub znajdź rozwiązania krok po kroku dla codziennej pracy z myNextDays.",
-    "searchPlaceholder": "Czego szukasz?",
-    "searchAria": "Szukaj w pomocy",
-    "contact": "Contact",
-    "home": "Strona główna pomocy",
-    "articles": "{count, plural, one {# artykuł} few {# artykuły} many {# artykułów} other {# artykułu}}",
-    "collectionKbTitle": "Baza wiedzy",
-    "collectionKbDesc": "Wszystko o obiektach, cenach, kalendarzu, portalach i Twoim koncie.",
-    "collectionUsecasesTitle": "Przykłady zastosowań",
-    "collectionUsecasesDesc": "Rozwiązania krok po kroku dla typowych sytuacji na co dzień.",
-    "helpfulQuestion": "Czy ten artykuł był pomocny?",
-    "helpfulYes": "Tak",
-    "helpfulNo": "Nie",
-    "helpfulThanks": "Dziękujemy za opinię!",
-    "related": "Więcej artykułów w kategorii {category}",
-    "searchTitle": "Szukaj",
-    "results": "{count, plural, one {# wynik dla „{query}”} few {# wyniki dla „{query}”} many {# wyników dla „{query}”} other {# wyniku dla „{query}”}}",
-    "noResultsTitle": "Nie znaleziono artykułów",
-    "noResultsHintPre": "Spróbuj innych słów kluczowych albo",
-    "noResultsHintLink": "przejrzyj kategorie",
-    "browseCategories": "Przeglądaj kategorie",
-    "brandTitle": "Pomoc myNextDays"
-  },
   "common": {
     "save": "Zapisz",
     "cancel": "Anuluj",
@@ -1420,7 +1395,10 @@
     "commissionableNo": "Nie — zwolnione z prowizji",
     "infoAria": "Objaśnienie do: {feld}",
     "rulesPageTitle": "Zasady rozliczeń",
-    "rulesPageIntro": "Ile portale zatrzymują z każdej rezerwacji i komu należą się opłaty. Oba ustawienia decydują o kwocie, która ostatecznie trafia do rozliczenia prowizji Twoich właścicieli."
+    "rulesPageIntro": "Ile portale zatrzymują z każdej rezerwacji i komu należą się opłaty. Oba ustawienia decydują o kwocie, która ostatecznie trafia do rozliczenia prowizji Twoich właścicieli.",
+    "endsSalesHint": "Uwaga: to zakończy również sprzedaż. Od dnia {date} obiekt nie będzie już sprzedawany w żadnym kanale — także w Booking.com, Airbnb ani na myBestDays. Jeśli chodzi tylko o zmianę stawki, dodaj zamiast tego umowę następczą rozpoczynającą się tego dnia.",
+    "effectReleased": "{property}: sprzedaż jest kontynuowana — zakończenie umowy zostało anulowane, a noce znów są dostępne w sprzedaży.",
+    "effectBlocked": "{property}: sprzedaż kończy się w dniu {date} — zablokowano {nights} nocy i wycofano je z portali."
   },
   "portal": {
     "title": "Mój portal",
@@ -4535,7 +4513,10 @@
       "photos": "Zdjęcia",
       "noPhotosFound": "Dla tej rezerwacji nie znaleziono żadnych zdjęć.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "przez {channel}",
+      "receivedOn": "wpłynęło do nas w dniu {date}",
+      "bookedOn": "zarezerwowano w dniu {date}"
     },
     "dashboard": {
       "todayCheckouts": "Wymeldowania",

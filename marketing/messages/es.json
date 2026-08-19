@@ -7,7 +7,7 @@
   "funktionen": "Funciones",
   "preise": "Precios",
   "kanaele": "Canales",
-  "kunden": "Clientes",
+  "ueberUns": "Sobre nosotros",
   "ressourcen": "Recursos",
   "sprache": "Idioma",
   "spracheWaehlen": "Elegir idioma",
@@ -425,7 +425,7 @@
   "ressourcen": {
    "blog": "Blog",
    "hilfeCenter": "Centro de ayuda",
-   "webinare": "Webinars",
+   "status": "Estado del sistema",
    "leitfaeden": "Guías",
    "api": "Documentación de la API"
   },
@@ -441,7 +441,8 @@
   "datenschutz": "Privacidad",
   "impressum": "Aviso legal",
   "cookies": "Política de cookies",
-  "avv": "Tratamiento de datos"
+  "avv": "Tratamiento de datos",
+  "kontoLoeschen": "Eliminar cuenta"
  },
  "abschluss": {
   "heading": "¿Listo para gestionar tu alojamiento desde un solo lugar?",
@@ -593,5 +594,1014 @@
    "provision": "Web propia {direkt} · portales {portale}",
    "tarif": "Un plan para todos, 1.er alojamiento incluido"
   }
+ },
+ "ueberUns": {
+  "meta": {
+   "titel": "Quiénes somos — myNextDays",
+   "beschreibung": "myNextDays ApS, de Bindslev (Dinamarca): por qué unos anfitriones en activo construyeron su propio sistema de gestión de propiedades con channel manager, qué defendemos y quién está detrás."
+  },
+  "hero": {
+   "eyebrow": "Quiénes somos",
+   "headlinePre": "Alquilamos nosotros mismos. Por eso existe",
+   "headlineHighlight": "myNextDays",
+   "sub": "myNextDays ApS es una empresa dirigida por sus fundadores, con sede en Bindslev, en el norte de Jutlandia. Alquilamos nuestros propios alojamientos — y construimos la plataforma que nos faltaba en el día a día: calendario, canales, huéspedes, pagos y liquidación en un solo lugar.",
+   "sitz": "Sede en Dinamarca",
+   "eu": "Alojado en la UE, conforme al RGPD",
+   "start": "Lanzamiento el 1 de septiembre de 2026",
+   "sprachen": "27 países, 24 idiomas",
+   "ctaTrial": "Probar 30 días gratis",
+   "ctaKontakt": "Escríbenos"
+  },
+  "warum": {
+   "eyebrow": "Por qué existimos",
+   "heading": "Nacido de nuestro propio día a día alquilando.",
+   "p1": "Quien alquila conoce la noche en la que la misma semana se ha vendido dos veces porque un canal nunca recibió el bloqueo. Ahí dejamos de buscar una herramienta y empezamos a construir una.",
+   "p2": "Los sistemas existentes estaban hechos para cadenas hoteleras — con una complejidad y un precio que ningún negocio con unos pocos alojamientos soporta — o se acababan justo donde empieza el trabajo de verdad: liquidación, propietarios, limpieza e impuestos en 27 países.",
+   "p3": "myNextDays es la respuesta: un sistema de gestión de propiedades completo con channel manager, para negocios que gestionan sus alojamientos ellos mismos — desde una única casa de vacaciones hasta un hotel con varios tipos de habitación.",
+   "bildFerienobjekt": "Casa de vacaciones junto a la costa",
+   "bildHotel": "Habitación de hotel con la cama hecha"
+  },
+  "bento": {
+   "eyebrow": "Lo que hay detrás",
+   "heading": "Cifras que podemos demostrar.",
+   "sub": "Sin número de clientes ni valoraciones: la plataforma se lanza el 1 de septiembre de 2026. Lo que figura aquí se puede comprobar en el propio producto.",
+   "vermieter": {
+    "titel": "Hecho por anfitriones, no sobre el papel",
+    "text": "Cada función se usa primero en nuestro propio negocio de alquiler antes de llegar al producto. Lo que allí no aguanta el día a día no se publica.",
+    "bildAlt": "Equipo de una agencia de alquiler trabajando"
+   },
+   "laender": {
+    "wert": "27",
+    "titel": "Países europeos",
+    "text": "Con la moneda, los tipos impositivos y las reglas de cada país — no un formulario en euros para todos."
+   },
+   "sprachen": {
+    "wert": "24",
+    "titel": "Idiomas",
+    "text": "Interfaz, comunicación con huéspedes y textos legales, no solo la página de inicio."
+   },
+   "kanaele": {
+    "wert": "56",
+    "titel": "Canales de reserva",
+    "text": "Booking.com, Airbnb, Expedia, Vrbo y muchos más a través de una sola conexión."
+   },
+   "eu": {
+    "titel": "Construido en la UE, operado en la UE",
+    "text": "Servidores y datos en la Unión Europea, operación conforme al RGPD y encargo de tratamiento por contrato escrito. Para un negocio que gestiona datos de huéspedes eso no es una nota al pie, sino un requisito."
+   }
+  },
+  "zeitleiste": {
+   "eyebrow": "El camino hasta aquí",
+   "heading": "Historia breve, pasos comprobables.",
+   "sub": "Somos jóvenes — y preferimos cuatro etapas documentadas a una historia inventada.",
+   "airsmil": {
+    "datum": "El punto de partida",
+    "titel": "El día a día en el propio negocio",
+    "text": "Alojamientos propios en varios canales a la vez: trabajo doble, bloqueos que llegaban tarde, liquidación en una hoja de cálculo. De esas fricciones salió la lista de requisitos."
+   },
+   "gruendung": {
+    "datum": "1 de julio de 2026",
+    "titel": "Constitución de myNextDays ApS",
+    "text": "Inscrita en el registro mercantil danés con el número CVR 46615182 y domicilio en Bindslev, norte de Jutlandia."
+   },
+   "beta": {
+    "datum": "Verano de 2026",
+    "titel": "Beta con alojamientos reales",
+    "text": "Las reservas entran en directo desde los canales; precios, disponibilidad y bloqueos vuelven por el mismo camino — con alojamientos y huéspedes reales, no en un entorno de pruebas."
+   },
+   "start": {
+    "datum": "1 de septiembre de 2026",
+    "titel": "Lanzamiento en 27 países",
+    "text": "En 24 idiomas, con multidivisa, el mercado myBestDays y las dos aplicaciones, para el negocio y para el huésped."
+   }
+  },
+  "marken": {
+   "eyebrow": "Dos marcas, una plataforma",
+   "heading": "myNextDays para el negocio, myBestDays para el huésped.",
+   "sub": "Ambas pertenecen a myNextDays ApS y funcionan sobre la misma tecnología — lo que las separa es quién las usa.",
+   "nextdays": {
+    "rolle": "Para negocios",
+    "text": "El sistema de gestión de propiedades y el channel manager: el lugar donde un negocio gestiona sus alojamientos, fija sus precios y liquida su dinero.",
+    "punkte": {
+     "kalender": "Plan de ocupación de todos los alojamientos y unidades, en tiempo real",
+     "portale": "Una conexión para todos los canales — disponibilidad, precios y bloqueos salen a todas partes a la vez",
+     "geld": "Pagos, facturas, comisiones y liquidación a propietarios",
+     "team": "App propia para propietarios, personal y limpieza"
+    }
+   },
+   "bestdays": {
+    "rolle": "Para huéspedes",
+    "text": "Nuestro propio mercado: los huéspedes encuentran allí los mismos alojamientos y reservan directamente con el negocio — con una comisión muy inferior a la de los grandes portales.",
+    "punkte": {
+     "direkt": "Reserva directa con el negocio, sin intermediarios",
+     "provision": "Comisión más baja que en los grandes portales",
+     "app": "App propia para buscar, reservar y para la estancia"
+    }
+   },
+   "hinweis": "Un alojamiento se vende por ambas vías a la vez — además de Booking.com, Airbnb y los demás portales. Qué canal está activo lo decide el negocio, canal por canal."
+  },
+  "werte": {
+   "eyebrow": "Principios",
+   "heading": "Aquello por lo que queremos que nos juzguen.",
+   "sub": "Seis puntos comprobables en el producto y en nuestros documentos — no declaraciones de intenciones.",
+   "doppelbuchung": {
+    "titel": "Sin reservas duplicadas",
+    "text": "Para nosotros la disponibilidad es un número de unidades libres, no una casilla. Llega en tiempo real a cada canal, y un bloqueo bloquea en todas partes — no solo donde se introdujo."
+   },
+   "preise": {
+    "titel": "Precios que se conocen de antemano",
+    "text": "Una tarifa, sin permanencia y sin cuota de alta. Lo que cuesta aparte figura con su importe en la página de precios, no en una llamada comercial."
+   },
+   "europa": {
+    "titel": "Europa no es un proyecto de traducción",
+    "text": "27 países significan 27 monedas, tipos impositivos y obligaciones de declaración — hasta la factura, el correo al huésped y el pago. Si nos falta un dato, lo decimos en lugar de poner un valor plausible."
+   },
+   "daten": {
+    "titel": "Los datos se quedan en la UE",
+    "text": "Operación y servidores en la Unión Europea, el RGPD como base y contrato de encargo de tratamiento por defecto. Dentro del negocio, solo ven los datos de huéspedes los roles que los necesitan."
+   },
+   "unabhaengig": {
+    "titel": "Dirigida por sus fundadores",
+    "text": "Sin un grupo detrás y sin hoja de ruta impuesta desde fuera. Lo siguiente que se construye se decide con los negocios que usan el software cada día."
+   },
+   "selbst": {
+    "titel": "Lo usamos nosotros mismos",
+    "text": "Nuestros propios alojamientos funcionan en la misma plataforma que los de nuestros clientes. Un fallo nos alcanza primero: el control de calidad más honesto que conocemos."
+   }
+  },
+  "menschen": {
+   "eyebrow": "Las personas detrás",
+   "heading": "Pequeños, accesibles, desde la práctica.",
+   "sub": "La dirección de myNextDays ApS tal como consta en el registro mercantil danés.",
+   "jeanine": {
+    "rolle": "Fundadora y directora",
+    "text": "Dirige nuestro propio negocio de alquiler y lleva el día a día con huéspedes, canales y limpieza a cada decisión de producto."
+   },
+   "torsten": {
+    "rolle": "Director",
+    "text": "Mantiene todos los hilos unidos y apoya al equipo justo donde hace falta. Aporta su amplia experiencia práctica para encontrar soluciones rápidas y pragmáticas en segundo plano."
+   }
+  },
+  "unternehmen": {
+   "eyebrow": "Empresa",
+   "heading": "Con quién tratas.",
+   "firma": "Empresa",
+   "sitz": "Dirección",
+   "register": "Registro mercantil",
+   "ustId": "Número de identificación fiscal (IVA)",
+   "direktion": "Dirección",
+   "impressum": "Datos completos del prestador en el aviso legal",
+   "kontaktTitel": "Línea directa",
+   "kontaktText": "¿Preguntas sobre el producto, sobre el cambio desde otro sistema o sobre colaborar? Quien responde usa el software a diario."
+  }
+ },
+ "funktionen": {
+  "rahmen": {
+   "ctaTesten": "Prueba 30 días gratis",
+   "ctaDemo": "Ver la demo",
+   "weiter": "Ver las demás funciones",
+   "mehr": "Ver",
+   "bereich": {
+    "verkauf": "Venta",
+    "gast": "Huésped y dinero",
+    "betrieb": "Operativa"
+   },
+   "reiterHeading": "¿Qué hay exactamente detrás?"
+  },
+  "uebersicht": {
+   "metaTitel": "Funciones — todo para el alquiler y el hotel | myNextDays",
+   "metaBeschreibung": "Calendario, channel manager, reserva directa, comunicación con huéspedes, pagos, tarifas, equipo, app y análisis — en un solo sistema, incluido en cada plan.",
+   "eyebrow": "Funciones",
+   "headline": "Todo lo que pide el día a día. En un solo sistema.",
+   "sub": "Nueve áreas, un solo acceso. Cada una forma parte del plan básico: no hay nada que empiece solo en un paquete más caro.",
+   "bereichSub": {
+    "verkauf": "Estar visible y recibir reservas",
+    "gast": "Del primer contacto al cobro",
+    "betrieb": "Quién hace qué — y qué ha dado de sí"
+   }
+  },
+  "pms": {
+   "metaBeschreibung": "Un calendario para todos los alojamientos: plan de ocupación, reservas, tareas y datos del alojamiento en un solo lugar — para alojamientos vacacionales y hoteles.",
+   "headline": "Un calendario para todo lo que alquilas.",
+   "sub": "Ocupación, reservas y datos del alojamiento están en un solo lugar, tanto si gestionas un apartamento como doce tipos de habitación con varias unidades.",
+   "bildAlt": "Plan de ocupación con reservas de varios canales",
+   "nutzen": {
+    "a": {
+     "titel": "Todo de un vistazo",
+     "text": "El plan de ocupación muestra cada unidad, cada reserva y cada bloqueo en una sola vista, con un color por canal."
+    },
+    "b": {
+     "titel": "Reservar en segundos",
+     "text": "Crear, mover o cancelar una reserva sin cambiar de vista. Las noches que quedan libres vuelven a venderse al instante."
+    },
+    "c": {
+     "titel": "Datos del alojamiento que valen en todas partes",
+     "text": "El equipamiento, las fotos y las reglas se mantienen una sola vez: los portales y tu propia web los reciben automáticamente."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Un alojamiento, varias unidades — representado como debe ser.",
+     "text": "Cinco estudios iguales son un tipo con cinco unidades, no un alojamiento mantenido cinco veces. Su disponibilidad es un número, exactamente como lo esperan los portales.",
+     "punkte": {
+      "a": "Unidades por tipo de alojamiento",
+      "b": "El edificio agrupa varios tipos",
+      "c": "Disponibilidad como número, no como sí/no"
+     }
+    }
+   },
+   "bildAltBlock": "Plan de ocupación de un hotel con tipos de habitación",
+   "reiter": {
+    "kalender": {
+     "titel": "Plan de ocupación",
+     "heading": "Cada unidad, cada noche, una sola imagen.",
+     "text": "El plan muestra reservas, bloqueos y noches libres unos junto a otros, con un color por canal y el nombre del huésped. Arrastrar mueve una reserva, un clic crea una nueva.",
+     "punkte": {
+      "a": "Color por canal",
+      "b": "Arrastrar y soltar",
+      "c": "Hasta 500 alojamientos"
+     }
+    },
+    "einheiten": {
+     "titel": "Unidades",
+     "heading": "Cinco estudios iguales son un tipo.",
+     "text": "Mantienes el tipo y dices cuántas unidades hay de él. Los portales reciben una cantidad, no una disponibilidad de sí/no, exactamente como lo esperan.",
+     "punkte": {
+      "a": "Tipo creado",
+      "b": "Unidades definidas",
+      "c": "Cantidad a los portales"
+     }
+    },
+    "reservierung": {
+     "titel": "Reservas",
+     "heading": "De la solicitud a la salida.",
+     "text": "Cada reserva tiene su historial: pagos, mensajes, tareas y cambios están en un solo lugar, comprensibles incluso semanas después.",
+     "punkte": {
+      "a": "Historial por reserva",
+      "b": "Cambios registrados",
+      "c": "Cancelación con motivo"
+     }
+    },
+    "objektdaten": {
+     "titel": "Datos del alojamiento",
+     "heading": "Se mantienen una vez, valen en todas partes.",
+     "text": "El equipamiento, las fotos, las reglas y las descripciones están en el alojamiento. Desde ahí van a los portales y a tu propia web, sin un segundo mantenimiento.",
+     "punkte": {
+      "a": "Fotos y equipamiento",
+      "b": "Normas de la casa",
+      "c": "Distribuido automáticamente"
+     }
+    }
+   }
+  },
+  "channel": {
+   "metaBeschreibung": "Channel manager para apartamento y hotel: Airbnb, Booking.com, Expedia, Vrbo y Google sincronizados en tiempo real, sin reservas dobles.",
+   "headline": "Un calendario. Todas las plataformas de reservas.",
+   "sub": "Disponibilidad, tarifas y contenidos van en tiempo real a los portales, y las reservas vuelven al mismo ritmo. Las reservas dobles no llegan ni a producirse.",
+   "bildAlt": "Vista general de canales con las plataformas de reservas conectadas",
+   "nutzen": {
+    "a": {
+     "titel": "56 plataformas",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google y muchas más, conectadas por una sola interfaz y no con apaños."
+    },
+    "b": {
+     "titel": "Dos sentidos, un mismo ritmo",
+     "text": "Lo que cambias aquí se ve allí en segundos. Lo que se reserva allí bloquea aquí las noches al instante."
+    },
+    "c": {
+     "titel": "Cada portal por separado",
+     "text": "Tarifas, recargos y reglas valen por portal: ningún juego de valores que tenga que ser igual en todas partes solo porque sería más fácil."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "El stop-sell actúa en todas partes. Sin pensarlo.",
+     "text": "Si bloqueas una fecha, queda cerrada en todos los portales conectados. Sin repasar cinco extranets, sin un canal olvidado el fin de semana.",
+     "punkte": {
+      "a": "Bloqueo inmediato en todos los canales",
+      "b": "Estancia mínima por portal",
+      "c": "Registro: qué salió y cuándo"
+     }
+    }
+   },
+   "bildAltBlock": "Plan de ocupación con reservas de varios portales",
+   "reiter": {
+    "portale": {
+     "titel": "Portales",
+     "heading": "56 plataformas en una sola interfaz.",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google y myBestDays cuelgan de la misma conexión. Un portal nuevo es una conexión, no un proyecto.",
+     "punkte": {
+      "a": "Airbnb",
+      "b": "Booking.com",
+      "c": "myBestDays"
+     }
+    },
+    "sync": {
+     "titel": "Sincronización en tiempo real",
+     "heading": "Lo que pasa aquí está allí en segundos.",
+     "text": "Disponibilidad, tarifas y restricciones salen al instante; las reservas vuelven al mismo ritmo y bloquean las noches antes de que alguien pueda reservar dos veces.",
+     "punkte": {
+      "a": "Disponibilidad",
+      "b": "Tarifas",
+      "c": "Restricciones"
+     }
+    },
+    "stopsell": {
+     "titel": "Stop-sell",
+     "heading": "Un clic cierra todos los canales.",
+     "text": "Un bloqueo vale en todas partes, no en cuatro extranets uno detrás de otro. El registro muestra qué salió, cuándo y qué respondió el portal.",
+     "punkte": {
+      "a": "Bloqueo puesto",
+      "b": "Enviado a todos los canales",
+      "c": "Registro comprobado"
+     }
+    },
+    "regeln": {
+     "titel": "Reglas por portal",
+     "heading": "Cada portal puede ser distinto.",
+     "text": "Recargos, estancias mínimas y condiciones de cancelación se ajustan por canal. Ningún juego común solo porque un sistema no sepa hacerlo de otra forma.",
+     "punkte": {
+      "a": "Recargo por canal",
+      "b": "Estancia mínima",
+      "c": "Plazo de cancelación"
+     }
+    }
+   }
+  },
+  "direkt": {
+   "metaBeschreibung": "Web de reservas propia, widget de reservas y dominio propio: reservas directas sin comisión de portal, con pago y confirmación.",
+   "headline": "Reservas que son enteramente tuyas.",
+   "sub": "Tu propia página de reservas con disponibilidad, tarifas y pago. Por esas reservas no cobramos comisión; los portales se llevan del 15 al 18 %.",
+   "bildAlt": "Página de un alojamiento con el proceso de reserva",
+   "nutzen": {
+    "a": {
+     "titel": "Web sin agencia",
+     "text": "Creador con plantillas, dominio propio, fotos y textos de los datos de tus alojamientos: online en una tarde."
+    },
+    "b": {
+     "titel": "Widget para tu página",
+     "text": "¿Ya tienes una web? Entonces solo insertas el proceso de reserva y mantienes tu diseño."
+    },
+    "c": {
+     "titel": "Se paga al momento",
+     "text": "Anticipo, saldo y fianza se gestionan automáticamente: el huésped recibe su confirmación sin que hagas nada."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "El marketplace te trae huéspedes que no te conocen.",
+     "text": "myBestDays es nuestro propio marketplace. Allí apareces junto a otros alojamientos sin mantener un segundo sistema: los mismos alojamientos, el mismo calendario.",
+     "punkte": {
+      "a": "Activable canal por canal",
+      "b": "Un calendario para todo",
+      "c": "8 % todo incluido en lugar de comisión de portal"
+     }
+    }
+   },
+   "bildAltBlock": "Vista general de canales con la web propia y el marketplace",
+   "reiter": {
+    "website": {
+     "titel": "Web de reservas",
+     "heading": "Tu página, tus reservas.",
+     "text": "Plantillas, dominio propio, fotos y textos de los datos del alojamiento. El huésped reserva directamente contigo, sin rodeo por un portal.",
+     "punkte": {
+      "a": "Plantillas",
+      "b": "Dominio propio",
+      "c": "Multiidioma"
+     }
+    },
+    "widget": {
+     "titel": "Widget de reservas",
+     "heading": "Para la web que ya tienes.",
+     "text": "Un bloque en tu página actual: disponibilidad, precio y pago, con tu diseño. Sin mudanza, sin proyecto nuevo.",
+     "punkte": {
+      "a": "Código insertado",
+      "b": "Diseño mantenido",
+      "c": "Primera reserva"
+     }
+    },
+    "marktplatz": {
+     "titel": "myBestDays",
+     "heading": "Nuestro marketplace trae huéspedes nuevos.",
+     "text": "Tus alojamientos aparecen en nuestro propio marketplace junto a otros alojamientos: los mismos datos, el mismo calendario, un clic para activarlo.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "zahlung": {
+     "titel": "Pago",
+     "heading": "Pagado antes de que el huésped llegue.",
+     "text": "Anticipo al reservar, saldo antes de la llegada, fianza asegurada. El huésped recibe confirmación y factura automáticamente.",
+     "punkte": {
+      "a": "Anticipo",
+      "b": "Saldo",
+      "c": "Fianza"
+     }
+    }
+   }
+  },
+  "gaeste": {
+   "metaBeschreibung": "Guía digital del huésped, check-in online, mensajes automáticos y conserje con IA en 24 idiomas: del primer contacto a la salida.",
+   "headline": "Atender a los huéspedes sin teclear sin parar.",
+   "sub": "Los mensajes salen automáticamente en el momento adecuado, el conserje responde a las preguntas en 24 idiomas, y tú lo lees todo en una sola bandeja de entrada.",
+   "bildAlt": "Bandeja de entrada con mensajes de huéspedes de varios canales",
+   "nutzen": {
+    "a": {
+     "titel": "Una sola bandeja de entrada",
+     "text": "Airbnb, Booking, correo y WhatsApp llegan a un mismo hilo, con la reserva al lado, en lugar de en cuatro apps."
+    },
+    "b": {
+     "titel": "Mensajes en el momento adecuado",
+     "text": "Confirmación, información de llegada, código de acceso, petición de valoración: se configura una vez y después va solo."
+    },
+    "c": {
+     "titel": "Check-in por adelantado",
+     "text": "El huésped rellena sus datos antes de la llegada. Tú lo recibes en lugar de copiar formularios."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "La guía del huésped sustituye a la carpeta del pasillo.",
+     "text": "Contraseña del wifi, recogida de basura, recomendaciones de restaurantes y normas de la casa: en digital, en el idioma del huésped, modificable en cualquier momento.",
+     "punkte": {
+      "a": "24 idiomas",
+      "b": "Códigos de acceso en el momento adecuado",
+      "c": "Recomendaciones de la zona"
+     }
+    }
+   },
+   "bildAltBlock": "Vista móvil con la ocupación y los mensajes",
+   "reiter": {
+    "posteingang": {
+     "titel": "Bandeja de entrada",
+     "heading": "Airbnb, Booking, correo y WhatsApp en un mismo hilo.",
+     "text": "Todos los mensajes de una reserva están juntos, con contexto, plantillas y traducción. Ya nadie busca en cuatro apps.",
+     "punkte": {
+      "a": "Huésped",
+      "b": "¿A partir de cuándo se puede hacer el check-in?",
+      "c": "A partir de las 15 h; el código te lo envío mañana por la mañana."
+     }
+    },
+    "automatisch": {
+     "titel": "Mensajes automáticos",
+     "heading": "En el momento adecuado, sin recordatorio.",
+     "text": "Confirmación, información de llegada, código de acceso, petición de valoración: se configura una vez y después va solo, en el idioma del huésped.",
+     "punkte": {
+      "a": "Confirmación enviada",
+      "b": "Información de llegada programada",
+      "c": "Petición de valoración"
+     }
+    },
+    "checkin": {
+     "titel": "Check-in online",
+     "heading": "Los datos antes de la llegada, no en la puerta.",
+     "text": "El huésped rellena por adelantado los datos de viajeros y el documento de identidad. Tú lo recibes en lugar de copiar formularios, y cumples con la obligación de registro.",
+     "punkte": {
+      "a": "Datos de viajeros",
+      "b": "Documento de identidad",
+      "c": "Firma"
+     }
+    },
+    "mappe": {
+     "titel": "Guía del huésped",
+     "heading": "Todo lo que el huésped necesita saber.",
+     "text": "Wifi, normas de la casa, recogida de basura y recomendaciones de la zona: en digital, modificable en cualquier momento, en 24 idiomas.",
+     "punkte": {
+      "a": "Huésped",
+      "b": "¿Dónde está la contraseña del wifi?",
+      "c": "En la guía del huésped; te he enviado el enlace."
+     }
+    }
+   }
+  },
+  "zahlungen": {
+   "metaBeschreibung": "Pagos online, anticipos, fianzas y exportaciones listas para contabilidad: cobro y facturación sin trabajo posterior.",
+   "headline": "El dinero llega sin que tengas que perseguirlo.",
+   "sub": "Anticipo al reservar, saldo antes de la llegada, fianza asegurada: se cobran automáticamente y quedan documentados en la reserva.",
+   "bildAlt": "Reserva con el estado de los pagos y los justificantes",
+   "nutzen": {
+    "a": {
+     "titel": "Pagar como siempre",
+     "text": "Tarjeta, Apple Pay, Google Pay, PayPal y métodos locales: el huésped elige el que conoce."
+    },
+    "b": {
+     "titel": "Reglas en lugar de recordatorios",
+     "text": "Cuándo vence qué importe lo fijas una sola vez. Los pagos que faltan los ves antes de que el huésped llegue."
+    },
+    "c": {
+     "titel": "Listo para contabilidad",
+     "text": "Las facturas surgen de la reserva y las exportaciones encajan con la asesoría fiscal, sin tablas hechas a mano."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Los propietarios ven su liquidación por sí mismos.",
+     "text": "Cada propietario tiene su acceso con ocupación, ingresos y liquidaciones. Eso ahorra el correo mensual con la tabla adjunta.",
+     "punkte": {
+      "a": "Un acceso propio por propietario",
+      "b": "Liquidación por alojamiento",
+      "c": "Solo lectura, sin intervenciones"
+     }
+    }
+   },
+   "bildAltBlock": "Vista general con los ingresos y las liquidaciones",
+   "reiter": {
+    "online": {
+     "titel": "Pagos online",
+     "heading": "Tarjeta, wallet, PayPal.",
+     "text": "El huésped paga con el método que conoce. El dinero va a tu cuenta y el estado consta en la reserva.",
+     "punkte": {
+      "a": "Importe pendiente",
+      "b": "Anticipo",
+      "c": "Saldo"
+     }
+    },
+    "plaene": {
+     "titel": "Planes de pago",
+     "heading": "Cuándo vence qué lo decides tú.",
+     "text": "Anticipo, saldo y fianza siguen tus reglas, distintas por alojamiento y por canal si hace falta.",
+     "punkte": {
+      "a": "Regla creada",
+      "b": "Anticipo cobrado",
+      "c": "Saldo pendiente"
+     }
+    },
+    "rechnungen": {
+     "titel": "Facturas",
+     "heading": "De la reserva, no de la tabla.",
+     "text": "Las facturas y los abonos surgen de las cifras reales, con tipo impositivo y serie de numeración. Las exportaciones encajan con la asesoría fiscal.",
+     "punkte": {
+      "a": "Serie de numeración",
+      "b": "Tipos impositivos",
+      "c": "Exportación"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Liquidación al propietario",
+     "heading": "Ingresos, costes, liquidación.",
+     "text": "Cada propietario ve sus alojamientos con ocupación, ingresos y liquidaciones, como acceso propio en lugar de como correo mensual.",
+     "punkte": {
+      "a": "Ingresos",
+      "b": "Costes",
+      "c": "Liquidación"
+     }
+    }
+   }
+  },
+  "preise": {
+   "metaBeschreibung": "Precios dinámicos con mín./máx., rate plans por alojamiento, lógica de temporada y ocupación: más ingresos sin trabajo manual diario.",
+   "headline": "Tarifas que se ocupan de sí mismas.",
+   "sub": "Temporada, ocupación, antelación y día de la semana entran automáticamente en el cálculo. Tus límites siguen siendo tus límites: por debajo del mínimo no pasa nada.",
+   "bildAlt": "Rejilla de precios con precios dinámicos por noche",
+   "nutzen": {
+    "a": {
+     "titel": "Mín. y máx. se respetan",
+     "text": "Tú marcas el marco y el sistema se mueve dentro de él: ningún precio que no quisieras."
+    },
+    "b": {
+     "titel": "Rate plans por alojamiento",
+     "text": "No reembolsable, reserva anticipada, larga estancia: varias tarifas por alojamiento, cada una con sus reglas."
+    },
+    "c": {
+     "titel": "La entrada manual tiene prioridad",
+     "text": "Un precio puesto a mano se queda. El automatismo nunca sobrescribe una decisión consciente."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Los descuentos y recargos van también a los portales.",
+     "text": "Descuentos semanales y mensuales, promociones para reserva anticipada y recargos se publican allí donde están permitidos, no solo en tu vista.",
+     "punkte": {
+      "a": "Descuentos por duración de la estancia",
+      "b": "Promociones con periodo",
+      "c": "Recargos por canal"
+     }
+    }
+   },
+   "bildAltBlock": "Plan de ocupación con los precios por noche",
+   "reiter": {
+    "dynamisch": {
+     "titel": "Precios dinámicos",
+     "heading": "Ocupación, temporada, antelación.",
+     "text": "El precio se mueve entre tu mínimo y tu máximo, según la demanda, el día de la semana y la antelación, recalculado cada noche.",
+     "punkte": {
+      "a": "Mínimo",
+      "b": "Máximo",
+      "c": "Demanda"
+     }
+    },
+    "raten": {
+     "titel": "Rate plans",
+     "heading": "Varios precios para el mismo alojamiento.",
+     "text": "No reembolsable, reserva anticipada, larga estancia: cada tarifa con sus condiciones, y cada una va a los portales que la admiten.",
+     "punkte": {
+      "a": "Tarifa creada",
+      "b": "Condiciones puestas",
+      "c": "A los portales"
+     }
+    },
+    "rabatte": {
+     "titel": "Descuentos",
+     "heading": "Quedarse más, pagar menos.",
+     "text": "Descuentos semanales y mensuales, promociones con periodo, recargos para estancias cortas: visibles directamente en el calendario.",
+     "punkte": {
+      "a": "Descuento semanal",
+      "b": "Descuento mensual",
+      "c": "Promoción"
+     }
+    },
+    "grenzen": {
+     "titel": "Tus límites",
+     "heading": "El automatismo nunca tiene la última palabra.",
+     "text": "Un precio que pones tú se queda. Y por debajo de tu mínimo no pasa nada, ni con el calendario vacío.",
+     "punkte": {
+      "a": "Mínimo",
+      "b": "Entrada manual",
+      "c": "Prioridad"
+     }
+    }
+   }
+  },
+  "team": {
+   "metaBeschreibung": "Roles para propietarios, limpieza, empleados y agencia: cada uno ve solo su área, con tareas y checklists fotográficas.",
+   "headline": "Cada uno ve exactamente lo que necesita.",
+   "sub": "Los propietarios ven sus alojamientos, la limpieza sus servicios, los empleados su área. Las finanzas se quedan donde deben estar.",
+   "bildAlt": "Vista general de tareas con las responsabilidades",
+   "nutzen": {
+    "a": {
+     "titel": "Roles en lugar de acuerdos verbales",
+     "text": "Los permisos dependen del rol, no de la confianza. Un acceso de limpieza no llega a ningún ingreso."
+    },
+    "b": {
+     "titel": "Tareas con prueba",
+     "text": "Las checklists con fotos muestran que el alojamiento se ha entregado, con la hora incluida."
+    },
+    "c": {
+     "titel": "Repartido automáticamente",
+     "text": "Después de cada salida, la limpieza se crea sola, con plazo hasta la siguiente llegada."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Las agencias llevan varios negocios en paralelo.",
+     "text": "Quien alquila para otros gestiona varios propietarios en una sola cuenta, con liquidaciones separadas y accesos propios.",
+     "punkte": {
+      "a": "Varios propietarios",
+      "b": "Liquidación separada",
+      "c": "Permisos por persona"
+     }
+    }
+   },
+   "bildAltBlock": "Lista de reservas con las responsabilidades",
+   "reiter": {
+    "rollen": {
+     "titel": "Roles",
+     "heading": "Cada uno ve su área.",
+     "text": "Agencia, propietario, empleado, limpieza: los permisos dependen del rol. Los ingresos solo los ve quien debe verlos.",
+     "punkte": {
+      "a": "Rol elegido",
+      "b": "Alojamientos asignados",
+      "c": "Permisos comprobados"
+     }
+    },
+    "aufgaben": {
+     "titel": "Tareas",
+     "heading": "La limpieza se crea sola.",
+     "text": "Después de cada salida, la tarea aparece en el plan, con plazo hasta la siguiente llegada. Se cierra con una checklist fotográfica.",
+     "punkte": {
+      "a": "Salida registrada",
+      "b": "Limpieza planificada",
+      "c": "Fotos subidas"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Propietarios",
+     "heading": "Acceso propio en lugar de correo mensual.",
+     "text": "Los propietarios ven la ocupación, los ingresos y las liquidaciones de sus alojamientos, en modo lectura y sin poder intervenir en la operativa.",
+     "punkte": {
+      "a": "Ocupación",
+      "b": "Ingresos",
+      "c": "Liquidación"
+     }
+    },
+    "agentur": {
+     "titel": "Agencia",
+     "heading": "Varios negocios en una sola cuenta.",
+     "text": "Quien alquila para otros lleva varios propietarios en paralelo: liquidaciones separadas, accesos separados, un solo calendario.",
+     "punkte": {
+      "a": "Varios propietarios",
+      "b": "Liquidación separada",
+      "c": "Un solo acceso"
+     }
+    }
+   }
+  },
+  "app": {
+   "metaBeschreibung": "App nativa para la operativa, los propietarios, los huéspedes y la limpieza: ocupación, tareas y mensajes desde cualquier lugar.",
+   "headline": "Tu negocio cabe en el bolsillo.",
+   "sub": "Comprobar la ocupación, crear una reserva, responder un mensaje, marcar una tarea: desde el teléfono, sin portátil.",
+   "bildAlt": "App móvil con la ocupación y las tareas",
+   "nutzen": {
+    "a": {
+     "titel": "Para cada rol",
+     "text": "Propietarios, limpieza y operativa tienen su propia vista: la misma app, permisos distintos."
+    },
+    "b": {
+     "titel": "Avisos que cuentan",
+     "text": "Reserva nueva, cancelación, pregunta de un huésped: te enteras al instante, sin abrir la app."
+    },
+    "c": {
+     "titel": "También para huéspedes",
+     "text": "Los huéspedes encuentran la guía del huésped, el check-in y los mensajes en la app de myBestDays."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Dos apps, porque son dos mundos.",
+     "text": "myNextDays lleva el negocio, myBestDays es del huésped. Apps separadas significa que ningún huésped acaba nunca en tus cifras.",
+     "punkte": {
+      "a": "myNextDays para el negocio",
+      "b": "myBestDays para el huésped",
+      "c": "iOS y Android"
+     }
+    }
+   },
+   "bildAltBlock": "Vista general del negocio desde el escritorio",
+   "reiter": {
+    "betrieb": {
+     "titel": "Operativa desde el móvil",
+     "heading": "Ocupación y reservas bajo control.",
+     "text": "Comprobar el calendario, crear una reserva, cambiar un precio: desde el teléfono, con los mismos datos que en el escritorio.",
+     "punkte": {
+      "a": "Calendario",
+      "b": "Reservas",
+      "c": "Tarifas"
+     }
+    },
+    "meldungen": {
+     "titel": "Avisos",
+     "heading": "Te enteras al instante.",
+     "text": "Una reserva nueva, una cancelación o la pregunta de un huésped llegan como aviso: con un toque estás en la reserva.",
+     "punkte": {
+      "a": "Reserva",
+      "b": "Reserva nueva en julio",
+      "c": "Cancelación del 12 al 14/08"
+     }
+    },
+    "gast": {
+     "titel": "Para el huésped",
+     "heading": "La app de myBestDays.",
+     "text": "Los huéspedes encuentran su reserva, la guía del huésped, el check-in y los mensajes en su propia app, separada de la tuya.",
+     "punkte": {
+      "a": "Reserva",
+      "b": "Guía del huésped",
+      "c": "Check-in"
+     }
+    },
+    "rollen": {
+     "titel": "Para el equipo",
+     "heading": "Limpieza y propietarios.",
+     "text": "El personal de limpieza ve sus servicios con checklist, los propietarios sus alojamientos. La misma app, permisos distintos.",
+     "punkte": {
+      "a": "Servicio pendiente",
+      "b": "Checklist completada",
+      "c": "Fotos enviadas"
+     }
+    }
+   }
+  },
+  "auswertungen": {
+   "metaBeschreibung": "Ocupación, ingresos, ADR y comparativa de canales: informes que muestran a qué se debe, no solo qué ha pasado.",
+   "headline": "Cifras que permiten decidir.",
+   "sub": "Ocupación, ingresos y precio medio por alojamiento, periodo y canal, unos junto a otros en lugar de en cinco exportaciones.",
+   "bildAlt": "Análisis con la ocupación y los ingresos",
+   "nutzen": {
+    "a": {
+     "titel": "Comparar canales",
+     "text": "¿Qué aporta Booking y qué aporta tu propia web? Calculado con la comisión incluida, no solo por ingresos."
+    },
+    "b": {
+     "titel": "Por alojamiento",
+     "text": "Qué alojamiento se sostiene y cuál no, visible en la ocupación y el precio medio."
+    },
+    "c": {
+     "titel": "Informes que llegan solos",
+     "text": "Los informes mensuales van automáticamente a ti y a tus propietarios, en PDF con la estructura habitual."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Pasado y perspectiva en una sola vista.",
+     "text": "Junto a lo que fue está lo que ya está reservado: así ves en febrero si el verano se sostiene, en lugar de notarlo en julio.",
+     "punkte": {
+      "a": "Reservas ya cerradas hacia delante",
+      "b": "Comparación con el año anterior",
+      "c": "Exportación para la asesoría fiscal"
+     }
+    }
+   },
+   "bildAltBlock": "Plan de ocupación de un hotel como base de datos",
+   "reiter": {
+    "auslastung": {
+     "titel": "Ocupación",
+     "heading": "¿Cuán lleno está de verdad?",
+     "text": "Ocupación por alojamiento, mes y canal, en comparación con el año anterior y no por intuición.",
+     "punkte": {
+      "a": "Ocupación",
+      "b": "Año anterior",
+      "c": "Por alojamiento"
+     }
+    },
+    "kanaele": {
+     "titel": "Comparativa de canales",
+     "heading": "¿Qué aporta cada canal?",
+     "text": "Ingresos después de comisión por canal: Booking, Airbnb, tu propia web, myBestDays, unos junto a otros en lugar de en cinco exportaciones.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "berichte": {
+     "titel": "Informes",
+     "heading": "Llegan solos.",
+     "text": "Los informes mensuales van automáticamente a ti y a tus propietarios, en PDF con la estructura habitual.",
+     "punkte": {
+      "a": "Informe creado",
+      "b": "Enviado a los propietarios",
+      "c": "Archivado"
+     }
+    },
+    "ausblick": {
+     "titel": "Perspectiva",
+     "heading": "Lo que ya está reservado.",
+     "text": "Junto a lo que fue están las reservas ya cerradas hacia delante: así ves en febrero si el verano se sostiene.",
+     "punkte": {
+      "a": "Reservado",
+      "b": "Solicitado",
+      "c": "Libre"
+     }
+    }
+   }
+  }
+ },
+ "kontakt": {
+  "meta": {
+   "titel": "Contacto — myNextDays",
+   "beschreibung": "Así puedes contactar con myNextDays: preguntas generales y comerciales a {info}, consultas técnicas a {technik}, por teléfono en el {telefon} — o directamente a través del formulario."
+  },
+  "hero": {
+   "eyebrow": "Contacto",
+   "headlinePre": "Cuéntanos de qué se trata —",
+   "headlineHighlight": "te respondemos",
+   "sub": "Preguntas sobre el producto, sobre el cambio desde otro sistema, sobre la conexión a través de nuestra API o sobre una colaboración: elige tu asunto y el mensaje llega directamente a las personas que saben del tema.",
+   "sitz": "Sede en Bindslev, Dinamarca",
+   "sprachen": "Software en 24 idiomas",
+   "eu": "Alojado en la UE, conforme al RGPD"
+  },
+  "wege": {
+   "eyebrow": "Cómo llegar a nosotros",
+   "heading": "¿Quién se ocupa de tu asunto?",
+   "sub": "Dos casillas de correo y un chat. Lo comercial y todo lo previo al inicio va a la casilla general, todo lo técnico directamente al equipo de desarrollo — así nada acaba en una cola que nadie mira.",
+   "allgemein": {
+    "titel": "Producto, precios y ventas",
+    "text": "¿Quieres saber si myNextDays encaja con tu negocio, qué implica el cambio desde otro sistema o cómo funcionan la factura y la suscripción? Este es el camino correcto — también para prensa, colaboraciones y consultas sobre protección de datos.",
+    "aktion": "Escribir un mensaje"
+   },
+   "technik": {
+    "titel": "Técnica, API y seguridad",
+    "text": "¿Algo no funciona, una conexión con un portal de reservas falla, desarrollas con nuestra API o has encontrado un fallo de seguridad? Estas consultas van directamente al equipo de desarrollo y no pasan por el departamento comercial.",
+    "aktion": "Escribir un mensaje"
+   },
+   "hilfe": {
+    "titel": "Ayuda y chat",
+    "text": "Las guías de cada área están en el centro de ayuda. Y si hace falta rapidez: abajo a la derecha de cada página hay un chat en el que responde una persona real — sin cuenta y sin registro.",
+    "aktion": "Ir al centro de ayuda",
+    "chatHinweis": "Chat abajo a la derecha en cada página"
+   }
+  },
+  "formular": {
+   "eyebrow": "Mensaje",
+   "heading": "Escríbenos",
+   "sub": "Un solo formulario para todo — tu asunto decide quién lo recibe.",
+   "ablaufTitel": "Qué pasa después",
+   "ablauf": {
+    "eingang": {
+     "titel": "El mensaje sale",
+     "text": "A través de nuestro propio servidor de correo en Dinamarca — sin ningún servicio de formularios de terceros por cuyas manos pasen tus datos."
+    },
+    "zuordnung": {
+     "titel": "Llega a la casilla correcta",
+     "text": "Lo comercial a {info}, lo técnico a {technik}. Cuál de las dos es, lo decide nuestro servidor según tu asunto."
+    },
+    "antwort": {
+     "titel": "Te respondemos directamente",
+     "text": "Como un correo normal a la dirección que indicas aquí — puedes responder a ese mensaje sin más."
+    }
+   },
+   "hinweisPostfach": "Dos casillas para que nada se quede sin atender: {info} para todo lo comercial, {technik} para todo lo técnico. Cuál será, lo determina nuestro servidor según tu asunto — este formulario no puede indicar ningún destino.",
+   "thema": "¿De qué se trata?",
+   "themen": {
+    "allgemein": "Pregunta general",
+    "vertrieb": "Producto, precios y ventas",
+    "abrechnung": "Factura y suscripción",
+    "technik": "Problema técnico",
+    "api": "API y desarrolladores",
+    "partner": "Colaboración",
+    "presse": "Prensa y medios",
+    "datenschutz": "Protección de datos",
+    "sicherheit": "Informar de un fallo de seguridad"
+   },
+   "zielAllgemein": "Va a {email}",
+   "zielTechnik": "Va a {email} — nuestro equipo de desarrollo",
+   "name": "Nombre",
+   "email": "Correo electrónico",
+   "emailPlatzhalter": "nombre@ejemplo.es",
+   "firma": "Negocio",
+   "telefon": "Teléfono",
+   "optional": "opcional",
+   "nachricht": "Tu mensaje",
+   "nachrichtPlatzhalter": "Describe tu asunto — cuanto más preciso, más adecuada será la respuesta.",
+   "absenden": "Enviar mensaje",
+   "laeuft": "Enviando …",
+   "dankeTitel": "Recibido.",
+   "nochEine": "Escribir otro mensaje",
+   "fehlerAllgemein": "No ha funcionado. Vuelve a intentarlo más tarde.",
+   "fehlerPruefung": "La comprobación de seguridad no se ha superado. Vuelve a cargar la página y envía el mensaje otra vez.",
+   "fehlerFelder": "Revisa tus datos: se necesitan nombre, correo electrónico y un mensaje de al menos 20 caracteres.",
+   "fehlerZuOft": "Se han enviado demasiados mensajes desde esta conexión. Espera un momento y vuelve a intentarlo.",
+   "fehlerSpaeter": "El mensaje no se puede entregar en este momento. Vuelve a intentarlo más tarde o escribe directamente a {email}.",
+   "datenschutzHinweis": "Usamos tus datos únicamente para responder a esta consulta. Más detalles en la <link>política de privacidad</link>.",
+   "recaptchaHinweis": "Este formulario está protegido por reCAPTCHA. Se aplican la <datenschutz>política de privacidad</datenschutz> y las <bedingungen>condiciones de uso</bedingungen> de Google."
+  },
+  "anschrift": {
+   "eyebrow": "Dirección",
+   "heading": "Así nos contactas directamente",
+   "firmaEyebrow": "Datos de la empresa",
+   "firmaHeading": "Con quién tratas",
+   "firmaText": "Quién es la parte contratante no debería tener que buscarse en la letra pequeña. Por eso los datos registrales están aquí — los mismos que en el aviso legal.",
+   "firma": "Empresa",
+   "register": "Registro",
+   "ustId": "Número de identificación a efectos del IVA",
+   "direktion": "Gerencia",
+   "impressum": "Ver el aviso legal",
+   "datenschutz": "Ver la protección de datos"
+  },
+  "faq": {
+   "eyebrow": "Preguntas frecuentes",
+   "heading": "Preguntas sobre el contacto",
+   "sub": "Quién responde, cuánto tarda y qué pasa con tus datos.",
+   "wer": {
+    "frage": "¿Quién me responde?",
+    "antwort": "Una persona del equipo, no un sistema de tickets con número. myNextDays está dirigido por su propietario: a las preguntas comerciales responde alguien que usa el software a diario, a las técnicas el equipo de desarrollo."
+   },
+   "postfach": {
+    "frage": "¿Cómo sé dónde llega mi mensaje?",
+    "antwort": "Debajo del campo de selección aparece la dirección de destino de cada asunto. Los asuntos generales, comerciales y de redacción van a {info}; las consultas técnicas, las preguntas sobre la API y los avisos de seguridad, a {technik}. La asignación la hace nuestro servidor — el formulario no puede indicar ninguna casilla, para que no se pueda usar de forma indebida como vía de envío de mensajes a terceros."
+   },
+   "sprache": {
+    "frage": "¿En qué idioma puedo escribir?",
+    "antwort": "Escribe en el idioma en el que estás leyendo esta página — lo vemos en tu consulta y respondemos en él en la medida de nuestras posibilidades. En alemán, danés e inglés respondemos siempre."
+   },
+   "dauer": {
+    "frage": "¿Cuánto tarda una respuesta?",
+    "antwort": "Por lo general, en pocas horas; los fines de semana y festivos puede tardar más. Para los avisos de seguridad: llegan al equipo de desarrollo sin pasar por el departamento comercial."
+   },
+   "telefon": {
+    "frage": "¿Puedo llamar también?",
+    "antwort": "Sí, en el {telefon}. Una llamada es la vía más rápida para todo lo que se habla mejor de lo que se escribe — en caso de fallos técnicos, un mensaje suele ser mejor, porque permite adjuntar mensajes de error y capturas de pantalla."
+   },
+   "bestaetigung": {
+    "frage": "¿Recibo una confirmación de recepción por correo electrónico?",
+    "antwort": "No, y es deliberado. Una confirmación automática iría a cualquier dirección que se escriba aquí — con eso se podría usar nuestro servidor de correo para escribir a casillas ajenas. Por eso la confirmación aparece aquí en la página, en cuanto el mensaje ha llegado. Tus datos los usamos exclusivamente para responder a esta consulta."
+   }
+  }
+ },
+ "help": {
+  "heroTitle": "¿Cómo podemos ayudarle?",
+  "heroSubtitle": "Busque en la base de conocimientos o encuentre soluciones paso a paso para su día a día con myNextDays.",
+  "searchPlaceholder": "¿Qué está buscando?",
+  "searchAria": "Buscar en la ayuda",
+  "contact": "Contact",
+  "home": "Inicio de la ayuda",
+  "articles": "{count, plural, one {# artículo} other {# artículos}}",
+  "collectionKbTitle": "Base de conocimientos",
+  "collectionKbDesc": "Todo sobre alojamientos, precios, calendario, portales y su cuenta.",
+  "collectionUsecasesTitle": "Casos de uso",
+  "collectionUsecasesDesc": "Soluciones paso a paso para situaciones habituales del día a día.",
+  "helpfulQuestion": "¿Le ha resultado útil este artículo?",
+  "helpfulYes": "Sí",
+  "helpfulNo": "No",
+  "helpfulThanks": "¡Gracias por sus comentarios!",
+  "related": "Más artículos en {category}",
+  "searchTitle": "Buscar",
+  "results": "{count, plural, one {# resultado para «{query}»} other {# resultados para «{query}»}}",
+  "noResultsTitle": "No se han encontrado artículos",
+  "noResultsHintPre": "Pruebe con otros términos de búsqueda o",
+  "noResultsHintLink": "explore las categorías",
+  "browseCategories": "Explorar las categorías",
+  "brandTitle": "Ayuda de myNextDays"
  }
 }

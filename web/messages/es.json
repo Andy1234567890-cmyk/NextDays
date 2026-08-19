@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "¿Cómo podemos ayudarle?",
-    "heroSubtitle": "Busque en la base de conocimientos o encuentre soluciones paso a paso para su día a día con myNextDays.",
-    "searchPlaceholder": "¿Qué está buscando?",
-    "searchAria": "Buscar en la ayuda",
-    "contact": "Contact",
-    "home": "Inicio de la ayuda",
-    "articles": "{count, plural, one {# artículo} other {# artículos}}",
-    "collectionKbTitle": "Base de conocimientos",
-    "collectionKbDesc": "Todo sobre alojamientos, precios, calendario, portales y su cuenta.",
-    "collectionUsecasesTitle": "Casos de uso",
-    "collectionUsecasesDesc": "Soluciones paso a paso para situaciones habituales del día a día.",
-    "helpfulQuestion": "¿Le ha resultado útil este artículo?",
-    "helpfulYes": "Sí",
-    "helpfulNo": "No",
-    "helpfulThanks": "¡Gracias por sus comentarios!",
-    "related": "Más artículos en {category}",
-    "searchTitle": "Buscar",
-    "results": "{count, plural, one {# resultado para «{query}»} other {# resultados para «{query}»}}",
-    "noResultsTitle": "No se han encontrado artículos",
-    "noResultsHintPre": "Pruebe con otros términos de búsqueda o",
-    "noResultsHintLink": "explore las categorías",
-    "browseCategories": "Explorar las categorías",
-    "brandTitle": "Ayuda de myNextDays"
-  },
   "common": {
     "save": "Guardar",
     "cancel": "Cancelar",
@@ -4540,7 +4515,10 @@
       "photos": "Fotos",
       "noPhotosFound": "No se han encontrado fotos para esta reserva.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "a través de {channel}",
+      "receivedOn": "recibida por nosotros el {date}",
+      "bookedOn": "reservada el {date}"
     },
     "dashboard": {
       "todayCheckouts": "Salidas",

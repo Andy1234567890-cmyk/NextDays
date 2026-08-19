@@ -26,6 +26,7 @@ import {
   PreisverlaufIllustration,
   SCHRITT_ILLUSTRATIONEN,
 } from "./illustrationen";
+import { HILFE_URL } from "@/lib/marketing-url";
 
 export function ModulVerkaufsseite({ eintrag }: { eintrag: Erweiterung }) {
   const detail = `/erweiterungen/${eintrag.slug}`;
@@ -138,7 +139,7 @@ export function ModulVerkaufsseite({ eintrag }: { eintrag: Erweiterung }) {
           <Link href={detail}>Modul ansehen und aktivieren</Link>
         </Button>
         <a
-          href={eintrag.links[0]?.href ?? "/hilfe"}
+          href={eintrag.links[0]?.href ?? HILFE_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="text-sm text-muted-foreground underline"

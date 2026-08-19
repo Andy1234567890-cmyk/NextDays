@@ -7,7 +7,7 @@
   "funktionen": "Funktsioonid",
   "preise": "Hinnad",
   "kanaele": "Kanalid",
-  "kunden": "Kliendid",
+  "ueberUns": "Meist",
   "ressourcen": "Materjalid",
   "sprache": "Keel",
   "spracheWaehlen": "Vali keel",
@@ -425,7 +425,7 @@
   "ressourcen": {
    "blog": "Blogi",
    "hilfeCenter": "Abikeskus",
-   "webinare": "Veebiseminarid",
+   "status": "Süsteemi olek",
    "leitfaeden": "Juhendid",
    "api": "API dokumentatsioon"
   },
@@ -441,7 +441,8 @@
   "datenschutz": "Privaatsus",
   "impressum": "Õiguslik teave",
   "cookies": "Küpsiste poliitika",
-  "avv": "Andmete töötlemine"
+  "avv": "Andmete töötlemine",
+  "kontoLoeschen": "Kustuta konto"
  },
  "abschluss": {
   "heading": "Valmis oma majutusettevõtet ühest kohast juhtima?",
@@ -593,5 +594,1014 @@
    "provision": "Oma veebileht {direkt} · portaalid {portale}",
    "tarif": "Üks pakett kõigile, sh 1. objekt"
   }
+ },
+ "ueberUns": {
+  "meta": {
+   "titel": "Meist — myNextDays",
+   "beschreibung": "myNextDays ApS Taanist Bindslevist: miks ehitasid tegutsevad väljaüürijad oma majutuse haldussüsteemi koos kanalihalduriga, mille eest me seisame ja kes on selle taga."
+  },
+  "hero": {
+   "eyebrow": "Meist",
+   "headlinePre": "Üürime ise välja. Sellepärast on olemas",
+   "headlineHighlight": "myNextDays",
+   "sub": "myNextDays ApS on omanike juhitud ettevõte Bindslevis Põhja-Jüütimaal. Üürime välja oma puhkemajutust — ja ehitasime platvormi, mida meil igapäevatöös puudu jäi: kalender, kanalid, külalised, maksed ja arveldus ühes kohas.",
+   "sitz": "Asukoht Taanis",
+   "eu": "Majutatud ELis, GDPR-iga kooskõlas",
+   "start": "Algus 1. septembril 2026",
+   "sprachen": "27 riiki, 24 keelt",
+   "ctaTrial": "Proovi 30 päeva tasuta",
+   "ctaKontakt": "Kirjuta meile"
+  },
+  "warum": {
+   "eyebrow": "Miks me olemas oleme",
+   "heading": "Sündinud omaenda üüriäri argipäevast.",
+   "p1": "Igaüks, kes välja üürib, teab seda õhtut, mil sama nädal on müüdud kaks korda, sest üks kanal ei saanud sulgemist kätte. Seal lõpetasime tööriista otsimise ja hakkasime seda ise ehitama.",
+   "p2": "Olemasolevad süsteemid olid kas tehtud hotelliketidele — keerukuse ja hinnaga, mida paari objektiga ettevõte ei kanna — või lõppesid täpselt seal, kus tegelik töö algab: arveldus, omanikud, koristus ja maksud 27 riigis.",
+   "p3": "myNextDays on vastus sellele: täisväärtuslik majutuse haldussüsteem koos kanalihalduriga ettevõtetele, kes juhivad oma objekte ise — ühest puhkemajast kuni mitme toatüübiga hotellini.",
+   "bildFerienobjekt": "Puhkemaja mere ääres",
+   "bildHotel": "Hotellituba tehtud voodiga"
+  },
+  "bento": {
+   "eyebrow": "Mis on selle taga",
+   "heading": "Numbrid, mida suudame tõendada.",
+   "sub": "Ei mingeid kliendinumbreid ega hinnanguid: platvorm avatakse 1. septembril 2026. See, mis siin seisab, on tootes endas kontrollitav.",
+   "vermieter": {
+    "titel": "Ehitatud väljaüürijate, mitte joonestuslaua taga",
+    "text": "Iga funktsioon töötab kõigepealt meie enda üüriäris ja alles siis jõuab tootesse. Mis seal igapäevatöös vastu ei pea, ei jõua välja.",
+    "bildAlt": "Üürimisagentuuri meeskond tööl"
+   },
+   "laender": {
+    "wert": "27",
+    "titel": "Euroopa riiki",
+    "text": "Iga riigi valuuta, maksumäärade ja reeglitega — mitte ühe eurovormiga kõigile."
+   },
+   "sprachen": {
+    "wert": "24",
+    "titel": "Keelt",
+    "text": "Kasutajaliides, külalissuhtlus ja õigustekstid, mitte ainult avaleht."
+   },
+   "kanaele": {
+    "wert": "56",
+    "titel": "Broneerimisportaali",
+    "text": "Booking.com, Airbnb, Expedia, Vrbo ja palju teisi ühe ühenduse kaudu."
+   },
+   "eu": {
+    "titel": "Ehitatud ELis, hallatud ELis",
+    "text": "Serverid ja andmed asuvad Euroopa Liidus, töö järgib GDPR-i ja andmetöötlus on kirjalikult reguleeritud. Külaliste andmeid haldava ettevõtte jaoks pole see joonealune märkus, vaid eeldus."
+   }
+  },
+  "zeitleiste": {
+   "eyebrow": "Senine tee",
+   "heading": "Lühike lugu, kontrollitavad sammud.",
+   "sub": "Oleme noored — ja kirjutame pigem neli tõendatud etappi kui välja mõeldud ajaloo.",
+   "airsmil": {
+    "datum": "Lähtepunkt",
+    "titel": "Argipäev omaenda ettevõttes",
+    "text": "Omad objektid mitmes kanalis korraga: topelttöö, hilinenud sulgemised, arveldus tabelis. Neist hõõrdumistest sai nõuete nimekiri."
+   },
+   "gruendung": {
+    "datum": "1. juuli 2026",
+    "titel": "myNextDays ApS asutatud",
+    "text": "Kantud Taani äriregistrisse numbriga CVR 46615182, asukohaga Bindslevis Põhja-Jüütimaal."
+   },
+   "beta": {
+    "datum": "Suvi 2026",
+    "titel": "Beeta päris objektidega",
+    "text": "Broneeringud saabuvad kanalitest reaalajas, hinnad, saadavus ja sulgemised liiguvad sama teed tagasi — päris objektide ja päris külalistega, mitte testkeskkonnas."
+   },
+   "start": {
+    "datum": "1. september 2026",
+    "titel": "Algus 27 riigis",
+    "text": "24 keeles, mitme valuutaga, myBestDaysi turuplatsiga ja kahe rakendusega — ettevõttele ja külalisele."
+   }
+  },
+  "marken": {
+   "eyebrow": "Kaks kaubamärki, üks platvorm",
+   "heading": "myNextDays ettevõttele, myBestDays külalisele.",
+   "sub": "Mõlemad kuuluvad myNextDays ApS-ile ja töötavad samal tehnikal — neid eristab see, kes neid kasutab.",
+   "nextdays": {
+    "rolle": "Ettevõtetele",
+    "text": "Majutuse haldussüsteem ja kanalihaldur: koht, kus ettevõte juhib oma objekte, määrab hinnad ja arveldab raha.",
+    "punkte": {
+     "kalender": "Täituvusplaan kõigi objektide ja üksuste kohta, reaalajas",
+     "portale": "Üks ühendus kõigi portaalidega — saadavus, hinnad ja sulgemised lähevad kõikjale korraga",
+     "geld": "Maksed, arved, komisjonitasud ja omanike arveldus",
+     "team": "Oma rakendus omanikele, töötajatele ja koristusele"
+    }
+   },
+   "bestdays": {
+    "rolle": "Külalistele",
+    "text": "Meie oma turuplats: külalised leiavad sealt samad objektid ja broneerivad otse ettevõttelt — tunduvalt madalama komisjonitasuga kui suurte portaalide kaudu.",
+    "punkte": {
+     "direkt": "Broneering otse ettevõttelt, ilma vahendajata",
+     "provision": "Madalam komisjonitasu kui suurtes portaalides",
+     "app": "Oma rakendus otsimiseks, broneerimiseks ja viibimiseks"
+    }
+   },
+   "hinweis": "Objekti müüakse mõlemat teed pidi korraga — lisaks Booking.comi, Airbnb ja teiste portaalide kaudu. Millise kanali ettevõte sisse lülitab, otsustab ta kanali kaupa."
+  },
+  "werte": {
+   "eyebrow": "Põhimõtted",
+   "heading": "Mille järgi meid mõõta.",
+   "sub": "Kuus punkti, mida saab kontrollida tootes ja meie dokumentides — mitte kavatsuste avaldus.",
+   "doppelbuchung": {
+    "titel": "Ei mingeid topeltbroneeringuid",
+    "text": "Meil on saadavus vabade üksuste arv, mitte linnuke. See jõuab reaalajas igasse kanalisse ja sulgemine sulgeb kõikjal — mitte ainult seal, kus see sisestati."
+   },
+   "preise": {
+    "titel": "Hinnad, mida tead ette",
+    "text": "Üks pakett, ilma miinimumtähtaja ja seadistustasuta. See, mis maksab lisaks, on summaga hinnalehel, mitte müügikõnes."
+   },
+   "europa": {
+    "titel": "Euroopa ei ole tõlkeprojekt",
+    "text": "27 riiki tähendab 27 valuutat, maksumäära ja aruandekohustust — kuni arve, külalisele saadetava e-kirja ja väljamakseni. Kui mõni andmeväli puudub, ütleme seda, selle asemel et sisestada usutav väärtus."
+   },
+   "daten": {
+    "titel": "Andmed jäävad ELi",
+    "text": "Töö ja serverid Euroopa Liidus, GDPR alusena, andmetöötluse leping standardina. Ettevõttes näevad külaliste andmeid ainult need rollid, kes neid vajavad."
+   },
+   "unabhaengig": {
+    "titel": "Omanike juhitud",
+    "text": "Meie taga pole kontserni ega väljastpoolt tulevat teekaarti. Mida järgmisena ehitame, otsustame koos ettevõtetega, kes tarkvara iga päev kasutavad."
+   },
+   "selbst": {
+    "titel": "Kasutame seda ise",
+    "text": "Meie oma objektid töötavad samal platvormil kui klientide omad. Viga tabab kõigepealt meid — ausaim kvaliteedikontroll, mida teame."
+   }
+  },
+  "menschen": {
+   "eyebrow": "Inimesed selle taga",
+   "heading": "Väikesed, kättesaadavad, praktikast.",
+   "sub": "myNextDays ApS-i juhatus nii, nagu see on kantud Taani äriregistrisse.",
+   "jeanine": {
+    "rolle": "Asutaja ja juhataja",
+    "text": "Juhib meie enda üüriäri ja toob külaliste, kanalite ja koristusega täidetud argipäeva igasse tooteotsusesse."
+   },
+   "torsten": {
+    "rolle": "Juhataja",
+    "text": "Hoiab kõik niidid koos ja toetab tiimi just seal, kus parasjagu vaja. Toob kaasa oma mitmekülgse praktilise kogemuse, et leida tagaplaanil kiireid ja pragmaatilisi lahendusi."
+   }
+  },
+  "unternehmen": {
+   "eyebrow": "Ettevõte",
+   "heading": "Kellega on tegemist.",
+   "firma": "Ettevõte",
+   "sitz": "Aadress",
+   "register": "Äriregister",
+   "ustId": "Käibemaksukohustuslase number",
+   "direktion": "Juhatus",
+   "impressum": "Täielikud andmed teenuse osutaja kohta",
+   "kontaktTitel": "Otsekontakt",
+   "kontaktText": "Küsimused toote kohta, teisest süsteemist üleminekust või koostööst? Vastab keegi, kes tarkvara ise kasutab."
+  }
+ },
+ "funktionen": {
+  "rahmen": {
+   "ctaTesten": "Proovi 30 päeva tasuta",
+   "ctaDemo": "Vaata demo",
+   "weiter": "Edasi teiste funktsioonide juurde",
+   "mehr": "Vaata",
+   "bereich": {
+    "verkauf": "Müük",
+    "gast": "Külaline ja raha",
+    "betrieb": "Tegevus"
+   },
+   "reiterHeading": "Mis selle taga täpsemalt on?"
+  },
+  "uebersicht": {
+   "metaTitel": "Funktsioonid — kõik väljaüürimiseks ja hotellile | myNextDays",
+   "metaBeschreibung": "Kalender, channel manager, otsebroneering, külalissuhtlus, maksed, hinnad, meeskond, rakendus ja analüütika — ühes süsteemis, sisaldub igas paketis.",
+   "eyebrow": "Funktsioonid",
+   "headline": "Kõik, mida igapäevatöö vajab. Ühes süsteemis.",
+   "sub": "Üheksa valdkonda, üks sisselogimine. Iga neist kuulub põhipaketti — midagi ei alga alles kallimas paketis.",
+   "bereichSub": {
+    "verkauf": "Ole nähtav ja saa broneeringuid",
+    "gast": "Esimesest kontaktist kuni raha laekumiseni",
+    "betrieb": "Kes teeb mida — ja mis sellest tuli"
+   }
+  },
+  "pms": {
+   "metaBeschreibung": "Üks kalender kõigi objektide jaoks: täituvusplaan, broneeringud, ülesanded ja objektiandmed ühes kohas — puhkemajutusele ja hotellidele.",
+   "headline": "Üks kalender kõigele, mida välja üürid.",
+   "sub": "Täituvus, broneeringud ja objektiandmed on ühes kohas — olgu see üks puhkekorter või kaksteist toatüüpi mitme üksusega.",
+   "bildAlt": "Täituvusplaan mitme kanali broneeringutega",
+   "nutzen": {
+    "a": {
+     "titel": "Kõik ühe pilguga",
+     "text": "Täituvusplaan näitab iga üksust, iga broneeringut ja iga sulgemist ühes vaates — värv kanali kaupa."
+    },
+    "b": {
+     "titel": "Broneering sekunditega",
+     "text": "Loo, tõsta või tühista broneering ilma vaadet vahetamata. Vabanenud ööd lähevad kohe uuesti müüki."
+    },
+    "c": {
+     "titel": "Objektiandmed, mis kehtivad kõikjal",
+     "text": "Sisustusandmed, fotod ja reeglid sisestad korra — portaalid ja sinu enda veebisait saavad need automaatselt."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Üks objekt, mitu üksust — õigesti kajastatud.",
+     "text": "Viis ühesugust stuudiot on üks tüüp viie üksusega, mitte viis korda hooldatud objekt. Saadavus on arv, täpselt nii, nagu portaalid seda ootavad.",
+     "punkte": {
+      "a": "Üksused objektitüübi kaupa",
+      "b": "Hoone koondab mitu tüüpi",
+      "c": "Saadavus arvuna, mitte jah/ei"
+     }
+    }
+   },
+   "bildAltBlock": "Hotelli täituvusplaan toatüüpidega",
+   "reiter": {
+    "kalender": {
+     "titel": "Täituvusplaan",
+     "heading": "Iga üksus, iga öö, üks pilt.",
+     "text": "Plaan näitab broneeringuid, sulgemisi ja vabu öid kõrvuti — värv kanali kaupa ja külalise nimi. Lohistamine tõstab broneeringut, klõps loob uue.",
+     "punkte": {
+      "a": "Värv kanali kaupa",
+      "b": "Lohista ja aseta",
+      "c": "Kuni 500 objekti"
+     }
+    },
+    "einheiten": {
+     "titel": "Üksused",
+     "heading": "Viis ühesugust stuudiot on üks tüüp.",
+     "text": "Sa haldad tüüpi ja ütled, mitu üksust sellest on. Portaalid saavad koguse, mitte jah/ei-saadavuse — täpselt nii, nagu nad ootavad.",
+     "punkte": {
+      "a": "Tüüp loodud",
+      "b": "Üksused määratud",
+      "c": "Kogus portaalidesse"
+     }
+    },
+    "reservierung": {
+     "titel": "Broneeringud",
+     "heading": "Päringust lahkumiseni.",
+     "text": "Igal broneeringul on oma ajalugu: maksed, sõnumid, ülesanded ja muudatused on ühes kohas — jälgitavad ka nädalaid hiljem.",
+     "punkte": {
+      "a": "Ajalugu broneeringu kaupa",
+      "b": "Muudatused logitud",
+      "c": "Tühistamine põhjusega"
+     }
+    },
+    "objektdaten": {
+     "titel": "Objektiandmed",
+     "heading": "Sisesta korra, kehtib kõikjal.",
+     "text": "Sisustus, fotod, reeglid ja kirjeldused on objekti küljes. Sealt lähevad need portaalidesse ja sinu enda veebisaidile — ilma teistkordse sisestamiseta.",
+     "punkte": {
+      "a": "Fotod ja sisustus",
+      "b": "Majareeglid",
+      "c": "Jagatakse automaatselt"
+     }
+    }
+   }
+  },
+  "channel": {
+   "metaBeschreibung": "Channel manager puhkekorterile ja hotellile: Airbnb, Booking.com, Expedia, Vrbo ja Google reaalajas sünkroonis — ilma topeltbroneeringuteta.",
+   "headline": "Üks kalender. Kõik broneerimisplatvormid.",
+   "sub": "Saadavus, hinnad ja sisu lähevad portaalidesse reaalajas, broneeringud tulevad samas taktis tagasi. Topeltbroneeringuid ei tekigi.",
+   "bildAlt": "Kanalite ülevaade ühendatud broneerimisplatvormidega",
+   "nutzen": {
+    "a": {
+     "titel": "56 platvormi",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google ja palju teisi — ühendatud ühe liidese kaudu, mitte isetehtud lahendustega."
+    },
+    "b": {
+     "titel": "Kaks suunda, üks takt",
+     "text": "Mida siin muudad, on seal sekunditega näha. Mis seal broneeritakse, sulgeb siin kohe ööd."
+    },
+    "c": {
+     "titel": "Iga portaal eraldi",
+     "text": "Hinnad, lisatasud ja reeglid kehtivad portaali kaupa — mitte üks määr, mis peab kõikjal sama olema ainult sellepärast, et nii oleks lihtsam."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Stop-sell mõjub kõikjal. Ilma mõtlemata.",
+     "text": "Kui sulged kuupäeva, on see igas ühendatud portaalis kinni. Ei mingit järelsisestamist viies ekstranetis, ei ühtki nädalavahetusel ununenud kanalit.",
+     "punkte": {
+      "a": "Kohene sulgemine kõigis kanalites",
+      "b": "Miinimumpeatus portaali kaupa",
+      "c": "Logi: mis läks välja ja millal"
+     }
+    }
+   },
+   "bildAltBlock": "Täituvusplaan mitme portaali broneeringutega",
+   "reiter": {
+    "portale": {
+     "titel": "Portaalid",
+     "heading": "56 platvormi ühe liidese taga.",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google ja myBestDays on sama ühenduse küljes. Uus portaal on üks ühendus, mitte projekt.",
+     "punkte": {
+      "a": "Airbnb",
+      "b": "Booking.com",
+      "c": "myBestDays"
+     }
+    },
+    "sync": {
+     "titel": "Sünkroonimine reaalajas",
+     "heading": "Mis siin juhtub, on seal sekunditega.",
+     "text": "Saadavus, hinnad ja piirangud lähevad kohe välja; broneeringud tulevad samas taktis tagasi ja sulgevad ööd, enne kui keegi jõuab kaks korda broneerida.",
+     "punkte": {
+      "a": "Saadavus",
+      "b": "Hinnad",
+      "c": "Piirangud"
+     }
+    },
+    "stopsell": {
+     "titel": "Stop-sell",
+     "heading": "Üks klõps sulgeb kõik kanalid.",
+     "text": "Üks sulgemine kehtib kõikjal — mitte neljas ekstranetis järjest. Logi näitab, mis läks välja, millal ja mida portaal vastas.",
+     "punkte": {
+      "a": "Sulgemine seatud",
+      "b": "Saadetud kõigisse kanalitesse",
+      "c": "Logi kontrollitud"
+     }
+    },
+    "regeln": {
+     "titel": "Reeglid portaali kaupa",
+     "heading": "Iga portaal võib olla erinev.",
+     "text": "Lisatasud, miinimumpeatused ja tühistamisreeglid seadistad kanali kaupa. Mitte üks ühine määr ainult sellepärast, et süsteem teisiti ei oska.",
+     "punkte": {
+      "a": "Lisatasu kanali kaupa",
+      "b": "Miinimumpeatus",
+      "c": "Tühistamistähtaeg"
+     }
+    }
+   }
+  },
+  "direkt": {
+   "metaBeschreibung": "Oma broneerimisveebisait, broneerimisvidin ja oma domeen — otsebroneeringud ilma portaali komisjonita, koos makse ja kinnitusega.",
+   "headline": "Broneeringud, mis kuuluvad täielikult sulle.",
+   "sub": "Sinu enda broneerimisleht koos saadavuse, hindade ja maksega. Selle kaudu tulnud broneeringutelt me komisjonitasu ei võta — portaalid võtavad 15 kuni 18 protsenti.",
+   "bildAlt": "Objekti leht broneerimisteekonnaga",
+   "nutzen": {
+    "a": {
+     "titel": "Veebisait ilma agentuurita",
+     "text": "Koostaja koos mallidega, oma domeen, fotod ja tekstid sinu objektiandmetest — veebis ühe pärastlõunaga."
+    },
+    "b": {
+     "titel": "Vidin sinu lehele",
+     "text": "Sul on veebisait juba olemas? Siis paigutad sinna ainult broneerimisteekonna ja säilitad oma kujunduse."
+    },
+    "c": {
+     "titel": "Makstakse kohe",
+     "text": "Ettemaks, jääkmakse ja tagatisraha käivad automaatselt — külaline saab oma kinnituse ilma sinu sekkumiseta."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Turuplats toob sulle külalisi, kes sind ei tunne.",
+     "text": "myBestDays on meie oma turuplats. Seal seisad teiste majutusasutuste kõrval, ilma teist süsteemi hooldamata — samad objektid, sama kalender.",
+     "punkte": {
+      "a": "Lülitatav sisse kanali kaupa",
+      "b": "Üks kalender kõigele",
+      "c": "8 % all-in portaali komisjoni asemel"
+     }
+    }
+   },
+   "bildAltBlock": "Kanalite ülevaade oma veebisaidi ja turuplatsiga",
+   "reiter": {
+    "website": {
+     "titel": "Broneerimisveebisait",
+     "heading": "Sinu leht, sinu broneeringud.",
+     "text": "Mallid, oma domeen, fotod ja tekstid objektiandmetest. Külaline broneerib otse sinult — ilma ringi portaali kaudu.",
+     "punkte": {
+      "a": "Mallid",
+      "b": "Oma domeen",
+      "c": "Mitmekeelne"
+     }
+    },
+    "widget": {
+     "titel": "Broneerimisvidin",
+     "heading": "Veebisaidile, mis sul juba on.",
+     "text": "Üks element sinu olemasoleval lehel: saadavus, hind ja makse, sinu kujunduses. Ei mingit kolimist, ei uut projekti.",
+     "punkte": {
+      "a": "Kood lisatud",
+      "b": "Kujundus üle võetud",
+      "c": "Esimene broneering"
+     }
+    },
+    "marktplatz": {
+     "titel": "myBestDays",
+     "heading": "Meie turuplats toob uusi külalisi.",
+     "text": "Sinu objektid on meie oma turuplatsil teiste majutusasutuste kõrval — samad andmed, sama kalender, üks klõps sisselülitamiseks.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "zahlung": {
+     "titel": "Makse",
+     "heading": "Makstud enne külalise saabumist.",
+     "text": "Ettemaks broneerimisel, jääk enne saabumist, tagatisraha kindlustatud. Külaline saab kinnituse ja arve automaatselt.",
+     "punkte": {
+      "a": "Ettemaks",
+      "b": "Jääkmakse",
+      "c": "Tagatisraha"
+     }
+    }
+   }
+  },
+  "gaeste": {
+   "metaBeschreibung": "Digitaalne külalisteraamat, veebis sisseregistreerimine, automaatsed sõnumid ja tehisintellektiga konsjerž 24 keeles — esimesest kontaktist lahkumiseni.",
+   "headline": "Hoolitse külaliste eest ilma pidevalt tippimata.",
+   "sub": "Sõnumid lähevad automaatselt õigel ajal, küsimustele vastab konsjerž 24 keeles — ja sina loed kõike ühes postkastis.",
+   "bildAlt": "Postkast mitme kanali külalissõnumitega",
+   "nutzen": {
+    "a": {
+     "titel": "Üks postkast",
+     "text": "Airbnb, Booking, e-post ja WhatsApp jõuavad ühte vestlusse — broneering kõrval, mitte neljas rakenduses."
+    },
+    "b": {
+     "titel": "Sõnumid õigel ajal",
+     "text": "Kinnitus, saabumisinfo, uksekood, hinnangupalve: seadistad korra, edasi käib ise."
+    },
+    "c": {
+     "titel": "Sisseregistreerimine ette",
+     "text": "Külaline täidab oma andmed enne saabumist. Sina võtad ta vastu, mitte ei trüki vorme ümber."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Külalisteraamat asendab kausta esikus.",
+     "text": "WiFi-parool, prügivedu, restoranisoovitused ja majareeglid — digitaalselt, külalise keeles, igal ajal muudetav.",
+     "punkte": {
+      "a": "24 keelt",
+      "b": "Uksekoodid õigel ajal",
+      "c": "Soovitused ümbruskonnast"
+     }
+    }
+   },
+   "bildAltBlock": "Mobiilivaade täituvuse ja sõnumitega",
+   "reiter": {
+    "posteingang": {
+     "titel": "Postkast",
+     "heading": "Airbnb, Booking, e-post ja WhatsApp ühes vestluses.",
+     "text": "Kõik ühe broneeringu sõnumid on koos — koos konteksti, mallide ja tõlkega. Keegi ei otsi enam neljast rakendusest.",
+     "punkte": {
+      "a": "Külaline",
+      "b": "Millal saab sisse registreerida?",
+      "c": "Alates kella 15-st — koodi saadan sulle homme hommikul."
+     }
+    },
+    "automatisch": {
+     "titel": "Automaatsed sõnumid",
+     "heading": "Õigel ajal, ilma meeldetuletuseta.",
+     "text": "Kinnitus, saabumisinfo, uksekood, hinnangupalve: seadistad korra, edasi käib ise — külalise keeles.",
+     "punkte": {
+      "a": "Kinnitus saadetud",
+      "b": "Saabumisinfo planeeritud",
+      "c": "Hinnangupalve"
+     }
+    },
+    "checkin": {
+     "titel": "Veebis sisseregistreerimine",
+     "heading": "Andmed enne saabumist, mitte ukse peal.",
+     "text": "Külaline täidab registreerimisandmed ja isikut tõendava dokumendi ette ära. Sina võtad ta vastu, mitte ei trüki vorme ümber — ja täidad registreerimiskohustuse.",
+     "punkte": {
+      "a": "Registreerimisandmed",
+      "b": "Isikut tõendav dokument",
+      "c": "Allkiri"
+     }
+    },
+    "mappe": {
+     "titel": "Külalisteraamat",
+     "heading": "Kõik, mida külaline peab teadma.",
+     "text": "WiFi, majareeglid, prügivedu ja soovitused ümbruskonnast — digitaalselt, igal ajal muudetav, 24 keeles.",
+     "punkte": {
+      "a": "Külaline",
+      "b": "Kus on WiFi-parool?",
+      "c": "Külalisteraamatus — saatsin sulle lingi."
+     }
+    }
+   }
+  },
+  "zahlungen": {
+   "metaBeschreibung": "Veebimaksed, ettemaksud, tagatisrahad ja raamatupidamisvalmis eksport — raha laekumine ja arveldus ilma järeltööta.",
+   "headline": "Raha laekub, ilma et peaksid seda taga ajama.",
+   "sub": "Ettemaks broneerimisel, jääk enne saabumist, tagatisraha kindlustatud — kogutakse automaatselt ja dokumenteeritakse broneeringus.",
+   "bildAlt": "Broneering makse oleku ja tõenditega",
+   "nutzen": {
+    "a": {
+     "titel": "Maksmine nagu ikka",
+     "text": "Kaart, Apple Pay, Google Pay, PayPal ja kohalikud makseviisid — külaline valib selle, mida ta tunneb."
+    },
+    "b": {
+     "titel": "Reeglid meeldetuletuste asemel",
+     "text": "Millal kui palju tasumisele kuulub, määrad korra. Puuduvad maksed näed enne külalise saabumist."
+    },
+    "c": {
+     "titel": "Valmis raamatupidamisele",
+     "text": "Arved tekivad broneeringust, eksport sobib raamatupidajale — ilma tabeleid käsitsi koostamata."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Omanikud näevad oma arveldust ise.",
+     "text": "Igal omanikul on oma ligipääs täituvuse, tulude ja väljamaksetega. See säästab kuukirja koos manusesse pandud tabeliga.",
+     "punkte": {
+      "a": "Oma sisselogimine iga omaniku jaoks",
+      "b": "Arveldus objekti kaupa",
+      "c": "Ainult lugemine, ei mingit sekkumist"
+     }
+    }
+   },
+   "bildAltBlock": "Ülevaade käibest ja väljamaksetest",
+   "reiter": {
+    "online": {
+     "titel": "Veebimaksed",
+     "heading": "Kaart, rahakott, PayPal.",
+     "text": "Külaline maksab viisiga, mida ta tunneb. Raha läheb sinu kontole, olek on broneeringus.",
+     "punkte": {
+      "a": "Tasumata summa",
+      "b": "Ettemaks",
+      "c": "Jääkmakse"
+     }
+    },
+    "plaene": {
+     "titel": "Maksegraafikud",
+     "heading": "Millal mis tasumisele kuulub, otsustad sina.",
+     "text": "Ettemaks, jääkmakse ja tagatisraha järgivad sinu reegleid — vajaduse korral objekti ja kanali kaupa erinevalt.",
+     "punkte": {
+      "a": "Reegel loodud",
+      "b": "Ettemaks kirjendatud",
+      "c": "Jääkmakse tasumata"
+     }
+    },
+    "rechnungen": {
+     "titel": "Arved",
+     "heading": "Broneeringust, mitte tabelist.",
+     "text": "Arved ja kreeditarved tekivad päris numbritest, koos maksumäära ja numbriseeriaga. Eksport sobib raamatupidajale.",
+     "punkte": {
+      "a": "Numbriseeria",
+      "b": "Maksumäärad",
+      "c": "Eksport"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Omaniku arveldus",
+     "heading": "Tulud, kulud, väljamakse.",
+     "text": "Iga omanik näeb oma objekte koos täituvuse, tulude ja väljamaksetega — oma ligipääsuna, mitte kuukirjana.",
+     "punkte": {
+      "a": "Tulud",
+      "b": "Kulud",
+      "c": "Väljamakse"
+     }
+    }
+   }
+  },
+  "preise": {
+   "metaBeschreibung": "Dünaamilised hinnad min/max piiridega, rate plan'id objektide kaupa, hooaja- ja täituvusloogika — rohkem käivet ilma igapäevase käsitööta.",
+   "headline": "Hinnad, mis hoolitsevad ise enda eest.",
+   "sub": "Hooaeg, täituvus, etteteatamisaeg ja nädalapäev arvestatakse automaatselt sisse. Sinu piirid jäävad sinu piirideks: alla miinimumi ei lähe miski.",
+   "bildAlt": "Hinnaruudustik dünaamiliste hindadega öö kaupa",
+   "nutzen": {
+    "a": {
+     "titel": "Min ja max kehtivad",
+     "text": "Sina annad raamid, süsteem liigub nende sees — ükski hind ei tule, mida sa ei tahtnud."
+    },
+    "b": {
+     "titel": "Rate plan'id objekti kaupa",
+     "text": "Mittetagastatav, varajane broneerija, pikaajaline: mitu rate plan'i objekti kohta, igaüks oma reeglitega."
+    },
+    "c": {
+     "titel": "Käsitsi sisestus on ülimuslik",
+     "text": "Käsitsi määratud hind jääb püsima. Automaatika ei kirjuta kunagi üle teadlikku otsust."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Soodustused ja lisatasud lähevad ka portaalidesse.",
+     "text": "Nädala- ja kuusoodustused, varajase broneerija kampaaniad ja juurdehindlused mängitakse välja seal, kus need on lubatud — mitte ainult sinu vaates.",
+     "punkte": {
+      "a": "Soodustused peatuse pikkuse järgi",
+      "b": "Kampaaniad ajavahemikuga",
+      "c": "Lisatasud kanali kaupa"
+     }
+    }
+   },
+   "bildAltBlock": "Täituvusplaan hindadega öö kaupa",
+   "reiter": {
+    "dynamisch": {
+     "titel": "Dünaamilised hinnad",
+     "heading": "Täituvus, hooaeg, etteteatamisaeg.",
+     "text": "Hind liigub sinu miinimumi ja maksimumi vahel — nõudluse, nädalapäeva ja etteteatamisaja järgi, iga öö uuesti arvutatud.",
+     "punkte": {
+      "a": "Miinimum",
+      "b": "Maksimum",
+      "c": "Nõudlus"
+     }
+    },
+    "raten": {
+     "titel": "Rate plan'id",
+     "heading": "Mitu hinda sama objekti kohta.",
+     "text": "Mittetagastatav, varajane broneerija, pikaajaline: iga rate plan oma tingimustega — ja iga läheb neisse portaalidesse, mis seda toetavad.",
+     "punkte": {
+      "a": "Rate plan loodud",
+      "b": "Tingimused määratud",
+      "c": "Portaalidesse"
+     }
+    },
+    "rabatte": {
+     "titel": "Soodustused",
+     "heading": "Jää kauemaks, maksa vähem.",
+     "text": "Nädala- ja kuusoodustused, kampaaniad ajavahemikuga, lisatasud lühikeste peatuste eest — nähtavad otse kalendris.",
+     "punkte": {
+      "a": "Nädalasoodustus",
+      "b": "Kuusoodustus",
+      "c": "Kampaania"
+     }
+    },
+    "grenzen": {
+     "titel": "Sinu piirid",
+     "heading": "Automaatikal ei ole kunagi viimast sõna.",
+     "text": "Hind, mille sa ise määrad, jääb püsima. Ja alla sinu miinimumi ei lähe miski — ka tühja kalendri korral mitte.",
+     "punkte": {
+      "a": "Miinimum",
+      "b": "Käsitsi sisestus",
+      "c": "Ülimuslikkus"
+     }
+    }
+   }
+  },
+  "team": {
+   "metaBeschreibung": "Rollid omanikele, koristusele, töötajatele ja agentuurile — igaüks näeb ainult oma ala, koos ülesannete ja fotokontrollnimekirjadega.",
+   "headline": "Igaüks näeb täpselt seda, mida ta vajab.",
+   "sub": "Omanikud näevad oma objekte, koristus oma töökäike, töötajad oma ala. Rahaasjad jäävad sinna, kuhu nad kuuluvad.",
+   "bildAlt": "Ülesannete ülevaade vastutustega",
+   "nutzen": {
+    "a": {
+     "titel": "Rollid kokkulepete asemel",
+     "text": "Õigused sõltuvad rollist, mitte usaldusest. Koristuse ligipääs ei pääse ligi ühelegi käibele."
+    },
+    "b": {
+     "titel": "Ülesanded tõendiga",
+     "text": "Fotodega kontrollnimekirjad näitavad, et korter on üle antud — koos kellaajaga."
+    },
+    "c": {
+     "titel": "Jagatakse automaatselt",
+     "text": "Pärast iga lahkumist tekib koristus ise, tähtajaga järgmise saabumiseni."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Agentuurid juhivad mitut ettevõtet kõrvuti.",
+     "text": "Kes üürib välja teiste eest, haldab mitut omanikku ühes kontos — eraldi arvelduste ja oma ligipääsudega.",
+     "punkte": {
+      "a": "Mitu omanikku",
+      "b": "Eraldi arveldus",
+      "c": "Õigused inimese kaupa"
+     }
+    }
+   },
+   "bildAltBlock": "Broneeringute loend vastutustega",
+   "reiter": {
+    "rollen": {
+     "titel": "Rollid",
+     "heading": "Igaüks näeb oma ala.",
+     "text": "Agentuur, omanik, töötaja, koristus: õigused sõltuvad rollist. Käivet näeb ainult see, kes peab.",
+     "punkte": {
+      "a": "Roll valitud",
+      "b": "Objektid määratud",
+      "c": "Õigused kontrollitud"
+     }
+    },
+    "aufgaben": {
+     "titel": "Ülesanded",
+     "heading": "Koristus tekib ise.",
+     "text": "Pärast iga lahkumist on ülesanne plaanis, tähtajaga järgmise saabumiseni. Lõpetatakse fotokontrollnimekirjaga.",
+     "punkte": {
+      "a": "Lahkumine kirjas",
+      "b": "Koristus planeeritud",
+      "c": "Fotod üles laaditud"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Omanikud",
+     "heading": "Oma ligipääs kuukirja asemel.",
+     "text": "Omanikud näevad oma objektide täituvust, tulusid ja väljamakseid — lugemisõigusega, ilma võimaluseta tegevusse sekkuda.",
+     "punkte": {
+      "a": "Täituvus",
+      "b": "Tulud",
+      "c": "Väljamakse"
+     }
+    },
+    "agentur": {
+     "titel": "Agentuur",
+     "heading": "Mitu ettevõtet ühes kontos.",
+     "text": "Kes üürib välja teiste eest, juhib mitut omanikku kõrvuti — eraldi arveldused, eraldi ligipääsud, üks kalender.",
+     "punkte": {
+      "a": "Mitu omanikku",
+      "b": "Eraldi arveldus",
+      "c": "Üks sisselogimine"
+     }
+    }
+   }
+  },
+  "app": {
+   "metaBeschreibung": "Natiivrakendus ettevõttele, omanikele, külalistele ja koristusele — täituvus, ülesanded ja sõnumid liikvel olles.",
+   "headline": "Sinu ettevõte mahub püksitaskusse.",
+   "sub": "Kontrolli täituvust, loo broneering, vasta sõnumile, märgi ülesanne tehtuks — telefonist, ilma sülearvutita.",
+   "bildAlt": "Mobiilirakendus täituvuse ja ülesannetega",
+   "nutzen": {
+    "a": {
+     "titel": "Igale rollile",
+     "text": "Omanikel, koristusel ja ettevõttel on oma vaade — sama rakendus, erinevad õigused."
+    },
+    "b": {
+     "titel": "Teated, mis loevad",
+     "text": "Uus broneering, tühistamine, külalise küsimus: saad kohe teada, ilma rakendust avamata."
+    },
+    "c": {
+     "titel": "Ka külalistele",
+     "text": "Külalised leiavad külalisteraamatu, sisseregistreerimise ja sõnumid myBestDaysi rakendusest."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Kaks rakendust, sest kaks maailma.",
+     "text": "myNextDays juhib ettevõtet, myBestDays kuulub külalisele. Eraldi rakendused tähendab: ükski külaline ei satu kunagi sinu numbrite juurde.",
+     "punkte": {
+      "a": "myNextDays ettevõttele",
+      "b": "myBestDays külalisele",
+      "c": "iOS ja Android"
+     }
+    }
+   },
+   "bildAltBlock": "Ettevõtte ülevaade laua taga",
+   "reiter": {
+    "betrieb": {
+     "titel": "Ettevõte liikvel",
+     "heading": "Täituvus ja broneeringud käpas.",
+     "text": "Kontrolli kalendrit, loo broneering, muuda hinda — telefonist, samade andmetega nagu laua taga.",
+     "punkte": {
+      "a": "Kalender",
+      "b": "Broneeringud",
+      "c": "Hinnad"
+     }
+    },
+    "meldungen": {
+     "titel": "Teated",
+     "heading": "Saad kohe teada.",
+     "text": "Uus broneering, tühistamine või külalise küsimus tulevad teatena — ühe puudutusega oled broneeringus.",
+     "punkte": {
+      "a": "Broneering",
+      "b": "Uus broneering juulis",
+      "c": "Tühistamine 12.–14.08."
+     }
+    },
+    "gast": {
+     "titel": "Külalisele",
+     "heading": "myBestDaysi rakendus.",
+     "text": "Külalised leiavad broneeringu, külalisteraamatu, sisseregistreerimise ja sõnumid oma rakendusest — sinu omast eraldi.",
+     "punkte": {
+      "a": "Broneering",
+      "b": "Külalisteraamat",
+      "c": "Sisseregistreerimine"
+     }
+    },
+    "rollen": {
+     "titel": "Meeskonnale",
+     "heading": "Koristus ja omanikud.",
+     "text": "Koristajad näevad oma töökäike koos kontrollnimekirjaga, omanikud oma objekte. Sama rakendus, erinevad õigused.",
+     "punkte": {
+      "a": "Töökäik lahtine",
+      "b": "Kontrollnimekiri tehtud",
+      "c": "Fotod saadetud"
+     }
+    }
+   }
+  },
+  "auswertungen": {
+   "metaBeschreibung": "Täituvus, käive, ADR ja kanalite võrdlus — aruanded, mis näitavad, millest asi sõltub, mitte ainult mis juhtus.",
+   "headline": "Numbrid, mis võimaldavad otsust teha.",
+   "sub": "Täituvus, käive ja keskmine hind objekti, perioodi ja kanali kaupa — kõrvuti, mitte viies ekspordis.",
+   "bildAlt": "Analüüs täituvuse ja käibega",
+   "nutzen": {
+    "a": {
+     "titel": "Võrdle kanaleid",
+     "text": "Mis toob Booking, mis oma veebisait? Arvutatud koos komisjonitasuga, mitte ainult käibe järgi."
+    },
+    "b": {
+     "titel": "Objekti kaupa",
+     "text": "Milline objekt end ära tasub ja milline mitte — näha täituvusest ja keskmisest hinnast."
+    },
+    "c": {
+     "titel": "Aruanded iseenesest",
+     "text": "Kuuaruanded lähevad automaatselt sulle ja sinu omanikele, PDF-ina harjunud ülesehituses."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Möödunu ja väljavaade ühes vaates.",
+     "text": "Selle kõrval, mis oli, seisab see, mis on broneeritud — nii näed veebruaris, kas suvi kannab, mitte alles juulis.",
+     "punkte": {
+      "a": "Broneeringute seis ettepoole",
+      "b": "Võrdlus eelmise aastaga",
+      "c": "Eksport raamatupidajale"
+     }
+    }
+   },
+   "bildAltBlock": "Hotelli täituvusplaan andmete alusena",
+   "reiter": {
+    "auslastung": {
+     "titel": "Täituvus",
+     "heading": "Kui täis tegelikult on?",
+     "text": "Täituvus objekti, kuu ja kanali kaupa — võrdluses eelmise aastaga, mitte kõhutunde järgi.",
+     "punkte": {
+      "a": "Täituvus",
+      "b": "Eelmine aasta",
+      "c": "Objekti kaupa"
+     }
+    },
+    "kanaele": {
+     "titel": "Kanalite võrdlus",
+     "heading": "Mis toob milline kanal?",
+     "text": "Käive pärast komisjonitasu kanali kaupa: Booking, Airbnb, oma veebisait, myBestDays — kõrvuti, mitte viies ekspordis.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "berichte": {
+     "titel": "Aruanded",
+     "heading": "Tulevad ise.",
+     "text": "Kuuaruanded lähevad automaatselt sulle ja sinu omanikele, PDF-ina harjunud ülesehituses.",
+     "punkte": {
+      "a": "Aruanne koostatud",
+      "b": "Saadetud omanikule",
+      "c": "Arhiivi salvestatud"
+     }
+    },
+    "ausblick": {
+     "titel": "Väljavaade",
+     "heading": "Mis on juba broneeritud.",
+     "text": "Selle kõrval, mis oli, seisab broneeringute seis ettepoole — nii näed veebruaris, kas suvi kannab.",
+     "punkte": {
+      "a": "Broneeritud",
+      "b": "Päritud",
+      "c": "Vaba"
+     }
+    }
+   }
+  }
+ },
+ "kontakt": {
+  "meta": {
+   "titel": "Kontakt — myNextDays",
+   "beschreibung": "Nii jõuad myNextDaysini: üldised küsimused ja müük aadressile {info}, tehnilised päringud aadressile {technik}, telefoni teel numbril {telefon} — või otse vormi kaudu."
+  },
+  "hero": {
+   "eyebrow": "Kontakt",
+   "headlinePre": "Ütle, millest jutt käib —",
+   "headlineHighlight": "meie vastame",
+   "sub": "Küsimused toote kohta, teisest süsteemist üleminekust, ühendamisest meie API kaudu või koostööst: vali oma teema ja sõnum jõuab otse nende inimesteni, kes seda tunnevad.",
+   "sitz": "Asukoht Bindslevis, Taanis",
+   "sprachen": "Tarkvara 24 keeles",
+   "eu": "Majutatud EL-is, GDPR-iga kooskõlas"
+  },
+  "wege": {
+   "eyebrow": "Teed meieni",
+   "heading": "Kes sinu teemaga tegeleb?",
+   "sub": "Kaks postkasti ja üks vestlus. Ärilised asjad ja kõik enne alustamist lähevad üldisesse postkasti, kõik tehniline otse arendusmeeskonnale — nii ei jää midagi järjekorda, kuhu keegi ei vaata.",
+   "allgemein": {
+    "titel": "Toode, hinnad ja müük",
+    "text": "Tahad teada, kas myNextDays sobib sinu ettevõttele, mida tähendab teisest süsteemist üleminek või kuidas käivad arve ja tellimus? See on õige tee — ka pressi, partnerluste ja andmekaitsepäringute jaoks.",
+    "aktion": "Kirjuta sõnum"
+   },
+   "technik": {
+    "titel": "Tehnika, API ja turvalisus",
+    "text": "Midagi ei tööta, ühendus broneerimisportaaliga jookseb kinni, arendad meie API vastu või oled leidnud turvaaugu? Need päringud lähevad otse arendusmeeskonnale, mitte müügi kaudu.",
+    "aktion": "Kirjuta sõnum"
+   },
+   "hilfe": {
+    "titel": "Abi ja vestlus",
+    "text": "Juhendid iga valdkonna kohta on abikeskuses. Ja kui peab kiiresti minema: igal lehel all paremal on vestlus, kus vastab päris inimene — ilma kontota ja ilma sisselogimiseta.",
+    "aktion": "Abikeskusesse",
+    "chatHinweis": "Vestlus igal lehel all paremal"
+   }
+  },
+  "formular": {
+   "eyebrow": "Sõnum",
+   "heading": "Kirjuta meile",
+   "sub": "Üks vorm kõige jaoks — sinu teema otsustab, kes selle saab.",
+   "ablaufTitel": "Mis edasi juhtub",
+   "ablauf": {
+    "eingang": {
+     "titel": "Sõnum läheb välja",
+     "text": "Meie enda postiserveri kaudu Taanis — mitte kolmanda osapoole vormiteenuse kaudu, kelle käest sinu andmed läbi käiksid."
+    },
+    "zuordnung": {
+     "titel": "See jõuab õigesse postkasti",
+     "text": "Ärilised asjad aadressile {info}, tehnilised aadressile {technik}. Kumb see on, otsustab meie server sinu teema järgi."
+    },
+    "antwort": {
+     "titel": "Vastame sulle otse",
+     "text": "Tavalise e-kirjana aadressile, mille sa siia sisestad — sellele saab lihtsalt vastu kirjutada."
+    }
+   },
+   "hinweisPostfach": "Kaks postkasti, et miski ei jääks seisma: {info} kõige ärilise jaoks, {technik} kõige tehnilise jaoks. Kumb sellest saab, määrab meie server sinu teema järgi — see vorm ei saa sihtkohta määrata.",
+   "thema": "Millest jutt käib?",
+   "themen": {
+    "allgemein": "Üldine küsimus",
+    "vertrieb": "Toode, hinnad ja müük",
+    "abrechnung": "Arve ja tellimus",
+    "technik": "Tehniline probleem",
+    "api": "API ja arendajad",
+    "partner": "Partnerlus",
+    "presse": "Press ja meedia",
+    "datenschutz": "Andmekaitse",
+    "sicherheit": "Teata turvaaugust"
+   },
+   "zielAllgemein": "Läheb aadressile {email}",
+   "zielTechnik": "Läheb aadressile {email} — meie arendusmeeskonnale",
+   "name": "Nimi",
+   "email": "E-post",
+   "emailPlatzhalter": "nimi@naide.ee",
+   "firma": "Ettevõte",
+   "telefon": "Telefon",
+   "optional": "valikuline",
+   "nachricht": "Sinu sõnum",
+   "nachrichtPlatzhalter": "Kirjelda oma teemat — mida täpsemalt, seda sobivam on vastus.",
+   "absenden": "Saada sõnum",
+   "laeuft": "Saadetakse …",
+   "dankeTitel": "Kohale jõudnud.",
+   "nochEine": "Kirjuta veel üks sõnum",
+   "fehlerAllgemein": "See ei õnnestunud. Palun proovi hiljem uuesti.",
+   "fehlerPruefung": "Turvakontroll ei õnnestunud. Palun laadi leht uuesti ja saada sõnum veel kord.",
+   "fehlerFelder": "Palun kontrolli oma andmeid: vaja on nime, e-posti aadressi ja vähemalt 20 tähemärgiga sõnumit.",
+   "fehlerZuOft": "Sellelt ühenduselt tuli liiga palju sõnumeid. Palun oota hetk ja proovi uuesti.",
+   "fehlerSpaeter": "Sõnumit ei saa praegu kohale toimetada. Palun proovi hiljem uuesti või kirjuta otse aadressile {email}.",
+   "datenschutzHinweis": "Kasutame sinu andmeid ainult sellele päringule vastamiseks. Täpsemalt <link>privaatsusteates</link>.",
+   "recaptchaHinweis": "See vorm on kaitstud reCAPTCHA-ga. Kehtivad Google'i <datenschutz>privaatsusteade</datenschutz> ja <bedingungen>kasutustingimused</bedingungen>."
+  },
+  "anschrift": {
+   "eyebrow": "Aadress",
+   "heading": "Nii jõuad meieni otse",
+   "firmaEyebrow": "Ettevõtte andmed",
+   "firmaHeading": "Kellega on tegemist",
+   "firmaText": "Seda, kes on lepingupartner, ei peaks olema vaja peenest kirjast otsida. Seepärast on registriandmed siin — samad, mis õigusteabes.",
+   "firma": "Ettevõte",
+   "register": "Register",
+   "ustId": "Käibemaksukohustuslase number",
+   "direktion": "Juhatus",
+   "impressum": "Vaata õigusteavet",
+   "datenschutz": "Vaata andmekaitset"
+  },
+  "faq": {
+   "eyebrow": "Korduvad küsimused",
+   "heading": "Küsimused ühenduse võtmise kohta",
+   "sub": "Kes vastab, kui kaua see aega võtab ja mis sinu andmetega juhtub.",
+   "wer": {
+    "frage": "Kes mulle vastab?",
+    "antwort": "Inimene meeskonnast, mitte numbriga tiketisüsteem. myNextDays on omanikujuhitud: ärilistele küsimustele vastab keegi, kes kasutab tarkvara ise iga päev, tehnilistele arendusmeeskond."
+   },
+   "postfach": {
+    "frage": "Kust ma tean, kuhu mu sõnum jõuab?",
+    "antwort": "Valikuvälja all on iga teema juures kirjas sihtaadress. Üldised, ärilised ja toimetuslikud teemad lähevad aadressile {info}, tehnilised päringud, API-küsimused ja turvateated aadressile {technik}. Jaotuse teeb meie server — vorm ei saa postkasti nimetada, et seda ei saaks kuritarvitada võõraste sõnumite saatmise teena."
+   },
+   "sprache": {
+    "frage": "Mis keeles ma võin kirjutada?",
+    "antwort": "Kirjuta selles keeles, milles sa seda lehte loed — näeme seda sinu päringus ja vastame selles, niipalju kui oskame. Saksa, taani ja inglise keeles vastame alati."
+   },
+   "dauer": {
+    "frage": "Kui kaua vastus aega võtab?",
+    "antwort": "Tavaliselt mõne tunni jooksul, nädalavahetustel ja pühade ajal võib see kauem aega võtta. Turvateadete kohta kehtib: need on arendusmeeskonna käes ilma müügi kaudu tehtava ringita."
+   },
+   "telefon": {
+    "frage": "Kas ma saan ka helistada?",
+    "antwort": "Jah, numbril {telefon}. Kõne on kiireim tee kõige jaoks, mida on parem arutada kui kirjutada — tehniliste rikete puhul on sõnum siiski sageli parem, sest veateateid ja ekraanipilte saab kaasa lisada."
+   },
+   "bestaetigung": {
+    "frage": "Kas ma saan e-kirjaga kättesaamise kinnituse?",
+    "antwort": "Ei, teadlikult mitte. Automaatne kinnitus läheks igale aadressile, mis siia sisestatakse — nii saaks meie postiserverit kasutada võõrastele postkastidele kirjutamiseks. Seepärast on kinnitus siin lehel, niipea kui sõnum on kohale jõudnud. Sinu andmeid kasutame ainult sellele päringule vastamiseks."
+   }
+  }
+ },
+ "help": {
+  "heroTitle": "Kuidas saame aidata?",
+  "heroSubtitle": "Otsi teadmusbaasist või leia samm-sammult lahendusi igapäevatööks myNextDaysiga.",
+  "searchPlaceholder": "Mida otsid?",
+  "searchAria": "Otsi abist",
+  "contact": "Contact",
+  "home": "Abikeskuse avaleht",
+  "articles": "{count, plural, one {# artikkel} other {# artiklit}}",
+  "collectionKbTitle": "Teadmusbaas",
+  "collectionKbDesc": "Kõik objektide, hindade, kalendri, portaalide ja teie konto kohta.",
+  "collectionUsecasesTitle": "Kasutusnäited",
+  "collectionUsecasesDesc": "Samm-sammult lahendused tavapärastele igapäevastele olukordadele.",
+  "helpfulQuestion": "Kas sellest artiklist oli abi?",
+  "helpfulYes": "Jah",
+  "helpfulNo": "Ei",
+  "helpfulThanks": "Aitäh tagasiside eest!",
+  "related": "Rohkem artikleid kategoorias {category}",
+  "searchTitle": "Otsi",
+  "results": "{count, plural, one {# tulemus otsingule „{query}“} other {# tulemust otsingule „{query}“}}",
+  "noResultsTitle": "Artikleid ei leitud",
+  "noResultsHintPre": "Proovi teisi otsingusõnu või",
+  "noResultsHintLink": "sirvi kategooriaid",
+  "browseCategories": "Sirvi kategooriaid",
+  "brandTitle": "myNextDays abi"
  }
 }

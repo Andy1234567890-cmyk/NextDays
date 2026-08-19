@@ -25,6 +25,10 @@ import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
 import { AppAufnahme } from "@/components/marketing/app-aufnahme";
+import {
+  AppAufnahmenMobilReihe,
+  TelefonBuehne,
+} from "@/components/marketing/app-aufnahme-mobil";
 import { MarketingCta } from "@/components/marketing/marketing-cta";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { MarketingNav } from "@/components/marketing/marketing-nav";
@@ -75,6 +79,9 @@ export default async function FunktionsSeite({
   const t = await getTranslations(`funktionen.${funktion.key}`);
   const tr = await getTranslations("funktionen.rahmen");
   const tg = await getTranslations("features.gruppen");
+  // Label „App herunterladen" — dasselbe wie im Footer, statt eines zweiten
+  // Satzes derselben Aussage in 24 Sprachen.
+  const tFooter = await getTranslations("footer");
   const Illustration = GRUPPEN_ILLUSTRATION[funktion.key];
 
   const nutzen = ["a", "b", "c"] as const;
@@ -90,16 +97,15 @@ export default async function FunktionsSeite({
       <main className="flex-1">
         {/* 1. Hero */}
         <section className="bg-gradient-to-b from-surface-warm to-background">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-20 pt-14 lg:grid-cols-[1fr_1.05fr]">
+          <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-16 pt-14 lg:grid-cols-[1fr_1.05fr]">
             <div>
-              <p className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium shadow-card">
-                <span className="text-accent">
-                  {Illustration ? <Illustration className="size-5" /> : null}
-                </span>
-                {tr(`bereich.${funktion.bereich}`)}
-              </p>
+              {/* Eyebrow statt Chip mit Icon: die Startseite und jede Sektion
+                  darauf beginnen mit derselben kleinen Kategoriezeile
+                  (`section-kit.tsx`). Ein umrandeter Chip war das einzige
+                  Element dieser Art auf der ganzen Site. */}
+              <p className="eyebrow">{tr(`bereich.${funktion.bereich}`)}</p>
 
-              <h1 className="mt-6 font-display text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">
+              <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl">
                 {t("headline")}
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
@@ -107,55 +113,98 @@ export default async function FunktionsSeite({
               </p>
 
               {/* Die Stichwortzeile aus `features.gruppen` — dieselbe, die im
-                  Menü und auf der Preisseite steht. */}
-              <p className="mt-5 text-sm font-medium text-muted-foreground">
+                  Menü und auf der Preisseite steht. Bewusst EIN Absatz und
+                  keine Chip-Reihe: die Zeile ist nur auf manchen Seiten eine
+                  Komma-Aufzählung, auf anderen ein Satz („Native App mit
+                  eigenen Logins für Eigentümer, Gäste und Reinigung, …").
+                  Am Komma getrennt zerfällt der Satz in sinnlose Schnipsel. */}
+              <p className="mt-5 max-w-xl text-sm font-medium text-muted-foreground">
                 {tg(`${funktion.key}.items`)}
               </p>
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Button asChild variant="accent" size="lg">
+              {/* Dieselben zwei Knöpfe wie im Hero der Startseite: Akzent für
+                  den Test, dunkel mit Play-Symbol für die Demo. */}
+              <div className="mt-7 flex flex-wrap items-center gap-4">
+                <Button asChild variant="accent" size="lg" className="min-w-48 text-base">
                   <Link href={SIGNUP_URL}>{tr("ctaTesten")}</Link>
                 </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link href={DEMO_URL}>{tr("ctaDemo")}</Link>
+                <Button asChild variant="default" size="lg" className="min-w-40 text-base">
+                  <Link href={DEMO_URL} className="gap-2">
+                    <Icon icon="ph:play-circle" className="size-5" />
+                    {tr("ctaDemo")}
+                  </Link>
                 </Button>
               </div>
+
+              {/* Nur auf App-Seiten: wer eine App sucht, will als erstes
+                  wissen, ob sie sein Telefon trifft. Dieselbe Darstellung wie
+                  im Footer — und wie dort OHNE Link, weil die Apps noch nicht
+                  in den Stores stehen (ein toter Store-Link wäre ein
+                  Versprechen, das die Seite nicht hält). */}
+              {funktion.telefonHero ? (
+                <div className="mt-8 flex flex-wrap items-center gap-3">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    {tFooter("appLaden")}
+                  </span>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-sm font-medium shadow-card">
+                    <Icon icon="ph:apple-logo-fill" className="size-4" />
+                    App Store
+                  </span>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-sm font-medium shadow-card">
+                    <Icon icon="ph:google-play-logo-fill" className="size-4" />
+                    Google Play
+                  </span>
+                </div>
+              ) : null}
             </div>
 
-            {/* Rechts die echte Aufnahme; fehlt das Motiv, trägt die
-                Zeichnung die Fläche — statt eines fremden Screenshots. */}
-            <div className="rounded-3xl bg-surface-accent p-6 shadow-float lg:p-8">
-              {funktion.aufnahme ? (
-                <AppAufnahme
-                  name={funktion.aufnahme}
+            {/* Rechts die echte Aufnahme: Telefone, wo die Funktion von der
+                App handelt, sonst die Browser-Aufnahme. Fehlt beides, trägt
+                die Zeichnung die Fläche — statt eines fremden Screenshots. */}
+            {funktion.telefonHero ? (
+              <TelefonBuehne>
+                <AppAufnahmenMobilReihe
+                  motive={funktion.telefonHero}
                   alt={t("bildAlt")}
                   priority
-                  className="w-full"
                 />
-              ) : (
-                <span className="flex aspect-[16/10] items-center justify-center text-accent">
-                  {Illustration ? <Illustration className="size-40" /> : null}
-                </span>
-              )}
-            </div>
+              </TelefonBuehne>
+            ) : (
+              <div className="rounded-3xl bg-surface-accent p-6 shadow-float lg:p-8">
+                {funktion.aufnahme ? (
+                  <AppAufnahme
+                    name={funktion.aufnahme}
+                    alt={t("bildAlt")}
+                    priority
+                    className="w-full"
+                  />
+                ) : (
+                  <span className="flex aspect-[16/10] items-center justify-center text-accent">
+                    {Illustration ? <Illustration className="size-40" /> : null}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </section>
 
-        {/* 2. Drei Kurz-Nutzen */}
-        <section className="bg-background">
-          <div className="mx-auto max-w-7xl px-6 py-20">
-            <div className="grid gap-10 md:grid-cols-3">
+        {/* 2. Drei Kurz-Nutzen — Muster der Startseite (`marketing-benefits`):
+            getönte Fläche, drei zentrierte Spalten mit Kreis, keine
+            Karten-Rahmen. Die Ruhe kommt aus dem Weißraum, nicht aus Rahmen. */}
+        <section className="bg-surface-warm">
+          <div className="mx-auto max-w-7xl px-6 py-24">
+            <div className="grid gap-12 md:grid-cols-3">
               {nutzen.map((n, i) => (
-                <div key={n}>
+                <div key={n} className="flex flex-col items-center text-center">
                   {/* Nummer statt dreimal desselben Häkchens: drei gleiche
                       Symbole nebeneinander tragen keine Information. */}
-                  <span className="flex size-12 items-center justify-center rounded-2xl bg-surface-accent font-display text-lg font-extrabold text-accent">
+                  <span className="flex size-20 items-center justify-center rounded-full bg-surface-accent font-display text-2xl font-extrabold text-accent">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <h2 className="mt-5 font-display text-xl font-semibold">
+                  <h2 className="mt-6 font-display text-xl font-semibold">
                     {t(`nutzen.${n}.titel`)}
                   </h2>
-                  <p className="mt-2 leading-relaxed text-muted-foreground">
+                  <p className="mt-3 max-w-sm leading-relaxed text-muted-foreground">
                     {t(`nutzen.${n}.text`)}
                   </p>
                 </div>
@@ -164,8 +213,14 @@ export default async function FunktionsSeite({
           </div>
         </section>
 
+        {/* Wellenkante wie zwischen den Sektionen der Startseite — harte
+            Farbkanten gibt es dort nirgends. */}
+        <SectionWave from="text-surface-warm" to="bg-background" />
+
         {/* 3. Reiter mit gebauten Grafiken — die Teilaspekte dieser Funktion. */}
         <FunktionsReiter gruppe={funktion.key} reiter={funktion.reiter} />
+
+        <SectionWave from="text-background" to="bg-surface-warm" />
 
         {/* 4. Beleg-Block (Text ↔ Bild) */}
         {bloecke.map((b, i) => (
@@ -174,12 +229,12 @@ export default async function FunktionsSeite({
             className={i % 2 === 0 ? "bg-surface-warm" : "bg-background"}
           >
             <div
-              className={`mx-auto grid max-w-7xl items-center gap-12 px-6 py-20 lg:grid-cols-2 ${
+              className={`mx-auto grid max-w-7xl items-center gap-12 px-6 py-24 lg:grid-cols-2 ${
                 i % 2 === 0 ? "" : "lg:[&>*:first-child]:order-2"
               }`}
             >
               <div>
-                <h2 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">
+                <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
                   {t(`block.${b}.titel`)}
                 </h2>
                 <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
@@ -203,23 +258,32 @@ export default async function FunktionsSeite({
                 </ul>
               </div>
 
-              <div
-                className={`rounded-3xl p-6 lg:p-8 ${
-                  i % 2 === 0 ? "bg-card shadow-float" : "bg-surface-accent"
-                }`}
-              >
-                {funktion.aufnahmeBlock ? (
-                  <AppAufnahme
-                    name={funktion.aufnahmeBlock}
+              {funktion.telefonBlock ? (
+                <TelefonBuehne>
+                  <AppAufnahmenMobilReihe
+                    motive={funktion.telefonBlock}
                     alt={t("bildAltBlock")}
-                    className="w-full"
                   />
-                ) : (
-                  <span className="flex aspect-[16/10] items-center justify-center text-accent">
-                    {Illustration ? <Illustration className="size-40" /> : null}
-                  </span>
-                )}
-              </div>
+                </TelefonBuehne>
+              ) : (
+                <div
+                  className={`rounded-3xl p-6 lg:p-8 ${
+                    i % 2 === 0 ? "bg-card shadow-float" : "bg-surface-accent"
+                  }`}
+                >
+                  {funktion.aufnahmeBlock ? (
+                    <AppAufnahme
+                      name={funktion.aufnahmeBlock}
+                      alt={t("bildAltBlock")}
+                      className="w-full"
+                    />
+                  ) : (
+                    <span className="flex aspect-[16/10] items-center justify-center text-accent">
+                      {Illustration ? <Illustration className="size-40" /> : null}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </section>
         ))}

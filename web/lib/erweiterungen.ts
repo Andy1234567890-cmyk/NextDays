@@ -16,6 +16,7 @@
 // würde man etwas verkaufen, das ohnehin läuft.
 import { formatCurrency } from "@/lib/currency";
 import type { ModuleKey, ModulePrice } from "@/lib/subscriptions";
+import { hilfeUrl } from "@/lib/marketing-url";
 
 export type Erweiterung = {
   /** URL-Segment unter /erweiterungen (sprechend, nicht der Modul-Schlüssel). */
@@ -113,15 +114,15 @@ const DYNAMISCHE_PREISE: Erweiterung = {
   ],
   links: [
     {
-      href: "/hilfe/preise-raten/dynamische-preise",
+      href: hilfeUrl("preise-raten/dynamische-preise"),
       text: "Dynamische Preise einrichten",
     },
     {
-      href: "/hilfe/preise-raten/grundpreis-waehrung",
+      href: hilfeUrl("preise-raten/grundpreis-waehrung"),
       text: "Grundpreis und Währung festlegen",
     },
     {
-      href: "/hilfe/konto-abo/abonnement-tarif",
+      href: hilfeUrl("konto-abo/abonnement-tarif"),
       text: "Abonnement, Tarif und Zusatzmodule",
     },
   ],

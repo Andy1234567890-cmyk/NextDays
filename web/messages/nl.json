@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Waarmee kunnen we helpen?",
-    "heroSubtitle": "Doorzoek de kennisbank of vind stapsgewijze oplossingen voor uw dagelijkse werk met myNextDays.",
-    "searchPlaceholder": "Waarnaar bent u op zoek?",
-    "searchAria": "Hulp doorzoeken",
-    "contact": "Contact",
-    "home": "Startpagina hulp",
-    "articles": "{count, plural, one {# artikel} other {# artikelen}}",
-    "collectionKbTitle": "Kennisbank",
-    "collectionKbDesc": "Alles over accommodaties, prijzen, agenda, portalen en uw account.",
-    "collectionUsecasesTitle": "Toepassingen",
-    "collectionUsecasesDesc": "Stapsgewijze oplossingen voor veelvoorkomende dagelijkse situaties.",
-    "helpfulQuestion": "Was dit artikel nuttig?",
-    "helpfulYes": "Ja",
-    "helpfulNo": "Nee",
-    "helpfulThanks": "Bedankt voor uw reactie!",
-    "related": "Meer artikelen in {category}",
-    "searchTitle": "Zoeken",
-    "results": "{count, plural, one {# resultaat voor ‘{query}’} other {# resultaten voor ‘{query}’}}",
-    "noResultsTitle": "Geen artikelen gevonden",
-    "noResultsHintPre": "Probeer andere zoektermen of",
-    "noResultsHintLink": "blader door de categorieën",
-    "browseCategories": "Categorieën doorbladeren",
-    "brandTitle": "myNextDays-hulp"
-  },
   "common": {
     "save": "Opslaan",
     "cancel": "Annuleren",
@@ -1420,7 +1395,10 @@
     "commissionableNo": "Nee — commissievrij",
     "infoAria": "Uitleg bij {feld}",
     "rulesPageTitle": "Afrekenregels",
-    "rulesPageIntro": "Wat de portalen per boeking inhouden en aan wie de kosten toekomen. Samen bepalen ze welk bedrag uiteindelijk in de commissieafrekening van uw eigenaren terechtkomt."
+    "rulesPageIntro": "Wat de portalen per boeking inhouden en aan wie de kosten toekomen. Samen bepalen ze welk bedrag uiteindelijk in de commissieafrekening van uw eigenaren terechtkomt.",
+    "endsSalesHint": "Let op: hiermee eindigt ook de verkoop. Vanaf {date} wordt het object op geen enkel kanaal meer verkocht — ook niet bij Booking.com, Airbnb of op myBestDays. Voeg voor een louter tariefwissel in plaats daarvan een vervolgcontract toe dat op die dag begint.",
+    "effectReleased": "{property}: de verkoop loopt door — het contracteinde is opgeheven en de nachten zijn weer verkoopbaar.",
+    "effectBlocked": "{property}: de verkoop eindigt op {date} — {nights} nachten geblokkeerd en bij de portalen teruggetrokken."
   },
   "portal": {
     "title": "Mijn portaal",
@@ -4535,7 +4513,10 @@
       "photos": "Foto's",
       "noPhotosFound": "Voor deze boeking zijn geen afbeeldingen gevonden.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "via {channel}",
+      "receivedOn": "bij ons ontvangen op {date}",
+      "bookedOn": "geboekt op {date}"
     },
     "dashboard": {
       "todayCheckouts": "Check-outs",

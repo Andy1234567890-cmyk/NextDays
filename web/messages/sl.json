@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Kako lahko pomagamo?",
-    "heroSubtitle": "Preiščite bazo znanja ali poiščite rešitve po korakih za vsakdanje delo z myNextDays.",
-    "searchPlaceholder": "Kaj iščete?",
-    "searchAria": "Iskanje po pomoči",
-    "contact": "Contact",
-    "home": "Začetna stran pomoči",
-    "articles": "{count, plural, one {# članek} two {# članka} few {# članki} other {# člankov}}",
-    "collectionKbTitle": "Baza znanja",
-    "collectionKbDesc": "Vse o nastanitvah, cenah, koledarju, portalih in vašem računu.",
-    "collectionUsecasesTitle": "Primeri uporabe",
-    "collectionUsecasesDesc": "Rešitve po korakih za običajne vsakodnevne primere.",
-    "helpfulQuestion": "Vam je bil ta članek v pomoč?",
-    "helpfulYes": "Da",
-    "helpfulNo": "Ne",
-    "helpfulThanks": "Hvala za povratno informacijo!",
-    "related": "Več člankov v kategoriji {category}",
-    "searchTitle": "Iskanje",
-    "results": "{count, plural, one {# zadetek za „{query}“} two {# zadetka za „{query}“} few {# zadetki za „{query}“} other {# zadetkov za „{query}“}}",
-    "noResultsTitle": "Ni najdenih člankov",
-    "noResultsHintPre": "Poskusite z drugimi iskalnimi izrazi ali",
-    "noResultsHintLink": "prebrskajte kategorije",
-    "browseCategories": "Prebrskaj kategorije",
-    "brandTitle": "Pomoč myNextDays"
-  },
   "common": {
     "save": "Shrani",
     "cancel": "Prekliči",
@@ -1420,7 +1395,10 @@
     "commissionableNo": "Ne — brez provizije",
     "infoAria": "Pojasnilo za: {feld}",
     "rulesPageTitle": "Pravila obračuna",
-    "rulesPageIntro": "Kaj portali zadržijo na rezervacijo in komu pripadajo pristojbine. Oboje določa, kateri znesek na koncu pride v obračun provizije vaših lastnikov."
+    "rulesPageIntro": "Kaj portali zadržijo na rezervacijo in komu pripadajo pristojbine. Oboje določa, kateri znesek na koncu pride v obračun provizije vaših lastnikov.",
+    "endsSalesHint": "Pozor: s tem se konča tudi prodaja. Od {date} se objekt ne prodaja več na nobenem kanalu — tudi ne na Booking.com, Airbnb ali na myBestDays. Če želite zgolj spremeniti ceno, namesto tega ustvarite nadaljevalno pogodbo od tega dne.",
+    "effectReleased": "{property}: prodaja se nadaljuje — konec pogodbe je bil preklican in noči so znova na voljo za prodajo.",
+    "effectBlocked": "{property}: prodaja se konča dne {date} — {nights} noči blokiranih in umaknjenih s portalov."
   },
   "portal": {
     "title": "Moj portal",
@@ -4535,7 +4513,10 @@
       "photos": "Fotografije",
       "noPhotosFound": "Za to rezervacijo ni bilo najdenih slik.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "prek {channel}",
+      "receivedOn": "prejeto pri nas dne {date}",
+      "bookedOn": "rezervirano dne {date}"
     },
     "dashboard": {
       "todayCheckouts": "Odjave",

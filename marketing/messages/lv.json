@@ -7,7 +7,7 @@
   "funktionen": "Funkcijas",
   "preise": "Cenas",
   "kanaele": "Kanāli",
-  "kunden": "Klienti",
+  "ueberUns": "Par mums",
   "ressourcen": "Resursi",
   "sprache": "Valoda",
   "spracheWaehlen": "Izvēlieties valodu",
@@ -425,7 +425,7 @@
   "ressourcen": {
    "blog": "Blogs",
    "hilfeCenter": "Palīdzības centrs",
-   "webinare": "Vebināri",
+   "status": "Sistēmas statuss",
    "leitfaeden": "Ceļveži",
    "api": "API dokumentācija"
   },
@@ -441,7 +441,8 @@
   "datenschutz": "Privātums",
   "impressum": "Juridiskā informācija",
   "cookies": "Sīkdatņu politika",
-  "avv": "Datu apstrāde"
+  "avv": "Datu apstrāde",
+  "kontoLoeschen": "Dzēst kontu"
  },
  "abschluss": {
   "heading": "Vai esat gatavi vadīt savu naktsmītni no vienas vietas?",
@@ -593,5 +594,1014 @@
    "provision": "Sava mājaslapa {direkt} · portāli {portale}",
    "tarif": "Viens plāns visiem, ieskaitot 1. objektu"
   }
+ },
+ "ueberUns": {
+  "meta": {
+   "titel": "Par mums — myNextDays",
+   "beschreibung": "myNextDays ApS no Bindsleves Dānijā: kāpēc aktīvi izīrētāji uzbūvēja savu īpašumu pārvaldības sistēmu ar kanālu pārvaldnieku, par ko mēs iestājamies un kas ir aiz tā."
+  },
+  "hero": {
+   "eyebrow": "Par mums",
+   "headlinePre": "Mēs paši izīrējam. Tāpēc pastāv",
+   "headlineHighlight": "myNextDays",
+   "sub": "myNextDays ApS ir īpašnieku vadīts uzņēmums Bindslevē Ziemeļjitlandē. Mēs izīrējam savus brīvdienu objektus — un uzbūvējām platformu, kuras ikdienā pietrūka: kalendārs, kanāli, viesi, maksājumi un norēķini vienuviet.",
+   "sitz": "Mītne Dānijā",
+   "eu": "Mitināts ES, atbilst VDAR",
+   "start": "Sākums 2026. gada 1. septembrī",
+   "sprachen": "27 valstis, 24 valodas",
+   "ctaTrial": "Izmēģināt 30 dienas bez maksas",
+   "ctaKontakt": "Rakstiet mums"
+  },
+  "warum": {
+   "eyebrow": "Kāpēc mēs pastāvam",
+   "heading": "Radies no mūsu pašu izīrēšanas ikdienas.",
+   "p1": "Ikviens, kas izīrē, zina to vakaru, kad viena un tā pati nedēļa pārdota divreiz, jo kāds kanāls nekad nesaņēma bloķējumu. Tur mēs pārstājām meklēt rīku un sākām to būvēt.",
+   "p2": "Esošās sistēmas vai nu bija veidotas viesnīcu ķēdēm — ar sarežģītību un cenu, ko neviens uzņēmums ar dažiem objektiem nespēj nest — vai arī beidzās tieši tur, kur sākas īstais darbs: norēķini, īpašnieki, uzkopšana un nodokļi 27 valstīs.",
+   "p3": "myNextDays ir atbilde: pilnvērtīga īpašumu pārvaldības sistēma ar kanālu pārvaldnieku uzņēmumiem, kas savus objektus vada paši — no vienas brīvdienu mājas līdz viesnīcai ar vairākiem numuru tipiem.",
+   "bildFerienobjekt": "Brīvdienu māja jūras krastā",
+   "bildHotel": "Viesnīcas numurs ar saklātu gultu"
+  },
+  "bento": {
+   "eyebrow": "Kas ir aiz tā",
+   "heading": "Skaitļi, ko varam pierādīt.",
+   "sub": "Bez klientu skaita un bez vērtējumiem: platforma startē 2026. gada 1. septembrī. To, kas šeit rakstīts, var pārbaudīt pašā produktā.",
+   "vermieter": {
+    "titel": "Veidojuši izīrētāji, nevis pie rasēšanas galda",
+    "text": "Katra funkcija vispirms strādā mūsu pašu izīrēšanā un tikai pēc tam nonāk produktā. Kas tur ikdienā nenoturas, netiek izlaists.",
+    "bildAlt": "Izīrēšanas aģentūras komanda darbā"
+   },
+   "laender": {
+    "wert": "27",
+    "titel": "Eiropas valstis",
+    "text": "Ar katras valsts valūtu, nodokļu likmēm un noteikumiem — nevis vienu eiro veidlapu visiem."
+   },
+   "sprachen": {
+    "wert": "24",
+    "titel": "Valodas",
+    "text": "Saskarne, saziņa ar viesiem un juridiskie teksti, ne tikai sākumlapa."
+   },
+   "kanaele": {
+    "wert": "56",
+    "titel": "Rezervāciju portāli",
+    "text": "Booking.com, Airbnb, Expedia, Vrbo un daudzi citi caur vienu savienojumu."
+   },
+   "eu": {
+    "titel": "Veidots ES, uzturēts ES",
+    "text": "Serveri un dati atrodas Eiropas Savienībā, darbība atbilst VDAR, un apstrāde ir noteikta rakstiski. Uzņēmumam, kas apstrādā viesu datus, tā nav zemsvītras piezīme, bet priekšnosacījums."
+   }
+  },
+  "zeitleiste": {
+   "eyebrow": "Ceļš līdz šejienei",
+   "heading": "Īsa vēsture, pārbaudāmi soļi.",
+   "sub": "Mēs esam jauni — un labāk uzrakstām četrus dokumentētus posmus nekā izdomātu vēsturi.",
+   "airsmil": {
+    "datum": "Sākumpunkts",
+    "titel": "Ikdiena savā uzņēmumā",
+    "text": "Savi objekti vairākos kanālos vienlaikus: dubults darbs, novēloti bloķējumi, norēķini izklājlapā. No šīm berzēm radās prasību saraksts."
+   },
+   "gruendung": {
+    "datum": "2026. gada 1. jūlijs",
+    "titel": "Dibināts myNextDays ApS",
+    "text": "Reģistrēts Dānijas uzņēmumu reģistrā ar numuru CVR 46615182, juridiskā adrese Bindslevē Ziemeļjitlandē."
+   },
+   "beta": {
+    "datum": "2026. gada vasara",
+    "titel": "Beta ar reāliem objektiem",
+    "text": "Rezervācijas pienāk tiešsaistē no kanāliem, cenas, pieejamība un bloķējumi dodas atpakaļ pa to pašu ceļu — ar reāliem objektiem un reāliem viesiem, nevis testa vidē."
+   },
+   "start": {
+    "datum": "2026. gada 1. septembris",
+    "titel": "Sākums 27 valstīs",
+    "text": "24 valodās, ar vairākām valūtām, ar myBestDays tirgu un abām lietotnēm — uzņēmumam un viesim."
+   }
+  },
+  "marken": {
+   "eyebrow": "Divi zīmoli, viena platforma",
+   "heading": "myNextDays uzņēmumam, myBestDays viesim.",
+   "sub": "Abi pieder myNextDays ApS un darbojas uz vienas tehnikas — tos šķir tas, kas tos lieto.",
+   "nextdays": {
+    "rolle": "Uzņēmumiem",
+    "text": "Īpašumu pārvaldības sistēma un kanālu pārvaldnieks: vieta, kur uzņēmums vada savus objektus, nosaka cenas un norēķinās par naudu.",
+    "punkte": {
+     "kalender": "Noslodzes plāns visiem objektiem un vienībām, reāllaikā",
+     "portale": "Viens savienojums visiem portāliem — pieejamība, cenas un bloķējumi aiziet visur vienlaikus",
+     "geld": "Maksājumi, rēķini, komisijas un norēķini ar īpašniekiem",
+     "team": "Sava lietotne īpašniekiem, darbiniekiem un uzkopšanai"
+    }
+   },
+   "bestdays": {
+    "rolle": "Viesiem",
+    "text": "Mūsu pašu tirgus: viesi tur atrod tos pašus objektus un rezervē tieši pie uzņēmuma — ar būtiski zemāku komisiju nekā lielajos portālos.",
+    "punkte": {
+     "direkt": "Rezervācija tieši pie uzņēmuma, bez starpnieka",
+     "provision": "Zemāka komisija nekā lielajos portālos",
+     "app": "Sava lietotne meklēšanai, rezervēšanai un uzturēšanās laikam"
+    }
+   },
+   "hinweis": "Objekts tiek pārdots pa abiem ceļiem vienlaikus — turklāt caur Booking.com, Airbnb un pārējiem portāliem. Kurš kanāls ir ieslēgts, izlemj uzņēmums katram kanālam atsevišķi."
+  },
+  "werte": {
+   "eyebrow": "Principi",
+   "heading": "Pēc kā mūs vērtēt.",
+   "sub": "Seši punkti, ko var pārbaudīt produktā un mūsu dokumentos — nevis nodomu deklarācijas.",
+   "doppelbuchung": {
+    "titel": "Nekādu dubultrezervāciju",
+    "text": "Pie mums pieejamība ir brīvo vienību skaits, nevis ķeksītis. Tā reāllaikā nonāk katrā portālā, un bloķējums bloķē visur — ne tikai tur, kur tas ievadīts."
+   },
+   "preise": {
+    "titel": "Cenas, ko zināt jau iepriekš",
+    "text": "Viens plāns, bez minimālā termiņa un bez ieviešanas maksas. Tas, kas maksā papildus, ir norādīts ar summu cenu lapā, nevis pārdošanas sarunā."
+   },
+   "europa": {
+    "titel": "Eiropa nav tulkošanas projekts",
+    "text": "27 valstis nozīmē 27 valūtas, nodokļu likmes un ziņošanas pienākumus — līdz pat rēķinam, e-pastam viesim un izmaksai. Ja kāda ziņa trūkst, mēs to sakām, nevis ierakstām ticamu vērtību."
+   },
+   "daten": {
+    "titel": "Dati paliek ES",
+    "text": "Darbība un serveri Eiropas Savienībā, VDAR kā pamats, datu apstrādes līgums kā standarts. Uzņēmumā viesu datus redz tikai tās lomas, kurām tie vajadzīgi."
+   },
+   "unabhaengig": {
+    "titel": "Īpašnieku vadīts",
+    "text": "Aiz mums nav koncerna un nav no ārpuses uzspiesta plāna. Ko būvēsim tālāk, izlemjam kopā ar uzņēmumiem, kas programmatūru lieto katru dienu."
+   },
+   "selbst": {
+    "titel": "Mēs to lietojam paši",
+    "text": "Mūsu objekti darbojas tajā pašā platformā, kur klientu objekti. Kļūda vispirms skar mūs — godīgākā kvalitātes pārbaude, ko zinām."
+   }
+  },
+  "menschen": {
+   "eyebrow": "Cilvēki aiz tā",
+   "heading": "Mazi, sasniedzami, no prakses.",
+   "sub": "myNextDays ApS vadība, kā tā reģistrēta Dānijas uzņēmumu reģistrā.",
+   "jeanine": {
+    "rolle": "Dibinātāja un direktore",
+    "text": "Vada mūsu pašu izīrēšanu un ienes ikdienu ar viesiem, portāliem un uzkopšanu katrā lēmumā par produktu."
+   },
+   "torsten": {
+    "rolle": "Direktors",
+    "text": "Notur visus pavedienus kopā un atbalsta komandu tieši tur, kur tas nepieciešams. Izmanto savu daudzpusīgo praktisko pieredzi, lai fonā atrastu ātrus un pragmatiskus risinājumus."
+   }
+  },
+  "unternehmen": {
+   "eyebrow": "Uzņēmums",
+   "heading": "Ar ko jums darīšana.",
+   "firma": "Uzņēmums",
+   "sitz": "Adrese",
+   "register": "Uzņēmumu reģistrs",
+   "ustId": "PVN identifikācijas numurs",
+   "direktion": "Vadība",
+   "impressum": "Pilnas ziņas par pakalpojuma sniedzēju",
+   "kontaktTitel": "Tiešs kontakts",
+   "kontaktText": "Jautājumi par produktu, par pāreju no citas sistēmas vai par sadarbību? Atbild kāds, kas programmatūru lieto pats."
+  }
+ },
+ "funktionen": {
+  "rahmen": {
+   "ctaTesten": "Izmēģini 30 dienas bez maksas",
+   "ctaDemo": "Skatīt demo",
+   "weiter": "Tālāk pie citām funkcijām",
+   "mehr": "Skatīt",
+   "bereich": {
+    "verkauf": "Pārdošana",
+    "gast": "Viesis un nauda",
+    "betrieb": "Darbība"
+   },
+   "reiterHeading": "Kas tieši slēpjas aiz tā?"
+  },
+  "uebersicht": {
+   "metaTitel": "Funkcijas — viss iznomāšanai un viesnīcai | myNextDays",
+   "metaBeschreibung": "Kalendārs, kanālu pārvaldnieks, tiešā rezervācija, saziņa ar viesiem, maksājumi, cenas, komanda, lietotne un analītika — vienā sistēmā, iekļauta katrā plānā.",
+   "eyebrow": "Funkcijas",
+   "headline": "Viss, kas vajadzīgs ikdienā. Vienā sistēmā.",
+   "sub": "Deviņas jomas, viena pieteikšanās. Katra no tām ir pamatplānā — nekā tāda, kas sāktos tikai dārgākā paketē.",
+   "bereichSub": {
+    "verkauf": "Būt redzamam un saņemt rezervācijas",
+    "gast": "No pirmā kontakta līdz naudas ienākšanai",
+    "betrieb": "Kas dara ko — un ko tas ir devis"
+   }
+  },
+  "pms": {
+   "metaBeschreibung": "Viens kalendārs visiem objektiem: noslodzes plāns, rezervācijas, uzdevumi un objektu dati vienā vietā — brīvdienu mājokļiem un viesnīcām.",
+   "headline": "Viens kalendārs visam, ko tu iznomā.",
+   "sub": "Noslodze, rezervācijas un objektu dati atrodas vienā vietā — vai tas ir viens brīvdienu dzīvoklis vai divpadsmit numuru tipi ar vairākām vienībām.",
+   "bildAlt": "Noslodzes plāns ar rezervācijām no vairākiem kanāliem",
+   "nutzen": {
+    "a": {
+     "titel": "Viss vienā skatā",
+     "text": "Noslodzes plāns rāda katru vienību, katru rezervāciju un katru slēgumu vienā skatā — ar krāsu katram kanālam."
+    },
+    "b": {
+     "titel": "Rezervācija sekundēs",
+     "text": "Izveido, pārcel vai atcel rezervāciju, nemainot skatu. Atbrīvotās naktis uzreiz atgriežas pārdošanā."
+    },
+    "c": {
+     "titel": "Objektu dati, kas darbojas visur",
+     "text": "Aprīkojumu, fotoattēlus un noteikumus ievadi vienreiz — portāli un tava mājaslapa tos saņem automātiski."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Viens objekts, vairākas vienības — attēlots pareizi.",
+     "text": "Pieci vienādi studio ir viens tips ar piecām vienībām, nevis piecas reizes uzturēts objekts. Pieejamība ir skaitlis, tieši tā, kā portāli to gaida.",
+     "punkte": {
+      "a": "Vienības katram objekta tipam",
+      "b": "Ēka apvieno vairākus tipus",
+      "c": "Pieejamība kā skaitlis, nevis jā/nē"
+     }
+    }
+   },
+   "bildAltBlock": "Viesnīcas noslodzes plāns ar numuru tipiem",
+   "reiter": {
+    "kalender": {
+     "titel": "Noslodzes plāns",
+     "heading": "Katra vienība, katra nakts, viens attēls.",
+     "text": "Plāns rāda rezervācijas, slēgumus un brīvās naktis blakus — ar krāsu katram kanālam un viesa vārdu. Vilkšana pārceļ rezervāciju, klikšķis izveido jaunu.",
+     "punkte": {
+      "a": "Krāsa katram kanālam",
+      "b": "Vilkt un nomest",
+      "c": "Līdz 500 objektiem"
+     }
+    },
+    "einheiten": {
+     "titel": "Vienības",
+     "heading": "Pieci vienādi studio ir viens tips.",
+     "text": "Tu uzturi tipu un norādi, cik vienību tam ir. Portāli saņem skaitu, nevis jā/nē pieejamību — tieši tā, kā tie to gaida.",
+     "punkte": {
+      "a": "Tips izveidots",
+      "b": "Vienības iestatītas",
+      "c": "Skaits portāliem"
+     }
+    },
+    "reservierung": {
+     "titel": "Rezervācijas",
+     "heading": "No pieprasījuma līdz izbraukšanai.",
+     "text": "Katrai rezervācijai ir sava vēsture: maksājumi, ziņas, uzdevumi un izmaiņas atrodas vienā vietā — izsekojami arī nedēļas vēlāk.",
+     "punkte": {
+      "a": "Vēsture katrai rezervācijai",
+      "b": "Izmaiņas protokolētas",
+      "c": "Atcelšana ar iemeslu"
+     }
+    },
+    "objektdaten": {
+     "titel": "Objektu dati",
+     "heading": "Ievadi vienreiz, darbojas visur.",
+     "text": "Aprīkojums, fotoattēli, noteikumi un apraksti atrodas pie objekta. No turienes tie nonāk portālos un tavā mājaslapā — bez otras ievades.",
+     "punkte": {
+      "a": "Fotoattēli un aprīkojums",
+      "b": "Mājas noteikumi",
+      "c": "Izplatīti automātiski"
+     }
+    }
+   }
+  },
+  "channel": {
+   "metaBeschreibung": "Kanālu pārvaldnieks brīvdienu dzīvoklim un viesnīcai: Airbnb, Booking.com, Expedia, Vrbo un Google sinhroni reāllaikā — bez dubultām rezervācijām.",
+   "headline": "Viens kalendārs. Visas rezervāciju platformas.",
+   "sub": "Pieejamība, cenas un saturs nonāk portālos reāllaikā, rezervācijas atgriežas tajā pašā ritmā. Dubultas rezervācijas nemaz nerodas.",
+   "bildAlt": "Kanālu pārskats ar pieslēgtajām rezervāciju platformām",
+   "nutzen": {
+    "a": {
+     "titel": "56 platformas",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google un daudzas citas — pieslēgtas caur vienu saskarni, nevis pašdarinātiem risinājumiem."
+    },
+    "b": {
+     "titel": "Divi virzieni, viens ritms",
+     "text": "Ko maini šeit, tur ir redzams sekundēs. Kas tur tiek rezervēts, šeit uzreiz aizver naktis."
+    },
+    "c": {
+     "titel": "Katrs portāls atsevišķi",
+     "text": "Cenas, piemaksas un noteikumi darbojas katram portālam atsevišķi — nav vienas likmes, kurai visur jābūt vienādai tikai tāpēc, ka tā būtu vienkāršāk."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Stop-sell darbojas visur. Bez domāšanas.",
+     "text": "Ja slēdz datumu, tas ir aizvērts katrā pieslēgtajā portālā. Nav jāpiestrādā piecos ekstranetos, neviens kanāls nedēļas nogalē nepaliek aizmirsts.",
+     "punkte": {
+      "a": "Tūlītējs slēgums visos kanālos",
+      "b": "Minimālā uzturēšanās katram portālam",
+      "c": "Protokols: kas un kad tika nosūtīts"
+     }
+    }
+   },
+   "bildAltBlock": "Noslodzes plāns ar rezervācijām no vairākiem portāliem",
+   "reiter": {
+    "portale": {
+     "titel": "Portāli",
+     "heading": "56 platformas vienā saskarnē.",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google un myBestDays izmanto vienu un to pašu pieslēgumu. Jauns portāls ir savienojums, nevis projekts.",
+     "punkte": {
+      "a": "Airbnb",
+      "b": "Booking.com",
+      "c": "myBestDays"
+     }
+    },
+    "sync": {
+     "titel": "Sinhronizācija reāllaikā",
+     "heading": "Kas notiek šeit, tur ir sekundēs.",
+     "text": "Pieejamība, cenas un ierobežojumi aiziet uzreiz; rezervācijas atgriežas tajā pašā ritmā un aizver naktis, pirms kāds var rezervēt divreiz.",
+     "punkte": {
+      "a": "Pieejamība",
+      "b": "Cenas",
+      "c": "Ierobežojumi"
+     }
+    },
+    "stopsell": {
+     "titel": "Stop-sell",
+     "heading": "Viens klikšķis aizver visus kanālus.",
+     "text": "Viens slēgums darbojas visur — nevis četros ekstranetos pēc kārtas. Protokols rāda, kas un kad tika nosūtīts un ko portāls atbildēja.",
+     "punkte": {
+      "a": "Slēgums iestatīts",
+      "b": "Nosūtīts visiem kanāliem",
+      "c": "Protokols pārbaudīts"
+     }
+    },
+    "regeln": {
+     "titel": "Noteikumi katram portālam",
+     "heading": "Katrs portāls var būt citāds.",
+     "text": "Piemaksas, minimālās uzturēšanās un atcelšanas noteikumus iestati katram kanālam. Nav kopējas likmes tikai tāpēc, ka sistēma citādi neprot.",
+     "punkte": {
+      "a": "Piemaksa katram kanālam",
+      "b": "Minimālā uzturēšanās",
+      "c": "Atcelšanas termiņš"
+     }
+    }
+   }
+  },
+  "direkt": {
+   "metaBeschreibung": "Sava rezervāciju mājaslapa, rezervāciju logrīks un savs domēns — tiešās rezervācijas bez portāla komisijas, ar maksājumu un apstiprinājumu.",
+   "headline": "Rezervācijas, kas pieder tikai tev.",
+   "sub": "Tava paša rezervāciju lapa ar pieejamību, cenām un maksājumu. Par rezervācijām tajā mēs neņemam komisiju — portāli ņem 15 līdz 18 procentus.",
+   "bildAlt": "Objekta lapa ar rezervācijas soļiem",
+   "nutzen": {
+    "a": {
+     "titel": "Mājaslapa bez aģentūras",
+     "text": "Veidotājs ar veidnēm, savs domēns, fotoattēli un teksti no taviem objektu datiem — tiešsaistē vienā pēcpusdienā."
+    },
+    "b": {
+     "titel": "Logrīks tavai lapai",
+     "text": "Jau ir mājaslapa? Tad tajā ieliec tikai rezervācijas soļus un paturi savu dizainu."
+    },
+    "c": {
+     "titel": "Maksājums notiek uzreiz",
+     "text": "Avanss, atlikums un drošības nauda notiek automātiski — viesis saņem apstiprinājumu bez tavas iejaukšanās."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Tirgus vieta atved viesus, kas tevi nepazīst.",
+     "text": "myBestDays ir mūsu paša tirgus vieta. Tur tu stāvi blakus citām naktsmītnēm, neuzturot otru sistēmu — tie paši objekti, tas pats kalendārs.",
+     "punkte": {
+      "a": "Ieslēdzams katram kanālam atsevišķi",
+      "b": "Viens kalendārs visam",
+      "c": "8 % viss iekļauts portāla komisijas vietā"
+     }
+    }
+   },
+   "bildAltBlock": "Kanālu pārskats ar savu mājaslapu un tirgus vietu",
+   "reiter": {
+    "website": {
+     "titel": "Rezervāciju mājaslapa",
+     "heading": "Tava lapa, tavas rezervācijas.",
+     "text": "Veidnes, savs domēns, fotoattēli un teksti no objektu datiem. Viesis rezervē tieši pie tevis — bez apkārtceļa caur portālu.",
+     "punkte": {
+      "a": "Veidnes",
+      "b": "Savs domēns",
+      "c": "Vairākās valodās"
+     }
+    },
+    "widget": {
+     "titel": "Rezervāciju logrīks",
+     "heading": "Mājaslapai, kas tev jau ir.",
+     "text": "Viens bloks tavā esošajā lapā: pieejamība, cena un maksājums, tavā dizainā. Bez pārcelšanās, bez jauna projekta.",
+     "punkte": {
+      "a": "Kods ielikts",
+      "b": "Dizains pārņemts",
+      "c": "Pirmā rezervācija"
+     }
+    },
+    "marktplatz": {
+     "titel": "myBestDays",
+     "heading": "Mūsu tirgus vieta atved jaunus viesus.",
+     "text": "Tavi objekti ir mūsu paša tirgus vietā blakus citām naktsmītnēm — tie paši dati, tas pats kalendārs, viens klikšķis, lai ieslēgtu.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "zahlung": {
+     "titel": "Maksājums",
+     "heading": "Samaksāts, pirms viesis ierodas.",
+     "text": "Avanss rezervējot, atlikums pirms ierašanās, drošības nauda nodrošināta. Viesis apstiprinājumu un rēķinu saņem automātiski.",
+     "punkte": {
+      "a": "Avanss",
+      "b": "Atlikuma maksājums",
+      "c": "Drošības nauda"
+     }
+    }
+   }
+  },
+  "gaeste": {
+   "metaBeschreibung": "Digitālā viesu mape, tiešsaistes reģistrēšanās, automātiskās ziņas un MI konsjeržs 24 valodās — no pirmā kontakta līdz izbraukšanai.",
+   "headline": "Apkalpo viesus, nerakstot bez apstājas.",
+   "sub": "Ziņas aiziet automātiski īstajā brīdī, uz jautājumiem atbild konsjeržs 24 valodās — un tu visu lasi vienā pastkastē.",
+   "bildAlt": "Pastkaste ar viesu ziņām no vairākiem kanāliem",
+   "nutzen": {
+    "a": {
+     "titel": "Viena pastkaste",
+     "text": "Airbnb, Booking, e-pasts un WhatsApp nonāk vienā sarunā — ar rezervāciju blakus, nevis četrās lietotnēs."
+    },
+    "b": {
+     "titel": "Ziņas īstajā laikā",
+     "text": "Apstiprinājums, ierašanās informācija, durvju kods, lūgums novērtēt: iestati vienreiz, tālāk notiek pats."
+    },
+    "c": {
+     "titel": "Reģistrēšanās iepriekš",
+     "text": "Viesis aizpilda savus datus pirms ierašanās. Tu viņu sagaidi, nevis pārraksti veidlapas."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Viesu mape aizstāj mapi gaitenī.",
+     "text": "Wi-Fi parole, atkritumu izvešana, restorānu ieteikumi un mājas noteikumi — digitāli, viesa valodā, jebkurā brīdī maināmi.",
+     "punkte": {
+      "a": "24 valodas",
+      "b": "Durvju kodi īstajā brīdī",
+      "c": "Ieteikumi apkaimē"
+     }
+    }
+   },
+   "bildAltBlock": "Mobilais skats ar noslodzi un ziņām",
+   "reiter": {
+    "posteingang": {
+     "titel": "Pastkaste",
+     "heading": "Airbnb, Booking, e-pasts un WhatsApp vienā sarunā.",
+     "text": "Visas ziņas par vienu rezervāciju ir kopā — ar kontekstu, veidnēm un tulkojumu. Vairs nav jāmeklē četrās lietotnēs.",
+     "punkte": {
+      "a": "Viesis",
+      "b": "Kad ir iespējama reģistrēšanās?",
+      "c": "No plkst. 15.00 — kodu nosūtīšu tev rīt no rīta."
+     }
+    },
+    "automatisch": {
+     "titel": "Automātiskās ziņas",
+     "heading": "Īstajā laikā, bez atgādinājuma.",
+     "text": "Apstiprinājums, ierašanās informācija, durvju kods, lūgums novērtēt: iestati vienreiz, tālāk notiek pats — viesa valodā.",
+     "punkte": {
+      "a": "Apstiprinājums nosūtīts",
+      "b": "Ierašanās informācija ieplānota",
+      "c": "Lūgums novērtēt"
+     }
+    },
+    "checkin": {
+     "titel": "Tiešsaistes reģistrēšanās",
+     "heading": "Dati pirms ierašanās, nevis pie durvīm.",
+     "text": "Viesis iepriekš aizpilda reģistrācijas datus un dokumentu. Tu viņu sagaidi, nevis pārraksti veidlapas — un izpildi reģistrēšanas prasību.",
+     "punkte": {
+      "a": "Reģistrācijas dati",
+      "b": "Personu apliecinošs dokuments",
+      "c": "Paraksts"
+     }
+    },
+    "mappe": {
+     "titel": "Viesu mape",
+     "heading": "Viss, kas viesim jāzina.",
+     "text": "Wi-Fi, mājas noteikumi, atkritumu izvešana un ieteikumi apkaimē — digitāli, jebkurā brīdī maināmi, 24 valodās.",
+     "punkte": {
+      "a": "Viesis",
+      "b": "Kur ir Wi-Fi parole?",
+      "c": "Viesu mapē — nosūtīju tev saiti."
+     }
+    }
+   }
+  },
+  "zahlungen": {
+   "metaBeschreibung": "Tiešsaistes maksājumi, avansi, drošības naudas un grāmatvedībai gatavi eksporti — naudas ienākšana un norēķini bez papildu darba.",
+   "headline": "Nauda ienāk, tev tai neskrienot pakaļ.",
+   "sub": "Avanss rezervējot, atlikums pirms ierašanās, drošības nauda nodrošināta — automātiski iekasēts un dokumentēts rezervācijā.",
+   "bildAlt": "Rezervācija ar maksājuma statusu un dokumentiem",
+   "nutzen": {
+    "a": {
+     "titel": "Maksā kā parasti",
+     "text": "Karte, Apple Pay, Google Pay, PayPal un vietējie veidi — viesis izvēlas to, ko pazīst."
+    },
+    "b": {
+     "titel": "Noteikumi, nevis atgādinājumi",
+     "text": "Kad un cik jāmaksā, nosaki vienreiz. Trūkstošos maksājumus redzi, pirms viesis ierodas."
+    },
+    "c": {
+     "titel": "Gatavs grāmatvedībai",
+     "text": "Rēķini rodas no rezervācijas, eksporti atbilst grāmatvedim — bez tabulām ar roku."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Īpašnieki savu norēķinu redz paši.",
+     "text": "Katram īpašniekam ir sava piekļuve ar noslodzi, ieņēmumiem un izmaksām. Tas ietaupa mēneša e-pastu ar pievienotu tabulu.",
+     "punkte": {
+      "a": "Sava pieteikšanās katram īpašniekam",
+      "b": "Norēķins katram objektam",
+      "c": "Tikai lasīšana, bez iejaukšanās"
+     }
+    }
+   },
+   "bildAltBlock": "Pārskats ar apgrozījumu un izmaksām",
+   "reiter": {
+    "online": {
+     "titel": "Tiešsaistes maksājumi",
+     "heading": "Karte, maks, PayPal.",
+     "text": "Viesis maksā ar veidu, ko pazīst. Nauda nonāk tavā kontā, statuss redzams rezervācijā.",
+     "punkte": {
+      "a": "Atvērtā summa",
+      "b": "Avanss",
+      "c": "Atlikuma maksājums"
+     }
+    },
+    "plaene": {
+     "titel": "Maksājumu plāni",
+     "heading": "Kas kad jāmaksā, izlem tu.",
+     "text": "Avanss, atlikums un drošības nauda seko taviem noteikumiem — vajadzības gadījumā atšķirīgi katram objektam un kanālam.",
+     "punkte": {
+      "a": "Noteikums izveidots",
+      "b": "Avanss iemaksāts",
+      "c": "Atlikums atvērts"
+     }
+    },
+    "rechnungen": {
+     "titel": "Rēķini",
+     "heading": "No rezervācijas, nevis no tabulas.",
+     "text": "Rēķini un kredītrēķini rodas no īstajiem skaitļiem, ar nodokļa likmi un numerāciju. Eksporti atbilst grāmatvedim.",
+     "punkte": {
+      "a": "Numerācija",
+      "b": "Nodokļu likmes",
+      "c": "Eksports"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Īpašnieku norēķins",
+     "heading": "Ieņēmumi, izdevumi, izmaksa.",
+     "text": "Katrs īpašnieks redz savus objektus ar noslodzi, ieņēmumiem un izmaksām — kā savu piekļuvi, nevis kā mēneša e-pastu.",
+     "punkte": {
+      "a": "Ieņēmumi",
+      "b": "Izdevumi",
+      "c": "Izmaksa"
+     }
+    }
+   }
+  },
+  "preise": {
+   "metaBeschreibung": "Dinamiskās cenas ar min./maks., cenu plāni katram objektam, sezonas un noslodzes loģika — vairāk ieņēmumu bez ikdienas roku darba.",
+   "headline": "Cenas, kas pašas parūpējas par sevi.",
+   "sub": "Sezona, noslodze, rezervēšanas laiks un nedēļas diena tiek ņemti vērā automātiski. Tavas robežas paliek tavas robežas: zem minimuma nekas nenotiek.",
+   "bildAlt": "Cenu tīkls ar dinamiskajām cenām katrai naktij",
+   "nutzen": {
+    "a": {
+     "titel": "Min. un maks. darbojas",
+     "text": "Tu nosaki rāmi, sistēma kustas tajā — nekādas cenas, kuru tu negribēji."
+    },
+    "b": {
+     "titel": "Cenu plāni katram objektam",
+     "text": "Neatmaksājams, agrā rezervācija, ilgtermiņa: vairākas cenas katram objektam, katra ar saviem noteikumiem."
+    },
+    "c": {
+     "titel": "Manuālajai ievadei ir prioritāte",
+     "text": "Manuāli iestatīta cena paliek spēkā. Automātika nekad nepārraksta apzinātu lēmumu."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Atlaides un piemaksas aiziet arī uz portāliem.",
+     "text": "Nedēļas un mēneša atlaides, agrās rezervācijas akcijas un piemaksas tiek izspēlētas tur, kur tas ir atļauts — ne tikai tavā skatā.",
+     "punkte": {
+      "a": "Atlaides par uzturēšanās ilgumu",
+      "b": "Akcijas ar periodu",
+      "c": "Piemaksas katram kanālam"
+     }
+    }
+   },
+   "bildAltBlock": "Noslodzes plāns ar cenām katrai naktij",
+   "reiter": {
+    "dynamisch": {
+     "titel": "Dinamiskās cenas",
+     "heading": "Noslodze, sezona, rezervēšanas laiks.",
+     "text": "Cena kustas starp tavu minimumu un maksimumu — pēc pieprasījuma, nedēļas dienas un rezervēšanas laika, katru nakti pārrēķināta.",
+     "punkte": {
+      "a": "Minimums",
+      "b": "Maksimums",
+      "c": "Pieprasījums"
+     }
+    },
+    "raten": {
+     "titel": "Cenu plāni",
+     "heading": "Vairākas cenas vienam objektam.",
+     "text": "Neatmaksājams, agrā rezervācija, ilgtermiņa: katra cena ar saviem nosacījumiem — un katra aiziet uz portāliem, kas to atbalsta.",
+     "punkte": {
+      "a": "Cena izveidota",
+      "b": "Nosacījumi iestatīti",
+      "c": "Uz portāliem"
+     }
+    },
+    "rabatte": {
+     "titel": "Atlaides",
+     "heading": "Palikt ilgāk, maksāt mazāk.",
+     "text": "Nedēļas un mēneša atlaides, akcijas ar periodu, piemaksas īsām uzturēšanās reizēm — redzamas tieši kalendārā.",
+     "punkte": {
+      "a": "Nedēļas atlaide",
+      "b": "Mēneša atlaide",
+      "c": "Akcija"
+     }
+    },
+    "grenzen": {
+     "titel": "Tavas robežas",
+     "heading": "Automātikai nekad nav pēdējais vārds.",
+     "text": "Cena, ko iestati pats, paliek spēkā. Un zem tava minimuma nekas nenotiek — arī ne pie tukša kalendāra.",
+     "punkte": {
+      "a": "Minimums",
+      "b": "Manuālā ievade",
+      "c": "Prioritāte"
+     }
+    }
+   }
+  },
+  "team": {
+   "metaBeschreibung": "Lomas īpašniekiem, uzkopšanai, darbiniekiem un aģentūrai — katrs redz tikai savu jomu, ar uzdevumiem un foto kontrolsarakstiem.",
+   "headline": "Katrs redz tieši to, kas viņam vajadzīgs.",
+   "sub": "Īpašnieki redz savus objektus, uzkopšana savus izsaukumus, darbinieki savu jomu. Finanses paliek tur, kur tām jābūt.",
+   "bildAlt": "Uzdevumu pārskats ar atbildībām",
+   "nutzen": {
+    "a": {
+     "titel": "Lomas, nevis vienošanās",
+     "text": "Tiesības ir piesaistītas lomai, nevis uzticībai. Uzkopšanas piekļuve netiek pie apgrozījuma."
+    },
+    "b": {
+     "titel": "Uzdevumi ar pierādījumu",
+     "text": "Kontrolsaraksti ar fotoattēliem parāda, ka dzīvoklis ir nodots — kopā ar laiku."
+    },
+    "c": {
+     "titel": "Sadalīti automātiski",
+     "text": "Pēc katras izbraukšanas uzkopšana rodas pati, ar termiņu līdz nākamajai ierašanās reizei."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Aģentūras vada vairākus uzņēmumus līdzās.",
+     "text": "Kas iznomā citu vārdā, vienā kontā pārvalda vairākus īpašniekus — ar atsevišķiem norēķiniem un savām piekļuvēm.",
+     "punkte": {
+      "a": "Vairāki īpašnieki",
+      "b": "Atsevišķi norēķini",
+      "c": "Tiesības katrai personai"
+     }
+    }
+   },
+   "bildAltBlock": "Rezervāciju saraksts ar atbildībām",
+   "reiter": {
+    "rollen": {
+     "titel": "Lomas",
+     "heading": "Katrs redz savu jomu.",
+     "text": "Aģentūra, īpašnieks, darbinieks, uzkopšana: tiesības ir piesaistītas lomai. Apgrozījumu redz tikai tas, kam tas jāredz.",
+     "punkte": {
+      "a": "Loma izvēlēta",
+      "b": "Objekti piesaistīti",
+      "c": "Tiesības pārbaudītas"
+     }
+    },
+    "aufgaben": {
+     "titel": "Uzdevumi",
+     "heading": "Uzkopšana rodas pati.",
+     "text": "Pēc katras izbraukšanas uzdevums ir plānā, ar termiņu līdz nākamajai ierašanās reizei. Izpildīts tas tiek ar foto kontrolsarakstu.",
+     "punkte": {
+      "a": "Izbraukšana reģistrēta",
+      "b": "Uzkopšana ieplānota",
+      "c": "Fotoattēli augšupielādēti"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Īpašnieki",
+     "heading": "Sava piekļuve, nevis mēneša e-pasts.",
+     "text": "Īpašnieki redz savu objektu noslodzi, ieņēmumus un izmaksas — lasot, bez iespējas iejaukties darbībā.",
+     "punkte": {
+      "a": "Noslodze",
+      "b": "Ieņēmumi",
+      "c": "Izmaksa"
+     }
+    },
+    "agentur": {
+     "titel": "Aģentūra",
+     "heading": "Vairāki uzņēmumi vienā kontā.",
+     "text": "Kas iznomā citu vārdā, vada vairākus īpašniekus līdzās — atsevišķi norēķini, atsevišķas piekļuves, viens kalendārs.",
+     "punkte": {
+      "a": "Vairāki īpašnieki",
+      "b": "Atsevišķi norēķini",
+      "c": "Viena pieteikšanās"
+     }
+    }
+   }
+  },
+  "app": {
+   "metaBeschreibung": "Vietējā lietotne uzņēmumam, īpašniekiem, viesiem un uzkopšanai — noslodze, uzdevumi un ziņas ceļā.",
+   "headline": "Tavs uzņēmums ietilpst kabatā.",
+   "sub": "Pārbaudi noslodzi, izveido rezervāciju, atbildi uz ziņu, atzīmē uzdevumu — no telefona, bez klēpjdatora.",
+   "bildAlt": "Mobilā lietotne ar noslodzi un uzdevumiem",
+   "nutzen": {
+    "a": {
+     "titel": "Katrai lomai",
+     "text": "Īpašniekiem, uzkopšanai un uzņēmumam ir savs skats — tā pati lietotne, atšķirīgas tiesības."
+    },
+    "b": {
+     "titel": "Paziņojumi, kas ir svarīgi",
+     "text": "Jauna rezervācija, atcelšana, viesa jautājums: uzzini uzreiz, neatverot lietotni."
+    },
+    "c": {
+     "titel": "Arī viesiem",
+     "text": "Viesi viesu mapi, reģistrēšanos un ziņas atrod myBestDays lietotnē."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Divas lietotnes, jo divas pasaules.",
+     "text": "myNextDays vada uzņēmumu, myBestDays pieder viesim. Atsevišķas lietotnes nozīmē: neviens viesis nekad nenokļūst tavos skaitļos.",
+     "punkte": {
+      "a": "myNextDays uzņēmumam",
+      "b": "myBestDays viesim",
+      "c": "iOS un Android"
+     }
+    }
+   },
+   "bildAltBlock": "Uzņēmuma pārskats pie darbagalda",
+   "reiter": {
+    "betrieb": {
+     "titel": "Darbība ceļā",
+     "heading": "Noslodze un rezervācijas rokā.",
+     "text": "Pārbaudi kalendāru, izveido rezervāciju, maini cenu — no telefona, tajos pašos datos kā pie darbagalda.",
+     "punkte": {
+      "a": "Kalendārs",
+      "b": "Rezervācijas",
+      "c": "Cenas"
+     }
+    },
+    "meldungen": {
+     "titel": "Paziņojumi",
+     "heading": "Tu uzzini uzreiz.",
+     "text": "Jauna rezervācija, atcelšana vai viesa jautājums pienāk kā paziņojums — ar vienu pieskārienu tu esi rezervācijā.",
+     "punkte": {
+      "a": "Rezervācija",
+      "b": "Jauna rezervācija jūlijā",
+      "c": "Atcelšana 12.–14.08."
+     }
+    },
+    "gast": {
+     "titel": "Viesim",
+     "heading": "myBestDays lietotne.",
+     "text": "Viesi rezervāciju, viesu mapi, reģistrēšanos un ziņas atrod savā lietotnē — atsevišķi no tavas.",
+     "punkte": {
+      "a": "Rezervācija",
+      "b": "Viesu mape",
+      "c": "Reģistrēšanās"
+     }
+    },
+    "rollen": {
+     "titel": "Komandai",
+     "heading": "Uzkopšana un īpašnieki.",
+     "text": "Uzkopšanas darbinieki redz savus izsaukumus ar kontrolsarakstu, īpašnieki savus objektus. Tā pati lietotne, atšķirīgas tiesības.",
+     "punkte": {
+      "a": "Izsaukums atvērts",
+      "b": "Kontrolsaraksts izpildīts",
+      "c": "Fotoattēli nosūtīti"
+     }
+    }
+   }
+  },
+  "auswertungen": {
+   "metaBeschreibung": "Noslodze, ieņēmumi, ADR un kanālu salīdzinājums — atskaites, kas rāda, kur ir iemesls, nevis tikai to, kas notika.",
+   "headline": "Skaitļi, kas ļauj pieņemt lēmumu.",
+   "sub": "Noslodze, ieņēmumi un vidējā cena katram objektam, periodam un kanālam — blakus, nevis piecos eksportos.",
+   "bildAlt": "Analītika ar noslodzi un ieņēmumiem",
+   "nutzen": {
+    "a": {
+     "titel": "Salīdzini kanālus",
+     "text": "Ko dod Booking, ko sava mājaslapa? Aprēķināts ar komisiju, nevis tikai pēc apgrozījuma."
+    },
+    "b": {
+     "titel": "Katram objektam",
+     "text": "Kurš objekts sevi nes, kurš nē — redzams pēc noslodzes un vidējās cenas."
+    },
+    "c": {
+     "titel": "Atskaites pašas",
+     "text": "Mēneša atskaites automātiski aiziet tev un taviem īpašniekiem, kā PDF ierastajā uzbūvē."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Pagātne un nākotne vienā skatā.",
+     "text": "Blakus tam, kas bija, stāv tas, kas ir rezervēts — tā februārī redzi, vai vasara nesīs, nevis pamani to jūlijā.",
+     "punkte": {
+      "a": "Rezervāciju stāvoklis uz priekšu",
+      "b": "Salīdzinājums ar iepriekšējo gadu",
+      "c": "Eksports grāmatvedim"
+     }
+    }
+   },
+   "bildAltBlock": "Viesnīcas noslodzes plāns kā datu pamats",
+   "reiter": {
+    "auslastung": {
+     "titel": "Noslodze",
+     "heading": "Cik pilns ir patiesībā?",
+     "text": "Noslodze katram objektam, mēnesim un kanālam — salīdzinājumā ar iepriekšējo gadu, nevis pēc nojautas.",
+     "punkte": {
+      "a": "Noslodze",
+      "b": "Iepriekšējais gads",
+      "c": "Katram objektam"
+     }
+    },
+    "kanaele": {
+     "titel": "Kanālu salīdzinājums",
+     "heading": "Ko dod kurš kanāls?",
+     "text": "Apgrozījums pēc komisijas katram kanālam: Booking, Airbnb, sava mājaslapa, myBestDays — blakus, nevis piecos eksportos.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "berichte": {
+     "titel": "Atskaites",
+     "heading": "Pienāk pašas.",
+     "text": "Mēneša atskaites automātiski aiziet tev un taviem īpašniekiem, kā PDF ierastajā uzbūvē.",
+     "punkte": {
+      "a": "Atskaite izveidota",
+      "b": "Nosūtīta īpašniekiem",
+      "c": "Arhīvā ielikta"
+     }
+    },
+    "ausblick": {
+     "titel": "Nākotnes skats",
+     "heading": "Kas jau ir rezervēts.",
+     "text": "Blakus tam, kas bija, stāv rezervāciju stāvoklis uz priekšu — tā februārī redzi, vai vasara nesīs.",
+     "punkte": {
+      "a": "Rezervēts",
+      "b": "Pieprasīts",
+      "c": "Brīvs"
+     }
+    }
+   }
+  }
+ },
+ "kontakt": {
+  "meta": {
+   "titel": "Kontakti — myNextDays",
+   "beschreibung": "Kā sazināties ar myNextDays: vispārīgi jautājumi un pārdošana uz adresi {info}, tehniski jautājumi uz adresi {technik}, pa tālruni {telefon} — vai tieši caur veidlapu."
+  },
+  "hero": {
+   "eyebrow": "Kontakti",
+   "headlinePre": "Pasakiet, par ko ir runa —",
+   "headlineHighlight": "mēs atbildēsim",
+   "sub": "Jautājumi par produktu, par pāreju no citas sistēmas, par pieslēgšanu caur mūsu API vai par sadarbību: izvēlieties savu tēmu, un ziņa nonāks tieši pie tiem cilvēkiem, kuri to pārzina.",
+   "sitz": "Mītne Bindslevā, Dānijā",
+   "sprachen": "Programmatūra 24 valodās",
+   "eu": "Mitināta ES, atbilst GDPR"
+  },
+  "wege": {
+   "eyebrow": "Ceļi pie mums",
+   "heading": "Kas atbild par jūsu jautājumu?",
+   "sub": "Divas pastkastes un tērzēšana. Komerciālie jautājumi un viss pirms sākuma nonāk vispārīgajā pastkastē, viss tehniskais tieši pie izstrādes komandas — tā nekas nepaliek rindā, kurā neviens neieskatās.",
+   "allgemein": {
+    "titel": "Produkts, cenas un pārdošana",
+    "text": "Vēlaties uzzināt, vai myNextDays der jūsu uzņēmumam, ko nozīmē pāreja no citas sistēmas vai kā notiek rēķini un abonements? Šis ir pareizais ceļš — arī presei, partnerībām un datu aizsardzības jautājumiem.",
+    "aktion": "Rakstīt ziņu"
+   },
+   "technik": {
+    "titel": "Tehnika, API un drošība",
+    "text": "Kaut kas nedarbojas, savienojums ar rezervācijas portālu ķeras, jūs izstrādājat pret mūsu API vai esat atradis drošības ievainojamību? Šie jautājumi nonāk tieši pie izstrādes komandas, nevis caur pārdošanu.",
+    "aktion": "Rakstīt ziņu"
+   },
+   "hilfe": {
+    "titel": "Palīdzība un tērzēšana",
+    "text": "Pamācības par katru jomu ir palīdzības centrā. Un ja vajag ātri: katras lapas apakšā pa labi ir tērzēšana, kurā atbild īsts cilvēks — bez konta un bez pieteikšanās.",
+    "aktion": "Uz palīdzības centru",
+    "chatHinweis": "Tērzēšana katras lapas apakšā pa labi"
+   }
+  },
+  "formular": {
+   "eyebrow": "Ziņa",
+   "heading": "Rakstiet mums",
+   "sub": "Viena veidlapa visam — jūsu tēma nosaka, kas to saņem.",
+   "ablaufTitel": "Kas notiek pēc tam",
+   "ablauf": {
+    "eingang": {
+     "titel": "Ziņa tiek nosūtīta",
+     "text": "Caur mūsu paša pasta serveri Dānijā — nevis caur trešās puses veidlapu pakalpojumu, caur kura rokām ietu jūsu dati."
+    },
+    "zuordnung": {
+     "titel": "Tā nonāk pareizajā pastkastē",
+     "text": "Komerciālais uz adresi {info}, tehniskais uz adresi {technik}. Kurā tieši, izlemj mūsu serveris pēc jūsu tēmas."
+    },
+    "antwort": {
+     "titel": "Mēs atbildam jums tieši",
+     "text": "Kā parastu e-pasta ziņu uz adresi, ko šeit norādāt — uz to var vienkārši atbildēt."
+    }
+   },
+   "hinweisPostfach": "Divas pastkastes, lai nekas nepaliktu neizskatīts: {info} visam komerciālajam, {technik} visam tehniskajam. Kura tā būs, nosaka mūsu serveris pēc jūsu tēmas — šī veidlapa nevar norādīt mērķi.",
+   "thema": "Par ko ir runa?",
+   "themen": {
+    "allgemein": "Vispārīgs jautājums",
+    "vertrieb": "Produkts, cenas un pārdošana",
+    "abrechnung": "Rēķins un abonements",
+    "technik": "Tehniska problēma",
+    "api": "API un izstrādātāji",
+    "partner": "Partnerība",
+    "presse": "Prese un mediji",
+    "datenschutz": "Datu aizsardzība",
+    "sicherheit": "Ziņot par drošības ievainojamību"
+   },
+   "zielAllgemein": "Tiks nosūtīts uz adresi {email}",
+   "zielTechnik": "Tiks nosūtīts uz adresi {email} — mūsu izstrādes komandai",
+   "name": "Vārds",
+   "email": "E-pasts",
+   "emailPlatzhalter": "vards@piemers.lv",
+   "firma": "Uzņēmums",
+   "telefon": "Tālrunis",
+   "optional": "neobligāti",
+   "nachricht": "Jūsu ziņa",
+   "nachrichtPlatzhalter": "Aprakstiet savu jautājumu — jo precīzāk, jo atbilstošāka atbilde.",
+   "absenden": "Nosūtīt ziņu",
+   "laeuft": "Tiek sūtīts …",
+   "dankeTitel": "Saņemts.",
+   "nochEine": "Rakstīt vēl vienu ziņu",
+   "fehlerAllgemein": "Tas neizdevās. Lūdzu, mēģiniet vēlāk vēlreiz.",
+   "fehlerPruefung": "Drošības pārbaude neizdevās. Lūdzu, pārlādējiet lapu un nosūtiet ziņu vēlreiz.",
+   "fehlerFelder": "Lūdzu, pārbaudiet savus datus: nepieciešams vārds, e-pasta adrese un ziņa ar vismaz 20 rakstzīmēm.",
+   "fehlerZuOft": "No šī savienojuma ir saņemts pārāk daudz ziņu. Lūdzu, mazliet uzgaidiet un mēģiniet vēlreiz.",
+   "fehlerSpaeter": "Ziņu pašlaik nevar nogādāt. Lūdzu, mēģiniet vēlāk vēlreiz vai rakstiet tieši uz {email}.",
+   "datenschutzHinweis": "Jūsu datus izmantojam tikai, lai atbildētu uz šo jautājumu. Vairāk <link>privātuma politikā</link>.",
+   "recaptchaHinweis": "Šo veidlapu aizsargā reCAPTCHA. Ir spēkā Google <datenschutz>privātuma politika</datenschutz> un <bedingungen>lietošanas noteikumi</bedingungen>."
+  },
+  "anschrift": {
+   "eyebrow": "Adrese",
+   "heading": "Kā ar mums sazināties tieši",
+   "firmaEyebrow": "Uzņēmuma dati",
+   "firmaHeading": "Ar ko jums ir darīšana",
+   "firmaText": "To, kas ir līgumpartneris, nevajadzētu meklēt sīkajā drukā. Tāpēc reģistra dati ir šeit — tie paši, kas juridiskajā informācijā.",
+   "firma": "Uzņēmums",
+   "register": "Reģistrs",
+   "ustId": "Pievienotās vērtības nodokļa identifikācijas numurs",
+   "direktion": "Vadība",
+   "impressum": "Skatīt juridisko informāciju",
+   "datenschutz": "Skatīt datu aizsardzību"
+  },
+  "faq": {
+   "eyebrow": "Biežie jautājumi",
+   "heading": "Jautājumi par saziņu",
+   "sub": "Kas atbild, cik ilgi tas prasa un kas notiek ar jūsu datiem.",
+   "wer": {
+    "frage": "Kas man atbildēs?",
+    "antwort": "Cilvēks no komandas, nevis biļešu sistēma ar numuru. myNextDays vada paši īpašnieki: uz komerciāliem jautājumiem atbild kāds, kas pats ikdienā lieto programmatūru, uz tehniskiem — izstrādes komanda."
+   },
+   "postfach": {
+    "frage": "Kā es zinu, kur nonāks mana ziņa?",
+    "antwort": "Zem izvēles lauka pie katras tēmas ir norādīta mērķa adrese. Vispārīgie, komerciālie un redakcionālie jautājumi nonāk uz adresi {info}, tehniskie jautājumi, API jautājumi un drošības ziņojumi — uz adresi {technik}. Sadalījumu veic mūsu serveris — veidlapa nevar nosaukt pastkasti, lai to nevarētu ļaunprātīgi izmantot kā sūtīšanas ceļu svešām ziņām."
+   },
+   "sprache": {
+    "frage": "Kādā valodā es varu rakstīt?",
+    "antwort": "Rakstiet valodā, kurā lasāt šo lapu — mēs to redzam jūsu pieprasījumā un atbildam tajā, ciktāl varam. Vācu, dāņu un angļu valodā atbildam vienmēr."
+   },
+   "dauer": {
+    "frage": "Cik ilgi jāgaida atbilde?",
+    "antwort": "Parasti dažu stundu laikā, nedēļas nogalēs un svētku dienās tas var ilgt ilgāk. Par drošības ziņojumiem: tie nonāk pie izstrādes komandas bez apkārtceļa caur pārdošanu."
+   },
+   "telefon": {
+    "frage": "Vai varu arī piezvanīt?",
+    "antwort": "Jā, pa tālruni {telefon}. Zvans ir ātrākais ceļš visam, ko labāk pārrunāt nekā rakstīt — tehnisku traucējumu gadījumā ziņa tomēr bieži ir labāka, jo tai var pievienot kļūdu ziņojumus un ekrānuzņēmumus."
+   },
+   "bestaetigung": {
+    "frage": "Vai saņemšu saņemšanas apstiprinājumu e-pastā?",
+    "antwort": "Nē, apzināti nē. Automātisks apstiprinājums tiktu sūtīts uz jebkuru adresi, kas šeit tiek ierakstīta — tā mūsu pasta serveri varētu izmantot, lai rakstītu uz svešām pastkastēm. Tāpēc apstiprinājums parādās šeit lapā, tiklīdz ziņa ir nonākusi. Jūsu datus izmantojam vienīgi, lai atbildētu uz šo pieprasījumu."
+   }
+  }
+ },
+ "help": {
+  "heroTitle": "Kā varam palīdzēt?",
+  "heroSubtitle": "Meklējiet zināšanu bāzē vai atrodiet soli pa solim risinājumus ikdienas darbam ar myNextDays.",
+  "searchPlaceholder": "Ko meklējat?",
+  "searchAria": "Meklēt palīdzībā",
+  "contact": "Contact",
+  "home": "Palīdzības sākums",
+  "articles": "{count, plural, zero {# rakstu} one {# raksts} other {# raksti}}",
+  "collectionKbTitle": "Zināšanu bāze",
+  "collectionKbDesc": "Viss par objektiem, cenām, kalendāru, portāliem un jūsu kontu.",
+  "collectionUsecasesTitle": "Lietošanas gadījumi",
+  "collectionUsecasesDesc": "Soli pa solim risinājumi ikdienas tipiskām situācijām.",
+  "helpfulQuestion": "Vai šis raksts bija noderīgs?",
+  "helpfulYes": "Jā",
+  "helpfulNo": "Nē",
+  "helpfulThanks": "Paldies par atsauksmi!",
+  "related": "Vairāk rakstu kategorijā {category}",
+  "searchTitle": "Meklēt",
+  "results": "{count, plural, zero {# rezultātu vaicājumam “{query}”} one {# rezultāts vaicājumam “{query}”} other {# rezultāti vaicājumam “{query}”}}",
+  "noResultsTitle": "Raksti nav atrasti",
+  "noResultsHintPre": "Mēģiniet citus meklēšanas vārdus vai",
+  "noResultsHintLink": "pārlūkojiet kategorijas",
+  "browseCategories": "Pārlūkot kategorijas",
+  "brandTitle": "myNextDays palīdzība"
  }
 }

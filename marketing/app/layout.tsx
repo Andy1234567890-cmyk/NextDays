@@ -9,6 +9,7 @@ import "./globals.css";
 
 import { SupportChat } from "@/components/support-chat";
 import { VoranmeldungPopup } from "@/components/voranmeldung-popup";
+import { SITE_URL } from "@/lib/site-url";
 
 import type { Metadata } from "next";
 
@@ -29,7 +30,14 @@ const fraunces = localFont({
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("meta");
-  return { title: t("title"), description: t("description") };
+  return {
+    // `metadataBase` macht relative Metadaten-Pfade absolut (Open-Graph-Bilder,
+    // kanonische Links). Ohne sie warnt Next beim Bauen und setzt localhost ein —
+    // eine Vorschau-Karte auf einer fremden Plattform zeigte dann ins Nichts.
+    metadataBase: new URL(SITE_URL),
+    title: t("title"),
+    description: t("description"),
+  };
 }
 
 export default async function RootLayout({

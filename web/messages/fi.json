@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Miten voimme auttaa?",
-    "heroSubtitle": "Hae tietopankista tai löydä vaihe vaiheelta -ratkaisuja arkeesi myNextDaysin kanssa.",
-    "searchPlaceholder": "Mitä etsit?",
-    "searchAria": "Hae ohjeista",
-    "contact": "Contact",
-    "home": "Ohjeiden etusivu",
-    "articles": "{count, plural, one {# artikkeli} other {# artikkelia}}",
-    "collectionKbTitle": "Tietopankki",
-    "collectionKbDesc": "Kaikki kohteista, hinnoista, kalenterista, portaaleista ja tilistäsi.",
-    "collectionUsecasesTitle": "Käyttötapaukset",
-    "collectionUsecasesDesc": "Vaihe vaiheelta -ratkaisut tavallisiin arjen tilanteisiin.",
-    "helpfulQuestion": "Oliko tästä artikkelista apua?",
-    "helpfulYes": "Kyllä",
-    "helpfulNo": "Ei",
-    "helpfulThanks": "Kiitos palautteesta!",
-    "related": "Lisää artikkeleita luokassa {category}",
-    "searchTitle": "Haku",
-    "results": "{count, plural, one {# tulos haulle ”{query}”} other {# tulosta haulle ”{query}”}}",
-    "noResultsTitle": "Artikkeleita ei löytynyt",
-    "noResultsHintPre": "Kokeile muita hakusanoja tai",
-    "noResultsHintLink": "selaa luokkia",
-    "browseCategories": "Selaa luokkia",
-    "brandTitle": "myNextDays-ohje"
-  },
   "common": {
     "save": "Tallenna",
     "cancel": "Peruuta",
@@ -4540,7 +4515,10 @@
       "photos": "Kuvat",
       "noPhotosFound": "Tälle varaukselle ei löytynyt kuvia.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "kanavan {channel} kautta",
+      "receivedOn": "vastaanotettu meille {date}",
+      "bookedOn": "varattu {date}"
     },
     "dashboard": {
       "todayCheckouts": "Uloskirjautumiset",

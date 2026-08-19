@@ -7,7 +7,7 @@
   "funktionen": "Funktioner",
   "preise": "Priser",
   "kanaele": "Kanaler",
-  "kunden": "Kunder",
+  "ueberUns": "Om oss",
   "ressourcen": "Resurser",
   "sprache": "Språk",
   "spracheWaehlen": "Välj språk",
@@ -425,7 +425,7 @@
   "ressourcen": {
    "blog": "Blogg",
    "hilfeCenter": "Hjälpcenter",
-   "webinare": "Webbinarier",
+   "status": "Systemstatus",
    "leitfaeden": "Guider",
    "api": "API-dokumentation"
   },
@@ -441,7 +441,8 @@
   "datenschutz": "Integritet",
   "impressum": "Juridisk information",
   "cookies": "Cookiepolicy",
-  "avv": "Personuppgiftsbiträde"
+  "avv": "Personuppgiftsbiträde",
+  "kontoLoeschen": "Radera konto"
  },
  "abschluss": {
   "heading": "Redo att sköta ditt boende från ett ställe?",
@@ -604,7 +605,8 @@
     "verkauf": "Försäljning",
     "gast": "Gäst & pengar",
     "betrieb": "Drift"
-   }
+   },
+   "reiterHeading": "Vad ligger bakom?"
   },
   "uebersicht": {
    "metaTitel": "Funktioner — allt för uthyrning och hotell | myNextDays",
@@ -623,7 +625,6 @@
    "headline": "En kalender för allt du hyr ut.",
    "sub": "Beläggning, bokningar och objektsdata finns på ett ställe — vare sig det är en stuga eller tolv rumstyper med flera enheter.",
    "bildAlt": "Beläggningsplan med bokningar från flera kanaler",
-   "bildAltBlock": "Hotellets beläggningsplan med rumstyper",
    "nutzen": {
     "a": {
      "titel": "Allt i en vy",
@@ -648,6 +649,49 @@
       "c": "Tillgänglighet som tal, inte ja/nej"
      }
     }
+   },
+   "bildAltBlock": "Hotellets beläggningsplan med rumstyper",
+   "reiter": {
+    "kalender": {
+     "titel": "Beläggningsplan",
+     "heading": "Varje enhet, varje natt, en bild.",
+     "text": "Planen visar bokningar, spärrar och lediga nätter sida vid sida — med färg per kanal och gästens namn. Dra för att flytta en bokning, klicka för att skapa en ny.",
+     "punkte": {
+      "a": "Färg per kanal",
+      "b": "Dra och släpp",
+      "c": "Upp till 500 objekt"
+     }
+    },
+    "einheiten": {
+     "titel": "Enheter",
+     "heading": "Fem likadana studios är en typ.",
+     "text": "Du sköter typen och anger hur många enheter det finns av den. Portalerna får ett antal, inte en ja/nej-tillgänglighet — precis som de vill ha det.",
+     "punkte": {
+      "a": "Typ upplagd",
+      "b": "Enheter satta",
+      "c": "Antal ut till portalerna"
+     }
+    },
+    "reservierung": {
+     "titel": "Bokningar",
+     "heading": "Från förfrågan till avresa.",
+     "text": "Varje bokning har sin historik: betalningar, meddelanden, uppgifter och ändringar står på ett ställe — spårbart även veckor senare.",
+     "punkte": {
+      "a": "Historik per bokning",
+      "b": "Ändringar loggade",
+      "c": "Avbokning med orsak"
+     }
+    },
+    "objektdaten": {
+     "titel": "Objektsdata",
+     "heading": "Sköt en gång, gäller överallt.",
+     "text": "Utrustning, bilder, regler och beskrivningar ligger på objektet. Därifrån går de ut till portalerna och till din egen webbplats — utan dubbelt arbete.",
+     "punkte": {
+      "a": "Bilder och utrustning",
+      "b": "Husregler",
+      "c": "Fördelas automatiskt"
+     }
+    }
    }
   },
   "channel": {
@@ -655,7 +699,6 @@
    "headline": "En kalender. Alla bokningskanaler.",
    "sub": "Tillgänglighet, priser och innehåll går ut i realtid, bokningar kommer tillbaka i samma takt. Dubbelbokningar uppstår inte.",
    "bildAlt": "Kanalöversikt med anslutna bokningsportaler",
-   "bildAltBlock": "Beläggningsplan med bokningar från flera kanaler",
    "nutzen": {
     "a": {
      "titel": "56 portaler",
@@ -680,6 +723,49 @@
       "c": "Logg: vad gick ut när"
      }
     }
+   },
+   "bildAltBlock": "Beläggningsplan med bokningar från flera kanaler",
+   "reiter": {
+    "portale": {
+     "titel": "Portaler",
+     "heading": "56 portaler i ett gränssnitt.",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google och myBestDays hänger på samma anslutning. En ny portal är en anslutning, inte ett projekt.",
+     "punkte": {
+      "a": "Airbnb",
+      "b": "Booking.com",
+      "c": "myBestDays"
+     }
+    },
+    "sync": {
+     "titel": "Realtidssynk",
+     "heading": "Vad som händer här finns där på sekunder.",
+     "text": "Tillgänglighet, priser och restriktioner går ut direkt; bokningar kommer tillbaka i samma takt och spärrar nätterna innan någon kan boka två gånger.",
+     "punkte": {
+      "a": "Tillgänglighet",
+      "b": "Priser",
+      "c": "Restriktioner"
+     }
+    },
+    "stopsell": {
+     "titel": "Stop-sell",
+     "heading": "Ett klick stänger alla kanaler.",
+     "text": "En spärr gäller överallt — inte i fyra extranät efter varandra. Loggen visar vad som gick ut när och vad portalen svarade.",
+     "punkte": {
+      "a": "Spärr satt",
+      "b": "Skickat till alla kanaler",
+      "c": "Logg kontrollerad"
+     }
+    },
+    "regeln": {
+     "titel": "Regler per portal",
+     "heading": "Varje portal får vara olik.",
+     "text": "Tillägg, minsta vistelse och avbokningsregler ställer du in per kanal. Ingen gemensam sats bara för att ett system inte klarar annat.",
+     "punkte": {
+      "a": "Tillägg per kanal",
+      "b": "Minsta vistelse",
+      "c": "Avbokningsfrist"
+     }
+    }
    }
   },
   "direkt": {
@@ -687,7 +773,6 @@
    "headline": "Bokningar som är helt dina.",
    "sub": "Din egen bokningssida med tillgänglighet, priser och betalning. Av dem tar vi ingen provision — portalerna tar 15 till 18 procent.",
    "bildAlt": "Objektsida med bokningsflöde",
-   "bildAltBlock": "Kanalöversikt med egen webbplats och marknadsplats",
    "nutzen": {
     "a": {
      "titel": "Webbplats utan byrå",
@@ -712,6 +797,49 @@
       "c": "8 % all-in i stället för portalprovision"
      }
     }
+   },
+   "bildAltBlock": "Kanalöversikt med egen webbplats och marknadsplats",
+   "reiter": {
+    "website": {
+     "titel": "Bokningswebbplats",
+     "heading": "Din sida, dina bokningar.",
+     "text": "Mallar, egen domän, bilder och texter från objektsdatan. Gästen bokar direkt hos dig — utan omväg via en portal.",
+     "punkte": {
+      "a": "Mallar",
+      "b": "Egen domän",
+      "c": "Flerspråkig"
+     }
+    },
+    "widget": {
+     "titel": "Bokningswidget",
+     "heading": "För webbplatsen du redan har.",
+     "text": "En byggsten på din befintliga sida: tillgänglighet, pris och betalning, i din design. Ingen flytt, inget nytt projekt.",
+     "punkte": {
+      "a": "Kod inlagd",
+      "b": "Design övertagen",
+      "c": "Första bokningen"
+     }
+    },
+    "marktplatz": {
+     "titel": "myBestDays",
+     "heading": "Vår marknadsplats ger nya gäster.",
+     "text": "Dina objekt står på vår egen marknadsplats bredvid andra boenden — samma data, samma kalender, ett klick för att slå på.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "zahlung": {
+     "titel": "Betalning",
+     "heading": "Betalt innan gästen kommer.",
+     "text": "Handpenning vid bokning, resten före ankomst, deposition säkrad. Gästen får bekräftelse och faktura automatiskt.",
+     "punkte": {
+      "a": "Handpenning",
+      "b": "Slutbetalning",
+      "c": "Deposition"
+     }
+    }
    }
   },
   "gaeste": {
@@ -719,7 +847,6 @@
    "headline": "Sköt gästerna utan att skriva hela dagen.",
    "sub": "Meddelanden går ut automatiskt vid rätt tillfälle, conciergen svarar på 24 språk — och du läser allt i en inkorg.",
    "bildAlt": "Inkorg med gästmeddelanden från flera kanaler",
-   "bildAltBlock": "Mobilvy med beläggning och meddelanden",
    "nutzen": {
     "a": {
      "titel": "En inkorg",
@@ -744,6 +871,49 @@
       "c": "Tips från trakten"
      }
     }
+   },
+   "bildAltBlock": "Mobilvy med beläggning och meddelanden",
+   "reiter": {
+    "posteingang": {
+     "titel": "Inkorg",
+     "heading": "Airbnb, Booking, mejl och WhatsApp i samma tråd.",
+     "text": "Alla meddelanden om en bokning står samlade — med sammanhang, mallar och översättning. Ingen letar längre i fyra appar.",
+     "punkte": {
+      "a": "Gäst",
+      "b": "När kan jag checka in?",
+      "c": "Från kl. 15 — koden skickar jag i morgon bitti."
+     }
+    },
+    "automatisch": {
+     "titel": "Automatiska meddelanden",
+     "heading": "I rätt tid, utan påminnelse.",
+     "text": "Bekräftelse, ankomstinfo, dörrkod, omdömesfråga: inställt en gång, sedan av sig självt — på gästens språk.",
+     "punkte": {
+      "a": "Bekräftelse skickad",
+      "b": "Ankomstinfo planerad",
+      "c": "Omdömesfråga"
+     }
+    },
+    "checkin": {
+     "titel": "Incheckning online",
+     "heading": "Uppgifter före ankomst, inte i dörren.",
+     "text": "Gästen fyller i registreringsuppgifter och legitimation i förväg. Du tar emot i stället för att knappa in formulär — och uppfyller registreringsplikten.",
+     "punkte": {
+      "a": "Registreringsuppgifter",
+      "b": "Legitimation",
+      "c": "Underskrift"
+     }
+    },
+    "mappe": {
+     "titel": "Gästpärm",
+     "heading": "Allt gästen behöver veta.",
+     "text": "Wifi, husregler, sophämtning och tips från trakten — digitalt, alltid ändringsbart, på 24 språk.",
+     "punkte": {
+      "a": "Gäst",
+      "b": "Var finns wifi-lösenordet?",
+      "c": "I gästpärmen — jag har skickat länken till dig."
+     }
+    }
    }
   },
   "zahlungen": {
@@ -751,7 +921,6 @@
    "headline": "Pengarna kommer in utan att du jagar dem.",
    "sub": "Handpenning vid bokning, resten före ankomst, deposition säkrad — dras automatiskt och dokumenteras i bokningen.",
    "bildAlt": "Bokning med betalstatus och underlag",
-   "bildAltBlock": "Översikt med intäkter och utbetalningar",
    "nutzen": {
     "a": {
      "titel": "Betala som vanligt",
@@ -776,6 +945,49 @@
       "c": "Endast läsning"
      }
     }
+   },
+   "bildAltBlock": "Översikt med intäkter och utbetalningar",
+   "reiter": {
+    "online": {
+     "titel": "Onlinebetalningar",
+     "heading": "Kort, wallet, PayPal.",
+     "text": "Gästen betalar med den metod han känner igen. Pengarna går till ditt konto, statusen står i bokningen.",
+     "punkte": {
+      "a": "Utestående belopp",
+      "b": "Handpenning",
+      "c": "Slutbetalning"
+     }
+    },
+    "plaene": {
+     "titel": "Betalningsplaner",
+     "heading": "När vad förfaller bestämmer du.",
+     "text": "Handpenning, slutbetalning och deposition följer dina regler — olika per objekt och kanal om det behövs.",
+     "punkte": {
+      "a": "Regel upplagd",
+      "b": "Handpenning bokförd",
+      "c": "Slutbetalning utestående"
+     }
+    },
+    "rechnungen": {
+     "titel": "Fakturor",
+     "heading": "Ur bokningen, inte ur kalkylbladet.",
+     "text": "Fakturor och kreditnotor skapas ur de verkliga siffrorna, med momssats och nummerserie. Exporter passar redovisningen.",
+     "punkte": {
+      "a": "Nummerserie",
+      "b": "Momssatser",
+      "c": "Export"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Ägaravräkning",
+     "heading": "Intäkter, kostnader, utbetalning.",
+     "text": "Varje ägare ser sina objekt med beläggning, intäkter och utbetalningar — som egen inloggning i stället för ett månadsmejl.",
+     "punkte": {
+      "a": "Intäkter",
+      "b": "Kostnader",
+      "c": "Utbetalning"
+     }
+    }
    }
   },
   "preise": {
@@ -783,7 +995,6 @@
    "headline": "Priser som sköter sig själva.",
    "sub": "Säsong, beläggning, framförhållning och veckodag räknas in automatiskt. Dina gränser gäller: under miniminivån händer inget.",
    "bildAlt": "Prisrutnät med dynamiska priser per natt",
-   "bildAltBlock": "Beläggningsplan med priser per natt",
    "nutzen": {
     "a": {
      "titel": "Min och max gäller",
@@ -808,6 +1019,49 @@
       "c": "Tillägg per kanal"
      }
     }
+   },
+   "bildAltBlock": "Beläggningsplan med priser per natt",
+   "reiter": {
+    "dynamisch": {
+     "titel": "Dynamiska priser",
+     "heading": "Beläggning, säsong, framförhållning.",
+     "text": "Priset rör sig mellan ditt minimum och maximum — efter efterfrågan, veckodag och framförhållning, omräknat varje natt.",
+     "punkte": {
+      "a": "Minimum",
+      "b": "Maximum",
+      "c": "Efterfrågan"
+     }
+    },
+    "raten": {
+     "titel": "Prisplaner",
+     "heading": "Flera priser för samma objekt.",
+     "text": "Ej återbetalningsbar, tidig bokning, långtid: varje pris med egna villkor — och varje går ut till de portaler som stöder den.",
+     "punkte": {
+      "a": "Pris upplagt",
+      "b": "Villkor satta",
+      "c": "Ut till portalerna"
+     }
+    },
+    "rabatte": {
+     "titel": "Rabatter",
+     "heading": "Stanna längre, betala mindre.",
+     "text": "Vecko- och månadsrabatter, kampanjer med period, tillägg för korta vistelser — synligt direkt i kalendern.",
+     "punkte": {
+      "a": "Veckorabatt",
+      "b": "Månadsrabatt",
+      "c": "Kampanj"
+     }
+    },
+    "grenzen": {
+     "titel": "Dina gränser",
+     "heading": "Automatiken har aldrig sista ordet.",
+     "text": "Ett pris du satt själv står kvar. Och under ditt minimum händer inget — inte ens med tom kalender.",
+     "punkte": {
+      "a": "Minimum",
+      "b": "Handinmatning",
+      "c": "Företräde"
+     }
+    }
    }
   },
   "team": {
@@ -815,7 +1069,6 @@
    "headline": "Alla ser exakt det de behöver.",
    "sub": "Ägare ser sina objekt, städet sina uppdrag, personalen sitt område. Ekonomin stannar där den hör hemma.",
    "bildAlt": "Uppgiftsöversikt med ansvariga",
-   "bildAltBlock": "Bokningslista med ansvariga",
    "nutzen": {
     "a": {
      "titel": "Roller i stället för överenskommelser",
@@ -840,6 +1093,49 @@
       "c": "Rättigheter per person"
      }
     }
+   },
+   "bildAltBlock": "Bokningslista med ansvariga",
+   "reiter": {
+    "rollen": {
+     "titel": "Roller",
+     "heading": "Var och en ser sitt område.",
+     "text": "Byrå, ägare, personal, städ: rättigheter hänger på rollen. Intäkterna ser bara den som ska se dem.",
+     "punkte": {
+      "a": "Roll vald",
+      "b": "Objekt tilldelade",
+      "c": "Rättigheter kontrollerade"
+     }
+    },
+    "aufgaben": {
+     "titel": "Uppgifter",
+     "heading": "Städningen skapas av sig själv.",
+     "text": "Efter varje avresa står uppgiften i planen, med frist till nästa ankomst. Den avslutas med en fotochecklista.",
+     "punkte": {
+      "a": "Avresa registrerad",
+      "b": "Städning planerad",
+      "c": "Bilder uppladdade"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Ägare",
+     "heading": "Egen inloggning i stället för månadsmejl.",
+     "text": "Ägare ser beläggning, intäkter och utbetalningar för sina objekt — endast läsning, utan att kunna gripa in i driften.",
+     "punkte": {
+      "a": "Beläggning",
+      "b": "Intäkter",
+      "c": "Utbetalning"
+     }
+    },
+    "agentur": {
+     "titel": "Byrå",
+     "heading": "Flera verksamheter i ett konto.",
+     "text": "Den som hyr ut åt andra driver flera ägare sida vid sida — separata avräkningar, separata inloggningar, en kalender.",
+     "punkte": {
+      "a": "Flera ägare",
+      "b": "Separat avräkning",
+      "c": "En inloggning"
+     }
+    }
    }
   },
   "app": {
@@ -847,7 +1143,6 @@
    "headline": "Din verksamhet får plats i fickan.",
    "sub": "Kolla beläggning, lägg upp bokning, svara på meddelande, bocka av uppgift — från telefonen, utan dator.",
    "bildAlt": "Mobilapp med beläggning och uppgifter",
-   "bildAltBlock": "Överblick över verksamheten vid skrivbordet",
    "nutzen": {
     "a": {
      "titel": "För varje roll",
@@ -872,6 +1167,49 @@
       "c": "iOS och Android"
      }
     }
+   },
+   "bildAltBlock": "Överblick över verksamheten vid skrivbordet",
+   "reiter": {
+    "betrieb": {
+     "titel": "Drift på språng",
+     "heading": "Beläggning och bokningar under kontroll.",
+     "text": "Kolla kalendern, lägg upp en bokning, ändra ett pris — från telefonen, på samma data som vid skrivbordet.",
+     "punkte": {
+      "a": "Kalender",
+      "b": "Bokningar",
+      "c": "Priser"
+     }
+    },
+    "meldungen": {
+     "titel": "Aviseringar",
+     "heading": "Du får veta direkt.",
+     "text": "Ny bokning, avbokning eller gästfråga kommer som en avisering — med en tryckning är du inne i bokningen.",
+     "punkte": {
+      "a": "Bokning",
+      "b": "Ny bokning i juli",
+      "c": "Avbokning för 12–14/8"
+     }
+    },
+    "gast": {
+     "titel": "För gästen",
+     "heading": "myBestDays-appen.",
+     "text": "Gäster hittar bokning, gästpärm, incheckning och meddelanden i sin egen app — skild från din.",
+     "punkte": {
+      "a": "Bokning",
+      "b": "Gästpärm",
+      "c": "Incheckning"
+     }
+    },
+    "rollen": {
+     "titel": "För teamet",
+     "heading": "Städ och ägare.",
+     "text": "Städpersonalen ser sina uppdrag med checklista, ägarna sina objekt. Samma app, olika rättigheter.",
+     "punkte": {
+      "a": "Uppdrag öppet",
+      "b": "Checklista klar",
+      "c": "Bilder skickade"
+     }
+    }
    }
   },
   "auswertungen": {
@@ -879,7 +1217,6 @@
    "headline": "Siffror som går att besluta på.",
    "sub": "Beläggning, intäkt och snittpris per objekt, period och kanal — bredvid varandra i stället för i fem exporter.",
    "bildAlt": "Rapport med beläggning och intäkter",
-   "bildAltBlock": "Hotellets beläggningsplan som underlag",
    "nutzen": {
     "a": {
      "titel": "Jämför kanaler",
@@ -904,7 +1241,367 @@
       "c": "Export till redovisningen"
      }
     }
+   },
+   "bildAltBlock": "Hotellets beläggningsplan som underlag",
+   "reiter": {
+    "auslastung": {
+     "titel": "Beläggning",
+     "heading": "Hur fullt är det egentligen?",
+     "text": "Beläggning per objekt, månad och kanal — jämfört med i fjol, inte som magkänsla.",
+     "punkte": {
+      "a": "Beläggning",
+      "b": "I fjol",
+      "c": "Per objekt"
+     }
+    },
+    "kanaele": {
+     "titel": "Kanaljämförelse",
+     "heading": "Vad ger vilken kanal?",
+     "text": "Intäkt efter provision per kanal: Booking, Airbnb, egen webbplats, myBestDays — bredvid varandra i stället för i fem exporter.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "berichte": {
+     "titel": "Rapporter",
+     "heading": "Kommer av sig själva.",
+     "text": "Månadsrapporter går automatiskt till dig och dina ägare som PDF i vant format.",
+     "punkte": {
+      "a": "Rapport skapad",
+      "b": "Skickad till ägare",
+      "c": "Arkiverad"
+     }
+    },
+    "ausblick": {
+     "titel": "Utsikt",
+     "heading": "Vad som redan är bokat.",
+     "text": "Bredvid det som varit står bokningsläget framåt — så ser du i februari om sommaren håller.",
+     "punkte": {
+      "a": "Bokat",
+      "b": "Förfrågat",
+      "c": "Ledigt"
+     }
+    }
    }
   }
+ },
+ "ueberUns": {
+  "meta": {
+   "titel": "Om oss — myNextDays",
+   "beschreibung": "myNextDays ApS från Bindslev i Danmark: varför aktiva uthyrare byggde ett eget property management-system med channel manager, vad vi står för och vilka som står bakom."
+  },
+  "hero": {
+   "eyebrow": "Om oss",
+   "headlinePre": "Vi hyr ut själva. Därför finns",
+   "headlineHighlight": "myNextDays",
+   "sub": "myNextDays ApS är ett ägarlett företag från Bindslev i norra Jylland. Vi hyr ut egna semesterboenden — och byggde plattformen vi själva saknade i vardagen: kalender, kanaler, gäster, betalningar och avräkning på ett ställe.",
+   "sitz": "Säte i Danmark",
+   "eu": "EU-hostat, GDPR-säkert",
+   "start": "Start 1 september 2026",
+   "sprachen": "27 länder, 24 språk",
+   "ctaTrial": "Testa gratis i 30 dagar",
+   "ctaKontakt": "Skriv till oss"
+  },
+  "warum": {
+   "eyebrow": "Därför finns vi",
+   "heading": "Ur vår egen uthyrningsvardag.",
+   "p1": "Den som hyr ut känner igen kvällen då samma vecka sålts två gånger för att en kanal aldrig fick spärren. Där slutade vi leta efter ett verktyg och började bygga ett.",
+   "p2": "De befintliga systemen var antingen gjorda för hotellkedjor — med en komplexitet och ett pris som inget företag med en handfull objekt bär — eller så tog de slut precis där arbetet börjar: vid avräkning, ägare, städning och skatt i 27 länder.",
+   "p3": "myNextDays är svaret: ett komplett property management-system med channel manager, för verksamheter som driver sina objekt själva — från det enskilda semesterhuset till hotellet med flera rumstyper.",
+   "bildFerienobjekt": "Semesterhus vid kusten",
+   "bildHotel": "Hotellrum med bäddad säng"
+  },
+  "bento": {
+   "eyebrow": "Det som ligger bakom",
+   "heading": "Siffror vi kan belägga.",
+   "sub": "Inga kundsiffror och inga omdömen: plattformen startar 1 september 2026. Det som står här går att se efter i produkten.",
+   "vermieter": {
+    "titel": "Byggd av uthyrare, inte på ritbordet",
+    "text": "Varje funktion körs i vår egen uthyrning innan den når produkten. Det som inte håller i vardagen där levereras inte.",
+    "bildAlt": "Team på en uthyrningsbyrå i arbete"
+   },
+   "laender": {
+    "wert": "27",
+    "titel": "Europeiska länder",
+    "text": "Med varje lands valuta, skattesatser och regler — inte ett euroformulär för alla."
+   },
+   "sprachen": {
+    "wert": "24",
+    "titel": "Språk",
+    "text": "Gränssnitt, gästkommunikation och juridiska texter, inte bara startsidan."
+   },
+   "kanaele": {
+    "wert": "56",
+    "titel": "Bokningskanaler",
+    "text": "Booking.com, Airbnb, Expedia, Vrbo och många fler via en anslutning."
+   },
+   "eu": {
+    "titel": "Byggd i EU, driven i EU",
+    "text": "Servrar och data ligger i EU, driften följer GDPR och personuppgiftsbiträdesavtalet är skriftligt. För en verksamhet med gästdata är det ingen fotnot utan en förutsättning."
+   }
+  },
+  "zeitleiste": {
+   "eyebrow": "Vägen hit",
+   "heading": "Kort historia, kontrollerbara steg.",
+   "sub": "Vi är unga — och skriver hellre fyra belagda etapper än en påhittad historia.",
+   "airsmil": {
+    "datum": "Utgångspunkten",
+    "titel": "Vardagen i den egna verksamheten",
+    "text": "Egna semesterboenden på flera kanaler samtidigt: dubbelarbete, spärrar som kom för sent, avräkning i ett kalkylblad. Ur den friktionen växte kravlistan."
+   },
+   "gruendung": {
+    "datum": "1 juli 2026",
+    "titel": "myNextDays ApS grundat",
+    "text": "Registrerat i det danska bolagsregistret under CVR-nr 46615182, med säte i Bindslev i norra Jylland."
+   },
+   "beta": {
+    "datum": "Sommaren 2026",
+    "titel": "Beta med riktiga objekt",
+    "text": "Bokningar kommer in live från kanalerna, priser, tillgänglighet och spärrar går samma väg tillbaka — med riktiga objekt och riktiga gäster, inte i en testmiljö."
+   },
+   "start": {
+    "datum": "1 september 2026",
+    "titel": "Start i 27 länder",
+    "text": "På 24 språk, med flera valutor, marknadsplatsen myBestDays och de två apparna för verksamheten och gästen."
+   }
+  },
+  "marken": {
+   "eyebrow": "Två varumärken, en plattform",
+   "heading": "myNextDays för verksamheten, myBestDays för gästen.",
+   "sub": "Båda tillhör myNextDays ApS och går på samma teknik — det som skiljer dem åt är vem som använder dem.",
+   "nextdays": {
+    "rolle": "För verksamheter",
+    "text": "Property management-systemet och channel managern: platsen där en verksamhet driver sina objekt, sätter sina priser och räknar av sina pengar.",
+    "punkte": {
+     "kalender": "Beläggningsplan över alla objekt och enheter, i realtid",
+     "portale": "En anslutning för alla kanaler — tillgänglighet, priser och spärrar går ut överallt samtidigt",
+     "geld": "Betalningar, fakturor, provisioner och ägaravräkning",
+     "team": "Egen app för ägare, personal och städning"
+    }
+   },
+   "bestdays": {
+    "rolle": "För gäster",
+    "text": "Vår egen marknadsplats: gästerna hittar samma objekt och bokar direkt hos verksamheten — till betydligt lägre provision än via de stora kanalerna.",
+    "punkte": {
+     "direkt": "Bokning direkt hos verksamheten, utan mellanhand",
+     "provision": "Lägre provision än på de stora kanalerna",
+     "app": "Egen app för sökning, bokning och vistelsen"
+    }
+   },
+   "hinweis": "Ett objekt säljs via båda vägarna samtidigt — därtill via Booking.com, Airbnb och de övriga kanalerna. Vilken kanal som är påslagen bestämmer verksamheten kanal för kanal."
+  },
+  "werte": {
+   "eyebrow": "Principer",
+   "heading": "Det vi vill mätas på.",
+   "sub": "Sex punkter som går att kontrollera i produkten och i våra dokument — inga avsiktsförklaringar.",
+   "doppelbuchung": {
+    "titel": "Inga dubbelbokningar",
+    "text": "Hos oss är tillgänglighet ett antal lediga enheter, inte en kryssruta. Den går i realtid till varje kanal, och en spärr spärrar överallt — inte bara där den lades in."
+   },
+   "preise": {
+    "titel": "Priser man känner i förväg",
+    "text": "En prisplan, ingen bindningstid, ingen startavgift. Det som kostar extra står med belopp på prissidan, inte i ett säljsamtal."
+   },
+   "europa": {
+    "titel": "Europa är inget översättningsprojekt",
+    "text": "27 länder betyder 27 valutor, skattesatser och rapporteringsplikter — ända ut i faktura, gästmejl och utbetalning. Saknas en uppgift säger vi det i stället för att fylla i ett rimligt värde."
+   },
+   "daten": {
+    "titel": "Data stannar i EU",
+    "text": "Drift och servrar i EU, GDPR som grund, personuppgiftsbiträdesavtal som standard. Inom verksamheten ser bara de roller gästdata som behöver dem."
+   },
+   "unabhaengig": {
+    "titel": "Ägarlett",
+    "text": "Ingen koncern bakom oss och ingen färdplan utifrån. Vad som byggs härnäst bestämmer vi tillsammans med de verksamheter som använder programmet dagligen."
+   },
+   "selbst": {
+    "titel": "Vi använder det själva",
+    "text": "Våra egna objekt går på samma plattform som våra kunders. Ett fel drabbar oss först — den ärligaste kvalitetssäkring vi känner till."
+   }
+  },
+  "menschen": {
+   "eyebrow": "Människorna bakom",
+   "heading": "Små, nåbara, ur praktiken.",
+   "sub": "Ledningen för myNextDays ApS så som den är registrerad i det danska bolagsregistret.",
+   "jeanine": {
+    "rolle": "Grundare och direktör",
+    "text": "Driver vår egen uthyrning och tar med vardagen med gäster, kanaler och städning in i varje produktbeslut."
+   },
+   "torsten": {
+    "rolle": "Direktör",
+    "text": "Håller ihop trådarna och stöttar teamet precis där det behövs. Bidrar med sin breda praktiska erfarenhet för att hitta snabba och pragmatiska lösningar i bakgrunden."
+   }
+  },
+  "unternehmen": {
+   "eyebrow": "Företaget",
+   "heading": "Vem du har att göra med.",
+   "firma": "Företag",
+   "sitz": "Adress",
+   "register": "Bolagsregister",
+   "ustId": "Momsregistreringsnummer",
+   "direktion": "Ledning",
+   "impressum": "Fullständiga uppgifter om leverantören",
+   "kontaktTitel": "Direktkontakt",
+   "kontaktText": "Frågor om produkten, om bytet från ett annat system eller om samarbete? Den som svarar använder själv programmet."
+  }
+ },
+ "kontakt": {
+  "meta": {
+   "titel": "Kontakt — myNextDays",
+   "beschreibung": "Så når du myNextDays: allmänna frågor och försäljning på {info}, tekniska frågor på {technik}, per telefon på {telefon} — eller direkt via formuläret."
+  },
+  "hero": {
+   "eyebrow": "Kontakt",
+   "headlinePre": "Berätta vad det gäller —",
+   "headlineHighlight": "vi svarar",
+   "sub": "Frågor om produkten, om byte från ett annat system, om anslutning via vårt API eller om samarbete: välj ditt ämne, så hamnar meddelandet direkt hos dem som kan det.",
+   "sitz": "Säte i Bindslev, Danmark",
+   "sprachen": "Programvara på 24 språk",
+   "eu": "EU-hostad, GDPR-förenlig"
+  },
+  "wege": {
+   "eyebrow": "Vägarna till oss",
+   "heading": "Vem tar hand om ditt ärende?",
+   "sub": "Två brevlådor och en chatt. Kommersiella frågor och allt före starten går till den allmänna brevlådan, allt tekniskt direkt till utvecklingsteamet — så hamnar inget i en kö som ingen tittar i.",
+   "allgemein": {
+    "titel": "Produkt, priser & försäljning",
+    "text": "Vill du veta om myNextDays passar din verksamhet, vad ett byte från ett annat system innebär eller hur faktura och abonnemang fungerar? Då är det här rätt väg — även för press, partnerskap och dataskyddsfrågor.",
+    "aktion": "Skriv ett meddelande"
+   },
+   "technik": {
+    "titel": "Teknik, API & säkerhet",
+    "text": "Något fungerar inte, en portalanslutning hänger, du utvecklar mot vårt API eller har hittat en säkerhetslucka? Dessa ärenden går direkt till utvecklingsteamet och inte via försäljningen.",
+    "aktion": "Skriv ett meddelande"
+   },
+   "hilfe": {
+    "titel": "Hjälp & chatt",
+    "text": "Guider för varje område finns i hjälpcentret. Och om det ska gå snabbt: nere till höger på varje sida finns en chatt där en riktig människa svarar — utan konto och utan inloggning.",
+    "aktion": "Till hjälpcentret",
+    "chatHinweis": "Chatt nere till höger på varje sida"
+   }
+  },
+  "formular": {
+   "eyebrow": "Meddelande",
+   "heading": "Skriv till oss",
+   "sub": "Ett formulär för allt — ditt ämne avgör vem som får det.",
+   "ablaufTitel": "Vad som händer sedan",
+   "ablauf": {
+    "eingang": {
+     "titel": "Meddelandet skickas",
+     "text": "Via vår egen mailserver i Danmark — ingen formulärtjänst från tredje part vars händer dina uppgifter passerar."
+    },
+    "zuordnung": {
+     "titel": "Det landar i rätt brevlåda",
+     "text": "Kommersiellt hos {info}, tekniskt hos {technik}. Vilken det blir avgör vår server utifrån ditt ämne."
+    },
+    "antwort": {
+     "titel": "Vi svarar dig direkt",
+     "text": "Som ett vanligt e-postmeddelande till den adress du anger här — du kan helt enkelt svara på det."
+    }
+   },
+   "hinweisPostfach": "Två brevlådor så att inget blir liggande: {info} för allt kommersiellt, {technik} för allt tekniskt. Vilken det blir bestämmer vår server utifrån ditt ämne — det här formuläret kan inte ange någon mottagare.",
+   "thema": "Vad gäller det?",
+   "themen": {
+    "allgemein": "Allmän fråga",
+    "vertrieb": "Produkt, priser & försäljning",
+    "abrechnung": "Faktura & abonnement",
+    "technik": "Tekniskt problem",
+    "api": "API & utvecklare",
+    "partner": "Partnerskap",
+    "presse": "Press & media",
+    "datenschutz": "Dataskydd",
+    "sicherheit": "Rapportera säkerhetslucka"
+   },
+   "zielAllgemein": "Går till {email}",
+   "zielTechnik": "Går till {email} — vårt utvecklingsteam",
+   "name": "Namn",
+   "email": "E-post",
+   "emailPlatzhalter": "namn@exempel.se",
+   "firma": "Verksamhet",
+   "telefon": "Telefon",
+   "optional": "valfritt",
+   "nachricht": "Ditt meddelande",
+   "nachrichtPlatzhalter": "Beskriv ditt ärende — desto tydligare, desto bättre passar svaret.",
+   "absenden": "Skicka meddelande",
+   "laeuft": "Skickar …",
+   "dankeTitel": "Mottaget.",
+   "nochEine": "Skriv ett meddelande till",
+   "fehlerAllgemein": "Det gick inte. Försök igen senare.",
+   "fehlerPruefung": "Säkerhetskontrollen gick inte igenom. Ladda om sidan och skicka meddelandet igen.",
+   "fehlerFelder": "Kontrollera dina uppgifter: namn, e-post och ett meddelande med minst 20 tecken behövs.",
+   "fehlerZuOft": "Det har kommit för många meddelanden från den här anslutningen. Vänta en stund och försök igen.",
+   "fehlerSpaeter": "Meddelandet kan inte levereras just nu. Försök igen senare eller skriv direkt till {email}.",
+   "datenschutzHinweis": "Vi använder dina uppgifter enbart för att svara på detta ärende. Mer i vår <link>integritetspolicy</link>.",
+   "recaptchaHinweis": "Detta formulär skyddas av reCAPTCHA. Googles <datenschutz>integritetspolicy</datenschutz> och <bedingungen>användarvillkor</bedingungen> gäller."
+  },
+  "anschrift": {
+   "eyebrow": "Adress",
+   "heading": "Så når du oss direkt",
+   "firmaEyebrow": "Företagsuppgifter",
+   "firmaHeading": "Vem du har att göra med",
+   "firmaText": "Man ska inte behöva leta i det finstilta för att se vem avtalsparten är. Därför står registeruppgifterna här — samma som i impressumet.",
+   "firma": "Företag",
+   "register": "Register",
+   "ustId": "Momsregistreringsnummer",
+   "direktion": "Ledning",
+   "impressum": "Visa impressum",
+   "datenschutz": "Visa integritetspolicy"
+  },
+  "faq": {
+   "eyebrow": "Vanliga frågor",
+   "heading": "Frågor om att ta kontakt",
+   "sub": "Vem som svarar, hur lång tid det tar och vad som händer med dina uppgifter.",
+   "wer": {
+    "frage": "Vem svarar mig?",
+    "antwort": "En människa ur teamet, inte ett ärendesystem med ett nummer. myNextDays drivs av sina ägare: kommersiella frågor besvaras av någon som själv använder programvaran varje dag, tekniska av utvecklingsteamet."
+   },
+   "postfach": {
+    "frage": "Hur vet jag var mitt meddelande hamnar?",
+    "antwort": "Under ämnesfältet står mottagaradressen för varje ärende. Allmänna, kommersiella och redaktionella ärenden går till {info}; tekniska frågor, API-frågor och säkerhetsrapporter till {technik}. Vår server gör tilldelningen — formuläret kan inte ange någon brevlåda, så det kan inte missbrukas för att skicka meddelanden till främlingar."
+   },
+   "sprache": {
+    "frage": "Vilket språk kan jag skriva på?",
+    "antwort": "Skriv på det språk du läser den här sidan på — vi ser det i ditt ärende och svarar på det så långt vi kan. Tyska, danska och engelska svarar vi alltid på."
+   },
+   "dauer": {
+    "frage": "Hur lång tid tar ett svar?",
+    "antwort": "Oftast inom några timmar; på helger och helgdagar kan det ta längre. För säkerhetsrapporter gäller: de ligger hos utvecklingsteamet utan omväg via försäljningen."
+   },
+   "telefon": {
+    "frage": "Kan jag ringa i stället?",
+    "antwort": "Ja, på {telefon}. Ett samtal är snabbast för allt som är lättare att prata om än att skriva — vid tekniska fel är ett meddelande ändå ofta bättre, eftersom felmeddelanden och skärmbilder kan bifogas."
+   },
+   "bestaetigung": {
+    "frage": "Får jag en bekräftelse via e-post?",
+    "antwort": "Nej, medvetet inte. En automatisk bekräftelse skulle gå till varje adress som skrivs in här — då kunde någon använda vår mailserver för att skriva till andras brevlådor. Bekräftelsen står därför här på sidan så snart meddelandet kommit fram. Dina uppgifter använder vi uteslutande för att svara på detta ärende."
+   }
+  }
+ },
+ "help": {
+  "heroTitle": "Hur kan vi hjälpa till?",
+  "heroSubtitle": "Sök i kunskapsbasen eller hitta steg-för-steg-lösningar för din vardag med myNextDays.",
+  "searchPlaceholder": "Vad letar du efter?",
+  "searchAria": "Sök i hjälpen",
+  "contact": "Contact",
+  "home": "Hjälpens startsida",
+  "articles": "{count, plural, one {# artikel} other {# artiklar}}",
+  "collectionKbTitle": "Kunskapsbas",
+  "collectionKbDesc": "Allt om boenden, priser, kalender, portaler och ditt konto.",
+  "collectionUsecasesTitle": "Användningsfall",
+  "collectionUsecasesDesc": "Steg-för-steg-lösningar för vanliga vardagssituationer.",
+  "helpfulQuestion": "Var den här artikeln till hjälp?",
+  "helpfulYes": "Ja",
+  "helpfulNo": "Nej",
+  "helpfulThanks": "Tack för din återkoppling!",
+  "related": "Fler artiklar i {category}",
+  "searchTitle": "Sök",
+  "results": "{count, plural, one {# träff för ”{query}”} other {# träffar för ”{query}”}}",
+  "noResultsTitle": "Inga artiklar hittades",
+  "noResultsHintPre": "Prova andra sökord eller",
+  "noResultsHintLink": "bläddra bland kategorierna",
+  "browseCategories": "Bläddra bland kategorier",
+  "brandTitle": "myNextDays Hjälp"
  }
 }

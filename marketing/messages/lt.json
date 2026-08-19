@@ -7,7 +7,7 @@
   "funktionen": "Funkcijos",
   "preise": "Kainos",
   "kanaele": "Kanalai",
-  "kunden": "Klientai",
+  "ueberUns": "Apie mus",
   "ressourcen": "Ištekliai",
   "sprache": "Kalba",
   "spracheWaehlen": "Pasirinkite kalbą",
@@ -425,7 +425,7 @@
   "ressourcen": {
    "blog": "Tinklaraštis",
    "hilfeCenter": "Pagalbos centras",
-   "webinare": "Internetiniai seminarai",
+   "status": "Sistemos būsena",
    "leitfaeden": "Vadovai",
    "api": "API dokumentacija"
   },
@@ -441,7 +441,8 @@
   "datenschutz": "Privatumas",
   "impressum": "Teisinė informacija",
   "cookies": "Slapukų politika",
-  "avv": "Duomenų tvarkymas"
+  "avv": "Duomenų tvarkymas",
+  "kontoLoeschen": "Ištrinti paskyrą"
  },
  "abschluss": {
   "heading": "Pasiruošę valdyti savo objektą iš vienos vietos?",
@@ -593,5 +594,1014 @@
    "provision": "Sava svetainė {direkt} · portalai {portale}",
    "tarif": "Vienas planas visiems, su 1-uoju objektu"
   }
+ },
+ "ueberUns": {
+  "meta": {
+   "titel": "Apie mus — myNextDays",
+   "beschreibung": "myNextDays ApS iš Bindslevo Danijoje: kodėl veikiantys nuomotojai susikūrė savo apgyvendinimo valdymo sistemą su kanalų tvarkytuve, už ką pasisakome ir kas už jos stovi."
+  },
+  "hero": {
+   "eyebrow": "Apie mus",
+   "headlinePre": "Patys nuomojame. Todėl atsirado",
+   "headlineHighlight": "myNextDays",
+   "sub": "myNextDays ApS yra savininkų valdoma įmonė Bindsleve, Šiaurės Jutlandijoje. Nuomojame savo poilsio būstus — ir sukūrėme platformą, kurios kasdien pritrūkdavo: kalendorius, kanalai, svečiai, mokėjimai ir atsiskaitymai vienoje vietoje.",
+   "sitz": "Buveinė Danijoje",
+   "eu": "Talpinama ES, atitinka BDAR",
+   "start": "Startas 2026 m. rugsėjo 1 d.",
+   "sprachen": "27 šalys, 24 kalbos",
+   "ctaTrial": "Išbandykite 30 dienų nemokamai",
+   "ctaKontakt": "Parašykite mums"
+  },
+  "warum": {
+   "eyebrow": "Kodėl mes esame",
+   "heading": "Gimė iš mūsų pačių nuomos kasdienybės.",
+   "p1": "Kas nuomoja, žino tą vakarą, kai ta pati savaitė parduota du kartus, nes vienas kanalas taip ir negavo blokavimo. Tuomet nustojome ieškoti įrankio ir pradėjome jį kurti.",
+   "p2": "Esamos sistemos arba buvo skirtos viešbučių tinklams — su sudėtingumu ir kaina, kurios keleto būstų verslas nepakelia — arba baigdavosi būtent ten, kur prasideda tikrasis darbas: atsiskaitymai, savininkai, valymas ir mokesčiai 27 šalyse.",
+   "p3": "myNextDays yra atsakymas: visavertė apgyvendinimo valdymo sistema su kanalų tvarkytuve verslams, kurie savo būstus tvarko patys — nuo vieno poilsio namo iki viešbučio su keliais kambarių tipais.",
+   "bildFerienobjekt": "Poilsio namas prie pajūrio",
+   "bildHotel": "Viešbučio kambarys su paklota lova"
+  },
+  "bento": {
+   "eyebrow": "Kas už to",
+   "heading": "Skaičiai, kuriuos galime pagrįsti.",
+   "sub": "Jokių klientų skaičių ir jokių įvertinimų: platforma startuoja 2026 m. rugsėjo 1 d. Tai, kas čia parašyta, patikrinama pačiame produkte.",
+   "vermieter": {
+    "titel": "Sukurta nuomotojų, o ne prie braižymo lentos",
+    "text": "Kiekviena funkcija pirmiausia veikia mūsų pačių nuomos versle ir tik paskui patenka į produktą. Kas ten kasdienybėje neišlaiko, neišleidžiama.",
+    "bildAlt": "Nuomos agentūros komanda darbe"
+   },
+   "laender": {
+    "wert": "27",
+    "titel": "Europos šalys",
+    "text": "Su kiekvienos šalies valiuta, mokesčių tarifais ir taisyklėmis — o ne su viena eurų forma visiems."
+   },
+   "sprachen": {
+    "wert": "24",
+    "titel": "Kalbos",
+    "text": "Sąsaja, bendravimas su svečiais ir teisiniai tekstai, ne tik pradinis puslapis."
+   },
+   "kanaele": {
+    "wert": "56",
+    "titel": "Rezervacijų portalai",
+    "text": "Booking.com, Airbnb, Expedia, Vrbo ir daugelis kitų per vieną jungtį."
+   },
+   "eu": {
+    "titel": "Sukurta ES, valdoma ES",
+    "text": "Serveriai ir duomenys yra Europos Sąjungoje, veikla atitinka BDAR, o tvarkymas sureguliuotas raštu. Verslui, tvarkančiam svečių duomenis, tai ne išnaša, o sąlyga."
+   }
+  },
+  "zeitleiste": {
+   "eyebrow": "Kelias iki čia",
+   "heading": "Trumpa istorija, patikrinami žingsniai.",
+   "sub": "Esame jauni — ir verčiau surašome keturis pagrįstus etapus nei išgalvotą istoriją.",
+   "airsmil": {
+    "datum": "Atskaitos taškas",
+    "titel": "Kasdienybė savame versle",
+    "text": "Savi būstai keliuose kanaluose vienu metu: dvigubas darbas, pavėluoti blokavimai, atsiskaitymai skaičiuoklėje. Iš tų trinčių gimė reikalavimų sąrašas."
+   },
+   "gruendung": {
+    "datum": "2026 m. liepos 1 d.",
+    "titel": "Įsteigta myNextDays ApS",
+    "text": "Įregistruota Danijos įmonių registre numeriu CVR 46615182, buveinė Bindsleve, Šiaurės Jutlandijoje."
+   },
+   "beta": {
+    "datum": "2026 m. vasara",
+    "titel": "Beta su tikrais būstais",
+    "text": "Rezervacijos ateina tiesiogiai iš kanalų, o kainos, laisvos vietos ir blokavimai grįžta tuo pačiu keliu — su tikrais būstais ir tikrais svečiais, ne bandymų aplinkoje."
+   },
+   "start": {
+    "datum": "2026 m. rugsėjo 1 d.",
+    "titel": "Startas 27 šalyse",
+    "text": "24 kalbomis, su keliomis valiutomis, su myBestDays turgaviete ir dviem programėlėmis — verslui ir svečiui."
+   }
+  },
+  "marken": {
+   "eyebrow": "Du prekių ženklai, viena platforma",
+   "heading": "myNextDays verslui, myBestDays svečiui.",
+   "sub": "Abu priklauso myNextDays ApS ir veikia ta pačia technika — juos skiria tai, kas jais naudojasi.",
+   "nextdays": {
+    "rolle": "Verslams",
+    "text": "Apgyvendinimo valdymo sistema ir kanalų tvarkytuvė: vieta, kurioje verslas tvarko savo būstus, nustato kainas ir atsiskaito.",
+    "punkte": {
+     "kalender": "Užimtumo planas visiems būstams ir vienetams, realiuoju laiku",
+     "portale": "Viena jungtis visiems portalams — laisvos vietos, kainos ir blokavimai iškeliauja visur vienu metu",
+     "geld": "Mokėjimai, sąskaitos, komisiniai ir atsiskaitymai savininkams",
+     "team": "Sava programėlė savininkams, darbuotojams ir valymui"
+    }
+   },
+   "bestdays": {
+    "rolle": "Svečiams",
+    "text": "Mūsų pačių turgavietė: svečiai ten randa tuos pačius būstus ir rezervuoja tiesiogiai pas verslą — su gerokai mažesniu komisiniu nei per didžiuosius portalus.",
+    "punkte": {
+     "direkt": "Rezervacija tiesiogiai pas verslą, be tarpininko",
+     "provision": "Mažesnis komisinis nei didžiuosiuose portaluose",
+     "app": "Sava programėlė paieškai, rezervacijai ir viešnagei"
+    }
+   },
+   "hinweis": "Būstas parduodamas abiem keliais vienu metu — be to, per Booking.com, Airbnb ir kitus portalus. Kuris kanalas įjungtas, verslas sprendžia kiekvienam kanalui atskirai."
+  },
+  "werte": {
+   "eyebrow": "Principai",
+   "heading": "Pagal ką mus vertinti.",
+   "sub": "Šeši punktai, kuriuos galima patikrinti produkte ir mūsų dokumentuose — ne ketinimų deklaracijos.",
+   "doppelbuchung": {
+    "titel": "Jokių dvigubų rezervacijų",
+    "text": "Pas mus laisvumas yra laisvų vienetų skaičius, o ne varnelė. Jis realiuoju laiku keliauja į kiekvieną portalą, o blokavimas blokuoja visur — ne tik ten, kur buvo įvestas."
+   },
+   "preise": {
+    "titel": "Kainos, kurias žinote iš anksto",
+    "text": "Vienas planas, be minimalaus termino ir be įdiegimo mokesčio. Kas kainuoja papildomai, nurodyta su suma kainų puslapyje, o ne pardavimo pokalbyje."
+   },
+   "europa": {
+    "titel": "Europa nėra vertimo projektas",
+    "text": "27 šalys reiškia 27 valiutas, mokesčių tarifus ir pranešimo prievoles — iki pat sąskaitos, laiško svečiui ir išmokos. Kai duomens trūksta, tai pasakome, o ne įrašome tikėtiną reikšmę."
+   },
+   "daten": {
+    "titel": "Duomenys lieka ES",
+    "text": "Veikla ir serveriai Europos Sąjungoje, BDAR kaip pagrindas, duomenų tvarkymo sutartis kaip standartas. Versle svečių duomenis mato tik tos rolės, kurioms jie reikalingi."
+   },
+   "unabhaengig": {
+    "titel": "Valdoma savininkų",
+    "text": "Už mūsų nėra koncerno ir nėra iš išorės primesto plano. Ką kursime toliau, sprendžiame kartu su verslais, kurie programa naudojasi kasdien."
+   },
+   "selbst": {
+    "titel": "Patys ja naudojamės",
+    "text": "Mūsų būstai veikia toje pačioje platformoje kaip ir klientų. Klaida pirmiausia paliečia mus — sąžiningiausia kokybės kontrolė, kokią žinome."
+   }
+  },
+  "menschen": {
+   "eyebrow": "Žmonės už viso to",
+   "heading": "Maži, pasiekiami, iš praktikos.",
+   "sub": "myNextDays ApS vadovybė, kaip įregistruota Danijos įmonių registre.",
+   "jeanine": {
+    "rolle": "Steigėja ir direktorė",
+    "text": "Vadovauja mūsų pačių nuomos verslui ir į kiekvieną sprendimą dėl produkto atsineša kasdienybę su svečiais, portalais ir valymu."
+   },
+   "torsten": {
+    "rolle": "Direktorius",
+    "text": "Suveda visas gijas ir palaiko komandą būtent ten, kur to reikia. Pasitelkia savo įvairiapusę praktinę patirtį, kad antrame plane rastų greitų ir pragmatiškų sprendimų."
+   }
+  },
+  "unternehmen": {
+   "eyebrow": "Įmonė",
+   "heading": "Su kuo turite reikalą.",
+   "firma": "Įmonė",
+   "sitz": "Adresas",
+   "register": "Įmonių registras",
+   "ustId": "PVM mokėtojo kodas",
+   "direktion": "Vadovybė",
+   "impressum": "Visi paslaugų teikėjo duomenys",
+   "kontaktTitel": "Tiesioginis kontaktas",
+   "kontaktText": "Klausimai apie produktą, apie perėjimą iš kitos sistemos ar apie bendradarbiavimą? Atsako tas, kas pats naudojasi programa."
+  }
+ },
+ "funktionen": {
+  "rahmen": {
+   "ctaTesten": "Išbandykite 30 dienų nemokamai",
+   "ctaDemo": "Žiūrėti demonstraciją",
+   "weiter": "Toliau prie kitų funkcijų",
+   "mehr": "Žiūrėti",
+   "bereich": {
+    "verkauf": "Pardavimas",
+    "gast": "Svečias ir pinigai",
+    "betrieb": "Veikla"
+   },
+   "reiterHeading": "Kas tiksliai už to slypi?"
+  },
+  "uebersicht": {
+   "metaTitel": "Funkcijos — viskas nuomai ir viešbučiui | myNextDays",
+   "metaBeschreibung": "Kalendorius, kanalų valdymo sistema, tiesioginė rezervacija, bendravimas su svečiais, mokėjimai, kainos, komanda, programėlė ir analitika — vienoje sistemoje, įskaičiuota į kiekvieną planą.",
+   "eyebrow": "Funkcijos",
+   "headline": "Viskas, ko reikia kasdienybėje. Vienoje sistemoje.",
+   "sub": "Devynios sritys, vienas prisijungimas. Kiekviena iš jų yra baziniame plane — nieko, kas prasidėtų tik brangesniame pakete.",
+   "bereichSub": {
+    "verkauf": "Būti matomam ir gauti rezervacijų",
+    "gast": "Nuo pirmo kontakto iki pinigų gavimo",
+    "betrieb": "Kas ką daro — ir ką tai davė"
+   }
+  },
+  "pms": {
+   "metaBeschreibung": "Vienas kalendorius visiems objektams: užimtumo planas, rezervacijos, užduotys ir objektų duomenys vienoje vietoje — atostogų būstams ir viešbučiams.",
+   "headline": "Vienas kalendorius viskam, ką nuomojate.",
+   "sub": "Užimtumas, rezervacijos ir objektų duomenys yra vienoje vietoje — ar tai vienas atostogų butas, ar dvylika kambarių tipų su keliais vienetais.",
+   "bildAlt": "Užimtumo planas su rezervacijomis iš kelių kanalų",
+   "nutzen": {
+    "a": {
+     "titel": "Viskas vienu vaizdu",
+     "text": "Užimtumo planas rodo kiekvieną vienetą, kiekvieną rezervaciją ir kiekvieną blokavimą viename vaizde — su spalva kiekvienam kanalui."
+    },
+    "b": {
+     "titel": "Rezervacija per sekundes",
+     "text": "Sukurkite, perkelkite arba atšaukite rezervaciją nekeisdami vaizdo. Atsilaisvinusios naktys iškart grįžta į pardavimą."
+    },
+    "c": {
+     "titel": "Objektų duomenys, galiojantys visur",
+     "text": "Įrangą, nuotraukas ir taisykles tvarkote vieną kartą — portalai ir jūsų sava svetainė gauna juos automatiškai."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Vienas objektas, keli vienetai — pavaizduota teisingai.",
+     "text": "Penkios vienodos studijos yra vienas tipas su penkiais vienetais, o ne penkis kartus tvarkomas objektas. Prieinamumas yra skaičius, būtent toks, kokio portalai laukia.",
+     "punkte": {
+      "a": "Vienetai kiekvienam objekto tipui",
+      "b": "Pastatas sujungia kelis tipus",
+      "c": "Prieinamumas kaip skaičius, ne taip/ne"
+     }
+    }
+   },
+   "bildAltBlock": "Viešbučio užimtumo planas su kambarių tipais",
+   "reiter": {
+    "kalender": {
+     "titel": "Užimtumo planas",
+     "heading": "Kiekvienas vienetas, kiekviena naktis, vienas vaizdas.",
+     "text": "Planas rodo rezervacijas, blokavimus ir laisvas naktis vienas prie kito — su spalva kiekvienam kanalui ir svečio vardu. Nuvilkimas perkelia rezervaciją, spustelėjimas sukuria naują.",
+     "punkte": {
+      "a": "Spalva kiekvienam kanalui",
+      "b": "Vilkti ir padėti",
+      "c": "Iki 500 objektų"
+     }
+    },
+    "einheiten": {
+     "titel": "Vienetai",
+     "heading": "Penkios vienodos studijos yra vienas tipas.",
+     "text": "Jūs tvarkote tipą ir nurodote, kiek jo vienetų yra. Portalai gauna kiekį, o ne taip/ne prieinamumą — būtent taip, kaip jie to laukia.",
+     "punkte": {
+      "a": "Tipas sukurtas",
+      "b": "Vienetai nustatyti",
+      "c": "Kiekis portalams"
+     }
+    },
+    "reservierung": {
+     "titel": "Rezervacijos",
+     "heading": "Nuo užklausos iki išvykimo.",
+     "text": "Kiekviena rezervacija turi savo istoriją: mokėjimai, žinutės, užduotys ir pakeitimai yra vienoje vietoje — atsekami ir po kelių savaičių.",
+     "punkte": {
+      "a": "Istorija kiekvienai rezervacijai",
+      "b": "Pakeitimai užregistruoti",
+      "c": "Atšaukimas su priežastimi"
+     }
+    },
+    "objektdaten": {
+     "titel": "Objektų duomenys",
+     "heading": "Tvarkote vieną kartą, galioja visur.",
+     "text": "Įranga, nuotraukos, taisyklės ir aprašymai yra prie objekto. Iš ten jie keliauja į portalus ir į jūsų savą svetainę — be antro tvarkymo.",
+     "punkte": {
+      "a": "Nuotraukos ir įranga",
+      "b": "Namų taisyklės",
+      "c": "Išdalijama automatiškai"
+     }
+    }
+   }
+  },
+  "channel": {
+   "metaBeschreibung": "Kanalų valdymo sistema atostogų butui ir viešbučiui: Airbnb, Booking.com, Expedia, Vrbo ir Google sinchroniškai realiuoju laiku — be dvigubų rezervacijų.",
+   "headline": "Vienas kalendorius. Visos rezervacijų platformos.",
+   "sub": "Prieinamumas, kainos ir turinys keliauja į portalus realiuoju laiku, rezervacijos grįžta tuo pačiu ritmu. Dvigubos rezervacijos net neatsiranda.",
+   "bildAlt": "Kanalų apžvalga su prijungtomis rezervacijų platformomis",
+   "nutzen": {
+    "a": {
+     "titel": "56 platformos",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google ir daug kitų — prijungta per vieną sąsają, o ne per savadarbius sprendimus."
+    },
+    "b": {
+     "titel": "Dvi kryptys, vienas ritmas",
+     "text": "Ką pakeičiate čia, ten matoma per sekundes. Kas rezervuojama ten, čia iškart užblokuoja naktis."
+    },
+    "c": {
+     "titel": "Kiekvienas portalas atskirai",
+     "text": "Kainos, priemokos ir taisyklės galioja kiekvienam portalui atskirai — jokio vieno tarifo, kuris visur turi būti vienodas vien todėl, kad taip paprasčiau."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Stop-sell veikia visur. Be papildomų minčių.",
+     "text": "Jei užblokuojate datą, ji uždaryta kiekviename prijungtame portale. Nereikia nieko taisyti penkiuose ekstranetuose, jokio užmiršto kanalo savaitgalį.",
+     "punkte": {
+      "a": "Neatidėliotinas blokavimas visuose kanaluose",
+      "b": "Minimalus apsistojimas kiekvienam portalui",
+      "c": "Žurnalas: kas ir kada išsiųsta"
+     }
+    }
+   },
+   "bildAltBlock": "Užimtumo planas su rezervacijomis iš kelių portalų",
+   "reiter": {
+    "portale": {
+     "titel": "Portalai",
+     "heading": "56 platformos vienoje sąsajoje.",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google ir myBestDays naudoja tą patį prijungimą. Naujas portalas yra ryšys, o ne projektas.",
+     "punkte": {
+      "a": "Airbnb",
+      "b": "Booking.com",
+      "c": "myBestDays"
+     }
+    },
+    "sync": {
+     "titel": "Sinchronizavimas realiuoju laiku",
+     "heading": "Kas nutinka čia, ten atsiranda per sekundes.",
+     "text": "Prieinamumas, kainos ir apribojimai išeina iškart; rezervacijos grįžta tuo pačiu ritmu ir užblokuoja naktis dar prieš tai, kai kas nors gali rezervuoti dukart.",
+     "punkte": {
+      "a": "Prieinamumas",
+      "b": "Kainos",
+      "c": "Apribojimai"
+     }
+    },
+    "stopsell": {
+     "titel": "Stop-sell",
+     "heading": "Vienas spustelėjimas uždaro visus kanalus.",
+     "text": "Vienas blokavimas galioja visur — o ne keturiuose ekstranetuose paeiliui. Žurnalas rodo, kas ir kada išsiųsta ir ką portalas atsakė.",
+     "punkte": {
+      "a": "Blokavimas nustatytas",
+      "b": "Išsiųsta visiems kanalams",
+      "c": "Žurnalas patikrintas"
+     }
+    },
+    "regeln": {
+     "titel": "Taisyklės kiekvienam portalui",
+     "heading": "Kiekvienas portalas gali būti kitoks.",
+     "text": "Priemokas, minimalius apsistojimus ir atšaukimo taisykles nustatote kiekvienam kanalui. Jokio bendro tarifo vien todėl, kad sistema kitaip nemoka.",
+     "punkte": {
+      "a": "Priemoka kiekvienam kanalui",
+      "b": "Minimalus apsistojimas",
+      "c": "Atšaukimo terminas"
+     }
+    }
+   }
+  },
+  "direkt": {
+   "metaBeschreibung": "Sava rezervacijų svetainė, rezervacijų valdiklis ir savas domenas — tiesioginės rezervacijos be portalo komisinių, su mokėjimu ir patvirtinimu.",
+   "headline": "Rezervacijos, kurios priklauso tik jums.",
+   "sub": "Jūsų sava rezervacijų puslapis su prieinamumu, kainomis ir mokėjimu. Už rezervacijas jame komisinių neimame — portalai ima 15 iki 18 procentų.",
+   "bildAlt": "Objekto puslapis su rezervacijos žingsniais",
+   "nutzen": {
+    "a": {
+     "titel": "Svetainė be agentūros",
+     "text": "Kūrimo įrankis su šablonais, savas domenas, nuotraukos ir tekstai iš jūsų objektų duomenų — internete per vieną popietę."
+    },
+    "b": {
+     "titel": "Valdiklis jūsų puslapiui",
+     "text": "Jau turite svetainę? Tada tereikia į ją įdėti rezervacijos žingsnius ir pasilikti savo dizainą."
+    },
+    "c": {
+     "titel": "Apmokama iškart",
+     "text": "Avansas, likutis ir užstatas vyksta automatiškai — svečias gauna patvirtinimą be jūsų įsikišimo."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Prekyvietė atveda svečius, kurie jūsų nepažįsta.",
+     "text": "myBestDays yra mūsų pačių prekyvietė. Ten stovite šalia kitų apgyvendinimo objektų, netvarkydami antros sistemos — tie patys objektai, tas pats kalendorius.",
+     "punkte": {
+      "a": "Įjungiama kiekvienam kanalui atskirai",
+      "b": "Vienas kalendorius viskam",
+      "c": "8 % viskas įskaičiuota vietoj portalo komisinių"
+     }
+    }
+   },
+   "bildAltBlock": "Kanalų apžvalga su sava svetaine ir prekyviete",
+   "reiter": {
+    "website": {
+     "titel": "Rezervacijų svetainė",
+     "heading": "Jūsų puslapis, jūsų rezervacijos.",
+     "text": "Šablonai, savas domenas, nuotraukos ir tekstai iš objektų duomenų. Svečias rezervuoja tiesiai pas jus — be aplinkkelio per portalą.",
+     "punkte": {
+      "a": "Šablonai",
+      "b": "Savas domenas",
+      "c": "Daugiakalbė"
+     }
+    },
+    "widget": {
+     "titel": "Rezervacijų valdiklis",
+     "heading": "Svetainei, kurią jau turite.",
+     "text": "Vienas blokas jūsų esamame puslapyje: prieinamumas, kaina ir mokėjimas, jūsų dizainu. Be persikėlimo, be naujo projekto.",
+     "punkte": {
+      "a": "Kodas įdėtas",
+      "b": "Dizainas perimtas",
+      "c": "Pirma rezervacija"
+     }
+    },
+    "marktplatz": {
+     "titel": "myBestDays",
+     "heading": "Mūsų prekyvietė atveda naujų svečių.",
+     "text": "Jūsų objektai stovi mūsų pačių prekyvietėje šalia kitų apgyvendinimo objektų — tie patys duomenys, tas pats kalendorius, vienas spustelėjimas įjungti.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "zahlung": {
+     "titel": "Mokėjimas",
+     "heading": "Apmokėta dar prieš svečio atvykimą.",
+     "text": "Avansas rezervuojant, likutis prieš atvykimą, užstatas apsaugotas. Svečias patvirtinimą ir sąskaitą gauna automatiškai.",
+     "punkte": {
+      "a": "Avansas",
+      "b": "Likučio mokėjimas",
+      "c": "Užstatas"
+     }
+    }
+   }
+  },
+  "gaeste": {
+   "metaBeschreibung": "Skaitmeninis svečio aplankas, registracija internetu, automatinės žinutės ir DI konsjeržas 24 kalbomis — nuo pirmo kontakto iki išvykimo.",
+   "headline": "Aptarnaukite svečius nerašydami be perstojo.",
+   "sub": "Žinutės iškeliauja automatiškai tinkamu momentu, į klausimus atsako konsjeržas 24 kalbomis — o jūs viską skaitote vienuose gautuosiuose.",
+   "bildAlt": "Gautieji su svečių žinutėmis iš kelių kanalų",
+   "nutzen": {
+    "a": {
+     "titel": "Vieni gautieji",
+     "text": "Airbnb, Booking, el. paštas ir WhatsApp atsiranda vienoje eigoje — su rezervacija šalia, o ne keturiose programėlėse."
+    },
+    "b": {
+     "titel": "Žinutės tinkamu laiku",
+     "text": "Patvirtinimas, atvykimo informacija, durų kodas, prašymas įvertinti: nustatoma vieną kartą, toliau vyksta savaime."
+    },
+    "c": {
+     "titel": "Registracija iš anksto",
+     "text": "Svečias užpildo savo duomenis prieš atvykimą. Jūs jį pasitinkate, o ne perrašinėjate anketas."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Svečio aplankas pakeičia segtuvą koridoriuje.",
+     "text": "Wi-Fi slaptažodis, atliekų išvežimas, restoranų patarimai ir namų taisyklės — skaitmeniškai, svečio kalba, bet kada pakeičiama.",
+     "punkte": {
+      "a": "24 kalbos",
+      "b": "Durų kodai tinkamu momentu",
+      "c": "Patarimai iš apylinkių"
+     }
+    }
+   },
+   "bildAltBlock": "Mobilus vaizdas su užimtumu ir žinutėmis",
+   "reiter": {
+    "posteingang": {
+     "titel": "Gautieji",
+     "heading": "Airbnb, Booking, el. paštas ir WhatsApp vienoje eigoje.",
+     "text": "Visos žinutės apie vieną rezervaciją stovi kartu — su kontekstu, šablonais ir vertimu. Niekam nebereikia ieškoti keturiose programėlėse.",
+     "punkte": {
+      "a": "Svečias",
+      "b": "Kada galima registracija?",
+      "c": "Nuo 15 val. — kodą atsiųsiu jums rytoj ryte."
+     }
+    },
+    "automatisch": {
+     "titel": "Automatinės žinutės",
+     "heading": "Tinkamu laiku, be priminimo.",
+     "text": "Patvirtinimas, atvykimo informacija, durų kodas, prašymas įvertinti: nustatoma vieną kartą, toliau vyksta savaime — svečio kalba.",
+     "punkte": {
+      "a": "Patvirtinimas išsiųstas",
+      "b": "Atvykimo informacija suplanuota",
+      "c": "Prašymas įvertinti"
+     }
+    },
+    "checkin": {
+     "titel": "Registracija internetu",
+     "heading": "Duomenys prieš atvykimą, o ne prie durų.",
+     "text": "Svečias iš anksto užpildo registracijos duomenis ir dokumentą. Jūs jį pasitinkate, o ne perrašinėjate anketas — ir įvykdote registravimo pareigą.",
+     "punkte": {
+      "a": "Registracijos duomenys",
+      "b": "Asmens dokumentas",
+      "c": "Parašas"
+     }
+    },
+    "mappe": {
+     "titel": "Svečio aplankas",
+     "heading": "Viskas, ką svečias turi žinoti.",
+     "text": "Wi-Fi, namų taisyklės, atliekų išvežimas ir patarimai iš apylinkių — skaitmeniškai, bet kada pakeičiama, 24 kalbomis.",
+     "punkte": {
+      "a": "Svečias",
+      "b": "Kur yra Wi-Fi slaptažodis?",
+      "c": "Svečio aplanke — nusiunčiau jums nuorodą."
+     }
+    }
+   }
+  },
+  "zahlungen": {
+   "metaBeschreibung": "Mokėjimai internetu, avansai, užstatai ir buhalterijai paruošti eksportai — pinigų gavimas ir atsiskaitymai be papildomo darbo.",
+   "headline": "Pinigai ateina, ir jums nereikia jų vaikytis.",
+   "sub": "Avansas rezervuojant, likutis prieš atvykimą, užstatas apsaugotas — nuskaitoma automatiškai ir dokumentuojama rezervacijoje.",
+   "bildAlt": "Rezervacija su mokėjimo būsena ir dokumentais",
+   "nutzen": {
+    "a": {
+     "titel": "Moka kaip įprasta",
+     "text": "Kortelė, Apple Pay, Google Pay, PayPal ir vietiniai būdai — svečias pasirenka tą, kurį pažįsta."
+    },
+    "b": {
+     "titel": "Taisyklės, o ne priminimai",
+     "text": "Kada ir kiek mokėti, nustatote vieną kartą. Negautus mokėjimus matote dar prieš svečio atvykimą."
+    },
+    "c": {
+     "titel": "Paruošta buhalterijai",
+     "text": "Sąskaitos atsiranda iš rezervacijos, eksportai atitinka buhalterio reikalavimus — be skaičiuoklių ranka."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Savininkai savo atsiskaitymą mato patys.",
+     "text": "Kiekvienas savininkas turi savo prieigą su užimtumu, pajamomis ir išmokomis. Tai sutaupo mėnesinį el. laišką su prisegta skaičiuokle.",
+     "punkte": {
+      "a": "Savas prisijungimas kiekvienam savininkui",
+      "b": "Atsiskaitymas kiekvienam objektui",
+      "c": "Tik skaitymas, be įsikišimo"
+     }
+    }
+   },
+   "bildAltBlock": "Apžvalga su apyvarta ir išmokomis",
+   "reiter": {
+    "online": {
+     "titel": "Mokėjimai internetu",
+     "heading": "Kortelė, piniginė, PayPal.",
+     "text": "Svečias moka tuo būdu, kurį pažįsta. Pinigai patenka į jūsų sąskaitą, būsena matoma rezervacijoje.",
+     "punkte": {
+      "a": "Neapmokėta suma",
+      "b": "Avansas",
+      "c": "Likučio mokėjimas"
+     }
+    },
+    "plaene": {
+     "titel": "Mokėjimo planai",
+     "heading": "Kas kada mokama, sprendžiate jūs.",
+     "text": "Avansas, likutis ir užstatas laikosi jūsų taisyklių — jei reikia, skirtingai kiekvienam objektui ir kanalui.",
+     "punkte": {
+      "a": "Taisyklė sukurta",
+      "b": "Avansas gautas",
+      "c": "Likutis neapmokėtas"
+     }
+    },
+    "rechnungen": {
+     "titel": "Sąskaitos",
+     "heading": "Iš rezervacijos, o ne iš skaičiuoklės.",
+     "text": "Sąskaitos ir kreditinės sąskaitos atsiranda iš tikrųjų skaičių, su mokesčio tarifu ir numeracija. Eksportai atitinka buhalterio reikalavimus.",
+     "punkte": {
+      "a": "Numeracija",
+      "b": "Mokesčių tarifai",
+      "c": "Eksportas"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Savininkų atsiskaitymas",
+     "heading": "Pajamos, išlaidos, išmoka.",
+     "text": "Kiekvienas savininkas mato savo objektus su užimtumu, pajamomis ir išmokomis — kaip savą prieigą, o ne kaip mėnesinį el. laišką.",
+     "punkte": {
+      "a": "Pajamos",
+      "b": "Išlaidos",
+      "c": "Išmoka"
+     }
+    }
+   }
+  },
+  "preise": {
+   "metaBeschreibung": "Dinaminės kainos su min. ir maks., kainų planai kiekvienam objektui, sezono ir užimtumo logika — daugiau pajamų be kasdienio rankų darbo.",
+   "headline": "Kainos, kurios pasirūpina savimi pačios.",
+   "sub": "Sezonas, užimtumas, rezervacijos laikas ir savaitės diena įtraukiami automatiškai. Jūsų ribos lieka jūsų ribos: žemiau minimumo nieko nebūna.",
+   "bildAlt": "Kainų tinklelis su dinaminėmis kainomis kiekvienai nakčiai",
+   "nutzen": {
+    "a": {
+     "titel": "Min. ir maks. galioja",
+     "text": "Jūs nustatote rėmus, sistema juose juda — jokios kainos, kurios nenorėjote."
+    },
+    "b": {
+     "titel": "Kainų planai kiekvienam objektui",
+     "text": "Negrąžinama, ankstyvoji rezervacija, ilgalaikė: kelios kainos kiekvienam objektui, kiekviena su savomis taisyklėmis."
+    },
+    "c": {
+     "titel": "Rankinis įvedimas turi pirmenybę",
+     "text": "Ranka nustatyta kaina lieka galioti. Automatika niekada neperrašo sąmoningo sprendimo."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Nuolaidos ir priemokos keliauja ir į portalus.",
+     "text": "Savaitės ir mėnesio nuolaidos, ankstyvosios rezervacijos akcijos ir priemokos parodomos ten, kur tai leidžiama — ne tik jūsų vaizde.",
+     "punkte": {
+      "a": "Nuolaidos pagal apsistojimo trukmę",
+      "b": "Akcijos su laikotarpiu",
+      "c": "Priemokos kiekvienam kanalui"
+     }
+    }
+   },
+   "bildAltBlock": "Užimtumo planas su kainomis kiekvienai nakčiai",
+   "reiter": {
+    "dynamisch": {
+     "titel": "Dinaminės kainos",
+     "heading": "Užimtumas, sezonas, rezervacijos laikas.",
+     "text": "Kaina juda tarp jūsų minimumo ir maksimumo — pagal paklausą, savaitės dieną ir rezervacijos laiką, kiekvieną naktį perskaičiuojama iš naujo.",
+     "punkte": {
+      "a": "Minimumas",
+      "b": "Maksimumas",
+      "c": "Paklausa"
+     }
+    },
+    "raten": {
+     "titel": "Kainų planai",
+     "heading": "Kelios kainos tam pačiam objektui.",
+     "text": "Negrąžinama, ankstyvoji rezervacija, ilgalaikė: kiekviena kaina su savomis sąlygomis — ir kiekviena keliauja į portalus, kurie ją palaiko.",
+     "punkte": {
+      "a": "Kaina sukurta",
+      "b": "Sąlygos nustatytos",
+      "c": "Į portalus"
+     }
+    },
+    "rabatte": {
+     "titel": "Nuolaidos",
+     "heading": "Likti ilgiau, mokėti mažiau.",
+     "text": "Savaitės ir mėnesio nuolaidos, akcijos su laikotarpiu, priemokos už trumpus apsistojimus — matoma tiesiai kalendoriuje.",
+     "punkte": {
+      "a": "Savaitės nuolaida",
+      "b": "Mėnesio nuolaida",
+      "c": "Akcija"
+     }
+    },
+    "grenzen": {
+     "titel": "Jūsų ribos",
+     "heading": "Automatika niekada neturi paskutinio žodžio.",
+     "text": "Kaina, kurią nustatote patys, lieka galioti. Ir žemiau jūsų minimumo nieko nebūna — net ir esant tuščiam kalendoriui.",
+     "punkte": {
+      "a": "Minimumas",
+      "b": "Rankinis įvedimas",
+      "c": "Pirmenybė"
+     }
+    }
+   }
+  },
+  "team": {
+   "metaBeschreibung": "Vaidmenys savininkams, valymui, darbuotojams ir agentūrai — kiekvienas mato tik savo sritį, su užduotimis ir nuotraukų kontroliniais sąrašais.",
+   "headline": "Kiekvienas mato tiksliai tai, ko jam reikia.",
+   "sub": "Savininkai mato savo objektus, valymo tarnyba savo darbus, darbuotojai savo sritį. Finansai lieka ten, kur jiems ir vieta.",
+   "bildAlt": "Užduočių apžvalga su atsakomybėmis",
+   "nutzen": {
+    "a": {
+     "titel": "Vaidmenys, o ne susitarimai",
+     "text": "Teisės priklauso vaidmeniui, o ne pasitikėjimui. Valymo prieiga nepasiekia apyvartos."
+    },
+    "b": {
+     "titel": "Užduotys su įrodymu",
+     "text": "Kontroliniai sąrašai su nuotraukomis parodo, kad būstas perduotas — kartu su laiku."
+    },
+    "c": {
+     "titel": "Paskirstoma automatiškai",
+     "text": "Po kiekvieno išvykimo valymas atsiranda savaime, su terminu iki kito atvykimo."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Agentūros veda kelis verslus vienas prie kito.",
+     "text": "Kas nuomoja kitų vardu, vienoje paskyroje valdo kelis savininkus — su atskirais atsiskaitymais ir savomis prieigomis.",
+     "punkte": {
+      "a": "Keli savininkai",
+      "b": "Atskiras atsiskaitymas",
+      "c": "Teisės kiekvienam asmeniui"
+     }
+    }
+   },
+   "bildAltBlock": "Rezervacijų sąrašas su atsakomybėmis",
+   "reiter": {
+    "rollen": {
+     "titel": "Vaidmenys",
+     "heading": "Kiekvienas mato savo sritį.",
+     "text": "Agentūra, savininkas, darbuotojas, valymas: teisės priklauso vaidmeniui. Apyvartą mato tik tas, kas ją turi matyti.",
+     "punkte": {
+      "a": "Vaidmuo pasirinktas",
+      "b": "Objektai priskirti",
+      "c": "Teisės patikrintos"
+     }
+    },
+    "aufgaben": {
+     "titel": "Užduotys",
+     "heading": "Valymas atsiranda savaime.",
+     "text": "Po kiekvieno išvykimo užduotis stovi plane, su terminu iki kito atvykimo. Atlikta ji būna su nuotraukų kontroliniu sąrašu.",
+     "punkte": {
+      "a": "Išvykimas užregistruotas",
+      "b": "Valymas suplanuotas",
+      "c": "Nuotraukos įkeltos"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Savininkai",
+     "heading": "Sava prieiga, o ne mėnesinis el. laiškas.",
+     "text": "Savininkai mato savo objektų užimtumą, pajamas ir išmokas — skaitydami, be galimybės įsiterpti į veiklą.",
+     "punkte": {
+      "a": "Užimtumas",
+      "b": "Pajamos",
+      "c": "Išmoka"
+     }
+    },
+    "agentur": {
+     "titel": "Agentūra",
+     "heading": "Keli verslai vienoje paskyroje.",
+     "text": "Kas nuomoja kitų vardu, veda kelis savininkus vienas prie kito — atskiri atsiskaitymai, atskiros prieigos, vienas kalendorius.",
+     "punkte": {
+      "a": "Keli savininkai",
+      "b": "Atskiras atsiskaitymas",
+      "c": "Vienas prisijungimas"
+     }
+    }
+   }
+  },
+  "app": {
+   "metaBeschreibung": "Vietinė programėlė verslui, savininkams, svečiams ir valymui — užimtumas, užduotys ir žinutės kelyje.",
+   "headline": "Jūsų verslas telpa į kišenę.",
+   "sub": "Patikrinti užimtumą, sukurti rezervaciją, atsakyti į žinutę, pažymėti užduotį — iš telefono, be nešiojamojo kompiuterio.",
+   "bildAlt": "Mobilioji programėlė su užimtumu ir užduotimis",
+   "nutzen": {
+    "a": {
+     "titel": "Kiekvienam vaidmeniui",
+     "text": "Savininkai, valymo tarnyba ir verslas turi savo vaizdą — ta pati programėlė, skirtingos teisės."
+    },
+    "b": {
+     "titel": "Pranešimai, kurie svarbūs",
+     "text": "Nauja rezervacija, atšaukimas, svečio klausimas: sužinote iškart, neatidarę programėlės."
+    },
+    "c": {
+     "titel": "Taip pat ir svečiams",
+     "text": "Svečiai svečio aplanką, registraciją ir žinutes randa myBestDays programėlėje."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Dvi programėlės, nes du pasauliai.",
+     "text": "myNextDays veda verslą, myBestDays priklauso svečiui. Atskiros programėlės reiškia: nė vienas svečias niekada nepatenka į jūsų skaičius.",
+     "punkte": {
+      "a": "myNextDays verslui",
+      "b": "myBestDays svečiui",
+      "c": "iOS ir Android"
+     }
+    }
+   },
+   "bildAltBlock": "Verslo apžvalga prie darbo stalo",
+   "reiter": {
+    "betrieb": {
+     "titel": "Veikla kelyje",
+     "heading": "Užimtumas ir rezervacijos rankose.",
+     "text": "Patikrinti kalendorių, sukurti rezervaciją, pakeisti kainą — iš telefono, tuose pačiuose duomenyse kaip prie darbo stalo.",
+     "punkte": {
+      "a": "Kalendorius",
+      "b": "Rezervacijos",
+      "c": "Kainos"
+     }
+    },
+    "meldungen": {
+     "titel": "Pranešimai",
+     "heading": "Sužinote iškart.",
+     "text": "Nauja rezervacija, atšaukimas ar svečio klausimas atkeliauja kaip pranešimas — vienu prisilietimu esate rezervacijoje.",
+     "punkte": {
+      "a": "Rezervacija",
+      "b": "Nauja rezervacija liepą",
+      "c": "Atšaukimas rugpj. 12–14"
+     }
+    },
+    "gast": {
+     "titel": "Svečiui",
+     "heading": "myBestDays programėlė.",
+     "text": "Svečiai rezervaciją, svečio aplanką, registraciją ir žinutes randa savo programėlėje — atskirai nuo jūsų.",
+     "punkte": {
+      "a": "Rezervacija",
+      "b": "Svečio aplankas",
+      "c": "Registracija"
+     }
+    },
+    "rollen": {
+     "titel": "Komandai",
+     "heading": "Valymas ir savininkai.",
+     "text": "Valytojai mato savo darbus su kontroliniu sąrašu, savininkai — savo objektus. Ta pati programėlė, skirtingos teisės.",
+     "punkte": {
+      "a": "Darbas atviras",
+      "b": "Kontrolinis sąrašas atliktas",
+      "c": "Nuotraukos išsiųstos"
+     }
+    }
+   }
+  },
+  "auswertungen": {
+   "metaBeschreibung": "Užimtumas, pajamos, ADR ir kanalų palyginimas — ataskaitos, kurios rodo, kur priežastis, o ne tik tai, kas nutiko.",
+   "headline": "Skaičiai, kurie leidžia priimti sprendimą.",
+   "sub": "Užimtumas, pajamos ir vidutinė kaina kiekvienam objektui, laikotarpiui ir kanalui — vienas prie kito, o ne penkiuose eksportuose.",
+   "bildAlt": "Analitika su užimtumu ir pajamomis",
+   "nutzen": {
+    "a": {
+     "titel": "Palyginkite kanalus",
+     "text": "Ką duoda Booking, ką sava svetainė? Apskaičiuota su komisiniais, o ne vien pagal apyvartą."
+    },
+    "b": {
+     "titel": "Kiekvienam objektui",
+     "text": "Kuris objektas išsilaiko, kuris ne — matoma pagal užimtumą ir vidutinę kainą."
+    },
+    "c": {
+     "titel": "Ataskaitos savaime",
+     "text": "Mėnesio ataskaitos automatiškai keliauja jums ir jūsų savininkams, kaip PDF įprasta sandara."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Praeitis ir perspektyva viename vaizde.",
+     "text": "Šalia to, kas buvo, stovi tai, kas rezervuota — taip vasarį matote, ar vasara išsilaikys, užuot pastebėję tai liepą.",
+     "punkte": {
+      "a": "Rezervacijų būklė į priekį",
+      "b": "Palyginimas su praėjusiais metais",
+      "c": "Eksportas buhalteriui"
+     }
+    }
+   },
+   "bildAltBlock": "Viešbučio užimtumo planas kaip duomenų pagrindas",
+   "reiter": {
+    "auslastung": {
+     "titel": "Užimtumas",
+     "heading": "Kiek pilna iš tikrųjų?",
+     "text": "Užimtumas kiekvienam objektui, mėnesiui ir kanalui — palyginus su praėjusiais metais, o ne iš nuojautos.",
+     "punkte": {
+      "a": "Užimtumas",
+      "b": "Praėję metai",
+      "c": "Kiekvienam objektui"
+     }
+    },
+    "kanaele": {
+     "titel": "Kanalų palyginimas",
+     "heading": "Ką duoda kuris kanalas?",
+     "text": "Apyvarta atskaičius komisinius kiekvienam kanalui: Booking, Airbnb, sava svetainė, myBestDays — vienas prie kito, o ne penkiuose eksportuose.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "berichte": {
+     "titel": "Ataskaitos",
+     "heading": "Atkeliauja savaime.",
+     "text": "Mėnesio ataskaitos automatiškai keliauja jums ir jūsų savininkams, kaip PDF įprasta sandara.",
+     "punkte": {
+      "a": "Ataskaita parengta",
+      "b": "Išsiųsta savininkams",
+      "c": "Padėta į archyvą"
+     }
+    },
+    "ausblick": {
+     "titel": "Perspektyva",
+     "heading": "Kas jau rezervuota.",
+     "text": "Šalia to, kas buvo, stovi rezervacijų būklė į priekį — taip vasarį matote, ar vasara išsilaikys.",
+     "punkte": {
+      "a": "Rezervuota",
+      "b": "Užklausta",
+      "c": "Laisva"
+     }
+    }
+   }
+  }
+ },
+ "kontakt": {
+  "meta": {
+   "titel": "Kontaktai — myNextDays",
+   "beschreibung": "Kaip susisiekti su myNextDays: bendrieji klausimai ir pardavimai adresu {info}, techniniai klausimai adresu {technik}, telefonu {telefon} — arba tiesiai per formą."
+  },
+  "hero": {
+   "eyebrow": "Kontaktai",
+   "headlinePre": "Pasakykite, apie ką eina kalba —",
+   "headlineHighlight": "mes atsakysime",
+   "sub": "Klausimai apie produktą, apie perėjimą iš kitos sistemos, apie prijungimą per mūsų API ar apie bendradarbiavimą: pasirinkite savo temą ir žinutė pateks tiesiai pas tuos žmones, kurie tai išmano.",
+   "sitz": "Būstinė Bindsleve, Danijoje",
+   "sprachen": "Programinė įranga 24 kalbomis",
+   "eu": "Talpinama ES, atitinka GDPR"
+  },
+  "wege": {
+   "eyebrow": "Keliai pas mus",
+   "heading": "Kas atsakingas už jūsų klausimą?",
+   "sub": "Dvi pašto dėžutės ir pokalbių langas. Komerciniai klausimai ir viskas prieš startą eina į bendrąją pašto dėžutę, viskas techniška — tiesiai kūrimo komandai, kad niekas neliktų eilėje, į kurią niekas nežiūri.",
+   "allgemein": {
+    "titel": "Produktas, kainos ir pardavimai",
+    "text": "Norite žinoti, ar myNextDays tinka jūsų įmonei, ką reiškia perėjimas iš kitos sistemos arba kaip veikia sąskaitos ir prenumerata? Tai tinkamas kelias — taip pat spaudai, partnerystėms ir duomenų apsaugos užklausoms.",
+    "aktion": "Rašyti žinutę"
+   },
+   "technik": {
+    "titel": "Technika, API ir saugumas",
+    "text": "Kažkas neveikia, strigo ryšys su rezervacijų portalu, kuriate naudodami mūsų API arba radote saugumo spragą? Šios užklausos eina tiesiai kūrimo komandai, o ne per pardavimus.",
+    "aktion": "Rašyti žinutę"
+   },
+   "hilfe": {
+    "titel": "Pagalba ir pokalbis",
+    "text": "Instrukcijos apie kiekvieną sritį yra pagalbos centre. O jei reikia greitai: kiekvieno lapo apačioje dešinėje yra pokalbių langas, kuriame atsako tikras žmogus — be paskyros ir be prisijungimo.",
+    "aktion": "Į pagalbos centrą",
+    "chatHinweis": "Pokalbių langas kiekvieno lapo apačioje dešinėje"
+   }
+  },
+  "formular": {
+   "eyebrow": "Žinutė",
+   "heading": "Rašykite mums",
+   "sub": "Viena forma viskam — jūsų tema nusprendžia, kas ją gaus.",
+   "ablaufTitel": "Kas nutinka toliau",
+   "ablauf": {
+    "eingang": {
+     "titel": "Žinutė išsiunčiama",
+     "text": "Per mūsų pačių pašto serverį Danijoje — ne per trečiosios šalies formų paslaugą, per kurios rankas eitų jūsų duomenys."
+    },
+    "zuordnung": {
+     "titel": "Ji patenka į tinkamą pašto dėžutę",
+     "text": "Komerciniai klausimai adresu {info}, techniniai adresu {technik}. Kuri tai bus, nusprendžia mūsų serveris pagal jūsų temą."
+    },
+    "antwort": {
+     "titel": "Atsakome jums tiesiogiai",
+     "text": "Įprastu el. laišku adresu, kurį čia įrašote — į jį galite tiesiog atsakyti."
+    }
+   },
+   "hinweisPostfach": "Dvi pašto dėžutės, kad niekas neužsiliktų: {info} visiems komerciniams klausimams, {technik} visiems techniniams. Kuri tai bus, nustato mūsų serveris pagal jūsų temą — ši forma negali nurodyti gavėjo.",
+   "thema": "Apie ką eina kalba?",
+   "themen": {
+    "allgemein": "Bendras klausimas",
+    "vertrieb": "Produktas, kainos ir pardavimai",
+    "abrechnung": "Sąskaita ir prenumerata",
+    "technik": "Techninė problema",
+    "api": "API ir kūrėjai",
+    "partner": "Partnerystė",
+    "presse": "Spauda ir medijos",
+    "datenschutz": "Duomenų apsauga",
+    "sicherheit": "Pranešti apie saugumo spragą"
+   },
+   "zielAllgemein": "Bus išsiųsta adresu {email}",
+   "zielTechnik": "Bus išsiųsta adresu {email} — mūsų kūrimo komandai",
+   "name": "Vardas",
+   "email": "El. paštas",
+   "emailPlatzhalter": "vardas@pavyzdys.lt",
+   "firma": "Įmonė",
+   "telefon": "Telefonas",
+   "optional": "neprivaloma",
+   "nachricht": "Jūsų žinutė",
+   "nachrichtPlatzhalter": "Aprašykite savo klausimą — kuo tiksliau, tuo tinkamesnis atsakymas.",
+   "absenden": "Siųsti žinutę",
+   "laeuft": "Siunčiama …",
+   "dankeTitel": "Gauta.",
+   "nochEine": "Rašyti dar vieną žinutę",
+   "fehlerAllgemein": "Nepavyko. Prašome vėliau pabandyti dar kartą.",
+   "fehlerPruefung": "Saugumo patikra nepavyko. Prašome iš naujo įkelti puslapį ir išsiųsti žinutę dar kartą.",
+   "fehlerFelder": "Prašome patikrinti savo duomenis: reikia vardo, el. pašto adreso ir bent 20 simbolių žinutės.",
+   "fehlerZuOft": "Iš šio ryšio gauta per daug žinučių. Prašome trumpai palaukti ir pabandyti dar kartą.",
+   "fehlerSpaeter": "Žinutės šiuo metu nepavyksta pristatyti. Prašome vėliau pabandyti dar kartą arba rašyti tiesiai adresu {email}.",
+   "datenschutzHinweis": "Jūsų duomenis naudojame tik atsakydami į šią užklausą. Daugiau <link>privatumo politikoje</link>.",
+   "recaptchaHinweis": "Šią formą saugo reCAPTCHA. Taikoma Google <datenschutz>privatumo politika</datenschutz> ir <bedingungen>naudojimo sąlygos</bedingungen>."
+  },
+  "anschrift": {
+   "eyebrow": "Adresas",
+   "heading": "Kaip su mumis susisiekti tiesiogiai",
+   "firmaEyebrow": "Įmonės duomenys",
+   "firmaHeading": "Su kuo turite reikalų",
+   "firmaText": "To, kas yra sutarties partneris, neturėtų reikėti ieškoti smulkiame tekste. Todėl registro duomenys yra čia — tie patys kaip teisinėje informacijoje.",
+   "firma": "Įmonė",
+   "register": "Registras",
+   "ustId": "Pridėtinės vertės mokesčio mokėtojo kodas",
+   "direktion": "Vadovybė",
+   "impressum": "Žiūrėti teisinę informaciją",
+   "datenschutz": "Žiūrėti duomenų apsaugą"
+  },
+  "faq": {
+   "eyebrow": "Dažni klausimai",
+   "heading": "Klausimai apie susisiekimą",
+   "sub": "Kas atsako, kiek tai užima laiko ir kas nutinka jūsų duomenims.",
+   "wer": {
+    "frage": "Kas man atsakys?",
+    "antwort": "Žmogus iš komandos, o ne bilietų sistema su numeriu. myNextDays vadovauja patys savininkai: į komercinius klausimus atsako tas, kuris pats kasdien naudoja programinę įrangą, į techninius — kūrimo komanda."
+   },
+   "postfach": {
+    "frage": "Iš kur žinosiu, kur pateks mano žinutė?",
+    "antwort": "Po pasirinkimo lauku prie kiekvienos temos nurodytas gavėjo adresas. Bendri, komerciniai ir redakciniai klausimai eina adresu {info}, techninės užklausos, API klausimai ir pranešimai apie saugumą — adresu {technik}. Paskirstymą atlieka mūsų serveris — forma negali nurodyti pašto dėžutės, kad jos nebūtų galima naudoti kaip svetimų žinučių siuntimo kelio."
+   },
+   "sprache": {
+    "frage": "Kokia kalba galiu rašyti?",
+    "antwort": "Rašykite ta kalba, kuria skaitote šį lapą — matome ją jūsų užklausoje ir atsakome ja, kiek galime. Vokiečių, danų ir anglų kalbomis atsakome visada."
+   },
+   "dauer": {
+    "frage": "Kiek laiko užima atsakymas?",
+    "antwort": "Paprastai per kelias valandas, savaitgaliais ir per šventes gali užtrukti ilgiau. Pranešimams apie saugumą taikoma: jie be aplinkkelio per pardavimus atsiduria pas kūrimo komandą."
+   },
+   "telefon": {
+    "frage": "Ar galiu ir paskambinti?",
+    "antwort": "Taip, numeriu {telefon}. Skambutis yra greičiausias kelias viskam, ką geriau apkalbėti nei rašyti — kilus techniniams trikdžiams žinutė vis tiek dažnai yra geresnė, nes prie jos galima prisegti klaidų pranešimus ir ekrano nuotraukas."
+   },
+   "bestaetigung": {
+    "frage": "Ar gausiu gavimo patvirtinimą el. paštu?",
+    "antwort": "Ne, sąmoningai ne. Automatinis patvirtinimas būtų išsiųstas bet kokiu čia įrašytu adresu — taip mūsų pašto serverį būtų galima naudoti rašyti į svetimas pašto dėžutes. Todėl patvirtinimas rodomas čia, lape, vos tik žinutė atkeliauja. Jūsų duomenis naudojame tik atsakydami į šią užklausą."
+   }
+  }
+ },
+ "help": {
+  "heroTitle": "Kaip galime padėti?",
+  "heroSubtitle": "Ieškokite žinių bazėje arba raskite žingsnis po žingsnio sprendimus kasdieniam darbui su myNextDays.",
+  "searchPlaceholder": "Ko ieškote?",
+  "searchAria": "Ieškoti pagalboje",
+  "contact": "Contact",
+  "home": "Pagalbos pradžia",
+  "articles": "{count, plural, one {# straipsnis} few {# straipsniai} many {# straipsnio} other {# straipsnių}}",
+  "collectionKbTitle": "Žinių bazė",
+  "collectionKbDesc": "Viskas apie objektus, kainas, kalendorių, portalus ir jūsų paskyrą.",
+  "collectionUsecasesTitle": "Naudojimo atvejai",
+  "collectionUsecasesDesc": "Žingsnis po žingsnio sprendimai tipinėms kasdienėms situacijoms.",
+  "helpfulQuestion": "Ar šis straipsnis buvo naudingas?",
+  "helpfulYes": "Taip",
+  "helpfulNo": "Ne",
+  "helpfulThanks": "Ačiū už atsiliepimą!",
+  "related": "Daugiau straipsnių kategorijoje {category}",
+  "searchTitle": "Paieška",
+  "results": "{count, plural, one {# rezultatas užklausai „{query}“} few {# rezultatai užklausai „{query}“} many {# rezultato užklausai „{query}“} other {# rezultatų užklausai „{query}“}}",
+  "noResultsTitle": "Straipsnių nerasta",
+  "noResultsHintPre": "Pabandykite kitus paieškos žodžius arba",
+  "noResultsHintLink": "naršykite kategorijas",
+  "browseCategories": "Naršyti kategorijas",
+  "brandTitle": "myNextDays pagalba"
  }
 }

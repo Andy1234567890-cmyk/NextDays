@@ -17,6 +17,8 @@
 // (`funktionen.<key>.*`). Eine zweite Fassung des Namens wäre die Doppelpflege,
 // die wir überall sonst abgeschafft haben.
 
+import type { AppMotivMobil } from "@/lib/app-mobil";
+
 /** Schlüssel = Schlüssel der Funktionsgruppe in `features.gruppen`. */
 export type FunktionsSchluessel =
   | "pms"
@@ -44,6 +46,14 @@ export type Funktion = {
    * dieselbe Aufnahme zweimal auf einer Seite liest sich wie ein Fehler.
    */
   aufnahmeBlock: string | null;
+  /**
+   * Telefon-Aufnahmen der App (`lib/app-mobil.ts`). Gesetzt NUR auf Seiten, die
+   * von der App handeln — dort ersetzen sie `aufnahme`/`aufnahmeBlock`, weil
+   * eine hochkante Handy-Aufnahme in einem 16:10-Programmfenster-Rahmen als
+   * leeres Fenster mit Bildstreifen liest. Zwei bis drei Motive je Stelle.
+   */
+  telefonHero?: readonly AppMotivMobil[];
+  telefonBlock?: readonly AppMotivMobil[];
   /** Gruppierung im Menü und auf der Übersicht. */
   bereich: "verkauf" | "gast" | "betrieb";
   /**
@@ -52,7 +62,7 @@ export type Funktion = {
    * Schlüssel zeigt auf `funktionen.<key>.reiter.<key>`, `grafik` bestimmt die
    * gebaute Szene daneben.
    */
-  reiter: readonly { key: string; grafik: GrafikArt }[];
+  reiter: readonly { key: string; grafik: GrafikArt; telefon?: readonly AppMotivMobil[] }[];
 };
 
 /** Grafik-Arten aus `components/funktionen/funktions-grafiken.tsx`. */
@@ -126,10 +136,25 @@ export const FUNKTIONEN: readonly Funktion[] = [
   {
     key: "app",
     slug: "mobile-app",
-    aufnahme: "mobil-kalender",
-    aufnahmeBlock: "dashboard",
+    // Keine Browser-Aufnahme: `mobil-kalender` war die WEB-App im
+    // Handy-Viewport, kein Bild der nativen App. Hier stehen die echten
+    // Telefon-Aufnahmen (alle neun, jede genau einmal).
+    aufnahme: null,
+    aufnahmeBlock: null,
+    telefonHero: ["kalender-mehrere", "uebersicht"],
+    telefonBlock: ["buchungen", "buchung-detail"],
     bereich: "betrieb",
-    reiter: [{ key: "betrieb", grafik: "belegung" }, { key: "meldungen", grafik: "nachrichten" }, { key: "gast", grafik: "zeichnung" }, { key: "rollen", grafik: "checkliste" }],
+    reiter: [
+      { key: "betrieb", grafik: "belegung", telefon: ["inserate", "kalender"] },
+      { key: "meldungen", grafik: "nachrichten", telefon: ["posteingang", "nachricht"] },
+      // „Für den Gast" beschreibt die myBestDays-App und „Für das Team" die
+      // Rollen-Ansichten — davon haben wir keine Aufnahmen. Lieber die
+      // gebaute Grafik als eine fremde Ansicht als Beleg (Markengrenze).
+      { key: "gast", grafik: "zeichnung" },
+      // Der Login trägt „Melde dich mit deinem Betriebskonto an" — genau der
+      // Punkt dieses Reiters: eine App, ein Konto, unterschiedliche Rechte.
+      { key: "rollen", grafik: "checkliste", telefon: ["login"] },
+    ],
   },
   {
     key: "auswertungen",

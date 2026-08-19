@@ -222,6 +222,14 @@ _NEWSLETTER_PATHS = ("/newsletter/subscribe", "/newsletter/confirm",
 _KONTO_LOESCHUNG_PATHS = ("/account-deletion/request",
                           "/account-deletion/confirm")
 
+# Kontaktformular der Marketing-Seite (0414). Jeder Aufruf löst eine Mail an
+# UNSER Postfach aus und kostet zusätzlich eine reCAPTCHA-Bewertung (kostenlos
+# nur bis 10.000/Monat je Organisation). Ohne eigenes Dach könnte ein einzelner
+# Bot beides erschöpfen: unser Posteingang und das Bewertungs-Kontingent, mit
+# dem der Spamschutz aller Formulare hängt. Fail-closed wie die übrigen
+# öffentlichen Formulare — bei Redis-Ausfall lieber abweisen.
+_KONTAKT_PATHS = ("/contact/message",)
+
 # Öffentliche Such-/Kalender-Endpunkte → Scraper-Schutz pro IP. Der iCal-Export
 # ist nicht eingeloggt (ein Kalender-Client schickt kein JWT).
 _LISTINGS_PATHS = (
@@ -289,6 +297,7 @@ _BUCKET_REGELN: tuple[tuple[str, tuple[str, ...], str, bool], ...] = (
     ("public_support", _PUBLIC_SUPPORT_PATHS, "public_support", True),
     ("public_support", _NEWSLETTER_PATHS, "public_support", True),
     ("public_support", _KONTO_LOESCHUNG_PATHS, "public_support", True),
+    ("public_support", _KONTAKT_PATHS, "public_support", True),
     ("ai", _AI_PATHS, "ai", False),
     # sensibel=True: bei Redis-Ausfall lieber abweisen als den Code-/Token-
     # Tausch ungedeckelt durchlassen (fail-closed, Wurzel 5).

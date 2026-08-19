@@ -7,7 +7,7 @@
   "funktionen": "Functies",
   "preise": "Prijzen",
   "kanaele": "Kanalen",
-  "kunden": "Klanten",
+  "ueberUns": "Over ons",
   "ressourcen": "Bronnen",
   "sprache": "Taal",
   "spracheWaehlen": "Taal kiezen",
@@ -425,7 +425,7 @@
   "ressourcen": {
    "blog": "Blog",
    "hilfeCenter": "Helpcentrum",
-   "webinare": "Webinars",
+   "status": "Systeemstatus",
    "leitfaeden": "Handleidingen",
    "api": "API-documentatie"
   },
@@ -441,7 +441,8 @@
   "datenschutz": "Privacy",
   "impressum": "Colofon",
   "cookies": "Cookiebeleid",
-  "avv": "Verwerkersovereenkomst"
+  "avv": "Verwerkersovereenkomst",
+  "kontoLoeschen": "Account verwijderen"
  },
  "abschluss": {
   "heading": "Klaar om je accommodatie vanaf één plek te sturen?",
@@ -593,5 +594,1014 @@
    "provision": "Eigen website {direkt} · portalen {portale}",
    "tarif": "Eén abonnement voor iedereen, incl. 1e object"
   }
+ },
+ "ueberUns": {
+  "meta": {
+   "titel": "Over ons — myNextDays",
+   "beschreibung": "myNextDays ApS uit Bindslev in Denemarken: waarom actieve verhuurders hun eigen property-management-systeem met channelmanager bouwden, waar we voor staan en wie erachter zit."
+  },
+  "hero": {
+   "eyebrow": "Over ons",
+   "headlinePre": "We verhuren zelf. Daarom bestaat",
+   "headlineHighlight": "myNextDays",
+   "sub": "myNextDays ApS is een eigenaarsgeleid bedrijf uit Bindslev in Noord-Jutland. We verhuren eigen vakantieobjecten — en bouwden het platform dat we in de praktijk misten: agenda, kanalen, gasten, betalingen en afrekening op één plek.",
+   "sitz": "Gevestigd in Denemarken",
+   "eu": "EU-gehost, AVG-conform",
+   "start": "Start op 1 september 2026",
+   "sprachen": "27 landen, 24 talen",
+   "ctaTrial": "30 dagen gratis proberen",
+   "ctaKontakt": "Schrijf ons"
+  },
+  "warum": {
+   "eyebrow": "Waarom wij bestaan",
+   "heading": "Ontstaan uit onze eigen verhuurpraktijk.",
+   "p1": "Wie verhuurt, kent de avond waarop dezelfde week twee keer verkocht is omdat één kanaal de blokkade nooit kreeg. Daar zijn we gestopt met zoeken naar een tool en begonnen er een te bouwen.",
+   "p2": "De bestaande systemen waren óf gemaakt voor hotelketens — met een complexiteit en een prijs die geen bedrijf met een handvol objecten draagt — óf ze hielden op waar het echte werk begint: bij afrekening, eigenaren, schoonmaak en belastingen in 27 landen.",
+   "p3": "myNextDays is het antwoord daarop: een volwaardig property-management-systeem met channelmanager, voor bedrijven die hun objecten zelf runnen — van het enkele vakantiehuis tot het hotel met meerdere kamertypes.",
+   "bildFerienobjekt": "Vakantiehuis aan de kust",
+   "bildHotel": "Hotelkamer met opgemaakt bed"
+  },
+  "bento": {
+   "eyebrow": "Wat erachter zit",
+   "heading": "Cijfers die we kunnen onderbouwen.",
+   "sub": "Geen klantaantallen en geen beoordelingen: het platform start op 1 september 2026. Wat hier staat, is in het product zelf na te kijken.",
+   "vermieter": {
+    "titel": "Gebouwd door verhuurders, niet op de tekentafel",
+    "text": "Elke functie draait eerst in onze eigen verhuur voordat ze in het product komt. Wat het daar in de praktijk niet houdt, wordt niet uitgeleverd.",
+    "bildAlt": "Team van een verhuurbureau aan het werk"
+   },
+   "laender": {
+    "wert": "27",
+    "titel": "Europese landen",
+    "text": "Met de munt, de btw-tarieven en de regels van elk land — niet één euroformulier voor iedereen."
+   },
+   "sprachen": {
+    "wert": "24",
+    "titel": "Talen",
+    "text": "Interface, gastcommunicatie en juridische teksten, niet alleen de startpagina."
+   },
+   "kanaele": {
+    "wert": "56",
+    "titel": "Boekingskanalen",
+    "text": "Booking.com, Airbnb, Expedia, Vrbo en vele andere via één koppeling."
+   },
+   "eu": {
+    "titel": "Gebouwd in de EU, beheerd in de EU",
+    "text": "Servers en gegevens staan in de Europese Unie, de exploitatie volgt de AVG en de verwerking is schriftelijk geregeld. Voor een bedrijf met gastgegevens is dat geen voetnoot maar een voorwaarde."
+   }
+  },
+  "zeitleiste": {
+   "eyebrow": "De weg tot hier",
+   "heading": "Korte geschiedenis, controleerbare stappen.",
+   "sub": "We zijn jong — en schrijven liever vier gedocumenteerde etappes op dan een verzonnen historie.",
+   "airsmil": {
+    "datum": "Het beginpunt",
+    "titel": "De praktijk in het eigen bedrijf",
+    "text": "Eigen vakantieobjecten op meerdere kanalen tegelijk: dubbel werk, blokkades die te laat aankwamen, afrekening in een spreadsheet. Uit die wrijving ontstond de eisenlijst."
+   },
+   "gruendung": {
+    "datum": "1 juli 2026",
+    "titel": "myNextDays ApS opgericht",
+    "text": "Ingeschreven in het Deense handelsregister onder CVR-nr. 46615182, met zetel in Bindslev in Noord-Jutland."
+   },
+   "beta": {
+    "datum": "Zomer 2026",
+    "titel": "Bèta met echte objecten",
+    "text": "Boekingen komen live binnen van de kanalen, prijzen, beschikbaarheid en blokkades gaan dezelfde weg terug — met echte objecten en echte gasten, niet in een testomgeving."
+   },
+   "start": {
+    "datum": "1 september 2026",
+    "titel": "Start in 27 landen",
+    "text": "In 24 talen, met meerdere valuta's, de marktplaats myBestDays en de twee apps voor bedrijf en gast."
+   }
+  },
+  "marken": {
+   "eyebrow": "Twee merken, één platform",
+   "heading": "myNextDays voor het bedrijf, myBestDays voor de gast.",
+   "sub": "Beide horen bij myNextDays ApS en draaien op dezelfde techniek — het verschil zit in wie ze gebruikt.",
+   "nextdays": {
+    "rolle": "Voor bedrijven",
+    "text": "Het property-management-systeem en de channelmanager: de plek waar een bedrijf zijn objecten runt, zijn prijzen zet en zijn geld afrekent.",
+    "punkte": {
+     "kalender": "Bezettingsplan over alle objecten en eenheden, in realtime",
+     "portale": "Eén koppeling voor alle kanalen — beschikbaarheid, prijzen en blokkades gaan overal tegelijk heen",
+     "geld": "Betalingen, facturen, commissies en eigenaarsafrekening",
+     "team": "Eigen app voor eigenaren, medewerkers en schoonmaak"
+    }
+   },
+   "bestdays": {
+    "rolle": "Voor gasten",
+    "text": "Onze eigen marktplaats: gasten vinden er dezelfde objecten en boeken rechtstreeks bij het bedrijf — tegen een veel lagere commissie dan via de grote kanalen.",
+    "punkte": {
+     "direkt": "Rechtstreeks boeken bij het bedrijf, zonder tussenpersoon",
+     "provision": "Lagere commissie dan bij de grote kanalen",
+     "app": "Eigen app voor zoeken, boeken en het verblijf"
+    }
+   },
+   "hinweis": "Een object wordt via beide wegen tegelijk verkocht — daarnaast via Booking.com, Airbnb en de overige kanalen. Welk kanaal aanstaat, bepaalt het bedrijf per kanaal."
+  },
+  "werte": {
+   "eyebrow": "Uitgangspunten",
+   "heading": "Waarop wij afgerekend willen worden.",
+   "sub": "Zes punten die in het product en in onze documenten na te kijken zijn — geen intentieverklaringen.",
+   "doppelbuchung": {
+    "titel": "Geen dubbele boekingen",
+    "text": "Beschikbaarheid is bij ons een aantal vrije eenheden, geen vinkje. Ze gaat in realtime naar elk kanaal, en een blokkade blokkeert overal — niet alleen daar waar ze is ingevoerd."
+   },
+   "preise": {
+    "titel": "Prijzen die je vooraf kent",
+    "text": "Één tarief, geen minimumlooptijd, geen instelkosten. Wat extra kost, staat met bedrag op de prijspagina, niet in een verkoopgesprek."
+   },
+   "europa": {
+    "titel": "Europa is geen vertaalproject",
+    "text": "27 landen betekent 27 valuta's, belastingtarieven en meldplichten — tot in factuur, gastmail en uitbetaling. Ontbreekt een gegeven, dan zeggen we dat, in plaats van een plausibele waarde in te vullen."
+   },
+   "daten": {
+    "titel": "Gegevens blijven in de EU",
+    "text": "Beheer en servers in de Europese Unie, de AVG als basis, een verwerkersovereenkomst als standaard. Binnen het bedrijf zien alleen de rollen gastgegevens die ze nodig hebben."
+   },
+   "unabhaengig": {
+    "titel": "Eigenaarsgeleid",
+    "text": "Geen concern achter ons en geen routekaart van buitenaf. Wat er als volgende gebouwd wordt, bepalen we samen met de bedrijven die de software dagelijks gebruiken."
+   },
+   "selbst": {
+    "titel": "We gebruiken het zelf",
+    "text": "Onze eigen objecten draaien op hetzelfde platform als dat van onze klanten. Een fout treft ons als eerste — de eerlijkste kwaliteitsborging die we kennen."
+   }
+  },
+  "menschen": {
+   "eyebrow": "De mensen erachter",
+   "heading": "Klein, bereikbaar, uit de praktijk.",
+   "sub": "De directie van myNextDays ApS zoals ingeschreven in het Deense handelsregister.",
+   "jeanine": {
+    "rolle": "Oprichter en directeur",
+    "text": "Runt onze eigen verhuur en brengt de praktijk met gasten, kanalen en schoonmaak in elke productbeslissing mee."
+   },
+   "torsten": {
+    "rolle": "Directeur",
+    "text": "Houdt de touwtjes in handen en ondersteunt het team precies daar waar het nodig is. Brengt zijn brede praktische ervaring in om achter de schermen snelle en pragmatische oplossingen te vinden."
+   }
+  },
+  "unternehmen": {
+   "eyebrow": "Onderneming",
+   "heading": "Met wie je te maken hebt.",
+   "firma": "Onderneming",
+   "sitz": "Adres",
+   "register": "Handelsregister",
+   "ustId": "Btw-identificatienummer",
+   "direktion": "Directie",
+   "impressum": "Volledige aanbiedergegevens in het colofon",
+   "kontaktTitel": "Rechtstreeks contact",
+   "kontaktText": "Vragen over het product, over de overstap van een ander systeem of over samenwerking? Wie antwoordt, gebruikt de software zelf."
+  }
+ },
+ "funktionen": {
+  "rahmen": {
+   "ctaTesten": "30 dagen gratis proberen",
+   "ctaDemo": "Demo bekijken",
+   "weiter": "Verder naar de andere functies",
+   "mehr": "Bekijken",
+   "bereich": {
+    "verkauf": "Verkoop",
+    "gast": "Gast & geld",
+    "betrieb": "Bedrijfsvoering"
+   },
+   "reiterHeading": "Wat zit er precies achter?"
+  },
+  "uebersicht": {
+   "metaTitel": "Functies — alles voor verhuur en hotel | myNextDays",
+   "metaBeschreibung": "Kalender, channel manager, directe boekingen, gastcommunicatie, betalingen, prijzen, team, app en analyses — in één systeem, bij elk tarief inbegrepen.",
+   "eyebrow": "Functies",
+   "headline": "Alles wat de dag vraagt. In één systeem.",
+   "sub": "Negen gebieden, één login. Elk ervan hoort bij het basistarief — er is niets dat pas in een duurder pakket begint.",
+   "bereichSub": {
+    "verkauf": "Zichtbaar zijn en boekingen krijgen",
+    "gast": "Van het eerste contact tot het geld op de rekening",
+    "betrieb": "Wie doet wat — en wat heeft het opgeleverd"
+   }
+  },
+  "pms": {
+   "metaBeschreibung": "Één kalender voor alle accommodaties: bezettingsoverzicht, reserveringen, taken en accommodatiegegevens op één plek — voor vakantieaccommodaties en hotels.",
+   "headline": "Één kalender voor alles wat je verhuurt.",
+   "sub": "Bezetting, reserveringen en accommodatiegegevens staan op één plek — of het nu één vakantiewoning is of twaalf kamertypes met meerdere eenheden.",
+   "bildAlt": "Bezettingsoverzicht met boekingen uit meerdere kanalen",
+   "nutzen": {
+    "a": {
+     "titel": "Alles in één oogopslag",
+     "text": "Het bezettingsoverzicht toont elke eenheid, elke boeking en elke blokkade in één beeld — met een kleur per kanaal."
+    },
+    "b": {
+     "titel": "Boeken in seconden",
+     "text": "Een reservering aanmaken, verschuiven of annuleren zonder van weergave te wisselen. Vrijgekomen nachten gaan direct weer in de verkoop."
+    },
+    "c": {
+     "titel": "Accommodatiegegevens die overal gelden",
+     "text": "Voorzieningen, foto's en regels onderhoud je één keer — de portalen en je eigen website krijgen ze automatisch."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Één accommodatie, meerdere eenheden — goed weergegeven.",
+     "text": "Vijf gelijke studio's zijn één type met vijf eenheden, geen accommodatie die je vijf keer onderhoudt. Ze zijn beschikbaar als getal, precies zoals de portalen het verwachten.",
+     "punkte": {
+      "a": "Eenheden per accommodatietype",
+      "b": "Het gebouw bundelt meerdere types",
+      "c": "Beschikbaarheid als getal, niet als ja/nee"
+     }
+    }
+   },
+   "bildAltBlock": "Bezettingsoverzicht van een hotel met kamertypes",
+   "reiter": {
+    "kalender": {
+     "titel": "Bezettingsoverzicht",
+     "heading": "Elke eenheid, elke nacht, één beeld.",
+     "text": "Het overzicht toont boekingen, blokkades en vrije nachten naast elkaar — met een kleur per kanaal en de naam van de gast. Slepen verschuift een boeking, één klik maakt een nieuwe aan.",
+     "punkte": {
+      "a": "Kleur per kanaal",
+      "b": "Slepen en neerzetten",
+      "c": "Tot 500 accommodaties"
+     }
+    },
+    "einheiten": {
+     "titel": "Eenheden",
+     "heading": "Vijf gelijke studio's zijn één type.",
+     "text": "Je onderhoudt het type en geeft aan hoeveel eenheden er van zijn. De portalen krijgen een aantal, geen ja/nee-beschikbaarheid — precies zoals ze het verwachten.",
+     "punkte": {
+      "a": "Type aangemaakt",
+      "b": "Eenheden ingesteld",
+      "c": "Aantal naar de portalen"
+     }
+    },
+    "reservierung": {
+     "titel": "Reserveringen",
+     "heading": "Van aanvraag tot vertrek.",
+     "text": "Elke boeking heeft haar eigen verloop: betalingen, berichten, taken en wijzigingen staan op één plek — ook weken later nog na te gaan.",
+     "punkte": {
+      "a": "Verloop per boeking",
+      "b": "Wijzigingen vastgelegd",
+      "c": "Annulering met reden"
+     }
+    },
+    "objektdaten": {
+     "titel": "Accommodatiegegevens",
+     "heading": "Eén keer onderhouden, overal geldig.",
+     "text": "Voorzieningen, foto's, regels en beschrijvingen horen bij de accommodatie. Van daar gaan ze naar de portalen en naar je eigen website — zonder tweede onderhoud.",
+     "punkte": {
+      "a": "Foto's en voorzieningen",
+      "b": "Huisregels",
+      "c": "Automatisch verspreid"
+     }
+    }
+   }
+  },
+  "channel": {
+   "metaBeschreibung": "Channel manager voor vakantiewoning en hotel: Airbnb, Booking.com, Expedia, Vrbo en Google in realtime synchroon — zonder dubbele boekingen.",
+   "headline": "Één kalender. Alle boekingsplatformen.",
+   "sub": "Beschikbaarheid, prijzen en content gaan in realtime naar de portalen, boekingen komen in hetzelfde ritme terug. Dubbele boekingen ontstaan niet eens.",
+   "bildAlt": "Kanaaloverzicht met verbonden boekingsplatformen",
+   "nutzen": {
+    "a": {
+     "titel": "56 platformen",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google en nog veel meer — aangesloten via één koppeling, niet via zelfbouwoplossingen."
+    },
+    "b": {
+     "titel": "Twee richtingen, één ritme",
+     "text": "Wat je hier wijzigt, is daar binnen seconden te zien. Wat daar geboekt wordt, blokkeert hier direct de nachten."
+    },
+    "c": {
+     "titel": "Elk portaal apart",
+     "text": "Prijzen, toeslagen en regels gelden per portaal — geen tarief dat overal gelijk moet zijn, alleen omdat dat eenvoudiger zou zijn."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Stop-sell werkt overal. Zonder nadenken.",
+     "text": "Blokkeer je een datum, dan is die op elk verbonden portaal dicht. Geen nawerk in vijf extranetten, geen vergeten kanaal in het weekend.",
+     "punkte": {
+      "a": "Directe blokkade op alle kanalen",
+      "b": "Minimumverblijf per portaal",
+      "c": "Logboek: wat ging wanneer de deur uit"
+     }
+    }
+   },
+   "bildAltBlock": "Bezettingsoverzicht met boekingen uit meerdere portalen",
+   "reiter": {
+    "portale": {
+     "titel": "Portalen",
+     "heading": "56 platformen op één koppeling.",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google en myBestDays hangen aan dezelfde koppeling. Een nieuw portaal is een verbinding, geen project.",
+     "punkte": {
+      "a": "Airbnb",
+      "b": "Booking.com",
+      "c": "myBestDays"
+     }
+    },
+    "sync": {
+     "titel": "Realtime synchronisatie",
+     "heading": "Wat hier gebeurt, is daar binnen seconden.",
+     "text": "Beschikbaarheid, prijzen en restricties gaan direct de deur uit; boekingen komen in hetzelfde ritme terug en blokkeren de nachten voordat iemand twee keer kan boeken.",
+     "punkte": {
+      "a": "Beschikbaarheid",
+      "b": "Prijzen",
+      "c": "Restricties"
+     }
+    },
+    "stopsell": {
+     "titel": "Stop-sell",
+     "heading": "Eén klik sluit alle kanalen.",
+     "text": "Een blokkade geldt overal — niet in vier extranetten achter elkaar. Het logboek toont wat wanneer de deur uit ging en wat het portaal heeft geantwoord.",
+     "punkte": {
+      "a": "Blokkade gezet",
+      "b": "Naar alle kanalen gestuurd",
+      "c": "Logboek gecontroleerd"
+     }
+    },
+    "regeln": {
+     "titel": "Regels per portaal",
+     "heading": "Elk portaal mag anders zijn.",
+     "text": "Toeslagen, minimumverblijven en annuleringsregels stel je per kanaal in. Geen gezamenlijk tarief, alleen omdat een systeem het niet anders kan.",
+     "punkte": {
+      "a": "Toeslag per kanaal",
+      "b": "Minimumverblijf",
+      "c": "Annuleringstermijn"
+     }
+    }
+   }
+  },
+  "direkt": {
+   "metaBeschreibung": "Eigen boekingswebsite, boekingswidget en eigen domein — directe boekingen zonder portaalcommissie, met betaling en bevestiging.",
+   "headline": "Boekingen die helemaal van jou zijn.",
+   "sub": "Je eigen boekingspagina met beschikbaarheid, prijzen en betaling. Voor boekingen daarlangs rekenen wij geen commissie — de portalen nemen 15 tot 18 procent.",
+   "bildAlt": "Accommodatiepagina met boekingsproces",
+   "nutzen": {
+    "a": {
+     "titel": "Website zonder bureau",
+     "text": "Bouwer met templates, eigen domein, foto's en teksten uit je accommodatiegegevens — in één middag online."
+    },
+    "b": {
+     "titel": "Widget voor je eigen site",
+     "text": "Heb je al een website? Dan zet je alleen het boekingsproces erin en houd je je eigen design."
+    },
+    "c": {
+     "titel": "Er wordt direct betaald",
+     "text": "Aanbetaling, restbetaling en borgsom lopen automatisch — de gast krijgt zijn bevestiging zonder dat je iets doet."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "De marktplaats brengt je gasten die je niet kennen.",
+     "text": "myBestDays is onze eigen marktplaats. Daar sta je naast andere accommodaties zonder een tweede systeem te onderhouden — dezelfde accommodaties, dezelfde kalender.",
+     "punkte": {
+      "a": "Per kanaal apart aan te zetten",
+      "b": "Één kalender voor alles",
+      "c": "8 % all-in in plaats van portaalcommissie"
+     }
+    }
+   },
+   "bildAltBlock": "Kanaaloverzicht met eigen website en marktplaats",
+   "reiter": {
+    "website": {
+     "titel": "Boekingswebsite",
+     "heading": "Jouw site, jouw boekingen.",
+     "text": "Templates, eigen domein, foto's en teksten uit de accommodatiegegevens. De gast boekt direct bij jou — zonder omweg via een portaal.",
+     "punkte": {
+      "a": "Templates",
+      "b": "Eigen domein",
+      "c": "Meertalig"
+     }
+    },
+    "widget": {
+     "titel": "Boekingswidget",
+     "heading": "Voor de website die je al hebt.",
+     "text": "Eén blok op je bestaande site: beschikbaarheid, prijs en betaling, in je eigen design. Geen verhuizing, geen nieuw project.",
+     "punkte": {
+      "a": "Code geplaatst",
+      "b": "Design overgenomen",
+      "c": "Eerste boeking"
+     }
+    },
+    "marktplatz": {
+     "titel": "myBestDays",
+     "heading": "Onze marktplaats brengt nieuwe gasten.",
+     "text": "Je accommodaties staan op onze eigen marktplaats naast andere accommodaties — dezelfde gegevens, dezelfde kalender, één klik om aan te zetten.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "zahlung": {
+     "titel": "Betaling",
+     "heading": "Betaald voordat de gast aankomt.",
+     "text": "Aanbetaling bij de boeking, de rest voor aankomst, borgsom afgedekt. De gast krijgt bevestiging en factuur automatisch.",
+     "punkte": {
+      "a": "Aanbetaling",
+      "b": "Restbetaling",
+      "c": "Borgsom"
+     }
+    }
+   }
+  },
+  "gaeste": {
+   "metaBeschreibung": "Digitale gastenmap, online check-in, automatische berichten en AI-conciërge in 24 talen — van het eerste contact tot het vertrek.",
+   "headline": "Gasten begeleiden zonder steeds te typen.",
+   "sub": "Berichten gaan automatisch op het juiste moment de deur uit, vragen beantwoordt de conciërge in 24 talen — en jij leest alles in één inbox.",
+   "bildAlt": "Inbox met gastberichten uit meerdere kanalen",
+   "nutzen": {
+    "a": {
+     "titel": "Eén inbox",
+     "text": "Airbnb, Booking, e-mail en WhatsApp komen in één verloop samen — met de boeking ernaast, in plaats van in vier apps."
+    },
+    "b": {
+     "titel": "Berichten op het juiste moment",
+     "text": "Bevestiging, aankomstinfo, toegangscode, verzoek om een beoordeling: één keer ingesteld, daarna vanzelf."
+    },
+    "c": {
+     "titel": "Check-in vooraf",
+     "text": "De gast vult zijn gegevens in voor de aankomst. Jij ontvangt hem in plaats van formulieren over te typen."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "De gastenmap vervangt de map in de gang.",
+     "text": "Wifiwachtwoord, vuilophaal, restauranttips en huisregels — digitaal, in de taal van de gast, altijd aan te passen.",
+     "punkte": {
+      "a": "24 talen",
+      "b": "Toegangscodes op het juiste moment",
+      "c": "Tips uit de omgeving"
+     }
+    }
+   },
+   "bildAltBlock": "Mobiele weergave met bezetting en berichten",
+   "reiter": {
+    "posteingang": {
+     "titel": "Inbox",
+     "heading": "Airbnb, Booking, mail en WhatsApp in één verloop.",
+     "text": "Alle berichten bij een boeking staan bij elkaar — met context, templates en vertaling. Niemand zoekt nog in vier apps.",
+     "punkte": {
+      "a": "Gast",
+      "b": "Vanaf wanneer is check-in mogelijk?",
+      "c": "Vanaf 15 uur — de code stuur ik je morgenvroeg."
+     }
+    },
+    "automatisch": {
+     "titel": "Automatische berichten",
+     "heading": "Op het juiste moment, zonder herinnering.",
+     "text": "Bevestiging, aankomstinfo, toegangscode, verzoek om een beoordeling: één keer ingesteld, daarna vanzelf — in de taal van de gast.",
+     "punkte": {
+      "a": "Bevestiging verstuurd",
+      "b": "Aankomstinfo gepland",
+      "c": "Verzoek om beoordeling"
+     }
+    },
+    "checkin": {
+     "titel": "Online check-in",
+     "heading": "Gegevens voor de aankomst, niet aan de deur.",
+     "text": "De gast vult registratiegegevens en identiteitsbewijs vooraf in. Jij ontvangt hem in plaats van formulieren over te typen — en voldoet aan de meldplicht.",
+     "punkte": {
+      "a": "Registratiegegevens",
+      "b": "Identiteitsbewijs",
+      "c": "Ondertekening"
+     }
+    },
+    "mappe": {
+     "titel": "Gastenmap",
+     "heading": "Alles wat de gast moet weten.",
+     "text": "Wifi, huisregels, vuilophaal en tips uit de omgeving — digitaal, altijd aan te passen, in 24 talen.",
+     "punkte": {
+      "a": "Gast",
+      "b": "Waar is het wifiwachtwoord?",
+      "c": "In de gastenmap — ik heb je de link gestuurd."
+     }
+    }
+   }
+  },
+  "zahlungen": {
+   "metaBeschreibung": "Online betalingen, aanbetalingen, borgsommen en boekhoudklare exports — geld binnen en afrekening zonder nawerk.",
+   "headline": "Geld komt binnen zonder dat je erachteraan loopt.",
+   "sub": "Aanbetaling bij de boeking, de rest voor aankomst, borgsom afgedekt — automatisch geïnd en in de boeking vastgelegd.",
+   "bildAlt": "Boeking met betaalstatus en bewijsstukken",
+   "nutzen": {
+    "a": {
+     "titel": "Betalen zoals gewend",
+     "text": "Kaart, Apple Pay, Google Pay, PayPal en lokale methoden — de gast kiest wat hij kent."
+    },
+    "b": {
+     "titel": "Regels in plaats van herinneringen",
+     "text": "Wanneer hoeveel verschuldigd is, leg je één keer vast. Ontbrekende betalingen zie je voordat de gast aankomt."
+    },
+    "c": {
+     "titel": "Klaar voor de boekhouding",
+     "text": "Facturen ontstaan uit de boeking en exports passen bij de boekhouder — zonder spreadsheets met de hand."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Eigenaren zien hun afrekening zelf.",
+     "text": "Elke eigenaar heeft een eigen login met bezetting, opbrengsten en uitbetalingen. Dat scheelt de maandmail met een tabel als bijlage.",
+     "punkte": {
+      "a": "Eigen login per eigenaar",
+      "b": "Afrekening per accommodatie",
+      "c": "Alleen lezen, geen ingrepen"
+     }
+    }
+   },
+   "bildAltBlock": "Overzicht met omzet en uitbetalingen",
+   "reiter": {
+    "online": {
+     "titel": "Online betalingen",
+     "heading": "Kaart, wallet, PayPal.",
+     "text": "De gast betaalt met de methode die hij kent. Het geld gaat naar je rekening, de status staat in de boeking.",
+     "punkte": {
+      "a": "Openstaand bedrag",
+      "b": "Aanbetaling",
+      "c": "Restbetaling"
+     }
+    },
+    "plaene": {
+     "titel": "Betaalplannen",
+     "heading": "Wanneer wat verschuldigd is, bepaal jij.",
+     "text": "Aanbetaling, restbetaling en borgsom volgen jouw regels — per accommodatie en kanaal verschillend, als dat nodig is.",
+     "punkte": {
+      "a": "Regel aangemaakt",
+      "b": "Aanbetaling geboekt",
+      "c": "Restbetaling open"
+     }
+    },
+    "rechnungen": {
+     "titel": "Facturen",
+     "heading": "Uit de boeking, niet uit de spreadsheet.",
+     "text": "Facturen en creditnota's ontstaan uit de echte cijfers, met belastingtarief en nummerreeks. Exports passen bij de boekhouder.",
+     "punkte": {
+      "a": "Nummerreeks",
+      "b": "Belastingtarieven",
+      "c": "Export"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Eigenaarsafrekening",
+     "heading": "Opbrengsten, kosten, uitbetaling.",
+     "text": "Elke eigenaar ziet zijn accommodaties met bezetting, opbrengsten en uitbetalingen — als eigen login in plaats van als maandmail.",
+     "punkte": {
+      "a": "Opbrengsten",
+      "b": "Kosten",
+      "c": "Uitbetaling"
+     }
+    }
+   }
+  },
+  "preise": {
+   "metaBeschreibung": "Dynamische prijzen met min./max., rate plans per accommodatie, seizoens- en bezettingslogica — meer omzet zonder dagelijks handwerk.",
+   "headline": "Prijzen die voor zichzelf zorgen.",
+   "sub": "Seizoen, bezetting, boekingstermijn en weekdag komen automatisch mee. Jouw grenzen blijven jouw grenzen: onder het minimum gaat niets.",
+   "bildAlt": "Prijsraster met dynamische prijzen per nacht",
+   "nutzen": {
+    "a": {
+     "titel": "Min. en max. gelden",
+     "text": "Jij geeft het kader, het systeem beweegt daarbinnen — geen prijs die je niet wilde."
+    },
+    "b": {
+     "titel": "Rate plans per accommodatie",
+     "text": "Niet-terugbetaalbaar, vroegboek, langverblijf: meerdere rate plans per accommodatie, elk met eigen regels."
+    },
+    "c": {
+     "titel": "Handmatige invoer gaat voor",
+     "text": "Een handmatig gezette prijs blijft staan. Automatisering overschrijft nooit een bewuste keuze."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Kortingen en toeslagen gaan mee naar de portalen.",
+     "text": "Week- en maandkortingen, vroegboekacties en toeslagen worden daar uitgespeeld waar ze toegestaan zijn — niet alleen in jouw weergave.",
+     "punkte": {
+      "a": "Kortingen naar verblijfsduur",
+      "b": "Acties met periode",
+      "c": "Toeslagen per kanaal"
+     }
+    }
+   },
+   "bildAltBlock": "Bezettingsoverzicht met prijzen per nacht",
+   "reiter": {
+    "dynamisch": {
+     "titel": "Dynamische prijzen",
+     "heading": "Bezetting, seizoen, boekingstermijn.",
+     "text": "De prijs beweegt tussen jouw minimum en maximum — naar vraag, weekdag en boekingstermijn, elke nacht opnieuw berekend.",
+     "punkte": {
+      "a": "Minimum",
+      "b": "Maximum",
+      "c": "Vraag"
+     }
+    },
+    "raten": {
+     "titel": "Rate plans",
+     "heading": "Meerdere prijzen voor dezelfde accommodatie.",
+     "text": "Niet-terugbetaalbaar, vroegboek, langverblijf: elk rate plan met eigen voorwaarden — en elk gaat naar de portalen die het ondersteunen.",
+     "punkte": {
+      "a": "Rate plan aangemaakt",
+      "b": "Voorwaarden ingesteld",
+      "c": "Naar de portalen"
+     }
+    },
+    "rabatte": {
+     "titel": "Kortingen",
+     "heading": "Langer blijven, minder betalen.",
+     "text": "Week- en maandkortingen, acties met periode, toeslagen voor korte verblijven — direct zichtbaar in de kalender.",
+     "punkte": {
+      "a": "Weekkorting",
+      "b": "Maandkorting",
+      "c": "Actie"
+     }
+    },
+    "grenzen": {
+     "titel": "Jouw grenzen",
+     "heading": "Automatisering heeft nooit het laatste woord.",
+     "text": "Een prijs die je zelf zet, blijft staan. En onder jouw minimum gaat niets — ook niet bij een lege kalender.",
+     "punkte": {
+      "a": "Minimum",
+      "b": "Handmatige invoer",
+      "c": "Voorrang"
+     }
+    }
+   }
+  },
+  "team": {
+   "metaBeschreibung": "Rollen voor eigenaren, schoonmaak, medewerkers en agentschappen — ieder ziet alleen zijn eigen gedeelte, met taken en fotochecklists.",
+   "headline": "Ieder ziet precies wat hij nodig heeft.",
+   "sub": "Eigenaren zien hun accommodaties, de schoonmaak haar opdrachten, medewerkers hun gedeelte. Financiën blijven waar ze horen.",
+   "bildAlt": "Taakoverzicht met verantwoordelijkheden",
+   "nutzen": {
+    "a": {
+     "titel": "Rollen in plaats van afspraken",
+     "text": "Rechten hangen aan de rol, niet aan vertrouwen. Een schoonmaaklogin komt bij geen enkele omzet."
+    },
+    "b": {
+     "titel": "Taken met bewijs",
+     "text": "Checklists met foto's tonen dat de woning is opgeleverd — inclusief tijdstip."
+    },
+    "c": {
+     "titel": "Automatisch verdeeld",
+     "text": "Na elk vertrek ontstaat de schoonmaak vanzelf, met een deadline tot de volgende aankomst."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Agentschappen runnen meerdere bedrijven naast elkaar.",
+     "text": "Wie voor anderen verhuurt, beheert meerdere eigenaren in één account — met gescheiden afrekeningen en eigen logins.",
+     "punkte": {
+      "a": "Meerdere eigenaren",
+      "b": "Gescheiden afrekening",
+      "c": "Rechten per persoon"
+     }
+    }
+   },
+   "bildAltBlock": "Reserveringslijst met verantwoordelijkheden",
+   "reiter": {
+    "rollen": {
+     "titel": "Rollen",
+     "heading": "Ieder ziet zijn eigen gedeelte.",
+     "text": "Agentschap, eigenaar, medewerker, schoonmaak: rechten hangen aan de rol. Omzet ziet alleen wie die mag zien.",
+     "punkte": {
+      "a": "Rol gekozen",
+      "b": "Accommodaties toegewezen",
+      "c": "Rechten gecontroleerd"
+     }
+    },
+    "aufgaben": {
+     "titel": "Taken",
+     "heading": "Schoonmaak ontstaat vanzelf.",
+     "text": "Na elk vertrek staat de taak in de planning, met een deadline tot de volgende aankomst. Afronden gebeurt met een fotochecklist.",
+     "punkte": {
+      "a": "Vertrek vastgelegd",
+      "b": "Schoonmaak gepland",
+      "c": "Foto's geüpload"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Eigenaren",
+     "heading": "Eigen login in plaats van een maandmail.",
+     "text": "Eigenaren zien bezetting, opbrengsten en uitbetalingen van hun accommodaties — alleen lezend, zonder in de bedrijfsvoering te kunnen ingrijpen.",
+     "punkte": {
+      "a": "Bezetting",
+      "b": "Opbrengsten",
+      "c": "Uitbetaling"
+     }
+    },
+    "agentur": {
+     "titel": "Agentschap",
+     "heading": "Meerdere bedrijven in één account.",
+     "text": "Wie voor anderen verhuurt, runt meerdere eigenaren naast elkaar — gescheiden afrekeningen, gescheiden logins, één kalender.",
+     "punkte": {
+      "a": "Meerdere eigenaren",
+      "b": "Gescheiden afrekening",
+      "c": "Één login"
+     }
+    }
+   }
+  },
+  "app": {
+   "metaBeschreibung": "Native app voor bedrijf, eigenaren, gasten en schoonmaak — bezetting, taken en berichten onderweg.",
+   "headline": "Je bedrijf past in je broekzak.",
+   "sub": "Bezetting checken, een boeking aanmaken, een bericht beantwoorden, een taak afvinken — vanaf je telefoon, zonder laptop.",
+   "bildAlt": "Mobiele app met bezetting en taken",
+   "nutzen": {
+    "a": {
+     "titel": "Voor elke rol",
+     "text": "Eigenaren, schoonmaak en bedrijf hebben hun eigen weergave — dezelfde app, verschillende rechten."
+    },
+    "b": {
+     "titel": "Meldingen die ertoe doen",
+     "text": "Nieuwe boeking, annulering, gastvraag: je hoort het direct, zonder de app te openen."
+    },
+    "c": {
+     "titel": "Ook voor gasten",
+     "text": "Gasten vinden gastenmap, check-in en berichten in de myBestDays-app."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Twee apps, omdat het twee werelden zijn.",
+     "text": "myNextDays runt het bedrijf, myBestDays is van de gast. Gescheiden apps betekent: geen gast komt ooit bij jouw cijfers.",
+     "punkte": {
+      "a": "myNextDays voor het bedrijf",
+      "b": "myBestDays voor de gast",
+      "c": "iOS en Android"
+     }
+    }
+   },
+   "bildAltBlock": "Overzicht van het bedrijf op het bureau",
+   "reiter": {
+    "betrieb": {
+     "titel": "Bedrijf onderweg",
+     "heading": "Bezetting en boekingen onder controle.",
+     "text": "Kalender checken, een boeking aanmaken, een prijs wijzigen — vanaf je telefoon, met dezelfde gegevens als op je bureau.",
+     "punkte": {
+      "a": "Kalender",
+      "b": "Boekingen",
+      "c": "Prijzen"
+     }
+    },
+    "meldungen": {
+     "titel": "Meldingen",
+     "heading": "Je hoort het direct.",
+     "text": "Een nieuwe boeking, een annulering of een gastvraag komt als melding binnen — met één tik zit je in de boeking.",
+     "punkte": {
+      "a": "Boeking",
+      "b": "Nieuwe boeking in juli",
+      "c": "Annulering voor 12–14/08"
+     }
+    },
+    "gast": {
+     "titel": "Voor de gast",
+     "heading": "De myBestDays-app.",
+     "text": "Gasten vinden boeking, gastenmap, check-in en berichten in hun eigen app — gescheiden van de jouwe.",
+     "punkte": {
+      "a": "Boeking",
+      "b": "Gastenmap",
+      "c": "Check-in"
+     }
+    },
+    "rollen": {
+     "titel": "Voor het team",
+     "heading": "Schoonmaak en eigenaren.",
+     "text": "Schoonmaakkrachten zien hun opdrachten met checklist, eigenaren hun accommodaties. Dezelfde app, verschillende rechten.",
+     "punkte": {
+      "a": "Opdracht open",
+      "b": "Checklist afgerond",
+      "c": "Foto's verstuurd"
+     }
+    }
+   }
+  },
+  "auswertungen": {
+   "metaBeschreibung": "Bezetting, omzet, ADR en kanaalvergelijking — rapporten die tonen waar het aan ligt, niet alleen wat er is gebeurd.",
+   "headline": "Cijfers waarmee je een beslissing kunt nemen.",
+   "sub": "Bezetting, omzet en gemiddelde prijs per accommodatie, periode en kanaal — naast elkaar in plaats van in vijf exports.",
+   "bildAlt": "Analyse met bezetting en omzet",
+   "nutzen": {
+    "a": {
+     "titel": "Kanalen vergelijken",
+     "text": "Wat levert Booking op, wat je eigen website? Met commissie meegerekend, niet alleen naar omzet."
+    },
+    "b": {
+     "titel": "Per accommodatie",
+     "text": "Welke accommodatie zich terugverdient en welke niet — te zien aan bezetting en gemiddelde prijs."
+    },
+    "c": {
+     "titel": "Rapporten vanzelf",
+     "text": "Maandrapporten gaan automatisch naar jou en je eigenaren, als PDF in de vertrouwde opbouw."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Verleden en vooruitzicht in één weergave.",
+     "text": "Naast wat er was staat wat er geboekt is — zo zie je in februari of de zomer draagt, in plaats van het in juli te merken.",
+     "punkte": {
+      "a": "Boekingsstand vooruit",
+      "b": "Vergelijking met vorig jaar",
+      "c": "Export voor de boekhouder"
+     }
+    }
+   },
+   "bildAltBlock": "Bezettingsoverzicht van een hotel als gegevensbasis",
+   "reiter": {
+    "auslastung": {
+     "titel": "Bezetting",
+     "heading": "Hoe vol is het echt?",
+     "text": "Bezetting per accommodatie, maand en kanaal — vergeleken met vorig jaar, niet op gevoel.",
+     "punkte": {
+      "a": "Bezetting",
+      "b": "Vorig jaar",
+      "c": "Per accommodatie"
+     }
+    },
+    "kanaele": {
+     "titel": "Kanaalvergelijking",
+     "heading": "Wat levert welk kanaal op?",
+     "text": "Omzet na commissie per kanaal: Booking, Airbnb, eigen website, myBestDays — naast elkaar in plaats van in vijf exports.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "berichte": {
+     "titel": "Rapporten",
+     "heading": "Komen vanzelf.",
+     "text": "Maandrapporten gaan automatisch naar jou en je eigenaren, als PDF in de vertrouwde opbouw.",
+     "punkte": {
+      "a": "Rapport aangemaakt",
+      "b": "Naar eigenaren verstuurd",
+      "c": "Archief opgeslagen"
+     }
+    },
+    "ausblick": {
+     "titel": "Vooruitzicht",
+     "heading": "Wat al geboekt is.",
+     "text": "Naast wat er was staat de boekingsstand vooruit — zo zie je in februari of de zomer draagt.",
+     "punkte": {
+      "a": "Geboekt",
+      "b": "Aangevraagd",
+      "c": "Vrij"
+     }
+    }
+   }
+  }
+ },
+ "kontakt": {
+  "meta": {
+   "titel": "Contact — myNextDays",
+   "beschreibung": "Zo bereik je myNextDays: algemene vragen en verkoop via {info}, technische vragen via {technik}, telefonisch op {telefon} — of direct via het formulier."
+  },
+  "hero": {
+   "eyebrow": "Contact",
+   "headlinePre": "Zeg waar het over gaat —",
+   "headlineHighlight": "wij antwoorden",
+   "sub": "Vragen over het product, over de overstap van een ander systeem, over koppelen via onze API of over samenwerking: kies je onderwerp en het bericht komt direct bij de mensen die er verstand van hebben.",
+   "sitz": "Vestiging in Bindslev, Denemarken",
+   "sprachen": "Software in 24 talen",
+   "eu": "In de EU gehost, AVG-conform"
+  },
+  "wege": {
+   "eyebrow": "Wegen naar ons",
+   "heading": "Wie behandelt jouw vraag?",
+   "sub": "Twee mailboxen en een chat. Commerciële zaken en alles vóór de start gaan naar de algemene mailbox, alles technisch direct naar het ontwikkelteam — zo belandt niets in een wachtrij waar niemand naar kijkt.",
+   "allgemein": {
+    "titel": "Product, prijzen & verkoop",
+    "text": "Wil je weten of myNextDays bij jouw bedrijf past, wat een overstap van een ander systeem betekent of hoe factuur en abonnement werken? Dan is dit de juiste weg — ook voor pers, partnerschappen en verzoeken over gegevensbescherming.",
+    "aktion": "Bericht schrijven"
+   },
+   "technik": {
+    "titel": "Techniek, API & veiligheid",
+    "text": "Iets werkt niet, een portaalverbinding loopt vast, je ontwikkelt tegen onze API of je hebt een beveiligingslek gevonden? Deze vragen gaan direct naar het ontwikkelteam en niet via de verkoop.",
+    "aktion": "Bericht schrijven"
+   },
+   "hilfe": {
+    "titel": "Hulp & chat",
+    "text": "Handleidingen voor elk onderdeel staan in het helpcentrum. En als het snel moet: rechtsonder op elke pagina zit een chat waarin een echt mens antwoordt — zonder account en zonder inloggen.",
+    "aktion": "Naar het helpcentrum",
+    "chatHinweis": "Chat rechtsonder op elke pagina"
+   }
+  },
+  "formular": {
+   "eyebrow": "Bericht",
+   "heading": "Schrijf ons",
+   "sub": "Eén formulier voor alles — jouw onderwerp bepaalt wie het krijgt.",
+   "ablaufTitel": "Wat er daarna gebeurt",
+   "ablauf": {
+    "eingang": {
+     "titel": "Het bericht gaat eruit",
+     "text": "Via onze eigen mailserver in Denemarken — geen formulierdienst van een derde partij door wiens handen jouw gegevens gaan."
+    },
+    "zuordnung": {
+     "titel": "Het komt in de juiste mailbox",
+     "text": "Commerciële zaken bij {info}, technische bij {technik}. Welke het is, bepaalt onze server op basis van jouw onderwerp."
+    },
+    "antwort": {
+     "titel": "Wij antwoorden je direct",
+     "text": "Als gewone e-mail aan het adres dat je hier invult — je kunt er simpelweg op terugschrijven."
+    }
+   },
+   "hinweisPostfach": "Twee mailboxen zodat niets blijft liggen: {info} voor alles commercieel, {technik} voor alles technisch. Welke het wordt, bepaalt onze server op basis van jouw onderwerp — dit formulier kan geen bestemming aangeven.",
+   "thema": "Waar gaat het over?",
+   "themen": {
+    "allgemein": "Algemene vraag",
+    "vertrieb": "Product, prijzen & verkoop",
+    "abrechnung": "Factuur & abonnement",
+    "technik": "Technisch probleem",
+    "api": "API & ontwikkelaars",
+    "partner": "Partnerschap",
+    "presse": "Pers & media",
+    "datenschutz": "Gegevensbescherming",
+    "sicherheit": "Beveiligingslek melden"
+   },
+   "zielAllgemein": "Gaat naar {email}",
+   "zielTechnik": "Gaat naar {email} — ons ontwikkelteam",
+   "name": "Naam",
+   "email": "E-mail",
+   "emailPlatzhalter": "naam@voorbeeld.nl",
+   "firma": "Bedrijf",
+   "telefon": "Telefoon",
+   "optional": "optioneel",
+   "nachricht": "Jouw bericht",
+   "nachrichtPlatzhalter": "Beschrijf je vraag — hoe preciezer, hoe beter het antwoord past.",
+   "absenden": "Bericht verzenden",
+   "laeuft": "Wordt verzonden …",
+   "dankeTitel": "Aangekomen.",
+   "nochEine": "Nog een bericht schrijven",
+   "fehlerAllgemein": "Dat is niet gelukt. Probeer het later opnieuw.",
+   "fehlerPruefung": "De veiligheidscontrole is niet gelukt. Laad de pagina opnieuw en verstuur het bericht nog een keer.",
+   "fehlerFelder": "Controleer je gegevens: naam, e-mail en een bericht van minstens 20 tekens zijn nodig.",
+   "fehlerZuOft": "Er zijn te veel berichten vanaf deze verbinding gekomen. Wacht een moment en probeer het opnieuw.",
+   "fehlerSpaeter": "Het bericht kan nu niet worden bezorgd. Probeer het later opnieuw of schrijf direct naar {email}.",
+   "datenschutzHinweis": "We gebruiken je gegevens uitsluitend om deze vraag te beantwoorden. Meer in onze <link>privacyverklaring</link>.",
+   "recaptchaHinweis": "Dit formulier is beveiligd met reCAPTCHA. De <datenschutz>privacyverklaring</datenschutz> en de <bedingungen>gebruiksvoorwaarden</bedingungen> van Google zijn van toepassing."
+  },
+  "anschrift": {
+   "eyebrow": "Adres",
+   "heading": "Zo bereik je ons direct",
+   "firmaEyebrow": "Bedrijfsgegevens",
+   "firmaHeading": "Met wie je te maken hebt",
+   "firmaText": "Wie de contractpartij is, hoef je niet in de kleine lettertjes te zoeken. Daarom staan de registergegevens hier — dezelfde als in het colofon.",
+   "firma": "Onderneming",
+   "register": "Register",
+   "ustId": "Btw-identificatienummer",
+   "direktion": "Directie",
+   "impressum": "Colofon bekijken",
+   "datenschutz": "Privacyverklaring bekijken"
+  },
+  "faq": {
+   "eyebrow": "Veelgestelde vragen",
+   "heading": "Vragen over contact opnemen",
+   "sub": "Wie antwoordt, hoe lang het duurt en wat er met je gegevens gebeurt.",
+   "wer": {
+    "frage": "Wie antwoordt mij?",
+    "antwort": "Een mens uit het team, niet een ticketsysteem met een nummer. myNextDays wordt door de eigenaren geleid: commerciële vragen worden beantwoord door iemand die de software zelf dagelijks gebruikt, technische door het ontwikkelteam."
+   },
+   "postfach": {
+    "frage": "Hoe weet ik waar mijn bericht belandt?",
+    "antwort": "Onder het onderwerpveld staat bij elke vraag het doeladres. Algemene, commerciële en redactionele zaken gaan naar {info}; technische vragen, API-vragen en beveiligingsmeldingen naar {technik}. Onze server maakt de toewijzing — het formulier kan geen mailbox aanwijzen, zodat het niet misbruikt kan worden om berichten naar onbekenden te sturen."
+   },
+   "sprache": {
+    "frage": "In welke taal kan ik schrijven?",
+    "antwort": "Schrijf in de taal waarin je deze pagina leest — we zien die in je aanvraag en antwoorden erin voor zover we kunnen. Duits, Deens en Engels beantwoorden we altijd."
+   },
+   "dauer": {
+    "frage": "Hoe lang duurt een antwoord?",
+    "antwort": "Meestal binnen een paar uur; in het weekend en op feestdagen kan het langer duren. Voor beveiligingsmeldingen geldt: die liggen zonder omweg via de verkoop bij het ontwikkelteam."
+   },
+   "telefon": {
+    "frage": "Kan ik ook bellen?",
+    "antwort": "Ja, op {telefon}. Bellen is het snelst voor alles wat je beter bespreekt dan opschrijft — bij technische storingen is een bericht toch vaak beter, omdat je foutmeldingen en schermafbeeldingen kunt meesturen."
+   },
+   "bestaetigung": {
+    "frage": "Krijg ik een ontvangstbevestiging per e-mail?",
+    "antwort": "Nee, bewust niet. Een automatische bevestiging zou naar elk adres gaan dat hier wordt ingetypt — daarmee zou iemand onze mailserver kunnen gebruiken om andermans mailboxen aan te schrijven. De bevestiging staat daarom hier op de pagina zodra het bericht is aangekomen. Je gegevens gebruiken we uitsluitend om deze vraag te beantwoorden."
+   }
+  }
+ },
+ "help": {
+  "heroTitle": "Waarmee kunnen we helpen?",
+  "heroSubtitle": "Doorzoek de kennisbank of vind stapsgewijze oplossingen voor uw dagelijkse werk met myNextDays.",
+  "searchPlaceholder": "Waarnaar bent u op zoek?",
+  "searchAria": "Hulp doorzoeken",
+  "contact": "Contact",
+  "home": "Startpagina hulp",
+  "articles": "{count, plural, one {# artikel} other {# artikelen}}",
+  "collectionKbTitle": "Kennisbank",
+  "collectionKbDesc": "Alles over accommodaties, prijzen, agenda, portalen en uw account.",
+  "collectionUsecasesTitle": "Toepassingen",
+  "collectionUsecasesDesc": "Stapsgewijze oplossingen voor veelvoorkomende dagelijkse situaties.",
+  "helpfulQuestion": "Was dit artikel nuttig?",
+  "helpfulYes": "Ja",
+  "helpfulNo": "Nee",
+  "helpfulThanks": "Bedankt voor uw reactie!",
+  "related": "Meer artikelen in {category}",
+  "searchTitle": "Zoeken",
+  "results": "{count, plural, one {# resultaat voor ‘{query}’} other {# resultaten voor ‘{query}’}}",
+  "noResultsTitle": "Geen artikelen gevonden",
+  "noResultsHintPre": "Probeer andere zoektermen of",
+  "noResultsHintLink": "blader door de categorieën",
+  "browseCategories": "Categorieën doorbladeren",
+  "brandTitle": "myNextDays-hulp"
  }
 }

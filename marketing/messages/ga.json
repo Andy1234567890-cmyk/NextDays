@@ -7,7 +7,7 @@
   "funktionen": "Gnéithe",
   "preise": "Praghsáil",
   "kanaele": "Cainéil",
-  "kunden": "Custaiméirí",
+  "ueberUns": "Fúinn",
   "ressourcen": "Acmhainní",
   "sprache": "Teanga",
   "spracheWaehlen": "Roghnaigh teanga",
@@ -425,7 +425,7 @@
   "ressourcen": {
    "blog": "Blag",
    "hilfeCenter": "Ionad cabhrach",
-   "webinare": "Webinars",
+   "status": "Stádas an chórais",
    "leitfaeden": "Treoracha",
    "api": "Doiciméadú API"
   },
@@ -441,7 +441,8 @@
   "datenschutz": "Príobháideacht",
   "impressum": "Fógra dlíthiúil",
   "cookies": "Beartas fianán",
-  "avv": "Próiseáil sonraí"
+  "avv": "Próiseáil sonraí",
+  "kontoLoeschen": "Scrios cuntas"
  },
  "abschluss": {
   "heading": "Réidh le d'áitreabh a rith ó aon áit amháin?",
@@ -593,5 +594,1014 @@
    "provision": "Suíomh féin {direkt} · tairseacha {portale}",
    "tarif": "Plean amháin do chách, an chéad mhaoin san áireamh"
   }
+ },
+ "ueberUns": {
+  "meta": {
+   "titel": "Fúinn — myNextDays",
+   "beschreibung": "myNextDays ApS as Bindslev sa Danmhairg: cén fáth ar thóg óstaigh ghníomhacha a gcóras bainistíochta maoine féin le bainisteoir cainéal, cad a sheasann muid dó agus cé atá taobh thiar de."
+  },
+  "hero": {
+   "eyebrow": "Fúinn",
+   "headlinePre": "Ligimid ar cíos sinn féin. Sin an fáth go bhfuil",
+   "headlineHighlight": "myNextDays ann",
+   "sub": "Is comhlacht faoi stiúir a úinéirí é myNextDays ApS atá lonnaithe i mBindslev i dtuaisceart Jutland. Ligimid ár n-áiteanna saoire féin ar cíos — agus thógamar an t-ardán a bhí in easnamh orainn ó lá go lá: féilire, cainéil, aíonna, íocaíochtaí agus cuntais in aon áit amháin.",
+   "sitz": "Ceanncheathrú sa Danmhairg",
+   "eu": "Óstáilte san AE, ag cloí le GDPR",
+   "start": "Seoladh an 1 Meán Fómhair 2026",
+   "sprachen": "27 dtír, 24 teanga",
+   "ctaTrial": "Bain triail as saor in aisce ar feadh 30 lá",
+   "ctaKontakt": "Scríobh chugainn"
+  },
+  "warum": {
+   "eyebrow": "Cén fáth a bhfuilimid ann",
+   "heading": "As ár ngnó cíosa féin a d'fhás sé.",
+   "p1": "Aithníonn gach duine a ligeann ar cíos an tráthnóna a díoladh an tseachtain chéanna faoi dhó, mar nach bhfuair cainéal amháin an bac riamh. Ansin stopamar ag lorg uirlise agus thosaíomar ar cheann a thógáil.",
+   "p2": "Bhí na córais a bhí ann déanta do shlabhraí óstán — le castacht agus praghas nach n-iompraíonn gnó a bhfuil dornán áiteanna aige — nó stop siad go díreach san áit a dtosaíonn an fíor-obair: cuntais, úinéirí, glanadh agus cánacha i 27 dtír.",
+   "p3": "Is é myNextDays an freagra air sin: córas iomlán bainistíochta maoine le bainisteoir cainéal, do ghnóthaí a stiúrann a n-áiteanna féin — ó theach saoire aonair go hóstán le roinnt cineálacha seomraí.",
+   "bildFerienobjekt": "Teach saoire cois cósta",
+   "bildHotel": "Seomra óstáin le leaba cóirithe"
+  },
+  "bento": {
+   "eyebrow": "Cad atá taobh thiar de",
+   "heading": "Figiúirí is féidir linn a chruthú.",
+   "sub": "Gan líon custaiméirí ná rátálacha: seoltar an t-ardán an 1 Meán Fómhair 2026. Is féidir a bhfuil anseo a sheiceáil sa táirge féin.",
+   "vermieter": {
+    "titel": "Tógtha ag óstaigh, ní ar chlár líníochta",
+    "text": "Ritheann gach gné inár ngnó cíosa féin sula sroicheann sí an táirge. Rud nach seasann ann ó lá go lá, ní sheoltar amach é.",
+    "bildAlt": "Foireann gníomhaireachta cíosa i mbun oibre"
+   },
+   "laender": {
+    "wert": "27",
+    "titel": "Tír Eorpach",
+    "text": "Le hairgeadra, rátaí cánach agus rialacha gach tíre — ní le foirm euro amháin do chách."
+   },
+   "sprachen": {
+    "wert": "24",
+    "titel": "Teanga",
+    "text": "Comhéadan, cumarsáid le haíonna agus téacsanna dlí, ní hamháin an leathanach baile."
+   },
+   "kanaele": {
+    "wert": "56",
+    "titel": "Ardán áirithinte",
+    "text": "Booking.com, Airbnb, Expedia, Vrbo agus go leor eile trí nasc amháin."
+   },
+   "eu": {
+    "titel": "Tógtha san AE, á reáchtáil san AE",
+    "text": "Tá na freastalaithe agus na sonraí san Aontas Eorpach, leanann an oibríocht GDPR, agus tá an phróiseáil socraithe i scríbhinn. Do ghnó a láimhseálann sonraí aíonna, ní fonóta é sin ach réamhchoinníoll."
+   }
+  },
+  "zeitleiste": {
+   "eyebrow": "An bóthar go dtí seo",
+   "heading": "Stair ghearr, céimeanna infhíoraithe.",
+   "sub": "Táimid óg — agus is fearr linn ceithre chéim dhoiciméadaithe ná stair chumtha.",
+   "airsmil": {
+    "datum": "An pointe tosaigh",
+    "titel": "An saol laethúil inár ngnó féin",
+    "text": "Ár n-áiteanna féin ar roinnt cainéal ag an am céanna: obair dhúbailte, baic a tháinig go déanach, cuntais i scarbhileog. As an gcuimilt sin a d'eascair liosta na riachtanas."
+   },
+   "gruendung": {
+    "datum": "1 Iúil 2026",
+    "titel": "Bunaíodh myNextDays ApS",
+    "text": "Cláraithe i gclár gnó na Danmhairge faoi uimhir CVR 46615182, le ceanncheathrú i mBindslev i dtuaisceart Jutland."
+   },
+   "beta": {
+    "datum": "Samhradh 2026",
+    "titel": "Béite le fíor-áiteanna",
+    "text": "Tagann áirithintí isteach beo ó na cainéil, agus téann praghsanna, infhaighteacht agus baic ar ais an bealach céanna — le fíor-áiteanna agus fíor-aíonna, ní i dtimpeallacht tástála."
+   },
+   "start": {
+    "datum": "1 Meán Fómhair 2026",
+    "titel": "Seoladh i 27 dtír",
+    "text": "I 24 teanga, le hilairgeadra, leis an margadh myBestDays agus leis an dá aip — don ghnó agus don aoi."
+   }
+  },
+  "marken": {
+   "eyebrow": "Dhá bhranda, ardán amháin",
+   "heading": "myNextDays don ghnó, myBestDays don aoi.",
+   "sub": "Baineann an dá cheann le myNextDays ApS agus ritheann siad ar an teicneolaíocht chéanna — is é an difríocht cé a úsáideann iad.",
+   "nextdays": {
+    "rolle": "Do ghnóthaí",
+    "text": "An córas bainistíochta maoine agus an bainisteoir cainéal: an áit a stiúrann gnó a chuid áiteanna, a shocraíonn praghsanna agus a réitíonn a chuid airgid.",
+    "punkte": {
+     "kalender": "Plean áitíochta trasna gach áite agus aonaid, i bhfíor-am",
+     "portale": "Nasc amháin do gach cainéal — imíonn infhaighteacht, praghsanna agus baic gach áit ag an am céanna",
+     "geld": "Íocaíochtaí, sonraisc, coimisiúin agus ráitis úinéirí",
+     "team": "Aip féin d'úinéirí, don fhoireann agus don ghlanadh"
+    }
+   },
+   "bestdays": {
+    "rolle": "D'aíonna",
+    "text": "Ár margadh féin: aimsíonn aíonna na háiteanna céanna ann agus cuireann siad in áirithe díreach leis an ngnó — ar choimisiún i bhfad níos ísle ná ar na hardáin mhóra.",
+    "punkte": {
+     "direkt": "Áirithint díreach leis an ngnó, gan idirghabhálaí",
+     "provision": "Coimisiún níos ísle ná ar na hardáin mhóra",
+     "app": "Aip féin don chuardach, don áirithint agus don fhanacht"
+    }
+   },
+   "hinweis": "Díoltar áit ar an dá bhealach ag an am céanna — chomh maith le Booking.com, Airbnb agus na hardáin eile. Is é an gnó a shocraíonn, cainéal ar chainéal, cé acu atá casta air."
+  },
+  "werte": {
+   "eyebrow": "Prionsabail",
+   "heading": "Na rudaí ar chóir sinn a mheas leo.",
+   "sub": "Sé phointe is féidir a sheiceáil sa táirge agus inár gcáipéisí — ní ráitis intinne iad.",
+   "doppelbuchung": {
+    "titel": "Gan áirithintí dúbailte",
+    "text": "Is é atá san infhaighteacht againn ná líon na n-aonad saor, ní ticbhosca. Téann sí i bhfíor-am chuig gach cainéal, agus cuireann bac bac i ngach áit — ní hamháin san áit ar cuireadh isteach é."
+   },
+   "preise": {
+    "titel": "Praghsanna atá ar eolas roimh ré",
+    "text": "Plean amháin, gan téarma íosta agus gan táille socraithe. An rud a chosnaíonn breis, tá sé leis an tsuim ar an leathanach praghsanna, ní i nglao díolacháin."
+   },
+   "europa": {
+    "titel": "Ní tionscadal aistriúcháin í an Eoraip",
+    "text": "Ciallaíonn 27 dtír 27 airgeadra, ráta cánach agus dualgas tuairiscithe — síos go dtí an sonrasc, an ríomhphost chuig an aoi agus an íocaíocht. Nuair a bhíonn sonra in easnamh orainn, deirimid é in ionad luach sochreidte a chur isteach."
+   },
+   "daten": {
+    "titel": "Fanann na sonraí san AE",
+    "text": "Oibríocht agus freastalaithe san Aontas Eorpach, GDPR mar bhunús, comhaontú próiseála mar chaighdeán. Sa ghnó ní fheiceann sonraí aíonna ach na róil a bhfuil gá acu leo."
+   },
+   "unabhaengig": {
+    "titel": "Faoi stiúir na n-úinéirí",
+    "text": "Níl aon chorparáid taobh thiar dínn ná treochlár ó thaobh amuigh. Socraímid an chéad rud eile a thógfar leis na gnóthaí a úsáideann an bogearra gach lá."
+   },
+   "selbst": {
+    "titel": "Úsáidimid féin é",
+    "text": "Ritheann ár n-áiteanna féin ar an ardán céanna le cinn ár gcustaiméirí. Buaileann earráid sinne ar dtús — an dearbhú cáilíochta is macánta atá ar eolas againn."
+   }
+  },
+  "menschen": {
+   "eyebrow": "Na daoine taobh thiar de",
+   "heading": "Beag, insroichte, ón gcleachtas.",
+   "sub": "Stiúrthóireacht myNextDays ApS mar atá sí cláraithe i gclár gnó na Danmhairge.",
+   "jeanine": {
+    "rolle": "Bunaitheoir agus stiúrthóir",
+    "text": "Stiúrann sí ár ngnó cíosa féin agus tugann sí an saol laethúil le haíonna, cainéil agus glanadh isteach i ngach cinneadh táirge."
+   },
+   "torsten": {
+    "rolle": "Stiúrthóir",
+    "text": "Coinníonn sé gach snáithe le chéile agus tacaíonn leis an bhfoireann go díreach san áit is gá. Cuireann a thaithí phraiticiúil ilghnéitheach i bhfeidhm chun réitigh thapa phragmatacha a aimsiú ar an gcúlráid."
+   }
+  },
+  "unternehmen": {
+   "eyebrow": "Comhlacht",
+   "heading": "Cé leis a bhfuil tú ag plé.",
+   "firma": "Comhlacht",
+   "sitz": "Seoladh",
+   "register": "Clár gnó",
+   "ustId": "Uimhir aitheantais CBL",
+   "direktion": "Stiúrthóireacht",
+   "impressum": "Sonraí iomlána an tsoláthraí",
+   "kontaktTitel": "Teagmháil dhíreach",
+   "kontaktText": "Ceisteanna faoin táirge, faoi aistriú ó chóras eile nó faoi chomhoibriú? Úsáideann an duine a fhreagraíonn an bogearra é féin."
+  }
+ },
+ "funktionen": {
+  "rahmen": {
+   "ctaTesten": "Bain triail as 30 lá saor in aisce",
+   "ctaDemo": "Féach ar an taispeántas",
+   "weiter": "Ar aghaidh chuig na gnéithe eile",
+   "mehr": "Féach",
+   "bereich": {
+    "verkauf": "Díolachán",
+    "gast": "Aoi agus airgead",
+    "betrieb": "Oibríochtaí"
+   },
+   "reiterHeading": "Cad go díreach atá taobh thiar de?"
+  },
+  "uebersicht": {
+   "metaTitel": "Gnéithe — gach rud don chíos agus don óstán | myNextDays",
+   "metaBeschreibung": "Féilire, channel manager, áirithint dhíreach, cumarsáid le haíonna, íocaíochtaí, praghsanna, foireann, aip agus léargais — in aon chóras amháin, san áireamh i ngach plean.",
+   "eyebrow": "Gnéithe",
+   "headline": "Gach rud a theastaíonn ón obair laethúil. In aon chóras amháin.",
+   "sub": "Naoi réimse, logáil isteach amháin. Baineann gach ceann acu leis an bplean bunúsach — níl aon rud a thosaíonn i bpacáiste níos daoire.",
+   "bereichSub": {
+    "verkauf": "Bí le feiceáil agus faigh áirithintí",
+    "gast": "Ón gcéad teagmháil go dtí go dtagann an t-airgead isteach",
+    "betrieb": "Cé a dhéanann cad — agus cad a thug sé isteach"
+   }
+  },
+  "pms": {
+   "metaBeschreibung": "Aon fhéilire amháin do gach áitreabh: clár áitíochta, áirithintí, tascanna agus sonraí an áitribh in aon áit amháin — do chíosanna saoire agus d'óstáin.",
+   "headline": "Aon fhéilire amháin do gach rud a ligeann tú ar cíos.",
+   "sub": "Tá an áitíocht, na háirithintí agus sonraí an áitribh in aon áit amháin — bíodh sé ina árasán saoire amháin nó ina dhá chineál seomra dhéag le roinnt aonad.",
+   "bildAlt": "Clár áitíochta le háirithintí ó roinnt cainéal",
+   "nutzen": {
+    "a": {
+     "titel": "Gach rud in aon spléachadh",
+     "text": "Taispeánann an clár áitíochta gach aonad, gach áirithint agus gach bloc in aon amharc amháin — le dath in aghaidh an chainéil."
+    },
+    "b": {
+     "titel": "Áirithint i gceann soicindí",
+     "text": "Cruthaigh, bog nó cealaigh áirithint gan an t-amharc a athrú. Cuirtear oícheanta a shaortar ar díol arís láithreach."
+    },
+    "c": {
+     "titel": "Sonraí áitribh a bhfuil feidhm acu i ngach áit",
+     "text": "Coinníonn tú an trealamh, na grianghraif agus na rialacha aon uair amháin — faigheann na tairseacha agus do shuíomh gréasáin féin go huathoibríoch iad."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Áitreabh amháin, roinnt aonad — léirithe mar is ceart.",
+     "text": "Is cineál amháin le cúig aonad atá i gcúig stiúideo mar a chéile, ní áitreabh a choinnítear cúig uaire. Téann an infhaighteacht amach mar uimhir, díreach mar a bhíonn na tairseacha ag súil leis.",
+     "punkte": {
+      "a": "Aonaid in aghaidh an chineáil áitribh",
+      "b": "Cuachann an foirgneamh roinnt cineálacha",
+      "c": "Infhaighteacht mar uimhir, ní mar tá/níl"
+     }
+    }
+   },
+   "bildAltBlock": "Clár áitíochta óstáin le cineálacha seomra",
+   "reiter": {
+    "kalender": {
+     "titel": "Clár áitíochta",
+     "heading": "Gach aonad, gach oíche, aon phictiúr amháin.",
+     "text": "Taispeánann an clár áirithintí, bloic agus oícheanta saora taobh le taobh — le dath in aghaidh an chainéil agus ainm an aoi. Bogann tarraingt áirithint, cruthaíonn cliceáil ceann nua.",
+     "punkte": {
+      "a": "Dath in aghaidh an chainéil",
+      "b": "Tarraing agus scaoil",
+      "c": "Suas le 500 áitreabh"
+     }
+    },
+    "einheiten": {
+     "titel": "Aonaid",
+     "heading": "Is cineál amháin atá i gcúig stiúideo mar a chéile.",
+     "text": "Coinníonn tú an cineál agus insíonn tú cé mhéad aonad atá de. Faigheann na tairseacha cainníocht, ní infhaighteacht tá/níl — díreach mar a bhíonn súil acu leis.",
+     "punkte": {
+      "a": "Cineál cruthaithe",
+      "b": "Aonaid socraithe",
+      "c": "Cainníocht chuig na tairseacha"
+     }
+    },
+    "reservierung": {
+     "titel": "Áirithintí",
+     "heading": "Ón bhfiosrúchán go dtí an imeacht.",
+     "text": "Tá a stair féin ag gach áirithint: tá na híocaíochtaí, na teachtaireachtaí, na tascanna agus na hathruithe in aon áit amháin — inrianaithe fós seachtainí ina dhiaidh.",
+     "punkte": {
+      "a": "Stair in aghaidh na háirithinte",
+      "b": "Athruithe logáilte",
+      "c": "Cealú le cúis"
+     }
+    },
+    "objektdaten": {
+     "titel": "Sonraí an áitribh",
+     "heading": "Coinnigh aon uair amháin, i bhfeidhm i ngach áit.",
+     "text": "Tá an trealamh, na grianghraif, na rialacha agus na tuairiscí ag an áitreabh. Uaidh sin téann siad chuig na tairseacha agus chuig do shuíomh gréasáin féin — gan aon dara coinneáil.",
+     "punkte": {
+      "a": "Grianghraif agus trealamh",
+      "b": "Rialacha an tí",
+      "c": "Scaipthe go huathoibríoch"
+     }
+    }
+   }
+  },
+  "channel": {
+   "metaBeschreibung": "Channel manager d'árasán saoire agus d'óstán: Airbnb, Booking.com, Expedia, Vrbo agus Google sioncronaithe i bhfíor-am — gan áirithintí dúbailte.",
+   "headline": "Aon fhéilire amháin. Gach ardán áirithinte.",
+   "sub": "Téann an infhaighteacht, na praghsanna agus an t-ábhar chuig na tairseacha i bhfíor-am, agus filleann na háirithintí ar an luas céanna. Ní tharlaíonn áirithintí dúbailte in aon chor.",
+   "bildAlt": "Forbhreathnú ar na cainéil le hardáin áirithinte nasctha",
+   "nutzen": {
+    "a": {
+     "titel": "56 ardán",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google agus a lán eile — ceangailte trí aon chomhéadan amháin, ní trí réitigh phaiste."
+    },
+    "b": {
+     "titel": "Dhá threo, aon luas amháin",
+     "text": "An rud a athraíonn tú anseo, bíonn sé le feiceáil ansiúd i gceann soicindí. An rud a chuirtear in áirithe ansiúd, cuireann sé bac ar na hoícheanta anseo láithreach."
+    },
+    "c": {
+     "titel": "Gach tairseach ar leithligh",
+     "text": "Baineann na praghsanna, na breismhuirir agus na rialacha le gach tairseach ar leithligh — níl aon ráta nach mór a bheith mar an gcéanna i ngach áit, ach toisc go mbeadh sé níos éasca."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Feidhmíonn stop-sell i ngach áit. Gan machnamh.",
+     "text": "Má chuireann tú bac ar dháta, tá sé dúnta ar gach tairseach nasctha. Gan aon obair leantach i gcúig eachtarlíon, gan aon chainéal dearmadta ag an deireadh seachtaine.",
+     "punkte": {
+      "a": "Bloc láithreach ar gach cainéal",
+      "b": "Fanacht íosta in aghaidh na tairsí",
+      "c": "Loga: cad a chuaigh amach agus cathain"
+     }
+    }
+   },
+   "bildAltBlock": "Clár áitíochta le háirithintí ó roinnt tairseach",
+   "reiter": {
+    "portale": {
+     "titel": "Tairseacha",
+     "heading": "56 ardán ar aon chomhéadan amháin.",
+     "text": "Tá Airbnb, Booking.com, Expedia, Vrbo, Google agus myBestDays ar an gceangal céanna. Is nasc atá i dtairseach nua, ní tionscadal.",
+     "punkte": {
+      "a": "Airbnb",
+      "b": "Booking.com",
+      "c": "myBestDays"
+     }
+    },
+    "sync": {
+     "titel": "Sioncronú fíor-ama",
+     "heading": "An rud a tharlaíonn anseo, bíonn sé ansiúd i gceann soicindí.",
+     "text": "Téann an infhaighteacht, na praghsanna agus na srianta amach láithreach; filleann na háirithintí ar an luas céanna agus cuireann bac ar na hoícheanta sula bhféadfaí áirithint a dhéanamh faoi dhó.",
+     "punkte": {
+      "a": "Infhaighteacht",
+      "b": "Praghsanna",
+      "c": "Srianta"
+     }
+    },
+    "stopsell": {
+     "titel": "Stop-sell",
+     "heading": "Dúnann cliceáil amháin gach cainéal.",
+     "text": "Baineann bloc le gach áit — ní i gceithre eachtarlíon i ndiaidh a chéile. Taispeánann an loga cad a chuaigh amach agus cathain, agus cad a d'fhreagair an tairseach.",
+     "punkte": {
+      "a": "Bloc socraithe",
+      "b": "Seolta chuig gach cainéal",
+      "c": "Loga seiceáilte"
+     }
+    },
+    "regeln": {
+     "titel": "Rialacha in aghaidh na tairsí",
+     "heading": "Tá cead ag gach tairseach a bheith difriúil.",
+     "text": "Socraíonn tú breismhuirir, fanachtaí íosta agus rialacha cealaithe in aghaidh an chainéil. Gan aon ráta comhroinnte, ach toisc nach féidir le córas é a dhéanamh a mhalairt.",
+     "punkte": {
+      "a": "Breismhuirear in aghaidh an chainéil",
+      "b": "Fanacht íosta",
+      "c": "Spriocam cealaithe"
+     }
+    }
+   }
+  },
+  "direkt": {
+   "metaBeschreibung": "Do shuíomh áirithinte féin, giuirléid áirithinte agus d'fhearann féin — áirithintí díreacha gan coimisiún tairsí, le híocaíocht agus deimhniú.",
+   "headline": "Áirithintí a bhaineann leat go hiomlán.",
+   "sub": "Do leathanach áirithinte féin le hinfhaighteacht, praghsanna agus íocaíocht. Ní ghlacaimid aon choimisiún ar áirithintí a thagann tríd — glacann na tairseacha 15 go 18 faoin gcéad.",
+   "bildAlt": "Leathanach áitribh le conair áirithinte",
+   "nutzen": {
+    "a": {
+     "titel": "Suíomh gréasáin gan ghníomhaireacht",
+     "text": "Tógálaí suímh le teimpléid, d'fhearann féin, grianghraif agus téacsanna ó shonraí do chuid áitreabh — ar líne i gceann aon tráthnóna amháin."
+    },
+    "b": {
+     "titel": "Giuirléid do do shuíomh",
+     "text": "An bhfuil suíomh gréasáin agat cheana? Ansin ní chuireann tú isteach ach an chonair áirithinte agus coinníonn tú do dhearadh."
+    },
+    "c": {
+     "titel": "Íoctar láithreach",
+     "text": "Ritheann an éarlais, an t-iarmhéid agus an taisce slándála go huathoibríoch — faigheann an t-aoi a dheimhniú gan aon lámh a leagan air."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Tugann an margadh aíonna chugat nach bhfuil aithne acu ort.",
+     "text": "Is é myBestDays an margadh dár gcuid féin. Ansiúd seasann tú in aice le lóistín eile, gan aon dara córas a choinneáil — na háitribh chéanna, an féilire céanna.",
+     "punkte": {
+      "a": "Inchasta in aghaidh an chainéil",
+      "b": "Aon fhéilire amháin do gach rud",
+      "c": "8 % san iomlán in ionad coimisiún tairsí"
+     }
+    }
+   },
+   "bildAltBlock": "Forbhreathnú ar na cainéil le suíomh gréasáin féin agus margadh",
+   "reiter": {
+    "website": {
+     "titel": "Suíomh áirithinte",
+     "heading": "Do shuíomh, do chuid áirithintí.",
+     "text": "Teimpléid, d'fhearann féin, grianghraif agus téacsanna ó shonraí an áitribh. Déanann an t-aoi áirithint go díreach leat — gan timpeall trí thairseach.",
+     "punkte": {
+      "a": "Teimpléid",
+      "b": "Fearann féin",
+      "c": "Ilteangach"
+     }
+    },
+    "widget": {
+     "titel": "Giuirléid áirithinte",
+     "heading": "Don suíomh gréasáin atá agat cheana.",
+     "text": "Bloc amháin ar an suíomh atá agat: infhaighteacht, praghas agus íocaíocht, i do dhearadh féin. Gan aon aistriú, gan aon tionscadal nua.",
+     "punkte": {
+      "a": "Cód curtha isteach",
+      "b": "Dearadh glactha",
+      "c": "An chéad áirithint"
+     }
+    },
+    "marktplatz": {
+     "titel": "myBestDays",
+     "heading": "Tugann ár margadh aíonna nua.",
+     "text": "Seasann do chuid áitreabh ar an margadh dár gcuid féin in aice le lóistín eile — na sonraí céanna, an féilire céanna, cliceáil amháin chun é a chur ar siúl.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "zahlung": {
+     "titel": "Íocaíocht",
+     "heading": "Íoctha sula dtagann an t-aoi.",
+     "text": "Éarlais ag an áirithint, an t-iarmhéid roimh an teacht, taisce slándála daingnithe. Faigheann an t-aoi deimhniú agus sonrasc go huathoibríoch.",
+     "punkte": {
+      "a": "Éarlais",
+      "b": "Iarmhéid",
+      "c": "Taisce slándála"
+     }
+    }
+   }
+  },
+  "gaeste": {
+   "metaBeschreibung": "Treoirleabhar digiteach aíonna, check-in ar líne, teachtaireachtaí uathoibríocha agus AI concierge i 24 teanga — ón gcéad teagmháil go dtí an imeacht.",
+   "headline": "Freastal ar aíonna gan a bheith ag clóscríobh gan stad.",
+   "sub": "Ritheann na teachtaireachtaí go huathoibríoch ag an nóiméad ceart, freagraíonn an concierge ceisteanna i 24 teanga — agus léann tú gach rud in aon bhosca isteach amháin.",
+   "bildAlt": "Bosca isteach le teachtaireachtaí aíonna ó roinnt cainéal",
+   "nutzen": {
+    "a": {
+     "titel": "Aon bhosca isteach amháin",
+     "text": "Tagann Airbnb, Booking, ríomhphost agus WhatsApp isteach in aon snáithe amháin — leis an áirithint in aice leis, in ionad i gceithre aip."
+    },
+    "b": {
+     "titel": "Teachtaireachtaí ag an am ceart",
+     "text": "Deimhniú, eolas teachta, cód an dorais, iarratas ar léirmheas: socraithe aon uair amháin, ina dhiaidh sin uaidh féin."
+    },
+    "c": {
+     "titel": "Check-in roimh ré",
+     "text": "Líonann an t-aoi a shonraí isteach roimh an teacht. Cuireann tú fáilte roimhe, in ionad foirmeacha a chlóscríobh."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Cuireann an treoirleabhar aíonna in ionad an fhillteáin sa halla.",
+     "text": "Focal faire an Wi-Fi, na boscaí bruscair, leideanna bialainne agus rialacha an tí — go digiteach, i dteanga an aoi, inathraithe am ar bith.",
+     "punkte": {
+      "a": "24 teanga",
+      "b": "Cóid dorais ag an nóiméad ceart",
+      "c": "Leideanna ón gceantar"
+     }
+    }
+   },
+   "bildAltBlock": "Amharc móibíleach le háitíocht agus teachtaireachtaí",
+   "reiter": {
+    "posteingang": {
+     "titel": "Bosca isteach",
+     "heading": "Airbnb, Booking, ríomhphost agus WhatsApp in aon snáithe amháin.",
+     "text": "Tá na teachtaireachtaí go léir a bhaineann le háirithint le chéile — le comhthéacs, teimpléid agus aistriúchán. Ní bhíonn aon duine ag cuardach i gceithre aip a thuilleadh.",
+     "punkte": {
+      "a": "Aoi",
+      "b": "Cathain is féidir check-in a dhéanamh?",
+      "c": "Ó 15:00 — seolfaidh mé an cód chugat maidin amárach."
+     }
+    },
+    "automatisch": {
+     "titel": "Teachtaireachtaí uathoibríocha",
+     "heading": "Ag an am ceart, gan aon mheabhrúchán.",
+     "text": "Deimhniú, eolas teachta, cód an dorais, iarratas ar léirmheas: socraithe aon uair amháin, ina dhiaidh sin uaidh féin — i dteanga an aoi.",
+     "punkte": {
+      "a": "Deimhniú seolta",
+      "b": "Eolas teachta sceidealta",
+      "c": "Iarratas ar léirmheas"
+     }
+    },
+    "checkin": {
+     "titel": "Check-in ar líne",
+     "heading": "Sonraí roimh an teacht, ní ag an doras.",
+     "text": "Líonann an t-aoi na sonraí clárúcháin agus an cárta aitheantais isteach roimh ré. Cuireann tú fáilte roimhe, in ionad foirmeacha a chlóscríobh — agus comhlíonann tú an dualgas clárúcháin.",
+     "punkte": {
+      "a": "Sonraí clárúcháin",
+      "b": "Cárta aitheantais",
+      "c": "Síniú"
+     }
+    },
+    "mappe": {
+     "titel": "Treoirleabhar aíonna",
+     "heading": "Gach rud a chaithfidh an t-aoi a bheith ar eolas aige.",
+     "text": "Wi-Fi, rialacha an tí, na boscaí bruscair agus leideanna ón gceantar — go digiteach, inathraithe am ar bith, i 24 teanga.",
+     "punkte": {
+      "a": "Aoi",
+      "b": "Cá bhfuil focal faire an Wi-Fi?",
+      "c": "Sa treoirleabhar aíonna — sheol mé an nasc chugat."
+     }
+    }
+   }
+  },
+  "zahlungen": {
+   "metaBeschreibung": "Íocaíochtaí ar líne, éarlaisí, taiscí slándála agus easpórtálacha réidh don chuntasóir — airgead isteach agus ráitis gan obair leantach.",
+   "headline": "Tagann an t-airgead isteach gan tú a bheith ina dhiaidh.",
+   "sub": "Éarlais ag an áirithint, an t-iarmhéid roimh an teacht, taisce slándála daingnithe — bailithe go huathoibríoch agus doiciméadaithe san áirithint.",
+   "bildAlt": "Áirithint le stádas íocaíochta agus admhálacha",
+   "nutzen": {
+    "a": {
+     "titel": "Íoc mar is gnách",
+     "text": "Cárta, Apple Pay, Google Pay, PayPal agus modhanna áitiúla — roghnaíonn an t-aoi an rud a bhfuil aithne air."
+    },
+    "b": {
+     "titel": "Rialacha in ionad meabhrúchán",
+     "text": "Socraíonn tú aon uair amháin cathain a bhíonn cé mhéad dlite. Feiceann tú na híocaíochtaí atá ar iarraidh sula dtagann an t-aoi."
+    },
+    "c": {
+     "titel": "Réidh don chuntasaíocht",
+     "text": "Cruthaítear na sonraisc ón áirithint, oireann na heaspórtálacha don chuntasóir — gan aon scarbhileog de láimh."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Feiceann na húinéirí a ráiteas féin.",
+     "text": "Tá a rochtain féin ag gach úinéir le háitíocht, ioncam agus íocaíochtaí amach. Sábhálann sin an ríomhphost míosúil le scarbhileog ceangailte.",
+     "punkte": {
+      "a": "Logáil isteach dá gcuid féin ag gach úinéir",
+      "b": "Ráiteas in aghaidh an áitribh",
+      "c": "Léamh amháin, gan aon idirghabháil"
+     }
+    }
+   },
+   "bildAltBlock": "Forbhreathnú le hioncam agus íocaíochtaí amach",
+   "reiter": {
+    "online": {
+     "titel": "Íocaíochtaí ar líne",
+     "heading": "Cárta, sparán, PayPal.",
+     "text": "Íocann an t-aoi leis an modh a bhfuil aithne air. Téann an t-airgead isteach i do chuntas, agus tá an stádas san áirithint.",
+     "punkte": {
+      "a": "Suim oscailte",
+      "b": "Éarlais",
+      "c": "Iarmhéid"
+     }
+    },
+    "plaene": {
+     "titel": "Pleananna íocaíochta",
+     "heading": "Is tusa a shocraíonn cathain a bhíonn cad dlite.",
+     "text": "Leanann an éarlais, an t-iarmhéid agus an taisce slándála do rialacha féin — difriúil in aghaidh an áitribh agus an chainéil, más gá.",
+     "punkte": {
+      "a": "Riail cruthaithe",
+      "b": "Éarlais taifeadta",
+      "c": "Iarmhéid gan íoc"
+     }
+    },
+    "rechnungen": {
+     "titel": "Sonraisc",
+     "heading": "Ón áirithint, ní ón scarbhileog.",
+     "text": "Cruthaítear sonraisc agus nótaí creidmheasa ó na fíoruimhreacha, le ráta cánach agus raon uimhreacha. Oireann na heaspórtálacha don chuntasóir.",
+     "punkte": {
+      "a": "Raon uimhreacha",
+      "b": "Rátaí cánach",
+      "c": "Easpórtáil"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Ráiteas úinéara",
+     "heading": "Ioncam, costais, íocaíocht amach.",
+     "text": "Feiceann gach úinéir a chuid áitreabh le háitíocht, ioncam agus íocaíochtaí amach — mar rochtain dá chuid féin in ionad ríomhphost míosúil.",
+     "punkte": {
+      "a": "Ioncam",
+      "b": "Costais",
+      "c": "Íocaíocht amach"
+     }
+    }
+   }
+  },
+  "preise": {
+   "metaBeschreibung": "Praghsanna dinimiciúla le híos/uas, rate plans in aghaidh an áitribh, loighic séasúir agus áitíochta — níos mó ioncaim gan obair láimhe laethúil.",
+   "headline": "Praghsanna a thugann aire dóibh féin.",
+   "sub": "Cuirtear an séasúr, an áitíocht, an achar roimh ré agus lá na seachtaine san áireamh go huathoibríoch. Fanann do theorainneacha ina dteorainneacha: níl aon rud faoi bhun an íosmhéid.",
+   "bildAlt": "Greille praghsanna le praghsanna dinimiciúla in aghaidh na hoíche",
+   "nutzen": {
+    "a": {
+     "titel": "Tá feidhm ag an íosmhéid agus ag an uasmhéid",
+     "text": "Leagann tú síos an fráma, bogann an córas laistigh de — gan aon phraghas nach raibh uait."
+    },
+    "b": {
+     "titel": "Rate plans in aghaidh an áitribh",
+     "text": "Neamh-inaisíoctha, áirithint luath, fadtéarmach: roinnt rátaí in aghaidh an áitribh, gach ceann acu le rialacha dá gcuid féin."
+    },
+    "c": {
+     "titel": "Tá tosaíocht ag an iontráil láimhe",
+     "text": "Fanann praghas a shocraítear de láimh mar atá. Ní sháraíonn an uathoibriú cinneadh comhfhiosach riamh."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Téann lascainí agus breismhuirir chuig na tairseacha freisin.",
+     "text": "Imrítear lascainí seachtaine agus míosa, tairiscintí áirithinte luaithe agus breismhuirir ansiúd nuair atá cead acu — ní i d'amharc féin amháin.",
+     "punkte": {
+      "a": "Lascainí de réir fad na fanachta",
+      "b": "Tairiscintí le tréimhse",
+      "c": "Breismhuirir in aghaidh an chainéil"
+     }
+    }
+   },
+   "bildAltBlock": "Clár áitíochta le praghsanna in aghaidh na hoíche",
+   "reiter": {
+    "dynamisch": {
+     "titel": "Praghsanna dinimiciúla",
+     "heading": "Áitíocht, séasúr, achar roimh ré.",
+     "text": "Bogann an praghas idir d'íosmhéid agus d'uasmhéid — de réir an éilimh, lá na seachtaine agus an achair roimh ré, ríofa as an nua gach oíche.",
+     "punkte": {
+      "a": "Íosmhéid",
+      "b": "Uasmhéid",
+      "c": "Éileamh"
+     }
+    },
+    "raten": {
+     "titel": "Rate plans",
+     "heading": "Roinnt praghsanna don áitreabh céanna.",
+     "text": "Neamh-inaisíoctha, áirithint luath, fadtéarmach: gach ráta le coinníollacha dá gcuid féin — agus téann gach ceann chuig na tairseacha a thacaíonn leis.",
+     "punkte": {
+      "a": "Ráta cruthaithe",
+      "b": "Coinníollacha socraithe",
+      "c": "Chuig na tairseacha"
+     }
+    },
+    "rabatte": {
+     "titel": "Lascainí",
+     "heading": "Fan níos faide, íoc níos lú.",
+     "text": "Lascainí seachtaine agus míosa, tairiscintí le tréimhse, breismhuirir ar fhanachtaí gearra — le feiceáil go díreach sa fhéilire.",
+     "punkte": {
+      "a": "Lascaine seachtaine",
+      "b": "Lascaine míosa",
+      "c": "Tairiscint"
+     }
+    },
+    "grenzen": {
+     "titel": "Do theorainneacha",
+     "heading": "Ní bhíonn an focal deireanach ag an uathoibriú riamh.",
+     "text": "Fanann praghas a shocraíonn tú féin mar atá. Agus níl aon rud faoi bhun d'íosmhéid — fiú agus an féilire folamh.",
+     "punkte": {
+      "a": "Íosmhéid",
+      "b": "Iontráil láimhe",
+      "c": "Tosaíocht"
+     }
+    }
+   }
+  },
+  "team": {
+   "metaBeschreibung": "Róil d'úinéirí, don ghlantachán, do bhaill foirne agus do ghníomhaireachtaí — ní fheiceann duine ach a réimse féin, le tascanna agus seicliostaí grianghraf.",
+   "headline": "Feiceann gach duine go beacht an rud atá de dhíth air.",
+   "sub": "Feiceann na húinéirí a gcuid áitreabh, an glantachán a chuid tascanna, na baill foirne a réimse féin. Fanann na hairgeadais san áit ar dual dóibh.",
+   "bildAlt": "Forbhreathnú ar na tascanna le freagrachtaí",
+   "nutzen": {
+    "a": {
+     "titel": "Róil in ionad socruithe béil",
+     "text": "Baineann na cearta leis an ról, ní le muinín. Ní shroicheann rochtain glantacháin aon ioncam."
+    },
+    "b": {
+     "titel": "Tascanna le cruthúnas",
+     "text": "Taispeánann seicliostaí le grianghraif gur tugadh an t-árasán ar aghaidh — an t-am san áireamh."
+    },
+    "c": {
+     "titel": "Scaipthe go huathoibríoch",
+     "text": "Tar éis gach imeachta cruthaítear an glantachán uaidh féin, le spriocam go dtí an chéad teacht eile."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Reáchtálann gníomhaireachtaí roinnt gnólachtaí taobh le taobh.",
+     "text": "An duine a ligeann ar cíos do dhaoine eile, bainistíonn sé roinnt úinéirí in aon chuntas amháin — le ráitis ar leith agus rochtain dá gcuid féin.",
+     "punkte": {
+      "a": "Roinnt úinéirí",
+      "b": "Ráitis ar leith",
+      "c": "Cearta in aghaidh an duine"
+     }
+    }
+   },
+   "bildAltBlock": "Liosta áirithintí le freagrachtaí",
+   "reiter": {
+    "rollen": {
+     "titel": "Róil",
+     "heading": "Feiceann gach duine a réimse féin.",
+     "text": "Gníomhaireacht, úinéir, ball foirne, glantachán: baineann na cearta leis an ról. Ní fheiceann an ioncam ach an duine atá ceaptha é a fheiceáil.",
+     "punkte": {
+      "a": "Ról roghnaithe",
+      "b": "Áitribh sannta",
+      "c": "Cearta seiceáilte"
+     }
+    },
+    "aufgaben": {
+     "titel": "Tascanna",
+     "heading": "Cruthaítear an glantachán uaidh féin.",
+     "text": "Tar éis gach imeachta tá an tasc sa phlean, le spriocam go dtí an chéad teacht eile. Cuirtear i gcrích é le seicliosta grianghraf.",
+     "punkte": {
+      "a": "Imeacht taifeadta",
+      "b": "Glantachán sceidealta",
+      "c": "Grianghraif uaslódáilte"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Úinéirí",
+     "heading": "Rochtain dá gcuid féin in ionad ríomhphost míosúil.",
+     "text": "Feiceann na húinéirí áitíocht, ioncam agus íocaíochtaí amach a gcuid áitreabh — ag léamh, gan a bheith in ann cur isteach ar an ngnó.",
+     "punkte": {
+      "a": "Áitíocht",
+      "b": "Ioncam",
+      "c": "Íocaíocht amach"
+     }
+    },
+    "agentur": {
+     "titel": "Gníomhaireacht",
+     "heading": "Roinnt gnólachtaí in aon chuntas amháin.",
+     "text": "An duine a ligeann ar cíos do dhaoine eile, reáchtálann sé roinnt úinéirí taobh le taobh — ráitis ar leith, rochtain ar leith, aon fhéilire amháin.",
+     "punkte": {
+      "a": "Roinnt úinéirí",
+      "b": "Ráitis ar leith",
+      "c": "Aon logáil isteach amháin"
+     }
+    }
+   }
+  },
+  "app": {
+   "metaBeschreibung": "Aip dhúchasach don ghnó, do na húinéirí, do na haíonna agus don ghlantachán — áitíocht, tascanna agus teachtaireachtaí agus tú ar an mbóthar.",
+   "headline": "Oireann do ghnó i bpóca do bhríste.",
+   "sub": "Seiceáil an áitíocht, cruthaigh áirithint, freagair teachtaireacht, cuir tic le tasc — ón bhfón, gan ríomhaire glúine.",
+   "bildAlt": "Aip mhóibíleach le háitíocht agus tascanna",
+   "nutzen": {
+    "a": {
+     "titel": "Do gach ról",
+     "text": "Tá a amharc féin ag na húinéirí, ag an nglantachán agus ag an ngnó — an aip chéanna, cearta difriúla."
+    },
+    "b": {
+     "titel": "Fógraí a bhfuil tábhacht leo",
+     "text": "Áirithint nua, cealú, ceist ó aoi: faigheann tú amach láithreach, gan an aip a oscailt."
+    },
+    "c": {
+     "titel": "D'aíonna freisin",
+     "text": "Aimsíonn aíonna an treoirleabhar aíonna, an check-in agus na teachtaireachtaí in aip myBestDays."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Dhá aip, mar tá dhá shaol.",
+     "text": "Reáchtálann myNextDays an gnó, baineann myBestDays leis an aoi. Ciallaíonn aipeanna ar leith: ní thagann aoi ar bith isteach i do chuid figiúirí riamh.",
+     "punkte": {
+      "a": "myNextDays don ghnó",
+      "b": "myBestDays don aoi",
+      "c": "iOS agus Android"
+     }
+    }
+   },
+   "bildAltBlock": "Forbhreathnú ar an ngnó ag an deasc",
+   "reiter": {
+    "betrieb": {
+     "titel": "An gnó ar an mbóthar",
+     "heading": "Greim ar an áitíocht agus ar na háirithintí.",
+     "text": "Seiceáil an féilire, cruthaigh áirithint, athraigh praghas — ón bhfón, sna sonraí céanna atá ag an deasc.",
+     "punkte": {
+      "a": "Féilire",
+      "b": "Áirithintí",
+      "c": "Praghsanna"
+     }
+    },
+    "meldungen": {
+     "titel": "Fógraí",
+     "heading": "Faigheann tú amach láithreach.",
+     "text": "Tagann áirithint nua, cealú nó ceist ó aoi isteach mar fhógra — le tapáil amháin tá tú san áirithint.",
+     "punkte": {
+      "a": "Áirithint",
+      "b": "Áirithint nua i mí Iúil",
+      "c": "Cealú don 12.–14.08."
+     }
+    },
+    "gast": {
+     "titel": "Don aoi",
+     "heading": "Aip myBestDays.",
+     "text": "Aimsíonn aíonna an áirithint, an treoirleabhar aíonna, an check-in agus na teachtaireachtaí in aip dá gcuid féin — scartha ó do cheann féin.",
+     "punkte": {
+      "a": "Áirithint",
+      "b": "Treoirleabhar aíonna",
+      "c": "Check-in"
+     }
+    },
+    "rollen": {
+     "titel": "Don fhoireann",
+     "heading": "An glantachán agus na húinéirí.",
+     "text": "Feiceann na glantóirí a gcuid tascanna le seicliosta, feiceann na húinéirí a gcuid áitreabh. An aip chéanna, cearta difriúla.",
+     "punkte": {
+      "a": "Tasc oscailte",
+      "b": "Seicliosta críochnaithe",
+      "c": "Grianghraif seolta"
+     }
+    }
+   }
+  },
+  "auswertungen": {
+   "metaBeschreibung": "Áitíocht, ioncam, ADR agus comparáid cainéal — tuarascálacha a thaispeánann cén fáth, ní hamháin cad a tharla.",
+   "headline": "Figiúirí a chuireann ar do chumas cinneadh a dhéanamh.",
+   "sub": "Áitíocht, ioncam agus meánphraghas in aghaidh an áitribh, na tréimhse agus an chainéil — taobh le taobh in ionad i gcúig easpórtáil.",
+   "bildAlt": "Léargas le háitíocht agus ioncam",
+   "nutzen": {
+    "a": {
+     "titel": "Déan comparáid idir na cainéil",
+     "text": "Cad a thugann Booking isteach, cad a thugann do shuíomh gréasáin féin? Ríofa i ndiaidh coimisiúin, ní de réir ioncaim amháin."
+    },
+    "b": {
+     "titel": "In aghaidh an áitribh",
+     "text": "Cén áitreabh a íocann as féin agus cén ceann nach n-íocann — le feiceáil ón áitíocht agus ón meánphraghas."
+    },
+    "c": {
+     "titel": "Tuarascálacha uathu féin",
+     "text": "Téann tuarascálacha míosúla go huathoibríoch chugat agus chuig do chuid úinéirí, mar PDF sa leagan amach a bhfuil taithí agat air."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "An rud a bhí agus an rud atá amach romhainn in aon amharc amháin.",
+     "text": "In aice leis an méid a bhí, tá an méid atá curtha in áirithe — mar sin feiceann tú i mí Feabhra an bhfuil an samhradh ag seasamh, in ionad é a thabhairt faoi deara i mí Iúil.",
+     "punkte": {
+      "a": "Staid na n-áirithintí amach romhainn",
+      "b": "Comparáid leis an mbliain roimhe",
+      "c": "Easpórtáil don chuntasóir"
+     }
+    }
+   },
+   "bildAltBlock": "Clár áitíochta óstáin mar bhunús sonraí",
+   "reiter": {
+    "auslastung": {
+     "titel": "Áitíocht",
+     "heading": "Cé chomh lán atá sé i ndáiríre?",
+     "text": "Áitíocht in aghaidh an áitribh, na míosa agus an chainéil — i gcomparáid leis an mbliain roimhe, ní mar mhothú boilg.",
+     "punkte": {
+      "a": "Áitíocht",
+      "b": "An bhliain roimhe",
+      "c": "In aghaidh an áitribh"
+     }
+    },
+    "kanaele": {
+     "titel": "Comparáid cainéal",
+     "heading": "Cad a thugann gach cainéal isteach?",
+     "text": "Ioncam i ndiaidh coimisiúin in aghaidh an chainéil: Booking, Airbnb, suíomh gréasáin féin, myBestDays — taobh le taobh in ionad i gcúig easpórtáil.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "berichte": {
+     "titel": "Tuarascálacha",
+     "heading": "Tagann uathu féin.",
+     "text": "Téann tuarascálacha míosúla go huathoibríoch chugat agus chuig do chuid úinéirí, mar PDF sa leagan amach a bhfuil taithí agat air.",
+     "punkte": {
+      "a": "Tuarascáil cruthaithe",
+      "b": "Seolta chuig an úinéir",
+      "c": "Curtha sa chartlann"
+     }
+    },
+    "ausblick": {
+     "titel": "Amharc chun cinn",
+     "heading": "An méid atá curtha in áirithe cheana.",
+     "text": "In aice leis an méid a bhí, tá staid na n-áirithintí amach romhainn — mar sin feiceann tú i mí Feabhra an bhfuil an samhradh ag seasamh.",
+     "punkte": {
+      "a": "Curtha in áirithe",
+      "b": "Iarrtha",
+      "c": "Saor"
+     }
+    }
+   }
+  }
+ },
+ "kontakt": {
+  "meta": {
+   "titel": "Teagmháil — myNextDays",
+   "beschreibung": "Conas teagmháil a dhéanamh le myNextDays: ceisteanna ginearálta agus díolacháin chuig {info}, fiosrúcháin theicniúla chuig {technik}, ar an nguthán ar {telefon} — nó go díreach tríd an bhfoirm."
+  },
+  "hero": {
+   "eyebrow": "Teagmháil",
+   "headlinePre": "Inis dúinn cad é —",
+   "headlineHighlight": "freagróimid",
+   "sub": "Ceisteanna faoin táirge, faoi aistriú ó chóras eile, faoi nascadh trínár API nó faoi obair le chéile: roghnaigh do thopaic agus téann an teachtaireacht díreach chuig na daoine a bhfuil eolas acu air.",
+   "sitz": "Bunaithe i Bindslev, an Danmhairg",
+   "sprachen": "Bogearraí i 24 teanga",
+   "eu": "Óstáilte san AE, i gcomhréir le GDPR"
+  },
+  "wege": {
+   "eyebrow": "Bealaí chugainn",
+   "heading": "Cé a láimhseálann do cheist?",
+   "sub": "Dhá bhosca poist agus comhrá. Téann cúrsaí tráchtála agus gach rud roimh thosú chuig an mbosca ginearálta, gach rud teicniúil díreach chuig an bhfoireann forbartha — sa tslí sin ní chríochnaíonn aon rud i scuaine nach mbreathnaíonn duine ar bith air.",
+   "allgemein": {
+    "titel": "Táirge, praghsáil agus díolacháin",
+    "text": "Ar mhaith leat a fháil amach an oireann myNextDays do do ghnó, cad atá i gceist le haistriú ó chóras eile, nó conas a oibríonn sonrascadh agus síntiúis? Seo an bealach ceart isteach — don phreas, do chomhpháirtíochtaí agus d'iarratais cosanta sonraí chomh maith.",
+    "aktion": "Scríobh teachtaireacht"
+   },
+   "technik": {
+    "titel": "Teicniúil, API agus slándáil",
+    "text": "Níl rud éigin ag obair, tá nasc le portáil áirithinte i bhfostú, tá tú ag forbairt in aghaidh ár API nó fuair tú lochtán slándála? Téann na fiosrúcháin seo díreach chuig an bhfoireann forbartha, ní trí na díolacháin.",
+    "aktion": "Scríobh teachtaireacht"
+   },
+   "hilfe": {
+    "titel": "Cabhair agus comhrá",
+    "text": "Tá treoracha céim ar chéim do gach réimse san Ionad Cabhrach. Agus más gá é a bheith tapa: tá comhrá ag bun ar dheis ar gach leathanach ina bhfreagraíonn fíordhuine — gan chuntas, gan logáil isteach.",
+    "aktion": "Chuig an Ionad Cabhrach",
+    "chatHinweis": "Comhrá ag bun ar dheis ar gach leathanach"
+   }
+  },
+  "formular": {
+   "eyebrow": "Teachtaireacht",
+   "heading": "Scríobh chugainn",
+   "sub": "Foirm amháin do gach rud — socraíonn do thopaic cé a fhaigheann í.",
+   "ablaufTitel": "Cad a tharlaíonn ina dhiaidh",
+   "ablauf": {
+    "eingang": {
+     "titel": "Imíonn an teachtaireacht amach",
+     "text": "Trínár bhfreastalaí poist féin sa Danmhairg — gan seirbhís foirme tríú páirtí a mbeadh do shonraí ag dul trína lámha."
+    },
+    "zuordnung": {
+     "titel": "Tagann sí sa bhosca poist ceart",
+     "text": "Cúrsaí tráchtála chuig {info}, cúrsaí teicniúla chuig {technik}. Cé acu é, socraíonn ár bhfreastalaí é ó do thopaic."
+    },
+    "antwort": {
+     "titel": "Freagraímid tú go díreach",
+     "text": "Mar ghnáthríomhphost chuig an seoladh a chuireann tú isteach anseo — is féidir leat freagra a scríobh air díreach."
+    }
+   },
+   "hinweisPostfach": "Dhá bhosca poist ionas nach bhfanann aon rud ina luí: {info} do gach rud tráchtála, {technik} do gach rud teicniúil. Socraíonn ár bhfreastalaí cé acu é ó do thopaic — ní féidir leis an bhfoirm seo ceann scríbe a ainmniú.",
+   "thema": "Cad faoi atá sé?",
+   "themen": {
+    "allgemein": "Ceist ghinearálta",
+    "vertrieb": "Táirge, praghsáil agus díolacháin",
+    "abrechnung": "Sonrasc agus síntiús",
+    "technik": "Fadhb theicniúil",
+    "api": "API agus forbróirí",
+    "partner": "Comhpháirtíocht",
+    "presse": "Preas agus meáin",
+    "datenschutz": "Cosaint sonraí",
+    "sicherheit": "Lochtán slándála a thuairisciú"
+   },
+   "zielAllgemein": "Téann chuig {email}",
+   "zielTechnik": "Téann chuig {email} — ár bhfoireann forbartha",
+   "name": "Ainm",
+   "email": "Ríomhphost",
+   "emailPlatzhalter": "ainm@sampla.ie",
+   "firma": "Gnó",
+   "telefon": "Guthán",
+   "optional": "roghnach",
+   "nachricht": "Do theachtaireacht",
+   "nachrichtPlatzhalter": "Déan cur síos ar do cheist — dá bheachtas é, is fearr a oireann an freagra.",
+   "absenden": "Seol teachtaireacht",
+   "laeuft": "Á seoladh …",
+   "dankeTitel": "Faighte.",
+   "nochEine": "Scríobh teachtaireacht eile",
+   "fehlerAllgemein": "Níor oibrigh sin. Bain triail eile as níos déanaí, le do thoil.",
+   "fehlerPruefung": "Níor éirigh leis an seiceáil slándála. Athlódáil an leathanach agus seol an teachtaireacht arís, le do thoil.",
+   "fehlerFelder": "Seiceáil do shonraí, le do thoil: tá ainm, ríomhphost agus teachtaireacht le 20 carachtar ar a laghad riachtanach.",
+   "fehlerZuOft": "Tháinig an iomarca teachtaireachtaí ón gceangal seo. Fan nóiméad agus bain triail eile as, le do thoil.",
+   "fehlerSpaeter": "Ní féidir an teachtaireacht a sheachadadh faoi láthair. Bain triail eile as níos déanaí nó scríobh go díreach chuig {email}.",
+   "datenschutzHinweis": "Ní úsáidimid do shonraí ach chun an fiosrúchán seo a fhreagairt. Tuilleadh sa <link>bheartas príobháideachais</link>.",
+   "recaptchaHinweis": "Tá an fhoirm seo cosanta ag reCAPTCHA. Tá <datenschutz>Beartas Príobháideachais</datenschutz> agus <bedingungen>Téarmaí Seirbhíse</bedingungen> Google i bhfeidhm."
+  },
+  "anschrift": {
+   "eyebrow": "Seoladh",
+   "heading": "Conas teagmháil dhíreach a dhéanamh linn",
+   "firmaEyebrow": "Sonraí na cuideachta",
+   "firmaHeading": "Cé leis a bhfuil tú ag plé",
+   "firmaText": "Níor cheart go mbeadh ar dhuine cuardach a dhéanamh sa chló beag chun a fháil amach cé é an páirtí conartha. Sin an fáth a bhfuil na sonraí cláir anseo — na cinn chéanna atá sa bhfógra dlíthiúil.",
+   "firma": "Cuideachta",
+   "register": "Clár",
+   "ustId": "Uimhir aitheantais CBL",
+   "direktion": "Bainistíocht",
+   "impressum": "Féach ar an bhfógra dlíthiúil",
+   "datenschutz": "Féach ar an mbeartas príobháideachais"
+  },
+  "faq": {
+   "eyebrow": "Ceisteanna coitianta",
+   "heading": "Ceisteanna faoi theagmháil a dhéanamh",
+   "sub": "Cé a fhreagraíonn, cá fhad a thógann sé agus cad a tharlaíonn le do shonraí.",
+   "wer": {
+    "frage": "Cé a fhreagróidh mé?",
+    "antwort": "Duine ón bhfoireann, ní córas ticéad le huimhir. Tá myNextDays faoi stiúir an úinéara: freagraíonn duine a úsáideann na bogearraí go laethúil na ceisteanna tráchtála, agus an fhoireann forbartha na cinn theicniúla."
+   },
+   "postfach": {
+    "frage": "Conas a bheidh a fhios agam cá dtéann mo theachtaireacht?",
+    "antwort": "Taispeántar an seoladh cinn scríbe faoin réimse topaice do gach fiosrúchán. Téann cúrsaí ginearálta, tráchtála agus eagarthóireachta chuig {info}; fiosrúcháin theicniúla, ceisteanna API agus tuairiscí slándála chuig {technik}. Déanann ár bhfreastalaí an sannadh — ní féidir leis an bhfoirm bosca poist a ainmniú, sa tslí nach féidir mí-úsáid a bhaint as mar bhealach chun teachtaireachtaí a sheoladh chuig strainséirí."
+   },
+   "sprache": {
+    "frage": "Cén teanga inar féidir liom scríobh?",
+    "antwort": "Scríobh sa teanga ina bhfuil an leathanach seo á léamh agat — feicimid í i do fhiosrúchán agus freagraímid inti chomh fada agus is féidir linn. Freagraímid Gearmáinis, Danmhairgis agus Béarla i gcónaí."
+   },
+   "dauer": {
+    "frage": "Cá fhad a thógann freagra?",
+    "antwort": "Laistigh de chúpla uair an chloig mar riail; ag an deireadh seachtaine agus ar laethanta saoire poiblí is féidir go dtógfaidh sé níos faide. Maidir le tuairiscí slándála: bíonn siad ag an bhfoireann forbartha gan aon chasadh trí na díolacháin."
+   },
+   "telefon": {
+    "frage": "An féidir liom glaoch a chur ina ionad?",
+    "antwort": "Is féidir, ar {telefon}. Is glao an bealach is tapúla d'aon rud is fearr a phlé ná a scríobh — i gcás lochtanna teicniúla is fearr teachtaireacht go minic mar sin féin, mar is féidir teachtaireachtaí earráide agus gabhálacha scáileáin a cheangal léi."
+   },
+   "bestaetigung": {
+    "frage": "An bhfaighidh mé ríomhphost a dhearbhaíonn go bhfuarthas é?",
+    "antwort": "Ní bhfaighidh, agus is d'aon ghnó é. Rachadh dearbhú uathoibríoch chuig cibé seoladh a chlóscríobhtar isteach anseo — rud a cheadódh do dhuine ár bhfreastalaí poist a úsáid chun scríobh chuig boscaí poist daoine eile. Mar sin tá an dearbhú le feiceáil anseo ar an leathanach a luaithe a shroicheann an teachtaireacht. Ní úsáidimid do shonraí ach chun an fiosrúchán seo a fhreagairt."
+   }
+  }
+ },
+ "help": {
+  "heroTitle": "Conas is féidir linn cabhrú?",
+  "heroSubtitle": "Cuardaigh an bunachar eolais nó aimsigh réitigh céim ar chéim do do chuid oibre laethúla le myNextDays.",
+  "searchPlaceholder": "Cad atá á lorg agat?",
+  "searchAria": "Cuardaigh sa chabhair",
+  "contact": "Contact",
+  "home": "Tús na cabhrach",
+  "articles": "{count, plural, one {# alt} two {# alt} few {# alt} many {# n-alt} other {# alt}}",
+  "collectionKbTitle": "Bunachar eolais",
+  "collectionKbDesc": "Gach rud faoi áiteanna, praghsanna, an féilire, tairseacha agus do chuntas.",
+  "collectionUsecasesTitle": "Cásanna úsáide",
+  "collectionUsecasesDesc": "Réitigh céim ar chéim do chásanna coitianta laethúla.",
+  "helpfulQuestion": "An raibh an t-alt seo cabhrach?",
+  "helpfulYes": "Tá",
+  "helpfulNo": "Níl",
+  "helpfulThanks": "Go raibh maith agat as an aiseolas!",
+  "related": "Tuilleadh alt i {category}",
+  "searchTitle": "Cuardach",
+  "results": "{count, plural, one {# toradh do „{query}“} two {# thoradh do „{query}“} few {# thoradh do „{query}“} many {# dtoradh do „{query}“} other {# toradh do „{query}“}}",
+  "noResultsTitle": "Níor aimsíodh aon alt",
+  "noResultsHintPre": "Bain triail as téarmaí cuardaigh eile nó",
+  "noResultsHintLink": "brabhsáil na catagóirí",
+  "browseCategories": "Brabhsáil na catagóirí",
+  "brandTitle": "Cabhair myNextDays"
  }
 }

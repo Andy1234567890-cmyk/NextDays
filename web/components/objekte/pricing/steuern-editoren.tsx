@@ -6,7 +6,6 @@
 // Bemessungsgrundlage, gastseitiger Name je Sprache und Übernahme auf weitere
 // Objekte. Liegt bewusst neben pricing-form.tsx, statt sie weiter aufzublähen.
 import { Icon } from "@iconify/react";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -50,6 +49,7 @@ import {
 import { type Locale, LOCALES, LOCALE_LABELS } from "@/i18n/locales";
 import { applyTaxToProperties } from "@/lib/properties";
 import { ZuAnderenObjekten } from "@/components/objekte/pricing/zu-anderen-objekten";
+import { HILFE_URL } from "@/lib/marketing-url";
 
 /** USt./MwSt.: genau zwei Angaben — Satz und ob er im Preis steckt. Einen
  *  eigenen Namen bekommt sie nicht (sie IST die Umsatzsteuer des Objekts). */
@@ -226,9 +226,14 @@ export function LokaleSteuerEditor({
     >
       <Hint>
         {t("pricingForm.localTaxHelpHint")}{" "}
-        <Link href="/hilfe" className="font-medium underline">
+        <a
+          href={HILFE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium underline"
+        >
           {t("pricingForm.localTaxHelpLink")}
-        </Link>
+        </a>
       </Hint>
 
       <Field label={t("pricingForm.localTaxTypeLabel")} required>

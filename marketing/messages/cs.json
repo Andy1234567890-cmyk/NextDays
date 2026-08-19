@@ -7,7 +7,7 @@
   "funktionen": "Funkce",
   "preise": "Ceník",
   "kanaele": "Kanály",
-  "kunden": "Zákazníci",
+  "ueberUns": "O nás",
   "ressourcen": "Materiály",
   "sprache": "Jazyk",
   "spracheWaehlen": "Vyberte jazyk",
@@ -425,7 +425,7 @@
   "ressourcen": {
    "blog": "Blog",
    "hilfeCenter": "Centrum nápovědy",
-   "webinare": "Webináře",
+   "status": "Stav systému",
    "leitfaeden": "Příručky",
    "api": "Dokumentace API"
   },
@@ -441,7 +441,8 @@
   "datenschutz": "Ochrana údajů",
   "impressum": "Právní informace",
   "cookies": "Zásady cookies",
-  "avv": "Zpracování údajů"
+  "avv": "Zpracování údajů",
+  "kontoLoeschen": "Smazat účet"
  },
  "abschluss": {
   "heading": "Připraveni řídit své ubytování z jednoho místa?",
@@ -593,5 +594,1014 @@
    "provision": "Vlastní web {direkt} · portály {portale}",
    "tarif": "Jeden tarif pro všechny, vč. 1. objektu"
   }
+ },
+ "ueberUns": {
+  "meta": {
+   "titel": "O nás — myNextDays",
+   "beschreibung": "myNextDays ApS z Bindslev v Dánsku: proč si aktivní pronajímatelé postavili vlastní systém správy ubytování s channel managerem, za čím si stojíme a kdo je za tím."
+  },
+  "hero": {
+   "eyebrow": "O nás",
+   "headlinePre": "Sami pronajímáme. Proto vznikl",
+   "headlineHighlight": "myNextDays",
+   "sub": "myNextDays ApS je firma vedená vlastníky se sídlem v Bindslevu v severním Jutsku. Pronajímáme vlastní rekreační objekty — a postavili jsme platformu, která nám v každodenním provozu chyběla: kalendář, portály, hosté, platby a vyúčtování na jednom místě.",
+   "sitz": "Sídlo v Dánsku",
+   "eu": "Hostováno v EU, v souladu s GDPR",
+   "start": "Start 1. září 2026",
+   "sprachen": "27 zemí, 24 jazyků",
+   "ctaTrial": "Vyzkoušet 30 dní zdarma",
+   "ctaKontakt": "Napište nám"
+  },
+  "warum": {
+   "eyebrow": "Proč existujeme",
+   "heading": "Vzniklo z vlastního pronájmu.",
+   "p1": "Kdo pronajímá, zná ten večer, kdy je stejný týden prodaný dvakrát, protože jeden portál nikdy nedostal blokaci. Tam jsme přestali hledat nástroj a začali jeden stavět.",
+   "p2": "Existující systémy byly buď dělané pro hotelové řetězce — se složitostí a cenou, kterou provoz s několika objekty neunese — nebo končily přesně tam, kde začíná skutečná práce: u vyúčtování, majitelů, úklidu a daní ve 27 zemích.",
+   "p3": "myNextDays je odpovědí: kompletní systém správy ubytování s channel managerem pro provozy, které si své objekty vedou samy — od jednoho rekreačního domu po hotel s několika typy pokojů.",
+   "bildFerienobjekt": "Rekreační dům u pobřeží",
+   "bildHotel": "Hotelový pokoj s ustlanou postelí"
+  },
+  "bento": {
+   "eyebrow": "Co je za tím",
+   "heading": "Čísla, která umíme doložit.",
+   "sub": "Žádné počty zákazníků ani hodnocení: platforma startuje 1. září 2026. To, co je tady, se dá ověřit přímo v produktu.",
+   "vermieter": {
+    "titel": "Postaveno pronajímateli, ne u rýsovacího prkna",
+    "text": "Každá funkce nejdřív běží v našem vlastním pronájmu a teprve pak jde do produktu. Co tam v běžném provozu neobstojí, nevydáváme.",
+    "bildAlt": "Tým pronájmové agentury při práci"
+   },
+   "laender": {
+    "wert": "27",
+    "titel": "Evropských zemí",
+    "text": "S měnou, daňovými sazbami a pravidly dané země — ne s jedním eurovým formulářem pro všechny."
+   },
+   "sprachen": {
+    "wert": "24",
+    "titel": "Jazyků",
+    "text": "Rozhraní, komunikace s hosty i právní texty, nejen úvodní stránka."
+   },
+   "kanaele": {
+    "wert": "56",
+    "titel": "Rezervačních portálů",
+    "text": "Booking.com, Airbnb, Expedia, Vrbo a řada dalších přes jedno napojení."
+   },
+   "eu": {
+    "titel": "Postaveno v EU, provozováno v EU",
+    "text": "Servery i data leží v Evropské unii, provoz se řídí GDPR a zpracování je smluvně ošetřeno písemně. Pro provoz, který spravuje data hostů, to není poznámka pod čarou, ale podmínka."
+   }
+  },
+  "zeitleiste": {
+   "eyebrow": "Cesta sem",
+   "heading": "Krátká historie, ověřitelné kroky.",
+   "sub": "Jsme mladí — a raději napíšeme čtyři doložené etapy než vymyšlenou historii.",
+   "airsmil": {
+    "datum": "Výchozí bod",
+    "titel": "Každodenní provoz ve vlastní firmě",
+    "text": "Vlastní objekty na několika portálech zároveň: dvojí práce, opožděné blokace, vyúčtování v tabulce. Z těchto tření vznikl seznam požadavků."
+   },
+   "gruendung": {
+    "datum": "1. července 2026",
+    "titel": "Založení myNextDays ApS",
+    "text": "Zapsáno v dánském obchodním rejstříku pod číslem CVR 46615182 se sídlem v Bindslevu v severním Jutsku."
+   },
+   "beta": {
+    "datum": "Léto 2026",
+    "titel": "Beta na skutečných objektech",
+    "text": "Rezervace přicházejí živě z portálů, ceny, dostupnost a blokace jdou stejnou cestou zpět — na skutečných objektech a se skutečnými hosty, ne v testovacím prostředí."
+   },
+   "start": {
+    "datum": "1. září 2026",
+    "titel": "Start ve 27 zemích",
+    "text": "Ve 24 jazycích, ve více měnách, s tržištěm myBestDays a dvěma aplikacemi pro provoz a pro hosta."
+   }
+  },
+  "marken": {
+   "eyebrow": "Dvě značky, jedna platforma",
+   "heading": "myNextDays pro provoz, myBestDays pro hosta.",
+   "sub": "Obě patří myNextDays ApS a běží na stejné technice — dělí je to, kdo je používá.",
+   "nextdays": {
+    "rolle": "Pro provozy",
+    "text": "Systém správy ubytování a channel manager: místo, kde provoz vede své objekty, nastavuje ceny a vyúčtovává peníze.",
+    "punkte": {
+     "kalender": "Plán obsazenosti přes všechny objekty a jednotky, v reálném čase",
+     "portale": "Jedno napojení pro všechny portály — dostupnost, ceny a blokace jdou všude naráz",
+     "geld": "Platby, faktury, provize a vyúčtování majitelům",
+     "team": "Vlastní aplikace pro majitele, personál a úklid"
+    }
+   },
+   "bestdays": {
+    "rolle": "Pro hosty",
+    "text": "Naše vlastní tržiště: hosté tam najdou tytéž objekty a rezervují přímo u provozu — s výrazně nižší provizí než přes velké portály.",
+    "punkte": {
+     "direkt": "Rezervace přímo u provozu, bez prostředníka",
+     "provision": "Nižší provize než u velkých portálů",
+     "app": "Vlastní aplikace pro hledání, rezervaci i pobyt"
+    }
+   },
+   "hinweis": "Objekt se prodává oběma cestami zároveň — a k tomu přes Booking.com, Airbnb a ostatní portály. Který kanál je zapnutý, rozhoduje provoz kanál po kanálu."
+  },
+  "werte": {
+   "eyebrow": "Zásady",
+   "heading": "Podle čeho nás můžete měřit.",
+   "sub": "Šest bodů, které lze ověřit v produktu a v našich dokumentech — ne prohlášení o záměru.",
+   "doppelbuchung": {
+    "titel": "Žádné dvojité rezervace",
+    "text": "Dostupnost je u nás počet volných jednotek, ne zaškrtávátko. Jde v reálném čase na každý portál a blokace blokuje všude — ne jen tam, kde byla zadána."
+   },
+   "preise": {
+    "titel": "Ceny známé předem",
+    "text": "Jeden tarif, bez minimální doby a bez zaváděcího poplatku. Co stojí navíc, je s částkou na stránce s cenami, ne v obchodním hovoru."
+   },
+   "europa": {
+    "titel": "Evropa není překladatelský projekt",
+    "text": "27 zemí znamená 27 měn, daňových sazeb a ohlašovacích povinností — až do faktury, e-mailu hostovi a výplaty. Když nám údaj chybí, řekneme to, místo abychom doplnili pravděpodobnou hodnotu."
+   },
+   "daten": {
+    "titel": "Data zůstávají v EU",
+    "text": "Provoz i servery v Evropské unii, GDPR jako základ, smlouva o zpracování jako standard. V provozu vidí data hostů jen role, které je potřebují."
+   },
+   "unabhaengig": {
+    "titel": "Vedeno vlastníky",
+    "text": "Žádný koncern za zády a žádný plán zvenčí. Co se postaví dál, rozhodujeme s provozy, které software používají každý den."
+   },
+   "selbst": {
+    "titel": "Používáme to sami",
+    "text": "Naše vlastní objekty běží na stejné platformě jako objekty zákazníků. Chyba zasáhne nejdřív nás — nejpoctivější kontrola kvality, jakou známe."
+   }
+  },
+  "menschen": {
+   "eyebrow": "Lidé za tím",
+   "heading": "Malí, dostupní, z praxe.",
+   "sub": "Vedení myNextDays ApS tak, jak je zapsáno v dánském obchodním rejstříku.",
+   "jeanine": {
+    "rolle": "Zakladatelka a ředitelka",
+    "text": "Vede náš vlastní pronájem a vnáší běžný provoz s hosty, portály a úklidem do každého rozhodnutí o produktu."
+   },
+   "torsten": {
+    "rolle": "Ředitel",
+    "text": "Drží všechny nitky pohromadě a podporuje tým přesně tam, kde je to právě potřeba. Přináší své všestranné praktické zkušenosti, aby v zákulisí našel rychlá a pragmatická řešení."
+   }
+  },
+  "unternehmen": {
+   "eyebrow": "Společnost",
+   "heading": "S kým máte co do činění.",
+   "firma": "Společnost",
+   "sitz": "Adresa",
+   "register": "Obchodní rejstřík",
+   "ustId": "DIČ",
+   "direktion": "Vedení",
+   "impressum": "Úplné údaje o poskytovateli",
+   "kontaktTitel": "Přímý kontakt",
+   "kontaktText": "Otázky k produktu, k přechodu z jiného systému nebo ke spolupráci? Odpovídá někdo, kdo software sám používá."
+  }
+ },
+ "funktionen": {
+  "rahmen": {
+   "ctaTesten": "Vyzkoušet 30 dní zdarma",
+   "ctaDemo": "Prohlédnout demo",
+   "weiter": "Dále k ostatním funkcím",
+   "mehr": "Zobrazit",
+   "bereich": {
+    "verkauf": "Prodej",
+    "gast": "Host a peníze",
+    "betrieb": "Provoz"
+   },
+   "reiterHeading": "Co přesně za tím stojí?"
+  },
+  "uebersicht": {
+   "metaTitel": "Funkce — vše pro pronájem a hotel | myNextDays",
+   "metaBeschreibung": "Kalendář, channel manager, přímá rezervace, komunikace s hosty, platby, ceny, tým, aplikace a vyhodnocení — v jednom systému, součástí každého tarifu.",
+   "eyebrow": "Funkce",
+   "headline": "Vše, co potřebuje každodenní provoz. V jednom systému.",
+   "sub": "Devět oblastí, jedno přihlášení. Každá z nich patří do základního tarifu — nic nezačíná až v dražším balíčku.",
+   "bereichSub": {
+    "verkauf": "Být vidět a získávat rezervace",
+    "gast": "Od prvního kontaktu až po připsání peněz",
+    "betrieb": "Kdo dělá co — a co to přineslo"
+   }
+  },
+  "pms": {
+   "metaBeschreibung": "Jeden kalendář pro všechny objekty: plán obsazenosti, rezervace, úkoly a data objektů na jednom místě — pro rekreační ubytování i hotely.",
+   "headline": "Jeden kalendář pro vše, co pronajímáte.",
+   "sub": "Obsazenost, rezervace a data objektů leží na jednom místě — ať jde o jeden rekreační apartmán, nebo dvanáct typů pokojů s více jednotkami.",
+   "bildAlt": "Plán obsazenosti s rezervacemi z několika kanálů",
+   "nutzen": {
+    "a": {
+     "titel": "Vše na jeden pohled",
+     "text": "Plán obsazenosti zobrazuje každou jednotku, každou rezervaci a každou blokaci v jednom zobrazení — s barvou pro každý kanál."
+    },
+    "b": {
+     "titel": "Rezervace za pár sekund",
+     "text": "Rezervaci založíte, přesunete nebo zrušíte bez přepínání zobrazení. Uvolněné noci se okamžitě prodávají dál."
+    },
+    "c": {
+     "titel": "Data objektu, která platí všude",
+     "text": "Vybavení, fotky a pravidla zadáte jednou — portály i váš vlastní web je dostanou automaticky."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Jeden objekt, více jednotek — správně zachyceno.",
+     "text": "Pět stejných studií je jeden typ s pěti jednotkami, ne pětkrát zadaný objekt. Dostupnost jde jako počet, přesně tak, jak to portály očekávají.",
+     "punkte": {
+      "a": "Jednotky pro každý typ objektu",
+      "b": "Budova sdružuje více typů",
+      "c": "Dostupnost jako počet, ne ano/ne"
+     }
+    }
+   },
+   "bildAltBlock": "Plán obsazenosti hotelu s typy pokojů",
+   "reiter": {
+    "kalender": {
+     "titel": "Plán obsazenosti",
+     "heading": "Každá jednotka, každá noc, jeden obraz.",
+     "text": "Plán zobrazuje rezervace, blokace a volné noci vedle sebe — s barvou pro každý kanál a jménem hosta. Tažením rezervaci přesunete, kliknutím založíte novou.",
+     "punkte": {
+      "a": "Barva pro každý kanál",
+      "b": "Přetáhnout a pustit",
+      "c": "Až 500 objektů"
+     }
+    },
+    "einheiten": {
+     "titel": "Jednotky",
+     "heading": "Pět stejných studií je jeden typ.",
+     "text": "Zadáte typ a řeknete, kolik jednotek ho tvoří. Portály dostanou počet kusů, ne dostupnost ano/ne — přesně tak, jak to očekávají.",
+     "punkte": {
+      "a": "Typ založen",
+      "b": "Jednotky nastaveny",
+      "c": "Počet kusů na portály"
+     }
+    },
+    "reservierung": {
+     "titel": "Rezervace",
+     "heading": "Od dotazu až po odjezd.",
+     "text": "Každá rezervace má svou historii: platby, zprávy, úkoly a změny stojí na jednom místě — dohledatelné i po týdnech.",
+     "punkte": {
+      "a": "Historie každé rezervace",
+      "b": "Změny zaznamenané",
+      "c": "Zrušení s důvodem"
+     }
+    },
+    "objektdaten": {
+     "titel": "Data objektu",
+     "heading": "Zadat jednou, platí všude.",
+     "text": "Vybavení, fotky, pravidla a popisy patří k objektu. Odtud jdou na portály i na váš vlastní web — bez druhého zadávání.",
+     "punkte": {
+      "a": "Fotky a vybavení",
+      "b": "Domovní pravidla",
+      "c": "Automaticky rozeslané"
+     }
+    }
+   }
+  },
+  "channel": {
+   "metaBeschreibung": "Channel manager pro rekreační apartmán i hotel: Airbnb, Booking.com, Expedia, Vrbo a Google synchronně v reálném čase — bez dvojitých rezervací.",
+   "headline": "Jeden kalendář. Všechny rezervační platformy.",
+   "sub": "Dostupnost, ceny a obsah jdou na portály v reálném čase, rezervace se ve stejném taktu vracejí. Dvojité rezervace vůbec nevzniknou.",
+   "bildAlt": "Přehled kanálů s připojenými rezervačními platformami",
+   "nutzen": {
+    "a": {
+     "titel": "56 platforem",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google a mnoho dalších — připojené přes jedno rozhraní, ne přes improvizovaná řešení."
+    },
+    "b": {
+     "titel": "Dva směry, jeden takt",
+     "text": "Co změníte tady, je tam vidět za pár sekund. Co se rezervuje tam, tady okamžitě zablokuje noci."
+    },
+    "c": {
+     "titel": "Každý portál zvlášť",
+     "text": "Ceny, příplatky a pravidla platí pro každý portál zvlášť — žádná sazba, která musí být všude stejná jen proto, že by to bylo snazší."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Stop-sell platí všude. Bez přemýšlení.",
+     "text": "Když zablokujete datum, je zavřené na každém připojeném portálu. Žádné dodatečné úpravy v pěti extranetech, žádný zapomenutý kanál o víkendu.",
+     "punkte": {
+      "a": "Okamžitá blokace na všech kanálech",
+      "b": "Minimální pobyt pro každý portál",
+      "c": "Protokol: co a kdy odešlo"
+     }
+    }
+   },
+   "bildAltBlock": "Plán obsazenosti s rezervacemi z několika portálů",
+   "reiter": {
+    "portale": {
+     "titel": "Portály",
+     "heading": "56 platforem na jednom rozhraní.",
+     "text": "Airbnb, Booking.com, Expedia, Vrbo, Google a myBestDays visí na stejném připojení. Nový portál je jedno spojení, ne projekt.",
+     "punkte": {
+      "a": "Airbnb",
+      "b": "Booking.com",
+      "c": "myBestDays"
+     }
+    },
+    "sync": {
+     "titel": "Synchronizace v reálném čase",
+     "heading": "Co se stane tady, je tam za pár sekund.",
+     "text": "Dostupnost, ceny a restrikce jdou okamžitě ven; rezervace se ve stejném taktu vracejí a zablokují noci, než někdo stihne rezervovat dvakrát.",
+     "punkte": {
+      "a": "Dostupnost",
+      "b": "Ceny",
+      "c": "Restrikce"
+     }
+    },
+    "stopsell": {
+     "titel": "Stop-sell",
+     "heading": "Jedno kliknutí zavře všechny kanály.",
+     "text": "Jedna blokace platí všude — ne postupně ve čtyřech extranetech. Protokol ukáže, co kdy odešlo a co portál odpověděl.",
+     "punkte": {
+      "a": "Blokace nastavena",
+      "b": "Odesláno na všechny kanály",
+      "c": "Protokol zkontrolován"
+     }
+    },
+    "regeln": {
+     "titel": "Pravidla pro každý portál",
+     "heading": "Každý portál smí být jiný.",
+     "text": "Příplatky, minimální pobyty a pravidla zrušení nastavíte pro každý kanál. Žádná společná sazba jen proto, že to systém neumí jinak.",
+     "punkte": {
+      "a": "Příplatek pro každý kanál",
+      "b": "Minimální pobyt",
+      "c": "Lhůta pro zrušení"
+     }
+    }
+   }
+  },
+  "direkt": {
+   "metaBeschreibung": "Vlastní rezervační web, rezervační widget a vlastní doména — přímé rezervace bez provize portálu, s platbou a potvrzením.",
+   "headline": "Rezervace, které patří jen vám.",
+   "sub": "Vaše vlastní rezervační stránka s dostupností, cenami a platbou. Z rezervací přes ni si nebereme žádnou provizi — portály si berou 15 až 18 procent.",
+   "bildAlt": "Stránka objektu s rezervačním procesem",
+   "nutzen": {
+    "a": {
+     "titel": "Web bez agentury",
+     "text": "Stavebnice se šablonami, vlastní doména, fotky a texty z dat vašich objektů — online během jednoho odpoledne."
+    },
+    "b": {
+     "titel": "Widget pro váš web",
+     "text": "Už máte web? Pak do něj jen vložíte rezervační proces a zachováte svůj design."
+    },
+    "c": {
+     "titel": "Zaplaceno hned",
+     "text": "Záloha, doplatek a kauce běží automaticky — host dostane potvrzení bez vašeho zásahu."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Tržiště vám přivede hosty, kteří vás neznají.",
+     "text": "myBestDays je naše vlastní tržiště. Stojíte tam vedle dalších ubytování, aniž byste spravovali druhý systém — stejné objekty, stejný kalendář.",
+     "punkte": {
+      "a": "Zapínatelné pro každý kanál zvlášť",
+      "b": "Jeden kalendář pro všechno",
+      "c": "8 % all-in místo provize portálu"
+     }
+    }
+   },
+   "bildAltBlock": "Přehled kanálů s vlastním webem a tržištěm",
+   "reiter": {
+    "website": {
+     "titel": "Rezervační web",
+     "heading": "Váš web, vaše rezervace.",
+     "text": "Šablony, vlastní doména, fotky a texty z dat objektů. Host rezervuje přímo u vás — bez okliky přes portál.",
+     "punkte": {
+      "a": "Šablony",
+      "b": "Vlastní doména",
+      "c": "Vícejazyčně"
+     }
+    },
+    "widget": {
+     "titel": "Rezervační widget",
+     "heading": "Pro web, který už máte.",
+     "text": "Jeden prvek na vaší stávající stránce: dostupnost, cena a platba, ve vašem designu. Žádné přesouvání, žádný nový projekt.",
+     "punkte": {
+      "a": "Kód vložen",
+      "b": "Design převzat",
+      "c": "První rezervace"
+     }
+    },
+    "marktplatz": {
+     "titel": "myBestDays",
+     "heading": "Naše tržiště přivádí nové hosty.",
+     "text": "Vaše objekty stojí na našem vlastním tržišti vedle dalších ubytování — stejná data, stejný kalendář, jedno kliknutí k zapnutí.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "zahlung": {
+     "titel": "Platba",
+     "heading": "Zaplaceno, než host přijede.",
+     "text": "Záloha při rezervaci, doplatek před příjezdem, kauce zajištěná. Host dostane potvrzení i fakturu automaticky.",
+     "punkte": {
+      "a": "Záloha",
+      "b": "Doplatek",
+      "c": "Kauce"
+     }
+    }
+   }
+  },
+  "gaeste": {
+   "metaBeschreibung": "Digitální průvodce pro hosty, online check-in, automatické zprávy a AI concierge ve 24 jazycích — od prvního kontaktu až po odjezd.",
+   "headline": "Starost o hosty bez neustálého psaní.",
+   "sub": "Zprávy odcházejí automaticky ve správný okamžik, na otázky odpovídá concierge ve 24 jazycích — a vy vše čtete v jedné doručené poště.",
+   "bildAlt": "Doručená pošta se zprávami hostů z několika kanálů",
+   "nutzen": {
+    "a": {
+     "titel": "Jedna doručená pošta",
+     "text": "Airbnb, Booking, e-mail a WhatsApp přicházejí do jedné historie — s rezervací hned vedle, ne ve čtyřech aplikacích."
+    },
+    "b": {
+     "titel": "Zprávy ve správný čas",
+     "text": "Potvrzení, informace k příjezdu, kód ke dveřím, žádost o hodnocení: nastavíte jednou, dál to jde samo."
+    },
+    "c": {
+     "titel": "Check-in předem",
+     "text": "Host vyplní své údaje před příjezdem. Vy ho přivítáte, místo abyste přepisovali formuláře."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Průvodce pro hosty nahradí šanon na chodbě.",
+     "text": "Heslo k Wi-Fi, svoz odpadu, tipy na restaurace a domovní pravidla — digitálně, v jazyce hosta, kdykoli změnitelné.",
+     "punkte": {
+      "a": "24 jazyků",
+      "b": "Kódy ke dveřím ve správný okamžik",
+      "c": "Tipy z okolí"
+     }
+    }
+   },
+   "bildAltBlock": "Mobilní zobrazení s obsazeností a zprávami",
+   "reiter": {
+    "posteingang": {
+     "titel": "Doručená pošta",
+     "heading": "Airbnb, Booking, e-mail a WhatsApp v jedné historii.",
+     "text": "Všechny zprávy k jedné rezervaci stojí pohromadě — s kontextem, šablonami a překladem. Nikdo už nehledá ve čtyřech aplikacích.",
+     "punkte": {
+      "a": "Host",
+      "b": "Odkdy je možný check-in?",
+      "c": "Od 15:00 — kód vám pošlu zítra ráno."
+     }
+    },
+    "automatisch": {
+     "titel": "Automatické zprávy",
+     "heading": "Ve správný čas, bez připomínek.",
+     "text": "Potvrzení, informace k příjezdu, kód ke dveřím, žádost o hodnocení: nastavíte jednou, dál to jde samo — v jazyce hosta.",
+     "punkte": {
+      "a": "Potvrzení odesláno",
+      "b": "Informace k příjezdu naplánována",
+      "c": "Žádost o hodnocení"
+     }
+    },
+    "checkin": {
+     "titel": "Online check-in",
+     "heading": "Údaje před příjezdem, ne u dveří.",
+     "text": "Host vyplní registrační údaje a doklad předem. Vy ho přivítáte, místo abyste přepisovali formuláře — a splníte ohlašovací povinnost.",
+     "punkte": {
+      "a": "Registrační údaje",
+      "b": "Doklad",
+      "c": "Podpis"
+     }
+    },
+    "mappe": {
+     "titel": "Průvodce pro hosty",
+     "heading": "Vše, co host potřebuje vědět.",
+     "text": "Wi-Fi, domovní pravidla, svoz odpadu a tipy z okolí — digitálně, kdykoli změnitelné, ve 24 jazycích.",
+     "punkte": {
+      "a": "Host",
+      "b": "Kde najdu heslo k Wi-Fi?",
+      "c": "V průvodci pro hosty — poslal jsem vám odkaz."
+     }
+    }
+   }
+  },
+  "zahlungen": {
+   "metaBeschreibung": "Online platby, zálohy, kauce a exporty připravené pro účetnictví — příjem peněz a vyúčtování bez dodatečné práce.",
+   "headline": "Peníze přijdou, aniž byste je museli vymáhat.",
+   "sub": "Záloha při rezervaci, doplatek před příjezdem, kauce zajištěná — automaticky inkasováno a zdokumentováno v rezervaci.",
+   "bildAlt": "Rezervace se stavem platby a doklady",
+   "nutzen": {
+    "a": {
+     "titel": "Platba, jak ji host zná",
+     "text": "Karta, Apple Pay, Google Pay, PayPal a místní metody — host si vybere, co zná."
+    },
+    "b": {
+     "titel": "Pravidla místo upomínek",
+     "text": "Kdy je co splatné, určíte jednou. Chybějící platby vidíte, ještě než host přijede."
+    },
+    "c": {
+     "titel": "Připraveno pro účetnictví",
+     "text": "Faktury vznikají z rezervace, exporty se hodí pro účetní — bez ručních tabulek."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Vlastníci vidí své vyúčtování sami.",
+     "text": "Každý vlastník má svůj přístup s obsazeností, výnosy a výplatami. Ušetří to měsíční e-mail s přiloženou tabulkou.",
+     "punkte": {
+      "a": "Vlastní přihlášení pro každého vlastníka",
+      "b": "Vyúčtování pro každý objekt",
+      "c": "Pouze čtení, žádné zásahy"
+     }
+    }
+   },
+   "bildAltBlock": "Přehled s tržbami a výplatami",
+   "reiter": {
+    "online": {
+     "titel": "Online platby",
+     "heading": "Karta, peněženka, PayPal.",
+     "text": "Host zaplatí metodou, kterou zná. Peníze jdou na váš účet, stav stojí v rezervaci.",
+     "punkte": {
+      "a": "Otevřená částka",
+      "b": "Záloha",
+      "c": "Doplatek"
+     }
+    },
+    "plaene": {
+     "titel": "Platební plány",
+     "heading": "Kdy je co splatné, rozhodujete vy.",
+     "text": "Záloha, doplatek a kauce se řídí vašimi pravidly — pro každý objekt a kanál jinak, je-li to potřeba.",
+     "punkte": {
+      "a": "Pravidlo založeno",
+      "b": "Záloha zaúčtována",
+      "c": "Doplatek otevřený"
+     }
+    },
+    "rechnungen": {
+     "titel": "Faktury",
+     "heading": "Z rezervace, ne z tabulky.",
+     "text": "Faktury a opravné doklady vznikají ze skutečných čísel, s daňovou sazbou a číselnou řadou. Exporty se hodí pro účetní.",
+     "punkte": {
+      "a": "Číselná řada",
+      "b": "Daňové sazby",
+      "c": "Export"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Vyúčtování pro vlastníky",
+     "heading": "Výnosy, náklady, výplata.",
+     "text": "Každý vlastník vidí své objekty s obsazeností, výnosy a výplatami — jako vlastní přístup místo měsíčního e-mailu.",
+     "punkte": {
+      "a": "Výnosy",
+      "b": "Náklady",
+      "c": "Výplata"
+     }
+    }
+   }
+  },
+  "preise": {
+   "metaBeschreibung": "Dynamické ceny s min./max., rate plany pro každý objekt, logika sezony a obsazenosti — vyšší tržby bez každodenní ruční práce.",
+   "headline": "Ceny, které se postarají samy o sebe.",
+   "sub": "Sezona, obsazenost, předstih a den v týdnu se počítají automaticky. Vaše hranice zůstávají vašimi hranicemi: pod minimum se nejde.",
+   "bildAlt": "Cenová mřížka s dynamickými cenami za každou noc",
+   "nutzen": {
+    "a": {
+     "titel": "Min. a max. platí",
+     "text": "Rámec zadáte vy, systém se pohybuje v něm — žádná cena, kterou jste nechtěli."
+    },
+    "b": {
+     "titel": "Rate plany pro každý objekt",
+     "text": "Nevratná, včasná rezervace, dlouhodobý pobyt: více sazeb na jeden objekt, každá s vlastními pravidly."
+    },
+    "c": {
+     "titel": "Ruční zadání má přednost",
+     "text": "Ručně nastavená cena zůstane. Automatika nikdy nepřepíše vědomé rozhodnutí."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Slevy a příplatky odcházejí i na portály.",
+     "text": "Týdenní a měsíční slevy, akce pro včasné rezervace a příplatky se zobrazí tam, kde jsou povolené — ne jen ve vašem zobrazení.",
+     "punkte": {
+      "a": "Slevy podle délky pobytu",
+      "b": "Akce s obdobím platnosti",
+      "c": "Příplatky pro každý kanál"
+     }
+    }
+   },
+   "bildAltBlock": "Plán obsazenosti s cenami za každou noc",
+   "reiter": {
+    "dynamisch": {
+     "titel": "Dynamické ceny",
+     "heading": "Obsazenost, sezona, předstih.",
+     "text": "Cena se pohybuje mezi vaším minimem a maximem — podle poptávky, dne v týdnu a předstihu, každou noc přepočítaná.",
+     "punkte": {
+      "a": "Minimum",
+      "b": "Maximum",
+      "c": "Poptávka"
+     }
+    },
+    "raten": {
+     "titel": "Rate plany",
+     "heading": "Více cen pro stejný objekt.",
+     "text": "Nevratná, včasná rezervace, dlouhodobý pobyt: každá sazba s vlastními podmínkami — a každá jde na portály, které ji podporují.",
+     "punkte": {
+      "a": "Sazba založena",
+      "b": "Podmínky nastaveny",
+      "c": "Na portály"
+     }
+    },
+    "rabatte": {
+     "titel": "Slevy",
+     "heading": "Zůstat déle, zaplatit méně.",
+     "text": "Týdenní a měsíční slevy, akce s obdobím platnosti, příplatky za krátké pobyty — vidět přímo v kalendáři.",
+     "punkte": {
+      "a": "Týdenní sleva",
+      "b": "Měsíční sleva",
+      "c": "Akce"
+     }
+    },
+    "grenzen": {
+     "titel": "Vaše hranice",
+     "heading": "Automatika nikdy nemá poslední slovo.",
+     "text": "Cena, kterou nastavíte sami, zůstane. A pod vaše minimum se nejde — ani při prázdném kalendáři.",
+     "punkte": {
+      "a": "Minimum",
+      "b": "Ruční zadání",
+      "c": "Přednost"
+     }
+    }
+   }
+  },
+  "team": {
+   "metaBeschreibung": "Role pro vlastníky, úklid, zaměstnance a agenturu — každý vidí jen svou oblast, s úkoly a fotokontrolními seznamy.",
+   "headline": "Každý vidí přesně to, co potřebuje.",
+   "sub": "Vlastníci vidí své objekty, úklid své směny, zaměstnanci svou oblast. Finance zůstávají tam, kam patří.",
+   "bildAlt": "Přehled úkolů s odpovědnostmi",
+   "nutzen": {
+    "a": {
+     "titel": "Role místo dohod",
+     "text": "Práva visí na roli, ne na důvěře. Přístup pro úklid se k tržbám nedostane."
+    },
+    "b": {
+     "titel": "Úkoly s důkazem",
+     "text": "Checklisty s fotkami ukazují, že byl apartmán předán — včetně času."
+    },
+    "c": {
+     "titel": "Rozdělené automaticky",
+     "text": "Po každém odjezdu vznikne úklid sám, s termínem do příštího příjezdu."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Agentury vedou několik provozů vedle sebe.",
+     "text": "Kdo pronajímá pro jiné, spravuje více vlastníků v jednom účtu — s oddělenými vyúčtováními a vlastními přístupy.",
+     "punkte": {
+      "a": "Více vlastníků",
+      "b": "Oddělené vyúčtování",
+      "c": "Práva pro každou osobu"
+     }
+    }
+   },
+   "bildAltBlock": "Seznam rezervací s odpovědnostmi",
+   "reiter": {
+    "rollen": {
+     "titel": "Role",
+     "heading": "Každý vidí svou oblast.",
+     "text": "Agentura, vlastník, zaměstnanec, úklid: práva visí na roli. Tržby vidí jen ten, kdo je vidět má.",
+     "punkte": {
+      "a": "Role zvolena",
+      "b": "Objekty přiřazeny",
+      "c": "Práva zkontrolována"
+     }
+    },
+    "aufgaben": {
+     "titel": "Úkoly",
+     "heading": "Úklid vznikne sám.",
+     "text": "Po každém odjezdu stojí úkol v plánu, s termínem do příštího příjezdu. Splní se fotokontrolním seznamem.",
+     "punkte": {
+      "a": "Odjezd zaznamenán",
+      "b": "Úklid naplánován",
+      "c": "Fotky nahrány"
+     }
+    },
+    "eigentuemer": {
+     "titel": "Vlastníci",
+     "heading": "Vlastní přístup místo měsíčního e-mailu.",
+     "text": "Vlastníci vidí obsazenost, výnosy a výplaty svých objektů — jen ke čtení, bez možnosti zasahovat do provozu.",
+     "punkte": {
+      "a": "Obsazenost",
+      "b": "Výnosy",
+      "c": "Výplata"
+     }
+    },
+    "agentur": {
+     "titel": "Agentura",
+     "heading": "Několik provozů v jednom účtu.",
+     "text": "Kdo pronajímá pro jiné, vede více vlastníků vedle sebe — oddělená vyúčtování, oddělené přístupy, jeden kalendář.",
+     "punkte": {
+      "a": "Více vlastníků",
+      "b": "Oddělené vyúčtování",
+      "c": "Jedno přihlášení"
+     }
+    }
+   }
+  },
+  "app": {
+   "metaBeschreibung": "Nativní aplikace pro provoz, vlastníky, hosty a úklid — obsazenost, úkoly a zprávy na cestách.",
+   "headline": "Váš provoz se vejde do kapsy.",
+   "sub": "Zkontrolovat obsazenost, založit rezervaci, odpovědět na zprávu, odškrtnout úkol — z telefonu, bez notebooku.",
+   "bildAlt": "Mobilní aplikace s obsazeností a úkoly",
+   "nutzen": {
+    "a": {
+     "titel": "Pro každou roli",
+     "text": "Vlastníci, úklid a provoz mají vlastní zobrazení — stejná aplikace, různá práva."
+    },
+    "b": {
+     "titel": "Oznámení, která se počítají",
+     "text": "Nová rezervace, zrušení, dotaz hosta: dozvíte se to hned, bez otevírání aplikace."
+    },
+    "c": {
+     "titel": "Také pro hosty",
+     "text": "Hosté najdou průvodce pro hosty, check-in a zprávy v aplikaci myBestDays."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Dvě aplikace, protože dva světy.",
+     "text": "myNextDays vede provoz, myBestDays patří hostovi. Oddělené aplikace znamenají: žádný host se nikdy nedostane do vašich čísel.",
+     "punkte": {
+      "a": "myNextDays pro provoz",
+      "b": "myBestDays pro hosta",
+      "c": "iOS a Android"
+     }
+    }
+   },
+   "bildAltBlock": "Přehled provozu u pracovního stolu",
+   "reiter": {
+    "betrieb": {
+     "titel": "Provoz na cestách",
+     "heading": "Obsazenost a rezervace pod kontrolou.",
+     "text": "Zkontrolovat kalendář, založit rezervaci, změnit cenu — z telefonu, ve stejných datech jako u stolu.",
+     "punkte": {
+      "a": "Kalendář",
+      "b": "Rezervace",
+      "c": "Ceny"
+     }
+    },
+    "meldungen": {
+     "titel": "Oznámení",
+     "heading": "Dozvíte se to hned.",
+     "text": "Nová rezervace, zrušení nebo dotaz hosta přijdou jako notifikace — jedním tapnutím jste v rezervaci.",
+     "punkte": {
+      "a": "Rezervace",
+      "b": "Nová rezervace v červenci",
+      "c": "Zrušení na 12.–14. 8."
+     }
+    },
+    "gast": {
+     "titel": "Pro hosta",
+     "heading": "Aplikace myBestDays.",
+     "text": "Hosté najdou rezervaci, průvodce pro hosty, check-in a zprávy ve vlastní aplikaci — oddělené od té vaší.",
+     "punkte": {
+      "a": "Rezervace",
+      "b": "Průvodce pro hosty",
+      "c": "Check-in"
+     }
+    },
+    "rollen": {
+     "titel": "Pro tým",
+     "heading": "Úklid a vlastníci.",
+     "text": "Uklízeči vidí své směny s checklistem, vlastníci své objekty. Stejná aplikace, různá práva.",
+     "punkte": {
+      "a": "Směna otevřená",
+      "b": "Checklist splněn",
+      "c": "Fotky odeslány"
+     }
+    }
+   }
+  },
+  "auswertungen": {
+   "metaBeschreibung": "Obsazenost, tržby, ADR a srovnání kanálů — reporty, které ukazují, čím to je, ne jen co se stalo.",
+   "headline": "Čísla, která umožní rozhodnutí.",
+   "sub": "Obsazenost, tržby a průměrná cena podle objektu, období a kanálu — vedle sebe místo v pěti exportech.",
+   "bildAlt": "Vyhodnocení s obsazeností a tržbami",
+   "nutzen": {
+    "a": {
+     "titel": "Porovnat kanály",
+     "text": "Co přináší Booking, co vlastní web? Spočítáno s provizí, ne jen podle tržeb."
+    },
+    "b": {
+     "titel": "Pro každý objekt",
+     "text": "Který objekt se uživí a který ne — vidět na obsazenosti a průměrné ceně."
+    },
+    "c": {
+     "titel": "Reporty samy od sebe",
+     "text": "Měsíční reporty jdou automaticky vám i vašim vlastníkům, jako PDF ve známé struktuře."
+    }
+   },
+   "block": {
+    "eins": {
+     "titel": "Minulost a výhled v jednom zobrazení.",
+     "text": "Vedle toho, co bylo, stojí to, co je rezervované — v únoru tak vidíte, jestli léto vyjde, místo abyste to poznali v červenci.",
+     "punkte": {
+      "a": "Stav rezervací dopředu",
+      "b": "Srovnání s předchozím rokem",
+      "c": "Export pro účetní"
+     }
+    }
+   },
+   "bildAltBlock": "Plán obsazenosti hotelu jako datový základ",
+   "reiter": {
+    "auslastung": {
+     "titel": "Obsazenost",
+     "heading": "Jak je opravdu plno?",
+     "text": "Obsazenost podle objektu, měsíce a kanálu — ve srovnání s předchozím rokem, ne podle pocitu.",
+     "punkte": {
+      "a": "Obsazenost",
+      "b": "Předchozí rok",
+      "c": "Pro každý objekt"
+     }
+    },
+    "kanaele": {
+     "titel": "Srovnání kanálů",
+     "heading": "Co přináší který kanál?",
+     "text": "Tržby po provizi podle kanálu: Booking, Airbnb, vlastní web, myBestDays — vedle sebe místo v pěti exportech.",
+     "punkte": {
+      "a": "myBestDays",
+      "b": "Booking.com",
+      "c": "Airbnb"
+     }
+    },
+    "berichte": {
+     "titel": "Reporty",
+     "heading": "Přijdou samy.",
+     "text": "Měsíční reporty jdou automaticky vám i vašim vlastníkům, jako PDF ve známé struktuře.",
+     "punkte": {
+      "a": "Report vytvořen",
+      "b": "Odesláno vlastníkovi",
+      "c": "Uloženo do archivu"
+     }
+    },
+    "ausblick": {
+     "titel": "Výhled",
+     "heading": "Co už je rezervované.",
+     "text": "Vedle toho, co bylo, stojí stav rezervací dopředu — v únoru tak vidíte, jestli léto vyjde.",
+     "punkte": {
+      "a": "Rezervováno",
+      "b": "Poptáno",
+      "c": "Volno"
+     }
+    }
+   }
+  }
+ },
+ "kontakt": {
+  "meta": {
+   "titel": "Kontakt — myNextDays",
+   "beschreibung": "Takto se dostanete k myNextDays: obecné dotazy a prodej na adresu {info}, technické dotazy na adresu {technik}, telefonicky na čísle {telefon} — nebo přímo přes formulář."
+  },
+  "hero": {
+   "eyebrow": "Kontakt",
+   "headlinePre": "Řekněte nám, o co jde —",
+   "headlineHighlight": "odpovíme",
+   "sub": "Dotazy k produktu, k přechodu z jiného systému, k propojení přes naše API nebo ke spolupráci: vyberte své téma a zpráva půjde přímo k lidem, kteří se v něm vyznají.",
+   "sitz": "Sídlo v Bindslev, Dánsko",
+   "sprachen": "Software ve 24 jazycích",
+   "eu": "Hostováno v EU, v souladu s GDPR"
+  },
+  "wege": {
+   "eyebrow": "Cesty k nám",
+   "heading": "Kdo se vaším dotazem zabývá?",
+   "sub": "Dvě poštovní schránky a chat. Obchodní záležitosti a vše před spuštěním jdou do obecné schránky, vše technické přímo k vývojářskému týmu — nic tak neskončí ve frontě, do které nikdo nekouká.",
+   "allgemein": {
+    "titel": "Produkt, ceny a prodej",
+    "text": "Chcete vědět, zda se myNextDays hodí pro váš provoz, co znamená přechod z jiného systému nebo jak fungují faktura a předplatné? Tohle je správná cesta — i pro tisk, partnerství a informace o ochraně osobních údajů.",
+    "aktion": "Napsat zprávu"
+   },
+   "technik": {
+    "titel": "Technika, API a bezpečnost",
+    "text": "Něco nefunguje, propojení s rezervačním portálem se zasekává, vyvíjíte proti našemu API nebo jste našli bezpečnostní chybu? Tyto dotazy jdou přímo k vývojářskému týmu, a ne přes prodej.",
+    "aktion": "Napsat zprávu"
+   },
+   "hilfe": {
+    "titel": "Nápověda a chat",
+    "text": "Návody ke každé oblasti najdete v centru nápovědy. A když to má být rychlé: vpravo dole na každé stránce je chat, ve kterém odpovídá skutečný člověk — bez účtu a bez přihlášení.",
+    "aktion": "Do centra nápovědy",
+    "chatHinweis": "Chat vpravo dole na každé stránce"
+   }
+  },
+  "formular": {
+   "eyebrow": "Zpráva",
+   "heading": "Napište nám",
+   "sub": "Jeden formulář na všechno — o tom, kdo ji dostane, rozhoduje vaše téma.",
+   "ablaufTitel": "Co se stane potom",
+   "ablauf": {
+    "eingang": {
+     "titel": "Zpráva odejde",
+     "text": "Přes náš vlastní mailový server v Dánsku — žádná formulářová služba třetí strany, jejímiž rukama by vaše údaje procházely."
+    },
+    "zuordnung": {
+     "titel": "Přijde do správné schránky",
+     "text": "Obchodní záležitosti na {info}, technické na {technik}. Kterou to bude, rozhodne náš server podle vašeho tématu."
+    },
+    "antwort": {
+     "titel": "Odpovíme vám přímo",
+     "text": "Běžným e-mailem na adresu, kterou tu zadáte — můžete na něj jednoduše odpovědět."
+    }
+   },
+   "hinweisPostfach": "Dvě schránky, aby nic neleželo: {info} pro vše obchodní, {technik} pro vše technické. Kterou to bude, určí náš server podle vašeho tématu — tento formulář nemůže zadat cíl.",
+   "thema": "O co jde?",
+   "themen": {
+    "allgemein": "Obecný dotaz",
+    "vertrieb": "Produkt, ceny a prodej",
+    "abrechnung": "Faktura a předplatné",
+    "technik": "Technický problém",
+    "api": "API a vývojáři",
+    "partner": "Partnerství",
+    "presse": "Tisk a média",
+    "datenschutz": "Ochrana osobních údajů",
+    "sicherheit": "Nahlásit bezpečnostní chybu"
+   },
+   "zielAllgemein": "Půjde na {email}",
+   "zielTechnik": "Půjde na {email} — náš vývojářský tým",
+   "name": "Jméno",
+   "email": "E-mail",
+   "emailPlatzhalter": "jmeno@priklad.cz",
+   "firma": "Firma",
+   "telefon": "Telefon",
+   "optional": "nepovinné",
+   "nachricht": "Vaše zpráva",
+   "nachrichtPlatzhalter": "Popište svůj dotaz — čím přesněji, tím lépe odpověď zapadne.",
+   "absenden": "Odeslat zprávu",
+   "laeuft": "Odesílá se …",
+   "dankeTitel": "Dorazilo.",
+   "nochEine": "Napsat další zprávu",
+   "fehlerAllgemein": "To se nepovedlo. Zkuste to prosím později znovu.",
+   "fehlerPruefung": "Bezpečnostní kontrola neproběhla úspěšně. Načtěte prosím stránku znovu a odešlete zprávu ještě jednou.",
+   "fehlerFelder": "Zkontrolujte prosím své údaje: je potřeba jméno, e-mail a zpráva s alespoň 20 znaky.",
+   "fehlerZuOft": "Z tohoto připojení přišlo příliš mnoho zpráv. Vyčkejte prosím chvíli a zkuste to znovu.",
+   "fehlerSpaeter": "Zprávu se právě nepodařilo doručit. Zkuste to prosím později znovu nebo napište přímo na {email}.",
+   "datenschutzHinweis": "Vaše údaje použijeme jen k odpovědi na tento dotaz. Podrobnosti v <link>zásadách ochrany osobních údajů</link>.",
+   "recaptchaHinweis": "Tento formulář je chráněn službou reCAPTCHA. Platí <datenschutz>zásady ochrany osobních údajů</datenschutz> a <bedingungen>podmínky používání</bedingungen> společnosti Google."
+  },
+  "anschrift": {
+   "eyebrow": "Adresa",
+   "heading": "Takto nás zastihnete přímo",
+   "firmaEyebrow": "Údaje o firmě",
+   "firmaHeading": "S kým máte co do činění",
+   "firmaText": "Kdo je smluvní stranou, by se nemělo hledat v drobném písmu. Proto jsou registrační údaje uvedené tady — stejné jako v právních informacích.",
+   "firma": "Společnost",
+   "register": "Registr",
+   "ustId": "Identifikační číslo pro DPH",
+   "direktion": "Vedení",
+   "impressum": "Zobrazit právní informace",
+   "datenschutz": "Zobrazit ochranu osobních údajů"
+  },
+  "faq": {
+   "eyebrow": "Časté dotazy",
+   "heading": "Dotazy ke kontaktování",
+   "sub": "Kdo odpovídá, jak dlouho to trvá a co se děje s vašimi údaji.",
+   "wer": {
+    "frage": "Kdo mi odpoví?",
+    "antwort": "Člověk z týmu, ne ticketovací systém s číslem. myNextDays vede vlastník: na obchodní dotazy odpovídá někdo, kdo software sám denně používá, na technické vývojářský tým."
+   },
+   "postfach": {
+    "frage": "Jak zjistím, kam moje zpráva přijde?",
+    "antwort": "Pod výběrovým polem je u každého tématu uvedena cílová adresa. Obecné, obchodní a redakční záležitosti jdou na {info}, technické dotazy, otázky k API a hlášení bezpečnostních chyb na {technik}. Přiřazení dělá náš server — formulář nemůže určit schránku, aby ho nešlo zneužít jako cestu k rozesílání cizích zpráv."
+   },
+   "sprache": {
+    "frage": "V jakém jazyce mohu psát?",
+    "antwort": "Pište v jazyce, ve kterém čtete tuto stránku — vidíme ho ve vašem dotazu a odpovídáme v něm, nakolik to zvládneme. Německy, dánsky a anglicky odpovídáme vždy."
+   },
+   "dauer": {
+    "frage": "Jak dlouho trvá odpověď?",
+    "antwort": "Zpravidla během několika hodin, o víkendech a ve dnech státních svátků to může trvat déle. Pro hlášení bezpečnostních chyb platí: leží u vývojářského týmu bez okliky přes prodej."
+   },
+   "telefon": {
+    "frage": "Můžu také zavolat?",
+    "antwort": "Ano, na čísle {telefon}. Telefonát je nejrychlejší cesta pro všechno, co se lépe probere než napíše — u technických potíží je ale zpráva často lepší, protože k ní lze přiložit chybová hlášení a snímky obrazovky."
+   },
+   "bestaetigung": {
+    "frage": "Dostanu e-mailem potvrzení o přijetí?",
+    "antwort": "Ne, záměrně ne. Automatické potvrzení by šlo na každou adresu, která se sem napíše — tím by šlo náš mailový server použít k psaní do cizích schránek. Potvrzení proto stojí tady na stránce, jakmile zpráva dorazí. Vaše údaje používáme výhradně k odpovědi na tento dotaz."
+   }
+  }
+ },
+ "help": {
+  "heroTitle": "Jak vám můžeme pomoci?",
+  "heroSubtitle": "Prohledejte znalostní bázi nebo najděte řešení krok za krokem pro každodenní práci s myNextDays.",
+  "searchPlaceholder": "Co hledáte?",
+  "searchAria": "Hledat v nápovědě",
+  "contact": "Contact",
+  "home": "Úvod nápovědy",
+  "articles": "{count, plural, one {# článek} few {# články} many {# článku} other {# článků}}",
+  "collectionKbTitle": "Znalostní báze",
+  "collectionKbDesc": "Vše o objektech, cenách, kalendáři, portálech a vašem účtu.",
+  "collectionUsecasesTitle": "Případy použití",
+  "collectionUsecasesDesc": "Řešení krok za krokem pro běžné každodenní situace.",
+  "helpfulQuestion": "Byl tento článek užitečný?",
+  "helpfulYes": "Ano",
+  "helpfulNo": "Ne",
+  "helpfulThanks": "Děkujeme za zpětnou vazbu!",
+  "related": "Další články v kategorii {category}",
+  "searchTitle": "Hledat",
+  "results": "{count, plural, one {# výsledek pro „{query}“} few {# výsledky pro „{query}“} many {# výsledku pro „{query}“} other {# výsledků pro „{query}“}}",
+  "noResultsTitle": "Nebyly nalezeny žádné články",
+  "noResultsHintPre": "Zkuste jiné hledané výrazy nebo",
+  "noResultsHintLink": "projděte si kategorie",
+  "browseCategories": "Procházet kategorie",
+  "brandTitle": "Nápověda myNextDays"
  }
 }

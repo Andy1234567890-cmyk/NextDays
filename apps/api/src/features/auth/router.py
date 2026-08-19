@@ -13,6 +13,13 @@ from src.core.security import (
     require_platform_write,
 )
 from src.core.uploads import read_upload
+from src.features.account_deletion.dependencies import InAppLoeschungDep
+from src.features.account_deletion.schemas import (
+    InAppLoeschRequest,
+    InAppLoeschResponse,
+    LoeschStatusResponse,
+)
+from src.features.account_deletion.service import LoeschantragError
 from src.features.login_devices.dependencies import LoginDeviceServiceDep
 from src.features.login_devices.service import LoginDeviceService
 
@@ -754,6 +761,65 @@ def delete_managed_user(
         service.delete_managed_user(ctx, user_id)
     except AuthError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Konto-Löschung durch den Nutzer selbst (Apple 5.1.1(v)) ---------------
+# Liegt im auth-Slice, weil es eine Konto-Aktion ist wie /account/email und
+# /account/password. Die Fachlogik und die Antragstabelle gehören dem
+# account_deletion-Slice — dort liegt auch der öffentliche Web-Weg, und beide
+# Wege müssen auf demselben Löschbuch arbeiten.
+
+
+@router.get("/account/deletion", response_model=LoeschStatusResponse)
+def deletion_status(
+    ctx: CurrentUser, loeschung: InAppLoeschungDep
+) -> LoeschStatusResponse:
+    """Liegt für dieses Konto ein Löschantrag vor?
+
+    Die App fragt das, bevor sie den Löschknopf anbietet: sonst stellt jemand
+    denselben Antrag mehrfach und hält ihn für wirkungslos (Wurzel 2).
+    """
+    try:
+        return LoeschStatusResponse(**loeschung.status(ctx))
+    except LoeschantragError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+
+
+@router.post("/account/deletion", response_model=InAppLoeschResponse)
+def deletion_request(
+    req: InAppLoeschRequest, ctx: CurrentUser, loeschung: InAppLoeschungDep
+) -> InAppLoeschResponse:
+    """Eigenes Konto löschen — mit Passwort-Rückfrage (Wurzel 7).
+
+    Mitarbeiter, Eigentümer und Co-Admins sind danach sofort weg. Beim
+    Kontoinhaber entsteht ein Antrag, weil am Konto der ganze Betrieb hängt und
+    Belege gesetzlich aufzubewahren sind; die Antwort sagt, welcher der beiden
+    Fälle eingetreten ist.
+    """
+    try:
+        return InAppLoeschResponse(
+            **loeschung.loeschen(
+                ctx, passwort=req.current_password, grund=req.grund
+            )
+        )
+    except AuthError as exc:
+        # Die Passwort-Rückfrage stammt aus dem AccountService und wirft dessen
+        # Fehler — inklusive 503 bei einer GoTrue-Störung. Der darf NICHT als
+        # „Passwort falsch" beim Nutzer landen (Wurzel 5).
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    except LoeschantragError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+
+
+@router.delete("/account/deletion", response_model=LoeschStatusResponse)
+def deletion_withdraw(
+    ctx: CurrentUser, loeschung: InAppLoeschungDep
+) -> LoeschStatusResponse:
+    """Eigenen Löschantrag zurückziehen (Gegenzustand, Wurzel 1)."""
+    try:
+        return LoeschStatusResponse(**loeschung.antrag_zuruecknehmen(ctx))
+    except LoeschantragError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
 
 @router.patch("/account/email", response_model=AccountResponse)

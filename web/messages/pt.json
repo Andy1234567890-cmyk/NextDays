@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Como podemos ajudar?",
-    "heroSubtitle": "Pesquise na base de conhecimento ou encontre soluções passo a passo para o seu dia a dia com o myNextDays.",
-    "searchPlaceholder": "O que procura?",
-    "searchAria": "Pesquisar na ajuda",
-    "contact": "Contact",
-    "home": "Início da ajuda",
-    "articles": "{count, plural, one {# artigo} other {# artigos}}",
-    "collectionKbTitle": "Base de conhecimento",
-    "collectionKbDesc": "Tudo sobre alojamentos, preços, calendário, portais e a sua conta.",
-    "collectionUsecasesTitle": "Casos de utilização",
-    "collectionUsecasesDesc": "Soluções passo a passo para situações típicas do dia a dia.",
-    "helpfulQuestion": "Este artigo foi útil?",
-    "helpfulYes": "Sim",
-    "helpfulNo": "Não",
-    "helpfulThanks": "Obrigado pelo seu comentário!",
-    "related": "Mais artigos em {category}",
-    "searchTitle": "Pesquisa",
-    "results": "{count, plural, one {# resultado para «{query}»} other {# resultados para «{query}»}}",
-    "noResultsTitle": "Nenhum artigo encontrado",
-    "noResultsHintPre": "Tente outros termos de pesquisa ou",
-    "noResultsHintLink": "explore as categorias",
-    "browseCategories": "Explorar categorias",
-    "brandTitle": "Ajuda myNextDays"
-  },
   "common": {
     "save": "Guardar",
     "cancel": "Cancelar",
@@ -1420,7 +1395,10 @@
     "commissionableNo": "Não — isento de comissão",
     "infoAria": "Explicação de {feld}",
     "rulesPageTitle": "Regras de acerto de contas",
-    "rulesPageIntro": "O que os portais retêm por reserva e a quem pertencem os encargos. Em conjunto, determinam o valor que chega ao acerto de comissões dos seus proprietários."
+    "rulesPageIntro": "O que os portais retêm por reserva e a quem pertencem os encargos. Em conjunto, determinam o valor que chega ao acerto de comissões dos seus proprietários.",
+    "endsSalesHint": "Atenção: isto termina também a comercialização. A partir de {date}, o imóvel deixa de ser vendido em qualquer canal — nem na Booking.com, na Airbnb ou no myBestDays. Para uma simples mudança de tarifa, crie em vez disso um contrato subsequente com início nesse dia.",
+    "effectReleased": "{property}: a comercialização continua — o fim do contrato foi anulado e as noites voltam a estar disponíveis para venda.",
+    "effectBlocked": "{property}: a comercialização termina em {date} — {nights} noites bloqueadas e retiradas dos portais."
   },
   "portal": {
     "title": "O meu portal",
@@ -4535,7 +4513,10 @@
       "photos": "Fotos",
       "noPhotosFound": "Não foram encontradas fotos para esta reserva.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "via {channel}",
+      "receivedOn": "recebida por nós em {date}",
+      "bookedOn": "reservada em {date}"
     },
     "dashboard": {
       "todayCheckouts": "Check-outs",

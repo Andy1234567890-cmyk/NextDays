@@ -31,8 +31,14 @@ import {
   GrafikZahlung,
   GrafikZeichnung,
 } from "@/components/funktionen/funktions-grafiken";
+import {
+  AppAufnahmenMobilReihe,
+  TelefonBuehne,
+} from "@/components/marketing/app-aufnahme-mobil";
 import { Button } from "@/components/ui/button";
 import { SIGNUP_URL } from "@/lib/app-url";
+
+import type { AppMotivMobil } from "@/lib/app-mobil";
 
 /** Welche Grafik ein Reiter zeigt. */
 export type GrafikArt =
@@ -45,7 +51,13 @@ export type GrafikArt =
   | "belegung"
   | "zeichnung";
 
-export type Reiter = { key: string; grafik: GrafikArt };
+export type Reiter = {
+  key: string;
+  grafik: GrafikArt;
+  /** Echte Telefon-Aufnahmen; gesetzt schlagen sie die gebaute Grafik. Eine
+   *  Aufnahme der Sache ist immer der stärkere Beleg als eine Nachbildung. */
+  telefon?: readonly AppMotivMobil[];
+};
 
 export function FunktionsReiter({
   gruppe,
@@ -133,21 +145,30 @@ export function FunktionsReiter({
                 </Button>
               </div>
 
-              {/* Die Grafik liegt auf einer getönten Fläche — bei der Referenz
-                  steht sie ebenfalls auf einem eigenen Panel. Ohne diesen
-                  Rahmen schwimmt sie in der leeren Spalte. */}
-              <div className="order-1 rounded-[2rem] bg-surface-warm p-8 lg:order-2 lg:p-10">
-                <Grafik
-                  art={r.grafik}
-                  gruppe={gruppe}
-                  titel={t(`${r.key}.titel`)}
-                  punkte={[
-                    t(`${r.key}.punkte.a`),
-                    t(`${r.key}.punkte.b`),
-                    t(`${r.key}.punkte.c`),
-                  ]}
-                />
-              </div>
+              {/* Echte Aufnahmen stehen frei auf einer Akzent-Aura (wie die
+                  Aufnahmen der Startseite); die GEBAUTE Grafik braucht dagegen
+                  ihr getöntes Feld, sonst schwimmt sie in der leeren Spalte. */}
+              {r.telefon ? (
+                <TelefonBuehne className="order-1 lg:order-2">
+                  <AppAufnahmenMobilReihe
+                    motive={r.telefon}
+                    alt={t(`${r.key}.heading`)}
+                  />
+                </TelefonBuehne>
+              ) : (
+                <div className="order-1 rounded-[2rem] bg-surface-warm p-8 lg:order-2 lg:p-10">
+                  <Grafik
+                    art={r.grafik}
+                    gruppe={gruppe}
+                    titel={t(`${r.key}.titel`)}
+                    punkte={[
+                      t(`${r.key}.punkte.a`),
+                      t(`${r.key}.punkte.b`),
+                      t(`${r.key}.punkte.c`),
+                    ]}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -184,6 +205,6 @@ function Grafik({
     case "belegung":
       return <GrafikBelegung titel={titel} punkte={punkte} />;
     default:
-      return <GrafikZeichnung gruppe={gruppe} />;
+      return <GrafikZeichnung gruppe={gruppe} titel={titel} punkte={punkte} />;
   }
 }

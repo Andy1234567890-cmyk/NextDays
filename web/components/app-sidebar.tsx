@@ -42,6 +42,7 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from "@nextdays/ui/sidebar";
+import { HILFE_URL } from "@/lib/marketing-url";
 
 // Navigation: oben die täglichen Kernbereiche flach, darunter thematische
 // Gruppen. Die Beherbergungsart des Mandanten (vacation_rental | hotel,
@@ -752,10 +753,10 @@ export function AppSidebar({
                   asChild
                   className="gap-3 px-3 py-2.5 text-sm [&>svg]:size-5"
                 >
-                  <Link href="/hilfe" target="_blank" rel="noopener noreferrer">
+                  <a href={HILFE_URL} target="_blank" rel="noopener noreferrer">
                     <Icon icon="ph:lifebuoy" />
                     {t("account.helpCenter")}
-                  </Link>
+                  </a>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

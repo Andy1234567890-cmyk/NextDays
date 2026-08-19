@@ -1,29 +1,4 @@
 {
-  "help": {
-    "heroTitle": "Ako vám môžeme pomôcť?",
-    "heroSubtitle": "Prehľadajte databázu znalostí alebo nájdite riešenia krok za krokom pre každodennú prácu s myNextDays.",
-    "searchPlaceholder": "Čo hľadáte?",
-    "searchAria": "Hľadať v pomocníkovi",
-    "contact": "Contact",
-    "home": "Úvod pomocníka",
-    "articles": "{count, plural, one {# článok} few {# články} many {# článku} other {# článkov}}",
-    "collectionKbTitle": "Databáza znalostí",
-    "collectionKbDesc": "Všetko o objektoch, cenách, kalendári, portáloch a vašom účte.",
-    "collectionUsecasesTitle": "Prípady použitia",
-    "collectionUsecasesDesc": "Riešenia krok za krokom pre bežné každodenné situácie.",
-    "helpfulQuestion": "Bol tento článok užitočný?",
-    "helpfulYes": "Áno",
-    "helpfulNo": "Nie",
-    "helpfulThanks": "Ďakujeme za spätnú väzbu!",
-    "related": "Ďalšie články v kategórii {category}",
-    "searchTitle": "Hľadať",
-    "results": "{count, plural, one {# výsledok pre „{query}“} few {# výsledky pre „{query}“} many {# výsledku pre „{query}“} other {# výsledkov pre „{query}“}}",
-    "noResultsTitle": "Nenašli sa žiadne články",
-    "noResultsHintPre": "Skúste iné hľadané výrazy alebo",
-    "noResultsHintLink": "prezrite si kategórie",
-    "browseCategories": "Prehliadať kategórie",
-    "brandTitle": "Pomoc myNextDays"
-  },
   "common": {
     "save": "Uložiť",
     "cancel": "Zrušiť",
@@ -1420,7 +1395,10 @@
     "commissionableNo": "Nie — bez provízie",
     "infoAria": "Vysvetlenie k: {feld}",
     "rulesPageTitle": "Pravidlá vyúčtovania",
-    "rulesPageIntro": "Koľko si portály ponechávajú z každej rezervácie a komu patria poplatky. Oboje určuje sumu, ktorá nakoniec vstúpi do vyúčtovania provízií vašich vlastníkov."
+    "rulesPageIntro": "Koľko si portály ponechávajú z každej rezervácie a komu patria poplatky. Oboje určuje sumu, ktorá nakoniec vstúpi do vyúčtovania provízií vašich vlastníkov.",
+    "endsSalesHint": "Pozor: tým sa končí aj predaj. Od {date} sa objekt už nepredáva na žiadnom kanáli — ani na Booking.com, Airbnb či na myBestDays. Ak chcete iba zmeniť sadzbu, založte namiesto toho nadväzujúcu zmluvu od tohto dňa.",
+    "effectReleased": "{property}: predaj pokračuje — koniec zmluvy bol zrušený a noci sú opäť predajné.",
+    "effectBlocked": "{property}: predaj sa končí dňa {date} — {nights} nocí zablokovaných a stiahnutých z portálov."
   },
   "portal": {
     "title": "Môj portál",
@@ -4535,7 +4513,10 @@
       "photos": "Fotografie",
       "noPhotosFound": "K tejto rezervácii neboli nájdené žiadne fotografie.",
       "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung."
+      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "viaChannel": "cez {channel}",
+      "receivedOn": "prijaté u nás dňa {date}",
+      "bookedOn": "rezervované dňa {date}"
     },
     "dashboard": {
       "todayCheckouts": "Odhlásenia",
