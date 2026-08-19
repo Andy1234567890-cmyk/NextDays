@@ -29,13 +29,45 @@ export type TokenQuelle = {
 
 let quelle: TokenQuelle | null = null;
 
+/** Aufräumen des laufenden Token-Abos — nötig, um beim Hot-Reload nicht zu stapeln. */
+let abmelden: (() => void) | null = null;
+
 export function realtimeTokenQuelleSetzen(q: TokenQuelle): void {
+  // ZWEI verschiedene Fälle, die vorher beide als Fehler endeten:
+  //
+  // 1. ECHTER Doppelaufruf mit einer ANDEREN Quelle — zwei Auth-Welten an einem
+  //    Realtime-Client. Das bleibt ein Fehler (ADR-0019): die Channels der
+  //    zweiten Welt laufen still aus, weil keine RLS-Policy mehr passt.
+  //
+  // 2. DASSELBE Modul erneut ausgeführt. Beim Hot-Reload lädt Metro `App.tsx`
+  //    neu, und weil der Aufruf dort auf MODULEBENE steht (absichtlich: er muss
+  //    stehen, bevor der erste Screen einen Channel öffnet), kommt er ein
+  //    zweites Mal an — mit einem frisch erzeugten, aber inhaltlich gleichen
+  //    Objekt. Das ist kein Konfigurationsfehler, sondern der normale
+  //    Entwickler-Ablauf. Vorher zerschoss er die laufende App mit einem roten
+  //    Schirm, den nur ein Neustart wegbekam.
+  //
+  // Unterschieden wird an den FUNKTIONEN, nicht am Objekt: `getToken` und
+  // `onTokenChange` sind Modul-Exporte und bleiben über den Reload identisch,
+  // während `{ holen, abonnieren }` jedes Mal neu gebaut wird.
   if (quelle) {
-    throw new Error("Realtime-Tokenquelle ist bereits gesetzt (genau EINE Auth-Welt).");
+    const gleich =
+      quelle.holen === q.holen && quelle.abonnieren === q.abonnieren;
+    if (!gleich) {
+      throw new Error(
+        "Realtime-Tokenquelle ist bereits mit einer ANDEREN Auth-Welt gesetzt " +
+          "(genau EINE Auth-Welt je App, ADR-0019).",
+      );
+    }
+    // Gleiche Quelle: das alte Abo lösen, damit sich die Listener nicht
+    // stapeln — sonst hängen nach zehn Reloads zehn setAuth-Aufrufe an jedem
+    // Token-Wechsel.
+    abmelden?.();
+    abmelden = null;
   }
   quelle = q;
   // Bei Token-Refresh/Logout das JWT erneuern — kein Polling.
-  q.abonnieren((token) => {
+  abmelden = q.abonnieren((token) => {
     if (rtClient && token) {
       rtClient.realtime.setAuth(token).catch(() => {
         // Best-effort: schlägt setAuth fehl, greift beim nächsten Channel-JOIN

@@ -8,13 +8,14 @@
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useEffect, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { GuestGate } from "@/components/GuestGate";
 import { Icon } from "@/components/ui/Icon";
-import { Btn, Col, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Btn, Col, Divider, Row, Spinner, Txt } from "@/components/ui/kit";
 import { useGuestAuth } from "@/contexts/GuestAuthContext";
+import { deleteGuestAccount } from "@/lib/guestAuth";
 import type { RootStackParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -22,18 +23,46 @@ export default function GuestAccount() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { status, guest, updateProfile } = useGuestAuth();
+  const { status, guest, updateProfile, logout } = useGuestAuth();
 
   const [name, setName] = useState("");
   const [telefon, setTelefon] = useState("");
   const [busy, setBusy] = useState(false);
   const [meldung, setMeldung] = useState<string | null>(null);
+  // Löschen ist zweistufig: der Weg muss auffindbar sein, aber ein einzelner
+  // Fehlgriff darf kein Konto vernichten. Erst aufklappen, dann Passwort.
+  const [loeschOffen, setLoeschOffen] = useState(false);
+  const [loeschPasswort, setLoeschPasswort] = useState("");
+  const [loeschLaeuft, setLoeschLaeuft] = useState(false);
 
   useEffect(() => {
     if (!guest) return;
     setName(guest.name ?? "");
     setTelefon(guest.phone ?? "");
   }, [guest]);
+
+  /**
+   * Konto endgültig löschen. Danach ist die Sitzung wertlos — deshalb IMMER
+   * abmelden, statt in einer Oberfläche zu bleiben, deren Aufrufe ab jetzt 401
+   * liefern. Was aufbewahrt wird, sagt der Server (`hinweis`): bereits
+   * getätigte Buchungen bleiben beim Gastgeber, und das muss der Gast erfahren,
+   * sonst steht er vor verschlossener Tür.
+   */
+  const loeschen = async () => {
+    setLoeschLaeuft(true);
+    const res = await deleteGuestAccount(loeschPasswort);
+    setLoeschLaeuft(false);
+    setLoeschPasswort("");
+    if (!res.ok) {
+      Alert.alert("Nicht gelöscht", res.error);
+      return;
+    }
+    Alert.alert(
+      "Konto gelöscht",
+      [res.data.detail, res.data.hinweis].filter(Boolean).join("\n\n"),
+      [{ text: "OK", onPress: () => logout() }],
+    );
+  };
 
   if (status === "loading") {
     return (
@@ -114,6 +143,79 @@ export default function GuestAccount() {
         <Btn variant={geaendert && !busy ? "primary" : "ghost"} block onPress={speichern}>
           {busy ? "Wird gespeichert …" : "Speichern"}
         </Btn>
+
+        {/* Konto löschen — Pflichtweg IN der App (Apple 5.1.1(v)); Google
+            verlangt zusätzlich den Web-Weg für Leute, die die App schon
+            deinstalliert haben.
+            Ganz unten und ohne Farbe: er muss auffindbar sein, aber niemand soll
+            ihn versehentlich treffen. */}
+        <Col gap={8} style={{ marginTop: 12 }}>
+          <Divider />
+          {loeschOffen ? (
+            <>
+              <Txt v="sm" soft>
+                Dein Konto und deine Anmeldedaten werden gelöscht. Bereits
+                getätigte Buchungen bleiben beim Gastgeber — er braucht sie für
+                deinen Aufenthalt und seine Buchhaltung.
+              </Txt>
+              <TextInput
+                value={loeschPasswort}
+                onChangeText={setLoeschPasswort}
+                secureTextEntry
+                placeholder="Passwort bestätigen"
+                placeholderTextColor={t.palette.faint}
+                style={{
+                  backgroundColor: t.palette.surface,
+                  borderWidth: 1,
+                  borderColor: t.palette.line,
+                  borderRadius: 12,
+                  paddingHorizontal: 14,
+                  paddingVertical: 12,
+                  fontSize: 16,
+                  color: t.palette.ink,
+                }}
+              />
+              <Row gap={8}>
+                <Btn
+                  variant="ghost"
+                  onPress={
+                    loeschLaeuft
+                      ? undefined
+                      : () => {
+                          setLoeschOffen(false);
+                          setLoeschPasswort("");
+                        }
+                  }
+                >
+                  Abbrechen
+                </Btn>
+                <View style={{ flex: 1 }}>
+                  <Btn
+                    variant="outline"
+                    block
+                    onPress={
+                      loeschLaeuft || !loeschPasswort ? undefined : loeschen
+                    }
+                  >
+                    {loeschLaeuft ? "Wird gelöscht …" : "Endgültig löschen"}
+                  </Btn>
+                </View>
+              </Row>
+            </>
+          ) : (
+            <Pressable
+              onPress={() => setLoeschOffen(true)}
+              style={({ pressed }) => ({
+                paddingVertical: 14,
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <Txt v="sm" accent>
+                Konto löschen
+              </Txt>
+            </Pressable>
+          )}
+        </Col>
       </ScrollView>
     </KeyboardAvoidingView>
   );

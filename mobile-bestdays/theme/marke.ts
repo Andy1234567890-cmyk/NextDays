@@ -15,6 +15,8 @@ export const marke: Marke = {
   akzent: "#C42B3A",
   logo: require("@/assets/img/mybestdays-logo.png"),
   logoHell: require("@/assets/img/mybestdays-logo-light.png"),
+  // Der Marktplatz im Web.
+  webUrl: "https://mybestdays.dk",
   andereApp: {
     name: "myNextDays",
     scheme: "mynextdays",

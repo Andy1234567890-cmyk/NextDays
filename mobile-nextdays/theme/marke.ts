@@ -15,6 +15,8 @@ export const marke: Marke = {
   akzent: "#C42B3A",
   logo: require("@/assets/img/mynextdays-logo.png"),
   logoHell: require("@/assets/img/mynextdays-logo-light.png"),
+  // Das Betriebs-Dashboard (siehe marketing/README.md).
+  webUrl: "https://app.mynextdays.com",
   andereApp: {
     name: "myBestDays",
     scheme: "mybestdays",

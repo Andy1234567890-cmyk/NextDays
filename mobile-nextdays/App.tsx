@@ -23,7 +23,6 @@ import { HostTabs } from "@/navigation/HostTabs";
 import { OwnerTabs } from "@/navigation/OwnerTabs";
 import type { RootStackParamList } from "@/navigation/types";
 import HostLogin from "@/screens/HostLogin";
-import HostSignup from "@/screens/HostSignup";
 import PropertyCustomFields from "@/screens/PropertyCustomFields";
 import PropertyDescription from "@/screens/PropertyDescription";
 import PropertyDetail from "@/screens/PropertyDetail";
@@ -51,7 +50,6 @@ const linking: LinkingOptions<RootStackParamList> = {
   config: {
     screens: {
       HostLogin: "login",
-      HostSignup: "registrieren",
       ReservationDetail: "reservierungen/:id",
       TaskDetail: "aufgaben/:id",
       PropertyDetail: "objekte/:id",
@@ -137,7 +135,6 @@ function Root() {
             {/* Nur ohne Session: Login/Registrierung. Nach dem Login flippt
                 status → Navigator tauscht die Gruppen automatisch. */}
             <Stack.Screen name="HostLogin" component={HostLogin} />
-            <Stack.Screen name="HostSignup" component={HostSignup} />
           </>
         )}
       </Stack.Navigator>

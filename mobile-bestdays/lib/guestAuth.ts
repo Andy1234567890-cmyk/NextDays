@@ -223,3 +223,39 @@ export async function updateGuestProfile(input: {
     return { ok: false, error: fehlertext(exc, "Speichern fehlgeschlagen.") };
   }
 }
+
+// --- Konto löschen (Apple 5.1.1(v), Google Play) -----------------------------
+// Apple verlangt den Löschweg IN der App, sobald man dort ein Konto anlegen kann;
+// Google verlangt zusätzlich einen Web-Weg für Leute, die die App schon
+// deinstalliert haben.
+
+export type GuestLoeschErgebnis = {
+  geloescht: boolean;
+  detail: string;
+  /**
+   * Was NICHT verschwindet: bereits getätigte Buchungen bleiben beim Gastgeber.
+   * Das muss vor bzw. mit der Bestätigung dastehen — sonst glaubt der Gast, mit
+   * dem Konto sei auch die Reise weg, und steht vor verschlossener Tür.
+   */
+  hinweis: string;
+};
+
+/**
+ * Eigenes Gast-Konto löschen. Das Passwort ist Pflicht: ein gekapertes Token
+ * allein darf kein Konto vernichten (Wurzel 7).
+ */
+export async function deleteGuestAccount(
+  password: string,
+): Promise<Result<GuestLoeschErgebnis>> {
+  try {
+    return {
+      ok: true,
+      data: await guestApi<GuestLoeschErgebnis>("/guest-auth/me", {
+        method: "DELETE",
+        body: { password },
+      }),
+    };
+  } catch (exc) {
+    return { ok: false, error: fehlertext(exc, "Löschen fehlgeschlagen.") };
+  }
+}

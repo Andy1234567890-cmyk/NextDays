@@ -2,21 +2,18 @@
 // — DIESELBE Auth wie das Web-Dashboard, KEINE eigene App-Registrierung. Bei
 // Erfolg wird das Token im Schlüsselbund gespeichert und in die Gastgeber-Tabs
 // navigiert. Kein Fallback: Fehler werden klar angezeigt.
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState } from "react";
-import { Image, Pressable, TextInput, View } from "react-native";
+import { Alert, Image, Linking, Pressable, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { Icon } from "@/components/ui/Icon";
 import { Btn, Col, Row, Txt } from "@/components/ui/kit";
 import { useAuth } from "@/contexts/AuthContext";
-import type { RootStackParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
 
 export default function HostLogin() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -111,20 +108,52 @@ export default function HostLogin() {
           {busy ? "Anmeldung läuft …" : "Weiter"}
         </Btn>
 
-        <Row style={{ justifyContent: "center", gap: 6, marginTop: 4 }}>
+        {/* Die Firmenanmeldung findet im WEB statt, nicht hier.
+            Ein Betrieb anzulegen heißt: Stammdaten, Steuer- und Zahlungsangaben,
+            Vertragsabschluss. Das gehört an den Schreibtisch — und eine zweite,
+            schwächere Anmeldestrecke in der App wäre ein zweiter Pfad in
+            dieselbe Tabelle, der stiller veraltet als der gepflegte.
+            Deshalb öffnet der Link den Browser statt eines App-Screens; der
+            Text sagt das vorher, damit der Sprung nicht überrascht. */}
+        <Col gap={4} style={{ marginTop: 4, alignItems: "center" }}>
           <Txt v="sm" soft>
             Noch kein Konto?
           </Txt>
           <Pressable
-            accessibilityRole="button"
-            onPress={busy ? undefined : () => navigation.navigate("HostSignup")}
+            accessibilityRole="link"
+            accessibilityLabel="Unternehmen im Web anlegen"
+            onPress={
+              busy
+                ? undefined
+                : () => {
+                    const ziel = `${t.marke.webUrl}/signup`;
+                    Linking.openURL(ziel).catch(() =>
+                      // Kein stiller Fehlschlag: ohne Browser bleibt die
+                      // Adresse lesbar, damit sie am Rechner eingegeben werden
+                      // kann.
+                      Alert.alert(
+                        "Anmeldung im Web",
+                        `Ein Betrieb wird am Rechner angelegt:\n\n${ziel}`,
+                      ),
+                    );
+                  }
+            }
             style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
           >
-            <Txt v="sm" style={{ fontFamily: t.fonts.semibold, textDecorationLine: "underline" }}>
-              Unternehmen anlegen
-            </Txt>
+            <Row gap={6} style={{ alignItems: "center" }}>
+              <Txt
+                v="sm"
+                style={{
+                  fontFamily: t.fonts.semibold,
+                  textDecorationLine: "underline",
+                }}
+              >
+                Unternehmen im Web anlegen
+              </Txt>
+              <Icon n="fwd" s={13} sw={2.2} c={t.palette.ink} />
+            </Row>
           </Pressable>
-        </Row>
+        </Col>
       </Col>
     </View>
   );

@@ -17,8 +17,6 @@ import {
   getToken,
   login as apiLogin,
   logout as apiLogout,
-  register as apiRegister,
-  type RegisterInput,
 } from "@/lib/auth";
 
 export type Role = "admin" | "co_admin" | "owner" | "staff" | "cleaner";
@@ -64,9 +62,6 @@ type AuthState = {
   login: (
     email: string,
     password: string,
-  ) => Promise<{ ok: true } | { ok: false; error: string }>;
-  register: (
-    input: RegisterInput,
   ) => Promise<{ ok: true } | { ok: false; error: string }>;
   logout: () => Promise<void>;
   reload: () => Promise<void>;
@@ -138,22 +133,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [fetchMe],
   );
 
-  const register = useCallback(
-    async (input: RegisterInput) => {
-      const res = await apiRegister(input);
-      if (!res.ok) return { ok: false as const, error: res.error };
-      const ok = await fetchMe();
-      if (!ok) {
-        await apiLogout();
-        setStatus("signedOut");
-        return { ok: false as const, error: "Konto konnte nicht geladen werden." };
-      }
-      setStatus("signedIn");
-      return { ok: true as const };
-    },
-    [fetchMe],
-  );
-
   const logout = useCallback(async () => {
     await apiLogout();
     setMe(null);
@@ -165,8 +144,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchMe]);
 
   const value = useMemo(
-    () => ({ status, me, login, register, logout, reload }),
-    [status, me, login, register, logout, reload],
+    () => ({ status, me, login, logout, reload }),
+    [status, me, login, logout, reload],
   );
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;

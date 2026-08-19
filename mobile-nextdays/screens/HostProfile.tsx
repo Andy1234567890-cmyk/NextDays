@@ -29,6 +29,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DemoBand } from "@/components/DemoBand";
 import { Icon } from "@/components/ui/Icon";
+import { KontoLoeschenBlock } from "@/components/KontoLoeschenBlock";
+import { RechtlichesBlock } from "@/components/RechtlichesBlock";
 import { Avatar, Btn, Chip, Col, Divider, Row, Spinner, Txt } from "@/components/ui/kit";
 import { Sheet } from "@/components/ui/patterns";
 import { useAuth } from "@/contexts/AuthContext";
@@ -423,6 +425,15 @@ export default function HostProfile() {
         <Btn variant="ghost" block onPress={logout}>
           Abmelden
         </Btn>
+
+
+        {/* Rechtliches und Konto-Löschung — beides Voraussetzung für die
+            Veröffentlichung im App Store und bei Google Play (Datenschutz-Link
+            in der App, Löschweg in der App). Sie stehen NACH dem Abmelden, weil
+            sie selten gebraucht werden, aber sie stehen sichtbar da und nicht
+            hinter einem weiteren Menü. */}
+        <RechtlichesBlock />
+        <KontoLoeschenBlock onGeloescht={logout} />
       </ScrollView>
 
       {/* --- Dialoge ------------------------------------------------------ */}

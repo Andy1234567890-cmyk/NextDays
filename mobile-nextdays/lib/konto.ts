@@ -150,3 +150,54 @@ export async function andereGeraeteAbmelden(): Promise<
 export async function geraetEntfernen(id: string): Promise<Result<void>> {
   return call(`/login-devices/${id}`, { method: "DELETE" });
 }
+
+// --- Konto löschen (Apple 5.1.1(v), Google Play) -----------------------------
+// Apple verlangt diesen Weg IN der App, sobald man dort ein Konto anlegen kann;
+// Google verlangt zusätzlich einen Web-Weg für Leute, die die App schon
+// deinstalliert haben. Beide führen im Backend auf dasselbe Löschbuch.
+
+export type LoeschStatus = {
+  antrag_offen: boolean;
+  /** Wann der Antrag gestellt wurde (ISO). null = keiner offen. */
+  beantragt_am: string | null;
+  /** Was trotz Löschung aufbewahrt wird. null, solange kein Antrag läuft. */
+  hinweis: string | null;
+};
+
+export type LoeschErgebnis = {
+  /**
+   * true = der Zugang ist weg (Mitarbeiter, Eigentümer, Co-Admin).
+   * false = es liegt ein ANTRAG vor, weil am Konto der ganze Betrieb hängt.
+   * Beides gleich zu behandeln wäre eine Falschaussage — im zweiten Fall ist
+   * nichts gelöscht, und der Nutzer bleibt angemeldet.
+   */
+  geloescht: boolean;
+  antrag_offen: boolean;
+  beantragt_am: string | null;
+  detail: string;
+  hinweis: string | null;
+};
+
+/** Liegt für dieses Konto schon ein Löschantrag vor? */
+export async function loeschStatus(): Promise<Result<LoeschStatus>> {
+  return call("/auth/account/deletion");
+}
+
+/**
+ * Eigenes Konto löschen. Das aktuelle Passwort ist Pflicht — ein gekapertes
+ * Token allein darf kein Konto vernichten (Wurzel 7).
+ */
+export async function kontoLoeschen(
+  currentPassword: string,
+  grund?: string,
+): Promise<Result<LoeschErgebnis>> {
+  return call("/auth/account/deletion", {
+    method: "POST",
+    body: { current_password: currentPassword, grund: grund ?? null },
+  });
+}
+
+/** Einen gestellten Löschantrag zurückziehen (Gegenzustand, Wurzel 1). */
+export async function loeschantragZurueckziehen(): Promise<Result<LoeschStatus>> {
+  return call("/auth/account/deletion", { method: "DELETE" });
+}

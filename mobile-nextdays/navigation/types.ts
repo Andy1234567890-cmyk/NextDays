@@ -38,7 +38,6 @@ export type OwnerTabParamList = {
 
 export type RootStackParamList = {
   HostLogin: undefined;
-  HostSignup: undefined;
   HostTabs: NavigatorScreenParams<HostTabParamList>;
   OwnerTabs: NavigatorScreenParams<OwnerTabParamList>;
   ReservationDetail: { id: string };

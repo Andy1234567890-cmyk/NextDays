@@ -25,6 +25,21 @@ export type Marke = {
   akzent: string;
   logo: ImageSourcePropType;
   logoHell: ImageSourcePropType;
+  /**
+   * Die eigene Web-Seite dieser Marke — myNextDays das Betriebs-Dashboard,
+   * myBestDays der Marktplatz.
+   *
+   * WOFÜR: Wege, die eine App bewusst NICHT führt. Ein Betrieb wird nicht in der
+   * App angelegt — die Firmenanmeldung verlangt Stammdaten, Steuer- und
+   * Zahlungsangaben und einen Vertragsabschluss; das gehört an den Schreibtisch.
+   * Eine zweite, schwächere Anmeldestrecke in der App wäre ein zweiter Pfad in
+   * dieselbe Tabelle, der stiller veraltet als der gepflegte.
+   *
+   * Hier und nicht in `lib/config.ts`: jene Datei hält CI byte-identisch
+   * (gleiches Backend für beide Apps), dieser Wert ist aber je Marke ein
+   * anderer. Markenwerte gehören nach `theme/marke.ts`.
+   */
+  webUrl: string;
   andereApp: AndereApp;
 };
 

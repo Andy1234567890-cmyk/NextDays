@@ -41,6 +41,15 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- Export-Compliance. Ohne diesen Schlüssel fragt App Store Connect bei
+	     JEDEM Upload nach der Verschlüsselung. Diese App verwendet
+	     Verschlüsselung ausschließlich über HTTPS/TLS des Systems und die
+	     System-Keychain — also nur, was Apple selbst mitbringt. `false` steht
+	     hier für „keine NICHT-ausgenommene Verschlüsselung"; ändert sich das
+	     (eigene Krypto-Bibliothek, eigene Verschlüsselung von Nutzerdaten),
+	     muss der Wert neu bewertet werden. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
