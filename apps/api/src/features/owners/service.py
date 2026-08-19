@@ -6,6 +6,12 @@ properties.service). Objekt-Zuordnung mit Anteil + Provisions-Override. Optional
 Verknüpfung zu einem Owner-Login-User spiegelt sich ins Portal-Scoping
 (owner_property_assignments via auth.OwnerAssignmentService).
 """
+# pylint: disable=too-many-lines
+# 1575 Zeilen (Limit 1500). Bewusst als EIN Modul: der Eigentuemer-Slice haelt
+# Zuordnung, Aufenthalte, Abrechnung und Reporting zusammen, und diese Teile
+# lesen sich gegenseitig. Ein Aufteilen entlang der Zeilenzahl statt entlang der
+# Fachlichkeit erzeugt zwei Module mit zirkulaerem Import — dieselbe Begruendung
+# wie in payments/service.py und calendar/service.py.
 from __future__ import annotations
 
 from postgrest.exceptions import APIError

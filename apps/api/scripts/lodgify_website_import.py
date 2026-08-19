@@ -48,6 +48,7 @@ from src.features.guests.identity import (  # noqa: E402
     GuestContact,
     resolve_or_create_guest,
 )
+from supabase import Client  # noqa: E402
 
 # Herkunft: so kennzeichnet Lodgify eine Buchung über die eigene Website.
 # `source_text` trägt die Domain der Buchungsstrecke bzw. „Homepage" bei einer
@@ -68,7 +69,7 @@ def naechte(anreise: str, abreise: str) -> list[str]:
     return [(a + timedelta(days=i)).isoformat() for i in range((b - a).days)]
 
 
-def objekte_je_lodgify_id(db, tenant_id: str, zuordnung: dict[str, str]) -> dict[str, dict]:
+def objekte_je_lodgify_id(db: Client, tenant_id: str, zuordnung: dict[str, str]) -> dict[str, dict]:
     """lodgify_property_id → unsere properties-Zeile, über den Titel.
 
     Die Zuordnung kommt aus einer geprüften Datei (Titel-Paare), nicht aus einer
@@ -89,7 +90,7 @@ def objekte_je_lodgify_id(db, tenant_id: str, zuordnung: dict[str, str]) -> dict
     return treffer
 
 
-def belegte_naechte(db, property_id: str, tage: list[str]) -> list[str]:
+def belegte_naechte(db: Client, property_id: str, tage: list[str]) -> list[str]:
     """Welche der Nächte sind schon belegt? (Kollisionsschutz vor dem Insert.)"""
     if not tage:
         return []
@@ -103,7 +104,7 @@ def belegte_naechte(db, property_id: str, tage: list[str]) -> list[str]:
     return sorted({z["date"] for z in zeilen if z.get("status") == "booked"})
 
 
-def vorhanden(db, tenant_id: str, lodgify_id: str) -> dict | None:
+def vorhanden(db: Client, tenant_id: str, lodgify_id: str) -> dict | None:
     zeilen = (
         db.table("reservations")
         .select("id")
@@ -115,7 +116,7 @@ def vorhanden(db, tenant_id: str, lodgify_id: str) -> dict | None:
     return zeilen[0] if zeilen else None
 
 
-def datumsgleich(db, tenant_id: str, property_id: str, von: str, bis: str) -> dict | None:
+def datumsgleich(db: Client, tenant_id: str, property_id: str, von: str, bis: str) -> dict | None:
     """Dieselbe Buchung, aber ohne Lodgify-ID — z. B. über Channex gekommen."""
     zeilen = (
         db.table("reservations")

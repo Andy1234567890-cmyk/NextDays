@@ -32,6 +32,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.core.supabase import get_service_client  # noqa: E402
 from src.features.inbox.felder import html_zu_text  # noqa: E402
+from supabase import Client  # noqa: E402
 
 # Lodgify kennzeichnet die Richtung am Nachrichtentyp.
 _RICHTUNG = {"Renter": "gast", "Owner": "gastgeber"}
@@ -39,7 +40,7 @@ HERKUNFT = "lodgify"
 KANAL = "website"
 
 
-def buchungen_je_lodgify_id(db, tenant_id: str) -> dict[str, str]:
+def buchungen_je_lodgify_id(db: Client, tenant_id: str) -> dict[str, str]:
     """lodgify_booking_id → unsere reservation_id (nur übernommene Buchungen)."""
     zeilen = (
         db.table("reservations")
@@ -51,7 +52,7 @@ def buchungen_je_lodgify_id(db, tenant_id: str) -> dict[str, str]:
     return {str(z["lodgify_booking_id"]): str(z["id"]) for z in zeilen}
 
 
-def bekannte_quelle_ids(db, tenant_id: str) -> set[str]:
+def bekannte_quelle_ids(db: Client, tenant_id: str) -> set[str]:
     """Was schon importiert ist — die Anwendungsseite der Idempotenz."""
     zeilen = (
         db.table("reservation_nachricht_uebernahme")

@@ -126,7 +126,9 @@ class AirbnbVerfuegbarkeitPushMixin:
         18 Listings an einem Kanal), erst das Mapping macht daraus DIESES Objekt
         — ohne den Abgleich schriebe man in ein fremdes Listing (Wurzel 3).
         """
-        channel_id = self._airbnb_kanal_des_betriebs(db, tenant_id, property_id)  # type: ignore[attr-defined]
+        channel_id = self._airbnb_kanal_des_betriebs(  # type: ignore[attr-defined]
+            db, tenant_id, property_id
+        )
         if not channel_id:
             return None
         mapping_id = self._airbnb_mapping_id(  # type: ignore[attr-defined]

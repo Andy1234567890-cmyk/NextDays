@@ -318,8 +318,13 @@ class AirbnbUebernahmeMixin:
 
     # -- c) Listings holen und Objekte daraus machen --------------------------
     def listings_uebernehmen(
-        self, ctx: AuthContext, *, portal_code: str = "AirBNB",
-        account_id: str | None = None,
+        # `portal_code` gab es hier als Parameter, wurde aber nie gelesen und von
+        # keinem Aufrufer gesetzt: die Methode arbeitet ausschliesslich mit
+        # Airbnb (`channels/mapping_details` eines Airbnb-Zugangs). Ein Argument,
+        # das aussieht als waehle es das Portal, aber nichts tut, ist
+        # schlimmer als keines — wer "Booking" uebergibt, bekaeme trotzdem
+        # Airbnb.
+        self, ctx: AuthContext, *, account_id: str | None = None,
     ) -> dict[str, Any]:
         """Airbnb-Listings eines verbundenen Kontos als Objekte übernehmen.
 

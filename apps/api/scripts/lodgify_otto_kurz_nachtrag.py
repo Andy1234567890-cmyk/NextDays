@@ -55,6 +55,7 @@ from src.features.guests.identity import (  # noqa: E402
     GuestContact,
     resolve_or_create_guest,
 )
+from supabase import Client  # noqa: E402
 
 TENANT = "a25577cf-c941-45c4-8d23-008887e631aa"
 
@@ -85,7 +86,7 @@ def naechte(anreise: str, abreise: str) -> list[str]:
     return out
 
 
-def objekt_laden(db, titel: str) -> dict:
+def objekt_laden(db: Client, titel: str) -> dict:
     rows = (
         db.table("properties")
         .select("id, title, currency")
@@ -99,7 +100,7 @@ def objekt_laden(db, titel: str) -> dict:
     return rows[0]
 
 
-def sperre_pruefen(db, property_id: str, tage: list[str]) -> tuple[list[dict], list[dict]]:
+def sperre_pruefen(db: Client, property_id: str, tage: list[str]) -> tuple[list[dict], list[dict]]:
     """Was auf diesen Nächten liegt — getrennt nach lösbar und fremd.
 
     Fremd ist alles, was NICHT die anonyme Handsperre ist: eine Buchung, eine

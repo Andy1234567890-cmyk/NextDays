@@ -88,8 +88,17 @@ android {
         // Der Wert kommt vom Workflow (-PversionCode=<run_number>) statt aus
         // einer hier gepflegten Zahl: die vergisst man, und zwei Builds mit
         // gleicher Nummer sind nicht unterscheidbar.
-        versionCode (project.findProperty("versionCode") ?: "1").toString().toInteger()
-        versionName (project.findProperty("versionName") ?: "1.0").toString()
+        // Klammer DIREKT am Methodennamen und Auswertung in eine eigene
+        // Variable: `versionCode (ausdruck)` mit Leerzeichen liest Groovy als
+        // `versionCode(ausdruck)` — also den Getter der Property, dem der
+        // Ausdruck als Argument uebergeben wird. Beim Auswerten von `:app` bricht
+        // das mit „Value is null" ab, und zwar UNABHAENGIG davon, ob
+        // -PversionCode uebergeben wird. Deshalb war dieser Build nie lauffaehig
+        // (der Verteil-Workflow wurde nie erfolgreich ausgefuehrt).
+        def ndVersionCode = (project.findProperty("versionCode") ?: "1") as String
+        def ndVersionName = (project.findProperty("versionName") ?: "1.0") as String
+        versionCode ndVersionCode.toInteger()
+        versionName ndVersionName
     }
     signingConfigs {
         debug {

@@ -4,6 +4,11 @@ Mixin des ChannelManagerService (verbatim aus service.py extrahiert;
 siehe service.py-Fassade). State (_db/_channex) und Basis-Helper kommen
 von der Fassade; Patch-Ziel für Modul-Helfer ist channel_manager.common.
 """
+# pylint: disable=too-many-lines
+# 1713 Zeilen (Limit 1500). Der OAuth-Weg jedes Portals ist eine eigene
+# Sonderlocke (Airbnb-Zugaenge, Booking, Expedia), und die Faelle teilen den
+# Token-/Refresh-/Mapping-Pfad. Getrennt nach Portal waere derselbe Pfad
+# dreimal kopiert — die teuerste Fehlerklasse laut ADR-0016.
 from __future__ import annotations
 
 from typing import Any, TypeVar
