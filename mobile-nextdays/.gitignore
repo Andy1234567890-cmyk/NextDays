@@ -73,3 +73,12 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Firebase — Konfiguration enthaelt einen echten API-Schluessel und gehoert
+# nicht ins Repo (CLAUDE.md: keine echten Credentials in Repo-Dateien). Die
+# Datei wird pro Arbeitsplatz geholt, in der CI aus einem Secret geschrieben:
+#   firebase apps:sdkconfig ANDROID <app-id> --out android/app/google-services.json
+google-services.json
+GoogleService-Info.plist
+.firebase/
+firebase-debug.log

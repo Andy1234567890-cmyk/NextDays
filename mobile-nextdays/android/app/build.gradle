@@ -82,8 +82,14 @@ android {
         applicationId "com.mynextdays.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // Version aus dem CI-Lauf, sonst der lokale Stand. Ein Release-Build
+        // MUSS einen hoeheren versionCode tragen als der vorige, sonst lehnt
+        // Play den Upload ab und App Distribution zeigt Testern kein Update.
+        // Der Wert kommt vom Workflow (-PversionCode=<run_number>) statt aus
+        // einer hier gepflegten Zahl: die vergisst man, und zwei Builds mit
+        // gleicher Nummer sind nicht unterscheidbar.
+        versionCode (project.findProperty("versionCode") ?: "1").toString().toInteger()
+        versionName (project.findProperty("versionName") ?: "1.0").toString()
     }
     signingConfigs {
         debug {
