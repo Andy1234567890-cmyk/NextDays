@@ -2,6 +2,8 @@
 // der Marktplatz lebt seit ADR-0019 in einer eigenen App (myBestDays).
 import type { NavigatorScreenParams } from "@react-navigation/native";
 
+import type { MappenFeld } from "@/lib/gaestemappe";
+
 export type HostTabParamList = {
   Dashboard: undefined;
   Calendar: undefined;
@@ -48,4 +50,8 @@ export type RootStackParamList = {
   PropertyDescription: { id: string };
   // Betriebs-eigene Zusatzfelder eines Objekts (Migration 0242).
   PropertyCustomFields: { id: string };
+  // Gästemappe: Liste der acht Blöcke und der einzelne Text je Sprache.
+  // Dieselben Daten wie im Web (`type_attributes.messaging`).
+  PropertyGuestGuide: { id: string };
+  PropertyGuestGuideText: { id: string; feld: MappenFeld };
 };

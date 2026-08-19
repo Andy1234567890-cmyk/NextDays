@@ -10,7 +10,7 @@
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { RefreshControl, ScrollView, View } from "react-native";
+import { RefreshControl, ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ListingCard } from "@/components/ListingCard";
@@ -40,13 +40,24 @@ import { useTheme } from "@/theme/ThemeProvider";
 
 type Nav = NativeStackNavigationProp<RootStackParamList & GuestTabParamList>;
 
-// Kachelbreite im Karussell: die Folgekachel bleibt angeschnitten sichtbar.
-const KACHEL_BREITE = 220;
+// Kachelbreite im Karussell als ANTEIL der Bildschirmbreite — dieselbe
+// Staffelung wie im mobilen Web (`plattform/components/listing-reihe.tsx`):
+// 43 % ergeben ZWEI vollständige Karten plus den Anschnitt der dritten, und der
+// Anschnitt sagt dem Gast, dass es seitlich weitergeht.
+//
+// Vorher stand hier eine feste Breite von 220 pt. Auf einem 393-pt-Telefon sind
+// das 56 % der Zeile: eine Karte füllte sie fast allein, pro Wisch sah man ein
+// Objekt, und auf kleinen Geräten (SE, 320 pt) ragte sie über den Rand hinaus.
+const KACHEL_ANTEIL = 0.43;
 
 export default function GuestHome() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
+  // useWindowDimensions statt Dimensions.get: die Breite ändert sich beim
+  // Drehen und auf dem iPad im Splitview.
+  const { width: schirmBreite } = useWindowDimensions();
+  const kachelBreite = Math.round(schirmBreite * KACHEL_ANTEIL);
 
   const [alle, setAlle] = useState<Listing[] | null>(null);
   const [fehler, setFehler] = useState<string | null>(null);
@@ -182,7 +193,7 @@ export default function GuestHome() {
               {reihe.listings.map((l) => (
                 <ListingCard
                   key={`${reihe.titel}-${l.id}`}
-                  width={KACHEL_BREITE}
+                  width={kachelBreite}
                   photo={l.photos[0]}
                   title={l.title}
                   place={listingOrt(l) || null}

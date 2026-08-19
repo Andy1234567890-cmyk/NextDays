@@ -9,9 +9,11 @@
 //   angezeigt — kein 0-Wert, keine erfundene Gebühr (Wurzel 4).
 // - Absenden ist gegen Doppeltipp/Retry gesperrt (Wurzel 2): ein laufender oder
 //   bereits erfolgreicher Versuch löst keinen zweiten POST aus.
-// - Eine echte Zahlungsabwicklung ist an dieser Stelle NICHT angebunden (der
-//   öffentliche Endpunkt legt die Reservierung an); es wird deshalb auch keine
-//   Zahlungsmethode vorgetäuscht.
+// - Eine echte Zahlungsabwicklung ist hier NOCH NICHT angebunden. Seit
+//   Migration 0409 antwortet der Server bei Sofortbuchung mit
+//   `status="zahlung_offen"` + `zahlung_erforderlich=true` und legt KEINE
+//   Buchung an. Die App zeigt diesen Zustand als „Noch nicht gebucht" —
+//   vorher stand hier „Buchung bestätigt", obwohl nichts gebucht war.
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCallback, useEffect, useState } from "react";
@@ -70,7 +72,12 @@ export default function Checkout() {
 
   const [sendet, setSendet] = useState(false);
   const [fehler, setFehler] = useState<string | null>(null);
-  const [erfolg, setErfolg] = useState<{ id: string; anfrage: boolean } | null>(null);
+  // `zahlungOffen` = der Server hat eine Buchungsabsicht angelegt, aber KEINE
+  // Buchung (0409). Der Zustand ist getrennt von `anfrage`: eine Anfrage ist
+  // beim Gastgeber, eine offene Zahlung liegt beim Gast.
+  const [erfolg, setErfolg] = useState<
+    { id: string; anfrage: boolean; zahlungOffen: boolean } | null
+  >(null);
 
   useEffect(() => {
     if (!guest) return;
@@ -143,7 +150,14 @@ export default function Checkout() {
       ...(gesamt != null ? { total_amount: gesamt } : {}),
     });
     if (res.ok) {
-      setErfolg({ id: res.data.id, anfrage: res.data.is_request });
+      setErfolg({
+        id: res.data.id,
+        anfrage: res.data.is_request,
+        // Nicht am Vorhandensein des client_secret ablesen: der Server sagt es
+        // ausdrücklich. Fehlt das Feld (alte API), gilt „nicht offen" — dann
+        // hat der alte Weg wirklich gebucht.
+        zahlungOffen: res.data.zahlung_erforderlich === true,
+      });
     } else {
       setFehler(res.error);
     }
@@ -179,21 +193,49 @@ export default function Checkout() {
         }}
       >
         <Col gap={14} style={{ alignItems: "flex-start" }}>
-          <Icon n="check" s={40} sw={2.2} c={t.palette.ink} />
-          <Txt v="display">{erfolg.anfrage ? "Anfrage gesendet" : "Buchung bestätigt"}</Txt>
-          <Txt v="body" soft>
-            {erfolg.anfrage
-              ? "Der Gastgeber bestätigt deine Anfrage. Du siehst den Status unter „Reisen“."
-              : "Deine Buchung steht unter „Reisen“ bereit."}
+          <Icon
+            n={erfolg.zahlungOffen ? "info" : "check"}
+            s={40}
+            sw={2.2}
+            c={t.palette.ink}
+          />
+          <Txt v="display">
+            {erfolg.zahlungOffen
+              ? "Noch nicht gebucht"
+              : erfolg.anfrage
+                ? "Anfrage gesendet"
+                : "Buchung bestätigt"}
           </Txt>
-          <Btn
-            variant="dark"
-            block
-            style={{ marginTop: 10 }}
-            onPress={() => navigation.navigate("GuestTabs", { screen: "Trips" })}
-          >
-            Zu meinen Reisen
-          </Btn>
+          {/* Bei offener Zahlung wird NICHTS bestätigt und nichts zu „Reisen“
+              geschickt: dort steht keine Buchung, weil keine entstanden ist.
+              Lieber die unbequeme Wahrheit als ein Häkchen, auf das sich
+              jemand verlässt (Wurzel 4). */}
+          <Txt v="body" soft>
+            {erfolg.zahlungOffen
+              ? "Diese Unterkunft wird sofort bestätigt — dafür muss zuerst bezahlt werden. Das Bezahlen ist in der App noch nicht angebunden. Deine Nächte sind NICHT reserviert; buche die Unterkunft bitte im Browser auf myBestDays."
+              : erfolg.anfrage
+                ? "Der Gastgeber bestätigt deine Anfrage. Du siehst den Status unter „Reisen“."
+                : "Deine Buchung steht unter „Reisen“ bereit."}
+          </Txt>
+          {erfolg.zahlungOffen ? (
+            <Btn
+              variant="dark"
+              block
+              style={{ marginTop: 10 }}
+              onPress={() => navigation.goBack()}
+            >
+              Zurück zur Unterkunft
+            </Btn>
+          ) : (
+            <Btn
+              variant="dark"
+              block
+              style={{ marginTop: 10 }}
+              onPress={() => navigation.navigate("GuestTabs", { screen: "Trips" })}
+            >
+              Zu meinen Reisen
+            </Btn>
+          )}
         </Col>
       </View>
     );

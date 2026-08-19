@@ -53,9 +53,26 @@ export type BookingCreated = {
   property_id: string;
   check_in: string;
   check_out: string;
+  /** `"zahlung_offen"` = noch KEINE Buchung, nur eine Absicht (0409). */
   status: string;
   is_request: boolean;
   request_expires_at: string | null;
+  /**
+   * Seit Migration 0409 („keine Buchung ohne bezahlte Zahlung"): Bei einem
+   * Sofortbuchungs-Objekt legt der Server NICHTS an, sondern eine
+   * Buchungsabsicht plus Stripe-Zahlung. Erst der bestätigte Zahlungseingang
+   * macht daraus eine Reservierung.
+   *
+   * Die App hat diese Felder bis 19.08.2026 nicht gelesen und deshalb
+   * „Buchung bestätigt" angezeigt, obwohl der Server `zahlung_offen`
+   * geantwortet hat — eine Bestätigung, die niemand gegeben hat.
+   */
+  zahlung_erforderlich?: boolean;
+  client_secret?: string | null;
+  publishable_key?: string | null;
+  stripe_account?: string | null;
+  total_amount?: number | null;
+  currency?: string | null;
 };
 
 export type SearchParams = {

@@ -28,6 +28,7 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { Btn, Col, Photo, Row, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState, Sheet } from "@/components/ui/patterns";
 import { useGuestAuth } from "@/contexts/GuestAuthContext";
+import { ausstattungLabel } from "@/lib/ausstattung";
 import { formatCurrency } from "@/lib/currency";
 import { formatZeitraum } from "@/lib/datum";
 import { addWishlistItem, createWishlist, listWishlists } from "@/lib/guestWishlist";
@@ -186,6 +187,10 @@ export default function ListingDetail() {
   const zeitraumText = von && bis ? formatZeitraum(von, bis) : null;
 
   const galerie = listing.photos.length > 0 ? listing.photos : [undefined];
+  // Nur Merkmale MIT Label — die Reihenfolge des Backends bleibt erhalten.
+  const ausstattungZeilen = listing.amenities
+    .map((slug) => ({ slug, label: ausstattungLabel(slug) }))
+    .filter((a): a is { slug: string; label: string } => a.label !== null);
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg }}>
@@ -364,15 +369,22 @@ export default function ListingDetail() {
             </>
           ) : null}
 
-          {listing.amenities.length > 0 && (
+          {/* Ausstattung: das Backend liefert SLUGS (`air_conditioning`,
+              `nd_single_level`) — sie sind der Schlüssel des Merkmals, kein
+              Text. Bis 19.08.2026 standen sie hier roh in der Liste. Merkmale
+              ohne Katalogeintrag werden WEGGELASSEN: ein Slug ist für den Gast
+              keine Information, und ein erfundener Text wäre eine Behauptung
+              über die Unterkunft (Wurzel 4). Das fehlende Label ist ein
+              Datenfehler — er gehört in den Katalog, nicht auf den Schirm. */}
+          {ausstattungZeilen.length > 0 && (
             <>
               <Trennlinie />
               <Col gap={12}>
                 <Txt v="h2">Das bietet dir diese Unterkunft</Txt>
                 <Col gap={0}>
-                  {listing.amenities.map((a, i) => (
+                  {ausstattungZeilen.map((a, i) => (
                     <Row
-                      key={a}
+                      key={a.slug}
                       gap={14}
                       style={{
                         paddingVertical: 13,
@@ -382,7 +394,7 @@ export default function ListingDetail() {
                     >
                       <Icon n="check" s={19} sw={1.8} c={t.palette.ink} />
                       <Txt v="body" style={{ flex: 1 }}>
-                        {a}
+                        {a.label}
                       </Txt>
                     </Row>
                   ))}

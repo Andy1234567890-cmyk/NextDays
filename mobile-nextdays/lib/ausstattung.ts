@@ -1,11 +1,19 @@
-// Deutsche Bezeichnungen der Ausstattungsmerkmale (Channex-Katalog).
-// ERZEUGT aus web/messages/de.json → Namespace "amenities" — dieselbe Quelle,
-// die das Web-Dashboard nutzt. Nicht von Hand pflegen: bei neuen Merkmalen die
-// Web-Übersetzung ergänzen und diese Datei daraus neu erzeugen.
+// Deutsche Bezeichnungen der Ausstattungsmerkmale.
 //
-// Die App hat (noch) kein i18n; bis dahin steht hier nur Deutsch. Unbekannte
-// Slugs werden NICHT geraten — sie bleiben als Slug stehen, damit man den
-// fehlenden Katalogeintrag sieht statt einer erfundenen Bezeichnung.
+// ERZEUGT — nicht von Hand pflegen:
+//   node scripts/mobile/ausstattung-labels-sync.mjs
+//
+// Quelle ist `web/messages/de.json` mit BEIDEN Katalogen:
+//   `amenities`         — Portal-Katalog (Airbnb ∪ Booking)
+//   `eigeneAusstattung` — unsere eigenen `nd_`-Merkmale
+// Dieselben Kataloge nutzen das PMS-Dashboard und der Web-Marktplatz
+// (`plattform/lib/ausstattung.ts`). Ein neues Merkmal wird in web/messages
+// ergänzt und diese Datei neu erzeugt — nie hier eingetippt.
+//
+// `null` heißt „kein Katalogeintrag". Was daraus wird, entscheidet die
+// Oberfläche: der Betrieb sieht den Slug (sichtbarer Datenfehler), der GAST
+// sieht die Zeile gar nicht — ein roher Slug ist für ihn keine Information
+// (Wurzel 4: kein erfundener Ersatztext, aber auch keine leere Zusage).
 const LABELS: Record<string, string> = {
   "24_hour_front_desk": "24-Stunden-Rezeption",
   "24_hour_security": "24-Stunden-Sicherheitsdienst",
@@ -175,6 +183,105 @@ const LABELS: Record<string, string> = {
   "minimarket_on_site": "Minimarkt vor Ort",
   "mobile_app_for_room_service": "Mobile App für den Zimmerservice",
   "movie_nights": "Filmabende",
+  "nd_all_inclusive": "Alles inklusive",
+  "nd_baking_sheet": "Backblech",
+  "nd_blender": "Mixer",
+  "nd_boat": "Boot",
+  "nd_books": "Bücher",
+  "nd_canoe_kayak": "Kanu/Kajak",
+  "nd_carport": "Parkplatz überdachter Carport",
+  "nd_central_heating": "Zentralheizung",
+  "nd_charcoal_grill": "Holzkohlegrill",
+  "nd_childrens_books_toys": "Kinderbücher und Spielzeug",
+  "nd_childrens_dinnerware": "Kindergeschirr",
+  "nd_city_centre": "Stadtzentrum",
+  "nd_concierge": "Portier",
+  "nd_credit_card_accepted": "Kreditkarte akzeptieren",
+  "nd_dishes_silverware": "Geschirr und Besteck",
+  "nd_door_buzzer": "Summer",
+  "nd_electric_grill": "Elektrogrill",
+  "nd_electric_heating": "Elektrische Heizung",
+  "nd_essentials": "Grundausstattung",
+  "nd_events_allowed": "Geeignet für Veranstaltungen",
+  "nd_freezer": "Gefrierschrank",
+  "nd_full_board": "Vollpension",
+  "nd_garage": "Garage",
+  "nd_gas_grill": "Gasgrill",
+  "nd_gated_community": "Abgeschlossene Wohnanlage",
+  "nd_golf_cart": "Golfwagen",
+  "nd_golf_clubs": "Golfschläger",
+  "nd_golf_view": "Blick auf den Golfkurs",
+  "nd_half_board": "Halbpension",
+  "nd_hammock": "Hängematte",
+  "nd_hangers": "Kleiderbügel",
+  "nd_harbour_district": "Hafenviertel",
+  "nd_hot_water": "Warmwasser",
+  "nd_housekeeper_included": "Haushälter(in) inklusive",
+  "nd_housekeeper_optional": "Haushälter(in) optional",
+  "nd_indoor_hot_tub": "Indoor-Whirlpool",
+  "nd_internet_broadband": "Internet-Breitband",
+  "nd_internet_dialup": "Internet-Einwahl",
+  "nd_internet_wireless": "Internet-drahtlos",
+  "nd_key_card": "Sicherheitskarte",
+  "nd_kitchen_stove": "Küchenherd",
+  "nd_laundry_included": "Wäscheservice inklusive",
+  "nd_laundry_optional": "Wäscheservice optional",
+  "nd_living_room": "Eigenes Wohnzimmer",
+  "nd_long_stay": "Langzeitaufenthalte möglich",
+  "nd_motorboat": "Motorboot",
+  "nd_near_sea": "Meeresnähe",
+  "nd_not_accessible": "Nicht barrierefrei",
+  "nd_not_senior_friendly": "Nicht geeignet für Senioren oder Personen mit eingeschränkter Mobilität",
+  "nd_outdoor_hot_tub": "Outdoor-Whirlpool",
+  "nd_parking_available": "Parkmöglichkeit",
+  "nd_parking_included": "Parkmöglichkeit inklusive",
+  "nd_parking_optional": "Parkmöglichkeit optional",
+  "nd_pets_not_allowed": "Tiere nicht erlaubt",
+  "nd_pets_on_request": "Tiere nur nach Absprache",
+  "nd_piano": "Klavier",
+  "nd_private_dry_sauna": "Private Trockensauna",
+  "nd_private_garden": "Privater Garten",
+  "nd_private_gym": "Privater Fitnessraum",
+  "nd_private_heated_indoor_pool": "Privater beheizter Indoor-Swimmingpool",
+  "nd_private_heated_outdoor_pool": "Privater beheizter Outdoor-Swimmingpool",
+  "nd_private_indoor_pool": "Privater unbeheizter Indoor-Swimmingpool",
+  "nd_private_outdoor_pool": "Privater unbeheizter Outdoor-Swimmingpool",
+  "nd_private_playground": "Privater Spielplatz",
+  "nd_private_porch": "Private Veranda",
+  "nd_private_steam_sauna": "Private Dampfsauna",
+  "nd_private_tennis": "Privater Tennisplatz",
+  "nd_recycling": "Mülltrennung",
+  "nd_resort": "Resort",
+  "nd_rice_cooker": "Reiskocher",
+  "nd_rural": "Ländlich",
+  "nd_sailboat": "Segelboot",
+  "nd_senior_friendly": "Geeignet für Senioren oder Personen mit eingeschränkter Mobilität",
+  "nd_shared_dry_sauna": "Gemeinsame Trockensauna",
+  "nd_shared_garden": "Gemeinsamer Garten",
+  "nd_shared_heated_indoor_pool": "Gemeinschaftlicher beheizter Indoor-Swimmingpool",
+  "nd_shared_heated_outdoor_pool": "Gemeinschaftlicher beheizter Outdoor-Swimmingpool",
+  "nd_shared_indoor_pool": "Gemeinschaftlicher unbeheizter Indoor-Swimmingpool",
+  "nd_shared_outdoor_pool": "Gemeinschaftlicher unbeheizter Outdoor-Swimmingpool",
+  "nd_shared_playground": "Gemeinsamer Spielplatz",
+  "nd_shared_porch": "Gemeinsame Veranda",
+  "nd_shared_steam_sauna": "Gemeinsame Dampfsauna",
+  "nd_shared_tennis": "Gemeinschaftlicher Tennisplatz",
+  "nd_single_level": "Alles auf einer Ebene",
+  "nd_smoking_allowed": "Rauchen erlaubt",
+  "nd_smoking_not_allowed": "Rauchen nicht erlaubt",
+  "nd_spices": "Gewürze",
+  "nd_stereo": "Stereoanlage",
+  "nd_sun_loungers": "Liegestühle",
+  "nd_table_football": "Kicker",
+  "nd_tv_antenna": "TV-Antenne",
+  "nd_tv_satellite": "TV-Satellit",
+  "nd_underfloor_heating": "Bodenheizung",
+  "nd_vacuum_cleaner": "Staubsauger",
+  "nd_village": "Dorf",
+  "nd_wash_basin": "Waschbecken",
+  "nd_water_dispenser": "Wasserspender",
+  "nd_water_filter": "Wasserfilter",
+  "nd_wood_stove": "Holz-/Kachelofen",
   "neck_massage": "Nackenmassage",
   "newspaper": "Zeitung",
   "nightclub_dj": "Nachtclub/DJ",
@@ -310,6 +417,10 @@ const LABELS: Record<string, string> = {
   "yoga_classes": "Yogakurse",
 };
 
-export function ausstattungLabel(slug: string): string {
-  return LABELS[slug] ?? slug;
+/** Label des Merkmals, oder `null`, wenn kein Katalog es kennt. */
+export function ausstattungLabel(slug: string): string | null {
+  return LABELS[slug] ?? null;
 }
+
+/** Anzahl der bekannten Merkmale — für Prüfskripte und Tests. */
+export const AUSSTATTUNG_ANZAHL = 400;

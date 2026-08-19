@@ -15,6 +15,11 @@ import { Btn, Card, Col, Divider, Photo, Row, Spinner, Txt } from "@/components/
 import { EmptyState } from "@/components/ui/patterns";
 import { ausstattungLabel } from "@/lib/ausstattung";
 import {
+  MAPPEN_FELDER,
+  anzahlGepflegt,
+  leseGaestemappe,
+} from "@/lib/gaestemappe";
+import {
   getProperty,
   propertyTypeLabel,
   type ChannelState,
@@ -101,6 +106,9 @@ export default function PropertyDetail({ route, navigation }: { route: any; navi
   const anschrift = adresse(p);
   // Kurzbeschreibung: der volle Text lebt im eigenen Screen (Lesen/Bearbeiten).
   const beschreibung = p.description?.trim() || "";
+  // Pflegestand der Gästemappe (`type_attributes.messaging`) — dieselbe Quelle
+  // wie im Web, deshalb kein eigener Zähler auf dem Server.
+  const gepflegteBloecke = anzahlGepflegt(leseGaestemappe(p.type_attributes));
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg }}>
@@ -170,6 +178,21 @@ export default function PropertyDetail({ route, navigation }: { route: any; navi
 
           <Divider />
 
+          {/* Gästemappe: dieselben Texte wie im Web (Check-in, Türzugang,
+              Hausordnung …). Der Hinweis nennt den Pflegestand, nicht die
+              Anzahl der Felder — leer ist hier die Information. */}
+          <Abschnitt
+            titel="Gästemappe"
+            hinweis={
+              gepflegteBloecke === 0
+                ? "Noch keine Gasttexte hinterlegt."
+                : `${gepflegteBloecke} von ${MAPPEN_FELDER.length} Blöcken gepflegt.`
+            }
+            onPress={() => navigation.navigate("PropertyGuestGuide", { id: p.id })}
+          />
+
+          <Divider />
+
           <Col gap={12}>
             <Txt v="h2">Ausstattung</Txt>
             {p.amenities.length === 0 ? (
@@ -183,7 +206,11 @@ export default function PropertyDetail({ route, navigation }: { route: any; navi
                     <Row key={slug} gap={10} style={{ paddingVertical: 9, alignItems: "center" }}>
                       <Icon n="check" s={15} sw={2} c={t.palette.soft} />
                       <Txt v="sm" style={{ flex: 1 }}>
-                        {ausstattungLabel(slug)}
+                        {/* Ohne Katalogeintrag steht hier der Slug: für den
+                            BETRIEB ist das ein sichtbarer Datenfehler, den er
+                            melden kann. Der Gast bekommt in der myBestDays-App
+                            statt dessen gar keine Zeile. */}
+                        {ausstattungLabel(slug) ?? slug}
                       </Txt>
                     </Row>
                   ))}

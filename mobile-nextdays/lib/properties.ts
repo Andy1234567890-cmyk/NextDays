@@ -100,7 +100,9 @@ export async function getProperty(id: string): Promise<Result<Property>> {
  */
 export async function updateProperty(
   id: string,
-  aenderung: Partial<Pick<Property, "description" | "platform_description">>,
+  aenderung: Partial<
+    Pick<Property, "description" | "platform_description" | "type_attributes">
+  >,
 ): Promise<Result<Property>> {
   return call(`/properties/${id}`, { method: "PATCH", body: aenderung });
 }
