@@ -118,6 +118,16 @@ def get_or_create_customer(
     return cust.id
 
 
+# Maximale Länge des dynamischen Suffix auf der Kartenabrechnung.
+#
+# Stripe begrenzt die GESAMTE Beschreibung auf 22 Zeichen — und die entsteht
+# aus dem am Konto hinterlegten Präfix (2–10 Zeichen), dem Trenner „* " und
+# diesem Suffix. Bei maximalem Präfix bleiben also 22 − 10 − 2 = 10 Zeichen.
+# Stripe kürzt Überlänge zwar selbst, aber dann steht ein abgeschnittener
+# Betriebsname auf der Abrechnung des Gastes; hier wird deshalb vorher gekappt.
+_DESCRIPTOR_SUFFIX_MAX = 10
+
+
 def create_payment_intent(
     *,
     amount_cents: int,
@@ -221,15 +231,36 @@ def create_payment_intent(
         # (platform_fees) hält den Soll-Wert unabhängig davon fest.
         params["application_fee_amount"] = application_fee_cents
     if statement_descriptor:
-        # Name des Händlers auf der Kartenabrechnung des Gastes. Stripe erlaubt
-        # max. 22 Zeichen und einige verbotene Zeichen (< > \ ' " *) — kappen und
-        # säubern, sonst wirft der Charge (angreifer-/nutzergelieferter Text,
-        # Wurzel 8). Leerer Rest → weglassen.
+        # Name des Händlers auf der Kartenabrechnung des Gastes.
+        #
+        # ES MUSS `statement_descriptor_suffix` SEIN, NICHT `statement_descriptor`:
+        # Stripe weist letzteren bei Kartenzahlungen ab — „The
+        # statement_descriptor parameter is not supported for
+        # payment_method_type `card`" (live gemessen am 18.08.2026, HTTP 400).
+        # Damit scheiterte JEDE Kartenzahlung schon beim Anlegen des Intents.
+        # Die Doku sagt es ausdrücklich: „Bei Kartenzahlungen können Sie die
+        # statement_descriptor nicht angeben. Sie können lediglich das
+        # statement_descriptor_suffix angeben."
+        #
+        # LÄNGE: Die 22 Zeichen sind die GESAMTlänge aus Präfix (am Konto
+        # hinterlegt, 2–10 Zeichen), dem Trenner „* " und diesem Suffix. Ein
+        # 22-Zeichen-Suffix riss die Grenze also selbst dann, wenn der Parameter
+        # akzeptiert würde. Stripe kürzt zwar, aber dann steht ein
+        # abgeschnittener Name auf der Abrechnung des Gastes — deshalb wird hier
+        # auf das gekappt, was neben einem maximalen Präfix sicher passt:
+        # 22 − 10 (Präfix) − 2 (Trenner „* ") = 10.
+        #
+        # Verbotene Zeichen (< > \ ' " *) fliegen raus: der Wert kommt aus den
+        # Betriebsdaten und darf den Charge nicht kippen (Wurzel 8).
         clean = "".join(
             c for c in statement_descriptor if c not in "<>\\'\"*"
-        ).strip()[:22]
-        if clean:
-            params["statement_descriptor"] = clean
+        ).strip()[:_DESCRIPTOR_SUFFIX_MAX]
+        # Stripe verlangt mindestens EINEN Buchstaben; ein Suffix aus lauter
+        # Ziffern/Zeichen wird abgewiesen. Lieber weglassen als den Charge
+        # daran scheitern lassen (Wurzel 5: fail-closed, aber nicht am
+        # Hauptpfad).
+        if clean and any(c.isalpha() for c in clean):
+            params["statement_descriptor_suffix"] = clean
     if metadata:
         params["metadata"] = metadata
     options: dict[str, Any] = {}

@@ -1462,3 +1462,66 @@ def test_branding_logo_ohne_logo_ist_kein_fehler() -> None:
     stripe = _BrandingStripe()
     PaymentsService(service_client=db, stripe=stripe).sync_branding_logo("t-1", "acct_own")
     assert stripe.dateien == []
+
+
+# --- Zahlungsbeschreibung auf der Kartenabrechnung --------------------------
+# Stripe weist `statement_descriptor` bei Kartenzahlungen ab (live gemessen am
+# 18.08.2026, HTTP 400: „The statement_descriptor parameter is not supported
+# for payment_method_type `card`"). Damit scheiterte JEDE Kartenzahlung schon
+# beim Anlegen des Intents. Erlaubt ist nur `statement_descriptor_suffix`.
+
+
+def _intent_params(descriptor: str) -> dict:
+    """Die an Stripe gehenden Parameter für einen Intent mit diesem Namen."""
+    from unittest.mock import MagicMock
+
+    from src.features.payments import stripe_client as sc
+
+    stripe = MagicMock(name="stripe")
+    stripe.v1.payment_intents.create.return_value = MagicMock(
+        id="pi_1", client_secret="cs_1"
+    )
+    sc.create_payment_intent(
+        amount_cents=1000,
+        currency="dkk",
+        destination_acct="acct_1",
+        application_fee_cents=0,
+        statement_descriptor=descriptor,
+        client=stripe,
+    )
+    aufruf = stripe.v1.payment_intents.create.call_args
+    return aufruf.kwargs.get("params") or aufruf.args[0]
+
+
+def test_kartenabrechnung_nutzt_suffix_nicht_descriptor() -> None:
+    """DIE REGEL: `statement_descriptor` ist bei Karten verboten."""
+    params = _intent_params("AirSmil")
+    assert params.get("statement_descriptor_suffix") == "AirSmil"
+    assert "statement_descriptor" not in params, (
+        "Stripe weist `statement_descriptor` bei Kartenzahlungen mit 400 ab."
+    )
+
+
+def test_suffix_wird_auf_zehn_zeichen_gekappt() -> None:
+    """Die 22 Zeichen gelten für Präfix + Trenner + Suffix zusammen.
+
+    Bei maximalem Kontopräfix (10) und dem Trenner „* " bleiben 10 Zeichen.
+    Ungekappt stünde ein abgeschnittener Name auf der Abrechnung des Gastes.
+    """
+    params = _intent_params("Ferienvermietung Nordlicht GmbH")
+    assert len(params["statement_descriptor_suffix"]) == 10
+
+
+def test_verbotene_zeichen_fliegen_raus() -> None:
+    """`< > \\ ' " *` sind bei Stripe unzulässig — der Wert kommt aus den
+    Betriebsdaten und darf den Charge nicht kippen (Wurzel 8)."""
+    params = _intent_params('Air<>"*Smil')
+    assert params["statement_descriptor_suffix"] == "AirSmil"
+
+
+def test_ohne_buchstaben_kein_suffix() -> None:
+    """Stripe verlangt mindestens EINEN Buchstaben — sonst weglassen statt
+    den Charge daran scheitern zu lassen."""
+    params = _intent_params("12345")
+    assert "statement_descriptor_suffix" not in params
+    assert "statement_descriptor" not in params

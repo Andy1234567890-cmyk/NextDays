@@ -26,7 +26,15 @@ type Zustand =
   | { kind: "eingabe" }
   | { kind: "bucht" }
   | { kind: "fehler"; msg: string }
-  | { kind: "bezahlen"; reservationId: string }
+  | {
+      kind: "bezahlen";
+      reservationId: string;
+      // Seit 0409 liefert der Buchungsaufruf die Zahlungsdaten gleich mit —
+      // eine Reservierung, gegen die man den Intent nachladen könnte, gibt es
+      // an dieser Stelle noch gar nicht.
+      clientSecret?: string | null;
+      publishableKey?: string | null;
+    }
   | { kind: "fertig"; email: string };
 
 export type CheckoutDaten = {
@@ -91,7 +99,15 @@ export function CheckoutAblauf({
       setZustand({ kind: "fehler", msg: res.error });
       return;
     }
-    setZustand({ kind: "bezahlen", reservationId: res.data.id });
+    // `res.data.id` ist seit 0409 die BuchungsABSICHT, nicht die Reservierung:
+    // Die Buchung entsteht erst, wenn Stripe die Zahlung bestätigt hat. Bis
+    // dahin ist nichts reserviert — deshalb hier auch kein „gebucht"-Zustand.
+    setZustand({
+      kind: "bezahlen",
+      reservationId: res.data.id,
+      clientSecret: res.data.client_secret,
+      publishableKey: res.data.publishable_key,
+    });
   }
 
   if (zustand.kind === "fertig") {
@@ -211,6 +227,8 @@ export function CheckoutAblauf({
         {zustand.kind === "bezahlen" ? (
           <StripeCheckout
             reservationId={zustand.reservationId}
+            clientSecret={zustand.clientSecret}
+            publishableKey={zustand.publishableKey}
             depositHint={
               angebot.deposit
                 ? t("kautionHinweis", {

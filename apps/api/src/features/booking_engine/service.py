@@ -28,6 +28,8 @@ from src.features.booking_conditions.plan import (
 )
 from src.features.guest_blocks.service import GuestBlockService
 
+from .absicht import AbsichtMixin
+from .errors import BookingEngineError
 from .reiseziele import land_treffer, ziele_aus_objekten
 from .schemas import (
     GuestContact,
@@ -89,13 +91,6 @@ _MAX_SPAN_DAYS = 730
 # wäre `radius_km` ein Weg, die Marktplatz-Filterung auszuhebeln; fail-closed
 # (Wurzel 5/8): darüber 422 statt stiller Deckelung.
 _MAX_RADIUS_KM = 500.0
-
-
-class BookingEngineError(Exception):
-    def __init__(self, message: str, *, status_code: int = 400) -> None:
-        super().__init__(message)
-        self.message = message
-        self.status_code = status_code
 
 
 def _assert_span(start: date | None, end: date | None) -> None:
@@ -204,7 +199,7 @@ def _as_opt_float(value: object) -> float | None:
         return None
 
 
-class BookingEngineService:
+class BookingEngineService(AbsichtMixin):
     slice_name = "booking_engine"
 
     def __init__(self, service_client: Client | None = None) -> None:
@@ -1057,6 +1052,34 @@ class BookingEngineService:
             if is_request
             else None
         )
+
+        # KEINE BUCHUNG OHNE BEZAHLTE ZAHLUNG (0409).
+        #
+        # Bis hierher ist alles GEPRÜFT, aber noch nichts geschrieben: Der Weg
+        # endet an dieser Stelle mit einer Buchungsabsicht und einem
+        # PaymentIntent. Die Reservierung entsteht erst, wenn Stripe die
+        # Zahlung bestätigt (`payments.webhook` → `absicht_einloesen`).
+        #
+        # Warum die Umkehrung nötig war: Vorher wurde hier `status='confirmed'`
+        # geschrieben und die Zahlung DANACH über einen eigenen Endpunkt
+        # gestartet. Brach der Gast dort ab, blieb eine bestätigte, unbezahlte
+        # Buchung stehen — live am 18.08.2026: drei Nächte belegt, bei den OTAs
+        # gesperrt, Automails ausgelöst, `paid_amount = 0.00`.
+        #
+        # Die ANFRAGE (`booking_mode='request'`) läuft weiter wie bisher: dort
+        # zahlt der Gast nichts, bis der Betrieb zusagt — eine Zahlung vorweg
+        # zu verlangen, hiesse Geld für etwas zu nehmen, das noch abgelehnt
+        # werden kann.
+        if not is_request:
+            return self._absicht_starten(
+                req=req,
+                tenant_id=tenant_id,
+                total_amount=total_amount,
+                currency=currency,
+                quote_items=quote_items,
+                bookable_addons=bookable_addons,
+                guest_id=guest_id,
+            )
 
         # Reservierung + Kalender-Belegung + ari_outbox ATOMAR (RPC 0104):
         # Advisory-Lock je Objekt schließt das TOCTOU-Fenster zwischen dem Check

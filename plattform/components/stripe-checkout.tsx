@@ -36,10 +36,24 @@ function stripePromise(key: string): Promise<Stripe | null> {
 
 export function StripeCheckout({
   reservationId,
+  clientSecret,
+  publishableKey,
   depositHint,
   onPaid,
 }: {
+  /**
+   * Die Reservierung — oder, seit „Zahlung zuerst" (0409), die
+   * Buchungsabsicht. Nur noch nötig, wenn kein `clientSecret` mitkommt.
+   */
   reservationId: string;
+  /**
+   * Zahlungsdaten, die der Buchungsaufruf bereits geliefert hat (0409). Sind
+   * sie gesetzt, wird NICHT nachgeladen: Für eine Buchungsabsicht gibt es noch
+   * keine Reservierung, gegen die `/payments/booking/{id}/intent` laufen
+   * könnte — der Aufruf liefe in einen 404.
+   */
+  clientSecret?: string | null;
+  publishableKey?: string | null;
   depositHint?: string | null;
   onPaid?: () => void;
 }) {
@@ -49,6 +63,19 @@ export function StripeCheckout({
   useEffect(() => {
     let active = true;
     (async () => {
+      // Direkt bezahlen, wenn der Buchungsaufruf die Daten schon mitgebracht
+      // hat (der Normalfall seit 0409).
+      if (clientSecret) {
+        // Ohne veröffentlichbaren Schlüssel kann Stripe.js nicht laden. Das ist
+        // ein Konfigurationsfehler des Servers und wird als solcher gemeldet,
+        // statt mit einem leeren Formular zu enden (Wurzel 4/5).
+        if (!publishableKey) {
+          setPhase({ kind: "error", msg: t("nichtKonfiguriert") });
+          return;
+        }
+        setPhase({ kind: "ready", clientSecret, publishableKey });
+        return;
+      }
       const res = await ladeZahlungsIntent(reservationId);
       if (!active) return;
       if (res.ok) {
@@ -64,7 +91,7 @@ export function StripeCheckout({
     return () => {
       active = false;
     };
-  }, [reservationId]);
+  }, [reservationId, clientSecret, publishableKey, t]);
 
   if (phase.kind === "loading") {
     return (

@@ -29,6 +29,7 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.features.addons.zahlung import verbuche_checkout_session
 from src.features.donations.service import DonationsService
+from src.features.payments import stripe_client as sc
 from src.features.payouts.service import PayoutsService
 
 log = get_logger("nextdays.payments.webhook")
@@ -121,6 +122,18 @@ def _dispatch_stripe_event(
         case "account.updated":
             _handle_account_updated(db, obj, now_iso)
         case "payment_intent.succeeded":
+            # KEINE BUCHUNG OHNE ZAHLUNG (0409): Trägt der Intent eine
+            # Buchungsabsicht, entsteht die Reservierung ERST JETZT — dieser
+            # Rückruf ist der einzige Ort, an dem feststeht, dass Geld wirklich
+            # geflossen ist. Vorher wurde die Buchung beim Klick auf „Buchen"
+            # angelegt und blieb bei Zahlungsabbruch bestätigt stehen (live am
+            # 18.08.2026: drei Nächte belegt, `paid_amount = 0.00`).
+            #
+            # Steht keine Absicht dran, ist es eine Zahlung zu einer bereits
+            # bestehenden Buchung (OTA-Restzahlung, Anzahlung, Anfrage nach
+            # Zusage) — dann gilt unverändert der bisherige Weg.
+            if _buchungsabsicht_einloesen(db, obj):
+                return None
             res_id = _set_payment_status(
                 db, obj["id"], "succeeded", reservation="paid"
             )
@@ -467,6 +480,74 @@ def _handle_identity_event(
         log.info("identity_status_set", user_id=user_id, status=status_val)
     else:
         log.warning("identity_user_not_found", user_id=user_id, tenant_id=tenant_id)
+
+
+def _buchungsabsicht_einloesen(db: Client, obj: Mapping[str, Any]) -> bool:
+    """Aus einer bezahlten Buchungsabsicht die Reservierung erzeugen (0409).
+
+    Gibt `True` zurück, wenn dieser Intent zu einer Absicht gehört und hier
+    behandelt wurde — dann ist der reguläre Zahlungsweg (`_set_payment_status`)
+    NICHT zuständig: es gibt keine `payments`-Zeile, weil es beim Bezahlen noch
+    keine Buchung gab, an der sie hätte hängen können.
+
+    Die Absicht-ID steht in den Metadaten des Intents
+    (`payments.service.create_intent_for_absicht`). Fehlt sie, ist es eine
+    gewöhnliche Zahlung zu einer bestehenden Buchung.
+
+    SCHLÄGT DIE BUCHUNG FEHL, WIRD ERSTATTET: Der Gast hat gezahlt, aber der
+    Zeitraum ist in der Zwischenzeit vergeben worden. Das Geld einfach zu
+    behalten wäre der schlimmere Fehler — deshalb voller Refund, und der
+    Betrieb bekommt eine Meldung darüber (Wurzel 1: der Gegenzustand gehört
+    mitgepflegt).
+    """
+    metadata = obj.get("metadata") or {}
+    absicht_id = metadata.get("buchungsabsicht_id")
+    if not absicht_id:
+        return False
+
+    from src.features.booking_engine.service import (  # noqa: PLC0415
+        BookingEngineService,
+    )
+
+    reservation_id = BookingEngineService(db).absicht_einloesen(str(absicht_id))
+    if reservation_id:
+        log.info(
+            "buchungsabsicht_eingeloest",
+            absicht_id=absicht_id, reservation_id=reservation_id,
+        )
+        return True
+
+    # Keine Buchung entstanden → das Geld gehört dem Gast. Voll erstatten.
+    #
+    # `reverse_transfer` ist bei Destination Charges Pflicht (sonst behält das
+    # Zielkonto die Mittel und die Plattform trägt den negativen Saldo),
+    # `refund_application_fee` gibt die Provision mit zurück — für eine
+    # Buchung, die es nie gab, steht uns nichts zu.
+    #
+    # Der Idempotenz-Key bindet die Erstattung an die Absicht: Stripe fängt
+    # damit eine zweite Zustellung desselben Ereignisses selbst ab (Wurzel 2).
+    try:
+        sc.refund(
+            str(obj["id"]),
+            refund_application_fee=True,
+            reverse_transfer=True,
+            idempotency_key=f"absicht-refund-{absicht_id}",
+        )
+        log.warning(
+            "buchungsabsicht_erstattet",
+            absicht_id=absicht_id, payment_intent=obj.get("id"),
+        )
+    except Exception as exc:  # noqa: BLE001 — Meldung statt stillem Geldbehalt
+        # NICHT schlucken und nicht als erledigt melden: hier liegt echtes Geld
+        # eines Gastes ohne Gegenleistung. Der Fehler gehört sichtbar, damit
+        # jemand von Hand erstattet.
+        log.error(
+            "buchungsabsicht_erstattung_fehlgeschlagen",
+            absicht_id=absicht_id,
+            payment_intent=obj.get("id"),
+            error=str(exc),
+        )
+    return True
 
 
 def _set_payment_status(

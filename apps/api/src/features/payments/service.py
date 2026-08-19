@@ -1254,6 +1254,84 @@ class PaymentsService:
             publishable_key=get_settings().stripe_publishable_key,
         )
 
+    def create_intent_for_absicht(
+        self,
+        *,
+        absicht_id: str,
+        tenant_id: str,
+        betrag: float,
+        waehrung: str,
+    ) -> dict[str, str | None]:
+        """PaymentIntent für eine Buchungsabsicht — BEVOR die Buchung existiert (0409).
+
+        WARUM EIN EIGENER WEG statt `create_booking_payment`:
+        Jener Pfad setzt eine Reservierung voraus — er lädt sie, prüft den
+        Kanal, schreibt eine `payments`-Zeile mit `reservation_id` (NOT NULL)
+        und friert Gebühren-/Spenden-Ledger darauf ein. Genau diese
+        Reservierung gibt es hier noch nicht: Sie entsteht erst, wenn diese
+        Zahlung gelingt.
+
+        Deshalb bleibt dieser Weg bewusst schlank — nur der Intent. Alles, was
+        an einer Buchung hängt (payments-Zeile, Fee-Ledger, Spende,
+        Auszahlungstermin, payment_status), entsteht beim Einlösen, wenn es
+        eine Buchung gibt, an die es gehört. Ein Ledger-Eintrag auf eine
+        Buchung, die es nie geben wird, wäre eine Forderung ohne Gegenstand.
+
+        Die Absicht-ID reist in den Metadaten mit — sie ist der einzige Faden
+        zurück, den der Webhook hat.
+        """
+        db = self._db_or_fail()
+        if betrag <= 0:
+            raise PaymentsError("Buchungsbetrag fehlt.", status_code=422)
+        if not waehrung:
+            raise PaymentsError("Währung fehlt.", status_code=422)
+
+        acct = self._connected_account(db, tenant_id)
+        amount_cents = _to_cents(betrag)
+        spende = self._donation_for(db, tenant_id, amount_cents)
+
+        # DER KANAL MUSS MIT (Wurzel 4): `_fee_cents` leitet die Provision aus
+        # `res["channel"]` ab und gibt ohne Reservierungskontext 0 zurück —
+        # fail-closed, damit nie zu Unrecht kassiert wird. Hier ist der Kanal
+        # aber BEKANNT: Eine Buchungsabsicht entsteht ausschliesslich in der
+        # Marktplatz-Strecke, die Buchung wird `channel='portal'` tragen
+        # (booking_engine.service). Ohne diese Angabe fiele die 8 %-Provision
+        # des myBestDays-Marktplatzes lautlos auf 0 — und zwar erst beim
+        # Umbau auf „Zahlung zuerst", also genau dort, wo es niemandem
+        # auffiele. Kein erfundener Wert, sondern derselbe, der gleich in die
+        # Reservierung geschrieben wird.
+        kanal_kontext = {"channel": "portal"}
+        with _stripe_errors():
+            intent = sc.create_payment_intent(
+                amount_cents=amount_cents,
+                currency=waehrung,
+                destination_acct=acct,
+                application_fee_cents=self._fee_cents(
+                    db, tenant_id, amount_cents, kanal_kontext
+                )
+                + (spende.betrag_cents if spende else 0),
+                statement_descriptor=self._merchant_descriptor(db, tenant_id),
+                # Die Absicht-ID als Klammer — sie wird beim Einlösen zur
+                # `reservation_id`, und der `transfer_group` bleibt damit über
+                # den Übergang hinweg derselbe.
+                transfer_group=_transfer_group(absicht_id),
+                metadata={
+                    "buchungsabsicht_id": absicht_id,
+                    "tenant_id": tenant_id,
+                    "type": "booking_intent",
+                },
+                # Haftung: dieselbe Regel wie bei einer Portal-Buchung —
+                # `_traegt_haftung` liest denselben Kanal.
+                direct=not self._traegt_haftung(kanal_kontext),
+                client=self._stripe,
+            )
+        return {
+            "payment_ref": intent["id"],
+            "client_secret": intent["client_secret"],
+            "publishable_key": get_settings().stripe_publishable_key,
+            "stripe_account": acct,
+        }
+
     # --- Buchungs-Konditionen: Anzahlung + automatische Restzahlung ----------
 
     def _resolve_condition(self, db: Client, res: dict) -> dict | None:

@@ -127,7 +127,30 @@ export async function bucheGast(input: {
   guests?: number;
   pets?: number;
 }): Promise<
-  Result<{ id: string; property_id: string; check_in: string; check_out: string; status: string }>
+  Result<{
+    /**
+     * Seit 0409 die BuchungsABSICHT, nicht die Reservierung: Eine Buchung
+     * entsteht erst, wenn Stripe die Zahlung bestätigt hat. Vorher wurde hier
+     * sofort eine bestätigte Buchung angelegt — brach der Gast die Zahlung ab,
+     * blieb sie unbezahlt stehen und belegte den Kalender.
+     */
+    id: string;
+    property_id: string;
+    check_in: string;
+    check_out: string;
+    /** "zahlung_offen" (Sofortbuchung) oder "requested" (Anfrage-Objekt). */
+    status: string;
+    /**
+     * True = es ist noch KEINE Buchung entstanden. Die Oberfläche muss zahlen
+     * lassen und darf nichts bestätigen.
+     */
+    zahlung_erforderlich?: boolean;
+    /** Zahlungsdaten fürs Payment Element — nur bei `zahlung_erforderlich`. */
+    client_secret?: string | null;
+    publishable_key?: string | null;
+    total_amount?: number | null;
+    currency?: string | null;
+  }>
 > {
   return call("reservations", { method: "POST", body: input });
 }

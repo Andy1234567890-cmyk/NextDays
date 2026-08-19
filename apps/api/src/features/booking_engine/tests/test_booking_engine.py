@@ -373,7 +373,7 @@ def test_round_coord_and_opt_int() -> None:
 
 # --- Atomare Gastbuchung (RPC 0104) --------------------------------------------
 
-def test_public_booking_maps_rpc_conflict_to_409(monkeypatch) -> None:  # noqa: ANN001
+def test_bezahlte_absicht_bei_konflikt_ohne_buchung(monkeypatch) -> None:  # noqa: ANN001
     """Verliert ein Gast das Buchungs-Race, kommt 409 mit neutraler Meldung —
     die atomare RPC hat nichts geschrieben (kein halber Buchungszustand)."""
     from datetime import date as _date
@@ -387,7 +387,6 @@ def test_public_booking_maps_rpc_conflict_to_409(monkeypatch) -> None:  # noqa: 
         PublicBookingRequest,
     )
     from src.features.booking_engine.service import (
-        BookingEngineError,
         BookingEngineService,
     )
 
@@ -438,12 +437,49 @@ def test_public_booking_maps_rpc_conflict_to_409(monkeypatch) -> None:  # noqa: 
             first_name="Max", last_name="Gast", email="max@example.com",
         ),
     )
-    import pytest
+    # SEIT 0409: Der Konflikt tritt nicht mehr beim Buchen auf, sondern beim
+    # EINLÖSEN der bezahlten Absicht — bis dahin ist nichts geschrieben.
+    # Zwischen Zahlungsstart und Bestätigung kann ein anderer Gast dieselben
+    # Nächte gekauft haben; die Absicht reserviert bewusst nichts.
+    #
+    # Was dann passiert, ist der Kern dieses Tests: Es entsteht KEINE Buchung
+    # (sonst Doppelbelegung), die Absicht wird als fehlgeschlagen markiert, und
+    # der Aufrufer (Webhook) erstattet daraufhin. Geld behalten ohne Buchung
+    # wäre der schlimmere Fehler.
+    from src.features.booking_engine import absicht as absicht_mod
 
-    with pytest.raises(BookingEngineError) as exc:
-        svc.create_public_booking(req)
-    assert exc.value.status_code == 409
-    assert exc.value.message == "Zeitraum ist nicht mehr verfügbar."
+    monkeypatch.setattr(absicht_mod, "anlegen", lambda *_a, **_k: "abs-9")
+    monkeypatch.setattr(absicht_mod, "zahlung_vermerken", lambda *_a, **_k: None)
+    monkeypatch.setattr(
+        absicht_mod, "laden",
+        lambda *_a: {
+            "status": absicht_mod.OFFEN, "tenant_id": "t-1", "property_id": "p-1",
+            "check_in": (_date.today() + _delta(days=30)).isoformat(),
+            "check_out": (_date.today() + _delta(days=32)).isoformat(),
+            "total_amount": 300.0, "currency": "EUR",
+            "daten": {"guests": 2, "contact": {}, "guest_id": None},
+        },
+    )
+    gescheitert: list[str] = []
+    monkeypatch.setattr(
+        absicht_mod, "als_fehlgeschlagen",
+        lambda _db, aid, grund: gescheitert.append(grund),
+    )
+    monkeypatch.setattr(
+        "src.features.payments.service.PaymentsService.create_intent_for_absicht",
+        lambda *_a, **_k: {
+            "payment_ref": "pi_9", "client_secret": "cs_9",
+            "publishable_key": None, "stripe_account": None,
+        },
+    )
+
+    # Der Buchungsstart selbst gelingt — er schreibt ja nichts.
+    antwort = svc.create_public_booking(req)
+    assert antwort.zahlung_erforderlich is True
+
+    # Erst das Einlösen läuft in den Konflikt.
+    assert svc.absicht_einloesen("abs-9") is None
+    assert gescheitert == ["Zeitraum inzwischen vergeben."]
 
 
 def test_public_booking_includes_addons_in_quote(monkeypatch) -> None:  # noqa: ANN001
@@ -509,6 +545,20 @@ def test_public_booking_includes_addons_in_quote(monkeypatch) -> None:  # noqa: 
         )
 
     monkeypatch.setattr(resolver_mod.PricingResolver, "quote", _fake_quote)
+
+    # Der Zahlungsstart (0409) ist für DIESEN Test ohne Belang — geprüft wird
+    # allein, ob der Quote die Addons sieht. Stripe wird deshalb abgehängt.
+    from src.features.booking_engine import absicht as absicht_mod
+
+    monkeypatch.setattr(absicht_mod, "anlegen", lambda *_a, **_k: "abs-2")
+    monkeypatch.setattr(absicht_mod, "zahlung_vermerken", lambda *_a, **_k: None)
+    monkeypatch.setattr(
+        "src.features.payments.service.PaymentsService.create_intent_for_absicht",
+        lambda *_a, **_k: {
+            "payment_ref": "pi_2", "client_secret": "cs_2",
+            "publishable_key": None, "stripe_account": None,
+        },
+    )
 
     req = PublicBookingRequest(
         property_id="p-1",
@@ -722,7 +772,41 @@ def test_public_booking_writes_num_guests(monkeypatch) -> None:  # noqa: ANN001
         ),
     )
 
-    svc.create_public_booking(
+    # Seit 0409 entsteht die Reservierung ERST beim Einlösen der bezahlten
+    # Absicht — `create_public_booking` legt nur die Absicht an. Die Gästezahl
+    # muss den Übergang überstehen, sonst landet sie wieder auf dem
+    # Spalten-Default 1.
+    from src.features.booking_engine import absicht as absicht_mod
+
+    monkeypatch.setattr(absicht_mod, "anlegen", lambda *_a, **_k: "abs-1")
+    monkeypatch.setattr(absicht_mod, "zahlung_vermerken", lambda *_a, **_k: None)
+    monkeypatch.setattr(
+        absicht_mod, "als_eingeloest", lambda *_a, **_k: True
+    )
+    gespeicherte: dict = {}
+
+    def _laden(_db, _aid):  # noqa: ANN001, ANN202
+        return {
+            "status": absicht_mod.OFFEN,
+            "tenant_id": "t-1",
+            "property_id": "p-1",
+            "check_in": (_date.today() + _delta(days=30)).isoformat(),
+            "check_out": (_date.today() + _delta(days=32)).isoformat(),
+            "total_amount": 260.0,
+            "currency": "EUR",
+            "daten": gespeicherte,
+        }
+
+    monkeypatch.setattr(absicht_mod, "laden", _laden)
+    monkeypatch.setattr(
+        "src.features.payments.service.PaymentsService.create_intent_for_absicht",
+        lambda *_a, **_k: {
+            "payment_ref": "pi_1", "client_secret": "cs_1",
+            "publishable_key": None, "stripe_account": None,
+        },
+    )
+
+    antwort = svc.create_public_booking(
         PublicBookingRequest(
             property_id="p-1",
             check_in=_date.today() + _delta(days=30),
@@ -733,16 +817,24 @@ def test_public_booking_writes_num_guests(monkeypatch) -> None:  # noqa: ANN001
             ),
         )
     )
+    # KEINE Buchung an dieser Stelle — nur die Aufforderung zu zahlen.
+    assert antwort.zahlung_erforderlich is True
+    assert not any(
+        call[0][0] == "create_reservation_atomic" for call in db.rpc.call_args_list
+    ), "Vor der Zahlung darf keine Reservierung entstehen (0409)."
 
-    # Gezielt den Reservierungs-RPC greifen, NICHT call_args: nach der Buchung
-    # läuft noch enqueue_job (jobs/queue.py) über dasselbe rpc-Mock, dessen
-    # Aufruf sonst der letzte ist.
+    # Jetzt die Zahlung bestätigen — erst hier entsteht die Buchung.
+    gespeicherte.update({"guests": 4, "contact": {}, "guest_id": "g-1"})
+    monkeypatch.setattr(svc, "_nachlauf", lambda **_k: None)
+    svc.absicht_einloesen("abs-1")
+
     payload = next(
         call[0][1]["p_reservation"]
         for call in db.rpc.call_args_list
         if call[0][0] == "create_reservation_atomic"
     )
     assert payload["num_guests"] == 4
+    assert payload["status"] == "confirmed"
 
 
 def test_pets_allowed_liest_policy_vor_ausstattung() -> None:

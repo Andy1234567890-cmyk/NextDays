@@ -286,6 +286,27 @@ class PublicBookingResponse(BaseModel):
     # Ablauf der Anfrage (ISO, 24 h). None bei Sofortbuchung.
     request_expires_at: str | None = None
 
+    # --- Zahlung vor der Buchung (0409) -------------------------------------
+    # True = es ist NOCH KEINE Buchung entstanden; `id` ist die Buchungsabsicht,
+    # nicht die Reservierung. Die Oberfläche muss dann bezahlen lassen und darf
+    # keinesfalls „gebucht" melden. Eine Buchung gibt es erst, wenn Stripe die
+    # Zahlung bestätigt hat.
+    #
+    # Bei einer ANFRAGE (`is_request`) bleibt das False: dort zahlt der Gast
+    # erst, wenn der Betrieb zugesagt hat.
+    zahlung_erforderlich: bool = False
+    # Stripe-Zugangsdaten für das Payment Element. Nur gesetzt, solange
+    # `zahlung_erforderlich` gilt.
+    client_secret: str | None = None
+    publishable_key: str | None = None
+    # Verbundenes Konto des Betriebs (Stripe Connect) — das Payment Element
+    # muss dagegen initialisiert werden, sonst findet es den Intent nicht.
+    stripe_account: str | None = None
+    # Was der Gast zahlt. Kommt aus dem serverseitigen Quote; die Oberfläche
+    # zeigt ihn an, statt selbst zu rechnen.
+    total_amount: float | None = None
+    currency: str | None = None
+
 
 class PurchasedAddon(BaseModel):
     """Ein bereits gekauftes Upsell (gast-sichere Sicht: Name/Menge/Betrag/Status)."""
