@@ -32,6 +32,16 @@ gradle="$wurzel/$app/android/app/build.gradle"
 app_id="$(sed -n 's/.*applicationId "\([^"]*\)".*/\1/p' "$gradle" | head -1)"
 [[ -n "$app_id" ]] || { echo "applicationId nicht in $gradle gefunden" >&2; exit 1; }
 
+# Der Secret-Praefix gehoert zur APP, nicht zum Skript: build.gradle liest bei
+# myBestDays MYBESTDAYS_RELEASE_* (eigene Marke, eigener Schluessel, ADR-0019).
+# Vorher nannte der Hinweis unten hart MYNEXTDAYS_ — wer ihm bei einem
+# bestdays-Lauf folgte, ueberschrieb die myNextDays-Secrets mit dem falschen
+# Keystore und konnte fuer die veroeffentlichte App kein Update mehr signieren.
+case "$app" in
+  mobile-nextdays) praefix="MYNEXTDAYS" ;;
+  mobile-bestdays) praefix="MYBESTDAYS" ;;
+esac
+
 ziel_ordner="$HOME/.keystores"
 ziel="$ziel_ordner/$app-release.keystore"
 alias_name="$app"
@@ -96,9 +106,15 @@ echo "Fingerabdruck (damit später beweisbar ist, welcher Schlüssel im APK stec
 # die Fingerabdrücke daraus selbst — dasselbe Ergebnis, unabhängig vom Gebietsschema.
 pem="$(keytool -exportcert -rfc -keystore "$ziel" -alias "$alias_name" -storepass "$pw1" 2>/dev/null)"
 if [[ -n "$pem" ]]; then
-  for alg in sha1 sha256; do
+  # `${alg^^}` (Grossschreibung) ist Bash 4; macOS liefert Bash 3.2 und bricht
+  # dort mit "bad substitution" ab — live passiert am 19.08.2026, NACH dem
+  # Erzeugen des Schluessels, sodass der Fingerabdruck fehlte. Deshalb die
+  # Bezeichnung direkt mitgeben statt sie zu berechnen.
+  for paar in "sha1:SHA1" "sha256:SHA256"; do
+    alg="${paar%%:*}"
+    label="${paar##*:}"
     fp="$(printf '%s' "$pem" | openssl x509 -noout -fingerprint -"$alg" 2>/dev/null | cut -d= -f2)"
-    printf '  %-7s %s\n' "${alg^^}:" "$fp"
+    printf '  %-7s %s\n' "$label:" "$fp"
   done
 else
   echo "  (nicht auslesbar — Passwort oder Alias prüfen)" >&2
@@ -109,10 +125,10 @@ Nächste Schritte:
   1. Keystore sichern (Passwort-Manager oder verschlüsseltes Backup).
      Ohne ihn ist für $app_id NIE wieder ein Update möglich.
   2. Vier GitHub-Secrets im Repo setzen:
-       MYNEXTDAYS_RELEASE_KEYSTORE_BASE64  = Inhalt von $b64
-       MYNEXTDAYS_RELEASE_STORE_PASSWORD   = das eben gewählte Passwort
-       MYNEXTDAYS_RELEASE_KEY_ALIAS        = $alias_name
-       MYNEXTDAYS_RELEASE_KEY_PASSWORD     = dasselbe Passwort
-     Per CLI:  gh secret set MYNEXTDAYS_RELEASE_KEYSTORE_BASE64 < "$b64"
+       ${praefix}_RELEASE_KEYSTORE_BASE64  = Inhalt von $b64
+       ${praefix}_RELEASE_STORE_PASSWORD   = das eben gewählte Passwort
+       ${praefix}_RELEASE_KEY_ALIAS        = $alias_name
+       ${praefix}_RELEASE_KEY_PASSWORD     = dasselbe Passwort
+     Per CLI:  gh secret set ${praefix}_RELEASE_KEYSTORE_BASE64 < "$b64"
   3. Base64-Datei danach löschen:  rm -f "$b64"
 HINWEIS

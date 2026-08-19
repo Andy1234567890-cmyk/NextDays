@@ -82,8 +82,20 @@ android {
         applicationId "com.mybestdays.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // MUSS bei jedem Upload steigen, sonst lehnt Play ab und App
+        // Distribution zeigt Testern kein Update. Der Wert kommt vom
+        // Verteil-Workflow (-PversionCode=<run_number>), nicht aus dem Repo.
+        //
+        // ZWINGEND ueber eine Variable: `versionCode (ausdruck)` mit Leerzeichen
+        // liest Groovy als `versionCode(ausdruck)` — also den Getter der
+        // Property, dem der Ausdruck als Argument zugeht. Ergebnis ist ein
+        // "Value is null" schon bei `./gradlew help`, unabhaengig davon, ob
+        // -PversionCode uebergeben wird. Genau daran war der myNextDays-Build
+        // monatelang unbrauchbar (behoben 19.08.2026); hier von Anfang an so.
+        def bdVersionCode = (project.findProperty("versionCode") ?: "1") as String
+        def bdVersionName = (project.findProperty("versionName") ?: "1.0") as String
+        versionCode bdVersionCode.toInteger()
+        versionName bdVersionName
     }
     signingConfigs {
         debug {
