@@ -60,6 +60,23 @@ jobs:
           SUPABASE_ANON_KEY: ci-placeholder-anon-key
           SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-service-role-key
           SUPABASE_JWT_SECRET: ci-placeholder-jwt-secret
+          # Zwei Tests pruefen ihre eigene Aussagekraft und brauchen dafuer
+          # gesetzte Werte. Lokal kommen sie aus apps/api/.env — deshalb war der
+          # Lauf hier gruen und im CI rot:
+          #
+          # * CHANNEX_WEBHOOK_SECRET: `test_secret_ist_gesetzt_damit_der_401_test
+          #   _aussagt` sichert den 401-Test ab. Ohne Secret kaeme der 401 aus
+          #   einem Vergleich zweier leerer Strings, und die Pruefung wuere
+          #   wertlos — der Test schlaegt deshalb absichtlich Alarm.
+          CHANNEX_WEBHOOK_SECRET: ci-placeholder-webhook-secret
+          # * RATE_LIMIT_FAIL_CLOSED_SENSITIVE: ohne Redis (im CI laeuft keiner)
+          #   antwortet das Ratelimit auf sensiblen Pfaden fail-CLOSED mit 503.
+          #   `/mcp/token` ist so ein Pfad, und der Test erwartet die fachliche
+          #   Antwort 400 (unsupported_grant_type). Hier ausgeschaltet, damit
+          #   geprueft wird, was der Test pruefen will — die Grant-Validierung,
+          #   nicht die Redis-Verfuegbarkeit. Das fail-closed-Verhalten selbst
+          #   bleibt in Produktion an (Default True) und hat eigene Tests.
+          RATE_LIMIT_FAIL_CLOSED_SENSITIVE: "false"
         run: pytest -q
 
   # Geteilte Pakete (packages/@nextdays/*): die Frontends prüfen nur, was sie
@@ -310,10 +327,18 @@ jobs:
           # Anbieterkennzeichnung ist ein Rechtsmangel, kein Schönheitsfehler.
           for f in lib/currency.ts lib/realtime.ts lib/config.ts \
                    lib/config.secrets.example.ts lib/appwechsel.ts \
+                   lib/ausstattung.ts \
                    theme/tokens.ts theme/ThemeProvider.tsx \
                    components/Splash.tsx navigation/tab-style.tsx; do
             diff -u "mobile-bestdays/$f" "mobile-nextdays/$f"
           done
+
+      - name: Ausstattungs-Labels aus web/messages erzeugt
+        # `lib/ausstattung.ts` ist GENERIERT. Ohne diesen Schritt fällt eine
+        # von Hand editierte oder veraltete Fassung erst dem Gast auf: er sieht
+        # rohe Slugs („nd_single_level"), weil das Merkmal im Katalog fehlt
+        # (live so passiert, 19.08.2026 in der myBestDays-App).
+        run: node scripts/mobile/ausstattung-labels-sync.mjs --pruefen
 
       - name: Kernversionen identisch
         # Zwei Lockfiles heißt: nichts hält react/react-native/supabase-js
