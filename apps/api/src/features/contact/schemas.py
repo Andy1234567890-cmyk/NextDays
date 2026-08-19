@@ -65,6 +65,19 @@ class KontaktAnfrage(BaseModel):
     # senden nichts. Kein Ersatz für das Captcha, sondern die billige erste
     # Stufe — sie kostet keinen Google-Aufruf.
     website: str | None = Field(default=None, max_length=200)
+    # Wie lange das Formular offen war, in Sekunden — gemessen im Browser vom
+    # ersten Anfassen bis zum Absenden. Ein Skript füllt in Millisekunden, ein
+    # Mensch braucht Sekunden (`spamnetz.MIN_SEKUNDEN`).
+    #
+    # Optional, und das ist Absicht: ein Besucher mit einer alten Fassung der
+    # Seite im Cache schickt das Feld nicht mit, und der soll nicht abgewiesen
+    # werden. Fehlt es, greifen Captcha und die übrigen Prüfungen weiter — es
+    # wird KEINE Dauer erfunden (Wurzel 4).
+    #
+    # Der Wert ist angreiferkontrolliert: ein Bot kann jede Zahl behaupten.
+    # Deshalb prüft `spamnetz` auch eine Obergrenze, und `ge=0` hält negative
+    # Werte heraus, bevor sie in einen Vergleich geraten.
+    dauer_sekunden: float | None = Field(default=None, ge=0, le=10**7)
 
     @field_validator("name", "nachricht")
     @classmethod

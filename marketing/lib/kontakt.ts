@@ -76,6 +76,15 @@ export type KontaktDaten = {
   locale: string;
   /** Honigtopf — muss leer bleiben. Gefüllt = Bot. */
   website?: string;
+  /**
+   * Sekunden zwischen dem ersten Anfassen des Formulars und dem Absenden.
+   *
+   * Der Server weist alles unter drei Sekunden ab (`spamnetz.MIN_SEKUNDEN`):
+   * niemand tippt Name, Adresse und zwanzig Zeichen Nachricht so schnell, ein
+   * Skript schon. `undefined` heißt „nicht gemessen" und ist ausdrücklich
+   * erlaubt — der Server erfindet dann keine Dauer.
+   */
+  dauerSekunden?: number;
 };
 
 /**
@@ -101,6 +110,11 @@ export async function kontaktSenden(
       locale: daten.locale,
       captcha_token: token,
       website: daten.website || null,
+      // `?? null`, NICHT `|| null`: eine gemessene Dauer von 0 (theoretisch
+      // möglich, wenn Fokus und Absenden in dieselbe Millisekunde fallen) ist
+      // eine Angabe und darf nicht zu „nicht gemessen" werden. Sie fällt dann
+      // korrekt in die Zeitfalle, statt sie zu umgehen.
+      dauer_sekunden: daten.dauerSekunden ?? null,
     }),
   });
 

@@ -378,3 +378,76 @@ def test_kein_zielfeld_im_schema() -> None:
     """
     felder = set(KontaktAnfrage.model_fields)
     assert not felder & {"to", "empfaenger", "an", "recipient", "mailto"}
+
+
+# --- Heuristik (Stufe 3) ----------------------------------------------------
+
+
+def test_zu_schnell_abgesendet_wird_abgewiesen() -> None:
+    """Ein Skript füllt in Millisekunden — 403, und KEIN Captcha-Aufruf.
+
+    Die Reihenfolge ist der Punkt: die Heuristik kostet nichts, der Google-Aufruf
+    kostet Kontingent. Ein Bot, der im Sekundentakt schickt, darf uns nicht das
+    Captcha-Budget leeren.
+    """
+    svc, mail, captcha = _service()
+    with pytest.raises(KontaktError) as exc:
+        svc.senden(_anfrage(dauer_sekunden=0.05))
+    assert exc.value.status_code == 403
+    assert not mail.gesendet
+    assert not captcha.aufrufe
+
+
+def test_wegwerf_adresse_wird_abgewiesen() -> None:
+    svc, mail, _ = _service()
+    with pytest.raises(KontaktError) as exc:
+        svc.senden(_anfrage(email="wegwerf@mailinator.com"))
+    assert exc.value.status_code == 403
+    assert not mail.gesendet
+
+
+def test_zu_viele_links_werden_abgewiesen() -> None:
+    svc, mail, _ = _service()
+    nachricht = (
+        "Buy now http://a1.example.com http://a2.example.com "
+        "http://a3.example.com http://a4.example.com"
+    )
+    with pytest.raises(KontaktError) as exc:
+        svc.senden(_anfrage(nachricht=nachricht))
+    assert exc.value.status_code == 403
+    assert not mail.gesendet
+
+
+def test_fehlerantwort_verraet_die_pruefung_nicht() -> None:
+    """Ein Bot soll nicht erfahren, an welcher Schraube er drehen muss."""
+    svc, _, _ = _service()
+    with pytest.raises(KontaktError) as exc:
+        svc.senden(_anfrage(dauer_sekunden=0.05))
+    text = exc.value.message.lower()
+    for verraeter in ("sekund", "zu_schnell", "dauer", "0.05", "link", "wegwerf"):
+        assert verraeter not in text
+
+
+def test_echte_anfrage_mit_dauer_kommt_durch() -> None:
+    """Das Gegenstück zu allen Ablehnungen — sonst prüft niemand die Fehlalarme."""
+    svc, mail, captcha = _service()
+    antwort = svc.senden(
+        _anfrage(
+            email="info@hotel-seeblick.de",
+            nachricht=(
+                "Wir betreiben 12 Zimmer und suchen ein PMS. Unsere Seite ist "
+                "https://hotel-seeblick.de — wann können wir sprechen?"
+            ),
+            dauer_sekunden=42.0,
+        )
+    )
+    assert antwort == NEUTRAL
+    assert len(mail.gesendet) == 1
+    assert captcha.aufrufe
+
+
+def test_ohne_dauer_laeuft_alles_wie_bisher() -> None:
+    """Alte Seite im Cache: kein Zeitstempel, trotzdem Zustellung."""
+    svc, mail, _ = _service()
+    assert svc.senden(_anfrage(dauer_sekunden=None)) == NEUTRAL
+    assert len(mail.gesendet) == 1

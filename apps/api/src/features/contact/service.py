@@ -6,12 +6,17 @@ eine bewusste Entscheidung: eine Kontaktanfrage ist eine Mail, und eine zweite
 Ablage, die niemand liest, wäre nur ein weiterer Ort mit personenbezogenen Daten.
 Der Nachweis der Zustellung ist die Message-ID im Log.
 
-Drei Stufen Spamschutz, von billig nach teuer:
+Vier Stufen Spamschutz, von billig nach teuer:
   1. **Honigtopf** — ein Feld, das kein Mensch sieht. Gefüllt → freundliche
      Antwort, keine Mail, kein Google-Aufruf.
   2. **reCAPTCHA Enterprise** — serverseitige Bewertung des Tokens
-     (`core.captcha`), fail-closed.
-  3. **Rate-Limit** — Bucket `public_support` (20/60/IP) in der Middleware.
+     (`core.captcha`), fail-closed, Schwelle `recaptcha_min_score`.
+  3. **Heuristik** (`spamnetz`) — Zeitfalle, Wegwerf-Adressen, Link-Häufung.
+     Sie ist die Antwort auf die Grenze von Stufe 2: ein score-basiertes
+     Captcha WEIST NICHTS AB, es bewertet. Ein Bot, der einen echten Browser
+     fernsteuert, holt sich ein gültiges Token und liegt oft knapp über der
+     Schwelle. Diese Stufe prüft, was der Score nicht sieht.
+  4. **Rate-Limit** — Bucket `public_support` (20/60/IP) in der Middleware.
 
 WOHIN DIE MAIL GEHT, entscheidet ausschließlich `themen.empfaenger_fuer`. Der
 Absender kann kein Ziel angeben (Wurzel 3) — sonst wäre das Formular ein offenes
@@ -31,6 +36,7 @@ from src.core.logging import get_logger, mask_email
 from src.core.mail import MailError, MailService, OutboundMessage
 from src.core.mail_layout import Aktion, MailInhalt, mail_rendern
 
+from . import spamnetz
 from .schemas import KontaktAnfrage, KontaktThema
 from .themen import BEZEICHNUNG, EmpfaengerFehlt, empfaenger_fuer
 
@@ -85,9 +91,11 @@ class ContactService:
         """Nimmt die Anfrage an und gibt den Antworttext zurück.
 
         Reihenfolge ist bedeutungstragend: Honigtopf VOR dem Captcha (spart den
-        Google-Aufruf), Captcha VOR dem Empfänger-Nachschlag (ein Bot soll nicht
-        durch Ausprobieren erfahren, welche Themen konfiguriert sind), und der
-        Versand ganz zuletzt — er ist der einzige Schritt mit Außenwirkung.
+        Google-Aufruf), Heuristik EBENFALLS vor dem Captcha (sie kostet nichts
+        und braucht kein Netz), Captcha VOR dem Empfänger-Nachschlag (ein Bot
+        soll nicht durch Ausprobieren erfahren, welche Themen konfiguriert sind),
+        und der Versand ganz zuletzt — er ist der einzige Schritt mit
+        Außenwirkung.
         """
         if req.website:
             # Treffer: kein Versand, keine Fehlermeldung. Der Bot bekommt genau
@@ -98,6 +106,23 @@ class ContactService:
                 email=mask_email(str(req.email)),
             )
             return NEUTRAL
+
+        try:
+            spamnetz.pruefen(
+                email=str(req.email),
+                nachricht=req.nachricht,
+                dauer_sekunden=req.dauer_sekunden,
+            )
+        except spamnetz.SpamVerdacht as exc:
+            # Der GRUND steht nur im Log. Nach draußen geht ein Text, der nicht
+            # verrät, welche Prüfung angesprochen hat.
+            log.info(
+                "kontakt_spamverdacht",
+                grund=exc.grund,
+                thema=req.thema.value,
+                email=mask_email(str(req.email)),
+            )
+            raise KontaktError(exc.antwort, status_code=403) from exc
 
         try:
             score = self._captcha.pruefen(

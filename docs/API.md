@@ -2881,11 +2881,12 @@ abgewiesene. Ein neues Thema ohne Eintrag in `EMPFAENGERART` fällt im Test
 | `locale`        | nein    | ≤ 10          |
 | `captcha_token` | s. u.   | ≤ 4000        |
 | `website`       | —       | ≤ 200 — **Honigtopf**, muss leer bleiben |
+| `dauer_sekunden` | —      | ≥ 0 — Sekunden vom ersten Anfassen bis zum Absenden (Zeitfalle, s. u.). Optional; fehlt es, ist das kein Verstoß |
 
 `name` und `nachricht` werden zusätzlich gegen reinen Leerraum geprüft: 200
 Leerzeichen erfüllen `min_length` und ergäben eine leere Mail im Postfach.
 
-### Spamschutz in drei Stufen
+### Spamschutz in vier Stufen
 
 1. **Honigtopf** (`website`) — im Formular ein Feld abseits der Bildfläche, das
    kein Mensch sieht. Gefüllt → **keine** Mail, **kein** Google-Aufruf, aber
@@ -2897,21 +2898,40 @@ Leerzeichen erfüllen `min_length` und ergäben eine leere Mail im Postfach.
    `POST https://recaptchaenterprise.googleapis.com/v1/projects/{RECAPTCHA_PROJECT_ID}/assessments?key={RECAPTCHA_API_KEY}`.
    Abgewiesen wird bei ungültigem/abgelaufenem Token, **abweichender Aktion**
    (sonst wäre ein Token von einer harmlosen Seite überall verwendbar) und
-   Score unter `RECAPTCHA_MIN_SCORE` (Standard 0.5). Kostenlos bis 10.000
+   Score unter `RECAPTCHA_MIN_SCORE` (**0.7**). Kostenlos bis 10.000
    Bewertungen/Monat je Organisation — deshalb der eigene Rate-Limit-Bucket.
    **Fail-CLOSED:** Netzwerkfehler, unerwartete Antwort oder fehlende Schlüssel
    ergeben `502`/`503`, nie ein stilles „bestanden".
    Lokal greift `Settings.captcha_sandbox` (gleiche Bauart wie `mail_sandbox`):
    Das Token wird nur protokolliert. Ausserhalb von `local` entscheidet allein
    `CAPTCHA_SANDBOX_OVERRIDE`, Default aus.
-3. **Rate-Limit** — `/contact/message` liegt im Bucket `public_support`.
+3. **Heuristik** (`features/contact/spamnetz.py`) — die Antwort auf die Grenze
+   von Stufe 2: ein score-basierter Schlüssel **weist nichts ab, er bewertet**.
+   Ein Bot, der einen echten Browser fernsteuert (Playwright, Puppeteer), holt
+   sich ein gültiges Token und liegt oft knapp über der Schwelle. Drei
+   sprachunabhängige Signale, die der Score nicht sieht:
+   - **Zeitfalle** — `dauer_sekunden` misst im Browser vom ersten Anfassen bis
+     zum Absenden. Unter 3 s ist maschinell; über 12 h ist ein erfundener Wert
+     (ein Bot könnte sonst einfach eine Riesenzahl behaupten). Das Feld ist
+     **optional**: fehlt es (alte Seite im Cache), ist das kein Verstoß und es
+     wird keine Dauer erfunden (Wurzel 4).
+   - **Wegwerf-Adressen** — Vergleich auf die vollständige Domain, nicht als
+     Teilstring: „mailinator-consulting.de" ist eine echte Firma.
+   - **Link-Häufung** — mehr als zwei URLs im Freitext. Gezählt werden auch
+     schemalose Angaben („www.x.de"), aber nur Spam-typische Endungen — sonst
+     wäre „Bitte um Rückruf. Vielen Dank" eine Domain.
+
+   Bewusst **keine Wortliste**: sie altert schlecht, trifft echte Nachrichten und
+   ist in 24 Sprachen nicht pflegbar. Der Ablehnungsgrund steht **nur im Log**;
+   nach draußen geht ein Text, der nicht verrät, welche Prüfung ansprach.
+4. **Rate-Limit** — `/contact/message` liegt im Bucket `public_support`.
 
 ### Antworten
 
 | Status | Bedeutung                                                                       |
 | ------ | ------------------------------------------------------------------------------- |
 | `200`  | angenommen — immer derselbe Text, auch beim Honigtopf-Treffer                    |
-| `403`  | Captcha fehlt, ist abgelaufen, trägt eine fremde Aktion oder liegt unter dem Score |
+| `403`  | Captcha fehlt/abgelaufen/fremde Aktion/unter dem Score **oder** Heuristik-Treffer |
 | `422`  | Feldgrenze verletzt oder unbekanntes `thema` (kein Default, Wurzel 4)           |
 | `429`  | Rate-Limit                                                                      |
 | `502`  | Captcha nicht prüfbar **oder** Mailversand fehlgeschlagen                       |

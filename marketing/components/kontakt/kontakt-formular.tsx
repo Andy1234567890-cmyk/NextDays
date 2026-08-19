@@ -24,7 +24,7 @@
 // ist nur zwei Minuten gültig.
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 
 import { SectionHeading } from "@/components/marketing/section-kit";
 import { Button } from "@/components/ui/button";
@@ -90,6 +90,16 @@ export function KontaktFormular() {
     }
   }
 
+  // Wann das Formular zum ERSTEN Mal angefasst wurde. Der Server prüft daraus,
+  // ob eine plausible Tippzeit vergangen ist (spamnetz.MIN_SEKUNDEN) — ein
+  // Skript füllt in Millisekunden.
+  //
+  // Ein `useRef` und kein `useState`: Der Wert wird nie gerendert, ein State
+  // würde bei jedem Tastendruck ein Neuzeichnen auslösen. Absichtlich beim
+  // ersten Fokus gesetzt und nicht beim Seitenaufruf — sonst zählte die Zeit
+  // mit, in der jemand nur liest oder den Tab vergisst.
+  const startZeit = useRef<number | null>(null);
+
   const [thema, setThema] = useState<KontaktThema>("allgemein");
   const [laeuft, setLaeuft] = useState(false);
   const [erfolg, setErfolg] = useState<string | null>(null);
@@ -113,6 +123,13 @@ export function KontaktFormular() {
         nachricht: String(felder.get("nachricht") ?? ""),
         locale,
         website: String(felder.get("website") ?? ""),
+        // `undefined`, wenn der Fokus-Handler nie lief (Formular per Skript
+        // abgeschickt, JavaScript teilweise aus). Der Server behandelt das
+        // ausdrücklich NICHT als Verstoß und erfindet keine Dauer.
+        dauerSekunden:
+          startZeit.current === null
+            ? undefined
+            : (Date.now() - startZeit.current) / 1000,
       });
       setErfolg(antwort.detail);
       formular.reset();
@@ -199,10 +216,17 @@ export function KontaktFormular() {
             ) : (
               <form
                 onSubmit={absenden}
-                // Beim ersten Anfassen des Formulars das Captcha-Skript holen,
-                // damit das Token beim Absenden ohne Wartezeit da ist. Vorher
-                // wird nichts von Google geladen (siehe lib/captcha.ts).
-                onFocus={() => void captchaVorbereiten()}
+                // Beim ersten Anfassen des Formulars zwei Dinge: das
+                // Captcha-Skript holen (damit das Token beim Absenden ohne
+                // Wartezeit da ist; vorher wird nichts von Google geladen,
+                // siehe lib/captcha.ts) und die Uhr für die Zeitfalle starten.
+                // `onFocus` feuert bei jedem Feldwechsel — die Zeit wird
+                // deshalb nur beim ERSTEN Mal gesetzt, sonst würde sie sich mit
+                // jedem Sprung ins nächste Feld zurückstellen.
+                onFocus={() => {
+                  startZeit.current ??= Date.now();
+                  void captchaVorbereiten();
+                }}
                 className="flex flex-col gap-5"
               >
                 <div className="flex flex-col gap-2">

@@ -454,9 +454,19 @@ class Settings(BaseSettings):
     recaptcha_api_key: SecretStr = SecretStr("")
     recaptcha_site_key: str = ""
     recaptcha_base_url: str = "https://recaptchaenterprise.googleapis.com/v1"
-    # Ab welchem Score die Anfrage als menschlich gilt. 0.5 ist der von Google
-    # dokumentierte Ausgangswert; 1.0 = sicher Mensch, 0.0 = sicher Bot.
-    recaptcha_min_score: float = 0.5
+    # Ab welchem Score die Anfrage als menschlich gilt (1.0 = sicher Mensch,
+    # 0.0 = sicher Bot).
+    #
+    # 0.7 statt der von Google dokumentierten 0.5: Ein score-basierter Schlüssel
+    # WEIST NICHTS AB, er bewertet nur — die Entscheidung ist genau diese Zahl.
+    # Ein Bot, der einen echten Browser fernsteuert (Playwright, Puppeteer),
+    # bekommt ein gültiges Token und liegt typisch im Bereich 0.3–0.7; bei 0.5
+    # kam die Hälfte davon durch. 0.5 ist Googles Startwert für Seiten, auf denen
+    # ein Fehlalarm einen Kauf kostet. Hier löst jede Anfrage eine Mail über
+    # unseren DKIM-signierten Server aus, und ein falsch abgewiesener Mensch
+    # bekommt eine verständliche Meldung samt der Postfach-Adressen — der
+    # Fehlalarm ist also billiger als der Durchlass.
+    recaptcha_min_score: float = 0.7
     # Sandbox: Token wird NICHT bei Google geprüft, nur protokolliert. Gleiche
     # Bauart wie `mail_sandbox` und aus demselben Grund — lokal darf niemand
     # daran denken müssen, und lokal gibt es keine Schlüssel. Der wirksame Wert
