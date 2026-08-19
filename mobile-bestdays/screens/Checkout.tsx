@@ -9,23 +9,36 @@
 //   angezeigt — kein 0-Wert, keine erfundene Gebühr (Wurzel 4).
 // - Absenden ist gegen Doppeltipp/Retry gesperrt (Wurzel 2): ein laufender oder
 //   bereits erfolgreicher Versuch löst keinen zweiten POST aus.
-// - Eine echte Zahlungsabwicklung ist hier NOCH NICHT angebunden. Seit
-//   Migration 0409 antwortet der Server bei Sofortbuchung mit
-//   `status="zahlung_offen"` + `zahlung_erforderlich=true` und legt KEINE
-//   Buchung an. Die App zeigt diesen Zustand als „Noch nicht gebucht" —
-//   vorher stand hier „Buchung bestätigt", obwohl nichts gebucht war.
+//
+// DREI SCHRITTE, in dieser Reihenfolge (Airbnb-Muster, live abgelesen am
+// 19.08.2026 auf airbnb.de/book/stays/… ohne Anmeldung):
+//   1. Konto — ohne angemeldeten Gast geht es nicht weiter. Vorher stand hier
+//      ein freies Kontaktformular: jeder konnte mit beliebigem Namen buchen,
+//      und die Buchung hing an keinem Konto.
+//   2. Zahlung — das PaymentSheet von Stripe (`lib/zahlung.ts`). Kein
+//      nachgebautes Kartenfeld: die Kartendaten sehen wir nie.
+//   3. Prüfen und auslösen — der Knopf unten.
+//
+// KEINE BUCHUNG OHNE ZAHLUNG (Migration 0409): Der Server antwortet bei
+// Sofortbuchung mit `status="zahlung_offen"` + `client_secret` und legt NICHTS
+// an; die Reservierung entsteht erst, wenn der Stripe-Webhook die Zahlung
+// einlöst. Bis 19.08.2026 las die App diese Felder nicht und meldete „Buchung
+// bestätigt" — für eine Buchung, die es nicht gab. Deshalb sagt dieser Screen
+// „bestätigt" erst, wenn die Buchung in „Reisen" wirklich auftaucht.
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, TextInput, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { AnmeldeBlatt } from "@/components/AnmeldeBlatt";
 import { Icon } from "@/components/ui/Icon";
 import { Btn, Col, Photo, Row, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState } from "@/components/ui/patterns";
 import { useGuestAuth } from "@/contexts/GuestAuthContext";
 import { formatCurrency } from "@/lib/currency";
 import { formatZeitraum } from "@/lib/datum";
+import { listGuestBookings } from "@/lib/guestBookings";
 import {
   createBooking,
   getListing,
@@ -35,6 +48,7 @@ import {
   type ListingDetail,
   type Quote,
 } from "@/lib/listings";
+import { zahleBuchung } from "@/lib/zahlung";
 import type { RootStackParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -62,33 +76,28 @@ export default function Checkout() {
   const [tiere, setTiere] = useState(0);
   const [angebot, setAngebot] = useState<Quote | null>(null);
 
-  // Kontaktdaten: aus dem Gast-Konto vorbelegt, wenn eines angemeldet ist.
-  // Der Name wird am ersten Leerzeichen getrennt; hat das Konto nur einen
-  // Namensteil, bleibt der Nachname leer und muss ergänzt werden.
-  const [vorname, setVorname] = useState("");
-  const [nachname, setNachname] = useState("");
-  const [email, setEmail] = useState("");
-  const [telefon, setTelefon] = useState("");
-
   const [sendet, setSendet] = useState(false);
   const [fehler, setFehler] = useState<string | null>(null);
+  // Schritt 1 des Checkouts (Airbnb-Reihenfolge): ohne Konto geht es nicht
+  // weiter. Das Blatt trägt E-Mail → Code → Name.
+  const [anmeldeOffen, setAnmeldeOffen] = useState(false);
+  // Was gerade läuft — der Knopf sagt es dem Gast, statt nur „lädt".
+  const [phase, setPhase] = useState<"" | "absicht" | "zahlung" | "bestaetigung">("");
   // `zahlungOffen` = der Server hat eine Buchungsabsicht angelegt, aber KEINE
   // Buchung (0409). Der Zustand ist getrennt von `anfrage`: eine Anfrage ist
   // beim Gastgeber, eine offene Zahlung liegt beim Gast.
   const [erfolg, setErfolg] = useState<
-    { id: string; anfrage: boolean; zahlungOffen: boolean } | null
+    {
+      id: string;
+      anfrage: boolean;
+      // Zahlung nötig, aber NICHT geleistet (abgebrochen oder nicht angebunden).
+      zahlungOffen: boolean;
+      // Stripe hat die Zahlung angenommen. Die Buchung entsteht daraufhin per
+      // Webhook — `bestaetigt` sagt, ob wir sie schon sehen.
+      bezahlt?: boolean;
+      bestaetigt?: boolean;
+    } | null
   >(null);
-
-  useEffect(() => {
-    if (!guest) return;
-    const teile = (guest.name ?? "").trim().split(/\s+/).filter(Boolean);
-    if (teile.length > 0) {
-      setVorname((v) => v || teile[0]);
-      setNachname((n) => n || teile.slice(1).join(" "));
-    }
-    setEmail((e) => e || guest.email);
-    if (guest.phone) setTelefon((p) => p || guest.phone!);
-  }, [guest]);
 
   const load = useCallback(async () => {
     const res = await getListing(listingId, { start: checkIn, end: checkOut });
@@ -127,40 +136,125 @@ export default function Checkout() {
   const gesamt = angebot && !angebot.priceless ? angebot.total : null;
   const tiereErlaubt = angebot?.pets_allowed ?? false;
 
-  const formularOk =
-    vorname.trim().length > 0 && nachname.trim().length > 0 && istEmail(email);
+  // Kontaktdaten kommen AUS DEM KONTO, nicht aus einem freien Formular: der
+  // Gast ist seit dem Umbau angemeldet, bevor er hierher kommt. Der Name wird
+  // am ersten Leerzeichen getrennt (der Server verlangt Vor- und Nachname).
+  const angemeldet = guest !== null;
+  const kontakt = (() => {
+    const teile = (guest?.name ?? "").trim().split(/\s+/).filter(Boolean);
+    return {
+      first_name: teile[0] ?? "",
+      last_name: teile.slice(1).join(" "),
+      email: guest?.email ?? "",
+      phone: guest?.phone ?? undefined,
+    };
+  })();
+  const kontaktOk =
+    angemeldet && kontakt.first_name.length > 0 && istEmail(kontakt.email);
+
+  /** Sucht die frisch bezahlte Buchung in „Reisen" — bis sie da ist, sagt die
+   *  App NICHT „bestätigt". Die Buchung entsteht über den Stripe-Webhook, also
+   *  einige Sekunden nach dem Sheet; Stripe warnt ausdrücklich davor, sich auf
+   *  den Client-Callback zu verlassen. */
+  const warteAufBuchung = async (): Promise<boolean> => {
+    for (let versuch = 0; versuch < 6; versuch += 1) {
+      const res = await listGuestBookings("upcoming");
+      if (
+        res.ok &&
+        res.data.items.some(
+          (b: { property: { id: string }; check_in: string; check_out: string }) =>
+            b.property.id === listingId &&
+            b.check_in === checkIn &&
+            b.check_out === checkOut,
+        )
+      ) {
+        return true;
+      }
+      await new Promise<void>((fertig) => {
+        setTimeout(fertig, 1500);
+      });
+    }
+    return false;
+  };
 
   const buchen = async () => {
-    if (sendet || erfolg || !listing || !formularOk) return; // Doppel-Guard
+    // Doppel-Guard (Wurzel 2): ein laufender oder erfolgreicher Versuch löst
+    // keinen zweiten Vorgang aus — ein zweiter Intent wäre ein zweites Mal Geld.
+    if (sendet || erfolg || !listing) return;
+    if (!kontaktOk) {
+      setAnmeldeOffen(true);
+      return;
+    }
     setSendet(true);
     setFehler(null);
+    setPhase("absicht");
     const res = await createBooking({
       property_id: listing.id,
       check_in: checkIn,
       check_out: checkOut,
       guests,
       pets: tiere,
-      contact: {
-        first_name: vorname.trim(),
-        last_name: nachname.trim(),
-        email: email.trim(),
-        phone: telefon.trim() || undefined,
-      },
+      contact: kontakt,
       // Anzeigewert; der Server bepreist verbindlich neu.
       ...(gesamt != null ? { total_amount: gesamt } : {}),
     });
-    if (res.ok) {
-      setErfolg({
-        id: res.data.id,
-        anfrage: res.data.is_request,
-        // Nicht am Vorhandensein des client_secret ablesen: der Server sagt es
-        // ausdrücklich. Fehlt das Feld (alte API), gilt „nicht offen" — dann
-        // hat der alte Weg wirklich gebucht.
-        zahlungOffen: res.data.zahlung_erforderlich === true,
-      });
-    } else {
+    if (!res.ok) {
       setFehler(res.error);
+      setPhase("");
+      setSendet(false);
+      return;
     }
+    const daten = res.data;
+
+    // Anfrage-Objekt: der Gastgeber muss zusagen, es wird (noch) nicht gezahlt.
+    if (daten.is_request || daten.zahlung_erforderlich !== true) {
+      setErfolg({ id: daten.id, anfrage: daten.is_request, zahlungOffen: false });
+      setPhase("");
+      setSendet(false);
+      return;
+    }
+
+    // Sofortbuchung: erst zahlen, dann existiert eine Buchung (0409).
+    if (!daten.client_secret || !daten.publishable_key) {
+      // Der Server sagt „Zahlung erforderlich", liefert aber keine Zahlungsdaten
+      // — dann ist hier nichts zu bezahlen und schon gar nichts bestätigt.
+      setErfolg({ id: daten.id, anfrage: false, zahlungOffen: true });
+      setPhase("");
+      setSendet(false);
+      return;
+    }
+    setPhase("zahlung");
+    const zahlung = await zahleBuchung({
+      clientSecret: daten.client_secret,
+      publishableKey: daten.publishable_key,
+      name: guest?.name ?? null,
+      email: guest?.email ?? null,
+    });
+    if (zahlung.art === "abgebrochen") {
+      // Kein Fehler, aber auch keine Buchung: der Zeitraum ist NICHT reserviert.
+      setFehler(
+        "Zahlung abgebrochen — die Unterkunft ist noch nicht gebucht. Du kannst es erneut versuchen.",
+      );
+      setPhase("");
+      setSendet(false);
+      return;
+    }
+    if (zahlung.art === "fehler") {
+      setFehler(zahlung.meldung);
+      setPhase("");
+      setSendet(false);
+      return;
+    }
+    setPhase("bestaetigung");
+    const bestaetigt = await warteAufBuchung();
+    setErfolg({
+      id: daten.id,
+      anfrage: false,
+      zahlungOffen: false,
+      bezahlt: true,
+      bestaetigt,
+    });
+    setPhase("");
     setSendet(false);
   };
 
@@ -204,7 +298,9 @@ export default function Checkout() {
               ? "Noch nicht gebucht"
               : erfolg.anfrage
                 ? "Anfrage gesendet"
-                : "Buchung bestätigt"}
+                : erfolg.bezahlt && !erfolg.bestaetigt
+                  ? "Zahlung erfolgreich"
+                  : "Buchung bestätigt"}
           </Txt>
           {/* Bei offener Zahlung wird NICHTS bestätigt und nichts zu „Reisen“
               geschickt: dort steht keine Buchung, weil keine entstanden ist.
@@ -212,12 +308,14 @@ export default function Checkout() {
               jemand verlässt (Wurzel 4). */}
           <Txt v="body" soft>
             {erfolg.zahlungOffen
-              ? "Diese Unterkunft wird sofort bestätigt — dafür muss zuerst bezahlt werden. Das Bezahlen ist in der App noch nicht angebunden. Deine Nächte sind NICHT reserviert; buche die Unterkunft bitte im Browser auf myBestDays."
+              ? "Diese Unterkunft wird sofort bestätigt — dafür muss zuerst bezahlt werden. Es kam aber keine Zahlungsmöglichkeit zurück. Deine Nächte sind NICHT reserviert; versuche es später erneut oder buche im Browser auf myBestDays."
               : erfolg.anfrage
                 ? "Der Gastgeber bestätigt deine Anfrage. Du siehst den Status unter „Reisen“."
-                : "Deine Buchung steht unter „Reisen“ bereit."}
+                : erfolg.bezahlt && !erfolg.bestaetigt
+                  ? "Die Zahlung ist angenommen. Wir verbuchen sie gerade — die Buchung erscheint gleich unter „Reisen“. Falls nicht, melde dich bei uns; das Geld ist nicht verloren."
+                  : "Deine Buchung steht unter „Reisen“ bereit."}
           </Txt>
-          {erfolg.zahlungOffen ? (
+          {erfolg.zahlungOffen && !erfolg.bezahlt ? (
             <Btn
               variant="dark"
               block
@@ -359,33 +457,50 @@ export default function Checkout() {
 
         <Trennlinie />
 
+        {/* SCHRITT 1 — Konto. Bei Airbnb ist das der erste Schritt des
+            Checkouts und die Zahlung erst der zweite (live abgelesen am
+            19.08.2026). Vorher stand hier ein freies Kontaktformular: jeder
+            konnte mit irgendeinem Namen buchen, und die Buchung hing an keinem
+            Konto. */}
         <Col gap={14}>
-          <Txt v="h2">Kontaktdaten</Txt>
-          <Col gap={0}>
-            <Feld label="Vorname" value={vorname} onChange={setVorname} position="oben" />
-            <Feld label="Nachname" value={nachname} onChange={setNachname} position="mitte" />
-            <Feld
-              label="E-Mail"
-              value={email}
-              onChange={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              position="mitte"
-            />
-            <Feld
-              label="Telefon (optional)"
-              value={telefon}
-              onChange={setTelefon}
-              keyboardType="phone-pad"
-              position="unten"
-            />
-          </Col>
-          {!formularOk && (
-            <Txt v="xs" soft>
-              Vorname, Nachname und eine gültige E-Mail sind nötig — daran hängt
-              die Bestätigung deiner Buchung.
-            </Txt>
+          <Txt v="h2">1 · Dein Konto</Txt>
+          {angemeldet ? (
+            <Col gap={4}>
+              <Txt v="body">{guest?.name}</Txt>
+              <Txt v="sm" soft>
+                {guest?.email}
+                {guest?.phone ? ` · ${guest.phone}` : ""}
+              </Txt>
+              <Txt v="xs" soft>
+                Aus deinem Konto. Ändern kannst du das unter „Profil".
+              </Txt>
+            </Col>
+          ) : (
+            <Col gap={10}>
+              <Txt v="body" soft>
+                Zum Buchen brauchst du ein Konto — wir schicken dir einen Code
+                per E-Mail, ein Passwort ist nicht nötig.
+              </Txt>
+              <Btn variant="dark" block onPress={() => setAnmeldeOffen(true)}>
+                Anmelden oder Konto anlegen
+              </Btn>
+            </Col>
           )}
+        </Col>
+
+        <Trennlinie />
+
+        {/* SCHRITT 2 — Zahlung. Das Kartenformular ist das PaymentSheet von
+            Stripe; es öffnet sich beim Buchen. Hier steht deshalb nur, WAS
+            passiert — kein nachgebautes Kartenfeld (die Kartendaten sehen wir
+            nie, und ein eigenes Feld wäre PCI-pflichtig). */}
+        <Col gap={14}>
+          <Txt v="h2">2 · Zahlung</Txt>
+          <Txt v="body" soft>
+            {gesamt != null
+              ? "Beim Buchen öffnet sich das Zahlungsfenster von Stripe. Die Buchung entsteht erst, wenn die Zahlung durch ist — vorher sind die Nächte nicht reserviert."
+              : "Für diesen Zeitraum gibt es keinen Preis: der Gastgeber bekommt eine Anfrage und meldet sich. Bezahlt wird erst nach seiner Zusage."}
+          </Txt>
         </Col>
 
         {fehler && (
@@ -427,10 +542,31 @@ export default function Checkout() {
             </Txt>
           )}
         </Col>
-        <Btn variant={formularOk && !sendet ? "primary" : "ghost"} onPress={buchen}>
-          {sendet ? "Wird gesendet …" : gesamt != null ? "Verbindlich buchen" : "Anfragen"}
+        {/* Der Knopf benennt den nächsten Schritt: ohne Konto führt er ins
+            Anmelde-Blatt, mit Konto zur Zahlung. „Verbindlich buchen" wäre hier
+            falsch — verbindlich wird es erst mit der Zahlung. */}
+        <Btn variant={!sendet ? "primary" : "ghost"} onPress={buchen}>
+          {phase === "absicht"
+            ? "Preis wird geprüft …"
+            : phase === "zahlung"
+              ? "Zahlung läuft …"
+              : phase === "bestaetigung"
+                ? "Buchung wird bestätigt …"
+                : !angemeldet
+                  ? "Anmelden und weiter"
+                  : gesamt != null
+                    ? "Weiter zur Zahlung"
+                    : "Anfragen"}
         </Btn>
       </Row>
+
+      {/* Nach erfolgreicher Anmeldung KEIN automatisches Buchen: der Gast soll
+          den Preis noch einmal sehen und selbst auslösen. */}
+      <AnmeldeBlatt
+        open={anmeldeOffen}
+        onClose={() => setAnmeldeOffen(false)}
+        onFertig={() => setAnmeldeOffen(false)}
+      />
     </View>
   );
 }
@@ -457,51 +593,4 @@ function ZurueckKnopf({ onPress }: { onPress: () => void }) {
   );
 }
 
-// Feld einer zusammenhängenden Gruppe: außen gerundet, innen geteilte Linie.
-function Feld({
-  label,
-  value,
-  onChange,
-  keyboardType,
-  autoCapitalize,
-  position,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  keyboardType?: "default" | "email-address" | "phone-pad";
-  autoCapitalize?: "none" | "sentences" | "words";
-  position: "oben" | "mitte" | "unten";
-}) {
-  const t = useTheme();
-  const r = 14;
-  return (
-    <View
-      style={{
-        borderWidth: 1,
-        borderColor: t.palette.line,
-        borderTopWidth: position === "oben" ? 1 : 0,
-        borderTopLeftRadius: position === "oben" ? r : 0,
-        borderTopRightRadius: position === "oben" ? r : 0,
-        borderBottomLeftRadius: position === "unten" ? r : 0,
-        borderBottomRightRadius: position === "unten" ? r : 0,
-        paddingHorizontal: 16,
-        paddingTop: 10,
-        paddingBottom: 8,
-        backgroundColor: t.palette.surface,
-      }}
-    >
-      <Txt v="xs" soft>
-        {label}
-      </Txt>
-      <TextInput
-        value={value}
-        onChangeText={onChange}
-        keyboardType={keyboardType ?? "default"}
-        autoCapitalize={autoCapitalize ?? "words"}
-        autoCorrect={false}
-        style={{ color: t.palette.ink, fontFamily: t.fonts.regular, fontSize: 16, paddingVertical: 6 }}
-      />
-    </View>
-  );
-}
+

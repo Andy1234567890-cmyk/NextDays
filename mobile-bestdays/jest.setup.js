@@ -22,6 +22,21 @@ jest.mock('react-native-keychain', () => {
   };
 });
 
+// Stripe: das SDK greift beim IMPORT auf das native TurboModule zu
+// (`TurboModuleRegistry.getEnforcing('StripeSdk')`) — im Node-Testlauf gibt es
+// das nicht, und schon `import App` würde werfen. Gemockt wird nur, was die App
+// benutzt: der Rückweg-Hook und die drei Zahlungsfunktionen. Die Mocks tun
+// NICHTS und melden auch keinen Erfolg — ein Test, der „bezahlt" behauptet,
+// müsste das selbst setzen.
+jest.mock('@stripe/stripe-react-native', () => ({
+  useStripe: () => ({ handleURLCallback: jest.fn(async () => false) }),
+  initStripe: jest.fn(async () => undefined),
+  initPaymentSheet: jest.fn(async () => ({})),
+  presentPaymentSheet: jest.fn(async () => ({
+    error: { code: 'Canceled', message: 'abgebrochen' },
+  })),
+}));
+
 jest.mock('react-native-safe-area-context', () => {
   const mock = jest.requireActual('react-native-safe-area-context/jest/mock');
   return mock.default ?? mock;

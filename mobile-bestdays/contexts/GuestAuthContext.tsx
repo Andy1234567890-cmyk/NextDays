@@ -19,8 +19,11 @@ import {
 import {
   getGuestProfile,
   getGuestToken,
+  guestCodeAnfordern as apiGuestCodeAnfordern,
+  guestCodePruefen as apiGuestCodePruefen,
   guestLogin as apiGuestLogin,
   guestLogout as apiGuestLogout,
+  guestProfilAnlegen as apiGuestProfilAnlegen,
   guestRegister as apiGuestRegister,
   updateGuestProfile,
   type GuestProfile,
@@ -38,6 +41,17 @@ type GuestAuthState = {
   register: (input: GuestRegisterInput) => Promise<Antwort>;
   logout: () => Promise<void>;
   reload: () => Promise<void>;
+  /** Schritt 1 der Code-Anmeldung: Code an die Adresse schicken. */
+  codeAnfordern: (email: string, locale?: string) => Promise<Antwort>;
+  /** Schritt 2: Code prüfen. `profilFehlt` = Name muss noch erfasst werden;
+   *  der Status bleibt dann bewusst `signedOut`, denn ohne Namen ist das Konto
+   *  für eine Buchung nicht benutzbar. */
+  codePruefen: (
+    email: string,
+    code: string,
+  ) => Promise<Antwort & { profilFehlt?: boolean }>;
+  /** Schritt 3 (nur Erstanmeldung): Namen nachtragen → dann angemeldet. */
+  profilAnlegen: (input: { name: string; phone?: string }) => Promise<Antwort>;
   updateProfile: (input: {
     name?: string;
     phone?: string;
@@ -107,6 +121,48 @@ export function GuestAuthProvider({ children }: { children: ReactNode }) {
     [ladeProfil],
   );
 
+  const codeAnfordern = useCallback(
+    async (email: string, locale?: string): Promise<Antwort> => {
+      const res = await apiGuestCodeAnfordern(email, locale);
+      return res.ok ? { ok: true } : { ok: false, error: res.error };
+    },
+    [],
+  );
+
+  const codePruefen = useCallback(
+    async (
+      email: string,
+      code: string,
+    ): Promise<Antwort & { profilFehlt?: boolean }> => {
+      const res = await apiGuestCodePruefen(email, code);
+      if (!res.ok) return { ok: false, error: res.error };
+      if (res.data.profilFehlt) {
+        // Angemeldet, aber unvollständig: NICHT `signedIn` melden, sonst zeigt
+        // die Oberfläche ein Konto ohne Namen als fertig an.
+        return { ok: true, profilFehlt: true };
+      }
+      if (!(await ladeProfil())) {
+        await apiGuestLogout();
+        setStatus("signedOut");
+        return { ok: false, error: "Konto konnte nicht geladen werden." };
+      }
+      setStatus("signedIn");
+      return { ok: true, profilFehlt: false };
+    },
+    [ladeProfil],
+  );
+
+  const profilAnlegen = useCallback(
+    async (input: { name: string; phone?: string }): Promise<Antwort> => {
+      const res = await apiGuestProfilAnlegen(input);
+      if (!res.ok) return { ok: false, error: res.error };
+      setGuest(res.data);
+      setStatus("signedIn");
+      return { ok: true };
+    },
+    [],
+  );
+
   const logout = useCallback(async () => {
     await apiGuestLogout();
     setGuest(null);
@@ -134,8 +190,30 @@ export function GuestAuthProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ status, guest, login, register, logout, reload, updateProfile }),
-    [status, guest, login, register, logout, reload, updateProfile],
+    () => ({
+      status,
+      guest,
+      login,
+      register,
+      logout,
+      reload,
+      updateProfile,
+      codeAnfordern,
+      codePruefen,
+      profilAnlegen,
+    }),
+    [
+      status,
+      guest,
+      login,
+      register,
+      logout,
+      reload,
+      updateProfile,
+      codeAnfordern,
+      codePruefen,
+      profilAnlegen,
+    ],
   );
 
   return <GuestAuthCtx.Provider value={value}>{children}</GuestAuthCtx.Provider>;

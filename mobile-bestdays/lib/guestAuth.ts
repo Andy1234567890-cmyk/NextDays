@@ -21,6 +21,10 @@ type GuestSession = {
   refresh_token: string;
   token_type: string;
   expires_in: number;
+  // Nur bei der Code-Anmeldung: der Gast ist angemeldet, aber der NAME fehlt
+  // noch (Erstanmeldung). Ohne Namen ist eine Reservierung für den Gastgeber
+  // unbrauchbar, deshalb fragt die Oberfläche ihn nach.
+  profil_fehlt?: boolean;
 };
 
 // Contract: guest_auth/schemas.py → GuestProfileResponse.
@@ -153,6 +157,70 @@ export async function guestPasswordReset(email: string): Promise<Result<string>>
     return { ok: true, data: res.message };
   } catch (exc) {
     return { ok: false, error: fehlertext(exc, "Anfrage fehlgeschlagen.") };
+  }
+}
+
+// --- Anmeldung per Einmal-Code (Airbnb-Muster) -------------------------------
+//
+// Die Reihenfolge im Checkout ist bei Airbnb live abgelesen (19.08.2026):
+// 1. einloggen oder registrieren → 2. Zahlungsart → 3. prüfen. Schritt 2 ist
+// ohne Schritt 1 nicht erreichbar. Ein Passwort gibt es hier NICHT: der Gast
+// tippt seine Adresse, bekommt einen Code und ist drin. Erzeugt und geprüft
+// wird der Code von GoTrue (`guest_auth/codeanmeldung.py`).
+
+/** Schritt 1: Code an die Adresse schicken. Antwortet immer neutral — ob die
+ *  Adresse ein Konto hat, sagt der Server bewusst nicht. */
+export async function guestCodeAnfordern(
+  email: string,
+  locale?: string,
+): Promise<Result<string>> {
+  try {
+    const res = await guestApi<{ message: string }>("/guest-auth/code", {
+      method: "POST",
+      body: { email: email.trim(), locale: locale ?? null },
+    });
+    return { ok: true, data: res.message };
+  } catch (exc) {
+    return { ok: false, error: fehlertext(exc, "Code konnte nicht verschickt werden.") };
+  }
+}
+
+/** Schritt 2: Code prüfen → Session. `true` = Name fehlt noch (Erstanmeldung). */
+export async function guestCodePruefen(
+  email: string,
+  code: string,
+): Promise<Result<{ profilFehlt: boolean }>> {
+  try {
+    const session = await guestApi<GuestSession>("/guest-auth/code/verify", {
+      method: "POST",
+      body: { email: email.trim(), code: code.trim() },
+    });
+    await speichereSession(session);
+    return { ok: true, data: { profilFehlt: session.profil_fehlt === true } };
+  } catch (exc) {
+    return {
+      ok: false,
+      error: fehlertext(exc, "Code ist ungültig oder abgelaufen."),
+    };
+  }
+}
+
+/** Schritt 3 (nur bei Erstanmeldung): Namen nachtragen. Braucht die Session
+ *  aus Schritt 2 — der Server schreibt ausschließlich die eigene Zeile. */
+export async function guestProfilAnlegen(input: {
+  name: string;
+  phone?: string;
+  preferred_locale?: string;
+  preferred_currency?: string;
+}): Promise<Result<GuestProfile>> {
+  try {
+    const profil = await guestApi<GuestProfile>("/guest-auth/code/profil", {
+      method: "POST",
+      body: input,
+    });
+    return { ok: true, data: profil };
+  } catch (exc) {
+    return { ok: false, error: fehlertext(exc, "Name konnte nicht gespeichert werden.") };
   }
 }
 

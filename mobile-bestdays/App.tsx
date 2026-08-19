@@ -9,6 +9,9 @@ import {
   type LinkingOptions,
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { useStripe } from "@stripe/stripe-react-native";
+import { useCallback, useEffect } from "react";
+import { Linking } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -102,13 +105,56 @@ function Root() {
   );
 }
 
+/**
+ * Rückweg aus 3-D Secure zurück in die App.
+ *
+ * Führt eine Zahlung den Gast aus der App heraus (Bank-App, Safari), kommt er
+ * über `mybestdays://stripe-redirect` zurück. Diese URL MUSS an das Stripe-SDK
+ * gehen, sonst hängt das PaymentSheet: React Navigation würde sie nur als
+ * unbekannten Deep-Link verwerfen. Von Stripe ausdrücklich verlangt
+ * (docs.stripe.com, „Rückgabe-URL einrichten").
+ *
+ * Kein eigener Screen für den Pfad: die URL ist ein Signal an das SDK, kein
+ * Ziel in der App.
+ */
+function useStripeRueckweg(): void {
+  const { handleURLCallback } = useStripe();
+
+  const behandle = useCallback(
+    async (url: string | null) => {
+      if (!url) return;
+      await handleURLCallback(url);
+    },
+    [handleURLCallback],
+  );
+
+  useEffect(() => {
+    // Kaltstart: die App wurde DURCH die Rückkehr gestartet.
+    void Linking.getInitialURL().then(behandle);
+    const abo = Linking.addEventListener("url", (e: { url: string }) => {
+      void behandle(e.url);
+    });
+    return () => abo.remove();
+  }, [behandle]);
+}
+
+function StripeRueckweg({ children }: { children: React.ReactNode }) {
+  useStripeRueckweg();
+  return <>{children}</>;
+}
+
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider marke={marke}>
           <GuestAuthProvider>
-            <Root />
+            {/* Kein StripeProvider mit festem Schlüssel: der Publishable Key
+                kommt pro Zahlung vom Server (`lib/zahlung.ts` ruft initStripe).
+                Ein Schlüssel in der App könnte zum Intent unpassend sein. */}
+            <StripeRueckweg>
+              <Root />
+            </StripeRueckweg>
           </GuestAuthProvider>
         </ThemeProvider>
       </SafeAreaProvider>
