@@ -135,13 +135,18 @@ jobs:
           echo "code=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
           echo "name=$basis+${{ github.run_number }}" >> "$GITHUB_OUTPUT"
 
+      # `working-directory` am SCHRITT ersetzt den Job-Default, es haengt sich
+      # nicht daran an: `android` allein zeigte auf <Wurzel>/android und damit
+      # ins Leere ("No such file or directory", erster Lauf 19.08.2026). Der
+      # Schritt "An Beta-Tester verteilen" hat bewusst KEIN eigenes
+      # working-directory und laeuft daher korrekt im Job-Default.
       - name: Release bauen
         env:
           MYNEXTDAYS_RELEASE_STORE_FILE: ${{ steps.keystore.outputs.pfad }}
           MYNEXTDAYS_RELEASE_STORE_PASSWORD: ${{ secrets.MYNEXTDAYS_RELEASE_STORE_PASSWORD }}
           MYNEXTDAYS_RELEASE_KEY_ALIAS: ${{ secrets.MYNEXTDAYS_RELEASE_KEY_ALIAS }}
           MYNEXTDAYS_RELEASE_KEY_PASSWORD: ${{ secrets.MYNEXTDAYS_RELEASE_KEY_PASSWORD }}
-        working-directory: android
+        working-directory: ${{ inputs.app }}/android
         run: |
           set -euo pipefail
           aufgabe=$([ "${{ inputs.artefakt }}" = "aab" ] && echo bundleRelease || echo assembleRelease)
@@ -154,7 +159,7 @@ jobs:
         # build.gradle ist fail-closed gebaut und liefert bei fehlendem
         # Keystore ein UNSIGNIERTES Release-APK — das installiert kein
         # Telefon. Also nachsehen, statt annehmen (Wurzel 5).
-        working-directory: android
+        working-directory: ${{ inputs.app }}/android
         run: |
           set -euo pipefail
           if [ "${{ inputs.artefakt }}" = "aab" ]; then
