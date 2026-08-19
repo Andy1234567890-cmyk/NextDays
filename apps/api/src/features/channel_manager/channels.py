@@ -584,6 +584,17 @@ class ChannelsMixin:
         — Zuordnung Zimmer→Zimmer; die Raten werden serverseitig expandiert."""
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
+        # Wie in `prepare_channel`: ohne Trace-Kontext schreibt der Sink nichts,
+        # weil ihm der Tenant fehlt. `connect_channel` ist ein EIGENER Request
+        # mit frischer Service-Instanz — der in `prepare_channel` gesetzte
+        # Kontext gilt hier nicht mehr. Folge bis 19.08.2026: von 18 verbundenen
+        # Booking.com-Kanälen stand kein einziger `POST /channels` im Log, nur
+        # die Vorbereitungsschritte. Als zu klären war, warum drei Objekte ihre
+        # Gebühren als „im Preis enthalten" zurückmelden, war der Anlegevorgang
+        # samt Channex-Antwort nicht mehr rekonstruierbar.
+        self._trace_step(
+            tenant_id=tenant_id, property_id=property_id, step="connect"
+        )
         log.info("connect_debug_start", tenant_id=tenant_id,
                  property_id=property_id, portal_code=portal_code,
                  mappings=mappings, settings_keys=list((settings or {}).keys()))
@@ -831,13 +842,20 @@ class ChannelsMixin:
         # ist Availability-Master, der neue Kanal darf nie mit leerem/altem ARI
         # starten. Best effort: der Nightly-Full-Sync holt Verpasstes nach.
         try:
-            from src.jobs.queue import dedup_key, enqueue
+            from src.jobs.queue import dedup_key, enqueue, try_enqueue_tax_sync
 
             enqueue(
                 db, "full_sync_property", tenant_id=tenant_id,
                 payload={"tenant_id": tenant_id, "property_id": property_id},
                 dedup_key=dedup_key(tenant_id, property_id, "full_sync_property"),
             )
+            # Steuern/Gebühren gehören zum Go-Live dazu, `full_sync_property`
+            # fasst sie NICHT an (nur Verfügbarkeit + Preise/Restriktionen). Ein
+            # Kanal-Plan, der erst beim Verbinden entsteht, hätte sonst kein
+            # Tax-Set, bis zufällig jemand eine Gebühr ändert — der Gast zahlte
+            # die Reinigung bis dahin nicht (Wurzel 1: der Gegenzustand zum
+            # neuen Kanal ist sein Abgaben-Stand).
+            try_enqueue_tax_sync(db, tenant_id, property_id)
             # NACHHOLEN, verzögert: Der Anstoß oben ist ein AUFTRAG ans Portal,
             # keine Antwort. Booking.com stellt die Reservierungen erst danach
             # bereit — der Import wenige Zeilen später kommt zwangsläufig zu früh
