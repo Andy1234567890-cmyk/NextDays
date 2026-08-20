@@ -440,38 +440,62 @@ export function ReservationDetailSlider({
                     </div>
                   ))}
                   <div className="mt-1 flex justify-between border-t pt-2 font-semibold">
-                    <dt>Gesamt</dt>
+                    {/* Bei einer OTA-Buchung ist `total_amount` NICHT der
+                        Gastpreis: Airbnb liefert dort den Uebernachtungspreis
+                        ohne Gebuehren. "Gesamt" zu nennen, was der Gast zahlt,
+                        waere eine Falschaussage — der Gast zahlte mehr. */}
+                    <dt>{isOta ? t("slider.otaTotal") : t("slider.total")}</dt>
                     <dd className="font-display font-extrabold">
                       {money(data.total_amount, data.currency)}
                     </dd>
                   </div>
-                  <div className="flex justify-between border-t pt-2">
-                    <dt className="text-muted-foreground">{t("slider.invoiced")}</dt>
-                    <dd>
-                      {data.invoice && data.invoice.gross_amount != null
-                        ? formatCurrency(
-                            data.invoice.gross_amount,
-                            data.invoice.currency || data.currency,
-                          )
-                        : money(0, data.currency)}
-                    </dd>
-                  </div>
+                  {/* "In Rechnung gestellt" ist eine Aussage ueber UNSERE
+                      Rechnung. Bei portal-kassierten Buchungen stellen wir dem
+                      Gast keine — die Zeile behauptete dort 0,00 und liess das
+                      wie eine offene Forderung aussehen. */}
+                  {!isOta && (
+                    <div className="flex justify-between border-t pt-2">
+                      <dt className="text-muted-foreground">{t("slider.invoiced")}</dt>
+                      <dd>
+                        {data.invoice && data.invoice.gross_amount != null
+                          ? formatCurrency(
+                              data.invoice.gross_amount,
+                              data.invoice.currency || data.currency,
+                            )
+                          : money(0, data.currency)}
+                      </dd>
+                    </div>
+                  )}
                   <div className="flex justify-between">
-                    <dt className="text-muted-foreground">Bezahlt</dt>
+                    {/* `paid_amount` traegt bei OTA-Buchungen die AUSZAHLUNG des
+                        Portals an uns (Gastpreis minus Portalprovision), nicht
+                        eine Zahlung des Gastes. Untereinander mit "Gesamt"
+                        gestellt las sich das als Ueberzahlung: live 3.967,00
+                        gegen 4.323,86 bei derselben Buchung (20.08.2026). */}
+                    <dt className="text-muted-foreground">
+                      {isOta ? t("slider.otaPayout") : t("slider.paid")}
+                    </dt>
                     <dd>{money(data.paid_amount, data.currency)}</dd>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <dt className="text-muted-foreground">{t("slider.stillOpen")}</dt>
-                    <dd
-                      className={
-                        (data.due_amount ?? 0) > 0
-                          ? "rounded-full bg-warning/20 px-2 py-0.5 font-semibold"
-                          : "font-semibold"
-                      }
-                    >
-                      {money(data.due_amount, data.currency)}
-                    </dd>
-                  </div>
+                  {/* Kein Offenposten bei portal-kassierten Buchungen: das
+                      Backend liefert dort `due_amount = null`, weil die
+                      Differenz zweier verschiedener Bezugsgroessen keine
+                      Forderung ist. Was der Gast noch schuldet, weiss das
+                      Portal, nicht wir. */}
+                  {data.due_amount != null && (
+                    <div className="flex items-center justify-between">
+                      <dt className="text-muted-foreground">{t("slider.stillOpen")}</dt>
+                      <dd
+                        className={
+                          data.due_amount > 0
+                            ? "rounded-full bg-warning/20 px-2 py-0.5 font-semibold"
+                            : "font-semibold"
+                        }
+                      >
+                        {money(data.due_amount, data.currency)}
+                      </dd>
+                    </div>
+                  )}
                 </dl>
 
                 {!isCancelled && (

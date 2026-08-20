@@ -414,6 +414,29 @@ class ReadsMixin(ReservationsBase):
 
         total = float(r.get("total_amount") or 0)
         paid = float(r.get("paid_amount") or 0)
+        # OTA-BUCHUNGEN SIND KEINE RECHNUNG. Bei Airbnb traegt `total_amount`
+        # den Uebernachtungspreis (`base_price`, ohne Gebuehren) und
+        # `paid_amount` die AUSZAHLUNG des Portals an uns (`payout_amount`,
+        # Gastpreis minus Portalprovision, siehe airbnb_historie_import). Zwei
+        # verschiedene Bezugsgroessen — ihre Differenz ist kein Offenposten.
+        #
+        # Live am 20.08.2026 im Slider: "Gesamt 3.967,00 / Bezahlt 4.323,86 /
+        # Noch offen 0,00" bei derselben Buchung. Bezahlt HOEHER als gesamt
+        # liest sich als Ueberzahlung von 356,86, und das `max(0, ...)` verdeckte
+        # das Minus, statt es zu benennen (Wurzel 4: keine plausible Zahl, wo
+        # die Groesse nicht bestimmbar ist).
+        #
+        # NUR AIRBNB, nicht "alle Portale": bei Booking.com traegt
+        # `total_amount` den Gastpreis brutto, dort ist `total - paid` ein
+        # echter Offenposten (docs/EIGENTUEMER-PREIS-KETTE.md, Tabelle "Was der
+        # Gesamtbetrag je Portal bedeutet"). Ein pauschaler OTA-Riegel haette
+        # den Booking-Offenposten mitgenommen — und genau das hat der
+        # bestehende Test `test_detail_admin_sees_full_amounts_and_quote`
+        # (channel="booking", 400/100 -> 300) aufgedeckt.
+        #
+        # `None` heisst "nicht bestimmbar" — die UI zeigt dann keinen
+        # Offenposten, statt 0,00 zu behaupten.
+        offen = None if r.get("channel") == "airbnb" else max(0.0, total - paid)
         items = [
             QuoteItem(label=str(it.get("label", "")), amount=float(it.get("amount") or 0))
             for it in (r.get("quote_items") or [])
@@ -487,7 +510,7 @@ class ReadsMixin(ReservationsBase):
             currency=(r.get("currency") or "") if mask.amounts else "",
             total_amount=mask.amount(total),
             paid_amount=mask.amount(paid),
-            due_amount=mask.amount(max(0.0, total - paid)),
+            due_amount=mask.amount(offen) if offen is not None else None,
             quote_items=items if mask.amounts else [],
             checkin_time=r.get("checkin_time"),
             checkout_time=r.get("checkout_time"),

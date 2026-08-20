@@ -1542,6 +1542,51 @@ def test_detail_masks_amounts_and_contact_without_permission() -> None:
     assert d.guest_email is None
 
 
+def test_detail_airbnb_hat_keinen_offenposten() -> None:
+    """Bei Airbnb ist `total - paid` KEIN Offenposten.
+
+    Live am 20.08.2026 im Kalender-Slider zu sehen: "Gesamt 3.967,00 /
+    Bezahlt 4.323,86 / Noch offen 0,00" bei EINER Buchung. Bezahlt hoeher als
+    gesamt liest sich als Ueberzahlung von 356,86 — dabei messen die Zahlen
+    Verschiedenes: `total_amount` traegt bei Airbnb den Uebernachtungspreis
+    (`base_price`, ohne Gebuehren), `paid_amount` die Auszahlung des Portals
+    an uns (`payout_amount` = Gastpreis minus Portalprovision). Das alte
+    `max(0, total - paid)` verdeckte das Minus mit einer 0,00 statt es zu
+    benennen (Wurzel 4).
+    """
+    store = _move_store(check_in="2026-07-31", check_out="2026-08-03")
+    store["reservations"][0].update({
+        "channel": "airbnb",
+        "total_amount": 3967.00,
+        "paid_amount": 4323.86,
+    })
+    svc = _move_db(store)
+    d = svc.detail(AuthContext(user_id="u", tenant_id="t1", role="admin"), RID)
+    assert d.total_amount == 3967.00
+    assert d.paid_amount == 4323.86
+    # Kein erfundener Offenposten — und ausdruecklich auch keine 0,00.
+    assert d.due_amount is None
+
+
+def test_detail_booking_behaelt_seinen_offenposten() -> None:
+    """Booking.com traegt den Gastpreis brutto — dort ist die Differenz echt.
+
+    Die Gegenprobe zum Airbnb-Fall: ein pauschaler Riegel fuer "alle Portale"
+    haette diesen Offenposten mitgenommen. Die Bedeutung von `total_amount`
+    ist je Portal verschieden, nicht je "OTA oder nicht".
+    """
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["reservations"][0].update({
+        "channel": "booking",
+        "total_amount": 5420.81,
+        "paid_amount": 4000.00,
+    })
+    svc = _move_db(store)
+    d = svc.detail(AuthContext(user_id="u", tenant_id="t1", role="admin"), RID)
+    assert d.due_amount is not None
+    assert round(d.due_amount, 2) == 1420.81
+
+
 def test_detail_unknown_404() -> None:
     store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
     svc = _move_db(store)
