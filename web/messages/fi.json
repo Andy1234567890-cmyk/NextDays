@@ -1225,12 +1225,18 @@
       "totals": "Summat",
       "empty": "Ei varauksia ajanjaksolla.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Portaali ei ilmoittanut maksuja",
+        "what": "Tämä varaus saapui portaalista ilman maksuerittelyä. Siksi laskelmassa ei veloiteta siivous-, käyttö- eikä lemmikkimaksua: mitä portaali ei ole ilmoittanut, sitä vieras ei ole maksanut. Vieraan hinta on siksi pienempi kuin tälle kohteelle tallennettu summa.",
+        "channexImport": "Varaus haettiin jälkikäteen kanavan liittämisen yhteydessä. Portaalien välittäjän mukaan tällaiset varaukset eivät sisällä lisäpalveluja eikä siivousmaksuja — sitä ei voi hakea jälkikäteen. Jos maksu halutaan veloittaa, lisää se varaukselle omana rivinä.",
+        "portalReportsNone": "Portaali ei merkitse maksua tässä varauksessa omaksi riviksi. Booking.comissa tämä riippuu kohteen määrityksistä (Majoituskohde → Käytännöt → Lisämaksut) ja siitä, mistä lähtien maksu on siellä voimassa: myöhemmin otettu maksu puuttuu perustellusti vanhemmista varauksista.",
+        "noPayload": "Tälle varaukselle ei ole portaalin sanomaa (olemassa olevien tietojen tuonti). Ilman sitä ei voida todeta, mitkä maksut vieras on maksanut.",
+        "unknownReason": "Syytä ei voida määrittää."
+      },
+      "chain": {
+        "portal": "Portaali",
+        "management": "Hallinnointi",
+        "flatFee": "Kiinteä maksu",
+        "fees": "Maksut"
       }
     },
     "expenses": {

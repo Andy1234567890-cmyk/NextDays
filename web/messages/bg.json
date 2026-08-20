@@ -1225,12 +1225,18 @@
       "totals": "Суми",
       "empty": "Няма резервации за периода.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Порталът не е подал такси",
+        "what": "Тази резервация постъпи без разбивка на таксите от портала. Затова в разчета не се начисляват такси за почистване, консумативи или домашни любимци: което порталът не е подал, гостът не го е платил. Затова цената за гостя е под заложената за този обект.",
+        "channexImport": "Резервацията беше изтеглена допълнително при свързването на канала. Според посредника за портали такива резервации не съдържат допълнителни услуги и такси за почистване — това не може да се навакса. Ако таксата трябва да бъде начислена, добавете я като позиция към резервацията.",
+        "portalReportsNone": "Порталът не води таксата при тази резервация като отделна позиция. При Booking.com това зависи от конфигурацията на обекта (Обект → Правила → Допълнителни такси) и от момента, от който таксата е в сила там: въведена по-късно такса основателно липсва при по-стари резервации.",
+        "noPayload": "За тази резервация няма съобщение от портала (импорт на съществуващи данни). Без него не може да се установи какви такси е платил гостът.",
+        "unknownReason": "Причината не може да бъде определена."
+      },
+      "chain": {
+        "portal": "Портал",
+        "management": "Управление",
+        "flatFee": "Фиксирана такса",
+        "fees": "Такси"
       }
     },
     "expenses": {

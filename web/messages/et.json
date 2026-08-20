@@ -1225,12 +1225,18 @@
       "totals": "Summad",
       "empty": "Perioodil broneeringuid pole.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Portaal ei teatanud ühestki tasust",
+        "what": "See broneering saabus portaalist ilma tasude jaotuseta. Seetõttu ei arvesta arveldus koristus-, kommunaal- ega loomatasu: mida portaal ei teatanud, seda külaline ei maksnud. Külalise hind on seetõttu väiksem kui selle objekti juures salvestatud summa.",
+        "channexImport": "Broneering laaditi tagantjärele kanali ühendamisel. Portaalide vahendaja andmetel ei sisalda sellised broneeringud lisateenuseid ega koristustasusid — seda ei saa tagantjärele täiendada. Kui tasu tuleb arvestada, lisage see broneeringule kirjena.",
+        "portalReportsNone": "Portaal ei kajasta seda tasu selle broneeringu juures eraldi kirjena. Booking.comi puhul oleneb see majutuse seadistusest (Majutusasutus → Reeglid → Lisatasud) ja sellest, millest alates tasu seal kehtib: hiljem kehtestatud tasu puudub vanemate broneeringute juures põhjendatult.",
+        "noPayload": "Selle broneeringu kohta puudub portaali teade (olemasolevate andmete import). Ilma selleta ei ole võimalik tuvastada, milliseid tasusid külaline maksis.",
+        "unknownReason": "Põhjust ei ole võimalik tuvastada."
+      },
+      "chain": {
+        "portal": "Portaal",
+        "management": "Haldus",
+        "flatFee": "Püsitasu",
+        "fees": "Tasud"
       }
     },
     "expenses": {

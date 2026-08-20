@@ -1225,12 +1225,18 @@
       "totals": "Totals",
       "empty": "No reservations in this period.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Portal reported no fees",
+        "what": "This booking arrived from the portal without a fee breakdown. The statement therefore charges no cleaning, utility or pet fee: what the portal did not report, the guest did not pay. The guest price is consequently lower than the amount stored for this property.",
+        "channexImport": "The booking was fetched retroactively when the channel was connected. According to the portal intermediary, such bookings contain no extras and no cleaning fees — this cannot be retrieved later. If the fee is to be billed, add it as a line item on the booking.",
+        "portalReportsNone": "The portal does not list the fee as a separate line item on this booking. With Booking.com this depends on the property configuration (Property → Policies → Additional fees) and on the date from which the fee applies there: a fee introduced later is rightly missing on older bookings.",
+        "noPayload": "There is no portal message for this booking (import of existing data). Without it, there is no way to determine which fees the guest paid.",
+        "unknownReason": "The reason cannot be determined."
+      },
+      "chain": {
+        "portal": "Portal",
+        "management": "Management",
+        "flatFee": "Flat fee",
+        "fees": "Fees"
       }
     },
     "expenses": {

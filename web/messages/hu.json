@@ -1225,12 +1225,18 @@
       "totals": "Összesen",
       "empty": "Nincs foglalás az időszakban.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "A portál nem jelentett díjakat",
+        "what": "Ez a foglalás díjkimutatás nélkül érkezett a portálról. Az elszámolás ezért nem számol fel takarítási, rezsi- vagy állatdíjat: amit a portál nem jelentett, azt a vendég nem fizette meg. A vendégár ezért alacsonyabb annál, ami ehhez az objektumhoz rögzítve van.",
+        "channexImport": "A foglalást a csatorna csatlakoztatásakor utólag töltöttük le. A foglalásközvetítő szerint az ilyen foglalások nem tartalmaznak extrákat és takarítási díjakat — ez utólag nem pótolható. Ha a díjat el kell számolni, vegye fel tételként a foglaláshoz.",
+        "portalReportsNone": "A portál ennél a foglalásnál nem szerepelteti a díjat önálló tételként. A Booking.com esetében ez a szállás beállításain (Szállás → Szabályzatok → További díjak) és azon múlik, hogy ott mikortól érvényes a díj: egy később bevezetett díj joggal hiányzik a korábbi foglalásokból.",
+        "noPayload": "Ehhez a foglaláshoz nem áll rendelkezésre portálüzenet (meglévő adatok importja). Enélkül nem állapítható meg, milyen díjakat fizetett a vendég.",
+        "unknownReason": "Az ok nem meghatározható."
+      },
+      "chain": {
+        "portal": "Portál",
+        "management": "Kezelés",
+        "flatFee": "Fix díj",
+        "fees": "Díjak"
       }
     },
     "expenses": {

@@ -1225,12 +1225,18 @@
       "totals": "Sumos",
       "empty": "Šiuo laikotarpiu rezervacijų nėra.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Portalas nepranešė jokių mokesčių",
+        "what": "Ši rezervacija iš portalo atėjo be mokesčių suvestinės. Todėl atsiskaitymas neįtraukia nei valymo, nei komunalinių, nei gyvūnų mokesčio: ko portalas nepranešė, to svečias nesumokėjo. Todėl svečio kaina yra mažesnė už tą, kuri nurodyta šiam objektui.",
+        "channexImport": "Rezervacija buvo papildomai atsiųsta prijungiant kanalą. Rezervacijų tarpininko duomenimis tokiose rezervacijose nėra nei papildomų paslaugų, nei valymo mokesčių — vėliau to papildyti nebeįmanoma. Jei mokestį reikia įtraukti į atsiskaitymą, įrašykite jį kaip rezervacijos poziciją.",
+        "portalReportsNone": "Šioje rezervacijoje portalas mokesčio nenurodo kaip atskiros pozicijos. „Booking.com“ atveju tai priklauso nuo apgyvendinimo vietos konfigūracijos (Apgyvendinimo vieta → Nuostatos → Papildomi mokesčiai) ir nuo to, nuo kada mokestis ten taikomas: vėliau įvestas mokestis senesnėse rezervacijose pagrįstai neatsiranda.",
+        "noPayload": "Šiai rezervacijai nėra portalo žinutės (esamų duomenų importas). Be jos neįmanoma nustatyti, kokius mokesčius svečias sumokėjo.",
+        "unknownReason": "Priežasties nustatyti neįmanoma."
+      },
+      "chain": {
+        "portal": "Portalas",
+        "management": "Valdymas",
+        "flatFee": "Fiksuotas mokestis",
+        "fees": "Mokesčiai"
       }
     },
     "expenses": {

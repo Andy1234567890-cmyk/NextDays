@@ -1225,12 +1225,18 @@
       "totals": "Vsote",
       "empty": "V tem obdobju ni rezervacij.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Portal ni sporočil nobenih stroškov",
+        "what": "Ta rezervacija je s portala prišla brez razčlenitve stroškov. Obračun zato ne zajema stroškov čiščenja, obratovalnih stroškov ali stroškov za hišne živali: kar portal ni sporočil, gost ni plačal. Cena za gosta je zato nižja od tiste, ki je shranjena pri tem objektu.",
+        "channexImport": "Rezervacija je bila naknadno pridobljena pri priklopu kanala. Po podatkih posrednika rezervacij take rezervacije ne vsebujejo dodatnih storitev in stroškov čiščenja — tega ni mogoče nadomestiti pozneje. Če je treba strošek obračunati, ga vnesite kot postavko pri rezervaciji.",
+        "portalReportsNone": "Portal pri tej rezervaciji stroška ne navaja kot samostojne postavke. Pri Booking.com je to odvisno od nastavitev nastanitve (Nastanitev → Pravilniki → Dodatni stroški) in od tega, od kdaj tam velja strošek: strošek, uveden pozneje, pri starejših rezervacijah upravičeno manjka.",
+        "noPayload": "Za to rezervacijo ni sporočila s portala (uvoz obstoječih podatkov). Brez njega ni mogoče ugotoviti, katere stroške je gost plačal.",
+        "unknownReason": "Vzroka ni mogoče določiti."
+      },
+      "chain": {
+        "portal": "Portal",
+        "management": "Upravljanje",
+        "flatFee": "Pavšal",
+        "fees": "Stroški"
       }
     },
     "expenses": {

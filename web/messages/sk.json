@@ -1225,12 +1225,18 @@
       "totals": "Súčty",
       "empty": "Žiadne rezervácie v danom období.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Portál nenahlásil žiadne poplatky",
+        "what": "Táto rezervácia prišla z portálu bez rozpisu poplatkov. Vyúčtovanie preto neúčtuje žiadny poplatok za úklid, za energie ani za domáce zvieratá: čo portál nenahlásil, to hosť nezaplatil. Cena pre hosťa je preto nižšia než tá, ktorá je uložená pri tomto objekte.",
+        "channexImport": "Rezervácia bola dodatočne stiahnutá pri pripojení kanála. Podľa sprostredkovateľa rezervácií takéto rezervácie neobsahujú príplatky ani poplatky za úklid — dodatočne to už nie je možné doplniť. Ak sa má poplatok vyúčtovať, zadajte ho ako položku k rezervácii.",
+        "portalReportsNone": "Portál pri tejto rezervácii neuvádza poplatok ako samostatnú položku. Pri Booking.com to závisí od konfigurácie ubytovania (Ubytovanie → Pravidlá → Ďalšie poplatky) a od toho, odkedy tam poplatok platí: poplatok zavedený neskôr právom chýba pri starších rezerváciách.",
+        "noPayload": "K tejto rezervácii neexistuje žiadna správa z portálu (import existujúcich údajov). Bez nej nie je možné zistiť, aké poplatky hosť zaplatil.",
+        "unknownReason": "Dôvod nie je možné určiť."
+      },
+      "chain": {
+        "portal": "Portál",
+        "management": "Správa",
+        "flatFee": "Fixný poplatok",
+        "fees": "Poplatky"
       }
     },
     "expenses": {

@@ -1225,12 +1225,18 @@
       "totals": "Suimeanna",
       "empty": "Níl aon áirithint sa tréimhse seo.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Níor thuairiscigh an tairseach aon táillí",
+        "what": "Tháinig an áirithint seo ón tairseach gan miondealú táillí. Dá bhrí sin ní ghearrann an ráiteas táille glantacháin, fóntas ná peataí: rud nár thuairiscigh an tairseach, níor íoc an cuairteoir é. Tá praghas an chuairteora dá réir sin níos ísle ná an méid atá taifeadta ar an maoin seo.",
+        "channexImport": "Fuarthas an áirithint go haisghníomhach nuair a ceanglaíodh an cainéal. De réir an idirghabhálaí tairseacha, níl breiseáin ná táillí glantacháin i n-áirithintí den chineál sin — ní féidir sin a fháil ina dhiaidh sin. Más gá an táille a bhilleáil, cuir isteach í mar mhír ar an áirithint.",
+        "portalReportsNone": "Ní liostaíonn an tairseach an táille mar mhír ar leith ar an áirithint seo. I gcás Booking.com, tá sin ag brath ar chumraíocht na maoine (Maoin → Beartais → Táillí breise) agus ar an dáta óna bhfuil an táille i bhfeidhm ansin: táille a tugadh isteach níos déanaí, is le ceart atá sí in easnamh ar áirithintí níos sine.",
+        "noPayload": "Níl aon teachtaireacht tairsí ann don áirithint seo (iompórtáil sonraí atá ann cheana). Gan í, ní féidir a dhearbhú cé na táillí a d'íoc an cuairteoir.",
+        "unknownReason": "Ní féidir an chúis a chinneadh."
+      },
+      "chain": {
+        "portal": "Tairseach",
+        "management": "Bainistíocht",
+        "flatFee": "Táille sheasta",
+        "fees": "Táillí"
       }
     },
     "expenses": {

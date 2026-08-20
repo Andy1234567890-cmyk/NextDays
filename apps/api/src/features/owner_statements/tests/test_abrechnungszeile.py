@@ -183,3 +183,112 @@ def test_haustiergebuehr_nur_mit_tier(
     }
     posten = objekt_gebuehren(attrs, NAECHTE, anlass={"pets": pets})
     assert {art for art, _ in posten} == erwartete_arten
+
+
+# --- Die Vertragspauschale muss in der Zeile ANKOMMEN ------------------------
+# Gemeldet am 20.08.2026 von der Betreiberin, wörtlich: „Ich verstehe zum
+# Beispiel nicht, warum ich für jede Buchung die 50kr mühsam nochmal anlegen
+# muss, wenn ich im Vertrag bereits feste Kosten pro Buchung 50kr angegeben
+# habe."
+#
+# Die Kette rechnete die Pauschale korrekt — `_rental_rows` übernahm von den
+# elf Feldern der `Auszahlung` aber nur `netto` und `brutto` und verwarf die
+# übrigen neun. Der Eigentümer sah eine Zahl ohne Herkunft, die Betreiberin
+# fand „ihre" 50 kr nicht und legte sie als Ausgabe NOCH EINMAL an: zwei Posten
+# „Indflytning-gebyr" à 50 DKK auf Feriehus „Perlen" (12.07./27.07.2026,
+# `direction=from_owner`, live gefunden) — 100 DKK doppelt zulasten der
+# Eigentümerin.
+#
+# Deshalb prüft dieser Test nicht die Rechnung (die war richtig), sondern dass
+# die Pauschale als EIGENER Wert vorliegt und im Netto genau einmal steckt.
+PERLEN_VERTRAG = Vertragsregeln(
+    provisions_pct=D("20.00"),
+    pauschale_betrag=D("50.00"),
+    pauschale_currency="DKK",
+    pauschale_basis="je_buchung",
+    pauschale_zeitpunkt="nach_provision",
+)
+
+
+def test_vertragspauschale_ist_ein_eigener_wert_der_zeile() -> None:
+    """Die 50 DKK stehen als `pauschale` da — nicht nur im Endbetrag."""
+    a = auszahlung_berechnen(
+        uebernachtung=UEBERNACHTUNG,
+        gebuehren=_reinigung(),
+        gebuehren_im_betrag=False,
+        abzug=_abzug(),
+        regeln=PERLEN_VERTRAG,
+        naechte=NAECHTE,
+        currency="DKK",
+    )
+    assert a.pauschale == D("50.00")
+    # Und genau EINMAL abgezogen: dieselbe Kette ohne Pauschale liegt um
+    # exakt 50 DKK höher. Ein zweiter Abzug (der Handeintrag) wäre hier
+    # sichtbar geworden.
+    ohne = auszahlung_berechnen(
+        uebernachtung=UEBERNACHTUNG,
+        gebuehren=_reinigung(),
+        gebuehren_im_betrag=False,
+        abzug=_abzug(),
+        regeln=Vertragsregeln(provisions_pct=D("20.00")),
+        naechte=NAECHTE,
+        currency="DKK",
+    )
+    assert ohne.netto - a.netto == D("50.00")
+
+
+def test_pauschale_je_nacht_zaehlt_die_naechte_des_aufenthalts() -> None:
+    """`je_nacht` × 8 Nächte — die zweite Vertragsform, damit sie nicht
+    stillschweigend wie `je_buchung` rechnet."""
+    a = auszahlung_berechnen(
+        uebernachtung=UEBERNACHTUNG,
+        gebuehren=_reinigung(),
+        gebuehren_im_betrag=False,
+        abzug=_abzug(),
+        regeln=Vertragsregeln(
+            provisions_pct=D("20.00"),
+            pauschale_betrag=D("50.00"),
+            pauschale_currency="DKK",
+            pauschale_basis="je_nacht",
+            pauschale_zeitpunkt="nach_provision",
+        ),
+        naechte=NAECHTE,
+        currency="DKK",
+    )
+    assert a.pauschale == D("400.00")
+
+
+def test_kette_der_zeile_geht_lueckenlos_auf() -> None:
+    """Jedes Zwischenglied ist einzeln belegbar — der Zweck der Felder.
+
+    Ohne diese Probe könnte ein Feld einen plausiblen, aber falschen Wert
+    tragen und niemandem auffallen: die Summe stimmte weiter, weil `netto`
+    getrennt gerechnet wird.
+    """
+    a = auszahlung_berechnen(
+        uebernachtung=UEBERNACHTUNG,
+        gebuehren=_reinigung(),
+        gebuehren_im_betrag=False,
+        abzug=_abzug(),
+        regeln=PERLEN_VERTRAG,
+        naechte=NAECHTE,
+        currency="DKK",
+    )
+    # Gerundet verglichen: die Kette rechnet mit voller Decimal-Genauigkeit
+    # (813,1215 statt 813,12), gerundet wird erst an der Anzeige. Das ist so
+    # gewollt — sonst summierten sich Rundungsfehler ueber die Glieder.
+    def c(x: D) -> D:
+        return x.quantize(D("0.01"))
+
+    assert a.brutto == BRUTTO
+    assert c(a.portal_provision) == KOMMISSION
+    assert c(a.portal_zahlungsgebuehr) == ZAHLUNGSGEBUEHR
+    assert c(a.auszahlungsbasis) == NACH_PORTAL
+    assert c(a.bemessungsgrundlage) == BEMESSUNG
+    assert c(a.verwaltungsprovision) == VERWALTUNG
+    assert a.pauschale == D("50.00")
+    # netto = Basis − Verwaltung − Pauschale + Gebühren an den Eigentümer
+    erwartet = (
+        NACH_PORTAL - VERWALTUNG - D("50.00") - REINIGUNG + a.gebuehren_an_eigentuemer
+    )
+    assert a.netto.quantize(D("0.01")) == erwartet.quantize(D("0.01"))

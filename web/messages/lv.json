@@ -1225,12 +1225,18 @@
       "totals": "Summas",
       "empty": "Periodā nav rezervāciju.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Portāls nav paziņojis nekādas maksas",
+        "what": "Šī rezervācija no portāla pienāca bez maksu atšifrējuma. Tāpēc norēķinā netiek iekļauta ne uzkopšanas, ne papildizmaksu, ne mājdzīvnieku maksa: ko portāls nav paziņojis, to viesis nav samaksājis. Tāpēc viesa cena ir zemāka par to, kas norādīta šim objektam.",
+        "channexImport": "Rezervācija tika iegūta vēlāk, pieslēdzot kanālu. Pēc rezervāciju starpnieka datiem šādās rezervācijās nav ne papildpakalpojumu, ne uzkopšanas maksu — to vēlāk nav iespējams papildināt. Ja maksa jāiekļauj norēķinā, ievadiet to kā pozīciju pie rezervācijas.",
+        "portalReportsNone": "Šajā rezervācijā portāls maksu neuzrāda kā atsevišķu pozīciju. Booking.com gadījumā tas atkarīgs no naktsmītnes konfigurācijas (Naktsmītne → Noteikumi → Papildu maksas) un no tā, no kura datuma maksa tur ir spēkā: vēlāk ieviesta maksa vecākās rezervācijās pamatoti nav norādīta.",
+        "noPayload": "Šai rezervācijai nav portāla ziņojuma (esošo datu imports). Bez tā nav iespējams noteikt, kādas maksas viesis ir samaksājis.",
+        "unknownReason": "Iemeslu nav iespējams noteikt."
+      },
+      "chain": {
+        "portal": "Portāls",
+        "management": "Pārvaldība",
+        "flatFee": "Fiksēta maksa",
+        "fees": "Maksas"
       }
     },
     "expenses": {

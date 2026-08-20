@@ -1225,12 +1225,18 @@
       "totals": "Zbrojevi",
       "empty": "Nema rezervacija u ovom razdoblju.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Portal nije prijavio nikakve naknade",
+        "what": "Ova rezervacija došla je s portala bez raščlambe naknada. Obračun zato ne uračunava naknadu za čišćenje, režije ni kućne ljubimce: što portal nije prijavio, gost nije platio. Cijena za gosta zbog toga je niža od one koja je upisana na ovom objektu.",
+        "channexImport": "Rezervacija je naknadno preuzeta pri povezivanju kanala. Prema posredniku portala takve rezervacije ne sadrže dodatne usluge ni naknade za čišćenje — to se ne može nadoknaditi. Ako naknadu treba obračunati, unesite je kao stavku na rezervaciji.",
+        "portalReportsNone": "Portal naknadu kod ove rezervacije ne vodi kao zasebnu stavku. Kod Booking.coma to ovisi o konfiguraciji objekta (Objekt → Pravila → Dodatne naknade) i o tome od kada naknada tamo vrijedi: naknada uvedena kasnije opravdano nedostaje na starijim rezervacijama.",
+        "noPayload": "Za ovu rezervaciju ne postoji poruka portala (uvoz postojećih podataka). Bez nje nije moguće utvrditi koje je naknade gost platio.",
+        "unknownReason": "Razlog nije moguće utvrditi."
+      },
+      "chain": {
+        "portal": "Portal",
+        "management": "Upravljanje",
+        "flatFee": "Fiksna naknada",
+        "fees": "Naknade"
       }
     },
     "expenses": {

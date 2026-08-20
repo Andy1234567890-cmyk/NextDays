@@ -1225,12 +1225,18 @@
       "totals": "Sumas",
       "empty": "No hay reservas en el periodo.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "El portal no ha notificado ninguna tasa",
+        "what": "Esta reserva llegó del portal sin desglose de tasas. Por eso la liquidación no aplica ninguna tasa de limpieza, de suministros ni de mascotas: lo que el portal no ha notificado, el huésped no lo ha pagado. El precio del huésped queda por ello por debajo del importe registrado en este alojamiento.",
+        "channexImport": "La reserva se obtuvo a posteriori al conectar el canal. Según el intermediario de portales, estas reservas no contienen extras ni tasas de limpieza — eso no se puede recuperar después. Si la tasa debe liquidarse, añádala como concepto en la reserva.",
+        "portalReportsNone": "El portal no registra la tasa en esta reserva como concepto propio. En Booking.com esto depende de la configuración del alojamiento (Alojamiento → Políticas → Tasas adicionales) y de la fecha a partir de la cual se aplica allí la tasa: una tasa introducida más tarde falta con razón en reservas anteriores.",
+        "noPayload": "Para esta reserva no existe ningún mensaje del portal (importación de datos existentes). Sin él no se puede determinar qué tasas ha pagado el huésped.",
+        "unknownReason": "No se puede determinar el motivo."
+      },
+      "chain": {
+        "portal": "Portal",
+        "management": "Gestión",
+        "flatFee": "Tarifa fija",
+        "fees": "Tasas"
       }
     },
     "expenses": {

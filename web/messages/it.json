@@ -1225,12 +1225,18 @@
       "totals": "Totali",
       "empty": "Nessuna prenotazione nel periodo.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Il portale non ha comunicato alcun costo",
+        "what": "Questa prenotazione è arrivata dal portale senza il dettaglio dei costi. Il rendiconto non addebita quindi alcun costo di pulizia, di utenze o per animali: ciò che il portale non ha comunicato non è stato pagato dall'ospite. Il prezzo per l'ospite è perciò inferiore a quanto registrato per questo immobile.",
+        "channexImport": "La prenotazione è stata recuperata a posteriori al momento del collegamento del canale. Secondo l'intermediario di prenotazione queste prenotazioni non contengono extra né costi di pulizia — non è possibile recuperarli in seguito. Se il costo deve essere addebitato, lo inserisca come voce nella prenotazione.",
+        "portalReportsNone": "Per questa prenotazione il portale non riporta il costo come voce separata. Su Booking.com ciò dipende dalla configurazione della struttura (Struttura → Regole → Costi aggiuntivi) e dalla data a partire dalla quale il costo è in vigore: un costo introdotto successivamente manca giustamente nelle prenotazioni più vecchie.",
+        "noPayload": "Per questa prenotazione non è disponibile alcun messaggio del portale (importazione dei dati esistenti). Senza di esso non è possibile stabilire quali costi l'ospite abbia pagato.",
+        "unknownReason": "Il motivo non è determinabile."
+      },
+      "chain": {
+        "portal": "Portale",
+        "management": "Gestione",
+        "flatFee": "Forfait",
+        "fees": "Spese"
       }
     },
     "expenses": {

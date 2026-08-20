@@ -1225,12 +1225,18 @@
       "totals": "Totaux",
       "empty": "Aucune réservation sur la période.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Le portail n'a communiqué aucuns frais",
+        "what": "Cette réservation est arrivée du portail sans détail des frais. Le décompte n'applique donc ni frais de ménage, ni charges, ni frais pour animaux : ce que le portail n'a pas communiqué, le voyageur ne l'a pas payé. Le prix voyageur est de ce fait inférieur au montant enregistré sur ce logement.",
+        "channexImport": "La réservation a été récupérée après coup lors du raccordement du canal. Selon l'intermédiaire des portails, ces réservations ne contiennent ni suppléments ni frais de ménage — cela ne peut pas être rattrapé. Si les frais doivent être facturés, ajoutez-les comme poste sur la réservation.",
+        "portalReportsNone": "Le portail ne fait pas figurer ces frais comme poste distinct sur cette réservation. Chez Booking.com, cela dépend de la configuration de l'établissement (Établissement → Conditions → Frais supplémentaires) et de la date à partir de laquelle les frais y s'appliquent : des frais introduits plus tard manquent à juste titre sur les réservations plus anciennes.",
+        "noPayload": "Aucun message du portail n'est disponible pour cette réservation (import de données existantes). Sans lui, il est impossible d'établir quels frais le voyageur a payés.",
+        "unknownReason": "La raison ne peut pas être déterminée."
+      },
+      "chain": {
+        "portal": "Portail",
+        "management": "Gestion",
+        "flatFee": "Forfait",
+        "fees": "Frais"
       }
     },
     "expenses": {

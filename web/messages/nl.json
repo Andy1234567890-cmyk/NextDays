@@ -1225,12 +1225,18 @@
       "totals": "Totalen",
       "empty": "Geen reserveringen in de periode.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Portaal heeft geen kosten gemeld",
+        "what": "Deze boeking kwam zonder kostenspecificatie van het portaal. De afrekening rekent daarom geen schoonmaak-, bijkomende of huisdierkosten: wat het portaal niet heeft gemeld, heeft de gast niet betaald. De gastprijs ligt daarom lager dan wat bij dit object is vastgelegd.",
+        "channexImport": "De boeking is bij het aansluiten van het kanaal achteraf opgehaald. Volgens de boekingsbemiddelaar bevatten zulke boekingen geen extra's en schoonmaakkosten — dat kan niet meer worden aangevuld. Wilt u de kosten toch afrekenen, voer ze dan als regel bij de boeking op.",
+        "portalReportsNone": "Het portaal voert de kosten bij deze boeking niet als aparte regel. Bij Booking.com hangt dat af van de configuratie van de accommodatie (Accommodatie → Beleid → Bijkomende kosten) en van de datum waarop de kosten daar gelden: kosten die later zijn ingevoerd, ontbreken bij oudere boekingen terecht.",
+        "noPayload": "Voor deze boeking is geen portaalbericht aanwezig (import van bestaande gegevens). Zonder dat bericht is niet vast te stellen welke kosten de gast heeft betaald.",
+        "unknownReason": "De reden is niet te bepalen."
+      },
+      "chain": {
+        "portal": "Portaal",
+        "management": "Beheer",
+        "flatFee": "Vast bedrag",
+        "fees": "Kosten"
       }
     },
     "expenses": {

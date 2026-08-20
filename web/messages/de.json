@@ -1231,6 +1231,12 @@
         "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
         "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
         "unknownReason": "Der Grund ist nicht bestimmbar."
+      },
+      "chain": {
+        "portal": "Portal",
+        "management": "Verwaltung",
+        "flatFee": "Pauschale",
+        "fees": "Gebühren"
       }
     },
     "expenses": {

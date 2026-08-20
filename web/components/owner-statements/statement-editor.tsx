@@ -885,7 +885,10 @@ function RentalActivity({
                         <GebuehrenHerkunft zeile={r} />
                       </span>
                     </td>
-                    <td className="py-2 text-right">{formatCurrency(r.total_payout, currency)}</td>
+                    <td className="py-2 text-right">
+                      {formatCurrency(r.total_payout, currency)}
+                      <AuszahlungsKette zeile={r} waehrung={currency} />
+                    </td>
                   </tr>
                 ))
               : statement.listing_rows.map((r) => (
@@ -1599,6 +1602,46 @@ function GebuehrenHerkunft({ zeile }: { zeile: RentalRow }) {
       ariaLabel={t("info.aria", { feld: t("rental.feeSource.title") })}
       className="text-warning"
     />
+  );
+}
+
+/** Die Kette unter dem Auszahlungsbetrag: WIE er entsteht.
+ *
+ *  WARUM DAS AN DIE ZEILE GEHÖRT: Ohne sie ist der Betrag eine Zahl ohne
+ *  Herkunft. Gemeldet am 20.08.2026 von der Betreiberin — sie fand die im
+ *  Eigentümervertrag hinterlegte Pauschale von 50 kr in der Abrechnung nicht
+ *  und legte sie deshalb je Buchung als Ausgabe NOCH EINMAL an. Die Pauschale
+ *  war längst abgezogen; der Eigentümerin wurde sie damit zweimal berechnet
+ *  (zwei Posten „Indflytning-gebyr", Juli 2026, live gefunden). Der Rechenweg
+ *  war korrekt — nur unsichtbar.
+ *
+ *  Nur was FESTSTEHT: `null` und 0 werden weggelassen, nie als „0,00" gezeigt
+ *  (Wurzel 4). Bei maskierten Zeilen (§4.2) fehlt die Portal-Provision
+ *  ohnehin — dann beginnt die Kette bei der Verwaltungsprovision. */
+function AuszahlungsKette({
+  zeile,
+  waehrung,
+}: {
+  zeile: RentalRow;
+  waehrung: string;
+}) {
+  const t = useTranslations("ownerStatements");
+  const glieder: string[] = [];
+  const glied = (label: string, wert: number | null, minus = true) => {
+    if (wert === null || wert === 0) return;
+    glieder.push(
+      `${label} ${minus ? "−" : "+"}${formatCurrency(Math.abs(wert), waehrung)}`,
+    );
+  };
+  glied(t("rental.chain.portal"), zeile.portal_provision);
+  glied(t("rental.chain.management"), zeile.verwaltungsprovision);
+  glied(t("rental.chain.flatFee"), zeile.pauschale);
+  glied(t("rental.chain.fees"), zeile.gebuehren_an_eigentuemer, false);
+  if (glieder.length === 0) return null;
+  return (
+    <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
+      {glieder.join(" · ")}
+    </span>
   );
 }
 

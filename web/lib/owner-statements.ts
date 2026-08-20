@@ -92,6 +92,19 @@ export type RentalRow = {
   owner_payout_converted: number | null;
   fx_rate: number;
   fx_date: string | null;
+  // DIE KETTE zum Auszahlungsbetrag, in Quellwährung. Bis 20.08.2026 lieferte
+  // das Backend nur `owner_payout` — eine Zahl ohne Herkunft. Die Betreiberin
+  // fand die vertraglich hinterlegte Pauschale darin nicht und legte sie als
+  // Ausgabe noch einmal an; dem Eigentümer wurde sie damit zweimal abgezogen.
+  // `null` heißt „nicht berechenbar" ODER „für diese Rolle maskiert" — nie 0.
+  /** Was das Portal einbehält. Maskiert wie `total_price` (§4.2). */
+  portal_provision: number | null;
+  /** Grundlage der Verwaltungsprovision. Maskiert wie `total_price` (§4.2). */
+  bemessungsgrundlage: number | null;
+  verwaltungsprovision: number | null;
+  /** Feste Pauschale aus dem Vertrag (je Buchung oder je Nacht). */
+  pauschale: number | null;
+  gebuehren_an_eigentuemer: number | null;
   /** Grund für eine fehlende Auszahlung dieser Zeile — heute `"provision"`. */
   payout_unbekannt: string | null;
   /** WOHER die Gebühren dieser Zeile kommen:

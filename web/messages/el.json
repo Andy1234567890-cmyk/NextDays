@@ -1225,12 +1225,18 @@
       "totals": "Σύνολα",
       "empty": "Καμία κράτηση στην περίοδο.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Η πύλη δεν δήλωσε χρεώσεις",
+        "what": "Αυτή η κράτηση ήρθε από την πύλη χωρίς ανάλυση χρεώσεων. Γι' αυτό η εκκαθάριση δεν χρεώνει τέλος καθαρισμού, κοινοχρήστων ή κατοικιδίων: ό,τι δεν δήλωσε η πύλη, δεν το πλήρωσε ο επισκέπτης. Η τιμή του επισκέπτη είναι επομένως χαμηλότερη από αυτήν που έχει καταχωριστεί σε αυτό το κατάλυμα.",
+        "channexImport": "Η κράτηση ανακτήθηκε εκ των υστέρων κατά τη σύνδεση του καναλιού. Σύμφωνα με τον διαμεσολαβητή των πυλών, τέτοιες κρατήσεις δεν περιέχουν πρόσθετες υπηρεσίες και τέλη καθαρισμού — αυτό δεν μπορεί να αναπληρωθεί. Εάν η χρέωση πρέπει να τιμολογηθεί, καταχωρίστε την ως θέση στην κράτηση.",
+        "portalReportsNone": "Η πύλη δεν τηρεί τη χρέωση σε αυτήν την κράτηση ως ξεχωριστή θέση. Στο Booking.com αυτό εξαρτάται από τη διαμόρφωση του καταλύματος (Κατάλυμα → Πολιτικές → Πρόσθετες χρεώσεις) και από το πότε ισχύει εκεί η χρέωση: μια χρέωση που εισήχθη αργότερα λείπει δικαιολογημένα σε παλαιότερες κρατήσεις.",
+        "noPayload": "Για αυτήν την κράτηση δεν υπάρχει μήνυμα της πύλης (εισαγωγή υφιστάμενων δεδομένων). Χωρίς αυτό δεν μπορεί να διαπιστωθεί ποιες χρεώσεις πλήρωσε ο επισκέπτης.",
+        "unknownReason": "Ο λόγος δεν μπορεί να προσδιοριστεί."
+      },
+      "chain": {
+        "portal": "Πύλη",
+        "management": "Διαχείριση",
+        "flatFee": "Πάγιο τέλος",
+        "fees": "Χρεώσεις"
       }
     },
     "expenses": {

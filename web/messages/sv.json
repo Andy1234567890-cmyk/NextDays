@@ -1225,12 +1225,18 @@
       "totals": "Summor",
       "empty": "Inga bokningar under perioden.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Portalen har inte rapporterat några avgifter",
+        "what": "Den här bokningen kom utan avgiftsspecifikation från portalen. Avräkningen tar därför inte upp någon städ-, driftkostnads- eller husdjursavgift: det som portalen inte har rapporterat har gästen inte betalat. Gästpriset ligger därför under det som är registrerat för det här objektet.",
+        "channexImport": "Bokningen hämtades i efterhand när kanalen anslöts. Enligt bokningsförmedlaren innehåller sådana bokningar inga tillägg och inga städavgifter — det går inte att komplettera i efterhand. Om avgiften ska räknas av lägger du in den som en post på bokningen.",
+        "portalReportsNone": "Portalen redovisar inte avgiften som en egen post för den här bokningen. Hos Booking.com beror det på boendets konfiguration (Boende → Policyer → Ytterligare avgifter) och på från vilket datum avgiften gäller där: en avgift som införts senare saknas med rätta i äldre bokningar.",
+        "noPayload": "För den här bokningen finns inget portalmeddelande (import av befintliga data). Utan det går det inte att fastställa vilka avgifter gästen har betalat.",
+        "unknownReason": "Orsaken går inte att fastställa."
+      },
+      "chain": {
+        "portal": "Portal",
+        "management": "Förvaltning",
+        "flatFee": "Fast avgift",
+        "fees": "Avgifter"
       }
     },
     "expenses": {

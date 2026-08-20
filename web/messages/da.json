@@ -1225,12 +1225,18 @@
       "totals": "Summer",
       "empty": "Ingen reservationer i perioden.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Portalen har ikke oplyst nogen gebyrer",
+        "what": "Denne booking kom uden gebyrspecifikation fra portalen. Afregningen medregner derfor hverken rengørings-, forbrugs- eller kæledyrsgebyr: hvad portalen ikke har oplyst, har gæsten ikke betalt. Gæsteprisen ligger derfor under det, der er registreret på dette objekt.",
+        "channexImport": "Bookingen blev hentet efterfølgende, da kanalen blev tilsluttet. Ifølge portalformidleren indeholder sådanne bookinger ingen ekstraydelser og rengøringsgebyrer — det kan ikke hentes bagefter. Skal gebyret afregnes, tilføjer du det som en post på bookingen.",
+        "portalReportsNone": "Portalen fører ikke gebyret som en selvstændig post ved denne booking. Hos Booking.com afhænger det af indstillingerne for overnatningsstedet (Overnatningssted → Politikker → Yderligere gebyrer) og af, fra hvornår gebyret gælder der: et gebyr, der er indført senere, mangler med rette ved ældre bookinger.",
+        "noPayload": "Der findes ingen portalmeddelelse til denne booking (import af eksisterende data). Uden den kan det ikke fastslås, hvilke gebyrer gæsten har betalt.",
+        "unknownReason": "Årsagen kan ikke fastslås."
+      },
+      "chain": {
+        "portal": "Portal",
+        "management": "Administration",
+        "flatFee": "Fast gebyr",
+        "fees": "Gebyrer"
       }
     },
     "expenses": {

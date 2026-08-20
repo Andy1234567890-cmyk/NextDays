@@ -958,6 +958,9 @@ class OwnerStatementsService:
             # Warum eine Zeile ihre Auszahlung nicht ausweisen kann — als
             # maschinenlesbarer Grund, den die UI benennt.
             grund: str | None = None
+            # Die Kettenglieder der Auszahlung. `None` bleibt bestehen, wenn die
+            # Kette nicht lief (Override, kein Vertrag) oder abbrach — nie 0.
+            kette: common.Auszahlung | None = None
             if override is None and regeln is not None:
                 # VOLLE Kette wie im Eigentümer-Portal (0364): Gebühren in den
                 # Gastpreis, Portal-Abzug, provisionsfreie Gebühren aus der
@@ -999,6 +1002,7 @@ class OwnerStatementsService:
                         detail=exc.message,
                     )
                 else:
+                    kette = ergebnis
                     owner_payout = ergebnis.netto
                     # Der GASTPREIS ist jetzt der Bruttoumsatz inkl. Gebühren —
                     # vorher stand hier nur Übernachtung + Extras, also weniger
@@ -1077,6 +1081,37 @@ class OwnerStatementsService:
                     # nicht berechenbar war — dort ist der Hinweis am nötigsten.
                     gebuehren_quelle=herkunft[0],
                     gebuehren_grund=herkunft[1],
+                    # DIE KETTE, die zum `owner_payout` fuehrt. Ohne sie ist der
+                    # Endbetrag eine Behauptung — genau der Grund, aus dem die
+                    # Vertragspauschale ein zweites Mal von Hand angelegt wurde.
+                    #
+                    # `portal_provision` und `bemessungsgrundlage` maskiert wie
+                    # `total_price`: sie legen offen, was das Portal einbehaelt,
+                    # und gehoeren damit zur Betriebs-, nicht zur
+                    # Eigentuemersicht (§4.2).
+                    portal_provision=(
+                        mask.amount(_money(kette.portal_provision))
+                        if kette is not None
+                        else None
+                    ),
+                    bemessungsgrundlage=(
+                        mask.amount(_money(kette.bemessungsgrundlage))
+                        if kette is not None
+                        else None
+                    ),
+                    verwaltungsprovision=(
+                        _money(kette.verwaltungsprovision)
+                        if kette is not None
+                        else None
+                    ),
+                    pauschale=(
+                        _money(kette.pauschale) if kette is not None else None
+                    ),
+                    gebuehren_an_eigentuemer=(
+                        _money(kette.gebuehren_an_eigentuemer)
+                        if kette is not None
+                        else None
+                    ),
                 )
             )
         return rows

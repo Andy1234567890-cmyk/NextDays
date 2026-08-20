@@ -153,6 +153,30 @@ class RentalRow(BaseModel):
     owner_payout_converted: float | None = None
     fx_rate: float = 1.0
     fx_date: date_ | None = None
+    # DIE KETTE zum Auszahlungsbetrag. `common.Auszahlung` rechnet elf Werte
+    # aus, hiervon kamen bis 20.08.2026 nur `netto` und `brutto` an — die
+    # uebrigen neun wurden in `_rental_rows` verworfen. Die Folge war kein
+    # Rechenfehler, sondern ein unbelegbarer Endbetrag: die Betreiberin fand
+    # die vertraglich hinterlegte Pauschale in der Abrechnung nicht und legte
+    # sie als Ausgabe NOCH EINMAL an (zwei Posten "Indflytning-gebyr" à 50 DKK,
+    # live gefunden) — der Eigentuemerin wurden 100 DKK doppelt abgezogen.
+    # Der Klassenkommentar von `Auszahlung` verlangt genau diese Felder:
+    # "jede Zwischenzeile ist ein Wert, den die Abrechnung dem Eigentuemer
+    # zeigen muss".
+    #
+    # Alle in QUELLWAEHRUNG wie die uebrigen Betraege der Zeile. `None` heisst
+    # "nicht berechenbar" oder "fuer diese Rolle nicht sichtbar" — nie 0
+    # (Wurzel 4).
+    #
+    # `portal_provision` und `bemessungsgrundlage` sind BETRIEBSzahlen: sie
+    # legen offen, was das Portal einbehaelt. Sie laufen deshalb durch
+    # `mask.amount` wie `total_price`; ein Eigentuemer sieht sie nicht (§4.2),
+    # er sieht seine eigene Kette ab `verwaltungsprovision`.
+    portal_provision: float | None = None
+    bemessungsgrundlage: float | None = None
+    verwaltungsprovision: float | None = None
+    pauschale: float | None = None
+    gebuehren_an_eigentuemer: float | None = None
     # Maschinenlesbar, WARUM die Auszahlung dieser Zeile fehlt. Heute nur
     # "provision"; der Name folgt `PayoutUnbekannt.grund`, damit neue Gründe
     # ohne zweite Namenswelt dazukommen können.

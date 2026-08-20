@@ -139,6 +139,31 @@ export function buildStatementHtml(st: Statement, locale: string): string {
         zeigtGastpreis && r.total_price !== null
           ? `<td class="num">${fmt(r.total_price, rc, locale)}</td>`
           : "";
+      // WIE der Auszahlungsbetrag entsteht. Ohne diese Aufschlüsselung ist er
+      // eine Behauptung: die Betreiberin fand ihre vertraglich hinterlegte
+      // Pauschale von 50 kr in der Abrechnung nicht und legte sie als Ausgabe
+      // noch einmal an — der Eigentümerin wurde sie damit zweimal abgezogen
+      // (zwei Posten „Indflytning-gebyr", Juli 2026).
+      //
+      // Nur was FESTSTEHT: jedes `null` wird weggelassen, nicht als 0 gezeigt.
+      // Bei maskierten Zeilen (§4.2) fehlen Portal-Provision und Bemessung
+      // ohnehin — die Kette beginnt für den Eigentümer bei seiner eigenen
+      // Provision, und genau das ist gewollt: er sieht, was ABGEZOGEN wurde,
+      // nicht was das Portal einbehält.
+      const glieder: string[] = [];
+      const glied = (label: string, wert: number | null, minus = true) => {
+        if (wert === null || wert === 0) return;
+        glieder.push(
+          `${esc(label)} ${minus ? "−" : "+"}${fmt(Math.abs(wert), rc, locale)}`,
+        );
+      };
+      glied("Portal", r.portal_provision);
+      glied("Verwaltung", r.verwaltungsprovision);
+      glied("Pauschale", r.pauschale);
+      glied("Gebühren", r.gebuehren_an_eigentuemer, false);
+      const kette = glieder.length
+        ? `<br><span style="color:#999;font-size:9px">${glieder.join(" · ")}</span>`
+        : "";
       return `
       <tr>
         <td>${esc(r.guest) || "—"}</td>
@@ -147,7 +172,7 @@ export function buildStatementHtml(st: Statement, locale: string): string {
         <td style="text-transform:capitalize">${esc(r.channel)}</td>
         ${gastpreis}
         <td class="num">${fmt(r.total_payout, rc, locale)}</td>
-        <td class="num">${conv}</td>
+        <td class="num">${conv}${kette}</td>
       </tr>`;
     })
     .join("");

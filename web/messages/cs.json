@@ -1225,12 +1225,18 @@
       "totals": "Součty",
       "empty": "V období nejsou žádné rezervace.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Portál nenahlásil žádné poplatky",
+        "what": "Tato rezervace přišla z portálu bez rozpisu poplatků. Vyúčtování proto neúčtuje žádný poplatek za úklid, energie ani za domácí zvíře: co portál nenahlásil, to hosté nezaplatili. Cena pro hosta je proto nižší než částka uložená u tohoto objektu.",
+        "channexImport": "Rezervace byla dodatečně načtena při připojení kanálu. Podle zprostředkovatele portálů takové rezervace neobsahují žádné doplňkové služby ani poplatky za úklid — to už nelze doplnit. Má-li být poplatek vyúčtován, doplňte jej jako položku k rezervaci.",
+        "portalReportsNone": "Portál u této rezervace poplatek nevede jako samostatnou položku. U Booking.com to závisí na konfiguraci ubytování (Ubytování → Zásady → Další poplatky) a na tom, od kdy tam poplatek platí: poplatek zavedený později u starších rezervací oprávněně chybí.",
+        "noPayload": "K této rezervaci není k dispozici žádná zpráva z portálu (import stávajících dat). Bez ní nelze zjistit, jaké poplatky hosté zaplatili.",
+        "unknownReason": "Důvod nelze určit."
+      },
+      "chain": {
+        "portal": "Portál",
+        "management": "Správa",
+        "flatFee": "Paušál",
+        "fees": "Poplatky"
       }
     },
     "expenses": {

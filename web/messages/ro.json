@@ -1225,12 +1225,18 @@
       "totals": "Totaluri",
       "empty": "Nicio rezervare în această perioadă.",
       "feeSource": {
-        "title": "Portal hat keine Gebühren gemeldet",
-        "what": "Diese Buchung kam ohne Gebührenaufstellung vom Portal. Die Abrechnung setzt deshalb keine Reinigungs-, Nebenkosten- oder Haustiergebühr an: was das Portal nicht gemeldet hat, hat der Gast nicht gezahlt. Der Gastpreis liegt darum unter dem, was an diesem Objekt hinterlegt ist.",
-        "channexImport": "Die Buchung wurde beim Anschluss des Kanals nachträglich geholt. Solche Buchungen enthalten laut Portal-Aggregator keine Extras und Reinigungsgebühren — das lässt sich nicht nachholen. Soll die Gebühr abgerechnet werden, tragen Sie sie als Position an der Buchung nach.",
-        "portalReportsNone": "Das Portal führt die Gebühr bei dieser Buchung nicht als eigene Position. Bei Booking.com hängt das an der Unterkunfts-Konfiguration (Unterkunft → Richtlinien → Zusätzliche Gebühren) und daran, ab wann die Gebühr dort gilt: eine später eingeführte Gebühr fehlt bei älteren Buchungen zu Recht.",
-        "noPayload": "Zu dieser Buchung liegt keine Portal-Nachricht vor (Bestandsimport). Ohne sie ist nicht feststellbar, welche Gebühren der Gast gezahlt hat.",
-        "unknownReason": "Der Grund ist nicht bestimmbar."
+        "title": "Portalul nu a raportat nicio taxă",
+        "what": "Această rezervare a venit de la portal fără defalcarea taxelor. Prin urmare, decontul nu include nicio taxă de curățenie, de utilități sau pentru animale de companie: ce nu a raportat portalul, oaspetele nu a plătit. Prețul pentru oaspete este de aceea mai mic decât cel înregistrat pentru acest obiect.",
+        "channexImport": "Rezervarea a fost preluată ulterior, la conectarea canalului. Potrivit intermediarului de rezervări, astfel de rezervări nu conțin extraopțiuni și taxe de curățenie — acest lucru nu mai poate fi completat ulterior. Dacă taxa trebuie decontată, introduceți-o ca poziție la rezervare.",
+        "portalReportsNone": "Portalul nu prezintă taxa acestei rezervări ca poziție separată. La Booking.com aceasta depinde de configurația unității de cazare (Unitate de cazare → Politici → Taxe suplimentare) și de data de la care taxa este valabilă acolo: o taxă introdusă ulterior lipsește pe bună dreptate din rezervările mai vechi.",
+        "noPayload": "Pentru această rezervare nu există niciun mesaj de la portal (import de date existente). Fără acesta nu se poate stabili ce taxe a plătit oaspetele.",
+        "unknownReason": "Motivul nu poate fi stabilit."
+      },
+      "chain": {
+        "portal": "Portal",
+        "management": "Administrare",
+        "flatFee": "Taxă fixă",
+        "fees": "Taxe"
       }
     },
     "expenses": {
