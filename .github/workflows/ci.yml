@@ -276,18 +276,7 @@ jobs:
         # Der echte anon-Key gehört in den Verteil-Workflow (dort hätte die App
         # bei den Testern sonst kein Realtime) — nicht in einen Job, der auch
         # für Pull Requests aus Forks läuft.
-        #
-        # google-services.json aus demselben Grund als Platzhalter: seit Push
-        # dazukam, verlangt das Google-Services-Gradle-Plugin die Datei, sonst
-        # bricht `:app:processReleaseGoogleServices` ab („File
-        # google-services.json is missing") — genau daran scheiterte dieser Job
-        # am 21.08.2026. Ein SECRET wäre hier falsch: der Job läuft auch für
-        # Fork-PRs, wo Secrets nicht verfügbar sind, und geprüft wird der Build,
-        # nicht die Zustellung. Die echte Datei setzt der Verteil-Workflow.
-        run: |
-          set -euo pipefail
-          cp lib/config.secrets.example.ts lib/config.secrets.ts
-          cp android/app/google-services.example.json android/app/google-services.json
+        run: cp lib/config.secrets.example.ts lib/config.secrets.ts
 
       - name: Release bauen (unsigniert)
         working-directory: mobile-nextdays/android
