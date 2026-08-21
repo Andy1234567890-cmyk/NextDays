@@ -277,6 +277,33 @@ jobs:
         # bei den Testern sonst kein Realtime) — nicht in einen Job, der auch
         # für Pull Requests aus Forks läuft.
         run: cp lib/config.secrets.example.ts lib/config.secrets.ts
+      - name: google-services.json bereitstellen
+        # Die Datei ist gitignoriert („pro Arbeitsplatz", siehe
+        # android/app/build.gradle) und liegt auf dem Runner nicht vor. Seit Push
+        # dazukam, verlangt `apply plugin: "com.google.gms.google-services"` sie
+        # ZWINGEND — sonst bricht `:app:processReleaseGoogleServices` ab („File
+        # google-services.json is missing"). Genau daran scheiterte dieser Job
+        # am 21.08.2026.
+        #
+        # Die ECHTE Datei aus dem Secret, KEIN Platzhalter: mit erfundenen
+        # Kennungen prueft der Job eine Konfiguration, die es nie gibt — ein
+        # Fehler, der nur mit den echten Werten auftritt, fiele erst beim
+        # Verteilen auf. Derselbe Schritt steht in mobile-release.yml.
+        #
+        # Der Schritt spricht NICHT mit Google: er dekodiert ein Secret in eine
+        # Datei. Kein API-Aufruf, keine Aenderung am Firebase-Projekt.
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.MYNEXTDAYS_GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GOOGLE_SERVICES_JSON_BASE64:-}" ]; then
+            echo "::error::Secret MYNEXTDAYS_GOOGLE_SERVICES_JSON_BASE64 fehlt."
+            exit 1
+          fi
+          printf '%s' "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
+          # Zurueckpruefen statt vertrauen: ein abgeschnittenes Secret gaebe
+          # sonst erst im Gradle-Lauf einen unverstaendlichen Fehler.
+          python3 -c "import json; d=json.load(open('android/app/google-services.json')); print('ok, Projekt:', d['project_info']['project_id'])"
 
       - name: Release bauen (unsigniert)
         working-directory: mobile-nextdays/android
