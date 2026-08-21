@@ -873,6 +873,13 @@ class ChannelMappingRow(BaseModel):
     # Existiert eine Verbindung dieses Portals für das Objekt (verbunden vs.
     # „Verbinden"-Button in der Tabelle)?
     connected: bool = False
+    # Zuordnung ist beim Portal VORHANDEN, aber unbrauchbar — das Portal kann
+    # ihr Ziel nicht auflösen und führt das Listing als „Not mapped". Dann ist
+    # `connected` false, aber die Handlung ist NICHT „verbinden" (der
+    # Rate-Plan-Titel ist belegt, ein Neu-Verbinden scheitert an
+    # „Duplication in Rate Plan title is not allowed"), sondern „reparieren":
+    # POST …/connections/{portal}/reparieren korrigiert den bestehenden Eintrag.
+    needs_repair: bool = False
     sync_enabled: bool
     last_sync_status: str | None = None
     last_sync_error: str | None = None

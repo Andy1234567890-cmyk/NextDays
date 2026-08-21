@@ -3971,7 +3971,8 @@
         "inspektion": "Spezzjoni",
         "vorlagen": "Mudelli tal-kompiti",
         "planmaessig": "Kompiti skedati",
-        "regelmaessig": "Kompiti regolari"
+        "regelmaessig": "Kompiti regolari",
+        "vertretungen": "Sostituzzjoni"
       }
     },
     "propertyCalendar": {
@@ -4857,6 +4858,18 @@
       "gesetzt": "Ir-responsabbli nbidel",
       "abgezogen": "L-assenjazzjoni tneħħiet",
       "aktion": "Assenja lil …"
+    },
+    "substitutions": {
+      "title": "Sostituzzjoni",
+      "intro": "Talbiet miftuħa mill-kollegi. Min jieħu f'idejh jingħata l-kompitu.",
+      "loading": "Qed jitgħabba …",
+      "empty": "L-ebda talba miftuħa",
+      "emptyHint": "Jekk xi ħadd ikollu bżonn sostitut, jidher hawn.",
+      "requestedBy": "Mitlub minn {name}",
+      "take": "Ħu f'idejk",
+      "decline": "Irrifjuta",
+      "taken": "Il-kompitu ttieħed",
+      "declined": "It-talba ġiet irrifjutata"
     }
   },
   "objects": {
@@ -4942,7 +4955,14 @@
       "unlistOk": "Il-konnessjoni mas-sit tneħħiet.",
       "unlistErr": "It-tneħħija tal-konnessjoni falliet.",
       "menuVerkaufAus": "Itfi fuq il-portali kollha",
-      "menuVerkaufAn": "Offri mill-ġdid fuq il-portali kollha"
+      "menuVerkaufAn": "Offri mill-ġdid fuq il-portali kollha",
+      "menuArchive": "Arkivja",
+      "menuUnarchive": "Erġa' attiva",
+      "archiveConfirm": "Tassew tixtieq tarkivja l-proprjetà „{title}“? Il-proprjetà tinħata mil-lista u minn illum ma tinbiegħ imkien aktar. Ir-riżervazzjonijiet eżistenti jibqgħu validi, id-dejta kollha tinżamm.",
+      "unarchiveConfirm": "Tassew tixtieq terġa' tattiva l-proprjetà „{title}“? Il-proprjetà terġa' tidher fil-lista u l-imblukkar tal-bejgħ jitneħħa.",
+      "archiveOk": "Il-proprjetà ġiet arkivjata.",
+      "unarchiveOk": "Il-proprjetà reġgħet saret attiva.",
+      "archiveErr": "L-arkivjar falla."
     },
     "messagingForm": {
       "title": "Segwiment tal-messaġġi",
@@ -6559,6 +6579,8 @@
     "allChannels": "All channels",
     "connectedStatus": "Connected",
     "notConnectedStatus": "Mhux konness",
+    "statusBroken": "Assoċjazzjoni difettuża",
+    "repairHint": "L-elenkar huwa assoċjat mal-portal, imma ma' destinazzjoni li ma teżistix hemm. Id-disponibbiltà tintbagħat, il-prezzijiet le. Aqta' l-konnessjoni u qabbad mill-ġdid biex l-assoċjazzjoni terġa' tinbena.",
     "addChannel": "Add channel",
     "searchChannel": "Fittex kanal …",
     "noResults": "Ma nstab l-ebda kanal.",
@@ -6677,7 +6699,21 @@
         "approved": "Approvata",
         "rejected": "Miċħuda"
       }
-    }
+    },
+    "csvTitle": "Importa mill-fajl riżervazzjonijiet minn qabel il-konnessjoni",
+    "csvText": "Il-portal jipprovdi permezz tal-interfaċċja biss riżervazzjonijiet minn dakinhar tal-konnessjoni 'l quddiem. Is-soġġorni eqdem tiksibhom mill-esportazzjoni tal-kont tal-portal tiegħek u ttella'hom hawn.",
+    "csvDownloadTemplate": "Niżżel il-mudell",
+    "csvUpload": "Ittella' fajl",
+    "csvHint": "Itella' l-fajl eżattament kif tirċevih mill-portal (.xls, .xlsx jew .csv). Qabel l-importazzjoni tara liema propjetajiet u kemm-il riżervazzjoni ġew rikonoxxuti. Riżervazzjonijiet ikkanċellati jinqabżu, dawk li jeżistu diġà jiġu rikonoxxuti u ma jinħolqux tnejn.",
+    "csvResult": "Ġew importati {imported} minn {total} riżervazzjoni.",
+    "csvSkipped": "{count, plural, one {# ringiela maqbuża (teżisti diġà jew il-propjetà mhux magħrufa)} two {# ringieli maqbuża (jeżistu diġà jew il-propjetà mhux magħrufa)} few {# ringieli maqbuża (jeżistu diġà jew il-propjetà mhux magħrufa)} many {# ringiela maqbuża (jeżistu diġà jew il-propjetà mhux magħrufa)} other {# ringiela maqbuża (jeżistu diġà jew il-propjetà mhux magħrufa)}}",
+    "csvNothingUsable": "Fil-fajl ma hemm ebda riżervazzjoni li tista' tiġi importata — ir-ringieli kollha huma kkanċellati jew ma għandhomx data li tinqara.",
+    "csvPreview": "{count} riżervazzjoni rikonoxxuta, waslat minn {from} sa {to}. Għadu ma ġie importat xejn.",
+    "csvPreviewProperties": "Propjetajiet fil-fajl — dawn l-ismijiet iridu jaqblu mat-titli tal-propjetajiet tiegħek, inkella r-ringieli jinqabżu:",
+    "csvPreviewNoRef": "{count, plural, one {# riżervazzjoni mingħajr numru ta' riżervazzjoni} two {# riżervazzjonijiet mingħajr numru ta' riżervazzjoni} few {# riżervazzjonijiet mingħajr numru ta' riżervazzjoni} many {# riżervazzjoni mingħajr numru ta' riżervazzjoni} other {# riżervazzjoni mingħajr numru ta' riżervazzjoni}} — dawn jiġu rikonoxxuti permezz tal-propjetà, il-perjodu u l-isem.",
+    "csvConfirm": "Importa {count} riżervazzjoni",
+    "csvCancel": "Ikkanċella",
+    "csvFailed": "{count, plural, one {# ringiela b'żball} two {# ringieli b'żball} few {# ringieli b'żball} many {# ringiela b'żball} other {# ringiela b'żball}}:"
   },
   "calendarSync": {
     "title": "Importazzjoni/esportazzjoni tal-kalendarju",
@@ -7409,6 +7445,7 @@
       "propertyCount": "Numru ta' proprjetajiet",
       "oneMore": "Proprjetà waħda aktar",
       "commissionPerChannel": "Kummissjoni għal kull kanal ta' prenotazzjoni",
+      "commissionExternalCap": "mhux aktar minn {betrag} fix-xahar",
       "included": "X'inhu inkluż",
       "totalMonthly": "Total fix-xahar"
     },
@@ -7494,7 +7531,7 @@
       "loadFailed": "Ma setgħux jitgħabbew il-kummissjonijiet: {error}",
       "cardRate": "Booking, Airbnb u oħrajn: {rate} % mid-dħul mill-prenotazzjonijiet tal-proprjetajiet ippubblikati tiegħek. Il-kummissjonijiet ta' xahar jiġu ffatturati fl-1 tax-xahar ta' wara u miżjuda mal-fattura li jmiss tal-abbonament tiegħek.",
       "cardRateCapped": "Booking, Airbnb u oħrajn: {rate} % mid-dħul mill-prenotazzjonijiet tal-proprjetajiet ippubblikati tiegħek. Il-kummissjonijiet ta' xahar jiġu ffatturati fl-1 tax-xahar ta' wara u miżjuda mal-fattura li jmiss tal-abbonament tiegħek, sa massimu ta' {cap} fix-xahar.",
-      "cardOtherChannels": "Il-prenotazzjonijiet permezz tas-sit web tiegħek stess jibqgħu bla kummissjoni. Il-prenotazzjonijiet permezz tas-suq myBestDays iġorru 8 %, li jinżamm direttament mal-wasla tal-ħlas — dawk mhumiex inklużi hawn.",
+      "cardOtherChannels": "Il-prenotazzjonijiet permezz tas-sit web tiegħek stess jibqgħu bla kummissjoni. Il-prenotazzjonijiet permezz tas-suq myBestDays iġorru {satz}, li jinżamm direttament mal-wasla tal-ħlas — dawk mhumiex inklużi hawn.",
       "pending": "Pendenti ({count, plural, one {prenotazzjoni waħda} two {# prenotazzjonijiet} few {# prenotazzjonijiet} many {# prenotazzjonijiet} other {# prenotazzjonijiet}}): ",
       "pendingCapHint": " — jiġi ffatturat il-limitu ta' kull xahar ta' {cap}",
       "noPending": "Bħalissa m'hemm l-ebda kummissjoni pendenti.",
@@ -7502,9 +7539,9 @@
       "backToBilling": "Fatturazzjoni",
       "monthsTitle": "Kummissjonijiet skont ix-xahar",
       "monthsIntro": "Din il-lista turi biss il-kummissjonijiet mill-prenotazzjonijiet permezz ta' portali esterni (Booking, Airbnb u oħrajn). Il-kummissjonijiet ta' xahar jiġu ffatturati fl-1 tax-xahar ta' wara u miżjuda mal-fattura li jmiss tal-abbonament tiegħek — il-ġbir isir flimkien ma' dik il-fattura.",
-      "monthsChannels": "Il-prenotazzjonijiet permezz tas-suq myBestDays iġorru kummissjoni ta' 8 %, li diġà tinżamm mal-wasla tal-ħlas; għalhekk ma jidhrux f'din il-lista. Il-prenotazzjonijiet permezz tas-sit web tiegħek stess jibqgħu bla kummissjoni.",
+      "monthsChannels": "Il-prenotazzjonijiet permezz tas-suq myBestDays iġorru kummissjoni ta' {satz}, li diġà tinżamm mal-wasla tal-ħlas; għalhekk ma jidhrux f'din il-lista. Il-prenotazzjonijiet permezz tas-sit web tiegħek stess jibqgħu bla kummissjoni.",
       "monthsLoading": "Qed jitgħabbew il-kummissjonijiet …",
-      "monthsEmpty": "S'issa ma nqalgħet l-ebda kummissjoni permezz ta' portali esterni. Il-prenotazzjonijiet permezz tas-sit web tiegħek stess jibqgħu dejjem bla kummissjoni. Il-prenotazzjonijiet fis-suq myBestDays iġorru kummissjoni ta' 8 % — dik tinżamm direttament mal-wasla tal-ħlas u ma tidhirx hawn.",
+      "monthsEmpty": "S'issa ma nqalgħet l-ebda kummissjoni permezz ta' portali esterni. Il-prenotazzjonijiet permezz tas-sit web tiegħek stess jibqgħu dejjem bla kummissjoni. Il-prenotazzjonijiet fis-suq myBestDays iġorru kummissjoni ta' {satz} — dik tinżamm direttament mal-wasla tal-ħlas u ma tidhirx hawn.",
       "colMonth": "Xahar",
       "colBookings": "Prenotazzjonijiet",
       "colGross": "Dħul mill-prenotazzjonijiet",
@@ -7637,7 +7674,7 @@
     "stars": "4,5 stilel",
     "reviews": "· 921 reċensjoni",
     "trial30": "Ipprova b'xejn għal 30 jum",
-    "bookingValue": "+0.5 % tal-valur tal-prenotazzjoni",
+    "bookingValue": "+{satz} tal-valur tal-prenotazzjoni",
     "seePrices": "Ara l-prezzijiet",
     "downloadApp": "Niżżel l-app",
     "copyright": "© 2026 myNextDays. Id-drittijiet kollha riżervati.",

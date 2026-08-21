@@ -1947,6 +1947,11 @@ class ChannelsMixin:
             .eq("tenant_id", tenant_id)
             .eq("status", "active")
             .eq("listed_on_marketplace", True)
+            # Archivierte zaehlen nicht mit (0416): sie stehen auf keinem
+            # Kanal mehr. Sonst meldete die Marktplatz-Karte ein gekuendigtes
+            # Objekt als „gelistet" — dieselbe Falschaussage, die dieser Block
+            # laut Kommentar oben eigentlich verhindert.
+            .is_("archived_at", "null")
             .execute()
         ).data or []
         marketplace_count = sum(
@@ -2102,11 +2107,24 @@ class ChannelsMixin:
         # Portal-Kennung mit einem anderen TEILT (Gebäude, 0264) oder eine eigene
         # hat. Die Oberfläche braucht das, um beim Verbinden nicht die Hotel-ID
         # eines FREMDEN Objekts vorzugeben — siehe `shares_building` unten.
+        # ARCHIVIERTE Objekte gehören hier NICHT hin (0416).
+        #
+        # Ohne diesen Filter stand ein gekündigtes Objekt weiter in der
+        # Zuordnungsliste JEDES Portals — mit „Nicht verbunden" und einem
+        # Verbinden-Knopf. Genau das war live zu sehen: `Fewo-Mosbjerg-Sindal`
+        # war archiviert, seine Channex-Property gelöscht, und trotzdem bot die
+        # Seite bei Booking.com UND Airbnb an, es zu verbinden. Ein Klick darauf
+        # hätte es neu angelegt — samt neuer Kosten.
+        #
+        # `status` allein reicht dafür nicht: ein archiviertes Objekt behält
+        # seinen Status (draft/active), weil das Archiv eine eigene Achse ist
+        # (siehe properties/archiv.py).
         props = (
             db.table("properties")
             .select("id, title, status, building_id")
             .eq("tenant_id", tenant_id)
             .in_("status", ["draft", "active"])
+            .is_("archived_at", "null")
             .order("title")
             .execute()
         ).data or []
@@ -2147,7 +2165,7 @@ class ChannelsMixin:
         # _objekte_mit_channex_ziel — unsere Verbindungszeile beweist es nicht).
         # `None` = konnten wir nicht abrufen; dann bleibt es bei der bisherigen
         # Aussage statt „nicht verbunden" zu behaupten.
-        mit_ziel = self._objekte_mit_channex_ziel(
+        ziel_stand = self._objekte_mit_channex_ziel(
             db,
             tenant_id,
             property_ids,
@@ -2158,6 +2176,10 @@ class ChannelsMixin:
             },
             portal_code=portal_code,
         )
+        mit_ziel = None if ziel_stand is None else ziel_stand[0]
+        # Objekte mit vorhandener, aber unbrauchbarer Zuordnung — die brauchen
+        # einen Reparatur-Knopf, nicht „verbinden".
+        defekte_zuordnung: set[str] = set() if ziel_stand is None else ziel_stand[1]
 
         # Sync-Status je Objekt aus der Property-Map (nur nicht-gelöschte).
         sync_by_property: dict[str, dict[str, Any]] = {}
@@ -2227,6 +2249,11 @@ class ChannelsMixin:
                     "ota_room_title": c.get("ota_room_title"),
                     "is_active": bool(c.get("is_active")) and hat_ziel,
                     "connected": hat_ziel,
+                    # Zuordnung vorhanden, aber vom Portal nicht auflösbar.
+                    # Dann NICHT „verbinden" anbieten (der Rate-Plan-Titel ist
+                    # belegt, ein Neu-Verbinden scheitert daran), sondern
+                    # reparieren — genau ein Feld am bestehenden Eintrag.
+                    "needs_repair": pid in defekte_zuordnung,
                     # Auch der Sync-Stand hängt an der Zuordnung bei Channex:
                     # ohne Zuordnung gibt es dort kein Ziel, also kann NICHTS
                     # synchronisiert sein. `channex_property_map.sync_enabled`
@@ -2292,8 +2319,17 @@ class ChannelsMixin:
         channel_ids: set[str],
         *,
         portal_code: str = "AirBNB",
-    ) -> set[str] | None:
-        """Objekte, die bei CHANNEX wirklich zugeordnet sind.
+    ) -> tuple[set[str], set[str]] | None:
+        """Objekte, die bei CHANNEX wirklich zugeordnet sind — und die defekten.
+
+        Rückgabe: `(zugeordnet, defekt)`.
+          * `zugeordnet` — bei Channex mit auflösbarem Ziel hinterlegt.
+          * `defekt` — eine Zuordnung ist da, aber unbrauchbar (siehe
+            `_zuordnung_unbrauchbar`). Diese Objekte sind NICHT zugeordnet, aber
+            sie brauchen eine andere Handlung als „verbinden": eine Reparatur.
+            Ohne diese Unterscheidung stünde in der Oberfläche „nicht
+            verbunden" und der Betrieb würde neu verbinden wollen — was am
+            belegten Rate-Plan-Titel scheitert.
 
         Gefragt wird Channex, nicht unsere eigene Tabelle: `013 Rævlingevej` und
         `020 Lille Lægehus` sind in `channex_channel_connection` Feld für Feld
@@ -2311,7 +2347,7 @@ class ChannelsMixin:
         Aufrufer NICHT „nicht verbunden" behaupten (Wurzel 4/5).
         """
         if not property_ids or not channel_ids:
-            return set()
+            return set(), set()
         # WORÜBER wird zugeordnet? Das hängt am Portal:
         #   Airbnb      → `settings.listing_id`, unsere `airbnb_listing_id`
         #   alle übrigen → `settings.room_type_code`, unser `ota_room_type_code`
@@ -2326,6 +2362,11 @@ class ChannelsMixin:
         ist_airbnb = portal_code == "AirBNB"
         feld = "listing_id" if ist_airbnb else "room_type_code"
         gemappte: set[str] = set()
+        # Zuordnungen, die ES GIBT, die das Portal aber nicht auflösen kann
+        # (siehe `_zuordnung_unbrauchbar`). Getrennt geführt, weil „gibt es
+        # nicht" und „ist kaputt" für den Betrieb zwei verschiedene Aufgaben
+        # sind: verbinden vs. reparieren.
+        defekt: set[str] = set()
         for channel_id in channel_ids:
             try:
                 kanal = self._channex.get_channel(channel_id)
@@ -2337,11 +2378,16 @@ class ChannelsMixin:
                 return None
             attrs = ((kanal.get("data") or {}).get("attributes")) or {}
             for eintrag in attrs.get("rate_plans") or []:
-                wert = ((eintrag or {}).get("settings") or {}).get(feld)
-                if wert:
-                    gemappte.add(str(wert))
-        if not gemappte:
-            return set()
+                settings = (eintrag or {}).get("settings") or {}
+                wert = settings.get(feld)
+                if not wert:
+                    continue
+                if self._zuordnung_unbrauchbar(settings):
+                    defekt.add(str(wert))
+                    continue
+                gemappte.add(str(wert))
+        if not gemappte and not defekt:
+            return set(), set()
         if ist_airbnb:
             rows = (
                 db.table("properties")
@@ -2350,12 +2396,20 @@ class ChannelsMixin:
                 .in_("id", property_ids)
                 .execute()
             ).data or []
-            return {
-                str(r["id"])
-                for r in rows
-                if r.get("airbnb_listing_id")
-                and str(r["airbnb_listing_id"]) in gemappte
-            }
+            return (
+                {
+                    str(r["id"])
+                    for r in rows
+                    if r.get("airbnb_listing_id")
+                    and str(r["airbnb_listing_id"]) in gemappte
+                },
+                {
+                    str(r["id"])
+                    for r in rows
+                    if r.get("airbnb_listing_id")
+                    and str(r["airbnb_listing_id"]) in defekt
+                },
+            )
         # Nicht-Airbnb: die Zimmer-Kennung steht in der Verbindungszeile, nicht
         # am Objekt — ein Objekt kann bei zwei Portalen unter verschiedenen
         # Kennungen laufen.
@@ -2367,12 +2421,47 @@ class ChannelsMixin:
             .in_("property_id", property_ids)
             .execute()
         ).data or []
-        return {
-            str(z["property_id"])
-            for z in zeilen
-            if z.get("ota_room_type_code")
-            and str(z["ota_room_type_code"]) in gemappte
-        }
+        return (
+            {
+                str(z["property_id"])
+                for z in zeilen
+                if z.get("ota_room_type_code")
+                and str(z["ota_room_type_code"]) in gemappte
+            },
+            {
+                str(z["property_id"])
+                for z in zeilen
+                if z.get("ota_room_type_code")
+                and str(z["ota_room_type_code"]) in defekt
+            },
+        )
+
+    @staticmethod
+    def _zuordnung_unbrauchbar(settings: dict[str, Any]) -> bool:
+        """Trägt diese Zuordnung ein Ziel, das das Portal nicht auflösen kann?
+
+        Existenz ist nicht Gültigkeit. `_objekte_mit_channex_ziel` fragte bisher
+        nur, OB ein Eintrag mit unserer Listing-ID am Kanal steht — und der
+        stand. Channex führte dasselbe Listing gleichzeitig als „Not mapped",
+        weil in `settings.airbnb_rate_plan_id` eine Nummer stand, die Airbnb
+        nicht kennt (live 21.08.2026, `016 Klitrosevej · Feriehus Rævehulen`:
+        dort steht die LISTING-ID 1669350904909142819 als Rate-Plan-ID; 1 von
+        17 Zuordnungen des Kanals betroffen, die 16 funktionierenden haben das
+        Feld leer). Die Oberfläche zeigte „Synchronisiert", während nichts
+        ankam — genau die Kombination, die der Kommentar an `sync_enabled` als
+        die schlimmste beschreibt: der Betrieb prüft dort nicht mehr nach.
+
+        Warum das Feld überhaupt tödlich ist, steht an `_RATE_PARAM_NIE_SETZEN`:
+        Channex schaltet damit auf Rate-Plan-Pushes um, kann die erfundene Rate
+        nicht auflösen und sendet in jedem `RatePlanInventoryUpdate` ein leeres
+        `rate_plans: []` — Verfügbarkeit kommt an, PREISE NIE.
+
+        Neu angelegte Zuordnungen können das nicht mehr haben (das Feld steht
+        auf der Nie-setzen-Liste, abgesichert durch
+        `test_airbnb_rate_plan_id_wird_nie_gesetzt`). Diese Prüfung gilt dem
+        ALTBESTAND, der vor dieser Regel entstanden ist.
+        """
+        return bool(settings.get("airbnb_rate_plan_id"))
 
     def _channel_live_zustand(
         self, channel_id: str
@@ -2616,6 +2705,9 @@ class ChannelsMixin:
             .eq("tenant_id", tenant_id)
             .eq("building_id", building_id)
             .eq("status", "active")
+            # Ein archiviertes Objekt im selben Gebaeude nicht mitregistrieren
+            # (0416) — es wuerde bei Channex neu angelegt und kostete wieder.
+            .is_("archived_at", "null")
             .execute()
         ).data or []
         for room in rooms:

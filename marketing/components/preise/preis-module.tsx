@@ -55,7 +55,11 @@ const MODULE: readonly {
     // Zimmern — als „ab 600 €/Monat" gelesen wirkt das Modul teurer als jedes
     // Hotel-PMS am Markt, obwohl der Zimmerpreis der günstigste davon ist
     // (Vergleich 18.08.2026, live abgelesen: Apaleo 8 € je Zimmer bei
-    // Mindestpreis 400 €/Monat; Sirvoy Pro 109 €/Monat bei 20 Zimmern;
+    // Mindestpreis 400 €/Monat; Sirvoy Pro 109 €/Monat für EIN Haus mit 20
+    // Zimmern — der Vergleich hier ist ein Hotel, nicht die 20 getrennten
+    // Objekte der Vergleichstabelle, wo bei Sirvoy je weiteres Objekt das
+    // Add-on „Multiple property connection" 20 €/Monat dazukommt
+    // (content/wettbewerb.ts, nachrecherchiert 21.08.2026);
     // Little Hotelier ab 135 €/Monat; Cloudbeds, Mews, Hostaway und Hotelogix
     // veröffentlichen keine Preise). Ein Haus mit 20 Zimmern zahlt bei uns
     // 30 € — diese Zahl gehört nach vorn, die Pauschale daneben.

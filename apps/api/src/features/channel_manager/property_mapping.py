@@ -115,6 +115,86 @@ class PropertyMappingMixin:
         )
         return res.data[0]["channex_group_id"] if res.data else None
 
+    def _channex_verwaiste_abraeumen(
+        self,
+        db: Client,
+        tenant_id: str,
+        active: list[dict[str, Any]],
+        live_by_id: dict[str, dict[str, Any]],
+    ) -> int:
+        """Bei Channex gefuehrt, bei uns archiviert/geloescht → dort entfernen.
+
+        DER GRUND: Channex rechnet je gefuehrter Property ab. Fehlte dieser
+        Lauf, blieb ein gekuendigtes Objekt dort auf Dauer stehen und kostete
+        jeden Monat — und ein noch aktiver Kanal verkaufte weiter, waehrend von
+        uns keine Pushes mehr kamen (Blindverkauf).
+
+        Der Handgriff im Archivieren/Loeschen macht dasselbe sofort; DIESER Lauf
+        ist das Netz darunter. Er greift, wenn das Abraeumen dort scheiterte
+        (Channex nicht erreichbar, Kanal-Abbau 502) oder wenn ein Objekt auf
+        einem Weg verschwand, der die Abraeumung nicht kennt. Bei einem Betrieb
+        faellt so ein Fall auf, bei tausend nicht — deshalb automatisch.
+
+        Gibt die Zahl der abgeraeumten Properties zurueck. Wirft nicht: ein
+        Fehler hier darf den uebrigen Abgleich nicht kippen (Wurzel 5), er steht
+        im Log.
+        """
+        # Nur Maps, deren Property bei Channex WIRKLICH noch lebt — die anderen
+        # hat der Zweig darueber schon geschlossen.
+        kandidaten = [
+            m for m in active if m["channex_property_id"] in live_by_id
+        ]
+        if not kandidaten:
+            return 0
+        eigene_ids = [m["property_id"] for m in kandidaten if m.get("property_id")]
+        if not eigene_ids:
+            return 0
+
+        # Welche dieser Objekte sind noch gefuehrt? Alles, was hier NICHT
+        # zurueckkommt, ist entweder geloescht (Zeile weg) oder archiviert.
+        gefuehrt = {
+            str(r["id"])
+            for r in (
+                db.table("properties")
+                .select("id")
+                .eq("tenant_id", tenant_id)
+                .in_("id", eigene_ids)
+                .is_("archived_at", "null")
+                .execute()
+            ).data or []
+        }
+
+        # Spaeter Import, kein Modul-Import: `properties` importiert seinerseits
+        # aus diesem Slice — ein Zyklus.
+        from src.features.properties.archiv import (  # noqa: PLC0415
+            channex_abraeumen,
+        )
+
+        anzahl = 0
+        for m in kandidaten:
+            pid = str(m.get("property_id") or "")
+            if not pid or pid in gefuehrt:
+                continue
+            try:
+                befund = channex_abraeumen(db, tenant_id, pid)
+            except Exception as exc:  # noqa: BLE001 — kippt den Abgleich nicht
+                log.warning(
+                    "reconcile_verwaiste_abraeumen_fehlgeschlagen",
+                    tenant_id=tenant_id, property_id=pid, error=str(exc)[:200],
+                )
+                continue
+            anzahl += 1
+            # Auf INFO, nicht DEBUG: das ist eine Kostenaenderung am
+            # Channex-Konto und muss im Betriebslog auffindbar sein.
+            log.info(
+                "reconcile_verwaiste_property_abgeraeumt",
+                tenant_id=tenant_id,
+                property_id=pid,
+                channex_property_id=m["channex_property_id"],
+                befund=befund,
+            )
+        return anzahl
+
     def _live_channex_properties_for_group(
         self, group_id: str
     ) -> list[dict[str, Any]] | None:
@@ -394,14 +474,32 @@ class PropertyMappingMixin:
             if soft:
                 prop = (
                     db.table("properties")
-                    .select("id")
+                    .select("id, archived_at")
                     .eq("id", soft[0]["property_id"])
                     .eq("tenant_id", tenant_id)
                     .limit(1)
                     .execute()
                 ).data
-                if prop:
+                # ARCHIVIERTE Objekte NICHT reaktivieren (0416).
+                #
+                # Ohne diese Prüfung macht der Abgleich das Archivieren
+                # rückgängig: die Property existiert bei Channex noch (das
+                # Löschen dort kann fehlschlagen oder Channex räumt erst nach
+                # 90 Tagen), der Abgleich findet sie „live", reanimiert das
+                # Mapping und spiegelt die Inhalte zurück — das gekündigte
+                # Objekt wäre wieder verbunden und würde weiter abgerechnet.
+                # Der Betrieb hätte es archiviert und es käme von allein zurück.
+                if prop and not prop[0].get("archived_at"):
                     reuse_property_id = prop[0]["id"]
+                elif prop:
+                    log.info(
+                        "reconcile_skip_archiviert",
+                        tenant_id=tenant_id,
+                        property_id=prop[0]["id"],
+                        channex_property_id=channex_id,
+                    )
+                    skipped += 1
+                    continue
 
             if reuse_property_id:
                 db.table("properties").update(row).eq(
@@ -472,6 +570,28 @@ class PropertyMappingMixin:
                 tenant_id=tenant_id,
                 count=soft_deleted,
             )
+
+        # DIE GEGENRICHTUNG: bei Channex noch da, bei uns archiviert/weg.
+        #
+        # Bis hierher kannte der Abgleich nur „Channex weg → Map schliessen".
+        # Der umgekehrte Fall fehlte vollstaendig — und genau der kostet Geld:
+        # Channex rechnet je gefuehrter Property ab. Ein gekuendigtes Objekt
+        # blieb dort auf Dauer stehen, ohne dass es irgendwo auffiel.
+        #
+        # Warum ein WAECHTER und nicht nur der Handgriff im Archivieren: das
+        # Abraeumen dort kann scheitern (Channex nicht erreichbar, Kanal-Abbau
+        # 502) — dann bleibt die Property stehen und niemand merkt es. Bei einem
+        # Betrieb faellt das auf, bei tausend nicht. Dieser Lauf holt jeden
+        # solchen Fall beim naechsten Tick nach, ohne dass jemand etwas tun muss.
+        #
+        # `archived_at` UND „Objekt-Zeile ganz weg" gelten gleich: beides heisst
+        # „wird nicht mehr geführt". Bewusst NICHT `status='draft'` — ein Entwurf
+        # ist ein Objekt in Arbeit, kein aufgegebenes.
+        aufgeraeumt = self._channex_verwaiste_abraeumen(
+            db, tenant_id, active, live_by_id
+        )
+        if aufgeraeumt:
+            soft_deleted += aufgeraeumt
 
         # Preis-Abgleich je noch aktivem Objekt: DB-Soll vs. lokaler Schatten des
         # zuletzt Gepushten (channex_ari_shadow, 0246) → nur die Differenz pushen.

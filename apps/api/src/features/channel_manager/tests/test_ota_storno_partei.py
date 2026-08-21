@@ -160,3 +160,107 @@ def test_storno_partei_ist_nicht_leer_und_nicht_geraten(monkeypatch) -> None:
 
     payload = _storno_payload(db.store)
     assert payload["cancelled_by_party"] not in (None, "", "gast", "betrieb")
+
+
+def test_storno_meldet_und_protokolliert(monkeypatch) -> None:
+    """Der Betrieb MUSS von einem Portal-Storno erfahren.
+
+    Gemeldet wurde bisher ausschliesslich `kind="created"` (im Neuanlage-Zweig
+    weiter unten in derselben Methode). Der Storno-Zweig kehrt vorher zurueck —
+    die Glocke behielt damit dauerhaft ihre „Neue Buchung"-Zeile, waehrend die
+    Buchung schon storniert war.
+
+    Live gemessen am 21.08.2026 (Buchung 5135385573, Raevlingehuset): drei
+    „New booking"-Meldungen um 10:11, Storno um 10:22, danach KEINE weitere
+    Meldung. Kalender und Aufgaben waren korrekt aufgeraeumt — nur der Betrieb
+    erfuhr es nicht.
+
+    Geprueft wird beides: der Zeitleisten-Eintrag und die Meldung.
+    """
+    db = _Db(
+        {
+            "reservations": [
+                {
+                    "id": _RESERVATION,
+                    "checked_out_at": None,
+                    "check_in": "2026-09-01",
+                    "check_out": "2026-09-04",
+                    "property_id": _PROPERTY,
+                    "payment_collect": "ota",
+                    "unit_id": None,
+                    "guest_id": "g-1",
+                }
+            ]
+        }
+    )
+    sync = _Sync()
+    monkeypatch.setattr(
+        "src.features.channel_manager.bookings_sync.sync_nach_id",
+        lambda *_a, **_k: None,
+    )
+    monkeypatch.setattr(_Sync, "_free_ota_nights", lambda *_a, **_k: None, raising=False)
+    monkeypatch.setattr(
+        _Sync, "_projection_precheck", lambda *_a, **_k: True, raising=False
+    )
+    monkeypatch.setattr(
+        _Sync, "_gast_name", staticmethod(lambda *_a, **_k: "Rainer"), raising=False
+    )
+    gemeldet: list[dict[str, Any]] = []
+    monkeypatch.setattr(
+        "src.features.channel_manager.bookings_sync.melde_buchungs_ereignis",
+        lambda _db, **kw: gemeldet.append(kw),
+    )
+
+    sync._project_booking_to_reservation(  # noqa: SLF001
+        db, _TENANT, _attrs(), guest_id="g-1", local_property_id=_PROPERTY
+    )
+
+    # Zeitleiste: der Storno ist ein Ereignis der Buchung, nicht nur ein
+    # geaenderter Status — ohne den Eintrag fehlt er im Verlauf.
+    ereignisse = [p for t, p in db.store["inserts"] if t == "reservation_events"]
+    assert len(ereignisse) == 1
+    assert ereignisse[0]["kind"] == "cancelled"
+    assert ereignisse[0]["reservation_id"] == _RESERVATION
+
+    # Meldung an Eigentuemer UND Betrieb.
+    assert len(gemeldet) == 1
+    assert gemeldet[0]["kind"] == "cancelled"
+    assert gemeldet[0]["reservation_id"] == _RESERVATION
+    assert gemeldet[0]["property_id"] == _PROPERTY
+    # Der Vorname macht die Meldung erst brauchbar — „Storno" allein sagt
+    # nicht, WESSEN Aufenthalt entfaellt.
+    assert gemeldet[0]["gast_vorname"] == "Rainer"
+    assert gemeldet[0]["quelle"] == "Booking.com"
+
+
+def test_unbekannte_buchung_meldet_keinen_storno(monkeypatch) -> None:
+    """Eine Storno-Revision zu einer Buchung, die wir nie hatten, meldet nichts.
+
+    Der Bestandsimport legt sie als storniert an (Historie), aber beim Betrieb
+    hat dieser Storno nie stattgefunden — eine Meldung darueber waere eine
+    Aussage ueber ein Ereignis, das es fuer ihn nicht gab (Wurzel 4).
+    """
+    db = _Db({"reservations": []})
+    sync = _Sync()
+    monkeypatch.setattr(
+        "src.features.channel_manager.bookings_sync.sync_nach_id",
+        lambda *_a, **_k: None,
+    )
+    monkeypatch.setattr(_Sync, "_free_ota_nights", lambda *_a, **_k: None, raising=False)
+    monkeypatch.setattr(
+        _Sync, "_projection_precheck", lambda *_a, **_k: True, raising=False
+    )
+    monkeypatch.setattr(
+        _Sync, "_insert_cancelled_reservation", lambda *_a, **_k: None, raising=False
+    )
+    gemeldet: list[dict[str, Any]] = []
+    monkeypatch.setattr(
+        "src.features.channel_manager.bookings_sync.melde_buchungs_ereignis",
+        lambda _db, **kw: gemeldet.append(kw),
+    )
+
+    sync._project_booking_to_reservation(  # noqa: SLF001
+        db, _TENANT, _attrs(), guest_id="g-1", local_property_id=_PROPERTY
+    )
+
+    assert gemeldet == []

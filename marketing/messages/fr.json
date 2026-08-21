@@ -157,7 +157,8 @@
   },
   "direkt": {
    "frage": "Ai-je une page de réservation sans commission de portail ?",
-   "antwort": "Oui. Chaque compte comprend son propre portail de réservation, un widget pour votre site existant et un créateur de site avec votre domaine. Les réservations directes coûtent 0,5 % au lieu des 15–18 % de commission des grands portails, utilisent le même calendrier et les mêmes tarifs — et l'argent arrive directement sur votre compte."
+   "antwort": "Oui. Chaque compte comprend son propre portail de réservation, un widget pour votre site existant et un créateur de site avec votre domaine. Les réservations directes coûtent {satz} au lieu des 15–18 % de commission des grands portails, utilisent le même calendrier et les mêmes tarifs — et l'argent arrive directement sur votre compte.",
+   "satzUnbekannt": "bien moins"
   },
   "marktplatz": {
    "frage": "Qu'est-ce que myBestDays ?",
@@ -261,7 +262,8 @@
    },
    "direkt": {
     "title": "Réservation directe",
-    "items": "Portail de réservation dédié, widget de réservation, créateur de site web, nom de domaine propre, 0,5 % au lieu de 15 à 18 % de commission OTA"
+    "items": "Portail de réservation dédié, widget de réservation, créateur de site web, nom de domaine propre, {satz} au lieu de 15 à 18 % de commission OTA",
+    "satzUnbekannt": "bien moins"
    },
    "preise": {
     "title": "Tarifs et revenus",
@@ -525,9 +527,9 @@
    "direktText": "Via votre propre site ou votre formulaire de réservation. Nous n'en prenons rien. Il ne reste que les frais de votre prestataire de paiement.",
    "direktWert": "0 %",
    "portaleTitel": "Le voyageur vient de Booking, Airbnb & co.",
-   "portaleText": "Nous facturons 0,5 % de la valeur de la réservation, une fois par mois sur votre facture. Ce que le portail retient de son côté est indépendant.",
+   "portaleText": "Nous facturons {satz} de la valeur de la réservation, une fois par mois sur votre facture. Ce que le portail retient de son côté est indépendant.",
    "marktplatzTitel": "Le voyageur vient via myBestDays",
-   "marktplatzText": "Notre propre place de marché. Ici, des voyageurs qui ne vous connaissent pas encore vous trouvent. Nous apportons la réservation, encaissons l'argent et vous le versons — pour cela nous gardons 8 %. Il n'y a pas d'autres frais.",
+   "marktplatzText": "Notre propre place de marché. Ici, des voyageurs qui ne vous connaissent pas encore vous trouvent. Nous apportons la réservation, encaissons l'argent et vous le versons — pour cela nous gardons {satz}. Il n'y a pas d'autres frais.",
    "deckel": "Et c'est plafonné : pour les réservations venant des portails, vous ne payez jamais plus de {betrag} par mois."
   },
   "module": {
@@ -766,7 +768,8 @@
     "gast": "Voyageur & argent",
     "betrieb": "Exploitation"
    },
-   "reiterHeading": "Qu'y a-t-il exactement derrière ?"
+   "reiterHeading": "Qu'y a-t-il exactement derrière ?",
+   "satzUnbekannt": "bien moins"
   },
   "uebersicht": {
    "metaTitel": "Fonctionnalités — tout pour la location et l'hôtel | myNextDays",
@@ -954,7 +957,7 @@
      "punkte": {
       "a": "Activable canal par canal",
       "b": "Un seul calendrier pour tout",
-      "c": "8 % tout compris au lieu d'une commission de portail"
+      "c": "{satz} tout compris au lieu d'une commission de portail"
      }
     }
    },

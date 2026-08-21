@@ -71,6 +71,16 @@ NICHT hier hinein gehören zwei Nachbarn, die etwas anderes tun:
   * `property_sales_pause` / `properties.status` — die schalten das INSERAT
     (`objekt_verkauf.py`), nicht einzelne Tage. Kein Datum, keine Stückzahl.
 """
+# SCHWESTERDATEI — byte-identisch in beiden Bäumen halten:
+#     apps/api/src/core/einheiten_verfuegbar.py
+#     apps/public-api/src/core/einheiten_verfuegbar.py
+# Die öffentliche API ist ein EIGENER Service (apps/public-api/README.md) und
+# importiert nichts aus apps/api. Diese Datei liegt dort deshalb als bewusste
+# Kopie (Muster ADR-0019). Der CI-Job `public-api-konsistenz` prüft die
+# Byte-Gleichheit, und hier ist der Einsatz am höchsten: die Liste der Regeln,
+# die eine Nacht unverkäuflich machen, ist die Wahrheit für die Verfügbarkeit.
+# Wer sie nur in einem der beiden Bäume ergänzt, meldet über den anderen Kanal
+# eine gesperrte Nacht als frei — genau der Schaden, der oben beschrieben ist.
 from __future__ import annotations
 
 from datetime import date, timedelta

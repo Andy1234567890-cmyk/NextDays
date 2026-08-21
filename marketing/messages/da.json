@@ -157,7 +157,8 @@
   },
   "direkt": {
    "frage": "Får jeg min egen bookingside uden portalkommission?",
-   "antwort": "Ja. Til hver konto hører en egen bookingportal, en widget til den eksisterende hjemmeside og en hjemmesidebygger med eget domæne. Direkte bookinger koster 0,5 % i stedet for de store portalers 15–18 %, kører på samme kalender og samme priser — og pengene går direkte ind på din konto."
+   "antwort": "Ja. Til hver konto hører en egen bookingportal, en widget til den eksisterende hjemmeside og en hjemmesidebygger med eget domæne. Direkte bookinger koster {satz} i stedet for de store portalers 15–18 %, kører på samme kalender og samme priser — og pengene går direkte ind på din konto.",
+   "satzUnbekannt": "markant mindre"
   },
   "marktplatz": {
    "frage": "Hvad er myBestDays?",
@@ -261,7 +262,8 @@
    },
    "direkt": {
     "title": "Direkte booking",
-    "items": "Egen bookingportal, booking-widget, hjemmesidebygger, eget domæne, 0,5 % i stedet for 15–18 % OTA-kommission"
+    "items": "Egen bookingportal, booking-widget, hjemmesidebygger, eget domæne, {satz} i stedet for 15–18 % OTA-kommission",
+    "satzUnbekannt": "markant mindre"
    },
    "preise": {
     "title": "Priser & omsætning",
@@ -525,9 +527,9 @@
    "direktText": "Via din egen hjemmeside eller dit bookingformular. Af det tager vi intet. Kun gebyret fra din betalingsudbyder er tilbage.",
    "direktWert": "0 %",
    "portaleTitel": "Gæsten kommer fra Booking, Airbnb m.fl.",
-   "portaleText": "Vi beregner 0,5 % af bookingens værdi, én gang om måneden på din faktura. Hvad portalen selv beholder, er uafhængigt af det.",
+   "portaleText": "Vi beregner {satz} af bookingens værdi, én gang om måneden på din faktura. Hvad portalen selv beholder, er uafhængigt af det.",
    "marktplatzTitel": "Gæsten kommer via myBestDays",
-   "marktplatzText": "Vores egen markedsplads. Her finder gæster dig, som ikke kender dig endnu. Vi skaffer bookingen, opkræver pengene og udbetaler dem til dig — for det beholder vi 8 %. Der kommer ikke flere omkostninger.",
+   "marktplatzText": "Vores egen markedsplads. Her finder gæster dig, som ikke kender dig endnu. Vi skaffer bookingen, opkræver pengene og udbetaler dem til dig — for det beholder vi {satz}. Der kommer ikke flere omkostninger.",
    "deckel": "Og der er et loft: for bookinger fra portaler betaler du aldrig mere end {betrag} om måneden."
   },
   "module": {
@@ -606,7 +608,8 @@
     "gast": "Gæst & penge",
     "betrieb": "Drift"
    },
-   "reiterHeading": "Hvad ligger der bag?"
+   "reiterHeading": "Hvad ligger der bag?",
+   "satzUnbekannt": "markant mindre"
   },
   "uebersicht": {
    "metaTitel": "Funktioner — alt til udlejning og hotel | myNextDays",
@@ -794,7 +797,7 @@
      "punkte": {
       "a": "Kan slås til pr. kanal",
       "b": "Én kalender til det hele",
-      "c": "8 % all-in i stedet for portalprovision"
+      "c": "{satz} all-in i stedet for portalprovision"
      }
     }
    },

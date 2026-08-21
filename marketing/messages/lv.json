@@ -157,7 +157,8 @@
   },
   "direkt": {
    "frage": "Vai saņemu savu rezervāciju lapu bez portāla komisijas?",
-   "antwort": "Jā. Katram kontam pieder savs rezervāciju portāls, logrīks esošajai vietnei un vietņu veidotājs ar savu domēnu. Tiešās rezervācijas maksā 0,5 % vietā 15–18 % lielo portālu komisijas, darbojas tajā pašā kalendārā un ar tām pašām cenām — un nauda nonāk tieši tavā kontā."
+   "antwort": "Jā. Katram kontam pieder savs rezervāciju portāls, logrīks esošajai vietnei un vietņu veidotājs ar savu domēnu. Tiešās rezervācijas maksā {satz}, nevis lielo portālu 15–18 % komisiju, darbojas tajā pašā kalendārā un ar tām pašām cenām — un nauda nonāk tieši tavā kontā.",
+   "satzUnbekannt": "ievērojami mazāk"
   },
   "marktplatz": {
    "frage": "Kas ir myBestDays?",
@@ -261,7 +262,8 @@
    },
    "direkt": {
     "title": "Tiešā rezervācija",
-    "items": "Savs rezervāciju portāls, rezervāciju logrīks, mājaslapu veidotājs, savs domēns, 0,5 % 15–18 % OTA komisijas vietā"
+    "items": "Savs rezervāciju portāls, rezervāciju logrīks, mājaslapu veidotājs, savs domēns, {satz}, nevis 15–18 % OTA komisija",
+    "satzUnbekannt": "ievērojami mazāk"
    },
    "preise": {
     "title": "Cenas un ieņēmumi",
@@ -525,9 +527,9 @@
    "direktText": "Caur tavu mājaslapu vai rezervācijas formu. No tā mēs neņemam neko. Paliek tikai tava maksājumu pakalpojuma maksa.",
    "direktWert": "0 %",
    "portaleTitel": "Viesis nāk no Booking, Airbnb un citiem",
-   "portaleText": "Aprēķinām 0,5 % no rezervācijas vērtības, reizi mēnesī tavā rēķinā. Tas, ko patur pats portāls, no tā nav atkarīgs.",
+   "portaleText": "Aprēķinām {satz} no rezervācijas vērtības, reizi mēnesī tavā rēķinā. Tas, ko patur pats portāls, no tā nav atkarīgs.",
    "marktplatzTitel": "Viesis nāk caur myBestDays",
-   "marktplatzText": "Mūsu pašu tirgus vieta. Šeit tevi atrod viesi, kas tevi vēl nepazīst. Mēs atnesam rezervāciju, iekasējam naudu un izmaksājam to tev — par to paturam 8 %. Citu izmaksu nav.",
+   "marktplatzText": "Mūsu pašu tirgus vieta. Šeit tevi atrod viesi, kas tevi vēl nepazīst. Mēs atnesam rezervāciju, iekasējam naudu un izmaksājam to tev — par to paturam {satz}. Citu izmaksu nav.",
    "deckel": "Un ir griesti: par portālu rezervācijām nekad nemaksā vairāk par {betrag} mēnesī."
   },
   "module": {
@@ -766,7 +768,8 @@
     "gast": "Viesis un nauda",
     "betrieb": "Darbība"
    },
-   "reiterHeading": "Kas tieši slēpjas aiz tā?"
+   "reiterHeading": "Kas tieši slēpjas aiz tā?",
+   "satzUnbekannt": "ievērojami mazāk"
   },
   "uebersicht": {
    "metaTitel": "Funkcijas — viss iznomāšanai un viesnīcai | myNextDays",
@@ -954,7 +957,7 @@
      "punkte": {
       "a": "Ieslēdzams katram kanālam atsevišķi",
       "b": "Viens kalendārs visam",
-      "c": "8 % viss iekļauts portāla komisijas vietā"
+      "c": "{satz} viss iekļauts, bez portāla komisijas"
      }
     }
    },

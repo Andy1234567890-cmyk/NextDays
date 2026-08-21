@@ -157,7 +157,8 @@
   },
   "direkt": {
    "frage": "Primesc o pagină proprie de rezervare fără comision de portal?",
-   "antwort": "Da. Fiecare cont include propriul portal de rezervare, un widget pentru site-ul existent și un constructor de site cu domeniu propriu. Rezervările directe costă 0,5 % în loc de comisionul de 15–18 % al portalurilor mari, folosesc același calendar și aceleași prețuri — iar banii intră direct în contul tău."
+   "antwort": "Da. Fiecare cont include propriul portal de rezervare, un widget pentru site-ul existent și un constructor de site cu domeniu propriu. Rezervările directe costă {satz} în loc de comisionul de 15–18 % al portalurilor mari, folosesc același calendar și aceleași prețuri — iar banii intră direct în contul tău.",
+   "satzUnbekannt": "considerabil mai puțin"
   },
   "marktplatz": {
    "frage": "Ce este myBestDays?",
@@ -261,7 +262,8 @@
    },
    "direkt": {
     "title": "Rezervare directă",
-    "items": "Portal de rezervări propriu, widget de rezervare, constructor de site-uri, domeniu propriu, 0,5 % în loc de 15–18 % comision OTA"
+    "items": "Portal de rezervări propriu, widget de rezervare, constructor de site-uri, domeniu propriu, {satz} în loc de 15–18 % comision OTA",
+    "satzUnbekannt": "considerabil mai puțin"
    },
    "preise": {
     "title": "Tarife și venituri",
@@ -525,9 +527,9 @@
    "direktText": "Prin propriul site sau formularul tău de rezervare. De acolo nu luăm nimic. Rămâne doar comisionul procesatorului tău de plăți.",
    "direktWert": "0 %",
    "portaleTitel": "Oaspetele vine de pe Booking, Airbnb și altele",
-   "portaleText": "Percepem 0,5 % din valoarea rezervării, o dată pe lună pe factura ta. Ce reține portalul însuși este independent de asta.",
+   "portaleText": "Percepem {satz} din valoarea rezervării, o dată pe lună pe factura ta. Ce reține portalul însuși este independent de asta.",
    "marktplatzTitel": "Oaspetele vine prin myBestDays",
-   "marktplatzText": "Propriul nostru marketplace. Aici te găsesc oaspeți care încă nu te cunosc. Aducem rezervarea, încasăm banii și ți-i plătim — pentru asta reținem 8 %. Alte costuri nu există.",
+   "marktplatzText": "Propriul nostru marketplace. Aici te găsesc oaspeți care încă nu te cunosc. Aducem rezervarea, încasăm banii și ți-i plătim — comisionul nostru pentru asta este de {satz}. Alte costuri nu există.",
    "deckel": "Și există un plafon: pentru rezervările din portaluri nu plătești niciodată mai mult de {betrag} pe lună."
   },
   "module": {
@@ -766,7 +768,8 @@
     "gast": "Oaspete și bani",
     "betrieb": "Operare"
    },
-   "reiterHeading": "Ce se află exact în spate?"
+   "reiterHeading": "Ce se află exact în spate?",
+   "satzUnbekannt": "considerabil mai puțin"
   },
   "uebersicht": {
    "metaTitel": "Funcții — tot pentru închiriere și hotel | myNextDays",
@@ -954,7 +957,7 @@
      "punkte": {
       "a": "Activabil separat pe fiecare canal",
       "b": "Un calendar pentru tot",
-      "c": "8 % totul inclus în loc de comision de portal"
+      "c": "{satz} totul inclus în loc de comision de portal"
      }
     }
    },

@@ -14,6 +14,7 @@ import Link from "next/link";
 import { SectionHeading } from "@/components/marketing/section-kit";
 import { Button } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { gruppenStichworte } from "@/lib/gruppen-stichworte";
 
 // Schlüssel + Icon; Titel und die Aufzählung kommen aus messages
 // (features.gruppen.*). `bald` markiert eine Gruppe, in der noch nicht alles da ist.
@@ -29,8 +30,14 @@ const GRUPPEN: { key: string; icon: IconName; bald?: boolean }[] = [
   { key: "auswertungen", icon: "ph:chart-bar" },
 ];
 
-export function MarketingFeatures() {
+/**
+ * `satzExtern`: der Provisionssatz für Direktbuchungen, vom Server formatiert
+ * (`holeProvisionssaetze` in `app/page.tsx`). Nur die Stichwortzeile der
+ * Gruppe „direkt" nennt ihn; die anderen acht ignorieren den Parameter.
+ */
+export function MarketingFeatures({ satzExtern }: { satzExtern: string | null }) {
   const t = useTranslations("features");
+  const tg = useTranslations("features.gruppen");
 
   return (
     <section id="funktionen" className="bg-background">
@@ -60,7 +67,7 @@ export function MarketingFeatures() {
                     {t(`gruppen.${g.key}.title`)}
                   </h3>
                   <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                    {t(`gruppen.${g.key}.items`)}
+                    {gruppenStichworte(tg, g.key, satzExtern)}
                   </p>
                 </div>
               </div>

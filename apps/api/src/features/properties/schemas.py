@@ -357,6 +357,11 @@ class PropertyResponse(PropertyBase):
     # rejected. Gehört in die Antwort, weil der Betrieb sonst nicht erfährt,
     # warum sein aktiv gelistetes Objekt auf myBestDays nicht erscheint.
     moderation_status: str | None = None
+    # Archiviert (gekündigt/aufgegeben, 0416). NULL = im Bestand. Eigene Achse
+    # neben `status`: der Status beschreibt die Verkaufsfähigkeit, diese Spalte
+    # ob das Objekt überhaupt noch geführt wird. Der Verkaufsstopp hängt am
+    # Vertragsende, nicht hier.
+    archived_at: str | None = None
     # Abgeleiteter Kanal-Zustand (Ebene B) für die Kanal-Chips. Optional, weil
     # nur die Listen-/Detail-Wege ihn befüllen; None = nicht berechnet.
     channels: PropertyChannels | None = None

@@ -3973,7 +3973,8 @@
         "inspektion": "Inspektion",
         "vorlagen": "Opgaveskabeloner",
         "planmaessig": "Planlagte opgaver",
-        "regelmaessig": "Faste opgaver"
+        "regelmaessig": "Faste opgaver",
+        "vertretungen": "Afløsning"
       }
     },
     "propertyCalendar": {
@@ -4859,6 +4860,18 @@
       "gesetzt": "Ansvarlig ændret",
       "abgezogen": "Tildeling fjernet",
       "aktion": "Tildel til …"
+    },
+    "substitutions": {
+      "title": "Afløsning",
+      "intro": "Åbne forespørgsler fra kolleger. Den, der overtager, får opgaven tildelt.",
+      "loading": "Indlæser …",
+      "empty": "Ingen åbne forespørgsler",
+      "emptyHint": "Søger nogen en afløser, vises det her.",
+      "requestedBy": "Anmodet af {name}",
+      "take": "Overtag",
+      "decline": "Afvis",
+      "taken": "Opgaven er overtaget",
+      "declined": "Forespørgsel afvist"
     }
   },
   "objects": {
@@ -4944,7 +4957,14 @@
       "unlistOk": "Forbindelsen til websitet er fjernet.",
       "unlistErr": "Handlingen mislykkedes.",
       "menuVerkaufAus": "Slå fra på alle portaler",
-      "menuVerkaufAn": "Udbyd igen på alle portaler"
+      "menuVerkaufAn": "Udbyd igen på alle portaler",
+      "menuArchive": "Arkivér",
+      "menuUnarchive": "Genaktivér",
+      "archiveConfirm": "Arkivér “{title}”? Boligen forsvinder fra listen og sælges fra i dag ikke længere nogen steder. Eksisterende bookinger forbliver gyldige, og alle data bevares.",
+      "unarchiveConfirm": "Skal “{title}” tilbage på listen? Boligen vises igen på listen, og salgsspærringen ophæves.",
+      "archiveOk": "Bolig arkiveret.",
+      "unarchiveOk": "Boligen er aktiv igen.",
+      "archiveErr": "Arkivering mislykkedes."
     },
     "messagingForm": {
       "title": "Beskedplaceholdere",
@@ -6561,6 +6581,8 @@
     "allChannels": "All channels",
     "connectedStatus": "Connected",
     "notConnectedStatus": "Ikke forbundet",
+    "statusBroken": "Fejl i tilknytning",
+    "repairHint": "Annoncen er tilknyttet portalen, men til et mål, der ikke findes der. Tilgængelighed overføres, priser gør ikke. Afbryd og forbind igen for at genoprette tilknytningen.",
     "addChannel": "Add channel",
     "searchChannel": "Søg kanal …",
     "noResults": "Ingen kanal fundet.",
@@ -6679,7 +6701,21 @@
         "approved": "Godkendt",
         "rejected": "Afvist"
       }
-    }
+    },
+    "csvTitle": "Importer bookinger fra før forbindelsen via fil",
+    "csvText": "Portalen leverer via grænsefladen kun bookinger fra den dag, du forbandt kontoen. Ældre ophold henter du fra din portalkontos eksport og uploader dem her.",
+    "csvDownloadTemplate": "Download skabelon",
+    "csvUpload": "Upload fil",
+    "csvHint": "Upload filen, sådan som du får den fra portalen (.xls, .xlsx eller .csv). Før importen ser du, hvilke objekter og hvor mange bookinger der er genkendt. Annullerede bookinger springes over, og bookinger, der allerede findes, genkendes og oprettes ikke dobbelt.",
+    "csvNothingUsable": "Filen indeholder ingen brugbar booking — alle linjer er annulleret eller har ingen læsbar dato.",
+    "csvPreview": "{count} bookinger genkendt, ankomster {from} til {to}. Endnu ikke importeret.",
+    "csvPreviewProperties": "Objekter i filen — disse navne skal matche dine objektnavne, ellers springes linjerne over:",
+    "csvPreviewNoRef": "{count, plural, one {# booking uden bookingnummer} other {# bookinger uden bookingnummer}} — de genkendes via objekt, periode og navn.",
+    "csvConfirm": "Importer {count} bookinger",
+    "csvCancel": "Annuller",
+    "csvResult": "{imported} af {total} bookinger importeret.",
+    "csvSkipped": "{count, plural, one {# linje sprunget over (findes allerede, eller objektet er ukendt)} other {# linjer sprunget over (findes allerede, eller objektet er ukendt)}}",
+    "csvFailed": "{count, plural, one {# linje med fejl} other {# linjer med fejl}}:"
   },
   "calendarSync": {
     "title": "Importér/eksportér kalender",
@@ -7411,6 +7447,7 @@
       "propertyCount": "Antal boliger",
       "oneMore": "Én bolig mere",
       "commissionPerChannel": "Kommission pr. bookingkanal",
+      "commissionExternalCap": "højst {betrag} om måneden",
       "included": "Hvad er inkluderet",
       "totalMonthly": "I alt pr. måned"
     },
@@ -7496,7 +7533,7 @@
       "loadFailed": "Provisionerne kunne ikke indlæses: {error}",
       "cardRate": "Booking, Airbnb m.fl.: {rate} % af bookingomsætningen for dine offentliggjorte boliger. En måneds provisioner afregnes den 1. i den følgende måned og lægges til din næste abonnementsfaktura.",
       "cardRateCapped": "Booking, Airbnb m.fl.: {rate} % af bookingomsætningen for dine offentliggjorte boliger. En måneds provisioner afregnes den 1. i den følgende måned og lægges til din næste abonnementsfaktura, højst {cap} pr. måned.",
-      "cardOtherChannels": "Bookinger via din egen hjemmeside er fortsat provisionsfrie. For bookinger via myBestDays-markedspladsen gælder 8 %, som tilbageholdes direkte ved betalingen — de indgår ikke her.",
+      "cardOtherChannels": "Bookinger via din egen hjemmeside er fortsat provisionsfrie. For bookinger via myBestDays-markedspladsen gælder {satz}, som tilbageholdes direkte ved betalingen — de indgår ikke her.",
       "pending": "Udestående ({count, plural, one {# booking} other {# bookinger}}): ",
       "pendingCapHint": " — der afregnes månedsloftet på {cap}",
       "noPending": "Ingen udestående provisioner i øjeblikket.",
@@ -7504,9 +7541,9 @@
       "backToBilling": "Afregning",
       "monthsTitle": "Provisioner pr. måned",
       "monthsIntro": "Denne oversigt viser udelukkende provisioner fra bookinger via eksterne portaler (Booking, Airbnb m.fl.). En måneds provisioner afregnes den 1. i den følgende måned og lægges til din næste abonnementsfaktura — opkrævningen sker sammen med den faktura.",
-      "monthsChannels": "Bookinger via myBestDays-markedspladsen bærer 8 % provision, som allerede tilbageholdes ved betalingen; de fremgår derfor ikke af denne liste. Bookinger via din egen hjemmeside er provisionsfrie.",
+      "monthsChannels": "Bookinger via myBestDays-markedspladsen bærer {satz} provision, som allerede tilbageholdes ved betalingen; de fremgår derfor ikke af denne liste. Bookinger via din egen hjemmeside er provisionsfrie.",
       "monthsLoading": "Indlæser provisioner …",
-      "monthsEmpty": "Der er endnu ikke påløbet provisioner via eksterne portaler. Bookinger via din egen hjemmeside er permanent provisionsfrie. Bookinger via myBestDays-markedspladsen bærer 8 % provision — den tilbageholdes direkte ved betalingen og fremgår ikke her.",
+      "monthsEmpty": "Der er endnu ikke påløbet provisioner via eksterne portaler. Bookinger via din egen hjemmeside er permanent provisionsfrie. Bookinger via myBestDays-markedspladsen bærer {satz} provision — den tilbageholdes direkte ved betalingen og fremgår ikke her.",
       "colMonth": "Måned",
       "colBookings": "Bookinger",
       "colGross": "Bookingomsætning",
@@ -7639,7 +7676,7 @@
     "stars": "4,5 stjerner",
     "reviews": "· 921 anmeldelser",
     "trial30": "Prøv gratis i 30 dage",
-    "bookingValue": "+0,5 % af bookingværdien",
+    "bookingValue": "+{satz} af bookingværdien",
     "seePrices": "Se priser",
     "downloadApp": "Download appen",
     "copyright": "© 2026 myNextDays. Alle rettigheder forbeholdes.",

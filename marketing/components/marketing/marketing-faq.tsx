@@ -31,13 +31,43 @@ const FRAGEN = [
   "preis",
 ] as const;
 
-export function MarketingFaq() {
+/**
+ * `satzExtern`: der Provisionssatz für Direktbuchungen, fertig formatiert vom
+ * Server (`holeProvisionssaetze`). Diese Komponente ist `"use client"` und
+ * kommt selbst nicht an den Endpunkt — sie bekommt den Wert deshalb als Prop
+ * von `app/page.tsx`, genau wie `preis-provisionen.tsx` seine `liste` bekommt.
+ */
+export function MarketingFaq({ satzExtern }: { satzExtern: string | null }) {
   const t = useTranslations("faq");
 
   const paare = FRAGEN.map((key) => ({
     key,
     frage: t(`${key}.frage`),
-    antwort: t(`${key}.antwort`),
+    // Nur die Antwort zu „direkt" nennt unseren Satz; alle anderen ignorieren
+    // den Wert (ein ICU-Text ohne `{satz}` nimmt den Parameter unbeschadet an).
+    //
+    // FEHLT DER SATZ (Backend/Stripe nicht erreichbar), tritt bewusst NICHT
+    // `return null` in Kraft wie bei `preis-provisionen.tsx`. Dort ist der
+    // Satz die Überschrift — eine Provisions-Sektion ohne Satz sagt nichts
+    // mehr. Hier ist er ein Detail in einem Absatz, der die eigentliche Frage
+    // („habe ich eine eigene Buchungsseite?") auch ohne Prozentzahl
+    // beantwortet. Eine verschwundene FAQ-Antwort wäre der größere Schaden:
+    // sie fehlte dann auch im FAQPage-Schema, das `faq-liste.tsx` aus
+    // denselben Texten baut, und eine Frage ohne Antwort liest sich als Lücke
+    // im Produkt.
+    //
+    // Statt eines leeren Strings (der „kosten  statt der 15–18 %" ergäbe)
+    // tritt das übersetzte Ersatzwort `direkt.satzUnbekannt` ein — in allen 24
+    // Sprachen eine wertfreie Wendung („deutlich weniger"). Das ist KEIN
+    // erfundener Zahlenwert (Wurzel 4): es wird keine Zahl behauptet, nur der
+    // Vergleich, der aus den daneben stehenden 15–18 % der Portale ohnehin
+    // folgt. Bewusst kein ICU-`select` auf den Satz: sein Match müsste den
+    // fertig formatierten Zahlen-String treffen, der je Sprache anders
+    // aussieht — ein Ersatzwort je Sprache ist die Fassung, die ein Übersetzer
+    // auch ohne ICU-Kenntnis richtig pflegt.
+    antwort: t(`${key}.antwort`, {
+      satz: satzExtern ?? t("direkt.satzUnbekannt"),
+    }),
   }));
 
   return (

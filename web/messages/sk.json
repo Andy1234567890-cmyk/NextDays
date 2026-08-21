@@ -3971,7 +3971,8 @@
         "inspektion": "Kontrola",
         "vorlagen": "Šablóny úloh",
         "planmaessig": "Plánované úlohy",
-        "regelmaessig": "Pravidelné úlohy"
+        "regelmaessig": "Pravidelné úlohy",
+        "vertretungen": "Zástupy"
       }
     },
     "propertyCalendar": {
@@ -4857,6 +4858,18 @@
       "gesetzt": "Priradenie zmenené",
       "abgezogen": "Priradenie zrušené",
       "aktion": "Priradiť …"
+    },
+    "substitutions": {
+      "title": "Zástupy",
+      "intro": "Otvorené žiadosti kolegov. Kto úlohu prevezme, bude mu priradená.",
+      "loading": "Načítava sa …",
+      "empty": "Žiadne otvorené žiadosti",
+      "emptyHint": "Ak niekto hľadá zástup, zobrazí sa tu.",
+      "requestedBy": "Požiadal {name}",
+      "take": "Prevziať",
+      "decline": "Odmietnuť",
+      "taken": "Úloha prevzatá",
+      "declined": "Žiadosť odmietnutá"
     }
   },
   "objects": {
@@ -4942,7 +4955,14 @@
       "unlistOk": "Prepojenie s webom zrušené.",
       "unlistErr": "Zrušenie zlyhalo.",
       "menuVerkaufAus": "Vypnúť na všetkých portáloch",
-      "menuVerkaufAn": "Znovu nabízať na všetkých portáloch"
+      "menuVerkaufAn": "Znovu nabízať na všetkých portáloch",
+      "menuArchive": "Archivovať",
+      "menuUnarchive": "Vrátiť do ponuky",
+      "archiveConfirm": "Archivovať objekt „{title}“? Objekt zmizne zo zoznamu a od dnešného dňa sa už nikde nepredáva. Existujúce rezervácie zostávajú platné, všetky údaje zostávajú zachované.",
+      "unarchiveConfirm": "Vrátiť objekt „{title}“ späť do ponuky? Objekt sa znova zobrazí v zozname a blokovanie predaja sa zruší.",
+      "archiveOk": "Objekt archivovaný.",
+      "unarchiveOk": "Objekt je opäť v ponuke.",
+      "archiveErr": "Archivácia zlyhala."
     },
     "messagingForm": {
       "title": "Nachrichten-Platzhalter",
@@ -6559,6 +6579,8 @@
     "allChannels": "All channels",
     "connectedStatus": "Connected",
     "notConnectedStatus": "Nepripojené",
+    "statusBroken": "Chybné priradenie",
+    "repairHint": "Inzerát je priradený k portálu, ale k cieľu, ktorý tam neexistuje. Dostupnosť sa prenáša, ceny nie. Odpojiť a znova pripojiť obnoví priradenie.",
     "addChannel": "Add channel",
     "searchChannel": "Hľadať kanál …",
     "noResults": "Nenašiel sa žiadny kanál.",
@@ -6677,7 +6699,21 @@
         "approved": "Schválené",
         "rejected": "Zamietnuté"
       }
-    }
+    },
+    "csvTitle": "Import rezervácií z čias pred pripojením zo súboru",
+    "csvText": "Portál poskytuje cez rozhranie len rezervácie od dňa pripojenia. Staršie pobyty si stiahnite z exportu svojho portálového účtu a nahrajte ich sem.",
+    "csvDownloadTemplate": "Stiahnuť šablónu",
+    "csvUpload": "Nahrať súbor",
+    "csvHint": "Nahrajte súbor tak, ako ho dostanete z portálu (.xls, .xlsx alebo .csv). Pred importom uvidíte, ktoré objekty a koľko rezervácií bolo rozpoznaných. Zrušené rezervácie sa vynechajú, už existujúce sa rozpoznajú a nepridajú sa druhýkrát.",
+    "csvNothingUsable": "V súbore nie je žiadna prenositeľná rezervácia — všetky riadky sú zrušené alebo majú nečitateľný dátum.",
+    "csvPreview": "Rozpoznaných {count} rezervácií, príchody od {from} do {to}. Ešte nič nebolo importované.",
+    "csvPreviewProperties": "Objekty v súbore — tieto názvy musia zodpovedať názvom vašich objektov, inak sa riadky vynechajú:",
+    "csvPreviewNoRef": "{count, plural, one {# rezervácia bez čísla rezervácie} few {# rezervácie bez čísla rezervácie} many {# rezervácie bez čísla rezervácie} other {# rezervácií bez čísla rezervácie}} — pri nich prebieha rozpoznanie podľa objektu, obdobia a mena.",
+    "csvConfirm": "Importovať {count} rezervácií",
+    "csvCancel": "Zrušiť",
+    "csvResult": "Importovaných {imported} z {total} rezervácií.",
+    "csvSkipped": "{count, plural, one {# riadok preskočený (už existuje alebo neznámy objekt)} few {# riadky preskočené (už existujú alebo neznámy objekt)} many {# riadku preskočeného (už existuje alebo neznámy objekt)} other {# riadkov preskočených (už existujú alebo neznámy objekt)}}",
+    "csvFailed": "{count, plural, one {# riadok s chybou} few {# riadky s chybou} many {# riadku s chybou} other {# riadkov s chybou}}:"
   },
   "calendarSync": {
     "title": "Import/export kalendára",
@@ -7409,6 +7445,7 @@
       "propertyCount": "Počet objektov",
       "oneMore": "O jeden objekt viac",
       "commissionPerChannel": "Provízia podľa rezervačného kanála",
+      "commissionExternalCap": "najviac {betrag} mesačne",
       "included": "Čo je zahrnuté",
       "totalMonthly": "Spolu mesačne"
     },
@@ -7494,7 +7531,7 @@
       "loadFailed": "Provízie sa nepodarilo načítať: {error}",
       "cardRate": "Booking, Airbnb a spol.: {rate} % z obratu z rezervácií vašich zverejnených objektov. Provízie za daný mesiac sa vyúčtujú 1. dňa nasledujúceho mesiaca a pripočítajú sa k vašej ďalšej faktúre za predplatné.",
       "cardRateCapped": "Booking, Airbnb a spol.: {rate} % z obratu z rezervácií vašich zverejnených objektov. Provízie za daný mesiac sa vyúčtujú 1. dňa nasledujúceho mesiaca a pripočítajú sa k vašej ďalšej faktúre za predplatné, najviac však {cap} mesačne.",
-      "cardOtherChannels": "Rezervácie cez vašu vlastnú webovú stránku zostávajú bez provízie. Pri rezerváciách cez trhovisko myBestDays sa účtuje 8 %, ktoré sa zadržia priamo pri prijatí platby — tu zahrnuté nie sú.",
+      "cardOtherChannels": "Rezervácie cez vašu vlastnú webovú stránku zostávajú bez provízie. Pri rezerváciách cez trhovisko myBestDays sa účtuje {satz}, ktoré sa zadržia priamo pri prijatí platby — tu zahrnuté nie sú.",
       "pending": "Neuhradené ({count, plural, one {# rezervácia} few {# rezervácie} many {# rezervácie} other {# rezervácií}}): ",
       "pendingCapHint": " — vyúčtuje sa mesačný strop {cap}",
       "noPending": "Momentálne žiadne neuhradené provízie.",
@@ -7502,9 +7539,9 @@
       "backToBilling": "Vyúčtovanie",
       "monthsTitle": "Provízie podľa mesiacov",
       "monthsIntro": "Tento prehľad zobrazuje výlučne provízie z rezervácií cez externé portály (Booking, Airbnb a spol.). Provízie za daný mesiac sa vyúčtujú 1. dňa nasledujúceho mesiaca a pripočítajú sa k vašej ďalšej faktúre za predplatné — inkaso prebehne spolu s touto faktúrou.",
-      "monthsChannels": "Rezervácie cez trhovisko myBestDays nesú províziu 8 %, ktorá sa zadržiava už pri prijatí platby; preto sa v tomto zozname neobjavujú. Rezervácie cez vašu vlastnú webovú stránku zostávajú bez provízie.",
+      "monthsChannels": "Rezervácie cez trhovisko myBestDays nesú províziu {satz}, ktorá sa zadržiava už pri prijatí platby; preto sa v tomto zozname neobjavujú. Rezervácie cez vašu vlastnú webovú stránku zostávajú bez provízie.",
       "monthsLoading": "Načítavajú sa provízie …",
-      "monthsEmpty": "Cez externé portály zatiaľ nevznikli žiadne provízie. Rezervácie cez vašu vlastnú webovú stránku zostávajú trvale bez provízie. Rezervácie cez trhovisko myBestDays nesú províziu 8 % — tá sa zadrží priamo pri prijatí platby a tu sa neobjavuje.",
+      "monthsEmpty": "Cez externé portály zatiaľ nevznikli žiadne provízie. Rezervácie cez vašu vlastnú webovú stránku zostávajú trvale bez provízie. Rezervácie cez trhovisko myBestDays nesú províziu {satz} — tá sa zadrží priamo pri prijatí platby a tu sa neobjavuje.",
       "colMonth": "Mesiac",
       "colBookings": "Rezervácie",
       "colGross": "Obrat z rezervácií",
@@ -7637,7 +7674,7 @@
     "stars": "4,5 hviezdičky",
     "reviews": "· 921 hodnotení",
     "trial30": "Vyskúšať 30 dní zadarmo",
-    "bookingValue": "+0,5 % hodnoty rezervácie",
+    "bookingValue": "+{satz} hodnoty rezervácie",
     "seePrices": "Zobraziť ceny",
     "downloadApp": "Stiahnuť aplikáciu",
     "copyright": "© 2026 myNextDays. Všetky práva vyhradené.",

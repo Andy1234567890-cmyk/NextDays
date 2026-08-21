@@ -100,7 +100,7 @@ ZEILEN = [
 
 def test_nur_das_bei_channex_zugeordnete_objekt_zaehlt() -> None:
     """Der Kern: 013 hat eine Verbindungszeile, aber KEIN Mapping bei Channex."""
-    ziel = _mixin(KANAL_MIT_EINEM_MAPPING)._objekte_mit_channex_ziel(  # noqa: SLF001
+    ziel, _defekt = _mixin(KANAL_MIT_EINEM_MAPPING)._objekte_mit_channex_ziel(  # noqa: SLF001
         _FakeDb(ZEILEN), "t1", [PROP_013, PROP_020], {"kanal-1"}
     )
     assert ziel == {PROP_020}
@@ -109,7 +109,7 @@ def test_nur_das_bei_channex_zugeordnete_objekt_zaehlt() -> None:
 
 def test_ohne_kanal_kein_ziel() -> None:
     """Eine Verbindungszeile ohne `channex_channel_id` ist keine Verbindung."""
-    ziel = _mixin(KANAL_MIT_EINEM_MAPPING)._objekte_mit_channex_ziel(  # noqa: SLF001
+    ziel, _defekt = _mixin(KANAL_MIT_EINEM_MAPPING)._objekte_mit_channex_ziel(  # noqa: SLF001
         _FakeDb(ZEILEN), "t1", [PROP_013, PROP_020], set()
     )
     assert ziel == set()
@@ -132,7 +132,7 @@ def test_kanal_ohne_mappings_ergibt_leere_menge() -> None:
     ersten Zuordnung. Dann ist KEIN Objekt zugeordnet (nicht None: der Abruf
     hat ja funktioniert)."""
     leer = {"data": {"attributes": {"rate_plans": []}}}
-    ziel = _mixin(leer)._objekte_mit_channex_ziel(  # noqa: SLF001
+    ziel, _defekt = _mixin(leer)._objekte_mit_channex_ziel(  # noqa: SLF001
         _FakeDb(ZEILEN), "t1", [PROP_013, PROP_020], {"kanal-1"}
     )
     assert ziel == set()
@@ -141,7 +141,7 @@ def test_kanal_ohne_mappings_ergibt_leere_menge() -> None:
 def test_objekt_ohne_listing_id_zaehlt_nie() -> None:
     """Ein Objekt ohne `airbnb_listing_id` kann keinem Airbnb-Listing entsprechen."""
     ohne = [{"id": PROP_013, "airbnb_listing_id": None}]
-    ziel = _mixin(KANAL_MIT_EINEM_MAPPING)._objekte_mit_channex_ziel(  # noqa: SLF001
+    ziel, _defekt = _mixin(KANAL_MIT_EINEM_MAPPING)._objekte_mit_channex_ziel(  # noqa: SLF001
         _FakeDb(ohne), "t1", [PROP_013], {"kanal-1"}
     )
     assert ziel == set()
@@ -151,7 +151,7 @@ def test_listing_id_vergleich_ist_typunabhaengig() -> None:
     """Channex liefert die listing_id als String, unsere Spalte kann sie als Zahl
     führen. Ein Vergleich ohne Normalisierung fände nichts."""
     als_zahl = [{"id": PROP_020, "airbnb_listing_id": 1378994948547697321}]
-    ziel = _mixin(KANAL_MIT_EINEM_MAPPING)._objekte_mit_channex_ziel(  # noqa: SLF001
+    ziel, _defekt = _mixin(KANAL_MIT_EINEM_MAPPING)._objekte_mit_channex_ziel(  # noqa: SLF001
         _FakeDb(als_zahl), "t1", [PROP_020], {"kanal-1"}
     )
     assert ziel == {PROP_020}

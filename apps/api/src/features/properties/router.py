@@ -65,10 +65,14 @@ def health(service: PropertiesServiceDep) -> SliceHealth:
 
 @router.get("", response_model=PropertyListResponse)
 def list_properties(
-    ctx: CurrentUser, service: PropertiesServiceDep
+    ctx: CurrentUser,
+    service: PropertiesServiceDep,
+    # Standard ist der geführte Bestand. `archiviert=true` liefert
+    # AUSSCHLIESSLICH das Archiv (gekündigte Objekte, 0416).
+    archiviert: bool = False,
 ) -> PropertyListResponse:
     try:
-        return service.list(ctx)
+        return service.list(ctx, archiviert=archiviert)
     except PropertyError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -313,6 +317,35 @@ def update_property(
         if exc.details is not None:
             detail = {"message": exc.message, **exc.details}
         raise HTTPException(status_code=exc.status_code, detail=detail) from exc
+
+
+@router.post("/{property_id}/archivieren", response_model=PropertyResponse)
+def archive_property(
+    property_id: str,
+    service: PropertiesServiceDep,
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_granular_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
+    ],
+    # `false` holt das Objekt zurück in den Bestand und gibt die Vertragssperre
+    # wieder frei (Wurzel 1 — beide Richtungen über denselben Weg).
+    archivieren: bool = True,
+) -> PropertyResponse:
+    """Objekt archivieren (gekündigt/aufgegeben) statt löschen.
+
+    Löschen scheitert bei jedem Objekt mit Buchungen an
+    `reservations_property_id_fkey` (RESTRICT) — und soll es auch: die Historie
+    der Aufenthalte hängt daran. Archivieren nimmt das Objekt aus den Listen
+    und stoppt den Verkauf über das Vertragsende; bestehende Buchungen bleiben
+    gültig.
+
+    Dieselbe Berechtigung wie publish/delete: es ist eine Entscheidung über den
+    Verkauf des Objekts, keine Ansichtssache.
+    """
+    try:
+        return service.archivieren(ctx, property_id, archivieren=archivieren)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.delete("/{property_id}", status_code=status.HTTP_204_NO_CONTENT)

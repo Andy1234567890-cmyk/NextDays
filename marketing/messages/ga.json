@@ -157,7 +157,8 @@
   },
   "direkt": {
    "frage": "An bhfaighidh mé leathanach áirithinte dom féin gan coimisiún tairsí?",
-   "antwort": "Gheobhaidh. Le gach cuntas tagann tairseach áirithinte féin, giuirléid don suíomh atá ann agus tógálaí suímh le fearann dá chuid féin. Cosnaíonn áirithintí díreacha 0,5 % in ionad choimisiún 15–18 % na dtairseach mór, ritheann iad ar an bhféilire céanna agus ar na praghsanna céanna — agus téann an t-airgead díreach isteach i do chuntas."
+   "antwort": "Gheobhaidh. Le gach cuntas tagann tairseach áirithinte féin, giuirléid don suíomh atá ann agus tógálaí suímh le fearann dá chuid féin. Cosnaíonn áirithintí díreacha {satz} in ionad choimisiún 15–18 % na dtairseach mór, ritheann iad ar an bhféilire céanna agus ar na praghsanna céanna — agus téann an t-airgead díreach isteach i do chuntas.",
+   "satzUnbekannt": "i bhfad níos lú"
   },
   "marktplatz": {
    "frage": "Cad é myBestDays?",
@@ -261,7 +262,8 @@
    },
    "direkt": {
     "title": "Áirithint dhíreach",
-    "items": "Do thairseach áirithinte féin, giuirléid áirithinte, tógálaí suímh, d'fhearann féin, 0.5 % in ionad coimisiún OTA de 15–18 %"
+    "items": "Do thairseach áirithinte féin, giuirléid áirithinte, tógálaí suímh, d'fhearann féin, {satz} in ionad coimisiún OTA de 15–18 %",
+    "satzUnbekannt": "i bhfad níos lú"
    },
    "preise": {
     "title": "Rátaí & ioncam",
@@ -525,9 +527,9 @@
    "direktText": "Trí do shuíomh gréasáin nó d'fhoirm áirithinte. Ní thógaimid tada uaidh sin. Ní fhanann ach táille do sholáthraí íocaíochta.",
    "direktWert": "0 %",
    "portaleTitel": "Tagann an t-aoi ó Booking, Airbnb agus a leithéidí",
-   "portaleText": "Gearraimid 0,5 % de luach na háirithinte, uair sa mhí ar do shonrasc. Tá an méid a choinníonn an tairseach féin neamhspleách air sin.",
+   "portaleText": "Gearraimid {satz} de luach na háirithinte, uair sa mhí ar do shonrasc. Tá an méid a choinníonn an tairseach féin neamhspleách air sin.",
    "marktplatzTitel": "Tagann an t-aoi trí myBestDays",
-   "marktplatzText": "Ár margadh féin. Anseo aimsíonn aíonna thú nach bhfuil aithne acu ort fós. Tugaimid an áirithint, bailímid an t-airgead agus íocaimid leat é — coinnímid 8 % dá bharr. Níl aon chostais eile ann.",
+   "marktplatzText": "Ár margadh féin. Anseo aimsíonn aíonna thú nach bhfuil aithne acu ort fós. Tugaimid an áirithint, bailímid an t-airgead agus íocaimid leat é — coinnímid {satz} dá bharr. Níl aon chostais eile ann.",
    "deckel": "Agus tá uasteorainn ann: ar áirithintí ó thairseacha ní íocann tú riamh níos mó ná {betrag} sa mhí."
   },
   "module": {
@@ -766,7 +768,8 @@
     "gast": "Aoi agus airgead",
     "betrieb": "Oibríochtaí"
    },
-   "reiterHeading": "Cad go díreach atá taobh thiar de?"
+   "reiterHeading": "Cad go díreach atá taobh thiar de?",
+   "satzUnbekannt": "i bhfad níos lú"
   },
   "uebersicht": {
    "metaTitel": "Gnéithe — gach rud don chíos agus don óstán | myNextDays",
@@ -954,7 +957,7 @@
      "punkte": {
       "a": "Inchasta in aghaidh an chainéil",
       "b": "Aon fhéilire amháin do gach rud",
-      "c": "8 % san iomlán in ionad coimisiún tairsí"
+      "c": "{satz} san iomlán in ionad coimisiún tairsí"
      }
     }
    },

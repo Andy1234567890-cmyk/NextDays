@@ -3971,7 +3971,8 @@
         "inspektion": "Inspectie",
         "vorlagen": "Taaksjablonen",
         "planmaessig": "Geplande taken",
-        "regelmaessig": "Terugkerende taken"
+        "regelmaessig": "Terugkerende taken",
+        "vertretungen": "Vervangingen"
       }
     },
     "propertyCalendar": {
@@ -4857,6 +4858,18 @@
       "gesetzt": "Verantwoordelijke gewijzigd",
       "abgezogen": "Toewijzing ingetrokken",
       "aktion": "Toewijzen aan …"
+    },
+    "substitutions": {
+      "title": "Vervangingen",
+      "intro": "Openstaande verzoeken van collega's. Wie overneemt, krijgt de taak toegewezen.",
+      "loading": "Laden …",
+      "empty": "Geen openstaande verzoeken",
+      "emptyHint": "Zoekt iemand vervanging, dan verschijnt dat hier.",
+      "requestedBy": "Aangevraagd door {name}",
+      "take": "Overnemen",
+      "decline": "Afwijzen",
+      "taken": "Taak overgenomen",
+      "declined": "Verzoek afgewezen"
     }
   },
   "objects": {
@@ -4942,7 +4955,14 @@
       "unlistOk": "Koppeling met website opgeheven.",
       "unlistErr": "Opheffen mislukt.",
       "menuVerkaufAus": "Uitschakelen op alle portalen",
-      "menuVerkaufAn": "Weer aanbieden op alle portalen"
+      "menuVerkaufAn": "Weer aanbieden op alle portalen",
+      "menuArchive": "Archiveren",
+      "menuUnarchive": "Terugzetten",
+      "archiveConfirm": "Accommodatie ‘{title}’ archiveren? De accommodatie verdwijnt uit de lijst en wordt vanaf vandaag nergens meer verkocht. Bestaande boekingen blijven geldig en alle gegevens blijven bewaard.",
+      "unarchiveConfirm": "Accommodatie ‘{title}’ weer terugzetten? De accommodatie verschijnt weer in de lijst en de verkoopblokkade wordt opgeheven.",
+      "archiveOk": "Accommodatie gearchiveerd.",
+      "unarchiveOk": "Accommodatie is weer actief.",
+      "archiveErr": "Archiveren mislukt."
     },
     "messagingForm": {
       "title": "Berichtplaceholders",
@@ -6559,6 +6579,8 @@
     "allChannels": "All channels",
     "connectedStatus": "Connected",
     "notConnectedStatus": "Niet verbonden",
+    "statusBroken": "Koppeling onjuist",
+    "repairHint": "De advertentie is gekoppeld aan het portaal, maar aan een doel dat daar niet bestaat. Beschikbaarheid wordt doorgegeven, prijzen niet. Verbinding verbreken en opnieuw verbinden herstelt de koppeling.",
     "addChannel": "Add channel",
     "searchChannel": "Kanaal zoeken …",
     "noResults": "Geen kanaal gevonden.",
@@ -6677,7 +6699,21 @@
         "approved": "Goedgekeurd",
         "rejected": "Afgewezen"
       }
-    }
+    },
+    "csvTitle": "Boekingen van vóór het verbinden via bestand importeren",
+    "csvText": "Het portaal levert via de interface alleen boekingen vanaf de dag van verbinden. Oudere verblijven haal je uit de export van je portaalaccount en upload je hier.",
+    "csvDownloadTemplate": "Sjabloon downloaden",
+    "csvUpload": "Bestand uploaden",
+    "csvHint": "Upload het bestand zoals je het van het portaal krijgt (.xls, .xlsx of .csv). Vóór het importeren zie je welke objecten en hoeveel boekingen herkend zijn. Geannuleerde boekingen worden overgeslagen, en boekingen die al bestaan worden herkend en niet dubbel aangemaakt.",
+    "csvNothingUsable": "Er staat geen overneembare boeking in het bestand — alle regels zijn geannuleerd of hebben geen leesbare datum.",
+    "csvPreview": "{count} boekingen herkend, aankomst {from} t/m {to}. Nog niets geïmporteerd.",
+    "csvPreviewProperties": "Objecten in het bestand — deze namen moeten overeenkomen met je objectnamen, anders worden de regels overgeslagen:",
+    "csvPreviewNoRef": "{count, plural, one {# boeking zonder boekingsnummer} other {# boekingen zonder boekingsnummer}} — deze worden herkend via object, periode en naam.",
+    "csvConfirm": "{count} boekingen importeren",
+    "csvCancel": "Annuleren",
+    "csvResult": "{imported} van {total} boekingen geïmporteerd.",
+    "csvSkipped": "{count, plural, one {# rij overgeslagen (bestaat al of object onbekend)} other {# rijen overgeslagen (bestaan al of object onbekend)}}",
+    "csvFailed": "{count, plural, one {# rij met een fout} other {# rijen met fouten}}:"
   },
   "calendarSync": {
     "title": "Agenda importeren/exporteren",
@@ -7409,6 +7445,7 @@
       "propertyCount": "Aantal accommodaties",
       "oneMore": "Eén accommodatie meer",
       "commissionPerChannel": "Commissie per boekingskanaal",
+      "commissionExternalCap": "maximaal {betrag} per maand",
       "included": "Wat is inbegrepen",
       "totalMonthly": "Totaal per maand"
     },
@@ -7494,7 +7531,7 @@
       "loadFailed": "De commissies konden niet worden geladen: {error}",
       "cardRate": "Booking, Airbnb & Co.: {rate} % van de boekingsomzet van je gepubliceerde accommodaties. De commissies van een maand worden op de 1e van de volgende maand afgerekend en aan je volgende abonnementsfactuur toegevoegd.",
       "cardRateCapped": "Booking, Airbnb & Co.: {rate} % van de boekingsomzet van je gepubliceerde accommodaties. De commissies van een maand worden op de 1e van de volgende maand afgerekend en aan je volgende abonnementsfactuur toegevoegd, maximaal {cap} per maand.",
-      "cardOtherChannels": "Boekingen via je eigen website blijven commissievrij. Voor boekingen via de myBestDays-marktplaats geldt 8 %, die direct bij ontvangst van de betaling wordt ingehouden — die staan hier niet bij.",
+      "cardOtherChannels": "Boekingen via je eigen website blijven commissievrij. Voor boekingen via de myBestDays-marktplaats geldt {satz}, die direct bij ontvangst van de betaling wordt ingehouden — die staan hier niet bij.",
       "pending": "Openstaand ({count, plural, one {# boeking} other {# boekingen}}): ",
       "pendingCapHint": " — afgerekend wordt het maandplafond van {cap}",
       "noPending": "Momenteel geen openstaande commissies.",
@@ -7502,9 +7539,9 @@
       "backToBilling": "Facturatie",
       "monthsTitle": "Commissies per maand",
       "monthsIntro": "Dit overzicht toont uitsluitend de commissies uit boekingen via externe portalen (Booking, Airbnb & Co.). De commissies van een maand worden op de 1e van de volgende maand afgerekend en aan je volgende abonnementsfactuur toegevoegd — de incasso gebeurt samen met die factuur.",
-      "monthsChannels": "Boekingen via de myBestDays-marktplaats dragen 8 % commissie, die al bij ontvangst van de betaling wordt ingehouden; ze verschijnen daarom niet in deze lijst. Boekingen via je eigen website blijven commissievrij.",
+      "monthsChannels": "Boekingen via de myBestDays-marktplaats dragen {satz} commissie, die al bij ontvangst van de betaling wordt ingehouden; ze verschijnen daarom niet in deze lijst. Boekingen via je eigen website blijven commissievrij.",
       "monthsLoading": "Commissies worden geladen …",
-      "monthsEmpty": "Via externe portalen zijn tot nu toe geen commissies ontstaan. Boekingen via je eigen website blijven permanent commissievrij. Marktplaatsboekingen via myBestDays dragen 8 % commissie — die wordt direct bij ontvangst van de betaling ingehouden en verschijnt hier niet.",
+      "monthsEmpty": "Via externe portalen zijn tot nu toe geen commissies ontstaan. Boekingen via je eigen website blijven permanent commissievrij. Marktplaatsboekingen via myBestDays dragen {satz} commissie — die wordt direct bij ontvangst van de betaling ingehouden en verschijnt hier niet.",
       "colMonth": "Maand",
       "colBookings": "Boekingen",
       "colGross": "Boekingsomzet",
@@ -7637,7 +7674,7 @@
     "stars": "4,5 sterren",
     "reviews": "· 921 beoordelingen",
     "trial30": "30 dagen gratis proberen",
-    "bookingValue": "+0,5 % boekingswaarde",
+    "bookingValue": "+{satz} boekingswaarde",
     "seePrices": "Prijzen bekijken",
     "downloadApp": "App downloaden",
     "copyright": "© 2026 myNextDays. Alle rechten voorbehouden.",

@@ -389,6 +389,16 @@ export type ChannelMappingRow = {
   is_active: boolean;
   // Existiert eine Verbindung dieses Portals (verbunden vs. „Verbinden"-Button)?
   connected: boolean;
+  /** Zuordnung ist beim Portal vorhanden, aber unbrauchbar — das Portal kann
+   *  ihr Ziel nicht auflösen und führt die Anzeige als „nicht zugeordnet".
+   *  `connected` ist dann false, aber der Grund ist ein anderer als „noch nie
+   *  verbunden": es liegt ein defekter Eintrag vor. Die Zeile zeigt deshalb
+   *  ein eigenes Abzeichen statt „Nicht verbunden".
+   *
+   *  Automatisch geradeziehen lässt sich das NICHT — alle drei Wege sind live
+   *  widerlegt (siehe test_zuordnung_gueltigkeit.py). Der Ausweg ist trennen
+   *  und neu verbinden. */
+  needs_repair: boolean;
   sync_enabled: boolean;
   last_sync_status: string | null;
   last_sync_error: string | null;

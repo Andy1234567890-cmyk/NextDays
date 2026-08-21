@@ -8,7 +8,7 @@
 //
 // Die Texte kommen aus `features.gruppen` — dieselben wie im Megamenü, auf der
 // Startseite und der Preisseite (eine Quelle, 24 Sprachen).
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
 
 import { MarketingCta } from "@/components/marketing/marketing-cta";
@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { FUNKTIONEN } from "@/content/funktionen";
 import { DEMO_URL, SIGNUP_URL } from "@/lib/app-url";
+import { gruppenStichworte } from "@/lib/gruppen-stichworte";
+import { holeProvisionssaetze } from "@/lib/provisionstexte";
 
 import type { Metadata } from "next";
 
@@ -38,10 +40,14 @@ export default async function FunktionenSeite() {
   const t = await getTranslations("funktionen.uebersicht");
   const tr = await getTranslations("funktionen.rahmen");
   const tg = await getTranslations("features.gruppen");
+  // Die Stichwortzeile der Gruppe „direkt" nennt unseren Provisionssatz — er
+  // kommt aus /subscriptions/public/pricing, nicht aus den Sprachdateien.
+  const locale = await getLocale();
+  const saetze = await holeProvisionssaetze(locale);
 
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans text-foreground">
-      <MarketingNav />
+      <MarketingNav satzExtern={saetze.extern} />
       <main className="flex-1">
         <section className="bg-primary pb-24 pt-16 text-primary-foreground">
           <div className="mx-auto max-w-3xl px-6 text-center">
@@ -103,7 +109,7 @@ export default async function FunktionenSeite() {
                           {tg(`${f.key}.title`)}
                         </h3>
                         <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
-                          {tg(`${f.key}.items`)}
+                          {gruppenStichworte(tg, f.key, saetze.extern)}
                         </p>
                         <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-accent">
                           {tr("mehr")}

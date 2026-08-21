@@ -3973,7 +3973,8 @@
         "inspektion": "Ellenőrzés",
         "vorlagen": "Feladatsablonok",
         "planmaessig": "Ütemezett feladatok",
-        "regelmaessig": "Ismétlődő feladatok"
+        "regelmaessig": "Ismétlődő feladatok",
+        "vertretungen": "Helyettesítések"
       }
     },
     "propertyCalendar": {
@@ -4859,6 +4860,18 @@
       "gesetzt": "Felelős módosítva",
       "abgezogen": "Hozzárendelés visszavonva",
       "aktion": "Hozzárendelés …"
+    },
+    "substitutions": {
+      "title": "Helyettesítések",
+      "intro": "Kollégák nyitott kérései. Aki átveszi, annak lesz kiosztva a feladat.",
+      "loading": "Betöltés …",
+      "empty": "Nincs nyitott kérés",
+      "emptyHint": "Ha valaki helyettest keres, itt jelenik meg.",
+      "requestedBy": "Kérte: {name}",
+      "take": "Átvétel",
+      "decline": "Elutasítás",
+      "taken": "Feladat átvéve",
+      "declined": "Kérés elutasítva"
     }
   },
   "objects": {
@@ -4944,7 +4957,14 @@
       "unlistOk": "A weboldallal való kapcsolat megszüntetve.",
       "unlistErr": "A megszüntetés nem sikerült.",
       "menuVerkaufAus": "Kikapcsolás minden portálon",
-      "menuVerkaufAn": "Újra kínálás minden portálon"
+      "menuVerkaufAn": "Újra kínálás minden portálon",
+      "menuArchive": "Archiválás",
+      "menuUnarchive": "Visszaállítás",
+      "archiveConfirm": "Archiválja a(z) „{title}” szálláshelyet? A szálláshely eltűnik a listáról, és a mai naptól sehol sem lesz értékesítve. A meglévő foglalások érvényben maradnak, minden adat megmarad.",
+      "unarchiveConfirm": "Visszaállítja a(z) „{title}” szálláshelyet? A szálláshely újra megjelenik a listán, és az értékesítési zárolás megszűnik.",
+      "archiveOk": "Szálláshely archiválva.",
+      "unarchiveOk": "A szálláshely ismét aktív.",
+      "archiveErr": "Az archiválás nem sikerült."
     },
     "messagingForm": {
       "title": "Üzenet-helyőrzők",
@@ -6561,6 +6581,8 @@
     "allChannels": "All channels",
     "connectedStatus": "Connected",
     "notConnectedStatus": "Nincs csatlakoztatva",
+    "statusBroken": "Hibás hozzárendelés",
+    "repairHint": "A hirdetés hozzá van rendelve a portálon, de olyan célhoz, amely ott nem létezik. Az elérhetőség átkerül, az árak nem. A leválasztás és az ismételt összekapcsolás helyreállítja a hozzárendelést.",
     "addChannel": "Add channel",
     "searchChannel": "Csatorna keresése …",
     "noResults": "Nem található csatorna.",
@@ -6679,7 +6701,21 @@
         "approved": "Jóváhagyva",
         "rejected": "Elutasítva"
       }
-    }
+    },
+    "csvTitle": "Csatlakozás előtti foglalások importálása fájlból",
+    "csvText": "A portál a felületen keresztül csak a csatlakozás napjától kezdve adja át a foglalásokat. A korábbi tartózkodásokat a portálfiókod exportjából töltsd le, és itt töltsd fel.",
+    "csvDownloadTemplate": "Sablon letöltése",
+    "csvUpload": "Fájl feltöltése",
+    "csvHint": "Töltsd fel a fájlt úgy, ahogyan a portáltól megkapod (.xls, .xlsx vagy .csv). Az importálás előtt látod, mely objektumok és hány foglalás lett felismerve. A lemondott foglalások kimaradnak, a már meglévők pedig felismerésre kerülnek, és nem kerülnek be duplán.",
+    "csvNothingUsable": "A fájlban nincs átvehető foglalás — minden sor lemondott, vagy nincs olvasható dátuma.",
+    "csvPreview": "{count} foglalás felismerve, érkezések {from}–{to} között. Még semmi nem lett importálva.",
+    "csvPreviewProperties": "Objektumok a fájlban — ezeknek a neveknek meg kell egyezniük az objektumaid nevével, különben a sorok kimaradnak:",
+    "csvPreviewNoRef": "{count, plural, one {# foglalás foglalási szám nélkül} other {# foglalás foglalási szám nélkül}} — ezeknél a felismerés az objektum, az időszak és a név alapján történik.",
+    "csvConfirm": "{count} foglalás importálása",
+    "csvCancel": "Mégse",
+    "csvResult": "{imported} / {total} foglalás importálva.",
+    "csvSkipped": "{count, plural, one {# sor kihagyva (már létezik, vagy ismeretlen objektum)} other {# sor kihagyva (már léteznek, vagy ismeretlen objektum)}}",
+    "csvFailed": "{count, plural, one {# sor hibás} other {# sor hibás}}:"
   },
   "calendarSync": {
     "title": "Naptár importálása/exportálása",
@@ -7411,6 +7447,7 @@
       "propertyCount": "Szálláshelyek száma",
       "oneMore": "Eggyel több szálláshely",
       "commissionPerChannel": "Jutalék foglalási csatornánként",
+      "commissionExternalCap": "legfeljebb {betrag} havonta",
       "included": "Mit tartalmaz",
       "totalMonthly": "Havi összesen"
     },
@@ -7496,7 +7533,7 @@
       "loadFailed": "A jutalékokat nem sikerült betölteni: {error}",
       "cardRate": "Booking, Airbnb és társai: a közzétett szállásai foglalási forgalmának {rate} %-a. Egy hónap jutalékait a következő hónap 1-jén számoljuk el, és hozzáadjuk a következő előfizetési számlájához.",
       "cardRateCapped": "Booking, Airbnb és társai: a közzétett szállásai foglalási forgalmának {rate} %-a. Egy hónap jutalékait a következő hónap 1-jén számoljuk el, és hozzáadjuk a következő előfizetési számlájához, havonta legfeljebb {cap} összegben.",
-      "cardOtherChannels": "A saját weboldalán keresztüli foglalások továbbra is jutalékmentesek. A myBestDays piactéren keresztüli foglalásokra 8 % vonatkozik, amelyet közvetlenül a fizetés beérkezésekor vonunk le — ezek itt nem szerepelnek.",
+      "cardOtherChannels": "A saját weboldalán keresztüli foglalások továbbra is jutalékmentesek. A myBestDays piactéren keresztüli foglalásoknál a jutalék {satz}, amelyet közvetlenül a fizetés beérkezésekor vonunk le — ezek itt nem szerepelnek.",
       "pending": "Nyitott ({count, plural, one {# foglalás} other {# foglalás}}): ",
       "pendingCapHint": " — a havi felső korlát, {cap} kerül elszámolásra",
       "noPending": "Jelenleg nincs nyitott jutalék.",
@@ -7504,9 +7541,9 @@
       "backToBilling": "Számlázás",
       "monthsTitle": "Jutalékok hónapok szerint",
       "monthsIntro": "Ez a kimutatás kizárólag a külső portálokon (Booking, Airbnb és társai) keresztüli foglalások jutalékait tartalmazza. Egy hónap jutalékait a következő hónap 1-jén számoljuk el, és hozzáadjuk a következő előfizetési számlájához — a terhelés ezzel a számlával együtt történik.",
-      "monthsChannels": "A myBestDays piactéren keresztüli foglalások 8 % jutalékot viselnek, amelyet már a fizetés beérkezésekor levonunk; ezért ebben a listában nem jelennek meg. A saját weboldalán keresztüli foglalások jutalékmentesek.",
+      "monthsChannels": "A myBestDays piactéren keresztüli foglalásoknál a jutalék {satz}, amelyet már a fizetés beérkezésekor levonunk; ezért ebben a listában nem jelennek meg. A saját weboldalán keresztüli foglalások jutalékmentesek.",
       "monthsLoading": "Jutalékok betöltése …",
-      "monthsEmpty": "Külső portálokon keresztül még nem keletkezett jutalék. A saját weboldalán keresztüli foglalások tartósan jutalékmentesek. A myBestDays piactéri foglalások 8 % jutalékot viselnek — ezt közvetlenül a fizetés beérkezésekor vonjuk le, és itt nem jelenik meg.",
+      "monthsEmpty": "Külső portálokon keresztül még nem keletkezett jutalék. A saját weboldalán keresztüli foglalások tartósan jutalékmentesek. A myBestDays piactéri foglalásoknál a jutalék {satz} — ezt közvetlenül a fizetés beérkezésekor vonjuk le, és itt nem jelenik meg.",
       "colMonth": "Hónap",
       "colBookings": "Foglalások",
       "colGross": "Foglalási forgalom",
@@ -7639,7 +7676,7 @@
     "stars": "4,5 csillag",
     "reviews": "· 921 értékelés",
     "trial30": "Próbálja ki 30 napig ingyen",
-    "bookingValue": "+0,5 % foglalási érték",
+    "bookingValue": "+{satz} foglalási érték",
     "seePrices": "Árak megtekintése",
     "downloadApp": "Alkalmazás letöltése",
     "copyright": "© 2026 myNextDays. Minden jog fenntartva.",

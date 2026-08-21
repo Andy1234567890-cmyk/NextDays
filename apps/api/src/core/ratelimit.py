@@ -12,6 +12,15 @@ gemeinsame Wahrheit.
 Resilienz: Redis nicht erreichbar → :func:`RateLimiter.check` meldet das über
 ``RateDecision.degraded``; die Middleware entscheidet dann fail-open/closed.
 """
+# SCHWESTERDATEI — byte-identisch in beiden Bäumen halten:
+#     apps/api/src/core/ratelimit.py
+#     apps/public-api/src/core/ratelimit.py
+# Die öffentliche API ist ein EIGENER Service (apps/public-api/README.md) und
+# importiert nichts aus apps/api. Diese Datei liegt dort deshalb als bewusste
+# Kopie (Muster ADR-0019). Der CI-Job `public-api-konsistenz` prüft die
+# Byte-Gleichheit: ein driftender Limiter (Fenster-Logik, X-Forwarded-For-Hops)
+# heißt, dass eines der beiden Systeme sein veröffentlichtes Limit nicht hält
+# oder eine gefälschte Client-IP glaubt.
 from __future__ import annotations
 
 from dataclasses import dataclass

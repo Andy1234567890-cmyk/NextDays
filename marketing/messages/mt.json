@@ -157,7 +157,8 @@
   },
   "direkt": {
    "frage": "Nikseb paġna tal-booking tiegħi mingħajr kommissjoni tal-portal?",
-   "antwort": "Iva. Ma' kull kont jiġu portal tal-booking tiegħek, widget għas-sit eżistenti u bini ta' websajt bid-dominju tiegħek. Il-bookings diretti jiswew 0,5 % minflok il-kommissjoni ta' 15–18 % tal-portali kbar, jaħdmu fuq l-istess kalendarju u l-istess prezzijiet — u l-flus jidħlu direttament fil-kont tiegħek."
+   "antwort": "Iva. Ma' kull kont jiġu portal tal-booking tiegħek, widget għas-sit eżistenti u bini ta' websajt bid-dominju tiegħek. Il-bookings diretti jiswew {satz} minflok il-kommissjoni ta' 15–18 % tal-portali kbar, jaħdmu fuq l-istess kalendarju u l-istess prezzijiet — u l-flus jidħlu direttament fil-kont tiegħek.",
+   "satzUnbekannt": "ferm inqas"
   },
   "marktplatz": {
    "frage": "X'inhu myBestDays?",
@@ -261,7 +262,8 @@
    },
    "direkt": {
     "title": "Booking dirett",
-    "items": "Portal tal-booking tiegħek, widget tal-booking, website builder, dominju tiegħek, 0.5 % minflok 15–18 % kummissjoni OTA"
+    "items": "Portal tal-booking tiegħek, widget tal-booking, website builder, dominju tiegħek, {satz} minflok 15–18 % kummissjoni OTA",
+    "satzUnbekannt": "ferm inqas"
    },
    "preise": {
     "title": "Prezzijiet u dħul",
@@ -525,9 +527,9 @@
    "direktText": "Permezz tas-sit tiegħek jew tal-formola tal-prenotazzjoni. Minn dan ma nieħdu xejn. Jibqa' biss il-ħlas tal-fornitur tal-pagamenti tiegħek.",
    "direktWert": "0 %",
    "portaleTitel": "Il-mistieden jiġi minn Booking, Airbnb u oħrajn",
-   "portaleText": "Nitolbu 0,5 % tal-valur tal-prenotazzjoni, darba fix-xahar fuq il-fattura tiegħek. Dak li żżomm il-portal innifsu huwa indipendenti minn dan.",
+   "portaleText": "Nitolbu {satz} tal-valur tal-prenotazzjoni, darba fix-xahar fuq il-fattura tiegħek. Dak li żżomm il-portal innifsu huwa indipendenti minn dan.",
    "marktplatzTitel": "Il-mistieden jiġi permezz ta' myBestDays",
-   "marktplatzText": "Is-suq tagħna stess. Hawn isibuk mistednin li għadhom ma jafukx. Aħna nġibu l-prenotazzjoni, niġbru l-flus u nħallsuhomlok — għal dan inżommu 8 %. M'hemmx spejjeż oħra.",
+   "marktplatzText": "Is-suq tagħna stess. Hawn isibuk mistednin li għadhom ma jafukx. Aħna nġibu l-prenotazzjoni, niġbru l-flus u nħallsuhomlok — għal dan inżommu {satz}. M'hemmx spejjeż oħra.",
    "deckel": "U hemm limitu: għal prenotazzjonijiet mill-portali qatt ma tħallas aktar minn {betrag} fix-xahar."
   },
   "module": {
@@ -766,7 +768,8 @@
     "gast": "Mistieden u flus",
     "betrieb": "Operat"
    },
-   "reiterHeading": "X'hemm eżattament wara dan?"
+   "reiterHeading": "X'hemm eżattament wara dan?",
+   "satzUnbekannt": "ferm inqas"
   },
   "uebersicht": {
    "metaTitel": "Funzjonijiet — kollox għall-kiri u għall-lukandi | myNextDays",
@@ -954,7 +957,7 @@
      "punkte": {
       "a": "Jinxtegħel għal kull kanal separatament",
       "b": "Kalendarju wieħed għal kollox",
-      "c": "8 % kollox inkluż minflok kummissjoni tal-portal"
+      "c": "{satz} kollox inkluż minflok kummissjoni tal-portal"
      }
     }
    },

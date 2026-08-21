@@ -75,11 +75,16 @@ def _is_exempt(path: str) -> bool:
 # Credential-Endpunkte → strenger auth-Bucket (Brute-Force-/Stuffing-Schutz,
 # Wurzel 2/7). Die Gast-Auth der Demand-Seite (/plattform) zählt genauso wie der
 # Vermieter-Login; password-reset zusätzlich gegen E-Mail-Enumeration.
-# /oauth/token ist der Client-Credentials-Tausch der Entwickler-API.
+#
+# `/oauth/token` stand hier, solange der Client-Credentials-Tausch der
+# Entwickler-API in dieser App lag. Er ist in den eigenen Service
+# `apps/public-api` umgezogen und bringt seinen eigenen, strengeren Eimer mit
+# (PUBLIC_API_RATE_LIMIT_TOKEN, Standard 10/60). Der Eintrag ist deshalb hier
+# entfernt und nicht vorsichtshalber stehen geblieben: ein Pfad, den es in
+# dieser App nicht gibt, sieht wie ein Schutz aus und ist keiner.
 _AUTH_PATHS = (
     "/auth/login",
     "/auth/register",
-    "/oauth/token",
     "/guest-auth/login",
     "/guest-auth/register",
     "/guest-auth/password-reset",

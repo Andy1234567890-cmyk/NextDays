@@ -37,6 +37,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 // Login und Registrierung der Gastgeber liegen in der web-App (Dashboard).
 import { DEMO_URL, LOGIN_URL, SIGNUP_URL } from "@/lib/app-url";
+import { gruppenStichworte } from "@/lib/gruppen-stichworte";
 
 // Anker mit führendem "/" — sonst zeigen sie auf Unterseiten (z. B. /impressum)
 // ins Nichts, weil die Abschnitte nur auf der Startseite existieren.
@@ -64,7 +65,25 @@ const MENU_SPALTEN: readonly {
   { titel: "betrieb", gruppen: ["team", "app", "auswertungen"] },
 ];
 
-export function MarketingNav() {
+/**
+ * `satzExtern`: der Provisionssatz für Direktbuchungen, vom Server formatiert.
+ *
+ * WARUM OPTIONAL — und warum das hier kein Schlupfloch ist:
+ * Die Kopfzeile steht auf VIERZEHN Seiten, zwei davon sind selbst
+ * `"use client"` (`/konto-loeschen`, `/konto-loeschen/bestaetigen`). Jeder
+ * dieser Seiten eine Server-Hülle zu geben, nur damit die Stichwortzeile im
+ * Megamenü eine Zahl trägt, wäre mehr Bauwerk als Nutzen: die Zeile steht dort
+ * unter `line-clamp-2` und ist eine ZWEI-ZEILEN-Vorschau — der Satz ist das
+ * letzte Glied einer Komma-Aufzählung und in der Regel längst abgeschnitten.
+ *
+ * Ohne den Wert erscheint deshalb das übersetzte Ersatzwort statt einer Zahl
+ * (`gruppenStichworte`), nie ein geratener Satz und nie ein roher Platzhalter.
+ * Die Seiten, auf denen die Zahl sichtbar zählt (Startseite, Preisseite,
+ * Funktionsseiten), geben sie ausdrücklich mit.
+ */
+export function MarketingNav({
+  satzExtern = null,
+}: { satzExtern?: string | null } = {}) {
   const t = useTranslations("nav");
   const tf = useTranslations("features.gruppen");
   const locale = useLocale();
@@ -248,7 +267,7 @@ export function MarketingNav() {
                                 die Klemmung und die Spalte wird zur Textwand
                                 (genau das war hier zu sehen). */}
                             <span className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                              {tf(`${key}.items`)}
+                              {gruppenStichworte(tf, key, satzExtern)}
                             </span>
                           </span>
                         </Link>

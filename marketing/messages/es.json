@@ -157,7 +157,8 @@
   },
   "direkt": {
    "frage": "¿Tengo una página de reservas propia sin comisión de portal?",
-   "antwort": "Sí. Cada cuenta incluye su propio portal de reservas, un widget para tu web actual y un constructor de webs con dominio propio. Las reservas directas cuestan un 0,5 % en lugar del 15–18 % de comisión de los grandes portales, usan el mismo calendario y los mismos precios — y el dinero va directo a tu cuenta."
+   "antwort": "Sí. Cada cuenta incluye su propio portal de reservas, un widget para tu web actual y un constructor de webs con dominio propio. Las reservas directas cuestan {satz} en lugar del 15–18 % de comisión de los grandes portales, usan el mismo calendario y los mismos precios — y el dinero va directo a tu cuenta.",
+   "satzUnbekannt": "mucho menos"
   },
   "marktplatz": {
    "frage": "¿Qué es myBestDays?",
@@ -261,7 +262,8 @@
    },
    "direkt": {
     "title": "Reserva directa",
-    "items": "Portal de reservas propio, widget de reservas, creador de webs, dominio propio, 0,5 % en lugar del 15–18 % de comisión OTA"
+    "items": "Portal de reservas propio, widget de reservas, creador de webs, dominio propio, {satz} en lugar del 15–18 % de comisión OTA",
+    "satzUnbekannt": "mucho menos"
    },
    "preise": {
     "title": "Tarifas e ingresos",
@@ -525,9 +527,9 @@
    "direktText": "A través de tu propia web o de tu formulario de reserva. De ahí no nos llevamos nada. Solo queda la comisión de tu proveedor de pagos.",
    "direktWert": "0 %",
    "portaleTitel": "El huésped llega desde Booking, Airbnb y demás",
-   "portaleText": "Cobramos el 0,5 % del valor de la reserva, una vez al mes en tu factura. Lo que retenga el portal es independiente de esto.",
+   "portaleText": "Cobramos un {satz} del valor de la reserva, una vez al mes en tu factura. Lo que retenga el portal es independiente de esto.",
    "marktplatzTitel": "El huésped llega por myBestDays",
-   "marktplatzText": "Nuestro propio marketplace. Aquí te encuentran huéspedes que aún no te conocen. Traemos la reserva, cobramos el dinero y te lo pagamos: por eso nos quedamos el 8 %. No hay más costes.",
+   "marktplatzText": "Nuestro propio marketplace. Aquí te encuentran huéspedes que aún no te conocen. Traemos la reserva, cobramos el dinero y te lo pagamos: por eso nos quedamos un {satz}. No hay más costes.",
    "deckel": "Y tiene tope: por las reservas de portales nunca pagas más de {betrag} al mes."
   },
   "module": {
@@ -766,7 +768,8 @@
     "gast": "Huésped y dinero",
     "betrieb": "Operativa"
    },
-   "reiterHeading": "¿Qué hay exactamente detrás?"
+   "reiterHeading": "¿Qué hay exactamente detrás?",
+   "satzUnbekannt": "mucho menos"
   },
   "uebersicht": {
    "metaTitel": "Funciones — todo para el alquiler y el hotel | myNextDays",
@@ -954,7 +957,7 @@
      "punkte": {
       "a": "Activable canal por canal",
       "b": "Un calendario para todo",
-      "c": "8 % todo incluido en lugar de comisión de portal"
+      "c": "{satz} todo incluido en lugar de comisión de portal"
      }
     }
    },

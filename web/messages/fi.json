@@ -3973,7 +3973,8 @@
         "inspektion": "Tarkastus",
         "vorlagen": "Tehtävämallit",
         "planmaessig": "Ajastetut tehtävät",
-        "regelmaessig": "Toistuvat tehtävät"
+        "regelmaessig": "Toistuvat tehtävät",
+        "vertretungen": "Sijaisuudet"
       }
     },
     "propertyCalendar": {
@@ -4859,6 +4860,18 @@
       "gesetzt": "Vastuuhenkilö vaihdettu",
       "abgezogen": "Vastuu poistettu",
       "aktion": "Määrää vastuuhenkilö …"
+    },
+    "substitutions": {
+      "title": "Sijaisuudet",
+      "intro": "Kollegoiden avoimet pyynnöt. Tehtävä siirtyy sille, joka ottaa sen hoitaakseen.",
+      "loading": "Ladataan …",
+      "empty": "Ei avoimia pyyntöjä",
+      "emptyHint": "Jos joku etsii sijaista, se näkyy tässä.",
+      "requestedBy": "Pyytäjä {name}",
+      "take": "Ota hoitaaksesi",
+      "decline": "Hylkää",
+      "taken": "Tehtävä otettu hoitaaksesi",
+      "declined": "Pyyntö hylätty"
     }
   },
   "objects": {
@@ -4944,7 +4957,14 @@
       "unlistOk": "Yhteys verkkosivustoon poistettu.",
       "unlistErr": "Yhteyden poisto epäonnistui.",
       "menuVerkaufAus": "Kytke pois kaikista portaaleista",
-      "menuVerkaufAn": "Tarjoa uudelleen kaikissa portaaleissa"
+      "menuVerkaufAn": "Tarjoa uudelleen kaikissa portaaleissa",
+      "menuArchive": "Arkistoi",
+      "menuUnarchive": "Palauta käyttöön",
+      "archiveConfirm": "Arkistoidaanko kohde ”{title}”? Kohde katoaa listalta ja sen myynti lopetetaan tästä päivästä alkaen kaikkialla. Voimassa olevat varaukset pysyvät voimassa, kaikki tiedot säilyvät.",
+      "unarchiveConfirm": "Palautetaanko kohde ”{title}” käyttöön? Kohde näkyy taas listalla ja myyntikielto poistetaan.",
+      "archiveOk": "Kohde arkistoitu.",
+      "unarchiveOk": "Kohde on taas käytössä.",
+      "archiveErr": "Arkistointi epäonnistui."
     },
     "messagingForm": {
       "title": "Viestien sijaintimerkit",
@@ -6561,6 +6581,8 @@
     "allChannels": "All channels",
     "connectedStatus": "Connected",
     "notConnectedStatus": "Ei yhdistetty",
+    "statusBroken": "Virheellinen liitos",
+    "repairHint": "Ilmoitus on liitetty portaaliin, mutta kohteeseen, jota siellä ei ole. Saatavuus välittyy, hinnat eivät. Katkaise yhteys ja yhdistä uudelleen, niin liitos palautuu.",
     "addChannel": "Add channel",
     "searchChannel": "Hae kanavaa …",
     "noResults": "Kanavaa ei löytynyt.",
@@ -6679,7 +6701,21 @@
         "approved": "Hyväksytty",
         "rejected": "Hylätty"
       }
-    }
+    },
+    "csvTitle": "Tuo tiedostosta varaukset ennen yhdistämistä",
+    "csvText": "Portaali toimittaa rajapinnan kautta vain varaukset yhdistämispäivästä alkaen. Vanhemmat varaukset saat portaalitilisi viennistä ja lataat ne tänne.",
+    "csvDownloadTemplate": "Lataa malli",
+    "csvUpload": "Lataa tiedosto",
+    "csvHint": "Lataa tiedosto sellaisena kuin saat sen portaalista (.xls, .xlsx tai .csv). Ennen tuontia näet, mitkä kohteet ja kuinka monta varausta tunnistettiin. Peruutetut varaukset jätetään pois, jo olemassa olevat tunnistetaan eikä niitä tuoda kahdesti.",
+    "csvResult": "{imported}/{total} varausta tuotu.",
+    "csvSkipped": "{count, plural, one {# rivi ohitettu (on jo olemassa tai kohde tuntematon)} other {# riviä ohitettu (on jo olemassa tai kohde tuntematon)}}",
+    "csvNothingUsable": "Tiedostossa ei ole yhtään tuotavaa varausta — kaikki rivit on peruutettu tai niissä ei ole luettavaa päivämäärää.",
+    "csvPreview": "{count} varausta tunnistettu, saapumiset {from}–{to}. Ei mitään tuotu vielä.",
+    "csvPreviewProperties": "Tiedostossa olevat kohteet — näiden nimien on vastattava kohteidesi nimiä, muuten rivit jätetään pois:",
+    "csvPreviewNoRef": "{count, plural, one {# varaus ilman varausnumeroa} other {# varausta ilman varausnumeroa}} — niiden tunnistus tapahtuu kohteen, ajanjakson ja nimen perusteella.",
+    "csvConfirm": "Tuo {count} varausta",
+    "csvCancel": "Peruuta",
+    "csvFailed": "{count, plural, one {# rivillä virhe} other {# rivillä virheitä}}:"
   },
   "calendarSync": {
     "title": "Tuo/vie kalenteri",
@@ -7411,6 +7447,7 @@
       "propertyCount": "Kohteiden määrä",
       "oneMore": "Yksi kohde lisää",
       "commissionPerChannel": "Provisio varauskanavaa kohden",
+      "commissionExternalCap": "enintään {betrag} kuukaudessa",
       "included": "Mitä sisältyy",
       "totalMonthly": "Yhteensä kuukaudessa"
     },
@@ -7496,7 +7533,7 @@
       "loadFailed": "Provisioita ei voitu ladata: {error}",
       "cardRate": "Booking, Airbnb ja muut: {rate} % julkaistujen kohteidesi varausmyynnistä. Kuukauden provisiot laskutetaan seuraavan kuukauden 1. päivänä ja lisätään seuraavaan tilauslaskuusi.",
       "cardRateCapped": "Booking, Airbnb ja muut: {rate} % julkaistujen kohteidesi varausmyynnistä. Kuukauden provisiot laskutetaan seuraavan kuukauden 1. päivänä ja lisätään seuraavaan tilauslaskuusi, enintään {cap} kuukaudessa.",
-      "cardOtherChannels": "Omien verkkosivujesi kautta tehdyt varaukset pysyvät provisiovapaina. myBestDays-markkinapaikan kautta tehdyistä varauksista peritään 8 %, joka pidätetään suoraan maksun yhteydessä — ne eivät sisälly tähän.",
+      "cardOtherChannels": "Omien verkkosivujesi kautta tehdyt varaukset pysyvät provisiovapaina. myBestDays-markkinapaikan kautta tehdyistä varauksista peritään {satz}, joka pidätetään suoraan maksun yhteydessä — ne eivät sisälly tähän.",
       "pending": "Avoimet ({count, plural, one {# varaus} other {# varausta}}): ",
       "pendingCapHint": " — laskutetaan kuukausikatto {cap}",
       "noPending": "Tällä hetkellä ei avoimia provisioita.",
@@ -7504,9 +7541,9 @@
       "backToBilling": "Laskutus",
       "monthsTitle": "Provisiot kuukausittain",
       "monthsIntro": "Tämä erittely sisältää yksinomaan ulkoisten portaalien (Booking, Airbnb ja muut) kautta tehtyjen varausten provisiot. Kuukauden provisiot laskutetaan seuraavan kuukauden 1. päivänä ja lisätään seuraavaan tilauslaskuusi — veloitus tapahtuu tämän laskun yhteydessä.",
-      "monthsChannels": "myBestDays-markkinapaikan kautta tehdyistä varauksista peritään 8 % provisio, joka pidätetään jo maksun yhteydessä; siksi ne eivät näy tässä luettelossa. Omien verkkosivujesi kautta tehdyt varaukset pysyvät provisiovapaina.",
+      "monthsChannels": "myBestDays-markkinapaikan kautta tehdyistä varauksista peritään {satz} provisio, joka pidätetään jo maksun yhteydessä; siksi ne eivät näy tässä luettelossa. Omien verkkosivujesi kautta tehdyt varaukset pysyvät provisiovapaina.",
       "monthsLoading": "Ladataan provisioita …",
-      "monthsEmpty": "Ulkoisten portaalien kautta ei ole vielä kertynyt provisioita. Omien verkkosivujesi kautta tehdyt varaukset ovat pysyvästi provisiovapaita. myBestDays-markkinapaikan varauksista peritään 8 % provisio — se pidätetään suoraan maksun yhteydessä eikä näy tässä.",
+      "monthsEmpty": "Ulkoisten portaalien kautta ei ole vielä kertynyt provisioita. Omien verkkosivujesi kautta tehdyt varaukset ovat pysyvästi provisiovapaita. myBestDays-markkinapaikan varauksista peritään {satz} provisio — se pidätetään suoraan maksun yhteydessä eikä näy tässä.",
       "colMonth": "Kuukausi",
       "colBookings": "Varaukset",
       "colGross": "Varausmyynti",
@@ -7639,7 +7676,7 @@
     "stars": "4,5 tähteä",
     "reviews": "· 921 arvostelua",
     "trial30": "Kokeile 30 päivää ilmaiseksi",
-    "bookingValue": "+0,5 % varauksen arvosta",
+    "bookingValue": "+{satz} varauksen arvosta",
     "seePrices": "Katso hinnat",
     "downloadApp": "Lataa sovellus",
     "copyright": "© 2026 myNextDays. Kaikki oikeudet pidätetään.",

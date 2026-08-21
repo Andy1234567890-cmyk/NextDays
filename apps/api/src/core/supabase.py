@@ -3,6 +3,17 @@
 Service-Role umgeht RLS → nur in vertrauenswürdigen Server-Pfaden nutzen,
 nie mit Gast-/User-Input ohne tenant-Scope.
 """
+# SCHWESTERDATEI — byte-identisch in beiden Bäumen halten:
+#     apps/api/src/core/supabase.py
+#     apps/public-api/src/core/supabase.py
+# Die öffentliche API ist ein EIGENER Service (apps/public-api/README.md) und
+# importiert nichts aus apps/api. Diese Datei liegt dort deshalb als bewusste
+# Kopie (Muster ADR-0019). Der CI-Job `public-api-konsistenz` prüft die
+# Byte-Gleichheit: die Verbindungshärtung hier (Timeouts, Reconnect bei
+# serverseitig geschlossenen Keep-Alive-Verbindungen, HTTP/2 aus) ist teuer
+# erkauftes Wissen aus zwei Live-Ausfällen. Ein Service ohne sie hängt beim
+# ersten Kong-Neustart. `load_scoped` ist zusätzlich die einzige erlaubte Form,
+# eine Zeile per ID zu laden (Wurzel 3) — in beiden Bäumen dieselbe.
 from functools import lru_cache
 from urllib.parse import quote
 

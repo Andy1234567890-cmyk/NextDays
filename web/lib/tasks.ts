@@ -499,6 +499,66 @@ export async function getTaskCalendar(
   return call(`/tasks/calendar?${p.toString()}`);
 }
 
+// --- Vertretung (0415) -----------------------------------------------------
+// Die vier Endpunkte gibt es seit 0019, eine Oberfläche dafür nie: eine Anfrage
+// landete in `task_substitutions` und blieb dort liegen. Wer ausfiel, fragte
+// ins Leere — die Aufgabe blieb bei ihm, während er annahm, jemand übernehme.
+
+/** Eine offene Vertretungsanfrage, die ich übernehmen könnte. */
+export type Vertretung = {
+  id: string;
+  task_id: string;
+  requested_by: string;
+  requested_by_name: string | null;
+  accepted_by: string | null;
+  status: "requested" | "accepted" | "declined";
+  note: string | null;
+  title: string;
+  property_title: string | null;
+  property_id: string | null;
+  start_at: string | null;
+  end_at: string | null;
+};
+
+/**
+ * Offene Anfragen, die ich übernehmen könnte.
+ *
+ * Eigene Anfragen fallen serverseitig raus (man vertritt sich nicht selbst),
+ * ebenso Aufgaben an Objekten ohne Freigabe (Wurzel 9).
+ */
+export async function listSubstitutions(): Promise<Result<Vertretung[]>> {
+  return call("/tasks/substitution");
+}
+
+/** Vertretung übernehmen — die Aufgabe wechselt dabei wirklich den Zuständigen. */
+export async function acceptSubstitution(
+  id: string,
+): Promise<Result<{ id: string; status: string }>> {
+  return call(`/tasks/substitution/${encodeURIComponent(id)}/accept`, {
+    method: "POST",
+  });
+}
+
+/** Vertretung ablehnen. Die Aufgabe bleibt, wo sie ist. */
+export async function declineSubstitution(
+  id: string,
+): Promise<Result<{ id: string; status: string }>> {
+  return call(`/tasks/substitution/${encodeURIComponent(id)}/decline`, {
+    method: "POST",
+  });
+}
+
+/** Vertretung für eine Aufgabe anfragen (nur der Zuständige, §4.3). */
+export async function requestSubstitution(
+  taskId: string,
+  note: string | null,
+): Promise<Result<{ id: string; status: string }>> {
+  return call("/tasks/substitution", {
+    method: "POST",
+    body: { task_id: taskId, note },
+  });
+}
+
 /** Aufgaben-Detail inkl. Checkliste. */
 export async function getTaskDetail(taskId: string): Promise<Result<TaskDetail>> {
   return call(`/tasks/detail/${encodeURIComponent(taskId)}`);

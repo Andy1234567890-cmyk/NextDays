@@ -1,11 +1,20 @@
-"""Router für den Entwickler-API-Zugang. Gemountet unter /api/v1.
+"""Router für die VERWALTUNG der Entwickler-Zugänge. Gemountet unter /api/v1.
 
-Zwei Wege:
-  • Verwaltung (/api-clients/*): der Betriebs-Admin legt Clients an, sieht sie,
-    rotiert/widerruft sie — geschützt per Supabase-Login (MANAGE_TENANT).
-  • Token-Tausch (/oauth/token): ÖFFENTLICH (kein Login) — der Entwickler tauscht
-    Client-ID + Secret gegen ein kurzlebiges Access-Token. Eigener strenger
-    Rate-Limit-Bucket (Wurzel 8).
+Hier legt der Betriebs-Admin API-Clients an, sieht sie, rotiert und widerruft
+sie — geschützt per Supabase-Login (MANAGE_TENANT). Das ist eine Funktion des
+Dashboards, deshalb sitzt sie in dieser API.
+
+Die NUTZUNG der Zugänge sitzt nicht mehr hier: der Token-Tausch
+(client_credentials) und alle öffentlichen Ressourcen-Endpunkte liegen im
+eigenen Service `apps/public-api` (POST https://api.mynextdays.dk/v1/oauth/token).
+Vorher stand der Token-Endpunkt in diesem Router. Er ist dorthin UMGEZOGEN und
+nicht kopiert: zwei Stellen, die Tokens ausgeben, wären zwei Wahrheiten über
+Gültigkeitsdauer, Audience und Widerruf — und der Entwickler müsste zwei Hosts
+ansprechen, um eine API zu benutzen.
+
+Geteilt bleibt genau zweierlei, beides bewusst: die Tabelle `api_clients` (die
+Zugänge selbst) und `scopes.py` (der Katalog der vergebbaren Rechte, als
+byte-identische Schwesterdatei).
 """
 from __future__ import annotations
 
@@ -20,12 +29,12 @@ from src.features.auth.dependencies import require_permission
 from src.features.auth.permissions import Capability
 
 from .schemas import (
+    SCOPE_KATALOG,
     ApiClientCreate,
     ApiClientCreated,
     ApiClientResponse,
+    ScopeInfo,
     SliceHealth,
-    TokenRequest,
-    TokenResponse,
 )
 from .service import ApiClientError, ApiClientsService
 
@@ -110,21 +119,18 @@ def revoke_client(client_pk: str, ctx: _admin, service: ServiceDep) -> None:
         raise _handle(exc) from exc
 
 
-@router.post("/oauth/token", response_model=TokenResponse)
-def issue_token(body: TokenRequest, service: ServiceDep) -> TokenResponse:
-    """Client-Credentials → kurzlebiges Access-Token (1 h). KEIN Login — die
-    Client-Zugangsdaten sind der Nachweis. Eigener Rate-Limit-Bucket (Wurzel 8)."""
-    if body.grant_type != "client_credentials":
-        raise HTTPException(
-            status_code=400, detail="grant_type muss client_credentials sein."
-        )
-    try:
-        tok = service.issue_token(
-            client_id=body.client_id, client_secret=body.client_secret
-        )
-    except ApiClientError as exc:
-        raise _handle(exc) from exc
-    return TokenResponse(**tok)
+@router.get("/api-clients/scopes", response_model=list[ScopeInfo])
+def list_scopes(ctx: _admin) -> list[ScopeInfo]:
+    """Vergebbare Scopes samt Beschreibung — die Auswahlliste des Dashboards.
+
+    Kommt aus `scopes.py`, damit das Frontend keine zweite Liste führt. Eine
+    handgepflegte Kopie im Frontend hätte genau den Fehler erzeugt, den der
+    Katalog verhindert: eine Auswahl, die die öffentliche API nicht kennt.
+    """
+    del ctx  # nur zur Autorisierung (MANAGE_TENANT)
+    return [
+        ScopeInfo(scope=s, beschreibung=b) for s, b in sorted(SCOPE_KATALOG.items())
+    ]
 
 
 def _row(r: dict) -> dict:

@@ -1587,6 +1587,54 @@ def test_detail_booking_behaelt_seinen_offenposten() -> None:
     assert round(d.due_amount, 2) == 1420.81
 
 
+def test_detail_storno_hat_keinen_offenposten() -> None:
+    """Eine stornierte Buchung fordert nichts — auch nicht bei Booking.com.
+
+    Beim Storno einer portal-kassierten Buchung setzt der Sync `paid_amount`
+    bewusst auf 0 (das Portal erstattet, siehe
+    bookings_sync._project_booking_to_reservation). Danach ergibt
+    `total - paid` den VOLLEN Betrag als angeblichen Offenposten.
+
+    Live gemessen am 21.08.2026: Buchung 5135385573 (Raevlingehuset, storniert)
+    zeigte "Offen 5.680,00 DKK"; ueber den Bestand waren es sieben stornierte
+    Booking-Buchungen mit zusammen 26.880,15 DKK, die niemand schuldet.
+    """
+    store = _move_store(check_in="2026-10-17", check_out="2026-10-22")
+    store["reservations"][0].update({
+        "channel": "booking",
+        "status": "cancelled",
+        "payment_collect": "ota",
+        "total_amount": 5680.00,
+        "paid_amount": 0.0,
+    })
+    svc = _move_db(store)
+    d = svc.detail(AuthContext(user_id="u", tenant_id="t1", role="admin"), RID)
+    assert d.total_amount == 5680.00
+    # Kein Offenposten — und ausdruecklich auch keine 0,00 (Wurzel 4).
+    assert d.due_amount is None
+
+
+def test_detail_portal_kassiert_hat_keinen_offenposten() -> None:
+    """Kassiert das PORTAL, hat der Gast uns gegenueber nichts offen.
+
+    `payment_collect='ota'` heisst: Booking.com/Airbnb zieht beim Gast ein und
+    rechnet mit uns ab. Bisher war nur Airbnb ausgenommen, begruendet mit der
+    Bedeutung von `total_amount`. Entscheidend ist aber, WER kassiert — bei
+    Booking.com ist `total_amount` zwar der Gastpreis brutto, gezahlt hat der
+    Gast trotzdem an das Portal.
+    """
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["reservations"][0].update({
+        "channel": "booking",
+        "payment_collect": "ota",
+        "total_amount": 5420.81,
+        "paid_amount": 5420.81,
+    })
+    svc = _move_db(store)
+    d = svc.detail(AuthContext(user_id="u", tenant_id="t1", role="admin"), RID)
+    assert d.due_amount is None
+
+
 def test_detail_unknown_404() -> None:
     store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
     svc = _move_db(store)

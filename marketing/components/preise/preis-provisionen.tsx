@@ -18,23 +18,34 @@ import { SectionHeading } from "@/components/marketing/section-kit";
 import { PROVISION_ILLUSTRATION } from "@/components/preise/preis-illustrationen";
 import { Icon } from "@/components/ui/icon";
 import { formatCurrency } from "@/lib/currency";
-import type { Preisliste } from "@/lib/preise";
+import { formatProzent, type Preisliste } from "@/lib/preise";
 
 export function PreisProvisionen({ liste }: { liste: Preisliste | null }) {
   const t = useTranslations("preise.provisionen");
   const locale = useLocale();
-  // Prozentsatz in der Sprache des Besuchers: "0,5 %" bzw. "0.5 %".
-  const prozent = (wert: number) =>
-    `${new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(wert)} %`;
 
   // Ohne Preisliste keine Sätze — dann entfällt die Sektion, statt „0 %" oder
   // einen geratenen Wert zu behaupten.
   if (!liste) return null;
 
+  // `wert` ist die Überschrift der Karte, `satz` derselbe Wert für den Absatz
+  // darunter. Bewusst EIN Ausdruck für beide: die Sätze standen früher als
+  // „0,5 %"/„8 %" im Fließtext der 24 Sprachdateien — bei einer Satzänderung
+  // im Backend hätte auf derselben Karte die neue Zahl über einem Absatz mit
+  // der alten gestanden, ohne dass tsc, ESLint oder ein Test es merkt
+  // (Wurzel 4). Der Direktweg hat keinen API-Satz, weil dort technisch keine
+  // Provisionszeile entsteht — seine Null steht als Text (`direktWert`) und
+  // wird als solcher auch in den Absatz gegeben.
   const wege: readonly { key: string; wert: string; hervor?: boolean }[] = [
     { key: "direkt", wert: t("direktWert"), hervor: true },
-    { key: "portale", wert: prozent(liste.commission_external_percent) },
-    { key: "marktplatz", wert: prozent(liste.commission_marketplace_percent) },
+    {
+      key: "portale",
+      wert: formatProzent(liste.commission_external_percent, locale),
+    },
+    {
+      key: "marktplatz",
+      wert: formatProzent(liste.commission_marketplace_percent, locale),
+    },
   ];
 
   return (
@@ -71,7 +82,7 @@ export function PreisProvisionen({ liste }: { liste: Preisliste | null }) {
                 {t(`${weg.key}Titel`)}
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {t(`${weg.key}Text`)}
+                {t(`${weg.key}Text`, { satz: weg.wert })}
               </p>
             </div>
           ))}

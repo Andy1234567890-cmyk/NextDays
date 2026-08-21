@@ -157,7 +157,8 @@
   },
   "direkt": {
    "frage": "Kas saan oma broneerimislehe ilma portaali komisjonita?",
-   "antwort": "Jah. Iga konto juurde kuuluvad oma broneerimisportaal, vidin olemasolevale veebilehele ja veebilehe koostaja oma domeeniga. Otsebroneeringud kulutavad 0,5 % suurte portaalide 15–18 % komisjoni asemel, käivad samas kalendris ja samade hindadega — ning raha läheb otse sinu kontole."
+   "antwort": "Jah. Iga konto juurde kuuluvad oma broneerimisportaal, vidin olemasolevale veebilehele ja veebilehe koostaja oma domeeniga. Otsebroneeringu tasu on {satz}, suurte portaalide 15–18 % komisjoni asemel; need käivad samas kalendris ja samade hindadega — ning raha läheb otse sinu kontole.",
+   "satzUnbekannt": "tunduvalt vähem"
   },
   "marktplatz": {
    "frage": "Mis on myBestDays?",
@@ -261,7 +262,8 @@
    },
    "direkt": {
     "title": "Otsebroneering",
-    "items": "Oma broneerimisportaal, broneerimisvidin, veebilehe koostaja, oma domeen, 0,5 % OTA komisjonitasu asemel 15–18 %"
+    "items": "Oma broneerimisportaal, broneerimisvidin, veebilehe koostaja, oma domeen, tasu {satz} portaalide 15–18 % komisjoni asemel",
+    "satzUnbekannt": "tunduvalt vähem"
    },
    "preise": {
     "title": "Hinnad ja käive",
@@ -525,9 +527,9 @@
    "direktText": "Sinu oma veebilehe või broneerimisvormi kaudu. Sellest ei võta me midagi. Jääb ainult sinu makseteenuse tasu.",
    "direktWert": "0 %",
    "portaleTitel": "Külaline tuleb Bookingust, Airbnb-st jt",
-   "portaleText": "Arvestame 0,5 % broneeringu väärtusest, kord kuus sinu arvel. See, mida portaal ise endale jätab, on sellest sõltumatu.",
+   "portaleText": "Arvestame {satz} broneeringu väärtusest, kord kuus sinu arvel. See, mida portaal ise endale jätab, on sellest sõltumatu.",
    "marktplatzTitel": "Külaline tuleb myBestDaysi kaudu",
-   "marktplatzText": "Meie oma turuplats. Siin leiavad sind külalised, kes sind veel ei tunne. Toome broneeringu, kogume raha ja maksame selle sulle välja — selle eest jätame endale 8 %. Muid kulusid ei ole.",
+   "marktplatzText": "Meie oma turuplats. Siin leiavad sind külalised, kes sind veel ei tunne. Toome broneeringu, kogume raha ja maksame selle sulle välja — selle eest jätame endale {satz}. Muid kulusid ei ole.",
    "deckel": "Ja ülempiir on olemas: portaalide broneeringute eest ei maksa sa kunagi rohkem kui {betrag} kuus."
   },
   "module": {
@@ -766,7 +768,8 @@
     "gast": "Külaline ja raha",
     "betrieb": "Tegevus"
    },
-   "reiterHeading": "Mis selle taga täpsemalt on?"
+   "reiterHeading": "Mis selle taga täpsemalt on?",
+   "satzUnbekannt": "tunduvalt vähem"
   },
   "uebersicht": {
    "metaTitel": "Funktsioonid — kõik väljaüürimiseks ja hotellile | myNextDays",
@@ -954,7 +957,7 @@
      "punkte": {
       "a": "Lülitatav sisse kanali kaupa",
       "b": "Üks kalender kõigele",
-      "c": "8 % all-in portaali komisjoni asemel"
+      "c": "{satz} kõik hinnas, portaali komisjonita"
      }
     }
    },

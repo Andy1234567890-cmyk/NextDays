@@ -1,4 +1,301 @@
 {
+ "entwickler": {
+  "meta": {
+   "titel": "API & Entwickler — myNextDays",
+   "beschreibung": "Die öffentliche REST-API von myNextDays: Objekte, Verfügbarkeit, Preise, Buchungen, Gäste und Aufgaben. OAuth2, OpenAPI 3.1, Webhooks mit signierten Zustellungen."
+  },
+  "hero": {
+   "eyebrow": "Öffentliche API",
+   "titel": "Baue gegen myNextDays",
+   "unterzeile": "Eine REST-API für Objekte, Verfügbarkeit, Preise, Buchungen, Gäste und Aufgaben. Kurzlebige Tokens, Rechte je Zugang, Ereignisse per Webhook — und ein Schema, das aus dem Code entsteht und deshalb nicht veralten kann.",
+   "basisLabel": "Basis-Adresse",
+   "versionLabel": "Version",
+   "versionHinweis": "im Pfad",
+   "konsole": "Ausprobieren",
+   "schema": "OpenAPI 3.1",
+   "referenz": "Referenz lesen"
+  },
+  "inhalt": {
+   "titel": "Auf dieser Seite",
+   "schnellstart": "Schnellstart",
+   "konzepte": "Konzepte",
+   "konventionen": "Konventionen",
+   "endpunkte": "Endpunkte",
+   "webhooks": "Webhooks",
+   "grenzen": "Grenzen",
+   "hilfe": "Hilfe"
+  },
+  "code": {
+   "kopieren": "Kopieren",
+   "kopiert": "Kopiert",
+   "anfrage": "Anfrage",
+   "antwort": "Antwort",
+   "zustellung": "Zustellung",
+   "pruefcode": "Signatur prüfen (Node)"
+  },
+  "schnellstart": {
+   "eyebrow": "Schnellstart",
+   "heading": "In fünf Minuten zum ersten Aufruf",
+   "sub": "Drei Schritte. Nur der erste läuft über die Oberfläche — alles andere ist ein Aufruf.",
+   "schritt1": {
+    "titel": "Zugang anlegen",
+    "text": "Im Dashboard einen Zugang erzeugen und dabei festlegen, was er darf: Rechte je Bereich und, wenn gewünscht, nur bestimmte Objekte. Ein Zugang für den Reinigungsplan braucht keinen Zugriff auf Umsätze.",
+    "pfad": "Konto → API-Zugang",
+    "hinweis": "Das Client-Secret wird genau einmal angezeigt. Danach steht in der Datenbank nur noch sein Hash — wer es verliert, lässt es neu erzeugen."
+   },
+   "schritt2": {
+    "titel": "Token holen",
+    "text": "Client-ID und Secret gegen ein Access-Token tauschen. Es gilt eine Stunde und trägt genau die Rechte des Zugangs.",
+    "hinweis": "Halte das Token im Speicher und tausche erst neu, wenn es abläuft oder ein 401 kommt — nicht bei jedem Aufruf. Ein Widerruf im Dashboard verhindert neue Tokens sofort."
+   },
+   "schritt3": {
+    "titel": "Ersten Aufruf machen",
+    "text": "Token als `Authorization: Bearer …` mitschicken. Jede Liste antwortet im gleichen Umschlag: `data` plus `pagination`.",
+    "hinweis": "Ruf danach `GET /v1/me` auf — es sagt dir, welche Rechte und welche Objekte dieser Zugang hat, ohne dass du es durch eine Reihe von 403ern herausfinden musst."
+   }
+  },
+  "konzepte": {
+   "eyebrow": "Konzepte",
+   "heading": "Vier Dinge, die du vorher wissen solltest",
+   "sub": "Wer diese vier Punkte überliest, baut eine Integration, die plausibel aussieht und falsche Zahlen liefert.",
+   "objekt": {
+    "titel": "Ein Objekt ist ein Einheiten-Typ",
+    "text": "Ein `property` ist genau ein Typ: ein Zimmertyp im Hotel oder ein Ferienobjekt. Darunter hängen seine Einheiten (`units`) — im Normalfall genau eine, bei fünf gleichen Studios eben fünf. Verkauft wird die Einheit, geführt und bepreist wird der Typ.",
+    "folge": "Verfügbarkeit ist deshalb eine ZAHL (`units_available`), kein Ja/Nein. Ein Hotel mit 8 Twin- und 4 Double-Zimmern hat zwei Objekte mit 8 bzw. 4 Einheiten — nicht ein Objekt mit 12 Zimmern."
+   },
+   "waehrung": {
+    "titel": "Jeder Betrag trägt seine Währung",
+    "text": "Es gibt keinen Standardwert. Jedes Objekt hat seine Währung, und jeder Betrag in einer Antwort nennt sie mit. Wir bedienen 27 EU-Länder plus Drittstaaten.",
+    "folge": "Fehlt die Währung an einem Objekt, ist das ein Datenfehler und der Aufruf schlägt mit 422 fehl — es wird kein „EUR“ eingesetzt. Beim Buchen muss deine Währung zur Währung des Objekts passen."
+   },
+   "zeit": {
+    "titel": "Zwei verschiedene Zeitpunkte",
+    "text": "`booked_at` ist der Zeitpunkt, zu dem der Gast gebucht hat — aus der Quelle des Portals, und `null`, wenn das Portal ihn nicht liefert. `received_at` ist der Eingang bei uns.",
+    "folge": "Sortiere „neueste zuerst“ über `booked_at`, nicht über `received_at`: bei einem Sammel-Import tragen Dutzende Buchungen dieselbe Sekunde. Zeitstempel sind UTC, Datumsfelder sind Kalendertage in der Zeitzone des Objekts."
+   },
+   "kanaele": {
+    "titel": "Sichtbarkeit gilt je Kanal",
+    "text": "Es gibt kein globales „veröffentlicht“. Ein Objekt ist auf dem Marktplatz sichtbar, auf der eigenen Website, über die Portale — jeweils einzeln schaltbar.",
+    "folge": "Verkäuflich ist ein Objekt nur, wenn drei Dinge zusammenkommen: `status = active`, der Kanal ist an, und es gibt freie Einheiten. Ein Verkaufsstopp wirkt dagegen über ALLE Kanäle."
+   }
+  },
+  "konventionen": {
+   "eyebrow": "Konventionen",
+   "heading": "Blättern, Fehler, Limits, Idempotenz",
+   "sub": "Die vier Punkte, die in jeder API anders sind — hier mit Zahlen statt mit Prosa.",
+   "tabelle": {
+    "feld": "Feld",
+    "bedeutung": "Bedeutung",
+    "code": "Code",
+    "status": "Status"
+   },
+   "blaettern": {
+    "titel": "Blättern",
+    "text": "Jede Liste antwortet mit `data` und `pagination`. Geblättert wird über `limit` und `offset`; die Gesamtzahl kostet eine zusätzliche Zählung und wird deshalb nur auf Anfrage geliefert.",
+    "felder": {
+     "limit": "Zeilen je Seite. Standard 50, Höchstwert 200 — ein größerer Wert ergibt 422, keine gekürzte Seite.",
+     "offset": "Zu überspringende Zeilen. Die Sortierung ist stabil, damit keine Zeile doppelt oder gar nicht kommt.",
+     "include_total": "`true` liefert zusätzlich `total`. Nur anfordern, wenn du die Zahl anzeigst.",
+     "has_more": "Steht in jeder Antwort und sagt, ob eine weitere Seite existiert — kein Raten, keine Extra-Runde."
+    }
+   },
+   "fehler": {
+    "titel": "Fehler",
+    "text": "Jeder Fehler kommt als `application/problem+json` (RFC 9457) mit einem stabilen `code`, einer `request_id` und — wo es hilft — den Feldern, die den Fehler erklären. Verzweige auf `code`, nicht auf den Text: der Text darf sich ändern, der Code nicht.",
+    "codes": {
+     "nichtAuthentifiziert": "Token fehlt, ist abgelaufen oder ungültig.",
+     "ungueltigeZugangsdaten": "Client-ID oder Secret falsch, oder der Zugang ist widerrufen.",
+     "scopeFehlt": "Token gültig, aber dieser Zugang hat das nötige Recht nicht. Der fehlende Scope steht im Fehler.",
+     "objektNichtErlaubt": "Der Zugang ist auf bestimmte Objekte beschränkt; dieses gehört nicht dazu.",
+     "nichtGefunden": "Existiert nicht — oder gehört einem anderen Betrieb. Bewusst nicht unterscheidbar.",
+     "zeitraumNichtVerfuegbar": "Belegt, gesperrt oder vom Verkauf ausgenommen. Es ist keine halbe Buchung entstanden.",
+     "idempotenzInArbeit": "Ein Aufruf mit diesem Idempotency-Key läuft noch. Kurz warten, dann wiederholen.",
+     "aboBestehtBereits": "Für diese Adresse besteht schon ein aktives Webhook-Abo dieses Zugangs.",
+     "waehrungFehlt": "Dem Objekt, Rate-Plan oder der Buchung ist keine Währung zugeordnet — ein Datenfehler.",
+     "ungueltigeAnfrage": "Formal in Ordnung, fachlich nicht erfüllbar. Die Begründung steht in `detail`.",
+     "validierungFehlgeschlagen": "Die Anfrage passt nicht zum Schema. `felder` nennt, welches Feld.",
+     "zuVieleAnfragen": "Rate-Limit erreicht. `Retry-After` sagt, wann es weitergeht.",
+     "nichtKonfiguriert": "Der Dienst kann die Anfrage nicht sicher bearbeiten. Kein Weiterlaufen ohne Prüfung."
+    }
+   },
+   "limits": {
+    "titel": "Rate-Limits",
+    "text": "Begrenzt wird je ZUGANG, nicht je IP-Adresse: eine Agentur, die zwanzig Betriebe betreut, sitzt hinter einer IP und soll sich nicht selbst ausbremsen. Drei getrennte Eimer, damit ein Kalender-Abgleich nicht das Preis-Setzen blockiert.",
+    "eimer": {
+     "token": "Token-Tausch. Streng, weil hier Zugangsdaten geprüft werden.",
+     "write": "Schreibende Aufrufe — sie greifen in den Verkauf ein.",
+     "read": "Lesende Aufrufe: der Alltag einer Integration."
+    },
+    "header": "Jede Antwort trägt den Stand mit, auch die erfolgreiche — damit du dein Tempo anpassen kannst, bevor du in den 429 läufst:"
+   },
+   "idempotenz": {
+    "titel": "Idempotenz",
+    "text": "Beim Anlegen einer Buchung ist der Header `Idempotency-Key` Pflicht. Wähle je Vorgang einen eindeutigen Wert (etwa eine UUID) und wiederhole ihn, wenn du denselben Aufruf erneut sendest. Ohne diesen Schutz erzeugt ein Netzabbruch mit Wiederholung zwei Buchungen — und die zweite sperrt Nächte, die niemand bestellt hat.",
+    "faelle": {
+     "wiederholung": "Gleicher Schlüssel, gleiche Nutzlast → die erste Antwort kommt wortgleich zurück, mit dem Header `Idempotency-Replayed: true`.",
+     "abweichend": "Gleicher Schlüssel, ANDERE Nutzlast → 422. Für einen neuen Vorgang gehört ein neuer Schlüssel.",
+     "laufend": "Gleicher Schlüssel, erster Aufruf läuft noch → 409. Kurz warten, dann wiederholen; nicht mit neuem Schlüssel nachfassen."
+    }
+   }
+  },
+  "endpunkte": {
+   "eyebrow": "Endpunkte",
+   "heading": "Was es gibt, und welches Recht es braucht",
+   "sub": "Die Übersicht je Bereich. Jeder Parameter und jedes Feld steht im Schema — es entsteht aus dem Code und kann deshalb nicht veralten.",
+   "ohneScope": "kein Recht nötig",
+   "gruppen": {
+    "auth": {
+     "titel": "Auth & Selbstauskunft",
+     "text": "Token holen und nachsehen, was dieser Zugang darf."
+    },
+    "objekte": {
+     "titel": "Objekte & Einheiten",
+     "text": "Die Typen des Betriebs samt Einheiten, Adresse, Ausstattung, Währung und Kanal-Sichtbarkeit."
+    },
+    "verfuegbarkeit": {
+     "titel": "Verfügbarkeit",
+     "text": "Freie Einheiten je Tag oder als Zeitraum-Spannen; Nächte sperren, freigeben oder den Verkauf ganz stoppen. Gebuchte Nächte werden nie überschrieben."
+    },
+    "preise": {
+     "titel": "Preise & Aufenthaltsregeln",
+     "text": "Rate-Pläne, Tagespreise, Mindest- und Höchstaufenthalt, An- und Abreisesperren — auch für einzelne Wochentage im Zeitraum."
+    },
+    "buchungen": {
+     "titel": "Buchungen",
+     "text": "Buchungen lesen und anlegen. Das Anlegen setzt Buchung und Kalender in einem Schritt — entweder beides oder nichts."
+    },
+    "gaeste": {
+     "titel": "Gäste",
+     "text": "Stammdaten, nur lesend und bewusst sparsam: keine Ausweisdaten, kein Geburtsdatum, keine Umsatzhistorie."
+    },
+    "aufgaben": {
+     "titel": "Aufgaben",
+     "text": "Reinigung und Wartung — anlegen, zuweisen, abschließen. Für die Anbindung eines eigenen Dienstplans."
+    },
+    "webhooks": {
+     "titel": "Webhooks",
+     "text": "Ereignis-Abos verwalten und den Katalog abrufen. Der Katalog kommt aus derselben Quelle, gegen die ein Abo geprüft wird."
+    }
+   },
+   "schema": {
+    "titel": "Die vollständige Referenz",
+    "text": "Jeder Parameter, jedes Feld, jeder Beispielkörper — als OpenAPI 3.1. Die Datei entsteht aus dem Code, du kannst also einen Client daraus generieren und darauf bauen, dass sie zur laufenden API passt. In der Konsole lässt sich jeder Aufruf direkt ausprobieren.",
+    "konsole": "Konsole öffnen",
+    "datei": "openapi.json"
+   }
+  },
+  "webhooks": {
+   "eyebrow": "Webhooks",
+   "heading": "Ereignisse statt Nachfragen",
+   "sub": "Ein Abo je Adresse, signierte Zustellungen, Wiederholungen mit wachsendem Abstand. Ereignisse entstehen bei JEDER Änderung — auch wenn sie über ein Portal oder das Dashboard kommt, nicht über diese API.",
+   "tabelle": {
+    "ereignis": "Ereignis",
+    "wann": "Wann es feuert"
+   },
+   "ereignisse": {
+    "reservationCreated": "Eine Buchung ist entstanden — über welchen Kanal auch immer.",
+    "reservationUpdated": "Eine bestehende Buchung hat sich geändert.",
+    "reservationCancelled": "Eine Buchung wurde storniert. Eigenes Ereignis, weil darauf anders zu reagieren ist als auf eine Änderung.",
+    "availabilityChanged": "Der Kalender eines Objekts hat sich geändert (Buchung, Sperre, Freigabe).",
+    "rateChanged": "Ein Tagespreis oder eine Aufenthaltsregel hat sich geändert.",
+    "taskCreated": "Eine Aufgabe ist entstanden.",
+    "taskCompleted": "Eine Aufgabe wurde abgeschlossen."
+   },
+   "anlegen": {
+    "titel": "Abo anlegen",
+    "text": "Eine `https`-Adresse und die Ereignisse, die du willst. Optional nur für bestimmte Objekte. Interne Adressen werden abgelehnt — die Prüfung läuft beim Anlegen UND vor jeder einzelnen Zustellung.",
+    "secret": "Die Antwort enthält das Signier-Secret genau einmal. Jetzt speichern — es wird nie wieder ausgeliefert."
+   },
+   "nutzlast": {
+    "titel": "Was ankommt",
+    "text": "Schmal gehalten: IDs und die Felder, die die Änderung beschreiben. Den vollen Datensatz holst du bei Bedarf über die API — so bekommt ein Empfänger nichts zugestellt, was er inzwischen nicht mehr sehen dürfte."
+   },
+   "signatur": {
+    "titel": "Signatur prüfen",
+    "text": "Jede Zustellung trägt einen Header mit Zeitstempel und HMAC-SHA256 über `<zeitstempel>.<body>`, berechnet mit dem Secret deines Abos. Weil der Zeitstempel mitsigniert ist, erkennst du eine aufgezeichnete und später erneut eingespielte Zustellung — bei einer Signatur nur über den Body ist das nicht möglich.",
+    "schritte": {
+     "roh": "Nimm den ROHEN Körper der Anfrage, nicht das geparste und neu serialisierte Objekt — eine andere Byte-Folge ergibt eine andere Signatur. Das ist der häufigste Grund für „Signatur passt nicht“.",
+     "alter": "Prüfe das Alter über den Zeitstempel; fünf Minuten Toleranz sind ein guter Wert.",
+     "vergleich": "Vergleiche zeitkonstant (`timingSafeEqual`, `hmac.compare_digest`). Ein normales `==` macht die Signatur erratbar."
+    }
+   },
+   "verhalten": {
+    "wiederholung": {
+     "titel": "Wiederholungen",
+     "text": "Antwortet deine Adresse nicht mit 2xx, wird bis zu zehnmal erneut zugestellt — mit wachsendem Abstand von einer Minute bis zu einer Stunde. Antworte schnell und verarbeite danach; ein langsamer Empfänger wird als Fehler gewertet."
+    },
+    "reihenfolge": {
+     "titel": "Reihenfolge",
+     "text": "Nicht garantiert. Nutze `created_at` des Ereignisses, um eine ältere Zustellung nicht über eine neuere zu schreiben."
+    },
+    "doppelt": {
+     "titel": "Doppelte Zustellung",
+     "text": "Ist unwahrscheinlich, aber möglich — behandle die Ereignis-`id` als Schlüssel und verarbeite jede nur einmal. Diese Zusage gilt für jeden Webhook-Anbieter, nicht nur für diesen."
+    }
+   }
+  },
+  "grenzen": {
+   "eyebrow": "Grenzen",
+   "heading": "Was v1 nicht kann",
+   "sub": "Ehrlich statt halb: jeder Punkt hier wäre schnell gebaut und würde eine zweite Wahrheit über Geld, Verkauf oder Kommunikation erzeugen. Das kostet mehr als es bringt.",
+   "stattdessen": "Stattdessen:",
+   "storno": {
+    "titel": "Buchungen ändern und stornieren",
+    "text": "Eine Stornierung ist kein Statusfeld: Nächte müssen freigegeben, die Portale informiert, die stornierende Partei und ihr Grund festgehalten, Stornogebühren und die Auszahlungs-Karenz gerechnet werden. Diese Kette lebt an einer Stelle und bleibt dort, bis sie geteilt nutzbar ist.",
+    "ausweg": "Storno über das Dashboard oder die App; über `reservation.cancelled` erfährt deine Integration davon sofort."
+   },
+   "quote": {
+    "titel": "Aufenthaltspreis berechnen",
+    "text": "„Was kosten diese vier Nächte für zwei Erwachsene und einen Hund“ ist eine eigene Rechnung mit Saisons, Rabatten, Zusatzleistungen, Abgaben und Steuern. Ein zweiter Rechner hier würde irgendwann eine andere Summe liefern als der, den Gast und Betrieb sehen.",
+    "ausweg": "Tagespreise und Regeln über `/v1/rates` lesen und selbst aufsummieren — oder den Gesamtpreis beim Anlegen einer Buchung mitschicken."
+   },
+   "gaeste": {
+    "titel": "Gäste anlegen und ändern",
+    "text": "Gastdaten entstehen dort, wo der Gast sie eingibt oder das Portal sie liefert. Ein Schreibweg über die API wäre eine dritte Quelle für dieselbe Person.",
+    "ausweg": "Beim Anlegen einer Buchung Gastdaten mitschicken — vorhandene Gäste werden über die E-Mail-Adresse wiedererkannt."
+   },
+   "nachrichten": {
+    "titel": "Nachrichten an Gäste",
+    "text": "Der Posteingang hängt an den Kanälen der Portale, an Vorlagen und an Automatiken. Eine API, die daneben sendet, erzeugt Nachrichten ohne Verlauf.",
+    "ausweg": "Posteingang im Dashboard oder in der App."
+   },
+   "finanzen": {
+    "titel": "Rechnungen, Zahlungen, Auszahlungen",
+    "text": "Finanzdaten sind auf Datenbankebene gesperrt und werden über diese API nicht ausgeliefert — auch nicht lesend. Ein Token, das abfließt, soll keine Umsätze offenlegen.",
+    "ausweg": "Buchhaltung und Eigentümer-Berichte im Dashboard; Exporte gibt es dort als Datei."
+   }
+  },
+  "hilfe": {
+   "eyebrow": "Hilfe",
+   "heading": "Fragen, Änderungen, Werkzeuge",
+   "sub": "Wohin mit einer Frage, und woran du dich beim Bauen halten kannst.",
+   "wege": {
+    "titel": "Wenn etwas nicht geht",
+    "entwicklerMail": {
+     "titel": "Technischer Kontakt",
+     "text": "Schick die `request_id` aus der Fehlerantwort mit — damit ist der Aufruf in unseren Protokollen auffindbar."
+    },
+    "hilfeCenter": {
+     "titel": "Hilfe-Center",
+     "text": "Anleitungen zum Produkt: Objekte anlegen, Portale verbinden, Preise pflegen."
+    },
+    "schema": {
+     "titel": "Client generieren",
+     "text": "Die OpenAPI-Datei taugt als Eingabe für die üblichen Generatoren — ein handgeschriebener Client ist unnötig."
+    }
+   },
+   "versionen": {
+    "titel": "Was wir dir zusagen",
+    "text": "Eine API ist ein Versprechen. Diese vier Punkte gelten für v1:",
+    "zusagen": {
+     "pfad": "Die Version steht im Pfad. Eine brechende Änderung bekommt `/v2`; `/v1` läuft daneben weiter.",
+     "additiv": "Innerhalb von v1 kommen nur Felder hinzu. Bestehende Felder werden nicht umbenannt und ändern ihre Bedeutung nicht.",
+     "frist": "Wird eine Version abgekündigt, nennen wir ein Datum mit mindestens zwölf Monaten Frist und melden uns bei jedem Betrieb mit einem aktiven Zugang.",
+     "changelog": "Änderungen stehen in der OpenAPI-Datei und in dieser Seite. Es gibt keine stille Änderung an einem Feld."
+    }
+   }
+  }
+ },
  "meta": {
   "title": "myNextDays – Die Vermieter-Plattform für Ferienunterkünfte",
   "description": "Die Plattform für Hotels, Agenturen und Vermieter von Ferienunterkünften: Channel-Manager, Kalender, Direktbuchung, Gästekommunikation und Abrechnung an einem Ort. In Dänemark gebaut, EU-gehostet. Ab 19,90 €/Monat. 30 Tage kostenlos testen."
@@ -157,7 +454,8 @@
   },
   "direkt": {
    "frage": "Bekomme ich eine eigene Buchungsseite ohne Portalprovision?",
-   "antwort": "Ja. Zu jedem Konto gehören ein eigenes Buchungsportal, ein Widget für die bestehende Website und ein Website-Baukasten mit eigener Domain. Direktbuchungen kosten 0,5 % statt der 15–18 % Provision der großen Portale, laufen über denselben Kalender und dieselben Preise — und das Geld geht direkt auf dein Konto."
+   "antwort": "Ja. Zu jedem Konto gehören ein eigenes Buchungsportal, ein Widget für die bestehende Website und ein Website-Baukasten mit eigener Domain. Direktbuchungen kosten {satz} statt der 15–18 % Provision der großen Portale, laufen über denselben Kalender und dieselben Preise — und das Geld geht direkt auf dein Konto.",
+   "satzUnbekannt": "deutlich weniger"
   },
   "marktplatz": {
    "frage": "Was ist myBestDays?",
@@ -261,7 +559,8 @@
    },
    "direkt": {
     "title": "Direktbuchung",
-    "items": "Eigenes Buchungsportal, Buchungs-Widget, Website-Baukasten, eigene Domain, 0,5 % statt 15–18 % OTA-Provision"
+    "items": "Eigenes Buchungsportal, Buchungs-Widget, Website-Baukasten, eigene Domain, {satz} statt 15–18 % OTA-Provision",
+    "satzUnbekannt": "deutlich weniger"
    },
    "preise": {
     "title": "Preise & Umsatz",
@@ -525,9 +824,9 @@
    "direktText": "Über deine eigene Website oder dein Buchungsformular. Davon nehmen wir nichts. Es bleibt nur die Gebühr deines Zahlungsanbieters.",
    "direktWert": "0 %",
    "portaleTitel": "Der Gast kommt von Booking, Airbnb & Co.",
-   "portaleText": "Wir berechnen 0,5 % vom Buchungswert, einmal im Monat auf deiner Rechnung. Was das Portal selbst einbehält, ist davon unabhängig.",
+   "portaleText": "Wir berechnen {satz} vom Buchungswert, einmal im Monat auf deiner Rechnung. Was das Portal selbst einbehält, ist davon unabhängig.",
    "marktplatzTitel": "Der Gast kommt über myBestDays",
-   "marktplatzText": "Unser eigener Marktplatz. Hier finden dich Gäste, die dich noch nicht kennen. Wir bringen die Buchung, ziehen das Geld ein und zahlen es dir aus — dafür behalten wir 8 %. Weitere Kosten gibt es nicht.",
+   "marktplatzText": "Unser eigener Marktplatz. Hier finden dich Gäste, die dich noch nicht kennen. Wir bringen die Buchung, ziehen das Geld ein und zahlen es dir aus — dafür behalten wir {satz}. Weitere Kosten gibt es nicht.",
    "deckel": "Und nach oben ist es gedeckelt: Für Buchungen von Portalen zahlst du nie mehr als {betrag} im Monat."
   },
   "module": {
@@ -606,7 +905,8 @@
     "gast": "Gast & Geld",
     "betrieb": "Betrieb"
    },
-   "reiterHeading": "Was genau steckt dahinter?"
+   "reiterHeading": "Was genau steckt dahinter?",
+   "satzUnbekannt": "deutlich weniger"
   },
   "uebersicht": {
    "metaTitel": "Funktionen — alles für Vermietung und Hotel | myNextDays",
@@ -794,7 +1094,7 @@
      "punkte": {
       "a": "Pro Kanal einzeln schaltbar",
       "b": "Ein Kalender für alles",
-      "c": "8 % all-in statt Portalprovision"
+      "c": "{satz} all-in statt Portalprovision"
      }
     }
    },

@@ -157,7 +157,8 @@
   },
   "direkt": {
    "frage": "Ho una pagina di prenotazione propria senza commissioni di portale?",
-   "antwort": "Sì. Ogni account comprende un portale di prenotazione proprio, un widget per il sito esistente e un costruttore di siti con dominio proprio. Le prenotazioni dirette costano lo 0,5 % invece del 15–18 % di commissione dei grandi portali, usano lo stesso calendario e gli stessi prezzi — e il denaro arriva direttamente sul tuo conto."
+   "antwort": "Sì. Ogni account comprende un portale di prenotazione proprio, un widget per il sito esistente e un costruttore di siti con dominio proprio. Le prenotazioni dirette costano {satz}, invece del 15–18 % di commissione dei grandi portali, usano lo stesso calendario e gli stessi prezzi — e il denaro arriva direttamente sul tuo conto.",
+   "satzUnbekannt": "molto meno"
   },
   "marktplatz": {
    "frage": "Che cos'è myBestDays?",
@@ -261,7 +262,8 @@
    },
    "direkt": {
     "title": "Prenotazione diretta",
-    "items": "Portale di prenotazione tuo, widget di prenotazione, creatore di siti, dominio proprio, 0,5 % invece del 15–18 % di commissione OTA"
+    "items": "Portale di prenotazione tuo, widget di prenotazione, creatore di siti, dominio proprio, {satz} invece del 15–18 % di commissione OTA",
+    "satzUnbekannt": "molto meno"
    },
    "preise": {
     "title": "Tariffe e ricavi",
@@ -525,9 +527,9 @@
    "direktText": "Tramite il tuo sito o il tuo modulo di prenotazione. Da lì non prendiamo nulla. Resta solo la commissione del tuo fornitore di pagamento.",
    "direktWert": "0 %",
    "portaleTitel": "L'ospite arriva da Booking, Airbnb e simili",
-   "portaleText": "Calcoliamo lo 0,5 % del valore della prenotazione, una volta al mese sulla tua fattura. Quanto trattiene il portale è indipendente da questo.",
+   "portaleText": "Calcoliamo {satz} del valore della prenotazione, una volta al mese sulla tua fattura. Quanto trattiene il portale è indipendente da questo.",
    "marktplatzTitel": "L'ospite arriva tramite myBestDays",
-   "marktplatzText": "Il nostro marketplace. Qui ti trovano ospiti che ancora non ti conoscono. Portiamo la prenotazione, incassiamo il denaro e te lo versiamo: per questo tratteniamo l'8 %. Non ci sono altri costi.",
+   "marktplatzText": "Il nostro marketplace. Qui ti trovano ospiti che ancora non ti conoscono. Portiamo la prenotazione, incassiamo il denaro e te lo versiamo: la nostra commissione per questo è {satz}. Non ci sono altri costi.",
    "deckel": "E c'è un tetto: per le prenotazioni dai portali non paghi mai più di {betrag} al mese."
   },
   "module": {
@@ -766,7 +768,8 @@
     "gast": "Ospiti e denaro",
     "betrieb": "Operatività"
    },
-   "reiterHeading": "Cosa c'è esattamente dietro?"
+   "reiterHeading": "Cosa c'è esattamente dietro?",
+   "satzUnbekannt": "molto meno"
   },
   "uebersicht": {
    "metaTitel": "Funzioni — tutto per affitto e hotel | myNextDays",
@@ -954,7 +957,7 @@
      "punkte": {
       "a": "Attivabile canale per canale",
       "b": "Un calendario per tutto",
-      "c": "8 % tutto compreso invece della commissione dei portali"
+      "c": "{satz} tutto compreso invece della commissione dei portali"
      }
     }
    },

@@ -14,6 +14,11 @@ Geprüft wird deshalb dreierlei:
    `tenants.platform_fee_bps` (Migration 0180). Genau hier entstünde sonst die
    Falschaussage, die niemand als Bug erkennt: eine Preisseite, die 8 % nennt,
    während die Abrechnung längst mit einem anderen Satz läuft.
+
+Die zweite Hälfte derselben Kette prüft `scripts/i18n/provisionssaetze-pruefen.mjs`:
+dass der Satz im FRONTEND nur einmal existiert. Hier stimmt die Zahl, dort ist
+sie nicht doppelt — beides ist nötig. Ein grüner Test hier hat nicht verhindert,
+dass „0,5 %"/„8 %"/„250 €" parallel im Fließtext von 48 Sprachdateien standen.
 """
 from __future__ import annotations
 

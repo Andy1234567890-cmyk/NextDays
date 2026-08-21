@@ -157,7 +157,8 @@
   },
   "direkt": {
    "frage": "Kapok saját foglalási oldalt portáljutalék nélkül?",
-   "antwort": "Igen. Minden fiókhoz tartozik saját foglalási portál, egy widget a meglévő weboldalra és egy weboldal-építő saját domainnel. A közvetlen foglalás 0,5 %-ba kerül a nagy portálok 15–18 %-os jutaléka helyett, ugyanazon a naptáron és ugyanazokkal az árakkal fut — a pénz pedig közvetlenül a te számládra megy."
+   "antwort": "Igen. Minden fiókhoz tartozik saját foglalási portál, egy widget a meglévő weboldalra és egy weboldal-építő saját domainnel. Közvetlen foglalásnál a mi díjunk {satz}, míg a nagy portálok 15–18 % jutalékot kérnek; ugyanazon a naptáron és ugyanazokkal az árakkal fut — a pénz pedig közvetlenül a te számládra megy.",
+   "satzUnbekannt": "jelentősen kevesebb"
   },
   "marktplatz": {
    "frage": "Mi az a myBestDays?",
@@ -261,7 +262,8 @@
    },
    "direkt": {
     "title": "Közvetlen foglalás",
-    "items": "Saját foglalási portál, foglalási widget, weboldal-építő, saját domain, 0,5 % a 15–18 %-os OTA-jutalék helyett"
+    "items": "Saját foglalási portál, foglalási widget, weboldal-építő, saját domain, a mi díjunk {satz} a portálok 15–18 % jutaléka helyett",
+    "satzUnbekannt": "jelentősen kevesebb"
    },
    "preise": {
     "title": "Árak és bevétel",
@@ -525,9 +527,9 @@
    "direktText": "A saját weboldaladon vagy foglalási űrlapodon keresztül. Ebből semmit nem viszünk el. Csak a fizetési szolgáltatód díja marad.",
    "direktWert": "0 %",
    "portaleTitel": "A vendég a Bookingról, Airbnb-ről és társaiktól jön",
-   "portaleText": "A foglalás értékének 0,5 %-át számítjuk fel, havonta egyszer a számládon. Amit maga a portál tart vissza, attól független.",
+   "portaleText": "A díjunk {satz} a foglalás értékéből, havonta egyszer a számládon. Amit maga a portál tart vissza, attól független.",
    "marktplatzTitel": "A vendég a myBestDaysen át jön",
-   "marktplatzText": "A saját piacterünk. Itt olyan vendégek találnak rád, akik még nem ismernek. Mi hozzuk a foglalást, beszedjük a pénzt és kifizetjük neked — ezért 8 %-ot tartunk meg. További költség nincs.",
+   "marktplatzText": "A saját piacterünk. Itt olyan vendégek találnak rád, akik még nem ismernek. Mi hozzuk a foglalást, beszedjük a pénzt és kifizetjük neked — a jutalékunk ezért {satz}. További költség nincs.",
    "deckel": "És van felső határ: portálos foglalásokért soha nem fizetsz többet, mint {betrag} havonta."
   },
   "module": {
@@ -766,7 +768,8 @@
     "gast": "Vendég és pénz",
     "betrieb": "Működés"
    },
-   "reiterHeading": "Mi van pontosan mögötte?"
+   "reiterHeading": "Mi van pontosan mögötte?",
+   "satzUnbekannt": "jelentősen kevesebb"
   },
   "uebersicht": {
    "metaTitel": "Funkciók — minden a kiadáshoz és a szállodához | myNextDays",
@@ -954,7 +957,7 @@
      "punkte": {
       "a": "Csatornánként külön kapcsolható",
       "b": "Egy naptár mindenre",
-      "c": "8 % minden benne a portáljutalék helyett"
+      "c": "{satz} minden benne, portáljutalék nélkül"
      }
     }
    },

@@ -157,7 +157,8 @@
   },
   "direkt": {
    "frage": "Dostanem vlastnú rezervačnú stránku bez provízie portálu?",
-   "antwort": "Áno. Ku každému kontu patrí vlastný rezervačný portál, widget pre existujúci web a stavebnica webu s vlastnou doménou. Priame rezervácie stoja 0,5 % namiesto 15–18 % provízie veľkých portálov, bežia na tom istom kalendári a tých istých cenách — a peniaze idú priamo na váš účet."
+   "antwort": "Áno. Ku každému kontu patrí vlastný rezervačný portál, widget pre existujúci web a stavebnica webu s vlastnou doménou. Priame rezervácie stoja {satz} namiesto 15–18 % provízie veľkých portálov, bežia na tom istom kalendári a tých istých cenách — a peniaze idú priamo na váš účet.",
+   "satzUnbekannt": "výrazne menej"
   },
   "marktplatz": {
    "frage": "Čo je myBestDays?",
@@ -261,7 +262,8 @@
    },
    "direkt": {
     "title": "Priame rezervácie",
-    "items": "Vlastný rezervačný portál, rezervačný widget, tvorca webu, vlastná doména, 0,5 % namiesto 15–18 % provízie OTA"
+    "items": "Vlastný rezervačný portál, rezervačný widget, tvorca webu, vlastná doména, {satz} namiesto 15–18 % provízie OTA",
+    "satzUnbekannt": "výrazne menej"
    },
    "preise": {
     "title": "Ceny a tržby",
@@ -525,9 +527,9 @@
    "direktText": "Cez váš web alebo rezervačný formulár. Z toho si neberieme nič. Zostáva len poplatok vašej platobnej brány.",
    "direktWert": "0 %",
    "portaleTitel": "Hosť prichádza z Booking, Airbnb a ďalších",
-   "portaleText": "Účtujeme 0,5 % z hodnoty rezervácie, raz mesačne na vašej faktúre. To, čo si necháva samotný portál, je od toho nezávislé.",
+   "portaleText": "Účtujeme {satz} z hodnoty rezervácie, raz mesačne na vašej faktúre. To, čo si necháva samotný portál, je od toho nezávislé.",
    "marktplatzTitel": "Hosť prichádza cez myBestDays",
-   "marktplatzText": "Naše vlastné trhovisko. Tu vás nájdu hostia, ktorí vás ešte nepoznajú. Prinesieme rezerváciu, vyberieme peniaze a vyplatíme vám ich — za to si necháme 8 %. Ďalšie náklady nie sú.",
+   "marktplatzText": "Naše vlastné trhovisko. Tu vás nájdu hostia, ktorí vás ešte nepoznajú. Prinesieme rezerváciu, vyberieme peniaze a vyplatíme vám ich — za to si necháme {satz}. Ďalšie náklady nie sú.",
    "deckel": "A je tu strop: za rezervácie z portálov nikdy nezaplatíte viac než {betrag} mesačne."
   },
   "module": {
@@ -766,7 +768,8 @@
     "gast": "Hosť a peniaze",
     "betrieb": "Prevádzka"
    },
-   "reiterHeading": "Čo presne za tým stojí?"
+   "reiterHeading": "Čo presne za tým stojí?",
+   "satzUnbekannt": "výrazne menej"
   },
   "uebersicht": {
    "metaTitel": "Funkcie — všetko pre prenájom a hotel | myNextDays",
@@ -954,7 +957,7 @@
      "punkte": {
       "a": "Zapínateľné pre každý kanál zvlášť",
       "b": "Jeden kalendár pre všetko",
-      "c": "8 % all-in namiesto provízie portálu"
+      "c": "{satz} all-in namiesto provízie portálu"
      }
     }
    },

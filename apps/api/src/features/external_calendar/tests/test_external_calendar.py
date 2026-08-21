@@ -141,8 +141,10 @@ def test_fetch_revalidates_redirect_target(monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.setattr(httpx.Client, "__init__", _init)
     # feed.example.com → öffentlich (Fetch erreicht Redirect-Logik),
     # internal.test → intern (muss abgelehnt werden).
+    # Die Auflösung liegt seit dem Zusammenlegen der SSRF-Prüfung im
+    # gemeinsamen Kern (core.ausgehende_url) — dort patchen, nicht mehr im Slice.
     monkeypatch.setattr(
-        "src.features.external_calendar.service.socket.getaddrinfo",
+        "src.core.ausgehende_url.socket.getaddrinfo",
         lambda host, *_a, **_k: (
             [(2, 1, 6, "", ("93.184.216.34", 0))]
             if host == "feed.example.com"

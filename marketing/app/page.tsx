@@ -5,6 +5,8 @@
 // Funktionen → Zahlen → Stimme → Formular → Abschluss-CTA. Der Farbwechsel
 // hell/warm trennt die Abschnitte, flache Wellen lösen die harten Kanten auf.
 // Umgesetzt im NextDays-Design-System (Schwarz/Rot, Fraunces/Inter, Pill-Buttons).
+import { getLocale } from "next-intl/server";
+
 import { MarketingBenefits } from "@/components/marketing/marketing-benefits";
 
 import { MarketingCta } from "@/components/marketing/marketing-cta";
@@ -23,10 +25,18 @@ import { MarketingTrial } from "@/components/marketing/marketing-trial";
 import { MarketingUsecases } from "@/components/marketing/marketing-usecases";
 import { MarketingZielgruppen } from "@/components/marketing/marketing-zielgruppen";
 import { SectionWave } from "@/components/marketing/section-kit";
+import { holeProvisionssaetze } from "@/lib/provisionstexte";
 
 // Titel/Beschreibung kommen aus dem Root-Layout (generateMetadata, meta.*) —
 // keine zweite, sprachfeste Kopie hier.
-export default function MarketingPage() {
+export default async function MarketingPage() {
+  // Die Provisionssätze EINMAL je Anfrage holen und an die zwei Sektionen
+  // geben, die sie im Text nennen (Funktionsliste, FAQ). Beide sind
+  // `"use client"` und kommen selbst nicht an den Endpunkt — dasselbe Muster
+  // wie `liste` auf der Preisseite (`app/preise/page.tsx`).
+  const locale = await getLocale();
+  const saetze = await holeProvisionssaetze(locale);
+
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans text-foreground">
       <MarketingNav />
@@ -39,7 +49,7 @@ export default function MarketingPage() {
         {/* Zielgruppen als gestapelte Scroll-Karten — je Unterkunftsart eine
             Karte mit Aufnahme aus der Software. */}
         <MarketingZielgruppen />
-        <MarketingFeatures />
+        <MarketingFeatures satzExtern={saetze.extern} />
         {/* Beweis nach der Funktionsliste: echte Aufnahmen aus der Software. */}
         <MarketingEinblicke />
         <MarketingKi />
@@ -58,7 +68,7 @@ export default function MarketingPage() {
         {/* Häufige Fragen vor dem Abschluss-CTA: wer hier noch zögert, sucht
             eine Antwort, keinen weiteren Knopf. Trägt zusätzlich das
             FAQPage-Schema für die Suchergebnisse. */}
-        <MarketingFaq />
+        <MarketingFaq satzExtern={saetze.extern} />
         <SectionWave from="text-background" to="bg-surface-warm" />
         <MarketingCta />
       </main>

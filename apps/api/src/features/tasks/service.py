@@ -39,6 +39,8 @@ from src.features.notification_settings.ereignisse import (
     melde_aufgaben_entzug,
     melde_aufgaben_zuweisung,
     melde_dienstleistung_erledigt,
+    melde_vertretung_entschieden,
+    melde_vertretung_gesucht,
 )
 
 from .engine import materialize_recurring, sync_for_reservation
@@ -98,6 +100,24 @@ _PHOTO_MIME = {
     "image/png": "png",
     "image/webp": "webp",
 }
+
+
+def _bild_typ(content: bytes) -> str | None:
+    """Der WIRKLICHE Bildtyp aus den Anfangsbytes, oder None.
+
+    Wurzel 8: der `content_type` des Clients ist eine Behauptung — er wird von
+    der Gegenseite gesetzt und kostet nichts. Wer „image/jpeg" schreibt und
+    eine HTML- oder SVG-Datei schickt, hätte damit eine Datei im Bucket, die
+    ein Browser als Markup ausführt. Deshalb entscheidet die Signatur:
+    JPEG ``FF D8 FF``, PNG ``89 50 4E 47 0D 0A 1A 0A``, WebP ``RIFF....WEBP``.
+    """
+    if content.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if content.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if content[:4] == b"RIFF" and content[8:12] == b"WEBP":
+        return "image/webp"
+    return None
 
 
 class TaskError(Exception):
@@ -455,18 +475,22 @@ class TasksService:
         Item→Task→Tenant-Kette (Wurzel 3) plus Objekt-Scope des Mitarbeiters
         (Wurzel 9). Typ/Größe serverseitig prüfen."""
         self._require_own_checklist_item(tenant_id, item_id, ctx)
-        ext = _PHOTO_MIME.get(content_type)
-        if not ext:
-            raise TaskError("Nur JPEG/PNG/WebP erlaubt.", status_code=415)
         if not content:
             raise TaskError("Bild ist leer.", status_code=413)
         if len(content) > _PHOTO_MAX_BYTES:
             raise TaskError("Bild ist zu groß (max. 20 MB).", status_code=413)
+        # Der echte Typ kommt aus den BYTES, nicht aus dem Header des Clients
+        # (Wurzel 8). Gespeichert wird ausschließlich, was wirklich ein Bild ist;
+        # der mitgeschickte Header muss dazu passen, sonst 415.
+        echt = _bild_typ(content)
+        if echt is None or (content_type and content_type not in _PHOTO_MIME):
+            raise TaskError("Nur JPEG/PNG/WebP erlaubt.", status_code=415)
+        ext = _PHOTO_MIME[echt]
         name = secrets.token_hex(8)
         path = f"{tenant_id}/{item_id}/{name}.{ext}"
         try:
             self._db().storage.from_(_TASK_PHOTO_BUCKET).upload(
-                path, content, {"content-type": content_type}
+                path, content, {"content-type": echt}
             )
         except Exception as exc:  # noqa: BLE001 — Storage-Fehler einheitlich als 502
             log.warning("checklist_photo_upload_failed", item_id=item_id, error=str(exc))
@@ -516,6 +540,39 @@ class TasksService:
             },
         )
         log.info("substitution_requested", task_id=req.task_id, by=user_id)
+        # Wer einspringen KOENNTE, erfaehrt es jetzt (0415). Der Empfaengerkreis
+        # ist derselbe, aus dem eine Zuweisung schoepfen darf
+        # (`moegliche_zustaendige`: Capability + Objekt-Freigabe) — nur ohne den
+        # Anfragenden selbst. „An alle im Tenant" waere geraten und schickte der
+        # Buchhaltung Reinigungsanfragen.
+        #
+        # Der Aufruf steht NACH dem Insert und in einem eigenen Nebenpfad: die
+        # Anfrage ist der Zustand, die Meldung ihr Beiwerk — ein Mailproblem
+        # darf die Anfrage nicht kippen (Wurzel 5).
+        aufgabe = (
+            self._db()
+            .table("tasks")
+            .select("title, property_id")
+            .eq("id", req.task_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or [{}]
+        prop = aufgabe[0].get("property_id")
+        melde_vertretung_gesucht(
+            self._db(),
+            tenant_id=tenant_id,
+            task_id=req.task_id,
+            empfaenger_ids=[
+                k.user_id
+                for k in self.moegliche_zustaendige(
+                    tenant_id, str(prop) if prop else None
+                )
+                if k.user_id != user_id
+            ],
+            titel=str(aufgabe[0].get("title") or ""),
+            property_id=str(prop) if prop else None,
+        )
         return Substitution(**{k: row.get(k) for k in Substitution.model_fields})
 
     def _offene_anfrage(self, tenant_id: str, substitution_id: str) -> dict[str, object]:
@@ -622,6 +679,13 @@ class TasksService:
             substitution_id=substitution_id, task_id=anfrage["task_id"],
             by=accepted_by,
         )
+        self._melde_vertretungs_antwort(
+            tenant_id,
+            str(anfrage["task_id"]),
+            str(anfrage.get("requested_by") or ""),
+            uebernommen=True,
+            durch=accepted_by,
+        )
         return Substitution(
             **{k: res.data[0].get(k) for k in Substitution.model_fields}
         )
@@ -671,8 +735,53 @@ class TasksService:
             "substitution_declined",
             substitution_id=substitution_id, by=declined_by,
         )
+        self._melde_vertretungs_antwort(
+            tenant_id,
+            str(anfrage["task_id"]),
+            str(anfrage.get("requested_by") or ""),
+            uebernommen=False,
+            durch=declined_by,
+        )
         return Substitution(
             **{k: res.data[0].get(k) for k in Substitution.model_fields}
+        )
+
+    def _melde_vertretungs_antwort(
+        self,
+        tenant_id: str,
+        task_id: str,
+        empfaenger_id: str,
+        *,
+        uebernommen: bool,
+        durch: str,
+    ) -> None:
+        """Die Entscheidung zurueck an den, der die Vertretung gesucht hat.
+
+        Ein Helfer fuer beide Wege (annehmen/ablehnen), damit der Text und der
+        Empfaenger nicht an zwei Stellen gepflegt werden. Bei der Ablehnung
+        geht KEIN Name mit — abgelehnt hat eine bestimmte Person, die Aussage
+        ist aber „es hat niemand uebernommen".
+        """
+        aufgabe = (
+            self._db()
+            .table("tasks")
+            .select("title, property_id")
+            .eq("id", task_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or [{}]
+        prop = aufgabe[0].get("property_id")
+        name = self._user_names(tenant_id, {durch}).get(durch) if uebernommen else None
+        melde_vertretung_entschieden(
+            self._db(),
+            tenant_id=tenant_id,
+            task_id=task_id,
+            empfaenger_id=empfaenger_id,
+            titel=str(aufgabe[0].get("title") or ""),
+            uebernommen=uebernommen,
+            durch_name=name,
+            property_id=str(prop) if prop else None,
         )
 
     def list_substitutions(
@@ -1101,13 +1210,42 @@ class TasksService:
         task = self._to_task(row[0])
         enriched = self._enrich(tenant_id, [task])[0]
         checklist = self._load_checklist(tenant_id, task_id)
+        an, ab = self._reservation_zeitraum(tenant_id, task.reservation_id)
         return TaskDetail(
             **enriched.model_dump(),
             checklist=checklist,
+            reservation_check_in=an,
+            reservation_check_out=ab,
             costs=self._load_costs(tenant_id, task_id, ctx),
             cost_currency=self._kosten_waehrung(tenant_id, task.property_id),
             resolution=self._load_resolution(tenant_id, task_id),
         )
+
+    def _reservation_zeitraum(
+        self, tenant_id: str, reservation_id: str | None
+    ) -> tuple[str | None, str | None]:
+        """An- und Abreisetag der Buchung einer Aufgabe.
+
+        NUR die zwei Kalendertage — kein Gastname, kein Betrag, kein Kanal
+        (§4.3). Für die ausführende Person ist „ab wann ist das Objekt frei"
+        die eigentliche Arbeitsangabe; sie stand ihr bisher nirgends.
+        Tenant-gescopt (Wurzel 3): die Buchung wird über tenant_id UND id
+        geladen, nicht über die id allein.
+        """
+        if not reservation_id:
+            return None, None
+        rows = (
+            self._db()
+            .table("reservations")
+            .select("check_in, check_out")
+            .eq("tenant_id", tenant_id)
+            .eq("id", reservation_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            return None, None
+        return rows[0].get("check_in"), rows[0].get("check_out")
 
     # --- Vierter Arbeitszustand: annehmen / anfangen (0360) ----------------
 
@@ -1534,6 +1672,11 @@ class TasksService:
                 requires_photo=bool(r.get("requires_photo")),
                 sort_order=int(r.get("sort_order") or 0),
                 photos=photos.get(r["id"], []),
+                photo_urls=[
+                    url
+                    for pfad in photos.get(r["id"], [])
+                    if (url := sign_task_photo(self._db(), pfad))
+                ],
                 done_at=r.get("done_at"),
                 done_by=r.get("done_by"),
                 done_by_name=namen.get(r.get("done_by") or ""),

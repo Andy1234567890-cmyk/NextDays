@@ -3973,7 +3973,8 @@
         "inspektion": "Kontroll",
         "vorlagen": "Ülesannete mallid",
         "planmaessig": "Plaanilised ülesanded",
-        "regelmaessig": "Korduvad ülesanded"
+        "regelmaessig": "Korduvad ülesanded",
+        "vertretungen": "Asendused"
       }
     },
     "propertyCalendar": {
@@ -4859,6 +4860,18 @@
       "gesetzt": "Vastutaja muudetud",
       "abgezogen": "Määrang tühistatud",
       "aktion": "Määra …"
+    },
+    "substitutions": {
+      "title": "Asendused",
+      "intro": "Kolleegide avatud taotlused. Kes üle võtab, saab ülesande endale.",
+      "loading": "Laadimine …",
+      "empty": "Avatud taotlusi pole",
+      "emptyHint": "Kui keegi otsib asendajat, ilmub see siia.",
+      "requestedBy": "Taotles {name}",
+      "take": "Võta üle",
+      "decline": "Keeldu",
+      "taken": "Ülesanne üle võetud",
+      "declined": "Taotlus tagasi lükatud"
     }
   },
   "objects": {
@@ -4944,7 +4957,14 @@
       "unlistOk": "Seos veebilehega eemaldatud.",
       "unlistErr": "Eemaldamine ebaõnnestus.",
       "menuVerkaufAus": "Lülita välja kõigis portaalides",
-      "menuVerkaufAn": "Paku uuesti kõigis portaalides"
+      "menuVerkaufAn": "Paku uuesti kõigis portaalides",
+      "menuArchive": "Arhiveeri",
+      "menuUnarchive": "Taasta aktiivseks",
+      "archiveConfirm": "Arhiveerida objekt „{title}“? Objekt kaob nimekirjast ja selle müük peatatakse tänasest kõikjal. Kehtivad broneeringud jäävad kehtima, kõik andmed säilivad.",
+      "unarchiveConfirm": "Taastada objekt „{title}“ aktiivseks? Objekt ilmub taas nimekirja ja müügikeeld tühistatakse.",
+      "archiveOk": "Objekt arhiveeritud.",
+      "unarchiveOk": "Objekt on taas aktiivne.",
+      "archiveErr": "Arhiveerimine ebaõnnestus."
     },
     "messagingForm": {
       "title": "Sõnumite kohatäitjad",
@@ -6561,6 +6581,8 @@
     "allChannels": "All channels",
     "connectedStatus": "Connected",
     "notConnectedStatus": "Pole ühendatud",
+    "statusBroken": "Vigane seos",
+    "repairHint": "Kuulutus on portaalis seotud, kuid sihtkohaga, mida seal ei ole. Saadavus edastatakse, hinnad mitte. Katkesta ühendus ja ühenda uuesti, et seos taastada.",
     "addChannel": "Add channel",
     "searchChannel": "Otsi kanalit …",
     "noResults": "Ühtegi kanalit ei leitud.",
@@ -6679,7 +6701,21 @@
         "approved": "Kinnitatud",
         "rejected": "Tagasi lükatud"
       }
-    }
+    },
+    "csvTitle": "Impordi failist broneeringud enne ühendamist",
+    "csvText": "Portaal edastab liidese kaudu vaid broneeringud ühendamise päevast alates. Varasemad viibimised saad oma portaalikonto ekspordist ja laadid need siia üles.",
+    "csvDownloadTemplate": "Laadi mall alla",
+    "csvUpload": "Laadi fail üles",
+    "csvHint": "Laadi fail üles sellisel kujul, nagu saad selle portaalist (.xls, .xlsx või .csv). Enne importimist näed, millised objektid ja mitu broneeringut tuvastati. Tühistatud broneeringud jäetakse välja, juba olemasolevad tuvastatakse ja neid ei lisata topelt.",
+    "csvResult": "Imporditud {imported} broneeringut {total}-st.",
+    "csvSkipped": "{count, plural, one {# rida jäeti vahele (juba olemas või objekt teadmata)} other {# rida jäeti vahele (juba olemas või objekt teadmata)}}",
+    "csvNothingUsable": "Failis ei ole ühtegi ülevõetavat broneeringut — kõik read on tühistatud või neil puudub loetav kuupäev.",
+    "csvPreview": "{count} broneeringut tuvastatud, saabumised {from} kuni {to}. Veel ei ole midagi imporditud.",
+    "csvPreviewProperties": "Failis olevad objektid — need nimed peavad vastama sinu objektide nimedele, vastasel juhul jäetakse read välja:",
+    "csvPreviewNoRef": "{count, plural, one {# broneering broneerimisnumbrita} other {# broneeringut broneerimisnumbrita}} — nende tuvastamine toimub objekti, ajavahemiku ja nime järgi.",
+    "csvConfirm": "Impordi {count} broneeringut",
+    "csvCancel": "Loobu",
+    "csvFailed": "{count, plural, one {# real viga} other {# real vigu}}:"
   },
   "calendarSync": {
     "title": "Kalendri import/eksport",
@@ -7411,6 +7447,7 @@
       "propertyCount": "Objektide arv",
       "oneMore": "Üks objekt rohkem",
       "commissionPerChannel": "Komisjonitasu broneerimiskanali kohta",
+      "commissionExternalCap": "kõige rohkem {betrag} kuus",
       "included": "Mis on hinnas",
       "totalMonthly": "Kokku kuus"
     },
@@ -7496,7 +7533,7 @@
       "loadFailed": "Vahendustasusid ei õnnestunud laadida: {error}",
       "cardRate": "Booking, Airbnb jt: {rate} % teie avaldatud objektide broneeringukäibest. Kuu vahendustasud arveldatakse järgmise kuu 1. kuupäeval ja lisatakse teie järgmisele tellimusarvele.",
       "cardRateCapped": "Booking, Airbnb jt: {rate} % teie avaldatud objektide broneeringukäibest. Kuu vahendustasud arveldatakse järgmise kuu 1. kuupäeval ja lisatakse teie järgmisele tellimusarvele, kuni {cap} kuus.",
-      "cardOtherChannels": "Teie enda veebilehe kaudu tehtud broneeringud jäävad vahendustasuta. myBestDays turuplatsi kaudu tehtud broneeringutelt võetakse 8 %, mis peetakse kinni kohe makse laekumisel — need ei kajastu siin.",
+      "cardOtherChannels": "Teie enda veebilehe kaudu tehtud broneeringud jäävad vahendustasuta. myBestDays turuplatsi kaudu tehtud broneeringutelt võetakse {satz}, mis peetakse kinni kohe makse laekumisel — need ei kajastu siin.",
       "pending": "Avatud ({count, plural, one {# broneering} other {# broneeringut}}): ",
       "pendingCapHint": " — arveldatakse kuulimiit {cap}",
       "noPending": "Praegu avatud vahendustasusid ei ole.",
@@ -7504,9 +7541,9 @@
       "backToBilling": "Arveldus",
       "monthsTitle": "Vahendustasud kuude kaupa",
       "monthsIntro": "See aruanne näitab üksnes väliste portaalide (Booking, Airbnb jt) kaudu tehtud broneeringute vahendustasusid. Kuu vahendustasud arveldatakse järgmise kuu 1. kuupäeval ja lisatakse teie järgmisele tellimusarvele — tasu võetakse koos selle arvega.",
-      "monthsChannels": "myBestDays turuplatsi kaudu tehtud broneeringud kannavad 8 % vahendustasu, mis peetakse kinni juba makse laekumisel; seetõttu neid siin loendis ei ole. Teie enda veebilehe kaudu tehtud broneeringud jäävad vahendustasuta.",
+      "monthsChannels": "myBestDays turuplatsi kaudu tehtud broneeringud kannavad vahendustasu {satz}, mis peetakse kinni juba makse laekumisel; seetõttu neid siin loendis ei ole. Teie enda veebilehe kaudu tehtud broneeringud jäävad vahendustasuta.",
       "monthsLoading": "Vahendustasude laadimine …",
-      "monthsEmpty": "Väliste portaalide kaudu ei ole seni vahendustasusid tekkinud. Teie enda veebilehe kaudu tehtud broneeringud on püsivalt vahendustasuta. myBestDays turuplatsi broneeringud kannavad 8 % vahendustasu — see peetakse kinni kohe makse laekumisel ega kajastu siin.",
+      "monthsEmpty": "Väliste portaalide kaudu ei ole seni vahendustasusid tekkinud. Teie enda veebilehe kaudu tehtud broneeringud on püsivalt vahendustasuta. myBestDays turuplatsi broneeringud kannavad vahendustasu {satz} — see peetakse kinni kohe makse laekumisel ega kajastu siin.",
       "colMonth": "Kuu",
       "colBookings": "Broneeringud",
       "colGross": "Broneeringukäive",
@@ -7639,7 +7676,7 @@
     "stars": "4,5 tärni",
     "reviews": "· 921 arvustust",
     "trial30": "Proovi 30 päeva tasuta",
-    "bookingValue": "+0,5 % broneeringu väärtusest",
+    "bookingValue": "+{satz} broneeringu väärtusest",
     "seePrices": "Vaata hindu",
     "downloadApp": "Laadi rakendus alla",
     "copyright": "© 2026 myNextDays. Kõik õigused kaitstud.",

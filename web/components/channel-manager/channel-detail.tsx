@@ -23,10 +23,13 @@ import type {
   PropertyMap,
 } from "@/lib/channex";
 import {
+  type CsvImportResult,
   activateChannel,
   airbnbHistorieLaufStand,
   airbnbHistorieLaufStarten,
   disconnectChannel,
+  getCsvTemplate,
+  importBookingsCsv,
   runChannelAction,
   disconnectPortalConnection,
   setConnectionActive,
@@ -35,6 +38,11 @@ import {
   uebernehmeAirbnbListings,
 } from "@/lib/channex";
 import { formatCurrency } from "@/lib/currency";
+import {
+  type ExportBefund,
+  csvAlsBefund,
+  portalExportNachCsv,
+} from "@/lib/portal-export";
 import { channelLabelLoose } from "@/lib/channel-logos";
 import { toast } from "sonner";
 
@@ -638,6 +646,17 @@ function MappingRow({
           >
             {statusLabel}
           </span>
+        ) : row.needs_repair ? (
+          /* Zuordnung ist da, das Portal kann sie nur nicht auflösen. Das ist
+             KEIN „nicht verbunden": es sieht dort verbunden aus, aber Preise
+             kommen nie an. Eigene Farbe und eigener Text, sonst hält der
+             Betrieb es für ein bloßes „noch nicht eingerichtet". */
+          <span
+            className="inline-block rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+            title={t("repairHint")}
+          >
+            {t("statusBroken")}
+          </span>
         ) : (
           <span className="inline-block rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
             {t("notConnectedStatus")}
@@ -743,6 +762,16 @@ function BookingsSection({
   // und danach per Realtime — die Seite darf jederzeit verlassen und wieder
   // geöffnet werden, der Balken steht dann am aktuellen Stand.
   const [lauf, setLauf] = useState<HistorieLauf | null>(null);
+  // Ergebnis des Datei-Imports. Getrennt von `message`, weil es mehrzeilig ist
+  // (importiert/übersprungen/Fehlerliste) — eine Zeile könnte 50 Fehlerzeilen
+  // nicht zeigen, und genau die braucht man zum Nachbessern der Datei.
+  const [csvResult, setCsvResult] = useState<CsvImportResult | null>(null);
+  const [csvError, setCsvError] = useState<string | null>(null);
+  // Vorschau der eingelesenen Datei. Der Import läuft ERST auf Bestätigung:
+  // die Objektnamen des Portals müssen exakt auf unsere Objekttitel passen,
+  // sonst überspringt der Import die Zeilen still. Diese Liste ist die einzige
+  // Stelle, an der das VOR dem Schreiben auffällt.
+  const [vorschau, setVorschau] = useState<ExportBefund | null>(null);
 
   useEffect(() => {
     if (!istAirbnb) return;
@@ -868,6 +897,95 @@ function BookingsSection({
     });
   }
 
+  // Der Datei-Weg für alles, was VOR dem Verbinden liegt und über keine
+  // Schnittstelle mehr zu holen ist.
+  //
+  // WARUM ER HIER STEHEN MUSS: Booking.coms Reservations-API liefert
+  // ausdrücklich nur Abreisen ab morgen, und der Aggregator kennt
+  // ausschliesslich, was er selbst als Revision gesehen hat — beides beginnt
+  // erst am Tag des Verbindens. Für einen Betrieb, der mitten im Jahr
+  // wechselt, ist der Extranet-Export des Portals die EINZIGE Quelle für die
+  // Monate davor (live gemessen: früheste über die Schnittstelle erreichbare
+  // Anreise war der 03.08.2026, obwohl der Export ab Januar Buchungen führt).
+  //
+  // Der Import lag bisher nur im Onboarding-Assistenten. Bestandskunden
+  // durchlaufen den nicht mehr — für sie war der Weg damit unerreichbar,
+  // obwohl gerade sie ihn brauchen (der Wechsel liegt bei ihnen hinter dem
+  // Onboarding). Deshalb steht er jetzt zusätzlich hier, an den Buchungen des
+  // Portals, wo man ihn sucht.
+  function downloadTemplate() {
+    setCsvError(null);
+    setMessage(null);
+    startTransition(async () => {
+      const res = await getCsvTemplate();
+      if (!res.ok) {
+        setCsvError(res.error);
+        return;
+      }
+      const blob = new Blob([res.data], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "buchungen-vorlage.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  // Datei einlesen und PRÜFEN — noch nichts schreiben.
+  //
+  // Nimmt den Portal-Export so, wie das Portal ihn verschickt: Booking.com
+  // liefert echtes altes Binär-Excel (.xls, CDFV2). Eine reine CSV-Annahme
+  // hätte den Betrieb gezwungen, die Datei vorher selbst umzuspeichern — und
+  // im Datei-Dialog war sie ausgegraut, also gar nicht wählbar.
+  function onExportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    // Auswahl leeren: sonst löst dieselbe Datei kein `change` mehr aus, und ein
+    // zweiter Versuch nach einer Korrektur bliebe wirkungslos.
+    e.target.value = "";
+    if (!file) return;
+    setCsvError(null);
+    setCsvResult(null);
+    setVorschau(null);
+    setMessage(null);
+    startTransition(async () => {
+      try {
+        // Eine fertige CSV geht direkt durch (Vorlagen-Weg); Excel wird hier
+        // umgewandelt.
+        const istCsv = /\.csv$/i.test(file.name);
+        const befund = istCsv
+          ? csvAlsBefund(await file.text())
+          : portalExportNachCsv(await file.arrayBuffer(), { jahr: 0 });
+        if (befund.uebernommen === 0) {
+          setCsvError(t("csvNothingUsable"));
+          return;
+        }
+        setVorschau(befund);
+      } catch (err) {
+        // Die echte Meldung zeigen, nicht „Fehler beim Lesen": bei einer
+        // falschen Datei steht dort, WELCHE Spalte fehlt.
+        setCsvError(err instanceof Error ? err.message : String(err));
+      }
+    });
+  }
+
+  // Erst jetzt schreiben — nach Sicht auf die Objektnamen.
+  function importBestaetigen() {
+    if (!vorschau) return;
+    setCsvError(null);
+    startTransition(async () => {
+      const res = await importBookingsCsv(vorschau.csv);
+      if (!res.ok) {
+        setCsvError(res.error);
+        return;
+      }
+      setCsvResult(res.data);
+      setVorschau(null);
+      // Angelegte Buchungen sollen sofort in der Liste unten stehen.
+      if (res.data.imported > 0) router.refresh();
+    });
+  }
+
   const laeuft = lauf?.status === "laeuft";
   // Objekte sind die Fortschritts-Einheit: „12 von 18" ist die einzige Zahl,
   // die vor dem Lauf feststeht. Wie viele Buchungen kommen, weiß niemand
@@ -921,6 +1039,156 @@ function BookingsSection({
           />
           {pending ? t("syncing") : t("syncBookings")}
         </Button>
+      </div>
+
+      {/* Datei-Import für die Zeit VOR dem Verbinden. Zwei Schritte, weil der
+          Betrieb dazwischen selbst arbeitet: Vorlage holen, Export des Portals
+          hineinschreiben, hochladen. */}
+      <div className="flex flex-col gap-2 rounded-2xl border border-border p-3">
+        <span className="text-sm font-medium">{t("csvTitle")}</span>
+        <p className="text-xs text-muted-foreground">{t("csvText")}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={downloadTemplate}
+            disabled={pending || laeuft}
+          >
+            <Icon icon="ph:download-simple" className="size-4" />
+            {t("csvDownloadTemplate")}
+          </Button>
+          <label
+            className={
+              "inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium " +
+              (pending || laeuft
+                ? "cursor-not-allowed opacity-50"
+                : "cursor-pointer hover:bg-secondary/50")
+            }
+          >
+            <Icon icon="ph:upload-simple" className="size-4" />
+            {t("csvUpload")}
+            {/* .xls MUSS dabei sein: Booking.com verschickt den Export als
+                altes Binär-Excel. Ohne diese Endung ist die Datei im
+                Datei-Dialog ausgegraut und gar nicht wählbar. */}
+            <input
+              type="file"
+              accept=".xls,.xlsx,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+              onChange={onExportFile}
+              disabled={pending || laeuft}
+              className="hidden"
+            />
+          </label>
+        </div>
+        <p className="text-xs text-muted-foreground">{t("csvHint")}</p>
+
+        {/* Vorschau VOR dem Schreiben. Der Import trifft den Objekttitel exakt
+            — passt ein Portal-Name nicht, fällt die Zeile still aus. Hier ist
+            die einzige Stelle, an der das vorher auffällt. */}
+        {vorschau && (
+          <div className="flex flex-col gap-2 rounded-(--radius) border border-accent/40 bg-accent/5 p-3 text-sm">
+            <span className="font-medium">
+              {t("csvPreview", {
+                count: vorschau.uebernommen,
+                from: vorschau.von,
+                to: vorschau.bis,
+              })}
+            </span>
+            {Object.keys(vorschau.ausgelassen).length > 0 && (
+              <ul className="list-disc pl-5 text-xs text-muted-foreground">
+                {Object.entries(vorschau.ausgelassen).map(([grund, n]) => (
+                  <li key={grund}>
+                    {n} × {grund}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium">
+                {t("csvPreviewProperties")}
+              </span>
+              {/* Die Namen SO, wie sie in der Datei stehen. Wer hier einen
+                  Namen sieht, der nicht seinem Objekttitel entspricht, weiss
+                  vor dem Import, dass diese Zeilen ausfallen. */}
+              <ul className="max-h-40 overflow-y-auto text-xs text-muted-foreground">
+                {Object.entries(vorschau.objekte)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([name, n]) => (
+                    <li key={name} className="flex justify-between gap-3">
+                      <span className="truncate">{name}</span>
+                      <span className="shrink-0 tabular-nums">{n}</span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+            {vorschau.ohneNummer > 0 && (
+              <span className="text-xs text-amber-700 dark:text-amber-500">
+                {t("csvPreviewNoRef", { count: vorschau.ohneNummer })}
+              </span>
+            )}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <Button
+                type="button"
+                size="sm"
+                onClick={importBestaetigen}
+                disabled={pending}
+              >
+                <Icon
+                  icon={pending ? "ph:spinner" : "ph:check"}
+                  className={"size-4 " + (pending ? "animate-spin" : "")}
+                />
+                {t("csvConfirm", { count: vorschau.uebernommen })}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setVorschau(null)}
+                disabled={pending}
+              >
+                {t("csvCancel")}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {csvError && (
+          <p className="rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {csvError}
+          </p>
+        )}
+
+        {/* Teil-Import ist der Normalfall: alle drei Zahlen stehen da, damit
+            „importiert" nicht wie „alles drin" aussieht (Wurzel 4). */}
+        {csvResult && (
+          <div className="flex flex-col gap-2 rounded-(--radius) border border-border p-3 text-sm">
+            <span className="font-medium">
+              {t("csvResult", {
+                imported: csvResult.imported,
+                total: csvResult.total_rows,
+              })}
+            </span>
+            {csvResult.skipped > 0 && (
+              <span className="text-muted-foreground">
+                {t("csvSkipped", { count: csvResult.skipped })}
+              </span>
+            )}
+            {csvResult.failed > 0 && (
+              <div className="flex flex-col gap-1">
+                <span className="text-destructive">
+                  {t("csvFailed", { count: csvResult.failed })}
+                </span>
+                {/* Zeilennummer + Grund je Fehlerzeile — ohne sie weiss der
+                    Betrieb nicht, WAS er in der Datei nachbessern soll. */}
+                <ul className="max-h-40 list-disc overflow-y-auto pl-5 text-xs text-muted-foreground">
+                  {csvResult.errors.slice(0, 50).map((err) => (
+                    <li key={err}>{err}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Fortschritt des Historien-Imports: Prozent, Objektzähler und wie viele

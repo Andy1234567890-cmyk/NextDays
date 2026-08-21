@@ -3971,7 +3971,8 @@
         "inspektion": "Pārbaude",
         "vorlagen": "Uzdevumu veidnes",
         "planmaessig": "Ieplānotie uzdevumi",
-        "regelmaessig": "Regulārie uzdevumi"
+        "regelmaessig": "Regulārie uzdevumi",
+        "vertretungen": "Aizvietošana"
       }
     },
     "propertyCalendar": {
@@ -4857,6 +4858,18 @@
       "gesetzt": "Atbildīgais mainīts",
       "abgezogen": "Piešķīrums atsaukts",
       "aktion": "Piešķirt …"
+    },
+    "substitutions": {
+      "title": "Aizvietošana",
+      "intro": "Kolēģu atvērtie pieprasījumi. Kas pārņem, tam tiek piešķirts uzdevums.",
+      "loading": "Notiek ielāde …",
+      "empty": "Nav atvērtu pieprasījumu",
+      "emptyHint": "Ja kāds meklē aizvietotāju, tas parādīsies šeit.",
+      "requestedBy": "Pieprasīja {name}",
+      "take": "Pārņemt",
+      "decline": "Atteikt",
+      "taken": "Uzdevums pārņemts",
+      "declined": "Pieprasījums atteikts"
     }
   },
   "objects": {
@@ -4942,7 +4955,14 @@
       "unlistOk": "Saite ar tīmekļa vietni noņemta.",
       "unlistErr": "Atsaistīšana neizdevās.",
       "menuVerkaufAus": "Izslēgt visos portālos",
-      "menuVerkaufAn": "Atkal piedāvāt visos portālos"
+      "menuVerkaufAn": "Atkal piedāvāt visos portālos",
+      "menuArchive": "Arhivēt",
+      "menuUnarchive": "Atjaunot aktīvajos",
+      "archiveConfirm": "Vai arhivēt objektu “{title}”? Objekts pazudīs no saraksta un no šodienas netiks pārdots nekur. Esošās rezervācijas paliks spēkā, visi dati tiks saglabāti.",
+      "unarchiveConfirm": "Vai atjaunot objektu “{title}” aktīvajos? Objekts atkal parādīsies sarakstā un pārdošanas bloķējums tiks atcelts.",
+      "archiveOk": "Objekts arhivēts.",
+      "unarchiveOk": "Objekts atkal ir aktīvs.",
+      "archiveErr": "Arhivēšana neizdevās."
     },
     "messagingForm": {
       "title": "Ziņu vietturi",
@@ -6559,6 +6579,8 @@
     "allChannels": "All channels",
     "connectedStatus": "Connected",
     "notConnectedStatus": "Nav savienots",
+    "statusBroken": "Kļūdaina piesaiste",
+    "repairHint": "Sludinājums portālā ir piesaistīts, taču mērķim, kāda tur nav. Pieejamība tiek nodota, cenas nē. Atvienojiet un pievienojiet atkārtoti, lai atjaunotu piesaisti.",
     "addChannel": "Add channel",
     "searchChannel": "Meklēt kanālu …",
     "noResults": "Neviens kanāls nav atrasts.",
@@ -6677,7 +6699,21 @@
         "approved": "Apstiprināts",
         "rejected": "Atteikts"
       }
-    }
+    },
+    "csvTitle": "Importēt no faila rezervācijas no laika pirms savienošanas",
+    "csvText": "Portāls pa saskarni piegādā tikai rezervācijas no savienošanas dienas. Vecākas uzturēšanās iegūsti no sava portāla konta eksporta un augšupielādē tās šeit.",
+    "csvDownloadTemplate": "Lejupielādēt veidni",
+    "csvUpload": "Augšupielādēt failu",
+    "csvHint": "Augšupielādē failu tādā veidā, kādā to saņem no portāla (.xls, .xlsx vai .csv). Pirms importēšanas redzēsi, kuri objekti un cik rezervāciju tika atpazīti. Atceltas rezervācijas tiek izlaistas, jau esošas tiek atpazītas un netiek izveidotas dubultā.",
+    "csvResult": "Importētas {imported} no {total} rezervācijām.",
+    "csvSkipped": "{count, plural, zero {# rindas izlaistas (jau eksistē vai objekts nav zināms)} one {# rinda izlaista (jau eksistē vai objekts nav zināms)} other {# rindas izlaistas (jau eksistē vai objekts nav zināms)}}",
+    "csvNothingUsable": "Failā nav nevienas pārņemamas rezervācijas — visas rindas ir atceltas vai tām nav nolasāma datuma.",
+    "csvPreview": "Atpazīta {count} rezervācijas, ierašanās no {from} līdz {to}. Pagaidām nekas nav importēts.",
+    "csvPreviewProperties": "Failā esošie objekti — šiem nosaukumiem jāsakrīt ar tavu objektu nosaukumiem, citādi rindas tiek izlaistas:",
+    "csvPreviewNoRef": "{count, plural, zero {# rezervāciju bez rezervācijas numura} one {# rezervācija bez rezervācijas numura} other {# rezervācijas bez rezervācijas numura}} — tās tiek atpazītas pēc objekta, laika perioda un vārda.",
+    "csvConfirm": "Importēt {count} rezervācijas",
+    "csvCancel": "Atcelt",
+    "csvFailed": "{count, plural, zero {# rindās kļūdas} one {# rindā kļūda} other {# rindās kļūdas}}:"
   },
   "calendarSync": {
     "title": "Kalendāra imports/eksports",
@@ -7409,6 +7445,7 @@
       "propertyCount": "Objektu skaits",
       "oneMore": "Par vienu objektu vairāk",
       "commissionPerChannel": "Komisija par rezervāciju kanālu",
+      "commissionExternalCap": "ne vairāk kā {betrag} mēnesī",
       "included": "Kas ir iekļauts",
       "totalMonthly": "Kopā mēnesī"
     },
@@ -7494,7 +7531,7 @@
       "loadFailed": "Neizdevās ielādēt komisijas: {error}",
       "cardRate": "Booking, Airbnb un citi: {rate} % no Jūsu publicēto objektu rezervāciju apgrozījuma. Mēneša komisijas tiek norēķinātas nākamā mēneša 1. datumā un pievienotas Jūsu nākamajam abonementa rēķinam.",
       "cardRateCapped": "Booking, Airbnb un citi: {rate} % no Jūsu publicēto objektu rezervāciju apgrozījuma. Mēneša komisijas tiek norēķinātas nākamā mēneša 1. datumā un pievienotas Jūsu nākamajam abonementa rēķinam, ne vairāk kā {cap} mēnesī.",
-      "cardOtherChannels": "Rezervācijas caur Jūsu paša tīmekļa vietni paliek bez komisijas. Rezervācijām caur myBestDays tirgus laukumu tiek piemēroti 8 %, kas tiek ieturēti tieši maksājuma saņemšanas brīdī — tie šeit nav iekļauti.",
+      "cardOtherChannels": "Rezervācijas caur Jūsu paša tīmekļa vietni paliek bez komisijas. Rezervācijām caur myBestDays tirgus laukumu tiek piemēroti {satz}, kas tiek ieturēti tieši maksājuma saņemšanas brīdī — tie šeit nav iekļauti.",
       "pending": "Neapmaksāts ({count, plural, zero {# rezervāciju} one {# rezervācija} other {# rezervācijas}}): ",
       "pendingCapHint": " — tiek izrakstīts rēķins par mēneša ierobežojumu {cap}",
       "noPending": "Pašlaik nav neapmaksātu komisiju.",
@@ -7502,9 +7539,9 @@
       "backToBilling": "Norēķini",
       "monthsTitle": "Komisijas pa mēnešiem",
       "monthsIntro": "Šis pārskats rāda tikai komisijas no rezervācijām caur ārējiem portāliem (Booking, Airbnb un citi). Mēneša komisijas tiek norēķinātas nākamā mēneša 1. datumā un pievienotas Jūsu nākamajam abonementa rēķinam — norakstīšana notiek kopā ar šo rēķinu.",
-      "monthsChannels": "Rezervācijas caur myBestDays tirgus laukumu ietver 8 % komisiju, kas jau tiek ieturēta maksājuma saņemšanas brīdī; tāpēc tās šajā sarakstā neparādās. Rezervācijas caur Jūsu paša tīmekļa vietni paliek bez komisijas.",
+      "monthsChannels": "Rezervācijas caur myBestDays tirgus laukumu ietver komisiju {satz}, kas jau tiek ieturēta maksājuma saņemšanas brīdī; tāpēc tās šajā sarakstā neparādās. Rezervācijas caur Jūsu paša tīmekļa vietni paliek bez komisijas.",
       "monthsLoading": "Notiek komisiju ielāde …",
-      "monthsEmpty": "Caur ārējiem portāliem komisijas līdz šim nav radušās. Rezervācijas caur Jūsu paša tīmekļa vietni pastāvīgi paliek bez komisijas. Tirgus laukuma rezervācijas caur myBestDays ietver 8 % komisiju — tā tiek ieturēta tieši maksājuma saņemšanas brīdī un šeit neparādās.",
+      "monthsEmpty": "Caur ārējiem portāliem komisijas līdz šim nav radušās. Rezervācijas caur Jūsu paša tīmekļa vietni pastāvīgi paliek bez komisijas. Tirgus laukuma rezervācijas caur myBestDays ietver komisiju {satz} — tā tiek ieturēta tieši maksājuma saņemšanas brīdī un šeit neparādās.",
       "colMonth": "Mēnesis",
       "colBookings": "Rezervācijas",
       "colGross": "Rezervāciju apgrozījums",
@@ -7637,7 +7674,7 @@
     "stars": "4,5 zvaigznes",
     "reviews": "· 921 atsauksme",
     "trial30": "Izmēģiniet 30 dienas bez maksas",
-    "bookingValue": "+0,5 % no rezervācijas vērtības",
+    "bookingValue": "+{satz} no rezervācijas vērtības",
     "seePrices": "Skatīt cenas",
     "downloadApp": "Lejupielādēt lietotni",
     "copyright": "© 2026 myNextDays. Visas tiesības aizsargātas.",

@@ -576,6 +576,206 @@ def _cleaner() -> AuthContext:
     return AuthContext(user_id="u1", tenant_id="T", role="cleaner")
 
 
+def test_vertretung_benachrichtigt_die_moeglichen_vertreter(monkeypatch) -> None:
+    """Eine Anfrage erreichte bis 0415 NIEMANDEN — nur eine Log-Zeile.
+
+    Der Empfaengerkreis ist derselbe, aus dem eine Zuweisung schoepfen darf
+    (Capability + Objekt-Freigabe), minus dem Anfragenden.
+    """
+    gesendet: dict[str, object] = {}
+
+    def _fake(_db, **kwargs):
+        gesendet.update(kwargs)
+
+    monkeypatch.setattr(
+        "src.features.tasks.service.melde_vertretung_gesucht", _fake
+    )
+    db = _FakeDB(
+        _tables(
+            staff_property_assignments=[
+                {"tenant_id": "T", "user_id": "u1", "property_id": "p1"},
+                # Zweite Reinigungskraft MIT Freigabe fuer dasselbe Objekt —
+                # nur sie kann die Aufgabe ueberhaupt uebernehmen.
+                {"tenant_id": "T", "user_id": "u2", "property_id": "p1"},
+            ]
+        )
+    )
+    svc = TasksService(client=db)
+    svc.request_substitution(
+        "T", "u1", SubstitutionRequest(task_id="t1", note="krank")
+    )
+    assert gesendet["task_id"] == "t1"
+    empfaenger = gesendet["empfaenger_ids"]
+    assert "u1" not in empfaenger  # man vertritt sich nicht selbst
+    assert "u2" in empfaenger
+    # Wer fuer das Objekt NICHT freigegeben ist, wird nicht gefragt: er koennte
+    # die Aufgabe ohnehin nicht uebernehmen (Wurzel 9).
+    assert gesendet["titel"] == "Endreinigung"
+
+
+def test_vertretung_antwort_geht_an_den_anfragenden(monkeypatch) -> None:
+    """Ohne diese Meldung weiss der Anfragende nicht, ob er noch fahren muss."""
+    antworten: list[dict[str, object]] = []
+
+    def _fake(_db, **kwargs):
+        antworten.append(kwargs)
+
+    monkeypatch.setattr(
+        "src.features.tasks.service.melde_vertretung_entschieden", _fake
+    )
+    db = _FakeDB(
+        _tables(
+            task_substitutions=[
+                {
+                    "id": "s1", "tenant_id": "T", "task_id": "t1",
+                    "requested_by": "u1", "status": "requested", "note": None,
+                    "accepted_by": None,
+                }
+            ],
+            staff_property_assignments=[
+                {"tenant_id": "T", "user_id": "u1", "property_id": "p1"},
+                {"tenant_id": "T", "user_id": "u2", "property_id": "p1"},
+            ],
+        )
+    )
+    svc = TasksService(client=db)
+    svc.accept_substitution("T", "s1", "u2", _admin())
+    assert antworten[-1]["empfaenger_id"] == "u1"
+    assert antworten[-1]["uebernommen"] is True
+    # Der Name des Vertreters steht in der Uebernahme-Meldung.
+    assert antworten[-1]["durch_name"] == "Zweite"
+
+
+def test_vertretung_ablehnung_nennt_keinen_namen(monkeypatch) -> None:
+    """Eine Absage ist keine Anschuldigung — kein Name in der Meldung."""
+    antworten: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        "src.features.tasks.service.melde_vertretung_entschieden",
+        lambda _db, **kwargs: antworten.append(kwargs),
+    )
+    db = _FakeDB(
+        _tables(
+            task_substitutions=[
+                {
+                    "id": "s1", "tenant_id": "T", "task_id": "t1",
+                    "requested_by": "u1", "status": "requested", "note": None,
+                    "accepted_by": None,
+                }
+            ]
+        )
+    )
+    svc = TasksService(client=db)
+    svc.decline_substitution("T", "s1", "u2", _admin())
+    assert antworten[-1]["uebernommen"] is False
+    assert antworten[-1]["durch_name"] is None
+
+
+def test_detail_traegt_buchungsbezug_ohne_gastdaten() -> None:
+    """Das Detail nennt Referenz UND Zeitraum der Buchung — aber nichts sonst.
+
+    Für die ausführende Person ist „ab wann ist das Objekt frei" die
+    Arbeitsangabe; sie fehlte im Detail komplett, obwohl die Liste daneben die
+    Referenz schon zeigte (TaskDetail erbte von der schmalen Task-Basis und
+    verwarf `reservation_ref` stillschweigend).
+    """
+    db = _FakeDB(
+        _tables(
+            tasks=[
+                {
+                    "id": "t1", "tenant_id": "T", "title": "Endreinigung",
+                    "status": "open", "property_id": "p1", "assignee_id": "u1",
+                    "reservation_id": "r1",
+                }
+            ],
+            reservations=[
+                {
+                    "id": "r1", "tenant_id": "T", "external_ref": "5318730188",
+                    "check_in": "2026-08-18", "check_out": "2026-08-22",
+                    "guest_name": "Gun Heiboe", "total_amount": "4905.00",
+                }
+            ],
+        )
+    )
+    svc = TasksService(client=db)
+    d = svc.get_detail("T", "t1", _cleaner())
+    assert d.reservation_ref == "5318730188"
+    assert d.reservation_check_in == "2026-08-18"
+    assert d.reservation_check_out == "2026-08-22"
+    # §4.3: kein Gastname, kein Betrag — auch nicht als Nebenprodukt.
+    werte = d.model_dump()
+    assert "guest_name" not in werte
+    assert "total_amount" not in werte
+
+
+def test_detail_ohne_buchung_erfindet_keinen_zeitraum() -> None:
+    """Wurzel 4: keine Buchung heißt `None`, nicht ein plausibler Tag."""
+    db = _FakeDB(_tables())
+    svc = TasksService(client=db)
+    d = svc.get_detail("T", "t1", _admin())
+    assert d.reservation_ref is None
+    assert d.reservation_check_in is None
+    assert d.reservation_check_out is None
+
+
+def test_detail_liest_die_buchung_nur_im_eigenen_mandanten() -> None:
+    """Wurzel 3: die Buchung wird über tenant_id UND id geladen."""
+    db = _FakeDB(
+        _tables(
+            tasks=[
+                {
+                    "id": "t1", "tenant_id": "T", "title": "X", "status": "open",
+                    "property_id": "p1", "reservation_id": "r-fremd",
+                }
+            ],
+            reservations=[
+                {
+                    "id": "r-fremd", "tenant_id": "FREMD", "external_ref": "999",
+                    "check_in": "2026-08-18", "check_out": "2026-08-22",
+                }
+            ],
+        )
+    )
+    svc = TasksService(client=db)
+    d = svc.get_detail("T", "t1", _admin())
+    assert d.reservation_check_in is None
+    assert d.reservation_ref is None
+
+
+def test_upload_prueft_die_bytes_nicht_den_header() -> None:
+    """Wurzel 8: `content_type` ist eine Behauptung des Clients.
+
+    Vorher entschied allein der Header, ob eine Datei „ein Bild" ist. Damit
+    landete alles im Bucket, was `image/jpeg` behauptete — auch Markup, das ein
+    Browser später ausführt.
+    """
+    db = _FakeDB(_tables(checklist_items=[
+        {"id": "c1", "task_id": "t1", "label": "Bad", "done": False,
+         "requires_photo": True, "sort_order": 0},
+    ]))
+    svc = TasksService(client=db)
+    with pytest.raises(TaskError) as exc:
+        svc.upload_checklist_photo(
+            "T", "c1", b"<svg onload=alert(1)>", "image/jpeg", _cleaner()
+        )
+    assert exc.value.status_code == 415
+
+
+def test_upload_nimmt_echtes_jpeg_an() -> None:
+    db = _FakeDB(_tables(checklist_items=[
+        {"id": "c1", "task_id": "t1", "label": "Bad", "done": False,
+         "requires_photo": True, "sort_order": 0},
+    ]))
+    svc = TasksService(client=db)
+    db.storage = MagicMock()  # type: ignore[attr-defined]
+    foto_id = svc.upload_checklist_photo(
+        "T", "c1", b"\xff\xd8\xff\xe0" + b"0" * 64, "image/jpeg", _cleaner()
+    )
+    assert foto_id
+    assert len(db.tables["checklist_photos"]) == 1
+    # Der Pfad trägt die Endung des ECHTEN Typs, nicht die des Headers.
+    assert db.tables["checklist_photos"][0]["storage_path"].endswith(".jpg")
+
+
 def test_status_annehmen_und_anfangen() -> None:
     db = _FakeDB(_tables())
     svc = TasksService(client=db)

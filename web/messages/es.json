@@ -3973,7 +3973,8 @@
         "inspektion": "Inspección",
         "vorlagen": "Plantillas de tareas",
         "planmaessig": "Tareas planificadas",
-        "regelmaessig": "Tareas recurrentes"
+        "regelmaessig": "Tareas recurrentes",
+        "vertretungen": "Sustituciones"
       }
     },
     "propertyCalendar": {
@@ -4859,6 +4860,18 @@
       "gesetzt": "Responsable cambiado",
       "abgezogen": "Asignación retirada",
       "aktion": "Asignar a …"
+    },
+    "substitutions": {
+      "title": "Sustituciones",
+      "intro": "Solicitudes abiertas de compañeros. Quien la asuma recibe la tarea.",
+      "loading": "Cargando …",
+      "empty": "No hay solicitudes abiertas",
+      "emptyHint": "Si alguien busca sustituto, aparecerá aquí.",
+      "requestedBy": "Solicitado por {name}",
+      "take": "Asumir",
+      "decline": "Rechazar",
+      "taken": "Tarea asumida",
+      "declined": "Solicitud rechazada"
     }
   },
   "objects": {
@@ -4944,7 +4957,14 @@
       "unlistOk": "Vínculo con el sitio web eliminado.",
       "unlistErr": "No se pudo desvincular.",
       "menuVerkaufAus": "Desactivar en todos los portales",
-      "menuVerkaufAn": "Volver a ofrecer en todos los portales"
+      "menuVerkaufAn": "Volver a ofrecer en todos los portales",
+      "menuArchive": "Archivar",
+      "menuUnarchive": "Reactivar",
+      "archiveConfirm": "¿Archivar «{title}»? El alojamiento desaparecerá de la lista y a partir de hoy dejará de venderse en todas partes. Las reservas existentes siguen siendo válidas y todos los datos se conservan.",
+      "unarchiveConfirm": "¿Devolver «{title}» a la lista activa? El alojamiento volverá a aparecer en la lista y se levantará el bloqueo de ventas.",
+      "archiveOk": "Alojamiento archivado.",
+      "unarchiveOk": "El alojamiento vuelve a estar activo.",
+      "archiveErr": "Error al archivar."
     },
     "messagingForm": {
       "title": "Marcadores de mensajes",
@@ -6561,6 +6581,8 @@
     "allChannels": "All channels",
     "connectedStatus": "Connected",
     "notConnectedStatus": "No conectado",
+    "statusBroken": "Asignación errónea",
+    "repairHint": "El anuncio está asignado en el portal, pero a un destino que allí no existe. La disponibilidad se transmite, los precios no. Desconectar y volver a conectar restablece la asignación.",
     "addChannel": "Add channel",
     "searchChannel": "Buscar canal …",
     "noResults": "No se encontró ningún canal.",
@@ -6679,7 +6701,21 @@
         "approved": "Aprobado",
         "rejected": "Rechazado"
       }
-    }
+    },
+    "csvTitle": "Importar reservas anteriores a la conexión mediante archivo",
+    "csvText": "El portal solo entrega reservas a partir del día de la conexión a través de la interfaz. Las estancias anteriores las obtienes de la exportación de tu cuenta del portal y las subes aquí.",
+    "csvDownloadTemplate": "Descargar plantilla",
+    "csvUpload": "Subir archivo",
+    "csvHint": "Sube el archivo tal como lo recibes del portal (.xls, .xlsx o .csv). Antes de importar verás qué alojamientos y cuántas reservas se han reconocido. Las reservas canceladas se omiten, y las que ya existen se reconocen y no se duplican.",
+    "csvNothingUsable": "El archivo no contiene ninguna reserva utilizable: todas las filas están canceladas o no tienen una fecha legible.",
+    "csvPreview": "{count} reservas reconocidas, entradas del {from} al {to}. Aún no se ha importado nada.",
+    "csvPreviewProperties": "Alojamientos en el archivo: estos nombres deben coincidir con los nombres de tus alojamientos, de lo contrario las filas se omiten:",
+    "csvPreviewNoRef": "{count, plural, one {# reserva sin número de reserva} other {# reservas sin número de reserva}} — estas se reconocen por alojamiento, periodo y nombre.",
+    "csvConfirm": "Importar {count} reservas",
+    "csvCancel": "Cancelar",
+    "csvResult": "{imported} de {total} reservas importadas.",
+    "csvSkipped": "{count, plural, one {# fila omitida (ya existe o el alojamiento es desconocido)} other {# filas omitidas (ya existen o el alojamiento es desconocido)}}",
+    "csvFailed": "{count, plural, one {# fila con error} other {# filas con errores}}:"
   },
   "calendarSync": {
     "title": "Importar/exportar calendario",
@@ -7411,6 +7447,7 @@
       "propertyCount": "Número de alojamientos",
       "oneMore": "Un alojamiento más",
       "commissionPerChannel": "Comisión por canal de reservas",
+      "commissionExternalCap": "como máximo {betrag} al mes",
       "included": "Qué está incluido",
       "totalMonthly": "Total mensual"
     },
@@ -7496,7 +7533,7 @@
       "loadFailed": "No se han podido cargar las comisiones: {error}",
       "cardRate": "Booking, Airbnb y similares: {rate} % de los ingresos por reservas de sus alojamientos publicados. Las comisiones de un mes se facturan el día 1 del mes siguiente y se añaden a su próxima factura de suscripción.",
       "cardRateCapped": "Booking, Airbnb y similares: {rate} % de los ingresos por reservas de sus alojamientos publicados. Las comisiones de un mes se facturan el día 1 del mes siguiente y se añaden a su próxima factura de suscripción, con un máximo de {cap} al mes.",
-      "cardOtherChannels": "Las reservas a través de su propia web siguen sin comisión. Las reservas a través del mercado myBestDays tienen un 8 %, que se retiene directamente al recibir el pago; no se incluyen aquí.",
+      "cardOtherChannels": "Las reservas a través de su propia web siguen sin comisión. Las reservas a través del mercado myBestDays tienen un {satz}, que se retiene directamente al recibir el pago; no se incluyen aquí.",
       "pending": "Pendientes ({count, plural, one {# reserva} other {# reservas}}): ",
       "pendingCapHint": " — se facturará el límite mensual de {cap}",
       "noPending": "Actualmente no hay comisiones pendientes.",
@@ -7504,9 +7541,9 @@
       "backToBilling": "Facturación",
       "monthsTitle": "Comisiones por mes",
       "monthsIntro": "Este resumen muestra exclusivamente las comisiones de reservas realizadas a través de portales externos (Booking, Airbnb y similares). Las comisiones de un mes se facturan el día 1 del mes siguiente y se añaden a su próxima factura de suscripción; el cobro se produce junto con esa factura.",
-      "monthsChannels": "Las reservas a través del mercado myBestDays llevan un 8 % de comisión que ya se retiene al recibir el pago, por lo que no aparecen en esta lista. Las reservas a través de su propia web siguen sin comisión.",
+      "monthsChannels": "Las reservas a través del mercado myBestDays llevan un {satz} de comisión que ya se retiene al recibir el pago, por lo que no aparecen en esta lista. Las reservas a través de su propia web siguen sin comisión.",
       "monthsLoading": "Cargando comisiones …",
-      "monthsEmpty": "Todavía no se han generado comisiones a través de portales externos. Las reservas a través de su propia web permanecen siempre sin comisión. Las reservas del mercado myBestDays llevan un 8 % de comisión, que se retiene directamente al recibir el pago y no aparece aquí.",
+      "monthsEmpty": "Todavía no se han generado comisiones a través de portales externos. Las reservas a través de su propia web permanecen siempre sin comisión. Las reservas del mercado myBestDays llevan un {satz} de comisión, que se retiene directamente al recibir el pago y no aparece aquí.",
       "colMonth": "Mes",
       "colBookings": "Reservas",
       "colGross": "Ingresos por reservas",
@@ -7639,7 +7676,7 @@
     "stars": "4,5 estrellas",
     "reviews": "· 921 opiniones",
     "trial30": "Probar 30 días gratis",
-    "bookingValue": "+0,5 % de valor de reserva",
+    "bookingValue": "+{satz} de valor de reserva",
     "seePrices": "Ver precios",
     "downloadApp": "Descargar la app",
     "copyright": "© 2026 myNextDays. Todos los derechos reservados.",

@@ -7,6 +7,7 @@ auth.account_service (PROJECT.md §2 — Business-Logik im Backend).
 from __future__ import annotations
 
 import secrets
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from supabase import Client
@@ -27,6 +28,7 @@ from src.jobs.queue import (
 )
 
 from .airbnb_nachziehen import airbnb_direkt_nachziehen
+from .archiv import ArchivMixin, channex_abraeumen
 from .errors import PropertyError
 from .gebaeude import GebaeudeMixin
 from .gebuehren import (
@@ -37,12 +39,12 @@ from .gebuehren import (
 from .objektwaehrung import waehrung_auf_rate_plans
 from .portalfreigabe import darf_zu_den_portalen
 from .preise_kopieren import PreiseKopierenMixin
+from .projektion import _derive_channels, _row
 from .rooms import RoomsMixin
 from .schemas import (
     ChannelState,
     PhotoUpdateRequest,
     PropertyCategoryOut,
-    PropertyChannels,
     PropertyCreate,
     PropertyListResponse,
     PropertyPhoto,
@@ -112,7 +114,8 @@ def _sniff_image_ext(content: bytes) -> str | None:
 
 
 class PropertiesService(
-    GebaeudeMixin, RoomsMixin, SteuernMixin, GebuehrenMixin, PreiseKopierenMixin
+    ArchivMixin, GebaeudeMixin, RoomsMixin, SteuernMixin, GebuehrenMixin,
+    PreiseKopierenMixin,
 ):
     slice_name = "properties"
 
@@ -204,12 +207,20 @@ class PropertiesService(
             )
         return row.data[0]["category_slug"]
 
-    def list(self, ctx: AuthContext) -> PropertyListResponse:
+    def list(
+        self, ctx: AuthContext, *, archiviert: bool = False
+    ) -> PropertyListResponse:
+        """Objekte des Mandanten; `archiviert=True` NUR das Archiv (archiv.py)."""
         tenant_id = self._require_tenant(ctx)
         query = (
             self._db.table("properties")
             .select("*")
             .eq("tenant_id", tenant_id)
+        )
+        query = (
+            query.not_.is_("archived_at", "null")
+            if archiviert
+            else query.is_("archived_at", "null")
         )
         # Owner-Scope (§4.2): ein Eigentümer sieht NUR seine zugeordneten Objekte,
         # nicht die aller anderen Eigentümer desselben Mandanten. Der Service läuft
@@ -1014,8 +1025,6 @@ class PropertiesService(
         Ohne Preis kann es nicht an die Buchungsportale übertragen werden (422,
         kein Fallback). Idempotent — erneutes Veröffentlichen aktualisiert nur.
         """
-        from datetime import UTC, datetime, timedelta
-
         tenant_id = self._require_tenant(ctx)
         # Veröffentlichen erfordert die abgeschlossene Zahlungs-Einrichtung (Stripe
         # charges_enabled) — erst ab jetzt kann ein Gast buchen/zahlen, also muss
@@ -1181,6 +1190,9 @@ class PropertiesService(
 
     def delete(self, ctx: AuthContext, property_id: str) -> None:
         tenant_id = self._require_tenant(ctx)
+        # Buchungen blocken das Löschen (FK RESTRICT) — mit Ausweg statt mit
+        # rohem Datenbankfehler antworten (archiv.py).
+        self.loeschschutz_pruefen(tenant_id, property_id)
         res = (
             self._db.table("properties")
             .delete()
@@ -1191,24 +1203,28 @@ class PropertiesService(
         if not res.data:
             raise PropertyError("Objekt nicht gefunden.", status_code=404)
 
-        # Channel-Manager-Mapping mitführen: ohne reale Unterkunft ist die
-        # Channex-Verknüpfung gegenstandslos und würde sonst als Karteileiche
-        # im Channel-Manager weiterleben. Soft-Delete (deleted_at), damit der
-        # Sync sie nicht erneut anfasst.
-        from datetime import UTC, datetime
-
-        self._db.table("channex_property_map").update(
-            {"deleted_at": datetime.now(UTC).isoformat(), "sync_enabled": False}
-        ).eq("tenant_id", tenant_id).eq("property_id", property_id).is_(
-            "deleted_at", "null"
-        ).execute()
+        # Das Objekt AUCH BEI CHANNEX entfernen: Kanäle abbauen, Property dort
+        # löschen, Mapping schließen (archiv.channex_abraeumen).
+        #
+        # Vorher stand hier nur der lokale Soft-Delete des Mappings. Die
+        # Property blieb damit bei Channex stehen und wurde WEITER ABGERECHNET —
+        # ein gelöschtes Objekt kostete monatlich Geld. Schlimmer: ein noch
+        # aktiver Kanal verkaufte weiter, während von uns keine Pushes mehr
+        # kamen (Blindverkauf → Overbooking auf ein Objekt, das es nicht mehr
+        # gibt). „Karteileiche im Channel-Manager" war die Untertreibung.
+        befund = channex_abraeumen(self._db, tenant_id, property_id)
 
         # Objektzahl nach dem Löschen ans Abo melden (Wurzel 1: Gegenzustand). Nur
         # wenn das gelöschte Objekt abrechenbar (active) war — sonst keine Änderung.
         if (res.data[0] or {}).get("status") == "active":
             self._sync_subscription_quantity(tenant_id)
 
-        log.info("property_deleted", tenant_id=tenant_id, property_id=property_id)
+        log.info(
+            "property_deleted",
+            tenant_id=tenant_id,
+            property_id=property_id,
+            channex=befund,
+        )
 
     def duplicate(self, ctx: AuthContext, property_id: str) -> PropertyResponse:
         """Objekt duplizieren (Lodgify „Kopieren"): legt eine EIGENSTÄNDIGE
@@ -1427,62 +1443,6 @@ class PropertiesService(
         ).eq("tenant_id", tenant_id).execute()
         log.info("accessibility_photo_deleted", photo_id=photo_id)
 
-
-
-def _local_channel_state(status: str | None, flag: bool | None) -> ChannelState:
-    """Zustand eines LOKALEN Kanals (Website/Plattform) ableiten. Diese Kanäle
-    können keinen Sync-Fehler haben (kein externer Push) → nur active/paused.
-    Sichtbar (active) nur, wenn status='active' UND das Kanal-Flag an ist; sonst
-    paused. Der Lebenszyklus (status) wird auf der Karte separat als Badge oben
-    gezeigt; hier zählt nur die pro-Kanal-Sichtbarkeit."""
-    if status == "active" and bool(flag):
-        return ChannelState.active
-    return ChannelState.paused
-
-
-def _marketplace_channel_state(
-    status: str | None, flag: bool | None, moderation: str | None
-) -> ChannelState:
-    """Zustand des EIGENEN Marktplatzes (myBestDays). Hängt zusätzlich an der
-    Freigabe des Betreibers (`moderation_status='approved'`, 0203) — dieselbe
-    Bedingung wie im öffentlichen `booking_engine.list_listings`. Ohne Freigabe
-    `pending`, nie `active`: das Objekt steht dort nicht. Live 11.08.2026: 17
-    gelistete Objekte trugen den grünen Punkt, der Marktplatz zeigte sie nie."""
-    if status != "active" or not bool(flag):
-        return ChannelState.paused
-    if moderation != "approved":
-        return ChannelState.pending
-    return ChannelState.active
-
-
-def _derive_channels(
-    r: dict, portals: ChannelState | None
-) -> PropertyChannels:
-    """Kanal-Zustände (Ebene B) für die drei Chips: Website aus dem lokalen Flag,
-    Plattform zusätzlich über die Marktplatz-Freigabe (0203), Portale aus dem
-    Channex/OTA-Aggregat (None → not_connected, kein erfundener Wert)."""
-    status = r.get("status")
-    return PropertyChannels(
-        website=_local_channel_state(status, r.get("listed_on_website")),
-        marketplace=_marketplace_channel_state(
-            status, r.get("listed_on_marketplace"), r.get("moderation_status")
-        ),
-        portals=portals or ChannelState.not_connected,
-    )
-
-
-def _row(r: dict) -> dict:
-    """DB-Zeile in das Response-Schema überführen (None-Listen/-Objekte glätten)."""
-    return {
-        **r,
-        "id": str(r["id"]),
-        "tenant_id": str(r["tenant_id"]),
-        "amenities": r.get("amenities") or [],
-        "photos": r.get("photos") or [],
-        "type_attributes": r.get("type_attributes") or {},
-        "created_at": str(r["created_at"]) if r.get("created_at") else None,
-        "updated_at": str(r["updated_at"]) if r.get("updated_at") else None,
-    }
 
 
 def _photo_row(r: dict) -> dict:

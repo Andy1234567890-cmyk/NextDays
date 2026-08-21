@@ -201,7 +201,13 @@ class ChecklistItem(BaseModel):
     done: bool = False
     requires_photo: bool = False
     sort_order: int = 0
+    # Storage-PFADE (die Wahrheit im privaten Bucket) …
     photos: list[str] = Field(default_factory=list)
+    # … und dieselben Bilder als kurzlebig SIGNIERTE URLs. Zwei Felder, weil
+    # beides gebraucht wird: der Pfad ist der stabile Verweis (Abschluss-Prüfung,
+    # Löschen), die URL ist das, was eine Oberfläche anzeigen kann. Ohne sie sah
+    # die ausführende Person ihren eigenen Nachweis nie — nur einen Zähler.
+    photo_urls: list[str] = Field(default_factory=list)
     # Spur hinter dem Haken (0360): WANN und von WEM. Beim Reinigungsnachweis
     # ist genau das die Frage — vor Ort abgehakt oder nachträglich im Büro.
     # Altbestand trägt beides `None`: vor 0360 gab es keinen Weg zum Abhaken.
@@ -339,10 +345,23 @@ class RuleItem(BaseModel):
     sort_order: int = 0
 
 
-class TaskDetail(Task):
-    property_title: str | None = None
-    assignee_name: str | None = None
+class TaskDetail(TaskListItem):
+    """Das Detail einer Aufgabe.
+
+    Erbt von `TaskListItem` und nicht von `Task`: `get_detail` baut die Antwort
+    ohnehin aus der angereicherten Zeile, aber die schmalere Basis hat
+    `reservation_ref` und die Checklisten-Zähler stillschweigend VERWORFEN —
+    die Detailansicht wusste deshalb nichts von der Buchung, obwohl die Liste
+    daneben ihre Referenz zeigte.
+    """
+
     checklist: list[ChecklistItem] = Field(default_factory=list)
+    # Der Zeitraum der Buchung, an der die Aufgabe hängt. NUR Kalendertage —
+    # kein Gastname, kein Betrag (§4.3): „der Gast reist am 22. ab" ist genau
+    # die Information, wegen der eine Reinigung terminiert wird, und sie fehlte
+    # der ausführenden Person komplett.
+    reservation_check_in: str | None = None
+    reservation_check_out: str | None = None
     # Auslagen (0360). Für staff/cleaner NUR die selbst erfassten: seine eigene
     # Auslage einzutragen ist etwas anderes, als die Auslagen des Betriebs zu
     # lesen (§4.3). Der Dienst filtert, nicht die Oberfläche.

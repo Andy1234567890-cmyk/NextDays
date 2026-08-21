@@ -157,7 +157,8 @@
   },
   "direkt": {
    "frage": "Krijg ik een eigen boekingspagina zonder portaalcommissie?",
-   "antwort": "Ja. Bij elk account horen een eigen boekingsportaal, een widget voor je bestaande website en een websitebouwer met eigen domein. Directe boekingen kosten 0,5 % in plaats van de 15–18 % commissie van de grote portalen, lopen op dezelfde agenda en dezelfde prijzen — en het geld gaat direct naar jouw rekening."
+   "antwort": "Ja. Bij elk account horen een eigen boekingsportaal, een widget voor je bestaande website en een websitebouwer met eigen domein. Directe boekingen kosten {satz} in plaats van de 15–18 % commissie van de grote portalen, lopen op dezelfde agenda en dezelfde prijzen — en het geld gaat direct naar jouw rekening.",
+   "satzUnbekannt": "aanzienlijk minder"
   },
   "marktplatz": {
    "frage": "Wat is myBestDays?",
@@ -261,7 +262,8 @@
    },
    "direkt": {
     "title": "Directe boekingen",
-    "items": "Eigen boekingsportaal, boekingswidget, websitebouwer, eigen domein, 0,5 % in plaats van 15–18 % OTA-commissie"
+    "items": "Eigen boekingsportaal, boekingswidget, websitebouwer, eigen domein, {satz} in plaats van 15–18 % OTA-commissie",
+    "satzUnbekannt": "aanzienlijk minder"
    },
    "preise": {
     "title": "Prijzen & omzet",
@@ -525,9 +527,9 @@
    "direktText": "Via je eigen website of je boekingsformulier. Daarvan nemen wij niets. Alleen de kosten van je betaalprovider blijven over.",
    "direktWert": "0 %",
    "portaleTitel": "De gast komt van Booking, Airbnb & co.",
-   "portaleText": "Wij rekenen 0,5 % van de boekingswaarde, één keer per maand op je factuur. Wat het portaal zelf inhoudt, staat daar los van.",
+   "portaleText": "Wij rekenen {satz} van de boekingswaarde, één keer per maand op je factuur. Wat het portaal zelf inhoudt, staat daar los van.",
    "marktplatzTitel": "De gast komt via myBestDays",
-   "marktplatzText": "Onze eigen marktplaats. Hier vinden gasten je die je nog niet kennen. Wij brengen de boeking, innen het geld en betalen het aan je uit — daarvoor houden wij 8 %. Verdere kosten zijn er niet.",
+   "marktplatzText": "Onze eigen marktplaats. Hier vinden gasten je die je nog niet kennen. Wij brengen de boeking, innen het geld en betalen het aan je uit — daarvoor houden wij {satz}. Verdere kosten zijn er niet.",
    "deckel": "En er zit een plafond op: voor boekingen van portalen betaal je nooit meer dan {betrag} per maand."
   },
   "module": {
@@ -766,7 +768,8 @@
     "gast": "Gast & geld",
     "betrieb": "Bedrijfsvoering"
    },
-   "reiterHeading": "Wat zit er precies achter?"
+   "reiterHeading": "Wat zit er precies achter?",
+   "satzUnbekannt": "aanzienlijk minder"
   },
   "uebersicht": {
    "metaTitel": "Functies — alles voor verhuur en hotel | myNextDays",
@@ -954,7 +957,7 @@
      "punkte": {
       "a": "Per kanaal apart aan te zetten",
       "b": "Één kalender voor alles",
-      "c": "8 % all-in in plaats van portaalcommissie"
+      "c": "{satz} all-in in plaats van portaalcommissie"
      }
     }
    },

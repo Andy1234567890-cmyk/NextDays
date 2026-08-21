@@ -157,7 +157,8 @@
   },
   "direkt": {
    "frage": "Do I get my own booking page without portal commission?",
-   "antwort": "Yes. Every account includes its own booking portal, a widget for your existing website and a website builder with your own domain. Direct bookings cost 0.5 % instead of the 15–18 % commission of the large portals, run on the same calendar and the same prices — and the money goes straight to your account."
+   "antwort": "Yes. Every account includes its own booking portal, a widget for your existing website and a website builder with your own domain. Direct bookings cost {satz} instead of the 15–18 % commission of the large portals, run on the same calendar and the same prices — and the money goes straight to your account.",
+   "satzUnbekannt": "far less"
   },
   "marktplatz": {
    "frage": "What is myBestDays?",
@@ -261,7 +262,8 @@
    },
    "direkt": {
     "title": "Direct booking",
-    "items": "Your own booking portal, booking widget, website builder, own domain, 0.5% instead of 15–18% OTA commission"
+    "items": "Your own booking portal, booking widget, website builder, own domain, {satz} instead of 15–18% OTA commission",
+    "satzUnbekannt": "far less"
    },
    "preise": {
     "title": "Rates & revenue",
@@ -525,9 +527,9 @@
    "direktText": "Through your own website or booking form. We take nothing from that. Only your payment provider's fee remains.",
    "direktWert": "0 %",
    "portaleTitel": "The guest comes from Booking, Airbnb & co.",
-   "portaleText": "We charge 0.5 % of the booking value, once a month on your invoice. Whatever the channel itself keeps is separate from this.",
+   "portaleText": "We charge {satz} of the booking value, once a month on your invoice. Whatever the channel itself keeps is separate from this.",
    "marktplatzTitel": "The guest comes via myBestDays",
-   "marktplatzText": "Our own marketplace. Here guests find you who do not know you yet. We bring the booking, collect the money and pay it out to you — for that we keep 8 %. There are no further costs.",
+   "marktplatzText": "Our own marketplace. Here guests find you who do not know you yet. We bring the booking, collect the money and pay it out to you — for that we keep {satz}. There are no further costs.",
    "deckel": "And there is a cap: for bookings from channels you never pay more than {betrag} a month."
   },
   "module": {
@@ -606,7 +608,8 @@
     "gast": "Guests & money",
     "betrieb": "Operations"
    },
-   "reiterHeading": "What exactly is behind it?"
+   "reiterHeading": "What exactly is behind it?",
+   "satzUnbekannt": "far less"
   },
   "uebersicht": {
    "metaTitel": "Features — everything for rentals and hotels | myNextDays",
@@ -794,7 +797,7 @@
      "punkte": {
       "a": "Switchable per channel",
       "b": "One calendar for everything",
-      "c": "8 % all-in instead of channel commission"
+      "c": "{satz} all-in instead of channel commission"
      }
     }
    },

@@ -3971,7 +3971,8 @@
         "inspektion": "Inspecție",
         "vorlagen": "Șabloane de sarcini",
         "planmaessig": "Sarcini planificate",
-        "regelmaessig": "Sarcini recurente"
+        "regelmaessig": "Sarcini recurente",
+        "vertretungen": "Înlocuiri"
       }
     },
     "propertyCalendar": {
@@ -4857,6 +4858,18 @@
       "gesetzt": "Responsabil modificat",
       "abgezogen": "Atribuire retrasă",
       "aktion": "Atribuie lui …"
+    },
+    "substitutions": {
+      "title": "Înlocuiri",
+      "intro": "Solicitări deschise de la colegi. Cine preia primește sarcina.",
+      "loading": "Se încarcă …",
+      "empty": "Nicio solicitare deschisă",
+      "emptyHint": "Dacă cineva caută un înlocuitor, apare aici.",
+      "requestedBy": "Solicitat de {name}",
+      "take": "Preia",
+      "decline": "Respinge",
+      "taken": "Sarcină preluată",
+      "declined": "Solicitare respinsă"
     }
   },
   "objects": {
@@ -4942,7 +4955,14 @@
       "unlistOk": "Conexiunea cu site-ul a fost anulată.",
       "unlistErr": "Deconectarea a eșuat.",
       "menuVerkaufAus": "Dezactivează pe toate portalurile",
-      "menuVerkaufAn": "Oferă din nou pe toate portalurile"
+      "menuVerkaufAn": "Oferă din nou pe toate portalurile",
+      "menuArchive": "Arhivează",
+      "menuUnarchive": "Reactivează",
+      "archiveConfirm": "Arhivați proprietatea „{title}”? Proprietatea va fi eliminată din listă și, de astăzi, nu mai este vândută nicăieri. Rezervările existente rămân valabile, toate datele sunt păstrate.",
+      "unarchiveConfirm": "Readuceți proprietatea „{title}” în activitate? Proprietatea va apărea din nou în listă, iar blocarea vânzărilor este ridicată.",
+      "archiveOk": "Proprietate arhivată.",
+      "unarchiveOk": "Proprietatea este din nou activă.",
+      "archiveErr": "Arhivarea a eșuat."
     },
     "messagingForm": {
       "title": "Substituenți de mesaje",
@@ -6559,6 +6579,8 @@
     "allChannels": "All channels",
     "connectedStatus": "Connected",
     "notConnectedStatus": "Neconectat",
+    "statusBroken": "Asociere eronată",
+    "repairHint": "Anunțul este asociat la portal, dar cu o destinație care nu există acolo. Disponibilitatea este transmisă, prețurile nu. Deconectează și conectează din nou pentru a restabili asocierea.",
     "addChannel": "Add channel",
     "searchChannel": "Caută canal …",
     "noResults": "Nu a fost găsit niciun canal.",
@@ -6677,7 +6699,21 @@
         "approved": "Aprobat",
         "rejected": "Respins"
       }
-    }
+    },
+    "csvTitle": "Import din fișier al rezervărilor de dinaintea conectării",
+    "csvText": "Portalul transmite prin interfață doar rezervările de la data conectării. Șederile mai vechi le obții din exportul contului tău de portal și le încarci aici.",
+    "csvDownloadTemplate": "Descarcă șablonul",
+    "csvUpload": "Încarcă fișierul",
+    "csvHint": "Încarcă fișierul așa cum îl primești de la portal (.xls, .xlsx sau .csv). Înainte de import vezi ce proprietăți și câte rezervări au fost recunoscute. Rezervările anulate sunt omise, iar cele deja existente sunt recunoscute și nu sunt adăugate a doua oară.",
+    "csvNothingUsable": "În fișier nu există nicio rezervare care poate fi preluată — toate rândurile sunt anulate sau au o dată ilizibilă.",
+    "csvPreview": "{count} rezervări recunoscute, sosiri din {from} până în {to}. Nu a fost importat încă nimic.",
+    "csvPreviewProperties": "Proprietăți din fișier — aceste denumiri trebuie să corespundă titlurilor proprietăților tale, altfel rândurile sunt omise:",
+    "csvPreviewNoRef": "{count, plural, one {# rezervare fără număr de rezervare} few {# rezervări fără număr de rezervare} other {# de rezervări fără număr de rezervare}} — pentru acestea recunoașterea se face după proprietate, perioadă și nume.",
+    "csvConfirm": "Importă {count} rezervări",
+    "csvCancel": "Anulează",
+    "csvResult": "Importate {imported} din {total} rezervări.",
+    "csvSkipped": "{count, plural, one {# rând omis (deja existent sau proprietate necunoscută)} few {# rânduri omise (deja existente sau proprietate necunoscută)} other {# de rânduri omise (deja existente sau proprietate necunoscută)}}",
+    "csvFailed": "{count, plural, one {# rând cu eroare} few {# rânduri cu eroare} other {# de rânduri cu eroare}}:"
   },
   "calendarSync": {
     "title": "Import/export calendar",
@@ -7409,6 +7445,7 @@
       "propertyCount": "Numărul de proprietăți",
       "oneMore": "O proprietate în plus",
       "commissionPerChannel": "Comision pe canal de rezervări",
+      "commissionExternalCap": "cel mult {betrag} pe lună",
       "included": "Ce este inclus",
       "totalMonthly": "Total lunar"
     },
@@ -7494,7 +7531,7 @@
       "loadFailed": "Comisioanele nu au putut fi încărcate: {error}",
       "cardRate": "Booking, Airbnb și altele: {rate} % din veniturile din rezervări ale proprietăților dumneavoastră publicate. Comisioanele unei luni se facturează pe 1 ale lunii următoare și se adaugă la următoarea factură de abonament.",
       "cardRateCapped": "Booking, Airbnb și altele: {rate} % din veniturile din rezervări ale proprietăților dumneavoastră publicate. Comisioanele unei luni se facturează pe 1 ale lunii următoare și se adaugă la următoarea factură de abonament, cel mult {cap} pe lună.",
-      "cardOtherChannels": "Rezervările prin propriul dumneavoastră site rămân fără comision. Pentru rezervările prin marketplace-ul myBestDays se aplică 8 %, reținuți direct la încasarea plății — aceștia nu sunt incluși aici.",
+      "cardOtherChannels": "Rezervările prin propriul dumneavoastră site rămân fără comision. Pentru rezervările prin marketplace-ul myBestDays se aplică {satz}, reținuți direct la încasarea plății — aceștia nu sunt incluși aici.",
       "pending": "În așteptare ({count, plural, one {# rezervare} few {# rezervări} other {# de rezervări}}): ",
       "pendingCapHint": " — se facturează plafonul lunar de {cap}",
       "noPending": "În prezent nu există comisioane în așteptare.",
@@ -7502,9 +7539,9 @@
       "backToBilling": "Facturare",
       "monthsTitle": "Comisioane pe lună",
       "monthsIntro": "Această situație afișează exclusiv comisioanele din rezervările prin portaluri externe (Booking, Airbnb și altele). Comisioanele unei luni se facturează pe 1 ale lunii următoare și se adaugă la următoarea factură de abonament — încasarea are loc împreună cu această factură.",
-      "monthsChannels": "Rezervările prin marketplace-ul myBestDays au un comision de 8 %, reținut deja la încasarea plății; de aceea nu apar în această listă. Rezervările prin propriul dumneavoastră site rămân fără comision.",
+      "monthsChannels": "Rezervările prin marketplace-ul myBestDays au un comision de {satz}, reținut deja la încasarea plății; de aceea nu apar în această listă. Rezervările prin propriul dumneavoastră site rămân fără comision.",
       "monthsLoading": "Se încarcă comisioanele …",
-      "monthsEmpty": "Până acum nu au rezultat comisioane prin portaluri externe. Rezervările prin propriul dumneavoastră site rămân permanent fără comision. Rezervările din marketplace-ul myBestDays au un comision de 8 % — acesta este reținut direct la încasarea plății și nu apare aici.",
+      "monthsEmpty": "Până acum nu au rezultat comisioane prin portaluri externe. Rezervările prin propriul dumneavoastră site rămân permanent fără comision. Rezervările din marketplace-ul myBestDays au un comision de {satz} — acesta este reținut direct la încasarea plății și nu apare aici.",
       "colMonth": "Luna",
       "colBookings": "Rezervări",
       "colGross": "Venituri din rezervări",
@@ -7637,7 +7674,7 @@
     "stars": "4,5 stele",
     "reviews": "· 921 recenzii",
     "trial30": "Încearcă gratuit 30 de zile",
-    "bookingValue": "+0,5 % din valoarea rezervării",
+    "bookingValue": "+{satz} din valoarea rezervării",
     "seePrices": "Vezi prețurile",
     "downloadApp": "Descarcă aplicația",
     "copyright": "© 2026 myNextDays. Toate drepturile rezervate.",

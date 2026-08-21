@@ -60,11 +60,21 @@ export const WETTBEWERB: readonly Wettbewerber[] = [
     rechnung: "281 € mit Jahresbindung",
     quelle: "lodgify.com/de/preise",
   },
+  // Sirvoy nachrecherchiert am 21.08.2026 (die übrigen Einträge stehen auf dem
+  // Stand vom 18.08.2026, siehe WETTBEWERB_STAND). Vorher stand hier nur die
+  // Zimmerstaffel (109 €) — das ist der Preis für EIN Objekt mit 20 Zimmern und
+  // damit der falsche Vergleichsfall: verglichen werden 20 GETRENNTE Objekte
+  // (VERGLEICH_OBJEKTE). Sirvoy Pro verbindet je Buchungskanal genau ein Objekt
+  // („All Sirvoy Pro accounts can connect one property per booking channel");
+  // jedes weitere kostet das Add-on „Multiple property connection" 20 €/Monat
+  // („Each MPC increases the number of properties you can connect to by one
+  // across all channels") — belegt unter
+  // help.sirvoy.com/manage-multiple-channel-properties-in-one-sirvoy-account.
   {
     name: "Sirvoy",
     tarif: "Pro",
-    preis20: 109,
-    rechnung: "Zimmerpreis-Rechner: 1 Zimmer 44 €, 20 Zimmer 109 €",
+    preis20: 489,
+    rechnung: "Pro 20 Zimmer 109 € + 19 × 20 € Add-on „channel-connected property“",
     quelle: "sirvoy.com/pricing",
   },
   {

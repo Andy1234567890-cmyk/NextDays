@@ -12,15 +12,19 @@ die NICHT mehr im Feed sind, werden aus den ical-Sperren dieses Feeds entfernt.
 """
 from __future__ import annotations
 
-import ipaddress
 import secrets
-import socket
 from datetime import date
 from urllib.parse import urlparse
 
 import httpx
 from supabase import Client
 
+from src.core.ausgehende_url import (
+    UnsichereUrl,
+    host_header,
+    host_pinnen,
+    oeffentliche_ips,
+)
 from src.core.dates import merge_day_ranges
 from src.core.einheiten import AVAILABILITY_CONFLICT, je_einheit
 from src.core.logging import get_logger
@@ -43,75 +47,25 @@ class ExternalCalendarError(Exception):
         self.status_code = status_code
 
 
-# CGNAT (RFC 6598) — von is_private NICHT erfasst, aber intern erreichbar.
-_CGNAT = ipaddress.ip_network("100.64.0.0/10")
-
-
-def _assert_public_ip(raw_ip: str) -> None:
-    ip = ipaddress.ip_address(raw_ip)
-    # IPv4-mapped IPv6 (::ffff:169.254.169.254) entpacken, sonst umgeht ein
-    # Angreifer die v4-Checks über die v6-Schreibweise.
-    if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped is not None:
-        ip = ip.ipv4_mapped
-    non_public = any((
-        ip.is_private, ip.is_loopback, ip.is_link_local,
-        ip.is_reserved, ip.is_multicast, ip.is_unspecified,
-        ip.version == 4 and ip in _CGNAT,
-    ))
-    if non_public:
-        raise ExternalCalendarError(
-            "URL zeigt auf eine nicht-öffentliche Adresse.", status_code=422
-        )
-
-
 def _resolve_public(url: str) -> list[str]:
-    """SSRF-Schutz: nur http(s), Host auflösen und JEDE aufgelöste IP prüfen —
-    keine private/lokale/link-local/CGNAT/mapped-Adresse. Fail-closed (Wurzel 5):
-    im Zweifel ablehnen. Gibt die geprüften IPs zurück, damit `_fetch` sich auf
-    genau EINE davon pinnt und den Host nicht erneut auflöst (DNS-Rebinding)."""
-    parsed = urlparse(url)
-    if parsed.scheme not in ("http", "https"):
-        raise ExternalCalendarError("Nur http/https-URLs erlaubt.", status_code=422)
-    host = parsed.hostname
-    if not host:
-        raise ExternalCalendarError("Ungültige URL (kein Host).", status_code=422)
+    """SSRF-Schutz über den gemeinsamen Kern (`core.ausgehende_url`).
+
+    Die Prüfung selbst (Schema, Auflösung, jede IP öffentlich, IPv4-mapped,
+    CGNAT) liegt dort — sie war früher hier UND in `features/mcp` als eigene
+    Kopie vorhanden, und zwei Kopien einer Sicherheitsprüfung laufen
+    auseinander. Hier bleibt nur die Übersetzung in den Slice-Fehler, damit der
+    Aufrufer weiterhin sein 422 bekommt.
+    """
     try:
-        infos = socket.getaddrinfo(host, None)
-    except socket.gaierror as exc:
-        raise ExternalCalendarError(
-            "URL-Host nicht auflösbar.", status_code=422
-        ) from exc
-    ips = []
-    for info in infos:
-        raw_ip = info[4][0]
-        _assert_public_ip(raw_ip)
-        ips.append(raw_ip)
-    if not ips:
-        raise ExternalCalendarError("URL-Host nicht auflösbar.", status_code=422)
-    return ips
+        return oeffentliche_ips(url)
+    except UnsichereUrl as exc:
+        raise ExternalCalendarError(exc.grund, status_code=422) from exc
 
 
 def _assert_public_url(url: str) -> None:
     """Eingangs-Validierung (Anlegen): URL muss auf eine öffentliche Adresse
     zeigen. Der eigentliche Fetch pinnt sich zusätzlich auf die IP (`_fetch`)."""
     _resolve_public(url)
-
-
-def _swap_host(netloc: str, ip: str) -> str:
-    """Host im netloc durch die gepinnte IP ersetzen, Port/Userinfo erhalten.
-    IPv6-Adressen werden in eckige Klammern gesetzt."""
-    literal = f"[{ip}]" if ":" in ip else ip
-    # netloc kann userinfo@host:port enthalten; nur den Host-Teil tauschen.
-    at = netloc.rfind("@")
-    prefix = netloc[: at + 1] if at != -1 else ""
-    hostport = netloc[at + 1 :]
-    port = ""
-    if hostport.startswith("["):
-        end = hostport.find("]")
-        port = hostport[end + 1 :]
-    elif ":" in hostport:
-        port = ":" + hostport.rsplit(":", 1)[1]
-    return f"{prefix}{literal}{port}"
 
 
 class ExternalCalendarService:
@@ -375,15 +329,15 @@ class ExternalCalendarService:
                 host = parsed.hostname or ""
                 # Host-Header = Host(+Port), OHNE userinfo — die Ziel-Site erwartet
                 # ihren Namen, nicht user:pass@host.
-                host_header = host if parsed.port is None else f"{host}:{parsed.port}"
+                echter_host = host_header(current)
                 # Auf die geprüfte IP verbinden (Rebinding-Schutz), aber Host-Header
                 # und SNI/Cert-Prüfung gegen den echten Hostnamen halten.
                 pinned = parsed._replace(
-                    netloc=_swap_host(parsed.netloc, ips[0])
+                    netloc=host_pinnen(parsed.netloc, ips[0])
                 ).geturl()
                 request = client.build_request(
                     "GET", pinned,
-                    headers={**base_headers, "Host": host_header},
+                    headers={**base_headers, "Host": echter_host},
                     extensions={"sni_hostname": host},
                 )
                 resp = client.send(request, stream=True)

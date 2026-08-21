@@ -49,6 +49,10 @@ log = get_logger("nextdays.benachrichtigungs_ereignisse")
 # Katalog-Schluessel (0331). Als Konstanten, damit ein Tippfehler beim Aufrufer
 # nicht erst zur Laufzeit im ValueError des Dispatchers auffaellt.
 SCHLUESSEL_AUFGABE = "task_assigned"
+# Vertretung (0415). Eigene Kategorie, weil der EMPFAENGER ein anderer ist:
+# die Anfrage geht an alle, die einspringen koennten, die Entscheidung zurueck
+# an den Anfragenden.
+SCHLUESSEL_VERTRETUNG = "task_substitution"
 SCHLUESSEL_BUCHUNG = "owner_booking"
 SCHLUESSEL_LEISTUNG = "owner_service"
 # Dieselbe Buchung, anderer Empfaenger: der BETRIEB statt des Eigentuemers.
@@ -210,6 +214,142 @@ def melde_aufgaben_zuweisung(
     except Exception as exc:  # noqa: BLE001 — Nebenpfad, darf die Aufgabe nicht kippen
         log.warning(
             "aufgaben_benachrichtigung_fehlgeschlagen",
+            task_id=task_id, error=str(exc)[:200],
+        )
+
+
+def melde_vertretung_gesucht(
+    db: Client,
+    *,
+    tenant_id: str,
+    task_id: str,
+    empfaenger_ids: list[str],
+    titel: str,
+    property_id: str | None = None,
+) -> None:
+    """„Vertretung gesucht." — an alle, die einspringen koennten.
+
+    Bis 0415 erreichte eine Vertretungsanfrage NIEMANDEN: `request_substitution`
+    schrieb die Zeile und eine Log-Meldung, es gab weder Oberflaeche noch
+    Benachrichtigung. Wer ausfiel, fragte ins Leere — und die Aufgabe blieb bei
+    ihm, waehrend er annahm, jemand uebernehme sie.
+
+    Der EMPFAENGERKREIS kommt vom Aufrufer (der Aufgaben-Dienst kennt die
+    Capability und die Objekt-Freigaben), nicht von hier: „an alle im Tenant"
+    waere geraten und schickte einer Buchhaltung Reinigungsanfragen.
+
+    `dedup_key` traegt Aufgabe UND Empfaenger — dieselbe Anfrage darf jeden
+    Kollegen genau einmal erreichen (Wurzel 2), aber eine zweite Anfrage zur
+    SELBEN Aufgabe (erste abgelehnt) ist ein neues Ereignis: dafuer traegt der
+    Schluessel die Anfrage-Nummer nicht, sondern der Aufrufer entdoppelt ueber
+    den Status — eine offene Anfrage kann es je Aufgabe nur einmal geben.
+    """
+    for empfaenger in empfaenger_ids:
+        if not empfaenger:
+            continue
+        try:
+            if not _gehoert_zum_tenant(db, empfaenger, tenant_id):
+                log.warning(
+                    "vertretung_benachrichtigung_fremder_empfaenger",
+                    tenant_id=tenant_id, task_id=task_id,
+                )
+                continue
+            _dispatcher(db).sende(
+                user_id=empfaenger,
+                schluessel=SCHLUESSEL_VERTRETUNG,
+                betreff=mail_text(
+                    "benachrichtigung.vertretung_gesucht",
+                    _GLOCKEN_SPRACHE,
+                    titel=_aufgaben_titel(titel, _GLOCKEN_SPRACHE),
+                ),
+                betreff_key="benachrichtigung.vertretung_gesucht",
+                betreff_werte={"titel": _titel_wert(titel)},
+                text="",
+                tenant_id=tenant_id,
+                # Ziel ist die AUFGABE: dort sieht der Kollege, worum es geht.
+                # Die Anfrage selbst hat keine eigene Adresse — annehmen kann er
+                # sie in der Aufgabenliste (Web) bzw. im Band der App.
+                ziel_pfad=f"/aufgaben/{task_id}",
+                property_id=property_id,
+                dedup_key=_aufgaben_dedup(
+                    "vertretung_gesucht", task_id, empfaenger, None
+                ),
+            )
+        except Exception as exc:  # noqa: BLE001 — Nebenpfad, darf die Anfrage nicht kippen
+            log.warning(
+                "vertretung_benachrichtigung_fehlgeschlagen",
+                task_id=task_id, error=str(exc)[:200],
+            )
+
+
+def melde_vertretung_entschieden(
+    db: Client,
+    *,
+    tenant_id: str,
+    task_id: str,
+    empfaenger_id: str | None,
+    titel: str,
+    uebernommen: bool,
+    durch_name: str | None = None,
+    property_id: str | None = None,
+) -> None:
+    """Die Antwort zurueck an den, der die Vertretung gesucht hat.
+
+    Der Gegenzustand zur Anfrage (Wurzel 1): ohne diese Meldung weiss der
+    Anfragende nicht, ob er heute noch fahren muss. Genau das ist die
+    Information, wegen der er gefragt hat.
+
+    Bei der Ablehnung steht KEIN Name in der Meldung: abgelehnt hat eine
+    bestimmte Person, aber die Aussage ist „es hat niemand uebernommen" — einen
+    Kollegen namentlich als Ablehner zu melden, macht aus einer Absage eine
+    Anschuldigung.
+
+    `vorgang` traegt die Entscheidung, damit auf eine Ablehnung eine spaetere
+    Uebernahme folgen kann, ohne an der noch ungelesenen ersten Meldung zu
+    scheitern (`notifications_dedup_offen_uq`).
+    """
+    if not empfaenger_id:
+        return
+    schluessel_text = (
+        "benachrichtigung.vertretung_uebernommen"
+        if uebernommen
+        else "benachrichtigung.vertretung_abgelehnt"
+    )
+    werte: dict[str, object] = {"titel": _titel_wert(titel)}
+    if uebernommen:
+        werte["name"] = durch_name or ""
+    try:
+        if not _gehoert_zum_tenant(db, empfaenger_id, tenant_id):
+            log.warning(
+                "vertretung_antwort_fremder_empfaenger",
+                tenant_id=tenant_id, task_id=task_id,
+            )
+            return
+        _dispatcher(db).sende(
+            user_id=empfaenger_id,
+            schluessel=SCHLUESSEL_VERTRETUNG,
+            betreff=mail_text(
+                schluessel_text,
+                _GLOCKEN_SPRACHE,
+                titel=_aufgaben_titel(titel, _GLOCKEN_SPRACHE),
+                **({"name": durch_name or ""} if uebernommen else {}),
+            ),
+            betreff_key=schluessel_text,
+            betreff_werte=werte,
+            text="",
+            tenant_id=tenant_id,
+            ziel_pfad=f"/aufgaben/{task_id}",
+            property_id=property_id,
+            dedup_key=_aufgaben_dedup(
+                "vertretung_antwort",
+                task_id,
+                empfaenger_id,
+                "uebernommen" if uebernommen else "abgelehnt",
+            ),
+        )
+    except Exception as exc:  # noqa: BLE001 — Nebenpfad, darf die Entscheidung nicht kippen
+        log.warning(
+            "vertretung_antwort_fehlgeschlagen",
             task_id=task_id, error=str(exc)[:200],
         )
 

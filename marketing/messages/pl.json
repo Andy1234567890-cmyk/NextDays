@@ -157,7 +157,8 @@
   },
   "direkt": {
    "frage": "Czy dostanę własną stronę rezerwacji bez prowizji portalu?",
-   "antwort": "Tak. Do każdego konta należą własny portal rezerwacyjny, widget na istniejącą stronę i kreator stron z własną domeną. Rezerwacje bezpośrednie kosztują 0,5 % zamiast 15–18 % prowizji dużych portali, korzystają z tego samego kalendarza i tych samych cen — a pieniądze wpływają wprost na twoje konto."
+   "antwort": "Tak. Do każdego konta należą własny portal rezerwacyjny, widget na istniejącą stronę i kreator stron z własną domeną. Rezerwacje bezpośrednie kosztują {satz} zamiast 15–18 % prowizji dużych portali, korzystają z tego samego kalendarza i tych samych cen — a pieniądze wpływają wprost na twoje konto.",
+   "satzUnbekannt": "znacznie mniej"
   },
   "marktplatz": {
    "frage": "Czym jest myBestDays?",
@@ -261,7 +262,8 @@
    },
    "direkt": {
     "title": "Rezerwacje bezpośrednie",
-    "items": "Własny portal rezerwacyjny, widget rezerwacyjny, kreator stron, własna domena, 0,5 % zamiast 15–18 % prowizji OTA"
+    "items": "Własny portal rezerwacyjny, widget rezerwacyjny, kreator stron, własna domena, {satz} zamiast 15–18 % prowizji OTA",
+    "satzUnbekannt": "znacznie mniej"
    },
    "preise": {
     "title": "Ceny i przychód",
@@ -525,9 +527,9 @@
    "direktText": "Przez Twoją stronę lub formularz rezerwacji. Z tego nie bierzemy nic. Zostaje tylko opłata Twojego operatora płatności.",
    "direktWert": "0 %",
    "portaleTitel": "Gość przychodzi z Booking, Airbnb i innych",
-   "portaleText": "Naliczamy 0,5 % wartości rezerwacji, raz w miesiącu na Twojej fakturze. To, co zatrzymuje sam portal, jest od tego niezależne.",
+   "portaleText": "Naliczamy {satz} wartości rezerwacji, raz w miesiącu na Twojej fakturze. To, co zatrzymuje sam portal, jest od tego niezależne.",
    "marktplatzTitel": "Gość przychodzi przez myBestDays",
-   "marktplatzText": "Nasz własny marketplace. Tu znajdują Cię goście, którzy jeszcze Cię nie znają. Przynosimy rezerwację, pobieramy pieniądze i wypłacamy je Tobie — za to zatrzymujemy 8 %. Innych kosztów nie ma.",
+   "marktplatzText": "Nasz własny marketplace. Tu znajdują Cię goście, którzy jeszcze Cię nie znają. Przynosimy rezerwację, pobieramy pieniądze i wypłacamy je Tobie — nasza prowizja za to wynosi {satz}. Innych kosztów nie ma.",
    "deckel": "I jest limit: za rezerwacje z portali nigdy nie zapłacisz więcej niż {betrag} miesięcznie."
   },
   "module": {
@@ -766,7 +768,8 @@
     "gast": "Gość i pieniądze",
     "betrieb": "Operacje"
    },
-   "reiterHeading": "Co dokładnie za tym stoi?"
+   "reiterHeading": "Co dokładnie za tym stoi?",
+   "satzUnbekannt": "znacznie mniej"
   },
   "uebersicht": {
    "metaTitel": "Funkcje — wszystko do wynajmu i hotelu | myNextDays",
@@ -954,7 +957,7 @@
      "punkte": {
       "a": "Włączany osobno dla każdego kanału",
       "b": "Jeden kalendarz na wszystko",
-      "c": "8 % all-in zamiast prowizji portalu"
+      "c": "{satz} all-in zamiast prowizji portalu"
      }
     }
    },

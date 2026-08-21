@@ -3973,7 +3973,8 @@
         "inspektion": "Cigireacht",
         "vorlagen": "Teimpléid tascanna",
         "planmaessig": "Tascanna sceidealta",
-        "regelmaessig": "Tascanna rialta"
+        "regelmaessig": "Tascanna rialta",
+        "vertretungen": "Ionadaíocht"
       }
     },
     "propertyCalendar": {
@@ -4859,6 +4860,18 @@
       "gesetzt": "Athraíodh an sannadh",
       "abgezogen": "Baineadh an sannadh",
       "aktion": "Sann do …"
+    },
+    "substitutions": {
+      "title": "Ionadaíocht",
+      "intro": "Iarratais oscailte ó chomhghleacaithe. An té a ghlacann air, sannta an tasc dó.",
+      "loading": "Á lódáil …",
+      "empty": "Níl aon iarratas oscailte",
+      "emptyHint": "Má bhíonn ionadaí ag teastáil ó dhuine, taispeánfar é seo.",
+      "requestedBy": "Iarrtha ag {name}",
+      "take": "Glac air",
+      "decline": "Diúltaigh",
+      "taken": "Tasc glactha",
+      "declined": "Iarratas diúltaithe"
     }
   },
   "objects": {
@@ -4944,7 +4957,14 @@
       "unlistOk": "Baineadh an nasc leis an suíomh gréasáin.",
       "unlistErr": "Theip ar an dínascadh.",
       "menuVerkaufAus": "Múch ar gach tairseach",
-      "menuVerkaufAn": "Tairg arís ar gach tairseach"
+      "menuVerkaufAn": "Tairg arís ar gach tairseach",
+      "menuArchive": "Cuir sa chartlann",
+      "menuUnarchive": "Cuir ar ais san fhardal",
+      "archiveConfirm": "An bhfuil tú cinnte gur mhaith leat an áit „{title}“ a chur sa chartlann? Imeoidh an áit ón liosta agus stopfar an díol uirthi i ngach áit ón lá inniu amach. Fanfaidh áirithintí atá ann fós bailí, agus fanfaidh na sonraí go léir slán.",
+      "unarchiveConfirm": "An bhfuil tú cinnte gur mhaith leat an áit „{title}“ a chur ar ais san fhardal? Feicfear an áit sa liosta arís agus cuirfear deireadh leis an chosc díolacháin.",
+      "archiveOk": "Áit curtha sa chartlann.",
+      "unarchiveOk": "Tá an áit san fhardal arís.",
+      "archiveErr": "Theip ar chur sa chartlann."
     },
     "messagingForm": {
       "title": "Sealbhóirí áite teachtaireachtaí",
@@ -6561,6 +6581,8 @@
     "allChannels": "All channels",
     "connectedStatus": "Connected",
     "notConnectedStatus": "Gan nasc",
+    "statusBroken": "Mapáil lochtach",
+    "repairHint": "Tá an fógra mapáilte ag an tairseach, ach le sprioc nach bhfuil ann. Cuirtear an infhaighteacht ar aghaidh, ach na praghsanna ní chuirtear. Dínasc agus nasc arís chun an mapáil a chur ar bun.",
     "addChannel": "Add channel",
     "searchChannel": "Cuardaigh cainéal …",
     "noResults": "Níor aimsíodh aon chainéal.",
@@ -6679,7 +6701,21 @@
         "approved": "Ceadaithe",
         "rejected": "Diúltaithe"
       }
-    }
+    },
+    "csvTitle": "Iompórtáil áirithintí ó roimh an nascadh trí chomhad",
+    "csvText": "Ní sholáthraíonn an tairseach tríd an chomhéadan ach áirithintí ón lá a nascadh í ar aghaidh. Faigheann tú fanachtaí níos sine ó easpórtáil chuntas do thairseacha agus uaslódálann tú iad anseo.",
+    "csvDownloadTemplate": "Íoslódáil teimpléad",
+    "csvUpload": "Uaslódáil comhad",
+    "csvHint": "Uaslódáil an comhad go díreach mar a fhaigheann tú é ón tairseach (.xls, .xlsx nó .csv). Roimh an iompórtáil, feicfidh tú cé na maoine agus cé mhéad áirithint a aithníodh. Fágfar ar lár áirithintí a cuireadh ar ceal, aithneofar iad atá ann cheana agus ní chruthófar iad faoi dhó.",
+    "csvResult": "Iompórtáladh {imported} as {total} áirithint.",
+    "csvSkipped": "{count, plural, one {Fágadh # líne ar lár (tá sí ann cheana nó tá an mhaoin anaithnid)} two {Fágadh # líne ar lár (tá siad ann cheana nó tá an mhaoin anaithnid)} few {Fágadh # línte ar lár (tá siad ann cheana nó tá an mhaoin anaithnid)} many {Fágadh # líne ar lár (tá siad ann cheana nó tá an mhaoin anaithnid)} other {Fágadh # líne ar lár (tá siad ann cheana nó tá an mhaoin anaithnid)}}",
+    "csvNothingUsable": "Níl aon áirithint inúsáidte sa chomhad — tá gach líne curtha ar ceal nó gan dáta inléite.",
+    "csvPreview": "{count} áirithint aitheanta, teacht ó {from} go {to}. Níor iompórtaíodh faic go fóill.",
+    "csvPreviewProperties": "Maoine sa chomhad — ní mór do na hainmneacha seo teacht leis na teidil atá ar do mhaoine, nó fágfar na línte ar lár:",
+    "csvPreviewNoRef": "{count, plural, one {# áirithint gan uimhir áirithinte} two {# áirithint gan uimhir áirithinte} few {# áirithint gan uimhir áirithinte} many {# áirithint gan uimhir áirithinte} other {# áirithint gan uimhir áirithinte}} — aithnítear iad seo trí mhaoin, tréimhse agus ainm.",
+    "csvConfirm": "Iompórtaigh {count} áirithint",
+    "csvCancel": "Cealaigh",
+    "csvFailed": "{count, plural, one {# líne le earráid} two {# líne le earráid} few {# línte le earráidí} many {# líne le earráidí} other {# líne le earráidí}}:"
   },
   "calendarSync": {
     "title": "Iompórtáil/easpórtáil féilire",
@@ -7411,6 +7447,7 @@
       "propertyCount": "Líon na n-áiteanna",
       "oneMore": "Áit amháin níos mó",
       "commissionPerChannel": "Coimisiún de réir cainéil áirithinte",
+      "commissionExternalCap": "ar a mhéad {betrag} sa mhí",
       "included": "Cad atá san áireamh",
       "totalMonthly": "Iomlán in aghaidh na míosa"
     },
@@ -7496,7 +7533,7 @@
       "loadFailed": "Níorbh fhéidir na coimisiúin a lódáil: {error}",
       "cardRate": "Booking, Airbnb agus eile: {rate} % de láimhdeachas áirithintí na n-áitreabh foilsithe atá agat. Billeáiltear coimisiúin míosa ar an 1ú lá den mhí dár gcionn agus cuirtear leis an gcéad sonrasc síntiúis eile agat.",
       "cardRateCapped": "Booking, Airbnb agus eile: {rate} % de láimhdeachas áirithintí na n-áitreabh foilsithe atá agat. Billeáiltear coimisiúin míosa ar an 1ú lá den mhí dár gcionn agus cuirtear leis an gcéad sonrasc síntiúis eile agat, {cap} sa mhí ar a mhéad.",
-      "cardOtherChannels": "Fanann áirithintí trí do shuíomh gréasáin féin saor ó choimisiún. Gearrtar 8 % ar áirithintí trí mhargadh myBestDays, a choinnítear siar díreach agus an íocaíocht á fáil — níl na cinn sin san áireamh anseo.",
+      "cardOtherChannels": "Fanann áirithintí trí do shuíomh gréasáin féin saor ó choimisiún. Gearrtar {satz} ar áirithintí trí mhargadh myBestDays, a choinnítear siar díreach agus an íocaíocht á fáil — níl na cinn sin san áireamh anseo.",
       "pending": "Ar feitheamh ({count, plural, one {# áirithint} two {# áirithint} few {# áirithint} many {# n-áirithint} other {# áirithint}}): ",
       "pendingCapHint": " — billeáiltear an uasteorainn mhíosúil {cap}",
       "noPending": "Níl aon choimisiún ar feitheamh faoi láthair.",
@@ -7504,9 +7541,9 @@
       "backToBilling": "Billeáil",
       "monthsTitle": "Coimisiúin de réir míosa",
       "monthsIntro": "Ní léiríonn an miondealú seo ach coimisiúin ó áirithintí trí thairseacha seachtracha (Booking, Airbnb agus eile). Billeáiltear coimisiúin míosa ar an 1ú lá den mhí dár gcionn agus cuirtear leis an gcéad sonrasc síntiúis eile agat — gearrtar an íocaíocht in éineacht leis an sonrasc sin.",
-      "monthsChannels": "Iompraíonn áirithintí trí mhargadh myBestDays coimisiún 8 %, a choinnítear siar agus an íocaíocht á fáil cheana féin; mar sin ní thaispeántar iad ar an liosta seo. Fanann áirithintí trí do shuíomh gréasáin féin saor ó choimisiún.",
+      "monthsChannels": "Iompraíonn áirithintí trí mhargadh myBestDays coimisiún {satz}, a choinnítear siar agus an íocaíocht á fáil cheana féin; mar sin ní thaispeántar iad ar an liosta seo. Fanann áirithintí trí do shuíomh gréasáin féin saor ó choimisiún.",
       "monthsLoading": "Coimisiúin á lódáil …",
-      "monthsEmpty": "Níor tháinig aon choimisiún chun cinn trí thairseacha seachtracha go dtí seo. Fanann áirithintí trí do shuíomh gréasáin féin saor ó choimisiún go buan. Iompraíonn áirithintí margaidh myBestDays coimisiún 8 % — coinnítear siar é díreach agus an íocaíocht á fáil agus ní thaispeántar anseo é.",
+      "monthsEmpty": "Níor tháinig aon choimisiún chun cinn trí thairseacha seachtracha go dtí seo. Fanann áirithintí trí do shuíomh gréasáin féin saor ó choimisiún go buan. Iompraíonn áirithintí margaidh myBestDays coimisiún {satz} — coinnítear siar é díreach agus an íocaíocht á fáil agus ní thaispeántar anseo é.",
       "colMonth": "Mí",
       "colBookings": "Áirithintí",
       "colGross": "Láimhdeachas áirithintí",
@@ -7639,7 +7676,7 @@
     "stars": "4,5 réalta",
     "reviews": "· 921 léirmheas",
     "trial30": "Bain triail as saor in aisce ar feadh 30 lá",
-    "bookingValue": "+0.5 % de luach na háirithinte",
+    "bookingValue": "+{satz} de luach na háirithinte",
     "seePrices": "Féach ar na praghsanna",
     "downloadApp": "Íoslódáil an aip",
     "copyright": "© 2026 myNextDays. Gach ceart ar cosaint.",

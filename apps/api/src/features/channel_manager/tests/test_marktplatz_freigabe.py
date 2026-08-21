@@ -31,6 +31,16 @@ class _Tabelle:
         self._filter.append((spalte, wert))
         return self
 
+    def is_(self, spalte: str, wert: Any) -> _Tabelle:
+        """`is_("archived_at", "null")` — der Archiv-Riegel (0416).
+
+        Als Filter behandelt wie `eq`: die Testzeilen tragen kein
+        `archived_at`, sind also nicht archiviert. Ohne diese Methode brach die
+        Kette mit AttributeError, sobald die Abfrage das Archiv ausblendet.
+        """
+        self._filter.append((spalte, None if wert == "null" else wert))
+        return self
+
     def execute(self) -> Any:
         rows = [
             r for r in self._rows

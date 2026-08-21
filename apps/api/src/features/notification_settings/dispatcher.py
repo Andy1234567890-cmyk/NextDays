@@ -182,10 +182,12 @@ class NotificationDispatcher:
         Ebene; er kennt das Ereignis, nicht das Layout.
 
         ZWEI BETREFFE, und das ist Absicht:
-        `betreff` ist der Text fuer die GLOCKE. Er bleibt, wie der Aufrufer ihn
-        baut — die Glocke wird in der Oberflaeche gelesen, die ihre eigene
-        Sprache hat, und dort steht neben der Meldung ohnehin der Objekttitel
-        in Originalschreibweise.
+        `betreff` ist der ROHTEXT-Rueckfall: er greift nur, wenn der Aufrufer
+        keinen Katalogschluessel mitgibt. Frueher war er zugleich der Text der
+        GLOCKE — und weil die Aufrufer ihn im FALLBACK (`en`) bauen, stand in
+        der Glocke eines deutschen Betriebs englischer Text („is taking over"),
+        obwohl 24 Sprachen und eine Grundeinstellung vorliegen. Die Glocke
+        nimmt jetzt DIESELBE Sprachkette wie Mail und SMS (siehe unten).
         `betreff_key` (+ `betreff_werte`) ist der Katalogschluessel fuer die
         E-MAIL. Sie verlaesst das Haus und erreicht keinen Message-Katalog mehr
         — sie muss in der Sprache des EMPFAENGERS geschrieben sein, nicht in
@@ -204,10 +206,21 @@ class NotificationDispatcher:
         zweiten Absatz selbst uebersetzen muesste — er kennt die Sprache des
         Empfaengers gar nicht.
 
-        DIE GLOCKE bleibt bei `betreff`/`text` und wird NICHT uebersetzt: sie
-        wird in der Oberflaeche gelesen, die ihre eigene Sprachwahl hat, und
-        sie ist eine gespeicherte Zeile — sie in der Sprache des Empfaengers
-        einzufrieren waere falsch, sobald er die Oberflaechensprache wechselt.
+        DIE GLOCKE nimmt dieselbe Sprache wie Mail und SMS:
+        `aufloesen(users.preferred_language, tenants.default_language)` — die
+        Einstellung des Empfaengers, sonst die Grundeinstellung des Betriebs,
+        erst dann Englisch. Sie ist eine GESPEICHERTE Zeile, also friert der
+        Satz in der Sprache ein, in der er entstand; wechselt der Nutzer spaeter
+        die Oberflaeche, bleiben ALTE Meldungen wie sie waren und neue kommen in
+        der neuen Sprache. Das ist der Kompromiss, den auch eine verschickte
+        Mail hat — und er ist allemal besser als der Zustand davor, in dem JEDE
+        Glocke englisch war, egal was eingestellt ist.
+        Wer die Meldung stattdessen zur ANZEIGEZEIT uebersetzen will, braucht
+        Schluessel + Werte in `notifications` (Migration) UND die Saetze
+        zusaetzlich in den Frontend-Katalogen aller sechs Oberflaechen — also
+        eine zweite Pflegestelle fuer dieselben Texte. Solange die Saetze nur
+        serverseitig stehen (`core/mail_texte.py`), ist das Rendern beim
+        Schreiben die einzige Fassung, die keinen rohen Schluessel anzeigt.
         """
         kategorie = NACH_SCHLUESSEL.get(schluessel)
         if kategorie is None:
@@ -216,11 +229,33 @@ class NotificationDispatcher:
 
         ergebnis = Zustellung()
         empfaenger = self._empfaenger(user_id)
+        # EINMAL aufloesen und an alle Kanaele durchgeben: die Kette ist fuer
+        # Glocke, Mail und SMS dieselbe, und `betriebs_sprache` ist eine
+        # Abfrage — sie je Kanal zu wiederholen waeren drei Roundtrips fuer
+        # dieselbe Antwort.
+        sprache = aufloesen(
+            empfaenger.get("preferred_language"),
+            betriebs_sprache(self._db, tenant_id) if tenant_id else None,
+        )
 
         if inapp and tenant_id:
             self._glocke(
                 tenant_id=tenant_id, user_id=user_id, kategorie=schluessel,
-                titel=betreff, text=text, ziel_pfad=ziel_pfad,
+                titel=(
+                    mail_text(
+                        betreff_key,
+                        sprache,
+                        **_werte_aufloesen(betreff_werte, sprache),
+                    )
+                    if betreff_key
+                    else betreff
+                ),
+                text=(
+                    _absaetze_rendern(text_key, sprache, text_werte)
+                    if text_key
+                    else text
+                ),
+                ziel_pfad=ziel_pfad,
                 property_id=property_id, thread_ref=thread_ref,
                 dedup_key=dedup_key, ergebnis=ergebnis,
             )
@@ -260,7 +295,7 @@ class NotificationDispatcher:
                 kanal, empfaenger, betreff, text, ziel_pfad, ergebnis,
                 betreff_key=betreff_key, betreff_werte=betreff_werte,
                 text_key=text_key, text_werte=text_werte,
-                tenant_id=tenant_id,
+                sprache=sprache, tenant_id=tenant_id,
             )
 
         log.info(
@@ -344,6 +379,11 @@ class NotificationDispatcher:
         betreff_werte: dict[str, object] | None = None,
         text_key: str | Sequence[str] | None = None,
         text_werte: dict[str, object] | None = None,
+        # Die Sprache loest `sende` EINMAL auf und gibt sie durch — Glocke,
+        # Mail und SMS teilen dieselbe Kette (Nutzer → Betrieb → Englisch).
+        sprache: str,
+        # Nur fuer den Verlaufs-Eintrag bei Fehlschlag, nicht mehr fuer die
+        # Sprache: die steht oben.
         tenant_id: str | None = None,
     ) -> None:
         """Einen Kanal bedienen. Fehler landen im Ergebnis, nie im Aufrufer.
@@ -362,10 +402,6 @@ class NotificationDispatcher:
         if not ziel:
             ergebnis.fehlgeschlagen[kanal.value] = "keine Adresse hinterlegt"
             return
-        sprache = aufloesen(
-            empfaenger.get("preferred_language"),
-            betriebs_sprache(self._db, tenant_id),
-        )
         # Betreff und Rumpf der AUSGEHENDEN Nachricht: aus dem Katalog, wenn
         # der Aufrufer einen Schluessel mitgibt, sonst der Rohtext von oben.
         betreff_aussen = (

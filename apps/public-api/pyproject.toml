@@ -1,0 +1,142 @@
+# apps/public-api/pyproject.toml — die ÖFFENTLICHE myNextDays-API
+#
+# EIGENES Projekt, nicht Teil von `apps/api`. Es teilt keinen Prozess, kein
+# Image, kein Deployment und keinen Import mit der Haupt-API: der einzige
+# gemeinsame Punkt ist die Datenbank (Supabase, service_role) — dort liegt die
+# Wahrheit ohnehin. Warum getrennt: eine öffentliche API hat andere Pflichten
+# als ein internes Dashboard-Backend (feste Versionierung, Deprecation-Fristen,
+# harte Rate-Limits je Kunde, eigene Auth-Welt, veröffentlichte OpenAPI). Wer
+# beides in einen Prozess legt, kann keines davon einhalten, ohne das andere zu
+# gefährden — ein Lastausbruch eines API-Kunden würde sonst die Oberfläche des
+# Betriebs mit umlegen.
+#
+# Abhängigkeiten bewusst schmal: was der Service nicht braucht (Stripe, Twilio,
+# Firebase, OCR, Mail), ist hier nicht installiert. Kleinere Angriffsfläche,
+# kleineres Image, schnellerer Start.
+
+[project]
+name = "mynextdays-public-api"
+version = "1.0.0"
+description = "Öffentliche REST-API von myNextDays (v1) — eigenständiger Service"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.14.2", # >=2.14.2 wegen GHSA-4xgf-cpjx-pc3j
+    "supabase>=2.9",             # Datenzugriff (service_role, RLS umgangen)
+    "redis>=5.2",                # Rate-Limit-Zähler (gemeinsam über Worker)
+    "structlog>=24.4",           # strukturiertes Logging
+    "pyjwt>=2.9",                # Access-Token (HS256, eigene Audience)
+    "httpx>=0.27",               # Webhook-Zustellung
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.7",
+    "pylint>=3.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# Dieselbe Auswahl wie in apps/api, plus W/N/C4/SIM/BLE — ein zweiter Dienst
+# darf strenger sein, aber nicht laxer.
+select = ["E", "F", "W", "I", "N", "UP", "B", "S", "C4", "SIM", "BLE", "ANN"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests: assert, Test-Zugangsdaten (keine echten Secrets), lockere Annotationen.
+"src/tests/*" = ["S101", "S105", "S106", "ANN"]
+# Der Token-Endpunkt und die Auth nehmen `client_secret` als Parameter. S105/S106
+# sehen darin ein hartkodiertes Passwort — es ist der ENTGEGENGENOMMENE Wert.
+"src/core/auth.py" = ["S106"]
+"src/core/config.py" = ["S105"]
+"src/v1/oauth.py" = ["S106"]
+# SCHWESTERDATEIEN: byte-identische Kopien aus apps/api. Sie stehen dort unter
+# dessen Regelsatz (E/F/I/B/UP/ANN/S) und dürfen hier nicht an den zusätzlichen
+# Regeln dieses Projekts (W/N/C4/SIM/BLE) scheitern — eine Korrektur nur hier
+# würde die Byte-Gleichheit brechen, die der CI-Job erzwingt. Wer eine dieser
+# Dateien wirklich verbessern will, tut es in BEIDEN Bäumen.
+"src/core/logging.py" = ["W", "N", "C4", "SIM", "BLE"]
+"src/core/ratelimit.py" = ["W", "N", "C4", "SIM", "BLE"]
+"src/core/supabase.py" = ["W", "N", "C4", "SIM", "BLE"]
+"src/core/einheiten.py" = ["W", "N", "C4", "SIM", "BLE"]
+"src/core/einheiten_verfuegbar.py" = ["W", "N", "C4", "SIM", "BLE"]
+"src/core/scopes.py" = ["W", "N", "C4", "SIM", "BLE"]
+# Fehlernamen ohne „Error"-Suffix (N818) sind hier Absicht: der Code ist
+# deutschsprachig, und `ApiFehler`/`UnsichereUrl` heißen in beiden Diensten
+# gleich. `ausgehende_url.py` ist zusätzlich eine byte-identische
+# Schwesterdatei — sie umzubenennen hieße, sie in apps/api mitzubenennen.
+"src/core/errors.py" = ["N818"]
+"src/core/ausgehende_url.py" = ["N818", "W", "N", "C4", "SIM", "BLE"]
+
+[tool.pylint.main]
+# Ruff (oben) ist der primäre Linter. Pylint ergänzt die logischen Prüfungen.
+# Der Abschalt-Satz ist bewusst DERSELBE wie in apps/api: zwei Dienste mit
+# verschiedenen Maßstäben zu prüfen heißt, dass ein Befund je nach Baum ein
+# Fehler oder erlaubt ist — und die Schwesterdateien liegen in beiden.
+py-version = "3.12"
+ignore-paths = ["^.*/tests/.*$"]
+# redis-py exponiert `redis.asyncio` über eine dynamische Submodul-Struktur,
+# die astroid statisch nicht auflösen kann (falscher E0401). Real installiert.
+ignored-modules = ["redis", "redis.asyncio"]
+
+[tool.pylint.basic]
+const-naming-style = "any"
+class-attribute-naming-style = "any"
+class-const-naming-style = "any"
+
+[tool.pylint.variables]
+# FastAPI-Idiom: `ctx` (Auth-Dependency) und `app` (Lifespan) stehen zwingend in
+# der Signatur, werden im Rumpf aber oft nicht gelesen — der Seiteneffekt
+# (401/403) IST ihr Zweck.
+ignored-argument-names = "_.*|^ignored_|^unused_|ctx|request|app"
+
+[tool.pylint."messages control"]
+disable = [
+    # Doku-Zwang: Modul-Docstrings sind überall da; Pydantic-Schemas und
+    # triviale Health-Funktionen brauchen keinen eigenen.
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "too-few-public-methods",
+    # Schwesterdateien zu apps/api sind ABSICHT (siehe README).
+    "duplicate-code",
+    # FastAPI-Factory: lokales `app` vs. Modul-`app` ist idiomatisch; dasselbe
+    # gilt für `einheiten` als Endpunktname und als lokale Variable.
+    "redefined-outer-name",
+    "import-outside-toplevel",
+    # Metrik-Heuristiken, keine Bugs. Die Endpunkte hier sind breit, weil sie
+    # viele Filter tragen — das Zerschneiden einer getesteten Funktion allein
+    # zur Metrik-Erfüllung bringt Risiko ohne Gewinn.
+    "too-many-locals",
+    "too-many-arguments",
+    "too-many-positional-arguments",
+    "too-many-statements",
+    "too-many-branches",
+    # Best-effort-Catch-alls sind ein bewusstes Muster (Zusteller-Schleife,
+    # Audit-Schreibvorgänge). Jede Stelle ist mit `# noqa: BLE001` und einer
+    # Begründung markiert; Ruffs BLE-Regel erzwingt diese Markierung.
+    "broad-exception-caught",
+]
+
+[tool.pylint.format]
+max-line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["src/tests"]
+asyncio_mode = "auto"

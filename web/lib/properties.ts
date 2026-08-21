@@ -99,6 +99,10 @@ export type Property = {
   channels?: PropertyChannels;
   // Freigabe-Stand für den eigenen Marktplatz (draft/pending/approved/rejected).
   moderation_status?: string | null;
+  // Archiviert (gekündigt/aufgegeben, 0416). `null`/fehlt = im Bestand. Eigene
+  // Achse neben `status`: dieser beschreibt die Verkaufsfähigkeit, jene ob das
+  // Objekt überhaupt noch geführt wird.
+  archived_at?: string | null;
 };
 
 // Zustand eines Objekts PRO Vertriebskanal (Guesty/Cloudbeds/SiteMinder-Modell):
@@ -164,10 +168,12 @@ async function call<T>(
   }
 }
 
-export async function listProperties(): Promise<
-  Result<{ items: Property[]; total: number }>
-> {
-  return call("/properties");
+export async function listProperties(
+  opts: { archiviert?: boolean } = {},
+): Promise<Result<{ items: Property[]; total: number }>> {
+  // `archiviert=true` liefert AUSSCHLIESSLICH das Archiv (gekündigte Objekte,
+  // 0416), nie beides zusammen.
+  return call(opts.archiviert ? "/properties?archiviert=true" : "/properties");
 }
 
 export async function getProperty(id: string): Promise<Result<Property>> {
@@ -236,6 +242,25 @@ export async function updateProperty(
 
 export async function deleteProperty(id: string): Promise<Result<null>> {
   return call(`/properties/${id}`, { method: "DELETE" });
+}
+
+/** Objekt archivieren (gekündigt/aufgegeben) bzw. zurück in den Bestand.
+ *
+ *  Der Weg für ein Objekt, das nicht mehr geführt wird. Löschen scheitert bei
+ *  jedem Objekt mit Buchungen an der Datenbank (FK RESTRICT) — und soll es
+ *  auch: an den Buchungen hängt die Historie (Umsatz, Eigentümer-Abrechnung).
+ *
+ *  Archivieren nimmt das Objekt aus den Listen UND stoppt den Verkauf über das
+ *  Vertragsende: ohne das würden Booking und Airbnb weiterverkaufen. Bestehende
+ *  Buchungen bleiben gültig und werden bedient. */
+export async function archiveProperty(
+  id: string,
+  archivieren = true,
+): Promise<Result<Property>> {
+  return call(
+    `/properties/${id}/archivieren?archivieren=${archivieren}`,
+    { method: "POST" },
+  );
 }
 
 /** Eine Steuer dieses Objekts auf weitere eigene Objekte übertragen. Der

@@ -21,7 +21,7 @@
 // auseinanderlaufen — und ein Besucher merkt sofort, wenn eine Funktionsseite
 // „anders" aussieht als die anderen.
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
 
 import { AppAufnahme } from "@/components/marketing/app-aufnahme";
@@ -39,6 +39,8 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { FUNKTIONEN, funktionNachSlug } from "@/content/funktionen";
 import { DEMO_URL, SIGNUP_URL } from "@/lib/app-url";
+import { gruppenStichworte } from "@/lib/gruppen-stichworte";
+import { holeProvisionssaetze } from "@/lib/provisionstexte";
 
 import type { Metadata } from "next";
 
@@ -82,6 +84,12 @@ export default async function FunktionsSeite({
   // Label „App herunterladen" — dasselbe wie im Footer, statt eines zweiten
   // Satzes derselben Aussage in 24 Sprachen.
   const tFooter = await getTranslations("footer");
+  // Zwei Textstellen dieser Seite nennen einen Provisionssatz: die
+  // Stichwortzeile der Gruppe „direkt" (extern) und auf der Direktbuchungs-
+  // Seite der dritte Häkchen-Chip (Marktplatz, 8 %). Beide kommen aus
+  // /subscriptions/public/pricing, nicht aus den Sprachdateien.
+  const locale = await getLocale();
+  const saetze = await holeProvisionssaetze(locale);
   const Illustration = GRUPPEN_ILLUSTRATION[funktion.key];
 
   const nutzen = ["a", "b", "c"] as const;
@@ -93,7 +101,7 @@ export default async function FunktionsSeite({
 
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans text-foreground">
-      <MarketingNav />
+      <MarketingNav satzExtern={saetze.extern} />
       <main className="flex-1">
         {/* 1. Hero */}
         <section className="bg-gradient-to-b from-surface-warm to-background">
@@ -119,7 +127,7 @@ export default async function FunktionsSeite({
                   eigenen Logins für Eigentümer, Gäste und Reinigung, …").
                   Am Komma getrennt zerfällt der Satz in sinnlose Schnipsel. */}
               <p className="mt-5 max-w-xl text-sm font-medium text-muted-foreground">
-                {tg(`${funktion.key}.items`)}
+                {gruppenStichworte(tg, funktion.key, saetze.extern)}
               </p>
 
               {/* Dieselben zwei Knöpfe wie im Hero der Startseite: Akzent für
@@ -252,7 +260,18 @@ export default async function FunktionsSeite({
                         icon="ph:check-circle-fill"
                         className="size-4 text-accent"
                       />
-                      {t(`block.${b}.punkte.${p}`)}
+                      {/* Der Marktplatz-Satz steht in genau EINEM dieser
+                          Chips (`funktionen.direkt.block.eins.punkte.c`); die
+                          übrigen Texte tragen keinen `{satz}` und nehmen den
+                          Parameter unbeschadet an. Fehlt die Preisliste, tritt
+                          das übersetzte Ersatzwort ein statt einer Lücke im
+                          Chip — ein Chip ohne Text wäre ein leeres Häkchen.
+                          Begründung ausführlich in `marketing-faq.tsx`. */}
+                      {t(`block.${b}.punkte.${p}`, {
+                        satz:
+                          saetze.marktplatz ??
+                          tr("satzUnbekannt"),
+                      })}
                     </li>
                   ))}
                 </ul>
@@ -311,7 +330,7 @@ export default async function FunktionsSeite({
                           {tg(`${f.key}.title`)}
                         </span>
                         <span className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                          {tg(`${f.key}.items`)}
+                          {gruppenStichworte(tg, f.key, saetze.extern)}
                         </span>
                       </span>
                     </Link>

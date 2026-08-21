@@ -34,6 +34,7 @@ import { GRUPPEN_ILLUSTRATION } from "@/components/preise/preis-illustrationen";
 import { Icon } from "@/components/ui/icon";
 import { DEMO_URL, SIGNUP_URL } from "@/lib/app-url";
 import { formatCurrency } from "@/lib/currency";
+import { gruppenStichworte } from "@/lib/gruppen-stichworte";
 import type { Preisliste } from "@/lib/preise";
 import { staffelPosten, staffelPreisCent } from "@/lib/tarif";
 
@@ -263,7 +264,7 @@ export function PreisRechner({ liste }: { liste: Preisliste | null }) {
  * Als eigene, dreispaltige Sektion liest sie sich ruhig und lässt dem Preis
  * seinen Auftritt.
  */
-export function PreisInklusive() {
+export function PreisInklusive({ satzExtern }: { satzExtern: string | null }) {
   const t = useTranslations("preise.rechner");
   const tf = useTranslations("features.gruppen");
 
@@ -296,7 +297,7 @@ export function PreisInklusive() {
                   {tf(`${key}.title`)}
                 </p>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {tf(`${key}.items`)}
+                  {gruppenStichworte(tf, key, satzExtern)}
                 </p>
               </li>
             );

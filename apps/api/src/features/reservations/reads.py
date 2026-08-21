@@ -436,7 +436,38 @@ class ReadsMixin(ReservationsBase):
         #
         # `None` heisst "nicht bestimmbar" — die UI zeigt dann keinen
         # Offenposten, statt 0,00 zu behaupten.
-        offen = None if r.get("channel") == "airbnb" else max(0.0, total - paid)
+        #
+        # ZWEI WEITERE FAELLE, in denen es keinen Offenposten GEBEN KANN:
+        #
+        # (a) STORNIERT. Eine stornierte Buchung fordert nichts. Bei
+        #     portal-kassierten Buchungen wird `paid_amount` beim Storno
+        #     bewusst auf 0 gesetzt (das Portal erstattet,
+        #     bookings_sync._project_booking_to_reservation) — `total - paid`
+        #     ergibt danach den VOLLEN Betrag. Live gemessen am 21.08.2026:
+        #     sieben stornierte Booking-Buchungen wiesen zusammen 26.880,15 DKK
+        #     als offen aus, die niemand schuldet. Die Nullung ist richtig,
+        #     die Subtraktion danach ist es nicht.
+        #
+        # (b) DAS PORTAL KASSIERT SELBST (`payment_collect='ota'`). Booking.com
+        #     und Airbnb ziehen beim Gast ein und rechnen mit uns ab; der Gast
+        #     hat uns gegenueber keine offene Zahlung. Bisher war nur Airbnb
+        #     ausgenommen — begruendet mit der Bedeutung von `total_amount`.
+        #     Das trifft aber nicht den Kern: entscheidend ist, WER kassiert.
+        #     Bei Booking.com ist `total_amount` zwar der Gastpreis brutto,
+        #     doch bezahlt hat der Gast an das Portal, nicht an uns.
+        #
+        # Kein `max(0, ...)`-Trick fuer diese Faelle: `None` heisst "hier gibt
+        # es keine Forderung", und die UI zeigt dann gar keine Kachel — eine
+        # 0,00-Forderung waere eine Aussage ueber Geld, die wir nicht treffen
+        # koennen (Wurzel 4).
+        if r.get("channel") == "airbnb":
+            offen = None
+        elif r.get("status") == "cancelled":
+            offen = None
+        elif r.get("payment_collect") == "ota":
+            offen = None
+        else:
+            offen = max(0.0, total - paid)
         items = [
             QuoteItem(label=str(it.get("label", "")), amount=float(it.get("amount") or 0))
             for it in (r.get("quote_items") or [])

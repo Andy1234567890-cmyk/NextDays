@@ -6,19 +6,41 @@ import { getTranslations } from "next-intl/server";
 import { NewPropertyButton } from "@/components/objekte/new-property-button";
 import { ObjectsList } from "@/components/objekte/objects-list";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
+import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
+import Link from "next/link";
 import { Icon } from "@iconify/react";
 import { getMe } from "@/lib/auth";
 import { listProperties } from "@/lib/properties";
 
-export default async function ObjektePage() {
+export default async function ObjektePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ archiv?: string }>;
+}) {
+  // Archiv-Ansicht (0416). Über die Adresse gesteuert, nicht über Client-State:
+  // ein archiviertes Objekt muss per Link auffindbar und teilbar sein — sonst
+  // ist es aus der Oberfläche verschwunden, sobald es aus der Liste fällt.
+  const archiv = (await searchParams).archiv === "1";
   // Betriebsart mitladen: Hotel spricht von „Zimmern" und bekommt die
   // Zimmertypen-Liste in der Anlage (0090/0098).
-  const [res, me, t] = await Promise.all([
-    listProperties(),
+  //
+  // Die Archiv-Zahl kommt IMMER mit, auch in der normalen Ansicht: nur so gibt
+  // es überhaupt einen sichtbaren Weg ins Archiv. Ohne sie wüsste niemand, dass
+  // dort etwas liegt.
+  const [res, archivRes, me, t] = await Promise.all([
+    listProperties({ archiviert: archiv }),
+    archiv ? Promise.resolve(null) : listProperties({ archiviert: true }),
     getMe(),
     getTranslations("objects"),
   ]);
+  const archivAnzahl = archiv
+    ? res.ok
+      ? res.data.items.length
+      : 0
+    : archivRes?.ok
+      ? archivRes.data.items.length
+      : 0;
   const accommodationType = me?.accommodation_type ?? null;
   const isHotel = accommodationType === "hotel";
 
@@ -28,15 +50,41 @@ export default async function ObjektePage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-display text-2xl font-extrabold">
-            {isHotel ? t("objektePage.titleHotel") : t("objektePage.titleDefault")}
+            {archiv
+              ? t("objektePage.archivTitle")
+              : isHotel
+                ? t("objektePage.titleHotel")
+                : t("objektePage.titleDefault")}
           </h2>
           <p className="text-sm text-muted-foreground">
-            {isHotel
-              ? t("objektePage.subtitleHotel")
-              : t("objektePage.subtitleDefault")}
+            {archiv
+              ? t("objektePage.archivSubtitle")
+              : isHotel
+                ? t("objektePage.subtitleHotel")
+                : t("objektePage.subtitleDefault")}
           </p>
         </div>
-        <NewPropertyButton accommodationType={accommodationType} />
+        <div className="flex items-center gap-2">
+          {/* Der Weg ins Archiv und zurück. Nur sichtbar, wenn dort etwas
+              liegt (bzw. man schon drin ist) — ein leeres Archiv braucht
+              keinen Knopf. Ohne diesen Link ist ein archiviertes Objekt aus
+              der Oberfläche verschwunden: es fällt aus der Liste und es gibt
+              keine zweite Stelle, an der es auftaucht. */}
+          {(archiv || archivAnzahl > 0) && (
+            <Button asChild variant="outline" size="sm">
+              <Link href={archiv ? "/objekte" : "/objekte?archiv=1"}>
+                <Icon
+                  icon={archiv ? "ph:arrow-left" : "ph:archive"}
+                  className="size-4"
+                />
+                {archiv
+                  ? t("objektePage.archivBack")
+                  : t("objektePage.archivOpen", { count: archivAnzahl })}
+              </Link>
+            </Button>
+          )}
+          {!archiv && <NewPropertyButton accommodationType={accommodationType} />}
+        </div>
       </div>
 
       {!res.ok ? (
@@ -44,7 +92,13 @@ export default async function ObjektePage() {
           {t("objektePage.loadError")}
         </Card>
       ) : res.data.items.length === 0 ? (
-        <EmptyState accommodationType={accommodationType} t={t} />
+        archiv ? (
+          <Card className="p-5 text-sm text-muted-foreground">
+            {t("objektePage.archivEmpty")}
+          </Card>
+        ) : (
+          <EmptyState accommodationType={accommodationType} t={t} />
+        )
       ) : (
         <ObjectsList
           items={res.data.items}

@@ -1190,11 +1190,37 @@ class ChannexClient(AirbnbActionsMixin, ListingSettingsMixin):
     # auf einem ALTEN Stand zurück, den Airbnb zwischenzeitlich geändert haben
     # kann.
     #
-    # Der bewiesene Weg für `published` ist stattdessen
-    # `VeroeffentlichenMixin.airbnb_sichtbarkeit_setzen`: `PUT channels/{id}` mit
-    # dem kompletten `rate_plans`-Array, in dem GENAU EIN Mapping geändert und
-    # alle übrigen unverändert übernommen werden — nötig, weil dieser PUT das
-    # Array ersetzt und ein Airbnb-Kanal live 18 Objekte trägt.
+    # AUCH `PUT channels/{id}` ÄNDERT BESTEHENDE `settings` NICHT. Der PUT ist
+    # nur für das ANHÄNGEN neuer Mappings verifiziert
+    # (`_attach_room_to_channel`). Zweimal live belegt:
+    #   * 12.08.2026 (Vorgang 75379514…): `settings.published=false` im vollen
+    #     Array → 200, danach steht `published` weiter auf `true`.
+    #   * 21.08.2026 (Rævehulen, Kanal 9a46827b…, Mapping 7eff77ae…): ein
+    #     `settings.airbnb_rate_plan_id` per `settings.pop` entfernt und alle 17
+    #     Einträge zurückgeschrieben → 200, beim Rücklesen steht das Feld
+    #     unverändert da. Kein Schaden (alle 17 Zuordnungen intakt), aber der
+    #     Weg leistet nichts.
+    # Ein FELD AUS BESTEHENDEN `settings` LÖSCHT DIESER PUT ALSO NICHT.
+    #
+    # Und der naheliegende Ausweg — Zuordnung löschen, ohne das Feld neu anlegen
+    # — ist EBENFALLS widerlegt (21.08.2026, Rævehulen): DELETE 200, POST 200
+    # mit einer FREMDEN `channex_id`, danach existierte die Zuordnung an keinem
+    # der 20 Kanäle. Ursache: dieser Rate-Plan hing gleichzeitig an einem
+    # Booking.com-Kanal, und Channex schlug die Neuanlage dem anderen Kanal zu.
+    # Bei den 16 funktionierenden Airbnb-Zuordnungen hat jede ihren EIGENEN,
+    # exklusiven Rate-Plan. Das Objekt war danach bei Airbnb gar nicht mehr
+    # zugeordnet; wiederhergestellt per `POST …/mappings` (nur `listing_id`) +
+    # `execute/unpublish`, beides zurückgelesen.
+    #
+    # FAZIT: Eine bestehende Zuordnung lässt sich NICHT im Feld korrigieren. Wer
+    # so einen Zustand findet, behebt die Ursache in den Daten (ein Rate-Plan
+    # gehört zu genau EINEM Kanal) und verbindet neu. Sichtbar gemacht wird er
+    # über `ChannelsMixin._zuordnung_unbrauchbar` — siehe
+    # `tests/test_zuordnung_gueltigkeit.py`.
+    #
+    # Für `published` ist der bewiesene Weg weder der eine noch der andere PUT,
+    # sondern die Kanal-Aktion `execute/publish|unpublish`
+    # (`set_listing_published`) — `published` ist ein Zustand des LISTINGS.
 
     def delete_channel_mapping(
         self, channel_id: str, mapping_id: str

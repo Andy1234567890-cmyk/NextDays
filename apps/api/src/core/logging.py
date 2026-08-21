@@ -1,4 +1,12 @@
 """structlog-Setup: Console-Renderer lokal, JSON in Produktion."""
+# SCHWESTERDATEI — byte-identisch in beiden Bäumen halten:
+#     apps/api/src/core/logging.py
+#     apps/public-api/src/core/logging.py
+# Die öffentliche API ist ein EIGENER Service (apps/public-api/README.md) und
+# importiert nichts aus apps/api. Diese Datei liegt dort deshalb als bewusste
+# Kopie (Muster ADR-0019). Der CI-Job `public-api-konsistenz` prüft die
+# Byte-Gleichheit: driftende Log-Maskierung (mask_email/mask_phone) hieße, dass
+# einer der beiden Dienste personenbezogene Daten im Klartext protokolliert.
 import logging
 import sys
 

@@ -13,6 +13,16 @@ Buchung dagegen belegt EINE Einheit und schreibt nur deren Zeile.
 Hier steht beides an einer Stelle, damit die Regel nicht in neun Slices je
 eigenständig nachgebaut (und irgendwo vergessen) wird.
 """
+# SCHWESTERDATEI — byte-identisch in beiden Bäumen halten:
+#     apps/api/src/core/einheiten.py
+#     apps/public-api/src/core/einheiten.py
+# Die öffentliche API ist ein EIGENER Service (apps/public-api/README.md) und
+# importiert nichts aus apps/api. Diese Datei liegt dort deshalb als bewusste
+# Kopie (Muster ADR-0019). Der CI-Job `public-api-konsistenz` prüft die
+# Byte-Gleichheit: driftet die Regel „wann trifft eine Zeile EINE Einheit und
+# wann alle", schreibt einer der beiden Dienste Kalenderzeilen, die der andere
+# nicht findet — und `AVAILABILITY_CONFLICT` muss in beiden dasselbe Tripel
+# nennen, sonst legt ein Upsert Duplikate an statt zu aktualisieren.
 from __future__ import annotations
 
 from typing import Any

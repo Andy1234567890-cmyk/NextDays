@@ -3971,7 +3971,8 @@
         "inspektion": "Patikra",
         "vorlagen": "Užduočių šablonai",
         "planmaessig": "Planinės užduotys",
-        "regelmaessig": "Pasikartojančios užduotys"
+        "regelmaessig": "Pasikartojančios užduotys",
+        "vertretungen": "Pavadavimai"
       }
     },
     "propertyCalendar": {
@@ -4857,6 +4858,18 @@
       "gesetzt": "Priskyrimas pakeistas",
       "abgezogen": "Priskyrimas atšauktas",
       "aktion": "Priskirti …"
+    },
+    "substitutions": {
+      "title": "Pavadavimai",
+      "intro": "Atviros kolegų užklausos. Kas perima, tam priskiriama užduotis.",
+      "loading": "Įkeliama …",
+      "empty": "Atvirų užklausų nėra",
+      "emptyHint": "Jei kas ieško pavaduojančio, tai matysite čia.",
+      "requestedBy": "Užklausė {name}",
+      "take": "Perimti",
+      "decline": "Atmesti",
+      "taken": "Užduotis perimta",
+      "declined": "Užklausa atmesta"
     }
   },
   "objects": {
@@ -4942,7 +4955,14 @@
       "unlistOk": "Ryšys su svetaine panaikintas.",
       "unlistErr": "Nepavyko atsieti.",
       "menuVerkaufAus": "Išjungti visuose portaluose",
-      "menuVerkaufAn": "Vėl siūlyti visuose portaluose"
+      "menuVerkaufAn": "Vėl siūlyti visuose portaluose",
+      "menuArchive": "Archyvuoti",
+      "menuUnarchive": "Grąžinti į sąrašą",
+      "archiveConfirm": "Archyvuoti objektą „{title}“? Objektas dings iš sąrašo ir nuo šiandien nebebus parduodamas niekur. Esamos rezervacijos liks galioti, visi duomenys išsaugomi.",
+      "unarchiveConfirm": "Grąžinti objektą „{title}“ į sąrašą? Objektas vėl atsiras sąraše, o pardavimo blokavimas bus panaikintas.",
+      "archiveOk": "Objektas archyvuotas.",
+      "unarchiveOk": "Objektas vėl aktyvus.",
+      "archiveErr": "Nepavyko archyvuoti."
     },
     "messagingForm": {
       "title": "Pranešimų šablonai",
@@ -6559,6 +6579,8 @@
     "allChannels": "All channels",
     "connectedStatus": "Connected",
     "notConnectedStatus": "Neprijungta",
+    "statusBroken": "Klaidingas priskyrimas",
+    "repairHint": "Skelbimas portale priskirtas, bet tikslui, kurio ten nėra. Pasiekiamumas perduodamas, o kainos ne. Atjunkite ir vėl prijunkite, kad priskyrimas būtų atkurtas.",
     "addChannel": "Add channel",
     "searchChannel": "Ieškoti kanalo …",
     "noResults": "Kanalų nerasta.",
@@ -6677,7 +6699,21 @@
         "approved": "Patvirtinta",
         "rejected": "Atmesta"
       }
-    }
+    },
+    "csvTitle": "Importuoti rezervacijas iš laiko prieš prijungimą per failą",
+    "csvText": "Portalas per sąsają pateikia tik rezervacijas nuo prijungimo dienos. Senesnius apsilankymus gauk iš savo portalo paskyros eksporto ir įkelk juos čia.",
+    "csvDownloadTemplate": "Atsisiųsti šabloną",
+    "csvUpload": "Įkelti failą",
+    "csvHint": "Įkelk failą tokį, kokį gauni iš portalo (.xls, .xlsx arba .csv). Prieš importuojant pamatysi, kokie objektai ir kiek rezervacijų atpažinta. Atšauktos rezervacijos praleidžiamos, jau esamos atpažįstamos ir nekuriamos iš naujo.",
+    "csvResult": "Importuota {imported} iš {total} rezervacijų.",
+    "csvSkipped": "{count, plural, one {# eilutė praleista (jau yra arba objektas nežinomas)} few {# eilutės praleistos (jau yra arba objektas nežinomas)} many {# eilutės praleista (jau yra arba objektas nežinomas)} other {# eilučių praleista (jau yra arba objektas nežinomas)}}",
+    "csvNothingUsable": "Faile nėra jokios perkeltinos rezervacijos — visos eilutės yra atšauktos arba jose nėra nuskaitomos datos.",
+    "csvPreview": "Atpažinta {count} rezervacijų, atvykimai nuo {from} iki {to}. Kol kas nieko neimportuota.",
+    "csvPreviewProperties": "Faile esantys objektai — šie pavadinimai turi sutapti su tavo objektų pavadinimais, kitaip eilutės bus praleistos:",
+    "csvPreviewNoRef": "{count, plural, one {# rezervacija be rezervacijos numerio} few {# rezervacijos be rezervacijos numerio} many {# rezervacijos be rezervacijos numerio} other {# rezervacijų be rezervacijos numerio}} — jos atpažįstamos pagal objektą, laikotarpį ir vardą.",
+    "csvConfirm": "Importuoti {count} rezervacijų",
+    "csvCancel": "Atšaukti",
+    "csvFailed": "{count, plural, one {# eilutė su klaida} few {# eilutės su klaidomis} many {# eilutės su klaida} other {# eilučių su klaidomis}}:"
   },
   "calendarSync": {
     "title": "Kalendoriaus importas / eksportas",
@@ -7409,6 +7445,7 @@
       "propertyCount": "Objektų skaičius",
       "oneMore": "Vienu objektu daugiau",
       "commissionPerChannel": "Komisinis pagal rezervacijų kanalą",
+      "commissionExternalCap": "ne daugiau kaip {betrag} per mėnesį",
       "included": "Kas įskaičiuota",
       "totalMonthly": "Iš viso per mėnesį"
     },
@@ -7494,7 +7531,7 @@
       "loadFailed": "Nepavyko įkelti komisinių: {error}",
       "cardRate": "„Booking“, „Airbnb“ ir kt.: {rate} % nuo Jūsų paskelbtų objektų rezervacijų apyvartos. Mėnesio komisiniai išrašomi kito mėnesio 1 d. ir įtraukiami į kitą Jūsų prenumeratos sąskaitą.",
       "cardRateCapped": "„Booking“, „Airbnb“ ir kt.: {rate} % nuo Jūsų paskelbtų objektų rezervacijų apyvartos. Mėnesio komisiniai išrašomi kito mėnesio 1 d. ir įtraukiami į kitą Jūsų prenumeratos sąskaitą, daugiausiai {cap} per mėnesį.",
-      "cardOtherChannels": "Rezervacijoms per Jūsų pačių svetainę komisiniai netaikomi. Rezervacijoms per myBestDays prekyvietę taikoma 8 %, kuri išskaičiuojama iš karto gavus mokėjimą – čia ji neįtraukta.",
+      "cardOtherChannels": "Rezervacijoms per Jūsų pačių svetainę komisiniai netaikomi. Rezervacijoms per myBestDays prekyvietę taikoma {satz}, kuri išskaičiuojama iš karto gavus mokėjimą – čia ji neįtraukta.",
       "pending": "Neapmokėta ({count, plural, one {# rezervacija} few {# rezervacijos} many {# rezervacijos} other {# rezervacijų}}): ",
       "pendingCapHint": " — bus išrašyta sąskaita už mėnesio ribą {cap}",
       "noPending": "Šiuo metu neapmokėtų komisinių nėra.",
@@ -7502,9 +7539,9 @@
       "backToBilling": "Atsiskaitymas",
       "monthsTitle": "Komisiniai pagal mėnesius",
       "monthsIntro": "Šioje suvestinėje rodomi tik komisiniai už rezervacijas per išorinius portalus („Booking“, „Airbnb“ ir kt.). Mėnesio komisiniai išrašomi kito mėnesio 1 d. ir įtraukiami į kitą Jūsų prenumeratos sąskaitą – nurašomi kartu su ta sąskaita.",
-      "monthsChannels": "Rezervacijoms per myBestDays prekyvietę taikomas 8 % komisinis mokestis, kuris išskaičiuojamas jau gavus mokėjimą; todėl jos šiame sąraše nerodomos. Rezervacijoms per Jūsų pačių svetainę komisiniai netaikomi.",
+      "monthsChannels": "Rezervacijoms per myBestDays prekyvietę taikomas {satz} komisinis mokestis, kuris išskaičiuojamas jau gavus mokėjimą; todėl jos šiame sąraše nerodomos. Rezervacijoms per Jūsų pačių svetainę komisiniai netaikomi.",
       "monthsLoading": "Įkeliami komisiniai …",
-      "monthsEmpty": "Per išorinius portalus komisinių iki šiol nesusidarė. Rezervacijoms per Jūsų pačių svetainę komisiniai netaikomi visą laiką. Rezervacijoms prekyvietėje myBestDays taikomas 8 % komisinis mokestis – jis išskaičiuojamas iš karto gavus mokėjimą ir čia nerodomas.",
+      "monthsEmpty": "Per išorinius portalus komisinių iki šiol nesusidarė. Rezervacijoms per Jūsų pačių svetainę komisiniai netaikomi visą laiką. Rezervacijoms prekyvietėje myBestDays taikomas {satz} komisinis mokestis – jis išskaičiuojamas iš karto gavus mokėjimą ir čia nerodomas.",
       "colMonth": "Mėnuo",
       "colBookings": "Rezervacijos",
       "colGross": "Rezervacijų apyvarta",
@@ -7637,7 +7674,7 @@
     "stars": "4,5 žvaigždutės",
     "reviews": "· 921 atsiliepimas",
     "trial30": "Išbandykite 30 dienų nemokamai",
-    "bookingValue": "+0,5 % rezervacijos vertės",
+    "bookingValue": "+{satz} rezervacijos vertės",
     "seePrices": "Peržiūrėti kainas",
     "downloadApp": "Atsisiųsti programėlę",
     "copyright": "© 2026 myNextDays. Visos teisės saugomos.",

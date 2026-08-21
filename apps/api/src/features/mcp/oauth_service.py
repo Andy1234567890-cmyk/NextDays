@@ -27,9 +27,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
-import ipaddress
 import secrets
-import socket
 from datetime import UTC, datetime, timedelta
 from urllib.parse import urlparse
 
@@ -37,6 +35,7 @@ import httpx
 import jwt
 from supabase import Client
 
+from src.core.ausgehende_url import ist_oeffentliche_url
 from src.core.config import Settings
 from src.core.logging import get_logger
 from src.core.security import secrets_match
@@ -162,39 +161,12 @@ def _ist_oeffentliche_url(url: str) -> bool:
     """HTTPS + auflösbarer, NICHT-interner Host.
 
     Die CIMD-URL kommt vom Client und wird von UNSEREM Server geholt — das ist
-    ein SSRF-Vektor (Wurzel 8). Geprüft wird gegen die aufgelöste IP, nicht
-    gegen den Namen: `interne.firma` kann auf 10.x zeigen.
+    ein SSRF-Vektor (Wurzel 8). Die eigentliche Prüfung (Schema, Auflösung,
+    jede IP öffentlich, IPv4-mapped, CGNAT, Metadaten-Adressen) liegt im
+    gemeinsamen Kern `core.ausgehende_url`; sie stand früher hier UND in
+    `features/external_calendar` als eigene Kopie.
     """
-    teile = urlparse(url)
-    if teile.scheme != "https" or not teile.hostname:
-        return False
-    try:
-        infos = socket.getaddrinfo(teile.hostname, 443, proto=socket.IPPROTO_TCP)
-    except OSError:
-        return False
-    return all(_ist_oeffentliche_ip(info[4][0]) for info in infos)
-
-
-def _ist_oeffentliche_ip(roh: str) -> bool:
-    """Zeigt diese Adresse ins öffentliche Netz?
-
-    `is_private` allein reicht nicht: CGNAT (100.64/10) ist formal nicht privat,
-    führt aber ins Providernetz, und 169.254.x ist der Cloud-Metadaten-Dienst.
-    """
-    adresse = ipaddress.ip_address(roh)
-    # IPv4-mapped IPv6 (::ffff:10.0.0.1) auspacken — sonst rutscht eine interne
-    # Adresse in dieser Schreibweise durch.
-    if getattr(adresse, "ipv4_mapped", None) is not None:
-        adresse = adresse.ipv4_mapped
-    unerlaubt = (
-        adresse.is_private,
-        adresse.is_loopback,
-        adresse.is_link_local,      # 169.254.x — Cloud-Metadaten
-        adresse.is_reserved,
-        adresse.is_multicast,
-        adresse in ipaddress.ip_network("100.64.0.0/10"),  # CGNAT
-    )
-    return not any(unerlaubt)
+    return ist_oeffentliche_url(url, nur_https=True)
 
 
 def _gleicher_ursprung(a: str, b: str) -> bool:

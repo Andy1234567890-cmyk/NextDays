@@ -3971,7 +3971,8 @@
         "inspektion": "Inspekcja",
         "vorlagen": "Szablony zadań",
         "planmaessig": "Zadania planowe",
-        "regelmaessig": "Zadania cykliczne"
+        "regelmaessig": "Zadania cykliczne",
+        "vertretungen": "Zastępstwa"
       }
     },
     "propertyCalendar": {
@@ -4857,6 +4858,18 @@
       "gesetzt": "Zmieniono osobę odpowiedzialną",
       "abgezogen": "Cofnięto przypisanie",
       "aktion": "Przypisz do …"
+    },
+    "substitutions": {
+      "title": "Zastępstwa",
+      "intro": "Otwarte prośby współpracowników. Kto przejmie, otrzymuje zadanie.",
+      "loading": "Wczytywanie …",
+      "empty": "Brak otwartych prośb",
+      "emptyHint": "Jeśli ktoś szuka zastępstwa, pojawi się tutaj.",
+      "requestedBy": "Poprosił(a) {name}",
+      "take": "Przejmij",
+      "decline": "Odrzuć",
+      "taken": "Zadanie przejęte",
+      "declined": "Prośba odrzucona"
     }
   },
   "objects": {
@@ -4942,7 +4955,14 @@
       "unlistOk": "Połączenie ze stroną internetową usunięte.",
       "unlistErr": "Nie udało się odłączyć.",
       "menuVerkaufAus": "Wyłącz we wszystkich portalach",
-      "menuVerkaufAn": "Ponownie oferuj we wszystkich portalach"
+      "menuVerkaufAn": "Ponownie oferuj we wszystkich portalach",
+      "menuArchive": "Archiwizuj",
+      "menuUnarchive": "Przywróć do zasobu",
+      "archiveConfirm": "Zarchiwizować obiekt „{title}”? Obiekt zniknie z listy i od dziś nie będzie sprzedawany na żadnym portalu. Istniejące rezerwacje pozostają ważne, wszystkie dane zostają zachowane.",
+      "unarchiveConfirm": "Przywrócić obiekt „{title}” do zasobu? Obiekt ponownie pojawi się na liście, a blokada sprzedaży zostanie zniesiona.",
+      "archiveOk": "Obiekt zarchiwizowany.",
+      "unarchiveOk": "Obiekt jest ponownie w zasobie.",
+      "archiveErr": "Archiwizacja nie powiodła się."
     },
     "messagingForm": {
       "title": "Zastępniki wiadomości",
@@ -6559,6 +6579,8 @@
     "allChannels": "All channels",
     "connectedStatus": "Connected",
     "notConnectedStatus": "Niepołączony",
+    "statusBroken": "Błędne przypisanie",
+    "repairHint": "Ogłoszenie jest przypisane w portalu, ale do celu, który tam nie istnieje. Dostępność jest przesyłana, ceny nie. Rozłącz i połącz ponownie, aby przywrócić przypisanie.",
     "addChannel": "Add channel",
     "searchChannel": "Szukaj kanału …",
     "noResults": "Nie znaleziono kanału.",
@@ -6677,7 +6699,21 @@
         "approved": "Zatwierdzony",
         "rejected": "Odrzucony"
       }
-    }
+    },
+    "csvTitle": "Import rezerwacji sprzed połączenia z plikiem",
+    "csvText": "Portal przekazuje przez interfejs tylko rezerwacje od dnia połączenia. Starsze pobyty pobierz z eksportu swojego konta w portalu i wgraj je tutaj.",
+    "csvDownloadTemplate": "Pobierz szablon",
+    "csvUpload": "Wgraj plik",
+    "csvHint": "Wgraj plik tak, jak dostajesz go z portalu (.xls, .xlsx lub .csv). Przed importem zobaczysz, jakie obiekty i ile rezerwacji zostało rozpoznanych. Anulowane rezerwacje zostają pominięte, a już istniejące są rozpoznawane i nie są dodawane po raz drugi.",
+    "csvNothingUsable": "W pliku nie ma żadnej rezerwacji do przejęcia — wszystkie wiersze są anulowane albo mają nieczytelną datę.",
+    "csvPreview": "Rozpoznano {count} rezerwacji, przyjazdy od {from} do {to}. Nic nie zostało jeszcze zaimportowane.",
+    "csvPreviewProperties": "Obiekty w pliku — te nazwy muszą odpowiadać tytułom Twoich obiektów, inaczej wiersze zostaną pominięte:",
+    "csvPreviewNoRef": "{count, plural, one {# rezerwacja bez numeru rezerwacji} few {# rezerwacje bez numeru rezerwacji} many {# rezerwacji bez numeru rezerwacji} other {# rezerwacji bez numeru rezerwacji}} — dla nich rozpoznanie odbywa się na podstawie obiektu, okresu i nazwiska.",
+    "csvConfirm": "Importuj {count} rezerwacji",
+    "csvCancel": "Anuluj",
+    "csvResult": "Zaimportowano {imported} z {total} rezerwacji.",
+    "csvSkipped": "{count, plural, one {# wiersz pominięty (już istnieje lub nieznany obiekt)} few {# wiersze pominięte (już istnieją lub nieznany obiekt)} many {# wierszy pominiętych (już istnieją lub nieznany obiekt)} other {# wiersza pominięte (już istnieją lub nieznany obiekt)}}",
+    "csvFailed": "{count, plural, one {# wiersz z błędem} few {# wiersze z błędem} many {# wierszy z błędem} other {# wiersza z błędem}}:"
   },
   "calendarSync": {
     "title": "Importuj/eksportuj kalendarz",
@@ -7409,6 +7445,7 @@
       "propertyCount": "Liczba obiektów",
       "oneMore": "Jeden obiekt więcej",
       "commissionPerChannel": "Prowizja na kanał rezerwacyjny",
+      "commissionExternalCap": "najwyżej {betrag} miesięcznie",
       "included": "Co jest w zestawie",
       "totalMonthly": "Łącznie miesięcznie"
     },
@@ -7494,7 +7531,7 @@
       "loadFailed": "Nie udało się wczytać prowizji: {error}",
       "cardRate": "Booking, Airbnb i inne: {rate} % obrotu z rezerwacji Twoich opublikowanych obiektów. Prowizje za dany miesiąc są rozliczane 1. dnia następnego miesiąca i doliczane do Twojej kolejnej faktury abonamentowej.",
       "cardRateCapped": "Booking, Airbnb i inne: {rate} % obrotu z rezerwacji Twoich opublikowanych obiektów. Prowizje za dany miesiąc są rozliczane 1. dnia następnego miesiąca i doliczane do Twojej kolejnej faktury abonamentowej, maksymalnie {cap} miesięcznie.",
-      "cardOtherChannels": "Rezerwacje przez Twoją własną stronę pozostają bez prowizji. Rezerwacje przez marketplace myBestDays są objęte prowizją 8 %, potrącaną bezpośrednio przy wpływie płatności — nie są tu uwzględnione.",
+      "cardOtherChannels": "Rezerwacje przez Twoją własną stronę pozostają bez prowizji. Rezerwacje przez marketplace myBestDays są objęte prowizją {satz}, potrącaną bezpośrednio przy wpływie płatności — nie są tu uwzględnione.",
       "pending": "Nierozliczone ({count, plural, one {# rezerwacja} few {# rezerwacje} many {# rezerwacji} other {# rezerwacji}}): ",
       "pendingCapHint": " — rozliczony zostanie miesięczny limit {cap}",
       "noPending": "Obecnie brak nierozliczonych prowizji.",
@@ -7502,9 +7539,9 @@
       "backToBilling": "Rozliczenia",
       "monthsTitle": "Prowizje w podziale na miesiące",
       "monthsIntro": "To zestawienie pokazuje wyłącznie prowizje z rezerwacji przez portale zewnętrzne (Booking, Airbnb i inne). Prowizje za dany miesiąc są rozliczane 1. dnia następnego miesiąca i doliczane do Twojej kolejnej faktury abonamentowej — pobranie następuje razem z tą fakturą.",
-      "monthsChannels": "Rezerwacje przez marketplace myBestDays są objęte prowizją 8 %, potrącaną już przy wpływie płatności; dlatego nie pojawiają się na tej liście. Rezerwacje przez Twoją własną stronę pozostają bez prowizji.",
+      "monthsChannels": "Rezerwacje przez marketplace myBestDays są objęte prowizją {satz}, potrącaną już przy wpływie płatności; dlatego nie pojawiają się na tej liście. Rezerwacje przez Twoją własną stronę pozostają bez prowizji.",
       "monthsLoading": "Wczytywanie prowizji …",
-      "monthsEmpty": "Dotychczas nie powstały żadne prowizje z portali zewnętrznych. Rezerwacje przez Twoją własną stronę na stałe pozostają bez prowizji. Rezerwacje na marketplace myBestDays są objęte prowizją 8 % — jest ona potrącana bezpośrednio przy wpływie płatności i nie pojawia się tutaj.",
+      "monthsEmpty": "Dotychczas nie powstały żadne prowizje z portali zewnętrznych. Rezerwacje przez Twoją własną stronę na stałe pozostają bez prowizji. Rezerwacje na marketplace myBestDays są objęte prowizją {satz} — jest ona potrącana bezpośrednio przy wpływie płatności i nie pojawia się tutaj.",
       "colMonth": "Miesiąc",
       "colBookings": "Rezerwacje",
       "colGross": "Obrót z rezerwacji",
@@ -7637,7 +7674,7 @@
     "stars": "4,5 gwiazdki",
     "reviews": "· 921 opinii",
     "trial30": "Wypróbuj za darmo przez 30 dni",
-    "bookingValue": "+0,5 % wartości rezerwacji",
+    "bookingValue": "+{satz} wartości rezerwacji",
     "seePrices": "Zobacz ceny",
     "downloadApp": "Pobierz aplikację",
     "copyright": "© 2026 myNextDays. Wszelkie prawa zastrzeżone.",

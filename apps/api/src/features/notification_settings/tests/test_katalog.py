@@ -37,6 +37,9 @@ MIGRATIONEN = (
     # Push-Kanal (nur `betrieb_buchung` und `messages` — die zwei
     # Ereignisse, die den Betrieb sofort erreichen muessen).
     "0414_push_geraete.sql",
+    # Vertretung (eigene Kategorie: anderer Empfaenger als task_assigned,
+    # mit Push, weil eine offene Vertretung heute gebraucht wird).
+    "0415_vertretung_benachrichtigung.sql",
 )
 
 

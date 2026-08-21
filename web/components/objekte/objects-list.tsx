@@ -24,6 +24,7 @@ import { Input } from "@nextdays/ui/input";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { Icon } from "@iconify/react";
 import {
+  archiveProperty,
   deleteProperty,
   duplicateProperty,
   unlistPropertyWebsite,
@@ -76,8 +77,45 @@ export function ObjectsList({
     if (res.ok) {
       toast.success(t("objektePage.deleteOk"));
       router.refresh();
+      return;
+    }
+    // Die SERVER-Meldung zeigen, nicht den pauschalen Text.
+    //
+    // Ein Objekt mit Buchungen ist nicht löschbar (FK RESTRICT) — der Server
+    // antwortet mit 409 und nennt die Zahl der Buchungen samt Ausweg
+    // („Archiviere es stattdessen"). Genau diese Auskunft hat ein Beta-Betrieb
+    // gebraucht und nicht bekommen: der pauschale „Löschen fehlgeschlagen"
+    // verschluckte sie, und davor kam der rohe Datenbankfehler.
+    toast.error(res.error || t("objektePage.deleteErr"), {
+      duration: res.status === 409 ? 12000 : undefined,
+    });
+  }
+
+  /**
+   * Objekt archivieren bzw. zurück in den Bestand holen.
+   *
+   * Der Weg für ein gekündigtes Objekt. Es verschwindet aus dieser Liste und
+   * wird nirgends mehr verkauft (das Vertragsende sperrt die freien Nächte und
+   * meldet das an die Portale), aber alle Daten bleiben: Buchungen, Umsätze,
+   * Eigentümer-Abrechnungen.
+   */
+  async function handleArchive(p: Property, archivieren: boolean) {
+    const frage = archivieren
+      ? t("objektePage.archiveConfirm", { title: p.title })
+      : t("objektePage.unarchiveConfirm", { title: p.title });
+    if (!window.confirm(frage)) return;
+    setBusyId(p.id);
+    const res = await archiveProperty(p.id, archivieren);
+    setBusyId(null);
+    if (res.ok) {
+      toast.success(
+        archivieren
+          ? t("objektePage.archiveOk")
+          : t("objektePage.unarchiveOk"),
+      );
+      router.refresh();
     } else {
-      toast.error(t("objektePage.deleteErr"));
+      toast.error(res.error || t("objektePage.archiveErr"));
     }
   }
 
@@ -327,6 +365,31 @@ export function ObjectsList({
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuSeparator />
+                        {/* Archivieren steht ÜBER dem Löschen und ohne
+                            Warnfarbe: für ein gekündigtes Objekt ist es der
+                            richtige Weg, nicht die Notlösung. Löschen bleibt
+                            darunter für den versehentlich angelegten Entwurf. */}
+                        {p.archived_at ? (
+                          <DropdownMenuItem
+                            onSelect={(e) => {
+                              e.preventDefault();
+                              void handleArchive(p, false);
+                            }}
+                          >
+                            <Icon icon="ph:arrow-counter-clockwise" className="size-4" />
+                            {t("objektePage.menuUnarchive")}
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem
+                            onSelect={(e) => {
+                              e.preventDefault();
+                              void handleArchive(p, true);
+                            }}
+                          >
+                            <Icon icon="ph:archive" className="size-4" />
+                            {t("objektePage.menuArchive")}
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem
                           className="text-destructive focus:text-destructive"
                           onSelect={(e) => {

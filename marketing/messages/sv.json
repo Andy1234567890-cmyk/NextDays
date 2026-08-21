@@ -157,7 +157,8 @@
   },
   "direkt": {
    "frage": "Får jag en egen bokningssida utan portalprovision?",
-   "antwort": "Ja. Till varje konto hör en egen bokningsportal, en widget för din befintliga webbplats och en webbplatsbyggare med eget domännamn. Direktbokningar kostar 0,5 % i stället för de stora portalernas 15–18 %, körs på samma kalender och samma priser — och pengarna går direkt till ditt konto."
+   "antwort": "Ja. Till varje konto hör en egen bokningsportal, en widget för din befintliga webbplats och en webbplatsbyggare med eget domännamn. Direktbokningar kostar {satz} i stället för de stora portalernas 15–18 %, körs på samma kalender och samma priser — och pengarna går direkt till ditt konto.",
+   "satzUnbekannt": "betydligt mindre"
   },
   "marktplatz": {
    "frage": "Vad är myBestDays?",
@@ -261,7 +262,8 @@
    },
    "direkt": {
     "title": "Direktbokning",
-    "items": "Egen bokningsportal, bokningswidget, webbplatsbyggare, egen domän, 0,5 % i stället för 15–18 % OTA-provision"
+    "items": "Egen bokningsportal, bokningswidget, webbplatsbyggare, egen domän, {satz} i stället för 15–18 % OTA-provision",
+    "satzUnbekannt": "betydligt mindre"
    },
    "preise": {
     "title": "Priser & intäkter",
@@ -525,9 +527,9 @@
    "direktText": "Via din egen webbplats eller ditt bokningsformulär. Av det tar vi ingenting. Kvar blir bara avgiften från din betalleverantör.",
    "direktWert": "0 %",
    "portaleTitel": "Gästen kommer från Booking, Airbnb med flera",
-   "portaleText": "Vi tar 0,5 % av bokningsvärdet, en gång i månaden på din faktura. Vad portalen själv behåller är oberoende av detta.",
+   "portaleText": "Vi tar {satz} av bokningsvärdet, en gång i månaden på din faktura. Vad portalen själv behåller är oberoende av detta.",
    "marktplatzTitel": "Gästen kommer via myBestDays",
-   "marktplatzText": "Vår egen marknadsplats. Här hittar gäster dig som inte känner dig än. Vi ger dig bokningen, drar in pengarna och betalar ut dem till dig — för det behåller vi 8 %. Fler kostnader tillkommer inte.",
+   "marktplatzText": "Vår egen marknadsplats. Här hittar gäster dig som inte känner dig än. Vi ger dig bokningen, drar in pengarna och betalar ut dem till dig — för det behåller vi {satz}. Fler kostnader tillkommer inte.",
    "deckel": "Och det finns ett tak: för bokningar från portaler betalar du aldrig mer än {betrag} i månaden."
   },
   "module": {
@@ -606,7 +608,8 @@
     "gast": "Gäst & pengar",
     "betrieb": "Drift"
    },
-   "reiterHeading": "Vad ligger bakom?"
+   "reiterHeading": "Vad ligger bakom?",
+   "satzUnbekannt": "betydligt mindre"
   },
   "uebersicht": {
    "metaTitel": "Funktioner — allt för uthyrning och hotell | myNextDays",
@@ -794,7 +797,7 @@
      "punkte": {
       "a": "Kan slås på per kanal",
       "b": "En kalender för allt",
-      "c": "8 % all-in i stället för portalprovision"
+      "c": "{satz} all-in i stället för portalprovision"
      }
     }
    },

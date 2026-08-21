@@ -3973,7 +3973,8 @@
         "inspektion": "Inspection",
         "vorlagen": "Task templates",
         "planmaessig": "Scheduled tasks",
-        "regelmaessig": "Recurring tasks"
+        "regelmaessig": "Recurring tasks",
+        "vertretungen": "Cover"
       }
     },
     "propertyCalendar": {
@@ -4880,6 +4881,18 @@
       "gesetzt": "Assignee changed",
       "abgezogen": "Assignment removed",
       "aktion": "Assign to …"
+    },
+    "substitutions": {
+      "title": "Cover requests",
+      "intro": "Open requests from colleagues. Whoever takes over is assigned the task.",
+      "loading": "Loading …",
+      "empty": "No open requests",
+      "emptyHint": "If someone needs cover, it appears here.",
+      "requestedBy": "Requested by {name}",
+      "take": "Take over",
+      "decline": "Decline",
+      "taken": "Task taken over",
+      "declined": "Request declined"
     }
   },
   "objects": {
@@ -4965,7 +4978,14 @@
       "unlistOk": "Website link removed.",
       "unlistErr": "Unlink failed.",
       "menuVerkaufAus": "Switch off on all portals",
-      "menuVerkaufAn": "Offer on all portals again"
+      "menuVerkaufAn": "Offer on all portals again",
+      "menuArchive": "Archive",
+      "menuUnarchive": "Restore",
+      "archiveConfirm": "Archive “{title}”? The property will disappear from the list and stop being sold everywhere as of today. Existing bookings remain valid, and all data is kept.",
+      "unarchiveConfirm": "Bring “{title}” back into the active list? The property will reappear in the list and the sales block will be lifted.",
+      "archiveOk": "Property archived.",
+      "unarchiveOk": "Property is active again.",
+      "archiveErr": "Archiving failed."
     },
     "messagingForm": {
       "title": "Message placeholders",
@@ -6582,6 +6602,8 @@
     "allChannels": "All channels",
     "connectedStatus": "Connected",
     "notConnectedStatus": "Not connected",
+    "statusBroken": "Mapping faulty",
+    "repairHint": "The listing is mapped at the portal, but to a target that does not exist there. Availability is transferred, prices are not. Disconnect and connect again to restore the mapping.",
     "addChannel": "Add channel",
     "searchChannel": "Search channel …",
     "noResults": "No channel found.",
@@ -6700,7 +6722,21 @@
         "approved": "Approved",
         "rejected": "Rejected"
       }
-    }
+    },
+    "csvTitle": "Import bookings from before you connected via file",
+    "csvText": "The portal only delivers bookings from the day you connected through the interface. Get older stays from your portal account's export and upload them here.",
+    "csvDownloadTemplate": "Download template",
+    "csvUpload": "Upload file",
+    "csvHint": "Upload the file exactly as you got it from the portal (.xls, .xlsx or .csv). Before importing, you’ll see which properties and how many bookings were recognized. Cancelled bookings are skipped, and bookings that already exist are recognized and not added twice.",
+    "csvNothingUsable": "There is no usable booking in the file — all rows are cancelled or have no readable date.",
+    "csvPreview": "{count} bookings recognized, check-ins {from} to {to}. Nothing imported yet.",
+    "csvPreviewProperties": "Properties in the file — these names must match your property names, otherwise the rows are skipped:",
+    "csvPreviewNoRef": "{count, plural, one {# booking without a booking number} other {# bookings without a booking number}} — these are recognized by property, dates and name.",
+    "csvConfirm": "Import {count} bookings",
+    "csvCancel": "Cancel",
+    "csvResult": "{imported} of {total} bookings imported.",
+    "csvSkipped": "{count, plural, one {# row skipped (already exists or property unknown)} other {# rows skipped (already exist or property unknown)}}",
+    "csvFailed": "{count, plural, one {# row with an error} other {# rows with errors}}:"
   },
   "calendarSync": {
     "title": "Import/export calendar",
@@ -7432,6 +7468,7 @@
       "propertyCount": "Number of properties",
       "oneMore": "One property more",
       "commissionPerChannel": "Commission per booking channel",
+      "commissionExternalCap": "at most {betrag} a month",
       "included": "What is included",
       "totalMonthly": "Total per month"
     },
@@ -7517,7 +7554,7 @@
       "loadFailed": "Commissions could not be loaded: {error}",
       "cardRate": "Booking, Airbnb & Co.: {rate} % of the booking revenue of your published properties. A month's commissions are billed on the 1st of the following month and added to your next subscription invoice.",
       "cardRateCapped": "Booking, Airbnb & Co.: {rate} % of the booking revenue of your published properties. A month's commissions are billed on the 1st of the following month and added to your next subscription invoice, up to a maximum of {cap} per month.",
-      "cardOtherChannels": "Bookings through your own website remain commission-free. Bookings through the myBestDays marketplace carry 8 %, which is withheld directly when the payment comes in — those are not included here.",
+      "cardOtherChannels": "Bookings through your own website remain commission-free. Bookings through the myBestDays marketplace carry {satz}, which is withheld directly when the payment comes in — those are not included here.",
       "pending": "Outstanding ({count, plural, one {# booking} other {# bookings}}): ",
       "pendingCapHint": " — the monthly cap of {cap} is what gets billed",
       "noPending": "No outstanding commissions at the moment.",
@@ -7525,9 +7562,9 @@
       "backToBilling": "Billing",
       "monthsTitle": "Commissions by month",
       "monthsIntro": "This overview shows only the commissions from bookings through external portals (Booking, Airbnb & Co.). A month's commissions are billed on the 1st of the following month and added to your next subscription invoice — they are charged together with that invoice.",
-      "monthsChannels": "Bookings through the myBestDays marketplace carry 8 % commission, which is already withheld when the payment comes in; they therefore do not appear in this list. Bookings through your own website remain commission-free.",
+      "monthsChannels": "Bookings through the myBestDays marketplace carry {satz} commission, which is already withheld when the payment comes in; they therefore do not appear in this list. Bookings through your own website remain commission-free.",
       "monthsLoading": "Loading commissions …",
-      "monthsEmpty": "No commissions have been incurred through external portals so far. Bookings through your own website remain permanently commission-free. Marketplace bookings through myBestDays carry 8 % commission — that is withheld directly when the payment comes in and does not show up here.",
+      "monthsEmpty": "No commissions have been incurred through external portals so far. Bookings through your own website remain permanently commission-free. Marketplace bookings through myBestDays carry {satz} commission — that is withheld directly when the payment comes in and does not show up here.",
       "colMonth": "Month",
       "colBookings": "Bookings",
       "colGross": "Booking revenue",
@@ -7660,7 +7697,7 @@
     "stars": "4.5 stars",
     "reviews": "· 921 reviews",
     "trial30": "Try free for 30 days",
-    "bookingValue": "+0.5 % booking value",
+    "bookingValue": "+{satz} booking value",
     "seePrices": "See prices",
     "downloadApp": "Download the app",
     "copyright": "© 2026 myNextDays. All rights reserved.",

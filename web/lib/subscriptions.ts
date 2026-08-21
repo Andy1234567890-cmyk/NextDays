@@ -78,6 +78,30 @@ export type Pricing = {
   modules: ModulePrice[];
 };
 
+/**
+ * Preisliste PLUS Provisionskonditionen — die Antwort von
+ * `/subscriptions/public/pricing` (dasselbe, was die Marketing-Preisseite
+ * holt, `marketing/lib/preise.ts`).
+ *
+ * WARUM ZUSÄTZLICH ZU `Pricing`: die Provisionssätze und der Monatsdeckel
+ * liegen NICHT in Stripe, sondern als benannte Konstanten im
+ * subscriptions-Slice (`COMMISSION_RATE_STANDARD`,
+ * `MARKETPLACE_FEE_BPS_STANDARD`, `COMMISSION_CAP_EUR`). Der geschützte
+ * `/pricing` liefert sie deshalb nicht mit. Sie im Tarifrechner als „0,5 %"/
+ * „8 %"/„250 €" hinzuschreiben war genau die Doppelquelle, die Wurzel 4
+ * verbietet — bei einer Satzänderung im Backend hätte die Karte weiter den
+ * alten Satz behauptet, ohne dass tsc, ESLint oder ein Test es merkt.
+ *
+ * Der Deckel trägt seine Währung mit: ein Betrag ohne Währung ist in 27
+ * EU-Ländern eine andere Zahl.
+ */
+export type PublicPricing = Pricing & {
+  commission_marketplace_percent: number;
+  commission_external_percent: number;
+  commission_external_cap_amount: number;
+  commission_external_cap_currency: string;
+};
+
 // --- Actions ----------------------------------------------------------------
 
 export async function getSubscriptionStatus(): Promise<Result<SubscriptionStatus>> {
@@ -86,6 +110,25 @@ export async function getSubscriptionStatus(): Promise<Result<SubscriptionStatus
 
 export async function getPricing(): Promise<Result<Pricing>> {
   return call<Pricing>("/pricing");
+}
+
+/**
+ * Preisliste samt Provisionskonditionen — OHNE Login (der Endpunkt ist
+ * öffentlich, er enthält nur unsere eigene Preisliste, keine Tenant-Daten).
+ *
+ * Bewusst nicht über `call()`: das verlangt ein Token und gäbe ohne Session
+ * „Nicht angemeldet." zurück, obwohl der Endpunkt keins braucht. Backend-seitig
+ * ist er per TTL-Cache und `listings`-Rate-Limit-Bucket gedeckt.
+ */
+export async function getPublicPricing(): Promise<Result<PublicPricing>> {
+  try {
+    const data = await api<PublicPricing>("/subscriptions/public/pricing");
+    return { ok: true, data };
+  } catch (exc) {
+    const error = exc instanceof ApiError ? exc.message : "Aktion fehlgeschlagen.";
+    const status = exc instanceof ApiError ? exc.status : undefined;
+    return { ok: false, error, status };
+  }
 }
 
 export async function startCheckout(input: {

@@ -3971,7 +3971,8 @@
         "inspektion": "Pregled",
         "vorlagen": "Predloge nalog",
         "planmaessig": "Načrtovane naloge",
-        "regelmaessig": "Redne naloge"
+        "regelmaessig": "Redne naloge",
+        "vertretungen": "Nadomeščanja"
       }
     },
     "propertyCalendar": {
@@ -4857,6 +4858,18 @@
       "gesetzt": "Dodelitev spremenjena",
       "abgezogen": "Dodelitev preklicana",
       "aktion": "Dodeli …"
+    },
+    "substitutions": {
+      "title": "Nadomeščanja",
+      "intro": "Odprte prošnje sodelavcev. Kdor prevzame, mu je naloga dodeljena.",
+      "loading": "Nalaganje …",
+      "empty": "Ni odprtih prošenj",
+      "emptyHint": "Če kdo išče nadomestilo, se prikaže tukaj.",
+      "requestedBy": "Zaprosil {name}",
+      "take": "Prevzemi",
+      "decline": "Zavrni",
+      "taken": "Naloga prevzeta",
+      "declined": "Prošnja zavrnjena"
     }
   },
   "objects": {
@@ -4942,7 +4955,14 @@
       "unlistOk": "Povezava s spletno stranjo prekinjena.",
       "unlistErr": "Prekinitev ni uspela.",
       "menuVerkaufAus": "Izklopi na vseh portalih",
-      "menuVerkaufAn": "Znova ponudi na vseh portalih"
+      "menuVerkaufAn": "Znova ponudi na vseh portalih",
+      "menuArchive": "Arhiviraj",
+      "menuUnarchive": "Vrni v ponudbo",
+      "archiveConfirm": "Arhivirati nastanitev „{title}“? Nastanitev izgine s seznama in se od danes nikjer več ne prodaja. Obstoječe rezervacije ostanejo veljavne, vsi podatki ostanejo ohranjeni.",
+      "unarchiveConfirm": "Vrniti nastanitev „{title}“ nazaj v ponudbo? Nastanitev se znova prikaže na seznamu, blokada prodaje pa se odpravi.",
+      "archiveOk": "Nastanitev arhivirana.",
+      "unarchiveOk": "Nastanitev je znova v ponudbi.",
+      "archiveErr": "Arhiviranje ni uspelo."
     },
     "messagingForm": {
       "title": "Nadomestna besedila za sporočila",
@@ -6559,6 +6579,8 @@
     "allChannels": "All channels",
     "connectedStatus": "Connected",
     "notConnectedStatus": "Ni povezano",
+    "statusBroken": "Napačna povezava",
+    "repairHint": "Oglas je povezan s portalom, vendar s ciljem, ki tam ne obstaja. Razpoložljivost se prenaša, cene ne. Odklopite in znova povežite, da se povezava vzpostavi.",
     "addChannel": "Add channel",
     "searchChannel": "Iskanje kanala …",
     "noResults": "Noben kanal ni bil najden.",
@@ -6677,7 +6699,21 @@
         "approved": "Odobreno",
         "rejected": "Zavrnjeno"
       }
-    }
+    },
+    "csvTitle": "Uvoz rezervacij iz časa pred povezavo iz datoteke",
+    "csvText": "Portal preko vmesnika posreduje samo rezervacije od dneva povezave. Starejše bivanje pridobite iz izvoza svojega portalskega računa in jih naložite tukaj.",
+    "csvDownloadTemplate": "Prenesi predlogo",
+    "csvUpload": "Naloži datoteko",
+    "csvHint": "Naložite datoteko tako, kot jo dobite od portala (.xls, .xlsx ali .csv). Pred uvozom boste videli, kateri objekti in koliko rezervacij je bilo zaznanih. Preklicane rezervacije se izpustijo, že obstoječe pa se prepoznajo in ne dodajo podvojeno.",
+    "csvNothingUsable": "V datoteki ni nobene prevzemljive rezervacije — vse vrstice so preklicane ali imajo neberljiv datum.",
+    "csvPreview": "Zaznanih {count} rezervacij, prihodi od {from} do {to}. Še nič ni bilo uvoženo.",
+    "csvPreviewProperties": "Objekti v datoteki — ta imena morajo ustrezati naslovom vaših objektov, sicer se vrstice izpustijo:",
+    "csvPreviewNoRef": "{count, plural, one {# rezervacija brez številke rezervacije} two {# rezervaciji brez številke rezervacije} few {# rezervacije brez številke rezervacije} other {# rezervacij brez številke rezervacije}} — pri njih poteka prepoznavanje po objektu, obdobju in imenu.",
+    "csvConfirm": "Uvozi {count} rezervacij",
+    "csvCancel": "Prekliči",
+    "csvResult": "Uvoženih {imported} od {total} rezervacij.",
+    "csvSkipped": "{count, plural, one {# vrstica preskočena (že obstaja ali neznan objekt)} two {# vrstici preskočeni (že obstajata ali neznan objekt)} few {# vrstice preskočene (že obstajajo ali neznan objekt)} other {# vrstic preskočenih (že obstajajo ali neznan objekt)}}",
+    "csvFailed": "{count, plural, one {# vrstica z napako} two {# vrstici z napako} few {# vrstice z napako} other {# vrstic z napako}}:"
   },
   "calendarSync": {
     "title": "Uvoz/izvoz koledarja",
@@ -7409,6 +7445,7 @@
       "propertyCount": "Število objektov",
       "oneMore": "En objekt več",
       "commissionPerChannel": "Provizija po rezervacijskem kanalu",
+      "commissionExternalCap": "največ {betrag} na mesec",
       "included": "Kaj je vključeno",
       "totalMonthly": "Skupaj mesečno"
     },
@@ -7494,7 +7531,7 @@
       "loadFailed": "Provizij ni bilo mogoče naložiti: {error}",
       "cardRate": "Booking, Airbnb in drugi: {rate} % od prometa iz rezervacij vaših objavljenih nastanitev. Provizije posameznega meseca se obračunajo 1. dne naslednjega meseca in dodajo vašemu naslednjemu računu za naročnino.",
       "cardRateCapped": "Booking, Airbnb in drugi: {rate} % od prometa iz rezervacij vaših objavljenih nastanitev. Provizije posameznega meseca se obračunajo 1. dne naslednjega meseca in dodajo vašemu naslednjemu računu za naročnino, največ {cap} na mesec.",
-      "cardOtherChannels": "Rezervacije prek vaše lastne spletne strani ostajajo brez provizije. Za rezervacije prek tržnice myBestDays velja 8 %, ki se zadrži neposredno ob prejemu plačila — te tukaj niso vključene.",
+      "cardOtherChannels": "Rezervacije prek vaše lastne spletne strani ostajajo brez provizije. Za rezervacije prek tržnice myBestDays velja {satz}, ki se zadrži neposredno ob prejemu plačila — te tukaj niso vključene.",
       "pending": "Odprto ({count, plural, one {# rezervacija} two {# rezervaciji} few {# rezervacije} other {# rezervacij}}): ",
       "pendingCapHint": " — obračuna se mesečna zgornja meja {cap}",
       "noPending": "Trenutno ni odprtih provizij.",
@@ -7502,9 +7539,9 @@
       "backToBilling": "Obračun",
       "monthsTitle": "Provizije po mesecih",
       "monthsIntro": "Ta pregled prikazuje izključno provizije iz rezervacij prek zunanjih portalov (Booking, Airbnb in drugi). Provizije posameznega meseca se obračunajo 1. dne naslednjega meseca in dodajo vašemu naslednjemu računu za naročnino — bremenitev se izvede skupaj s tem računom.",
-      "monthsChannels": "Rezervacije prek tržnice myBestDays nosijo 8 % provizije, ki se zadrži že ob prejemu plačila; zato se na tem seznamu ne prikažejo. Rezervacije prek vaše lastne spletne strani ostajajo brez provizije.",
+      "monthsChannels": "Rezervacije prek tržnice myBestDays nosijo provizijo {satz}, ki se zadrži že ob prejemu plačila; zato se na tem seznamu ne prikažejo. Rezervacije prek vaše lastne spletne strani ostajajo brez provizije.",
       "monthsLoading": "Nalaganje provizij …",
-      "monthsEmpty": "Prek zunanjih portalov doslej ni nastala nobena provizija. Rezervacije prek vaše lastne spletne strani ostajajo trajno brez provizije. Rezervacije prek tržnice myBestDays nosijo 8 % provizije — ta se zadrži neposredno ob prejemu plačila in se tukaj ne prikaže.",
+      "monthsEmpty": "Prek zunanjih portalov doslej ni nastala nobena provizija. Rezervacije prek vaše lastne spletne strani ostajajo trajno brez provizije. Rezervacije prek tržnice myBestDays nosijo provizijo {satz} — ta se zadrži neposredno ob prejemu plačila in se tukaj ne prikaže.",
       "colMonth": "Mesec",
       "colBookings": "Rezervacije",
       "colGross": "Promet iz rezervacij",
@@ -7637,7 +7674,7 @@
     "stars": "4,5 zvezdice",
     "reviews": "· 921 ocen",
     "trial30": "Preizkusite brezplačno 30 dni",
-    "bookingValue": "+0,5 % vrednosti rezervacije",
+    "bookingValue": "+{satz} vrednosti rezervacije",
     "seePrices": "Oglejte si cene",
     "downloadApp": "Prenesi aplikacijo",
     "copyright": "© 2026 myNextDays. Vse pravice pridržane.",

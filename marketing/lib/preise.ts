@@ -84,3 +84,17 @@ export function modulNachKey(
 ): ModulPreis | undefined {
   return liste.modules.find((m) => m.module_key === moduleKey);
 }
+
+/**
+ * Prozentsatz in der Sprache des Besuchers: „0,5 %" (de) bzw. „0.5 %" (en).
+ *
+ * Warum zentral und nicht an der Anzeigestelle: der Satz erscheint auf der
+ * Preisseite als Überschrift UND im Absatz darunter, plus im Startseiten-
+ * Teaser. Drei Inline-`Intl.NumberFormat`-Kopien driften auseinander (eine
+ * zeigt „0,5 %", die nächste „0,50 %") — und der Absatz-Text bekommt seinen
+ * Wert per ICU-Platzhalter aus genau diesem Helfer, damit Überschrift und
+ * Fließtext nie zwei verschiedene Zahlen nennen können (Wurzel 4).
+ */
+export function formatProzent(wert: number, locale: string): string {
+  return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(wert)} %`;
+}

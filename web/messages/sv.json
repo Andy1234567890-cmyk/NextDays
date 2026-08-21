@@ -3971,7 +3971,8 @@
         "inspektion": "Inspektion",
         "vorlagen": "Uppgiftsmallar",
         "planmaessig": "Schemalagda uppgifter",
-        "regelmaessig": "Återkommande uppgifter"
+        "regelmaessig": "Återkommande uppgifter",
+        "vertretungen": "Ersättning"
       }
     },
     "propertyCalendar": {
@@ -4857,6 +4858,18 @@
       "gesetzt": "Ansvarig ändrad",
       "abgezogen": "Tilldelning borttagen",
       "aktion": "Tilldela …"
+    },
+    "substitutions": {
+      "title": "Ersättning",
+      "intro": "Öppna förfrågningar från kollegor. Den som tar över blir tilldelad uppgiften.",
+      "loading": "Läser in …",
+      "empty": "Inga öppna förfrågningar",
+      "emptyHint": "Om någon söker en ersättare visas det här.",
+      "requestedBy": "Begärd av {name}",
+      "take": "Ta över",
+      "decline": "Avslå",
+      "taken": "Uppgiften har tagits över",
+      "declined": "Förfrågan avslogs"
     }
   },
   "objects": {
@@ -4942,7 +4955,14 @@
       "unlistOk": "Kopplingen till webbplatsen är borttagen.",
       "unlistErr": "Det gick inte att koppla bort.",
       "menuVerkaufAus": "Stäng av på alla portaler",
-      "menuVerkaufAn": "Erbjud igen på alla portaler"
+      "menuVerkaufAn": "Erbjud igen på alla portaler",
+      "menuArchive": "Arkivera",
+      "menuUnarchive": "Återaktivera",
+      "archiveConfirm": "Arkivera ”{title}”? Boendet försvinner från listan och slutar säljas överallt från och med idag. Befintliga bokningar förblir giltiga, och all data behålls.",
+      "unarchiveConfirm": "Vill du ta ”{title}” tillbaka till listan? Boendet visas igen i listan och försäljningsspärren hävs.",
+      "archiveOk": "Boendet arkiverat.",
+      "unarchiveOk": "Boendet är aktivt igen.",
+      "archiveErr": "Arkivering misslyckades."
     },
     "messagingForm": {
       "title": "Meddelandeplatshållare",
@@ -6559,6 +6579,8 @@
     "allChannels": "All channels",
     "connectedStatus": "Connected",
     "notConnectedStatus": "Inte ansluten",
+    "statusBroken": "Felaktig koppling",
+    "repairHint": "Annonsen är kopplad till portalen, men till ett mål som inte finns där. Tillgängligheten överförs, men inte priserna. Koppla från och anslut igen för att återställa kopplingen.",
     "addChannel": "Add channel",
     "searchChannel": "Sök kanal …",
     "noResults": "Ingen kanal hittades.",
@@ -6677,7 +6699,21 @@
         "approved": "Godkänt",
         "rejected": "Avvisat"
       }
-    }
+    },
+    "csvTitle": "Importera bokningar från innan anslutningen via fil",
+    "csvText": "Portalen levererar via gränssnittet endast bokningar från den dag du anslöt kontot. Äldre vistelser hämtar du från din portalkontos export och laddar upp dem här.",
+    "csvDownloadTemplate": "Ladda ner mall",
+    "csvUpload": "Ladda upp fil",
+    "csvHint": "Ladda upp filen exakt som du får den från portalen (.xls, .xlsx eller .csv). Innan importen ser du vilka objekt och hur många bokningar som identifierats. Avbokade bokningar hoppas över, och bokningar som redan finns identifieras och skapas inte dubbelt.",
+    "csvNothingUsable": "Filen innehåller ingen användbar bokning — alla rader är avbokade eller saknar läsbart datum.",
+    "csvPreview": "{count} bokningar identifierade, ankomster {from} till {to}. Ännu inget importerat.",
+    "csvPreviewProperties": "Objekt i filen — dessa namn måste matcha dina objektnamn, annars hoppas raderna över:",
+    "csvPreviewNoRef": "{count, plural, one {# bokning utan bokningsnummer} other {# bokningar utan bokningsnummer}} — dessa identifieras via objekt, period och namn.",
+    "csvConfirm": "Importera {count} bokningar",
+    "csvCancel": "Avbryt",
+    "csvResult": "{imported} av {total} bokningar importerade.",
+    "csvSkipped": "{count, plural, one {# rad hoppades över (finns redan eller objektet är okänt)} other {# rader hoppades över (finns redan eller objektet är okänt)}}",
+    "csvFailed": "{count, plural, one {# rad med fel} other {# rader med fel}}:"
   },
   "calendarSync": {
     "title": "Importera/exportera kalender",
@@ -7409,6 +7445,7 @@
       "propertyCount": "Antal objekt",
       "oneMore": "Ett objekt till",
       "commissionPerChannel": "Provision per bokningskanal",
+      "commissionExternalCap": "högst {betrag} per månad",
       "included": "Vad som ingår",
       "totalMonthly": "Totalt per månad"
     },
@@ -7494,7 +7531,7 @@
       "loadFailed": "Provisionerna kunde inte laddas: {error}",
       "cardRate": "Booking, Airbnb med flera: {rate} % av bokningsomsättningen för dina publicerade objekt. En månads provisioner faktureras den 1:a i följande månad och läggs till på din nästa abonnemangsfaktura.",
       "cardRateCapped": "Booking, Airbnb med flera: {rate} % av bokningsomsättningen för dina publicerade objekt. En månads provisioner faktureras den 1:a i följande månad och läggs till på din nästa abonnemangsfaktura, dock högst {cap} per månad.",
-      "cardOtherChannels": "Bokningar via din egen webbplats förblir provisionsfria. För bokningar via myBestDays-marknadsplatsen tillkommer 8 %, som dras direkt när betalningen kommer in — de ingår inte här.",
+      "cardOtherChannels": "Bokningar via din egen webbplats förblir provisionsfria. För bokningar via myBestDays-marknadsplatsen tillkommer {satz}, som dras direkt när betalningen kommer in — de ingår inte här.",
       "pending": "Utestående ({count, plural, one {# bokning} other {# bokningar}}): ",
       "pendingCapHint": " — det är månadstaket på {cap} som faktureras",
       "noPending": "Inga utestående provisioner just nu.",
@@ -7502,9 +7539,9 @@
       "backToBilling": "Fakturering",
       "monthsTitle": "Provisioner per månad",
       "monthsIntro": "Den här sammanställningen visar endast provisionerna från bokningar via externa portaler (Booking, Airbnb med flera). En månads provisioner faktureras den 1:a i följande månad och läggs till på din nästa abonnemangsfaktura — de dras tillsammans med den fakturan.",
-      "monthsChannels": "Bokningar via myBestDays-marknadsplatsen bär 8 % provision, som redan dras när betalningen kommer in; därför syns de inte i den här listan. Bokningar via din egen webbplats förblir provisionsfria.",
+      "monthsChannels": "Bokningar via myBestDays-marknadsplatsen bär {satz} provision, som redan dras när betalningen kommer in; därför syns de inte i den här listan. Bokningar via din egen webbplats förblir provisionsfria.",
       "monthsLoading": "Provisioner laddas …",
-      "monthsEmpty": "Via externa portaler har hittills inga provisioner uppstått. Bokningar via din egen webbplats förblir permanent provisionsfria. Marknadsplatsbokningar via myBestDays bär 8 % provision — den dras direkt när betalningen kommer in och syns inte här.",
+      "monthsEmpty": "Via externa portaler har hittills inga provisioner uppstått. Bokningar via din egen webbplats förblir permanent provisionsfria. Marknadsplatsbokningar via myBestDays bär {satz} provision — den dras direkt när betalningen kommer in och syns inte här.",
       "colMonth": "Månad",
       "colBookings": "Bokningar",
       "colGross": "Bokningsomsättning",
@@ -7637,7 +7674,7 @@
     "stars": "4,5 stjärnor",
     "reviews": "· 921 omdömen",
     "trial30": "Testa gratis i 30 dagar",
-    "bookingValue": "+0,5 % av bokningsvärdet",
+    "bookingValue": "+{satz} av bokningsvärdet",
     "seePrices": "Se priser",
     "downloadApp": "Ladda ner appen",
     "copyright": "© 2026 myNextDays. Med ensamrätt.",

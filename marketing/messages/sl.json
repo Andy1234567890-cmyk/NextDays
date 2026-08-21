@@ -157,7 +157,8 @@
   },
   "direkt": {
    "frage": "Ali dobim lastno rezervacijsko stran brez provizije portala?",
-   "antwort": "Da. K vsakemu računu sodijo lasten rezervacijski portal, pripomoček za obstoječo spletno stran in urejevalnik spletnih strani z lastno domeno. Neposredne rezervacije stanejo 0,5 % namesto 15–18 % provizije velikih portalov, tečejo na istem koledarju in istih cenah — denar pa gre neposredno na vaš račun."
+   "antwort": "Da. K vsakemu računu sodijo lasten rezervacijski portal, pripomoček za obstoječo spletno stran in urejevalnik spletnih strani z lastno domeno. Neposredne rezervacije stanejo {satz} namesto 15–18 % provizije velikih portalov, tečejo na istem koledarju in istih cenah — denar pa gre neposredno na vaš račun.",
+   "satzUnbekannt": "bistveno manj"
   },
   "marktplatz": {
    "frage": "Kaj je myBestDays?",
@@ -261,7 +262,8 @@
    },
    "direkt": {
     "title": "Direktna rezervacija",
-    "items": "Lasten rezervacijski portal, rezervacijski gradnik, urejevalnik spletne strani, lastna domena, 0,5 % namesto 15–18 % provizije OTA"
+    "items": "Lasten rezervacijski portal, rezervacijski gradnik, urejevalnik spletne strani, lastna domena, {satz} namesto 15–18 % provizije OTA",
+    "satzUnbekannt": "bistveno manj"
    },
    "preise": {
     "title": "Cene in prihodki",
@@ -525,9 +527,9 @@
    "direktText": "Prek vaše spletne strani ali obrazca za rezervacije. Od tega ne vzamemo nič. Ostane le strošek vašega ponudnika plačil.",
    "direktWert": "0 %",
    "portaleTitel": "Gost pride z Bookinga, Airbnbja in podobnih",
-   "portaleText": "Zaračunamo 0,5 % vrednosti rezervacije, enkrat mesečno na vašem računu. Kar zadrži portal sam, je od tega neodvisno.",
+   "portaleText": "Zaračunamo {satz} vrednosti rezervacije, enkrat mesečno na vašem računu. Kar zadrži portal sam, je od tega neodvisno.",
    "marktplatzTitel": "Gost pride prek myBestDays",
-   "marktplatzText": "Naša lastna tržnica. Tu vas najdejo gostje, ki vas še ne poznajo. Prinesemo rezervacijo, poberemo denar in vam ga izplačamo — za to zadržimo 8 %. Drugih stroškov ni.",
+   "marktplatzText": "Naša lastna tržnica. Tu vas najdejo gostje, ki vas še ne poznajo. Prinesemo rezervacijo, poberemo denar in vam ga izplačamo — naša provizija za to je {satz}. Drugih stroškov ni.",
    "deckel": "In obstaja zgornja meja: za rezervacije s portalov nikoli ne plačate več kot {betrag} na mesec."
   },
   "module": {
@@ -766,7 +768,8 @@
     "gast": "Gost in denar",
     "betrieb": "Poslovanje"
    },
-   "reiterHeading": "Kaj natanko je za tem?"
+   "reiterHeading": "Kaj natanko je za tem?",
+   "satzUnbekannt": "bistveno manj"
   },
   "uebersicht": {
    "metaTitel": "Funkcije — vse za oddajanje in hotel | myNextDays",
@@ -954,7 +957,7 @@
      "punkte": {
       "a": "Vklopljivo za vsak kanal posebej",
       "b": "En koledar za vse",
-      "c": "8 % all-in namesto provizije portala"
+      "c": "{satz} all-in namesto provizije portala"
      }
     }
    },

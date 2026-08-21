@@ -17,8 +17,8 @@ Stabile `lookup_key`s:
 | `modul4_flat` / `modul4_per_seat` | Mitarbeiter (flat/Nutzer) | 19,90 / 2,50 |
 | `modul6_flat` / `modul6_per_room` | Hotel (flat/Zimmer) | 600,00 / 1,50 |
 
-Modul 5 (Jobmarkt, 2 % Umsatz) und die Buchungs-Provisionen (1 % extern / 8 %
-Portal) sind **variabel** → nachgelagert als Invoice-Item bzw. über die Connect-
+Modul 5 (Jobmarkt, 2 % Umsatz) und die Buchungs-Provisionen (0,5 % extern /
+8 % Portal) sind **variabel** → nachgelagert als Invoice-Item bzw. über die Connect-
 `application_fee`, KEIN festes Stripe-Produkt.
 
 **27 EU-Staaten:** graduated + Stripe **Adaptive Pricing** (Checkout rechnet in
@@ -50,13 +50,17 @@ Idempotent über `stripe_webhook_event` (Wurzel 2), Signatur fail-closed (Wurzel
 
 ## Externe Provision (OTA-Buchungen, Migration 0118)
 
-Preisliste: **1 % (0,5 % ab 101 Objekten)** auf Buchungen über externe Kanäle
-(Booking/Airbnb/Vrbo). Da wir den Gast dabei NICHT kassieren, läuft die Provision
+Preisliste: einheitlich **0,5 %** auf Buchungen über externe Kanäle
+(Booking/Airbnb/Vrbo), unabhängig von der Objektzahl — Quelle der Wahrheit ist
+`COMMISSION_RATE_STANDARD` in `schemas.py`. Die frühere Staffel (1 % bis 100
+Objekte, 0,5 % ab 101) ist mit Migration `0310_provision_einheitlich_0_5_prozent`
+abgeschafft. Da wir den Gast dabei NICHT kassieren, läuft die Provision
 nachgelagert über `commission_ledger`:
 
 - **Erfassung:** `bookings_sync` legt beim OTA-Import eine Ledger-Zeile an
-  (best-effort-Hook, kippt den Import nie — Wurzel 5). Satz aus der Objektzahl-
-  Staffel. Idempotent über UNIQUE(reservation_id) — Wurzel 2.
+  (best-effort-Hook, kippt den Import nie — Wurzel 5). Satz ist der eine
+  einheitliche 0,5-%-Wert, keine Staffel. Idempotent über UNIQUE(reservation_id)
+  — Wurzel 2.
 - **Gegenzustand (Wurzel 1):** Storno → offene Zeile weg; Kanalwechsel extern→eigen
   oder Betrag→0 beim Resync → offene Zeile weg. Bereits fakturierte Zeilen bleiben.
 - **Abrechnung:** `bill_pending_commissions(tenant, period)` bucht alle pending als

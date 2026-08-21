@@ -3973,7 +3973,8 @@
         "inspektion": "Inspektion",
         "vorlagen": "Aufgabenvorlagen",
         "planmaessig": "Planmäßige Aufgaben",
-        "regelmaessig": "Regelmäßige Aufgaben"
+        "regelmaessig": "Regelmäßige Aufgaben",
+        "vertretungen": "Vertretungen"
       }
     },
     "propertyCalendar": {
@@ -4992,6 +4993,18 @@
       "gesetzt": "Zuständigkeit geändert",
       "abgezogen": "Zuweisung zurückgenommen",
       "aktion": "Zuweisen an …"
+    },
+    "substitutions": {
+      "title": "Vertretungen",
+      "intro": "Offene Anfragen von Kolleginnen und Kollegen. Wer übernimmt, bekommt die Aufgabe zugewiesen.",
+      "loading": "Lädt …",
+      "empty": "Keine offenen Anfragen",
+      "emptyHint": "Sucht jemand eine Vertretung, erscheint sie hier.",
+      "requestedBy": "Angefragt von {name}",
+      "take": "Übernehmen",
+      "decline": "Ablehnen",
+      "taken": "Aufgabe übernommen",
+      "declined": "Anfrage abgelehnt"
     }
   },
   "objects": {
@@ -5077,7 +5090,19 @@
       "unlistOk": "Website-Verbindung aufgehoben.",
       "unlistErr": "Aufheben fehlgeschlagen.",
       "menuVerkaufAus": "Bei allen Portalen abschalten",
-      "menuVerkaufAn": "Wieder bei allen Portalen anbieten"
+      "menuVerkaufAn": "Wieder bei allen Portalen anbieten",
+      "menuArchive": "Archivieren",
+      "menuUnarchive": "Zurück in den Bestand",
+      "archiveConfirm": "„{title}“ archivieren? Das Objekt verschwindet aus der Liste und wird ab heute nirgends mehr verkauft. Bestehende Buchungen bleiben gültig, alle Daten bleiben erhalten.",
+      "unarchiveConfirm": "„{title}“ zurück in den Bestand holen? Das Objekt erscheint wieder in der Liste und die Verkaufssperre wird aufgehoben.",
+      "archiveOk": "Objekt archiviert.",
+      "unarchiveOk": "Objekt ist wieder im Bestand.",
+      "archiveErr": "Archivieren fehlgeschlagen.",
+      "archivTitle": "Archiv",
+      "archivSubtitle": "Gekündigte und aufgegebene Objekte. Sie werden nirgends mehr verkauft, ihre Buchungen und Abrechnungen bleiben erhalten.",
+      "archivOpen": "Archiv ({count})",
+      "archivBack": "Zurück zu den Objekten",
+      "archivEmpty": "Im Archiv liegt kein Objekt."
     },
     "messagingForm": {
       "title": "Nachrichten-Platzhalter",
@@ -6699,6 +6724,8 @@
     "allChannels": "Alle Kanäle",
     "connectedStatus": "Verbunden",
     "notConnectedStatus": "Nicht verbunden",
+    "statusBroken": "Zuordnung fehlerhaft",
+    "repairHint": "Die Anzeige ist beim Portal hinterlegt, aber mit einem Ziel, das es dort nicht gibt. Verfügbarkeit wird übertragen, Preise nicht. Trennen und neu verbinden stellt die Zuordnung her.",
     "addChannel": "Kanal hinzufügen",
     "searchChannel": "Kanal suchen …",
     "noResults": "Kein Kanal gefunden.",
@@ -6817,7 +6844,21 @@
         "approved": "Freigegeben",
         "rejected": "Abgelehnt"
       }
-    }
+    },
+    "csvTitle": "Buchungen von vor dem Verbinden per Datei importieren",
+    "csvText": "Das Portal liefert über die Schnittstelle nur Buchungen ab dem Tag des Verbindens. Ältere Aufenthalte holst du aus dem Export deines Portal-Kontos und lädst sie hier hoch.",
+    "csvDownloadTemplate": "Vorlage herunterladen",
+    "csvUpload": "Datei hochladen",
+    "csvHint": "Lade die Datei so hoch, wie du sie vom Portal bekommst (.xls, .xlsx oder .csv). Vor dem Import siehst du, welche Objekte und wie viele Buchungen erkannt wurden. Stornierte Buchungen werden ausgelassen, bereits vorhandene erkannt und nicht doppelt angelegt.",
+    "csvResult": "{imported} von {total} Buchungen importiert.",
+    "csvSkipped": "{count, plural, one {# Zeile übersprungen (bereits vorhanden oder Objekt unbekannt)} other {# Zeilen übersprungen (bereits vorhanden oder Objekt unbekannt)}}",
+    "csvFailed": "{count, plural, one {# Zeile mit Fehler} other {# Zeilen mit Fehlern}}:",
+    "csvNothingUsable": "In der Datei ist keine übernehmbare Buchung — alle Zeilen sind storniert oder haben kein lesbares Datum.",
+    "csvPreview": "{count} Buchungen erkannt, Anreisen {from} bis {to}. Noch nichts importiert.",
+    "csvPreviewProperties": "Objekte in der Datei — diese Namen müssen deinen Objekttiteln entsprechen, sonst werden die Zeilen ausgelassen:",
+    "csvPreviewNoRef": "{count, plural, one {# Buchung ohne Buchungsnummer} other {# Buchungen ohne Buchungsnummer}} — bei ihnen erfolgt die Erkennung über Objekt, Zeitraum und Name.",
+    "csvConfirm": "{count} Buchungen importieren",
+    "csvCancel": "Abbrechen"
   },
   "calendarSync": {
     "title": "Kalender importieren/exportieren",
@@ -7549,6 +7590,7 @@
       "propertyCount": "Anzahl Objekte",
       "oneMore": "Ein Objekt mehr",
       "commissionPerChannel": "Provision je Buchungskanal",
+      "commissionExternalCap": "höchstens {betrag} im Monat",
       "included": "Was ist enthalten",
       "totalMonthly": "Gesamt monatlich"
     },
@@ -7634,7 +7676,7 @@
       "loadFailed": "Die Provisionen konnten nicht geladen werden: {error}",
       "cardRate": "Booking, Airbnb & Co.: {rate} % vom Buchungsumsatz Ihrer veröffentlichten Objekte. Die Provisionen eines Monats werden am 1. des Folgemonats abgerechnet und Ihrer nächsten Abo-Rechnung hinzugefügt.",
       "cardRateCapped": "Booking, Airbnb & Co.: {rate} % vom Buchungsumsatz Ihrer veröffentlichten Objekte. Die Provisionen eines Monats werden am 1. des Folgemonats abgerechnet und Ihrer nächsten Abo-Rechnung hinzugefügt, höchstens {cap} im Monat.",
-      "cardOtherChannels": "Buchungen über Ihre eigene Website bleiben provisionsfrei. Für Buchungen über den myBestDays-Marktplatz fallen 8 % an, die direkt beim Zahlungseingang einbehalten werden — sie sind hier nicht enthalten.",
+      "cardOtherChannels": "Buchungen über Ihre eigene Website bleiben provisionsfrei. Für Buchungen über den myBestDays-Marktplatz fallen {satz} an, die direkt beim Zahlungseingang einbehalten werden — sie sind hier nicht enthalten.",
       "pending": "Offen ({count, plural, one {# Buchung} other {# Buchungen}}): ",
       "pendingCapHint": " — abgerechnet wird der Monatsdeckel von {cap}",
       "noPending": "Aktuell keine offenen Provisionen.",
@@ -7642,9 +7684,9 @@
       "backToBilling": "Abrechnung",
       "monthsTitle": "Provisionen je Monat",
       "monthsIntro": "Diese Aufstellung zeigt ausschließlich die Provisionen aus Buchungen über externe Portale (Booking, Airbnb & Co.). Die Provisionen eines Monats werden am 1. des Folgemonats abgerechnet und Ihrer nächsten Abo-Rechnung hinzugefügt — der Einzug erfolgt zusammen mit dieser Rechnung.",
-      "monthsChannels": "Buchungen über den myBestDays-Marktplatz tragen 8 % Provision, die bereits beim Zahlungseingang einbehalten werden; sie erscheinen deshalb nicht in dieser Liste. Buchungen über Ihre eigene Website bleiben provisionsfrei.",
+      "monthsChannels": "Buchungen über den myBestDays-Marktplatz tragen {satz} Provision, die bereits beim Zahlungseingang einbehalten werden; sie erscheinen deshalb nicht in dieser Liste. Buchungen über Ihre eigene Website bleiben provisionsfrei.",
       "monthsLoading": "Provisionen werden geladen …",
-      "monthsEmpty": "Über externe Portale sind bisher keine Provisionen angefallen. Buchungen über Ihre eigene Website bleiben dauerhaft provisionsfrei. Marktplatz-Buchungen über myBestDays tragen 8 % Provision — die wird direkt beim Zahlungseingang einbehalten und taucht hier nicht auf.",
+      "monthsEmpty": "Über externe Portale sind bisher keine Provisionen angefallen. Buchungen über Ihre eigene Website bleiben dauerhaft provisionsfrei. Marktplatz-Buchungen über myBestDays tragen {satz} Provision — die wird direkt beim Zahlungseingang einbehalten und taucht hier nicht auf.",
       "colMonth": "Monat",
       "colBookings": "Buchungen",
       "colGross": "Buchungsumsatz",
@@ -7777,7 +7819,7 @@
     "stars": "4,5 Sterne",
     "reviews": "· 921 Bewertungen",
     "trial30": "30 Tage kostenlos testen",
-    "bookingValue": "+0,5 % Buchungswert",
+    "bookingValue": "+{satz} Buchungswert",
     "seePrices": "Preise ansehen",
     "downloadApp": "App herunterladen",
     "copyright": "© 2026 myNextDays. Alle Rechte vorbehalten.",

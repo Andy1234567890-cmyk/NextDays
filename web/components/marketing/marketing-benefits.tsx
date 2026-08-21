@@ -1,11 +1,20 @@
 // Benefits — "Mehr Buchungen. Weniger Arbeit." mit 3 Statistik-Karten
 // und anschließendem Preis-CTA-Banner (Akzent-Hintergrund).
+//
+// Der Preisblock rechts holt Einstiegspreis UND Portal-Provision aus
+// `/subscriptions/public/pricing`. Vorher standen dort „39 €" im JSX und
+// „+0,5 % Buchungswert" in 24 Sprachdateien — zwei Zahlen parallel zur
+// Abrechnung, die bei einer Änderung stumm falsch geworden wären (Wurzel 4).
+// Fehlt die Preisliste, entfällt der Preisblock; der Weg zur Preisseite bleibt.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
 
+import { staffelPreisCent } from "@nextdays/tarif";
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
+import { formatCurrency } from "@/lib/currency";
+import { getPublicPricing } from "@/lib/subscriptions";
 
 const BENEFITS = [
   {
@@ -31,8 +40,14 @@ const BENEFITS = [
   },
 ];
 
-export function MarketingBenefits() {
-  const t = useTranslations("marketingSite");
+export async function MarketingBenefits() {
+  const t = await getTranslations("marketingSite");
+  const locale = await getLocale();
+  const preise = await getPublicPricing();
+  const liste = preise.ok ? preise.data : null;
+  const einstiegCent = liste
+    ? staffelPreisCent(liste.grundtarif_tiers, 1)
+    : null;
   return (
     <section id="funktionen" className="bg-secondary/40">
       <div className="mx-auto max-w-7xl px-6 py-20">
@@ -74,16 +89,26 @@ export function MarketingBenefits() {
             </div>
             {/* Rechte Spalte: Preisblock */}
             <div className="flex flex-col items-start gap-2">
-              <p className="text-sm text-foreground">ab</p>
-              <p className="whitespace-nowrap">
-                <span className="font-display text-3xl font-semibold text-accent">
-                  39 €
-                </span>
-                <span className="ml-1 text-base font-semibold text-foreground">
-                  pro Monat
-                </span>
-              </p>
-              <p className="text-sm text-foreground">{t("bookingValue")}</p>
+              {liste && einstiegCent !== null && (
+                <>
+                  <p className="text-sm text-foreground">ab</p>
+                  <p className="whitespace-nowrap">
+                    <span className="font-display text-3xl font-semibold text-accent">
+                      {formatCurrency(einstiegCent / 100, liste.currency, locale)}
+                    </span>
+                    <span className="ml-1 text-base font-semibold text-foreground">
+                      pro Monat
+                    </span>
+                  </p>
+                  <p className="text-sm text-foreground">
+                    {t("bookingValue", {
+                      satz: `${new Intl.NumberFormat(locale, {
+                        maximumFractionDigits: 2,
+                      }).format(liste.commission_external_percent)} %`,
+                    })}
+                  </p>
+                </>
+              )}
               <Button asChild className="mt-3">
                 <Link href="#preise">{t("seePrices")}</Link>
               </Button>

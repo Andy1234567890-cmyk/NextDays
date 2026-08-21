@@ -1,7 +1,7 @@
 "use client";
 
 // Sub-Navigation des Aufgaben-Moduls (.. /tasks): eigene linke Sidebar mit
-// Überschrift „AUFGABEN" und 7 Reitern. Aktiver Reiter grau hinterlegt (wie
+// Überschrift „AUFGABEN" und 8 Reitern. Aktiver Reiter grau hinterlegt (wie
 // Objekt-Sub-Nav).
 import { Icon } from "@iconify/react";
 import Link from "next/link";
@@ -15,6 +15,7 @@ const TAB_SLUGS = [
   "meine",
   "team",
   "inspektion",
+  "vertretungen",
   "vorlagen",
   "planmaessig",
   "regelmaessig",
@@ -25,6 +26,7 @@ const TAB_KEYS: Record<(typeof TAB_SLUGS)[number], string> = {
   meine: "tabs.meine",
   team: "tabs.team",
   inspektion: "tabs.inspektion",
+  vertretungen: "tabs.vertretungen",
   vorlagen: "tabs.vorlagen",
   planmaessig: "tabs.planmaessig",
   regelmaessig: "tabs.regelmaessig",

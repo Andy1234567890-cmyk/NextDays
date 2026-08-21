@@ -14,7 +14,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/currency";
-import { holePreisliste } from "@/lib/preise";
+import { formatProzent, holePreisliste } from "@/lib/preise";
 import { staffelPreisCent } from "@/lib/tarif";
 
 export async function PreisTeaser({ locale }: { locale: string }) {
@@ -68,9 +68,10 @@ export async function PreisTeaser({ locale }: { locale: string }) {
                 <p className="text-sm text-muted-foreground">
                   {tp("provision", {
                     direkt: "0 %",
-                    portale: `${new Intl.NumberFormat(locale, {
-                      maximumFractionDigits: 2,
-                    }).format(liste.commission_external_percent)} %`,
+                    portale: formatProzent(
+                      liste.commission_external_percent,
+                      locale,
+                    ),
                   })}
                 </p>
               </>

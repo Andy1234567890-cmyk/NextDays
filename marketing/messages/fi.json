@@ -157,7 +157,8 @@
   },
   "direkt": {
    "frage": "Saanko oman varaussivun ilman portaalikomissiota?",
-   "antwort": "Kyllä. Jokaiseen tiliin kuuluu oma varausportaali, widget nykyiselle verkkosivullesi ja sivustorakentaja omalla verkkotunnuksella. Suoravaraukset kustantavat 0,5 % suurten portaalien 15–18 %:n sijaan, kulkevat samassa kalenterissa ja samoilla hinnoilla — ja rahat menevät suoraan tilillesi."
+   "antwort": "Kyllä. Jokaiseen tiliin kuuluu oma varausportaali, widget nykyiselle verkkosivullesi ja sivustorakentaja omalla verkkotunnuksella. Suoravarauksen hinta on {satz}, kun suuret portaalit ottavat 15–18 %; ne kulkevat samassa kalenterissa ja samoilla hinnoilla — ja rahat menevät suoraan tilillesi.",
+   "satzUnbekannt": "huomattavasti vähemmän"
   },
   "marktplatz": {
    "frage": "Mikä on myBestDays?",
@@ -261,7 +262,8 @@
    },
    "direkt": {
     "title": "Suoravaraus",
-    "items": "Oma varausportaali, varaus-widget, verkkosivueditori, oma verkkotunnus, 0,5 % OTA-provision 15–18 %:n sijaan"
+    "items": "Oma varausportaali, varaus-widget, verkkosivueditori, oma verkkotunnus, {satz} — portaalit ottavat 15–18 %",
+    "satzUnbekannt": "huomattavasti vähemmän"
    },
    "preise": {
     "title": "Hinnat & myynti",
@@ -525,9 +527,9 @@
    "direktText": "Oman sivustosi tai varauslomakkeesi kautta. Siitä emme ota mitään. Jäljelle jää vain maksunvälittäjäsi kulu.",
    "direktWert": "0 %",
    "portaleTitel": "Vieras tulee Bookingista, Airbnb:stä ja muista",
-   "portaleText": "Veloitamme 0,5 % varauksen arvosta, kerran kuussa laskullasi. Se, minkä portaali itse pitää, on tästä riippumatonta.",
+   "portaleText": "Veloitamme {satz} varauksen arvosta, kerran kuussa laskullasi. Se, minkä portaali itse pitää, on tästä riippumatonta.",
    "marktplatzTitel": "Vieras tulee myBestDaysin kautta",
-   "marktplatzText": "Oma markkinapaikkamme. Täältä sinut löytävät vieraat, jotka eivät vielä tunne sinua. Tuomme varauksen, perimme rahat ja maksamme ne sinulle — siitä pidämme 8 %. Muita kuluja ei tule.",
+   "marktplatzText": "Oma markkinapaikkamme. Täältä sinut löytävät vieraat, jotka eivät vielä tunne sinua. Tuomme varauksen, perimme rahat ja maksamme ne sinulle — siitä pidämme {satz}. Muita kuluja ei tule.",
    "deckel": "Ja katto on olemassa: portaalivarauksista maksat enintään {betrag} kuukaudessa."
   },
   "module": {
@@ -766,7 +768,8 @@
     "gast": "Vieras ja raha",
     "betrieb": "Toiminta"
    },
-   "reiterHeading": "Mitä siihen tarkalleen sisältyy?"
+   "reiterHeading": "Mitä siihen tarkalleen sisältyy?",
+   "satzUnbekannt": "huomattavasti vähemmän"
   },
   "uebersicht": {
    "metaTitel": "Ominaisuudet — kaikki vuokraukseen ja hotelliin | myNextDays",
@@ -954,7 +957,7 @@
      "punkte": {
       "a": "Kytkettävissä kanavittain",
       "b": "Yksi kalenteri kaikelle",
-      "c": "8 % kaikki mukana portaaliprovision sijaan"
+      "c": "{satz} kaikki mukana, ei portaaliprovisiota"
      }
     }
    },

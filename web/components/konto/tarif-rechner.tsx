@@ -5,11 +5,12 @@
 // Pakete. Statt Paket-Spalten zeigen wir deshalb den Regler für die Objektzahl
 // und rechnen den echten Staffelpreis daraus aus.
 //
-// Alle Beträge kommen aus Stripe (getPricing) — nichts hier hardcoden
+// Alle Beträge kommen aus dem Backend (getPublicPricing: Stripe-Preise plus
+// Provisionssätze und Monatsdeckel) — nichts hier hardcoden
 // (Wurzel 4). Die Staffel wird exakt so gerechnet, wie Stripe sie als
 // `graduated` abrechnet: jeder Tier gilt nur für die Objekte IN seiner Spanne.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -19,10 +20,11 @@ import { Button } from "@nextdays/ui/button";
 import { formatCurrency } from "@/lib/currency";
 import {
   changeSubscriptionQuantity,
-  getPricing,
+  getPublicPricing,
   getSubscriptionStatus,
   startCheckout,
   type Pricing,
+  type PublicPricing,
   type SubscriptionStatus,
 } from "@/lib/subscriptions";
 import { hilfeUrl } from "@/lib/marketing-url";
@@ -92,7 +94,13 @@ function rechnungsPosten(
 
 export function TarifRechner({ onBack }: { onBack: () => void }) {
   const t = useTranslations("account");
-  const [pricing, setPricing] = useState<Pricing | null>(null);
+  const locale = useLocale();
+  // Prozentsatz in der Sprache des Nutzers: „0,5 %" (de) bzw. „0.5 %" (en).
+  // Kein eigener Formatierer je Anzeigestelle — sonst zeigt eine Zeile
+  // „0,5 %" und die nächste „0,50 %".
+  const prozent = (wert: number) =>
+    `${new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(wert)} %`;
+  const [pricing, setPricing] = useState<PublicPricing | null>(null);
   const [status, setStatus] = useState<SubscriptionStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [anzahl, setAnzahl] = useState(1);
@@ -100,7 +108,15 @@ export function TarifRechner({ onBack }: { onBack: () => void }) {
 
   useEffect(() => {
     void (async () => {
-      const [p, s] = await Promise.all([getPricing(), getSubscriptionStatus()]);
+      // `getPublicPricing` statt `getPricing`: dieselben Stripe-Beträge PLUS
+      // die Provisionssätze und den Monatsdeckel. Der geschützte `/pricing`
+      // liefert die drei Konditionen nicht mit — sie standen deshalb hier als
+      // „0,5 %"/„8 %"/„höchstens 250 € im Monat" im JSX, parallel zur
+      // Abrechnung (Wurzel 4). Jetzt gibt es sie nur noch einmal.
+      const [p, s] = await Promise.all([
+        getPublicPricing(),
+        getSubscriptionStatus(),
+      ]);
       if (p.ok) setPricing(p.data);
       else setError(p.error);
       if (s.ok) {
@@ -281,24 +297,42 @@ export function TarifRechner({ onBack }: { onBack: () => void }) {
               </p>
 
               {/* Provision hängt am KANAL, nicht am Paket (payments/service.py
-                  _platform_fee_bps). Alle drei Sätze offen ausweisen — die 8 %
-                  auf dem Marktplatz zu verschweigen wäre irreführend. */}
+                  _platform_fee_bps). Alle drei Sätze offen ausweisen — die
+                  Marktplatz-Provision zu verschweigen wäre irreführend.
+
+                  Die ZAHLEN kommen aus `/subscriptions/public/pricing`, nicht
+                  aus dem JSX: hier standen „0,5 %", „8 %" und „höchstens
+                  250 € im Monat" fest verdrahtet, obwohl das Backend alle drei
+                  Werte liefert. Eine Satzänderung dort hätte diese Karte
+                  unverändert weiterbehaupten lassen, ohne dass tsc, ESLint
+                  oder ein Test es merkt (Wurzel 4). Der Deckel kommt mit
+                  SEINER Währung über formatCurrency — kein €-Zeichen im Code,
+                  27 EU-Länder. Die Null der eigenen Website ist keine
+                  API-Zahl: dort entsteht technisch keine Provisionszeile
+                  (`_platform_fee_bps` gibt 0 zurück). */}
               <div className="mt-4 flex flex-col gap-2 rounded-xl bg-muted/50 p-3 text-sm">
                 <div className="font-medium">{t("tariff.commissionPerChannel")}</div>
                 <KanalZeile
                   kanal="Eigene Website"
-                  satz="0 %"
+                  satz={prozent(0)}
                   hinweis="Ihre Direktbuchungen bleiben provisionsfrei"
                   hervorheben
                 />
                 <KanalZeile
                   kanal="Booking, Airbnb & Co."
-                  satz="0,5 %"
-                  hinweis="höchstens 250 € im Monat"
+                  satz={prozent(pricing.commission_external_percent)}
+                  hinweis={t("tariff.commissionExternalCap", {
+                    betrag: formatCurrency(
+                      pricing.commission_external_cap_amount,
+                      pricing.commission_external_cap_currency,
+                      locale,
+                      0,
+                    ),
+                  })}
                 />
                 <KanalZeile
                   kanal="myBestDays-Marktplatz"
-                  satz="8 %"
+                  satz={prozent(pricing.commission_marketplace_percent)}
                   hinweis="nur wenn wir Ihnen den Gast bringen"
                 />
               </div>

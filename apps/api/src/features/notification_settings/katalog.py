@@ -99,6 +99,13 @@ KATALOG: tuple[Kategorie, ...] = (
     # Buchungen fremder Objekte, und ein Eigentuemer koennte die Auftrags-
     # Mails nur zusammen mit seinen Buchungsmeldungen abschalten.
     Kategorie("task_assigned", Tab.KONTO, "aufgaben", _MAIL_SMS),
+    # Vertretung (0415). Wieder eine eigene Kategorie wegen des EMPFAENGERS:
+    # `task_assigned` geht an die EINE zustaendige Person, diese hier an alle,
+    # die einspringen koennten — und die Entscheidung zurueck an den
+    # Anfragenden. Mit PUSH, weil hier die Zeit zaehlt: faellt jemand heute aus,
+    # ist die Reinigung in drei Stunden faellig. Eine Mail, die abends gelesen
+    # wird, hilft niemandem; die Glocke sieht nur, wer die Anwendung offen hat.
+    Kategorie("task_substitution", Tab.KONTO, "aufgaben", _MAIL_SMS_PUSH),
     # E-Mail Pflicht: Buchung/Aenderung/Storno am eigenen Objekt ist die
     # vertragliche Kerninformation des Eigentuemers (wie guest_policies).
     Kategorie("owner_booking", Tab.KONTO, "aktivitaet", _MAIL_SMS, email_pflicht=True),

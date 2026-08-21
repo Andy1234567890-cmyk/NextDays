@@ -1112,9 +1112,13 @@ class BookingsSyncMixin:
         ota_name = attrs.get("ota_name")
         channel = self._ota_name_to_channel(ota_name)
         status_in = (attrs.get("status") or "new").lower()
+        # `guest_id` gehoert dazu, seit der Storno-Zweig eine Meldung schickt:
+        # ohne die Spalte waere der Vorname darin immer leer, und die Meldung
+        # lautete „Storno" ohne zu sagen, WESSEN Aufenthalt (Wurzel 4 — lieber
+        # kein Name als ein falscher, aber hier ist er verfuegbar).
         _spalten = (
             "id, checked_out_at, check_in, check_out, property_id,"
-            " payment_collect, unit_id"
+            " payment_collect, unit_id, guest_id"
         )
         existing = (
             db.table("reservations")
@@ -1250,6 +1254,59 @@ class BookingsSyncMixin:
             # neu rechnen (coalesced; ohne Trigger altern die Empfehlungen
             # bis zum nächsten Tages-Cron). Best-effort wie beim Direktkanal.
             try_enqueue_recompute(db, tenant_id, free_property_id)
+            # Zeitleiste + Meldung zum Storno.
+            #
+            # WARUM DAS HIER FEHLTE UND WAS ES ANRICHTET: gemeldet wurde bisher
+            # ausschliesslich `kind="created"` (weiter unten im Neuanlage-Zweig).
+            # Der Storno-Pfad kehrt vorher zurueck — die Glocke behielt also
+            # dauerhaft ihre „Neue Buchung"-Zeile, waehrend die Buchung schon
+            # storniert war.
+            #
+            # Live gemessen am 21.08.2026 (Buchung 5135385573, Raevlingehuset):
+            # drei „New booking"-Meldungen um 10:11, Storno um 10:22, KEINE
+            # weitere Meldung. Kalender und Aufgaben waren korrekt aufgeraeumt —
+            # nur der Betrieb erfuhr es nicht und sah in der Glocke weiterhin
+            # eine Buchung, die es nicht mehr gab.
+            #
+            # `melde_buchungs_ereignis` kennt `cancelled` bereits als
+            # Ereignisart (`_BUCHUNG_BETREFF_KEY`) samt Uebersetzungsschluessel
+            # `benachrichtigung.buchung_storniert`; es fehlte allein der Aufruf.
+            #
+            # NUR bei `existing`: eine Storno-Revision zu einer Buchung, die wir
+            # nie hatten, ist keine Aenderung an unserem Bestand — dazu etwas zu
+            # melden waere eine Meldung ueber ein Ereignis, das beim Betrieb nie
+            # stattgefunden hat.
+            if existing:
+                reservation_id = existing[0]["id"]
+                try:
+                    db.table("reservation_events").insert({
+                        "tenant_id": tenant_id,
+                        "reservation_id": reservation_id,
+                        "kind": "cancelled",
+                        "detail": {"channel": channel, "ota_name": ota_name},
+                    }).execute()
+                except Exception as exc:  # noqa: BLE001 — Zeitleiste ist best-effort
+                    log.warning(
+                        "reservation_event_log_failed",
+                        reservation_id=reservation_id,
+                        kind="cancelled",
+                        error=str(exc)[:200],
+                    )
+                # Best-effort wie bei `created`: die Funktion faengt intern
+                # breit, ein Meldungsfehler darf den Storno nicht kippen
+                # (Wurzel 5 — der Kalender ist zu diesem Zeitpunkt schon frei).
+                melde_buchungs_ereignis(
+                    db,
+                    tenant_id=tenant_id,
+                    reservation_id=str(reservation_id),
+                    kind="cancelled",
+                    property_id=free_property_id,
+                    gast_vorname=self._gast_name(
+                        db, tenant_id, existing[0].get("guest_id")
+                    ),
+                    quelle=ota_name,
+                    kanal=channel,
+                )
             return True
 
         if guest_id is None:

@@ -13,7 +13,7 @@
 // Die Beträge kommen SERVERSEITIG aus dem Backend (holePreisliste), damit der
 // Besucher im ersten Rendern eine Zahl sieht und nicht einen Ladezustand — und
 // damit die Preise nicht in 24 Sprachdateien kopiert werden müssen (Wurzel 4).
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { MarketingCta } from "@/components/marketing/marketing-cta";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
@@ -26,6 +26,7 @@ import { PreisInklusive, PreisRechner } from "@/components/preise/preis-rechner"
 import { PreisVergleich } from "@/components/preise/preis-vergleich";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { holePreisliste } from "@/lib/preise";
+import { holeProvisionssaetze } from "@/lib/provisionstexte";
 
 import type { Metadata } from "next";
 
@@ -51,11 +52,15 @@ const ZUSAGEN: readonly { key: string; icon: IconName }[] = [
 
 export default async function PreisePage() {
   const t = await getTranslations("preise.hero");
+  const locale = await getLocale();
   const liste = await holePreisliste();
+  // Dieselbe Preisliste, nur als fertig formatierte Sätze für die Fließtexte
+  // (`PreisInklusive`, Megamenü). Next dedupliziert den Fetch im Request.
+  const saetze = await holeProvisionssaetze(locale);
 
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans text-foreground">
-      <MarketingNav />
+      <MarketingNav satzExtern={saetze.extern} />
       <main className="flex-1">
         {/* Hero: dunkle Fläche über die volle Breite.
             Die erste Fassung war hell auf hell — Überschrift, Chips und
@@ -135,7 +140,7 @@ export default async function PreisePage() {
           </div>
         </section>
 
-        <PreisInklusive />
+        <PreisInklusive satzExtern={saetze.extern} />
 
         <PreisProvisionen liste={liste} />
         <PreisModule liste={liste} />

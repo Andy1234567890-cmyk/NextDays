@@ -78,9 +78,16 @@ def _svc(result_data: list[dict]) -> PropertiesService:
     db = MagicMock()
     chain = MagicMock()
     chain.execute.return_value = MagicMock(data=result_data)
-    # alle Builder-Methoden geben die Kette zurück
-    for m in ("select", "eq", "in_", "limit", "order", "insert", "update", "delete"):
+    # alle Builder-Methoden geben die Kette zurück. `is_` gehört dazu, seit die
+    # Liste archivierte Objekte ausblendet (0416) — ohne den Eintrag gäbe
+    # MagicMock ein FRISCHES Mock zurück, dessen execute() keine Daten trägt,
+    # und jede Liste wäre im Test leer.
+    for m in (
+        "select", "eq", "in_", "limit", "order", "insert", "update", "delete", "is_",
+    ):
         getattr(chain, m).return_value = chain
+    # `.not_` ist ein Attribut, keine Methode: `query.not_.is_(...)`.
+    chain.not_ = chain
     db.table.return_value = chain
     return PropertiesService(service_client=db)
 
@@ -215,6 +222,16 @@ class _PublishQuery:
         return self
 
     def is_(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+        return self
+
+    @property
+    def not_(self):  # noqa: ANN201
+        """PostgREST-Negation (`.not_.is_(...)`) — der Archiv-Filter nutzt sie.
+
+        Der Stub filtert ohnehin nicht, er gibt die Canned-Zeilen zurück;
+        `not_` muss nur dieselbe Kette weiterreichen, sonst bricht der Aufruf
+        mit AttributeError.
+        """
         return self
 
     def limit(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
