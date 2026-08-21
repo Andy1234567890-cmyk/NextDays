@@ -1,7 +1,9 @@
 // Aufgaben — gegen den FastAPI-tasks-Slice (/api/v1/tasks), gespiegelt aus
 // apps/web/lib/tasks.ts. Zwei Sichten je nach Berechtigung:
-//   VIEW_OWN_TASKS (staff/cleaner) → /tasks/mine, /tasks/detail, /complete
-//   MANAGE_TASKS   (admin/co_admin) → /tasks/team, PATCH /status
+//   VIEW_OWN_TASKS (staff/cleaner) → /tasks/mine, /tasks/detail, /complete,
+//                                    PATCH /checklist/item
+//   MANAGE_TASKS   (admin/co_admin) → /tasks/team, /tasks/calendar,
+//                                    PATCH /status
 // TaskListItem/TaskDetail tragen bewusst KEINE Gast-PII/Beträge (§4.3) — der
 // cleaner sieht nur Objekt + Zeitfenster. Nichts auffüllen.
 import { call, type Result } from "@/lib/api";
@@ -51,16 +53,69 @@ export type TaskDetail = Task & {
   checklist: ChecklistItem[];
 };
 
+/**
+ * Die drei Zeit-Reiter des Webs (AKTUELL · BEVORSTEHENDE · ABGESCHLOSSEN).
+ * Die Einteilung nimmt der SERVER vor (`_filter_bucket`) — sie ist zeitlich,
+ * nicht nach Status, und darf hier nicht zweitgerechnet werden.
+ */
+export type StatusBucket = "current" | "upcoming" | "done";
+
+export type TaskFilter = {
+  status_bucket?: StatusBucket;
+  property_ids?: string[];
+  assignee_ids?: string[];
+  rule_ids?: string[];
+};
+
+/** Filter → Query. Mehrfachauswahl wirkt: jeder Wert wird angehängt. */
+function filterParams(filter?: TaskFilter): URLSearchParams {
+  const p = new URLSearchParams();
+  if (filter?.status_bucket) p.set("status_bucket", filter.status_bucket);
+  for (const id of filter?.property_ids ?? []) p.append("property_id", id);
+  for (const id of filter?.assignee_ids ?? []) p.append("assignee_id", id);
+  for (const id of filter?.rule_ids ?? []) p.append("rule_id", id);
+  return p;
+}
+
 // --- Ausführung (VIEW_OWN_TASKS: staff/cleaner) ---
 
-/** Dem angemeldeten Nutzer zugewiesene Aufgaben. */
-export async function listMyTasks(): Promise<Result<Task[]>> {
-  return call("/tasks/mine");
+/**
+ * Dem angemeldeten Nutzer zugewiesene Aufgaben.
+ *
+ * Liefert `TaskListItem`, nicht `Task`: der Endpunkt reichert seit je Objekt-
+ * und Zuständigen-Namen sowie den Checklisten-Fortschritt an (Router:
+ * `response_model=list[TaskListItem]`). Der frühere `Task`-Typ hier war eine
+ * Untertreibung — die App zeigte deshalb weder Objekt noch Fortschritt, obwohl
+ * beides in der Antwort stand.
+ */
+export async function listMyTasks(
+  filter?: Pick<TaskFilter, "status_bucket" | "property_ids">,
+): Promise<Result<TaskListItem[]>> {
+  const q = filterParams(filter).toString();
+  return call(`/tasks/mine${q ? `?${q}` : ""}`);
 }
 
 /** Aufgaben-Detail inkl. Checkliste. */
 export async function getTaskDetail(taskId: string): Promise<Result<TaskDetail>> {
   return call(`/tasks/detail/${encodeURIComponent(taskId)}`);
+}
+
+/**
+ * Einen Checklistenpunkt ab- oder wieder anhaken.
+ *
+ * Erlaubt für den Zuständigen (VIEW_OWN_TASKS) — der Server prüft den Scope
+ * und die Foto-Pflicht; ein Punkt mit `requires_photo` und ohne Nachweis
+ * scheitert dort mit 422. Antwort ist das ganze Detail, damit Fortschritt und
+ * Status in einem Zug stimmen.
+ */
+export async function toggleChecklistItem(
+  itemId: string,
+  done: boolean,
+): Promise<Result<TaskDetail>> {
+  return call(`/tasks/checklist/item/${encodeURIComponent(itemId)}`, {
+    method: "PATCH",
+    body: { done },
+  });
 }
 
 /** Eigene Aufgabe abschließen (Foto-Pflicht serverseitig erzwungen → 422). */
@@ -71,9 +126,56 @@ export async function completeTask(taskId: string): Promise<Result<TaskDetail>> 
 // --- Verwaltung (MANAGE_TASKS: admin/co_admin) ---
 
 /** Teamaufgaben (alle, mit Objekt-/Assignee-Namen + Fortschritt). */
-export async function listTeamTasks(statusBucket?: string): Promise<Result<TaskListItem[]>> {
-  const q = statusBucket ? `?status_bucket=${encodeURIComponent(statusBucket)}` : "";
-  return call(`/tasks/team${q}`);
+export async function listTeamTasks(
+  filter?: TaskFilter,
+): Promise<Result<TaskListItem[]>> {
+  const q = filterParams(filter).toString();
+  return call(`/tasks/team${q ? `?${q}` : ""}`);
+}
+
+/** Eine Buchung der Kalender-Zeile. KEINE Beträge/Gast-PII (§4.3). */
+export type CalendarBooking = {
+  id: string;
+  property_id: string;
+  channel: string;
+  ota_name: string | null;
+  guests: number;
+  adults: number;
+  children: number;
+  check_in: string;
+  check_out: string;
+  status: string;
+};
+
+/** Eine Objekt-Zeile des Aufgaben-Kalenders (property_id `null` = ohne Objekt). */
+export type CalendarRow = {
+  property_id: string | null;
+  property_title: string;
+  tasks: TaskListItem[];
+  bookings: CalendarBooking[];
+};
+
+/**
+ * Aufgaben-Kalender eines Monats: je Objekt eine Zeile mit ihren Aufgaben UND
+ * ihren Buchungen. Die Buchungen sind der Grund, hier zu laden statt in
+ * `/tasks/team`: nur mit ihnen lässt sich am Tag „Abreise/Anreise" ausweisen,
+ * und genau das braucht die Reinigung.
+ *
+ * Nur MANAGE_TASKS (Router: `_manage()`). Mitarbeiter bekommen ihre Agenda aus
+ * `/tasks/mine` — dort ist der Scope die Autorisierung (Wurzel 9).
+ *
+ * `monthFrom`/`monthTo` sind ISO-Zeitstempel (Monatsanfang bzw. -ende 23:59:59)
+ * wie im Web; das Backend vergleicht sie als Strings gegen `start_at`/`due_at`.
+ */
+export async function getTaskCalendar(
+  monthFrom: string,
+  monthTo: string,
+  filter?: Pick<TaskFilter, "assignee_ids" | "rule_ids">,
+): Promise<Result<{ rows: CalendarRow[] }>> {
+  const p = filterParams(filter);
+  p.set("month_from", monthFrom);
+  p.set("month_to", monthTo);
+  return call(`/tasks/calendar?${p.toString()}`);
 }
 
 /** Wer kann Zuständige:r einer Aufgabe sein?
