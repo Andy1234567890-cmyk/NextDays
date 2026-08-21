@@ -16,6 +16,7 @@ import {
   type PortalStatement,
 } from "@/lib/ownerPortal";
 import { useRealtime } from "@/lib/realtime";
+import { useUnterkante } from "@/lib/unterkante";
 import { useTheme } from "@/theme/ThemeProvider";
 
 // Lokales YYYY-MM-DD (kein UTC-Shift).
@@ -37,6 +38,8 @@ function periodLabel(from: string, to: string): string {
 
 export default function OwnerEarnings() {
   const t = useTheme();
+  // Unten frei bleiben MUSS die Tab-Leiste (lib/unterkante).
+  const unterkante = useUnterkante();
   const insets = useSafeAreaInsets();
   const [earnings, setEarnings] = useState<PortalEarnings | null>(null);
   const [statements, setStatements] = useState<PortalStatement[] | null>(null);
@@ -80,7 +83,7 @@ export default function OwnerEarnings() {
       </Col>
 
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, gap: 26 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: unterkante + 24, gap: 26 }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
       >
         {error && <EmptyState icon="info" titel="Nicht geladen" text={error} />}

@@ -29,6 +29,7 @@ import {
   type ReservationChannel,
   type ReservationStatus,
 } from "@/lib/reservations";
+import { useUnterkante } from "@/lib/unterkante";
 import { useTheme } from "@/theme/ThemeProvider";
 
 // Filter-Dimensionen (Chips wie im Mockup).
@@ -67,6 +68,8 @@ export default function HostReservations({
   route?: { params?: { status?: ReservationStatus } };
 }) {
   const t = useTheme();
+  // Unten frei bleiben MUSS die Tab-Leiste (lib/unterkante).
+  const unterkante = useUnterkante();
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState<Reservation[] | null>(null);
   const [props, setProps] = useState<Property[]>([]);
@@ -213,7 +216,7 @@ export default function HostReservations({
         contentContainerStyle={{
           paddingHorizontal: 24,
           paddingTop: 4,
-          paddingBottom: insets.bottom + 32,
+          paddingBottom: unterkante + 24,
           gap: 24,
         }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}

@@ -23,6 +23,7 @@ import {
   type PortalProperty,
 } from "@/lib/ownerPortal";
 import { useRealtime } from "@/lib/realtime";
+import { useUnterkante } from "@/lib/unterkante";
 import { useTheme } from "@/theme/ThemeProvider";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -40,6 +41,8 @@ function validDate(s: string): boolean {
 
 export default function OwnerRequests() {
   const t = useTheme();
+  // Unten frei bleiben MUSS die Tab-Leiste (lib/unterkante).
+  const unterkante = useUnterkante();
   const insets = useSafeAreaInsets();
   const { me, logout } = useAuth();
 
@@ -137,7 +140,7 @@ export default function OwnerRequests() {
 
       {props && props.length > 0 && (
         <ScrollView
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40, gap: 22 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: unterkante + 24, gap: 22 }}
           keyboardShouldPersistTaps="handled"
           refreshControl={<RefreshControl refreshing={false} onRefresh={onRefresh} />}
         >

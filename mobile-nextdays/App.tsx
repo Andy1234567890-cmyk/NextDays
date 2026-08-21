@@ -67,6 +67,10 @@ const linking: LinkingOptions<RootStackParamList> = {
           Calendar: "kalender",
           Reservations: "buchungen",
           Tasks: "aufgabenliste",
+          // Eigenes Segment, KEIN „aufgaben/kalender": das kollidierte mit
+          // `TaskDetail: "aufgaben/:id"` — der Link landete im Detail einer
+          // Aufgabe namens „kalender".
+          TaskCalendar: "aufgabenkalender",
           Listings: "inserate",
           HostInbox: "inbox/:threadId?",
           HostProfile: "profil",

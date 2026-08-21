@@ -32,6 +32,7 @@ import {
   type ReviewSummary,
   type UnifiedReview,
 } from "@/lib/reviews";
+import { useUnterkante } from "@/lib/unterkante";
 import { useTheme } from "@/theme/ThemeProvider";
 
 // Portal-Codes, deren technischer Name nicht der Markenname ist. Alle anderen
@@ -49,6 +50,8 @@ function kanalLabel(code: string): string {
 
 export default function HostReviews() {
   const t = useTheme();
+  // Unten frei bleiben MUSS die Tab-Leiste (lib/unterkante).
+  const unterkante = useUnterkante();
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState<UnifiedReview[] | null>(null);
   const [summary, setSummary] = useState<ReviewSummary | null>(null);
@@ -87,7 +90,12 @@ export default function HostReviews() {
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 40, gap: 16 }}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: 12,
+          paddingBottom: unterkante + 24,
+          gap: 16,
+        }}
         refreshControl={<RefreshControl refreshing={busy} onRefresh={aktualisieren} />}
       >
         <Txt v="display">Bewertungen</Txt>

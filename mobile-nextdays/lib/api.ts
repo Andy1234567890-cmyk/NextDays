@@ -20,6 +20,12 @@ export type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
 type Options = {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
+  /**
+   * JSON-Nutzlast — ODER ein `FormData` für Datei-Uploads (Foto-Nachweise an
+   * Aufgaben). Bei FormData wird NICHT serialisiert und KEIN Content-Type
+   * gesetzt: die Boundary bestimmt die Laufzeit, ein selbst gesetzter Header
+   * ohne Boundary lässt den Upload serverseitig als leeres Feld ankommen.
+   */
   body?: unknown;
 };
 
@@ -38,7 +44,11 @@ async function doFetch<T>(path: string, opts: Options): Promise<T> {
   const token = await getToken();
   // Content-Type braucht Bracket-Notation (Bindestrich im Header-Namen).
   const headers: Record<string, string> = {};
-  if (opts.body !== undefined) headers["Content-Type"] = "application/json";
+  const istFormData =
+    typeof FormData !== "undefined" && opts.body instanceof FormData;
+  if (opts.body !== undefined && !istFormData) {
+    headers["Content-Type"] = "application/json";
+  }
   if (token) headers.Authorization = `Bearer ${token}`;
 
   let res: Response;
@@ -46,7 +56,11 @@ async function doFetch<T>(path: string, opts: Options): Promise<T> {
     res = await fetch(`${BASE}${PREFIX}${path}`, {
       method: opts.method ?? "GET",
       headers,
-      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+      body: istFormData
+        ? (opts.body as FormData)
+        : opts.body !== undefined
+          ? JSON.stringify(opts.body)
+          : undefined,
     });
   } catch {
     throw new ApiError("Backend nicht erreichbar.", 503);

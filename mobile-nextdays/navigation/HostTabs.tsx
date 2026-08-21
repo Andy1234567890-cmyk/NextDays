@@ -8,9 +8,9 @@
 //    zeitkritisch sind (Antwortquoten der Portale) — Aufgaben sind es nicht;
 //    so hält es auch die Referenz-App (Hostaway: Reservations · Calendar ·
 //    Inbox · Tasks · Menu).
-//  staff/cleaner (Mitarbeiter): Aufgaben · Profil. Reduziert — KEIN Finanz-/
-//    Vertriebseinblick (keine Reservierungen/Beträge, keine Übersicht, keine
-//    Inbox/Inserate). BEWUSST auch kein Kalender-Tab: _STAFF hat kein
+//  staff/cleaner (Mitarbeiter): Aufgaben · Profil, dazu der Aufgaben-Kalender
+//    ohne Tab-Button. Reduziert — KEIN Finanz-/Vertriebseinblick (keine
+//    Reservierungen/Beträge, keine Übersicht, keine Inbox/Inserate). BEWUSST auch kein Belegungs-Kalender-Tab: _STAFF hat kein
 //    VIEW_CALENDAR (§4.3, permissions.py) — /calendar/availability würde 403
 //    liefern; Belegungszeiten sehen Mitarbeiter über ihre Aufgaben. Das
 //    Backend maskiert zusätzlich (doppelter Schutz).
@@ -33,6 +33,7 @@ import HostMore from "@/screens/HostMore";
 import HostProfile from "@/screens/HostProfile";
 import HostReservations from "@/screens/HostReservations";
 import HostReviews from "@/screens/HostReviews";
+import HostTaskCalendar from "@/screens/HostTaskCalendar";
 import HostTasks from "@/screens/HostTasks";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -53,6 +54,16 @@ export function HostTabs() {
     return (
       <Tab.Navigator initialRouteName="Tasks" screenOptions={screenOptions}>
         <Tab.Screen name="Tasks" component={HostTasks} options={{ title: "Aufgaben", tabBarIcon: icon("list") }} />
+        {/* Aufgaben-Kalender: über den Umschalter im Aufgaben-Kopf erreichbar,
+            ohne eigenen Tab-Button — wie im Verwalter-Erlebnis. Ein Tab
+            „Kalender" wäre hier irreführend: der BELEGUNGS-Kalender ist für
+            Mitarbeiter gesperrt (kein VIEW_CALENDAR, §4.3), dieser Screen zeigt
+            nur die eigenen Aufgaben. */}
+        <Tab.Screen
+          name="TaskCalendar"
+          component={HostTaskCalendar}
+          options={{ title: "Aufgaben-Kalender", tabBarItemStyle: { display: "none" } }}
+        />
         <Tab.Screen name="HostProfile" component={HostProfile} options={{ title: "Profil", tabBarIcon: icon("user") }} />
       </Tab.Navigator>
     );
@@ -72,6 +83,7 @@ export function HostTabs() {
       <Tab.Screen name="More" component={HostMore} options={{ title: "Mehr", tabBarIcon: icon("more") }} />
       {/* Über „Mehr“ erreichbar, aber nicht in der Leiste: */}
       <Tab.Screen name="Tasks" component={HostTasks} options={{ title: "Aufgaben", ...hidden }} />
+      <Tab.Screen name="TaskCalendar" component={HostTaskCalendar} options={{ title: "Aufgaben-Kalender", ...hidden }} />
       <Tab.Screen name="Listings" component={HostListings} options={{ title: "Inserate", ...hidden }} />
       <Tab.Screen name="Reviews" component={HostReviews} options={{ title: "Bewertungen", ...hidden }} />
       <Tab.Screen name="HostProfile" component={HostProfile} options={{ title: "Profil", ...hidden }} />

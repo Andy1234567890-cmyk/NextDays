@@ -12,10 +12,13 @@ import { Avatar, Col, Row, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState } from "@/components/ui/patterns";
 import { getOwnerProperties, type PortalProperty } from "@/lib/ownerPortal";
 import { useRealtime } from "@/lib/realtime";
+import { useUnterkante } from "@/lib/unterkante";
 import { useTheme } from "@/theme/ThemeProvider";
 
 export default function OwnerProperties() {
   const t = useTheme();
+  // Unten frei bleiben MUSS die Tab-Leiste (lib/unterkante).
+  const unterkante = useUnterkante();
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState<PortalProperty[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +57,7 @@ export default function OwnerProperties() {
 
       {!items && !error && <Spinner />}
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: unterkante + 24 }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
       >
         {items && items.length === 0 && (

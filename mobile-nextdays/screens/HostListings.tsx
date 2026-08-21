@@ -22,6 +22,7 @@ import {
   type Property,
 } from "@/lib/properties";
 import { useRealtime } from "@/lib/realtime";
+import { useUnterkante } from "@/lib/unterkante";
 import { useTheme } from "@/theme/ThemeProvider";
 
 type ChannelKey = "website" | "marketplace" | "portals";
@@ -35,6 +36,8 @@ const CHANNEL_LABEL: Record<ChannelKey, string> = {
 
 export default function Listings({ navigation }: { navigation: any }) {
   const t = useTheme();
+  // Unten frei bleiben MUSS die Tab-Leiste (lib/unterkante).
+  const unterkante = useUnterkante();
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState<Property[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -92,7 +95,7 @@ export default function Listings({ navigation }: { navigation: any }) {
       </Row>
 
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, gap: 28 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: unterkante + 24, gap: 28 }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
       >
         {!items && !error && <Spinner />}

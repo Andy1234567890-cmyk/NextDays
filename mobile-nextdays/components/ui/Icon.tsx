@@ -26,6 +26,10 @@ export const NIC: Record<string, string> = {
   share: "M16 6l-4-3-4 3M12 3v13M5 12v7a1 1 0 001 1h12a1 1 0 001-1v-7",
   check: "M5 12.5l4.5 4.5L19 7",
   clock: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 8v4.5l3 1.8",
+  // Kamera (Foto-Nachweis an Aufgaben). Unbekannte Namen fallen auf `dot`
+  // zurück — ein fehlendes Icon wäre also ein STILLER Punkt statt einer
+  // Fehlermeldung; deshalb steht jedes benutzte Motiv hier.
+  cam: "M4 8.5h3l1.6-2.2h6.8L17 8.5h3v10H4zM12 16.6a3.1 3.1 0 100-6.2 3.1 3.1 0 000 6.2",
   card: "M3 7.5h18v9H3zM3 11h18M7 14h3",
   // ACHTUNG: ein echter Euro-Glyph. NUR verwenden, wo tatsächlich Euro gemeint
   // ist — nicht als Symbol für „Geld/Umsatz". Der Betrieb kann in Kronen,

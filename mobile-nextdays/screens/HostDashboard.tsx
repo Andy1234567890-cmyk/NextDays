@@ -32,6 +32,7 @@ import { getDashboard, type Dashboard } from "@/lib/dashboard";
 import { heuteLabel } from "@/lib/kalendertag";
 import { getInboxUnreadCount } from "@/lib/inbox";
 import { useRealtime } from "@/lib/realtime";
+import { useUnterkante } from "@/lib/unterkante";
 import { useTheme } from "@/theme/ThemeProvider";
 
 /**
@@ -101,6 +102,8 @@ function HinweisZeile({
 export default function HostDashboard({ navigation }: { navigation: any }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
+  // Unten frei bleiben MUSS die Tab-Leiste (lib/unterkante).
+  const unterkante = useUnterkante();
   const { me } = useAuth();
   const [data, setData] = useState<Dashboard | null>(null);
   // Offene Konversationen. null = der Posteingang ist für diese Rolle nicht
@@ -207,7 +210,7 @@ export default function HostDashboard({ navigation }: { navigation: any }) {
           paddingHorizontal: 24,
           paddingTop: 12,
           gap: 26,
-          paddingBottom: insets.bottom + 40,
+          paddingBottom: unterkante + 24,
         }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
         showsVerticalScrollIndicator={false}

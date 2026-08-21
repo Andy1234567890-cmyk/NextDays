@@ -50,6 +50,13 @@
 	     muss der Wert neu bewertet werden. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<!-- Foto-Nachweise an Aufgaben: iOS verweigert Kamera und Bildwaehler
+	     OHNE diese Texte nicht nur die Berechtigung, es beendet die App beim
+	     ersten Zugriff. Die Texte sagen den Zweck, nicht die Technik. -->
+	<key>NSCameraUsageDescription</key>
+	<string>Damit du Nachweisfotos zu Aufgaben aufnehmen kannst.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Damit du vorhandene Fotos als Nachweis zu einer Aufgabe auswaehlen kannst.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>

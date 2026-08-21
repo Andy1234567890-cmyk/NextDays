@@ -8,7 +8,16 @@
 // cleaner sieht nur Objekt + Zeitfenster. Nichts auffüllen.
 import { call, type Result } from "@/lib/api";
 
-export type TaskStatus = "open" | "in_progress" | "done" | "cancelled";
+// `accepted` (0360, Hostaway-Gleichzug) sitzt zwischen „liegt da" und „ich bin
+// dran": jemand hat die Aufgabe ANGENOMMEN, aber noch nicht angefangen. Der
+// Wert fehlte hier — eine angenommene Aufgabe hatte in der App gar keine
+// Beschriftung und keinen nächsten Schritt.
+export type TaskStatus =
+  | "open"
+  | "accepted"
+  | "in_progress"
+  | "done"
+  | "cancelled";
 export type InspectionState = "to_review" | "reviewed";
 export type TaskSource = "manual" | "auto" | "recurring";
 
@@ -32,6 +41,9 @@ export type Task = {
 export type TaskListItem = Task & {
   property_title: string | null;
   assignee_name: string | null;
+  // Anzeige-Referenz der Buchung (Portal-Referenz, sonst Kurz-ID). KEIN
+  // Gastname, kein Betrag — die Zeile sieht auch die Reinigungskraft (§4.3).
+  reservation_ref: string | null;
   checklist_total: number;
   checklist_done: number;
 };
@@ -44,13 +56,51 @@ export type ChecklistItem = {
   done: boolean;
   requires_photo: boolean;
   sort_order: number;
+  // Storage-Pfade der Nachweise (die Wahrheit) …
   photos: string[];
+  // … und dieselben Bilder als kurzlebig signierte URLs — nur die kann die App
+  // anzeigen. Ohne sie sah die ausführende Person ihren eigenen Nachweis nie,
+  // sondern nur einen Zähler. Optional, weil eine noch nicht ausgerollte API
+  // das Feld nicht mitschickt (die Oberfläche darf daran nicht brechen).
+  photo_urls?: string[];
+  // Wer den Punkt abgehakt hat und wann. Der Server liefert beides mit; ohne
+  // diese Felder sah im Team nicht nachvollziehbar aus, wer was erledigt hat.
+  // Die Nutzer-ID (`done_by`) bleibt bewusst draußen — die Anzeige braucht sie
+  // nicht (§4.3, kein Recon-Material).
+  done_at: string | null;
+  done_by_name: string | null;
 };
 
-export type TaskDetail = Task & {
-  property_title: string | null;
-  assignee_name: string | null;
+export type TaskCost = {
+  id: string;
+  task_id: string;
+  amount: string;
+  currency: string;
+  note: string | null;
+  created_by_name: string | null;
+  created_at: string | null;
+};
+
+export type TaskResolution = {
+  task_id: string;
+  note: string | null;
+  score: number | null;
+  created_by_name: string | null;
+  updated_at: string | null;
+};
+
+export type TaskDetail = TaskListItem & {
   checklist: ChecklistItem[];
+  // An- und Abreisetag der Buchung, an der die Aufgabe hängt (nur Kalendertage,
+  // §4.3). „Der Gast reist am 22. ab" ist die eigentliche Arbeitsangabe.
+  reservation_check_in: string | null;
+  reservation_check_out: string | null;
+  costs: TaskCost[];
+  // Währung einer NEUEN Auslage (Objekt-, sonst Betriebswährung). `null` heißt
+  // „für dieses Objekt ist keine hinterlegt" → das Kostenfeld bleibt weg,
+  // statt ein Feld anzubieten, dessen Speichern mit 422 endet (Wurzel 4).
+  cost_currency: string | null;
+  resolution: TaskResolution | null;
 };
 
 /**
@@ -95,9 +145,158 @@ export async function listMyTasks(
   return call(`/tasks/mine${q ? `?${q}` : ""}`);
 }
 
+/**
+ * Auslage zu einer Aufgabe erfassen. KEINE Währung im Aufruf — die kommt
+ * serverseitig aus dem Objekt (sonst dem Betrieb). Fehlt sie dort, antwortet
+ * der Server mit 422 statt einen Euro zu erfinden (Wurzel 4).
+ */
+export async function addTaskCost(
+  taskId: string,
+  amount: string,
+  note: string | null,
+): Promise<Result<TaskDetail>> {
+  return call(`/tasks/${encodeURIComponent(taskId)}/costs`, {
+    method: "POST",
+    body: { amount, note },
+  });
+}
+
+/** Auslage zurücknehmen (staff/cleaner nur die eigenen — der Server filtert). */
+export async function deleteTaskCost(costId: string): Promise<Result<TaskDetail>> {
+  return call(`/tasks/costs/${encodeURIComponent(costId)}`, { method: "DELETE" });
+}
+
+/**
+ * Abschluss-Rückmeldung setzen (genau eine je Aufgabe).
+ *
+ * Den TEXT darf jede zuständige Person schreiben, die BEWERTUNG nur die
+ * Konto-Führung (`manage_tasks`) — ein Score ohne dieses Recht ergibt 403.
+ * Deshalb wird `score` nur mitgesendet, wenn er gesetzt ist.
+ */
+export async function setTaskResolution(
+  taskId: string,
+  note: string | null,
+  score?: number | null,
+): Promise<Result<TaskDetail>> {
+  const body: Record<string, unknown> = { note };
+  if (score != null) body.score = score;
+  return call(`/tasks/${encodeURIComponent(taskId)}/resolution`, {
+    method: "PUT",
+    body,
+  });
+}
+
+/** Eine offene Vertretungsanfrage, die ich übernehmen könnte. */
+export type Vertretung = {
+  id: string;
+  task_id: string;
+  requested_by: string;
+  requested_by_name: string | null;
+  accepted_by: string | null;
+  status: "requested" | "accepted" | "declined";
+  note: string | null;
+  title: string;
+  property_title: string | null;
+  property_id: string | null;
+  start_at: string | null;
+  end_at: string | null;
+};
+
+/**
+ * Offene Vertretungsanfragen, die ich übernehmen könnte.
+ *
+ * Eigene Anfragen fallen serverseitig raus (man vertritt sich nicht selbst),
+ * ebenso Aufgaben an Objekten ohne Freigabe (Wurzel 9). Ohne diese Liste war
+ * die Vertretung unerreichbar: eine Anfrage ging raus und niemand erfuhr davon
+ * — es gibt dafür weder eine Web-Oberfläche noch eine Benachrichtigung.
+ */
+export async function listSubstitutions(): Promise<Result<Vertretung[]>> {
+  return call("/tasks/substitution");
+}
+
+/** Eine Vertretung übernehmen — die Aufgabe wird damit mir zugewiesen. */
+export async function acceptSubstitution(
+  id: string,
+): Promise<Result<{ id: string; status: string }>> {
+  return call(`/tasks/substitution/${encodeURIComponent(id)}/accept`, {
+    method: "POST",
+  });
+}
+
+/** Eine Vertretung ablehnen (sie bleibt für andere sichtbar bzw. wird zu). */
+export async function declineSubstitution(
+  id: string,
+): Promise<Result<{ id: string; status: string }>> {
+  return call(`/tasks/substitution/${encodeURIComponent(id)}/decline`, {
+    method: "POST",
+  });
+}
+
+/**
+ * Vertretung für eine Aufgabe anfragen (`request_substitute`).
+ *
+ * Der Weg der ausführenden Person aus einer Aufgabe: sie kann sie nicht
+ * umhängen (das ist Verteilung), aber abgeben. Ein Kollege nimmt die Anfrage
+ * an — im Web oder hier.
+ */
+export async function requestSubstitution(
+  taskId: string,
+  note: string | null,
+): Promise<Result<{ id: string; status: string }>> {
+  return call("/tasks/substitution", {
+    method: "POST",
+    body: { task_id: taskId, note },
+  });
+}
+
 /** Aufgaben-Detail inkl. Checkliste. */
 export async function getTaskDetail(taskId: string): Promise<Result<TaskDetail>> {
   return call(`/tasks/detail/${encodeURIComponent(taskId)}`);
+}
+
+/**
+ * Ein aufgenommenes oder gewähltes Bild als Multipart-Feld `file`.
+ *
+ * React Native schickt Dateien als `{uri, name, type}` — kein `Blob`, kein
+ * `File`. Der Typ MUSS mitkommen: der Server prüft ihn gegen die echten
+ * Anfangsbytes (Wurzel 8) und lehnt alles ab, was kein JPEG/PNG/WebP ist.
+ */
+export type Bilddatei = { uri: string; name: string; type: string };
+
+function bildFormular(bild: Bilddatei): FormData {
+  const form = new FormData();
+  // Der Cast ist nötig, weil die DOM-Typen für `append` nur Blob/string kennen;
+  // die React-Native-Laufzeit erwartet genau dieses Objekt.
+  form.append("file", bild as unknown as Blob);
+  return form;
+}
+
+/** Foto-Nachweis zu einem Checklisten-Punkt hochladen (privater Bucket). */
+export async function uploadChecklistPhoto(
+  itemId: string,
+  bild: Bilddatei,
+): Promise<Result<{ id: string }>> {
+  return call(`/tasks/checklist/item/${encodeURIComponent(itemId)}/photo`, {
+    method: "POST",
+    body: bildFormular(bild),
+  });
+}
+
+/**
+ * Foto direkt an der Aufgabe — auch ohne Checkliste möglich.
+ *
+ * Der Server legt dafür bei Bedarf EIN Sammel-Item „Fotos" an und hängt das
+ * Bild dort ein (idempotent, Wurzel 2); es erscheint anschließend als
+ * Buchungsbild im Bilder-Modul.
+ */
+export async function uploadTaskPhoto(
+  taskId: string,
+  bild: Bilddatei,
+): Promise<Result<{ id: string }>> {
+  return call(`/tasks/${encodeURIComponent(taskId)}/photo`, {
+    method: "POST",
+    body: bildFormular(bild),
+  });
 }
 
 /**
@@ -241,11 +440,21 @@ export async function setTaskAssignee(
   });
 }
 
-/** Aufgaben-Status setzen (nur MANAGE_TASKS). */
+/**
+ * Arbeitszustand setzen: annehmen, anfangen, zurücklegen, abschließen.
+ *
+ * Seit 0360 reicht dafür `VIEW_OWN_TASKS` — den Zustand der eigenen Arbeit
+ * meldet die Person, die sie tut. Die App hat das lange nur Verwaltern
+ * angeboten; eine Reinigungskraft konnte „ich bin dran" nicht sagen. Fremde
+ * Aufgaben sind serverseitig ein 404 (Wurzel 9), der Scope bleibt also dort.
+ *
+ * Antwort ist das ganze Detail (nicht nur die Zeile) — Status, Zeitpunkte und
+ * Inspektionsfolge kommen in einem Zug zurück.
+ */
 export async function setTaskStatus(
   taskId: string,
   status: TaskStatus,
-): Promise<Result<Task>> {
+): Promise<Result<TaskDetail>> {
   return call(`/tasks/${encodeURIComponent(taskId)}/status`, {
     method: "PATCH",
     body: { status },

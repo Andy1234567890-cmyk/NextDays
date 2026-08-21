@@ -53,6 +53,7 @@ import {
 } from "@/lib/konto";
 import { totpEinrichten, totpBestaetigen } from "@/lib/mfa";
 import { RECHTE_GRUPPEN } from "@/lib/rechte-texte";
+import { useUnterkante } from "@/lib/unterkante";
 import { useTheme } from "@/theme/ThemeProvider";
 
 type Dialog =
@@ -105,6 +106,8 @@ function datum(iso: string | null): string {
 
 export default function HostProfile() {
   const t = useTheme();
+  // Unten frei bleiben MUSS die Tab-Leiste (lib/unterkante).
+  const unterkante = useUnterkante();
   const insets = useSafeAreaInsets();
   const { logout, reload } = useAuth();
 
@@ -268,7 +271,7 @@ export default function HostProfile() {
         contentContainerStyle={{
           paddingHorizontal: 24,
           paddingTop: 12,
-          paddingBottom: insets.bottom + 40,
+          paddingBottom: unterkante + 24,
           gap: 20,
         }}
       >

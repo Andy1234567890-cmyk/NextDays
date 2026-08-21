@@ -16,6 +16,7 @@ import {
   type PortalProperty,
 } from "@/lib/ownerPortal";
 import { useRealtime } from "@/lib/realtime";
+import { useUnterkante } from "@/lib/unterkante";
 import { useTheme } from "@/theme/ThemeProvider";
 
 const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
@@ -40,6 +41,8 @@ function monthGrid(year: number, month: number): (Date | null)[] {
 
 export default function OwnerCalendar() {
   const t = useTheme();
+  // Unten frei bleiben MUSS die Tab-Leiste (lib/unterkante).
+  const unterkante = useUnterkante();
   const insets = useSafeAreaInsets();
   const [props, setProps] = useState<PortalProperty[] | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -162,7 +165,9 @@ export default function OwnerCalendar() {
       )}
 
       {props && props.length > 0 && (
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}>
+        <ScrollView
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: unterkante + 24 }}
+        >
           <Row style={{ marginBottom: 6 }}>
             {WEEKDAYS.map((w) => (
               <Txt key={w} v="xs" faint style={{ flex: 1, textAlign: "center" }}>

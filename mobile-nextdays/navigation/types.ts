@@ -12,6 +12,9 @@ export type HostTabParamList = {
   // denselben Zeilen gibt.
   Reservations: { status?: "pending" | "confirmed" | "cancelled" | "completed" } | undefined;
   Tasks: undefined;
+  // Aufgaben-Kalender (Wochenstreifen + Tages-Agenda). Kein eigener Tab-Button
+  // — erreichbar über den Umschalter im Aufgaben-Kopf (Regel „max 5 Tabs").
+  TaskCalendar: undefined;
   // threadId: Deep-Link mynextdays://inbox/:threadId öffnet diesen Thread.
   HostInbox: { threadId?: string } | undefined;
   Listings: undefined;
@@ -25,6 +28,10 @@ export type HostTabParamList = {
 // liefern; Belegungszeiten sehen Mitarbeiter über ihre Aufgaben.
 export type StaffTabParamList = {
   Tasks: undefined;
+  // Derselbe Aufgaben-Kalender wie im Verwalter-Erlebnis, nur aus „Meine
+  // Aufgaben" gespeist — Mitarbeiter haben kein VIEW_CALENDAR (§4.3), also
+  // auch keine Buchungs-/Belegungsdaten darin.
+  TaskCalendar: undefined;
   HostProfile: undefined;
 };
 

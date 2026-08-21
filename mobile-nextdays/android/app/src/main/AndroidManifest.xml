@@ -6,6 +6,15 @@
          FCM meldet trotzdem "zugestellt". Deklaration allein genuegt
          nicht, sie wird zur Laufzeit erfragt (lib/push.ts). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Foto-Nachweise an Aufgaben (Checklisten-Punkte mit Foto-Pflicht):
+         die KAMERA wird zur Laufzeit erfragt (react-native-image-picker),
+         die Deklaration allein genuegt nicht. Kein Lese-Recht auf den
+         Bildspeicher: der System-Bildwaehler (Photo Picker) liefert die
+         Auswahl ueber einen temporaeren URI, dafuer braucht die App
+         READ_MEDIA_IMAGES NICHT — und was sie nicht braucht, fragt sie
+         auch nicht ab. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <!-- Ab Android 11 sieht eine App fremde Pakete nur, wenn sie sie hier
          deklariert. Ohne diesen Block liefert Linking.canOpenURL IMMER false
          und der Absprung nach myBestDays landet still im Store (ADR-0019). -->

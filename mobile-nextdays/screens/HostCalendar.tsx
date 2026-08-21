@@ -11,7 +11,7 @@
 // nicht; das Backend maskiert zusätzlich.
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -45,6 +45,7 @@ import { listProperties, propertyTypeLabel, type Property } from "@/lib/properti
 import { useRealtime } from "@/lib/realtime";
 import { listReservations, type Reservation } from "@/lib/reservations";
 import type { HostTabParamList } from "@/navigation/types";
+import { useUnterkante } from "@/lib/unterkante";
 import { useTheme } from "@/theme/ThemeProvider";
 
 const WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
@@ -55,6 +56,22 @@ const MONTH_SHORT = [
 ];
 // Wie viele Monate ab dem aktuellen untereinander gezeigt werden.
 const MONTHS_AHEAD = 4;
+
+// --- Zeitachse der Matrix (endloses Scrollen wie im Web) -------------------
+// Die Matrix zeigte genau EINEN Monat; am rechten Rand war Schluss und man
+// musste ‹ › drücken. Der Web-Kalender (`calendar-board.tsx`) hat stattdessen
+// EINE lange Achse und rendert nur das Sichtfenster (`OVERSCAN`), Daten holt er
+// in Blöcken (`CHUNK_DAYS`). Genau das steht hier — dieselben drei Größen, nur
+// kleiner gewählt, weil ein Telefon weniger Spalten zeigt und weniger Speicher
+// hat.
+const ACHSE_ZURUECK_MONATE = 2;
+const ACHSE_VOR_MONATE = 14;
+// Puffer links/rechts des sichtbaren Fensters gegen Leerflächen beim Wischen.
+const SPALTEN_PUFFER = 12;
+// Blockgröße (Tage) für das Nachladen der Tagesdaten. Der ganze Zeitraum in
+// einem Zug wären ~480 Tage × N Objekte — der Request ist der Grund für Blöcke,
+// nicht die Renderleistung.
+const BLOCK_TAGE = 45;
 
 type MonthKey = { year: number; month0: number };
 
@@ -76,6 +93,9 @@ function propertyLabel(p: Property): string {
 
 export default function HostCalendar() {
   const t = useTheme();
+  // Unten frei bleiben MUSS die Tab-Leiste, nicht nur die Systemleiste
+  // (lib/unterkante) — sonst liegt die letzte Objektzeile dahinter.
+  const unterkante = useUnterkante();
   const insets = useSafeAreaInsets();
 
   // Angetippte Buchung → Panel von rechts. Bis August 2026 waren die
@@ -101,12 +121,6 @@ export default function HostCalendar() {
   // Matrix-Ansicht: Board + Reservierungen für ALLE Objekte (property_id → …).
   const [matrixBoard, setMatrixBoard] = useState<Map<string, BoardProperty>>(new Map());
   const [matrixRes, setMatrixRes] = useState<Reservation[]>([]);
-  // Sichtbarer Matrix-Monat (‹ › blättert monatsweise, wie das Mockup).
-  const [matrixMonth, setMatrixMonth] = useState<MonthKey>(() => {
-    const now = new Date();
-    return { year: now.getFullYear(), month0: now.getMonth() };
-  });
-
   // Unendlich scrollbar: Anzahl sichtbarer Monate wächst beim Scroll-Ende.
   const [monthCount, setMonthCount] = useState(MONTHS_AHEAD);
   const months = useMemo<MonthKey[]>(() => {
@@ -176,49 +190,117 @@ export default function HostCalendar() {
     if (view === "month") load();
   }, [load, view]);
 
-  // Matrix-Fenster = ganzer sichtbarer Monat (1. bis Monatsletzter), ‹ › blättert
-  // monatsweise. Kein Hardcode — Monat kommt aus dem State (Start: heutiger).
-  const matrixStart = useMemo(
-    () => isoLocal(new Date(matrixMonth.year, matrixMonth.month0, 1)),
-    [matrixMonth],
-  );
-  const matrixEnd = useMemo(
-    () => isoLocal(new Date(matrixMonth.year, matrixMonth.month0 + 1, 0)),
-    [matrixMonth],
-  );
+  // Die Zeitachse der Matrix: EINE durchgehende Spanne, in der gescrollt wird —
+  // kein Monatsfenster mehr. Sie hängt am heutigen Tag und nicht am gewählten
+  // Monat: ‹ ›, „Heute" und das Dropdown SCROLLEN darin (siehe `scrollToTag`),
+  // statt einen neuen Bereich zu laden. Genau daran scheiterte das endlose
+  // Scrollen vorher — am rechten Rand des Monats war die Achse zu Ende.
+  const achseStart = useMemo(() => {
+    const h = new Date();
+    return isoLocal(new Date(h.getFullYear(), h.getMonth() - ACHSE_ZURUECK_MONATE, 1));
+  }, []);
+  const achseEnde = useMemo(() => {
+    const h = new Date();
+    // Letzter Tag des letzten Monats der Achse (Tag 0 des Folgemonats).
+    return isoLocal(new Date(h.getFullYear(), h.getMonth() + ACHSE_VOR_MONATE + 1, 0));
+  }, []);
 
   const allIds = useMemo(() => (props ?? []).map((p) => p.id), [props]);
 
-  const loadMatrix = useCallback(async () => {
-    if (allIds.length === 0) return;
-    setLoading(true);
-    setDataErr(null);
-    // Board end ist exklusiv → einen Tag nach dem letzten sichtbaren.
-    const boardEnd = isoLocal(addDays(parseLocal(matrixEnd), 1));
-    const [b, r] = await Promise.all([
-      getBoard(allIds, matrixStart, boardEnd),
-      listReservations(),
-    ]);
-    if (!b.ok) {
-      setDataErr(b.error);
+  // Welche Tagesblöcke schon geholt sind. Als Ref und nicht als State: die
+  // Merkliste darf kein Neuzeichnen auslösen, sie verhindert nur doppelte
+  // Anfragen (Wurzel 2 — beim Wischen feuert `onScroll` viele Male).
+  const geholteBloecke = useRef(new Set<number>());
+
+  /**
+   * Die Tagesdaten für einen Spaltenbereich sicherstellen.
+   *
+   * Lädt NUR fehlende Blöcke und MERGED sie in die vorhandene Karte — ein
+   * Ersetzen würde beim Weiterscrollen die Preise der Monate löschen, die man
+   * gerade verlassen hat, und sie beim Zurückscrollen erneut holen.
+   */
+  const bloeckeSichern = useCallback(
+    async (vonTag: number, bisTag: number) => {
+      if (allIds.length === 0) return;
+      const ersterBlock = Math.floor(Math.max(0, vonTag) / BLOCK_TAGE);
+      const letzterBlock = Math.floor(Math.max(0, bisTag) / BLOCK_TAGE);
+      const offen: number[] = [];
+      for (let b = ersterBlock; b <= letzterBlock; b += 1) {
+        if (!geholteBloecke.current.has(b)) {
+          geholteBloecke.current.add(b);
+          offen.push(b);
+        }
+      }
+      if (offen.length === 0) return;
+      setLoading(true);
+      const anker = parseLocal(achseStart);
+      const antworten = await Promise.all(
+        offen.map((b) =>
+          getBoard(
+            allIds,
+            isoLocal(addDays(anker, b * BLOCK_TAGE)),
+            // `end` ist exklusiv (Board-Contract).
+            isoLocal(addDays(anker, (b + 1) * BLOCK_TAGE)),
+          ),
+        ),
+      );
+      const fehler = antworten.find((r) => !r.ok);
+      if (fehler && !fehler.ok) {
+        // Fehlgeschlagene Blöcke wieder freigeben, sonst bleibt die Lücke für
+        // immer leer (Wurzel 5: kein stilles „ist geladen").
+        for (const b of offen) geholteBloecke.current.delete(b);
+        setDataErr(fehler.error);
+        setLoading(false);
+        return;
+      }
+      setMatrixBoard((vorher) => {
+        const naechste = new Map(vorher);
+        for (const r of antworten) {
+          if (!r.ok) continue;
+          for (const it of r.data.items) {
+            const bestehend = naechste.get(it.property_id);
+            naechste.set(
+              it.property_id,
+              bestehend
+                ? { ...it, days: [...bestehend.days, ...it.days] }
+                : it,
+            );
+          }
+        }
+        return naechste;
+      });
+      setDataErr(null);
       setLoading(false);
-      return;
-    }
+    },
+    [allIds, achseStart],
+  );
+
+  // Buchungen: EIN Abruf für alle Objekte, ohne Zeitraum — der Endpunkt liefert
+  // sie am Stück, und ein Balken darf nicht fehlen, nur weil sein Block noch
+  // nicht geholt wurde.
+  const buchungenLaden = useCallback(async () => {
+    if (allIds.length === 0) return;
+    const r = await listReservations();
     if (!r.ok) {
       setDataErr(r.error);
-      setLoading(false);
       return;
     }
-    const map = new Map<string, BoardProperty>();
-    for (const it of b.data.items) map.set(it.property_id, it);
-    setMatrixBoard(map);
     setMatrixRes(r.data.items);
-    setLoading(false);
-  }, [allIds, matrixStart, matrixEnd]);
+  }, [allIds]);
+
+  const matrixNeuLaden = useCallback(() => {
+    // Alles verwerfen und den sichtbaren Bereich neu holen: eine fremde
+    // Änderung kann jeden Block betreffen, und welcher gerade sichtbar ist,
+    // weiß die Matrix selbst (sie ruft `bloeckeSichern` beim nächsten Scroll
+    // bzw. beim Aufbau erneut).
+    geholteBloecke.current.clear();
+    setMatrixBoard(new Map());
+    buchungenLaden();
+  }, [buchungenLaden]);
 
   useEffect(() => {
-    if (view === "matrix") loadMatrix();
-  }, [loadMatrix, view]);
+    if (view === "matrix") buchungenLaden();
+  }, [buchungenLaden, view]);
 
   // Realtime: Belegung (availability) und Buchungen (reservations) — bei jeder
   // Änderung neu laden (debounced), kein manuelles Reload nach eigenen Aktionen
@@ -226,7 +308,7 @@ export default function HostCalendar() {
   // Monatsansicht: auf das gewählte Objekt gefiltert. Matrix: alle Objekte, kein
   // Filter → jede Änderung lädt die Matrix neu.
   const propFilter = selectedId ? `property_id=eq.${selectedId}` : undefined;
-  const onRt = view === "matrix" ? loadMatrix : load;
+  const onRt = view === "matrix" ? matrixNeuLaden : load;
   const rtFilter = view === "matrix" ? undefined : propFilter;
   const rtEnabled = view === "matrix" ? allIds.length > 0 : !!selectedId;
   useRealtime({ table: "reservations", filter: rtFilter, onChange: onRt, enabled: rtEnabled });
@@ -287,22 +369,20 @@ export default function HostCalendar() {
           board={matrixBoard}
           reservations={matrixRes}
           onBuchung={setOffeneBuchung}
-          start={matrixStart}
-          end={matrixEnd}
-          onPrev={() => setMatrixMonth((m) => shiftMonth(m, -1))}
-          onNext={() => setMatrixMonth((m) => shiftMonth(m, 1))}
-          onToday={() => {
-            const now = new Date();
-            setMatrixMonth({ year: now.getFullYear(), month0: now.getMonth() });
-          }}
-          onPickMonth={(m) => setMatrixMonth(m)}
-          bottomInset={insets.bottom}
+          start={achseStart}
+          end={achseEnde}
+          onSichtbar={bloeckeSichern}
+          bottomInset={unterkante}
         />
       ) : !selectedId ? (
         <StateBox tone="empty">Objekt auswählen, um den Kalender zu sehen.</StateBox>
       ) : (
         <ScrollView
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 32, gap: 28 }}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingBottom: unterkante + 24,
+            gap: 28,
+          }}
           showsVerticalScrollIndicator={false}
           scrollEventThrottle={16}
           onScroll={(e) => {
@@ -336,7 +416,7 @@ export default function HostCalendar() {
           reservationId={offeneBuchung}
           heuteIso={heuteIso()}
           onClose={() => setOffeneBuchung(null)}
-          onGeaendert={view === "matrix" ? loadMatrix : load}
+          onGeaendert={view === "matrix" ? matrixNeuLaden : load}
           onNachrichtOeffnen={(threadId) => {
             setOffeneBuchung(null);
             navigation.navigate("HostInbox", { threadId });
@@ -355,6 +435,11 @@ const NAME_COL_COLLAPSED = 52; // nur Foto
 const NAME_COL_EXPANDED = 176; // Foto + voller Name (2 Zeilen)
 const DAY_COL = 62; // Breite je Tages-Spalte
 const ROW_H = 62; // Höhe je Objektzeile
+// Höhe der Datumsleiste. Als Konstante, weil links (Ecke mit Ausklapp-Knopf)
+// und rechts (Wochentag + Tageszahl) auf dieselbe Höhe MÜSSEN: die beiden
+// Spalten scrollen getrennt, und schon ein Pixel Unterschied verschiebt die
+// Fotos dauerhaft gegen ihre Zeilen.
+const HEAD_H = 52;
 
 function MatrixCalendar({
   properties,
@@ -362,10 +447,7 @@ function MatrixCalendar({
   reservations,
   start,
   end,
-  onPrev,
-  onNext,
-  onToday,
-  onPickMonth,
+  onSichtbar,
   onBuchung,
   bottomInset,
 }: {
@@ -374,14 +456,17 @@ function MatrixCalendar({
   reservations: Reservation[];
   start: string;
   end: string;
-  onPrev: () => void;
-  onNext: () => void;
-  onToday: () => void;
-  onPickMonth: (m: MonthKey) => void;
+  /** Meldet den sichtbaren Spaltenbereich, damit die Daten nachgeladen werden. */
+  onSichtbar: (vonTag: number, bisTag: number) => void;
   onBuchung: (reservationId: string) => void;
   bottomInset: number;
 }) {
   const t = useTheme();
+  // Die feste linke Spalte folgt dem Raster (siehe `onScroll` unten).
+  const objektSpalte = useRef<ScrollView | null>(null);
+  // Das Raster: wird auch zum Springen benutzt (‹ › · Heute · Monatswahl
+  // scrollen, statt einen neuen Bereich zu laden).
+  const raster = useRef<ScrollView | null>(null);
   // Objektspalte ausklappbar: eingeklappt nur Fotos, ausgeklappt Foto + Name.
   const [expanded, setExpanded] = useState(false);
   // Monat-Dropdown offen?
@@ -392,10 +477,67 @@ function MatrixCalendar({
   const gridWidth = days.length * DAY_COL;
   const todayCol = days.findIndex((d) => d.isToday);
 
-  // Kopf-Label „Monat Jahr" aus dem ersten sichtbaren Tag.
-  const first = parseLocal(start);
+  // --- Sichtfenster ---------------------------------------------------------
+  // Gerendert wird NUR das Fenster plus Puffer. Ohne das entstünden bei 16
+  // Monaten Achse und 20 Objekten über 9 000 Zellen — die Ansicht wäre beim
+  // ersten Wischen eingefroren. Der Web-Kalender macht es genauso
+  // (`visFrom`/`visTo` + OVERSCAN in `calendar-board.tsx`).
+  // Startfenster um HEUTE, nicht um den Achsenanfang: die Achse reicht zwei
+  // Monate zurück (damit man nach links blättern kann), aufgehen soll die
+  // Ansicht aber am heutigen Tag. Ohne diesen Startwert zeigte sie den
+  // Vormonat, und der Nutzer musste erst nach rechts wischen.
+  const [fenster, setFenster] = useState(() => ({
+    von: Math.max(0, ACHSE_ZURUECK_MONATE * 31 - SPALTEN_PUFFER),
+    bis: ACHSE_ZURUECK_MONATE * 31 + SPALTEN_PUFFER * 2,
+  }));
+  // Der Sprung auf heute passiert genau EINMAL. Bei jedem Layout (Drehen,
+  // Tastatur, Ausklappen der Objektspalte) erneut zu springen würde den Nutzer
+  // aus dem Monat werfen, den er gerade ansieht.
+  const startGesetzt = useRef(false);
+  // Letzte horizontale Scrollposition — gebraucht, wenn sich nur das Layout
+  // ändert (Objektspalte aus-/einklappen) und das Fenster neu gerechnet wird.
+  const letzteX = useRef(0);
+  const sichtbareTage = useMemo(
+    () => days.slice(fenster.von, fenster.bis),
+    [days, fenster],
+  );
+
+  const fensterSetzen = useCallback(
+    (scrollX: number, breite: number) => {
+      const ersteSpalte = Math.max(0, Math.floor(scrollX / DAY_COL));
+      const spaltenImBild = Math.max(1, Math.ceil(breite / DAY_COL));
+      const von = Math.max(0, ersteSpalte - SPALTEN_PUFFER);
+      const bis = Math.min(days.length, ersteSpalte + spaltenImBild + SPALTEN_PUFFER);
+      setFenster((vorher) =>
+        vorher.von === von && vorher.bis === bis ? vorher : { von, bis },
+      );
+      onSichtbar(von, bis);
+    },
+    [days.length, onSichtbar],
+  );
+
+  // Zum Tag scrollen (Monatssprung). `animated: false`, weil ein Sprung über
+  // Monate sonst sekundenlang durch alle Spalten fährt.
+  const zuSpalteScrollen = useCallback((spalte: number) => {
+    raster.current?.scrollTo({ x: Math.max(0, spalte) * DAY_COL, animated: false });
+  }, []);
+
+  // Kopf-Label „Monat Jahr" aus dem ersten SICHTBAREN Tag — beim Scrollen zieht
+  // der Titel mit, statt an einem gewählten Monat zu kleben.
+  const linkerTag = days[Math.min(days.length - 1, fenster.von + SPALTEN_PUFFER)];
+  const first = linkerTag ? parseLocal(linkerTag.iso) : parseLocal(start);
   const curMonth: MonthKey = { year: first.getFullYear(), month0: first.getMonth() };
   const headLabel = monthLabel(curMonth.year, curMonth.month0);
+
+  /** Erste Spalte eines Monats auf der Achse — oder die nächstgelegene. */
+  const spalteVonMonat = useCallback(
+    (m: MonthKey) => {
+      const ziel = isoLocal(new Date(m.year, m.month0, 1));
+      const treffer = days.findIndex((d) => d.iso >= ziel);
+      return treffer >= 0 ? treffer : days.length - 1;
+    },
+    [days],
+  );
   // Im Dropdown gewähltes Jahr (frei per ‹ Jahr › wählbar, kein Limit).
   const [pickerYear, setPickerYear] = useState(curMonth.year);
   // Beim Öffnen aufs aktuelle Jahr springen.
@@ -467,7 +609,9 @@ function MatrixCalendar({
                       <Pressable
                         key={m0}
                         onPress={() => {
-                          onPickMonth({ year: pickerYear, month0: m0 });
+                          zuSpalteScrollen(
+                            spalteVonMonat({ year: pickerYear, month0: m0 }),
+                          );
                           setMonthOpen(false);
                         }}
                         style={{
@@ -491,19 +635,25 @@ function MatrixCalendar({
         </View>
         <Row gap={8}>
           <Pressable
-            onPress={onPrev}
+            // ‹ › SCROLLEN auf der Achse, statt einen Monat neu zu laden —
+            // sonst wäre die Achse wieder an ihren Rändern zu Ende.
+            onPress={() =>
+              zuSpalteScrollen(spalteVonMonat(shiftMonth(curMonth, -1)))
+            }
             style={{ padding: 6, borderRadius: t.radius.btn, borderWidth: 1, borderColor: t.palette.line }}
           >
             <Icon n="back" s={16} sw={2} c={t.palette.ink} />
           </Pressable>
           <Pressable
-            onPress={onNext}
+            onPress={() =>
+              zuSpalteScrollen(spalteVonMonat(shiftMonth(curMonth, 1)))
+            }
             style={{ padding: 6, borderRadius: t.radius.btn, borderWidth: 1, borderColor: t.palette.line }}
           >
             <Icon n="fwd" s={16} sw={2} c={t.palette.ink} />
           </Pressable>
           <Pressable
-            onPress={onToday}
+            onPress={() => zuSpalteScrollen(Math.max(0, todayCol))}
             style={{
               paddingHorizontal: 12,
               paddingVertical: 6,
@@ -517,80 +667,166 @@ function MatrixCalendar({
         </Row>
       </Row>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingLeft: 20 }}
-      >
-        <Col>
-          {/* Kopfzeile: Ausklapp-Toggle (>> / <<) über der Foto-Spalte, dann
-              Wochentag/Datum je Spalte. */}
-          {/* gap={0}: `Row` setzt sonst 12 dp Abstand (kit.tsx) — die absolut
-              positionierten Balken rechnen mit DAY_COL und liefen dadurch pro
-              Spalte 12 dp aus dem Raster (gemessen: 74 statt 62 dp Schritt,
-              nach drei Spalten eine ganze Spaltenbreite Versatz). */}
-          <Row gap={0}>
-            <View style={{ width: nameCol, alignItems: "center", justifyContent: "center" }}>
-              <Pressable
-                onPress={() => setExpanded((v) => !v)}
-                style={{
-                  padding: 6,
-                  borderRadius: t.radius.btn,
-                  borderWidth: 1,
-                  borderColor: t.palette.line,
-                }}
-              >
-                <Icon n={expanded ? "back" : "fwd"} s={16} sw={2.4} c={t.palette.ink} />
-              </Pressable>
-            </View>
-            {days.map((d) => (
-              <DayHead key={d.iso} day={d} />
-            ))}
-          </Row>
-
-          {/* Objektzeilen */}
+      {/* ZWEI Spalten, damit beide Leisten stehenbleiben, wo sie gebraucht
+          werden: die OBJEKTSPALTE fest am linken Rand (sie scrollt vertikal mit
+          den Zeilen, aber NICHT horizontal mit den Tagen), die DATUMSLEISTE fest
+          oben (sie scrollt horizontal mit den Tagen, aber nicht vertikal).
+          Vorher lag die Objektspalte innerhalb des horizontalen ScrollViews und
+          wanderte beim Wischen nach links aus dem Bild — man sah Preise und
+          Namensbalken, aber nicht mehr, zu welchem Haus sie gehören. Genau das
+          macht die Ansicht unbrauchbar, und genau so hält es die Referenz
+          (Lodgify/Hostaway: eingefrorene erste Spalte). */}
+      <Row gap={0} style={{ flex: 1, alignItems: "stretch" }}>
+        {/* --- Feste linke Spalte: Ecke + Objektzellen --- */}
+        <Col style={{ width: nameCol + 20, paddingLeft: 20 }}>
+          <View
+            style={{
+              width: nameCol,
+              height: HEAD_H,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Pressable
+              onPress={() => setExpanded((v) => !v)}
+              style={{
+                padding: 6,
+                borderRadius: t.radius.btn,
+                borderWidth: 1,
+                borderColor: t.palette.line,
+              }}
+            >
+              <Icon n={expanded ? "back" : "fwd"} s={16} sw={2.4} c={t.palette.ink} />
+            </Pressable>
+          </View>
+          {/* Folgt dem rechten ScrollView. `scrollEnabled={false}`, weil genau
+              EINE Seite führen muss: scrollten beide, schöbe jede die andere
+              per `scrollTo`, und das Ergebnis ist ein Ruckeln, das nie zur Ruhe
+              kommt. Gewischt wird also im Raster — dort ist ohnehin die Fläche. */}
           <ScrollView
+            ref={objektSpalte}
+            scrollEnabled={false}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: bottomInset + 32 }}
           >
-            <View>
-              {/* Durchgehender roter Heute-Streifen über ALLE Zeilen (Mockup). */}
-              {todayCol >= 0 && (
-                <View
-                  pointerEvents="none"
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    height: properties.length * ROW_H,
-                    left: nameCol + todayCol * DAY_COL,
-                    width: DAY_COL,
-                    backgroundColor: t.palette.accentSoft,
-                    borderLeftWidth: 2,
-                    borderRightWidth: 2,
-                    borderColor: t.palette.accent,
-                  }}
-                />
-              )}
-              {properties.map((p) => (
-                <MatrixRow
-                  key={p.id}
-                  property={p}
-                  bp={board.get(p.id)}
-                  reservations={resByProp.get(p.id) ?? []}
-                  days={days}
-                  gridWidth={gridWidth}
-                  nameCol={nameCol}
-                  expanded={expanded}
-                  onBuchung={onBuchung}
-                />
-              ))}
-            </View>
-            <View style={{ paddingTop: 12, paddingLeft: 4 }}>
-              <Legend />
-            </View>
+            {properties.map((p) => (
+              <ObjektZelle
+                key={p.id}
+                property={p}
+                nameCol={nameCol}
+                expanded={expanded}
+              />
+            ))}
           </ScrollView>
         </Col>
-      </ScrollView>
+
+        {/* --- Raster: horizontal scrollend, mit fester Datumsleiste oben --- */}
+        <Col style={{ flex: 1 }}>
+          <ScrollView
+            ref={raster}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={16}
+            onScroll={(e) => {
+              letzteX.current = e.nativeEvent.contentOffset.x;
+              fensterSetzen(
+                e.nativeEvent.contentOffset.x,
+                e.nativeEvent.layoutMeasurement.width,
+              );
+            }}
+            // Beim Aufbau einmal auf HEUTE springen und das Fenster rechnen:
+            // die Breite steht erst nach dem Layout fest, und ohne diesen
+            // Aufruf bliebe das Startfenster bei seinem Schätzwert stehen.
+            onLayout={(e) => {
+              const breite = e.nativeEvent.layout.width;
+              const x = Math.max(0, todayCol) * DAY_COL;
+              if (!startGesetzt.current && todayCol >= 0) {
+                startGesetzt.current = true;
+                letzteX.current = x;
+                raster.current?.scrollTo({ x, animated: false });
+                fensterSetzen(x, breite);
+                return;
+              }
+              // Sonst: das Fenster aus der AKTUELLEN Position neu rechnen.
+              // `onLayout` kennt sie nicht, deshalb wird sie beim Scrollen
+              // mitgeschrieben — sonst spränge das Fenster beim Ausklappen der
+              // Objektspalte zurück auf heute.
+              fensterSetzen(letzteX.current, breite);
+            }}
+          >
+            <Col>
+              {/* gap={0}: `Row` setzt sonst 12 dp Abstand (kit.tsx) — die absolut
+                  positionierten Balken rechnen mit DAY_COL und liefen dadurch pro
+                  Spalte 12 dp aus dem Raster (gemessen: 74 statt 62 dp Schritt,
+                  nach drei Spalten eine ganze Spaltenbreite Versatz). */}
+              {/* Nur das Fenster wird gezeichnet; `marginLeft` hält die Spalten
+                  an ihrer Stelle auf der langen Achse, `width` reserviert die
+                  Gesamtbreite (sonst hätte die Achse kein Ende zum Scrollen). */}
+              <Row gap={0} style={{ height: HEAD_H, width: gridWidth }}>
+                <View style={{ width: fenster.von * DAY_COL }} />
+                {sichtbareTage.map((d) => (
+                  <DayHead key={d.iso} day={d} />
+                ))}
+              </Row>
+
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                // Führt die linke Spalte mit. 16 ms ≈ ein Bild bei 60 Hz —
+                // seltener zu melden lässt die Fotos hinter den Zeilen
+                // herhinken, häufiger bringt nichts mehr.
+                scrollEventThrottle={16}
+                onScroll={(e) =>
+                  objektSpalte.current?.scrollTo({
+                    y: e.nativeEvent.contentOffset.y,
+                    animated: false,
+                  })
+                }
+                contentContainerStyle={{ paddingBottom: bottomInset + 32 }}
+              >
+                <View>
+                  {/* Durchgehender roter Heute-Streifen über ALLE Zeilen (Mockup).
+                      Ohne die Namensspalte im Raster zählt der Versatz nur noch
+                      die Tage — `nameCol` gehört hier NICHT mehr dazu. */}
+                  {todayCol >= fenster.von && todayCol < fenster.bis && (
+                    <View
+                      pointerEvents="none"
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        height: properties.length * ROW_H,
+                        left: todayCol * DAY_COL,
+                        width: DAY_COL,
+                        backgroundColor: t.palette.accentSoft,
+                        borderLeftWidth: 2,
+                        borderRightWidth: 2,
+                        borderColor: t.palette.accent,
+                      }}
+                    />
+                  )}
+                  {properties.map((p) => (
+                    <MatrixRow
+                      key={p.id}
+                      bp={board.get(p.id)}
+                      reservations={resByProp.get(p.id) ?? []}
+                      // Nur die sichtbaren Spalten. Die Balken werden gegen
+                      // DIESE Tage gerechnet (`buildRowBars`) und liegen damit
+                      // im verschobenen Fenster richtig; was außerhalb liegt,
+                      // schneidet die Balkenrechnung ohnehin ab.
+                      days={sichtbareTage}
+                      versatz={fenster.von}
+                      gridWidth={gridWidth}
+                      onBuchung={onBuchung}
+                    />
+                  ))}
+                </View>
+                <View style={{ paddingTop: 12, paddingLeft: 4 }}>
+                  <Legend />
+                </View>
+              </ScrollView>
+            </Col>
+          </ScrollView>
+        </Col>
+      </Row>
     </Col>
   );
 }
@@ -599,7 +835,18 @@ function DayHead({ day }: { day: MatrixDay }) {
   const t = useTheme();
   const wd = WEEKDAYS[day.dow];
   return (
-    <View style={{ width: DAY_COL, alignItems: "center", paddingVertical: 6 }}>
+    // Feste Höhe (HEAD_H) statt `paddingVertical`: die Datumsleiste und die
+    // Ecke über der Objektspalte stehen in GETRENNTEN Spalten, die eigenständig
+    // scrollen. Wächst eine der beiden mit ihrem Inhalt, laufen die Fotos
+    // dauerhaft gegen ihre Zeilen versetzt.
+    <View
+      style={{
+        width: DAY_COL,
+        height: HEAD_H,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <Txt v="xs" faint>{wd}</Txt>
       {day.isToday ? (
         <View
@@ -626,23 +873,64 @@ function DayHead({ day }: { day: MatrixDay }) {
   );
 }
 
-function MatrixRow({
+/** Eine Zelle der FESTEN linken Spalte: Foto, ausgeklappt mit Namen.
+ *
+ * Eigene Komponente, seit die Spalte aus dem scrollenden Raster gelöst ist.
+ * Ihre Höhe MUSS `ROW_H` sein — sie ist das Gegenstück zur Rasterzeile, und ein
+ * Unterschied summiert sich über die Objekte zu einem sichtbaren Versatz. */
+function ObjektZelle({
   property,
+  nameCol,
+  expanded,
+}: {
+  property: Property;
+  nameCol: number;
+  expanded: boolean;
+}) {
+  const t = useTheme();
+  return (
+    <Row
+      gap={8}
+      style={{
+        width: nameCol,
+        height: ROW_H,
+        paddingHorizontal: 8,
+        alignItems: "center",
+        justifyContent: expanded ? "flex-start" : "center",
+        borderTopWidth: 1,
+        borderTopColor: t.palette.line,
+        borderRightWidth: 1,
+        borderRightColor: t.palette.line,
+      }}
+    >
+      <Photo src={property.photos?.[0]} h={32} w={32} r={7} />
+      {expanded && (
+        <Txt v="xs" numberOfLines={2} style={{ flex: 1 }}>
+          {property.bfe_number ? `${property.bfe_number} · ` : ""}
+          {property.title}
+        </Txt>
+      )}
+    </Row>
+  );
+}
+
+function MatrixRow({
   bp,
   reservations,
   days,
+  versatz,
   gridWidth,
-  nameCol,
-  expanded,
   onBuchung,
 }: {
-  property: Property;
+  // `property` steht NICHT mehr hier: Foto und Name liegen in der festen
+  // linken Spalte (`ObjektZelle`). Die Zeile trägt nur noch das Raster.
   bp: BoardProperty | undefined;
   reservations: Reservation[];
+  /** NUR die sichtbaren Tage (Fenster), nicht die ganze Achse. */
   days: MatrixDay[];
+  /** Index der ersten sichtbaren Spalte auf der Achse. */
+  versatz: number;
   gridWidth: number;
-  nameCol: number;
-  expanded: boolean;
   onBuchung: (reservationId: string) => void;
 }) {
   const t = useTheme();
@@ -652,31 +940,17 @@ function MatrixRow({
 
   return (
     <Row gap={0} style={{ height: ROW_H, borderTopWidth: 1, borderTopColor: t.palette.line }}>
-      {/* Objekt-Spalte: eingeklappt nur Foto (zentriert), ausgeklappt Foto +
-          voller Name (2 Zeilen). Feste Breite → Grid rückt nach, kein Overlay. */}
-      <Row
-        style={{
-          width: nameCol,
-          paddingHorizontal: 8,
-          alignItems: "center",
-          justifyContent: expanded ? "flex-start" : "center",
-          borderRightWidth: 1,
-          borderRightColor: t.palette.line,
-        }}
-        gap={8}
-      >
-        <Photo src={property.photos?.[0]} h={32} w={32} r={7} />
-        {expanded && (
-          <Txt v="xs" numberOfLines={2} style={{ flex: 1 }}>
-            {property.bfe_number ? `${property.bfe_number} · ` : ""}
-            {property.title}
-          </Txt>
-        )}
-      </Row>
-
-      {/* Tages-Zellen mit Preis + darüber die Buchungsbalken. */}
-      <View style={{ width: gridWidth }}>
-        <Row gap={0}>
+      {/* Tages-Zellen mit Preis + darüber die Buchungsbalken. Die Objektspalte
+          liegt NICHT mehr hier, sondern fest links (`ObjektZelle`). Gezeichnet
+          wird nur das Fenster; der linke Abstandhalter hält es an seiner Stelle
+          auf der Achse. */}
+      <View style={{ width: gridWidth, height: ROW_H }}>
+        {/* EIN verschobener Container für Zellen UND Balken: die Balken rechnen
+            ihre Position gegen die sichtbaren Tage (`buildRowBars`), also müssen
+            sie denselben Versatz erben wie die Zellen. Lägen sie daneben,
+            stünde jeder Namensbalken um das Fenster versetzt im Raster. */}
+        <View style={{ position: "absolute", left: versatz * DAY_COL, top: 0 }}>
+          <Row gap={0}>
           {days.map((d) => {
             const a = byIso.get(d.iso);
             const price = a?.price;
@@ -705,17 +979,18 @@ function MatrixRow({
                 ) : null}
               </View>
             );
-          })}
-        </Row>
+            })}
+          </Row>
 
-        {/* Balken-Overlay: absolute Positionierung über den Zellen. */}
-        {bars.map((b, i) => (
-          <MatrixBarView
-            key={`${b.reservationId}-${i}`}
-            bar={b}
-            onPress={() => onBuchung(b.reservationId)}
-          />
-        ))}
+          {/* Balken-Overlay: absolute Positionierung über den Zellen. */}
+          {bars.map((b, i) => (
+            <MatrixBarView
+              key={`${b.reservationId}-${i}`}
+              bar={b}
+              onPress={() => onBuchung(b.reservationId)}
+            />
+          ))}
+        </View>
       </View>
     </Row>
   );

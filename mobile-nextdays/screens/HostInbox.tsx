@@ -59,6 +59,7 @@ import {
 } from "@/lib/inbox";
 import type { ReservationChannel } from "@/lib/reservations";
 import type { HostTabParamList } from "@/navigation/types";
+import { useUnterkante } from "@/lib/unterkante";
 import { useTheme } from "@/theme/ThemeProvider";
 
 export default function HostInbox() {
@@ -92,6 +93,10 @@ function ThreadList({
 }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
+  // Die LISTE liegt im Tab-Erlebnis: unten muss die Tab-Leiste frei bleiben
+  // (lib/unterkante). Die Thread-Ansicht darunter hat ihre eigene Eingabezeile
+  // am Rand und rechnet weiter mit der Systemleiste.
+  const unterkante = useUnterkante();
   const [threads, setThreads] = useState<InboxThread[] | null>(null);
   // Deep-Link nur EINMAL öffnen (nicht bei jedem Realtime-Reload erneut).
   const [autoOpened, setAutoOpened] = useState(false);
@@ -285,7 +290,7 @@ function ThreadList({
 
       {!threads && <Spinner />}
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: insets.bottom + 32 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: unterkante + 24 }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
         showsVerticalScrollIndicator={false}
       >

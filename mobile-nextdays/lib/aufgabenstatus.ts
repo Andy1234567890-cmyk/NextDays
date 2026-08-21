@@ -18,10 +18,27 @@ import type { TaskStatus } from "@/lib/tasks";
 
 export const AUFGABE_STATUS_LABEL: Record<TaskStatus, string> = {
   open: "Offen",
+  // „Angenommen" (0360): jemand hat zugesagt, aber noch nicht angefangen.
+  accepted: "Angenommen",
   in_progress: "In Arbeit",
   done: "Erledigt",
   cancelled: "Abgebrochen",
 };
+
+/**
+ * Der nächste Arbeitszustand — offen → angenommen → in Arbeit → erledigt.
+ *
+ * Eine Quelle für Liste, Kalender und Detail; vorher stand die Kette im
+ * Listen-Screen und kannte `accepted` nicht, weshalb eine angenommene Aufgabe
+ * dort keinen Weiter-Knopf mehr hatte. Aus `done`/`cancelled` führt hier kein
+ * Weg — das Zurücknehmen ist eine eigene Entscheidung, kein „weiter".
+ */
+export function naechsterStatus(s: TaskStatus): TaskStatus | null {
+  if (s === "open") return "accepted";
+  if (s === "accepted") return "in_progress";
+  if (s === "in_progress") return "done";
+  return null;
+}
 
 /** Welche Bedeutung die Karte trägt — nicht der rohe Status. */
 export type AufgabeTon = "done" | "cancelled" | "today" | "unassigned" | "plain";
