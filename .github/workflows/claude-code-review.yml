@@ -36,6 +36,15 @@ jobs:
         uses: anthropics/claude-code-action@be7b93b1907a4abad570368f3c74b6fe3807510b # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Dependabot-PRs mitpruefen. Ohne diesen Eintrag bricht die Action mit
+          # „Workflow initiated by non-human actor" ab (Standard: kein Bot
+          # erlaubt) — jeder Abhaengigkeits-PR hinterliess einen roten Haken.
+          #
+          # NAMENTLICH und nicht '*': bei '*' koennte auf einem oeffentlichen
+          # Repo eine fremde App die Action mit einem Prompt aufrufen, den sie
+          # selbst bestimmt (Warnung in der action.yml). Dependabot-PRs
+          # enthalten dagegen nur einen Versionsbump.
+          allowed_bots: 'dependabot[bot]'
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
           prompt: '/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
