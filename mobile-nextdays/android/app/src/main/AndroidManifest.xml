@@ -1,6 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Ab Android 13 (API 33) eine Laufzeit-Berechtigung: ohne die
+         Zustimmung des Nutzers verwirft das System jede Meldung STILL —
+         FCM meldet trotzdem "zugestellt". Deklaration allein genuegt
+         nicht, sie wird zur Laufzeit erfragt (lib/push.ts). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Ab Android 11 sieht eine App fremde Pakete nur, wenn sie sie hier
          deklariert. Ohne diesen Block liefert Linking.canOpenURL IMMER false
          und der Absprung nach myBestDays landet still im Store (ADR-0019). -->

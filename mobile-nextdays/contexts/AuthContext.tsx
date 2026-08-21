@@ -13,9 +13,14 @@ import {
 } from "react";
 
 import { api } from "@/lib/api";
+import { pushAbmelden, pushEinrichten, pushTapVerdrahten } from "@/lib/push";
 import {
   getToken,
   login as apiLogin,
+  mfaFaktoren as apiMfaFaktoren,
+  mfaLoesen as apiMfaLoesen,
+  mfaSmsAnfordern as apiMfaSmsAnfordern,
+  mfaVerwerfen,
   logout as apiLogout,
 } from "@/lib/auth";
 
@@ -62,6 +67,23 @@ type AuthState = {
   login: (
     email: string,
     password: string,
+  ) => Promise<
+    | { ok: true }
+    | { ok: false; error: string }
+    | { ok: false; mfaRequired: true; methods: string[]; phoneMasked: string | null }
+  >;
+  /** Schritt 2 bei aktivem 2FA: Faktor lösen, dann Konto laden. */
+  mfaLoesen: (
+    factorId: string,
+    code: string,
+  ) => Promise<{ ok: true } | { ok: false; error: string }>;
+  /** Die factor_id je Typ (totp/phone) des offenen Anmeldevorgangs. */
+  mfaFaktoren: () => Promise<
+    { ok: true; data: Record<string, string> } | { ok: false; error: string }
+  >;
+  /** SMS-Code anfordern (nur bei phone-Faktor). */
+  mfaSmsAnfordern: (
+    factorId: string,
   ) => Promise<{ ok: true } | { ok: false; error: string }>;
   logout: () => Promise<void>;
   reload: () => Promise<void>;
@@ -119,6 +141,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (email: string, password: string) => {
       const res = await apiLogin(email, password);
+      // 2FA offen: KEIN Fehler, sondern der zweite Schritt. Der Screen zeigt
+      // die Code-Eingabe; die aal1-Sitzung liegt in lib/auth.ts.
+      if (!res.ok && "mfaRequired" in res) {
+        return {
+          ok: false as const,
+          mfaRequired: true as const,
+          methods: res.methods,
+          phoneMasked: res.phoneMasked,
+        };
+      }
       if (!res.ok) return { ok: false as const, error: res.error };
       const ok = await fetchMe();
       if (!ok) {
@@ -133,7 +165,80 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [fetchMe],
   );
 
+  // Schritt 2: Faktor lösen. Danach dasselbe Muster wie beim Login — erst
+  // /auth/me, dann signedIn. Ohne geladenes Konto bleibt der Nutzer draußen,
+  // statt „halb angemeldet" zu sein.
+  const mfaLoesen = useCallback(
+    async (factorId: string, code: string) => {
+      const res = await apiMfaLoesen(factorId, code);
+      if (!res.ok) return { ok: false as const, error: res.error };
+      const ok = await fetchMe();
+      if (!ok) {
+        await apiLogout();
+        setStatus("signedOut");
+        return { ok: false as const, error: "Konto konnte nicht geladen werden." };
+      }
+      setStatus("signedIn");
+      return { ok: true as const };
+    },
+    [fetchMe],
+  );
+
+  // Push-Registrierung am STATUS, nicht an den drei Aufrufern (Login, 2FA,
+  // Kaltstart mit gueltigem Token). Sonst muesste derselbe Aufruf dreimal
+  // stehen — und die dritte Stelle (Kaltstart) wird typischerweise vergessen,
+  // womit ein Nutzer, der die App nur neu oeffnet, nie ein Token meldet.
+  //
+  // Fehler bleiben still: Push ist eine Zugabe. Wer die Meldungs-Berechtigung
+  // verweigert, soll sich trotzdem anmelden koennen.
+  useEffect(() => {
+    if (status !== "signedIn") return;
+    void pushEinrichten();
+  }, [status]);
+
+  // Der Tap auf eine Meldung — ebenfalls erst NACH der Anmeldung, nicht bei
+  // jedem Mount. Frueher stand hier ein `useEffect(..., [])` mit der Begruendung,
+  // ein Effekt an `signedIn` kaeme fuer einen Tap aus dem geschlossenen Zustand
+  // zu spaet. Das ist nachweislich falsch:
+  //
+  //  - Die Start-Meldung liegt in den Intent-Extras der Activity
+  //    (`NativeRNFBTurboMessaging.getInitialNotification`, Android-Quelle:
+  //    `activity.getIntent().getExtras()`), nicht in einem fluechtigen Puffer.
+  //    Sie bleibt abholbar, solange die Activity lebt — eine `message_id` wird
+  //    dabei nur EINMAL ausgeliefert (`initialNotificationMap`).
+  //  - Zu FRUEH ist der dokumentierte Fehlerfall, nicht zu spaet: ist die
+  //    Activity noch nicht bereit, loggt das Modul woertlich „The current
+  //    activity is not ready, try calling the method later in the React
+  //    lifecycle" und liefert `null`.
+  //
+  // Der frueher Aufruf hatte dagegen einen echten Preis: er fasst die native
+  // Firebase-Seite an, bevor irgendwer angemeldet ist. Ein Ziel-Deep-Link nuetzt
+  // ohne Anmeldung ohnehin nichts — der Screen wuerde nur auf den Login werfen.
+  useEffect(() => {
+    if (status !== "signedIn") return;
+    pushTapVerdrahten();
+  }, [status]);
+
+  const mfaFaktoren = useCallback(async () => {
+    const res = await apiMfaFaktoren();
+    return res.ok
+      ? { ok: true as const, data: res.data }
+      : { ok: false as const, error: res.error };
+  }, []);
+
+  const mfaSmsAnfordern = useCallback(async (factorId: string) => {
+    const res = await apiMfaSmsAnfordern(factorId);
+    return res.ok ? { ok: true as const } : { ok: false as const, error: res.error };
+  }, []);
+
   const logout = useCallback(async () => {
+    // Einen halb gelaufenen 2FA-Vorgang mitnehmen: sonst haengt die aal1-
+    // Sitzung noch im Speicher, wenn sich danach jemand anders anmeldet.
+    mfaVerwerfen();
+    // VOR apiLogout: das Abmelden des Geraets braucht noch ein gueltiges
+    // Token, sonst antwortet die Route 401 und das Geraet bekaeme weiter die
+    // Meldungen des abgemeldeten Betriebs (Wurzel 1).
+    await pushAbmelden();
     await apiLogout();
     setMe(null);
     setStatus("signedOut");
@@ -144,8 +249,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchMe]);
 
   const value = useMemo(
-    () => ({ status, me, login, logout, reload }),
-    [status, me, login, logout, reload],
+    () => ({
+      status,
+      me,
+      login,
+      mfaLoesen,
+      mfaFaktoren,
+      mfaSmsAnfordern,
+      logout,
+      reload,
+    }),
+    [status, me, login, mfaLoesen, mfaFaktoren, mfaSmsAnfordern, logout, reload],
   );
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
