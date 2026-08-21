@@ -26,6 +26,7 @@ import {
   isoLocal,
   monthLabel,
   parseLocal,
+  HALBER_TAG as HALBER_TAG_GRID,
   type BarSegment,
   type GridCell,
 } from "@/lib/calendar-grid";
@@ -33,6 +34,7 @@ import {
   availIndex,
   buildMatrixDays,
   buildRowBars,
+  HALBER_TAG,
   type MatrixBar,
   type MatrixDay,
 } from "@/lib/calendar-matrix";
@@ -523,7 +525,11 @@ function MatrixCalendar({
         <Col>
           {/* Kopfzeile: Ausklapp-Toggle (>> / <<) über der Foto-Spalte, dann
               Wochentag/Datum je Spalte. */}
-          <Row>
+          {/* gap={0}: `Row` setzt sonst 12 dp Abstand (kit.tsx) — die absolut
+              positionierten Balken rechnen mit DAY_COL und liefen dadurch pro
+              Spalte 12 dp aus dem Raster (gemessen: 74 statt 62 dp Schritt,
+              nach drei Spalten eine ganze Spaltenbreite Versatz). */}
+          <Row gap={0}>
             <View style={{ width: nameCol, alignItems: "center", justifyContent: "center" }}>
               <Pressable
                 onPress={() => setExpanded((v) => !v)}
@@ -645,7 +651,7 @@ function MatrixRow({
   const sym = currencySymbol(bp?.currency ?? null);
 
   return (
-    <Row style={{ height: ROW_H, borderTopWidth: 1, borderTopColor: t.palette.line }}>
+    <Row gap={0} style={{ height: ROW_H, borderTopWidth: 1, borderTopColor: t.palette.line }}>
       {/* Objekt-Spalte: eingeklappt nur Foto (zentriert), ausgeklappt Foto +
           voller Name (2 Zeilen). Feste Breite → Grid rückt nach, kein Overlay. */}
       <Row
@@ -670,7 +676,7 @@ function MatrixRow({
 
       {/* Tages-Zellen mit Preis + darüber die Buchungsbalken. */}
       <View style={{ width: gridWidth }}>
-        <Row>
+        <Row gap={0}>
           {days.map((d) => {
             const a = byIso.get(d.iso);
             const price = a?.price;
@@ -678,6 +684,11 @@ function MatrixRow({
               <View
                 key={d.iso}
                 style={{
+                  // Zelle und Balken MUESSEN dasselbe Rastermass benutzen:
+                  // beide DAY_COL, wie im Web beide `COL`. Der Rahmen zaehlt
+                  // NICHT zur Breite dazu — Yoga rechnet border-box
+                  // (ReactCommon/yoga/style/Style.h: BoxSizing::BorderBox ist
+                  // der Default), die Zelle bleibt also 62 dp breit.
                   width: DAY_COL,
                   height: ROW_H,
                   borderLeftWidth: 1,
@@ -718,8 +729,15 @@ function MatrixBarView({
   onPress: () => void;
 }) {
   const t = useTheme();
-  const left = bar.startCol * DAY_COL + 2;
-  const width = (bar.endCol - bar.startCol + 1) * DAY_COL - 4;
+  // Halbtags-Versatz wie im Web (`calendar-board.tsx`, HALF_DAY): Anreise ab
+  // der Spaltenmitte, Auslauf bis zur Mitte des Abreisetags. Sonst belegt eine
+  // Buchung den Wechseltag ganz und der Nachmieter sieht aus wie eine
+  // Doppelbelegung. Am Fensterrand (clip) bleibt der Balken bündig.
+  const linksVersatz = bar.halbStart ? HALBER_TAG : 0;
+  const spalten =
+    bar.endCol - bar.startCol + 1 - linksVersatz + (bar.halbEnde ? HALBER_TAG : 0);
+  const left = (bar.startCol + linksVersatz) * DAY_COL + 2;
+  const width = spalten * DAY_COL - 4;
   return (
     // Wie im Monatsgitter: der Balken IST der Weg in die Buchung. `hitSlop`
     // vergrößert die Trefferfläche des 22 Punkte hohen Streifens.
@@ -999,8 +1017,16 @@ function WeekRow({
 
       {/* Belegungsbalken (absolut über den Zellen) */}
       {laidOut.bars.map((s, i) => {
-        const leftPct = (s.startCol / 7) * 100;
-        const widthPct = ((s.endCol - s.startCol + 1) / 7) * 100;
+        // Halbtags-Versatz wie im Web (`calendar-board.tsx`, HALF_DAY): der
+        // Balken beginnt in der MITTE des Anreisetags und laeuft bis zur Mitte
+        // des Abreisetags, damit Vor- und Nachmieter den Wechseltag sichtbar
+        // teilen. Ohne das belegte die Anreise die ganze Zelle und ein
+        // Wechseltag sah aus wie eine Doppelbelegung.
+        const linksVersatz = s.halbStart ? HALBER_TAG_GRID : 0;
+        const spalten =
+          s.endCol - s.startCol + 1 - linksVersatz + (s.halbEnde ? HALBER_TAG_GRID : 0);
+        const leftPct = ((s.startCol + linksVersatz) / 7) * 100;
+        const widthPct = (spalten / 7) * 100;
         return (
           // Antippen öffnet die Buchung. `hitSlop` nach oben/unten, weil ein
           // 22 Punkte hoher Balken unter der Fingerkuppe sonst schwer zu

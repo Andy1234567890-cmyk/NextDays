@@ -26,7 +26,19 @@ export type MatrixBar = {
   endCol: number;
   clipStart: boolean; // Buchung beginnt vor dem Fenster
   clipEnd: boolean; // Buchung endet nach dem Fenster
+  // Halbtags-Versatz wie im Web (`calendar-board.tsx`, HALF_DAY): der Balken
+  // beginnt in der MITTE des Anreisetags und laeuft bis zur MITTE des
+  // Abreisetags. Nur so teilen zwei Buchungen den Wechseltag sichtbar — ohne
+  // das sass die Anreise auf einer ganzen Spalte, und ein Wechseltag sah aus
+  // wie eine Doppelbelegung (live gesehen 20.08.2026).
+  // Am Fensterrand bleibt der Balken bündig: ein Versatz ins Leere täuschte
+  // eine Anreise vor, die ausserhalb liegt.
+  halbStart: boolean; // Anreisetag liegt IM Fenster → ab Spaltenmitte
+  halbEnde: boolean; // Abreisetag liegt IM Fenster → bis Spaltenmitte
 };
+
+/** Halbtags-Versatz in Spaltenbreiten. Eine Quelle, wie HALF_DAY im Web. */
+export const HALBER_TAG = 0.5;
 
 /** Tagesspalten für [start, end] (beide inklusive), heutiger Tag markiert. */
 export function buildMatrixDays(start: string, end: string, todayIso: string): MatrixDay[] {
@@ -71,6 +83,10 @@ export function buildRowBars(
     const from = inStart < first ? first : inStart;
     const to = inEnd > last ? last : inEnd;
     const meta = channelMeta(r.channel);
+    // Der Abreisetag ist check_out (die Nacht davor ist die letzte belegte).
+    // Er zaehlt nur, wenn er noch INS Fenster fällt — sonst laeuft der Balken
+    // bis zum Rand durch.
+    const abreise = parseLocal(r.check_out);
     bars.push({
       reservationId: r.id,
       label: r.guest_name,
@@ -80,6 +96,8 @@ export function buildRowBars(
       endCol: colOf(to),
       clipStart: inStart < first,
       clipEnd: inEnd > last,
+      halbStart: inStart >= first,
+      halbEnde: abreise <= last,
     });
   }
   return bars;

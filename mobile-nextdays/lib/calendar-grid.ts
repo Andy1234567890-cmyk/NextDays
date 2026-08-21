@@ -57,7 +57,18 @@ export type BarSegment = {
   endCol: number;
   clipStart: boolean; // Buchung begann vor diesem Segment (linke Kante offen)
   clipEnd: boolean; // Buchung endet nach diesem Segment (rechte Kante offen)
+  // Halbtags-Versatz wie im Web (`calendar-board.tsx`, HALF_DAY): Anreise ab
+  // der Mitte des Anreisetags, Auslauf bis zur Mitte des Abreisetags — nur so
+  // teilen Vor- und Nachmieter den Wechseltag sichtbar. Gilt AUSSCHLIESSLICH
+  // am echten Anfang/Ende der Buchung: an einem Wochenumbruch (row-Wechsel)
+  // muss der Balken bündig durchlaufen, sonst klafft mitten in einer Buchung
+  // eine halbe Zelle.
+  halbStart: boolean;
+  halbEnde: boolean;
 };
+
+/** Halbtags-Versatz in Spaltenbreiten. Eine Quelle, wie HALF_DAY im Web. */
+export const HALBER_TAG = 0.5;
 
 // Baut die 6×7-Zellen eines Monats (immer volle Wochen, So=0-Start). weekStart
 // legt fest, an welchem Wochentag die erste Zeile beginnt (0=Sonntag wie das
@@ -139,6 +150,12 @@ export function buildBarSegments(
         endCol: segEnd - rowStart,
         clipStart: idx === startIdx ? inStart < gridFirst : true,
         clipEnd: segEnd === endIdx ? inEnd > gridLast : true,
+        // Nur am ERSTEN Segment und nur, wenn der Anreisetag wirklich im Grid
+        // liegt (nicht abgeschnitten). Analog das letzte Segment mit dem
+        // Abreisetag (check_out).
+        halbStart: idx === startIdx && inStart >= gridFirst,
+        halbEnde:
+          segEnd === endIdx && parseLocal(r.check_out) <= gridLast,
       });
       idx = segEnd + 1;
     }
