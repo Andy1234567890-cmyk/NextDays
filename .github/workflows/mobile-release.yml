@@ -87,6 +87,28 @@ jobs:
           fi
           printf 'export const SUPABASE_ANON_KEY =\n  "%s";\n' "$SUPABASE_ANON_KEY" > lib/config.secrets.ts
 
+      - name: google-services.json anlegen
+        # Gitignoriert (traegt die echte Projekt-/App-Kennung), wird aber vom
+        # Google-Services-Gradle-Plugin ZWINGEND gebraucht: ohne die Datei
+        # bricht `:app:processReleaseGoogleServices` ab
+        # („File google-services.json is missing") — genau daran scheiterte
+        # der Release am 21.08.2026, nachdem Push dazukam.
+        #
+        # Als base64-Secret wie der Keystore: die Datei enthaelt echte
+        # Kennungen und gehoert nicht ins Repo.
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.MYNEXTDAYS_GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GOOGLE_SERVICES_JSON_BASE64:-}" ]; then
+            echo "::error::Secret MYNEXTDAYS_GOOGLE_SERVICES_JSON_BASE64 fehlt. Einmalig setzen: base64 -i mobile-nextdays/android/app/google-services.json | tr -d '\n' | gh secret set MYNEXTDAYS_GOOGLE_SERVICES_JSON_BASE64"
+            exit 1
+          fi
+          printf '%s' "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
+          # Zurueckpruefen statt vertrauen: ein abgeschnittenes Secret gaebe
+          # sonst erst im Gradle-Lauf einen unverstaendlichen Fehler.
+          python3 -c "import json,sys; d=json.load(open('android/app/google-services.json')); print('google-services.json ok, Projekt:', d['project_info']['project_id'])"
+
       - name: Typprüfung
         # Der Prüf-Job in ci.yml läuft nur auf main/PR. Ein Release kann von
         # jedem Ref gestartet werden — also hier erneut prüfen, statt auf
