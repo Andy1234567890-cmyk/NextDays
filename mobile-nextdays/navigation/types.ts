@@ -40,6 +40,9 @@ export type OwnerTabParamList = {
 
 export type RootStackParamList = {
   HostLogin: undefined;
+  // „Passwort vergessen": Reset-Link anfordern. Ohne Session, deshalb im
+  // ungeschuetzten Zweig neben HostLogin.
+  HostPasswortVergessen: undefined;
   HostTabs: NavigatorScreenParams<HostTabParamList>;
   OwnerTabs: NavigatorScreenParams<OwnerTabParamList>;
   ReservationDetail: { id: string };

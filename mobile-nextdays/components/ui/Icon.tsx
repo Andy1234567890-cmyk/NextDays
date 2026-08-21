@@ -70,6 +70,12 @@ export const NIC: Record<string, string> = {
   bellhop: "M4 19h16M5.5 19v-2a6.5 6.5 0 0113 0v2M12 10.5V8M10 8h4",
   balloon: "M12 15.5c3 0 5.5-2.8 5.5-6.2S15 3 12 3 6.5 5.9 6.5 9.3s2.5 6.2 5.5 6.2zM10.5 15.5h3l-.7 2.5h-1.6zM11 21h2M10.8 18h2.4l.4 3h-3.2z",
   lock: "M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 017 0v3",
+  // Passwort-Sichtbarkeit. `eye` = derzeit verborgen (Antippen zeigt),
+  // `eyeoff` = derzeit sichtbar (Antippen verbirgt) — das Icon zeigt die
+  // AKTION, nicht den Zustand, wie in iOS/Android-Passwortfeldern ueblich.
+  eye: "M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12s-3.5 6.5-9.5 6.5S2.5 12 2.5 12M12 14.6a2.6 2.6 0 100-5.2 2.6 2.6 0 000 5.2",
+  eyeoff:
+    "M4 4l16 16M9.9 5.7A9.6 9.6 0 0112 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 01-2.4 3.3M6.4 8.2A17 17 0 002.5 12S6 18.5 12 18.5a9 9 0 003.2-.6M10.2 10.3a2.6 2.6 0 003.6 3.6",
   logout: "M15 5H6a1 1 0 00-1 1v12a1 1 0 001 1h9M18.5 12H10M15.5 8.5l3.5 3.5-3.5 3.5",
   info: "M12 21a9 9 0 100-18 9 9 0 000 18M12 11v5.5M12 7.6h.01",
   doc: "M6 3.5h8l4 4V20.5H6zM14 3.5V8h4M9 12.5h6M9 16h4",

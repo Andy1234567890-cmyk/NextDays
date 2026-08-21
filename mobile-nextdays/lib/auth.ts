@@ -5,6 +5,7 @@
 import * as Keychain from "react-native-keychain";
 
 import { api, ApiError, type Result } from "@/lib/api";
+import { faktorenDerSitzung, faktorLoesen, smsCodeAnfordern } from "@/lib/mfa-login";
 
 const SERVICE = "mynextdays.auth";
 const ACCESS_ACCOUNT = "nd_access";
@@ -108,6 +109,22 @@ async function storeSession(session: SessionResponse | null): Promise<void> {
   for (const listener of tokenListeners) listener(cachedAccess);
 }
 
+/** Ergebnis des Passwort-Schritts: fertig, gescheitert — oder 2FA offen. */
+export type LoginErgebnis =
+  | { ok: true; data: true }
+  | { ok: false; error: string }
+  | { ok: false; mfaRequired: true; methods: string[]; phoneMasked: string | null };
+
+// Die aal1-Sitzung zwischen Schritt 1 und 2. NUR im Speicher, bewusst nicht im
+// Keychain: sie ist 5 Minuten wert, öffnet keine API-Route, und ein Neustart
+// der App soll den halben Login nicht überleben — dann beginnt er von vorn.
+let aal1: { access_token: string; refresh_token: string } | null = null;
+
+/** Die offene 2FA verwerfen (Abbruch, Logout, gelöster Faktor). */
+export function mfaVerwerfen(): void {
+  aal1 = null;
+}
+
 // E-Mail/Passwort-Login gegen das Backend; speichert beide Tokens bei Erfolg.
 //
 // Contract: auth/schemas.py → LoginResponse. Die Antwort ist NICHT die Session
@@ -115,21 +132,36 @@ async function storeSession(session: SessionResponse | null): Promise<void> {
 // `session=null`, sonst `session` gefüllt. Die Session flach zu erwarten
 // lieferte `access_token: undefined` — der Login sah erfolgreich aus und
 // /auth/me kippte danach in „Konto konnte nicht geladen werden".
-export async function login(email: string, password: string): Promise<Result<true>> {
+export async function login(email: string, password: string): Promise<LoginErgebnis> {
   try {
     const antwort = await api<LoginResponse>("/auth/login", {
       method: "POST",
       body: { email, password },
     });
-    if (antwort.mfa_required || !antwort.session) {
-      // Fail-closed (Wurzel 5): die App hat noch keinen TOTP-/SMS-Schritt.
-      // Lieber ehrlich abbrechen als eine halbe Session anlegen.
+    if (antwort.mfa_required) {
+      // Zweiter Faktor nötig. Die aal1-Session wird NICHT gespeichert: sie
+      // öffnet keine API-Route, und `storeSession` würde die Realtime-
+      // Abonnenten auf ein Token umstellen, mit dem keine Policy greift (tote
+      // Abos). Sie bleibt nur im Speicher, bis der Faktor gelöst ist.
+      if (!antwort.session) {
+        // Nativer Faktor ohne aal1-Session waere ein Vertragsbruch des
+        // Servers — ohne sie ist die GoTrue-Challenge nicht loesbar. Nicht
+        // raten, klar abbrechen (Wurzel 5).
+        return { ok: false, error: "Zweiter Faktor nicht lösbar: keine Sitzung erhalten." };
+      }
+      aal1 = {
+        access_token: antwort.session.access_token,
+        refresh_token: antwort.session.refresh_token,
+      };
       return {
         ok: false,
-        error:
-          "Dieses Konto verlangt eine Zwei-Faktor-Bestätigung. " +
-          "Der zweite Schritt fehlt in der App noch — bitte im Dashboard anmelden.",
+        mfaRequired: true,
+        methods: antwort.mfa_methods ?? [],
+        phoneMasked: antwort.mfa_phone_masked ?? null,
       };
+    }
+    if (!antwort.session) {
+      return { ok: false, error: "Anmeldung ohne Sitzung — bitte erneut versuchen." };
     }
     await storeSession(antwort.session);
     return { ok: true, data: true };
@@ -145,6 +177,41 @@ export async function login(email: string, password: string): Promise<Result<tru
     }
     return { ok: false, error: "Login fehlgeschlagen." };
   }
+}
+
+/** Welche Faktoren das Konto hat (factor_id je Typ) — aus der aal1-Sitzung. */
+export async function mfaFaktoren(): Promise<Result<Record<string, string>>> {
+  if (!aal1) return { ok: false, error: "Kein offener Anmeldevorgang." };
+  const res = await faktorenDerSitzung(aal1);
+  return res.ok ? { ok: true, data: res.data } : { ok: false, error: res.error };
+}
+
+/**
+ * Schritt 2: Faktor lösen und die aal2-Sitzung übernehmen.
+ *
+ * Erst HIER wird gespeichert — vorher gibt es keine Session, mit der die API
+ * spricht. Die aal1-Sitzung wird danach verworfen: sie ist verbraucht, und ein
+ * zweiter Versuch mit demselben Code wäre ohnehin ungültig.
+ */
+export async function mfaLoesen(factorId: string, code: string): Promise<Result<true>> {
+  if (!aal1) return { ok: false, error: "Kein offener Anmeldevorgang." };
+  const res = await faktorLoesen(aal1, factorId, code.trim().replace(/\s/g, ""));
+  if (!res.ok) return { ok: false, error: res.error };
+  await storeSession({
+    access_token: res.data.access_token,
+    refresh_token: res.data.refresh_token,
+    token_type: "bearer",
+    expires_in: res.data.expires_in,
+  });
+  aal1 = null;
+  return { ok: true, data: true };
+}
+
+/** SMS-Code anfordern (nur bei `phone`-Faktor). */
+export async function mfaSmsAnfordern(factorId: string): Promise<Result<true>> {
+  if (!aal1) return { ok: false, error: "Kein offener Anmeldevorgang." };
+  const res = await smsCodeAnfordern(aal1, factorId);
+  return res.ok ? { ok: true, data: true } : { ok: false, error: res.error };
 }
 
 // Tenant-Registrierung (Agentur/self_managed) gegen /auth/register — legt Konto
