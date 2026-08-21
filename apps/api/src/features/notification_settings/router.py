@@ -6,17 +6,24 @@ jeder eingeloggte Nutzer sieht/ändert nur die EIGENE Zeile.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from src.core.security import CurrentUser
 
-from .dependencies import GlockeServiceDep, NotificationSettingsServiceDep
+from .dependencies import (
+    GlockeServiceDep,
+    NotificationSettingsServiceDep,
+    PushGeraeteServiceDep,
+)
+from .geraete import GeraeteFehler
 from .schemas import (
     GlockeEintrag,
     GlockeListe,
     NotificationOverview,
     NotificationSettings,
     NotificationSettingsUpdate,
+    PushGeraetAbmeldung,
+    PushGeraetRegistrierung,
 )
 
 router = APIRouter(
@@ -108,3 +115,54 @@ def _glocke_zeile(zeile: dict[str, object]) -> dict[str, object]:
         ),
         "created_at": str(zeile["created_at"]),
     }
+
+
+# --- Push-Geraete (Migration 0414) -------------------------------------------
+# Die Tabelle ist fuer Clients komplett gesperrt (revoke); dies ist der einzige
+# Weg hinein. Beide Routen scopen auf `ctx.user_id` — ein Client darf weder ein
+# Token auf eine fremde user_id setzen noch ein fremdes Geraet abmelden
+# (Wurzel 3/9).
+
+
+@router.put("/push-geraet", status_code=204)
+def push_geraet_registrieren(
+    req: PushGeraetRegistrierung,
+    ctx: CurrentUser,
+    service: PushGeraeteServiceDep,
+) -> None:
+    """Geraet fuer Push anmelden oder auffrischen.
+
+    PUT statt POST, weil die Operation idempotent ist: dasselbe Token legt kein
+    zweites Geraet an (UNIQUE auf token, Wurzel 2). Die App ruft das bei jedem
+    Start und bei jedem Token-Wechsel (`onTokenRefresh`) auf — ohne den zweiten
+    Aufruf stirbt Push fuer einen Teil der Nutzer stumm, weil FCM Tokens
+    jederzeit rotieren kann.
+
+    `tenant_id` kommt aus der Session, nicht aus der Anfrage.
+    """
+    try:
+        service.registrieren(
+            user_id=ctx.user_id,
+            tenant_id=ctx.tenant_id,
+            token=req.token,
+            platform=req.platform,
+            app=req.app,
+        )
+    except GeraeteFehler as exc:
+        raise HTTPException(
+            status_code=exc.status_code, detail=exc.message
+        ) from exc
+
+
+@router.post("/push-geraet/abmelden", status_code=204)
+def push_geraet_abmelden(
+    req: PushGeraetAbmeldung,
+    ctx: CurrentUser,
+    service: PushGeraeteServiceDep,
+) -> None:
+    """Geraet abmelden (Logout).
+
+    Ohne diesen Aufruf bekaeme das Telefon weiter die Meldungen des
+    abgemeldeten Betriebs — der Gegenzustand zur Anmeldung (Wurzel 1).
+    """
+    service.abmelden(user_id=ctx.user_id, token=req.token)

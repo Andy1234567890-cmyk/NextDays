@@ -7,6 +7,7 @@ from fastapi import Depends
 
 from src.core.supabase import get_service_client
 
+from .geraete import PushGeraeteService
 from .glocke import GlockeService
 from .service import NotificationSettingsService
 
@@ -31,3 +32,15 @@ def get_glocke_service() -> GlockeService:
 
 
 GlockeServiceDep = Annotated[GlockeService, Depends(get_glocke_service)]
+
+
+def get_push_geraete_service() -> PushGeraeteService:
+    # service_role: `push_devices` ist per revoke fuer anon/authenticated
+    # komplett gesperrt (Migration 0414) — ein FCM-Token ist ein Zustellkanal
+    # ans Geraet, kein lesbares Nutzerfeld. Der Scope kommt aus ctx.user_id.
+    return PushGeraeteService(db=get_service_client())
+
+
+PushGeraeteServiceDep = Annotated[
+    PushGeraeteService, Depends(get_push_geraete_service)
+]

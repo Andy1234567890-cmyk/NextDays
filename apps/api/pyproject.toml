@@ -22,6 +22,16 @@ dependencies = [
     "pillow>=12.3.0",           # transitiv via qrcode[pil]; >=12.3.0 schließt 8 CVEs (PYSEC-2026-*)
     "nh3>=0.2.18",              # HTML-Sanitizer (Rust/ammonia) für gast-sichtbares Rich-Text
     "twilio>=9.10.9",
+    # Push an die Mobile-Apps (FCM HTTP v1, Migration 0414). Das offizielle
+    # SDK statt eines eigenen HTTP-Aufrufs wegen der TYPISIERTEN Fehler je
+    # Token (UnregisteredError, SenderIdMismatchError, QuotaExceededError):
+    # nur damit laesst sich ein abgemeldetes Geraet gezielt loeschen
+    # (Wurzel 1) und ein Kontroll-Signal spezifisch fangen (Wurzel 5).
+    # Ein Eigenbau muesste dafuer JSON-Fehlerstrings parsen.
+    # Preis: ~150 MB transitive Abhaengigkeiten (grpcio, google-cloud-*),
+    # von denen nur der messaging-Teil genutzt wird — bewusst in Kauf
+    # genommen, ein FCM-only-Extra bietet das SDK nicht an.
+    "firebase-admin>=6.5",
 ]
 
 [project.optional-dependencies]

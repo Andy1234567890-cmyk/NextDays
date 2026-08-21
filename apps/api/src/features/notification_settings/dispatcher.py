@@ -36,7 +36,10 @@ from src.core.mail_texte import text as mail_text
 from src.features.auth.sms import SmsError, send_sms
 from src.jobs import worker_verlauf
 
+from .geraete import PushGeraeteService
 from .katalog import NACH_SCHLUESSEL, Kanal
+from .push import PushFehler
+from .push import senden as push_senden
 from .service import NotificationSettingsService
 
 log = get_logger("nextdays.notification_dispatch")
@@ -349,6 +352,12 @@ class NotificationDispatcher:
         jedes Zeichen kostet. Sie geht in DERSELBEN Sprache raus wie die Mail —
         eine SMS ist genauso eine Nachricht nach draussen.
         """
+        if kanal is Kanal.PUSH:
+            # Push hat keine Adresse, sondern Geraete-Tokens — und muss deshalb
+            # VOR der Adresspruefung abzweigen, sonst scheiterte er immer mit
+            # „keine Adresse hinterlegt".
+            self._sende_push(empfaenger, betreff, text, ziel_pfad, ergebnis)
+            return
         ziel = empfaenger.get("email" if kanal is Kanal.EMAIL else "phone")
         if not ziel:
             ergebnis.fehlgeschlagen[kanal.value] = "keine Adresse hinterlegt"
@@ -444,6 +453,66 @@ class NotificationDispatcher:
             )
         )
 
+    def _sende_push(
+        self,
+        empfaenger: dict[str, str | None],
+        betreff: str,
+        text: str,
+        ziel_pfad: str | None,
+        ergebnis: Zustellung,
+    ) -> None:
+        """Push an alle Geraete dieses Nutzers in der BETRIEBS-App.
+
+        Bewusst nur `mynextdays`: die Kategorien mit Push-Kanal
+        (`betrieb_buchung`, `messages`) sind Betriebs-Meldungen. Auf dem
+        Marktplatz-Telefon derselben Person haetten sie nichts zu suchen —
+        das ist die Markengrenze aus ADR-0019, und sie muss hier stehen, weil
+        ein Push das Geraet erreicht, nicht ein Konto.
+
+        KEINE Uebersetzung ueber `betreff_key`/`text_key` wie bei Mail/SMS: der
+        Aufrufer liefert bereits kurzen Text, und ein Push ist kein Dokument.
+        Sollte das noetig werden, gehoert es hierher — nicht zum Aufrufer.
+
+        Der Inhalt ist bewusst knapp: er steht im SPERRBILDSCHIRM und ist ohne
+        Entsperren lesbar (Wurzel 3). Gastnamen und Betraege gehoeren nicht
+        hinein; das Sprungziel traegt die ID, Details holt die App nach der
+        Anmeldung.
+        """
+        user_id = empfaenger.get("user_id")
+        if not user_id:
+            ergebnis.fehlgeschlagen[Kanal.PUSH.value] = "kein Nutzerbezug"
+            return
+        geraete = PushGeraeteService(self._db)
+        tokens = geraete.tokens_fuer(user_id, app="mynextdays")
+        if not tokens:
+            # Kein registriertes Geraet ist KEIN Fehler: die meisten Nutzer
+            # haben die App nicht. Als „uebersprungen" vermerken, damit es im
+            # Log unterscheidbar bleibt von einem echten Fehlschlag.
+            ergebnis.uebersprungen.append(f"{Kanal.PUSH.value} (kein Geraet)")
+            return
+        try:
+            zugestellt, zu_loeschen = push_senden(
+                get_settings(),
+                tokens=tokens,
+                titel=betreff,
+                text=text,
+                ziel_pfad=ziel_pfad,
+            )
+        except PushFehler as exc:
+            # Konfigurationsfehler (Dienstkonto fehlt/kaputt). Spezifisch
+            # gefangen, damit Mail und SMS weiterlaufen — aber sichtbar, nie
+            # als Erfolg gebucht (Wurzel 5).
+            ergebnis.fehlgeschlagen[Kanal.PUSH.value] = str(exc)[:200]
+            return
+        # Gegenzustand pflegen (Wurzel 1): abgemeldete Geraete raus, sonst
+        # laufen alle kuenftigen Versuche in denselben Fehler.
+        if zu_loeschen:
+            geraete.ungueltige_entfernen(zu_loeschen)
+        if zugestellt:
+            ergebnis.gesendet.append(Kanal.PUSH.value)
+        else:
+            ergebnis.fehlgeschlagen[Kanal.PUSH.value] = "kein Geraet erreicht"
+
     def _empfaenger(self, user_id: str) -> dict[str, str | None]:
         """E-Mail, Telefonnummer und SPRACHE des Nutzers. Scope auf die eigene id.
 
@@ -459,8 +528,17 @@ class NotificationDispatcher:
             .execute()
         ).data or []
         if not rows:
-            return {"email": None, "phone": None, "preferred_language": None}
+            return {
+                "user_id": user_id,
+                "email": None,
+                "phone": None,
+                "preferred_language": None,
+            }
         return {
+            # Fuer den Push-Kanal: er adressiert Geraete des Nutzers, nicht eine
+            # Mailadresse. Hier mitgenommen, statt in `_sende_push` erneut zu
+            # fragen — eine zweite Query je Benachrichtigung.
+            "user_id": user_id,
             "email": rows[0].get("email"),
             "phone": rows[0].get("phone"),
             "preferred_language": rows[0].get("preferred_language"),

@@ -5,7 +5,9 @@ sonst laufen Migration, Schema und UI auseinander (Wurzel 4).
 """
 from __future__ import annotations
 
-from pydantic import BaseModel, create_model
+from typing import Literal
+
+from pydantic import BaseModel, Field, create_model
 
 from .katalog import KATALOG, Kanal, Kategorie
 
@@ -109,3 +111,23 @@ class GlockeListe(BaseModel):
 
     eintraege: list[GlockeEintrag]
     ungelesen: int
+
+
+class PushGeraetRegistrierung(BaseModel):
+    """Ein Geraet meldet sein FCM-Token an (Migration 0414).
+
+    `tenant_id` kommt NICHT vom Client — der Server nimmt sie aus dem Token
+    (Wurzel 3: der Anfrage nicht vertrauen, Scope serverseitig erzwingen).
+    """
+
+    token: str = Field(min_length=10, max_length=4096)
+    platform: Literal["ios", "android"]
+    # Welche der beiden Apps (ADR-0019). Ohne diese Angabe landete eine
+    # Betriebs-Meldung auf dem Gast-Telefon derselben Person.
+    app: Literal["mynextdays", "mybestdays"]
+
+
+class PushGeraetAbmeldung(BaseModel):
+    """Abmelden beim Logout. Nur der Token — der Nutzer kommt aus der Session."""
+
+    token: str = Field(min_length=10, max_length=4096)

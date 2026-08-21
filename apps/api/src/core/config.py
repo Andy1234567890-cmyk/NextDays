@@ -374,6 +374,23 @@ class Settings(BaseSettings):
     # wenn man den Produktivversand vom eigenen Rechner ausdrücklich will.
     mail_sandbox_override: bool | None = None
 
+    # --- Push-Benachrichtigungen (FCM HTTP v1, Migration 0414) -------------
+    # Das Dienstkonto-JSON von Firebase, als EINE Umgebungsvariable (der ganze
+    # JSON-Text). Bewusst nicht als Datei im Repo: es ist ein privater
+    # Schluessel, mit dem man jedem Geraet der App Meldungen schicken kann.
+    # Fehlt es, wird kein Push versendet — klar protokolliert, nie stillschweigend
+    # (Wurzel 4/5: kein Ersatzwert, keine vorgetaeuschte Zustellung).
+    fcm_service_account_json: str = ""
+    # Die Firebase-Projekt-ID. Nur noetig, wenn OHNE Dienstkonto-JSON gearbeitet
+    # wird (Application Default Credentials) — dann kennt die Anmeldung das
+    # Projekt nicht von selbst. Kein Default: eine falsch geratene Projekt-ID
+    # schickt Pushes ins Leere (Wurzel 4).
+    fcm_projekt_id: str = ""
+    # Bauart wie `mail_sandbox_override` und aus demselben Grund: lokal darf
+    # niemand versehentlich echte Pushes auf die Telefone der Beta-Tester
+    # schicken. NICHT direkt lesen — der wirksame Wert ist `push_sandbox`.
+    push_sandbox_override: bool | None = None
+
     # Öffentliche Adresse des Plattform-Backoffice (admin/). Wird für die
     # Einladungslinks des Backoffice-Teams gebraucht; fehlt sie, schlägt die
     # Einladung klar fehl, statt eine erfundene URL zu verschicken (Wurzel 4).
@@ -566,6 +583,23 @@ class Settings(BaseSettings):
     @property
     def is_local(self) -> bool:
         return self.app_env == "local"
+
+    @property
+    def push_sandbox(self) -> bool:
+        """Ob Pushes nur geloggt statt real zugestellt werden.
+
+        Fail-CLOSED lokal, genau wie `mail_sandbox` und aus derselben Lehre
+        (18.08.2026, 70 real versandte Test-Mails): auf dem Entwicklerrechner
+        ist die Sandbox an, OHNE dass jemand daran denken muss. Ein Push ist
+        dabei noch unangenehmer als eine Mail — er klingelt sofort auf dem
+        Telefon eines Beta-Testers und laesst sich nicht zurueckholen.
+
+        `PUSH_SANDBOX_OVERRIDE` hebt das bewusst auf; ausserhalb von `local`
+        entscheidet es allein, Default aus = echter Versand.
+        """
+        if self.push_sandbox_override is not None:
+            return self.push_sandbox_override
+        return self.is_local
 
     @property
     def mail_sandbox(self) -> bool:

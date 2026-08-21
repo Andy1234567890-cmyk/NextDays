@@ -30,6 +30,13 @@ class Kanal(StrEnum):
     #
     # `soll_senden` gibt fuer diesen Kanal darum immer True zurueck.
     INAPP = "inapp"
+    # Push aufs Telefon (mobile-nextdays/-bestdays, FCM). ANDERS als die
+    # Glocke abwaehlbar und darum MIT Praeferenzspalte: die Glocke wartet
+    # geduldig in der Anwendung, ein Push klingelt nachts auf dem Nachttisch.
+    # Er hat deshalb nur an den zwei Kategorien einen Schalter, bei denen der
+    # Betrieb sofort reagieren muss (`betrieb_buchung`, `messages`) — nicht an
+    # den Marketing-Kategorien (Migration 0414).
+    PUSH = "push"
 
 
 class Tab(StrEnum):
@@ -58,6 +65,9 @@ class Kategorie:
 
 _ALLE_KANAELE = (Kanal.EMAIL, Kanal.SMS, Kanal.PHONE)
 _MAIL_SMS = (Kanal.EMAIL, Kanal.SMS)
+# Mail + SMS + Push. Nur fuer Ereignisse, die den Betrieb SOFORT erreichen
+# muessen; jede Kategorie hier braucht eine `*_push`-Spalte in der DB.
+_MAIL_SMS_PUSH = (Kanal.EMAIL, Kanal.SMS, Kanal.PUSH)
 
 KATALOG: tuple[Kategorie, ...] = (
     # --- Tab „Angebote und Updates" (Marketing) --------------------------
@@ -81,7 +91,7 @@ KATALOG: tuple[Kategorie, ...] = (
     Kategorie("guest_policies", Tab.KONTO, "aktivitaet", _MAIL_SMS, email_pflicht=True),
     Kategorie("host_policies", Tab.KONTO, "aktivitaet", _MAIL_SMS, email_pflicht=True),
     Kategorie("reminders", Tab.KONTO, "erinnerungen", _MAIL_SMS),
-    Kategorie("messages", Tab.KONTO, "nachrichten", _MAIL_SMS),
+    Kategorie("messages", Tab.KONTO, "nachrichten", _MAIL_SMS_PUSH),
     # --- Betrieb: Aufgaben und Eigentümer-Meldungen (0331) ----------------
     # Eigene Kategorien statt „listing_activity" mitzubenutzen, weil die
     # EMPFAENGER verschieden sind: task_assigned geht an einen Mitarbeiter,
@@ -108,7 +118,7 @@ KATALOG: tuple[Kategorie, ...] = (
     # 200 Buchungen im Monat muss den Mail-Kanal abwaehlen duerfen — die Glocke
     # bleibt ohnehin an (INAPP ist nicht abwaehlbar), und genau sie ist hier
     # gemeint.
-    Kategorie("betrieb_buchung", Tab.KONTO, "aktivitaet", _MAIL_SMS),
+    Kategorie("betrieb_buchung", Tab.KONTO, "aktivitaet", _MAIL_SMS_PUSH),
     # --- Sperr-Antrags-Workflow (0332) ------------------------------------
     # Wieder getrennte Kategorien wegen der EMPFAENGER: „block_request" geht an
     # die Entscheider der Agentur (APPROVE_BLOCK), „block_decision" an den
