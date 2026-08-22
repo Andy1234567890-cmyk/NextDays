@@ -66,6 +66,10 @@ while IFS='|' read -r bereich pfade; do
     '!'*) eigenwillig="ja"; bereich="${bereich#!}" ;;
   esac
 
+  # `alles=ja` kommt aus ZWEI Quellen: dem Infra-Schwenk und einer unbrauchbaren
+  # Basis (kein erfolgreicher Vorlauf → `git ls-files` als Diff-Ersatz). Der
+  # Marker gilt fuer beide, sonst laeuft der teure Job weiter bei jedem Lauf,
+  # solange die Historie keinen gruenen Stand hat.
   treffer="false"
   if [ "$alles" = "ja" ] && [ "$eigenwillig" = "nein" ]; then
     treffer="true"
