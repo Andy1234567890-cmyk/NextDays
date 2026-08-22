@@ -19,6 +19,7 @@ u67kn5pj9cb2gqryt2ezsc8r|nextdays-storybook
 cdqxi7d0w34sxzr4wr8jy8um|nextdays-supabase
 kilcrxob5u434k3vsyf54ble|nextdays-api
 ly4w6vw4ffxk2987nyg5z5kt|nextdays-worker
+bok2ol51jn1936lxs66zuujs|nextdays-public-api
 bln3q0n1l1se2hna8utkuag9|nextdays-web
 zcjrx4czu338zghc58d41yp7|nextdays-docs
 yih7d7kz4tkkgezqzg1zzjcs|nextdays-redis
