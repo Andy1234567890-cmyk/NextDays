@@ -292,6 +292,43 @@ def test_umbuchung_zieht_provision_nach(subs: MagicMock) -> None:
     )
 
 
+def test_umbuchung_zieht_auch_die_modulgebuehr_nach(subs: MagicMock) -> None:
+    """Wurzel 1 — der Umbuchung folgen BEIDE Ledger, nicht nur einer.
+
+    `cancel()` räumt Provision UND 0,5-%-Nutzung ab; beim Verschieben stand nur
+    die Provision. Ein Upsell von 200 auf 450 zog damit die Provision nach,
+    während `dynpricing_ledger` auf dem alten Betrag stehen blieb — die
+    Monatsrechnung des Moduls war zu niedrig, und zwar unauffällig: beide
+    Zahlen sahen für sich plausibel aus.
+    """
+    from src.features.pricing.schemas import QuoteLine, QuoteResponse  # noqa: PLC0415
+
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    svc = _move_db(store)
+    svc._quote = MagicMock(  # noqa: SLF001 — Preis-Resolver im Test festnageln
+        return_value=QuoteResponse(
+            property_id="p2", check_in=date(2026, 7, 10), check_out=date(2026, 7, 12),
+            nights=2, guests=1, channel="booking", currency="EUR",
+            nightly_total=450.0, total=450.0,
+            lines=[QuoteLine(label="Übernachtung", amount=450.0, kind=None)],
+        )
+    )
+    svc.move(
+        AuthContext(user_id="u", tenant_id="t1", role="admin"),
+        RID,
+        ReservationMove(
+            property_id="p2", check_in=date(2026, 7, 10),
+            check_out=date(2026, 7, 12), reprice=True,
+        ),
+    )
+    subs.return_value.record_dynpricing_usage.assert_called_once_with(
+        "t1",
+        reservation_id=RID,
+        gross_amount=450.0,
+        currency="EUR",
+    )
+
+
 def test_umbuchung_uebernimmt_die_neue_waehrung(subs: MagicMock) -> None:
     """Objektwechsel über eine Währungsgrenze (EU-27): der neu gerechnete Betrag
     gehört zur Währung des ZIELS. Vorher ging der neue Betrag mit der ALTEN

@@ -333,6 +333,39 @@ def test_buchung_geht_ueber_die_datenbankfunktion(_db: FakeDB) -> None:
     assert namen == ["create_reservation_atomic"]
 
 
+def test_belegter_zeitraum_gibt_den_schluessel_frei(_db: FakeDB) -> None:
+    """Nach einem 409 ist derselbe Idempotency-Key wieder nutzbar.
+
+    Ohne die Freigabe bliebe der Anspruch ohne Antwort stehen, und jede
+    Wiederholung bekäme dauerhaft 409 „läuft noch" — der Schlüssel wäre
+    verbrannt, obwohl keine Buchung entstanden ist. Genau das soll der Client
+    aber tun: denselben Schlüssel erneut senden, sobald die Nächte frei sind.
+    """
+    _db.rpc_fehler = RuntimeError("RS409 Zeitraum enthält bereits belegte Tage.")
+    with pytest.raises(errors.ApiFehler):
+        buchungen.anlegen(
+            _buchung(), _Antwort(), _CTX, idempotency_key="schluessel-abcdef"  # type: ignore[arg-type]
+        )
+    assert _db.speicher.get("public_api_idempotency", []) == []
+
+
+def test_serverfehler_behaelt_den_schluessel(_db: FakeDB) -> None:
+    """Bei unklarem Ausgang bleibt der Schlüssel belegt (fail-closed).
+
+    Hier KANN die Buchung entstanden sein — eine Wiederholung wäre eine zweite.
+    Der Client bekommt 409 „läuft noch" und soll erst nachsehen.
+    """
+    # RPC antwortet ohne Reservierungszeile: der Endpunkt macht daraus 500
+    # `buchung_unklar`, weil er nicht weiß, was passiert ist.
+    _db.rpc_antwort = {}
+    with pytest.raises(errors.ApiFehler) as exc:
+        buchungen.anlegen(
+            _buchung(), _Antwort(), _CTX, idempotency_key="schluessel-abcdef"  # type: ignore[arg-type]
+        )
+    assert exc.value.status == 500
+    assert len(_db.speicher.get("public_api_idempotency", [])) == 1
+
+
 class _Antwort:
     """Minimaler Ersatz für `fastapi.Response` (der Endpunkt setzt Header)."""
 

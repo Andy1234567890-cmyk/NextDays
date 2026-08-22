@@ -33,8 +33,9 @@ from src.core.logging import configure_logging, get_logger
 from src.core.supabase import get_service_client
 from src.features.channel_manager.common import ist_demo_mapping
 from src.features.properties.vertragsende import vertragsenden_nachziehen
-from src.jobs import feed_nachpflege, worker_verlauf
-from src.jobs.channex_budget import BudgetDecision, ChannexBudget
+from src.jobs import feed_nachpflege, public_api_storno, worker_verlauf
+from src.jobs.channex_budget import ChannexBudget
+from src.jobs.fortschritt_budget import ProgressBudget
 from src.jobs.queue import enqueue, next_run_after, try_enqueue_content_sync
 
 log = get_logger("nextdays.worker")
@@ -627,25 +628,6 @@ def _handle_full_sync_property(
     )
 
 
-class _ProgressBudget:
-    """Dünner Wrapper um ein ChannexBudget, der die ERFOLGREICH vergebenen Token
-    zählt (= echte Channex-Calls, die durchgingen). So erkennt _run_job, ob ein
-    Batch-Job vor einem ChannexBudgetExhausted schon Fortschritt gemacht hat, und
-    setzt dann den defer_count-Livelock-Zähler zurück. Erfüllt das before_call-
-    Kontrakt (try_consume) transparent — der ChannexClient merkt keinen Unterschied."""
-
-    def __init__(self, inner: ChannexBudget) -> None:
-        self._inner = inner
-        self.granted = 0
-
-    def try_consume(
-        self, channex_property_id: str | None, kind: str = "other"
-    ) -> BudgetDecision:
-        decision = self._inner.try_consume(channex_property_id, kind)
-        if decision.allowed:
-            self.granted += 1
-        return decision
-
 
 # Ein Handler DARF ein Ergebnis zurückgeben (`dict` mit Zählern) — dann steht im
 # Verlauf, was er bewirkt hat. `None` ist weiterhin erlaubt und heisst „nichts zu
@@ -674,6 +656,8 @@ HANDLERS: dict[
     "sync_live_feed": _handle_sync_live_feed,
     "import_ari_property": _handle_import_ari_property,
     "full_sync_property": _handle_full_sync_property,
+    "public_api_cancel_reservation": public_api_storno.handle,
+    "public_api_move_reservation": public_api_storno.handle_move,
 }
 
 
@@ -856,7 +840,7 @@ class Worker:
         # Job OHNE jeden Fortschritt (echter Redis-Ausfall: schon der 1. Token wird
         # verweigert) läuft in den defer_count-Deckel und stirbt als 'dead'.
         budget = (
-            _ProgressBudget(self._budget)
+            ProgressBudget(self._budget)
             if job["job_type"] in _CHANNEX_JOB_TYPES
             else None
         )

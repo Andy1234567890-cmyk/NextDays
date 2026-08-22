@@ -6823,7 +6823,12 @@
     "needScope": "Agħżel mill-inqas permess wieħed.",
     "docsHint": "Kif tawtentika b'dawn id-dettalji huwa deskritt fid-dokumentazzjoni tal-API.",
     "loadErr": "Ma setax jitgħabba.",
-    "noAccess": "L-ebda aċċess"
+    "noAccess": "L-ebda aċċess",
+    "scopeRates": "Prezzijiet",
+    "scopeGuests": "Mistednin",
+    "scopeTasks": "Kompiti",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "Dokumentazzjoni API"
   },
   "supportChat": {
     "titel": "Għajnuna u appoġġ",

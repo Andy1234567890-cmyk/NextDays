@@ -4,6 +4,12 @@ Eine Wahrheit für Buchungsstrecke, Nach-Buchung-Kauf und Pricing-Resolver:
 Basis-Hochrechnung (Aufenthalt/Nacht/Gast/Einheit) + optionale Steuer. Kein
 Doppel-Mechanismus, keine erfundenen Defaults.
 """
+# SCHWESTERDATEI — byte-identisch in beiden Bäumen halten:
+#     apps/api/src/features/addons/pricing.py
+#     apps/public-api/src/features/addons/pricing.py
+# Kopie, weil die öffentliche API ein eigener Service ist (siehe
+# `apps/public-api/src/features/__init__.py`). Drift heißt: dieselbe
+# Zusatzleistung kostet über die API etwas anderes als im Dashboard.
 from __future__ import annotations
 
 

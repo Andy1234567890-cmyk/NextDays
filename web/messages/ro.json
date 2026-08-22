@@ -6823,7 +6823,12 @@
     "needScope": "Alegeți cel puțin o permisiune.",
     "docsHint": "Cum vă autentificați cu aceste date este descris în documentația API.",
     "loadErr": "Nu s-a putut încărca.",
-    "noAccess": "Fără acces"
+    "noAccess": "Fără acces",
+    "scopeRates": "Prețuri",
+    "scopeGuests": "Oaspeți",
+    "scopeTasks": "Sarcini",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "Documentație API"
   },
   "supportChat": {
     "titel": "Ajutor și asistență",

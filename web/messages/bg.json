@@ -6825,7 +6825,12 @@
     "needScope": "Изберете поне едно право.",
     "docsHint": "Как да се удостоверите с тези данни, е описано в API документацията.",
     "loadErr": "Зареждането не бе успешно.",
-    "noAccess": "Няма достъп"
+    "noAccess": "Няма достъп",
+    "scopeRates": "Цени",
+    "scopeGuests": "Гости",
+    "scopeTasks": "Задачи",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "API документация"
   },
   "supportChat": {
     "titel": "Помощ и поддръжка",

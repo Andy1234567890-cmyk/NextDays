@@ -6823,7 +6823,12 @@
     "needScope": "Välj minst en behörighet.",
     "docsHint": "Hur du autentiserar dig med dessa uppgifter står i API-dokumentationen.",
     "loadErr": "Det gick inte att läsa in.",
-    "noAccess": "Ingen åtkomst"
+    "noAccess": "Ingen åtkomst",
+    "scopeRates": "Priser",
+    "scopeGuests": "Gäster",
+    "scopeTasks": "Uppgifter",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "API-dokumentation"
   },
   "supportChat": {
     "titel": "Hjälp och support",

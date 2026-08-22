@@ -1,4 +1,427 @@
 {
+ "entwickler": {
+  "meta": {
+   "titel": "API u Żviluppaturi — myNextDays",
+   "beschreibung": "L-API REST pubblika ta' myNextDays: proprjetajiet, disponibbiltà, prezzijiet, prenotazzjonijiet, mistednin u kompiti. OAuth2, OpenAPI 3.1, webhooks bi kunsinni ffirmati."
+  },
+  "hero": {
+   "eyebrow": "API pubblika",
+   "titel": "Ibni fuq myNextDays",
+   "unterzeile": "API REST waħda għal proprjetajiet, disponibbiltà, prezzijiet, prenotazzjonijiet, mistednin u kompiti. Tokens ta' ħajja qasira, drittijiet għal kull aċċess, avvenimenti permezz ta' webhook — u skema li tinbet mill-kodiċi u għalhekk ma tistax tiskadi.",
+   "basisLabel": "Indirizz bażi",
+   "versionLabel": "Verżjoni",
+   "versionHinweis": "fil-path",
+   "konsole": "Ipprova",
+   "schema": "OpenAPI 3.1",
+   "referenz": "Aqra r-referenza"
+  },
+  "inhalt": {
+   "titel": "F'din il-paġna",
+   "schnellstart": "L-ewwel passi",
+   "konzepte": "Mudell tad-data",
+   "konventionen": "Paġnazzjoni",
+   "endpunkte": "Punti finali",
+   "webhooks": "Webhooks",
+   "grenzen": "Limitazzjonijiet",
+   "hilfe": "Sapport",
+   "start": "Ħarsa ġenerali",
+   "zugang": "Awtentikazzjoni",
+   "fehler": "Errori",
+   "limits": "Limiti tar-rata",
+   "fehlercodes": "Kodiċi tal-errori",
+   "lokalisierung": "Lokalizzazzjoni",
+   "zeit": "Żoni tal-ħin"
+  },
+  "code": {
+   "kopieren": "Ikkopja",
+   "kopiert": "Ikkupjat",
+   "anfrage": "Talba",
+   "antwort": "Tweġiba",
+   "zustellung": "Kunsinna",
+   "pruefcode": "Ivverifika l-firma (Node)"
+  },
+  "schnellstart": {
+   "eyebrow": "Bidu mgħaġġel",
+   "heading": "L-ewwel sejħa fi ħames minuti",
+   "sub": "Tliet passi. L-ewwel wieħed biss jgħaddi mill-interfaċċa — kull ma jifdal huwa sejħa.",
+   "schritt1": {
+    "titel": "Oħloq aċċess",
+    "text": "Fid-dashboard oħloq aċċess u ddeċiedi x'jista' jagħmel: drittijiet għal kull qasam u, jekk trid, biss ċerti proprjetajiet. Aċċess għall-pjan tat-tindif ma jeħtieġ ebda dħul fid-dħul finanzjarju.",
+    "pfad": "Kont → Aċċess API",
+    "hinweis": "`client_secret` jintwera darba; jinħażen biss il-hash tiegħu. Sigriet mitluf ma jiġix irkuprat, imma jinbidel."
+   },
+   "schritt2": {
+    "titel": "Ġib token",
+    "text": "Ibdel il-Client-ID u s-Secret ma' Access-Token. Jgħodd għal siegħa u jġorr eżattament id-drittijiet ta' dak l-aċċess.",
+    "hinweis": "Żomm it-token fil-memorja u ibdlu biss meta jiskadi jew meta tasal 401 — mhux ma' kull sejħa. Revoka fid-dashboard timblokka tokens ġodda minnufih."
+   },
+   "schritt3": {
+    "titel": "Agħmel l-ewwel sejħa",
+    "text": "Ibgħat it-token bħala `Authorization: Bearer …`. Kull lista twieġeb fl-istess envelopp: `data` flimkien ma' `pagination`.",
+    "hinweis": "Wara sejjaħ `GET /v1/me` — jgħidlek liema drittijiet u liema proprjetajiet għandu dan l-aċċess, mingħajr ma jkollok tiskoprih permezz ta' sensiela ta' 403."
+   }
+  },
+  "konzepte": {
+   "eyebrow": "Kunċetti",
+   "heading": "Erba' ħwejjeġ li għandek tkun tafhom minn qabel",
+   "sub": "Erba’ deċiżjonijiet li jiddeterminaw l-imġiba tal-API. Jitbiegħdu minn suppożizzjonijiet mifruxa.",
+   "objekt": {
+    "titel": "Proprjetà hija tip ta' unitajiet",
+    "text": "`property` huwa eżattament tip wieħed: tip ta' kamra fil-lukanda jew proprjetà ta' vaganza. Taħtu jorbtu l-unitajiet tiegħu (`units`) — normalment waħda biss, u bi ħames studios identiċi jkunu ħamsa. Tinbiegħ l-unità, imma jinżamm u jiġi pprezzat it-tip.",
+    "folge": "Għalhekk id-disponibbiltà hija NUMRU (`units_available`), mhux iva/le. Lukanda bi 8 kmamar Twin u 4 Double għandha żewġ proprjetajiet bi 8 u 4 unitajiet rispettivament — mhux proprjetà waħda bi 12 kamra."
+   },
+   "waehrung": {
+    "titel": "Kull ammont iġorr il-munita tiegħu",
+    "text": "Ma hemmx valur awtomatiku. Kull proprjetà għandha munita, u kull ammont fi tweġiba jsemmiha.",
+    "folge": "Jekk il-munita tkun nieqsa fuq proprjetà, dan huwa żball fid-data u s-sejħa tfalli bi 422 — ma jiddaħħal ebda “EUR”. Meta tipprenota, il-munita tiegħek trid taqbel mal-munita tal-proprjetà."
+   },
+   "zeit": {
+    "titel": "Żewġ mumenti differenti",
+    "text": "`booked_at` huwa l-ħin tal-prenotazzjoni mill-mistieden — mis-sors tal-portal, `null` jekk il-portal ma jipprovdihx. `received_at` huwa d-dħul f’din is-sistema.",
+    "folge": "Issortja “l-aktar riċenti l-ewwel” permezz ta' `booked_at`, mhux permezz ta' `received_at`: f'importazzjoni f'daqqa għexieren ta' prenotazzjonijiet iġorru l-istess sekonda. It-timestamps huma UTC, il-kampi tad-dati huma ġranet tal-kalendarju fiż-żona tal-ħin tal-proprjetà."
+   },
+   "kanaele": {
+    "titel": "Il-viżibbiltà tgħodd għal kull kanal",
+    "text": "Ma hemmx “ippubblikat” globali. Proprjetà tidher fis-suq, fuq is-sit web tagħha stess, permezz tal-portali — kull wieħed jinxtegħel separatament.",
+    "folge": "Proprjetà tinbiegħ biss meta jiltaqgħu tliet ħwejjeġ: `status = active`, il-kanal mixgħul, u jkun hemm unitajiet ħielsa. Waqfien tal-bejgħ, għall-kuntrarju, jaħdem fuq IL-KANALI KOLLHA."
+   }
+  },
+  "konventionen": {
+   "eyebrow": "Konvenzjonijiet",
+   "heading": "Paġnar, żbalji, limiti, Idempotenza",
+   "sub": "L-erba' punti li huma differenti f'kull API — hawn bi numri u mhux bi proża.",
+   "tabelle": {
+    "feld": "Kamp",
+    "bedeutung": "Tifsira",
+    "code": "Kodiċi",
+    "status": "Status"
+   },
+   "blaettern": {
+    "titel": "Paġnar",
+    "text": "Kull lista twieġeb bi `data` u `pagination`. Il-paġnar isir permezz ta' **cursor**: tibgħat l-`id` tal-aħħar element tal-paġna ta' qabel bħala `starting_after`. Jekk `next_starting_after` ma jkunx fit-tweġiba, il-mixja tkun lesta.",
+    "felder": {
+     "starting_after": "L-`id` tal-aħħar element tal-paġna ta' qabel. It-triq rakkomandata — stabbli, anke jekk il-lista tinbidel bejn żewġ paġni. `id` mhux magħruf jew imħassar jagħti 422, mhux paġna vojta.",
+     "next_starting_after": "Jinsab fi `pagination` sakemm ikun hemm iktar: il-valur għall-`starting_after` li jmiss tiegħek. Jekk ma jkunx hemm, tkun wasalt fl-aħħar.",
+     "limit": "Ringieli għal kull paġna. Standard 50, valur massimu 200 — valur akbar jagħti 422, mhux paġna mqassra.",
+     "offset": "Ringieli li għandhom jinqabżu — għal ħarsa ta' darba lejn paġna partikolari. Flimkien ma' `starting_after` jagħti 422: żewġ indikazzjonijiet ta' pożizzjoni fl-istess talba ma għandhomx tifsira mingħajr kontradizzjoni.",
+     "include_total": "`true` jagħti wkoll `total`. Itlobha biss jekk tkun turi n-numru.",
+     "has_more": "Jinsab f'kull tweġiba u jgħid jekk teżisti paġna oħra — mingħajr taħmin, mingħajr dawra żejda."
+    },
+    "warumCursor": "Għaliex mhux sempliċement `offset`: dan jiddeskrivi POŻIZZJONI fil-lista. Jekk bejn il-paġna 1 u l-paġna 2 tiżdied prenotazzjoni, kollox jiċċaqlaq b'post — `offset=50` imbagħad jaqbeż ringiela, u meta titħassar waħda tiġi darbtejn. Wara dan tkun nieqsa prenotazzjoni mid-database tiegħek, u xejn fit-tweġiba ma jikxef dan. Il-cursor isemmi l-aħħar rekord li rajt, u għalhekk ma jistax jiċċaqlaq."
+   },
+   "fehler": {
+    "titel": "Żbalji",
+    "text": "Kull żball jasal bħala `application/problem+json` (RFC 9457) bi `code` stabbli, bi `request_id` u — fejn jgħin — bil-kampi li jispjegaw l-iżball. Aqbad il-fergħa fuq `code`, mhux fuq it-test: it-test jista' jinbidel, il-kodiċi le.",
+    "codes": {
+     "nichtAuthentifiziert": "It-token nieqes, skada jew mhux validu.",
+     "ungueltigeZugangsdaten": "Il-Client-ID jew is-Secret żbaljati, jew l-aċċess ġie revokat.",
+     "scopeFehlt": "It-token validu, imma dan l-aċċess ma għandux id-dritt meħtieġ. L-Scope nieqes jidher fl-iżball.",
+     "objektNichtErlaubt": "L-aċċess huwa limitat għal ċerti proprjetajiet; din mhijiex fosthom.",
+     "nichtGefunden": "Ma jeżistix jew jappartjeni għal negozju ieħor — iż-żewġ każi jwieġbu l-istess.",
+     "zeitraumNichtVerfuegbar": "Okkupat, imblukkat jew eskluż mill-bejgħ. Ma nħolqot ebda prenotazzjoni nofsha lesta.",
+     "idempotenzInArbeit": "Sejħa b'dan l-Idempotency-Key għadha għaddejja. Stenna ftit, imbagħad erġa' pprova.",
+     "aboBestehtBereits": "Għal dan l-indirizz diġà teżisti sottoskrizzjoni attiva ta' webhook ta' dan l-aċċess.",
+     "waehrungFehlt": "Lill-proprjetà, lill-pjan tar-rati jew lill-prenotazzjoni ma hijiex assenjata ebda munita — żball fid-data.",
+     "ungueltigeAnfrage": "Formalment tajba, imma mil-lat tal-kontenut ma tistax titwettaq. Ir-raġuni tinsab fi `detail`.",
+     "validierungFehlgeschlagen": "It-talba ma taqbilx mal-iskema. `felder` jgħid liema kamp.",
+     "zuVieleAnfragen": "Intlaħaq ir-Rate-Limit. `Retry-After` jgħid meta tista' tkompli.",
+     "nichtKonfiguriert": "Is-servizz ma jistax jipproċessa t-talba b'mod sigur. Ma jkomplix mingħajr verifika."
+    }
+   },
+   "limits": {
+    "titel": "Rate-Limits",
+    "text": "Il-limitu jgħodd għal kull AĊĊESS, mhux għal kull indirizz IP: aġenzija li tieħu ħsieb għoxrin negozju tinsab wara IP waħda u ma għandhiex tbatti minnha nfisha. Tliet basktijiet separati, biex allinjament tal-kalendarju ma jimblokkax l-issettjar tal-prezzijiet.",
+    "eimer": {
+     "token": "Skambju tat-token. Strett, għax hawn jiġu vverifikati l-kredenzjali.",
+     "write": "Sejħiet li jiktbu — jindaħlu fil-bejgħ.",
+     "read": "Sejħiet li jaqraw: il-ħidma ta' kuljum ta' integrazzjoni."
+    },
+    "header": "Kull tweġiba tġorr magħha l-istat, ukoll dik li tirnexxi — biex tkun tista' taġġusta l-pass tiegħek qabel ma taqa' fi 429:"
+   },
+   "idempotenz": {
+    "titel": "Idempotenza",
+    "text": "Meta toħloq prenotazzjoni, il-header `Idempotency-Key` huwa obbligatorju. Agħżel valur unika għal kull operazzjoni (pereżempju UUID) u tennieha meta terġa' tibgħat l-istess sejħa. Mingħajr din il-protezzjoni, qtugħ tan-netwerk b'ripetizzjoni joħloq żewġ prenotazzjonijiet — u t-tieni waħda timblokka ljieli li ħadd ma ordna.",
+    "faelle": {
+     "wiederholung": "L-istess ċavetta, l-istess payload → l-ewwel tweġiba terġa' lura kelma b'kelma, bil-header `Idempotency-Replayed: true`.",
+     "abweichend": "L-istess ċavetta, payload OĦRA → 422. Għal operazzjoni ġdida jmiss ċavetta ġdida.",
+     "laufend": "L-istess ċavetta, l-ewwel sejħa għadha għaddejja → 409. Stenna ftit, imbagħad erġa' pprova; tinsistix bi ċavetta ġdida."
+    }
+   }
+  },
+  "webhooks": {
+   "eyebrow": "Webhooks",
+   "heading": "Avvenimenti minflok domandi ripetuti",
+   "sub": "Sottoskrizzjoni waħda għal kull indirizz, kunsinni ffirmati, ripetizzjonijiet bi distanza li tikber. L-avvenimenti jinħolqu ma' KULL bidla — ukoll meta tiġi minn portal jew mid-dashboard, mhux minn din l-API.",
+   "tabelle": {
+    "ereignis": "Avveniment",
+    "wann": "Meta jiskatta"
+   },
+   "ereignisse": {
+    "reservationCreated": "Inħolqot prenotazzjoni — minn kull kanal li jkun.",
+    "reservationUpdated": "Prenotazzjoni eżistenti nbidlet.",
+    "reservationCancelled": "Prenotazzjoni ġiet ikkanċellata. Avveniment għalih waħdu, għax għalih trid tirreaġixxi mod ieħor milli għal bidla.",
+    "availabilityChanged": "Il-kalendarju ta' proprjetà nbidel (prenotazzjoni, imblukkar, illiberazzjoni).",
+    "rateChanged": "Prezz ta' kuljum jew regola tas-soġġorn inbidlet.",
+    "taskCreated": "Inħoloq kompitu.",
+    "taskCompleted": "Kompitu ngħalaq."
+   },
+   "anlegen": {
+    "titel": "Oħloq sottoskrizzjoni",
+    "text": "Indirizz `https` u l-avvenimenti li trid. Bl-għażla, biss għal ċerti proprjetajiet. Indirizzi interni jiġu rifjutati — il-verifika ssir mal-ħolqien U qabel kull kunsinna waħda.",
+    "secret": "It-tweġiba fiha s-secret tal-firma darba waħda biss. Aħżnu issa — ma jingħatax mill-ġdid qatt."
+   },
+   "nutzlast": {
+    "titel": "X'jasal",
+    "text": "Miżmum dejjaq: IDs u l-kampi li jiddeskrivu l-bidla. Ir-rekord sħiħ tiġbru meta jkun meħtieġ permezz tal-API — b'hekk riċevitur ma jingħatax xi ħaġa li sadanittant ma jkollux dritt jara."
+   },
+   "signatur": {
+    "titel": "Ivverifika l-firma",
+    "text": "Kull kunsinna tġorr header bi timestamp u HMAC-SHA256 fuq `ZEITSTEMPEL.BODY`, kalkulat bis-secret tas-sottoskrizzjoni tiegħek. Billi t-timestamp huwa ffirmat ukoll, tagħraf kunsinna rreġistrata u mibgħuta mill-ġdid aktar tard — bi firma fuq il-body biss dan ma jkunx possibbli.",
+    "schritte": {
+     "roh": "Ħu l-korp ROZZ tat-talba, mhux l-oġġett parsed u serjalizzat mill-ġdid — sekwenza differenti ta' bytes tagħti firma differenti. Din hija l-aktar raġuni komuni għal “il-firma ma taqbilx”.",
+     "alter": "Iċċekkja l-età permezz tat-timestamp; ħames minuti tolleranza huma valur tajjeb.",
+     "vergleich": "Qabbel fi ħin kostanti (`timingSafeEqual`, `hmac.compare_digest`). Paragun normali bi `==` jagħmel il-firma waħda li tista' tinstab bit-taħmin."
+    }
+   },
+   "verhalten": {
+    "wiederholung": {
+     "titel": "Ripetizzjonijiet",
+     "text": "Jekk l-indirizz tiegħek ma jweġibx bi 2xx, il-kunsinna terġa' ssir sa għaxar darbiet — bi distanza li tikber minn minuta sa siegħa. Weġib malajr u pproċessa wara; riċevitur bil-mod jitqies bħala żball."
+    },
+    "reihenfolge": {
+     "titel": "Ordni",
+     "text": "Mhijiex garantita. Uża l-`created_at` tal-avveniment biex ma tiktebx kunsinna qadima fuq waħda aktar riċenti."
+    },
+    "doppelt": {
+     "titel": "Kunsinna doppja",
+     "text": "Mhijiex probabbli, imma possibbli — ittratta l-`id` tal-avveniment bħala ċavetta u pproċessa kull waħda darba biss. Din il-wegħda tgħodd għal kull fornitur ta' webhook, mhux biss għal dan."
+    },
+    "nachholen": {
+     "titel": "Irkupra wara interruzzjoni",
+     "text": "Jekk is-servers tiegħek ma kinux disponibbli, tirkupra l-avvenimenti mitlufa permezz ta' `GET /v1/events?since=…` — l-eqdem l-ewwel, bl-istess `id` bħall-kunsinna, sa massimu ta' 30 jum lura. Push waħdu mhux garanzija ta' kunsinna: qabel jew wara t-tentattivi ta' ripetizzjoni jispiċċaw, u mingħajr dan il-pass jonqsuk eżattament l-avvenimenti li qatt ma sirt taf bihom."
+    }
+   }
+  },
+  "grenzen": {
+   "eyebrow": "Limitazzjonijiet",
+   "heading": "Limitazzjonijiet",
+   "sub": "Żewġ operazzjonijiet mhumiex possibbli permezz ta’ dan l-API. It-tnejn jirriżultaw mill-mudell tad-data. Il-kanċellazzjoni, it-tibdil tad-dati u l-kalkolu tal-prezz huma possibbli.",
+   "stattdessen": "Minflok:",
+   "gaeste": {
+    "titel": "Ħolqien u modifika ta’ mistednin",
+    "text": "Id-data tal-mistieden titwieled mad-dħul tagħha mill-mistieden jew permezz tal-portal. Triq tal-kitba hawn tkun it-tielet sors għall-istess persuna.",
+    "ausweg": "Meta tinħoloq prenotazzjoni, ibgħat magħha d-data tal-mistieden — mistednin li diġà jeżistu jiġu rikonoxxuti mill-indirizz tal-email. L-oqsma ta' kuntatt ta' prenotazzjoni eżistenti jinżammu permezz ta' `PATCH /v1/reservations/'{'id}`."
+   },
+   "nachrichten": {
+    "titel": "Il-ftuħ ta’ konversazzjoni",
+    "text": "Li taqra messaġġi u tikteb f’konversazzjoni li diġà teżisti huwa possibbli (`/v1/reservations/'{'id}/messages`). Li toħloq konversazzjoni ġdida mhux: ħajt ta’ konversazzjoni jappartjeni dejjem lil kont ta’ mistieden fis-suq, u l-aċċess API ta’ negozju mhuwiex kont bħal dan.",
+    "ausweg": "Il-konversazzjoni titnissel mal-ewwel messaġġ tal-mistieden jew mid-dashboard; wara dan l-API jista’ jikteb fiha."
+   },
+   "finanzen": {
+    "titel": "Il-ġbir ta’ pagament",
+    "text": "Jinqraw il-pagamenti u t-talbiet ta’ pagament skedati (`/v1/reservations/'{'id}/payments`) kif ukoll il-pjan ta’ pagament u l-iskala tal-kanċellazzjoni (`/v1/properties/'{'id}/booking-conditions`). Il-ġbir jgħaddi mill-proċess ta’ prenotazzjoni tal-mistieden bl-intenzjonijiet ta’ pagament, mhux minn link li tibgħat.",
+    "ausweg": "It-talbiet ta’ pagament jinħolqu fid-dashboard; l-API jaqra l-istat tagħhom u l-avvenimenti marbuta magħhom."
+   }
+  },
+  "hilfe": {
+   "eyebrow": "Għajnuna",
+   "heading": "Mistoqsijiet, bidliet, għodod",
+   "sub": "Fejn tmur bi mistoqsija, u ma' xiex tista' żżomm meta tibni.",
+   "wege": {
+    "titel": "Meta xi ħaġa ma taħdimx",
+    "entwicklerMail": {
+     "titel": "Kuntatt tekniku",
+     "text": "Ibgħat magħha l-`request_id` mit-tweġiba tal-iżball — b'hekk is-sejħa tinstab fil-protokolli tagħna."
+    },
+    "hilfeCenter": {
+     "titel": "Ċentru tal-Għajnuna",
+     "text": "Gwidi dwar il-prodott: oħloq proprjetajiet, qabbad il-portali, żomm il-prezzijiet."
+    },
+    "schema": {
+     "titel": "Iġġenera client",
+     "text": "Il-fajl OpenAPI jservi bħala input għall-ġeneraturi tas-soltu — client miktub bl-idejn mhux meħtieġ."
+    }
+   },
+   "versionen": {
+    "titel": "Verżjonar",
+    "text": "API hija wegħda. Dawn l-erba' punti jgħoddu għal v1:",
+    "zusagen": {
+     "pfad": "Il-verżjoni tinsab fil-path. Bidla li tikser tirċievi `/v2`; `/v1` jibqa' jaħdem maġenbha.",
+     "additiv": "Fi v1 jiżdiedu kampi biss. Il-kampi eżistenti ma jissemmewx mill-ġdid u ma jibdlux it-tifsira tagħhom.",
+     "frist": "Jekk verżjoni tiġi rtirata, insemmu data bi mill-inqas tnax-il xahar avviż u nikkuntattjaw kull negozju li għandu aċċess attiv.",
+     "changelog": "Il-bidliet jinsabu fil-fajl OpenAPI u f'din il-paġna. Ma hemmx bidla siekta fi kamp."
+    }
+   }
+  },
+  "kopf": {
+   "hilfe": "Ċentru tal-għajnuna",
+   "zurueck": "Lura għas-sit"
+  },
+  "sidebar": {
+   "sprung": "Aqbeż għal …",
+   "keineTreffer": "L-ebda endpoint u l-ebda kapitlu ma jaqbel ma’ dan.",
+   "leitfaden": "Gwida",
+   "referenz": "Referenza tal-API",
+   "tocTitel": "Fuq din il-paġna",
+   "version": "myNextDays API pubblika v1"
+  },
+  "referenz": {
+   "scope": "Dritt meħtieġ:",
+   "pfadParameter": "Parametri tal-path",
+   "queryParameter": "Parametri tal-query",
+   "headerParameter": "Headers",
+   "koerper": "Korp tat-talba",
+   "antworten": "Tweġibiet",
+   "erlaubt": "Permess:",
+   "pflicht": "obbligatorju",
+   "standard": "Default",
+   "sprache": "Lingwa",
+   "zugang": "Aċċess",
+   "tokenHinweis": "Biss f’dan il-browser, biss għal “Ipprova” — il-valur ma jinħażenx u ma jintbagħatx lilna.",
+   "ausprobieren": "Ipprova",
+   "laeuft": "Qed jaħdem …",
+   "anfrage": "Talba",
+   "antwort": "Tweġiba",
+   "beispiel": "Eżempju",
+   "kopieren": "Ikkopja",
+   "kopiert": "Ikkopjat",
+   "fehlerNetz": "It-talba ma laħqitx is-servizz. L-iktar kawżi komuni: is-servizz bħalissa ma jweġibx, jew il-browser waqqaf it-talba għax nieqes il-permess CORS. L-istess sejħa permezz ta’ curl mill-kaxxa tal-kodiċi turi x’jgħid is-servizz tassew.",
+   "keinToken": "Mingħajr token is-sejħa twieġeb b’401 — dan huwa l-mod mistenni."
+  },
+  "start": {
+   "eyebrow": "API pubblika",
+   "titel": "Ibni ma’ myNextDays",
+   "unterzeile": "API REST għall-proprjetajiet, id-disponibbiltà, il-prezzijiet, il-prenotazzjonijiet, il-mistednin u l-kompiti — qari u kitba, bil-kanċellazzjoni, it-tibdil tad-dati u l-previżjoni tal-prezz. Il-gwida tispjega r-regoli, ir-referenza fiha kull endpoint bil-parametri kollha u kaxxa biex tipprovah.",
+   "basisLabel": "Indirizz bażi",
+   "versionLabel": "Verżjoni",
+   "versionHinweis": "fil-path",
+   "schemaTitel": "Skema",
+   "schemaText": "OpenAPI 3.1, iġġenerat mill-kodiċi. Jaqbel bħala input għall-ġeneraturi tal-klijenti tas-soltu.",
+   "woAnfangen": "Minn fejn tibda",
+   "erstLesen": "Aqra l-ewwel",
+   "dannBauen": "Imbagħad ibni"
+  },
+  "bereiche": {
+   "leitfaden": "Dokumentazzjoni",
+   "referenz": "Referenza tal-API"
+  },
+  "gruppen": {
+   "ueberblick": "Bażi",
+   "anhang": "Anness"
+  },
+  "weiter": {
+   "naechste": "Il-paġna li jmiss",
+   "zurReferenz": "Kompli għar-referenza tal-API"
+  },
+  "referenzUebersicht": {
+   "eyebrow": "Referenza tal-API",
+   "titel": "L-endpoints kollha",
+   "sub": "Kull endpoint għandu paġna għalih, bil-parametri kollha, il-korp tat-talba, it-tweġibiet u kaxxa fejn tista’ tipprova s-sejħa mill-ewwel."
+  },
+  "zugang": {
+   "eyebrow": "Awtentikazzjoni",
+   "heading": "Awtentikazzjoni",
+   "sub": "OAuth 2.0 b'`client_credentials`. Aċċess jappartjeni għal negozju wieħed biss; ma hemmx ċavetta li tkopri diversi negozji.",
+   "ablauf": {
+    "titel": "Fluss",
+    "text": "`client_credentials` huwa t-triq għal programmi li jaġixxu għalihom infushom. Ma hemmx djalogu ta' kunsens u ma hemmx token ta' tiġdid.",
+    "schritte": {
+     "anlegen": "Oħloq aċċess fid-dashboard: Kont → Aċċess API. `client_secret` jintwera darba u wara ma jistax jinkiseb aktar.",
+     "tauschen": "`POST /v1/oauth/token` b'`client_id` u `client_secret`. It-tweġiba tinkludi `access_token`, `expires_in` (3600) u d-drittijiet mogħtija.",
+     "senden": "Ibgħat it-token f'kull sejħa bħala `Authorization: Bearer ACCESS_TOKEN`. Wara li jiskadi, l-API twieġeb b'401 u l-kodiċi `token_expired`."
+    },
+    "merksatz": "Żomm it-token fil-memorja u tiksbux mill-ġdid f'kull sejħa. Skambju għal kull talba jilħaq il-limitu tar-rata tal-punt finali tat-tokens (10/minuta)."
+   },
+   "rechte": {
+    "titel": "Drittijiet",
+    "text": "Id-drittijiet għandhom il-forma `bereich:richtung`, bħal `reservations:read` jew `rates:write`. Jekk dritt ikun nieqes, il-punt finali jwieġeb b'403 u l-kodiċi `insufficient_scope`.",
+    "merksatz": "Agħti biss id-drittijiet li teħtieġ l-integrazzjoni. Ċavetta mitlufa mbagħad ma tistax tikteb fuq xejn li qatt ma kellha taqra."
+   },
+   "objekte": {
+    "titel": "Restrizzjoni għal proprjetajiet",
+    "text": "Aċċess jista' jkun limitat għal proprjetajiet speċifiċi. Fil-listi jara biss dawn; sejħa bi ID ta' proprjetà oħra twieġeb b'403 u l-kodiċi `objekt_nicht_erlaubt`."
+   },
+   "selbstauskunft": {
+    "titel": "Kontroll tad-drittijiet",
+    "text": "`GET /v1/me` jagħti n-negozju, id-drittijiet u r-restrizzjoni tal-proprjetajiet tat-token — l-ewwel sejħa meta titwaqqaf integrazzjoni."
+   }
+  },
+  "fehler": {
+   "eyebrow": "Errori",
+   "heading": "Kif jidhru l-errori",
+   "sub": "Kull error huwa kodiċi ta' stat HTTP flimkien ma' korp skont RFC 9457 (`application/problem+json`). L-ebda error ma jasal bl-istat 200.",
+   "aufbau": {
+    "titel": "Struttura",
+    "text": "`code` huwa l-isem stabbli u li jinqara mill-magni tal-error. `detail` huwa test għall-bnedmin u jista' jinbidel f'kull ħin.",
+    "felder": {
+     "type": "L-indirizz tad-deskrizzjoni ta' dan it-tip ta' error — il-lista tal-kodiċi tal-errori fl-anness.",
+     "title": "Isem qasir tat-tip ta' error.",
+     "status": "Il-kodiċi ta' stat HTTP.",
+     "detail": "Deskrizzjoni għall-bnedmin.",
+     "code": "Isem stabbli tal-error. Evalwa dan il-qasam.",
+     "request_id": "Identifikatur tat-talba. Ibgħatu ma' talba għal sapport."
+    },
+    "merksatz": "Iddeċiedi fuq `code`, mhux fuq `detail`. It-test mhuwiex interface."
+   },
+   "klassen": {
+    "titel": "Klassijiet ta' stat",
+    "vier": "4xx — it-talba hija l-problema: dritt nieqes, ID mhux magħruf, valur invalidu, perjodu okkupat. Ir-repetizzjoni ma tibdel xejn.",
+    "fuenf": "5xx — error fuq in-naħa tas-server. Erġa' pprova bi distanza li tikber.",
+    "neun": "429 — intlaħaq il-limitu tar-rata. `Retry-After` jindika l-ħin ta' stennija f'sekondi."
+   }
+  },
+  "limits": {
+   "eyebrow": "Limiti tar-rata",
+   "heading": "Kemm sejħiet huma permessi",
+   "sub": "Il-limitu japplika għal kull aċċess, mhux għal kull IP. Hemm tliet bramel bil-valuri tagħhom stess għall-qari, għall-kitba u għall-ħruġ tat-tokens."
+  },
+  "fehlercodes": {
+   "eyebrow": "Anness",
+   "heading": "Kodiċi tal-errori",
+   "sub": "Il-valuri `code` kollha ta' dan l-API. Kull ringiela għandha ankra; l-indirizz `type` ta' tweġiba ta' error jirreferi għaliha."
+  },
+  "lokalisierung": {
+   "eyebrow": "Anness",
+   "heading": "Lokalizzazzjoni",
+   "sub": "Il-lingwa u l-munita ġejjin mid-data. Iż-żewġ oqsma jistgħu jkunu vojta; l-ebda wieħed ma għandu valur awtomatiku.",
+   "waehrung": {
+    "titel": "Munita",
+    "text": "Kull ammont iġorr kodiċi `currency` skont ISO 4217. Ma hemmx valur awtomatiku u ma hemmx konverżjoni.",
+    "merksatz": "Meta tinħoloq prenotazzjoni, `currency` trid taqbel mal-munita tal-proprjetà. Jekk tvarja: 422 bil-kodiċi `currency_mismatch`."
+   },
+   "sprache": {
+    "titel": "Lingwa",
+    "text": "`language` huwa kodiċi ta' żewġ ittri skont ISO 639-1, bħal `de`, `da`, `en`. Il-valur ġej mill-prenotazzjoni jew mill-portal u jista' jkun vojt. Vojt ifisser mhux magħruf."
+   },
+   "texte": {
+    "titel": "It-testi tal-API",
+    "text": "L-ismijiet tal-oqsma, il-valuri `code` u l-valuri enum huma bl-Ingliż u jagħmlu parti mill-kuntratt. It-testi `detail` ta' tweġiba ta' error huma maħsuba għall-bnedmin u jistgħu jinbidlu — uri l-messaġġi tiegħek stess ibbażati fuq `code`."
+   }
+  },
+  "zeit": {
+   "eyebrow": "Anness",
+   "heading": "Żoni tal-ħin",
+   "sub": "Dan l-API juża żewġ tipi ta' indikazzjonijiet ta' ħin: ġranet tal-kalendarju fiż-żona tal-ħin tal-proprjetà u punti fil-ħin f'UTC.",
+   "tage": {
+    "titel": "Ġranet tal-kalendarju",
+    "text": "`check_in`, `check_out`, `date`, `from` u `to` huma ġranet tal-kalendarju fil-format `YYYY-MM-DD`, fiż-żona tal-ħin tal-proprjetà. Ma jġorrux ħin tal-ġurnata u ma jiġux konvertiti f'UTC.",
+    "merksatz": "`check_out` huwa l-jum tat-tluq; l-aħħar lejl okkupat huwa l-lejl ta' qabel. Erba' iljieli jfissru erba' ġranet differenza bejn `check_in` u `check_out`."
+   },
+   "zeitpunkte": {
+    "titel": "Punti fil-ħin",
+    "text": "`created_at`, `updated_at`, `received_at`, `booked_at` u `cancelled_at` huma punti fil-ħin skont ISO 8601 f'UTC bi `Z` fl-aħħar."
+   },
+   "quelle": {
+    "titel": "booked_at u received_at",
+    "text": "`booked_at` huwa l-ħin tal-prenotazzjoni mill-mistieden, u fil-prenotazzjonijiet mill-portali mis-sors tal-portal. `received_at` huwa d-dħul f'din is-sistema. F'ġbir kollettiv, ħafna prenotazzjonijiet iġorru l-istess sekonda `received_at`.",
+    "merksatz": "Għal “l-aktar riċenti l-ewwel” uża `booked_at` u ttratta `null` bħala mhux magħruf. `received_at` jirrifletti l-ordni tal-ġbir, mhux l-ordni tal-prenotazzjonijiet."
+   },
+   "filter": {
+    "titel": "Filtrar skont il-bidliet",
+    "text": "`updated_since` jaċċetta punt fil-ħin u jagħti lura dak li nbidel minn dakinhar. Attenzjoni bl-ikkodifikar tal-URL: `+` f'indirizz ifisser spazju — ikteb `Z` jew ikkodifikah bħala `%2B`."
+   }
+  }
+ },
  "meta": {
   "title": "myNextDays – Il-pjattaforma għal min jikri akkomodazzjoni tal-vaganzi",
   "description": "Il-pjattaforma għal lukandi, aġenziji u sidien ta' akkomodazzjoni tal-vaganzi: channel manager, kalendarju, booking dirett, komunikazzjoni mal-mistednin u kontabilità f'post wieħed. Mibnija fid-Danimarka, ospitata fl-UE. Minn €19.90 fix-xahar. B'xejn għal 30 jum."

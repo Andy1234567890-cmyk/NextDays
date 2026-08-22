@@ -6825,7 +6825,12 @@
     "needScope": "Valitse vähintään yksi oikeus.",
     "docsHint": "API-dokumentaatiossa kerrotaan, miten näillä tunnuksilla tunnistaudutaan.",
     "loadErr": "Lataaminen epäonnistui.",
-    "noAccess": "Ei käyttöoikeutta"
+    "noAccess": "Ei käyttöoikeutta",
+    "scopeRates": "Hinnat",
+    "scopeGuests": "Vieraat",
+    "scopeTasks": "Tehtävät",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "API-dokumentaatio"
   },
   "supportChat": {
     "titel": "Ohje ja tuki",

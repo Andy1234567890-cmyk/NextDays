@@ -16,6 +16,17 @@ Vorher lagen Preise in vier unverbundenen Quellen, die nicht zusammenspielten
 Alle Oberflächen (Kalender, Reservierungs-Wizard, Buchungsstrecke) lesen Preise
 ausschließlich über diesen Resolver — kein direktes Preis-Tabellenlesen mehr.
 """
+# SCHWESTERDATEI — byte-identisch in beiden Bäumen halten:
+#     apps/api/src/features/pricing/resolver.py
+#     apps/public-api/src/features/pricing/resolver.py
+# Die EINE Preisberechnung: Saisons, Aktionen, Aufenthaltsregeln, Kanal-Markup,
+# Zusatzleistungen, Abgaben. Sie liegt in der öffentlichen API als Kopie unter
+# demselben Importpfad, damit die Datei byte-identisch bleiben kann und der
+# CI-Job `public-api-konsistenz` die Gleichheit prüft.
+#
+# WAS DRIFT ANRICHTET: die Preisvorschau der API nennt einen anderen Betrag als
+# die Buchung im Dashboard — der Gast sieht zwei Preise für denselben
+# Aufenthalt. Das ist kein Anzeigefehler, sondern ein Streit über Geld.
 from __future__ import annotations
 
 from dataclasses import dataclass

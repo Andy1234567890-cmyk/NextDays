@@ -1,4 +1,427 @@
 {
+ "entwickler": {
+  "meta": {
+   "titel": "API ja kehittäjät — myNextDays",
+   "beschreibung": "myNextDaysin julkinen REST-API: kohteet, saatavuus, hinnat, varaukset, vieraat ja tehtävät. OAuth2, OpenAPI 3.1, webhookit allekirjoitetuin toimituksin."
+  },
+  "hero": {
+   "eyebrow": "Julkinen API",
+   "titel": "Rakenna myNextDaysia vasten",
+   "unterzeile": "Yksi REST-API kohteille, saatavuudelle, hinnoille, varauksille, vieraille ja tehtäville. Lyhytikäiset tokenit, oikeudet pääsyä kohden, tapahtumat webhookina — ja skeema, joka syntyy koodista eikä siksi voi vanhentua.",
+   "basisLabel": "Perusosoite",
+   "versionLabel": "Versio",
+   "versionHinweis": "polussa",
+   "konsole": "Kokeile",
+   "schema": "OpenAPI 3.1",
+   "referenz": "Lue referenssi"
+  },
+  "inhalt": {
+   "titel": "Tällä sivulla",
+   "schnellstart": "Aloittaminen",
+   "konzepte": "Tietomalli",
+   "konventionen": "Sivutus",
+   "endpunkte": "Päätepisteet",
+   "webhooks": "Webhookit",
+   "grenzen": "Rajoitukset",
+   "hilfe": "Tuki",
+   "start": "Yleiskatsaus",
+   "zugang": "Todennus",
+   "fehler": "Virheet",
+   "limits": "Kutsurajoitukset",
+   "fehlercodes": "Virhekoodit",
+   "lokalisierung": "Lokalisointi",
+   "zeit": "Aikavyöhykkeet"
+  },
+  "code": {
+   "kopieren": "Kopioi",
+   "kopiert": "Kopioitu",
+   "anfrage": "Pyyntö",
+   "antwort": "Vastaus",
+   "zustellung": "Toimitus",
+   "pruefcode": "Tarkista allekirjoitus (Node)"
+  },
+  "schnellstart": {
+   "eyebrow": "Pikaopas",
+   "heading": "Ensimmäiseen kutsuun viidessä minuutissa",
+   "sub": "Kolme askelta. Vain ensimmäinen kulkee käyttöliittymän kautta — kaikki muu on yksi kutsu.",
+   "schritt1": {
+    "titel": "Luo pääsy",
+    "text": "Luo hallintapaneelissa pääsy ja määritä samalla, mitä se saa tehdä: oikeudet alueittain ja halutessasi vain tietyt kohteet. Siivouslistaa varten tarkoitettu pääsy ei tarvitse oikeutta myyntilukuihin.",
+    "pfad": "Tili → API-pääsy",
+    "hinweis": "`client_secret` näytetään kerran; talteen jää vain sen tiiviste. Kadonnutta salaisuutta ei palauteta, se korvataan."
+   },
+   "schritt2": {
+    "titel": "Hae token",
+    "text": "Vaihda Client-ID ja Secret pääsytokeniin (Access-Token). Se on voimassa tunnin ja kantaa täsmälleen pääsyn oikeudet.",
+    "hinweis": "Pidä token muistissa ja vaihda uuteen vasta, kun se vanhenee tai tulee 401 — ei jokaisella kutsulla. Peruutus hallintapaneelissa estää uudet tokenit välittömästi."
+   },
+   "schritt3": {
+    "titel": "Tee ensimmäinen kutsu",
+    "text": "Lähetä token mukana muodossa `Authorization: Bearer …`. Jokainen lista vastaa samassa kuoressa: `data` ja `pagination`.",
+    "hinweis": "Kutsu sen jälkeen `GET /v1/me` — se kertoo, mitkä oikeudet ja mitkä kohteet tällä pääsyllä on, ilman että sinun täytyy päätellä se sarjasta 403-vastauksia."
+   }
+  },
+  "konzepte": {
+   "eyebrow": "Käsitteet",
+   "heading": "Neljä asiaa, jotka sinun kannattaa tietää etukäteen",
+   "sub": "Neljä ratkaisua, jotka määrittävät API:n toiminnan. Ne poikkeavat yleisistä oletuksista.",
+   "objekt": {
+    "titel": "Kohde on yksikkötyyppi",
+    "text": "Yksi `property` on täsmälleen yksi tyyppi: hotellin huonetyyppi tai vuokrakohde. Sen alla ovat sen yksiköt (`units`) — normaalitapauksessa tarkalleen yksi, viiden samanlaisen studion tapauksessa viisi. Myydään yksikkö, hallitaan ja hinnoitellaan tyyppi.",
+    "folge": "Saatavuus on siksi LUKU (`units_available`), ei kyllä/ei. Hotellilla, jossa on 8 Twin- ja 4 Double-huonetta, on kaksi kohdetta, joilla on 8 ja 4 yksikköä — ei yksi kohde, jossa on 12 huonetta."
+   },
+   "waehrung": {
+    "titel": "Jokainen summa kantaa valuuttansa",
+    "text": "Oletusarvoa ei ole. Jokaisella kohteella on valuutta, ja jokainen vastauksen summa nimeää sen.",
+    "folge": "Jos kohteelta puuttuu valuutta, se on datavirhe ja kutsu epäonnistuu koodilla 422 — mitään ”EUR”-arvoa ei aseteta sijalle. Varattaessa sinun valuuttasi täytyy vastata kohteen valuuttaa."
+   },
+   "zeit": {
+    "titel": "Kaksi eri ajankohtaa",
+    "text": "`booked_at` on hetki, jolloin vieras teki varauksen — portaalin lähteestä, `null`, jos portaali ei toimita sitä. `received_at` on saapumishetki tähän järjestelmään.",
+    "folge": "Järjestä ”uusimmat ensin” kentän `booked_at` mukaan, ei kentän `received_at`: massatuonnissa kymmenet varaukset kantavat samaa sekuntia. Aikaleimat ovat UTC, päivämääräkentät ovat kalenteripäiviä kohteen aikavyöhykkeessä."
+   },
+   "kanaele": {
+    "titel": "Näkyvyys on kanavakohtainen",
+    "text": "Globaalia ”julkaistu”-tilaa ei ole. Kohde on näkyvissä markkinapaikalla, omalla verkkosivustolla, portaalien kautta — kukin erikseen kytkettävissä.",
+    "folge": "Kohde on myyntikelpoinen vain, kun kolme asiaa täyttyvät yhdessä: `status = active`, kanava on päällä ja vapaita yksiköitä on. Myyntipysäytys sen sijaan vaikuttaa KAIKKIIN kanaviin."
+   }
+  },
+  "konventionen": {
+   "eyebrow": "Käytännöt",
+   "heading": "Sivutus, virheet, rajat, idempotenssi",
+   "sub": "Ne neljä kohtaa, jotka ovat jokaisessa API:ssa erilaiset — tässä lukuina eikä jaaritteluna.",
+   "tabelle": {
+    "feld": "Kenttä",
+    "bedeutung": "Merkitys",
+    "code": "Koodi",
+    "status": "Tila"
+   },
+   "blaettern": {
+    "titel": "Sivutus",
+    "text": "Jokainen lista vastaa kentillä `data` ja `pagination`. Sivutus tapahtuu **kursorilla**: lähetät edellisen sivun viimeisen alkion `id`-arvon kenttänä `starting_after`. Jos `next_starting_after` puuttuu vastauksesta, läpikäynti on valmis.",
+    "felder": {
+     "starting_after": "Edellisen sivun viimeisen alkion `id`. Suositeltu tapa — vakaa myös silloin, kun lista muuttuu kahden sivun välillä. Tuntematon tai poistettu `id` tuottaa 422, ei tyhjää sivua.",
+     "next_starting_after": "On kentässä `pagination` niin kauan kuin jatkoa on: arvo seuraavaan `starting_after`-pyyntöösi. Jos se puuttuu, olet lopussa.",
+     "limit": "Rivejä sivua kohden. Oletus 50, enimmäisarvo 200 — suurempi arvo tuottaa 422, ei lyhennettyä sivua.",
+     "offset": "Ohitettavien rivien määrä — kertaluonteiseen katsaukseen tiettyyn sivuun. Yhdessä kentän `starting_after` kanssa se tuottaa 422: kaksi sijaintitietoa samassa pyynnössä eivät anna ristiriidatonta merkitystä.",
+     "include_total": "`true` palauttaa lisäksi `total`. Pyydä se vain, jos näytät luvun.",
+     "has_more": "On jokaisessa vastauksessa ja kertoo, onko seuraava sivu olemassa — ei arvailua eikä ylimääräistä kierrosta."
+    },
+    "warumCursor": "Miksi ei vain `offset`: se kuvaa SIJAINTIA listassa. Jos sivun 1 ja sivun 2 välissä tulee uusi varaus, kaikki siirtyy yhden paikan — `offset=50` ohittaa silloin yhden rivin, ja poistettaessa yksi rivi tulee kahdesti. Sen jälkeen tietokannastasi puuttuu varaus, eikä mikään vastauksessa paljasta sitä. Kursori nimeää viimeisen tietueen, jonka olet nähnyt, eikä siksi voi liukua."
+   },
+   "fehler": {
+    "titel": "Virheet",
+    "text": "Jokainen virhe tulee muodossa `application/problem+json` (RFC 9457), ja siinä on vakaa `code`, `request_id` ja — silloin kun se auttaa — ne kentät, jotka selittävät virheen. Haaraudu kentän `code` perusteella, ei tekstin: teksti saa muuttua, koodi ei.",
+    "codes": {
+     "nichtAuthentifiziert": "Token puuttuu, on vanhentunut tai kelpaamaton.",
+     "ungueltigeZugangsdaten": "Client-ID tai Secret on väärä, tai pääsy on peruutettu.",
+     "scopeFehlt": "Token on kelvollinen, mutta tällä pääsyllä ei ole tarvittavaa oikeutta. Puuttuva scope kerrotaan virheessä.",
+     "objektNichtErlaubt": "Pääsy on rajattu tiettyihin kohteisiin; tämä ei kuulu niihin.",
+     "nichtGefunden": "Ei ole olemassa tai kuuluu toiselle yritykselle — molemmat tapaukset vastaavat samoin.",
+     "zeitraumNichtVerfuegbar": "Varattu, suljettu tai myynnistä poistettu. Puolittaista varausta ei syntynyt.",
+     "idempotenzInArbeit": "Kutsu, jolla on tämä Idempotency-Key, on vielä käynnissä. Odota hetki ja toista sitten.",
+     "aboBestehtBereits": "Tälle osoitteelle on jo tämän pääsyn aktiivinen webhook-tilaus.",
+     "waehrungFehlt": "Kohteelle, hinnastolle tai varaukselle ei ole määritetty valuuttaa — datavirhe.",
+     "ungueltigeAnfrage": "Muodollisesti kunnossa, sisällöllisesti ei toteutettavissa. Peruste on kentässä `detail`.",
+     "validierungFehlgeschlagen": "Pyyntö ei vastaa skeemaa. `felder` kertoo, mikä kenttä.",
+     "zuVieleAnfragen": "Rate-Limit saavutettu. `Retry-After` kertoo, milloin voi jatkaa.",
+     "nichtKonfiguriert": "Palvelu ei voi käsitellä pyyntöä turvallisesti. Ei jatkoa ilman tarkistusta."
+    }
+   },
+   "limits": {
+    "titel": "Rate-Limits",
+    "text": "Rajoitus on PÄÄSY-kohtainen, ei IP-osoitekohtainen: kahtakymmentä yritystä hoitava välitystoimisto istuu yhden IP:n takana, eikä sen kuulu jarruttaa itseään. Kolme erillistä ämpäriä, jottei kalenterin täsmäytys estä hintojen asettamista.",
+    "eimer": {
+     "token": "Tokenin vaihto. Tiukka, koska tässä tarkistetaan tunnistetiedot.",
+     "write": "Kirjoittavat kutsut — ne vaikuttavat myyntiin.",
+     "read": "Lukevat kutsut: integraation arki."
+    },
+    "header": "Jokainen vastaus kantaa tilanteen mukanaan, myös onnistunut — jotta voit sopeuttaa tahtiasi ennen kuin törmäät 429:ään:"
+   },
+   "idempotenz": {
+    "titel": "Idempotenssi",
+    "text": "Varausta luodessa header `Idempotency-Key` on pakollinen. Valitse jokaiselle toimenpiteelle yksilöllinen arvo (esimerkiksi UUID) ja toista se, kun lähetät saman kutsun uudelleen. Ilman tätä suojaa verkkokatkos ja uudelleenlähetys tuottavat kaksi varausta — ja toinen niistä sulkee öitä, joita kukaan ei tilannut.",
+    "faelle": {
+     "wiederholung": "Sama avain, sama hyötykuorma → ensimmäinen vastaus tulee sanatarkasti takaisin, headerilla `Idempotency-Replayed: true`.",
+     "abweichend": "Sama avain, ERI hyötykuorma → 422. Uutta toimenpidettä varten kuuluu uusi avain.",
+     "laufend": "Sama avain, ensimmäinen kutsu on vielä käynnissä → 409. Odota hetki ja toista sitten; älä yritä uudelleen uudella avaimella."
+    }
+   }
+  },
+  "webhooks": {
+   "eyebrow": "Webhookit",
+   "heading": "Tapahtumia kyselemisen sijaan",
+   "sub": "Yksi tilaus osoitetta kohden, allekirjoitetut toimitukset, uudelleenyritykset kasvavin välein. Tapahtumia syntyy JOKAISESTA muutoksesta — myös silloin, kun se tulee portaalin tai hallintapaneelin kautta eikä tämän API:n kautta.",
+   "tabelle": {
+    "ereignis": "Tapahtuma",
+    "wann": "Milloin se laukeaa"
+   },
+   "ereignisse": {
+    "reservationCreated": "Varaus on syntynyt — minkä kanavan kautta tahansa.",
+    "reservationUpdated": "Olemassa oleva varaus on muuttunut.",
+    "reservationCancelled": "Varaus on peruutettu. Oma tapahtuma, koska siihen on reagoitava toisin kuin muutokseen.",
+    "availabilityChanged": "Kohteen kalenteri on muuttunut (varaus, sulku, vapautus).",
+    "rateChanged": "Päivähinta tai oleskelusääntö on muuttunut.",
+    "taskCreated": "Tehtävä on syntynyt.",
+    "taskCompleted": "Tehtävä on merkitty valmiiksi."
+   },
+   "anlegen": {
+    "titel": "Luo tilaus",
+    "text": "Yksi `https`-osoite ja ne tapahtumat, jotka haluat. Valinnaisesti vain tietyille kohteille. Sisäverkon osoitteet hylätään — tarkistus tehdään luonnin yhteydessä JA ennen jokaista yksittäistä toimitusta.",
+    "secret": "Vastaus sisältää allekirjoitussalaisuuden täsmälleen kerran. Tallenna se nyt — sitä ei koskaan toimiteta uudelleen."
+   },
+   "nutzlast": {
+    "titel": "Mitä perille tulee",
+    "text": "Pidetty niukkana: id:t ja ne kentät, jotka kuvaavat muutoksen. Täyden tietueen haet tarvittaessa API:n kautta — näin vastaanottaja ei saa toimituksena mitään, mitä se ei enää saisi nähdä."
+   },
+   "signatur": {
+    "titel": "Tarkista allekirjoitus",
+    "text": "Jokainen toimitus kantaa headerin, jossa on aikaleima ja HMAC-SHA256 arvosta `ZEITSTEMPEL.BODY`, laskettuna tilauksesi secretillä. Koska aikaleima on allekirjoitettu mukana, tunnistat tallennetun ja myöhemmin uudelleen toistetun toimituksen — pelkän bodyn yli lasketulla allekirjoituksella se ei ole mahdollista.",
+    "schritte": {
+     "roh": "Ota pyynnön RAAKA runko, ei jäsennettyä ja uudelleen serialisoitua objektia — toinen tavujono tuottaa toisen allekirjoituksen. Tämä on yleisin syy sille, että ”allekirjoitus ei täsmää”.",
+     "alter": "Tarkista ikä aikaleiman avulla; viiden minuutin toleranssi on hyvä arvo.",
+     "vergleich": "Vertaa vakioaikaisesti (`timingSafeEqual`, `hmac.compare_digest`). Tavallinen `==` tekee allekirjoituksesta arvattavan."
+    }
+   },
+   "verhalten": {
+    "wiederholung": {
+     "titel": "Uudelleenyritykset",
+     "text": "Jos osoitteesi ei vastaa 2xx:llä, toimitus yritetään uudelleen jopa kymmenen kertaa — kasvavin välein yhdestä minuutista tuntiin. Vastaa nopeasti ja käsittele vasta sen jälkeen; hidas vastaanottaja lasketaan virheeksi."
+    },
+    "reihenfolge": {
+     "titel": "Järjestys",
+     "text": "Ei taattu. Käytä tapahtuman `created_at`-arvoa, jottet kirjoita vanhempaa toimitusta uudemman päälle."
+    },
+    "doppelt": {
+     "titel": "Kaksinkertainen toimitus",
+     "text": "On epätodennäköistä, mutta mahdollista — käsittele tapahtuman `id` avaimena ja käsittele jokainen vain kertaalleen. Tämä lupaus pätee jokaiseen webhook-tarjoajaan, ei vain tähän."
+    },
+    "nachholen": {
+     "titel": "Kiinni kurominen katkon jälkeen",
+     "text": "Jos palvelimesi oli poissa, haet väliin jääneet tapahtumat jälkikäteen osoitteesta `GET /v1/events?since=…` — vanhimmat ensin, samoilla `id`:llä kuin toimituksessa, enintään 30 päivää taaksepäin. Pelkkä push ei ole toimitustakuu: uudelleenyritykset loppuvat jossain vaiheessa, ja ilman tätä vaihetta sinulta puuttuvat juuri ne tapahtumat, joista et koskaan saanut tietää."
+    }
+   }
+  },
+  "grenzen": {
+   "eyebrow": "Rajat",
+   "heading": "Rajoitukset",
+   "sub": "Kaksi toimenpidettä ei ole mahdollista tämän API:n kautta. Molemmat johtuvat tietomallista. Peruutus, siirto ja hinnan laskenta ovat mahdollisia.",
+   "stattdessen": "Sen sijaan:",
+   "gaeste": {
+    "titel": "Vieraiden luominen ja muuttaminen",
+    "text": "Vieraan tiedot syntyvät vieraan syöttäessä ne tai portaalin kautta. Kirjoitustie tässä olisi kolmas lähde samalle henkilölle.",
+    "ausweg": "Lähetä vieraan tiedot varauksen luonnin yhteydessä — olemassa olevat vieraat tunnistetaan sähköpostiosoitteen perusteella. Olemassa olevan varauksen yhteystietokentät voi ylläpitää päätepisteellä `PATCH /v1/reservations/'{'id}`."
+   },
+   "nachrichten": {
+    "titel": "Keskustelun avaaminen",
+    "text": "Viestien lukeminen ja olemassa olevaan keskusteluun kirjoittaminen onnistuu (`/v1/reservations/'{'id}/messages`). Uuden keskustelun luominen ei: viestiketju kuuluu aina markkinapaikan vierastiliin, eikä yrityksen API-käyttöoikeus ole tällainen tili.",
+    "ausweg": "Keskustelu syntyy vieraan ensimmäisestä viestistä tai hallintanäkymässä; sen jälkeen API voi kirjoittaa siihen."
+   },
+   "finanzen": {
+    "titel": "Maksun veloittaminen",
+    "text": "Luettavissa ovat maksut ja ajastetut maksupyynnöt (`/v1/reservations/'{'id}/payments`) sekä maksusuunnitelma ja peruutusporrastus (`/v1/properties/'{'id}/booking-conditions`). Veloitus kulkee vieraan varauspolun kautta maksuaikomuksilla, ei lähetettävän linkin kautta.",
+    "ausweg": "Maksupyynnöt syntyvät hallintanäkymässä; API lukee niiden tilan ja niihin liittyvät tapahtumat."
+   }
+  },
+  "hilfe": {
+   "eyebrow": "Apua",
+   "heading": "Kysymykset, muutokset, työkalut",
+   "sub": "Minne kysymyksen kanssa, ja mihin voit rakentaessasi luottaa.",
+   "wege": {
+    "titel": "Kun jokin ei toimi",
+    "entwicklerMail": {
+     "titel": "Tekninen kontakti",
+     "text": "Lähetä mukana `request_id` virhevastauksesta — sen avulla kutsu löytyy lokeistamme."
+    },
+    "hilfeCenter": {
+     "titel": "Ohjekeskus",
+     "text": "Tuotteen ohjeet: kohteiden luominen, portaalien yhdistäminen, hintojen ylläpito."
+    },
+    "schema": {
+     "titel": "Generoi client",
+     "text": "OpenAPI-tiedosto kelpaa syötteeksi tavallisille generaattoreille — käsin kirjoitettu client on turha."
+    }
+   },
+   "versionen": {
+    "titel": "Versiointi",
+    "text": "API on lupaus. Nämä neljä kohtaa pätevät versioon v1:",
+    "zusagen": {
+     "pfad": "Versio on polussa. Rikkova muutos saa `/v2`; `/v1` jatkaa sen rinnalla.",
+     "additiv": "v1:n sisällä kenttiä vain lisätään. Olemassa olevia kenttiä ei nimetä uudelleen, eikä niiden merkitys muutu.",
+     "frist": "Jos versio poistetaan käytöstä, ilmoitamme päivämäärän vähintään kahdentoista kuukauden varoitusajalla ja otamme yhteyttä jokaiseen yritykseen, jolla on aktiivinen pääsy.",
+     "changelog": "Muutokset ovat OpenAPI-tiedostossa ja tällä sivulla. Kenttää ei koskaan muuteta hiljaisesti."
+    }
+   }
+  },
+  "kopf": {
+   "hilfe": "Ohjekeskus",
+   "zurueck": "Verkkosivustolle"
+  },
+  "sidebar": {
+   "sprung": "Siirry kohtaan …",
+   "keineTreffer": "Yksikään päätepiste tai luku ei vastaa hakua.",
+   "leitfaden": "Opas",
+   "referenz": "API-viite",
+   "tocTitel": "Tällä sivulla",
+   "version": "myNextDays Julkinen API v1"
+  },
+  "referenz": {
+   "scope": "Vaadittu oikeus:",
+   "pfadParameter": "Polkuparametrit",
+   "queryParameter": "Kyselyparametrit",
+   "headerParameter": "Otsakkeet",
+   "koerper": "Pyynnön runko",
+   "antworten": "Vastaukset",
+   "erlaubt": "Sallitut:",
+   "pflicht": "pakollinen",
+   "standard": "Oletus",
+   "sprache": "Kieli",
+   "zugang": "Pääsy",
+   "tokenHinweis": "Vain tässä selaimessa, vain ”Kokeile”-toimintoon — arvoa ei tallenneta eikä lähetetä meille.",
+   "ausprobieren": "Kokeile",
+   "laeuft": "Suoritetaan …",
+   "anfrage": "Pyyntö",
+   "antwort": "Vastaus",
+   "beispiel": "Esimerkki",
+   "kopieren": "Kopioi",
+   "kopiert": "Kopioitu",
+   "fehlerNetz": "Pyyntö ei tavoittanut palvelua. Yleisimmät syyt: palvelu ei juuri nyt vastaa, tai selain keskeytti pyynnön puuttuvan CORS-luvan vuoksi. Sama kutsu curlilla koodikentästä näyttää, mitä palvelu todella sanoo.",
+   "keinToken": "Ilman tokenia kutsu vastaa 401 — se on odotettu kulku."
+  },
+  "start": {
+   "eyebrow": "Julkinen API",
+   "titel": "Rakenna myNextDaysia vasten",
+   "unterzeile": "REST-rajapinta kohteille, saatavuudelle, hinnoille, varauksille, vieraille ja tehtäville — luku ja kirjoitus, mukana peruutus, siirto ja hinnan esikatselu. Opas selittää säännöt, referenssissä on jokainen päätepiste kaikkine parametreineen ja kenttä sen kokeilemiseen.",
+   "basisLabel": "Perusosoite",
+   "versionLabel": "Versio",
+   "versionHinweis": "polussa",
+   "schemaTitel": "Skeema",
+   "schemaText": "OpenAPI 3.1, luotu koodista. Sopii syötteeksi tavallisille asiakasgeneraattoreille.",
+   "woAnfangen": "Mistä aloittaa",
+   "erstLesen": "Lue ensin",
+   "dannBauen": "Rakenna sitten"
+  },
+  "bereiche": {
+   "leitfaden": "Dokumentaatio",
+   "referenz": "API-viite"
+  },
+  "gruppen": {
+   "ueberblick": "Perusteet",
+   "anhang": "Liite"
+  },
+  "weiter": {
+   "naechste": "Seuraava sivu",
+   "zurReferenz": "Jatka API-viitteeseen"
+  },
+  "referenzUebersicht": {
+   "eyebrow": "API-viite",
+   "titel": "Kaikki päätepisteet",
+   "sub": "Jokaisella päätepisteellä on oma sivu, jolla on kaikki parametrit, pyynnön runko, vastaukset ja kenttä, jossa voit kokeilla kutsua suoraan."
+  },
+  "zugang": {
+   "eyebrow": "Todennus",
+   "heading": "Todennus",
+   "sub": "OAuth 2.0 ja `client_credentials`. Tunnus kuuluu tarkalleen yhdelle yritykselle; usealle yritykselle yhteistä avainta ei ole.",
+   "ablauf": {
+    "titel": "Kulku",
+    "text": "`client_credentials` on tapa ohjelmille, jotka toimivat omissa nimissään. Suostumusdialogia ei ole eikä refresh-tokenia.",
+    "schritte": {
+     "anlegen": "Luo tunnus hallintanäkymässä: Tili → API-tunnus. `client_secret` näytetään kerran, eikä sitä voi hakea myöhemmin.",
+     "tauschen": "`POST /v1/oauth/token` tiedoilla `client_id` ja `client_secret`. Vastaus sisältää `access_token`, `expires_in` (3600) ja myönnetyt oikeudet.",
+     "senden": "Lähetä token joka kutsussa muodossa `Authorization: Bearer ACCESS_TOKEN`. Vanhentumisen jälkeen API vastaa 401 ja koodilla `token_expired`."
+    },
+    "merksatz": "Pidä token muistissa, älä hae sitä uudelleen joka kutsua varten. Vaihto joka pyynnöllä osuu token-päätepisteen kutsurajaan (10/Minute)."
+   },
+   "rechte": {
+    "titel": "Oikeudet",
+    "text": "Oikeudet ovat muodossa `bereich:richtung`, esimerkiksi `reservations:read` tai `rates:write`. Jos oikeus puuttuu, päätepiste vastaa 403 ja koodilla `insufficient_scope`.",
+    "merksatz": "Myönnä vain ne oikeudet, joita integraatio tarvitsee. Kadonnut avain ei silloin voi ylikirjoittaa mitään, mitä sen ei olisi pitänytkään lukea."
+   },
+   "objekte": {
+    "titel": "Kohderajaus",
+    "text": "Tunnus voidaan rajata tiettyihin kohteisiin. Listoissa se näkee vain nämä; kutsu toisella kohdetunnisteella vastaa 403 ja koodilla `objekt_nicht_erlaubt`."
+   },
+   "selbstauskunft": {
+    "titel": "Oikeuksien tarkistus",
+    "text": "`GET /v1/me` palauttaa tokenin yrityksen, oikeudet ja kohderajauksen — ensimmäinen kutsu integraatiota käyttöön otettaessa."
+   }
+  },
+  "fehler": {
+   "eyebrow": "Virheet",
+   "heading": "Miltä virheet näyttävät",
+   "sub": "Jokainen virhe on HTTP-statuskoodi ja runko standardin RFC 9457 mukaan (`application/problem+json`). Yksikään virhe ei tule statuksella 200.",
+   "aufbau": {
+    "titel": "Rakenne",
+    "text": "`code` on virheen pysyvä, koneluettava nimi. `detail` on ihmisille tarkoitettu teksti ja voi muuttua milloin tahansa.",
+    "felder": {
+     "type": "Tämän virhetyypin kuvauksen osoite — virhekoodien luettelo liitteessä.",
+     "title": "Virhetyypin lyhyt nimi.",
+     "status": "HTTP-statuskoodi.",
+     "detail": "Kuvaus ihmisille.",
+     "code": "Virheen pysyvä nimi. Käsittele tätä kenttää.",
+     "request_id": "Pyynnön tunniste. Liitä se tukipyyntöön."
+    },
+    "merksatz": "Haaraudu kentän `code` mukaan, ei kentän `detail`. Teksti ei ole rajapinta."
+   },
+   "klassen": {
+    "titel": "Statusluokat",
+    "vier": "4xx — pyyntö on ongelma: puuttuva oikeus, tuntematon tunniste, virheellinen arvo, varattu ajanjakso. Uudelleenyritys ei muuta mitään.",
+    "fuenf": "5xx — palvelinpuolen virhe. Yritä uudelleen kasvavin väliajoin.",
+    "neun": "429 — kutsuraja saavutettu. `Retry-After` kertoo odotusajan sekunteina."
+   }
+  },
+  "limits": {
+   "eyebrow": "Kutsurajoitukset",
+   "heading": "Kuinka monta kutsua on sallittu",
+   "sub": "Rajoitus on tunnusta kohti, ei IP-osoitetta kohti. Koreja on kolme, kullakin omat arvot luvulle, kirjoitukselle ja tokenin annolle."
+  },
+  "fehlercodes": {
+   "eyebrow": "Liite",
+   "heading": "Virhekoodit",
+   "sub": "Kaikki tämän API:n `code`-arvot. Jokaisella rivillä on ankkuri; virhevastauksen `type`-osoite viittaa siihen."
+  },
+  "lokalisierung": {
+   "eyebrow": "Liite",
+   "heading": "Lokalisointi",
+   "sub": "Kieli ja valuutta tulevat datasta. Molemmat kentät voivat olla tyhjiä; kummallakaan ei ole oletusarvoa.",
+   "waehrung": {
+    "titel": "Valuutta",
+    "text": "Jokaisessa summassa on `currency`-koodi standardin ISO 4217 mukaan. Oletusarvoa ei ole eikä muunnosta.",
+    "merksatz": "Varausta luotaessa `currency` on oltava sama kuin kohteen valuutta. Poikkeamasta seuraa 422 ja koodi `currency_mismatch`."
+   },
+   "sprache": {
+    "titel": "Kieli",
+    "text": "`language` on kaksikirjaiminen koodi standardin ISO 639-1 mukaan, esimerkiksi `de`, `da`, `en`. Arvo tulee varauksesta tai portaalista ja voi olla tyhjä. Tyhjä tarkoittaa tuntematonta."
+   },
+   "texte": {
+    "titel": "API:n tekstit",
+    "text": "Kenttien nimet, `code`-arvot ja enum-arvot ovat englanniksi ja osa sopimusta. Virhevastauksen `detail`-tekstit on tarkoitettu ihmisille ja voivat muuttua — näytä omat viestit kentän `code` perusteella."
+   }
+  },
+  "zeit": {
+   "eyebrow": "Liite",
+   "heading": "Aikavyöhykkeet",
+   "sub": "Tämä API käyttää kahta aikamerkinnän lajia: kalenteripäiviä kohteen aikavyöhykkeellä ja ajanhetkiä UTC-ajassa.",
+   "tage": {
+    "titel": "Kalenteripäivät",
+    "text": "`check_in`, `check_out`, `date`, `from` ja `to` ovat kalenteripäiviä muodossa `YYYY-MM-DD`, kohteen aikavyöhykkeellä. Niissä ei ole kellonaikaa eikä niitä muunneta UTC-aikaan.",
+    "merksatz": "`check_out` on lähtöpäivä; viimeinen varattu yö on sitä edeltävä yö. Neljä yötä tarkoittaa neljän päivän väliä kenttien `check_in` ja `check_out` välillä."
+   },
+   "zeitpunkte": {
+    "titel": "Ajanhetket",
+    "text": "`created_at`, `updated_at`, `received_at`, `booked_at` ja `cancelled_at` ovat ajanhetkiä standardin ISO 8601 mukaan UTC-ajassa, päätteenä `Z`."
+   },
+   "quelle": {
+    "titel": "booked_at ja received_at",
+    "text": "`booked_at` on hetki, jolloin vieras teki varauksen, portaalivarauksissa portaalin lähteestä. `received_at` on saapumishetki tähän järjestelmään. Joukkohaussa monella varauksella on sama `received_at`-sekunti.",
+    "merksatz": "Käytä järjestykseen ”uusimmat ensin” kenttää `booked_at` ja käsittele `null` tuntemattomana. `received_at` kertoo haun järjestyksen, ei varausten."
+   },
+   "filter": {
+    "titel": "Suodatus muutosten mukaan",
+    "text": "`updated_since` ottaa ajanhetken ja palauttaa sen jälkeen muuttuneet. Huomioi URL-koodaus: `+` tarkoittaa osoitteessa välilyöntiä — kirjoita `Z` tai koodaa muotoon `%2B`."
+   }
+  }
+ },
  "meta": {
   "title": "myNextDays – Alusta lomamajoituksen vuokraajille",
   "description": "Alusta hotelleille, välitystoimistoille ja lomamajoituksen vuokraajille: channel manager, kalenteri, suoravaraus, vierasviestintä ja laskutus yhdessä paikassa. Rakennettu Tanskassa, isännöity EU:ssa. Alkaen 19,90 € kuukaudessa. Kokeile 30 päivää maksutta."

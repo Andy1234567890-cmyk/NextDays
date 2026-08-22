@@ -1,4 +1,427 @@
 {
+ "entwickler": {
+  "meta": {
+   "titel": "API și dezvoltatori — myNextDays",
+   "beschreibung": "API-ul REST public al myNextDays: obiecte, disponibilitate, tarife, rezervări, oaspeți și sarcini. OAuth2, OpenAPI 3.1, webhookuri cu livrări semnate."
+  },
+  "hero": {
+   "eyebrow": "API publică",
+   "titel": "Construiește pe myNextDays",
+   "unterzeile": "Un API REST pentru obiecte, disponibilitate, tarife, rezervări, oaspeți și sarcini. Tokenuri de scurtă durată, drepturi pentru fiecare acces, evenimente prin webhook — și o schemă care se naște din cod și de aceea nu poate rămâne în urmă.",
+   "basisLabel": "Adresa de bază",
+   "versionLabel": "Versiune",
+   "versionHinweis": "în cale",
+   "konsole": "Încearcă",
+   "schema": "OpenAPI 3.1",
+   "referenz": "Citește referința"
+  },
+  "inhalt": {
+   "titel": "Pe această pagină",
+   "schnellstart": "Primii pași",
+   "konzepte": "Model de date",
+   "konventionen": "Paginare",
+   "endpunkte": "Puncte finale",
+   "webhooks": "Webhook-uri",
+   "grenzen": "Limitări",
+   "hilfe": "Asistență",
+   "start": "Prezentare generală",
+   "zugang": "Autentificare",
+   "fehler": "Erori",
+   "limits": "Limitarea ratei",
+   "fehlercodes": "Coduri de eroare",
+   "lokalisierung": "Localizare",
+   "zeit": "Fusuri orare"
+  },
+  "code": {
+   "kopieren": "Copiază",
+   "kopiert": "Copiat",
+   "anfrage": "Cerere",
+   "antwort": "Răspuns",
+   "zustellung": "Livrare",
+   "pruefcode": "Verifică semnătura (Node)"
+  },
+  "schnellstart": {
+   "eyebrow": "Start rapid",
+   "heading": "În cinci minute până la primul apel",
+   "sub": "Trei pași. Doar primul trece prin interfață — tot restul este un apel.",
+   "schritt1": {
+    "titel": "Creează un acces",
+    "text": "Creează un acces în dashboard și stabilește de la început ce are voie să facă: drepturi pentru fiecare domeniu și, dacă vrei, doar anumite obiecte. Un acces pentru planul de curățenie nu are nevoie de vizibilitate asupra veniturilor.",
+    "pfad": "Cont → Acces API",
+    "hinweis": "`client_secret` este afișat o singură dată; se stochează doar hash-ul său. Un secret pierdut nu se recuperează, se înlocuiește."
+   },
+   "schritt2": {
+    "titel": "Obține un token",
+    "text": "Schimbă Client-ID și Client-Secret pe un Access-Token. Este valabil o oră și poartă exact drepturile accesului.",
+    "hinweis": "Ține tokenul în memorie și schimbă-l abia când expiră sau când apare un 401 — nu la fiecare apel. O revocare în dashboard împiedică imediat emiterea de tokenuri noi."
+   },
+   "schritt3": {
+    "titel": "Fă primul apel",
+    "text": "Trimite tokenul ca `Authorization: Bearer …`. Fiecare listă răspunde în același plic: `data` plus `pagination`.",
+    "hinweis": "Apelează apoi `GET /v1/me` — îți spune ce drepturi și ce obiecte are acest acces, fără să fii nevoit să afli asta printr-o serie de erori 403."
+   }
+  },
+  "konzepte": {
+   "eyebrow": "Concepte",
+   "heading": "Patru lucruri pe care ar trebui să le știi înainte",
+   "sub": "Patru decizii care determină comportamentul API-ului. Se abat de la presupunerile răspândite.",
+   "objekt": {
+    "titel": "Un obiect este un tip de unitate",
+    "text": "Un `property` este exact un tip: un tip de cameră în hotel sau un obiect de vacanță. Sub el atârnă unitățile sale (`units`) — în mod normal exact una, la cinci studiouri identice tocmai cinci. Se vinde unitatea, se administrează și se tarifează tipul.",
+    "folge": "De aceea disponibilitatea este un NUMĂR (`units_available`), nu un da/nu. Un hotel cu 8 camere Twin și 4 camere Double are două obiecte cu 8, respectiv 4 unități — nu un obiect cu 12 camere."
+   },
+   "waehrung": {
+    "titel": "Fiecare sumă își poartă moneda",
+    "text": "Nu există valoare implicită. Fiecare proprietate are o monedă, iar fiecare sumă dintr-un răspuns o indică.",
+    "folge": "Dacă la un obiect lipsește moneda, aceasta este o eroare de date și apelul eșuează cu 422 — nu se completează niciun „EUR”. La rezervare, moneda ta trebuie să corespundă monedei obiectului."
+   },
+   "zeit": {
+    "titel": "Două momente diferite",
+    "text": "`booked_at` este momentul rezervării la oaspete — din sursa portalului, `null` dacă portalul nu îl livrează. `received_at` este momentul intrării în acest sistem.",
+    "folge": "Sortează „cele mai noi întâi” după `booked_at`, nu după `received_at`: la un import colectiv, zeci de rezervări poartă aceeași secundă. Marcajele de timp sunt în UTC, câmpurile de dată sunt zile calendaristice în fusul orar al obiectului."
+   },
+   "kanaele": {
+    "titel": "Vizibilitatea este valabilă pentru fiecare canal",
+    "text": "Nu există un „publicat” global. Un obiect este vizibil în marketplace, pe propriul site web, prin portaluri — fiecare comutabil separat.",
+    "folge": "Un obiect este vandabil doar dacă se întâlnesc trei lucruri: `status = active`, canalul este pornit și există unități libere. O oprire a vânzării, în schimb, are efect pe TOATE canalele."
+   }
+  },
+  "konventionen": {
+   "eyebrow": "Convenții",
+   "heading": "Paginare, erori, limite, idempotență",
+   "sub": "Cele patru puncte care diferă la fiecare API — aici cu cifre în loc de proză.",
+   "tabelle": {
+    "feld": "Câmp",
+    "bedeutung": "Semnificație",
+    "code": "Cod",
+    "status": "Status"
+   },
+   "blaettern": {
+    "titel": "Paginare",
+    "text": "Fiecare listă răspunde cu `data` și `pagination`. Paginarea se face cu un **cursor**: trimiți `id` al ultimului element din pagina anterioară ca `starting_after`. Dacă `next_starting_after` lipsește din răspuns, parcurgerea s-a încheiat.",
+    "felder": {
+     "starting_after": "`id` al ultimului element din pagina anterioară. Calea recomandată — stabilă, chiar dacă lista se schimbă între două pagini. Un `id` necunoscut sau șters dă 422, nu o pagină goală.",
+     "next_starting_after": "Apare în `pagination` cât timp există continuare: valoarea pentru următorul tău `starting_after`. Dacă lipsește, ai ajuns la final.",
+     "limit": "Rânduri pe pagină. Implicit 50, maxim 200 — o valoare mai mare dă 422, nu o pagină scurtată.",
+     "offset": "Rânduri de sărit — pentru o privire unică asupra unei anumite pagini. Împreună cu `starting_after` dă 422: două indicații de poziție în aceeași cerere nu au un sens fără contradicție.",
+     "include_total": "`true` livrează suplimentar `total`. Cere-l doar dacă afișezi numărul.",
+     "has_more": "Apare în fiecare răspuns și spune dacă mai există o pagină — fără ghicit, fără o rundă suplimentară."
+    },
+    "warumCursor": "De ce nu pur și simplu `offset`: el descrie o POZIȚIE în listă. Dacă între pagina 1 și pagina 2 apare o rezervare, totul se deplasează cu un loc — `offset=50` sare atunci un rând, iar la ștergere un rând vine de două ori. După aceea lipsește o rezervare din baza ta de date, și nimic din răspuns nu o dezvăluie. Cursorul numește ultima înregistrare pe care ai văzut-o și de aceea nu se poate deplasa."
+   },
+   "fehler": {
+    "titel": "Erori",
+    "text": "Fiecare eroare vine ca `application/problem+json` (RFC 9457) cu un `code` stabil, un `request_id` și — unde ajută — câmpurile care explică eroarea. Ramifică după `code`, nu după text: textul se poate schimba, codul nu.",
+    "codes": {
+     "nichtAuthentifiziert": "Tokenul lipsește, a expirat sau este invalid.",
+     "ungueltigeZugangsdaten": "Client-ID sau Client-Secret sunt greșite, ori accesul a fost revocat.",
+     "scopeFehlt": "Token valabil, dar acest acces nu are dreptul necesar. Scope-ul lipsă apare în eroare.",
+     "objektNichtErlaubt": "Accesul este limitat la anumite obiecte; acesta nu face parte dintre ele.",
+     "nichtGefunden": "Nu există sau aparține unui alt operator — ambele cazuri răspund la fel.",
+     "zeitraumNichtVerfuegbar": "Ocupat, blocat sau exclus de la vânzare. Nu a apărut nicio rezervare pe jumătate.",
+     "idempotenzInArbeit": "Un apel cu acest Idempotency-Key încă rulează. Așteaptă puțin, apoi repetă.",
+     "aboBestehtBereits": "Pentru această adresă există deja un abonament webhook activ al acestui acces.",
+     "waehrungFehlt": "Obiectului, planului tarifar sau rezervării nu i-a fost atribuită nicio monedă — o eroare de date.",
+     "ungueltigeAnfrage": "Formal în ordine, dar imposibil de îndeplinit din punct de vedere funcțional. Motivul apare în `detail`.",
+     "validierungFehlgeschlagen": "Cererea nu corespunde schemei. `felder` spune care câmp.",
+     "zuVieleAnfragen": "Limita de rată a fost atinsă. `Retry-After` spune când se poate continua.",
+     "nichtKonfiguriert": "Serviciul nu poate procesa cererea în siguranță. Nu se merge mai departe fără verificare."
+    }
+   },
+   "limits": {
+    "titel": "Limite de rată",
+    "text": "Limitarea se face per ACCES, nu per adresă IP: o agenție care administrează douăzeci de afaceri stă în spatele unei singure adrese IP și nu trebuie să se frâneze singură. Trei găleți separate, astfel încât o sincronizare a calendarului să nu blocheze setarea tarifelor.",
+    "eimer": {
+     "token": "Schimbul de tokenuri. Strict, pentru că aici se verifică datele de acces.",
+     "write": "Apeluri de scriere — ele intervin în vânzare.",
+     "read": "Apeluri de citire: cotidianul unei integrări."
+    },
+    "header": "Fiecare răspuns poartă starea actuală, chiar și cel reușit — ca să îți poți ajusta ritmul înainte să intri în 429:"
+   },
+   "idempotenz": {
+    "titel": "Idempotență",
+    "text": "La crearea unei rezervări, header-ul `Idempotency-Key` este obligatoriu. Alege o valoare unică pentru fiecare operațiune (de exemplu un UUID) și repetă-o dacă trimiți din nou același apel. Fără această protecție, o întrerupere de rețea cu repetare creează două rezervări — iar a doua blochează nopți pe care nu le-a comandat nimeni.",
+    "faelle": {
+     "wiederholung": "Aceeași cheie, aceeași sarcină utilă → primul răspuns revine cuvânt cu cuvânt, cu header-ul `Idempotency-Replayed: true`.",
+     "abweichend": "Aceeași cheie, ALTĂ sarcină utilă → 422. Pentru o operațiune nouă se cuvine o cheie nouă.",
+     "laufend": "Aceeași cheie, primul apel încă rulează → 409. Așteaptă puțin, apoi repetă; nu insista cu o cheie nouă."
+    }
+   }
+  },
+  "webhooks": {
+   "eyebrow": "Webhookuri",
+   "heading": "Evenimente în loc de interogări",
+   "sub": "Un abonament pe adresă, livrări semnate, repetări cu interval crescător. Evenimentele apar la FIECARE modificare — chiar dacă vine printr-un portal sau prin dashboard, nu prin acest API.",
+   "tabelle": {
+    "ereignis": "Eveniment",
+    "wann": "Când se declanșează"
+   },
+   "ereignisse": {
+    "reservationCreated": "A apărut o rezervare — prin oricare canal.",
+    "reservationUpdated": "O rezervare existentă s-a modificat.",
+    "reservationCancelled": "O rezervare a fost anulată. Eveniment propriu, pentru că la el se reacționează altfel decât la o modificare.",
+    "availabilityChanged": "Calendarul unui obiect s-a modificat (rezervare, blocare, eliberare).",
+    "rateChanged": "Un tarif zilnic sau o regulă de sejur s-a modificat.",
+    "taskCreated": "A apărut o sarcină.",
+    "taskCompleted": "O sarcină a fost finalizată."
+   },
+   "anlegen": {
+    "titel": "Creează un abonament",
+    "text": "O adresă `https` și evenimentele pe care le vrei. Opțional doar pentru anumite obiecte. Adresele interne sunt respinse — verificarea rulează la creare ȘI înainte de fiecare livrare.",
+    "secret": "Răspunsul conține secretul de semnare exact o singură dată. Salvează-l acum — nu va mai fi livrat niciodată."
+   },
+   "nutzlast": {
+    "titel": "Ce sosește",
+    "text": "Ținut îngust: ID-uri și câmpurile care descriu modificarea. Setul complet de date îl iei la nevoie prin API — astfel un destinatar nu primește nimic ce între timp nu i-ar mai fi permis să vadă."
+   },
+   "signatur": {
+    "titel": "Verifică semnătura",
+    "text": "Fiecare livrare poartă un header cu marcaj de timp și HMAC-SHA256 peste `ZEITSTEMPEL.BODY`, calculat cu secretul abonamentului tău. Deoarece marcajul de timp este semnat împreună, recunoști o livrare înregistrată și reintrodusă mai târziu — la o semnătură doar peste body acest lucru nu este posibil.",
+    "schritte": {
+     "roh": "Ia corpul BRUT al cererii, nu obiectul parsat și reserializat — o altă succesiune de octeți dă o altă semnătură. Acesta este cel mai frecvent motiv pentru „semnătura nu se potrivește”.",
+     "alter": "Verifică vechimea prin marcajul de timp; cinci minute de toleranță sunt o valoare bună.",
+     "vergleich": "Compară în timp constant (`timingSafeEqual`, `hmac.compare_digest`). Un `==` obișnuit face semnătura ghicibilă."
+    }
+   },
+   "verhalten": {
+    "wiederholung": {
+     "titel": "Repetări",
+     "text": "Dacă adresa ta nu răspunde cu 2xx, livrarea este reluată de până la zece ori — cu interval crescător, de la un minut până la o oră. Răspunde repede și procesează după aceea; un destinatar lent este considerat eroare."
+    },
+    "reihenfolge": {
+     "titel": "Ordine",
+     "text": "Nu este garantată. Folosește `created_at` al evenimentului, ca să nu scrii o livrare mai veche peste una mai nouă."
+    },
+    "doppelt": {
+     "titel": "Livrare dublă",
+     "text": "Este improbabilă, dar posibilă — tratează `id`-ul evenimentului ca cheie și procesează fiecare doar o dată. Această regulă este valabilă pentru orice furnizor de webhookuri, nu doar pentru acesta."
+    },
+    "nachholen": {
+     "titel": "Recuperare după o cădere",
+     "text": "Dacă serverele tale au fost indisponibile, recuperezi evenimentele pierdute prin `GET /v1/events?since=…` — cele mai vechi primele, cu aceleași `id`-uri ca la livrare, cel mult 30 de zile în urmă. Un simplu push nu este o garanție de livrare: la un moment dat reîncercările se epuizează, iar fără acest pas îți lipsesc exact evenimentele despre care nu ai aflat niciodată."
+    }
+   }
+  },
+  "grenzen": {
+   "eyebrow": "Limite",
+   "heading": "Limitări",
+   "sub": "Două operațiuni nu sunt posibile prin acest API. Ambele decurg din modelul de date. Anularea, mutarea și calculul prețului sunt posibile.",
+   "stattdessen": "În schimb:",
+   "gaeste": {
+    "titel": "Crearea și modificarea oaspeților",
+    "text": "Datele oaspetelui apar la introducerea lor de către oaspete sau prin portal. O cale de scriere aici ar fi o a treia sursă pentru aceeași persoană.",
+    "ausweg": "La crearea unei rezervări, trimite și datele oaspetelui — oaspeții existenți sunt recunoscuți prin adresa de e-mail. Câmpurile de contact ale unei rezervări existente pot fi întreținute prin `PATCH /v1/reservations/'{'id}`."
+   },
+   "nachrichten": {
+    "titel": "Deschiderea unei conversații",
+    "text": "Citirea mesajelor și scrierea într-o conversație existentă sunt posibile (`/v1/reservations/'{'id}/messages`). Crearea unei conversații noi, nu: un fir de discuție aparține întotdeauna unui cont de oaspete din marketplace, iar accesul API al unui operator nu este un astfel de cont.",
+    "ausweg": "Conversația apare cu primul mesaj al oaspetelui sau din tabloul de bord; după aceea API-ul poate scrie în ea."
+   },
+   "finanzen": {
+    "titel": "Încasarea unei plăți",
+    "text": "Se pot citi plățile și solicitările de plată programate (`/v1/reservations/'{'id}/payments`), precum și planul de plată și scara de penalizări la anulare (`/v1/properties/'{'id}/booking-conditions`). Încasarea trece prin fluxul de rezervare al oaspetelui, cu intenții de plată, nu printr-un link care se trimite.",
+    "ausweg": "Solicitările de plată apar în tabloul de bord; API-ul le citește starea și evenimentele aferente."
+   }
+  },
+  "hilfe": {
+   "eyebrow": "Ajutor",
+   "heading": "Întrebări, modificări, unelte",
+   "sub": "Unde să duci o întrebare și de ce te poți ghida când construiești.",
+   "wege": {
+    "titel": "Când ceva nu funcționează",
+    "entwicklerMail": {
+     "titel": "Contact tehnic",
+     "text": "Trimite `request_id` din răspunsul de eroare — astfel apelul poate fi găsit în jurnalele noastre."
+    },
+    "hilfeCenter": {
+     "titel": "Centru de ajutor",
+     "text": "Instrucțiuni despre produs: crearea obiectelor, conectarea portalurilor, întreținerea tarifelor."
+    },
+    "schema": {
+     "titel": "Generează un client",
+     "text": "Fișierul OpenAPI este bun ca intrare pentru generatoarele obișnuite — un client scris de mână este de prisos."
+    }
+   },
+   "versionen": {
+    "titel": "Versionare",
+    "text": "Un API este o promisiune. Aceste patru puncte sunt valabile pentru v1:",
+    "zusagen": {
+     "pfad": "Versiunea se află în cale. O modificare care rupe compatibilitatea primește `/v2`; `/v1` rulează în paralel.",
+     "additiv": "În interiorul v1 se adaugă doar câmpuri. Câmpurile existente nu sunt redenumite și nu își schimbă semnificația.",
+     "frist": "Dacă o versiune este scoasă din uz, anunțăm o dată cu un termen de cel puțin douăsprezece luni și contactăm fiecare afacere care are un acces activ.",
+     "changelog": "Modificările apar în fișierul OpenAPI și în această pagină. Nu există modificări tacite la un câmp."
+    }
+   }
+  },
+  "kopf": {
+   "hilfe": "Centrul de ajutor",
+   "zurueck": "Către site"
+  },
+  "sidebar": {
+   "sprung": "Salt la …",
+   "keineTreffer": "Niciun endpoint și niciun capitol nu corespunde.",
+   "leitfaden": "Ghid",
+   "referenz": "Referință API",
+   "tocTitel": "Pe această pagină",
+   "version": "myNextDays API public v1"
+  },
+  "referenz": {
+   "scope": "Drept necesar:",
+   "pfadParameter": "Parametri de cale",
+   "queryParameter": "Parametri de interogare",
+   "headerParameter": "Anteturi",
+   "koerper": "Corpul cererii",
+   "antworten": "Răspunsuri",
+   "erlaubt": "Permis:",
+   "pflicht": "obligatoriu",
+   "standard": "Implicit",
+   "sprache": "Limbă",
+   "zugang": "Acces",
+   "tokenHinweis": "Doar în acest browser, doar pentru „Încearcă” — valoarea nu este salvată și nu este trimisă la noi.",
+   "ausprobieren": "Încearcă",
+   "laeuft": "Se execută …",
+   "anfrage": "Cerere",
+   "antwort": "Răspuns",
+   "beispiel": "Exemplu",
+   "kopieren": "Copiază",
+   "kopiert": "Copiat",
+   "fehlerNetz": "Cererea nu a ajuns la serviciu. Cele mai frecvente cauze: serviciul nu răspunde în acest moment sau browserul a anulat cererea din lipsa unei aprobări CORS. Același apel prin curl din câmpul de cod arată ce spune serviciul în realitate.",
+   "keinToken": "Fără token, apelul răspunde cu 401 — acesta este comportamentul așteptat."
+  },
+  "start": {
+   "eyebrow": "API public",
+   "titel": "Dezvoltă cu myNextDays",
+   "unterzeile": "Un API REST pentru unități, disponibilitate, tarife, rezervări, oaspeți și sarcini — citire și scriere, cu anulare, mutare și previzualizare de preț. Ghidul explică regulile, referința are fiecare endpoint cu toți parametrii și un câmp pentru a-l încerca.",
+   "basisLabel": "Adresă de bază",
+   "versionLabel": "Versiune",
+   "versionHinweis": "în cale",
+   "schemaTitel": "Schemă",
+   "schemaText": "OpenAPI 3.1, generat din cod. Este potrivit ca intrare pentru generatoarele obișnuite de clienți.",
+   "woAnfangen": "De unde să începi",
+   "erstLesen": "Citește mai întâi",
+   "dannBauen": "Apoi construiește"
+  },
+  "bereiche": {
+   "leitfaden": "Documentație",
+   "referenz": "Referință API"
+  },
+  "gruppen": {
+   "ueberblick": "Bazele",
+   "anhang": "Anexă"
+  },
+  "weiter": {
+   "naechste": "Pagina următoare",
+   "zurReferenz": "Continuă la referința API"
+  },
+  "referenzUebersicht": {
+   "eyebrow": "Referință API",
+   "titel": "Toate endpointurile",
+   "sub": "Fiecare endpoint are o pagină proprie cu toți parametrii, corpul cererii, răspunsurile și un câmp în care poți încerca direct apelul."
+  },
+  "zugang": {
+   "eyebrow": "Autentificare",
+   "heading": "Autentificare",
+   "sub": "OAuth 2.0 cu `client_credentials`. Un acces aparține exact unui operator; nu există chei valabile pentru mai mulți operatori.",
+   "ablauf": {
+    "titel": "Flux",
+    "text": "`client_credentials` este calea pentru programele care acționează în nume propriu. Nu există dialog de consimțământ și nici refresh token.",
+    "schritte": {
+     "anlegen": "Creați accesul în dashboard: Cont → Acces API. `client_secret` este afișat o singură dată și nu mai poate fi consultat ulterior.",
+     "tauschen": "`POST /v1/oauth/token` cu `client_id` și `client_secret`. Răspunsul conține `access_token`, `expires_in` (3600) și drepturile acordate.",
+     "senden": "Trimiteți tokenul la fiecare apel ca `Authorization: Bearer ACCESS_TOKEN`. După expirare, API-ul răspunde cu 401 și codul `token_expired`."
+    },
+    "merksatz": "Păstrați tokenul în memorie, nu îl solicitați din nou la fiecare apel. Un schimb per cerere atinge limita de rată a punctului final pentru tokenuri (10/Minute)."
+   },
+   "rechte": {
+    "titel": "Drepturi",
+    "text": "Drepturile au forma `bereich:richtung`, de exemplu `reservations:read` sau `rates:write`. Dacă un drept lipsește, punctul final răspunde cu 403 și codul `insufficient_scope`.",
+    "merksatz": "Acordați doar drepturile de care are nevoie integrarea. O cheie pierdută nu poate atunci suprascrie nimic ce nu ar fi trebuit niciodată să citească."
+   },
+   "objekte": {
+    "titel": "Restricție la proprietăți",
+    "text": "Un acces poate fi restrâns la anumite proprietăți. În liste vede numai acestea; un apel cu un alt ID de proprietate răspunde cu 403 și codul `objekt_nicht_erlaubt`."
+   },
+   "selbstauskunft": {
+    "titel": "Verificarea drepturilor",
+    "text": "`GET /v1/me` returnează operatorul, drepturile și restricția la proprietăți ale tokenului — primul apel la configurarea unei integrări."
+   }
+  },
+  "fehler": {
+   "eyebrow": "Erori",
+   "heading": "Cum arată erorile",
+   "sub": "Fiecare eroare este un cod de stare HTTP plus un corp conform RFC 9457 (`application/problem+json`). Nicio eroare nu vine cu status 200.",
+   "aufbau": {
+    "titel": "Structură",
+    "text": "`code` este numele stabil, citibil de mașină, al erorii. `detail` este un text pentru oameni și se poate schimba oricând.",
+    "felder": {
+     "type": "Adresa descrierii acestui tip de eroare — lista codurilor de eroare din anexă.",
+     "title": "Numele scurt al tipului de eroare.",
+     "status": "Codul de stare HTTP.",
+     "detail": "Descriere pentru oameni.",
+     "code": "Numele stabil al erorii. Evaluați acest câmp.",
+     "request_id": "Identificatorul cererii. Trimiteți-l într-o solicitare de asistență."
+    },
+    "merksatz": "Ramificați pe `code`, nu pe `detail`. Textul nu este o interfață."
+   },
+   "klassen": {
+    "titel": "Clase de stare",
+    "vier": "4xx — cererea este problema: drept lipsă, ID necunoscut, valoare invalidă, perioadă ocupată. Reluarea nu schimbă nimic.",
+    "fuenf": "5xx — eroare de server. Reluați cu intervale crescătoare.",
+    "neun": "429 — limita de rată a fost atinsă. `Retry-After` indică timpul de așteptare în secunde."
+   }
+  },
+  "limits": {
+   "eyebrow": "Limitarea ratei",
+   "heading": "Câte apeluri sunt permise",
+   "sub": "Limitarea se face per acces, nu per IP. Există trei compartimente cu valori proprii pentru citire, scriere și emiterea de tokenuri."
+  },
+  "fehlercodes": {
+   "eyebrow": "Anexă",
+   "heading": "Coduri de eroare",
+   "sub": "Toate valorile `code` ale acestui API. Fiecare rând are o ancoră; adresa `type` a unui răspuns de eroare face referire la ea."
+  },
+  "lokalisierung": {
+   "eyebrow": "Anexă",
+   "heading": "Localizare",
+   "sub": "Limba și moneda provin din date. Ambele câmpuri pot fi goale; niciunul nu are o valoare implicită.",
+   "waehrung": {
+    "titel": "Monedă",
+    "text": "Fiecare sumă are un cod `currency` conform ISO 4217. Nu există valoare implicită și nici conversie.",
+    "merksatz": "La crearea unei rezervări, `currency` trebuie să corespundă monedei proprietății. În caz de abatere: 422 cu codul `currency_mismatch`."
+   },
+   "sprache": {
+    "titel": "Limbă",
+    "text": "`language` este un cod de două litere conform ISO 639-1, de exemplu `de`, `da`, `en`. Valoarea provine din rezervare sau de la portal și poate fi goală. Gol înseamnă necunoscut."
+   },
+   "texte": {
+    "titel": "Textele API-ului",
+    "text": "Numele câmpurilor, valorile `code` și valorile enum sunt în engleză și fac parte din contract. Textele `detail` ale unui răspuns de eroare sunt destinate oamenilor și se pot schimba — afișați propriile mesaje pe baza `code`."
+   }
+  },
+  "zeit": {
+   "eyebrow": "Anexă",
+   "heading": "Fusuri orare",
+   "sub": "Acest API folosește două tipuri de indicații temporale: zile calendaristice în fusul orar al proprietății și momente în UTC.",
+   "tage": {
+    "titel": "Zile calendaristice",
+    "text": "`check_in`, `check_out`, `date`, `from` și `to` sunt zile calendaristice în formatul `YYYY-MM-DD`, înțelese în fusul orar al proprietății. Nu conțin oră și nu sunt convertite în UTC.",
+    "merksatz": "`check_out` este ziua plecării; ultima noapte ocupată este noaptea precedentă. Patru nopți înseamnă patru zile de diferență între `check_in` și `check_out`."
+   },
+   "zeitpunkte": {
+    "titel": "Momente",
+    "text": "`created_at`, `updated_at`, `received_at`, `booked_at` și `cancelled_at` sunt momente conform ISO 8601 în UTC, cu `Z` la final."
+   },
+   "quelle": {
+    "titel": "booked_at și received_at",
+    "text": "`booked_at` este momentul rezervării la oaspete, la rezervările prin portal preluat din sursa portalului. `received_at` este momentul intrării în acest sistem. La o preluare în bloc, multe rezervări au aceeași secundă `received_at`.",
+    "merksatz": "Pentru „cele mai noi mai întâi” folosiți `booked_at` și tratați `null` ca necunoscut. `received_at` reflectă ordinea preluării, nu pe cea a rezervărilor."
+   },
+   "filter": {
+    "titel": "Filtrare după modificări",
+    "text": "`updated_since` primește un moment și returnează ce s-a modificat de atunci. Atenție la codificarea URL: `+` înseamnă spațiu într-o adresă — scrieți `Z` sau codificați ca `%2B`."
+   }
+  }
+ },
  "meta": {
   "title": "myNextDays – Platforma pentru proprietarii de cazări de vacanță",
   "description": "Platforma pentru hoteluri, agenții și proprietari de cazări de vacanță: channel manager, calendar, rezervare directă, comunicare cu oaspeții și facturare într-un singur loc. Construită în Danemarca, găzduită în UE. De la 19,90 €/lună. 30 de zile gratuit."

@@ -1,6 +1,6 @@
 // Webhooks: Ereignisse, Signatur, Wiederholungen.
 //
-// Der Signatur-Abschnitt ist der wichtigste der ganzen Seite: eine falsch
+// Der Signatur-Abschnitt ist der wichtigste des Leitfadens: eine falsch
 // geprüfte Signatur ist keine Fehlermeldung, sondern ein offener Endpunkt, an
 // den jeder erfundene Buchungen schicken kann. Deshalb steht hier nicht nur das
 // Verfahren, sondern fertiger Prüfcode samt der beiden Fallen (rohen Body
@@ -8,7 +8,15 @@
 import { useTranslations } from "next-intl";
 
 import { CodeBlock } from "@/components/entwickler/code-block";
-import { SectionHeading } from "@/components/marketing/section-kit";
+import {
+  DokuAbschnitt,
+  DokuKopf,
+  DokuListe,
+  DokuTabelle,
+  DokuTitel,
+  Merksatz,
+  Prosa,
+} from "@/components/entwickler/doku";
 import {
   BEISPIEL_SIGNATUR_PRUEFEN,
   BEISPIEL_WEBHOOK_ANLEGEN,
@@ -21,121 +29,87 @@ export function ApiWebhooks() {
   const tc = useTranslations("entwickler.code");
 
   return (
-    <section id="webhooks" className="scroll-mt-24 bg-background">
-      <div className="mx-auto max-w-7xl px-6 py-20">
-        <SectionHeading
-          eyebrow={t("eyebrow")}
-          heading={t("heading")}
-          sub={t("sub")}
-          align="left"
+    <div className="max-w-3xl pb-16">
+      <DokuKopf eyebrow={t("eyebrow")} titel={t("heading")} lead={t("sub")} />
+
+      <DokuAbschnitt id="katalog" titel={t("tabelle.ereignis")}>
+        <DokuTabelle kopf={[t("tabelle.ereignis"), t("tabelle.wann")]}>
+          {EREIGNISSE.map((e) => (
+            <tr key={e.name}>
+              <td className="py-2.5 pr-4 align-top font-mono text-xs text-foreground">
+                {e.name}
+              </td>
+              <td className="py-2.5">
+                <Prosa>{t(`ereignisse.${e.key}`)}</Prosa>
+              </td>
+            </tr>
+          ))}
+        </DokuTabelle>
+      </DokuAbschnitt>
+
+      <DokuAbschnitt id="anlegen" titel={t("anlegen.titel")}>
+        <p>
+          <Prosa>{t("anlegen.text")}</Prosa>
+        </p>
+        <CodeBlock
+          code={BEISPIEL_WEBHOOK_ANLEGEN}
+          titel={tc("anfrage")}
+          kopierenLabel={tc("kopieren")}
+          kopiertLabel={tc("kopiert")}
         />
+        <Merksatz>
+          <Prosa>{t("anlegen.secret")}</Prosa>
+        </Merksatz>
+      </DokuAbschnitt>
 
-        {/* -- Ereignis-Katalog -------------------------------------------- */}
-        <div className="mt-12 overflow-x-auto">
-          <table className="w-full min-w-[36rem] text-left text-sm">
-            <thead className="border-b border-border">
-              <tr>
-                <th className="py-2 pr-4 font-medium">{t("tabelle.ereignis")}</th>
-                <th className="py-2 font-medium">{t("tabelle.wann")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {EREIGNISSE.map((e) => (
-                <tr key={e.name}>
-                  <td className="py-2.5 pr-4 align-top font-mono text-xs">
-                    {e.name}
-                  </td>
-                  <td className="py-2.5 text-muted-foreground">
-                    {t(`ereignisse.${e.key}`)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <DokuAbschnitt id="nutzlast" titel={t("nutzlast.titel")}>
+        <p>
+          <Prosa>{t("nutzlast.text")}</Prosa>
+        </p>
+        <CodeBlock
+          code={BEISPIEL_WEBHOOK_NUTZLAST}
+          titel={tc("zustellung")}
+          kopierenLabel={tc("kopieren")}
+          kopiertLabel={tc("kopiert")}
+        />
+      </DokuAbschnitt>
 
-        <div className="mt-12 grid gap-8 lg:grid-cols-2">
-          <div>
-            <h3 className="font-display text-xl font-semibold">
-              {t("anlegen.titel")}
-            </h3>
-            <p className="mt-3 leading-relaxed text-muted-foreground">
-              {t("anlegen.text")}
-            </p>
-            <div className="mt-5">
-              <CodeBlock
-                code={BEISPIEL_WEBHOOK_ANLEGEN}
-                titel={tc("anfrage")}
-                kopierenLabel={tc("kopieren")}
-                kopiertLabel={tc("kopiert")}
-              />
-            </div>
-            <p className="mt-4 border-l-2 border-accent pl-4 text-sm font-medium">
-              {t("anlegen.secret")}
-            </p>
-          </div>
+      <DokuAbschnitt id="signatur" titel={t("signatur.titel")}>
+        <p>
+          <Prosa>{t("signatur.text")}</Prosa>
+        </p>
+        <p className="rounded-lg bg-surface-warm px-4 py-2.5 font-mono text-sm text-foreground">
+          MyNextDays-Signature: t=&lt;unix-sekunden&gt;,v1=&lt;hmac-sha256&gt;
+        </p>
+        <DokuListe
+          punkte={["roh", "alter", "vergleich"].map((k) =>
+            t(`signatur.schritte.${k}`),
+          )}
+        />
+        <CodeBlock
+          code={BEISPIEL_SIGNATUR_PRUEFEN}
+          titel={tc("pruefcode")}
+          kopierenLabel={tc("kopieren")}
+          kopiertLabel={tc("kopiert")}
+        />
+      </DokuAbschnitt>
 
-          <div>
-            <h3 className="font-display text-xl font-semibold">
-              {t("nutzlast.titel")}
-            </h3>
-            <p className="mt-3 leading-relaxed text-muted-foreground">
-              {t("nutzlast.text")}
-            </p>
-            <div className="mt-5">
-              <CodeBlock
-                code={BEISPIEL_WEBHOOK_NUTZLAST}
-                titel={tc("zustellung")}
-                kopierenLabel={tc("kopieren")}
-                kopiertLabel={tc("kopiert")}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* -- Signatur ---------------------------------------------------- */}
-        <div id="signatur" className="mt-16 scroll-mt-24">
-          <h3 className="font-display text-xl font-semibold">
-            {t("signatur.titel")}
-          </h3>
-          <p className="mt-3 max-w-3xl leading-relaxed text-muted-foreground">
-            {t("signatur.text")}
-          </p>
-          <p className="mt-4 max-w-3xl rounded-xl bg-surface-warm px-4 py-3 font-mono text-sm">
-            MyNextDays-Signature: t=&lt;unix-sekunden&gt;,v1=&lt;hmac-sha256&gt;
-          </p>
-          <ol className="mt-5 max-w-3xl space-y-2 text-muted-foreground">
-            {["roh", "alter", "vergleich"].map((k) => (
-              <li key={k} className="flex gap-3">
-                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-accent" />
-                <span>{t(`signatur.schritte.${k}`)}</span>
-              </li>
-            ))}
-          </ol>
-          <div className="mt-6 max-w-4xl">
-            <CodeBlock
-              code={BEISPIEL_SIGNATUR_PRUEFEN}
-              titel={tc("pruefcode")}
-              kopierenLabel={tc("kopieren")}
-              kopiertLabel={tc("kopiert")}
-            />
-          </div>
-        </div>
-
-        {/* -- Zustellverhalten -------------------------------------------- */}
-        <div className="mt-16 grid gap-6 md:grid-cols-3">
-          {["wiederholung", "reihenfolge", "doppelt"].map((k) => (
-            <div key={k} className="rounded-2xl border border-border p-6">
-              <h4 className="font-display font-semibold">
-                {t(`verhalten.${k}.titel`)}
-              </h4>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {t(`verhalten.${k}.text`)}
+      {/* „nachholen" steht bewusst hier und nicht in einer Fußnote: es ist die
+          Antwort auf die Frage, die jeden Integrator irgendwann trifft („mein
+          Server war zwei Stunden weg — was jetzt?"). Ohne sie ist der
+          Abruf-Endpunkt für Kunden unsichtbar. */}
+      <DokuAbschnitt id="zustellung" titel={t("verhalten.wiederholung.titel")}>
+        {(["wiederholung", "reihenfolge", "doppelt", "nachholen"] as const).map(
+          (k) => (
+            <div key={k}>
+              <DokuTitel>{t(`verhalten.${k}.titel`)}</DokuTitel>
+              <p className="mt-1.5">
+                <Prosa>{t(`verhalten.${k}.text`)}</Prosa>
               </p>
             </div>
-          ))}
-        </div>
-      </div>
-    </section>
+          ),
+        )}
+      </DokuAbschnitt>
+    </div>
   );
 }

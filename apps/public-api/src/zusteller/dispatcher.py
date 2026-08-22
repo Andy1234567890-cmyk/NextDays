@@ -18,6 +18,12 @@ Der Ablauf je Takt:
      IP pinnen, senden.
   3. Erfolg (2xx) → `delivered`. Fehler → Versuch zählen, nächsten Zeitpunkt mit
      exponentiellem Abstand setzen, nach `webhook_max_attempts` → `failed`.
+  4. Scheitert ein ABO dauerhaft (`webhook_abo_abschalten_ab` aufeinander-
+     folgende Fehlschläge), wird es abgeschaltet — mit benanntem Grund in
+     `last_error`. Ein Abo, das stumm nichts mehr bekommt, ist der schlimmste
+     Zustand: der Partner sucht den Fehler bei sich, während wir längst
+     aufgegeben haben. Ein Erfolg setzt den Zähler zurück, es zählen also nur
+     UNUNTERBROCHENE Fehlschläge.
 
 **Warum die URL bei JEDER Zustellung neu geprüft wird**, obwohl sie beim Anlegen
 schon geprüft war: zwischen Anlegen und Zustellung liegen Minuten bis Monate. Ein
@@ -199,6 +205,7 @@ def _fehler_vermerken(
     status: int | None,
     fehler: str | None,
     max_versuche: int,
+    abschalten_ab: int,
 ) -> None:
     versuche = int(zustellung["attempts"]) + 1
     endgueltig = versuche >= max_versuche
@@ -226,12 +233,35 @@ def _fehler_vermerken(
         .execute()
     ).data
     bisher = int((zeilen[0].get("failure_count") if zeilen else 0) or 0)
-    db.table("public_api_webhooks").update(
-        {"failure_count": bisher + 1, "last_error": (fehler or "")[:500]}
-    ).eq("id", zustellung["webhook_id"]).execute()
+    neu = bisher + 1
+    aenderung: dict[str, object] = {
+        "failure_count": neu,
+        "last_error": (fehler or "")[:500],
+    }
+    if neu >= abschalten_ab:
+        # Abschalten MIT benanntem Grund. Ein Abo, das stumm nichts mehr
+        # bekommt, ist der schlimmste Zustand: der Partner sucht den Fehler bei
+        # sich, während wir längst aufgegeben haben. Der Grund steht in
+        # `last_error` und ist über GET /v1/webhooks sichtbar — dort ist
+        # `active` dann false.
+        aenderung["revoked_at"] = datetime.now(UTC).isoformat()
+        aenderung["last_error"] = (
+            f"Abo nach {neu} aufeinanderfolgenden Fehlversuchen abgeschaltet. "
+            f"Letzter Fehler: {(fehler or 'unbekannt')[:300]}"
+        )
+        log.error(
+            "webhook_abo_abgeschaltet",
+            webhook_id=str(zustellung["webhook_id"]),
+            fehlversuche=neu,
+        )
+    db.table("public_api_webhooks").update(aenderung).eq(
+        "id", zustellung["webhook_id"]
+    ).execute()
 
 
-async def takt(db: Client, *, timeout: float, max_versuche: int) -> int:
+async def takt(
+    db: Client, *, timeout: float, max_versuche: int, abschalten_ab: int
+) -> int:
     """Einen Durchgang ausführen. Gibt die Zahl der bearbeiteten Zustellungen zurück."""
     zustellungen = _faellige(db)
     if not zustellungen:
@@ -265,7 +295,7 @@ async def takt(db: Client, *, timeout: float, max_versuche: int) -> int:
             _erfolg_vermerken(db, z, status)
             log.info("zustellung_ok", event=ereignis["event"], status=status)
         else:
-            _fehler_vermerken(db, z, status, fehler, max_versuche)
+            _fehler_vermerken(db, z, status, fehler, max_versuche, abschalten_ab)
             log.warning(
                 "zustellung_fehlgeschlagen",
                 event=ereignis["event"],
@@ -287,6 +317,7 @@ async def hauptschleife() -> None:
                 db,
                 timeout=settings.webhook_timeout_seconds,
                 max_versuche=settings.webhook_max_attempts,
+                abschalten_ab=settings.webhook_abo_abschalten_ab,
             )
         except Exception as exc:  # noqa: BLE001 — die Schleife darf nie sterben
             # Ein Fehler in EINEM Takt (DB kurz weg) darf den Zusteller nicht

@@ -17,13 +17,20 @@
   },
   "inhalt": {
    "titel": "Auf dieser Seite",
-   "schnellstart": "Schnellstart",
-   "konzepte": "Konzepte",
-   "konventionen": "Konventionen",
+   "schnellstart": "Erste Schritte",
+   "konzepte": "Datenmodell",
+   "konventionen": "Blättern",
    "endpunkte": "Endpunkte",
    "webhooks": "Webhooks",
-   "grenzen": "Grenzen",
-   "hilfe": "Hilfe"
+   "grenzen": "Einschränkungen",
+   "hilfe": "Support",
+   "start": "Übersicht",
+   "zugang": "Authentifizierung",
+   "fehler": "Fehler",
+   "limits": "Ratenbegrenzung",
+   "fehlercodes": "Fehlercodes",
+   "lokalisierung": "Lokalisierung",
+   "zeit": "Zeitzonen"
   },
   "code": {
    "kopieren": "Kopieren",
@@ -41,7 +48,7 @@
     "titel": "Zugang anlegen",
     "text": "Im Dashboard einen Zugang erzeugen und dabei festlegen, was er darf: Rechte je Bereich und, wenn gewünscht, nur bestimmte Objekte. Ein Zugang für den Reinigungsplan braucht keinen Zugriff auf Umsätze.",
     "pfad": "Konto → API-Zugang",
-    "hinweis": "Das Client-Secret wird genau einmal angezeigt. Danach steht in der Datenbank nur noch sein Hash — wer es verliert, lässt es neu erzeugen."
+    "hinweis": "Das `client_secret` wird einmal angezeigt; gespeichert wird nur sein Hash. Ein verlorenes Secret wird nicht wiederhergestellt, sondern ersetzt."
    },
    "schritt2": {
     "titel": "Token holen",
@@ -57,7 +64,7 @@
   "konzepte": {
    "eyebrow": "Konzepte",
    "heading": "Vier Dinge, die du vorher wissen solltest",
-   "sub": "Wer diese vier Punkte überliest, baut eine Integration, die plausibel aussieht und falsche Zahlen liefert.",
+   "sub": "Vier Festlegungen, die das Verhalten der API bestimmen. Sie weichen von verbreiteten Annahmen ab.",
    "objekt": {
     "titel": "Ein Objekt ist ein Einheiten-Typ",
     "text": "Ein `property` ist genau ein Typ: ein Zimmertyp im Hotel oder ein Ferienobjekt. Darunter hängen seine Einheiten (`units`) — im Normalfall genau eine, bei fünf gleichen Studios eben fünf. Verkauft wird die Einheit, geführt und bepreist wird der Typ.",
@@ -65,12 +72,12 @@
    },
    "waehrung": {
     "titel": "Jeder Betrag trägt seine Währung",
-    "text": "Es gibt keinen Standardwert. Jedes Objekt hat seine Währung, und jeder Betrag in einer Antwort nennt sie mit. Wir bedienen 27 EU-Länder plus Drittstaaten.",
+    "text": "Es gibt keinen Standardwert. Jedes Objekt hat eine Währung, und jeder Betrag in einer Antwort nennt sie mit.",
     "folge": "Fehlt die Währung an einem Objekt, ist das ein Datenfehler und der Aufruf schlägt mit 422 fehl — es wird kein „EUR“ eingesetzt. Beim Buchen muss deine Währung zur Währung des Objekts passen."
    },
    "zeit": {
     "titel": "Zwei verschiedene Zeitpunkte",
-    "text": "`booked_at` ist der Zeitpunkt, zu dem der Gast gebucht hat — aus der Quelle des Portals, und `null`, wenn das Portal ihn nicht liefert. `received_at` ist der Eingang bei uns.",
+    "text": "`booked_at` ist der Zeitpunkt der Buchung beim Gast — aus der Quelle des Portals, `null`, wenn das Portal ihn nicht liefert. `received_at` ist der Eingang in diesem System.",
     "folge": "Sortiere „neueste zuerst“ über `booked_at`, nicht über `received_at`: bei einem Sammel-Import tragen Dutzende Buchungen dieselbe Sekunde. Zeitstempel sind UTC, Datumsfelder sind Kalendertage in der Zeitzone des Objekts."
    },
    "kanaele": {
@@ -91,13 +98,16 @@
    },
    "blaettern": {
     "titel": "Blättern",
-    "text": "Jede Liste antwortet mit `data` und `pagination`. Geblättert wird über `limit` und `offset`; die Gesamtzahl kostet eine zusätzliche Zählung und wird deshalb nur auf Anfrage geliefert.",
+    "text": "Jede Liste antwortet mit `data` und `pagination`. Geblättert wird über einen **Cursor**: du schickst die `id` des letzten Elements der Vorseite als `starting_after`. Fehlt `next_starting_after` in der Antwort, ist der Durchgang fertig.",
     "felder": {
+     "starting_after": "Die `id` des letzten Elements der Vorseite. Der empfohlene Weg — stabil, auch wenn sich die Liste zwischen zwei Seiten ändert. Eine unbekannte oder gelöschte `id` ergibt 422, keine leere Seite.",
+     "next_starting_after": "Steht in `pagination`, solange es weitergeht: der Wert für dein nächstes `starting_after`. Fehlt er, bist du am Ende.",
      "limit": "Zeilen je Seite. Standard 50, Höchstwert 200 — ein größerer Wert ergibt 422, keine gekürzte Seite.",
-     "offset": "Zu überspringende Zeilen. Die Sortierung ist stabil, damit keine Zeile doppelt oder gar nicht kommt.",
+     "offset": "Zu überspringende Zeilen — für einen einmaligen Blick auf eine bestimmte Seite. Zusammen mit `starting_after` ergibt es 422: zwei Positionsangaben in einer Anfrage haben keine widerspruchsfreie Bedeutung.",
      "include_total": "`true` liefert zusätzlich `total`. Nur anfordern, wenn du die Zahl anzeigst.",
      "has_more": "Steht in jeder Antwort und sagt, ob eine weitere Seite existiert — kein Raten, keine Extra-Runde."
-    }
+    },
+    "warumCursor": "Warum nicht einfach `offset`: der beschreibt eine POSITION in der Liste. Kommt zwischen Seite 1 und Seite 2 eine Buchung dazu, rutscht alles um eine Stelle — `offset=50` überspringt dann eine Zeile, beim Löschen kommt eine doppelt. In deiner Datenbank fehlt danach eine Buchung, und nichts in der Antwort verrät es. Der Cursor benennt den letzten Datensatz, den du gesehen hast, und kann deshalb nicht verrutschen."
    },
    "fehler": {
     "titel": "Fehler",
@@ -107,7 +117,7 @@
      "ungueltigeZugangsdaten": "Client-ID oder Secret falsch, oder der Zugang ist widerrufen.",
      "scopeFehlt": "Token gültig, aber dieser Zugang hat das nötige Recht nicht. Der fehlende Scope steht im Fehler.",
      "objektNichtErlaubt": "Der Zugang ist auf bestimmte Objekte beschränkt; dieses gehört nicht dazu.",
-     "nichtGefunden": "Existiert nicht — oder gehört einem anderen Betrieb. Bewusst nicht unterscheidbar.",
+     "nichtGefunden": "Nicht vorhanden oder einem anderen Betrieb zugeordnet — beide Fälle antworten gleich.",
      "zeitraumNichtVerfuegbar": "Belegt, gesperrt oder vom Verkauf ausgenommen. Es ist keine halbe Buchung entstanden.",
      "idempotenzInArbeit": "Ein Aufruf mit diesem Idempotency-Key läuft noch. Kurz warten, dann wiederholen.",
      "aboBestehtBereits": "Für diese Adresse besteht schon ein aktives Webhook-Abo dieses Zugangs.",
@@ -138,52 +148,6 @@
     }
    }
   },
-  "endpunkte": {
-   "eyebrow": "Endpunkte",
-   "heading": "Was es gibt, und welches Recht es braucht",
-   "sub": "Die Übersicht je Bereich. Jeder Parameter und jedes Feld steht im Schema — es entsteht aus dem Code und kann deshalb nicht veralten.",
-   "ohneScope": "kein Recht nötig",
-   "gruppen": {
-    "auth": {
-     "titel": "Auth & Selbstauskunft",
-     "text": "Token holen und nachsehen, was dieser Zugang darf."
-    },
-    "objekte": {
-     "titel": "Objekte & Einheiten",
-     "text": "Die Typen des Betriebs samt Einheiten, Adresse, Ausstattung, Währung und Kanal-Sichtbarkeit."
-    },
-    "verfuegbarkeit": {
-     "titel": "Verfügbarkeit",
-     "text": "Freie Einheiten je Tag oder als Zeitraum-Spannen; Nächte sperren, freigeben oder den Verkauf ganz stoppen. Gebuchte Nächte werden nie überschrieben."
-    },
-    "preise": {
-     "titel": "Preise & Aufenthaltsregeln",
-     "text": "Rate-Pläne, Tagespreise, Mindest- und Höchstaufenthalt, An- und Abreisesperren — auch für einzelne Wochentage im Zeitraum."
-    },
-    "buchungen": {
-     "titel": "Buchungen",
-     "text": "Buchungen lesen und anlegen. Das Anlegen setzt Buchung und Kalender in einem Schritt — entweder beides oder nichts."
-    },
-    "gaeste": {
-     "titel": "Gäste",
-     "text": "Stammdaten, nur lesend und bewusst sparsam: keine Ausweisdaten, kein Geburtsdatum, keine Umsatzhistorie."
-    },
-    "aufgaben": {
-     "titel": "Aufgaben",
-     "text": "Reinigung und Wartung — anlegen, zuweisen, abschließen. Für die Anbindung eines eigenen Dienstplans."
-    },
-    "webhooks": {
-     "titel": "Webhooks",
-     "text": "Ereignis-Abos verwalten und den Katalog abrufen. Der Katalog kommt aus derselben Quelle, gegen die ein Abo geprüft wird."
-    }
-   },
-   "schema": {
-    "titel": "Die vollständige Referenz",
-    "text": "Jeder Parameter, jedes Feld, jeder Beispielkörper — als OpenAPI 3.1. Die Datei entsteht aus dem Code, du kannst also einen Client daraus generieren und darauf bauen, dass sie zur laufenden API passt. In der Konsole lässt sich jeder Aufruf direkt ausprobieren.",
-    "konsole": "Konsole öffnen",
-    "datei": "openapi.json"
-   }
-  },
   "webhooks": {
    "eyebrow": "Webhooks",
    "heading": "Ereignisse statt Nachfragen",
@@ -212,7 +176,7 @@
    },
    "signatur": {
     "titel": "Signatur prüfen",
-    "text": "Jede Zustellung trägt einen Header mit Zeitstempel und HMAC-SHA256 über `<zeitstempel>.<body>`, berechnet mit dem Secret deines Abos. Weil der Zeitstempel mitsigniert ist, erkennst du eine aufgezeichnete und später erneut eingespielte Zustellung — bei einer Signatur nur über den Body ist das nicht möglich.",
+    "text": "Jede Zustellung trägt einen Header mit Zeitstempel und HMAC-SHA256 über `ZEITSTEMPEL.BODY`, berechnet mit dem Secret deines Abos. Weil der Zeitstempel mitsigniert ist, erkennst du eine aufgezeichnete und später erneut eingespielte Zustellung — bei einer Signatur nur über den Body ist das nicht möglich.",
     "schritte": {
      "roh": "Nimm den ROHEN Körper der Anfrage, nicht das geparste und neu serialisierte Objekt — eine andere Byte-Folge ergibt eine andere Signatur. Das ist der häufigste Grund für „Signatur passt nicht“.",
      "alter": "Prüfe das Alter über den Zeitstempel; fünf Minuten Toleranz sind ein guter Wert.",
@@ -231,38 +195,32 @@
     "doppelt": {
      "titel": "Doppelte Zustellung",
      "text": "Ist unwahrscheinlich, aber möglich — behandle die Ereignis-`id` als Schlüssel und verarbeite jede nur einmal. Diese Zusage gilt für jeden Webhook-Anbieter, nicht nur für diesen."
+    },
+    "nachholen": {
+     "titel": "Nach einem Ausfall nachholen",
+     "text": "Waren deine Server weg, holst du die verpassten Ereignisse über `GET /v1/events?since=…` nach — älteste zuerst, mit denselben `id`s wie die Zustellung, höchstens 30 Tage zurück. Ein Push allein ist keine Zustellgarantie: irgendwann laufen die Wiederholversuche aus, und ohne diesen Schritt fehlen dir genau die Ereignisse, von denen du nie erfahren hast."
     }
    }
   },
   "grenzen": {
    "eyebrow": "Grenzen",
-   "heading": "Was v1 nicht kann",
-   "sub": "Ehrlich statt halb: jeder Punkt hier wäre schnell gebaut und würde eine zweite Wahrheit über Geld, Verkauf oder Kommunikation erzeugen. Das kostet mehr als es bringt.",
+   "heading": "Einschränkungen",
+   "sub": "Zwei Vorgänge sind über diese API nicht möglich. Beides folgt aus dem Datenmodell. Stornieren, Verschieben und Preisberechnung sind möglich.",
    "stattdessen": "Stattdessen:",
-   "storno": {
-    "titel": "Buchungen ändern und stornieren",
-    "text": "Eine Stornierung ist kein Statusfeld: Nächte müssen freigegeben, die Portale informiert, die stornierende Partei und ihr Grund festgehalten, Stornogebühren und die Auszahlungs-Karenz gerechnet werden. Diese Kette lebt an einer Stelle und bleibt dort, bis sie geteilt nutzbar ist.",
-    "ausweg": "Storno über das Dashboard oder die App; über `reservation.cancelled` erfährt deine Integration davon sofort."
-   },
-   "quote": {
-    "titel": "Aufenthaltspreis berechnen",
-    "text": "„Was kosten diese vier Nächte für zwei Erwachsene und einen Hund“ ist eine eigene Rechnung mit Saisons, Rabatten, Zusatzleistungen, Abgaben und Steuern. Ein zweiter Rechner hier würde irgendwann eine andere Summe liefern als der, den Gast und Betrieb sehen.",
-    "ausweg": "Tagespreise und Regeln über `/v1/rates` lesen und selbst aufsummieren — oder den Gesamtpreis beim Anlegen einer Buchung mitschicken."
-   },
    "gaeste": {
     "titel": "Gäste anlegen und ändern",
-    "text": "Gastdaten entstehen dort, wo der Gast sie eingibt oder das Portal sie liefert. Ein Schreibweg über die API wäre eine dritte Quelle für dieselbe Person.",
-    "ausweg": "Beim Anlegen einer Buchung Gastdaten mitschicken — vorhandene Gäste werden über die E-Mail-Adresse wiedererkannt."
+    "text": "Gastdaten entstehen bei der Eingabe durch den Gast oder über das Portal. Ein Schreibweg hier wäre eine dritte Quelle für dieselbe Person.",
+    "ausweg": "Beim Anlegen einer Buchung Gastdaten mitschicken — vorhandene Gäste werden über die E-Mail-Adresse wiedererkannt. Kontaktfelder einer bestehenden Buchung lassen sich über `PATCH /v1/reservations/'{'id}` pflegen."
    },
    "nachrichten": {
-    "titel": "Nachrichten an Gäste",
-    "text": "Der Posteingang hängt an den Kanälen der Portale, an Vorlagen und an Automatiken. Eine API, die daneben sendet, erzeugt Nachrichten ohne Verlauf.",
-    "ausweg": "Posteingang im Dashboard oder in der App."
+    "titel": "Gespräch eröffnen",
+    "text": "Nachrichten lesen und in ein bestehendes Gespräch schreiben ist möglich (`/v1/reservations/'{'id}/messages`). Ein neues Gespräch anzulegen nicht: ein Gesprächsfaden gehört immer einem Marktplatz-Gastkonto, und ein API-Zugang des Betriebs ist kein solches Konto.",
+    "ausweg": "Das Gespräch entsteht mit der ersten Nachricht des Gastes oder über das Dashboard; danach kann die API darin schreiben."
    },
    "finanzen": {
-    "titel": "Rechnungen, Zahlungen, Auszahlungen",
-    "text": "Finanzdaten sind auf Datenbankebene gesperrt und werden über diese API nicht ausgeliefert — auch nicht lesend. Ein Token, das abfließt, soll keine Umsätze offenlegen.",
-    "ausweg": "Buchhaltung und Eigentümer-Berichte im Dashboard; Exporte gibt es dort als Datei."
+    "titel": "Zahlung einziehen",
+    "text": "Lesbar sind Zahlungen und terminierte Aufforderungen (`/v1/reservations/'{'id}/payments`) sowie Zahlungsplan und Stornostaffel (`/v1/properties/'{'id}/booking-conditions`). Der Einzug läuft über die Buchungsstrecke des Gastes mit Zahlungsabsichten, nicht über einen versendbaren Link.",
+    "ausweg": "Zahlungsaufforderungen entstehen im Dashboard; die API liest ihren Stand und die Ereignisse dazu."
    }
   },
   "hilfe": {
@@ -285,7 +243,7 @@
     }
    },
    "versionen": {
-    "titel": "Was wir dir zusagen",
+    "titel": "Versionierung",
     "text": "Eine API ist ein Versprechen. Diese vier Punkte gelten für v1:",
     "zusagen": {
      "pfad": "Die Version steht im Pfad. Eine brechende Änderung bekommt `/v2`; `/v1` läuft daneben weiter.",
@@ -293,6 +251,174 @@
      "frist": "Wird eine Version abgekündigt, nennen wir ein Datum mit mindestens zwölf Monaten Frist und melden uns bei jedem Betrieb mit einem aktiven Zugang.",
      "changelog": "Änderungen stehen in der OpenAPI-Datei und in dieser Seite. Es gibt keine stille Änderung an einem Feld."
     }
+   }
+  },
+  "kopf": {
+   "hilfe": "Hilfe-Center",
+   "zurueck": "Zur Website"
+  },
+  "sidebar": {
+   "sprung": "Springen zu …",
+   "keineTreffer": "Kein Endpunkt und kein Kapitel passt dazu.",
+   "leitfaden": "Leitfaden",
+   "referenz": "API-Referenz",
+   "tocTitel": "Auf dieser Seite",
+   "version": "myNextDays Öffentliche API v1"
+  },
+  "referenz": {
+   "scope": "Nötiges Recht:",
+   "pfadParameter": "Pfad-Parameter",
+   "queryParameter": "Query-Parameter",
+   "headerParameter": "Header",
+   "koerper": "Anfrage-Körper",
+   "antworten": "Antworten",
+   "erlaubt": "Erlaubt:",
+   "pflicht": "pflicht",
+   "standard": "Standard",
+   "sprache": "Sprache",
+   "zugang": "Zugang",
+   "tokenHinweis": "Nur in diesem Browser, nur für „Ausprobieren“ — der Wert wird nicht gespeichert und nicht an uns geschickt.",
+   "ausprobieren": "Ausprobieren",
+   "laeuft": "Läuft …",
+   "anfrage": "Anfrage",
+   "antwort": "Antwort",
+   "beispiel": "Beispiel",
+   "kopieren": "Kopieren",
+   "kopiert": "Kopiert",
+   "fehlerNetz": "Die Anfrage hat den Dienst nicht erreicht. Häufigste Ursachen: der Dienst antwortet gerade nicht, oder der Browser hat die Anfrage wegen fehlender CORS-Freigabe abgebrochen. Derselbe Aufruf über curl aus dem Code-Feld zeigt, was der Dienst wirklich sagt.",
+   "keinToken": "Ohne Token antwortet der Aufruf mit 401 — das ist der erwartete Weg."
+  },
+  "start": {
+   "eyebrow": "Öffentliche API",
+   "titel": "Baue gegen myNextDays",
+   "unterzeile": "Eine REST-API für Objekte, Verfügbarkeit, Preise, Buchungen, Gäste und Aufgaben — lesen und schreiben, mit Storno, Verschieben und Preisvorschau. Der Leitfaden erklärt die Regeln, die Referenz hat jeden Endpunkt mit allen Parametern und einem Feld, um ihn auszuprobieren.",
+   "basisLabel": "Basis-Adresse",
+   "versionLabel": "Version",
+   "versionHinweis": "im Pfad",
+   "schemaTitel": "Schema",
+   "schemaText": "OpenAPI 3.1, erzeugt aus dem Code. Taugt als Eingabe für die üblichen Client-Generatoren.",
+   "woAnfangen": "Wo anfangen",
+   "erstLesen": "Erst lesen",
+   "dannBauen": "Dann bauen"
+  },
+  "bereiche": {
+   "leitfaden": "Dokumentation",
+   "referenz": "API-Referenz"
+  },
+  "gruppen": {
+   "ueberblick": "Grundlagen",
+   "anhang": "Anhang"
+  },
+  "weiter": {
+   "naechste": "Nächste Seite",
+   "zurReferenz": "Weiter zur API-Referenz"
+  },
+  "referenzUebersicht": {
+   "eyebrow": "API-Referenz",
+   "titel": "Alle Endpunkte",
+   "sub": "Jeder Endpunkt hat eine eigene Seite mit allen Parametern, dem Anfrage-Körper, den Antworten und einem Feld, in dem du den Aufruf direkt ausprobieren kannst."
+  },
+  "zugang": {
+   "eyebrow": "Authentifizierung",
+   "heading": "Authentifizierung",
+   "sub": "OAuth 2.0 mit `client_credentials`. Ein Zugang gehört genau einem Betrieb; es gibt keinen Schlüssel über mehrere Betriebe hinweg.",
+   "ablauf": {
+    "titel": "Ablauf",
+    "text": "`client_credentials` ist der Weg für Programme, die für sich selbst handeln. Es gibt keinen Zustimmungsdialog und keinen Refresh-Token.",
+    "schritte": {
+     "anlegen": "Zugang im Dashboard anlegen: Konto → API-Zugang. Das `client_secret` wird einmal angezeigt und ist danach nicht mehr abrufbar.",
+     "tauschen": "`POST /v1/oauth/token` mit `client_id` und `client_secret`. Die Antwort enthält `access_token`, `expires_in` (3600) und die bewilligten Rechte.",
+     "senden": "Token als `Authorization: Bearer ACCESS_TOKEN` an jedem Aufruf mitschicken. Nach Ablauf antwortet die API mit 401 und dem Code `token_expired`."
+    },
+    "merksatz": "Token im Speicher halten, nicht je Aufruf neu holen. Ein Tausch je Anfrage läuft in die Ratenbegrenzung des Token-Endpunkts (10/Minute)."
+   },
+   "rechte": {
+    "titel": "Rechte",
+    "text": "Rechte haben die Form `bereich:richtung`, etwa `reservations:read` oder `rates:write`. Fehlt ein Recht, antwortet der Endpunkt mit 403 und dem Code `insufficient_scope`.",
+    "merksatz": "Nur die Rechte vergeben, die die Integration braucht. Ein verlorener Schlüssel kann dann nichts überschreiben, was er nie lesen sollte."
+   },
+   "objekte": {
+    "titel": "Objekt-Beschränkung",
+    "text": "Ein Zugang kann auf bestimmte Objekte beschränkt sein. Er sieht in Listen nur diese; ein Aufruf mit einer anderen Objekt-ID antwortet mit 403 und dem Code `objekt_nicht_erlaubt`."
+   },
+   "selbstauskunft": {
+    "titel": "Rechte prüfen",
+    "text": "`GET /v1/me` liefert Betrieb, Rechte und Objekt-Beschränkung des Tokens — der erste Aufruf beim Einrichten einer Integration."
+   }
+  },
+  "fehler": {
+   "eyebrow": "Fehler",
+   "heading": "Wie Fehler aussehen",
+   "sub": "Jeder Fehler ist ein HTTP-Statuscode plus ein Körper nach RFC 9457 (`application/problem+json`). Kein Fehler kommt mit Status 200.",
+   "aufbau": {
+    "titel": "Aufbau",
+    "text": "`code` ist der stabile, maschinenlesbare Name des Fehlers. `detail` ist ein Text für Menschen und kann sich jederzeit ändern.",
+    "felder": {
+     "type": "Adresse der Beschreibung dieses Fehlertyps — die Liste der Fehlercodes im Anhang.",
+     "title": "Kurzer Name des Fehlertyps.",
+     "status": "Der HTTP-Statuscode.",
+     "detail": "Beschreibung für Menschen.",
+     "code": "Stabiler Name des Fehlers. Dieses Feld auswerten.",
+     "request_id": "Kennung der Anfrage. Bei einer Support-Anfrage mitschicken."
+    },
+    "merksatz": "Auf `code` verzweigen, nicht auf `detail`. Der Text ist keine Schnittstelle."
+   },
+   "klassen": {
+    "titel": "Statusklassen",
+    "vier": "4xx — die Anfrage ist das Problem: fehlendes Recht, unbekannte ID, ungültiger Wert, belegter Zeitraum. Ein Wiederholen ändert nichts.",
+    "fuenf": "5xx — serverseitiger Fehler. Wiederholen mit wachsendem Abstand.",
+    "neun": "429 — Ratenbegrenzung erreicht. `Retry-After` nennt die Wartezeit in Sekunden."
+   }
+  },
+  "limits": {
+   "eyebrow": "Ratenbegrenzung",
+   "heading": "Wie viele Aufrufe erlaubt sind",
+   "sub": "Begrenzt wird je Zugang, nicht je IP. Es gibt drei Eimer mit eigenen Werten für Lesen, Schreiben und Token-Ausgabe."
+  },
+  "fehlercodes": {
+   "eyebrow": "Anhang",
+   "heading": "Fehlercodes",
+   "sub": "Alle `code`-Werte dieser API. Jede Zeile hat einen Anker; die `type`-Adresse einer Fehlerantwort verweist darauf."
+  },
+  "lokalisierung": {
+   "eyebrow": "Anhang",
+   "heading": "Lokalisierung",
+   "sub": "Sprache und Währung kommen aus den Daten. Beide Felder können leer sein; keines hat einen Standardwert.",
+   "waehrung": {
+    "titel": "Währung",
+    "text": "Jeder Betrag trägt einen `currency`-Code nach ISO 4217. Es gibt keinen Standardwert und keine Umrechnung.",
+    "merksatz": "Beim Anlegen einer Buchung muss `currency` der Währung des Objekts entsprechen. Bei Abweichung: 422 mit dem Code `currency_mismatch`."
+   },
+   "sprache": {
+    "titel": "Sprache",
+    "text": "`language` ist ein zweibuchstabiger Code nach ISO 639-1, etwa `de`, `da`, `en`. Der Wert kommt aus der Buchung oder vom Portal und kann leer sein. Leer bedeutet unbekannt."
+   },
+   "texte": {
+    "titel": "Texte der API",
+    "text": "Feldnamen, `code`-Werte und Enum-Werte sind englisch und Teil des Vertrags. Die `detail`-Texte einer Fehlerantwort richten sich an Menschen und können sich ändern — eigene Meldungen anhand von `code` anzeigen."
+   }
+  },
+  "zeit": {
+   "eyebrow": "Anhang",
+   "heading": "Zeitzonen",
+   "sub": "Diese API verwendet zwei Arten von Zeitangaben: Kalendertage in der Zeitzone des Objekts und Zeitpunkte in UTC.",
+   "tage": {
+    "titel": "Kalendertage",
+    "text": "`check_in`, `check_out`, `date`, `from` und `to` sind Kalendertage im Format `YYYY-MM-DD`, gemeint in der Zeitzone des Objekts. Sie tragen keine Uhrzeit und werden nicht nach UTC umgerechnet.",
+    "merksatz": "`check_out` ist der Abreisetag; die letzte belegte Nacht ist die Nacht davor. Vier Nächte bedeuten vier Tage Abstand zwischen `check_in` und `check_out`."
+   },
+   "zeitpunkte": {
+    "titel": "Zeitpunkte",
+    "text": "`created_at`, `updated_at`, `received_at`, `booked_at` und `cancelled_at` sind Zeitpunkte nach ISO 8601 in UTC mit `Z` am Ende."
+   },
+   "quelle": {
+    "titel": "booked_at und received_at",
+    "text": "`booked_at` ist der Zeitpunkt der Buchung beim Gast, bei Portalbuchungen aus der Quelle des Portals. `received_at` ist der Eingang in diesem System. Bei einem Sammel-Abruf tragen viele Buchungen dieselbe `received_at`-Sekunde.",
+    "merksatz": "Für „neueste zuerst“ `booked_at` verwenden und `null` als unbekannt behandeln. `received_at` gibt die Reihenfolge des Abrufs wieder, nicht die der Buchungen."
+   },
+   "filter": {
+    "titel": "Nach Änderungen filtern",
+    "text": "`updated_since` nimmt einen Zeitpunkt und liefert, was sich seither geändert hat. Achtung bei der URL-Kodierung: `+` bedeutet in einer Adresse ein Leerzeichen — `Z` schreiben oder als `%2B` kodieren."
    }
   }
  },

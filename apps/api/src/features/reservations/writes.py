@@ -634,6 +634,49 @@ class WritesMixin(ReservationsBase):
             check_out=check_out.isoformat(),
         )
 
+    def _entwerte_sperrantrag(self, tenant_id: str, current: dict) -> None:
+        """Den genehmigten Sperrantrag dieser Buchung auf `rejected` setzen.
+
+        Zielzustand ist `rejected` und nicht `pending`: Das Enum aus 0014 kennt
+        nur drei Zustaende, und ein Zurueck auf `pending` liesse den Antrag
+        erneut in der Warteschlange auftauchen, obwohl er laengst behandelt
+        wurde — dieselbe Begruendung wie in `sperrantraege.zuruecknehmen`.
+
+        Der Filter auf `status='approved'` macht die Methode idempotent
+        (Wurzel 2) UND verhindert die Rekursion: Kommt der Storno aus dem
+        Widerruf selbst (`zuruecknehmen` → `_eigennutzung_stornieren` →
+        `cancel`), hat der Claim den Antrag bereits auf `rejected` gesetzt, und
+        dieses Update trifft nichts. Ein zweiter Storno auf dieselbe Buchung
+        ebenso.
+
+        Best-effort (Wurzel 5): die Buchung IST an dieser Stelle bereits
+        storniert und die Naechte sind frei. Kippt das Update, darf das den
+        Vorgang nicht zurueckdrehen — der Fehlschlag wird laut protokolliert,
+        damit ein haengengebliebener Antrag auffindbar bleibt.
+        """
+        antrag_id = current.get("block_request_id")
+        if not antrag_id:
+            return
+        try:
+            self._db().table("block_requests").update(
+                {"status": "rejected"}
+            ).eq("id", str(antrag_id)).eq("tenant_id", tenant_id).eq(
+                "status", "approved"
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — Storno steht, darf nicht kippen
+            log.warning(
+                "sperrantrag_entwertung_fehlgeschlagen",
+                tenant_id=tenant_id,
+                block_request_id=str(antrag_id),
+                error=str(exc)[:200],
+            )
+            return
+        log.info(
+            "sperrantrag_mit_storno_entwertet",
+            tenant_id=tenant_id,
+            block_request_id=str(antrag_id),
+        )
+
     def move(
         self, ctx: AuthContext, reservation_id: str, req: ReservationMove
     ) -> ReservationResponse:
@@ -1021,6 +1064,20 @@ class WritesMixin(ReservationsBase):
             # Betrag-Währung-Paarung (Wurzel 4).
             update_fields.get("currency", current.get("currency")),
         )
+        # UND die 0,5-%-Nutzungsmeldung mit demselben Stand (Wurzel 1). Sie
+        # stand hier nicht, waehrend `cancel()` BEIDE Ledger abraeumt — ein
+        # Upsell von 200 auf 450 zog also die Provision nach, die Modulgebuehr
+        # blieb bei 200, und die Monatsrechnung war zu niedrig. Der Service
+        # aktualisiert nur 'pending'-Zeilen; eine bereits fakturierte bleibt
+        # unangetastet.
+        self._record_dynpricing_usage(
+            tenant_id,
+            reservation_id,
+            float(
+                update_fields.get("total_amount", current.get("total_amount")) or 0
+            ),
+            update_fields.get("currency", current.get("currency")),
+        )
         log.info(
             "reservation_moved",
             reservation_id=reservation_id,
@@ -1244,6 +1301,19 @@ class WritesMixin(ReservationsBase):
         # Wurzel 1) — eine stornierte OTA-Buchung darf nicht mit abgerechnet
         # werden.
         self._cancel_commission(tenant_id, reservation_id)
+
+        # Genehmigten Sperrantrag mit entwerten (Wurzel 1). Der umgekehrte Weg
+        # ist gebaut — `sperrantraege.zuruecknehmen` storniert die Eigennutzung
+        # —, dieser hier fehlte: wird die Buchung DIREKT storniert (Rezeption,
+        # Gast-Storno, Vertragsende), gab sie ihre Naechte frei, waehrend der
+        # Antrag auf `approved` stehen blieb.
+        #
+        # Der Schaden ist unsichtbar und tritt erst spaeter auf: der
+        # EXCLUDE-Constraint `block_requests_kein_ueberlapp` (0377) weist jeden
+        # NEUEN Antrag fuer dieselben Tage mit 23P01 ab — der Eigentuemer bekommt
+        # „ueberschneidet sich mit einer genehmigten Sperre" fuer einen Zeitraum,
+        # der im Kalender frei ist, und niemand findet den Grund.
+        self._entwerte_sperrantrag(tenant_id, current)
 
         # Audit: append-only Storno-Historie (Best-Effort — Log-Fehler darf die
         # Stornierung nicht kippen).

@@ -1,4 +1,427 @@
 {
+ "entwickler": {
+  "meta": {
+   "titel": "API & developers — myNextDays",
+   "beschreibung": "The public REST API of myNextDays: property types, availability, rates, bookings, guests and tasks. OAuth2, OpenAPI 3.1, webhooks with signed deliveries."
+  },
+  "hero": {
+   "eyebrow": "Public API",
+   "titel": "Build against myNextDays",
+   "unterzeile": "One REST API for property types, availability, rates, bookings, guests and tasks. Short-lived tokens, permissions per credential, events by webhook — and a schema that is generated from the code and therefore cannot go out of date.",
+   "basisLabel": "Base address",
+   "versionLabel": "Version",
+   "versionHinweis": "in the path",
+   "konsole": "Try it out",
+   "schema": "OpenAPI 3.1",
+   "referenz": "Read the reference"
+  },
+  "inhalt": {
+   "titel": "On this page",
+   "schnellstart": "Getting started",
+   "konzepte": "Data model",
+   "konventionen": "Pagination",
+   "endpunkte": "Endpoints",
+   "webhooks": "Webhooks",
+   "grenzen": "Limitations",
+   "hilfe": "Support",
+   "start": "Overview",
+   "zugang": "Authentication",
+   "fehler": "Errors",
+   "limits": "Rate limits",
+   "fehlercodes": "Error codes",
+   "lokalisierung": "Localization",
+   "zeit": "Time zones"
+  },
+  "code": {
+   "kopieren": "Copy",
+   "kopiert": "Copied",
+   "anfrage": "Request",
+   "antwort": "Response",
+   "zustellung": "Delivery",
+   "pruefcode": "Verify signature (Node)"
+  },
+  "schnellstart": {
+   "eyebrow": "Quick start",
+   "heading": "Your first call in five minutes",
+   "sub": "Three steps. Only the first one runs through the interface — everything else is a call.",
+   "schritt1": {
+    "titel": "Create a credential",
+    "text": "Create a credential in the dashboard and decide what it may do: permissions per area and, if you want, only certain property types. A credential for the cleaning schedule needs no access to revenue.",
+    "pfad": "Account → API access",
+    "hinweis": "The `client_secret` is shown once; only its hash is stored. A lost secret is not recovered, it is replaced."
+   },
+   "schritt2": {
+    "titel": "Get a token",
+    "text": "Exchange Client-ID and Client-Secret for an Access-Token. It is valid for one hour and carries exactly the permissions of the credential.",
+    "hinweis": "Keep the token in memory and only exchange a new one when it expires or a 401 comes back — not on every call. Revoking a credential in the dashboard blocks new tokens immediately."
+   },
+   "schritt3": {
+    "titel": "Make your first call",
+    "text": "Send the token as `Authorization: Bearer …`. Every list answers in the same envelope: `data` plus `pagination`.",
+    "hinweis": "Then call `GET /v1/me` — it tells you which permissions and which property types this credential has, without you having to find out through a series of 403s."
+   }
+  },
+  "konzepte": {
+   "eyebrow": "Concepts",
+   "heading": "Four things you should know first",
+   "sub": "Four decisions that determine the behaviour of the API. They depart from common assumptions.",
+   "objekt": {
+    "titel": "A property is a unit type",
+    "text": "A `property` is exactly one type: a room type in a hotel, or a holiday rental. Its units (`units`) hang below it — normally exactly one, with five identical studios exactly five. The unit is what is sold, the type is what is managed and priced.",
+    "folge": "Availability is therefore a NUMBER (`units_available`), not a yes/no. A hotel with 8 twin and 4 double rooms has two property types with 8 and 4 units — not one property with 12 rooms."
+   },
+   "waehrung": {
+    "titel": "Every amount carries its currency",
+    "text": "There is no default value. Every property has a currency, and every amount in a response names it.",
+    "folge": "If the currency is missing on a property type, that is a data error and the call fails with 422 — no “EUR” is substituted. When booking, your currency must match the currency of the property type."
+   },
+   "zeit": {
+    "titel": "Two different points in time",
+    "text": "`booked_at` is the moment the guest booked — from the portal’s source, `null` if the portal does not deliver it. `received_at` is the arrival in this system.",
+    "folge": "Sort “newest first” by `booked_at`, not by `received_at`: in a bulk import dozens of bookings carry the same second. Timestamps are UTC, date fields are calendar days in the time zone of the property type."
+   },
+   "kanaele": {
+    "titel": "Visibility applies per channel",
+    "text": "There is no global “published”. A property type is visible on the marketplace, on your own website, through the portals — each one switchable on its own.",
+    "folge": "A property type is sellable only when three things come together: `status = active`, the channel is on, and there are free units. A stop sell, by contrast, applies across ALL channels."
+   }
+  },
+  "konventionen": {
+   "eyebrow": "Conventions",
+   "heading": "Paging, errors, limits, idempotency",
+   "sub": "The four points that are different in every API — here with numbers instead of prose.",
+   "tabelle": {
+    "feld": "Field",
+    "bedeutung": "Meaning",
+    "code": "Code",
+    "status": "Status"
+   },
+   "blaettern": {
+    "titel": "Paging",
+    "text": "Every list answers with `data` and `pagination`. Paging runs through a **cursor**: you send the `id` of the last item on the previous page as `starting_after`. If `next_starting_after` is missing from the response, the run is finished.",
+    "felder": {
+     "starting_after": "The `id` of the last item on the previous page. The recommended way — stable, even when the list changes between two pages. An unknown or deleted `id` gives 422, not an empty page.",
+     "next_starting_after": "Is in `pagination` as long as there is more to come: the value for your next `starting_after`. If it is missing, you are at the end.",
+     "limit": "Rows per page. Default 50, maximum 200 — a larger value gives 422, not a shortened page.",
+     "offset": "Rows to skip — for a one-off look at a particular page. Together with `starting_after` it gives 422: two position statements in one request have no contradiction-free meaning.",
+     "include_total": "`true` additionally returns `total`. Only ask for it when you display the number.",
+     "has_more": "Is in every response and says whether a further page exists — no guessing, no extra round trip."
+    },
+    "warumCursor": "Why not simply `offset`: it describes a POSITION in the list. If a booking is added between page 1 and page 2, everything shifts by one place — `offset=50` then skips a row, and on a deletion one row comes twice. Afterwards a booking is missing from your database, and nothing in the response reveals it. The cursor names the last record you have seen and therefore cannot slip."
+   },
+   "fehler": {
+    "titel": "Errors",
+    "text": "Every error comes as `application/problem+json` (RFC 9457) with a stable `code`, a `request_id` and — where it helps — the fields that explain the error. Branch on `code`, not on the text: the text may change, the code may not.",
+    "codes": {
+     "nichtAuthentifiziert": "Token is missing, has expired or is invalid.",
+     "ungueltigeZugangsdaten": "Client-ID or Client-Secret wrong, or the credential has been revoked.",
+     "scopeFehlt": "Token valid, but this credential does not have the required permission. The missing scope is named in the error.",
+     "objektNichtErlaubt": "The credential is restricted to certain property types; this one is not among them.",
+     "nichtGefunden": "Not present or assigned to a different business — both cases answer the same.",
+     "zeitraumNichtVerfuegbar": "Booked, blocked or withdrawn from sale. No half booking was created.",
+     "idempotenzInArbeit": "A call with this Idempotency-Key is still running. Wait a moment, then retry.",
+     "aboBestehtBereits": "There is already an active webhook subscription of this credential for this address.",
+     "waehrungFehlt": "No currency is assigned to the property type, rate plan or booking — a data error.",
+     "ungueltigeAnfrage": "Formally in order, but not fulfillable in substance. The reason is in `detail`.",
+     "validierungFehlgeschlagen": "The request does not match the schema. `felder` names which field.",
+     "zuVieleAnfragen": "Rate limit reached. `Retry-After` says when it continues.",
+     "nichtKonfiguriert": "The service cannot handle the request safely. No carrying on without checking."
+    }
+   },
+   "limits": {
+    "titel": "Rate limits",
+    "text": "The limit applies per CREDENTIAL, not per IP address: an agency that looks after twenty businesses sits behind one IP and should not throttle itself. Three separate buckets, so that a calendar sync does not block price setting.",
+    "eimer": {
+     "token": "Token exchange. Strict, because credentials are checked here.",
+     "write": "Writing calls — they intervene in the sale.",
+     "read": "Reading calls: the everyday work of an integration."
+    },
+    "header": "Every response carries the current state with it, the successful one too — so that you can adjust your pace before you run into the 429:"
+   },
+   "idempotenz": {
+    "titel": "Idempotency",
+    "text": "When creating a booking the `Idempotency-Key` header is mandatory. Choose a unique value per operation (a UUID, for example) and repeat it when you send the same call again. Without this protection a network failure with a retry creates two bookings — and the second one blocks nights that nobody ordered.",
+    "faelle": {
+     "wiederholung": "Same key, same payload → the first response comes back word for word, with the header `Idempotency-Replayed: true`.",
+     "abweichend": "Same key, DIFFERENT payload → 422. A new operation needs a new key.",
+     "laufend": "Same key, first call still running → 409. Wait a moment, then retry; do not follow up with a new key."
+    }
+   }
+  },
+  "webhooks": {
+   "eyebrow": "Webhooks",
+   "heading": "Events instead of polling",
+   "sub": "One subscription per address, signed deliveries, retries with a growing interval. Events arise on EVERY change — even when it comes through a portal or the dashboard and not through this API.",
+   "tabelle": {
+    "ereignis": "Event",
+    "wann": "When it fires"
+   },
+   "ereignisse": {
+    "reservationCreated": "A booking has come into being — through whatever channel.",
+    "reservationUpdated": "An existing booking has changed.",
+    "reservationCancelled": "A booking was cancelled. Its own event, because it calls for a different reaction than a change.",
+    "availabilityChanged": "The calendar of a property type has changed (booking, block, release).",
+    "rateChanged": "A daily rate or a stay rule has changed.",
+    "taskCreated": "A task has come into being.",
+    "taskCompleted": "A task was completed."
+   },
+   "anlegen": {
+    "titel": "Create a subscription",
+    "text": "An `https` address and the events you want. Optionally only for certain property types. Internal addresses are rejected — the check runs when creating AND before every single delivery.",
+    "secret": "The response contains the signing secret exactly once. Save it now — it is never delivered again."
+   },
+   "nutzlast": {
+    "titel": "What arrives",
+    "text": "Kept narrow: IDs and the fields that describe the change. You fetch the full record through the API when you need it — that way a recipient is not sent anything that it may no longer be allowed to see."
+   },
+   "signatur": {
+    "titel": "Verify the signature",
+    "text": "Every delivery carries a header with a timestamp and HMAC-SHA256 over `ZEITSTEMPEL.BODY`, computed with the secret of your subscription. Because the timestamp is signed along with it, you can recognise a delivery that was recorded and replayed later — with a signature over the body alone that is not possible.",
+    "schritte": {
+     "roh": "Take the RAW body of the request, not the parsed and re-serialised object — a different byte sequence gives a different signature. That is the most common reason for “signature does not match”.",
+     "alter": "Check the age via the timestamp; five minutes of tolerance is a good value.",
+     "vergleich": "Compare in constant time (`timingSafeEqual`, `hmac.compare_digest`). A plain `==` makes the signature guessable."
+    }
+   },
+   "verhalten": {
+    "wiederholung": {
+     "titel": "Retries",
+     "text": "If your address does not answer with 2xx, delivery is repeated up to ten times — with a growing interval from one minute up to one hour. Answer quickly and process afterwards; a slow recipient is counted as an error."
+    },
+    "reihenfolge": {
+     "titel": "Order",
+     "text": "Not guaranteed. Use the `created_at` of the event so as not to write an older delivery over a newer one."
+    },
+    "doppelt": {
+     "titel": "Duplicate delivery",
+     "text": "Is unlikely, but possible — treat the event `id` as a key and process each one only once. This promise holds for every webhook provider, not only for this one."
+    },
+    "nachholen": {
+     "titel": "Catching up after an outage",
+     "text": "If your servers were down, you catch up on the missed events via `GET /v1/events?since=…` — oldest first, with the same `id`s as in the delivery, at most 30 days back. A push alone is no delivery guarantee: eventually the retries run out, and without this step you are missing exactly the events you never found out about."
+    }
+   }
+  },
+  "grenzen": {
+   "eyebrow": "Limitations",
+   "heading": "Limitations",
+   "sub": "Two operations are not possible through this API. Both follow from the data model. Cancelling, rescheduling and price calculation are possible.",
+   "stattdessen": "Instead:",
+   "gaeste": {
+    "titel": "Creating and changing guests",
+    "text": "Guest data comes into being when the guest enters it or through the portal. A write path here would be a third source for the same person.",
+    "ausweg": "Send guest data along when creating a booking — existing guests are recognised by their email address. Contact fields of an existing booking can be maintained through `PATCH /v1/reservations/'{'id}`."
+   },
+   "nachrichten": {
+    "titel": "Opening a conversation",
+    "text": "Reading messages and writing into an existing conversation is possible (`/v1/reservations/'{'id}/messages`). Creating a new conversation is not: a message thread always belongs to a marketplace guest account, and a business API credential is not such an account.",
+    "ausweg": "The conversation comes into being with the guest’s first message or via the dashboard; after that the API can write in it."
+   },
+   "finanzen": {
+    "titel": "Collecting a payment",
+    "text": "Payments and scheduled payment requests can be read (`/v1/reservations/'{'id}/payments`), as can the payment schedule and the cancellation scale (`/v1/properties/'{'id}/booking-conditions`). Collection runs through the guest’s booking flow with payment intents, not through a link you send out.",
+    "ausweg": "Payment requests are created in the dashboard; the API reads their status and the events belonging to them."
+   }
+  },
+  "hilfe": {
+   "eyebrow": "Help",
+   "heading": "Questions, changes, tools",
+   "sub": "Where to take a question, and what you can hold on to while building.",
+   "wege": {
+    "titel": "When something does not work",
+    "entwicklerMail": {
+     "titel": "Technical contact",
+     "text": "Send the `request_id` from the error response along — that makes the call findable in our logs."
+    },
+    "hilfeCenter": {
+     "titel": "Help centre",
+     "text": "Guides for the product: creating property types, connecting portals, maintaining rates."
+    },
+    "schema": {
+     "titel": "Generate a client",
+     "text": "The OpenAPI file works as input for the usual generators — a hand-written client is unnecessary."
+    }
+   },
+   "versionen": {
+    "titel": "Versioning",
+    "text": "An API is a promise. These four points hold for v1:",
+    "zusagen": {
+     "pfad": "The version is in the path. A breaking change gets `/v2`; `/v1` keeps running alongside it.",
+     "additiv": "Within v1 only fields are added. Existing fields are not renamed and do not change their meaning.",
+     "frist": "If a version is discontinued, we name a date at least twelve months ahead and get in touch with every business that has an active credential.",
+     "changelog": "Changes are in the OpenAPI file and on this page. There is no silent change to a field."
+    }
+   }
+  },
+  "kopf": {
+   "hilfe": "Help center",
+   "zurueck": "To the website"
+  },
+  "sidebar": {
+   "sprung": "Jump to …",
+   "keineTreffer": "No endpoint and no chapter matches that.",
+   "leitfaden": "Guide",
+   "referenz": "API reference",
+   "tocTitel": "On this page",
+   "version": "myNextDays Public API v1"
+  },
+  "referenz": {
+   "scope": "Required permission:",
+   "pfadParameter": "Path parameters",
+   "queryParameter": "Query parameters",
+   "headerParameter": "Headers",
+   "koerper": "Request body",
+   "antworten": "Responses",
+   "erlaubt": "Allowed:",
+   "pflicht": "required",
+   "standard": "Default",
+   "sprache": "Language",
+   "zugang": "Access",
+   "tokenHinweis": "Only in this browser, only for “Try it” — the value is neither stored nor sent to us.",
+   "ausprobieren": "Try it",
+   "laeuft": "Running …",
+   "anfrage": "Request",
+   "antwort": "Response",
+   "beispiel": "Example",
+   "kopieren": "Copy",
+   "kopiert": "Copied",
+   "fehlerNetz": "The request did not reach the service. The most common causes: the service is not answering right now, or the browser aborted the request because CORS was not granted. The same call made with curl from the code field shows what the service really says.",
+   "keinToken": "Without a token the call answers with 401 — that is the expected path."
+  },
+  "start": {
+   "eyebrow": "Public API",
+   "titel": "Build against myNextDays",
+   "unterzeile": "A REST API for properties, availability, rates, bookings, guests and tasks — read and write, with cancellation, rescheduling and price preview. The guide explains the rules, the reference has every endpoint with all its parameters and a field to try it out.",
+   "basisLabel": "Base address",
+   "versionLabel": "Version",
+   "versionHinweis": "in the path",
+   "schemaTitel": "Schema",
+   "schemaText": "OpenAPI 3.1, generated from the code. Suitable as input for the usual client generators.",
+   "woAnfangen": "Where to start",
+   "erstLesen": "Read first",
+   "dannBauen": "Then build"
+  },
+  "bereiche": {
+   "leitfaden": "Documentation",
+   "referenz": "API reference"
+  },
+  "gruppen": {
+   "ueberblick": "Basics",
+   "anhang": "Appendix"
+  },
+  "weiter": {
+   "naechste": "Next page",
+   "zurReferenz": "On to the API reference"
+  },
+  "referenzUebersicht": {
+   "eyebrow": "API reference",
+   "titel": "All endpoints",
+   "sub": "Every endpoint has its own page with all its parameters, the request body, the responses and a field in which you can try the call out directly."
+  },
+  "zugang": {
+   "eyebrow": "Authentication",
+   "heading": "Authentication",
+   "sub": "OAuth 2.0 with `client_credentials`. A credential belongs to exactly one business; there is no key that spans several businesses.",
+   "ablauf": {
+    "titel": "Flow",
+    "text": "`client_credentials` is the flow for programs acting on their own behalf. There is no consent dialog and no refresh token.",
+    "schritte": {
+     "anlegen": "Create the credential in the dashboard: Account → API access. The `client_secret` is shown once and cannot be retrieved afterwards.",
+     "tauschen": "`POST /v1/oauth/token` with `client_id` and `client_secret`. The response contains `access_token`, `expires_in` (3600) and the granted scopes.",
+     "senden": "Send the token as `Authorization: Bearer ACCESS_TOKEN` with every call. After expiry the API responds with 401 and the code `token_expired`."
+    },
+    "merksatz": "Keep the token in memory instead of fetching a new one per call. One exchange per request runs into the rate limit of the token endpoint (10/minute)."
+   },
+   "rechte": {
+    "titel": "Scopes",
+    "text": "Scopes have the form `bereich:richtung`, for example `reservations:read` or `rates:write`. If a scope is missing, the endpoint responds with 403 and the code `insufficient_scope`.",
+    "merksatz": "Grant only the scopes the integration needs. A lost key then cannot overwrite anything it was never meant to read."
+   },
+   "objekte": {
+    "titel": "Property restriction",
+    "text": "A credential can be restricted to specific properties. It sees only those in lists; a call with a different property ID responds with 403 and the code `objekt_nicht_erlaubt`."
+   },
+   "selbstauskunft": {
+    "titel": "Check scopes",
+    "text": "`GET /v1/me` returns the business, scopes and property restriction of the token — the first call when setting up an integration."
+   }
+  },
+  "fehler": {
+   "eyebrow": "Errors",
+   "heading": "What errors look like",
+   "sub": "Every error is an HTTP status code plus a body per RFC 9457 (`application/problem+json`). No error arrives with status 200.",
+   "aufbau": {
+    "titel": "Structure",
+    "text": "`code` is the stable, machine-readable name of the error. `detail` is text for humans and can change at any time.",
+    "felder": {
+     "type": "Address of the description of this error type — the list of error codes in the appendix.",
+     "title": "Short name of the error type.",
+     "status": "The HTTP status code.",
+     "detail": "Description for humans.",
+     "code": "Stable name of the error. Evaluate this field.",
+     "request_id": "Identifier of the request. Include it in a support request."
+    },
+    "merksatz": "Branch on `code`, not on `detail`. The text is not an interface."
+   },
+   "klassen": {
+    "titel": "Status classes",
+    "vier": "4xx — the request is the problem: missing scope, unknown ID, invalid value, occupied period. Retrying changes nothing.",
+    "fuenf": "5xx — server-side error. Retry with increasing intervals.",
+    "neun": "429 — rate limit reached. `Retry-After` gives the wait time in seconds."
+   }
+  },
+  "limits": {
+   "eyebrow": "Rate limits",
+   "heading": "How many calls are allowed",
+   "sub": "Limits apply per credential, not per IP. There are three buckets with separate values for reading, writing and token issuance."
+  },
+  "fehlercodes": {
+   "eyebrow": "Appendix",
+   "heading": "Error codes",
+   "sub": "All `code` values of this API. Every row has an anchor; the `type` address of an error response points to it."
+  },
+  "lokalisierung": {
+   "eyebrow": "Appendix",
+   "heading": "Localization",
+   "sub": "Language and currency come from the data. Both fields can be empty; neither has a default value.",
+   "waehrung": {
+    "titel": "Currency",
+    "text": "Every amount carries a `currency` code per ISO 4217. There is no default value and no conversion.",
+    "merksatz": "When creating a booking, `currency` must match the currency of the property. On deviation: 422 with the code `currency_mismatch`."
+   },
+   "sprache": {
+    "titel": "Language",
+    "text": "`language` is a two-letter code per ISO 639-1, for example `de`, `da`, `en`. The value comes from the booking or from the portal and can be empty. Empty means unknown."
+   },
+   "texte": {
+    "titel": "Text in the API",
+    "text": "Field names, `code` values and enum values are English and part of the contract. The `detail` texts of an error response are aimed at humans and can change — show your own messages based on `code`."
+   }
+  },
+  "zeit": {
+   "eyebrow": "Appendix",
+   "heading": "Time zones",
+   "sub": "This API uses two kinds of time values: calendar days in the time zone of the property and timestamps in UTC.",
+   "tage": {
+    "titel": "Calendar days",
+    "text": "`check_in`, `check_out`, `date`, `from` and `to` are calendar days in the format `YYYY-MM-DD`, meant in the time zone of the property. They carry no time of day and are not converted to UTC.",
+    "merksatz": "`check_out` is the day of departure; the last occupied night is the night before. Four nights mean four days between `check_in` and `check_out`."
+   },
+   "zeitpunkte": {
+    "titel": "Timestamps",
+    "text": "`created_at`, `updated_at`, `received_at`, `booked_at` and `cancelled_at` are timestamps per ISO 8601 in UTC with `Z` at the end."
+   },
+   "quelle": {
+    "titel": "booked_at and received_at",
+    "text": "`booked_at` is the moment the guest booked, for portal bookings taken from the portal’s source. `received_at` is the arrival in this system. In a bulk fetch many bookings carry the same `received_at` second.",
+    "merksatz": "For “newest first” use `booked_at` and treat `null` as unknown. `received_at` reflects the order of the fetch, not that of the bookings."
+   },
+   "filter": {
+    "titel": "Filter by changes",
+    "text": "`updated_since` takes a timestamp and returns what has changed since then. Careful with URL encoding: `+` means a space in an address — write `Z` or encode it as `%2B`."
+   }
+  }
+ },
  "meta": {
   "title": "myNextDays – The platform for holiday rental hosts",
   "description": "The platform for hotels, agencies and holiday rental hosts: channel manager, calendar, direct booking, guest messaging and accounting in one place. Built in Denmark, hosted in the EU. From €19.90 per month. Free for 30 days."

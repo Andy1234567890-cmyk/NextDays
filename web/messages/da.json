@@ -6825,7 +6825,12 @@
     "needScope": "Vælg mindst én tilladelse.",
     "docsHint": "Hvordan du godkender dig med disse oplysninger, står i API-dokumentationen.",
     "loadErr": "Kunne ikke indlæses.",
-    "noAccess": "Ingen adgang"
+    "noAccess": "Ingen adgang",
+    "scopeRates": "Priser",
+    "scopeGuests": "Gæster",
+    "scopeTasks": "Opgaver",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "API-dokumentation"
   },
   "supportChat": {
     "titel": "Hjælp og support",

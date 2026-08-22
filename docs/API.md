@@ -1,5 +1,17 @@
 # API-Übersicht
 
+Dieses Dokument beschreibt die **interne** API des Dashboards (`apps/api`).
+
+> **Nicht zu verwechseln mit der öffentlichen Partner-API.** Die ist ein
+> eigener Dienst (`apps/public-api`) unter `open-api.mynextdays.com/v1` mit eigener
+> Auth-Welt (Client-Credentials statt Supabase-Login), eigener Versionierung
+> und veröffentlichtem Schema. Ihre Dokumentation:
+> `apps/public-api/README.md` (intern), `/entwickler` in der Marketing-App
+> (für Kunden) und `open-api.mynextdays.com/openapi.json` (das Schema selbst).
+> Was hier steht, gilt dort NICHT — die öffentliche API antwortet
+> `application/problem+json` nach RFC 9457, blättert mit `limit`/`offset` und
+> verlangt bei Buchungen einen `Idempotency-Key`.
+
 Base-URL (lokal): `http://localhost:8000`
 Alle Slice-Endpoints liegen unter dem Prefix **`/api/v1`**.
 

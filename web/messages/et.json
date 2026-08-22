@@ -6825,7 +6825,12 @@
     "needScope": "Vali vähemalt üks õigus.",
     "docsHint": "Kuidas nende andmetega autentida, on kirjas API dokumentatsioonis.",
     "loadErr": "Laadimine ebaõnnestus.",
-    "noAccess": "Juurdepääs puudub"
+    "noAccess": "Juurdepääs puudub",
+    "scopeRates": "Hinnad",
+    "scopeGuests": "Külalised",
+    "scopeTasks": "Ülesanded",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "API dokumentatsioon"
   },
   "supportChat": {
     "titel": "Abi ja tugi",

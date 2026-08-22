@@ -25,8 +25,8 @@ from supabase import Client
 from ..core import errors
 from ..core.auth import ApiKontext, scope_erforderlich
 from ..core.db import Abfrage, service_db, zeile_im_mandanten
-from ..core.pagination import blaettern_pruefen, seite_bauen
-from .schemas import Einheit, Objekt, ObjektAenderung
+from ..core.pagination import blaettern_pruefen, keyset_anwenden, seite_bauen
+from .schemas import Einheit, Objekt, ObjektAenderung, Seite
 
 router = APIRouter(prefix="/properties", tags=["Objekte"])
 
@@ -135,7 +135,12 @@ def _sichtbare_ids(ctx: ApiKontext, db: Client) -> list[str] | None:
     return ctx.property_ids or None
 
 
-@router.get("", summary="Objekte auflisten")
+@router.get(
+    "",
+    response_model=Seite[Objekt],
+    response_model_exclude_unset=True,
+    summary="Objekte auflisten",
+)
 def liste(
     ctx: Annotated[ApiKontext, Depends(scope_erforderlich("properties:read"))],
     status: Annotated[
@@ -143,6 +148,17 @@ def liste(
         Query(description="Nach Status filtern: draft | active | inactive."),
     ] = None,
     building_id: Annotated[str | None, Query(description="Nur Objekte dieses Gebäudes.")] = None,
+    archived: Annotated[
+        bool | None,
+        Query(
+            description=(
+                "Ohne Angabe: nur AKTIVE Objekte (archivierte bleiben weg). "
+                "`true` liefert ausschließlich archivierte — der Weg, sie im "
+                "eigenen System ebenfalls stillzulegen. `false` ist dasselbe "
+                "wie keine Angabe, nur ausdrücklich."
+            )
+        ),
+    ] = None,
     updated_since: Annotated[
         str | None,
         Query(
@@ -154,6 +170,24 @@ def liste(
     ] = None,
     limit: Annotated[int | None, Query(ge=1, le=200)] = None,
     offset: Annotated[int | None, Query(ge=0)] = None,
+    starting_after: Annotated[
+        str | None,
+        Query(
+            description=(
+                "ID des letzten Elements der Vorseite — der empfohlene Weg zum "
+                "Blättern. Stabil, auch wenn sich die Liste zwischen zwei "
+                "Seiten ändert. Schließt `offset` aus. Den Wert liefert "
+                "`pagination.next_starting_after` der Vorseite.\n\n"
+                "**Die übrigen Filter musst du beim Weiterblättern unverändert "
+                "mitschicken.** Änderst du sie, beschreibt der Cursor eine "
+                "Stelle in einer anderen Liste, und das Ergebnis ist nicht "
+                "vorhersagbar. `limit` darf sich ändern.\n\n"
+                "Der Cursor läuft nicht ab. Er wird ungültig, wenn der "
+                "Datensatz gelöscht wird — dann kommt ein 422, und du beginnst "
+                "den Durchgang ohne `starting_after` neu."
+            )
+        ),
+    ] = None,
     include_total: Annotated[
         bool,
         Query(
@@ -170,7 +204,7 @@ def liste(
     ohne stabile Sortierung kann Blättern Zeilen doppelt oder gar nicht liefern.
     """
     db = service_db()
-    blatt = blaettern_pruefen(limit, offset, include_total)
+    blatt = blaettern_pruefen(limit, offset, include_total, starting_after)
 
     def basis() -> Abfrage:
         q = db.table("properties").select(_SPALTEN).eq("tenant_id", ctx.tenant_id)
@@ -183,13 +217,31 @@ def liste(
             q = q.eq("building_id", building_id)
         if updated_since:
             q = q.gte("updated_at", updated_since)
-        # Archivierte Objekte gehören nicht in die öffentliche Liste: sie sind
-        # aus dem Betrieb genommen, und ein Client, der sie mitsynchronisiert,
-        # legt sie bei sich als aktive Objekte an.
-        return q.is_("archived_at", "null")
+        # Archivierte Objekte sind standardmäßig NICHT dabei: sie sind aus dem
+        # Betrieb genommen, und ein Client, der sie mitsynchronisiert, legt sie
+        # bei sich als aktive Objekte an. Wer sie braucht — um sie im eigenen
+        # System ebenfalls stillzulegen — fragt sie ausdrücklich an.
+        if archived is True:
+            return q.not_.is_("archived_at", "null")
+        if archived is False:
+            return q.is_("archived_at", "null")
+        return q
 
+    # Sortiert nach `(title, id)`: der Titel ist nicht eindeutig, und ohne den
+    # zweiten Schlüssel könnte ein Cursor nicht sagen, welches von zwei
+    # gleichnamigen Objekten gemeint war.
     zeilen = (
-        basis().order("title").range(blatt.offset, blatt.range_bis).execute()
+        keyset_anwenden(
+            basis().order("title").order("id"),
+            db,
+            "properties",
+            blatt,
+            tenant_id=ctx.tenant_id,
+            sortier_spalte="title",
+            aufsteigend=True,
+        )
+        .range(blatt.range_von, blatt.range_bis)
+        .execute()
     ).data or []
 
     total = None

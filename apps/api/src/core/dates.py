@@ -19,6 +19,15 @@ Domänen:
 Deshalb ist die Konvention hier ein PFLICHT-Argument: Der Aufrufer muss sie
 bewusst wählen, statt sie aus einem Funktionsnamen zu erraten.
 """
+# SCHWESTERDATEI — byte-identisch in beiden Bäumen halten:
+#     apps/api/src/core/dates.py
+#     apps/public-api/src/core/dates.py
+# Die öffentliche API ist ein EIGENER Service (apps/public-api/README.md) und
+# importiert nichts aus apps/api. Diese Datei liegt dort als bewusste Kopie
+# (Muster ADR-0019); der CI-Job `public-api-konsistenz` prüft die
+# Byte-Gleichheit. Drift hier verschiebt die Nächte-Zählung: eine Fassung
+# rechnet vier Nächte, die andere fünf — und damit weichen der Preis in der
+# Vorschau und der Preis in der Buchung um eine Nacht ab.
 from __future__ import annotations
 
 from datetime import date, timedelta

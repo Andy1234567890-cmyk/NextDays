@@ -15,8 +15,14 @@
 // lautlos ÖFFNEN. Der Verschluss steht deshalb im Code; das Öffnen ist ein
 // bewusster Commit, kein Deploy-Nebeneffekt.
 //
-// ZUM START: hier auf `false` setzen — UND in plattform/lib/vorstart.ts.
-export const VOR_DEM_START = true;
+// GESTARTET am 22.08.2026: der Wert steht auf `false` — hier UND in
+// plattform/lib/vorstart.ts, im selben Zug. Zwei Schalter, die auseinander-
+// laufen, waeren genau der Zustand, den das Tor verhindern soll.
+//
+// Der Schalter bleibt stehen und wird NICHT ausgebaut: Er ist der Weg zurueck,
+// wenn der Marktplatz noch einmal zumachen muss. Ihn zu entfernen hiesse, das
+// Tor beim naechsten Mal neu zu bauen — samt der Stellen, die daran haengen.
+export const VOR_DEM_START = false;
 
 /** Pfade, die auch vor dem Start erreichbar bleiben.
  *

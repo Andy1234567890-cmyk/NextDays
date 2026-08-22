@@ -6823,7 +6823,12 @@
     "needScope": "Kies minstens één recht.",
     "docsHint": "In de API-documentatie staat hoe je je met deze gegevens authenticeert.",
     "loadErr": "Kon niet worden geladen.",
-    "noAccess": "Geen toegang"
+    "noAccess": "Geen toegang",
+    "scopeRates": "Prijzen",
+    "scopeGuests": "Gasten",
+    "scopeTasks": "Taken",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "API-documentatie"
   },
   "supportChat": {
     "titel": "Hulp en ondersteuning",

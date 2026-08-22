@@ -81,9 +81,20 @@ class Settings(BaseSettings):
     webhook_max_attempts: int = 10
     # Takt des Zustellers in Sekunden.
     webhook_poll_seconds: float = 5.0
+    # Nach so vielen AUFEINANDERFOLGENDEN Fehlschlägen wird ein Abo
+    # abgeschaltet — mit benanntem Grund, nicht stillschweigend.
+    #
+    # 50 ist gerechnet, nicht geraten: ein Ereignis wird bis zu 10-mal
+    # versucht, die Abstände wachsen auf eine Stunde. 50 Fehlschläge sind damit
+    # mindestens fünf vollständig gescheiterte Ereignisse über etwa einen Tag.
+    # Ein Abo, das so lange nichts annimmt, hat keinen Schluckauf, sondern ist
+    # weg — und weiterzuklopfen belastet nur beide Seiten. Zu FRÜH abschalten
+    # wäre schlimmer: eine halbe Stunde Wartung beim Partner darf ein Abo nicht
+    # kosten.
+    webhook_abo_abschalten_ab: int = 50
 
     # -- Veröffentlichte Basis-Adresse (steht in der OpenAPI-Datei) ----------
-    public_base_url: str = "https://api.mynextdays.dk"
+    public_base_url: str = "https://open-api.mynextdays.com"
 
     @property
     def ist_produktion(self) -> bool:

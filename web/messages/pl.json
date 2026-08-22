@@ -6823,7 +6823,12 @@
     "needScope": "Wybierz co najmniej jedno uprawnienie.",
     "docsHint": "Sposób uwierzytelniania tymi danymi opisano w dokumentacji API.",
     "loadErr": "Nie udało się wczytać.",
-    "noAccess": "Brak dostępu"
+    "noAccess": "Brak dostępu",
+    "scopeRates": "Ceny",
+    "scopeGuests": "Goście",
+    "scopeTasks": "Zadania",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "Dokumentacja API"
   },
   "supportChat": {
     "titel": "Pomoc i wsparcie",

@@ -599,3 +599,297 @@ class WebhookAngelegt(Webhook):
             "Jetzt speichern — es wird nie wieder ausgeliefert."
         )
     )
+
+
+# ---------------------------------------------------------------------------
+# Umschläge
+# ---------------------------------------------------------------------------
+class Blaetterinfo(BaseModel):
+    """Der `pagination`-Block, der bei JEDER Liste gleich aussieht."""
+
+    limit: int
+    offset: int
+    has_more: bool = Field(
+        description="Es gibt eine weitere Seite. Dann steht `next_starting_after` dabei."
+    )
+    next_starting_after: str | None = Field(
+        default=None,
+        description=(
+            "Cursor für die nächste Seite — unverändert als `starting_after` "
+            "mitschicken. Fehlt das Feld, ist der Durchgang fertig."
+        ),
+    )
+    total: int | None = Field(
+        default=None,
+        description="Gesamtzahl der Treffer. Nur vorhanden, wenn `include_total=true`.",
+    )
+
+
+class Seite[T](BaseModel):
+    """Umschlag jeder Liste: `data` plus `pagination`.
+
+    Ein Umschlag, der je Endpunkt anders heißt, zwingt jeden Client zu
+    Sonderfällen — deshalb ist er hier ein Typ und keine handgebaute `dict`
+    je Endpunkt. Er ist ausdrücklich Teil der veröffentlichten Spezifikation:
+    ohne ihn steht in der OpenAPI-Datei ein leeres Objekt, und die Doku kann
+    kein Antwortbeispiel zeigen.
+    """
+
+    data: list[T]
+    pagination: Blaetterinfo
+
+
+class GastProfil(Gast):
+    """Gast als eigener Datensatz — mehr als der Gast AN einer Buchung.
+
+    Erbt von `Gast`, damit ein Client, der beides liest, nicht zwei
+    unterschiedliche Formen derselben Person auseinanderhalten muss.
+    """
+
+    company: str | None = None
+    segment: str | None = None
+    stays_count: int | None = Field(
+        default=None, description="Zahl der abgeschlossenen Aufenthalte."
+    )
+    last_stay_at: date | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class VerfuegbarkeitsAntwort(BaseModel):
+    """Verfügbarkeit als Spannen ODER als Tage — je nach `granularity`."""
+
+    property_id: str
+    granularity: Literal["spans", "days"]
+    data: list[VerfuegbarkeitsSpanne] | list[VerfuegbarkeitsTag]
+
+
+class PreisAntwort(BaseModel):
+    """Tagespreise eines Rate-Plans samt seines Grundpreises."""
+
+    rate_plan_id: str
+    property_id: str
+    currency: str
+    base_price: str = Field(
+        description="Grundpreis des Rate-Plans als Dezimalzeichenkette."
+    )
+    data: list[TagesPreis]
+
+
+class EreignisTyp(BaseModel):
+    """Ein abonnierbares Ereignis aus dem Katalog."""
+
+    event: str
+    description: str
+
+
+class Ereignis(BaseModel):
+    """Ein aufgetretenes Ereignis — dieselbe Nutzlast wie im Webhook.
+
+    Der Abruf ist der Weg zurück, wenn der eigene Empfänger eine Weile weg war:
+    identische Form, damit dieselbe Verarbeitung beide Wege bedient.
+    """
+
+    id: str
+    event: str
+    created_at: datetime
+    property_id: str | None = None
+    data: dict[str, Any]
+
+
+# ---------------------------------------------------------------------------
+# Global (Normdaten)
+# ---------------------------------------------------------------------------
+class LandAntwort(BaseModel):
+    """Ein Land, wie die API es ausliefert."""
+
+    code: str = Field(description="ISO-3166-1 alpha-2, immer zwei Großbuchstaben.")
+    name: str = Field(description="Englischer Name des Landes.")
+    currency: str = Field(
+        description=(
+            "Landeswährung nach ISO 4217. Sie ist der Vorschlag für ein neues "
+            "Objekt in diesem Land — nicht mehr: die Währung eines Objekts "
+            "steht am Objekt."
+        )
+    )
+
+
+class WaehrungAntwort(BaseModel):
+    """Eine Währung samt der Stellenzahl, mit der Beträge zu lesen sind."""
+
+    code: str = Field(description="ISO 4217, immer drei Großbuchstaben.")
+    name: str = Field(description="Englischer Name der Währung.")
+    decimal_digits: int = Field(
+        description=(
+            "Nachkommastellen nach ISO 4217. Beträge dieser API sind "
+            "Dezimalzahlen, keine kleinsten Einheiten — diese Angabe ist für "
+            "die Anzeige und das Runden gedacht."
+        )
+    )
+
+
+# ---------------------------------------------------------------------------
+# Objekt-Beiwerk: Zusatzleistungen, Konditionen, Kanäle, Zugangsdaten
+# ---------------------------------------------------------------------------
+class Zusatzleistung(BaseModel):
+    """Eine buchbare Zusatzleistung eines Objekts.
+
+    `basis` sagt, WORAUF sich der Preis bezieht — ohne diese Angabe ist ein
+    Betrag nicht rechenbar: 15 kann „pro Aufenthalt" oder „pro Nacht und Gast"
+    heißen.
+    """
+
+    id: str
+    name: dict[str, str] = Field(
+        description=(
+            "Bezeichnung je Sprache (ISO 639-1 → Text). Ein leerer Wert heißt "
+            "\u201enicht \u00fcbersetzt\u201c, nicht \u201eohne Namen\u201c "
+            "\u2014 wir geben keine Sprache als eine andere aus."
+        )
+    )
+    description: dict[str, str] | None = None
+    price: Decimal
+    currency: str = Field(description="Währung des Objekts (ISO 4217).")
+    basis: str = Field(
+        description=(
+            "Bezugsgröße des Preises, z. B. `per_stay`, `per_night`, "
+            "`per_guest_stay`, `per_guest_night`, `per_pet_stay`."
+        )
+    )
+    mandatory: bool = Field(
+        description="Pflichtleistung — wird bei jeder Buchung berechnet."
+    )
+    tax_rate: Decimal | None = Field(
+        default=None, description="Eigener USt-Satz in Prozent, falls abweichend."
+    )
+
+
+class StornoStaffel(BaseModel):
+    """Eine Stufe der Stornostaffel: bis `days_before` Tage vor Anreise."""
+
+    days_before: int
+    refund_percent: Decimal
+
+
+class Konditionen(BaseModel):
+    """Zahlungsplan und Stornoregel, die für dieses Objekt gelten.
+
+    Zugeordnet wird sie über den RATE-PLAN, nicht über das Objekt: beim Hotel
+    kosten BAR und „nicht erstattbar" verschieden und haben verschiedene
+    Storno-Zusagen. Ohne `rate_plan_id` antwortet der Endpunkt mit der
+    Standard-Kondition des Betriebs.
+
+    Ist keine gepflegt, kommt `null` in allen Feldern — dann gilt „vollständig
+    bei Buchung" und es gibt KEINE Stornozusage. Eine erfundene Staffel wäre
+    eine Zusage, die niemand eingelöst hat (Wurzel 4).
+    """
+
+    rate_plan_id: str | None = None
+    name: str | None = None
+    installments: int | None = Field(
+        default=None, description="Zahl der Teilzahlungen (1 = alles auf einmal)."
+    )
+    first_payment_percent: Decimal | None = None
+    first_payment_timing: str | None = Field(
+        default=None, description="Wann die erste Zahlung fällig ist."
+    )
+    balance_days_before_arrival: int | None = None
+    deposit_required: bool = False
+    deposit_method: str | None = None
+    cancellation_mode: str | None = Field(
+        default=None, description="Art der Stornoregel."
+    )
+    refund_rules: list[StornoStaffel] = []
+
+
+class KanalZuordnung(BaseModel):
+    """Wie dieses Objekt an die Portale angebunden ist.
+
+    `sync_enabled` allein heißt nicht „verkauft sich": dazu gehören der
+    Objekt-Status, die Kanal-Sichtbarkeit und freie Einheiten. Was hier steht,
+    ist die technische Verbindung.
+    """
+
+    channel: str = Field(
+        description=(
+            "Der Kanal. `portale` steht für die Anbindung über den "
+            "Kanal-Aggregator (Booking, Airbnb, Expedia & Co.), `marktplatz` "
+            "für den myBestDays-Marktplatz, `website` für die eigene Seite."
+        )
+    )
+    enabled: bool
+    external_id: str | None = Field(
+        default=None, description="Kennung des Objekts beim Kanal, falls vorhanden."
+    )
+    last_sync_at: datetime | None = None
+    last_sync_status: str | None = None
+    last_sync_error: str | None = None
+
+
+class Zugangsdaten(BaseModel):
+    """Türcode und WLAN eines Objekts — die Angaben für die Anreise.
+
+    Sie stehen am OBJEKT, nicht an der Buchung: bei uns hat ein Objekt einen
+    Code, den der Gast zur passenden Zeit sieht. Wer je Buchung einen eigenen
+    Code braucht, findet das hier NICHT — eine erfundene Zuordnung wäre
+    schlimmer als eine fehlende.
+    """
+
+    property_id: str
+    self_checkin: bool
+    door_code: str | None = None
+    wifi_ssid: str | None = None
+    wifi_password: str | None = None
+    show_code_only_if_paid: bool = Field(
+        description="Code erst zeigen, wenn die Zahlung eingegangen ist."
+    )
+    hide_code_until_checkin: bool = Field(
+        description="Code erst am Anreisetag zeigen."
+    )
+    code_visible_from: datetime | None = None
+
+
+class ZugangsdatenSetzen(BaseModel):
+    """Türcode und WLAN setzen. Nur mitgeschickte Felder werden geändert."""
+
+    door_code: str | None = Field(default=None, max_length=100)
+    wifi_ssid: str | None = Field(default=None, max_length=100)
+    wifi_password: str | None = Field(default=None, max_length=200)
+    self_checkin: bool | None = None
+    show_code_only_if_paid: bool | None = None
+    hide_code_until_checkin: bool | None = None
+
+
+class PortalRohdaten(BaseModel):
+    """Was das Portal zu dieser Buchung geliefert hat — unverändert.
+
+    Für den Fall, dass ein Feld gebraucht wird, das diese API nicht abbildet.
+    Der Inhalt ist NICHT stabil: er ist das, was das Portal schickt, und ändert
+    sich, wenn das Portal sich ändert. Wer darauf baut, baut auf fremdem Grund.
+    """
+
+    reservation_id: str
+    channel: str
+    ota_name: str | None = None
+    external_ref: str | None = Field(
+        default=None, description="Buchungsnummer beim Portal."
+    )
+    booked_at: datetime | None = Field(
+        default=None, description="Wann der Gast beim Portal gebucht hat."
+    )
+    received_at: datetime | None = Field(
+        default=None, description="Wann die Buchung bei uns eingegangen ist."
+    )
+    payment_collect: str | None = Field(
+        default=None, description="Wer das Geld einzieht: Portal oder Betrieb."
+    )
+    commission: Decimal | None = Field(
+        default=None, description="Provision des Portals, wie es sie meldet."
+    )
+    withheld_taxes: Decimal | None = Field(
+        default=None, description="Abgaben, die das Portal einbehält."
+    )
+    notes: str | None = None
+    details: dict[str, Any] | None = Field(
+        default=None, description="Die Rohdaten des Portals."
+    )

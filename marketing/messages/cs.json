@@ -1,4 +1,427 @@
 {
+ "entwickler": {
+  "meta": {
+   "titel": "API a vývojáři — myNextDays",
+   "beschreibung": "Veřejné REST API myNextDays: objekty, dostupnost, ceny, rezervace, hosté a úkoly. OAuth2, OpenAPI 3.1, webhooky s podepsanými doručeními."
+  },
+  "hero": {
+   "eyebrow": "Veřejné API",
+   "titel": "Stav na myNextDays",
+   "unterzeile": "Jedno REST API pro objekty, dostupnost, ceny, rezervace, hosty a úkoly. Krátkodobé tokeny, práva podle přístupu, události přes webhook — a schéma, které vzniká z kódu, a proto nemůže zestárnout.",
+   "basisLabel": "Základní adresa",
+   "versionLabel": "Verze",
+   "versionHinweis": "v cestě",
+   "konsole": "Vyzkoušet",
+   "schema": "OpenAPI 3.1",
+   "referenz": "Přečíst referenci"
+  },
+  "inhalt": {
+   "titel": "Na této stránce",
+   "schnellstart": "První kroky",
+   "konzepte": "Datový model",
+   "konventionen": "Stránkování",
+   "endpunkte": "Endpointy",
+   "webhooks": "Webhooky",
+   "grenzen": "Omezení",
+   "hilfe": "Podpora",
+   "start": "Přehled",
+   "zugang": "Autentizace",
+   "fehler": "Chyby",
+   "limits": "Limity požadavků",
+   "fehlercodes": "Kódy chyb",
+   "lokalisierung": "Lokalizace",
+   "zeit": "Časové zóny"
+  },
+  "code": {
+   "kopieren": "Kopírovat",
+   "kopiert": "Zkopírováno",
+   "anfrage": "Požadavek",
+   "antwort": "Odpověď",
+   "zustellung": "Doručení",
+   "pruefcode": "Ověřit podpis (Node)"
+  },
+  "schnellstart": {
+   "eyebrow": "Rychlý start",
+   "heading": "První volání za pět minut",
+   "sub": "Tři kroky. Jen ten první vede přes rozhraní — všechno ostatní je volání.",
+   "schritt1": {
+    "titel": "Vytvoř přístup",
+    "text": "V dashboardu vytvoř přístup a hned stanov, co smí: práva podle oblasti a, pokud chceš, jen určité objekty. Přístup pro plán úklidu nepotřebuje přístup k výnosům.",
+    "pfad": "Účet → API přístup",
+    "hinweis": "`client_secret` se zobrazí jednou; ukládá se jen jeho hash. Ztracené tajemství se neobnovuje, nahrazuje se."
+   },
+   "schritt2": {
+    "titel": "Získej token",
+    "text": "Vymeň Client-ID a Client-Secret za Access-Token. Platí jednu hodinu a nese přesně práva daného přístupu.",
+    "hinweis": "Drž token v paměti a vyměň ho za nový teprve tehdy, když vyprší nebo přijde 401 — ne při každém volání. Odvolání v dashboardu okamžitě zabrání vydávání nových tokenů."
+   },
+   "schritt3": {
+    "titel": "Proveď první volání",
+    "text": "Token posílej jako `Authorization: Bearer …`. Každý seznam odpovídá ve stejné obálce: `data` plus `pagination`.",
+    "hinweis": "Potom zavolej `GET /v1/me` — řekne ti, jaká práva a jaké objekty tento přístup má, aniž bys to musel zjišťovat řadou odpovědí 403."
+   }
+  },
+  "konzepte": {
+   "eyebrow": "Pojmy",
+   "heading": "Čtyři věci, které bys měl vědět předem",
+   "sub": "Čtyři rozhodnutí, která určují chování API. Odchylují se od rozšířených předpokladů.",
+   "objekt": {
+    "titel": "Objekt je typ jednotky",
+    "text": "`property` je přesně jeden typ: typ pokoje v hotelu nebo rekreační objekt. Pod ním visí jeho jednotky (`units`) — normálně přesně jedna, u pěti stejných studií právě pět. Prodává se jednotka, vede se a ceníkuje se typ.",
+    "folge": "Dostupnost je proto ČÍSLO (`units_available`), nikoli ano/ne. Hotel s 8 pokoji twin a 4 dvoulůžkovými má dva objekty s 8 a 4 jednotkami — ne jeden objekt s 12 pokoji."
+   },
+   "waehrung": {
+    "titel": "Každá částka nese svou měnu",
+    "text": "Výchozí hodnota neexistuje. Každý objekt má měnu a každá částka v odpovědi ji uvádí.",
+    "folge": "Chybí-li u objektu měna, je to chyba dat a volání selže s 422 — žádné „EUR“ se nedoplňuje. Při rezervaci musí tvoje měna odpovídat měně objektu."
+   },
+   "zeit": {
+    "titel": "Dva různé okamžiky",
+    "text": "`booked_at` je okamžik rezervace u hosta — ze zdroje portálu, `null`, pokud jej portál nedodá. `received_at` je příchod do tohoto systému.",
+    "folge": "Řaď „nejnovější první“ podle `booked_at`, ne podle `received_at`: při dávkovém importu nesou desítky rezervací tutéž sekundu. Časové značky jsou v UTC, datová pole jsou kalendářní dny v časové zóně objektu."
+   },
+   "kanaele": {
+    "titel": "Viditelnost platí pro každý kanál zvlášť",
+    "text": "Neexistuje žádné globální „zveřejněno“. Objekt je viditelný na tržišti, na vlastním webu, přes portály — každé lze zapnout samostatně.",
+    "folge": "Objekt je prodejný jen tehdy, když se sejdou tři věci: `status = active`, kanál je zapnutý a jsou volné jednotky. Zastavení prodeje naopak působí na VŠECH kanálech."
+   }
+  },
+  "konventionen": {
+   "eyebrow": "Konvence",
+   "heading": "Stránkování, chyby, limity, idempotence",
+   "sub": "Čtyři body, které jsou v každém API jiné — tady s čísly místo prózy.",
+   "tabelle": {
+    "feld": "Pole",
+    "bedeutung": "Význam",
+    "code": "Kód",
+    "status": "Status"
+   },
+   "blaettern": {
+    "titel": "Stránkování",
+    "text": "Každý seznam odpovídá s `data` a `pagination`. Stránkuje se přes **kurzor**: pošleš `id` posledního prvku předchozí stránky jako `starting_after`. Chybí-li v odpovědi `next_starting_after`, je průchod hotový.",
+    "felder": {
+     "starting_after": "`id` posledního prvku předchozí stránky. Doporučená cesta — stabilní, i když se seznam mezi dvěma stránkami změní. Neznámé nebo smazané `id` dá 422, ne prázdnou stránku.",
+     "next_starting_after": "Je v `pagination`, dokud to pokračuje: hodnota pro tvé další `starting_after`. Chybí-li, jsi na konci.",
+     "limit": "Řádků na stránku. Výchozí 50, nejvyšší hodnota 200 — větší hodnota dá 422, ne zkrácenou stránku.",
+     "offset": "Řádky, které se přeskočí — pro jednorázový pohled na určitou stránku. Spolu s `starting_after` dá 422: dva údaje o pozici v jednom dotazu nemají bezesporný význam.",
+     "include_total": "`true` dodá navíc `total`. Vyžaduj jen tehdy, když to číslo zobrazuješ.",
+     "has_more": "Je v každé odpovědi a říká, zda existuje další stránka — žádné hádání, žádné kolo navíc."
+    },
+    "warumCursor": "Proč ne prostě `offset`: ten popisuje POZICI v seznamu. Přidá-li se mezi stránkou 1 a stránkou 2 rezervace, posune se všechno o jedno místo — `offset=50` pak přeskočí jeden řádek, při smazání přijde jeden dvakrát. Ve tvé databázi potom chybí rezervace a nic v odpovědi to neprozradí. Kurzor pojmenovává poslední záznam, který jsi viděl, a proto se nemůže posunout."
+   },
+   "fehler": {
+    "titel": "Chyby",
+    "text": "Každá chyba přichází jako `application/problem+json` (RFC 9457) se stabilním `code`, s `request_id` a — kde to pomáhá — s poli, která chybu vysvětlují. Větvi podle `code`, ne podle textu: text se měnit smí, kód ne.",
+    "codes": {
+     "nichtAuthentifiziert": "Token chybí, vypršel nebo je neplatný.",
+     "ungueltigeZugangsdaten": "Client-ID nebo Client-Secret je špatný, nebo je přístup odvolaný.",
+     "scopeFehlt": "Token je platný, ale tento přístup nemá potřebné právo. Chybějící scope stojí v chybě.",
+     "objektNichtErlaubt": "Přístup je omezen na určité objekty; tento mezi ně nepatří.",
+     "nichtGefunden": "Neexistuje nebo patří jinému podniku — oba případy odpovídají stejně.",
+     "zeitraumNichtVerfuegbar": "Obsazeno, zablokováno nebo vyňato z prodeje. Žádná poloviční rezervace nevznikla.",
+     "idempotenzInArbeit": "Volání s tímto Idempotency-Key ještě běží. Chvíli počkej, pak zopakuj.",
+     "aboBestehtBereits": "Pro tuto adresu už existuje aktivní odběr webhooku tohoto přístupu.",
+     "waehrungFehlt": "Objektu, cenovému plánu nebo rezervaci není přiřazena žádná měna — chyba dat.",
+     "ungueltigeAnfrage": "Formálně v pořádku, věcně nesplnitelné. Důvod stojí v `detail`.",
+     "validierungFehlgeschlagen": "Požadavek neodpovídá schématu. `felder` uvádí, které pole.",
+     "zuVieleAnfragen": "Dosažen limit požadavků. `Retry-After` říká, kdy se pokračuje.",
+     "nichtKonfiguriert": "Služba nemůže požadavek bezpečně zpracovat. Žádné pokračování bez kontroly."
+    }
+   },
+   "limits": {
+    "titel": "Limity požadavků",
+    "text": "Omezuje se podle PŘÍSTUPU, ne podle IP adresy: agentura, která obsluhuje dvacet podniků, sedí za jednou IP a nemá si sama brzdit. Tři oddělené kbelíky, aby srovnávání kalendáře neblokovalo nastavování cen.",
+    "eimer": {
+     "token": "Výměna tokenu. Přísná, protože se tu kontrolují přihlašovací údaje.",
+     "write": "Zapisující volání — zasahují do prodeje.",
+     "read": "Čtoucí volání: každodenní chod integrace."
+    },
+    "header": "Každá odpověď nese aktuální stav, i ta úspěšná — abys mohl přizpůsobit tempo, než narazíš na 429:"
+   },
+   "idempotenz": {
+    "titel": "Idempotence",
+    "text": "Při zakládání rezervace je hlavička `Idempotency-Key` povinná. Zvol pro každou operaci jednoznačnou hodnotu (například UUID) a zopakuj ji, když stejné volání posíláš znovu. Bez této ochrany vytvoří přerušení sítě s opakováním dvě rezervace — a ta druhá zablokuje noci, které nikdo neobjednal.",
+    "faelle": {
+     "wiederholung": "Stejný klíč, stejná data → první odpověď se vrátí slovo za slovem, s hlavičkou `Idempotency-Replayed: true`.",
+     "abweichend": "Stejný klíč, JINÁ data → 422. K nové operaci patří nový klíč.",
+     "laufend": "Stejný klíč, první volání ještě běží → 409. Chvíli počkej, pak zopakuj; nedoléhej novým klíčem."
+    }
+   }
+  },
+  "webhooks": {
+   "eyebrow": "Webhooky",
+   "heading": "Události místo dotazování",
+   "sub": "Jeden odběr na adresu, podepsaná doručení, opakování s rostoucím odstupem. Události vznikají při KAŽDÉ změně — i když přijde přes portál nebo dashboard, ne přes toto API.",
+   "tabelle": {
+    "ereignis": "Událost",
+    "wann": "Kdy se spustí"
+   },
+   "ereignisse": {
+    "reservationCreated": "Vznikla rezervace — ať přišla jakýmkoli kanálem.",
+    "reservationUpdated": "Existující rezervace se změnila.",
+    "reservationCancelled": "Rezervace byla stornována. Vlastní událost, protože se na ni reaguje jinak než na změnu.",
+    "availabilityChanged": "Kalendář objektu se změnil (rezervace, blokace, uvolnění).",
+    "rateChanged": "Změnila se denní cena nebo pravidlo pobytu.",
+    "taskCreated": "Vznikl úkol.",
+    "taskCompleted": "Úkol byl uzavřen."
+   },
+   "anlegen": {
+    "titel": "Založit odběr",
+    "text": "Adresa `https` a události, které chceš. Volitelně jen pro určité objekty. Interní adresy se odmítají — kontrola běží při zakládání A před každým jednotlivým doručením.",
+    "secret": "Odpověď obsahuje podpisový secret přesně jednou. Ulož si ho hned — už nikdy se nevydá."
+   },
+   "nutzlast": {
+    "titel": "Co přijde",
+    "text": "Drženo úzce: identifikátory a pole, která změnu popisují. Celý záznam si podle potřeby vyzvedneš přes API — příjemci se tak nedoručí nic, co už mezitím nesmí vidět."
+   },
+   "signatur": {
+    "titel": "Ověření podpisu",
+    "text": "Každé doručení nese hlavičku s časovou značkou a HMAC-SHA256 nad `ZEITSTEMPEL.BODY`, spočítaný se secretem tvého odběru. Protože je podepsána i časová značka, rozpoznáš doručení, které bylo zaznamenáno a později znovu přehráno — u podpisu jen nad tělem to není možné.",
+    "schritte": {
+     "roh": "Vezmi HRUBÉ tělo požadavku, ne rozparsovaný a znovu serializovaný objekt — jiná sekvence bajtů dá jiný podpis. To je nejčastější důvod pro „podpis nesedí“.",
+     "alter": "Zkontroluj věk podle časové značky; pět minut tolerance je dobrá hodnota.",
+     "vergleich": "Porovnávej v konstantním čase (`timingSafeEqual`, `hmac.compare_digest`). Obyčejné `==` udělá podpis uhodnutelným."
+    }
+   },
+   "verhalten": {
+    "wiederholung": {
+     "titel": "Opakování",
+     "text": "Neodpoví-li tvoje adresa 2xx, doručuje se znovu až desetkrát — s rostoucím odstupem od jedné minuty až do jedné hodiny. Odpovídej rychle a zpracovávej potom; pomalý příjemce se počítá jako chyba."
+    },
+    "reihenfolge": {
+     "titel": "Pořadí",
+     "text": "Není zaručeno. Použij `created_at` události, abys starší doručení nepřepsal přes novější."
+    },
+    "doppelt": {
+     "titel": "Dvojí doručení",
+     "text": "Je nepravděpodobné, ale možné — ber `id` události jako klíč a zpracuj každou jen jednou. Tento příslib platí pro každého poskytovatele webhooků, ne jen pro tohoto."
+    },
+    "nachholen": {
+     "titel": "Dohnat po výpadku",
+     "text": "Pokud tvé servery byly nedostupné, zameškané události doženeš přes `GET /v1/events?since=…` — nejstarší nejdřív, se stejnými `id` jako při doručení, nejvýše 30 dní zpět. Samotný push není zárukou doručení: opakování časem vyprší, a bez tohoto kroku ti budou chybět právě ty události, o kterých ses nikdy nedozvěděl."
+    }
+   }
+  },
+  "grenzen": {
+   "eyebrow": "Hranice",
+   "heading": "Omezení",
+   "sub": "Dvě operace přes toto API nejsou možné. Obě vyplývají z datového modelu. Rušení, přesun a výpočet ceny možné jsou.",
+   "stattdessen": "Místo toho:",
+   "gaeste": {
+    "titel": "Zakládání a změna hostů",
+    "text": "Údaje hosta vznikají při zadání hostem nebo přes portál. Zápis na tomto místě by byl třetím zdrojem pro tutéž osobu.",
+    "ausweg": "Při zakládání rezervace posílej údaje hosta s sebou — existující hosté se rozpoznají podle e-mailové adresy. Kontaktní pole existující rezervace lze spravovat přes `PATCH /v1/reservations/'{'id}`."
+   },
+   "nachrichten": {
+    "titel": "Otevření konverzace",
+    "text": "Číst zprávy a psát do existující konverzace lze (`/v1/reservations/'{'id}/messages`). Založit novou konverzaci ne: vlákno vždy patří ke kontu hosta na marketplace a přístup podniku přes API takové konto není.",
+    "ausweg": "Konverzace vzniká první zprávou hosta nebo v dashboardu; potom do ní API může psát."
+   },
+   "finanzen": {
+    "titel": "Inkaso platby",
+    "text": "Ke čtení jsou platby a naplánované výzvy k platbě (`/v1/reservations/'{'id}/payments`) a dále platební plán a stornovací škála (`/v1/properties/'{'id}/booking-conditions`). Inkaso běží přes rezervační proces hosta s platebními záměry, ne přes odesílatelný odkaz.",
+    "ausweg": "Výzvy k platbě vznikají v dashboardu; API čte jejich stav a související události."
+   }
+  },
+  "hilfe": {
+   "eyebrow": "Pomoc",
+   "heading": "Otázky, změny, nástroje",
+   "sub": "Kam s otázkou a čeho se můžeš při stavbě držet.",
+   "wege": {
+    "titel": "Když něco nejde",
+    "entwicklerMail": {
+     "titel": "Technický kontakt",
+     "text": "Pošli s sebou `request_id` z chybové odpovědi — díky tomu je volání v našich protokolech dohledatelné."
+    },
+    "hilfeCenter": {
+     "titel": "Centrum pomoci",
+     "text": "Návody k produktu: zakládat objekty, propojovat portály, spravovat ceny."
+    },
+    "schema": {
+     "titel": "Vygenerovat klienta",
+     "text": "Soubor OpenAPI se hodí jako vstup pro běžné generátory — ručně psaný klient je zbytečný."
+    }
+   },
+   "versionen": {
+    "titel": "Verzování",
+    "text": "API je slib. Tyto čtyři body platí pro v1:",
+    "zusagen": {
+     "pfad": "Verze stojí v cestě. Rozbíjející změna dostane `/v2`; `/v1` běží dál vedle ní.",
+     "additiv": "V rámci v1 se pole jen přidávají. Existující pole se nepřejmenovávají a nemění svůj význam.",
+     "frist": "Bude-li verze ohlášena k ukončení, uvedeme datum s nejméně dvanáctiměsíční lhůtou a ozveme se každému podniku s aktivním přístupem.",
+     "changelog": "Změny stojí v souboru OpenAPI a na této stránce. Žádná tichá změna pole neexistuje."
+    }
+   }
+  },
+  "kopf": {
+   "hilfe": "Centrum nápovědy",
+   "zurueck": "Na web"
+  },
+  "sidebar": {
+   "sprung": "Přejít na …",
+   "keineTreffer": "Žádný endpoint ani kapitola tomu neodpovídá.",
+   "leitfaden": "Průvodce",
+   "referenz": "Referenční příručka API",
+   "tocTitel": "Na této stránce",
+   "version": "myNextDays Veřejné API v1"
+  },
+  "referenz": {
+   "scope": "Potřebné oprávnění:",
+   "pfadParameter": "Parametry cesty",
+   "queryParameter": "Parametry dotazu",
+   "headerParameter": "Hlavičky",
+   "koerper": "Tělo požadavku",
+   "antworten": "Odpovědi",
+   "erlaubt": "Povoleno:",
+   "pflicht": "povinné",
+   "standard": "Výchozí",
+   "sprache": "Jazyk",
+   "zugang": "Přístup",
+   "tokenHinweis": "Jen v tomto prohlížeči, jen pro „Vyzkoušet“ — hodnota se neukládá a neposílá se k nám.",
+   "ausprobieren": "Vyzkoušet",
+   "laeuft": "Probíhá …",
+   "anfrage": "Požadavek",
+   "antwort": "Odpověď",
+   "beispiel": "Příklad",
+   "kopieren": "Kopírovat",
+   "kopiert": "Zkopírováno",
+   "fehlerNetz": "Požadavek se ke službě nedostal. Nejčastější příčiny: služba právě neodpovídá, nebo prohlížeč požadavek zrušil kvůli chybějícímu povolení CORS. Stejné volání přes curl z pole s kódem ukáže, co služba skutečně říká.",
+   "keinToken": "Bez tokenu odpoví volání kódem 401 — to je očekávaná cesta."
+  },
+  "start": {
+   "eyebrow": "Veřejné API",
+   "titel": "Vyvíjej pro myNextDays",
+   "unterzeile": "REST API pro objekty, dostupnost, ceny, rezervace, hosty a úkoly — čtení i zápis, se stornem, přesunem a náhledem ceny. Průvodce vysvětluje pravidla, reference obsahuje každý endpoint se všemi parametry a pole pro vyzkoušení.",
+   "basisLabel": "Základní adresa",
+   "versionLabel": "Verze",
+   "versionHinweis": "v cestě",
+   "schemaTitel": "Schéma",
+   "schemaText": "OpenAPI 3.1, generováno z kódu. Hodí se jako vstup pro běžné generátory klientů.",
+   "woAnfangen": "Kde začít",
+   "erstLesen": "Nejdřív si přečti",
+   "dannBauen": "Pak vyvíjej"
+  },
+  "bereiche": {
+   "leitfaden": "Dokumentace",
+   "referenz": "Referenční příručka API"
+  },
+  "gruppen": {
+   "ueberblick": "Základy",
+   "anhang": "Příloha"
+  },
+  "weiter": {
+   "naechste": "Další stránka",
+   "zurReferenz": "Dále na referenční příručku API"
+  },
+  "referenzUebersicht": {
+   "eyebrow": "Referenční příručka API",
+   "titel": "Všechny endpointy",
+   "sub": "Každý endpoint má vlastní stránku se všemi parametry, tělem požadavku, odpověďmi a polem, ve kterém můžeš volání hned vyzkoušet."
+  },
+  "zugang": {
+   "eyebrow": "Autentizace",
+   "heading": "Autentizace",
+   "sub": "OAuth 2.0 s `client_credentials`. Jeden přístup patří právě jednomu podniku; klíč přes více podniků neexistuje.",
+   "ablauf": {
+    "titel": "Průběh",
+    "text": "`client_credentials` je cesta pro programy, které jednají samy za sebe. Neexistuje dialog souhlasu ani refresh token.",
+    "schritte": {
+     "anlegen": "Přístup vytvořit v dashboardu: Účet → Přístup k API. `client_secret` se zobrazí jednou a poté už jej nelze získat.",
+     "tauschen": "`POST /v1/oauth/token` s `client_id` a `client_secret`. Odpověď obsahuje `access_token`, `expires_in` (3600) a udělená oprávnění.",
+     "senden": "Token posílat u každého volání jako `Authorization: Bearer ACCESS_TOKEN`. Po vypršení odpovídá API stavem 401 a kódem `token_expired`."
+    },
+    "merksatz": "Token držet v paměti, nezískávat jej při každém volání. Výměna u každého požadavku narazí na limit požadavků token endpointu (10/Minute)."
+   },
+   "rechte": {
+    "titel": "Oprávnění",
+    "text": "Oprávnění mají podobu `bereich:richtung`, například `reservations:read` nebo `rates:write`. Chybí-li oprávnění, endpoint odpoví stavem 403 a kódem `insufficient_scope`.",
+    "merksatz": "Udělovat jen oprávnění, která integrace potřebuje. Ztracený klíč pak nemůže přepsat nic, co nikdy neměl číst."
+   },
+   "objekte": {
+    "titel": "Omezení na objekty",
+    "text": "Přístup může být omezen na určité objekty. V seznamech vidí jen tyto; volání s jiným ID objektu odpoví stavem 403 a kódem `objekt_nicht_erlaubt`."
+   },
+   "selbstauskunft": {
+    "titel": "Kontrola oprávnění",
+    "text": "`GET /v1/me` vrací podnik, oprávnění a omezení na objekty daného tokenu — první volání při nastavování integrace."
+   }
+  },
+  "fehler": {
+   "eyebrow": "Chyby",
+   "heading": "Jak chyby vypadají",
+   "sub": "Každá chyba je stavový kód HTTP plus tělo podle RFC 9457 (`application/problem+json`). Žádná chyba nepřichází se stavem 200.",
+   "aufbau": {
+    "titel": "Struktura",
+    "text": "`code` je stabilní, strojově čitelný název chyby. `detail` je text pro lidi a může se kdykoli změnit.",
+    "felder": {
+     "type": "Adresa popisu tohoto typu chyby — seznam kódů chyb v příloze.",
+     "title": "Krátký název typu chyby.",
+     "status": "Stavový kód HTTP.",
+     "detail": "Popis pro lidi.",
+     "code": "Stabilní název chyby. Vyhodnocovat toto pole.",
+     "request_id": "Identifikátor požadavku. Přiložit k dotazu na podporu."
+    },
+    "merksatz": "Rozhodovat podle `code`, nikoli podle `detail`. Text není rozhraní."
+   },
+   "klassen": {
+    "titel": "Třídy stavů",
+    "vier": "4xx — problémem je požadavek: chybějící oprávnění, neznámé ID, neplatná hodnota, obsazené období. Opakování nic nezmění.",
+    "fuenf": "5xx — chyba na straně serveru. Opakovat s rostoucím odstupem.",
+    "neun": "429 — dosažen limit požadavků. `Retry-After` uvádí dobu čekání v sekundách."
+   }
+  },
+  "limits": {
+   "eyebrow": "Limity požadavků",
+   "heading": "Kolik volání je povoleno",
+   "sub": "Limit platí na přístup, nikoli na IP. Existují tři kbelíky s vlastními hodnotami pro čtení, zápis a vydávání tokenů."
+  },
+  "fehlercodes": {
+   "eyebrow": "Příloha",
+   "heading": "Kódy chyb",
+   "sub": "Všechny hodnoty `code` tohoto API. Každý řádek má ukotvení; adresa `type` v chybové odpovědi na něj ukazuje."
+  },
+  "lokalisierung": {
+   "eyebrow": "Příloha",
+   "heading": "Lokalizace",
+   "sub": "Jazyk a měna vycházejí z dat. Obě pole mohou být prázdná; ani jedno nemá výchozí hodnotu.",
+   "waehrung": {
+    "titel": "Měna",
+    "text": "Každá částka nese kód `currency` podle ISO 4217. Neexistuje výchozí hodnota ani přepočet.",
+    "merksatz": "Při vytváření rezervace musí `currency` odpovídat měně objektu. Při odchylce: 422 s kódem `currency_mismatch`."
+   },
+   "sprache": {
+    "titel": "Jazyk",
+    "text": "`language` je dvoumístný kód podle ISO 639-1, například `de`, `da`, `en`. Hodnota pochází z rezervace nebo z portálu a může být prázdná. Prázdná znamená neznámá."
+   },
+   "texte": {
+    "titel": "Texty API",
+    "text": "Názvy polí, hodnoty `code` a hodnoty enum jsou anglické a jsou součástí kontraktu. Texty `detail` v chybové odpovědi jsou určeny lidem a mohou se měnit — vlastní hlášení zobrazovat podle `code`."
+   }
+  },
+  "zeit": {
+   "eyebrow": "Příloha",
+   "heading": "Časové zóny",
+   "sub": "Toto API používá dva druhy časových údajů: kalendářní dny v časové zóně objektu a okamžiky v UTC.",
+   "tage": {
+    "titel": "Kalendářní dny",
+    "text": "`check_in`, `check_out`, `date`, `from` a `to` jsou kalendářní dny ve formátu `YYYY-MM-DD`, míněné v časové zóně objektu. Nenesou čas a nepřepočítávají se na UTC.",
+    "merksatz": "`check_out` je den odjezdu; poslední obsazená noc je noc předtím. Čtyři noci znamenají čtyři dny rozdílu mezi `check_in` a `check_out`."
+   },
+   "zeitpunkte": {
+    "titel": "Okamžiky",
+    "text": "`created_at`, `updated_at`, `received_at`, `booked_at` a `cancelled_at` jsou okamžiky podle ISO 8601 v UTC s `Z` na konci."
+   },
+   "quelle": {
+    "titel": "booked_at a received_at",
+    "text": "`booked_at` je okamžik rezervace u hosta, u rezervací z portálu ze zdroje portálu. `received_at` je příchod do tohoto systému. Při hromadném stažení nese mnoho rezervací stejnou sekundu `received_at`.",
+    "merksatz": "Pro „nejnovější první“ používat `booked_at` a `null` chápat jako neznámé. `received_at` odráží pořadí stažení, nikoli pořadí rezervací."
+   },
+   "filter": {
+    "titel": "Filtrování podle změn",
+    "text": "`updated_since` přijímá okamžik a vrací, co se od té doby změnilo. Pozor na kódování URL: `+` v adrese znamená mezeru — psát `Z` nebo zakódovat jako `%2B`."
+   }
+  }
+ },
  "meta": {
   "title": "myNextDays – Platforma pro pronajímatele rekreačních ubytování",
   "description": "Platforma pro hotely, agentury a pronajímatele rekreačních ubytování: channel manager, kalendář, přímé rezervace, komunikace s hosty a fakturace na jednom místě. Vyvinuto v Dánsku, hostováno v EU. Od 19,90 € měsíčně. 30 dní zdarma."

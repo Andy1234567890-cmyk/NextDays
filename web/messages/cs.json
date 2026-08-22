@@ -6825,7 +6825,12 @@
     "needScope": "Vyberte alespoň jedno oprávnění.",
     "docsHint": "Jak se pomocí těchto údajů přihlásit, najdete v dokumentaci API.",
     "loadErr": "Načtení se nezdařilo.",
-    "noAccess": "Bez přístupu"
+    "noAccess": "Bez přístupu",
+    "scopeRates": "Ceny",
+    "scopeGuests": "Hosté",
+    "scopeTasks": "Úkoly",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "Dokumentace API"
   },
   "supportChat": {
     "titel": "Nápověda a podpora",

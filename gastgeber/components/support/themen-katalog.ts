@@ -33,8 +33,10 @@ export const SUPPORT_THEMEN: SupportThema[] = [
     labelKey: "themaBuchung",
     icon: "solar:calendar-line-duotone",
     hinweisKey: "themaBuchungHinweis",
+    // `/buchungen` fehlt hier bewusst: die Seite gibt es (noch) nicht, und ein
+    // Selbsthilfe-Link in einen 404 ist die schlechteste Antwort auf eine
+    // Support-Frage — der Gastgeber steht danach schlechter da als vorher.
     selbsthilfe: [
-      { textKey: "themaBuchungHilfeBuchungen", href: "/buchungen" },
       { textKey: "themaBuchungHilfeNachrichten", href: "/nachrichten" },
     ],
   },
@@ -43,7 +45,10 @@ export const SUPPORT_THEMEN: SupportThema[] = [
     labelKey: "themaZahlung",
     icon: "solar:wallet-line-duotone",
     hinweisKey: "themaZahlungHinweis",
-    selbsthilfe: [{ textKey: "themaZahlungHilfeFinanzen", href: "/finanzen" }],
+    // Ohne Selbsthilfe: der einzige Punkt zeigte auf `/finanzen`, das es nicht
+    // gibt. Das Thema bleibt (es führt zum Kontaktformular), nur der tote Weg
+    // dorthin ist weg.
+    selbsthilfe: [],
   },
   {
     slug: "objekt",

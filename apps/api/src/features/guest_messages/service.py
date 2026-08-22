@@ -331,7 +331,75 @@ class GuestMessagesService:
             {"last_message_at": now}
         ).eq("id", thread_id).eq("portal_guest_id", guest_id).execute()
 
+        self._melde_dem_betrieb(thread, thread_id, body)
         return GuestMessageView(**inserted[0])
+
+    def _melde_dem_betrieb(
+        self, thread: dict, thread_id: str, body: str
+    ) -> None:
+        """Glocke/Mail an den Betrieb: „Ein Gast hat geschrieben."
+
+        WARUM DAS HIER STEHEN MUSS: Die Kategorie `messages` steht im Katalog
+        und ist im Konto einschaltbar — ausgelöst wurde sie bislang NUR vom
+        Portal-Eingang (`channel_manager.nachrichten_eingang`). Eine Nachricht
+        aus dem eigenen Marktplatz landete damit still in der Datenbank: kein
+        Abzeichen, keine Mail, kein Push. Wer nicht zufällig in den Posteingang
+        sah, erfuhr von der Anfrage nichts — bei einem Gast, der VOR der
+        Anreise etwas fragt, ist das der teuerste Fall.
+
+        `mb:`-Präfix wie im Posteingang (`inbox.marktplatz.PREFIX`): der
+        Sprungziel-Pfad muss dieselbe ID tragen, unter der die Oberfläche den
+        Thread führt — sonst öffnet die Meldung eine Ansicht, die es nicht gibt.
+
+        Best-effort (Wurzel 5): die Nachricht IST an dieser Stelle gespeichert.
+        Kippt die Meldung, darf das den Versand nicht zurückdrehen — sonst
+        verlöre der Gast seinen Text, weil eine Glocke nicht klingeln konnte.
+        Der Fang steht HIER und nicht nur in `melde_gastnachricht`: er soll
+        nicht davon abhängen, dass ein anderes Modul seine Disziplin behält
+        (auch der Import selbst kann fehlschlagen).
+        """
+        try:
+            from src.features.inbox.marktplatz import PREFIX  # noqa: PLC0415
+            from src.features.notification_settings.ereignisse import (  # noqa: PLC0415
+                melde_gastnachricht,
+            )
+
+            melde_gastnachricht(
+                self._db(),
+                tenant_id=str(thread["tenant_id"]),
+                thread_id=f"{PREFIX}{thread_id}",
+                absender=self._gastname(thread.get("portal_guest_id")),
+                vorschau=body,
+            )
+        except Exception as exc:  # noqa: BLE001 — Nebenpfad kippt den Versand nie
+            log.warning(
+                "gastnachricht_meldung_fehlgeschlagen",
+                thread_id=thread_id,
+                error=str(exc)[:200],
+            )
+
+    def _gastname(self, portal_guest_id: object) -> str | None:
+        """Anzeigename des Gasts für die Meldung — oder None.
+
+        `None` statt eines Ersatztextes: `melde_gastnachricht` schreibt dann
+        „Neue Gastnachricht" statt „Neue Nachricht von <erfundener Name>"
+        (Wurzel 4). Eigene, enge Abfrage statt eines Joins oben — der
+        Nachrichtenversand soll nicht an einer Anzeigefrage hängen.
+        """
+        if not portal_guest_id:
+            return None
+        try:
+            zeilen = (
+                self._db()
+                .table("portal_guests")
+                .select("name")
+                .eq("id", str(portal_guest_id))
+                .limit(1)
+                .execute()
+            ).data or []
+        except Exception:  # noqa: BLE001 — Anzeigename, kein Kontroll-Signal
+            return None
+        return (zeilen[0].get("name") or None) if zeilen else None
 
     # ---- Anreicherungs-Helfer ------------------------------------------------
 

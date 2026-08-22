@@ -6823,7 +6823,12 @@
     "needScope": "Pasirinkite bent vieną teisę.",
     "docsHint": "Kaip autentifikuotis su šiais duomenimis, aprašyta API dokumentacijoje.",
     "loadErr": "Nepavyko įkelti.",
-    "noAccess": "Nėra prieigos"
+    "noAccess": "Nėra prieigos",
+    "scopeRates": "Kainos",
+    "scopeGuests": "Svečiai",
+    "scopeTasks": "Užduotys",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "API dokumentacija"
   },
   "supportChat": {
     "titel": "Pagalba ir palaikymas",

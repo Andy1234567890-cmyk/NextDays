@@ -22,6 +22,23 @@ Der Ablauf ist bewusst „erst beanspruchen, dann handeln":
 Der Anspruch entsteht damit VOR dem Seiteneffekt. Andersherum — erst buchen,
 dann Schlüssel merken — wäre wirkungslos: genau zwischen beiden Schritten liegt
 der Abbruch, der die Wiederholung auslöst.
+
+VIERTER SCHRITT, ohne den das Verfahren eine Falle ist: scheitert der Vorgang,
+OHNE stattgefunden zu haben, wird der Anspruch wieder FREIGEGEBEN
+(`freigeben()`). Ohne das bliebe die Zeile ohne Antwort stehen, und jede
+Wiederholung mit demselben Schlüssel bekäme für immer 409 „läuft noch" — der
+Schlüssel wäre verbrannt, obwohl nichts passiert ist. Diesen Fall trifft man
+garantiert: „Zeitraum belegt" ist der häufigste Fehler beim Buchen, und der
+Client soll es mit demselben Schlüssel erneut versuchen können, sobald die
+Nächte wieder frei sind.
+
+Die Grenze verläuft bei der Frage, ob der Seiteneffekt eingetreten sein KANN:
+  * Fehler VOR dem Schreiben (Währung passt nicht, Zeitraum belegt, Objekt
+    nicht erlaubt) → freigeben, es ist nichts entstanden.
+  * Fehler mit UNKLAREM Ausgang (Serverfehler, abgebrochene Verbindung) →
+    NICHT freigeben. Hier ist die Buchung vielleicht doch entstanden, und eine
+    Wiederholung wäre eine zweite. Der Client bekommt 409 „läuft noch" und soll
+    erst nachsehen (fail-closed, Wurzel 5).
 """
 from __future__ import annotations
 
@@ -191,3 +208,33 @@ def antwort_festhalten(
         ).execute()
     except Exception:  # noqa: BLE001 — best effort, Hauptpfad ist schon fertig
         log.warning("idempotenz_antwort_nicht_gespeichert", key=key[:12])
+
+
+def freigeben(db: Client, *, tenant_id: str, client_pk: str, key: str) -> None:
+    """Anspruch löschen, weil der Vorgang NICHT stattgefunden hat.
+
+    Nur aufzurufen, wenn sicher ist, dass kein Seiteneffekt eingetreten ist —
+    sonst öffnet die Freigabe genau die Doppelausführung, die der Schlüssel
+    verhindern soll.
+
+    Gelöscht wird ausschließlich die Zeile OHNE Antwort
+    (`response_status is null`). Damit kann dieser Aufruf niemals einen bereits
+    abgeschlossenen Vorgang freiräumen, selbst wenn ihn jemand an der falschen
+    Stelle einsetzt.
+
+    Best effort: schlägt das Löschen fehl, bleibt der Schlüssel belegt, bis der
+    Aufräumjob ihn entfernt. Das ist die harmlose Richtung — der Kunde braucht
+    dann einen neuen Schlüssel, statt eine Doppelbuchung zu riskieren.
+    """
+    try:
+        (
+            db.table("public_api_idempotency")
+            .delete()
+            .eq("tenant_id", tenant_id)
+            .eq("api_client_id", client_pk)
+            .eq("idempotency_key", key)
+            .is_("response_status", "null")
+            .execute()
+        )
+    except Exception:  # noqa: BLE001 — best effort, der Hauptfehler zählt
+        log.warning("idempotenz_anspruch_nicht_freigegeben", key=key[:12])

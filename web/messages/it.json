@@ -6823,7 +6823,12 @@
     "needScope": "Seleziona almeno un’autorizzazione.",
     "docsHint": "La documentazione dell’API spiega come autenticarsi con queste credenziali.",
     "loadErr": "Caricamento non riuscito.",
-    "noAccess": "Nessun accesso"
+    "noAccess": "Nessun accesso",
+    "scopeRates": "Prezzi",
+    "scopeGuests": "Ospiti",
+    "scopeTasks": "Attività",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "Documentazione API"
   },
   "supportChat": {
     "titel": "Aiuto e assistenza",

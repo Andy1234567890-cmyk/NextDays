@@ -15,10 +15,16 @@
 // Tor also lautlos ÖFFNEN. Fail-closed heißt hier: der Verschluss steht im
 // Code, ein Öffnen ist ein bewusster Commit, kein Deploy-Nebeneffekt.
 //
-// ZUM START: hier auf `false` setzen. Damit fallen in einem Zug weg: das Tor in
-// der Middleware, `noindex` im Layout, `Disallow: /` in robots.txt und die
-// leere sitemap.xml — alle vier lesen diesen einen Wert.
-export const VOR_DEM_START = true;
+// GESTARTET am 22.08.2026: der Wert steht auf `false`. Damit sind in einem Zug
+// weggefallen: das Tor in der Middleware, `noindex` im Layout, `Disallow: /` in
+// robots.txt und die leere sitemap.xml — alle vier lesen diesen einen Wert.
+//
+// Der Schalter bleibt stehen und wird NICHT ausgebaut: Er ist der Weg zurück,
+// wenn der Marktplatz noch einmal zumachen muss (Wartung, rechtliche Klärung,
+// ein Fehler im Bestand). Ihn zu entfernen hiesse, das Tor beim naechsten Mal
+// neu zu bauen — samt der vier Stellen, die daran haengen, und samt der
+// Erfahrung, die in den Kommentaren unten steht.
+export const VOR_DEM_START = false;
 
 /** Pfade, die auch vor dem Start erreichbar bleiben.
  *

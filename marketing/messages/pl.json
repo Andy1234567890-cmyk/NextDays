@@ -1,4 +1,427 @@
 {
+ "entwickler": {
+  "meta": {
+   "titel": "API i programiści — myNextDays",
+   "beschreibung": "Publiczne REST API myNextDays: obiekty, dostępność, ceny, rezerwacje, goście i zadania. OAuth2, OpenAPI 3.1, webhooki z podpisanymi dostarczeniami."
+  },
+  "hero": {
+   "eyebrow": "Publiczne API",
+   "titel": "Buduj na myNextDays",
+   "unterzeile": "Jedno REST API do obiektów, dostępności, cen, rezerwacji, gości i zadań. Krótko żyjące tokeny, uprawnienia per dostęp, zdarzenia przez webhooki — oraz schemat, który powstaje z kodu i dlatego nie może się zdezaktualizować.",
+   "basisLabel": "Adres bazowy",
+   "versionLabel": "Wersja",
+   "versionHinweis": "w ścieżce",
+   "konsole": "Wypróbuj",
+   "schema": "OpenAPI 3.1",
+   "referenz": "Przeczytaj referencję"
+  },
+  "inhalt": {
+   "titel": "Na tej stronie",
+   "schnellstart": "Pierwsze kroki",
+   "konzepte": "Model danych",
+   "konventionen": "Paginacja",
+   "endpunkte": "Punkty końcowe",
+   "webhooks": "Webhooki",
+   "grenzen": "Ograniczenia",
+   "hilfe": "Wsparcie",
+   "start": "Przegląd",
+   "zugang": "Uwierzytelnianie",
+   "fehler": "Błędy",
+   "limits": "Limity zapytań",
+   "fehlercodes": "Kody błędów",
+   "lokalisierung": "Lokalizacja",
+   "zeit": "Strefy czasowe"
+  },
+  "code": {
+   "kopieren": "Kopiuj",
+   "kopiert": "Skopiowano",
+   "anfrage": "Żądanie",
+   "antwort": "Odpowiedź",
+   "zustellung": "Dostarczenie",
+   "pruefcode": "Sprawdź podpis (Node)"
+  },
+  "schnellstart": {
+   "eyebrow": "Szybki start",
+   "heading": "Pierwsze wywołanie w pięć minut",
+   "sub": "Trzy kroki. Tylko pierwszy przechodzi przez interfejs — cała reszta to wywołanie.",
+   "schritt1": {
+    "titel": "Utwórz dostęp",
+    "text": "W dashboardzie utwórz dostęp i od razu określ, co mu wolno: uprawnienia per obszar oraz, jeśli chcesz, tylko wybrane obiekty. Dostęp do planu sprzątania nie potrzebuje wglądu w przychody.",
+    "pfad": "Konto → Dostęp API",
+    "hinweis": "`client_secret` jest wyświetlany jednorazowo; zapisywany jest tylko jego skrót. Utracony sekret nie jest odtwarzany, lecz zastępowany."
+   },
+   "schritt2": {
+    "titel": "Pobierz token",
+    "text": "Wymień Client-ID i Secret na Access-Token. Obowiązuje godzinę i nosi dokładnie te uprawnienia, które ma dany dostęp.",
+    "hinweis": "Trzymaj token w pamięci i wymieniaj go dopiero wtedy, gdy wygaśnie albo przyjdzie 401 — nie przy każdym wywołaniu. Odwołanie w dashboardzie natychmiast blokuje wydawanie nowych tokenów."
+   },
+   "schritt3": {
+    "titel": "Wykonaj pierwsze wywołanie",
+    "text": "Wyślij token jako `Authorization: Bearer …`. Każda lista odpowiada w tej samej kopercie: `data` plus `pagination`.",
+    "hinweis": "Zaraz potem wywołaj `GET /v1/me` — powie ci, jakie uprawnienia i jakie obiekty ma ten dostęp, bez tego, żebyś musiał wyszukiwać to przez serię błędów 403."
+   }
+  },
+  "konzepte": {
+   "eyebrow": "Koncepcje",
+   "heading": "Cztery rzeczy, które powinieneś wiedzieć wcześniej",
+   "sub": "Cztery ustalenia, które określają zachowanie API. Odbiegają od rozpowszechnionych założeń.",
+   "objekt": {
+    "titel": "Obiekt to typ jednostek",
+    "text": "`property` to dokładnie jeden typ: typ pokoju w hotelu albo obiekt wakacyjny. Pod nim wiszą jego jednostki (`units`) — normalnie dokładnie jedna, przy pięciu identycznych studiach po prostu pięć. Sprzedaje się jednostkę, prowadzi się i wycenia typ.",
+    "folge": "Dostępność jest dlatego LICZBĄ (`units_available`), a nie tak/nie. Hotel z 8 pokojami twin i 4 pokojami double ma dwa obiekty z 8 i 4 jednostkami — a nie jeden obiekt z 12 pokojami."
+   },
+   "waehrung": {
+    "titel": "Każda kwota nosi swoją walutę",
+    "text": "Nie ma wartości domyślnej. Każdy obiekt ma walutę, a każda kwota w odpowiedzi ją podaje.",
+    "folge": "Jeśli przy obiekcie brakuje waluty, jest to błąd danych i wywołanie kończy się błędem 422 — nie wstawiamy „EUR“. Przy rezerwowaniu twoja waluta musi zgadzać się z walutą obiektu."
+   },
+   "zeit": {
+    "titel": "Dwa różne momenty",
+    "text": "`booked_at` to moment rezerwacji przez gościa — ze źródła portalu, `null`, jeśli portal go nie dostarcza. `received_at` to moment wpływu do tego systemu.",
+    "folge": "Sortuj „najnowsze pierwsze“ po `booked_at`, a nie po `received_at`: przy imporcie zbiorczym dziesiątki rezerwacji noszą tę samą sekundę. Znaczniki czasu są w UTC, a pola datowe to dni kalendarzowe w strefie czasowej obiektu."
+   },
+   "kanaele": {
+    "titel": "Widoczność obowiązuje per kanał",
+    "text": "Nie ma globalnego „opublikowane“. Obiekt jest widoczny na marketplace, na własnej stronie internetowej, przez portale — każde przełączane osobno.",
+    "folge": "Obiekt jest sprzedawalny tylko wtedy, gdy zbiegają się trzy rzeczy: `status = active`, kanał jest włączony i są wolne jednostki. Wstrzymanie sprzedaży działa natomiast przez WSZYSTKIE kanały."
+   }
+  },
+  "konventionen": {
+   "eyebrow": "Konwencje",
+   "heading": "Stronicowanie, błędy, limity, idempotencja",
+   "sub": "Cztery punkty, które w każdym API są inne — tutaj z liczbami zamiast prozy.",
+   "tabelle": {
+    "feld": "Pole",
+    "bedeutung": "Znaczenie",
+    "code": "Kod",
+    "status": "Status"
+   },
+   "blaettern": {
+    "titel": "Stronicowanie",
+    "text": "Każda lista odpowiada z `data` i `pagination`. Stronicuje się przez **kursor**: wysyłasz `id` ostatniego elementu poprzedniej strony jako `starting_after`. Jeśli w odpowiedzi brakuje `next_starting_after`, przejście jest zakończone.",
+    "felder": {
+     "starting_after": "`id` ostatniego elementu poprzedniej strony. Zalecana droga — stabilna, także gdy lista zmieni się między dwiema stronami. Nieznane lub usunięte `id` daje 422, a nie pustą stronę.",
+     "next_starting_after": "Jest w `pagination`, dopóki jest ciąg dalszy: wartość do twojego następnego `starting_after`. Gdy go brakuje, jesteś na końcu.",
+     "limit": "Wiersze na stronę. Domyślnie 50, wartość maksymalna 200 — większa wartość daje 422, a nie skróconą stronę.",
+     "offset": "Wiersze do pominięcia — do jednorazowego spojrzenia na określoną stronę. Razem z `starting_after` daje 422: dwie informacje o pozycji w jednym żądaniu nie mają niesprzecznego znaczenia.",
+     "include_total": "`true` zwraca dodatkowo `total`. Żądaj tego tylko wtedy, gdy wyświetlasz tę liczbę.",
+     "has_more": "Jest w każdej odpowiedzi i mówi, czy istnieje kolejna strona — bez zgadywania, bez dodatkowej rundy."
+    },
+    "warumCursor": "Dlaczego nie po prostu `offset`: opisuje on POZYCJĘ na liście. Jeśli między stroną 1 a stroną 2 dojdzie rezerwacja, wszystko przesuwa się o jedno miejsce — `offset=50` pomija wtedy jeden wiersz, a przy usunięciu jeden przychodzi dwa razy. Potem w twojej bazie danych brakuje rezerwacji i nic w odpowiedzi tego nie ujawnia. Kursor wskazuje ostatni rekord, który widziałeś, i dlatego nie może się przesunąć."
+   },
+   "fehler": {
+    "titel": "Błędy",
+    "text": "Każdy błąd przychodzi jako `application/problem+json` (RFC 9457) ze stabilnym `code`, z `request_id` i — tam, gdzie to pomaga — z polami, które ten błąd wyjaśniają. Rozgałęziaj na `code`, a nie na tekst: tekst może się zmienić, kod nie.",
+    "codes": {
+     "nichtAuthentifiziert": "Brak tokenu, token wygasł albo jest nieprawidłowy.",
+     "ungueltigeZugangsdaten": "Błędny Client-ID lub Secret, albo dostęp został odwołany.",
+     "scopeFehlt": "Token prawidłowy, ale ten dostęp nie ma potrzebnego uprawnienia. Brakujący scope jest podany w błędzie.",
+     "objektNichtErlaubt": "Ten dostęp jest ograniczony do wybranych obiektów; ten obiekt do nich nie należy.",
+     "nichtGefunden": "Nie istnieje albo należy do innego podmiotu — oba przypadki odpowiadają tak samo.",
+     "zeitraumNichtVerfuegbar": "Zajęte, zablokowane albo wyłączone ze sprzedaży. Nie powstała żadna połowiczna rezerwacja.",
+     "idempotenzInArbeit": "Wywołanie z tym Idempotency-Key jeszcze trwa. Odczekaj chwilę, potem powtórz.",
+     "aboBestehtBereits": "Dla tego adresu istnieje już aktywna subskrypcja webhooka tego dostępu.",
+     "waehrungFehlt": "Do obiektu, planu cenowego albo rezerwacji nie jest przypisana żadna waluta — to błąd danych.",
+     "ungueltigeAnfrage": "Formalnie w porządku, merytorycznie niewykonalne. Uzasadnienie jest w `detail`.",
+     "validierungFehlgeschlagen": "Żądanie nie pasuje do schematu. `felder` podaje, o które pole chodzi.",
+     "zuVieleAnfragen": "Osiągnięty Rate-Limit. `Retry-After` mówi, kiedy można dalej.",
+     "nichtKonfiguriert": "Usługa nie może bezpiecznie obsłużyć tego żądania. Bez sprawdzenia nie ma dalszego działania."
+    }
+   },
+   "limits": {
+    "titel": "Rate-Limity",
+    "text": "Ograniczamy per DOSTĘP, a nie per adres IP: agencja, która obsługuje dwadzieścia firm, siedzi za jednym IP i nie ma sama siebie hamować. Trzy osobne wiadra, żeby uzgadnianie kalendarza nie blokowało ustawiania cen.",
+    "eimer": {
+     "token": "Wymiana tokenu. Ścisła, bo tutaj sprawdzane są dane dostępowe.",
+     "write": "Wywołania zapisujące — ingerują w sprzedaż.",
+     "read": "Wywołania czytające: codzienność integracji."
+    },
+    "header": "Każda odpowiedź niesie aktualny stan, także ta udana — żebyś mógł dostosować swoje tempo, zanim wpadniesz w 429:"
+   },
+   "idempotenz": {
+    "titel": "Idempotencja",
+    "text": "Przy tworzeniu rezerwacji nagłówek `Idempotency-Key` jest obowiązkowy. Wybierz dla każdej operacji jednoznaczną wartość (na przykład UUID) i powtórz ją, gdy wysyłasz to samo wywołanie ponownie. Bez tej ochrony zerwane połączenie wraz z powtórzeniem tworzy dwie rezerwacje — a druga blokuje noce, których nikt nie zamówił.",
+    "faelle": {
+     "wiederholung": "Ten sam klucz, ten sam ładunek → pierwsza odpowiedź wraca słowo w słowo, z nagłówkiem `Idempotency-Replayed: true`.",
+     "abweichend": "Ten sam klucz, INNY ładunek → 422. Do nowej operacji należy nowy klucz.",
+     "laufend": "Ten sam klucz, pierwsze wywołanie jeszcze trwa → 409. Odczekaj chwilę, potem powtórz; nie ponaglaj nowym kluczem."
+    }
+   }
+  },
+  "webhooks": {
+   "eyebrow": "Webhooki",
+   "heading": "Zdarzenia zamiast dopytywania",
+   "sub": "Jedna subskrypcja na adres, podpisane dostarczenia, powtórzenia z rosnącym odstępem. Zdarzenia powstają przy KAŻDEJ zmianie — także wtedy, gdy przychodzi ona przez portal albo dashboard, a nie przez to API.",
+   "tabelle": {
+    "ereignis": "Zdarzenie",
+    "wann": "Kiedy się wywołuje"
+   },
+   "ereignisse": {
+    "reservationCreated": "Powstała rezerwacja — niezależnie od kanału.",
+    "reservationUpdated": "Istniejąca rezerwacja się zmieniła.",
+    "reservationCancelled": "Rezerwacja została anulowana. Osobne zdarzenie, bo trzeba na nie reagować inaczej niż na zmianę.",
+    "availabilityChanged": "Kalendarz obiektu się zmienił (rezerwacja, blokada, zwolnienie).",
+    "rateChanged": "Zmieniła się cena dzienna albo zasada pobytu.",
+    "taskCreated": "Powstało zadanie.",
+    "taskCompleted": "Zadanie zostało zamknięte."
+   },
+   "anlegen": {
+    "titel": "Utwórz subskrypcję",
+    "text": "Adres `https` i zdarzenia, których chcesz. Opcjonalnie tylko dla wybranych obiektów. Adresy wewnętrzne są odrzucane — sprawdzenie działa przy tworzeniu I przed każdym pojedynczym dostarczeniem.",
+    "secret": "Odpowiedź zawiera secret do podpisywania dokładnie raz. Zapisz go teraz — nigdy więcej nie zostanie wydany."
+   },
+   "nutzlast": {
+    "titel": "Co przychodzi",
+    "text": "Trzymane wąsko: identyfikatory i te pola, które opisują zmianę. Pełny rekord pobierasz w razie potrzeby przez API — dzięki temu odbiorca nie dostaje niczego, czego w danym momencie nie wolno mu już widzieć."
+   },
+   "signatur": {
+    "titel": "Sprawdź podpis",
+    "text": "Każde dostarczenie niesie nagłówek ze znacznikiem czasu i HMAC-SHA256 z `ZEITSTEMPEL.BODY`, obliczonym przy użyciu secretu twojej subskrypcji. Ponieważ znacznik czasu jest podpisany razem, rozpoznasz dostarczenie, które zostało nagrane i później odtworzone ponownie — przy podpisie tylko z ciała nie jest to możliwe.",
+    "schritte": {
+     "roh": "Weź SUROWE ciało żądania, a nie sparsowany i ponownie zserializowany obiekt — inna sekwencja bajtów daje inny podpis. To najczęstsza przyczyna „podpis nie zgadza się“.",
+     "alter": "Sprawdź wiek przez znacznik czasu; pięć minut tolerancji to dobra wartość.",
+     "vergleich": "Porównuj w czasie stałym (`timingSafeEqual`, `hmac.compare_digest`). Zwykłe `==` sprawia, że podpis da się odgadnąć."
+    }
+   },
+   "verhalten": {
+    "wiederholung": {
+     "titel": "Powtórzenia",
+     "text": "Jeśli twój adres nie odpowiada kodem 2xx, dostarczenie jest powtarzane do dziesięciu razy — z rosnącym odstępem od jednej minuty do jednej godziny. Odpowiadaj szybko, a przetwarzaj potem; wolny odbiorca jest liczony jako błąd."
+    },
+    "reihenfolge": {
+     "titel": "Kolejność",
+     "text": "Nie jest gwarantowana. Używaj `created_at` zdarzenia, żeby starsze dostarczenie nie nadpisało nowszego."
+    },
+    "doppelt": {
+     "titel": "Podwójne dostarczenie",
+     "text": "Jest nieprawdopodobne, ale możliwe — traktuj `id` zdarzenia jako klucz i przetwarzaj każde tylko raz. Ta zasada obowiązuje u każdego dostawcy webhooków, nie tylko u tego."
+    },
+    "nachholen": {
+     "titel": "Nadrabianie po awarii",
+     "text": "Jeśli twoje serwery były niedostępne, nadrabiasz przegapione zdarzenia przez `GET /v1/events?since=…` — od najstarszego do najnowszego, z tymi samymi `id` co przy dostarczeniu, maksymalnie 30 dni wstecz. Sam push nie jest gwarancją dostarczenia: prędzej czy później próby powtórzeń się kończą, a bez tego kroku brakuje ci właśnie tych zdarzeń, o których nigdy się nie dowiedziałeś."
+    }
+   }
+  },
+  "grenzen": {
+   "eyebrow": "Ograniczenia",
+   "heading": "Ograniczenia",
+   "sub": "Dwie operacje nie są możliwe przez to API. Obie wynikają z modelu danych. Anulowanie, przenoszenie i wyliczanie ceny są możliwe.",
+   "stattdessen": "Zamiast tego:",
+   "gaeste": {
+    "titel": "Tworzenie i zmiana gości",
+    "text": "Dane gościa powstają przy wprowadzeniu ich przez gościa albo przez portal. Zapis w tym miejscu byłby trzecim źródłem dla tej samej osoby.",
+    "ausweg": "Przy tworzeniu rezerwacji przekaż dane gościa — istniejący goście są rozpoznawani po adresie e-mail. Pola kontaktowe istniejącej rezerwacji można utrzymywać przez `PATCH /v1/reservations/'{'id}`."
+   },
+   "nachrichten": {
+    "titel": "Otwieranie rozmowy",
+    "text": "Czytanie wiadomości i pisanie w istniejącej rozmowie jest możliwe (`/v1/reservations/'{'id}/messages`). Utworzenie nowej rozmowy już nie: wątek należy zawsze do konta gościa na marketplace, a dostęp API podmiotu takim kontem nie jest.",
+    "ausweg": "Rozmowa powstaje z pierwszą wiadomością gościa albo w panelu; potem API może w niej pisać."
+   },
+   "finanzen": {
+    "titel": "Pobranie płatności",
+    "text": "Do czytania są płatności i zaplanowane wezwania do zapłaty (`/v1/reservations/'{'id}/payments`) oraz harmonogram płatności i tabela opłat za anulowanie (`/v1/properties/'{'id}/booking-conditions`). Pobranie idzie przez ścieżkę rezerwacji gościa z zamiarami płatności, a nie przez wysyłany link.",
+    "ausweg": "Wezwania do zapłaty powstają w panelu; API czyta ich stan i powiązane zdarzenia."
+   }
+  },
+  "hilfe": {
+   "eyebrow": "Pomoc",
+   "heading": "Pytania, zmiany, narzędzia",
+   "sub": "Gdzie zwrócić się z pytaniem i czego możesz się trzymać przy budowie.",
+   "wege": {
+    "titel": "Gdy coś nie działa",
+    "entwicklerMail": {
+     "titel": "Kontakt techniczny",
+     "text": "Dołącz `request_id` z odpowiedzi z błędem — dzięki temu dane wywołanie da się znaleźć w naszych logach."
+    },
+    "hilfeCenter": {
+     "titel": "Centrum pomocy",
+     "text": "Instrukcje do produktu: tworzenie obiektów, podłączanie portali, utrzymywanie cen."
+    },
+    "schema": {
+     "titel": "Wygeneruj klienta",
+     "text": "Plik OpenAPI nadaje się jako wejście dla typowych generatorów — ręcznie pisany klient jest niepotrzebny."
+    }
+   },
+   "versionen": {
+    "titel": "Wersjonowanie",
+    "text": "API to obietnica. Te cztery punkty obowiązują dla v1:",
+    "zusagen": {
+     "pfad": "Wersja stoi w ścieżce. Zmiana łamiąca zgodność dostaje `/v2`; `/v1` działa dalej obok.",
+     "additiv": "W ramach v1 pola tylko dochodzą. Istniejące pola nie są zmieniane w nazwie i nie zmieniają swojego znaczenia.",
+     "frist": "Jeśli wersja zostanie wycofana, podamy datę z co najmniej dwunastomiesięcznym wyprzedzeniem i zgłosimy się do każdej firmy z aktywnym dostępem.",
+     "changelog": "Zmiany stoją w pliku OpenAPI i na tej stronie. Nie ma cichej zmiany w żadnym polu."
+    }
+   }
+  },
+  "kopf": {
+   "hilfe": "Centrum pomocy",
+   "zurueck": "Do witryny"
+  },
+  "sidebar": {
+   "sprung": "Przejdź do …",
+   "keineTreffer": "Żaden endpoint ani rozdział nie odpowiada temu zapytaniu.",
+   "leitfaden": "Przewodnik",
+   "referenz": "Referencja API",
+   "tocTitel": "Na tej stronie",
+   "version": "myNextDays Publiczne API v1"
+  },
+  "referenz": {
+   "scope": "Wymagane uprawnienie:",
+   "pfadParameter": "Parametry ścieżki",
+   "queryParameter": "Parametry zapytania",
+   "headerParameter": "Nagłówki",
+   "koerper": "Treść żądania",
+   "antworten": "Odpowiedzi",
+   "erlaubt": "Dozwolone:",
+   "pflicht": "wymagane",
+   "standard": "Domyślnie",
+   "sprache": "Język",
+   "zugang": "Dostęp",
+   "tokenHinweis": "Tylko w tej przeglądarce, tylko do „Wypróbuj” — wartość nie jest zapisywana ani wysyłana do nas.",
+   "ausprobieren": "Wypróbuj",
+   "laeuft": "Trwa …",
+   "anfrage": "Żądanie",
+   "antwort": "Odpowiedź",
+   "beispiel": "Przykład",
+   "kopieren": "Kopiuj",
+   "kopiert": "Skopiowano",
+   "fehlerNetz": "Żądanie nie dotarło do usługi. Najczęstsze przyczyny: usługa chwilowo nie odpowiada albo przeglądarka przerwała żądanie z powodu braku zgody CORS. To samo wywołanie przez curl z pola z kodem pokazuje, co usługa naprawdę odpowiada.",
+   "keinToken": "Bez tokenu wywołanie odpowiada kodem 401 — to oczekiwane zachowanie."
+  },
+  "start": {
+   "eyebrow": "Publiczne API",
+   "titel": "Twórz integracje z myNextDays",
+   "unterzeile": "REST API do obiektów, dostępności, cen, rezerwacji, gości i zadań — czytanie i zapis, z anulowaniem, przenoszeniem i podglądem ceny. Przewodnik wyjaśnia zasady, referencja zawiera każdy endpoint ze wszystkimi parametrami i polem do wypróbowania.",
+   "basisLabel": "Adres bazowy",
+   "versionLabel": "Wersja",
+   "versionHinweis": "w ścieżce",
+   "schemaTitel": "Schemat",
+   "schemaText": "OpenAPI 3.1, generowane z kodu. Nadaje się jako źródło dla typowych generatorów klientów.",
+   "woAnfangen": "Od czego zacząć",
+   "erstLesen": "Najpierw przeczytaj",
+   "dannBauen": "Potem buduj"
+  },
+  "bereiche": {
+   "leitfaden": "Dokumentacja",
+   "referenz": "Referencja API"
+  },
+  "gruppen": {
+   "ueberblick": "Podstawy",
+   "anhang": "Załącznik"
+  },
+  "weiter": {
+   "naechste": "Następna strona",
+   "zurReferenz": "Dalej do referencji API"
+  },
+  "referenzUebersicht": {
+   "eyebrow": "Referencja API",
+   "titel": "Wszystkie endpointy",
+   "sub": "Każdy endpoint ma własną stronę ze wszystkimi parametrami, treścią żądania, odpowiedziami i polem, w którym możesz od razu wypróbować wywołanie."
+  },
+  "zugang": {
+   "eyebrow": "Uwierzytelnianie",
+   "heading": "Uwierzytelnianie",
+   "sub": "OAuth 2.0 z `client_credentials`. Jeden dostęp należy dokładnie do jednego podmiotu; nie ma klucza obejmującego wiele podmiotów.",
+   "ablauf": {
+    "titel": "Przebieg",
+    "text": "`client_credentials` to droga dla programów działających w swoim własnym imieniu. Nie ma okna zgody ani tokenu odświeżania.",
+    "schritte": {
+     "anlegen": "Dostęp utworzyć w panelu: Konto → Dostęp API. `client_secret` jest wyświetlany jednorazowo i później nie da się go odczytać.",
+     "tauschen": "`POST /v1/oauth/token` z `client_id` i `client_secret`. Odpowiedź zawiera `access_token`, `expires_in` (3600) oraz przyznane uprawnienia.",
+     "senden": "Token przesyłać przy każdym wywołaniu jako `Authorization: Bearer ACCESS_TOKEN`. Po wygaśnięciu API odpowiada statusem 401 i kodem `token_expired`."
+    },
+    "merksatz": "Token trzymać w pamięci, nie pobierać go przy każdym wywołaniu. Wymiana przy każdym żądaniu wpada w limit zapytań punktu końcowego tokenu (10/Minute)."
+   },
+   "rechte": {
+    "titel": "Uprawnienia",
+    "text": "Uprawnienia mają postać `bereich:richtung`, na przykład `reservations:read` lub `rates:write`. Gdy brakuje uprawnienia, punkt końcowy odpowiada statusem 403 i kodem `insufficient_scope`.",
+    "merksatz": "Nadawać tylko te uprawnienia, których potrzebuje integracja. Utracony klucz nie nadpisze wtedy tego, czego nigdy nie miał czytać."
+   },
+   "objekte": {
+    "titel": "Ograniczenie do obiektów",
+    "text": "Dostęp może być ograniczony do wybranych obiektów. Na listach widzi tylko te; wywołanie z innym identyfikatorem obiektu odpowiada statusem 403 i kodem `objekt_nicht_erlaubt`."
+   },
+   "selbstauskunft": {
+    "titel": "Sprawdzenie uprawnień",
+    "text": "`GET /v1/me` zwraca podmiot, uprawnienia i ograniczenie do obiektów danego tokenu — pierwsze wywołanie przy konfiguracji integracji."
+   }
+  },
+  "fehler": {
+   "eyebrow": "Błędy",
+   "heading": "Jak wyglądają błędy",
+   "sub": "Każdy błąd to kod statusu HTTP oraz treść zgodna z RFC 9457 (`application/problem+json`). Żaden błąd nie przychodzi ze statusem 200.",
+   "aufbau": {
+    "titel": "Budowa",
+    "text": "`code` to stabilna, czytelna maszynowo nazwa błędu. `detail` to tekst dla ludzi i może się zmienić w każdej chwili.",
+    "felder": {
+     "type": "Adres opisu tego typu błędu — lista kodów błędów w załączniku.",
+     "title": "Krótka nazwa typu błędu.",
+     "status": "Kod statusu HTTP.",
+     "detail": "Opis dla ludzi.",
+     "code": "Stabilna nazwa błędu. To pole należy analizować.",
+     "request_id": "Identyfikator żądania. Dołączyć do zgłoszenia do wsparcia."
+    },
+    "merksatz": "Rozgałęziać na `code`, nie na `detail`. Tekst nie jest interfejsem."
+   },
+   "klassen": {
+    "titel": "Klasy statusów",
+    "vier": "4xx — problemem jest żądanie: brak uprawnienia, nieznany identyfikator, nieprawidłowa wartość, zajęty okres. Powtórzenie nic nie zmieni.",
+    "fuenf": "5xx — błąd po stronie serwera. Powtarzać z rosnącym odstępem.",
+    "neun": "429 — osiągnięto limit zapytań. `Retry-After` podaje czas oczekiwania w sekundach."
+   }
+  },
+  "limits": {
+   "eyebrow": "Limity zapytań",
+   "heading": "Ile wywołań jest dozwolonych",
+   "sub": "Limit obowiązuje na dostęp, nie na adres IP. Istnieją trzy kubełki z własnymi wartościami dla czytania, zapisu i wydawania tokenów."
+  },
+  "fehlercodes": {
+   "eyebrow": "Załącznik",
+   "heading": "Kody błędów",
+   "sub": "Wszystkie wartości `code` tego API. Każdy wiersz ma zakotwiczenie; adres `type` w odpowiedzi błędu na nie wskazuje."
+  },
+  "lokalisierung": {
+   "eyebrow": "Załącznik",
+   "heading": "Lokalizacja",
+   "sub": "Język i waluta pochodzą z danych. Oba pola mogą być puste; żadne nie ma wartości domyślnej.",
+   "waehrung": {
+    "titel": "Waluta",
+    "text": "Każda kwota ma kod `currency` zgodny z ISO 4217. Nie ma wartości domyślnej ani przeliczania.",
+    "merksatz": "Przy tworzeniu rezerwacji `currency` musi odpowiadać walucie obiektu. Przy rozbieżności: 422 z kodem `currency_mismatch`."
+   },
+   "sprache": {
+    "titel": "Język",
+    "text": "`language` to dwuliterowy kod zgodny z ISO 639-1, na przykład `de`, `da`, `en`. Wartość pochodzi z rezerwacji lub z portalu i może być pusta. Pusta oznacza nieznaną."
+   },
+   "texte": {
+    "titel": "Teksty API",
+    "text": "Nazwy pól, wartości `code` i wartości enum są angielskie i stanowią część kontraktu. Teksty `detail` w odpowiedzi błędu są skierowane do ludzi i mogą się zmieniać — własne komunikaty wyświetlać na podstawie `code`."
+   }
+  },
+  "zeit": {
+   "eyebrow": "Załącznik",
+   "heading": "Strefy czasowe",
+   "sub": "To API używa dwóch rodzajów oznaczeń czasu: dni kalendarzowych w strefie czasowej obiektu i momentów w UTC.",
+   "tage": {
+    "titel": "Dni kalendarzowe",
+    "text": "`check_in`, `check_out`, `date`, `from` i `to` to dni kalendarzowe w formacie `YYYY-MM-DD`, rozumiane w strefie czasowej obiektu. Nie mają godziny i nie są przeliczane na UTC.",
+    "merksatz": "`check_out` to dzień wyjazdu; ostatnia zajęta noc to noc poprzedzająca. Cztery noce oznaczają cztery dni odstępu między `check_in` a `check_out`."
+   },
+   "zeitpunkte": {
+    "titel": "Momenty",
+    "text": "`created_at`, `updated_at`, `received_at`, `booked_at` i `cancelled_at` to momenty zgodne z ISO 8601 w UTC z `Z` na końcu."
+   },
+   "quelle": {
+    "titel": "booked_at i received_at",
+    "text": "`booked_at` to moment rezerwacji przez gościa, przy rezerwacjach z portalu pochodzi ze źródła portalu. `received_at` to moment wpływu do tego systemu. Przy zbiorczym pobraniu wiele rezerwacji ma tę samą sekundę `received_at`.",
+    "merksatz": "Do „najnowsze najpierw” używać `booked_at` i traktować `null` jako nieznane. `received_at` odzwierciedla kolejność pobrania, a nie kolejność rezerwacji."
+   },
+   "filter": {
+    "titel": "Filtrowanie po zmianach",
+    "text": "`updated_since` przyjmuje moment i zwraca to, co zmieniło się od tego czasu. Uwaga na kodowanie URL: `+` w adresie oznacza spację — zapisać `Z` albo zakodować jako `%2B`."
+   }
+  }
+ },
  "meta": {
   "title": "myNextDays – Platforma dla wynajmujących obiekty wakacyjne",
   "description": "Platforma dla hoteli, agencji i właścicieli obiektów wakacyjnych: channel manager, kalendarz, rezerwacje bezpośrednie, komunikacja z gośćmi i rozliczenia w jednym miejscu. Stworzona w Danii, hostowana w UE. Od 19,90 € miesięcznie. 30 dni za darmo."

@@ -1,4 +1,427 @@
 {
+ "entwickler": {
+  "meta": {
+   "titel": "API y desarrolladores — myNextDays",
+   "beschreibung": "La API REST pública de myNextDays: alojamientos, disponibilidad, precios, reservas, huéspedes y tareas. OAuth2, OpenAPI 3.1, webhooks con entregas firmadas."
+  },
+  "hero": {
+   "eyebrow": "API pública",
+   "titel": "Desarrolla sobre myNextDays",
+   "unterzeile": "Una API REST para alojamientos, disponibilidad, precios, reservas, huéspedes y tareas. Tokens de vida corta, permisos por acceso, eventos por webhook — y un esquema que nace del código y por eso no puede quedar desactualizado.",
+   "basisLabel": "Dirección base",
+   "versionLabel": "Versión",
+   "versionHinweis": "en la ruta",
+   "konsole": "Probar",
+   "schema": "OpenAPI 3.1",
+   "referenz": "Leer la referencia"
+  },
+  "inhalt": {
+   "titel": "En esta página",
+   "schnellstart": "Primeros pasos",
+   "konzepte": "Modelo de datos",
+   "konventionen": "Paginación",
+   "endpunkte": "Endpoints",
+   "webhooks": "Webhooks",
+   "grenzen": "Limitaciones",
+   "hilfe": "Soporte",
+   "start": "Resumen",
+   "zugang": "Autenticación",
+   "fehler": "Errores",
+   "limits": "Límites de tasa",
+   "fehlercodes": "Códigos de error",
+   "lokalisierung": "Localización",
+   "zeit": "Zonas horarias"
+  },
+  "code": {
+   "kopieren": "Copiar",
+   "kopiert": "Copiado",
+   "anfrage": "Petición",
+   "antwort": "Respuesta",
+   "zustellung": "Entrega",
+   "pruefcode": "Verificar la firma (Node)"
+  },
+  "schnellstart": {
+   "eyebrow": "Inicio rápido",
+   "heading": "Tu primera llamada en cinco minutos",
+   "sub": "Tres pasos. Solo el primero pasa por la interfaz — todo lo demás es una llamada.",
+   "schritt1": {
+    "titel": "Crear un acceso",
+    "text": "Crea un acceso en el panel y define al mismo tiempo qué puede hacer: permisos por área y, si lo deseas, solo determinados alojamientos. Un acceso para el plan de limpieza no necesita acceso a los ingresos.",
+    "pfad": "Cuenta → Acceso API",
+    "hinweis": "El `client_secret` se muestra una vez; solo se guarda su hash. Un secreto perdido no se recupera, se sustituye."
+   },
+   "schritt2": {
+    "titel": "Obtener un token",
+    "text": "Cambia el Client-ID y el Client-Secret por un Access-Token. Es válido una hora y lleva exactamente los permisos del acceso.",
+    "hinweis": "Guarda el token en memoria y cámbialo por uno nuevo solo cuando caduque o llegue un 401 — no en cada llamada. Una revocación en el panel impide nuevos tokens de inmediato."
+   },
+   "schritt3": {
+    "titel": "Hacer la primera llamada",
+    "text": "Envía el token como `Authorization: Bearer …`. Cada lista responde en el mismo sobre: `data` más `pagination`.",
+    "hinweis": "Llama después a `GET /v1/me` — te dice qué permisos y qué alojamientos tiene este acceso, sin que tengas que averiguarlo a base de una serie de 403."
+   }
+  },
+  "konzepte": {
+   "eyebrow": "Conceptos",
+   "heading": "Cuatro cosas que deberías saber antes",
+   "sub": "Cuatro definiciones que determinan el comportamiento de la API. Se apartan de las suposiciones habituales.",
+   "objekt": {
+    "titel": "Un alojamiento es un tipo de unidad",
+    "text": "Un `property` es exactamente un tipo: un tipo de habitación en el hotel o un alojamiento turístico. Debajo cuelgan sus unidades (`units`) — normalmente exactamente una, con cinco estudios iguales precisamente cinco. Lo que se vende es la unidad; lo que se gestiona y se tarifica es el tipo.",
+    "folge": "La disponibilidad es por eso un NÚMERO (`units_available`), no un sí/no. Un hotel con 8 habitaciones twin y 4 dobles tiene dos alojamientos con 8 y 4 unidades respectivamente — no un alojamiento con 12 habitaciones."
+   },
+   "waehrung": {
+    "titel": "Cada importe lleva su moneda",
+    "text": "No hay valor por defecto. Cada objeto tiene una moneda, y cada importe de una respuesta la indica.",
+    "folge": "Si falta la moneda en un alojamiento, se trata de un error de datos y la llamada falla con 422 — no se sustituye por un «EUR». Al reservar, tu moneda debe coincidir con la moneda del alojamiento."
+   },
+   "zeit": {
+    "titel": "Dos momentos distintos",
+    "text": "`booked_at` es el momento de la reserva por parte del huésped — de la fuente del portal, `null` si el portal no lo entrega. `received_at` es la entrada en este sistema.",
+    "folge": "Ordena «más recientes primero» por `booked_at`, no por `received_at`: en una importación masiva decenas de reservas llevan el mismo segundo. Las marcas de tiempo son UTC, los campos de fecha son días naturales en la zona horaria del alojamiento."
+   },
+   "kanaele": {
+    "titel": "La visibilidad se aplica por canal",
+    "text": "No existe un «publicado» global. Un alojamiento es visible en el marketplace, en la web propia, a través de los portales — cada caso se activa por separado.",
+    "folge": "Un alojamiento solo es vendible cuando coinciden tres cosas: `status = active`, el canal está activado y hay unidades libres. Una parada de venta, en cambio, actúa en TODOS los canales."
+   }
+  },
+  "konventionen": {
+   "eyebrow": "Convenciones",
+   "heading": "Paginación, errores, límites, idempotencia",
+   "sub": "Los cuatro puntos que son distintos en cada API — aquí con cifras en lugar de prosa.",
+   "tabelle": {
+    "feld": "Campo",
+    "bedeutung": "Significado",
+    "code": "Código",
+    "status": "Estado"
+   },
+   "blaettern": {
+    "titel": "Paginación",
+    "text": "Cada lista responde con `data` y `pagination`. Se pagina mediante un **cursor**: envías el `id` del último elemento de la página anterior como `starting_after`. Si falta `next_starting_after` en la respuesta, el recorrido ha terminado.",
+    "felder": {
+     "starting_after": "El `id` del último elemento de la página anterior. La vía recomendada — estable, incluso si la lista cambia entre dos páginas. Un `id` desconocido o borrado da 422, no una página vacía.",
+     "next_starting_after": "Está en `pagination` mientras haya continuación: el valor para tu siguiente `starting_after`. Si falta, has llegado al final.",
+     "limit": "Filas por página. Por defecto 50, máximo 200 — un valor mayor da 422, no una página recortada.",
+     "offset": "Filas a omitir — para una mirada puntual a una página concreta. Junto con `starting_after` da 422: dos indicaciones de posición en una misma petición no tienen un significado sin contradicción.",
+     "include_total": "`true` entrega además `total`. Pídelo solo si muestras la cifra.",
+     "has_more": "Está en cada respuesta e indica si existe otra página — sin adivinar, sin una vuelta extra."
+    },
+    "warumCursor": "Por qué no simplemente `offset`: describe una POSICIÓN en la lista. Si entre la página 1 y la página 2 se añade una reserva, todo se desplaza un lugar — `offset=50` se salta entonces una fila, y al borrar una llega dos veces. Después falta una reserva en tu base de datos, y nada en la respuesta lo revela. El cursor nombra el último registro que has visto y por eso no puede desplazarse."
+   },
+   "fehler": {
+    "titel": "Errores",
+    "text": "Cada error llega como `application/problem+json` (RFC 9457) con un `code` estable, un `request_id` y — donde ayuda — los campos que explican el error. Ramifica según `code`, no según el texto: el texto puede cambiar, el código no.",
+    "codes": {
+     "nichtAuthentifiziert": "Falta el token, ha caducado o no es válido.",
+     "ungueltigeZugangsdaten": "Client-ID o Client-Secret incorrectos, o el acceso está revocado.",
+     "scopeFehlt": "Token válido, pero este acceso no tiene el permiso necesario. El scope que falta consta en el error.",
+     "objektNichtErlaubt": "El acceso está limitado a determinados alojamientos; este no está entre ellos.",
+     "nichtGefunden": "No existe o pertenece a otra empresa — ambos casos responden igual.",
+     "zeitraumNichtVerfuegbar": "Ocupado, bloqueado o excluido de la venta. No se ha creado media reserva.",
+     "idempotenzInArbeit": "Una llamada con esta Idempotency-Key todavía está en curso. Espera un momento y repite.",
+     "aboBestehtBereits": "Para esta dirección ya existe una suscripción de webhook activa de este acceso.",
+     "waehrungFehlt": "Al alojamiento, al plan de tarifas o a la reserva no se le ha asignado ninguna moneda — un error de datos.",
+     "ungueltigeAnfrage": "Formalmente correcta, pero no realizable en cuanto al fondo. El motivo consta en `detail`.",
+     "validierungFehlgeschlagen": "La petición no se ajusta al esquema. `felder` indica qué campo.",
+     "zuVieleAnfragen": "Límite de peticiones alcanzado. `Retry-After` indica cuándo se puede continuar.",
+     "nichtKonfiguriert": "El servicio no puede tratar la petición de forma segura. Nada continúa sin comprobación."
+    }
+   },
+   "limits": {
+    "titel": "Límites de peticiones",
+    "text": "Se limita por ACCESO, no por dirección IP: una agencia que atiende veinte negocios está detrás de una sola IP y no debe frenarse a sí misma. Tres cubos separados, para que un cotejo de calendario no bloquee la fijación de precios.",
+    "eimer": {
+     "token": "Intercambio de token. Estricto, porque aquí se comprueban credenciales.",
+     "write": "Llamadas de escritura — intervienen en la venta.",
+     "read": "Llamadas de lectura: el día a día de una integración."
+    },
+    "header": "Cada respuesta lleva el estado actual, también la que ha tenido éxito — para que puedas ajustar tu ritmo antes de chocar con el 429:"
+   },
+   "idempotenz": {
+    "titel": "Idempotencia",
+    "text": "Al crear una reserva, la cabecera `Idempotency-Key` es obligatoria. Elige un valor único por operación (por ejemplo un UUID) y repítelo cuando envíes de nuevo la misma llamada. Sin esta protección, un corte de red con reintento genera dos reservas — y la segunda bloquea noches que nadie ha pedido.",
+    "faelle": {
+     "wiederholung": "Misma clave, misma carga → la primera respuesta vuelve palabra por palabra, con la cabecera `Idempotency-Replayed: true`.",
+     "abweichend": "Misma clave, carga DISTINTA → 422. Una operación nueva necesita una clave nueva.",
+     "laufend": "Misma clave, la primera llamada sigue en curso → 409. Espera un momento y repite; no insistas con una clave nueva."
+    }
+   }
+  },
+  "webhooks": {
+   "eyebrow": "Webhooks",
+   "heading": "Eventos en lugar de consultas",
+   "sub": "Una suscripción por dirección, entregas firmadas, reintentos con intervalos crecientes. Los eventos surgen con CADA cambio — también si llega por un portal o por el panel y no por esta API.",
+   "tabelle": {
+    "ereignis": "Evento",
+    "wann": "Cuándo se dispara"
+   },
+   "ereignisse": {
+    "reservationCreated": "Se ha creado una reserva — por el canal que sea.",
+    "reservationUpdated": "Una reserva existente ha cambiado.",
+    "reservationCancelled": "Se ha cancelado una reserva. Evento propio, porque hay que reaccionar de otra manera que ante un cambio.",
+    "availabilityChanged": "El calendario de un alojamiento ha cambiado (reserva, bloqueo, liberación).",
+    "rateChanged": "Un precio diario o una regla de estancia ha cambiado.",
+    "taskCreated": "Se ha creado una tarea.",
+    "taskCompleted": "Se ha completado una tarea."
+   },
+   "anlegen": {
+    "titel": "Crear una suscripción",
+    "text": "Una dirección `https` y los eventos que quieras. Opcionalmente solo para determinados alojamientos. Las direcciones internas se rechazan — la comprobación se realiza al crear la suscripción Y antes de cada entrega concreta.",
+    "secret": "La respuesta contiene el secret de firma exactamente una vez. Guárdalo ahora — no se vuelve a entregar nunca."
+   },
+   "nutzlast": {
+    "titel": "Qué llega",
+    "text": "Se mantiene escueto: identificadores y los campos que describen el cambio. El registro completo lo obtienes cuando lo necesitas a través de la API — así a un receptor no se le entrega nada que entretanto ya no debiera ver."
+   },
+   "signatur": {
+    "titel": "Verificar la firma",
+    "text": "Cada entrega lleva una cabecera con marca de tiempo y HMAC-SHA256 sobre `ZEITSTEMPEL.BODY`, calculada con el secret de tu suscripción. Como la marca de tiempo está firmada también, reconoces una entrega grabada y reproducida más tarde — con una firma solo sobre el cuerpo eso no es posible.",
+    "schritte": {
+     "roh": "Toma el cuerpo EN CRUDO de la petición, no el objeto parseado y serializado de nuevo — otra secuencia de bytes da otra firma. Es el motivo más frecuente de «la firma no coincide».",
+     "alter": "Comprueba la antigüedad con la marca de tiempo; cinco minutos de tolerancia es un buen valor.",
+     "vergleich": "Compara en tiempo constante (`timingSafeEqual`, `hmac.compare_digest`). Un `==` normal hace que la firma sea adivinable."
+    }
+   },
+   "verhalten": {
+    "wiederholung": {
+     "titel": "Reintentos",
+     "text": "Si tu dirección no responde con 2xx, la entrega se repite hasta diez veces — con un intervalo creciente de un minuto hasta una hora. Responde rápido y procesa después; un receptor lento se cuenta como error."
+    },
+    "reihenfolge": {
+     "titel": "Orden",
+     "text": "No está garantizado. Utiliza el `created_at` del evento para no escribir una entrega antigua sobre una más reciente."
+    },
+    "doppelt": {
+     "titel": "Entrega duplicada",
+     "text": "Es improbable, pero posible — trata el `id` del evento como clave y procesa cada uno solo una vez. Esta advertencia vale para cualquier proveedor de webhooks, no solo para este."
+    },
+    "nachholen": {
+     "titel": "Ponerte al día tras una caída",
+     "text": "Si tus servidores estuvieron caídos, te pones al día con los eventos perdidos a través de `GET /v1/events?since=…` — los más antiguos primero, con los mismos `id` que en la entrega, como máximo 30 días atrás. Un push por sí solo no es garantía de entrega: en algún momento los reintentos se agotan, y sin este paso te faltan justamente los eventos de los que nunca te enteraste."
+    }
+   }
+  },
+  "grenzen": {
+   "eyebrow": "Límites",
+   "heading": "Limitaciones",
+   "sub": "Dos operaciones no son posibles a través de esta API. Ambas se derivan del modelo de datos. Cancelar, mover y calcular precios sí es posible.",
+   "stattdessen": "En su lugar:",
+   "gaeste": {
+    "titel": "Crear y modificar huéspedes",
+    "text": "Los datos del huésped se originan al introducirlos el huésped o a través del portal. Una vía de escritura aquí sería una tercera fuente para la misma persona.",
+    "ausweg": "Envíe los datos del huésped al crear una reserva — los huéspedes existentes se reconocen por su dirección de correo electrónico. Los campos de contacto de una reserva existente se mantienen mediante `PATCH /v1/reservations/'{'id}`."
+   },
+   "nachrichten": {
+    "titel": "Abrir una conversación",
+    "text": "Leer mensajes y escribir en una conversación existente es posible (`/v1/reservations/'{'id}/messages`). Crear una conversación nueva, no: un hilo pertenece siempre a una cuenta de huésped del marketplace, y el acceso por API de una empresa no es esa clase de cuenta.",
+    "ausweg": "La conversación nace con el primer mensaje del huésped o desde el panel; después la API puede escribir en ella."
+   },
+   "finanzen": {
+    "titel": "Cobrar un pago",
+    "text": "Se pueden leer los pagos y las solicitudes de pago programadas (`/v1/reservations/'{'id}/payments`), así como el plan de pagos y la escala de cancelación (`/v1/properties/'{'id}/booking-conditions`). El cobro va por el flujo de reserva del huésped con intenciones de pago, no por un enlace que se envía.",
+    "ausweg": "Las solicitudes de pago se crean en el panel; la API lee su estado y los eventos relacionados."
+   }
+  },
+  "hilfe": {
+   "eyebrow": "Ayuda",
+   "heading": "Preguntas, cambios, herramientas",
+   "sub": "Dónde llevar una pregunta y a qué puedes atenerte al construir.",
+   "wege": {
+    "titel": "Cuando algo no funciona",
+    "entwicklerMail": {
+     "titel": "Contacto técnico",
+     "text": "Envía el `request_id` de la respuesta de error — con eso la llamada se localiza en nuestros registros."
+    },
+    "hilfeCenter": {
+     "titel": "Centro de ayuda",
+     "text": "Guías sobre el producto: crear alojamientos, conectar portales, mantener los precios."
+    },
+    "schema": {
+     "titel": "Generar un cliente",
+     "text": "El archivo OpenAPI sirve como entrada para los generadores habituales — un cliente escrito a mano es innecesario."
+    }
+   },
+   "versionen": {
+    "titel": "Versionado",
+    "text": "Una API es una promesa. Estos cuatro puntos valen para v1:",
+    "zusagen": {
+     "pfad": "La versión consta en la ruta. Un cambio incompatible recibe `/v2`; `/v1` sigue funcionando en paralelo.",
+     "additiv": "Dentro de v1 solo se añaden campos. Los campos existentes no se renombran ni cambian su significado.",
+     "frist": "Si se anuncia el fin de una versión, indicamos una fecha con al menos doce meses de plazo y nos dirigimos a cada negocio con un acceso activo.",
+     "changelog": "Los cambios constan en el archivo OpenAPI y en esta página. No hay ningún cambio silencioso en un campo."
+    }
+   }
+  },
+  "kopf": {
+   "hilfe": "Centro de ayuda",
+   "zurueck": "Al sitio web"
+  },
+  "sidebar": {
+   "sprung": "Ir a …",
+   "keineTreffer": "Ningún endpoint y ningún capítulo coincide.",
+   "leitfaden": "Guía",
+   "referenz": "Referencia de la API",
+   "tocTitel": "En esta página",
+   "version": "myNextDays API pública v1"
+  },
+  "referenz": {
+   "scope": "Permiso necesario:",
+   "pfadParameter": "Parámetros de ruta",
+   "queryParameter": "Parámetros de consulta",
+   "headerParameter": "Cabeceras",
+   "koerper": "Cuerpo de la petición",
+   "antworten": "Respuestas",
+   "erlaubt": "Permitido:",
+   "pflicht": "obligatorio",
+   "standard": "Valor por defecto",
+   "sprache": "Idioma",
+   "zugang": "Acceso",
+   "tokenHinweis": "Solo en este navegador, solo para «Probar» — el valor no se guarda ni se nos envía.",
+   "ausprobieren": "Probar",
+   "laeuft": "Ejecutando …",
+   "anfrage": "Petición",
+   "antwort": "Respuesta",
+   "beispiel": "Ejemplo",
+   "kopieren": "Copiar",
+   "kopiert": "Copiado",
+   "fehlerNetz": "La petición no ha llegado al servicio. Causas más frecuentes: el servicio no responde en este momento, o el navegador ha cancelado la petición por falta de permiso CORS. La misma llamada con curl desde el campo de código muestra lo que dice realmente el servicio.",
+   "keinToken": "Sin token, la llamada responde con 401 — es el camino esperado."
+  },
+  "start": {
+   "eyebrow": "API pública",
+   "titel": "Desarrolla con myNextDays",
+   "unterzeile": "Una API REST para alojamientos, disponibilidad, tarifas, reservas, huéspedes y tareas — lectura y escritura, con cancelación, cambio de fechas y vista previa de precios. La guía explica las reglas, la referencia tiene cada endpoint con todos sus parámetros y un campo para probarlo.",
+   "basisLabel": "Dirección base",
+   "versionLabel": "Versión",
+   "versionHinweis": "en la ruta",
+   "schemaTitel": "Esquema",
+   "schemaText": "OpenAPI 3.1, generado a partir del código. Sirve como entrada para los generadores de clientes habituales.",
+   "woAnfangen": "Por dónde empezar",
+   "erstLesen": "Primero lee",
+   "dannBauen": "Luego desarrolla"
+  },
+  "bereiche": {
+   "leitfaden": "Documentación",
+   "referenz": "Referencia de la API"
+  },
+  "gruppen": {
+   "ueberblick": "Fundamentos",
+   "anhang": "Anexo"
+  },
+  "weiter": {
+   "naechste": "Página siguiente",
+   "zurReferenz": "Continuar a la referencia de la API"
+  },
+  "referenzUebersicht": {
+   "eyebrow": "Referencia de la API",
+   "titel": "Todos los endpoints",
+   "sub": "Cada endpoint tiene su propia página con todos los parámetros, el cuerpo de la petición, las respuestas y un campo en el que puedes probar la llamada directamente."
+  },
+  "zugang": {
+   "eyebrow": "Autenticación",
+   "heading": "Autenticación",
+   "sub": "OAuth 2.0 con `client_credentials`. Un acceso pertenece exactamente a una empresa; no existe ninguna clave que abarque varias empresas.",
+   "ablauf": {
+    "titel": "Flujo",
+    "text": "`client_credentials` es la vía para programas que actúan por cuenta propia. No hay diálogo de consentimiento ni token de refresco.",
+    "schritte": {
+     "anlegen": "Crear el acceso en el panel: Cuenta → Acceso API. El `client_secret` se muestra una vez y después ya no se puede consultar.",
+     "tauschen": "`POST /v1/oauth/token` con `client_id` y `client_secret`. La respuesta contiene `access_token`, `expires_in` (3600) y los permisos concedidos.",
+     "senden": "Enviar el token como `Authorization: Bearer ACCESS_TOKEN` en cada llamada. Tras la expiración, la API responde con 401 y el código `token_expired`."
+    },
+    "merksatz": "Mantener el token en memoria en lugar de solicitar uno nuevo en cada llamada. Un intercambio por solicitud alcanza el límite de tasa del endpoint de token (10/minuto)."
+   },
+   "rechte": {
+    "titel": "Permisos",
+    "text": "Los permisos tienen la forma `bereich:richtung`, por ejemplo `reservations:read` o `rates:write`. Si falta un permiso, el endpoint responde con 403 y el código `insufficient_scope`.",
+    "merksatz": "Conceder solo los permisos que necesita la integración. Una clave perdida no podrá sobrescribir nada que nunca debiera leer."
+   },
+   "objekte": {
+    "titel": "Restricción de objetos",
+    "text": "Un acceso puede estar limitado a determinados objetos. En las listas solo ve esos; una llamada con otro ID de objeto responde con 403 y el código `objekt_nicht_erlaubt`."
+   },
+   "selbstauskunft": {
+    "titel": "Comprobar permisos",
+    "text": "`GET /v1/me` devuelve la empresa, los permisos y la restricción de objetos del token — la primera llamada al configurar una integración."
+   }
+  },
+  "fehler": {
+   "eyebrow": "Errores",
+   "heading": "Cómo son los errores",
+   "sub": "Cada error es un código de estado HTTP más un cuerpo según RFC 9457 (`application/problem+json`). Ningún error llega con estado 200.",
+   "aufbau": {
+    "titel": "Estructura",
+    "text": "`code` es el nombre estable y legible por máquina del error. `detail` es un texto para personas y puede cambiar en cualquier momento.",
+    "felder": {
+     "type": "Dirección de la descripción de este tipo de error — la lista de códigos de error en el anexo.",
+     "title": "Nombre corto del tipo de error.",
+     "status": "El código de estado HTTP.",
+     "detail": "Descripción para personas.",
+     "code": "Nombre estable del error. Evaluar este campo.",
+     "request_id": "Identificador de la solicitud. Incluirlo en una solicitud de soporte."
+    },
+    "merksatz": "Ramificar según `code`, no según `detail`. El texto no es una interfaz."
+   },
+   "klassen": {
+    "titel": "Clases de estado",
+    "vier": "4xx — la solicitud es el problema: permiso ausente, ID desconocido, valor no válido, periodo ocupado. Repetirla no cambia nada.",
+    "fuenf": "5xx — error del lado del servidor. Reintentar con intervalos crecientes.",
+    "neun": "429 — límite de tasa alcanzado. `Retry-After` indica el tiempo de espera en segundos."
+   }
+  },
+  "limits": {
+   "eyebrow": "Límites de tasa",
+   "heading": "Cuántas llamadas están permitidas",
+   "sub": "El límite se aplica por acceso, no por IP. Hay tres cubos con valores propios para lectura, escritura y emisión de tokens."
+  },
+  "fehlercodes": {
+   "eyebrow": "Anexo",
+   "heading": "Códigos de error",
+   "sub": "Todos los valores `code` de esta API. Cada fila tiene un ancla; la dirección `type` de una respuesta de error remite a ella."
+  },
+  "lokalisierung": {
+   "eyebrow": "Anexo",
+   "heading": "Localización",
+   "sub": "El idioma y la moneda provienen de los datos. Ambos campos pueden estar vacíos; ninguno tiene valor por defecto.",
+   "waehrung": {
+    "titel": "Moneda",
+    "text": "Cada importe lleva un código `currency` según ISO 4217. No hay valor por defecto ni conversión.",
+    "merksatz": "Al crear una reserva, `currency` debe coincidir con la moneda del objeto. En caso de discrepancia: 422 con el código `currency_mismatch`."
+   },
+   "sprache": {
+    "titel": "Idioma",
+    "text": "`language` es un código de dos letras según ISO 639-1, por ejemplo `de`, `da`, `en`. El valor proviene de la reserva o del portal y puede estar vacío. Vacío significa desconocido."
+   },
+   "texte": {
+    "titel": "Textos de la API",
+    "text": "Los nombres de campo, los valores `code` y los valores de enumeración están en inglés y forman parte del contrato. Los textos `detail` de una respuesta de error se dirigen a personas y pueden cambiar — mostrar mensajes propios a partir de `code`."
+   }
+  },
+  "zeit": {
+   "eyebrow": "Anexo",
+   "heading": "Zonas horarias",
+   "sub": "Esta API utiliza dos tipos de indicaciones temporales: días de calendario en la zona horaria del objeto y marcas de tiempo en UTC.",
+   "tage": {
+    "titel": "Días de calendario",
+    "text": "`check_in`, `check_out`, `date`, `from` y `to` son días de calendario en el formato `YYYY-MM-DD`, entendidos en la zona horaria del objeto. No llevan hora y no se convierten a UTC.",
+    "merksatz": "`check_out` es el día de salida; la última noche ocupada es la noche anterior. Cuatro noches significan cuatro días de diferencia entre `check_in` y `check_out`."
+   },
+   "zeitpunkte": {
+    "titel": "Marcas de tiempo",
+    "text": "`created_at`, `updated_at`, `received_at`, `booked_at` y `cancelled_at` son marcas de tiempo según ISO 8601 en UTC con `Z` al final."
+   },
+   "quelle": {
+    "titel": "booked_at y received_at",
+    "text": "`booked_at` es el momento de la reserva por parte del huésped; en reservas de portal, procede de la fuente del portal. `received_at` es la entrada en este sistema. En una consulta agrupada, muchas reservas llevan el mismo segundo `received_at`.",
+    "merksatz": "Para «más recientes primero», usar `booked_at` y tratar `null` como desconocido. `received_at` refleja el orden de la consulta, no el de las reservas."
+   },
+   "filter": {
+    "titel": "Filtrar por cambios",
+    "text": "`updated_since` toma una marca de tiempo y devuelve lo que ha cambiado desde entonces. Atención con la codificación de URL: `+` significa un espacio en una dirección — escribir `Z` o codificarlo como `%2B`."
+   }
+  }
+ },
  "meta": {
   "title": "myNextDays – La plataforma para anfitriones de alojamientos turísticos",
   "description": "La plataforma para hoteles, agencias y anfitriones de alojamientos turísticos: channel manager, calendario, reserva directa, comunicación con huéspedes y facturación en un solo lugar. Creada en Dinamarca, alojada en la UE. Desde 19,90 €/mes. 30 días gratis."

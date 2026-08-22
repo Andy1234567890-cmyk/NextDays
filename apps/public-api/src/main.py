@@ -50,7 +50,7 @@ Verfügbarkeit, Preise, Buchungen, Gäste und Aufgaben eines Betriebs.
 2. Token holen:
 
    ```
-   curl -X POST https://api.mynextdays.dk/v1/oauth/token \\
+   curl -X POST https://open-api.mynextdays.com/v1/oauth/token \\
      -H 'Content-Type: application/json' \\
      -d '{"grant_type":"client_credentials",
           "client_id":"mnd_live_id_…","client_secret":"mnd_live_…"}'
@@ -59,7 +59,7 @@ Verfügbarkeit, Preise, Buchungen, Gäste und Aufgaben eines Betriebs.
 3. Aufrufen:
 
    ```
-   curl https://api.mynextdays.dk/v1/properties \\
+   curl https://open-api.mynextdays.com/v1/properties \\
      -H 'Authorization: Bearer <access_token>'
    ```
 

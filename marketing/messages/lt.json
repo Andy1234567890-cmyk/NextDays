@@ -1,4 +1,427 @@
 {
+ "entwickler": {
+  "meta": {
+   "titel": "API ir kūrėjai — myNextDays",
+   "beschreibung": "Vieša myNextDays REST API: objektai, prieinamumas, kainos, rezervacijos, svečiai ir užduotys. OAuth2, OpenAPI 3.1, webhooks su pasirašytais pristatymais."
+  },
+  "hero": {
+   "eyebrow": "Vieša API",
+   "titel": "Kurk su myNextDays",
+   "unterzeile": "Viena REST API objektams, prieinamumui, kainoms, rezervacijoms, svečiams ir užduotims. Trumpaamžiai token, teisės kiekvienai prieigai atskirai, įvykiai per webhook — ir schema, kuri sukuriama iš kodo ir todėl negali pasenti.",
+   "basisLabel": "Bazinis adresas",
+   "versionLabel": "Versija",
+   "versionHinweis": "kelyje",
+   "konsole": "Išbandyti",
+   "schema": "OpenAPI 3.1",
+   "referenz": "Skaityti žinyną"
+  },
+  "inhalt": {
+   "titel": "Šiame puslapyje",
+   "schnellstart": "Pirmieji žingsniai",
+   "konzepte": "Duomenų modelis",
+   "konventionen": "Puslapiavimas",
+   "endpunkte": "Galiniai taškai",
+   "webhooks": "Webhook'ai",
+   "grenzen": "Apribojimai",
+   "hilfe": "Pagalba",
+   "start": "Apžvalga",
+   "zugang": "Autentifikavimas",
+   "fehler": "Klaidos",
+   "limits": "Užklausų limitai",
+   "fehlercodes": "Klaidų kodai",
+   "lokalisierung": "Lokalizacija",
+   "zeit": "Laiko juostos"
+  },
+  "code": {
+   "kopieren": "Kopijuoti",
+   "kopiert": "Nukopijuota",
+   "anfrage": "Užklausa",
+   "antwort": "Atsakymas",
+   "zustellung": "Pristatymas",
+   "pruefcode": "Patikrinti parašą (Node)"
+  },
+  "schnellstart": {
+   "eyebrow": "Greita pradžia",
+   "heading": "Pirmoji užklausa per penkias minutes",
+   "sub": "Trys žingsniai. Tik pirmasis vyksta sąsajoje — visa kita yra užklausa.",
+   "schritt1": {
+    "titel": "Sukurk prieigą",
+    "text": "Dashboard sukurk prieigą ir iš karto nustatyk, ką jai leidžiama: teises kiekvienai sričiai ir, jei nori, tik tam tikrus objektus. Prieigai, kuri tvarko valymo grafiką, apyvartos duomenų nereikia.",
+    "pfad": "Paskyra → API prieiga",
+    "hinweis": "`client_secret` parodomas vieną kartą; išsaugoma tik jo maiša. Pamesta paslaptis neatkuriama, ji pakeičiama."
+   },
+   "schritt2": {
+    "titel": "Gauk token",
+    "text": "Client-ID ir Secret iškeisk į Access-Token. Jis galioja vieną valandą ir turi lygiai tas teises, kurias turi prieiga.",
+    "hinweis": "Laikyk token atmintyje ir keisk į naują tik tada, kai jis nustoja galioti arba grįžta 401 — ne prie kiekvienos užklausos. Panaikinus prieigą Dashboard, nauji token nebeišduodami iš karto."
+   },
+   "schritt3": {
+    "titel": "Atlik pirmą užklausą",
+    "text": "Token perduok kaip `Authorization: Bearer …`. Kiekvienas sąrašas atsako tuo pačiu apvalkalu: `data` ir `pagination`.",
+    "hinweis": "Po to iškviesk `GET /v1/me` — jis pasako, kokias teises ir kuriuos objektus ši prieiga turi, kad nereikėtų to išsiaiškinti per virtinę 403 klaidų."
+   }
+  },
+  "konzepte": {
+   "eyebrow": "Sąvokos",
+   "heading": "Keturi dalykai, kuriuos verta žinoti iš anksto",
+   "sub": "Keturi apsisprendimai, kurie nulemia API veikimą. Jie skiriasi nuo paplitusių prielaidų.",
+   "objekt": {
+    "titel": "Objektas yra vienetų tipas",
+    "text": "`property` yra lygiai vienas tipas: kambario tipas viešbutyje arba atostogų objektas. Jam priklauso jo vienetai (`units`) — paprastai lygiai vienas, o esant penkioms vienodoms studijoms — penki. Parduodamas vienetas, o tvarkomas ir įkainojamas tipas.",
+    "folge": "Todėl prieinamumas yra SKAIČIUS (`units_available`), o ne taip/ne. Viešbutis su 8 Twin ir 4 Double kambariais turi du objektus su atitinkamai 8 ir 4 vienetais — o ne vieną objektą su 12 kambarių."
+   },
+   "waehrung": {
+    "titel": "Kiekviena suma nurodo savo valiutą",
+    "text": "Numatytosios vertės nėra. Kiekvienas objektas turi valiutą, ir kiekviena atsakymo suma ją nurodo.",
+    "folge": "Jei objektui valiuta nepriskirta, tai yra duomenų klaida ir užklausa nepavyksta su 422 — jokia „EUR“ reikšmė neįrašoma. Rezervuojant tavo valiuta turi atitikti objekto valiutą."
+   },
+   "zeit": {
+    "titel": "Du skirtingi laiko momentai",
+    "text": "`booked_at` yra svečio rezervacijos momentas — iš portalo šaltinio, `null`, jei portalas jo neteikia. `received_at` yra gavimo šioje sistemoje momentas.",
+    "folge": "Rikiuok „naujausi pirmi“ pagal `booked_at`, o ne pagal `received_at`: masinio importo metu dešimtys rezervacijų turi tą pačią sekundę. Laiko žymos yra UTC, datų laukai yra kalendorinės dienos objekto laiko zonoje."
+   },
+   "kanaele": {
+    "titel": "Matomumas galioja kiekvienam kanalui atskirai",
+    "text": "Bendro „paskelbta“ nėra. Objektas gali būti matomas prekyvietėje, savo interneto svetainėje, per portalus — kiekvienas kanalas įjungiamas atskirai.",
+    "folge": "Objektas parduodamas tik tada, kai sutampa trys dalykai: `status = active`, kanalas įjungtas ir yra laisvų vienetų. O pardavimo stabdymas veikia VISUS kanalus."
+   }
+  },
+  "konventionen": {
+   "eyebrow": "Susitarimai",
+   "heading": "Puslapiavimas, klaidos, limitai, idempotentumas",
+   "sub": "Keturi punktai, kurie kiekvienoje API skiriasi — čia su skaičiais, o ne su aprašymais.",
+   "tabelle": {
+    "feld": "Laukas",
+    "bedeutung": "Reikšmė",
+    "code": "Kodas",
+    "status": "Statusas"
+   },
+   "blaettern": {
+    "titel": "Puslapiavimas",
+    "text": "Kiekvienas sąrašas atsako su `data` ir `pagination`. Puslapiuojama **žymekliu**: paskutinio ankstesnio puslapio elemento `id` išsiunti kaip `starting_after`. Jei atsakyme `next_starting_after` nėra, perėjimas baigtas.",
+    "felder": {
+     "starting_after": "Paskutinio ankstesnio puslapio elemento `id`. Rekomenduojamas būdas — stabilus net tada, kai sąrašas tarp dviejų puslapių pasikeičia. Nežinomas arba ištrintas `id` duoda 422, o ne tuščią puslapį.",
+     "next_starting_after": "Yra `pagination`, kol yra tęsinys: reikšmė tavo kitam `starting_after`. Jei jos nėra, esi pabaigoje.",
+     "limit": "Įrašų viename puslapyje. Numatyta 50, didžiausia reikšmė 200 — didesnė reikšmė duoda 422, o ne sutrumpintą puslapį.",
+     "offset": "Praleidžiamų įrašų skaičius — vienkartiniam žvilgsniui į tam tikrą puslapį. Kartu su `starting_after` duoda 422: dvi padėties nuorodos vienoje užklausoje neturi neprieštaringos reikšmės.",
+     "include_total": "`true` papildomai grąžina `total`. Prašyk to tik tada, kai tą skaičių tikrai rodai.",
+     "has_more": "Yra kiekviename atsakyme ir pasako, ar egzistuoja dar vienas puslapis — nereikia nei spėlioti, nei papildomos užklausos."
+    },
+    "warumCursor": "Kodėl ne tiesiog `offset`: jis nurodo PADĖTĮ sąraše. Jei tarp 1 ir 2 puslapio atsiranda nauja rezervacija, viskas pasislenka viena vieta — `offset=50` tada praleidžia vieną įrašą, o ištrynus vienas įrašas atkeliauja dukart. Po to tavo duomenų bazėje trūksta rezervacijos, ir atsakyme niekas to neišduoda. Žymeklis nurodo paskutinį įrašą, kurį matei, todėl negali pasislinkti."
+   },
+   "fehler": {
+    "titel": "Klaidos",
+    "text": "Kiekviena klaida grąžinama kaip `application/problem+json` (RFC 9457) su stabiliu `code`, su `request_id` ir — kur tai padeda — su laukais, kurie klaidą paaiškina. Logiką šakok pagal `code`, o ne pagal tekstą: tekstas gali keistis, kodas — ne.",
+    "codes": {
+     "nichtAuthentifiziert": "Token nėra, jis nustojo galioti arba yra negaliojantis.",
+     "ungueltigeZugangsdaten": "Neteisingas Client-ID arba Secret, arba prieiga panaikinta.",
+     "scopeFehlt": "Token galioja, bet ši prieiga neturi reikiamos teisės. Trūkstamas scope nurodytas klaidoje.",
+     "objektNichtErlaubt": "Prieiga apribota tam tikrais objektais; šis objektas jiems nepriklauso.",
+     "nichtGefunden": "Neegzistuoja arba priklauso kitai įmonei — abiem atvejais atsakymas tas pats.",
+     "zeitraumNichtVerfuegbar": "Užimta, blokuota arba išimta iš pardavimo. Jokia pusiau sukurta rezervacija neatsirado.",
+     "idempotenzInArbeit": "Užklausa su šiuo Idempotency-Key dar vykdoma. Trumpai palauk ir pakartok.",
+     "aboBestehtBereits": "Šiam adresui jau yra aktyvi šios prieigos webhook prenumerata.",
+     "waehrungFehlt": "Objektui, tarifų planui ar rezervacijai nepriskirta jokia valiuta — duomenų klaida.",
+     "ungueltigeAnfrage": "Formaliai tvarkinga, bet dalykiškai neįvykdoma. Priežastis nurodyta `detail`.",
+     "validierungFehlgeschlagen": "Užklausa neatitinka schemos. `felder` nurodo, kuris laukas.",
+     "zuVieleAnfragen": "Pasiektas Rate-Limit. `Retry-After` pasako, kada galima tęsti.",
+     "nichtKonfiguriert": "Paslauga negali saugiai apdoroti užklausos. Be patikrinimo darbas netęsiamas."
+    }
+   },
+   "limits": {
+    "titel": "Rate-Limit ribos",
+    "text": "Ribojama kiekvienai PRIEIGAI, o ne kiekvienam IP adresui: agentūra, aptarnaujanti dvidešimt įmonių, sėdi už vieno IP ir neturi pati sau kliudyti. Trys atskiri kibirai, kad kalendoriaus sulyginimas neblokuotų kainų nustatymo.",
+    "eimer": {
+     "token": "Token keitimas. Griežtas, nes čia tikrinami prieigos duomenys.",
+     "write": "Rašančios užklausos — jos įsiterpia į pardavimą.",
+     "read": "Skaitančios užklausos: integracijos kasdienybė."
+    },
+    "header": "Kiekvienas atsakymas, taip pat ir sėkmingas, nurodo esamą būklę — kad galėtum pritaikyti savo tempą dar prieš atsitrenkdamas į 429:"
+   },
+   "idempotenz": {
+    "titel": "Idempotentumas",
+    "text": "Kuriant rezervaciją antraštė `Idempotency-Key` yra būtina. Kiekvienai operacijai pasirink unikalią reikšmę (pavyzdžiui, UUID) ir pakartok ją, jei tą pačią užklausą siunti dar kartą. Be šios apsaugos nutrūkęs tinklas su pakartojimu sukuria dvi rezervacijas — o antroji užblokuoja naktis, kurių niekas neužsakė.",
+    "faelle": {
+     "wiederholung": "Tas pats raktas, ta pati naudingoji apkrova → pirmasis atsakymas grąžinamas žodis žodin, su antrašte `Idempotency-Replayed: true`.",
+     "abweichend": "Tas pats raktas, KITA naudingoji apkrova → 422. Naujai operacijai priklauso naujas raktas.",
+     "laufend": "Tas pats raktas, pirmoji užklausa dar vykdoma → 409. Trumpai palauk ir pakartok; nekartok su nauju raktu."
+    }
+   }
+  },
+  "webhooks": {
+   "eyebrow": "Webhooks",
+   "heading": "Įvykiai, o ne pakartotinės užklausos",
+   "sub": "Viena prenumerata kiekvienam adresui, pasirašyti pristatymai, kartojimai vis didesniais intervalais. Įvykiai atsiranda po KIEKVIENO pakeitimo — taip pat ir tada, kai jis atliekamas per portalą ar Dashboard, o ne per šią API.",
+   "tabelle": {
+    "ereignis": "Įvykis",
+    "wann": "Kada jis suveikia"
+   },
+   "ereignisse": {
+    "reservationCreated": "Atsirado rezervacija — nesvarbu, per kurį kanalą.",
+    "reservationUpdated": "Esama rezervacija pasikeitė.",
+    "reservationCancelled": "Rezervacija buvo atšaukta. Atskiras įvykis, nes į jį reikia reaguoti kitaip nei į pakeitimą.",
+    "availabilityChanged": "Objekto kalendorius pasikeitė (rezervacija, blokavimas, atlaisvinimas).",
+    "rateChanged": "Pasikeitė dienos kaina arba viešnagės taisyklė.",
+    "taskCreated": "Atsirado užduotis.",
+    "taskCompleted": "Užduotis buvo užbaigta."
+   },
+   "anlegen": {
+    "titel": "Sukurti prenumeratą",
+    "text": "`https` adresas ir įvykiai, kurių nori. Pasirinktinai — tik tam tikriems objektams. Vidiniai adresai atmetami — tikrinama ir kuriant, IR prieš kiekvieną atskirą pristatymą.",
+    "secret": "Atsakyme parašo Secret pateikiamas lygiai vieną kartą. Išsaugok jį dabar — daugiau jis niekada nebus pateiktas."
+   },
+   "nutzlast": {
+    "titel": "Kas atkeliauja",
+    "text": "Sąmoningai glaustas turinys: ID ir laukai, kurie apibūdina pakeitimą. Visą įrašą prireikus paimi per API — taip gavėjui nepristatoma tai, ko jam jau nebeleidžiama matyti."
+   },
+   "signatur": {
+    "titel": "Patikrinti parašą",
+    "text": "Kiekvienas pristatymas turi antraštę su laiko žyma ir HMAC-SHA256 nuo `ZEITSTEMPEL.BODY`, apskaičiuotą su tavo prenumeratos Secret. Kadangi laiko žyma pasirašyta kartu, atpažinsi įrašytą ir vėliau pakartotinai atsiųstą pristatymą — jei parašas apima tik kūną, tai neįmanoma.",
+    "schritte": {
+     "roh": "Naudok NEAPDOROTĄ užklausos kūną, o ne išanalizuotą ir iš naujo serializuotą objektą — kita baitų seka duoda kitą parašą. Tai dažniausia priežastis, dėl kurios „parašas neatitinka“.",
+     "alter": "Patikrink amžių pagal laiko žymą; penkios minutės nuokrypio yra tinkama reikšmė.",
+     "vergleich": "Lygink pastoviu laiku (`timingSafeEqual`, `hmac.compare_digest`). Paprastas `==` leidžia parašą atspėti."
+    }
+   },
+   "verhalten": {
+    "wiederholung": {
+     "titel": "Kartojimai",
+     "text": "Jei tavo adresas neatsako 2xx, pristatymas kartojamas iki dešimties kartų — vis didesniais intervalais nuo vienos minutės iki vienos valandos. Atsakyk greitai, o apdorok po to; lėtas gavėjas vertinamas kaip klaida."
+    },
+    "reihenfolge": {
+     "titel": "Eiliškumas",
+     "text": "Negarantuojamas. Naudok įvykio `created_at`, kad senesnis pristatymas neperrašytų naujesnio."
+    },
+    "doppelt": {
+     "titel": "Dvigubas pristatymas",
+     "text": "Mažai tikėtinas, bet įmanomas — laikyk įvykio `id` raktu ir apdorok kiekvieną tik vieną kartą. Šis įsipareigojimas galioja kiekvienam webhook teikėjui, ne tik šiam."
+    },
+    "nachholen": {
+     "titel": "Praleistų įvykių atsiėmimas po prastovos",
+     "text": "Jei tavo serveriai buvo neprieinami, praleistus įvykius atsiimi per `GET /v1/events?since=…` — nuo seniausio iki naujausio, su tais pačiais `id`, kaip ir pristatymas, ne daugiau kaip 30 dienų atgal. Vien push negarantuoja pristatymo: anksčiau ar vėliau pakartojimų bandymai baigiasi, ir be šio žingsnio tau trūks būtent tų įvykių, apie kuriuos niekada nesužinojai."
+    }
+   }
+  },
+  "grenzen": {
+   "eyebrow": "Ribos",
+   "heading": "Apribojimai",
+   "sub": "Dviejų veiksmų per šį API atlikti negalima. Abu kyla iš duomenų modelio. Atšaukimas, perkėlimas ir kainos apskaičiavimas galimi.",
+   "stattdessen": "Vietoje to:",
+   "gaeste": {
+    "titel": "Svečių kūrimas ir keitimas",
+    "text": "Svečio duomenys atsiranda svečiui juos įvedus arba per portalą. Rašymo kelias čia būtų trečiasis to paties žmogaus šaltinis.",
+    "ausweg": "Kurdamas rezervaciją, kartu perduok svečio duomenis — esami svečiai atpažįstami pagal el. pašto adresą. Esamos rezervacijos kontaktinius laukus galima tvarkyti per `PATCH /v1/reservations/'{'id}`."
+   },
+   "nachrichten": {
+    "titel": "Pokalbio atidarymas",
+    "text": "Skaityti pranešimus ir rašyti į esamą pokalbį galima (`/v1/reservations/'{'id}/messages`). Sukurti naują pokalbį negalima: pokalbio grandinė visada priklauso prekyvietės svečio paskyrai, o įmonės API prieiga tokia paskyra nėra.",
+    "ausweg": "Pokalbis atsiranda su pirmuoju svečio pranešimu arba valdymo skydelyje; po to API gali jame rašyti."
+   },
+   "finanzen": {
+    "titel": "Mokėjimo nuskaitymas",
+    "text": "Skaitomi yra mokėjimai ir suplanuoti mokėjimo prašymai (`/v1/reservations/'{'id}/payments`), taip pat mokėjimo planas ir atšaukimo skalė (`/v1/properties/'{'id}/booking-conditions`). Nuskaitymas vyksta per svečio rezervacijos eigą su mokėjimo ketinimais, o ne per išsiunčiamą nuorodą.",
+    "ausweg": "Mokėjimo prašymai atsiranda valdymo skydelyje; API skaito jų būseną ir su jais susijusius įvykius."
+   }
+  },
+  "hilfe": {
+   "eyebrow": "Pagalba",
+   "heading": "Klausimai, pakeitimai, įrankiai",
+   "sub": "Kur kreiptis su klausimu ir kuo gali pasikliauti kurdamas.",
+   "wege": {
+    "titel": "Kai kas nors neveikia",
+    "entwicklerMail": {
+     "titel": "Techninis kontaktas",
+     "text": "Atsiųsk `request_id` iš klaidos atsakymo — su juo užklausą galima rasti mūsų žurnaluose."
+    },
+    "hilfeCenter": {
+     "titel": "Pagalbos centras",
+     "text": "Instrukcijos apie produktą: kurti objektus, prijungti portalus, tvarkyti kainas."
+    },
+    "schema": {
+     "titel": "Sugeneruoti klientą",
+     "text": "OpenAPI failas tinka kaip įvestis įprastiems generatoriams — rankomis rašytas klientas nereikalingas."
+    }
+   },
+   "versionen": {
+    "titel": "Versijavimas",
+    "text": "API yra pažadas. Šie keturi punktai galioja v1:",
+    "zusagen": {
+     "pfad": "Versija nurodoma kelyje. Nesuderinamas pakeitimas gauna `/v2`; `/v1` toliau veikia greta.",
+     "additiv": "v1 viduje laukai tik pridedami. Esami laukai nepervadinami ir nepakeičia savo reikšmės.",
+     "frist": "Jei versija nutraukiama, nurodome datą su bent dvylikos mėnesių terminu ir susisiekiame su kiekviena įmone, turinčia aktyvią prieigą.",
+     "changelog": "Pakeitimai nurodomi OpenAPI faile ir šiame puslapyje. Nė vienas laukas nekeičiamas tyliai."
+    }
+   }
+  },
+  "kopf": {
+   "hilfe": "Pagalbos centras",
+   "zurueck": "Į svetainę"
+  },
+  "sidebar": {
+   "sprung": "Pereiti į …",
+   "keineTreffer": "Nė vienas galutinis taškas ir nė vienas skyrius to neatitinka.",
+   "leitfaden": "Vadovas",
+   "referenz": "API žinynas",
+   "tocTitel": "Šiame lape",
+   "version": "myNextDays Vieša API v1"
+  },
+  "referenz": {
+   "scope": "Reikalinga teisė:",
+   "pfadParameter": "Kelio parametrai",
+   "queryParameter": "Užklausos parametrai",
+   "headerParameter": "Antraštės",
+   "koerper": "Užklausos turinys",
+   "antworten": "Atsakymai",
+   "erlaubt": "Leidžiama:",
+   "pflicht": "būtinas",
+   "standard": "Numatytoji vertė",
+   "sprache": "Kalba",
+   "zugang": "Prieiga",
+   "tokenHinweis": "Tik šioje naršyklėje, tik „Išbandyti“ funkcijai — vertė nėra saugoma ir nėra siunčiama mums.",
+   "ausprobieren": "Išbandyti",
+   "laeuft": "Vykdoma …",
+   "anfrage": "Užklausa",
+   "antwort": "Atsakymas",
+   "beispiel": "Pavyzdys",
+   "kopieren": "Kopijuoti",
+   "kopiert": "Nukopijuota",
+   "fehlerNetz": "Užklausa nepasiekė paslaugos. Dažniausios priežastys: paslauga šiuo metu neatsako arba naršyklė nutraukė užklausą dėl trūkstamo CORS leidimo. Tas pats iškvietimas per curl iš kodo lauko parodo, ką paslauga tikrai sako.",
+   "keinToken": "Be prieigos rakto iškvietimas atsako 401 — tai numatytas kelias."
+  },
+  "start": {
+   "eyebrow": "Vieša API",
+   "titel": "Kurk su myNextDays",
+   "unterzeile": "REST API objektams, laisvoms vietoms, kainoms, rezervacijoms, svečiams ir užduotims — skaitymui ir rašymui, su atšaukimu, perkėlimu ir kainos peržiūra. Vadovas paaiškina taisykles, žinyne yra kiekvienas galinis taškas su visais parametrais ir laukas jam išbandyti.",
+   "basisLabel": "Bazinis adresas",
+   "versionLabel": "Versija",
+   "versionHinweis": "kelyje",
+   "schemaTitel": "Schema",
+   "schemaText": "OpenAPI 3.1, sugeneruota iš kodo. Tinka kaip įvestis įprastiems kliento generatoriams.",
+   "woAnfangen": "Kur pradėti",
+   "erstLesen": "Pirmiausia perskaityk",
+   "dannBauen": "Paskui kurk"
+  },
+  "bereiche": {
+   "leitfaden": "Dokumentacija",
+   "referenz": "API žinynas"
+  },
+  "gruppen": {
+   "ueberblick": "Pagrindai",
+   "anhang": "Priedas"
+  },
+  "weiter": {
+   "naechste": "Kitas lapas",
+   "zurReferenz": "Toliau į API žinyną"
+  },
+  "referenzUebersicht": {
+   "eyebrow": "API žinynas",
+   "titel": "Visi galutiniai taškai",
+   "sub": "Kiekvienas galutinis taškas turi savo lapą su visais parametrais, užklausos turiniu, atsakymais ir lauku, kuriame iškvietimą gali išbandyti iškart."
+  },
+  "zugang": {
+   "eyebrow": "Autentifikavimas",
+   "heading": "Autentifikavimas",
+   "sub": "OAuth 2.0 su `client_credentials`. Prieiga priklauso lygiai vienai įmonei; kelias įmones apimančio rakto nėra.",
+   "ablauf": {
+    "titel": "Eiga",
+    "text": "`client_credentials` yra būdas programoms, veikiančioms savo vardu. Sutikimo dialogo ir atnaujinimo prieigos rakto nėra.",
+    "schritte": {
+     "anlegen": "Sukurkite prieigą valdymo skydelyje: Paskyra → API prieiga. `client_secret` parodomas vieną kartą ir vėliau jo gauti nebegalima.",
+     "tauschen": "`POST /v1/oauth/token` su `client_id` ir `client_secret`. Atsakyme yra `access_token`, `expires_in` (3600) ir suteiktos teisės.",
+     "senden": "Prieigos raktą siųskite su kiekvienu iškvietimu kaip `Authorization: Bearer ACCESS_TOKEN`. Pasibaigus galiojimui API atsako 401 ir kodu `token_expired`."
+    },
+    "merksatz": "Prieigos raktą laikykite atmintyje, negaukite jo iš naujo kiekvienam iškvietimui. Keitimas kiekvienai užklausai atsiduria prieigos raktų galinio taško užklausų limite (10/Minute)."
+   },
+   "rechte": {
+    "titel": "Teisės",
+    "text": "Teisių forma yra `bereich:richtung`, pavyzdžiui, `reservations:read` arba `rates:write`. Jei teisės nėra, galinis taškas atsako 403 ir kodu `insufficient_scope`.",
+    "merksatz": "Suteikite tik tas teises, kurių integracijai reikia. Pamestas raktas tada negali perrašyti nieko, ko jam niekada nebuvo leista net skaityti."
+   },
+   "objekte": {
+    "titel": "Objektų apribojimas",
+    "text": "Prieiga gali būti apribota tam tikrais objektais. Sąrašuose ji mato tik juos; iškvietimas su kito objekto ID atsako 403 ir kodu `objekt_nicht_erlaubt`."
+   },
+   "selbstauskunft": {
+    "titel": "Teisių patikra",
+    "text": "`GET /v1/me` grąžina prieigos rakto įmonę, teises ir objektų apribojimą — pirmasis iškvietimas nustatant integraciją."
+   }
+  },
+  "fehler": {
+   "eyebrow": "Klaidos",
+   "heading": "Kaip atrodo klaidos",
+   "sub": "Kiekviena klaida yra HTTP būsenos kodas ir turinys pagal RFC 9457 (`application/problem+json`). Nė viena klaida negrąžinama su būsena 200.",
+   "aufbau": {
+    "titel": "Sandara",
+    "text": "`code` yra stabilus, kompiuterio nuskaitomas klaidos pavadinimas. `detail` yra tekstas žmonėms ir gali bet kada pasikeisti.",
+    "felder": {
+     "type": "Šio klaidos tipo aprašo adresas — klaidų kodų sąrašas priede.",
+     "title": "Trumpas klaidos tipo pavadinimas.",
+     "status": "HTTP būsenos kodas.",
+     "detail": "Aprašas žmonėms.",
+     "code": "Stabilus klaidos pavadinimas. Vertinkite šį lauką.",
+     "request_id": "Užklausos identifikatorius. Pridėkite jį prie pagalbos užklausos."
+    },
+    "merksatz": "Skirstykite pagal `code`, ne pagal `detail`. Tekstas nėra sąsaja."
+   },
+   "klassen": {
+    "titel": "Būsenų klasės",
+    "vier": "4xx — problema yra užklausa: nėra teisės, nežinomas ID, netinkama vertė, užimtas laikotarpis. Pakartojimas nieko nepakeis.",
+    "fuenf": "5xx — serverio pusės klaida. Kartokite vis didesniais intervalais.",
+    "neun": "429 — pasiektas užklausų limitas. `Retry-After` nurodo laukimo laiką sekundėmis."
+   }
+  },
+  "limits": {
+   "eyebrow": "Užklausų limitai",
+   "heading": "Kiek iškvietimų leidžiama",
+   "sub": "Ribojama kiekvienai prieigai, ne kiekvienam IP. Yra trys kibirai su savomis vertėmis skaitymui, rašymui ir prieigos raktų išdavimui."
+  },
+  "fehlercodes": {
+   "eyebrow": "Priedas",
+   "heading": "Klaidų kodai",
+   "sub": "Visos šio API `code` vertės. Kiekviena eilutė turi inkarą; klaidos atsakymo `type` adresas į jį nurodo."
+  },
+  "lokalisierung": {
+   "eyebrow": "Priedas",
+   "heading": "Lokalizacija",
+   "sub": "Kalba ir valiuta gaunamos iš duomenų. Abu laukai gali būti tušti; nė vienas neturi numatytosios vertės.",
+   "waehrung": {
+    "titel": "Valiuta",
+    "text": "Kiekviena suma turi `currency` kodą pagal ISO 4217. Numatytosios vertės ir perskaičiavimo nėra.",
+    "merksatz": "Kuriant rezervaciją `currency` turi atitikti objekto valiutą. Nesutapus: 422 su kodu `currency_mismatch`."
+   },
+   "sprache": {
+    "titel": "Kalba",
+    "text": "`language` yra dviejų raidžių kodas pagal ISO 639-1, pavyzdžiui, `de`, `da`, `en`. Vertė gaunama iš rezervacijos arba iš portalo ir gali būti tuščia. Tuščia reiškia nežinoma."
+   },
+   "texte": {
+    "titel": "API tekstai",
+    "text": "Laukų pavadinimai, `code` vertės ir enum vertės yra angliškos ir yra sutarties dalis. Klaidos atsakymo `detail` tekstai skirti žmonėms ir gali pasikeisti — savo pranešimus rodykite pagal `code`."
+   }
+  },
+  "zeit": {
+   "eyebrow": "Priedas",
+   "heading": "Laiko juostos",
+   "sub": "Šis API naudoja dvi laiko nuorodų rūšis: kalendorines dienas objekto laiko juostoje ir laiko momentus UTC.",
+   "tage": {
+    "titel": "Kalendorinės dienos",
+    "text": "`check_in`, `check_out`, `date`, `from` ir `to` yra kalendorinės dienos `YYYY-MM-DD` formatu, objekto laiko juostoje. Jos neturi laiko ir nėra perskaičiuojamos į UTC.",
+    "merksatz": "`check_out` yra išvykimo diena; paskutinė užimta naktis yra naktis prieš ją. Keturios naktys reiškia keturių dienų skirtumą tarp `check_in` ir `check_out`."
+   },
+   "zeitpunkte": {
+    "titel": "Laiko momentai",
+    "text": "`created_at`, `updated_at`, `received_at`, `booked_at` ir `cancelled_at` yra laiko momentai pagal ISO 8601 UTC su `Z` gale."
+   },
+   "quelle": {
+    "titel": "booked_at ir received_at",
+    "text": "`booked_at` yra svečio rezervacijos momentas, portalo rezervacijoms iš portalo šaltinio. `received_at` yra gavimo šioje sistemoje momentas. Atliekant grupinę užklausą daugelis rezervacijų turi tą pačią `received_at` sekundę.",
+    "merksatz": "Rikiavimui „naujausi pirma“ naudokite `booked_at`, o `null` laikykite nežinoma verte. `received_at` atspindi užklausos eiliškumą, ne rezervacijų."
+   },
+   "filter": {
+    "titel": "Filtravimas pagal pakeitimus",
+    "text": "`updated_since` priima laiko momentą ir grąžina tai, kas nuo tada pasikeitė. Atkreipkite dėmesį į URL kodavimą: `+` adrese reiškia tarpą — rašykite `Z` arba užkoduokite kaip `%2B`."
+   }
+  }
+ },
  "meta": {
   "title": "myNextDays – nuomotojų platforma atostogų būstams",
   "description": "Platforma viešbučiams, agentūroms ir atostogų būstų nuomotojams: kanalų valdymo sistema, kalendorius, tiesioginės rezervacijos, bendravimas su svečiais ir apskaita vienoje vietoje. Sukurta Danijoje, talpinama ES. Nuo 19,90 € per mėnesį. 30 dienų nemokamai."

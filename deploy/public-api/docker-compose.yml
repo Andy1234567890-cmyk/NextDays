@@ -1,0 +1,114 @@
+# ──────────────────────────────────────────────────────────────────────────
+# nextdays-public-api — die ÖFFENTLICHE Partner-API als eigene Coolify-App.
+#
+# WARUM EINE EIGENE APP und nicht ein zweiter Service im api-Stack: Coolify
+# deployt einen Compose-Stack als EINE Einheit (stop-all → start-all, kein
+# Rolling-Update). Läge die öffentliche API im Stack der Haupt-API, würde jeder
+# Dashboard-Deploy die Partner-API mit herunterfahren — und jeder Partner-Deploy
+# das Dashboard. Beides ist inakzeptabel: die eine bedient unsere Oberfläche, die
+# andere fremde Systeme mit Verträgen und Abkündigungsfristen.
+#
+# ZWEI CONTAINER, EIN IMAGE:
+#   api        uvicorn src.main:app          — bedient open-api.mynextdays.com
+#   zusteller  python -m src.zusteller.dispatcher — liefert Webhooks aus
+# Getrennt, weil ein langsam antwortender Kunden-Endpunkt keine API-Anfrage
+# aufhalten darf. Sie teilen Code und Konfiguration, aber nicht den Prozess.
+#
+# ERREICHBARKEIT: `api` hängt im coolify-Netz (Traefik routet die Domain) UND im
+# supabase-internal-Netz (Kong + Redis per Servicename). Der `zusteller` hat
+# NICHTS im coolify-Netz zu suchen — er nimmt keine Anfragen an, er stellt nur
+# nach außen zu. Ein Prozess ohne Eingang gehört nicht ans Ingress.
+# ──────────────────────────────────────────────────────────────────────────
+services:
+  api:
+    build:
+      context: ./apps/public-api
+      dockerfile: Dockerfile
+    image: nextdays-public-api:prod
+    restart: unless-stopped
+    networks:
+      # Explizit, sonst hängt Coolify den Container bei eigenem networks:-Block
+      # nicht ins Ingress-Netz → Traefik erreicht ihn nicht (504).
+      coolify:
+      default:
+      supabase-internal:
+        aliases: [public-api]
+    labels:
+      # Muss "coolify" sein (dort lauscht coolify-proxy) und fest stehen —
+      # Coolify expandiert ${VARS} in Labels nicht.
+      - traefik.docker.network=coolify
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      UVICORN_WORKERS: ${UVICORN_WORKERS:-4}
+      # Kong intern (kein Hairpin über die öffentliche Adresse).
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      # MUSS identisch zur Haupt-API sein: dort werden die Zugänge angelegt,
+      # hier die Tokens ausgegeben und geprüft. Zwei verschiedene Secrets heißen,
+      # dass ein im Dashboard erzeugter Zugang hier nicht funktioniert.
+      API_TOKEN_SECRET: ${API_TOKEN_SECRET}
+      # EIGENE Redis-Datenbank (…/1), nicht die der Haupt-API (…/0): die
+      # Rate-Limit-Zähler beider Dienste dürfen sich keine Schlüssel teilen.
+      REDIS_URL: ${PUBLIC_API_REDIS_URL:-redis://:${REDIS_PASSWORD}@redis:6379/1}
+      # Steht in der veröffentlichten OpenAPI-Datei als `servers[0].url`. Falsch
+      # gesetzt, generieren Kunden Clients gegen eine Adresse, die es nicht gibt.
+      PUBLIC_BASE_URL: ${PUBLIC_API_BASE_URL:-https://open-api.mynextdays.com}
+      # Vertrauenswürdige Proxy-Hops für X-Forwarded-For. Hinter Traefik ist das
+      # 0 (der Header kommt vom Proxy selbst); ein zu hoher Wert lässt eine
+      # gefälschte Client-IP durch und macht das IP-Limit wirkungslos.
+      TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-0}
+    expose:
+      - "8000"
+    # Voraussetzung für Coolifys Start-before-Stop: der neue Container nimmt erst
+    # Verkehr, wenn /health grün ist. Über python, nicht curl — das slim-Image
+    # hat kein curl.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+  zusteller:
+    build:
+      context: ./apps/public-api
+      dockerfile: Dockerfile
+    image: nextdays-public-api:prod
+    restart: unless-stopped
+    command: ["python", "-m", "src.zusteller.dispatcher"]
+    networks:
+      default:
+      supabase-internal:
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      # Der Zusteller braucht Redis NICHT (er zählt keine Anfragen) — die
+      # Variable bleibt deshalb weg, statt sie „für den Fall" zu setzen.
+      WEBHOOK_TIMEOUT_SECONDS: ${WEBHOOK_TIMEOUT_SECONDS:-10}
+      WEBHOOK_MAX_ATTEMPTS: ${WEBHOOK_MAX_ATTEMPTS:-10}
+      WEBHOOK_POLL_SECONDS: ${WEBHOOK_POLL_SECONDS:-5}
+    # Ein Prozess, der eine Warteschlange abarbeitet, braucht keinen zweiten
+    # Arbeiter: zwei würden sich dieselben fälligen Zustellungen greifen. Der
+    # Unique-Index auf (webhook, event) verhindert die Doppelzustellung, aber
+    # doppelte Arbeit bleibt doppelte Arbeit.
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 512m
+
+networks:
+  coolify:
+    external: true
+    name: coolify
+  default:
+  supabase-internal:
+    external: true
+    name: supabase-internal

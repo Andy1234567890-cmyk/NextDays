@@ -26,9 +26,22 @@ from typing import Any
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
-# Basis der `type`-URIs. Zeigt auf die veröffentlichte Fehlerliste — eine URI,
-# die ins Nichts führt, ist die häufigste Verletzung von RFC 9457.
-FEHLER_BASIS_URI = "https://developers.mynextdays.dk/errors"
+# Basis der `type`-URIs. Sie zeigt auf die veröffentlichte Fehlerliste im
+# Entwicklerportal, und zwar auf den ANKER des jeweiligen Codes — eine URI, die
+# ins Nichts führt, ist die häufigste Verletzung von RFC 9457. Hier stand
+# zuerst `developers.mynextdays.dk/errors`: eine Subdomain, die es nicht gibt.
+# Genau der Fehler, den der Absatz oben anprangert.
+#
+# Die Anker werden in `marketing/components/entwickler/api-fehlercodes.tsx` je
+# Tabellenzeile gesetzt (`id="fehler-<code>"`, Unterstriche als Bindestriche).
+# Wer einen neuen Fehlercode einführt, trägt ihn dort ein — sonst zeigt seine
+# `type`-URI auf die richtige Seite, aber an keine Stelle darin.
+#
+# Die Seite ist der Anhang des Entwicklerportals und trägt NUR die Codeliste.
+# Ein Anker mitten in einem längeren Kapitel wäre für diesen Sprung die falsche
+# Adresse: RFC 9457 verlangt eine Beschreibung des Fehlertyps, nicht ein
+# Kapitel, in dem sie irgendwo vorkommt.
+FEHLER_BASIS_URI = "https://mynextdays.com/entwickler/fehlercodes"
 
 MEDIENTYP = "application/problem+json"
 
@@ -65,8 +78,11 @@ class ApiFehler(Exception):
 
 def problem_antwort(request: Request, fehler: ApiFehler) -> JSONResponse:
     """`ApiFehler` → problem+json-Antwort mit Request-ID und Fehler-URI."""
+    # Anker-Form: Unterstriche werden zu Bindestrichen, weil Fragment-IDs in
+    # HTML so geschrieben werden und die Doku-Seite sie so setzt.
+    anker = fehler.code.replace("_", "-")
     koerper: dict[str, Any] = {
-        "type": f"{FEHLER_BASIS_URI}/{fehler.code}",
+        "type": f"{FEHLER_BASIS_URI}#fehler-{anker}",
         "title": fehler.titel,
         "status": fehler.status,
         "detail": fehler.detail,

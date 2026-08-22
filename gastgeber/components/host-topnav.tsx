@@ -24,11 +24,16 @@ import { Logo } from "@/components/logo";
 import { logout } from "@/lib/auth";
 
 // Haupt-Tabs (mittig). `dot` = roter Ungelesen-Punkt (Nachrichten).
+//
+// NUR ROUTEN, DIE ES GIBT: `/kalender` und `/buchungen` standen hier, ohne dass
+// unter `app/(dashboard)/` eine Seite dazu existiert — beide Tabs führten in
+// einen 404. Ein Menüpunkt ohne Ziel ist schlimmer als keiner: er sieht aus wie
+// eine Funktion, die es gibt, und der Gastgeber sucht den Fehler bei sich.
+// Die Übersetzungen (`nav.kalender`, `nav.buchungen`) bleiben in allen Sprachen
+// stehen — sobald die Seite da ist, gehört der Eintrag hier zurück.
 const PRIMARY = [
   { key: "dashboard", href: "/", dot: false },
-  { key: "kalender", href: "/kalender", dot: false },
   { key: "objekte", href: "/objekte", dot: false },
-  { key: "buchungen", href: "/buchungen", dot: false },
   { key: "nachrichten", href: "/nachrichten", dot: true },
 ] as const;
 
@@ -104,12 +109,15 @@ export function HostTopNav({ email }: { email: string | null }) {
 
 // Menüpunkte, die auf ECHTE Routen zeigen (keine toten Links). Airbnb-spezifische
 // Punkte (Co-Host, Werben) sind weggelassen, bis es sie bei uns gibt.
+//
+// Der Satz oben stand hier, während `/finanzen` und `/statistiken` in einen 404
+// liefen — es gibt unter `app/(dashboard)/` keine Seite dazu. Beide sind
+// deshalb draußen; die Übersetzungen bleiben, der Eintrag kommt mit der Seite
+// zurück. Wer hier etwas ergänzt, prüft vorher `ls gastgeber/app/(dashboard)`.
 const MENU = [
   { key: "kontoeinstellungen", href: "/konto", icon: "solar:settings-line-duotone" },
   { key: "spracheWaehrung", href: "/konto?bereich=sprache", icon: "solar:global-line-duotone" },
   { key: "bewertungen", href: "/bewertungen", icon: "solar:star-line-duotone" },
-  { key: "finanzen", href: "/finanzen", icon: "solar:wallet-line-duotone" },
-  { key: "statistiken", href: "/statistiken", icon: "solar:chart-2-line-duotone" },
   { key: "neuesObjekt", href: "/objekt-einstellen", icon: "solar:add-square-line-duotone" },
   { key: "support", href: "/support", icon: "solar:chat-round-line-duotone" },
 ] as const;

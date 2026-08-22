@@ -77,6 +77,10 @@ known-first-party = ["src"]
 "src/core/einheiten.py" = ["W", "N", "C4", "SIM", "BLE"]
 "src/core/einheiten_verfuegbar.py" = ["W", "N", "C4", "SIM", "BLE"]
 "src/core/scopes.py" = ["W", "N", "C4", "SIM", "BLE"]
+"src/core/dates.py" = ["W", "N", "C4", "SIM", "BLE"]
+"src/features/addons/pricing.py" = ["W", "N", "C4", "SIM", "BLE"]
+"src/features/pricing/resolver.py" = ["W", "N", "C4", "SIM", "BLE"]
+"src/features/pricing/schemas.py" = ["W", "N", "C4", "SIM", "BLE"]
 # Fehlernamen ohne „Error"-Suffix (N818) sind hier Absicht: der Code ist
 # deutschsprachig, und `ApiFehler`/`UnsichereUrl` heißen in beiden Diensten
 # gleich. `ausgehende_url.py` ist zusätzlich eine byte-identische
@@ -91,6 +95,11 @@ known-first-party = ["src"]
 # Fehler oder erlaubt ist — und die Schwesterdateien liegen in beiden.
 py-version = "3.12"
 ignore-paths = ["^.*/tests/.*$"]
+# SCHWESTERDATEIEN werden im Ursprungsbaum geprüft (dort 10.00/10) und dürfen
+# hier nicht an einer strengeren Metrik scheitern — eine Korrektur nur in einem
+# Baum bricht die Byte-Gleichheit, die der CI erzwingt. Deshalb dieselbe
+# Modulgrenze wie in apps/api, statt die Kopien von der Prüfung auszunehmen.
+max-module-lines = 1500
 # redis-py exponiert `redis.asyncio` über eine dynamische Submodul-Struktur,
 # die astroid statisch nicht auflösen kann (falscher E0401). Real installiert.
 ignored-modules = ["redis", "redis.asyncio"]
@@ -128,6 +137,9 @@ disable = [
     "too-many-positional-arguments",
     "too-many-statements",
     "too-many-branches",
+    # Wie in apps/api: eine Klasse mit zehn Feldern ist kein Fehler, und der
+    # Resolver liegt hier als Kopie — sein Zuschnitt wird dort entschieden.
+    "too-many-instance-attributes",
     # Best-effort-Catch-alls sind ein bewusstes Muster (Zusteller-Schleife,
     # Audit-Schreibvorgänge). Jede Stelle ist mit `# noqa: BLE001` und einer
     # Begründung markiert; Ruffs BLE-Regel erzwingt diese Markierung.

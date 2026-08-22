@@ -20,8 +20,8 @@ from supabase import Client
 from ..core import errors
 from ..core.auth import ApiKontext, scope_erforderlich
 from ..core.db import Abfrage, service_db, zeile_im_mandanten
-from ..core.pagination import blaettern_pruefen, seite_bauen
-from .schemas import Aufgabe, AufgabeAendern, AufgabeAnlegen
+from ..core.pagination import blaettern_pruefen, keyset_anwenden, seite_bauen
+from .schemas import Aufgabe, AufgabeAendern, AufgabeAnlegen, Seite
 
 router = APIRouter(prefix="/tasks", tags=["Aufgaben"])
 
@@ -65,7 +65,12 @@ def _objekt_erlaubt(db: Client, ctx: ApiKontext, property_id: str | None) -> Non
     )
 
 
-@router.get("", summary="Aufgaben auflisten")
+@router.get(
+    "",
+    response_model=Seite[Aufgabe],
+    response_model_exclude_unset=True,
+    summary="Aufgaben auflisten",
+)
 def liste(
     ctx: Annotated[ApiKontext, Depends(scope_erforderlich("tasks:read"))],
     property_id: Annotated[str | None, Query()] = None,
@@ -84,6 +89,24 @@ def liste(
     ] = None,
     limit: Annotated[int | None, Query(ge=1, le=200)] = None,
     offset: Annotated[int | None, Query(ge=0)] = None,
+    starting_after: Annotated[
+        str | None,
+        Query(
+            description=(
+                "ID des letzten Elements der Vorseite — der empfohlene Weg zum "
+                "Blättern. Stabil, auch wenn sich die Liste zwischen zwei "
+                "Seiten ändert. Schließt `offset` aus. Den Wert liefert "
+                "`pagination.next_starting_after` der Vorseite.\n\n"
+                "**Die übrigen Filter musst du beim Weiterblättern unverändert "
+                "mitschicken.** Änderst du sie, beschreibt der Cursor eine "
+                "Stelle in einer anderen Liste, und das Ergebnis ist nicht "
+                "vorhersagbar. `limit` darf sich ändern.\n\n"
+                "Der Cursor läuft nicht ab. Er wird ungültig, wenn der "
+                "Datensatz gelöscht wird — dann kommt ein 422, und du beginnst "
+                "den Durchgang ohne `starting_after` neu."
+            )
+        ),
+    ] = None,
     include_total: Annotated[bool, Query()] = False,
 ) -> dict[str, Any]:
     """Aufgaben des Betriebs.
@@ -91,7 +114,7 @@ def liste(
     Sortiert nach Fälligkeit; Aufgaben ohne Fälligkeitszeitpunkt stehen am Ende.
     """
     db = service_db()
-    blatt = blaettern_pruefen(limit, offset, include_total)
+    blatt = blaettern_pruefen(limit, offset, include_total, starting_after)
     if property_id:
         _objekt_erlaubt(db, ctx, property_id)
 
@@ -112,11 +135,27 @@ def liste(
             q = q.lte("due_at", due_before.isoformat())
         return q
 
+    # `due_at` darf NULL sein (eine Aufgabe ohne Fälligkeit). `nullsfirst=False`
+    # stellt diese Zeilen ans Ende — und genau damit rechnet der Cursor-Filter:
+    # solange er auf einem Wert steht, schließt er den NULL-Block mit ein, und
+    # sobald er darin ist, blättert er nur noch über die ID weiter. Ohne diese
+    # Behandlung bliebe das Blättern vor den Aufgaben ohne Fälligkeit stehen.
     zeilen = (
-        basis()
-        .order("due_at", desc=False, nullsfirst=False)
-        .order("id")
-        .range(blatt.offset, blatt.range_bis)
+        keyset_anwenden(
+            basis().order("due_at", desc=False, nullsfirst=False).order("id"),
+            db,
+            "tasks",
+            blatt,
+            tenant_id=ctx.tenant_id,
+            sortier_spalte="due_at",
+            aufsteigend=True,
+            # `due_at` darf NULL sein — deshalb die ODER-Form statt der
+            # schnelleren Range-Form: eine Grenze `due_at >= wert` würde alle
+            # Aufgaben ohne Fälligkeit ausschließen und den NULL-Block
+            # unerreichbar machen.
+            nullable=True,
+        )
+        .range(blatt.range_von, blatt.range_bis)
         .execute()
     ).data or []
     total = None

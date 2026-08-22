@@ -6968,7 +6968,12 @@
     "needScope": "Wähle mindestens eine Berechtigung.",
     "docsHint": "Wie du dich mit diesen Zugangsdaten authentifizierst, steht in der API-Dokumentation.",
     "loadErr": "Konnte nicht geladen werden.",
-    "noAccess": "Kein Zugriff"
+    "noAccess": "Kein Zugriff",
+    "scopeRates": "Preise",
+    "scopeGuests": "Gäste",
+    "scopeTasks": "Aufgaben",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "API-Dokumentation"
   },
   "supportChat": {
     "titel": "Hilfe & Support",

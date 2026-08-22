@@ -1,4 +1,427 @@
 {
+ "entwickler": {
+  "meta": {
+   "titel": "API un izstrādātāji — myNextDays",
+   "beschreibung": "myNextDays publiskā REST API: objekti, pieejamība, cenas, rezervācijas, viesi un uzdevumi. OAuth2, OpenAPI 3.1, webhook ar parakstītām piegādēm."
+  },
+  "hero": {
+   "eyebrow": "Publiskā API",
+   "titel": "Veido integrāciju ar myNextDays",
+   "unterzeile": "Viena REST API objektiem, pieejamībai, cenām, rezervācijām, viesiem un uzdevumiem. Īsdzīvojoši token, tiesības katrai piekļuvei atsevišķi, notikumi caur webhook — un shēma, kas rodas no koda un tāpēc nevar novecot.",
+   "basisLabel": "Bāzes adrese",
+   "versionLabel": "Versija",
+   "versionHinweis": "ceļā",
+   "konsole": "Izmēģināt",
+   "schema": "OpenAPI 3.1",
+   "referenz": "Lasīt atsauci"
+  },
+  "inhalt": {
+   "titel": "Šajā lapā",
+   "schnellstart": "Darba sākšana",
+   "konzepte": "Datu modelis",
+   "konventionen": "Lapošana",
+   "endpunkte": "Galapunkti",
+   "webhooks": "Webhooki",
+   "grenzen": "Ierobežojumi",
+   "hilfe": "Atbalsts",
+   "start": "Pārskats",
+   "zugang": "Autentifikācija",
+   "fehler": "Kļūdas",
+   "limits": "Pieprasījumu ierobežojumi",
+   "fehlercodes": "Kļūdu kodi",
+   "lokalisierung": "Lokalizācija",
+   "zeit": "Laika joslas"
+  },
+  "code": {
+   "kopieren": "Kopēt",
+   "kopiert": "Nokopēts",
+   "anfrage": "Pieprasījums",
+   "antwort": "Atbilde",
+   "zustellung": "Piegāde",
+   "pruefcode": "Pārbaudīt parakstu (Node)"
+  },
+  "schnellstart": {
+   "eyebrow": "Ātrais starts",
+   "heading": "Pirmais izsaukums piecās minūtēs",
+   "sub": "Trīs soļi. Tikai pirmais notiek saskarnē — viss pārējais ir izsaukums.",
+   "schritt1": {
+    "titel": "Izveido piekļuvi",
+    "text": "Vadības panelī izveido piekļuvi un uzreiz nosaki, ko tā drīkst: tiesības katrai jomai un, ja vēlies, tikai konkrētus objektus. Piekļuvei, kas paredzēta uzkopšanas plānam, nav vajadzīga pieeja apgrozījumam.",
+    "pfad": "Konts → API piekļuve",
+    "hinweis": "`client_secret` tiek parādīts vienu reizi; saglabāts tiek tikai tā jaucējkods. Zaudēts noslēpums netiek atjaunots, tas tiek aizstāts."
+   },
+   "schritt2": {
+    "titel": "Iegūsti token",
+    "text": "Apmaini Client-ID un Secret pret Access-Token. Tas ir derīgs vienu stundu un nes tieši tās tiesības, kas ir piekļuvei.",
+    "hinweis": "Turi token atmiņā un apmaini to pret jaunu tikai tad, kad tam beidzas termiņš vai atnāk 401 — nevis pie katra izsaukuma. Atsaukšana vadības panelī nekavējoties liedz izsniegt jaunus token."
+   },
+   "schritt3": {
+    "titel": "Veic pirmo izsaukumu",
+    "text": "Nosūti token kā `Authorization: Bearer …`. Katrs saraksts atbild vienā un tajā pašā aploksnē: `data` plus `pagination`.",
+    "hinweis": "Pēc tam izsauc `GET /v1/me` — tas pasaka, kādas tiesības un kurus objektus šī piekļuve aptver, un tev tas nav jānoskaidro ar virkni 403 atbilžu."
+   }
+  },
+  "konzepte": {
+   "eyebrow": "Koncepti",
+   "heading": "Četras lietas, kas jāzina jau iepriekš",
+   "sub": "Četri lēmumi, kas nosaka API uzvedību. Tie atšķiras no izplatītiem pieņēmumiem.",
+   "objekt": {
+    "titel": "Objekts ir vienību tips",
+    "text": "`property` ir tieši viens tips: numura tips viesnīcā vai brīvdienu objekts. Zem tā ir tā vienības (`units`) — parasti tieši viena, bet, ja ir 5 vienādi studio, tad piecas. Pārdod vienību, bet uzskaita un cenu nosaka tipam.",
+    "folge": "Tāpēc pieejamība ir SKAITLIS (`units_available`), nevis jā/nē. Viesnīcai ar 8 Twin un 4 Double numuriem ir divi objekti ar attiecīgi 8 un 4 vienībām — nevis viens objekts ar 12 numuriem."
+   },
+   "waehrung": {
+    "titel": "Katra summa nes savu valūtu",
+    "text": "Noklusējuma vērtības nav. Katram objektam ir valūta, un katra summa atbildē to nosauc.",
+    "folge": "Ja objektam valūtas nav, tā ir datu kļūda un izsaukums neizdodas ar 422 — nekāds „EUR“ netiek ielikts. Rezervējot tavai valūtai jāsakrīt ar objekta valūtu."
+   },
+   "zeit": {
+    "titel": "Divi dažādi laika momenti",
+    "text": "`booked_at` ir rezervācijas moments pie viesa — no portāla avota, `null`, ja portāls to nesniedz. `received_at` ir ienākšana šajā sistēmā.",
+    "folge": "Kārto „jaunākie vispirms“ pēc `booked_at`, nevis pēc `received_at`: kopimportā desmitiem rezervāciju nes vienu un to pašu sekundi. Laika zīmogi ir UTC, datuma lauki ir kalendāra dienas objekta laika joslā."
+   },
+   "kanaele": {
+    "titel": "Redzamība ir spēkā katram kanālam atsevišķi",
+    "text": "Globāla „publicēts“ nav. Objekts ir redzams tirdzniecības vietnē, paša mājaslapā, caur portāliem — katrs no tiem ieslēdzams atsevišķi.",
+    "folge": "Objekts ir pārdodams tikai tad, ja sanāk kopā trīs lietas: `status = active`, kanāls ir ieslēgts un ir brīvas vienības. Turpretī pārdošanas apturēšana darbojas VISOS kanālos."
+   }
+  },
+  "konventionen": {
+   "eyebrow": "Konvencijas",
+   "heading": "Lapošana, kļūdas, limiti, idempotence",
+   "sub": "Četri punkti, kas katrā API ir citādi — šeit ar skaitļiem, nevis ar prozu.",
+   "tabelle": {
+    "feld": "Lauks",
+    "bedeutung": "Nozīme",
+    "code": "Kods",
+    "status": "Statuss"
+   },
+   "blaettern": {
+    "titel": "Lapošana",
+    "text": "Katrs saraksts atbild ar `data` un `pagination`. Lapošana notiek ar **kursoru**: iepriekšējās lapas pēdējā elementa `id` tu nosūti kā `starting_after`. Ja atbildē nav `next_starting_after`, caurskate ir pabeigta.",
+    "felder": {
+     "starting_after": "Iepriekšējās lapas pēdējā elementa `id`. Ieteicamais ceļš — noturīgs arī tad, ja saraksts starp divām lapām mainās. Nezināms vai izdzēsts `id` dod 422, nevis tukšu lapu.",
+     "next_starting_after": "Ir laukā `pagination`, kamēr ir turpinājums: vērtība tavam nākamajam `starting_after`. Ja tās nav, tu esi galā.",
+     "limit": "Rindas vienā lapā. Noklusējums 50, augstākā vērtība 200 — lielāka vērtība dod 422, nevis saīsinātu lapu.",
+     "offset": "Izlaižamo rindu skaits — vienreizējam ieskatam noteiktā lapā. Kopā ar `starting_after` tas dod 422: divām pozīcijas norādēm vienā pieprasījumā nav pretrunu brīvas nozīmes.",
+     "include_total": "`true` papildus atgriež `total`. Pieprasi to tikai tad, ja tu šo skaitli tiešām rādi.",
+     "has_more": "Ir katrā atbildē un pasaka, vai eksistē vēl viena lapa — nekāda minēšana, nekāds papildu aplis."
+    },
+    "warumCursor": "Kāpēc ne vienkārši `offset`: tas apraksta POZĪCIJU sarakstā. Ja starp 1. un 2. lapu pienāk rezervācija, viss pārbīdās par vienu vietu — `offset=50` tad izlaiž vienu rindu, bet dzēšot viena rinda nāk divreiz. Pēc tam tavā datubāzē trūkst rezervācijas, un atbildē nekas to neatklāj. Kursors nosauc pēdējo ierakstu, ko tu esi redzējis, un tāpēc nevar pārbīdīties."
+   },
+   "fehler": {
+    "titel": "Kļūdas",
+    "text": "Katra kļūda atnāk kā `application/problem+json` (RFC 9457) ar stabilu `code`, ar `request_id` un — kur tas palīdz — ar laukiem, kas kļūdu izskaidro. Zarojies pēc `code`, nevis pēc teksta: teksts drīkst mainīties, kods nē.",
+    "codes": {
+     "nichtAuthentifiziert": "Token nav, tam ir beidzies termiņš vai tas nav derīgs.",
+     "ungueltigeZugangsdaten": "Client-ID vai Secret ir nepareizs, vai piekļuve ir atsaukta.",
+     "scopeFehlt": "Token ir derīgs, bet šai piekļuvei nav nepieciešamo tiesību. Trūkstošais scope ir norādīts kļūdā.",
+     "objektNichtErlaubt": "Piekļuve ir ierobežota ar konkrētiem objektiem; šis tiem nepieder.",
+     "nichtGefunden": "Nepastāv vai pieder citam uzņēmumam — abos gadījumos atbilde ir vienāda.",
+     "zeitraumNichtVerfuegbar": "Aizņemts, bloķēts vai izņemts no pārdošanas. Nekāda pusrezervācija nav radusies.",
+     "idempotenzInArbeit": "Izsaukums ar šo Idempotency-Key vēl darbojas. Nedaudz pagaidi, tad atkārto.",
+     "aboBestehtBereits": "Šai adresei jau ir aktīvs šīs piekļuves webhook abonements.",
+     "waehrungFehlt": "Objektam, cenu plānam vai rezervācijai nav piesaistīta valūta — datu kļūda.",
+     "ungueltigeAnfrage": "Formāli pareizs, saturiski neizpildāms. Pamatojums ir laukā `detail`.",
+     "validierungFehlgeschlagen": "Pieprasījums neatbilst shēmai. `felder` nosauc, kurš lauks.",
+     "zuVieleAnfragen": "Sasniegts Rate-Limit. `Retry-After` pasaka, kad var turpināt.",
+     "nichtKonfiguriert": "Serviss nevar pieprasījumu apstrādāt droši. Nekāda turpināšana bez pārbaudes."
+    }
+   },
+   "limits": {
+    "titel": "Rate-Limit",
+    "text": "Ierobežojums tiek piemērots katrai PIEKĻUVEI, nevis katrai IP adresei: aģentūra, kas apkalpo divdesmit uzņēmumus, sēž aiz vienas IP un nedrīkst pati sevi bremzēt. Trīs atsevišķi spaiņi, lai kalendāra salīdzināšana nebloķētu cenu iestatīšanu.",
+    "eimer": {
+     "token": "Token apmaiņa. Strikts, jo tieši šeit tiek pārbaudīti piekļuves dati.",
+     "write": "Rakstošie izsaukumi — tie iejaucas pārdošanā.",
+     "read": "Lasošie izsaukumi: integrācijas ikdiena."
+    },
+    "header": "Katra atbilde nes līdzi pašreizējo stāvokli, arī veiksmīgā — lai tu varētu pielāgot savu tempu, pirms ieskrien 429:"
+   },
+   "idempotenz": {
+    "titel": "Idempotence",
+    "text": "Veidojot rezervāciju, galvene `Idempotency-Key` ir obligāta. Katram darījumam izvēlies unikālu vērtību (piemēram, UUID) un atkārto to, ja sūti to pašu izsaukumu vēlreiz. Bez šīs aizsardzības tīkla pārrāvums ar atkārtojumu rada divas rezervācijas — un otrā bloķē naktis, ko neviens nav pasūtījis.",
+    "faelle": {
+     "wiederholung": "Tā pati atslēga, tā pati slodze → pirmā atbilde atnāk vārds vārdā tāda pati, ar galveni `Idempotency-Replayed: true`.",
+     "abweichend": "Tā pati atslēga, CITA slodze → 422. Jaunam darījumam pienākas jauna atslēga.",
+     "laufend": "Tā pati atslēga, pirmais izsaukums vēl darbojas → 409. Nedaudz pagaidi, tad atkārto; neuzstāj ar jaunu atslēgu."
+    }
+   }
+  },
+  "webhooks": {
+   "eyebrow": "Webhook",
+   "heading": "Notikumi, nevis vaicāšana",
+   "sub": "Viens abonements katrai adresei, parakstītas piegādes, atkārtojumi ar augošu intervālu. Notikumi rodas pie KATRAS izmaiņas — arī tad, ja tā nāk caur portālu vai vadības paneli, nevis caur šo API.",
+   "tabelle": {
+    "ereignis": "Notikums",
+    "wann": "Kad tas nostrādā"
+   },
+   "ereignisse": {
+    "reservationCreated": "Ir radusies rezervācija — vienalga caur kuru kanālu.",
+    "reservationUpdated": "Esoša rezervācija ir mainījusies.",
+    "reservationCancelled": "Rezervācija ir atcelta. Atsevišķs notikums, jo uz to jāreaģē citādi nekā uz izmaiņu.",
+    "availabilityChanged": "Objekta kalendārs ir mainījies (rezervācija, bloķēšana, atbrīvošana).",
+    "rateChanged": "Ir mainījusies dienas cena vai uzturēšanās noteikums.",
+    "taskCreated": "Ir radies uzdevums.",
+    "taskCompleted": "Uzdevums ir pabeigts."
+   },
+   "anlegen": {
+    "titel": "Izveidot abonementu",
+    "text": "Viena `https` adrese un notikumi, kurus tu vēlies. Pēc izvēles tikai konkrētiem objektiem. Iekšējas adreses tiek atteiktas — pārbaude notiek gan izveidojot, UN arī pirms katras atsevišķas piegādes.",
+    "secret": "Atbilde satur parakstīšanas secret tikai vienu reizi. Saglabā to tagad — tas vairs nekad netiks izsniegts."
+   },
+   "nutzlast": {
+    "titel": "Kas pienāk",
+    "text": "Turēts šaurs: ID un lauki, kas apraksta izmaiņu. Pilno ierakstu pēc vajadzības iegūsti caur API — tā saņēmējam netiek piegādāts nekas, ko viņam pa šo laiku vairs nebūtu tiesību redzēt."
+   },
+   "signatur": {
+    "titel": "Pārbaudīt parakstu",
+    "text": "Katra piegāde nes galveni ar laika zīmogu un HMAC-SHA256 pār `ZEITSTEMPEL.BODY`, aprēķinātu ar tava abonementa secret. Tā kā laika zīmogs ir parakstīts līdzi, tu pamanīsi ierakstītu un vēlāk atkārtoti atskaņotu piegādi — ja paraksts būtu tikai pār ķermeni, tas nebūtu iespējams.",
+    "schritte": {
+     "roh": "Ņem pieprasījuma NEAPSTRĀDĀTO ķermeni, nevis parsēto un no jauna serializēto objektu — cita baitu secība dod citu parakstu. Tas ir visbiežākais iemesls ziņai „paraksts nesakrīt“.",
+     "alter": "Pārbaudi vecumu pēc laika zīmoga; piecu minūšu pielaide ir laba vērtība.",
+     "vergleich": "Salīdzini laika ziņā nemainīgi (`timingSafeEqual`, `hmac.compare_digest`). Parasts `==` padara parakstu uzminējamu."
+    }
+   },
+   "verhalten": {
+    "wiederholung": {
+     "titel": "Atkārtojumi",
+     "text": "Ja tava adrese neatbild ar 2xx, piegāde tiek atkārtota līdz desmit reizēm — ar augošu intervālu no vienas minūtes līdz vienai stundai. Atbildi ātri un apstrādā pēc tam; lēns saņēmējs tiek uzskatīts par kļūdu."
+    },
+    "reihenfolge": {
+     "titel": "Secība",
+     "text": "Nav garantēta. Izmanto notikuma `created_at`, lai vecāka piegāde netiktu ierakstīta pāri jaunākai."
+    },
+    "doppelt": {
+     "titel": "Dubulta piegāde",
+     "text": "Tā ir maz ticama, bet iespējama — uzskati notikuma `id` par atslēgu un apstrādā katru tikai vienu reizi. Šī garantija attiecas uz katru webhook piegādātāju, ne tikai uz šo."
+    },
+    "nachholen": {
+     "titel": "Nokavēto notikumu atgūšana pēc pārtraukuma",
+     "text": "Ja tavi serveri bija nesasniedzami, nokavētos notikumus atgūsti caur `GET /v1/events?since=…` — no vecākā uz jaunāko, ar tādiem pašiem `id` kā piegādei, ne vairāk kā 30 dienas atpakaļ. Pats push vien nav piegādes garantija: agri vai vēlu atkārtošanas mēģinājumi beidzas, un bez šī soļa tev tieši trūks to notikumu, par kuriem tu nekad neuzzināji."
+    }
+   }
+  },
+  "grenzen": {
+   "eyebrow": "Ierobežojumi",
+   "heading": "Ierobežojumi",
+   "sub": "Divas darbības caur šo API nav iespējamas. Abas izriet no datu modeļa. Atcelšana, pārcelšana un cenas aprēķins ir iespējami.",
+   "stattdessen": "Tā vietā:",
+   "gaeste": {
+    "titel": "Viesu izveide un maiņa",
+    "text": "Viesa dati rodas, kad viesis tos ievada, vai caur portālu. Rakstīšanas ceļš šeit būtu trešais avots vienai un tai pašai personai.",
+    "ausweg": "Izveidojot rezervāciju, nosūti līdzi viesa datus — esošie viesi tiek atpazīti pēc e-pasta adreses. Esošas rezervācijas kontaktinformācijas laukus var uzturēt ar `PATCH /v1/reservations/'{'id}`."
+   },
+   "nachrichten": {
+    "titel": "Sarunas atvēršana",
+    "text": "Ziņu lasīšana un rakstīšana esošā sarunā ir iespējama (`/v1/reservations/'{'id}/messages`). Jaunas sarunas izveide nav: sarunu pavediens vienmēr pieder tirdzniecības vietas viesa kontam, un uzņēmuma API piekļuve tāds konts nav.",
+    "ausweg": "Saruna rodas ar viesa pirmo ziņu vai vadības panelī; pēc tam API tajā var rakstīt."
+   },
+   "finanzen": {
+    "titel": "Maksājuma iekasēšana",
+    "text": "Lasāmi ir maksājumi un plānotie maksājuma pieprasījumi (`/v1/reservations/'{'id}/payments`), kā arī maksājumu grafiks un atcelšanas skala (`/v1/properties/'{'id}/booking-conditions`). Iekasēšana notiek caur viesa rezervēšanas gaitu ar maksājuma nodomiem, nevis caur nosūtāmu saiti.",
+    "ausweg": "Maksājuma pieprasījumi rodas vadības panelī; API nolasa to statusu un ar tiem saistītos notikumus."
+   }
+  },
+  "hilfe": {
+   "eyebrow": "Palīdzība",
+   "heading": "Jautājumi, izmaiņas, rīki",
+   "sub": "Kur griezties ar jautājumu un uz ko tu vari balstīties, kamēr būvē.",
+   "wege": {
+    "titel": "Ja kaut kas nedarbojas",
+    "entwicklerMail": {
+     "titel": "Tehniskais kontakts",
+     "text": "Nosūti līdzi `request_id` no kļūdas atbildes — ar to izsaukums ir atrodams mūsu žurnālos."
+    },
+    "hilfeCenter": {
+     "titel": "Palīdzības centrs",
+     "text": "Pamācības par produktu: izveidot objektus, savienot portālus, uzturēt cenas."
+    },
+    "schema": {
+     "titel": "Ģenerēt klientu",
+     "text": "OpenAPI fails noder kā ievade parastajiem ģeneratoriem — ar roku rakstīts klients nav vajadzīgs."
+    }
+   },
+   "versionen": {
+    "titel": "Versiju pārvaldība",
+    "text": "API ir apsolījums. Šie četri punkti attiecas uz v1:",
+    "zusagen": {
+     "pfad": "Versija ir norādīta ceļā. Nesaderīga izmaiņa saņem `/v2`; `/v1` turpina darboties tam blakus.",
+     "additiv": "v1 ietvaros lauki tikai pievienojas. Esošie lauki netiek pārsaukti un nemaina savu nozīmi.",
+     "frist": "Ja versija tiek izbeigta, mēs nosaucam datumu ar vismaz divpadsmit mēnešu termiņu un sazināmies ar katru uzņēmumu, kuram ir aktīva piekļuve.",
+     "changelog": "Izmaiņas ir aprakstītas OpenAPI failā un šajā lapā. Nekādu klusu izmaiņu kādā laukā nav."
+    }
+   }
+  },
+  "kopf": {
+   "hilfe": "Palīdzības centrs",
+   "zurueck": "Uz vietni"
+  },
+  "sidebar": {
+   "sprung": "Pāriet uz …",
+   "keineTreffer": "Neviens galapunkts un neviena nodaļa tam neatbilst.",
+   "leitfaden": "Rokasgrāmata",
+   "referenz": "API atsauce",
+   "tocTitel": "Šajā lapā",
+   "version": "myNextDays Publiskā API v1"
+  },
+  "referenz": {
+   "scope": "Nepieciešamā tiesība:",
+   "pfadParameter": "Ceļa parametri",
+   "queryParameter": "Vaicājuma parametri",
+   "headerParameter": "Galvenes",
+   "koerper": "Pieprasījuma pamatteksts",
+   "antworten": "Atbildes",
+   "erlaubt": "Atļauts:",
+   "pflicht": "obligāts",
+   "standard": "Noklusējums",
+   "sprache": "Valoda",
+   "zugang": "Piekļuve",
+   "tokenHinweis": "Tikai šajā pārlūkā, tikai „Izmēģināt“ vajadzībām — vērtība netiek saglabāta un netiek sūtīta mums.",
+   "ausprobieren": "Izmēģināt",
+   "laeuft": "Notiek …",
+   "anfrage": "Pieprasījums",
+   "antwort": "Atbilde",
+   "beispiel": "Piemērs",
+   "kopieren": "Kopēt",
+   "kopiert": "Nokopēts",
+   "fehlerNetz": "Pieprasījums nesasniedza pakalpojumu. Biežākie iemesli: pakalpojums pašlaik neatbild vai pārlūks pārtrauca pieprasījumu trūkstošas CORS atļaujas dēļ. Tas pats izsaukums ar curl no koda lauka parāda, ko pakalpojums tiešām saka.",
+   "keinToken": "Bez tokena izsaukums atbild ar 401 — tas ir gaidītais ceļš."
+  },
+  "start": {
+   "eyebrow": "Publiskā API",
+   "titel": "Veido pret myNextDays",
+   "unterzeile": "REST API objektiem, pieejamībai, cenām, rezervācijām, viesiem un uzdevumiem — lasīšanai un rakstīšanai, ar atcelšanu, pārcelšanu un cenas priekšskatījumu. Rokasgrāmata izskaidro noteikumus, atsauce satur katru galapunktu ar visiem parametriem un lauku, lai to izmēģinātu.",
+   "basisLabel": "Bāzes adrese",
+   "versionLabel": "Versija",
+   "versionHinweis": "ceļā",
+   "schemaTitel": "Shēma",
+   "schemaText": "OpenAPI 3.1, ģenerēts no koda. Noder kā ievade ierastajiem klientu ģeneratoriem.",
+   "woAnfangen": "Kur sākt",
+   "erstLesen": "Vispirms izlasi",
+   "dannBauen": "Tad veido"
+  },
+  "bereiche": {
+   "leitfaden": "Dokumentācija",
+   "referenz": "API atsauce"
+  },
+  "gruppen": {
+   "ueberblick": "Pamati",
+   "anhang": "Pielikums"
+  },
+  "weiter": {
+   "naechste": "Nākamā lapa",
+   "zurReferenz": "Tālāk uz API atsauci"
+  },
+  "referenzUebersicht": {
+   "eyebrow": "API atsauce",
+   "titel": "Visi galapunkti",
+   "sub": "Katram galapunktam ir sava lapa ar visiem parametriem, pieprasījuma pamattekstu, atbildēm un lauku, kurā izsaukumu vari izmēģināt uzreiz."
+  },
+  "zugang": {
+   "eyebrow": "Autentifikācija",
+   "heading": "Autentifikācija",
+   "sub": "OAuth 2.0 ar `client_credentials`. Piekļuve pieder tieši vienam uzņēmumam; atslēgas vairākiem uzņēmumiem nav.",
+   "ablauf": {
+    "titel": "Norise",
+    "text": "`client_credentials` ir ceļš programmām, kas darbojas savā vārdā. Piekrišanas dialoga un atsvaidzināšanas marķiera nav.",
+    "schritte": {
+     "anlegen": "Izveidojiet piekļuvi vadības panelī: Konts → API piekļuve. `client_secret` tiek parādīts vienu reizi, un pēc tam to vairs nevar iegūt.",
+     "tauschen": "`POST /v1/oauth/token` ar `client_id` un `client_secret`. Atbilde satur `access_token`, `expires_in` (3600) un piešķirtās tiesības.",
+     "senden": "Sūtiet marķieri katrā izsaukumā kā `Authorization: Bearer ACCESS_TOKEN`. Pēc derīguma beigām API atbild ar 401 un kodu `token_expired`."
+    },
+    "merksatz": "Glabājiet marķieri atmiņā, neiegūstiet to atkārtoti katram izsaukumam. Apmaiņa katrā pieprasījumā ieskrien marķieru galapunkta pieprasījumu ierobežojumā (10/Minute)."
+   },
+   "rechte": {
+    "titel": "Tiesības",
+    "text": "Tiesībām ir forma `bereich:richtung`, piemēram, `reservations:read` vai `rates:write`. Ja tiesības nav, galapunkts atbild ar 403 un kodu `insufficient_scope`.",
+    "merksatz": "Piešķiriet tikai tās tiesības, kas integrācijai nepieciešamas. Pazaudēta atslēga tad nevar pārrakstīt neko, ko tai nekad nebija ļauts pat lasīt."
+   },
+   "objekte": {
+    "titel": "Objektu ierobežojums",
+    "text": "Piekļuve var būt ierobežota ar noteiktiem objektiem. Sarakstos tā redz tikai tos; izsaukums ar cita objekta ID atbild ar 403 un kodu `objekt_nicht_erlaubt`."
+   },
+   "selbstauskunft": {
+    "titel": "Tiesību pārbaude",
+    "text": "`GET /v1/me` atgriež marķiera uzņēmumu, tiesības un objektu ierobežojumu — pirmais izsaukums, iestatot integrāciju."
+   }
+  },
+  "fehler": {
+   "eyebrow": "Kļūdas",
+   "heading": "Kā izskatās kļūdas",
+   "sub": "Katra kļūda ir HTTP statusa kods un ķermenis atbilstoši RFC 9457 (`application/problem+json`). Neviena kļūda nenāk ar statusu 200.",
+   "aufbau": {
+    "titel": "Uzbūve",
+    "text": "`code` ir kļūdas stabilais, mašīnlasāmais nosaukums. `detail` ir teksts cilvēkiem un var mainīties jebkurā laikā.",
+    "felder": {
+     "type": "Šī kļūdas tipa apraksta adrese — kļūdu kodu saraksts pielikumā.",
+     "title": "Kļūdas tipa īsais nosaukums.",
+     "status": "HTTP statusa kods.",
+     "detail": "Apraksts cilvēkiem.",
+     "code": "Kļūdas stabilais nosaukums. Apstrādājiet šo lauku.",
+     "request_id": "Pieprasījuma identifikators. Pievienojiet to atbalsta pieprasījumam."
+    },
+    "merksatz": "Sazarojiet pēc `code`, nevis pēc `detail`. Teksts nav saskarne."
+   },
+   "klassen": {
+    "titel": "Statusa klases",
+    "vier": "4xx — problēma ir pieprasījums: trūkst tiesību, nezināms ID, nederīga vērtība, aizņemts periods. Atkārtošana neko nemaina.",
+    "fuenf": "5xx — servera puses kļūda. Atkārtojiet ar augošu intervālu.",
+    "neun": "429 — sasniegts pieprasījumu ierobežojums. `Retry-After` norāda gaidīšanas laiku sekundēs."
+   }
+  },
+  "limits": {
+   "eyebrow": "Pieprasījumu ierobežojumi",
+   "heading": "Cik izsaukumu ir atļauts",
+   "sub": "Ierobežo katrai piekļuvei, nevis katrai IP. Ir trīs spaiņi ar savām vērtībām lasīšanai, rakstīšanai un marķieru izsniegšanai."
+  },
+  "fehlercodes": {
+   "eyebrow": "Pielikums",
+   "heading": "Kļūdu kodi",
+   "sub": "Visas šī API `code` vērtības. Katrai rindai ir enkurs; kļūdas atbildes `type` adrese uz to norāda."
+  },
+  "lokalisierung": {
+   "eyebrow": "Pielikums",
+   "heading": "Lokalizācija",
+   "sub": "Valoda un valūta nāk no datiem. Abi lauki var būt tukši; nevienam nav noklusējuma vērtības.",
+   "waehrung": {
+    "titel": "Valūta",
+    "text": "Katrai summai ir `currency` kods atbilstoši ISO 4217. Noklusējuma vērtības un pārrēķina nav.",
+    "merksatz": "Veidojot rezervāciju, `currency` jāatbilst objekta valūtai. Ja atšķiras: 422 ar kodu `currency_mismatch`."
+   },
+   "sprache": {
+    "titel": "Valoda",
+    "text": "`language` ir divu burtu kods atbilstoši ISO 639-1, piemēram, `de`, `da`, `en`. Vērtība nāk no rezervācijas vai no portāla un var būt tukša. Tukšs nozīmē nezināms."
+   },
+   "texte": {
+    "titel": "API teksti",
+    "text": "Lauku nosaukumi, `code` vērtības un enum vērtības ir angļu valodā un ir daļa no līguma. Kļūdas atbildes `detail` teksti ir domāti cilvēkiem un var mainīties — rādiet savus ziņojumus, balstoties uz `code`."
+   }
+  },
+  "zeit": {
+   "eyebrow": "Pielikums",
+   "heading": "Laika joslas",
+   "sub": "Šis API izmanto divu veidu laika norādes: kalendāra dienas objekta laika joslā un laika momentus UTC.",
+   "tage": {
+    "titel": "Kalendāra dienas",
+    "text": "`check_in`, `check_out`, `date`, `from` un `to` ir kalendāra dienas formātā `YYYY-MM-DD`, objekta laika joslā. Tās nesatur pulksteņa laiku un netiek pārrēķinātas uz UTC.",
+    "merksatz": "`check_out` ir izbraukšanas diena; pēdējā aizņemtā nakts ir nakts pirms tās. Četras naktis nozīmē četru dienu starpību starp `check_in` un `check_out`."
+   },
+   "zeitpunkte": {
+    "titel": "Laika momenti",
+    "text": "`created_at`, `updated_at`, `received_at`, `booked_at` un `cancelled_at` ir laika momenti atbilstoši ISO 8601 UTC ar `Z` beigās."
+   },
+   "quelle": {
+    "titel": "booked_at un received_at",
+    "text": "`booked_at` ir rezervācijas moments pie viesa, portāla rezervācijām no portāla avota. `received_at` ir ienākšana šajā sistēmā. Masveida izgūšanā daudzām rezervācijām ir viena un tā pati `received_at` sekunde.",
+    "merksatz": "Kārtojumam „jaunākie pirmie“ izmantojiet `booked_at` un `null` uzskatiet par nezināmu. `received_at` atspoguļo izgūšanas kārtību, nevis rezervāciju kārtību."
+   },
+   "filter": {
+    "titel": "Filtrēšana pēc izmaiņām",
+    "text": "`updated_since` pieņem laika momentu un atgriež to, kas kopš tā ir mainījies. Uzmanību ar URL kodēšanu: `+` adresē nozīmē atstarpi — rakstiet `Z` vai kodējiet kā `%2B`."
+   }
+  }
+ },
  "meta": {
   "title": "myNextDays – platforma brīvdienu mājokļu iznomātājiem",
   "description": "Platforma viesnīcām, aģentūrām un brīvdienu mājokļu iznomātājiem: kanālu pārvaldnieks, kalendārs, tiešās rezervācijas, saziņa ar viesiem un norēķini vienuviet. Izstrādāts Dānijā, mitināts ES. No 19,90 € mēnesī. 30 dienas bez maksas."

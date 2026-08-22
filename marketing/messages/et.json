@@ -1,4 +1,427 @@
 {
+ "entwickler": {
+  "meta": {
+   "titel": "API ja arendajad — myNextDays",
+   "beschreibung": "myNextDaysi avalik REST-API: objektid, saadavus, hinnad, broneeringud, külalised ja ülesanded. OAuth2, OpenAPI 3.1, Webhookid allkirjastatud edastustega."
+  },
+  "hero": {
+   "eyebrow": "Avalik API",
+   "titel": "Ehita myNextDaysi peale",
+   "unterzeile": "Üks REST-API objektide, saadavuse, hindade, broneeringute, külaliste ja ülesannete jaoks. Lühiealised Tokenid, õigused iga juurdepääsu kohta, sündmused Webhooki kaudu — ja skeem, mis sünnib koodist ja ei saa seetõttu vananeda.",
+   "basisLabel": "Baasaadress",
+   "versionLabel": "Versioon",
+   "versionHinweis": "teekonnas",
+   "konsole": "Proovi järele",
+   "schema": "OpenAPI 3.1",
+   "referenz": "Loe referentsi"
+  },
+  "inhalt": {
+   "titel": "Sellel lehel",
+   "schnellstart": "Alustamine",
+   "konzepte": "Andmemudel",
+   "konventionen": "Lehitsemine",
+   "endpunkte": "Lõpp-punktid",
+   "webhooks": "Webhookid",
+   "grenzen": "Piirangud",
+   "hilfe": "Tugi",
+   "start": "Ülevaade",
+   "zugang": "Autentimine",
+   "fehler": "Vead",
+   "limits": "Päringupiirangud",
+   "fehlercodes": "Veakoodid",
+   "lokalisierung": "Lokaliseerimine",
+   "zeit": "Ajavööndid"
+  },
+  "code": {
+   "kopieren": "Kopeeri",
+   "kopiert": "Kopeeritud",
+   "anfrage": "Päring",
+   "antwort": "Vastus",
+   "zustellung": "Edastus",
+   "pruefcode": "Allkirja kontroll (Node)"
+  },
+  "schnellstart": {
+   "eyebrow": "Kiirstart",
+   "heading": "Viie minutiga esimese päringuni",
+   "sub": "Kolm sammu. Ainult esimene käib kasutajaliidese kaudu — kõik ülejäänu on üks päring.",
+   "schritt1": {
+    "titel": "Loo juurdepääs",
+    "text": "Loo juhtpaneelis juurdepääs ja määra kohe, mida see tohib: õigused valdkonna kaupa ja soovi korral ainult teatud objektid. Koristusplaani jaoks mõeldud juurdepääs ei vaja ligipääsu käibele.",
+    "pfad": "Konto → API-juurdepääs",
+    "hinweis": "`client_secret` kuvatakse üks kord; salvestatakse ainult selle räsi. Kaotatud saladust ei taastata, see asendatakse."
+   },
+   "schritt2": {
+    "titel": "Hangi Token",
+    "text": "Vaheta Client-ID ja Secret Access-Tokeni vastu. See kehtib ühe tunni ja kannab täpselt selle juurdepääsu õigusi.",
+    "hinweis": "Hoia Token mälus ja vaheta uue vastu alles siis, kui see aegub või tuleb 401 — mitte iga päringu juures. Tühistamine juhtpaneelis takistab uute Tokenite väljastamist kohe."
+   },
+   "schritt3": {
+    "titel": "Tee esimene päring",
+    "text": "Saada Token kaasa kujul `Authorization: Bearer …`. Iga loend vastab samas ümbrikus: `data` pluss `pagination`.",
+    "hinweis": "Kutsu seejärel `GET /v1/me` — see ütleb sulle, millised õigused ja millised objektid sellel juurdepääsul on, ilma et peaksid selle rea 403-de kaudu välja uurima."
+   }
+  },
+  "konzepte": {
+   "eyebrow": "Mõisted",
+   "heading": "Neli asja, mida peaksid enne teadma",
+   "sub": "Neli otsust, mis määravad API käitumise. Need erinevad levinud eeldustest.",
+   "objekt": {
+    "titel": "Objekt on üksuse tüüp",
+    "text": "Üks `property` on täpselt üks tüüp: toatüüp hotellis või puhkeobjekt. Selle all ripuvad tema üksused (`units`) — tavaliselt täpselt üks, viie ühesuguse stuudio puhul viis. Müüakse üksust, hallatakse ja hinnastatakse tüüpi.",
+    "folge": "Saadavus on seetõttu ARV (`units_available`), mitte jah/ei. Hotellil, kus on 8 Twin- ja 4 Double-tuba, on kaks objekti 8 ja 4 üksusega — mitte üks objekt 12 toaga."
+   },
+   "waehrung": {
+    "titel": "Iga summa kannab oma valuutat",
+    "text": "Vaikeväärtust ei ole. Igal objektil on valuuta ja iga summa vastuses nimetab selle.",
+    "folge": "Kui objektil valuuta puudub, on see andmeviga ja päring ebaõnnestub koodiga 422 — asemele ei panda mingit „EUR“. Broneerimisel peab sinu valuuta objekti valuutaga kokku langema."
+   },
+   "zeit": {
+    "titel": "Kaks erinevat ajahetke",
+    "text": "`booked_at` on broneeringu hetk külalise juures — portaali allikast, `null`, kui portaal seda ei edasta. `received_at` on saabumine sellesse süsteemi.",
+    "folge": "Sordi „uuemad enne“ välja `booked_at`, mitte `received_at` järgi: koondimpordi puhul kannavad kümned broneeringud sama sekundit. Ajatemplid on UTC, kuupäevaväljad on kalendripäevad objekti ajavööndis."
+   },
+   "kanaele": {
+    "titel": "Nähtavus kehtib kanali kaupa",
+    "text": "Globaalset „avaldatud“ ei ole olemas. Objekt on nähtav turuplatsil, oma veebilehel, portaalide kaudu — igaüks eraldi lülitatav.",
+    "folge": "Müüdav on objekt ainult siis, kui kolm asja langevad kokku: `status = active`, kanal on sees ja vabu üksusi on. Müügipeatus seevastu mõjub KÕIGIS kanalites."
+   }
+  },
+  "konventionen": {
+   "eyebrow": "Kokkulepped",
+   "heading": "Lehitsemine, vead, limiidid, idempotentsus",
+   "sub": "Need neli punkti, mis on igas API-s erinevad — siin arvudega, mitte proosaga.",
+   "tabelle": {
+    "feld": "Väli",
+    "bedeutung": "Tähendus",
+    "code": "Kood",
+    "status": "Staatus"
+   },
+   "blaettern": {
+    "titel": "Lehitsemine",
+    "text": "Iga loend vastab väljadega `data` ja `pagination`. Lehitsetakse **kursori** abil: saadad eelmise lehe viimase elemendi `id` väärtusena `starting_after`. Kui `next_starting_after` vastuses puudub, on läbimine lõpetatud.",
+    "felder": {
+     "starting_after": "Eelmise lehe viimase elemendi `id`. Soovitatav tee — püsiv ka siis, kui loend kahe lehe vahel muutub. Tundmatu või kustutatud `id` annab 422, mitte tühja lehe.",
+     "next_starting_after": "Seisab väljal `pagination` seni, kuni jätku on: väärtus sinu järgmise `starting_after` jaoks. Kui see puudub, oled lõpus.",
+     "limit": "Ridu lehe kohta. Standard 50, ülempiir 200 — suurem väärtus annab 422, mitte lühendatud lehte.",
+     "offset": "Vahelejäetavad read — ühekordseks pilguks kindlale lehele. Koos väljaga `starting_after` annab see 422: kaks asukohaviidet ühes päringus ei anna vasturääkivuseta tähendust.",
+     "include_total": "`true` annab lisaks `total`. Küsi seda ainult siis, kui sa seda arvu ka näitad.",
+     "has_more": "Seisab igas vastuses ja ütleb, kas järgmine leht on olemas — ei mingit oletamist, ei lisaringi."
+    },
+    "warumCursor": "Miks mitte lihtsalt `offset`: see kirjeldab ASUKOHTA loendis. Kui lehe 1 ja lehe 2 vahel lisandub broneering, nihkub kõik ühe koha võrra — `offset=50` jätab siis ühe rea vahele, kustutamisel tuleb üks rida kaks korda. Sinu andmebaasist puudub pärast üks broneering ja vastuses ei viita sellele miski. Kursor nimetab viimase kirje, mida sa nägid, ega saa seetõttu nihkuda."
+   },
+   "fehler": {
+    "titel": "Vead",
+    "text": "Iga viga tuleb kujul `application/problem+json` (RFC 9457), stabiilse väljaga `code`, ühe `request_id` ja — kus see aitab — nende väljadega, mis viga selgitavad. Hargne `code`, mitte teksti järgi: tekst tohib muutuda, kood mitte.",
+    "codes": {
+     "nichtAuthentifiziert": "Token puudub, on aegunud või kehtetu.",
+     "ungueltigeZugangsdaten": "Client-ID või Secret on vale või juurdepääs on tühistatud.",
+     "scopeFehlt": "Token kehtib, aga sellel juurdepääsul ei ole vajalikku õigust. Puuduv Scope on veateates kirjas.",
+     "objektNichtErlaubt": "Juurdepääs on piiratud teatud objektidega; see siin ei kuulu nende hulka.",
+     "nichtGefunden": "Ei ole olemas või kuulub teisele ettevõttele — mõlemad juhud vastavad ühtemoodi.",
+     "zeitraumNichtVerfuegbar": "Hõivatud, suletud või müügist välja jäetud. Poolikut broneeringut ei tekkinud.",
+     "idempotenzInArbeit": "Selle Idempotency-Key väärtusega päring on veel töös. Oota hetk, siis korda.",
+     "aboBestehtBereits": "Sellel aadressil on juba selle juurdepääsu aktiivne Webhooki tellimus.",
+     "waehrungFehlt": "Objektile, hinnaplaanile või broneeringule ei ole valuutat määratud — andmeviga.",
+     "ungueltigeAnfrage": "Vormiliselt korras, sisuliselt täitmatu. Põhjendus seisab väljal `detail`.",
+     "validierungFehlgeschlagen": "Päring ei vasta skeemile. `felder` nimetab, milline väli.",
+     "zuVieleAnfragen": "Rate-Limit on täis. `Retry-After` ütleb, millal saab edasi.",
+     "nichtKonfiguriert": "Teenus ei suuda päringut turvaliselt töödelda. Ilma kontrollimiseta edasi ei minda."
+    }
+   },
+   "limits": {
+    "titel": "Rate-Limits",
+    "text": "Piiratakse JUURDEPÄÄSU, mitte IP-aadressi kaupa: agentuur, kes hooldab kahtkümmend ettevõtet, istub ühe IP taga ja ei tohi ennast ise pidurdada. Kolm eraldi ämbrit, et kalendri võrdlemine ei blokeeriks hindade seadmist.",
+    "eimer": {
+     "token": "Tokeni vahetus. Range, sest siin kontrollitakse juurdepääsuandmeid.",
+     "write": "Kirjutavad päringud — need sekkuvad müüki.",
+     "read": "Lugevad päringud: integratsiooni argipäev."
+    },
+    "header": "Iga vastus kannab seisu kaasa, ka õnnestunud vastus — et saaksid oma tempot kohandada, enne kui jooksed 429 sisse:"
+   },
+   "idempotenz": {
+    "titel": "Idempotentsus",
+    "text": "Broneeringu loomisel on päis `Idempotency-Key` kohustuslik. Vali iga toimingu jaoks kordumatu väärtus (näiteks UUID) ja korda seda, kui saadad sama päringu uuesti. Ilma selle kaitseta tekitab võrgukatkestus koos kordusega kaks broneeringut — ja teine sulgeb öid, mida keegi ei tellinud.",
+    "faelle": {
+     "wiederholung": "Sama võti, sama sisu → esimene vastus tuleb sõna-sõnalt tagasi, päisega `Idempotency-Replayed: true`.",
+     "abweichend": "Sama võti, TEINE sisu → 422. Uue toimingu jaoks käib uus võti.",
+     "laufend": "Sama võti, esimene päring on veel töös → 409. Oota hetk, siis korda; ära käi järele uue võtmega."
+    }
+   }
+  },
+  "webhooks": {
+   "eyebrow": "Webhookid",
+   "heading": "Sündmused järelepärimiste asemel",
+   "sub": "Üks tellimus aadressi kohta, allkirjastatud edastused, kordused kasvava vahega. Sündmused tekivad IGA muudatuse juures — ka siis, kui see tuleb portaali või juhtpaneeli kaudu, mitte selle API kaudu.",
+   "tabelle": {
+    "ereignis": "Sündmus",
+    "wann": "Millal see käivitub"
+   },
+   "ereignisse": {
+    "reservationCreated": "Broneering on tekkinud — ükskõik millise kanali kaudu.",
+    "reservationUpdated": "Olemasolev broneering on muutunud.",
+    "reservationCancelled": "Broneering tühistati. Eraldi sündmus, sest sellele tuleb reageerida teisiti kui muudatusele.",
+    "availabilityChanged": "Objekti kalender on muutunud (broneering, sulgemine, vabastamine).",
+    "rateChanged": "Päevahind või viibimisreegel on muutunud.",
+    "taskCreated": "Ülesanne on tekkinud.",
+    "taskCompleted": "Ülesanne lõpetati."
+   },
+   "anlegen": {
+    "titel": "Loo tellimus",
+    "text": "Üks `https`-aadress ja need sündmused, mida sa soovid. Soovi korral ainult teatud objektide kohta. Sisemised aadressid lükatakse tagasi — kontroll käib loomisel JA enne iga üksikut edastust.",
+    "secret": "Vastus sisaldab allkirjastamise Secretit täpselt üks kord. Salvesta see kohe — seda ei väljastata enam kunagi."
+   },
+   "nutzlast": {
+    "titel": "Mis kohale jõuab",
+    "text": "Hoitud kitsana: ID-d ja need väljad, mis muudatust kirjeldavad. Täisandmed tood vajadusel API kaudu — nii ei saa saaja kätte midagi, mida ta vahepeal enam näha ei tohiks."
+   },
+   "signatur": {
+    "titel": "Kontrolli allkirja",
+    "text": "Iga edastus kannab päist, milles on ajatempel ja HMAC-SHA256 üle `ZEITSTEMPEL.BODY`, arvutatud sinu tellimuse Secretiga. Kuna ajatempel on kaasa allkirjastatud, tunned ära salvestatud ja hiljem uuesti sisse mängitud edastuse — ainult keha üle antud allkirja puhul see võimalik ei ole.",
+    "schritte": {
+     "roh": "Võta päringu TOORES keha, mitte parsitud ja uuesti serialiseeritud objekt — teine baidijada annab teise allkirja. See on kõige sagedasem põhjus, miks „allkiri ei klapi“.",
+     "alter": "Kontrolli vanust ajatempli järgi; viis minutit tolerantsi on hea väärtus.",
+     "vergleich": "Võrdle ajakonstantselt (`timingSafeEqual`, `hmac.compare_digest`). Tavaline `==` teeb allkirja äraarvatavaks."
+    }
+   },
+   "verhalten": {
+    "wiederholung": {
+     "titel": "Kordused",
+     "text": "Kui sinu aadress ei vasta koodiga 2xx, edastatakse kuni kümme korda uuesti — kasvava vahega ühest minutist kuni ühe tunnini. Vasta kiiresti ja töötle pärast; aeglane saaja loetakse veaks."
+    },
+    "reihenfolge": {
+     "titel": "Järjekord",
+     "text": "Ei ole garanteeritud. Kasuta sündmuse välja `created_at`, et vanemat edastust uuema peale mitte kirjutada."
+    },
+    "doppelt": {
+     "titel": "Topeltedastus",
+     "text": "On ebatõenäoline, aga võimalik — käsitle sündmuse `id` võtmena ja töötle igaüht ainult üks kord. See kehtib iga Webhooki pakkuja kohta, mitte ainult selle kohta."
+    },
+    "nachholen": {
+     "titel": "Tõrke järel järele jõudmine",
+     "text": "Kui sinu server oli maas, tood puudu jäänud sündmused järele käsuga `GET /v1/events?since=…` — vanimad kõigepealt, samade `id`-dega nagu edastusel, kõige rohkem 30 päeva tagasi. Pelgalt push ei ole kohaletoimetamise garantii: kordused lõppevad kunagi ära ja ilma selle sammuta jäävadki sulle teadmata just need sündmused, millest sa kunagi midagi ei kuulnud."
+    }
+   }
+  },
+  "grenzen": {
+   "eyebrow": "Piirid",
+   "heading": "Piirangud",
+   "sub": "Kaks toimingut ei ole selle API kaudu võimalikud. Mõlemad tulenevad andmemudelist. Tühistamine, ümbertõstmine ja hinna arvutus on võimalikud.",
+   "stattdessen": "Selle asemel:",
+   "gaeste": {
+    "titel": "Külaliste loomine ja muutmine",
+    "text": "Külalise andmed tekivad külalise sisestusel või portaali kaudu. Kirjutustee siin oleks kolmas allikas sama isiku kohta.",
+    "ausweg": "Saada broneeringu loomisel kaasa ka külalise andmed — olemasolevad külalised tuvastatakse e-posti aadressi järgi. Olemasoleva broneeringu kontaktivälju saab hallata lõpp-punkti `PATCH /v1/reservations/'{'id}` kaudu."
+   },
+   "nachrichten": {
+    "titel": "Vestluse avamine",
+    "text": "Sõnumite lugemine ja olemasolevasse vestlusse kirjutamine on võimalik (`/v1/reservations/'{'id}/messages`). Uue vestluse loomine mitte: sõnumilõim kuulub alati turuplatsi külaliskontole ja ettevõtte API-ligipääs ei ole selline konto.",
+    "ausweg": "Vestlus tekib külalise esimese sõnumiga või töölaual; pärast seda saab API sinna kirjutada."
+   },
+   "finanzen": {
+    "titel": "Makse sissenõudmine",
+    "text": "Loetavad on maksed ja ajastatud maksenõuded (`/v1/reservations/'{'id}/payments`) ning maksegraafik ja tühistamisastmestik (`/v1/properties/'{'id}/booking-conditions`). Sissenõudmine käib külalise broneerimisteekonna kaudu maksekavatsustega, mitte saadetava lingi kaudu.",
+    "ausweg": "Maksenõuded tekivad töölaual; API loeb nende seisu ja nendega seotud sündmusi."
+   }
+  },
+  "hilfe": {
+   "eyebrow": "Abi",
+   "heading": "Küsimused, muudatused, tööriistad",
+   "sub": "Kuhu küsimusega minna ja millest saad ehitamisel kinni pidada.",
+   "wege": {
+    "titel": "Kui midagi ei tööta",
+    "entwicklerMail": {
+     "titel": "Tehniline kontakt",
+     "text": "Saada veavastusest `request_id` kaasa — sellega on päring meie logides leitav."
+    },
+    "hilfeCenter": {
+     "titel": "Abikeskus",
+     "text": "Juhendid toote kohta: objektide loomine, portaalide ühendamine, hindade haldamine."
+    },
+    "schema": {
+     "titel": "Genereeri Client",
+     "text": "OpenAPI-fail sobib sisendiks tavalistele generaatoritele — käsitsi kirjutatud Client on tarbetu."
+    }
+   },
+   "versionen": {
+    "titel": "Versioonimine",
+    "text": "API on lubadus. Need neli punkti kehtivad v1 kohta:",
+    "zusagen": {
+     "pfad": "Versioon seisab teekonnas. Murdev muudatus saab `/v2`; `/v1` jookseb kõrval edasi.",
+     "additiv": "v1 sees ainult lisandub välju. Olemasolevaid välju ümber ei nimetata ja nende tähendus ei muutu.",
+     "frist": "Kui versioon aegunuks kuulutatakse, nimetame kuupäeva vähemalt kaheteistkümne kuu etteteatamisega ja võtame ühendust iga ettevõttega, kellel on aktiivne juurdepääs.",
+     "changelog": "Muudatused seisavad OpenAPI-failis ja sellel lehel. Ühtegi vaikset muudatust väljal ei tehta."
+    }
+   }
+  },
+  "kopf": {
+   "hilfe": "Abikeskus",
+   "zurueck": "Veebilehele"
+  },
+  "sidebar": {
+   "sprung": "Liigu kohta …",
+   "keineTreffer": "Ükski lõpp-punkt ega peatükk ei vasta sellele.",
+   "leitfaden": "Juhend",
+   "referenz": "API viide",
+   "tocTitel": "Sellel lehel",
+   "version": "myNextDays Avalik API v1"
+  },
+  "referenz": {
+   "scope": "Vajalik õigus:",
+   "pfadParameter": "Tee parameetrid",
+   "queryParameter": "Päringuparameetrid",
+   "headerParameter": "Päised",
+   "koerper": "Päringu keha",
+   "antworten": "Vastused",
+   "erlaubt": "Lubatud:",
+   "pflicht": "kohustuslik",
+   "standard": "Vaikeväärtus",
+   "sprache": "Keel",
+   "zugang": "Ligipääs",
+   "tokenHinweis": "Ainult selles brauseris, ainult „Proovi“ jaoks — väärtust ei salvestata ega saadeta meile.",
+   "ausprobieren": "Proovi",
+   "laeuft": "Töötab …",
+   "anfrage": "Päring",
+   "antwort": "Vastus",
+   "beispiel": "Näide",
+   "kopieren": "Kopeeri",
+   "kopiert": "Kopeeritud",
+   "fehlerNetz": "Päring ei jõudnud teenuseni. Sagedasemad põhjused: teenus ei vasta praegu või brauser katkestas päringu puuduva CORS-loa tõttu. Sama kutse curliga koodiväljalt näitab, mida teenus tegelikult ütleb.",
+   "keinToken": "Ilma tokenita vastab kutse koodiga 401 — see on oodatud käik."
+  },
+  "start": {
+   "eyebrow": "Avalik API",
+   "titel": "Ehita myNextDaysi vastu",
+   "unterzeile": "REST-API objektidele, saadavusele, hindadele, broneeringutele, külalistele ja ülesannetele — lugemine ja kirjutamine, koos tühistamise, ümbertõstmise ja hinna eelvaatega. Juhend selgitab reegleid, viide sisaldab iga otspunkti kõigi parameetritega ja väljaga selle proovimiseks.",
+   "basisLabel": "Baasaadress",
+   "versionLabel": "Versioon",
+   "versionHinweis": "aadressi teel",
+   "schemaTitel": "Skeem",
+   "schemaText": "OpenAPI 3.1, loodud koodist. Sobib sisendiks tavalistele kliendigeneraatoritele.",
+   "woAnfangen": "Kust alustada",
+   "erstLesen": "Loe esmalt",
+   "dannBauen": "Seejärel ehita"
+  },
+  "bereiche": {
+   "leitfaden": "Dokumentatsioon",
+   "referenz": "API viide"
+  },
+  "gruppen": {
+   "ueberblick": "Alused",
+   "anhang": "Lisa"
+  },
+  "weiter": {
+   "naechste": "Järgmine leht",
+   "zurReferenz": "Edasi API viitesse"
+  },
+  "referenzUebersicht": {
+   "eyebrow": "API viide",
+   "titel": "Kõik lõpp-punktid",
+   "sub": "Igal lõpp-punktil on oma leht kõigi parameetrite, päringu keha, vastuste ja väljaga, kus saad kutset kohe järele proovida."
+  },
+  "zugang": {
+   "eyebrow": "Autentimine",
+   "heading": "Autentimine",
+   "sub": "OAuth 2.0 `client_credentials` abil. Juurdepääs kuulub täpselt ühele ettevõttele; mitut ettevõtet hõlmavat võtit ei ole.",
+   "ablauf": {
+    "titel": "Kulg",
+    "text": "`client_credentials` on tee programmidele, mis tegutsevad iseenda nimel. Nõusolekudialoogi ega refresh-tokenit ei ole.",
+    "schritte": {
+     "anlegen": "Loo juurdepääs töölaual: Konto → API-juurdepääs. `client_secret` kuvatakse üks kord ja hiljem ei saa seda enam pärida.",
+     "tauschen": "`POST /v1/oauth/token` väärtustega `client_id` ja `client_secret`. Vastus sisaldab `access_token`, `expires_in` (3600) ja antud õigused.",
+     "senden": "Saada token igas päringus kujul `Authorization: Bearer ACCESS_TOKEN`. Pärast aegumist vastab API 401 ja koodiga `token_expired`."
+    },
+    "merksatz": "Hoia tokenit mälus, ära päri seda iga kutse jaoks uuesti. Vahetus iga päringu kohta jookseb token-lõpp-punkti päringupiirangusse (10/Minute)."
+   },
+   "rechte": {
+    "titel": "Õigused",
+    "text": "Õigused on kujul `bereich:richtung`, näiteks `reservations:read` või `rates:write`. Kui õigus puudub, vastab lõpp-punkt 403 ja koodiga `insufficient_scope`.",
+    "merksatz": "Anna ainult need õigused, mida liidestus vajab. Kaotatud võti ei saa siis üle kirjutada midagi, mida ta poleks tohtinud lugedagi."
+   },
+   "objekte": {
+    "titel": "Objektipiirang",
+    "text": "Juurdepääs võib olla piiratud kindlate objektidega. Nimekirjades näeb see ainult neid; kutse teise objekti ID-ga vastab 403 ja koodiga `objekt_nicht_erlaubt`."
+   },
+   "selbstauskunft": {
+    "titel": "Õiguste kontroll",
+    "text": "`GET /v1/me` tagastab tokeni ettevõtte, õigused ja objektipiirangu — esimene kutse liidestuse seadistamisel."
+   }
+  },
+  "fehler": {
+   "eyebrow": "Vead",
+   "heading": "Kuidas vead välja näevad",
+   "sub": "Iga viga on HTTP olekukood pluss keha vastavalt RFC 9457 (`application/problem+json`). Ükski viga ei tule olekuga 200.",
+   "aufbau": {
+    "titel": "Ülesehitus",
+    "text": "`code` on vea püsiv, masinloetav nimi. `detail` on tekst inimestele ja võib igal ajal muutuda.",
+    "felder": {
+     "type": "Selle veatüübi kirjelduse aadress — veakoodide loend lisas.",
+     "title": "Veatüübi lühinimi.",
+     "status": "HTTP olekukood.",
+     "detail": "Kirjeldus inimestele.",
+     "code": "Vea püsiv nimi. Töötle seda välja.",
+     "request_id": "Päringu tunnus. Lisa see tugipäringule."
+    },
+    "merksatz": "Hargne välja `code` järgi, mitte `detail` järgi. Tekst ei ole liides."
+   },
+   "klassen": {
+    "titel": "Olekuklassid",
+    "vier": "4xx — probleem on päringus: puuduv õigus, tundmatu ID, kehtetu väärtus, hõivatud ajavahemik. Kordamine ei muuda midagi.",
+    "fuenf": "5xx — serveripoolne viga. Korda kasvava vahega.",
+    "neun": "429 — päringupiirang on täis. `Retry-After` näitab ooteaega sekundites."
+   }
+  },
+  "limits": {
+   "eyebrow": "Päringupiirangud",
+   "heading": "Kui palju kutseid on lubatud",
+   "sub": "Piiratakse juurdepääsu kaupa, mitte IP kaupa. Ämbreid on kolm, igaühel omad väärtused lugemiseks, kirjutamiseks ja tokeni väljastamiseks."
+  },
+  "fehlercodes": {
+   "eyebrow": "Lisa",
+   "heading": "Veakoodid",
+   "sub": "Kõik selle API `code`-väärtused. Igal real on ankur; veavastuse `type`-aadress viitab sellele."
+  },
+  "lokalisierung": {
+   "eyebrow": "Lisa",
+   "heading": "Lokaliseerimine",
+   "sub": "Keel ja valuuta tulevad andmetest. Mõlemad väljad võivad olla tühjad; kummalgi ei ole vaikeväärtust.",
+   "waehrung": {
+    "titel": "Valuuta",
+    "text": "Igal summal on `currency`-kood vastavalt ISO 4217. Vaikeväärtust ega teisendust ei ole.",
+    "merksatz": "Broneeringu loomisel peab `currency` vastama objekti valuutale. Erinevuse korral: 422 koodiga `currency_mismatch`."
+   },
+   "sprache": {
+    "titel": "Keel",
+    "text": "`language` on kahetäheline kood vastavalt ISO 639-1, näiteks `de`, `da`, `en`. Väärtus tuleb broneeringust või portaalist ja võib olla tühi. Tühi tähendab teadmata."
+   },
+   "texte": {
+    "titel": "API tekstid",
+    "text": "Väljade nimed, `code`-väärtused ja enum-väärtused on ingliskeelsed ja osa lepingust. Veavastuse `detail`-tekstid on mõeldud inimestele ja võivad muutuda — kuva oma teated `code` alusel."
+   }
+  },
+  "zeit": {
+   "eyebrow": "Lisa",
+   "heading": "Ajavööndid",
+   "sub": "See API kasutab kaht liiki ajaandmeid: kalendripäevi objekti ajavööndis ja ajahetki UTC-s.",
+   "tage": {
+    "titel": "Kalendripäevad",
+    "text": "`check_in`, `check_out`, `date`, `from` ja `to` on kalendripäevad vormingus `YYYY-MM-DD`, objekti ajavööndis. Neil ei ole kellaaega ja neid ei teisendata UTC-sse.",
+    "merksatz": "`check_out` on lahkumispäev; viimane hõivatud öö on sellele eelnev öö. Neli ööd tähendab nelja päeva vahet `check_in` ja `check_out` vahel."
+   },
+   "zeitpunkte": {
+    "titel": "Ajahetked",
+    "text": "`created_at`, `updated_at`, `received_at`, `booked_at` ja `cancelled_at` on ajahetked vastavalt ISO 8601 UTC-s, lõpus `Z`."
+   },
+   "quelle": {
+    "titel": "booked_at ja received_at",
+    "text": "`booked_at` on broneeringu hetk külalise juures, portaalibroneeringutel portaali allikast. `received_at` on saabumine sellesse süsteemi. Hulgipäringul on paljudel broneeringutel sama `received_at`-sekund.",
+    "merksatz": "Järjestuseks „uusimad enne“ kasuta `booked_at` ja käsitle `null` teadmata väärtusena. `received_at` kajastab päringu järjekorda, mitte broneeringute oma."
+   },
+   "filter": {
+    "titel": "Muudatuste järgi filtreerimine",
+    "text": "`updated_since` võtab ajahetke ja tagastab selle järel muutunu. Tähelepanu URL-kodeeringul: `+` tähendab aadressis tühikut — kirjuta `Z` või kodeeri kujul `%2B`."
+   }
+  }
+ },
  "meta": {
   "title": "myNextDays – Platvorm puhkemajutuse väljaüürijatele",
   "description": "Platvorm hotellidele, agentuuridele ja puhkemajutuse väljaüürijatele: channel manager, kalender, otsebroneering, külalissuhtlus ja arveldus ühes kohas. Ehitatud Taanis, majutatud EL-is. Alates 19,90 € kuus. Proovi 30 päeva tasuta."

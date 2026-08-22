@@ -1,4 +1,26 @@
--- 0418_open_api_webhooks_idempotenz.sql — Fundament der öffentlichen Open API
+-- 0418_open_api_webhooks_idempotenz.sql — ZURÜCKGENOMMEN durch 0419
+--
+-- ============================================================================
+-- DIESE MIGRATION IST NICHT MEHR WIRKSAM. Sie wurde am 21.08.2026 eingespielt
+-- und noch am selben Tag durch `0419_open_api_doppelbau_zuruecknehmen.sql`
+-- vollständig zurückgenommen — die vier Tabellen unten existieren in keiner
+-- Datenbank mehr.
+--
+-- Grund: Die öffentliche Partner-API wurde an diesem Tag in zwei Strängen
+-- gleichzeitig gebaut. Der andere Strang (`0418_public_api.sql`, gleiche
+-- Nummer — daher die Doppelung im Verzeichnis) legt dieselben vier Dinge als
+-- `public_api_webhooks`, `public_api_events`, `public_api_deliveries` und
+-- `public_api_idempotency` an und kann mehr: die Ereignisse entstehen dort in
+-- DB-Triggern statt im Anwendungscode. An diesem Satz hängt der laufende
+-- Dienst `apps/public-api`.
+--
+-- Die Datei bleibt liegen, weil sie in `schema_migrations` eingetragen ist:
+-- Umbenennen oder Löschen würde den Runner dazu bringen, sie als neu zu werten
+-- und die Tabellen erneut anzulegen. Wer nach dem heutigen Stand der Dinge
+-- sucht, liest `0418_public_api.sql` und `0419_…`.
+-- ============================================================================
+--
+-- Der ursprüngliche Text ab hier, unverändert, als Beleg der Entscheidung:
 --
 -- Ergänzt den bestehenden Entwickler-Zugang (0179 api_clients) um die drei
 -- Bausteine, die eine öffentliche Partner-API braucht und die im Markt

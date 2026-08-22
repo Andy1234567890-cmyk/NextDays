@@ -43,7 +43,7 @@ from ..core.ausgehende_url import UnsichereUrl, oeffentliche_ips
 from ..core.auth import ApiKontext, scope_erforderlich
 from ..core.db import service_db, zeile_im_mandanten
 from ..core.logging import get_logger
-from .schemas import EREIGNISSE, Webhook, WebhookAngelegt, WebhookAnlegen
+from .schemas import EREIGNISSE, EreignisTyp, Webhook, WebhookAngelegt, WebhookAnlegen
 
 log = get_logger("publicapi.webhooks")
 
@@ -64,7 +64,9 @@ def _webhook(zeile: dict) -> Webhook:
     )
 
 
-@router.get("/events", summary="Ereignis-Katalog")
+@router.get(
+    "/events", response_model=list[EreignisTyp], summary="Ereignis-Katalog"
+)
 def katalog(
     ctx: Annotated[ApiKontext, Depends(scope_erforderlich("webhooks:read"))],
 ) -> list[dict[str, str]]:

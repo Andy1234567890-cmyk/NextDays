@@ -6825,7 +6825,12 @@
     "needScope": "Sélectionnez au moins une autorisation.",
     "docsHint": "La documentation de l’API explique comment s’authentifier avec ces identifiants.",
     "loadErr": "Le chargement a échoué.",
-    "noAccess": "Aucun accès"
+    "noAccess": "Aucun accès",
+    "scopeRates": "Prix",
+    "scopeGuests": "Clients",
+    "scopeTasks": "Tâches",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "Documentation de l'API"
   },
   "supportChat": {
     "titel": "Aide et assistance",

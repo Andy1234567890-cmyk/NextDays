@@ -1,4 +1,427 @@
 {
+ "entwickler": {
+  "meta": {
+   "titel": "API & utvecklare — myNextDays",
+   "beschreibung": "Det publika REST-API:et från myNextDays: objekt, tillgänglighet, priser, bokningar, gäster och uppgifter. OAuth2, OpenAPI 3.1, webhooks med signerade leveranser."
+  },
+  "hero": {
+   "eyebrow": "Publikt API",
+   "titel": "Bygg mot myNextDays",
+   "unterzeile": "Ett REST-API för objekt, tillgänglighet, priser, bokningar, gäster och uppgifter. Kortlivade tokens, rättigheter per åtkomst, händelser via webhook — och ett schema som skapas ur koden och därför inte kan bli inaktuellt.",
+   "basisLabel": "Basadress",
+   "versionLabel": "Version",
+   "versionHinweis": "i sökvägen",
+   "konsole": "Prova",
+   "schema": "OpenAPI 3.1",
+   "referenz": "Läs referensen"
+  },
+  "inhalt": {
+   "titel": "På den här sidan",
+   "schnellstart": "Kom igång",
+   "konzepte": "Datamodell",
+   "konventionen": "Paginering",
+   "endpunkte": "Slutpunkter",
+   "webhooks": "Webhooks",
+   "grenzen": "Begränsningar",
+   "hilfe": "Support",
+   "start": "Översikt",
+   "zugang": "Autentisering",
+   "fehler": "Fel",
+   "limits": "Hastighetsgräns",
+   "fehlercodes": "Felkoder",
+   "lokalisierung": "Lokalisering",
+   "zeit": "Tidszoner"
+  },
+  "code": {
+   "kopieren": "Kopiera",
+   "kopiert": "Kopierat",
+   "anfrage": "Förfrågan",
+   "antwort": "Svar",
+   "zustellung": "Leverans",
+   "pruefcode": "Verifiera signaturen (Node)"
+  },
+  "schnellstart": {
+   "eyebrow": "Snabbstart",
+   "heading": "Första anropet på fem minuter",
+   "sub": "Tre steg. Bara det första går via gränssnittet — allt annat är ett anrop.",
+   "schritt1": {
+    "titel": "Skapa en åtkomst",
+    "text": "Skapa en åtkomst i dashboarden och bestäm samtidigt vad den får göra: rättigheter per område och, om du vill, bara vissa objekt. En åtkomst för städschemat behöver ingen insyn i intäkter.",
+    "pfad": "Konto → API-åtkomst",
+    "hinweis": "`client_secret` visas en gång; bara dess hash sparas. En förlorad hemlighet återställs inte, den ersätts."
+   },
+   "schritt2": {
+    "titel": "Hämta ett token",
+    "text": "Byt Client-ID och Client-Secret mot ett Access-Token. Det gäller en timme och bär exakt åtkomstens rättigheter.",
+    "hinweis": "Håll tokenet i minnet och byt först när det går ut eller när en 401 kommer — inte vid varje anrop. En återkallelse i dashboarden stoppar nya tokens omedelbart."
+   },
+   "schritt3": {
+    "titel": "Gör det första anropet",
+    "text": "Skicka med tokenet som `Authorization: Bearer …`. Varje lista svarar i samma kuvert: `data` plus `pagination`.",
+    "hinweis": "Anropa sedan `GET /v1/me` — det säger vilka rättigheter och vilka objekt den här åtkomsten har, utan att du behöver ta reda på det genom en rad 403:or."
+   }
+  },
+  "konzepte": {
+   "eyebrow": "Begrepp",
+   "heading": "Fyra saker du bör känna till först",
+   "sub": "Fyra fastställda regler som bestämmer API:ets beteende. De avviker från vanliga antaganden.",
+   "objekt": {
+    "titel": "Ett objekt är en enhetstyp",
+    "text": "Ett `property` är exakt en typ: en rumstyp på hotellet eller ett fritidsobjekt. Under den hänger dess enheter (`units`) — normalt exakt en, vid fem likadana studios alltså fem. Enheten säljs, typen förvaltas och prissätts.",
+    "folge": "Tillgänglighet är därför ett ANTAL (`units_available`), inte ett ja/nej. Ett hotell med 8 Twin-rum och 4 Double-rum har två objekt med 8 respektive 4 enheter — inte ett objekt med 12 rum."
+   },
+   "waehrung": {
+    "titel": "Varje belopp bär sin valuta",
+    "text": "Det finns inget standardvärde. Varje objekt har en valuta, och varje belopp i ett svar anger den.",
+    "folge": "Saknas valutan på ett objekt är det ett datafel och anropet misslyckas med 422 — inget ”EUR” sätts in. Vid bokning måste din valuta stämma med objektets valuta."
+   },
+   "zeit": {
+    "titel": "Två olika tidpunkter",
+    "text": "`booked_at` är tidpunkten för gästens bokning — från portalens källa, `null` om portalen inte levererar den. `received_at` är mottagandet i detta system.",
+    "folge": "Sortera ”senaste först” på `booked_at`, inte på `received_at`: vid en samlad import bär dussintals bokningar samma sekund. Tidsstämplar är UTC, datumfält är kalenderdagar i objektets tidszon."
+   },
+   "kanaele": {
+    "titel": "Synlighet gäller per kanal",
+    "text": "Det finns inget globalt ”publicerad”. Ett objekt är synligt på marknadsplatsen, på den egna webbplatsen, via portalerna — varje kanal slås på för sig.",
+    "folge": "Ett objekt är säljbart bara när tre saker sammanfaller: `status = active`, kanalen är på, och det finns lediga enheter. Ett försäljningsstopp verkar däremot på ALLA kanaler."
+   }
+  },
+  "konventionen": {
+   "eyebrow": "Konventioner",
+   "heading": "Paginering, fel, gränser, idempotens",
+   "sub": "De fyra punkter som skiljer sig i varje API — här med siffror i stället för prosa.",
+   "tabelle": {
+    "feld": "Fält",
+    "bedeutung": "Betydelse",
+    "code": "Kod",
+    "status": "Status"
+   },
+   "blaettern": {
+    "titel": "Paginering",
+    "text": "Varje lista svarar med `data` och `pagination`. Du bläddrar med en **cursor**: du skickar `id` för det sista elementet på föregående sida som `starting_after`. Saknas `next_starting_after` i svaret är genomgången klar.",
+    "felder": {
+     "starting_after": "`id` för det sista elementet på föregående sida. Den rekommenderade vägen — stabil även när listan ändras mellan två sidor. Ett okänt eller borttaget `id` ger 422, inte en tom sida.",
+     "next_starting_after": "Finns i `pagination` så länge det finns mer: värdet till ditt nästa `starting_after`. Saknas det är du vid slutet.",
+     "limit": "Rader per sida. Standard 50, högsta värde 200 — ett större värde ger 422, inte en avkortad sida.",
+     "offset": "Rader att hoppa över — för en engångstitt på en bestämd sida. Tillsammans med `starting_after` ger det 422: två positionsangivelser i samma förfrågan har ingen motsägelsefri betydelse.",
+     "include_total": "`true` levererar dessutom `total`. Begär den bara om du visar antalet.",
+     "has_more": "Finns i varje svar och säger om ytterligare en sida finns — ingen gissning, ingen extra runda."
+    },
+    "warumCursor": "Varför inte helt enkelt `offset`: den beskriver en POSITION i listan. Om en bokning kommer till mellan sida 1 och sida 2 förskjuts allt ett steg — `offset=50` hoppar då över en rad, och vid en borttagning kommer en rad dubbelt. Efteråt saknas en bokning i din databas, och inget i svaret avslöjar det. Cursorn pekar ut den sista posten du har sett och kan därför inte glida."
+   },
+   "fehler": {
+    "titel": "Fel",
+    "text": "Varje fel kommer som `application/problem+json` (RFC 9457) med en stabil `code`, ett `request_id` och — där det hjälper — de fält som förklarar felet. Förgrena på `code`, inte på texten: texten får ändras, koden inte.",
+    "codes": {
+     "nichtAuthentifiziert": "Token saknas, har gått ut eller är ogiltigt.",
+     "ungueltigeZugangsdaten": "Client-ID eller Client-Secret är fel, eller åtkomsten är återkallad.",
+     "scopeFehlt": "Token är giltigt, men den här åtkomsten har inte den rättighet som krävs. Det scope som saknas står i felet.",
+     "objektNichtErlaubt": "Åtkomsten är begränsad till vissa objekt; det här hör inte till dem.",
+     "nichtGefunden": "Finns inte eller hör till ett annat företag — båda fallen svarar likadant.",
+     "zeitraumNichtVerfuegbar": "Belagt, blockerat eller undantaget från försäljning. Ingen halv bokning har uppstått.",
+     "idempotenzInArbeit": "Ett anrop med detta Idempotency-Key pågår fortfarande. Vänta en kort stund och gör om det.",
+     "aboBestehtBereits": "För den här adressen finns redan en aktiv webhook-prenumeration för den här åtkomsten.",
+     "waehrungFehlt": "Objektet, prisplanen eller bokningen har ingen valuta kopplad — ett datafel.",
+     "ungueltigeAnfrage": "Formellt korrekt, men sakligt inte möjligt att uppfylla. Skälet står i `detail`.",
+     "validierungFehlgeschlagen": "Förfrågan matchar inte schemat. `felder` anger vilket fält.",
+     "zuVieleAnfragen": "Frekvensgränsen är nådd. `Retry-After` säger när det går vidare.",
+     "nichtKonfiguriert": "Tjänsten kan inte behandla förfrågan säkert. Inget går vidare utan kontroll."
+    }
+   },
+   "limits": {
+    "titel": "Frekvensgränser",
+    "text": "Begränsningen sker per ÅTKOMST, inte per IP-adress: en byrå som sköter tjugo verksamheter sitter bakom en IP-adress och ska inte bromsa sig själv. Tre separata hinkar, så att en kalenderavstämning inte blockerar prissättningen.",
+    "eimer": {
+     "token": "Tokenbyte. Strikt, eftersom det är här inloggningsuppgifter prövas.",
+     "write": "Skrivande anrop — de griper in i försäljningen.",
+     "read": "Läsande anrop: en integrations vardag."
+    },
+    "header": "Varje svar bär med sig läget, även det lyckade — så att du kan anpassa takten innan du går in i 429:"
+   },
+   "idempotenz": {
+    "titel": "Idempotens",
+    "text": "När du skapar en bokning är headern `Idempotency-Key` obligatorisk. Välj ett unikt värde per ärende (till exempel en UUID) och upprepa det om du skickar samma anrop igen. Utan det skyddet skapar ett nätavbrott med omförsök två bokningar — och den andra blockerar nätter som ingen har beställt.",
+    "faelle": {
+     "wiederholung": "Samma nyckel, samma payload → det första svaret kommer tillbaka ordagrant, med headern `Idempotency-Replayed: true`.",
+     "abweichend": "Samma nyckel, ANNAN payload → 422. Ett nytt ärende ska ha en ny nyckel.",
+     "laufend": "Samma nyckel, det första anropet pågår fortfarande → 409. Vänta en kort stund och gör om det; följ inte upp med en ny nyckel."
+    }
+   }
+  },
+  "webhooks": {
+   "eyebrow": "Webhooks",
+   "heading": "Händelser i stället för frågor",
+   "sub": "En prenumeration per adress, signerade leveranser, omförsök med växande mellanrum. Händelser uppstår vid VARJE ändring — även när den kommer via en portal eller dashboarden och inte via detta API.",
+   "tabelle": {
+    "ereignis": "Händelse",
+    "wann": "När den utlöses"
+   },
+   "ereignisse": {
+    "reservationCreated": "En bokning har uppstått — oavsett vilken kanal den kom via.",
+    "reservationUpdated": "En befintlig bokning har ändrats.",
+    "reservationCancelled": "En bokning har avbokats. Egen händelse, eftersom den kräver ett annat svar än en ändring.",
+    "availabilityChanged": "Kalendern för ett objekt har ändrats (bokning, blockering, frigivning).",
+    "rateChanged": "Ett dagspris eller en vistelseregel har ändrats.",
+    "taskCreated": "En uppgift har uppstått.",
+    "taskCompleted": "En uppgift har slutförts."
+   },
+   "anlegen": {
+    "titel": "Skapa en prenumeration",
+    "text": "En `https`-adress och de händelser du vill ha. Valfritt bara för vissa objekt. Interna adresser avvisas — kontrollen körs vid skapandet OCH före varje enskild leverans.",
+    "secret": "Svaret innehåller signeringssecret exakt en gång. Spara det nu — det lämnas aldrig ut igen."
+   },
+   "nutzlast": {
+    "titel": "Vad som kommer in",
+    "text": "Hållet smalt: id:n och de fält som beskriver ändringen. Hela posten hämtar du vid behov via API:et — så får en mottagare inget levererat som den under tiden inte längre får se."
+   },
+   "signatur": {
+    "titel": "Verifiera signaturen",
+    "text": "Varje leverans bär en header med tidsstämpel och HMAC-SHA256 över `ZEITSTEMPEL.BODY`, beräknad med din prenumerations secret. Eftersom tidsstämpeln är medsignerad känner du igen en inspelad och senare återspelad leverans — med en signatur bara över body är det inte möjligt.",
+    "schritte": {
+     "roh": "Ta förfrågans RÅA kropp, inte det parsade och omserialiserade objektet — en annan byteföljd ger en annan signatur. Det är den vanligaste orsaken till ”signaturen stämmer inte”.",
+     "alter": "Kontrollera åldern via tidsstämpeln; fem minuters tolerans är ett bra värde.",
+     "vergleich": "Jämför i konstant tid (`timingSafeEqual`, `hmac.compare_digest`). Ett vanligt `==` gör signaturen gissningsbar."
+    }
+   },
+   "verhalten": {
+    "wiederholung": {
+     "titel": "Omförsök",
+     "text": "Svarar din adress inte med 2xx levereras den om upp till tio gånger — med växande mellanrum från en minut upp till en timme. Svara snabbt och behandla efteråt; en långsam mottagare räknas som ett fel."
+    },
+    "reihenfolge": {
+     "titel": "Ordning",
+     "text": "Inte garanterad. Använd händelsens `created_at` för att inte skriva en äldre leverans över en nyare."
+    },
+    "doppelt": {
+     "titel": "Dubbel leverans",
+     "text": "Osannolikt, men möjligt — behandla händelsens `id` som nyckel och behandla varje händelse bara en gång. Det gäller för varje webhook-leverantör, inte bara för den här."
+    },
+    "nachholen": {
+     "titel": "Upphämtning efter ett avbrott",
+     "text": "Om dina servrar var nere hämtar du in de missade händelserna via `GET /v1/events?since=…` — äldst först, med samma `id` som vid leveransen, högst 30 dagar tillbaka. En push ensam är ingen leveransgaranti: förr eller senare tar omförsöken slut, och utan det här steget saknar du just de händelser du aldrig fick reda på."
+    }
+   }
+  },
+  "grenzen": {
+   "eyebrow": "Begränsningar",
+   "heading": "Begränsningar",
+   "sub": "Två åtgärder är inte möjliga via detta API. Båda följer av datamodellen. Avbokning, ombokning och prisberäkning är möjliga.",
+   "stattdessen": "I stället:",
+   "gaeste": {
+    "titel": "Skapa och ändra gäster",
+    "text": "Gästdata uppstår vid gästens inmatning eller via portalen. En skrivväg här vore en tredje källa för samma person.",
+    "ausweg": "Skicka med gästdata när du skapar en bokning — befintliga gäster känns igen via e-postadressen. Kontaktfält i en befintlig bokning underhåller du via `PATCH /v1/reservations/'{'id}`."
+   },
+   "nachrichten": {
+    "titel": "Öppna en konversation",
+    "text": "Att läsa meddelanden och skriva i en befintlig konversation är möjligt (`/v1/reservations/'{'id}/messages`). Att skapa en ny konversation är det inte: en meddelandetråd tillhör alltid ett gästkonto på marknadsplatsen, och en verksamhets API-åtkomst är inte ett sådant konto.",
+    "ausweg": "Konversationen uppstår med gästens första meddelande eller via instrumentpanelen; därefter kan API:et skriva i den."
+   },
+   "finanzen": {
+    "titel": "Dra en betalning",
+    "text": "Läsbara är betalningar och schemalagda betalningsuppmaningar (`/v1/reservations/'{'id}/payments`) samt betalningsplan och avbokningstrappa (`/v1/properties/'{'id}/booking-conditions`). Indrivningen sker via gästens bokningsflöde med betalningsavsikter, inte via en länk som skickas.",
+    "ausweg": "Betalningsuppmaningar skapas i instrumentpanelen; API:et läser deras status och händelserna kring dem."
+   }
+  },
+  "hilfe": {
+   "eyebrow": "Hjälp",
+   "heading": "Frågor, ändringar, verktyg",
+   "sub": "Vart du vänder dig med en fråga, och vad du kan hålla dig till när du bygger.",
+   "wege": {
+    "titel": "När något inte fungerar",
+    "entwicklerMail": {
+     "titel": "Teknisk kontakt",
+     "text": "Skicka med `request_id` ur felsvaret — då går anropet att hitta i våra loggar."
+    },
+    "hilfeCenter": {
+     "titel": "Hjälpcenter",
+     "text": "Instruktioner för produkten: skapa objekt, koppla portaler, sköta priser."
+    },
+    "schema": {
+     "titel": "Generera en klient",
+     "text": "OpenAPI-filen fungerar som indata för de vanliga generatorerna — en handskriven klient är onödig."
+    }
+   },
+   "versionen": {
+    "titel": "Versionshantering",
+    "text": "Ett API är ett löfte. Dessa fyra punkter gäller för v1:",
+    "zusagen": {
+     "pfad": "Versionen står i sökvägen. En brytande ändring får `/v2`; `/v1` fortsätter att köra parallellt.",
+     "additiv": "Inom v1 tillkommer bara fält. Befintliga fält byter inte namn och ändrar inte betydelse.",
+     "frist": "Om en version avvecklas anger vi ett datum med minst tolv månaders varsel och hör av oss till varje verksamhet med en aktiv åtkomst.",
+     "changelog": "Ändringar står i OpenAPI-filen och på den här sidan. Det finns ingen tyst ändring av ett fält."
+    }
+   }
+  },
+  "kopf": {
+   "hilfe": "Hjälpcenter",
+   "zurueck": "Till webbplatsen"
+  },
+  "sidebar": {
+   "sprung": "Gå till …",
+   "keineTreffer": "Varken en endpoint eller ett kapitel passar in på det.",
+   "leitfaden": "Guide",
+   "referenz": "API-referens",
+   "tocTitel": "På den här sidan",
+   "version": "myNextDays Öppet API v1"
+  },
+  "referenz": {
+   "scope": "Nödvändig rättighet:",
+   "pfadParameter": "Sökvägsparametrar",
+   "queryParameter": "Query-parametrar",
+   "headerParameter": "Headers",
+   "koerper": "Begärans kropp",
+   "antworten": "Svar",
+   "erlaubt": "Tillåtet:",
+   "pflicht": "obligatorisk",
+   "standard": "Standard",
+   "sprache": "Språk",
+   "zugang": "Åtkomst",
+   "tokenHinweis": "Bara i den här webbläsaren, bara för ”Prova” — värdet sparas inte och skickas inte till oss.",
+   "ausprobieren": "Prova",
+   "laeuft": "Körs …",
+   "anfrage": "Begäran",
+   "antwort": "Svar",
+   "beispiel": "Exempel",
+   "kopieren": "Kopiera",
+   "kopiert": "Kopierat",
+   "fehlerNetz": "Begäran nådde inte tjänsten. De vanligaste orsakerna: tjänsten svarar inte just nu, eller webbläsaren avbröt begäran eftersom CORS inte är tillåtet. Samma anrop via curl från kodfältet visar vad tjänsten verkligen säger.",
+   "keinToken": "Utan token svarar anropet med 401 — det är den förväntade vägen."
+  },
+  "start": {
+   "eyebrow": "Öppet API",
+   "titel": "Bygg mot myNextDays",
+   "unterzeile": "Ett REST-API för objekt, tillgänglighet, priser, bokningar, gäster och uppgifter — läsa och skriva, med avbokning, ombokning och prisförhandsvisning. Guiden förklarar reglerna, referensen har varje endpoint med alla parametrar och ett fält för att testa den.",
+   "basisLabel": "Basadress",
+   "versionLabel": "Version",
+   "versionHinweis": "i sökvägen",
+   "schemaTitel": "Schema",
+   "schemaText": "OpenAPI 3.1, genererat ur koden. Fungerar som indata till de vanliga klientgeneratorerna.",
+   "woAnfangen": "Var du börjar",
+   "erstLesen": "Läs först",
+   "dannBauen": "Bygg sedan"
+  },
+  "bereiche": {
+   "leitfaden": "Dokumentation",
+   "referenz": "API-referens"
+  },
+  "gruppen": {
+   "ueberblick": "Grunder",
+   "anhang": "Bilaga"
+  },
+  "weiter": {
+   "naechste": "Nästa sida",
+   "zurReferenz": "Vidare till API-referensen"
+  },
+  "referenzUebersicht": {
+   "eyebrow": "API-referens",
+   "titel": "Alla endpoints",
+   "sub": "Varje endpoint har en egen sida med alla parametrar, begärans kropp, svaren och ett fält där du kan prova anropet direkt."
+  },
+  "zugang": {
+   "eyebrow": "Autentisering",
+   "heading": "Autentisering",
+   "sub": "OAuth 2.0 med `client_credentials`. En åtkomst hör till exakt ett företag; det finns ingen nyckel som omfattar flera företag.",
+   "ablauf": {
+    "titel": "Flöde",
+    "text": "`client_credentials` är vägen för program som agerar för sin egen räkning. Det finns ingen samtyckesdialog och inget refresh-token.",
+    "schritte": {
+     "anlegen": "Skapa åtkomsten i panelen: Konto → API-åtkomst. `client_secret` visas en gång och kan inte hämtas i efterhand.",
+     "tauschen": "`POST /v1/oauth/token` med `client_id` och `client_secret`. Svaret innehåller `access_token`, `expires_in` (3600) och de beviljade behörigheterna.",
+     "senden": "Skicka tokenet som `Authorization: Bearer ACCESS_TOKEN` med varje anrop. Efter utgång svarar API:et med 401 och koden `token_expired`."
+    },
+    "merksatz": "Håll tokenet i minnet i stället för att hämta ett nytt vid varje anrop. Ett byte per förfrågan slår i hastighetsgränsen för token-slutpunkten (10/minut)."
+   },
+   "rechte": {
+    "titel": "Behörigheter",
+    "text": "Behörigheter har formen `bereich:richtung`, till exempel `reservations:read` eller `rates:write`. Saknas en behörighet svarar slutpunkten med 403 och koden `insufficient_scope`.",
+    "merksatz": "Ge bara de behörigheter som integrationen behöver. En förlorad nyckel kan då inte skriva över något som den aldrig skulle läsa."
+   },
+   "objekte": {
+    "titel": "Objektbegränsning",
+    "text": "En åtkomst kan begränsas till bestämda objekt. Den ser bara dessa i listor; ett anrop med ett annat objekt-id svarar med 403 och koden `objekt_nicht_erlaubt`."
+   },
+   "selbstauskunft": {
+    "titel": "Kontrollera behörigheter",
+    "text": "`GET /v1/me` returnerar tokenets företag, behörigheter och objektbegränsning — det första anropet när en integration sätts upp."
+   }
+  },
+  "fehler": {
+   "eyebrow": "Fel",
+   "heading": "Så ser fel ut",
+   "sub": "Varje fel är en HTTP-statuskod plus en kropp enligt RFC 9457 (`application/problem+json`). Inget fel kommer med status 200.",
+   "aufbau": {
+    "titel": "Uppbyggnad",
+    "text": "`code` är felets stabila, maskinläsbara namn. `detail` är en text för människor och kan ändras när som helst.",
+    "felder": {
+     "type": "Adress till beskrivningen av den här feltypen — listan över felkoder i bilagan.",
+     "title": "Kort namn på feltypen.",
+     "status": "HTTP-statuskoden.",
+     "detail": "Beskrivning för människor.",
+     "code": "Felets stabila namn. Läs av det här fältet.",
+     "request_id": "Förfrågans identifierare. Skicka med den vid en supportförfrågan."
+    },
+    "merksatz": "Förgrena på `code`, inte på `detail`. Texten är inget gränssnitt."
+   },
+   "klassen": {
+    "titel": "Statusklasser",
+    "vier": "4xx — förfrågan är problemet: saknad behörighet, okänt id, ogiltigt värde, belagd period. Ett nytt försök ändrar inget.",
+    "fuenf": "5xx — fel på serversidan. Försök igen med växande intervall.",
+    "neun": "429 — hastighetsgränsen är nådd. `Retry-After` anger väntetiden i sekunder."
+   }
+  },
+  "limits": {
+   "eyebrow": "Hastighetsgräns",
+   "heading": "Hur många anrop som är tillåtna",
+   "sub": "Begränsningen gäller per åtkomst, inte per IP. Det finns tre hinkar med egna värden för läsning, skrivning och tokenutgivning."
+  },
+  "fehlercodes": {
+   "eyebrow": "Bilaga",
+   "heading": "Felkoder",
+   "sub": "Alla `code`-värden i detta API. Varje rad har ett ankare; `type`-adressen i ett felsvar pekar på det."
+  },
+  "lokalisierung": {
+   "eyebrow": "Bilaga",
+   "heading": "Lokalisering",
+   "sub": "Språk och valuta kommer från data. Båda fälten kan vara tomma; inget av dem har ett standardvärde.",
+   "waehrung": {
+    "titel": "Valuta",
+    "text": "Varje belopp har en `currency`-kod enligt ISO 4217. Det finns inget standardvärde och ingen omräkning.",
+    "merksatz": "När en bokning skapas måste `currency` motsvara objektets valuta. Vid avvikelse: 422 med koden `currency_mismatch`."
+   },
+   "sprache": {
+    "titel": "Språk",
+    "text": "`language` är en tvåbokstavskod enligt ISO 639-1, till exempel `de`, `da`, `en`. Värdet kommer från bokningen eller från portalen och kan vara tomt. Tomt betyder okänt."
+   },
+   "texte": {
+    "titel": "API:ets texter",
+    "text": "Fältnamn, `code`-värden och enum-värden är engelska och en del av kontraktet. `detail`-texterna i ett felsvar riktar sig till människor och kan ändras — visa egna meddelanden utifrån `code`."
+   }
+  },
+  "zeit": {
+   "eyebrow": "Bilaga",
+   "heading": "Tidszoner",
+   "sub": "Detta API använder två slags tidsangivelser: kalenderdagar i objektets tidszon och tidpunkter i UTC.",
+   "tage": {
+    "titel": "Kalenderdagar",
+    "text": "`check_in`, `check_out`, `date`, `from` och `to` är kalenderdagar i formatet `YYYY-MM-DD`, avsedda i objektets tidszon. De har inget klockslag och räknas inte om till UTC.",
+    "merksatz": "`check_out` är avresedagen; den sista belagda natten är natten före. Fyra nätter betyder fyra dagars avstånd mellan `check_in` och `check_out`."
+   },
+   "zeitpunkte": {
+    "titel": "Tidpunkter",
+    "text": "`created_at`, `updated_at`, `received_at`, `booked_at` och `cancelled_at` är tidpunkter enligt ISO 8601 i UTC med `Z` på slutet."
+   },
+   "quelle": {
+    "titel": "booked_at och received_at",
+    "text": "`booked_at` är tidpunkten för gästens bokning, vid portalbokningar från portalens källa. `received_at` är mottagandet i detta system. Vid en samlad hämtning bär många bokningar samma `received_at`-sekund.",
+    "merksatz": "Använd `booked_at` för ”senaste först” och behandla `null` som okänt. `received_at` återger hämtningens ordning, inte bokningarnas."
+   },
+   "filter": {
+    "titel": "Filtrera på ändringar",
+    "text": "`updated_since` tar en tidpunkt och returnerar vad som har ändrats sedan dess. Se upp med URL-kodningen: `+` betyder ett blanksteg i en adress — skriv `Z` eller koda det som `%2B`."
+   }
+  }
+ },
  "meta": {
   "title": "myNextDays – Plattformen för uthyrare av semesterboenden",
   "description": "Plattformen för hotell, förmedlare och uthyrare av semesterboenden: channel manager, kalender, direktbokning, gästkommunikation och fakturering på ett ställe. Byggd i Danmark, driftad inom EU. Från 19,90 € per månad. Testa gratis i 30 dagar."

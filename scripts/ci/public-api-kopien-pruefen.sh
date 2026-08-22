@@ -31,6 +31,20 @@
 #   ratelimit.py            Zähl-Logik der Limits (gemeinsamer Redis).
 #   logging.py              Feldnamen der Logzeilen; Drift macht die
 #                           Fehlersuche über beide Dienste hinweg unmöglich.
+#   dates.py                Nächte-Zählung. Eine Fassung rechnet vier Nächte,
+#                           die andere fünf — und Vorschau und Buchung weichen
+#                           um eine Nacht ab.
+#   pricing/resolver.py     Die EINE Preisberechnung (Saisons, Aktionen,
+#                           Aufenthaltsregeln, Kanal-Markup, Zusatzleistungen,
+#                           Abgaben). Driftet sie, nennt die Preisvorschau der
+#                           öffentlichen API einen anderen Betrag als die
+#                           Buchung im Dashboard: zwei Preise für denselben
+#                           Aufenthalt, und damit ein Streit über Geld.
+#   pricing/schemas.py      Die Formen dieser Berechnung; Drift bricht den
+#                           Resolver in einem der beiden Bäume.
+#   addons/pricing.py       Preis einer Zusatzleistung. Drift heißt: dieselbe
+#                           Leistung kostet über die API etwas anderes als im
+#                           Dashboard.
 #
 # ARBEITSWEISE BEI EINER ÄNDERUNG: in EINER Datei ändern, dann in die
 # Schwester kopieren (der Kopf bleibt erhalten, er ist bei diesen Dateien Teil
@@ -49,6 +63,10 @@ paare=(
   "apps/api/src/core/ratelimit.py:apps/public-api/src/core/ratelimit.py"
   "apps/api/src/core/supabase.py:apps/public-api/src/core/supabase.py"
   "apps/api/src/features/api_clients/scopes.py:apps/public-api/src/core/scopes.py"
+  "apps/api/src/core/dates.py:apps/public-api/src/core/dates.py"
+  "apps/api/src/features/addons/pricing.py:apps/public-api/src/features/addons/pricing.py"
+  "apps/api/src/features/pricing/resolver.py:apps/public-api/src/features/pricing/resolver.py"
+  "apps/api/src/features/pricing/schemas.py:apps/public-api/src/features/pricing/schemas.py"
 )
 
 fehler=0

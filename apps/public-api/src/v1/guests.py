@@ -20,8 +20,9 @@ from fastapi import APIRouter, Depends, Query
 
 from ..core.auth import ApiKontext, scope_erforderlich
 from ..core.db import Abfrage, service_db, zeile_im_mandanten
-from ..core.pagination import blaettern_pruefen, seite_bauen
+from ..core.pagination import blaettern_pruefen, keyset_anwenden, seite_bauen
 from ..core.supabase import escape_like
+from .schemas import GastProfil, Seite
 
 router = APIRouter(prefix="/guests", tags=["Gäste"])
 
@@ -51,7 +52,12 @@ def _gast(zeile: dict) -> dict[str, Any]:
     }
 
 
-@router.get("", summary="Gäste auflisten")
+@router.get(
+    "",
+    response_model=Seite[GastProfil],
+    response_model_exclude_unset=True,
+    summary="Gäste auflisten",
+)
 def liste(
     ctx: Annotated[ApiKontext, Depends(scope_erforderlich("guests:read"))],
     email: Annotated[str | None, Query(description="Exakte E-Mail-Adresse.")] = None,
@@ -62,6 +68,24 @@ def liste(
     updated_since: Annotated[str | None, Query(description="Geändert seit (ISO 8601).")] = None,
     limit: Annotated[int | None, Query(ge=1, le=200)] = None,
     offset: Annotated[int | None, Query(ge=0)] = None,
+    starting_after: Annotated[
+        str | None,
+        Query(
+            description=(
+                "ID des letzten Elements der Vorseite — der empfohlene Weg zum "
+                "Blättern. Stabil, auch wenn sich die Liste zwischen zwei "
+                "Seiten ändert. Schließt `offset` aus. Den Wert liefert "
+                "`pagination.next_starting_after` der Vorseite.\n\n"
+                "**Die übrigen Filter musst du beim Weiterblättern unverändert "
+                "mitschicken.** Änderst du sie, beschreibt der Cursor eine "
+                "Stelle in einer anderen Liste, und das Ergebnis ist nicht "
+                "vorhersagbar. `limit` darf sich ändern.\n\n"
+                "Der Cursor läuft nicht ab. Er wird ungültig, wenn der "
+                "Datensatz gelöscht wird — dann kommt ein 422, und du beginnst "
+                "den Durchgang ohne `starting_after` neu."
+            )
+        ),
+    ] = None,
     include_total: Annotated[bool, Query()] = False,
 ) -> dict[str, Any]:
     """Gäste des Betriebs.
@@ -71,7 +95,7 @@ def liste(
     einmal abholt, würde sie bei sich wieder aufbauen.
     """
     db = service_db()
-    blatt = blaettern_pruefen(limit, offset, include_total)
+    blatt = blaettern_pruefen(limit, offset, include_total, starting_after)
 
     def basis() -> Abfrage:
         q = db.table("guests").select(_SPALTEN).eq("tenant_id", ctx.tenant_id)
@@ -90,7 +114,17 @@ def liste(
         return q.is_("anonymized_at", "null")
 
     zeilen = (
-        basis().order("name").order("id").range(blatt.offset, blatt.range_bis).execute()
+        keyset_anwenden(
+            basis().order("name").order("id"),
+            db,
+            "guests",
+            blatt,
+            tenant_id=ctx.tenant_id,
+            sortier_spalte="name",
+            aufsteigend=True,
+        )
+        .range(blatt.range_von, blatt.range_bis)
+        .execute()
     ).data or []
     total = None
     if include_total:
@@ -98,7 +132,9 @@ def liste(
     return seite_bauen([_gast(z) for z in zeilen], blatt, total=total)
 
 
-@router.get("/{guest_id}", summary="Einen Gast lesen")
+@router.get(
+    "/{guest_id}", response_model=GastProfil, summary="Einen Gast lesen"
+)
 def detail(
     guest_id: str,
     ctx: Annotated[ApiKontext, Depends(scope_erforderlich("guests:read"))],

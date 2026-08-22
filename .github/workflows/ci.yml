@@ -3,7 +3,12 @@ name: CI
 on:
   push:
     branches: [main]
+  # Draft-PRs loesen NICHTS aus: an einem Zweig, der noch in Arbeit ist, ist
+  # jeder Push ein Zwischenstand, und jeder Lauf darauf verbrannte Runner-Zeit
+  # (belegt: die Laeufe 633-636 an einem Nachmittag, alle auf demselben Draft).
+  # `ready_for_review` holt die Pruefung nach, sobald der PR wirklich steht.
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
 
 # Der Deploy-Job hängt an den Prüf-Jobs (needs) — deshalb liegt er in DIESEM
 # Workflow und nicht mehr in einer eigenen deploy.yml. Als getrennter Workflow
@@ -144,7 +149,7 @@ jobs:
 
       - name: Schwesterdateien byte-identisch
         if: steps.pruefen.outputs.laufen == 'true'
-        # Sieben Dateien liegen bewusst doppelt (apps/api ↔ apps/public-api).
+        # Elf Dateien liegen bewusst doppelt (apps/api ↔ apps/public-api).
         # Drift ist hier kein Stilproblem: eine geflickte SSRF-Prüfung in nur
         # einem Baum, zwei verschiedene Verfügbarkeitszahlen, ein Scope, den das
         # Dashboard vergibt und kein Endpunkt kennt. Der Schritt läuft VOR der
@@ -201,6 +206,19 @@ jobs:
           assert not ohne_version, f"Pfade ohne /v1: {ohne_version}"
           print(f"OpenAPI {spec['openapi']} — {len(pfade)} Pfade, alle unter /v1")
           PY
+
+      - name: Eingecheckte OpenAPI-Datei ist aktuell
+        if: steps.pruefen.outputs.laufen == 'true'
+        # `marketing/content/api/openapi.json` ist die Quelle der
+        # Entwickler-Referenz auf der Website. Sie wird aus dem Code erzeugt;
+        # driftet sie, zeigt die veröffentlichte Doku Endpunkte, die es nicht
+        # mehr gibt, oder verschweigt neue. Der Vergleich läuft gegen einen
+        # frischen Export — schlägt er fehl, ist der Export nachzuholen
+        # (`python scripts/api/openapi-export.py`).
+        working-directory: .
+        env:
+          API_TOKEN_SECRET: ci-placeholder-signier-secret-0123456789
+        run: uv run --project apps/public-api python scripts/api/openapi-export.py --pruefen
 
       - name: Deploy-Stack ist gültig
         if: steps.pruefen.outputs.laufen == 'true'
@@ -740,6 +758,10 @@ jobs:
   # ────────────────────────────────────────────────────────────────────────
   betroffen:
     name: Betroffene Apps ermitteln
+    # Das Tor fuer den ganzen Lauf: jeder andere Job haengt per `needs` hieran.
+    # Ein Draft-PR laesst es geschlossen — `types:` allein genuegt nicht, weil
+    # `synchronize` auch an Draft-PRs feuert.
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     permissions:
       contents: read

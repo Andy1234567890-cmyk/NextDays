@@ -6825,7 +6825,12 @@
     "needScope": "Roghnaigh cead amháin ar a laghad.",
     "docsHint": "Tá cur síos ar an mbealach le fíordheimhniú leis na sonraí seo i ndoiciméadú an API.",
     "loadErr": "Níorbh fhéidir é a lódáil.",
-    "noAccess": "Gan rochtain"
+    "noAccess": "Gan rochtain",
+    "scopeRates": "Praghsanna",
+    "scopeGuests": "Aíonna",
+    "scopeTasks": "Tascanna",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "Doiciméadú API"
   },
   "supportChat": {
     "titel": "Cabhair agus tacaíocht",

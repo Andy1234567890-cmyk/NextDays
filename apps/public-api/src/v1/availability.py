@@ -32,6 +32,7 @@ from ..core.pagination import zeitraum_pruefen
 from .schemas import (
     SperrAnfrage,
     SperrErgebnis,
+    VerfuegbarkeitsAntwort,
     VerfuegbarkeitsSpanne,
     VerfuegbarkeitsTag,
 )
@@ -72,7 +73,9 @@ def _einheit_pruefen(db: Client, property_id: str, unit_id: str) -> None:
         )
 
 
-@router.get("", summary="Verfügbarkeit lesen")
+@router.get(
+    "", response_model=VerfuegbarkeitsAntwort, summary="Verfügbarkeit lesen"
+)
 def lesen(
     ctx: Annotated[ApiKontext, Depends(scope_erforderlich("availability:read"))],
     property_id: Annotated[str, Query(description="Objekt, dessen Kalender gelesen wird.")],

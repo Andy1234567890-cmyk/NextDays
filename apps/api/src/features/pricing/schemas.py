@@ -5,6 +5,11 @@ einen vollständigen Buchungs-Quote berechnet. Kalender, Reservierungs-Wizard un
 Buchungsstrecke lesen ausschließlich hierüber — kein direktes Preis-Tabellenlesen
 mehr in anderen Slices.
 """
+# SCHWESTERDATEI — byte-identisch in beiden Bäumen halten:
+#     apps/api/src/features/pricing/schemas.py
+#     apps/public-api/src/features/pricing/schemas.py
+# Die Ein- und Ausgabeformen der Preisberechnung. Drift hier bricht den
+# Resolver in einem der beiden Bäume — die Felder müssen dieselben sein.
 from datetime import date
 
 from pydantic import BaseModel, Field, model_validator

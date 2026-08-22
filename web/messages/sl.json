@@ -6823,7 +6823,12 @@
     "needScope": "Izberite vsaj eno dovoljenje.",
     "docsHint": "Kako se s temi podatki prijavite, piše v dokumentaciji API.",
     "loadErr": "Nalaganje ni uspelo.",
-    "noAccess": "Ni dostopa"
+    "noAccess": "Ni dostopa",
+    "scopeRates": "Cene",
+    "scopeGuests": "Gostje",
+    "scopeTasks": "Naloge",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "Dokumentacija API"
   },
   "supportChat": {
     "titel": "Pomoč in podpora",

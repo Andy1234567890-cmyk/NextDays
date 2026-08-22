@@ -37,7 +37,7 @@ const STATISCH: { pfad: string; priority: number }[] = [
   { pfad: "/kontakt", priority: 0.7 },
   // Entwickler-Dokumentation der öffentlichen API. Gehört in den Index: wer
   // nach „myNextDays API" sucht, ist ein potenzieller Integrationspartner. Die
-  // interaktive Referenz selbst (api.mynextdays.dk/docs) steht NICHT hier — sie
+  // interaktive Referenz selbst (open-api.mynextdays.com/docs) steht NICHT hier — sie
   // liegt auf einer anderen Domain und hat ihre eigene robots-Regel.
   { pfad: "/entwickler", priority: 0.6 },
   { pfad: "/agb", priority: 0.3 },

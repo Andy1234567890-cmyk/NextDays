@@ -6823,7 +6823,12 @@
     "needScope": "Vyberte aspoň jedno oprávnenie.",
     "docsHint": "Ako sa pomocou týchto údajov overiť, nájdete v dokumentácii API.",
     "loadErr": "Načítanie zlyhalo.",
-    "noAccess": "Bez prístupu"
+    "noAccess": "Bez prístupu",
+    "scopeRates": "Ceny",
+    "scopeGuests": "Hostia",
+    "scopeTasks": "Úlohy",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "Dokumentácia API"
   },
   "supportChat": {
     "titel": "Pomoc a podpora",

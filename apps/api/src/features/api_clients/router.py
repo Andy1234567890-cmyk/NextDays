@@ -6,7 +6,7 @@ Dashboards, deshalb sitzt sie in dieser API.
 
 Die NUTZUNG der Zugänge sitzt nicht mehr hier: der Token-Tausch
 (client_credentials) und alle öffentlichen Ressourcen-Endpunkte liegen im
-eigenen Service `apps/public-api` (POST https://api.mynextdays.dk/v1/oauth/token).
+eigenen Service `apps/public-api` (POST https://open-api.mynextdays.com/v1/oauth/token).
 Vorher stand der Token-Endpunkt in diesem Router. Er ist dorthin UMGEZOGEN und
 nicht kopiert: zwei Stellen, die Tokens ausgeben, wären zwei Wahrheiten über
 Gültigkeitsdauer, Audience und Widerruf — und der Entwickler müsste zwei Hosts

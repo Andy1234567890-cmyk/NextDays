@@ -33,8 +33,14 @@ from supabase import Client
 from ..core import errors, idempotency
 from ..core.auth import ApiKontext, scope_erforderlich
 from ..core.db import Abfrage, service_db, zeile_im_mandanten
-from ..core.pagination import blaettern_pruefen, seite_bauen
-from .schemas import Betrag, Buchung, BuchungAnlegen, Gast
+from ..core.pagination import blaettern_pruefen, keyset_anwenden, seite_bauen
+from .schemas import (
+    Betrag,
+    Buchung,
+    BuchungAnlegen,
+    Gast,
+    Seite,
+)
 
 router = APIRouter(prefix="/reservations", tags=["Buchungen"])
 
@@ -144,7 +150,12 @@ def _gaeste_zu(db: Client, tenant_id: str, zeilen: list[dict]) -> dict[str, dict
     return {str(g["id"]): g for g in gaeste}
 
 
-@router.get("", summary="Buchungen auflisten")
+@router.get(
+    "",
+    response_model=Seite[Buchung],
+    response_model_exclude_unset=True,
+    summary="Buchungen auflisten",
+)
 def liste(
     ctx: Annotated[ApiKontext, Depends(scope_erforderlich("reservations:read"))],
     property_id: Annotated[str | None, Query(description="Nur Buchungen dieses Objekts.")] = None,
@@ -171,6 +182,24 @@ def liste(
     ] = None,
     limit: Annotated[int | None, Query(ge=1, le=200)] = None,
     offset: Annotated[int | None, Query(ge=0)] = None,
+    starting_after: Annotated[
+        str | None,
+        Query(
+            description=(
+                "ID des letzten Elements der Vorseite — der empfohlene Weg zum "
+                "Blättern. Stabil, auch wenn sich die Liste zwischen zwei "
+                "Seiten ändert. Schließt `offset` aus. Den Wert liefert "
+                "`pagination.next_starting_after` der Vorseite.\n\n"
+                "**Die übrigen Filter musst du beim Weiterblättern unverändert "
+                "mitschicken.** Änderst du sie, beschreibt der Cursor eine "
+                "Stelle in einer anderen Liste, und das Ergebnis ist nicht "
+                "vorhersagbar. `limit` darf sich ändern.\n\n"
+                "Der Cursor läuft nicht ab. Er wird ungültig, wenn der "
+                "Datensatz gelöscht wird — dann kommt ein 422, und du beginnst "
+                "den Durchgang ohne `starting_after` neu."
+            )
+        ),
+    ] = None,
     include_total: Annotated[bool, Query()] = False,
 ) -> dict[str, Any]:
     """Buchungen des Betriebs, gefiltert.
@@ -184,7 +213,7 @@ def liste(
     dieselbe Sekunde.
     """
     db = service_db()
-    blatt = blaettern_pruefen(limit, offset, include_total)
+    blatt = blaettern_pruefen(limit, offset, include_total, starting_after)
 
     if property_id:
         ctx.objekt_pruefen(property_id)
@@ -211,11 +240,21 @@ def liste(
             q = q.gte("updated_at", updated_since)
         return q.is_("archived_at", "null")
 
+    # Absteigend nach Anreise, dann nach ID — beides zusammen ist eindeutig.
+    # Der Cursor rechnet mit derselben Richtung (`aufsteigend=False`); eine
+    # Abweichung zwischen `order` und Filter läge nicht als Fehler, sondern als
+    # fehlende Zeile in der Antwort des Kunden.
     zeilen = (
-        basis()
-        .order("check_in", desc=True)
-        .order("id")
-        .range(blatt.offset, blatt.range_bis)
+        keyset_anwenden(
+            basis().order("check_in", desc=True).order("id", desc=True),
+            db,
+            "reservations",
+            blatt,
+            tenant_id=ctx.tenant_id,
+            sortier_spalte="check_in",
+            aufsteigend=False,
+        )
+        .range(blatt.range_von, blatt.range_bis)
         .execute()
     ).data or []
 
@@ -294,6 +333,13 @@ def anlegen(
     hast. Diese API rechnet ihn nicht nach — sie kennt die
     Aufenthaltspreis-Berechnung in v1 nicht (siehe „Grenzen von v1"). Die
     Währung muss zur Währung des Objekts passen, sonst 422.
+
+    Schlägt der Aufruf fehl, ohne dass eine Buchung entstanden ist (409, 422),
+    ist dein `Idempotency-Key` danach wieder frei: du kannst denselben Vorgang
+    mit demselben Schlüssel erneut versuchen, sobald der Zeitraum wieder frei
+    ist. Nur bei einem Serverfehler bleibt er belegt — dann ist unklar, ob die
+    Buchung doch entstanden ist, und du siehst zuerst über
+    `GET /v1/reservations` nach.
     """
     schluessel = idempotency.schluessel_pruefen(idempotency_key, pflicht=True)
     db = service_db()
@@ -322,7 +368,23 @@ def anlegen(
         response.headers["Idempotency-Replayed"] = "true"
         return vorhanden["body"]
 
-    zeile = _buchen(db, ctx, body)
+    try:
+        zeile = _buchen(db, ctx, body)
+    except errors.ApiFehler as exc:
+        # Der Anspruch wird freigegeben, WEIL nichts entstanden ist — sonst
+        # bekäme der Client mit demselben Schlüssel für immer 409 „läuft noch",
+        # obwohl er es genau so wiederholen soll (Zeitraum belegt ist der
+        # häufigste Fall, und Nächte werden wieder frei).
+        #
+        # Ausgenommen sind Fehler mit unklarem Ausgang (>= 500): dort KANN die
+        # Buchung doch entstanden sein, und eine Wiederholung wäre eine zweite.
+        # Der Schlüssel bleibt dann belegt (fail-closed).
+        if exc.status < 500:
+            idempotency.freigeben(
+                db, tenant_id=ctx.tenant_id, client_pk=ctx.client_pk,
+                key=schluessel or "",
+            )
+        raise
     gaeste = _gaeste_zu(db, ctx.tenant_id, [zeile])
     buchung = _buchung_aus_zeile(zeile, gaeste.get(str(zeile.get("guest_id"))))
     koerper = buchung.model_dump(mode="json")

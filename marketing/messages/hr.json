@@ -1,4 +1,427 @@
 {
+ "entwickler": {
+  "meta": {
+   "titel": "API i programeri — myNextDays",
+   "beschreibung": "Javni REST-API sustava myNextDays: objekti, dostupnost, cijene, rezervacije, gosti i zadaci. OAuth2, OpenAPI 3.1, webhookovi s potpisanim dostavama."
+  },
+  "hero": {
+   "eyebrow": "Javni API",
+   "titel": "Gradi na myNextDays",
+   "unterzeile": "Jedan REST-API za objekte, dostupnost, cijene, rezervacije, goste i zadatke. Kratkotrajni tokeni, prava po pristupu, događaji preko webhooka — i shema koja nastaje iz koda i zato ne može ostarjeti.",
+   "basisLabel": "Osnovna adresa",
+   "versionLabel": "Verzija",
+   "versionHinweis": "u putanji",
+   "konsole": "Isprobaj",
+   "schema": "OpenAPI 3.1",
+   "referenz": "Pročitaj referencu"
+  },
+  "inhalt": {
+   "titel": "Na ovoj stranici",
+   "schnellstart": "Prvi koraci",
+   "konzepte": "Model podataka",
+   "konventionen": "Straničenje",
+   "endpunkte": "Krajnje točke",
+   "webhooks": "Webhookovi",
+   "grenzen": "Ograničenja",
+   "hilfe": "Podrška",
+   "start": "Pregled",
+   "zugang": "Autentifikacija",
+   "fehler": "Pogreške",
+   "limits": "Ograničenja zahtjeva",
+   "fehlercodes": "Kodovi pogrešaka",
+   "lokalisierung": "Lokalizacija",
+   "zeit": "Vremenske zone"
+  },
+  "code": {
+   "kopieren": "Kopiraj",
+   "kopiert": "Kopirano",
+   "anfrage": "Zahtjev",
+   "antwort": "Odgovor",
+   "zustellung": "Dostava",
+   "pruefcode": "Provjeri potpis (Node)"
+  },
+  "schnellstart": {
+   "eyebrow": "Brzi početak",
+   "heading": "Do prvog poziva u pet minuta",
+   "sub": "Tri koraka. Samo prvi ide preko sučelja — sve ostalo je poziv.",
+   "schritt1": {
+    "titel": "Stvori pristup",
+    "text": "U dashboardu stvori pristup i pritom odredi što smije: prava po području i, ako želiš, samo određene objekte. Pristupu za plan čišćenja ne treba uvid u prihode.",
+    "pfad": "Račun → API-pristup",
+    "hinweis": "`client_secret` prikazuje se jednom; sprema se samo njegov hash. Izgubljena tajna ne obnavlja se, nego se zamjenjuje."
+   },
+   "schritt2": {
+    "titel": "Preuzmi token",
+    "text": "Client-ID i Secret zamijeni za Access-Token. Vrijedi jedan sat i nosi točno prava tog pristupa.",
+    "hinweis": "Token drži u memoriji i mijenjaj ga tek kad istekne ili kad dobiješ 401 — ne pri svakom pozivu. Ukidanje u dashboardu odmah onemogućuje nove tokene."
+   },
+   "schritt3": {
+    "titel": "Napravi prvi poziv",
+    "text": "Token pošalji kao `Authorization: Bearer …`. Svaka lista odgovara u istoj omotnici: `data` plus `pagination`.",
+    "hinweis": "Zatim pozovi `GET /v1/me` — reći će ti koja prava i koje objekte ovaj pristup ima, tako da to ne moraš otkrivati kroz niz odgovora 403."
+   }
+  },
+  "konzepte": {
+   "eyebrow": "Koncepti",
+   "heading": "Četiri stvari koje bi trebao znati unaprijed",
+   "sub": "Četiri odluke koje određuju ponašanje API-ja. Odstupaju od raširenih pretpostavki.",
+   "objekt": {
+    "titel": "Objekt je tip jedinice",
+    "text": "Jedan `property` je točno jedan tip: tip sobe u hotelu ili objekt za odmor. Pod njim se nalaze njegove jedinice (`units`) — u pravilu točno jedna, a kod pet jednakih studija njih pet. Prodaje se jedinica, a tip je taj koji se vodi i kojemu se određuje cijena.",
+    "folge": "Dostupnost je zato BROJ (`units_available`), a ne da/ne. Hotel s 8 soba tipa Twin i 4 sobe tipa Double ima dva objekta s 8 odnosno 4 jedinice — a ne jedan objekt s 12 soba."
+   },
+   "waehrung": {
+    "titel": "Svaki iznos nosi svoju valutu",
+    "text": "Zadane vrijednosti nema. Svaki objekt ima valutu i svaki iznos u odgovoru ju navodi.",
+    "folge": "Ako valuta na objektu nedostaje, to je greška u podacima i poziv pada s 422 — ne umeće se nikakav „EUR“. Pri rezervaciji tvoja valuta mora odgovarati valuti objekta."
+   },
+   "zeit": {
+    "titel": "Dva različita trenutka",
+    "text": "`booked_at` je vrijeme rezervacije kod gosta — iz izvora portala, `null` ako ga portal ne dostavlja. `received_at` je primitak u ovom sustavu.",
+    "folge": "Sortiraj „najnovije prvo“ po `booked_at`, a ne po `received_at`: pri skupnom uvozu deseci rezervacija nose istu sekundu. Vremenske oznake su UTC, a datumska polja su kalendarski dani u vremenskoj zoni objekta."
+   },
+   "kanaele": {
+    "titel": "Vidljivost vrijedi po kanalu",
+    "text": "Ne postoji globalno „objavljeno“. Objekt je vidljiv na tržnici, na vlastitoj web-stranici, preko portala — svako od toga uključuje se pojedinačno.",
+    "folge": "Objekt je prodajan samo kad se poklopi troje: `status = active`, kanal je uključen i ima slobodnih jedinica. Zaustavljanje prodaje pak djeluje preko SVIH kanala."
+   }
+  },
+  "konventionen": {
+   "eyebrow": "Konvencije",
+   "heading": "Straničenje, greške, limiti, idempotentnost",
+   "sub": "Četiri točke koje su u svakom API-ju drugačije — ovdje s brojkama umjesto s prozom.",
+   "tabelle": {
+    "feld": "Polje",
+    "bedeutung": "Značenje",
+    "code": "Kod",
+    "status": "Status"
+   },
+   "blaettern": {
+    "titel": "Straničenje",
+    "text": "Svaka lista odgovara s `data` i `pagination`. Straniči se preko **kursora**: pošalješ `id` posljednjeg elementa prethodne stranice kao `starting_after`. Ako u odgovoru nema `next_starting_after`, prolaz je završen.",
+    "felder": {
+     "starting_after": "`id` posljednjeg elementa prethodne stranice. Preporučeni put — stabilan, čak i ako se lista promijeni između dvije stranice. Nepoznat ili izbrisan `id` daje 422, a ne praznu stranicu.",
+     "next_starting_after": "Stoji u `pagination` dok ima nastavka: vrijednost za tvoj sljedeći `starting_after`. Ako ga nema, došao si do kraja.",
+     "limit": "Redova po stranici. Standardno 50, najviše 200 — veća vrijednost daje 422, a ne skraćenu stranicu.",
+     "offset": "Redovi koje treba preskočiti — za jednokratan pogled na određenu stranicu. Zajedno s `starting_after` daje 422: dva navoda položaja u jednom zahtjevu nemaju besprotuslovno značenje.",
+     "include_total": "`true` dodatno vraća `total`. Zahtijevaj ga samo ako taj broj prikazuješ.",
+     "has_more": "Stoji u svakom odgovoru i kaže postoji li još jedna stranica — bez nagađanja, bez dodatnog kruga."
+    },
+    "warumCursor": "Zašto ne jednostavno `offset`: on opisuje POLOŽAJ u listi. Ako između stranice 1 i stranice 2 pristigne rezervacija, sve se pomakne za jedno mjesto — `offset=50` tada preskoči jedan red, a pri brisanju jedan red dođe dvaput. U tvojoj bazi podataka nakon toga nedostaje rezervacija, i ništa u odgovoru to ne otkriva. Kursor imenuje posljednji zapis koji si vidio i zato se ne može pomaknuti."
+   },
+   "fehler": {
+    "titel": "Greške",
+    "text": "Svaka greška dolazi kao `application/problem+json` (RFC 9457) sa stabilnim `code`, s `request_id` i — gdje to pomaže — s poljima koja grešku objašnjavaju. Grananje radi po `code`, ne po tekstu: tekst se smije mijenjati, kod ne.",
+    "codes": {
+     "nichtAuthentifiziert": "Token nedostaje, istekao je ili nije važeći.",
+     "ungueltigeZugangsdaten": "Client-ID ili Secret je pogrešan, ili je pristup ukinut.",
+     "scopeFehlt": "Token je važeći, ali ovaj pristup nema potrebno pravo. Scope koji nedostaje stoji u grešci.",
+     "objektNichtErlaubt": "Pristup je ograničen na određene objekte; ovaj nije među njima.",
+     "nichtGefunden": "Ne postoji ili pripada drugom poslovnom subjektu — u oba slučaja odgovor je jednak.",
+     "zeitraumNichtVerfuegbar": "Zauzeto, blokirano ili izuzeto iz prodaje. Nije nastala polovična rezervacija.",
+     "idempotenzInArbeit": "Poziv s tim ključem Idempotency-Key još je u obradi. Pričekaj kratko, pa ponovi.",
+     "aboBestehtBereits": "Za ovu adresu već postoji aktivna pretplata na webhook ovog pristupa.",
+     "waehrungFehlt": "Objektu, planu cijena ili rezervaciji nije dodijeljena valuta — greška u podacima.",
+     "ungueltigeAnfrage": "Formalno u redu, sadržajno neizvedivo. Obrazloženje stoji u `detail`.",
+     "validierungFehlgeschlagen": "Zahtjev ne odgovara shemi. `felder` navodi koje polje.",
+     "zuVieleAnfragen": "Rate-Limit je dosegnut. `Retry-After` kaže kada se nastavlja.",
+     "nichtKonfiguriert": "Servis ne može sigurno obraditi zahtjev. Bez provjere nema nastavka."
+    }
+   },
+   "limits": {
+    "titel": "Rate-limiti",
+    "text": "Ograničava se po PRISTUPU, a ne po IP-adresi: agencija koja vodi dvadeset poslovnih subjekata sjedi za jednom IP-adresom i ne smije sama sebe kočiti. Tri odvojena bucketa, tako da usklađivanje kalendara ne blokira postavljanje cijena.",
+    "eimer": {
+     "token": "Zamjena tokena. Strogo, jer se ovdje provjeravaju pristupni podaci.",
+     "write": "Pozivi koji pišu — oni zadiru u prodaju.",
+     "read": "Pozivi koji čitaju: svakodnevica jedne integracije."
+    },
+    "header": "Svaki odgovor nosi trenutno stanje, i onaj uspješan — da možeš prilagoditi tempo prije nego što uletiš u 429:"
+   },
+   "idempotenz": {
+    "titel": "Idempotentnost",
+    "text": "Pri stvaranju rezervacije header `Idempotency-Key` je obavezan. Za svaki postupak odaberi jedinstvenu vrijednost (npr. UUID) i ponovi je kad isti poziv pošalješ opet. Bez te zaštite prekid mreže s ponavljanjem stvara dvije rezervacije — a druga blokira noći koje nitko nije naručio.",
+    "faelle": {
+     "wiederholung": "Isti ključ, isti sadržaj → prvi odgovor vraća se od riječi do riječi, s headerom `Idempotency-Replayed: true`.",
+     "abweichend": "Isti ključ, DRUGI sadržaj → 422. Za novi postupak ide novi ključ.",
+     "laufend": "Isti ključ, prvi poziv još traje → 409. Pričekaj kratko, pa ponovi; ne navaljuj s novim ključem."
+    }
+   }
+  },
+  "webhooks": {
+   "eyebrow": "Webhookovi",
+   "heading": "Događaji umjesto ispitivanja",
+   "sub": "Jedna pretplata po adresi, potpisane dostave, ponavljanja s rastućim odmakom. Događaji nastaju pri SVAKOJ promjeni — i kad dolazi preko portala ili dashboarda, a ne preko ovog API-ja.",
+   "tabelle": {
+    "ereignis": "Događaj",
+    "wann": "Kada se aktivira"
+   },
+   "ereignisse": {
+    "reservationCreated": "Nastala je rezervacija — bez obzira na kanal.",
+    "reservationUpdated": "Postojeća rezervacija se promijenila.",
+    "reservationCancelled": "Rezervacija je otkazana. Vlastiti događaj, jer na to treba reagirati drugačije nego na promjenu.",
+    "availabilityChanged": "Kalendar objekta se promijenio (rezervacija, blokada, otpuštanje).",
+    "rateChanged": "Dnevna cijena ili pravilo boravka se promijenilo.",
+    "taskCreated": "Nastao je zadatak.",
+    "taskCompleted": "Zadatak je dovršen."
+   },
+   "anlegen": {
+    "titel": "Stvori pretplatu",
+    "text": "Jedna `https` adresa i događaji koje želiš. Po želji samo za određene objekte. Interne adrese se odbijaju — provjera se izvodi pri stvaranju I prije svake pojedine dostave.",
+    "secret": "Odgovor sadrži Secret za potpisivanje točno jednom. Spremi ga sada — više se nikada ne dostavlja."
+   },
+   "nutzlast": {
+    "titel": "Što dolazi",
+    "text": "Držano uskim: ID-jevi i polja koja opisuju promjenu. Cijeli zapis po potrebi dohvatiš preko API-ja — tako primatelju ne bude dostavljeno ništa što u međuvremenu više ne bi smio vidjeti."
+   },
+   "signatur": {
+    "titel": "Provjeri potpis",
+    "text": "Svaka dostava nosi header s vremenskom oznakom i HMAC-SHA256 preko `ZEITSTEMPEL.BODY`, izračunat Secretom tvoje pretplate. Budući da je vremenska oznaka potpisana zajedno, prepoznat ćeš snimljenu i kasnije ponovno poslanu dostavu — kod potpisa samo preko tijela to nije moguće.",
+    "schritte": {
+     "roh": "Uzmi SIROVO tijelo zahtjeva, a ne parsirani i iznova serijalizirani objekt — drugi niz bajtova daje drugi potpis. To je najčešći razlog za „potpis ne odgovara“.",
+     "alter": "Provjeri starost preko vremenske oznake; pet minuta tolerancije dobra je vrijednost.",
+     "vergleich": "Usporedi u konstantnom vremenu (`timingSafeEqual`, `hmac.compare_digest`). Običan `==` čini potpis pogodivim."
+    }
+   },
+   "verhalten": {
+    "wiederholung": {
+     "titel": "Ponavljanja",
+     "text": "Ako tvoja adresa ne odgovori s 2xx, dostava se ponavlja do deset puta — s rastućim odmakom od jedne minute do jednog sata. Odgovori brzo, a obradi poslije; polagan primatelj računa se kao greška."
+    },
+    "reihenfolge": {
+     "titel": "Redoslijed",
+     "text": "Nije zagarantiran. Koristi `created_at` događaja da starija dostava ne prepiše noviju."
+    },
+    "doppelt": {
+     "titel": "Dvostruka dostava",
+     "text": "Malo je vjerojatna, ali moguća — `id` događaja tretiraj kao ključ i svaki obradi samo jednom. To vrijedi za svakog pružatelja webhooka, ne samo za ovog."
+    },
+    "nachholen": {
+     "titel": "Nadoknada nakon ispada",
+     "text": "Ako ti je poslužitelj bio nedostupan, propuštene događaje nadoknađuješ preko `GET /v1/events?since=…` — najstariji prvi, s istim `id`-jevima kao pri dostavi, najviše 30 dana unatrag. Sam push nije jamstvo dostave: ponavljanja u nekom trenutku prestaju, a bez ovog koraka nedostajat će ti upravo oni događaji za koje nikad nisi saznao."
+    }
+   }
+  },
+  "grenzen": {
+   "eyebrow": "Granice",
+   "heading": "Ograničenja",
+   "sub": "Dva postupka nisu mogući preko ovog API-ja. Oboje slijedi iz modela podataka. Otkazivanje, premještanje i izračun cijene su mogući.",
+   "stattdessen": "Umjesto toga:",
+   "gaeste": {
+    "titel": "Stvaranje i mijenjanje gostiju",
+    "text": "Podaci o gostu nastaju pri unosu od strane gosta ili preko portala. Put pisanja ovdje bio bi treći izvor za istu osobu.",
+    "ausweg": "Pri stvaranju rezervacije pošalji podatke o gostu zajedno s njom — postojeći gosti prepoznaju se prema adresi e-pošte. Kontaktna polja postojeće rezervacije uređuju se preko `PATCH /v1/reservations/'{'id}`."
+   },
+   "nachrichten": {
+    "titel": "Otvaranje razgovora",
+    "text": "Čitanje poruka i pisanje u postojeći razgovor je moguće (`/v1/reservations/'{'id}/messages`). Stvaranje novog razgovora nije: nit razgovora uvijek pripada računu gosta na tržnici, a API pristup poslovnog subjekta nije takav račun.",
+    "ausweg": "Razgovor nastaje prvom porukom gosta ili preko nadzorne ploče; nakon toga API u njemu može pisati."
+   },
+   "finanzen": {
+    "titel": "Naplata plaćanja",
+    "text": "Čitljivi su plaćanja i zakazani zahtjevi za plaćanje (`/v1/reservations/'{'id}/payments`) te plan plaćanja i ljestvica otkaznih troškova (`/v1/properties/'{'id}/booking-conditions`). Naplata ide kroz proces rezervacije gosta s namjerama plaćanja, a ne preko veze koju pošaljete.",
+    "ausweg": "Zahtjevi za plaćanje nastaju na nadzornoj ploči; API čita njihovo stanje i pripadajuće događaje."
+   }
+  },
+  "hilfe": {
+   "eyebrow": "Pomoć",
+   "heading": "Pitanja, promjene, alati",
+   "sub": "Kamo s pitanjem i čega se možeš držati pri gradnji.",
+   "wege": {
+    "titel": "Ako nešto ne radi",
+    "entwicklerMail": {
+     "titel": "Tehnički kontakt",
+     "text": "Pošalji `request_id` iz odgovora s greškom — s njim je poziv pronalaziv u našim zapisima."
+    },
+    "hilfeCenter": {
+     "titel": "Centar za pomoć",
+     "text": "Upute za proizvod: stvaranje objekata, povezivanje portala, održavanje cijena."
+    },
+    "schema": {
+     "titel": "Generiraj klijenta",
+     "text": "OpenAPI datoteka služi kao ulaz uobičajenim generatorima — ručno pisan klijent nije potreban."
+    }
+   },
+   "versionen": {
+    "titel": "Upravljanje verzijama",
+    "text": "API je obećanje. Ove četiri točke vrijede za v1:",
+    "zusagen": {
+     "pfad": "Verzija stoji u putanji. Promjena koja lomi dobiva `/v2`; `/v1` radi dalje uz nju.",
+     "additiv": "Unutar v1 polja se samo dodaju. Postojeća polja ne preimenuju se i ne mijenjaju svoje značenje.",
+     "frist": "Kad se verzija ukine, navodimo datum s rokom od najmanje dvanaest mjeseci i javljamo se svakom poslovnom subjektu s aktivnim pristupom.",
+     "changelog": "Promjene stoje u OpenAPI datoteci i na ovoj stranici. Nema tihe promjene na polju."
+    }
+   }
+  },
+  "kopf": {
+   "hilfe": "Centar za pomoć",
+   "zurueck": "Na web stranicu"
+  },
+  "sidebar": {
+   "sprung": "Skoči na …",
+   "keineTreffer": "Nijedna krajnja točka i nijedno poglavlje ne odgovaraju tome.",
+   "leitfaden": "Vodič",
+   "referenz": "API referenca",
+   "tocTitel": "Na ovoj stranici",
+   "version": "myNextDays Javni API v1"
+  },
+  "referenz": {
+   "scope": "Potrebno pravo:",
+   "pfadParameter": "Parametri putanje",
+   "queryParameter": "Parametri upita",
+   "headerParameter": "Zaglavlja",
+   "koerper": "Tijelo zahtjeva",
+   "antworten": "Odgovori",
+   "erlaubt": "Dopušteno:",
+   "pflicht": "obavezno",
+   "standard": "Zadano",
+   "sprache": "Jezik",
+   "zugang": "Pristup",
+   "tokenHinweis": "Samo u ovom pregledniku, samo za „Isprobaj“ — vrijednost se ne pohranjuje i ne šalje nam se.",
+   "ausprobieren": "Isprobaj",
+   "laeuft": "Izvodi se …",
+   "anfrage": "Zahtjev",
+   "antwort": "Odgovor",
+   "beispiel": "Primjer",
+   "kopieren": "Kopiraj",
+   "kopiert": "Kopirano",
+   "fehlerNetz": "Zahtjev nije stigao do usluge. Najčešći uzroci: usluga trenutno ne odgovara ili je preglednik prekinuo zahtjev zbog nedostatka CORS dopuštenja. Isti poziv putem curl iz polja s kodom pokazuje što usluga stvarno kaže.",
+   "keinToken": "Bez tokena poziv odgovara s 401 — to je očekivani put."
+  },
+  "start": {
+   "eyebrow": "Javni API",
+   "titel": "Gradi s myNextDays",
+   "unterzeile": "REST API za objekte, dostupnost, cijene, rezervacije, goste i zadatke — čitanje i pisanje, s otkazivanjem, premještanjem i pretpregledom cijene. Vodič objašnjava pravila, referenca sadrži svaku krajnju točku sa svim parametrima i polje za isprobavanje.",
+   "basisLabel": "Osnovna adresa",
+   "versionLabel": "Verzija",
+   "versionHinweis": "u putanji",
+   "schemaTitel": "Shema",
+   "schemaText": "OpenAPI 3.1, generirano iz koda. Može se koristiti kao ulaz za uobičajene generatore klijenata.",
+   "woAnfangen": "Gdje početi",
+   "erstLesen": "Prvo pročitaj",
+   "dannBauen": "Zatim gradi"
+  },
+  "bereiche": {
+   "leitfaden": "Dokumentacija",
+   "referenz": "API referenca"
+  },
+  "gruppen": {
+   "ueberblick": "Osnove",
+   "anhang": "Prilog"
+  },
+  "weiter": {
+   "naechste": "Sljedeća stranica",
+   "zurReferenz": "Dalje na API referencu"
+  },
+  "referenzUebersicht": {
+   "eyebrow": "API referenca",
+   "titel": "Sve krajnje točke",
+   "sub": "Svaka krajnja točka ima vlastitu stranicu sa svim parametrima, tijelom zahtjeva, odgovorima i poljem u kojem poziv možeš odmah isprobati."
+  },
+  "zugang": {
+   "eyebrow": "Autentifikacija",
+   "heading": "Autentifikacija",
+   "sub": "OAuth 2.0 s `client_credentials`. Pristup pripada točno jednom poslovnom subjektu; ne postoji ključ za više subjekata.",
+   "ablauf": {
+    "titel": "Tok",
+    "text": "`client_credentials` je put za programe koji djeluju za sebe. Nema dijaloga za privolu i nema tokena za osvježavanje.",
+    "schritte": {
+     "anlegen": "Pristup izradite na nadzornoj ploči: Račun → API pristup. `client_secret` prikazuje se jednom i nakon toga više nije dostupan.",
+     "tauschen": "`POST /v1/oauth/token` s `client_id` i `client_secret`. Odgovor sadrži `access_token`, `expires_in` (3600) i odobrena prava.",
+     "senden": "Token pošaljite pri svakom pozivu kao `Authorization: Bearer ACCESS_TOKEN`. Nakon isteka API odgovara s 401 i kodom `token_expired`."
+    },
+    "merksatz": "Token držite u memoriji, ne dohvaćajte ga ponovno pri svakom pozivu. Jedna zamjena po zahtjevu ulazi u ograničenje krajnje točke za tokene (10/minutu)."
+   },
+   "rechte": {
+    "titel": "Prava",
+    "text": "Prava imaju oblik `bereich:richtung`, primjerice `reservations:read` ili `rates:write`. Ako pravo nedostaje, krajnja točka odgovara s 403 i kodom `insufficient_scope`.",
+    "merksatz": "Dodijelite samo prava koja integracija treba. Izgubljeni ključ tada ne može prebrisati ništa što nikada nije smio čitati."
+   },
+   "objekte": {
+    "titel": "Ograničenje na objekte",
+    "text": "Pristup može biti ograničen na određene objekte. Na popisima vidi samo njih; poziv s drugim ID-om objekta odgovara s 403 i kodom `objekt_nicht_erlaubt`."
+   },
+   "selbstauskunft": {
+    "titel": "Provjera prava",
+    "text": "`GET /v1/me` vraća poslovni subjekt, prava i ograničenje na objekte za taj token — prvi poziv pri postavljanju integracije."
+   }
+  },
+  "fehler": {
+   "eyebrow": "Pogreške",
+   "heading": "Kako izgledaju pogreške",
+   "sub": "Svaka pogreška je HTTP kod stanja plus tijelo prema RFC 9457 (`application/problem+json`). Nijedna pogreška ne dolazi sa stanjem 200.",
+   "aufbau": {
+    "titel": "Struktura",
+    "text": "`code` je stabilan, strojno čitljiv naziv pogreške. `detail` je tekst za ljude i može se promijeniti u svakom trenutku.",
+    "felder": {
+     "type": "Adresa opisa ove vrste pogreške — popis kodova pogrešaka u prilogu.",
+     "title": "Kratak naziv vrste pogreške.",
+     "status": "HTTP kod stanja.",
+     "detail": "Opis za ljude.",
+     "code": "Stabilan naziv pogreške. Obradite ovo polje.",
+     "request_id": "Oznaka zahtjeva. Priložite je pri upitu podršci."
+    },
+    "merksatz": "Grananje radite po `code`, ne po `detail`. Tekst nije sučelje."
+   },
+   "klassen": {
+    "titel": "Klase stanja",
+    "vier": "4xx — problem je zahtjev: nedostaje pravo, nepoznat ID, nevažeća vrijednost, zauzet termin. Ponavljanje ništa ne mijenja.",
+    "fuenf": "5xx — pogreška na strani servera. Ponovite s rastućim odmakom.",
+    "neun": "429 — dosegnuto je ograničenje broja zahtjeva. `Retry-After` navodi vrijeme čekanja u sekundama."
+   }
+  },
+  "limits": {
+   "eyebrow": "Ograničenja zahtjeva",
+   "heading": "Koliko je poziva dopušteno",
+   "sub": "Ograničava se po pristupu, ne po IP-u. Postoje tri kante s vlastitim vrijednostima za čitanje, pisanje i izdavanje tokena."
+  },
+  "fehlercodes": {
+   "eyebrow": "Prilog",
+   "heading": "Kodovi pogrešaka",
+   "sub": "Sve `code` vrijednosti ovog API-ja. Svaki red ima sidro; adresa `type` u odgovoru s pogreškom pokazuje na njega."
+  },
+  "lokalisierung": {
+   "eyebrow": "Prilog",
+   "heading": "Lokalizacija",
+   "sub": "Jezik i valuta dolaze iz podataka. Oba polja mogu biti prazna; nijedno nema zadanu vrijednost.",
+   "waehrung": {
+    "titel": "Valuta",
+    "text": "Svaki iznos nosi kod `currency` prema ISO 4217. Nema zadane vrijednosti i nema pretvorbe.",
+    "merksatz": "Pri izradi rezervacije `currency` mora odgovarati valuti objekta. Kod odstupanja: 422 s kodom `currency_mismatch`."
+   },
+   "sprache": {
+    "titel": "Jezik",
+    "text": "`language` je dvoslovni kod prema ISO 639-1, primjerice `de`, `da`, `en`. Vrijednost dolazi iz rezervacije ili s portala i može biti prazna. Prazno znači nepoznato."
+   },
+   "texte": {
+    "titel": "Tekstovi API-ja",
+    "text": "Nazivi polja, `code` vrijednosti i enum vrijednosti na engleskom su i dio su ugovora. `detail` tekstovi u odgovoru s pogreškom namijenjeni su ljudima i mogu se promijeniti — prikažite vlastite poruke na temelju `code`."
+   }
+  },
+  "zeit": {
+   "eyebrow": "Prilog",
+   "heading": "Vremenske zone",
+   "sub": "Ovaj API koristi dvije vrste vremenskih podataka: kalendarske dane u vremenskoj zoni objekta i vremenske točke u UTC-u.",
+   "tage": {
+    "titel": "Kalendarski dani",
+    "text": "`check_in`, `check_out`, `date`, `from` i `to` kalendarski su dani u obliku `YYYY-MM-DD`, u vremenskoj zoni objekta. Ne nose vrijeme i ne pretvaraju se u UTC.",
+    "merksatz": "`check_out` je dan odjave; posljednja zauzeta noć je noć prije. Četiri noći znače četiri dana razlike između `check_in` i `check_out`."
+   },
+   "zeitpunkte": {
+    "titel": "Vremenske točke",
+    "text": "`created_at`, `updated_at`, `received_at`, `booked_at` i `cancelled_at` vremenske su točke prema ISO 8601 u UTC-u sa `Z` na kraju."
+   },
+   "quelle": {
+    "titel": "booked_at i received_at",
+    "text": "`booked_at` je vrijeme rezervacije kod gosta, kod rezervacija s portala iz izvora portala. `received_at` je primitak u ovom sustavu. Pri skupnom dohvatu mnoge rezervacije nose istu `received_at` sekundu.",
+    "merksatz": "Za „najnovije prvo“ koristite `booked_at`, a `null` tretirajte kao nepoznato. `received_at` odražava redoslijed dohvata, ne redoslijed rezervacija."
+   },
+   "filter": {
+    "titel": "Filtriranje po promjenama",
+    "text": "`updated_since` prima vremensku točku i vraća ono što se od tada promijenilo. Pozor pri URL kodiranju: `+` u adresi znači razmak — napišite `Z` ili kodirajte kao `%2B`."
+   }
+  }
+ },
  "meta": {
   "title": "myNextDays – platforma za iznajmljivače smještaja",
   "description": "Platforma za hotele, agencije i iznajmljivače apartmana: channel manager, kalendar, izravne rezervacije, komunikacija s gostima i obračun na jednom mjestu. Razvijeno u Danskoj, hostano u EU. Od 19,90 € mjesečno. 30 dana besplatno."

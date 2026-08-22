@@ -1287,6 +1287,47 @@ def test_move_zieht_genehmigten_sperrantrag_mit() -> None:
     assert antrag["end_date"] == "2026-07-05"
 
 
+def test_storno_entwertet_den_genehmigten_sperrantrag() -> None:
+    """Wurzel 1 — der Gegenzustand in der ANDEREN Richtung.
+
+    Der Weg Antrag → Storno war gebaut (`sperrantraege.zuruecknehmen` storniert
+    die Eigennutzung), der Weg Storno → Antrag fehlte: wurde die Buchung direkt
+    storniert, gab sie ihre Nächte frei, während der Antrag `approved` blieb.
+
+    Der Schaden zeigt sich erst später und sieht wie ein Systemfehler aus: der
+    EXCLUDE `block_requests_kein_ueberlapp` (0377) weist jeden NEUEN Antrag für
+    dieselben Tage mit 23P01 ab — der Eigentümer liest „überschneidet sich mit
+    einer genehmigten Sperre" für einen Zeitraum, der im Kalender frei ist.
+    """
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["reservations"][0].update({
+        "is_owner_stay": True, "block_request_id": "ba-1", "channel": "direct",
+    })
+    store["block_requests"] = [{
+        "id": "ba-1", "tenant_id": "t1", "property_id": "p1",
+        "start_date": "2026-07-01", "end_date": "2026-07-02",
+        "status": "approved",
+    }]
+    svc = _move_db(store)
+    svc.cancel(_CANCEL_CTX, RID, "Eigentümer kommt doch nicht",
+               partei=CancelParty.betrieb)
+    assert store["block_requests"][0]["status"] == "rejected"
+
+
+def test_storno_ohne_antragsbezug_laesst_antraege_unberuehrt() -> None:
+    """Gegenprobe: eine gewöhnliche Buchung fasst keinen Antrag an — auch nicht
+    einen fremden, der zufällig im selben Zeitraum liegt."""
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["block_requests"] = [{
+        "id": "ba-fremd", "tenant_id": "t1", "property_id": "p1",
+        "start_date": "2026-07-01", "end_date": "2026-07-02",
+        "status": "approved",
+    }]
+    svc = _move_db(store)
+    svc.cancel(_CANCEL_CTX, RID, "Gast hat abgesagt", partei=CancelParty.betrieb)
+    assert store["block_requests"][0]["status"] == "approved"
+
+
 def test_move_ohne_antragsbezug_laesst_antraege_unberuehrt() -> None:
     """Gegenprobe: eine gewöhnliche Buchung ohne block_request_id fasst keinen
     Antrag an — auch nicht einen fremden im selben Zeitraum."""

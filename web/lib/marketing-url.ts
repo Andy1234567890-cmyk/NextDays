@@ -39,5 +39,15 @@ export function hilfeUrl(pfad: string): string {
   return `${HILFE_URL}/${pfad.replace(/^\//, "")}`;
 }
 
+/**
+ * Entwickler-Dokumentation der öffentlichen API.
+ *
+ * Liegt in der Marketing-App (`/entwickler`) und nicht im Dashboard: sie ist
+ * für Entwickler gedacht, die noch keinen Zugang haben, und muss ohne Login
+ * lesbar sein. Die interaktive Referenz liegt noch einmal woanders — beim
+ * API-Dienst selbst (open-api.mynextdays.com/docs); die Seite hier verlinkt sie.
+ */
+export const ENTWICKLER_URL = `${MARKETING_BASIS}/entwickler`;
+
 /** Anker der Voranmeldung auf der Marketing-Startseite. */
 export const VORANMELDUNG_URL = `${MARKETING_BASIS}/#voranmeldung`;

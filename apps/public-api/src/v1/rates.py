@@ -27,7 +27,7 @@ from ..core import ari, errors
 from ..core.auth import ApiKontext, scope_erforderlich
 from ..core.db import service_db, zeile_im_mandanten
 from ..core.pagination import zeitraum_pruefen
-from .schemas import PreisErgebnis, PreisSetzen, RatePlan, TagesPreis
+from .schemas import PreisAntwort, PreisErgebnis, PreisSetzen, RatePlan, TagesPreis
 
 router = APIRouter(tags=["Preise"])
 
@@ -136,7 +136,11 @@ def plaene(
     return [_plan_aus_zeile(z) for z in zeilen]
 
 
-@router.get("/rates", summary="Tagespreise und Aufenthaltsregeln lesen")
+@router.get(
+    "/rates",
+    response_model=PreisAntwort,
+    summary="Tagespreise und Aufenthaltsregeln lesen",
+)
 def lesen(
     ctx: Annotated[ApiKontext, Depends(scope_erforderlich("rates:read"))],
     rate_plan_id: Annotated[str, Query(description="Rate-Plan, dessen Preise gelesen werden.")],

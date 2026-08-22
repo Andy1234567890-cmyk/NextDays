@@ -10,14 +10,14 @@
 //
 // EINE WAHRHEIT: Die Endpunktliste hier ist eine LESEHILFE, nicht die Quelle.
 // Die Quelle ist die OpenAPI-Datei, die der Service selbst ausliefert
-// (`https://api.mynextdays.dk/openapi.json`) — sie entsteht aus dem Code und
+// (`https://open-api.mynextdays.com/openapi.json`) — sie entsteht aus dem Code und
 // kann deshalb nicht veralten. Deshalb ist diese Seite bewusst eine ANLEITUNG
 // mit Verweis auf die interaktive Referenz und keine zweite, handgepflegte
 // Endpunktdokumentation. Wer einen Endpunkt ergänzt, prüft hier höchstens die
 // Gruppen-Übersicht; die Details holt sich der Leser aus dem Schema.
 
 /** Basis-Adresse der öffentlichen API. */
-export const API_BASIS = "https://api.mynextdays.dk";
+export const API_BASIS = "https://open-api.mynextdays.com";
 
 /** Die drei Adressen, die ein Entwickler zuerst braucht. */
 export const API_LINKS = {
@@ -32,117 +32,11 @@ export const API_LINKS = {
 /** Aktuelle Version im Pfad. */
 export const API_VERSION = "v1";
 
-export type EndpunktGruppe = {
-  /** Übersetzungsschlüssel für Titel und Beschreibung der Gruppe. */
-  key: string;
-  scopes: readonly string[];
-  endpunkte: readonly { methode: string; pfad: string; zweck: string }[];
-};
-
-/**
- * Gruppen-Übersicht. `zweck` ist absichtlich ein kurzer deutscher Halbsatz und
- * NICHT übersetzt: die Zeile daneben trägt Methode und Pfad, und wer eine API
- * anbindet, liest ohnehin die englische Referenz. Eine 24-fach übersetzte
- * Endpunkttabelle wäre 24-fach veraltet.
- */
-export const ENDPUNKT_GRUPPEN: readonly EndpunktGruppe[] = [
-  {
-    key: "auth",
-    scopes: [],
-    endpunkte: [
-      { methode: "POST", pfad: "/v1/oauth/token", zweck: "Access-Token holen" },
-      { methode: "GET", pfad: "/v1/me", zweck: "Scopes und Objekte dieses Zugangs" },
-    ],
-  },
-  {
-    key: "objekte",
-    scopes: ["properties:read", "properties:write"],
-    endpunkte: [
-      { methode: "GET", pfad: "/v1/properties", zweck: "Objekte auflisten" },
-      { methode: "GET", pfad: "/v1/properties/{id}", zweck: "Ein Objekt lesen" },
-      {
-        methode: "GET",
-        pfad: "/v1/properties/{id}/units",
-        zweck: "Einheiten des Typs",
-      },
-      { methode: "PATCH", pfad: "/v1/properties/{id}", zweck: "Objekt ändern" },
-    ],
-  },
-  {
-    key: "verfuegbarkeit",
-    scopes: ["availability:read", "availability:write"],
-    endpunkte: [
-      {
-        methode: "GET",
-        pfad: "/v1/availability",
-        zweck: "Freie Einheiten je Tag oder Zeitraum",
-      },
-      {
-        methode: "PUT",
-        pfad: "/v1/availability",
-        zweck: "Nächte sperren, freigeben, Verkauf stoppen",
-      },
-    ],
-  },
-  {
-    key: "preise",
-    scopes: ["rates:read", "rates:write"],
-    endpunkte: [
-      { methode: "GET", pfad: "/v1/rate-plans", zweck: "Rate-Pläne eines Objekts" },
-      {
-        methode: "GET",
-        pfad: "/v1/rates",
-        zweck: "Tagespreise und Aufenthaltsregeln lesen",
-      },
-      {
-        methode: "PUT",
-        pfad: "/v1/rates",
-        zweck: "Tagespreise und Regeln setzen",
-      },
-    ],
-  },
-  {
-    key: "buchungen",
-    scopes: ["reservations:read", "reservations:write"],
-    endpunkte: [
-      { methode: "GET", pfad: "/v1/reservations", zweck: "Buchungen auflisten" },
-      {
-        methode: "GET",
-        pfad: "/v1/reservations/{id}",
-        zweck: "Eine Buchung lesen",
-      },
-      { methode: "POST", pfad: "/v1/reservations", zweck: "Buchung anlegen" },
-    ],
-  },
-  {
-    key: "gaeste",
-    scopes: ["guests:read"],
-    endpunkte: [
-      { methode: "GET", pfad: "/v1/guests", zweck: "Gäste auflisten" },
-      { methode: "GET", pfad: "/v1/guests/{id}", zweck: "Einen Gast lesen" },
-    ],
-  },
-  {
-    key: "aufgaben",
-    scopes: ["tasks:read", "tasks:write"],
-    endpunkte: [
-      { methode: "GET", pfad: "/v1/tasks", zweck: "Aufgaben auflisten" },
-      { methode: "GET", pfad: "/v1/tasks/{id}", zweck: "Eine Aufgabe lesen" },
-      { methode: "POST", pfad: "/v1/tasks", zweck: "Aufgabe anlegen" },
-      { methode: "PATCH", pfad: "/v1/tasks/{id}", zweck: "Aufgabe ändern" },
-    ],
-  },
-  {
-    key: "webhooks",
-    scopes: ["webhooks:read", "webhooks:write"],
-    endpunkte: [
-      { methode: "GET", pfad: "/v1/webhooks/events", zweck: "Ereignis-Katalog" },
-      { methode: "GET", pfad: "/v1/webhooks", zweck: "Eigene Abos" },
-      { methode: "POST", pfad: "/v1/webhooks", zweck: "Abo anlegen" },
-      { methode: "DELETE", pfad: "/v1/webhooks/{id}", zweck: "Abo beenden" },
-    ],
-  },
-] as const;
+// Die handgeführte Endpunkt-Übersicht stand hier, bis die Referenz aus der
+// OpenAPI-Datei entstand (`lib/openapi.ts`). Sie war eine zweite Liste
+// derselben Sache — und die zweite Liste ist die, die veraltet: neue Endpunkte
+// erscheinen in der Spec sofort, in einer gepflegten Tabelle erst, wenn jemand
+// daran denkt. Wer die Gruppen braucht, liest sie über `gruppen()`.
 
 /**
  * Ereignis-Katalog. Deckungsgleich mit `EREIGNISSE` in
@@ -235,8 +129,27 @@ export const BEISPIEL_OBJEKTE_ANTWORT = `{
       "channels": { "marketplace": true, "website": false }
     }
   ],
-  "pagination": { "limit": 50, "offset": 0, "has_more": false }
+  "pagination": {
+    "limit": 50,
+    "offset": 0,
+    "has_more": true,
+    "next_starting_after": "8f14e45f-…"
+  }
 }`;
+
+/**
+ * Blättern mit Cursor — der empfohlene Weg. `next_starting_after` der Vorseite
+ * wird zum `starting_after` der nächsten Anfrage; fehlt das Feld, ist der
+ * Durchgang fertig.
+ */
+export const BEISPIEL_BLAETTERN = `# Erste Seite
+curl '${API_BASIS}/v1/reservations?limit=50' \\
+  -H 'Authorization: Bearer <access_token>'
+
+# Nächste Seite: die ID aus pagination.next_starting_after übernehmen
+curl '${API_BASIS}/v1/reservations?limit=50\\
+&starting_after=d41d8cd9-…' \\
+  -H 'Authorization: Bearer <access_token>'`;
 
 export const BEISPIEL_VERFUEGBARKEIT = `curl '${API_BASIS}/v1/availability\\
 ?property_id=8f14e45f-…&from=2026-09-01&to=2026-09-30' \\
@@ -283,7 +196,7 @@ export const BEISPIEL_BUCHUNG = `curl -X POST ${API_BASIS}/v1/reservations \\
   }'`;
 
 export const BEISPIEL_FEHLER = `{
-  "type": "https://developers.mynextdays.dk/errors/zeitraum_nicht_verfuegbar",
+  "type": "https://mynextdays.com/entwickler/fehlercodes#fehler-zeitraum-nicht-verfuegbar",
   "title": "Konflikt",
   "status": 409,
   "detail": "Der Zeitraum ist belegt, gesperrt oder vom Verkauf ausgenommen. Es wurde keine Buchung angelegt.",

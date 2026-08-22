@@ -1,4 +1,427 @@
 {
+ "entwickler": {
+  "meta": {
+   "titel": "API & Forbróirí — myNextDays",
+   "beschreibung": "REST-API phoiblí myNextDays: maoine, infhaighteacht, praghsanna, áirithintí, aíonna agus tascanna. OAuth2, OpenAPI 3.1, Webhooks le seachadtha sínithe."
+  },
+  "hero": {
+   "eyebrow": "API phoiblí",
+   "titel": "Tóg ar myNextDays",
+   "unterzeile": "REST-API amháin do mhaoine, infhaighteacht, praghsanna, áirithintí, aíonna agus tascanna. Tokens gearrshaolacha, cearta faoi leith ag gach rochtain, imeachtaí trí Webhook — agus scéimre a fhásann as an gcód agus nach féidir dá bharr sin dul as dáta.",
+   "basisLabel": "Bunseoladh",
+   "versionLabel": "Leagan",
+   "versionHinweis": "sa chonair",
+   "konsole": "Bain triail as",
+   "schema": "OpenAPI 3.1",
+   "referenz": "Léigh an tagairt"
+  },
+  "inhalt": {
+   "titel": "Ar an leathanach seo",
+   "schnellstart": "Céad chéimeanna",
+   "konzepte": "Samhail sonraí",
+   "konventionen": "Leathanú",
+   "endpunkte": "Críochphointí",
+   "webhooks": "Webhooks",
+   "grenzen": "Srianta",
+   "hilfe": "Tacaíocht",
+   "start": "Forbhreathnú",
+   "zugang": "Fíordheimhniú",
+   "fehler": "Earráidí",
+   "limits": "Teorainneacha rátaí",
+   "fehlercodes": "Cóid earráide",
+   "lokalisierung": "Logánú",
+   "zeit": "Criosanna ama"
+  },
+  "code": {
+   "kopieren": "Cóipeáil",
+   "kopiert": "Cóipeáilte",
+   "anfrage": "Iarratas",
+   "antwort": "Freagra",
+   "zustellung": "Seachadadh",
+   "pruefcode": "Seiceáil an síniú (Node)"
+  },
+  "schnellstart": {
+   "eyebrow": "Tosú tapa",
+   "heading": "Ón tús go dtí an chéad ghlaoch i gcúig nóiméad",
+   "sub": "Trí chéim. Ní ritheann ach an chéad cheann tríd an gcomhéadan — glaoch atá i ngach rud eile.",
+   "schritt1": {
+    "titel": "Rochtain a chruthú",
+    "text": "Cruthaigh rochtain sa deais agus socraigh ag an am céanna cad atá ceadaithe di: cearta de réir réimse agus, más mian leat, maoine áirithe amháin. Ní gá do rochtain don sceideal glanadóireachta teacht ar ioncam ar chor ar bith.",
+    "pfad": "Cuntas → Rochtain API",
+    "hinweis": "Taispeántar an `client_secret` uair amháin; ní stóráiltear ach a hais. Ní ghnóthaítear rún caillte, cuirtear ceann eile ina áit."
+   },
+   "schritt2": {
+    "titel": "Token a fháil",
+    "text": "Malartaigh an Client-ID agus an Secret ar Access-Token. Maireann sé uair an chloig agus iompraíonn sé cearta na rochtana go beacht.",
+    "hinweis": "Coinnigh an Token sa chuimhne agus ná malartaigh ceann nua go dtí go dtéann sé in éag nó go dtagann 401 — ní ag gach glaoch. Cuireann cúlghairm sa deais cosc láithreach ar Tokens nua."
+   },
+   "schritt3": {
+    "titel": "An chéad ghlaoch a dhéanamh",
+    "text": "Seol an Token mar `Authorization: Bearer …`. Freagraíonn gach liosta sa chlúdach céanna: `data` móide `pagination`.",
+    "hinweis": "Glaoigh ansin ar `GET /v1/me` — insíonn sé duit cé na cearta agus cé na maoine atá ag an rochtain seo, gan go gcaithfeadh tú é a fháil amach trí shraith earráidí 403."
+   }
+  },
+  "konzepte": {
+   "eyebrow": "Coincheapa",
+   "heading": "Ceithre rud ba cheart a bheith ar eolas agat roimh ré",
+   "sub": "Ceithre chinneadh a shocraíonn conas a fheidhmíonn an API. Téann siad in aghaidh na dtuairimí coitianta.",
+   "objekt": {
+    "titel": "Cineál aonaid atá i maoin",
+    "text": "Is cineál amháin go díreach atá i `property`: cineál seomra san óstán nó áit saoire. Faoi sin crochann a aonaid (`units`) — ceann amháin go díreach de ghnáth, cúig cheann i gcás cúig stiúideo mar an gcéanna. Is é an aonad a dhíoltar, is é an cineál a bhainistítear agus a phraghsáiltear.",
+    "folge": "Is UIMHIR (`units_available`) an infhaighteacht dá bharr, ní tá nó níl. Tá dhá mhaoin ag óstán a bhfuil 8 seomra Twin agus 4 sheomra Double aige — ceann le 8 aonad agus ceann le 4 aonad — agus ní maoin amháin le 12 seomra."
+   },
+   "waehrung": {
+    "titel": "Iompraíonn gach suim a hairgeadra féin",
+    "text": "Níl aon luach réamhshocraithe ann. Tá airgeadra ag gach maoin, agus ainmníonn gach suim i bhfreagra é.",
+    "folge": "Mura bhfuil airgeadra ag maoin, is earráid sonraí é sin agus teipeann an glaoch le 422 — ní chuirtear “EUR” isteach ina ionad. Nuair a bhíonn tú ag áirithint, caithfidh d'airgeadra teacht le airgeadra na maoine."
+   },
+   "zeit": {
+    "titel": "Dhá phointe ama éagsúla",
+    "text": "Is é `booked_at` an tráth a rinne an t-aoi an áirithint — as foinse an phortáil, `null` mura soláthraíonn an portál é. Is é `received_at` an tráth a tháinig sí isteach sa chóras seo.",
+    "folge": "Sórtáil “na cinn is nuaí ar dtús” de réir `booked_at`, ní de réir `received_at`: le hiompórtáil chnuasaithe iompraíonn na scórtha áirithintí an soicind céanna. Is UTC na stampaí ama, is laethanta féilire i gcrios ama na maoine na réimsí dáta."
+   },
+   "kanaele": {
+    "titel": "Baineann an infheictheacht le gach cainéal ar leith",
+    "text": "Níl aon “foilsithe” domhanda ann. Bíonn maoin infheicthe ar an margadh, ar a suíomh gréasáin féin, trí na tairseacha — gach ceann acu inathraithe ar leithligh.",
+    "folge": "Ní féidir maoin a dhíol ach nuair a thagann trí rud le chéile: `status = active`, an cainéal casta air, agus aonaid saor ar fáil. Oibríonn stopadh díolachán, ina choinne sin, thar GACH cainéal."
+   }
+  },
+  "konventionen": {
+   "eyebrow": "Coinbhinsiúin",
+   "heading": "Leathanú, earráidí, teorainneacha, idempoteacht",
+   "sub": "Na ceithre phointe atá difriúil i ngach API — le figiúirí seo in ionad prós.",
+   "tabelle": {
+    "feld": "Réimse",
+    "bedeutung": "Brí",
+    "code": "Cód",
+    "status": "Stádas"
+   },
+   "blaettern": {
+    "titel": "Leathanú",
+    "text": "Freagraíonn gach liosta le `data` agus `pagination`. Déantar an leathanú le **cúrsóir**: seolann tú `id` an mhíre dheireanaigh den leathanach roimhe sin mar `starting_after`. Mura bhfuil `next_starting_after` sa fhreagra, tá an rith críochnaithe.",
+    "felder": {
+     "starting_after": "`id` an mhíre dheireanaigh den leathanach roimhe sin. An bealach a mholtar — seasmhach, fiú má athraíonn an liosta idir dhá leathanach. Tugann `id` anaithnid nó scriosta 422, ní leathanach folamh.",
+     "next_starting_after": "Tá sé i `pagination` fad is atá tuilleadh ann: an luach do do chéad `starting_after` eile. Mura bhfuil sé ann, tá tú ag an deireadh.",
+     "limit": "Línte in aghaidh an leathanaigh. Réamhshocrú 50, uasluach 200 — tugann luach níos mó 422, ní leathanach giorraithe.",
+     "offset": "Líne a léimtear thairsti — le haghaidh spléachadh aon uaire ar leathanach áirithe. In éineacht le `starting_after` tugann sé 422: níl brí gan bhréagnú ag dhá shonrú suímh in aon iarratas amháin.",
+     "include_total": "Soláthraíonn `true` `total` freisin. Ná iarr é ach nuair a thaispeánann tú an uimhir.",
+     "has_more": "Tá sé i ngach freagra agus insíonn sé an bhfuil leathanach eile ann — gan buille faoi thuairim, gan babhta breise."
+    },
+    "warumCursor": "Cén fáth nach `offset` go simplí: cuireann sé síos ar SHUÍOMH sa liosta. Má chuirtear áirithint leis idir leathanach 1 agus leathanach 2, bogann gach rud aon áit amháin — léimeann `offset=50` thar líne ansin, agus le scriosadh tagann líne faoi dhó. Ina dhiaidh sin tá áirithint ar iarraidh i do bhunachar sonraí, agus ní nochtann aon rud sa fhreagra é. Ainmníonn an cúrsóir an taifead deireanach a chonaic tú, agus mar sin ní féidir leis sleamhnú."
+   },
+   "fehler": {
+    "titel": "Earráidí",
+    "text": "Tagann gach earráid mar `application/problem+json` (RFC 9457) le `code` seasmhach, le `request_id` agus — san áit a gcabhraíonn sé — leis na réimsí a mhíníonn an earráid. Brainseáil ar `code`, ná brainseáil ar an téacs: tá cead ag an téacs athrú, níl cead ag an gcód.",
+    "codes": {
+     "nichtAuthentifiziert": "Token ar iarraidh, in éag nó neamhbhailí.",
+     "ungueltigeZugangsdaten": "Client-ID nó Secret mícheart, nó tá an rochtain cúlghairmthe.",
+     "scopeFehlt": "Token bailí, ach níl an ceart riachtanach ag an rochtain seo. Tá an Scope atá in easnamh luaite san earráid.",
+     "objektNichtErlaubt": "Tá an rochtain teoranta do mhaoine áirithe; níl an ceann seo ina measc.",
+     "nichtGefunden": "Níl ann nó baineann le gnólacht eile — freagraíonn an dá chás ar an gcaoi chéanna.",
+     "zeitraumNichtVerfuegbar": "Áirithithe, faoi ghlas nó eisiata ón díol. Níor cruthaíodh leatháirithint.",
+     "idempotenzInArbeit": "Tá glaoch leis an Idempotency-Key seo ar siúl fós. Fan tamall gearr, ansin bain triail eile as.",
+     "aboBestehtBereits": "Tá síntiús Webhook gníomhach ag an rochtain seo don seoladh sin cheana féin.",
+     "waehrungFehlt": "Níl aon airgeadra sannta don mhaoin, don phlean rátaí ná don áirithint — earráid sonraí.",
+     "ungueltigeAnfrage": "Ceart ó thaobh foirme, ach neamh-inchomhlíonta ó thaobh ábhair. Tá an chúis i `detail`.",
+     "validierungFehlgeschlagen": "Ní réitíonn an iarratas leis an scéimre. Ainmníonn `felder` cén réimse atá i gceist.",
+     "zuVieleAnfragen": "Rate-Limit sroichte. Insíonn `Retry-After` cathain a leanann sé ar aghaidh.",
+     "nichtKonfiguriert": "Ní féidir leis an tseirbhís an iarratas a phróiseáil go sábháilte. Gan leanúint ar aghaidh gan seiceáil."
+    }
+   },
+   "limits": {
+    "titel": "Rate-Limits",
+    "text": "Cuirtear an teorainn de réir ROCHTANA, ní de réir seolta IP: bíonn gníomhaireacht a thugann aire do fiche gnó taobh thiar d'aon seoladh amháin agus níor cheart di stop a chur léi féin. Trí bhuicéad ar leith, ionas nach gcuireann sioncronú féilire bac ar shocrú praghsanna.",
+    "eimer": {
+     "token": "Malartú Token. Dian, mar go seiceáiltear dintiúir rochtana anseo.",
+     "write": "Glaonna scríofa — cuireann siad isteach ar an díol.",
+     "read": "Glaonna léite: gnáthobair laethúil comhtháthaithe."
+    },
+    "header": "Iompraíonn gach freagra an staid reatha leis, an ceann rathúil freisin — ionas gur féidir leat do luas a chur in oiriúint sula rithfidh tú isteach sa 429:"
+   },
+   "idempotenz": {
+    "titel": "Idempoteacht",
+    "text": "Nuair a chruthaítear áirithint, tá an ceanntásc `Idempotency-Key` éigeantach. Roghnaigh luach uathúil in aghaidh gach oibríochta (UUID, mar shampla) agus athdhéan é má sheolann tú an glaoch céanna arís. Gan an chosaint seo cruthaíonn briseadh líonra le hathdhéanamh dhá áirithint — agus cuireann an dara ceann oícheanta faoi ghlas nár ordaigh aon duine.",
+    "faelle": {
+     "wiederholung": "An eochair chéanna, an t-ualach céanna → tagann an chéad fhreagra ar ais focal ar fhocal, leis an gceanntásc `Idempotency-Replayed: true`.",
+     "abweichend": "An eochair chéanna, ualach EILE → 422. Teastaíonn eochair nua le haghaidh oibríochta nua.",
+     "laufend": "An eochair chéanna, an chéad ghlaoch ar siúl fós → 409. Fan tamall gearr, ansin bain triail eile as; ná lean leis le heochair nua."
+    }
+   }
+  },
+  "webhooks": {
+   "eyebrow": "Webhooks",
+   "heading": "Imeachtaí in ionad fiafraí",
+   "sub": "Síntiús amháin in aghaidh gach seolta, seachadtha sínithe, athdhéanamh le spás atá ag fás. Cruthaítear imeachtaí ag GACH athrú — fiú nuair a thagann sé trí thairseach nó tríd an deais, ní tríd an API seo.",
+   "tabelle": {
+    "ereignis": "Imeacht",
+    "wann": "Cathain a lasann sé"
+   },
+   "ereignisse": {
+    "reservationCreated": "Cruthaíodh áirithint — cibé cainéal a bhí i gceist.",
+    "reservationUpdated": "D'athraigh áirithint atá ann cheana.",
+    "reservationCancelled": "Cuireadh áirithint ar ceal. Imeacht dá chuid féin, mar go gcaithfear freagairt dó ar bhealach eile ná d'athrú.",
+    "availabilityChanged": "D'athraigh féilire maoine (áirithint, glas, scaoileadh).",
+    "rateChanged": "D'athraigh praghas laethúil nó riail fanachta.",
+    "taskCreated": "Cruthaíodh tasc.",
+    "taskCompleted": "Cuireadh tasc i gcrích."
+   },
+   "anlegen": {
+    "titel": "Síntiús a chruthú",
+    "text": "Seoladh `https` agus na himeachtaí atá uait. Roghnach do mhaoine áirithe amháin. Diúltaítear do sheoltaí inmheánacha — ritheann an tseiceáil nuair a chruthaítear é AGUS roimh gach seachadadh aonair.",
+    "secret": "Tá an Secret sínithe san fhreagra aon uair amháin. Sábháil anois é — ní sheachadfar arís é choíche."
+   },
+   "nutzlast": {
+    "titel": "Cad a shroicheann tú",
+    "text": "Coinnithe caol: IDanna agus na réimsí a chuireann síos ar an athrú. Faigheann tú an taifead iomlán trí an API más gá — mar sin ní sheachadtar aon rud ar fhaighteoir nach mbeadh cead aige a fheiceáil a thuilleadh."
+   },
+   "signatur": {
+    "titel": "An síniú a sheiceáil",
+    "text": "Iompraíonn gach seachadadh ceanntásc le stampa ama agus HMAC-SHA256 thar `ZEITSTEMPEL.BODY`, ríofa le Secret do shíntiúis. Ós rud é go bhfuil an stampa ama sínithe leis, aithníonn tú seachadadh a taifeadadh agus a athimríodh níos déanaí — le síniú thar an gcorp amháin níl sin indéanta.",
+    "schritte": {
+     "roh": "Tóg CORP AMH an iarratais, ní an réad parsáilte agus srathaithe as an nua — tugann sraith beart eile síniú eile. Sin an chúis is coitianta le “níl an síniú ag teacht”.",
+     "alter": "Seiceáil an aois de réir an stampa ama; is luach maith cúig nóiméad lamháltais.",
+     "vergleich": "Déan an chomparáid go ham-tairiseach (`timingSafeEqual`, `hmac.compare_digest`). Fágann gnáth-`==` an síniú intuartha."
+    }
+   },
+   "verhalten": {
+    "wiederholung": {
+     "titel": "Athdhéanamh",
+     "text": "Mura bhfreagraíonn do sheoladh le 2xx, seachadfar arís é suas le deich n-uaire — le spás atá ag fás ó nóiméad amháin suas go huair an chloig. Freagair go tapa agus próiseáil ina dhiaidh sin; measfar faighteoir mall mar earráid."
+    },
+    "reihenfolge": {
+     "titel": "Ord",
+     "text": "Níl sé faoi ráthaíocht. Úsáid `created_at` an imeachta le nach scríobhfaidh tú seachadadh níos sine thar cheann níos nuaí."
+    },
+    "doppelt": {
+     "titel": "Seachadadh dúbailte",
+     "text": "Níl sé dóchúil, ach tá sé indéanta — caith le `id` an imeachta mar eochair agus próiseáil gach ceann aon uair amháin. Baineann an gealltanas seo le gach soláthraí Webhook, ní leis an gceann seo amháin."
+    },
+    "nachholen": {
+     "titel": "Teacht suas i ndiaidh teip",
+     "text": "Má bhí d'fhreastalaithe as líne, faigheann tú ar ais na himeachtaí a cailleadh trí `GET /v1/events?since=…` — na cinn is sine ar dtús, leis na `id` céanna a bhí ag an seachadadh, suas le 30 lá siar ar a mhéad. Ní ráthaíocht seachadta é push amháin: stopfaidh na hathdhéanaimh am éigin, agus gan an chéim seo beidh na himeachtaí sin in easnamh ort go díreach, na cinn nár chuala tú riamh fúthu."
+    }
+   }
+  },
+  "grenzen": {
+   "eyebrow": "Teorainneacha",
+   "heading": "Srianta",
+   "sub": "Níl dhá oibríocht indéanta tríd an API seo. Leanann an dá cheann as an múnla sonraí. Is féidir cealú, aistriú agus ríomh praghsanna a dhéanamh.",
+   "stattdessen": "Ina ionad sin:",
+   "gaeste": {
+    "titel": "Aíonna a chruthú agus a athrú",
+    "text": "Tagann sonraí an aoi chun cinn nuair a chuireann an aoi isteach iad nó tríd an bportál. Bheadh conair scríofa anseo mar thríú foinse don duine céanna.",
+    "ausweg": "Seol sonraí an aoi in éineacht leis nuair a chruthaítear áirithint — aithnítear aíonna atá ann cheana ar an seoladh ríomhphoist. Is féidir réimsí teagmhála áirithinte atá ann cheana a chothabháil trí `PATCH /v1/reservations/'{'id}`."
+   },
+   "nachrichten": {
+    "titel": "Comhrá a oscailt",
+    "text": "Is féidir teachtaireachtaí a léamh agus scríobh i gcomhrá atá ann cheana (`/v1/reservations/'{'id}/messages`). Ní féidir comhrá nua a chruthú: baineann snáithe comhrá le cuntas aoi ar an margadh i gcónaí, agus ní cuntas den sórt sin é rochtain API gnólachta.",
+    "ausweg": "Tosaíonn an comhrá le chéad teachtaireacht an aoi nó tríd an deais; ina dhiaidh sin is féidir leis an API scríobh isteach ann."
+   },
+   "finanzen": {
+    "titel": "Íocaíocht a bhailiú",
+    "text": "Is féidir íocaíochtaí agus iarratais íocaíochta sceidealta a léamh (`/v1/reservations/'{'id}/payments`) chomh maith leis an bplean íocaíochta agus an scála cealaithe (`/v1/properties/'{'id}/booking-conditions`). Téann an bailiú trí phróiseas áirithinte an aoi le hintinní íocaíochta, ní trí nasc a sheoltar amach.",
+    "ausweg": "Cruthaítear iarratais íocaíochta sa deais; léann an API a stádas agus na himeachtaí a bhaineann leo."
+   }
+  },
+  "hilfe": {
+   "eyebrow": "Cabhair",
+   "heading": "Ceisteanna, athruithe, uirlisí",
+   "sub": "Cá dtéann ceist, agus cad ar a bhféadfaidh tú seasamh nuair a bhíonn tú ag tógáil.",
+   "wege": {
+    "titel": "Mura n-oibríonn rud éigin",
+    "entwicklerMail": {
+     "titel": "Teagmháil theicniúil",
+     "text": "Seol an `request_id` ón bhfreagra earráide leis — leis sin is féidir an glaoch a aimsiú inár logaí."
+    },
+    "hilfeCenter": {
+     "titel": "Ionad Cabhrach",
+     "text": "Treoracha faoin táirge: maoine a chruthú, tairseacha a cheangal, praghsanna a chothabháil."
+    },
+    "schema": {
+     "titel": "Client a ghiniúint",
+     "text": "Feidhmíonn an comhad OpenAPI mar ionchur do na gnáthghineadóirí — níl gá le Client lámhscríofa."
+    }
+   },
+   "versionen": {
+    "titel": "Leaganú",
+    "text": "Is gealltanas atá in API. Baineann na ceithre phointe seo le v1:",
+    "zusagen": {
+     "pfad": "Tá an leagan sa chonair. Faigheann athrú briste `/v2`; leanann `/v1` ar aghaidh taobh leis.",
+     "additiv": "Laistigh de v1 ní chuirtear ach réimsí leis. Ní athainmnítear réimsí atá ann cheana agus ní athraíonn a mbrí.",
+     "frist": "Má chuirtear leagan ar ceal, ainmnímid dáta le fógra dhá mhí dhéag ar a laghad agus déanaimid teagmháil le gach gnó a bhfuil rochtain ghníomhach aige.",
+     "changelog": "Tá na hathruithe sa chomhad OpenAPI agus ar an leathanach seo. Níl aon athrú ciúin ar réimse."
+    }
+   }
+  },
+  "kopf": {
+   "hilfe": "Ionad Cabhrach",
+   "zurueck": "Chuig an suíomh gréasáin"
+  },
+  "sidebar": {
+   "sprung": "Léim chuig …",
+   "keineTreffer": "Níl aon chríochphointe ná aon chaibidil ag teacht leis sin.",
+   "leitfaden": "Treoir",
+   "referenz": "Tagairt API",
+   "tocTitel": "Ar an leathanach seo",
+   "version": "myNextDays API poiblí v1"
+  },
+  "referenz": {
+   "scope": "Ceart riachtanach:",
+   "pfadParameter": "Paraiméadair chosáin",
+   "queryParameter": "Paraiméadair cheiste",
+   "headerParameter": "Ceanntásca",
+   "koerper": "Corp an iarratais",
+   "antworten": "Freagraí",
+   "erlaubt": "Ceadaithe:",
+   "pflicht": "riachtanach",
+   "standard": "Réamhshocrú",
+   "sprache": "Teanga",
+   "zugang": "Rochtain",
+   "tokenHinweis": "Sa bhrabhsálaí seo amháin, le haghaidh “Bain triail as” amháin — ní shábháiltear an luach agus ní sheoltar chugainn é.",
+   "ausprobieren": "Bain triail as",
+   "laeuft": "Ar siúl …",
+   "anfrage": "Iarratas",
+   "antwort": "Freagra",
+   "beispiel": "Sampla",
+   "kopieren": "Cóipeáil",
+   "kopiert": "Cóipeáilte",
+   "fehlerNetz": "Níor shroich an iarratas an tseirbhís. Na cúiseanna is coitianta: níl an tseirbhís ag freagairt faoi láthair, nó chuir an brabhsálaí deireadh leis an iarratas de bharr cead CORS a bheith in easnamh. Taispeánann an glao céanna trí curl as an réimse cóid a ndeir an tseirbhís i ndáiríre.",
+   "keinToken": "Gan token freagraíonn an glao le 401 — sin an bealach a bhfuil súil leis."
+  },
+  "start": {
+   "eyebrow": "API poiblí",
+   "titel": "Forbair le myNextDays",
+   "unterzeile": "API REST le haghaidh maoine, infhaighteachta, praghsanna, áirithintí, aíonna agus tascanna — léamh agus scríobh, le cealú, aistriú agus réamhamharc praghais. Míníonn an treoir na rialacha, tá gach críochphointe sa tagairt le gach paraiméadar agus réimse chun triail a bhaint as.",
+   "basisLabel": "Bunseoladh",
+   "versionLabel": "Leagan",
+   "versionHinweis": "sa chosán",
+   "schemaTitel": "Scéimre",
+   "schemaText": "OpenAPI 3.1, cruthaithe as an gcód. Oireann sé mar ionchur do na gineadóirí cliaint coitianta.",
+   "woAnfangen": "Cá dtosú",
+   "erstLesen": "Léigh ar dtús",
+   "dannBauen": "Tóg ansin"
+  },
+  "bereiche": {
+   "leitfaden": "Doiciméadú",
+   "referenz": "Tagairt API"
+  },
+  "gruppen": {
+   "ueberblick": "Buneolas",
+   "anhang": "Aguisín"
+  },
+  "weiter": {
+   "naechste": "An chéad leathanach eile",
+   "zurReferenz": "Ar aghaidh chuig an tagairt API"
+  },
+  "referenzUebersicht": {
+   "eyebrow": "Tagairt API",
+   "titel": "Gach críochphointe",
+   "sub": "Tá leathanach dá chuid féin ag gach críochphointe, le gach paraiméadar, corp an iarratais, na freagraí agus réimse ina féidir leat triail a bhaint as an nglao láithreach."
+  },
+  "zugang": {
+   "eyebrow": "Fíordheimhniú",
+   "heading": "Fíordheimhniú",
+   "sub": "OAuth 2.0 le `client_credentials`. Baineann rochtain le gnólacht amháin go beacht; níl aon eochair a chlúdaíonn níos mó ná gnólacht amháin.",
+   "ablauf": {
+    "titel": "Sreabhadh",
+    "text": "Is é `client_credentials` an bealach do ríomhchláir a ghníomhaíonn dóibh féin. Níl dialóg toilithe ná comhartha athnuachana ann.",
+    "schritte": {
+     "anlegen": "Cruthaigh rochtain sa deais: Cuntas → Rochtain API. Taispeántar `client_secret` uair amháin agus ní féidir é a fháil arís ina dhiaidh sin.",
+     "tauschen": "`POST /v1/oauth/token` le `client_id` agus `client_secret`. Sa fhreagra tá `access_token`, `expires_in` (3600) agus na cearta a deonaíodh.",
+     "senden": "Seol an comhartha le gach glao mar `Authorization: Bearer ACCESS_TOKEN`. Tar éis dó dul in éag, freagraíonn an API le 401 agus an cód `token_expired`."
+    },
+    "merksatz": "Coinnigh an comhartha sa chuimhne, ná faigh ceann nua le gach glao. Buaileann malartú in aghaidh gach iarratais teorainn ráta an chríochphointe comharthaí (10/nóiméad)."
+   },
+   "rechte": {
+    "titel": "Cearta",
+    "text": "Tá cearta san fhoirm `bereich:richtung`, mar shampla `reservations:read` nó `rates:write`. Má tá ceart in easnamh, freagraíonn an críochphointe le 403 agus an cód `insufficient_scope`.",
+    "merksatz": "Ná deonaigh ach na cearta a bhfuil gá leo don chomhtháthú. Ansin ní féidir le eochair chaillte aon rud a fhorscríobh nár cheart di a léamh riamh."
+   },
+   "objekte": {
+    "titel": "Srian ar mhaoine",
+    "text": "Is féidir rochtain a shrianadh ar mhaoine ar leith. I liostaí ní fheiceann sí ach na maoine sin; freagraíonn glao le ID maoine eile le 403 agus an cód `objekt_nicht_erlaubt`."
+   },
+   "selbstauskunft": {
+    "titel": "Cearta a sheiceáil",
+    "text": "Tugann `GET /v1/me` an gnólacht, na cearta agus srian maoine an chomhartha — an chéad ghlao agus comhtháthú á chur ar bun."
+   }
+  },
+  "fehler": {
+   "eyebrow": "Earráidí",
+   "heading": "Cuma na hearráidí",
+   "sub": "Is cód stádais HTTP gach earráid mar aon le corp de réir RFC 9457 (`application/problem+json`). Ní thagann earráid ar bith le stádas 200.",
+   "aufbau": {
+    "titel": "Struchtúr",
+    "text": "Is `code` ainm seasmhach, meaisín-inléite na hearráide. Is téacs do dhaoine `detail` agus is féidir go n-athróidh sé am ar bith.",
+    "felder": {
+     "type": "Seoladh an chur síos ar an gcineál earráide seo — liosta na gcód earráide san aguisín.",
+     "title": "Ainm gearr an chineáil earráide.",
+     "status": "An cód stádais HTTP.",
+     "detail": "Cur síos do dhaoine.",
+     "code": "Ainm seasmhach na hearráide. Bain leas as an réimse seo.",
+     "request_id": "Aitheantóir an iarratais. Seol é le ceist tacaíochta."
+    },
+    "merksatz": "Déan brainseáil ar `code`, ní ar `detail`. Ní comhéadan an téacs."
+   },
+   "klassen": {
+    "titel": "Aicmí stádais",
+    "vier": "4xx — is é an iarratas an fhadhb: ceart in easnamh, ID anaithnid, luach neamhbhailí, tréimhse in úsáid. Ní athraíonn atriail aon rud.",
+    "fuenf": "5xx — earráid ar thaobh an fhreastalaí. Bain triail eile as le moill mhéadaitheach.",
+    "neun": "429 — teorainn ráta sroichte. Tugann `Retry-After` an aga feithimh i soicindí."
+   }
+  },
+  "limits": {
+   "eyebrow": "Teorainneacha rátaí",
+   "heading": "Cé mhéad glao atá ceadaithe",
+   "sub": "Cuirtear teorainn de réir rochtana, ní de réir IP. Tá trí bhuicéad ann le luachanna dá gcuid féin don léamh, don scríobh agus d'eisiúint comharthaí."
+  },
+  "fehlercodes": {
+   "eyebrow": "Aguisín",
+   "heading": "Cóid earráide",
+   "sub": "Gach luach `code` san API seo. Tá ancaire ag gach líne; tagraíonn seoladh `type` i bhfreagra earráide dó."
+  },
+  "lokalisierung": {
+   "eyebrow": "Aguisín",
+   "heading": "Logánú",
+   "sub": "Tagann an teanga agus an t-airgeadra as na sonraí. Is féidir leis an dá réimse a bheith folamh; níl luach réamhshocraithe ag ceachtar acu.",
+   "waehrung": {
+    "titel": "Airgeadra",
+    "text": "Tá cód `currency` de réir ISO 4217 ag gach suim. Níl luach réamhshocraithe ná comhshó ann.",
+    "merksatz": "Nuair a chruthaítear áirithint, caithfidh `currency` teacht le hairgeadra na maoine. Má tá difríocht: 422 leis an gcód `currency_mismatch`."
+   },
+   "sprache": {
+    "titel": "Teanga",
+    "text": "Is cód dhá litir de réir ISO 639-1 é `language`, mar shampla `de`, `da`, `en`. Tagann an luach as an áirithint nó ón bportál agus is féidir go bhfuil sé folamh. Ciallaíonn folamh anaithnid."
+   },
+   "texte": {
+    "titel": "Téacsanna an API",
+    "text": "Tá ainmneacha réimsí, luachanna `code` agus luachanna enum i mBéarla agus is cuid den chonradh iad. Tá téacsanna `detail` i bhfreagra earráide dírithe ar dhaoine agus is féidir go n-athróidh siad — taispeáin do theachtaireachtaí féin bunaithe ar `code`."
+   }
+  },
+  "zeit": {
+   "eyebrow": "Aguisín",
+   "heading": "Criosanna ama",
+   "sub": "Úsáideann an API seo dhá chineál sonraí ama: laethanta féilire i gcrios ama na maoine agus pointí ama in UTC.",
+   "tage": {
+    "titel": "Laethanta féilire",
+    "text": "Is laethanta féilire iad `check_in`, `check_out`, `date`, `from` agus `to` san fhormáid `YYYY-MM-DD`, i gcrios ama na maoine. Níl am an lae orthu agus ní thiontaítear go UTC iad.",
+    "merksatz": "Is é `check_out` lá an imeachta; is í an oíche roimhe an oíche dheireanach in úsáid. Ciallaíonn ceithre oíche ceithre lá idir `check_in` agus `check_out`."
+   },
+   "zeitpunkte": {
+    "titel": "Pointí ama",
+    "text": "Is pointí ama iad `created_at`, `updated_at`, `received_at`, `booked_at` agus `cancelled_at` de réir ISO 8601 in UTC le `Z` ag an deireadh."
+   },
+   "quelle": {
+    "titel": "booked_at agus received_at",
+    "text": "Is é `booked_at` an tráth a rinne an t-aoi an áirithint, agus i gcás áirithintí portáil as foinse an phortáil. Is é `received_at` an tráth a tháinig sí isteach sa chóras seo. Le tarraingt bhaisce, bíonn an soicind `received_at` céanna ar go leor áirithintí.",
+    "merksatz": "Le haghaidh “na cinn is nuaí ar dtús” bain úsáid as `booked_at` agus caith le `null` mar anaithnid. Léiríonn `received_at` ord na tarraingthe, ní ord na n-áirithintí."
+   },
+   "filter": {
+    "titel": "Scagadh de réir athruithe",
+    "text": "Glacann `updated_since` pointe ama agus tugann ar ais an rud a athraigh ó shin. Aire le hionchódú URL: ciallaíonn `+` spás i seoladh — scríobh `Z` nó ionchódaigh mar `%2B`."
+   }
+  }
+ },
  "meta": {
   "title": "myNextDays – An t-ardán d'óstaigh cíosanna saoire",
   "description": "An t-ardán d'óstáin, do ghníomhaireachtaí agus d'óstaigh cíosanna saoire: channel manager, féilire, áirithintí díreacha, teachtaireachtaí aíonna agus cuntasaíocht in aon áit amháin. Tógtha sa Danmhairg, óstáilte san AE. Ó €19,90 sa mhí. Saor in aisce ar feadh 30 lá."

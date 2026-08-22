@@ -762,7 +762,7 @@ Die drei, die eine Partner-API wirklich treffen:
 
 | Baustein | Unsere Entscheidung | Vorbild / Beleg |
 | --- | --- | --- |
-| Trennung | eigener Dienst, eigene Domain `api.mynextdays.dk`, eigene Spec | Guesty, Apaleo, Mews, Booking (6/8 der Branche) |
+| Trennung | eigener Dienst, eigene Domain `open-api.mynextdays.com`, eigene Spec | Guesty, Apaleo, Mews, Booking (6/8 der Branche) |
 | Auth | OAuth2 client_credentials → JWT 1 h, `resource:action`-Scopes, `test`-Claim | Booking (TTL + Test-Claim), Apaleo (Scopes) |
 | Token-Limit | eigener strenger Eimer auf `/oauth/token` | Booking 30/h, Guesty 5/24 h |
 | Fehler | **RFC 9457** `application/problem+json` + `request_id` + `errors[]` | RFC 9457; besser als alle 8 Wettbewerber |

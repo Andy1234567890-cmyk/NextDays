@@ -6825,7 +6825,12 @@
     "needScope": "Odaberite barem jednu ovlast.",
     "docsHint": "Kako se prijaviti s ovim podacima, piše u dokumentaciji API-ja.",
     "loadErr": "Učitavanje nije uspjelo.",
-    "noAccess": "Nema pristupa"
+    "noAccess": "Nema pristupa",
+    "scopeRates": "Cijene",
+    "scopeGuests": "Gosti",
+    "scopeTasks": "Zadaci",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "API dokumentacija"
   },
   "supportChat": {
     "titel": "Pomoć i podrška",

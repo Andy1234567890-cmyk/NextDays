@@ -88,24 +88,85 @@ def _die(msg: str) -> None:
     sys.exit(1)
 
 
+def _tier_upper(tier: dict) -> float:
+    """Obergrenze einer Stripe-Stufe als Zahl. `up_to: "inf"` = letzte Stufe."""
+    up_to = tier["up_to"]
+    return float("inf") if up_to in ("inf", float("inf")) else float(up_to)
+
+
+def _graduated_cost(objects: int) -> int:
+    """Monatsbetrag (Cent) fuer `objects` Objekte — gerechnet AUS `GRADUATED_TIERS`.
+
+    Stripe-Semantik `tiers_mode=graduated`: die Stufen werden der Reihe nach
+    gefuellt, `up_to` ist die kumulative Obergrenze der Stufe. In jeder Stufe
+    fallen `flat_amount` (pauschal, sobald die Stufe ueberhaupt erreicht ist)
+    und `unit_amount` je Einheit IN dieser Stufe an.
+
+    Bewusst KEINE zweite Kopie der Betraege hier (Wurzel 4): waere die Staffel
+    hier erneut hardcodiert, pruefte die Assertion eine Kopie gegen die
+    Referenz — nicht die Konfiguration, die wirklich nach Stripe geht.
+    """
+    total = 0
+    lower = 0.0  # bereits von vorherigen Stufen abgedeckte Einheiten
+    for tier in GRADUATED_TIERS:
+        if objects <= lower:
+            break
+        upper = _tier_upper(tier)
+        in_tier = min(float(objects), upper) - lower
+        total += int(tier.get("flat_amount") or 0)
+        total += int(in_tier) * int(tier.get("unit_amount") or 0)
+        lower = upper
+    return total
+
+
+# Soll-Betraege der Modul-Preise in Cent. Referenz: PLAN-stripe-preisliste.md
+# Zeile 94-97 (Tabelle "Zusatzmodule", Abschnitt 3 der Preisliste):
+#   Z. 94  Modul 3 Buchhaltung   30,00 EUR/Monat                 -> 3000
+#   Z. 95  Modul 4 Mitarbeiter   19,90 EUR/Monat ODER 2,50/Nutzer -> 1990 / 250
+#   Z. 97  Modul 6 Hotel        600,00 EUR/Monat ODER 1,50/Zimmer -> 60000 / 150
+# Modul 5 (Jobmarkt, 2 % vom Umsatz, Z. 96) hat bewusst KEINEN Stripe-Preis.
+EXPECTED_FIXED_AMOUNTS = {
+    "modul3_flat": 3000,
+    "modul4_flat": 1990,
+    "modul4_per_seat": 250,
+    "modul6_flat": 60000,
+    "modul6_per_room": 150,
+}
+
+
 def _assert_pdf_math() -> None:
-    """Rechnet die Staffel gegen die PDF-Beispiele (Abschnitt 4). Bricht ab,
-    wenn die Tiers nicht exakt stimmen — bevor irgendetwas in Stripe entsteht."""
-    def cost(objects: int) -> int:
-        total = 1990  # Tier 1 flat, das erste Objekt ist darin enthalten
-        for lo, hi, unit in ((1, 50, 600), (50, 100, 500), (100, None, 400)):
-            if objects <= lo:
-                break
-            n = (min(objects, hi) if hi else objects) - lo
-            total += n * unit
-        return total
+    """Prueft die tatsaechliche Konfiguration gegen die Preisliste. Bricht ab,
+    wenn Staffel ODER Modulpreise nicht exakt stimmen — bevor irgendetwas in
+    Stripe entsteht.
+
+    Geprueft wird `GRADUATED_TIERS` und `FIXED_PRICES` SELBST, nicht eine
+    Kopie davon: aendert jemand die Konfiguration, schlaegt das hier aus.
+    """
     checks = {1: 1990, 3: 3190, 20: 13390, 100: 56390, 200: 96390}
     for objs, want in checks.items():
-        got = cost(objs)
+        got = _graduated_cost(objs)
         if got != want:
             _die(f"Staffel falsch: {objs} Objekte = {got/100:.2f} EUR, "
                  f"PDF sagt {want/100:.2f} EUR")
     print("  PDF-Rechenbeispiele stimmen (1/3/20/100/200 Objekte) ✓")
+
+    # Modulpreise: Menge der lookup_keys UND jeder Betrag muessen stimmen.
+    if set(FIXED_PRICES) != set(EXPECTED_FIXED_AMOUNTS):
+        fehlt = sorted(set(EXPECTED_FIXED_AMOUNTS) - set(FIXED_PRICES))
+        zuviel = sorted(set(FIXED_PRICES) - set(EXPECTED_FIXED_AMOUNTS))
+        _die("Modul-Preisliste weicht ab: fehlt="
+             f"{fehlt or '-'}, unerwartet={zuviel or '-'} "
+             "(Referenz: PLAN-stripe-preisliste.md Z. 94-97)")
+    for lk, want_amount in EXPECTED_FIXED_AMOUNTS.items():
+        got_amount = FIXED_PRICES[lk].get("unit_amount")
+        if got_amount != want_amount:
+            _die(f"Modulpreis '{lk}' falsch: {got_amount} Cent, Preisliste sagt "
+                 f"{want_amount} Cent (PLAN-stripe-preisliste.md Z. 94-97)")
+        recurring = FIXED_PRICES[lk].get("recurring")
+        if recurring != {"interval": "month"}:
+            _die(f"Modulpreis '{lk}' ist nicht monatlich wiederkehrend: "
+                 f"{recurring!r} (Preisliste: '/Monat')")
+    print("  Modulpreise stimmen (Modul 3/4/6, je monatlich) ✓")
 
 
 def _find_product(mnd_key: str):  # noqa: ANN202

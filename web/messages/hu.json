@@ -6825,7 +6825,12 @@
     "needScope": "Válasszon legalább egy jogosultságot.",
     "docsHint": "Az API dokumentációjában olvasható, hogyan hitelesítheti magát ezekkel az adatokkal.",
     "loadErr": "A betöltés nem sikerült.",
-    "noAccess": "Nincs hozzáférés"
+    "noAccess": "Nincs hozzáférés",
+    "scopeRates": "Árak",
+    "scopeGuests": "Vendégek",
+    "scopeTasks": "Feladatok",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "API-dokumentáció"
   },
   "supportChat": {
     "titel": "Súgó és támogatás",

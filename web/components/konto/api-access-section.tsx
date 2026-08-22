@@ -4,6 +4,14 @@
 // zum Anlegen (Name · Umgebung · Berechtigungs-Matrix Lesen/Schreiben je Bereich
 // · Objekt-Auswahl). Beim Erzeugen/Rotieren wird das Client-Secret GENAU EINMAL
 // gezeigt (show-once). Widerrufen/Rotieren pro Client.
+//
+// Die Bereiche kommen aus `lib/api-scopes.ts` und deckten früher nur vier
+// Domänen ab. Seit die öffentliche API auch Preise, Gäste, Aufgaben und
+// Webhooks bedient, stehen dort alle acht — ein Bereich, den dieser Dialog
+// nicht anbietet, ist ein Recht, das niemand vergeben kann, und die zugehörigen
+// Endpunkte antworten dauerhaft mit 403, ohne dass irgendwo ein Fehler steht.
+// `scripts/i18n/api-scopes-pruefen.mjs` hält Backend, Katalog und die
+// Etiketten in 24 Sprachen deckungsgleich.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -22,6 +30,7 @@ import {
   type ApiClientCreated,
 } from "@/lib/api-clients";
 import { API_SCOPE_CATALOG } from "@/lib/api-scopes";
+import { ENTWICKLER_URL } from "@/lib/marketing-url";
 
 type PropertyOpt = { id: string; title: string };
 
@@ -158,7 +167,17 @@ export function ApiAccessSection({
         </Card>
       )}
 
-      <p className="text-xs text-muted-foreground">{t("docsHint")}</p>
+      <p className="text-xs text-muted-foreground">
+        {t("docsHint")}{" "}
+        <a
+          href={ENTWICKLER_URL}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="font-medium text-foreground underline-offset-4 hover:underline"
+        >
+          {t("docsLink")}
+        </a>
+      </p>
 
       {dialogOpen && (
         <CreateDialog
@@ -269,32 +288,47 @@ function CreateDialog({
               <span className="w-16 text-center">{t("scopeWrite")}</span>
             </div>
             {API_SCOPE_CATALOG.map((s) => {
-              const readKey = `${s.key}:read`;
-              const writeKey = `${s.key}:write`;
-              const label =
-                s.labelKey === "calendarSync"
-                  ? t("scopeCalendarSync")
-                  : t(
-                      `scope${s.labelKey.charAt(0).toUpperCase()}${s.labelKey.slice(1)}` as never,
-                    );
+              // Etikett aus dem Bereichsnamen: `apiAccess.scope<Label>`. Die
+              // Schlüssel sind in allen 24 Sprachen vorhanden — geprüft von
+              // scripts/i18n/api-scopes-pruefen.mjs, das denselben Katalog
+              // gegen das Backend UND gegen die Sprachdateien hält.
+              const label = t(
+                `scope${s.labelKey.charAt(0).toUpperCase()}${s.labelKey.slice(1)}` as never,
+              );
               return (
                 <div
                   key={s.key}
                   className="grid grid-cols-[1fr_auto_auto] items-center gap-2 border-b border-border px-3 py-2 text-sm last:border-b-0"
                 >
                   <span>{label}</span>
-                  <input
-                    type="checkbox"
-                    className="mx-auto w-16"
-                    checked={scopes.has(readKey)}
-                    onChange={() => toggleScope(readKey)}
-                  />
-                  <input
-                    type="checkbox"
-                    className="mx-auto w-16"
-                    checked={scopes.has(writeKey)}
-                    onChange={() => toggleScope(writeKey)}
-                  />
+                  {(["read", "write"] as const).map((richtung) => {
+                    const scope = `${s.key}:${richtung}`;
+                    // Nicht jeder Bereich hat beide Richtungen: `guests` ist
+                    // bewusst nur lesend. Für eine fehlende Richtung bleibt das
+                    // Feld LEER, statt ein Häkchen anzubieten, das der Server
+                    // beim Speichern mit 422 ablehnt.
+                    if (!s.richtungen.includes(richtung)) {
+                      return (
+                        <span
+                          key={richtung}
+                          className="mx-auto w-16 text-center text-muted-foreground"
+                          aria-hidden
+                        >
+                          –
+                        </span>
+                      );
+                    }
+                    return (
+                      <input
+                        key={richtung}
+                        type="checkbox"
+                        className="mx-auto w-16"
+                        aria-label={`${label} · ${richtung === "read" ? t("scopeRead") : t("scopeWrite")}`}
+                        checked={scopes.has(scope)}
+                        onChange={() => toggleScope(scope)}
+                      />
+                    );
+                  })}
                 </div>
               );
             })}

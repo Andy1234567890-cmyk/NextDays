@@ -6823,7 +6823,12 @@
     "needScope": "Izvēlieties vismaz vienu atļauju.",
     "docsHint": "Kā autentificēties ar šiem datiem, ir aprakstīts API dokumentācijā.",
     "loadErr": "Neizdevās ielādēt.",
-    "noAccess": "Nav piekļuves"
+    "noAccess": "Nav piekļuves",
+    "scopeRates": "Cenas",
+    "scopeGuests": "Viesi",
+    "scopeTasks": "Uzdevumi",
+    "scopeWebhooks": "Webhooks",
+    "docsLink": "API dokumentācija"
   },
   "supportChat": {
     "titel": "Palīdzība un atbalsts",

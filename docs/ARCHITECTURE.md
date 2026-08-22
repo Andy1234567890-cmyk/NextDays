@@ -96,6 +96,8 @@ C4Container
         Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
         Container(builder, "Website-Renderer", "Next.js (builder/, Port 3200)", "Öffentliche White-Label-Websites der Vermieter (Page-Builder); Host→Tenant über den by-domain-Resolver")
         Container(api, "API Backend", "FastAPI, Python", "Business-Logik, Vertical Slices unter /api/v1; Redis-Rate-Limiter als ASGI-Middleware (429 + Retry-After)")
+        Container(public_api, "Öffentliche Partner-API", "FastAPI, Python (apps/public-api)", "Die veröffentlichte REST-API unter open-api.mynextdays.com/v1 — EIGENER Dienst, importiert nichts aus apps/api (nur DB + 11 byte-identische Schwesterdateien, darunter die EINE Preisberechnung). Client-Credentials → 1-h-Token, Scopes je Zugang, OpenAPI 3.1 öffentlich, problem+json (RFC 9457)")
+        Container(zusteller, "Webhook-Zusteller", "Python-Prozess (apps/public-api/src/zusteller)", "Liest die Ereignis-Warteschlange (DB-Trigger füllen sie) und stellt signiert an Kunden-Endpunkte zu; eigener Container, damit ein langsamer Empfänger keine API-Anfrage aufhält")
         ContainerDb(db, "Datenbank", "Supabase / Postgres", "195 Tabellen (Migrationen 0001–0339), Multi-Tenant, RLS, tenant_id; sensible Tabellen zusätzlich per revoke gegen den DB-Direktpfad gesperrt (§6.2)")
         ContainerDb(cache, "Cache", "Redis", "Caching-Layer + Rate-Limiter-Zähler")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR, Messaging-Trigger, wiederkehrende Aufgaben")
@@ -106,6 +108,7 @@ C4Container
     System_Ext(booking, "Booking.com", "OTA")
     System_Ext(google, "Google APIs", "Maps/Translate")
     System_Ext(cf, "Cloudflare for SaaS", "Custom-Hostname-TLS für Kunden-Domains")
+    System_Ext(partner, "Partner-Systeme", "Fremdsoftware der Betriebe: Dienstpläne, Buchhaltung, eigene Websites — sprechen die öffentliche API")
     System_Ext(gfonts, "Google Fonts API", "Font-Katalog für den Website-Editor")
 
     Rel(landlord, web, "Nutzt", "HTTPS")
@@ -127,6 +130,11 @@ C4Container
     Rel(api, revolut, "Charges, Kautionen", "API")
     Rel(api, stripe, "Charges (Fallback)", "API")
     Rel(api, google, "Geocoding, Übersetzung", "API")
+    Rel(partner, public_api, "Liest/schreibt Objekte, Kalender, Preise, Buchungen", "JSON/HTTPS + Bearer")
+    Rel(public_api, db, "Liest/schreibt (service_role, Tenant im Code erzwungen)", "SQL")
+    Rel(public_api, cache, "Rate-Limit-Zähler (eigene Redis-DB)", "Redis-Protokoll")
+    Rel(public_api, queue, "Reiht ARI-Push ein (enqueue_job) — sendet NICHT selbst an die Portale", "Redis/DB")
+    Rel(zusteller, partner, "Signierte Ereignis-Zustellung (HMAC-SHA256 + Zeitstempel)", "HTTPS")
 ```
 
 > **Hinweis zur C4-Notation:** „Container" meint hier eine _separat ausführbare App

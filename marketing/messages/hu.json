@@ -1,4 +1,427 @@
 {
+ "entwickler": {
+  "meta": {
+   "titel": "API és fejlesztők — myNextDays",
+   "beschreibung": "A myNextDays nyilvános REST-API: ingatlanok, elérhetőség, árak, foglalások, vendégek és feladatok. OAuth2, OpenAPI 3.1, webhookok aláírt kiszállításokkal."
+  },
+  "hero": {
+   "eyebrow": "Nyilvános API",
+   "titel": "Építs a myNextDays-re",
+   "unterzeile": "Egy REST-API az ingatlanokhoz, az elérhetőséghez, az árakhoz, a foglalásokhoz, a vendégekhez és a feladatokhoz. Rövid életű tokenek, hozzáférésenkénti jogosultságok, események webhookon — és egy séma, amely a kódból keletkezik, ezért nem tud elavulni.",
+   "basisLabel": "Bázis-URL",
+   "versionLabel": "Verzió",
+   "versionHinweis": "az útvonalban",
+   "konsole": "Kipróbálás",
+   "schema": "OpenAPI 3.1",
+   "referenz": "Referencia elolvasása"
+  },
+  "inhalt": {
+   "titel": "Ezen az oldalon",
+   "schnellstart": "Első lépések",
+   "konzepte": "Adatmodell",
+   "konventionen": "Lapozás",
+   "endpunkte": "Végpontok",
+   "webhooks": "Webhookok",
+   "grenzen": "Korlátozások",
+   "hilfe": "Támogatás",
+   "start": "Áttekintés",
+   "zugang": "Hitelesítés",
+   "fehler": "Hibák",
+   "limits": "Kérési korlátok",
+   "fehlercodes": "Hibakódok",
+   "lokalisierung": "Lokalizáció",
+   "zeit": "Időzónák"
+  },
+  "code": {
+   "kopieren": "Másolás",
+   "kopiert": "Másolva",
+   "anfrage": "Kérés",
+   "antwort": "Válasz",
+   "zustellung": "Kiszállítás",
+   "pruefcode": "Aláírás ellenőrzése (Node)"
+  },
+  "schnellstart": {
+   "eyebrow": "Gyorsindítás",
+   "heading": "Öt perc alatt az első hívásig",
+   "sub": "Három lépés. Csak az első megy a felületen keresztül — minden más egy hívás.",
+   "schritt1": {
+    "titel": "Hozzáférés létrehozása",
+    "text": "Hozz létre egy hozzáférést az irányítópulton, és add meg közben, mit szabad neki: jogosultságok területenként, és ha akarod, csak bizonyos ingatlanok. Egy takarítási beosztáshoz készült hozzáférésnek nincs szüksége a bevételekre.",
+    "pfad": "Fiók → API-hozzáférés",
+    "hinweis": "A `client_secret` egyszer jelenik meg; csak a hash-e tárolódik. Az elveszett titok nem áll helyre, hanem cserélődik."
+   },
+   "schritt2": {
+    "titel": "Token beszerzése",
+    "text": "Cseréld be a Client-ID-t és a Secretet egy Access-Tokenre. Egy órán át érvényes, és pontosan a hozzáférés jogosultságait hordozza.",
+    "hinweis": "Tartsd a tokent a memóriában, és csak akkor cserélj újat, ha lejár vagy 401 jön — ne minden hívásnál. Az irányítópulton kiadott visszavonás azonnal megakadályozza az új tokeneket."
+   },
+   "schritt3": {
+    "titel": "Az első hívás elvégzése",
+    "text": "A tokent `Authorization: Bearer …` formában küldd el. Minden lista ugyanabban a borítékban válaszol: `data` és `pagination`.",
+    "hinweis": "Utána hívd meg a `GET /v1/me`-t — megmondja, milyen jogosultságai és mely ingatlanjai vannak ennek a hozzáférésnek, anélkül hogy 403-as hibák sorozatából kellene kitalálnod."
+   }
+  },
+  "konzepte": {
+   "eyebrow": "Alapfogalmak",
+   "heading": "Négy dolog, amit előre tudnod kell",
+   "sub": "Négy döntés, amely az API viselkedését meghatározza. Eltérnek az elterjedt feltevésektől.",
+   "objekt": {
+    "titel": "Egy ingatlan egy egységtípus",
+    "text": "Egy `property` pontosan egy típus: egy szobatípus a hotelben vagy egy nyaralóingatlan. Alatta lógnak az egységei (`units`) — normál esetben pontosan egy, öt egyforma stúdió esetén éppen öt. Az egységet adjuk el, a típust vezetjük és árazzuk.",
+    "folge": "Az elérhetőség ezért egy SZÁM (`units_available`), nem igen/nem. Egy 8 Twin- és 4 Double-szobával rendelkező hotelnek két ingatlanja van, 8, illetve 4 egységgel — nem egy ingatlanja 12 szobával."
+   },
+   "waehrung": {
+    "titel": "Minden összeg viszi a saját pénznemét",
+    "text": "Nincs alapértelmezett érték. Minden ingatlannak van pénzneme, és a válaszban minden összeg megnevezi azt.",
+    "folge": "Ha egy ingatlanról hiányzik a pénznem, az adathiba, és a hívás 422-vel elszáll — nem teszünk be helyette „EUR”-t. Foglalásnál a te pénznemednek illeszkednie kell az ingatlan pénznemhez."
+   },
+   "zeit": {
+    "titel": "Két különböző időpont",
+    "text": "A `booked_at` a vendég foglalásának időpontja — a portál forrásából, `null`, ha a portál nem adja meg. A `received_at` a beérkezés ideje ebbe a rendszerbe.",
+    "folge": "A „legújabb elöl” rendezést a `booked_at` szerint végezd, ne a `received_at` szerint: egy gyűjtőimportnál több tucat foglalás ugyanazt a másodpercet viseli. Az időbélyegek UTC szerintiek, a dátummezők pedig naptári napok az ingatlan időzónájában."
+   },
+   "kanaele": {
+    "titel": "A láthatóság csatornánként érvényes",
+    "text": "Nincs globális „közzétéve”. Egy ingatlan látható a piactéren, a saját weboldalon, a portálokon — mindegyik külön kapcsolható.",
+    "folge": "Egy ingatlan csak akkor eladható, ha három dolog együtt teljesül: `status = active`, a csatorna be van kapcsolva, és van szabad egység. Az értékesítés leállítása ezzel szemben MINDEN csatornára hat."
+   }
+  },
+  "konventionen": {
+   "eyebrow": "Konvenciók",
+   "heading": "Lapozás, hibák, limitek, idempotencia",
+   "sub": "A négy pont, amely minden API-ban másképp működik — itt számokkal, nem prózával.",
+   "tabelle": {
+    "feld": "Mező",
+    "bedeutung": "Jelentés",
+    "code": "Kód",
+    "status": "Státusz"
+   },
+   "blaettern": {
+    "titel": "Lapozás",
+    "text": "Minden lista `data` és `pagination` mezővel válaszol. A lapozás **kurzorral** történik: az előző lap utolsó elemének `id` értékét küldöd el `starting_after` néven. Ha a `next_starting_after` hiányzik a válaszból, a végigjárás befejeződött.",
+    "felder": {
+     "starting_after": "Az előző lap utolsó elemének `id` értéke. Ez az ajánlott út — stabil akkor is, ha a lista két lap között megváltozik. Ismeretlen vagy törölt `id` 422-t ad, nem üres lapot.",
+     "next_starting_after": "Addig szerepel a `pagination` mezőben, ameddig van folytatás: ez a következő `starting_after` értéked. Ha hiányzik, a végére értél.",
+     "limit": "Sorok laponként. Alapérték 50, legnagyobb érték 200 — nagyobb érték 422-t ad, nem levágott lapot.",
+     "offset": "Az átugrandó sorok száma — egyszeri betekintéshez egy adott lapra. A `starting_after` mellett 422-t ad: két helymegadásnak egyetlen kérésben nincs ellentmondásmentes értelme.",
+     "include_total": "A `true` a `total` értéket is megadja. Csak akkor kérd, ha meg is jeleníted a számot.",
+     "has_more": "Minden válaszban ott van, és megmondja, létezik-e további lap — nincs találgatás, nincs plusz kör."
+    },
+    "warumCursor": "Miért ne egyszerűen az `offset`: az egy POZÍCIÓT ír le a listában. Ha az 1. és a 2. lap között bejön egy foglalás, minden eggyel elcsúszik — az `offset=50` ekkor átugrik egy sort, törlésnél pedig egy sor kétszer jön. Ezután egy foglalás hiányzik az adatbázisodból, és a válaszban semmi sem árulja el. A kurzor a legutóbbi rekordot nevezi meg, amit láttál, ezért nem tud elcsúszni."
+   },
+   "fehler": {
+    "titel": "Hibák",
+    "text": "Minden hiba `application/problem+json` formában (RFC 9457) érkezik, stabil `code` értékkel, egy `request_id`-vel és — ahol segít — azokkal a mezőkkel, amelyek a hibát megmagyarázzák. A `code` szerint ágazz el, ne a szöveg szerint: a szöveg változhat, a kód nem.",
+    "codes": {
+     "nichtAuthentifiziert": "A token hiányzik, lejárt vagy érvénytelen.",
+     "ungueltigeZugangsdaten": "A Client-ID vagy a Secret hibás, vagy a hozzáférés vissza van vonva.",
+     "scopeFehlt": "A token érvényes, de ennek a hozzáférésnek nincs meg a szükséges jogosultsága. A hiányzó scope benne áll a hibában.",
+     "objektNichtErlaubt": "A hozzáférés bizonyos ingatlanokra van szűkítve; ez nem tartozik közéjük.",
+     "nichtGefunden": "Nem létezik, vagy más vállalkozáshoz tartozik — mindkét eset ugyanígy válaszol.",
+     "zeitraumNichtVerfuegbar": "Foglalt, zárolt vagy ki van véve az értékesítésből. Fél foglalás nem keletkezett.",
+     "idempotenzInArbeit": "Ezzel az Idempotency-Key értékkel indított hívás még fut. Várj egy kicsit, aztán ismételd meg.",
+     "aboBestehtBereits": "Ehhez a címhez már létezik ennek a hozzáférésnek egy aktív webhook-előfizetése.",
+     "waehrungFehlt": "Az ingatlanhoz, az ártervhez vagy a foglaláshoz nincs pénznem hozzárendelve — ez adathiba.",
+     "ungueltigeAnfrage": "Formálisan rendben van, tartalmilag nem teljesíthető. Az indoklás a `detail` mezőben áll.",
+     "validierungFehlgeschlagen": "A kérés nem illeszkedik a sémához. A `felder` megnevezi, melyik mezőről van szó.",
+     "zuVieleAnfragen": "A rate limit elérve. A `Retry-After` megmondja, mikor folytatható.",
+     "nichtKonfiguriert": "A szolgáltatás nem tudja biztonságosan feldolgozni a kérést. Ellenőrzés nélkül nincs továbbfutás."
+    }
+   },
+   "limits": {
+    "titel": "Rate limitek",
+    "text": "A korlátozás HOZZÁFÉRÉSENKÉNT történik, nem IP-cím szerint: egy ügynökség, amely húsz vállalkozást gondoz, egyetlen IP-cím mögött ül, és nem szabad, hogy önmagát fékezze le. Három külön kosár, hogy egy naptár-egyeztetés ne blokkolja az árak beállítását.",
+    "eimer": {
+     "token": "Tokencsere. Szigorú, mert itt hozzáférési adatokat ellenőrzünk.",
+     "write": "Írási hívások — beleavatkoznak az értékesítésbe.",
+     "read": "Olvasási hívások: egy integráció napi rutinja."
+    },
+    "header": "Minden válasz magával viszi az aktuális állást, a sikeres is — hogy még azelőtt igazíthasd a tempódat, hogy 429-be futnál:"
+   },
+   "idempotenz": {
+    "titel": "Idempotencia",
+    "text": "Foglalás létrehozásakor az `Idempotency-Key` fejléc kötelező. Válassz műveletenként egyedi értéket (például egy UUID-t), és ismételd meg, ha ugyanazt a hívást újra elküldöd. E védelem nélkül egy megszakadt kapcsolat utáni újrapróbálkozás két foglalást hoz létre — és a második olyan éjszakákat zár le, amelyeket senki nem rendelt meg.",
+    "faelle": {
+     "wiederholung": "Ugyanaz a kulcs, ugyanaz az adattartalom → az első válasz szó szerint jön vissza, az `Idempotency-Replayed: true` fejléccel.",
+     "abweichend": "Ugyanaz a kulcs, MÁS adattartalom → 422. Új művelethez új kulcs tartozik.",
+     "laufend": "Ugyanaz a kulcs, az első hívás még fut → 409. Várj egy kicsit, aztán ismételd meg; ne próbálkozz új kulccsal."
+    }
+   }
+  },
+  "webhooks": {
+   "eyebrow": "Webhookok",
+   "heading": "Események kérdezgetés helyett",
+   "sub": "Címenként egy előfizetés, aláírt kiszállítások, ismétlések növekvő időbeli távolsággal. Az események MINDEN változásnál keletkeznek — akkor is, ha portálon vagy az irányítópulton keresztül érkeznek, nem ezen az API-n.",
+   "tabelle": {
+    "ereignis": "Esemény",
+    "wann": "Mikor sül el"
+   },
+   "ereignisse": {
+    "reservationCreated": "Foglalás keletkezett — bármelyik csatornán.",
+    "reservationUpdated": "Egy meglévő foglalás megváltozott.",
+    "reservationCancelled": "Egy foglalást lemondtak. Külön esemény, mert erre másképp kell reagálni, mint egy módosításra.",
+    "availabilityChanged": "Egy ingatlan naptára megváltozott (foglalás, zárolás, felszabadítás).",
+    "rateChanged": "Egy napi ár vagy egy tartózkodási szabály megváltozott.",
+    "taskCreated": "Feladat keletkezett.",
+    "taskCompleted": "Egy feladatot befejeztek."
+   },
+   "anlegen": {
+    "titel": "Előfizetés létrehozása",
+    "text": "Egy `https`-cím és az események, amelyeket kérsz. Opcionálisan csak bizonyos ingatlanokra. A belső címeket elutasítjuk — az ellenőrzés a létrehozáskor ÉS minden egyes kiszállítás előtt lefut.",
+    "secret": "A válasz pontosan egyszer tartalmazza az aláíró Secretet. Most mentsd el — soha többé nem adjuk ki."
+   },
+   "nutzlast": {
+    "titel": "Mi érkezik meg",
+    "text": "Szűken tartva: azonosítók és azok a mezők, amelyek a változást leírják. A teljes rekordot szükség esetén az API-n keresztül kérdezed le — így a címzett nem kap kiszállítva olyat, amit közben már nem láthatna."
+   },
+   "signatur": {
+    "titel": "Aláírás ellenőrzése",
+    "text": "Minden kiszállítás visz egy fejlécet időbélyeggel és a `ZEITSTEMPEL.BODY` fölött számolt HMAC-SHA256 értékkel, amelyet az előfizetésed Secretjével számolunk. Mivel az időbélyeg is alá van írva, felismersz egy rögzített és később újra bejátszott kiszállítást — csak a törzs fölötti aláírásnál ez nem lehetséges.",
+    "schritte": {
+     "roh": "A kérés NYERS törzsét vedd, ne a beolvasott és újraszerializált objektumot — más bájtsorozat más aláírást ad. Ez a leggyakoribb oka annak, hogy „az aláírás nem egyezik”.",
+     "alter": "Ellenőrizd a kiszállítás életkorát az időbélyeg alapján; öt perc tolerancia jó érték.",
+     "vergleich": "Időállandóan hasonlíts (`timingSafeEqual`, `hmac.compare_digest`). Egy sima `==` kitalálhatóvá teszi az aláírást."
+    }
+   },
+   "verhalten": {
+    "wiederholung": {
+     "titel": "Ismétlések",
+     "text": "Ha a címed nem 2xx-szel válaszol, legfeljebb tízszer szállítjuk ki újra — növekvő távolsággal, egy perctől egy óráig. Válaszolj gyorsan, és utána dolgozz fel; egy lassú címzettet hibaként értékelünk."
+    },
+    "reihenfolge": {
+     "titel": "Sorrend",
+     "text": "Nem garantált. Használd az esemény `created_at` értékét, hogy egy régebbi kiszállítás ne írjon egy újabb fölé."
+    },
+    "doppelt": {
+     "titel": "Dupla kiszállítás",
+     "text": "Valószínűtlen, de lehetséges — kezeld az esemény `id` értékét kulcsként, és mindegyiket csak egyszer dolgozd fel. Ez a vállalás minden webhook-szolgáltatóra érvényes, nem csak erre."
+    },
+    "nachholen": {
+     "titel": "Pótlás egy kiesés után",
+     "text": "Ha a szervered nem volt elérhető, a kimaradt eseményeket a `GET /v1/events?since=…` végponton pótlod be — a legrégebbivel kezdve, ugyanazokkal az `id`-kkel, mint a kiszállításnál, legfeljebb 30 napra visszamenőleg. Egy push önmagában nem kiszállítási garancia: az ismétlések egyszer csak leállnak, és e lépés nélkül éppen azok az események hiányoznak neked, amelyekről sosem szereztél tudomást."
+    }
+   }
+  },
+  "grenzen": {
+   "eyebrow": "Korlátok",
+   "heading": "Korlátozások",
+   "sub": "Két művelet nem lehetséges ezen az API-n. Mindkettő az adatmodellből következik. A lemondás, az áthelyezés és az árszámítás lehetséges.",
+   "stattdessen": "Ehelyett:",
+   "gaeste": {
+    "titel": "Vendégek létrehozása és módosítása",
+    "text": "A vendégadatok a vendég beírásakor vagy a portálon keresztül keletkeznek. Egy írási út itt harmadik forrás lenne ugyanarra a személyre.",
+    "ausweg": "Foglalás létrehozásakor küldd el a vendégadatokat is — a meglévő vendégeket az e-mail-cím alapján ismeri fel a rendszer. Egy meglévő foglalás kapcsolattartási mezői a `PATCH /v1/reservations/'{'id}` végponton tarthatók naprakészen."
+   },
+   "nachrichten": {
+    "titel": "Beszélgetés megnyitása",
+    "text": "Üzeneteket olvasni és meglévő beszélgetésbe írni lehet (`/v1/reservations/'{'id}/messages`). Új beszélgetést létrehozni nem: egy üzenetszál mindig a piactér egy vendégfiókjához tartozik, és egy vállalkozás API-hozzáférése nem ilyen fiók.",
+    "ausweg": "A beszélgetés a vendég első üzenetével vagy a vezérlőpulton jön létre; utána az API már írhat bele."
+   },
+   "finanzen": {
+    "titel": "Fizetés beszedése",
+    "text": "Olvashatók a fizetések és az ütemezett fizetési felhívások (`/v1/reservations/'{'id}/payments`), valamint a fizetési terv és a lemondási sáv (`/v1/properties/'{'id}/booking-conditions`). A beszedés a vendég foglalási folyamatán fut fizetési szándékokkal, nem elküldhető linken.",
+    "ausweg": "A fizetési felhívások a vezérlőpulton jönnek létre; az API a státuszukat és a hozzájuk tartozó eseményeket olvassa."
+   }
+  },
+  "hilfe": {
+   "eyebrow": "Segítség",
+   "heading": "Kérdések, változások, eszközök",
+   "sub": "Hová a kérdéssel, és mihez tarthatod magad az építés során.",
+   "wege": {
+    "titel": "Ha valami nem működik",
+    "entwicklerMail": {
+     "titel": "Technikai kapcsolat",
+     "text": "Küldd el a hibaválaszból a `request_id` értékét — ezzel a hívás megtalálható a naplóinkban."
+    },
+    "hilfeCenter": {
+     "titel": "Súgóközpont",
+     "text": "Útmutatók a termékhez: ingatlanok létrehozása, portálok összekötése, árak gondozása."
+    },
+    "schema": {
+     "titel": "Kliens generálása",
+     "text": "Az OpenAPI-fájl bemenetként megfelel a szokásos generátoroknak — kézzel írt kliensre nincs szükség."
+    }
+   },
+   "versionen": {
+    "titel": "Verziókezelés",
+    "text": "Egy API ígéret. Ez a négy pont érvényes a v1-re:",
+    "zusagen": {
+     "pfad": "A verzió az útvonalban áll. Egy törést okozó változás `/v2` alá kerül; a `/v1` mellette fut tovább.",
+     "additiv": "A v1-en belül csak mezők jönnek hozzá. A meglévő mezőket nem nevezzük át, és a jelentésük sem változik meg.",
+     "frist": "Ha egy verziót kivezetünk, legalább tizenkét hónap határidővel nevezünk meg egy dátumot, és jelentkezünk minden olyan vállalkozásnál, amelynek aktív hozzáférése van.",
+     "changelog": "A változások az OpenAPI-fájlban és ezen az oldalon szerepelnek. Nincs csendes változtatás egy mezőn."
+    }
+   }
+  },
+  "kopf": {
+   "hilfe": "Súgóközpont",
+   "zurueck": "A weboldalra"
+  },
+  "sidebar": {
+   "sprung": "Ugrás ide …",
+   "keineTreffer": "Egyetlen végpont és fejezet sem illik ehhez.",
+   "leitfaden": "Útmutató",
+   "referenz": "API-referencia",
+   "tocTitel": "Ezen az oldalon",
+   "version": "myNextDays Nyilvános API v1"
+  },
+  "referenz": {
+   "scope": "Szükséges jogosultság:",
+   "pfadParameter": "Útvonal-paraméterek",
+   "queryParameter": "Query-paraméterek",
+   "headerParameter": "Fejlécek",
+   "koerper": "Kéréstörzs",
+   "antworten": "Válaszok",
+   "erlaubt": "Engedélyezett:",
+   "pflicht": "kötelező",
+   "standard": "Alapérték",
+   "sprache": "Nyelv",
+   "zugang": "Hozzáférés",
+   "tokenHinweis": "Csak ebben a böngészőben, csak a „Kipróbálás” funkcióhoz — az értéket nem mentjük el, és nem küldjük el hozzánk.",
+   "ausprobieren": "Kipróbálás",
+   "laeuft": "Fut …",
+   "anfrage": "Kérés",
+   "antwort": "Válasz",
+   "beispiel": "Példa",
+   "kopieren": "Másolás",
+   "kopiert": "Másolva",
+   "fehlerNetz": "A kérés nem érte el a szolgáltatást. A leggyakoribb okok: a szolgáltatás éppen nem válaszol, vagy a böngésző hiányzó CORS-engedély miatt megszakította a kérést. Ugyanez a hívás curl-lel a kódmezőből megmutatja, mit mond valójában a szolgáltatás.",
+   "keinToken": "Token nélkül a hívás 401-es kóddal válaszol — ez a várt működés."
+  },
+  "start": {
+   "eyebrow": "Nyilvános API",
+   "titel": "Fejlessz a myNextDays-hez",
+   "unterzeile": "REST API szálláshelyekhez, elérhetőséghez, árakhoz, foglalásokhoz, vendégekhez és feladatokhoz — olvasás és írás, lemondással, áthelyezéssel és árelőnézettel. Az útmutató a szabályokat magyarázza, a referencia minden végpontot tartalmaz az összes paraméterrel és egy mezővel a kipróbáláshoz.",
+   "basisLabel": "Alapcím",
+   "versionLabel": "Verzió",
+   "versionHinweis": "az útvonalban",
+   "schemaTitel": "Séma",
+   "schemaText": "OpenAPI 3.1, a kódból generálva. Bemenetként használható a szokásos kliensgenerátorokhoz.",
+   "woAnfangen": "Hol kezdd",
+   "erstLesen": "Először olvasd el",
+   "dannBauen": "Aztán fejlessz"
+  },
+  "bereiche": {
+   "leitfaden": "Dokumentáció",
+   "referenz": "API-referencia"
+  },
+  "gruppen": {
+   "ueberblick": "Alapok",
+   "anhang": "Melléklet"
+  },
+  "weiter": {
+   "naechste": "Következő oldal",
+   "zurReferenz": "Tovább az API-referenciára"
+  },
+  "referenzUebersicht": {
+   "eyebrow": "API-referencia",
+   "titel": "Minden végpont",
+   "sub": "Minden végpontnak saját oldala van az összes paraméterrel, a kéréstörzzsel, a válaszokkal és egy mezővel, amelyben a hívást azonnal kipróbálhatod."
+  },
+  "zugang": {
+   "eyebrow": "Hitelesítés",
+   "heading": "Hitelesítés",
+   "sub": "OAuth 2.0 `client_credentials` folyamattal. Egy hozzáférés pontosan egy vállalkozáshoz tartozik; nincs több vállalkozásra érvényes kulcs.",
+   "ablauf": {
+    "titel": "Folyamat",
+    "text": "A `client_credentials` a saját nevükben eljáró programok útja. Nincs hozzájárulási párbeszéd és nincs refresh token.",
+    "schritte": {
+     "anlegen": "A hozzáférést az irányítópulton kell létrehozni: Fiók → API-hozzáférés. A `client_secret` egyszer jelenik meg, utána már nem kérdezhető le.",
+     "tauschen": "`POST /v1/oauth/token` a `client_id` és a `client_secret` értékével. A válasz tartalmazza az `access_token`, az `expires_in` (3600) értéket és a megadott jogosultságokat.",
+     "senden": "A tokent minden híváshoz `Authorization: Bearer ACCESS_TOKEN` formában kell elküldeni. Lejárat után az API 401 állapottal és a `token_expired` kóddal válaszol."
+    },
+    "merksatz": "A tokent memóriában kell tartani, nem minden híváshoz újra beszerezni. A kérésenkénti csere beleütközik a token-végpont kéréskorlátjába (10/Minute)."
+   },
+   "rechte": {
+    "titel": "Jogosultságok",
+    "text": "A jogosultságok formája `bereich:richtung`, például `reservations:read` vagy `rates:write`. Ha egy jogosultság hiányzik, a végpont 403 állapottal és az `insufficient_scope` kóddal válaszol.",
+    "merksatz": "Csak azokat a jogosultságokat kell megadni, amelyekre az integrációnak szüksége van. Egy elveszett kulcs így nem írhat felül olyat, amit soha nem olvashatott volna."
+   },
+   "objekte": {
+    "titel": "Ingatlankorlátozás",
+    "text": "Egy hozzáférés meghatározott ingatlanokra korlátozható. A listákban csak ezeket látja; más ingatlan-azonosítóval indított hívás 403 állapottal és az `objekt_nicht_erlaubt` kóddal válaszol."
+   },
+   "selbstauskunft": {
+    "titel": "Jogosultságok ellenőrzése",
+    "text": "A `GET /v1/me` a token vállalkozását, jogosultságait és ingatlankorlátozását adja vissza — ez az első hívás egy integráció beállításakor."
+   }
+  },
+  "fehler": {
+   "eyebrow": "Hibák",
+   "heading": "Hogyan néznek ki a hibák",
+   "sub": "Minden hiba egy HTTP-állapotkód és egy RFC 9457 szerinti törzs (`application/problem+json`). Egyetlen hiba sem 200-as állapottal érkezik.",
+   "aufbau": {
+    "titel": "Felépítés",
+    "text": "A `code` a hiba stabil, gép által olvasható neve. A `detail` embereknek szánt szöveg, és bármikor változhat.",
+    "felder": {
+     "type": "Ennek a hibatípusnak a leírására mutató cím — a hibakódok listája a mellékletben.",
+     "title": "A hibatípus rövid neve.",
+     "status": "A HTTP-állapotkód.",
+     "detail": "Embereknek szánt leírás.",
+     "code": "A hiba stabil neve. Ezt a mezőt kell kiértékelni.",
+     "request_id": "A kérés azonosítója. Támogatási megkeresésnél el kell küldeni."
+    },
+    "merksatz": "A `code` alapján kell elágazni, nem a `detail` alapján. A szöveg nem interfész."
+   },
+   "klassen": {
+    "titel": "Állapotosztályok",
+    "vier": "4xx — a kérés a probléma: hiányzó jogosultság, ismeretlen azonosító, érvénytelen érték, foglalt időszak. Az ismétlés nem változtat semmit.",
+    "fuenf": "5xx — kiszolgálóoldali hiba. Növekvő időközökkel kell ismételni.",
+    "neun": "429 — a kéréskorlát elérve. A `Retry-After` megadja a várakozási időt másodpercben."
+   }
+  },
+  "limits": {
+   "eyebrow": "Kérési korlátok",
+   "heading": "Hány hívás engedélyezett",
+   "sub": "A korlát hozzáférésenként érvényes, nem IP-címenként. Három vödör van, saját értékekkel az olvasásra, az írásra és a tokenkiadásra."
+  },
+  "fehlercodes": {
+   "eyebrow": "Melléklet",
+   "heading": "Hibakódok",
+   "sub": "Az API összes `code` értéke. Minden sornak van horgonya; egy hibaválasz `type` címe erre mutat."
+  },
+  "lokalisierung": {
+   "eyebrow": "Melléklet",
+   "heading": "Lokalizáció",
+   "sub": "A nyelv és a pénznem az adatokból származik. Mindkét mező lehet üres; egyiknek sincs alapértelmezett értéke.",
+   "waehrung": {
+    "titel": "Pénznem",
+    "text": "Minden összeg ISO 4217 szerinti `currency` kódot hordoz. Nincs alapértelmezett érték és nincs átszámítás.",
+    "merksatz": "Foglalás létrehozásakor a `currency` értékének meg kell egyeznie az ingatlan pénznemével. Eltérés esetén: 422 a `currency_mismatch` kóddal."
+   },
+   "sprache": {
+    "titel": "Nyelv",
+    "text": "A `language` ISO 639-1 szerinti kétbetűs kód, például `de`, `da`, `en`. Az érték a foglalásból vagy a portálról származik, és lehet üres. Az üres érték ismeretlent jelent."
+   },
+   "texte": {
+    "titel": "Az API szövegei",
+    "text": "A mezőnevek, a `code` értékek és az enum értékek angolul vannak, és a szerződés részét képezik. Egy hibaválasz `detail` szövegei embereknek szólnak és változhatnak — a saját üzeneteket a `code` alapján kell megjeleníteni."
+   }
+  },
+  "zeit": {
+   "eyebrow": "Melléklet",
+   "heading": "Időzónák",
+   "sub": "Ez az API kétféle időadatot használ: naptári napokat az ingatlan időzónájában és időpontokat UTC-ben.",
+   "tage": {
+    "titel": "Naptári napok",
+    "text": "A `check_in`, `check_out`, `date`, `from` és `to` naptári napok `YYYY-MM-DD` formátumban, az ingatlan időzónájában értve. Nem hordoznak időpontot, és nem kerülnek átszámításra UTC-re.",
+    "merksatz": "A `check_out` az elutazás napja; az utolsó elfoglalt éjszaka az azt megelőző éjszaka. Négy éjszaka négy nap különbséget jelent a `check_in` és a `check_out` között."
+   },
+   "zeitpunkte": {
+    "titel": "Időpontok",
+    "text": "A `created_at`, `updated_at`, `received_at`, `booked_at` és `cancelled_at` ISO 8601 szerinti időpontok UTC-ben, a végén `Z` betűvel."
+   },
+   "quelle": {
+    "titel": "booked_at és received_at",
+    "text": "A `booked_at` a vendég foglalásának időpontja, portálfoglalások esetén a portál forrásából. A `received_at` a beérkezés ideje ebbe a rendszerbe. Gyűjtőlekérésnél sok foglalás ugyanazt a `received_at` másodpercet hordozza.",
+    "merksatz": "A „legújabb elöl” sorrendhez a `booked_at` értéket kell használni, a `null` értéket ismeretlenként kezelve. A `received_at` a lekérés sorrendjét tükrözi, nem a foglalásokét."
+   },
+   "filter": {
+    "titel": "Szűrés változások szerint",
+    "text": "Az `updated_since` egy időpontot vár, és azt adja vissza, ami azóta változott. Figyelem az URL-kódolásra: a `+` a címben szóközt jelent — `Z` betűt kell írni, vagy `%2B` formában kódolni."
+   }
+  }
+ },
  "meta": {
   "title": "myNextDays – A platform nyaralószállás-kiadóknak",
   "description": "A platform szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak: channel manager, naptár, közvetlen foglalás, vendégkommunikáció és számlázás egy helyen. Dániában fejlesztve, EU-s tárhelyen. 19,90 €/hó-tól. 30 napig ingyenes."
