@@ -3,6 +3,12 @@
     "titel": "myBestDays — najděte a rezervujte ubytování",
     "beschreibung": "Najděte a rezervujte prázdninové ubytování přímo u hostitelů — rezervační platforma myBestDays."
   },
+  "vorstart": {
+    "titel": "Již brzy",
+    "ueberschrift": "Ještě nejsme otevřeni.",
+    "text": "Tato stránka se připravuje a bude brzy dostupná.",
+    "rechtliches": "Právní informace"
+  },
   "suche": {
     "leerTitel": "Zatím žádné ubytování",
     "leerText": "Jakmile hostitelé zveřejní své objekty, zobrazí se zde.",

@@ -3,6 +3,12 @@
     "titel": "myBestDays — verblijven vinden en boeken",
     "beschreibung": "Vind en boek vakantiewoningen direct bij de hosts — het boekingsplatform van myBestDays."
   },
+  "vorstart": {
+    "titel": "Binnenkort beschikbaar",
+    "ueberschrift": "We zijn nog niet open.",
+    "text": "Deze pagina is in voorbereiding en is binnenkort bereikbaar.",
+    "rechtliches": "Juridische informatie"
+  },
   "suche": {
     "leerTitel": "Nog geen verblijven beschikbaar",
     "leerText": "Zodra hosts hun objecten publiceren, verschijnen ze hier.",

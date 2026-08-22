@@ -3,6 +3,12 @@
     "titel": "myBestDays — hitta och boka boende",
     "beschreibung": "Hitta och boka semesterboenden direkt hos värdarna — bokningsplattformen från myBestDays."
   },
+  "vorstart": {
+    "titel": "Kommer snart",
+    "ueberschrift": "Vi har inte öppnat än.",
+    "text": "Den här sidan förbereds och blir snart tillgänglig.",
+    "rechtliches": "Juridisk information"
+  },
   "suche": {
     "leerTitel": "Inga boenden tillgängliga än",
     "leerText": "Så snart värdar publicerar sina objekt visas de här.",

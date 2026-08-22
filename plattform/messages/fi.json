@@ -3,6 +3,12 @@
     "titel": "myBestDays — löydä ja varaa majoitus",
     "beschreibung": "Löydä ja varaa lomakohteita suoraan majoittajilta — myBestDaysin varausalusta."
   },
+  "vorstart": {
+    "titel": "Tulossa pian",
+    "ueberschrift": "Emme ole vielä auki.",
+    "text": "Tämä sivu on valmistelussa ja on pian käytettävissä.",
+    "rechtliches": "Oikeudelliset tiedot"
+  },
   "suche": {
     "leerTitel": "Ei vielä majoituksia",
     "leerText": "Heti kun majoittajat julkaisevat kohteitaan, ne näkyvät tässä.",

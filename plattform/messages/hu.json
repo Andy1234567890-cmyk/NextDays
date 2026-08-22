@@ -3,6 +3,12 @@
     "titel": "myBestDays — szállás keresése és foglalása",
     "beschreibung": "Találj és foglalj nyaralókat közvetlenül a szállásadóknál — a myBestDays foglalási platformja."
   },
+  "vorstart": {
+    "titel": "Hamarosan elérhető",
+    "ueberschrift": "Még nem nyitottunk ki.",
+    "text": "Ez az oldal előkészítés alatt áll, és hamarosan elérhető lesz.",
+    "rechtliches": "Jogi információk"
+  },
   "suche": {
     "leerTitel": "Még nincs elérhető szállás",
     "leerText": "Amint a szállásadók közzéteszik szállásaikat, itt megjelennek.",

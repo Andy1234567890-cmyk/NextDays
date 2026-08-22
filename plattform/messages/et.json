@@ -3,6 +3,12 @@
     "titel": "myBestDays — leia ja broneeri majutus",
     "beschreibung": "Leia ja broneeri puhkusemajutust otse võõrustajatelt — myBestDaysi broneerimisplatvorm."
   },
+  "vorstart": {
+    "titel": "Tulekul",
+    "ueberschrift": "Me ei ole veel avatud.",
+    "text": "See leht on ettevalmistamisel ja on varsti kättesaadav.",
+    "rechtliches": "Õiguslik teave"
+  },
   "suche": {
     "leerTitel": "Majutust pole veel saadaval",
     "leerText": "Kohe kui võõrustajad oma objektid avaldavad, ilmuvad need siia.",

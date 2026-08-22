@@ -3,6 +3,12 @@
     "titel": "myBestDays — atrodi un rezervē naktsmītni",
     "beschreibung": "Atrodi un rezervē brīvdienu mājas tieši pie saimniekiem — myBestDays rezervāciju platforma."
   },
+  "vorstart": {
+    "titel": "Jau drīz",
+    "ueberschrift": "Mēs vēl neesam atvērti.",
+    "text": "Šī lapa tiek sagatavota un būs drīz pieejama.",
+    "rechtliches": "Juridiskā informācija"
+  },
   "suche": {
     "leerTitel": "Naktsmītnes vēl nav pieejamas",
     "leerText": "Tiklīdz saimnieki publicēs savus objektus, tie parādīsies šeit.",

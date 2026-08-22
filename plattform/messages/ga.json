@@ -3,6 +3,12 @@
     "titel": "myBestDays — faigh agus cuir áit chónaithe in áirithe",
     "beschreibung": "Faigh agus cuir tithe saoire in áirithe go díreach leis na hóstaigh — ardán áirithinte myBestDays."
   },
+  "vorstart": {
+    "titel": "Ag teacht go luath",
+    "ueberschrift": "Nílimid oscailte go fóill.",
+    "text": "Tá an leathanach seo á ullmhú agus beidh sé ar fáil go luath.",
+    "rechtliches": "Eolas dlíthiúil"
+  },
   "suche": {
     "leerTitel": "Níl aon áit chónaithe ar fáil go fóill",
     "leerText": "Chomh luath agus a fhoilsíonn óstaigh a n-áiteanna, taispeánfar iad anseo.",

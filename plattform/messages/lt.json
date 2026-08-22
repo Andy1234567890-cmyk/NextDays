@@ -3,6 +3,12 @@
     "titel": "myBestDays — rask ir rezervuok apgyvendinimą",
     "beschreibung": "Rask ir rezervuok atostogų namus tiesiai pas savininkus — myBestDays rezervacijų platforma."
   },
+  "vorstart": {
+    "titel": "Jau greitai",
+    "ueberschrift": "Dar nesame atidaryti.",
+    "text": "Šis puslapis yra rengiamas ir greitai bus prieinamas.",
+    "rechtliches": "Teisinė informacija"
+  },
   "suche": {
     "leerTitel": "Apgyvendinimo dar nėra",
     "leerText": "Kai savininkai paskelbs savo objektus, jie atsiras čia.",

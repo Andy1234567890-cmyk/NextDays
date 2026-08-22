@@ -3,6 +3,12 @@
     "titel": "myBestDays — znajdź i zarezerwuj nocleg",
     "beschreibung": "Znajdź i zarezerwuj domy wakacyjne bezpośrednio u gospodarzy — platforma rezerwacyjna myBestDays."
   },
+  "vorstart": {
+    "titel": "Już wkrótce",
+    "ueberschrift": "Jeszcze nie jesteśmy otwarci.",
+    "text": "Ta strona jest w przygotowaniu i będzie wkrótce dostępna.",
+    "rechtliches": "Informacje prawne"
+  },
   "suche": {
     "leerTitel": "Brak dostępnych noclegów",
     "leerText": "Gdy gospodarze opublikują swoje obiekty, pojawią się tutaj.",

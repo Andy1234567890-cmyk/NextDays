@@ -3,6 +3,12 @@
     "titel": "myBestDays — encontre e reserve alojamento",
     "beschreibung": "Encontre e reserve casas de férias diretamente com os anfitriões — a plataforma de reservas da myBestDays."
   },
+  "vorstart": {
+    "titel": "Disponível em breve",
+    "ueberschrift": "Ainda não estamos abertos.",
+    "text": "Esta página está em preparação e estará disponível em breve.",
+    "rechtliches": "Informações legais"
+  },
   "suche": {
     "leerTitel": "Ainda não há alojamentos disponíveis",
     "leerText": "Assim que os anfitriões publicarem os seus alojamentos, aparecem aqui.",

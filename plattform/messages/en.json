@@ -3,6 +3,12 @@
     "titel": "myBestDays — find and book places to stay",
     "beschreibung": "Find and book holiday homes directly with the hosts — the booking platform by myBestDays."
   },
+  "vorstart": {
+    "titel": "Coming soon",
+    "ueberschrift": "We are not open yet.",
+    "text": "This page is in preparation and will be available soon.",
+    "rechtliches": "Legal information"
+  },
   "suche": {
     "leerTitel": "No places available yet",
     "leerText": "As soon as hosts publish their properties, they appear here.",

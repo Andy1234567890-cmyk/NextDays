@@ -3,6 +3,12 @@
     "titel": "myBestDays — trouver et réserver un logement",
     "beschreibung": "Trouvez et réservez des logements de vacances directement auprès des hôtes — la plateforme de réservation de myBestDays."
   },
+  "vorstart": {
+    "titel": "Bientôt disponible",
+    "ueberschrift": "Nous ne sommes pas encore ouverts.",
+    "text": "Cette page est en préparation et sera bientôt accessible.",
+    "rechtliches": "Informations légales"
+  },
   "suche": {
     "leerTitel": "Aucun logement disponible pour le moment",
     "leerText": "Dès que les hôtes publient leurs logements, ils apparaissent ici.",

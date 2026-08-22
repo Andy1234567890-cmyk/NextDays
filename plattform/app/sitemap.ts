@@ -1,12 +1,20 @@
-// sitemap.xml der Plattform (Next generiert daraus /sitemap.xml). Enthält die
-// statischen öffentlichen Seiten UND die Detailseiten der aktiven, suchmaschinen-
-// indexierbaren Objekte. noindex-Objekte (Host-Schalter aus) liefert das Backend
-// gar nicht erst — sie tauchen hier also nie auf.
+// sitemap.xml der Plattform (Next generiert daraus /sitemap.xml).
+//
+// VOR DEM START (`VOR_DEM_START` in lib/vorstart.ts) ist sie LEER, und der
+// Inserate-Abruf entfällt ganz. Beides ist Absicht: eine Sitemap, die Adressen
+// nennt, die mit 503 antworten, wäre ein Widerspruch — und der Abruf würde
+// Objektdaten aus dem Backend holen, die vor dem Start niemand ausliefern soll.
+//
+// NACH DEM START enthält sie die statischen öffentlichen Seiten UND die
+// Detailseiten der aktiven, suchmaschinen-indexierbaren Objekte. noindex-Objekte
+// (Host-Schalter aus) liefert das Backend gar nicht erst — sie tauchen hier also
+// nie auf.
 import type { MetadataRoute } from "next";
 
 import { LEGAL_DOCUMENT_SLUGS } from "@/content/legal/dokumente";
 import { envUrl } from "@/lib/backend-basis";
 import { ladeSitemapInserate } from "@/lib/inserate";
+import { VOR_DEM_START } from "@/lib/vorstart";
 
 // envUrl statt `?? …`: ein leeres Build-Arg ergäbe URLs ohne Host.
 const SITE_URL = envUrl(process.env.NEXT_PUBLIC_SITE_URL, "http://localhost:3100");
@@ -21,6 +29,9 @@ const STATISCH = [
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Vor dem Start: leer, und ohne Backend-Abruf (siehe Kopf).
+  if (VOR_DEM_START) return [];
+
   const inserate = await ladeSitemapInserate();
 
   const statisch: MetadataRoute.Sitemap = STATISCH.map((pfad) => ({

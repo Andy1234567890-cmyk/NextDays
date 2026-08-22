@@ -5,7 +5,75 @@
 // Nutzer leere Dashboard-Shells sehen.
 import { type NextRequest, NextResponse } from "next/server";
 
+import { VOR_DEM_START, vorstartFrei } from "@/lib/vorstart";
+import {
+  VORSTART_COOKIE,
+  VORSTART_PARAM,
+  schluesselStimmt,
+  vorstartSchluessel,
+} from "@/lib/vorstart-zugang";
+
+/** Vorstart-Tor. Gibt eine Antwort zurück, wenn die Anfrage hier endet.
+ *
+ *  Steht VOR der Auth-Weiche: solange der Marktplatz nicht öffentlich ist,
+ *  soll auch die Anmeldeseite nicht erreichbar sein. Sie trug den Markennamen
+ *  im Titel und viermal im Text — für einen Crawler ein vollwertiger
+ *  Marktplatz-Auftritt.
+ *
+ *  Deckungsgleich mit plattform/middleware.ts; Unterschiede nur dort, wo die
+ *  App sich unterscheidet (keine eigene Vorab-Seite, siehe unten).
+ */
+function vorstartTor(req: NextRequest): NextResponse | null {
+  if (!VOR_DEM_START) return null;
+
+  const { pathname, searchParams } = req.nextUrl;
+  if (vorstartFrei(pathname)) return null;
+
+  // Freischaltung per `?zugang=…`: Cookie setzen, Parameter aus der Adresse
+  // entfernen (er soll nicht in Verlauf, Logs oder Referrer weiterwandern).
+  const uebergeben = searchParams.get(VORSTART_PARAM);
+  if (uebergeben !== null && schluesselStimmt(uebergeben)) {
+    const ziel = req.nextUrl.clone();
+    ziel.searchParams.delete(VORSTART_PARAM);
+    const antwort = NextResponse.redirect(ziel);
+    antwort.cookies.set(VORSTART_COOKIE, uebergeben, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+    });
+    return antwort;
+  }
+
+  // Der Cookie-Wert wird jedes Mal gegen das aktuelle Geheimnis geprüft — ein
+  // gedrehter Schlüssel sperrt alte Sitzungen sofort aus.
+  if (schluesselStimmt(req.cookies.get(VORSTART_COOKIE)?.value)) return null;
+
+  if (!vorstartSchluessel()) {
+    console.warn(
+      "[vorstart] MARKETPLACE_PREVIEW_KEY fehlt oder ist zu kurz — es gibt derzeit keinen Durchlass.",
+    );
+  }
+
+  // Anders als die Gäste-Seite bekommt das Gastgeber-Dashboard KEINE eigene
+  // Vorab-Seite: es ist reines Werkzeug hinter Login, es gibt hier nichts zu
+  // erwarten. Ein nackter 503 ohne Inhalt ist die ehrliche Antwort und
+  // verrät nichts über die Marke. Crawler behandeln 503 als vorübergehend und
+  // nehmen die Adresse nicht in den Index.
+  return new NextResponse(null, {
+    status: 503,
+    headers: {
+      "Retry-After": "2592000",
+      "X-Robots-Tag": "noindex, nofollow, noarchive",
+    },
+  });
+}
+
 export function middleware(req: NextRequest) {
+  const tor = vorstartTor(req);
+  if (tor) return tor;
+
   const { pathname } = req.nextUrl;
   // Anmeldung + API-Route-Handler bleiben frei. Route-Handler (z. B. der Foto-
   // Upload /api/objekte/…/fotos) machen ihre eigene Auth über den Host-Cookie

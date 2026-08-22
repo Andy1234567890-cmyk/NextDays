@@ -3,6 +3,12 @@
     "titel": "myBestDays — sib u ibbukkja akkomodazzjoni",
     "beschreibung": "Sib u ibbukkja djar tal-vaganzi direttament mal-ospitanti — il-pjattaforma tal-ibbukkjar ta' myBestDays."
   },
+  "vorstart": {
+    "titel": "Dalwaqt disponibbli",
+    "ueberschrift": "Għadna ma ftaħniex.",
+    "text": "Din il-paġna qiegħda tiġi ppreparata u dalwaqt tkun disponibbli.",
+    "rechtliches": "Informazzjoni legali"
+  },
   "suche": {
     "leerTitel": "Għadha m'hemmx akkomodazzjoni disponibbli",
     "leerText": "Malli l-ospitanti jippubblikaw il-proprjetajiet tagħhom, jidhru hawn.",

@@ -3,6 +3,12 @@
     "titel": "myBestDays — găsește și rezervă cazare",
     "beschreibung": "Găsește și rezervă case de vacanță direct de la gazde — platforma de rezervări myBestDays."
   },
+  "vorstart": {
+    "titel": "Disponibil în curând",
+    "ueberschrift": "Încă nu suntem deschiși.",
+    "text": "Această pagină este în pregătire și va fi disponibilă în curând.",
+    "rechtliches": "Informații juridice"
+  },
   "suche": {
     "leerTitel": "Încă nu există cazări disponibile",
     "leerText": "Imediat ce gazdele publică proprietățile, apar aici.",

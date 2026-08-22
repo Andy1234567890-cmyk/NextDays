@@ -3,6 +3,12 @@
     "titel": "myBestDays — Unterkünfte finden & buchen",
     "beschreibung": "Finde und buche Ferienunterkünfte direkt bei den Gastgebern — die Buchungsplattform von myBestDays."
   },
+  "vorstart": {
+    "titel": "Demnächst verfügbar",
+    "ueberschrift": "Wir sind noch nicht offen.",
+    "text": "Diese Seite ist in Vorbereitung und bald erreichbar.",
+    "rechtliches": "Rechtliches"
+  },
   "suche": {
     "leerTitel": "Noch keine Unterkünfte verfügbar",
     "leerText": "Sobald Gastgeber Objekte veröffentlichen, erscheinen sie hier.",

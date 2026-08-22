@@ -3,6 +3,12 @@
     "titel": "myBestDays — nađi i rezerviraj smještaj",
     "beschreibung": "Nađi i rezerviraj kuće za odmor izravno kod domaćina — platforma za rezervacije myBestDays."
   },
+  "vorstart": {
+    "titel": "Dostupno uskoro",
+    "ueberschrift": "Još nismo otvoreni.",
+    "text": "Ova stranica je u pripremi i bit će uskoro dostupna.",
+    "rechtliches": "Pravne informacije"
+  },
   "suche": {
     "leerTitel": "Još nema dostupnog smještaja",
     "leerText": "Kad domaćini objave svoje objekte, pojavit će se ovdje.",

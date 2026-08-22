@@ -3,6 +3,12 @@
     "titel": "myBestDays — find og book overnatning",
     "beschreibung": "Find og book feriehuse direkte hos værterne — bookingplatformen fra myBestDays."
   },
+  "vorstart": {
+    "titel": "Kommer snart",
+    "ueberschrift": "Vi er endnu ikke åbne.",
+    "text": "Denne side er under forberedelse og er snart tilgængelig.",
+    "rechtliches": "Juridisk information"
+  },
   "suche": {
     "leerTitel": "Ingen overnatninger tilgængelige endnu",
     "leerText": "Så snart værter offentliggør deres objekter, vises de her.",

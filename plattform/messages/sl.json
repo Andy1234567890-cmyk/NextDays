@@ -3,6 +3,12 @@
     "titel": "myBestDays — najdi in rezerviraj namestitev",
     "beschreibung": "Najdi in rezerviraj počitniške nastanitve neposredno pri gostiteljih — rezervacijska platforma myBestDays."
   },
+  "vorstart": {
+    "titel": "Na voljo kmalu",
+    "ueberschrift": "Še nismo odprti.",
+    "text": "Ta stran je v pripravi in bo kmalu dostopna.",
+    "rechtliches": "Pravne informacije"
+  },
   "suche": {
     "leerTitel": "Nastanitev še ni na voljo",
     "leerText": "Ko gostitelji objavijo svoje objekte, se prikažejo tukaj.",

@@ -3,6 +3,12 @@
     "titel": "myBestDays — trova e prenota alloggi",
     "beschreibung": "Trova e prenota case vacanza direttamente dagli host: la piattaforma di prenotazione di myBestDays."
   },
+  "vorstart": {
+    "titel": "Disponibile a breve",
+    "ueberschrift": "Non siamo ancora aperti.",
+    "text": "Questa pagina è in preparazione e sarà disponibile a breve.",
+    "rechtliches": "Informazioni legali"
+  },
   "suche": {
     "leerTitel": "Ancora nessun alloggio disponibile",
     "leerText": "Appena gli host pubblicano i loro alloggi, appaiono qui.",
