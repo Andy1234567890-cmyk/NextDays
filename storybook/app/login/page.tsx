@@ -61,44 +61,21 @@ export default function LoginPage() {
           gap: "0.85rem",
         }}
       >
-        {/* Original-Logo (Logo_transparent.png, schwarze Schrift) — auf weißem
-            Chip, damit es auf der dunklen Karte sichtbar bleibt und die
-            Markenfarben erhalten sind. Die Datei hat viel transparente Fläche;
-            wie in apps/web/components/logo.tsx zeigen wir nur den sichtbaren
-            Bereich (bbox 1446×375 @ 87/420 von 1600). */}
-        <span
-          style={{
-            justifySelf: "center",
-            background: "#fff",
-            borderRadius: "0.5rem",
-            padding: "0.6rem 0.9rem",
-            lineHeight: 0,
-          }}
-        >
-          <span
-            style={{
-              width: `${3 * (1446 / 375)}rem`,
-              height: "3rem",
-              display: "inline-block",
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
-            <img
-              src="/Logo_transparent.png"
-              alt="myNextDays — powered by AirSmil"
-              style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                width: `${(1600 / 1446) * 100}%`,
-                height: "auto",
-                maxWidth: "none",
-                transform: `translate(-${(87 / 1600) * 100}%, -${(420 / 1600) * 100}%)`,
-              }}
-            />
-          </span>
-        </span>
+        {/* Marken-Lockup als SVG (mnd_lockup_negativ.svg, 245x44). Die
+            Negativ-Fassung ist weiss + #E24B4A und damit die richtige fuer
+            diese dunkle Karte (#161616) — der weisse Chip und das
+            bbox-Zuschneiden von vorher sind entfallen: das SVG ist randlos
+            exportiert und braucht keinen hellen Untergrund mehr. Wird die
+            Quelle hier getauscht, muss PUBLIC_PATHS in middleware.ts
+            mitwandern, sonst leitet die Auth-Middleware die Bild-Anfrage auf
+            /login um (kaputtes Bild). */}
+        <img
+          src="/marketing/brand/mnd_lockup_negativ.svg"
+          alt="myNextDays"
+          width={245}
+          height={44}
+          style={{ justifySelf: "center", width: "13rem", height: "auto" }}
+        />
         <h1 style={{ margin: "0.25rem 0 0.25rem", fontSize: "1.25rem" }}>
           myNextDays Design-System
         </h1>

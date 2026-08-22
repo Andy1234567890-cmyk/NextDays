@@ -41,7 +41,7 @@ export function UeberMarken() {
 
         <div className="mt-14 grid gap-6 lg:grid-cols-2">
           <MarkenKarte
-            logo="/marketing/brand/mynextdays-logo.png"
+            logo="/marketing/brand/mnd_lockup.svg"
             logoAlt="myNextDays"
             rolle={t("nextdays.rolle")}
             text={t("nextdays.text")}
@@ -86,7 +86,12 @@ function MarkenKarte({
   return (
     <article className="flex flex-col rounded-3xl bg-card p-8 shadow-card sm:p-10">
       {/* Das Logo trägt den Namen — deshalb steht der Markenname NICHT
-          zusätzlich als Überschrift daneben. */}
+          zusätzlich als Überschrift daneben.
+          Die Karte liegt auf heller Fläche (bg-card): myNextDays kommt daher
+          als Standard-Lockup (Rot #B82028), nicht als Negativ-Variante.
+          width/height sind nur das Seitenverhältnis für den Platzhalter — die
+          beiden Marken-Assets haben unterschiedliche Proportionen, gerendert
+          wird ohnehin auf feste Höhe (h-9) mit object-contain. */}
       <Image
         src={logo}
         alt={logoAlt}

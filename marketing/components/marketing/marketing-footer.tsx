@@ -71,7 +71,7 @@ const RESSOURCEN_ZIELE: Record<string, string> = {
   // Sprachen übersetzt war — der Link war da, das Ziel nicht. Seit die
   // öffentliche API existiert (eigener Service `apps/public-api`), führt er auf
   // die Entwickler-Seite dieser App. Die interaktive Referenz liegt NICHT hier,
-  // sondern beim Service selbst (api.mynextdays.dk/docs); diese Seite ist die
+  // sondern beim Service selbst (open-api.mynextdays.com/docs); diese Seite ist die
   // Anleitung und verweist dorthin.
   api: "/entwickler",
 };

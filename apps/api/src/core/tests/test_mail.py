@@ -202,7 +202,7 @@ def test_inline_bild_wird_als_related_teil_eingebettet() -> None:
     erschiene als Dateianhang, und `cid:` im Rumpf liefe weiter ins Leere.
     """
     logo = Path(__file__).resolve().parents[5] / (
-        "marketing/public/marketing/brand/mynextdays-logo-light.png"
+        "marketing/public/marketing/brand/mnd_lockup_negativ_mail.png"
     )
     assert logo.is_file(), "Logodatei fehlt — Testvoraussetzung"
 

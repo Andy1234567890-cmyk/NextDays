@@ -8,8 +8,13 @@ import { updateSession } from "@/lib/supabase-server";
 // /healthz bleibt offen, damit der Coolify/Traefik-Healthcheck 200 erhält
 // (sonst würde die Auth-Middleware ihn auf /login umleiten → „unhealthy").
 // Das Logo braucht die Login-Seite selbst — ohne Freigabe würde die
-// Bild-Anfrage auf /login umgeleitet (kaputtes Bild).
-const PUBLIC_PATHS = ["/login", "/auth", "/healthz", "/Logo_transparent.png"];
+// Bild-Anfrage auf /login umgeleitet (kaputtes Bild). Der Eintrag MUSS zu der
+// Quelle passen, die app/login/page.tsx wirklich lädt: seit dem Wechsel auf das
+// Marken-Lockup ist das `/marketing/brand/mnd_lockup_negativ.svg`. Freigegeben
+// ist der ganze Ordner `/marketing/brand`, damit ein späterer Variantenwechsel
+// (Negativ ↔ einfarbig) nicht wieder ein kaputtes Bild ergibt; dort liegen
+// ausschließlich öffentliche Markenassets, keine schützenswerten Inhalte.
+const PUBLIC_PATHS = ["/login", "/auth", "/healthz", "/marketing/brand"];
 
 // Optionale strikte Allowlist. Wenn gesetzt (STORYBOOK_ALLOWED_EMAILS), dürfen
 // NUR diese E-Mails rein. Wenn LEER, darf jeder eingeloggte Nutzer rein — das

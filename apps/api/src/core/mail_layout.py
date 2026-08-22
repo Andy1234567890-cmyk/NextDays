@@ -125,19 +125,37 @@ _REPO = _PFAD.parents[4] if len(_PFAD.parents) > 4 else None
 # derselbe Pfad für beide anzunehmen wäre falsch (am 08.08.2026 geprüft):
 #   myNextDays → marketing/public/marketing/brand/
 #   myBestDays → plattform/public/  (direkt, ohne Unterordner)
-# Verwendet wird jeweils die `-light`-Variante: sie sitzt im Layout auf einer
-# schwarzen Kopffläche und ist nur hell lesbar.
+# Verwendet wird jeweils die helle/negative Variante: sie sitzt im Layout auf
+# einer schwarzen Kopffläche und ist nur hell lesbar.
+#
+# WARUM PNG UND NICHT DAS SVG (22.08.2026):
+# Die neuen Marken-Assets liegen als SVG vor (`mnd_lockup_negativ.svg`). In einer
+# E-Mail ist SVG jedoch nicht verwendbar: Gmail (Web und App) und Outlook zeigen
+# es überhaupt nicht an — der Kopf wäre leer. Für Mails wird deshalb eine
+# gerasterte Fassung desselben Vektors eingebettet:
+# `mnd_lockup_negativ_mail.png` (980×176, aus `mnd_lockup_negativ.svg`
+# gerendert). Sie trägt die dunkle Kopffläche #0a0a0a fest eingebrannt statt
+# Transparenz — das ist Absicht: die Wortmarke ist in der Negativ-Fassung weiß,
+# und ein Client, der einen transparenten PNG-Hintergrund hell unterlegt (Apple
+# Mail im Hell-Modus tut das), würde weiße Schrift auf Weiß zeigen. Die Fläche
+# der Mail ist an dieser Stelle ohnehin #0a0a0a, siehe `_kopf`.
+#
+# WARUM NICHT MEHR `mynextdays-logo-light.png`:
+# In dieser Datei war der Zusatz „powered by AirSmil" ins Pixelbild eingebrannt.
+# myNextDays ApS ist ein reines Softwarehaus; der Zusatz gehört nicht in die
+# Kundenkommunikation — und dieses Logo ging als CID-Anhang an JEDEN Empfänger.
 _LOGO_NEXTDAYS = (
-    _REPO / "marketing/public/marketing/brand/mynextdays-logo-light.png"
+    _REPO / "marketing/public/marketing/brand/mnd_lockup_negativ_mail.png"
     if _REPO is not None
     else None
 )
 _LOGO_BESTDAYS = _REPO / "plattform/public/mybestdays-logo-light.png" if _REPO is not None else None
 
-# Anzeigebreite des Logos in der Mail. Die Dateien sind ~1470 px breit; bei 180 px
-# Anzeige bleibt gut das Doppelte an Pixeln übrig, das Logo ist also auf
-# Retina-Schirmen scharf. Ohne gesetzte Breite skaliert Apple Mail das Bild auf
-# seine native Größe und sprengt das 600-px-Layout.
+# Anzeigebreite des Logos in der Mail. Die Dateien sind deutlich breiter als
+# das (myNextDays 980 px, myBestDays ~1470 px); bei 180 px Anzeige bleibt also
+# mindestens das Fünffache an Pixeln übrig, das Logo ist auf Retina-Schirmen
+# scharf. Ohne gesetzte Breite skaliert Apple Mail das Bild auf seine native
+# Größe und sprengt das 600-px-Layout.
 _LOGO_BREITE = 180
 
 # Die Content-ID, unter der das Logo in der Mail hängt. Im HTML verweist
@@ -551,8 +569,8 @@ def _kopf(marke: Marke) -> str:
 
     Die Breite steht als HTML-Attribut UND im Inline-Style: Outlook liest das
     Attribut, moderne Clients den Style, und ohne beides skaliert Apple Mail
-    das Bild auf seine native Größe (~1470 px) und sprengt das Layout. Die Höhe
-    bleibt `auto`, damit das Seitenverhältnis erhalten bleibt.
+    das Bild auf seine native Größe (~1000 px und mehr) und sprengt das Layout.
+    Die Höhe bleibt `auto`, damit das Seitenverhältnis erhalten bleibt.
 
     Der `alt`-Text ist bewusst gestylt: bei blockierten Bildern zeigen die
     Clients ihn an derselben Stelle an — ohne Farbangabe stünde dunkler

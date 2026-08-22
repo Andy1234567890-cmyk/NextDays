@@ -61,8 +61,11 @@
 }
 
 /* Light (Default).
-   Markenfarben aus dem offiziellen NextDays-Logo (powered by AirSmil):
-   Text-Schwarz #050505, Akzent-Rot #b82028 ("Smil"). Klar, aufgeräumt. */
+   Markenfarben von myNextDays: Text-Schwarz #050505, Akzent-Rot #b82028.
+   Das Rot bleibt unverändert die Marken-Rot-Farbe; seine früher hier
+   notierte Herkunft ("Smil" aus dem AirSmil-Schriftzug) trifft nicht mehr zu —
+   das Logo ist das eigene Lockup (mnd_lockup.svg), in dem das Rot auf "Next"
+   sitzt. Klar, aufgeräumt. */
 :root {
   --background: #ffffff;
   --foreground: #0a0a0a;
@@ -70,13 +73,13 @@
   --card-foreground: #0a0a0a;
   --popover: #ffffff;
   --popover-foreground: #0a0a0a;
-  --primary: #0a0a0a;           /* Logo-Schwarz ("NextDays") als Primärfarbe */
+  --primary: #0a0a0a;           /* Marken-Schwarz ("my"/"Days") als Primärfarbe */
   --primary-foreground: #ffffff;
   --secondary: #f4f4f5;
   --secondary-foreground: #18181b;
   --muted: #f4f4f5;
   --muted-foreground: #71717a;
-  --accent: #b82028;           /* Logo-Rot ("Smil") als Akzent */
+  --accent: #b82028;           /* Marken-Rot ("Next") als Akzent */
   --accent-foreground: #ffffff;
   --destructive: #b82028;
   --destructive-foreground: #ffffff;

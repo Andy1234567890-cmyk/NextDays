@@ -12,7 +12,7 @@ export function Logo({
   return (
     <img
       src={variant === "light" ? "/mybestdays-logo-light.png" : "/mybestdays-logo.png"}
-      alt="myBestDays — powered by AirSmil"
+      alt="myBestDays"
       style={{
         height: `${heightRem}rem`,
         width: `${heightRem * ASPECT}rem`,

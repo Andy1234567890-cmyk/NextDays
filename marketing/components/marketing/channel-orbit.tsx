@@ -137,17 +137,18 @@ export function ChannelOrbit() {
         </g>
       </svg>
 
-      {/* Sonne: das echte Logo, freigestellt (transparente Ränder entfernt,
-          siehe brand/mynextdays-logo-freigestellt.png). Weiße Scheibe statt
-          roter Fläche, weil die Wortmarke schwarz ist und das „AirSmil" rot —
-          auf rotem Grund verschwände genau dieser Teil der Marke. Der rote
-          Ring hält den Kreis trotzdem als Zentrum des Systems erkennbar. */}
-      <div className="absolute left-1/2 top-1/2 flex size-32 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-4 border-accent bg-card px-4 shadow-float-lg sm:size-36 sm:px-5">
+      {/* Sonne: die Bildmarke (die zwei Chevrons) statt der breiten Wortmarke —
+          in einen Kreis passt ein 245×44-Lockup nur winzig hinein, das
+          73×54-Zeichen füllt ihn. Weiße Scheibe statt roter Fläche, weil der
+          vordere Chevron selbst rot ist (#B82028) und auf rotem Grund
+          verschwände; der rote Ring hält den Kreis trotzdem als Zentrum des
+          Systems erkennbar. */}
+      <div className="absolute left-1/2 top-1/2 flex size-32 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-4 border-accent bg-card p-7 shadow-float-lg sm:size-36 sm:p-8">
         <Image
-          src="/marketing/brand/mynextdays-logo-freigestellt.png"
+          src="/marketing/brand/mnd_bildmarke.svg"
           alt="myNextDays"
-          width={1443}
-          height={373}
+          width={73}
+          height={54}
           priority
           className="h-auto w-full"
         />

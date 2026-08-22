@@ -235,7 +235,13 @@ export default function HostLogin() {
       <Col gap={10} style={{ alignItems: "center" }}>
         <Image
           source={t.marke.logo}
-          style={{ height: 44, width: 160, resizeMode: "contain", alignSelf: "center" }}
+          style={{
+            height: 44,
+            width: 44 * t.marke.logoRatio,
+            resizeMode: "contain",
+            alignSelf: "center",
+          }}
+          accessibilityLabel={t.marke.name}
         />
         <Txt v="display" style={{ textAlign: "center" }}>
           Gastgeber-Login

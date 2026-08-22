@@ -26,6 +26,13 @@ export type Marke = {
   logo: ImageSourcePropType;
   logoHell: ImageSourcePropType;
   /**
+   * Seitenverhältnis der Logo-Dateien (Breite ÷ Höhe). Wer das Logo rendert,
+   * gibt eine Höhe vor und rechnet die Breite hieraus — sonst steht in jedem
+   * Screen eine geschätzte Zahl, die beim nächsten Logo-Tausch still falsch
+   * wird und die Wortmarke staucht.
+   */
+  logoRatio: number;
+  /**
    * Die eigene Web-Seite dieser Marke — myNextDays das Betriebs-Dashboard,
    * myBestDays der Marktplatz.
    *

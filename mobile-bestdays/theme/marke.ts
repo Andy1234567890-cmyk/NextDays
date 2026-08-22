@@ -15,6 +15,9 @@ export const marke: Marke = {
   akzent: "#C42B3A",
   logo: require("@/assets/img/mybestdays-logo.png"),
   logoHell: require("@/assets/img/mybestdays-logo-light.png"),
+  // Seitenverhältnis der beiden Logo-Dateien (1461×578). Wer das Logo rendert,
+  // rechnet die Breite hieraus statt sie zu schätzen.
+  logoRatio: 1461 / 578,
   // Der Marktplatz im Web.
   webUrl: "https://mybestdays.dk",
   andereApp: {

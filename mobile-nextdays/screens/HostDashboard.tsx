@@ -222,7 +222,7 @@ export default function HostDashboard({ navigation }: { navigation: any }) {
           <Row style={{ alignItems: "center", justifyContent: "space-between" }}>
             <Image
               source={t.marke.logo}
-              style={{ height: 26, width: 26 * 3.87 }}
+              style={{ height: 26, width: 26 * t.marke.logoRatio }}
               resizeMode="contain"
               accessibilityLabel={t.marke.name}
             />
