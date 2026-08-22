@@ -27,6 +27,8 @@ regeln="$hier/bereiche.txt"
 # Pfade, die JEDEN Bereich auslösen. Wer die Pipeline selbst, die
 # Workspace-Wurzel oder die CI-Skripte ändert, kann jeden Job beeinflussen —
 # hier zu filtern wäre die Wette, dass man alle Wirkungen überblickt.
+# Ausnahme: ein Bereich mit `!` vor dem Namen in bereiche.txt folgt diesem
+# Schwenk NICHT (siehe Schleife unten).
 INFRA='^(\.github/workflows/|package\.json$|bun\.lock$|bunfig\.toml$|scripts/ci/)'
 
 alles="nein"
@@ -54,8 +56,18 @@ while IFS='|' read -r bereich pfade; do
   case "${bereich# }" in ''|\#*) continue ;; esac
   [ -n "${pfade:-}" ] || { echo "::error::Bereich '$bereich' ohne Pfade"; exit 1; }
 
+  # Ein `!` vor dem Namen nimmt den Bereich vom Infra-Schwenk aus: er folgt
+  # dann NUR seinen eigenen Pfaden. Gedacht fuer Jobs, deren Ausgang von der
+  # Pipeline nachweislich unabhaengig ist und die zu teuer sind, um sie
+  # vorsichtshalber mitlaufen zu lassen (mobile-android: JDK + Android-SDK +
+  # Gradle, ~10 Minuten, haengt an Keystore und Firebase-App).
+  eigenwillig="nein"
+  case "$bereich" in
+    '!'*) eigenwillig="ja"; bereich="${bereich#!}" ;;
+  esac
+
   treffer="false"
-  if [ "$alles" = "ja" ]; then
+  if [ "$alles" = "ja" ] && [ "$eigenwillig" = "nein" ]; then
     treffer="true"
   else
     for p in $pfade; do

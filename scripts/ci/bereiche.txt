@@ -59,7 +59,7 @@ mobile-bestdays|mobile-bestdays/
 mobile-nextdays|mobile-nextdays/
 # Der teure Job. NUR myNextDays hat Keystore und Firebase-App, deshalb hängt er
 # allein an diesem Baum.
-mobile-android|mobile-nextdays/
+!mobile-android|mobile-nextdays/
 # Diffed die 10 Schwesterdateien BEIDER Apps und ruft
 # `ausstattung-labels-sync.mjs --pruefen`, das `lib/ausstattung.ts` aus
 # web/messages/de.json erzeugt — web/messages MUSS hier stehen.

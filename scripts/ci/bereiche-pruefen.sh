@@ -22,7 +22,9 @@ fehler=0
 [ -f "$regeln" ] || { echo "::error::$regeln fehlt"; exit 1; }
 [ -f "$ci" ] || { echo "::error::$ci fehlt"; exit 1; }
 
-bereiche="$(grep -vE '^\s*(#|$)' "$regeln" | cut -d'|' -f1 | sort -u)"
+# Das fuehrende `!` markiert nur, dass der Bereich dem Infra-Schwenk nicht
+# folgt (betroffene-bereiche.sh) — der Output-Name ist der ohne Marker.
+bereiche="$(grep -vE '^\s*(#|$)' "$regeln" | cut -d'|' -f1 | sed 's/^!//' | sort -u)"
 
 # 1) Jeder in ci.yml gelesene Output muss in bereiche.txt stehen.
 gelesen="$(grep -oE 'needs\.betroffen\.outputs\.[a-z0-9-]+' "$ci" \
