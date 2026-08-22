@@ -34,6 +34,10 @@ jobs:
       # Runner-Start je nicht betroffenem Job — beabsichtigt.
       - name: Betroffen?
         id: pruefen
+        # Vor dem Checkout gibt es das working-directory dieses Jobs noch
+        # nicht (defaults.run.working-directory). Ohne diese Zeile stirbt der
+        # Schritt mit "No such file or directory", bevor er etwas tut.
+        working-directory: ${{ github.workspace }}
         run: echo "laufen=${{ needs.betroffen.outputs.api }}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -129,6 +133,10 @@ jobs:
       # Runner-Start je nicht betroffenem Job — beabsichtigt.
       - name: Betroffen?
         id: pruefen
+        # Vor dem Checkout gibt es das working-directory dieses Jobs noch
+        # nicht (defaults.run.working-directory). Ohne diese Zeile stirbt der
+        # Schritt mit "No such file or directory", bevor er etwas tut.
+        working-directory: ${{ github.workspace }}
         run: echo "laufen=${{ needs.betroffen.outputs.public-api }}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -216,6 +224,10 @@ jobs:
       # Runner-Start je nicht betroffenem Job — beabsichtigt.
       - name: Betroffen?
         id: pruefen
+        # Vor dem Checkout gibt es das working-directory dieses Jobs noch
+        # nicht (defaults.run.working-directory). Ohne diese Zeile stirbt der
+        # Schritt mit "No such file or directory", bevor er etwas tut.
+        working-directory: ${{ github.workspace }}
         run: echo "laufen=${{ needs.betroffen.outputs.packages }}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -270,6 +282,10 @@ jobs:
         # Fehlt der Eintrag, wird NICHT uebersprungen, sondern abgebrochen
         # (fail-closed, Wurzel 5): ein leerer Wert sieht aus wie "nicht
         # betroffen", und die App bliebe bei gruenem Lauf dauerhaft ungeprueft.
+        # Vor dem Checkout gibt es das working-directory dieses Jobs noch
+        # nicht (defaults.run.working-directory). Ohne diese Zeile stirbt der
+        # Schritt mit "No such file or directory", bevor er etwas tut.
+        working-directory: ${{ github.workspace }}
         env:
           BEREICHE: ${{ toJSON(needs.betroffen.outputs) }}
         run: |
@@ -340,6 +356,10 @@ jobs:
       # Runner-Start je nicht betroffenem Job — beabsichtigt.
       - name: Betroffen?
         id: pruefen
+        # Vor dem Checkout gibt es das working-directory dieses Jobs noch
+        # nicht (defaults.run.working-directory). Ohne diese Zeile stirbt der
+        # Schritt mit "No such file or directory", bevor er etwas tut.
+        working-directory: ${{ github.workspace }}
         run: echo "laufen=${{ needs.betroffen.outputs.kanal-enums }}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -422,6 +442,10 @@ jobs:
         # Fehlt der Eintrag, wird NICHT uebersprungen, sondern abgebrochen
         # (fail-closed, Wurzel 5): ein leerer Wert sieht aus wie "nicht
         # betroffen", und die App bliebe bei gruenem Lauf dauerhaft ungeprueft.
+        # Vor dem Checkout gibt es das working-directory dieses Jobs noch
+        # nicht (defaults.run.working-directory). Ohne diese Zeile stirbt der
+        # Schritt mit "No such file or directory", bevor er etwas tut.
+        working-directory: ${{ github.workspace }}
         env:
           BEREICHE: ${{ toJSON(needs.betroffen.outputs) }}
         run: |
@@ -615,6 +639,10 @@ jobs:
       # Runner-Start je nicht betroffenem Job — beabsichtigt.
       - name: Betroffen?
         id: pruefen
+        # Vor dem Checkout gibt es das working-directory dieses Jobs noch
+        # nicht (defaults.run.working-directory). Ohne diese Zeile stirbt der
+        # Schritt mit "No such file or directory", bevor er etwas tut.
+        working-directory: ${{ github.workspace }}
         run: echo "laufen=${{ needs.betroffen.outputs.mobile-konsistenz }}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -677,6 +705,10 @@ jobs:
       # Runner-Start je nicht betroffenem Job — beabsichtigt.
       - name: Betroffen?
         id: pruefen
+        # Vor dem Checkout gibt es das working-directory dieses Jobs noch
+        # nicht (defaults.run.working-directory). Ohne diese Zeile stirbt der
+        # Schritt mit "No such file or directory", bevor er etwas tut.
+        working-directory: ${{ github.workspace }}
         run: echo "laufen=${{ needs.betroffen.outputs.marketing-konsistenz }}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -891,6 +923,10 @@ jobs:
       # Build) und erscheinen im Lauf als grün-übersprungen.
       - name: Betroffen?
         id: pruefen
+        # Vor dem Checkout gibt es das working-directory dieses Jobs noch
+        # nicht (defaults.run.working-directory). Ohne diese Zeile stirbt der
+        # Schritt mit "No such file or directory", bevor er etwas tut.
+        working-directory: ${{ github.workspace }}
         env:
           APPS: ${{ needs.betroffen.outputs.apps }}
         run: |
