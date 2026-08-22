@@ -50,3 +50,28 @@ export function vorstartFrei(pathname: string): boolean {
     (p) => pathname === p || pathname.startsWith(p) || pathname === p.replace(/\/$/, ""),
   );
 }
+
+/** Nur die Nachrichten, die die Vorab-Seite braucht.
+ *
+ *  `NextIntlClientProvider` ohne `messages` serialisiert den KOMPLETTEN
+ *  Nachrichten-Baum in das ausgelieferte HTML (532 Keys). Vor dem Start ist das
+ *  ein Leck: darin stehen Marktplatz-Texte samt Markenname — im Container
+ *  gemessen (22.08.2026) u. a. „myBestDays für Gastgeber", im Quelltext einer
+ *  Seite, die die Marke gerade verbergen soll. Ein Crawler liest den Quelltext,
+ *  nicht das gerenderte Bild.
+ *
+ *  Deshalb hier eine ausdrückliche Auswahl: nur `vorstart`. Der Import ist
+ *  derselbe Weg wie in `i18n/request.ts` — eine Ladefunktion an einer Stelle,
+ *  siehe die Begründung dort.
+ */
+export async function vorstartNachrichten(
+  locale: string,
+): Promise<Record<string, unknown>> {
+  const { load } = await import("@/i18n/request");
+  const gewaehlt = await load(locale);
+  if (gewaehlt.vorstart) return { vorstart: gewaehlt.vorstart };
+  // Fällt die gewählte Datei aus, greift Deutsch. Vier Sätze — die Seite muss
+  // stehen, ein stiller Rückfall ist hier richtig.
+  const basis = await load("de");
+  return { vorstart: basis.vorstart ?? {} };
+}

@@ -2,8 +2,8 @@
 //
 // Ohne diesen Weg wäre der Marktplatz vor dem Start auch für die Entwicklung
 // unerreichbar; mit einem im Code stehenden Passwort wäre er faktisch offen
-// (jeder liest das Repo-Bundle). Das Geheimnis kommt deshalb AUSSCHLIESSLICH
-// aus der Umgebung und ist serverseitig — kein NEXT_PUBLIC_, sonst läge es im
+// (jeder liest das Repo). Das Geheimnis kommt deshalb AUSSCHLIESSLICH aus der
+// Umgebung und ist serverseitig — kein NEXT_PUBLIC_, sonst läge es im
 // Client-Bundle und damit bei jedem Besucher.
 //
 // Ablauf: `/?zugang=<schlüssel>` setzt ein httpOnly-Cookie, danach ist die
@@ -14,9 +14,13 @@
 // FAIL-CLOSED (Wurzel 5): ist `MARKETPLACE_PREVIEW_KEY` nicht gesetzt oder
 // kürzer als 16 Zeichen, gibt es GAR KEINEN Durchlass. Ein leeres Build-Arg
 // darf das Tor nicht öffnen — und ein kurzes Geheimnis ist ratbar.
-import { timingSafeEqual } from "node:crypto";
-
-/** Name des Cookies, das eine freigeschaltete Sitzung markiert. */
+//
+// WARUM KEIN `node:crypto`: Diese Datei wird aus der `middleware.ts` importiert,
+// und die läuft im EDGE-Runtime. Dort gibt es weder `node:crypto` noch `Buffer`
+// — der erste Entwurf nutzte `timingSafeEqual` und riss damit den Docker-Build
+// beider Marktplatz-Apps auf (CI 22.08.2026). `tsc` und ESLint sehen das NICHT:
+// die Typen von `node:crypto` sind vorhanden, nur das Modul fehlt zur Laufzeit.
+// Der Vergleich läuft deshalb über Web-Standards, die im Edge existieren.
 export const VORSTART_COOKIE = "nd_vorstart";
 
 /** Query-Parameter, mit dem freigeschaltet wird. */
@@ -30,19 +34,24 @@ export function vorstartSchluessel(): string | null {
   return wert.length >= MIN_LAENGE ? wert : null;
 }
 
-/** Byteweiser Vergleich ohne Zeitunterschied.
+/** Vergleich ohne verwertbaren Zeitunterschied.
  *
  *  `a === b` bricht beim ersten abweichenden Zeichen ab und verrät über die
- *  Laufzeit, wie viele Zeichen stimmten. Bei ungleicher Länge vergleicht
- *  `timingSafeEqual` nicht, sondern wirft — deshalb die Längenprüfung vorher,
- *  und zwar so, dass sie selbst nichts verrät (die Länge des Geheimnisses ist
- *  kein Geheimnis).
+ *  Laufzeit, wie viele Zeichen stimmten. Hier wird deshalb IMMER die volle
+ *  Länge durchlaufen und das Ergebnis per XOR verrechnet: kein früher Ausstieg,
+ *  kein Verzweigen auf dem Wert.
+ *
+ *  Die Längenprüfung davor ist unkritisch — die Länge des Geheimnisses ist kein
+ *  Geheimnis, und ohne sie müsste man auf eine feste Länge auffüllen, was den
+ *  Vergleich nur schwerer prüfbar macht.
  */
 export function schluesselStimmt(eingabe: string | null | undefined): boolean {
   const erwartet = vorstartSchluessel();
   if (!erwartet || !eingabe) return false;
-  const a = Buffer.from(eingabe, "utf8");
-  const b = Buffer.from(erwartet, "utf8");
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(a, b);
+  if (eingabe.length !== erwartet.length) return false;
+  let abweichung = 0;
+  for (let i = 0; i < erwartet.length; i += 1) {
+    abweichung |= eingabe.charCodeAt(i) ^ erwartet.charCodeAt(i);
+  }
+  return abweichung === 0;
 }

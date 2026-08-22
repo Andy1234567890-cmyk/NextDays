@@ -9,7 +9,16 @@ import { getRequestConfig } from "next-intl/server";
 
 import { DEFAULT_LOCALE, LOCALE_COOKIE, isLocale } from "./locales";
 
-async function load(locale: string): Promise<Record<string, unknown>> {
+/** Eine Sprachdatei laden.
+ *
+ *  Exportiert, weil die Vorab-Seite (app/demnaechst) sie ebenfalls braucht: sie
+ *  wird per `rewrite` ausgeliefert und waehlt ihre Sprache aus `Accept-Language`
+ *  statt aus dem Cookie, kann also nicht ueber `getTranslations` gehen. Ein
+ *  zweiter, eigener `import()`-Pfad dort hat den Docker-Build zerrissen — der
+ *  relative Pfad stimmte aus einer anderen Verzeichnistiefe nicht mehr, und
+ *  `tsc` sieht das bei einem dynamischen Template-Import nicht. Deshalb EINE
+ *  Ladefunktion an EINER Stelle. */
+export async function load(locale: string): Promise<Record<string, unknown>> {
   try {
     return (await import(`../messages/${locale}.json`)).default;
   } catch (fehler) {

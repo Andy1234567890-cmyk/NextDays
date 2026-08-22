@@ -17,6 +17,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 
 import { DEFAULT_LOCALE, LOCALES, type Locale, bcp47 } from "@/i18n/locales";
+import { load } from "@/i18n/request";
 import { VOR_DEM_START } from "@/lib/vorstart";
 
 /** Erste Sprache aus `Accept-Language`, die wir wirklich haben.
@@ -41,23 +42,20 @@ function spracheAusHeader(header: string | null): Locale {
 async function texte() {
   const kopf = await headers();
   const locale = spracheAusHeader(kopf.get("accept-language"));
-  // Direkt laden statt über getTranslations: diese Seite wird per `rewrite`
-  // ausgeliefert und soll nicht von der Cookie-Sprache abhängen. Fällt eine
-  // Datei aus, greift die Basissprache — hier ist ein stiller Rückfall richtig,
-  // weil es nur vier Sätze sind und die Seite auf jeden Fall stehen muss.
-  const laden = async (l: string) => {
-    try {
-      return (await import(`../../messages/${l}.json`)).default as {
-        vorstart?: Record<string, string>;
-      };
-    } catch {
-      return {};
-    }
-  };
-  const gewaehlt = await laden(locale);
-  if (gewaehlt.vorstart) return { locale, t: gewaehlt.vorstart };
-  const basis = await laden(DEFAULT_LOCALE);
-  return { locale: DEFAULT_LOCALE, t: basis.vorstart ?? {} };
+  // `load` aus i18n/request statt getTranslations: diese Seite wird per
+  // `rewrite` ausgeliefert und waehlt ihre Sprache aus dem Header, nicht aus dem
+  // Cookie. Ein eigener `import()` waere der naheliegende Weg und war der
+  // falsche — aus dieser Verzeichnistiefe zeigte der relative Pfad ins Leere,
+  // und weil es ein dynamischer Template-Import ist, faellt das weder `tsc`
+  // noch dem Lint auf, sondern erst dem Docker-Build.
+  const vorstartAus = (m: Record<string, unknown>) =>
+    (m.vorstart ?? undefined) as Record<string, string> | undefined;
+
+  const gewaehlt = vorstartAus(await load(locale));
+  if (gewaehlt) return { locale, t: gewaehlt };
+  // Faellt die gewaehlte Datei aus, greift die Basissprache. Hier ist der stille
+  // Rueckfall richtig: es sind vier Saetze, und die Seite muss stehen.
+  return { locale: DEFAULT_LOCALE, t: vorstartAus(await load(DEFAULT_LOCALE)) ?? {} };
 }
 
 export async function generateMetadata(): Promise<Metadata> {
