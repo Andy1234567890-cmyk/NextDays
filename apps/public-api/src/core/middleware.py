@@ -77,6 +77,45 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
         return antwort
 
 
+class SicherheitsKopfMiddleware(BaseHTTPMiddleware):
+    """Setzt die Kopfzeilen, die ein Auditor bei einer oeffentlichen API erwartet.
+
+    Warum bei einer JSON-API ueberhaupt: der Schutzwert ist hier kleiner als bei
+    einer Oberflaeche (kein Browser rendert diese Antworten), aber zwei der
+    Zeilen wirken trotzdem. `Strict-Transport-Security` bindet den Client an
+    HTTPS, bevor ein Angreifer im Netz die erste Anfrage auf http umbiegen kann
+    — der 302 von Traefik kommt dafuer zu spaet. `X-Content-Type-Options`
+    verhindert, dass ein Browser eine problem+json-Antwort als HTML deutet, was
+    aus einer Fehlermeldung mit fremdem Text ein XSS machen kann.
+
+    `/docs` und `/referenz` sind ausgenommen: sie SIND Oberflaeche und laden
+    Swagger/Redoc per Skript aus dem CDN. Eine strenge CSP wuerde sie leer
+    anzeigen, und die Referenz ist bei einer veroeffentlichten API das Produkt.
+    """
+
+    # frame-ancestors statt X-Frame-Options: gleiche Wirkung, aber die moderne
+    # Form, die auch Browser ohne den alten Header verstehen.
+    _CSP = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+    _OBERFLAECHE = frozenset({"/docs", "/referenz", "/openapi.json"})
+
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        antwort = await call_next(request)
+        # 2 Jahre, Subdomains eingeschlossen. Kein `preload`: das ist eine
+        # Eintragung in eine Browser-Liste, die sich nicht schnell zuruecknehmen
+        # laesst — sie gehoert entschieden, nicht nebenbei gesetzt.
+        antwort.headers["Strict-Transport-Security"] = (
+            "max-age=63072000; includeSubDomains"
+        )
+        antwort.headers["X-Content-Type-Options"] = "nosniff"
+        antwort.headers["Referrer-Policy"] = "no-referrer"
+        if request.url.path not in self._OBERFLAECHE:
+            antwort.headers["Content-Security-Policy"] = self._CSP
+            antwort.headers["X-Frame-Options"] = "DENY"
+        return antwort
+
+
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Zählt Anfragen je Zugang (Notbehelf: je IP) in drei Eimern."""
 

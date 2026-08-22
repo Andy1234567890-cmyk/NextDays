@@ -30,7 +30,11 @@ from fastapi.responses import JSONResponse
 from .core import errors
 from .core.config import get_settings
 from .core.logging import configure_logging, get_logger
-from .core.middleware import RateLimitMiddleware, RequestIdMiddleware
+from .core.middleware import (
+    RateLimitMiddleware,
+    RequestIdMiddleware,
+    SicherheitsKopfMiddleware,
+)
 from .core.ratelimit import RateLimiter, build_redis
 from .v1 import router as v1_router
 
@@ -143,6 +147,9 @@ def create_app() -> FastAPI:
         settings=settings,
     )
     app.add_middleware(RequestIdMiddleware)
+    # Zuletzt hinzugefuegt = zuerst ausgefuehrt: so tragen auch die
+    # Antworten, die der Limiter selbst erzeugt (429), die Kopfzeilen.
+    app.add_middleware(SicherheitsKopfMiddleware)
 
     app.include_router(v1_router, prefix="/v1")
 
@@ -188,7 +195,47 @@ def create_app() -> FastAPI:
         toten Service."""
         return {"status": "ok", "service": "public-api", "version": "1.0.0"}
 
+    _schema_mit_auth(app)
     return app
+
+
+def _schema_mit_auth(app: FastAPI) -> None:
+    """Traegt `bearerAuth` in die veroeffentlichte Spec nach.
+
+    Die Auth haengt an einem `Header`-Parameter (core/auth.py), nicht an
+    FastAPIs `Security(...)` — dadurch stand `components.securitySchemes` leer
+    und `security` fehlte ganz. Funktional war das harmlos, fuer einen Partner
+    aber nicht: ein aus der Spec generierter Client kennt dann keinen
+    Auth-Mechanismus und schickt Anfragen ohne Token, bis jemand die Doku liest.
+
+    Nachtragen statt umbauen: die Auth-Kette ist geprueft, und ein Wechsel auf
+    `Security(HTTPBearer())` wuerde jede Abhaengigkeit anfassen, ohne am
+    Verhalten etwas zu aendern.
+    """
+    urspruenglich = app.openapi
+
+    def openapi() -> dict[str, object]:
+        schema = urspruenglich()
+        komponenten = schema.setdefault("components", {})
+        komponenten.setdefault("securitySchemes", {})["bearerAuth"] = {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": (
+                "Kurzlebiges Zugriffstoken aus `POST /v1/oauth/token` "
+                "(client_credentials). Gueltig 3600 Sekunden."
+            ),
+        }
+        # Global, mit Ausnahme des Token-Endpunkts selbst: er ist der EINE Weg
+        # hinein und darf kein Token verlangen, sonst kaeme niemand an eines.
+        schema["security"] = [{"bearerAuth": []}]
+        token_pfad = schema.get("paths", {}).get("/v1/oauth/token", {})
+        for operation in token_pfad.values():
+            if isinstance(operation, dict):
+                operation["security"] = []
+        return schema
+
+    app.openapi = openapi  # type: ignore[method-assign]
 
 
 app = create_app()
