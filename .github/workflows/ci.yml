@@ -19,17 +19,32 @@ permissions:
 jobs:
   api:
     name: API (lint + tests)
+    needs: [betroffen]
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: apps/api
     steps:
+      # Kein Job-`if:` — SO gewollt: dieser Job steht in `deploy.needs`, und ein
+      # per Job-`if` uebersprungener needs-Job gilt GitHub als NICHT erfolgreich;
+      # `deploy` wird dann mit-uebersprungen (belegt: Lauf 32505375969 — `images`
+      # stand auf skipped, `deploy` lief nicht, obwohl seine Bedingung wahr war).
+      # Also entscheidet der ERSTE Schritt, und jeder weitere haengt daran: der
+      # Job endet als success (leer durchgelaufen) statt skipped. Preis: ~10 s
+      # Runner-Start je nicht betroffenem Job — beabsichtigt.
+      - name: Betroffen?
+        id: pruefen
+        run: echo "laufen=${{ needs.betroffen.outputs.api }}" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.pruefen.outputs.laufen == 'true'
 
       - name: uv installieren
+        if: steps.pruefen.outputs.laufen == 'true'
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
       - name: Abhängigkeiten installieren
+        if: steps.pruefen.outputs.laufen == 'true'
         # In ein venv statt `--system`: der Runner-Interpreter unter /usr ist
         # extern verwaltet (PEP 668) und lehnt Installationen ab. Das venv-bin
         # in GITHUB_PATH macht ruff/pylint/pytest in den Folgeschritten sichtbar.
@@ -39,15 +54,18 @@ jobs:
           uv pip install --python .venv/bin/python -e ".[dev]"
 
       - name: Lint (ruff)
+        if: steps.pruefen.outputs.laufen == 'true'
         run: ruff check src
 
       - name: Lint (pylint 10/10)
+        if: steps.pruefen.outputs.laufen == 'true'
         # Hält die saubere 10.00/10 dauerhaft: bricht ab, sobald das Rating
         # unter 10 fällt (neue echte Befunde). Bewusste Ausnahmen sind zentral
         # in pyproject.toml [tool.pylint.*] begründet.
         run: pylint --fail-under=10 src
 
       - name: Tests (pytest)
+        if: steps.pruefen.outputs.laufen == 'true'
         # Platzhalter-Werte, keine echten Secrets: die Tests sprechen kein
         # Supabase an, der Client wird aber beim Import konstruiert und lehnt
         # einen leeren Key ab. SUPABASE_PUBLIC_URL muss ebenfalls gesetzt sein:
@@ -81,24 +99,144 @@ jobs:
 
   # Geteilte Pakete (packages/@nextdays/*): die Frontends prüfen nur, was sie
   # importieren — ungenutzter geteilter Code bliebe sonst ungeprüft.
+  # ────────────────────────────────────────────────────────────────────────
+  # Die ÖFFENTLICHE Partner-API (apps/public-api) — eigener Dienst, eigener Job.
+  #
+  # Bewusst nicht in den api-Job gehängt: es sind zwei Projekte mit eigenen
+  # Abhängigkeiten (dieser hier hat kein Stripe, kein Twilio, kein Firebase).
+  # Ein gemeinsamer Job würde beide Abhängigkeitsbäume installieren und die
+  # Trennung, die der ganze Sinn des zweiten Dienstes ist, im CI wieder
+  # aufheben.
+  #
+  # Die Tests laufen OHNE Datenbank gegen eine In-Memory-Nachbildung; deshalb
+  # braucht dieser Job keine Platzhalter-Secrets für Supabase — nur das
+  # Signier-Secret, das die Auth-Tests selbst setzen.
+  # ────────────────────────────────────────────────────────────────────────
+  public-api:
+    name: Öffentliche API (lint + tests)
+    needs: [betroffen]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/public-api
+    steps:
+      # Kein Job-`if:` — SO gewollt: dieser Job steht in `deploy.needs`, und ein
+      # per Job-`if` uebersprungener needs-Job gilt GitHub als NICHT erfolgreich;
+      # `deploy` wird dann mit-uebersprungen (belegt: Lauf 32505375969 — `images`
+      # stand auf skipped, `deploy` lief nicht, obwohl seine Bedingung wahr war).
+      # Also entscheidet der ERSTE Schritt, und jeder weitere haengt daran: der
+      # Job endet als success (leer durchgelaufen) statt skipped. Preis: ~10 s
+      # Runner-Start je nicht betroffenem Job — beabsichtigt.
+      - name: Betroffen?
+        id: pruefen
+        run: echo "laufen=${{ needs.betroffen.outputs.public-api }}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.pruefen.outputs.laufen == 'true'
+
+      - name: Schwesterdateien byte-identisch
+        if: steps.pruefen.outputs.laufen == 'true'
+        # Sieben Dateien liegen bewusst doppelt (apps/api ↔ apps/public-api).
+        # Drift ist hier kein Stilproblem: eine geflickte SSRF-Prüfung in nur
+        # einem Baum, zwei verschiedene Verfügbarkeitszahlen, ein Scope, den das
+        # Dashboard vergibt und kein Endpunkt kennt. Der Schritt läuft VOR der
+        # Installation — er braucht nur den Checkout und soll als Erstes
+        # scheitern.
+        working-directory: .
+        run: bash scripts/ci/public-api-kopien-pruefen.sh
+
+      - name: uv installieren
+        if: steps.pruefen.outputs.laufen == 'true'
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+
+      - name: Abhängigkeiten installieren
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: |
+          uv venv --python 3.12 .venv
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+          uv pip install --python .venv/bin/python -e ".[dev]"
+
+      - name: Lint (ruff)
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: ruff check src
+
+      - name: Lint (pylint 10/10)
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: pylint --fail-under=10 src
+
+      - name: Tests (pytest)
+        if: steps.pruefen.outputs.laufen == 'true'
+        env:
+          # Die Auth-Tests setzen das Secret selbst; hier steht es, damit ein
+          # Test, der es NICHT setzt, nicht versehentlich gegen einen leeren
+          # Wert läuft und fail-closed grün aussieht.
+          API_TOKEN_SECRET: ci-placeholder-signier-secret-0123456789
+        run: pytest -q
+
+      - name: OpenAPI-Datei entsteht und ist 3.1
+        if: steps.pruefen.outputs.laufen == 'true'
+        # Ein Schema, das sich nicht erzeugen lässt, ist ein kaputtes Produkt:
+        # `/openapi.json` IST die veröffentlichte Referenz, aus der Kunden ihre
+        # Clients generieren. Der Aufruf prüft zusätzlich, dass jeder Endpunkt
+        # unter /v1 hängt — ein Pfad ohne Version wäre eine Zusage, die wir
+        # nicht halten können.
+        env:
+          API_TOKEN_SECRET: ci-placeholder-signier-secret-0123456789
+        run: |
+          python - <<'PY'
+          from src.main import app
+          spec = app.openapi()
+          assert spec["openapi"].startswith("3.1"), spec["openapi"]
+          pfade = list(spec["paths"])
+          assert pfade, "keine Pfade im Schema"
+          ohne_version = [p for p in pfade if not p.startswith("/v1/")]
+          assert not ohne_version, f"Pfade ohne /v1: {ohne_version}"
+          print(f"OpenAPI {spec['openapi']} — {len(pfade)} Pfade, alle unter /v1")
+          PY
+
+      - name: Deploy-Stack ist gültig
+        if: steps.pruefen.outputs.laufen == 'true'
+        # Prüft die Compose-Datei so, wie Coolify sie liest (Variablen dürfen
+        # leer sein — geprüft wird die Syntax und die Netz-/Service-Struktur).
+        # Ohne diesen Schritt fällt ein Tippfehler erst beim Deploy auf.
+        working-directory: .
+        run: docker compose -f deploy/public-api/docker-compose.yml config --quiet
+
   packages:
     name: Packages (Typprüfung + Lint)
+    needs: [betroffen]
     runs-on: ubuntu-latest
     steps:
+      # Kein Job-`if:` — SO gewollt: dieser Job steht in `deploy.needs`, und ein
+      # per Job-`if` uebersprungener needs-Job gilt GitHub als NICHT erfolgreich;
+      # `deploy` wird dann mit-uebersprungen (belegt: Lauf 32505375969 — `images`
+      # stand auf skipped, `deploy` lief nicht, obwohl seine Bedingung wahr war).
+      # Also entscheidet der ERSTE Schritt, und jeder weitere haengt daran: der
+      # Job endet als success (leer durchgelaufen) statt skipped. Preis: ~10 s
+      # Runner-Start je nicht betroffenem Job — beabsichtigt.
+      - name: Betroffen?
+        id: pruefen
+        run: echo "laufen=${{ needs.betroffen.outputs.packages }}" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.pruefen.outputs.laufen == 'true'
 
       - name: bun installieren
+        if: steps.pruefen.outputs.laufen == 'true'
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: "1.3.9"
 
       - name: Abhängigkeiten installieren
+        if: steps.pruefen.outputs.laufen == 'true'
         run: bun install --frozen-lockfile
 
       - name: Typprüfung
+        if: steps.pruefen.outputs.laufen == 'true'
         run: bunx tsc -p packages
 
       - name: Lint (eslint)
+        if: steps.pruefen.outputs.laufen == 'true'
         run: bun run lint:packages
 
   # Typprüfung je Frontend — schnelles, präzises Signal VOR den langsamen
@@ -107,27 +245,63 @@ jobs:
   # bun-Workspaces (Wurzel-package.json): eine Installation deckt alle ab.
   frontends:
     name: Frontend-Typprüfung (${{ matrix.app }})
+    needs: [betroffen]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         app: [web, marketing, plattform, gastgeber, admin, builder, storybook]
     steps:
+      # Kein Job-`if:` — SO gewollt: dieser Job steht in `deploy.needs`, und ein
+      # per Job-`if` uebersprungener needs-Job gilt GitHub als NICHT erfolgreich;
+      # `deploy` wird dann mit-uebersprungen (belegt: Lauf 32505375969 — `images`
+      # stand auf skipped, `deploy` lief nicht, obwohl seine Bedingung wahr war).
+      # Also entscheidet der ERSTE Schritt, und jeder weitere haengt daran: der
+      # Job endet als success (leer durchgelaufen) statt skipped. Preis: ~10 s
+      # Runner-Start je nicht betroffenem Job — beabsichtigt.
+      - name: Betroffen?
+        id: pruefen
+        # Der Bereichsname IST der Matrix-Wert (bereiche.txt fuehrt jede App
+        # unter ihrem eigenen Namen). Einen Ausdruck
+        # `needs.betroffen.outputs[matrix.app]` gibt es in GitHub-Expressions
+        # nicht — deshalb das ganze outputs-Objekt als JSON und der Zugriff per
+        # jq.
+        #
+        # Fehlt der Eintrag, wird NICHT uebersprungen, sondern abgebrochen
+        # (fail-closed, Wurzel 5): ein leerer Wert sieht aus wie "nicht
+        # betroffen", und die App bliebe bei gruenem Lauf dauerhaft ungeprueft.
+        env:
+          BEREICHE: ${{ toJSON(needs.betroffen.outputs) }}
+        run: |
+          set -euo pipefail
+          wert=$(printf '%s' "$BEREICHE" \
+            | jq -r --arg a "${{ matrix.app }}" '.[$a] // empty')
+          if [ -z "$wert" ]; then
+            echo "::error::Kein Bereichs-Output fuer ${{ matrix.app }} — scripts/ci/bereiche.txt und die outputs-Deklaration des Jobs betroffen pruefen."
+            exit 1
+          fi
+          echo "laufen=$wert" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.pruefen.outputs.laufen == 'true'
 
       - name: bun installieren
+        if: steps.pruefen.outputs.laufen == 'true'
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: "1.3.9"
 
       - name: Abhängigkeiten installieren
+        if: steps.pruefen.outputs.laufen == 'true'
         run: bun install --frozen-lockfile
 
       - name: Typprüfung
+        if: steps.pruefen.outputs.laufen == 'true'
         working-directory: ${{ matrix.app }}
         run: bun run typecheck
 
       - name: Lint (eslint)
+        if: steps.pruefen.outputs.laufen == 'true'
         # Fängt, was `tsc` NICHT sieht: toter Code, Hooks hinter einem frühen
         # Return, vergessene Hook-Abhängigkeiten, verschluckte Fehler ohne
         # `cause`. Regeln zentral in packages/eslint-config; Warnungen brechen
@@ -140,7 +314,9 @@ jobs:
         # Nur builder: die App hat (noch) keine Coolify-Resource, ihr Build wird
         # also nirgends sonst geprüft. Alle übrigen Frontends bauen im
         # images-Job über ihr Dockerfile — dort ist der Next-Build enthalten.
-        if: matrix.app == 'builder'
+        # Die Betroffenheit steht davor und mit UND: ein nicht betroffener
+        # builder-Push soll auch nicht bauen.
+        if: steps.pruefen.outputs.laufen == 'true' && matrix.app == 'builder'
         working-directory: ${{ matrix.app }}
         run: bun run build
 
@@ -152,11 +328,25 @@ jobs:
   # mit `ota_other` passiert.
   kanal-enums:
     name: Kanal-Enums (Backend ↔ Frontends)
+    needs: [betroffen]
     runs-on: ubuntu-latest
     steps:
+      # Kein Job-`if:` — SO gewollt: dieser Job steht in `deploy.needs`, und ein
+      # per Job-`if` uebersprungener needs-Job gilt GitHub als NICHT erfolgreich;
+      # `deploy` wird dann mit-uebersprungen (belegt: Lauf 32505375969 — `images`
+      # stand auf skipped, `deploy` lief nicht, obwohl seine Bedingung wahr war).
+      # Also entscheidet der ERSTE Schritt, und jeder weitere haengt daran: der
+      # Job endet als success (leer durchgelaufen) statt skipped. Preis: ~10 s
+      # Runner-Start je nicht betroffenem Job — beabsichtigt.
+      - name: Betroffen?
+        id: pruefen
+        run: echo "laufen=${{ needs.betroffen.outputs.kanal-enums }}" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.pruefen.outputs.laufen == 'true'
 
       - name: Enums und Labels deckungsgleich
+        if: steps.pruefen.outputs.laufen == 'true'
         run: node scripts/i18n/kanal-enums-pruefen.mjs
 
       # Jeder Platzhalter aus dem Backend-Katalog braucht sein Etikett in allen
@@ -164,7 +354,38 @@ jobs:
       # und übersieht deshalb ein Feld, das in allen 24 fehlt — genau so kamen
       # 31 neue Platzhalter ohne Beschriftung in die Oberfläche.
       - name: Platzhalter-Etiketten vollstaendig
+        if: steps.pruefen.outputs.laufen == 'true'
         run: node scripts/i18n/pruefe-feld-labels.mjs
+
+      # Der Namespace `entwickler` (Entwickler-Portal /entwickler) muss in ALLEN
+      # 24 Sprachen vollständig sein: marketing lädt die Sprachdatei OHNE Merge
+      # mit der Basissprache, ein fehlender Schlüssel ist deshalb kein deutscher
+      # Text, sondern ein MISSING_MESSAGE — und in einer Server Component bricht
+      # damit die ganze Seite. Zusätzlich geprüft: Code-Bezeichner (Feldnamen,
+      # Header) sind in keiner Übersetzung verändert worden.
+      - name: Entwickler-Portal in allen Sprachen
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: node scripts/i18n/entwickler-namespace-pruefen.mjs
+
+      # Der Scope-Katalog wird von DREI Stellen gelesen: dem Backend (was das
+      # Dashboard vergeben darf), der Auswahl in der Oberfläche und den
+      # Etiketten in 24 Sprachen. Fehlt ein Bereich in der Oberfläche, kann
+      # niemand dieses Recht vergeben — die zugehörigen Endpunkte der
+      # öffentlichen API antworten dann dauerhaft mit 403, ohne dass irgendwo
+      # ein Fehler auftaucht. Genau dieser Zustand lag vor, als die API um
+      # Preise, Gäste, Aufgaben und Webhooks erweitert wurde.
+      - name: API-Scopes in Backend und Oberfläche deckungsgleich
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: node scripts/i18n/api-scopes-pruefen.mjs
+
+      # Provisionssatz und Monatsdeckel sind Zahlen der ABRECHNUNG. Standen sie
+      # zusaetzlich im Fliesstext der 48 Sprachdateien, waere bei einer
+      # Satzaenderung im Backend die neue Zahl als Ueberschrift ueber einem
+      # Absatz mit der alten gelandet — in 24 Sprachen, unsichtbar fuer tsc,
+      # ESLint und jeden Test.
+      - name: Provisionssaetze nur aus der API
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: node scripts/i18n/provisionssaetze-pruefen.mjs
 
   # Die beiden Mobile-Apps (ADR-0019) hängen nicht am Wurzel-Workspace (React
   # Native braucht sein eigenes, nicht gehobenes node_modules — deshalb hat jede
@@ -173,6 +394,7 @@ jobs:
   # deploy-Jobs unverändert gilt.
   mobile:
     name: Mobile (${{ matrix.app }})
+    needs: [betroffen]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -182,29 +404,66 @@ jobs:
       run:
         working-directory: ${{ matrix.app }}
     steps:
+      # Kein Job-`if:` — SO gewollt: dieser Job steht in `deploy.needs`, und ein
+      # per Job-`if` uebersprungener needs-Job gilt GitHub als NICHT erfolgreich;
+      # `deploy` wird dann mit-uebersprungen (belegt: Lauf 32505375969 — `images`
+      # stand auf skipped, `deploy` lief nicht, obwohl seine Bedingung wahr war).
+      # Also entscheidet der ERSTE Schritt, und jeder weitere haengt daran: der
+      # Job endet als success (leer durchgelaufen) statt skipped. Preis: ~10 s
+      # Runner-Start je nicht betroffenem Job — beabsichtigt.
+      - name: Betroffen?
+        id: pruefen
+        # Der Bereichsname IST der Matrix-Wert (bereiche.txt fuehrt jede App
+        # unter ihrem eigenen Namen). Einen Ausdruck
+        # `needs.betroffen.outputs[matrix.app]` gibt es in GitHub-Expressions
+        # nicht — deshalb das ganze outputs-Objekt als JSON und der Zugriff per
+        # jq.
+        #
+        # Fehlt der Eintrag, wird NICHT uebersprungen, sondern abgebrochen
+        # (fail-closed, Wurzel 5): ein leerer Wert sieht aus wie "nicht
+        # betroffen", und die App bliebe bei gruenem Lauf dauerhaft ungeprueft.
+        env:
+          BEREICHE: ${{ toJSON(needs.betroffen.outputs) }}
+        run: |
+          set -euo pipefail
+          wert=$(printf '%s' "$BEREICHE" \
+            | jq -r --arg a "${{ matrix.app }}" '.[$a] // empty')
+          if [ -z "$wert" ]; then
+            echo "::error::Kein Bereichs-Output fuer ${{ matrix.app }} — scripts/ci/bereiche.txt und die outputs-Deklaration des Jobs betroffen pruefen."
+            exit 1
+          fi
+          echo "laufen=$wert" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.pruefen.outputs.laufen == 'true'
 
       - name: bun installieren
+        if: steps.pruefen.outputs.laufen == 'true'
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: "1.3.9"
 
       - name: Abhängigkeiten installieren
+        if: steps.pruefen.outputs.laufen == 'true'
         run: bun install --frozen-lockfile
 
       - name: Platzhalter-Secrets anlegen
+        if: steps.pruefen.outputs.laufen == 'true'
         # lib/config.secrets.ts ist gitignoriert (echter anon-Key), wird aber von
         # lib/config.ts importiert. Ohne die Datei bricht tsc mit TS2307 ab. Die
         # Vorlage enthält nur einen Platzhalter — für Typprüfung/Jest genügt das.
         run: cp lib/config.secrets.example.ts lib/config.secrets.ts
 
       - name: Typprüfung
+        if: steps.pruefen.outputs.laufen == 'true'
         run: bun run typecheck
 
       - name: Lint (eslint)
+        if: steps.pruefen.outputs.laufen == 'true'
         run: bun run lint
 
       - name: Tests (jest)
+        if: steps.pruefen.outputs.laufen == 'true'
         run: bun run test
 
   # Der Android-RELEASE-Build als Prüfung — NUR myNextDays.
@@ -231,6 +490,14 @@ jobs:
   # Bekommt die Schwester-App ihren Release-Weg, gehört sie hier ergänzt.
   mobile-android-release:
     name: Mobile (Android-Release-Build myNextDays)
+    needs: [betroffen]
+    # Hier ist ein Job-`if` RICHTIG und nicht das Muster der anderen Pruefjobs:
+    # dieser Job steht NICHT in `deploy.needs`, ein skipped kann den Deploy also
+    # nicht mit-ueberspringen. Und er ist der teuerste im ganzen Workflow
+    # (JDK + Android-SDK + Gradle, ~10 Minuten) — er soll wirklich uebersprungen
+    # werden, nicht bloss leer durchlaufen. Bereich `mobile-android` haengt
+    # allein an mobile-nextdays/ (bereiche.txt).
+    if: needs.betroffen.outputs.mobile-android == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -336,11 +603,25 @@ jobs:
   # deren Divergenz echten Schaden anrichtet.
   mobile-konsistenz:
     name: Mobile (Konsistenz beider Apps)
+    needs: [betroffen]
     runs-on: ubuntu-latest
     steps:
+      # Kein Job-`if:` — SO gewollt: dieser Job steht in `deploy.needs`, und ein
+      # per Job-`if` uebersprungener needs-Job gilt GitHub als NICHT erfolgreich;
+      # `deploy` wird dann mit-uebersprungen (belegt: Lauf 32505375969 — `images`
+      # stand auf skipped, `deploy` lief nicht, obwohl seine Bedingung wahr war).
+      # Also entscheidet der ERSTE Schritt, und jeder weitere haengt daran: der
+      # Job endet als success (leer durchgelaufen) statt skipped. Preis: ~10 s
+      # Runner-Start je nicht betroffenem Job — beabsichtigt.
+      - name: Betroffen?
+        id: pruefen
+        run: echo "laufen=${{ needs.betroffen.outputs.mobile-konsistenz }}" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.pruefen.outputs.laufen == 'true'
 
       - name: Geteilte Logik identisch
+        if: steps.pruefen.outputs.laufen == 'true'
         # Divergenz hier erzeugt falsche Zahlen (currency), tote Realtime-Abos
         # (realtime) oder eine App, die gegen ein anderes Backend spricht
         # (config). UI (kit/patterns/Icon) steht bewusst NICHT auf der Liste:
@@ -361,6 +642,7 @@ jobs:
           done
 
       - name: Ausstattungs-Labels aus web/messages erzeugt
+        if: steps.pruefen.outputs.laufen == 'true'
         # `lib/ausstattung.ts` ist GENERIERT. Ohne diesen Schritt fällt eine
         # von Hand editierte oder veraltete Fassung erst dem Gast auf: er sieht
         # rohe Slugs („nd_single_level"), weil das Merkmal im Katalog fehlt
@@ -368,6 +650,7 @@ jobs:
         run: node scripts/mobile/ausstattung-labels-sync.mjs --pruefen
 
       - name: Kernversionen identisch
+        if: steps.pruefen.outputs.laufen == 'true'
         # Zwei Lockfiles heißt: nichts hält react/react-native/supabase-js
         # automatisch gleich. Drift ist die teuerste Fehlerklasse — ein Bug
         # reproduziert sich dann nur in einer der beiden Apps.
@@ -382,11 +665,25 @@ jobs:
 
   marketing-konsistenz:
     name: Marketing (bewusste Kopien)
+    needs: [betroffen]
     runs-on: ubuntu-latest
     steps:
+      # Kein Job-`if:` — SO gewollt: dieser Job steht in `deploy.needs`, und ein
+      # per Job-`if` uebersprungener needs-Job gilt GitHub als NICHT erfolgreich;
+      # `deploy` wird dann mit-uebersprungen (belegt: Lauf 32505375969 — `images`
+      # stand auf skipped, `deploy` lief nicht, obwohl seine Bedingung wahr war).
+      # Also entscheidet der ERSTE Schritt, und jeder weitere haengt daran: der
+      # Job endet als success (leer durchgelaufen) statt skipped. Preis: ~10 s
+      # Runner-Start je nicht betroffenem Job — beabsichtigt.
+      - name: Betroffen?
+        id: pruefen
+        run: echo "laufen=${{ needs.betroffen.outputs.marketing-konsistenz }}" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.pruefen.outputs.laufen == 'true'
 
       - name: Kopien decken sich mit ihrer Quelle
+        if: steps.pruefen.outputs.laufen == 'true'
         # marketing baut ISOLIERT (Coolify base_directory /marketing, eigenes
         # bun.lock) und kann deshalb keine @nextdays/*-Packages importieren —
         # ein `workspace:*`-Eintrag lässt dort `bun install --frozen-lockfile`
@@ -418,6 +715,29 @@ jobs:
     outputs:
       apps: ${{ steps.ermitteln.outputs.apps }}
       base: ${{ steps.basis.outputs.base }}
+      # Je Prüf-Bereich ein "true"/"false". Regeln in scripts/ci/bereiche.txt,
+      # Namen dort und hier deckungsgleich (bereiche-pruefen.sh erzwingt das —
+      # ein Tippfehler wäre ein leerer String und würde den Job STILL
+      # überspringen, bei grünem Lauf). Die Matrix-Jobs lesen diese Outputs als
+      # Ganzes per toJSON + jq und brechen bei fehlendem Eintrag ab; die
+      # Jobs mit fest genanntem Bereich haben diesen Schutz NICHT — für sie ist
+      # bereiche-pruefen.sh die einzige Absicherung gegen den Tippfehler.
+      api: ${{ steps.bereiche.outputs.api }}
+      public-api: ${{ steps.bereiche.outputs.public-api }}
+      packages: ${{ steps.bereiche.outputs.packages }}
+      web: ${{ steps.bereiche.outputs.web }}
+      plattform: ${{ steps.bereiche.outputs.plattform }}
+      gastgeber: ${{ steps.bereiche.outputs.gastgeber }}
+      admin: ${{ steps.bereiche.outputs.admin }}
+      builder: ${{ steps.bereiche.outputs.builder }}
+      marketing: ${{ steps.bereiche.outputs.marketing }}
+      storybook: ${{ steps.bereiche.outputs.storybook }}
+      kanal-enums: ${{ steps.bereiche.outputs.kanal-enums }}
+      mobile-bestdays: ${{ steps.bereiche.outputs.mobile-bestdays }}
+      mobile-nextdays: ${{ steps.bereiche.outputs.mobile-nextdays }}
+      mobile-android: ${{ steps.bereiche.outputs.mobile-android }}
+      mobile-konsistenz: ${{ steps.bereiche.outputs.mobile-konsistenz }}
+      marketing-konsistenz: ${{ steps.bereiche.outputs.marketing-konsistenz }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -459,9 +779,19 @@ jobs:
       - name: App-Liste deckungsgleich mit images-Matrix
         run: bash scripts/ci/apps-liste-pruefen.sh
 
+      - name: Bereichs-Regeln deckungsgleich mit ci.yml
+        run: bash scripts/ci/bereiche-pruefen.sh
+
       - name: Betroffene Apps ermitteln
         id: ermitteln
         run: bash scripts/ci/betroffene-apps.sh "${{ steps.basis.outputs.base }}" "${{ github.sha }}"
+
+      - name: Betroffene Prüf-Bereiche ermitteln
+        id: bereiche
+        # DIESELBE Basis wie die App-Ermittlung. Liefe sie gegen eine andere,
+        # würden Prüfjobs und Image-Build von verschiedenen Mengen ausgehen —
+        # dann kann ein Image gebaut werden, dessen Prüfung nie lief.
+        run: bash scripts/ci/betroffene-bereiche.sh "${{ steps.basis.outputs.base }}" "${{ github.sha }}"
 
   # ────────────────────────────────────────────────────────────────────────
   # JEDE Coolify-App dieses Repos wird hier so gebaut/validiert, wie Coolify es
@@ -485,7 +815,13 @@ jobs:
   images:
     name: Coolify-App (${{ matrix.app }})
     needs: [betroffen]
-    if: needs.betroffen.outputs.apps != ''
+    # Bewusst KEIN Job-`if:` mehr. Hier stand
+    # `if: needs.betroffen.outputs.apps != ''` — genau das hat am Lauf
+    # 32505375969 den Deploy verhindert: bei einem Push, der keine Coolify-App
+    # beruehrt, ging `images` auf skipped, und weil GitHub die `needs` VOR der
+    # if-Auswertung prueft, wurde `deploy` mit-uebersprungen. Die Bedingung war
+    # ohnehin doppelt — der Schritt `Betroffen?` unten entscheidet je
+    # Matrix-Eintrag, und ohne Treffer ist der Job in Sekunden leer durch.
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -539,6 +875,13 @@ jobs:
             kind: compose
             projectdir: .
             compose: deploy/supabase/docker-compose.yml
+          # Die oeffentliche Partner-API: eigener Compose-Stack (api + zusteller),
+          # eigenes Image. Baut aus apps/public-api, nicht aus apps/api — die
+          # beiden Dienste teilen bewusst keine Abhaengigkeiten.
+          - app: nextdays-public-api
+            kind: compose
+            projectdir: .
+            compose: deploy/public-api/docker-compose.yml
     steps:
       # Die Matrix bleibt die vollständige, lesbare Abbildung aller 12
       # Coolify-Resources; ob dieser Eintrag WIRKLICH baut, entscheidet die
@@ -611,8 +954,24 @@ jobs:
   # ────────────────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to Coolify
-    needs: [betroffen, api, packages, frontends, kanal-enums, mobile, mobile-konsistenz, marketing-konsistenz, images]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [betroffen, api, public-api, packages, frontends, kanal-enums, mobile, mobile-konsistenz, marketing-konsistenz, images]
+    # `always()` ist ZWINGEND: ohne es prueft GitHub die `needs` VOR der
+    # if-Auswertung und ueberspringt den Job, sobald irgendein needs-Job
+    # `skipped` ist — egal wie wahr die Bedingung ist (belegt: Lauf 32505375969,
+    # `images` skipped → `deploy` mit-uebersprungen). `always()` schaltet diese
+    # Vorpruefung ab; ersetzt wird sie durch `!contains(needs.*.result,
+    # 'failure')`, das `skipped` durchlaesst, aber kein rotes Ergebnis.
+    # `cancelled` muss mit rein, sonst deployt ein abgebrochener Lauf ungeprueft.
+    # `needs.betroffen.result == 'success'` steht EINZELN da, weil dessen Output
+    # die Deploy-Liste IST: waere er leer, meldete der Deploy-Schritt "Keine App
+    # betroffen" und endete gruen — obwohl eine App haette live gehen muessen.
+    if: >-
+      always()
+      && github.event_name == 'push'
+      && github.ref == 'refs/heads/main'
+      && needs.betroffen.result == 'success'
+      && !contains(needs.*.result, 'failure')
+      && !contains(needs.*.result, 'cancelled')
     runs-on: ubuntu-latest
     permissions:
       contents: read

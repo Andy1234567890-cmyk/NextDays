@@ -1,0 +1,71 @@
+# Welcher Prüf-Bereich der CI wird von welchen Pfaden berührt?
+#
+# Format: bereich|pfad-präfix1 pfad-präfix2 …
+#
+# Die EINE Quelle dafür, was ein Push in ci.yml auslöst. Vorher lief jeder
+# Prüfjob bei jedem Push: eine Änderung an `plattform/app/robots.ts` startete
+# den Android-Release-Prüfbau (JDK + Android-SDK + Gradle + APK, ~10 Minuten)
+# und blockierte damit die Warteschlange für den nächsten Lauf.
+#
+# WICHTIG — die Pfade sind KEINE Verzeichnis-Zuordnung, sondern die Antwort auf
+# „welche Dateien kann dieser Job überhaupt lesen?". Mehrere Prüfskripte lesen
+# quer über den Baum; steht ihre Quelle hier nicht, wird der Job übersprungen
+# und der Befund kommt nie. Die Zeilen sind deshalb einzeln aus den Skripten
+# abgeleitet, nicht geschätzt — `bereiche-pruefen.sh` hält sie gegen ci.yml
+# deckungsgleich, und der wöchentliche Vollauf fängt, was hier fehlt.
+#
+# Ergänzt ein Skript eine neue Fremdquelle, gehört sie in dieselbe Zeile.
+
+# --- Backend ---------------------------------------------------------------
+# Beide Python-Bäume lösen BEIDE Jobs aus: `public-api-kopien-pruefen.sh`
+# verlangt 7 Schwesterdateien byte-identisch, eine einseitige Änderung darf
+# nicht durchrutschen.
+api|apps/api/ apps/public-api/
+public-api|apps/public-api/ apps/api/ deploy/public-api/
+
+# --- Geteilte Pakete -------------------------------------------------------
+packages|packages/
+
+# --- Frontends -------------------------------------------------------------
+# `packages/ui` exportiert rohes .tsx (package.json: "./*": "./src/*.tsx"),
+# `tsc --noEmit` kompiliert also Paket-QUELLCODE mit. Wer ein Paket ändert,
+# muss die Typprüfung jeder App bekommen, die es konsumiert.
+web|web/ packages/
+plattform|plattform/ packages/
+gastgeber|gastgeber/ packages/
+admin|admin/ packages/
+builder|builder/ packages/
+# marketing und storybook sind ABSICHTLICH ohne `packages/`: beide nutzen
+# keine @nextdays/*-Pakete (dokumentiert in ihren next.config.ts), nur die
+# ESLint-Konfiguration. `packages/` pauschal einzutragen würde bei jeder
+# Paket-Änderung zwei unnötige Läufe starten.
+marketing|marketing/ packages/eslint-config/
+storybook|storybook/ packages/eslint-config/
+
+# --- Querprüfungen ---------------------------------------------------------
+# Der Job führt FÜNF Skripte aus, jedes mit eigenen Quellen:
+#   kanal-enums-pruefen.mjs        supabase/migrations, reservations+calendar
+#                                  schemas, web/lib, mobile-nextdays/lib,
+#                                  web/messages
+#   pruefe-feld-labels.mjs         inbox/felder.py + web/messages
+#   entwickler-namespace-pruefen   marketing/messages
+#   api-scopes-pruefen.mjs         api_clients/scopes.py, public-api scopes,
+#                                  web/lib/api-scopes.ts, web/messages
+#   provisionssaetze-pruefen.mjs   marketing/messages + web/messages
+kanal-enums|supabase/migrations/ apps/api/src/features/reservations/ apps/api/src/features/calendar/ apps/api/src/features/inbox/ apps/api/src/features/api_clients/ apps/public-api/src/core/ web/lib/ web/messages/ marketing/messages/ mobile-nextdays/lib/ scripts/i18n/
+
+# --- Mobile ----------------------------------------------------------------
+mobile-bestdays|mobile-bestdays/
+mobile-nextdays|mobile-nextdays/
+# Der teure Job. NUR myNextDays hat Keystore und Firebase-App, deshalb hängt er
+# allein an diesem Baum.
+mobile-android|mobile-nextdays/
+# Diffed die 10 Schwesterdateien BEIDER Apps und ruft
+# `ausstattung-labels-sync.mjs --pruefen`, das `lib/ausstattung.ts` aus
+# web/messages/de.json erzeugt — web/messages MUSS hier stehen.
+mobile-konsistenz|mobile-bestdays/ mobile-nextdays/ web/messages/ scripts/mobile/
+
+# `kopien-pruefen.sh` hält genau zwei Paare byte-identisch:
+#   packages/tarif/src/index.ts    ↔ marketing/lib/tarif.ts
+#   packages/currency/src/index.ts ↔ marketing/lib/currency.ts
+marketing-konsistenz|marketing/lib/ packages/tarif/ packages/currency/ scripts/marketing/
