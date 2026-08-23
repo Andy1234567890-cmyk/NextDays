@@ -3643,6 +3643,14 @@
         "title": "Zusatzleistung",
         "type": "object"
       }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "bearerFormat": "JWT",
+        "description": "Kurzlebiges Zugriffstoken aus `POST /v1/oauth/token` (client_credentials). Gueltig 3600 Sekunden.",
+        "scheme": "bearer",
+        "type": "http"
+      }
     }
   },
   "info": {
@@ -4513,6 +4521,7 @@
             "description": "Zu viele Versuche (10 pro Minute)."
           }
         },
+        "security": [],
         "summary": "Access-Token holen",
         "tags": [
           "Auth"
@@ -7386,6 +7395,11 @@
       }
     }
   },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
   "servers": [
     {
       "description": "Produktion",
