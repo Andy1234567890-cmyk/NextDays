@@ -5532,6 +5532,7 @@
       "feeShortStayOnlyHint": "Ta ut avgiften endast vid kortvistelse.",
       "feeShortStayOnlyBound": "Gäller vid högst {nights} nätter — samma gräns som kortvistelsepåslaget. Avgiften skickas inte till portalerna: en vistelselängd kan inte anges där.",
       "feeShortStayOnlyMissing": "För detta objekt är ingen kortvistelse fastställd ännu (”Kortvistelsepåslag”) — så länge den saknas tas avgiften inte ut.",
+      "feePetsOnlyNote": "Denna avgift tas ut endast när gästen tar med ett husdjur — även som fast belopp.",
       "applyToOthersFeeHint": "Tillämpa samma avgift på andra objekt.",
       "applyToOthersTaxHint": "Tillämpa samma skatt på andra objekt.",
       "promoUnnamed": "Utan namn",

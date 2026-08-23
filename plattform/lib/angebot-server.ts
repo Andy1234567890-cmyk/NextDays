@@ -17,6 +17,12 @@ export type AngebotsAnfrage = {
   guests: number;
   pets: number;
   promoCode?: string;
+  /** Sprache des Gastes für die Bezeichnungen der Aufschlüsselung. Der Server
+   *  fällt ohne sie auf Englisch zurück — nicht auf Deutsch (27 Länder). */
+  locale?: string;
+  /** IDs der zugewählten optionalen Gebühren. Ohne Wahl werden sie nicht
+   *  berechnet; welche ID gültig ist, prüft der Server. */
+  fees?: string[];
 };
 
 /** Verbindliches Angebot des Servers — null, wenn es keins gibt (unbekanntes
@@ -42,6 +48,8 @@ export async function ladeAngebotServer(
         guests: anfrage.guests,
         pets: anfrage.pets,
         promo_code: anfrage.promoCode,
+        locale: anfrage.locale,
+        fees: anfrage.fees,
       }),
       cache: "no-store",
       signal: controller.signal,

@@ -433,6 +433,107 @@ def test_quote_haustiergebuehr_pro_tier() -> None:
     assert "Haustier" not in quote_mit(0)
 
 
+def test_quote_haustier_pauschale_nur_mit_tier() -> None:
+    """Haustier-PAUSCHALE (`per_stay`) greift nur bei einer Buchung mit Tier.
+
+    Das war der Live-Bug: die Bedingung hing an der Basis, und `per_stay`
+    multipliziert nichts — die Gebühr lief jedem Gast mit. Alle neun gepflegten
+    Haustiergebühren der Kundendatenbank standen genau so (150 DKK, `per_stay`,
+    aus dem Airbnb-Import). Die Pauschale bleibt eine Pauschale: zwei Hunde
+    kosten dasselbe wie einer, nur ohne Tier entfällt sie.
+    """
+    cfg = {
+        "fees": [
+            {"name": "Haustier", "amount": 150, "basis": "per_stay",
+             "feeType": "pet_fee"},
+            {"name": "Reinigung", "amount": 80, "basis": "per_stay",
+             "feeType": "cleaning_fee"},
+        ],
+    }
+    r = _resolver(base=100.0, config=cfg)
+
+    def quote_mit(pets: int) -> dict[str, float]:
+        q = r.quote(
+            QuoteRequest(
+                property_id="p",
+                check_in=date(2026, 7, 1),
+                check_out=date(2026, 7, 4),
+                guests=2,
+                pets=pets,
+            )
+        )
+        return {line.label: line.amount for line in q.lines}
+
+    ohne = quote_mit(0)
+    assert "Haustier" not in ohne
+    # Die Gegenprobe: eine Gebühr OHNE Tierbezug bleibt unberührt.
+    assert ohne["Reinigung"] == 80.0
+
+    assert quote_mit(1)["Haustier"] == 150.0
+    # Pauschale heißt Pauschale — nicht je Tier (dafür gibt es per_pet_stay).
+    assert quote_mit(3)["Haustier"] == 150.0
+
+
+def test_quote_haustier_altbestand_und_ohne_art() -> None:
+    """Der Altbestandsschlüssel `pet` trägt dieselbe Bedingung wie `pet_fee`.
+
+    Eine Gebühr OHNE `feeType` dagegen nicht: welche Art sie hat, ist unbekannt,
+    und aus dem Namen „Hundegebühr" eine Art zu raten wäre ein erfundener Wert
+    (Wurzel 4). Sie verhält sich wie bisher.
+    """
+    cfg = {
+        "fees": [
+            {"name": "Tier alt", "amount": 60, "basis": "per_stay",
+             "feeType": "pet"},
+            {"name": "Hundegebühr", "amount": 40, "basis": "per_stay"},
+        ],
+    }
+    r = _resolver(base=100.0, config=cfg)
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 4),
+            guests=2,
+            pets=0,
+        )
+    )
+    labels = {line.label: line.amount for line in q.lines}
+    assert "Tier alt" not in labels
+    assert labels["Hundegebühr"] == 40.0
+
+
+def test_quote_haustier_prozent_nur_mit_tier() -> None:
+    """Auch die prozentuale Haustiergebühr braucht ein Tier.
+
+    Prozent ist immer einmalig auf den Zimmerpreis und multipliziert die
+    Tierzahl nie — ohne die Bedingung an der ART wäre gerade dieser Fall
+    dauerhaft offen geblieben.
+    """
+    cfg = {
+        "fees": [
+            {"name": "Haustier %", "amount": 10, "mode": "percent",
+             "basis": "per_stay", "feeType": "pet_fee"},
+        ],
+    }
+    r = _resolver(base=100.0, config=cfg)
+
+    def labels(pets: int) -> dict[str, float]:
+        q = r.quote(
+            QuoteRequest(
+                property_id="p",
+                check_in=date(2026, 7, 1),
+                check_out=date(2026, 7, 4),
+                guests=2,
+                pets=pets,
+            )
+        )
+        return {line.label: line.amount for line in q.lines}
+
+    assert "Haustier %" not in labels(0)
+    assert labels(1)["Haustier %"] == 30.0
+
+
 def test_quote_direct_has_no_markup() -> None:
     cfg = {"markup": {"booking": 25}}
     r = _resolver(base=100.0, config=cfg)
@@ -1320,3 +1421,135 @@ def test_eingelöster_code_verdrängt_automatische_aktionen() -> None:
     q = _q("QUATSCH")
     assert _rabatt(q) == -60.0
     assert q.promo_code_applied is False
+
+
+def test_tierbedingung_deckt_alle_pet_arten() -> None:
+    """`PET_FEE_TYPES` muss deckungsgleich mit der Kategorie „pet" sein.
+
+    Die Menge liegt bewusst als Kopie in `pricing/tierbedingung.py`, weil die
+    öffentliche API den Resolver spiegelt, aber kein `features/properties` hat
+    (siehe Modul-Kopf dort). Eine Kopie ohne Prüfung driftet: eine neue
+    Tier-Gebührenart in `FEE_TYPE_CATEGORY` würde stillschweigend jedem Gast
+    berechnet — genau der Bug, den diese Bedingung schließt. Dieser Test ist die
+    Klammer, nicht die Disziplin.
+    """
+    from src.features.pricing.tierbedingung import PET_FEE_TYPES
+    from src.features.properties.gebuehren import (
+        FEE_TYPE_ALTBESTAND,
+        FEE_TYPE_CATEGORY,
+        PET_BASIS_CATEGORIES,
+    )
+
+    aus_katalog = {
+        art
+        for art, kategorie in {**FEE_TYPE_CATEGORY, **FEE_TYPE_ALTBESTAND}.items()
+        if kategorie in PET_BASIS_CATEGORIES
+    }
+    assert PET_FEE_TYPES == aus_katalog
+
+
+def test_quote_optionale_gebuehr_nur_bei_wahl() -> None:
+    """Eine als optional markierte Gebühr wird ohne die Wahl des Gastes NICHT
+    berechnet — das ist die Zusage der Oberfläche („Gast kann ab-/zuwählen").
+
+    Vorher las der Resolver das Flag überhaupt nicht: die Gebühr lief jedem Gast
+    mit, der sie damit gar nicht abwählen KONNTE. Nur der Channel-Manager
+    beachtete es (optionale Gebühren gehen an kein Portal) — im Preis war es
+    eine Attrappe.
+    """
+    cfg = {
+        "fees": [
+            {"id": "f-opt", "name": "Endreinigung", "amount": 80,
+             "basis": "per_stay", "feeType": "cleaning_fee", "optional": True},
+            {"id": "f-pflicht", "name": "Kurtaxe-Service", "amount": 20,
+             "basis": "per_stay", "feeType": "resort"},
+        ],
+    }
+    r = _resolver(base=100.0, config=cfg)
+
+    def labels(**kw: object) -> dict[str, float]:
+        q = r.quote(
+            QuoteRequest(
+                property_id="p",
+                check_in=date(2026, 7, 1),
+                check_out=date(2026, 7, 4),
+                guests=2,
+                **kw,  # type: ignore[arg-type]
+            )
+        )
+        return {line.label: line.amount for line in q.lines}
+
+    ohne = labels()
+    assert "Endreinigung" not in ohne
+    # Die Gegenprobe: die Pflichtgebühr bleibt unberührt.
+    assert ohne["Kurtaxe-Service"] == 20.0
+
+    assert labels(fees=["f-opt"])["Endreinigung"] == 80.0
+    # Eine fremde ID wählt nichts aus (kein „irgendwas trifft zu").
+    assert "Endreinigung" not in labels(fees=["f-fremd"])
+
+
+def test_quote_optionale_gebuehr_ohne_id_entfaellt() -> None:
+    """Optional ohne `id` ist unwählbar — die Wahl läuft über die ID.
+
+    Fail-closed in Richtung des Gastes: eine Gebühr, die er nicht anwählen kann,
+    darf ihm nicht berechnet werden. `normalize_fees` vergibt jeder Gebühr eine
+    ID, das trifft also nur von Hand gebauten Bestand.
+    """
+    cfg = {"fees": [{"name": "Ohne ID", "amount": 50, "basis": "per_stay",
+                     "feeType": "cleaning_fee", "optional": True}]}
+    r = _resolver(base=100.0, config=cfg)
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 4),
+            guests=2,
+        )
+    )
+    assert "Ohne ID" not in {line.label for line in q.lines}
+
+
+def test_quote_bezeichnungen_in_der_sprache_des_gastes() -> None:
+    """Gebühr, Steuer und Zusatzleistung tragen den Namen in `locale`.
+
+    Vorher war Deutsch fest verdrahtet (`_pick_locale_text` bevorzugte "de",
+    die Addons setzten `locale = "de"`, Gebühren lasen `names` gar nicht) — in
+    einem Produkt für 27 Länder eine Falschaussage auf der Rechnung des Gastes
+    und kein technischer Default (Wurzel 4).
+    """
+    cfg = {
+        "fees": [
+            {"id": "f1", "name": "Reinigung", "amount": 80, "basis": "per_stay",
+             "feeType": "cleaning_fee",
+             "names": {"de": "Reinigung", "da": "Rengøring", "en": "Cleaning"}},
+        ],
+        "taxes": [
+            {"kind": "local", "mode": "amount", "value": 5,
+             "basis": "per_guest_night", "includedInPrice": False,
+             "name": "Kurtaxe",
+             "names": {"de": "Kurtaxe", "da": "Turistskat", "en": "City tax"}},
+        ],
+    }
+    r = _resolver(base=100.0, config=cfg)
+
+    def labels(locale: str) -> set[str]:
+        q = r.quote(
+            QuoteRequest(
+                property_id="p",
+                check_in=date(2026, 7, 1),
+                check_out=date(2026, 7, 4),
+                guests=2,
+                locale=locale,
+            )
+        )
+        return {line.label for line in q.lines}
+
+    assert {"Rengøring", "Turistskat"} <= labels("da")
+    assert {"Cleaning", "City tax"} <= labels("en")
+    # Regionsvariante wird auf die Basissprache gekappt.
+    assert "Rengøring" in labels("da-DK")
+    # Sprache ohne Übersetzung fällt auf ENGLISCH zurück, nicht auf Deutsch.
+    assert {"Cleaning", "City tax"} <= labels("fr")
+    # Ein unbekannter Code ebenso — kein Absturz, kein leeres Label.
+    assert {"Cleaning", "City tax"} <= labels("zh")

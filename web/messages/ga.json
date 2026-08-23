@@ -5534,6 +5534,7 @@
       "feeShortStayOnlyHint": "Gearr an táille ar ghearrfhanachtaí amháin.",
       "feeShortStayOnlyBound": "Bainfidh sé le fanachtaí de {nights} oíche ar a mhéad — an teorainn chéanna leis an bhformhuirear gearrfhanachta. Ní sheoltar an táille chuig na tairseacha: ní féidir fad fanachta a chur in iúl ansin.",
       "feeShortStayOnlyMissing": "Níl gearrfhanacht sainithe don mhaoin seo go fóill („Formhuirear gearrfhanachta“) — go dtí sin ní ghearrtar an táille.",
+      "feePetsOnlyNote": "Ní ghearrtar an táille seo ach nuair a thugann an cuairteoir peata leis — táillí comhréidhe san áireamh.",
       "applyToOthersFeeHint": "Cuir an táille chéanna i bhfeidhm ar mhaoine eile freisin.",
       "applyToOthersTaxHint": "Cuir an cháin chéanna i bhfeidhm ar mhaoine eile freisin.",
       "promoUnnamed": "Gan ainm",

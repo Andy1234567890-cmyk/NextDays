@@ -5532,6 +5532,7 @@
       "feeShortStayOnlyHint": "Iekasēt maksu tikai par īsu uzturēšanos.",
       "feeShortStayOnlyBound": "Attiecas uz ne vairāk kā {nights} naktīm — tā pati robeža kā īsas uzturēšanās uzcenojumam. Portāliem maksa netiek sūtīta: tur uzturēšanās ilgumu nevar atspoguļot.",
       "feeShortStayOnlyMissing": "Šim objektam īsa uzturēšanās vēl nav noteikta („Īsas uzturēšanās uzcenojums“) — kamēr tās nav, maksa netiek aprēķināta.",
+      "feePetsOnlyNote": "Šo maksu aprēķina tikai tad, ja viesis ņem līdzi mājdzīvnieku — arī kā vienotu summu.",
       "applyToOthersFeeHint": "Piemērot to pašu maksu arī citiem objektiem.",
       "applyToOthersTaxHint": "Piemērot to pašu nodokli arī citiem objektiem.",
       "promoUnnamed": "Bez nosaukuma",

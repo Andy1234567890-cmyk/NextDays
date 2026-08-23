@@ -5534,6 +5534,7 @@
       "feeShortStayOnlyHint": "Opkræv kun gebyret ved kortophold.",
       "feeShortStayOnlyBound": "Gælder ved højst {nights} nætter — samme grænse som kortophold-tillægget. Gebyret sendes ikke til portalerne: en opholdslængde kan ikke angives der.",
       "feeShortStayOnlyMissing": "Der er endnu ikke fastlagt et kortophold for dette objekt („Kortophold-tillæg“) — indtil da opkræves gebyret ikke.",
+      "feePetsOnlyNote": "Dette gebyr opkræves kun, når gæsten medbringer et kæledyr — også som fast beløb.",
       "applyToOthersFeeHint": "Anvend det samme gebyr på andre objekter.",
       "applyToOthersTaxHint": "Anvend den samme skat på andre objekter.",
       "promoUnnamed": "Uden navn",

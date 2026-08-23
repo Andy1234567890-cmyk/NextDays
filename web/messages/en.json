@@ -5555,6 +5555,7 @@
       "feeShortStayOnlyHint": "Charge the fee for short stays only.",
       "feeShortStayOnlyBound": "Applies to stays of at most {nights} nights — the same limit as the short-stay surcharge. The fee is not sent to the channels: a stay length cannot be expressed there.",
       "feeShortStayOnlyMissing": "No short stay has been defined for this property yet (“Short-stay surcharge”) — until it is, the fee is not charged.",
+      "feePetsOnlyNote": "This fee is only charged when the guest brings a pet — flat rates included.",
       "applyToOthersFeeHint": "Apply the same fee to other properties as well.",
       "applyToOthersTaxHint": "Apply the same tax to other properties as well.",
       "promoUnnamed": "Unnamed",

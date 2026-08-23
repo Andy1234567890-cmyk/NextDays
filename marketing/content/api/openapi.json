@@ -5300,17 +5300,30 @@
             }
           },
           {
-            "description": "Mitgebrachte Tiere.",
+            "description": "Mitgebrachte Tiere. Preiswirksam in zwei Richtungen: eine Gebühr „pro Tier und Aufenthalt“ multipliziert damit, und jede Haustiergebühr — auch eine Pauschale — entfällt ohne Tier.",
             "in": "query",
             "name": "pets",
             "required": false,
             "schema": {
               "default": 0,
-              "description": "Mitgebrachte Tiere.",
+              "description": "Mitgebrachte Tiere. Preiswirksam in zwei Richtungen: eine Gebühr „pro Tier und Aufenthalt“ multipliziert damit, und jede Haustiergebühr — auch eine Pauschale — entfällt ohne Tier.",
               "maximum": 20,
               "minimum": 0,
               "title": "Pets",
               "type": "integer"
+            }
+          },
+          {
+            "description": "Sprache der Bezeichnungen in der Aufschlüsselung (ISO 639-1, z. B. „da“). Reine Anzeige-Achse — die Beträge sind unberührt. Ohne Angabe Englisch; pflegt der Betrieb die Sprache an einem Posten nicht, greift ebenfalls Englisch.",
+            "in": "query",
+            "name": "locale",
+            "required": false,
+            "schema": {
+              "default": "en",
+              "description": "Sprache der Bezeichnungen in der Aufschlüsselung (ISO 639-1, z. B. „da“). Reine Anzeige-Achse — die Beträge sind unberührt. Ohne Angabe Englisch; pflegt der Betrieb die Sprache an einem Posten nicht, greift ebenfalls Englisch.",
+              "maxLength": 10,
+              "title": "Locale",
+              "type": "string"
             }
           },
           {

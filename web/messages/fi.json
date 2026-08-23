@@ -5534,6 +5534,7 @@
       "feeShortStayOnlyHint": "Peri maksu vain lyhyistä oleskeluista.",
       "feeShortStayOnlyBound": "Koskee enintään {nights} yön oleskeluja — sama raja kuin lyhytoleskelulisässä. Maksua ei lähetetä portaaleihin: oleskelun pituutta ei voi siellä ilmaista.",
       "feeShortStayOnlyMissing": "Tälle kohteelle ei ole vielä määritetty lyhyttä oleskelua (”Lyhytoleskelulisä”) — niin kauan kuin se puuttuu, maksua ei peritä.",
+      "feePetsOnlyNote": "Tämä maksu peritään vain, kun vieras tuo lemmikin mukanaan — myös kiinteänä summana.",
       "applyToOthersFeeHint": "Käytä samaa maksua myös muissa kohteissa.",
       "applyToOthersTaxHint": "Käytä samaa veroa myös muissa kohteissa.",
       "promoUnnamed": "Nimetön",

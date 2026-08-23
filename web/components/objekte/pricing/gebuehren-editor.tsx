@@ -322,6 +322,13 @@ export function GebuehrEditor({
             </div>
           </>
         )}
+        {/* Eine Haustiergebühr setzt ein Tier voraus — in JEDER Berechnungsart,
+            auch als Pauschale. Das steht hier, weil der Betrieb sonst annimmt,
+            die Pauschale werde jedem Gast berechnet (so war es bis 23.08.2026,
+            und niemandem fiel es auf: 150 kr sehen auf einer Rechnung
+            unauffällig aus). Kein Schalter, sondern eine Aussage: die Umkehrung
+            „auch ohne Tier erheben" hat keinen fachlichen Fall. */}
+        {tierBasisMoeglich && <Hint>{t("pricingForm.feePetsOnlyNote")}</Hint>}
       </section>
 
       <section className="flex flex-col gap-3">

@@ -16,7 +16,7 @@
 // verlässt, hinterlässt keine halbe Buchung im Kalender des Gastgebers.
 import { Icon } from "@iconify/react";
 import { useState } from "react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 
 import { StripeCheckout } from "@/components/stripe-checkout";
 import { type Angebot, bucheGast } from "@/lib/buchung";
@@ -44,6 +44,8 @@ export type CheckoutDaten = {
   guests: number;
   pets: number;
   promoCode?: string;
+  /** Zugewählte optionale Gebühren — dieselben IDs wie im Angebot. */
+  fees?: string[];
 };
 
 export function CheckoutAblauf({
@@ -55,6 +57,9 @@ export function CheckoutAblauf({
 }) {
   const t = useTranslations("checkout");
   const format = useFormatter();
+  // Dieselbe Sprache wie im angezeigten Angebot: die Posten wandern in die
+  // Reservierung und stehen später auf der Rechnung des Gastes.
+  const locale = useLocale();
   const [schritt, setSchritt] = useState(1);
   const [vorname, setVorname] = useState("");
   const [nachname, setNachname] = useState("");
@@ -94,6 +99,8 @@ export function CheckoutAblauf({
       guests: daten.guests,
       pets: daten.pets,
       promo_code: daten.promoCode,
+      locale,
+      fees: daten.fees,
     });
     if (!res.ok) {
       setZustand({ kind: "fehler", msg: res.error });

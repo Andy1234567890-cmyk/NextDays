@@ -152,13 +152,22 @@ class PublicBookingRequest(BaseModel):
     contact: GuestContact
     total_amount: float = 0
     guests: int = 1
-    # Mitgebrachte Tiere: preiswirksam, sobald das Objekt eine Haustiergebühr
-    # „pro Tier und Aufenthalt" führt. Ohne das Feld zahlte ein Gast mit zwei
-    # Hunden dasselbe wie einer ohne.
+    # Mitgebrachte Tiere. Preiswirksam in ZWEI Richtungen: „pro Tier und
+    # Aufenthalt" multipliziert damit, und jede Haustiergebühr — auch die
+    # Pauschale — entfällt ohne Tier (`pricing.tierbedingung`). Ohne das Feld
+    # zahlte ein Gast ohne Hund die Tiergebühr mit.
     pets: int = Field(default=0, ge=0, le=50)
     # Optionale Zusatzleistungen; serverseitig aus dem Katalog bepreist + als
     # reservation_addons angelegt (Client-Beträge werden nicht vertraut).
     addons: list[AddonPick] = []
+    # Vom Gast gewählte optionale Gebühren (IDs). Ohne Wahl wird eine als
+    # optional markierte Gebühr NICHT berechnet — dieselbe Menge wie im Quote,
+    # sonst zeigte das Widget einen anderen Preis als die Buchung berechnet.
+    fees: list[str] = Field(default_factory=list, max_length=50)
+    # Sprache des Gastes für die Bezeichnungen der Aufschlüsselung. Reine
+    # Anzeige-Achse; die Beträge sind unberührt. Fehlt sie: Englisch, nicht
+    # Deutsch (27 Länder, siehe pricing.schemas).
+    locale: str = Field(default="en", max_length=10)
     # Aktionscode des Gastes („Rabattcode einlösen"). Nur ein FILTER auf die
     # Aktionen des Objekts — der Rabatt selbst wird serverseitig gerechnet, ein
     # Client-Betrag wird nie übernommen. Länge wie im Branchenstandard (15).
@@ -184,6 +193,10 @@ class PublicQuoteRequest(BaseModel):
     guests: int = Field(default=1, ge=1, le=100)
     pets: int = Field(default=0, ge=0, le=50)
     addons: list[AddonPick] = []
+    # Gewählte optionale Gebühren und Anzeigesprache — beides wie in
+    # PublicBookingRequest, damit Anzeige und Buchung übereinstimmen.
+    fees: list[str] = Field(default_factory=list, max_length=50)
+    locale: str = Field(default="en", max_length=10)
     # Aktionscode des Gastes („Rabattcode einlösen"). Nur ein FILTER auf die
     # Aktionen des Objekts — der Rabatt selbst wird serverseitig gerechnet, ein
     # Client-Betrag wird nie übernommen. Länge wie im Branchenstandard (15).
@@ -249,6 +262,28 @@ class PublicDeposit(BaseModel):
     currency: str | None = None
 
 
+class PublicOptionalFee(BaseModel):
+    """Eine vom Gast wählbare Gebühr — der Gegenpart zu `fees` in der Anfrage.
+
+    Ohne diese Liste wüsste die Strecke nicht, WAS sie zur Wahl stellen soll:
+    die Zeilen der Aufschlüsselung enthalten nur, was schon gilt. `pets_allowed`
+    erfüllt dieselbe Aufgabe für die Tierauswahl.
+
+    Der Betrag ist der BRUTTO-Aufschlag für DIESEN Aufenthalt, serverseitig
+    gerechnet (Basis, Nächte, Gäste, Steuer) — nicht der eingetippte Rohwert.
+    Sonst rechnete der Browser „80 pro Nacht × 7" nach und käme bei einer
+    Prozent- oder Gast-Basis auf etwas anderes als der Server (Wurzel 3).
+    """
+
+    id: str
+    label: str
+    amount: float
+    # True = der Gast hat sie in DIESER Anfrage gewählt; die Zeile steht dann
+    # auch in `lines`. So bleibt die Oberfläche nach dem Neuladen richtig
+    # angehakt, ohne dass der Browser den Zustand selbst führt.
+    selected: bool = False
+
+
 class PublicQuoteResponse(BaseModel):
     property_id: str
     nights: int
@@ -271,6 +306,9 @@ class PublicQuoteResponse(BaseModel):
     # Haustiere überhaupt erlaubt? Entscheidet, ob die Auswahl angeboten wird.
     pets_allowed: bool = False
     max_guests: int = 1
+    # Wählbare Gebühren des Objekts (`fees[].optional`). Leer = keine; dann
+    # zeigt die Strecke den Abschnitt nicht.
+    optional_fees: list[PublicOptionalFee] = []
 
 
 class PublicBookingResponse(BaseModel):

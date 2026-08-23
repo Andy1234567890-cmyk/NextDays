@@ -13,7 +13,7 @@ import { Icon } from "@iconify/react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 
 import { CheckoutAblauf } from "@/components/checkout-ablauf";
 import { PhotoPlaceholder } from "@/components/photo-placeholder";
@@ -36,6 +36,8 @@ type Suche = {
   guests?: string;
   pets?: string;
   promo?: string;
+  /** Zugewählte optionale Gebühren als kommagetrennte IDs (aus dem Widget). */
+  fees?: string;
 };
 
 /** ISO-Datum (YYYY-MM-DD) oder null — der Rest ist Client-Eingabe und wird
@@ -61,9 +63,10 @@ export default async function CheckoutPage({
 }) {
   const { id } = await params;
   const sp = await searchParams;
-  const [t, format] = await Promise.all([
+  const [t, format, locale] = await Promise.all([
     getTranslations("checkout"),
     getFormatter(),
+    getLocale(),
   ]);
 
   const checkIn = isoDatum(sp.check_in);
@@ -71,6 +74,13 @@ export default async function CheckoutPage({
   const guests = zahl(sp.guests, 1, 100);
   const pets = zahl(sp.pets, 0, 50);
   const promo = sp.promo?.trim().slice(0, 15) || undefined;
+  // Client-Eingabe: nur Form prüfen und deckeln, nicht deuten. Welche ID
+  // wirklich eine wählbare Gebühr ist, entscheidet der Server (Wurzel 3).
+  const fees = (sp.fees ?? "")
+    .split(",")
+    .map((x) => x.trim())
+    .filter((x) => x.length > 0 && x.length <= 64)
+    .slice(0, 50);
 
   const listing = await ladeInserat(id, {
     ...(checkIn && checkOut ? { start: checkIn, end: checkOut } : {}),
@@ -96,6 +106,10 @@ export default async function CheckoutPage({
     guests,
     pets,
     promoCode: promo,
+    // Die Posten der Aufschlüsselung („Reinigung", „Haustiergebühr") kommen
+    // vom Server und werden dort in DIESER Sprache gewählt.
+    locale,
+    fees,
   });
 
   if (!angebot || angebot.priceless) {
@@ -169,6 +183,8 @@ export default async function CheckoutPage({
             guests,
             pets,
             promoCode: promo,
+            // DIESELBE Auswahl, mit der das Angebot oben gerechnet wurde.
+            fees,
           }}
           angebot={angebot}
         />

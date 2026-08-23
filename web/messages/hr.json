@@ -5534,6 +5534,7 @@
       "feeShortStayOnlyHint": "Naplati naknadu samo kod kratkih boravaka.",
       "feeShortStayOnlyBound": "Vrijedi za najviše {nights} noćenja — ista granica kao i doplata za kratki boravak. Naknada se ne šalje na portale: tamo se dužina boravka ne može prikazati.",
       "feeShortStayOnlyMissing": "Za ovaj objekt kratki boravak još nije određen („Doplata za kratki boravak“) — dok toga nema, naknada se ne naplaćuje.",
+      "feePetsOnlyNote": "Ova se naknada naplaćuje samo kada gost dovede ljubimca — i kao paušal.",
       "applyToOthersFeeHint": "Primijeni istu naknadu i na druge objekte.",
       "applyToOthersTaxHint": "Primijeni isti porez i na druge objekte.",
       "promoUnnamed": "Bez naziva",

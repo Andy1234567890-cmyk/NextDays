@@ -5532,6 +5532,7 @@
       "feeShortStayOnlyHint": "Cobrar a taxa apenas em estadias curtas.",
       "feeShortStayOnlyBound": "Aplica-se até {nights} noites — o mesmo limite do agravamento por estadia curta. A taxa não é enviada aos portais: ali não é possível representar a duração da estadia.",
       "feeShortStayOnlyMissing": "Para este alojamento ainda não foi definida uma estadia curta («Agravamento por estadia curta») — enquanto faltar, a taxa não é cobrada.",
+      "feePetsOnlyNote": "Esta taxa só é cobrada quando o hóspede traz um animal — também como valor fixo.",
       "applyToOthersFeeHint": "Aplicar a mesma taxa também a outros alojamentos.",
       "applyToOthersTaxHint": "Aplicar o mesmo imposto também a outros alojamentos.",
       "promoUnnamed": "Sem nome",

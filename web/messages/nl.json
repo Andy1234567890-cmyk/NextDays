@@ -5532,6 +5532,7 @@
       "feeShortStayOnlyHint": "Bereken de kosten alleen bij een kort verblijf.",
       "feeShortStayOnlyBound": "Geldt bij maximaal {nights} nachten — dezelfde grens als de toeslag kort verblijf. De kosten gaan niet naar de portalen: een verblijfsduur is daar niet weer te geven.",
       "feeShortStayOnlyMissing": "Voor dit object is nog geen kort verblijf vastgelegd („Toeslag kort verblijf“) — zolang dat ontbreekt, worden de kosten niet berekend.",
+      "feePetsOnlyNote": "Deze kosten worden alleen berekend als de gast een huisdier meeneemt — ook als vast bedrag.",
       "applyToOthersFeeHint": "Pas dezelfde kosten ook toe op andere objecten.",
       "applyToOthersTaxHint": "Pas dezelfde belasting ook toe op andere objecten.",
       "promoUnnamed": "Zonder naam",

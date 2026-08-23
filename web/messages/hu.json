@@ -5534,6 +5534,7 @@
       "feeShortStayOnlyHint": "A díjat csak rövid tartózkodás esetén számítsa fel.",
       "feeShortStayOnlyBound": "Legfeljebb {nights} éjszakára érvényes — ugyanaz a határ, mint a rövid tartózkodási felárnál. A díj nem kerül a portálokra: ott a tartózkodás hossza nem képezhető le.",
       "feeShortStayOnlyMissing": "Ehhez az objektumhoz még nincs meghatározva rövid tartózkodás („Rövid tartózkodási felár”) — amíg ez hiányzik, a díjat nem számítjuk fel.",
+      "feePetsOnlyNote": "Ezt a díjat csak akkor számítjuk fel, ha a vendég állatot hoz magával — átalányként is.",
       "applyToOthersFeeHint": "Ugyanezt a díjat más objektumoknál is alkalmazza.",
       "applyToOthersTaxHint": "Ugyanezt az adót más objektumoknál is alkalmazza.",
       "promoUnnamed": "Név nélkül",

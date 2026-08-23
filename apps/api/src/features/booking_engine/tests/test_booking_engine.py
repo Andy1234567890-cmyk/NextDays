@@ -362,7 +362,8 @@ def test_listings_endpoint_public_no_auth() -> None:
 
 
 def test_round_coord_and_opt_int() -> None:
-    from src.features.booking_engine.service import _as_opt_int, _round_coord
+    from src.features.booking_engine.common import _as_opt_int
+    from src.features.booking_engine.schaufenster import _round_coord
 
     assert _round_coord(None) is None
     assert _round_coord(1.23456) == 1.23
@@ -423,7 +424,7 @@ def test_bezahlte_absicht_bei_konflikt_ohne_buchung(monkeypatch) -> None:  # noq
         resolver_mod.PricingResolver, "quote",
         lambda self, req: SimpleNamespace(
             total=300.0, currency="EUR", lines=[],
-            priceless=False, unpriced_nights=0,
+            priceless=False, unpriced_nights=0, optional_fees=[],
         ),
     )
 
@@ -541,7 +542,7 @@ def test_public_booking_includes_addons_in_quote(monkeypatch) -> None:  # noqa: 
         captured["addons"] = list(req.addons)
         return SimpleNamespace(
             total=260.0, currency="EUR", lines=[],
-            priceless=False, unpriced_nights=0,
+            priceless=False, unpriced_nights=0, optional_fees=[],
         )
 
     monkeypatch.setattr(resolver_mod.PricingResolver, "quote", _fake_quote)
@@ -674,10 +675,8 @@ def test_public_booking_rejects_past_check_in(monkeypatch) -> None:
 def test_availability_rejects_huge_span() -> None:
     from datetime import date
 
-    from src.features.booking_engine.service import (
-        BookingEngineError,
-        _assert_span,
-    )
+    from src.features.booking_engine.common import _assert_span
+    from src.features.booking_engine.errors import BookingEngineError
 
     # >730 Tage → 422.
     try:
@@ -768,7 +767,7 @@ def test_public_booking_writes_num_guests(monkeypatch) -> None:  # noqa: ANN001
         "quote",
         lambda _self, _req: SimpleNamespace(
             total=260.0, currency="EUR", lines=[],
-            priceless=False, unpriced_nights=0,
+            priceless=False, unpriced_nights=0, optional_fees=[],
         ),
     )
 
@@ -892,7 +891,7 @@ def test_public_quote_lehnt_tiere_ohne_erlaubnis_ab(monkeypatch) -> None:  # noq
         resolver_mod.PricingResolver,
         "quote",
         lambda _self, _req: SimpleNamespace(
-            total=200.0, currency="EUR", lines=[], priceless=False,
+            total=200.0, currency="EUR", lines=[], priceless=False, optional_fees=[],
             promo_code_applied=False
         ),
     )
@@ -944,7 +943,7 @@ def test_public_quote_reicht_tiere_an_den_resolver(monkeypatch) -> None:  # noqa
         gesehen["pets"] = req.pets
         gesehen["guests"] = req.guests
         return SimpleNamespace(
-            total=250.0, currency="EUR", lines=[], priceless=False,
+            total=250.0, currency="EUR", lines=[], priceless=False, optional_fees=[],
             promo_code_applied=False,
         )
 

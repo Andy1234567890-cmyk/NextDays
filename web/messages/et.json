@@ -5534,6 +5534,7 @@
       "feeShortStayOnlyHint": "Võta tasu ainult lühiviibimiste eest.",
       "feeShortStayOnlyBound": "Kehtib kuni {nights} öö puhul — sama piir nagu lühiviibimise juurdehindlusel. Portaalidesse tasu ei lähe: viibimise pikkust ei saa seal väljendada.",
       "feeShortStayOnlyMissing": "Sellel objektil pole lühiviibimist veel määratud („Lühiviibimise juurdehindlus“) — kuni see puudub, tasu ei arvestata.",
+      "feePetsOnlyNote": "See tasu arvestatakse ainult siis, kui külaline toob lemmiklooma kaasa — ka ühekordse summana.",
       "applyToOthersFeeHint": "Rakenda sama tasu ka teistele objektidele.",
       "applyToOthersTaxHint": "Rakenda sama maks ka teistele objektidele.",
       "promoUnnamed": "Nimeta",

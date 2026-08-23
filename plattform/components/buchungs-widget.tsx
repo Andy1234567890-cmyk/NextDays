@@ -17,7 +17,7 @@
 import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { type Angebot, ladeAngebot, ladeVerfuegbarkeit } from "@/lib/buchung";
 import { type Listing, formatCurrency } from "@/lib/listings";
@@ -95,11 +95,17 @@ export function BuchungsWidget({
   rahmenlos?: boolean;
 }) {
   const t = useTranslations("widget");
+  // Sprache für die Posten der Aufschlüsselung: der Server wählt die
+  // Bezeichnungen („Reinigung", „Haustiergebühr") danach aus.
+  const locale = useLocale();
   const router = useRouter();
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [gaeste, setGaeste] = useState(1);
   const [tiere, setTiere] = useState(0);
+  // Zugewählte optionale Gebühren (IDs). Der Server rechnet nur, was hier
+  // steht — eine nicht angehakte Gebühr ist eine Ablehnung.
+  const [gebuehren, setGebuehren] = useState<string[]>([]);
   // Aktionscode des Gastes. `code` ist das Eingabefeld, `codeAktiv` der
   // EINGELÖSTE Code — erst beim Einlösen wird neu gerechnet, sonst schickte
   // jeder Tastendruck eine Anfrage.
@@ -133,6 +139,8 @@ export function BuchungsWidget({
       guests: gaeste,
       pets: tiere,
       promo_code: codeAktiv || undefined,
+      locale,
+      fees: gebuehren,
     }).then((res) => {
       if (abgebrochen) return;
       setRechnet(false);
@@ -143,7 +151,7 @@ export function BuchungsWidget({
     return () => {
       abgebrochen = true;
     };
-  }, [listing.id, checkIn, checkOut, gaeste, tiere, n, codeAktiv]);
+  }, [listing.id, checkIn, checkOut, gaeste, tiere, n, codeAktiv, locale, gebuehren]);
 
   // Verfügbarkeit prüfen, sobald ein Zeitraum steht — nicht erst beim Klick.
   // Sonst füllt der Gast alles aus und erfährt am Ende, dass die Tage weg sind.
@@ -188,6 +196,9 @@ export function BuchungsWidget({
       pets: String(tiere),
     });
     if (codeAktiv) qs.set("promo", codeAktiv);
+    // Die Auswahl MUSS mit: der Checkout holt sein Angebot selbst neu, und ohne
+    // sie zeigte er einen anderen Preis als das Widget eine Seite vorher.
+    if (gebuehren.length > 0) qs.set("fees", gebuehren.join(","));
     router.push(`/checkout/${listing.id}?${qs.toString()}`);
   }
 
@@ -325,6 +336,39 @@ export function BuchungsWidget({
           )}
           {angebot && !angebot.priceless && (
             <>
+              {/* Zuwählbare Gebühren: der Betrieb hat sie als „optional"
+                  gepflegt, also entscheidet der Gast. Ohne diese Auswahl wäre
+                  das Kennzeichen wirkungslos — genau das war es bis 23.08.2026,
+                  und der Gast bekam sie berechnet, ohne sie abwählen zu können.
+                  Der Betrag kommt vom Server; selbst hochrechnen ginge bei
+                  Prozent-Basis schief. */}
+              {angebot.optional_fees.length > 0 && (
+                <div className="flex flex-col gap-2 border-b border-border pb-3">
+                  {angebot.optional_fees.map((g) => (
+                    <label
+                      key={g.id}
+                      className="flex cursor-pointer items-center justify-between gap-3"
+                    >
+                      <span className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          className="size-4 rounded border-border"
+                          checked={g.selected}
+                          onChange={(e) =>
+                            setGebuehren((alt) =>
+                              e.target.checked
+                                ? [...alt, g.id]
+                                : alt.filter((x) => x !== g.id),
+                            )
+                          }
+                        />
+                        {g.label}
+                      </span>
+                      <span>{formatCurrency(g.amount, waehrung)}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
               {angebot.lines.map((zeile, i) => (
                 <div key={`${zeile.label}-${i}`} className="flex justify-between">
                   <span className={zeile.amount < 0 ? "text-emerald-700" : ""}>

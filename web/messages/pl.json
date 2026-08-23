@@ -5532,6 +5532,7 @@
       "feeShortStayOnlyHint": "Pobieraj opłatę tylko przy krótkim pobycie.",
       "feeShortStayOnlyBound": "Obowiązuje przy maksymalnie {nights} nocach — ta sama granica co narzut za krótki pobyt. Opłata nie trafia do portali: nie można tam odwzorować długości pobytu.",
       "feeShortStayOnlyMissing": "Dla tego obiektu nie określono jeszcze krótkiego pobytu („Narzut za krótki pobyt“) — dopóki go brak, opłata nie jest naliczana.",
+      "feePetsOnlyNote": "Ta opłata jest naliczana tylko wtedy, gdy gość przyjeżdża ze zwierzęciem — również jako kwota zryczałtowana.",
       "applyToOthersFeeHint": "Zastosuj tę samą opłatę również w innych obiektach.",
       "applyToOthersTaxHint": "Zastosuj ten sam podatek również w innych obiektach.",
       "promoUnnamed": "Bez nazwy",

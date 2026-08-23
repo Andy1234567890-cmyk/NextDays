@@ -5532,6 +5532,7 @@
       "feeShortStayOnlyHint": "Applica il costo solo ai soggiorni brevi.",
       "feeShortStayOnlyBound": "Vale fino a {nights} notti — lo stesso limite del supplemento soggiorno breve. Il costo non viene inviato ai portali: lì non è rappresentabile una durata del soggiorno.",
       "feeShortStayOnlyMissing": "Per questo alloggio non è ancora definito un soggiorno breve («Supplemento soggiorno breve») — finché manca, il costo non viene applicato.",
+      "feePetsOnlyNote": "Questo costo viene applicato solo se l'ospite porta un animale — anche come importo forfettario.",
       "applyToOthersFeeHint": "Applica lo stesso costo anche ad altri alloggi.",
       "applyToOthersTaxHint": "Applica la stessa imposta anche ad altri alloggi.",
       "promoUnnamed": "Senza nome",

@@ -5678,6 +5678,7 @@
       "feeShortStayOnlyHint": "Die Gebühr nur bei Kurzaufenthalten erheben.",
       "feeShortStayOnlyBound": "Gilt bei höchstens {nights} Nächten — dieselbe Grenze wie der Kurzaufenthalts-Aufschlag. An die Portale geht die Gebühr nicht: dort ist keine Aufenthaltslänge abbildbar.",
       "feeShortStayOnlyMissing": "Für dieses Objekt ist noch kein Kurzaufenthalt festgelegt („Kurzaufenthalts-Aufschlag“) — solange das fehlt, wird die Gebühr nicht berechnet.",
+      "feePetsOnlyNote": "Diese Gebühr wird nur berechnet, wenn der Gast ein Haustier mitbringt — auch als Pauschale.",
       "applyToOthersFeeHint": "Dieselbe Gebühr auch bei anderen Objekten anwenden.",
       "applyToOthersTaxHint": "Dieselbe Steuer auch bei anderen Objekten anwenden.",
       "promoUnnamed": "Ohne Namen",

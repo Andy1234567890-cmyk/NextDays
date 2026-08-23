@@ -5532,6 +5532,7 @@
       "feeShortStayOnlyHint": "Účtovať poplatok len pri krátkych pobytoch.",
       "feeShortStayOnlyBound": "Platí pri najviac {nights} nociach — tá istá hranica ako pri príplatku za krátky pobyt. Na portály sa poplatok neposiela: dĺžku pobytu tam nemožno vyjadriť.",
       "feeShortStayOnlyMissing": "Pre tento objekt ešte nie je určený krátky pobyt („Príplatok za krátky pobyt“) — kým chýba, poplatok sa neúčtuje.",
+      "feePetsOnlyNote": "Tento poplatok sa účtuje len vtedy, keď hosť privezie zvieratko — aj ako paušál.",
       "applyToOthersFeeHint": "Použiť rovnaký poplatok aj pri ďalších objektoch.",
       "applyToOthersTaxHint": "Použiť rovnakú daň aj pri ďalších objektoch.",
       "promoUnnamed": "Bez názvu",

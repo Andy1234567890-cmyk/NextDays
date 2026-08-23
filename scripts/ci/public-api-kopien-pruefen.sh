@@ -45,6 +45,12 @@
 #   addons/pricing.py       Preis einer Zusatzleistung. Drift heißt: dieselbe
 #                           Leistung kostet über die API etwas anderes als im
 #                           Dashboard.
+#   pricing/tierbedingung.py  Ob eine Gebühr ein mitgebrachtes Tier voraussetzt.
+#                           Eigene Datei, weil die öffentliche API den Resolver
+#                           spiegelt, aber kein `features/properties` hat.
+#                           Driftet sie, berechnet die Preisvorschau der API
+#                           einem Gast ohne Hund eine Haustiergebühr, die das
+#                           Dashboard nicht berechnet.
 #
 # ARBEITSWEISE BEI EINER ÄNDERUNG: in EINER Datei ändern, dann in die
 # Schwester kopieren (der Kopf bleibt erhalten, er ist bei diesen Dateien Teil
@@ -67,6 +73,7 @@ paare=(
   "apps/api/src/features/addons/pricing.py:apps/public-api/src/features/addons/pricing.py"
   "apps/api/src/features/pricing/resolver.py:apps/public-api/src/features/pricing/resolver.py"
   "apps/api/src/features/pricing/schemas.py:apps/public-api/src/features/pricing/schemas.py"
+  "apps/api/src/features/pricing/tierbedingung.py:apps/public-api/src/features/pricing/tierbedingung.py"
 )
 
 fehler=0

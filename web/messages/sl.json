@@ -5532,6 +5532,7 @@
       "feeShortStayOnlyHint": "Pristojbino zaračunaj samo pri kratkih bivanjih.",
       "feeShortStayOnlyBound": "Velja pri največ {nights} nočeh — ista meja kot pribitek za kratko bivanje. Na portale pristojbina ne gre: tam dolžine bivanja ni mogoče prikazati.",
       "feeShortStayOnlyMissing": "Za ta objekt kratko bivanje še ni določeno („Pribitek za kratko bivanje“) — dokler ga ni, pristojbina ni obračunana.",
+      "feePetsOnlyNote": "Ti stroški se obračunajo samo, kadar gost pripelje hišnega ljubljenčka — tudi kot pavšal.",
       "applyToOthersFeeHint": "Isto pristojbino uporabi tudi pri drugih objektih.",
       "applyToOthersTaxHint": "Isti davek uporabi tudi pri drugih objektih.",
       "promoUnnamed": "Brez imena",

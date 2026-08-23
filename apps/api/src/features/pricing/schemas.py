@@ -50,6 +50,17 @@ class QuoteRequest(BaseModel):
     # („pro Tier und Aufenthalt"). Ohne Angabe 0 — dann kostet eine solche
     # Gebühr nichts, was genau richtig ist: kein Tier, keine Tiergebühr.
     pets: int = Field(default=0, ge=0, le=50)
+    # Sprache des GASTES für die Bezeichnungen der Aufschlüsselung (Gebühr,
+    # Steuer, Zusatzleistung). Sie ist eine Anzeige-Achse, keine Rechen-Achse:
+    # die Beträge sind davon unberührt.
+    #
+    # Fehlt sie, greift Englisch (`_pick_locale_text`) und nicht Deutsch — das
+    # Produkt läuft in 27 Ländern, und ein deutscher Posten auf der Rechnung
+    # eines dänischen Gastes ist keine Voreinstellung, sondern eine
+    # Falschaussage (Wurzel 4, dieselbe Begründung wie Migration 0335 für die
+    # Mail-Sprache). Regionsvarianten („de-AT", "pt_BR") kappt der Resolver auf
+    # die Basissprache; ein unbekannter Code fällt auf Englisch zurück.
+    locale: str = "en"
     # Kanal bestimmt den Markup-Aufschlag (direct = kein Markup).
     channel: str = "direct"
     # Hotel: der KONKRETE Rate-Plan der Buchung (BAR vs. B&B kosten verschieden).
@@ -58,6 +69,15 @@ class QuoteRequest(BaseModel):
     # Optionale Zusatzleistungen (Upsells); werden nach Basis + Steuer als eigene
     # Positionen in die Aufschlüsselung gerechnet.
     addons: list[AddonSelection] = Field(default_factory=list)
+    # Vom Gast GEWÄHLTE optionale Gebühren (`fees[].optional`, deren IDs).
+    #
+    # Eine als optional markierte Gebühr wird ohne ihre ID hier NICHT berechnet.
+    # Das ist die Zusage der Oberfläche („Optional — Gast kann ab-/zuwählen");
+    # bisher las der Resolver das Flag überhaupt nicht und berechnete sie jedem
+    # Gast, der sie damit gar nicht abwählen KONNTE. Leere Liste = keine
+    # gewählt, nicht „alle" — sonst wäre ein Gast, der nichts anklickt,
+    # schlechter dran als einer, der abwählt.
+    fees: list[str] = Field(default_factory=list, max_length=50)
     # Buchungs-/Bezugsdatum für zeitabhängige Rabatte (early_booker/last_minute:
     # Abstand as_of→check_in). Default heute. EXPLIZIT im Request, damit der
     # Resolver deterministisch bleibt (kein date.today() tief in der Rechnung) —
@@ -105,6 +125,21 @@ class QuoteLine(BaseModel):
     fee_id: str | None = None
 
 
+class OptionalFeeOffer(BaseModel):
+    """Eine wählbare Gebühr mit ihrem Betrag FÜR DIESEN Aufenthalt.
+
+    Der Resolver rechnet sie mit, auch wenn der Gast sie nicht gewählt hat —
+    sonst müsste die Oberfläche „80 pro Nacht × 7 Nächte" selbst hochrechnen und
+    käme bei Prozent- oder Gast-Basis auf einen anderen Betrag als der Server
+    (Wurzel 3: der Preis wird nicht im Browser gebildet).
+    """
+
+    id: str
+    label: str
+    amount: float
+    selected: bool = False
+
+
 class QuoteResponse(BaseModel):
     """Vollständige Preisaufschlüsselung eines Aufenthalts.
 
@@ -124,6 +159,9 @@ class QuoteResponse(BaseModel):
     nightly_total: float
     lines: list[QuoteLine] = []
     total: float
+    # Wählbare Gebühren des Objekts samt gerechnetem Betrag. Die gewählten
+    # stehen zusätzlich in `lines` und sind hier `selected=True`.
+    optional_fees: list[OptionalFeeOffer] = []
     # Hat der mitgeschickte Angebotscode WIRKLICH eine Aktion ausgelöst? Ohne
     # diese Antwort könnte die Buchungsstrecke nicht zwischen „Code angewendet"
     # und „Code ungültig, aber es gilt eine automatische Aktion" unterscheiden —

@@ -92,6 +92,19 @@ export type Angebot = {
   priceless: boolean;
   pets_allowed: boolean;
   max_guests: number;
+  /** Vom Gast wählbare Gebühren mit dem SERVERSEITIG gerechneten Betrag für
+   *  diesen Aufenthalt. Nicht selbst hochrechnen: bei Prozent- oder Gast-Basis
+   *  käme der Browser auf eine andere Zahl als der Server. */
+  optional_fees: WaehlbareGebuehr[];
+};
+
+/** Eine zuwählbare Gebühr des Objekts (`optional` im Gebühren-Editor). */
+export type WaehlbareGebuehr = {
+  id: string;
+  label: string;
+  amount: number;
+  /** Bereits gewählt — der Server führt den Zustand, nicht der Browser. */
+  selected: boolean;
 };
 
 /**
@@ -108,6 +121,12 @@ export async function ladeAngebot(input: {
   /** Aktionscode des Gastes. Nur ein Filter auf die Aktionen des Objekts — den
    *  Rabatt rechnet der Server, nie der Browser. */
   promo_code?: string;
+  /** Sprache für die Bezeichnungen der Posten. Ohne sie antwortet der Server
+   *  auf Englisch — nicht auf Deutsch (27 Länder). */
+  locale?: string;
+  /** IDs der zugewählten optionalen Gebühren. Ohne Wahl werden sie NICHT
+   *  berechnet — der Gast entscheidet. */
+  fees?: string[];
 }): Promise<Result<Angebot>> {
   return call("quote", { method: "POST", body: input });
 }
@@ -126,6 +145,12 @@ export async function bucheGast(input: {
    *  Gast" bzw. „pro Tier"); ohne Angabe rechnet der Server mit 1 Gast, 0 Tieren. */
   guests?: number;
   pets?: number;
+  /** DIESELBE Sprache wie im Angebot: die Posten wandern als `quote_items` in
+   *  die Reservierung und stehen später auf der Rechnung. */
+  locale?: string;
+  /** DIESELBE Auswahl wie im Angebot — sonst berechnet die Buchung etwas
+   *  anderes, als die Strecke angezeigt hat. */
+  fees?: string[];
 }): Promise<
   Result<{
     /**

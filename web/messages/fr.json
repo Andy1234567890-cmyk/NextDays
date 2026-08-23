@@ -5534,6 +5534,7 @@
       "feeShortStayOnlyHint": "Facturer les frais uniquement pour les séjours courts.",
       "feeShortStayOnlyBound": "S’applique jusqu’à {nights} nuits — la même limite que la majoration séjour court. Les frais ne sont pas envoyés aux portails : une durée de séjour n’y est pas représentable.",
       "feeShortStayOnlyMissing": "Aucun séjour court n’est encore défini pour cet hébergement (« Majoration séjour court ») — tant qu’il manque, les frais ne sont pas facturés.",
+      "feePetsOnlyNote": "Ces frais ne sont facturés que si le client vient avec un animal — y compris sous forme de forfait.",
       "applyToOthersFeeHint": "Appliquer les mêmes frais à d’autres hébergements.",
       "applyToOthersTaxHint": "Appliquer la même taxe à d’autres hébergements.",
       "promoUnnamed": "Sans nom",

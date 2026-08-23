@@ -42,10 +42,12 @@ from src.features.addons.pricing import addon_total
 from .schemas import (
     MAX_QUOTE_NIGHTS,
     EffectivePriceDay,
+    OptionalFeeOffer,
     QuoteLine,
     QuoteRequest,
     QuoteResponse,
 )
+from .tierbedingung import ist_tierbedingt
 
 log = get_logger("nextdays.pricing")
 
@@ -67,12 +69,38 @@ _DISCOUNT_LABEL = {
 }
 
 
-def _pick_locale_text(name: object) -> str | None:
-    """Aus einem i18n-jsonb {locale: text} einen Anzeigetext wählen: 'de'
-    bevorzugt, sonst der erste vorhandene Wert. None, wenn leer/kein dict."""
+def _pick_locale_text(name: object, locale: str = "en") -> str | None:
+    """Aus einem i18n-jsonb {locale: text} den Text in `locale` wählen.
+
+    Reihenfolge: die verlangte Sprache → Englisch → der erste vorhandene Wert.
+    None, wenn leer/kein dict.
+
+    WARUM NICHT MEHR HART 'de': das Produkt läuft in 27 Ländern, und jede Zeile
+    dieser Aufschlüsselung liest ein GAST. Ein fester Vorzug auf Deutsch war
+    kein technischer Default, sondern eine inhaltliche Aussage, die sich als
+    einer getarnt hat — für einen dänischen Gast ist „Haustiergebühr" auf seiner
+    Rechnung keine neutrale Voreinstellung, sondern falsch (Wurzel 4). Dieselbe
+    Begründung steht bereits in Migration 0335 für die Mail-Sprache; hier war
+    die letzte Stelle, an der die alte Annahme noch stand.
+
+    Englisch als Zwischenstufe aus demselben Grund wie dort (`core.mail_sprache
+    .FALLBACK`): es wird als Ausweichsprache erkannt, Deutsch als
+    Herkunftsaussage. Der letzte Rückfall bleibt „irgendein gepflegter Text",
+    denn ein leeres Label wäre schlechter als ein fremdsprachiges: der Gast
+    sähe einen Betrag ohne Bezeichnung.
+    """
     if not isinstance(name, dict) or not name:
         return None
-    val = name.get("de") or next(iter(name.values()), None)
+    # Regionsvariante auf die Basissprache kappen: die Kataloge sind nach
+    # 2-Buchstaben-Codes geschlüsselt (`web/messages/*.json`), ein „de-AT" aus
+    # einem Accept-Language-Header würde sonst nie treffen. Gleiche Regel wie
+    # `core.mail_sprache.normalisieren`.
+    code = str(locale or "").strip().lower().replace("_", "-").split("-", 1)[0]
+    val = (
+        name.get(code)
+        or name.get("en")
+        or next((v for v in name.values() if v), None)
+    )
     return str(val) if val else None
 
 
@@ -991,6 +1019,13 @@ class PricingResolver:
         # abgeleitete Kurve wirken.
         subtotal = nightly_total
 
+        # Vom Gast gewählte optionale Gebühren — als Menge, weil die Schleife je
+        # Gebühr danach fragt.
+        gewaehlt = {str(x) for x in req.fees}
+        # Wählbare Gebühren dieses Aufenthalts (gewählt oder nicht) für die
+        # Oberfläche.
+        optional_fees: list[OptionalFeeOffer] = []
+
         # 3) Gebühren. Eigener USt-Satz (fees[].taxRate, z. B. Frühstück 19 %)
         # wandert als Snapshot in die Zeile — die Rechnung nutzt ihn später
         # vorrangig vor dem Übernachtungssatz.
@@ -1008,21 +1043,68 @@ class PricingResolver:
                 and n <= config.short_stay_max_nights
             ):
                 continue
+            # Tierbedingte Gebühr ohne Tier: entfällt. Die Bedingung hängt an der
+            # ART (`ist_tierbedingt`), nicht an der Basis — sonst schützt nur
+            # `per_pet_stay`, weil es mit der Tierzahl multipliziert und bei null
+            # nebenbei null wird. Die Haustier-PAUSCHALE (`per_stay`) multipliziert
+            # nichts und lief deshalb jedem Gast mit; live waren das alle 9
+            # gepflegten Haustiergebühren (150 DKK je Buchung ohne Hund).
+            if ist_tierbedingt(fee) and req.pets <= 0:
+                continue
             amount = self._fee_brutto(
                 fee, self._fee_amount(fee, n, req.guests, nightly_total, req.pets)
             )
-            if amount > 0:
-                name = str(fee.get("name") or "Gebühr")
-                lines.append(
-                    QuoteLine(
+            if amount <= 0:
+                continue
+            # Gastseitiger Name in der Sprache des Gastes: der Editor pflegt
+            # `names` in 24 Sprachen ausdrücklich für die Preisaufschlüsselung —
+            # hier stand bisher nur der INTERNE Name, also las jeder Gast die
+            # Eingabe des Betriebs.
+            name = _pick_locale_text(fee.get("names"), req.locale) or str(
+                fee.get("name") or "Gebühr"
+            )
+            fee_id = str(fee.get("id") or "")
+
+            # Optionale Gebühr: sie wird ANGEBOTEN und nur bei ausdrücklicher
+            # Wahl berechnet. Die Oberfläche sagt „Gast kann ab-/zuwählen" —
+            # gelesen wurde das Flag hier nie, also bekam der Gast sie berechnet,
+            # ohne sie abwählen zu KÖNNEN. Fail-closed in Richtung des Gastes:
+            # ohne Wahl kein Zuschlag, denn eine nicht angeklickte Zusatzoption
+            # ist eine Ablehnung und keine fehlende Angabe.
+            #
+            # Der Betrag wird auch für die NICHT gewählte gerechnet und
+            # mitgeliefert: sonst müsste die Strecke „80 pro Nacht × 7" selbst
+            # hochrechnen und käme bei Prozent- oder Gast-Basis auf etwas anderes
+            # als der Server (Wurzel 3).
+            #
+            # Ohne `id` ist sie unwählbar und entfällt immer — sie taucht auch
+            # nicht im Angebot auf, weil der Gast sie nicht anhaken könnte.
+            # `normalize_fees` vergibt jeder Gebühr eine ID, das trifft also nur
+            # von Hand gebauten Bestand.
+            if bool(fee.get("optional")):
+                if not fee_id:
+                    continue
+                optional_fees.append(
+                    OptionalFeeOffer(
+                        id=fee_id,
                         label=name,
                         amount=round(amount, 2),
-                        kind="fee",
-                        tax_rate=_to_float(fee.get("taxRate")),
-                        fee_id=(str(fee["id"]) if fee.get("id") else None),
+                        selected=fee_id in gewaehlt,
                     )
                 )
-                subtotal += amount
+                if fee_id not in gewaehlt:
+                    continue
+
+            lines.append(
+                QuoteLine(
+                    label=name,
+                    amount=round(amount, 2),
+                    kind="fee",
+                    tax_rate=_to_float(fee.get("taxRate")),
+                    fee_id=fee_id or None,
+                )
+            )
+            subtotal += amount
 
         # 4) Aktion/Rabatt (property_discounts, 0185 + 0276): die BESTE greifende
         #    Aktion als eigene Rabattzeile — pro Steuersatz aufgeteilt. Sonst
@@ -1056,7 +1138,7 @@ class PricingResolver:
             codes = {str(c).strip().upper() for c in (regel.get("promo_codes") or [])}
             promo_code_applied = bool(eingegeben) and eingegeben in codes
             disc_name = (
-                _pick_locale_text(regel.get("name"))
+                _pick_locale_text(regel.get("name"), req.locale)
                 or _DISCOUNT_LABEL.get(str(regel["discount_type"]), "Rabatt")
             )
             if str(regel.get("discount_kind") or "percent") == "fixed":
@@ -1107,7 +1189,7 @@ class PricingResolver:
             )
             amount = self._tax_amount(tax, basis, n, req.guests)
             if amount > 0:
-                name = _pick_locale_text(tax.get("names")) or str(
+                name = _pick_locale_text(tax.get("names"), req.locale) or str(
                     tax.get("name") or "Steuer"
                 )
                 lines.append(QuoteLine(label=name, amount=round(amount, 2), kind="tax"))
@@ -1119,7 +1201,6 @@ class PricingResolver:
             catalog = self._load_addons(
                 req.property_id, [a.addon_id for a in req.addons]
             )
-            locale = "de"
             for sel in req.addons:
                 addon = catalog.get(sel.addon_id)
                 if not addon:
@@ -1137,8 +1218,10 @@ class PricingResolver:
                 )
                 if gross <= 0:
                     continue
-                names = addon.get("name") or {}
-                label = names.get(locale) or next(iter(names.values()), "Zusatzleistung")
+                label = (
+                    _pick_locale_text(addon.get("name"), req.locale)
+                    or "Zusatzleistung"
+                )
                 if sel.qty > 1:
                     label = f"{label} ×{sel.qty}"
                 lines.append(QuoteLine(label=label, amount=gross, kind="addon"))
@@ -1154,6 +1237,7 @@ class PricingResolver:
             channel=req.channel,
             currency=currency,
             nightly_total=round(nightly_total, 2),
+            optional_fees=optional_fees,
             lines=lines,
             total=total,
             promo_code_applied=promo_code_applied,

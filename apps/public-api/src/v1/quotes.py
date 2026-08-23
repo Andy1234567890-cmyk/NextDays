@@ -58,7 +58,30 @@ def vorschau(
         date, Query(description="Abreisetag — die Nacht davor ist die letzte.")
     ],
     guests: Annotated[int, Query(ge=1, le=100, description="Zahl der Gäste.")] = 1,
-    pets: Annotated[int, Query(ge=0, le=20, description="Mitgebrachte Tiere.")] = 0,
+    pets: Annotated[
+        int,
+        Query(
+            ge=0,
+            le=20,
+            description=(
+                "Mitgebrachte Tiere. Preiswirksam in zwei Richtungen: eine "
+                "Gebühr „pro Tier und Aufenthalt“ multipliziert damit, und jede "
+                "Haustiergebühr — auch eine Pauschale — entfällt ohne Tier."
+            ),
+        ),
+    ] = 0,
+    locale: Annotated[
+        str,
+        Query(
+            max_length=10,
+            description=(
+                "Sprache der Bezeichnungen in der Aufschlüsselung (ISO 639-1, "
+                "z. B. „da“). Reine Anzeige-Achse — die Beträge sind unberührt. "
+                "Ohne Angabe Englisch; pflegt der Betrieb die Sprache an einem "
+                "Posten nicht, greift ebenfalls Englisch."
+            ),
+        ),
+    ] = "en",
     rate_plan_id: Annotated[
         str | None,
         Query(
@@ -123,6 +146,7 @@ def vorschau(
             check_out=check_out,
             guests=guests,
             pets=pets,
+            locale=locale,
             channel="direct",
             rate_plan_id=rate_plan_id,
             promo_code=promo_code,

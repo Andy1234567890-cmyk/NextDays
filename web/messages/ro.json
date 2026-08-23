@@ -5532,6 +5532,7 @@
       "feeShortStayOnlyHint": "Percepeți taxa numai la sejururi scurte.",
       "feeShortStayOnlyBound": "Se aplică la cel mult {nights} nopți — aceeași limită ca adaosul pentru sejur scurt. Taxa nu ajunge la portaluri: durata sejurului nu poate fi reprezentată acolo.",
       "feeShortStayOnlyMissing": "Pentru acest obiectiv nu este încă definit un sejur scurt („Adaos sejur scurt“) — până atunci, taxa nu este percepută.",
+      "feePetsOnlyNote": "Această taxă este percepută numai atunci când oaspetele vine cu un animal — inclusiv ca sumă fixă.",
       "applyToOthersFeeHint": "Aplicați aceeași taxă suplimentară și la alte obiective.",
       "applyToOthersTaxHint": "Aplicați aceeași taxă și la alte obiective.",
       "promoUnnamed": "Fără nume",

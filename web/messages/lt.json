@@ -5532,6 +5532,7 @@
       "feeShortStayOnlyHint": "Imti mokestį tik už trumpas viešnages.",
       "feeShortStayOnlyBound": "Taikoma iki {nights} naktų — ta pati riba kaip trumpos viešnagės priedui. Į portalus mokestis nesiunčiamas: viešnagės trukmės ten išreikšti neįmanoma.",
       "feeShortStayOnlyMissing": "Šiam objektui trumpa viešnagė dar neapibrėžta („Trumpos viešnagės priedas“) — kol jos nėra, mokestis neskaičiuojamas.",
+      "feePetsOnlyNote": "Šis mokestis imamas tik tada, kai svečias atsiveža gyvūną — taip pat ir kaip vienkartinė suma.",
       "applyToOthersFeeHint": "Taikyti tą pačią rinkliavą ir kitiems objektams.",
       "applyToOthersTaxHint": "Taikyti tą patį mokestį ir kitiems objektams.",
       "promoUnnamed": "Be pavadinimo",

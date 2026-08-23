@@ -5532,6 +5532,7 @@
       "feeShortStayOnlyHint": "Iċċarġja t-tariffa biss għal soġġorni qosra.",
       "feeShortStayOnlyBound": "Tapplika sa {nights} iljieli — l-istess limitu tas-supplement għal soġġorn qasir. It-tariffa ma tintbagħatx lill-portali: it-tul tas-soġġorn ma jistax jiġi espress hemm.",
       "feeShortStayOnlyMissing": "Għal din il-proprjetà għadu ma ġiex definit soġġorn qasir („Supplement għal soġġorn qasir“) — sakemm dan jonqos, it-tariffa ma tiġix iċċarġjata.",
+      "feePetsOnlyNote": "Din it-tariffa tiġi ċċarġjata biss meta l-mistieden iġib annimal — anke bħala somma fissa.",
       "applyToOthersFeeHint": "Applika l-istess tariffa anke għal proprjetajiet oħra.",
       "applyToOthersTaxHint": "Applika l-istess taxxa anke għal proprjetajiet oħra.",
       "promoUnnamed": "Bla isem",

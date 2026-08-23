@@ -5534,6 +5534,7 @@
       "feeShortStayOnlyHint": "Cobrar la tarifa solo en estancias cortas.",
       "feeShortStayOnlyBound": "Se aplica con un máximo de {nights} noches — el mismo límite que el recargo por estancia corta. La tarifa no se envía a los portales: allí no se puede expresar una duración de estancia.",
       "feeShortStayOnlyMissing": "Para este alojamiento aún no se ha definido una estancia corta («Recargo por estancia corta») — mientras falte, la tarifa no se cobra.",
+      "feePetsOnlyNote": "Esta tarifa solo se cobra cuando el huésped trae una mascota — también como importe fijo.",
       "applyToOthersFeeHint": "Aplicar la misma tarifa también a otros alojamientos.",
       "applyToOthersTaxHint": "Aplicar el mismo impuesto también a otros alojamientos.",
       "promoUnnamed": "Sin nombre",
