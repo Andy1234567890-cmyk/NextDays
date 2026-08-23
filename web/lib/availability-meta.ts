@@ -192,6 +192,25 @@ export function readAvailability(
   return {
     ...DEFAULT_AVAILABILITY,
     ...raw,
+    // Gespeichertes "both" wird zu "arrival" korrigiert.
+    //
+    // "both" war die frühere Voreinstellung und steht deshalb bei jedem
+    // Bestandsobjekt in `type_attributes.availability`. Über den Spread würde
+    // es den korrigierten Default überschreiben — die Objekte behielten den
+    // kaputten Wert für immer.
+    //
+    // Warum der Wert kaputt ist (live belegt 23.08.2026): bei "both" schickt
+    // Channex `min_stay_arrival` UND `min_stay_through`. Booking.com kennt je
+    // Zimmer nur EINEN Mindestaufenthalt-Typ und übernimmt daher keinen. Bei
+    // "Feriehus Kornblomst" standen 2 Nächte bei uns, 2 auf allen vier Raten
+    // bei Channex — und im Booking-Extranet "Keine Mindestaufenthaltsdauer".
+    // Bei allen 18 Objekten dasselbe; Airbnb war nie betroffen, weil sein Typ
+    // separat gesetzt wird.
+    //
+    // Keine Migration nötig: die Korrektur greift beim Lesen, wird beim
+    // nächsten Speichern mitgeschrieben und mit dem Objekt an Channex
+    // gesendet. "through" bleibt unangetastet — das ist eine bewusste Wahl.
+    minStayType: raw.minStayType === "both" ? "arrival" : (raw.minStayType ?? DEFAULT_AVAILABILITY.minStayType),
     preparationDays: mergePerChannel(raw.preparationDays, DEFAULT_AVAILABILITY.preparationDays),
     bookingWindowDays: mergePerChannel(raw.bookingWindowDays, DEFAULT_AVAILABILITY.bookingWindowDays),
     advanceNotice: mergePerChannel(raw.advanceNotice, DEFAULT_AVAILABILITY.advanceNotice),
