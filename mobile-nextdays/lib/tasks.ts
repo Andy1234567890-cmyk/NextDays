@@ -117,6 +117,23 @@ export type TaskFilter = {
   rule_ids?: string[];
 };
 
+/**
+ * Beginn des NÄCHSTEN Tages beim Nutzer, als ISO-Zeitstempel MIT Zone.
+ *
+ * Der Server kann das nicht selbst bestimmen: die Zeitzone hängt am Objekt
+ * (`properties.timezone`), und eine Liste über mehrere Objekte hat keine
+ * einzige richtige. Das Gerät weiß dagegen sicher, welcher Tag hier läuft —
+ * deshalb liefert der Client die Grenze und der Server rechnet nur damit.
+ *
+ * Ohne diese Angabe verglich der Server gegen seine Uhr, und eine heute um
+ * 16:00 fällige Aufgabe lag morgens unter „Bevorstehend" statt „Aktuell".
+ */
+function tagesende(): string {
+  const d = new Date();
+  d.setHours(24, 0, 0, 0); // Mitternacht des kommenden Tages, lokale Zeit
+  return d.toISOString();
+}
+
 /** Filter → Query. Mehrfachauswahl wirkt: jeder Wert wird angehängt. */
 function filterParams(filter?: TaskFilter): URLSearchParams {
   const p = new URLSearchParams();
@@ -124,6 +141,9 @@ function filterParams(filter?: TaskFilter): URLSearchParams {
   for (const id of filter?.property_ids ?? []) p.append("property_id", id);
   for (const id of filter?.assignee_ids ?? []) p.append("assignee_id", id);
   for (const id of filter?.rule_ids ?? []) p.append("rule_id", id);
+  // Immer mitsenden: die Reiter-Einteilung ist ohne Tagesgrenze schief, und
+  // eine ältere Server-Fassung ignoriert einen unbekannten Parameter.
+  p.set("tagesende", tagesende());
   return p;
 }
 

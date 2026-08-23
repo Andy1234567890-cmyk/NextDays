@@ -55,6 +55,10 @@ export default async function PortalLayout({
         email={sitzung.me.email ?? ""}
         darfBerichte={rolle.ok ? rolle.data.darf_berichte : true}
         darfZugaenge={rolle.ok ? rolle.data.darf_zugaenge : true}
+        // Granulare Berechtigungen aus /auth/me — serverseitig aus der DB
+        // gelesen (Wurzel 7), nicht aus einem JWT-Claim abgeleitet. Steuert
+        // die drei Punkte Objektbereich/Fotoalbum/Statistiken.
+        rechte={sitzung.me.permissions ?? []}
       />
       <SidebarInset>
         <PortalTopbar />

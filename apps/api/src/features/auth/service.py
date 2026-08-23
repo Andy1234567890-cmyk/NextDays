@@ -31,10 +31,11 @@ from .granular_permissions import (
     Permission,
     default_permissions_for,
     effective_permissions,
+    nicht_vergebbar,
     normalize_permissions,
 )
 from .otp_service import OtpService
-from .permissions import effective_capabilities
+from .permissions import effective_capabilities, owner_family_capabilities_for
 from .schemas import (
     InviteRequest,
     InviteResponse,
@@ -202,10 +203,34 @@ class AuthService:
         # kann ein Recht weitergeben, das er selbst nicht hat.
         granter = self._effective_perms_of(granter_id)
         if req.permissions is None:
-            permissions = normalize_permissions(
-                default_permissions_for(req.role), req.role, granter=granter
-            )
+            # Rollen-Standard: was der Vergebende nicht weitergeben kann, fällt
+            # still weg — er hat es nicht ausgewählt, also ist es keine
+            # unerfüllte Zusage. Der Verlust steht im Protokoll, damit er
+            # nachvollziehbar bleibt.
+            standard = default_permissions_for(req.role)
+            verloren = nicht_vergebbar(standard, granter, req.role)
+            if verloren:
+                log.info(
+                    "rollen_standard_geklemmt",
+                    extra={
+                        "rolle": req.role.value,
+                        "nicht_vergebbar": verloren,
+                        "vergeber": granter_id,
+                    },
+                )
+            permissions = normalize_permissions(standard, req.role, granter=granter)
         else:
+            # AUSDRÜCKLICH GEWÄHLT: hier wäre stilles Verwerfen eine Lüge. Der
+            # Aufrufer hat Häkchen gesetzt und bekäme „gespeichert" zurück,
+            # während die Hälfte fehlt. Live legte ein co_admin so
+            # Eigentümer-Konten mit einem einzigen wirksamen Recht an.
+            verloren = nicht_vergebbar(req.permissions, granter, req.role)
+            if verloren:
+                raise AuthError(
+                    "Diese Berechtigungen können Sie nicht vergeben, weil Sie "
+                    "sie selbst nicht haben: " + ", ".join(verloren),
+                    status_code=422,
+                )
             permissions = normalize_permissions(
                 req.permissions, req.role, granter=granter
             )
@@ -773,6 +798,45 @@ class AuthService:
         log.info("other_sessions_revoked", user_id=ctx.user_id, count=count)
         return count
 
+    def _familien_stufe(self, user_id: str) -> str | None:
+        """Freigabe-Stufe, wenn dieses Konto ein FAMILIENZUGANG ist (0389).
+
+        `None` = kein Familienzugang, dann gilt die Rolle unverändert. Das ist
+        der Normalfall: die Tabelle enthält live drei Zeilen.
+
+        Bei mehreren Objekten mit verschiedenen Stufen gewinnt die NIEDRIGSTE.
+        Die Capability-Menge ist hier nicht objektbezogen — eine höhere Stufe
+        würde also für alle Objekte gelten, auch die, für die sie nicht erteilt
+        wurde. Die objektgenaue Prüfung bleibt Sache der Slices
+        (`owner_property_assignments`); diese Deckelung ist die Untergrenze.
+
+        Best-effort im Fehlerfall: schlägt die Abfrage fehl, gilt das Konto
+        NICHT als Familienzugang — die Rolle greift dann wie bisher. Ein
+        Fehlschlag darf `/auth/me` nicht kippen, sonst kommt niemand mehr in die
+        Oberfläche.
+        """
+        try:
+            res = (
+                self._service.table("owner_family_members")
+                .select("access")
+                .eq("user_id", user_id)
+                .execute()
+            )
+        except Exception:  # noqa: BLE001 - Anmeldung darf hieran nicht scheitern
+            log.exception("familien_stufe_lesen_fehlgeschlagen")
+            return None
+        stufen = [str(r.get("access") or "") for r in (res.data or [])]
+        stufen = [x for x in stufen if x]
+        if not stufen:
+            return None
+        # Die niedrigste Stufe gewinnt. „Niedrig" heißt: die kleinere
+        # Fähigkeiten-Menge — abgeleitet aus dem Katalog, nicht aus einer hier
+        # gepflegten Rangliste. Sonst müsste eine dritte Stufe an zwei Stellen
+        # eingetragen werden, und die zweite würde vergessen. Eine unbekannte
+        # Stufe ergibt die leere Menge und gewinnt damit von selbst
+        # (fail-closed, Wurzel 5).
+        return min(stufen, key=lambda x: len(owner_family_capabilities_for(x)))
+
     def me(self, ctx: AuthContext) -> MeResponse:
         # Rolle + Berechtigungen aus der DB (Quelle der Wahrheit) lesen — das
         # JWT-app_metadata kann veraltet sein.
@@ -784,7 +848,11 @@ class AuthService:
             .execute()
         )
         data = row.data[0] if row.data else {}
-        role_raw = data.get("role") or ctx.role
+        # Rolle NUR aus der DB, kein `or ctx.role` (Wurzel 7): `/auth/me` speist
+        # das Gating ALLER Oberflächen. Eine im Token veraltete Rolle hätte dort
+        # bis zu einer Stunde Menüpunkte offen gehalten, die der Server längst
+        # mit 403 abweist.
+        role_raw = data.get("role")
         role = UserRole(role_raw) if role_raw in UserRole.__members__ else None
         perms = effective_permissions(role, data.get("permissions"))
         # Effektive Fähigkeiten = Rollen-Capabilities OHNE PM-Bereich, falls das
@@ -792,7 +860,15 @@ class AuthService:
         # Kontrollzentrum/Buchungen/Aufgaben automatisch aus, wenn der PM-Zugriff
         # im Rechte-Dialog entzogen wurde.
         pm = Permission.ACCESS_PM_FEATURES in perms
-        caps = effective_capabilities(role, has_pm_access=pm)
+        caps = effective_capabilities(
+            role,
+            has_pm_access=pm,
+            # Familienzugang (0389) DECKELT das Ergebnis: das Mitglied trägt in
+            # `users` die Rolle `owner`, darf aber nur, was seine Stufe hergibt.
+            # Ohne diesen Wert bekam es in jeder Oberfläche außer dem Portal die
+            # vollen Eigentümer-Fähigkeiten.
+            family_access=self._familien_stufe(ctx.user_id),
+        )
         tenant_meta = self._tenant_meta(ctx.tenant_id)
         return MeResponse(
             user_id=ctx.user_id,

@@ -5,6 +5,17 @@
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const PREFIX = "/api/v1";
 
+/** Basis-URL der API inkl. Präfix.
+ *
+ *  Für Aufrufe, die `api()` NICHT nutzen können — konkret Multipart-Uploads: der
+ *  Browser muss dort den `Content-Type` samt Grenzmarkierung selbst setzen, ein
+ *  von uns gesetztes `application/json` würde den Body unlesbar machen. Damit
+ *  diese Aufrufe die Adresse nicht ein zweites Mal zusammenbauen (und beim
+ *  nächsten Umzug vergessen werden), kommt sie von hier. */
+export function apiBasis(): string {
+  return `${BASE}${PREFIX}`;
+}
+
 export class ApiError extends Error {
   status: number;
   /**

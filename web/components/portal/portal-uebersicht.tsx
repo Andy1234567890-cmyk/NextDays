@@ -15,6 +15,7 @@ import { useCallback } from "react";
 
 import { PortalRealtime } from "@/components/portal/portal-realtime";
 import { Card, CardContent } from "@nextdays/ui/card";
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { formatCurrency } from "@/lib/currency";
 import type {
   PortalEarnings,
@@ -322,6 +323,7 @@ function Kennzahl({
   hint?: string;
   wert: string;
 }) {
+  const tGemein = useTranslations("common");
   return (
     <Card>
       <CardContent className="flex items-start gap-3 py-4">
@@ -329,11 +331,23 @@ function Kennzahl({
           <Icon icon={icon} className="size-5" />
         </span>
         <div className="flex min-w-0 flex-col">
-          <span className="text-xs text-muted-foreground">{label}</span>
+          {/* Die Erklärung steckt hinter dem „i" neben der Beschriftung, statt
+              als dritte Zeile unter der Zahl zu stehen: vier Kacheln
+              nebeneinander, von denen zwei drei Zeilen hoch sind, drückten die
+              Zahl — also das, wofür die Kachel da ist — optisch an den Rand.
+              `InfoHinweis` ist ein Popover, kein Tooltip: es öffnet auf Klick
+              und ist damit auch auf dem Tablet erreichbar. */}
+          <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            {label}
+            {hint && (
+              <InfoHinweis
+                titel={label}
+                text={hint}
+                ariaLabel={tGemein("explain", { label })}
+              />
+            )}
+          </span>
           <span className="font-display text-2xl font-extrabold">{wert}</span>
-          {hint && (
-            <span className="text-xs text-muted-foreground">{hint}</span>
-          )}
         </div>
       </CardContent>
     </Card>

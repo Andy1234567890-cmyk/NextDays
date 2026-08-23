@@ -21,12 +21,30 @@ export interface CspOptions {
   /** frame-ancestors. Default 'none' (nicht einbettbar). builder überschreibt
    *  das für White-Label-Embeds. */
   frameAncestors?: string;
+  /** Fremde Origins, die diese App per <iframe> EINBETTEN darf (frame-src).
+   *  Mit Schema, z. B. "https://sites.mynextdays.dk".
+   *
+   *  Ohne diese Option gibt es keine frame-src-Direktive und der Browser fällt
+   *  auf `default-src 'self'` zurück — jeder fremde iframe wird dann still
+   *  blockiert. Genau daran ist schon eine OpenStreetMap-Karte gescheitert
+   *  (siehe web/components/reservierungen/property-location.tsx) und danach die
+   *  Live-Vorschau des Website-Baukastens: der iframe blieb leer, ohne dass im
+   *  Code ein Fehler war. Wer einen fremden iframe einbettet, MUSS seinen Origin
+   *  hier eintragen. */
+  frameSrc?: string[];
   /** Dev-Modus braucht 'unsafe-eval' (React-Debugging). In Prod NIE. */
   dev?: boolean;
   /** Google-Maps-JS-API freigeben (nur Apps, die eine Karte rendern). Fügt die
    *  minimal nötigen Maps-Hosts zu script-/connect-/img-src hinzu — NICHT pauschal
    *  für alle Apps, damit die CSP sonst eng bleibt (Wurzel 6). */
   googleMaps?: boolean;
+  /** Google-Fonts freigeben (nur Apps, die Schriften von dort laden).
+   *
+   *  Zwei Hosts, beide nötig: das Stylesheet kommt von `fonts.googleapis.com`,
+   *  die Schriftdateien von `fonts.gstatic.com`. Fehlt einer, lädt die Schrift
+   *  nicht und die Seite steht in der Fallback-Schrift — ohne sichtbaren Fehler
+   *  außer einer CSP-Zeile in der Konsole. */
+  googleFonts?: boolean;
 }
 
 // Genau die Hosts, die die Google-Maps-JS-API braucht — nicht mehr.
@@ -47,7 +65,14 @@ const MAPS_FONT = ["https://fonts.gstatic.com"];
 
 /** Baut den CSP-Header-Wert für eine App. */
 export function buildCsp(opts: CspOptions = {}): string {
-  const { connectHosts = [], frameAncestors = "'none'", dev = false, googleMaps = false } = opts;
+  const {
+    connectHosts = [],
+    frameAncestors = "'none'",
+    frameSrc = [],
+    dev = false,
+    googleMaps = false,
+    googleFonts = false,
+  } = opts;
   const scriptExtra = googleMaps ? " " + MAPS_SCRIPT.join(" ") : "";
   // `wss:` MUSS mit: ein WebSocket-Ziel wird gegen sein EIGENES Schema geprüft,
   // `https:` deckt es NICHT ab. Ohne diesen Eintrag blockt die CSP jede
@@ -63,8 +88,15 @@ export function buildCsp(opts: CspOptions = {}): string {
     ...(googleMaps ? MAPS_CONNECT : []),
   ].join(" ");
   const img = ["'self'", "data:", "blob:", "https:", ...(googleMaps ? MAPS_IMG : [])].join(" ");
-  const style = ["'self'", "'unsafe-inline'", ...(googleMaps ? MAPS_STYLE : [])].join(" ");
-  const font = ["'self'", "data:", ...(googleMaps ? MAPS_FONT : [])].join(" ");
+  // Maps und Fonts brauchen dieselben zwei Hosts — Set verhindert Dubletten.
+  const styleHosts = new Set<string>();
+  const fontHosts = new Set<string>();
+  if (googleMaps || googleFonts) {
+    for (const h of MAPS_STYLE) styleHosts.add(h);
+    for (const h of MAPS_FONT) fontHosts.add(h);
+  }
+  const style = ["'self'", "'unsafe-inline'", ...styleHosts].join(" ");
+  const font = ["'self'", "data:", ...fontHosts].join(" ");
   return [
     "default-src 'self'",
     `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ""}${scriptExtra}`,
@@ -73,6 +105,12 @@ export function buildCsp(opts: CspOptions = {}): string {
     `font-src ${font}`,
     `connect-src ${connect}`,
     `frame-ancestors ${frameAncestors}`,
+    // Nur setzen, wenn die App wirklich fremde iframes einbettet. Ohne die
+    // Direktive gilt weiterhin der `default-src 'self'`-Fallback — das ist der
+    // engere Zustand und soll der Standard bleiben.
+    ...(frameSrc.length > 0
+      ? [`frame-src ${["'self'", ...frameSrc].join(" ")}`]
+      : []),
     "base-uri 'self'",
     "form-action 'self'",
     "object-src 'none'",

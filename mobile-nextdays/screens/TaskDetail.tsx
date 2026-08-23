@@ -119,10 +119,23 @@ export default function TaskDetail() {
   const [fotoBusy, setFotoBusy] = useState<string | null>(null);
   // Für welchen Punkt die Auswahl „Aufnehmen / Aus der Galerie" offen ist.
   const [fotoZiel, setFotoZiel] = useState<string | null>(null);
+  // Warum das Detail fehlt — null = die Aufgabe gibt es wirklich nicht.
+  const [ladeFehler, setLadeFehler] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const res = await getTaskDetail(id);
-    if (res.ok) setDetail(res.data);
+    // Wurzel 5: den Grund festhalten. Vorher blieb `detail` bei jedem Fehler
+    // null, und der Screen behauptete „Diese Aufgabe gibt es nicht (mehr)" —
+    // bei einer abgelaufenen Sitzung (401) oder einem kurzen Serverausfall
+    // (503) eine Falschaussage, die den Nutzer zur falschen Schlussfolgerung
+    // führt (er sucht die Aufgabe, statt sich neu anzumelden).
+    if (!res.ok) {
+      setLadeFehler(res.error);
+      setLoading(false);
+      return;
+    }
+    setLadeFehler(null);
+    setDetail(res.data);
     setLoading(false);
   }, [id]);
 
@@ -305,7 +318,15 @@ export default function TaskDetail() {
         <Row style={{ paddingHorizontal: 12, paddingVertical: 8 }}>
           <ZurueckKnopf onPress={() => navigation.goBack()} />
         </Row>
-        <EmptyState icon="info" titel="Nicht gefunden" text="Diese Aufgabe gibt es nicht (mehr)." />
+        {ladeFehler ? (
+          <EmptyState icon="info" titel="Nicht geladen" text={ladeFehler} />
+        ) : (
+          <EmptyState
+            icon="info"
+            titel="Nicht gefunden"
+            text="Diese Aufgabe gibt es nicht (mehr)."
+          />
+        )}
       </View>
     );
   }

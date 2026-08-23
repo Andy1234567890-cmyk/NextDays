@@ -59,6 +59,14 @@ type MappingRow = {
   room_type_code: string;
   roomLabel: string;
   rateSummary: string; // die Raten des OTA-Zimmers, nur zur Anzeige
+  // Die Raten EINZELN — nicht nur als zusammengeklebter Text. Jede Portal-Rate
+  // wird beim Verbinden zu einem eigenen Kanal-Eintrag und traegt ihre eigenen
+  // Restriktionen; der Betrieb muss deshalb sehen, WIE VIELE es sind. Vorher
+  // stand hier nur `rateSummary` (`rates.join(" · ")`), und eine zweite
+  // Booking-Rate war in der Oberflaeche nicht von einer einzigen zu
+  // unterscheiden — live bei fuenf Objekten der Fall
+  // („Standard Rate" + „Wochenrate").
+  rates: { code: string; label: string }[];
   pricing_type: string;
   occupancy: number;
   local_property_id: string; // gewähltes eigenes Zimmer (Objekt)
@@ -147,6 +155,10 @@ function buildMappingRows(
       room_type_code: String(room.id),
       roomLabel: room.title ?? `Zimmer ${room.id}`,
       rateSummary: rates.map((r) => r.title ?? `Rate ${r.id}`).join(" · "),
+      rates: rates.map((r) => ({
+        code: String(r.id),
+        label: r.title ?? `Rate ${r.id}`,
+      })),
       pricing_type: first?.pricing === "OBP" ? "OBP" : "Standard",
       occupancy: first?.max_persons ?? 2,
       // Ferienobjekt mit einer einzigen Portal-Einheit: 1:1 gesetzt, es gibt

@@ -43,6 +43,10 @@ export type OwnerTabParamList = {
   OwnerEarnings: undefined;
   // Sperr-Anfragen + Zählerstände + Konto/Logout gebündelt (kein Tab-Zoo).
   OwnerRequests: undefined;
+  // Nicht-Umsatz-Auswertung (Belegung/Auslastung). Der Tab existiert NUR mit
+  // dem Recht `pm_nonrevenue_charts` — ohne das Recht wird er gar nicht erst
+  // registriert (OwnerTabs.tsx), nicht bloß ausgeblendet.
+  OwnerStatistics: undefined;
 };
 
 export type RootStackParamList = {
@@ -64,4 +68,10 @@ export type RootStackParamList = {
   // Dieselben Daten wie im Web (`type_attributes.messaging`).
   PropertyGuestGuide: { id: string };
   PropertyGuestGuideText: { id: string; feld: MappenFeld };
+  // Eigentümer-Zweig (nur mit Owner-Erlebnis registriert, App.tsx): das
+  // LESENDE Objekt-Detail über /public-portal und das Fotoalbum. Bewusst
+  // getrennt von `PropertyDetail` oben — das liegt auf /properties und würde
+  // einem Eigentümer 403 liefern.
+  OwnerPropertyDetail: { id: string };
+  OwnerPhotoAlbum: undefined;
 };

@@ -73,9 +73,25 @@ export default function HostTasks({ navigation }: { navigation: any }) {
   const darfVertretung = can(me, "request_substitute");
   const heute = heuteIso();
 
+  // Verwalter starten in der TEAM-Sicht, Mitarbeiter bei sich selbst.
+  //
+  // Vorher stand hier `useState(false)`, also „Meine" für jeden. Für einen
+  // Verwalter ist das die falsche Frage: er will den Betrieb sehen, nicht seine
+  // persönliche Liste. Live gemessen (23.08.2026) sah ein co_admin dadurch 33
+  // von 57 offenen Aufgaben — die übrigen 24 hingen an anderen Zuständigen und
+  // waren im Einstieg nicht zu erkennen. Gemeldet wurde das als „es werden
+  // nicht alle Aufgaben angezeigt", und genau so sah es auch aus.
+  //
+  // Der Startwert kann nicht direkt `canManage` sein: `me` kommt asynchron und
+  // ist im ersten Rendern `null`, `can()` also `false`. Deshalb zieht der
+  // Effekt unten einmalig nach, sobald die Rolle da ist — und nur dann, damit
+  // eine spätere Wahl des Nutzers nicht überschrieben wird.
   const [team, setTeam] = useState(false);
+  const teamVorgabe = useRef(false);
   const [bucket, setBucket] = useState<StatusBucket>("current");
   const [liste, setListe] = useState<TaskListItem[] | null>(null);
+  // Grund, warum die Liste leer ist — null = kein Fehler, wirklich leer.
+  const [fehler, setFehler] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   // Filter (wie die drei Auswahlfelder im Web). Objekte kann jede Sicht
@@ -99,8 +115,28 @@ export default function HostTasks({ navigation }: { navigation: any }) {
           assignee_ids: personFilter,
         })
       : await listMyTasks({ status_bucket: bucket, property_ids: objektFilter });
-    setListe(res.ok ? res.data : []);
+    // Wurzel 5: ein Ladefehler ist NICHT „keine Aufgaben". Vorher stand hier
+    // `res.ok ? res.data : []` — ein 401 (abgelaufene Sitzung), 403 oder 503
+    // wurde damit zur leeren Liste samt beruhigendem „Dir ist gerade keine
+    // Aufgabe zugewiesen". Der Nutzer sieht dann nichts zum Antippen und
+    // schließt, die App könne keine Aufgaben bearbeiten.
+    if (!res.ok) {
+      setFehler(res.error);
+      setListe([]);
+      return;
+    }
+    setFehler(null);
+    setListe(res.data);
   }, [team, bucket, objektFilter, personFilter]);
+
+  // Einmalig auf „Team" stellen, sobald die Rolle bekannt ist. `teamVorgabe`
+  // verhindert, dass ein Nutzer, der bewusst auf „Meine" zurückgeschaltet hat,
+  // beim nächsten Rollen-Update wieder umgeworfen wird.
+  useEffect(() => {
+    if (teamVorgabe.current || !canManage) return;
+    teamVorgabe.current = true;
+    setTeam(true);
+  }, [canManage]);
 
   useEffect(() => {
     setListe(null);
@@ -168,7 +204,16 @@ export default function HostTasks({ navigation }: { navigation: any }) {
     setBusyId(task.id);
     const res = await setTaskStatus(task.id, next);
     setBusyId(null);
-    if (res.ok) load();
+    if (!res.ok) {
+      // Wurzel 5: den Fehler NICHT verschlucken. Vorher stand hier nur
+      // `if (res.ok) load()` — schlug der Aufruf fehl (fehlende Berechtigung,
+      // Foto-Pflicht 422, fremde Aufgabe 404), passierte sichtbar NICHTS. Der
+      // Nutzer tippt, nichts rührt sich, und der Schluss ist: die App ist
+      // kaputt. Dieselbe Meldung wie im Detail-Screen.
+      Alert.alert("Nicht möglich", res.error);
+      return;
+    }
+    load();
   };
 
   // Beim Wechsel von Sicht oder Reiter nach oben: sonst behält der ScrollView
@@ -271,7 +316,20 @@ export default function HostTasks({ navigation }: { navigation: any }) {
           contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: unterkante + 24, gap: 18 }}
           refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
         >
-          {gruppen.length === 0 ? (
+          {gruppen.length === 0 && fehler ? (
+            // Der Grund, statt eines beruhigenden Leerzustands: „keine Aufgabe
+            // zugewiesen" wäre hier eine Falschaussage über einen Ladefehler.
+            <Col gap={2} style={{ paddingTop: 24 }}>
+              {/* Gleiche Form wie im Dashboard (`BuchungsReiter`): eine Marke
+                  in der Akzentfarbe plus der Grund darunter. */}
+              <Txt v="body" color={t.palette.accent}>
+                Aufgaben nicht geladen.
+              </Txt>
+              <Txt v="xs" soft>
+                {fehler}
+              </Txt>
+            </Col>
+          ) : gruppen.length === 0 ? (
             <LeerZustand bucket={bucket} team={team} />
           ) : (
             gruppen.map((gruppe) => (

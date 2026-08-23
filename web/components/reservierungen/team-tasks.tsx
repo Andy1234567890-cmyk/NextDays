@@ -13,7 +13,7 @@ import { AufgabenTabelle } from "@/components/reservierungen/aufgaben-tabelle";
 import { MassenaktionenFab } from "@/components/reservierungen/massenaktionen-fab";
 import { TaskDetailModal } from "@/components/reservierungen/task-detail-modal";
 import { mitarbeiterOptionen } from "@/lib/mitarbeiter-optionen";
-import { UNASSIGNED } from "@/lib/aufgaben-konstanten";
+import { UNASSIGNED, tagesendeIso } from "@/lib/aufgaben-konstanten";
 import { listProperties } from "@/lib/properties";
 import {
   type TaskListItem,
@@ -53,6 +53,7 @@ export function TeamTasks() {
       property_ids: propFilter,
       assignee_ids: userFilter,
       rule_ids: ruleFilter,
+      tagesende: tagesendeIso(),
     });
     if (res.ok) setRows(res.data);
     else toast.error(res.error);

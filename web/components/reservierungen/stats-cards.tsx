@@ -9,17 +9,18 @@
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
-import { Pie, PieChart } from "recharts";
 
 import { KpiSparkline } from "@/components/reservierungen/kpi-sparkline";
 import { Card } from "@nextdays/ui/card";
 import {
-  type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
+  Pie,
+  PieChart,
+  type ChartConfig,
 } from "@nextdays/ui/chart";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { useCalendarLabels } from "@/lib/use-calendar-labels";

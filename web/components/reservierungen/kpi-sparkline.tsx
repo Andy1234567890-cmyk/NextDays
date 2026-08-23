@@ -3,9 +3,13 @@
 // Mini-Verlaufsgraph in jeder KPI-Kachel (..): die Tagesreihe der Metrik
 // als kleiner Area-Chart ohne Achsen/Grid — nur die Kurve. recharts +
 // Chart-Token (var(--chart-1)), gleiche Infrastruktur wie die großen Charts.
-import { Area, AreaChart } from "recharts";
 
-import { ChartContainer, type ChartConfig } from "@nextdays/ui/chart";
+import {
+  Area,
+  AreaChart,
+  ChartContainer,
+  type ChartConfig,
+} from "@nextdays/ui/chart";
 import type { StatPoint } from "@/lib/reservations";
 
 const CONFIG: ChartConfig = { value: { label: "Wert", color: "var(--chart-1)" } };

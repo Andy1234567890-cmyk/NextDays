@@ -146,7 +146,7 @@ export default async function DashboardLayout({
           {me?.is_demo && <DemoBand />}
           <Topbar />
           {/* Inhaltsbereich — hier kommen später KPI-Kacheln & Charts hinein. */}
-          <main className="flex min-w-0 flex-1 flex-col p-4 md:p-6">
+          <main className="flex min-h-0 min-w-0 flex-1 flex-col p-4 md:p-6">
             {zweiterFaktorFehlt && <MfaPflichtHinweis fristIso={mfaFrist} />}
             {children}
           </main>

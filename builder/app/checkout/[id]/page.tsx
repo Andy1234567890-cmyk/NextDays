@@ -5,11 +5,12 @@ import { notFound } from "next/navigation";
 
 import { CheckoutSteps } from "@/components/checkout-steps";
 import { PhotoPlaceholder } from "@/components/photo-placeholder";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { SiteShell } from "@/components/site-shell";
 import { Icon } from "@iconify/react";
 import { ladeInserat } from "@/lib/inserate";
 import { formatCurrency } from "@/lib/listings";
+import { getSiteContext, navOf } from "@/lib/site-context";
+import { spracheWaehlen } from "@/lib/sprache";
 
 const NAECHTE = 2;
 
@@ -19,7 +20,13 @@ export default async function CheckoutPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const listing = await ladeInserat(id);
+  // Tenant-Scope (Wurzel 3): der Checkout lud das Inserat vorher UNGESCOPED —
+  // mit einer fremden Objekt-ID hätte man über die Direkt-URL die Buchungsstrecke
+  // eines anderen Betriebs geöffnet. Der Scope kommt aus der Domain, nicht aus
+  // der Anfrage.
+  const { tenantId, branding, unknown } = await getSiteContext();
+  if (unknown || !tenantId) notFound();
+  const listing = await ladeInserat(id, {}, tenantId);
   if (!listing) notFound();
 
   const cur = listing.currency;
@@ -27,10 +34,14 @@ export default async function CheckoutPage({
   const gesamt = Math.round(zwischensumme * 100) / 100;
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <SiteHeader />
-
-      <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">
+    <SiteShell
+      branding={branding}
+      nav={navOf(branding)}
+      jahr={new Date().getFullYear()}
+      sprache={spracheWaehlen(branding)}
+      flaeche="zahlung"
+    >
+      <div className="mx-auto w-full max-w-5xl px-6 py-8">
         <div className="mb-8 flex items-center gap-4">
           <button
             type="button"
@@ -137,9 +148,7 @@ export default async function CheckoutPage({
             </div>
           </div>
         </div>
-      </main>
-
-      <SiteFooter />
-    </div>
+      </div>
+    </SiteShell>
   );
 }

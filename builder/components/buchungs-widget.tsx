@@ -9,6 +9,7 @@ import { useState } from "react";
 
 import { bucheGast, ladeVerfuegbarkeit } from "@/lib/buchung";
 import { type Listing, formatCurrency } from "@/lib/listings";
+import { texte } from "@/lib/texte";
 import { StripeCheckout } from "@/components/stripe-checkout";
 
 function naechte(checkIn: string, checkOut: string): number {
@@ -19,12 +20,35 @@ function naechte(checkIn: string, checkOut: string): number {
   return n > 0 ? n : 0;
 }
 
-export function BuchungsWidget({ listing }: { listing: Listing }) {
+export function BuchungsWidget({
+  listing,
+  sprache,
+  datenschutzPflicht = false,
+  datenschutzHref = null,
+}: {
+  listing: Listing;
+  /** Sprache der Website — für die festen Beschriftungen (lib/texte.ts).
+   *  Vorher standen hier deutsche Wörter im Markup, auf jeder Kundenseite. */
+  sprache: string;
+  /** true = der Gast muss der Datenschutzerklärung zustimmen, bevor reserviert
+   *  wird (`privacy_consent`, 0426).
+   *
+   *  Diese Stelle und nicht der Kontakt-Abschnitt: HIER übermittelt der Gast
+   *  seine personenbezogenen Daten. Der Kontakt-Abschnitt des Renderers zeigt
+   *  nur Adresse und Telefon und hat gar kein Formular — ein Häkchen dort wäre
+   *  eine Attrappe gewesen. */
+  datenschutzPflicht?: boolean;
+  /** Pfad zur Datenschutzerklärung. Fehlt sie, gibt es kein Link — aber das
+   *  Häkchen bleibt: die Pflicht hängt an der Einstellung, nicht am Link. */
+  datenschutzHref?: string | null;
+}) {
+  const txt = texte(sprache);
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [vorname, setVorname] = useState("");
   const [nachname, setNachname] = useState("");
   const [email, setEmail] = useState("");
+  const [zugestimmt, setZugestimmt] = useState(false);
   const [status, setStatus] = useState<{
     kind: "idle" | "loading" | "error" | "done";
     msg?: string;
@@ -42,6 +66,13 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
     }
     if (!vorname || !nachname || !email) {
       setStatus({ kind: "error", msg: "Bitte Kontaktdaten ausfüllen." });
+      return;
+    }
+    // Die Prüfung steht VOR dem ersten Netzaufruf: sonst wäre die
+    // Verfügbarkeitsabfrage schon gelaufen, obwohl die Reservierung gar nicht
+    // zulässig ist.
+    if (datenschutzPflicht && !zugestimmt) {
+      setStatus({ kind: "error", msg: txt.datenschutzPflicht });
       return;
     }
     setStatus({ kind: "loading" });
@@ -89,7 +120,7 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
         <div className="grid grid-cols-2 divide-x divide-border border-b border-border">
           <label className="p-3">
             <span className="block text-[0.625rem] font-semibold uppercase tracking-wide">
-              Check-in
+              {txt.checkIn}
             </span>
             <input
               type="date"
@@ -100,7 +131,7 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
           </label>
           <label className="p-3">
             <span className="block text-[0.625rem] font-semibold uppercase tracking-wide">
-              Check-out
+              {txt.checkOut}
             </span>
             <input
               type="date"
@@ -112,26 +143,53 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
         </div>
         <div className="grid grid-cols-1 gap-2 p-3">
           <input
-            placeholder="Vorname"
+            placeholder={txt.vorname}
             value={vorname}
             onChange={(e) => setVorname(e.target.value)}
             className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none"
           />
           <input
-            placeholder="Nachname"
+            placeholder={txt.nachname}
             value={nachname}
             onChange={(e) => setNachname(e.target.value)}
             className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none"
           />
           <input
             type="email"
-            placeholder="E-Mail"
+            placeholder={txt.email}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none"
           />
         </div>
       </div>
+
+      {datenschutzPflicht ? (
+        <label className="mt-3 flex items-start gap-2 text-xs">
+          <input
+            type="checkbox"
+            checked={zugestimmt}
+            onChange={(e) => setZugestimmt(e.target.checked)}
+            className="mt-0.5 size-4 accent-foreground"
+          />
+          <span>
+            {txt.datenschutzZustimmung}
+            {datenschutzHref ? (
+              <>
+                {" "}
+                <a
+                  href={datenschutzHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  {txt.datenschutzMehr}
+                </a>
+              </>
+            ) : null}
+          </span>
+        </label>
+      ) : null}
 
       {/* Schritt 2: Bezahlen (Stripe Payment Element) — erscheint, sobald die
           Reservierung angelegt ist. */}

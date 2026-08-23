@@ -425,6 +425,17 @@ jobs:
         if: steps.pruefen.outputs.laufen == 'true'
         run: node scripts/i18n/provisionssaetze-pruefen.mjs
 
+      # Die Liste der 24 EU-Amtssprachen liegt an VIER Stellen: Dashboard-
+      # Oberflaeche, Backend-Validierung, Adresszeilen-Pruefung des Renderers
+      # und die Anzeigenamen im Sprachwaehler. Ein gemeinsames Paket gibt es
+      # nicht, weil Python und der Renderer keine Laufzeit teilen — also
+      # dasselbe Muster wie bei den Kanal-Enums: bewusste Kopien plus diese
+      # Pruefung. Ohne sie wird eine Sprache im Baukasten angeboten, die das
+      # Backend mit 422 ablehnt, oder der Sprachwaehler zeigt den nackten Code.
+      - name: Sprachlisten deckungsgleich
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: node scripts/i18n/sprachlisten-pruefen.mjs
+
   # Die beiden Mobile-Apps (ADR-0019) hängen nicht am Wurzel-Workspace (React
   # Native braucht sein eigenes, nicht gehobenes node_modules — deshalb hat jede
   # App ein eigenes bun.lock), nutzen aber denselben Paketmanager. Matrix statt
@@ -679,11 +690,16 @@ jobs:
           # mobile-nextdays; sobald myBestDays sie ebenfalls bekommt, gehört sie
           # hierher — hinter beiden Apps steht EIN Anbieter, und eine driftende
           # Anbieterkennzeichnung ist ein Rechtsmangel, kein Schönheitsfehler.
+          # components/Splash.tsx stand hier, bis myNextDays seinen Start-Bildschirm
+          # animiert bekam (Chevrons und Wortmarke fliegen getrennt ein, aus dem
+          # Vektor-Lockup statt aus einem PNG). Das ist UI und darf nach ADR-0016
+          # divergieren — myBestDays behält sein ruhiges Einblenden. Zusammen-
+          # gehalten bleibt, was Zahlen, Ziele und Zustände bestimmt.
           for f in lib/currency.ts lib/realtime.ts lib/config.ts \
                    lib/config.secrets.example.ts lib/appwechsel.ts \
                    lib/ausstattung.ts \
                    theme/tokens.ts theme/ThemeProvider.tsx \
-                   components/Splash.tsx navigation/tab-style.tsx; do
+                   navigation/tab-style.tsx; do
             diff -u "mobile-bestdays/$f" "mobile-nextdays/$f"
           done
 

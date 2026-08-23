@@ -295,7 +295,20 @@ def test_invite_creates_user_with_role_in_existing_tenant() -> None:
 
 
 def test_invite_clamps_permissions_to_granter_rights() -> None:
-    # Ein Co-Admin OHNE ein bestimmtes Recht kann es nicht weitergeben (Wurzel 3).
+    """Ein Co-Admin ohne ein Recht kann es nicht weitergeben (Wurzel 3) — und
+    erfährt es jetzt, statt ein halb ausgestattetes Konto zu bekommen.
+
+    Vorher klemmte `invite` still: die Antwort trug nur noch `pm_chat`, die
+    Oberfläche meldete Erfolg, und niemand sah, dass ein ausdrücklich
+    angeklicktes Recht fehlte. Live legte ein co_admin so Eigentümer-Konten mit
+    einem einzigen wirksamen Recht an (`owner_reporting` steht im
+    Eigentümer-Standard, ist für ihn aber nicht vergebbar).
+
+    Die Klemmung selbst bleibt — sie ist die Sicherung. Neu ist nur, dass ein
+    AUSDRÜCKLICH gewähltes, unvergebbares Recht ein 422 ergibt statt einer
+    stillen Kürzung. Rollen-Standards klemmen weiter still (siehe
+    `test_invite_rollenstandard_klemmt_still`): die hat niemand angeklickt.
+    """
     svc, _anon, service = _service_with_mocks()
     _mock_granter(
         service,
@@ -304,13 +317,48 @@ def test_invite_clamps_permissions_to_granter_rights() -> None:
     created = MagicMock()
     created.user.id = "user-clamp"
     service.auth.admin.create_user.return_value = created
+    with pytest.raises(AuthError) as exc:
+        svc.invite(
+            _invite(UserRole.staff, permissions=["pm_chat", "inbox_manage_config"]),
+            tenant_id="tenant-abc",
+            granter_id="coadmin-1",
+        )
+    assert exc.value.status_code == 422
+    # Die Meldung NENNT das Recht — sonst rät der Aufrufer, was er streichen soll.
+    assert "inbox_manage_config" in exc.value.message
+
+    # Nur vergebbare Rechte: geht durch, unverändert.
     res = svc.invite(
-        _invite(UserRole.staff, permissions=["pm_chat", "inbox_manage_config"]),
+        _invite(UserRole.staff, permissions=["pm_chat"]),
         tenant_id="tenant-abc",
         granter_id="coadmin-1",
     )
-    # inbox_manage_config besitzt der Granter nicht → weggeklemmt; pm_chat bleibt.
     assert res.permissions == ["pm_chat"]
+
+
+def test_invite_rollenstandard_klemmt_still() -> None:
+    """Der ROLLEN-STANDARD klemmt weiter still — ohne 422.
+
+    Die Unterscheidung ist der Kern: was der Vergebende ausdrücklich anklickt,
+    darf nicht stillschweigend verschwinden. Was aus dem Standard kommt, hat er
+    nicht gewählt — daraus einen Fehler zu machen hieße, dass ein co_admin gar
+    keinen Eigentümer mehr anlegen könnte.
+    """
+    svc, _anon, service = _service_with_mocks()
+    _mock_granter(
+        service,
+        {"role": "co_admin", "permissions": ["view_booking_source"]},
+    )
+    created = MagicMock()
+    created.user.id = "user-standard"
+    service.auth.admin.create_user.return_value = created
+    res = svc.invite(
+        _invite(UserRole.owner, permissions=None),
+        tenant_id="tenant-abc",
+        granter_id="coadmin-1",
+    )
+    # Kein Fehler, und übrig bleibt, was der Vergebende weitergeben kann.
+    assert res.permissions == ["view_booking_source"]
 
 
 def test_invite_rejects_admin_role() -> None:

@@ -11,12 +11,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from src.core.security import AuthContext
 from src.features.auth.dependencies import require_permission
+from src.features.auth.granular_permissions import Permission
 from src.features.auth.permissions import Capability
 
 from .dependencies import (
     DienstleistungsServiceDep,
     OwnerFamilyServiceDep,
     PublicPortalServiceDep,
+    require_portal_recht,
 )
 from .dienstleistungen import DienstleistungError
 from .familie import FamilieError
@@ -29,8 +31,12 @@ from .schemas import (
     MeterReadingList,
     PortalCalendarResponse,
     PortalEarningsResponse,
+    PortalImageList,
+    PortalPhotoAlbum,
+    PortalPropertyDetail,
     PortalPropertyList,
     PortalStatementList,
+    PortalStatisticsResponse,
     SliceHealth,
 )
 from .schemas_dienstleistungen import (
@@ -166,6 +172,91 @@ def meter_readings(
 ) -> MeterReadingList:
     try:
         return service.meter_readings(ctx, property_id)
+    except PortalError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Objektbereich, Bilder, Fotoalbum, Statistik (lesend) -------------------
+#
+# Die vier Rechte, die der Eigentümer im Standard hat und für die es bis jetzt
+# keine prüfende Stelle gab. Ein Recht ohne Guard ist ein Schalter ohne
+# Funktion — das war hier die Ausgangslage.
+#
+# Jeder dieser Endpunkte hängt an ZWEI Prüfungen (`require_portal_recht`): der
+# granularen Berechtigung aus der DATENBANK (Wurzel 7) und der Fähigkeit
+# inklusive Familien-Deckelung (0389). Alle vier sind GET; es gibt bewusst
+# keinen Schreibpfad — ein Eigentümer ist read-only (§4.2). Der Objekt-Scope
+# kommt im Service oben drauf: fremde/unbekannte ID → 404, nie 403.
+
+_AREA = require_portal_recht(  # noqa: N816  pylint: disable=invalid-name
+    Permission.PM_PROPERTY_AREA, Capability.VIEW_PROPERTY_AREA
+)
+_IMAGES = require_portal_recht(  # noqa: N816  pylint: disable=invalid-name
+    Permission.PM_VIEW_PROPERTY_IMAGES, Capability.VIEW_PROPERTY_AREA
+)
+_ALBUM = require_portal_recht(  # noqa: N816  pylint: disable=invalid-name
+    Permission.PM_PHOTO_ALBUM, Capability.VIEW_PROPERTY_AREA
+)
+_STATS = require_portal_recht(  # noqa: N816  pylint: disable=invalid-name
+    Permission.PM_NONREVENUE_CHARTS, Capability.VIEW_OCCUPANCY_STATS
+)
+
+
+@router.get("/properties/{property_id}", response_model=PortalPropertyDetail)
+def property_detail(
+    property_id: str,
+    service: PublicPortalServiceDep,
+    ctx: Annotated[AuthContext, Depends(_AREA)],
+) -> PortalPropertyDetail:
+    """Stammdaten/Beschreibung/Ausstattung EINES eigenen Objekts, lesend."""
+    try:
+        return service.property_detail(ctx, property_id)
+    except PortalError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/properties/{property_id}/images", response_model=PortalImageList
+)
+def property_images(
+    property_id: str,
+    service: PublicPortalServiceDep,
+    ctx: Annotated[AuthContext, Depends(_IMAGES)],
+) -> PortalImageList:
+    """Die Bilder EINES eigenen Objekts."""
+    try:
+        return service.property_images(ctx, property_id)
+    except PortalError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/photo-album", response_model=PortalPhotoAlbum)
+def photo_album(
+    service: PublicPortalServiceDep,
+    ctx: Annotated[AuthContext, Depends(_ALBUM)],
+) -> PortalPhotoAlbum:
+    """Die Bilder ALLER zugeordneten Objekte, je Objekt gruppiert."""
+    try:
+        return service.photo_album(ctx)
+    except PortalError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/statistics", response_model=PortalStatisticsResponse)
+def statistics(
+    service: PublicPortalServiceDep,
+    ctx: Annotated[AuthContext, Depends(_STATS)],
+    property_id: Annotated[str | None, Query()] = None,
+    date_from: Annotated[date | None, Query(alias="from")] = None,
+    date_to: Annotated[date | None, Query(alias="to")] = None,
+) -> PortalStatisticsResponse:
+    """Belegung, Auslastung, Aufenthaltsdauer, Vorlaufzeit — OHNE Geld.
+
+    Ohne `from`/`to`: die letzten zwölf Monate. Spanne > 730 Tage → 422
+    (Wurzel 8). `property_id` außerhalb des Owner-Scopes → 404.
+    """
+    try:
+        return service.statistics(ctx, property_id, date_from, date_to)
     except PortalError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

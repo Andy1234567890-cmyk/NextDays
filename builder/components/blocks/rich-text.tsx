@@ -3,15 +3,21 @@
 // aus dem eingeloggten Agentur-Dashboard und wird hier defensiv gegen
 // <script>/Event-Handler bereinigt (XSS-Schutz).
 import { fontStack } from "@/lib/fonts-catalog";
+import { type EditierModus, NICHT_EDITIERBAR } from "@/lib/editier-kontext";
 import { pickText } from "@/lib/i18n";
 import { sanitizeHtml } from "@/lib/sanitize";
 
 export function RichTextBlock({
   content,
+  modus = NICHT_EDITIERBAR,
 }: {
   content: Record<string, unknown>;
+  // Formatierter Text wird NICHT in der Vorschau bearbeitet: contentEditable
+  // würde das gespeicherte HTML zerstören (Listen, Überschriften, Links). Dafür
+  // gibt es den Editor im Formular links. Der Modus liefert hier nur die Sprache.
+  modus?: EditierModus;
 }) {
-  const html = sanitizeHtml(pickText(content.html));
+  const html = sanitizeHtml(pickText(content.html, modus.locale));
   if (!html) return null;
   const centered = content.align === "center";
   const stack = fontStack(

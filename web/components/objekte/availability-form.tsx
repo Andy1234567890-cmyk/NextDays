@@ -73,18 +73,50 @@ export function AvailabilityForm({ initial }: { initial: Property }) {
   const av = readAvailability(p.type_attributes);
 
   async function save(next: Availability): Promise<true | string> {
+    // Speichern macht ZWEI Backend-Aufrufe. Bleibt einer hängen, sah der Nutzer
+    // bisher nur einen ewig drehenden Knopf und wusste nicht, ob etwas ankam —
+    // live am 23.08.2026: die Verfuegbarkeit wurde nie geschrieben, es entstand
+    // kein Channex-Sync-Job, und Booking blieb ohne Mindestaufenthalt. Diese
+    // Logs benennen jeden Schritt mit Dauer, damit der Hänger auffindbar ist.
+    const t0 = performance.now();
+    const ms = () => Math.round(performance.now() - t0);
+    console.info("[verfuegbarkeit] speichern start", {
+      objekt: p.id,
+      minStay: next.minStay,
+      minStayType: next.minStayType,
+      maxStay: next.maxStay,
+    });
     const res = await updateProperty(p.id, {
       type_attributes: { ...p.type_attributes, availability: next },
     });
-    if (!res.ok) return res.error;
+    if (!res.ok) {
+      console.error("[verfuegbarkeit] objekt speichern FEHLER", {
+        ms: ms(), fehler: res.error,
+      });
+      return res.error;
+    }
+    const gespeichert = (res.data.type_attributes as Record<string, unknown> | undefined)
+      ?.availability as Partial<Availability> | undefined;
+    console.info("[verfuegbarkeit] objekt gespeichert", {
+      ms: ms(),
+      minStayType: gespeichert?.minStayType,
+      minStay: gespeichert?.minStay,
+    });
     setP(res.data);
     setSection(null);
     // Mindestaufenthalt zusätzlich in den rate_plan schreiben (Channex versteht
     // min_stay direkt) — sofern bereits ein Preis/Plan existiert.
     if (next.minStay >= 1) {
       const rp = await setMinStay(p.id, next.minStay);
-      if (!rp.ok) return rp.error;
+      if (!rp.ok) {
+        console.error("[verfuegbarkeit] rate_plan min_stay FEHLER", {
+          ms: ms(), fehler: rp.error,
+        });
+        return rp.error;
+      }
+      console.info("[verfuegbarkeit] rate_plan min_stay gesetzt", { ms: ms() });
     }
+    console.info("[verfuegbarkeit] speichern fertig", { ms: ms() });
     return true;
   }
 

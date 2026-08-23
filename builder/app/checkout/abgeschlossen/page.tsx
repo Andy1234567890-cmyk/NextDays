@@ -1,58 +1,30 @@
 // Rückkehr-Seite nach einer redirect-basierten Zahlung (iDEAL/Giropay/…).
 // Stripe leitet hierher zurück und hängt `redirect_status` + `payment_intent` an
-// die URL. Der endgültige „bezahlt"-Status kommt serverseitig über den Webhook;
-// hier wird nur eine ehrliche Rückmeldung gezeigt (kein Status erfunden).
-"use client";
-
-import { Icon } from "@iconify/react";
-import { useSearchParams } from "next/navigation";
+// die URL an. Die Auswertung dieser Parameter liegt in ./ergebnis (Client), damit
+// diese Seite eine Server-Component bleiben und das Branding des Betriebs laden
+// kann — vorher stand die ganze Seite unter „use client" und trug deshalb eine
+// ungebrandete Kopfzeile.
 import { Suspense } from "react";
 
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { SiteShell } from "@/components/site-shell";
+import { getSiteContext, navOf } from "@/lib/site-context";
+import { spracheWaehlen } from "@/lib/sprache";
 
-function Result() {
-  const params = useSearchParams();
-  const status = params.get("redirect_status");
+import { Ergebnis } from "./ergebnis";
 
-  const ok = status === "succeeded";
-  const pending = status === "pending" || status === "processing";
-
+export default async function CheckoutDonePage() {
+  const { branding } = await getSiteContext();
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-      <Icon
-        icon={ok ? "ph:check-circle" : pending ? "ph:clock" : "ph:warning-circle"}
-        className={
-          "size-14 " +
-          (ok ? "text-emerald-600" : pending ? "text-amber-500" : "text-red-600")
-        }
-      />
-      <h1 className="font-display text-2xl font-semibold tracking-tight">
-        {ok
-          ? "Zahlung erhalten"
-          : pending
-            ? "Zahlung wird verarbeitet"
-            : "Zahlung nicht abgeschlossen"}
-      </h1>
-      <p className="text-muted-foreground">
-        {ok
-          ? "Deine Buchung wird bestätigt. Du erhältst eine E-Mail."
-          : pending
-            ? "Deine Zahlung wird noch verarbeitet. Sobald sie bestätigt ist, erhältst du eine E-Mail."
-            : "Die Zahlung wurde nicht abgeschlossen. Bitte versuche es erneut."}
-      </p>
-    </main>
-  );
-}
-
-export default function CheckoutDonePage() {
-  return (
-    <div className="flex min-h-screen flex-col">
-      <SiteHeader />
+    <SiteShell
+      branding={branding}
+      nav={navOf(branding)}
+      jahr={new Date().getFullYear()}
+      sprache={spracheWaehlen(branding)}
+      flaeche="bestaetigung"
+    >
       <Suspense fallback={null}>
-        <Result />
+        <Ergebnis />
       </Suspense>
-      <SiteFooter />
-    </div>
+    </SiteShell>
   );
 }

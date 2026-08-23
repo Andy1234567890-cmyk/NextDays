@@ -14,6 +14,7 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { Textarea } from "@nextdays/ui/textarea";
 import { channelLabel, channelLogo } from "@/lib/channel-logos";
@@ -276,6 +277,9 @@ export function BewertungsCockpit({
 
 function Kennzahlen({ summary }: { summary: ReviewSummary }) {
   const t = useTranslations("reviews");
+  // aria-Label des Info-Punkts: app-weit dieselbe Formulierung, deshalb aus
+  // `common` und nicht je Fläche neu erfunden.
+  const tGemein = useTranslations("common");
   return (
     <div className="grid gap-3 sm:grid-cols-3">
       <Card className="flex flex-col gap-1 p-4">
@@ -288,18 +292,31 @@ function Kennzahlen({ summary }: { summary: ReviewSummary }) {
         <span className="text-xs text-muted-foreground">{t("kpiCount")}</span>
         <span className="text-2xl font-semibold">{summary.count}</span>
       </Card>
+      {/* Die Antwortquote erklärt die Zahl daneben („12 unbeantwortet" heißt
+          bei 400 Bewertungen etwas anderes als bei 15) und steckt deshalb
+          hinter dem „i", statt als dritte Zeile die Kachel höher zu machen als
+          ihre beiden Nachbarn. Der Leerzustand („Noch keine Bewertungen")
+          bleibt sichtbarer Text — eine Fehlanzeige hinter einem Klick zu
+          verstecken hieße, eine leere Kachel ohne Grund zu zeigen. */}
       <Card className="flex flex-col gap-1 p-4">
-        <span className="text-xs text-muted-foreground">
+        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {t("kpiUnanswered")}
-        </span>
-        <span className="text-2xl font-semibold">{summary.unanswered}</span>
-        <span className="text-xs text-muted-foreground">
-          {summary.response_rate == null
-            ? t("noResponseRate")
-            : t("responseRate", {
+          {summary.response_rate != null && (
+            <InfoHinweis
+              titel={t("kpiUnanswered")}
+              text={t("responseRate", {
                 pct: Math.round(summary.response_rate * 100),
               })}
+              ariaLabel={tGemein("explain", { label: t("kpiUnanswered") })}
+            />
+          )}
         </span>
+        <span className="text-2xl font-semibold">{summary.unanswered}</span>
+        {summary.response_rate == null && (
+          <span className="text-xs text-muted-foreground">
+            {t("noResponseRate")}
+          </span>
+        )}
       </Card>
     </div>
   );

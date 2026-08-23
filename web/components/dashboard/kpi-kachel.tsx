@@ -12,6 +12,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useId, useState, useTransition } from "react";
 
 import { Card, CardContent } from "@nextdays/ui/card";
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { formatCurrency } from "@/lib/currency";
 import type { NachrichtenKennzahl } from "@/lib/inbox";
 import { getNachrichtenKennzahlen } from "@/lib/inbox";
@@ -124,6 +125,9 @@ function KachelRahmen({
   fehler: string | null;
 }) {
   const t = useTranslations("reservations");
+  // aria-Label der Info-Punkte: app-weit dieselbe Formulierung, deshalb aus
+  // `common` und nicht je Fläche neu erfunden.
+  const tGemein = useTranslations("common");
   return (
     <Card>
       <CardContent className="flex h-full flex-col gap-4 p-6">
@@ -137,6 +141,16 @@ function KachelRahmen({
             <h3 className="whitespace-nowrap text-sm font-semibold text-foreground">
               {title}
             </h3>
+            {/* Was die Zahl zählt („Umsatz je Buchung", „Bestätigte
+                Reservierungen"), steckt hinter dem „i" statt als Zeile unter
+                der Zahl zu stehen. `InfoHinweis` ist ein Popover, kein
+                Tooltip: es öffnet auf Klick und ist damit auch auf dem Tablet
+                erreichbar (packages/ui/src/info-hinweis.tsx). */}
+            <InfoHinweis
+              titel={title}
+              text={unitLabel}
+              ariaLabel={tGemein("explain", { label: title })}
+            />
           </div>
           <ZeitraumSelektor
             wert={zeitraum}
@@ -146,17 +160,13 @@ function KachelRahmen({
           />
         </div>
         <div className="mt-auto">
-          {/* Die Zahl steht allein in ihrer Zeile, Beschriftung und Veränderung
-              darunter. Vorher teilten sich Zahl UND Beschriftung eine Spalte
-              neben der Veränderung: bei einer langen Beschriftung („Bestätigte
-              Reservierungen") brach sie um und rutschte neben die Zahl.
+          {/* Die Zahl steht allein in ihrer Zeile, die Veränderung darunter.
               Kein `truncate` auf der Zahl — ein Betrag mit Tausendern und
               Währungskürzel ist abgeschnitten keine Zahl mehr. */}
           <p className="font-display break-words text-2xl font-extrabold leading-tight tabular-nums">
             {display}
           </p>
-          <div className="mt-1 flex items-end justify-between gap-2">
-            <p className="text-sm text-muted-foreground">{unitLabel}</p>
+          <div className="mt-1 flex items-end gap-2">
             <ChangeBadge change={change} />
           </div>
         </div>

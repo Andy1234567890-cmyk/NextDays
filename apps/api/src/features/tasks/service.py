@@ -20,6 +20,7 @@ import secrets
 from datetime import UTC, date, datetime
 from uuid import UUID
 
+from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger
@@ -263,8 +264,20 @@ class TasksService:
         if is_staff(ctx) and prop not in staff_property_ids(self._db(), ctx):
             raise TaskError("Reservierung nicht gefunden.", status_code=404)
 
-    def delete_task(self, tenant_id: str, task_id: str) -> None:
-        """Aufgabe löschen (Kalender-Popup). Tenant-scoped (Wurzel 3)."""
+    def delete_task(
+        self, tenant_id: str, task_id: str, ctx: AuthContext | None = None
+    ) -> None:
+        """Aufgabe löschen (Kalender-Popup).
+
+        Der Item-Pfad prüft denselben Scope wie der Listen-Pfad (Wurzel 9):
+        vorher war hier NUR der Tenant gescopt, während `bulk_delete` jede
+        Aufgabe einzeln über `get_detail` prüft. Damit war der Einzel-Löscher
+        schwächer als der Massen-Löscher — ein Mitarbeiter mit `MANAGE_TASKS`
+        konnte eine Aufgabe an einem Objekt löschen, das er nicht einmal sehen
+        darf.
+        """
+        # Lädt im Objekt-Scope und wirft 404, wenn die Aufgabe außerhalb liegt.
+        self.get_detail(tenant_id, task_id, ctx)
         res = (
             self._db()
             .table("tasks")
@@ -985,6 +998,7 @@ class TasksService:
         property_ids: list[str] | None = None,
         assignee_ids: list[str] | None = None,
         rule_ids: list[str] | None = None,
+        tagesende: datetime | None = None,
     ) -> list[TaskListItem]:
         """Alle Aufgaben des Tenants mit Assignee (MANAGE_TASKS)."""
         rows = self._filtered_tasks(
@@ -993,7 +1007,9 @@ class TasksService:
             assignee_ids=assignee_ids,
             rule_ids=rule_ids,
         )
-        return self._enrich(tenant_id, self._filter_bucket(rows, status_bucket))
+        return self._enrich(
+            tenant_id, self._filter_bucket(rows, status_bucket, tagesende)
+        )
 
     def list_own_tasks(
         self,
@@ -1002,6 +1018,7 @@ class TasksService:
         status_bucket: str | None = None,
         property_ids: list[str] | None = None,
         ctx: AuthContext | None = None,
+        tagesende: datetime | None = None,
     ) -> list[TaskListItem]:
         """„Meine Aufgaben": dieselbe Tabelle wie Teamaufgaben, aber hart auf den
         angemeldeten Nutzer gescopt (Wurzel 9 — der Filter ist keine Anzeigehilfe,
@@ -1012,7 +1029,9 @@ class TasksService:
         if ctx is not None and is_staff(ctx):
             allowed = staff_property_ids(self._db(), ctx)
             rows = [t for t in rows if t.property_id is None or t.property_id in allowed]
-        return self._enrich(tenant_id, self._filter_bucket(rows, status_bucket))
+        return self._enrich(
+            tenant_id, self._filter_bucket(rows, status_bucket, tagesende)
+        )
 
     _UNASSIGNED = "none"
 
@@ -1053,13 +1072,32 @@ class TasksService:
         return rows
 
     @staticmethod
-    def _filter_bucket(tasks: list[Task], bucket: str | None) -> list[Task]:
+    def _filter_bucket(
+        tasks: list[Task], bucket: str | None, tagesende: datetime | None = None
+    ) -> list[Task]:
         """current|upcoming|done → die drei Reiter AKTUELL/BEVORSTEHENDE/ABGESCHLOSSEN.
 
         Die Einteilung ist ZEITLICH, nicht nach Status: eine heute fällige offene
         Aufgabe gehört unter AKTUELL. Vorher entschied allein der Status, wodurch
         jede offene Aufgabe — auch die von gestern — unter BEVORSTEHENDE lag und
         der AKTUELL-Reiter praktisch leer blieb.
+
+        `tagesende` ist der Beginn des NÄCHSTEN Tages beim Nutzer. Alles davor
+        ist AKTUELL, alles danach BEVORSTEHEND.
+
+        Ohne diesen Wert wurde gegen `now()` verglichen — ein Zeitpunkt, wo eine
+        Tagesgrenze hingehört. Eine heute um 16:00 fällige Aufgabe lag dann
+        morgens um 09:00 unter BEVORSTEHEND, zwischen den Aufgaben der nächsten
+        Woche; der Reiter widersprach damit dem Satz zwei Absätze weiter oben.
+        Live (23.08.2026) traf das 8 von 57 offenen Aufgaben, und alle 49
+        Aufgaben auf UTC-Mitternacht zusätzlich im Fenster 00:00–02:00 Ortszeit.
+
+        Die Grenze kommt vom CLIENT und wird hier nicht gerechnet: die Zeitzone
+        hängt am Objekt (`properties.timezone`), und eine Liste über mehrere
+        Objekte hat keine einzige richtige. Live sind 24 von 43 Objekten ohne
+        Zeitzone — eine hier zu unterstellen wäre ein erfundener Wert (Wurzel 4).
+        Der Client weiß dagegen sicher, welcher Tag beim Nutzer läuft. Fehlt der
+        Wert (ältere App-Fassung), bleibt es beim bisherigen Verhalten.
         """
         if bucket == "done":
             return [
@@ -1070,12 +1108,25 @@ class TasksService:
         if bucket not in ("current", "upcoming"):
             return tasks
         now = datetime.now(UTC)
+        # Ohne Tagesgrenze bleibt es beim alten Verhalten — inklusive `<=`, damit
+        # eine Aufgabe genau JETZT weiter unter AKTUELL fällt. Mit Grenze ist
+        # `<` richtig: der Tageswechsel selbst gehört schon zum nächsten Tag.
+        if tagesende is None:
+            offen = [
+                t
+                for t in tasks
+                if t.status not in (TaskStatus.done, TaskStatus.cancelled)
+            ]
+            if bucket == "current":
+                return [t for t in offen if (t.start_at or t.due_at or now) <= now]
+            return [t for t in offen if (t.start_at or t.due_at or now) > now]
+        grenze = tagesende
         open_tasks = [
             t for t in tasks if t.status not in (TaskStatus.done, TaskStatus.cancelled)
         ]
         if bucket == "current":
-            return [t for t in open_tasks if (t.start_at or t.due_at or now) <= now]
-        return [t for t in open_tasks if (t.start_at or t.due_at or now) > now]
+            return [t for t in open_tasks if (t.start_at or t.due_at or now) < grenze]
+        return [t for t in open_tasks if (t.start_at or t.due_at or now) >= grenze]
 
     def calendar(
         self,
@@ -2020,7 +2071,12 @@ class TasksService:
 
     def create_rule(self, tenant_id: str, req: RuleCreate) -> RuleDetail:
         self._require_own_properties(tenant_id, req.property_ids)
-        self._require_own_assignee(tenant_id, req.assignee_id)
+        # Mit Objektbezug prüfen (wie in `update_rule`): ohne ihn bleibt es eine
+        # nackte Existenzabfrage, und die Regel erzeugt später Aufgaben an einem
+        # Objekt, für das der Zuständige nicht freigegeben ist.
+        self._require_own_assignee(
+            tenant_id, req.assignee_id, (req.property_ids or [None])[0]
+        )
         self._require_own_template(tenant_id, req.template_rule_id)
         row = self._insert("task_rules", self._rule_payload(tenant_id, req))
         self._replace_rule_children(tenant_id, row["id"], req)
@@ -2030,12 +2086,32 @@ class TasksService:
         self, tenant_id: str, rule_id: str, req: RuleUpdate
     ) -> RuleDetail:
         self._require_own_properties(tenant_id, req.property_ids)
-        self._require_own_assignee(tenant_id, req.assignee_id)
+        # Objektbezug MITGEBEN: ohne ihn ist die Prüfung eine nackte
+        # Existenzabfrage (siehe `_require_own_assignee`), und ein Zuständiger
+        # ohne Freigabe für das Objekt bekäme die Regel zugewiesen, ohne ihre
+        # Aufgaben je zu sehen.
+        self._require_own_assignee(
+            tenant_id,
+            req.assignee_id,
+            (req.property_ids or [None])[0],
+        )
         if req.template_rule_id == rule_id:
             raise TaskError(
                 "Eine Regel kann nicht ihre eigene Vorlage sein.", status_code=422
             )
         self._require_own_template(tenant_id, req.template_rule_id)
+        # ALT-Zustand VOR dem Update sichern (Wurzel 1): wer den Zuständigen
+        # einer Regel wechselt, muss die schon erzeugten Aufgaben mitziehen.
+        vorher = (
+            self._db()
+            .table("task_rules")
+            .select("assignee_id")
+            .eq("id", rule_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        alter_zustaendiger = str(vorher[0].get("assignee_id") or "") if vorher else ""
         res = (
             self._db()
             .table("task_rules")
@@ -2047,7 +2123,57 @@ class TasksService:
         if not res.data:
             raise TaskError("Regel nicht gefunden.", status_code=404)
         self._replace_rule_children(tenant_id, rule_id, req)
+        self._zustaendigen_nachziehen(
+            tenant_id, rule_id, alter_zustaendiger, req.assignee_id
+        )
         return self.get_rule(tenant_id, rule_id)
+
+    def _zustaendigen_nachziehen(
+        self, tenant_id: str, rule_id: str, alt: str, neu: str | None
+    ) -> None:
+        """Offene Aufgaben einer Regel dem NEUEN Zuständigen zuordnen.
+
+        Der Gegenzustand zum Regel-Update (Wurzel 1). Ohne diesen Schritt bleibt
+        eine bereits erzeugte Aufgabe beim alten Zuständigen stehen, während die
+        Regel längst auf jemand anderen zeigt.
+
+        LIVE PASSIERT (23.08.2026 gemessen): eine Regel „Velk T" zeigte auf ein
+        EIGENTÜMER-Konto, erzeugte 17 Aufgaben und wurde am 20.08. auf den
+        richtigen Verwalter korrigiert. Die 17 Aufgaben blieben am Eigentümer —
+        und ein `owner` hat kein `VIEW_OWN_TASKS`, kann sie also nie öffnen.
+        15 davon standen offen: Arbeit, die niemand sehen konnte. Gemeldet wurde
+        das als „es werden nicht alle Aufgaben angezeigt".
+
+        NUR OFFENE: eine abgeschlossene Aufgabe ist ein Protokoll darüber, wer
+        sie erledigt hat. Sie umzuhängen würde die Historie verfälschen — dann
+        stünde jemand als Erlediger da, der nie damit zu tun hatte.
+
+        Nur bei echtem Wechsel und nur, wenn die Aufgabe noch auf dem ALTEN Wert
+        steht: eine von Hand einzeln umgehängte Aufgabe bleibt, wo sie ist.
+        """
+        if not alt or str(neu or "") == alt:
+            return
+        try:
+            (
+                self._db()
+                .table("tasks")
+                .update({"assignee_id": neu})
+                .eq("tenant_id", tenant_id)
+                .eq("rule_id", rule_id)
+                .eq("assignee_id", alt)
+                .in_("status", [TaskStatus.open.value, TaskStatus.accepted.value,
+                                TaskStatus.in_progress.value])
+                .execute()
+            )
+        except APIError:  # noqa: BLE001 - Protokoll, nicht der Hauptpfad
+            # Die Regel IST gespeichert. Ein Fehlschlag hier darf den Aufrufer
+            # nicht in den Glauben versetzen, das Update sei misslungen — er
+            # würde es wiederholen. Stattdessen protokollieren, damit die
+            # Abweichung auffindbar bleibt.
+            log.exception(
+                "regel_zustaendiger_nachziehen_fehlgeschlagen",
+                extra={"rule_id": rule_id, "alt": alt, "neu": neu},
+            )
 
     def delete_rule(self, tenant_id: str, rule_id: str) -> None:
         res = (
@@ -2171,7 +2297,7 @@ class TasksService:
         owned = (
             self._db()
             .table("users")
-            .select("id, role")
+            .select("id, role, deactivated_at")
             .eq("tenant_id", tenant_id)
             .eq("id", assignee_id)
             .limit(1)
@@ -2179,11 +2305,36 @@ class TasksService:
         ).data
         if not owned:
             raise TaskError("Unbekannter Mitarbeiter referenziert.", status_code=422)
+        if owned[0].get("deactivated_at"):
+            # Ein gesperrtes Konto kann sich nicht anmelden — die Aufgabe wäre
+            # unerreichbar. Vorher ging die Zuweisung durch.
+            raise TaskError(
+                "Dieses Konto ist gesperrt und würde die Aufgabe nicht sehen.",
+                status_code=422,
+            )
+        rolle = str(owned[0].get("role") or "")
+        # DIE ROLLE MUSS AUFGABEN ÜBERHAUPT SEHEN DÜRFEN. Vorher fehlte diese
+        # Prüfung ganz, und genau das hat live Schaden angerichtet: ein
+        # EIGENTÜMER hat kein `VIEW_OWN_TASKS`, bekam aber 17 Aufgaben
+        # zugewiesen (Regel „Velk T", 23.08.2026) — 15 davon offen, keine
+        # davon für ihn öffenbar. Die Auswahlliste `moegliche_zustaendige`
+        # filtert korrekt danach; der SCHREIBpfad tat es nicht, und über ihn
+        # (Regel-Zuweisung) entstand der Fehler.
+        try:
+            darf_aufgaben = has_capability(UserRole(rolle), Capability.VIEW_OWN_TASKS)
+        except ValueError:
+            # Unbekannte Rolle: fail-closed (Wurzel 6) — wie in der Auswahlliste.
+            darf_aufgaben = False
+        if not darf_aufgaben:
+            raise TaskError(
+                "Diese Rolle kann keine Aufgaben sehen und würde sie nie öffnen.",
+                status_code=422,
+            )
         if property_id is None:
-            # Pool-Aufgabe ohne Objektbezug: für jede Rolle sichtbar.
+            # Pool-Aufgabe ohne Objektbezug: für jede berechtigte Rolle sichtbar.
             return
-        if str(owned[0].get("role") or "") not in _STAFF_ROLLEN:
-            # admin/co_admin/owner hängen nicht an staff_property_assignments.
+        if rolle not in _STAFF_ROLLEN:
+            # admin/co_admin hängen nicht an staff_property_assignments.
             return
         frei = (
             self._db()

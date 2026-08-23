@@ -65,12 +65,16 @@ def _common_pages(
     gallery_ids: list[str],
     contact: dict[str, Any],
 ) -> list[dict[str, Any]]:
-    """Gemeinsames Seiten-Gerüst (Home + Über-uns + Kontakt) für alle Templates."""
+    """Gemeinsames Seiten-Gerüst (Home + Über-uns + Kontakt) für alle Templates.
+
+    ``nav_area`` steht bewusst an jeder Seite: eine Vorlage, deren Unterseiten in
+    keinem Menü auftauchen, wäre für den Gast eine Sackgasse."""
     return [
         {
             "slug": "",
             "title": "Startseite",
             "is_home": True,
+            "nav_area": "header",
             "blocks": [
                 {"type": "hero", "content": hero},
                 {
@@ -92,6 +96,7 @@ def _common_pages(
             "slug": "ueber-uns",
             "title": "Über uns",
             "is_home": False,
+            "nav_area": "header",
             "blocks": [
                 {"type": "rich_text", "content": {"html": about_html}},
                 {"type": "gallery", "content": _gallery(gallery_ids)},
@@ -101,15 +106,58 @@ def _common_pages(
             "slug": "kontakt",
             "title": "Kontakt",
             "is_home": False,
+            "nav_area": "header",
             "blocks": [{"type": "contact", "content": contact}],
         },
     ]
 
 
+# Design-Tokens je Vorlage. Damit ist ein Vorlagen-Klick wirklich fertig: Layout,
+# Farben und Schriften passen zusammen, der Kunde muss nichts mehr einstellen.
+# ``apply_template`` schreibt diese Werte NUR in noch leere Branding-Felder — ein
+# Kunde, der seine Marke schon gesetzt hat, verliert sie nicht (Wurzel 1: die
+# Vorlage darf den bestehenden Gegenzustand nicht überschreiben).
+# Farben kommen aus der Vorlage, nicht aus einem Fallback: fehlt ein Wert, bleibt
+# die Spalte NULL und der Renderer entscheidet (Wurzel 4).
+_BERG_BRANDING: dict[str, Any] = {
+    "theme": "klar",
+    "primary_color": "#8a5a2b",
+    "secondary_color": "#f3ece3",
+    "background_color": "#fdfbf8",
+    "foreground_color": "#2a211a",
+    "heading_font": "Fraunces",
+    "font_family": "Inter",
+    "button_style": "solid",
+    "button_radius": "pill",
+}
+_KUESTE_BRANDING: dict[str, Any] = {
+    "theme": "mitte",
+    "primary_color": "#1f7a8c",
+    "secondary_color": "#e6f2f5",
+    "background_color": "#ffffff",
+    "foreground_color": "#12313a",
+    "heading_font": "Fraunces",
+    "font_family": "Inter",
+    "button_style": "solid",
+    "button_radius": "pill",
+}
+_STADT_BRANDING: dict[str, Any] = {
+    "theme": "karte",
+    "primary_color": "#111827",
+    "secondary_color": "#f3f4f6",
+    "background_color": "#ffffff",
+    "foreground_color": "#111827",
+    "heading_font": "Inter",
+    "font_family": "Inter",
+    "button_style": "solid",
+    "button_radius": "rounded",
+}
+
 TEMPLATES: dict[str, dict[str, Any]] = {
     "bergchalet": {
         "name": {"de": "Bergchalet", "en": "Mountain Chalet"},
         "description": {"de": "Warm, holzig — für Chalets & Berghütten."},
+        "branding": _BERG_BRANDING,
         "pages": _common_pages(
             hero={
                 "eyebrow": {"de": "Willkommen in den Bergen", "en": "Welcome to the mountains"},
@@ -142,6 +190,7 @@ TEMPLATES: dict[str, dict[str, Any]] = {
     "kueste": {
         "name": {"de": "Küste & See", "en": "Coast & Lake"},
         "description": {"de": "Hell, luftig — für Strand- & Seehäuser."},
+        "branding": _KUESTE_BRANDING,
         "pages": _common_pages(
             hero={
                 "eyebrow": {"de": "Am Wasser zu Hause", "en": "At home by the water"},
@@ -174,6 +223,7 @@ TEMPLATES: dict[str, dict[str, Any]] = {
     "stadt": {
         "name": {"de": "Stadt-Apartments", "en": "City Apartments"},
         "description": {"de": "Modern, urban — für City-Apartments."},
+        "branding": _STADT_BRANDING,
         "pages": _common_pages(
             hero={
                 "eyebrow": {"de": "Mitten in der Stadt", "en": "In the heart of the city"},

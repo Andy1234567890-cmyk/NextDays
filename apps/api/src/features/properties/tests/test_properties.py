@@ -3,6 +3,7 @@
 Unit/Contract (immer): Health, Schema-Validierung, Service-CRUD mit gemocktem
 Supabase-Client (tenant-Scope wird im Code erzwungen).
 """
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -12,6 +13,7 @@ from pydantic import ValidationError
 
 from src.core.config import get_settings
 from src.core.security import AuthContext
+from src.features.properties import service as properties_service
 from src.features.properties.gebuehren import (
     fee_category,
     fee_signatur,
@@ -739,6 +741,35 @@ def test_max_stay_of_defaults_zero_when_missing_or_invalid() -> None:
     assert max_stay_of({"type_attributes": {}}) == 0
     assert max_stay_of({"type_attributes": {"availability": {"maxStay": None}}}) == 0
     assert max_stay_of({"type_attributes": {"availability": {"maxStay": "x"}}}) == 0
+
+
+def test_publish_reiht_max_stay_auch_als_null_ein() -> None:
+    """publish() darf den Maximalaufenthalt NICHT hinter `> 0` verstecken.
+
+    Vorher stand in `publish()` ein `if max_stay > 0`. Ein Objekt, dessen
+    Obergrenze im Verfügbarkeits-Formular entfernt wurde und das danach neu
+    veröffentlicht wird, behielt damit die ALTE Grenze bei den Portalen: der Job
+    blieb aus, der Full-Sync führt max_stay nicht als Ganz-Horizont-Push, und der
+    ARI-Schatten spiegelt max_stay ohnehin nicht. 0 ist bei Channex ausdrücklich
+    „keine Obergrenze" und damit der Gegenzustand, der gesendet werden MUSS
+    (Wurzel 1). `push_max_stay` im Speichern-Pfad macht das seit je so.
+
+    Geprüft an der Quelle statt am kompletten publish()-Durchlauf: der Aufruf
+    liegt hinter Stripe-Gate, Abo-Kontingent, Rate-Plan- und
+    Verfügbarkeits-Aufbau. Ein Test, der das alles nachstellt, prüfte am Ende
+    alles ausser dieser einen Entscheidung — und würde bei jeder Änderung an den
+    Gates brechen, ohne dass die Regel hier verletzt wäre.
+    """
+    quelle = Path(properties_service.__file__).read_text(encoding="utf-8")
+    _, _, nach_publish = quelle.partition("def publish(")
+    publish_rumpf, _, _ = nach_publish.partition("\n    def ")
+    # Kommentarzeilen raus: der Rumpf ERKLÄRT den alten Gate-Ausdruck, und ohne
+    # diesen Schnitt prüfte der Test seine eigene Begründung statt des Codes.
+    code = "\n".join(
+        z for z in publish_rumpf.splitlines() if not z.lstrip().startswith("#")
+    )
+    assert '"max_stay": max_stay_of(row)' in code
+    assert "if max_stay > 0" not in code
 
 
 # --- Kanal-Zustands-Ableitung (Ebene B, 0162) ---------------------------------

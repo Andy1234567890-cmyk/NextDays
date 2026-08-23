@@ -194,7 +194,12 @@ class AccountService:
             .execute()
         )
         data = res.data[0] if res.data else {}
-        role_raw = data.get("role") or ctx.role
+        # Rolle NUR aus der DB (Wurzel 7): diese Funktion speist jeden
+        # PM-Berechtigungs-Guard. Der frühere Rückfall `or ctx.role` ließ eine
+        # entzogene Rolle bis zum Token-Ablauf weitergelten — bis zu einer
+        # Stunde. Fehlt die Zeile, ist `None` die richtige Antwort: der Guard
+        # verweigert dann, statt zu raten.
+        role_raw = data.get("role")
         try:
             role = UserRole(role_raw) if role_raw else None
         except ValueError:
@@ -208,6 +213,18 @@ class AccountService:
             return UserRole(row.get("role")) if row.get("role") else None
         except ValueError:
             return None
+
+    @staticmethod
+    def _stored_perm_ids(row: dict) -> list[str]:
+        """Die Rechte, wie sie in `users.permissions` STEHEN — ungefiltert.
+
+        Gegenstück zu `_effective_perm_ids`: dort wird die Rolle eingerechnet
+        und das PM-Dach angewandt (richtig für Anzeige und Gating), hier nicht
+        (richtig für den Bearbeiten-Dialog). Beide Antworten sind nötig, und die
+        Verwechslung war der Bug: die gefilterte Antwort als Schreibquelle.
+        """
+        stored = row.get("permissions")
+        return sorted(str(p) for p in stored) if isinstance(stored, list) else []
 
     @staticmethod
     def _effective_perm_ids(row: dict) -> list[str]:
@@ -281,8 +298,33 @@ class AccountService:
 
         Eigentümer/Mitarbeiter, die als Hauptkontakt eines Objekts gewählt
         werden können. Reihenfolge: der Account-Inhaber (owner/admin) zuerst.
+
+        NUR FÜR VERWALTENDE ROLLEN. Die Liste trägt `email`, `role` und
+        `permissions` JEDES Nutzers des Betriebs — also die komplette
+        Rechte-Landkarte. Vorher hing die Route nur an `get_current_user`
+        (Authentifizierung, nicht Autorisierung), und damit konnte sie jeder
+        eingeloggte Eigentümer, Mitarbeiter oder Reiniger abrufen. Wurzel 9
+        verbietet das ausdrücklich: `email`/`permissions` gehören nicht an
+        Rollen, die sie nicht brauchen — das ist Aufklärung für eine
+        Rechte-Eskalation.
+
+        Dieselbe Rollen-Allowlist wie `list_managed_users` (`_USER_MGMT_ROLES`);
+        eine zweite Menge daneben würde bei der nächsten Änderung auseinander-
+        laufen. Fail-closed: unbekannte oder fehlende Rolle sieht nichts.
         """
         row = self._ensure_user_row(ctx)
+        # Rolle NUR aus der DB, kein `or ctx.role`-Rückfall: die Rolle im JWT
+        # kann bis zu einer Stunde veraltet sein (Wurzel 7). Bei einem Guard
+        # heißt das, eine entzogene Verwaltungsrolle gälte weiter.
+        try:
+            rolle = UserRole(row["role"]) if row.get("role") else None
+        except ValueError:
+            rolle = None  # unbekannt → fail-closed
+        if rolle not in self._USER_MGMT_ROLES:
+            raise AuthError(
+                "Diese Übersicht ist der Benutzerverwaltung vorbehalten.",
+                status_code=403,
+            )
         tenant_id = row.get("tenant_id") or ctx.tenant_id
         if not tenant_id:
             return []
@@ -428,6 +470,10 @@ class AccountService:
             avatar_url=u.get("avatar_url"),
             tenant_id=u.get("tenant_id"),
             permissions=self._effective_perm_ids(u),
+            # UNGEFILTERT für den Bearbeiten-Dialog. Er darf nicht die
+            # gefilterte Anzeige zurückschreiben — sonst löscht Speichern die
+            # Rechte, die das PM-Dach nur ausgeblendet hat.
+            stored_permissions=self._stored_perm_ids(u),
             preferred_language=u.get("preferred_language"),
             additional_phone=u.get("additional_phone"),
             hide_phones=bool(u.get("hide_phones")),
@@ -451,7 +497,8 @@ class AccountService:
         haben keinen Zugriff (403).
         """
         row = self._ensure_user_row(ctx)
-        role_raw = row.get("role") or ctx.role
+        # Rolle NUR aus der DB, kein JWT-Rückfall (Wurzel 7).
+        role_raw = row.get("role")
         try:
             role = UserRole(role_raw) if role_raw else None
         except ValueError:
@@ -489,8 +536,10 @@ class AccountService:
         """Guard für Bearbeiten/Löschen: Rolle prüfen und (eigene Row,
         tenant_id) zurückgeben. Wurzel 3: alles bleibt tenant-gescopt."""
         row = self._ensure_user_row(ctx)
+        # Rolle NUR aus der DB, kein JWT-Rückfall (Wurzel 7) — hier besonders
+        # wichtig: der Guard entscheidet über Bearbeiten und LÖSCHEN von Nutzern.
         try:
-            role = UserRole(row.get("role") or ctx.role or "")
+            role = UserRole(row.get("role") or "")
         except ValueError:
             role = None
         if role not in self._USER_WRITE_ROLES:
@@ -1150,10 +1199,24 @@ class AccountService:
                 {"app_metadata": {"tenant_id": tenant_id, "role": UserRole.owner.value}},
             )
 
+        # Startrolle der ERSTANLAGE. Der Wert aus dem JWT wird gegen das Enum
+        # geprüft, statt ungeprüft übernommen zu werden: `users.role` ist die
+        # Quelle der Wahrheit für alle DB-gestützten Guards (Wurzel 7), und ein
+        # beliebiger `app_metadata.role`-Wert darf dort nicht landen. Ein
+        # unbekannter Wert fällt auf `owner` zurück — die Rolle mit den
+        # WENIGSTEN Rechten, nicht die mit den meisten (fail-closed).
+        try:
+            start_rolle = UserRole(ctx.role) if ctx.role else UserRole.owner
+        except ValueError:
+            log.warning(
+                "unbekannte_jwt_rolle_bei_erstanlage",
+                extra={"user_id": ctx.user_id, "jwt_rolle": ctx.role},
+            )
+            start_rolle = UserRole.owner
         row = {
             "id": ctx.user_id,
             "tenant_id": tenant_id,
-            "role": (ctx.role or UserRole.owner.value),
+            "role": start_rolle.value,
             "email": email,
             "full_name": full_name,
         }

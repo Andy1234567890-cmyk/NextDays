@@ -224,6 +224,58 @@ class ChannexError(Exception):
         self.payload = payload
 
 
+class ChannexAriVerworfen(ChannexError):
+    """Channex hat den ARI-Call mit HTTP 200 quittiert, dabei aber Werte
+    BEANSTANDET (`meta.warnings` nicht leer) — der Push gilt NICHT als erledigt.
+
+    WARUM DAS EIN FEHLER IST UND KEIN HINWEIS (Wurzel 5, fail-closed):
+    `POST /availability` und `POST /restrictions` sind ASYNCHRON. Die Antwort ist
+    kein Ergebnis, sondern eine Quittung über die Annahme in eine FIFO-Queue:
+
+        {"data": [{"id": "<uuid>", "type": "task"}],
+         "meta": {"message": "Success", "warnings": []}}
+
+    Ein HTTP 200 sagt also nur „angenommen", nicht „übernommen". Steht in
+    `meta.warnings` etwas, hat Channex am Inhalt etwas geändert oder verworfen —
+    live gesehen 356× zwischen dem 05.08. und 13.08.2026:
+
+        "warnings": ["Past date is not allowed.
+                      `date_from` was changed from 2026-08-12 to 2026-08-13"]
+
+    Bisher las das NIEMAND außer `push_ari` (dem interaktiven Pfad), und selbst
+    dort nur zur Anzeige. Alle Worker-/Outbox-Pfade verwarfen die Antwort
+    komplett und setzten die Outbox-Zeile unmittelbar danach auf 'done'.
+
+    Warum genau das der teuerste Fall ist: `channex_ari_shadow` FÜHRT bei uns den
+    Ist-Stand (kein ARI-Readback, Projektentscheidung). Ein als 'done' verbuchter,
+    real verworfener Wert schreibt den Schatten auf den SOLL-Wert fort. Der
+    Reconciler vergleicht danach Soll gegen diesen falschen Ist-Stand, sieht keine
+    Differenz und sendet NIE nach. Der Wert fehlt dauerhaft im Portal, und zwar
+    unsichtbar — es gibt keinen Fehler, keine offene Zeile, keine Drift.
+
+    Als Unterklasse von ChannexError, weil JEDER Push-Pfad ChannexError bereits
+    korrekt behandelt (Outbox bleibt 'pending', Job-Retry, Schatten wird NICHT
+    fortgeschrieben). Damit greift die Auswertung überall, ohne dass ein Aufrufer
+    sie einbauen — oder vergessen — kann.
+
+    `status_code=502`: die Werte sind unsere, nicht die des API-Clients; ein
+    verworfener Push ist ein Upstream-Problem, kein Eingabefehler (kein 422).
+    """
+
+    def __init__(
+        self, pfad: str, warnings: list[Any], values: list[dict[str, Any]]
+    ) -> None:
+        super().__init__(
+            f"Channex hat Werte des {pfad}-Pushes beanstandet: "
+            + "; ".join(str(w) for w in warnings),
+            status_code=502,
+            payload={"warnings": [str(w) for w in warnings]},
+        )
+        self.pfad = pfad
+        self.warnings = [str(w) for w in warnings]
+        self.values = values
+
+
 class ChannexBudgetExhausted(Exception):
     """Kontoweites Channex-Token-Budget vor einem Call erschöpft.
 
@@ -807,35 +859,146 @@ class ChannexClient(AirbnbActionsMixin, ListingSettingsMixin):
         return self.delete(f"hotel_policies/{policy_id}")
 
     # ----- ARI: Availability + Restrictions/Rates -----------------------------
-    def update_availability(self, values: list[dict[str, Any]]) -> dict[str, Any]:
+    def update_availability(
+        self, values: list[dict[str, Any]], *, warnungen_melden: bool = False
+    ) -> dict[str, Any]:
         """Verfügbarkeit setzen. `values` = Liste von Updates (s. Channex-ARI).
 
         Getrennt von Preisen senden (Channex priorisiert Availability-Queue).
         Vergangene Tage werden hier zentral abgeschnitten (`ohne_vergangenheit`).
+        Beanstandet Channex Werte (`meta.warnings`), wirft dieser Aufruf
+        ChannexAriVerworfen — `warnungen_melden=True` gibt sie stattdessen im
+        Body zurück (nur für den interaktiven Pfad, s. `_ari_senden`).
         """
-        return self._ari_senden("availability", values)
+        return self._ari_senden(
+            "availability", values, warnungen_melden=warnungen_melden
+        )
 
-    def update_restrictions(self, values: list[dict[str, Any]]) -> dict[str, Any]:
+    def update_restrictions(
+        self, values: list[dict[str, Any]], *, warnungen_melden: bool = False
+    ) -> dict[str, Any]:
         """Preise + Restriktionen setzen (rate, min_stay_*, stop_sell, …).
 
         Vergangene Tage werden hier zentral abgeschnitten (`ohne_vergangenheit`).
+        Beanstandete Werte werfen ChannexAriVerworfen (s. update_availability).
         """
-        return self._ari_senden("restrictions", values)
+        return self._ari_senden(
+            "restrictions", values, warnungen_melden=warnungen_melden
+        )
 
     def _ari_senden(
-        self, pfad: str, values: list[dict[str, Any]]
+        self, pfad: str, values: list[dict[str, Any]], *,
+        warnungen_melden: bool = False,
     ) -> dict[str, Any]:
-        """ARI-Werte beschneiden und senden — der gemeinsame Weg beider Endpunkte.
+        """ARI-Werte beschneiden, senden und die ANTWORT AUSWERTEN — der
+        gemeinsame Weg beider Endpunkte.
 
         Bleibt nach dem Beschneiden NICHTS übrig, wird auch nicht gesendet: ein
         `{"values": []}` verbraucht Budget und einen Round-Trip, um Channex zu
         sagen, dass es nichts tun soll. Die Antwort ist dieselbe Form wie eine
         echte Erfolgsmeldung, damit kein Aufrufer einen Sonderfall braucht.
+
+        WARUM DIE AUSWERTUNG HIER SITZT UND NICHT IN DEN AUFRUFERN — dieselbe
+        Begründung wie bei `ohne_vergangenheit` (und dieselbe Lehre): es gibt je
+        Endpunkt ein halbes Dutzend Sendewege (Sofort-Push, Batch, Stop-Sell,
+        Multi-Row, zwei Outbox-Crons). Von allen las genau EINER (`push_ari`)
+        `meta.warnings` — die anderen verwarfen die Antwort und setzten die
+        Outbox-Zeile direkt danach auf 'done'. Eine Prüfung in den Aufrufern wäre
+        die siebte Kopie und damit genau der Weg, auf dem sie beim achten
+        Sendeweg wieder fehlt. Hier ist sie die letzte Station vor der Rückgabe:
+        ein neuer Aufrufer kann sie nicht mehr umgehen.
+
+        GRENZE DER PRÜFUNG (bewusst dokumentiert, nicht überschätzt):
+        `meta.warnings` ist das EINZIGE Signal, das Channex synchron über die
+        Annahme der Werte gibt. Die Verarbeitung selbst ist asynchron (FIFO), und
+        die Antwort enthält nur die Task-ID. Einen dokumentierten Weg, den
+        Endstatus dieses Tasks nachzulesen, gibt es nicht (s. `ChannexAriVerworfen`
+        und den Kommentar an `_ari_warnungen_pruefen`). Ein Task kann also auch
+        ohne Warnung später scheitern, ohne dass wir es erfahren — was diese
+        Prüfung fängt, ist die Klasse, die Channex uns SAGT. Mehr ist an dieser
+        Stelle nicht belegbar; erfundene Erfolgsbestätigung wäre schlimmer als
+        eine benannte Grenze (Wurzel 4).
+
+        `warnungen_melden=True` gibt die Warnungen im Body zurück statt zu
+        werfen — ausschließlich für `push_ari`, den interaktiven Pfad, der sie
+        dem Nutzer als `AriPushResponse.warnings` ANZEIGT und keine Outbox-Zeile
+        abzuhaken hat. Alle Worker-/Outbox-Pfade nutzen den Default (werfen).
         """
         beschnitten = ohne_vergangenheit(values)
         if values and not beschnitten:
             return {"data": [], "meta": {"message": "Nur vergangene Tage — nichts zu senden."}}
-        return self.post(pfad, json={"values": beschnitten})
+        body = self.post(pfad, json={"values": beschnitten})
+        if not warnungen_melden:
+            self._ari_warnungen_pruefen(pfad, body, beschnitten)
+        return body
+
+    @staticmethod
+    def _ari_warnungen_pruefen(
+        pfad: str, body: dict[str, Any], gesendet: list[dict[str, Any]]
+    ) -> None:
+        """`meta.warnings` auswerten: nicht leer ⇒ ChannexAriVerworfen werfen.
+
+        Vorher wird der Vorfall MIT den betroffenen Werten protokolliert — ohne
+        das ist ein verworfener Push nicht nachvollziehbar (welches Objekt,
+        welcher Tag, welcher Wert). Die Task-ID kommt mit, damit die Zeile mit
+        `channex_debug_log` zusammengeführt werden kann.
+
+        WAS CHANNEX LAUT DOKU ZUSICHERT (docs.channex.io/api-v.1-documentation/ari,
+        Abschnitt „Warning Notifications", geprüft 23.08.2026):
+
+            „If a request contains wrong values, we will reject this value from
+             the update and provide a warning message in the response."
+            „if the request contains a few messages, our application process all
+             correct information and ignores the problem ones."
+
+        Eine Warnung heißt also: dieser Wert wurde ABGELEHNT, die übrigen des
+        Requests liefen durch. Ein Teil-Erfolg ist für uns kein Erfolg — die
+        Outbox-Zeile deckt den ganzen Zeitraum ab, und welcher Tag durchkam,
+        steht nirgends maschinenlesbar. Deshalb wird der GANZE Push als offen
+        behandelt und vom Cron wiederholt (er ist idempotent: dieselben values
+        erneut zu senden ist gefahrlos, Wurzel 2).
+
+        WARUM ES KEIN NACHLESEN GIBT (recherchiert am 23.08.2026 in der
+        Gesamt-Doku `docs.channex.io/llms-full.txt`, alle 88 dokumentierten
+        `/api/v1/…`-Pfade geprüft): Es gibt KEINEN Task-Status-Endpunkt — kein
+        `GET /api/v1/tasks/{id}`, in keiner Variante. Die Zeichenkette „task"
+        erscheint in der gesamten Doku nur als `"type": "task"` in Beispiel-
+        Antworten. Channex FÜHRT den Endstatus („is Success — Was the update a
+        success of fail", plus Waiting/Execution Time) — aber ausschließlich im
+        Web-UI unter Property Tasks, ohne API. Ein Task kann demnach nach dem 200
+        scheitern, ohne dass wir es je erfahren.
+
+        Die Webhooks `sync_error`/`sync_warning`/`rate_error` taugen dafür NICHT
+        als Ersatz: ihre Nutzlast trägt keine `task_id` und kein Datum, ist einem
+        einzelnen Push also nicht zuzuordnen (sie melden Kanal-Gesundheit).
+
+        Damit ist `meta.warnings` das EINZIGE synchrone Signal über die Annahme
+        unserer Werte — und deshalb wird es fail-closed behandelt, statt aus
+        einem 200 eine Zusage zu erfinden, die Channex nie gegeben hat.
+
+        Die Task-IDs werden trotzdem mitprotokolliert: sie sind der einzige
+        Schlüssel, mit dem sich ein Vorfall im Channex-UI/Support nachvollziehen
+        lässt (und bei der PMS-Zertifizierung Pflicht).
+        """
+        meta = body.get("meta")
+        warnings = (meta or {}).get("warnings") if isinstance(meta, dict) else None
+        if not warnings:
+            return
+        data = body.get("data")
+        task_ids = [
+            t.get("id") for t in data if isinstance(t, dict)
+        ] if isinstance(data, list) else []
+        log.error(
+            "channex_ari_werte_verworfen",
+            pfad=pfad,
+            warnings=[str(w) for w in warnings],
+            task_ids=task_ids,
+            werte_anzahl=len(gesendet),
+            # Die betroffenen Werte selbst — gedeckelt, damit ein Massen-Push
+            # das Log nicht sprengt; die ersten 20 zeigen Objekt/Tag/Wert.
+            werte=gesendet[:20],
+        )
+        raise ChannexAriVerworfen(pfad, list(warnings), gesendet)
 
     def get_availability(
         self, property_id: str, *, date_from: str, date_to: str

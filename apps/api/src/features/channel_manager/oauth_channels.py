@@ -995,10 +995,23 @@ class OAuthChannelsMixin:
         Channex-ID unser Objekt einmal hatte), und ein hartes Löschen nähme sie
         mit. Best effort — misslingt es, scheitert nur der nächste Versuch
         wieder an derselben Stelle, es geht nichts kaputt.
+
+        `sync_enabled` MUSS mit (Wurzel 1 — Gegenzustand): eine geschlossene
+        Registrierung ist keine eingeschaltete. Hier stand einmal NUR
+        `deleted_at`, und damit blieben Zeilen mit `deleted_at is not null AND
+        sync_enabled = true` stehen — ein Zustand, den es fachlich nicht gibt.
+        Live gemessen am 23.08.2026: „FeWo *Stjerneskud*" trug drei Map-Zeilen,
+        zwei davon geschlossen, beide weiter `sync_enabled = true` und
+        `last_sync_status = 'ok'`. Jeder Leseweg, der (wie
+        `airbnb_historie_dienst.verbundene_objekte_des_tenants` vor seinem Fix)
+        nur auf `sync_enabled` filtert, hielt das Objekt damit für dreifach
+        verbunden und zeigte auf zwei Channex-Properties, die es nicht mehr gibt.
+        `last_sync_status`/`last_sync_error` werden bewusst NICHT angefasst: sie
+        sind der Beleg, wie die Registrierung endete.
         """
         try:
             db.table("channex_property_map").update(
-                {"deleted_at": "now()"}
+                {"deleted_at": "now()", "sync_enabled": False}
             ).eq("tenant_id", tenant_id).eq(
                 "channex_property_id", channex_property_id
             ).is_("deleted_at", "null").execute()

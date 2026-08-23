@@ -49,6 +49,256 @@ export async function getOwnerProperties(): Promise<
   return call("/public-portal/properties");
 }
 
+// --- Objektbereich (pm_property_area, LESEND) -------------------------------
+// Vier neue GET-Wege, alle read-only. Es gibt hier bewusst KEINE Schreib-Action:
+// der Eigentümer ist §4.2 read-only, und ein Speicherpfad im Portal wäre nicht
+// „ein Knopf zu viel", sondern eine zweite Tür an einer Fläche, die keine haben
+// darf (Wurzel 3).
+//
+// KEIN GELDFELD IN DIESEM GANZEN ABSCHNITT — kein Betrag, kein Preis, KEINE
+// WÄHRUNG. Die Antwort-Schemas des Backends führen bewusst keins
+// (public_portal/schemas.py, Abschnitt „Objektbereich, Bilder, Fotoalbum,
+// Statistik"), und diese Spiegelung führt deshalb auch keins: was der Typ nicht
+// kennt, kann die Fläche nicht versehentlich rendern. Ein Währungsfeld in einer
+// geldfreien Antwort wäre die Einladung, später doch einen Betrag danebenzu-
+// stellen — deshalb steht hier auch kein `currency`.
+
+/**
+ * EIN Objekt des Eigentümers, lesend.
+ *
+ * Spiegelt `PortalPropertyDetail` aus
+ * apps/api/src/features/public_portal/schemas.py (GET
+ * /public-portal/properties/{property_id}) — Feld für Feld, inklusive der
+ * NULLBARKEIT. `status` und `max_guests` sind serverseitig optional; hier
+ * stehen sie deshalb als `| null` und werden in der Fläche als „—" gerendert,
+ * nie als 0 oder leerer Text (Wurzel 4).
+ *
+ * `lat`/`lng` führt das Backend ebenfalls. Sie stehen hier NICHT, weil das
+ * Portal keine Karte zeigt — ein Feld im Typ, das nichts rendert, ist eine
+ * Behauptung über die Fläche, die nicht stimmt.
+ */
+export type PortalPropertyDetail = {
+  id: string;
+  title: string;
+  /** Objektbeschreibung. `null` = nicht hinterlegt → eigener Hinweistext,
+   *  nie ein erfundener Platzhaltertext (Wurzel 4). */
+  description: string | null;
+  /** Legacy-Objekttyp (ferienhaus, appartement, …) für `objects.meta.type.*`. */
+  property_type: string | null;
+  /** Objekt-Taxonomie (0198). Slugs, keine Anzeigetexte. */
+  category_slug: string | null;
+  subtype_slug: string | null;
+  listing_type: string | null;
+  /** Zimmeranzahl-Bucket („2-5", „50+") — nur bei Hotels/Betrieben gesetzt. */
+  total_rooms: string | null;
+  /** draft | active | inactive. `null` = nicht erfasst. */
+  status: string | null;
+
+  // Adresse
+  street: string | null;
+  house_number: string | null;
+  postal_code: string | null;
+  city: string | null;
+  /** ISO-3166-1 alpha-2. */
+  country: string | null;
+  /** IANA-Zeitzone (0258). `null` = nicht erfasst. */
+  timezone: string | null;
+
+  // Kapazität und Bau
+  max_guests: number | null;
+  floors_total: number | null;
+  floor_number: number | null;
+  year_built: number | null;
+  size_value: number | null;
+  size_unit: string | null;
+  /** DK-Katasternummer (Objektkartei Stufe 1). */
+  bfe_number: string | null;
+
+  /** Objekt-Ausstattung (Slugs) — Anzeige über `useAmenityLabels`. */
+  amenities: string[];
+  /** Zimmer-Ausstattung (eigener Channex-Katalog, 0243) — eigener Namensraum,
+   *  nie mit `amenities` in eine Liste mischen. */
+  room_amenities: string[];
+
+  /** Anzahl der Einheiten dieses TYPS (property_units, 0265). Serverseitig
+   *  mit Vorgabe 1 — 1 property = 1 Typ mit n ≥ 1 Einheiten. */
+  units_total: number;
+  /** Titelbild, falls vorhanden — dieselbe URL wie in `images`. */
+  cover_image_url: string | null;
+};
+
+export async function getOwnerProperty(
+  propertyId: string,
+): Promise<Result<PortalPropertyDetail>> {
+  // Fremde/unbekannte ID beantwortet das Backend mit 404 (nie 403): die
+  // Existenz fremder Objekte wird nicht verraten.
+  return call(`/public-portal/properties/${encodeURIComponent(propertyId)}`);
+}
+
+// --- Bilder (pm_view_property_images / pm_photo_album) ----------------------
+
+/**
+ * EIN Bild eines Objekts (`property_photos`, 0061) — spiegelt `PortalImage`.
+ *
+ * `url` ist eine fertige, absolute URL: der Bucket `property-images` ist
+ * öffentlich (0062, damit die Buchungsstrecke sie anonym laden kann). Es gibt
+ * hier nichts zu signieren und keine Ablaufzeit zu behandeln.
+ */
+export type PortalImage = {
+  id: string;
+  /** Zu welchem Objekt das Bild gehört — im Album die Klammer zur Gruppe. */
+  property_id: string;
+  url: string;
+  sort_order: number;
+  is_cover: boolean;
+  /** Locale → Bildunterschrift. Leer = keine. */
+  caption: Record<string, string>;
+  /** Urheber/Fotograf. `null` = nicht erfasst. */
+  author: string | null;
+};
+
+export type PortalImageList = {
+  property_id: string;
+  items: PortalImage[];
+  total: number;
+};
+
+export async function getOwnerPropertyImages(
+  propertyId: string,
+): Promise<Result<PortalImageList>> {
+  return call(
+    `/public-portal/properties/${encodeURIComponent(propertyId)}/images`,
+  );
+}
+
+/** Ein Objekt mit seinen Bildern im Fotoalbum (`PortalAlbumGroup`). Die
+ *  Gruppierung kommt VOM SERVER — die UI ordnet kein Bild selbst zu. */
+export type PortalAlbumGroup = {
+  property_id: string;
+  title: string;
+  /** Ort unter dem Objektnamen. `null` = keiner erfasst → Zeile bleibt leer,
+   *  es wird keiner erfunden. */
+  city: string | null;
+  items: PortalImage[];
+  /** Anzahl der Bilder DIESER Gruppe. */
+  total: number;
+};
+
+export type PortalPhotoAlbum = {
+  groups: PortalAlbumGroup[];
+  /** Summe über alle Gruppen. */
+  total: number;
+};
+
+export async function getOwnerPhotoAlbum(): Promise<Result<PortalPhotoAlbum>> {
+  return call("/public-portal/photo-album");
+}
+
+// --- Statistiken (pm_nonrevenue_charts) -------------------------------------
+//
+// ZWEI BEZUGSGRÖSSEN, die das Backend bewusst trennt — und die die Fläche
+// deshalb BESCHRIFTEN muss, sonst liest sich das Ergebnis wie ein Widerspruch
+// („12 Buchungen, aber 400 Nächte"):
+//   * Belegung (`nights_booked`, `owner_stay_nights`, `occupancy_rate`) zählt
+//     NÄCHTE, die IM Zeitraum liegen — auch aus früher begonnenen Buchungen.
+//   * `reservations`, `avg_stay_nights`, `avg_lead_time_days` beziehen sich auf
+//     ANREISEN im Zeitraum. Eine Buchung ist ein Ereignis und lässt sich nicht
+//     über zwei Monate halbieren.
+// Ebenfalls kein Geld: keine Beträge, keine Preise, keine Währung (§4.3).
+
+/** Verteilung nach Buchungskanal — ausschließlich ANZAHLEN. */
+export type PortalStatisticsChannel = {
+  /** Interner Kanalwert (`calendar.channel.*`). */
+  channel: string;
+  /** Echter Portalname (`ota_name`, z. B. „Booking.com", „myBestDays").
+   *  `null` = kein Portal im Spiel (Direktbuchung). Für Label UND Logo hat er
+   *  Vorrang vor `channel` — das ist im Projekt der Weg
+   *  (components/reservierungen/stats-cards.tsx). */
+  ota_name: string | null;
+  /** ANREISEN im Zeitraum über diesen Kanal. */
+  reservations: number;
+  /** Nächte, die DIESE Anreisen insgesamt umfassen — der ganze Aufenthalt,
+   *  auch über das Zeitraum-Ende hinaus. Passt damit zu `reservations`, NICHT
+   *  zu `nights_booked`. */
+  nights: number;
+};
+
+/** EIN Monat der Zeitreihe. Die Reihe ist lückenlos: auch ein Monat ohne
+ *  Buchung kommt vor (0 Nächte, echte Kapazität). */
+export type PortalStatisticsMonth = {
+  /** „YYYY-MM". */
+  month: string;
+  /** Gastnächte, die IN diesem Monat liegen. Summe über alle Monate =
+   *  `nights_booked`. */
+  nights_booked: number;
+  /** Nächte der Eigennutzung in diesem Monat. */
+  owner_stay_nights: number;
+  /** Einheiten × Tage DIESES Monats, die IM ZEITRAUM liegen — Randmonate sind
+   *  angeschnitten. */
+  capacity_unit_nights: number;
+  /** (nights_booked + owner_stay_nights) / capacity_unit_nights in Prozent.
+   *  `null` = keine Kapazität in diesem Monat → „—", NIE 0 (Wurzel 4). */
+  occupancy_rate: number | null;
+  /** ANREISEN in diesem Monat. Summe über alle Monate = `reservations`. */
+  reservations: number;
+};
+
+export type PortalStatisticsResponse = {
+  /** `null` = über alle zugeordneten Objekte gerechnet. */
+  property_id: string | null;
+  date_from: string;
+  date_to: string;
+
+  // --- Bezugsgröße NÄCHTE IM ZEITRAUM ---
+  /** Nächte, die im Zeitraum durch GASTbuchungen belegt sind. */
+  nights_booked: number;
+  /** Nächte, die der Eigentümer selbst nutzt (0241). Getrennt ausgewiesen: sie
+   *  belegen den Kalender genauso, sind aber keine Vermarktungsleistung — wer
+   *  beides in einer Zahl sähe, hielte die eigene Ferienwoche für Auslastung. */
+  owner_stay_nights: number;
+  /** Einheiten × Tage im Zeitraum = die Nächte, die überhaupt verkauft werden
+   *  KONNTEN (0265). */
+  capacity_unit_nights: number;
+  units_total: number;
+  /** (nights_booked + owner_stay_nights) / capacity_unit_nights in Prozent.
+   *  `null` = keine Kapazität → „—", nie 0 % (Wurzel 4). */
+  occupancy_rate: number | null;
+
+  // --- Bezugsgröße ANREISEN IM ZEITRAUM ---
+  reservations: number;
+  /** Durchschnittliche Aufenthaltsdauer in Nächten. `null` ohne Anreise. */
+  avg_stay_nights: number | null;
+  /** Durchschnittliche Vorlaufzeit in Tagen: von der Buchung beim Portal
+   *  (`reservations.booked_at`) bis zur Anreise — NIE aus `created_at`
+   *  (Wurzel 5b). `null` = keine Buchung mit bekanntem Buchungszeitpunkt. */
+  avg_lead_time_days: number | null;
+  /** Auf wie vielen Buchungen die Vorlaufzeit beruht. 0 zusammen mit
+   *  `avg_lead_time_days = null` heißt „nicht bekannt" — die Fläche muss das
+   *  benennen, statt einen Durchschnitt ohne Grundlage zu zeigen. */
+  avg_lead_time_basis: number;
+
+  by_channel: PortalStatisticsChannel[];
+  /** Monatsreihe, aufsteigend und lückenlos. */
+  months: PortalStatisticsMonth[];
+};
+
+/**
+ * Nicht-Umsatz-Auswertungen des Eigentümers.
+ *
+ * `propertyId` muss im Owner-Scope liegen, sonst 404. Die Spanne ist
+ * serverseitig auf 730 Tage gedeckelt (422 darüber, Wurzel 8) — die Fläche
+ * meldet den Grund, statt still einen kürzeren Zeitraum zu zeigen.
+ */
+export async function getOwnerStatistics(input: {
+  propertyId?: string | null;
+  from: string;
+  to: string;
+}): Promise<Result<PortalStatisticsResponse>> {
+  const p = new URLSearchParams({ from: input.from, to: input.to });
+  if (input.propertyId) p.set("property_id", input.propertyId);
+  return call(`/public-portal/statistics?${p.toString()}`);
+}
+
 // --- Belegungskalender (read-only, maskiert) --------------------------------
 
 /**

@@ -6,10 +6,10 @@ import { notFound } from "next/navigation";
 
 import { BuchungsWidget } from "@/components/buchungs-widget";
 import { PhotoPlaceholder } from "@/components/photo-placeholder";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { SiteShell } from "@/components/site-shell";
 import { ladeInserat } from "@/lib/inserate";
-import { getSiteContext } from "@/lib/site-context";
+import { getSiteContext, navOf } from "@/lib/site-context";
+import { spracheWaehlen } from "@/lib/sprache";
 
 // Ausstattungs-Icons (Mapping bekannter amenity-Codes → Icon + Label).
 const AMENITY_META: Record<string, { icon: string; label: string }> = {
@@ -39,14 +39,13 @@ export default async function InseratPage({
   const galerieHues = [0, 20, 40, 60, 80].map((d) => (listing.hue + d) % 360);
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <SiteHeader
-        logoSrc={branding?.logo_url}
-        logoAlt={branding?.site_name}
-        siteName={branding?.site_name}
-      />
-
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-6">
+    <SiteShell
+      branding={branding}
+      nav={navOf(branding)}
+      jahr={new Date().getFullYear()}
+      sprache={spracheWaehlen(branding)}
+    >
+      <div className="mx-auto w-full max-w-6xl px-6 py-6">
         {/* Titelzeile */}
         <div className="mb-4">
           <h1 className="font-display text-2xl font-semibold tracking-tight">
@@ -160,13 +159,20 @@ export default async function InseratPage({
           {/* Buchungs-Widget */}
           <div className="lg:relative">
             <div className="lg:sticky lg:top-28">
-              <BuchungsWidget listing={listing} />
+              <BuchungsWidget
+                listing={listing}
+                sprache={spracheWaehlen(branding)}
+                datenschutzPflicht={branding?.privacy_consent === true}
+                datenschutzHref={
+                  branding?.privacy_policy_slug
+                    ? `/${branding.privacy_policy_slug}`
+                    : null
+                }
+              />
             </div>
           </div>
         </div>
-      </main>
-
-      <SiteFooter />
-    </div>
+      </div>
+    </SiteShell>
   );
 }

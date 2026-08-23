@@ -70,3 +70,23 @@ export const MONATS_POSITIONEN = [
   "fourth",
   "last",
 ] as const;
+
+/**
+ * Beginn des nächsten Tages BEIM NUTZER, als ISO-Zeitstempel mit Zone.
+ *
+ * Nur im BROWSER aufrufen. Der Aufgaben-Server teilt die Reiter „Aktuell" und
+ * „Bevorstehend" an dieser Grenze; er kann sie nicht selbst bilden, weil die
+ * Zeitzone am Objekt hängt (`properties.timezone`) und eine Liste über mehrere
+ * Objekte keine einzige richtige hat. In einer Server-Action wäre es die Zeit
+ * des Rechenzentrums — deshalb steht der Helfer hier und nicht in `lib/tasks.ts`
+ * (dort gilt „use server").
+ *
+ * Ohne diese Grenze verglich der Server gegen seine Uhr: eine heute um 16:00
+ * fällige Aufgabe lag morgens unter „Bevorstehend", zwischen den Aufgaben der
+ * nächsten Woche.
+ */
+export function tagesendeIso(): string {
+  const d = new Date();
+  d.setHours(24, 0, 0, 0);
+  return d.toISOString();
+}

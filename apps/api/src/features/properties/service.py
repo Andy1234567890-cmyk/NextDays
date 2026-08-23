@@ -481,7 +481,18 @@ class PropertiesService(
         begründet.
         """
         if not darf_zu_den_portalen(self._db, tenant_id, property_id):
+            # Haeufigste Ursache fuer "gespeichert, kommt aber nicht an": das
+            # Objekt darf gar nicht zu den Portalen (Entwurf/nicht verbunden).
+            # Ohne diesen Log sieht der Nutzer nur ein stilles Nichts.
+            log.info(
+                "channex_sync_uebersprungen_keine_portalfreigabe",
+                tenant_id=tenant_id, property_id=property_id,
+            )
             return
+        log.info(
+            "channex_content_sync_eingereiht",
+            tenant_id=tenant_id, property_id=property_id,
+        )
         try_enqueue_content_sync(
             self._db, tenant_id, property_id, title=title, currency=currency
         )
@@ -521,6 +532,24 @@ class PropertiesService(
         changes = req.model_dump(mode="json", exclude_unset=True)
         if not changes:
             return self.get(ctx, property_id)
+        # Was das Frontend beim Speichern wirklich schickt. Nur die Feldnamen
+        # plus die Verfuegbarkeits-Werte, die zu den Portalen gehen — keine
+        # Gastdaten ins Log.
+        if "type_attributes" in changes:
+            av_in = (changes.get("type_attributes") or {}).get("availability") or {}
+            log.info(
+                "property_update_availability",
+                property_id=property_id,
+                felder=sorted(changes.keys()),
+                min_stay=av_in.get("minStay"),
+                min_stay_type=av_in.get("minStayType"),
+                max_stay=av_in.get("maxStay"),
+            )
+        else:
+            log.info(
+                "property_update", property_id=property_id,
+                felder=sorted(changes.keys()),
+            )
         if "property_type" in changes:
             self._require_type_matches_accommodation(
                 tenant_id, PropertyType(changes["property_type"])
@@ -1164,7 +1193,7 @@ class PropertiesService(
 
         # Min-/Max-Stay separat als ARI-Job — der Full-Sync pusht nur Preise+
         # Verfügbarkeit, nicht die Aufenthalts-Restriktionen (die haben keine
-        # Ganz-Horizont-Tabelle). Nur wenn vom Rate-Plan/Formular gesetzt.
+        # Ganz-Horizont-Tabelle).
         min_stay = int(rates[0].get("min_stay") or 1)
         if min_stay > 1:
             try_enqueue_ari(
@@ -1172,13 +1201,20 @@ class PropertiesService(
                 {"date_from": today_iso, "date_to": horizon_to, "min_stay": min_stay},
                 coalesce=True,
             )
-        max_stay = max_stay_of(row)
-        if max_stay > 0:
-            try_enqueue_ari(
-                self._db, tenant_id, property_id, "max_stay",
-                {"date_from": today_iso, "date_to": horizon_to, "max_stay": max_stay},
-                coalesce=True,
-            )
+        # Der Maximalaufenthalt geht IMMER raus, auch als 0. Vorher stand hier
+        # `if max_stay > 0` — ein Objekt, dessen Obergrenze entfernt wurde und das
+        # danach neu veröffentlicht wird, hätte damit die ALTE Grenze bei den
+        # Portalen behalten: der Job bliebe aus, der Full-Sync führt max_stay
+        # nicht, und der Reconciler spiegelt es nicht. 0 heißt bei Channex
+        # ausdrücklich „keine Obergrenze" und ist genau der Gegenzustand, der
+        # gesendet werden muss (Wurzel 1). `push_max_stay` im Speichern-Pfad
+        # macht es seit je so — publish() war die Ausnahme.
+        try_enqueue_ari(
+            self._db, tenant_id, property_id, "max_stay",
+            {"date_from": today_iso, "date_to": horizon_to,
+             "max_stay": max_stay_of(row)},
+            coalesce=True,
+        )
 
         # 5) Tagesgenaue Preise nachrechnen als recompute_property-Job (Coalescing
         #    je Objekt) — für Autopilot-Objekte, die danach dynamisch weiterpushen.

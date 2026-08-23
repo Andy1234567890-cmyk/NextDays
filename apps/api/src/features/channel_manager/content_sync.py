@@ -861,10 +861,20 @@ class ContentSyncMixin:
         # cut_off_time/cut_off_days, max_day_advance, min_stay_type,
         # allow_availability_autoupdate_on_{confirmation,modification,cancellation}.
         # Nur senden, was der Nutzer gesetzt hat; keine erfundenen Defaults.
-        settings.update(_availability_settings(
-            (prop_row.get("type_attributes") or {}).get("availability") or {}
-        ))
+        av_roh = (prop_row.get("type_attributes") or {}).get("availability") or {}
+        settings.update(_availability_settings(av_roh))
         attrs["settings"] = settings
+        # Mindestaufenthalt-Typ mitloggen: bei "both" schickt Channex
+        # min_stay_arrival UND min_stay_through, und Booking.com uebernimmt dann
+        # KEINEN Mindestaufenthalt (live belegt 23.08.2026, alle 18 Objekte).
+        # Der Log macht sichtbar, was wirklich rausgeht, statt es zu vermuten.
+        log.info(
+            "channex_min_stay_type_push",
+            property_id=prop_row.get("id"),
+            gelesen=av_roh.get("minStayType"),
+            gesendet=settings.get("min_stay_type"),
+            min_stay=av_roh.get("minStay"),
+        )
         return attrs
 
     @staticmethod

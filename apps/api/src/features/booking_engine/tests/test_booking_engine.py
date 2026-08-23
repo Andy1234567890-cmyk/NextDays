@@ -30,6 +30,7 @@ _PROPERTIES = [
         "amenities": ["wifi"], "photos": ["a.jpg"],
         "type_attributes": {"bedrooms": 3, "baths": 2}, "status": "active",
         "listed_on_marketplace": True, "moderation_status": "approved",
+        "listed_on_website": True,
     },
     {
         "id": "p-active2", "tenant_id": "t2", "title": "City Loft",
@@ -37,6 +38,7 @@ _PROPERTIES = [
         "country": "DE", "lat": None, "lng": None, "max_guests": 2,
         "amenities": [], "photos": [], "type_attributes": {}, "status": "active",
         "listed_on_marketplace": True, "moderation_status": "approved",
+        "listed_on_website": True,
     },
     {
         "id": "p-draft", "tenant_id": "t1", "title": "Entwurf", "description": None,
@@ -44,6 +46,7 @@ _PROPERTIES = [
         "lng": None, "max_guests": 4, "amenities": [], "photos": [],
         "type_attributes": {}, "status": "draft",
         "listed_on_marketplace": True, "moderation_status": "draft",
+        "listed_on_website": True,
     },
 ]
 
@@ -1163,3 +1166,49 @@ def test_quote_kaution_ohne_betrag_wird_nicht_geraten() -> None:
     }
     _plan, _storno, deposit = _konditionen(_quote_service([kond], []))
     assert deposit is None
+
+
+def test_listings_website_flag_versteckt_nur_auf_der_website() -> None:
+    """Website-Sichtbarkeit ist die dritte Achse (0159), getrennt von Marktplatz
+    und OTA.
+
+    Vorher wurde `listed_on_website` NIRGENDS gefiltert: der Schalter im
+    Baukasten war eine Attrappe, und ein Objekt, das der Betrieb bewusst nur
+    über Booking.com verkaufen wollte, stand trotzdem auf seiner eigenen Seite.
+    """
+    props = [
+        {**_PROPERTIES[0], "tenant_id": "t1", "listed_on_website": False},
+        {**_PROPERTIES[1], "tenant_id": "t1", "listed_on_website": True},
+    ]
+    svc = _service(properties=props)
+    # Kunden-Website des Betriebs: nur das freigegebene Objekt.
+    assert {i.id for i in svc.list_listings(tenant="t1").items} == {"p-active2"}
+    # Zentraler Marktplatz: die Website-Achse spielt dort keine Rolle, beide
+    # Objekte bleiben (sie sind marketplace-gelistet und freigegeben).
+    assert {i.id for i in svc.list_listings().items} == {"p-active", "p-active2"}
+
+
+def test_listings_website_flag_gilt_nicht_fuer_featured() -> None:
+    """Wer ein Objekt NAMENTLICH auf seine Seite setzt, hat damit entschieden,
+    dass es dort erscheint — genau wie beim Marktplatz-Flag."""
+    props = [{**_PROPERTIES[0], "tenant_id": "t1", "listed_on_website": False}]
+    svc = _service(properties=props)
+    res = svc.list_listings(tenant="t1", property_ids=["p-active"])
+    assert {i.id for i in res.items} == {"p-active"}
+
+
+def test_destinations_folgen_der_website_achse() -> None:
+    """Die Reiseziel-Vorschläge dürfen kein Ziel anbieten, dessen Objekte die
+    Suche danach ausblendet — sonst tippt der Gast „Berlin" und bekommt nichts.
+    """
+    props = [
+        {**_PROPERTIES[0], "tenant_id": "t1", "city": "Kopenhagen",
+         "listed_on_website": False},
+        {**_PROPERTIES[1], "tenant_id": "t1", "city": "Berlin",
+         "listed_on_website": True},
+    ]
+    svc = _service(properties=props)
+    ziele = svc.list_destinations(tenant="t1")
+    staedte = {z.city for z in ziele.items if z.city}
+    assert "Berlin" in staedte
+    assert "Kopenhagen" not in staedte

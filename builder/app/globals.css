@@ -49,3 +49,27 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+/* --- Button-Form des Betriebs (0421) ---------------------------------------
+   Die Kunden-Site stellt EINE Button-Form ein (Eckenform + Füllung + Schrift),
+   die überall gilt: Kopfzeile, Abschnitte, Buchungsstrecke. Das läuft über CSS
+   statt über durchgereichte Props, weil die Abschnitts-Renderer reine
+   Inhalts-Komponenten sind und kein Branding-Objekt kennen sollen — sonst
+   müsste jeder neue Abschnitt daran denken, und einer vergisst es.
+
+   Fehlt eine Einstellung, greift der Fallback im var() — das ist kein
+   erfundener Datenwert, sondern die Form, die die Seite ohne Kundenwunsch hat
+   (Repo-Vorgabe: Buttons oval). */
+.btn-marke {
+  border-radius: var(--button-radius, 9999px);
+  font-family: var(--font-button, var(--font-sans));
+}
+
+/* „Umrandet" statt „Solide": nur Füllung und Rand ändern sich, Form und
+   Abstände bleiben — ein Stilwechsel darf das Layout nicht verschieben. */
+[data-button-style="outline"] .btn-marke-primaer {
+  background-color: transparent;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  box-shadow: none;
+}

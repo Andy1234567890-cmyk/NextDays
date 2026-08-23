@@ -92,6 +92,16 @@ class OwnerFamilyService:
         ).data or []
         return rows[0] if rows else None
 
+    def stufe(self, ctx: AuthContext) -> str | None:
+        """Kontoweite Familienstufe des eingeloggten Nutzers (0389).
+
+        Die EINE Quelle für `effective_capabilities(..., family_access=…)` in
+        den Portal-Guards. `None` = kein Familienmitglied (der Eigentümer
+        selbst) und damit keine Deckelung.
+        """
+        tenant_id, user_id = self._require(ctx)
+        return familienstufe(self._db, tenant_id, user_id)
+
     def eigene_rolle(self, ctx: AuthContext) -> dict:
         """Was ist dieser Portal-Nutzer, und was darf er?
 
@@ -754,6 +764,46 @@ def melde_freigabe_noetig(
 # Existenz einer Zeile) und gehören darum hierher, nicht in den Portal-Service.
 
 
+def familienstufe(db: Client, tenant_id: str, user_id: str) -> str | None:
+    """Die KONTOWEITE Familienstufe dieses Portal-Nutzers (0389).
+
+    `None` heißt: keine Familien-Zeile — also der Eigentümer selbst, der nicht
+    gedeckelt wird. Sonst die höchste Stufe, die IRGENDEINE seiner Zuordnungen
+    trägt.
+
+    Warum „die höchste" und nicht je Objekt: Diese Auskunft speist die
+    Endpunkt-Guards, und die entscheiden über die FLÄCHE (darf der Fotoalbum-
+    Endpunkt überhaupt antworten?), nicht über eine einzelne Zeile. Der
+    Objekt-Scope kommt danach und unabhängig aus
+    `owner_property_assignments` — ein Mitglied sieht also nie ein Objekt, zu
+    dem es nicht zugeordnet ist, auch wenn seine Stufe an einem ANDEREN Objekt
+    höher ist. Für objektgenaue Fragen gibt es `OwnerFamilyService.darf`.
+    Dieselbe Bündelung nimmt `darf_berichte` seit jeher vor (unten) — sie ist
+    hier nur benannt statt zweimal gedacht.
+
+    Fail-closed (Wurzel 5): Ein unbekannter Wert in der Spalte wird
+    unverändert zurückgegeben und ergibt über
+    `owner_family_capabilities_for` die LEERE Fähigkeitsmenge — ein Tippfehler
+    sperrt, statt zu öffnen.
+    """
+    rows = (
+        db.table("owner_family_members")
+        .select("access")
+        .eq("tenant_id", tenant_id)
+        .eq("user_id", user_id)
+        .execute()
+    ).data or []
+    if not rows:
+        return None
+    vorhanden = {str(r.get("access")) for r in rows}
+    for stufe in reversed(STUFEN):
+        if stufe in vorhanden:
+            return stufe
+    # Nur unbekannte Werte: den ersten (stabil sortiert) zurückgeben, damit die
+    # Deckelung greift und nichts geraten wird.
+    return sorted(vorhanden)[0]
+
+
 def darf_berichte(db: Client, tenant_id: str, user_id: str) -> bool:
     """Darf dieser Nutzer Finanzzahlen sehen? (0389)
 
@@ -770,17 +820,13 @@ def darf_berichte(db: Client, tenant_id: str, user_id: str) -> bool:
     über alle zugeordneten Objekte zusammengerechnet. Eine Teilmengen-
     Auswertung ergäbe eine Zahl, die niemand wiederfindet — eine plausibel
     aussehende Falschaussage (Wurzel 4).
+
+    Dieselbe Frage, nur anders geschnitten, stellt `familienstufe` — deshalb
+    beantwortet sie sie hier, statt die Spalte ein zweites Mal auszuwerten.
     """
-    rows = (
-        db.table("owner_family_members")
-        .select("access")
-        .eq("tenant_id", tenant_id)
-        .eq("user_id", user_id)
-        .execute()
-    ).data or []
-    if not rows:
-        return True  # Kein Familienmitglied → der Eigentümer selbst.
-    return any(r.get("access") == "nutzung_berichte" for r in rows)
+    stufe = familienstufe(db, tenant_id, user_id)
+    # None = Eigentümer selbst.
+    return stufe is None or stufe == "nutzung_berichte"
 
 
 def freigabe_stufe(

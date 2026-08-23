@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import secrets
 import time
 from datetime import UTC, datetime
 
@@ -22,13 +23,16 @@ from supabase import Client
 from src.core.config import get_settings
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.core.supabase import public_storage_url
 
+from . import konto_daten
 from . import templates as site_templates
 from .cloudflare_client import CloudflareClient, CloudflareError
 from .schemas import (
     BlockCreate,
     BlockListResponse,
     BlockResponse,
+    BlocksReplaceRequest,
     BlockType,
     BlockUpdate,
     BrandingResponse,
@@ -38,11 +42,16 @@ from .schemas import (
     DnsRecord,
     DomainCreate,
     DomainStatus,
+    MediumListResponse,
+    MediumResponse,
+    NavArea,
     PageCreate,
     PageListResponse,
     PageResponse,
     PageUpdate,
     PublicBlock,
+    PublicNav,
+    PublicNavItem,
     PublicPageMeta,
     PublicPageResponse,
     PublicSiteResponse,
@@ -52,10 +61,26 @@ from .schemas import (
 
 log = get_logger("nextdays.site_config")
 
+# Alle Branding-Spalten. Sie werden AUFGEZÄHLT und nicht per `*` geholt:
+# `select("*")` würde jede neue Spalte automatisch mitliefern — auch eine, die
+# nur intern gedacht ist — und der öffentliche Resolver baut auf derselben Liste
+# auf (`_PUBLIC_COLS`). Eine Aufzählung macht jedes zusätzliche Feld zu einer
+# bewussten Entscheidung.
 _BRANDING_COLS = (
-    "site_name, tagline, logo_url, hero_image_url, primary_color, "
-    "secondary_color, font_family, about_text, contact_text, social_links, "
-    "booking_mode"
+    "site_name, tagline, logo_url, hero_image_url, favicon_url, theme, "
+    "primary_color, secondary_color, background_color, foreground_color, "
+    "font_family, heading_font, button_font, button_style, button_radius, "
+    "logo_scale, about_text, contact_text, social_links, booking_mode, "
+    # 0426: Farbrollen für Kopf-/Fußzeile, Links und Firmenname.
+    "brand_name_color, header_background, header_link_color, link_color, "
+    "footer_background, "
+    # 0426: Typografie des Logo-Bereichs.
+    "logo_name_font, logo_name_size, slogan_font, logo_link_url, "
+    # 0426: Sprachen und Anzeigeverhalten der Website.
+    "languages, default_language, show_guest_breakdown, show_base_prices, "
+    # 0426: Code-Injection und Rechts-Schalter.
+    "head_html, head_css, custom_js, checkout_js, cookie_banner, "
+    "cookie_policy_page_id, privacy_consent, privacy_policy_page_id, is_offline"
 )
 _DOMAIN_COLS = (
     "id, tenant_id, domain, cf_custom_hostname_id, status, ssl_status, "
@@ -65,9 +90,29 @@ _DOMAIN_COLS = (
 _PUBLIC_COLS = f"tenant_id, {_BRANDING_COLS}"
 _PAGE_COLS = (
     "id, slug, title, seo_title, seo_description, og_image_url, is_home, "
-    "is_published, nav_order"
+    "is_published, nav_area, nav_order, languages"
 )
 _BLOCK_COLS = "id, page_id, type, position, content, settings"
+_MEDIA_COLS = "id, url, filename, mime, bytes, created_at"
+
+
+def _bild_typ(content: bytes) -> str | None:
+    """Der WIRKLICHE Bildtyp aus den Anfangsbytes, oder None.
+
+    Wurzel 8: der `content_type` des Clients ist eine Behauptung — er wird von
+    der Gegenseite gesetzt und kostet nichts. Deshalb entscheidet die Signatur:
+    JPEG ``FF D8 FF``, PNG ``89 50 4E 47 0D 0A 1A 0A``, WebP ``RIFF....WEBP``.
+
+    Gleiche Prüfung wie in tasks/service.py — bewusst als Kopie und nicht als
+    Import: ein Slice soll für seine Upload-Sicherheit nicht an einem fremden
+    Slice hängen, und die Signaturen ändern sich nie."""
+    if content.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if content.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if content[:4] == b"RIFF" and content[8:12] == b"WEBP":
+        return "image/webp"
+    return None
 
 
 class SiteConfigError(Exception):
@@ -99,8 +144,17 @@ class SiteConfigService:
     # --- Branding (Dashboard, MANAGE_SITE_CONFIG) ----------------------------
 
     def get_branding(self, ctx: AuthContext) -> BrandingResponse:
-        """Branding des Tenants. Fehlt die Zeile → leere Config (Defaults/None),
-        kein erfundener Wert."""
+        """Branding des Tenants, mit den Firmendaten des Kontos als Rückfall.
+
+        Firmenname und Logo pflegt der Betrieb unter Konto → Profil. Sie im
+        Baukasten noch einmal einzutragen wäre nicht nur Arbeit, sondern eine
+        zweite Wahrheit: wer sein Logo im Konto austauscht, erwartet es auch auf
+        der Website.
+
+        Deshalb wird hier NICHT kopiert, sondern abgeleitet: was in der
+        Site-Konfiguration steht, gewinnt — steht dort nichts, gilt das Konto.
+        Damit bleibt beides automatisch in Deckung, und der Kunde kann für die
+        Website trotzdem bewusst etwas anderes setzen."""
         tenant_id = self._require_tenant(ctx)
         rows = (
             self._db.table("tenant_site_config")
@@ -109,9 +163,23 @@ class SiteConfigService:
             .limit(1)
             .execute()
         ).data or []
-        if not rows:
-            return BrandingResponse()
-        return BrandingResponse(**rows[0])
+        eigen = rows[0] if rows else {}
+        return BrandingResponse(**self._mit_konto_rueckfall(tenant_id, eigen))
+
+    def _mit_konto_rueckfall(self, tenant_id: str, eigen: dict) -> dict:
+        """Leere Marken-Felder aus den Firmendaten des Kontos füllen.
+
+        Nur `site_name` und `logo_url` — Farben, Schriften und Theme sind
+        Website-Entscheidungen und haben im Konto kein Gegenstück."""
+        aus = {k: v for k, v in eigen.items() if v is not None}
+        if aus.get("site_name") and aus.get("logo_url"):
+            # Beides gesetzt: das Konto muss nicht gelesen werden.
+            return aus
+        firma = konto_daten.firmendaten(self._db, tenant_id)
+        for feld in ("site_name", "logo_url"):
+            if not aus.get(feld) and firma.get(feld):
+                aus[feld] = firma[feld]
+        return aus
 
     def set_branding(
         self, ctx: AuthContext, req: BrandingUpdate
@@ -300,13 +368,83 @@ class SiteConfigService:
             .limit(1)
             .execute()
         ).data or []
-        base = cfg_rows[0] if cfg_rows else {"tenant_id": tenant_id}
-        return PublicSiteResponse(**{**base, "tenant_id": tenant_id})
+        base = cfg_rows[0] if cfg_rows else {}
+        # Nur gelieferte Werte übernehmen (siehe _page_row): ein fehlender Key
+        # darf nicht als None ein Enum-Feld kippen. Dazu derselbe Konto-Rückfall
+        # wie im Dashboard — sonst zeigt die Vorschau ein Logo, das die
+        # veröffentlichte Seite nicht hat.
+        gesetzt = {
+            k: v
+            for k, v in self._mit_konto_rueckfall(tenant_id, base).items()
+            if v is not None and k not in ("tenant_id", "nav")
+        }
+        # Die verlinkten Rechts-Seiten wandern als SLUG nach draußen, nicht als
+        # ID: der Renderer baut daraus einen Pfad, mit einer ID müsste er die
+        # Seite erst nachschlagen.
+        for feld, ziel in (
+            ("cookie_policy_page_id", "cookie_policy_slug"),
+            ("privacy_policy_page_id", "privacy_policy_slug"),
+        ):
+            seiten_id = gesetzt.pop(feld, None)
+            if seiten_id:
+                slug = self._slug_von(tenant_id, str(seiten_id))
+                if slug is not None:
+                    gesetzt[ziel] = slug
+        return PublicSiteResponse(
+            **gesetzt,
+            tenant_id=tenant_id,
+            nav=self._public_nav(tenant_id),
+        )
+
+    def _slug_von(self, tenant_id: str, page_id: str) -> str | None:
+        """Slug einer eigenen Seite. `None`, wenn sie nicht (mehr) existiert
+        oder nicht veröffentlicht ist.
+
+        Der Tenant-Filter ist nicht Zierde: die Spalte trägt eine
+        Fremdschlüssel-Beziehung auf `site_pages`, aber eine ID, die per
+        Direktpfad dort landet, könnte auf eine fremde Seite zeigen. Ein
+        Cookie-Hinweis, der auf die Datenschutzseite eines anderen Betriebs
+        verlinkt, wäre ein Datenleck mit Ansage (Wurzel 3).
+
+        Unveröffentlichte Seiten geben `None`: der Banner zeigt dann keinen Link,
+        statt den Gast auf eine 404 zu schicken."""
+        rows = (
+            self._db.table("site_pages")
+            .select("slug")
+            .eq("id", page_id)
+            .eq("tenant_id", tenant_id)
+            .eq("is_published", True)
+            .limit(1)
+            .execute()
+        ).data or []
+        return rows[0]["slug"] if rows else None
+
+    def _ist_offline(self, tenant_id: str) -> bool:
+        """Hauptschalter „Website offline" (0426).
+
+        Eigene Abfrage und nicht aus dem Branding gelesen, weil sie VOR dem
+        Branding laufen muss: ist die Site zu, soll gar nichts erst
+        zusammengebaut werden."""
+        rows = (
+            self._db.table("tenant_site_config")
+            .select("is_offline")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        return bool(rows and rows[0].get("is_offline"))
 
     def resolve_site_by_domain(self, host: str) -> PublicSiteResponse:
         """Host → Tenant + öffentliches Branding. NUR aktive Domains; unbekannt
-        → 404. Gibt ausschließlich öffentliche Felder zurück (kein Leak)."""
-        return self._public_branding(self._tenant_id_for_host(host))
+        → 404. Gibt ausschließlich öffentliche Felder zurück (kein Leak).
+
+        Steht der Hauptschalter „Website offline" (0426), antwortet auch eine
+        gültige Domain mit 404. Ohne diese Zeile wäre der Schalter Deko: der
+        Renderer bekäme sein Branding und würde die Seite bauen."""
+        tenant_id = self._tenant_id_for_host(host)
+        if self._ist_offline(tenant_id):
+            raise SiteConfigError("Website ist offline.", status_code=404)
+        return self._public_branding(tenant_id)
 
     # === Page-Builder: Seiten (Dashboard, MANAGE_SITE_CONFIG) ================
 
@@ -316,11 +454,12 @@ class SiteConfigService:
             self._db.table("site_pages")
             .select(_PAGE_COLS)
             .eq("tenant_id", tenant_id)
+            .order("nav_area")
             .order("nav_order")
             .order("created_at")
             .execute()
         ).data or []
-        items = [PageResponse(**r) for r in rows]
+        items = [PageResponse(**self._page_row(r)) for r in rows]
         return PageListResponse(items=items, total=len(items))
 
     def create_page(self, ctx: AuthContext, req: PageCreate) -> PageResponse:
@@ -351,6 +490,10 @@ class SiteConfigService:
             "title": req.title,
             "slug": slug,
             "is_home": not existing,
+            "nav_area": req.nav_area.value,
+            # Neue Seite hinten in ihrem Navigationsbereich einsortieren, damit
+            # sie nicht auf Position 0 vor die Startseite springt.
+            "nav_order": self._next_nav_order(tenant_id, req.nav_area.value),
         }
         res = self._db.table("site_pages").insert(payload).execute()
         if not res.data:
@@ -364,8 +507,18 @@ class SiteConfigService:
         self, ctx: AuthContext, page_id: str, req: PageUpdate
     ) -> PageResponse:
         tenant_id = self._require_tenant(ctx)
-        self._own_page(tenant_id, page_id)
+        page = self._own_page(tenant_id, page_id)
         patch = req.model_dump(mode="json", exclude_unset=True)
+        # Gegenzustand (Wurzel 1): wechselt die Seite den Navigationsbereich,
+        # gilt ihre alte Position im neuen Bereich nicht mehr — sonst landet sie
+        # dort auf einer schon belegten Stelle und die Reihenfolge ist zufällig.
+        # Eine explizit mitgeschickte nav_order gewinnt.
+        if (
+            "nav_area" in patch
+            and patch["nav_area"] != page.get("nav_area")
+            and "nav_order" not in patch
+        ):
+            patch["nav_order"] = self._next_nav_order(tenant_id, patch["nav_area"])
         if "slug" in patch:
             clash = (
                 self._db.table("site_pages")
@@ -385,6 +538,50 @@ class SiteConfigService:
                 "tenant_id", tenant_id
             ).execute()
         return self._load_page(tenant_id, page_id)
+
+    def _next_nav_order(self, tenant_id: str, nav_area: str) -> int:
+        """Nächste freie Position innerhalb EINES Navigationsbereichs.
+
+        Die Reihenfolge gilt je Bereich (Kopfzeile zählt eigen, Fußzeile eigen) —
+        sonst würde eine neue Fußzeilen-Seite die Kopfzeilen-Reihenfolge
+        durchmischen."""
+        rows = (
+            self._db.table("site_pages")
+            .select("nav_order")
+            .eq("tenant_id", tenant_id)
+            .eq("nav_area", nav_area)
+            .order("nav_order", desc=True)
+            .limit(1)
+            .execute()
+        ).data or []
+        return (rows[0]["nav_order"] + 1) if rows else 0
+
+    def reorder_pages(
+        self, ctx: AuthContext, nav_area: NavArea, ordered_ids: list[str]
+    ) -> PageListResponse:
+        """Seiten INNERHALB eines Navigationsbereichs neu sortieren.
+
+        Die übergebene Liste muss exakt die Seiten dieses Bereichs sein — eine
+        fremde oder fehlende ID ist ein 400, kein stilles Teil-Update (Wurzel 3:
+        der Anfrage nicht vertrauen, Menge serverseitig gegenprüfen)."""
+        tenant_id = self._require_tenant(ctx)
+        rows = (
+            self._db.table("site_pages")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("nav_area", nav_area.value)
+            .execute()
+        ).data or []
+        if {r["id"] for r in rows} != set(ordered_ids):
+            raise SiteConfigError(
+                "Die Seitenliste passt nicht zum Navigationsbereich.",
+                status_code=400,
+            )
+        for pos, page_id in enumerate(ordered_ids):
+            self._db.table("site_pages").update({"nav_order": pos}).eq(
+                "id", page_id
+            ).eq("tenant_id", tenant_id).execute()
+        return self.list_pages(ctx)
 
     def set_home_page(self, ctx: AuthContext, page_id: str) -> PageResponse:
         tenant_id = self._require_tenant(ctx)
@@ -433,7 +630,15 @@ class SiteConfigService:
     ) -> BlockResponse:
         tenant_id = self._require_tenant(ctx)
         self._own_page(tenant_id, page_id)
-        content = self._validate_content(req.type, req.content)
+        roh = dict(req.content or {})
+        if req.type is BlockType.contact:
+            # Ein Kontakt-Abschnitt ohne Kontaktdaten ist nutzlos, und die Daten
+            # liegen im Konto. Also gleich einsetzen statt den Kunden abtippen
+            # zu lassen — was er selbst mitgeschickt hat, gewinnt.
+            roh = konto_daten.kontakt_mit_firmendaten(
+                roh, konto_daten.firmendaten(self._db, tenant_id), nur_leere=True
+            )
+        content = self._validate_content(req.type, roh)
         rows = (
             self._db.table("site_blocks")
             .select("position")
@@ -500,12 +705,292 @@ class SiteConfigService:
             ).eq("tenant_id", tenant_id).execute()
         return self.list_blocks(ctx, page_id)
 
+    def replace_blocks(
+        self, ctx: AuthContext, page_id: str, req: BlocksReplaceRequest
+    ) -> BlockListResponse:
+        """ALLE Abschnitte einer Seite in EINEM Aufruf setzen.
+
+        Der Editor speicherte bisher mit N+1 einzelnen Requests (löschen, dann
+        updaten, dann anlegen, dann neu ordnen). Brach einer in der Mitte ab,
+        blieb die Seite halb gespeichert — und ein Doppelklick auf „Speichern"
+        lief zweimal durch dieselbe Sequenz. Hier ist der Speichervorgang EINE
+        idempotente Operation: dieselbe Liste zweimal gesendet ergibt denselben
+        Zustand (Wurzel 2).
+
+        Jede mitgeschickte Block-ID muss zu DIESER Seite gehören — nicht bloß zum
+        Tenant. Sonst könnte man mit einer fremden Block-ID aus einer anderen
+        Seite des eigenen Kontos deren Abschnitt hierher umhängen (Wurzel 3:
+        Scope serverseitig erzwingen, und zwar denselben wie im List-Pfad)."""
+        tenant_id = self._require_tenant(ctx)
+        self._own_page(tenant_id, page_id)
+
+        vorhanden = {
+            r["id"]: r["type"]
+            for r in (
+                self._db.table("site_blocks")
+                .select("id, type")
+                .eq("page_id", page_id)
+                .execute()
+            ).data
+            or []
+        }
+
+        gesendet: set[str] = set()
+        for item in req.items:
+            if item.id is None:
+                continue
+            if item.id not in vorhanden:
+                log.warning(
+                    "site_blocks_replace_fremder_abschnitt",
+                    page_id=page_id,
+                    block_id=item.id,
+                    bekannt=sorted(vorhanden),
+                )
+                raise SiteConfigError(
+                    "Ein Abschnitt gehört nicht zu dieser Seite.", status_code=400
+                )
+            if item.id in gesendet:
+                log.warning(
+                    "site_blocks_replace_doppelt",
+                    page_id=page_id,
+                    block_id=item.id,
+                )
+                raise SiteConfigError(
+                    "Ein Abschnitt kommt doppelt vor.", status_code=400
+                )
+            if vorhanden[item.id] != item.type.value:
+                # Typwechsel gibt es fachlich nicht (jeder Typ hat ein eigenes
+                # content-Schema). Der Editor schickt das nie — klar fehlschlagen
+                # statt still das falsche Schema zu validieren (Wurzel 5).
+                log.warning(
+                    "site_blocks_replace_typwechsel",
+                    page_id=page_id,
+                    block_id=item.id,
+                    war=vorhanden[item.id],
+                    neu=item.type.value,
+                )
+                raise SiteConfigError(
+                    "Ein Abschnitt kann seinen Typ nicht wechseln.",
+                    status_code=400,
+                )
+            gesendet.add(item.id)
+
+        # 1) ALLES validieren, BEVOR irgendetwas geschrieben wird (Wurzel 5:
+        #    fail-closed vor dem Seiteneffekt).
+        #
+        #    Vorher wurde zuerst gelöscht und dann in der Schreib-Schleife
+        #    validiert. Schlug ein Abschnitt weiter hinten fehl, waren die
+        #    Löschungen schon committet: der Aufrufer bekam 400 und glaubte,
+        #    nichts sei passiert — der entfernte Abschnitt war aber unwiederbring-
+        #    lich weg. Genau die Kombination trat real auf, weil eine E-Mail im
+        #    Kontakt-Abschnitt zuverlässig einen 400 auslöste.
+        geprueft = [
+            (pos, item, self._validate_content(item.type, item.content))
+            for pos, item in enumerate(req.items)
+        ]
+
+        # 2) Weggefallene Abschnitte löschen (der Gegenzustand zur neuen Liste,
+        #    Wurzel 1 — sonst bleiben gelöschte Abschnitte auf der Seite stehen).
+        entfallen = [bid for bid in vorhanden if bid not in gesendet]
+        if entfallen:
+            self._db.table("site_blocks").delete().in_("id", entfallen).eq(
+                "tenant_id", tenant_id
+            ).execute()
+
+        # 3) Bestehende aktualisieren bzw. neue anlegen; Position = Array-Index.
+        for pos, item, content in geprueft:
+            if item.id is not None:
+                self._db.table("site_blocks").update(
+                    {
+                        "position": pos,
+                        "content": content,
+                        "settings": item.settings or {},
+                    }
+                ).eq("id", item.id).eq("tenant_id", tenant_id).execute()
+                continue
+            self._db.table("site_blocks").insert(
+                {
+                    "tenant_id": tenant_id,
+                    "page_id": page_id,
+                    "type": item.type.value,
+                    "position": pos,
+                    "content": content,
+                    "settings": item.settings or {},
+                }
+            ).execute()
+
+        return self.list_blocks(ctx, page_id)
+
     def remove_block(self, ctx: AuthContext, block_id: str) -> None:
         tenant_id = self._require_tenant(ctx)
         self._own_block(tenant_id, block_id)
         self._db.table("site_blocks").delete().eq("id", block_id).eq(
             "tenant_id", tenant_id
         ).execute()
+
+    # === Mediathek (Dashboard, MANAGE_SITE_CONFIG) ==========================
+
+    #: Bucket der Mediathek (Migration 0422). Öffentlich, weil die Bilder als
+    #: <img src> in gespeicherte Blöcke wandern.
+    MEDIA_BUCKET = "site-media"
+    #: Erlaubte Bildtypen → Dateiendung. SVG fehlt bewusst: es darf <script>
+    #: tragen und wäre im public Bucket Stored-XSS (Wurzel 8).
+    MEDIA_MIME = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+    }
+    MEDIA_MAX_BYTES = 20 * 1024 * 1024
+    #: Obergrenze je Betrieb — kein unbegrenzter Bereich (Wurzel 8). Reicht für
+    #: jede echte Vermieter-Website und verhindert, dass ein Konto den Bucket
+    #: füllt.
+    MEDIA_MAX_COUNT = 500
+
+    def list_media(
+        self, ctx: AuthContext, *, limit: int = 100, offset: int = 0
+    ) -> MediumListResponse:
+        """Bildbestand des Betriebs, neueste zuerst."""
+        tenant_id = self._require_tenant(ctx)
+        # Harte Obergrenze auch hier: ein Client, der limit=100000 schickt, darf
+        # keine unbegrenzte Antwort auslösen.
+        limit = max(1, min(limit, 200))
+        offset = max(0, offset)
+        rows = (
+            self._db.table("site_media")
+            .select(_MEDIA_COLS)
+            .eq("tenant_id", tenant_id)
+            .order("created_at", desc=True)
+            .range(offset, offset + limit - 1)
+            .execute()
+        ).data or []
+        items = [MediumResponse(**self._medium_row(r)) for r in rows]
+        return MediumListResponse(items=items, total=len(items))
+
+    def add_medium(
+        self,
+        ctx: AuthContext,
+        content: bytes,
+        *,
+        filename: str | None = None,
+    ) -> MediumResponse:
+        """Ein Bild in die Mediathek legen.
+
+        Der Typ wird aus den ANFANGSBYTES bestimmt, nicht aus dem, was der Client
+        behauptet: ein `content_type` ist eine Angabe der Gegenseite und kostet
+        nichts. Wer „image/jpeg" schreibt und HTML oder SVG schickt, hätte sonst
+        eine Datei im öffentlichen Bucket, die der Browser als Dokument ausführt
+        (Wurzel 8)."""
+        tenant_id = self._require_tenant(ctx)
+        mime = _bild_typ(content)
+        if mime is None or mime not in self.MEDIA_MIME:
+            raise SiteConfigError(
+                "Nur JPEG, PNG oder WebP.", status_code=415
+            )
+        if len(content) > self.MEDIA_MAX_BYTES:
+            raise SiteConfigError("Bild ist zu groß (max. 20 MB).", status_code=413)
+
+        # Gegenzustand zur Obergrenze: erst zählen, dann schreiben. Sonst wächst
+        # der Bestand still über das Limit (Wurzel 1).
+        vorhanden = (
+            self._db.table("site_media")
+            .select("id", count="exact")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        if (vorhanden.count or 0) >= self.MEDIA_MAX_COUNT:
+            raise SiteConfigError(
+                f"Die Mediathek ist voll (max. {self.MEDIA_MAX_COUNT} Bilder). "
+                "Löschen Sie ältere Bilder, um Platz zu machen.",
+                status_code=409,
+            )
+
+        ext = self.MEDIA_MIME[mime]
+        # Nicht-ratbarer Name: der Bucket ist öffentlich, der Pfad ist der
+        # einzige Schutz vor dem Erraten fremder Bilder.
+        path = f"{tenant_id}/{secrets.token_hex(16)}.{ext}"
+        try:
+            self._db.storage.from_(self.MEDIA_BUCKET).upload(
+                path, content, {"content-type": mime}
+            )
+        except Exception as exc:  # noqa: BLE001 — Storage-Fehler einheitlich
+            log.warning(
+                "site_media_upload_failed", tenant_id=tenant_id, error=str(exc)
+            )
+            raise SiteConfigError("Upload fehlgeschlagen.", status_code=502) from exc
+
+        url = public_storage_url(self.MEDIA_BUCKET, path)
+        payload = {
+            "tenant_id": tenant_id,
+            "path": path,
+            "url": url,
+            # Nur der Anzeigename, gekürzt. Er landet in keinem Pfad und in
+            # keinem href — der echte Pfad ist der Token oben.
+            "filename": (filename or "")[:200] or None,
+            "mime": mime,
+            "bytes": len(content),
+        }
+        res = self._db.table("site_media").insert(payload).execute()
+        if not res.data:
+            # Die Datei liegt schon im Bucket; ohne DB-Zeile wäre sie eine Waise,
+            # die niemand mehr findet oder löschen kann. Also aufräumen.
+            self._entferne_datei(path)
+            raise SiteConfigError(
+                "Bild konnte nicht gespeichert werden.", status_code=500
+            )
+        log.info("site_media_added", tenant_id=tenant_id, bytes=len(content))
+        return MediumResponse(**self._medium_row(res.data[0]))
+
+    def remove_medium(self, ctx: AuthContext, medium_id: str) -> None:
+        """Ein Bild aus der Mediathek entfernen — Zeile UND Datei.
+
+        Beide Seiten, sonst bleibt eine Waise im Bucket, die Platz belegt und
+        weiterhin öffentlich erreichbar ist (Wurzel 1: jede Aktion hat einen
+        Gegenzustand).
+
+        Was NICHT passiert: Abschnitte, die dieses Bild noch verwenden, werden
+        nicht angetastet. Ein Bild aus einem veröffentlichten Block zu entfernen
+        wäre eine stille Änderung an einer lebenden Seite — der Kunde sieht das
+        fehlende Bild in der Vorschau und entscheidet selbst."""
+        tenant_id = self._require_tenant(ctx)
+        row = self._own_medium(tenant_id, medium_id)
+        self._db.table("site_media").delete().eq("id", medium_id).eq(
+            "tenant_id", tenant_id
+        ).execute()
+        self._entferne_datei(row["path"])
+        log.info("site_media_removed", tenant_id=tenant_id, medium_id=medium_id)
+
+    def _entferne_datei(self, path: str) -> None:
+        """Datei aus dem Bucket löschen. Best-effort: schlägt es fehl, ist die
+        DB-Zeile schon weg und das Bild aus der Mediathek verschwunden — ein
+        harter Fehler hier würde dem Kunden einen Misserfolg melden, obwohl die
+        Aktion für ihn stattgefunden hat."""
+        try:
+            self._db.storage.from_(self.MEDIA_BUCKET).remove([path])
+        except Exception as exc:  # noqa: BLE001 — Aufräumen kippt nicht den Pfad
+            log.warning("site_media_file_orphan", path=path, error=str(exc))
+
+    def _own_medium(self, tenant_id: str, medium_id: str) -> dict:
+        rows = (
+            self._db.table("site_media")
+            .select("id, path")
+            .eq("id", medium_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise SiteConfigError(
+                "Bild gehört nicht zu diesem Konto.", status_code=404
+            )
+        return rows[0]
+
+    @staticmethod
+    def _medium_row(row: dict) -> dict:
+        out = {k: row.get(k) for k in MediumResponse.model_fields}
+        created = row.get("created_at")
+        out["created_at"] = str(created) if created else None
+        return out
 
     def apply_template(
         self, ctx: AuthContext, template_id: str
@@ -534,12 +1019,19 @@ class SiteConfigService:
                 .execute()
             ).data
         )
+        # Die Vorlage bringt Beispieldaten mit („hallo@bergchalet.example",
+        # „Alpenstraße 1"). Die stehen sonst auf der Kundenseite und müssten von
+        # Hand überschrieben werden — obwohl die echten Angaben im Konto liegen.
+        # Also einsetzen, wo vorhanden.
+        firma = konto_daten.firmendaten(self._db, tenant_id)
+
         for page in tmpl["pages"]:
             if page["slug"] in existing_slugs:
                 continue  # Slug schon vergeben → diese Template-Seite überspringen
             is_home = bool(page.get("is_home")) and not has_home
             if is_home:
                 has_home = True
+            nav_area = page.get("nav_area", NavArea.header.value)
             page_res = (
                 self._db.table("site_pages")
                 .insert(
@@ -548,6 +1040,8 @@ class SiteConfigService:
                         "title": page["title"],
                         "slug": page["slug"],
                         "is_home": is_home,
+                        "nav_area": nav_area,
+                        "nav_order": self._next_nav_order(tenant_id, nav_area),
                     }
                 )
                 .execute()
@@ -555,26 +1049,67 @@ class SiteConfigService:
             page_id = page_res.data[0]["id"]
             for pos, block in enumerate(page.get("blocks", [])):
                 btype = BlockType(block["type"])
+                inhalt = dict(block.get("content", {}))
+                if btype is BlockType.contact:
+                    inhalt = konto_daten.kontakt_mit_firmendaten(inhalt, firma)
                 self._db.table("site_blocks").insert(
                     {
                         "tenant_id": tenant_id,
                         "page_id": page_id,
                         "type": btype.value,
                         "position": pos,
-                        "content": self._validate_content(
-                            btype, block.get("content", {})
-                        ),
+                        "content": self._validate_content(btype, inhalt),
                         "settings": block.get("settings", {}),
                     }
                 ).execute()
+        # Design-Tokens der Vorlage UND die echten Marken-Angaben des Betriebs.
+        # Name und Logo stehen im Konto — ohne diesen Schritt bleibt die
+        # Kopfzeile der Kundenseite leer, obwohl beides vorhanden ist.
+        vorgaben = dict(tmpl.get("branding") or {})
+        if firma.get("site_name"):
+            vorgaben["site_name"] = firma["site_name"]
+        if firma.get("logo_url"):
+            vorgaben["logo_url"] = firma["logo_url"]
+        self._apply_template_branding(ctx, vorgaben)
         return self.list_pages(ctx)
+
+    def _apply_template_branding(
+        self, ctx: AuthContext, branding: dict[str, object]
+    ) -> None:
+        """Design-Tokens der Vorlage NUR in noch leere Branding-Felder schreiben.
+
+        Ohne das steht der Kunde nach einem Vorlagen-Klick vor fertigen Seiten in
+        einem fremden Standard-Look. Mit blindem Überschreiben würde er dagegen
+        seine bereits gesetzte Marke verlieren — beides falsch, deshalb füllt die
+        Vorlage nur die Lücken (Wurzel 1: den bestehenden Zustand mitpflegen,
+        nicht plattmachen)."""
+        if not branding:
+            return
+        vorhanden = self.get_branding(ctx).model_dump(mode="json")
+        patch = {
+            feld: wert
+            for feld, wert in branding.items()
+            if vorhanden.get(feld) is None
+        }
+        if patch:
+            self.set_branding(ctx, BrandingUpdate.model_validate(patch))
 
     # === Page-Builder: öffentlicher Resolver (service-role, kein JWT) ========
 
     def resolve_page(self, host: str, slug: str | None = None) -> PublicPageResponse:
         """Host → veröffentlichte Seite (Home bei slug=None) + geordnete Blöcke +
-        Branding. NUR is_published, nur öffentliche Felder. Unbekannt → 404."""
+        Branding. NUR is_published, nur öffentliche Felder. Unbekannt → 404.
+
+        Der Hauptschalter „Website offline" (0426) gilt auch hier — und zwar VOR
+        der Seitensuche. Nur in `resolve_site_by_domain` zu prüfen hätte nichts
+        gebracht: der Renderer holt seine Seiten über DIESEN Weg, und eine
+        einzelne Unterseite wäre über ihren Direktlink weiter erreichbar
+        gewesen. Der Entwurfs-Renderer (`resolve_page_draft`) ist bewusst NICHT
+        betroffen — sonst könnte der Kunde die Seite nicht herrichten, während
+        sie zu ist."""
         tenant_id = self._tenant_id_for_host(host)
+        if self._ist_offline(tenant_id):
+            raise SiteConfigError("Website ist offline.", status_code=404)
         query = (
             self._db.table("site_pages")
             .select(_PAGE_COLS)
@@ -616,6 +1151,32 @@ class SiteConfigService:
             ],
             branding=self._public_branding(tenant_id),
         )
+
+    def _public_nav(self, tenant_id: str) -> PublicNav:
+        """Menüstruktur der Kunden-Site — nur VERÖFFENTLICHTE Seiten.
+
+        Ohne das war jede Unterseite, die der Kunde anlegte, für Gäste
+        unerreichbar: die Kopfzeile zeigte nur Logo und einen festen Knopf.
+        Seiten mit ``nav_area='none'`` bleiben absichtlich aus beiden Listen —
+        sie sind nur per Direktlink erreichbar. Ein Entwurf erscheint nie im
+        Menü, sonst führt der Link ins 404."""
+        rows = (
+            self._db.table("site_pages")
+            .select("slug, title, nav_area")
+            .eq("tenant_id", tenant_id)
+            .eq("is_published", True)
+            .in_("nav_area", ["header", "footer"])
+            .order("nav_order")
+            .order("created_at")
+            .execute()
+        ).data or []
+        kopf: list[PublicNavItem] = []
+        fuss: list[PublicNavItem] = []
+        for r in rows:
+            eintrag = PublicNavItem(slug=r["slug"], title=r["title"])
+            ziel = fuss if r["nav_area"] == "footer" else kopf
+            ziel.append(eintrag)
+        return PublicNav(header=kopf, footer=fuss)
 
     # === Page-Builder: Draft-Vorschau (Editor-iframe) =======================
 
@@ -714,6 +1275,14 @@ class SiteConfigService:
         try:
             return validate_block_content(block_type, content or {})
         except ValueError as exc:
+            # Mit Typ UND Schlüsseln loggen: die Meldung allein sagt nicht, an
+            # welchem Feld es lag, und der Inhalt selbst gehört nicht ins Log.
+            log.warning(
+                "site_blocks_inhalt_ungueltig",
+                block_type=block_type.value,
+                schluessel=sorted((content or {}).keys()),
+                fehler=str(exc),
+            )
             raise SiteConfigError(
                 f"Ungültiger Block-Inhalt: {exc}", status_code=400
             ) from exc
@@ -766,7 +1335,16 @@ class SiteConfigService:
 
     @staticmethod
     def _page_row(row: dict) -> dict:
-        return {k: row.get(k) for k in PageResponse.model_fields}
+        # Nur tatsächlich gelieferte Werte übernehmen. Ein fehlender Key darf
+        # NICHT als None durchgereicht werden: bei NOT-NULL-Spalten mit
+        # DB-Default (nav_area, is_home, is_published) würde das Pydantic-Enum
+        # sonst auf None validieren und die Antwort kippen — statt dass der
+        # Schema-Default greift. Kein erfundener Ersatzwert, nur Weglassen.
+        return {
+            k: row[k]
+            for k in PageResponse.model_fields
+            if row.get(k) is not None
+        }
 
     @staticmethod
     def _block_row(row: dict) -> dict:

@@ -1,39 +1,49 @@
-// Unterseite einer white-label Agentur-Site (z.B. /ueber-uns, /kontakt) = die im
-// Editor komponierte Seite mit diesem Slug, gerendert pro Custom-Domain.
-import { headers } from "next/headers";
+// Unterseite einer Kunden-Site (z. B. /ueber-uns, /kontakt) = die im Baukasten
+// komponierte Seite mit diesem Slug, gerendert pro Custom-Domain.
 import { notFound } from "next/navigation";
 
 import { BlockRenderer } from "@/components/blocks/block-renderer";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { SiteShell } from "@/components/site-shell";
+import { aktuellerHost } from "@/lib/host";
 import { ladeSeite } from "@/lib/site";
-import { getSiteContext } from "@/lib/site-context";
+import { getSiteContext, navOf } from "@/lib/site-context";
+import { spracheWaehlen } from "@/lib/sprache";
 
 export default async function SlugPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ lang?: string }>;
 }) {
   const { slug } = await params;
+  const { lang } = await searchParams;
   const { branding, unknown } = await getSiteContext();
-  const h = await headers();
-  const host = (h.get("x-forwarded-host") ?? h.get("host") ?? "")
-    .split(":")[0]!
-    .trim()
-    .toLowerCase();
+  const host = await aktuellerHost();
 
   if (unknown || !host) notFound();
 
   const site = await ladeSeite(host, slug);
   if (!site) notFound();
 
+  // Die Sprache der Website, nicht ein festes „de". Vorher rendert JEDE
+  // veröffentlichte Seite mit `NICHT_EDITIERBAR.locale` — also auf Deutsch, auch
+  // die dänische Kundenseite, sobald deren Texte in beiden Sprachen gepflegt
+  // waren.
+  const sprache = spracheWaehlen(branding, lang);
   return (
-    <div className="flex min-h-screen flex-col">
-      <SiteHeader logoSrc={branding?.logo_url} logoAlt={branding?.site_name} siteName={branding?.site_name} />
-      <main className="flex-1">
-        <BlockRenderer blocks={site.blocks} tenantId={site.tenant_id} />
-      </main>
-      <SiteFooter siteName={branding?.site_name} />
-    </div>
+    <SiteShell
+      branding={branding}
+      nav={navOf(branding)}
+      aktiverSlug={slug}
+      jahr={new Date().getFullYear()}
+      sprache={sprache}
+    >
+      <BlockRenderer
+        blocks={site.blocks}
+        tenantId={site.tenant_id}
+        modus={{ aktiv: false, locale: sprache }}
+      />
+    </SiteShell>
   );
 }

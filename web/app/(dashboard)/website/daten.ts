@@ -1,0 +1,78 @@
+// Gemeinsame Server-Daten aller Baukasten-Routen.
+//
+// Jede Route braucht dieselben drei Dinge (Branding, Seiten, Domains) — für die
+// Reiterleiste, den Veröffentlichen-Knopf und die Vorschau. Statt das in fünf
+// `page.tsx` zu kopieren, steht es einmal hier.
+import { type Branding, getBranding, listDomains } from "@/lib/site-config";
+import { listPages } from "@/lib/site-pages";
+
+/** Leeres Branding, wenn noch nie etwas gespeichert wurde.
+ *  Alles auf null: „nicht gesetzt" ist der wahre Zustand, und der Renderer
+ *  entscheidet dann selbst. Kein erfundener Startwert (Wurzel 4). */
+export const LEERES_BRANDING: Branding = {
+  site_name: null,
+  tagline: null,
+  logo_url: null,
+  hero_image_url: null,
+  favicon_url: null,
+  theme: null,
+  primary_color: null,
+  secondary_color: null,
+  background_color: null,
+  foreground_color: null,
+  font_family: null,
+  heading_font: null,
+  button_font: null,
+  button_style: null,
+  button_radius: null,
+  logo_scale: null,
+  about_text: {},
+  contact_text: {},
+  social_links: {},
+  booking_mode: "instant",
+  brand_name_color: null,
+  header_background: null,
+  header_link_color: null,
+  link_color: null,
+  footer_background: null,
+  logo_name_font: null,
+  logo_name_size: null,
+  slogan_font: null,
+  logo_link_url: null,
+  languages: null,
+  default_language: null,
+  // Die drei Booleans tragen HIER die Werte, die auch die Spalten-Defaults
+  // haben (0426). Ein Schalter hat keinen dritten Zustand — anders als eine
+  // Farbe, wo `null` „nie gewählt" heißt und der Renderer entscheidet.
+  show_guest_breakdown: true,
+  show_base_prices: true,
+  head_html: null,
+  head_css: null,
+  custom_js: null,
+  checkout_js: null,
+  cookie_banner: false,
+  cookie_policy_page_id: null,
+  privacy_consent: false,
+  privacy_policy_page_id: null,
+  is_offline: false,
+};
+
+export type BaukastenDaten = Awaited<ReturnType<typeof ladeBaukasten>>;
+
+export async function ladeBaukasten() {
+  const [pagesRes, brandingRes, domainsRes] = await Promise.all([
+    listPages(),
+    getBranding(),
+    listDomains(),
+  ]);
+  return {
+    // 403 auf der Seitenliste heißt: dieser Rolle fehlt MANAGE_SITE_CONFIG.
+    // Der Aufrufer entscheidet, was er damit anzeigt — hier wird nichts
+    // stillschweigend zu einer leeren Liste (sonst sähe „kein Zugriff" aus wie
+    // „noch keine Seiten angelegt").
+    keinZugriff: !pagesRes.ok && pagesRes.status === 403,
+    branding: brandingRes.ok ? brandingRes.data : LEERES_BRANDING,
+    pages: pagesRes.ok ? pagesRes.data.items : [],
+    domains: domainsRes.ok ? domainsRes.data.items : [],
+  };
+}

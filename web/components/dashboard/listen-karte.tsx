@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useId, useState, useTransition } from "react";
 
 import { Card, CardContent } from "@nextdays/ui/card";
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { ChannelLogo } from "@/components/channel-logo";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { OWNER_STAY_ICON } from "@/lib/calendar-status";
@@ -242,6 +243,9 @@ export function ListenKarte({
   empty: string;
 }) {
   const t = useTranslations("reservations");
+  // aria-Label der Info-Punkte: app-weit dieselbe Formulierung, deshalb aus
+  // `common` und nicht je Fläche neu erfunden.
+  const tGemein = useTranslations("common");
   const [fenster, setFenster] = useState<DashboardFenster>(standardFenster);
   const [zeilen, setZeilen] = useState<DashboardEntry[]>(entries);
   const [gesamt, setGesamt] = useState(count);
@@ -279,6 +283,15 @@ export function ListenKarte({
             <h3 className="whitespace-nowrap text-sm font-semibold text-foreground">
               {title}
             </h3>
+            {/* Was die Zahl zählt („Offene, unbestätigte Reservierungen"),
+                steckt hinter dem „i" statt als Zeile unter der Zahl zu stehen.
+                `InfoHinweis` ist ein Popover, kein Tooltip: es öffnet auf
+                Klick und ist damit auch auf dem Tablet erreichbar. */}
+            <InfoHinweis
+              titel={title}
+              text={countLabel}
+              ariaLabel={tGemein("explain", { label: title })}
+            />
           </div>
           <FensterSelektor
             wert={fenster}
@@ -291,7 +304,6 @@ export function ListenKarte({
           <p className="font-display text-4xl font-extrabold leading-none tabular-nums">
             {gesamt}
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">{countLabel}</p>
         </div>
         {fehler ? (
           <p className="border-t border-border pt-3 text-sm text-destructive">

@@ -175,6 +175,33 @@ def normalize_permissions(
     return sorted(picked)
 
 
+def nicht_vergebbar(
+    raw: object, granter: frozenset[Permission] | None, role: UserRole | None = None
+) -> list[str]:
+    """Welche angeforderten Rechte der Vergebende NICHT weitergeben kann.
+
+    Gegenstück zu `normalize_permissions`: die klemmt still (`picked &= allowed`)
+    und gibt nur das Ergebnis zurück. Genau diese Stille war der Fehler — der
+    Aufrufer konnte nicht unterscheiden zwischen „so gewollt" und „die Hälfte
+    ist weggefallen", und die Oberfläche meldete Erfolg.
+
+    LIVE: ein co_admin kann 14 der 50 Rechte nicht weitergeben, darunter
+    `owner_reporting` — das im Eigentümer-Standard steht. Wählte er die Rolle
+    „Eigentümer", legte das System ein Konto mit faktisch EINEM wirksamen Recht
+    an und sagte „gespeichert".
+
+    Leere Liste = nichts verloren. Für `admin` immer leer: er vergibt
+    uneingeschränkt.
+    """
+    if role is UserRole.admin or granter is None:
+        return []
+    if not isinstance(raw, (list, tuple, set, frozenset)):
+        return []
+    valid = {p.value for p in Permission}
+    gewuenscht = {str(x) for x in raw if str(x) in valid}
+    return sorted(gewuenscht - {p.value for p in granter})
+
+
 # Dach-Recht des PM-Moduls: ohne ACCESS_PM_FEATURES ist das GESAMTE PM-Modul
 # dicht — jedes pm_*-Recht wird unwirksam, egal ob es einzeln gesetzt ist. Der
 # Posteingang lebt im PM-Modul (pm_chat), die inbox_*-Rechte hängen an pm_chat
@@ -188,12 +215,64 @@ def _pm_child_permissions() -> frozenset[Permission]:
 _PM_CHILDREN: frozenset[Permission] = _pm_child_permissions()
 
 
-def effective_permissions(role: UserRole | None, stored: object) -> frozenset[Permission]:
+# Rollen, für die das PM-Dach überhaupt gilt: die PMS-Rollen, die im
+# Rechte-Dialog einen PM-Zugriff bekommen oder entzogen kriegen können.
+# `owner` steht bewusst NICHT hier: ein Eigentümer kann ACCESS_PM_FEATURES
+# konstruktiv nie besitzen (`_OWNER` oben enthält es nicht, weil er die
+# Agentur-Fläche nicht haben soll). Er lebt in seinem EIGENEN Portal
+# (`web/app/(portal)/portal/`), und die vier pm_*-Rechte in seinem Standard
+# beschreiben, was er DORT sieht — nicht einen Weg ins PMS.
+#
+# WARUM DIE REGEL HIER STEHT UND NICHT IN permissions.py: sie muss auf BEIDEN
+# Ebenen dieselbe sein. Sie stand nur auf der Capability-Ebene; die
+# Permission-Ebene (`effective_permissions` weiter unten) wandte das Dach
+# stumpf auf jede Rolle an. Ergebnis live am 23.08.2026: von den sechs
+# gespeicherten Eigentümer-Rechten wirkten zwei. Die vier verschluckten
+# (pm_property_area, pm_photo_album, pm_view_property_images,
+# pm_nonrevenue_charts) standen im Rechte-Dialog als gesetzt da und hatten
+# keine Wirkung — ein Schalter ohne Funktion, den niemand als Fehler sieht.
+#
+# Fail-closed (Wurzel 5): unbekannte/fehlende Rolle → das Dach greift. Der
+# Entzug bleibt für admin/co_admin/staff/cleaner voll wirksam.
+_PM_UMBRELLA_ROLES: frozenset[UserRole] = frozenset({
+    UserRole.admin,
+    UserRole.co_admin,
+    UserRole.staff,
+    UserRole.cleaner,
+})
+
+
+def pm_umbrella_applies(role: UserRole | str | None) -> bool:
+    """Gilt das PM-Dach (ACCESS_PM_FEATURES) für diese Rolle?
+
+    Fail-closed (Wurzel 5): unbekannte/fehlende Rolle → True, das Dach greift.
+    Solche Rollen haben ohnehin die leere Capability-Menge
+    (``capabilities_for``), das Ergebnis bleibt also in jedem Fall leer — aber
+    die Regel selbst öffnet nichts, wenn hier je etwas anderes durchkommt."""
+    if role is None:
+        return True
+    try:
+        role_enum = UserRole(role)
+    except ValueError:
+        return True
+    return role_enum in _PM_UMBRELLA_ROLES
+
+
+def effective_permissions(
+    role: UserRole | str | None, stored: object
+) -> frozenset[Permission]:
     """Tatsächliche Berechtigungen eines Nutzers (Admin = alle).
 
     Wendet das PM-Dach an: fehlt ACCESS_PM_FEATURES, werden alle PM-Kind-Rechte
     (pm_*, inbox_*) entfernt — der Entzug des Dach-Rechts sperrt das komplette
-    PM-Modul, serverseitig wie in der UI (Wurzel 3/5)."""
+    PM-Modul, serverseitig wie in der UI (Wurzel 3/5).
+
+    ABER nur für die Rollen, die das Dach tragen können
+    (``pm_umbrella_applies``). Für ``owner`` gilt es nicht: er kann
+    ACCESS_PM_FEATURES konstruktiv nie besitzen, das Dach hätte ihm also
+    ausnahmslos JEDES pm_*-Recht gelöscht. Dieselbe Regel wie auf der
+    Capability-Ebene (``effective_capabilities``) — eine Wahrheit, keine zwei
+    Meinungen."""
     if role is UserRole.admin:
         return _ALL
     if not isinstance(stored, (list, tuple, set, frozenset)):
@@ -204,12 +283,14 @@ def effective_permissions(role: UserRole | None, stored: object) -> frozenset[Pe
             out.add(Permission(str(x)))
         except ValueError:
             continue
-    if Permission.ACCESS_PM_FEATURES not in out:
+    if pm_umbrella_applies(role) and Permission.ACCESS_PM_FEATURES not in out:
         out -= _PM_CHILDREN
     return frozenset(out)
 
 
-def has_permission(role: UserRole | None, stored: object, perm: Permission) -> bool:
+def has_permission(
+    role: UserRole | str | None, stored: object, perm: Permission
+) -> bool:
     return perm in effective_permissions(role, stored)
 
 

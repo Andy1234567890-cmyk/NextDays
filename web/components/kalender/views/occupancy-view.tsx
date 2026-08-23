@@ -19,6 +19,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Prop } from "@/components/kalender/calendar-board";
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { Segmented } from "@nextdays/ui/segmented";
 import { getBoard } from "@/lib/calendar";
 import { usePropertyLabels } from "@/lib/use-property-labels";
@@ -80,6 +81,9 @@ function bookedRuns(
 
 export function CalendarOccupancyView({ properties }: { properties: Prop[] }) {
   const t = useTranslations("calendar");
+  // aria-Label der Info-Punkte: app-weit dieselbe Formulierung, deshalb aus
+  // `common` und nicht je Fläche neu erfunden.
+  const tGemein = useTranslations("common");
   const { typeLabel } = usePropertyLabels();
   const locale = useLocale();
   const WINDOWS = useMemo(
@@ -342,9 +346,22 @@ export function CalendarOccupancyView({ properties }: { properties: Prop[] }) {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
+        {/* Die Bezugsgröße („über 90 Tage", „von 900 möglichen") steckt hinter
+            dem „i" neben der Beschriftung, statt als vierte Zeile unter der
+            Zahl zu stehen — sonst drückt der Erklärtext die Kennzahl, um die
+            es geht, optisch an den Rand. `InfoHinweis` ist ein Popover, kein
+            Tooltip: es öffnet auf Klick und ist damit auch auf dem Tablet
+            erreichbar (packages/ui/src/info-hinweis.tsx). */}
         <Card className="flex flex-col gap-2 p-4">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t("occupancyView.avgOccupancyPrefix")}
+            <InfoHinweis
+              titel={t("occupancyView.avgOccupancyPrefix")}
+              text={t("occupancyView.overDays", { count: windowDays })}
+              ariaLabel={tGemein("explain", {
+                label: t("occupancyView.avgOccupancyPrefix"),
+              })}
+            />
           </span>
           <span className="font-display text-3xl font-bold tabular-nums">
             {Math.round(kpi.avg * 100)}%
@@ -358,35 +375,49 @@ export function CalendarOccupancyView({ properties }: { properties: Prop[] }) {
               style={{ width: `${Math.round(kpi.avg * 100)}%` }}
             />
           </span>
-          <span className="text-xs text-muted-foreground">
-            {t("occupancyView.overDays", { count: windowDays })}
-          </span>
         </Card>
 
         <Card className="flex flex-col gap-2 p-4">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t("occupancyView.kpiBookedNights")}
+            <InfoHinweis
+              titel={t("occupancyView.kpiBookedNights")}
+              text={t("occupancyView.kpiOfNights", { count: kpi.totalNights })}
+              ariaLabel={tGemein("explain", {
+                label: t("occupancyView.kpiBookedNights"),
+              })}
+            />
           </span>
           <span className="font-display text-3xl font-bold tabular-nums">
             {kpi.bookedNights}
           </span>
-          <span className="text-xs text-muted-foreground">
-            {t("occupancyView.kpiOfNights", { count: kpi.totalNights })}
-          </span>
         </Card>
 
+        {/* Beim stärksten Tag wandert nur die ERKLÄRUNG hinter das „i" — der
+            Leerzustand („Keine Belegung") bleibt sichtbarer Text. Eine
+            Fehlanzeige hinter einem Klick zu verstecken hieße, eine leere
+            Kachel ohne Grund zu zeigen. */}
         <Card className="flex flex-col gap-2 p-4">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t("occupancyView.kpiBestDay")}
+            {kpi.best && (
+              <InfoHinweis
+                titel={t("occupancyView.kpiBestDay")}
+                text={`${Math.round(kpi.best.ratio * 100)}% · ${matrix.perDay[kpi.best.key].booked}/${properties.length}`}
+                ariaLabel={tGemein("explain", {
+                  label: t("occupancyView.kpiBestDay"),
+                })}
+              />
+            )}
           </span>
           <span className="font-display text-3xl font-bold capitalize tabular-nums">
             {kpi.best ? fmtDate(kpi.best.key) : "–"}
           </span>
-          <span className="text-xs text-muted-foreground">
-            {kpi.best
-              ? `${Math.round(kpi.best.ratio * 100)}% · ${matrix.perDay[kpi.best.key].booked}/${properties.length}`
-              : t("occupancyView.kpiNoBookings")}
-          </span>
+          {!kpi.best && (
+            <span className="text-xs text-muted-foreground">
+              {t("occupancyView.kpiNoBookings")}
+            </span>
+          )}
         </Card>
       </div>
 

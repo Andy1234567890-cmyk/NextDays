@@ -9,16 +9,20 @@ import { Icon } from "@iconify/react";
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { Button } from "@nextdays/ui/button";
 import { Card } from "@nextdays/ui/card";
 import { Switch } from "@nextdays/ui/switch";
 import {
-  type ChartConfig,
+  Area,
+  AreaChart,
+  CartesianGrid,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  XAxis,
+  YAxis,
+  type ChartConfig,
 } from "@nextdays/ui/chart";
 import { formatCurrency } from "@/lib/currency";
 import {

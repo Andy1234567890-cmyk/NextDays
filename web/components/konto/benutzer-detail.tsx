@@ -88,6 +88,14 @@ export function BenutzerDetail({
   tenantCountry: string | null;
 }) {
   const t = useTranslations("account");
+  const tPermissions = useTranslations("permissions");
+  // Gespeichert, aber ohne Wirkung: das PM-Dach (`access_pm_features`) filtert
+  // `pm_*`/`inbox_*` heraus, wenn es fehlt — und die Rolle „Eigentümer" kann es
+  // nicht tragen. Die Differenz zwischen gespeichert und wirksam war bisher
+  // nirgends benannt.
+  const wirkungslos = (user.stored_permissions ?? []).filter(
+    (id) => !user.permissions.includes(id),
+  );
   const tObj = useTranslations("objects.meta.status");
   const locale = useLocale();
   const router = useRouter();
@@ -321,6 +329,30 @@ export function BenutzerDetail({
             ids={INBOX_PERMISSIONS.map((p) => p.id)}
             gesetzt={user.permissions}
           />
+          {/* Diese Seite zeigt die WIRKSAMEN Rechte — was die Person kann. Ohne
+              den Hinweis unten verschweigt sie aber, dass gespeicherte Rechte
+              wirkungslos sind: das PM-Dach (`access_pm_features`) filtert alle
+              `pm_*`/`inbox_*` heraus, und die Rolle „Eigentümer" kann das Dach
+              nicht tragen. Live standen bei einem Eigentümer 6 Rechte in der
+              Datenbank und 2 auf dieser Seite — die Differenz war nirgends
+              erklärt, und genau das ließ die Rechteverwaltung kaputt aussehen. */}
+          {wirkungslos.length > 0 && (
+            <div className="flex flex-col gap-1.5 rounded-lg bg-muted/50 p-3">
+              <p className="text-sm text-muted-foreground">
+                {t("userDetail.ohneWirkung", { anzahl: wirkungslos.length })}
+              </p>
+              {/* Die Rechte BENENNEN, nicht nur zählen: „4 Berechtigungen
+                  wirken nicht" lässt den Betreiber im Dunkeln, welche gemeint
+                  sind — er kann daraufhin nichts entscheiden. */}
+              <ul className="grid gap-1 sm:grid-cols-2 lg:grid-cols-3">
+                {wirkungslos.map((id) => (
+                  <li key={id} className="text-sm line-through opacity-60">
+                    {tPermissions(`${id}.label`)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </Abschnittskarte>
 

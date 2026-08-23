@@ -1,6 +1,13 @@
 // Gästekarte-Zugriffsmodell im Frontend (Spiegel von guest_masking.py /
 // guests-Service). Leitet aus den effektiven Permissions des Nutzers ab, welche
 // Felder/Aktionen sichtbar sind. Single Source of Truth: die Permission-IDs.
+//
+// Das PM-Dach (`access_pm_features`) wird hier NICHT erneut geprüft, und das
+// ist richtig: `/auth/me` liefert `effective_permissions` (auth/service.py),
+// das Dach ist also schon angewandt, bevor diese Funktion rechnet. Ein
+// `pm_*`-Recht ohne Dach kommt hier nie an. Nur der Rechte-Dialog arbeitet mit
+// `stored_permissions` — dem UNGEFILTERTEN Stand — und muss das Dach selbst
+// abbilden (components/konto/pm-dach.ts).
 import type { UserRole } from "@/lib/account";
 
 export type GuestAccess = {

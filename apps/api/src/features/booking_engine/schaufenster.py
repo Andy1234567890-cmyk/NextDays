@@ -170,6 +170,20 @@ class SchaufensterMixin:
         # (tenant gesetzt) und der explizite Featured-Block (property_ids) sind
         # EIGENE Flächen; sie kuratieren über tenant/property_ids und werden vom
         # Marktplatz-Flag NICHT gefiltert.
+        if tenant is not None and property_ids is None:
+            # Website-Sichtbarkeit ist die dritte Achse (0159): die EIGENE
+            # Kunden-Website zeigt nur Objekte mit listed_on_website=true.
+            #
+            # Das fehlte, und damit war der Schalter im Baukasten wirkungslos:
+            # ein Objekt, das der Betrieb bewusst nicht auf seiner Website haben
+            # wollte (nur Booking.com, nur Marktplatz), erschien dort trotzdem.
+            # Aufgefallen beim Bau des Objekte-Reiters am 23.08.2026.
+            #
+            # Der Featured-Block (property_ids) ist davon bewusst ausgenommen:
+            # wer ein Objekt namentlich auf seine Seite setzt, hat damit
+            # entschieden, dass es dort erscheint — genau wie im
+            # Marktplatz-Zweig darunter.
+            query = query.eq("listed_on_website", True)
         if tenant is None and property_ids is None:
             query = query.eq("listed_on_marketplace", True)
             # Freigabe des Betreibers (0203): auf dem EIGENEN Marktplatz tritt
@@ -307,6 +321,11 @@ class SchaufensterMixin:
                 query = query.not_.in_("tenant_id", gesperrt)
         else:
             query = query.eq("tenant_id", tenant)
+            # Dieselbe Website-Achse wie in `list_listings`. Ohne sie schlüge das
+            # Suchfeld der Kunden-Website ein Ziel vor, dessen Objekte dort gar
+            # nicht erscheinen — genau der Fall, den der Docstring oben
+            # ausschließen soll.
+            query = query.eq("listed_on_website", True)
         rows = fetch_all_rows(query.order("city"))
         return PublicDestinationListResponse(
             items=ziele_aus_objekten(rows, q=q, limit=limit)

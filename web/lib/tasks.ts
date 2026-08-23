@@ -300,10 +300,17 @@ export async function listBookingTasks(
 export async function listMyTasks(filter?: {
   status_bucket?: string;
   property_ids?: string[];
+  /** Beginn des nächsten Tages BEIM NUTZER (ISO mit Zone). Muss vom Browser
+   *  kommen: hier läuft Server-Code, dessen lokale Zeit die des Rechenzentrums
+   *  ist — nicht die des Betriebs. Ohne den Wert teilt der Server die Reiter
+   *  nach seiner Uhr ein, und eine heute später fällige Aufgabe landet unter
+   *  „Bevorstehend". */
+  tagesende?: string;
 }): Promise<Result<TaskListItem[]>> {
   const p = new URLSearchParams();
   if (filter?.status_bucket) p.set("status_bucket", filter.status_bucket);
   for (const id of filter?.property_ids ?? []) p.append("property_id", id);
+  if (filter?.tagesende) p.set("tagesende", filter.tagesende);
   const q = p.toString();
   return call(`/tasks/mine${q ? `?${q}` : ""}`);
 }
@@ -415,6 +422,9 @@ export type TaskFilter = {
   property_ids?: string[];
   assignee_ids?: string[];
   rule_ids?: string[];
+  /** Beginn des nächsten Tages BEIM NUTZER (ISO mit Zone) — siehe
+   *  `listMyTasks`. Kommt aus dem Browser, nicht von hier. */
+  tagesende?: string;
 };
 
 function filterParams(filter?: TaskFilter): URLSearchParams {
@@ -423,6 +433,7 @@ function filterParams(filter?: TaskFilter): URLSearchParams {
   for (const id of filter?.property_ids ?? []) p.append("property_id", id);
   for (const id of filter?.assignee_ids ?? []) p.append("assignee_id", id);
   for (const id of filter?.rule_ids ?? []) p.append("rule_id", id);
+  if (filter?.tagesende) p.set("tagesende", filter.tagesende);
   return p;
 }
 

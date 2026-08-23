@@ -6,6 +6,7 @@
 // Ohne `property_id` kommen die Bewertungen aller Objekte des Betriebs. Gibt es
 // keine veröffentlichte Bewertung, rendert der Block NICHTS — eine leere
 // Sternreihe wäre eine Null-Bewertung (Wurzel 4).
+import { type EditierModus, NICHT_EDITIERBAR, editierbar } from "@/lib/editier-kontext";
 import { pickText } from "@/lib/i18n";
 import {
   KATEGORIEN,
@@ -34,11 +35,14 @@ function Sterne({ wert }: { wert: number }) {
 export async function BewertungenBlock({
   content,
   tenantId,
+  modus = NICHT_EDITIERBAR,
 }: {
   content: Record<string, unknown>;
   tenantId: string;
+  /** Editier-Marker nur in der Entwurfs-Vorschau. */
+  modus?: EditierModus;
 }) {
-  const headline = pickText(content.headline);
+  const headline = pickText(content.headline, modus.locale);
   const propertyId =
     typeof content.property_id === "string" && content.property_id
       ? content.property_id
@@ -55,9 +59,14 @@ export async function BewertungenBlock({
   return (
     <section className="mx-auto max-w-7xl px-6 py-16">
       <div className="flex flex-wrap items-baseline gap-3">
-        <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-          {headline || "Was unsere Gäste sagen"}
-        </h2>
+        {headline ? (
+          <h2
+            {...editierbar(modus, "headline")}
+            className="font-display text-3xl font-semibold tracking-tight md:text-4xl"
+          >
+            {headline}
+          </h2>
+        ) : null}
         <span className="flex items-center gap-2 text-lg">
           <Sterne wert={daten.average} />
           <span className="font-semibold">

@@ -84,6 +84,40 @@ def create_task(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+def _tagesgrenze(wert: str | None) -> datetime | None:
+    """Der vom Client gemeldete Beginn seines NÄCHSTEN Tages (ISO-8601).
+
+    Der Client liefert die Grenze, weil nur er weiß, welcher Tag beim Nutzer
+    läuft: die Zeitzone hängt am Objekt (`properties.timezone`) und eine Liste
+    über mehrere Objekte hat keine einzige richtige — live sind 24 von 43
+    Objekten ohne Zeitzone. Eine hier zu unterstellen wäre ein erfundener Wert
+    (Wurzel 4).
+
+    Fehlt der Wert, bleibt es beim bisherigen Verhalten (ältere App-Fassungen
+    senden ihn nicht). Ein unlesbarer Wert ist dagegen ein Fehler des Aufrufers
+    und wird als solcher gemeldet — angreiferkontrollierter Input darf keinen
+    500 erzeugen (Wurzel 5), und stillschweigend zu ignorieren hieße, eine
+    falsche Liste als richtige auszugeben.
+    """
+    if not wert:
+        return None
+    try:
+        grenze = datetime.fromisoformat(wert)
+    except ValueError as exc:
+        raise TaskError(
+            "tagesende muss ein ISO-8601-Zeitstempel sein.", status_code=422
+        ) from exc
+    if grenze.tzinfo is None:
+        # Ohne Zonenangabe ließe sich der Wert nicht mit `start_at`/`due_at`
+        # (beide zonenbewusst) vergleichen — Python wirft dabei einen
+        # TypeError, also ein 500 auf eine Client-Eingabe.
+        raise TaskError(
+            "tagesende braucht eine Zeitzonenangabe (z. B. +02:00).",
+            status_code=422,
+        )
+    return grenze
+
+
 @router.get("/mine", response_model=list[TaskListItem])
 def my_tasks(
     service: TasksServiceDep,
@@ -92,6 +126,7 @@ def my_tasks(
     ],
     status_bucket: str | None = None,
     property_id: Annotated[list[str] | None, Query()] = None,
+    tagesende: str | None = None,
 ) -> list[TaskListItem]:
     """Dieselbe Tabelle wie Teamaufgaben, hart auf den angemeldeten Nutzer
     gescopt (Wurzel 9). Liefert Objekt, Buchungsreferenz und Checklisten-Stand —
@@ -102,6 +137,7 @@ def my_tasks(
         status_bucket=status_bucket,
         property_ids=property_id,
         ctx=ctx,
+        tagesende=_tagesgrenze(tagesende),
     )
 
 
@@ -119,18 +155,6 @@ def tasks_by_reservation(
     lädt und sonst 404t (Wurzel 9)."""
     try:
         return service.list_by_reservation(_tenant(ctx), reservation_id, ctx)
-    except TaskError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
-
-
-@router.delete("/{task_id}", status_code=204)
-def delete_task(
-    task_id: str,
-    service: TasksServiceDep,
-    ctx: Annotated[AuthContext, Depends(require_permission(Capability.MANAGE_TASKS))],
-) -> None:
-    try:
-        service.delete_task(_tenant(ctx), task_id)
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -446,11 +470,17 @@ def team_tasks(
     property_id: Annotated[list[str] | None, Query()] = None,
     assignee_id: Annotated[list[str] | None, Query()] = None,
     rule_id: Annotated[list[str] | None, Query()] = None,
+    tagesende: str | None = None,
 ) -> list[TaskListItem]:
     """Filter sind MEHRFACH wählbar (Lodgify-Dialoge). `assignee_id=none` meint
     „Nicht zugeordnet"."""
     return service.list_team_tasks(
-        _tenant(ctx), status_bucket, property_id, assignee_id, rule_id
+        _tenant(ctx),
+        status_bucket,
+        property_id,
+        assignee_id,
+        rule_id,
+        tagesende=_tagesgrenze(tagesende),
     )
 
 
@@ -707,5 +737,27 @@ def delete_rule(
 ) -> None:
     try:
         service.delete_rule(_tenant(ctx), rule_id)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# ---------------------------------------------------------------------------
+# GANZ AM ENDE, und das ist Absicht: `/{task_id}` ist ein Platzhalter, der auch
+# auf `costs/<id>` und `rules/<id>` passt. FastAPI prüft die Routen in der
+# Reihenfolge ihrer Registrierung — stand dieser Block oben (so war es bis
+# 23.08.2026), landete ein `DELETE /tasks/costs/<id>` im AUFGABEN-Löscher und
+# der Aufrufer bekam 404 „Aufgabe nicht gefunden", während seine Kostenzeile
+# stehen blieb. Neue Routen mit festem Segment gehören deshalb ÜBER diesen
+# Block, nicht darunter.
+# ---------------------------------------------------------------------------
+
+@router.delete("/{task_id}", status_code=204)
+def delete_task(
+    task_id: str,
+    service: TasksServiceDep,
+    ctx: Annotated[AuthContext, Depends(require_permission(Capability.MANAGE_TASKS))],
+) -> None:
+    try:
+        service.delete_task(_tenant(ctx), task_id, ctx)
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

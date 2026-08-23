@@ -37,17 +37,52 @@ import {
   SidebarTrigger,
 } from "@nextdays/ui/sidebar";
 
+/**
+ * Voraussetzung, unter der ein Menüpunkt erscheint.
+ *
+ * ZWEI Herkünfte, EIN Feld — bewusst kein zweites Filtersystem daneben:
+ *  * `"berichte"`/`"zugaenge"` sind Freigaben des Familienzugangs (0389,
+ *    GET /public-portal/familie/rolle);
+ *  * jeder andere Wert ist eine granulare Berechtigung aus `/auth/me`
+ *    (`MeResponse.permissions`, z. B. `pm_property_area`).
+ * Welcher Fall vorliegt, entscheidet `sichtbar()` an EINER Stelle.
+ */
+type PortalVoraussetzung =
+  | "berichte"
+  | "zugaenge"
+  | "pm_property_area"
+  | "pm_photo_album"
+  | "pm_nonrevenue_charts";
+
 type PortalNavItem = {
   key: string;
   href: string;
   icon: string;
-  /** Nur zeigen, wenn die Finanzberichte freigegeben sind (0389). */
-  braucht?: "berichte" | "zugaenge";
+  /** Ohne Angabe: immer sichtbar. */
+  braucht?: PortalVoraussetzung;
 };
 
 const NAV: readonly PortalNavItem[] = [
   { key: "overview", href: "/portal", icon: "ph:squares-four" },
   { key: "calendar", href: "/portal/kalender", icon: "ph:calendar-blank" },
+  {
+    key: "propertyArea",
+    href: "/portal/objekte",
+    icon: "ph:house-line",
+    braucht: "pm_property_area",
+  },
+  {
+    key: "photoAlbum",
+    href: "/portal/fotoalbum",
+    icon: "ph:images",
+    braucht: "pm_photo_album",
+  },
+  {
+    key: "statistics",
+    href: "/portal/statistiken",
+    icon: "ph:chart-bar",
+    braucht: "pm_nonrevenue_charts",
+  },
   {
     key: "reports",
     href: "/portal/berichte",
@@ -74,6 +109,7 @@ export function PortalSidebar({
   email = "",
   darfBerichte = true,
   darfZugaenge = true,
+  rechte = [],
 }: {
   email?: string;
   /** Aus GET /public-portal/familie/rolle. Voreinstellung `true`, weil der
@@ -83,11 +119,27 @@ export function PortalSidebar({
    *  seine Rechte selbst, ein sichtbarer Punkt führt höchstens zu 403. */
   darfBerichte?: boolean;
   darfZugaenge?: boolean;
+  /** `MeResponse.permissions` aus `/auth/me` (portalGuard liefert `me`).
+   *  Anders als die beiden Freigaben oben ist die Voreinstellung hier LEER:
+   *  ein Recht, das der Server nicht nennt, hat der Zugang nicht — es gibt
+   *  keinen „Normalfall", aus dem sich `pm_photo_album` ableiten ließe
+   *  (Wurzel 4). Sicherheit hängt auch hier nicht daran: die Endpunkte prüfen
+   *  selbst, die Liste ist Kosmetik. */
+  rechte?: readonly string[];
 }) {
   const t = useTranslations("portal.nav");
   const tPortal = useTranslations("portal");
   const pathname = usePathname();
   const router = useRouter();
+
+  // EIN Filter für beide Herkünfte (siehe PortalVoraussetzung).
+  const gewaehrt = new Set(rechte);
+  const sichtbar = (item: PortalNavItem) => {
+    if (!item.braucht) return true;
+    if (item.braucht === "berichte") return darfBerichte;
+    if (item.braucht === "zugaenge") return darfZugaenge;
+    return gewaehrt.has(item.braucht);
+  };
 
   // „/portal" ist nur aktiv, wenn es EXAKT die Übersicht ist — sonst leuchtete
   // der erste Punkt auf jeder Unterseite mit.
@@ -112,11 +164,7 @@ export function PortalSidebar({
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {NAV.filter(
-                (item) =>
-                  (item.braucht !== "berichte" || darfBerichte) &&
-                  (item.braucht !== "zugaenge" || darfZugaenge),
-              ).map((item) => (
+              {NAV.filter(sichtbar).map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild

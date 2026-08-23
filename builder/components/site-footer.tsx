@@ -1,15 +1,121 @@
-// Schlanker, neutraler Footer der white-label Agentur-Site. Zeigt den Marken-
-// namen der Agentur (aus dem Branding) — KEIN myBestDays-Marktplatz-Inhalt,
-// keine festen Reiseziele. Inhalte gehören in einen Kontakt-/Text-Block der Seite.
-export function SiteFooter({ siteName }: { siteName?: string | null }) {
-  const year = 2026;
+// Fußzeile einer Kunden-Site: Marke, Fußzeilen-Menü, Social-Links.
+//
+// Das Fußzeilen-Menü ist eine EIGENE Achse (`nav.footer`, 0421) — Impressum,
+// Datenschutz und AGB gehören dorthin und nicht in die Kopfzeile. Vorher gab es
+// diese Achse nicht: rechtliche Seiten waren entweder in der Hauptnavigation
+// oder unerreichbar.
+//
+// KEIN myBestDays-Marktplatz-Inhalt, keine festen Reiseziele. Inhalte gehören in
+// einen Abschnitt der Seite.
+import Link from "next/link";
+
+import type { NavItem, SiteBranding } from "@/lib/site-context";
+import { themeOf } from "@/lib/theme";
+
+// Social-Netzwerke, die wir in der Fußzeile zeigen. Reihenfolge = Anzeigeordnung;
+// nur Schlüssel aus dieser Liste werden gerendert, damit ein beliebiger Eintrag
+// in `social_links` keinen unbekannten Link in die Seite schreibt.
+const SOCIAL: Array<{ key: string; label: string }> = [
+  { key: "instagram", label: "Instagram" },
+  { key: "facebook", label: "Facebook" },
+  { key: "youtube", label: "YouTube" },
+  { key: "linkedin", label: "LinkedIn" },
+  { key: "pinterest", label: "Pinterest" },
+  { key: "tiktok", label: "TikTok" },
+];
+
+/** Nur http(s) durchlassen. Die Werte stammen aus Kundeneingabe und landen in
+ *  einem href — ein `javascript:`-Schema darf hier nicht ankommen (Wurzel 8).
+ *  Das Backend validiert beim Speichern; dies ist der Backstop beim Rendern. */
+function sichereUrl(raw: string | undefined): string | null {
+  if (!raw) return null;
+  const v = raw.trim();
+  return /^https?:\/\//i.test(v) ? v : null;
+}
+
+function pfad(slug: string): string {
+  return slug ? `/${slug}` : "/";
+}
+
+export function SiteFooter({
+  branding,
+  nav,
+  jahr,
+}: {
+  branding: SiteBranding | null | undefined;
+  nav: NavItem[];
+  /** Anzeigejahr. Wird vom Aufrufer übergeben, damit der Renderer keine eigene
+   *  Uhr befragt und der Wert im Server-Render stabil bleibt. */
+  jahr: number;
+}) {
+  const theme = themeOf(branding);
+  const social = SOCIAL.map((s) => ({
+    ...s,
+    url: sichereUrl(branding?.social_links?.[s.key]),
+  })).filter((s) => s.url);
+
+  // Beim seitlichen Skelett steht der Inhalt in einer Spalte rechts — die
+  // Fußzeile bleibt linksbündig statt zentriert, sonst kippt die Optik.
+  const zentriert = theme !== "seitlich";
+
   return (
-    <footer className="border-t border-border bg-secondary/30">
-      <div className="mx-auto flex max-w-7xl flex-col items-center gap-1 px-6 py-8 text-center text-sm text-muted-foreground">
-        <p>
-          © {year} {siteName ?? ""}
-        </p>
-        <p className="text-xs">Powered by myNextDays</p>
+    <footer
+      // Eigene Fußzeilen-Farbe, falls gesetzt (0426). Ist keine gesetzt, bleibt
+      // `bg-secondary/30`; beides gleichzeitig würde um dieselbe Eigenschaft
+      // streiten, deshalb fällt die Klasse dann weg.
+      style={
+        branding?.footer_background
+          ? { backgroundColor: branding.footer_background }
+          : undefined
+      }
+      className={
+        "mt-auto border-t border-border" +
+        (branding?.footer_background ? "" : " bg-secondary/30")
+      }
+    >
+      <div
+        className={
+          "mx-auto flex max-w-7xl flex-col gap-4 px-6 py-10 " +
+          (zentriert ? "items-center text-center" : "items-start text-left")
+        }
+      >
+        {nav.length > 0 ? (
+          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm">
+            {nav.map((item) => (
+              <Link
+                key={item.slug}
+                href={pfad(item.slug)}
+                className="font-medium text-foreground/80 transition hover:text-primary"
+              >
+                {item.title}
+              </Link>
+            ))}
+          </nav>
+        ) : null}
+
+        {social.length > 0 ? (
+          <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm">
+            {social.map((s) => (
+              <li key={s.key}>
+                <a
+                  href={s.url as string}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="text-muted-foreground transition hover:text-primary"
+                >
+                  {s.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        <div className="text-sm text-muted-foreground">
+          <p>
+            © {jahr} {branding?.site_name ?? ""}
+          </p>
+          <p className="text-xs">Powered by myNextDays</p>
+        </div>
       </div>
     </footer>
   );

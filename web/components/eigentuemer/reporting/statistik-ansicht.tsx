@@ -16,13 +16,19 @@ import { Icon } from "@iconify/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, XAxis } from "recharts";
 
 import { Card } from "@nextdays/ui/card";
 import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Cell,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  Pie,
+  PieChart,
+  XAxis,
   type ChartConfig,
 } from "@nextdays/ui/chart";
 import { DatePicker } from "@nextdays/ui/date-picker";

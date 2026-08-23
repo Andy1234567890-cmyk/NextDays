@@ -24,6 +24,8 @@ import { OwnerTabs } from "@/navigation/OwnerTabs";
 import type { RootStackParamList } from "@/navigation/types";
 import HostLogin from "@/screens/HostLogin";
 import HostPasswortVergessen from "@/screens/HostPasswortVergessen";
+import OwnerPhotoAlbum from "@/screens/OwnerPhotoAlbum";
+import OwnerPropertyDetail from "@/screens/OwnerPropertyDetail";
 import PropertyCustomFields from "@/screens/PropertyCustomFields";
 import PropertyGuestGuide from "@/screens/PropertyGuestGuide";
 import PropertyGuestGuideText from "@/screens/PropertyGuestGuideText";
@@ -141,6 +143,18 @@ function Root() {
             <Stack.Screen name="PropertyCustomFields" component={PropertyCustomFields} />
             <Stack.Screen name="PropertyGuestGuide" component={PropertyGuestGuide} />
             <Stack.Screen name="PropertyGuestGuideText" component={PropertyGuestGuideText} />
+            {/* Eigentümer-Zweig: die beiden lesenden Portal-Screens existieren
+                NUR im Eigentümer-Erlebnis. Getrennt statt versteckt — dieselbe
+                Linie, mit der OwnerTabs keine Agentur-Screens verlinkt. Sie
+                tragen bewusst KEINEN Deep-Link: erreichbar sind sie über die
+                Objektliste, nicht über eine URL, die auch in der Agentur-Welt
+                gälte. */}
+            {target?.route === "OwnerTabs" && (
+              <>
+                <Stack.Screen name="OwnerPropertyDetail" component={OwnerPropertyDetail} />
+                <Stack.Screen name="OwnerPhotoAlbum" component={OwnerPhotoAlbum} />
+              </>
+            )}
           </>
         ) : (
           <>

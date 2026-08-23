@@ -1,12 +1,19 @@
 // Schlanke Render-Blöcke auf Template-Niveau: Bild, Galerie, Button, Spacer,
 // Kontakt. Großzügige Aspect-Ratios, Rundungen, Hover-States, Lesetypografie.
+import { type EditierModus, NICHT_EDITIERBAR, editierbar } from "@/lib/editier-kontext";
 import { pickText } from "@/lib/i18n";
 
-export function ImageBlock({ content }: { content: Record<string, unknown> }) {
+export function ImageBlock({
+  content,
+  modus = NICHT_EDITIERBAR,
+}: {
+  content: Record<string, unknown>;
+  modus?: EditierModus;
+}) {
   const url = typeof content.url === "string" ? content.url : null;
   if (!url) return null;
-  const alt = pickText(content.alt);
-  const caption = pickText(content.caption);
+  const alt = pickText(content.alt, modus.locale);
+  const caption = pickText(content.caption, modus.locale);
   return (
     <figure className="mx-auto max-w-5xl px-6 py-12">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -16,7 +23,10 @@ export function ImageBlock({ content }: { content: Record<string, unknown> }) {
         className="w-full rounded-3xl object-cover shadow-sm"
       />
       {caption ? (
-        <figcaption className="mt-3 text-center text-sm text-muted-foreground">
+        <figcaption
+          {...editierbar(modus, "caption")}
+          className="mt-3 text-center text-sm text-muted-foreground"
+        >
           {caption}
         </figcaption>
       ) : null}
@@ -54,8 +64,14 @@ export function GalleryBlock({ content }: { content: Record<string, unknown> }) 
   );
 }
 
-export function ButtonBlock({ content }: { content: Record<string, unknown> }) {
-  const label = pickText(content.label);
+export function ButtonBlock({
+  content,
+  modus = NICHT_EDITIERBAR,
+}: {
+  content: Record<string, unknown>;
+  modus?: EditierModus;
+}) {
+  const label = pickText(content.label, modus.locale);
   const href = typeof content.href === "string" ? content.href : null;
   if (!label || !href) return null;
   const secondary = content.variant === "secondary";
@@ -63,11 +79,12 @@ export function ButtonBlock({ content }: { content: Record<string, unknown> }) {
     <div className="mx-auto max-w-3xl px-6 py-8 text-center">
       <a
         href={href}
+        {...editierbar(modus, "label")}
         className={
-          "inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-semibold transition hover:-translate-y-0.5 " +
+          "btn-marke inline-flex items-center gap-2 px-8 py-4 text-base font-semibold transition hover:-translate-y-0.5 " +
           (secondary
             ? "border border-border text-foreground hover:bg-secondary"
-            : "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:shadow-xl")
+            : "btn-marke-primaer bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:shadow-xl")
         }
       >
         {label}
@@ -88,16 +105,25 @@ export function SpacerBlock({ content }: { content: Record<string, unknown> }) {
   return <div style={{ height: SPACER_REM[size] ?? SPACER_REM.md }} />;
 }
 
-export function ContactBlock({ content }: { content: Record<string, unknown> }) {
-  const headline = pickText(content.headline);
+export function ContactBlock({
+  content,
+  modus = NICHT_EDITIERBAR,
+}: {
+  content: Record<string, unknown>;
+  modus?: EditierModus;
+}) {
+  const headline = pickText(content.headline, modus.locale);
   const email = typeof content.email === "string" ? content.email : null;
   const phone = typeof content.phone === "string" ? content.phone : null;
-  const address = pickText(content.address);
+  const address = pickText(content.address, modus.locale);
   return (
     <section className="mx-auto max-w-5xl px-6 py-20">
       <div className="rounded-3xl bg-secondary/40 px-8 py-12 md:px-14">
         {headline ? (
-          <h2 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
+          <h2
+            {...editierbar(modus, "headline")}
+            className="font-display text-3xl font-semibold tracking-tight md:text-4xl"
+          >
             {headline}
           </h2>
         ) : null}

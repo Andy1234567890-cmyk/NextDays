@@ -364,6 +364,46 @@ function getPayloadConfigFromPayload(
   return configLabelKey in config ? config[configLabelKey] : config[key]
 }
 
+// Die recharts-Primitiven werden hier MIT exportiert — und Verbraucher müssen
+// sie von hier holen, nicht direkt aus "recharts".
+//
+// WARUM: recharts reicht die berechnete Diagrammgröße über einen React-Context
+// weiter (`ResponsiveContainerContextProvider` in ResponsiveContainer). Ein
+// React-Context ist an die MODULINSTANZ gebunden, nicht an den Paketnamen.
+// Im Monorepo liegen zwei physisch getrennte recharts-Kopien — `packages/ui`
+// und `web` haben je einen eigenen Eintrag im bun-Store (verschiedene Inodes,
+// gleiche Version 3.8.1). Holte der Verbraucher `ChartContainer` von hier und
+// `BarChart` aus "recharts", stammten beide aus VERSCHIEDENEN Instanzen: der
+// Provider der einen füllte einen Context, den die andere nie liest. Das
+// Diagramm fiel auf den Vorgabewert `{ width: -1, height: -1 }` zurück und
+// rendert dann gar nichts — ein leerer, korrekt bemessener Kasten ohne SVG,
+// ohne Fehlermeldung in der Konsole. Genau so waren die drei Diagramme im
+// Eigentümer-Portal leer.
+//
+// Ein Re-Export erzwingt EINE Instanz und macht den Fehler strukturell
+// unmöglich, statt ihn von einer sauberen Installation abhängig zu machen.
+export {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  PolarAngleAxis,
+  PolarGrid,
+  RadialBar,
+  RadialBarChart,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts"
+
 export {
   ChartContainer,
   ChartTooltip,

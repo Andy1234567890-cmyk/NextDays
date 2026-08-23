@@ -2,7 +2,7 @@
   "name": "nextdays-builder",
   "version": "0.1.0",
   "private": true,
-  "description": "NextDays — White-Label-Buchungs-Sites pro Agentur (Host→Tenant, eigene Custom-Domain + Branding). Getrennt vom globalen Marktplatz (plattform/).",
+  "description": "NextDays \u2014 White-Label-Buchungs-Sites pro Agentur (Host\u2192Tenant, eigene Custom-Domain + Branding). Getrennt vom globalen Marktplatz (plattform/).",
   "scripts": {
     "dev": "next dev --port 3200",
     "build": "next build",
@@ -13,6 +13,7 @@
   "dependencies": {
     "@iconify/react": "^6.0.2",
     "@nextdays/currency": "workspace:*",
+    "@nextdays/security-headers": "workspace:*",
     "@stripe/react-stripe-js": "^6.6.0",
     "@stripe/stripe-js": "^9.8.0",
     "motion": "^12.40.0",

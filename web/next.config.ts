@@ -53,6 +53,18 @@ const nextConfig: NextConfig = {
         headers: securityHeaders({
           dev: process.env.NODE_ENV !== "production",
           googleMaps: true,
+          // Der Website-Baukasten bettet die Live-Vorschau der Kunden-Site per
+          // iframe ein — den ECHTEN Renderer, nicht eine zweite Nachbildung der
+          // Abschnitte. Ohne diesen Eintrag greift `default-src 'self'` und der
+          // iframe bleibt still leer (kein Fehler im Code, keine Meldung außer
+          // einer CSP-Zeile in der Browser-Konsole).
+          //
+          // Nur der eine Origin, und nur wenn er konfiguriert ist: ohne die
+          // Variable bleibt die CSP eng und der Baukasten zeigt statt der
+          // Vorschau einen Hinweis (fail-closed, kein geratener Host).
+          frameSrc: process.env.NEXT_PUBLIC_BUILDER_URL
+            ? [process.env.NEXT_PUBLIC_BUILDER_URL]
+            : [],
         }),
       },
     ];

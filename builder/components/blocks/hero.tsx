@@ -5,6 +5,7 @@
 // eingebetteter Such-Slot (children) — die Buchung sitzt direkt im Hero.
 import type { CSSProperties, ReactNode } from "react";
 
+import { type EditierModus, NICHT_EDITIERBAR, editierbar } from "@/lib/editier-kontext";
 import { fontStack } from "@/lib/fonts-catalog";
 import { pickText } from "@/lib/i18n";
 
@@ -20,14 +21,16 @@ function headingStyle(content: Record<string, unknown>): CSSProperties {
 export function HeroBlock({
   content,
   children,
+  modus = NICHT_EDITIERBAR,
 }: {
   content: Record<string, unknown>;
   children?: ReactNode;
+  modus?: EditierModus;
 }) {
-  const heading = pickText(content.heading);
-  const subheading = pickText(content.subheading);
-  const eyebrow = pickText(content.eyebrow);
-  const ctaLabel = pickText(content.cta_label);
+  const heading = pickText(content.heading, modus.locale);
+  const subheading = pickText(content.subheading, modus.locale);
+  const eyebrow = pickText(content.eyebrow, modus.locale);
+  const ctaLabel = pickText(content.cta_label, modus.locale);
   const ctaHref = typeof content.cta_href === "string" ? content.cta_href : null;
   const imageUrl =
     typeof content.image_url === "string" ? content.image_url : null;
@@ -38,7 +41,10 @@ export function HeroBlock({
   const hStyle = headingStyle(content);
 
   const eyebrowEl = eyebrow ? (
-    <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-primary">
+    <p
+      {...editierbar(modus, "eyebrow")}
+      className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-primary"
+    >
       {eyebrow}
     </p>
   ) : null;
@@ -47,7 +53,8 @@ export function HeroBlock({
     ctaLabel && ctaHref ? (
       <a
         href={ctaHref}
-        className="mt-8 inline-flex items-center gap-2 rounded-full bg-primary px-8 py-4 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:shadow-xl"
+        {...editierbar(modus, "cta_label")}
+        className="btn-marke btn-marke-primaer mt-8 inline-flex items-center gap-2 bg-primary px-8 py-4 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:shadow-xl"
       >
         {ctaLabel}
       </a>
@@ -74,13 +81,17 @@ export function HeroBlock({
           {heading ? (
             <h1
               style={hStyle}
+              {...editierbar(modus, "heading")}
               className="font-display text-4xl font-semibold leading-[1.05] tracking-tight text-foreground md:text-6xl"
             >
               {heading}
             </h1>
           ) : null}
           {subheading ? (
-            <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground">
+            <p
+              {...editierbar(modus, "subheading")}
+              className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground"
+            >
               {subheading}
             </p>
           ) : null}
@@ -118,13 +129,17 @@ export function HeroBlock({
       >
         <div className={centered ? "mx-auto max-w-3xl" : "max-w-3xl"}>
           {eyebrow ? (
-            <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-white/80">
+            <p
+              {...editierbar(modus, "eyebrow")}
+              className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-white/80"
+            >
               {eyebrow}
             </p>
           ) : null}
           {heading ? (
             <h1
               style={hStyle}
+              {...editierbar(modus, "heading")}
               className="font-display text-5xl font-semibold leading-[1.02] tracking-tight text-white drop-shadow-sm md:text-7xl"
             >
               {heading}
@@ -132,6 +147,7 @@ export function HeroBlock({
           ) : null}
           {subheading ? (
             <p
+              {...editierbar(modus, "subheading")}
               className={
                 "mt-6 text-lg leading-relaxed text-white/90 md:text-xl " +
                 (centered ? "mx-auto max-w-2xl" : "max-w-2xl")

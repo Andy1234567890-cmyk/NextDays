@@ -280,14 +280,23 @@ class TaxSyncMixin(TaxRegimeMixin):
         )
         fehlend = sorted(gebraucht - set(scope_je_plan.values()))
         if fehlend:
-            neu = self._kanalplaene_nachziehen(
+            nachgezogen = self._kanalplaene_nachziehen(
                 db, tenant_id, property_id, fehlend
             )
-            if neu:
-                plan_ids = list(dict.fromkeys([*plan_ids, *neu]))
-                scope_je_plan = self._portal_scope_je_channex_plan(
-                    db, tenant_id, property_id
-                )
+            # IMMER neu lesen, nicht nur bei Erfolg: `_kanalplaene_nachziehen`
+            # nimmt einen Plan zurück, der am Kanal nicht ankam. Ein danach
+            # weiterverwendeter alter Stand würde ein Tax-Set an eine Rate
+            # hängen, die es nicht mehr gibt (Wurzel 1).
+            scope_je_plan = self._portal_scope_je_channex_plan(
+                db, tenant_id, property_id
+            )
+            if nachgezogen:
+                plan_ids = list(dict.fromkeys([*plan_ids, *nachgezogen]))
+            # Ein zurückgenommener Plan darf nicht in der Liste bleiben: sein
+            # Channex-Gegenstück ist stillgelegt, ein Tax-Set daran wäre ins
+            # Leere gehängt.
+            noch_da = set(self._alle_channex_plaene(db, tenant_id, property_id))
+            plan_ids = [rp for rp in plan_ids if rp in noch_da]
 
         plaene_je_portal: dict[str, list[str]] = {}
         standard_plans: list[str] = []
@@ -800,13 +809,36 @@ class TaxSyncMixin(TaxRegimeMixin):
     def _kanalplaene_nachziehen(
         self, db: Client, tenant_id: str, property_id: str, portale: list[str]
     ) -> list[str]:
-        """Fehlende Kanal-Pläne für Portale anlegen, die ein eigenes Tax-Set
-        brauchen. Gibt die neuen Channex-Rate-Plan-IDs zurück.
+        """Fehlende Kanal-Pläne anlegen UND am Kanal ihres Portals zuordnen.
+
+        Gibt die Channex-Rate-Plan-IDs zurück, die WIRKSAM sind — also die, deren
+        Zuordnung am Kanal des Portals steht.
 
         `offset_percent = 0`: gewollt ist kein anderer Preis, nur eine andere
         Steuer-Zusammenstellung. Gibt es keinen Grundpreis-Plan, wird NICHTS
         angelegt (kein erfundener Preis, Wurzel 4) — dann bleibt es bei der
         Warnung des Aufrufers.
+
+        WARUM DIE ZUORDNUNG DAZUGEHÖRT (Wurzel 1, live gemessen 23.08.2026):
+        Diese Methode legte den Plan an und war fertig. Die Kanal-Zuordnung —
+        der Teil, der den Plan überhaupt wirksam macht — zog sie NICHT mit;
+        `_swap_channel_rate_plan` wurde von hier nie gerufen. Ergebnis: 18
+        Zeilen `rate_plans` mit `portal_scope='BookingCom'` und
+        `offset_percent = 0`, alle mit Channex-Rate-Plan und eigenem Tax-Set,
+        aber am Kanal lasen 17 von 18 Portalen nur die Standard-Rate. Wir
+        pushten auf zwei Channex-Rate-Plans, das Portal las einen: jeder ARI-
+        Push lief doppelt, und das portal-eigene Tax-Set hing an einer Rate,
+        die kein Portal kannte — die Sonderzusammenstellung kam nie an.
+
+        Der Plan ist damit kein Selbstzweck: sein EINZIGER Grund ist, das
+        portal-eigene Tax-Set zu tragen (Channex führt `tax_set_id` am
+        Rate-Plan, es gibt keine Kanal-Achse an der Steuer). Ein Plan, den der
+        Kanal nicht liest, trägt das Set an kein Portal — er ist ein Schalter
+        ohne Funktion und kostet zusätzlich einen doppelten Push. Deshalb gilt
+        hier ALLES ODER NICHTS: gelingt die Zuordnung nicht, wird der Plan
+        wieder entfernt und der Aufrufer meldet `channex_portal_ohne_kanalplan`
+        — die ehrliche Aussage „dieses Portal hängt am Standard-Set" statt
+        einer stillen Attrappe.
         """
         standard = (
             db.table("rate_plans")
@@ -820,7 +852,7 @@ class TaxSyncMixin(TaxRegimeMixin):
         if not standard:
             return []
         basis = standard[0]
-        angelegt = False
+        neu_je_portal: dict[str, str] = {}
         for portal in portale:
             # Idempotent: einen vorhandenen Plan nicht doppeln (Wurzel 2). Der
             # Unique-Index (property_id, portal_scope) wäre der Backstop.
@@ -832,6 +864,17 @@ class TaxSyncMixin(TaxRegimeMixin):
                 .limit(1)
                 .execute()
             ).data:
+                continue
+            # Kein Kanal, kein Plan. Ohne verbundenen Kanal gibt es niemanden,
+            # der die Rate lesen könnte — der Plan wäre von Geburt an die
+            # Attrappe, die dieser Fix beseitigt.
+            if not self._kanal_id_fuer_portal(db, tenant_id, property_id, portal):
+                log.info(
+                    "channex_kanalplan_uebersprungen_ohne_kanal",
+                    tenant_id=tenant_id,
+                    property_id=property_id,
+                    portal=portal,
+                )
                 continue
             db.table("rate_plans").insert(
                 {
@@ -850,26 +893,167 @@ class TaxSyncMixin(TaxRegimeMixin):
                     "portal_scope": portal,
                 }
             ).execute()
-            angelegt = True
+            lokal = (
+                db.table("rate_plans")
+                .select("id")
+                .eq("property_id", property_id)
+                .eq("portal_scope", portal)
+                .limit(1)
+                .execute()
+            ).data or []
+            if not lokal:
+                log.warning(
+                    "channex_kanalplan_nach_insert_nicht_gefunden",
+                    tenant_id=tenant_id,
+                    property_id=property_id,
+                    portal=portal,
+                )
+                continue
+            neu_je_portal[portal] = lokal[0]["id"]
             log.info(
                 "channex_kanalplan_fuer_steuer_angelegt",
                 tenant_id=tenant_id,
                 property_id=property_id,
                 portal=portal,
             )
-        if not angelegt:
+        if not neu_je_portal:
             return []
-        # Die neuen Pläne brauchen ihr Channex-Gegenstück, bevor ein Tax-Set
-        # daran hängen kann. Das erledigt der Content-Sync; danach stehen sie
-        # in der rate_plan_map.
+        # Die neuen Pläne brauchen ihr Channex-Gegenstück, bevor eine Zuordnung
+        # oder ein Tax-Set daran hängen kann. Das erledigt der Content-Sync;
+        # danach stehen sie in der rate_plan_map.
         self.sync_content(tenant_id, property_id=property_id)  # type: ignore[attr-defined]
+        wirksam: list[str] = []
+        for portal, lokal_id in neu_je_portal.items():
+            if self._kanalplan_zuordnen(
+                db, tenant_id, property_id, portal, lokal_id
+            ):
+                wirksam.append(lokal_id)
+            else:
+                self._kanalplan_zuruecknehmen(
+                    db, tenant_id, property_id, portal, lokal_id
+                )
+        if not wirksam:
+            return []
+        scope_je_cx = self._portal_scope_je_channex_plan(
+            db, tenant_id, property_id
+        )
+        wirksame_portale = {
+            portal for portal, lokal_id in neu_je_portal.items()
+            if lokal_id in wirksam
+        }
         return [
-            cx
-            for cx, portal in self._portal_scope_je_channex_plan(
-                db, tenant_id, property_id
-            ).items()
-            if portal in portale
+            cx for cx, portal in scope_je_cx.items()
+            if portal in wirksame_portale
         ]
+
+    @staticmethod
+    def _kanal_id_fuer_portal(
+        db: Client, tenant_id: str, property_id: str, portal: str
+    ) -> str | None:
+        """Channex-Kanal-ID dieses Objekts an diesem Portal (sonst None).
+
+        property_id ist beim Aufrufer tenant-gescoped; der Filter auf
+        tenant_id bleibt trotzdem stehen (Wurzel 3).
+        """
+        rows = (
+            db.table("channex_channel_connection")
+            .select("channex_channel_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .eq("ota_portal_code", portal)
+            .limit(1)
+            .execute()
+        ).data or []
+        return str(rows[0]["channex_channel_id"]) if (
+            rows and rows[0].get("channex_channel_id")
+        ) else None
+
+    def _kanalplan_zuordnen(
+        self, db: Client, tenant_id: str, property_id: str,
+        portal: str, lokal_id: str,
+    ) -> bool:
+        """Den neuen Kanal-Plan am Kanal seines Portals zuordnen.
+
+        `_swap_channel_rate_plan` hängt die bestehende Zuordnung des
+        Grundpreis-Plans auf den Kanal-Plan um bzw. legt sie an, wenn der Kanal
+        noch keine Rate trägt — derselbe Baustein, den die Preisänderung nutzt.
+        Genau EINE Rate je Portal, sonst pushten wir weiter doppelt.
+
+        `False` heißt: nicht zugeordnet. Der Aufrufer nimmt den Plan dann
+        zurück. Ein Fehler hier darf den Steuer-Sync nicht kippen — er ist der
+        Nebenpfad (Wurzel 5), das Standard-Set steht bereits.
+        """
+        channel_id = self._kanal_id_fuer_portal(
+            db, tenant_id, property_id, portal
+        )
+        if not channel_id:
+            return False
+        primary_id = self._primary_rate_plan_id(  # type: ignore[attr-defined]
+            db, tenant_id, property_id
+        )
+        if not primary_id:
+            return False
+        try:
+            self._swap_channel_rate_plan(  # type: ignore[attr-defined]
+                db, tenant_id, channel_id,
+                von_lokal=primary_id, nach_lokal=lokal_id,
+            )
+        except (ChannelManagerError, ChannexError) as exc:
+            log.warning(
+                "channex_kanalplan_zuordnung_fehlgeschlagen",
+                tenant_id=tenant_id,
+                property_id=property_id,
+                portal=portal,
+                error=str(exc)[:200],
+            )
+            return False
+        log.info(
+            "channex_kanalplan_zugeordnet",
+            tenant_id=tenant_id,
+            property_id=property_id,
+            portal=portal,
+            channel_id=channel_id,
+        )
+        return True
+
+    def _kanalplan_zuruecknehmen(
+        self, db: Client, tenant_id: str, property_id: str,
+        portal: str, lokal_id: str,
+    ) -> None:
+        """Einen Kanal-Plan zurücknehmen, der am Kanal nicht ankam (Wurzel 1).
+
+        Reihenfolge wie in der Preisänderung: erst das Channex-Gegenstück
+        abräumen, dann die lokale Zeile. Bleibt die lokale Zeile stehen, hält
+        der nächste Lauf den Plan für vorhanden (Idempotenz-Prüfung oben) und
+        legt ihn nie wieder an — die Attrappe wäre dauerhaft.
+
+        Das Channex-seitige Aufräumen ist best-effort: ein dort verbliebener
+        Rate-Plan ohne lokale Zeile wird vom nächsten Content-Sync als verwaist
+        behandelt. Die LOKALE Löschung ist der Punkt und passiert immer.
+        """
+        cx_id = self._channex_id_for_local_plan(  # type: ignore[attr-defined]
+            db, tenant_id, lokal_id
+        )
+        if cx_id:
+            try:
+                db.table("channex_rate_plan_map").update(
+                    {"deleted_at": datetime.now(UTC).isoformat()}
+                ).eq("tenant_id", tenant_id).eq(
+                    "local_rate_plan_id", lokal_id
+                ).is_("deleted_at", "null").execute()
+            except APIError as exc:  # noqa: BLE001 — best-effort, siehe Docstring
+                log.warning(
+                    "channex_kanalplan_map_stilllegen_fehlgeschlagen",
+                    property_id=property_id, portal=portal, error=str(exc),
+                )
+        db.table("rate_plans").delete().eq("id", lokal_id).execute()
+        log.warning(
+            "channex_kanalplan_zurueckgenommen",
+            tenant_id=tenant_id,
+            property_id=property_id,
+            portal=portal,
+            channex_rate_plan_id=cx_id,
+        )
 
     def _prune_portal_tax_sets(
         self,

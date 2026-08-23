@@ -61,21 +61,37 @@ from .schemas import (
     MeterReadingCreate,
     MeterReadingItem,
     MeterReadingList,
+    PortalAlbumGroup,
     PortalCalendarDay,
     PortalCalendarResponse,
     PortalEarningsItem,
     PortalEarningsResponse,
+    PortalImage,
+    PortalImageList,
     PortalNightBooking,
+    PortalPhotoAlbum,
     PortalProperty,
+    PortalPropertyDetail,
     PortalPropertyList,
     PortalStatementItem,
     PortalStatementList,
+    PortalStatisticsResponse,
     SliceHealth,
 )
+from .statistik import berechne_statistik
 
 log = get_logger("nextdays.public_portal")
 
 _CENT = Decimal("0.01")
+
+# Harte Obergrenzen der neuen Lesepfade (Wurzel 8: kein unbegrenzter Bereich).
+# Sie sind so gewählt, dass sie im Alltag nie greifen — ein Objekt hat selten
+# mehr als 60 Bilder, ein Eigentümer selten mehr als eine Handvoll Objekte.
+MAX_BILDER_JE_OBJEKT = 300
+MAX_BILDER_JE_ALBUM = 2000
+# Zwei Jahre. Genug für „dieses Jahr gegen letztes", und die Obergrenze, ab
+# der eine Portal-Abfrage zum Bestandsdump würde.
+MAX_STATISTIK_TAGE = 730
 
 
 def _money(value: Decimal) -> float:
@@ -323,6 +339,287 @@ class PublicPortalService:
         ]
         return PortalPropertyList(items=items, total=len(items))
 
+    # --- Objektbereich / Bilder / Fotoalbum / Statistik (lesend) -------------
+    #
+    # Die vier Flächen zu den Rechten pm_property_area,
+    # pm_view_property_images, pm_photo_album und pm_nonrevenue_charts. Alle
+    # rein lesend (§4.2) und alle OHNE Geldfeld: die Spalten sind darum
+    # einzeln aufgezählt, nie `select("*")` — ein Stern zöge `deposit_amount`,
+    # `total_amount` und die Rate-Daten mit herein, und niemand sähe es der
+    # Zeile an.
+
+    def property_detail(
+        self, ctx: AuthContext, property_id: str
+    ) -> PortalPropertyDetail:
+        """Der Objektbereich EINES eigenen Objekts, lesend.
+
+        Fremde/unbekannte ID → 404 (nicht 403): die Existenz fremder Objekte
+        wird nicht verraten. Denselben Scope prüft die Liste `my_properties`
+        (Wurzel 9).
+        """
+        tenant_id, _ = self._require(ctx)
+        self._require_own(ctx, property_id)
+        rows = (
+            self._db.table("properties")
+            .select(
+                "id, title, description, property_type, category_slug, "
+                "subtype_slug, listing_type, total_rooms, status, "
+                "street, house_number, postal_code, city, country, lat, lng, "
+                "timezone, max_guests, floors_total, floor_number, year_built, "
+                "size_value, size_unit, bfe_number, amenities, room_amenities"
+            )
+            .eq("id", property_id)
+            # Tenant-Filter zusätzlich zur Zuordnung: Load und Scope in
+            # DERSELBEN Abfrage (Wurzel 3), damit kein späterer Umbau die
+            # beiden trennt.
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise PortalError("Objekt nicht gefunden.", status_code=404)
+        row = rows[0]
+        log.info(
+            "portal_objektbereich", user_id=ctx.user_id, property_id=property_id
+        )
+        return PortalPropertyDetail(
+            id=str(row["id"]),
+            title=row.get("title") or "",
+            description=row.get("description"),
+            property_type=row.get("property_type"),
+            category_slug=row.get("category_slug"),
+            subtype_slug=row.get("subtype_slug"),
+            listing_type=row.get("listing_type"),
+            total_rooms=row.get("total_rooms"),
+            status=row.get("status"),
+            street=row.get("street"),
+            house_number=row.get("house_number"),
+            postal_code=row.get("postal_code"),
+            city=row.get("city"),
+            country=row.get("country"),
+            lat=row.get("lat"),
+            lng=row.get("lng"),
+            timezone=row.get("timezone"),
+            max_guests=row.get("max_guests"),
+            floors_total=row.get("floors_total"),
+            floor_number=row.get("floor_number"),
+            year_built=row.get("year_built"),
+            size_value=row.get("size_value"),
+            size_unit=row.get("size_unit"),
+            bfe_number=row.get("bfe_number"),
+            amenities=list(row.get("amenities") or []),
+            room_amenities=list(row.get("room_amenities") or []),
+            units_total=self._einheiten_zahl(property_id),
+            cover_image_url=self._titelbild(property_id),
+        )
+
+    def _titelbild(self, property_id: str) -> str | None:
+        """URL des Titelbilds oder None — nie ein Platzhalterbild (Wurzel 4)."""
+        rows = (
+            self._db.table("property_photos")
+            .select("url, is_cover, sort_order")
+            .eq("property_id", property_id)
+            .order("is_cover", desc=True)
+            .order("sort_order")
+            .limit(1)
+            .execute()
+        ).data or []
+        return str(rows[0]["url"]) if rows else None
+
+    def property_images(
+        self, ctx: AuthContext, property_id: str
+    ) -> PortalImageList:
+        """Die Bilder EINES eigenen Objekts (`property_photos`, 0061).
+
+        `url` geht so hinaus, wie sie gespeichert ist: der Bucket
+        `property-images` ist öffentlich (0062, damit anonyme Gäste die
+        Buchungsstrecke laden können). Eine signierte URL wäre hier eine
+        Erfindung ohne Gegenwert — sie liefe ab, während die Datei weiter
+        öffentlich erreichbar bliebe.
+        """
+        self._require_own(ctx, property_id)
+        rows = (
+            self._db.table("property_photos")
+            .select("id, property_id, url, sort_order, is_cover, caption, author")
+            .eq("property_id", property_id)
+            .order("sort_order")
+            .limit(MAX_BILDER_JE_OBJEKT)
+            .execute()
+        ).data or []
+        items = [self._bild(r) for r in rows]
+        log.info(
+            "portal_objektbilder",
+            user_id=ctx.user_id,
+            property_id=property_id,
+            anzahl=len(items),
+        )
+        return PortalImageList(
+            property_id=property_id, items=items, total=len(items)
+        )
+
+    def photo_album(self, ctx: AuthContext) -> PortalPhotoAlbum:
+        """Die Bilder ALLER zugeordneten Objekte, je Objekt gruppiert."""
+        ids = self._owned_property_ids(ctx)
+        if not ids:
+            return PortalPhotoAlbum(groups=[], total=0)
+        # Titel UND Ort: zwei gleich benannte Häuser („Strandhus") sind im
+        # Album sonst nicht auseinanderzuhalten.
+        kopf: dict[str, tuple[str, str | None]] = {
+            str(r["id"]): (r.get("title") or "", r.get("city"))
+            for r in (
+                self._db.table("properties")
+                .select("id, title, city")
+                .in_("id", ids)
+                .order("title")
+                .execute()
+            ).data
+            or []
+        }
+        rows = (
+            self._db.table("property_photos")
+            .select("id, property_id, url, sort_order, is_cover, caption, author")
+            .in_("property_id", ids)
+            .order("property_id")
+            .order("sort_order")
+            # Harte Obergrenze (Wurzel 8): ein Eigentümer mit vielen Objekten
+            # zöge sonst eine unbegrenzte Liste. Sie ist so hoch angesetzt,
+            # dass sie im Alltag nie greift.
+            .limit(MAX_BILDER_JE_ALBUM)
+            .execute()
+        ).data or []
+        je_objekt: dict[str, list[PortalImage]] = {pid: [] for pid in kopf}
+        for r in rows:
+            je_objekt.setdefault(str(r["property_id"]), []).append(self._bild(r))
+        groups = [
+            PortalAlbumGroup(
+                property_id=pid,
+                title=kopf.get(pid, ("", None))[0],
+                city=kopf.get(pid, ("", None))[1],
+                items=bilder,
+                total=len(bilder),
+            )
+            # Reihenfolge über die Objekt-Titel, nicht über die Bild-Zeilen.
+            for pid, bilder in sorted(
+                je_objekt.items(), key=lambda kv: (kopf.get(kv[0], ("", None))[0], kv[0])
+            )
+        ]
+        gesamt = sum(g.total for g in groups)
+        log.info(
+            "portal_fotoalbum",
+            user_id=ctx.user_id,
+            objekte=len(groups),
+            bilder=gesamt,
+        )
+        return PortalPhotoAlbum(groups=groups, total=gesamt)
+
+    @staticmethod
+    def _bild(row: dict) -> PortalImage:
+        caption = row.get("caption")
+        return PortalImage(
+            id=str(row["id"]),
+            property_id=str(row["property_id"]),
+            url=str(row["url"]),
+            sort_order=int(row.get("sort_order") or 0),
+            is_cover=bool(row.get("is_cover")),
+            caption=caption if isinstance(caption, dict) else {},
+            author=row.get("author"),
+        )
+
+    def statistics(
+        self,
+        ctx: AuthContext,
+        property_id: str | None,
+        date_from: date | None,
+        date_to: date | None,
+    ) -> PortalStatisticsResponse:
+        """Nicht-Umsatz-Auswertung über die eigenen Objekte.
+
+        Ohne Zeitraum: die letzten zwölf Monate. Die Spanne ist hart auf
+        `MAX_STATISTIK_TAGE` gedeckelt (Wurzel 8) — ohne Deckel ließe sich mit
+        einem Datumspaar über hundert Jahre eine Abfrage über den gesamten
+        Bestand auslösen.
+
+        KEIN GELDFELD: die Abfrage wählt die Betragsspalten gar nicht erst
+        aus. Was nicht geladen wird, kann auch kein späterer Umbau versehentlich
+        ausgeben.
+        """
+        tenant_id, _ = self._require(ctx)
+        von, bis = self._statistik_zeitraum(date_from, date_to)
+        if property_id:
+            # Item-Pfad prüft denselben Scope wie der Listen-Pfad (Wurzel 9).
+            self._require_own(ctx, property_id)
+            ids = [property_id]
+        else:
+            ids = self._owned_property_ids(ctx)
+        einheiten = self._einheiten_je_objekt(ids)
+        units_total = sum(einheiten.values())
+        capacity = units_total * ((bis - von).days + 1)
+        rows: list[dict] = []
+        if ids:
+            rows = fetch_all_rows(
+                self._db.table("reservations")
+                .select(
+                    # Nur, was die Auswertung braucht — keine Beträge, keine
+                    # Währung, keine Gastdaten.
+                    "id, property_id, check_in, check_out, channel, ota_name, "
+                    "booked_at, is_owner_stay"
+                )
+                .eq("tenant_id", tenant_id)
+                .in_("property_id", ids)
+                .in_("status", ["confirmed", "completed"])
+                # Überlappung mit dem Fenster: check_in <= bis UND
+                # check_out > von (check_out ist der Abreisetag, keine Nacht).
+                .lte("check_in", bis.isoformat())
+                .gt("check_out", von.isoformat())
+                .order("id")
+            )
+        log.info(
+            "portal_statistik",
+            user_id=ctx.user_id,
+            property_id=property_id,
+            objekte=len(ids),
+            von=von.isoformat(),
+            bis=bis.isoformat(),
+            buchungen=len(rows),
+        )
+        return berechne_statistik(
+            property_id=property_id,
+            rows=rows,
+            date_from=von,
+            date_to=bis,
+            capacity_unit_nights=capacity,
+            units_total=units_total,
+        )
+
+    @staticmethod
+    def _statistik_zeitraum(
+        date_from: date | None, date_to: date | None
+    ) -> tuple[date, date]:
+        """Zeitraum prüfen und deckeln — 422 statt einer stillen Kürzung.
+
+        Eine stillschweigend gekürzte Spanne wäre die schlimmere Antwort: die
+        Oberfläche zeigte eine Auslastung, die zu einem anderen Zeitraum
+        gehört als der, der darübersteht (Wurzel 4).
+        """
+        if (date_from is None) != (date_to is None):
+            raise PortalError(
+                "Zeitraum unvollständig: from und to gehören zusammen.",
+                status_code=422,
+            )
+        if date_from is None or date_to is None:
+            heute = date.today()
+            return heute - timedelta(days=364), heute
+        if date_to < date_from:
+            raise PortalError(
+                "Zeitraum ungültig: to liegt vor from.", status_code=422
+            )
+        if (date_to - date_from).days + 1 > MAX_STATISTIK_TAGE:
+            raise PortalError(
+                f"Zeitraum zu groß: höchstens {MAX_STATISTIK_TAGE} Tage.",
+                status_code=422,
+            )
+        return date_from, date_to
+
     # --- Kalender (maskiert) -------------------------------------------------
 
     def calendar(  # noqa: PLR0914 — ein Kalendertag trägt viele Einzelwerte
@@ -432,13 +729,29 @@ class PublicPortalService:
         dokumentierte Datenmodell: „im Normalfall genau eine" (CLAUDE.md), und
         der ganze Altbestand vor 0265 hat gar keine Zeile.
         """
+        return self._einheiten_je_objekt([property_id])[property_id]
+
+    def _einheiten_je_objekt(self, property_ids: list[str]) -> dict[str, int]:
+        """Einheitenzahl je Objekt in EINER Abfrage (0265).
+
+        Dieselbe Regel wie `_einheiten_zahl` (keine Zeile = eine Einheit), nur
+        für mehrere Objekte auf einmal — die Statistik braucht die Kapazität
+        über alle zugeordneten Objekte und würde sonst je Objekt einzeln
+        fragen. Eine Regel, zwei Schnitte; `_einheiten_zahl` ruft diese hier.
+        """
+        if not property_ids:
+            return {}
         rows = (
             self._db.table("property_units")
-            .select("id")
-            .eq("property_id", property_id)
+            .select("id, property_id")
+            .in_("property_id", property_ids)
             .execute()
         ).data or []
-        return max(len(rows), 1)
+        gefunden: dict[str, int] = {}
+        for row in rows:
+            pid = str(row["property_id"])
+            gefunden[pid] = gefunden.get(pid, 0) + 1
+        return {pid: max(gefunden.get(pid, 0), 1) for pid in property_ids}
 
     def _payout_je_nacht(
         self,

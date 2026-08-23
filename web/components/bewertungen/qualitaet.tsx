@@ -11,6 +11,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { Card } from "@nextdays/ui/card";
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { type QualityDashboard, reviewQuality } from "@/lib/reviews";
 import { formatDate } from "@/lib/utils";
@@ -32,6 +33,9 @@ function vorTagen(tage: number): string {
 
 export function Qualitaet({ initial }: { initial: QualityDashboard }) {
   const t = useTranslations("reviews");
+  // aria-Label des Info-Punkts: app-weit dieselbe Formulierung, deshalb aus
+  // `common` und nicht je Fläche neu erfunden.
+  const tGemein = useTranslations("common");
   const locale = useLocale();
   const [daten, setDaten] = useState(initial);
   const [tage, setTage] = useState<number>(30);
@@ -136,8 +140,18 @@ export function Qualitaet({ initial }: { initial: QualityDashboard }) {
 
       {daten.by_property.length > 0 && (
         <Card className="flex flex-col gap-3 p-5">
-          <h2 className="text-sm font-medium">{t("qualityByProperty")}</h2>
-          <p className="text-xs text-muted-foreground">{t("qualityByPropertyHint")}</p>
+          {/* Wie die Liste sortiert ist („Das schwächste Objekt steht oben"),
+              steckt hinter dem „i" an der Überschrift statt als eigene Zeile
+              darunter. `InfoHinweis` ist ein Popover, kein Tooltip: es öffnet
+              auf Klick und ist damit auch auf dem Tablet erreichbar. */}
+          <h2 className="flex items-center gap-1.5 text-sm font-medium">
+            {t("qualityByProperty")}
+            <InfoHinweis
+              titel={t("qualityByProperty")}
+              text={t("qualityByPropertyHint")}
+              ariaLabel={tGemein("explain", { label: t("qualityByProperty") })}
+            />
+          </h2>
           <div className="flex flex-col gap-2">
             {daten.by_property.map((o) => (
               <div

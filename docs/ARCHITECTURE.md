@@ -2286,22 +2286,47 @@ Datenkern an). Verbindliche Feature-Spezifikation und Bau-Vorlage des Editors is
 **[docs/FRAMER-FEATURES.md](FRAMER-FEATURES.md)** (Soll/Ist je Feature mit
 ✅/🟡/❌-Status). Drei physisch getrennte Ebenen:
 
-1. **Editor (`apps/web`)** — Framer-artiger visueller Canvas-Editor auf
-   **craft.js** (`@craftjs/core`/`layers`/`utils`) als Vollbild-Overlay über dem
-   Dashboard (`app/(dashboard)/website/[pageId]/page.tsx`). Die Seite wird
-   serverseitig geladen (`listBlocks()`); `serialize.ts` konvertiert die flache
-   DB-Blockliste in craft.js-Nodes am ROOT-Canvas. Beim Speichern diff't
-   `syncBlocks()` (`lib/site-pages.ts`) den serialisierten craft-Baum gegen die
-   DB über die einzelnen CRUD-Endpunkte (löschen/aktualisieren/anlegen/neu
-   ordnen — **kein Bulk-Endpoint**); frische DB-IDs fließen zurück in die
-   craft-Props. Editor-Features: unendliche Bühne mit Kamera (Pan,
-   Zoom-zum-Cursor, `use-camera.ts`), Device-Frames/Breakpoints (Desktop 1200 /
-   Tablet 810 / Phone 390 + Custom, Resize per Ziehgriff mit Live-Maß-Badge),
-   Layer-Tree, Insert-Panel, Framer-Style-Inspektor
-   (Seiten-/Frame-/Element-Ebene), Font-Picker (kuratierter Katalog + voller
-   Google-Fonts-Katalog über die Next-Route `/api/google-fonts`), Inline-Text,
-   Effekte/Motion. Der Editor nutzt bewusst **kein** Realtime; die Seitenliste
-   (`/website`) abonniert `site_pages`.
+1. **Baukasten (`apps/web`)** — ein **Abschnitts-Stapel**, kein freier Canvas.
+   Der frühere craft.js-Editor (Framer-Nachbau: unendliche Bühne, Kamera,
+   Layer-Tree, Frame-Inspektor) ist entfernt. Grund war nicht der Aufwand,
+   sondern eine Fehlpassung zum Datenmodell und zur Zielgruppe: `site_blocks`
+   ist eine **flache, geordnete Liste ohne `parent_id`**, der Canvas-Baum ließ
+   sich also gar nicht speichern — das meiste, was der Kunde dort baute,
+   überlebte kein Neuladen. Und ein Ferienhaus-Vermieter will keine Bühne,
+   sondern eine Seite, die schon richtig aussieht.
+
+   Aufbau, wie im Markt einheitlich (live abgelesen bei Lodgify am 23.08.2026):
+   **Reiterleiste oben · schmale Einstellungsspalte links · Live-Vorschau
+   rechts**, dazu Autospeichern statt Speichern-Knopf. Jeder Reiter ist eine
+   eigene ROUTE, keine Zustandsvariable:
+
+   | Route                                | Inhalt                                                                 |
+   | ------------------------------------ | ---------------------------------------------------------------------- |
+   | `/website`                           | Weiterleitung (ohne Seiten → `seiten`, sonst → `design`)                |
+   | `/website/design`                    | Theme, 9 Farbrollen, drei Schriften, Button-Form                        |
+   | `/website/design/logo`               | Logo, Skalierung, Firmenname + Slogan mit eigener Typografie, Klickziel |
+   | `/website/seiten`                    | Seitenliste je Navigationszone; Dialog für Name/Slug/SEO/Sprachen       |
+   | `/website/seiten/{pageId}`           | Abschnitts-Editor (Liste links, Vorschau rechts, Inline-Textbearbeitung)|
+   | `/website/einstellungen/adresse`     | eigene Domains (Cloudflare for SaaS)                                    |
+   | `/website/einstellungen/sprachen`    | geführte Sprachen + Standardsprache                                     |
+   | `/website/einstellungen/kontakt`     | Kontaktdaten (aus dem Konto, nur Ansicht) + Social-Links                |
+   | `/website/einstellungen/anzeige`     | Gästezahl aufschlüsseln, Basispreise vor Datumswahl                     |
+   | `/website/einstellungen/erweitert`   | Favicon, Code-Injection, Cookie/Datenschutz, Website offline            |
+   | `/website/objekte`                   | welche Objekte auf der Website erscheinen (`listed_on_website`)         |
+   | `/website/widgets`                   | Einbettungs-Code für fremde Seiten (iframe-Schnipsel)                   |
+
+   Vorher lag alles unter `/website` mit `?reiter=design|seiten|adresse`. Damit
+   hatte kein Unterpunkt eine Adresse — ein Link auf die Domain-Einstellung führte
+   zurück auf den Standard-Reiter, der Zurück-Knopf verließ den Baukasten, und die
+   Sidebar brauchte einen eigenen Query-Vergleich, um zu wissen, welcher Punkt
+   aktiv ist.
+
+   Die Vorschau ist der **echte Renderer im iframe** (Draft-Token, s. u.) und
+   keine zweite Nachbildung der Abschnitte — der Doppel-Renderer war der offene
+   Divergenz-Herd. Im Entwurfsmodus tragen Textstellen Marker (`data-feld`), über
+   die der Editor sie direkt in der Vorschau bearbeitbar macht (`postMessage`).
+   Der Editor nutzt bewusst **kein** Realtime für den offenen Bearbeitungsstand;
+   Seitenliste und Design abonnieren `site_pages` bzw. `tenant_site_config`.
 2. **Backend (`apps/api`, Slice `site_config`)** — zwei Router:
    `manage_router` (`/api/v1/site-config`, JWT + Capability
    `MANAGE_SITE_CONFIG`, tenant-gescoped) und `public_router` (`/api/v1/site`,
@@ -2315,12 +2340,35 @@ Datenkern an). Verbindliche Feature-Spezifikation und Bau-Vorlage des Editors is
    `x-tenant-id`/`x-site-branding`; die öffentlichen Seiten (`app/page.tsx` =
    Home, `app/[slug]/page.tsx`) laden über `lib/site.ts` →
    `GET /api/v1/site/page` **nur veröffentlichte** Blöcke und rendern sie mit
-   `components/blocks/block-renderer.tsx`. TLS für Kunden-Domains kommt von
+   `components/blocks/block-renderer.tsx`.
+
+   **Sprache (0426).** Der Renderer rendert in der Sprache der Website
+   (`lib/sprache.ts`: `?lang=` → `default_language` → erste geführte Sprache).
+   Vorher stand dort ein festes `de` — eine dänische Website, deren Texte in `da`
+   UND `de` gepflegt waren, zeigte ihren Gästen Deutsch. Seine eigenen festen
+   Texte (Suchfeld, Cookie-Hinweis, Buchungs-Widget) liegen in `lib/texte.ts`,
+   erzeugt von `scripts/i18n/renderer-texte-erzeugen.py`; `next-intl` wird
+   bewusst nicht eingezogen, weil jeder Request GENAU EINE Sprache hat.
+
+   **Framing.** Drei Regeln in `next.config.ts`: `/render/*` nur für das
+   Dashboard (Entwurfs-Vorschau, Draft-Token), `/widget/*` von **überall**
+   (Einbettung auf fremden Seiten — die Route navigiert nur und führt keine
+   Aktion mit Nebenwirkung aus), alles andere `frame-ancestors 'none'`, weil dort
+   die Buchungsstrecke läuft.
+
+   **Kundencode.** `lib/code-injection.ts` unterscheidet drei Flächen:
+   `oeffentlich` (head_html/head_css/custom_js), `zahlung` (**gar kein**
+   Kundencode) und `bestaetigung` (nur `checkout_js`). Eine CSP-Nonce gibt es
+   bewusst nicht: die CSP dieser App führt `script-src 'self' 'unsafe-inline'`
+   (Next-15-Bootstrap), und eine Nonce würde `unsafe-inline` außer Kraft setzen —
+   sie wäre eine Schutzbehauptung ohne Wirkung. Der Schutz liegt an der
+   nh3-Allowlist beim Speichern, an der Rolle (`MANAGE_SITE_CONFIG`) und an der
+   Trennung von der Zahlungsstrecke. TLS für Kunden-Domains kommt von
    **Cloudflare for SaaS** (Custom Hostnames,
    `site_config/cloudflare_client.py`; ohne Cloudflare-Konfiguration antworten
    die Domain-Endpunkte `503`).
 
-### Datenmodell (Migrationen `0086`/`0087`)
+### Datenmodell (Migrationen `0086`/`0087`, erweitert `0421`/`0422`/`0426`)
 
 ```mermaid
 erDiagram
@@ -2333,15 +2381,46 @@ erDiagram
         uuid id PK
         uuid tenant_id FK "unique (1:1)"
         string site_name
-        string tagline
+        string tagline "= Slogan"
         string logo_url
         string hero_image_url
+        string favicon_url
+        enum theme "klar|mitte|karte|seitlich (0421)"
         string primary_color "6-stelliger Hex-Code"
         string secondary_color
-        string font_family
+        string background_color
+        string foreground_color
+        string brand_name_color "0426"
+        string header_background "0426"
+        string header_link_color "0426"
+        string link_color "0426"
+        string footer_background "0426"
+        string font_family "= Absatz"
+        string heading_font
+        string button_font
+        string logo_name_font "0426"
+        smallint logo_name_size "8-48 pt, 0426"
+        string slogan_font "0426"
+        string logo_link_url "0426"
+        enum button_style "solid|outline"
+        enum button_radius "sharp|rounded|pill"
+        numeric logo_scale "0.5-3.0"
+        text_array languages "0426"
+        string default_language "muss in languages stehen"
+        bool show_guest_breakdown "Std. true, 0426"
+        bool show_base_prices "Std. true, 0426"
+        text head_html "nur meta/link/title"
+        text head_css
+        text custom_js "nicht in der Zahlungsstrecke"
+        text checkout_js "nur Bestaetigungsseite"
+        bool cookie_banner
+        uuid cookie_policy_page_id FK "on delete set null"
+        bool privacy_consent
+        uuid privacy_policy_page_id FK "on delete set null"
+        bool is_offline "Hauptschalter, 0426"
         jsonb about_text
         jsonb contact_text
-        jsonb social_links
+        jsonb social_links "6 Netzwerke, http(s)-geprueft"
         enum booking_mode "instant|inquiry|both"
     }
     TENANT_CUSTOM_DOMAINS {

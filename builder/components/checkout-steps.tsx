@@ -43,7 +43,7 @@ export function CheckoutSteps({ gesamt }: { gesamt: string }) {
         <div className="mt-2 flex justify-end">
           <button
             type="button"
-            className="rounded-full bg-primary px-7 py-3 font-medium text-primary-foreground transition-opacity hover:opacity-90"
+            className="btn-marke btn-marke-primaer bg-primary px-7 py-3 font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
             Weiter
           </button>

@@ -26,6 +26,7 @@ import {
   DialogTitle,
 } from "@nextdays/ui/dialog";
 import { DatePicker } from "@nextdays/ui/date-picker";
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { Input } from "@nextdays/ui/input";
 import { Label } from "@nextdays/ui/label";
 import { Textarea } from "@nextdays/ui/textarea";
@@ -340,18 +341,31 @@ function Kpi({
   value: string;
   zusatz?: string;
 }) {
+  // aria-Label des Info-Punkts: app-weit dieselbe Formulierung, deshalb aus
+  // `common` und nicht je Fläche neu erfunden.
+  const tGemein = useTranslations("common");
   return (
     <div className="flex flex-col gap-1">
+      {/* Wie die Zahl zustande kommt („72 % bezahlt"), steckt hinter dem „i"
+          statt als dritte Zeile unter dem Betrag zu stehen: von vier Kennzahlen
+          nebeneinander trug nur eine diese Zeile, und die Beträge der anderen
+          drei standen dadurch auf einer anderen Höhe. `InfoHinweis` ist ein
+          Popover, kein Tooltip: es öffnet auf Klick und ist damit auch auf dem
+          Tablet erreichbar (packages/ui/src/info-hinweis.tsx). */}
       <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
         <Icon icon={icon} className="size-4" />
         {label}
+        {zusatz && (
+          <InfoHinweis
+            titel={label}
+            text={zusatz}
+            ariaLabel={tGemein("explain", { label })}
+          />
+        )}
       </span>
       <span className="font-display text-xl font-extrabold tabular-nums">
         {value}
       </span>
-      {zusatz && (
-        <span className="text-xs text-muted-foreground">{zusatz}</span>
-      )}
     </div>
   );
 }

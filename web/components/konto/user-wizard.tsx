@@ -481,7 +481,9 @@ function StepRole(p: {
         </Select>
       </div>
 
-      {p.role && <PermissionGroups perms={p.perms} toggle={p.togglePerm} />}
+      {p.role && (
+        <PermissionGroups perms={p.perms} toggle={p.togglePerm} rolle={p.role} />
+      )}
     </div>
   );
 }

@@ -309,6 +309,71 @@ def test_filter_bucket_teilt_zeitlich_nicht_nach_status() -> None:
     assert len(TasksService._filter_bucket(tasks, None)) == 5
 
 
+def test_filter_bucket_tagesgrenze_holt_heute_spaeter_faellige_in_aktuell() -> None:
+    """Mit Tagesgrenze gehört ALLES bis Mitternacht unter AKTUELL.
+
+    Der Fehler davor: verglichen wurde gegen `now()` — ein Zeitpunkt, wo eine
+    Tagesgrenze hingehört. Eine heute um 16:00 fällige Aufgabe lag morgens um
+    09:00 unter BEVORSTEHEND, zwischen den Aufgaben der nächsten Woche, obwohl
+    der Docstring der Funktion das Gegenteil zusagt. Live (23.08.2026) traf das
+    8 von 57 offenen Aufgaben; die 49 Aufgaben auf UTC-Mitternacht zusätzlich im
+    Fenster 00:00–02:00 Ortszeit, weil 00:00 UTC = 02:00 in Kopenhagen ist.
+    """
+    from datetime import UTC, datetime
+
+    from src.features.tasks.schemas import Task
+
+    def _t(tid: str, faellig: datetime) -> Task:
+        return Task(
+            id=tid, tenant_id="T", title=tid, status=TaskStatus.open, due_at=faellig
+        )
+
+    # Es ist 08:54 in Kopenhagen (06:54 UTC); der Tag endet 24.08. 00:00 lokal.
+    grenze = datetime(2026, 8, 23, 22, 0, tzinfo=UTC)
+    aufgaben = [
+        _t("heute_frueh", datetime(2026, 8, 23, 0, 0, tzinfo=UTC)),
+        _t("heute_spaet", datetime(2026, 8, 23, 16, 0, tzinfo=UTC)),
+        _t("ueberfaellig", datetime(2026, 8, 22, 10, 0, tzinfo=UTC)),
+        _t("morgen", datetime(2026, 8, 24, 9, 0, tzinfo=UTC)),
+    ]
+
+    current = {t.id for t in TasksService._filter_bucket(aufgaben, "current", grenze)}
+    # „heute_spaet" ist der Kern: mit `now()` wäre sie draußen gewesen.
+    assert current == {"heute_frueh", "heute_spaet", "ueberfaellig"}
+    upcoming = {t.id for t in TasksService._filter_bucket(aufgaben, "upcoming", grenze)}
+    assert upcoming == {"morgen"}
+
+    # Die Grenze selbst gehört zum NÄCHSTEN Tag (kein Off-by-one).
+    genau = [_t("mitternacht", grenze)]
+    assert TasksService._filter_bucket(genau, "current", grenze) == []
+    assert len(TasksService._filter_bucket(genau, "upcoming", grenze)) == 1
+
+
+def test_filter_bucket_ohne_tagesgrenze_bleibt_beim_altverhalten() -> None:
+    """Ohne Grenze (ältere App-Fassung) ändert sich nichts.
+
+    Die Klammer gegen einen stillen Verhaltenswechsel: eine App, die den neuen
+    Parameter nicht kennt, muss weiter genau dieselbe Einteilung bekommen —
+    inklusive `<=`, damit eine Aufgabe mit dem Termin JETZT unter AKTUELL fällt.
+    """
+    from datetime import UTC, datetime, timedelta
+
+    from src.features.tasks.schemas import Task
+
+    now = datetime.now(UTC)
+    spaeter = Task(
+        id="spaeter",
+        tenant_id="T",
+        title="spaeter",
+        status=TaskStatus.open,
+        due_at=now + timedelta(hours=6),
+    )
+    # Ohne Grenze bleibt die heute später fällige Aufgabe BEVORSTEHEND — das ist
+    # das alte Verhalten und hier ausdrücklich gewollt.
+    assert TasksService._filter_bucket([spaeter], "current") == []
+    assert len(TasksService._filter_bucket([spaeter], "upcoming")) == 1
+
+
 # --- Wurzel 9: by-reservation scopt wie der Buchungs-Slice ------------------
 #
 # Angriff: Ein Eigentümer schiebt die reservation_id einer Buchung an einem

@@ -12,7 +12,7 @@ add_domain/sync_domain/remove_domain/resolve_site_by_domain).
 """
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 
 from src.core.security import AuthContext
 from src.features.auth.dependencies import require_permission
@@ -24,6 +24,7 @@ from .schemas import (
     BlockCreate,
     BlockListResponse,
     BlockResponse,
+    BlocksReplaceRequest,
     BlockUpdate,
     BrandingResponse,
     BrandingUpdate,
@@ -31,9 +32,12 @@ from .schemas import (
     CustomDomainResponse,
     DomainCreate,
     DraftTokenResponse,
+    MediumListResponse,
+    MediumResponse,
     PageCreate,
     PageListResponse,
     PageResponse,
+    PagesReorderRequest,
     PageUpdate,
     PublicPageResponse,
     PublicSiteResponse,
@@ -278,6 +282,36 @@ def reorder_blocks(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@manage_router.put("/pages/{page_id}/blocks", response_model=BlockListResponse)
+def replace_blocks(
+    page_id: str,
+    req: BlocksReplaceRequest,
+    service: SiteConfigServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> BlockListResponse:
+    """Alle Abschnitte einer Seite in EINEM Aufruf setzen (der Speicher-Weg des
+    Editors). Ersetzt die alte N+1-Sequenz aus delete/update/create/reorder —
+    idempotent, siehe ``BlocksReplaceRequest``."""
+    try:
+        return service.replace_blocks(ctx, page_id, req)
+    except SiteConfigError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@manage_router.post("/pages/reorder", response_model=PageListResponse)
+def reorder_pages(
+    req: PagesReorderRequest,
+    service: SiteConfigServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> PageListResponse:
+    """Seiten innerhalb eines Navigationsbereichs neu sortieren (Kopfzeile,
+    Fußzeile oder „nicht verlinkt" — jeder Bereich zählt seine eigene Reihenfolge)."""
+    try:
+        return service.reorder_pages(ctx, req.nav_area, req.ordered_ids)
+    except SiteConfigError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @manage_router.delete(
     "/blocks/{block_id}", status_code=status.HTTP_204_NO_CONTENT
 )
@@ -288,6 +322,55 @@ def remove_block(
 ) -> None:
     try:
         service.remove_block(ctx, block_id)
+    except SiteConfigError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Mediathek --------------------------------------------------------------
+@manage_router.get("/media", response_model=MediumListResponse)
+def list_media(
+    service: SiteConfigServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+    limit: Annotated[int, Query(ge=1, le=200)] = 100,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> MediumListResponse:
+    """Bildbestand des Betriebs, neueste zuerst."""
+    try:
+        return service.list_media(ctx, limit=limit, offset=offset)
+    except SiteConfigError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@manage_router.post(
+    "/media", response_model=MediumResponse, status_code=status.HTTP_201_CREATED
+)
+async def add_medium(
+    service: SiteConfigServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+    file: Annotated[UploadFile, File()],
+) -> MediumResponse:
+    """Ein Bild in die Mediathek legen.
+
+    Der Bildtyp wird serverseitig aus den Anfangsbytes bestimmt — der vom Client
+    gemeldete ``content_type`` wird bewusst NICHT verwendet (Wurzel 8)."""
+    content = await file.read()
+    try:
+        return service.add_medium(ctx, content, filename=file.filename)
+    except SiteConfigError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@manage_router.delete(
+    "/media/{medium_id}", status_code=status.HTTP_204_NO_CONTENT
+)
+def remove_medium(
+    medium_id: str,
+    service: SiteConfigServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> None:
+    """Bild aus der Mediathek entfernen (Zeile UND Datei im Bucket)."""
+    try:
+        service.remove_medium(ctx, medium_id)
     except SiteConfigError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

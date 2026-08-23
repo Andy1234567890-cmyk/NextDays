@@ -44,8 +44,17 @@ export function BenutzerRolleSheet({
   const t = useTranslations("account");
   const istAdmin = user.role === "admin";
   const [rolle, setRolle] = useState<UserRole>(user.role ?? "staff");
+  // GESPEICHERTE Rechte, nicht die wirksamen: dieser Dialog schreibt seinen
+  // Zustand beim Speichern zurück. Mit `user.permissions` (durchs PM-Dach
+  // gefiltert) war die Anzeige die Schreibquelle — jedes Speichern löschte,
+  // was das Dach nur ausgeblendet hatte. Live verlor ein Eigentümer so 4 seiner
+  // 6 Rechte pro Vorgang, ohne dass jemand ein Häkchen anfasste.
+  //
+  // Rückfall auf `permissions`, falls der Server das Feld nicht liefert
+  // (ältere Fassung) — dann verhält es sich wie bisher, statt die Rechte auf
+  // eine leere Menge zu setzen.
   const [rechte, setRechte] = useState<Set<string>>(
-    () => new Set(user.permissions),
+    () => new Set(user.stored_permissions ?? user.permissions),
   );
   const [busy, setBusy] = useState(false);
 
@@ -119,7 +128,7 @@ export function BenutzerRolleSheet({
                 </p>
               </div>
 
-              <PermissionGroups perms={rechte} toggle={umschalten} />
+              <PermissionGroups perms={rechte} toggle={umschalten} rolle={rolle} />
             </>
           )}
         </div>

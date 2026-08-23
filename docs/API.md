@@ -2340,7 +2340,7 @@ den `builder/`-Renderer der myNextDays-Websites.
 | Methode  | Pfad                                           | Beschreibung                                                                                                                                                                                                                                                                   |
 | -------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `GET`    | `/api/v1/site-config/health`                   | Slice-Status                                                                                                                                                                                                                                                                   |
-| `GET`    | `/api/v1/site-config`                          | Branding lesen (`site_name`, `tagline`, `logo_url`, `hero_image_url`, `primary_color`/`secondary_color` (Hex `#rrggbb`), `font_family`, `about_text`/`contact_text`/`social_links` (i18n-/Key-Objekte), `booking_mode` `instant\|inquiry\|both`); leere Config → Defaults/None |
+| `GET`    | `/api/v1/site-config`                          | Branding lesen (`site_name`, `tagline`, `logo_url`, `hero_image_url`, `primary_color`/`secondary_color` (Hex `#rrggbb`), `font_family`, `about_text`/`contact_text`/`social_links` (i18n-/Key-Objekte), `booking_mode` `instant\|inquiry\|both`); leere Config → Defaults/None. Dazu **Vollausbau 0426** (s. u.) |
 | `PUT`    | `/api/v1/site-config`                          | Branding setzen — Teil-Update, nur gesendete Felder werden geschrieben                                                                                                                                                                                                         |
 | `GET`    | `/api/v1/site-config/domains`                  | Custom-Domains des Tenants (`status` `pending\|active\|error`, `ssl_status`, `dns_records[]`; die interne Cloudflare-Hostname-ID wird bewusst nicht exponiert)                                                                                                                 |
 | `POST`   | `/api/v1/site-config/domains`                  | Domain verbinden → `201`; legt den Cloudflare-Custom-Hostname an und liefert die zu setzenden DNS-Records (CNAME + TXT-Validierung). `409` Domain bereits vergeben (global unique); `503` Cloudflare nicht konfiguriert                                                        |
@@ -2353,7 +2353,7 @@ den `builder/`-Renderer der myNextDays-Websites.
 | -------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GET`    | `/api/v1/site-config/pages`                       | Seiten des Tenants (sortiert nach `nav_order`)                                                                                                                               |
 | `POST`   | `/api/v1/site-config/pages`                       | Seite anlegen → `201`. Body `{title, slug?}`; `slug` nur `a-z 0-9 -`, leer = Home-Slug. Die **erste** Seite eines Tenants wird automatisch Home. `409` Slug bereits vergeben |
-| `PUT`    | `/api/v1/site-config/pages/{page_id}`             | Seite ändern (Teil-Update): `title`, `slug`, `seo_title`, `seo_description`, `og_image_url`, `nav_order`. `409` Slug-Kollision                                               |
+| `PUT`    | `/api/v1/site-config/pages/{page_id}`             | Seite ändern (Teil-Update): `title`, `slug`, `seo_title`, `seo_description`, `og_image_url`, `nav_area`, `nav_order`, `languages`. `409` Slug-Kollision                      |
 | `POST`   | `/api/v1/site-config/pages/{page_id}/home`        | Seite zur Home-Seite machen (genau eine je Tenant, partieller Unique-Index)                                                                                                  |
 | `POST`   | `/api/v1/site-config/pages/{page_id}/publish`     | veröffentlichen (`is_published=true`)                                                                                                                                        |
 | `POST`   | `/api/v1/site-config/pages/{page_id}/unpublish`   | Veröffentlichung zurücknehmen                                                                                                                                                |
@@ -2382,6 +2382,44 @@ außerhalb des Schemas werden verworfen, ungültiger Inhalt → `400`. Texte sin
 i18n-Objekte (`{locale: text}`). `settings` sind typunabhängig
 (`background_color` Hex, `padding` `none|sm|md|lg`, `full_width`, `opacity`,
 `visible`, `radius`, `rotation`).
+
+**Branding-Vollausbau (Migration 0426).** Der Baukasten wurde auf den
+Branchenumfang gebracht (Vergleich: Lodgify, live abgelesen 23.08.2026). Neue
+Felder in `BrandingBase` — alle im Teil-Update setzbar, alle NULL-fähig, sofern
+nicht als Schalter gekennzeichnet:
+
+| Gruppe                | Felder                                                                                                              | Wirkung im Renderer                                                                                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Farbrollen            | `brand_name_color`, `header_background`, `header_link_color`, `link_color`, `footer_background` (Hex)                | eigene CSS-Variablen für Kopf-/Fußzeile; vorher übernahmen beide den Seitenhintergrund, ein dunkler Header war unmöglich                                          |
+| Logo-Typografie       | `logo_name_font`, `logo_name_size` (8–48 pt), `slogan_font`, `logo_link_url`                                         | Firmenname neben dem Logo mit eigener Familie/Größe; `logo_link_url` ist das Klickziel (leer = Startseite)                                                        |
+| Sprachen              | `languages` (ISO-Codes), `default_language`                                                                          | bestimmt, in welcher Sprache der Renderer ausgibt — vorher stand dort ein festes `de`. Sprachwähler in der Kopfzeile ab zwei Sprachen, Wahl über `?lang=xx`       |
+| Anzeige (Schalter)    | `show_guest_breakdown` (Std. `true`), `show_base_prices` (Std. `true`)                                               | Suchfeld erfragt Erwachsene/Kinder/Kleinkinder getrennt; Basispreis erst nach Datumswahl                                                                          |
+| Code-Injection        | `head_html` (≤8 000), `head_css` (≤20 000), `custom_js` (≤20 000), `checkout_js` (≤8 000)                            | `head_html` nur `<meta>`/`<link>`/`<title>` (nh3-Allowlist, kein `http-equiv`, nur http(s)); `custom_js` NICHT in der Zahlungsstrecke; `checkout_js` NUR nach der Zahlung |
+| Recht (Schalter + ID) | `cookie_banner`, `cookie_policy_page_id`, `privacy_consent`, `privacy_policy_page_id`                                | Cookie-Hinweis am Seitenfuß; Datenschutz-Häkchen im Buchungs-Widget (Pflicht vor dem Reservieren)                                                                 |
+| Hauptschalter         | `is_offline`                                                                                                        | `true` → der **öffentliche** Resolver antwortet mit `404` (`by-domain` UND `page`); der Entwurfs-Render bleibt erreichbar                                          |
+
+`social_links` wird jetzt **serverseitig** validiert: nur die sechs Netzwerke,
+die die Fußzeile rendert (`instagram`, `facebook`, `youtube`, `linkedin`,
+`pinterest`, `tiktok`), und nur vollständige `http(s)`-Adressen — ein
+`javascript:`-Wert kam vorher bis in die Datenbank und wurde erst beim Rendern
+abgefangen. Unbekannter Schlüssel oder unvollständige Adresse → `422`.
+
+`PublicSiteResponse` gibt davon alles heraus, was der Renderer braucht — mit
+zwei Unterschieden zum Dashboard-Branding: `is_offline` erscheint **nicht** (die
+Seite antwortet dann ohnehin mit `404`), und die verlinkten Rechts-Seiten kommen
+als **Slug** (`cookie_policy_slug`, `privacy_policy_slug`) statt als ID. Der
+Slug wird tenant-gescoped und nur für **veröffentlichte** Seiten aufgelöst; eine
+per Direktpfad eingetragene fremde ID ergibt `null` statt eines Links auf die
+Datenschutzseite eines anderen Betriebs.
+
+Seiten tragen zusätzlich `languages` (`PageUpdate`/`PageResponse`): in welchen
+Sprachen **diese** Seite existiert. `null` = alle Sprachen der Website.
+
+**Objekt-Sichtbarkeit auf der Website.** `properties.listed_on_website` (0162)
+wurde vom Renderer nie ausgewertet — die Kunden-Website zeigte alle aktiven
+Objekte. `booking_engine.list_listings`/`list_destinations` filtern jetzt bei
+gesetztem `tenant` darauf; der Featured-Block (`property_ids`) ist bewusst
+ausgenommen, wie beim Marktplatz-Flag.
 
 **Font-Katalog:** Die Schriftauswahl des Editors (voller Google-Fonts-Katalog)
 läuft **nicht** über FastAPI, sondern über die server-seitige Next.js-Route

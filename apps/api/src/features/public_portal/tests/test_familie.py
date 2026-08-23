@@ -253,11 +253,22 @@ def test_stufe_nutzung_hat_keine_berichte() -> None:
     assert Capability.VIEW_OWNER_REPORTS not in caps
 
 
-def test_stufe_berichte_erweitert_nur_um_berichte() -> None:
-    """Die höhere Stufe ist die engere PLUS Berichte — nichts sonst."""
+def test_stufe_berichte_erweitert_nur_um_geschaeftszahlen() -> None:
+    """Die höhere Stufe ist die engere PLUS die Geschäftszahlen — nichts sonst.
+
+    Zwei Fähigkeiten, eine Begründung: Umsatz/Abrechnung (VIEW_OWNER_REPORTS)
+    und Auslastung (VIEW_OCCUPANCY_STATS) sind beides Geschäftsleistung des
+    Betriebs, nicht Nutzungsplanung der Familie. Die Auslastung steht bewusst
+    NICHT in `nutzung`: sie ist zusammen mit dem Grundpreis eine Schätzung des
+    Jahresumsatzes und würde die Berichts-Sperre über eine Nebenkennzahl
+    umgehen.
+    """
     schmal = owner_family_capabilities_for("nutzung")
     breit = owner_family_capabilities_for("nutzung_berichte")
-    assert breit - schmal == {Capability.VIEW_OWNER_REPORTS}
+    assert breit - schmal == {
+        Capability.VIEW_OWNER_REPORTS,
+        Capability.VIEW_OCCUPANCY_STATS,
+    }
 
 
 def test_unbekannte_stufe_gibt_keine_rechte() -> None:

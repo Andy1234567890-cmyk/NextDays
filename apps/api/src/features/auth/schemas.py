@@ -441,7 +441,20 @@ class TenantUser(BaseModel):
     phone: str | None = None
     avatar_url: str | None = None
     tenant_id: str | None = None
+    # WIRKSAME Rechte (Rolle + gespeicherte, gefiltert durchs PM-Dach). Für
+    # Anzeige und UI-Gating: was dieser Nutzer tatsächlich kann.
     permissions: list[str] = []
+    # GESPEICHERTE Rechte, ungefiltert — genau das, was in `users.permissions`
+    # steht. Nur für den BEARBEITEN-Dialog.
+    #
+    # Ohne dieses Feld war die gefilterte Anzeige die Schreibquelle: der Dialog
+    # las `permissions`, und Speichern schrieb sie zurück. Alles, was das
+    # PM-Dach herausgefiltert hatte, war danach dauerhaft weg — ohne dass es
+    # jemand angefasst hätte. Live betraf das die Rolle `owner`: 6 gespeicherte
+    # Rechte, 2 wirksame, 4 verloren pro Speichervorgang (23.08.2026 gemessen).
+    # Dasselbe Muster wie bei `preferred_language` einen Kommentar weiter unten,
+    # nur mit Rechten statt einer Sprache.
+    stored_permissions: list[str] = []
     # Sprache der E-Mails an diesen Nutzer. Wird mitgeliefert, damit der
     # Bearbeiten-Dialog den gespeicherten Wert anzeigen kann statt „nicht
     # gesetzt" zu behaupten und ihn beim Speichern zu ueberschreiben.

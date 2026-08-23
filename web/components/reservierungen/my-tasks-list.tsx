@@ -18,6 +18,7 @@ import { AufgabenTabelle } from "@/components/reservierungen/aufgaben-tabelle";
 import { MassenaktionenFab } from "@/components/reservierungen/massenaktionen-fab";
 import { TaskDetailModal } from "@/components/reservierungen/task-detail-modal";
 import { listProperties } from "@/lib/properties";
+import { tagesendeIso } from "@/lib/aufgaben-konstanten";
 import { type TaskListItem, completeTask, listMyTasks } from "@/lib/tasks";
 import { useRealtime } from "@/lib/use-realtime";
 
@@ -40,6 +41,9 @@ export function MyTasksList() {
     const res = await listMyTasks({
       status_bucket: tab,
       property_ids: propFilter,
+      // Im Browser gebildet: die Server-Action kennt nur die Zeit des
+      // Rechenzentrums, nicht die des Betriebs.
+      tagesende: tagesendeIso(),
     });
     if (res.ok) setRows(res.data);
     else toast.error(res.error);

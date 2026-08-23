@@ -8,7 +8,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from src.core.security import AuthContext, get_current_user
-from src.features.auth.dependencies import require_permission
+from src.features.auth.dependencies import AccountServiceDep, require_permission
 from src.features.auth.permissions import Capability, has_capability
 
 from .dependencies import OwnersServiceDep
@@ -45,6 +45,7 @@ _MANAGE_STAFF = require_permission(  # noqa: N816  pylint: disable=invalid-name
 
 def _hat_manage_staff(
     ctx: Annotated[AuthContext, Depends(get_current_user)],
+    konto: AccountServiceDep,
 ) -> bool:
     """MANAGE_STAFF vorhanden? — als Auskunft, nicht als Sperre.
 
@@ -55,7 +56,13 @@ def _hat_manage_staff(
     dürfen. Die Entscheidung trifft der Endpunkt, diese Dependency liefert ihr
     nur die Tatsache.
     """
-    return has_capability(ctx.role, Capability.MANAGE_STAFF)
+    # Rolle FRISCH aus der DB, nicht aus dem JWT (Wurzel 7): hier hängt die
+    # Vergabe eines Portal-ZUGANGS dran, also eine rechtevergebende Operation.
+    # Eine im Token veraltete Rolle würde bis zu einer Stunde weitergelten, und
+    # der erteilte Zugang überlebt sie ohnehin. Dieselbe Regel wie in
+    # `_DB_ROLLE_ERFORDERLICH` für den Routen-Guard.
+    rolle, _ = konto.role_and_permissions(ctx)
+    return has_capability(rolle, Capability.MANAGE_STAFF)
 
 
 @router.get("/health", response_model=SliceHealth)

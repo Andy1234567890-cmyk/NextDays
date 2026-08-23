@@ -49,9 +49,22 @@ export type TenantUser = {
   phone: string | null;
   avatar_url: string | null;
   tenant_id: string | null;
-  // Effektive Berechtigungs-IDs des Nutzers (admin = alle). Vorbelegung
-  // der Rechte-Checkboxen im Bearbeiten-Dialog.
+  // WIRKSAME Berechtigungs-IDs (admin = alle): Rolle plus gespeicherte, durch
+  // das PM-Dach gefiltert. Für Anzeige und Gating — NICHT als Vorbelegung des
+  // Bearbeiten-Dialogs, dafür ist `stored_permissions` da.
   permissions: string[];
+  // GESPEICHERTE Berechtigungs-IDs, ungefiltert (`users.permissions`).
+  //
+  // Die Vorbelegung des Bearbeiten-Dialogs MUSS hierher greifen. Vorher stand
+  // dort `permissions`, also die gefilterte Anzeige — und Speichern schrieb sie
+  // zurück. Alles, was das PM-Dach ausgeblendet hatte, war danach dauerhaft
+  // gelöscht, ohne dass es jemand angeklickt hätte. Live traf das die Rolle
+  // `owner`: 6 gespeicherte Rechte, 2 sichtbare, 4 pro Speichervorgang
+  // verloren (23.08.2026 gemessen).
+  //
+  // Optional, weil ältere Server-Fassungen das Feld nicht senden; der Dialog
+  // fällt dann auf `permissions` zurück und verhält sich wie bisher.
+  stored_permissions?: string[];
   // Sprache der E-Mails an diesen Nutzer (ISO-639-1). `null` heißt „nicht
   // erfasst" — dann greift serverseitig die Kette Betriebssprache → Englisch,
   // und der Bearbeiten-Dialog zeigt „nicht gesetzt" statt einer erfundenen

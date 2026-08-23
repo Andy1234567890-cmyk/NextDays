@@ -1,5 +1,6 @@
 """Tests für den zentralen Gast-Masking-Helper (DSGVO-Daten-Split §4)."""
 from src.features.auth.granular_permissions import (
+    ROLE_DEFAULT_PERMISSIONS,
     Permission,
     effective_permissions,
 )
@@ -154,7 +155,104 @@ def test_pm_dach_unbekannte_rolle_fail_closed() -> None:
     assert effective_capabilities("hausmeister", has_pm_access=True) == frozenset()
 
 
+def test_owner_standard_zaehlt_sechs_und_behaelt_sie_alle() -> None:
+    """Regression zur Zahl: gespeichert 6 → wirksam 6.
+
+    Ergänzt `test_owner_standard_wirkt_vollstaendig` weiter unten (dieselbe
+    Regel, dort namentlich geprüft) um genau das, was live gemessen wurde:
+    „gespeichert 6 -> wirksam 2". Fiele je ein Recht aus dem Standard, ohne
+    dass jemand es merkt, sagt es dieser Test.
+
+    Die Gegenprobe für staff/co_admin/cleaner steht ebenfalls unten
+    (`test_permission_dach_bleibt_fuer_pms_rollen_wirksam`) — der Entzug des
+    PM-Zugriffs bleibt für die PMS-Rollen voll wirksam.
+    """
+    gespeichert = ROLE_DEFAULT_PERMISSIONS[UserRole.owner]
+    assert len(gespeichert) == 6
+    assert effective_permissions(UserRole.owner, list(gespeichert)) == gespeichert
+
+
+def test_neue_owner_faehigkeiten_haengen_nicht_am_pm_dach() -> None:
+    """VIEW_PROPERTY_AREA/VIEW_OCCUPANCY_STATS sind KEINE PM-Capabilities.
+
+    Stünden sie in `_PM_CAPABILITIES`, würden sie einem co_admin ohne Dach
+    entzogen — und einem owner, sobald die Dach-Ausnahme je fiele.
+    """
+    assert not is_pm_capability(Capability.VIEW_PROPERTY_AREA)
+    assert not is_pm_capability(Capability.VIEW_OCCUPANCY_STATS)
+    caps = effective_capabilities(UserRole.owner, has_pm_access=False)
+    assert Capability.VIEW_PROPERTY_AREA in caps
+    assert Capability.VIEW_OCCUPANCY_STATS in caps
+
+
 def test_view_calendar_bleibt_pm_capability() -> None:
     # Die Ausnahme sitzt an der ROLLE, nicht an der Capability: VIEW_CALENDAR
     # muss PM-Capability bleiben, sonst verlöre staff/co_admin den Entzug.
     assert is_pm_capability(Capability.VIEW_CALENDAR)
+
+
+# --- PM-Dach auf PERMISSION-Ebene: dieselbe Rollen-Ausnahme -----------------
+# Die Regel stand nur auf der Capability-Ebene. `effective_permissions` wandte
+# das Dach stumpf auf jede Rolle an, also auch auf `owner` — der es
+# konstruktiv nie besitzen kann. Live am 23.08.2026: von den sechs
+# gespeicherten Eigentümer-Rechten wirkten zwei. Die vier verschluckten
+# (pm_property_area, pm_photo_album, pm_view_property_images,
+# pm_nonrevenue_charts) standen im Rechte-Dialog als gesetzt da und taten
+# nichts. Beide Ebenen müssen dieselbe Ausnahme kennen, sonst driften sie
+# wieder auseinander.
+
+def test_owner_standard_wirkt_vollstaendig() -> None:
+    gespeichert = sorted(p.value for p in ROLE_DEFAULT_PERMISSIONS[UserRole.owner])
+    wirksam = effective_permissions(UserRole.owner, gespeichert)
+    assert {p.value for p in wirksam} == set(gespeichert)
+    # Namentlich die vier, die vorher verschwanden:
+    for p in (
+        Permission.PM_PROPERTY_AREA,
+        Permission.PM_PHOTO_ALBUM,
+        Permission.PM_VIEW_PROPERTY_IMAGES,
+        Permission.PM_NONREVENUE_CHARTS,
+    ):
+        assert p in wirksam
+
+
+def test_owner_gewinnt_auf_permission_ebene_nichts_dazu() -> None:
+    # Die Ausnahme hebt nur den Abzug auf. Ein Recht, das nicht gespeichert
+    # ist, darf sie nicht herbeizaubern (§4.3: keine Finanzdaten).
+    wirksam = effective_permissions(UserRole.owner, ["pm_photo_album"])
+    assert wirksam == _perms("pm_photo_album")
+    for verboten in (
+        Permission.PM_REVENUE_CHARTS,
+        Permission.PM_BOOKING_TOTAL,
+        Permission.PM_DETAILED_PAYMENTS,
+    ):
+        assert verboten not in wirksam
+
+
+def test_permission_dach_bleibt_fuer_pms_rollen_wirksam() -> None:
+    # Der Entzug muss für die PMS-Rollen greifen: ohne ACCESS_PM_FEATURES fällt
+    # jedes pm_*/inbox_*-Recht, egal wie viele Häkchen gesetzt sind.
+    for rolle in (UserRole.co_admin, UserRole.staff, UserRole.cleaner):
+        gespeichert = [
+            p.value
+            for p in ROLE_DEFAULT_PERMISSIONS[rolle]
+            if p is not Permission.ACCESS_PM_FEATURES
+        ]
+        wirksam = {p.value for p in effective_permissions(rolle, gespeichert)}
+        assert not any(
+            i.startswith("pm_") or i.startswith("inbox_") for i in wirksam
+        ), rolle
+        # Was nicht am Dach hängt, bleibt: sonst wäre der Entzug zu breit.
+        assert wirksam == {
+            i for i in gespeichert
+            if not (i.startswith("pm_") or i.startswith("inbox_"))
+        }
+
+
+def test_permission_dach_unbekannte_rolle_fail_closed() -> None:
+    # Wurzel 5: unbekannte/fehlende Rolle → Dach greift, pm_* fällt.
+    for rolle in (None, "hausmeister"):
+        wirksam = {
+            p.value
+            for p in effective_permissions(rolle, ["pm_photo_album", "owner_reporting"])
+        }
+        assert wirksam == {"owner_reporting"}, rolle

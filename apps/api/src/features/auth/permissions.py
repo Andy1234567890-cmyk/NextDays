@@ -15,6 +15,7 @@ Die Default-Matrix bildet das Lastenheft ab:
 """
 from enum import StrEnum
 
+from .granular_permissions import pm_umbrella_applies
 from .schemas import UserRole
 
 
@@ -43,6 +44,15 @@ class Capability(StrEnum):
     VIEW_FINANCES = "view_finances"
     VIEW_OWNER_REPORTS = "view_owner_reports"
     # Eigentümer-spezifisch
+    # Objektbereich: Stammdaten/Beschreibung/Ausstattung + Bilder + Fotoalbum
+    # SEINER Objekte, lesend. Deckt die drei granularen Rechte
+    # pm_property_area, pm_view_property_images und pm_photo_album ab — sie
+    # zeigen dieselbe Fläche in drei Ausschnitten, nicht drei Fähigkeiten.
+    VIEW_PROPERTY_AREA = "view_property_area"
+    # Auswertungen OHNE Geldbezug (Belegung, Auslastung, Aufenthaltsdauer,
+    # Vorlaufzeit). Gegenstück zu VIEW_FINANCES/VIEW_OWNER_REPORTS, die der
+    # Eigentümer für die Umsatzsicht braucht und die hier bewusst fehlen.
+    VIEW_OCCUPANCY_STATS = "view_occupancy_stats"
     ADD_METER_READING = "add_meter_reading"
     BOOK_SERVICES = "book_services"
     MANAGE_NOTIFICATION_PREFS = "manage_notification_prefs"  # §4.2 SMS/E-Mail/aus
@@ -112,6 +122,12 @@ _OWNER: frozenset[Capability] = frozenset({
     Capability.BOOK_SERVICES,
     Capability.VIEW_OWNER_REPORTS,
     Capability.MANAGE_NOTIFICATION_PREFS,
+    # Der Objektbereich seiner eigenen Objekte (Stammdaten/Bilder/Fotoalbum)
+    # und die Nicht-Umsatz-Auswertungen. Beide read-only; die zugehörigen
+    # granularen Rechte (pm_property_area, pm_view_property_images,
+    # pm_photo_album, pm_nonrevenue_charts) stehen im owner-Standard.
+    Capability.VIEW_PROPERTY_AREA,
+    Capability.VIEW_OCCUPANCY_STATS,
     # Bewertungen SEINER Objekte lesen — antworten darf er nicht (§4.2 read-only),
     # deshalb bewusst ohne MANAGE_REVIEWS.
     Capability.VIEW_REVIEWS,
@@ -210,6 +226,12 @@ _FAMILIE_NUTZUNG: frozenset[Capability] = frozenset({
     # Nur Vorname/Belegungszeit (§4.2) — wer wann im Haus ist, gehört zur
     # Nutzungsplanung; der volle Gastdatensatz nicht.
     Capability.VIEW_GUEST_LIMITED,
+    # Das HAUS, kein Geld: Wer es nutzt, darf sehen, wie es aussieht und was
+    # drin ist (Bilder, Ausstattung, Adresse). Eine Tochter, die im Juli
+    # anreist, muss wissen, ob eine Spülmaschine da ist — dafür braucht sie
+    # keine Freigabe des Vaters, und die Angabe verrät nichts über das
+    # Geschäft.
+    Capability.VIEW_PROPERTY_AREA,
 })
 
 # Nutzung + Berichte: zusätzlich Umsatz, Abrechnung, Auszahlung.
@@ -220,6 +242,17 @@ _FAMILIE_NUTZUNG: frozenset[Capability] = frozenset({
 # Wer sie vergeben will, schaltet sie bewusst zu (Art. 25 Abs. 2 DSGVO).
 _FAMILIE_NUTZUNG_BERICHTE: frozenset[Capability] = _FAMILIE_NUTZUNG | frozenset({
     Capability.VIEW_OWNER_REPORTS,
+    # WARUM VIEW_OCCUPANCY_STATS NICHT IN `_FAMILIE_NUTZUNG` STEHT:
+    # Auslastung ist keine Nutzungsinformation, sondern die GESCHÄFTSLEISTUNG
+    # des Betriebs. „Belegt an 214 von 365 Nächten" ist die Kennzahl, an der
+    # sich Vermarktung und Provision messen lassen; zusammen mit dem Grundpreis
+    # ist daraus der Jahresumsatz zu schätzen, den die Stufe `nutzung` über
+    # `VIEW_OWNER_REPORTS` gerade NICHT bekommt. Eine Sperre, die man durch
+    # eine Nebenkennzahl umgehen kann, ist keine.
+    # Es gilt dieselbe Begründung wie oben für die Berichte: Wer sie vergeben
+    # will, schaltet sie bewusst zu (Art. 25 Abs. 2 DSGVO) — der Neffe, der
+    # eine Woche im Juli möchte, braucht sie nicht.
+    Capability.VIEW_OCCUPANCY_STATS,
 })
 
 OWNER_FAMILY_CAPABILITIES: dict[str, frozenset[Capability]] = {
@@ -309,6 +342,12 @@ def is_pm_capability(cap: Capability) -> bool:
 # nur an einer FRISCHEN Rollenprüfung.
 _DB_ROLLE_ERFORDERLICH: frozenset[Capability] = frozenset({
     Capability.MANAGE_CONNECTIONS,
+    # MANAGE_STAFF gehört aus demselben Grund dazu: sie legt NUTZER an und
+    # vergibt Rechte (`/auth/invite`, Eigentümer-Portalzugang). Eine
+    # rechtevergebende Operation an einer bis zu einer Stunde veralteten
+    # JWT-Rolle zu hängen heißt, dass ein gerade herabgestufter Verwalter noch
+    # Konten mit Rechten anlegen kann — und die überleben den Token.
+    Capability.MANAGE_STAFF,
 })
 
 
@@ -317,42 +356,23 @@ def braucht_db_rolle(cap: Capability) -> bool:
     return cap in _DB_ROLLE_ERFORDERLICH
 
 
-# Rollen, für die das PM-Dach überhaupt gilt: die PMS-Rollen, die im
-# Rechte-Dialog einen PM-Zugriff bekommen oder entzogen kriegen können.
-# `owner` steht bewusst NICHT hier: ein Eigentümer kann ACCESS_PM_FEATURES
-# konstruktiv nie besitzen (`_OWNER` in granular_permissions.py enthält es
-# nicht, weil er die PM-Fläche nicht haben soll). Würde das Dach auch für ihn
-# gelten, verlöre er JEDE PM-Capability — auch VIEW_CALENDAR, seine einzige.
-# Genau das sperrte das Eigentümer-Portal aus (403 „Kein Zugriff auf das
-# PM-Modul." auf GET /public-portal/properties), obwohl §4.2 ihm den lesenden
-# Blick auf SEINE Objekte ausdrücklich zubilligt. Der Entzug bleibt für
-# admin/co_admin/staff/cleaner voll wirksam.
-_PM_UMBRELLA_ROLES: frozenset[UserRole] = frozenset({
-    UserRole.admin,
-    UserRole.co_admin,
-    UserRole.staff,
-    UserRole.cleaner,
-})
-
-
-def pm_umbrella_applies(role: UserRole | str | None) -> bool:
-    """Gilt das PM-Dach (ACCESS_PM_FEATURES) für diese Rolle?
-
-    Fail-closed (Wurzel 5): unbekannte/fehlende Rolle → True, das Dach greift.
-    Solche Rollen haben ohnehin die leere Capability-Menge
-    (``capabilities_for``), das Ergebnis bleibt also in jedem Fall leer — aber
-    die Regel selbst öffnet nichts, wenn hier je etwas anderes durchkommt."""
-    if role is None:
-        return True
-    try:
-        role_enum = UserRole(role)
-    except ValueError:
-        return True
-    return role_enum in _PM_UMBRELLA_ROLES
+# Das PM-Dach und die Rollen, für die es gilt, leben jetzt EINE Ebene tiefer
+# (granular_permissions.py) — dort, wo ACCESS_PM_FEATURES und die pm_*-Kinder
+# definiert sind. Hier wird die Regel nur weiterverwendet, damit die
+# Capability-Ebene und die Permission-Ebene nicht zwei Meinungen haben können.
+#
+# Genau dieser Widerspruch war der Fehler: `pm_umbrella_applies` schloss
+# `owner` aus dem Dach aus, `effective_permissions` wandte es trotzdem auf ihn
+# an und löschte ihm vier seiner sechs Standardrechte (pm_property_area,
+# pm_photo_album, pm_view_property_images, pm_nonrevenue_charts) — Rechte, die
+# im Rechte-Dialog gesetzt aussahen und nie wirkten.
 
 
 def effective_capabilities(
-    role: UserRole | str | None, *, has_pm_access: bool
+    role: UserRole | str | None,
+    *,
+    has_pm_access: bool,
+    family_access: str | None = None,
 ) -> frozenset[Capability]:
     """Tatsächliche Fähigkeiten eines Nutzers = Rollen-Capabilities, aber ohne
     die PM-Capabilities, wenn das PM-Dach fehlt.
@@ -362,8 +382,28 @@ def effective_capabilities(
     ACCESS_PM_FEATURES), verliert hier also nichts. Für Rollen, die das Dach nie
     tragen können (``pm_umbrella_applies`` → False, aktuell ``owner``), wird es
     gar nicht erst angewandt — sie behalten ihr Rollen-Set unverändert und
-    gewinnen dadurch nichts hinzu."""
+    gewinnen dadurch nichts hinzu.
+
+    ``family_access`` ist die Stufe eines FAMILIENZUGANGS (0389). Sie DECKELT
+    das Ergebnis: ein Familienmitglied trägt in ``users`` die Rolle ``owner``,
+    soll aber nur können, was seine Stufe hergibt.
+
+    WARUM DAS HIER STEHT UND NICHT NUR IM PORTAL: die abgestufte Prüfung
+    (``owner_family_has_capability``) gab es ausschließlich in
+    ``public_portal`` — jeder andere Slice (properties, calendar, reservations,
+    reviews, pricing, property_dossier, tasks) scopte allein über
+    ``owner_property_assignments`` und gab dem Familienmitglied die VOLLEN
+    Eigentümer-Fähigkeiten. Live tragen alle drei Mitglieder die höchste Stufe,
+    weshalb es nicht auffiel; ein Mitglied der Stufe ``nutzung`` hätte
+    ``VIEW_OWNER_REPORTS`` überall außer im Portal gehabt.
+
+    Deckeln statt ersetzen: die Stufe kann nie MEHR geben als die Rolle. Sonst
+    wäre ein Familienzugang ein Weg, Eigentümer-Grenzen zu überschreiten."""
     caps = capabilities_for(role)
-    if has_pm_access or not pm_umbrella_applies(role):
-        return caps
-    return caps - _PM_CAPABILITIES
+    if not (has_pm_access or not pm_umbrella_applies(role)):
+        caps = caps - _PM_CAPABILITIES
+    if family_access is not None:
+        # Schnittmenge: fail-closed über `owner_family_capabilities_for`, das
+        # bei unbekannter Stufe die LEERE Menge liefert.
+        caps = caps & owner_family_capabilities_for(family_access)
+    return caps

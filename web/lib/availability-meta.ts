@@ -88,28 +88,34 @@ export type Availability = {
 export const DEFAULT_AVAILABILITY: Availability = {
   minStay: 1,
   minStayByDays: false,
-  // "arrival", NICHT "both" (live belegt 23.08.2026):
+  // "both" — am Wire-XML belegt (23.08.2026), NICHT "arrival":
   //
-  // Booking.com kennt je Zimmer nur EINEN Mindestaufenthalt-Typ
-  // (Channex-Mapping-Guide: „Primary Rate – This will be the rate plan that
-  // sends the restrictions such as min stay or stop sell. Since it is only one
-  // rate plan in booking.com."). Steht die Property auf "both", schickt Channex
-  // min_stay_arrival UND min_stay_through — Booking kann nicht entscheiden,
-  // welche Regel gilt, und übernimmt KEINE. Im Extranet stand deshalb bei allen
-  // 18 Objekten „Keine Mindestaufenthaltsdauer", obwohl die Werte bei Channex
-  // vollständig anlagen (per GET /restrictions über 91 Tage nachgelesen).
-  // Folge: drei Buchungen unter dem Mindestaufenthalt (1.820 + 2.685 DKK
-  // bestätigt, 1.801,25 DKK storniert), darunter eine 1-Nacht-Buchung an einem
-  // Objekt mit Mindestaufenthalt 3.
+  // Booking.com bekommt von Channex ZWEI getrennte AvailStatusMessage-Bloecke,
+  // einen je Min-Stay-Achse (`ArrivalDateBased="1"` = arrival, `="0"` = through)
+  // und entscheidet selbst. Ein Kanal-`min_stay_type` gibt es fuer Booking.com
+  // nicht (GET /channels/adapter?code=BookingCom kennt das Feld nicht — Expedia
+  // und Airbnb schon). Beide Achsen muessen deshalb den Wert tragen.
   //
-  // Airbnb war nie betroffen, weil es seinen Typ separat gesetzt bekommt
-  // (airbnb_oauth.py: MIN_STAY_ANREISE = "Arrival") — dort stand die 3 korrekt.
+  // Was "arrival" anrichtet, gemessen an dem, was Channex wirklich gesendet hat
+  // (GET /channel_events/{id}/logs, Feriehus Kornblomst, Rate 64872019):
+  //     00:42 Uhr, min_stay_type "both":     through SetMinLOS 2, arrival SetMinLOS 2
+  //     14:56 Uhr, min_stay_type "arrival":  through SetMinLOS 1, arrival LEER
+  // Bei "arrival" normalisiert Channex die through-Achse auf 1 UND sendet die
+  // arrival-Achse ohne jeden Wert — fuer den Zeitraum bis 04.01.2028, von
+  // Booking mit <Success/> quittiert. Ergebnis: bei Booking gilt "min stay 1",
+  // also gar keine Regel. "both" ist damit der einzige Wert, unter dem
+  // Booking.com den Mindestaufenthalt ueberhaupt erhaelt.
   //
-  // „arrival" ist der fachlich richtige Wert: der Mindestaufenthalt gilt für
-  // die ANREISE („mindestens N Nächte buchen"). „through" ist strenger und
-  // sperrt zusätzlich Nächte mitten in einem Aufenthalt — das will hier
-  // niemand. Wer es doch braucht, stellt es je Objekt im Formular um.
-  minStayType: "arrival",
+  // Airbnb ist von dieser Einstellung unabhaengig: es bekommt seinen Typ
+  // separat gesetzt (airbnb_oauth.py: MIN_STAY_ANREISE = "Arrival") und zeigte
+  // die Werte durchgehend korrekt an.
+  //
+  // ACHTUNG, nicht erneut umstellen: "Booking kennt nur einen Min-Stay-Typ,
+  // also muessen wir uns auf einen festlegen" klingt plausibel, ist aber am
+  // Wire-XML widerlegt. Warum der Mindestaufenthalt trotz korrekter Werte im
+  // Extranet fehlte, ist damit NICHT geklaert — die Suche geht dort weiter,
+  // nicht an dieser Zeile.
+  minStayType: "both",
   maxStay: 365,
   preparationDays: perChannel(0),
   bookingWindowDays: perChannel(365),
@@ -192,25 +198,6 @@ export function readAvailability(
   return {
     ...DEFAULT_AVAILABILITY,
     ...raw,
-    // Gespeichertes "both" wird zu "arrival" korrigiert.
-    //
-    // "both" war die frühere Voreinstellung und steht deshalb bei jedem
-    // Bestandsobjekt in `type_attributes.availability`. Über den Spread würde
-    // es den korrigierten Default überschreiben — die Objekte behielten den
-    // kaputten Wert für immer.
-    //
-    // Warum der Wert kaputt ist (live belegt 23.08.2026): bei "both" schickt
-    // Channex `min_stay_arrival` UND `min_stay_through`. Booking.com kennt je
-    // Zimmer nur EINEN Mindestaufenthalt-Typ und übernimmt daher keinen. Bei
-    // "Feriehus Kornblomst" standen 2 Nächte bei uns, 2 auf allen vier Raten
-    // bei Channex — und im Booking-Extranet "Keine Mindestaufenthaltsdauer".
-    // Bei allen 18 Objekten dasselbe; Airbnb war nie betroffen, weil sein Typ
-    // separat gesetzt wird.
-    //
-    // Keine Migration nötig: die Korrektur greift beim Lesen, wird beim
-    // nächsten Speichern mitgeschrieben und mit dem Objekt an Channex
-    // gesendet. "through" bleibt unangetastet — das ist eine bewusste Wahl.
-    minStayType: raw.minStayType === "both" ? "arrival" : (raw.minStayType ?? DEFAULT_AVAILABILITY.minStayType),
     preparationDays: mergePerChannel(raw.preparationDays, DEFAULT_AVAILABILITY.preparationDays),
     bookingWindowDays: mergePerChannel(raw.bookingWindowDays, DEFAULT_AVAILABILITY.bookingWindowDays),
     advanceNotice: mergePerChannel(raw.advanceNotice, DEFAULT_AVAILABILITY.advanceNotice),

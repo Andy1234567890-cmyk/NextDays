@@ -259,9 +259,40 @@ function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] 
         // Bewertungen aller Kanäle (Portale + myBestDays) — Vertriebsarbeit:
         // eine unbeantwortete Bewertung kostet Sichtbarkeit im Ranking.
         { key: "reviews", href: "/bewertungen", icon: "ph:star", req: "view_reviews" },
-        // „dynamicPricing" steht jetzt oben in MAIN (unter Aufgaben) — hier
-        // NICHT wiederholen, sonst hätte die Sidebar den Punkt zweimal.
-        { key: "websiteBuilder", href: "/website", icon: "ph:globe", req: "access_homepage_builder" },
+        // „dynamicPricing" steht oben in MAIN, der Website-Baukasten hat seine
+        // EIGENE Gruppe (unten) — hier keinen der beiden wiederholen, sonst
+        // stünde er zweimal in der Sidebar.
+      ],
+    },
+    // Website-Baukasten als eigene Gruppe, nicht als Punkt unter „Vertrieb":
+    // die eigene Website ist ein eigener Verkaufsweg (Direktbuchung), und man
+    // arbeitet an ihr in drei klar getrennten Bereichen. Jeder Bereich ist ein
+    // eigener PFAD (`/website/design`, `/website/seiten`,
+    // `/website/einstellungen/adresse`) — vorher unterschieden sie sich nur im
+    // Query (`?reiter=`), womit ein Unterpunkt wie das Logo-Panel gar keine
+    // Adresse hatte und die Hervorhebung eine Sonderbehandlung brauchte.
+    {
+      groupKey: "website",
+      icon: "ph:globe",
+      items: [
+        {
+          key: "websiteDesign",
+          href: "/website/design",
+          icon: "ph:palette",
+          req: "access_homepage_builder",
+        },
+        {
+          key: "websitePages",
+          href: "/website/seiten",
+          icon: "ph:files",
+          req: "access_homepage_builder",
+        },
+        {
+          key: "websiteDomain",
+          href: "/website/einstellungen/adresse",
+          icon: "ph:link",
+          req: "access_homepage_builder",
+        },
       ],
     },
     ...STATIC_GROUPS.filter((g) => !HIDDEN_AT_LAUNCH.has(g.groupKey)),
@@ -414,18 +445,23 @@ export function AppSidebar({
   // `/eigentuemer`, und beide Punkte standen gleichzeitig hervorgehoben da —
   // die Navigation behauptete, man sei an zwei Stellen. Der längste Treffer
   // gewinnt, weil er der spezifischste ist.
+  // Alle Menüpunkte führen auf einen PFAD — kein Punkt unterscheidet sich mehr
+  // nur im Query. Der Baukasten war der letzte Fall (`?reiter=design|seiten|
+  // adresse`) und brauchte dafür einen eigenen Vergleichszweig plus
+  // `useSearchParams`; seit er echte Unterpfade hat, trägt der normale
+  // Präfix-Vergleich auch ihn.
   const alleHrefs = [
     ...MAIN.map((i) => i.href),
     ...buildGroups(accommodationType).flatMap((g) => g.items.map((i) => i.href)),
   ];
-  const isActive = ({ href, exact }: NavItem) => {
-    if (href === "/") return pathname === "/";
-    if (exact) return pathname === href;
-    if (!pathname.startsWith(href)) return false;
+  const isActive = ({ href: pfad, exact }: NavItem) => {
+    if (pfad === "/") return pathname === "/";
+    if (exact) return pathname === pfad;
+    if (!pathname.startsWith(pfad)) return false;
     return !alleHrefs.some(
       (other) =>
         other !== "/" &&
-        other.length > href.length &&
+        other.length > pfad.length &&
         pathname.startsWith(other),
     );
   };

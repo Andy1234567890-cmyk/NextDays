@@ -1,27 +1,34 @@
-// Startseite einer white-label Agentur-Site = die im Editor komponierte Home-Page
-// (Block-Baum), gerendert pro Custom-Domain. KEIN Marktplatz-Klon.
-import { headers } from "next/headers";
-
+// Startseite einer Kunden-Site = die im Baukasten komponierte Home-Page
+// (geordnete Abschnitte), gerendert pro Custom-Domain. KEIN Marktplatz-Klon.
 import { BlockRenderer } from "@/components/blocks/block-renderer";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { NichtEingerichtet } from "@/components/nicht-eingerichtet";
+import { SiteShell } from "@/components/site-shell";
+import { aktuellerHost } from "@/lib/host";
 import type { SuchParams } from "@/lib/inserate";
 import { ladeSeite } from "@/lib/site";
-import { getSiteContext } from "@/lib/site-context";
+import { getSiteContext, navOf } from "@/lib/site-context";
+import { spracheWaehlen } from "@/lib/sprache";
 
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; guests?: string; start?: string; end?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    guests?: string;
+    start?: string;
+    end?: string;
+    /** Sprachwahl des Besuchers (Sprachwähler in der Kopfzeile). */
+    lang?: string;
+  }>;
 }) {
   const { branding, unknown } = await getSiteContext();
-  const host = await currentHost();
+  const host = await aktuellerHost();
 
-  if (unknown || !host) return <NotConfigured />;
+  if (unknown || !host) return <NichtEingerichtet />;
 
   const site = await ladeSeite(host);
-  // Keine veröffentlichte Home-Seite → neutraler Hinweis (kein Marktplatz).
-  if (!site) return <NotConfigured />;
+  // Keine veröffentlichte Startseite → neutraler Hinweis (kein Marktplatz).
+  if (!site) return <NichtEingerichtet />;
 
   const sp = await searchParams;
   const search: SuchParams = {
@@ -32,35 +39,19 @@ export default async function HomePage({
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <SiteHeader logoSrc={branding?.logo_url} logoAlt={branding?.site_name} siteName={branding?.site_name} />
-      <main className="flex-1">
-        <BlockRenderer
-          blocks={site.blocks}
-          tenantId={site.tenant_id}
-          search={search}
-        />
-      </main>
-      <SiteFooter siteName={branding?.site_name} />
-    </div>
-  );
-}
-
-async function currentHost(): Promise<string | null> {
-  const h = await headers();
-  const raw = h.get("x-forwarded-host") ?? h.get("host") ?? "";
-  return raw.split(":")[0]!.trim().toLowerCase() || null;
-}
-
-function NotConfigured() {
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-3 px-6 text-center">
-      <p className="font-display text-xl font-semibold">
-        Diese Seite ist noch nicht eingerichtet
-      </p>
-      <p className="max-w-md text-sm text-muted-foreground">
-        Für diese Adresse ist noch keine Buchungs-Site veröffentlicht.
-      </p>
-    </div>
+    <SiteShell
+      branding={branding}
+      nav={navOf(branding)}
+      aktiverSlug=""
+      jahr={new Date().getFullYear()}
+      sprache={spracheWaehlen(branding, sp.lang)}
+    >
+      <BlockRenderer
+        blocks={site.blocks}
+        tenantId={site.tenant_id}
+        search={search}
+        modus={{ aktiv: false, locale: spracheWaehlen(branding, sp.lang) }}
+      />
+    </SiteShell>
   );
 }

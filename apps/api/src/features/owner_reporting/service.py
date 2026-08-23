@@ -46,6 +46,7 @@ from .auswertung import (
 )
 from .empfaenger import EmpfaengerService
 from .fehler import ReportingError
+from .rollen import nur_eigene_berichte, verbiete_eigentuemer_schreiben
 from .schemas import (
     Abschnitt,
     AmTag,
@@ -232,6 +233,12 @@ class OwnerReportingService:  # pylint: disable=too-many-public-methods
             .order("id")
         )
         objekte = self._report_property_ids([str(r["id"]) for r in rows])
+        # Eigentümer sehen nur Berichte, die MINDESTENS EIN eigenes Objekt
+        # betreffen (§4.2). Vorher war die Liste rein tenant-gescopt: ein
+        # Eigentümer hätte die Auswertung ALLER Eigentümer des Betriebs gesehen,
+        # inklusive fremder Auszahlungsbeträge. Gefiltert wird über dieselbe
+        # Zuordnung wie in den übrigen Slices (`owner_property_assignments`).
+        rows = nur_eigene_berichte(self._db, ctx, rows, objekte)
         zahlungen: dict[str, int] = defaultdict(int)
         for p in fetch_all_rows(
             self._db.table("owner_report_payments")
@@ -258,6 +265,7 @@ class OwnerReportingService:  # pylint: disable=too-many-public-methods
         return ReportListResponse(items=items, total=len(items))
 
     def create_report(self, ctx: AuthContext, req: ReportCreate) -> ReportDetail:
+        verbiete_eigentuemer_schreiben(ctx)
         tenant_id = self._tenant(ctx)
         ids = self.pruefe_objekte(tenant_id, req.property_ids)
         row = (
@@ -284,6 +292,7 @@ class OwnerReportingService:  # pylint: disable=too-many-public-methods
     def update_report(
         self, ctx: AuthContext, report_id: str, req: ReportUpdate
     ) -> ReportDetail:
+        verbiete_eigentuemer_schreiben(ctx)
         tenant_id = self._tenant(ctx)
         row = self._own_report(tenant_id, report_id)
         patch: dict[str, Any] = {}
@@ -325,6 +334,7 @@ class OwnerReportingService:  # pylint: disable=too-many-public-methods
         return self.get_report(ctx, report_id)
 
     def delete_report(self, ctx: AuthContext, report_id: str) -> None:
+        verbiete_eigentuemer_schreiben(ctx)
         tenant_id = self._tenant(ctx)
         self._own_report(tenant_id, report_id)
         # Eine bereits erzeugte Zahlung ist eine Forderung mit eigenem Beleg.
@@ -543,6 +553,7 @@ class OwnerReportingService:  # pylint: disable=too-many-public-methods
         schon, wird sie zurückgegeben statt eine zweite Forderung über denselben
         Betrag anzulegen. Der UNIQUE-Index ist der DB-Backstop dahinter.
         """
+        verbiete_eigentuemer_schreiben(ctx)
         tenant_id = self._tenant(ctx)
         report = self._own_report(tenant_id, report_id)
         owner = self.own_owner(tenant_id, req.owner_id)
@@ -1014,6 +1025,7 @@ class OwnerReportingService:  # pylint: disable=too-many-public-methods
     def update_payment(
         self, ctx: AuthContext, payment_id: str, req: PaymentUpdate
     ) -> PaymentDetail:
+        verbiete_eigentuemer_schreiben(ctx)
         tenant_id = self._tenant(ctx)
         self._own_payment(tenant_id, payment_id)
         self._db.table("owner_report_payments").update(
@@ -1032,6 +1044,7 @@ class OwnerReportingService:  # pylint: disable=too-many-public-methods
         beglichen, wird nichts angelegt (Wurzel 2: der zweite Klick darf keine
         zweite Zahlung erzeugen).
         """
+        verbiete_eigentuemer_schreiben(ctx)
         tenant_id = self._tenant(ctx)
         row = self._own_payment(tenant_id, payment_id)
         gezahlt = self._teilzahlungen([payment_id]).get(payment_id, _NULL)
@@ -1056,6 +1069,7 @@ class OwnerReportingService:  # pylint: disable=too-many-public-methods
     def add_part(
         self, ctx: AuthContext, payment_id: str, req: PaymentPartCreate
     ) -> PaymentDetail:
+        verbiete_eigentuemer_schreiben(ctx)
         tenant_id = self._tenant(ctx)
         row = self._own_payment(tenant_id, payment_id)
         gezahlt = self._teilzahlungen([payment_id]).get(payment_id, _NULL)
@@ -1086,6 +1100,7 @@ class OwnerReportingService:  # pylint: disable=too-many-public-methods
         return self.get_payment(ctx, payment_id)
 
     def delete_part(self, ctx: AuthContext, part_id: str) -> PaymentDetail:
+        verbiete_eigentuemer_schreiben(ctx)
         tenant_id = self._tenant(ctx)
         rows = (
             self._db.table("owner_report_payment_parts")
@@ -1113,6 +1128,7 @@ class OwnerReportingService:  # pylint: disable=too-many-public-methods
         return self.get_payment(ctx, payment_id)
 
     def delete_payment(self, ctx: AuthContext, payment_id: str) -> None:
+        verbiete_eigentuemer_schreiben(ctx)
         tenant_id = self._tenant(ctx)
         row = self._own_payment(tenant_id, payment_id)
         if row.get("statement_id"):
@@ -1213,6 +1229,7 @@ class OwnerReportingService:  # pylint: disable=too-many-public-methods
     def create_schedule(
         self, ctx: AuthContext, req: ScheduleCreate
     ) -> ScheduleResponse:
+        verbiete_eigentuemer_schreiben(ctx)
         tenant_id = self._tenant(ctx)
         ids = self.pruefe_objekte(tenant_id, req.property_ids)
         for oid in req.recipient_ids:
@@ -1268,6 +1285,7 @@ class OwnerReportingService:  # pylint: disable=too-many-public-methods
     def update_schedule(
         self, ctx: AuthContext, schedule_id: str, req: ScheduleUpdate
     ) -> ScheduleResponse:
+        verbiete_eigentuemer_schreiben(ctx)
         tenant_id = self._tenant(ctx)
         self._own_schedule(tenant_id, schedule_id)
         patch: dict[str, Any] = {"updated_at": "now()"}
@@ -1309,6 +1327,7 @@ class OwnerReportingService:  # pylint: disable=too-many-public-methods
         return self.get_schedule(ctx, schedule_id)
 
     def delete_schedule(self, ctx: AuthContext, schedule_id: str) -> None:
+        verbiete_eigentuemer_schreiben(ctx)
         tenant_id = self._tenant(ctx)
         self._own_schedule(tenant_id, schedule_id)
         self._db.table("owner_report_schedules").delete().eq(
@@ -1456,6 +1475,7 @@ class OwnerReportingService:  # pylint: disable=too-many-public-methods
     def create_recurring(
         self, ctx: AuthContext, owner_id: str, req: RecurringItemCreate
     ) -> RecurringItemResponse:
+        verbiete_eigentuemer_schreiben(ctx)
         return self._empfaenger.create_recurring(
             self._tenant(ctx), owner_id, req, user_id=ctx.user_id
         )
@@ -1463,7 +1483,9 @@ class OwnerReportingService:  # pylint: disable=too-many-public-methods
     def update_recurring(
         self, ctx: AuthContext, item_id: str, req: RecurringItemUpdate
     ) -> RecurringItemResponse:
+        verbiete_eigentuemer_schreiben(ctx)
         return self._empfaenger.update_recurring(self._tenant(ctx), item_id, req)
 
     def delete_recurring(self, ctx: AuthContext, item_id: str) -> None:
+        verbiete_eigentuemer_schreiben(ctx)
         self._empfaenger.delete_recurring(self._tenant(ctx), item_id)
