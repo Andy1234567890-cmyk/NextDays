@@ -88,7 +88,28 @@ export type Availability = {
 export const DEFAULT_AVAILABILITY: Availability = {
   minStay: 1,
   minStayByDays: false,
-  minStayType: "both",
+  // "arrival", NICHT "both" (live belegt 23.08.2026):
+  //
+  // Booking.com kennt je Zimmer nur EINEN Mindestaufenthalt-Typ
+  // (Channex-Mapping-Guide: „Primary Rate – This will be the rate plan that
+  // sends the restrictions such as min stay or stop sell. Since it is only one
+  // rate plan in booking.com."). Steht die Property auf "both", schickt Channex
+  // min_stay_arrival UND min_stay_through — Booking kann nicht entscheiden,
+  // welche Regel gilt, und übernimmt KEINE. Im Extranet stand deshalb bei allen
+  // 18 Objekten „Keine Mindestaufenthaltsdauer", obwohl die Werte bei Channex
+  // vollständig anlagen (per GET /restrictions über 91 Tage nachgelesen).
+  // Folge: drei Buchungen unter dem Mindestaufenthalt (1.820 + 2.685 DKK
+  // bestätigt, 1.801,25 DKK storniert), darunter eine 1-Nacht-Buchung an einem
+  // Objekt mit Mindestaufenthalt 3.
+  //
+  // Airbnb war nie betroffen, weil es seinen Typ separat gesetzt bekommt
+  // (airbnb_oauth.py: MIN_STAY_ANREISE = "Arrival") — dort stand die 3 korrekt.
+  //
+  // „arrival" ist der fachlich richtige Wert: der Mindestaufenthalt gilt für
+  // die ANREISE („mindestens N Nächte buchen"). „through" ist strenger und
+  // sperrt zusätzlich Nächte mitten in einem Aufenthalt — das will hier
+  // niemand. Wer es doch braucht, stellt es je Objekt im Formular um.
+  minStayType: "arrival",
   maxStay: 365,
   preparationDays: perChannel(0),
   bookingWindowDays: perChannel(365),

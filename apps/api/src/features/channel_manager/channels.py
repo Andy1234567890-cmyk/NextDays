@@ -960,9 +960,45 @@ class ChannelsMixin:
         # sonst landet dieselbe OTA-Rate doppelt und der Kanal ist inkonsistent.
         seen_pairs: set[tuple[Any, Any]] = set()
         # Genau EINE Rate trägt die Restriktionen (min_stay/stop_sell), weil Booking
-        # pro Zimmer nur EINEN Restriktions-Träger kennt (Doku). Der erste erzeugte
-        # Eintrag ist primary_occ=True, alle weiteren False.
-        primary_used = False
+        # pro Zimmer nur EINEN Restriktions-Träger kennt (Doku:
+        # „Primary Rate – This will be the rate plan that sends the restrictions
+        # such as min stay or stop sell. Since it is only one rate plan in
+        # booking.com."). Der erste erzeugte Eintrag ist primary_occ=True, alle
+        # weiteren False.
+        #
+        # DESHALB IST JEDER WEITERE OTA-RATENCODE EIN LOCH (live belegt am
+        # 23.08.2026): Rævlingehuset hat min_stay 3, gepusht und bei Channex auf
+        # allen Raten nachgelesen. Der Booking-Kanal führte aber ZWEI Ratencodes
+        # auf denselben Plan — 45621028 (primary) und 45627350 (nicht primary).
+        # Am 23.08. 11:46 kam über 45627350 eine 1-NACHT-Buchung (1.820 DKK),
+        # weil dieser Code die Restriktion nie erhält; Booking wendet dort seinen
+        # eigenen Wert an. Insgesamt drei solche Buchungen seit dem Connect.
+        # Der Mindestaufenthalt „wird gesendet" — nur nicht an alle Codes.
+        #
+        # Wir können das nicht beheben (Booking nimmt je Zimmer nur einen
+        # Restriktions-Träger), aber wir dürfen es nicht verschweigen: die
+        # überzähligen Codes werden gesammelt und gemeldet, damit sie im
+        # Extranet gelöscht oder dort selbst mit dem Mindestaufenthalt versehen
+        # werden (Booking-Mapping-Guide: „Ask the hotel to delete the derived
+        # rates inside booking.com and then they can make them again new").
+        # Restriktions-Träger je Channex-Rate-Plan, NICHT einmal pro Kanal.
+        #
+        # WARUM (live belegt 23.08.2026): Booking trägt Restriktionen nur an der
+        # Primary-Rate („Primary Rate – This will be the rate plan that sends the
+        # restrictions such as min stay or stop sell", Booking-Mapping-Guide).
+        # Vorher war genau EIN Eintrag im ganzen Kanal primary_occ=True. Führte
+        # ein Booking-Zimmer mehrere Ratencodes (Regelfall: Standard + Wochen-
+        # rate), bekamen alle weiteren Codes KEINE Restriktion — sie verkauften
+        # ohne Mindestaufenthalt. Rævlingehuset: min_stay 3 gepusht und bei
+        # Channex nachgelesen, am 23.08. 11:46 trotzdem eine 1-Nacht-Buchung
+        # über Code 45627350 (primary_occ=False, 1.820 DKK); zwei weitere Fälle
+        # seit dem Connect.
+        #
+        # Da jeder Ratencode auf denselben lokalen Plan zeigen darf, ist der
+        # richtige Bezug der ZIEL-PLAN: je Channex-Rate-Plan genau ein Träger.
+        # Mehr geht nicht (Booking kennt je Zimmer einen), aber weniger darf es
+        # auch nicht sein — jeder Plan, der bespielt wird, braucht seinen.
+        primary_je_plan: set[str] = set()
         rate_plans: list[dict[str, Any]] = []
         for m in mappings:
             local_property_id = m.get("local_property_id")
@@ -1049,11 +1085,12 @@ class ChannelsMixin:
                             rate_code=rate_code,
                             occupancy=occupancy,
                             pricing_type=pricing_type,
-                            primary=not primary_used,
+                            primary=str(channex_rate_plan_id)
+                            not in primary_je_plan,
                         ),
                     }
                 )
-                primary_used = True
+                primary_je_plan.add(str(channex_rate_plan_id))
         if not rate_plans:
             raise ChannelManagerError(
                 "Bitte mindestens ein Zimmer zuordnen.", status_code=422
@@ -1206,6 +1243,30 @@ class ChannelsMixin:
              and portal_code is not None),
             None,
         )
+        # FAIL-CLOSED (Wurzel 5): allein die Existenz einer `portal_scope`-Zeile
+        # macht den Plan nicht zum Primary. Er darf den Grundpreis nur
+        # ERSETZEN, wenn er auch etwas anderes trägt — also einen Aufschlag ≠ 0.
+        #
+        # WARUM (live gemessen 23.08.2026): der Steuer-Sync legte Kanal-Pläne mit
+        # `offset_percent = 0` an, ohne sie am Kanal zuzuordnen. 18 solche Zeilen
+        # standen in `rate_plans`. Diese Funktion nahm sie trotzdem als Primary
+        # und schob damit den GRUNDPREIS aus dem Array — der Kanal bekam einen
+        # Plan zugewiesen, den er nicht gemappt hatte, während der Plan, den er
+        # las, aus der Zuordnung fiel. Ein 0-%-Plan ist preislich ohnehin
+        # identisch zum Grundpreis; sein einziger Zweck ist das portal-eigene
+        # Tax-Set, und dafür genügt es, dass er MITgeht — Primary muss er nicht
+        # sein. Bleibt der Grundpreis Primary, trägt er weiter Restriktionen
+        # (Booking kennt je Zimmer nur EINEN Restriktions-Träger) und keine
+        # Buchung fällt durch eine ungemappte Rate.
+        if eigener_kanalplan and not self._kanalplan_mit_aufschlag(
+            db, local_property_id, portal_code
+        ):
+            log.info(
+                "kanalplan_nicht_primary_ohne_aufschlag",
+                property_id=local_property_id, portal_code=portal_code,
+                channex_rate_plan_id=eigener_kanalplan,
+            )
+            eigener_kanalplan = None
         portal_ids = self._portal_enabled_rate_plan_ids(
             db, tenant_id, local_property_id
         )
@@ -1216,7 +1277,47 @@ class ChannelsMixin:
                 if cid != eigener_kanalplan and cid in portal_ids
             ]
             return [eigener_kanalplan, *rest]
-        return [cid for i, cid in enumerate(ids) if i == 0 or cid in portal_ids]
+        # Grundpreis bleibt Primary. Ein 0-%-Kanal-Plan geht als ZUSATZ mit,
+        # damit sein Tax-Set beim Portal ankommt — aber hinter dem Grundpreis.
+        gewaehlt = [
+            cid for i, cid in enumerate(ids)
+            if i == 0 or cid in portal_ids or scoped.get(cid) == portal_code
+        ]
+        return gewaehlt
+
+    @staticmethod
+    def _kanalplan_mit_aufschlag(
+        db: Client, property_id: str, portal_code: str | None
+    ) -> bool:
+        """Trägt der Kanal-Plan dieses Portals einen echten Aufschlag?
+
+        `offset_percent`/`offset_amount` beide leer oder 0 heißt: preislich
+        identisch zum Grundpreis. Ein solcher Plan wurde vom Steuer-Sync
+        angelegt, um ein portal-eigenes Tax-Set zu tragen — er ist kein
+        Preisträger und darf den Grundpreis nicht als Primary verdrängen.
+
+        property_id ist beim Aufrufer tenant-gescoped (Wurzel 3).
+        """
+        if not portal_code:
+            return False
+        rows = (
+            db.table("rate_plans")
+            .select("offset_percent, offset_amount")
+            .eq("property_id", property_id)
+            .eq("portal_scope", portal_code)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            return False
+        for feld in ("offset_percent", "offset_amount"):
+            try:
+                if float(rows[0].get(feld) or 0) != 0:
+                    return True
+            except (TypeError, ValueError):
+                # Unlesbarer Wert ist kein Beweis für einen Aufschlag.
+                continue
+        return False
 
     def _portal_scoped_channex_ids(
         self, db: Client, tenant_id: str, property_id: str
