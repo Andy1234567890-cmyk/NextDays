@@ -25,7 +25,8 @@
       "de": "German",
       "da": "Danish",
       "en": "English"
-    }
+    },
+    "explain": "Explanation of {label}"
   },
   "legal": {
     "agbLinkLabel": "Terms",
@@ -240,7 +241,8 @@
       "vacationRentals": "Vacation rentals",
       "accounting": "Accounting",
       "guests": "Guests",
-      "tools": "Tools"
+      "tools": "Tools",
+      "website": "Website builder"
     },
     "roles": {
       "admin": "Admin",
@@ -297,7 +299,10 @@
     "announcements": "What's new",
     "billingRules": "Billing rules",
     "ownerReporting": "Owner reporting",
-    "inboxUngelesen": "Inbox ({count} unread)"
+    "inboxUngelesen": "Inbox ({count} unread)",
+    "websiteDesign": "Design",
+    "websiteDomain": "Address",
+    "websitePages": "Pages"
   },
   "exemption": {
     "labelNamed": "Tax-exempt ({scheme}) — no VAT ID required",
@@ -1500,7 +1505,10 @@
       "meterReadings": "Meter readings",
       "services": "Services",
       "notifications": "Notifications",
-      "familyAccess": "Access"
+      "familyAccess": "Access",
+      "photoAlbum": "Photo album",
+      "propertyArea": "Property area",
+      "statistics": "Statistics"
     },
     "overview": {
       "occupancy": "Occupancy",
@@ -1672,6 +1680,98 @@
         "forwarded": "Forwarded to the agency.",
         "declined": "Declined. The agency will not hear about it."
       }
+    },
+    "statistics": {
+      "allProperties": "All properties",
+      "basis": {
+        "arrivalsHint": "Bookings whose arrival falls within the period are counted, with their entire stay. That's why the number of bookings and the booked nights above don't match — those are two different questions.",
+        "arrivalsTitle": "Arrivals in the period",
+        "nightsHint": "Nights that fall WITHIN the period are counted — including nights from bookings that started earlier.",
+        "nightsTitle": "Occupancy in the period"
+      },
+      "charts": {
+        "bookingsByChannel": "Bookings by channel",
+        "bookingsByChannelHint": "Number of arrivals per channel — no amounts.",
+        "nightsByMonth": "Booked nights by month",
+        "nightsByMonthHint": "Guest nights and owner stays by month, stacked.",
+        "noChannels": "There are no bookings in this period.",
+        "occupancyByMonth": "Occupancy rate by month"
+      },
+      "empty": "No data is available for this period.",
+      "from": "From",
+      "kpi": {
+        "avgStay": "Length of stay",
+        "avgStayHint": "Average number of nights per booking.",
+        "bookings": "Bookings",
+        "capacity": "Available unit-nights",
+        "capacityHint": "Units × days in the period — the nights that could have been sold at all (number of units: {units}).",
+        "guestNights": "Guest nights",
+        "leadTime": "Lead time",
+        "leadTimeBasis": "{count, plural, =0 {No booking time known} one {Based on # booking with a known booking time} other {Based on # bookings with a known booking time}}",
+        "occupancy": "Occupancy rate",
+        "occupancyHint": "Guest nights and owner stays relative to the available unit-nights.",
+        "ownerStay": "Owner stay",
+        "ownerStayHint": "Nights you use yourself. They occupy the calendar and count towards the occupancy rate, but they are not a marketing result."
+      },
+      "noValue": "—",
+      "property": "Property",
+      "series": {
+        "guestNights": "Guest nights",
+        "ownerStay": "Owner stay"
+      },
+      "subtitle": "Occupancy and stays for your properties. No amounts.",
+      "title": "Statistics",
+      "to": "To",
+      "units": {
+        "bookings": "bookings",
+        "days": "days",
+        "nights": "nights"
+      }
+    },
+    "propertyArea": {
+      "back": "Back to the property list",
+      "empty": "No properties are assigned to you yet.",
+      "fields": {
+        "bfeNumber": "BFE number",
+        "floorNumber": "Floor",
+        "floors": "Floors in the building",
+        "maxGuests": "Guests",
+        "size": "Living space",
+        "status": "Status",
+        "timezone": "Time zone",
+        "totalRooms": "Number of rooms",
+        "type": "Property type",
+        "units": "Units",
+        "yearBuilt": "Year built"
+      },
+      "noAddress": "No address is on file for this property.",
+      "noAmenities": "No amenities are on file for this property.",
+      "noDescription": "No description is on file for this property.",
+      "noImages": "No images are on file for this property.",
+      "noPermission": "You don't have permission for the property area. Your management can grant it.",
+      "notFound": "This property doesn't exist or isn't assigned to you.",
+      "readOnlyHint": "This view is read-only. Changes are made by your management.",
+      "sections": {
+        "address": "Address",
+        "amenities": "Amenities",
+        "basics": "Basic data",
+        "description": "Description",
+        "images": "Images",
+        "roomAmenities": "In-room amenities"
+      },
+      "subtitle": "Basic data, description and amenities for your properties — view only.",
+      "title": "Property area"
+    },
+    "photoAlbum": {
+      "cover": "Cover image",
+      "empty": "No images are on file for your properties yet.",
+      "imageCount": "{count, plural, =0 {no images} one {# image} other {# images}}",
+      "next": "Next image",
+      "open": "Enlarge image",
+      "position": "{index} of {total}",
+      "previous": "Previous image",
+      "subtitle": "All images from your properties, grouped by property.",
+      "title": "Photo album"
     }
   },
   "travelAgencies": {
@@ -5509,6 +5609,24 @@
       "planModeDerived": "Derived from {parent} · {offset}",
       "planDerivedPrice": "calculated",
       "planMinStay": "Min. {nights} nights",
+      "planPortalRate": "Portal rate",
+      "planMinStayEdit": "Edit minimum stay",
+      "planMinStayEditorTitle": "Minimum stay",
+      "planMinStayEditorSubtitle": "Minimum stay for the rate plan {plan}. It applies as the default on every day that has no separate value in the calendar.",
+      "planMinStayLabel": "Nights",
+      "planMinStayFieldHint": "1 to 365 nights.",
+      "planMinStayPortalHint": "Booking portals keep the minimum stay per rate category. A weekly rate without 7 nights is sold there for single nights too.",
+      "planMinStayInvalid": "Please enter a number from 1 to 365.",
+      "planMinStaySaved": "Minimum stay saved.",
+      "planPriceEdit": "Edit price",
+      "planPriceEditorTitle": "Price per night",
+      "planPriceEditorSubtitle": "Price per night for the rate plan {plan}. It applies as the default on every day that has no separate price in the calendar.",
+      "planPriceLabel": "Price per night {currency}",
+      "planPriceFieldHint": "Greater than 0.",
+      "planPricePortalHint": "Booking portals keep the price per rate category. This amount applies to this rate plan only and goes to the portals it is released for.",
+      "planPriceDiscountHint": "This is the discounted price PER NIGHT, not the price for the whole week. Booking.com shows this rate to guests searching for this plan's minimum stay or longer; the discount comes solely from this nightly price being lower than the base price. If it stays the same, it is not a discount but a second standard price.",
+      "planPriceInvalid": "Please enter a price greater than 0.",
+      "planPriceSaved": "Price saved.",
       "planDelete": "Delete",
       "planDeleted": "Rate plan deleted.",
       "planCreated": "Rate plan created.",
@@ -6492,7 +6610,8 @@
       "confirm": {
         "approve": "Block {objekt} from {von} to {bis}? The nights will be blocked on all channels.",
         "reject": "Reject the request for {objekt} ({von} – {bis})?",
-        "revoke": "Revoke the approval for {objekt} ({von} – {bis})? The nights will be released again."
+        "revoke": "Revoke the approval for {objekt} ({von} – {bis})? The nights will be released again.",
+        "approve": "Block {objekt} from {von} to {bis}? The nights will be blocked on all channels."
       },
       "done": {
         "approve": "Request approved, nights blocked.",
@@ -7191,7 +7310,34 @@
       "togglePinsEn": "Toggle pins",
       "guestReviews": "What our guests say",
       "reviewPreview": "A real review from your guests will appear here.",
-      "reviewsHint": "Preview · your real reviews appear on the live page."
+      "reviewsHint": "Preview · your real reviews appear on the live page.",
+      "abschnittHinzufuegen": "Add section",
+      "abschnitte": "Sections",
+      "bildHinzufuegen": "Add image",
+      "buchungsAbschnitt": "Shows real availability and real prices",
+      "duplizieren": "Duplicate",
+      "entfernen": "Remove",
+      "gruppe": {
+        "buchung": "Booking",
+        "inhalt": "Content",
+        "medien": "Media",
+        "sonstiges": "Other"
+      },
+      "hinzufuegen": "Add",
+      "maxAbschnitte": "A page cannot have more than {max} sections.",
+      "nachOben": "Move up",
+      "nachUnten": "Move down",
+      "nochKeineAbschnitte": "No sections yet. Add the first one.",
+      "objektHinzufuegen": "Add",
+      "objektIdPlatzhalter": "Property ID",
+      "objekteHinweis": "IDs of the properties that should appear here.",
+      "schliessen": "Close",
+      "sprache": "Language",
+      "standard": "Default",
+      "unbekannterAbschnitt": "Unknown section",
+      "unbekannterAbschnittHinweis": "The builder no longer recognises this section. It stays on the page until you remove it.",
+      "zurListe": "All sections",
+      "zurueck": "Back to overview"
     },
     "pages": {
       "startFromTemplate": "Start from a template",
@@ -7199,6 +7345,436 @@
       "titlePlaceholder": "Page title (e.g. About us)",
       "setHomepage": "Set as homepage",
       "delete": "Delete"
+    },
+    "design": {
+      "alleGespeichert": "Everything is saved",
+      "buttonEcken": "Corners",
+      "buttonFuellung": "Style",
+      "buttonRand": {
+        "pill": "Pill",
+        "rounded": "Rounded",
+        "sharp": "Sharp"
+      },
+      "buttonSolide": "Solid",
+      "buttonUmrandet": "Outlined",
+      "buttonVorschau": "Example",
+      "buttonsHinweis": "Applies to every button on the website.",
+      "buttonsTitel": "Button shape",
+      "farbeZuruecksetzen": "Reset colour",
+      "farbenHinweis": "A palette sets all four colours to match each other.",
+      "farbenTitel": "Colours",
+      "farbrolle": {
+        "firmenname": "Business name",
+        "flaeche": "Surfaces",
+        "fussHintergrund": "Footer background",
+        "hintergrund": "Background",
+        "kopfHintergrund": "Header background",
+        "kopfLinks": "Header links",
+        "links": "Links in text",
+        "primaer": "Buttons and links",
+        "schrift": "Text colour"
+      },
+      "farbrolleHinweis": {
+        "firmenname": "Your business name next to the logo",
+        "flaeche": "Cards, contact block, footer",
+        "fussHintergrund": "The footer surface",
+        "hintergrund": "The page's base surface",
+        "kopfHintergrund": "The surface behind the logo and menu",
+        "kopfLinks": "Menu items at the top",
+        "links": "References within body text",
+        "primaer": "Buttons, accents and links",
+        "schrift": "Body text and headings"
+      },
+      "faviconBild": "Favicon",
+      "faviconTitel": "Favicon",
+      "faviconUrl": "Favicon address",
+      "firmenname": "Business name",
+      "gespeichert": "Design saved.",
+      "hexUngueltig": "Enter a complete colour value, for example #1f7a8c.",
+      "kontrastWarnung": "These colours are hard to read",
+      "kontrastWert": "Contrast {ist} instead of at least {soll}",
+      "logoBild": "Logo",
+      "logoGroesse": "Scale logo",
+      "logoHinweis": "Recommended: PNG or SVG with a transparent background, at least 60 pixels tall.",
+      "logoTitel": "Logo",
+      "logoUrl": "Logo address",
+      "logoZiel": "Logo click target",
+      "logoZielLeer": "Home page",
+      "namensGroesse": "Name size",
+      "paletteEmpfohlen": "Recommended",
+      "paletteWaehlen": "Choose colour palette",
+      "schrift": "Font",
+      "schriftAbsatz": "Paragraph",
+      "schriftButtons": "Button font",
+      "schriftMarke": "Default",
+      "schriftUeberschrift": "Heading",
+      "schriftWieAbsatz": "Same as paragraph",
+      "schriftenHinweis": "Heading, paragraph and buttons are chosen separately.",
+      "schriftenTitel": "Fonts",
+      "siteName": "Name",
+      "slogan": "Slogan",
+      "sloganText": "Text",
+      "speichern": "Save",
+      "speichert": "Saving …",
+      "theme": {
+        "karte": "Card",
+        "klar": "Plain",
+        "mitte": "Centred",
+        "seitlich": "Side"
+      },
+      "themeBeschreibung": {
+        "karte": "Header as a separate card",
+        "klar": "Logo on the left, menu on the right",
+        "mitte": "Logo centred, menu below",
+        "seitlich": "Menu as a bar on the left"
+      },
+      "themeHinweis": "Determines where the logo, menu and footer sit.",
+      "themeTitel": "Template",
+      "ungespeichert": "Unsaved changes",
+      "verwerfen": "Discard",
+      "weitereOptionen": "More options",
+      "zurueck": "Back"
+    },
+    "paletten": {
+      "holz": "Wood",
+      "koralle": "Coral",
+      "lavendel": "Lavender",
+      "nacht": "Night",
+      "sand": "Sand",
+      "schlicht": "Plain",
+      "see": "Lake",
+      "stein": "Stone",
+      "wald": "Forest",
+      "wein": "Wine"
+    },
+    "kontrast": {
+      "buttonText": "Text on buttons",
+      "linkAufHintergrund": "Links against the background",
+      "schriftAufFlaeche": "Text on surfaces",
+      "schriftAufHintergrund": "Text against the background"
+    },
+    "kopf": {
+      "entwurfAnsehen": "View draft",
+      "entwurfHinweis": "The current state, in its own window",
+      "entwurfLaedt": "Preparing draft …",
+      "entwurfNichtMoeglich": "Draft not available right now",
+      "gespeichert": "Saved",
+      "keineLiveDomain": "No custom domain connected yet",
+      "liveAnsehen": "View live version",
+      "nichtsZuVeroeffentlichen": "All pages are already published.",
+      "speicherFehler": "Not saved",
+      "speichert": "saving …",
+      "veroeffentlichen": "Publish",
+      "veroeffentlicht": "{anzahl, plural, one {One page published} other {# pages published}}",
+      "veroeffentlicht0": "Publishing …",
+      "websiteAnsehen": "View website"
+    },
+    "reiter": {
+      "design": "Design",
+      "einstellungen": "Settings",
+      "objekte": "Properties",
+      "seiten": "Pages",
+      "widgets": "Widgets"
+    },
+    "baukasten": {
+      "keinZugriff": "You do not have access to the website builder."
+    },
+    "seiten": {
+      "abbrechen": "Cancel",
+      "adresse": "Page address",
+      "alleSprachen": "In all languages of the website",
+      "alleSprachenHinweis": "The normal case — the page appears everywhere your website appears.",
+      "alsStartseite": "As homepage",
+      "anlegen": "Create",
+      "bearbeiten": "Edit",
+      "bereich": "Area",
+      "bereichHinweis": {
+        "footer": "Appears at the bottom, in the footer.",
+        "header": "Appears in the website's main menu.",
+        "none": "Only reachable via a direct link."
+      },
+      "bereichKurz": {
+        "footer": "Footer",
+        "header": "Header",
+        "none": "No menu"
+      },
+      "bereichLeer": {
+        "footer": "No page in the footer yet.",
+        "header": "No page in the main menu yet.",
+        "none": "No unlinked pages."
+      },
+      "bereichTitel": {
+        "footer": "Footer",
+        "header": "Header",
+        "none": "Not linked"
+      },
+      "einstellungen": "Page settings",
+      "einstellungenGespeichert": "Page settings saved.",
+      "entwurf": "Draft",
+      "fehlgeschlagen": "The action failed.",
+      "googleVorschau": "Preview on Google",
+      "keineDomain": "As soon as your own domain is connected, the full address appears here.",
+      "keineDomainKurz": "no domain yet",
+      "loeschen": "Delete",
+      "menue": "More actions",
+      "nachOben": "Move up",
+      "nachUnten": "Move down",
+      "name": "Page name",
+      "neueSeite": "New page",
+      "reiter": {
+        "allgemein": "General",
+        "seo": "Search engines",
+        "sprachen": "Languages"
+      },
+      "schliessen": "Close",
+      "seoHinweis": "This is how this page appears in search results. Without your own input, Google takes the page name and the start of the text.",
+      "seoOhneText": "No description yet — Google will then take the start of your text.",
+      "seoText": "Description for search engines",
+      "seoTitel": "Title for search engines",
+      "slug": "Address suffix",
+      "speichern": "Save",
+      "sprachenErstEinstellen": "First choose under Settings → Available languages which languages your website appears in.",
+      "sprachenHinweis": "Does this page exist in all languages of your website, or only in some?",
+      "startseite": "Homepage",
+      "startseiteOhneSlug": "The homepage has no address suffix — its address is your domain.",
+      "titelPlatzhalter": "For example: About us",
+      "veroeffentlichen": "Publish",
+      "veroeffentlicht": "published",
+      "verschiebeNach": {
+        "footer": "To the footer",
+        "header": "To the header",
+        "none": "Don't link"
+      },
+      "zurueckziehen": "Unpublish"
+    },
+    "vorlagen": {
+      "angewendet": "Template applied.",
+      "bergchalet": "Mountain chalet",
+      "bergchaletHinweis": "Warm and woody, for chalets and mountain cabins.",
+      "hinweis": "Creates a homepage, About us and Contact — with matching colours and fonts.",
+      "kueste": "Coast & lake",
+      "kuesteHinweis": "Light and airy, for houses by the beach and the lake.",
+      "stadt": "City apartments",
+      "stadtHinweis": "Modern and urban, for apartments in the city.",
+      "titel": "Start with a template"
+    },
+    "einstellungen": {
+      "adresse": {
+        "hinweis": "Connect your own domain. We set up the encryption automatically.",
+        "titel": "Website address"
+      },
+      "anzeige": {
+        "basispreise": "Show base prices before the date selection",
+        "basispreiseHinweis": "Off: the price appears only once check-in and check-out are chosen. A \"from\" price without a period often no longer holds in high season.",
+        "gaesteAufschluesseln": "Break down the number of guests",
+        "gaesteAufschluesselnHinweis": "The guest enters adults, children and infants separately instead of a single number. Infants do not count towards occupancy.",
+        "hinweis": "Choose how the search field and prices appear on your website.",
+        "preiseTitel": "Prices",
+        "suchfeldTitel": "Search field",
+        "titel": "Display settings"
+      },
+      "erweitert": {
+        "checkoutJs": "JavaScript for the confirmation page",
+        "checkoutJsHinweis": "Runs only after a completed payment. The place for a conversion pixel.",
+        "codeHinweis": "For verification tags, an analytics script or your own styling. None of this runs in the payment flow.",
+        "codeTitel": "Custom code",
+        "cookieBanner": "Cookie notice",
+        "cookieBannerHinweis": "Shows a notice with a confirmation button at the bottom of the page.",
+        "cookieSeite": "Page with the cookie policy",
+        "customJs": "Custom JavaScript",
+        "customJsHinweis": "Runs on all public pages — NOT in the payment flow.",
+        "datenschutzHaken": "Privacy checkbox in forms",
+        "datenschutzHakenHinweis": "Visitors must accept your privacy policy before submitting a form.",
+        "datenschutzSeite": "Page with the privacy policy",
+        "faviconHinweis": "The small icon in browser tabs and bookmarks.",
+        "faviconTitel": "Favicon",
+        "headCss": "Custom CSS",
+        "headCssHinweis": "Loaded on all public pages.",
+        "headHtml": "HTML for the page head",
+        "headHtmlHinweis": "Only <meta>, <link> and <title>. Scripts belong in the JavaScript field below.",
+        "hinweis": "Settings for advanced users. Everything here affects your public website.",
+        "keineSeite": "Link no page",
+        "offline": "Take the website offline",
+        "offlineHinweis": "Makes your website unreachable for visitors and search engines.",
+        "offlineWarnung": "Your website is offline. Visitors and search engines cannot reach it — the preview here still works.",
+        "rechtHinweis": "Notices your visitors see. The texts themselves live on your own pages.",
+        "rechtTitel": "Privacy and legal",
+        "titel": "Advanced",
+        "verwaltungTitel": "Website administration"
+      },
+      "kontakt": {
+        "anschrift": "Address",
+        "ausKontoHinweis": "This information comes from Account → Company details and appears in the footer. Change it there and the website follows.",
+        "ausKontoTitel": "From your account",
+        "email": "Email",
+        "firmenname": "Company name",
+        "hinweis": "Contact details and social media links in the website footer.",
+        "imKontoAendern": "Change in the account",
+        "nichtGesetzt": "not set",
+        "socialHinweis": "Only filled-in networks get an icon in the footer.",
+        "socialTitel": "Social media",
+        "telefon": "Phone",
+        "titel": "Contact and social media",
+        "urlUnvollstaendig": "Enter a complete address starting with https://"
+      },
+      "sprachen": {
+        "hinweis": "Choose which languages your website is available in and which of them is the default language.",
+        "nochKeine": "No language has been chosen yet. Until then, the website shows the first text version it finds.",
+        "reihenfolgeHinweis": "The order of this list is the order of the language switcher on your website.",
+        "standard": "Default language",
+        "titel": "Available languages",
+        "zurStandardMachen": "Set as default"
+      }
+    },
+    "adresse": {
+      "dnsHinweis": "So that {domain} points to your website. Then click \"Check\" above.",
+      "dnsName": "Name",
+      "dnsTitel": "Add these records with your domain provider",
+      "dnsTyp": "Type",
+      "dnsWert": "Value",
+      "eigeneDomain": "Custom domain",
+      "entfernen": "Remove",
+      "entfernt": "The domain has been removed.",
+      "fehlgeschlagen": "The action failed.",
+      "hinzufuegen": "Add",
+      "hinzugefuegt": "The domain has been added.",
+      "keineDomain": "No custom domain is connected yet.",
+      "pruefen": "Check",
+      "status": {
+        "active": "Active",
+        "error": "Error",
+        "pending": "Waiting for the DNS records"
+      },
+      "statusAktualisiert": "The status has been updated."
+    },
+    "abschnitte": {
+      "button": "Button",
+      "buttonHinweis": "A single button with a destination.",
+      "contact": "Contact",
+      "contactHinweis": "Address, phone, email and form.",
+      "featuredProperties": "Featured properties",
+      "featuredPropertiesHinweis": "Only the properties you choose.",
+      "gallery": "Gallery",
+      "galleryHinweis": "Several images in a grid.",
+      "hero": "Hero image",
+      "heroHinweis": "Large image with heading and button.",
+      "image": "Image",
+      "imageHinweis": "A single image with a caption.",
+      "propertiesGrid": "Properties",
+      "propertiesGridHinweis": "All properties in a grid, with real prices.",
+      "reviews": "Reviews",
+      "reviewsHinweis": "Your own, verified guest reviews.",
+      "richText": "Text",
+      "richTextHinweis": "Formatted text with headings and lists.",
+      "search": "Search",
+      "searchHinweis": "Search bar with dates and guest count.",
+      "spacer": "Spacer",
+      "spacerHinweis": "Empty space between two sections."
+    },
+    "felder": {
+      "abstandGross": "Large",
+      "abstandKlein": "Small",
+      "abstandMittel": "Medium",
+      "abstandSehrGross": "Extra large",
+      "adresse": "Address",
+      "anzahl": "Number",
+      "ausrichtung": "Alignment",
+      "beschriftung": "Label",
+      "bild": "Image",
+      "bildBeschreibung": "Image description",
+      "bildUnterschrift": "Image caption",
+      "bilder": "Images",
+      "buttonPrimaer": "Highlighted",
+      "buttonSekundaer": "Subtle",
+      "ctaHref": "Button destination",
+      "ctaLabel": "Button label",
+      "datumZeigen": "Ask for dates",
+      "email": "Email",
+      "eyebrow": "Small line above",
+      "formularZeigen": "Show contact form",
+      "gaesteZeigen": "Ask for guest count",
+      "heading": "Heading",
+      "heroGeteilt": "Image and text side by side",
+      "heroVollbild": "Full screen",
+      "heroZentriert": "Centred over the image",
+      "hoehe": "Height",
+      "kategorienZeigen": "Show category ratings",
+      "linksbuendig": "Left-aligned",
+      "mindestGaeste": "From how many guests",
+      "objekte": "Properties",
+      "platzhalter": "Placeholder text",
+      "subheading": "Subheading",
+      "suchbegriff": "Filter",
+      "telefon": "Phone",
+      "text": "Text",
+      "ueberschrift": "Heading",
+      "variante": "Display",
+      "zentriert": "Centred",
+      "ziel": "Destination"
+    },
+    "vorschau": {
+      "desktop": "Computer",
+      "fehler": "Preview unavailable",
+      "fehlerHinweis": "The preview could not be opened. Reload the page.",
+      "keineSeite": "No page yet",
+      "keineSeiteHinweis": "Create a page under \"Pages\" or choose a template.",
+      "laedt": "Loading preview",
+      "laedtHinweis": "One moment, the page is being prepared.",
+      "mobil": "Mobile",
+      "nichtKonfiguriert": "Preview not set up",
+      "nichtKonfiguriertHinweis": "The address of the page renderer is missing from the configuration.",
+      "titel": "Preview"
+    },
+    "mediathek": {
+      "ablegen": "Drop images here",
+      "dateiWaehlen": "Choose files",
+      "formate": "JPG, PNG or WebP, up to 20 MB",
+      "geloescht": "Image deleted.",
+      "hinweis": "Upload once, use everywhere.",
+      "hochgeladen": "{anzahl, plural, one {One image added} other {# images added}}",
+      "laedt": "Loading images …",
+      "laedtHoch": "Uploading …",
+      "leer": "No images yet. Upload the first one.",
+      "loeschen": "Delete image",
+      "titel": "My images"
+    },
+    "bildFeld": {
+      "adresseStattdessen": "Enter an address instead",
+      "aendern": "Change image",
+      "entfernen": "Remove image",
+      "waehlen": "Choose image"
+    },
+    "objekte": {
+      "anzahl": "{an} of {gesamt} properties are shown on your website.",
+      "hinweis": "Choose which of your properties appear on your own website. Portals and the marketplace are not affected.",
+      "keine": "You have not created any properties yet.",
+      "nichtAktiv": "Not active — will show once the property is active",
+      "suchen": "Search by name or ID",
+      "titel": "Properties on the website"
+    },
+    "widgets": {
+      "codeHinweis": "Paste this code into the other page. It stays valid even as we keep developing our software.",
+      "codeLabel": "Code to paste",
+      "hinweis": "A search or booking field for ANOTHER website. Copy the code and paste it where the field should appear.",
+      "keineDomain": "A widget needs your own domain: only that works reliably on another page. Connect it under Settings → Address.",
+      "kopieren": "Copy code",
+      "kopierenFehler": "Copying is not possible — please select it by hand.",
+      "kopiert": "Code copied.",
+      "neuesFenster": "Open in a new window",
+      "neuesFensterHinweis": "Off: your website replaces the other page in the same window.",
+      "randLabel": "Corners",
+      "sprache": "Language",
+      "spracheHinweis": "The language the field appears in on the other page.",
+      "titel": "External widgets",
+      "typ": {
+        "buchen": "Booking field",
+        "suche": "Search field"
+      },
+      "typBeschreibung": {
+        "buchen": "Dates and number of guests — leads straight into your booking flow.",
+        "suche": "Destination, dates and number of guests — leads to the property list on your website."
+      },
+      "typLabel": "Widget type"
     }
   },
   "dynamicPricing": {
@@ -7545,7 +8121,10 @@
       "noAccessHint": "Only administrators and the account owner can manage users.",
       "emptyTitle": "No users yet",
       "emptyHint": "You haven't created any users yet.",
-      "loadFailed": "Users could not be loaded."
+      "loadFailed": "Users could not be loaded.",
+      "pmDachHinweis": "Main switch: without this access, none of the permissions in the two groups below take effect.",
+      "pmDachNoetig": "Only takes effect together with access to the PM modules.",
+      "pmDachOhneBelang": "Not relevant for this role — it has its own interface."
     },
     "staffProperties": {
       "title": "Share properties"
@@ -7653,7 +8232,8 @@
       "colStatus": "Status",
       "editPayoutTerms": "Edit payout terms",
       "unassign": "Remove assignment",
-      "noOwnerRecord": "There is no owner record linked to this access, so there is no commission rate. It is created in the Owners section."
+      "noOwnerRecord": "There is no owner record linked to this access, so there is no commission rate. It is created in the Owners section.",
+      "ohneWirkung": "{anzahl, plural, one {One more permission is saved but has no effect: access to the PM modules is missing.} other {# more permissions are saved but have no effect: access to the PM modules is missing.}}"
     }
   },
   "voice": {

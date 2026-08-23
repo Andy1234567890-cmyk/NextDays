@@ -25,7 +25,8 @@
       "de": "Deutsch",
       "da": "Dänisch",
       "en": "Englisch"
-    }
+    },
+    "explain": "Erklärung zu {label}"
   },
   "legal": {
     "agbLinkLabel": "AGB",
@@ -240,7 +241,8 @@
       "vacationRentals": "Ferienobjekte",
       "accounting": "Buchhaltung",
       "guests": "Gäste",
-      "tools": "Werkzeuge"
+      "tools": "Werkzeuge",
+      "website": "Website-Baukasten"
     },
     "roles": {
       "admin": "Admin",
@@ -297,7 +299,10 @@
     "announcements": "Neuerungen",
     "billingRules": "Abrechnungsregeln",
     "ownerReporting": "Eigentümer-Reporting",
-    "inboxUngelesen": "Posteingang ({count} ungelesen)"
+    "inboxUngelesen": "Posteingang ({count} ungelesen)",
+    "websiteDesign": "Design",
+    "websiteDomain": "Adresse",
+    "websitePages": "Seiten"
   },
   "exemption": {
     "labelNamed": "Steuerbefreit ({scheme}) — keine USt-ID nötig",
@@ -1500,7 +1505,10 @@
       "meterReadings": "Zählerstände",
       "services": "Dienstleistungen",
       "notifications": "Benachrichtigungen",
-      "familyAccess": "Zugänge"
+      "familyAccess": "Zugänge",
+      "photoAlbum": "Fotoalbum",
+      "propertyArea": "Objektbereich",
+      "statistics": "Statistik"
     },
     "overview": {
       "occupancy": "Belegung",
@@ -1672,6 +1680,98 @@
         "forwarded": "Weitergeleitet an die Verwaltung.",
         "declined": "Abgelehnt. Die Verwaltung erfährt davon nichts."
       }
+    },
+    "statistics": {
+      "allProperties": "Alle Objekte",
+      "basis": {
+        "arrivalsHint": "Gezählt werden Buchungen, deren Anreise im Zeitraum liegt, mit ihrem gesamten Aufenthalt. Deshalb stimmen die Buchungsanzahl und die belegten Nächte oben nicht überein — das sind zwei unterschiedliche Fragen.",
+        "arrivalsTitle": "Anreisen im Zeitraum",
+        "nightsHint": "Gezählt werden Nächte, die INNERHALB des Zeitraums liegen — auch Nächte aus Buchungen, die früher begonnen haben.",
+        "nightsTitle": "Belegung im Zeitraum"
+      },
+      "charts": {
+        "bookingsByChannel": "Buchungen nach Kanal",
+        "bookingsByChannelHint": "Anzahl der Anreisen je Kanal — keine Beträge.",
+        "nightsByMonth": "Belegte Nächte pro Monat",
+        "nightsByMonthHint": "Gästenächte und Eigennutzung pro Monat, gestapelt.",
+        "noChannels": "In diesem Zeitraum gibt es keine Buchungen.",
+        "occupancyByMonth": "Belegungsquote pro Monat"
+      },
+      "empty": "Für diesen Zeitraum liegen keine Auswertungen vor.",
+      "from": "Von",
+      "kpi": {
+        "avgStay": "Aufenthaltsdauer",
+        "avgStayHint": "Durchschnittliche Anzahl Nächte pro Buchung.",
+        "bookings": "Buchungen",
+        "capacity": "Verfügbare Einheitennächte",
+        "capacityHint": "Einheiten × Tage im Zeitraum — die Nächte, die überhaupt verkauft werden konnten (Anzahl Einheiten: {units}).",
+        "guestNights": "Gästenächte",
+        "leadTime": "Vorlaufzeit",
+        "leadTimeBasis": "{count, plural, =0 {Kein Buchungszeitpunkt bekannt} one {Basierend auf # Buchung mit bekanntem Buchungszeitpunkt} other {Basierend auf # Buchungen mit bekanntem Buchungszeitpunkt}}",
+        "occupancy": "Belegungsquote",
+        "occupancyHint": "Gästenächte und Eigennutzung im Verhältnis zu den verfügbaren Einheitennächten.",
+        "ownerStay": "Eigennutzung",
+        "ownerStayHint": "Nächte, die du selbst nutzt. Sie belegen den Kalender und zählen in die Belegungsquote ein, sind aber keine Vermarktungsleistung."
+      },
+      "noValue": "—",
+      "property": "Objekt",
+      "series": {
+        "guestNights": "Gästenächte",
+        "ownerStay": "Eigennutzung"
+      },
+      "subtitle": "Belegung und Aufenthalte deiner Objekte. Ohne Beträge.",
+      "title": "Statistik",
+      "to": "Bis",
+      "units": {
+        "bookings": "Buchungen",
+        "days": "Tage",
+        "nights": "Nächte"
+      }
+    },
+    "propertyArea": {
+      "back": "Zurück zur Objektliste",
+      "empty": "Dir sind aktuell keine Objekte zugeordnet.",
+      "fields": {
+        "bfeNumber": "BFE-Nummer",
+        "floorNumber": "Etage",
+        "floors": "Etagen im Gebäude",
+        "maxGuests": "Gäste",
+        "size": "Wohnfläche",
+        "status": "Status",
+        "timezone": "Zeitzone",
+        "totalRooms": "Anzahl Zimmer",
+        "type": "Objekttyp",
+        "units": "Einheiten",
+        "yearBuilt": "Baujahr"
+      },
+      "noAddress": "Für dieses Objekt ist keine Adresse hinterlegt.",
+      "noAmenities": "Für dieses Objekt ist keine Ausstattung hinterlegt.",
+      "noDescription": "Für dieses Objekt ist keine Beschreibung hinterlegt.",
+      "noImages": "Für dieses Objekt sind keine Bilder hinterlegt.",
+      "noPermission": "Dir fehlt die Berechtigung für den Objektbereich. Deine Verwaltung kann sie dir geben.",
+      "notFound": "Dieses Objekt gibt es nicht oder ist dir nicht zugeordnet.",
+      "readOnlyHint": "Diese Ansicht ist schreibgeschützt. Änderungen nimmt deine Verwaltung vor.",
+      "sections": {
+        "address": "Adresse",
+        "amenities": "Ausstattung",
+        "basics": "Stammdaten",
+        "description": "Beschreibung",
+        "images": "Bilder",
+        "roomAmenities": "Ausstattung im Zimmer"
+      },
+      "subtitle": "Stammdaten, Beschreibung und Ausstattung deiner Objekte — nur zur Ansicht.",
+      "title": "Objektbereich"
+    },
+    "photoAlbum": {
+      "cover": "Titelbild",
+      "empty": "Für deine Objekte sind noch keine Bilder hinterlegt.",
+      "imageCount": "{count, plural, =0 {keine Bilder} one {# Bild} other {# Bilder}}",
+      "next": "Nächstes Bild",
+      "open": "Bild vergrößern",
+      "position": "{index} von {total}",
+      "previous": "Voriges Bild",
+      "subtitle": "Alle Bilder deiner Objekte, gruppiert nach Objekt.",
+      "title": "Fotoalbum"
     }
   },
   "travelAgencies": {
@@ -5631,6 +5731,24 @@
       "planModeDerived": "Abgeleitet von {parent} · {offset}",
       "planDerivedPrice": "berechnet",
       "planMinStay": "Min. {nights} Nächte",
+      "planPortalRate": "Portal-Rate",
+      "planMinStayEdit": "Mindestaufenthalt bearbeiten",
+      "planMinStayEditorTitle": "Mindestaufenthalt",
+      "planMinStayEditorSubtitle": "Mindestaufenthalt für den Preisplan {plan}. Er gilt als Standard für alle Tage, an denen im Kalender kein eigener Wert steht.",
+      "planMinStayLabel": "Nächte",
+      "planMinStayFieldHint": "1 bis 365 Nächte.",
+      "planMinStayPortalHint": "Buchungsportale führen den Mindestaufenthalt je Ratenkategorie. Eine Wochenrate ohne 7 Nächte wird dort auch für einzelne Nächte verkauft.",
+      "planMinStayInvalid": "Bitte eine Zahl von 1 bis 365 eingeben.",
+      "planMinStaySaved": "Mindestaufenthalt gespeichert.",
+      "planPriceEdit": "Preis bearbeiten",
+      "planPriceEditorTitle": "Preis pro Nacht",
+      "planPriceEditorSubtitle": "Preis pro Nacht für den Preisplan {plan}. Er gilt als Standard für alle Tage, an denen im Kalender kein eigener Preis steht.",
+      "planPriceLabel": "Preis pro Nacht {currency}",
+      "planPriceFieldHint": "Größer als 0.",
+      "planPricePortalHint": "Buchungsportale führen den Preis je Ratenkategorie. Dieser Betrag gilt nur für diesen Preisplan und geht an die Portale, für die er freigegeben ist.",
+      "planPriceDiscountHint": "Das ist der Rabattpreis PRO NACHT, nicht der Preis der ganzen Woche. Booking.com zeigt diese Rate Gästen, die den Mindestaufenthalt dieses Plans oder mehr suchen; der Rabatt entsteht allein daraus, dass dieser Nachtpreis unter dem Grundpreis liegt. Bleibt er gleich hoch, ist es kein Rabatt, sondern ein zweiter Standardpreis.",
+      "planPriceInvalid": "Bitte einen Preis größer als 0 eingeben.",
+      "planPriceSaved": "Preis gespeichert.",
       "planPortalYes": "An Portale",
       "planPortalNo": "Nur direkt",
       "planPortalOnHint": "Dieser Preis geht an die Buchungsportale. Klicken, um ihn nur für Direktbuchungen zu nutzen.",
@@ -6614,7 +6732,8 @@
       },
       "confirm": {
         "reject": "Antrag für {objekt} ({von} – {bis}) ablehnen?",
-        "revoke": "Genehmigung für {objekt} ({von} – {bis}) zurücknehmen? Die Nächte werden wieder freigegeben."
+        "revoke": "Genehmigung für {objekt} ({von} – {bis}) zurücknehmen? Die Nächte werden wieder freigegeben.",
+        "approve": "{objekt} von {von} bis {bis} sperren? Die Nächte werden auf allen Portalen gesperrt."
       },
       "done": {
         "approve": "Antrag genehmigt, Nächte gesperrt.",
@@ -7313,7 +7432,34 @@
       "togglePinsEn": "Toggle Pins",
       "guestReviews": "Was unsere Gäste sagen",
       "reviewPreview": "Hier steht später eine echte Bewertung Ihrer Gäste.",
-      "reviewsHint": "Vorschau · auf der Live-Seite erscheinen Ihre echten Bewertungen."
+      "reviewsHint": "Vorschau · auf der Live-Seite erscheinen Ihre echten Bewertungen.",
+      "abschnittHinzufuegen": "Abschnitt hinzufügen",
+      "abschnitte": "Abschnitte",
+      "bildHinzufuegen": "Bild hinzufügen",
+      "buchungsAbschnitt": "Zeigt echte Verfügbarkeit und echte Preise",
+      "duplizieren": "Duplizieren",
+      "entfernen": "Entfernen",
+      "gruppe": {
+        "buchung": "Buchung",
+        "inhalt": "Inhalt",
+        "medien": "Medien",
+        "sonstiges": "Sonstiges"
+      },
+      "hinzufuegen": "Hinzufügen",
+      "maxAbschnitte": "Mehr als {max} Abschnitte sind auf einer Seite nicht möglich.",
+      "nachOben": "Nach oben",
+      "nachUnten": "Nach unten",
+      "nochKeineAbschnitte": "Noch keine Abschnitte. Fügen Sie den ersten hinzu.",
+      "objektHinzufuegen": "Hinzufügen",
+      "objektIdPlatzhalter": "Objekt-ID",
+      "objekteHinweis": "IDs der Objekte, die hier erscheinen sollen.",
+      "schliessen": "Schließen",
+      "sprache": "Sprache",
+      "standard": "Standard",
+      "unbekannterAbschnitt": "Unbekannter Abschnitt",
+      "unbekannterAbschnittHinweis": "Diesen Abschnitt kennt der Baukasten nicht mehr. Er bleibt auf der Seite, bis Sie ihn entfernen.",
+      "zurListe": "Alle Abschnitte",
+      "zurueck": "Zur Übersicht"
     },
     "pages": {
       "startFromTemplate": "Mit einer Vorlage starten",
@@ -7321,6 +7467,436 @@
       "titlePlaceholder": "Seitentitel (z. B. Über uns)",
       "setHomepage": "Als Startseite setzen",
       "delete": "Löschen"
+    },
+    "design": {
+      "alleGespeichert": "Alles gespeichert",
+      "buttonEcken": "Rand",
+      "buttonFuellung": "Stil",
+      "buttonRand": {
+        "pill": "Oval",
+        "rounded": "Abgerundet",
+        "sharp": "Eckig"
+      },
+      "buttonSolide": "Gefüllt",
+      "buttonUmrandet": "Umrandet",
+      "buttonVorschau": "Beispiel",
+      "buttonsHinweis": "Gilt für alle Buttons auf der Website.",
+      "buttonsTitel": "Buttonform",
+      "farbeZuruecksetzen": "Farbe zurücksetzen",
+      "farbenHinweis": "Eine Palette setzt alle vier Farben so, dass sie zusammenpassen.",
+      "farbenTitel": "Farben",
+      "farbrolle": {
+        "firmenname": "Firmenname",
+        "flaeche": "Flächen",
+        "fussHintergrund": "Hintergrund im Footer",
+        "hintergrund": "Hintergrund",
+        "kopfHintergrund": "Hintergrund im Header",
+        "kopfLinks": "Links im Header",
+        "links": "Links im Text",
+        "primaer": "Buttons und Links",
+        "schrift": "Schriftfarbe"
+      },
+      "farbrolleHinweis": {
+        "firmenname": "Der Name des Betriebs neben dem Logo",
+        "flaeche": "Karten, Kontaktblock, Footer",
+        "fussHintergrund": "Die Fläche des Footers",
+        "hintergrund": "Die Grundfläche der Seite",
+        "kopfHintergrund": "Die Fläche hinter Logo und Menü",
+        "kopfLinks": "Menüpunkte oben",
+        "links": "Verweise im Fließtext",
+        "primaer": "Buttons, Akzente und Links",
+        "schrift": "Fließtext und Überschriften"
+      },
+      "faviconBild": "Favicon",
+      "faviconTitel": "Favicon",
+      "faviconUrl": "Adresse des Favicons",
+      "firmenname": "Firmenname",
+      "gespeichert": "Design gespeichert.",
+      "hexUngueltig": "Geben Sie einen vollständigen Farbwert ein, zum Beispiel #1f7a8c.",
+      "kontrastWarnung": "Diese Farben sind schwer zu lesen",
+      "kontrastWert": "Kontrast {ist} statt mindestens {soll}",
+      "logoBild": "Logo",
+      "logoGroesse": "Logo skalieren",
+      "logoHinweis": "Empfohlen: PNG oder SVG mit transparentem Hintergrund, mindestens 60 Pixel hoch.",
+      "logoTitel": "Logo",
+      "logoUrl": "Adresse des Logos",
+      "logoZiel": "Klickziel des Logos",
+      "logoZielLeer": "Startseite",
+      "namensGroesse": "Größe des Namens",
+      "paletteEmpfohlen": "Empfohlen",
+      "paletteWaehlen": "Farbpalette wählen",
+      "schrift": "Schriftart",
+      "schriftAbsatz": "Absatz",
+      "schriftButtons": "Buttonschrift",
+      "schriftMarke": "Standard",
+      "schriftUeberschrift": "Überschrift",
+      "schriftWieAbsatz": "Wie Absatz",
+      "schriftenHinweis": "Überschrift, Absatz und Buttons werden einzeln gewählt.",
+      "schriftenTitel": "Schriftarten",
+      "siteName": "Name",
+      "slogan": "Slogan",
+      "sloganText": "Text",
+      "speichern": "Speichern",
+      "speichert": "Speichert …",
+      "theme": {
+        "karte": "Karte",
+        "klar": "Klar",
+        "mitte": "Mitte",
+        "seitlich": "Seitlich"
+      },
+      "themeBeschreibung": {
+        "karte": "Header als abgesetzte Karte",
+        "klar": "Logo links, Menü rechts",
+        "mitte": "Logo zentriert, Menü darunter",
+        "seitlich": "Menü als Leiste links"
+      },
+      "themeHinweis": "Bestimmt, wo Logo, Menü und Footer stehen.",
+      "themeTitel": "Vorlage",
+      "ungespeichert": "Ungespeicherte Änderungen",
+      "verwerfen": "Verwerfen",
+      "weitereOptionen": "Weitere Optionen",
+      "zurueck": "Zurück"
+    },
+    "paletten": {
+      "holz": "Holz",
+      "koralle": "Koralle",
+      "lavendel": "Lavendel",
+      "nacht": "Nacht",
+      "sand": "Sand",
+      "schlicht": "Schlicht",
+      "see": "See",
+      "stein": "Stein",
+      "wald": "Wald",
+      "wein": "Wein"
+    },
+    "kontrast": {
+      "buttonText": "Text auf Buttons",
+      "linkAufHintergrund": "Links auf dem Hintergrund",
+      "schriftAufFlaeche": "Schrift auf Flächen",
+      "schriftAufHintergrund": "Schrift auf dem Hintergrund"
+    },
+    "kopf": {
+      "entwurfAnsehen": "Entwurf ansehen",
+      "entwurfHinweis": "Der aktuelle Stand, in einem eigenen Fenster",
+      "entwurfLaedt": "Entwurf wird vorbereitet …",
+      "entwurfNichtMoeglich": "Entwurf gerade nicht möglich",
+      "gespeichert": "Gespeichert",
+      "keineLiveDomain": "Noch keine eigene Domain verbunden",
+      "liveAnsehen": "Live-Version ansehen",
+      "nichtsZuVeroeffentlichen": "Alle Seiten sind schon veröffentlicht.",
+      "speicherFehler": "Nicht gespeichert",
+      "speichert": "speichert …",
+      "veroeffentlichen": "Veröffentlichen",
+      "veroeffentlicht": "{anzahl, plural, one {Eine Seite veröffentlicht} other {# Seiten veröffentlicht}}",
+      "veroeffentlicht0": "Veröffentlicht …",
+      "websiteAnsehen": "Website ansehen"
+    },
+    "reiter": {
+      "design": "Design",
+      "einstellungen": "Einstellungen",
+      "objekte": "Objekte",
+      "seiten": "Seiten",
+      "widgets": "Widgets"
+    },
+    "baukasten": {
+      "keinZugriff": "Sie haben keinen Zugriff auf den Website-Baukasten."
+    },
+    "seiten": {
+      "abbrechen": "Abbrechen",
+      "adresse": "Adresse der Seite",
+      "alleSprachen": "In allen Sprachen der Website",
+      "alleSprachenHinweis": "Der Normalfall — die Seite erscheint überall, wo Ihre Website erscheint.",
+      "alsStartseite": "Als Startseite",
+      "anlegen": "Anlegen",
+      "bearbeiten": "Bearbeiten",
+      "bereich": "Bereich",
+      "bereichHinweis": {
+        "footer": "Erscheint unten in der Fußzeile.",
+        "header": "Erscheint im Hauptmenü der Website.",
+        "none": "Nur über einen direkten Link erreichbar."
+      },
+      "bereichKurz": {
+        "footer": "Fußzeile",
+        "header": "Kopfzeile",
+        "none": "Ohne Menü"
+      },
+      "bereichLeer": {
+        "footer": "Noch keine Seite in der Fußzeile.",
+        "header": "Noch keine Seite im Hauptmenü.",
+        "none": "Keine nicht verlinkten Seiten."
+      },
+      "bereichTitel": {
+        "footer": "Fußzeile",
+        "header": "Kopfzeile",
+        "none": "Nicht verlinkt"
+      },
+      "einstellungen": "Seiteneinstellungen",
+      "einstellungenGespeichert": "Seiteneinstellungen gespeichert.",
+      "entwurf": "Entwurf",
+      "fehlgeschlagen": "Die Aktion ist fehlgeschlagen.",
+      "googleVorschau": "Vorschau bei Google",
+      "keineDomain": "Sobald Ihre eigene Domain verbunden ist, steht hier die vollständige Adresse.",
+      "keineDomainKurz": "noch keine Domain",
+      "loeschen": "Löschen",
+      "menue": "Weitere Aktionen",
+      "nachOben": "Nach oben",
+      "nachUnten": "Nach unten",
+      "name": "Name der Seite",
+      "neueSeite": "Neue Seite",
+      "reiter": {
+        "allgemein": "Allgemein",
+        "seo": "Suchmaschinen",
+        "sprachen": "Sprachen"
+      },
+      "schliessen": "Schließen",
+      "seoHinweis": "So erscheint diese Seite in den Suchergebnissen. Ohne eigene Angabe übernimmt Google den Namen der Seite und den Anfang des Textes.",
+      "seoOhneText": "Noch keine Beschreibung — Google übernimmt dann den Anfang Ihres Textes.",
+      "seoText": "Beschreibung für Suchmaschinen",
+      "seoTitel": "Titel für Suchmaschinen",
+      "slug": "Adresszusatz",
+      "speichern": "Speichern",
+      "sprachenErstEinstellen": "Legen Sie zuerst unter Einstellungen → Verfügbare Sprachen fest, in welchen Sprachen Ihre Website erscheint.",
+      "sprachenHinweis": "Gibt es diese Seite in allen Sprachen Ihrer Website, oder nur in einigen?",
+      "startseite": "Startseite",
+      "startseiteOhneSlug": "Die Startseite hat keinen Adresszusatz — ihre Adresse ist Ihre Domain.",
+      "titelPlatzhalter": "Zum Beispiel: Über uns",
+      "veroeffentlichen": "Veröffentlichen",
+      "veroeffentlicht": "veröffentlicht",
+      "verschiebeNach": {
+        "footer": "In die Fußzeile",
+        "header": "In die Kopfzeile",
+        "none": "Nicht verlinken"
+      },
+      "zurueckziehen": "Zurückziehen"
+    },
+    "vorlagen": {
+      "angewendet": "Vorlage angewendet.",
+      "bergchalet": "Bergchalet",
+      "bergchaletHinweis": "Warm und holzig, für Chalets und Hütten im Gebirge.",
+      "hinweis": "Legt Startseite, Über uns und Kontakt an — mit zueinander passenden Farben und Schriften.",
+      "kueste": "Küste & See",
+      "kuesteHinweis": "Hell und luftig, für Häuser am Strand und am See.",
+      "stadt": "Stadtwohnungen",
+      "stadtHinweis": "Modern und urban, für Wohnungen in der Stadt.",
+      "titel": "Mit einer Vorlage beginnen"
+    },
+    "einstellungen": {
+      "adresse": {
+        "hinweis": "Verbinden Sie Ihre eigene Domain. Die Verschlüsselung richten wir automatisch ein.",
+        "titel": "Adresse der Website"
+      },
+      "anzeige": {
+        "basispreise": "Basispreise vor der Datumswahl anzeigen",
+        "basispreiseHinweis": "Aus: der Preis erscheint erst, wenn Anreise und Abreise gewählt sind. Ein „ab“-Preis ohne Zeitraum gilt in der Hochsaison oft nicht mehr.",
+        "gaesteAufschluesseln": "Gästezahl aufschlüsseln",
+        "gaesteAufschluesselnHinweis": "Der Gast gibt Erwachsene, Kinder und Kleinkinder getrennt an statt einer einzigen Zahl. Kleinkinder zählen nicht zur Belegung.",
+        "hinweis": "Wählen Sie, wie Suchfeld und Preise auf Ihrer Website angezeigt werden.",
+        "preiseTitel": "Preise",
+        "suchfeldTitel": "Suchfeld",
+        "titel": "Anzeigeeinstellungen"
+      },
+      "erweitert": {
+        "checkoutJs": "JavaScript für die Bestätigungsseite",
+        "checkoutJsHinweis": "Läuft nur nach einer abgeschlossenen Zahlung. Der Platz für ein Conversion-Pixel.",
+        "codeHinweis": "Für Verifizierungs-Tags, ein Analyse-Skript oder eigenes Styling. Nichts davon läuft in der Zahlungsstrecke.",
+        "codeTitel": "Eigener Code",
+        "cookieBanner": "Cookie-Hinweis",
+        "cookieBannerHinweis": "Zeigt am unteren Seitenrand einen Hinweis mit Bestätigungsknopf.",
+        "cookieSeite": "Seite mit der Cookie-Richtlinie",
+        "customJs": "Eigenes JavaScript",
+        "customJsHinweis": "Läuft auf allen öffentlichen Seiten — NICHT in der Zahlungsstrecke.",
+        "datenschutzHaken": "Datenschutz-Haken in Formularen",
+        "datenschutzHakenHinweis": "Besucher müssen Ihre Datenschutzerklärung akzeptieren, bevor sie ein Formular absenden.",
+        "datenschutzSeite": "Seite mit der Datenschutzerklärung",
+        "faviconHinweis": "Das kleine Symbol in Browser-Tabs und Lesezeichen.",
+        "faviconTitel": "Favicon",
+        "headCss": "Eigenes CSS",
+        "headCssHinweis": "Wird auf allen öffentlichen Seiten geladen.",
+        "headHtml": "HTML für den Seitenkopf",
+        "headHtmlHinweis": "Nur <meta>, <link> und <title>. Skripte gehören in das JavaScript-Feld unten.",
+        "hinweis": "Eingriffe für erfahrene Nutzer. Alles hier wirkt auf Ihre öffentliche Website.",
+        "keineSeite": "Keine Seite verlinken",
+        "offline": "Website offline nehmen",
+        "offlineHinweis": "Macht Ihre Website für Besucher und Suchmaschinen unerreichbar.",
+        "offlineWarnung": "Ihre Website ist offline. Besucher und Suchmaschinen erreichen sie nicht — die Vorschau hier funktioniert weiterhin.",
+        "rechtHinweis": "Hinweise, die Ihre Besucher sehen. Die Texte selbst stehen auf Ihren eigenen Seiten.",
+        "rechtTitel": "Datenschutz und Recht",
+        "titel": "Erweitert",
+        "verwaltungTitel": "Websiteverwaltung"
+      },
+      "kontakt": {
+        "anschrift": "Anschrift",
+        "ausKontoHinweis": "Diese Angaben stammen aus Konto → Firmendaten und erscheinen in der Fußzeile. Ändern Sie sie dort, folgt die Website.",
+        "ausKontoTitel": "Aus Ihrem Konto",
+        "email": "E-Mail",
+        "firmenname": "Firmenname",
+        "hinweis": "Kontaktdaten und Links zu sozialen Medien in der Fußzeile der Website.",
+        "imKontoAendern": "Im Konto ändern",
+        "nichtGesetzt": "nicht gesetzt",
+        "socialHinweis": "Nur ausgefüllte Netzwerke erhalten ein Symbol in der Fußzeile.",
+        "socialTitel": "Soziale Medien",
+        "telefon": "Telefon",
+        "titel": "Kontakt und soziale Medien",
+        "urlUnvollstaendig": "Geben Sie eine vollständige Adresse an, die mit https:// beginnt"
+      },
+      "sprachen": {
+        "hinweis": "Wählen Sie, in welchen Sprachen Ihre Website erscheint und welche davon die Standardsprache ist.",
+        "nochKeine": "Es ist noch keine Sprache gewählt. Bis dahin zeigt die Website die erste vorhandene Textfassung.",
+        "reihenfolgeHinweis": "Die Reihenfolge dieser Liste ist die Reihenfolge im Sprachwähler Ihrer Website.",
+        "standard": "Standardsprache",
+        "titel": "Verfügbare Sprachen",
+        "zurStandardMachen": "Zur Standardsprache machen"
+      }
+    },
+    "adresse": {
+      "dnsHinweis": "Damit {domain} auf Ihre Website zeigt. Klicken Sie danach oben auf „Prüfen“.",
+      "dnsName": "Name",
+      "dnsTitel": "Tragen Sie diese Einträge bei Ihrem Domain-Anbieter ein",
+      "dnsTyp": "Typ",
+      "dnsWert": "Wert",
+      "eigeneDomain": "Eigene Domain",
+      "entfernen": "Entfernen",
+      "entfernt": "Die Domain wurde entfernt.",
+      "fehlgeschlagen": "Die Aktion ist fehlgeschlagen.",
+      "hinzufuegen": "Hinzufügen",
+      "hinzugefuegt": "Die Domain wurde hinzugefügt.",
+      "keineDomain": "Es ist noch keine eigene Domain verbunden.",
+      "pruefen": "Prüfen",
+      "status": {
+        "active": "Aktiv",
+        "error": "Fehler",
+        "pending": "Wartet auf die DNS-Einträge"
+      },
+      "statusAktualisiert": "Der Status wurde aktualisiert."
+    },
+    "abschnitte": {
+      "button": "Button",
+      "buttonHinweis": "Ein einzelner Button mit Ziel.",
+      "contact": "Kontakt",
+      "contactHinweis": "Adresse, Telefon, E-Mail und Formular.",
+      "featuredProperties": "Ausgewählte Objekte",
+      "featuredPropertiesHinweis": "Nur die Objekte, die Sie wählen.",
+      "gallery": "Galerie",
+      "galleryHinweis": "Mehrere Bilder in einem Raster.",
+      "hero": "Titelbild",
+      "heroHinweis": "Großes Bild mit Überschrift und Button.",
+      "image": "Bild",
+      "imageHinweis": "Ein Bild mit Bildunterschrift.",
+      "propertiesGrid": "Objekte",
+      "propertiesGridHinweis": "Alle Objekte in einem Raster, mit echten Preisen.",
+      "reviews": "Bewertungen",
+      "reviewsHinweis": "Ihre eigenen, verifizierten Gästebewertungen.",
+      "richText": "Text",
+      "richTextHinweis": "Formatierter Text mit Überschriften und Listen.",
+      "search": "Suche",
+      "searchHinweis": "Suchfeld mit Datum und Gästezahl.",
+      "spacer": "Abstand",
+      "spacerHinweis": "Leerraum zwischen zwei Abschnitten."
+    },
+    "felder": {
+      "abstandGross": "Groß",
+      "abstandKlein": "Klein",
+      "abstandMittel": "Mittel",
+      "abstandSehrGross": "Sehr groß",
+      "adresse": "Adresse",
+      "anzahl": "Anzahl",
+      "ausrichtung": "Ausrichtung",
+      "beschriftung": "Beschriftung",
+      "bild": "Bild",
+      "bildBeschreibung": "Bildbeschreibung",
+      "bildUnterschrift": "Bildunterschrift",
+      "bilder": "Bilder",
+      "buttonPrimaer": "Hervorgehoben",
+      "buttonSekundaer": "Zurückhaltend",
+      "ctaHref": "Ziel des Buttons",
+      "ctaLabel": "Beschriftung des Buttons",
+      "datumZeigen": "Nach Datum fragen",
+      "email": "E-Mail",
+      "eyebrow": "Kleine Zeile darüber",
+      "formularZeigen": "Kontaktformular anzeigen",
+      "gaesteZeigen": "Nach Gästezahl fragen",
+      "heading": "Überschrift",
+      "heroGeteilt": "Bild und Text nebeneinander",
+      "heroVollbild": "Vollbild",
+      "heroZentriert": "Zentriert über dem Bild",
+      "hoehe": "Höhe",
+      "kategorienZeigen": "Einzelbewertungen anzeigen",
+      "linksbuendig": "Linksbündig",
+      "mindestGaeste": "Ab wie vielen Gästen",
+      "objekte": "Objekte",
+      "platzhalter": "Platzhaltertext",
+      "subheading": "Unterüberschrift",
+      "suchbegriff": "Filter",
+      "telefon": "Telefon",
+      "text": "Text",
+      "ueberschrift": "Überschrift",
+      "variante": "Darstellung",
+      "zentriert": "Zentriert",
+      "ziel": "Ziel"
+    },
+    "vorschau": {
+      "desktop": "Computer",
+      "fehler": "Vorschau nicht verfügbar",
+      "fehlerHinweis": "Die Vorschau konnte nicht geöffnet werden. Laden Sie die Seite neu.",
+      "keineSeite": "Noch keine Seite",
+      "keineSeiteHinweis": "Legen Sie unter „Seiten“ eine Seite an oder wählen Sie eine Vorlage.",
+      "laedt": "Vorschau wird geladen",
+      "laedtHinweis": "Einen Moment, die Seite wird vorbereitet.",
+      "mobil": "Mobil",
+      "nichtKonfiguriert": "Vorschau nicht eingerichtet",
+      "nichtKonfiguriertHinweis": "Die Adresse des Seiten-Renderers fehlt in der Konfiguration.",
+      "titel": "Vorschau"
+    },
+    "mediathek": {
+      "ablegen": "Bilder hier ablegen",
+      "dateiWaehlen": "Dateien wählen",
+      "formate": "JPG, PNG oder WebP, bis zu 20 MB",
+      "geloescht": "Bild gelöscht.",
+      "hinweis": "Einmal hochladen, überall verwenden.",
+      "hochgeladen": "{anzahl, plural, one {Ein Bild hinzugefügt} other {# Bilder hinzugefügt}}",
+      "laedt": "Bilder werden geladen …",
+      "laedtHoch": "Wird hochgeladen …",
+      "leer": "Noch keine Bilder. Laden Sie das erste hoch.",
+      "loeschen": "Bild löschen",
+      "titel": "Meine Bilder"
+    },
+    "bildFeld": {
+      "adresseStattdessen": "Stattdessen eine Adresse eingeben",
+      "aendern": "Bild ändern",
+      "entfernen": "Bild entfernen",
+      "waehlen": "Bild wählen"
+    },
+    "objekte": {
+      "anzahl": "{an} von {gesamt} Objekten werden auf Ihrer Website angezeigt.",
+      "hinweis": "Wählen Sie, welche Ihrer Objekte auf Ihrer eigenen Website erscheinen. Portale und der Marktplatz sind davon nicht betroffen.",
+      "keine": "Sie haben noch keine Objekte angelegt.",
+      "nichtAktiv": "Nicht aktiv — wird erst angezeigt, wenn das Objekt aktiv ist",
+      "suchen": "Nach Name oder ID suchen",
+      "titel": "Objekte auf der Website"
+    },
+    "widgets": {
+      "codeHinweis": "Fügen Sie diesen Code auf der fremden Seite ein. Er bleibt gültig, auch wenn wir unsere Software weiterentwickeln.",
+      "codeLabel": "Code zum Einfügen",
+      "hinweis": "Ein Such- oder Buchen-Feld für eine FREMDE Website. Kopieren Sie den Code und fügen Sie ihn dort ein, wo das Feld erscheinen soll.",
+      "keineDomain": "Ein Widget braucht Ihre eigene Domain: Nur sie funktioniert dauerhaft auf einer fremden Seite. Verbinden Sie sie unter Einstellungen → Adresse.",
+      "kopieren": "Code kopieren",
+      "kopierenFehler": "Kopieren nicht möglich — bitte markieren Sie ihn von Hand.",
+      "kopiert": "Code kopiert.",
+      "neuesFenster": "In neuem Fenster öffnen",
+      "neuesFensterHinweis": "Aus: Ihre Website ersetzt die fremde Seite im selben Fenster.",
+      "randLabel": "Ecken",
+      "sprache": "Sprache",
+      "spracheHinweis": "Die Sprache, in der das Feld auf der fremden Seite erscheint.",
+      "titel": "Externe Widgets",
+      "typ": {
+        "buchen": "Buchen-Feld",
+        "suche": "Suchfeld"
+      },
+      "typBeschreibung": {
+        "buchen": "Zeitraum und Gästezahl — führt direkt in Ihre Buchungsstrecke.",
+        "suche": "Reiseziel, Zeitraum und Gästezahl — führt zur Objektliste auf Ihrer Website."
+      },
+      "typLabel": "Art des Widgets"
     }
   },
   "dynamicPricing": {
@@ -7667,7 +8243,10 @@
       "noAccessHint": "Nur Administratoren und Kontoinhaber können Benutzer verwalten.",
       "emptyTitle": "Noch keine Benutzer",
       "emptyHint": "Sie haben noch keine Benutzer angelegt.",
-      "loadFailed": "Benutzer konnten nicht geladen werden."
+      "loadFailed": "Benutzer konnten nicht geladen werden.",
+      "pmDachHinweis": "Hauptschalter: ohne diesen Zugriff wirkt keine der Berechtigungen in den beiden Gruppen darunter.",
+      "pmDachNoetig": "Wirkt erst mit Zugriff auf die PM-Module.",
+      "pmDachOhneBelang": "Ohne Belang für diese Rolle — sie hat ihre eigene Oberfläche."
     },
     "staffProperties": {
       "title": "Objekte freigeben"
@@ -7775,7 +8354,8 @@
       "colStatus": "Status",
       "editPayoutTerms": "Abrechnung bearbeiten",
       "unassign": "Zuweisung aufheben",
-      "noOwnerRecord": "Zu diesem Zugang gibt es keinen Eigentümer-Stammdatensatz, daher keinen Provisionssatz. Er entsteht im Bereich Eigentümer."
+      "noOwnerRecord": "Zu diesem Zugang gibt es keinen Eigentümer-Stammdatensatz, daher keinen Provisionssatz. Er entsteht im Bereich Eigentümer.",
+      "ohneWirkung": "{anzahl, plural, one {Eine weitere Berechtigung ist gespeichert, wirkt aber nicht: der Zugriff auf die PM-Module fehlt.} other {# weitere Berechtigungen sind gespeichert, wirken aber nicht: der Zugriff auf die PM-Module fehlt.}}"
     }
   },
   "voice": {
