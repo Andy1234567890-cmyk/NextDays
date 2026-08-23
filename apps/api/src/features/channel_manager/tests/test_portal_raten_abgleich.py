@@ -194,6 +194,9 @@ class _Channex:
         self.aufrufe: list[dict[str, Any]] = []
         self.kanal_aufrufe: list[str] = []
         self.zuordnungen: list[tuple[str, Any, bool]] = []
+        # Ratencodes, deren Eintrag als ATTRAPPE gebaut wird (ohne `occupancy`
+        # und `pricing_type`) — der live gemessene Fehlzustand.
+        self.attrappe_codes: set[str] = set()
 
     def get_channel_mapping_details(
         self, *, channel: str, settings: dict[str, Any]
@@ -213,6 +216,11 @@ class _Channex:
         eintraege = self.zuordnungen or [
             ("cx-grundpreis", code, True) for code in self.gemappt
         ]
+        # `occupancy` gehoert zu einem echten Eintrag: Channex fuehrt sie an
+        # jeder Paar-Zuordnung, und ohne sie ist der Eintrag eine Attrappe, die
+        # keine Restriktionen traegt. Wer sie im Doppelgaenger weglaesst, testet
+        # ausschliesslich den Fehlzustand — `attrappe_codes` macht ihn deshalb
+        # ausdruecklich waehlbar, statt ihn zum Normalfall zu machen.
         return {
             "data": {
                 "attributes": {
@@ -223,6 +231,12 @@ class _Channex:
                                 "room_type_code": 1220760101,
                                 "rate_plan_code": code,
                                 "primary_occ": primary,
+                                **(
+                                    {}
+                                    if str(code) in self.attrappe_codes
+                                    else {"occupancy": 4,
+                                          "pricing_type": "Standard"}
+                                ),
                             },
                         }
                         for plan, code, primary in eintraege
@@ -366,25 +380,72 @@ def test_primaere_zuordnung_entscheidet_nicht_die_reihenfolge(
 
 
 def test_eigener_plan_je_rate_ist_ruhe(monkeypatch: Any) -> None:
-    """Der Zielzustand: zeigt jede Rate auf einen Plan, der IHREN Namen traegt,
-    ist nichts zu tun. Das ist die erste Idempotenz-Sperre nach einem
-    vollstaendig durchgelaufenen Abgleich."""
+    """Der Zielzustand: zeigt jede Rate auf einen Plan, der IHREN Namen traegt
+    UND dessen Eintrag die Restriktionen traegt, ist nichts zu tun. Das ist die
+    erste Idempotenz-Sperre nach einem vollstaendig durchgelaufenen Abgleich.
+
+    `primary_occ: True` ist Teil des Zielzustands, nicht Beigabe: ohne die Marke
+    sendet Channex an dem Eintrag keine Restriktionen. Genau diese Attrappe lag
+    live vor (23.08.2026, Grævlinge und Stjerneskud: `occ=None, primary=None`),
+    und weil sie als „versorgt" galt, stiess der Abgleich keinen Content-Sync an
+    und der Fehlzustand fror ein — die Mindestaufenthalt-Zelle der Wochenrate
+    blieb im Booking-Extranet leer. Siehe `test_attrappe_ist_keine_ruhe`."""
     db = _Db()
     db.rate_plans.append({"id": "woche-1", "name": "Wochenrate"})
     db.rate_plan_map.append({
         "local_rate_plan_id": "woche-1", "channex_rate_plan_id": "cx-woche",
     })
     channex = _Channex(_details([STANDARD, WOCHE]))
-    # Standard am Grundpreis (behalten), Wochenrate an ihrem eigenen Plan.
+    # Standard am Grundpreis (behalten), Wochenrate an ihrem eigenen Plan —
+    # beide als Restriktions-Traeger ihres Paares.
     channex.zuordnungen = [
         ("cx-grundpreis", STANDARD["id"], True),
-        ("cx-woche", WOCHE["id"], False),
+        ("cx-woche", WOCHE["id"], True),
     ]
     ergebnis, eingereiht = _lauf(db, channex, monkeypatch)
 
     assert db.inserts == []
     assert ergebnis["angelegt"] == 0
     assert eingereiht == []
+
+
+def test_attrappe_ist_keine_ruhe(monkeypatch: Any) -> None:
+    """Ein namensgleicher Plan mit ATTRAPPEN-Eintrag ist KEIN Zielzustand.
+
+    Live gemessen (23.08.2026) an „Feriehus Grævlinge" und „FeWo *Stjerneskud*":
+    der Plan „Wochenrate" existierte, war bei Channex registriert und am Kanal
+    zugeordnet — aber mit `occupancy: None` und `primary_occ: None`. Ein solcher
+    Eintrag sendet keine Restriktionen: im Booking-Extranet blieb die
+    Mindestaufenthalt-Zelle der Wochenrate leer, waehrend die 7 bei Channex auf
+    der Rate korrekt anlag.
+
+    Der Abgleich las die Attrappe als „versorgt", meldete `angelegt = 0` und
+    stiess keinen Content-Sync an. Damit wurde
+    `objekt_kanal._eintrag_ist_vollwertig` — das die Attrappe erkennt und das
+    Paar heilt — NIE erreicht, und der Fehlzustand fror ein. Genau diese Sperre
+    prueft dieser Test: der Sync MUSS eingereiht werden, sonst heilt der
+    taegliche Lauf den Bestand nie.
+    """
+    db = _Db()
+    db.rate_plans.append({"id": "woche-1", "name": "Wochenrate"})
+    db.rate_plan_map.append({
+        "local_rate_plan_id": "woche-1", "channex_rate_plan_id": "cx-woche",
+    })
+    channex = _Channex(_details([STANDARD, WOCHE]))
+    channex.zuordnungen = [
+        ("cx-grundpreis", STANDARD["id"], True),
+        ("cx-woche", WOCHE["id"], False),
+    ]
+    # Der Eintrag der Wochenrate ist die Attrappe — wie live.
+    channex.attrappe_codes = {str(WOCHE["id"])}
+
+    ergebnis, eingereiht = _lauf(db, channex, monkeypatch)
+
+    # Kein zweiter Plan: der Name steht schon da, angelegt wird nichts.
+    assert db.inserts == []
+    assert ergebnis["angelegt"] == 0
+    # ABER der Sync muss laufen, damit die Zuordnung geheilt wird.
+    assert eingereiht, "Attrappe muss einen Content-Sync ausloesen"
 
 
 def test_kanal_unlesbar_legt_nichts_an(monkeypatch: Any) -> None:

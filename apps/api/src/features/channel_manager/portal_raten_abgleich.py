@@ -424,7 +424,21 @@ class PortalRatenAbgleichMixin:
             name = (namen.get(plan_cx) or "").strip()
             titel = (titel_je_code.get(code) or "").strip()
             if name and titel and name.lower() == titel.lower():
-                belegt.add(code)  # eigener Plan
+                # Der eigene Plan zaehlt nur, wenn sein Eintrag ueberhaupt
+                # etwas TRAEGT. Eine Attrappe (`occupancy`/`primary_occ` fehlen)
+                # sendet keine Restriktionen — sie als „versorgt" zu lesen war
+                # die Sperre, die den Fehlzustand einfror.
+                #
+                # Live gemessen (23.08.2026, Feriehus Grævlinge und FeWo
+                # *Stjerneskud*): der Plan „Wochenrate" stand am Kanal mit
+                # `occ=None, primary=None`. Der Abgleich meldete daraufhin
+                # `angelegt = 0`, `nachgezogen = 0`, stiess keinen Content-Sync
+                # an — und `objekt_kanal._eintrag_ist_vollwertig`, das die
+                # Attrappe erkennen WUERDE, wurde nie erreicht. Im
+                # Booking-Extranet blieb die Mindestaufenthalt-Zelle der
+                # Wochenrate leer, waehrend die 7 bei Channex korrekt anlag.
+                if _eintrag_traegt_restriktionen(settings):
+                    belegt.add(code)  # eigener Plan, vollwertig zugeordnet
                 continue
             if settings.get("primary_occ") is not True:
                 continue  # weitere Rate an einem fremden Plan = Arbeit
@@ -506,3 +520,23 @@ class PortalRatenAbgleichMixin:
                 gesehen.add(str(code))
                 raten.append(rate)
         return raten
+
+
+def _eintrag_traegt_restriktionen(settings: dict[str, Any]) -> bool:
+    """Traegt dieser Kanal-Eintrag die Restriktionen seines Paares?
+
+    Nur mit `primary_occ is True` UND einer `occupancy`: `primary_occ` markiert
+    den Restriktions-Traeger („Primary Rate – This will be the rate plan that
+    sends the restrictions such as min stay or stop sell", Booking-Mapping-
+    Guide), und ohne Belegung ist der Eintrag bei Channex eine Attrappe.
+
+    Dieselbe Bedingung wie `objekt_kanal._eintrag_ist_vollwertig` fuer
+    Paar-Kanaele — hier bewusst als eigene, engere Pruefung: dort geht es um
+    „darf ich neu anlegen", hier um „ist die Rate versorgt". Ein Eintrag ohne
+    Paar-Code (Airbnb: `listing_id`) erreicht diese Stelle nicht, der Aufrufer
+    filtert ihn vorher aus.
+    """
+    return (
+        settings.get("primary_occ") is True
+        and settings.get("occupancy") is not None
+    )
