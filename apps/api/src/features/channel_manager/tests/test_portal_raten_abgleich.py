@@ -53,7 +53,9 @@ class _Tabelle:
         self._db = db
         self._name = name
         self._insert: dict[str, Any] | None = None
+        self._update: dict[str, Any] | None = None
         self._spalten = ""
+        self._eq: list[tuple[Any, Any]] = []
 
     def select(self, spalten: str = "") -> _Tabelle:
         self._spalten = spalten
@@ -63,7 +65,12 @@ class _Tabelle:
         self._insert = payload
         return self
 
-    def eq(self, *_a: Any, **_k: Any) -> _Tabelle:
+    def update(self, payload: dict[str, Any]) -> _Tabelle:
+        self._update = payload
+        return self
+
+    def eq(self, spalte: Any = None, wert: Any = None) -> _Tabelle:
+        self._eq.append((spalte, wert))
         return self
 
     def is_(self, *_a: Any, **_k: Any) -> _Tabelle:
@@ -85,7 +92,13 @@ class _Tabelle:
     def execute(self) -> Any:
         if self._insert is not None:
             return self._db.insert_ausfuehren(self._name, self._insert)
-        return type("R", (), {"data": self._db.lesen(self._name, self._spalten)})()
+        if self._update is not None:
+            return self._db.update_ausfuehren(
+                self._name, self._update, dict(self._eq)
+            )
+        return type("R", (), {
+            "data": self._db.lesen(self._name, self._spalten, dict(self._eq)),
+        })()
 
 
 class _Db:
@@ -101,6 +114,7 @@ class _Db:
             [grundpreis] if grundpreis else []
         )
         self.inserts: list[dict[str, Any]] = []
+        self.updates: list[dict[str, Any]] = []
         self._naechste_id = 0
         # Die Live-Lage: der Grundpreis ist bei Channex als `cx-grundpreis`
         # registriert — genau die ID, auf die der Kanal-Doppelgaenger zeigt.
@@ -113,7 +127,9 @@ class _Db:
     def table(self, name: str) -> _Tabelle:
         return _Tabelle(self, name)
 
-    def lesen(self, name: str, spalten: str) -> list[dict[str, Any]]:
+    def lesen(
+        self, name: str, spalten: str, filter_: dict[Any, Any] | None = None
+    ) -> list[dict[str, Any]]:
         if name == "channex_channel_connection":
             return list(self.verbindungen)
         if name == "channex_rate_plan_map":
@@ -122,10 +138,30 @@ class _Db:
             raise AssertionError(f"unerwartete Tabelle: {name}")
         if "base_price" in spalten:
             return [self.grundpreis] if self.grundpreis else []
+        if "portal_scope" in spalten:
+            # Der Lese-Schritt von `portalfreigabe_nachziehen`: EINE Zeile per ID.
+            plan_id = (filter_ or {}).get("id")
+            return [
+                {"id": r["id"], "send_to_portals": r.get("send_to_portals"),
+                 "portal_scope": r.get("portal_scope")}
+                for r in self.rate_plans if r["id"] == plan_id
+            ]
         return [
-            {"id": r["id"], "name": r.get("name")}
+            {"id": r["id"], "name": r.get("name"),
+             "send_to_portals": r.get("send_to_portals")}
             for r in self.rate_plans if r.get("name")
         ]
+
+    def update_ausfuehren(
+        self, name: str, payload: dict[str, Any], filter_: dict[Any, Any]
+    ) -> Any:
+        assert name == "rate_plans", name
+        plan_id = filter_.get("id")
+        for r in self.rate_plans:
+            if r["id"] == plan_id:
+                r.update(payload)
+                self.updates.append({"id": plan_id, **payload})
+        return type("R", (), {"data": []})()
 
     def insert_ausfuehren(self, name: str, payload: dict[str, Any]) -> Any:
         assert name == "rate_plans", name
@@ -379,15 +415,92 @@ def test_kanal_ohne_zuordnung_macht_alle_raten_offen(monkeypatch: Any) -> None:
 
 
 def test_vorhandener_plan_wird_nicht_doppelt_angelegt(monkeypatch: Any) -> None:
-    """Heisst ein Plan schon wie die Rate, entsteht kein zweiter."""
+    """Heisst ein Plan schon wie die Rate, entsteht kein zweiter.
+
+    Der Plan traegt hier seine Portal-Freigabe (`send_to_portals`) — dann ist
+    wirklich NICHTS zu tun, auch kein Content-Sync.
+    """
     db = _Db()
-    db.rate_plans.append({"id": "woche-1", "name": "Wochenrate"})
+    db.rate_plans.append({"id": "woche-1", "name": "Wochenrate",
+                          "send_to_portals": True})
     channex = _Channex(_details([WOCHE]))
     ergebnis, eingereiht = _lauf(db, channex, monkeypatch)
 
     assert db.inserts == []
+    assert db.updates == []
     assert ergebnis["angelegt"] == 0
+    assert ergebnis["nachgezogen"] == 0
     assert ergebnis["sync_eingereiht"] is False
+    assert eingereiht == []
+
+
+def test_verlorene_portalfreigabe_wird_nachgezogen(monkeypatch: Any) -> None:
+    """DER GEGENZUSTAND ZUR IDEMPOTENZ-SPERRE (Wurzel 1).
+
+    Live gemessen (23.08.2026): der Plan „Wochenrate" von „FeWo *Stjerneskud*"
+    (05f602c2-…) wurde 17:28:02 mit `send_to_portals: True` angelegt und stand
+    17:28:51 auf `false` — waehrend die vier Schwester-Plaene desselben Laufs
+    ihr `true` behielten. In beiden API-Containern steht in diesem Fenster KEIN
+    schreibender Request (nur Channex-Webhooks), `mcp_access_log` ist leer; der
+    Schreiber war ein Prozess mit dem Service-Key ausserhalb der deployten
+    Dienste.
+
+    Die Ursache liegt damit nicht im Code — die FOLGE lag es: der Plan war
+    danach dauerhaft unzuordenbar, weil `freigegebene_plaene_zuordnen` nur
+    Plaene mit `send_to_portals = true` liest und der taegliche Abgleich einen
+    vorhandenen Plan nur am NAMEN wiedererkannte, nie an seinem Flag. Ohne
+    dieses Nachziehen bliebe die Rate fuer immer ohne Kanal-Zuordnung.
+    """
+    db = _Db()
+    db.rate_plans.append({"id": "woche-1", "name": "Wochenrate",
+                          "send_to_portals": False})
+    channex = _Channex(_details([WOCHE]))
+    ergebnis, eingereiht = _lauf(db, channex, monkeypatch)
+
+    assert db.inserts == [], "kein zweiter Plan — nur das Flag"
+    assert db.updates == [{"id": "woche-1", "send_to_portals": True}]
+    assert ergebnis["nachgezogen"] == 1
+    # Der Content-Sync MUSS kommen: erst sein Handler ruft
+    # `freigegebene_plaene_zuordnen`, die das Flag liest (Schritt (d)->(e)).
+    assert ergebnis["sync_eingereiht"] is True
+    assert eingereiht == [(TENANT, OBJEKT)]
+
+
+def test_nachziehen_ist_idempotent(monkeypatch: Any) -> None:
+    """Zweiter Lauf nach dem Nachziehen: kein weiteres Update, kein Sync.
+
+    Sonst kostete jeder taegliche Lauf je Objekt einen vollen
+    Channex-Content-Push fuer nichts (Wurzel 2).
+    """
+    db = _Db()
+    db.rate_plans.append({"id": "woche-1", "name": "Wochenrate",
+                          "send_to_portals": False})
+    channex = _Channex(_details([WOCHE]))
+    _lauf(db, channex, monkeypatch)
+    ergebnis, eingereiht = _lauf(db, channex, monkeypatch)
+
+    assert db.updates == [{"id": "woche-1", "send_to_portals": True}]
+    assert ergebnis["nachgezogen"] == 0
+    assert ergebnis["sync_eingereiht"] is False
+    assert eingereiht == []
+
+
+def test_kanalplan_wird_nicht_freigegeben(monkeypatch: Any) -> None:
+    """Ein `portal_scope`-Plan bleibt bei `send_to_portals: False`.
+
+    Er geht ausschliesslich ueber seine Portal-Achse an SEIN Portal (0272);
+    ihn zusaetzlich freizugeben hiesse, ihn ueber die Zusatz-Freigabe an jedes
+    Portal zu mappen. Das Flag ist dort ABSICHT, kein verlorener Zustand.
+    """
+    db = _Db()
+    db.rate_plans.append({"id": "kanal-1", "name": "Wochenrate",
+                          "send_to_portals": False,
+                          "portal_scope": "BookingCom"})
+    channex = _Channex(_details([WOCHE]))
+    ergebnis, eingereiht = _lauf(db, channex, monkeypatch)
+
+    assert db.updates == []
+    assert ergebnis["nachgezogen"] == 0
     assert eingereiht == []
 
 

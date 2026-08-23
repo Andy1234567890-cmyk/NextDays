@@ -599,6 +599,14 @@ class ObjektKanalMixin:
                 status_code=422,
             )
         for settings in ziele:
+            if not self._paar_vom_alten_traeger_loesen(
+                channel_id, bestand or [], settings,
+                neue_channex_rate_plan_id=channex_rate_plan_id,
+            ):
+                # Der alte Traeger liess sich nicht loesen → NICHT anlegen.
+                # Sonst hat das Paar zwei primaere Eintraege und der alte
+                # gewinnt (der gemessene Fehlzustand, s. u.).
+                continue
             try:
                 self._channex.create_channel_mapping(  # type: ignore[attr-defined]
                     channel_id, channex_rate_plan_id, settings
@@ -624,6 +632,101 @@ class ObjektKanalMixin:
             )
 
     @staticmethod
+    def _eintrag_ist_vollwertig(eintrag: dict[str, Any]) -> bool:
+        """Traegt dieser Kanal-Eintrag ueberhaupt etwas?
+
+        Bei einem PAAR-Kanal (Booking/Expedia: `room_type_code` +
+        `rate_plan_code`) nur mit `occupancy` UND `pricing_type` — ohne die
+        sendet Channex an dem Eintrag nichts (der gemessene Attrappen-Zustand,
+        siehe `_paar_vom_alten_traeger_loesen`).
+
+        Bei Airbnb gibt es diese Felder NICHT: dort ist der Schluessel die
+        `listing_id`, und der Bestand fuehrt statt Belegung die Airbnb-Bloecke
+        (`pricing_setting`, `availability_rule`, …) — live gegengeprueft am Kanal
+        21ec5429. Ein Listing-Eintrag ist deshalb aus sich heraus vollwertig;
+        ihn an `occupancy` zu messen hiesse, jede Airbnb-Zuordnung als Attrappe
+        zu lesen und bei jedem Lauf erneut anzulegen.
+        """
+        settings = eintrag.get("settings") or {}
+        if settings.get("rate_plan_code") is None:
+            return True  # Airbnb & Co. — kein Paar-Kanal
+        return (
+            settings.get("occupancy") is not None
+            and bool(settings.get("pricing_type"))
+        )
+
+    def _paar_vom_alten_traeger_loesen(
+        self, channel_id: str, bestand: list[dict[str, Any]],
+        settings: dict[str, Any], *, neue_channex_rate_plan_id: str,
+    ) -> bool:
+        """Das OTA-Paar von seinem ALTEN Restriktions-Traeger loesen.
+
+        DER GEGENZUSTAND (Wurzel 1). Ein neuer Eintrag mit `primary_occ: True`
+        macht das Paar nicht neu, er verdoppelt es: Channex traegt je OTA-Paar
+        hoechstens EINEN lokalen Plan („One OTA room+rate pair should map to at
+        most one local rate plan"), und live gewinnt der ALTE. Gemessen am
+        23.08.2026 am Kanal von „FeWo *Stjerneskud*"
+        (6194a921-b1c8-41b3-8971-f8bf0a645efc): Rate 63941996 hatte drei
+        Eintraege, darunter der Grundpreis mit `primary_occ: true` — und das
+        Booking-Extranet zeigte an der Wochenrate weiter Mindestaufenthalt 2.
+
+        Geloescht wird EINZELN per `DELETE …/mappings/{mapping_id}` und nicht
+        per `PUT channels/{id}` mit neuem Array: der PUT aendert bestehende
+        `settings` nachweislich nicht (zweimal live belegt, siehe
+        `channex_client`) — er haengt nur an.
+
+        Rueckgabe `True` = es kann angelegt werden (geloest oder nichts zu
+        loesen). `False` = fail-closed, NICHT anlegen (Wurzel 5): entweder ist
+        kein loeschbarer Traeger auffindbar, oder Channex lehnte das Loeschen
+        ab. In beiden Faellen waere das Anlegen der Doppel-Primary-Zustand.
+
+        HEILT DEN LIVE-BESTAND MIT: der kaputte dritte Eintrag (unser Plan ohne
+        `primary_occ`) ist selbst kein Traeger — `restriktions_traeger`
+        verlangt `primary_occ is True` PLUS `occupancy`. Der naechste Lauf
+        findet also den Grundpreis-Eintrag als Traeger, loescht ihn und legt
+        unseren Plan mit vollen settings neu an. Der Attrappen-Eintrag bleibt
+        dabei stehen; er wird beim naechsten additiven PUT nach der
+        Channex-Eindeutigkeit ohnehin nicht mehr gebraucht, und ihn hier
+        blindlings mitzuloeschen hiesse, aus einem Fehlzustand eine
+        Loesch-Heuristik zu machen.
+        """
+        from .portal_raten_plaene import NICHTS_ZU_LOESEN, alter_traeger_mapping_id
+
+        mapping_id = alter_traeger_mapping_id(
+            bestand,
+            settings.get("room_type_code"),
+            settings.get("rate_plan_code"),
+            neue_channex_rate_plan_id=neue_channex_rate_plan_id,
+        )
+        if mapping_id is NICHTS_ZU_LOESEN:
+            return True
+        if not isinstance(mapping_id, str):
+            return False
+        try:
+            self._channex.delete_channel_mapping(  # type: ignore[attr-defined]
+                channel_id, mapping_id
+            )
+        except ChannexError as exc:
+            # 404 = schon weg, also Zielzustand (Wurzel 2 — der Lauf kommt
+            # taeglich wieder). Alles andere ist ein echtes Nein.
+            if exc.channex_status == 404:
+                return True
+            log.warning(
+                "portal_paar_alter_traeger_nicht_geloest",
+                channel_id=channel_id, mapping_id=mapping_id,
+                rate_plan_code=settings.get("rate_plan_code"),
+                error=str(exc)[:200],
+            )
+            return False
+        log.info(
+            "portal_paar_alter_traeger_geloest",
+            channel_id=channel_id, mapping_id=mapping_id,
+            rate_plan_code=settings.get("rate_plan_code"),
+            neuer_plan=neue_channex_rate_plan_id,
+        )
+        return True
+
+    @staticmethod
     def _zuordnungs_ziele(
         bestand: list[dict[str, Any]], airbnb_listing_id: object,
     ) -> list[dict[str, Any]]:
@@ -638,6 +741,8 @@ class ObjektKanalMixin:
         Rückgabe ist dedupliziert und stabil sortiert: dieselbe Rate zweimal
         anzulegen wäre ein 422 „already exists" für nichts.
         """
+        from .portal_raten_plaene import settings_fuer_paar
+
         gesehen: set[tuple[str, ...]] = set()
         ziele: list[dict[str, Any]] = []
         for eintrag in bestand:
@@ -653,7 +758,22 @@ class ObjektKanalMixin:
             if schluessel in gesehen:
                 continue
             gesehen.add(schluessel)
-            ziele.append({"room_type_code": raum, "rate_plan_code": rate})
+            # VOLLE settings, nicht nur das Paar: `occupancy`, `pricing_type`
+            # und `primary_occ` gehoeren dazu, sonst sendet Channex an dem
+            # Eintrag keine Restriktionen (siehe `settings_fuer_paar` und
+            # `paar_fuer_portal_plan` fuer den gemessenen Beleg).
+            volle = settings_fuer_paar(bestand, raum, rate)
+            if volle is None:
+                # Kein Restriktions-Traeger fuer dieses Paar → nichts anlegen.
+                # Ein Eintrag ohne `occupancy` waere eine Attrappe, und eine
+                # geratene Belegung waere ein anderer Preis fuer dieselbe Rate
+                # (fail-closed, Wurzel 4/5).
+                log.warning(
+                    "zuordnungs_ziel_ohne_traeger_uebersprungen",
+                    room_type_code=raum, rate_plan_code=rate,
+                )
+                continue
+            ziele.append(volle)
         if ziele:
             return ziele
         # Kein Paar im Bestand → Airbnb-Weg über die Listing-ID.
@@ -899,7 +1019,20 @@ class ObjektKanalMixin:
                 continue
             attrs = (aktuell.get("data") or {}).get("attributes") or {}
             bestand = attrs.get("rate_plans") or []
-            schon_da = {str(p.get("rate_plan_id")) for p in bestand}
+            # „Schon da" heisst NICHT „irgendein Eintrag traegt unsere
+            # rate_plan_id" — es heisst „unser Plan ist ein vollwertiger
+            # Eintrag". Der Unterschied ist der Befund vom 23.08.2026: am Kanal
+            # von „FeWo *Stjerneskud*" stand unsere Wochenrate als Eintrag OHNE
+            # `occupancy`/`primary_occ` (die Attrappe, die dieser Lauf selbst
+            # hinterlassen hatte). Mit der alten Pruefung galt sie als „schon
+            # zugeordnet", und der taegliche Lauf konnte den Zustand nie heilen —
+            # der Grundpreis blieb Traeger, das Extranet zeigte weiter
+            # Mindestaufenthalt 2. Ein Eintrag ohne diese Felder sendet nichts
+            # und zaehlt deshalb nicht.
+            schon_da = {
+                str(p.get("rate_plan_id")) for p in bestand
+                if self._eintrag_ist_vollwertig(p)
+            }
             # Die Rate-TITEL des Portals — gebraucht, um einen Portal-Raten-Plan
             # an genau SEINE Rate zu haengen (`_portal_raten_plan_ziel`).
             # LAZY: erst beim ersten Plan, der wirklich zugeordnet werden muss.

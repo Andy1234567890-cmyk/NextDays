@@ -139,19 +139,23 @@ class PortalRatenAbgleichMixin:
 
         Rueckgabe (fuer den Job-Verlauf, damit dort steht was passiert ist und
         keine Taetigkeit behauptet wird, Wurzel 4):
-        `{"kanaele": n, "portal_raten": n, "angelegt": n, "sync_eingereiht": b}`.
+        `{"kanaele": n, "portal_raten": n, "angelegt": n, "nachgezogen": n,
+        "sync_eingereiht": b}` — `nachgezogen` sind Plaene, deren verlorene
+        Portal-Freigabe wieder gesetzt wurde (s. `portalfreigabe_nachziehen`).
         """
         db = self._require_db()
         conns = self._kanaele_mit_raten(db, tenant_id, property_id)
         if not conns:
             return {
                 "kanaele": 0, "portal_raten": 0, "angelegt": 0,
+                "nachgezogen": 0,
                 "sync_eingereiht": False,
             }
 
         from .portal_raten_plaene import (
             MAX_PLAENE_JE_ZIMMER,
             plan_fuer_portal_rate,
+            portalfreigabe_nachziehen,
             vorhandene_plan_namen,
         )
 
@@ -166,12 +170,14 @@ class PortalRatenAbgleichMixin:
             )
             return {
                 "kanaele": len(conns), "portal_raten": 0, "angelegt": 0,
+                "nachgezogen": 0,
                 "sync_eingereiht": False,
             }
 
         bekannt = vorhandene_plan_namen(db, property_id)
         raten_gesamt = 0
         angelegt = 0
+        nachgezogen = 0
         for conn in conns:
             portal = str(conn.get("ota_portal_code") or "")
             raten = self._portal_raten(conn)
@@ -256,7 +262,20 @@ class PortalRatenAbgleichMixin:
                     )
                     continue
                 if titel.lower() in bekannt:
-                    continue  # Wurzel 2: der Plan steht schon da
+                    # Wurzel 2: der Plan steht schon da. ABER der Gegenzustand
+                    # zu dieser Sperre muss mit (Wurzel 1): ein Plan, dessen
+                    # `send_to_portals` verloren ging, ist fuer
+                    # `freigegebene_plaene_zuordnen` unsichtbar und bekommt
+                    # nie seine Kanal-Zuordnung. Ohne dieses Nachziehen bliebe
+                    # er dauerhaft eine Zeile unter „Preise", die kein Portal
+                    # liest — Begruendung und Live-Beleg in
+                    # `portal_raten_plaene.portalfreigabe_nachziehen`.
+                    if portalfreigabe_nachziehen(
+                        db, property_id=property_id,
+                        plan_id=bekannt[titel.lower()], plan_name=titel,
+                    ):
+                        nachgezogen += 1
+                    continue
                 neu = plan_fuer_portal_rate(
                     db,
                     property_id=property_id,
@@ -270,14 +289,16 @@ class PortalRatenAbgleichMixin:
                 bekannt[titel.lower()] = neu
                 angelegt += 1
 
-        if not angelegt:
-            # KEIN Content-Sync ohne neuen Plan: sonst kostete jeder taegliche
-            # Lauf je Objekt einen vollen Channex-Content-Push, obwohl sich
-            # nichts geaendert hat (Wurzel 2 — der Lauf muss beim zweiten Mal
-            # NICHTS tun).
+        if not angelegt and not nachgezogen:
+            # KEIN Content-Sync ohne neuen oder nachgezogenen Plan: sonst
+            # kostete jeder taegliche Lauf je Objekt einen vollen
+            # Channex-Content-Push, obwohl sich nichts geaendert hat (Wurzel 2 —
+            # der Lauf muss beim zweiten Mal NICHTS tun). Ein nachgezogenes Flag
+            # zaehlt dazu, denn erst der Content-Sync ruft im selben Handler
+            # `freigegebene_plaene_zuordnen`, die es liest.
             return {
                 "kanaele": len(conns), "portal_raten": raten_gesamt,
-                "angelegt": 0, "sync_eingereiht": False,
+                "angelegt": 0, "nachgezogen": 0, "sync_eingereiht": False,
             }
 
         # Der Gegenzustand zum Anlegen (Wurzel 1) haengt an DIESEM Job:
@@ -291,10 +312,12 @@ class PortalRatenAbgleichMixin:
             "portal_raten_abgleich_plaene_angelegt",
             tenant_id=tenant_id, property_id=property_id,
             kanaele=len(conns), portal_raten=raten_gesamt, angelegt=angelegt,
+            nachgezogen=nachgezogen,
         )
         return {
             "kanaele": len(conns), "portal_raten": raten_gesamt,
-            "angelegt": angelegt, "sync_eingereiht": True,
+            "angelegt": angelegt, "nachgezogen": nachgezogen,
+            "sync_eingereiht": True,
         }
 
     def _kanaele_mit_raten(

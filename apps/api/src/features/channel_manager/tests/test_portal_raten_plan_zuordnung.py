@@ -51,11 +51,28 @@ OTA_ZIMMER: list[dict[str, Any]] = [
 
 # Der Ist-Stand am Kanal: der Grundpreis liegt auf BEIDEN Raten (der Zustand vor
 # dem Umbau — genau daraus entstand die 1-Nacht-Buchung).
+#
+# VOLLSTAENDIG wie Channex es liefert (Form zurueckgelesen 23.08.2026 an Kanal
+# 6194a921-b1c8-41b3-8971-f8bf0a645efc): `id` (die mapping_id), `occupancy`,
+# `pricing_type`, `primary_occ`, `readonly`. Die frueheren Fixtures liessen das
+# weg — und genau deshalb fanden sie den Fehler nicht, den dieser Lauf live
+# produzierte: einen Eintrag ohne `primary_occ`, der keine Restriktionen sendet.
+def _eintrag(mapping_id: str, plan: str, code: int, *,
+             primary: bool = True, occ: int = 4) -> dict[str, Any]:
+    return {
+        "id": mapping_id,
+        "rate_plan_id": plan,
+        "settings": {
+            "readonly": False, "occupancy": occ,
+            "room_type_code": RAUM, "rate_plan_code": code,
+            "pricing_type": "RLO", "primary_occ": primary,
+        },
+    }
+
+
 BESTAND: list[dict[str, Any]] = [
-    {"rate_plan_id": "cx-grund",
-     "settings": {"room_type_code": RAUM, "rate_plan_code": STANDARD_CODE}},
-    {"rate_plan_id": "cx-grund",
-     "settings": {"room_type_code": RAUM, "rate_plan_code": WOCHE_CODE}},
+    _eintrag("map-standard", "cx-grund", STANDARD_CODE),
+    _eintrag("map-woche", "cx-grund", WOCHE_CODE),
 ]
 
 
@@ -76,7 +93,15 @@ def test_wochen_plan_trifft_nur_seine_rate() -> None:
         BESTAND, "Wochenrate",
         portal_titel_je_code=portal_titel_je_code(OTA_ZIMMER),
     )
-    assert paar == {"room_type_code": RAUM, "rate_plan_code": WOCHE_CODE}
+    assert paar == {
+        "room_type_code": RAUM, "rate_plan_code": WOCHE_CODE,
+        # Ohne diese drei Felder ist der Eintrag am Kanal eine Attrappe: Channex
+        # sendet nur am primaeren Eintrag Restriktionen, und `occupancy`/
+        # `pricing_type` sind Pflicht im Create-Payload. Beide Werte kommen aus
+        # dem BESTEHENDEN Eintrag desselben Paares, nicht aus einem Default.
+        "primary_occ": True, "occupancy": 4, "pricing_type": "RLO",
+        "readonly": False,
+    }
 
 
 def test_codes_behalten_ihren_typ() -> None:
@@ -110,7 +135,7 @@ def test_zwei_raten_gleichen_titels_sind_nicht_entscheidbar() -> None:
 def test_rate_nicht_im_kanal_gibt_kein_paar() -> None:
     """Das Portal fuehrt die Rate, der Kanal hat sie aber nicht gemappt: dann
     gibt es kein Paar, das wir uebernehmen koennten — nichts erfinden."""
-    nur_standard = [BESTAND[0]]
+    nur_standard = [_eintrag("map-standard", "cx-grund", STANDARD_CODE)]
     assert paar_fuer_portal_plan(
         nur_standard, "Wochenrate",
         portal_titel_je_code=portal_titel_je_code(OTA_ZIMMER),
@@ -178,9 +203,12 @@ class _Channex:
 
     def __init__(self, bestand: list[dict[str, Any]],
                  ota_zimmer: list[dict[str, Any]] | None = None) -> None:
-        self._bestand = bestand
+        # KOPIE: der Fake veraendert den Bestand (anlegen/loesen) wie der echte
+        # Kanal. Ohne Kopie waere das Modul-Fixture nach dem ersten Test kaputt.
+        self._bestand = [dict(e) for e in bestand]
         self._ota_zimmer = ota_zimmer
         self.angelegt: list[tuple[str, str, dict[str, Any]]] = []
+        self.geloest: list[tuple[str, str]] = []
         self.details_abrufe = 0
 
     def get_channel(self, channel_id: str) -> dict[str, Any]:
@@ -203,7 +231,24 @@ class _Channex:
         self, channel_id: str, rate_plan_id: str, settings: dict[str, Any]
     ) -> dict[str, Any]:
         self.angelegt.append((channel_id, rate_plan_id, settings))
+        # Wie am echten Kanal: der neue Eintrag steht danach im Bestand. Erst
+        # damit ist der zweite Lauf ein echter Idempotenz-Test.
+        self._bestand.append({
+            "id": f"map-neu-{len(self.angelegt)}",
+            "rate_plan_id": rate_plan_id, "settings": dict(settings),
+        })
         return {"data": {"attributes": {"settings": settings}}}
+
+    def delete_channel_mapping(
+        self, channel_id: str, mapping_id: str
+    ) -> dict[str, Any]:
+        """Der Gegenzustand (Wurzel 1): das Paar von seinem alten Traeger
+        loesen. Der echte Kanal nimmt den Eintrag danach nicht mehr mit."""
+        self.geloest.append((channel_id, mapping_id))
+        self._bestand[:] = [
+            e for e in self._bestand if str(e.get("id")) != mapping_id
+        ]
+        return {}
 
 
 def _daten(*, plan_name: str) -> dict[str, list[dict[str, Any]]]:
@@ -255,9 +300,19 @@ def test_am_kanal_landet_der_plan_nur_auf_seiner_rate() -> None:
     assert len(cx.angelegt) == 1, cx.angelegt
     _kanal, rp, settings = cx.angelegt[0]
     assert rp == "cx-woche"
-    assert settings == {"room_type_code": RAUM, "rate_plan_code": WOCHE_CODE}
+    assert settings["room_type_code"] == RAUM
+    assert settings["rate_plan_code"] == WOCHE_CODE
+    assert settings["primary_occ"] is True
+    assert settings["occupancy"] == 4
+    assert settings["pricing_type"] == "RLO"
     # Die Standard-Rate bleibt beim Grundpreis.
     assert settings["rate_plan_code"] != STANDARD_CODE
+    # DER GEGENZUSTAND: der alte Traeger des Paares ist GELOEST. Ohne das hat
+    # das Paar zwei primaere Eintraege, und live gewinnt der alte — genau der
+    # Zustand, der am 23.08.2026 am Kanal 6194a921 gemessen wurde.
+    assert cx.geloest == [("kanal-1", "map-woche")]
+    # Und der Traeger der Standard-Rate bleibt unangetastet.
+    assert all(m != "map-standard" for _, m in cx.geloest)
 
 
 def test_zusatz_plan_bleibt_auf_allen_raten() -> None:
@@ -293,8 +348,7 @@ def test_kein_titel_abruf_wenn_schon_alles_zugeordnet() -> None:
     zusaetzlichen Channex-Abruf kosten (der Titel-Abruf ist lazy)."""
     schon_da = [
         *BESTAND,
-        {"rate_plan_id": "cx-woche",
-         "settings": {"room_type_code": RAUM, "rate_plan_code": WOCHE_CODE}},
+        _eintrag("map-woche-neu", "cx-woche", WOCHE_CODE),
     ]
     dienst, cx = _dienst(_daten(plan_name="Wochenrate"), schon_da)
     ergebnis = dienst.freigegebene_plaene_zuordnen("t-1", "prop-1")
@@ -318,11 +372,309 @@ def test_monatsrate_trifft_ihre_eigene_rate() -> None:
     }]
     bestand = [
         *BESTAND,
-        {"rate_plan_id": "cx-grund",
-         "settings": {"room_type_code": RAUM, "rate_plan_code": monat_code}},
+        _eintrag("map-monat", "cx-grund", monat_code),
     ]
     dienst, cx = _dienst(_daten(plan_name="Monatsrate"), bestand, zimmer)
     dienst.freigegebene_plaene_zuordnen("t-1", "prop-1")
 
     assert len(cx.angelegt) == 1
     assert cx.angelegt[0][2]["rate_plan_code"] == monat_code
+    assert cx.geloest == [("kanal-1", "map-monat")]
+
+
+# --- Der gemessene VIER-Eintraege-Zustand und sein Zielzustand --------------
+#
+# So sah der Kanal von „FeWo *Stjerneskud*"
+# (6194a921-b1c8-41b3-8971-f8bf0a645efc) am 23.08.2026 aus, NACHDEM dieser Lauf
+# einmal „erfolgreich" durchgelaufen war — zurueckgelesen per
+# `GET /channels/{id}`, nicht angenommen:
+#
+#   code=47588686 occ=4    primary=True   -> 94cc38bb (Grundpreis)
+#   code=63941996 occ=1    primary=False  -> bd74737b (Grundpreis · BookingCom)
+#   code=63941996 occ=None primary=None   -> b7df3e35 (unsere Wochenrate)
+#   code=63941996 occ=4    primary=True   -> 94cc38bb (Grundpreis)
+#
+# Der dritte Eintrag ist die Attrappe: ohne `primary_occ` sendet Channex dort
+# keine Restriktionen, der vierte bleibt Traeger, und das Booking-Extranet
+# zeigte an der Wochenrate weiter Mindestaufenthalt 2 statt 7.
+STJERNESKUD_RAUM = 1264579201
+STJERNESKUD_STANDARD = 47588686
+STJERNESKUD_WOCHE = 63941996
+CX_GRUND = "94cc38bb-3c39-46cd-8ebf-fd54812f5245"
+CX_KANALPLAN = "bd74737b-32c0-4cfc-b815-9ecfa90777df"
+CX_WOCHE = "b7df3e35-4483-494f-85fc-476aa14d8d6e"
+
+VIER_EINTRAEGE: list[dict[str, Any]] = [
+    {"id": "f48200fc", "rate_plan_id": CX_GRUND,
+     "settings": {"readonly": False, "occupancy": 4,
+                  "rate_plan_code": STJERNESKUD_STANDARD,
+                  "room_type_code": STJERNESKUD_RAUM,
+                  "pricing_type": "RLO", "primary_occ": True}},
+    {"id": "c0e40509", "rate_plan_id": CX_KANALPLAN,
+     "settings": {"readonly": False, "occupancy": 1,
+                  "rate_plan_code": STJERNESKUD_WOCHE,
+                  "room_type_code": STJERNESKUD_RAUM,
+                  "pricing_type": "RLO", "occ_changed": False,
+                  "primary_occ": False}},
+    {"id": "7ba01b47", "rate_plan_id": CX_WOCHE,
+     "settings": {"rate_plan_code": STJERNESKUD_WOCHE,
+                  "room_type_code": STJERNESKUD_RAUM}},
+    {"id": "8ec8a717", "rate_plan_id": CX_GRUND,
+     "settings": {"readonly": False, "occupancy": 4,
+                  "rate_plan_code": STJERNESKUD_WOCHE,
+                  "room_type_code": STJERNESKUD_RAUM,
+                  "pricing_type": "RLO", "primary_occ": True}},
+]
+
+STJERNESKUD_ZIMMER: list[dict[str, Any]] = [{
+    "id": STJERNESKUD_RAUM, "title": "Ferienhaus",
+    "rates": [
+        {"id": STJERNESKUD_STANDARD, "title": "Standard Rate"},
+        {"id": STJERNESKUD_WOCHE, "title": "Wochenrate"},
+    ],
+}]
+
+
+def _stjerneskud_daten() -> dict[str, list[dict[str, Any]]]:
+    daten = _daten(plan_name="Wochenrate")
+    daten["channex_rate_plan_map"] = [
+        {"local_rate_plan_id": "lokal-woche",
+         "channex_rate_plan_id": CX_WOCHE,
+         "tenant_id": "t-1", "deleted_at": None},
+    ]
+    return daten
+
+
+def test_vier_eintraege_werden_auf_einen_traeger_je_paar_zurueckgefuehrt() -> None:
+    """DER HEIL-TEST: aus dem gemessenen Vier-Eintraege-Zustand der Zielzustand.
+
+    Paar 47588686 -> Grundpreis (primary, unberuehrt).
+    Paar 63941996 -> Wochenrate (primary) — der alte Grundpreis-Traeger 8ec8a717
+                     ist GELOEST, sonst hat das Paar zwei primaere Eintraege und
+                     Channex laesst den alten gewinnen.
+    Der occ=1/primary=False-Eintrag (c0e40509) bleibt UNBERUEHRT: er ist eine
+    Belegungs-Variante des Kanal-Plans, kein Restriktions-Traeger.
+    """
+    dienst, cx = _dienst(
+        _stjerneskud_daten(), VIER_EINTRAEGE, STJERNESKUD_ZIMMER
+    )
+    dienst.freigegebene_plaene_zuordnen("t-1", "prop-1")
+
+    assert cx.geloest == [("kanal-1", "8ec8a717")], (
+        "Nur der alte primaere Traeger des Paares 63941996 darf weg — nicht der "
+        "des Paares 47588686 und nicht die Belegungs-Variante."
+    )
+    assert len(cx.angelegt) == 1
+    _kanal, rp, settings = cx.angelegt[0]
+    assert rp == CX_WOCHE
+    assert settings["rate_plan_code"] == STJERNESKUD_WOCHE
+    assert settings["primary_occ"] is True
+    # occupancy/pricing_type aus dem Bestandseintrag desselben Paares — 4/RLO,
+    # nicht 2/Standard (der Default des Kanal-AUFBAUS) und nicht 1 (die
+    # Belegungs-Variante).
+    assert settings["occupancy"] == 4
+    assert settings["pricing_type"] == "RLO"
+
+
+def test_paar_hat_danach_genau_einen_primaeren_eintrag() -> None:
+    """Channex traegt je OTA-Paar hoechstens EINEN lokalen Plan. Nach dem Lauf
+    muss das Paar 63941996 genau einen primaeren Eintrag haben — und der muss
+    unser Wochen-Plan sein."""
+    dienst, cx = _dienst(
+        _stjerneskud_daten(), VIER_EINTRAEGE, STJERNESKUD_ZIMMER
+    )
+    dienst.freigegebene_plaene_zuordnen("t-1", "prop-1")
+
+    danach = cx.get_channel("kanal-1")["data"]["attributes"]["rate_plans"]
+    primaer = [
+        e for e in danach
+        if str((e.get("settings") or {}).get("rate_plan_code"))
+        == str(STJERNESKUD_WOCHE)
+        and (e.get("settings") or {}).get("primary_occ") is True
+    ]
+    assert len(primaer) == 1, primaer
+    assert primaer[0]["rate_plan_id"] == CX_WOCHE
+    # Die Belegungs-Variante steht weiter da.
+    assert any(e["id"] == "c0e40509" for e in danach)
+
+
+def test_zweiter_lauf_aendert_nichts() -> None:
+    """Idempotenz (Wurzel 2): der Lauf haengt an JEDEM Content-Sync und kommt
+    taeglich wieder. Beim zweiten Mal ist der Plan schon am Kanal — es darf
+    weder ein Eintrag angelegt noch einer geloescht werden. Ohne die
+    `rate_plan_id`-Pruefung in `alter_traeger_mapping_id` loeschte der zweite
+    Lauf die Zuordnung, die der erste gerade hergestellt hat."""
+    dienst, cx = _dienst(
+        _stjerneskud_daten(), VIER_EINTRAEGE, STJERNESKUD_ZIMMER
+    )
+    dienst.freigegebene_plaene_zuordnen("t-1", "prop-1")
+    angelegt_1, geloest_1 = len(cx.angelegt), len(cx.geloest)
+
+    ergebnis = dienst.freigegebene_plaene_zuordnen("t-1", "prop-1")
+
+    assert ergebnis["zugeordnet"] == 0
+    assert len(cx.angelegt) == angelegt_1
+    assert len(cx.geloest) == geloest_1
+
+
+def test_attrappen_eintrag_ist_keine_quelle_fuer_die_belegung() -> None:
+    """Der kaputte dritte Eintrag (nur die beiden Codes) darf nicht als Traeger
+    gelten — sonst schreibt der Lauf den Fehler fort und legt den naechsten
+    Eintrag wieder ohne `occupancy` an."""
+    nur_attrappe = [
+        VIER_EINTRAEGE[0],  # anderes Paar
+        VIER_EINTRAEGE[2],  # die Attrappe des Paares 63941996
+    ]
+    dienst, cx = _dienst(
+        _stjerneskud_daten(), nur_attrappe, STJERNESKUD_ZIMMER
+    )
+    dienst.freigegebene_plaene_zuordnen("t-1", "prop-1")
+
+    assert cx.angelegt == [], (
+        "Ohne belegte occupancy wird NICHT zugeordnet — eine geratene Belegung "
+        "waere ein anderer Preis fuer dieselbe Rate (fail-closed, Wurzel 4/5)."
+    )
+    assert cx.geloest == []
+
+
+def test_ohne_bestandseintrag_wird_nicht_zugeordnet() -> None:
+    """Fehlt der Bestandseintrag des Paares ganz, gibt es keine occupancy zum
+    Uebernehmen — dann wird gar nicht zugeordnet, statt mit einer geratenen
+    Belegung (fail-closed, Wurzel 5)."""
+    nur_standard = [VIER_EINTRAEGE[0]]
+    dienst, cx = _dienst(
+        _stjerneskud_daten(), nur_standard, STJERNESKUD_ZIMMER
+    )
+    dienst.freigegebene_plaene_zuordnen("t-1", "prop-1")
+
+    assert cx.angelegt == []
+    assert cx.geloest == []
+
+
+def test_airbnb_eintrag_gilt_als_vollwertig() -> None:
+    """KEINE Regression bei Airbnb: dort gibt es `occupancy`/`pricing_type`
+    nicht (Schluessel ist die `listing_id`, live gegengeprueft am Kanal
+    21ec5429). Ein Listing-Eintrag an `occupancy` zu messen hiesse, JEDE
+    Airbnb-Zuordnung als Attrappe zu lesen und bei jedem Lauf erneut anzulegen —
+    Channex antwortet dann 422 „already exists"."""
+    vollwertig = ObjektKanalMixin._eintrag_ist_vollwertig  # noqa: SLF001
+    assert vollwertig({"settings": {"listing_id": "54087677",
+                                    "published": True}}) is True
+    # Ein PAAR-Eintrag ohne Belegung ist die Attrappe.
+    assert vollwertig({"settings": {"room_type_code": RAUM,
+                                    "rate_plan_code": WOCHE_CODE}}) is False
+    assert vollwertig({"settings": {"room_type_code": RAUM,
+                                    "rate_plan_code": WOCHE_CODE,
+                                    "occupancy": 4,
+                                    "pricing_type": "RLO"}}) is True
+
+
+# --- Zweiter Live-Zustand: „Feriehus Grævlinge" -----------------------------
+#
+# Frisch gemessen (Channex-Property 28392615-ea5e-4f6d-ac00-b53aa481b284,
+# Booking-Kanal 79a87664-fe24-4df8-996f-29305528250e). Er ist NICHT derselbe
+# wie bei Stjerneskud, und der Unterschied entscheidet:
+#
+#   code=64053536 occ=None primary=None   -> f2648d48 (unsere Wochenrate)
+#   code=64053536 occ=8    primary=False  -> 00641ac4 (Grundpreis)
+#   code=64053431 occ=8    primary=True   -> 00641ac4 (Grundpreis, Standard)
+#
+# Das Paar 64053536 hat KEINEN Eintrag mit `primary_occ: True` — deshalb ist die
+# Mindestaufenthalt-Zelle der Wochenrate im Booking-Extranet LEER, waehrend die
+# Standard Rate (64053431, primary) ihre 2 korrekt zeigt. Bei Stjerneskud gab es
+# einen alten primaeren Traeger, hier gibt es keinen: der Schaden ist derselbe,
+# der Weg dahin nicht. Deshalb hat `restriktions_traeger` zwei Stufen.
+GRAEV_RAUM = 1279216201
+GRAEV_STANDARD = 64053431
+GRAEV_WOCHE = 64053536
+GRAEV_GRUND = "00641ac4-0000-0000-0000-000000000000"
+GRAEV_WOCHE_CX = "f2648d48-0000-0000-0000-000000000000"
+
+GRAEVLINGE: list[dict[str, Any]] = [
+    {"id": "map-attrappe", "rate_plan_id": GRAEV_WOCHE_CX,
+     "settings": {"rate_plan_code": GRAEV_WOCHE, "room_type_code": GRAEV_RAUM}},
+    {"id": "map-woche-nonprimary", "rate_plan_id": GRAEV_GRUND,
+     "settings": {"readonly": False, "occupancy": 8,
+                  "rate_plan_code": GRAEV_WOCHE, "room_type_code": GRAEV_RAUM,
+                  "pricing_type": "Standard", "primary_occ": False}},
+    {"id": "map-standard", "rate_plan_id": GRAEV_GRUND,
+     "settings": {"readonly": False, "occupancy": 8,
+                  "rate_plan_code": GRAEV_STANDARD,
+                  "room_type_code": GRAEV_RAUM,
+                  "pricing_type": "Standard", "primary_occ": True}},
+]
+
+GRAEV_ZIMMER: list[dict[str, Any]] = [{
+    "id": GRAEV_RAUM, "title": "Ferienhaus",
+    "rates": [
+        {"id": GRAEV_STANDARD, "title": "Standard Rate"},
+        {"id": GRAEV_WOCHE, "title": "Wochenrate"},
+    ],
+}]
+
+
+def _graev_daten() -> dict[str, list[dict[str, Any]]]:
+    daten = _daten(plan_name="Wochenrate")
+    daten["channex_rate_plan_map"] = [
+        {"local_rate_plan_id": "lokal-woche",
+         "channex_rate_plan_id": GRAEV_WOCHE_CX,
+         "tenant_id": "t-1", "deleted_at": None},
+    ]
+    return daten
+
+
+def test_graevlinge_wochenrate_wird_primaerer_traeger() -> None:
+    """Das Paar OHNE primaeren Traeger: die Wochenrate wird selbst einer.
+
+    Die Belegung (8) kommt aus dem nicht-primaeren Bestandseintrag desselben
+    Paares — das ist die einzige Stelle, an der die Belegung dieses Paares
+    belegt steht. Sein Eintrag wird geloest, sonst haette das Paar unseren
+    neuen primaeren PLUS den alten nicht-primaeren am Grundpreis, und Channex
+    traegt je Paar nur EINEN lokalen Plan.
+    """
+    dienst, cx = _dienst(_graev_daten(), GRAEVLINGE, GRAEV_ZIMMER)
+    dienst.freigegebene_plaene_zuordnen("t-1", "prop-1")
+
+    assert len(cx.angelegt) == 1, cx.angelegt
+    _kanal, rp, settings = cx.angelegt[0]
+    assert rp == GRAEV_WOCHE_CX
+    assert settings["rate_plan_code"] == GRAEV_WOCHE
+    assert settings["primary_occ"] is True, (
+        "Ohne primary_occ bleibt die Mindestaufenthalt-Zelle der Wochenrate im "
+        "Booking-Extranet leer — genau der gemessene Schaden."
+    )
+    assert settings["occupancy"] == 8, "Belegung aus dem Bestand, nicht geraten"
+    assert settings["pricing_type"] == "Standard"
+    # Die Standard Rate behaelt ihren Traeger.
+    assert cx.geloest == [("kanal-1", "map-woche-nonprimary")]
+
+    danach = cx.get_channel("kanal-1")["data"]["attributes"]["rate_plans"]
+    for code in (GRAEV_STANDARD, GRAEV_WOCHE):
+        primaer = [
+            e for e in danach
+            if str((e.get("settings") or {}).get("rate_plan_code")) == str(code)
+            and (e.get("settings") or {}).get("primary_occ") is True
+        ]
+        assert len(primaer) == 1, (code, primaer)
+    assert next(
+        e["rate_plan_id"] for e in danach
+        if str((e.get("settings") or {}).get("rate_plan_code"))
+        == str(GRAEV_WOCHE)
+        and (e.get("settings") or {}).get("primary_occ") is True
+    ) == GRAEV_WOCHE_CX
+    assert next(
+        e["rate_plan_id"] for e in danach
+        if str((e.get("settings") or {}).get("rate_plan_code"))
+        == str(GRAEV_STANDARD)
+    ) == GRAEV_GRUND
+
+
+def test_graevlinge_zweiter_lauf_aendert_nichts() -> None:
+    """Idempotenz auch fuer diesen Zustand (Wurzel 2)."""
+    dienst, cx = _dienst(_graev_daten(), GRAEVLINGE, GRAEV_ZIMMER)
+    dienst.freigegebene_plaene_zuordnen("t-1", "prop-1")
+    a1, g1 = len(cx.angelegt), len(cx.geloest)
+
+    dienst.freigegebene_plaene_zuordnen("t-1", "prop-1")
+
+    assert (len(cx.angelegt), len(cx.geloest)) == (a1, g1)

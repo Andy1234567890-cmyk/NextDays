@@ -85,6 +85,7 @@ class _Channex:
     def __init__(self, bestand: list[dict[str, Any]]) -> None:
         self._bestand = bestand
         self.angelegt: list[tuple[str, str, dict[str, Any]]] = []
+        self.geloest: list[tuple[str, str]] = []
 
     def get_channel(self, channel_id: str) -> dict[str, Any]:
         return {
@@ -99,6 +100,13 @@ class _Channex:
     ) -> dict[str, Any]:
         self.angelegt.append((channel_id, rate_plan_id, settings))
         return {"data": {"attributes": {"settings": settings}}}
+
+    def delete_channel_mapping(
+        self, channel_id: str, mapping_id: str
+    ) -> dict[str, Any]:
+        """Der Gegenzustand: das Paar von seinem alten Traeger loesen."""
+        self.geloest.append((channel_id, mapping_id))
+        return {}
 
 
 def _dienst(
@@ -119,14 +127,24 @@ def _dienst(
     return _Dienst(), cx
 
 
+# Vollstaendig wie am Kanal (zurueckgelesen 23.08.2026): `occupancy`,
+# `pricing_type`, `primary_occ`, `readonly` gehoeren dazu. Ein Ziel ohne diese
+# Felder sendet am Kanal keine Restriktionen (siehe
+# `portal_raten_plaene.paar_fuer_portal_plan`).
 BOOKING_BESTAND: list[dict[str, Any]] = [
     {
+        "id": "map-wochenrate",
         "rate_plan_id": "cx-grundpreis",
-        "settings": {"room_type_code": 1621321801, "rate_plan_code": 65402734},
+        "settings": {"room_type_code": 1621321801, "rate_plan_code": 65402734,
+                     "occupancy": 6, "pricing_type": "Standard",
+                     "primary_occ": True, "readonly": False},
     },
     {
+        "id": "map-standard",
         "rate_plan_id": "cx-grundpreis",
-        "settings": {"room_type_code": 1621321801, "rate_plan_code": 64513248},
+        "settings": {"room_type_code": 1621321801, "rate_plan_code": 64513248,
+                     "occupancy": 6, "pricing_type": "Standard",
+                     "primary_occ": True, "readonly": False},
     },
 ]
 
@@ -196,6 +214,10 @@ def test_freigegebener_plan_wird_an_allen_raten_zugeordnet() -> None:
     codes = sorted(s["rate_plan_code"] for _, _, s in cx.angelegt)
     assert codes == [64513248, 65402734]
     assert all(rp == "cx-wochenrate" for _, rp, _ in cx.angelegt)
+    # Gegenzustand (Wurzel 1): jedes Paar wird VORHER von seinem alten Traeger
+    # geloest. Ohne das haette jedes Paar zwei primaere Eintraege, und Channex
+    # laesst dann den ALTEN gewinnen (live gemessen an „FeWo *Stjerneskud*").
+    assert sorted(m for _, m in cx.geloest) == ["map-standard", "map-wochenrate"]
 
 
 def test_kanal_plan_wird_nicht_mitgemappt() -> None:
@@ -222,14 +244,20 @@ def test_schon_zugeordnet_wird_nicht_erneut_angelegt() -> None:
     bestand = [
         *BOOKING_BESTAND,
         {
+            "id": "map-wochenrate-neu",
             "rate_plan_id": "cx-wochenrate",
-            "settings": {"room_type_code": 1621321801, "rate_plan_code": 65402734},
+            "settings": {"room_type_code": 1621321801, "rate_plan_code": 65402734,
+                         "occupancy": 6, "pricing_type": "Standard",
+                         "primary_occ": True, "readonly": False},
         },
     ]
     dienst, cx = _dienst(DATEN, bestand)
     ergebnis = dienst.freigegebene_plaene_zuordnen("t-1", "prop-1")
     assert cx.angelegt == []
     assert ergebnis["zugeordnet"] == 0
+    # Und der Gegenzustand loescht nichts: der Plan ist schon am Kanal, es gibt
+    # keinen fremden Traeger zu loesen (Wurzel 2).
+    assert cx.geloest == []
 
 
 def test_ohne_freigegebene_plaene_kein_kanal_abruf() -> None:
