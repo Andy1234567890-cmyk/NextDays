@@ -4587,6 +4587,8 @@
       },
       "fenster": {
         "heute": "Šiandien",
+        "1d": "Iki rytojaus",
+        "2d": "Iki poryt",
         "7d": "Artimiausios 7 dienos",
         "30d": "Artimiausios 30 dienų",
         "alle": "Visos",

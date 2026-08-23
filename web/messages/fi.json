@@ -4589,6 +4589,8 @@
       },
       "fenster": {
         "heute": "Tänään",
+        "1d": "Huomiseen asti",
+        "2d": "Ylihuomiseen asti",
         "7d": "Seuraavat 7 päivää",
         "30d": "Seuraavat 30 päivää",
         "alle": "Kaikki",

@@ -4589,6 +4589,8 @@
       },
       "fenster": {
         "heute": "Ma",
+        "1d": "Holnapig",
+        "2d": "Holnaputánig",
         "7d": "Következő 7 nap",
         "30d": "Következő 30 nap",
         "alle": "Összes",

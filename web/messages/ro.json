@@ -4587,6 +4587,8 @@
       },
       "fenster": {
         "heute": "Astăzi",
+        "1d": "Până mâine",
+        "2d": "Până poimâine",
         "7d": "Următoarele 7 zile",
         "30d": "Următoarele 30 de zile",
         "alle": "Toate",

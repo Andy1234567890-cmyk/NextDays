@@ -655,6 +655,8 @@ class DashboardFenster(StrEnum):
     """
 
     heute = "heute"
+    d1 = "1d"
+    d2 = "2d"
     d7 = "7d"
     d30 = "30d"
     alle = "alle"

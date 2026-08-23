@@ -4587,6 +4587,8 @@
       },
       "fenster": {
         "heute": "I dag",
+        "1d": "Till och med i morgon",
+        "2d": "Till och med i övermorgon",
         "7d": "Kommande 7 dagar",
         "30d": "Kommande 30 dagar",
         "alle": "Alla",

@@ -4589,6 +4589,8 @@
       },
       "fenster": {
         "heute": "Danas",
+        "1d": "Do sutra",
+        "2d": "Do prekosutra",
         "7d": "Sljedećih 7 dana",
         "30d": "Sljedećih 30 dana",
         "alle": "Sve",

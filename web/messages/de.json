@@ -4633,6 +4633,8 @@
       },
       "fenster": {
         "heute": "Heute",
+        "1d": "Bis morgen",
+        "2d": "Bis übermorgen",
         "7d": "Nächste 7 Tage",
         "30d": "Nächste 30 Tage",
         "alle": "Alle",

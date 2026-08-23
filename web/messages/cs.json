@@ -4589,6 +4589,8 @@
       },
       "fenster": {
         "heute": "Dnes",
+        "1d": "Do zítřka",
+        "2d": "Do pozítří",
         "7d": "Příštích 7 dní",
         "30d": "Příštích 30 dní",
         "alle": "Vše",

@@ -4589,6 +4589,8 @@
       },
       "fenster": {
         "heute": "Täna",
+        "1d": "Kuni homseni",
+        "2d": "Kuni ülehomseni",
         "7d": "Järgmised 7 päeva",
         "30d": "Järgmised 30 päeva",
         "alle": "Kõik",

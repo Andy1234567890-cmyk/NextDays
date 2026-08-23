@@ -4610,6 +4610,8 @@
       },
       "fenster": {
         "heute": "Today",
+        "1d": "Through tomorrow",
+        "2d": "Through the day after tomorrow",
         "7d": "Next 7 days",
         "30d": "Next 30 days",
         "alle": "All",

@@ -890,6 +890,59 @@ def test_dashboard_liste_fenster_je_liste_auf_eigener_achse() -> None:
     assert im_haus.gesamt == 2
 
 
+def test_dashboard_liste_kurze_fenster() -> None:
+    """„Bis morgen" (1d) und „Bis übermorgen" (2d) sind Spannen AB HEUTE.
+
+    Der heutige Tag ist eingeschlossen — deshalb heißen sie in der Oberfläche
+    „Bis morgen" und nicht „Morgen": eine heutige Anreise steht in der Liste,
+    und eine Beschriftung „Morgen" hätte das Gegenteil versprochen.
+    """
+    today = date.today()
+    iso = lambda d: d.isoformat()  # noqa: E731
+    reservations = [
+        {"id": RID, "property_id": "p1", "channel": "booking", "status": "confirmed",
+         "check_in": iso(today), "check_out": iso(today + timedelta(days=9)),
+         "total_amount": 100, "currency": "EUR", "guests": {"name": "Heute"}},
+        {"id": "r-morgen", "property_id": "p1", "channel": "booking",
+         "status": "confirmed", "check_in": iso(today + timedelta(days=1)),
+         "check_out": iso(today + timedelta(days=9)),
+         "total_amount": 100, "currency": "EUR", "guests": {"name": "Morgen"}},
+        {"id": "r-uebermorgen", "property_id": "p1", "channel": "booking",
+         "status": "confirmed", "check_in": iso(today + timedelta(days=2)),
+         "check_out": iso(today + timedelta(days=9)),
+         "total_amount": 100, "currency": "EUR", "guests": {"name": "Uebermorgen"}},
+        {"id": "r-spaeter", "property_id": "p1", "channel": "booking",
+         "status": "confirmed", "check_in": iso(today + timedelta(days=3)),
+         "check_out": iso(today + timedelta(days=9)),
+         "total_amount": 100, "currency": "EUR", "guests": {"name": "Spaeter"}},
+    ]
+    svc = _dashboard_db(reservations, [{"id": "p1", "title": "Strandhaus"}])
+    ctx = AuthContext(user_id="u1", tenant_id="t1", role="admin")
+
+    def ids(fenster: DashboardFenster) -> set[str]:
+        antwort = svc.dashboard_liste(ctx, DashboardListe.checkins, fenster)
+        return {e.reservation_id for e in antwort.items}
+
+    # „Nur heute" bleibt unverändert — die neuen Werte nehmen ihm nichts weg.
+    assert ids(DashboardFenster.heute) == {RID}
+    assert ids(DashboardFenster.d1) == {RID, "r-morgen"}
+    assert ids(DashboardFenster.d2) == {RID, "r-morgen", "r-uebermorgen"}
+    # Der Tag danach fällt aus beiden heraus.
+    assert "r-spaeter" not in ids(DashboardFenster.d2)
+
+
+def test_dashboard_fenster_vollstaendig_abgebildet() -> None:
+    """Jeder Wert des Enums braucht eine Tageszahl.
+
+    Ein neuer Enum-Wert ohne Eintrag in `_FENSTER_TAGE` würde beim Nachladen mit
+    KeyError einschlagen — ein 500 auf einen Wert, den die Oberfläche selbst
+    anbietet. Diese Klammer fängt das beim nächsten Mal.
+    """
+    from src.features.reservations.dashboard import _FENSTER_TAGE
+
+    assert set(_FENSTER_TAGE) == set(DashboardFenster)
+
+
 def test_dashboard_liste_owner_ohne_objekte_bekommt_nichts() -> None:
     """Fail-closed wie im Dashboard: ein Eigentümer ohne zugeordnetes Objekt
     darf über den Nachlade-Weg keine tenant-weite Liste bekommen (Wurzel 9)."""

@@ -314,7 +314,13 @@ export type DashboardListe =
   | "im_haus";
 
 /** Zeitfenster einer Listen-Karte, gerechnet ab heute (Backend-Enum). */
-export type DashboardFenster = "heute" | "7d" | "30d" | "alle";
+export type DashboardFenster =
+  | "heute"
+  | "1d"
+  | "2d"
+  | "7d"
+  | "30d"
+  | "alle";
 
 export type DashboardListeAntwort = {
   liste: DashboardListe;

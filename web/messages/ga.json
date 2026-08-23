@@ -4589,6 +4589,8 @@
       },
       "fenster": {
         "heute": "Inniu",
+        "1d": "Go dtí amárach",
+        "2d": "Go dtí arú amárach",
         "7d": "An chéad 7 lá eile",
         "30d": "An chéad 30 lá eile",
         "alle": "Uile",

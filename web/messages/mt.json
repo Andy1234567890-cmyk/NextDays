@@ -4587,6 +4587,8 @@
       },
       "fenster": {
         "heute": "Illum",
+        "1d": "Sa għada",
+        "2d": "Sa pitgħada",
         "7d": "Is-7 ijiem li ġejjin",
         "30d": "It-30 jum li ġejjin",
         "alle": "Kollha",

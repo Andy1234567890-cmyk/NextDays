@@ -1,17 +1,17 @@
 // Der Umschalter der Übersicht — einmal für Auswertungs-ZEITRÄUME (Kennzahlen)
 // und einmal für Zeit-FENSTER (Listen). Beides sind geschlossene Mengen aus dem
 // Backend (`core.zeitraum.ZEITRAEUME` bzw. `DashboardFenster`); hier steht nur
-// die Reihenfolge und die Beschriftung. Ein hier erfundener fünfter Wert würde
-// vom Server mit 422 abgewiesen (Wurzel 8).
+// die Reihenfolge und die Beschriftung. Ein hier erfundener Wert würde vom
+// Server mit 422 abgewiesen (Wurzel 8).
 //
-// Aufklappmenü wie im Web (dort ein `<select>` im Pill-Kleid), nicht vier
+// Aufklappmenü wie im Web (dort ein `<select>` im Pill-Kleid), nicht alle
 // Pillen nebeneinander: die Kurzform („7 T") ist auf der geschlossenen Pille
 // nötig, damit sie in eine Kopfzeile passt — in der offenen Liste steht der
 // ausgeschriebene Zeitraum, weil „7 T" allein nicht sagt, ob vorwärts oder
 // rückwärts gezählt wird.
 //
-// Eigenes Menü statt eines RN-`Picker`: das Rad öffnet für vier Werte einen
-// halben Bildschirm und zeigt die Wahl erst nach dem Scrollen. Dieses Menü hängt
+// Eigenes Menü statt eines RN-`Picker`: das Rad öffnet für eine Handvoll Werte
+// einen halben Bildschirm und zeigt die Wahl erst nach dem Scrollen. Dieses Menü hängt
 // direkt unter seinem Auslöser (bei Platzmangel darüber) — dieselbe Geste, aber
 // die Liste ist auf einen Blick lesbar.
 import { useCallback, useRef, useState } from "react";
@@ -41,8 +41,15 @@ export const ZEITRAEUME: ZeitOption<Zeitraum>[] = [
 
 // Die Fenster zählen AB HEUTE vorwärts (Backend: „gerechnet ab heute") — die
 // ausgeschriebene Form sagt das, die Kurzform kann es nicht.
+//
+// Deshalb „Bis morgen" und nicht „Morgen": der heutige Tag ist in der Spanne
+// mit drin. „Morgen" würde versprechen, dass die heutige Anreise NICHT in der
+// Liste steht — sie steht aber drin, und das hielte niemand für eine
+// Beschriftung, sondern für einen Fehler.
 export const FENSTER: ZeitOption<DashboardFenster>[] = [
   { wert: "heute", label: "Heute", lang: "Nur heute" },
+  { wert: "1d", label: "+1 T", lang: "Bis morgen" },
+  { wert: "2d", label: "+2 T", lang: "Bis übermorgen" },
   { wert: "7d", label: "7 T", lang: "Nächste 7 Tage" },
   { wert: "30d", label: "30 T", lang: "Nächste 30 Tage" },
   { wert: "alle", label: "Alle", lang: "Alle" },

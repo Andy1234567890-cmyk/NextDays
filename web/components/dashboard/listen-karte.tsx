@@ -30,7 +30,10 @@ import { getDashboardListe } from "@/lib/reservations";
 // Reihenfolge der Auswahlliste. Die Menge selbst kommt aus dem Backend
 // (`DashboardFenster`) — ein hier erfundener fünfter Wert würde mit 422
 // abgewiesen.
-const FENSTER: DashboardFenster[] = ["heute", "7d", "30d", "alle"];
+// Reihenfolge des Selektors. Die Spannen zählen ab HEUTE vorwärts, „1d"/„2d"
+// schließen den heutigen Tag also ein — deshalb heißen sie in den Katalogen
+// „Bis morgen"/„Bis übermorgen" und nicht „Morgen"/„Übermorgen".
+const FENSTER: DashboardFenster[] = ["heute", "1d", "2d", "7d", "30d", "alle"];
 
 // Gebuchte Zusatzleistungen der Buchung. Zeigt, was das Team vorzubereiten hat
 // („2× Wäschepaket"), und ob es beim Check-in noch zu kassieren ist: ein

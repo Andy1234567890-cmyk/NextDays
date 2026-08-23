@@ -4587,6 +4587,8 @@
       },
       "fenster": {
         "heute": "Vandaag",
+        "1d": "Tot en met morgen",
+        "2d": "Tot en met overmorgen",
         "7d": "Komende 7 dagen",
         "30d": "Komende 30 dagen",
         "alle": "Alle",

@@ -4587,6 +4587,8 @@
       },
       "fenster": {
         "heute": "Šodien",
+        "1d": "Līdz rītdienai",
+        "2d": "Līdz parītdienai",
         "7d": "Nākamās 7 dienas",
         "30d": "Nākamās 30 dienas",
         "alle": "Visas",

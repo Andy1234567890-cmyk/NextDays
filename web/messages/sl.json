@@ -4587,6 +4587,8 @@
       },
       "fenster": {
         "heute": "Danes",
+        "1d": "Do jutri",
+        "2d": "Do pojutrišnjem",
         "7d": "Naslednjih 7 dni",
         "30d": "Naslednjih 30 dni",
         "alle": "Vse",

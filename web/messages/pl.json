@@ -4587,6 +4587,8 @@
       },
       "fenster": {
         "heute": "Dzisiaj",
+        "1d": "Do jutra",
+        "2d": "Do pojutrza",
         "7d": "Najbliższe 7 dni",
         "30d": "Najbliższe 30 dni",
         "alle": "Wszystkie",

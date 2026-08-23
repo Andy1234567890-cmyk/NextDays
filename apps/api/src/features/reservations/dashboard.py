@@ -168,6 +168,12 @@ def _kennzahlen(
 # Zeitfenster der Listen in Tagen ab heute; None = unbegrenzt („alle").
 _FENSTER_TAGE: dict[DashboardFenster, int | None] = {
     DashboardFenster.heute: 0,
+    # Die kurzen Fenster zählen wie die langen AB HEUTE: „1d" ist heute+morgen,
+    # nicht morgen allein. Ein Fenster, das heute AUSLIESSE, wäre die erste
+    # Spanne mit eigenem Startpunkt — dann müsste jede Liste zwei Grenzen
+    # führen statt einer, und „alle" hätte keine Bedeutung mehr.
+    DashboardFenster.d1: 1,
+    DashboardFenster.d2: 2,
     DashboardFenster.d7: 7,
     DashboardFenster.d30: 30,
     DashboardFenster.alle: None,
