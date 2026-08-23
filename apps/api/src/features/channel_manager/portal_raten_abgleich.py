@@ -178,6 +178,8 @@ class PortalRatenAbgleichMixin:
         raten_gesamt = 0
         angelegt = 0
         nachgezogen = 0
+        # Raten, deren eigener Plan nur als Attrappe zugeordnet ist (s. u.).
+        zu_heilen = 0
         for conn in conns:
             portal = str(conn.get("ota_portal_code") or "")
             raten = self._portal_raten(conn)
@@ -189,10 +191,10 @@ class PortalRatenAbgleichMixin:
             titel_je_code = {
                 str(r.get("id")): (r.get("title") or "") for r in raten
             }
-            belegt = self._belegte_ratencodes(
+            gelesen = self._belegte_ratencodes(
                 db, tenant_id, property_id, conn, titel_je_code
             )
-            if belegt is None:
+            if gelesen is None:
                 # Der Kanal war nicht lesbar. Dann ist UNBEKANNT, welche Rate
                 # ihren eigenen Plan schon traegt — und ohne dieses Wissen
                 # wuerde der Lauf dem Grundpreis seine PRIMAERE Rate wegnehmen.
@@ -203,6 +205,16 @@ class PortalRatenAbgleichMixin:
                     portal=portal,
                 )
                 continue
+            belegt, attrappen = gelesen
+            # Eine Attrappe ist ARBEIT, auch wenn nichts anzulegen ist: der
+            # Plan steht da, sein Flag stimmt, nur seine Kanal-Zuordnung traegt
+            # nichts. Ohne diesen Zaehler blieben `angelegt` und `nachgezogen`
+            # auf 0, der Content-Sync entfiel — und `freigegebene_plaene_
+            # zuordnen`, das die Attrappe heilt, lief nie. Live gemessen
+            # (23.08.2026): bei „Feriehus Grævlinge" stand die Wochenrate mit
+            # `occ=None, primary=None` am Kanal, `send_to_portals` war korrekt
+            # `true`, und fuenf Laeufe hintereinander taten nichts.
+            zu_heilen += len(attrappen)
             # Nur die Raten, die noch KEINEN EIGENEN Plan haben.
             #
             # „Belegt" ist NICHT dasselbe wie „gemappt" — daran haengt der ganze
@@ -289,7 +301,7 @@ class PortalRatenAbgleichMixin:
                 bekannt[titel.lower()] = neu
                 angelegt += 1
 
-        if not angelegt and not nachgezogen:
+        if not angelegt and not nachgezogen and not zu_heilen:
             # KEIN Content-Sync ohne neuen oder nachgezogenen Plan: sonst
             # kostete jeder taegliche Lauf je Objekt einen vollen
             # Channex-Content-Push, obwohl sich nichts geaendert hat (Wurzel 2 —
@@ -298,7 +310,8 @@ class PortalRatenAbgleichMixin:
             # `freigegebene_plaene_zuordnen`, die es liest.
             return {
                 "kanaele": len(conns), "portal_raten": raten_gesamt,
-                "angelegt": 0, "nachgezogen": 0, "sync_eingereiht": False,
+                "angelegt": 0, "nachgezogen": 0, "zu_heilen": 0,
+                "sync_eingereiht": False,
             }
 
         # Der Gegenzustand zum Anlegen (Wurzel 1) haengt an DIESEM Job:
@@ -312,12 +325,12 @@ class PortalRatenAbgleichMixin:
             "portal_raten_abgleich_plaene_angelegt",
             tenant_id=tenant_id, property_id=property_id,
             kanaele=len(conns), portal_raten=raten_gesamt, angelegt=angelegt,
-            nachgezogen=nachgezogen,
+            nachgezogen=nachgezogen, zu_heilen=zu_heilen,
         )
         return {
             "kanaele": len(conns), "portal_raten": raten_gesamt,
             "angelegt": angelegt, "nachgezogen": nachgezogen,
-            "sync_eingereiht": True,
+            "zu_heilen": zu_heilen, "sync_eingereiht": True,
         }
 
     def _kanaele_mit_raten(
@@ -345,7 +358,7 @@ class PortalRatenAbgleichMixin:
     def _belegte_ratencodes(
         self, db: Client, tenant_id: str, property_id: str,
         conn: dict[str, Any], titel_je_code: dict[str, str],
-    ) -> set[str] | None:
+    ) -> tuple[set[str], set[str]] | None:
         """Die Ratencodes, die ihren EIGENEN Plan schon haben.
 
         `None` heisst „Kanal nicht lesbar" — dann wird nichts angelegt
@@ -408,6 +421,10 @@ class PortalRatenAbgleichMixin:
             return None
         namen = self._plannamen_je_channex_id(db, tenant_id, property_id)
         belegt: set[str] = set()
+        # Raten, deren eigener Plan nur als Attrappe zugeordnet ist. Sie sind
+        # weder versorgt (kein Traeger) noch anzulegen (der Plan existiert) —
+        # aber sie sind ARBEIT: erst der Content-Sync heilt die Zuordnung.
+        attrappen: set[str] = set()
         # Je (Plan, Zimmer) die EINE primaere Rate, die ein namensfremder Plan
         # behalten darf — siehe Docstring, Punkt 2.
         behalten: set[tuple[str, str]] = set()
@@ -439,6 +456,8 @@ class PortalRatenAbgleichMixin:
                 # Wochenrate leer, waehrend die 7 bei Channex korrekt anlag.
                 if _eintrag_traegt_restriktionen(settings):
                     belegt.add(code)  # eigener Plan, vollwertig zugeordnet
+                else:
+                    attrappen.add(code)
                 continue
             if settings.get("primary_occ") is not True:
                 continue  # weitere Rate an einem fremden Plan = Arbeit
@@ -446,7 +465,7 @@ class PortalRatenAbgleichMixin:
             if schluessel not in behalten:
                 behalten.add(schluessel)
                 belegt.add(code)
-        return belegt
+        return belegt, attrappen
 
     def _plannamen_je_channex_id(
         self, db: Client, tenant_id: str, property_id: str

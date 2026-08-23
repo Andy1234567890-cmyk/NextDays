@@ -728,3 +728,41 @@ def test_obergrenze_deckelt_einen_ausreisser(monkeypatch: Any) -> None:
 
     assert ergebnis["angelegt"] == MAX_PLAENE_JE_ZIMMER
     assert len(db.inserts) == MAX_PLAENE_JE_ZIMMER
+
+
+def test_attrappe_loest_sync_auch_ohne_neuen_plan(monkeypatch: Any) -> None:
+    """Eine Attrappe muss den Content-Sync ausloesen, obwohl NICHTS anzulegen
+    und KEIN Flag nachzuziehen ist.
+
+    Das war die zweite Sperre, und sie kostete einen ganzen Deploy-Zyklus. Nach
+    dem ersten Fix erkannte `_belegte_ratencodes` die Attrappe korrekt und
+    sortierte sie aus — aber `angelegt` und `nachgezogen` blieben beide 0, der
+    Lauf brach vor dem Content-Sync ab, und `freigegebene_plaene_zuordnen` lief
+    nie. Live gemessen (23.08.2026, „Feriehus Grævlinge"): Plan „Wochenrate"
+    vorhanden, `send_to_portals` korrekt `true`, Eintrag am Kanal
+    `occ=None, primary=None` — fuenf Laeufe hintereinander taten nichts, und im
+    Extranet blieb die Mindestaufenthalt-Zelle leer.
+
+    Nur „Stjerneskud" heilte, weil dort zufaellig ein Flag nachzuziehen war.
+    """
+    db = _Db()
+    db.rate_plans.append({"id": "woche-1", "name": "Wochenrate"})
+    db.rate_plan_map.append({
+        "local_rate_plan_id": "woche-1", "channex_rate_plan_id": "cx-woche",
+    })
+    channex = _Channex(_details([STANDARD, WOCHE]))
+    channex.zuordnungen = [
+        ("cx-grundpreis", STANDARD["id"], True),
+        ("cx-woche", WOCHE["id"], False),
+    ]
+    channex.attrappe_codes = {str(WOCHE["id"])}
+
+    ergebnis, eingereiht = _lauf(db, channex, monkeypatch)
+
+    assert db.inserts == []           # kein zweiter Plan
+    assert ergebnis["angelegt"] == 0
+    # Der Attrappen-Zaehler ist der neue, entscheidende Wert: er allein muss
+    # den Sync ausloesen koennen. Dass der Doppelgaenger hier zusaetzlich ein
+    # Flag nachzieht, ist unerheblich — geprueft wird `zu_heilen`.
+    assert ergebnis["zu_heilen"] == 1
+    assert eingereiht, "Attrappe muss den Sync ausloesen"
