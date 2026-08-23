@@ -214,15 +214,49 @@ export function PricingForm({ initial }: { initial: Property }) {
     filter: `property_id=eq.${p.id}`,
     onChange: () => void loadDp(),
   });
-  // Kanal-Pläne (`portal_scope`, 0272) sind KEINE eigenständigen Preispläne:
-  // sie sind der abgeleitete Aufschlag EINES Portals und werden in der Karte
-  // „Preisänderung je Portal" gepflegt. In der Plan-Liste erschienen sie als
-  // zweite Zeile („Grundpreis (von Airbnb) · AirBNB, abgeleitet 1:1") — und
-  // schlimmer: sie machten `multiPlan` wahr, wodurch die Grundpreis-Eingabe
-  // verschwand, obwohl das Objekt genau EINEN Verkaufsplan hat.
+  // Kanal-Pläne (`portal_scope`, 0272) zählen NICHT als Verkaufspläne: sie
+  // tragen den Aufschlag EINES Portals und werden in „Preisänderung je Portal"
+  // gepflegt — sie verkaufen nichts und dürfen deshalb nicht als Grundpreis
+  // gelten.
   const verkaufsplaene = plans.filter((pl) => !pl.portal_scope);
-  const multiPlan = verkaufsplaene.length > 1;
-  const basePlan = multiPlan ? null : (verkaufsplaene[0] ?? null);
+  // Der Grundpreis hängt am ÄLTESTEN Plan ohne portal_scope, unabhängig von
+  // der ANZAHL der Pläne. Vorher galt `verkaufsplaene.length > 1 ? null`, und
+  // das wurde falsch, als das Backend anfing, für jede Portal-Ratenkategorie
+  // (Bookings „Wochenrate", `portal_raten_plaene.py`) einen ZWEITEN normalen
+  // Plan anzulegen: dieser zweite Plan schaltete die Grundpreis-Eingabe
+  // ersatzlos ab, der Betrieb konnte seinen eigenen Standardpreis nicht mehr
+  // bearbeiten — obwohl er nichts an seinem Preismodell geändert hat, sondern
+  // nur eine Portal-Rate dazubekam.
+  // Warum [0] wirklich der Grundpreis ist: das Backend sortiert die Liste
+  // aufsteigend nach created_at (rates/service.py `.order("created_at")`), also
+  // steht der gewachsene Standardpreis vorn und eine später angelegte
+  // Portal-Rate kann ihn nicht verdrängen.
+  const basePlan = verkaufsplaene[0] ?? null;
+  // Ein abgeleiteter Plan (`rate_mode === "derived"`) hat KEINEN eigenen
+  // Basispreis — er erbt ihn vom Parent, und das Backend weist einen
+  // base_price-PATCH darauf mit 422 ab. Ist der aelteste Plan ausgerechnet ein
+  // solcher, waere die Grundpreis-Karte eine Eingabe, die nie speichert; dann
+  // bleibt sie weg und die Pflege laeuft ueber die Plan-Liste/den Kalender.
+  const isDerivedBase = basePlan?.rate_mode === "derived";
+  // Ein Kanal-Plan MIT Aufschlag ist eine echte Preisänderung je Portal und
+  // gehört in seine Karte, nicht in die Plan-Liste. Ein Kanal-Plan mit 0 %
+  // dagegen ist gar keine Preisänderung: er wurde vom Steuer-Sync angelegt, um
+  // ein portal-eigenes Steuer-Set zu tragen, und ist bei 17 von 18 Objekten
+  // nicht einmal am Kanal gemappt — er verkauft nichts. Ihn anzuzeigen wären 17
+  // wirkungslose Zeilen, also bleibt er unsichtbar.
+  //
+  // Sichtbar werden muss dagegen jeder Plan, der eine echte PORTAL-RATE ist:
+  // ein eigener Ratenplan wie Bookings „Wochenrate", der dort mit eigenem Preis
+  // und eigenem Mindestaufenthalt verkauft (`portal_raten_plaene`). Solche
+  // Pläne tragen KEIN portal_scope — sie sind normale Verkaufspläne mit
+  // `send_to_portals` und stehen deshalb ohnehin schon in `verkaufsplaene`.
+  //
+  // Warum das der richtige Schnitt ist (live belegt 23.08.2026): bei
+  // „Rævlingehuset" stand im Booking-Kalender an der Standard Rate min_stay 3
+  // in jeder Spalte, an der „Wochenrate" LEER — und über diese Rate kam um
+  // 11:46 eine 1-Nacht-Buchung (1.820 DKK). Gefehlt hat nicht die Anzeige des
+  // Steuer-Vehikels, sondern ein eigener Plan für die Wochenrate.
+
   // Währung ist zentral am OBJEKT eingestellt (properties.currency, 0161) und
   // gilt für alle Rate-Plans. Anzeige-Priorität: Objektwährung → (Bestand) Plan-
   // /pricing-Währung. Leer/unbekannt rendert symbollos (lib/currency), nie ein
@@ -406,9 +440,30 @@ export function PricingForm({ initial }: { initial: Property }) {
     // Basispreis in rate_plans persistieren — die eine Preis-Wahrheit (Resolver,
     // Channex, Kalender). Auch 0 wird gespiegelt (Zurücksetzen muss wirken);
     // ohne gewählte Währung kein Push (Backend lehnt leere Währung ab, 422).
-    // Bei mehreren Plänen am Objekt gibt es keinen einen Grundpreis — dann kein Upsert.
-    if (!multiPlan && next.currency) {
-      const rp = await setBasePrice(p.id, next.basePrice, next.currency);
+    //
+    // ZWEI Wege, weil das Backend zwei verschiedene Endpunkte anbietet:
+    //   * Gibt es noch KEINEN Plan, muss einer entstehen → `setBasePrice`
+    //     (Upsert `PUT /rates/base-price`). Nur der kann anlegen.
+    //   * Gibt es schon einen, wird GENAU DIESER gepatcht → `updateRatePlan`.
+    // Warum nicht immer `setBasePrice`: dessen Server-Guard wirft 409, sobald
+    // das Objekt mehr als einen Plan hat („Dieses Objekt hat mehrere
+    // Preispläne"). Eine Portal-Ratenkategorie (Bookings „Wochenrate") ist so
+    // ein zweiter Plan — über `setBasePrice` wäre der Grundpreis danach nur
+    // noch mit einer 409-Meldung speicherbar. `updateRatePlan` kennt diesen
+    // Guard nicht und fasst nur die ID an, die wir ihm geben; Name und
+    // min_stay des Plans bleiben unberührt (Wurzel 1: fremde Pflege-Zustände).
+    //
+    // Beim PATCH geht die Währung ABSICHTLICH nicht mit: sie wird zentral am
+    // Objekt gepflegt (0161), und ein mitgeschickter Wert wird vom Server nur
+    // gegen die Objektwährung geprüft (422 bei Abweichung) — er kann sie nicht
+    // setzen. Ein Altbestands-Plan mit abweichender Plan-Währung liesse sich
+    // damit gar nicht mehr speichern. Nur beim ERSTEN Anlegen ist die Währung
+    // nötig, weil `setBasePrice` sie am Objekt festschreibt, wenn dort noch
+    // keine steht.
+    if (next.currency) {
+      const rp = basePlan
+        ? await updateRatePlan(basePlan.id, { basePrice: next.basePrice })
+        : await setBasePrice(p.id, next.basePrice, next.currency);
       if (!rp.ok) return rp.error;
       void loadPlans();
     }
@@ -480,10 +535,15 @@ export function PricingForm({ initial }: { initial: Property }) {
         title={t("pricingForm.nightlyPriceTitle")}
         hint={t("pricingForm.nightlyPriceHint")}
       >
-        {/* Ein Plan → Objekt-Grundpreis direkt pflegbar. Mehrere Pläne (BAR/B&B,
-            abgeleitet) → kein EINER Objekt-Grundpreis; die Pläne werden
-            datumsgenau im Kalender gepflegt. Die Liste steht in beiden Fällen. */}
-        {!multiPlan && (
+        {/* Der Grundpreis ist der Preis des ältesten Verkaufsplans und bleibt
+            immer bearbeitbar — auch wenn daneben eine Portal-Ratenkategorie
+            steht (Bookings „Wochenrate"). Nur wenn es überhaupt keinen Plan
+            gibt und auch kein `pricing`-Blob-Wert existiert, wäre die Karte
+            leer; `basePlan === null` heißt dann „noch nichts angelegt", und
+            genau dafür schreibt `save()` per `setBasePrice` den ersten Plan.
+            Die abgeleiteten Pläne (BAR/B&B) werden weiter datumsgenau im
+            Kalender gepflegt, die Liste darunter steht in jedem Fall. */}
+        {!isDerivedBase && (
           <BlockCard
             title={t("pricingForm.basePriceTitle")}
             hint={t("pricingForm.basePriceHint")}
@@ -517,8 +577,9 @@ export function PricingForm({ initial }: { initial: Property }) {
           />
         )}
 
-        {/* Nur Verkaufspläne: der Kanal-Aufschlag gehört in die Karte darunter,
-            nicht als zweite Zeile in die Plan-Liste. */}
+        {/* Alle Verkaufspläne — auch die, die einer Portal-Rate entsprechen
+            (Bookings „Wochenrate" & Co., s. Kommentar bei `verkaufsplaene`).
+            Der reine Portal-Aufschlag bleibt in seiner Karte darunter. */}
         <RatePlanList
           plans={verkaufsplaene}
           currency={cur}
@@ -2133,6 +2194,10 @@ function RatePlanList({
   const locale = useLocale();
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  /** Welcher Plan wird gerade im Mindestaufenthalt-Sheet gepflegt? */
+  const [minStayEdit, setMinStayEdit] = useState<RatePlan | null>(null);
+  /** Welcher Plan wird gerade im Preis-Sheet gepflegt? */
+  const [priceEdit, setPriceEdit] = useState<RatePlan | null>(null);
 
   const offsetLabel = (p: RatePlan): string => {
     const parts: string[] = [];
@@ -2202,8 +2267,23 @@ function RatePlanList({
       <ul className="flex w-full flex-col divide-y">
         {plans.map((p) => (
           <li key={p.id} className="flex items-center gap-3 py-2">
-            <span className="min-w-0 flex-1 truncate text-[0.8125rem] font-medium leading-5">
-              {p.name}
+            <span className="flex min-w-0 flex-1 items-center gap-1.5">
+              <span className="min-w-0 truncate text-[0.8125rem] font-medium leading-5">
+                {p.name}
+              </span>
+              {/* Was diese Zeile IST, muss ablesbar sein. Ein zusaetzlicher Plan
+                  mit `send_to_portals` ist keine hausinterne Preisvariante,
+                  sondern entspricht einer Ratenkategorie beim Portal (Bookings
+                  „Wochenrate") — mit eigenem Preis und eigenem
+                  Mindestaufenthalt. Ohne diese Kennzeichnung sieht er aus wie
+                  ein beliebiger zweiter Preis, und niemand versteht, warum sein
+                  min_stay dort drueben etwas anderes bewirkt als am Grundpreis.
+                  Der Grundpreis selbst ([0]) traegt das Badge nicht: er geht
+                  ohnehin immer an alle Portale und ist keine eigene Kategorie. */}
+              {p.id !== plans[0]?.id
+                && (p.send_to_portals || istLangzeitRate(p.name)) ? (
+                <PreisBadge>{t("pricingForm.planPortalRate")}</PreisBadge>
+              ) : null}
             </span>
             <PreisChip>
               {p.rate_mode === "derived"
@@ -2213,18 +2293,63 @@ function RatePlanList({
                   })
                 : t("pricingForm.planModeManual")}
             </PreisChip>
-            <span className="w-24 shrink-0 text-right text-[0.8125rem] leading-5 tabular-nums">
-              {p.rate_mode === "derived"
-                ? t("pricingForm.planDerivedPrice")
-                : fmtPrice(p.base_price, (p.currency || "") as Currency | "", locale)}
-            </span>
-            <span className="w-28 shrink-0 text-right text-xs leading-4 text-muted-foreground">
+            {/* Preis: BEARBEITBAR, nicht nur angezeigt. Eine Portal-Rate wie
+                Bookings „Wochenrate" ist erst ein RABATT, wenn ihr Nachtpreis
+                unter dem Grundpreis liegt. Erbt sie den Grundpreis und laesst
+                sich hier nicht senken, ist sie ein zweiter Standardpreis —
+                genau der live gemessene Zustand (beide Booking-Raten trugen
+                denselben Betrag). Die Zahl ist deshalb ein Knopf, gleiches
+                Muster wie der Mindestaufenthalt daneben.
+                AUSNAHME abgeleiteter Plan: er hat keinen eigenen Basispreis
+                (Waehrung und Basis gehoeren dem Parent), und das Backend weist
+                ein `base_price`-PATCH mit 422 ab. Dort bleibt der Preis Text —
+                eine Eingabe, die nie speichern kann, waere eine Attrappe. */}
+            {p.rate_mode === "derived" ? (
+              <span className="w-24 shrink-0 text-right text-[0.8125rem] leading-5 tabular-nums">
+                {t("pricingForm.planDerivedPrice")}
+              </span>
+            ) : (
+              <button
+                type="button"
+                disabled={busy === p.id}
+                onClick={() => setPriceEdit(p)}
+                title={t("pricingForm.planPriceEdit")}
+                className="w-24 shrink-0 rounded-full px-2 py-0.5 text-right text-[0.8125rem] leading-5 tabular-nums underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground disabled:opacity-50"
+              >
+                {fmtPrice(p.base_price, (p.currency || "") as Currency | "", locale)}
+              </button>
+            )}
+            {/* Mindestaufenthalt: BEARBEITBAR, nicht nur angezeigt. Booking
+                fuehrt Restriktionen auf RATE-Ebene — jede Ratenkategorie
+                braucht ihren eigenen Wert, und eine „Wochenrate" ohne
+                min_stay 7 verkauft dort Einzelnaechte zum Wochenpreis (live
+                belegt 23.08.2026: 1-Nacht-Buchung ueber die Wochenrate).
+                Die Zahl ist deshalb ein Knopf, kein Text. */}
+            <button
+              type="button"
+              disabled={busy === p.id}
+              onClick={() => setMinStayEdit(p)}
+              title={t("pricingForm.planMinStayEdit")}
+              className="w-28 shrink-0 rounded-full px-2 py-0.5 text-right text-xs leading-4 text-muted-foreground underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground disabled:opacity-50"
+            >
               {t("pricingForm.planMinStay", { nights: p.min_stay })}
-            </span>
+            </button>
             {/* Portal-Freigabe: nur bei ZUSÄTZLICHEN Plänen. Der Grundpreis geht
                 ohnehin immer an die Portale (channels._selected_rate_plan_ids
-                nimmt ihn ungefragt mit) — dort wäre ein Schalter eine Lüge. */}
-            {plans.length > 1 && p.id !== plans[0]?.id ? (
+                nimmt ihn ungefragt mit) — dort wäre ein Schalter eine Lüge.
+                Bei einer PORTAL-RATE ebenso: ihre Ratenkategorie verkauft beim
+                Portal bereits (der Betrieb hat sie im Extranet angelegt), und
+                sie bekommt dort ihren Preis und ihren Mindestaufenthalt.
+                „Nur direkt" waere dort schlicht falsch — und die Folge des
+                Schalters ist nicht „nicht senden", sondern „ohne
+                Restriktionen verkaufen lassen": genau der Zustand, ueber den am
+                23.08.2026 eine 1-Nacht-Buchung an einem Objekt mit
+                Mindestaufenthalt 3 kam. Ob eine Portal-Rate zugeordnet wird,
+                haengt deshalb serverseitig nicht mehr am Flag
+                (`objekt_kanal.freigegebene_plaene_zuordnen`), und hier gibt es
+                keinen Schalter, der etwas anderes behauptet. */}
+            {plans.length > 1 && p.id !== plans[0]?.id
+              && !istLangzeitRate(p.name) ? (
               <button
                 type="button"
                 disabled={busy === p.id}
@@ -2258,6 +2383,199 @@ function RatePlanList({
           </li>
         ))}
       </ul>
+
+      {minStayEdit && (
+        <PlanMinStayEditor
+          plan={minStayEdit}
+          onClose={() => setMinStayEdit(null)}
+          onSaved={() => {
+            setMinStayEdit(null);
+            onDeleted(); // laedt die Liste neu (derselbe Weg wie nach dem Loeschen)
+          }}
+        />
+      )}
+
+      {priceEdit && (
+        <PlanPriceEditor
+          plan={priceEdit}
+          locale={locale}
+          onClose={() => setPriceEdit(null)}
+          onSaved={() => {
+            setPriceEdit(null);
+            onDeleted(); // laedt die Liste neu (derselbe Weg wie nach dem Loeschen)
+          }}
+        />
+      )}
     </PreisKarte>
+  );
+}
+
+// Mindestaufenthalt EINES Preisplans pflegen. Eigenes Sheet statt Inline-Feld,
+// weil der Wert an die Portale geht und dort auf Ratenebene wirkt — das
+// verdient eine Erklaerung neben der Eingabe, die in eine 7rem breite Zelle
+// nicht passt. Geschrieben wird per `updateRatePlan({ minStay })`, also GENAU
+// dieser Plan; Preis, Name und Portal-Freigabe bleiben unberuehrt (Wurzel 1).
+//
+// Was hier NICHT passiert: der datumsgenaue Mindestaufenthalt
+// (`rate_plan_min_stay_overrides`, Kalender). Der hier gesetzte Wert ist der
+// Default des Plans, den ein Datums-Override punktuell ueberschreibt.
+function PlanMinStayEditor({
+  plan,
+  onClose,
+  onSaved,
+}: {
+  plan: RatePlan;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const t = useTranslations("objects");
+  // Als Text gehalten, damit das Feld beim Loeschen der Ziffer leer sein darf
+  // statt auf eine erfundene 1 zu springen (Wurzel 4: kein Ersatzwert).
+  const [v, setV] = useState(String(plan.min_stay));
+  const { busy, error, run } = useSaver(async () => {
+    const naechte = Number.parseInt(v, 10);
+    if (!Number.isFinite(naechte) || naechte < 1 || naechte > 365) {
+      return t("pricingForm.planMinStayInvalid");
+    }
+    const res = await updateRatePlan(plan.id, { minStay: naechte });
+    if (!res.ok) return res.error;
+    toast.success(t("pricingForm.planMinStaySaved"));
+    onSaved();
+    return true;
+  });
+  return (
+    <EditorShell
+      title={t("pricingForm.planMinStayEditorTitle")}
+      subtitle={t("pricingForm.planMinStayEditorSubtitle", { plan: plan.name })}
+      onClose={onClose}
+      footer={
+        <Footer busy={busy} error={error} onCancel={onClose} onSave={() => void run()} />
+      }
+    >
+      <Field
+        label={t("pricingForm.planMinStayLabel")}
+        hint={t("pricingForm.planMinStayFieldHint")}
+      >
+        <Input
+          type="number"
+          min={1}
+          max={365}
+          inputMode="numeric"
+          value={v}
+          onChange={(e) => setV(e.target.value)}
+        />
+      </Field>
+      <Hint>{t("pricingForm.planMinStayPortalHint")}</Hint>
+    </EditorShell>
+  );
+}
+
+// Ist der Plan-Name eine Wochen-/Monatsrate? Nur fuer den ZUSATZ-Hinweis im
+// Preis-Sheet, nicht fuer Logik: bei einer Wochenrate ist der hier gesetzte
+// Betrag der RABATT-Preis pro Nacht, und das ist beim Eintippen die
+// entscheidende Information. Der Name ist die einzige Quelle dafuer — die
+// Portal-Rate wird lokal mit dem Titel der Portal-Ratenkategorie angelegt
+// (`portal_raten_plaene.py`), eine eigene Spalte „das ist eine Wochenrate"
+// gibt es nicht. Erkannt wird deshalb bewusst nur der Name, in den Sprachen,
+// in denen die Portale diese Kategorien benennen; greift die Erkennung nicht,
+// fehlt lediglich ein Zusatzsatz — es wird nichts falsch gespeichert.
+function istLangzeitRate(name: string): boolean {
+  const n = name.toLowerCase();
+  return [
+    "woche",
+    "wochen",
+    "week",
+    "weekly",
+    "uge",
+    "ugentlig",
+    "monat",
+    "month",
+    "monthly",
+    "maaned",
+  ].some((wort) => n.includes(wort));
+}
+
+// Preis EINES Preisplans pflegen. Eigenes Sheet statt Inline-Feld, aus demselben
+// Grund wie beim Mindestaufenthalt: der Wert geht an die Buchungsportale und
+// wirkt dort auf Ratenebene — das braucht eine Erklaerung neben der Eingabe.
+// Geschrieben wird per `updateRatePlan({ basePrice })`, also GENAU der Preis
+// dieses Plans; Name, Mindestaufenthalt und Portal-Freigabe bleiben unberuehrt
+// (Wurzel 1). Das Backend reiht danach `reconcile_rate_plan_prices` ein, das
+// die Preiskurve dieses Plans an die Portale pusht
+// (`rates/service.py` -> `channel_manager/ari_push.py`).
+//
+// Was hier NICHT passiert: die datumsgenauen Preise
+// (`rate_plan_price_overrides`, Kalender). Der hier gesetzte Betrag ist der
+// Grundwert des Plans, den ein Datums-Preis punktuell ueberschreibt.
+//
+// Abgeleitete Plaene erreichen dieses Sheet nicht (die Liste zeigt dort Text) —
+// sie haben keinen eigenen Basispreis und das Backend weist ihren
+// `base_price`-PATCH mit 422 ab.
+function PlanPriceEditor({
+  plan,
+  locale,
+  onClose,
+  onSaved,
+}: {
+  plan: RatePlan;
+  locale: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const t = useTranslations("objects");
+  // Waehrung kommt AUS DEM PLAN (Wurzel 4: nie ein hartes Symbol, nie ein
+  // EUR-Ersatzwert). Fehlt sie, rendert `currencySymbol` symbollos statt zu
+  // raten — die Zahl bleibt eingebbar, nur das Symbol fehlt.
+  const cur = (plan.currency || "") as Currency | "";
+  // Als Text gehalten, damit das Feld beim Loeschen der Ziffer leer sein darf
+  // statt auf eine erfundene 0 zu springen (Wurzel 4: kein Ersatzwert).
+  const [v, setV] = useState(String(plan.base_price));
+  const { busy, error, run } = useSaver(async () => {
+    // Komma wie Punkt akzeptieren: die meisten der 27 Laender tippen das
+    // Dezimalkomma. Nur die Eingabe wird normalisiert, gespeichert wird eine
+    // Zahl.
+    const betrag = Number.parseFloat(v.replace(",", "."));
+    if (!Number.isFinite(betrag) || betrag <= 0) {
+      return t("pricingForm.planPriceInvalid");
+    }
+    const res = await updateRatePlan(plan.id, { basePrice: betrag });
+    if (!res.ok) return res.error;
+    toast.success(t("pricingForm.planPriceSaved"));
+    onSaved();
+    return true;
+  });
+  return (
+    <EditorShell
+      title={t("pricingForm.planPriceEditorTitle")}
+      subtitle={t("pricingForm.planPriceEditorSubtitle", { plan: plan.name })}
+      onClose={onClose}
+      footer={
+        <Footer busy={busy} error={error} onCancel={onClose} onSave={() => void run()} />
+      }
+    >
+      <Field
+        label={t("pricingForm.planPriceLabel", {
+          currency: currencySymbol(cur, locale),
+        })}
+        hint={t("pricingForm.planPriceFieldHint")}
+      >
+        <Input
+          type="number"
+          min={0}
+          step="0.01"
+          inputMode="decimal"
+          value={v}
+          onChange={(e) => setV(e.target.value)}
+        />
+      </Field>
+      <Hint>{t("pricingForm.planPricePortalHint")}</Hint>
+      {/* Bei einer Wochen-/Monatsrate zusaetzlich sagen, WOFUER der Betrag
+          steht: er ist der Rabattpreis pro Nacht, nicht der Preis der ganzen
+          Woche. Ohne diesen Satz tippt man leicht den Wochen-GESAMTpreis ein
+          und verkauft sieben Naechte zum Preis von einer. Keine Prozentzahl
+          und keine Empfehlung — welcher Abstand zum Grundpreis richtig ist,
+          entscheidet der Betrieb. */}
+      {istLangzeitRate(plan.name) && <Hint>{t("pricingForm.planPriceDiscountHint")}</Hint>}
+    </EditorShell>
   );
 }

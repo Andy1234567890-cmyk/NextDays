@@ -984,14 +984,48 @@ class ObjektKanalMixin:
         Rückgabe: was zugeordnet und was übersprungen wurde (für den Verlauf).
         """
         db = self._require_db()
-        offen = (
+        # Kein Filter auf `send_to_portals` in der Abfrage: ein Portal-Raten-Plan
+        # muss auch dann seine Zuordnung bekommen, wenn sein Flag verloren ging.
+        #
+        # WARUM (live gemessen 23.08.2026, „FeWo *Stjerneskud*"): der Plan
+        # „Wochenrate" wurde um 17:28 mit `send_to_portals: true` angelegt und
+        # stand 49 Sekunden spaeter auf `false`; nach dem Nachziehen um 18:09
+        # war er um 18:22 erneut `false`. Kein `update` im Code setzt das Flag
+        # zurueck (drei Fundstellen, alle `insert` fuer andere Plan-Arten) — der
+        # Schreiber sitzt ausserhalb der Dienste. Mit dem Filter in der Abfrage
+        # war der Plan in genau diesen Fenstern unsichtbar und verlor seine
+        # Kanal-Zuordnung wieder; die Wochenrate verkaufte dann ohne
+        # Mindestaufenthalt.
+        #
+        # Fachlich ist das Flag hier ohnehin die falsche Frage: es schaltet
+        # ZUSAETZLICHE Preise frei, die der Betrieb selbst angelegt hat. Die
+        # Rate eines Portal-Raten-Plans verkauft beim Portal aber bereits (der
+        # Betrieb hat sie im Extranet gebaut) — sie NICHT zu versorgen heisst
+        # nicht „nicht senden", sondern „ohne Restriktionen verkaufen lassen".
+        alle = (
             db.table("rate_plans")
-            .select("id, name")
+            .select("id, name, send_to_portals")
             .eq("property_id", property_id)
-            .eq("send_to_portals", True)
             .is_("portal_scope", "null")
             .execute()
         ).data or []
+        # Freigegebene Plaene — PLUS die, deren Name eine Portal-Rate benennt.
+        #
+        # Ein Portal-Raten-Plan darf nicht am Flag haengen (Begruendung oben),
+        # aber ein pauschales „alle Plaene" waere zu teuer: dann rief JEDER
+        # Content-Sync den Kanal ab, auch wenn nichts zuzuordnen ist
+        # (`test_ohne_freigegebene_plaene_kein_kanal_abruf` haelt das fest, und
+        # der Abruf zaehlt gegen das Channex-Budget).
+        #
+        # Der Name ist das Erkennungsmerkmal: `plan_fuer_portal_rate` benennt
+        # den Plan nach dem Titel der Portal-Rate („Wochenrate"), und
+        # `_portal_raten_plan_ziel` loest darueber sein Paar auf. Ein Plan mit
+        # gesetztem Flag ODER einem solchen Namen ist Arbeit; alles andere
+        # nicht, und dann bleibt der Kanal-Abruf aus.
+        offen = [
+            p for p in alle
+            if p.get("send_to_portals") or _klingt_wie_portal_rate(p.get("name"))
+        ]
         if not offen:
             return {"geprueft": 0, "zugeordnet": 0}
 
@@ -1382,3 +1416,23 @@ class ObjektKanalMixin:
         db.table("rate_plans").delete().eq("property_id", property_id).eq(
             "portal_scope", portal_code
         ).execute()
+
+
+def _klingt_wie_portal_rate(name: str | None) -> bool:
+    """Benennt dieser Planname eine Portal-Ratenkategorie?
+
+    `plan_fuer_portal_rate` benennt einen Portal-Raten-Plan nach dem TITEL der
+    Rate beim Portal („Wochenrate", „Weekly Rate"). Diese Vorpruefung
+    entscheidet nur, ob es sich lohnt, den Kanal ueberhaupt abzurufen — die
+    verbindliche Zuordnung macht danach `_portal_raten_plan_ziel` ueber den
+    echten Titel-Abgleich. Ein falsch-positiver Treffer kostet also einen
+    Lese-Abruf, nie eine falsche Zuordnung.
+
+    Absichtlich dieselben Wortstaemme wie `portal_raten_plaene.min_stay_aus_titel`
+    — dort bestimmen sie den Mindestaufenthalt, hier die Sichtbarkeit. Wer einen
+    Stamm ergaenzt, muss beide Listen pflegen; sie getrennt zu halten waere die
+    Doppelpflege, aus der die Namens-Fehlschluesse dieses Tages entstanden sind.
+    """
+    from .portal_raten_plaene import min_stay_aus_titel
+
+    return min_stay_aus_titel(name) is not None
