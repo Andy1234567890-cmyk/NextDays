@@ -57,6 +57,7 @@ from .oauth_channels import OAuthChannelsMixin
 from .objekt_kanal import ObjektKanalMixin
 from .objekt_verkauf import ObjektVerkaufMixin
 from .ota_extras import OtaExtrasMixin
+from .portal_raten_abgleich import PortalRatenAbgleichMixin
 from .property_mapping import PropertyMappingMixin
 from .reviews_sync import ReviewsSyncMixin
 from .schemas import ChannexDebugEntry, ChannexDebugResponse, SliceHealth
@@ -173,6 +174,13 @@ class ChannelManagerService(
     BookingsSyncMixin,
     LiveFeedSyncMixin,
     OtaExtrasMixin,
+    # Nach ChannelsMixin: nutzt dessen `_normalize_mapping_rooms`,
+    # `_grundpreis_zeile` und `_portal_label`. Zieht fuer BESTEHENDE Kanaele
+    # nach, was `_plaene_fuer_uebrige_raten` nur beim Verbinden tut — je
+    # Portal-Rate ein eigener Preisplan (Booking fuehrt Restriktionen auf
+    # Rate-Ebene). Kein zweiter Weg dorthin: dasselbe
+    # `portal_raten_plaene.plan_fuer_portal_rate` wie der Aufbau-Pfad.
+    PortalRatenAbgleichMixin,
     ReviewsSyncMixin,
     FullSyncMixin,
     CsvImportMixin,
