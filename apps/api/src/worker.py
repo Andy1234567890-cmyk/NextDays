@@ -33,7 +33,12 @@ from src.core.logging import configure_logging, get_logger
 from src.core.supabase import get_service_client
 from src.features.channel_manager.common import ist_demo_mapping
 from src.features.properties.vertragsende import vertragsenden_nachziehen
-from src.jobs import feed_nachpflege, public_api_storno, worker_verlauf
+from src.jobs import (
+    feed_nachpflege,
+    portal_raten_tick,
+    public_api_storno,
+    worker_verlauf,
+)
 from src.jobs.channex_budget import ChannexBudget
 from src.jobs.fortschritt_budget import ProgressBudget
 from src.jobs.queue import enqueue, next_run_after, try_enqueue_content_sync
@@ -78,7 +83,11 @@ _CHANNEX_JOB_TYPES = frozenset(
      # Property (ari-Webhook) und nächtlicher Full-Sync-Push — alle rufen Channex.
      "sync_bookings_feed", "import_ari_property", "full_sync_property",
      # On-demand Rate-Plan-Preis-Reconcile ('Jetzt übertragen') — liest Channex.
-     "reconcile_rate_plan_prices"}
+     "reconcile_rate_plan_prices",
+     # Portal-Raten-Abgleich: zwei lesende Calls je Objekt und Raten-Portal
+     # (mapping_details + get_channel) — echte Channex-Calls, ziehen also das
+     # kontoweite Token-Budget.
+     "abgleich_portal_raten"}
 )
 
 # Parallel verarbeitete Jobs je Worker-Instanz. Begrenzt lokale Thread-/DB-Last;
@@ -656,6 +665,7 @@ HANDLERS: dict[
     "sync_live_feed": _handle_sync_live_feed,
     "import_ari_property": _handle_import_ari_property,
     "full_sync_property": _handle_full_sync_property,
+    "abgleich_portal_raten": portal_raten_tick.handle,
     "public_api_cancel_reservation": public_api_storno.handle,
     "public_api_move_reservation": public_api_storno.handle_move,
 }
@@ -1373,6 +1383,12 @@ class Worker:
                 payload={"tenant_id": tid},
                 dedup_key=f"reconcile_tick:{tid}:{bucket}",
             )
+        # Am SELBEN täglichen Tick: je verbundenem Objekt die Raten des Portals
+        # gegen unsere Preispläne abgleichen. Begründung samt Budget-Rechnung in
+        # `src/jobs/portal_raten_tick` — der Abgleich ist nicht zeitkritisch und
+        # kostet 2 lesende Channex-Calls je Objekt.
+        portal_raten_tick.einreihen(self._db, bucket)
+
     def _enqueue_outbox_all(self) -> None:
         """Offene AUSGEHENDE Pushes nachziehen (Availability + Restriktionen).
         Bewusst ein EIGENER, häufiger Tick und nicht mehr am Reconcile-Tick: der

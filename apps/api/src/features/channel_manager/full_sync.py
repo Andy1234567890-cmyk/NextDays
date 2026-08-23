@@ -127,11 +127,23 @@ class FullSyncMixin:
             # meldete Erfolg — der nächtliche Heilungsmechanismus war tot, ohne
             # dass es irgendwo sichtbar wurde.
             raise
-        except Exception as exc:  # noqa: BLE001 — Rate-Teil kippt nie den Avail-Teil
-            log.warning(
-                "full_sync_rates_failed",
+        except Exception as exc:
+            # KEIN stilles Weitermachen mehr (Wurzel 5): der Restriktions-Teil
+            # traegt min_stay, Preise, max_stay, CTA/CTD und stop_sell ueber 500
+            # Tage. Faellt er aus, ist der Full-Sync fuer alles ausser der reinen
+            # Verfuegbarkeit wirkungslos — mit `log.warning` meldete der Job
+            # trotzdem "done", und der naechtliche Heil-Lauf war eine Attrappe,
+            # die niemand als solche erkennen konnte.
+            #
+            # Der Verfuegbarkeits-Teil ist zu diesem Zeitpunkt bereits gesendet
+            # (oben, vor diesem try) — das re-raise verliert ihn also nicht,
+            # sondern markiert den Job als fehlgeschlagen, damit er wiederholt
+            # wird und im Monitoring auftaucht.
+            log.error(
+                "full_sync_restrictions_failed",
                 property_id=property_id, error=str(exc)[:200],
             )
+            raise
 
         # Recovery-Import (Feed-Lücken-Schutz): un-geackte Booking-Revisionen
         # fallen bei Channex nach ~30 Min PERMANENT aus dem Feed (Retention-Doku).

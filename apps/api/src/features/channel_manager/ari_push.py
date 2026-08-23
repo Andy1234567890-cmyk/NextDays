@@ -23,6 +23,7 @@ from .schemas import (
     AriPushRequest,
     AriPushResponse,
 )
+from .verfuegbarkeit_regeln import availability_block, min_stay_grundwert
 
 
 class _PendingRatePlanMapping(Exception):
@@ -107,7 +108,80 @@ def _aktionen_einrechnen(
 
 
 def _rate_fields(rate_cents: int | None, min_stay: int | None) -> dict[str, Any]:
-    """Preis/Min-Stay zu Channex-restriction-Feldern. Leer, wenn beide None."""
+    """Preis/Min-Stay zu Channex-restriction-Feldern. Leer, wenn beide None.
+
+    WARUM BEIDE min_stay-FELDER GESENDET WERDEN (geprüft 23.08.2026 gegen die
+    offizielle Doku, `docs/channex-komplette-dokumentation.md` — die Frage kam
+    schon zweimal auf, deshalb hier die Belege):
+
+    1. BEIDE sind gültige Restriktions-Felder. Die Feldliste zu
+       `POST /restrictions` führt sie ausdrücklich getrennt auf:
+           „min_stay_arrival [optional] Positive Integer value."
+           „min_stay_through [optional] Positive Integer value."
+       Dass die Kurz-Referenz im Skill nur `min_stay_arrival` im BEISPIEL zeigt,
+       ist kein Gegenbeleg — sie zeigt eine Beispiel-Nutzlast, keine Feldliste.
+
+    2. Es gibt ein DRITTES, virtuelles Feld `min_stay`, das genau das tun würde,
+       was hier von Hand passiert — aber nur bei anderer Property-Einstellung:
+           „min_stay [optional] … Applicable only if property.settings.
+            min_stay_type not equal to both value. It is virtual option and
+            provided value will be automatically translated into correct
+            min_stay_* value based at property.settings.min_stay_type value."
+       Unsere Objekte stehen auf `settings.min_stay_type = "both"`, und das
+       muss so bleiben. Fuer „both" ist `min_stay` NICHT anwendbar — die
+       expliziten Felder sind dort der vorgesehene Weg.
+
+       Am 23.08.2026 wurde „arrival" versucht und am gesendeten OTA-XML
+       (`GET /channel_events/{id}/logs`) als schaedlich belegt: Channex
+       normalisiert dann die through-Achse auf 1 UND sendet die arrival-Achse
+       LEER an Booking.com — womit dort gar keine Regel mehr gilt.
+           „both"   -> through SetMinLOS 2, arrival SetMinLOS 2
+           „arrival" -> through SetMinLOS 1, arrival ohne LengthOfStay
+       Booking.com bekommt beide Achsen als getrennte AvailStatusMessage-Bloecke
+       (`ArrivalDateBased` 1/0) und hat kein Kanal-`min_stay_type`
+       (GET /channels/adapter?code=BookingCom kennt das Feld nicht, Expedia und
+       Airbnb schon). Beide Werte muessen also bei Channex stehen.
+
+    3. `min_stay_type` steuert laut Doku die Kanal-Übersetzung, nicht die
+       Annahme: „If your system work only with Min Stay Arrival or only with Min
+       Stay Through you can setup that setting into arrival or through mode, as
+       result we will simplify ARI updates and … automatically setup correct
+       selection for Min Stay type at Channel mappings. Possible values: both,
+       arrival, through."
+       Bei „both" führt Channex beide Regeln und mappt je Kanal die passende.
+
+    ACHTUNG, ZWEI VERSCHIEDENE FELDER GLEICHEN NAMENS (nicht verwechseln):
+    `property.settings.min_stay_type` (klein: both/arrival/through) ist die oben
+    zitierte PMS-Vereinfachung. Davon getrennt existiert je KANAL-VERBINDUNG ein
+    `min_stay_type` (groß: Arrival/Through), das bestimmt, welches der beiden
+    Felder ein Kanal bekommt, der nur EINEN Min-Stay-Typ kann — für Expedia
+    wörtlich: „`Arrival` sends `min_stay_arrival`, `Through` sends
+    `min_stay_through`" (docs.channex.io/channels/expedia), analog Airbnb.
+    Genau DESHALB müssen beide Werte bei Channex stehen: welches Feld ein Kanal
+    zieht, entscheidet dessen Mapping — nicht wir.
+
+    NICHT auf eines der beiden verkürzen: Würden wir nur `arrival` senden, bliebe
+    ein zuvor gesetztes `through` bei Channex STEHEN — Partial Updates lassen
+    nicht mitgeschickte Felder unangetastet (Wurzel 1: der Gegenzustand würde
+    nicht gepflegt), und ein Kanal mit Mapping „Through" zöge weiter den ALTEN
+    Wert. Beide zu setzen hält den Ist-Stand eindeutig.
+
+    Zur Semantik (Doku-Stand, damit die Begriffe nicht durcheinandergehen):
+    belegt ist nur die Typ-Beschreibung „`Arrival` (counted from the arrival
+    date) or `Through` (applied to every stayed-through date)" aus den Kanal-
+    Einstellungen. Die geläufige Lesart „jede durchlaufene Nacht muss in einem
+    N-Nacht-Block liegen" ist eine INTERPRETATION davon, kein Zitat — die
+    ARI-Referenz definiert beide Felder gar nicht, sie nennt nur „Positive
+    Integer value".
+
+    OFFEN (nicht belegbar, deshalb benannt statt geraten): ob Booking.com bei
+    gleichzeitig gesetztem arrival+through beide Regeln erzwingt, sagt die Doku
+    nicht — für Booking.com ist überhaupt kein `min_stay_type` dokumentiert
+    (dort gilt „Channex will pass the min stay and max stay for each night from
+    the Room/Rate plan in mapping"). Solange wir beide auf DENSELBEN Wert setzen,
+    ist die Frage folgenlos; UNTERSCHIEDLICHE Werte je Feld wären ohne eine
+    Klärung durch den Channex-Support nicht zu vertreten.
+    """
     fields: dict[str, Any] = {}
     if rate_cents is not None:
         fields["rate"] = rate_cents
@@ -395,14 +469,24 @@ class AriPushMixin:
                 self._trace_step(
                     tenant_id=tenant_id, property_id=local_pid, step="availability"
                 )
-                res_a = self._channex.update_availability(avail_values)
+                # `warnungen_melden=True`: DIESER Pfad ist der interaktive
+                # (API-Aufruf eines Nutzers/Clients) und der EINZIGE, der die
+                # Warnungen dem Aufrufer zurückgibt (AriPushResponse.warnings)
+                # statt eine Outbox-Zeile abzuhaken. Er darf sie deshalb melden;
+                # alle Worker-/Outbox-Pfade lassen den Client werfen, weil ein
+                # dort verworfener Wert sonst als 'done' verbucht würde.
+                res_a = self._channex.update_availability(
+                    avail_values, warnungen_melden=True
+                )
                 avail_tasks = len(res_a.get("data") or [])
                 warnings += list((res_a.get("meta") or {}).get("warnings") or [])
             if rate_values:
                 self._trace_step(
                     tenant_id=tenant_id, property_id=local_pid, step="restrictions"
                 )
-                res_r = self._channex.update_restrictions(rate_values)
+                res_r = self._channex.update_restrictions(
+                    rate_values, warnungen_melden=True
+                )
                 rate_tasks = len(res_r.get("data") or [])
                 warnings += list((res_r.get("meta") or {}).get("warnings") or [])
         except ChannexError as exc:
@@ -441,6 +525,61 @@ class AriPushMixin:
     # Der Buchungskalender (availability) ist die oberste Wahrheit. Jede lokale
     # Änderung pusht SOFORT die Channex-Verfügbarkeit, damit OTAs den Tag nicht
     # mehr/wieder verkaufen. Persistiert in ari_outbox (Retry bei Ausfall).
+    @staticmethod
+    def _aktives_property_mapping(
+        db: Client, tenant_id: str, property_id: str
+    ) -> dict[str, Any] | None:
+        """Die EINE aktive Registrierung des Objekts — und ein laut geloggter
+        Alarm, wenn es doch mehrere sind.
+
+        Warum das nicht schweigen darf: alle Aufrufer nahmen früher `.limit(1)`
+        OHNE `order`, also eine beliebige der Zeilen. Bei mehreren aktiven
+        Mappings pushte jeder ARI-Lauf gegen eine willkürlich gewählte
+        Channex-Property — im schlechten Fall eine, die es dort nicht mehr gibt.
+        Das kostet Channex-Budget (kontoweit, für alle Betriebe) und der Push
+        wirkt nie, ohne dass irgendwo ein Fehler entsteht. Genau die Klasse
+        Fehler, die niemand als Bug erkennt (Wurzel 5b: sieht plausibel aus).
+
+        Der DB-Backstop dagegen ist `channex_property_map_property_uidx`
+        (partiell, WHERE deleted_at IS NULL) — er macht diesen Zustand
+        unmöglich. Diese Prüfung ist der Melder für den Fall, dass der Index
+        einmal fehlt (frisch aufgesetzte DB, Migration nicht eingespielt):
+        dann steht die Ursache im Log statt in einer Budget-Statistik.
+
+        `order("created_at")` macht die Auswahl zusätzlich DETERMINISTISCH: die
+        älteste Zeile gewinnt, wie schon bei der Room-Type-Auflösung und im
+        Full-Sync-Tick. Beliebig wechselnde Ziele wären selbst bei sauberen
+        Daten nicht diagnostizierbar.
+        """
+        rows = (
+            db.table("channex_property_map")
+            .select("id, channex_property_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .is_("deleted_at", "null")
+            .order("created_at")
+            .execute()
+        ).data or []
+        if not rows:
+            return None
+        if len(rows) > 1:
+            log.error(
+                "channex_property_map_mehrfach_aktiv",
+                tenant_id=tenant_id,
+                property_id=property_id,
+                anzahl=len(rows),
+                map_ids=[r.get("id") for r in rows],
+                channex_property_ids=[
+                    r.get("channex_property_id") for r in rows
+                ],
+                hinweis=(
+                    "Ein Objekt darf nur EINE aktive Channex-Registrierung "
+                    "haben. Jeder ARI-Push traf bisher eine beliebige davon. "
+                    "Backstop channex_property_map_property_uidx prüfen."
+                ),
+            )
+        return rows[0]
+
     def _resolve_channex_room_type(
         self, db: Client, tenant_id: str, property_id: str,
     ) -> dict[str, str] | None:
@@ -460,22 +599,14 @@ class AriPushMixin:
         room type(s)"). `_resolve_channex_rate_plans` wurde für exakt dieses
         Problem bereits repariert; hier fehlte die Entsprechung.
         """
-        pm = (
-            db.table("channex_property_map")
-            .select("id, channex_property_id")
-            .eq("tenant_id", tenant_id)
-            .eq("property_id", property_id)
-            .is_("deleted_at", "null")
-            .limit(1)
-            .execute()
-        ).data
-        if not pm:
+        pm_row = self._aktives_property_mapping(db, tenant_id, property_id)
+        if not pm_row:
             return None
         rt = (
             db.table("channex_room_type_map")
             .select("channex_room_type_id")
             .eq("tenant_id", tenant_id)
-            .eq("property_map_id", pm[0]["id"])
+            .eq("property_map_id", pm_row["id"])
             .eq("local_unit_ref", property_id)
             .is_("deleted_at", "null")
             .limit(1)
@@ -488,7 +619,7 @@ class AriPushMixin:
                 db.table("channex_room_type_map")
                 .select("channex_room_type_id")
                 .eq("tenant_id", tenant_id)
-                .eq("property_map_id", pm[0]["id"])
+                .eq("property_map_id", pm_row["id"])
                 .is_("deleted_at", "null")
                 .order("created_at")
                 .limit(1)
@@ -497,7 +628,7 @@ class AriPushMixin:
         if not rt:
             return None
         return {
-            "channex_property_id": pm[0]["channex_property_id"],
+            "channex_property_id": pm_row["channex_property_id"],
             "channex_room_type_id": rt[0]["channex_room_type_id"],
         }
 
@@ -514,23 +645,25 @@ class AriPushMixin:
         Channel (set_connection_active → deactivate_channel). Das frühere Gate
         „mindestens ein aktiver Kanal" war ein Deadlock: ohne OTA kein Push →
         Channex meldet availability=0 → Objekt überall „gesperrt". Tenant-Scope
-        explizit, da der Service-Role-Key die RLS umgeht. `sync_enabled` wird stets
-        gemeinsam mit `deleted_at` gesetzt → `deleted_at IS NULL` genügt.
+        explizit, da der Service-Role-Key die RLS umgeht.
+
+        `deleted_at IS NULL` ist der Filter, NICHT `sync_enabled` — beide werden
+        gemeinsam gesetzt, aber `deleted_at` ist die verlässliche Seite: es ist
+        die Spalte, auf der der partielle UNIQUE-Index und der CHECK (0427)
+        sitzen. Umgekehrt trug live eine geschlossene Zeile weiter
+        `sync_enabled = true` (oauth_channels._mapping_schliessen schrieb nur
+        `deleted_at`, 23.08.2026) — ein Filter auf `sync_enabled` hätte sie
+        also als verbunden gelesen. Der Zustand ist an der Quelle behoben und
+        per CHECK verriegelt; der Filter bleibt trotzdem bewusst auf
+        `deleted_at`.
 
         Ein Platzhalter statt einer echten Channex-ID (Demo-Betriebe der
         Marketing-Screenshots) zählt NICHT als gemanagt: sonst geht jeder Preis-/
         Restriktions-Push mit einer erfundenen ID raus, Channex antwortet „Bad
         Request", und der Job läuft zehnmal in den Retry — auf Kosten des
         kontoweiten Anfrage-Budgets aller echten Betriebe."""
-        res = (
-            db.table("channex_property_map")
-            .select("channex_property_id")
-            .eq("tenant_id", tenant_id)
-            .eq("property_id", property_id)
-            .is_("deleted_at", "null")
-            .limit(1)
-            .execute()
-        ).data
+        row = self._aktives_property_mapping(db, tenant_id, property_id)
+        res = [row] if row else []
         # Eine Map-Zeile OHNE channex_property_id ist ein aus Airbnb ÜBERNOMMENES
         # Objekt (0280): die Brücke zum Listing steht, die Channex-Property
         # entsteht erst beim Verkaufsstart. Ein Push würde `property_id: null`
@@ -768,16 +901,8 @@ class AriPushMixin:
         (local_unit_ref = room_type.id, s. content_sync). Der frühere Filter auf
         NUR local_unit_ref = property_id fand für Hotels NIE einen Rate-Plan → jeder
         Restriktions-/Preis-Push blieb ewig 'pending' ('Rate-Plan-Mapping fehlt')."""
-        pm = (
-            db.table("channex_property_map")
-            .select("id, channex_property_id")
-            .eq("tenant_id", tenant_id)
-            .eq("property_id", property_id)
-            .is_("deleted_at", "null")
-            .limit(1)
-            .execute()
-        ).data
-        if not pm:
+        pm_row = self._aktives_property_mapping(db, tenant_id, property_id)
+        if not pm_row:
             return []
         # ALLE Room-Type-Maps der Property (synthetischer FeWo-Room-Type UND je
         # Hotel-Kategorie einer) — nicht auf local_unit_ref = property_id einengen.
@@ -785,7 +910,7 @@ class AriPushMixin:
             db.table("channex_room_type_map")
             .select("id")
             .eq("tenant_id", tenant_id)
-            .eq("property_map_id", pm[0]["id"])
+            .eq("property_map_id", pm_row["id"])
             .is_("deleted_at", "null")
             .execute()
         ).data or []
@@ -800,7 +925,7 @@ class AriPushMixin:
             .order("created_at")
             .execute()
         ).data or []
-        channex_property_id = pm[0]["channex_property_id"]
+        channex_property_id = pm_row["channex_property_id"]
         return [
             {
                 "channex_property_id": channex_property_id,
@@ -1430,10 +1555,18 @@ class AriPushMixin:
     def reconcile_rate_plan_prices(
         self, tenant_id: str, property_id: str, horizon_days: int = 365
     ) -> dict[str, int]:
-        """Push-only-Abgleich: vergleicht die volle Soll-Preiskurve je Plan
-        (Resolver: Datumspreis > Overrides > Dynamic > Wochentag > Plan-Basis)
-        gegen den LOKALEN Schatten des zuletzt gepushten Stands
-        (`channex_ari_shadow`) und pusht NUR die Differenz — pro Rate-Plan.
+        """Push-only-Abgleich: vergleicht das volle Soll je Plan gegen den
+        LOKALEN Schatten des zuletzt gepushten Stands (`channex_ari_shadow`) und
+        pusht NUR die Differenz — pro Rate-Plan. Abgeglichen werden ZWEI Größen,
+        beide als durchgehende Kurve über den Horizont:
+        - Preis: Resolver (Datumspreis > Overrides > Dynamic > Wochentag >
+          Plan-Basis), gesenkt um den Aktionsfaktor.
+        - Mindestaufenthalt: Grundwert (`rate_plans.min_stay`, sonst
+          `availability.minStay`) plus tagesgenaue
+          `rate_plan_min_stay_overrides`.
+        Der Maximalaufenthalt und CTA/CTD gehören NICHT dazu — der Schatten führt
+        sie nicht (`_write_ari_shadow`); für sie ist der nächtliche Full-Sync der
+        Abgleich.
 
         Channex wird dabei NICHT gelesen: wir sind die Quelle der Wahrheit, und
         Channex hat das Zurücklesen der ARI ausdrücklich untersagt. Selbstheilend
@@ -1466,9 +1599,12 @@ class AriPushMixin:
         if not any(desired.values()):
             return result
 
-        # SOLL: datumsgenaue Mindestaufenthalte je lokalem Rate-Plan.
+        # SOLL: Mindestaufenthalte je lokalem Rate-Plan — durchgehender
+        # Grundwert (rate_plans.min_stay bzw. Formularwert) plus tagesgenaue
+        # Overrides. Nur die Overrides zu lesen hieße: ein leeres Soll und damit
+        # nie Drift (Wurzel 1, live gemessen — siehe die Methode).
         desired_min = self._load_desired_rate_plan_min_stays(
-            db, local_rate_plan_ids, today, horizon
+            db, property_id, local_rate_plan_ids, today, horizon
         )
 
         # IST: unser eigener Schatten des zuletzt GEPUSHTEN Stands — kein
@@ -1531,12 +1667,82 @@ class AriPushMixin:
         except (TypeError, ValueError):
             return None
 
+    def _load_rate_plan_min_stay_base(
+        self, db: Client, property_id: str, local_rate_plan_ids: list[str]
+    ) -> dict[str, int]:
+        """Der durchgehende Min-Stay-GRUNDWERT je Rate-Plan: {plan_id: naechte}.
+
+        Dieselbe Vorrangkette wie `_full_sync_restriction_rows` (full_sync.py):
+        `rate_plans.min_stay` schlägt den Objekt-Grundwert aus dem
+        Verfügbarkeits-Formular (`type_attributes.availability.minStay`). Anders
+        als dort gibt es hier KEIN `or 1`: eine erfundene 1 wäre ein
+        Fantasie-Default (Wurzel 4) und würde jeden Tag ohne echten Grundwert als
+        Drift melden und mit min_stay=1 an die Portale schreiben. Ohne Grundwert
+        bleibt der Plan hier also draußen und nur die Overrides greifen.
+
+        Nicht ladbar (fehlende Tabelle/Spalte) → leer: dann verhält sich der
+        Abgleich wie vor dieser Änderung (nur Overrides), statt zu crashen."""
+        av_min: int | None = None
+        try:
+            prop = (
+                db.table("properties")
+                .select("type_attributes")
+                .eq("id", property_id)
+                .limit(1)
+                .execute()
+            ).data or []
+            av_min = min_stay_grundwert(availability_block(prop[0] if prop else {}))
+        except Exception as exc:  # noqa: BLE001 — Grundwert best-effort
+            log.warning("min_stay_grundwert_unlesbar", error=str(exc)[:200])
+        try:
+            plans = (
+                db.table("rate_plans")
+                .select("id, min_stay")
+                .in_("id", local_rate_plan_ids)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — ohne Plan-Zeilen kein Grundwert
+            log.warning("rate_plan_min_stay_unlesbar", error=str(exc)[:200])
+            return {}
+        out: dict[str, int] = {}
+        for p in plans:
+            rp = p.get("id")
+            if rp is None:
+                continue
+            basis = self._to_int(p.get("min_stay")) or av_min
+            if basis is not None and basis >= 1:
+                out[str(rp)] = basis
+        return out
+
     def _load_desired_rate_plan_min_stays(
-        self, db: Client, local_rate_plan_ids: list[str], start: date, end: date
+        self, db: Client, property_id: str,
+        local_rate_plan_ids: list[str], start: date, end: date,
     ) -> dict[str, dict[str, int]]:
-        """Soll-Mindestaufenthalte aus rate_plan_min_stay_overrides je lokalem Rate-
-        Plan im Horizont: {local_rate_plan_id: {iso: min_stay}}. Fehlt die Tabelle
-        (Umgebung vor 0150), leer → kein Min-Stay-Abgleich (kein Crash)."""
+        """Soll-Mindestaufenthalte je lokalem Rate-Plan im Horizont:
+        {local_rate_plan_id: {iso: min_stay}} — die VOLLE Kurve, genau wie
+        `_load_desired_rate_plan_prices` sie für den Preis bildet: der
+        durchgehende Grundwert (`rate_plans.min_stay`, sonst der Formularwert)
+        über alle Tage, tagesgenau überschrieben von
+        `rate_plan_min_stay_overrides` (0150).
+
+        Vorher stand hier NUR die Override-Tabelle. Live gemessen (23.08.2026) an
+        vier Rate-Plans zweier Objekte: 0 Override-Zeilen bei
+        `rate_plans.min_stay = 2` — das Soll war also leer, `min_drift` damit
+        immer 0, und der Schatten hielt gleichzeitig ~510 min_stay-Tage je Plan.
+        Ginge der Mindestaufenthalt bei Channex verloren, hätte der Reconciler es
+        nie bemerkt und nie nachgesendet; die Selbstheilungs-Zusage im Docstring
+        von `reconcile_rate_plan_prices` galt nur für den Preis (Wurzel 1: der
+        Gegenzustand wurde für min_stay nicht gepflegt).
+
+        Fehlt die Override-Tabelle (Umgebung vor 0150), bleibt der Grundwert —
+        kein Crash."""
+        out: dict[str, dict[str, int]] = {}
+        basis = self._load_rate_plan_min_stay_base(
+            db, property_id, local_rate_plan_ids
+        )
+        tage = _iso_days(start.isoformat(), end.isoformat())
+        for rp, wert in basis.items():
+            out[rp] = dict.fromkeys(tage, wert)
         try:
             rows = (
                 db.table("rate_plan_min_stay_overrides")
@@ -1547,10 +1753,9 @@ class AriPushMixin:
                 .not_.is_("min_stay", "null")
                 .execute()
             ).data or []
-        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = kein Min-Stay
+        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = nur Grundwert
             log.warning("rate_plan_min_stay_overrides_unavailable", error=str(exc))
-            return {}
-        out: dict[str, dict[str, int]] = {}
+            return out
         for r in rows:
             rp = r.get("rate_plan_id")
             iso = r.get("date")
@@ -1632,7 +1837,7 @@ class AriPushMixin:
             db, property_id, local_ids, today, horizon
         )
         desired_min = self._load_desired_rate_plan_min_stays(
-            db, local_ids, today, horizon
+            db, property_id, local_ids, today, horizon
         )
         for local_rp in local_ids:
             prices = desired.get(local_rp) or {}
@@ -1923,10 +2128,31 @@ class AriPushMixin:
                 )
             for oid in bucket["outbox"]:
                 self._mark_restriction_outbox(oid, "done")
+            # Was WIRKLICH in der Nutzlast stand — nicht nur die Anzahl.
+            # Ohne das war jeder Push eine Blackbox: "values: 60, status 200"
+            # sagt nicht, ob min_stay/max_stay ueberhaupt drin waren. Am
+            # 23.08.2026 kostete genau diese Luecke Stunden, weil sich nicht
+            # nachlesen liess, welchen Mindestaufenthalt wir gesendet hatten.
+            # Nur Restriktionswerte, keine Gastdaten; ein Beispielsegment
+            # genuegt fuer die Diagnose, deshalb kein Dump der ganzen Liste.
+            beispiel = bucket["values"][0] if bucket["values"] else {}
             log.info(
                 "restriction_rows_push_done",
                 tenant_id=tenant_id, properties=len(bucket["pids"]),
                 values=len(bucket["values"]),
+                felder=sorted(beispiel.keys()),
+                min_stays=sorted({
+                    v["min_stay"] for v in bucket["values"]
+                    if v.get("min_stay") is not None
+                }),
+                max_stays=sorted({
+                    v["max_stay"] for v in bucket["values"]
+                    if v.get("max_stay") is not None
+                }),
+                zeitraum=(
+                    f'{beispiel.get("date_from")}..{beispiel.get("date_to")}'
+                    if beispiel else None
+                ),
             )
         except ChannexError as exc:
             # Outbox-Zeilen bleiben 'pending' (Cron-Backstop).

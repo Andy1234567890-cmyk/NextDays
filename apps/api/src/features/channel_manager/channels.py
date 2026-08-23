@@ -25,6 +25,7 @@ from .ota_konten import (
     konto_zum_kanal_loesen,
     objekte_je_konto_zaehlen,
 )
+from .verwaiste_raten import ohne_verwaiste
 
 
 class ChannelsMixin:
@@ -959,46 +960,34 @@ class ChannelsMixin:
         # Dedup deshalb auf DIESEM Paar (nicht auf der Channex-rate_plan_id) —
         # sonst landet dieselbe OTA-Rate doppelt und der Kanal ist inkonsistent.
         seen_pairs: set[tuple[Any, Any]] = set()
-        # Genau EINE Rate trägt die Restriktionen (min_stay/stop_sell), weil Booking
-        # pro Zimmer nur EINEN Restriktions-Träger kennt (Doku:
-        # „Primary Rate – This will be the rate plan that sends the restrictions
-        # such as min stay or stop sell. Since it is only one rate plan in
-        # booking.com."). Der erste erzeugte Eintrag ist primary_occ=True, alle
-        # weiteren False.
+        # JEDE gemappte Booking-Rate traegt die Restriktionen (primary_occ=true).
         #
-        # DESHALB IST JEDER WEITERE OTA-RATENCODE EIN LOCH (live belegt am
-        # 23.08.2026): Rævlingehuset hat min_stay 3, gepusht und bei Channex auf
-        # allen Raten nachgelesen. Der Booking-Kanal führte aber ZWEI Ratencodes
-        # auf denselben Plan — 45621028 (primary) und 45627350 (nicht primary).
-        # Am 23.08. 11:46 kam über 45627350 eine 1-NACHT-Buchung (1.820 DKK),
-        # weil dieser Code die Restriktion nie erhält; Booking wendet dort seinen
-        # eigenen Wert an. Insgesamt drei solche Buchungen seit dem Connect.
-        # Der Mindestaufenthalt „wird gesendet" — nur nicht an alle Codes.
+        # Der Fehler, den das behebt (live belegt 23.08.2026, Rævlingehuset,
+        # Booking-Zimmer 1220760101): die Marke hing am LOKALEN Plan. Weil
+        # mehrere Booking-Raten bewusst auf denselben lokalen Plan zeigen duerfen
+        # (siehe `pairs` unten — ein Ferienobjekt hat EINEN Preis, eine
+        # Booking-Kennung fuehrt regelmaessig mehrere Raten), bekam nur die
+        # ERSTE Rate primary_occ=true. Im Extranet-Kalender stand bei Rate
+        # 45621028 „Standard Rate" min_stay 3 in jeder Spalte, bei Rate 45627350
+        # „Wochenrate" waren die Zellen LEER — Preise kamen bei beiden an, die
+        # Restriktion nur bei einer. Am 23.08. 11:46 kam ueber 45627350 eine
+        # 1-NACHT-Buchung (1.820 DKK, 28.–29.05.2027), obwohl bei Channex auf
+        # allen fuenf Raten min_stay_arrival/through = 3 lag; insgesamt drei
+        # solche Buchungen seit dem Connect.
         #
-        # Wir können das nicht beheben (Booking nimmt je Zimmer nur einen
-        # Restriktions-Träger), aber wir dürfen es nicht verschweigen: die
-        # überzähligen Codes werden gesammelt und gemeldet, damit sie im
-        # Extranet gelöscht oder dort selbst mit dem Mindestaufenthalt versehen
-        # werden (Booking-Mapping-Guide: „Ask the hotel to delete the derived
-        # rates inside booking.com and then they can make them again new").
-        # Restriktions-Träger je Channex-Rate-Plan, NICHT einmal pro Kanal.
+        # Warum mehrere Traeger erlaubt sind: „Primary Rate – This will be the
+        # rate plan that sends the restrictions such as min stay or stop sell.
+        # Since it is only one rate plan in booking.com." steht im Mapping-Guide
+        # unter „Occupancy Based Mapping" — es trennt die BELEGUNGS-Varianten
+        # EINER Rate, nicht verschiedene Raten eines Zimmers. Die Wochenrate ist
+        # keine abgeleitete Rate (per POST /channels/mapping_details geprueft:
+        # `derived: None`, eigener Code, gleiche max_persons), sondern eine
+        # gleichrangige Rate — sie braucht ihre eigene Restriktion. Abgeleitete
+        # Raten sind etwas anderes: die sind laut Doku „not mappable inside
+        # Channex" und erben ohnehin.
         #
-        # WARUM (live belegt 23.08.2026): Booking trägt Restriktionen nur an der
-        # Primary-Rate („Primary Rate – This will be the rate plan that sends the
-        # restrictions such as min stay or stop sell", Booking-Mapping-Guide).
-        # Vorher war genau EIN Eintrag im ganzen Kanal primary_occ=True. Führte
-        # ein Booking-Zimmer mehrere Ratencodes (Regelfall: Standard + Wochen-
-        # rate), bekamen alle weiteren Codes KEINE Restriktion — sie verkauften
-        # ohne Mindestaufenthalt. Rævlingehuset: min_stay 3 gepusht und bei
-        # Channex nachgelesen, am 23.08. 11:46 trotzdem eine 1-Nacht-Buchung
-        # über Code 45627350 (primary_occ=False, 1.820 DKK); zwei weitere Fälle
-        # seit dem Connect.
-        #
-        # Da jeder Ratencode auf denselben lokalen Plan zeigen darf, ist der
-        # richtige Bezug der ZIEL-PLAN: je Channex-Rate-Plan genau ein Träger.
-        # Mehr geht nicht (Booking kennt je Zimmer einen), aber weniger darf es
-        # auch nicht sein — jeder Plan, der bespielt wird, braucht seinen.
-        primary_je_plan: set[str] = set()
+        # Kein eigener Zaehler: `seen_pairs` laesst jedes OTA-Paar nur EINMAL
+        # ins Array, jeder Eintrag ist also der einzige seines Paares.
         rate_plans: list[dict[str, Any]] = []
         for m in mappings:
             local_property_id = m.get("local_property_id")
@@ -1059,7 +1048,25 @@ class ChannelsMixin:
             # OTA-Raten dürfen auf denselben lokalen Plan zeigen, dieselbe
             # OTA-Rate aber nie zweimal (seen_pairs unten).
             pairs = list(zip(ota_rates, selected, strict=False))
-            pairs += [(rate, selected[0]) for rate in ota_rates[len(pairs):]]
+            # Fuer JEDE uebrige Portal-Rate einen EIGENEN Preisplan, nicht den
+            # Grundpreis nochmal. Booking fuehrt Restriktionen auf Rate-Ebene:
+            # nur eine Rate mit eigenem Plan bekommt ihren eigenen
+            # Mindestaufenthalt, und nur so ist sie bei uns unter „Preise"
+            # sichtbar. Siehe `portal_raten_plaene` fuer die Belege.
+            #
+            # Faellt das Anlegen aus (DB-Fehler), bleibt der alte Weg: die Rate
+            # auf den Grundpreis legen. Unzugeordnet darf sie nicht bleiben —
+            # Channex aktiviert den Kanal sonst nicht („Map all rates even the
+            # derived ones").
+            uebrige = ota_rates[len(pairs):]
+            if uebrige:
+                pairs += self._plaene_fuer_uebrige_raten(
+                    db, tenant_id,
+                    local_property_id=local_property_id,
+                    portal_code=portal_code,
+                    uebrige=uebrige,
+                    grundpreis_channex_id=selected[0],
+                )
 
             for rate, channex_rate_plan_id in pairs:
                 rate_code = (
@@ -1085,12 +1092,12 @@ class ChannelsMixin:
                             rate_code=rate_code,
                             occupancy=occupancy,
                             pricing_type=pricing_type,
-                            primary=str(channex_rate_plan_id)
-                            not in primary_je_plan,
+                            # JEDE gemappte Booking-Rate traegt die
+                            # Restriktionen (ein Eintrag je OTA-Paar, s. o.).
+                            primary=True,
                         ),
                     }
                 )
-                primary_je_plan.add(str(channex_rate_plan_id))
         if not rate_plans:
             raise ChannelManagerError(
                 "Bitte mindestens ein Zimmer zuordnen.", status_code=422
@@ -1744,29 +1751,61 @@ class ChannelsMixin:
         return code_str, title
 
     def _merge_channel_rate_plans(
-        self, channel_id: str, new_rate_plans: list[dict[str, Any]]
+        self, channel_id: str, new_rate_plans: list[dict[str, Any]],
+        *, ota_rooms: list[dict[str, Any]] | None = None,
+        tenant_id: str = "", portal_code: str = "",
     ) -> list[dict[str, Any]]:
         """Bestehendes rate_plans-Array eines Kanals per GET lesen und die neuen
         Einträge anhängen (PUT ersetzt das Array, kein Merge → Wurzel 1). Je
         rate_plan_id genau EIN Eintrag (Channex-Regel, sonst 422); bereits
-        vorhandene werden nicht dupliziert (Wurzel 2, idempotent)."""
+        vorhandene werden nicht dupliziert (Wurzel 2, idempotent).
+
+        Mit `ota_rooms` (die aktuellen Portal-Zimmer/Raten aus
+        `mapping_details`) werden dabei Einträge AUSSORTIERT, deren Ratencode
+        das Portal nicht mehr führt — siehe `verwaiste_raten`. Ohne diesen
+        Filter schleppte jeder weitere Kanal-Schreibvorgang gelöschte
+        Portal-Raten mit, und die verkauften ohne Restriktion weiter (live
+        belegt 23.08.2026: 1-Nacht-Buchung über Code 45627350 an
+        Rævlingehuset). Ohne `ota_rooms` bleibt das Verhalten unverändert —
+        kein Abräumen auf Verdacht."""
         try:
             current = self._channex.get_channel(channel_id)
         except ChannexError as exc:
             raise self._wrap_channex(exc) from exc
         attrs = (current.get("data") or {}).get("attributes") or {}
         existing_plans = attrs.get("rate_plans") or []
+        if ota_rooms:
+            existing_plans = ohne_verwaiste(
+                existing_plans, ota_rooms,
+                tenant_id=tenant_id, portal_code=portal_code,
+            )
         merged: list[dict[str, Any]] = [
             {"rate_plan_id": p.get("rate_plan_id"), "settings": p.get("settings") or {}}
             for p in existing_plans
             if p.get("rate_plan_id")
         ]
-        seen = {p["rate_plan_id"] for p in merged}
+        # Dedup auf dem OTA-PAAR (Zimmer + Ratencode), NICHT auf unserer
+        # rate_plan_id. Mehrere Portal-Raten duerfen bewusst auf denselben
+        # lokalen Plan zeigen (ein Ferienobjekt hat EINEN Preis, eine
+        # Booking-Kennung fuehrt regelmaessig zwei Raten). Ueber die
+        # rate_plan_id verworfen, verschwand jede zweite Portal-Rate hier
+        # stillschweigend — sie stand nie im Kanal, bekam also auch nie eine
+        # Restriktion. Channex' Eindeutigkeit gilt ohnehin auf dem Paar
+        # („One OTA room+rate pair should map to at most one local rate plan").
+        def paar(eintrag: dict[str, Any]) -> tuple[Any, Any, Any]:
+            st = eintrag.get("settings") or {}
+            return (
+                eintrag.get("rate_plan_id"),
+                str(st.get("room_type_code")) if st.get("room_type_code") is not None else None,
+                str(st.get("rate_plan_code")) if st.get("rate_plan_code") is not None else None,
+            )
+
+        seen = {paar(p) for p in merged}
         for plan in new_rate_plans:
-            if plan.get("rate_plan_id") in seen:
+            if paar(plan) in seen:
                 continue
             merged.append(plan)
-            seen.add(plan.get("rate_plan_id"))
+            seen.add(paar(plan))
         return merged
 
     def _existing_channel_for_hotel(
@@ -1872,7 +1911,12 @@ class ChannelsMixin:
         die bestehenden Einträge werden per GET gelesen und die neuen ANGEHÄNGT.
         Idempotent (Wurzel 2): bereits vorhandene rate_plan_ids werden nicht
         dupliziert — ein erneuter Connect desselben Zimmers ändert das Array nicht."""
-        merged = self._merge_channel_rate_plans(channel_id, new_rate_plans)
+        merged = self._merge_channel_rate_plans(
+            channel_id, new_rate_plans,
+            # Die aktuellen Portal-Raten mitgeben, damit geloeschte Raten nicht
+            # weiter mitgeschleppt werden (verwaiste_raten).
+            ota_rooms=ota_rooms, tenant_id=tenant_id, portal_code=portal_code,
+        )
         try:
             self._channex.update_channel(channel_id, {"rate_plans": merged})
         except ChannexError as exc:
@@ -2902,6 +2946,142 @@ class ChannelsMixin:
                 }
             )
         return out
+
+    def _plaene_fuer_uebrige_raten(
+        self, db: Client, tenant_id: str, *, local_property_id: str,
+        portal_code: str, uebrige: list[dict[str, Any]],
+        grundpreis_channex_id: str,
+    ) -> list[tuple[dict[str, Any], str]]:
+        """Je uebriger Portal-Rate einen EIGENEN Preisplan — und die Paare
+        (Portal-Rate, Channex-Rate-Plan-ID) zurueckgeben.
+
+        Warum eigene Plaene statt alle auf den Grundpreis: Booking fuehrt
+        Restriktionen auf RATE-Ebene, und nur ein Eintrag je Plan traegt
+        `primary_occ`. Mehrere Portal-Raten auf einem Plan hiess deshalb: eine
+        Rate mit Mindestaufenthalt, alle weiteren ohne. Zusaetzlich war die
+        zweite Rate bei uns unsichtbar — der Betrieb fuehrt bei Booking eine
+        „Wochenrate" fuer den Wochenrabatt und sah unter „Preise" nur den
+        Grundpreis. Belege in `portal_raten_plaene`.
+
+        Reihenfolge der Schritte (die Abhaengigkeit ist echt, nicht Kosmetik):
+        1. Plan lokal anlegen (oder den namensgleichen wiederverwenden).
+        2. Content-Sync anstossen — ERST der registriert den Plan bei Channex
+           und schreibt `channex_rate_plan_map`. Ohne diesen Schritt gibt es
+           keine Channex-ID, die ins Mapping koennte.
+        3. Fuer DIESEN Kanal-Aufbau faellt die Rate auf den Grundpreis zurueck,
+           weil die Channex-ID noch nicht existiert.
+        4. Der GEGENZUSTAND (Wurzel 1) haengt am selben Job: derselbe Handler
+           `sync_property_content` ruft nach `sync_content` direkt
+           `objekt_kanal.freigegebene_plaene_zuordnen` (worker.py) — und die
+           ordnet den frisch registrierten Plan am Kanal zu. Es braucht also
+           KEINEN neuen Job: der Plan traegt `send_to_portals: True`, genau
+           worauf dieser Lauf filtert.
+
+        Schritt 3 ist bewusst so: eine Rate ohne Zuordnung verhindert die
+        Aktivierung des Kanals („Map all rates even the derived ones"), und auf
+        eine Channex-ID zu warten hiesse, den Request auf einen Hintergrundjob
+        warten zu lassen. Der Betrieb sieht den Plan sofort unter „Preise"; die
+        Restriktion folgt mit Schritt 4.
+
+        WICHTIG zu Schritt 4: dieser Lauf war fuer den Portal-AUFSCHLAG gebaut
+        und legte einen freigegebenen Plan auf JEDES OTA-Paar des Zimmers. Fuer
+        einen Portal-Raten-Plan ist das genau verkehrt (der Wochen-Plan lag
+        damit auch auf der Standard-Rate) — deshalb schraenkt
+        `objekt_kanal._portal_raten_plan_ziel` ihn auf die EIGENE Rate ein.
+        """
+        from .portal_raten_plaene import (  # lokal: vermeidet Zyklus
+            MAX_PLAENE_JE_ZIMMER,
+            plan_fuer_portal_rate,
+            vorhandene_plan_namen,
+        )
+
+        if len(uebrige) > MAX_PLAENE_JE_ZIMMER:
+            log.warning(
+                "portal_raten_ueber_obergrenze",
+                property_id=local_property_id, portal=portal_code,
+                anzahl=len(uebrige), grenze=MAX_PLAENE_JE_ZIMMER,
+            )
+            uebrige = uebrige[:MAX_PLAENE_JE_ZIMMER]
+
+        grundpreis = self._grundpreis_zeile(db, local_property_id)
+        bekannt = vorhandene_plan_namen(db, local_property_id)
+        neu_angelegt = False
+        paare: list[tuple[dict[str, Any], str]] = []
+        for rate in uebrige:
+            titel = (rate.get("title") or "").strip()
+            lokal_id = bekannt.get(titel.lower()) if titel else None
+            if lokal_id is None and grundpreis:
+                lokal_id = plan_fuer_portal_rate(
+                    db,
+                    property_id=local_property_id,
+                    grundpreis=grundpreis,
+                    portal_titel=titel or None,
+                    rate_code=rate.get("id"),
+                    portal_label=self._portal_label(portal_code),
+                )
+                if lokal_id:
+                    neu_angelegt = True
+                    bekannt[titel.lower()] = lokal_id
+            # Channex-ID des Plans, falls er dort bereits registriert ist.
+            channex_id = (
+                self._channex_id_fuer_lokalen_plan(db, tenant_id, lokal_id)
+                if lokal_id else None
+            )
+            paare.append((rate, channex_id or grundpreis_channex_id))
+        if neu_angelegt:
+            # Der neue Plan muss zu Channex, sonst bleibt er ohne Channex-ID und
+            # damit dauerhaft ohne eigene Zuordnung (Wurzel 1: der Gegenzustand
+            # zum Anlegen ist die Registrierung).
+            from src.jobs.queue import try_enqueue_content_sync
+
+            try_enqueue_content_sync(db, tenant_id, local_property_id)
+        return paare
+
+    def _grundpreis_zeile(
+        self, db: Client, property_id: str
+    ) -> dict[str, Any] | None:
+        """Der aelteste Preisplan des Objekts (= Grundpreis) mit Preis, Waehrung
+        und Mindestaufenthalt. Er ist die Erbmasse fuer einen neuen Portal-Plan;
+        ohne ihn wird keiner angelegt (kein erfundener Preis, Wurzel 4)."""
+        try:
+            rows = (
+                db.table("rate_plans")
+                .select("id, base_price, currency, min_stay")
+                .eq("property_id", property_id)
+                .is_("portal_scope", "null")
+                .order("created_at")
+                .limit(1)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — ohne Grundpreis kein neuer Plan
+            log.warning(
+                "grundpreis_zeile_unlesbar",
+                property_id=property_id, error=str(exc)[:200],
+            )
+            return None
+        return rows[0] if rows else None
+
+    def _channex_id_fuer_lokalen_plan(
+        self, db: Client, tenant_id: str, local_rate_plan_id: str
+    ) -> str | None:
+        """Die Channex-Rate-Plan-ID eines lokalen Plans, sofern registriert."""
+        try:
+            rows = (
+                db.table("channex_rate_plan_map")
+                .select("channex_rate_plan_id")
+                .eq("tenant_id", tenant_id)
+                .eq("local_rate_plan_id", local_rate_plan_id)
+                .is_("deleted_at", "null")
+                .limit(1)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — nicht registriert = kein Fehler
+            log.warning(
+                "channex_rate_plan_map_unlesbar",
+                local_rate_plan_id=local_rate_plan_id, error=str(exc)[:200],
+            )
+            return None
+        return str(rows[0]["channex_rate_plan_id"]) if rows else None
 
     def _rate_plan_maps_for_property(
         self, db: Client, tenant_id: str, property_id: str

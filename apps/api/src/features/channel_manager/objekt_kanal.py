@@ -298,6 +298,7 @@ class ObjektKanalMixin:
         if percent == 0:
             if kanalplan:
                 kp_id = kanalplan[0]["id"]
+                kp_cx = self._channex_id_for_local_plan(db, tenant_id, kp_id)
                 # Gegenzustand: ERST das Mapping zurück auf den Standard —
                 # ein am Kanal hängender Plan darf nicht gelöscht werden
                 # (Löschkette fail-closed), und das Portal braucht lückenlos
@@ -310,6 +311,18 @@ class ObjektKanalMixin:
                 # Channex-seitigen Rest abräumen + Kurve neu abgleichen.
                 self.sync_content(tenant_id, property_id=property_id)
                 self._enqueue_price_reconcile(db, tenant_id, property_id)
+                # Gegenzustand VERIFIZIEREN, nicht annehmen (Wurzel 1 + 5).
+                # Vorher gab dieser Zweig unbesehen `percent: 0` zurück — die
+                # Oberfläche meldete „kein Aufschlag", während der Kanal-Plan
+                # weiterlief. Genau dieser Zustand lag live vor (23.08.2026):
+                # 18 Zeilen mit `offset_percent = 0`, die nie zurückgetauscht
+                # wurden. Eine unbelegte Behauptung „zurückgenommen" ist
+                # schlimmer als ein Fehler, weil niemand nachsieht.
+                self._rueckweg_pruefen(
+                    db, tenant_id, property_id, portal_code,
+                    channel_id=channel_id, kanalplan_id=kp_id,
+                    kanalplan_channex_id=kp_cx,
+                )
             return {"portal_code": portal_code, "percent": 0.0}
 
         if kanalplan:
@@ -366,6 +379,88 @@ class ObjektKanalMixin:
             )
         self._enqueue_price_reconcile(db, tenant_id, property_id)
         return {"portal_code": portal_code, "percent": float(percent)}
+
+    def _rueckweg_pruefen(  # pylint: disable=too-many-arguments
+        self, db: Client, tenant_id: str, property_id: str, portal_code: str,
+        *, channel_id: str, kanalplan_id: str,
+        kanalplan_channex_id: str | None,
+    ) -> None:
+        """Nachweisen, dass die Rücknahme auf 0 % wirklich gelandet ist.
+
+        Drei Stellen, die alle stimmen müssen — geprüft wird die Wirkung, nicht
+        der Aufruf:
+
+        1. Die lokale Zeile ist weg. Bleibt sie stehen, zeigt die Detailsicht
+           beim nächsten Laden wieder einen Aufschlag (`_portal_adjustment_percent`
+           liest genau diese Zeile), und `_selected_rate_plan_ids` schiebt den
+           Plan weiter als Primary an das Portal.
+        2. Der Kanal trägt die Kanal-Rate nicht mehr. Sonst pushen wir auf zwei
+           Channex-Rate-Plans, während das Portal einen liest — jeder ARI-Push
+           doppelt (live gemessen 23.08.2026 an 17 von 18 Booking-Kanälen).
+        3. Der Kanal trägt STATTDESSEN den Grundpreis. Eine ungemappte Rate
+           verschluckt laut Channex-Doku eine Buchung („if an unmapped rate is
+           booked on a connected channel, the reservation will not be sent
+           through") — ein leerer Kanal ist also kein akzeptabler Endzustand.
+
+        Schlägt eine Prüfung fehl, wird das GESAGT (500), nicht still
+        quittiert: der Betrieb muss wissen, dass der Aufschlag beim Portal noch
+        steht. Ein Fehler beim LESEN des Kanals ist dagegen kein Beweis für
+        einen kaputten Zustand — er wird protokolliert und nicht als Erfolg
+        ausgegeben.
+        """
+        rest = (
+            db.table("rate_plans")
+            .select("id")
+            .eq("id", kanalplan_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if rest:
+            raise ChannelManagerError(
+                "Die Preisänderung konnte nicht zurückgenommen werden — der "
+                "Kanal-Preisplan besteht weiter. Bitte erneut versuchen.",
+                status_code=500,
+            )
+        primary_id = self._primary_rate_plan_id(db, tenant_id, property_id)
+        primary_cx = (
+            self._channex_id_for_local_plan(db, tenant_id, primary_id)
+            if primary_id else None
+        )
+        try:
+            aktuell = self._channex.get_channel(channel_id)
+        except ChannexError as exc:
+            # Nicht lesbar heißt nicht kaputt. Kein stiller Erfolg, aber auch
+            # kein erfundener Fehlerzustand (Wurzel 4).
+            log.warning(
+                "portal_adjustment_rueckweg_ungeprueft",
+                property_id=property_id, portal=portal_code,
+                channel_id=channel_id, error=str(exc)[:200],
+            )
+            return
+        plans = (
+            ((aktuell.get("data") or {}).get("attributes") or {}).get("rate_plans")
+            or []
+        )
+        am_kanal = {str(p.get("rate_plan_id")) for p in plans}
+        if kanalplan_channex_id and str(kanalplan_channex_id) in am_kanal:
+            raise ChannelManagerError(
+                "Die Preisänderung konnte nicht zurückgenommen werden — das "
+                "Portal liest weiter den Kanal-Preisplan. Bitte erneut "
+                "versuchen.",
+                status_code=500,
+            )
+        if primary_cx and str(primary_cx) not in am_kanal:
+            raise ChannelManagerError(
+                "Nach dem Zurücknehmen liegt am Portal kein Preisplan mehr. "
+                "Bitte die Zuordnung unter „Synchronisierung“ prüfen — eine "
+                "nicht zugeordnete Rate nimmt keine Buchung an.",
+                status_code=500,
+            )
+        log.info(
+            "portal_adjustment_rueckweg_verifiziert",
+            property_id=property_id, portal=portal_code,
+            channel_id=channel_id,
+        )
 
     def _swap_channel_rate_plan(
         self, db: Client, tenant_id: str, channel_id: str,
@@ -430,6 +525,7 @@ class ObjektKanalMixin:
     def _kanal_zuordnung_anlegen(
         self, db: Client, channel_id: str, channex_rate_plan_id: str,
         lokaler_plan_id: str, *, bestand: list[dict[str, Any]] | None = None,
+        nur_paar: dict[str, Any] | None = None,
     ) -> None:
         """Den Kanal-Plan erstmalig am Kanal zuordnen (`POST …/mappings`).
 
@@ -462,6 +558,15 @@ class ObjektKanalMixin:
         UNGEMAPPTE Rate eine Buchung verschluckt („if an unmapped rate is booked
         on a connected channel, the reservation will not be sent through") —
         deshalb darf keine Rate unbelegt zurückbleiben.
+
+        `nur_paar` KEHRT DAS UM, für genau einen Fall: einen Plan, der EINE
+        Portal-Rate abbildet (`portal_raten_plaene`). Der Aufschlag oben gilt
+        dem ZIMMER, ein Portal-Raten-Plan gilt SEINER RATE. Ohne diese
+        Einschränkung legte der Lauf den Wochen-Plan (min_stay 7) auch auf die
+        Standard Rate — nachgerechnet an Rævlingehuset, Zimmer 1220760101:
+        Booking verkaufte die Standard-Rate dann erst ab sieben Nächten. Es
+        verstieße zusätzlich gegen die Channex-Eindeutigkeit („One OTA room+rate
+        pair should map to at most one local rate plan").
         """
         plan = (
             db.table("rate_plans")
@@ -481,7 +586,11 @@ class ObjektKanalMixin:
         ).data or []
         listing_id = prop[0].get("airbnb_listing_id") if prop else None
 
-        ziele = self._zuordnungs_ziele(bestand or [], listing_id)
+        if nur_paar is not None:
+            # Genau die eine Rate dieses Portal-Raten-Plans (s. Docstring).
+            ziele = [nur_paar]
+        else:
+            ziele = self._zuordnungs_ziele(bestand or [], listing_id)
         if not ziele:
             raise ChannelManagerError(
                 "Für dieses Objekt ist an diesem Portal keine Rate zugeordnet. "
@@ -652,6 +761,77 @@ class ObjektKanalMixin:
         ).data or []
         return rows[0]["url"] if rows else None
 
+    # Sentinel: „das ist ein Portal-Raten-Plan, aber seine Rate ist nicht
+    # eindeutig zuordenbar" — unterscheidbar von None (= alle Paare, das
+    # bisherige Verhalten fuer Zusatz-Plaene). Ohne diese Unterscheidung waere
+    # der fail-closed-Fall nicht von „normal zuordnen" zu trennen.
+    _KEIN_ZIEL: object = object()
+
+    def _portal_rate_titel(self, conn: dict[str, Any]) -> dict[str, str]:
+        """{rate_plan_code: Titel} der Raten, die das Portal aktuell fuehrt.
+
+        Aus `POST /channels/mapping_details` — lesend, der einzige Weg an die
+        TITEL. Das bestehende Kanal-Mapping traegt nur Codes, und ein
+        Portal-Raten-Plan ist nur ueber seinen Namen (= Rate-Titel) seiner Rate
+        zuzuordnen.
+
+        Leeres dict bei jedem Fehlschlag: dann findet
+        `paar_fuer_portal_plan` kein Paar und der Plan wird NICHT zugeordnet
+        (fail-closed) — statt auf „alle Paare" zurueckzufallen und die
+        Restriktion einer Wochenrate auf die Standard-Rate zu legen.
+        """
+        hotel_id = conn.get("ota_hotel_id")
+        portal = conn.get("ota_portal_code")
+        if not hotel_id or not portal:
+            return {}
+        try:
+            details = self._channex.get_channel_mapping_details(
+                channel=portal, settings={"hotel_id": str(hotel_id)}
+            )
+        except ChannexError as exc:
+            log.warning(
+                "portal_rate_titel_unlesbar",
+                portal=portal, hotel_id=hotel_id, error=str(exc)[:200],
+            )
+            return {}
+        from .portal_raten_plaene import portal_titel_je_code
+
+        # `_normalize_mapping_rooms` liegt am Schwester-Mixin `ChannelsMixin`;
+        # beide setzen denselben Dienst zusammen, `self` traegt es also. Ueber
+        # die Klasse zu gehen waere ein Zugriff auf fremdes Innenleben.
+        return portal_titel_je_code(self._normalize_mapping_rooms(details))
+
+    def _portal_raten_plan_ziel(
+        self, bestand: list[dict[str, Any]], plan_name: str,
+        titel_je_code: dict[str, str],
+    ) -> dict[str, Any] | object | None:
+        """Wohin dieser Plan gehoert — drei Antworten, drei Bedeutungen.
+
+        `dict`        genau dieses OTA-Paar (der Plan traegt den Namen einer
+                      Portal-Rate, also gehoert er ihr allein).
+        `_KEIN_ZIEL`  Portal-Raten-Plan, Rate aber nicht eindeutig auffindbar →
+                      gar nicht zuordnen (fail-closed).
+        `None`        kein Portal-Raten-Plan → bisheriges Verhalten (alle Paare
+                      des Zimmers), richtig fuer einen Zusatz-Plan.
+
+        Die Unterscheidung laeuft am Namen: `plan_fuer_portal_rate` benennt den
+        Plan nach der Rate, dieser Name ist die Verbindung. Traegt kein Titel
+        des Portals diesen Namen, ist es ein normaler Zusatz-Plan
+        („Frühbucher", „Langzeit") — der gilt fuer das ganze Zimmer.
+        """
+        gesucht = (plan_name or "").strip().lower()
+        if not gesucht:
+            return None
+        namen = {(t or "").strip().lower() for t in titel_je_code.values()}
+        if gesucht not in namen:
+            return None  # kein Portal-Raten-Plan
+        from .portal_raten_plaene import paar_fuer_portal_plan
+
+        paar = paar_fuer_portal_plan(
+            bestand, plan_name, portal_titel_je_code=titel_je_code
+        )
+        return paar if paar else self._KEIN_ZIEL
+
     def freigegebene_plaene_zuordnen(
         self, tenant_id: str, property_id: str
     ) -> dict[str, int]:
@@ -697,7 +877,7 @@ class ObjektKanalMixin:
 
         conns = (
             db.table("channex_channel_connection")
-            .select("channex_channel_id, ota_portal_code")
+            .select("channex_channel_id, ota_portal_code, ota_hotel_id")
             .eq("tenant_id", tenant_id)
             .eq("property_id", property_id)
             .not_.is_("channex_channel_id", "null")
@@ -720,13 +900,41 @@ class ObjektKanalMixin:
             attrs = (aktuell.get("data") or {}).get("attributes") or {}
             bestand = attrs.get("rate_plans") or []
             schon_da = {str(p.get("rate_plan_id")) for p in bestand}
+            # Die Rate-TITEL des Portals — gebraucht, um einen Portal-Raten-Plan
+            # an genau SEINE Rate zu haengen (`_portal_raten_plan_ziel`).
+            # LAZY: erst beim ersten Plan, der wirklich zugeordnet werden muss.
+            # Im Normalfall ist alles schon zugeordnet, und dann darf dieser Lauf
+            # keinen zusaetzlichen Channex-Abruf je Objekt und Kanal kosten — er
+            # haengt an JEDEM Content-Sync.
+            titel_je_code: dict[str, str] | None = None
             for plan in offen:
                 cx = self._channex_id_for_local_plan(db, tenant_id, plan["id"])
                 if not cx or cx in schon_da:
                     continue
+                if titel_je_code is None:
+                    titel_je_code = self._portal_rate_titel(conn)
+                ziel = self._portal_raten_plan_ziel(
+                    bestand, str(plan.get("name") or ""), titel_je_code
+                )
+                if ziel is self._KEIN_ZIEL:
+                    # Portal-Raten-Plan, dessen Rate nicht eindeutig zuordenbar
+                    # ist → LIEBER GAR NICHT zuordnen (fail-closed, Wurzel 5).
+                    # Begruendung siehe `portal_raten_plaene.paar_fuer_portal_plan`.
+                    log.warning(
+                        "portal_raten_plan_nicht_zugeordnet",
+                        channel_id=channel_id, rate_plan_id=cx,
+                        plan_name=plan.get("name"),
+                        portal=conn.get("ota_portal_code"),
+                    )
+                    continue
                 try:
                     self._kanal_zuordnung_anlegen(
                         db, channel_id, cx, plan["id"], bestand=bestand,
+                        # Gesetzt = NUR dieses eine OTA-Paar (Portal-Raten-Plan).
+                        # None = das bisherige Verhalten (alle Paare des Zimmers),
+                        # richtig fuer einen Zusatz-Plan, der das ganze Zimmer
+                        # betrifft.
+                        nur_paar=ziel,
                     )
                 except (ChannelManagerError, ChannexError) as exc:
                     # Ein Kanal ohne zuordenbare Rate (oder ein Portal, das die
