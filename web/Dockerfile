@@ -17,6 +17,35 @@ COPY packages ./packages
 RUN bun install
 COPY web ./web
 ENV NODE_ENV=production
+
+# NEXT_PUBLIC_*-Variablen werden beim BUILD in den Client-Bundle eingebacken —
+# ein Laufzeit-Eintrag in der Coolify-Env erreicht sie NICHT. Dasselbe gilt für
+# die `headers()`-Funktion in next.config.ts: `next build` schreibt sie in
+# `.next/routes-manifest.json`, also ist auch die CSP zur Build-Zeit festgelegt.
+#
+# Dieser Block fehlte hier vollständig, während gastgeber/, admin/ und
+# plattform/ ihn längst haben (ADR-0016 P6 nennt web ausdrücklich als offen).
+# Die Folge war live nachweisbar und betraf nicht eine Variable, sondern die
+# ganze Klasse: die CSP von app.mynextdays.com hatte kein `frame-src`
+# (deshalb blieb die Baukasten-Vorschau „nicht eingerichtet"), und in keinem
+# der 31 Client-Chunks stand ein Supabase-Host. Wer die Werte in Coolify
+# einträgt, ohne dass sie hier als ARG stehen, ändert nichts — genau das ist
+# die Falle, die dieser Kommentar verhindern soll.
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+ARG NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+# Adresse des Seiten-Renderers (builder/). Ohne sie zeigt der Website-Baukasten
+# „Vorschau nicht eingerichtet" UND die CSP lässt `frame-src` weg — der iframe
+# wäre dann auch mit richtiger Adresse von `default-src 'self'` blockiert.
+ARG NEXT_PUBLIC_BUILDER_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+ENV NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+ENV NEXT_PUBLIC_BUILDER_URL=$NEXT_PUBLIC_BUILDER_URL
 WORKDIR /repo/web
 RUN bun run build
 

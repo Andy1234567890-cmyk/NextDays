@@ -21,5 +21,6 @@ kilcrxob5u434k3vsyf54ble|nextdays-api
 ly4w6vw4ffxk2987nyg5z5kt|nextdays-worker
 bok2ol51jn1936lxs66zuujs|nextdays-public-api
 bln3q0n1l1se2hna8utkuag9|nextdays-web
+lx65cb93ivz5il1suejtaz7g|nextdays-builder
 zcjrx4czu338zghc58d41yp7|nextdays-docs
 yih7d7kz4tkkgezqzg1zzjcs|nextdays-redis

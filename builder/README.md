@@ -36,8 +36,12 @@ kein fremder Inhalt). Custom-Domains + TLS laufen über **Cloudflare for SaaS**
 
 | Variable | Zweck |
 |---|---|
-| `NEXT_PUBLIC_SITE_URL` | eigener Origin der App — lokal explizit auf `http://localhost:3200` setzen (Achtung: der Code-Fallback ist `localhost:3000` und passt NICHT zum Dev-Port) |
 | `NEXT_PUBLIC_API_URL` | FastAPI-Backend, Ziel des `/api/v1`-Proxys (lokal `http://localhost:8000`) |
+| `DASHBOARD_ORIGIN` | Origin des Dashboards, das `/render/*` per iframe einbetten darf (lokal `http://localhost:3000`). **Muss beim BUILD gesetzt sein**, obwohl ohne `NEXT_PUBLIC_`-Präfix: `next.config.ts` liest den Wert in `headers()`, und `next build` friert die Kopfzeilen in `.next/routes-manifest.json` ein — ein Laufzeit-Eintrag kommt nie an. Fehlt er, steht `frame-ancestors 'none'` im Image, und die Entwurfs-Vorschau bleibt leer, **ohne Meldung** |
+
+`NEXT_PUBLIC_SITE_URL` stand hier früher — der Wert wird im Code **nirgends
+gelesen**. Eintrag entfernt, statt eine Variable zu dokumentieren, die niemand
+braucht.
 
 ## Lokaler Start
 
@@ -45,8 +49,8 @@ kein fremder Inhalt). Custom-Domains + TLS laufen über **Cloudflare for SaaS**
 cd builder
 bun install
 # .env.local anlegen (nicht committen):
-#   NEXT_PUBLIC_SITE_URL=http://localhost:3200
 #   NEXT_PUBLIC_API_URL=http://localhost:8000
+#   DASHBOARD_ORIGIN=http://localhost:3000
 bun run dev        # → http://localhost:3200
 ```
 

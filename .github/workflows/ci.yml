@@ -345,9 +345,13 @@ jobs:
         run: bun run lint
 
       - name: Produktions-Build
-        # Nur builder: die App hat (noch) keine Coolify-Resource, ihr Build wird
-        # also nirgends sonst geprüft. Alle übrigen Frontends bauen im
-        # images-Job über ihr Dockerfile — dort ist der Next-Build enthalten.
+        # Nur builder — und seit dem 24.08.2026 aus einem anderen Grund als
+        # vorher: die App HAT jetzt eine Coolify-Resource und baut im images-Job
+        # über ihr Dockerfile. Dieser Schritt bleibt trotzdem, weil er etwas
+        # anderes prüft: den Build im REPO-Kontext (`bun run build` im
+        # Workspace), während der images-Job den Docker-Build prüft. Beide
+        # können unabhängig kaputtgehen — der Docker-Build etwa dann, wenn ein
+        # `COPY` fehlt, obwohl der Next-Build stimmt.
         # Die Betroffenheit steht davor und mit UND: ein nicht betroffener
         # builder-Push soll auch nicht bauen.
         if: steps.pruefen.outputs.laufen == 'true' && matrix.app == 'builder'
@@ -901,6 +905,12 @@ jobs:
             kind: dockerfile
             context: .
             dockerfile: web/Dockerfile
+          # Root-Kontext wie web: builder/package.json fuehrt @nextdays/* als
+          # workspace:*, mit builder/ als Kontext gaebe es kein packages/.
+          - app: nextdays-builder
+            kind: dockerfile
+            context: .
+            dockerfile: builder/Dockerfile
           - app: nextdays-marketing
             kind: dockerfile
             context: marketing

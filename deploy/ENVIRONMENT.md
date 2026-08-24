@@ -240,12 +240,26 @@ API), dann `MFA_SMS_AVAILABLE=true` setzen und die API neu deployen.
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase-URL (öffentlich) | nein | Coolify-Env (`is_buildtime`) |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | anon/publishable Key (öffentlich) | nein | Coolify-Env (`is_buildtime`) |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable (öffentlich) | nein | Coolify-Env (`is_buildtime`) |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Karten im Objekt-/Reservierungsbereich | nein | Coolify-Env (`is_buildtime`) |
+| `NEXT_PUBLIC_BUILDER_URL` | Origin des Seiten-Renderers (`nextdays-builder`). Ziel des Vorschau-iframes im Website-Baukasten UND Quelle der CSP-Direktive `frame-src`. Ohne den Wert zeigt der Baukasten „Vorschau nicht eingerichtet" | nein | Coolify-Env (`is_buildtime`) |
 | `GOOGLE_FONTS_API_KEY` | Google-Fonts-Katalog im Page-Builder (server-only, Proxy `/api/google-fonts`; ohne Key → 503 im Font-Picker) | **ja** | → Passwort-Manager |
 
 > `NEXT_PUBLIC_*` sind per Definition öffentlich (Browser-sichtbar) → **kein Secret**,
 > müssen aber als **buildtime** gesetzt sein, weil Next.js sie beim Build inlined.
 > `GOOGLE_FONTS_API_KEY` hat bewusst **kein** `NEXT_PUBLIC_`-Präfix — er wird nur
 > server-seitig in der Proxy-Route gelesen und darf nie ins Browser-Bundle.
+
+> **Die Falle, die hier zweimal zuschlug (24.08.2026).** `is_buildtime` in Coolify
+> allein genügt NICHT: der Wert kommt nur an, wenn das Dockerfile ihn auch als
+> `ARG` deklariert und an `ENV` weitergibt. In `web/Dockerfile` fehlte dieser
+> Block vollständig — mit der Folge, dass KEINE einzige `NEXT_PUBLIC_`-Variable
+> im Client-Bundle landete, obwohl alle in Coolify korrekt als buildtime
+> markiert waren. Nachweisbar war das von außen: die CSP von
+> `app.mynextdays.com` hatte kein `frame-src` (es entsteht nur bei gesetztem
+> `NEXT_PUBLIC_BUILDER_URL`), und in keinem der 31 Client-Chunks stand ein
+> Supabase-Host. Wer eine neue `NEXT_PUBLIC_`-Variable einführt, muss sie an
+> DREI Stellen eintragen: Coolify-Env (buildtime), `ARG`+`ENV` im Dockerfile der
+> App, und diese Tabelle.
 
 ## App: `nextdays-plattform` (Next.js öffentliche Buchungsplattform)
 | Variable | Zweck | Secret? | Quelle |
@@ -268,12 +282,34 @@ Rendert pro Custom-Domain die veröffentlichte Agentur-Website (siehe
 Next-Standalone unter Node, `HEALTHCHECK` auf `/healthz`; `HOSTNAME=0.0.0.0` ist
 bereits im Image gesetzt). Coolify-`base_directory` ist `builder/`. Die
 Cloudflare-Custom-Hostnames (`CLOUDFLARE_FALLBACK_ORIGIN`, s. o.) zeigen auf
-diese App. Stand der Erhebung (2026-06-30) noch nicht als Coolify-App angelegt.
+diese App.
+
+**Angelegt am 24.08.2026** (`lx65cb93ivz5il1suejtaz7g`), Bauart wie
+`nextdays-web`: `build_pack=dockerfile`, `base_directory=/`,
+`dockerfile_location=/builder/Dockerfile`. Der Root-Kontext ist Pflicht, nicht
+Geschmack — `builder/package.json` führt `@nextdays/currency` und
+`@nextdays/security-headers` als `workspace:*`; mit `builder/` als Kontext gäbe
+es kein `packages/` und `bun install` scheitert. Das alte Dockerfile hatte genau
+diesen engen Kontext samt `--frozen-lockfile` gegen ein `builder/bun.lock` ohne
+einen einzigen `workspace:`-Eintrag; es war also nicht baubar, was niemandem
+auffiel, weil es keine Coolify-Resource gab. Angelegt wird die App mit
+`deploy/coolify/builder-app-anlegen.php`, die Variablen mit
+`deploy/coolify/builder-env-setzen.php` (beide idempotent).
+
+Erreichbar zunächst über den Coolify-Host
+`https://lx65cb93ivz5il1suejtaz7g.65.21.144.136.sslip.io` — der braucht keinen
+DNS-Eintrag, und die Vorschau im Baukasten läuft damit sofort. Eine eigene
+Subdomain kommt später DAZU, nicht an seine Stelle (wie `nextdays-web`, das
+beide führt).
 
 | Variable | Zweck | Secret? | Quelle |
 |---|---|---|---|
-| `NEXT_PUBLIC_SITE_URL` | eigener öffentlicher Origin der builder-App | nein | Coolify-Env (`is_buildtime`) |
-| `NEXT_PUBLIC_API_URL` | FastAPI-Backend (Ziel des `/api/v1`-Proxys) | nein | Coolify-Env (`is_buildtime`) |
+| `DASHBOARD_ORIGIN` | Origin des Dashboards (`https://app.mynextdays.com`) — NUR von dort darf `/render/*` per iframe eingebettet werden. **Muss buildtime sein**, obwohl ohne `NEXT_PUBLIC_`-Präfix: `next.config.ts` liest es in `headers()`, und `next build` friert die Kopfzeilen in `routes-manifest.json` ein. Fehlt es, steht `frame-ancestors 'none'` im Image und die Vorschau bleibt leer — **ohne jede Meldung**, nur als CSP-Zeile in der Browser-Konsole | nein | Coolify-Env (`is_buildtime`) |
+| `NEXT_PUBLIC_API_URL` | FastAPI-Backend (Ziel des `/api/v1`-Proxys). Rückfall ist `http://localhost:8000` und zeigt im Container ins Nichts: jede Kunden-Domain endet dann bei „nicht eingerichtet" | nein | Coolify-Env (`is_buildtime`) |
+
+`NEXT_PUBLIC_SITE_URL` stand hier früher — der Wert wird im Code **nirgends
+gelesen** (vollständiger Grep über `builder/`). Eintrag entfernt, statt eine
+Variable zu dokumentieren, die niemand braucht.
 
 ## App: `nextdays-storybook` (Komponenten-Doku)
 | Variable | Zweck | Secret? | Quelle |
