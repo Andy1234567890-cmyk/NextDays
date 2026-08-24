@@ -3,6 +3,7 @@
 // Wochenstreifen und Monatsgrenzen.
 import {
   aufgabenTag,
+  aufgabenTage,
   gruppiereNachTag,
   istUeberfaellig,
   monatsGrenzen,
@@ -99,10 +100,10 @@ describe("istUeberfaellig", () => {
 
 describe("gruppiereNachTag", () => {
   const offen = "open" as const;
-  const a = { title: "A", status: offen, start_at: lokal("2026-08-22", 10), due_at: null };
-  const b = { title: "B", status: offen, start_at: lokal("2026-08-21", 14), due_at: null };
-  const c = { title: "C", status: offen, start_at: lokal("2026-08-21", 8), due_at: null };
-  const ohne = { title: "D", status: offen, start_at: null, due_at: null };
+  const a = { title: "A", status: offen, start_at: lokal("2026-08-22", 10), due_at: null, end_at: null };
+  const b = { title: "B", status: offen, start_at: lokal("2026-08-21", 14), due_at: null, end_at: null };
+  const c = { title: "C", status: offen, start_at: lokal("2026-08-21", 8), due_at: null, end_at: null };
+  const ohne = { title: "D", status: offen, start_at: null, due_at: null, end_at: null };
 
   it("sortiert Tage aufsteigend und innerhalb des Tages nach Zeit", () => {
     const gruppen = gruppiereNachTag([a, b, c]);
@@ -200,5 +201,87 @@ describe("monatsGrenzen", () => {
       expect(tag >= von.slice(0, 10)).toBe(true);
       expect(tag <= bis.slice(0, 10)).toBe(true);
     }
+  });
+});
+
+describe("aufgabenTage", () => {
+  it("nennt beide Tage, wenn die Aufgabe von einem Tag zum nächsten läuft", () => {
+    // Der live gemeldete Fall: „Velk T" (Wechsel) läuft von einem Tag vor der
+    // Anreise bis zur Anreise — 22.08. 18:00 bis 23.08. 18:00. Am 23. fiel sie
+    // aus der Liste, weil nur der Starttag zählte.
+    expect(
+      aufgabenTage({
+        start_at: lokal("2026-08-22", 18),
+        end_at: lokal("2026-08-23", 18),
+        due_at: lokal("2026-08-23", 18),
+      }),
+    ).toEqual(["2026-08-22", "2026-08-23"]);
+  });
+
+  it("bleibt bei einem Tag, wenn Anfang und Ende auf denselben fallen", () => {
+    expect(
+      aufgabenTage({
+        start_at: lokal("2026-08-22", 10),
+        end_at: lokal("2026-08-22", 12),
+        due_at: null,
+      }),
+    ).toEqual(["2026-08-22"]);
+  });
+
+  it("nimmt ohne Anfang den Fälligkeitstag", () => {
+    expect(
+      aufgabenTage({ start_at: null, end_at: null, due_at: lokal("2026-08-30") }),
+    ).toEqual(["2026-08-30"]);
+  });
+
+  it("ohne jeden Termin kein Tag", () => {
+    expect(aufgabenTage({ start_at: null, end_at: null, due_at: null })).toEqual([]);
+  });
+
+  it("faellt bei absurder Dauer auf den Starttag zurueck", () => {
+    // Eine Aufgabe über ein halbes Jahr ist keine Tagesaufgabe, sondern eine
+    // Fehlkonfiguration — sie darf nicht 180 Tage mit Punkten fluten.
+    expect(
+      aufgabenTage({
+        start_at: lokal("2026-08-22"),
+        end_at: lokal("2027-02-22"),
+        due_at: null,
+      }),
+    ).toEqual(["2026-08-22"]);
+  });
+});
+
+describe("zaehleProTag mehrtaegig", () => {
+  it("zaehlt eine zweitaegige Aufgabe an BEIDEN Tagen", () => {
+    const zaehler = zaehleProTag([
+      {
+        status: "open" as const,
+        start_at: lokal("2026-08-22", 18),
+        end_at: lokal("2026-08-23", 18),
+        due_at: lokal("2026-08-23", 18),
+      },
+    ]);
+    expect(zaehler.get("2026-08-22")).toBe(1);
+    expect(zaehler.get("2026-08-23")).toBe(1);
+  });
+});
+
+describe("Tagesangabe ohne erfundene Uhrzeit", () => {
+  it("zeigt keine Uhrzeit, wenn der Zeitstempel nur den Tag meint", () => {
+    // Die Engine setzt 00:00 UTC, wenn die Buchung keine Check-in-Zeit kennt.
+    // In Kopenhagen wären das „2:00" — eine Uhrzeit, die niemand gemeint hat.
+    expect(uhrzeit("2026-08-23T00:00:00+00:00")).toBeNull();
+    expect(
+      zeitfenster({
+        start_at: "2026-08-22T00:00:00+00:00",
+        end_at: "2026-08-23T00:00:00+00:00",
+        due_at: "2026-08-23T00:00:00+00:00",
+      }),
+    ).toBeNull();
+  });
+
+  it("zeigt eine echte Uhrzeit weiterhin", () => {
+    // Grævlinge hat eine Check-in-Zeit: 16:00 UTC → 18:00 in Kopenhagen.
+    expect(uhrzeit("2026-08-22T16:00:00+00:00")).toBe("18:00");
   });
 });

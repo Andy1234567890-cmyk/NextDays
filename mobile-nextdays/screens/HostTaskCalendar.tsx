@@ -27,7 +27,7 @@ import { Col, IconBtn, Row, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState } from "@/components/ui/patterns";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  aufgabenTag,
+  aufgabenTage,
   monatLabel,
   monatsGrenzen,
   tagLabel,
@@ -110,7 +110,9 @@ export default function HostTaskCalendar({ navigation }: { navigation: any }) {
   const desTages = useMemo(
     () =>
       (aufgaben ?? [])
-        .filter((a) => aufgabenTag(a) === tag)
+        // `aufgabenTage`, nicht `aufgabenTag`: eine Aufgabe, die von einem Tag
+        // zum nächsten läuft (Wechsel/Anreise-Check), gehört an BEIDE Tage.
+        .filter((a) => aufgabenTage(a).includes(tag))
         .sort((a, b) => (a.start_at ?? a.due_at ?? "").localeCompare(b.start_at ?? b.due_at ?? "")),
     [aufgaben, tag],
   );

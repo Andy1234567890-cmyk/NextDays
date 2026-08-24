@@ -14,6 +14,10 @@ import type { Task, TaskStatus } from "@/lib/tasks";
 
 type Terminiert = Pick<Task, "start_at" | "due_at" | "end_at">;
 
+/** Wie viele Tage eine Aufgabe höchstens überspannen darf, bevor die
+ * Mehrtages-Darstellung als Fehlkonfiguration gilt. */
+const MAX_TAGE = 31;
+
 /** Der lokale Kalendertag einer Aufgabe, oder null wenn sie keinen trägt. */
 export function aufgabenTag(task: Pick<Task, "start_at" | "due_at">): string | null {
   const roh = task.start_at ?? task.due_at;
@@ -22,11 +26,67 @@ export function aufgabenTag(task: Pick<Task, "start_at" | "due_at">): string | n
   return Number.isNaN(d.getTime()) ? null : isoLocal(d);
 }
 
-/** Uhrzeit eines Zeitstempels in lokaler Zeit („8:05"), oder null. */
+/**
+ * ALLE lokalen Kalendertage, die eine Aufgabe berührt — von `start_at` bis
+ * `end_at ?? due_at`.
+ *
+ * Der Grund: eine planmäßige Regel spannt regelmäßig zwei Tage. „Velk T"
+ * (Wechsel) läuft von „ein Tag vor Anreise" bis „Anreise", live also vom
+ * 22.08. 18:00 bis 23.08. 18:00. `aufgabenTag` liefert davon nur den
+ * STARTTAG — am Anreisetag selbst, an dem die Arbeit anfällt, stand die
+ * Aufgabe nicht in der Tagesliste und der Tag trug keinen Punkt. Gemeldet
+ * wurde das als „am 23.8. fehlt der Wechsel".
+ *
+ * Obergrenze gegen eine kaputt konfigurierte Dauer (Wurzel 8): mehr als
+ * `MAX_TAGE` Tage wären keine Aufgabe mehr, sondern ein Dauerzustand — dann
+ * bleibt es beim Starttag.
+ */
+export function aufgabenTage(
+  task: Pick<Task, "start_at" | "due_at" | "end_at">,
+): string[] {
+  const start = aufgabenTag(task);
+  if (start === null) return [];
+  const endeRoh = task.end_at ?? task.due_at;
+  if (!endeRoh) return [start];
+  const ende = new Date(endeRoh);
+  if (Number.isNaN(ende.getTime())) return [start];
+  const endeTag = isoLocal(ende);
+  if (endeTag <= start) return [start];
+  const tage: string[] = [];
+  const lauf = parseLocal(start);
+  const grenze = parseLocal(endeTag);
+  while (lauf <= grenze && tage.length < MAX_TAGE) {
+    tage.push(isoLocal(lauf));
+    lauf.setDate(lauf.getDate() + 1);
+  }
+  return tage.length < MAX_TAGE ? tage : [start];
+}
+
+/**
+ * Trägt dieser Zeitstempel überhaupt eine Uhrzeit?
+ *
+ * Die Regel-Engine setzt bewusst den TAGESBEGINN (00:00 UTC), wenn die Buchung
+ * keine Check-in-/Check-out-Zeit kennt — sie erfindet keine Standardstunde
+ * (Wurzel 4). Live betrifft das 129 von 304 Buchungen; die daraus erzeugten
+ * Aufgaben trugen in der App „fällig 2:00", weil 00:00 UTC in Kopenhagen 02:00
+ * ist. Das ist genau die erfundene Uhrzeit, die das Backend vermeiden wollte —
+ * nur eine Ebene später. Ein solcher Zeitstempel bedeutet „dieser Tag", nicht
+ * „nachts um zwei".
+ *
+ * Preis der Erkennung: eine Aufgabe, die WIRKLICH auf 00:00 UTC terminiert ist,
+ * verliert ihre Uhrzeitangabe. Für Reinigung und Wechsel gibt es diesen Termin
+ * nicht — und eine fehlende Angabe ist allemal besser als eine falsche.
+ */
+function hatUhrzeit(d: Date): boolean {
+  return d.getUTCHours() !== 0 || d.getUTCMinutes() !== 0 || d.getUTCSeconds() !== 0;
+}
+
+/** Uhrzeit eines Zeitstempels in lokaler Zeit („8:05"), oder null — auch dann
+ * null, wenn der Zeitstempel nur einen TAG meint (siehe `hatUhrzeit`). */
 export function uhrzeit(iso: string | null): string | null {
   if (!iso) return null;
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
+  if (Number.isNaN(d.getTime()) || !hatUhrzeit(d)) return null;
   return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
@@ -121,14 +181,16 @@ function vergleicheZeit<T extends Pick<Task, "start_at" | "due_at" | "title">>(
  * sagte nichts mehr aus.
  */
 export function zaehleProTag<
-  T extends Pick<Task, "status" | "start_at" | "due_at">,
+  T extends Pick<Task, "status" | "start_at" | "due_at" | "end_at">,
 >(aufgaben: T[]): Map<string, number> {
   const zaehler = new Map<string, number>();
   for (const a of aufgaben) {
     if (istAbgeschlossen(a.status)) continue;
-    const tag = aufgabenTag(a);
-    if (tag === null) continue;
-    zaehler.set(tag, (zaehler.get(tag) ?? 0) + 1);
+    // JEDER berührte Tag, nicht nur der Starttag: eine Aufgabe über zwei Tage
+    // ist an beiden zu tun und muss an beiden einen Punkt tragen.
+    for (const tag of aufgabenTage(a)) {
+      zaehler.set(tag, (zaehler.get(tag) ?? 0) + 1);
+    }
   }
   return zaehler;
 }
