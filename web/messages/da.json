@@ -892,7 +892,7 @@
     "blockReason": "Grund",
     "auditLine": "Oprettet {created} · sidst ændret {updated}",
     "actionNewReservation": "Ny reservation",
-    "reservationCreated": "Reservation oprettet.",
+    "reservationCreated": "Reservationen er oprettet.",
     "actionMessage": "Nachricht",
     "nationality": "Nationalität",
     "language": "Sprache",
