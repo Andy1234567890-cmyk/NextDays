@@ -239,12 +239,10 @@
       "staff": "Personal",
       "jobs": "Jobb",
       "reservations": "Bokningar",
-      "distribution": "Distribution",
       "hotel": "Hotell",
       "vacationRentals": "Semesterbostäder",
       "accounting": "Bokföring",
       "guests": "Gäster",
-      "tools": "Verktyg",
       "website": "Webbplatsbyggare"
     },
     "roles": {
@@ -4253,6 +4251,14 @@
       "learnBody": {
         "auto": "En planerad uppgift skapas automatiskt vid varje bokning av de valda boendena — med start och slut i förhållande till in- och utcheckning.",
         "recurring": "En återkommande uppgift följer kalendern: startdatum, frekvens och längd. Systemet skapar tillfällena i förväg — oberoende av bokningar."
+      },
+      "deckung": {
+        "titel": "Boenden utan schemalagd uppgift",
+        "text": "{count} av {total} boenden täcks inte av någon regel. Där skapas aldrig en uppgift för incheckning eller städning.",
+        "hinweis": "En regel utan val av boende gäller för alla boenden — även de som skapas senare.",
+        "nurAnreise": "ingen incheckningsregel",
+        "nurAbreise": "ingen utcheckningsregel",
+        "keine": "ingen regel"
       }
     },
     "statsCards": {
@@ -7113,7 +7119,8 @@
       "seiten": "Sidor",
       "einstellungen": "Inställningar",
       "objekte": "Boenden",
-      "widgets": "Widgetar"
+      "widgets": "Widgetar",
+      "seo": "SEO"
     },
     "kopf": {
       "websiteAnsehen": "Visa webbplatsen",
@@ -7339,7 +7346,9 @@
       "bildHinzufuegen": "Lägg till bild",
       "objekteHinweis": "Id för de boenden som ska visas här.",
       "objektIdPlatzhalter": "Boende-id",
-      "objektHinzufuegen": "Lägg till"
+      "objektHinzufuegen": "Lägg till",
+      "frageHinzufuegen": "Lägg till fråga",
+      "fragenMax": "Fler än {max} frågor är inte möjligt."
     },
     "abschnitte": {
       "hero": "Toppbild",
@@ -7363,7 +7372,9 @@
       "image": "Bild",
       "imageHinweis": "En bild med bildtext.",
       "gallery": "Galleri",
-      "galleryHinweis": "Flera bilder i ett rutnät."
+      "galleryHinweis": "Flera bilder i ett rutnät.",
+      "faq": "Frågor och svar",
+      "faqHinweis": "Utfällbara frågor. Med struktur visas de även i sökresultatet."
     },
     "felder": {
       "eyebrow": "Liten rad ovanför",
@@ -7404,7 +7415,10 @@
       "email": "E-post",
       "telefon": "Telefon",
       "adresse": "Adress",
-      "formularZeigen": "Visa kontaktformulär"
+      "formularZeigen": "Visa kontaktformulär",
+      "fragen": "Frågor",
+      "frage": "Fråga",
+      "antwort": "Svar"
     },
     "vorschau": {
       "titel": "Förhandsvisning",
@@ -7558,6 +7572,121 @@
       "kopiert": "Koden är kopierad.",
       "kopierenFehler": "Kopiering är inte möjlig — markera den för hand.",
       "keineDomain": "En widget behöver din egen domän: bara den fungerar varaktigt på en annan sida. Anslut den under Inställningar → Adress."
+    },
+    "seo": {
+      "felder": {
+        "titel": "Meta title",
+        "titelHinweis": "Visas i webbläsarfliken och som rubrik i sökresultatet. Sikta på omkring 60 tecken, därefter kapar Google.",
+        "beschreibung": "Meta description",
+        "beschreibungHinweis": "Texten under titeln i sökresultatet. Den påverkar inte placeringen, men om någon klickar.",
+        "keywords": "Keywords",
+        "keywordsHinweis": "Kommaseparerade. Google och Bing använder dem inte längre — bara mindre kataloger gör det.",
+        "canonical": "Canonical URL",
+        "canonicalHinweis": "Behövs bara om samma innehåll kan nås under två adresser. Tomt betyder: den här sidan är originalet.",
+        "rueckfall": "Hela webbplatsen"
+      },
+      "uebersicht": {
+        "titel": "Översikt",
+        "hinweis": "Uppgifterna här gäller för hela webbplatsen. De används på varje sida som inte har egna — det egentliga arbetet sker under ”Sidor”.",
+        "metaTitel": "Uppgifter för hela webbplatsen",
+        "metaHinweis": "Reserv för alla sidor utan egna uppgifter. Står samma text överallt är det för sökmotorer ett tecken på bristande struktur.",
+        "indexTitel": "Sökmotorer",
+        "noindex": "Indexera inte webbplatsen",
+        "noindexHinweis": "Håller hela webbplatsen utanför sökindexet. För en webbplats under uppbyggnad — stäng av igen efter starten, annars hittas den aldrig.",
+        "noindexWarnung": "Så länge det här reglaget är på levererar robots.txt ”Disallow: /” och det finns ingen sitemap.",
+        "tempoTitel": "Laddningstid (Core Web Vitals)",
+        "tempoHinweis": "Google väger in laddningstiden. Båda reglagen får verkan direkt på webbplatsen.",
+        "lazy": "Ladda bilder först vid rullning",
+        "lazyHinweis": "Snabbar upp den första uppbyggnaden. Vid en stor bild direkt högst upp på sidan kan det göra visningen långsammare — stäng då av.",
+        "systemschrift": "Visa systemtypsnittet tills det egna har laddats",
+        "systemschriftHinweis": "Texten går att läsa direkt, men sidan byter typsnitt synligt.",
+        "dateienTitel": "Vad sökmotorer hämtar",
+        "dateienHinweis": "Dessa tre filer skapas automatiskt ur uppgifterna ovan. sitemap.xml hör hemma i Google Search Console — det är steget som snabbar upp indexeringen.",
+        "datei": {
+          "sitemap": "Alla adresser på webbplatsen med datum för senaste ändring.",
+          "robots": "Vad som får genomsökas och var sitemap ligger.",
+          "llms": "Kortversion av webbplatsen för svarsmotorer som ChatGPT eller Perplexity."
+        },
+        "keineDomain": "Ingen egen domän är ansluten än. De tre filerna skapas så snart webbplatsen körs under en egen adress."
+      },
+      "seiten": {
+        "titel": "Sidor",
+        "hinweis": "Varje sida behöver en egen titel och en egen beskrivning. Det är den viktigaste åtgärden av alla — här står var något saknas.",
+        "startseite": "Startsida",
+        "entwurf": "Utkast",
+        "nichtIndexiert": "inte indexerad",
+        "gepflegt": "komplett",
+        "fehltTitel": "Titel saknas",
+        "fehltBeschreibung": "Beskrivning saknas",
+        "fehltBeides": "Titel och beskrivning saknas",
+        "alleGepflegt": "Alla sidor har titel och beskrivning.",
+        "offeneLuecken": "{anzahl} sidor utan titel eller beskrivning.",
+        "noindex": "Indexera inte den här sidan",
+        "noindexHinweis": "Sidan går fortfarande att nå via sin adress men visas inte i sökresultat.",
+        "speichern": "Spara",
+        "gespeichert": "Sparat.",
+        "ungespeichert": "Inte sparat",
+        "keine": "Inga sidor har skapats än."
+      },
+      "schema": {
+        "titel": "Strukturerad data",
+        "hinweis": "Så förstår en sökmotor att ett pris är ett pris och att en adress är en adress. Först då visas stjärnor, priser och öppettider i sökresultatet.",
+        "typenTitel": "Vad som levereras",
+        "organization": "Verksamhet och adress",
+        "organizationHinweis": "Namn, adress, telefon och e-post från företagsprofilen.",
+        "lodging": "Boenden med pris",
+        "lodgingHinweis": "Per objektsida: typ av boende, utrustning och dagens pris.",
+        "breadcrumbs": "Sidväg",
+        "breadcrumbsHinweis": "Visar i sökresultatet var sidan ligger inom webbplatsen.",
+        "faq": "Frågor och svar",
+        "faqHinweis": "Bara på sidor med ett avsnitt med frågor och svar.",
+        "quelleTitel": "Varifrån uppgifterna kommer",
+        "quelleHinweis": "Alla uppgifter kommer från företagsprofilen och objektuppgifterna — inget matas in dubbelt här. Saknas ett schema saknas oftast adressen i profilen.",
+        "quelleKnopf": "Till företagsprofilen"
+      },
+      "messung": {
+        "titel": "Mätning",
+        "hinweis": "Besökssiffror via Google. Ett fält för alla fyra id — vilken produkt som avses ser Google på prefixet.",
+        "kennungTitel": "Google-id",
+        "kennungHinweis": "Analytics (G-), äldre typ (UA-), Google Ads (AW-) eller Campaign Manager (DC-).",
+        "kennung": "Id",
+        "kennungFormat": "Till exempel G-ABCD123456. Finns i Google Analytics under Administratör → Dataströmmar.",
+        "kennungFehler": "Id:t måste börja med G-, UA-, AW- eller DC-.",
+        "zustimmungTitel": "Samtycke",
+        "zustimmungHinweis": "Skriptet laddas men mäter först efter besökarens samtycke. Fram till dess sätter det inga Cookies.",
+        "zustimmungAktiv": "Cookie-meddelandet är aktivt. Mätning sker först efter att besökaren har klickat.",
+        "zustimmungFehlt": "Utan Cookie-meddelande mäts det direkt. I EU krävs samtycke för det.",
+        "zumHinweis": "Slå på Cookie-meddelandet"
+      },
+      "weiterleitungen": {
+        "titel": "Omdirigeringar",
+        "hinweis": "Led om gamla adresser till nya. Behövs vid en flytt från en annan webbplats — utan omdirigering hamnar besökare från Google och från nyhetsbrev på en felsida.",
+        "neuTitel": "Ny omdirigering",
+        "quelle": "Gammal adress",
+        "ziel": "Nytt mål",
+        "typ": "Typ",
+        "typ301": "Permanent (301)",
+        "typ302": "Tillfällig (302)",
+        "typ301Kurz": "permanent",
+        "typ302Kurz": "tillfällig",
+        "anlegen": "Skapa",
+        "angelegt": "Omdirigering skapad.",
+        "geloescht": "Omdirigering borttagen.",
+        "loeschen": "Ta bort",
+        "aktivieren": "Aktivera",
+        "deaktivieren": "Avaktivera",
+        "listeTitel": "Befintliga omdirigeringar",
+        "keine": "Inga omdirigeringar har skapats än.",
+        "wirdGespeichert": "Det här sparas:",
+        "nurPfad": "Bara sökvägen sparas:",
+        "csvImport": "Läs in CSV",
+        "csvFormat": "Två kolumner: gammal adress, nytt mål. Högst 200 rader.",
+        "dateiZuGross": "Filen är för stor (högst 200 KB).",
+        "dateiLeer": "Ingen giltig rad hittades i filen.",
+        "importErgebnis": "{neu} nya, {geaendert} ändrade, {uebersprungen} överhoppade.",
+        "weitereFehler": "{anzahl} ytterligare rader med fel.",
+        "vorrangHinweis": "En omdirigering fungerar bara om det inte finns någon sida under den gamla adressen. En befintlig sida har alltid företräde."
+      }
     }
   },
   "dynamicPricing": {

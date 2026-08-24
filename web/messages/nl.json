@@ -239,12 +239,10 @@
       "staff": "Personeel",
       "jobs": "Vacatures",
       "reservations": "Reserveringen",
-      "distribution": "Distributie",
       "hotel": "Hotel",
       "vacationRentals": "Vakantiewoningen",
       "accounting": "Boekhouding",
       "guests": "Gasten",
-      "tools": "Hulpmiddelen",
       "website": "Websitebouwer"
     },
     "roles": {
@@ -4253,6 +4251,14 @@
       "learnBody": {
         "auto": "Een geplande taak ontstaat automatisch bij elke boeking van de gekozen accommodaties — met begin en einde ten opzichte van check-in en check-out.",
         "recurring": "Een terugkerende taak volgt de kalender: startdatum, frequentie en duur. Het systeem maakt de afspraken vooruit aan — los van boekingen."
+      },
+      "deckung": {
+        "titel": "Accommodaties zonder geplande taak",
+        "text": "{count} van de {total} accommodaties worden door geen enkele regel bereikt. Daar ontstaat nooit een check-in- of schoonmaaktaak.",
+        "hinweis": "Een regel zonder accommodatiekeuze geldt voor alle accommodaties — ook voor later aangemaakte.",
+        "nurAnreise": "geen check-inregel",
+        "nurAbreise": "geen check-outregel",
+        "keine": "geen regel"
       }
     },
     "statsCards": {
@@ -7113,7 +7119,8 @@
       "seiten": "Pagina's",
       "einstellungen": "Instellingen",
       "objekte": "Accommodaties",
-      "widgets": "Widgets"
+      "widgets": "Widgets",
+      "seo": "SEO"
     },
     "kopf": {
       "websiteAnsehen": "Website bekijken",
@@ -7339,7 +7346,9 @@
       "bildHinzufuegen": "Afbeelding toevoegen",
       "objekteHinweis": "Codes van de accommodaties die hier moeten verschijnen.",
       "objektIdPlatzhalter": "Accommodatiecode",
-      "objektHinzufuegen": "Toevoegen"
+      "objektHinzufuegen": "Toevoegen",
+      "frageHinzufuegen": "Vraag toevoegen",
+      "fragenMax": "Meer dan {max} vragen zijn niet mogelijk."
     },
     "abschnitte": {
       "hero": "Titelafbeelding",
@@ -7363,7 +7372,9 @@
       "image": "Afbeelding",
       "imageHinweis": "Eén afbeelding met onderschrift.",
       "gallery": "Galerij",
-      "galleryHinweis": "Meerdere afbeeldingen als raster."
+      "galleryHinweis": "Meerdere afbeeldingen als raster.",
+      "faq": "Vragen en antwoorden",
+      "faqHinweis": "Uitklapbare vragen. Met structuur verschijnen ze ook in de zoekresultaten."
     },
     "felder": {
       "eyebrow": "Kleine regel erboven",
@@ -7404,7 +7415,10 @@
       "email": "E-mail",
       "telefon": "Telefoon",
       "adresse": "Adres",
-      "formularZeigen": "Contactformulier tonen"
+      "formularZeigen": "Contactformulier tonen",
+      "fragen": "Vragen",
+      "frage": "Vraag",
+      "antwort": "Antwoord"
     },
     "vorschau": {
       "titel": "Voorbeeld",
@@ -7558,6 +7572,121 @@
       "kopiert": "Code gekopieerd.",
       "kopierenFehler": "Kopiëren niet mogelijk — selecteer hem met de hand.",
       "keineDomain": "Een widget heeft uw eigen domein nodig: alleen dat werkt duurzaam op een andere pagina. Verbind het onder Instellingen → Adres."
+    },
+    "seo": {
+      "felder": {
+        "titel": "Meta title",
+        "titelHinweis": "Staat in het browsertabblad en als kop in het zoekresultaat. Houd ongeveer 60 tekens aan, daarna kapt Google af.",
+        "beschreibung": "Meta description",
+        "beschreibungHinweis": "De tekst onder de titel in het zoekresultaat. Die beïnvloedt de positie niet, maar wel of er geklikt wordt.",
+        "keywords": "Keywords",
+        "keywordsHinweis": "Gescheiden door komma’s. Google en Bing gebruiken ze niet meer — alleen kleinere directory’s doen dat nog.",
+        "canonical": "Canonical URL",
+        "canonicalHinweis": "Alleen nodig als dezelfde inhoud onder twee adressen te bereiken is. Leeg betekent: deze pagina is het origineel.",
+        "rueckfall": "Sitebreed"
+      },
+      "uebersicht": {
+        "titel": "Overzicht",
+        "hinweis": "De gegevens hier gelden voor de hele website. Ze werken op elke pagina die geen eigen gegevens heeft — het echte werk gebeurt onder ‘Pagina’s’.",
+        "metaTitel": "Sitebrede gegevens",
+        "metaHinweis": "Terugval voor alle pagina’s zonder eigen gegevens. Staat overal hetzelfde, dan is dat voor zoekmachines een teken van gebrek aan structuur.",
+        "indexTitel": "Zoekmachines",
+        "noindex": "Website niet indexeren",
+        "noindexHinweis": "Houdt de hele website uit de zoekindex. Voor een site in opbouw — zet het na de start weer uit, anders wordt hij nooit gevonden.",
+        "noindexWarnung": "Zolang deze schakelaar aan staat, levert de robots.txt ‘Disallow: /’ en is er geen sitemap.",
+        "tempoTitel": "Laadtijd (Core Web Vitals)",
+        "tempoHinweis": "Google weegt de laadtijd mee. Beide schakelaars werken direct op de website.",
+        "lazy": "Afbeeldingen pas laden bij scrollen",
+        "lazyHinweis": "Versnelt de eerste opbouw. Bij een grote afbeelding direct bovenaan de pagina kan het de weergave vertragen — zet het dan uit.",
+        "systemschrift": "Systeemlettertype tonen tot het eigen lettertype geladen is",
+        "systemschriftHinweis": "De tekst is direct leesbaar, maar de pagina wisselt zichtbaar van lettertype.",
+        "dateienTitel": "Wat zoekmachines ophalen",
+        "dateienHinweis": "Deze drie bestanden ontstaan automatisch uit de gegevens hierboven. De sitemap.xml hoort in Google Search Console — dat is de stap die de opname versnelt.",
+        "datei": {
+          "sitemap": "Alle adressen van de website met de datum van de laatste wijziging.",
+          "robots": "Wat gecrawld mag worden en waar de sitemap staat.",
+          "llms": "Korte versie van de website voor antwoordmachines zoals ChatGPT of Perplexity."
+        },
+        "keineDomain": "Nog geen eigen domein verbonden. De drie bestanden ontstaan zodra de website onder een eigen adres draait."
+      },
+      "seiten": {
+        "titel": "Pagina’s",
+        "hinweis": "Elke pagina heeft een eigen titel en een eigen beschrijving nodig. Dat is de belangrijkste hefboom die er is — hier staat waar iets ontbreekt.",
+        "startseite": "Startpagina",
+        "entwurf": "Concept",
+        "nichtIndexiert": "niet geïndexeerd",
+        "gepflegt": "compleet",
+        "fehltTitel": "Titel ontbreekt",
+        "fehltBeschreibung": "Beschrijving ontbreekt",
+        "fehltBeides": "Titel en beschrijving ontbreken",
+        "alleGepflegt": "Alle pagina’s hebben een titel en een beschrijving.",
+        "offeneLuecken": "{anzahl} pagina’s zonder titel of beschrijving.",
+        "noindex": "Deze pagina niet indexeren",
+        "noindexHinweis": "De pagina blijft via haar adres bereikbaar, maar verschijnt niet in zoekresultaten.",
+        "speichern": "Opslaan",
+        "gespeichert": "Opgeslagen.",
+        "ungespeichert": "Niet opgeslagen",
+        "keine": "Nog geen pagina’s aangemaakt."
+      },
+      "schema": {
+        "titel": "Gestructureerde data",
+        "hinweis": "Daarmee begrijpt een zoekmachine dat een prijs een prijs is en een adres een adres. Pas daardoor verschijnen sterren, prijzen en openingstijden in het zoekresultaat.",
+        "typenTitel": "Wat er wordt uitgeleverd",
+        "organization": "Bedrijf en adres",
+        "organizationHinweis": "Naam, adres, telefoon en e-mail uit het bedrijfsprofiel.",
+        "lodging": "Accommodaties met prijs",
+        "lodgingHinweis": "Per objectpagina: soort accommodatie, voorzieningen en de prijs van vandaag.",
+        "breadcrumbs": "Paginapad",
+        "breadcrumbsHinweis": "Laat in het zoekresultaat zien waar de pagina zich binnen de website bevindt.",
+        "faq": "Vragen en antwoorden",
+        "faqHinweis": "Alleen op pagina’s met een vraag-en-antwoordgedeelte.",
+        "quelleTitel": "Waar de gegevens vandaan komen",
+        "quelleHinweis": "Alle gegevens komen uit het bedrijfsprofiel en de objectgegevens — hier wordt niets dubbel ingevoerd. Ontbreekt een schema, dan ontbreekt meestal het adres in het profiel.",
+        "quelleKnopf": "Naar het bedrijfsprofiel"
+      },
+      "messung": {
+        "titel": "Meting",
+        "hinweis": "Bezoekersaantallen via Google. Eén veld voor alle vier de ID’s — welk product bedoeld is, ziet Google aan het voorvoegsel.",
+        "kennungTitel": "Google-ID",
+        "kennungHinweis": "Analytics (G-), oude versie (UA-), Google Ads (AW-) of Campaign Manager (DC-).",
+        "kennung": "ID",
+        "kennungFormat": "Bijvoorbeeld G-ABCD123456. Te vinden in Google Analytics onder Beheer → Gegevensstromen.",
+        "kennungFehler": "De ID moet beginnen met G-, UA-, AW- of DC-.",
+        "zustimmungTitel": "Toestemming",
+        "zustimmungHinweis": "Het script laadt, maar meet pas na toestemming van de bezoeker. Tot dan plaatst het geen Cookies.",
+        "zustimmungAktiv": "De Cookie-melding is actief. Er wordt pas gemeten nadat de bezoeker geklikt heeft.",
+        "zustimmungFehlt": "Zonder Cookie-melding wordt er direct gemeten. In de EU is daarvoor toestemming vereist.",
+        "zumHinweis": "Cookie-melding aanzetten"
+      },
+      "weiterleitungen": {
+        "titel": "Omleidingen",
+        "hinweis": "Oude adressen naar nieuwe omleiden. Nodig bij een verhuizing van een andere website — zonder omleiding komen bezoekers uit Google en uit nieuwsbrieven op een foutpagina terecht.",
+        "neuTitel": "Nieuwe omleiding",
+        "quelle": "Oud adres",
+        "ziel": "Nieuwe bestemming",
+        "typ": "Soort",
+        "typ301": "Permanent (301)",
+        "typ302": "Tijdelijk (302)",
+        "typ301Kurz": "permanent",
+        "typ302Kurz": "tijdelijk",
+        "anlegen": "Aanmaken",
+        "angelegt": "Omleiding aangemaakt.",
+        "geloescht": "Omleiding verwijderd.",
+        "loeschen": "Verwijderen",
+        "aktivieren": "Activeren",
+        "deaktivieren": "Deactiveren",
+        "listeTitel": "Bestaande omleidingen",
+        "keine": "Nog geen omleidingen aangemaakt.",
+        "wirdGespeichert": "Dit wordt opgeslagen:",
+        "nurPfad": "Alleen het pad wordt opgeslagen:",
+        "csvImport": "CSV inlezen",
+        "csvFormat": "Twee kolommen: oud adres, nieuwe bestemming. Maximaal 200 regels.",
+        "dateiZuGross": "Het bestand is te groot (maximaal 200 KB).",
+        "dateiLeer": "In het bestand is geen geldige regel gevonden.",
+        "importErgebnis": "{neu} nieuw, {geaendert} gewijzigd, {uebersprungen} overgeslagen.",
+        "weitereFehler": "{anzahl} andere regels met fouten.",
+        "vorrangHinweis": "Een omleiding werkt alleen als er onder het oude adres geen pagina bestaat. Een bestaande pagina heeft altijd voorrang."
+      }
     }
   },
   "dynamicPricing": {

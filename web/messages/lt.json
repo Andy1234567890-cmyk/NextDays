@@ -239,12 +239,10 @@
       "staff": "Personalas",
       "jobs": "Darbai",
       "reservations": "Rezervacijos",
-      "distribution": "Platinimas",
       "hotel": "Viešbutis",
       "vacationRentals": "Atostogų būstai",
       "accounting": "Apskaita",
       "guests": "Svečiai",
-      "tools": "Įrankiai",
       "website": "Svetainės kūrimas"
     },
     "roles": {
@@ -4253,6 +4251,14 @@
       "learnBody": {
         "auto": "Suplanuota užduotis sukuriama automatiškai kiekvieno pasirinktų vietų užsakymo metu — su pradžia ir pabaiga atvykimo ir išvykimo atžvilgiu.",
         "recurring": "Pasikartojanti užduotis seka kalendorių: pradžios data, dažnumas ir trukmė. Sistema įvykius sukuria iš anksto — nepriklausomai nuo užsakymų."
+      },
+      "deckung": {
+        "titel": "Vietos be planinės užduoties",
+        "text": "{count} iš {total} vietų nepasiekia jokia taisyklė. Joms niekada nebus sukurta atvykimo ar valymo užduotis.",
+        "hinweis": "Taisyklė be pasirinktos vietos taikoma visoms vietoms — įskaitant vėliau sukurtas.",
+        "nurAnreise": "nėra atvykimo taisyklės",
+        "nurAbreise": "nėra išvykimo taisyklės",
+        "keine": "nėra taisyklės"
       }
     },
     "statsCards": {
@@ -7113,7 +7119,8 @@
       "seiten": "Puslapiai",
       "einstellungen": "Nustatymai",
       "objekte": "Objektai",
-      "widgets": "Valdikliai"
+      "widgets": "Valdikliai",
+      "seo": "SEO"
     },
     "kopf": {
       "websiteAnsehen": "Peržiūrėti svetainę",
@@ -7339,7 +7346,9 @@
       "bildHinzufuegen": "Pridėti nuotrauką",
       "objekteHinweis": "Objektų, kurie čia bus rodomi, kodai.",
       "objektIdPlatzhalter": "Objekto kodas",
-      "objektHinzufuegen": "Pridėti"
+      "objektHinzufuegen": "Pridėti",
+      "frageHinzufuegen": "Pridėti klausimą",
+      "fragenMax": "Daugiau nei {max} klausimų neįmanoma."
     },
     "abschnitte": {
       "hero": "Titulinė nuotrauka",
@@ -7363,7 +7372,9 @@
       "image": "Nuotrauka",
       "imageHinweis": "Viena nuotrauka su parašu.",
       "gallery": "Galerija",
-      "galleryHinweis": "Kelios nuotraukos tinkleliu."
+      "galleryHinweis": "Kelios nuotraukos tinkleliu.",
+      "faq": "Klausimai ir atsakymai",
+      "faqHinweis": "Išskleidžiami klausimai. Su struktūriniais duomenimis jie rodomi ir paieškos rezultatuose."
     },
     "felder": {
       "eyebrow": "Maža eilutė viršuje",
@@ -7404,7 +7415,10 @@
       "email": "El. paštas",
       "telefon": "Telefonas",
       "adresse": "Adresas",
-      "formularZeigen": "Rodyti kontaktų formą"
+      "formularZeigen": "Rodyti kontaktų formą",
+      "fragen": "Klausimai",
+      "frage": "Klausimas",
+      "antwort": "Atsakymas"
     },
     "vorschau": {
       "titel": "Peržiūra",
@@ -7558,6 +7572,121 @@
       "kopiert": "Kodas nukopijuotas.",
       "kopierenFehler": "Kopijuoti neįmanoma — pažymėkite ranka.",
       "keineDomain": "Valdikliui reikia jūsų domeno: tik jis ilgai veikia svetimoje svetainėje. Sujunkite jį skyriuje Nustatymai → Adresas."
+    },
+    "seo": {
+      "felder": {
+        "titel": "Meta antraštė",
+        "titelHinweis": "Rodoma naršyklės skirtuke ir kaip antraštė paieškos rezultate. Apie 60 simbolių, po to Google ją nukerpa.",
+        "beschreibung": "Meta aprašas",
+        "beschreibungHinweis": "Tekstas po antrašte paieškos rezultate. Jis neturi įtakos vietai rezultatuose, bet turi įtakos tam, ar bus spustelėta.",
+        "keywords": "Reikšminiai žodžiai",
+        "keywordsHinweis": "Atskirti kableliais. Google ir Bing jų nebevertina — tik mažesni katalogai.",
+        "canonical": "Kanoninis adresas",
+        "canonicalHinweis": "Reikalingas tik tada, kai tas pats turinys prieinamas dviem adresais. Tuščias reiškia: šis puslapis yra originalas.",
+        "rueckfall": "Visai svetainei"
+      },
+      "uebersicht": {
+        "titel": "Apžvalga",
+        "hinweis": "Čia nurodyti duomenys taikomi visai svetainei. Jie veikia kiekviename puslapyje, kuris neturi savų — pats darbas atliekamas skiltyje „Puslapiai“.",
+        "metaTitel": "Visai svetainei bendri duomenys",
+        "metaHinweis": "Atsarginis variantas visiems puslapiams be savų duomenų. Jei visur yra tas pats tekstas, paieškos sistemoms tai yra struktūros trūkumo ženklas.",
+        "indexTitel": "Paieškos sistemos",
+        "noindex": "Neindeksuoti svetainės",
+        "noindexHinweis": "Laiko visą svetainę už paieškos indekso. Tinka dar kuriamai svetainei — po paleidimo vėl išjunkite, kitaip svetainė niekada nebus surasta.",
+        "noindexWarnung": "Kol šis jungiklis įjungtas, robots.txt grąžina „Disallow: /“ ir Sitemap nėra.",
+        "tempoTitel": "Įkėlimo laikas (Core Web Vitals)",
+        "tempoHinweis": "Google vertina ir įkėlimo laiką. Abu jungikliai svetainėje veikia iš karto.",
+        "lazy": "Įkelti vaizdus tik slenkant",
+        "lazyHinweis": "Pagreitina pirmą atvaizdavimą. Jei pačioje puslapio pradžioje yra didelis vaizdas, tai gali atvaizdavimą sulėtinti — tada išjunkite.",
+        "systemschrift": "Rodyti sistemos šriftą, kol įkeliamas savas",
+        "systemschriftHinweis": "Tekstas iš karto įskaitomas, bet puslapis matomai pakeičia šriftą.",
+        "dateienTitel": "Ką paieškos sistemos atsisiunčia",
+        "dateienHinweis": "Šie trys failai sukuriami automatiškai iš viršuje nurodytų duomenų. Failas sitemap.xml turi būti įtrauktas į Google Search Console — tai žingsnis, kuris pagreitina įtraukimą į indeksą.",
+        "datei": {
+          "sitemap": "Visi svetainės adresai su paskutinio pakeitimo data.",
+          "robots": "Ką leidžiama naršyti ir kur yra Sitemap.",
+          "llms": "Trumpa svetainės versija atsakymų sistemoms, tokioms kaip ChatGPT ar Perplexity."
+        },
+        "keineDomain": "Savo domenas dar nepridėtas. Šie trys failai sukuriami vos svetainė pradeda veikti savu adresu."
+      },
+      "seiten": {
+        "titel": "Puslapiai",
+        "hinweis": "Kiekvienam puslapiui reikia savos antraštės ir savo aprašo. Tai pati svarbiausia svirtis — čia matoma, kur ko nors trūksta.",
+        "startseite": "Pradinis puslapis",
+        "entwurf": "Juodraštis",
+        "nichtIndexiert": "neindeksuojamas",
+        "gepflegt": "užpildyta",
+        "fehltTitel": "Trūksta antraštės",
+        "fehltBeschreibung": "Trūksta aprašo",
+        "fehltBeides": "Trūksta antraštės ir aprašo",
+        "alleGepflegt": "Visi puslapiai turi antraštę ir aprašą.",
+        "offeneLuecken": "{anzahl} puslapių be antraštės arba aprašo.",
+        "noindex": "Neindeksuoti šio puslapio",
+        "noindexHinweis": "Puslapis lieka prieinamas savo adresu, bet nerodomas paieškos rezultatuose.",
+        "speichern": "Išsaugoti",
+        "gespeichert": "Išsaugota.",
+        "ungespeichert": "Neišsaugota",
+        "keine": "Dar nesukurta nė vieno puslapio."
+      },
+      "schema": {
+        "titel": "Struktūriniai duomenys",
+        "hinweis": "Taip paieškos sistema supranta, kad kaina yra kaina, o adresas yra adresas. Tik dėl to paieškos rezultate atsiranda žvaigždutės, kainos ir darbo laikas.",
+        "typenTitel": "Kas pateikiama",
+        "organization": "Įmonė ir adresas",
+        "organizationHinweis": "Pavadinimas, adresas, telefonas ir el. paštas iš įmonės profilio.",
+        "lodging": "Apgyvendinimas su kaina",
+        "lodgingHinweis": "Kiekviename objekto puslapyje: apgyvendinimo rūšis, įranga ir dienos kaina.",
+        "breadcrumbs": "Puslapio kelias",
+        "breadcrumbsHinweis": "Paieškos rezultate parodo, kur puslapis yra svetainės viduje.",
+        "faq": "Klausimai ir atsakymai",
+        "faqHinweis": "Tik puslapiuose, kuriuose yra klausimų ir atsakymų skyrius.",
+        "quelleTitel": "Iš kur atkeliauja duomenys",
+        "quelleHinweis": "Visi duomenys ateina iš įmonės profilio ir objektų duomenų — čia nieko nereikia įvesti antrą kartą. Jei kurios nors schemos nėra, dažniausiai profilyje trūksta adreso.",
+        "quelleKnopf": "Į įmonės profilį"
+      },
+      "messung": {
+        "titel": "Matavimas",
+        "hinweis": "Apsilankymų skaičius per Google. Vienas laukas visiems keturiems identifikatoriams — kuris produktas turimas galvoje, Google atpažįsta iš priešdėlio.",
+        "kennungTitel": "Google identifikatorius",
+        "kennungHinweis": "Analytics (G-), senasis (UA-), Google Ads (AW-) arba Campaign Manager (DC-).",
+        "kennung": "Identifikatorius",
+        "kennungFormat": "Pavyzdžiui, G-ABCD123456. Rasite Google Analytics skiltyje Administravimas → Duomenų srautai.",
+        "kennungFehler": "Identifikatorius turi prasidėti G-, UA-, AW- arba DC-.",
+        "zustimmungTitel": "Sutikimas",
+        "zustimmungHinweis": "Skriptas įkeliamas, bet matuoja tik gavęs lankytojo sutikimą. Iki tol jis nenustato jokio Cookie failo.",
+        "zustimmungAktiv": "Cookie pranešimas įjungtas. Matuojama tik lankytojui spustelėjus.",
+        "zustimmungFehlt": "Be Cookie pranešimo matuojama iš karto. Europos Sąjungoje tam reikia sutikimo.",
+        "zumHinweis": "Įjungti Cookie pranešimą"
+      },
+      "weiterleitungen": {
+        "titel": "Peradresavimai",
+        "hinweis": "Nukreipia senus adresus į naujus. Reikalinga persikeliant iš kitos svetainės — be peradresavimo lankytojai iš Google ir iš naujienlaiškių atsiduria klaidos puslapyje.",
+        "neuTitel": "Naujas peradresavimas",
+        "quelle": "Senas adresas",
+        "ziel": "Naujas tikslas",
+        "typ": "Rūšis",
+        "typ301": "Nuolatinis (301)",
+        "typ302": "Laikinas (302)",
+        "typ301Kurz": "nuolatinis",
+        "typ302Kurz": "laikinas",
+        "anlegen": "Sukurti",
+        "angelegt": "Peradresavimas sukurtas.",
+        "geloescht": "Peradresavimas ištrintas.",
+        "loeschen": "Ištrinti",
+        "aktivieren": "Įjungti",
+        "deaktivieren": "Išjungti",
+        "listeTitel": "Esami peradresavimai",
+        "keine": "Dar nesukurta nė vieno peradresavimo.",
+        "wirdGespeichert": "Bus išsaugota:",
+        "nurPfad": "Bus išsaugotas tik kelias:",
+        "csvImport": "Įkelti CSV",
+        "csvFormat": "Du stulpeliai: senas adresas, naujas tikslas. Daugiausia 200 eilučių.",
+        "dateiZuGross": "Failas per didelis (daugiausia 200 KB).",
+        "dateiLeer": "Faile nerasta nė vienos tinkamos eilutės.",
+        "importErgebnis": "{neu} nauji, {geaendert} pakeisti, {uebersprungen} praleisti.",
+        "weitereFehler": "Dar {anzahl} eilutės su klaidomis.",
+        "vorrangHinweis": "Peradresavimas veikia tik tada, kai senuoju adresu nėra puslapio. Esamas puslapis visada turi pirmenybę."
+      }
     }
   },
   "dynamicPricing": {

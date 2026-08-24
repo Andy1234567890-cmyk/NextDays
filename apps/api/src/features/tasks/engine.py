@@ -65,9 +65,24 @@ _ENDSTATUS = frozenset({"cancelled", "declined", "expired"})
 # Buchung, die nur noch nicht bezahlt ist.
 _UNVERBINDLICH = frozenset({"requested"})
 
+# Wie weit der Nachzug ZURÜCK schaut. Ein Fenster nur ab heute lässt genau die
+# Arbeit unsichtbar, die liegen geblieben ist: live fehlten am 23.08.2026 fünf
+# Reinigungen zu fünf Abreisen dieses Tages, und ab dem 24. hätte der Lauf sie
+# nie mehr angefasst — der Tag wäre für immer leer geblieben, obwohl niemand
+# weiß, ob geputzt wurde. Zwei Wochen sind der Zeitraum, in dem eine offene
+# Reinigung noch eine Aussage ist; weiter zurück wäre sie Archiv-Rauschen.
+NACHZUG_RUECKBLICK_TAGE = 14
+
 # Wie viele Reservierungen ein Nachzieh-Lauf je Tenant betrachtet (Wurzel 8:
-# jeder unbegrenzte Bereich bekommt eine Obergrenze).
-MAX_NACHZUG_RESERVIERUNGEN = 500
+# jeder unbegrenzte Bereich bekommt eine Obergrenze). Der Lauf arbeitet in
+# Seiten bis hierhin — eine einzelne `limit`-Abfrage hätte bei einem großen
+# Betrieb IMMER dieselben ersten 500 geholt, und der Rest wäre nie dran
+# gekommen: eine stille Grenze, die wie „fertig" aussieht.
+MAX_NACHZUG_RESERVIERUNGEN = 5000
+
+# Seitengröße je Abfrage. Eine Zeile ist klein; die Grenze ist die URL-Länge
+# der `in_`-Liste im Aufgaben-Abgleich, nicht der Speicher.
+_NACHZUG_SEITE = 200
 
 # PostgREST bekommt `in_`-Listen über die URL — in Blöcken, nicht als eine
 # Riesenliste.
@@ -395,27 +410,16 @@ def _insert_task(
 # ---------------------------------------------------------------------------
 
 
-def _regel_anwenden(
-    db: Client,
-    tenant_id: str,
+def _regel_zeitfenster(
     rule: dict[str, object],
     reservation: dict[str, object],
     anchors: tuple[datetime, datetime],
-    items: list[dict[str, object]],
-    known: dict[str, object] | None,
-    *,
-    verschieben: bool = True,
-) -> bool:
-    """EINE planmäßige Regel auf EINE Reservierung anwenden.
+) -> tuple[datetime, datetime | None] | None:
+    """Start- und Endzeitpunkt einer planmäßigen Regel für diese Buchung.
 
-    Der gemeinsame Kern von `sync_for_reservation` (ein Schreibpfad, alle
-    Regeln einer Buchung) und `nachziehen_planmaessig` (ein Tick, alle
-    Buchungen einer Regel). Rückgabe: True, wenn eine Aufgabe entstand oder
-    verschoben wurde.
-
-    `verschieben=False` legt nur Fehlendes an und lässt Vorhandenes in Ruhe —
-    so schreibt der stündliche Abgleich nicht bei jedem Lauf dieselben Werte
-    erneut in jede Aufgabe (Realtime-Rauschen, Schreiblast ohne Änderung).
+    `None`, wenn die Regel (noch) nichts auslösen kann — kaputter oder
+    fehlender Start-Trigger. Beides ist kein Fehler des Aufrufers: eine
+    halbfertige Regel darf die übrigen nicht mitreißen.
     """
     try:
         start = _trigger_time(
@@ -431,15 +435,49 @@ def _regel_anwenden(
             anchors,
         )
     except RuleEngineError as exc:
-        # Eine kaputt konfigurierte Regel darf die übrigen nicht mitreißen.
         log.warning("task_rule_trigger_unbekannt", rule_id=rule["id"], error=str(exc))
-        return False
+        return None
     if start is None:
-        # Ohne Start-Trigger kann die Regel nichts auslösen — sie ist noch
-        # nicht fertig konfiguriert, kein Grund für einen Fehler.
-        return False
+        # Ohne Start-Trigger ist die Regel noch nicht fertig konfiguriert.
+        return None
     if end is None and rule.get("duration_minutes"):
         end = start + timedelta(minutes=int(rule["duration_minutes"]))
+    return start, end
+
+
+def _regel_anwenden(
+    db: Client,
+    tenant_id: str,
+    rule: dict[str, object],
+    reservation: dict[str, object],
+    anchors: tuple[datetime, datetime],
+    items: list[dict[str, object]],
+    known: dict[str, object] | None,
+    *,
+    verschieben: bool = True,
+    nicht_vor: datetime | None = None,
+) -> bool:
+    """EINE planmäßige Regel auf EINE Reservierung anwenden.
+
+    Der gemeinsame Kern von `sync_for_reservation` (ein Schreibpfad, alle
+    Regeln einer Buchung) und `nachziehen_planmaessig` (ein Tick, alle
+    Buchungen einer Regel). Rückgabe: True, wenn eine Aufgabe entstand oder
+    verschoben wurde.
+
+    `verschieben=False` legt nur Fehlendes an und lässt Vorhandenes in Ruhe —
+    so schreibt der stündliche Abgleich nicht bei jedem Lauf dieselben Werte
+    erneut in jede Aufgabe (Realtime-Rauschen, Schreiblast ohne Änderung).
+
+    `nicht_vor` verwirft Aufgaben, deren Termin länger zurückliegt: einen
+    Willkommens-Check für eine Anreise von vor drei Wochen nachträglich als
+    OFFEN anzulegen wäre eine Falschmeldung, nicht ein Fund.
+    """
+    fenster = _regel_zeitfenster(rule, reservation, anchors)
+    if fenster is None:
+        return False
+    start, end = fenster
+    if nicht_vor is not None and (end or start) < nicht_vor:
+        return False
 
     property_id = reservation.get("property_id")
     if known:
@@ -483,6 +521,7 @@ def nachziehen_planmaessig(
     *,
     today: date,
     horizon_days: int = HORIZON_DAYS,
+    rueckblick_tage: int = NACHZUG_RUECKBLICK_TAGE,
     rule_id: str | None = None,
 ) -> int:
     """Planmäßige Regeln gegen ALLE Buchungen im Fenster abgleichen.
@@ -518,29 +557,84 @@ def nachziehen_planmaessig(
     assignments = _rule_properties(db, [str(r["id"]) for r in rules])
     items = _template_items(db, tenant_id, {_checklist_source(r) for r in rules})
 
-    # Fenster: alles, was noch nicht abgereist ist, bis zum Horizont. Eine
-    # Buchung, die schon abgereist ist, braucht keine Anreise-Aufgabe mehr.
-    reservations = (
-        db.table("reservations")
-        .select(
-            "id, property_id, status, check_in, check_out, "
-            "checkin_time, checkout_time, created_at"
-        )
-        .eq("tenant_id", tenant_id)
-        .gte("check_out", today.isoformat())
-        .lte("check_in", (today + timedelta(days=horizon_days)).isoformat())
-        .not_.in_("status", list(_ENDSTATUS | _UNVERBINDLICH))
-        .order("check_in")
-        .limit(MAX_NACHZUG_RESERVIERUNGEN)
-        .execute()
-    ).data or []
-    if not reservations:
-        return 0
+    # Fenster: vom Rückblick bis zum Horizont. Der Rückblick ist kein Komfort,
+    # sondern der Unterschied zwischen „keine Aufgabe" und „keine Arbeit": eine
+    # Abreise von vorgestern ohne Reinigungsaufgabe ist offene Arbeit, die
+    # niemand sieht.
+    # Dieselbe Grenze wie beim Buchungsfenster, aber auf den AUFGABEN-Termin
+    # angewandt: eine Buchung kann im Rückblick liegen und ihre Anreise-Aufgabe
+    # trotzdem weit davor (langer Aufenthalt).
+    fruehester_termin = _at(today - timedelta(days=rueckblick_tage), None)
+    von = (today - timedelta(days=rueckblick_tage)).isoformat()
+    bis = (today + timedelta(days=horizon_days)).isoformat()
 
+    created = 0
+    gesehen = 0
+    while gesehen < MAX_NACHZUG_RESERVIERUNGEN:
+        reservations = (
+            db.table("reservations")
+            .select(
+                "id, property_id, status, check_in, check_out, "
+                "checkin_time, checkout_time, created_at"
+            )
+            .eq("tenant_id", tenant_id)
+            .gte("check_out", von)
+            .lte("check_in", bis)
+            .not_.in_("status", list(_ENDSTATUS | _UNVERBINDLICH))
+            # Nach `id` sortiert, nicht nach `check_in`: die Seitengrenze muss
+            # eindeutig sein, sonst kann eine Zeile bei gleichem Datum zwischen
+            # zwei Seiten verschwinden oder doppelt kommen.
+            .order("id")
+            .range(gesehen, gesehen + _NACHZUG_SEITE - 1)
+            .execute()
+        ).data or []
+        if not reservations:
+            break
+        gesehen += len(reservations)
+        created += _nachzug_seite(
+            db,
+            tenant_id,
+            rules,
+            reservations,
+            assignments,
+            items,
+            fruehester_termin,
+        )
+        if len(reservations) < _NACHZUG_SEITE:
+            break
+
+    if created:
+        log.info(
+            "task_rules_nachgezogen",
+            tenant_id=tenant_id,
+            rules=len(rules),
+            reservations=gesehen,
+            created=created,
+        )
+    if gesehen >= MAX_NACHZUG_RESERVIERUNGEN:
+        # Keine stille Deckelung: was der Lauf nicht erreicht hat, muss man
+        # sehen können (sonst liest sich „fertig" wie „alles abgedeckt").
+        log.warning(
+            "task_rules_nachzug_gedeckelt",
+            tenant_id=tenant_id,
+            limit=MAX_NACHZUG_RESERVIERUNGEN,
+        )
+    return created
+
+
+def _nachzug_seite(
+    db: Client,
+    tenant_id: str,
+    rules: list[dict[str, object]],
+    reservations: list[dict[str, object]],
+    assignments: dict[str, set[str]],
+    items: dict[str, list[dict[str, object]]],
+    fruehester_termin: datetime,
+) -> int:
+    """Eine Seite Reservierungen gegen die Regeln abgleichen."""
     known = _vorhandene_aufgaben(
         db, tenant_id, [str(r["id"]) for r in reservations]
     )
-
     created = 0
     for reservation in reservations:
         anchors = _reservation_anchors(reservation)
@@ -561,25 +655,9 @@ def nachziehen_planmaessig(
                 items.get(_checklist_source(rule), []),
                 known.get((reservation_id, str(rule["id"]))),
                 verschieben=False,
+                nicht_vor=fruehester_termin,
             ):
                 created += 1
-
-    if created:
-        log.info(
-            "task_rules_nachgezogen",
-            tenant_id=tenant_id,
-            rules=len(rules),
-            reservations=len(reservations),
-            created=created,
-        )
-    if len(reservations) == MAX_NACHZUG_RESERVIERUNGEN:
-        # Keine stille Deckelung: was der Lauf nicht erreicht hat, muss man
-        # sehen können (sonst liest sich „fertig" wie „alles abgedeckt").
-        log.warning(
-            "task_rules_nachzug_gedeckelt",
-            tenant_id=tenant_id,
-            limit=MAX_NACHZUG_RESERVIERUNGEN,
-        )
     return created
 
 

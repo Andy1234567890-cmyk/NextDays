@@ -239,12 +239,10 @@
       "staff": "Personál",
       "jobs": "Pracovné miesta",
       "reservations": "Rezervácie",
-      "distribution": "Distribúcia",
       "hotel": "Hotel",
       "vacationRentals": "Rekreačné objekty",
       "accounting": "Účtovníctvo",
       "guests": "Hostia",
-      "tools": "Nástroje",
       "website": "Tvorba webu"
     },
     "roles": {
@@ -4253,6 +4251,14 @@
       "learnBody": {
         "auto": "Plánovaná úloha vzniká automaticky pri každej rezervácii vybraných ubytovaní — so začiatkom a koncom vzhľadom na príchod a odchod.",
         "recurring": "Opakovaná úloha sa riadi kalendárom: dátum začiatku, frekvencia a trvanie. Systém termíny zakladá vopred — nezávisle od rezervácií."
+      },
+      "deckung": {
+        "titel": "Ubytovania bez plánovanej úlohy",
+        "text": "{count} z {total} ubytovaní nie je pokrytých žiadnym pravidlom. Nikdy tam nevznikne úloha príchodu ani úklidu.",
+        "hinweis": "Pravidlo bez výberu ubytovania platí pre všetky ubytovania — aj pre neskôr vytvorené.",
+        "nurAnreise": "žiadne pravidlo príchodu",
+        "nurAbreise": "žiadne pravidlo odchodu",
+        "keine": "žiadne pravidlo"
       }
     },
     "statsCards": {
@@ -7113,7 +7119,8 @@
       "seiten": "Stránky",
       "einstellungen": "Nastavenia",
       "objekte": "Objekty",
-      "widgets": "Widgety"
+      "widgets": "Widgety",
+      "seo": "SEO"
     },
     "kopf": {
       "websiteAnsehen": "Zobraziť web",
@@ -7339,7 +7346,9 @@
       "bildHinzufuegen": "Pridať obrázok",
       "objekteHinweis": "Identifikátory objektov, ktoré sa tu majú zobraziť.",
       "objektIdPlatzhalter": "Identifikátor objektu",
-      "objektHinzufuegen": "Pridať"
+      "objektHinzufuegen": "Pridať",
+      "frageHinzufuegen": "Pridať otázku",
+      "fragenMax": "Viac ako {max} otázok nie je možné."
     },
     "abschnitte": {
       "hero": "Hlavný obrázok",
@@ -7363,7 +7372,9 @@
       "image": "Obrázok",
       "imageHinweis": "Obrázok s popisom.",
       "gallery": "Galéria",
-      "galleryHinweis": "Viac obrázkov v mriežke."
+      "galleryHinweis": "Viac obrázkov v mriežke.",
+      "faq": "Otázky a odpovede",
+      "faqHinweis": "Rozbaľovacie otázky. So štruktúrou sa zobrazia aj vo výsledkoch hľadania."
     },
     "felder": {
       "eyebrow": "Malý riadok nad nadpisom",
@@ -7404,7 +7415,10 @@
       "email": "E-mail",
       "telefon": "Telefón",
       "adresse": "Adresa",
-      "formularZeigen": "Zobraziť kontaktný formulár"
+      "formularZeigen": "Zobraziť kontaktný formulár",
+      "fragen": "Otázky",
+      "frage": "Otázka",
+      "antwort": "Odpoveď"
     },
     "vorschau": {
       "titel": "Náhľad",
@@ -7558,6 +7572,121 @@
       "kopiert": "Kód skopírovaný.",
       "kopierenFehler": "Kopírovanie nie je možné — označte ho ručne.",
       "keineDomain": "Widget potrebuje vašu vlastnú doménu: iba tá funguje trvale na cudzom webe. Pripojte ju v Nastavenia → Adresa."
+    },
+    "seo": {
+      "felder": {
+        "titel": "Meta titulok",
+        "titelHinweis": "Zobrazuje sa na karte prehliadača a ako nadpis vo výsledku hľadania. Okolo 60 znakov, ďalej to Google skracuje.",
+        "beschreibung": "Meta popis",
+        "beschreibungHinweis": "Text pod titulkom vo výsledku hľadania. Neovplyvňuje pozíciu, ale to, či niekto klikne.",
+        "keywords": "Kľúčové slová",
+        "keywordsHinweis": "Oddelené čiarkami. Google a Bing ich už nevyhodnocujú — len pre menšie katalógy.",
+        "canonical": "Kanonická adresa",
+        "canonicalHinweis": "Potrebná len vtedy, keď je ten istý obsah dostupný na dvoch adresách. Prázdne pole znamená: táto stránka je originál.",
+        "rueckfall": "Pre celý web"
+      },
+      "uebersicht": {
+        "titel": "Prehľad",
+        "hinweis": "Údaje tu platia pre celý web. Uplatnia sa na každej stránke, ktorá nemá vlastné — hlavná práca sa deje v časti „Stránky“.",
+        "metaTitel": "Údaje pre celý web",
+        "metaHinweis": "Záloha pre všetky stránky bez vlastných údajov. Ak sú všade tie isté, je to pre vyhľadávače znak chýbajúcej štruktúry.",
+        "indexTitel": "Vyhľadávače",
+        "noindex": "Web neindexovať",
+        "noindexHinweis": "Drží celý web mimo indexu hľadania. Pre web vo výstavbe — po spustení znova vypnúť, inak ho nikto nenájde.",
+        "noindexWarnung": "Kým je tento prepínač zapnutý, robots.txt vracia „Disallow: /“ a nevzniká žiadna sitemap.",
+        "tempoTitel": "Rýchlosť načítania (Core Web Vitals)",
+        "tempoHinweis": "Google rýchlosť načítania zohľadňuje. Oba prepínače sa na webe prejavia okamžite.",
+        "lazy": "Obrázky načítať až pri posúvaní",
+        "lazyHinweis": "Zrýchli prvé zobrazenie. Pri veľkom obrázku hneď na začiatku stránky môže zobrazenie spomaliť — potom vypnúť.",
+        "systemschrift": "Zobraziť systémové písmo, kým sa nenačíta vlastné",
+        "systemschriftHinweis": "Text je čitateľný okamžite, stránka však viditeľne zmení písmo.",
+        "dateienTitel": "Čo si vyhľadávače sťahujú",
+        "dateienHinweis": "Tieto tri súbory vznikajú automaticky z údajov vyššie. Súbor sitemap.xml patrí do Google Search Console — to je krok, ktorý zaradenie zrýchli.",
+        "datei": {
+          "sitemap": "Všetky adresy webu s dátumom poslednej zmeny.",
+          "robots": "Čo sa smie prechádzať a kde leží sitemap.",
+          "llms": "Skrátená verzia webu pre odpovedacie stroje ako ChatGPT alebo Perplexity."
+        },
+        "keineDomain": "Zatiaľ nie je pripojená vlastná doména. Tieto tri súbory vzniknú, len čo web pobeží na vlastnej adrese."
+      },
+      "seiten": {
+        "titel": "Stránky",
+        "hinweis": "Každá stránka potrebuje vlastný titulok a vlastný popis. To je vôbec najdôležitejšia páka — tu je vidieť, kde niečo chýba.",
+        "startseite": "Úvodná stránka",
+        "entwurf": "Návrh",
+        "nichtIndexiert": "neindexované",
+        "gepflegt": "úplné",
+        "fehltTitel": "Chýba titulok",
+        "fehltBeschreibung": "Chýba popis",
+        "fehltBeides": "Chýba titulok a popis",
+        "alleGepflegt": "Všetky stránky majú titulok a popis.",
+        "offeneLuecken": "{anzahl} stránok bez titulku alebo popisu.",
+        "noindex": "Túto stránku neindexovať",
+        "noindexHinweis": "Stránka zostane dostupná na svojej adrese, ale neobjaví sa vo výsledkoch hľadania.",
+        "speichern": "Uložiť",
+        "gespeichert": "Uložené.",
+        "ungespeichert": "Neuložené",
+        "keine": "Zatiaľ nie sú vytvorené žiadne stránky."
+      },
+      "schema": {
+        "titel": "Štruktúrované dáta",
+        "hinweis": "Vďaka nim vyhľadávač pochopí, že cena je cena a adresa je adresa. Až potom sa vo výsledku hľadania objavia hviezdičky, ceny a otváracie hodiny.",
+        "typenTitel": "Čo sa odosiela",
+        "organization": "Prevádzka a adresa",
+        "organizationHinweis": "Názov, adresa, telefón a e-mail z firemného profilu.",
+        "lodging": "Ubytovanie s cenou",
+        "lodgingHinweis": "Na každej stránke objektu: druh ubytovania, vybavenie a aktuálna denná cena.",
+        "breadcrumbs": "Cesta stránkou",
+        "breadcrumbsHinweis": "Vo výsledku hľadania ukazuje, kde stránka v rámci webu leží.",
+        "faq": "Otázky a odpovede",
+        "faqHinweis": "Len na stránkach s oddielom otázok a odpovedí.",
+        "quelleTitel": "Odkiaľ údaje pochádzajú",
+        "quelleHinweis": "Všetky údaje pochádzajú z firemného profilu a z dát objektov — nič sa tu nezadáva druhýkrát. Ak schéma chýba, chýba väčšinou adresa v profile.",
+        "quelleKnopf": "Na firemný profil"
+      },
+      "messung": {
+        "titel": "Meranie",
+        "hinweis": "Počty návštevníkov cez Google. Jedno pole pre všetky štyri ID — o ktorý produkt ide, pozná Google podľa predpony.",
+        "kennungTitel": "ID Google",
+        "kennungHinweis": "Analytics (G-), starší formát (UA-), Google Ads (AW-) alebo Campaign Manager (DC-).",
+        "kennung": "ID",
+        "kennungFormat": "Napríklad G-ABCD123456. Nájdete ho v Google Analytics v časti Správa → Dátové streamy.",
+        "kennungFehler": "ID musí začínať na G-, UA-, AW- alebo DC-.",
+        "zustimmungTitel": "Súhlas",
+        "zustimmungHinweis": "Skript sa načíta, ale meria až po súhlase návštevníka. Dovtedy nenastavuje žiadne Cookie.",
+        "zustimmungAktiv": "Upozornenie na Cookie je aktívne. Meria sa až po kliknutí návštevníka.",
+        "zustimmungFehlt": "Bez upozornenia na Cookie sa meria okamžite. V EÚ je na to potrebný súhlas.",
+        "zumHinweis": "Zapnúť upozornenie na Cookie"
+      },
+      "weiterleitungen": {
+        "titel": "Presmerovania",
+        "hinweis": "Presmerovanie starých adries na nové. Potrebné pri prechode z iného webu — bez presmerovania skončia návštevníci z Google a z newsletterov na chybovej stránke.",
+        "neuTitel": "Nové presmerovanie",
+        "quelle": "Stará adresa",
+        "ziel": "Nový cieľ",
+        "typ": "Druh",
+        "typ301": "Trvalé (301)",
+        "typ302": "Dočasné (302)",
+        "typ301Kurz": "trvalé",
+        "typ302Kurz": "dočasné",
+        "anlegen": "Vytvoriť",
+        "angelegt": "Presmerovanie vytvorené.",
+        "geloescht": "Presmerovanie odstránené.",
+        "loeschen": "Odstrániť",
+        "aktivieren": "Aktivovať",
+        "deaktivieren": "Deaktivovať",
+        "listeTitel": "Existujúce presmerovania",
+        "keine": "Zatiaľ nie sú vytvorené žiadne presmerovania.",
+        "wirdGespeichert": "Uloží sa:",
+        "nurPfad": "Uloží sa len cesta:",
+        "csvImport": "Načítať CSV",
+        "csvFormat": "Dva stĺpce: stará adresa, nový cieľ. Najviac 200 riadkov.",
+        "dateiZuGross": "Súbor je príliš veľký (najviac 200 KB).",
+        "dateiLeer": "V súbore sa nenašiel žiadny platný riadok.",
+        "importErgebnis": "{neu} nových, {geaendert} zmenených, {uebersprungen} preskočených.",
+        "weitereFehler": "{anzahl} ďalších riadkov s chybami.",
+        "vorrangHinweis": "Presmerovanie sa uplatní len vtedy, keď na starej adrese žiadna stránka nie je. Existujúca stránka má vždy prednosť."
+      }
     }
   },
   "dynamicPricing": {

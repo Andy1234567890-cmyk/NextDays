@@ -239,12 +239,10 @@
       "staff": "Personal",
       "jobs": "Locuri de muncă",
       "reservations": "Rezervări",
-      "distribution": "Distribuție",
       "hotel": "Hotel",
       "vacationRentals": "Case de vacanță",
       "accounting": "Contabilitate",
       "guests": "Oaspeți",
-      "tools": "Instrumente",
       "website": "Generator de site web"
     },
     "roles": {
@@ -4253,6 +4251,14 @@
       "learnBody": {
         "auto": "O sarcină planificată se creează automat la fiecare rezervare a cazărilor alese — cu început și sfârșit față de sosire și plecare.",
         "recurring": "O sarcină recurentă urmează calendarul: data de început, frecvența și durata. Sistemul creează aparițiile în avans — independent de rezervări."
+      },
+      "deckung": {
+        "titel": "Cazări fără sarcină planificată",
+        "text": "{count} din {total} cazări nu sunt acoperite de nicio regulă. Acolo nu se va crea niciodată o sarcină de sosire sau de curățenie.",
+        "hinweis": "O regulă fără selecția cazării se aplică tuturor cazărilor — inclusiv celor create ulterior.",
+        "nurAnreise": "nicio regulă de sosire",
+        "nurAbreise": "nicio regulă de plecare",
+        "keine": "nicio regulă"
       }
     },
     "statsCards": {
@@ -7113,7 +7119,8 @@
       "seiten": "Pagini",
       "einstellungen": "Setări",
       "objekte": "Proprietăți",
-      "widgets": "Widgeturi"
+      "widgets": "Widgeturi",
+      "seo": "SEO"
     },
     "kopf": {
       "websiteAnsehen": "Vezi site-ul",
@@ -7339,7 +7346,9 @@
       "bildHinzufuegen": "Adaugă o imagine",
       "objekteHinweis": "Codurile proprietăților care trebuie să apară aici.",
       "objektIdPlatzhalter": "Cod proprietate",
-      "objektHinzufuegen": "Adaugă"
+      "objektHinzufuegen": "Adaugă",
+      "frageHinzufuegen": "Adaugă întrebare",
+      "fragenMax": "Nu sunt posibile mai mult de {max} întrebări."
     },
     "abschnitte": {
       "hero": "Imagine principală",
@@ -7363,7 +7372,9 @@
       "image": "Imagine",
       "imageHinweis": "O imagine cu legendă.",
       "gallery": "Galerie",
-      "galleryHinweis": "Mai multe imagini în grilă."
+      "galleryHinweis": "Mai multe imagini în grilă.",
+      "faq": "Întrebări și răspunsuri",
+      "faqHinweis": "Întrebări care se extind. Cu date structurate apar și în rezultatele căutării."
     },
     "felder": {
       "eyebrow": "Rând mic deasupra",
@@ -7404,7 +7415,10 @@
       "email": "E-mail",
       "telefon": "Telefon",
       "adresse": "Adresă",
-      "formularZeigen": "Arată formularul de contact"
+      "formularZeigen": "Arată formularul de contact",
+      "fragen": "Întrebări",
+      "frage": "Întrebare",
+      "antwort": "Răspuns"
     },
     "vorschau": {
       "titel": "Previzualizare",
@@ -7558,6 +7572,121 @@
       "kopiert": "Cod copiat.",
       "kopierenFehler": "Copierea nu este posibilă — selectați-l manual.",
       "keineDomain": "Un widget are nevoie de domeniul dvs.: doar el funcționează durabil pe un site străin. Conectați-l la Setări → Adresă."
+    },
+    "seo": {
+      "felder": {
+        "titel": "Meta-titlu",
+        "titelHinweis": "Apare în fila browserului și ca titlu în rezultatul căutării. Aproximativ 60 de caractere — după aceea Google îl taie.",
+        "beschreibung": "Meta-descriere",
+        "beschreibungHinweis": "Textul de sub titlu în rezultatul căutării. Nu influențează poziționarea, dar influențează dacă se dă clic.",
+        "keywords": "Cuvinte-cheie",
+        "keywordsHinweis": "Separate prin virgulă. Google și Bing nu le mai iau în calcul — doar directoarele mai mici.",
+        "canonical": "Adresă canonică",
+        "canonicalHinweis": "Necesară doar când același conținut este accesibil la două adrese. Gol înseamnă: această pagină este originalul.",
+        "rueckfall": "La nivelul întregului site"
+      },
+      "uebersicht": {
+        "titel": "Prezentare generală",
+        "hinweis": "Datele de aici se aplică întregului site. Ele acționează pe fiecare pagină care nu are date proprii — munca propriu-zisă se face la „Pagini”.",
+        "metaTitel": "Date pentru întregul site",
+        "metaHinweis": "Rezervă pentru toate paginile fără date proprii. Dacă apar aceleași texte peste tot, pentru motoarele de căutare acesta este un semn de lipsă de structură.",
+        "indexTitel": "Motoare de căutare",
+        "noindex": "Nu indexa site-ul",
+        "noindexHinweis": "Ține întregul site în afara indexului de căutare. Pentru un site în construcție — dezactivați-l din nou după lansare, altfel nu va fi găsit niciodată.",
+        "noindexWarnung": "Cât timp acest comutator este activ, robots.txt returnează „Disallow: /” și nu există niciun Sitemap.",
+        "tempoTitel": "Timp de încărcare (Core Web Vitals)",
+        "tempoHinweis": "Google ia în calcul și timpul de încărcare. Ambele comutatoare acționează imediat pe site.",
+        "lazy": "Încarcă imaginile abia la derulare",
+        "lazyHinweis": "Accelerează prima afișare. La o imagine mare chiar la începutul paginii poate încetini afișarea — atunci dezactivați-l.",
+        "systemschrift": "Afișează fontul de sistem până se încarcă fontul propriu",
+        "systemschriftHinweis": "Textul este lizibil imediat, dar pagina schimbă vizibil fontul.",
+        "dateienTitel": "Ce preiau motoarele de căutare",
+        "dateienHinweis": "Aceste trei fișiere se creează automat din datele de mai sus. Fișierul sitemap.xml trebuie introdus în Google Search Console — acesta este pasul care accelerează includerea în index.",
+        "datei": {
+          "sitemap": "Toate adresele site-ului, cu data ultimei modificări.",
+          "robots": "Ce poate fi accesat de roboți și unde se află Sitemap.",
+          "llms": "Versiune scurtă a site-ului pentru motoare de răspuns precum ChatGPT sau Perplexity."
+        },
+        "keineDomain": "Încă nu este conectat un domeniu propriu. Cele trei fișiere se creează imediat ce site-ul rulează la o adresă proprie."
+      },
+      "seiten": {
+        "titel": "Pagini",
+        "hinweis": "Fiecare pagină are nevoie de titlu propriu și de descriere proprie. Acesta este cel mai important factor dintre toate — aici se vede ce lipsește.",
+        "startseite": "Pagina de start",
+        "entwurf": "Ciornă",
+        "nichtIndexiert": "neindexată",
+        "gepflegt": "completă",
+        "fehltTitel": "Lipsește titlul",
+        "fehltBeschreibung": "Lipsește descrierea",
+        "fehltBeides": "Lipsesc titlul și descrierea",
+        "alleGepflegt": "Toate paginile au titlu și descriere.",
+        "offeneLuecken": "{anzahl} pagini fără titlu sau descriere.",
+        "noindex": "Nu indexa această pagină",
+        "noindexHinweis": "Pagina rămâne accesibilă la adresa sa, dar nu apare în rezultatele căutării.",
+        "speichern": "Salvează",
+        "gespeichert": "Salvat.",
+        "ungespeichert": "Nesalvat",
+        "keine": "Încă nu a fost creată nicio pagină."
+      },
+      "schema": {
+        "titel": "Date structurate",
+        "hinweis": "Astfel un motor de căutare înțelege că un preț este un preț și o adresă este o adresă. Abia atunci apar stele, prețuri și ore de deschidere în rezultatul căutării.",
+        "typenTitel": "Ce este livrat",
+        "organization": "Firmă și adresă",
+        "organizationHinweis": "Nume, adresă, telefon și e-mail din profilul firmei.",
+        "lodging": "Unități de cazare cu preț",
+        "lodgingHinweis": "Pentru fiecare pagină de proprietate: tipul cazării, dotările și prețul valabil în ziua respectivă.",
+        "breadcrumbs": "Calea paginii",
+        "breadcrumbsHinweis": "Arată în rezultatul căutării unde se află pagina în cadrul site-ului.",
+        "faq": "Întrebări și răspunsuri",
+        "faqHinweis": "Doar pe paginile cu o secțiune de întrebări și răspunsuri.",
+        "quelleTitel": "De unde provin datele",
+        "quelleHinweis": "Toate datele provin din profilul firmei și din datele proprietăților — nimic nu se introduce a doua oară aici. Dacă lipsește o schemă, de obicei lipsește adresa din profil.",
+        "quelleKnopf": "Către profilul firmei"
+      },
+      "messung": {
+        "titel": "Măsurare",
+        "hinweis": "Numărul de vizitatori prin Google. Un singur câmp pentru toate cele patru identificatoare — Google recunoaște din prefix despre ce produs este vorba.",
+        "kennungTitel": "Identificator Google",
+        "kennungHinweis": "Analytics (G-), versiune veche (UA-), Google Ads (AW-) sau Campaign Manager (DC-).",
+        "kennung": "Identificator",
+        "kennungFormat": "De exemplu G-ABCD123456. Se găsește în Google Analytics la Administrare → Fluxuri de date.",
+        "kennungFehler": "Identificatorul trebuie să înceapă cu G-, UA-, AW- sau DC-.",
+        "zustimmungTitel": "Consimțământ",
+        "zustimmungHinweis": "Scriptul se încarcă, dar măsoară abia după consimțământul vizitatorului. Până atunci nu plasează cookie-uri.",
+        "zustimmungAktiv": "Notificarea privind cookie-urile este activă. Măsurarea începe abia după clicul vizitatorului.",
+        "zustimmungFehlt": "Fără notificare privind cookie-urile, măsurarea începe imediat. În UE pentru asta este necesar consimțământul.",
+        "zumHinweis": "Activează notificarea privind cookie-urile"
+      },
+      "weiterleitungen": {
+        "titel": "Redirecționări",
+        "hinweis": "Redirecționează adresele vechi către cele noi. Necesar la mutarea de pe un alt site — fără redirecționare, vizitatorii veniți din Google și din buletinele informative ajung pe o pagină de eroare.",
+        "neuTitel": "Redirecționare nouă",
+        "quelle": "Adresa veche",
+        "ziel": "Destinația nouă",
+        "typ": "Tip",
+        "typ301": "Permanentă (301)",
+        "typ302": "Temporară (302)",
+        "typ301Kurz": "permanentă",
+        "typ302Kurz": "temporară",
+        "anlegen": "Creează",
+        "angelegt": "Redirecționare creată.",
+        "geloescht": "Redirecționare ștearsă.",
+        "loeschen": "Șterge",
+        "aktivieren": "Activează",
+        "deaktivieren": "Dezactivează",
+        "listeTitel": "Redirecționări existente",
+        "keine": "Încă nu a fost creată nicio redirecționare.",
+        "wirdGespeichert": "Se salvează:",
+        "nurPfad": "Se salvează doar calea:",
+        "csvImport": "Importă CSV",
+        "csvFormat": "Două coloane: adresa veche, destinația nouă. Cel mult 200 de rânduri.",
+        "dateiZuGross": "Fișierul este prea mare (cel mult 200 KB).",
+        "dateiLeer": "În fișier nu a fost găsit niciun rând valid.",
+        "importErgebnis": "{neu} noi, {geaendert} modificate, {uebersprungen} omise.",
+        "weitereFehler": "{anzahl} rânduri suplimentare cu erori.",
+        "vorrangHinweis": "O redirecționare acționează doar dacă la adresa veche nu există nicio pagină. O pagină existentă are întotdeauna prioritate."
+      }
     }
   },
   "dynamicPricing": {

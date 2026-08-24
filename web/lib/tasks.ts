@@ -128,6 +128,28 @@ export type RuleItem = {
   sort_order: number;
 };
 
+/** Ein Objekt, das von keiner planmäßigen Regel erreicht wird. */
+export type UngedecktesObjekt = {
+  property_id: string;
+  property_title: string;
+  ohne_anreise: boolean;
+  ohne_abreise: boolean;
+};
+
+/**
+ * Wie viele Objekte planmäßige Aufgaben bekommen — und welche nicht.
+ *
+ * Eine Regel gilt für ALLE Objekte, solange ihr keins zugeordnet ist; sobald
+ * eines zugeordnet ist, nur noch für die gelisteten. Ein danach angelegtes
+ * Objekt fällt still heraus und bekommt nie eine Aufgabe.
+ */
+export type RegelDeckung = {
+  objekte: number;
+  ohne_anreise: number;
+  ohne_abreise: number;
+  betroffen: UngedecktesObjekt[];
+};
+
 export type RuleListItem = {
   id: string;
   kind: RuleKind;
@@ -612,6 +634,11 @@ const RULE_PATH: Record<RuleKind, string> = {
   auto: "/tasks/auto",
   recurring: "/tasks/recurring",
 };
+
+/** Objekte ohne wirksame planmäßige Regel — dort entsteht nie eine Aufgabe. */
+export async function ruleCoverage(): Promise<Result<RegelDeckung>> {
+  return call("/tasks/rules/coverage");
+}
 
 /** Regeln/Vorlagen einer Art auflisten. */
 export async function listRules(

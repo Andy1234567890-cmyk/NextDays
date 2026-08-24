@@ -239,12 +239,10 @@
       "staff": "Pessoal",
       "jobs": "Empregos",
       "reservations": "Reservas",
-      "distribution": "Distribuição",
       "hotel": "Hotel",
       "vacationRentals": "Alojamentos de férias",
       "accounting": "Contabilidade",
       "guests": "Hóspedes",
-      "tools": "Ferramentas",
       "website": "Criador de sites"
     },
     "roles": {
@@ -4253,6 +4251,14 @@
       "learnBody": {
         "auto": "Uma tarefa planeada é criada automaticamente em cada reserva dos alojamentos escolhidos — com início e fim em relação ao check-in e ao check-out.",
         "recurring": "Uma tarefa recorrente segue o calendário: data de início, frequência e duração. O sistema cria as ocorrências com antecedência — independentemente das reservas."
+      },
+      "deckung": {
+        "titel": "Alojamentos sem tarefa planeada",
+        "text": "{count} de {total} alojamentos não são cobertos por nenhuma regra. Nunca será criada aí uma tarefa de check-in ou de limpeza.",
+        "hinweis": "Uma regra sem seleção de alojamento aplica-se a todos os alojamentos — incluindo os criados mais tarde.",
+        "nurAnreise": "sem regra de check-in",
+        "nurAbreise": "sem regra de check-out",
+        "keine": "sem regra"
       }
     },
     "statsCards": {
@@ -7113,7 +7119,8 @@
       "seiten": "Páginas",
       "einstellungen": "Configurações",
       "objekte": "Alojamentos",
-      "widgets": "Widgets"
+      "widgets": "Widgets",
+      "seo": "SEO"
     },
     "kopf": {
       "websiteAnsehen": "Ver o site",
@@ -7339,7 +7346,9 @@
       "bildHinzufuegen": "Adicionar imagem",
       "objekteHinweis": "Identificadores dos alojamentos que devem aparecer aqui.",
       "objektIdPlatzhalter": "Identificador do alojamento",
-      "objektHinzufuegen": "Adicionar"
+      "objektHinzufuegen": "Adicionar",
+      "frageHinzufuegen": "Adicionar pergunta",
+      "fragenMax": "Não é possível ter mais de {max} perguntas."
     },
     "abschnitte": {
       "hero": "Imagem principal",
@@ -7363,7 +7372,9 @@
       "image": "Imagem",
       "imageHinweis": "Uma imagem com legenda.",
       "gallery": "Galeria",
-      "galleryHinweis": "Várias imagens em grelha."
+      "galleryHinweis": "Várias imagens em grelha.",
+      "faq": "Perguntas e respostas",
+      "faqHinweis": "Perguntas expansíveis. Com dados estruturados aparecem também nos resultados de pesquisa."
     },
     "felder": {
       "eyebrow": "Linha pequena acima",
@@ -7404,7 +7415,10 @@
       "email": "E-mail",
       "telefon": "Telefone",
       "adresse": "Endereço",
-      "formularZeigen": "Mostrar formulário de contacto"
+      "formularZeigen": "Mostrar formulário de contacto",
+      "fragen": "Perguntas",
+      "frage": "Pergunta",
+      "antwort": "Resposta"
     },
     "vorschau": {
       "titel": "Pré-visualização",
@@ -7558,6 +7572,121 @@
       "kopiert": "Código copiado.",
       "kopierenFehler": "Não é possível copiar — seleccione-o à mão.",
       "keineDomain": "Um widget precisa do seu próprio domínio: só ele funciona de forma duradoura num site de terceiros. Ligue-o em Definições → Endereço."
+    },
+    "seo": {
+      "felder": {
+        "titel": "Tag title",
+        "titelHinweis": "Aparece no separador do navegador e como título no resultado de pesquisa. Cerca de 60 caracteres; a partir daí o Google corta.",
+        "beschreibung": "Meta description",
+        "beschreibungHinweis": "O texto abaixo do título no resultado de pesquisa. Não influencia a posição, mas sim se há cliques.",
+        "keywords": "Palavras-chave",
+        "keywordsHinweis": "Separadas por vírgulas. O Google e o Bing já não as valorizam — servem apenas para diretórios pequenos.",
+        "canonical": "URL canónico",
+        "canonicalHinweis": "Só é necessário se o mesmo conteúdo estiver acessível em dois endereços. Vazio significa: esta página é a original.",
+        "rueckfall": "Para todo o site"
+      },
+      "uebersicht": {
+        "titel": "Visão geral",
+        "hinweis": "Os dados indicados aqui valem para todo o site. Aplicam-se a cada página que não tenha os seus próprios — o trabalho verdadeiro acontece em «Páginas».",
+        "metaTitel": "Dados para todo o site",
+        "metaHinweis": "Valor de recurso para todas as páginas sem dados próprios. Se estiverem os mesmos em todo o lado, para os motores de pesquisa é sinal de falta de estrutura.",
+        "indexTitel": "Motores de pesquisa",
+        "noindex": "Não indexar o site",
+        "noindexHinweis": "Mantém todo o site fora do índice de pesquisa. Para um site em construção — depois do lançamento deve ser desligado, senão nunca será encontrado.",
+        "noindexWarnung": "Enquanto este interruptor estiver ligado, o robots.txt devolve «Disallow: /» e não existe Sitemap.",
+        "tempoTitel": "Tempo de carregamento (Core Web Vitals)",
+        "tempoHinweis": "O Google também avalia o tempo de carregamento. Ambos os interruptores atuam imediatamente no site.",
+        "lazy": "Carregar as imagens apenas ao deslocar a página",
+        "lazyHinweis": "Acelera a primeira construção da página. Com uma imagem grande logo no início da página pode atrasar a exibição — nesse caso, desligar.",
+        "systemschrift": "Mostrar o tipo de letra do sistema até o próprio estar carregado",
+        "systemschriftHinweis": "O texto é legível de imediato, mas a página muda de tipo de letra de forma visível.",
+        "dateienTitel": "O que os motores de pesquisa consultam",
+        "dateienHinweis": "Estes três ficheiros são gerados automaticamente a partir dos dados acima. O sitemap.xml deve ser registado na Google Search Console — é esse o passo que acelera a inclusão.",
+        "datei": {
+          "sitemap": "Todos os endereços do site com a data da última alteração.",
+          "robots": "O que pode ser rastreado e onde está a Sitemap.",
+          "llms": "Versão resumida do site para motores de resposta como o ChatGPT ou o Perplexity."
+        },
+        "keineDomain": "Ainda não há nenhum domínio próprio ligado. Os três ficheiros são gerados assim que o site funcionar num endereço próprio."
+      },
+      "seiten": {
+        "titel": "Páginas",
+        "hinweis": "Cada página precisa de um título próprio e de uma descrição própria. É a alavanca mais importante de todas — aqui vê-se onde falta algo.",
+        "startseite": "Página inicial",
+        "entwurf": "Rascunho",
+        "nichtIndexiert": "não indexada",
+        "gepflegt": "completa",
+        "fehltTitel": "Falta o título",
+        "fehltBeschreibung": "Falta a descrição",
+        "fehltBeides": "Faltam o título e a descrição",
+        "alleGepflegt": "Todas as páginas têm título e descrição.",
+        "offeneLuecken": "{anzahl} páginas sem título ou sem descrição.",
+        "noindex": "Não indexar esta página",
+        "noindexHinweis": "A página continua acessível através do seu endereço, mas não aparece nos resultados de pesquisa.",
+        "speichern": "Guardar",
+        "gespeichert": "Guardado.",
+        "ungespeichert": "Não guardado",
+        "keine": "Ainda não foi criada nenhuma página."
+      },
+      "schema": {
+        "titel": "Dados estruturados",
+        "hinweis": "Com eles, um motor de pesquisa compreende que um preço é um preço e um endereço é um endereço. Só assim aparecem estrelas, preços e horários de funcionamento no resultado de pesquisa.",
+        "typenTitel": "O que é enviado",
+        "organization": "Empresa e endereço",
+        "organizationHinweis": "Nome, endereço, telefone e e-mail do perfil da empresa.",
+        "lodging": "Alojamentos com preço",
+        "lodgingHinweis": "Por cada página de objeto: tipo de alojamento, equipamento e o preço do dia.",
+        "breadcrumbs": "Caminho da página",
+        "breadcrumbsHinweis": "Mostra no resultado de pesquisa onde a página se situa dentro do site.",
+        "faq": "Perguntas e respostas",
+        "faqHinweis": "Apenas em páginas com uma secção de perguntas e respostas.",
+        "quelleTitel": "De onde vêm os dados",
+        "quelleHinweis": "Todos os dados provêm do perfil da empresa e dos dados dos objetos — aqui nada é introduzido duas vezes. Se faltar um esquema, normalmente falta o endereço no perfil.",
+        "quelleKnopf": "Ir para o perfil da empresa"
+      },
+      "messung": {
+        "titel": "Medição",
+        "hinweis": "Número de visitantes através do Google. Um único campo para os quatro identificadores — o Google reconhece pelo prefixo de que produto se trata.",
+        "kennungTitel": "Identificador Google",
+        "kennungHinweis": "Analytics (G-), formato antigo (UA-), Google Ads (AW-) ou Campaign Manager (DC-).",
+        "kennung": "Identificador",
+        "kennungFormat": "Por exemplo G-ABCD123456. Encontra-se no Google Analytics em Administrar → Fluxos de dados.",
+        "kennungFehler": "O identificador tem de começar por G-, UA-, AW- ou DC-.",
+        "zustimmungTitel": "Consentimento",
+        "zustimmungHinweis": "O script é carregado, mas só mede após o consentimento do visitante. Até então não coloca nenhum Cookie.",
+        "zustimmungAktiv": "O aviso de Cookie está ativo. A medição só começa depois do clique do visitante.",
+        "zustimmungFehlt": "Sem aviso de Cookie, a medição começa de imediato. Na UE é necessário um consentimento para isso.",
+        "zumHinweis": "Ativar o aviso de Cookie"
+      },
+      "weiterleitungen": {
+        "titel": "Redirecionamentos",
+        "hinweis": "Encaminhar endereços antigos para novos. Necessário numa mudança a partir de outro site — sem redirecionamento, os visitantes que vêm do Google e das newsletters aterram numa página de erro.",
+        "neuTitel": "Novo redirecionamento",
+        "quelle": "Endereço antigo",
+        "ziel": "Novo destino",
+        "typ": "Tipo",
+        "typ301": "Permanente (301)",
+        "typ302": "Temporário (302)",
+        "typ301Kurz": "permanente",
+        "typ302Kurz": "temporário",
+        "anlegen": "Criar",
+        "angelegt": "Redirecionamento criado.",
+        "geloescht": "Redirecionamento eliminado.",
+        "loeschen": "Eliminar",
+        "aktivieren": "Ativar",
+        "deaktivieren": "Desativar",
+        "listeTitel": "Redirecionamentos existentes",
+        "keine": "Ainda não foi criado nenhum redirecionamento.",
+        "wirdGespeichert": "Será guardado:",
+        "nurPfad": "Apenas o caminho é guardado:",
+        "csvImport": "Importar CSV",
+        "csvFormat": "Duas colunas: endereço antigo, novo destino. No máximo 200 linhas.",
+        "dateiZuGross": "O ficheiro é demasiado grande (no máximo 200 KB).",
+        "dateiLeer": "Não foi encontrada nenhuma linha válida no ficheiro.",
+        "importErgebnis": "{neu} novos, {geaendert} alterados, {uebersprungen} ignorados.",
+        "weitereFehler": "{anzahl} outras linhas com erros.",
+        "vorrangHinweis": "Um redirecionamento só atua se não existir nenhuma página no endereço antigo. Uma página existente tem sempre prioridade."
+      }
     }
   },
   "dynamicPricing": {

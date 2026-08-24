@@ -251,3 +251,36 @@ def test_nachzug_ruehrt_vorhandene_aufgabe_nicht_an() -> None:
         verschieben=False,
     )
     assert beruehrt is False
+
+
+def test_nachzug_legt_keine_laengst_faellige_aufgabe_mehr_an() -> None:
+    """`nicht_vor`: ein Willkommens-Check für eine Anreise von vor drei Wochen
+    nachträglich als OFFEN anzulegen wäre eine Falschmeldung, kein Fund.
+
+    Der Rückblick des Nachzugs greift am Buchungs-Fenster (check_out); eine
+    lange Buchung kann darin liegen und ihre Anreise-Aufgabe weit davor.
+    """
+    regel = {
+        "id": "rule1",
+        "name": "Velk T",
+        "start_trigger": "days_before_check_in",
+        "start_offset_minutes": -1440,
+        "end_trigger": "check_in",
+        "end_offset_minutes": 0,
+    }
+    # Anreise 10.08. → Aufgabe 09.–10.08.; die Grenze liegt am 20.08.
+    frueh = {**_RESERVATION, "check_in": "2026-08-10", "check_out": "2026-08-23"}
+    assert (
+        _regel_anwenden(
+            _KeineDb(),
+            "t1",
+            regel,
+            frueh,
+            _reservation_anchors(frueh) or (datetime.now(UTC), datetime.now(UTC)),
+            [],
+            None,
+            verschieben=False,
+            nicht_vor=datetime(2026, 8, 20, tzinfo=UTC),
+        )
+        is False
+    )

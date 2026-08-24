@@ -239,12 +239,10 @@
       "staff": "Henkilöstö",
       "jobs": "Työpaikat",
       "reservations": "Varaukset",
-      "distribution": "Jakelu",
       "hotel": "Hotelli",
       "vacationRentals": "Loma-asunnot",
       "accounting": "Kirjanpito",
       "guests": "Vieraat",
-      "tools": "Työkalut",
       "website": "Verkkosivueditori"
     },
     "roles": {
@@ -4255,6 +4253,14 @@
       "learnBody": {
         "auto": "Aikataulutettu tehtävä syntyy automaattisesti jokaisesta valittujen majoitusten varauksesta — alku ja loppu suhteessa saapumiseen ja lähtöön.",
         "recurring": "Toistuva tehtävä seuraa kalenteria: aloituspäivä, toistuvuus ja kesto. Järjestelmä luo ajankohdat etukäteen varauksista riippumatta."
+      },
+      "deckung": {
+        "titel": "Majoitukset, joilla ei ole ajastettua tehtävää",
+        "text": "{count} majoitusta {total}:sta ei kata mikään sääntö. Niihin ei koskaan synny saapumis- tai siivoustehtävää.",
+        "hinweis": "Sääntö, jossa ei ole valittu majoitusta, koskee kaikkia majoituksia — myös myöhemmin luotuja.",
+        "nurAnreise": "ei saapumissääntöä",
+        "nurAbreise": "ei lähtösääntöä",
+        "keine": "ei sääntöä"
       }
     },
     "statsCards": {
@@ -7115,7 +7121,8 @@
       "seiten": "Sivut",
       "einstellungen": "Asetukset",
       "objekte": "Kohteet",
-      "widgets": "Widgetit"
+      "widgets": "Widgetit",
+      "seo": "SEO"
     },
     "kopf": {
       "websiteAnsehen": "Katso sivustoa",
@@ -7341,7 +7348,9 @@
       "bildHinzufuegen": "Lisää kuva",
       "objekteHinweis": "Niiden kohteiden tunnukset, jotka näkyvät tässä.",
       "objektIdPlatzhalter": "Kohteen tunnus",
-      "objektHinzufuegen": "Lisää"
+      "objektHinzufuegen": "Lisää",
+      "frageHinzufuegen": "Lisää kysymys",
+      "fragenMax": "Yli {max} kysymystä ei ole mahdollista."
     },
     "abschnitte": {
       "hero": "Pääkuva",
@@ -7365,7 +7374,9 @@
       "image": "Kuva",
       "imageHinweis": "Kuva ja kuvateksti.",
       "gallery": "Galleria",
-      "galleryHinweis": "Useita kuvia ruudukkona."
+      "galleryHinweis": "Useita kuvia ruudukkona.",
+      "faq": "Kysymykset ja vastaukset",
+      "faqHinweis": "Avattavat kysymykset. Rakenteisina ne näkyvät myös hakutuloksissa."
     },
     "felder": {
       "eyebrow": "Pieni rivi yläpuolella",
@@ -7406,7 +7417,10 @@
       "email": "Sähköposti",
       "telefon": "Puhelin",
       "adresse": "Osoite",
-      "formularZeigen": "Näytä yhteydenottolomake"
+      "formularZeigen": "Näytä yhteydenottolomake",
+      "fragen": "Kysymykset",
+      "frage": "Kysymys",
+      "antwort": "Vastaus"
     },
     "vorschau": {
       "titel": "Esikatselu",
@@ -7560,6 +7574,121 @@
       "kopiert": "Koodi kopioitu.",
       "kopierenFehler": "Kopiointi ei ole mahdollista — valitse se käsin.",
       "keineDomain": "Widget tarvitsee oman verkkotunnuksesi: vain se toimii pysyvästi vieraalla sivulla. Yhdistä se kohdassa Asetukset → Osoite."
+    },
+    "seo": {
+      "felder": {
+        "titel": "Meta-otsikko",
+        "titelHinweis": "Näkyy selaimen välilehdellä ja hakutuloksen otsikkona. Noin 60 merkkiä, sen jälkeen Google katkaisee sen.",
+        "beschreibung": "Meta-kuvaus",
+        "beschreibungHinweis": "Otsikon alla hakutuloksessa oleva teksti. Se ei vaikuta sijoitukseen, mutta siihen, klikataanko tulosta.",
+        "keywords": "Avainsanat",
+        "keywordsHinweis": "Pilkuilla erotettuna. Google ja Bing eivät enää käytä niitä — vain pienemmät hakemistot.",
+        "canonical": "Kanoninen osoite",
+        "canonicalHinweis": "Tarvitaan vain, jos sama sisältö on saatavilla kahdessa osoitteessa. Tyhjä tarkoittaa: tämä sivu on alkuperäinen.",
+        "rueckfall": "Koko sivusto"
+      },
+      "uebersicht": {
+        "titel": "Yleiskatsaus",
+        "hinweis": "Tämän kohdan tiedot koskevat koko verkkosivustoa. Ne pätevät jokaisella sivulla, jolla ei ole omia — varsinainen työ tehdään kohdassa ”Sivut”.",
+        "metaTitel": "Koko sivustoa koskevat tiedot",
+        "metaHinweis": "Varatieto kaikille sivuille, joilla ei ole omaa. Jos joka sivulla on sama teksti, se on hakukoneille merkki puuttuvasta rakenteesta.",
+        "indexTitel": "Hakukoneet",
+        "noindex": "Älä indeksoi sivustoa",
+        "noindexHinweis": "Pitää koko sivuston pois hakuindeksistä. Sopii rakenteilla olevalle sivustolle — kytke se julkaisun jälkeen pois, muuten sivustoa ei löydetä koskaan.",
+        "noindexWarnung": "Niin kauan kuin tämä kytkin on päällä, robots.txt palauttaa ”Disallow: /” eikä Sitemap-tiedostoa ole.",
+        "tempoTitel": "Latausaika (Core Web Vitals)",
+        "tempoHinweis": "Google ottaa latausajan huomioon. Molemmat kytkimet vaikuttavat sivustoon heti.",
+        "lazy": "Lataa kuvat vasta vieritettäessä",
+        "lazyHinweis": "Nopeuttaa ensimmäistä latausta. Jos heti sivun alussa on suuri kuva, se voi hidastaa näyttämistä — kytke tällöin pois.",
+        "systemschrift": "Näytä järjestelmän kirjasin, kunnes oma on latautunut",
+        "systemschriftHinweis": "Teksti on heti luettavissa, mutta sivun kirjasin vaihtuu näkyvästi.",
+        "dateienTitel": "Mitä hakukoneet hakevat",
+        "dateienHinweis": "Nämä kolme tiedostoa syntyvät automaattisesti yllä olevista tiedoista. Tiedosto sitemap.xml kuuluu Google Search Consoleen — se on vaihe, joka nopeuttaa hakemistoon pääsyä.",
+        "datei": {
+          "sitemap": "Kaikki sivuston osoitteet ja viimeisen muutoksen päivämäärä.",
+          "robots": "Mitä hakurobotit saavat käydä läpi ja missä Sitemap sijaitsee.",
+          "llms": "Lyhennelmä sivustosta vastauskoneille, kuten ChatGPT tai Perplexity."
+        },
+        "keineDomain": "Omaa verkkotunnusta ei ole vielä liitetty. Nämä kolme tiedostoa syntyvät heti, kun sivusto toimii omassa osoitteessaan."
+      },
+      "seiten": {
+        "titel": "Sivut",
+        "hinweis": "Jokainen sivu tarvitsee oman otsikon ja oman kuvauksen. Tämä on kaikkein tärkein vipu — täällä näkyy, mistä jotain puuttuu.",
+        "startseite": "Etusivu",
+        "entwurf": "Luonnos",
+        "nichtIndexiert": "ei indeksoitu",
+        "gepflegt": "valmis",
+        "fehltTitel": "Otsikko puuttuu",
+        "fehltBeschreibung": "Kuvaus puuttuu",
+        "fehltBeides": "Otsikko ja kuvaus puuttuvat",
+        "alleGepflegt": "Kaikilla sivuilla on otsikko ja kuvaus.",
+        "offeneLuecken": "{anzahl} sivua ilman otsikkoa tai kuvausta.",
+        "noindex": "Älä indeksoi tätä sivua",
+        "noindexHinweis": "Sivu on edelleen saavutettavissa osoitteestaan, mutta ei näy hakutuloksissa.",
+        "speichern": "Tallenna",
+        "gespeichert": "Tallennettu.",
+        "ungespeichert": "Ei tallennettu",
+        "keine": "Sivuja ei ole vielä luotu."
+      },
+      "schema": {
+        "titel": "Rakenteiset tiedot",
+        "hinweis": "Näin hakukone ymmärtää, että hinta on hinta ja osoite on osoite. Vasta sen ansiosta tähdet, hinnat ja aukioloajat näkyvät hakutuloksessa.",
+        "typenTitel": "Mitä toimitetaan",
+        "organization": "Yritys ja osoite",
+        "organizationHinweis": "Nimi, osoite, puhelin ja sähköposti yritysprofiilista.",
+        "lodging": "Majoitukset hintoineen",
+        "lodgingHinweis": "Kohdesivua kohden: majoituksen laji, varustelu ja päivän hinta.",
+        "breadcrumbs": "Sivupolku",
+        "breadcrumbsHinweis": "Näyttää hakutuloksessa, missä sivu sijaitsee sivuston sisällä.",
+        "faq": "Kysymykset ja vastaukset",
+        "faqHinweis": "Vain sivuilla, joilla on kysymys-vastaus-osio.",
+        "quelleTitel": "Mistä tiedot tulevat",
+        "quelleHinweis": "Kaikki tiedot tulevat yritysprofiilista ja kohdetiedoista — täällä ei kirjata mitään toista kertaa. Jos jokin skeema puuttuu, useimmiten profiilista puuttuu osoite.",
+        "quelleKnopf": "Yritysprofiiliin"
+      },
+      "messung": {
+        "titel": "Mittaus",
+        "hinweis": "Vierailijamäärät Googlen kautta. Yksi kenttä kaikille neljälle tunnisteelle — Google tunnistaa etuliitteestä, mistä tuotteesta on kyse.",
+        "kennungTitel": "Google-tunniste",
+        "kennungHinweis": "Analytics (G-), vanha kanta (UA-), Google Ads (AW-) tai Campaign Manager (DC-).",
+        "kennung": "Tunniste",
+        "kennungFormat": "Esimerkiksi G-ABCD123456. Löytyy Google Analyticsista kohdasta Hallinta → Tietovirrat.",
+        "kennungFehler": "Tunnisteen on alettava merkeillä G-, UA-, AW- tai DC-.",
+        "zustimmungTitel": "Suostumus",
+        "zustimmungHinweis": "Skripti latautuu, mutta mittaa vasta vierailijan suostumuksen jälkeen. Siihen asti se ei aseta Cookie-tiedostoja.",
+        "zustimmungAktiv": "Cookie-ilmoitus on käytössä. Mittaus alkaa vasta vierailijan klikkauksen jälkeen.",
+        "zustimmungFehlt": "Ilman Cookie-ilmoitusta mittaus alkaa heti. EU:ssa siihen tarvitaan suostumus.",
+        "zumHinweis": "Ota Cookie-ilmoitus käyttöön"
+      },
+      "weiterleitungen": {
+        "titel": "Uudelleenohjaukset",
+        "hinweis": "Ohjaa vanhat osoitteet uusiin. Tarpeen, kun siirrytään toiselta verkkosivustolta — ilman uudelleenohjausta Googlesta ja uutiskirjeistä tulevat vierailijat päätyvät virhesivulle.",
+        "neuTitel": "Uusi uudelleenohjaus",
+        "quelle": "Vanha osoite",
+        "ziel": "Uusi kohde",
+        "typ": "Laji",
+        "typ301": "Pysyvä (301)",
+        "typ302": "Väliaikainen (302)",
+        "typ301Kurz": "pysyvä",
+        "typ302Kurz": "väliaikainen",
+        "anlegen": "Luo",
+        "angelegt": "Uudelleenohjaus luotu.",
+        "geloescht": "Uudelleenohjaus poistettu.",
+        "loeschen": "Poista",
+        "aktivieren": "Ota käyttöön",
+        "deaktivieren": "Poista käytöstä",
+        "listeTitel": "Olemassa olevat uudelleenohjaukset",
+        "keine": "Uudelleenohjauksia ei ole vielä luotu.",
+        "wirdGespeichert": "Tallennetaan:",
+        "nurPfad": "Vain polku tallennetaan:",
+        "csvImport": "Lue CSV",
+        "csvFormat": "Kaksi saraketta: vanha osoite, uusi kohde. Enintään 200 riviä.",
+        "dateiZuGross": "Tiedosto on liian suuri (enintään 200 KB).",
+        "dateiLeer": "Tiedostosta ei löytynyt yhtään kelvollista riviä.",
+        "importErgebnis": "{neu} uutta, {geaendert} muutettu, {uebersprungen} ohitettu.",
+        "weitereFehler": "{anzahl} muuta riviä, joissa on virheitä.",
+        "vorrangHinweis": "Uudelleenohjaus toimii vain, jos vanhassa osoitteessa ei ole sivua. Olemassa oleva sivu on aina etusijalla."
+      }
     }
   },
   "dynamicPricing": {

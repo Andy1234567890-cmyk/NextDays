@@ -236,12 +236,10 @@
       "staff": "Staff",
       "jobs": "Jobs",
       "reservations": "Reservations",
-      "distribution": "Distribution",
       "hotel": "Hotel",
       "vacationRentals": "Vacation rentals",
       "accounting": "Accounting",
       "guests": "Guests",
-      "tools": "Tools",
       "website": "Website builder"
     },
     "roles": {
@@ -4255,6 +4253,14 @@
       "learnBody": {
         "auto": "A scheduled task is created automatically for every booking of the selected accommodations — with start and end relative to check-in and check-out.",
         "recurring": "A recurring task follows the calendar: start date, frequency and duration. The system creates the occurrences in advance — independently of bookings."
+      },
+      "deckung": {
+        "titel": "Accommodations without a scheduled task",
+        "text": "{count} of {total} accommodations are not covered by any rule. No check-in or cleaning task will ever be created there.",
+        "hinweis": "A rule without an accommodation selection applies to all accommodations — including ones created later.",
+        "nurAnreise": "no check-in rule",
+        "nurAbreise": "no check-out rule",
+        "keine": "no rule"
       }
     },
     "statsCards": {
@@ -7206,7 +7212,9 @@
       "unbekannterAbschnitt": "Unknown section",
       "unbekannterAbschnittHinweis": "The builder no longer recognises this section. It stays on the page until you remove it.",
       "zurListe": "All sections",
-      "zurueck": "Back to overview"
+      "zurueck": "Back to overview",
+      "frageHinzufuegen": "Add question",
+      "fragenMax": "More than {max} questions are not possible."
     },
     "pages": {
       "newPage": "New page",
@@ -7335,7 +7343,8 @@
       "einstellungen": "Settings",
       "objekte": "Properties",
       "seiten": "Pages",
-      "widgets": "Widgets"
+      "widgets": "Widgets",
+      "seo": "SEO"
     },
     "baukasten": {
       "keinZugriff": "You do not have access to the website builder."
@@ -7530,7 +7539,9 @@
       "search": "Search",
       "searchHinweis": "Search bar with dates and guest count.",
       "spacer": "Spacer",
-      "spacerHinweis": "Empty space between two sections."
+      "spacerHinweis": "Empty space between two sections.",
+      "faq": "Questions & answers",
+      "faqHinweis": "Expandable questions. With structured data they also appear in search results."
     },
     "felder": {
       "abstandGross": "Large",
@@ -7571,7 +7582,10 @@
       "ueberschrift": "Heading",
       "variante": "Display",
       "zentriert": "Centred",
-      "ziel": "Destination"
+      "ziel": "Destination",
+      "fragen": "Questions",
+      "frage": "Question",
+      "antwort": "Answer"
     },
     "vorschau": {
       "desktop": "Computer",
@@ -7636,6 +7650,121 @@
         "suche": "Destination, dates and number of guests — leads to the property list on your website."
       },
       "typLabel": "Widget type"
+    },
+    "seo": {
+      "felder": {
+        "titel": "Meta title",
+        "titelHinweis": "Shows in the browser tab and as the headline in the search result. Aim for about 60 characters — after that Google cuts it off.",
+        "beschreibung": "Meta description",
+        "beschreibungHinweis": "The text below the title in the search result. It does not affect the ranking, but it does affect whether people click.",
+        "keywords": "Keywords",
+        "keywordsHinweis": "Comma-separated. Google and Bing no longer use them — only smaller directories do.",
+        "canonical": "Canonical URL",
+        "canonicalHinweis": "Only needed when the same content is reachable under two addresses. Empty means: this page is the original.",
+        "rueckfall": "Site-wide"
+      },
+      "uebersicht": {
+        "titel": "Overview",
+        "hinweis": "The settings here apply to the whole website. They take effect on every page that has none of its own — the actual work happens under “Pages”.",
+        "metaTitel": "Site-wide settings",
+        "metaHinweis": "Fallback for all pages without their own entry. If the same text appears everywhere, search engines read that as a lack of structure.",
+        "indexTitel": "Search engines",
+        "noindex": "Do not index the website",
+        "noindexHinweis": "Keeps the whole website out of the search index. For a site under construction — switch it off again after launch, otherwise it will never be found.",
+        "noindexWarnung": "While this switch is on, the robots.txt returns “Disallow: /” and there is no sitemap.",
+        "tempoTitel": "Loading time (Core Web Vitals)",
+        "tempoHinweis": "Google takes loading time into account. Both switches take effect on the website immediately.",
+        "lazy": "Load images only when scrolling",
+        "lazyHinweis": "Speeds up the first render. With a large image right at the top of the page it can slow the display down — switch it off in that case.",
+        "systemschrift": "Show the system font until your own has loaded",
+        "systemschriftHinweis": "The text is readable straight away, but the page visibly switches font.",
+        "dateienTitel": "What search engines fetch",
+        "dateienHinweis": "These three files are generated automatically from the settings above. The sitemap.xml belongs in Google Search Console — that is the step which speeds up being indexed.",
+        "datei": {
+          "sitemap": "All addresses of the website with the date of their last change.",
+          "robots": "What may be crawled and where the sitemap is located.",
+          "llms": "A short version of the website for answer engines such as ChatGPT or Perplexity."
+        },
+        "keineDomain": "No own domain connected yet. The three files are generated as soon as the website runs under its own address."
+      },
+      "seiten": {
+        "titel": "Pages",
+        "hinweis": "Every page needs its own title and its own description. This is the single biggest lever there is — this is where you see what is missing.",
+        "startseite": "Home page",
+        "entwurf": "Draft",
+        "nichtIndexiert": "not indexed",
+        "gepflegt": "complete",
+        "fehltTitel": "Title missing",
+        "fehltBeschreibung": "Description missing",
+        "fehltBeides": "Title and description missing",
+        "alleGepflegt": "All pages have a title and a description.",
+        "offeneLuecken": "{anzahl} pages without a title or description.",
+        "noindex": "Do not index this page",
+        "noindexHinweis": "The page stays reachable at its address but does not appear in search results.",
+        "speichern": "Save",
+        "gespeichert": "Saved.",
+        "ungespeichert": "Not saved",
+        "keine": "No pages created yet."
+      },
+      "schema": {
+        "titel": "Structured data",
+        "hinweis": "This is how a search engine understands that a price is a price and an address is an address. Only then do stars, prices and opening hours appear in the search result.",
+        "typenTitel": "What is delivered",
+        "organization": "Business and address",
+        "organizationHinweis": "Name, address, phone and email from the company profile.",
+        "lodging": "Accommodation with price",
+        "lodgingHinweis": "Per property page: type of accommodation, amenities and the current daily price.",
+        "breadcrumbs": "Page path",
+        "breadcrumbsHinweis": "Shows in the search result where the page sits within the website.",
+        "faq": "Questions and answers",
+        "faqHinweis": "Only on pages with a question-and-answer section.",
+        "quelleTitel": "Where the data comes from",
+        "quelleHinweis": "All data comes from the company profile and the property records — nothing is entered twice here. If a schema is missing, the address in the profile is usually missing as well.",
+        "quelleKnopf": "Go to company profile"
+      },
+      "messung": {
+        "titel": "Measurement",
+        "hinweis": "Visitor numbers via Google. One field for all four IDs — Google recognises which product is meant from the prefix.",
+        "kennungTitel": "Google ID",
+        "kennungHinweis": "Analytics (G-), legacy (UA-), Google Ads (AW-) or Campaign Manager (DC-).",
+        "kennung": "ID",
+        "kennungFormat": "For example G-ABCD123456. Found in Google Analytics under Admin → Data streams.",
+        "kennungFehler": "The ID must begin with G-, UA-, AW- or DC-.",
+        "zustimmungTitel": "Consent",
+        "zustimmungHinweis": "The script loads but only measures after the visitor has consented. Until then it sets no Cookies.",
+        "zustimmungAktiv": "The Cookie notice is active. Measurement only starts after the visitor clicks.",
+        "zustimmungFehlt": "Without a Cookie notice, measurement starts immediately. In the EU that requires consent.",
+        "zumHinweis": "Switch on the Cookie notice"
+      },
+      "weiterleitungen": {
+        "titel": "Redirects",
+        "hinweis": "Point old addresses to new ones. Needed when moving from another website — without a redirect, visitors from Google and from newsletters land on an error page.",
+        "neuTitel": "New redirect",
+        "quelle": "Old address",
+        "ziel": "New target",
+        "typ": "Type",
+        "typ301": "Permanent (301)",
+        "typ302": "Temporary (302)",
+        "typ301Kurz": "permanent",
+        "typ302Kurz": "temporary",
+        "anlegen": "Create",
+        "angelegt": "Redirect created.",
+        "geloescht": "Redirect deleted.",
+        "loeschen": "Delete",
+        "aktivieren": "Activate",
+        "deaktivieren": "Deactivate",
+        "listeTitel": "Existing redirects",
+        "keine": "No redirects created yet.",
+        "wirdGespeichert": "What will be saved:",
+        "nurPfad": "Only the path will be saved:",
+        "csvImport": "Import CSV",
+        "csvFormat": "Two columns: old address, new target. At most 200 rows.",
+        "dateiZuGross": "The file is too large (200 KB maximum).",
+        "dateiLeer": "No valid row was found in the file.",
+        "importErgebnis": "{neu} new, {geaendert} changed, {uebersprungen} skipped.",
+        "weitereFehler": "{anzahl} further rows with errors.",
+        "vorrangHinweis": "A redirect only takes effect when there is no page at the old address. An existing page always takes precedence."
+      }
     }
   },
   "dynamicPricing": {

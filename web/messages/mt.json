@@ -239,12 +239,10 @@
       "staff": "Persunal",
       "jobs": "Impjiegi",
       "reservations": "Riżervazzjonijiet",
-      "distribution": "Distribuzzjoni",
       "hotel": "Lukanda",
       "vacationRentals": "Akkomodazzjonijiet tal-vaganzi",
       "accounting": "Kontabilità",
       "guests": "Mistednin",
-      "tools": "Għodod",
       "website": "Bennej tal-websajt"
     },
     "roles": {
@@ -4253,6 +4251,14 @@
       "learnBody": {
         "auto": "Kompitu skedat jinħoloq awtomatikament ma' kull riżervazzjoni tal-akkomodazzjoni magħżula — bil-bidu u t-tmiem fir-rigward tal-check-in u l-check-out.",
         "recurring": "Kompitu rikorrenti jsegwi l-kalendarju: data tal-bidu, frekwenza u tul. Is-sistema toħloq l-okkorrenzi bil-quddiem — indipendentement mir-riżervazzjonijiet."
+      },
+      "deckung": {
+        "titel": "Akkomodazzjoni mingħajr kompitu skedat",
+        "text": "{count} minn {total} akkomodazzjonijiet mhumiex koperti minn ebda regola. Hemmhekk qatt ma jinħoloq kompitu ta' check-in jew ta' tindif.",
+        "hinweis": "Regola mingħajr għażla ta' akkomodazzjoni tapplika għall-akkomodazzjonijiet kollha — anki dawk maħluqa aktar 'il quddiem.",
+        "nurAnreise": "l-ebda regola ta' check-in",
+        "nurAbreise": "l-ebda regola ta' check-out",
+        "keine": "l-ebda regola"
       }
     },
     "statsCards": {
@@ -7113,7 +7119,8 @@
       "seiten": "Paġni",
       "einstellungen": "Settings",
       "objekte": "Proprjetajiet",
-      "widgets": "Widgets"
+      "widgets": "Widgets",
+      "seo": "SEO"
     },
     "kopf": {
       "websiteAnsehen": "Ara l-websajt",
@@ -7339,7 +7346,9 @@
       "bildHinzufuegen": "Żid immaġni",
       "objekteHinweis": "L-identifikaturi tal-proprjetajiet li għandhom jidhru hawn.",
       "objektIdPlatzhalter": "Kodiċi tal-proprjetà",
-      "objektHinzufuegen": "Żid"
+      "objektHinzufuegen": "Żid",
+      "frageHinzufuegen": "Żid mistoqsija",
+      "fragenMax": "Mhux possibbli iżjed minn {max} mistoqsijiet."
     },
     "abschnitte": {
       "hero": "Immaġni prinċipali",
@@ -7363,7 +7372,9 @@
       "image": "Immaġni",
       "imageHinweis": "Immaġni waħda bil-kitba taħtha.",
       "gallery": "Gallerija",
-      "galleryHinweis": "Diversi immaġini f'gradilja."
+      "galleryHinweis": "Diversi immaġini f'gradilja.",
+      "faq": "Mistoqsijiet u tweġibiet",
+      "faqHinweis": "Mistoqsijiet li jinfetħu. Bid-data strutturata jidhru wkoll fir-riżultati tat-tiftix."
     },
     "felder": {
       "eyebrow": "Linja żgħira fuq it-titlu",
@@ -7404,7 +7415,10 @@
       "email": "E-mail",
       "telefon": "Telefon",
       "adresse": "Indirizz",
-      "formularZeigen": "Uri l-formola tal-kuntatt"
+      "formularZeigen": "Uri l-formola tal-kuntatt",
+      "fragen": "Mistoqsijiet",
+      "frage": "Mistoqsija",
+      "antwort": "Tweġiba"
     },
     "vorschau": {
       "titel": "Ħarsa minn qabel",
@@ -7558,6 +7572,121 @@
       "kopiert": "Il-kodiċi ġie kkupjat.",
       "kopierenFehler": "L-ikkupjar mhux possibbli — jekk jogħġbok agħżlu bl-idejn.",
       "keineDomain": "Widget teħtieġ id-dominju tiegħek: biss hu jaħdem fit-tul fuq websajt oħra. Qabbdu taħt Settings → Indirizz."
+    },
+    "seo": {
+      "felder": {
+        "titel": "Meta-titlu",
+        "titelHinweis": "Jidher fit-tab tal-browser u bħala titlu fir-riżultat tat-tfittxija. Madwar 60 karattru — wara dan Google jaqtgħu.",
+        "beschreibung": "Meta-deskrizzjoni",
+        "beschreibungHinweis": "It-test taħt it-titlu fir-riżultat tat-tfittxija. Ma jaffettwax il-pożizzjoni, imma jaffettwa jekk jingħata klikk jew le.",
+        "keywords": "Kliem ċavetta",
+        "keywordsHinweis": "Separati bil-virgola. Google u Bing ma jibqgħux jużawhom — biss għal direttorji iżgħar.",
+        "canonical": "Indirizz kanoniku",
+        "canonicalHinweis": "Meħtieġ biss meta l-istess kontenut ikun jista’ jintlaħaq fuq żewġ indirizzi. Vojt ifisser: din il-paġna hija l-oriġinal.",
+        "rueckfall": "Għas-sit kollu"
+      },
+      "uebersicht": {
+        "titel": "Ħarsa ġenerali",
+        "hinweis": "Id-dettalji hawn japplikaw għas-sit web kollu. Jaħdmu fuq kull paġna li ma jkollhiex tagħha — ix-xogħol veru jsir taħt “Paġni”.",
+        "metaTitel": "Dettalji għas-sit kollu",
+        "metaHinweis": "Riżerva għal kull paġna li ma jkollhiex dettalji tagħha. Jekk kullimkien jidher l-istess test, il-magni tat-tfittxija jaqrawh bħala nuqqas ta’ struttura.",
+        "indexTitel": "Magni tat-tfittxija",
+        "noindex": "Tindiċjax is-sit web",
+        "noindexHinweis": "Iżomm is-sit web kollu barra mill-indiċi tat-tfittxija. Għal sit li għadu qed jinbena — itfih mill-ġdid wara t-tnedija, inkella ma jinstab qatt.",
+        "noindexWarnung": "Sakemm dan is-swiċċ ikun mixgħul, ir-robots.txt iwieġeb “Disallow: /” u ma jkun hemm ebda Sitemap.",
+        "tempoTitel": "Ħin tat-tagħbija (Core Web Vitals)",
+        "tempoHinweis": "Google jqis ukoll il-ħin tat-tagħbija. Iż-żewġ swiċċijiet jaħdmu mill-ewwel fuq is-sit web.",
+        "lazy": "Agħbi l-istampi biss meta jsir l-iscroll",
+        "lazyHinweis": "Iħaffef l-ewwel tqegħid tal-paġna. B’stampa kbira eżatt fil-bidu tal-paġna jista’ jdewwem il-wiri — f’dak il-każ itfih.",
+        "systemschrift": "Uri l-font tas-sistema sakemm jitgħabba l-font tiegħek",
+        "systemschriftHinweis": "It-test jinqara mill-ewwel, imma l-paġna tibdel il-font b’mod viżibbli.",
+        "dateienTitel": "Dak li jġibu l-magni tat-tfittxija",
+        "dateienHinweis": "Dawn it-tliet fajls jinħolqu awtomatikament mid-dettalji ta’ fuq. Is-sitemap.xml trid tiddaħħal fil-Google Search Console — dan huwa l-pass li jħaffef id-dħul fl-indiċi.",
+        "datei": {
+          "sitemap": "L-indirizzi kollha tas-sit web bid-data tal-aħħar bidla tagħhom.",
+          "robots": "X’jista’ jinqara mill-magni tat-tfittxija u fejn jinsab is-Sitemap.",
+          "llms": "Verżjoni qasira tas-sit web għal magni tat-tweġibiet bħal ChatGPT jew Perplexity."
+        },
+        "keineDomain": "Għadu ma hemmx dominju tiegħek konness. It-tliet fajls jinħolqu hekk kif is-sit web jaħdem fuq indirizz tiegħu."
+      },
+      "seiten": {
+        "titel": "Paġni",
+        "hinweis": "Kull paġna teħtieġ titlu tagħha u deskrizzjoni tagħha. Din hija l-aktar ħaġa importanti minn kollox — hawn tidher fejn hemm nieqes.",
+        "startseite": "Paġna prinċipali",
+        "entwurf": "Abbozz",
+        "nichtIndexiert": "mhux indiċjata",
+        "gepflegt": "kompluta",
+        "fehltTitel": "It-titlu nieqes",
+        "fehltBeschreibung": "Id-deskrizzjoni nieqsa",
+        "fehltBeides": "It-titlu u d-deskrizzjoni neqsin",
+        "alleGepflegt": "Il-paġni kollha għandhom titlu u deskrizzjoni.",
+        "offeneLuecken": "{anzahl} paġni mingħajr titlu jew deskrizzjoni.",
+        "noindex": "Tindiċjax din il-paġna",
+        "noindexHinweis": "Il-paġna tibqa’ tintlaħaq mill-indirizz tagħha, imma ma tidhirx fir-riżultati tat-tfittxija.",
+        "speichern": "Issejvja",
+        "gespeichert": "Issejvjat.",
+        "ungespeichert": "Mhux issejvjat",
+        "keine": "Għadha ma nħolqot ebda paġna."
+      },
+      "schema": {
+        "titel": "Dejta strutturata",
+        "hinweis": "B’dan magna tat-tfittxija tifhem li prezz huwa prezz u indirizz huwa indirizz. Biss b’hekk jidhru stilel, prezzijiet u ħinijiet tal-ftuħ fir-riżultat tat-tfittxija.",
+        "typenTitel": "Dak li jintbagħat",
+        "organization": "Negozju u indirizz",
+        "organizationHinweis": "Isem, indirizz, telefon u e-mail mill-profil tan-negozju.",
+        "lodging": "Akkomodazzjoni bil-prezz",
+        "lodgingHinweis": "Għal kull paġna ta’ proprjetà: it-tip ta’ akkomodazzjoni, il-faċilitajiet u l-prezz tal-ġurnata.",
+        "breadcrumbs": "Mogħdija tal-paġna",
+        "breadcrumbsHinweis": "Turi fir-riżultat tat-tfittxija fejn tinsab il-paġna fis-sit web.",
+        "faq": "Mistoqsijiet u tweġibiet",
+        "faqHinweis": "Biss fuq paġni li għandhom sezzjoni ta’ mistoqsijiet u tweġibiet.",
+        "quelleTitel": "Minn fejn ġejja d-dejta",
+        "quelleHinweis": "Id-dejta kollha tiġi mill-profil tan-negozju u mid-dejta tal-proprjetajiet — xejn ma jiddaħħal darbtejn hawn. Jekk tonqos skema, l-aktar li jkun nieqes huwa l-indirizz fil-profil.",
+        "quelleKnopf": "Mur fil-profil tan-negozju"
+      },
+      "messung": {
+        "titel": "Kejl",
+        "hinweis": "Numru ta’ viżitaturi permezz ta’ Google. Qasam wieħed għall-erba’ identifikaturi kollha — Google jagħraf mill-prefiss liema prodott hu maħsub.",
+        "kennungTitel": "Identifikatur ta’ Google",
+        "kennungHinweis": "Analytics (G-), verżjoni antika (UA-), Google Ads (AW-) jew Campaign Manager (DC-).",
+        "kennung": "Identifikatur",
+        "kennungFormat": "Pereżempju G-ABCD123456. Jinstab fil-Google Analytics taħt Amministrazzjoni → Flussi tad-dejta.",
+        "kennungFehler": "L-identifikatur irid jibda b’G-, UA-, AW- jew DC-.",
+        "zustimmungTitel": "Kunsens",
+        "zustimmungHinweis": "L-iscript jitgħabba, imma jkejjel biss wara l-kunsens tal-viżitatur. Sa dak il-ħin ma jqiegħedx cookies.",
+        "zustimmungAktiv": "L-avviż tal-cookies huwa attiv. Il-kejl jibda biss wara li l-viżitatur jagħti klikk.",
+        "zustimmungFehlt": "Mingħajr avviż tal-cookies il-kejl jibda mill-ewwel. Fl-UE għal dan jeħtieġ il-kunsens.",
+        "zumHinweis": "Ixgħel l-avviż tal-cookies"
+      },
+      "weiterleitungen": {
+        "titel": "Ridirezzjonijiet",
+        "hinweis": "Idderieġi indirizzi qodma lejn oħrajn ġodda. Meħtieġ meta tiċċaqlaq minn sit web ieħor — mingħajr ridirezzjoni l-viżitaturi li jiġu minn Google u minn newsletters jispiċċaw fuq paġna ta’ żball.",
+        "neuTitel": "Ridirezzjoni ġdida",
+        "quelle": "Indirizz qadim",
+        "ziel": "Destinazzjoni ġdida",
+        "typ": "Tip",
+        "typ301": "Permanenti (301)",
+        "typ302": "Temporanja (302)",
+        "typ301Kurz": "permanenti",
+        "typ302Kurz": "temporanja",
+        "anlegen": "Oħloq",
+        "angelegt": "Ir-ridirezzjoni nħolqot.",
+        "geloescht": "Ir-ridirezzjoni tħassret.",
+        "loeschen": "Ħassar",
+        "aktivieren": "Attiva",
+        "deaktivieren": "Iddiżattiva",
+        "listeTitel": "Ridirezzjonijiet eżistenti",
+        "keine": "Għadha ma nħolqot ebda ridirezzjoni.",
+        "wirdGespeichert": "Dan hu li jiġi ssejvjat:",
+        "nurPfad": "Tiġi ssejvjata biss il-mogħdija:",
+        "csvImport": "Importa CSV",
+        "csvFormat": "Żewġ kolonni: indirizz qadim, destinazzjoni ġdida. Massimu 200 ringiela.",
+        "dateiZuGross": "Il-fajl huwa kbir wisq (massimu 200 KB).",
+        "dateiLeer": "Fil-fajl ma nstabet ebda ringiela valida.",
+        "importErgebnis": "{neu} ġodda, {geaendert} mibdula, {uebersprungen} maqbuża.",
+        "weitereFehler": "{anzahl} ringieli oħra bi żbalji.",
+        "vorrangHinweis": "Ridirezzjoni taħdem biss jekk fl-indirizz qadim ma jkunx hemm paġna. Paġna eżistenti dejjem tieħu preċedenza."
+      }
     }
   },
   "dynamicPricing": {

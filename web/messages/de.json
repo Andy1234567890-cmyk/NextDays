@@ -236,12 +236,10 @@
       "staff": "Personal",
       "jobs": "Jobs",
       "reservations": "Reservierungen",
-      "distribution": "Vertrieb",
       "hotel": "Hotel",
       "vacationRentals": "Ferienobjekte",
       "accounting": "Buchhaltung",
       "guests": "Gäste",
-      "tools": "Werkzeuge",
       "website": "Website-Baukasten"
     },
     "roles": {
@@ -4255,6 +4253,14 @@
       "learnBody": {
         "auto": "Eine planmäßige Aufgabe entsteht automatisch bei jeder Buchung der gewählten Objekte — mit Beginn und Ende relativ zu Check-in und Check-out.",
         "recurring": "Eine regelmäßige Aufgabe folgt dem Kalender: Anfangsdatum, Häufigkeit und Dauer. Das System legt die Termine im Voraus an — unabhängig von Buchungen."
+      },
+      "deckung": {
+        "titel": "Objekte ohne planmäßige Aufgabe",
+        "text": "{count} von {total} Objekten wird von keiner Regel erreicht. Dort entsteht nie eine Anreise- oder Reinigungsaufgabe.",
+        "hinweis": "Eine Regel ohne Objekt-Auswahl gilt für alle Objekte — auch für später angelegte.",
+        "nurAnreise": "keine Anreise-Regel",
+        "nurAbreise": "keine Abreise-Regel",
+        "keine": "keine Regel"
       }
     },
     "statsCards": {
@@ -7329,7 +7335,9 @@
       "unbekannterAbschnitt": "Unbekannter Abschnitt",
       "unbekannterAbschnittHinweis": "Diesen Abschnitt kennt der Baukasten nicht mehr. Er bleibt auf der Seite, bis Sie ihn entfernen.",
       "zurListe": "Alle Abschnitte",
-      "zurueck": "Zur Übersicht"
+      "zurueck": "Zur Übersicht",
+      "frageHinzufuegen": "Frage hinzufügen",
+      "fragenMax": "Mehr als {max} Fragen sind nicht möglich."
     },
     "pages": {
       "newPage": "Neue Seite",
@@ -7458,7 +7466,8 @@
       "einstellungen": "Einstellungen",
       "objekte": "Objekte",
       "seiten": "Seiten",
-      "widgets": "Widgets"
+      "widgets": "Widgets",
+      "seo": "SEO"
     },
     "baukasten": {
       "keinZugriff": "Sie haben keinen Zugriff auf den Website-Baukasten."
@@ -7653,7 +7662,9 @@
       "search": "Suche",
       "searchHinweis": "Suchfeld mit Datum und Gästezahl.",
       "spacer": "Abstand",
-      "spacerHinweis": "Leerraum zwischen zwei Abschnitten."
+      "spacerHinweis": "Leerraum zwischen zwei Abschnitten.",
+      "faq": "Fragen & Antworten",
+      "faqHinweis": "Aufklappbare Fragen. Erscheinen mit Struktur auch im Suchergebnis."
     },
     "felder": {
       "abstandGross": "Groß",
@@ -7694,7 +7705,10 @@
       "ueberschrift": "Überschrift",
       "variante": "Darstellung",
       "zentriert": "Zentriert",
-      "ziel": "Ziel"
+      "ziel": "Ziel",
+      "fragen": "Fragen",
+      "frage": "Frage",
+      "antwort": "Antwort"
     },
     "vorschau": {
       "desktop": "Computer",
@@ -7759,6 +7773,121 @@
         "suche": "Reiseziel, Zeitraum und Gästezahl — führt zur Objektliste auf Ihrer Website."
       },
       "typLabel": "Art des Widgets"
+    },
+    "seo": {
+      "felder": {
+        "titel": "Meta-Titel",
+        "titelHinweis": "Steht im Browser-Tab und als Überschrift im Suchergebnis. Um 60 Zeichen, danach schneidet Google ab.",
+        "beschreibung": "Meta-Beschreibung",
+        "beschreibungHinweis": "Der Text unter dem Titel im Suchergebnis. Er beeinflusst die Platzierung nicht, aber ob geklickt wird.",
+        "keywords": "Keywords",
+        "keywordsHinweis": "Kommagetrennt. Google und Bing werten sie nicht mehr — nur für kleinere Verzeichnisse.",
+        "canonical": "Kanonische Adresse",
+        "canonicalHinweis": "Nur nötig, wenn derselbe Inhalt unter zwei Adressen erreichbar ist. Leer heißt: diese Seite ist das Original.",
+        "rueckfall": "Site-weit"
+      },
+      "uebersicht": {
+        "titel": "Übersicht",
+        "hinweis": "Die Angaben hier gelten für die ganze Website. Sie greifen auf jeder Seite, die keine eigenen hat — die eigentliche Arbeit passiert unter „Seiten\".",
+        "metaTitel": "Site-weite Angaben",
+        "metaHinweis": "Rückfall für alle Seiten ohne eigene Angabe. Stehen überall dieselben, ist das für Suchmaschinen ein Zeichen fehlender Struktur.",
+        "indexTitel": "Suchmaschinen",
+        "noindex": "Website nicht indexieren",
+        "noindexHinweis": "Hält die ganze Website aus dem Suchindex. Für eine Seite im Aufbau — nach dem Start wieder ausschalten, sonst wird sie nie gefunden.",
+        "noindexWarnung": "Solange dieser Schalter an ist, liefert die robots.txt „Disallow: /\" und es gibt keine Sitemap.",
+        "tempoTitel": "Ladezeit (Core Web Vitals)",
+        "tempoHinweis": "Google bewertet die Ladezeit mit. Beide Schalter wirken sofort auf der Website.",
+        "lazy": "Bilder erst beim Scrollen laden",
+        "lazyHinweis": "Beschleunigt den ersten Aufbau. Bei einem großen Bild direkt am Seitenanfang kann es die Anzeige verlangsamen — dann ausschalten.",
+        "systemschrift": "Systemschrift zeigen, bis die eigene geladen ist",
+        "systemschriftHinweis": "Der Text ist sofort lesbar, die Seite wechselt aber sichtbar die Schrift.",
+        "dateienTitel": "Was Suchmaschinen abrufen",
+        "dateienHinweis": "Diese drei Dateien entstehen automatisch aus den Angaben oben. Die sitemap.xml gehört in die Google Search Console — das ist der Schritt, der die Aufnahme beschleunigt.",
+        "datei": {
+          "sitemap": "Alle Adressen der Website mit Datum der letzten Änderung.",
+          "robots": "Was gecrawlt werden darf und wo die Sitemap liegt.",
+          "llms": "Kurzfassung der Website für Antwortmaschinen wie ChatGPT oder Perplexity."
+        },
+        "keineDomain": "Noch keine eigene Domain verbunden. Die drei Dateien entstehen, sobald die Website unter einer eigenen Adresse läuft."
+      },
+      "seiten": {
+        "titel": "Seiten",
+        "hinweis": "Jede Seite braucht einen eigenen Titel und eine eigene Beschreibung. Das ist der wichtigste Hebel überhaupt — hier steht, wo etwas fehlt.",
+        "startseite": "Startseite",
+        "entwurf": "Entwurf",
+        "nichtIndexiert": "nicht indexiert",
+        "gepflegt": "vollständig",
+        "fehltTitel": "Titel fehlt",
+        "fehltBeschreibung": "Beschreibung fehlt",
+        "fehltBeides": "Titel und Beschreibung fehlen",
+        "alleGepflegt": "Alle Seiten haben Titel und Beschreibung.",
+        "offeneLuecken": "{anzahl} Seiten ohne Titel oder Beschreibung.",
+        "noindex": "Diese Seite nicht indexieren",
+        "noindexHinweis": "Die Seite bleibt über ihre Adresse erreichbar, erscheint aber nicht in Suchergebnissen.",
+        "speichern": "Speichern",
+        "gespeichert": "Gespeichert.",
+        "ungespeichert": "Nicht gespeichert",
+        "keine": "Noch keine Seiten angelegt."
+      },
+      "schema": {
+        "titel": "Strukturierte Daten",
+        "hinweis": "Damit versteht eine Suchmaschine, dass ein Preis ein Preis und eine Anschrift eine Anschrift ist. Erst dadurch erscheinen Sterne, Preise und Öffnungszeiten im Suchergebnis.",
+        "typenTitel": "Was ausgeliefert wird",
+        "organization": "Betrieb und Anschrift",
+        "organizationHinweis": "Name, Anschrift, Telefon und E-Mail aus dem Firmenprofil.",
+        "lodging": "Unterkünfte mit Preis",
+        "lodgingHinweis": "Je Objektseite: Art der Unterkunft, Ausstattung und der tagesaktuelle Preis.",
+        "breadcrumbs": "Seitenpfad",
+        "breadcrumbsHinweis": "Zeigt im Suchergebnis, wo die Seite innerhalb der Website liegt.",
+        "faq": "Fragen und Antworten",
+        "faqHinweis": "Nur auf Seiten mit einem Frage-Antwort-Abschnitt.",
+        "quelleTitel": "Woher die Angaben kommen",
+        "quelleHinweis": "Alle Angaben stammen aus dem Firmenprofil und den Objektdaten — nichts wird hier doppelt eingetragen. Fehlt ein Schema, fehlt meist die Anschrift im Profil.",
+        "quelleKnopf": "Zum Firmenprofil"
+      },
+      "messung": {
+        "titel": "Messung",
+        "hinweis": "Besucherzahlen über Google. Ein Feld für alle vier Kennungen — welches Produkt gemeint ist, erkennt Google am Präfix.",
+        "kennungTitel": "Google-Kennung",
+        "kennungHinweis": "Analytics (G-), Altbestand (UA-), Google Ads (AW-) oder Campaign Manager (DC-).",
+        "kennung": "Kennung",
+        "kennungFormat": "Zum Beispiel G-ABCD123456. Zu finden in Google Analytics unter Verwaltung → Datenstreams.",
+        "kennungFehler": "Die Kennung muss mit G-, UA-, AW- oder DC- beginnen.",
+        "zustimmungTitel": "Zustimmung",
+        "zustimmungHinweis": "Das Skript lädt, misst aber erst nach Zustimmung des Besuchers. Bis dahin setzt es keine Cookies.",
+        "zustimmungAktiv": "Der Cookie-Hinweis ist aktiv. Gemessen wird erst nach dem Klick des Besuchers.",
+        "zustimmungFehlt": "Ohne Cookie-Hinweis wird sofort gemessen. In der EU ist dafür eine Zustimmung erforderlich.",
+        "zumHinweis": "Cookie-Hinweis einschalten"
+      },
+      "weiterleitungen": {
+        "titel": "Weiterleitungen",
+        "hinweis": "Alte Adressen auf neue umlenken. Nötig bei einem Umzug von einer anderen Website — ohne Weiterleitung landen Besucher aus Google und aus Newslettern auf einer Fehlerseite.",
+        "neuTitel": "Neue Weiterleitung",
+        "quelle": "Alte Adresse",
+        "ziel": "Neues Ziel",
+        "typ": "Art",
+        "typ301": "Dauerhaft (301)",
+        "typ302": "Vorübergehend (302)",
+        "typ301Kurz": "dauerhaft",
+        "typ302Kurz": "vorübergehend",
+        "anlegen": "Anlegen",
+        "angelegt": "Weiterleitung angelegt.",
+        "geloescht": "Weiterleitung gelöscht.",
+        "loeschen": "Löschen",
+        "aktivieren": "Aktivieren",
+        "deaktivieren": "Deaktivieren",
+        "listeTitel": "Bestehende Weiterleitungen",
+        "keine": "Noch keine Weiterleitungen angelegt.",
+        "wirdGespeichert": "Gespeichert wird:",
+        "nurPfad": "Nur der Pfad wird gespeichert:",
+        "csvImport": "CSV einlesen",
+        "csvFormat": "Zwei Spalten: alte Adresse, neues Ziel. Höchstens 200 Zeilen.",
+        "dateiZuGross": "Die Datei ist zu groß (höchstens 200 KB).",
+        "dateiLeer": "In der Datei wurde keine gültige Zeile gefunden.",
+        "importErgebnis": "{neu} neu, {geaendert} geändert, {uebersprungen} übersprungen.",
+        "weitereFehler": "{anzahl} weitere Zeilen mit Fehlern.",
+        "vorrangHinweis": "Eine Weiterleitung greift nur, wenn es unter der alten Adresse keine Seite gibt. Eine bestehende Seite hat immer Vorrang."
+      }
     }
   },
   "dynamicPricing": {

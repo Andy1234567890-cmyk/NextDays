@@ -1410,3 +1410,72 @@ def test_unlesbare_fenstergrenze_faellt_hart_durch() -> None:
     with pytest.raises(TaskError) as exc:
         _als_zeitpunkt("naechster Monat", "month_to")
     assert exc.value.status_code == 422
+
+
+def _deckung_db(rules: list[dict], props: list[dict], zuordnung: dict) -> MagicMock:
+    """Fake-DB für `regel_deckung`: task_rules, properties, task_rule_assignments."""
+    db = MagicMock()
+
+    def table(name: str) -> MagicMock:
+        q = MagicMock()
+        if name == "task_rules":
+            kette = q.select.return_value.eq.return_value.eq.return_value
+            kette.eq.return_value.not_.is_.return_value.execute.return_value.data = (
+                rules
+            )
+        elif name == "properties":
+            kette = q.select.return_value.eq.return_value.order.return_value
+            kette.execute.return_value.data = props
+        elif name == "task_rule_assignments":
+            rows = [
+                {"rule_id": rid, "property_id": pid}
+                for rid, pids in zuordnung.items()
+                for pid in pids
+            ]
+            q.select.return_value.in_.return_value.execute.return_value.data = rows
+        return q
+
+    db.table.side_effect = table
+    return db
+
+
+def test_deckung_meldet_objekt_ohne_regel() -> None:
+    """Ein Objekt, das keiner Regel zugeordnet ist, bekommt NIE eine Aufgabe.
+
+    Sobald einer Regel ein Objekt zugeordnet ist, gilt sie nur noch für die
+    gelisteten — ein später angelegtes Objekt fällt still heraus. Live traf das
+    2 von 19 Objekten, und nichts in der Oberfläche sagte das.
+    """
+    svc = TasksService(
+        client=_deckung_db(
+            rules=[
+                {"id": "r_an", "start_trigger": "days_before_check_in"},
+                {"id": "r_ab", "start_trigger": "check_out"},
+            ],
+            props=[{"id": "p1", "title": "Haus A"}, {"id": "p2", "title": "Haus B"}],
+            zuordnung={"r_an": ["p1"], "r_ab": ["p1"]},
+        )
+    )
+    deckung = svc.regel_deckung("t1")
+    assert deckung.objekte == 2
+    assert deckung.ohne_anreise == 1
+    assert deckung.ohne_abreise == 1
+    assert [b.property_title for b in deckung.betroffen] == ["Haus B"]
+
+
+def test_regel_ohne_zuordnung_deckt_jedes_objekt() -> None:
+    """Eine Regel ohne Objekt-Zuordnung gilt für ALLE — auch für künftige."""
+    svc = TasksService(
+        client=_deckung_db(
+            rules=[
+                {"id": "r_an", "start_trigger": "check_in"},
+                {"id": "r_ab", "start_trigger": "days_after_check_out"},
+            ],
+            props=[{"id": "p1", "title": "Haus A"}, {"id": "p2", "title": "Haus B"}],
+            zuordnung={},
+        )
+    )
+    deckung = svc.regel_deckung("t1")
+    assert deckung.ohne_anreise == 0
+    assert deckung.ohne_abreise == 0
+    assert deckung.betroffen == []

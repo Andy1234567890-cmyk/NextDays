@@ -69,6 +69,7 @@ from .schemas import (
     InspectionState,
     InventoryItem,
     InventoryItemCreate,
+    RegelDeckung,
     RuleCreate,
     RuleDetail,
     RuleItem,
@@ -93,6 +94,7 @@ from .schemas import (
     TaskRuleKind,
     TaskSource,
     TaskStatus,
+    UngedecktesObjekt,
 )
 
 log = get_logger("nextdays.tasks")
@@ -1999,6 +2001,78 @@ class TasksService:
         return self.get_detail(tenant_id, task_id)
 
     # --- Regeln / Vorlagen (task_rules kind=template|auto|recurring) ---
+
+    # Trigger, die am ANREISE-Anker hängen; alles andere hängt an der Abreise.
+    _ANREISE_TRIGGER = frozenset(
+        {"check_in", "days_before_check_in", "after_check_in_24h", "booking_confirmed"}
+    )
+
+    def regel_deckung(self, tenant_id: str) -> RegelDeckung:
+        """Objekte OHNE wirksame planmäßige Regel — getrennt nach An- und Abreise.
+
+        Die Frage, die niemand stellt, bis eine Aufgabe fehlt: greift für jedes
+        Objekt überhaupt eine Regel? Eine Regel ohne Objekt-Zuordnung gilt für
+        alle; sobald ihr eines zugeordnet ist, gilt sie NUR für die gelisteten.
+        Ein später angelegtes Objekt fällt damit still heraus — und ein neu
+        angelegter Betrieb hat gar keine Regel, bekommt also nie eine Aufgabe,
+        ohne dass irgendwo ein Hinweis steht.
+        """
+        db = self._db()
+        rules = (
+            db.table("task_rules")
+            .select("id, start_trigger")
+            .eq("tenant_id", tenant_id)
+            .eq("kind", TaskRuleKind.auto.value)
+            .eq("active", True)
+            .not_.is_("start_trigger", "null")
+            .execute()
+        ).data or []
+        props = (
+            db.table("properties")
+            .select("id, title")
+            .eq("tenant_id", tenant_id)
+            .order("title")
+            .execute()
+        ).data or []
+        zuordnung = self._rule_property_ids({str(r["id"]) for r in rules})
+
+        # Je Achse: die Objekte, die von mindestens einer Regel erreicht werden.
+        # `alle` = es gibt eine Regel ohne Zuordnung, die damit jedes Objekt
+        # trifft (auch jedes künftige).
+        gedeckt: dict[str, set[str]] = {"anreise": set(), "abreise": set()}
+        alle: dict[str, bool] = {"anreise": False, "abreise": False}
+        for rule in rules:
+            achse = (
+                "anreise"
+                if str(rule.get("start_trigger")) in self._ANREISE_TRIGGER
+                else "abreise"
+            )
+            ids = zuordnung.get(str(rule["id"])) or []
+            if ids:
+                gedeckt[achse].update(str(i) for i in ids)
+            else:
+                alle[achse] = True
+
+        betroffen: list[UngedecktesObjekt] = []
+        for p in props:
+            pid = str(p["id"])
+            ohne_anreise = not alle["anreise"] and pid not in gedeckt["anreise"]
+            ohne_abreise = not alle["abreise"] and pid not in gedeckt["abreise"]
+            if ohne_anreise or ohne_abreise:
+                betroffen.append(
+                    UngedecktesObjekt(
+                        property_id=pid,
+                        property_title=str(p.get("title") or ""),
+                        ohne_anreise=ohne_anreise,
+                        ohne_abreise=ohne_abreise,
+                    )
+                )
+        return RegelDeckung(
+            objekte=len(props),
+            ohne_anreise=sum(1 for b in betroffen if b.ohne_anreise),
+            ohne_abreise=sum(1 for b in betroffen if b.ohne_abreise),
+            betroffen=betroffen,
+        )
 
     def list_rules(self, tenant_id: str, kind: TaskRuleKind) -> list[RuleListItem]:
         rows = (

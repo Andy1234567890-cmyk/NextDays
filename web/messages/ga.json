@@ -239,12 +239,10 @@
       "staff": "Foireann",
       "jobs": "Poist",
       "reservations": "Áirithintí",
-      "distribution": "Dáileadh",
       "hotel": "Óstán",
       "vacationRentals": "Cóiríocht saoire",
       "accounting": "Cuntasaíocht",
       "guests": "Aíonna",
-      "tools": "Uirlisí",
       "website": "Tógálaí suíomh gréasáin"
     },
     "roles": {
@@ -4255,6 +4253,14 @@
       "learnBody": {
         "auto": "Cruthaítear tasc sceidealta go huathoibríoch le gach áirithint den chóiríocht roghnaithe — le tús agus deireadh i gcoibhneas leis an teacht isteach agus an t-imeacht.",
         "recurring": "Leanann tasc athfhillteach an féilire: dáta tosaigh, minicíocht agus fad. Cruthaíonn an córas na hócáidí roimh ré — go neamhspleách ar áirithintí."
+      },
+      "deckung": {
+        "titel": "Cóiríocht gan tasc sceidealta",
+        "text": "Níl {count} as {total} cóiríocht cumhdaithe ag aon riail. Ní chruthófar tasc teachta isteach ná glantacháin ann riamh.",
+        "hinweis": "Bíonn riail gan roghnú cóiríochta i bhfeidhm do gach cóiríocht — lena n-áirítear cinn a chruthófar amach anseo.",
+        "nurAnreise": "gan riail teachta isteach",
+        "nurAbreise": "gan riail imeachta",
+        "keine": "gan riail"
       }
     },
     "statsCards": {
@@ -7115,7 +7121,8 @@
       "seiten": "Leathanaigh",
       "einstellungen": "Socruithe",
       "objekte": "Réadmhaoin",
-      "widgets": "Giuirléidí"
+      "widgets": "Giuirléidí",
+      "seo": "SEO"
     },
     "kopf": {
       "websiteAnsehen": "Féach ar an suíomh",
@@ -7341,7 +7348,9 @@
       "bildHinzufuegen": "Cuir íomhá leis",
       "objekteHinweis": "Aitheantóirí na gcóiríochtaí ba mhaith leat a thaispeáint anseo.",
       "objektIdPlatzhalter": "Aitheantóir cóiríochta",
-      "objektHinzufuegen": "Cuir leis"
+      "objektHinzufuegen": "Cuir leis",
+      "frageHinzufuegen": "Cuir ceist leis",
+      "fragenMax": "Ní féidir níos mó ná {max} ceist a chur leis."
     },
     "abschnitte": {
       "hero": "Príomhíomhá",
@@ -7365,7 +7374,9 @@
       "image": "Íomhá",
       "imageHinweis": "Íomhá amháin agus foscríbhinn léi.",
       "gallery": "Gailearaí",
-      "galleryHinweis": "Roinnt íomhánna i ngreille."
+      "galleryHinweis": "Roinnt íomhánna i ngreille.",
+      "faq": "Ceisteanna agus freagraí",
+      "faqHinweis": "Ceisteanna inleathnaithe. Le sonraí struchtúrtha taispeántar iad i dtorthaí cuardaigh freisin."
     },
     "felder": {
       "eyebrow": "Líne bheag os cionn",
@@ -7406,7 +7417,10 @@
       "email": "Ríomhphost",
       "telefon": "Teileafón",
       "adresse": "Seoladh",
-      "formularZeigen": "Taispeáin an fhoirm teagmhála"
+      "formularZeigen": "Taispeáin an fhoirm teagmhála",
+      "fragen": "Ceisteanna",
+      "frage": "Ceist",
+      "antwort": "Freagra"
     },
     "vorschau": {
       "titel": "Réamhamharc",
@@ -7560,6 +7574,121 @@
       "kopiert": "Cód cóipeáilte.",
       "kopierenFehler": "Ní féidir cóipeáil — roghnaigh de láimh, le do thoil.",
       "keineDomain": "Teastaíonn do fhearann féin le giuirléid: níl ach é ag obair go buan ar shuíomh eile. Ceangail é faoi Socruithe → Seoladh."
+    },
+    "seo": {
+      "felder": {
+        "titel": "Meiteatheideal",
+        "titelHinweis": "Taispeántar é i gcluaisín an bhrabhsálaí agus mar cheannlíne sa toradh cuardaigh. Timpeall 60 carachtar — gearrann Google as sin amach é.",
+        "beschreibung": "Meiteathuairisc",
+        "beschreibungHinweis": "An téacs faoin teideal sa toradh cuardaigh. Ní bhíonn tionchar aige ar an rangú, ach bíonn tionchar aige ar cé acu a chliceálfar é nó nach gcliceálfar.",
+        "keywords": "Eochairfhocail",
+        "keywordsHinweis": "Scartha le camóga. Ní úsáideann Google ná Bing a thuilleadh iad — d’eolairí níos lú amháin.",
+        "canonical": "Seoladh canónta",
+        "canonicalHinweis": "Ní bhíonn gá leis ach nuair atá an t-inneachar céanna ar fáil ag dhá sheoladh. Ciallaíonn folamh: is é an leathanach seo an bunleagan.",
+        "rueckfall": "Ar fud an tsuímh"
+      },
+      "uebersicht": {
+        "titel": "Forbhreathnú",
+        "hinweis": "Baineann na socruithe anseo leis an suíomh gréasáin ar fad. Feidhmíonn siad ar gach leathanach nach bhfuil a chuid féin aige — is faoi “Leathanaigh” a dhéantar an fíor-obair.",
+        "metaTitel": "Socruithe ar fud an tsuímh",
+        "metaHinweis": "Cúltaca do gach leathanach gan a chuid féin. Má tá an téacs céanna i ngach áit, léann innill chuardaigh sin mar easpa struchtúir.",
+        "indexTitel": "Innill chuardaigh",
+        "noindex": "Ná déan innéacsú ar an suíomh gréasáin",
+        "noindexHinweis": "Coinníonn sé an suíomh gréasáin ar fad amach as an innéacs cuardaigh. Do shuíomh atá á thógáil — múch arís é tar éis an tseolta, nó ní bhfaighfear é choíche.",
+        "noindexWarnung": "Fad is atá an lasc seo ar siúl, seolann an robots.txt “Disallow: /” ar ais agus níl aon Sitemap ann.",
+        "tempoTitel": "Am lódála (Core Web Vitals)",
+        "tempoHinweis": "Cuireann Google an t-am lódála i gcuntas. Feidhmíonn an dá lasc láithreach ar an suíomh gréasáin.",
+        "lazy": "Ná lódáil íomhánna ach le scrollú",
+        "lazyHinweis": "Cuireann sé dlús leis an gcéad taispeáint. Le híomhá mhór ag barr an leathanaigh féadfaidh sé an taispeáint a mhoilliú — múch é ansin.",
+        "systemschrift": "Taispeáin cló an chórais go dtí go mbeidh do chló féin lódáilte",
+        "systemschriftHinweis": "Bíonn an téacs inléite láithreach, ach athraíonn an leathanach an cló go sofheicthe.",
+        "dateienTitel": "Cad a fhaigheann innill chuardaigh",
+        "dateienHinweis": "Cruthaítear na trí chomhad seo go huathoibríoch as na socruithe thuas. Baineann an sitemap.xml le Google Search Console — sin an chéim a chuireann dlús leis an innéacsú.",
+        "datei": {
+          "sitemap": "Gach seoladh ar an suíomh gréasáin mar aon le dáta an athraithe dheireanaigh.",
+          "robots": "Cad is féidir le hinnill chuardaigh a léamh agus cá bhfuil an Sitemap.",
+          "llms": "Leagan gearr den suíomh gréasáin d’innill fhreagra ar nós ChatGPT nó Perplexity."
+        },
+        "keineDomain": "Níl fearann dá chuid féin ceangailte go fóill. Cruthaítear na trí chomhad a luaithe a ritheann an suíomh gréasáin faoina sheoladh féin."
+      },
+      "seiten": {
+        "titel": "Leathanaigh",
+        "hinweis": "Teastaíonn teideal dá chuid féin agus cur síos dá chuid féin ó gach leathanach. Sin an luamhán is tábhachtaí ar fad — taispeánann sé seo cá bhfuil rud éigin in easnamh.",
+        "startseite": "Leathanach baile",
+        "entwurf": "Dréacht",
+        "nichtIndexiert": "gan innéacsú",
+        "gepflegt": "iomlán",
+        "fehltTitel": "Teideal in easnamh",
+        "fehltBeschreibung": "Cur síos in easnamh",
+        "fehltBeides": "Teideal agus cur síos in easnamh",
+        "alleGepflegt": "Tá teideal agus cur síos ag gach leathanach.",
+        "offeneLuecken": "{anzahl} leathanach gan teideal nó gan cur síos.",
+        "noindex": "Ná déan innéacsú ar an leathanach seo",
+        "noindexHinweis": "Fanann an leathanach inrochtana ag a sheoladh, ach ní thaispeántar é i dtorthaí cuardaigh.",
+        "speichern": "Sábháil",
+        "gespeichert": "Sábháilte.",
+        "ungespeichert": "Gan sábháil",
+        "keine": "Níl aon leathanach cruthaithe go fóill."
+      },
+      "schema": {
+        "titel": "Sonraí struchtúrtha",
+        "hinweis": "Sin mar a thuigeann inneall cuardaigh gur praghas é praghas agus gur seoladh é seoladh. Ní thaispeántar réaltaí, praghsanna ná uaireanta oscailte sa toradh cuardaigh ach dá bharr.",
+        "typenTitel": "Cad a sheachadtar",
+        "organization": "Gnólacht agus seoladh",
+        "organizationHinweis": "Ainm, seoladh, teileafón agus ríomhphost as próifíl an ghnólachta.",
+        "lodging": "Lóistín le praghas",
+        "lodgingHinweis": "In aghaidh gach leathanach maoine: cineál an lóistín, na háiseanna agus praghas an lae.",
+        "breadcrumbs": "Cosán an leathanaigh",
+        "breadcrumbsHinweis": "Taispeánann sé sa toradh cuardaigh cá bhfuil an leathanach suite laistigh den suíomh gréasáin.",
+        "faq": "Ceisteanna agus freagraí",
+        "faqHinweis": "Ar leathanaigh a bhfuil rannóg ceisteanna agus freagraí orthu amháin.",
+        "quelleTitel": "Cad as a dtagann na sonraí",
+        "quelleHinweis": "Tagann na sonraí ar fad as próifíl an ghnólachta agus as sonraí na maoine — ní chuirtear rud ar bith isteach faoi dhó anseo. Má tá scéimre in easnamh, is é an seoladh sa phróifíl a bhíonn in easnamh go hiondúil.",
+        "quelleKnopf": "Go dtí próifíl an ghnólachta"
+      },
+      "messung": {
+        "titel": "Tomhas",
+        "hinweis": "Líon na gcuairteoirí trí Google. Réimse amháin do na ceithre aitheantóir ar fad — aithníonn Google ón réimír cén táirge atá i gceist.",
+        "kennungTitel": "Aitheantóir Google",
+        "kennungHinweis": "Analytics (G-), seanleagan (UA-), Google Ads (AW-) nó Campaign Manager (DC-).",
+        "kennung": "Aitheantóir",
+        "kennungFormat": "Mar shampla G-ABCD123456. Le fáil i Google Analytics faoi Riarachán → Sruthanna sonraí.",
+        "kennungFehler": "Ní mór don aitheantóir tosú le G-, UA-, AW- nó DC-.",
+        "zustimmungTitel": "Toiliú",
+        "zustimmungHinweis": "Lódálann an script, ach ní thomhaiseann sí ach tar éis toiliú an chuairteora. Go dtí sin ní shocraíonn sí aon fhianáin.",
+        "zustimmungAktiv": "Tá fógra na bhfianán gníomhach. Ní thosaíonn an tomhas ach tar éis don chuairteoir cliceáil.",
+        "zustimmungFehlt": "Gan fógra fianán tosaíonn an tomhas láithreach. San AE teastaíonn toiliú chuige sin.",
+        "zumHinweis": "Cuir fógra na bhfianán ar siúl"
+      },
+      "weiterleitungen": {
+        "titel": "Atreoruithe",
+        "hinweis": "Seanseoltaí a atreorú chuig seoltaí nua. Riachtanach agus tú ag aistriú ó shuíomh gréasáin eile — gan atreorú tagann cuairteoirí ó Google agus ó nuachtlitreacha ar leathanach earráide.",
+        "neuTitel": "Atreorú nua",
+        "quelle": "Seanseoladh",
+        "ziel": "Sprioc nua",
+        "typ": "Cineál",
+        "typ301": "Buan (301)",
+        "typ302": "Sealadach (302)",
+        "typ301Kurz": "buan",
+        "typ302Kurz": "sealadach",
+        "anlegen": "Cruthaigh",
+        "angelegt": "Atreorú cruthaithe.",
+        "geloescht": "Atreorú scriosta.",
+        "loeschen": "Scrios",
+        "aktivieren": "Cuir ar siúl",
+        "deaktivieren": "Múch",
+        "listeTitel": "Atreoruithe atá ann",
+        "keine": "Níl aon atreorú cruthaithe go fóill.",
+        "wirdGespeichert": "Is é seo a shábhálfar:",
+        "nurPfad": "Ní shábhálfar ach an cosán:",
+        "csvImport": "Iompórtáil CSV",
+        "csvFormat": "Dhá cholún: seanseoladh, sprioc nua. 200 líne ar a mhéad.",
+        "dateiZuGross": "Tá an comhad rómhór (200 KB ar a mhéad).",
+        "dateiLeer": "Níor aimsíodh líne bhailí ar bith sa chomhad.",
+        "importErgebnis": "{neu} nua, {geaendert} athraithe, {uebersprungen} scipeáilte.",
+        "weitereFehler": "{anzahl} líne eile le hearráidí.",
+        "vorrangHinweis": "Ní fheidhmíonn atreorú ach mura bhfuil leathanach ann ag an seanseoladh. Bíonn tosaíocht i gcónaí ag leathanach atá ann cheana."
+      }
     }
   },
   "dynamicPricing": {

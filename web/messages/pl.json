@@ -239,12 +239,10 @@
       "staff": "Personel",
       "jobs": "Praca",
       "reservations": "Rezerwacje",
-      "distribution": "Dystrybucja",
       "hotel": "Hotel",
       "vacationRentals": "Obiekty wakacyjne",
       "accounting": "Księgowość",
       "guests": "Goście",
-      "tools": "Narzędzia",
       "website": "Kreator stron"
     },
     "roles": {
@@ -4253,6 +4251,14 @@
       "learnBody": {
         "auto": "Zadanie planowe powstaje automatycznie przy każdej rezerwacji wybranych obiektów — z początkiem i końcem względem zameldowania i wymeldowania.",
         "recurring": "Zadanie cykliczne podąża za kalendarzem: data początkowa, częstotliwość i czas trwania. System tworzy terminy z wyprzedzeniem — niezależnie od rezerwacji."
+      },
+      "deckung": {
+        "titel": "Obiekty bez zadania planowego",
+        "text": "{count} z {total} obiektów nie jest objętych żadną regułą. Nigdy nie powstanie tam zadanie zameldowania lub sprzątania.",
+        "hinweis": "Reguła bez wyboru obiektu obejmuje wszystkie obiekty — także te utworzone później.",
+        "nurAnreise": "brak reguły zameldowania",
+        "nurAbreise": "brak reguły wymeldowania",
+        "keine": "brak reguły"
       }
     },
     "statsCards": {
@@ -7113,7 +7119,8 @@
       "seiten": "Strony",
       "einstellungen": "Ustawienia",
       "objekte": "Obiekty",
-      "widgets": "Widżety"
+      "widgets": "Widżety",
+      "seo": "SEO"
     },
     "kopf": {
       "websiteAnsehen": "Zobacz stronę",
@@ -7339,7 +7346,9 @@
       "bildHinzufuegen": "Dodaj zdjęcie",
       "objekteHinweis": "Identyfikatory obiektów, które mają się tu pojawić.",
       "objektIdPlatzhalter": "Identyfikator obiektu",
-      "objektHinzufuegen": "Dodaj"
+      "objektHinzufuegen": "Dodaj",
+      "frageHinzufuegen": "Dodaj pytanie",
+      "fragenMax": "Więcej niż {max} pytań nie jest możliwe."
     },
     "abschnitte": {
       "hero": "Zdjęcie główne",
@@ -7363,7 +7372,9 @@
       "image": "Zdjęcie",
       "imageHinweis": "Zdjęcie z podpisem.",
       "gallery": "Galeria",
-      "galleryHinweis": "Kilka zdjęć w siatce."
+      "galleryHinweis": "Kilka zdjęć w siatce.",
+      "faq": "Pytania i odpowiedzi",
+      "faqHinweis": "Rozwijane pytania. Z danymi strukturalnymi pojawiają się też w wynikach wyszukiwania."
     },
     "felder": {
       "eyebrow": "Mała linia powyżej",
@@ -7404,7 +7415,10 @@
       "email": "E-mail",
       "telefon": "Telefon",
       "adresse": "Adres",
-      "formularZeigen": "Pokaż formularz kontaktowy"
+      "formularZeigen": "Pokaż formularz kontaktowy",
+      "fragen": "Pytania",
+      "frage": "Pytanie",
+      "antwort": "Odpowiedź"
     },
     "vorschau": {
       "titel": "Podgląd",
@@ -7558,6 +7572,121 @@
       "kopiert": "Kod skopiowany.",
       "kopierenFehler": "Kopiowanie niemożliwe — zaznacz ręcznie.",
       "keineDomain": "Widżet wymaga własnej domeny: tylko ona działa trwale na obcej stronie. Podłącz ją w Ustawienia → Adres."
+    },
+    "seo": {
+      "felder": {
+        "titel": "Tytuł meta",
+        "titelHinweis": "Widoczny na karcie przeglądarki i jako nagłówek w wyniku wyszukiwania. Około 60 znaków, dalszą część Google obcina.",
+        "beschreibung": "Opis meta",
+        "beschreibungHinweis": "Tekst pod tytułem w wyniku wyszukiwania. Nie wpływa na pozycję, ale na to, czy ktoś kliknie.",
+        "keywords": "Słowa kluczowe",
+        "keywordsHinweis": "Rozdzielone przecinkami. Google i Bing ich już nie uwzględniają — tylko dla mniejszych katalogów.",
+        "canonical": "Adres kanoniczny",
+        "canonicalHinweis": "Potrzebny tylko wtedy, gdy ta sama treść jest dostępna pod dwoma adresami. Puste pole znaczy: ta strona jest oryginałem.",
+        "rueckfall": "Dla całej witryny"
+      },
+      "uebersicht": {
+        "titel": "Przegląd",
+        "hinweis": "Dane podane tutaj obowiązują dla całej witryny. Działają na każdej stronie, która nie ma własnych — właściwa praca odbywa się w sekcji „Strony”.",
+        "metaTitel": "Dane dla całej witryny",
+        "metaHinweis": "Rezerwa dla wszystkich stron bez własnych danych. Jeśli wszędzie są takie same, dla wyszukiwarek jest to znak braku struktury.",
+        "indexTitel": "Wyszukiwarki",
+        "noindex": "Nie indeksuj witryny",
+        "noindexHinweis": "Trzyma całą witrynę poza indeksem wyszukiwania. Do strony w budowie — po uruchomieniu wyłącz, inaczej nikt jej nie znajdzie.",
+        "noindexWarnung": "Dopóki ten przełącznik jest włączony, robots.txt zwraca „Disallow: /” i nie powstaje żaden plik sitemap.",
+        "tempoTitel": "Czas wczytywania (Core Web Vitals)",
+        "tempoHinweis": "Google uwzględnia czas wczytywania w ocenie. Oba przełączniki działają na witrynie od razu.",
+        "lazy": "Wczytuj obrazy dopiero przy przewijaniu",
+        "lazyHinweis": "Przyspiesza pierwsze wyświetlenie. Przy dużym obrazie na samej górze strony może opóźnić wyświetlenie — wtedy wyłącz.",
+        "systemschrift": "Pokazuj czcionkę systemową, dopóki własna się nie wczyta",
+        "systemschriftHinweis": "Tekst jest czytelny od razu, ale strona widocznie zmienia czcionkę.",
+        "dateienTitel": "Co pobierają wyszukiwarki",
+        "dateienHinweis": "Te trzy pliki powstają automatycznie z danych powyżej. Plik sitemap.xml należy dodać w Google Search Console — to krok, który przyspiesza indeksowanie.",
+        "datei": {
+          "sitemap": "Wszystkie adresy witryny z datą ostatniej zmiany.",
+          "robots": "Co można indeksować i gdzie leży sitemap.",
+          "llms": "Skrót witryny dla wyszukiwarek odpowiedzi, takich jak ChatGPT czy Perplexity."
+        },
+        "keineDomain": "Nie połączono jeszcze własnej domeny. Te trzy pliki powstaną, gdy witryna będzie działać pod własnym adresem."
+      },
+      "seiten": {
+        "titel": "Strony",
+        "hinweis": "Każda strona potrzebuje własnego tytułu i własnego opisu. To najważniejsza dźwignia — tutaj widać, czego brakuje.",
+        "startseite": "Strona główna",
+        "entwurf": "Szkic",
+        "nichtIndexiert": "nieindeksowana",
+        "gepflegt": "kompletna",
+        "fehltTitel": "Brak tytułu",
+        "fehltBeschreibung": "Brak opisu",
+        "fehltBeides": "Brak tytułu i opisu",
+        "alleGepflegt": "Wszystkie strony mają tytuł i opis.",
+        "offeneLuecken": "{anzahl} stron bez tytułu lub opisu.",
+        "noindex": "Nie indeksuj tej strony",
+        "noindexHinweis": "Strona pozostaje dostępna pod swoim adresem, ale nie pojawia się w wynikach wyszukiwania.",
+        "speichern": "Zapisz",
+        "gespeichert": "Zapisano.",
+        "ungespeichert": "Niezapisane",
+        "keine": "Nie utworzono jeszcze żadnych stron."
+      },
+      "schema": {
+        "titel": "Dane strukturalne",
+        "hinweis": "Dzięki nim wyszukiwarka rozumie, że cena to cena, a adres to adres. Dopiero wtedy w wyniku wyszukiwania pojawiają się gwiazdki, ceny i godziny otwarcia.",
+        "typenTitel": "Co jest przekazywane",
+        "organization": "Firma i adres",
+        "organizationHinweis": "Nazwa, adres, telefon i e-mail z profilu firmy.",
+        "lodging": "Obiekty z ceną",
+        "lodgingHinweis": "Na każdej stronie obiektu: rodzaj zakwaterowania, wyposażenie i aktualna cena dnia.",
+        "breadcrumbs": "Ścieżka strony",
+        "breadcrumbsHinweis": "Pokazuje w wyniku wyszukiwania, gdzie strona znajduje się w witrynie.",
+        "faq": "Pytania i odpowiedzi",
+        "faqHinweis": "Tylko na stronach z sekcją pytań i odpowiedzi.",
+        "quelleTitel": "Skąd pochodzą dane",
+        "quelleHinweis": "Wszystkie dane pochodzą z profilu firmy i danych obiektów — nic nie jest tu wpisywane po raz drugi. Jeśli brakuje schematu, zwykle brakuje adresu w profilu.",
+        "quelleKnopf": "Do profilu firmy"
+      },
+      "messung": {
+        "titel": "Pomiar",
+        "hinweis": "Liczba odwiedzających przez Google. Jedno pole na wszystkie cztery identyfikatory — o który produkt chodzi, Google rozpoznaje po prefiksie.",
+        "kennungTitel": "Identyfikator Google",
+        "kennungHinweis": "Analytics (G-), stary format (UA-), Google Ads (AW-) lub Campaign Manager (DC-).",
+        "kennung": "Identyfikator",
+        "kennungFormat": "Na przykład G-ABCD123456. Znajdziesz go w Google Analytics w sekcji Administracja → Strumienie danych.",
+        "kennungFehler": "Identyfikator musi zaczynać się od G-, UA-, AW- lub DC-.",
+        "zustimmungTitel": "Zgoda",
+        "zustimmungHinweis": "Skrypt się wczytuje, ale mierzy dopiero po zgodzie odwiedzającego. Do tego czasu nie ustawia żadnych plików Cookie.",
+        "zustimmungAktiv": "Informacja o plikach Cookie jest aktywna. Pomiar zaczyna się dopiero po kliknięciu odwiedzającego.",
+        "zustimmungFehlt": "Bez informacji o plikach Cookie pomiar zaczyna się od razu. W UE wymagana jest do tego zgoda.",
+        "zumHinweis": "Włącz informację o plikach Cookie"
+      },
+      "weiterleitungen": {
+        "titel": "Przekierowania",
+        "hinweis": "Kierowanie starych adresów na nowe. Potrzebne przy przenosinach z innej witryny — bez przekierowania odwiedzający z Google i z newsletterów trafiają na stronę błędu.",
+        "neuTitel": "Nowe przekierowanie",
+        "quelle": "Stary adres",
+        "ziel": "Nowy cel",
+        "typ": "Rodzaj",
+        "typ301": "Trwałe (301)",
+        "typ302": "Tymczasowe (302)",
+        "typ301Kurz": "trwałe",
+        "typ302Kurz": "tymczasowe",
+        "anlegen": "Utwórz",
+        "angelegt": "Przekierowanie utworzone.",
+        "geloescht": "Przekierowanie usunięte.",
+        "loeschen": "Usuń",
+        "aktivieren": "Aktywuj",
+        "deaktivieren": "Dezaktywuj",
+        "listeTitel": "Istniejące przekierowania",
+        "keine": "Nie utworzono jeszcze żadnych przekierowań.",
+        "wirdGespeichert": "Zostanie zapisane:",
+        "nurPfad": "Zapisana będzie tylko ścieżka:",
+        "csvImport": "Wczytaj CSV",
+        "csvFormat": "Dwie kolumny: stary adres, nowy cel. Najwyżej 200 wierszy.",
+        "dateiZuGross": "Plik jest za duży (najwyżej 200 KB).",
+        "dateiLeer": "W pliku nie znaleziono żadnego prawidłowego wiersza.",
+        "importErgebnis": "{neu} nowych, {geaendert} zmienionych, {uebersprungen} pominiętych.",
+        "weitereFehler": "{anzahl} kolejnych wierszy z błędami.",
+        "vorrangHinweis": "Przekierowanie działa tylko wtedy, gdy pod starym adresem nie ma strony. Istniejąca strona ma zawsze pierwszeństwo."
+      }
     }
   },
   "dynamicPricing": {

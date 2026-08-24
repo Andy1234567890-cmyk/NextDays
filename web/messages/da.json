@@ -239,12 +239,10 @@
       "staff": "Personale",
       "jobs": "Job",
       "reservations": "Reservationer",
-      "distribution": "Distribution",
       "hotel": "Hotel",
       "vacationRentals": "Ferieboliger",
       "accounting": "Regnskab",
       "guests": "Gæster",
-      "tools": "Værktøjer",
       "website": "Hjemmesidebygger"
     },
     "roles": {
@@ -4255,6 +4253,14 @@
       "learnBody": {
         "auto": "En planlagt opgave oprettes automatisk ved hver reservation på de valgte boliger — med start og slut i forhold til check-in og check-ud.",
         "recurring": "En tilbagevendende opgave følger kalenderen: startdato, hyppighed og varighed. Systemet opretter terminerne på forhånd — uafhængigt af reservationer."
+      },
+      "deckung": {
+        "titel": "Boliger uden planlagt opgave",
+        "text": "{count} af {total} boliger er ikke omfattet af nogen regel. Der oprettes aldrig en check-in- eller rengøringsopgave dér.",
+        "hinweis": "En regel uden valg af bolig gælder for alle boliger — også dem, der oprettes senere.",
+        "nurAnreise": "ingen check-in-regel",
+        "nurAbreise": "ingen check-ud-regel",
+        "keine": "ingen regel"
       }
     },
     "statsCards": {
@@ -7115,7 +7121,8 @@
       "seiten": "Sider",
       "einstellungen": "Indstillinger",
       "objekte": "Boliger",
-      "widgets": "Widgets"
+      "widgets": "Widgets",
+      "seo": "SEO"
     },
     "kopf": {
       "websiteAnsehen": "Se hjemmesiden",
@@ -7341,7 +7348,9 @@
       "bildHinzufuegen": "Tilføj billede",
       "objekteHinweis": "ID på de boliger, der skal vises her.",
       "objektIdPlatzhalter": "Bolig-ID",
-      "objektHinzufuegen": "Tilføj"
+      "objektHinzufuegen": "Tilføj",
+      "frageHinzufuegen": "Tilføj spørgsmål",
+      "fragenMax": "Mere end {max} spørgsmål er ikke muligt."
     },
     "abschnitte": {
       "hero": "Topbillede",
@@ -7365,7 +7374,9 @@
       "image": "Billede",
       "imageHinweis": "Et billede med billedtekst.",
       "gallery": "Galleri",
-      "galleryHinweis": "Flere billeder i et gitter."
+      "galleryHinweis": "Flere billeder i et gitter.",
+      "faq": "Spørgsmål og svar",
+      "faqHinweis": "Foldbare spørgsmål. Med struktur vises de også i søgeresultatet."
     },
     "felder": {
       "eyebrow": "Lille linje ovenover",
@@ -7406,7 +7417,10 @@
       "email": "E-mail",
       "telefon": "Telefon",
       "adresse": "Adresse",
-      "formularZeigen": "Vis kontaktformular"
+      "formularZeigen": "Vis kontaktformular",
+      "fragen": "Spørgsmål",
+      "frage": "Spørgsmål",
+      "antwort": "Svar"
     },
     "vorschau": {
       "titel": "Forhåndsvisning",
@@ -7560,6 +7574,121 @@
       "kopiert": "Koden er kopieret.",
       "kopierenFehler": "Kopiering er ikke mulig — markér den venligst manuelt.",
       "keineDomain": "En widget kræver dit eget domæne: kun det fungerer varigt på en fremmed side. Forbind det under Indstillinger → Adresse."
+    },
+    "seo": {
+      "felder": {
+        "titel": "Meta title",
+        "titelHinweis": "Står i browserfanen og som overskrift i søgeresultatet. Sigt efter omkring 60 tegn, derefter afkorter Google.",
+        "beschreibung": "Meta description",
+        "beschreibungHinweis": "Teksten under titlen i søgeresultatet. Den påvirker ikke placeringen, men om der bliver klikket.",
+        "keywords": "Keywords",
+        "keywordsHinweis": "Adskilt med komma. Google og Bing bruger dem ikke længere — kun mindre kataloger gør.",
+        "canonical": "Canonical URL",
+        "canonicalHinweis": "Kun nødvendigt, hvis det samme indhold kan nås under to adresser. Tomt betyder: denne side er originalen.",
+        "rueckfall": "Hele websitet"
+      },
+      "uebersicht": {
+        "titel": "Oversigt",
+        "hinweis": "Oplysningerne her gælder for hele websitet. De virker på alle sider, der ikke har deres egne — det egentlige arbejde foregår under »Sider«.",
+        "metaTitel": "Oplysninger for hele websitet",
+        "metaHinweis": "Reserve for alle sider uden egne oplysninger. Står der det samme overalt, er det for søgemaskiner et tegn på manglende struktur.",
+        "indexTitel": "Søgemaskiner",
+        "noindex": "Indeksér ikke websitet",
+        "noindexHinweis": "Holder hele websitet ude af søgeindekset. Til et site under opbygning — slå det fra igen efter starten, ellers bliver det aldrig fundet.",
+        "noindexWarnung": "Så længe denne kontakt er slået til, leverer robots.txt »Disallow: /«, og der findes ingen sitemap.",
+        "tempoTitel": "Indlæsningstid (Core Web Vitals)",
+        "tempoHinweis": "Google vægter indlæsningstiden med. Begge kontakter virker med det samme på websitet.",
+        "lazy": "Indlæs først billeder ved rulning",
+        "lazyHinweis": "Gør den første opbygning hurtigere. Ved et stort billede lige øverst på siden kan det gøre visningen langsommere — slå det så fra.",
+        "systemschrift": "Vis systemskriften, indtil websitets egen skrift er indlæst",
+        "systemschriftHinweis": "Teksten kan læses med det samme, men siden skifter synligt skrift.",
+        "dateienTitel": "Hvad søgemaskiner henter",
+        "dateienHinweis": "Disse tre filer opstår automatisk ud fra oplysningerne ovenfor. sitemap.xml hører i Google Search Console — det er det skridt, der fremskynder optagelsen i indekset.",
+        "datei": {
+          "sitemap": "Alle websitets adresser med dato for seneste ændring.",
+          "robots": "Hvad der må crawles, og hvor sitemap ligger.",
+          "llms": "Kort udgave af websitet til svarmaskiner som ChatGPT eller Perplexity."
+        },
+        "keineDomain": "Der er endnu ikke forbundet et eget domæne. De tre filer opstår, så snart websitet kører under sin egen adresse."
+      },
+      "seiten": {
+        "titel": "Sider",
+        "hinweis": "Hver side skal have sin egen titel og sin egen beskrivelse. Det er det vigtigste greb af alle — her står, hvor der mangler noget.",
+        "startseite": "Forside",
+        "entwurf": "Kladde",
+        "nichtIndexiert": "ikke indekseret",
+        "gepflegt": "fuldstændig",
+        "fehltTitel": "Titel mangler",
+        "fehltBeschreibung": "Beskrivelse mangler",
+        "fehltBeides": "Titel og beskrivelse mangler",
+        "alleGepflegt": "Alle sider har titel og beskrivelse.",
+        "offeneLuecken": "{anzahl} sider uden titel eller beskrivelse.",
+        "noindex": "Indeksér ikke denne side",
+        "noindexHinweis": "Siden kan fortsat nås via sin adresse, men optræder ikke i søgeresultater.",
+        "speichern": "Gem",
+        "gespeichert": "Gemt.",
+        "ungespeichert": "Ikke gemt",
+        "keine": "Der er endnu ikke oprettet nogen sider."
+      },
+      "schema": {
+        "titel": "Strukturerede data",
+        "hinweis": "Sådan forstår en søgemaskine, at en pris er en pris, og at en adresse er en adresse. Først derved optræder stjerner, priser og åbningstider i søgeresultatet.",
+        "typenTitel": "Hvad der bliver leveret",
+        "organization": "Virksomhed og adresse",
+        "organizationHinweis": "Navn, adresse, telefon og e-mail fra firmaprofilen.",
+        "lodging": "Overnatningssteder med pris",
+        "lodgingHinweis": "Pr. objektside: type af overnatningssted, faciliteter og dagens pris.",
+        "breadcrumbs": "Sidesti",
+        "breadcrumbsHinweis": "Viser i søgeresultatet, hvor siden ligger inde i websitet.",
+        "faq": "Spørgsmål og svar",
+        "faqHinweis": "Kun på sider med et afsnit med spørgsmål og svar.",
+        "quelleTitel": "Hvor oplysningerne kommer fra",
+        "quelleHinweis": "Alle oplysninger kommer fra firmaprofilen og objektdataene — der indtastes ikke noget dobbelt her. Mangler et schema, mangler oftest adressen i profilen.",
+        "quelleKnopf": "Til firmaprofilen"
+      },
+      "messung": {
+        "titel": "Måling",
+        "hinweis": "Besøgstal via Google. Ét felt til alle fire id’er — hvilket produkt der menes, ser Google på præfikset.",
+        "kennungTitel": "Google-id",
+        "kennungHinweis": "Analytics (G-), gammel type (UA-), Google Ads (AW-) eller Campaign Manager (DC-).",
+        "kennung": "Id",
+        "kennungFormat": "For eksempel G-ABCD123456. Findes i Google Analytics under Administration → Datastrømme.",
+        "kennungFehler": "Id’et skal begynde med G-, UA-, AW- eller DC-.",
+        "zustimmungTitel": "Samtykke",
+        "zustimmungHinweis": "Scriptet indlæses, men måler først efter den besøgendes samtykke. Indtil da sætter det ingen Cookies.",
+        "zustimmungAktiv": "Cookie-meddelelsen er aktiv. Der måles først, når den besøgende har klikket.",
+        "zustimmungFehlt": "Uden Cookie-meddelelse måles der med det samme. I EU kræver det et samtykke.",
+        "zumHinweis": "Slå Cookie-meddelelsen til"
+      },
+      "weiterleitungen": {
+        "titel": "Omdirigeringer",
+        "hinweis": "Led gamle adresser videre til nye. Nødvendigt ved et flyt fra et andet website — uden omdirigering lander besøgende fra Google og fra nyhedsbreve på en fejlside.",
+        "neuTitel": "Ny omdirigering",
+        "quelle": "Gammel adresse",
+        "ziel": "Nyt mål",
+        "typ": "Type",
+        "typ301": "Permanent (301)",
+        "typ302": "Midlertidig (302)",
+        "typ301Kurz": "permanent",
+        "typ302Kurz": "midlertidig",
+        "anlegen": "Opret",
+        "angelegt": "Omdirigering oprettet.",
+        "geloescht": "Omdirigering slettet.",
+        "loeschen": "Slet",
+        "aktivieren": "Aktivér",
+        "deaktivieren": "Deaktivér",
+        "listeTitel": "Eksisterende omdirigeringer",
+        "keine": "Der er endnu ikke oprettet nogen omdirigeringer.",
+        "wirdGespeichert": "Dette bliver gemt:",
+        "nurPfad": "Kun stien bliver gemt:",
+        "csvImport": "Indlæs CSV",
+        "csvFormat": "To kolonner: gammel adresse, nyt mål. Højst 200 linjer.",
+        "dateiZuGross": "Filen er for stor (højst 200 KB).",
+        "dateiLeer": "Der blev ikke fundet nogen gyldig linje i filen.",
+        "importErgebnis": "{neu} nye, {geaendert} ændrede, {uebersprungen} sprunget over.",
+        "weitereFehler": "{anzahl} yderligere linjer med fejl.",
+        "vorrangHinweis": "En omdirigering virker kun, hvis der ikke findes en side under den gamle adresse. En eksisterende side har altid forrang."
+      }
     }
   },
   "dynamicPricing": {

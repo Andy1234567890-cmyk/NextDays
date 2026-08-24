@@ -239,12 +239,10 @@
       "staff": "Personal",
       "jobs": "Töökohad",
       "reservations": "Broneeringud",
-      "distribution": "Turustus",
       "hotel": "Hotell",
       "vacationRentals": "Puhkemajutused",
       "accounting": "Raamatupidamine",
       "guests": "Külalised",
-      "tools": "Tööriistad",
       "website": "Veebilehe koostaja"
     },
     "roles": {
@@ -4255,6 +4253,14 @@
       "learnBody": {
         "auto": "Plaaniline ülesanne tekib automaatselt iga valitud majutuse broningu juures — algus ja lõpp saabumise ja lahkumise suhtes.",
         "recurring": "Korduv ülesanne järgib kalendrit: alguskuupäev, sagedus ja kestus. Süsteem loob korded ette — broningutest sõltumatult."
+      },
+      "deckung": {
+        "titel": "Majutused ilma plaanilise ülesandeta",
+        "text": "{count} majutust {total}-st ei ole hõlmatud ühegi reegliga. Seal ei tekigi kunagi saabumis- või koristusülesannet.",
+        "hinweis": "Reegel, mille juures pole majutust valitud, kehtib kõigi majutuste kohta — ka hiljem loodud majutuste kohta.",
+        "nurAnreise": "puudub saabumisreegel",
+        "nurAbreise": "puudub lahkumisreegel",
+        "keine": "puudub reegel"
       }
     },
     "statsCards": {
@@ -7115,7 +7121,8 @@
       "seiten": "Lehed",
       "einstellungen": "Seaded",
       "objekte": "Objektid",
-      "widgets": "Vidinad"
+      "widgets": "Vidinad",
+      "seo": "SEO"
     },
     "kopf": {
       "websiteAnsehen": "Vaata veebilehte",
@@ -7341,7 +7348,9 @@
       "bildHinzufuegen": "Lisa pilt",
       "objekteHinweis": "Nende objektide tunnused, mis peavad siin ilmuma.",
       "objektIdPlatzhalter": "Objekti tunnus",
-      "objektHinzufuegen": "Lisa"
+      "objektHinzufuegen": "Lisa",
+      "frageHinzufuegen": "Lisa küsimus",
+      "fragenMax": "Rohkem kui {max} küsimust ei ole võimalik."
     },
     "abschnitte": {
       "hero": "Tiitelpilt",
@@ -7365,7 +7374,9 @@
       "image": "Pilt",
       "imageHinweis": "Pilt koos allkirjaga.",
       "gallery": "Galerii",
-      "galleryHinweis": "Mitu pilti ruudustikuna."
+      "galleryHinweis": "Mitu pilti ruudustikuna.",
+      "faq": "Küsimused ja vastused",
+      "faqHinweis": "Avanevad küsimused. Struktuuriga kuvatakse neid ka otsingutulemustes."
     },
     "felder": {
       "eyebrow": "Väike rida selle kohal",
@@ -7406,7 +7417,10 @@
       "email": "E-post",
       "telefon": "Telefon",
       "adresse": "Aadress",
-      "formularZeigen": "Näita kontaktivormi"
+      "formularZeigen": "Näita kontaktivormi",
+      "fragen": "Küsimused",
+      "frage": "Küsimus",
+      "antwort": "Vastus"
     },
     "vorschau": {
       "titel": "Eelvaade",
@@ -7560,6 +7574,121 @@
       "kopiert": "Kood on kopeeritud.",
       "kopierenFehler": "Kopeerimine pole võimalik — palun märgistage see käsitsi.",
       "keineDomain": "Vidin vajab teie oma domeeni: ainult see töötab võõral lehel püsivalt. Ühendage see jaotises Seaded → Aadress."
+    },
+    "seo": {
+      "felder": {
+        "titel": "Metapealkiri",
+        "titelHinweis": "Kuvatakse brauseri vahekaardil ja otsingutulemuse pealkirjana. Umbes 60 tähemärki, pärast seda lõikab Google selle ära.",
+        "beschreibung": "Metakirjeldus",
+        "beschreibungHinweis": "Tekst otsingutulemuses pealkirja all. See ei mõjuta asetust, küll aga seda, kas tulemusele klõpsatakse.",
+        "keywords": "Märksõnad",
+        "keywordsHinweis": "Komadega eraldatud. Google ja Bing ei arvesta neid enam — ainult väiksemad kataloogid.",
+        "canonical": "Kanooniline aadress",
+        "canonicalHinweis": "Vajalik ainult siis, kui sama sisu on kättesaadav kahel aadressil. Tühi tähendab: see leht on originaal.",
+        "rueckfall": "Kogu sait"
+      },
+      "uebersicht": {
+        "titel": "Ülevaade",
+        "hinweis": "Siinsed andmed kehtivad kogu veebisaidi kohta. Need rakenduvad igal lehel, millel omi ei ole — tegelik töö käib jaotises „Lehed“.",
+        "metaTitel": "Kogu saidi andmed",
+        "metaHinweis": "Varuvariant kõigile lehtedele, millel pole oma andmeid. Kui igal lehel seisab sama tekst, on see otsingumootoritele märk puuduvast struktuurist.",
+        "indexTitel": "Otsingumootorid",
+        "noindex": "Ära indekseeri veebisaiti",
+        "noindexHinweis": "Hoiab kogu veebisaidi otsinguindeksist väljas. Sobib valmimisjärgus saidile — lülita see pärast avamist uuesti välja, muidu ei leita saiti kunagi.",
+        "noindexWarnung": "Kuni see lüliti on sees, tagastab robots.txt „Disallow: /“ ja Sitemap puudub.",
+        "tempoTitel": "Laadimisaeg (Core Web Vitals)",
+        "tempoHinweis": "Google arvestab laadimisaega. Mõlemad lülitid mõjuvad veebisaidile kohe.",
+        "lazy": "Lae pildid alles kerimisel",
+        "lazyHinweis": "Kiirendab esmast kuvamist. Kui kohe lehe alguses on suur pilt, võib see kuvamist aeglustada — lülita siis välja.",
+        "systemschrift": "Näita süsteemi kirja, kuni oma kiri on laetud",
+        "systemschriftHinweis": "Tekst on kohe loetav, kuid lehe kiri vahetub nähtavalt.",
+        "dateienTitel": "Mida otsingumootorid pärivad",
+        "dateienHinweis": "Need kolm faili tekivad automaatselt ülaltoodud andmetest. Fail sitemap.xml kuulub Google Search Console’i — see on samm, mis kiirendab indeksisse võtmist.",
+        "datei": {
+          "sitemap": "Kõik veebisaidi aadressid koos viimase muutmise kuupäevaga.",
+          "robots": "Mida tohib roomata ja kus Sitemap asub.",
+          "llms": "Veebisaidi lühikokkuvõte vastusemootoritele nagu ChatGPT või Perplexity."
+        },
+        "keineDomain": "Oma domeeni pole veel ühendatud. Need kolm faili tekivad kohe, kui veebisait töötab oma aadressil."
+      },
+      "seiten": {
+        "titel": "Lehed",
+        "hinweis": "Iga leht vajab oma pealkirja ja oma kirjeldust. See on kõige tugevam hoob — siin on näha, kus midagi puudub.",
+        "startseite": "Avaleht",
+        "entwurf": "Mustand",
+        "nichtIndexiert": "ei ole indekseeritud",
+        "gepflegt": "täielik",
+        "fehltTitel": "Pealkiri puudub",
+        "fehltBeschreibung": "Kirjeldus puudub",
+        "fehltBeides": "Pealkiri ja kirjeldus puuduvad",
+        "alleGepflegt": "Kõigil lehtedel on pealkiri ja kirjeldus.",
+        "offeneLuecken": "{anzahl} lehte ilma pealkirja või kirjelduseta.",
+        "noindex": "Ära indekseeri seda lehte",
+        "noindexHinweis": "Leht jääb oma aadressil kättesaadavaks, kuid ei ilmu otsingutulemustes.",
+        "speichern": "Salvesta",
+        "gespeichert": "Salvestatud.",
+        "ungespeichert": "Ei ole salvestatud",
+        "keine": "Ühtegi lehte pole veel loodud."
+      },
+      "schema": {
+        "titel": "Struktureeritud andmed",
+        "hinweis": "Nii saab otsingumootor aru, et hind on hind ja aadress on aadress. Alles tänu sellele ilmuvad otsingutulemusse tärnid, hinnad ja lahtiolekuajad.",
+        "typenTitel": "Mida edastatakse",
+        "organization": "Ettevõte ja aadress",
+        "organizationHinweis": "Nimi, aadress, telefon ja e-post ettevõtte profiilist.",
+        "lodging": "Majutus koos hinnaga",
+        "lodgingHinweis": "Iga objektilehe kohta: majutuse liik, sisustus ja päevahind.",
+        "breadcrumbs": "Lehe teekond",
+        "breadcrumbsHinweis": "Näitab otsingutulemuses, kus leht veebisaidi sees asub.",
+        "faq": "Küsimused ja vastused",
+        "faqHinweis": "Ainult lehtedel, millel on küsimuste ja vastuste osa.",
+        "quelleTitel": "Kust andmed tulevad",
+        "quelleHinweis": "Kõik andmed pärinevad ettevõtte profiilist ja objektiandmetest — siin ei sisestata midagi teist korda. Kui mõni skeem puudub, on tavaliselt profiilis aadress puudu.",
+        "quelleKnopf": "Ettevõtte profiili juurde"
+      },
+      "messung": {
+        "titel": "Mõõtmine",
+        "hinweis": "Külastajate arv Google’i kaudu. Üks väli kõigi nelja tunnuse jaoks — Google tunneb eesliite järgi ära, millist toodet mõeldakse.",
+        "kennungTitel": "Google’i tunnus",
+        "kennungHinweis": "Analytics (G-), vana kanne (UA-), Google Ads (AW-) või Campaign Manager (DC-).",
+        "kennung": "Tunnus",
+        "kennungFormat": "Näiteks G-ABCD123456. Leitav Google Analyticsis jaotisest Haldus → Andmevood.",
+        "kennungFehler": "Tunnus peab algama tähistega G-, UA-, AW- või DC-.",
+        "zustimmungTitel": "Nõusolek",
+        "zustimmungHinweis": "Skript laeb, kuid mõõdab alles pärast külastaja nõusolekut. Seni ei sea see ühtegi Cookie-faili.",
+        "zustimmungAktiv": "Cookie-teade on aktiivne. Mõõtmine algab alles pärast külastaja klõpsu.",
+        "zustimmungFehlt": "Ilma Cookie-teateta mõõdetakse kohe. Euroopa Liidus on selleks vaja nõusolekut.",
+        "zumHinweis": "Lülita Cookie-teade sisse"
+      },
+      "weiterleitungen": {
+        "titel": "Ümbersuunamised",
+        "hinweis": "Suuna vanad aadressid uutele. Vajalik teiselt veebisaidilt kolimisel — ilma ümbersuunamiseta jõuavad Google’ist ja uudiskirjadest tulevad külastajad veateate lehele.",
+        "neuTitel": "Uus ümbersuunamine",
+        "quelle": "Vana aadress",
+        "ziel": "Uus sihtkoht",
+        "typ": "Liik",
+        "typ301": "Püsiv (301)",
+        "typ302": "Ajutine (302)",
+        "typ301Kurz": "püsiv",
+        "typ302Kurz": "ajutine",
+        "anlegen": "Loo",
+        "angelegt": "Ümbersuunamine loodud.",
+        "geloescht": "Ümbersuunamine kustutatud.",
+        "loeschen": "Kustuta",
+        "aktivieren": "Aktiveeri",
+        "deaktivieren": "Deaktiveeri",
+        "listeTitel": "Olemasolevad ümbersuunamised",
+        "keine": "Ühtegi ümbersuunamist pole veel loodud.",
+        "wirdGespeichert": "Salvestatakse:",
+        "nurPfad": "Salvestatakse ainult tee:",
+        "csvImport": "Loe CSV sisse",
+        "csvFormat": "Kaks veergu: vana aadress, uus sihtkoht. Kõige rohkem 200 rida.",
+        "dateiZuGross": "Fail on liiga suur (kõige rohkem 200 KB).",
+        "dateiLeer": "Failist ei leitud ühtegi kehtivat rida.",
+        "importErgebnis": "{neu} uut, {geaendert} muudetud, {uebersprungen} vahele jäetud.",
+        "weitereFehler": "Veel {anzahl} rida vigadega.",
+        "vorrangHinweis": "Ümbersuunamine rakendub ainult siis, kui vanal aadressil lehte ei ole. Olemasoleval lehel on alati eesõigus."
+      }
     }
   },
   "dynamicPricing": {

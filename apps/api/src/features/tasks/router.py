@@ -30,6 +30,7 @@ from .schemas import (
     InspectionDecision,
     InspectionItem,
     InventoryItemCreate,
+    RegelDeckung,
     RuleCreate,
     RuleDetail,
     RuleListItem,
@@ -207,6 +208,21 @@ def update_task_assignee(
         return service.set_assignee(_tenant(ctx), task_id, req.assignee_id, ctx)
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/rules/coverage")
+def rule_coverage(
+    service: TasksServiceDep,
+    ctx: Annotated[AuthContext, Depends(require_permission(Capability.MANAGE_TASKS))],
+) -> RegelDeckung:
+    """Objekte OHNE wirksame planmäßige Regel — nach An- und Abreise getrennt.
+
+    Damit „für dieses Objekt entsteht nie eine Aufgabe" ein sichtbarer Zustand
+    ist und kein stiller. Eine Regel ohne Objekt-Zuordnung gilt für alle
+    Objekte; sobald ihr eines zugeordnet ist, nur noch für die gelisteten — ein
+    später angelegtes Objekt fällt dann heraus, ohne dass es irgendwo steht.
+    """
+    return service.regel_deckung(_tenant(ctx))
 
 
 @router.post("/sync-reservation/{reservation_id}")

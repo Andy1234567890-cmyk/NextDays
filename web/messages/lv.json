@@ -239,12 +239,10 @@
       "staff": "Personāls",
       "jobs": "Darbi",
       "reservations": "Rezervācijas",
-      "distribution": "Izplatīšana",
       "hotel": "Viesnīca",
       "vacationRentals": "Brīvdienu mājokļi",
       "accounting": "Grāmatvedība",
       "guests": "Viesi",
-      "tools": "Rīki",
       "website": "Mājaslapas veidotājs"
     },
     "roles": {
@@ -4253,6 +4251,14 @@
       "learnBody": {
         "auto": "Plānotais uzdevums rodas automātiski katrai izvēlēto naktsmītņu rezervācijai — ar sākumu un beigām attiecībā pret ierašanos un izbraukšanu.",
         "recurring": "Regulārs uzdevums seko kalendāram: sākuma datums, biežums un ilgums. Sistēma izveido reizes iepriekš — neatkarīgi no rezervācijām."
+      },
+      "deckung": {
+        "titel": "Naktsmītnes bez ieplānota uzdevuma",
+        "text": "{count} no {total} naktsmītnēm neattiecas neviens noteikums. Tur nekad netiks izveidots ierašanās vai tīrīšanas uzdevums.",
+        "hinweis": "Noteikums bez naktsmītnes izvēles attiecas uz visām naktsmītnēm — arī uz vēlāk izveidotajām.",
+        "nurAnreise": "nav ierašanās noteikuma",
+        "nurAbreise": "nav izbraukšanas noteikuma",
+        "keine": "nav noteikuma"
       }
     },
     "statsCards": {
@@ -7113,7 +7119,8 @@
       "seiten": "Lapas",
       "einstellungen": "Iestatījumi",
       "objekte": "Objekti",
-      "widgets": "Sīkrīki"
+      "widgets": "Sīkrīki",
+      "seo": "SEO"
     },
     "kopf": {
       "websiteAnsehen": "Skatīt vietni",
@@ -7339,7 +7346,9 @@
       "bildHinzufuegen": "Pievienot attēlu",
       "objekteHinweis": "To objektu identifikatori, kuriem šeit jāparādās.",
       "objektIdPlatzhalter": "Objekta identifikators",
-      "objektHinzufuegen": "Pievienot"
+      "objektHinzufuegen": "Pievienot",
+      "frageHinzufuegen": "Pievienot jautājumu",
+      "fragenMax": "Vairāk par {max} jautājumiem nav iespējams."
     },
     "abschnitte": {
       "hero": "Titulattēls",
@@ -7363,7 +7372,9 @@
       "image": "Attēls",
       "imageHinweis": "Viens attēls ar parakstu.",
       "gallery": "Galerija",
-      "galleryHinweis": "Vairāki attēli režģī."
+      "galleryHinweis": "Vairāki attēli režģī.",
+      "faq": "Jautājumi un atbildes",
+      "faqHinweis": "Izvēršami jautājumi. Ar strukturētiem datiem tie parādās arī meklēšanas rezultātos."
     },
     "felder": {
       "eyebrow": "Maza rindiņa virs virsraksta",
@@ -7404,7 +7415,10 @@
       "email": "E-pasts",
       "telefon": "Tālrunis",
       "adresse": "Adrese",
-      "formularZeigen": "Rādīt kontaktu veidlapu"
+      "formularZeigen": "Rādīt kontaktu veidlapu",
+      "fragen": "Jautājumi",
+      "frage": "Jautājums",
+      "antwort": "Atbilde"
     },
     "vorschau": {
       "titel": "Priekšskatījums",
@@ -7558,6 +7572,121 @@
       "kopiert": "Kods nokopēts.",
       "kopierenFehler": "Kopēšana nav iespējama — lūdzu, atzīmējiet to manuāli.",
       "keineDomain": "Sīkrīkam nepieciešams jūsu domēns: tikai tas darbojas ilgstoši svešā lapā. Pievienojiet to sadaļā Iestatījumi → Adrese."
+    },
+    "seo": {
+      "felder": {
+        "titel": "Meta virsraksts",
+        "titelHinweis": "Redzams pārlūka cilnē un kā virsraksts meklēšanas rezultātā. Aptuveni 60 rakstzīmes, pēc tam Google to nogriež.",
+        "beschreibung": "Meta apraksts",
+        "beschreibungHinweis": "Teksts zem virsraksta meklēšanas rezultātā. Tas neietekmē vietu rezultātos, bet gan to, vai uz saiti noklikšķina.",
+        "keywords": "Atslēgvārdi",
+        "keywordsHinweis": "Atdalīti ar komatiem. Google un Bing tos vairs neizmanto — tikai mazāki katalogi.",
+        "canonical": "Kanoniskā adrese",
+        "canonicalHinweis": "Nepieciešama tikai tad, ja tas pats saturs ir sasniedzams divās adresēs. Tukšs nozīmē: šī lapa ir oriģināls.",
+        "rueckfall": "Visai vietnei"
+      },
+      "uebersicht": {
+        "titel": "Pārskats",
+        "hinweis": "Šeit norādītais attiecas uz visu vietni. Tas darbojas katrā lapā, kurai nav savu norādījumu — īstais darbs notiek sadaļā „Lapas“.",
+        "metaTitel": "Visai vietnei kopīgie dati",
+        "metaHinweis": "Rezerves variants visām lapām bez saviem datiem. Ja visur ir viens un tas pats teksts, meklētājprogrammām tā ir pazīme, ka trūkst struktūras.",
+        "indexTitel": "Meklētājprogrammas",
+        "noindex": "Neindeksēt vietni",
+        "noindexHinweis": "Notur visu vietni ārpus meklēšanas indeksa. Piemērots vēl topošai vietnei — pēc palaišanas izslēdz to atkal, citādi vietni nekad neatradīs.",
+        "noindexWarnung": "Kamēr šis slēdzis ir ieslēgts, robots.txt atgriež „Disallow: /“ un Sitemap nav.",
+        "tempoTitel": "Ielādes laiks (Core Web Vitals)",
+        "tempoHinweis": "Google ņem vērā ielādes laiku. Abi slēdži vietnē iedarbojas uzreiz.",
+        "lazy": "Ielādēt attēlus tikai ritinot",
+        "lazyHinweis": "Paātrina pirmo attēlošanu. Ja lapas pašā sākumā ir liels attēls, tas var attēlošanu palēnināt — tad izslēdz.",
+        "systemschrift": "Rādīt sistēmas fontu, līdz ir ielādēts savs",
+        "systemschriftHinweis": "Teksts ir salasāms uzreiz, taču lapa redzami nomaina fontu.",
+        "dateienTitel": "Ko izgūst meklētājprogrammas",
+        "dateienHinweis": "Šie trīs faili veidojas automātiski no augšā norādītā. Fails sitemap.xml jāpievieno Google Search Console — tas ir solis, kas paātrina iekļūšanu indeksā.",
+        "datei": {
+          "sitemap": "Visas vietnes adreses ar pēdējo izmaiņu datumu.",
+          "robots": "Ko atļauts pārmeklēt un kur atrodas Sitemap.",
+          "llms": "Vietnes kopsavilkums atbilžu dzinējiem, piemēram, ChatGPT vai Perplexity."
+        },
+        "keineDomain": "Savs domēns vēl nav pievienots. Šie trīs faili izveidojas, tiklīdz vietne darbojas savā adresē."
+      },
+      "seiten": {
+        "titel": "Lapas",
+        "hinweis": "Katrai lapai vajag savu virsrakstu un savu aprakstu. Tā ir pati svarīgākā svira — šeit redzams, kur kas iztrūkst.",
+        "startseite": "Sākumlapa",
+        "entwurf": "Melnraksts",
+        "nichtIndexiert": "netiek indeksēta",
+        "gepflegt": "pilnīga",
+        "fehltTitel": "Trūkst virsraksta",
+        "fehltBeschreibung": "Trūkst apraksta",
+        "fehltBeides": "Trūkst virsraksta un apraksta",
+        "alleGepflegt": "Visām lapām ir virsraksts un apraksts.",
+        "offeneLuecken": "{anzahl} lapas bez virsraksta vai apraksta.",
+        "noindex": "Neindeksēt šo lapu",
+        "noindexHinweis": "Lapa paliek sasniedzama savā adresē, taču neparādās meklēšanas rezultātos.",
+        "speichern": "Saglabāt",
+        "gespeichert": "Saglabāts.",
+        "ungespeichert": "Nav saglabāts",
+        "keine": "Vēl nav izveidota neviena lapa."
+      },
+      "schema": {
+        "titel": "Strukturētie dati",
+        "hinweis": "Tā meklētājprogramma saprot, ka cena ir cena un adrese ir adrese. Tikai pateicoties tam meklēšanas rezultātā parādās zvaigznītes, cenas un darba laiki.",
+        "typenTitel": "Kas tiek nodots",
+        "organization": "Uzņēmums un adrese",
+        "organizationHinweis": "Nosaukums, adrese, tālrunis un e-pasts no uzņēmuma profila.",
+        "lodging": "Mājokļi ar cenu",
+        "lodgingHinweis": "Katrā objekta lapā: mājokļa veids, aprīkojums un dienas cena.",
+        "breadcrumbs": "Lapas ceļš",
+        "breadcrumbsHinweis": "Rāda meklēšanas rezultātā, kur lapa atrodas vietnes iekšienē.",
+        "faq": "Jautājumi un atbildes",
+        "faqHinweis": "Tikai lapās ar jautājumu un atbilžu sadaļu.",
+        "quelleTitel": "No kurienes nāk dati",
+        "quelleHinweis": "Visi dati nāk no uzņēmuma profila un objektu datiem — šeit nekas nav jāievada otrreiz. Ja kāda shēma iztrūkst, visbiežāk profilā nav adreses.",
+        "quelleKnopf": "Uz uzņēmuma profilu"
+      },
+      "messung": {
+        "titel": "Mērījumi",
+        "hinweis": "Apmeklētāju skaits, izmantojot Google. Viens lauks visiem četriem identifikatoriem — kurš produkts domāts, Google atpazīst pēc priedēkļa.",
+        "kennungTitel": "Google identifikators",
+        "kennungHinweis": "Analytics (G-), vecais (UA-), Google Ads (AW-) vai Campaign Manager (DC-).",
+        "kennung": "Identifikators",
+        "kennungFormat": "Piemēram, G-ABCD123456. Atrodams Google Analytics sadaļā Administrēšana → Datu plūsmas.",
+        "kennungFehler": "Identifikatoram jāsākas ar G-, UA-, AW- vai DC-.",
+        "zustimmungTitel": "Piekrišana",
+        "zustimmungHinweis": "Skripts ielādējas, taču mēra tikai pēc apmeklētāja piekrišanas. Līdz tam tas neuzstāda nevienu Cookie failu.",
+        "zustimmungAktiv": "Cookie paziņojums ir aktīvs. Mērīšana sākas tikai pēc apmeklētāja klikšķa.",
+        "zustimmungFehlt": "Bez Cookie paziņojuma mērīšana sākas uzreiz. Eiropas Savienībā tam ir nepieciešama piekrišana.",
+        "zumHinweis": "Ieslēgt Cookie paziņojumu"
+      },
+      "weiterleitungen": {
+        "titel": "Pāradresācijas",
+        "hinweis": "Novirza vecās adreses uz jaunajām. Nepieciešams, pārceļoties no citas vietnes — bez pāradresācijas apmeklētāji no Google un no jaunumu vēstulēm nonāk kļūdas lapā.",
+        "neuTitel": "Jauna pāradresācija",
+        "quelle": "Vecā adrese",
+        "ziel": "Jaunais mērķis",
+        "typ": "Veids",
+        "typ301": "Pastāvīga (301)",
+        "typ302": "Pagaidu (302)",
+        "typ301Kurz": "pastāvīga",
+        "typ302Kurz": "pagaidu",
+        "anlegen": "Izveidot",
+        "angelegt": "Pāradresācija izveidota.",
+        "geloescht": "Pāradresācija dzēsta.",
+        "loeschen": "Dzēst",
+        "aktivieren": "Aktivizēt",
+        "deaktivieren": "Deaktivizēt",
+        "listeTitel": "Esošās pāradresācijas",
+        "keine": "Vēl nav izveidota neviena pāradresācija.",
+        "wirdGespeichert": "Tiks saglabāts:",
+        "nurPfad": "Tiks saglabāts tikai ceļš:",
+        "csvImport": "Ielasīt CSV",
+        "csvFormat": "Divas kolonnas: vecā adrese, jaunais mērķis. Ne vairāk par 200 rindām.",
+        "dateiZuGross": "Fails ir pārāk liels (ne vairāk par 200 KB).",
+        "dateiLeer": "Failā netika atrasta neviena derīga rinda.",
+        "importErgebnis": "{neu} jaunas, {geaendert} mainītas, {uebersprungen} izlaistas.",
+        "weitereFehler": "Vēl {anzahl} rindas ar kļūdām.",
+        "vorrangHinweis": "Pāradresācija darbojas tikai tad, ja vecajā adresē nav lapas. Esošai lapai vienmēr ir priekšroka."
+      }
     }
   },
   "dynamicPricing": {

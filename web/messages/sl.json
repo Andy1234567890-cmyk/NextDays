@@ -239,12 +239,10 @@
       "staff": "Osebje",
       "jobs": "Zaposlitve",
       "reservations": "Rezervacije",
-      "distribution": "Distribucija",
       "hotel": "Hotel",
       "vacationRentals": "Počitniški objekti",
       "accounting": "Računovodstvo",
       "guests": "Gostje",
-      "tools": "Orodja",
       "website": "Urejevalnik spletne strani"
     },
     "roles": {
@@ -4253,6 +4251,14 @@
       "learnBody": {
         "auto": "Načrtovana naloga nastane samodejno ob vsaki rezervaciji izbranih nastanitev — z začetkom in koncem glede na prijavo in odjavo.",
         "recurring": "Ponavljajoča naloga sledi koledarju: začetni datum, pogostost in trajanje. Sistem termine ustvari vnaprej — neodvisno od rezervacij."
+      },
+      "deckung": {
+        "titel": "Nastanitve brez načrtovane naloge",
+        "text": "{count} od {total} nastanitev ni zajetih z nobenim pravilom. Tam nikoli ne bo ustvarjena naloga prijave ali čiščenja.",
+        "hinweis": "Pravilo brez izbire nastanitve velja za vse nastanitve — tudi za pozneje ustvarjene.",
+        "nurAnreise": "brez pravila prijave",
+        "nurAbreise": "brez pravila odjave",
+        "keine": "brez pravila"
       }
     },
     "statsCards": {
@@ -7113,7 +7119,8 @@
       "seiten": "Strani",
       "einstellungen": "Nastavitve",
       "objekte": "Objekti",
-      "widgets": "Gradniki"
+      "widgets": "Gradniki",
+      "seo": "SEO"
     },
     "kopf": {
       "websiteAnsehen": "Ogled spletne strani",
@@ -7339,7 +7346,9 @@
       "bildHinzufuegen": "Dodaj sliko",
       "objekteHinweis": "Oznake objektov, ki naj se prikažejo tukaj.",
       "objektIdPlatzhalter": "Oznaka objekta",
-      "objektHinzufuegen": "Dodaj"
+      "objektHinzufuegen": "Dodaj",
+      "frageHinzufuegen": "Dodaj vprašanje",
+      "fragenMax": "Več kot {max} vprašanj ni mogoče."
     },
     "abschnitte": {
       "hero": "Naslovna slika",
@@ -7363,7 +7372,9 @@
       "image": "Slika",
       "imageHinweis": "Ena slika z napisom.",
       "gallery": "Galerija",
-      "galleryHinweis": "Več slik v mreži."
+      "galleryHinweis": "Več slik v mreži.",
+      "faq": "Vprašanja in odgovori",
+      "faqHinweis": "Razširljiva vprašanja. S strukturiranimi podatki se prikažejo tudi med rezultati iskanja."
     },
     "felder": {
       "eyebrow": "Majhna vrstica nad naslovom",
@@ -7404,7 +7415,10 @@
       "email": "E-pošta",
       "telefon": "Telefon",
       "adresse": "Naslov",
-      "formularZeigen": "Pokaži kontaktni obrazec"
+      "formularZeigen": "Pokaži kontaktni obrazec",
+      "fragen": "Vprašanja",
+      "frage": "Vprašanje",
+      "antwort": "Odgovor"
     },
     "vorschau": {
       "titel": "Predogled",
@@ -7558,6 +7572,121 @@
       "kopiert": "Koda je kopirana.",
       "kopierenFehler": "Kopiranje ni mogoče — označite jo ročno.",
       "keineDomain": "Gradnik potrebuje vašo lastno domeno: samo ta trajno deluje na tuji strani. Povežite jo v Nastavitve → Naslov."
+    },
+    "seo": {
+      "felder": {
+        "titel": "Meta naslov",
+        "titelHinweis": "Prikaže se v zavihku brskalnika in kot naslov v zadetku iskanja. Okoli 60 znakov, dlje Google skrajša.",
+        "beschreibung": "Meta opis",
+        "beschreibungHinweis": "Besedilo pod naslovom v zadetku iskanja. Na uvrstitev ne vpliva, na klik pa.",
+        "keywords": "Ključne besede",
+        "keywordsHinweis": "Ločene z vejicami. Google in Bing jih ne upoštevata več — le za manjše kataloge.",
+        "canonical": "Kanonični naslov",
+        "canonicalHinweis": "Potreben le, če je ista vsebina dosegljiva na dveh naslovih. Prazno polje pomeni: ta stran je izvirnik.",
+        "rueckfall": "Za celotno spletno mesto"
+      },
+      "uebersicht": {
+        "titel": "Pregled",
+        "hinweis": "Podatki tukaj veljajo za celotno spletno mesto. Uporabijo se na vsaki strani, ki nima svojih — glavno delo poteka v razdelku „Strani“.",
+        "metaTitel": "Podatki za celotno spletno mesto",
+        "metaHinweis": "Nadomestek za vse strani brez lastnih podatkov. Če so vsepovsod enaki, je to za iskalnike znak manjkajoče strukture.",
+        "indexTitel": "Iskalniki",
+        "noindex": "Spletnega mesta ne indeksiraj",
+        "noindexHinweis": "Celotno spletno mesto ostane zunaj iskalnega kazala. Za stran v izdelavi — po zagonu spet izklopi, sicer ne bo nikoli najdena.",
+        "noindexWarnung": "Dokler je to stikalo vklopljeno, robots.txt vrača „Disallow: /“ in datoteka sitemap ne nastane.",
+        "tempoTitel": "Hitrost nalaganja (Core Web Vitals)",
+        "tempoHinweis": "Google hitrost nalaganja upošteva pri ocenjevanju. Obe stikali na spletnem mestu delujeta takoj.",
+        "lazy": "Slike nalagaj šele pri drsenju",
+        "lazyHinweis": "Pospeši prvi prikaz. Pri veliki sliki takoj na začetku strani lahko prikaz upočasni — takrat izklopi.",
+        "systemschrift": "Prikaži sistemsko pisavo, dokler se lastna ne naloži",
+        "systemschriftHinweis": "Besedilo je takoj berljivo, stran pa vidno zamenja pisavo.",
+        "dateienTitel": "Kaj iskalniki prenesejo",
+        "dateienHinweis": "Te tri datoteke nastanejo samodejno iz zgornjih podatkov. Datoteka sitemap.xml sodi v Google Search Console — to je korak, ki pospeši uvrstitev.",
+        "datei": {
+          "sitemap": "Vsi naslovi spletnega mesta z datumom zadnje spremembe.",
+          "robots": "Kaj se sme pregledovati in kje je sitemap.",
+          "llms": "Skrajšana različica spletnega mesta za iskalnike z odgovori, kot sta ChatGPT ali Perplexity."
+        },
+        "keineDomain": "Lastna domena še ni povezana. Te tri datoteke nastanejo, ko bo spletno mesto delovalo na lastnem naslovu."
+      },
+      "seiten": {
+        "titel": "Strani",
+        "hinweis": "Vsaka stran potrebuje svoj naslov in svoj opis. To je najpomembnejši vzvod — tukaj je vidno, kje kaj manjka.",
+        "startseite": "Začetna stran",
+        "entwurf": "Osnutek",
+        "nichtIndexiert": "ni indeksirana",
+        "gepflegt": "popolno",
+        "fehltTitel": "Manjka naslov",
+        "fehltBeschreibung": "Manjka opis",
+        "fehltBeides": "Manjkata naslov in opis",
+        "alleGepflegt": "Vse strani imajo naslov in opis.",
+        "offeneLuecken": "{anzahl} strani brez naslova ali opisa.",
+        "noindex": "Te strani ne indeksiraj",
+        "noindexHinweis": "Stran ostane dosegljiva na svojem naslovu, v zadetkih iskanja pa se ne pojavi.",
+        "speichern": "Shrani",
+        "gespeichert": "Shranjeno.",
+        "ungespeichert": "Ni shranjeno",
+        "keine": "Strani še niso ustvarjene."
+      },
+      "schema": {
+        "titel": "Strukturirani podatki",
+        "hinweis": "Z njimi iskalnik razume, da je cena cena in naslov naslov. Šele tako se v zadetku iskanja pokažejo zvezdice, cene in odpiralni čas.",
+        "typenTitel": "Kaj se pošilja",
+        "organization": "Podjetje in naslov",
+        "organizationHinweis": "Ime, naslov, telefon in e-pošta iz profila podjetja.",
+        "lodging": "Nastanitve s ceno",
+        "lodgingHinweis": "Na vsaki strani objekta: vrsta nastanitve, oprema in dnevno posodobljena cena.",
+        "breadcrumbs": "Pot strani",
+        "breadcrumbsHinweis": "V zadetku iskanja pokaže, kje na spletnem mestu je stran.",
+        "faq": "Vprašanja in odgovori",
+        "faqHinweis": "Le na straneh z razdelkom vprašanj in odgovorov.",
+        "quelleTitel": "Od kod prihajajo podatki",
+        "quelleHinweis": "Vsi podatki izhajajo iz profila podjetja in podatkov objektov — tukaj se nič ne vnaša drugič. Če shema manjka, običajno manjka naslov v profilu.",
+        "quelleKnopf": "Na profil podjetja"
+      },
+      "messung": {
+        "titel": "Merjenje",
+        "hinweis": "Število obiskovalcev prek Google. Eno polje za vse štiri oznake — kateri izdelek je mišljen, Google prepozna po predponi.",
+        "kennungTitel": "Oznaka Google",
+        "kennungHinweis": "Analytics (G-), stara oblika (UA-), Google Ads (AW-) ali Campaign Manager (DC-).",
+        "kennung": "Oznaka",
+        "kennungFormat": "Na primer G-ABCD123456. Najdete jo v Google Analytics pod Skrbništvo → Podatkovni tokovi.",
+        "kennungFehler": "Oznaka se mora začeti z G-, UA-, AW- ali DC-.",
+        "zustimmungTitel": "Privolitev",
+        "zustimmungHinweis": "Skript se naloži, meri pa šele po privolitvi obiskovalca. Do takrat ne nastavi nobenega Cookie.",
+        "zustimmungAktiv": "Obvestilo o Cookie je aktivno. Meritev se začne šele po kliku obiskovalca.",
+        "zustimmungFehlt": "Brez obvestila o Cookie se meri takoj. V EU je za to potrebna privolitev.",
+        "zumHinweis": "Vklopi obvestilo o Cookie"
+      },
+      "weiterleitungen": {
+        "titel": "Preusmeritve",
+        "hinweis": "Preusmerjanje starih naslovov na nove. Potrebno pri prehodu z drugega spletnega mesta — brez preusmeritve obiskovalci iz Google in iz e-novic pristanejo na strani z napako.",
+        "neuTitel": "Nova preusmeritev",
+        "quelle": "Stari naslov",
+        "ziel": "Novi cilj",
+        "typ": "Vrsta",
+        "typ301": "Trajno (301)",
+        "typ302": "Začasno (302)",
+        "typ301Kurz": "trajno",
+        "typ302Kurz": "začasno",
+        "anlegen": "Ustvari",
+        "angelegt": "Preusmeritev ustvarjena.",
+        "geloescht": "Preusmeritev izbrisana.",
+        "loeschen": "Izbriši",
+        "aktivieren": "Aktiviraj",
+        "deaktivieren": "Deaktiviraj",
+        "listeTitel": "Obstoječe preusmeritve",
+        "keine": "Preusmeritve še niso ustvarjene.",
+        "wirdGespeichert": "Shranjeno bo:",
+        "nurPfad": "Shranjena bo samo pot:",
+        "csvImport": "Uvozi CSV",
+        "csvFormat": "Dva stolpca: stari naslov, novi cilj. Največ 200 vrstic.",
+        "dateiZuGross": "Datoteka je prevelika (največ 200 KB).",
+        "dateiLeer": "V datoteki ni bilo najdene nobene veljavne vrstice.",
+        "importErgebnis": "{neu} novih, {geaendert} spremenjenih, {uebersprungen} preskočenih.",
+        "weitereFehler": "{anzahl} nadaljnjih vrstic z napakami.",
+        "vorrangHinweis": "Preusmeritev deluje le, če na starem naslovu ni strani. Obstoječa stran ima vedno prednost."
+      }
     }
   },
   "dynamicPricing": {

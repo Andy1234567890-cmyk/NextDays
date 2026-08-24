@@ -19,7 +19,7 @@
 # Deploy sollte es 0 Lücken melden. Read-only, keine Schreibzugriffe.
 #
 # Aufruf:
-#   bash scripts/tasks/aufgaben-luecken-pruefen.sh            # 60 Tage voraus
+#   bash scripts/tasks/aufgaben-luecken-pruefen.sh            # −14 bis +60 Tage
 #   HORIZONT=180 bash scripts/tasks/aufgaben-luecken-pruefen.sh
 #
 # Zugang (ENV, Defaults passen auf den Staging-Server):
@@ -39,6 +39,10 @@ set -uo pipefail
 : "${DB_NAME:=postgres}"
 : "${PSQL_DSN:=}"
 : "${HORIZONT:=60}"
+# Derselbe Rückblick wie im Nachzug (engine.NACHZUG_RUECKBLICK_TAGE): eine
+# Abreise von vorgestern ohne Reinigungsaufgabe ist offene Arbeit, die niemand
+# sieht — sie gehört in den Report, nicht hinter die Tagesgrenze.
+: "${RUECKBLICK:=14}"
 
 rot(){ printf '\033[31m%s\033[0m\n' "$*"; }
 gruen(){ printf '\033[32m%s\033[0m\n' "$*"; }
@@ -87,7 +91,7 @@ with paare as (
    and tr.kind = 'auto'
    and tr.active
    and tr.start_trigger is not null
-  where r.check_out >= current_date
+  where r.check_out >= current_date - interval '${RUECKBLICK} days'
     and r.check_in <= current_date + interval '${HORIZONT} days'
     and r.status not in ('cancelled','declined','expired','requested')
     and (
@@ -110,8 +114,65 @@ order by paare.check_in, paare.objekt, paare.regel;
 SQLEOF
 )
 
-kopf "Buchungen ohne ihre planmäßige Aufgabe (heute bis +${HORIZONT} Tage)"
+# --- 1) Objekte, die von KEINER Regel erreicht werden -----------------------
+# Der Fall, der bei jedem neuen Kunden zuerst auftritt: es gibt noch keine
+# Regel, oder ein später angelegtes Objekt fehlt in den Zuordnungen einer
+# bestehenden. Beides erzeugt keine Fehlermeldung — es entstehen einfach nie
+# Aufgaben. Eine Regel OHNE Zuordnung gilt dagegen für alle Objekte, auch für
+# künftige.
+DECKUNG_SQL=$(cat <<'SQLEOF'
+with wirksam as (
+  select r.tenant_id, r.id as rule_id,
+         case when r.start_trigger in
+                   ('check_in','days_before_check_in','after_check_in_24h',
+                    'booking_confirmed')
+              then 'anreise' else 'abreise' end as art,
+         exists(select 1 from task_rule_assignments a where a.rule_id=r.id)
+           as hat_zuordnung
+  from task_rules r
+  where r.kind='auto' and r.active and r.start_trigger is not null
+), luecke as (
+  select tn.name as betrieb, p.title as objekt,
+         not exists (
+           select 1 from wirksam w
+           where w.tenant_id=p.tenant_id and w.art='anreise'
+             and (not w.hat_zuordnung
+                  or exists (select 1 from task_rule_assignments a
+                             where a.rule_id=w.rule_id and a.property_id=p.id))
+         ) as ohne_anreise,
+         not exists (
+           select 1 from wirksam w
+           where w.tenant_id=p.tenant_id and w.art='abreise'
+             and (not w.hat_zuordnung
+                  or exists (select 1 from task_rule_assignments a
+                             where a.rule_id=w.rule_id and a.property_id=p.id))
+         ) as ohne_abreise
+  from properties p join tenants tn on tn.id=p.tenant_id
+)
+select betrieb, objekt,
+       case when ohne_anreise and ohne_abreise then 'keine Regel'
+            when ohne_anreise then 'keine Anreise-Regel'
+            else 'keine Abreise-Regel' end
+from luecke where ohne_anreise or ohne_abreise
+order by betrieb, objekt;
+SQLEOF
+)
+
+kopf "Objekte, die von keiner planmäßigen Regel erreicht werden"
 container_bestimmen
+OHNE_REGEL=$(printf '%s\n' "$DECKUNG_SQL" | psql_run | sed '/^$/d')
+if [ -z "$OHNE_REGEL" ]; then
+  gruen "Jedes Objekt wird von einer Anreise- UND einer Abreise-Regel erreicht."
+else
+  printf 'Betrieb | Objekt | fehlt\n'
+  printf '%s\n' "$OHNE_REGEL" | tr '|' '\t' \
+    | awk -F'\t' '{printf "%s | %s | %s\n", $1,$2,$3}'
+  ANZ_REGEL=$(printf '%s\n' "$OHNE_REGEL" | wc -l | tr -d ' ')
+  rot "$ANZ_REGEL Objekt(e) ohne wirksame Regel — dort entsteht NIE eine Aufgabe."
+  rot "Abhilfe: Regel anlegen, oder das Objekt einer bestehenden zuordnen."
+fi
+
+kopf "Buchungen ohne ihre planmäßige Aufgabe (−${RUECKBLICK} bis +${HORIZONT} Tage)"
 LUECKEN=$(printf '%s\n' "$SQL" | psql_run)
 STATUS=$?
 if [ $STATUS -ne 0 ]; then
@@ -122,7 +183,9 @@ fi
 LUECKEN=$(printf '%s\n' "$LUECKEN" | sed '/^$/d')
 if [ -z "$LUECKEN" ]; then
   gruen "Keine Lücke: jede Buchung im Fenster hat die Aufgaben ihrer Regeln."
-  exit 0
+  # Ein ungedecktes Objekt bleibt ein Befund, auch wenn keine Buchung fehlt.
+  [ -z "$OHNE_REGEL" ] && exit 0
+  exit 1
 fi
 
 printf 'Anreise    | Objekt | Regel | Status | Kanal | Reservierung\n'

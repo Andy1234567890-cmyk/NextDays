@@ -439,6 +439,31 @@ class RuleListItem(BaseModel):
     updated_at: datetime | None = None
 
 
+class UngedecktesObjekt(BaseModel):
+    """Ein Objekt, für das keine wirksame planmäßige Regel greift."""
+
+    property_id: str
+    property_title: str
+    ohne_anreise: bool
+    ohne_abreise: bool
+
+
+class RegelDeckung(BaseModel):
+    """Wie viele Objekte planmäßige Aufgaben bekommen — und welche nicht.
+
+    Der Grund für diesen Endpunkt: eine Regel gilt für ALLE Objekte, solange
+    ihr keins ausdrücklich zugeordnet ist — sobald aber EINES zugeordnet ist,
+    gilt sie nur noch für die gelisteten. Ein danach angelegtes Objekt fällt
+    still heraus: es bekommt keine Anreise- und keine Reinigungsaufgabe, und
+    nichts in der Oberfläche sagt das. Live traf das 2 von 19 Objekten.
+    """
+
+    objekte: int
+    ohne_anreise: int
+    ohne_abreise: int
+    betroffen: list[UngedecktesObjekt] = Field(default_factory=list)
+
+
 class RuleDetail(RuleListItem):
     description: str | None = None
     remove_on_cancellation: bool = True

@@ -239,12 +239,10 @@
       "staff": "Személyzet",
       "jobs": "Állások",
       "reservations": "Foglalások",
-      "distribution": "Értékesítés",
       "hotel": "Szálloda",
       "vacationRentals": "Nyaralók",
       "accounting": "Könyvelés",
       "guests": "Vendégek",
-      "tools": "Eszközök",
       "website": "Weboldal-szerkesztő"
     },
     "roles": {
@@ -4255,6 +4253,14 @@
       "learnBody": {
         "auto": "Az ütemezett feladat automatikusan létrejön a kiválasztott szállások minden foglalásánál – kezdéssel és befejezéssel az érkezéshez és távozáshoz képest.",
         "recurring": "Az ismétlődő feladat a naptárat követi: kezdődátum, gyakoriság és időtartam. A rendszer az alkalmakat előre létrehozza – a foglalásoktól függetlenül."
+      },
+      "deckung": {
+        "titel": "Szállások ütemezett feladat nélkül",
+        "text": "{count} szállást a {total}-ból egyetlen szabály sem ér el. Ott soha nem keletkezik érkezési vagy takarítási feladat.",
+        "hinweis": "A szállás kiválasztása nélküli szabály minden szállásra vonatkozik — a később létrehozottakra is.",
+        "nurAnreise": "nincs érkezési szabály",
+        "nurAbreise": "nincs távozási szabály",
+        "keine": "nincs szabály"
       }
     },
     "statsCards": {
@@ -7115,7 +7121,8 @@
       "seiten": "Oldalak",
       "einstellungen": "Beállítások",
       "objekte": "Szálláshelyek",
-      "widgets": "Widgetek"
+      "widgets": "Widgetek",
+      "seo": "SEO"
     },
     "kopf": {
       "websiteAnsehen": "Weboldal megtekintése",
@@ -7341,7 +7348,9 @@
       "bildHinzufuegen": "Kép hozzáadása",
       "objekteHinweis": "Az itt megjelenítendő szálláshelyek azonosítói.",
       "objektIdPlatzhalter": "Szálláshely azonosítója",
-      "objektHinzufuegen": "Hozzáadás"
+      "objektHinzufuegen": "Hozzáadás",
+      "frageHinzufuegen": "Kérdés hozzáadása",
+      "fragenMax": "Legfeljebb {max} kérdés lehetséges."
     },
     "abschnitte": {
       "hero": "Főkép",
@@ -7365,7 +7374,9 @@
       "image": "Kép",
       "imageHinweis": "Egy kép képaláírással.",
       "gallery": "Galéria",
-      "galleryHinweis": "Több kép rácsban."
+      "galleryHinweis": "Több kép rácsban.",
+      "faq": "Kérdések és válaszok",
+      "faqHinweis": "Lenyitható kérdések. Strukturált adatokkal a találatok között is megjelennek."
     },
     "felder": {
       "eyebrow": "Kis sor a címsor felett",
@@ -7406,7 +7417,10 @@
       "email": "E-mail",
       "telefon": "Telefon",
       "adresse": "Cím",
-      "formularZeigen": "Kapcsolatfelvételi űrlap megjelenítése"
+      "formularZeigen": "Kapcsolatfelvételi űrlap megjelenítése",
+      "fragen": "Kérdések",
+      "frage": "Kérdés",
+      "antwort": "Válasz"
     },
     "vorschau": {
       "titel": "Előnézet",
@@ -7560,6 +7574,121 @@
       "kopiert": "A kód másolva.",
       "kopierenFehler": "A másolás nem lehetséges — jelölje ki kézzel.",
       "keineDomain": "A widgethez saját domain kell: csak az működik tartósan egy idegen oldalon. Kapcsolja össze a Beállítások → Cím alatt."
+    },
+    "seo": {
+      "felder": {
+        "titel": "Meta-cím",
+        "titelHinweis": "A böngésző fülén és a találat főcímeként jelenik meg. Körülbelül 60 karakter, utána a Google levágja.",
+        "beschreibung": "Meta-leírás",
+        "beschreibungHinweis": "A cím alatti szöveg a találatban. A helyezést nem befolyásolja, azt viszont igen, hogy rákattintanak-e.",
+        "keywords": "Kulcsszavak",
+        "keywordsHinweis": "Vesszővel elválasztva. A Google és a Bing már nem veszi figyelembe őket — csak a kisebb jegyzékek.",
+        "canonical": "Kanonikus cím",
+        "canonicalHinweis": "Csak akkor kell, ha ugyanaz a tartalom két címen is elérhető. Az üres érték azt jelenti: ez az oldal az eredeti.",
+        "rueckfall": "Az egész webhelyre"
+      },
+      "uebersicht": {
+        "titel": "Áttekintés",
+        "hinweis": "Az itteni adatok az egész webhelyre érvényesek. Minden olyan oldalon érvényesülnek, amelynek nincs sajátja — az igazi munka az „Oldalak” résznél történik.",
+        "metaTitel": "Az egész webhelyre érvényes adatok",
+        "metaHinweis": "Tartalék minden olyan oldalhoz, amelynek nincs saját adata. Ha mindenhol ugyanaz áll, azt a keresőmotorok a szerkezet hiányának jeleként olvassák.",
+        "indexTitel": "Keresőmotorok",
+        "noindex": "Ne indexelje a webhelyet",
+        "noindexHinweis": "Az egész webhelyet kívül tartja a keresőindexen. Épülő oldalhoz — az indulás után kapcsolja ki újra, különben soha nem találják meg.",
+        "noindexWarnung": "Amíg ez a kapcsoló be van kapcsolva, a robots.txt a „Disallow: /” választ adja, és nincs Sitemap.",
+        "tempoTitel": "Betöltési idő (Core Web Vitals)",
+        "tempoHinweis": "A Google a betöltési időt is figyelembe veszi. Mindkét kapcsoló azonnal hat a webhelyen.",
+        "lazy": "A képek csak görgetéskor töltődjenek be",
+        "lazyHinweis": "Felgyorsítja az első megjelenítést. Ha közvetlenül az oldal elején nagy kép van, lassíthatja a megjelenítést — akkor kapcsolja ki.",
+        "systemschrift": "A rendszerbetűtípus látszódjon, amíg a saját betöltődik",
+        "systemschriftHinweis": "A szöveg azonnal olvasható, az oldal viszont láthatóan betűtípust vált.",
+        "dateienTitel": "Amit a keresőmotorok letöltenek",
+        "dateienHinweis": "Ez a három fájl automatikusan jön létre a fenti adatokból. A sitemap.xml a Google Search Console-ba tartozik — ez az a lépés, amely felgyorsítja a keresőbe kerülést.",
+        "datei": {
+          "sitemap": "A webhely összes címe az utolsó módosítás dátumával.",
+          "robots": "Mit lehet bejárni, és hol található a Sitemap.",
+          "llms": "A webhely rövidített változata válaszmotorokhoz, például a ChatGPT vagy a Perplexity számára."
+        },
+        "keineDomain": "Még nincs saját domain csatlakoztatva. A három fájl akkor jön létre, amikor a webhely saját címen fut."
+      },
+      "seiten": {
+        "titel": "Oldalak",
+        "hinweis": "Minden oldalnak saját címre és saját leírásra van szüksége. Ez a legnagyobb hatású eszköz — itt látszik, hol hiányzik valami.",
+        "startseite": "Kezdőlap",
+        "entwurf": "Vázlat",
+        "nichtIndexiert": "nincs indexelve",
+        "gepflegt": "teljes",
+        "fehltTitel": "Hiányzik a cím",
+        "fehltBeschreibung": "Hiányzik a leírás",
+        "fehltBeides": "Hiányzik a cím és a leírás",
+        "alleGepflegt": "Minden oldalnak van címe és leírása.",
+        "offeneLuecken": "{anzahl} oldal cím vagy leírás nélkül.",
+        "noindex": "Ez az oldal ne legyen indexelve",
+        "noindexHinweis": "Az oldal a címén továbbra is elérhető, de nem jelenik meg a találatok között.",
+        "speichern": "Mentés",
+        "gespeichert": "Mentve.",
+        "ungespeichert": "Nincs mentve",
+        "keine": "Még nincs létrehozva oldal."
+      },
+      "schema": {
+        "titel": "Strukturált adatok",
+        "hinweis": "Ebből érti meg a keresőmotor, hogy egy ár az ár, egy cím pedig a cím. Csak ezáltal jelennek meg csillagok, árak és nyitvatartás a találatban.",
+        "typenTitel": "Amit átadunk",
+        "organization": "Vállalkozás és cím",
+        "organizationHinweis": "Név, cím, telefon és e-mail a cégprofilból.",
+        "lodging": "Szálláshelyek árral",
+        "lodgingHinweis": "Szálláshely-oldalonként: a szállás fajtája, a felszereltség és a napi aktuális ár.",
+        "breadcrumbs": "Az oldal útvonala",
+        "breadcrumbsHinweis": "A találatban megmutatja, hol áll az oldal a webhelyen belül.",
+        "faq": "Kérdések és válaszok",
+        "faqHinweis": "Csak olyan oldalakon, amelyeken kérdés-válasz szakasz van.",
+        "quelleTitel": "Honnan jönnek az adatok",
+        "quelleHinweis": "Minden adat a cégprofilból és a szálláshelyek adataiból származik — itt semmit nem kell másodszor beírni. Ha hiányzik egy séma, általában a cím hiányzik a profilból.",
+        "quelleKnopf": "A cégprofilhoz"
+      },
+      "messung": {
+        "titel": "Mérés",
+        "hinweis": "Látogatószám a Google-on keresztül. Egy mező mind a négy azonosítóhoz — hogy melyik termékről van szó, azt a Google az előtagból ismeri fel.",
+        "kennungTitel": "Google-azonosító",
+        "kennungHinweis": "Analytics (G-), régi (UA-), Google Ads (AW-) vagy Campaign Manager (DC-).",
+        "kennung": "Azonosító",
+        "kennungFormat": "Például G-ABCD123456. A Google Analytics Adminisztrátor → Adatfolyamok pontjában található.",
+        "kennungFehler": "Az azonosítónak G-, UA-, AW- vagy DC- kezdetűnek kell lennie.",
+        "zustimmungTitel": "Hozzájárulás",
+        "zustimmungHinweis": "A szkript betöltődik, de csak a látogató hozzájárulása után mér. Addig nem helyez el Cookie-fájlt.",
+        "zustimmungAktiv": "A Cookie-tájékoztató aktív. A mérés csak a látogató kattintása után indul.",
+        "zustimmungFehlt": "Cookie-tájékoztató nélkül a mérés azonnal elindul. Az EU-ban ehhez hozzájárulás szükséges.",
+        "zumHinweis": "Cookie-tájékoztató bekapcsolása"
+      },
+      "weiterleitungen": {
+        "titel": "Átirányítások",
+        "hinweis": "A régi címek átirányítása az újakra. Más webhelyről való átköltözésnél szükséges — átirányítás nélkül a Google-ból és a hírlevelekből érkező látogatók hibaoldalra jutnak.",
+        "neuTitel": "Új átirányítás",
+        "quelle": "Régi cím",
+        "ziel": "Új cél",
+        "typ": "Fajta",
+        "typ301": "Állandó (301)",
+        "typ302": "Átmeneti (302)",
+        "typ301Kurz": "állandó",
+        "typ302Kurz": "átmeneti",
+        "anlegen": "Létrehozás",
+        "angelegt": "Az átirányítás létrejött.",
+        "geloescht": "Az átirányítás törölve.",
+        "loeschen": "Törlés",
+        "aktivieren": "Bekapcsolás",
+        "deaktivieren": "Kikapcsolás",
+        "listeTitel": "Meglévő átirányítások",
+        "keine": "Még nincs létrehozva átirányítás.",
+        "wirdGespeichert": "Ez lesz mentve:",
+        "nurPfad": "Csak az útvonal lesz mentve:",
+        "csvImport": "CSV beolvasása",
+        "csvFormat": "Két oszlop: régi cím, új cél. Legfeljebb 200 sor.",
+        "dateiZuGross": "A fájl túl nagy (legfeljebb 200 KB).",
+        "dateiLeer": "A fájlban nem található érvényes sor.",
+        "importErgebnis": "{neu} új, {geaendert} módosított, {uebersprungen} kihagyott.",
+        "weitereFehler": "További {anzahl} hibás sor.",
+        "vorrangHinweis": "Az átirányítás csak akkor érvényesül, ha a régi címen nincs oldal. A meglévő oldalnak mindig elsőbbsége van."
+      }
     }
   },
   "dynamicPricing": {
