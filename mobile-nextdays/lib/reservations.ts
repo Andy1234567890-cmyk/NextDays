@@ -46,6 +46,12 @@ export type Reservation = {
   // Eigentümer-Aufenthalt (Migration 0241): kein Umsatz, keine Herkunft —
   // die Liste kennzeichnet ihn statt einen Vertriebskanal zu zeigen.
   is_owner_stay: boolean;
+  // Wann der GAST gebucht hat, aus der Quelle (0291, Wurzel 5b). Das Backend
+  // liefert es in der Liste mit; hier fehlte es, weshalb die Liste nur nach
+  // Anreisetag sortieren konnte und „neueste zuerst" den spätesten ANREISETAG
+  // meinte. null = die Quelle hat keinen geliefert — dann NICHT auf
+  // `created_at` ausweichen, das ist unsere Uhr.
+  booked_at: string | null;
 };
 
 export type ReservationListResponse = { items: Reservation[]; total: number };

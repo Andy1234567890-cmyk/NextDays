@@ -10,6 +10,11 @@
 // als Schnellfilter weiter — dieselbe Semantik (`matchesQuick`), nur als
 // Dropdown statt als Reiterleiste; „Alle" ist neu und der Startwert.
 //
+// REIHENFOLGE: oben steht, was ANSTEHT (noch nicht abgereist), nächste
+// Anreise zuerst; Abgereistes darunter, das Jüngste davon oben. Nur die
+// Sicht „Vergangen" dreht komplett um. Es wird nichts ausgeblendet —
+// die Liste beginnt nur dort, wo die Arbeit ist.
+//
 // Ein listReservations()-Call speist die Liste; EIN Realtime-Abo (Pflicht,
 // CLAUDE.md) hält sie live. Beträge kommen bereits maskiert aus dem Backend
 // (null → „—", kein 0-Fallback), Währung IMMER aus der Zeile (Wurzel 4).
@@ -228,13 +233,26 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
         return hay.includes(q);
       })
       .sort((a, b) => {
-        // Ankünfte/Zukunft aufsteigend (was kommt zuerst?), sonst neuste zuerst.
-        const asc = quick === "arrivals" || quick === "future";
+        // „Vergangen" ist die Historie: das Jüngste oben, absteigend.
+        if (quick === "past") {
+          return a.check_in === b.check_in ? 0 : a.check_in < b.check_in ? 1 : -1;
+        }
         const key = quick === "departures" ? "check_out" : "check_in";
+        // In jeder anderen Sicht steht oben, was ANSTEHT. „Alle" (der
+        // Startwert) sortierte bis 23.08.2026 absteigend und begann deshalb
+        // mit der am weitesten entfernten Buchung — live mit August 2027,
+        // während die Anreise dieser Woche 40 Zeilen tiefer stand. Der
+        // Anreisetag ist kein Neuheitsmaß: „neuste zuerst" hieß hier in
+        // Wahrheit „reist am spätesten an".
+        const aAn = a.check_out >= todayKey;
+        const bAn = b.check_out >= todayKey;
+        if (aAn !== bAn) return aAn ? -1 : 1;
         const av = a[key];
         const bv = b[key];
         if (av === bv) return 0;
-        return (av < bv ? -1 : 1) * (asc ? 1 : -1);
+        // Anstehendes aufsteigend (die nächste Anreise oben), Abgereistes
+        // absteigend — von heute aus gesehen ist beides „das Nächstliegende".
+        return (av < bv ? -1 : 1) * (aAn ? 1 : -1);
       });
   }, [
     reservations,

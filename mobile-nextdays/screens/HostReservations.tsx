@@ -18,6 +18,11 @@ import { BuchungsPanel } from "@/components/buchung/BuchungsPanel";
 import { Icon } from "@/components/ui/Icon";
 import { Col, Photo, Row, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState } from "@/components/ui/patterns";
+import {
+  REIHENFOLGE_LABEL,
+  sortiereBuchungen,
+  type Reihenfolge,
+} from "@/lib/buchungs-reihenfolge";
 import { STATUS_LABEL, STATUS_TONE, anzeigeStatus } from "@/lib/buchungsstatus";
 import { channelMeta } from "@/lib/calendar-channels";
 import { formatCurrency } from "@/lib/currency";
@@ -83,7 +88,10 @@ export default function HostReservations({
   );
   const [channelFilter, setChannelFilter] = useState<ReservationChannel | "all">("all");
   const [propFilter, setPropFilter] = useState<string | "all">("all");
-  const [newestFirst, setNewestFirst] = useState(true);
+  // Startwert „anstehend": die Liste öffnet bei dem, was als Nächstes
+  // ansteht. Vorher stand hier `newestFirst` und meinte „späteste Anreise
+  // zuerst" — die Liste begann mit August 2027.
+  const [reihenfolge, setReihenfolge] = useState<Reihenfolge>("anstehend");
   // Angetippte Buchung → Panel. Kein Screen-Wechsel: die gesetzten Filter und
   // die Scrollposition sollen erhalten bleiben.
   const [offeneBuchung, setOffeneBuchung] = useState<string | null>(null);
@@ -110,6 +118,11 @@ export default function HostReservations({
     return m;
   }, [props]);
 
+  // Kein useMemo: `heuteIso()` liefert bei gleichem Tag denselben String,
+  // die Abhängigkeit unten bleibt also stabil — über Mitternacht zieht die
+  // Reihenfolge dagegen mit, statt auf dem Tag des App-Starts zu stehen.
+  const heute = heuteIso();
+
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     const list = (items ?? []).filter((r) => {
@@ -123,25 +136,38 @@ export default function HostReservations({
       }
       return true;
     });
-    // Sortierung nach Check-in (neu/alt zuerst) — lexikografisch auf YYYY-MM-DD.
-    return [...list].sort((a, b) =>
-      newestFirst ? b.check_in.localeCompare(a.check_in) : a.check_in.localeCompare(b.check_in),
-    );
-  }, [items, query, statusFilter, channelFilter, propFilter, newestFirst, propById]);
+    return sortiereBuchungen(list, reihenfolge, heute);
+  }, [items, query, statusFilter, channelFilter, propFilter, reihenfolge, heute, propById]);
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
       <Col style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 14, gap: 16 }}>
         <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
           <Txt v="display">Buchungen</Txt>
+          {/* Die Reihenfolge steht LESBAR da. Vorher war es ein nacktes
+              Regler-Symbol: unsichtbar, was es tut und was gerade gilt — und
+              damit auch unsichtbar, warum die Liste in der Zukunft anfing. */}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={newestFirst ? "Älteste zuerst" : "Neueste zuerst"}
-            onPress={() => setNewestFirst((v) => !v)}
+            accessibilityLabel={`Reihenfolge: ${REIHENFOLGE_LABEL[reihenfolge]}. Umschalten.`}
+            onPress={() =>
+              setReihenfolge((v) => (v === "anstehend" ? "gebucht" : "anstehend"))
+            }
             hitSlop={10}
-            style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.6 : 1 })}
+            style={({ pressed }) => ({
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+              paddingVertical: 6,
+              paddingHorizontal: 10,
+              borderRadius: t.radius.pill,
+              borderWidth: 1,
+              borderColor: t.palette.line,
+              opacity: pressed ? 0.6 : 1,
+            })}
           >
-            <Icon n="sliders" s={22} sw={1.8} c={t.palette.ink} />
+            <Icon n="sliders" s={16} sw={1.8} c={t.palette.ink} />
+            <Txt v="sm">{REIHENFOLGE_LABEL[reihenfolge]}</Txt>
           </Pressable>
         </Row>
 
