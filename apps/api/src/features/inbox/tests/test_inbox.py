@@ -788,7 +788,7 @@ def test_link_thread_guest_requires_config_permission() -> None:
 
 
 # --- Automail: Zeitberechnung + Zuweisungs-Matching (reine Logik) ------------
-from datetime import UTC  # noqa: E402
+from datetime import UTC, timedelta  # noqa: E402
 
 
 def test_compute_send_at_before_arrival_with_time() -> None:
@@ -1138,6 +1138,41 @@ def test_nachzuegler_wird_nicht_mehr_versendet() -> None:
         == "pending"
     )
 
+
+def test_lastminute_anker_vor_der_buchung_geht_nicht_raus() -> None:
+    """DER VORFALL (24.08.2026, Booking.com 5095596783): gebucht am 24.08. um
+    06:02 UTC, Anreise am 26.08. Die Regel „3 Tage vor Anreise" rechnete auf den
+    23.08. 18:00 — VOR der Buchung, aber nur zwölf Stunden vor „jetzt", also
+    innerhalb der Nachzügler-Grenze. Sie ging um 06:04 raus, vier Minuten VOR der
+    Buchungsbestätigung (booked_at + 5 min). Der Gast las „in 3 Tagen ist es
+    soweit", obwohl seine Anreise in zwei Tagen war."""
+    gebucht = datetime(2026, 8, 24, 6, 2, 31, tzinfo=UTC)
+    jetzt = datetime(2026, 8, 24, 6, 4, tzinfo=UTC)
+    vor_der_buchung = datetime(2026, 8, 23, 18, 0, tzinfo=UTC)
+    # Ohne den Buchungszeitpunkt sieht die Zeile frisch aus — das war der Fehler.
+    assert InboxService._versandstatus(vor_der_buchung, jetzt) == "pending"
+    # Mit ihm: die Regel hat für diese Buchung nie gegolten.
+    assert (
+        InboxService._versandstatus(vor_der_buchung, jetzt, gebucht_am=gebucht)
+        == "skipped"
+    )
+    # Die Buchungsbestätigung selbst hängt am Buchungszeitpunkt und bleibt
+    # unberührt — sonst hätte der Fix den Hauptfall mitgenommen.
+    assert (
+        InboxService._versandstatus(
+            gebucht + timedelta(minutes=5), jetzt, gebucht_am=gebucht
+        )
+        == "pending"
+    )
+    # Genau auf dem Buchungszeitpunkt (Versatz 0) ist gültig, nicht „davor".
+    assert (
+        InboxService._versandstatus(gebucht, jetzt, gebucht_am=gebucht) == "pending"
+    )
+    # Fehlt `booked_at`, wird nichts geraten (Wurzel 4): nur die 24-h-Grenze.
+    assert (
+        InboxService._versandstatus(vor_der_buchung, jetzt, gebucht_am=None)
+        == "pending"
+    )
 
 # --- Auslöser: Anker + Richtung kommen aus dem Auslöser (0307) ---------------
 def test_ausloeser_katalog_ist_vollstaendig() -> None:

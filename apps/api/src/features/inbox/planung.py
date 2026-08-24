@@ -797,19 +797,52 @@ class PlanungMixin:
             # (sent/sending/failed). Genau so soll es sein.
 
     @staticmethod
-    def _versandstatus(send_at: datetime, jetzt: datetime) -> str:
-        """'pending' (geht raus) oder 'skipped' (Nachzügler, geht nicht mehr raus).
+    def _versandstatus(
+        send_at: datetime,
+        jetzt: datetime,
+        *,
+        gebucht_am: datetime | None = None,
+    ) -> str:
+        """'pending' (geht raus) oder 'skipped' (geht nicht mehr raus).
 
-        Ein Versandzeitpunkt, der über `NACHZUEGLER_STUNDEN` zurückliegt, ist als
-        Zeitpunkt nicht mehr einzuhalten. Ohne diese Grenze wird jeder Import
-        bestehender Buchungen zur Nachrichtenlawine: Hunderte Zeilen mit
-        Ankerdatum in der Vergangenheit sind sofort „fällig" und gehen im
-        nächsten Versand-Tick gebündelt an längst abgereiste Gäste."""
-        return (
-            "pending"
-            if send_at >= jetzt - timedelta(hours=NACHZUEGLER_STUNDEN)
-            else "skipped"
-        )
+        ZWEI Gründe, aus denen ein Zeitpunkt nicht mehr einzuhalten ist. Sie
+        sehen sich ähnlich, sind aber verschieden, und der zweite fehlte:
+
+        1. **Nachzügler** — der Zeitpunkt liegt über `NACHZUEGLER_STUNDEN`
+           zurück. Ohne diese Grenze wird jeder Import bestehender Buchungen zur
+           Nachrichtenlawine: Hunderte Zeilen mit Ankerdatum in der
+           Vergangenheit sind sofort „fällig" und gehen im nächsten Versand-Tick
+           gebündelt an längst abgereiste Gäste.
+
+        2. **Der Anker lag VOR der Buchung** — die Regel hat für diese Buchung
+           nie gegolten. Bei einer Last-Minute-Buchung ist „3 Tage vor Anreise"
+           schon vorbei, wenn der Gast bucht: der Zeitpunkt wurde nicht versäumt,
+           es gab ihn für diese Buchung gar nicht. Die 24-Stunden-Grenze fängt
+           das NICHT, weil der Zeitpunkt gemessen an unserer Uhr frisch ist.
+
+        Live passiert (24.08.2026, Booking.com 5095596783): gebucht 06:02 UTC,
+        Anreise 26.08. Die Regel „3 Tage vor Anreise" rechnete send_at auf den
+        23.08. 18:00 — zwölf Stunden VOR der Buchung, aber nur zwölf Stunden vor
+        „jetzt". Sie stand deshalb auf 'pending' und ging um 06:04 raus, vier
+        Minuten VOR der Buchungsbestätigung (booked_at + 5 min = 06:07). Der Gast
+        las als Erstes „in 3 Tagen ist es soweit", obwohl seine Anreise in zwei
+        Tagen war, und erst danach, dass seine Buchung angekommen ist.
+
+        Beides an EINER Stelle, weil beides dieselbe Frage ist: konnte diese
+        Nachricht ihren Zeitpunkt je treffen? Nein → 'skipped'. Nicht gelöscht:
+        die Regel HAT gegriffen, nur eben ins Leere.
+
+        `gebucht_am` ist der Zeitpunkt beim Portal (`booked_at`, Wurzel 5b) —
+        nicht unser `created_at`. Sonst überspränge ein nachträglich verbundener
+        Kanal seine gesamte Bestandsübernahme, weil alles „vor unserer Kenntnis"
+        liegt. Fehlt er, wird nur die Nachzügler-Grenze geprüft: kein geratener
+        Ersatzzeitpunkt (Wurzel 4).
+        """
+        if send_at < jetzt - timedelta(hours=NACHZUEGLER_STUNDEN):
+            return "skipped"
+        if gebucht_am is not None and send_at < gebucht_am:
+            return "skipped"
+        return "pending"
 
     @staticmethod
     def _stilllegen(
@@ -859,6 +892,11 @@ class PlanungMixin:
         # die Anreise-Info an einen Gast, der abgesagt hat.
         if (th.get("status") or "") == "cancelled":
             return set()
+        # Zeitpunkt der Buchung beim Portal — die Untergrenze jeder Automail
+        # dieses Threads (s. `_versandstatus`). Einmal vor der Schleife, weil er
+        # für alle Regeln derselbe ist.
+        gebucht = self._ankerzeit("booking", th)
+        gebucht_am = gebucht[2] if gebucht else None
         geplant: set[str] = set()
         for a in automations:
             if not self._automation_matches(a, property_id, th.get("ota_name")):
@@ -922,7 +960,9 @@ class PlanungMixin:
                 continue
             self._einplanen(
                 db, tenant_id, a, thread_id, body, send_at,
-                status=self._versandstatus(send_at, jetzt),
+                status=self._versandstatus(
+                    send_at, jetzt, gebucht_am=gebucht_am
+                ),
             )
             geplant.add(str(a["id"]))
         return geplant
