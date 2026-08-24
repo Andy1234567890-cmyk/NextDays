@@ -5,10 +5,16 @@
 # Ersetzt das gruene SOGo-Standard-Tab-Icon durch das myNextDays-Monogramm.
 #
 # Warum ein Monogramm "N" statt der Wortmarke?
-# Im Repo gibt es KEIN reines Symbol-Logo, nur die breite Wortmarke
-# ("myNextDays powered by AirSmil"). Eine Wortmarke ist bei 16x16 (echte
-# Tab-Groesse) nur ein roter Klecks — unlesbar. Das Monogramm "N" auf
-# Marken-Rot (#b82028) ist bei 16/32/64px klar erkennbar, hell wie dunkel.
+# Eine Wortmarke ist bei 16x16 (echte Tab-Groesse) nur ein roter Klecks —
+# unlesbar. Das Monogramm "N" auf Marken-Rot (#b82028) ist bei 16/32/64px klar
+# erkennbar, hell wie dunkel.
+#
+# Der fruehere Grund („im Repo gibt es KEIN reines Symbol-Logo, nur die breite
+# Wortmarke myNextDays powered by AirSmil") gilt nicht mehr: seit der
+# Figma-Logo-Familie liegt mnd_bildmarke.svg vor, und der Zusatz „powered by
+# AirSmil" ist ueberall entfallen. Das Monogramm bleibt trotzdem, weil es bei
+# 16px besser traegt als die Bildmarke — pruefen lohnt sich aber, wenn das Icon
+# das naechste Mal angefasst wird.
 #
 # Erfordert ImageMagick (magick). Font-frei (reine Pfad-Geometrie), damit
 # es ohne Freetype/Ghostscript laeuft.

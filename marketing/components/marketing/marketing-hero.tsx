@@ -18,7 +18,13 @@ import { Button } from "@/components/ui/button";
 import { SIGNUP_URL, DEMO_URL } from "@/lib/app-url";
 
 // Trust-Streifen unter der Unterzeile — Schlüssel, nicht Texte (hero.trust*).
-const TRUST = ["trustNeu", "trustVermieter", "trustAirsmil", "trustEu"] as const;
+//
+// „powered by AirSmil" stand hier als viertes Signal und ist am 24.08.2026
+// entfallen: myNextDays ApS ist ein reines Softwarehaus, der Zusatz gehört nicht
+// in die Kundenkommunikation. Der Schlüssel ist aus allen 24 Sprachdateien
+// gelöscht, nicht auf einen Leerstring gesetzt — sonst stünde hier eine leere
+// Pille im Streifen.
+const TRUST = ["trustNeu", "trustVermieter", "trustEu"] as const;
 
 export function MarketingHero() {
   const t = useTranslations("hero");
