@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "Samtycke krävs enligt artikel 9 i den danska cookieförordningen (Cookie-bekendtgørelsen) (som genomför artikel 5.3 i direktiv 2002/58/EG) endast när åtkomst till din enhet inte uteslutande syftar till att överföra ett meddelande eller inte är absolut nödvändig för en tjänst som du uttryckligen har begärt.",
         "Alla cookies som vi sätter är nödvändiga för inloggning, sessionens säkerhet eller en inställning som du själv har gjort — därför frågar vi inte efter något för dem, och sätter omvänt heller inget som skulle kräva samtycke.",
         "Du behöver bara samtycka till en enda sak: spamskyddet i vårt kontaktformulär. Det kommer från Google (reCAPTCHA Enterprise), är alltså en extern tjänst, och laddas endast om du har tillåtit det. För detta frågar en rad längst ner på skärmen — vid första besöket, med likvärdiga knappar för ”Avvisa” och ”Acceptera” och utan förval. Så länge du inte har bestämt dig gäller ”ej tillåtet”.",
-        "Ditt beslut lagras i din webbläsares minne (Local Storage, värdet ”nd_consent”); det innehåller endast kategorin, tidpunkten och ett versionsnummer, ingen identifiering av din person. Längst ner på denna sida kan du när som helst ändra eller återkalla det.",
+        "Ditt beslut lagras i din webbläsares minne (Local Storage, värdet ”nd_consent”); det innehåller endast kategorin, tidpunkten och ett versionsnummer, ingen identifiering av din person. Via cookie-ikonen längst ner till vänster på varje sida kan du när som helst ändra eller återkalla det. Efter sex månader frågar vi igen — ett samtycke ska inte gälla obegränsat.",
       ],
     },
     {
@@ -93,7 +93,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Sparar ditt beslut om spamskyddet i kontaktformuläret, så att samtyckesraden inte frågar igen vid varje besök. Endast kategorin, tidpunkten och ett versionsnummer sparas. Värdet lämnar inte din enhet och överförs inte till vår server; det gäller för denna webbläsare. Om du raderar det frågar raden igen vid nästa besök.",
+            "Sparar ditt beslut om spamskyddet i kontaktformuläret, så att samtyckesraden inte frågar igen vid varje besök. Endast kategorin, tidpunkten och ett versionsnummer sparas. Värdet lämnar inte din enhet och överförs inte till vår server; det gäller för denna webbläsare. Giltighetstid: sex månader — därefter frågar raden igen. Om du raderar värdet frågar raden igen vid nästa besök.",
           ],
         },
         {

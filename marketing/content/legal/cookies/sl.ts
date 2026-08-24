@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "Soglasje je v skladu s členom 9 danske uredbe o piškotkih (Cookie-bekendtgørelsen) (ki prenaša člen 5(3) Direktive 2002/58/ES) potrebno le, kadar dostop do vaše naprave ne služi izključno prenosu sporočila ali ni nujno potreben za izrecno zahtevano storitev.",
         "Vsi piškotki, ki jih nastavimo, so potrebni za prijavo, varnost seje ali nastavitev, ki ste jo izbrali sami — zato zanje ne zahtevamo ničesar, obratno pa tudi ne nastavljamo ničesar, za kar bi bilo potrebno soglasje.",
         "Soglasje morate dati za natanko eno stvar: zaščito pred neželeno pošto v našem kontaktnem obrazcu. Ta prihaja od podjetja Google (reCAPTCHA Enterprise), gre torej za zunanjo storitev, ki se naloži izključno, če ste jo dovolili. Za to vas ob prvem obisku vpraša pasica na spodnjem robu zaslona — z enakovrednima gumboma za „Zavrni” in „Sprejmi” ter brez privzete izbire. Dokler se ne odločite, velja „ni dovoljeno”.",
-        "Vaša odločitev je shranjena v pomnilniku vašega brskalnika (Local Storage, vrednost „nd_consent”); vsebuje le kategorijo, čas in številko različice, brez kakršne koli identifikacije vaše osebe. Na koncu te strani jo lahko kadar koli spremenite ali prekličete.",
+        "Vaša odločitev je shranjena v pomnilniku vašega brskalnika (Local Storage, vrednost „nd_consent”); vsebuje le kategorijo, čas in številko različice, brez kakršne koli identifikacije vaše osebe. Prek ikone piškotkov v spodnjem levem kotu vsake strani jo lahko kadar koli spremenite ali prekličete. Po šestih mesecih bomo vprašali znova — soglasje ne bi smelo veljati neomejeno.",
       ],
     },
     {
@@ -93,7 +93,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Beleži vašo odločitev glede zaščite pred neželeno pošto v kontaktnem obrazcu, da vas pasica za soglasje ne vpraša znova ob vsakem obisku. Shranjeni so le kategorija, čas in številka različice. Vrednost ne zapusti vaše naprave in se ne prenese na naš strežnik; velja za ta brskalnik. Če jo izbrišete, vas bo pasica ob naslednjem obisku znova vprašala.",
+            "Beleži vašo odločitev glede zaščite pred neželeno pošto v kontaktnem obrazcu, da vas pasica za soglasje ne vpraša znova ob vsakem obisku. Shranjeni so le kategorija, čas in številka različice. Vrednost ne zapusti vaše naprave in se ne prenese na naš strežnik; velja za ta brskalnik. Veljavnost: šest mesecev — po tem obdobju bo pasica vprašala znova. Če izbrišete vrednost, vas bo pasica ob naslednjem obisku znova vprašala.",
           ],
         },
         {

@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "Zgoda jest wymagana na podstawie § 9 duńskiego rozporządzenia w sprawie plików cookie (Cookie-bekendtgørelsen), wdrażającego art. 5 ust. 3 dyrektywy 2002/58/WE, wyłącznie wtedy, gdy dostęp do Twojego urządzenia nie służy jedynie przekazaniu komunikatu ani nie jest bezwzględnie konieczny do świadczenia usługi wyraźnie przez Ciebie zamówionej.",
         "Wszystkie pliki cookie, które ustawiamy, są niezbędne do zalogowania, do bezpieczeństwa sesji albo do ustawienia wybranego przez Ciebie samego — o nie nie pytamy, a odwrotnie nie ustawiamy niczego, co wymagałoby zgody.",
         "Zgody potrzebujemy dokładnie w jednej sprawie: ochrony przed spamem w naszym formularzu kontaktowym. Pochodzi ona od Google (reCAPTCHA Enterprise), jest więc usługą zewnętrzną, i jest wczytywana wyłącznie wtedy, gdy na nią zezwolisz. Pyta o to pasek na dole ekranu — przy pierwszej wizycie, z równorzędnymi przyciskami odrzucenia i przyjęcia oraz bez wstępnego wyboru. Dopóki nie podejmiesz decyzji, obowiązuje „brak zezwolenia”.",
-        "Twoja decyzja pozostaje w pamięci Twojej przeglądarki (Local Storage, wartość „nd_consent”); zawiera wyłącznie kategorię, moment i numer wersji, bez identyfikatora Twojej osoby. Na końcu tej strony możesz ją w każdej chwili zmienić lub odwołać.",
+        "Twoja decyzja pozostaje w pamięci Twojej przeglądarki (Local Storage, wartość „nd_consent”); zawiera wyłącznie kategorię, moment i numer wersji, bez identyfikatora Twojej osoby. Za pomocą ikony cookies w lewym dolnym rogu każdej strony możesz ją w każdej chwili zmienić lub odwołać. Po sześciu miesiącach zapytamy ponownie — zgoda nie powinna obowiązywać bezterminowo.",
       ],
     },
     {
@@ -92,7 +92,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Zapisuje Twoją decyzję dotyczącą ochrony przed spamem w formularzu kontaktowym, aby pasek zgody nie pytał ponownie przy każdej wizycie. Zapisywane są wyłącznie kategoria, moment i numer wersji. Wartość nie opuszcza Twojego urządzenia i nie jest przesyłana na nasz serwer; obowiązuje dla tej przeglądarki. Jeśli ją usuniesz, pasek zapyta ponownie przy następnej wizycie.",
+            "Zapisuje Twoją decyzję dotyczącą ochrony przed spamem w formularzu kontaktowym, aby pasek zgody nie pytał ponownie przy każdej wizycie. Zapisywane są wyłącznie kategoria, moment i numer wersji. Wartość nie opuszcza Twojego urządzenia i nie jest przesyłana na nasz serwer; obowiązuje dla tej przeglądarki. Okres ważności: sześć miesięcy — po tym czasie pasek zapyta ponownie. Jeśli usuniesz wartość, pasek zapyta ponownie przy następnej wizycie.",
           ],
         },
         {

@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "Suostumus on tarpeen Tanskan evästeasetuksen (Cookie-bekendtgørelsen) 9 §:n mukaan (direktiivin 2002/58/EY 5 artiklan 3 kohdan täytäntöönpano) vain, jos pääsy laitteeseenne ei palvele yksinomaan viestin välittämistä tai ei ole ehdottoman välttämätön nimenomaisesti pyytämänne palvelun tarjoamiseksi.",
         "Kaikki asettamamme evästeet ovat tarpeen kirjautumista, istunnon turvallisuutta tai itse tekemäänne asetusta varten — emme kysy niitä varten mitään, emmekä toisaalta aseta mitään, mikä vaatisi suostumusta.",
         "Suostumusta tarvitsette täsmälleen yhtä asiaa varten: yhteydenottolomakkeemme roskapostisuojaa. Se tulee Googlelta (reCAPTCHA Enterprise) eli on ulkoinen palvelu, ja se ladataan vain, jos olette sallineet sen. Tätä varten näytön alareunassa kysyy palkki — ensimmäisellä käynnillä, tasavertaisilla painikkeilla ”Hylkää” ja ”Hyväksy” ilman ennalta valittua vaihtoehtoa. Kunnes olette päättäneet, on voimassa ”ei sallittu”.",
-        "Päätöksenne sijaitsee selaimenne tallennustilassa (Local Storage, arvo ”nd_consent”); se sisältää vain kategorian, ajankohdan ja versionumeron, ei henkilöllisyyttänne. Voitte muuttaa tai peruuttaa sen milloin tahansa tämän sivun lopussa.",
+        "Päätöksenne sijaitsee selaimenne tallennustilassa (Local Storage, arvo ”nd_consent”); se sisältää vain kategorian, ajankohdan ja versionumeron, ei henkilöllisyyttänne. Voitte muuttaa tai peruuttaa sen milloin tahansa jokaisen sivun vasemmassa alakulmassa olevan evästekuvakkeen kautta. Kuuden kuukauden kuluttua kysymme uudelleen — suostumus ei saa olla voimassa rajattomasti.",
       ],
     },
     {
@@ -92,7 +92,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Tallentaa päätöksenne yhteydenottolomakkeen roskapostisuojasta, jotta suostumuspalkki ei kysy sitä uudelleen jokaisella käynnillä. Tallennettuna on vain kategoria, ajankohta ja versionumero. Arvo ei poistu laitteeltanne eikä sitä siirretä palvelimellemme; se koskee tätä selainta. Jos poistatte sen, palkki kysyy asiaa uudelleen seuraavalla käynnillä.",
+            "Tallentaa päätöksenne yhteydenottolomakkeen roskapostisuojasta, jotta suostumuspalkki ei kysy sitä uudelleen jokaisella käynnillä. Tallennettuna on vain kategoria, ajankohta ja versionumero. Arvo ei poistu laitteeltanne eikä sitä siirretä palvelimellemme; se koskee tätä selainta. Voimassaolo: kuusi kuukautta — sen jälkeen palkki kysyy asiaa uudelleen. Jos poistatte arvon, palkki kysyy asiaa uudelleen seuraavalla käynnillä.",
           ],
         },
         {

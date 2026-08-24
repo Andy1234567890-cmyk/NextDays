@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "Consent is required under § 9 of the Danish Cookie Executive Order (Cookie-bekendtgørelsen) (implementing Article 5(3) of Directive 2002/58/EC) only where access to your device does not serve exclusively to carry out the transmission of a communication or is not strictly necessary for a service you have explicitly requested.",
         "All cookies we set are required for logging in, session security, or a setting you have chosen yourself — we do not ask for consent for these, and conversely we do not set anything that would require consent.",
         "There is exactly one thing you must consent to: the spam protection on our contact form. It comes from Google (reCAPTCHA Enterprise), so it is an external service, and it is loaded only once you have allowed it. A bar at the bottom of the screen asks for this — on your first visit, with equally weighted buttons for reject and accept and no pre-selection. Until you have decided, “not allowed” applies.",
-        "Your decision is stored in your browser's memory (local storage, value “nd_consent”); it contains only the category, the timestamp and a version number, no identifier of your person. At the bottom of this page you can change or withdraw it at any time.",
+        "Your decision is stored in your browser's memory (local storage, value “nd_consent”); it contains only the category, the timestamp and a version number, no identifier of your person. Via the cookie icon at the bottom left of every page, you can change or withdraw it at any time. After six months we will ask again — a consent should not remain valid indefinitely.",
       ],
     },
     {
@@ -92,7 +92,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Stores your decision about the contact form's spam protection so the consent bar doesn't ask again on every visit. Only the category, the timestamp and a version number are stored. The value never leaves your device and is not transmitted to our server; it applies to this browser. If you delete it, the bar will ask again on your next visit.",
+            "Stores your decision about the contact form's spam protection so the consent bar doesn't ask again on every visit. Only the category, the timestamp and a version number are stored. The value never leaves your device and is not transmitted to our server; it applies to this browser. Duration: six months — after that, the bar will ask again. If you delete the value, the bar will ask again on your next visit.",
           ],
         },
         {

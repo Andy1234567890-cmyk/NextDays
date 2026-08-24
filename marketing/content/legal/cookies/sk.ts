@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "Súhlas je podľa § 9 dánskej vyhlášky o cookies (Cookie-bekendtgørelsen) (ktorou sa transponuje čl. 5 ods. 3 smernice 2002/58/ES) potrebný len vtedy, keď prístup k vášmu zariadeniu neslúži výlučne na prenos správy alebo nie je bezpodmienečne nevyhnutný pre výslovne požadovanú službu.",
         "Všetky súbory cookie, ktoré nastavujeme, sú potrebné na prihlásenie, na zabezpečenie relácie alebo na nastavenie, ktoré ste si sami zvolili — preto si k nim nepýtame žiadny súhlas a naopak nenastavujeme nič, na čo by bol súhlas potrebný.",
         "Súhlas musíte udeliť len pre jednu vec: ochranu proti spamu nášho kontaktného formulára. Tá pochádza od spoločnosti Google (reCAPTCHA Enterprise), ide teda o externú službu, a načíta sa iba vtedy, ak ste ju povolili. Na to sa vás pri prvej návšteve opýta lišta v dolnej časti obrazovky — s rovnocennými tlačidlami „Odmietnuť“ a „Prijať“ a bez prednastaveného výberu. Kým sa nerozhodnete, platí „nepovolené“.",
-        "Vaše rozhodnutie je uložené v pamäti vášho prehliadača (Local Storage, hodnota „nd_consent“); obsahuje iba kategóriu, čas a číslo verzie, žiadnu identifikáciu vašej osoby. Na konci tejto stránky ju môžete kedykoľvek zmeniť alebo odvolať.",
+        "Vaše rozhodnutie je uložené v pamäti vášho prehliadača (Local Storage, hodnota „nd_consent“); obsahuje iba kategóriu, čas a číslo verzie, žiadnu identifikáciu vašej osoby. Prostredníctvom ikony cookies vľavo dole na každej stránke ju môžete kedykoľvek zmeniť alebo odvolať. Po šiestich mesiacoch sa spýtame znova — súhlas nemá platiť neobmedzene.",
       ],
     },
     {
@@ -93,7 +93,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Zaznamenáva vaše rozhodnutie o ochrane proti spamu kontaktného formulára, aby sa vás lišta súhlasu nepýtala znova pri každej návšteve. Ukladá sa iba kategória, čas a číslo verzie. Hodnota neopúšťa vaše zariadenie a neprenáša sa na náš server; platí pre tento prehliadač. Ak ju vymažete, lišta sa pri ďalšej návšteve opýta znova.",
+            "Zaznamenáva vaše rozhodnutie o ochrane proti spamu kontaktného formulára, aby sa vás lišta súhlasu nepýtala znova pri každej návšteve. Ukladá sa iba kategória, čas a číslo verzie. Hodnota neopúšťa vaše zariadenie a neprenáša sa na náš server; platí pre tento prehliadač. Platnosť: šesť mesiacov — potom sa lišta opýta znova. Ak vymažete hodnotu, lišta sa pri ďalšej návšteve opýta znova.",
           ],
         },
         {

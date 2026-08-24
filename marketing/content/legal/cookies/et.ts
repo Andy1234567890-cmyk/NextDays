@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "Nõusolek on vajalik Taani küpsiste määruse (Cookie-bekendtgørelsen) § 9 kohaselt (direktiivi 2002/58/EÜ artikli 5 lõike 3 ülevõtmine) ainult siis, kui juurdepääs teie seadmele ei teeni üksnes sõnumi edastamist või ei ole hädavajalik teie enda selgesõnaliselt taotletud teenuse jaoks.",
         "Kõik küpsised, mida me kasutame, on vajalikud sisselogimiseks, sessiooni turvalisuseks või teie enda tehtud seadistuse jaoks — selleks me midagi ei küsi ega sea vastupidi ka midagi, mis vajaks nõusolekut.",
         "Nõusolekut vajame täpselt ühe asja jaoks: meie kontaktvormi rämpspostikaitse jaoks. See tuleb Google'ilt (reCAPTCHA Enterprise) ehk on väline teenus ja laaditakse ainult siis, kui olete selle lubanud. Selleks küsib ekraani allservas riba — esimesel külastusel, võrdväärsete nuppudega „Keeldu“ ja „Nõustu“ ning ilma eelvalikuta. Kuni te ei ole otsustanud, kehtib „ei ole lubatud“.",
-        "Teie otsus asub teie brauseri salvestuses (Local Storage, väärtus „nd_consent“); see sisaldab ainult kategooriat, ajahetke ja versiooninumbrit, mitte teie isikut tuvastavat teavet. Selle lehe lõpus saate seda igal ajal muuta või tagasi võtta.",
+        "Teie otsus asub teie brauseri salvestuses (Local Storage, väärtus „nd_consent“); see sisaldab ainult kategooriat, ajahetke ja versiooninumbrit, mitte teie isikut tuvastavat teavet. Iga lehe vasakus alanurgas oleva küpsiseikooni kaudu saate seda igal ajal muuta või tagasi võtta. Kuue kuu pärast küsime uuesti — nõusolek ei peaks kehtima piiramatult.",
       ],
     },
     {
@@ -92,7 +92,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Salvestab teie otsuse kontaktvormi rämpspostikaitse kohta, et nõusolekuriba ei küsiks seda iga külastuse korral uuesti. Salvestatakse ainult kategooria, ajahetk ja versiooninumber. Väärtus ei lahku teie seadmest ega edastata meie serverile; see kehtib selle brauseri jaoks. Kui kustutate selle, küsib riba järgmisel külastusel uuesti.",
+            "Salvestab teie otsuse kontaktvormi rämpspostikaitse kohta, et nõusolekuriba ei küsiks seda iga külastuse korral uuesti. Salvestatakse ainult kategooria, ajahetk ja versiooninumber. Väärtus ei lahku teie seadmest ega edastata meie serverile; see kehtib selle brauseri jaoks. Kehtivusaeg: kuus kuud — pärast seda küsib riba uuesti. Kui kustutate väärtuse, küsib riba järgmisel külastusel uuesti.",
           ],
         },
         {

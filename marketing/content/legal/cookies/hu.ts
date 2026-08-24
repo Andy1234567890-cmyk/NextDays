@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "Hozzájárulás a dán süti-rendelet (Cookie-bekendtgørelsen) 9. §-a szerint (amely a 2002/58/EK irányelv 5. cikk (3) bekezdését ülteti át) csak akkor szükséges, ha az eszközéhez való hozzáférés nem kizárólag üzenet továbbítására szolgál, vagy nem feltétlenül szükséges egy Ön által kifejezetten kért szolgáltatáshoz.",
         "Minden általunk elhelyezett süti a bejelentkezéshez, a munkamenet biztonságához vagy egy Ön által saját maga beállított paraméterhez szükséges — ehhez semmit nem kérdezünk, és fordítva sem helyezünk el olyat, amihez hozzájárulás kellene.",
         "Pontosan egy dologhoz van szükségünk a hozzájárulására: kapcsolatfelvételi űrlapunk spamvédelméhez. Ez a Google-től (reCAPTCHA Enterprise) származik, tehát külső szolgáltatás, és csak akkor töltődik be, ha Ön ezt engedélyezte. Ehhez a képernyő alján egy sáv kérdez rá — az első látogatáskor, egyenrangú „Elutasítás” és „Elfogadás” gombokkal, előzetes kiválasztás nélkül. Amíg nem döntött, a „nem engedélyezett” állapot érvényes.",
-        "Az Ön döntése a böngészője tárhelyén található (Local Storage, „nd_consent” érték); csak a kategóriát, az időpontot és egy verziószámot tartalmaz, semmilyen személyazonosító adatot. Ezt az oldal alján bármikor módosíthatja vagy visszavonhatja.",
+        "Az Ön döntése a böngészője tárhelyén található (Local Storage, „nd_consent” érték); csak a kategóriát, az időpontot és egy verziószámot tartalmaz, semmilyen személyazonosító adatot. Ezt bármikor módosíthatja vagy visszavonhatja minden oldal bal alsó sarkában található cookie-ikon segítségével. Hat hónap után újra rákérdezünk — a hozzájárulás nem érvényes korlátlan ideig.",
       ],
     },
     {
@@ -92,7 +92,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Rögzíti az Ön döntését a kapcsolatfelvételi űrlap spamvédelméről, hogy a hozzájárulási sáv ne kérdezzen rá minden látogatáskor újra. Csak a kategória, az időpont és egy verziószám kerül tárolásra. Az érték nem hagyja el az Ön eszközét, és nem kerül továbbításra a szerverünkre; ez a böngészőre vonatkozik. Ha törli, a sáv a következő látogatáskor újra rákérdez.",
+            "Rögzíti az Ön döntését a kapcsolatfelvételi űrlap spamvédelméről, hogy a hozzájárulási sáv ne kérdezzen rá minden látogatáskor újra. Csak a kategória, az időpont és egy verziószám kerül tárolásra. Az érték nem hagyja el az Ön eszközét, és nem kerül továbbításra a szerverünkre; ez a böngészőre vonatkozik. Érvényesség: hat hónap — ezután a sáv újra rákérdez. Ha törli az értéket, a sáv a következő látogatáskor újra rákérdez.",
           ],
         },
         {

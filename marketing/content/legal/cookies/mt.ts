@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "Kunsens huwa meħtieġ skont l-Artikolu 9 tar-regolament Daniż dwar il-cookies (Cookie-bekendtgørelsen) (li jittrasponi l-Artikolu 5(3) tad-Direttiva 2002/58/KE) biss meta l-aċċess għall-apparat tiegħek ma jservix esklussivament għat-trażmissjoni ta' messaġġ jew ma jkunx strettament meħtieġ għal servizz li int stess tkun talabt b'mod espliċitu.",
         "Il-cookies kollha li nużaw huma meħtieġa għad-dħul, is-sigurtà tas-sessjoni jew għal xi impostazzjoni li għażilt int stess — għal dan ma nitolbu xejn u lanqas ma nissettjaw xi ħaġa li teħtieġ kunsens.",
         "Trid tagħti l-kunsens għal ħaġa waħda biss: il-protezzjoni kontra l-ispam tal-formola ta' kuntatt tagħna. Din tiġi minn Google (reCAPTCHA Enterprise), għalhekk hija servizz estern, u tinġieb biss jekk tkun ippermettejtha. Għal dan, meta żżur għall-ewwel darba, tidher barra fl-isfel tal-iskrin b'buttuni ta' importanza ndaqs għal Irrifjuta u Aċċetta u mingħajr ebda għażla minn qabel. Sakemm ma tkunx iddeċidejt, tapplika «mhux permess».",
-        "Id-deċiżjoni tiegħek tinżamm fil-ħżin tal-brawżer tiegħek (Local Storage, valur «nd_consent»); fiha biss il-kategorija, il-mument u numru ta' verżjoni, ebda identifikatur personali tiegħek. Fl-aħħar ta' din il-paġna tista' dejjem tibdilha jew tirtiraha.",
+        "Id-deċiżjoni tiegħek tinżamm fil-ħżin tal-brawżer tiegħek (Local Storage, valur «nd_consent»); fiha biss il-kategorija, il-mument u numru ta' verżjoni, ebda identifikatur personali tiegħek. Permezz tal-ikona tal-cookies fin-naħa ta' isfel tax-xellug ta' kull paġna tista' dejjem tibdilha jew tirtiraha. Wara sitt xhur nerġgħu nistaqsu mill-ġdid — kunsens m'għandux jibqa' validu mingħajr limitu ta' żmien.",
       ],
     },
     {
@@ -92,7 +92,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Iżomm id-deċiżjoni tiegħek dwar il-protezzjoni kontra l-ispam tal-formola ta' kuntatt, sabiex il-barra tal-kunsens ma terġax titlob kull darba li żżur. Jinżammu biss il-kategorija, il-mument u numru ta' verżjoni. Il-valur ma jitlaqx mill-apparat tiegħek u ma jiġix trażmess lis-server tagħna; japplika għal dan il-brawżer. Jekk tħassru, il-barra terġa' titlob fiż-żjara li jmiss.",
+            "Iżomm id-deċiżjoni tiegħek dwar il-protezzjoni kontra l-ispam tal-formola ta' kuntatt, sabiex il-barra tal-kunsens ma terġax titlob kull darba li żżur. Jinżammu biss il-kategorija, il-mument u numru ta' verżjoni. Il-valur ma jitlaqx mill-apparat tiegħek u ma jiġix trażmess lis-server tagħna; japplika għal dan il-brawżer. Validità: sitt xhur — wara dan il-barra terġa' titlob mill-ġdid. Jekk tħassar il-valur, il-barra terġa' titlob fiż-żjara li jmiss.",
           ],
         },
         {

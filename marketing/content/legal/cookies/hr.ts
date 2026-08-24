@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "Suglasnost je prema § 9 danske uredbe o kolačićima (Cookie-bekendtgørelsen) (kojom se prenosi čl. 5. st. 3. Direktive 2002/58/EZ) potrebna samo ako pristup vašem uređaju ne služi isključivo prijenosu poruke ili nije nužno potreban za uslugu koju ste izričito zatražili.",
         "Svi kolačići koje postavljamo nužni su za prijavu, sigurnost sesije ili postavku koju ste sami odabrali — za to ništa ne pitamo, a obrnuto, ne postavljamo ni ništa za što bi bila potrebna suglasnost.",
         "Suglasnost morate dati za točno jednu stvar: zaštitu od neželjene pošte na našem kontaktnom obrascu. Ona dolazi od tvrtke Google (reCAPTCHA Enterprise), dakle riječ je o vanjskoj usluzi, koja se učitava isključivo ako ste je dopustili. Za to pri prvom posjetu pita traka pri dnu zaslona, s ravnopravnim gumbima „Odbij” i „Prihvati”, bez unaprijed odabrane opcije. Dok se ne odlučite, vrijedi „nije dopušteno”.",
-        "Vaša odluka pohranjena je u memoriji vašeg preglednika (Local Storage, vrijednost „nd_consent”); sadrži samo kategoriju, vrijeme i broj verzije, bez ikakve identifikacije vaše osobe. Na dnu ove stranice možete je u bilo kojem trenutku promijeniti ili opozvati.",
+        "Vaša odluka pohranjena je u memoriji vašeg preglednika (Local Storage, vrijednost „nd_consent”); sadrži samo kategoriju, vrijeme i broj verzije, bez ikakve identifikacije vaše osobe. Putem ikone kolačića u donjem lijevom kutu svake stranice možete je u bilo kojem trenutku promijeniti ili opozvati. Nakon šest mjeseci ponovno ćemo pitati — privola ne treba vrijediti neograničeno.",
       ],
     },
     {
@@ -92,7 +92,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Bilježi vašu odluku o zaštiti od neželjene pošte na kontaktnom obrascu, kako traka za suglasnost ne bi pri svakom posjetu ponovno pitala. Pohranjuju se samo kategorija, vrijeme i broj verzije. Vrijednost ne napušta vaš uređaj i ne prenosi se na naš poslužitelj; vrijedi za ovaj preglednik. Ako je izbrišete, traka će vas ponovno pitati pri sljedećem posjetu.",
+            "Bilježi vašu odluku o zaštiti od neželjene pošte na kontaktnom obrascu, kako traka za suglasnost ne bi pri svakom posjetu ponovno pitala. Pohranjuju se samo kategorija, vrijeme i broj verzije. Vrijednost ne napušta vaš uređaj i ne prenosi se na naš poslužitelj; vrijedi za ovaj preglednik. Rok valjanosti: šest mjeseci — nakon toga traka će ponovno pitati. Ako izbrišete vrijednost, traka će vas ponovno pitati pri sljedećem posjetu.",
           ],
         },
         {

@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "Piekrišana saskaņā ar Dānijas sīkdatņu noteikumu (Cookie-bekendtgørelsen) 9. pantu (ar ko īsteno Direktīvas 2002/58/EK 5. panta 3. punktu) ir nepieciešama tikai tad, ja piekļuve jūsu ierīcei nekalpo vienīgi ziņojuma pārraidīšanai vai nav obligāti nepieciešama jūsu tieši pieprasītam pakalpojumam.",
         "Visas sīkdatnes, ko mēs izmantojam, ir nepieciešamas pieteikšanās, sesijas drošības vai jūsu paša izvēlēta iestatījuma nodrošināšanai — tāpēc mēs neko neprasām un arī neuzstādām neko, kam būtu nepieciešama piekrišana.",
         "Piekrišana jums jādod tikai vienā jautājumā: mūsu kontaktformas aizsardzībai pret surogātpastu. To nodrošina Google (reCAPTCHA Enterprise), tātad tas ir ārējs pakalpojums, un tas tiek ielādēts tikai tad, ja esat to atļāvis. Šim nolūkam pirmajā apmeklējumā ekrāna apakšā parādās josla ar vienlīdzīgas nozīmes pogām „Noraidīt“ un „Piekrist“ un bez iepriekšējas atlases. Kamēr neesat izlēmis, spēkā ir „nav atļauts“.",
-        "Jūsu izvēle tiek saglabāta jūsu pārlūkprogrammas krātuvē (Local Storage, vērtība „nd_consent“); tā satur tikai kategoriju, laiku un versijas numuru, bez jūsu personas identifikatora. Šīs lapas beigās to jebkurā laikā varat mainīt vai atsaukt.",
+        "Jūsu izvēle tiek saglabāta jūsu pārlūkprogrammas krātuvē (Local Storage, vērtība „nd_consent“); tā satur tikai kategoriju, laiku un versijas numuru, bez jūsu personas identifikatora. Izmantojot sīkdatņu ikonu katras lapas kreisajā apakšējā stūrī, to jebkurā laikā varat mainīt vai atsaukt. Pēc sešiem mēnešiem mēs jautāsim atkārtoti — piekrišanai nav jābūt spēkā neierobežoti.",
       ],
     },
     {
@@ -92,7 +92,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Saglabā jūsu izvēli par kontaktformas aizsardzību pret surogātpastu, lai piekrišanas josla katrā apmeklējumā nejautātu no jauna. Tiek saglabāta tikai kategorija, laiks un versijas numurs. Vērtība nepamet jūsu ierīci un netiek pārsūtīta uz mūsu serveri; tā attiecas uz šo pārlūkprogrammu. To dzēšot, josla nākamajā apmeklējumā jautās atkal.",
+            "Saglabā jūsu izvēli par kontaktformas aizsardzību pret surogātpastu, lai piekrišanas josla katrā apmeklējumā nejautātu no jauna. Tiek saglabāta tikai kategorija, laiks un versijas numurs. Vērtība nepamet jūsu ierīci un netiek pārsūtīta uz mūsu serveri; tā attiecas uz šo pārlūkprogrammu. Derīguma termiņš: seši mēneši — pēc tam josla jautās atkārtoti. Dzēšot vērtību, josla nākamajā apmeklējumā jautās atkal.",
           ],
         },
         {

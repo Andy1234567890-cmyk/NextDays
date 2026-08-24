@@ -54,6 +54,27 @@ export const SPEICHER_SCHLUESSEL = "nd_consent";
 export const EINWILLIGUNG_FASSUNG = 1;
 
 /**
+ * Wie lange eine Einwilligung gilt, bevor erneut gefragt wird — in Tagen.
+ *
+ * WARUM ÜBERHAUPT: Eine Einwilligung, die nie abläuft, ist keine Einwilligung
+ * mehr, sondern ein Zustand. Das war hier bis zum 24.08.2026 der Fall —
+ * `entscheidungLesen` prüfte nur die Fassung, nicht das Alter.
+ *
+ * WARUM SECHS MONATE: Cookies richten sich nach der ePrivacy-Richtlinie
+ * 2002/58/EG, und die ist in jedem Mitgliedstaat einzeln umgesetzt — es gibt
+ * keinen EU-weit einheitlichen Wert. Die veröffentlichten Empfehlungen der
+ * Aufsichtsbehörden laufen auseinander: CNIL (FR) und die irische DPC nennen
+ * sechs Monate, der BfDI (DE) sechs bis zwölf, Luxemburg zwölf, die AEPD (ES)
+ * lässt in bestimmten Fällen bis zu 24 Monate zu. Wir spielen EU-weit aus und
+ * können nicht je Besucher das Land bestimmen — also gilt der STRENGSTE Wert
+ * für alle. Sechs Monate erfüllen damit auch die längeren Fristen.
+ *
+ * Die Frist verkürzen ist unproblematisch; sie zu verlängern hieße, für
+ * französische und irische Besucher unter den dortigen Wert zu gehen.
+ */
+export const EINWILLIGUNG_GUELTIG_TAGE = 182;
+
+/**
  * Eigenes Ereignis, damit Leiste, Einstellungsfeld und Kontaktformular im
  * gleichen Tab sofort denselben Stand sehen. `storage` feuert nur in ANDEREN
  * Tabs — allein darauf zu hören hieße, dass die eigene Seite ihre eigene
@@ -137,9 +158,32 @@ export function entscheidungLesen(): Entscheidung | null {
   if (!auswahl) return null;
   const zeitpunkt =
     typeof satz.zeitpunkt === "string" && satz.zeitpunkt ? satz.zeitpunkt : "";
-  // Kein erfundener Zeitpunkt (Wurzel 4/5b): fehlt er, bleibt das Feld leer
-  // und die Anzeige nennt kein Datum, statt „jetzt" zu behaupten.
+  // Abgelaufen? Dann gilt sie NICHT mehr — die Leiste fragt erneut.
+  //
+  // Ein FEHLENDER oder unlesbarer Zeitpunkt zählt ebenfalls als abgelaufen.
+  // Das ist die einzige richtige Richtung: ohne Zeitpunkt lässt sich das Alter
+  // nicht prüfen, und eine Einwilligung, deren Alter niemand kennt, darf nicht
+  // unbegrenzt weitergelten. Kein erfundener Ersatzzeitpunkt (Wurzel 4), und
+  // kein Weitergelten im Zweifel (Wurzel 5, fail-closed).
+  if (abgelaufen(zeitpunkt)) return null;
   return { fassung: EINWILLIGUNG_FASSUNG, zeitpunkt, auswahl };
+}
+
+/**
+ * Ist eine Einwilligung mit diesem Zeitstempel älter als
+ * `EINWILLIGUNG_GUELTIG_TAGE`?
+ *
+ * Leerer, unparsbarer oder in der ZUKUNFT liegender Zeitpunkt gilt als
+ * abgelaufen. Der Zukunftsfall ist nicht theoretisch: der Wert kommt aus dem
+ * Speicher des Besuchers, dessen Uhr falsch stehen kann — eine auf 2030
+ * datierte Einwilligung wäre sonst zwölf Jahre gültig.
+ */
+function abgelaufen(zeitpunkt: string): boolean {
+  if (!zeitpunkt) return true;
+  const erteilt = Date.parse(zeitpunkt);
+  if (Number.isNaN(erteilt)) return true;
+  const alterTage = (Date.now() - erteilt) / 86_400_000;
+  return alterTage < 0 || alterTage > EINWILLIGUNG_GUELTIG_TAGE;
 }
 
 /**

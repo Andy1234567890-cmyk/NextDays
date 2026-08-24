@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "El consentimiento solo es necesario conforme al artículo 9 del reglamento danés de cookies (Cookie-bekendtgørelsen) (que transpone el artículo 5, apartado 3, de la Directiva 2002/58/CE) cuando el acceso a su dispositivo no sirva exclusivamente para transmitir una comunicación o no sea estrictamente necesario para un servicio que usted haya solicitado expresamente.",
         "Todas las cookies que utilizamos son necesarias para el inicio de sesión, la seguridad de la sesión o una configuración que usted mismo ha elegido; para ello no le pedimos nada y, a la inversa, tampoco utilizamos nada que requiera consentimiento.",
         "Solo debe dar su consentimiento para una cosa: la protección contra spam de nuestro formulario de contacto. Proviene de Google (reCAPTCHA Enterprise), es decir, un servicio externo, y solo se carga si usted lo ha permitido. Para ello aparece una barra en la parte inferior de la pantalla — en la primera visita, con botones de igual peso para rechazar y aceptar y sin preselección. Mientras no haya decidido, se aplica «no permitido».",
-        "Su decisión se guarda en el almacenamiento de su navegador (Local Storage, valor «nd_consent»); solo contiene la categoría, el momento y un número de versión, sin ningún identificador de su persona. Al final de esta página puede modificarla o revocarla en cualquier momento.",
+        "Su decisión se guarda en el almacenamiento de su navegador (Local Storage, valor «nd_consent»); solo contiene la categoría, el momento y un número de versión, sin ningún identificador de su persona. A través del icono de cookies situado en la parte inferior izquierda de cada página puede modificarla o revocarla en cualquier momento. Transcurridos seis meses, volveremos a preguntar — un consentimiento no debe tener validez indefinida.",
       ],
     },
     {
@@ -92,7 +92,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Guarda su decisión sobre la protección contra spam del formulario de contacto para que la barra de consentimiento no vuelva a preguntar en cada visita. Solo se almacenan la categoría, el momento y un número de versión. El valor no sale de su dispositivo ni se transmite a nuestro servidor; se aplica a este navegador. Si lo elimina, la barra volverá a preguntar en la próxima visita.",
+            "Guarda su decisión sobre la protección contra spam del formulario de contacto para que la barra de consentimiento no vuelva a preguntar en cada visita. Solo se almacenan la categoría, el momento y un número de versión. El valor no sale de su dispositivo ni se transmite a nuestro servidor; se aplica a este navegador. Vigencia: seis meses; transcurrido ese plazo, la barra volverá a preguntar. Si elimina el valor, la barra volverá a preguntar en la próxima visita.",
           ],
         },
         {

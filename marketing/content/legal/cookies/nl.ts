@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "Toestemming is op grond van § 9 van de Deense cookieverordening (Cookie-bekendtgørelsen) (uitvoering van artikel 5, lid 3, van Richtlijn 2002/58/EG) alleen nodig wanneer toegang tot uw apparaat niet uitsluitend dient om een bericht over te brengen of niet strikt noodzakelijk is voor een door u uitdrukkelijk gevraagde dienst.",
         "Alle cookies die wij plaatsen zijn noodzakelijk voor het inloggen, de beveiliging van de sessie of een door uzelf gekozen instelling — daarvoor vragen wij niets en plaatsen wij omgekeerd ook niets waarvoor toestemming nodig zou zijn.",
         "U hoeft slechts voor één ding toestemming te geven: de spambeveiliging van ons contactformulier. Deze komt van Google (reCAPTCHA Enterprise), is dus een externe dienst, en wordt uitsluitend geladen als u dit hebt toegestaan. Daarvoor verschijnt bij het eerste bezoek een balk onderaan het scherm, met gelijkwaardige knoppen voor Weigeren en Accepteren en zonder vooraf gemaakte keuze. Zolang u niet hebt beslist, geldt „niet toegestaan”.",
-        "Uw keuze wordt opgeslagen in het geheugen van uw browser (Local Storage, waarde „nd_consent”); deze bevat alleen de categorie, het tijdstip en een versienummer, geen identificatie van uw persoon. Onderaan deze pagina kunt u deze op elk moment wijzigen of intrekken.",
+        "Uw keuze wordt opgeslagen in het geheugen van uw browser (Local Storage, waarde „nd_consent”); deze bevat alleen de categorie, het tijdstip en een versienummer, geen identificatie van uw persoon. Via het cookie-icoon linksonder op elke pagina kunt u deze op elk moment wijzigen of intrekken. Na zes maanden vragen wij opnieuw — een toestemming mag niet onbeperkt geldig blijven.",
       ],
     },
     {
@@ -92,7 +92,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Bevat uw beslissing over de spambeveiliging van het contactformulier, zodat de toestemmingsbalk niet bij elk bezoek opnieuw vraagt. Er worden alleen de categorie, het tijdstip en een versienummer opgeslagen. De waarde verlaat uw apparaat niet en wordt niet naar onze server verzonden; deze geldt voor deze browser. Als u deze verwijdert, vraagt de balk bij het volgende bezoek opnieuw.",
+            "Bevat uw beslissing over de spambeveiliging van het contactformulier, zodat de toestemmingsbalk niet bij elk bezoek opnieuw vraagt. Er worden alleen de categorie, het tijdstip en een versienummer opgeslagen. De waarde verlaat uw apparaat niet en wordt niet naar onze server verzonden; deze geldt voor deze browser. Geldigheidsduur: zes maanden — daarna vraagt de balk opnieuw. Als u de waarde verwijdert, vraagt de balk bij het volgende bezoek opnieuw.",
           ],
         },
         {

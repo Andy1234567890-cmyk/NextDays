@@ -50,7 +50,7 @@ export const cookies: LegalDoc = {
         "Eine Einwilligung ist nach § 9 der dänischen Cookie-Bekendtgørelse (Umsetzung von Art. 5 Abs. 3 der Richtlinie 2002/58/EG) nur nötig, wenn ein Zugriff auf Ihr Gerät nicht ausschließlich der Übermittlung einer Nachricht dient oder für einen ausdrücklich angeforderten Dienst unbedingt erforderlich ist.",
         "Alle Cookies, die wir setzen, sind für die Anmeldung, die Sicherheit der Sitzung oder eine von Ihnen selbst getroffene Einstellung erforderlich — dafür fragen wir nichts ab und setzen umgekehrt auch nichts, was eine Einwilligung bräuchte.",
         "Einwilligen müssen Sie für genau eine Sache: den Spamschutz unseres Kontaktformulars. Er kommt von Google (reCAPTCHA Enterprise), ist also ein externer Dienst, und wird ausschließlich dann geladen, wenn Sie ihn erlaubt haben. Dafür fragt eine Leiste am unteren Bildschirmrand — beim ersten Besuch, mit gleichrangigen Knöpfen für Ablehnen und Annehmen und ohne Vorauswahl. Solange Sie nicht entschieden haben, gilt „nicht erlaubt“.",
-        "Ihre Entscheidung liegt im Speicher Ihres Browsers (Local Storage, Wert „nd_consent“); sie enthält nur die Kategorie, den Zeitpunkt und eine Fassungsnummer, keine Kennung Ihrer Person. Am Ende dieser Seite können Sie sie jederzeit ändern oder widerrufen.",
+        "Ihre Entscheidung liegt im Speicher Ihres Browsers (Local Storage, Wert „nd_consent“); sie enthält nur die Kategorie, den Zeitpunkt und eine Fassungsnummer, keine Kennung Ihrer Person. Über das Cookie-Symbol unten links auf jeder Seite können Sie sie jederzeit ändern oder widerrufen. Nach sechs Monaten fragen wir erneut — eine Einwilligung soll nicht unbegrenzt weitergelten.",
       ],
     },
     {
@@ -113,7 +113,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Hält Ihre Entscheidung über den Spamschutz des Kontaktformulars fest, damit die Einwilligungs-Leiste nicht bei jedem Aufruf erneut fragt. Gespeichert werden nur die Kategorie, der Zeitpunkt und eine Fassungsnummer. Der Wert verlässt Ihr Gerät nicht und wird nicht an unseren Server übertragen; er gilt für diesen Browser. Löschen Sie ihn, fragt die Leiste beim nächsten Besuch wieder.",
+            "Hält Ihre Entscheidung über den Spamschutz des Kontaktformulars fest, damit die Einwilligungs-Leiste nicht bei jedem Aufruf erneut fragt. Gespeichert werden nur die Kategorie, der Zeitpunkt und eine Fassungsnummer. Der Wert verlässt Ihr Gerät nicht und wird nicht an unseren Server übertragen; er gilt für diesen Browser. Laufzeit: sechs Monate — danach fragt die Leiste erneut. Löschen Sie den Wert, fragt sie beim nächsten Besuch wieder.",
           ],
         },
         {

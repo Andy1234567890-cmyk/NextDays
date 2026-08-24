@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "Samtykke er efter § 9 i bekendtgørelse om cookies (gennemfører artikel 5, stk. 3, i direktiv 2002/58/EF) kun nødvendigt, hvis adgangen til din enhed ikke udelukkende tjener til at overføre en meddelelse eller ikke er strengt nødvendig for en tjeneste, du udtrykkeligt har anmodet om.",
         "Alle cookies, vi sætter, er nødvendige for login, sikkerheden af sessionen eller en indstilling, du selv har foretaget — det behøver vi ikke spørge om, og omvendt sætter vi heller ikke noget, der ville kræve samtykke.",
         "Du skal kun give samtykke til én ting: spambeskyttelsen i vores kontaktformular. Den kommer fra Google (reCAPTCHA Enterprise), er altså en ekstern tjeneste, og indlæses udelukkende, hvis du har tilladt den. Det spørger en bjælke nederst på skærmen om — ved første besøg, med ligestillede knapper til afvis og accepter og uden forudvalg. Så længe du ikke har truffet en beslutning, gælder »ikke tilladt«.",
-        "Din beslutning ligger i din browsers lager (Local Storage, værdien »nd_consent«); den indeholder kun kategorien, tidspunktet og et versionsnummer, ingen identifikation af din person. Nederst på denne side kan du til enhver tid ændre eller tilbagekalde den.",
+        "Din beslutning ligger i din browsers lager (Local Storage, værdien »nd_consent«); den indeholder kun kategorien, tidspunktet og et versionsnummer, ingen identifikation af din person. Via cookie-ikonet nederst til venstre på hver side kan du til enhver tid ændre eller tilbagekalde den. Efter seks måneder spørger vi igen — et samtykke skal ikke gælde uendeligt.",
       ],
     },
     {
@@ -92,7 +92,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Fastholder din beslutning om spambeskyttelsen i kontaktformularen, så samtykkebjælken ikke spørger igen ved hvert besøg. Der gemmes kun kategorien, tidspunktet og et versionsnummer. Værdien forlader ikke din enhed og overføres ikke til vores server; den gælder for denne browser. Sletter du den, spørger bjælken igen ved næste besøg.",
+            "Fastholder din beslutning om spambeskyttelsen i kontaktformularen, så samtykkebjælken ikke spørger igen ved hvert besøg. Der gemmes kun kategorien, tidspunktet og et versionsnummer. Værdien forlader ikke din enhed og overføres ikke til vores server; den gælder for denne browser. Gyldighed: seks måneder — derefter spørger bjælken igen. Sletter du værdien, spørger bjælken igen ved næste besøg.",
           ],
         },
         {

@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "Un consentement n'est nécessaire, en vertu de l'article 9 du règlement danois sur les cookies (Cookie-bekendtgørelsen) (transposant l'article 5, paragraphe 3, de la directive 2002/58/CE), que lorsque l'accès à votre appareil ne sert pas exclusivement à transmettre une communication ou n'est pas strictement nécessaire à un service que vous avez expressément demandé.",
         "Tous les cookies que nous déposons sont nécessaires à la connexion, à la sécurité de la session ou à un paramètre que vous avez vous-même défini — nous ne demandons donc rien pour cela et, inversement, nous ne déposons rien qui nécessiterait un consentement.",
         "Vous devez donner votre consentement pour exactement une chose : la protection anti-spam de notre formulaire de contact. Elle provient de Google (reCAPTCHA Enterprise), il s'agit donc d'un service externe, qui n'est chargé que si vous l'avez autorisé. Un bandeau situé en bas de l'écran vous le demande — lors de votre première visite, avec des boutons de rang égal « Refuser » et « Accepter », sans sélection préalable. Tant que vous n'avez pas décidé, « non autorisé » s'applique.",
-        "Votre décision est conservée dans le stockage de votre navigateur (Local Storage, valeur « nd_consent ») ; elle ne contient que la catégorie, l'horodatage et un numéro de version, aucune donnée permettant de vous identifier. Vous pouvez la modifier ou la révoquer à tout moment en bas de cette page.",
+        "Votre décision est conservée dans le stockage de votre navigateur (Local Storage, valeur « nd_consent ») ; elle ne contient que la catégorie, l'horodatage et un numéro de version, aucune donnée permettant de vous identifier. Vous pouvez la modifier ou la révoquer à tout moment via l'icône cookies en bas à gauche de chaque page. Au bout de six mois, nous vous la redemanderons — un consentement ne doit pas rester valable indéfiniment.",
       ],
     },
     {
@@ -92,7 +92,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Conserve votre décision concernant la protection anti-spam du formulaire de contact, afin que le bandeau de consentement ne vous la redemande pas à chaque visite. Seules la catégorie, l'horodatage et un numéro de version sont enregistrés. La valeur ne quitte pas votre appareil et n'est pas transmise à notre serveur ; elle s'applique à ce navigateur. Si vous la supprimez, le bandeau vous interrogera à nouveau lors de votre prochaine visite.",
+            "Conserve votre décision concernant la protection anti-spam du formulaire de contact, afin que le bandeau de consentement ne vous la redemande pas à chaque visite. Seules la catégorie, l'horodatage et un numéro de version sont enregistrés. La valeur ne quitte pas votre appareil et n'est pas transmise à notre serveur ; elle s'applique à ce navigateur. Durée de conservation : six mois — passé ce délai, le bandeau vous interrogera à nouveau. Si vous supprimez la valeur, le bandeau vous interrogera à nouveau lors de votre prochaine visite.",
           ],
         },
         {

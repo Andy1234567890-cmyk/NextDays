@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "Ní gá toiliú faoi Airteagal 9 den rialachán Danmhargach maidir le fianáin (Cookie-bekendtgørelsen) (lena gcuirtear Airteagal 5(3) de Threoir 2002/58/CE chun feidhme) ach amháin nuair nach mbaineann rochtain ar do ghléas go heisiach le teachtaireacht a tharchur nó nach bhfuil sí fíor-riachtanach do sheirbhís a d'iarr tú féin go sainráite.",
         "Tá gach fianán a shocraímid riachtanach don síniú isteach, do shlándáil an tseisiúin, nó do shocrú a rinne tú féin — ní iarraimid aon rud dá bharr sin, agus ní shocraímid a mhalairt ach an oiread aon rud a mbeadh toiliú ag teastáil dó.",
         "Ní gá duit toiliú a thabhairt ach le haghaidh rud amháin go beacht: cosaint spam ár bhfoirm teagmhála. Tagann sé sin ó Google (reCAPTCHA Enterprise), is é sin le rá gur seirbhís sheachtrach í, agus ní luchtaítear í ach amháin má cheadaigh tú í. Fiafraíonn barra ag bun an scáileáin díot é sin — ar an gcéad chuairt, le cnaipí atá ar chomhchéim dar teideal “Diúltaigh” agus “Glac Leis”, gan aon roghnú réamhshocraithe. Go dtí go mbeidh cinneadh déanta agat, tá feidhm ag “níl sé ceadaithe”.",
-        "Tá do chinneadh stóráilte i stóráil do bhrabhsálaí (Local Storage, luach “nd_consent”); ní bhfuil ann ach an chatagóir, an t-am agus uimhir leagain, gan aon sainaitheantóir pearsanta. Is féidir leat é a athrú nó a chúlghairm tráth ar bith ag bun an leathanaigh seo.",
+        "Tá do chinneadh stóráilte i stóráil do bhrabhsálaí (Local Storage, luach “nd_consent”); ní bhfuil ann ach an chatagóir, an t-am agus uimhir leagain, gan aon sainaitheantóir pearsanta. Is féidir leat é a athrú nó a chúlghairm tráth ar bith trí dheilbhín na bhfianán i gcúinne bun chlé gach leathanaigh. Tar éis sé mhí, fiafróimid díot arís — níor cheart go mbeadh toiliú bailí gan teorainn ama.",
       ],
     },
     {
@@ -92,7 +92,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Coinníonn sé do chinneadh maidir le cosaint spam an fhoirm teagmhála, ionas nach bhfiafróidh an barra toilithe díot arís ag gach cuairt. Ní stóráiltear ach an chatagóir, an t-am agus uimhir leagain. Ní fhágann an luach do ghléas agus ní tharchuirtear chuig ár bhfreastalaí é; baineann sé leis an mbrabhsálaí seo amháin. Má scriosann tú é, fiafróidh an barra díot arís ar do chéad chuairt eile.",
+            "Coinníonn sé do chinneadh maidir le cosaint spam an fhoirm teagmhála, ionas nach bhfiafróidh an barra toilithe díot arís ag gach cuairt. Ní stóráiltear ach an chatagóir, an t-am agus uimhir leagain. Ní fhágann an luach do ghléas agus ní tharchuirtear chuig ár bhfreastalaí é; baineann sé leis an mbrabhsálaí seo amháin. Tréimhse bailíochta: sé mhí — ina dhiaidh sin, fiafróidh an barra arís. Má scriosann tú an luach, fiafróidh an barra díot arís ar do chéad chuairt eile.",
           ],
         },
         {

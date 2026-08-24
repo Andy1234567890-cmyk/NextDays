@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "Un consimțământ este necesar, conform art. 9 din regulamentul danez privind modulele cookie (Cookie-bekendtgørelsen) (care transpune art. 5 alin. (3) din Directiva 2002/58/CE), doar atunci când accesul la dispozitivul dumneavoastră nu servește exclusiv transmiterii unui mesaj sau nu este strict necesar pentru un serviciu solicitat în mod expres de dumneavoastră.",
         "Toate modulele cookie pe care le setăm sunt necesare pentru autentificare, pentru securitatea sesiunii sau pentru o setare aleasă chiar de dumneavoastră — prin urmare, nu solicităm nimic pentru acestea și, invers, nu setăm nimic pentru care ar fi necesar consimțământul.",
         "Trebuie să vă dați consimțământul pentru un singur lucru: protecția anti-spam a formularului nostru de contact. Aceasta provine de la Google (reCAPTCHA Enterprise), fiind deci un serviciu extern, și se încarcă numai dacă ați permis-o. Pentru aceasta apare o bară în partea de jos a ecranului — la prima vizită, cu butoane de aceeași importanță pentru „Respingere” și „Acceptare” și fără nicio selecție prealabilă. Atât timp cât nu ați decis, se aplică „nepermis”.",
-        "Decizia dumneavoastră este stocată în memoria browserului dumneavoastră (Local Storage, valoarea „nd_consent”); aceasta conține doar categoria, momentul și un număr de versiune, fără nicio identificare a persoanei dumneavoastră. O puteți modifica sau revoca oricând la finalul acestei pagini.",
+        "Decizia dumneavoastră este stocată în memoria browserului dumneavoastră (Local Storage, valoarea „nd_consent”); aceasta conține doar categoria, momentul și un număr de versiune, fără nicio identificare a persoanei dumneavoastră. O puteți modifica sau revoca oricând prin pictograma modulelor cookie din colțul din stânga jos al fiecărei pagini. După șase luni, vă vom întreba din nou — un consimțământ nu trebuie să rămână valabil pe termen nelimitat.",
       ],
     },
     {
@@ -93,7 +93,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Reține decizia dumneavoastră privind protecția anti-spam a formularului de contact, astfel încât bara de consimțământ să nu vă întrebe din nou la fiecare vizită. Sunt stocate doar categoria, momentul și un număr de versiune. Valoarea nu părăsește dispozitivul dumneavoastră și nu este transmisă serverului nostru; se aplică acestui browser. Dacă o ștergeți, bara vă va întreba din nou la vizita următoare.",
+            "Reține decizia dumneavoastră privind protecția anti-spam a formularului de contact, astfel încât bara de consimțământ să nu vă întrebe din nou la fiecare vizită. Sunt stocate doar categoria, momentul și un număr de versiune. Valoarea nu părăsește dispozitivul dumneavoastră și nu este transmisă serverului nostru; se aplică acestui browser. Valabilitate: șase luni — după acest termen, bara vă va întreba din nou. Dacă ștergeți valoarea, bara vă va întreba din nou la vizita următoare.",
           ],
         },
         {

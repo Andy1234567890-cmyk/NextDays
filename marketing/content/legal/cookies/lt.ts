@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "Sutikimas pagal Danijos slapukų reglamento (Cookie-bekendtgørelsen) 9 straipsnį (kuriuo įgyvendinama Direktyvos 2002/58/EB 5 straipsnio 3 dalis) reikalingas tik tuomet, kai prieiga prie jūsų įrenginio nėra skirta išimtinai pranešimo perdavimui arba nėra būtinai reikalinga jūsų aiškiai užsakytai paslaugai teikti.",
         "Visi mūsų naudojami slapukai yra būtini prisijungimui, sesijos saugumui arba jūsų pačių pasirinktam nustatymui — dėl to mes nieko neklausiame ir taip pat nenustatome nieko, kam reikėtų sutikimo.",
         "Sutikimą turite duoti tik dėl vieno dalyko: mūsų kontaktų formos apsaugos nuo šlamšto. Ją teikia Google (reCAPTCHA Enterprise), t. y. tai išorinė paslauga, ir ji įkeliama tik tuomet, jei tai leidote. Dėl to pirmojo apsilankymo metu ekrano apačioje rodoma juosta su lygiaverčiais mygtukais „Atmesti“ ir „Sutikti“, be jokio išankstinio pasirinkimo. Kol nenusprendėte, galioja „neleista“.",
-        "Jūsų sprendimas saugomas jūsų naršyklės atmintyje (Local Storage, reikšmė „nd_consent“); jame nurodoma tik kategorija, laikas ir versijos numeris, jokio jūsų asmens identifikatoriaus. Šio puslapio apačioje galite jį bet kada pakeisti arba atšaukti.",
+        "Jūsų sprendimas saugomas jūsų naršyklės atmintyje (Local Storage, reikšmė „nd_consent“); jame nurodoma tik kategorija, laikas ir versijos numeris, jokio jūsų asmens identifikatoriaus. Per slapukų piktogramą kiekvieno puslapio kairiajame apatiniame kampe galite jį bet kada pakeisti arba atšaukti. Po šešių mėnesių paklausime dar kartą — sutikimas neturi galioti neribotai.",
       ],
     },
     {
@@ -92,7 +92,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Saugo jūsų sprendimą dėl kontaktų formos apsaugos nuo šlamšto, kad sutikimo juosta neklaustų iš naujo kaskart apsilankius. Saugoma tik kategorija, laikas ir versijos numeris. Reikšmė nepalieka jūsų įrenginio ir neperduodama į mūsų serverį; ji galioja šiai naršyklei. Ją ištrynus, juosta vėl paklaus kito apsilankymo metu.",
+            "Saugo jūsų sprendimą dėl kontaktų formos apsaugos nuo šlamšto, kad sutikimo juosta neklaustų iš naujo kaskart apsilankius. Saugoma tik kategorija, laikas ir versijos numeris. Reikšmė nepalieka jūsų įrenginio ir neperduodama į mūsų serverį; ji galioja šiai naršyklei. Galiojimo laikas: šeši mėnesiai — po to juosta paklaus dar kartą. Ištrynus reikšmę, juosta vėl paklaus kito apsilankymo metu.",
           ],
         },
         {

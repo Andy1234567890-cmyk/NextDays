@@ -29,7 +29,7 @@ export const cookies: LegalDoc = {
         "O consentimento só é necessário nos termos do artigo 9.º do regulamento dinamarquês sobre cookies (Cookie-bekendtgørelsen) (que transpõe o artigo 5.º, n.º 3, da Diretiva 2002/58/CE), quando o acesso ao seu dispositivo não se destina exclusivamente à transmissão de uma comunicação ou não é estritamente necessário para um serviço expressamente solicitado.",
         "Todos os cookies que definimos são necessários para o início de sessão, para a segurança da sessão ou para uma definição escolhida por si — por isso não solicitamos nada, e também não definimos nada que exigisse consentimento.",
         "Há apenas uma coisa para a qual precisamos do seu consentimento: a proteção antispam do nosso formulário de contacto. Esta provém da Google (reCAPTCHA Enterprise), sendo, portanto, um serviço externo, e só é carregada se a tiver autorizado. Para isso, surge uma barra na parte inferior do ecrã — na primeira visita, com botões de igual destaque para «Rejeitar» e «Aceitar» e sem seleção prévia. Enquanto não tiver decidido, aplica-se «não permitido».",
-        "A sua decisão fica guardada na memória do seu navegador (Local Storage, valor «nd_consent»); contém apenas a categoria, o momento e um número de versão, sem qualquer identificação da sua pessoa. Pode alterá-la ou revogá-la a qualquer momento no final desta página.",
+        "A sua decisão fica guardada na memória do seu navegador (Local Storage, valor «nd_consent»); contém apenas a categoria, o momento e um número de versão, sem qualquer identificação da sua pessoa. Pode alterá-la ou revogá-la a qualquer momento através do ícone de cookies no canto inferior esquerdo de cada página. Após seis meses, voltaremos a perguntar — um consentimento não deve manter-se válido indefinidamente.",
       ],
     },
     {
@@ -93,7 +93,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Regista a sua decisão sobre a proteção antispam do formulário de contacto, para que a barra de consentimento não volte a perguntar em cada visita. São guardados apenas a categoria, o momento e um número de versão. O valor não sai do seu dispositivo e não é transmitido ao nosso servidor; aplica-se a este navegador. Se o eliminar, a barra volta a perguntar na próxima visita.",
+            "Regista a sua decisão sobre a proteção antispam do formulário de contacto, para que a barra de consentimento não volte a perguntar em cada visita. São guardados apenas a categoria, o momento e um número de versão. O valor não sai do seu dispositivo e não é transmitido ao nosso servidor; aplica-se a este navegador. Validade: seis meses — depois desse prazo, a barra volta a perguntar. Se eliminar o valor, a barra volta a perguntar na próxima visita.",
           ],
         },
         {
