@@ -40,7 +40,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
 } from "@nextdays/ui/sidebar";
 import { HILFE_URL } from "@/lib/marketing-url";
 
@@ -512,11 +511,26 @@ export function AppSidebar({
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-          <Link href="/" className="group-data-[collapsible=icon]:hidden">
-            <Logo heightRem={1.75} />
+        {/* Kein Einklapp-Knopf mehr: die Topbar traegt denselben
+            `SidebarTrigger` (components/topbar.tsx), und Cmd/Ctrl+B klappt die
+            Leiste ebenfalls. Zwei Knoepfe fuer dieselbe Sache direkt
+            uebereinander sahen aus wie zwei verschiedene Funktionen.
+
+            Das Logo bleibt in BEIDEN Zustaenden sichtbar, wechselt aber die
+            Form: ausgeklappt der Schriftzug, eingeklappt nur das Chevron. Das
+            Lockup ist 245x44 (5,6:1) und passt nicht in die ~3 rem schmale
+            Leiste — es war dort bisher schlicht versteckt, was eine leere
+            Kopfzeile ergab und die Marke genau dann verschwinden liess, wenn
+            von ihr nur noch Symbole uebrig sind. */}
+        <div className="flex items-center gap-2 px-2 py-1.5">
+          <Link href="/">
+            <span className="group-data-[collapsible=icon]:hidden">
+              <Logo heightRem={1.75} />
+            </span>
+            <span className="hidden group-data-[collapsible=icon]:inline-block">
+              <Logo heightRem={1.5} nurZeichen />
+            </span>
           </Link>
-          <SidebarTrigger className="group-data-[collapsible=icon]:hidden" />
         </div>
       </SidebarHeader>
 
