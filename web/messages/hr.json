@@ -4901,6 +4901,17 @@
       "decline": "Odbij",
       "taken": "Zadatak preuzet",
       "declined": "Zahtjev odbijen"
+    },
+    "bookingPeriod": {
+      "change": "Promijeni razdoblje",
+      "title": "Promjena razdoblja rezervacije",
+      "closeAriaLabel": "Zatvori",
+      "recheck": "Ponovno će se provjeriti postoji li dvostruka rezervacija.",
+      "orderInvalid": "Odjava mora biti nakon prijave.",
+      "priceHint": "„Zadrži cijenu” ostavlja dogovoreni iznos nepromijenjenim. „Ponovno izračunaj cijenu” je iznova izračunava za novo razdoblje.",
+      "keepPrice": "Zadrži cijenu",
+      "recalcPrice": "Ponovno izračunaj cijenu",
+      "saving": "Mijenja se…"
     }
   },
   "objects": {
@@ -6329,6 +6340,7 @@
       "cancel": "Odustani",
       "unblocking": "Uklanjanje…",
       "moveTitle": "Premjestiti rezervaciju?",
+      "move": "Premjesti",
       "resizeTitle": "Promijeniti razdoblje?",
       "bookingFallback": "Rezervacija",
       "propertyFallback": "Property",

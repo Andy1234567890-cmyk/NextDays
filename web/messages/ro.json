@@ -4899,6 +4899,17 @@
       "decline": "Respinge",
       "taken": "Sarcină preluată",
       "declined": "Solicitare respinsă"
+    },
+    "bookingPeriod": {
+      "change": "Modifică perioada",
+      "title": "Modificarea perioadei rezervării",
+      "closeAriaLabel": "Închide",
+      "recheck": "Se verifică din nou dacă există o rezervare dublă.",
+      "orderInvalid": "Plecarea trebuie să fie după sosire.",
+      "priceHint": "„Păstrează prețul” lasă suma convenită neschimbată. „Recalculează prețul” o stabilește din nou pentru noua perioadă.",
+      "keepPrice": "Păstrează prețul",
+      "recalcPrice": "Recalculează prețul",
+      "saving": "Se modifică…"
     }
   },
   "objects": {
@@ -6327,6 +6338,7 @@
       "cancel": "Anulează",
       "unblocking": "Se elimină…",
       "moveTitle": "Mutați rezervarea?",
+      "move": "Mută",
       "resizeTitle": "Modificați perioada?",
       "bookingFallback": "Rezervare",
       "propertyFallback": "Property",

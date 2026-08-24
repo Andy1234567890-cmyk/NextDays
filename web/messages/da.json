@@ -4901,6 +4901,17 @@
       "decline": "Afvis",
       "taken": "Opgaven er overtaget",
       "declined": "Forespørgsel afvist"
+    },
+    "bookingPeriod": {
+      "change": "Skift periode",
+      "title": "Skift bookingens periode",
+      "closeAriaLabel": "Luk dialogboks",
+      "recheck": "Der tjekkes igen for dobbeltbooking.",
+      "orderInvalid": "Afrejse skal ligge efter ankomst.",
+      "priceHint": "„Behold pris“ lader det aftalte beløb være uændret. „Genberegn pris“ fastsætter det på ny for den nye periode.",
+      "keepPrice": "Behold pris",
+      "recalcPrice": "Genberegn pris",
+      "saving": "Gemmer…"
     }
   },
   "objects": {
@@ -6329,6 +6340,7 @@
       "cancel": "Annuller",
       "unblocking": "Ophæver…",
       "moveTitle": "Vil du flytte reservationen?",
+      "move": "Flyt",
       "resizeTitle": "Vil du ændre perioden?",
       "bookingFallback": "Booking",
       "propertyFallback": "Property",

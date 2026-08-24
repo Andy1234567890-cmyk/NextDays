@@ -4899,6 +4899,17 @@
       "decline": "Avslå",
       "taken": "Uppgiften har tagits över",
       "declined": "Förfrågan avslogs"
+    },
+    "bookingPeriod": {
+      "change": "Ändra perioden",
+      "title": "Ändra bokningens period",
+      "closeAriaLabel": "Stäng dialogrutan",
+      "recheck": "Dubbelbokning kontrolleras igen.",
+      "orderInvalid": "Avresan måste vara efter ankomsten.",
+      "priceHint": "”Behåll priset” lämnar det överenskomna beloppet oförändrat. ”Räkna om priset” beräknar det på nytt för den nya perioden.",
+      "keepPrice": "Behåll priset",
+      "recalcPrice": "Räkna om priset",
+      "saving": "Ändrar…"
     }
   },
   "objects": {
@@ -6327,6 +6338,7 @@
       "cancel": "Avbryt",
       "unblocking": "Häver…",
       "moveTitle": "Vill du flytta bokningen?",
+      "move": "Flytta",
       "resizeTitle": "Vill du ändra perioden?",
       "bookingFallback": "Bokning",
       "propertyFallback": "Property",

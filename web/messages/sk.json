@@ -4899,6 +4899,17 @@
       "decline": "Odmietnuť",
       "taken": "Úloha prevzatá",
       "declined": "Žiadosť odmietnutá"
+    },
+    "bookingPeriod": {
+      "change": "Zmeniť obdobie",
+      "title": "Zmeniť obdobie rezervácie",
+      "closeAriaLabel": "Zavrieť dialóg",
+      "recheck": "Znovu sa kontroluje dvojitá rezervácia.",
+      "orderInvalid": "Odchod musí byť po príchode.",
+      "priceHint": "„Zachovať cenu“ ponechá dohodnutú sumu bez zmeny. „Prepočítať cenu“ ju pre nový termín znovu vypočíta.",
+      "keepPrice": "Zachovať cenu",
+      "recalcPrice": "Prepočítať cenu",
+      "saving": "Mení sa…"
     }
   },
   "objects": {
@@ -6327,6 +6338,7 @@
       "cancel": "Zrušiť",
       "unblocking": "Ruší sa…",
       "moveTitle": "Presunúť rezerváciu?",
+      "move": "Presunúť",
       "resizeTitle": "Zmeniť obdobie?",
       "bookingFallback": "Rezervácia",
       "propertyFallback": "Property",

@@ -4901,6 +4901,17 @@
       "decline": "Rechazar",
       "taken": "Tarea asumida",
       "declined": "Solicitud rechazada"
+    },
+    "bookingPeriod": {
+      "change": "Cambiar periodo",
+      "title": "Cambiar el periodo de la reserva",
+      "closeAriaLabel": "Cerrar diálogo",
+      "recheck": "Se volverá a comprobar si hay reservas duplicadas.",
+      "orderInvalid": "La salida debe ser posterior a la llegada.",
+      "priceHint": "«Mantener precio» deja el importe acordado sin cambios. «Recalcular precio» lo determina de nuevo para el nuevo periodo.",
+      "keepPrice": "Mantener precio",
+      "recalcPrice": "Recalcular precio",
+      "saving": "Guardando…"
     }
   },
   "objects": {
@@ -6329,6 +6340,7 @@
       "cancel": "Cancelar",
       "unblocking": "Quitando…",
       "moveTitle": "¿Mover la reserva?",
+      "move": "Mover",
       "resizeTitle": "¿Cambiar el periodo?",
       "bookingFallback": "Reserva",
       "propertyFallback": "Property",

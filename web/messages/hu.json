@@ -4901,6 +4901,17 @@
       "decline": "Elutasítás",
       "taken": "Feladat átvéve",
       "declined": "Kérés elutasítva"
+    },
+    "bookingPeriod": {
+      "change": "Időszak módosítása",
+      "title": "A foglalás időszakának módosítása",
+      "closeAriaLabel": "Bezárás",
+      "recheck": "Ismét ellenőrizzük, hogy nincs-e dupla foglalás.",
+      "orderInvalid": "A távozásnak az érkezés után kell lennie.",
+      "priceHint": "Az „Ár megtartása” a megállapodott összeget változatlanul hagyja. Az „Ár újraszámítása” azt az új időszakra újra meghatározza.",
+      "keepPrice": "Ár megtartása",
+      "recalcPrice": "Ár újraszámítása",
+      "saving": "Módosítás folyamatban…"
     }
   },
   "objects": {
@@ -6329,6 +6340,7 @@
       "cancel": "Mégse",
       "unblocking": "Feloldás…",
       "moveTitle": "Áthelyezi a foglalást?",
+      "move": "Áthelyezés",
       "resizeTitle": "Módosítja az időszakot?",
       "bookingFallback": "Foglalás",
       "propertyFallback": "Property",

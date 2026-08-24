@@ -4901,6 +4901,17 @@
       "decline": "Hylkää",
       "taken": "Tehtävä otettu hoitaaksesi",
       "declined": "Pyyntö hylätty"
+    },
+    "bookingPeriod": {
+      "change": "Muuta ajanjaksoa",
+      "title": "Muuta varauksen ajanjaksoa",
+      "closeAriaLabel": "Sulje valintaikkuna",
+      "recheck": "Päällekkäiset varaukset tarkistetaan uudelleen.",
+      "orderInvalid": "Lähtöpäivän on oltava saapumispäivän jälkeen.",
+      "priceHint": "”Säilytä hinta” jättää sovitun summan ennalleen. ”Laske hinta uudelleen” määrittää sen uudelleen uudelle ajanjaksolle.",
+      "keepPrice": "Säilytä hinta",
+      "recalcPrice": "Laske hinta uudelleen",
+      "saving": "Tallennetaan…"
     }
   },
   "objects": {
@@ -6329,6 +6340,7 @@
       "cancel": "Peruuta",
       "unblocking": "Poistetaan…",
       "moveTitle": "Siirretäänkö varaus?",
+      "move": "Siirrä",
       "resizeTitle": "Muutetaanko ajanjaksoa?",
       "bookingFallback": "Varaus",
       "propertyFallback": "Property",

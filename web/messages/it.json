@@ -4899,6 +4899,17 @@
       "decline": "Rifiuta",
       "taken": "Attività presa in carico",
       "declined": "Richiesta rifiutata"
+    },
+    "bookingPeriod": {
+      "change": "Modifica periodo",
+      "title": "Modifica periodo della prenotazione",
+      "closeAriaLabel": "Chiudi finestra di dialogo",
+      "recheck": "Verrà effettuato un nuovo controllo per doppie prenotazioni.",
+      "orderInvalid": "La partenza deve essere successiva all'arrivo.",
+      "priceHint": "«Mantieni prezzo» lascia invariato l'importo concordato. «Ricalcola prezzo» lo ricalcola per il nuovo periodo.",
+      "keepPrice": "Mantieni prezzo",
+      "recalcPrice": "Ricalcola prezzo",
+      "saving": "Modifica in corso…"
     }
   },
   "objects": {
@@ -6327,6 +6338,7 @@
       "cancel": "Annulla",
       "unblocking": "Rimozione…",
       "moveTitle": "Spostare la prenotazione?",
+      "move": "Sposta",
       "resizeTitle": "Modificare il periodo?",
       "bookingFallback": "Prenotazione",
       "propertyFallback": "Property",

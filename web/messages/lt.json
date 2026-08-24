@@ -4899,6 +4899,17 @@
       "decline": "Atmesti",
       "taken": "Užduotis perimta",
       "declined": "Užklausa atmesta"
+    },
+    "bookingPeriod": {
+      "change": "Keisti laikotarpį",
+      "title": "Keisti rezervacijos laikotarpį",
+      "closeAriaLabel": "Uždaryti dialogo langą",
+      "recheck": "Bus pakartotinai patikrinta dėl dvigubos rezervacijos.",
+      "orderInvalid": "Išvykimo data turi būti vėlesnė už atvykimo datą.",
+      "priceHint": "„Palikti kainą“ reiškia, kad sutarta suma nekeičiama. „Perskaičiuoti kainą“ ją perskaičiuoja naujam laikotarpiui.",
+      "keepPrice": "Palikti kainą",
+      "recalcPrice": "Perskaičiuoti kainą",
+      "saving": "Keičiama…"
     }
   },
   "objects": {
@@ -6327,6 +6338,7 @@
       "cancel": "Atšaukti",
       "unblocking": "Naikinama…",
       "moveTitle": "Ar perkelti rezervaciją?",
+      "move": "Perkelti",
       "resizeTitle": "Ar keisti laikotarpį?",
       "bookingFallback": "Rezervacija",
       "propertyFallback": "Property",

@@ -4899,6 +4899,17 @@
       "decline": "Irrifjuta",
       "taken": "Il-kompitu ttieħed",
       "declined": "It-talba ġiet irrifjutata"
+    },
+    "bookingPeriod": {
+      "change": "Biddel il-perjodu",
+      "title": "Biddel il-perjodu tal-prenotazzjoni",
+      "closeAriaLabel": "Agħlaq id-djalogu",
+      "recheck": "Se jsir kontroll mill-ġdid għal prenotazzjoni doppja.",
+      "orderInvalid": "It-tluq irid ikun wara l-wasla.",
+      "priceHint": "“Żomm il-prezz” tfisser li s-somma miftiehma ma tinbidilx. “Erġa' ikkalkula l-prezz” terġa' tikkalkulah għall-perjodu l-ġdid.",
+      "keepPrice": "Żomm il-prezz",
+      "recalcPrice": "Erġa' ikkalkula l-prezz",
+      "saving": "Qed jinbidel…"
     }
   },
   "objects": {
@@ -6327,6 +6338,7 @@
       "cancel": "Ikkanċella",
       "unblocking": "Qed jitneħħa…",
       "moveTitle": "Trid tmexxi l-prenotazzjoni?",
+      "move": "Mexxi",
       "resizeTitle": "Trid tibdel il-perjodu?",
       "bookingFallback": "Prenotazzjoni",
       "propertyFallback": "Property",

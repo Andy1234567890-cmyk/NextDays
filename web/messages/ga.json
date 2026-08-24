@@ -4901,6 +4901,17 @@
       "decline": "Diúltaigh",
       "taken": "Tasc glactha",
       "declined": "Iarratas diúltaithe"
+    },
+    "bookingPeriod": {
+      "change": "Athraigh an tréimhse",
+      "title": "Athraigh tréimhse na háirithinte",
+      "closeAriaLabel": "Dún",
+      "recheck": "Seiceálfar arís an bhfuil áirithint dhúbailte ann.",
+      "orderInvalid": "Ní mór an dáta imeachta a bheith tar éis an dáta teachta.",
+      "priceHint": "Fágann „Coinnigh an praghas“ an méid comhaontaithe mar atá. Athríomhann „Athríomh an praghas“ méid nua don tréimhse nua.",
+      "keepPrice": "Coinnigh an praghas",
+      "recalcPrice": "Athríomh an praghas",
+      "saving": "Á athrú…"
     }
   },
   "objects": {
@@ -6329,6 +6340,7 @@
       "cancel": "Cealaigh",
       "unblocking": "Á bhaint…",
       "moveTitle": "An bhfuil tú cinnte gur mhaith leat an áirithint a bhogadh?",
+      "move": "Bog",
       "resizeTitle": "An dtiocfaidh athrú ar an tréimhse?",
       "bookingFallback": "Áirithint",
       "propertyFallback": "Property",

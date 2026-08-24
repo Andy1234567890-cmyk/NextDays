@@ -649,6 +649,108 @@ class ReservationsBase:
         ).data or []
         return str(rows[0]["id"]) if len(rows) == 1 else None
 
+    def _gehaltene_einheit(
+        self,
+        tenant_id: str,
+        property_id: str,
+        nights: list[str],
+        reservation_id: str,
+    ) -> str | None:
+        """Die Einheit, die DIESE Reservierung im Kalender hält — abgeleitet,
+        wenn `reservations.unit_id` fehlt.
+
+        Warum es den Fall gibt: die Spalte ist nullable (0265), trägt
+        `on delete set null` und wurde im Bestand nicht durchgängig gefüllt.
+        Live gefunden am 24.08.2026: alle 10 `channel='website'`-Buchungen
+        stehen ohne Einheit, ihre `availability`-Zeilen dagegen MIT. Der
+        Move-Vorcheck erkannte die eigenen Alt-Tage darum nicht wieder und wies
+        jede Verlängerung mit „Ziel-Zeitraum enthält bereits belegte/gesperrte
+        Tage" ab — die Buchung blockierte sich selbst.
+
+        Ableitung in zwei Stufen:
+        1. Hat das Objekt genau EINE Einheit, ist sie es (`_einzige_einheit`).
+        2. Sonst: die Einheiten, die an ALLEN eigenen Nächten `booked` sind,
+           minus derer, die eine ANDERE aktive Reservierung dort hält. Bleibt
+           genau eine übrig, ist die Zuordnung eindeutig.
+
+        `None` heißt „nicht eindeutig ableitbar" — der Aufrufer entscheidet
+        fail-closed (Wurzel 5). Eine geratene Einheit wäre hier keine Notlösung,
+        sondern eine Doppelbelegung.
+        """
+        einzige = self._einzige_einheit(tenant_id, property_id)
+        if einzige or not nights:
+            log.warning(
+                "Reservierung ohne unit_id: Einheit über das Objekt bestimmt",
+                extra={
+                    "reservation_id": reservation_id,
+                    "property_id": property_id,
+                    "einheit": einzige,
+                },
+            )
+            return einzige
+        rows = (
+            self._db()
+            .table("availability")
+            .select("date, unit_id")
+            .eq("property_id", property_id)
+            .in_("date", nights)
+            .eq("status", "booked")
+            .execute()
+        ).data or []
+        tage_je_einheit: dict[str, set[str]] = {}
+        for r in rows:
+            uid = r.get("unit_id")
+            if uid:
+                tage_je_einheit.setdefault(str(uid), set()).add(str(r["date"]))
+        gesucht = set(nights)
+        kandidaten = {
+            uid for uid, tage in tage_je_einheit.items() if tage >= gesucht
+        }
+        if len(kandidaten) <= 1:
+            return next(iter(kandidaten), None)
+        # Mehrere Einheiten sind über den ganzen Zeitraum belegt — die fremden
+        # Buchungen abziehen, die IHRE Einheit benennen. Was übrig bleibt, hält
+        # niemand sonst; ist das genau eine, gehört sie zu uns.
+        fremd = (
+            self._db()
+            .table("reservations")
+            .select("check_in, check_out, status, unit_id")
+            .eq("property_id", property_id)
+            .neq("id", reservation_id)
+            .neq("status", "cancelled")
+            .lte("check_in", max(nights))
+            .gt("check_out", min(nights))
+            .execute()
+        ).data or []
+        for r in fremd:
+            if str(r.get("status") or "") in _NICHT_BELEGEND:
+                continue
+            uid = r.get("unit_id")
+            if not uid:
+                continue
+            belegt = {
+                d.isoformat()
+                for d in _nights(_as_date(r["check_in"]), _as_date(r["check_out"]))
+            }
+            if belegt & gesucht:
+                kandidaten.discard(str(uid))
+        treffer = next(iter(kandidaten), None) if len(kandidaten) == 1 else None
+        # Beide Ausgänge protokollieren: die Ableitung ist ein Reparaturpfad für
+        # unvollständige Daten und muss im Log sichtbar sein — sonst sieht ein
+        # geglückter Move aus wie ein normaler, und ein misslungener nennt eine
+        # Ursache, die niemand nachvollziehen kann.
+        log.warning(
+            "Reservierung ohne unit_id: Einheit aus dem Kalender abgeleitet",
+            extra={
+                "reservation_id": reservation_id,
+                "property_id": property_id,
+                "naechte": len(nights),
+                "kandidaten": len(kandidaten),
+                "einheit": treffer,
+            },
+        )
+        return treffer
+
     def _release_nights(
         self,
         tenant_id: str,

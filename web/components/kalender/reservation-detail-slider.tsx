@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { ReservationAddonsSection } from "@/components/kalender/reservation-addons-section";
+import { BookingPeriodDialog } from "@/components/reservierungen/booking-period-dialog";
 import { CheckoutPaymentDialog } from "@/components/reservierungen/checkout-payment-dialog";
 import { Button } from "@nextdays/ui/button";
 import type { AvailabilitySource } from "@/lib/calendar";
@@ -65,6 +66,7 @@ export function ReservationDetailSlider({
   const [reason, setReason] = useState("");
   const [earlyConfirm, setEarlyConfirm] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const [periodOpen, setPeriodOpen] = useState(false);
 
   const isCancelled = data?.status === "cancelled";
   // OTA-Buchung erkannt am echten Portal-Namen (channel "portal" sammelt 40+ OTAs).
@@ -73,6 +75,17 @@ export function ReservationDetailSlider({
   // Umsatz — Beträge, Rechnungs- und Zusatzleistungs-Aktionen entfallen hier,
   // weil es sie zu diesem Aufenthalt nicht gibt (kein leeres 0-Formular).
   const isOwnerStay = !!data?.is_owner_stay;
+  // Zeitraum änderbar? Dieselben Grenzen wie serverseitig in `move()` — hier
+  // nur als Sichtbarkeit. Eine Portal-Buchung wird beim PORTAL geändert: der
+  // lokale Move hebt sie dort nicht auf und die Nächte würden doppelt
+  // verkauft. `channel='portal'` (myBestDays) ist unser eigener Kanal und
+  // gehört NICHT dazu.
+  const zeitraumAenderbar =
+    !!data &&
+    !isCancelled &&
+    !["booking", "airbnb", "vrbo", "ota_other"].includes(data.channel) &&
+    !data.checked_in_at &&
+    !data.checked_out_at;
   // Als Konstante, nicht im Callback abgelesen: TypeScript verengt `string |
   // null` innerhalb eines Handlers nicht, und ein Cast würde die Prüfung nur
   // stumm schalten.
@@ -119,6 +132,10 @@ export function ReservationDetailSlider({
   const meta = data ? channelMeta(data.channel as AvailabilitySource) : null;
 
   const t = useTranslations("calendar");
+  // Der Slider ist historisch deutsch-hart; für den Zeitraum-Dialog wird der
+  // bereits übersetzte `reservations`-Namensraum mitgenutzt, statt einen
+  // zweiten Textbestand für dieselben Knöpfe anzulegen.
+  const tRes = useTranslations("reservations");
   const { channelLabel, statusLabel } = useCalendarLabels();
   const locale = useLocale();
   const fmtDateTime = (iso: string) =>
@@ -255,6 +272,17 @@ export function ReservationDetailSlider({
                     <p className="text-sm font-bold">{fmtDate(data.check_out)}</p>
                   </div>
                 </div>
+                {zeitraumAenderbar && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPeriodOpen(true)}
+                  >
+                    <Icon icon="ph:calendar-plus" className="size-4" />
+                    {tRes("bookingPeriod.change")}
+                  </Button>
+                )}
                 <div className="text-right">
                   {!isOwnerStay && (
                     <p className="font-display text-xl font-extrabold">
@@ -690,6 +718,23 @@ export function ReservationDetailSlider({
           </div>
         )}
       </div>
+
+      {/* Zeitraum ändern (geteilt mit der PM-Detail-Vollseite). Der Slider
+          steht auch dort, wo es keinen Kalender zum Ziehen gibt — in der
+          Buchungsliste und in der Gäste-Akte. */}
+      {periodOpen && data && (
+        <BookingPeriodDialog
+          reservationId={data.id}
+          propertyId={data.property_id}
+          checkIn={data.check_in}
+          checkOut={data.check_out}
+          onClose={() => setPeriodOpen(false)}
+          onChanged={() => {
+            void d.reload();
+            onChanged?.();
+          }}
+        />
+      )}
 
       {/* Zahlart-Abfrage beim Check-out (geteilt mit der PM-Detail-Vollseite). */}
       {paymentOpen && (

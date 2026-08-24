@@ -774,6 +774,42 @@ class WritesMixin(ReservationsBase):
         )
         same_property = req.property_id == old_property
         alte_unit = str(current["unit_id"]) if current.get("unit_id") else None
+        if alte_unit is None:
+            # Ohne Einheit findet der Alt-Tag-Filter unten die EIGENEN Nächte
+            # nicht wieder (`r["unit_id"] == None` trifft nie) — die Buchung
+            # zählte sich selbst als Fremdbelegung und jede Verlängerung endete
+            # in „Ziel-Zeitraum enthält bereits belegte/gesperrte Tage".
+            # Live am 24.08.2026 an allen 10 Website-Buchungen: `unit_id` leer,
+            # die Kalenderzeilen dagegen einheiten-genau. Deshalb aus dem
+            # Kalender ableiten (Wurzel 4: kein geratener Ersatzwert — bleibt
+            # es mehrdeutig, kommt None und der Move scheitert präzise).
+            alte_unit = self._gehaltene_einheit(
+                tenant_id, old_property, sorted(old_nights), reservation_id
+            )
+        if (
+            alte_unit is None
+            and same_property
+            and old_nights & new_keys
+            # NUR wenn die eigenen Alt-Tage im Kalender überhaupt eine Einheit
+            # nennen. Im Altbestand vor 0266 tragen die Zeilen selbst keine
+            # (`unit_id is null`) — dort trifft `None == None` und der Filter
+            # unten erkennt die eigenen Tage wie eh und je. Ohne diese
+            # Bedingung hätte der Guard genau diesen intakten Fall gesperrt.
+            and any(
+                r["date"] in old_nights and r.get("unit_id")
+                for r in (avail.data or [])
+            )
+        ):
+            # Eigene Tage im Ziel-Zeitraum, aber die eigene Einheit ist nicht
+            # bestimmbar: jede Antwort wäre geraten. Fail-closed mit der
+            # WAHREN Ursache statt der irreführenden Belegt-Meldung, sonst
+            # sucht der Betrieb den Fehler beim Gast-Kalender (Wurzel 5).
+            raise ReservationError(
+                "Diese Buchung ist keiner Einheit zugeordnet — der Zeitraum "
+                "lässt sich deshalb nicht ändern. Bitte die Einheit der "
+                "Buchung setzen und erneut versuchen.",
+                status_code=409,
+            )
         # Wie in create() je EINHEIT (0265/0266): die Frage lautet „bleibt eine
         # Einheit im ganzen Zeitraum frei?", nicht „ist irgendein Tag irgendeiner
         # Einheit belegt?". Objektweit gefragt war ein Typ mit zwei Einheiten ab

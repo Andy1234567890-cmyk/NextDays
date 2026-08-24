@@ -4899,6 +4899,17 @@
       "decline": "Afwijzen",
       "taken": "Taak overgenomen",
       "declined": "Verzoek afgewezen"
+    },
+    "bookingPeriod": {
+      "change": "Periode wijzigen",
+      "title": "Periode van de boeking wijzigen",
+      "closeAriaLabel": "Sluiten",
+      "recheck": "Er wordt opnieuw op dubbele boekingen gecontroleerd.",
+      "orderInvalid": "Het vertrek moet na de aankomst liggen.",
+      "priceHint": "„Prijs behouden” laat het overeengekomen bedrag ongewijzigd. „Prijs herberekenen” bepaalt dit opnieuw voor de nieuwe periode.",
+      "keepPrice": "Prijs behouden",
+      "recalcPrice": "Prijs herberekenen",
+      "saving": "Wordt gewijzigd…"
     }
   },
   "objects": {
@@ -6327,6 +6338,7 @@
       "cancel": "Annuleren",
       "unblocking": "Opheffen…",
       "moveTitle": "Reservering verplaatsen?",
+      "move": "Verplaatsen",
       "resizeTitle": "Periode wijzigen?",
       "bookingFallback": "Boeking",
       "propertyFallback": "Property",

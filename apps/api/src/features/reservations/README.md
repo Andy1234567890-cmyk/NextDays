@@ -23,3 +23,32 @@ Status: **implementiert**.
    `booked` ge-upsertet → derselbe Schutzmechanismus wie der calendar-Slice.
 
 tenant_id stammt immer aus dem JWT (AuthContext), nie aus User-Input.
+
+## Verhalten beim Verschieben/Verlängern (`PATCH /{id}/move`)
+
+Ein neues `(property_id, check_in, check_out)` für eine bestehende Buchung —
+Verlängern, Verkürzen, Verschieben und Objektwechsel sind derselbe Vorgang.
+
+1. Nicht änderbar sind: storniert, ausgecheckt, eingecheckt, OTA-importiert
+   (`source_channex_booking_id` — die Änderung gehört ins Portal).
+2. **Die eigene Einheit ist der Dreh- und Angelpunkt.** Der Double-Booking-
+   Vorcheck fragt je Einheit „bleibt eine im ganzen Zeitraum frei?" und nimmt
+   die EIGENEN Alt-Tage auf der EIGENEN Einheit aus. Trägt die Buchung keine
+   `unit_id` (nullable seit 0265, `on delete set null`, Direkt-Inserts an der
+   RPC vorbei), wird sie über `_gehaltene_einheit` aus dem Kalender abgeleitet:
+   bei einem Objekt mit einer Einheit ist es diese, sonst die Einheit, die an
+   ALLEN eigenen Nächten belegt ist und die keine andere aktive Buchung für
+   sich benennt. Bleibt es mehrdeutig → **409 „keiner Einheit zugeordnet"**,
+   nicht die irreführende Belegt-Meldung.
+   Ohne diese Ableitung zählte eine Buchung ohne Einheit ihre eigenen Nächte
+   als Fremdbelegung und war dauerhaft unveränderbar (live 24.08.2026, alle 10
+   `channel='website'`-Buchungen; Bestand per 0431 nachgezogen, Dauerprüfung:
+   `scripts/diagnose/buchung-einheit-pruefen.sh`).
+3. Stop-Sell im Ziel-Zeitraum (kanal- und plan-bewusst) → 409.
+4. Preis bleibt UNVERÄNDERT, außer `reprice=true` (protel-Modell: der
+   vereinbarte Preis ist bindend, Neurechnen ist eine bewusste Entscheidung).
+5. Reihenfolge: Reservierungszeile zuerst (EXCLUDE-Constraint 0104/0315 prüft
+   atomar) → Alt-Nächte über `_release_nights` freigeben (`push=False` am
+   gleichen Objekt) → Ziel-Nächte belegen → EIN Push über
+   `min(alt,neu)..max(alt,neu)`. Ein Push dazwischen meldete gerade geräumte
+   Tage als frei, obwohl sie Sekunden später wieder belegt sind.

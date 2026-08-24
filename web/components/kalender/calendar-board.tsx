@@ -3030,7 +3030,7 @@ export function CalendarBoard({
                   {t("board.cancel")}
                 </Button>
                 <Button onClick={() => confirmMove(false)} disabled={saving}>
-                  {saving ? "Verschiebe…" : "Verschieben"}
+                  {saving ? t("board.moving") : t("board.move")}
                 </Button>
               </div>
             )}

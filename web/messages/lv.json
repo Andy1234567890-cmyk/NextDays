@@ -4899,6 +4899,17 @@
       "decline": "Atteikt",
       "taken": "Uzdevums pārņemts",
       "declined": "Pieprasījums atteikts"
+    },
+    "bookingPeriod": {
+      "change": "Mainīt periodu",
+      "title": "Mainīt rezervācijas periodu",
+      "closeAriaLabel": "Aizvērt dialoglodziņu",
+      "recheck": "Tiks veikta atkārtota dubultās rezervācijas pārbaude.",
+      "orderInvalid": "Izbraukšanas datumam jābūt pēc ierašanās datuma.",
+      "priceHint": "„Saglabāt cenu” nozīmē, ka saskaņotā summa netiek mainīta. „Pārrēķināt cenu” to no jauna aprēķina jaunajam periodam.",
+      "keepPrice": "Saglabāt cenu",
+      "recalcPrice": "Pārrēķināt cenu",
+      "saving": "Tiek mainīts…"
     }
   },
   "objects": {
@@ -6327,6 +6338,7 @@
       "cancel": "Atcelt",
       "unblocking": "Noņem…",
       "moveTitle": "Vai pārvietot rezervāciju?",
+      "move": "Pārvietot",
       "resizeTitle": "Vai mainīt periodu?",
       "bookingFallback": "Rezervācija",
       "propertyFallback": "Property",

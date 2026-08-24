@@ -548,3 +548,126 @@ def test_accept_request_pusht_echte_zahl_freier_einheiten() -> None:
     assert [c[3] for c in eigen] == [1], (
         f"erwartet 1 freie Einheit, gepusht wurde {[c[3] for c in eigen]}"
     )
+
+
+# --- Buchung OHNE unit_id (Bestand/Direkt-Insert) ---------------------------
+#
+# `reservations.unit_id` ist nullable (0265) und trägt `on delete set null`;
+# ein Direkt-Insert an der RPC vorbei füllt sie gar nicht. Live am 24.08.2026
+# gefunden: ALLE 10 `channel='website'`-Buchungen des Beta-Betriebs standen
+# ohne Einheit, ihre `availability`-Zeilen dagegen einheiten-genau. Der
+# Vorcheck oben verglich `zeile.unit_id == None`, traf damit nie, und zählte
+# die EIGENEN Alt-Tage als Fremdbelegung: jede Verlängerung endete in
+# „Ziel-Zeitraum enthält bereits belegte/gesperrte Tage" — die Buchung
+# blockierte sich selbst und war für immer unveränderbar.
+
+
+def _store_ohne_unit_id(
+    *, einheiten: list[str], belegt_von: dict[str, list[str]],
+    check_in: str = "2026-07-01", check_out: str = "2026-07-03",
+) -> dict:
+    """p1 mit `einheiten`, Buchung OHNE `unit_id`, Kalender MIT `unit_id`.
+
+    `belegt_von` bildet unit_id → Tage ab, die dort als `booked` stehen.
+    """
+    store = _move_store(check_in=check_in, check_out=check_out)
+    store["property_units"] = [
+        {"id": uid, "property_id": "p1", "tenant_id": "t1", "position": i}
+        for i, uid in enumerate(einheiten, start=1)
+    ]
+    store["reservations"][0]["unit_id"] = None
+    store["reservations"][0]["channel"] = "website"
+    store["availability"] = [
+        {"property_id": "p1", "unit_id": uid, "date": tag,
+         "status": "booked", "source": "website"}
+        for uid, tage in belegt_von.items()
+        for tag in tage
+    ]
+    return store
+
+
+def test_verlaengern_ohne_unit_id_bei_einer_einheit() -> None:
+    """Der Live-Fall: eine Einheit, Buchung ohne `unit_id`, Verlängerung.
+
+    23.–25. auf 23.–28. — die eigenen Nächte liegen IM Zielzeitraum. Ohne die
+    Ableitung der Einheit aus dem Kalender wirft der Vorcheck hier 409.
+    """
+    store = _store_ohne_unit_id(
+        einheiten=["u-p1-a"],
+        belegt_von={"u-p1-a": ["2026-07-01", "2026-07-02"]},
+    )
+    svc = _move_db(store)
+    _move(svc, ziel="p1", check_in="2026-07-01", check_out="2026-07-06")
+    res = store["reservations"][0]
+    assert res["check_out"] == "2026-07-06"
+    # Der Move heilt die Zeile mit: die Einheit steht danach auf der Buchung.
+    assert res["unit_id"] == "u-p1-a"
+    assert _belegt(store) == {
+        ("u-p1-a", tag.isoformat())
+        for tag in _naechte("2026-07-01", "2026-07-06")
+    }
+
+
+def test_verlaengern_ohne_unit_id_bei_zwei_einheiten() -> None:
+    """Zwei Einheiten: die eigene ist die, die an ALLEN Alt-Nächten belegt ist.
+
+    u-p1-b trägt nur EINE der beiden Nächte (fremde Buchung) und scheidet damit
+    aus; eindeutig bleibt u-p1-a.
+    """
+    store = _store_ohne_unit_id(
+        einheiten=["u-p1-a", "u-p1-b"],
+        belegt_von={
+            "u-p1-a": ["2026-07-01", "2026-07-02"],
+            "u-p1-b": ["2026-07-02"],
+        },
+    )
+    svc = _move_db(store)
+    _move(svc, ziel="p1", check_in="2026-07-01", check_out="2026-07-04")
+    assert store["reservations"][0]["unit_id"] == "u-p1-a"
+    assert store["reservations"][0]["check_out"] == "2026-07-04"
+
+
+def test_verlaengern_ohne_unit_id_mehrdeutig_nennt_die_wahre_ursache() -> None:
+    """Zwei Einheiten, beide durchgehend belegt, keine fremde Buchung benennt
+    ihre Einheit → die eigene ist NICHT ableitbar.
+
+    Fail-closed ist richtig (eine geratene Einheit wäre eine Doppelbelegung),
+    die MELDUNG aber muss die Ursache nennen. Stünde hier weiter
+    „belegte/gesperrte Tage", suchte der Betrieb den Fehler im Gast-Kalender.
+    """
+    store = _store_ohne_unit_id(
+        einheiten=["u-p1-a", "u-p1-b"],
+        belegt_von={
+            "u-p1-a": ["2026-07-01", "2026-07-02"],
+            "u-p1-b": ["2026-07-01", "2026-07-02"],
+        },
+    )
+    store["reservations"].append({
+        "id": "res-fremd", "tenant_id": "t1", "property_id": "p1",
+        "channel": "direct", "check_in": "2026-07-01", "check_out": "2026-07-03",
+        "status": "confirmed", "unit_id": None,
+    })
+    svc = _move_db(store)
+    with pytest.raises(ReservationError) as exc:
+        _move(svc, ziel="p1", check_in="2026-07-01", check_out="2026-07-06")
+    assert "keiner Einheit zugeordnet" in str(exc.value)
+    assert exc.value.status_code == 409
+
+
+def test_move_woanders_hin_ohne_unit_id_bleibt_erlaubt() -> None:
+    """Kein Überlapp mit den eigenen Alt-Tagen → die Einheit ist für den
+    Vorcheck irrelevant, der Move muss auch mehrdeutig durchgehen.
+
+    Sonst hätte der neue Guard eine Buchung ohne Einheit komplett festgesetzt,
+    obwohl sie sich problemlos woandershin verschieben lässt.
+    """
+    store = _store_ohne_unit_id(
+        einheiten=["u-p1-a", "u-p1-b"],
+        belegt_von={
+            "u-p1-a": ["2026-07-01", "2026-07-02"],
+            "u-p1-b": ["2026-07-01", "2026-07-02"],
+        },
+    )
+    svc = _move_db(store)
+    _move(svc, ziel="p1", check_in="2026-07-20", check_out="2026-07-22")
+    assert store["reservations"][0]["check_in"] == "2026-07-20"

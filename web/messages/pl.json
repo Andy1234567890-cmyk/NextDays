@@ -4899,6 +4899,17 @@
       "decline": "Odrzuć",
       "taken": "Zadanie przejęte",
       "declined": "Prośba odrzucona"
+    },
+    "bookingPeriod": {
+      "change": "Zmień okres",
+      "title": "Zmiana okresu rezerwacji",
+      "closeAriaLabel": "Zamknij",
+      "recheck": "Zostanie ponownie sprawdzone, czy nie doszło do podwójnej rezerwacji.",
+      "orderInvalid": "Wyjazd musi nastąpić po przyjeździe.",
+      "priceHint": "„Zachowaj cenę” pozostawia uzgodnioną kwotę bez zmian. „Przelicz cenę” ustala ją od nowa dla nowego okresu.",
+      "keepPrice": "Zachowaj cenę",
+      "recalcPrice": "Przelicz cenę",
+      "saving": "Zmienianie…"
     }
   },
   "objects": {
@@ -6327,6 +6338,7 @@
       "cancel": "Anuluj",
       "unblocking": "Zdejmowanie…",
       "moveTitle": "Przenieść rezerwację?",
+      "move": "Przenieś",
       "resizeTitle": "Zmienić okres?",
       "bookingFallback": "Rezerwacja",
       "propertyFallback": "Property",

@@ -4922,6 +4922,17 @@
       "decline": "Decline",
       "taken": "Task taken over",
       "declined": "Request declined"
+    },
+    "bookingPeriod": {
+      "change": "Change period",
+      "title": "Change booking period",
+      "closeAriaLabel": "Close dialog",
+      "recheck": "It will be checked again for double bookings.",
+      "orderInvalid": "Departure must be after arrival.",
+      "priceHint": "“Keep price” leaves the agreed amount unchanged. “Recalculate price” determines it again for the new period.",
+      "keepPrice": "Keep price",
+      "recalcPrice": "Recalculate price",
+      "saving": "Saving…"
     }
   },
   "objects": {
@@ -6350,6 +6361,7 @@
       "cancel": "Cancel",
       "unblocking": "Removing…",
       "moveTitle": "Move the reservation?",
+      "move": "Move",
       "resizeTitle": "Change the date range?",
       "bookingFallback": "Booking",
       "propertyFallback": "Property",

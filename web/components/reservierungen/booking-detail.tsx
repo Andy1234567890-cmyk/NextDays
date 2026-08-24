@@ -18,6 +18,7 @@ import { BookingDetailTabs } from "@/components/reservierungen/booking-detail-ta
 import { BookingGuestSheet } from "@/components/reservierungen/booking-guest-sheet";
 import { BookingNoteSheet } from "@/components/reservierungen/booking-note-sheet";
 import { BookingOtaTermsCard } from "@/components/reservierungen/booking-ota-terms-card";
+import { BookingPeriodDialog } from "@/components/reservierungen/booking-period-dialog";
 import { BookingTasksSection } from "@/components/reservierungen/booking-tasks-section";
 import { CheckoutPaymentDialog } from "@/components/reservierungen/checkout-payment-dialog";
 import { PropertyLocation } from "@/components/reservierungen/property-location";
@@ -63,6 +64,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
   const [earlyConfirm, setEarlyConfirm] = useState(false);
   const [guestSheet, setGuestSheet] = useState(false);
   const [noteSheet, setNoteSheet] = useState(false);
+  const [periodOpen, setPeriodOpen] = useState(false);
 
   const todayKey = dateKey(new Date());
   const { data, error } = d;
@@ -120,6 +122,21 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
   // Zahlungen, Rechnung und Zusatzleistungen entfallen, weil es sie nicht gibt.
   const isOwnerStay = data.is_owner_stay;
   const refLabel = data.external_ref ?? data.id.slice(0, 8);
+  // Zeitraum änderbar? Dieselben Grenzen, die `move()` serverseitig zieht —
+  // hier NUR als Sichtbarkeit, nicht als zweite Wahrheit: was durchkommt,
+  // entscheidet weiter das Backend (Doppelbuchung, Stop-Sell, Einheit).
+  // Eine Portal-Buchung (Booking/Airbnb & Co.) wird beim PORTAL geändert: der
+  // lokale Move hebt sie dort nicht auf und die Nächte würden doppelt verkauft.
+  // `channel='portal'` (myBestDays) gehört NICHT dazu — der Marktplatz ist
+  // unser eigener Kanal ohne Fremd-Bestand.
+  const istPortalBuchung = ["booking", "airbnb", "vrbo", "ota_other"].includes(
+    data.channel,
+  );
+  const zeitraumAenderbar =
+    !isCancelled &&
+    !istPortalBuchung &&
+    !data.checked_in_at &&
+    !data.checked_out_at;
 
   // Zahlungs-Fortschritt (..-Balken). Nur mit sichtbaren Beträgen; sonst
   // kein Balken (kein 0-Fallback, kein erfundener Prozentsatz).
@@ -356,6 +373,17 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                   )}
                 </div>
               </div>
+              {zeitraumAenderbar && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPeriodOpen(true)}
+                >
+                  <Icon icon="ph:calendar-plus" className="size-4" />
+                  {t("bookingPeriod.change")}
+                </Button>
+              )}
               <div className="text-right">
                 {/* Preis nur zeigen, wenn es einen gibt. Ein Betrag von 0 heisst
                     bei importierten Direkt-/Fremdkalender-Buchungen „die Quelle
@@ -1076,6 +1104,17 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
           }}
           onClose={() => setGuestSheet(false)}
           onSaved={d.reload}
+        />
+      )}
+
+      {periodOpen && (
+        <BookingPeriodDialog
+          reservationId={data.id}
+          propertyId={data.property_id}
+          checkIn={data.check_in}
+          checkOut={data.check_out}
+          onClose={() => setPeriodOpen(false)}
+          onChanged={d.reload}
         />
       )}
 

@@ -4901,6 +4901,17 @@
       "decline": "Keeldu",
       "taken": "Ülesanne üle võetud",
       "declined": "Taotlus tagasi lükatud"
+    },
+    "bookingPeriod": {
+      "change": "Muuda ajavahemikku",
+      "title": "Muuda broneeringu ajavahemikku",
+      "closeAriaLabel": "Sulge dialoog",
+      "recheck": "Topeltbroneeringut kontrollitakse uuesti.",
+      "orderInvalid": "Lahkumine peab olema hiljem kui saabumine.",
+      "priceHint": "„Säilita hind“ jätab kokkulepitud summa muutmata. „Arvuta hind uuesti“ määrab selle uue ajavahemiku jaoks uuesti.",
+      "keepPrice": "Säilita hind",
+      "recalcPrice": "Arvuta hind uuesti",
+      "saving": "Salvestamine…"
     }
   },
   "objects": {
@@ -6329,6 +6340,7 @@
       "cancel": "Tühista",
       "unblocking": "Eemaldan…",
       "moveTitle": "Kas teisaldada broneering?",
+      "move": "Teisalda",
       "resizeTitle": "Kas muuta perioodi?",
       "bookingFallback": "Broneering",
       "propertyFallback": "Property",

@@ -4899,6 +4899,17 @@
       "decline": "Recusar",
       "taken": "Tarefa assumida",
       "declined": "Pedido recusado"
+    },
+    "bookingPeriod": {
+      "change": "Alterar período",
+      "title": "Alterar o período da reserva",
+      "closeAriaLabel": "Fechar",
+      "recheck": "Será feita uma nova verificação de reservas duplicadas.",
+      "orderInvalid": "A partida tem de ser posterior à chegada.",
+      "priceHint": "«Manter preço» mantém o valor acordado inalterado. «Recalcular preço» determina-o de novo para o novo período.",
+      "keepPrice": "Manter preço",
+      "recalcPrice": "Recalcular preço",
+      "saving": "A alterar…"
     }
   },
   "objects": {
@@ -6327,6 +6338,7 @@
       "cancel": "Cancelar",
       "unblocking": "A remover…",
       "moveTitle": "Mover a reserva?",
+      "move": "Mover",
       "resizeTitle": "Alterar o período?",
       "bookingFallback": "Reserva",
       "propertyFallback": "Property",

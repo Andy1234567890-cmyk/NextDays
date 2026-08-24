@@ -4899,6 +4899,17 @@
       "decline": "Zavrni",
       "taken": "Naloga prevzeta",
       "declined": "Prošnja zavrnjena"
+    },
+    "bookingPeriod": {
+      "change": "Spremeni obdobje",
+      "title": "Spremeniti obdobje rezervacije",
+      "closeAriaLabel": "Zapri pogovorno okno",
+      "recheck": "Ponovno se preveri dvojna rezervacija.",
+      "orderInvalid": "Odhod mora biti po prihodu.",
+      "priceHint": "„Ohrani ceno“ ohrani dogovorjeni znesek nespremenjen. „Preračunaj ceno“ ga za novo obdobje ponovno izračuna.",
+      "keepPrice": "Ohrani ceno",
+      "recalcPrice": "Preračunaj ceno",
+      "saving": "Spreminjanje…"
     }
   },
   "objects": {
@@ -6327,6 +6338,7 @@
       "cancel": "Prekliči",
       "unblocking": "Odstranjevanje…",
       "moveTitle": "Premakniti rezervacijo?",
+      "move": "Premakni",
       "resizeTitle": "Spremeniti obdobje?",
       "bookingFallback": "Rezervacija",
       "propertyFallback": "Property",

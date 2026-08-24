@@ -5034,6 +5034,17 @@
       "decline": "Ablehnen",
       "taken": "Aufgabe übernommen",
       "declined": "Anfrage abgelehnt"
+    },
+    "bookingPeriod": {
+      "change": "Zeitraum ändern",
+      "title": "Zeitraum der Buchung ändern",
+      "closeAriaLabel": "Dialog schließen",
+      "recheck": "Es wird erneut auf Doppelbuchung geprüft.",
+      "orderInvalid": "Die Abreise muss nach der Anreise liegen.",
+      "priceHint": "„Preis behalten“ lässt den vereinbarten Betrag unverändert. „Preis neu berechnen“ ermittelt ihn für den neuen Zeitraum neu.",
+      "keepPrice": "Preis behalten",
+      "recalcPrice": "Preis neu berechnen",
+      "saving": "Wird geändert…"
     }
   },
   "objects": {
@@ -6473,6 +6484,7 @@
       "cancel": "Abbrechen",
       "unblocking": "Hebe auf…",
       "moveTitle": "Reservierung verschieben?",
+      "move": "Verschieben",
       "resizeTitle": "Zeitraum ändern?",
       "bookingFallback": "Buchung",
       "propertyFallback": "Objekt",
