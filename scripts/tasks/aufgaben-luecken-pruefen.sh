@@ -83,7 +83,23 @@ with paare as (
          r.status,
          r.channel,
          tr.id as rule_id,
-         tr.name as regel
+         tr.name as regel,
+         -- Der Termin, den die Engine der Aufgabe geben WUERDE: Ende, wenn es
+         -- einen End-Trigger gibt, sonst Anfang. `after_check_in_24h` deckelt
+         -- die Engine zusaetzlich auf den Check-out — fuer die Altersgrenze
+         -- hier ist diese Naeherung genau genug.
+         (case
+            when tr.end_trigger is not null then
+              (case when tr.end_trigger in ('check_in','days_before_check_in',
+                                            'after_check_in_24h','booking_confirmed')
+                    then r.check_in else r.check_out end)::timestamp
+              + (tr.end_offset_minutes || ' minutes')::interval
+            else
+              (case when tr.start_trigger in ('check_in','days_before_check_in',
+                                              'after_check_in_24h','booking_confirmed')
+                    then r.check_in else r.check_out end)::timestamp
+              + (tr.start_offset_minutes || ' minutes')::interval
+          end) as termin
   from reservations r
   join properties p on p.id = r.property_id
   join task_rules tr
@@ -110,6 +126,13 @@ where not exists (
   where t.reservation_id = paare.reservation_id
     and t.rule_id = paare.rule_id
 )
+  -- DIESELBE Untergrenze wie im Nachzug (`_regel_anwenden(nicht_vor=…)`): eine
+  -- Aufgabe, deren Termin laenger zurueckliegt als der Rueckblick, wird
+  -- bewusst NICHT mehr angelegt — ein Willkommens-Check fuer eine Anreise von
+  -- vor drei Wochen waere eine Falschmeldung. Ohne diese Zeile meldete das
+  -- Skript sie dauerhaft als Luecke, und der Report waere dauerhaft rot,
+  -- obwohl alles richtig ist.
+  and paare.termin >= current_date - interval '${RUECKBLICK} days'
 order by paare.check_in, paare.objekt, paare.regel;
 SQLEOF
 )
