@@ -281,7 +281,9 @@ describe("Tagesangabe ohne erfundene Uhrzeit", () => {
   });
 
   it("zeigt eine echte Uhrzeit weiterhin", () => {
-    // Grævlinge hat eine Check-in-Zeit: 16:00 UTC → 18:00 in Kopenhagen.
-    expect(uhrzeit("2026-08-22T16:00:00+00:00")).toBe("18:00");
+    // Über `lokal()` gebaut, nicht mit einem festen UTC-Zeitstempel: „16:00 UTC
+    // ist 18:00" gilt nur in Kopenhagen. Der CI-Runner läuft in UTC — ein
+    // solcher Test ist auf dem Entwicklerrechner grün und in der Pipeline rot.
+    expect(uhrzeit(lokal("2026-08-22", 18))).toBe("18:00");
   });
 });
