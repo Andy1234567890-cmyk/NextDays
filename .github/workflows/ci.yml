@@ -420,6 +420,16 @@ jobs:
         if: steps.pruefen.outputs.laufen == 'true'
         run: node scripts/i18n/blocktypen-pruefen.mjs
 
+      # Der Benachrichtigungs-Dispatcher schreibt einen Pfad in `ziel_pfad`;
+      # daraus wird der Knopf „In myNextDays ansehen" in der Mail. Ob es diesen
+      # Pfad im Dashboard gibt, prüft sonst nichts — und zweimal gab es ihn
+      # nicht (`/aufgaben/<id>` am 11.08., `/posteingang/<thread>` am 24.08.).
+      # Beide Male war die Mail schon raus, und eine verschickte Mail lässt sich
+      # nicht zurückholen.
+      - name: Sprungziele der Benachrichtigungen haben eine Route
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: node scripts/diagnose/melde-ziele-pruefen.mjs
+
       # Der Scope-Katalog wird von DREI Stellen gelesen: dem Backend (was das
       # Dashboard vergeben darf), der Auswahl in der Oberfläche und den
       # Etiketten in 24 Sprachen. Fehlt ein Bereich in der Oberfläche, kann

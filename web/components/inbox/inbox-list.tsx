@@ -84,21 +84,31 @@ export function InboxList({
   threads,
   error,
   access,
+  initialThreadId = null,
 }: {
   threads: InboxThread[];
   error: string | null;
   access: InboxAccess;
+  /** Vorausgewaehlter Verlauf aus dem Pfad `/posteingang/<thread>` — der Weg,
+   *  den Benachrichtigungs-Mails und die Glocke nehmen. Getrennt vom
+   *  `?thread=`-Parameter, weil beide Formen bestehen bleiben muessen: der
+   *  Parameter kommt aus dem Buchungsdetail, der Pfad steht in bereits
+   *  verschickten Mails. */
+  initialThreadId?: string | null;
 }) {
   const t = useTranslations("inbox");
   const locale = useLocale();
   const [query, setQuery] = useState("");
   // Lokale Thread-Liste, damit Archivieren/Ungelesen sofort sichtbar werden.
   const [rows, setRows] = useState<InboxThread[]>(threads);
-  // Deep-Link aus dem Buchungsdetail: `/posteingang?thread=<id>` öffnet genau
-  // diesen Verlauf. Ohne den Parameter bleibt es beim ersten Thread — der
-  // Posteingang soll nie leer starten.
+  // Deep-Link auf einen einzelnen Verlauf. ZWEI Formen, beide gueltig:
+  //   * `/posteingang/<thread>` — der Pfad, den der Benachrichtigungs-Dispatcher
+  //     in Mails und in die Glocke schreibt (`ziel_pfad`).
+  //   * `/posteingang?thread=<id>` — der Sprung aus dem Buchungsdetail.
+  // Der Pfad hat Vorrang: er ist der spezifischere Aufruf. Ohne beides bleibt
+  // es beim ersten Thread — der Posteingang soll nie leer starten.
   const searchParams = useSearchParams();
-  const wunschThread = searchParams.get("thread");
+  const wunschThread = initialThreadId ?? searchParams.get("thread");
   const [active, setActive] = useState<string | null>(
     wunschThread ?? threads[0]?.id ?? null,
   );
