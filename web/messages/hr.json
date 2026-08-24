@@ -5893,7 +5893,24 @@
       "next": "Dalje",
       "cancel": "Odustani",
       "save": "Izradi",
-      "saving": "Izrađuje se …"
+      "saving": "Izrađuje se …",
+      "portalRatesLoading": "Dohvaćaju se cijene povezanih portala …",
+      "sourcePortalLabel": "Preuzmi cijenu portala",
+      "sourcePortalHint": "Cjenik se povezuje s cijenom na portalu samo ako ima potpuno isti naziv. Zato ovdje preuzmi naslov umjesto da ga prepisuješ.",
+      "sourceOwnLabel": "Vlastiti cjenik",
+      "sourceOwnHint": "Interna cjenovna varijanta s vlastitim nazivom — ne odgovara nijednoj cijeni na portalu.",
+      "nameLockedHint": "Cjenik se zove potpuno isto kao odabrana cijena — samo tako dobiva svoju cijenu na portalu. Ako ti treba slobodan naziv, odaberi dolje „Vlastiti cjenik“.",
+      "portalRatesFailed": "Cijene za {portal} nije bilo moguće dohvatiti. To ne znači da tamo nema slobodnih cijena — trenutačno to jednostavno ne znamo. Cjenik možeš izraditi putem „Vlastiti cjenik“; pri tome pazi da ga nazoveš potpuno isto kao cijenu na portalu.",
+      "portalRatesOccupancyUnknown": "Cijene su poznate, ali nije bilo moguće provjeriti imaju li već cjenik.",
+      "portalRatesTruncated": "Popis je skraćen — portal ima više cijena nego što je ovdje prikazano.",
+      "rateOccupied": "Već ima cjenik",
+      "rateOccupancyUnknown": "Nije provjereno ima li već cjenik",
+      "rateFree": "Još nema cjenik",
+      "rateMinStayHint": "Još nema cjenik · predlaže se minimalni boravak od {nights} noćenja",
+      "minStaySuggested": "Predloženo iz naslova „{title}“: {nights} noćenja. Provjeri vrijednost — na portalima vrijedi na razini cijene.",
+      "goesToPortalFact": "Ova cijena ide na {portal}",
+      "goesToPortalHint": "„{title}“ je cijena na portalu. Njezina cijena i minimalni boravak moraju stići tamo, jer inače portal nastavlja prodavati bez tvojih vrijednosti.",
+      "reviewPortalRate": "Cijena na portalu"
     },
     "meta": {
       "status": {

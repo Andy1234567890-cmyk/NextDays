@@ -5891,7 +5891,24 @@
       "next": "Toliau",
       "cancel": "Atšaukti",
       "save": "Sukurti",
-      "saving": "Kuriama …"
+      "saving": "Kuriama …",
+      "portalRatesLoading": "Gaunamos prijungtų portalų ratenų duomenys …",
+      "sourcePortalLabel": "Perimti portalo ratą",
+      "sourcePortalHint": "Kainos planas priskiriamas portalo ratai tik tada, kai jo pavadinimas sutampa tiksliai. Todėl perimk pavadinimą iš čia, o ne įvesk jį iš naujo.",
+      "sourceOwnLabel": "Nuosavas kainos planas",
+      "sourceOwnHint": "Vidinis kainos variantas su savo pavadinimu — jis neatitinka jokios portalo ratų.",
+      "nameLockedHint": "Kainos planas pavadintas lygiai taip pat kaip pasirinkta rata — tik tada jai bus priskirta portalo kaina. Jei reikia laisvo pavadinimo, apačioje pasirink „Nuosavas kainos planas“.",
+      "portalRatesFailed": "Nepavyko gauti {portal} ratų. Tai nereiškia, kad ten nėra laisvų ratų — tiesiog kol kas nežinome. Planą gali sukurti per „Nuosavas kainos planas“; būtinai pavadink jį lygiai taip pat, kaip ratą portale.",
+      "portalRatesOccupancyUnknown": "Ratos yra žinomos, tačiau nepavyko patikrinti, ar joms jau priskirtas kainos planas.",
+      "portalRatesTruncated": "Sąrašas sutrumpintas — portalas turi daugiau ratų, nei rodoma čia.",
+      "rateOccupied": "Jau turi kainos planą",
+      "rateOccupancyUnknown": "Nepatikrinta, ar jau turi kainos planą",
+      "rateFree": "Kainos plano dar nėra",
+      "rateMinStayHint": "Kainos plano dar nėra · siūloma minimali viešnagė — {nights} naktų",
+      "minStaySuggested": "Pasiūlyta iš pavadinimo „{title}“: {nights} naktų. Patikrink reikšmę — portaluose ji taikoma ratos lygiu.",
+      "goesToPortalFact": "Ši kaina keliauja į {portal}",
+      "goesToPortalHint": "„{title}“ portale yra rata. Jos kaina ir minimali viešnagė turi patekti ten, kitaip portalas ją parduos toliau be tavo reikšmių.",
+      "reviewPortalRate": "Rata portale"
     },
     "meta": {
       "status": {

@@ -1139,6 +1139,62 @@ export async function getAbgabenStatus(propertyId: string): Promise<
    vom Hintergrund-Job gepflegt — Channex reicht asynchron weiter, ein Klick
    konnte darum nur den alten Stand erneut bestätigen. */
 
+// --- Portal-Raten zur Auswahl (Dialog „Preisplan anlegen") -------------------
+//
+// Die Zuordnung eines Preisplans zu einer Portal-Rate läuft AUSSCHLIESSLICH über
+// Namensgleichheit (`portal_raten_plaene.paar_fuer_portal_plan`). Ein getippter
+// „Wochenpreis" neben Bookings „Wochenrate" ergibt einen Plan, der nie beim
+// Portal ankommt — eine Attrappe ohne Fehlermeldung. Deshalb WÄHLT der Nutzer
+// die Rate, statt ihren Titel abzuschreiben.
+
+/** EINE Rate, die ein Portal führt. */
+export type PortalRateAuswahl = {
+  rate_plan_code: string;
+  /** Portal-Titel EXAKT — der ZUORDNUNGS-SCHLÜSSEL, kein Anzeigetext. Wer ihn
+   *  normalisiert (Groß-/Kleinschreibung, Bindestriche), erzeugt genau den Plan,
+   *  der beim Portal nie ankommt. */
+  title: string;
+  room_type_code: string | null;
+  portal: string;
+  /** DREIWERTIG: `true` = hat schon einen eigenen Plan, `false` = frei,
+   *  `null` = der Kanal war nicht lesbar, die Belegung ist UNBEKANNT. Aus `null`
+   *  darf die Oberfläche kein „frei" machen (Wurzel 5). */
+  belegt: boolean | null;
+  /** Vorschlag aus dem Titel (7 bei Wochen-, 30 bei Monats-Wörtern).
+   *  `null` = nicht erkannt, NICHT „kein Mindestaufenthalt" (Wurzel 4). */
+  min_stay: number | null;
+};
+
+/** Die Raten EINES verbundenen Portals plus die Güte des Abrufs. */
+export type PortalRatenAuswahlPortal = {
+  portal: string;
+  portal_label: string;
+  /** `false` heißt „der Abruf beim Portal ist FEHLGESCHLAGEN", NICHT „keine
+   *  Raten vorhanden" — in einer leeren Liste sehen beide gleich aus, und genau
+   *  diese Verwechslung darf die Oberfläche nicht machen (Wurzel 5). */
+  abruf_ok: boolean;
+  /** Raten bekannt, aber die BELEGUNG unbekannt: dann tragen alle Raten
+   *  `belegt: null`. */
+  kanal_lesbar: boolean;
+  /** Die Antwort des Portals wurde gekappt (Wurzel 8) — sichtbar, nicht still. */
+  truncated: boolean;
+  rates: PortalRateAuswahl[];
+};
+
+/** Die Raten der verbundenen Portale eines Objekts, je Portal gruppiert.
+ *
+ *  Leere `portals`-Liste heißt „kein verbundenes Portal mit Raten-Ebene";
+ *  Airbnb erscheint hier NIE (keine Raten-Ebene, `PORTALE_MIT_RATEN` ist eine
+ *  Allowlist). */
+export async function getPortalRatenAuswahl(propertyId: string): Promise<
+  Result<{
+    property_id: string;
+    portals: PortalRatenAuswahlPortal[];
+  }>
+> {
+  return call(`/properties/${propertyId}/portal-raten`);
+}
+
 /** Ein Tarifplan dieses Objekts, wie er ans Portal geht (Lodgify: „Aktive
  *  Tarifpläne"): Kondition, Name/Typ, Preisänderung. offset_* nur bei
  *  abgeleiteten Plänen. */

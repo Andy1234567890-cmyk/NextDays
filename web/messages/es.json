@@ -5893,7 +5893,24 @@
       "next": "Siguiente",
       "cancel": "Cancelar",
       "save": "Crear",
-      "saving": "Creando …"
+      "saving": "Creando …",
+      "portalRatesLoading": "Se están obteniendo las tarifas de los portales conectados …",
+      "sourcePortalLabel": "Tomar una tarifa del portal",
+      "sourcePortalHint": "El plan de precios solo se asocia a la tarifa del portal si el nombre coincide exactamente. Por eso, toma el título de aquí en lugar de volver a escribirlo.",
+      "sourceOwnLabel": "Plan de precios propio",
+      "sourceOwnHint": "Una variante de precio interna con nombre propio — no corresponde a ninguna tarifa del portal.",
+      "nameLockedHint": "El plan de precios se llama exactamente igual que la tarifa seleccionada — solo así recibe su precio en el portal. Si necesitas un nombre libre, elige abajo «Plan de precios propio».",
+      "portalRatesFailed": "No se pudieron obtener las tarifas de {portal}. Eso no significa que no haya tarifas disponibles allí — simplemente ahora mismo no lo sabemos. Puedes crear el plan mediante «Plan de precios propio»; asegúrate de nombrarlo exactamente igual que la tarifa del portal.",
+      "portalRatesOccupancyUnknown": "Se conocen las tarifas, pero no se pudo comprobar si ya tienen un plan de precios.",
+      "portalRatesTruncated": "La lista está acortada — el portal tiene más tarifas de las que se muestran aquí.",
+      "rateOccupied": "Ya tiene un plan de precios",
+      "rateOccupancyUnknown": "No se ha comprobado si ya tiene un plan de precios",
+      "rateFree": "Todavía sin plan de precios",
+      "rateMinStayHint": "Todavía sin plan de precios · estancia mínima sugerida de {nights} noches",
+      "minStaySuggested": "Sugerido a partir del título «{title}»: {nights} noches. Comprueba el valor — en los portales se aplica a nivel de tarifa.",
+      "goesToPortalFact": "Este precio va a {portal}",
+      "goesToPortalHint": "«{title}» es la tarifa en el portal. Su precio y su estancia mínima deben enviarse allí; de lo contrario, el portal sigue vendiéndola sin tus valores.",
+      "reviewPortalRate": "Tarifa en el portal"
     },
     "meta": {
       "status": {

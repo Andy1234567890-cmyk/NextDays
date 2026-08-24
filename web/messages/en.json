@@ -5914,7 +5914,24 @@
       "next": "Next",
       "cancel": "Cancel",
       "save": "Create",
-      "saving": "Creating …"
+      "saving": "Creating …",
+      "portalRatesLoading": "Loading the rates of the connected portals …",
+      "sourcePortalLabel": "Use a rate from the portal",
+      "sourcePortalHint": "The rate plan is only matched to the rate at the portal if it has exactly the same name. So take the title from here instead of typing it out.",
+      "sourceOwnLabel": "Own rate plan",
+      "sourceOwnHint": "An in-house price variant with its own name — it does not correspond to any rate at the portal.",
+      "nameLockedHint": "The rate plan is named exactly like the selected rate — only then does it get its price at the portal. If you need a free name, choose “Own rate plan” below.",
+      "portalRatesFailed": "The rates from {portal} could not be retrieved. That does not mean no rates are available there — we simply do not know right now. You can create the plan via “Own rate plan”; make sure to name it exactly like the rate at the portal.",
+      "portalRatesOccupancyUnknown": "The rates are known, but whether they already have a rate plan could not be checked.",
+      "portalRatesTruncated": "The list is shortened — the portal carries more rates than are shown here.",
+      "rateOccupied": "Already has a rate plan",
+      "rateOccupancyUnknown": "Not checked whether it already has a rate plan",
+      "rateFree": "No rate plan yet",
+      "rateMinStayHint": "No rate plan yet · minimum stay of {nights} nights suggested",
+      "minStaySuggested": "Suggested from the title “{title}”: {nights} nights. Check the value — at the portals it applies at rate level.",
+      "goesToPortalFact": "This price goes to {portal}",
+      "goesToPortalHint": "“{title}” is the rate at the portal. Its price and its minimum stay have to go there, otherwise the portal keeps selling it without your values.",
+      "reviewPortalRate": "Rate at the portal"
     },
     "meta": {
       "status": {
@@ -6610,8 +6627,7 @@
       "confirm": {
         "approve": "Block {objekt} from {von} to {bis}? The nights will be blocked on all channels.",
         "reject": "Reject the request for {objekt} ({von} – {bis})?",
-        "revoke": "Revoke the approval for {objekt} ({von} – {bis})? The nights will be released again.",
-        "approve": "Block {objekt} from {von} to {bis}? The nights will be blocked on all channels."
+        "revoke": "Revoke the approval for {objekt} ({von} – {bis})? The nights will be released again."
       },
       "done": {
         "approve": "Request approved, nights blocked.",

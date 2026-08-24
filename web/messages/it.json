@@ -5891,7 +5891,24 @@
       "next": "Avanti",
       "cancel": "Annulla",
       "save": "Crea",
-      "saving": "Creazione in corso …"
+      "saving": "Creazione in corso …",
+      "portalRatesLoading": "Recupero delle tariffe dei portali collegati in corso …",
+      "sourcePortalLabel": "Riprendi una tariffa del portale",
+      "sourcePortalHint": "Il piano tariffario viene associato alla tariffa del portale solo se ha esattamente lo stesso nome. Riprendi quindi il titolo da qui invece di riscriverlo.",
+      "sourceOwnLabel": "Piano tariffario proprio",
+      "sourceOwnHint": "Una variante di prezzo interna con un nome proprio — non corrisponde a nessuna tariffa del portale.",
+      "nameLockedHint": "Il piano tariffario si chiama esattamente come la tariffa selezionata — solo così riceve il suo prezzo sul portale. Se hai bisogno di un nome libero, scegli qui sotto «Piano tariffario proprio».",
+      "portalRatesFailed": "Non è stato possibile recuperare le tariffe di {portal}. Questo non significa che lì non ci siano tariffe disponibili — semplicemente non lo sappiamo in questo momento. Puoi creare il piano tramite «Piano tariffario proprio»; in tal caso assicurati di chiamarlo esattamente come la tariffa sul portale.",
+      "portalRatesOccupancyUnknown": "Le tariffe sono note, ma non è stato possibile verificare se hanno già un piano tariffario.",
+      "portalRatesTruncated": "L'elenco è abbreviato — il portale gestisce più tariffe di quelle mostrate qui.",
+      "rateOccupied": "Ha già un piano tariffario",
+      "rateOccupancyUnknown": "Non verificato se ha già un piano tariffario",
+      "rateFree": "Nessun piano tariffario ancora",
+      "rateMinStayHint": "Nessun piano tariffario ancora · soggiorno minimo suggerito di {nights} notti",
+      "minStaySuggested": "Suggerito dal titolo «{title}»: {nights} notti. Verifica il valore — presso i portali si applica a livello di tariffa.",
+      "goesToPortalFact": "Questo prezzo va a {portal}",
+      "goesToPortalHint": "«{title}» è la tariffa presso il portale. Il suo prezzo e il suo soggiorno minimo devono arrivare lì, altrimenti il portale continua a venderla senza i tuoi valori.",
+      "reviewPortalRate": "Tariffa presso il portale"
     },
     "meta": {
       "status": {

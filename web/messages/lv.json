@@ -5891,7 +5891,24 @@
       "next": "Tālāk",
       "cancel": "Atcelt",
       "save": "Izveidot",
-      "saving": "Notiek izveide …"
+      "saving": "Notiek izveide …",
+      "portalRatesLoading": "Tiek ielādētas savienoto portālu likmes …",
+      "sourcePortalLabel": "Pārņemt portāla likmi",
+      "sourcePortalHint": "Cenu plāns tiek piesaistīts portāla likmei tikai tad, ja tā nosaukums sakrīt precīzi. Tāpēc pārņem nosaukumu no šeit, nevis ieraksti to no jauna.",
+      "sourceOwnLabel": "Savs cenu plāns",
+      "sourceOwnHint": "Iekšējs cenu variants ar savu nosaukumu — tas neatbilst nevienai portāla likmei.",
+      "nameLockedHint": "Cenu plāns ir nosaukts tieši tāpat kā izvēlētā likme — tikai tā tā portālā iegūst savu cenu. Ja nepieciešams brīvs nosaukums, izvēlies zemāk „Savs cenu plāns“.",
+      "portalRatesFailed": "Neizdevās ielādēt {portal} likmes. Tas nenozīmē, ka tur nav pieejamu likmju — mēs vienkārši to pašlaik nezinām. Plānu vari izveidot, izvēloties „Savs cenu plāns“; tad rūpējies, lai tas būtu nosaukts tieši tāpat kā likme portālā.",
+      "portalRatesOccupancyUnknown": "Likmes ir zināmas, bet nevarēja pārbaudīt, vai tām jau ir cenu plāns.",
+      "portalRatesTruncated": "Saraksts ir saīsināts — portālam ir vairāk likmju, nekā šeit redzams.",
+      "rateOccupied": "Jau ir cenu plāns",
+      "rateOccupancyUnknown": "Nav pārbaudīts, vai jau ir cenu plāns",
+      "rateFree": "Vēl nav cenu plāna",
+      "rateMinStayHint": "Vēl nav cenu plāna · ieteicamā minimālā uzturēšanās — {nights} naktis",
+      "minStaySuggested": "Ieteikts no nosaukuma „{title}“: {nights} naktis. Pārbaudi vērtību — portālos tā tiek piemērota likmes līmenī.",
+      "goesToPortalFact": "Šī cena tiek sūtīta uz {portal}",
+      "goesToPortalHint": "„{title}“ portālā ir likme. Tās cenai un minimālajai uzturēšanās jātiek nosūtītām tur, citādi portāls to pārdod tālāk bez tavām vērtībām.",
+      "reviewPortalRate": "Likme portālā"
     },
     "meta": {
       "status": {

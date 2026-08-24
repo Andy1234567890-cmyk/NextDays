@@ -6037,7 +6037,24 @@
       "next": "Weiter",
       "cancel": "Abbrechen",
       "save": "Anlegen",
-      "saving": "Wird angelegt …"
+      "saving": "Wird angelegt …",
+      "portalRatesLoading": "Die Raten der verbundenen Portale werden abgerufen …",
+      "sourcePortalLabel": "Rate des Portals übernehmen",
+      "sourcePortalHint": "Der Preisplan wird der Rate beim Portal nur dann zugeordnet, wenn er genau so heißt. Übernimm den Titel deshalb hier, statt ihn abzutippen.",
+      "sourceOwnLabel": "Eigener Preisplan",
+      "sourceOwnHint": "Eine hausinterne Preisvariante mit eigenem Namen — sie entspricht keiner Rate beim Portal.",
+      "nameLockedHint": "Der Preisplan heißt genau wie die gewählte Rate — nur dann bekommt sie beim Portal seinen Preis. Brauchst du einen freien Namen, wähle unten „Eigener Preisplan“.",
+      "portalRatesFailed": "Die Raten von {portal} konnten nicht abgerufen werden. Das heißt nicht, dass dort keine Raten frei sind — wir wissen es gerade nicht. Du kannst den Plan über „Eigener Preisplan“ anlegen; achte dann darauf, ihn genau so zu benennen wie die Rate beim Portal.",
+      "portalRatesOccupancyUnknown": "Die Raten sind bekannt, ob sie schon einen Preisplan haben ließ sich nicht prüfen.",
+      "portalRatesTruncated": "Die Liste ist gekürzt — das Portal führt mehr Raten, als hier angezeigt werden.",
+      "rateOccupied": "Hat schon einen Preisplan",
+      "rateOccupancyUnknown": "Nicht geprüft, ob sie schon einen Preisplan hat",
+      "rateFree": "Noch kein Preisplan",
+      "rateMinStayHint": "Noch kein Preisplan · Mindestaufenthalt {nights} Nächte vorgeschlagen",
+      "minStaySuggested": "Vorgeschlagen aus dem Titel „{title}“: {nights} Nächte. Prüfe den Wert — bei den Portalen gilt er auf Ratenebene.",
+      "goesToPortalFact": "Dieser Preis geht an {portal}",
+      "goesToPortalHint": "„{title}“ ist beim Portal die Rate. Ihr Preis und ihr Mindestaufenthalt müssen dorthin, sonst verkauft das Portal sie ohne deine Werte weiter.",
+      "reviewPortalRate": "Rate beim Portal"
     },
     "meta": {
       "status": {

@@ -5891,7 +5891,24 @@
       "next": "Seguinte",
       "cancel": "Cancelar",
       "save": "Criar",
-      "saving": "A criar …"
+      "saving": "A criar …",
+      "portalRatesLoading": "A obter as tarifas dos portais associados …",
+      "sourcePortalLabel": "Assumir uma tarifa do portal",
+      "sourcePortalHint": "O plano de preços só é associado à tarifa do portal se tiver exatamente o mesmo nome. Por isso, aqui copia o título em vez de o voltar a escrever.",
+      "sourceOwnLabel": "Plano de preços próprio",
+      "sourceOwnHint": "Uma variante de preço interna com nome próprio — não corresponde a nenhuma tarifa do portal.",
+      "nameLockedHint": "O plano de preços tem exatamente o nome da tarifa selecionada — só assim recebe o seu preço no portal. Se precisares de um nome livre, escolhe abaixo «Plano de preços próprio».",
+      "portalRatesFailed": "Não foi possível obter as tarifas de {portal}. Isso não significa que não haja tarifas disponíveis — simplesmente não sabemos neste momento. Podes criar o plano em «Plano de preços próprio»; nesse caso, assegura-te de que lhe dás exatamente o mesmo nome da tarifa no portal.",
+      "portalRatesOccupancyUnknown": "As tarifas são conhecidas, mas não foi possível verificar se já têm um plano de preços.",
+      "portalRatesTruncated": "A lista está reduzida — o portal tem mais tarifas do que as apresentadas aqui.",
+      "rateOccupied": "Já tem um plano de preços",
+      "rateOccupancyUnknown": "Não verificado se já tem um plano de preços",
+      "rateFree": "Ainda sem plano de preços",
+      "rateMinStayHint": "Ainda sem plano de preços · estadia mínima de {nights} noites sugerida",
+      "minStaySuggested": "Sugerido a partir do título «{title}»: {nights} noites. Verifica o valor — nos portais aplica-se ao nível da tarifa.",
+      "goesToPortalFact": "Este preço é enviado a {portal}",
+      "goesToPortalHint": "«{title}» é a tarifa no portal. O seu preço e a sua estadia mínima têm de ir para lá, caso contrário o portal continua a vendê-la sem os teus valores.",
+      "reviewPortalRate": "Tarifa do portal"
     },
     "meta": {
       "status": {

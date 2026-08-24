@@ -5891,7 +5891,24 @@
       "next": "Dalej",
       "cancel": "Anuluj",
       "save": "Utwórz",
-      "saving": "Tworzenie …"
+      "saving": "Tworzenie …",
+      "portalRatesLoading": "Pobieranie stawek połączonych portali …",
+      "sourcePortalLabel": "Przejmij stawkę portalu",
+      "sourcePortalHint": "Plan cenowy zostaje przypisany do stawki w portalu tylko wtedy, gdy nazywa się identycznie. Przejmij więc tytuł z tego miejsca, zamiast wpisywać go ponownie.",
+      "sourceOwnLabel": "Własny plan cenowy",
+      "sourceOwnHint": "Wewnętrzny wariant cenowy z własną nazwą — nie odpowiada żadnej stawce w portalu.",
+      "nameLockedHint": "Plan cenowy nazywa się identycznie jak wybrana stawka — tylko wtedy otrzyma w portalu swoją cenę. Jeśli potrzebujesz swobodnej nazwy, wybierz poniżej „Własny plan cenowy”.",
+      "portalRatesFailed": "Nie udało się pobrać stawek z {portal}. Nie oznacza to, że nie ma tam wolnych stawek — po prostu w tej chwili tego nie wiemy. Plan możesz utworzyć przez „Własny plan cenowy”; zwróć wtedy uwagę, aby nazwać go identycznie jak stawkę w portalu.",
+      "portalRatesOccupancyUnknown": "Stawki są znane, ale nie udało się sprawdzić, czy mają już plan cenowy.",
+      "portalRatesTruncated": "Lista jest skrócona — portal prowadzi więcej stawek, niż jest tu wyświetlonych.",
+      "rateOccupied": "Ma już plan cenowy",
+      "rateOccupancyUnknown": "Nie sprawdzono, czy ma już plan cenowy",
+      "rateFree": "Jeszcze bez planu cenowego",
+      "rateMinStayHint": "Jeszcze bez planu cenowego · proponowany minimalny pobyt {nights} nocy",
+      "minStaySuggested": "Zaproponowano na podstawie tytułu „{title}”: {nights} nocy. Sprawdź wartość — w portalach obowiązuje ona na poziomie stawki.",
+      "goesToPortalFact": "Ta cena trafia do {portal}",
+      "goesToPortalHint": "„{title}” to w portalu stawka. Jej cena i minimalny pobyt muszą tam trafić, inaczej portal będzie ją dalej sprzedawał bez Twoich wartości.",
+      "reviewPortalRate": "Stawka w portalu"
     },
     "meta": {
       "status": {

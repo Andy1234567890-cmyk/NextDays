@@ -5891,7 +5891,24 @@
       "next": "Nästa",
       "cancel": "Avbryt",
       "save": "Skapa",
-      "saving": "Skapas …"
+      "saving": "Skapas …",
+      "portalRatesLoading": "Hämtar de anslutna portalernas priser …",
+      "sourcePortalLabel": "Använd ett pris från portalen",
+      "sourcePortalHint": "Prisplanen kopplas bara till portalens pris om den heter exakt likadant. Hämta därför titeln härifrån i stället för att skriva av den.",
+      "sourceOwnLabel": "Egen prisplan",
+      "sourceOwnHint": "En intern prisvariant med eget namn — den motsvarar inget pris hos portalen.",
+      "nameLockedHint": "Prisplanen heter exakt som det valda priset — bara då får den sitt pris hos portalen. Behöver du ett fritt namn, välj „Egen prisplan” nedan.",
+      "portalRatesFailed": "Priserna från {portal} kunde inte hämtas. Det betyder inte att inga priser är tillgängliga där — vi vet bara inte just nu. Du kan skapa planen via „Egen prisplan”; se då till att ge den exakt samma namn som priset hos portalen.",
+      "portalRatesOccupancyUnknown": "Priserna är kända, men det gick inte att kontrollera om de redan har en prisplan.",
+      "portalRatesTruncated": "Listan är förkortad — portalen har fler priser än de som visas här.",
+      "rateOccupied": "Har redan en prisplan",
+      "rateOccupancyUnknown": "Inte kontrollerat om den redan har en prisplan",
+      "rateFree": "Ingen prisplan än",
+      "rateMinStayHint": "Ingen prisplan än · minsta vistelse på {nights} nätter föreslås",
+      "minStaySuggested": "Föreslaget från titeln „{title}”: {nights} nätter. Kontrollera värdet — hos portalerna gäller det på prisnivå.",
+      "goesToPortalFact": "Det här priset går till {portal}",
+      "goesToPortalHint": "„{title}” är priset hos portalen. Dess pris och minsta vistelse måste dit, annars fortsätter portalen sälja det utan dina värden.",
+      "reviewPortalRate": "Portalpris"
     },
     "meta": {
       "status": {

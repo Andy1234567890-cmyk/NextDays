@@ -5893,7 +5893,24 @@
       "next": "Edasi",
       "cancel": "Tühista",
       "save": "Loo",
-      "saving": "Luuakse …"
+      "saving": "Luuakse …",
+      "portalRatesLoading": "Ühendatud portaalide hinnakategooriaid laaditakse …",
+      "sourcePortalLabel": "Portaali hinnakategooria ülevõtmine",
+      "sourcePortalHint": "Hinnaplaan seotakse portaali hinnakategooriaga ainult siis, kui nimi on täpselt samasugune. Seepärast võta pealkiri siit üle, selle asemel et see uuesti sisestada.",
+      "sourceOwnLabel": "Oma hinnaplaan",
+      "sourceOwnHint": "Majasisene hinnavariant oma nimega — see ei vasta portaali ühelegi hinnakategooriale.",
+      "nameLockedHint": "Hinnaplaan kannab täpselt valitud hinnakategooria nime — ainult nii saab see portaalis oma hinna. Kui vajad vaba nime, vali allpool „Oma hinnaplaan“.",
+      "portalRatesFailed": "Portaali {portal} hinnakategooriaid ei õnnestunud laadida. See ei tähenda, et seal ei ole vabu hinnakategooriaid — praegu me lihtsalt ei tea seda. Plaani saab luua valikuga „Oma hinnaplaan“; jälgi siis, et nimetaksid selle täpselt nagu portaali hinnakategooria.",
+      "portalRatesOccupancyUnknown": "Hinnakategooriad on teada, kuid ei saanud kontrollida, kas neil on juba hinnaplaan.",
+      "portalRatesTruncated": "Loend on lühendatud — portaalil on rohkem hinnakategooriaid, kui siin kuvatakse.",
+      "rateOccupied": "Sellel on juba hinnaplaan",
+      "rateOccupancyUnknown": "Ei ole kontrollitud, kas sellel on juba hinnaplaan",
+      "rateFree": "Hinnaplaani veel pole",
+      "rateMinStayHint": "Hinnaplaani veel pole · soovitatud minimaalne peatumisaeg {nights} ööd",
+      "minStaySuggested": "Pealkirjast „{title}“ tuletatud soovitus: {nights} ööd. Kontrolli väärtust — portaalides kehtib see hinnakategooria tasandil.",
+      "goesToPortalFact": "See hind läheb {portal}",
+      "goesToPortalHint": "„{title}“ on hinnakategooria portaalis. Selle hind ja minimaalne peatumisaeg peavad minema sinna, vastasel juhul müüb portaal seda edasi ilma sinu väärtusteta.",
+      "reviewPortalRate": "Hinnakategooria portaalis"
     },
     "meta": {
       "status": {

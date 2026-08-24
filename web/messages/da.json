@@ -5893,7 +5893,24 @@
       "next": "Videre",
       "cancel": "Annuller",
       "save": "Opret",
-      "saving": "Opretter …"
+      "saving": "Opretter …",
+      "portalRatesLoading": "Hentar de forbundne portalers rater …",
+      "sourcePortalLabel": "Overtag en rate fra portalen",
+      "sourcePortalHint": "Prisplanen matches kun med raten hos portalen, hvis navnet er helt identisk. Overtag derfor titlen herfra i stedet for at skrive den af.",
+      "sourceOwnLabel": "Egen prisplan",
+      "sourceOwnHint": "En intern prisvariant med eget navn — den svarer ikke til nogen rate hos portalen.",
+      "nameLockedHint": "Prisplanen har præcis samme navn som den valgte rate — kun så får den sin pris hos portalen. Har du brug for et frit navn, vælg „Egen prisplan“ nedenfor.",
+      "portalRatesFailed": "Raterne fra {portal} kunne ikke hentes. Det betyder ikke, at der ikke er nogen rater tilgængelige der — vi ved det bare ikke lige nu. Du kan oprette planen via „Egen prisplan“; sørg da for at give den præcis samme navn som raten hos portalen.",
+      "portalRatesOccupancyUnknown": "Raterne er kendte, men det kunne ikke kontrolleres, om de allerede har en prisplan.",
+      "portalRatesTruncated": "Listen er forkortet — portalen har flere rater, end der vises her.",
+      "rateOccupied": "Har allerede en prisplan",
+      "rateOccupancyUnknown": "Ikke kontrolleret, om den allerede har en prisplan",
+      "rateFree": "Endnu ingen prisplan",
+      "rateMinStayHint": "Endnu ingen prisplan · minimumsophold på {nights} nætter foreslået",
+      "minStaySuggested": "Forslag fra titlen „{title}“: {nights} nætter. Kontroller værdien — hos portalerne gælder den på rateniveau.",
+      "goesToPortalFact": "Denne pris går til {portal}",
+      "goesToPortalHint": "„{title}“ er raten hos portalen. Dens pris og minimumsophold skal sendes dertil, ellers fortsætter portalen med at sælge den uden dine værdier.",
+      "reviewPortalRate": "Rate hos portalen"
     },
     "meta": {
       "status": {

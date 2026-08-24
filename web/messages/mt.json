@@ -5891,7 +5891,24 @@
       "next": "Li jmiss",
       "cancel": "Ikkanċella",
       "save": "Oħloq",
-      "saving": "Qed jinħoloq …"
+      "saving": "Qed jinħoloq …",
+      "portalRatesLoading": "Qed jinġabru r-rati tal-portali konnessi …",
+      "sourcePortalLabel": "Uża rata mill-portal",
+      "sourcePortalHint": "Il-pjan tal-prezzijiet jitqabbel mar-rata tal-portal biss jekk ikollu eżatt l-istess isem. Għalhekk aqbad it-titlu minn hawn minflok ma tikteb mill-ġdid.",
+      "sourceOwnLabel": "Pjan tal-prezzijiet proprju",
+      "sourceOwnHint": "Varjant tal-prezz intern b'isem tiegħu stess — ma jikkorrispondi għal ebda rata fil-portal.",
+      "nameLockedHint": "Il-pjan tal-prezzijiet jismu eżatt bħar-rata magħżula — biss hekk jikseb il-prezz tiegħu fil-portal. Jekk teħtieġ isem liberu, agħżel hawn taħt „Pjan tal-prezzijiet proprju“.",
+      "portalRatesFailed": "Ma ntlaħqux ir-rati ta' {portal}. Dan ma jfissirx li ma hemm l-ebda rata disponibbli hemm — sempliċement bħalissa ma nafux. Tista' toħloq il-pjan permezz ta' „Pjan tal-prezzijiet proprju“; kun ċert li ssemmieh eżatt bħar-rata fil-portal.",
+      "portalRatesOccupancyUnknown": "Ir-rati magħrufa, iżda ma setax jiġi vverifikat jekk diġà għandhomx pjan tal-prezzijiet.",
+      "portalRatesTruncated": "Il-lista hija mqassra — il-portal għandu aktar rati milli murija hawn.",
+      "rateOccupied": "Diġà għandha pjan tal-prezzijiet",
+      "rateOccupancyUnknown": "Mhux ivverifikat jekk diġà għandhiex pjan tal-prezzijiet",
+      "rateFree": "Għad m'hemm ebda pjan tal-prezzijiet",
+      "rateMinStayHint": "Għad m'hemm ebda pjan tal-prezzijiet · issuġerit soġġorn minimu ta' {nights} iljieli",
+      "minStaySuggested": "Issuġerit mit-titlu „{title}“: {nights} iljieli. Ivverifika l-valur — fil-portali dan japplika fil-livell tar-rata.",
+      "goesToPortalFact": "Dan il-prezz jintbagħat lil {portal}",
+      "goesToPortalHint": "„{title}“ hija r-rata fil-portal. Il-prezz tagħha u s-soġġorn minimu tagħha jridu jaslu hemm, altrimenti l-portal ikompli jbigħha mingħajr il-valuri tiegħek.",
+      "reviewPortalRate": "Rata fil-portal"
     },
     "meta": {
       "status": {

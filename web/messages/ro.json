@@ -5891,7 +5891,24 @@
       "next": "Continuă",
       "cancel": "Anulează",
       "save": "Creează",
-      "saving": "Se creează …"
+      "saving": "Se creează …",
+      "portalRatesLoading": "Se preiau tarifele portalurilor conectate …",
+      "sourcePortalLabel": "Preia un tarif de la portal",
+      "sourcePortalHint": "Planul de prețuri este asociat tarifului de la portal doar dacă are exact același nume. Preia deci titlul de aici, în loc să îl retastezi.",
+      "sourceOwnLabel": "Plan de prețuri propriu",
+      "sourceOwnHint": "O variantă de preț internă, cu nume propriu — nu corespunde niciunui tarif de la portal.",
+      "nameLockedHint": "Planul de prețuri se numește exact ca tariful selectat — doar așa primește prețul său la portal. Dacă ai nevoie de un nume liber, alege mai jos „Plan de prețuri propriu”.",
+      "portalRatesFailed": "Tarifele de la {portal} nu au putut fi preluate. Asta nu înseamnă că nu sunt tarife disponibile acolo — pur și simplu nu știm acum. Poți crea planul prin „Plan de prețuri propriu”; ai grijă să îl denumești exact ca tariful de la portal.",
+      "portalRatesOccupancyUnknown": "Tarifele sunt cunoscute, dar nu s-a putut verifica dacă au deja un plan de prețuri.",
+      "portalRatesTruncated": "Lista este redusă — portalul are mai multe tarife decât cele afișate aici.",
+      "rateOccupied": "Are deja un plan de prețuri",
+      "rateOccupancyUnknown": "Nu s-a verificat dacă are deja un plan de prețuri",
+      "rateFree": "Încă fără plan de prețuri",
+      "rateMinStayHint": "Încă fără plan de prețuri · sejur minim de {nights} nopți propus",
+      "minStaySuggested": "Propus din titlul „{title}”: {nights} nopți. Verifică valoarea — la portaluri se aplică la nivel de tarif.",
+      "goesToPortalFact": "Acest preț ajunge la {portal}",
+      "goesToPortalHint": "„{title}” este tariful la portal. Prețul și sejurul minim al acestuia trebuie transmise acolo, altfel portalul continuă să îl vândă fără valorile tale.",
+      "reviewPortalRate": "Tarif portal"
     },
     "meta": {
       "status": {

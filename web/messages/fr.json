@@ -5893,7 +5893,24 @@
       "next": "Suivant",
       "cancel": "Annuler",
       "save": "Créer",
-      "saving": "Création en cours …"
+      "saving": "Création en cours …",
+      "portalRatesLoading": "Récupération des tarifs des portails connectés …",
+      "sourcePortalLabel": "Reprendre un tarif du portail",
+      "sourcePortalHint": "Le plan tarifaire n'est associé au tarif du portail que s'il porte exactement le même nom. Reprenez donc le titre ici plutôt que de le retaper.",
+      "sourceOwnLabel": "Plan tarifaire propre",
+      "sourceOwnHint": "Une variante de prix interne avec un nom libre — elle ne correspond à aucun tarif du portail.",
+      "nameLockedHint": "Le plan tarifaire porte exactement le même nom que le tarif sélectionné — ce n'est qu'ainsi qu'il reçoit son prix chez le portail. Si vous avez besoin d'un nom libre, choisissez « Plan tarifaire propre » ci-dessous.",
+      "portalRatesFailed": "Les tarifs de {portal} n'ont pas pu être récupérés. Cela ne signifie pas qu'aucun tarif n'y est disponible — nous ne le savons simplement pas pour l'instant. Vous pouvez créer le plan via « Plan tarifaire propre » ; veillez alors à lui donner exactement le même nom que le tarif chez le portail.",
+      "portalRatesOccupancyUnknown": "Les tarifs sont connus, mais on n'a pas pu vérifier s'ils ont déjà un plan tarifaire.",
+      "portalRatesTruncated": "La liste est raccourcie — le portail propose plus de tarifs que ceux affichés ici.",
+      "rateOccupied": "A déjà un plan tarifaire",
+      "rateOccupancyUnknown": "Non vérifié si un plan tarifaire existe déjà",
+      "rateFree": "Pas encore de plan tarifaire",
+      "rateMinStayHint": "Pas encore de plan tarifaire · séjour minimum de {nights} nuits suggéré",
+      "minStaySuggested": "Suggéré à partir du titre « {title} » : {nights} nuits. Vérifiez la valeur — chez les portails, elle s'applique au niveau du tarif.",
+      "goesToPortalFact": "Ce prix est envoyé à {portal}",
+      "goesToPortalHint": "« {title} » est le tarif chez le portail. Son prix et son séjour minimum doivent y être envoyés, sinon le portail continue de le vendre sans vos valeurs.",
+      "reviewPortalRate": "Tarif chez le portail"
     },
     "meta": {
       "status": {

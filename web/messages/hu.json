@@ -5893,7 +5893,24 @@
       "next": "Tovább",
       "cancel": "Mégse",
       "save": "Létrehozás",
-      "saving": "Létrehozás folyamatban …"
+      "saving": "Létrehozás folyamatban …",
+      "portalRatesLoading": "A csatlakoztatott portálok árai betöltése …",
+      "sourcePortalLabel": "Portál árának átvétele",
+      "sourcePortalHint": "Az árterv csak akkor kapcsolódik a portál árához, ha pontosan ugyanaz a neve. Ezért vedd át innen a címet, ne írd be újra.",
+      "sourceOwnLabel": "Saját árterv",
+      "sourceOwnHint": "Egy házon belüli, saját néven futó ártípus — nem felel meg semmilyen portálárnak.",
+      "nameLockedHint": "Az árterv pontosan úgy van elnevezve, mint a kiválasztott ár — csak így kapja meg az árát a portálnál. Ha szabad névre van szükséged, válaszd lent a „Saját árterv“ lehetőséget.",
+      "portalRatesFailed": "A {portal} árait nem sikerült lekérni. Ez nem jelenti azt, hogy nincs ott elérhető ár — pillanatnyilag egyszerűen nem tudjuk. A tervet létrehozhatod a „Saját árterv“ lehetőséggel; ügyelj arra, hogy pontosan úgy nevezd el, mint a portál árát.",
+      "portalRatesOccupancyUnknown": "Az árak ismertek, de nem sikerült ellenőrizni, hogy már van-e hozzájuk árterv.",
+      "portalRatesTruncated": "A lista rövidítve van — a portál több árat kínál, mint amennyi itt látható.",
+      "rateOccupied": "Már van hozzá árterv",
+      "rateOccupancyUnknown": "Nincs ellenőrizve, hogy már van-e hozzá árterv",
+      "rateFree": "Még nincs árterv",
+      "rateMinStayHint": "Még nincs árterv · javasolt minimum tartózkodás {nights} éjszaka",
+      "minStaySuggested": "A „{title}“ címből javasolt: {nights} éjszaka. Ellenőrizd az értéket — a portáloknál ez ár szinten érvényes.",
+      "goesToPortalFact": "Ez az ár a {portal} portálhoz megy",
+      "goesToPortalHint": "A „{title}“ a portálnál az ár. Az árát és a minimum tartózkodást el kell küldeni oda, különben a portál a saját értékeivel adja tovább.",
+      "reviewPortalRate": "Ár a portálnál"
     },
     "meta": {
       "status": {

@@ -5893,7 +5893,24 @@
       "next": "Seuraava",
       "cancel": "Peruuta",
       "save": "Luo",
-      "saving": "Luodaan …"
+      "saving": "Luodaan …",
+      "portalRatesLoading": "Yhdistettyjen portaalien rateja haetaan …",
+      "sourcePortalLabel": "Käytä portaalin rateja",
+      "sourcePortalHint": "Hintasuunnitelma yhdistetään portaalin rateen vain, jos nimi on täsmälleen sama. Ota siis otsikko tästä, älä kirjoita sitä uudelleen.",
+      "sourceOwnLabel": "Oma hintasuunnitelma",
+      "sourceOwnHint": "Talon sisäinen hintavaihtoehto omalla nimellä — se ei vastaa mitään portaalin ratea.",
+      "nameLockedHint": "Hintasuunnitelma on nimetty täsmälleen niin kuin valittu rate — vain niin se saa hintansa portaalissa. Jos tarvitset vapaan nimen, valitse alla ”Oma hintasuunnitelma”.",
+      "portalRatesFailed": "Portaalin {portal} rateja ei voitu hakea. Se ei tarkoita, ettei rateja olisi vapaana — emme vain tiedä sitä juuri nyt. Voit luoda suunnitelman kohdasta ”Oma hintasuunnitelma”; nimeä se siinä tapauksessa täsmälleen niin kuin rate on portaalissa.",
+      "portalRatesOccupancyUnknown": "Ratet tunnetaan, mutta sitä, onko niillä jo hintasuunnitelma, ei voitu tarkistaa.",
+      "portalRatesTruncated": "Luettelo on lyhennetty — portaalilla on enemmän rateja kuin tässä näytetään.",
+      "rateOccupied": "Sillä on jo hintasuunnitelma",
+      "rateOccupancyUnknown": "Ei tarkistettu, onko sillä jo hintasuunnitelma",
+      "rateFree": "Ei vielä hintasuunnitelmaa",
+      "rateMinStayHint": "Ei vielä hintasuunnitelmaa · vähimmäisyöpymisajaksi ehdotetaan {nights} yötä",
+      "minStaySuggested": "Ehdotettu otsikosta ”{title}”: {nights} yötä. Tarkista arvo — portaaleissa se koskee ratetasoa.",
+      "goesToPortalFact": "Tämä hinta menee {portal}",
+      "goesToPortalHint": "”{title}” on portaalissa rate. Sen hinta ja vähimmäisyöpymisaika on lähetettävä sinne, muuten portaali myy sitä eteenpäin omilla arvoillaan.",
+      "reviewPortalRate": "Rate portaalissa"
     },
     "meta": {
       "status": {

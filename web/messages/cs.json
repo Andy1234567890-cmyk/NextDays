@@ -5893,7 +5893,24 @@
       "next": "Další",
       "cancel": "Zrušit",
       "save": "Vytvořit",
-      "saving": "Vytváří se …"
+      "saving": "Vytváří se …",
+      "portalRatesLoading": "Načítají se sazby propojených portálů …",
+      "sourcePortalLabel": "Převzít sazbu z portálu",
+      "sourcePortalHint": "Cenový plán se přiřadí k sazbě na portálu jen tehdy, pokud se název přesně shoduje. Proto název převezměte odtud, místo abyste ho přepisovali.",
+      "sourceOwnLabel": "Vlastní cenový plán",
+      "sourceOwnHint": "Interní cenová varianta s vlastním názvem — neodpovídá žádné sazbě na portálu.",
+      "nameLockedHint": "Cenový plán se jmenuje přesně jako vybraná sazba — jen tak dostane na portálu svou cenu. Pokud potřebujete volný název, zvolte níže „Vlastní cenový plán“.",
+      "portalRatesFailed": "Sazby z {portal} se nepodařilo načíst. To neznamená, že tam nejsou žádné volné sazby — momentálně to jen nevíme. Plán můžete vytvořit přes „Vlastní cenový plán“; dbejte na to, abyste ho nazvali přesně jako sazbu na portálu.",
+      "portalRatesOccupancyUnknown": "Sazby jsou známé, ale nelze ověřit, zda už mají cenový plán.",
+      "portalRatesTruncated": "Seznam je zkrácený — portál nabízí více sazeb, než je zde zobrazeno.",
+      "rateOccupied": "Už má cenový plán",
+      "rateOccupancyUnknown": "Neověřeno, zda už má cenový plán",
+      "rateFree": "Zatím žádný cenový plán",
+      "rateMinStayHint": "Zatím žádný cenový plán · navržena minimální délka pobytu {nights} nocí",
+      "minStaySuggested": "Navrženo z názvu „{title}“: {nights} nocí. Zkontrolujte hodnotu — na portálech platí na úrovni sazby.",
+      "goesToPortalFact": "Tato cena se odesílá na {portal}",
+      "goesToPortalHint": "„{title}“ je sazba na portálu. Její cena a minimální délka pobytu musí být odeslány tam, jinak ji portál dál prodává bez vašich hodnot.",
+      "reviewPortalRate": "Sazba na portálu"
     },
     "meta": {
       "status": {

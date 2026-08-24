@@ -5891,7 +5891,24 @@
       "next": "Naprej",
       "cancel": "Prekliči",
       "save": "Ustvari",
-      "saving": "Ustvarjanje …"
+      "saving": "Ustvarjanje …",
+      "portalRatesLoading": "Pridobivanje cen povezanih portalov …",
+      "sourcePortalLabel": "Prevzemi ceno portala",
+      "sourcePortalHint": "Cenik se ceni pri portalu priredi samo, če se imenuje popolnoma enako. Zato tukaj prevzemi naslov, namesto da ga na novo natipkaš.",
+      "sourceOwnLabel": "Lasten cenik",
+      "sourceOwnHint": "Interna cenovna varianta z lastnim imenom — ne ustreza nobeni ceni pri portalu.",
+      "nameLockedHint": "Cenik se imenuje natanko tako kot izbrana cena — le tako pri portalu prejme njeno ceno. Če potrebuješ prosto ime, spodaj izberi »Lasten cenik«.",
+      "portalRatesFailed": "Cen od {portal} ni bilo mogoče pridobiti. To ne pomeni, da tam ni prostih cen — trenutno tega preprosto ne vemo. Cenik lahko ustvariš prek »Lasten cenik«; pri tem pazi, da ga poimenuješ natanko tako kot ceno pri portalu.",
+      "portalRatesOccupancyUnknown": "Cene so znane, ni pa bilo mogoče preveriti, ali že imajo cenik.",
+      "portalRatesTruncated": "Seznam je okrajšan — portal ima več cen, kot je prikazanih tukaj.",
+      "rateOccupied": "Že ima cenik",
+      "rateOccupancyUnknown": "Ni preverjeno, ali že ima cenik",
+      "rateFree": "Še brez cenika",
+      "rateMinStayHint": "Še brez cenika · predlagano najmanjše število nočitev {nights}",
+      "minStaySuggested": "Predlagano iz naslova »{title}«: {nights} nočitev. Preveri vrednost — pri portalih velja na ravni cene.",
+      "goesToPortalFact": "Ta cena gre na {portal}",
+      "goesToPortalHint": "»{title}« je cena pri portalu. Njena cena in najmanjše število nočitev morata iti tja, sicer jo portal še naprej prodaja brez tvojih vrednosti.",
+      "reviewPortalRate": "Cena portala"
     },
     "meta": {
       "status": {

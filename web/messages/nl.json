@@ -5891,7 +5891,24 @@
       "next": "Verder",
       "cancel": "Annuleren",
       "save": "Aanmaken",
-      "saving": "Wordt aangemaakt …"
+      "saving": "Wordt aangemaakt …",
+      "portalRatesLoading": "De tarieven van de gekoppelde portalen worden opgehaald …",
+      "sourcePortalLabel": "Tarief van het portaal overnemen",
+      "sourcePortalHint": "Het prijsplan wordt alleen aan het tarief bij het portaal gekoppeld als de naam exact overeenkomt. Neem de titel daarom hier over in plaats van hem opnieuw te typen.",
+      "sourceOwnLabel": "Eigen prijsplan",
+      "sourceOwnHint": "Een interne prijsvariant met een eigen naam — deze komt niet overeen met een tarief bij het portaal.",
+      "nameLockedHint": "Het prijsplan heet exact zoals het gekozen tarief — alleen dan krijgt het bij het portaal zijn prijs. Heb je een vrije naam nodig, kies dan hieronder „Eigen prijsplan”.",
+      "portalRatesFailed": "De tarieven van {portal} konden niet worden opgehaald. Dat betekent niet dat daar geen tarieven beschikbaar zijn — we weten het momenteel gewoon niet. Je kunt het plan aanmaken via „Eigen prijsplan”; let er dan op dat je het exact zo noemt als het tarief bij het portaal.",
+      "portalRatesOccupancyUnknown": "De tarieven zijn bekend, maar of ze al een prijsplan hebben kon niet worden gecontroleerd.",
+      "portalRatesTruncated": "De lijst is ingekort — het portaal heeft meer tarieven dan hier worden weergegeven.",
+      "rateOccupied": "Heeft al een prijsplan",
+      "rateOccupancyUnknown": "Niet gecontroleerd of er al een prijsplan is",
+      "rateFree": "Nog geen prijsplan",
+      "rateMinStayHint": "Nog geen prijsplan · minimumverblijf van {nights} nachten voorgesteld",
+      "minStaySuggested": "Voorgesteld op basis van de titel „{title}”: {nights} nachten. Controleer de waarde — bij de portalen geldt deze op tariefniveau.",
+      "goesToPortalFact": "Deze prijs gaat naar {portal}",
+      "goesToPortalHint": "„{title}” is bij het portaal het tarief. De prijs en het minimumverblijf ervan moeten daarheen, anders blijft het portaal het zonder jouw waarden verkopen.",
+      "reviewPortalRate": "Tarief bij het portaal"
     },
     "meta": {
       "status": {

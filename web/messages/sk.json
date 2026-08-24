@@ -5891,7 +5891,24 @@
       "next": "Ďalej",
       "cancel": "Zrušiť",
       "save": "Vytvoriť",
-      "saving": "Vytvára sa …"
+      "saving": "Vytvára sa …",
+      "portalRatesLoading": "Načítavajú sa sadzby prepojených portálov …",
+      "sourcePortalLabel": "Prevziať sadzbu portálu",
+      "sourcePortalHint": "Cenový plán sa priradí k sadzbe na portáli len vtedy, keď sa volá presne rovnako. Preto tu prevezmi názov, namiesto toho, aby si ho prepisoval.",
+      "sourceOwnLabel": "Vlastný cenový plán",
+      "sourceOwnHint": "Interná cenová varianta s vlastným názvom — nezodpovedá žiadnej sadzbe na portáli.",
+      "nameLockedHint": "Cenový plán sa volá presne ako vybraná sadzba — len tak dostane na portáli jej cenu. Ak potrebuješ voľný názov, vyber nižšie „Vlastný cenový plán\".",
+      "portalRatesFailed": "Sadzby z {portal} sa nepodarilo načítať. To neznamená, že tam nie sú žiadne voľné sadzby — momentálne to jednoducho nevieme. Plán môžeš vytvoriť cez „Vlastný cenový plán\"; potom dbaj na to, aby si ho nazval presne ako sadzbu na portáli.",
+      "portalRatesOccupancyUnknown": "Sadzby sú známe, nedalo sa však overiť, či už majú cenový plán.",
+      "portalRatesTruncated": "Zoznam je skrátený — portál má viac sadzieb, než je tu zobrazených.",
+      "rateOccupied": "Už má cenový plán",
+      "rateOccupancyUnknown": "Nezistené, či už má cenový plán",
+      "rateFree": "Ešte bez cenového plánu",
+      "rateMinStayHint": "Ešte bez cenového plánu · navrhovaný minimálny pobyt {nights} nocí",
+      "minStaySuggested": "Navrhnuté z názvu „{title}\": {nights} nocí. Over hodnotu — na portáloch platí na úrovni sadzby.",
+      "goesToPortalFact": "Táto cena sa odošle na {portal}",
+      "goesToPortalHint": "„{title}\" je na portáli sadzba. Jej cena a minimálny pobyt sa musia odoslať tam, inak ju portál ďalej predáva bez tvojich hodnôt.",
+      "reviewPortalRate": "Sadzba portálu"
     },
     "meta": {
       "status": {

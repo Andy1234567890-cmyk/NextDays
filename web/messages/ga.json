@@ -5893,7 +5893,24 @@
       "next": "Ar aghaidh",
       "cancel": "Cealaigh",
       "save": "Cruthaigh",
-      "saving": "Á chruthú …"
+      "saving": "Á chruthú …",
+      "portalRatesLoading": "Rátaí na dtairseach ceangailte á n-aisghabháil …",
+      "sourcePortalLabel": "Glac le ráta na tairseacha",
+      "sourcePortalHint": "Ní dhéantar an plean praghsála a mheaitseáil le ráta na tairseacha ach amháin má tá an t-ainm céanna go beacht air. Glac leis an teideal anseo dá bhrí sin, seachas é a chlóscríobh amach.",
+      "sourceOwnLabel": "Plean praghsála féin",
+      "sourceOwnHint": "Athrach praghais inmheánach le hainm féin — ní fhreagraíonn é do ráta ar bith ag an tairseach.",
+      "nameLockedHint": "Tá an plean praghsála ainmnithe go beacht mar an ráta a roghnaíodh — ní bhfaigheann sé a phraghas ag an tairseach ach ar an mbealach sin amháin. Má tá ainm saor uaigh de dhíth ort, roghnaigh “Plean praghsála féin” thíos.",
+      "portalRatesFailed": "Níorbh fhéidir rátaí {portal} a aisghabháil. Ní chiallaíonn sé sin nach bhfuil rátaí ar fáil ann — níl a fhios againn é sin faoi láthair, sin an méid. Is féidir leat an plean a chruthú trí “Plean praghsála féin”; déan cinnte ansin é a ainmniú go beacht mar an ráta ag an tairseach.",
+      "portalRatesOccupancyUnknown": "Tá na rátaí ar eolas, ach níorbh fhéidir a dheimhniú an bhfuil plean praghsála acu cheana.",
+      "portalRatesTruncated": "Tá an liosta giorraithe — tá níos mó rátaí ag an tairseach ná mar a thaispeántar anseo.",
+      "rateOccupied": "Tá plean praghsála aige cheana",
+      "rateOccupancyUnknown": "Níor deimhníodh an bhfuil plean praghsála aige cheana",
+      "rateFree": "Gan phlean praghsála fós",
+      "rateMinStayHint": "Gan phlean praghsála fós · moltar fanacht íosta {nights} oíche",
+      "minStaySuggested": "Molta ón teideal “{title}”: {nights} oíche. Seiceáil an luach — ag na tairseacha bíonn sé i bhfeidhm ar leibhéal an ráta.",
+      "goesToPortalFact": "Téann an praghas seo chuig {portal}",
+      "goesToPortalHint": "Is é “{title}” an ráta ag an tairseach. Ní mór a phraghas agus a fhanacht íosta a sheoladh ann, nó díolfaidh an tairseach ar aghaidh é gan do chuid luachanna.",
+      "reviewPortalRate": "Ráta ag an tairseach"
     },
     "meta": {
       "status": {
