@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Logo } from "@/components/logo";
 import { SprachUmschalter } from "@/components/auth/sprach-umschalter";
@@ -16,6 +16,7 @@ import { Input } from "@nextdays/ui/input";
 import { Label } from "@nextdays/ui/label";
 import { ZweiterFaktorSchritt } from "@/components/auth/zweiter-faktor-schritt";
 import { login } from "@/lib/auth";
+import { rueckzielPruefen } from "@/lib/rueckziel";
 import { signInWithProvider } from "@/lib/oauth-login";
 
 export default function LoginPage() {
@@ -35,11 +36,30 @@ export default function LoginPage() {
   // maskierte SMS-Nummer fuer die Anzeige.
   const [mfaMethods, setMfaMethods] = useState<string[]>([]);
   const [mfaPhone, setMfaPhone] = useState<string | null>(null);
+  // Rueckziel aus `?weiter=` — nur fuer den Hinweis oben. Es wird im State
+  // gehalten, weil `window` beim ersten Render auf dem Server nicht existiert;
+  // ohne das gaebe es einen Hydration-Unterschied.
+  const [rueckziel, setRueckziel] = useState<string | null>(null);
+  useEffect(() => {
+    setRueckziel(
+      rueckzielPruefen(new URLSearchParams(window.location.search).get("weiter")),
+    );
+  }, []);
 
   function goDashboard() {
     // Andy begruesst im Dashboard selbst — dort liegt eine gueltige
     // User-Geste (Consent-Klick) vor, ohne die der Browser Sprache verwirft.
-    router.replace("/");
+    //
+    // RUECKSPRUNG: Kam der Nutzer aus einer Benachrichtigungs-Mail
+    // (`/login?weiter=/aufgaben/<id>`), endet die Anmeldung auf GENAU dieser
+    // Seite. Vorher landete jede Anmeldung fest auf `/`, und wer aus einer Mail
+    // kam, musste die verlinkte Aufgabe in seiner Liste wiedersuchen.
+    // `rueckzielPruefen` laesst nur eigene, relative Pfade durch — ein
+    // `?weiter=https://boese.example` waere sonst ein offener Redirect
+    // (Wurzel 8). Faellt die Pruefung durch, bleibt es beim Dashboard.
+    // `rueckziel` ist bereits geprueft (siehe useEffect oben) — hier nur noch
+    // anwenden. Ohne Ziel bleibt es das Dashboard.
+    router.replace(rueckziel ?? "/");
     router.refresh();
   }
 
@@ -97,6 +117,17 @@ export default function LoginPage() {
             <h1 className="text-center font-display text-3xl font-extrabold">
               {t("title")}
             </h1>
+
+            {/* Kam der Nutzer aus einer Benachrichtigungs-Mail, sagt die Seite
+                WARUM sie da ist. Ohne diesen Satz sah es nach einem Defekt aus:
+                geklickt wurde eine Aufgabe, gelandet ist man auf der
+                Anmeldung. Der Hinweis nennt keinen Inhalt des Ziels — nur,
+                dass der Link zum eigenen Betrieb gehoert. */}
+            {rueckziel ? (
+              <p className="rounded-(--radius) bg-muted px-3 py-2 text-center text-sm text-muted-foreground">
+                {t("weiterHinweis")}
+              </p>
+            ) : null}
 
             {/* Social-Login via Supabase OAuth (Apple folgt, sobald konfiguriert) */}
             <div className="grid grid-cols-2 gap-3">

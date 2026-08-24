@@ -9001,7 +9001,8 @@
     "google": "Google",
     "apple": "Apple",
     "noAccount": "Inte myNextDays-kund än?",
-    "signupLink": "Prova gratis"
+    "signupLink": "Prova gratis",
+    "weiterHinweis": "Den här länken tillhör ditt företag. Logga in för att öppna den."
   },
   "portalSaetze": {
     "add": "Lägg till sats",

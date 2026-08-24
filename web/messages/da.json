@@ -9003,7 +9003,8 @@
     "google": "Google",
     "apple": "Apple",
     "noAccount": "Endnu ikke myNextDays-kunde?",
-    "signupLink": "Prøv gratis nu"
+    "signupLink": "Prøv gratis nu",
+    "weiterHinweis": "Dette link tilhører din virksomhed. Log ind for at åbne det."
   },
   "portalSaetze": {
     "add": "Tilføj sats",

@@ -9003,7 +9003,8 @@
     "google": "Google",
     "apple": "Apple",
     "noAccount": "Etkö ole vielä myNextDays-asiakas?",
-    "signupLink": "Kokeile ilmaiseksi"
+    "signupLink": "Kokeile ilmaiseksi",
+    "weiterHinweis": "Tämä linkki kuuluu yritykseesi. Kirjaudu sisään avataksesi sen."
   },
   "portalSaetze": {
     "add": "Lisää prosentti",

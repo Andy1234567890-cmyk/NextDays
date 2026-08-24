@@ -9079,7 +9079,8 @@
     "google": "Google",
     "apple": "Apple",
     "noAccount": "Not a myNextDays customer yet?",
-    "signupLink": "Try it free"
+    "signupLink": "Try it free",
+    "weiterHinweis": "This link belongs to your business. Sign in to open it."
   },
   "portalSaetze": {
     "add": "Add rate",

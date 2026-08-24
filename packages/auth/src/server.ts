@@ -135,12 +135,24 @@ export async function api<T>(path: string, opts: CallOpts = {}): Promise<T> {
   return data as T;
 }
 
+/** Regel-Laufzeit des Refresh-Cookies: 30 Tage. Wer taeglich arbeitet, soll
+ *  sich nicht jede Woche neu anmelden. */
+const REFRESH_MAX_AGE = 60 * 60 * 24 * 30;
+
 /** Setzt Access- + Refresh-Cookie host-only. __Host-Regeln fest erzwungen:
  *  Secure (nur prod, damit dev über http funktioniert), KEIN Domain-Attribut
- *  (host-only → nicht über Subdomains teilbar, ADR-0015-Trennung), Path=/. */
+ *  (host-only → nicht über Subdomains teilbar, ADR-0015-Trennung), Path=/.
+ *
+ *  `refreshMaxAge` kuerzt die Laufzeit des Refresh-Cookies fuer Sitzungen, die
+ *  NICHT einem Arbeitsplatz gehoeren — namentlich die Vorfuehrung: dort waeren
+ *  30 Tage falsch, weil ein einmaliger Besuch die aktive Sitzung des Browsers
+ *  einen Monat lang belegt und jeden spaeteren Mail-Link in die Demo zieht.
+ *  Ohne Angabe bleibt es bei der Regel-Laufzeit — bestehende Aufrufer aendern
+ *  ihr Verhalten nicht. */
 export async function persistSession(
   session: SessionResponse,
   names: CookieNames,
+  refreshMaxAge: number = REFRESH_MAX_AGE,
 ): Promise<void> {
   requireName(names.access, "access");
   requireName(names.refresh, "refresh");
@@ -158,7 +170,7 @@ export async function persistSession(
   });
   jar.set(names.refresh, session.refresh_token, {
     ...common,
-    maxAge: 60 * 60 * 24 * 30,
+    maxAge: refreshMaxAge,
   });
 }
 

@@ -25,12 +25,21 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { SPRACHE_HEADER } from "@/i18n/aufloesung";
+import { DEMO_COOKIE, PFAD_HEADER } from "@/lib/demo-cookie";
 
 const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const PROD = process.env.NODE_ENV === "production";
 
 const ACCESS = "nd_access";
 const REFRESH = "nd_refresh";
+
+
+/** Regel-Laufzeit des Refresh-Cookies (30 Tage) und die kurze der Vorfuehrung
+ *  (2 Stunden). Beide Werte stehen auch in `@nextdays/auth/server`; hier
+ *  bewusst noch einmal, weil die Middleware in der Edge-Runtime laeuft und
+ *  `next/headers` (das das Paket zieht) dort nicht verfuegbar ist. */
+const REFRESH_MAX_AGE = 60 * 60 * 24 * 30;
+const DEMO_REFRESH_MAX_AGE = 60 * 60 * 2;
 
 interface SessionAntwort {
   access_token: string;
@@ -134,24 +143,34 @@ async function tokenSprache(req: NextRequest): Promise<string | null> {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  /** Basis-Header dieses Requests: der angefragte Pfad (inkl. Query), damit
+   *  Server Components ein Rueckziel bilden koennen. Wird an JEDEM Rueckgabeweg
+   *  mitgegeben — fehlte er auf einem, verlore genau dort das Rueckziel. */
+  const basisHeader = () => {
+    const h = new Headers(req.headers);
+    h.set(PFAD_HEADER, `${pathname}${req.nextUrl.search}`);
+    return h;
+  };
+  const weiter = () => NextResponse.next({ request: { headers: basisHeader() } });
+
   // Sprache der Token-Seiten VOR dem Skip auflösen: diese Pfade brauchen keine
   // Token-Erneuerung (sie laufen ohne Sitzung), aber sehr wohl die richtige
   // Sprache. Das Ergebnis reist als Request-Header zu `i18n/request.ts`.
   const sprache = await tokenSprache(req);
   if (sprache) {
-    const headers = new Headers(req.headers);
+    const headers = basisHeader();
     headers.set(SPRACHE_HEADER, sprache);
     return NextResponse.next({ request: { headers } });
   }
 
-  if (ueberspringen(pathname)) return NextResponse.next();
+  if (ueberspringen(pathname)) return weiter();
 
   // Access-Token noch da → nichts zu tun. Das ist der Normalfall und kostet
   // keinen einzigen Backend-Aufruf.
-  if (req.cookies.get(ACCESS)?.value) return NextResponse.next();
+  if (req.cookies.get(ACCESS)?.value) return weiter();
 
   const refresh = req.cookies.get(REFRESH)?.value;
-  if (!refresh) return NextResponse.next();
+  if (!refresh) return weiter();
 
   let session: SessionAntwort | null = null;
   let abgelehnt = false;
@@ -178,19 +197,19 @@ export async function middleware(req: NextRequest) {
   if (abgelehnt) {
     // Totes Refresh-Token entfernen, damit nicht jeder Folgerequest erneut
     // dagegenläuft. Der Layout-Guard leitet dann auf /login.
-    const antwort = NextResponse.next();
+    const antwort = weiter();
     antwort.cookies.delete(ACCESS);
     antwort.cookies.delete(REFRESH);
     return antwort;
   }
 
-  if (!session?.access_token) return NextResponse.next();
+  if (!session?.access_token) return weiter();
 
   // Das frische Access-Token dem Rendering SOFORT mitgeben: die Server
   // Components dieses Requests lesen ihr Cookie aus den Request-Headern, nicht
   // aus der Response. Ohne das hier liefe der aktuelle Render noch ohne Token
   // und der Nutzer sähe einmalig die abgemeldete Ansicht.
-  const headers = new Headers(req.headers);
+  const headers = basisHeader();
   const jar = req.cookies;
   jar.set(ACCESS, session.access_token);
   jar.set(REFRESH, session.refresh_token);
@@ -208,10 +227,25 @@ export async function middleware(req: NextRequest) {
     ...common,
     maxAge: session.expires_in,
   });
+  // Die Vorfuehrung behaelt ihre KURZE Laufzeit. Ohne diese Zeile hob die
+  // Erneuerung sie beim ersten Seitenaufruf auf die Regel-Laufzeit zurueck —
+  // die Kuerzung im Demo-Login waere damit wirkungslos gewesen und ein
+  // einmaliger `/demo`-Besuch bliebe wieder 30 Tage die aktive Sitzung.
+  // Die Markierung ist eine Laufzeit-Angabe, keine Schranke: was die
+  // Vorfuehrung darf, entscheidet der serverseitige `demo_gate` (Wurzel 7).
+  const istVorfuehrung = req.cookies.get(DEMO_COOKIE)?.value === "1";
   antwort.cookies.set(REFRESH, session.refresh_token, {
     ...common,
-    maxAge: 60 * 60 * 24 * 30,
+    maxAge: istVorfuehrung ? DEMO_REFRESH_MAX_AGE : REFRESH_MAX_AGE,
   });
+  // Die Markierung selbst mitziehen, sonst laeuft sie vor der Sitzung ab und
+  // die letzten Minuten der Vorfuehrung bekaemen wieder 30 Tage.
+  if (istVorfuehrung) {
+    antwort.cookies.set(DEMO_COOKIE, "1", {
+      ...common,
+      maxAge: DEMO_REFRESH_MAX_AGE,
+    });
+  }
   return antwort;
 }
 

@@ -9001,7 +9001,8 @@
     "google": "Google",
     "apple": "Apple",
     "noAccount": "Nie jesteś jeszcze klientem myNextDays?",
-    "signupLink": "Wypróbuj za darmo"
+    "signupLink": "Wypróbuj za darmo",
+    "weiterHinweis": "Ten link należy do Twojej firmy. Zaloguj się, aby go otworzyć."
   },
   "portalSaetze": {
     "add": "Dodaj stawkę",

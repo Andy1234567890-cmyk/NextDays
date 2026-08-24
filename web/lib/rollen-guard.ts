@@ -1,4 +1,8 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+
+import { PFAD_HEADER } from "@/lib/demo-cookie";
+import { loginMitZiel } from "@/lib/rueckziel";
 
 import { getSession } from "@/lib/auth";
 import type { MeResponse } from "@/lib/api";
@@ -57,7 +61,11 @@ export async function portalGuard(): Promise<PortalSitzung> {
   const sitzung = await getSession();
   if (sitzung.fehler) return { art: "fehler", meldung: sitzung.fehler };
   const me = sitzung.me;
-  if (!me) redirect("/login");
+  // Mit RUECKZIEL: auch ins Eigentuemer-Portal wird aus Mails verlinkt
+  // (`/portal/sperrungen`, `/portal/dienstleistungen`). Ohne Ziel endete die
+  // Anmeldung immer auf der Portal-Startseite. Den Pfad reicht die Middleware
+  // als Header herein — fehlt er, bleibt es beim nackten `/login`.
+  if (!me) redirect(loginMitZiel((await headers()).get(PFAD_HEADER)));
   if (!me.role || !PORTAL_ROLLEN.has(me.role)) redirect("/");
   return { art: "ok", me };
 }

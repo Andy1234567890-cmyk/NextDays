@@ -9003,7 +9003,8 @@
     "google": "Google",
     "apple": "Apple",
     "noAccount": "Pas encore client myNextDays ?",
-    "signupLink": "Essayer gratuitement"
+    "signupLink": "Essayer gratuitement",
+    "weiterHinweis": "Ce lien appartient à votre établissement. Connectez-vous pour l'ouvrir."
   },
   "portalSaetze": {
     "add": "Ajouter un taux",

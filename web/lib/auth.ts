@@ -4,17 +4,28 @@
 // Session über httpOnly-Cookies. Die Business-Logik bleibt in FastAPI
 // (PROJECT.md §2) — hier wird nur aufgerufen und das Token sicher abgelegt.
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 
 import { clearSession, persistSession } from "@nextdays/auth/server";
 import type { LoginResponse } from "@nextdays/auth/types";
 
 import { ApiError, api, type MeResponse, type SessionResponse } from "@/lib/api";
+import { DEMO_COOKIE, DEMO_REFRESH_MAX_AGE } from "@/lib/demo-cookie";
 import { currentToken, currentTokenStreng } from "@/lib/session-token";
 import { createClient } from "@/lib/supabase/server";
 
 // Cookie-Namen dieser App (Sicherheitsgrenze — pro App explizit, ADR-0017). web
 // nutzt zusätzlich eine Supabase-OAuth-Welt (Google), die hier web-lokal bleibt.
 const COOKIES = { access: "nd_access", refresh: "nd_refresh" } as const;
+
+/** Vorfuehr-Markierung entfernen (nach jeder ECHTEN Anmeldung).
+ *
+ *  Bleibt sie liegen, haelt die Middleware auch die neue, echte Sitzung nur
+ *  zwei Stunden und meldet den Nutzer grundlos ab. Sie wird deshalb an JEDEM
+ *  Anmeldeweg abgeraeumt — Passwort, 2FA-Uebernahme und OAuth. */
+async function demoMarkierungLoeschen(): Promise<void> {
+  (await cookies()).delete(DEMO_COOKIE);
+}
 
 type LoginResult =
   | { ok: true }
@@ -55,6 +66,7 @@ export async function login(
       // `setSession()` braucht. Ohne sie gäbe es keinen Weg, den zweiten
       // Faktor zu lösen.
       if (res.session) await persistSession(res.session, COOKIES);
+      await demoMarkierungLoeschen();
       return {
         ok: true,
         mfaRequired: true,
@@ -66,6 +78,7 @@ export async function login(
     }
     if (!res.session) return { ok: false, error: "Login fehlgeschlagen." };
     await persistSession(res.session, COOKIES);
+    await demoMarkierungLoeschen();
     return { ok: true };
   } catch (exc) {
     // Wurzel 5: Eine STÖRUNG (5xx, Backend/Anmeldedienst weg) ist kein Urteil
@@ -118,7 +131,27 @@ export async function demoSitzungHolen(): Promise<
       // Grund gehört benannt statt in einen leeren Dashboard-Aufruf zu münden.
       return { ok: false, error: "Die Vorführung ist gerade nicht verfügbar." };
     }
-    await persistSession(res.session, COOKIES);
+    // Kurze Laufzeit (2 h statt 30 Tage): eine Vorfuehrung gehoert einem
+    // BESUCH, nicht einem Arbeitsplatz. Mit der Regel-Laufzeit blieb ein
+    // einmaliger `/demo`-Aufruf einen Monat lang die aktive Sitzung des
+    // Browsers — jeder spaeter geklickte Link aus einer Benachrichtigungs-Mail
+    // landete dann im Demo-Mandanten, wo die verlinkte Aufgabe nicht existiert
+    // (live 24.08.2026: „Aufgabe nicht verfuegbar" statt einer Anmeldung).
+    await persistSession(res.session, COOKIES, DEMO_REFRESH_MAX_AGE);
+    // Markierung fuer die Middleware: sie erneuert Sitzungen, kennt den
+    // Mandanten aber nicht (das `is_demo` steht in `tenants`, nicht im JWT) und
+    // wuerde das Refresh-Cookie sonst auf die Regel-Laufzeit zurueckheben —
+    // die Kuerzung oben waere nach dem ersten Seitenaufruf wieder weg.
+    // Kein Sicherheitsmerkmal, nur eine Laufzeit-Angabe: die Schranke bleibt
+    // der serverseitige `demo_gate` am `is_demo` des Mandanten (Wurzel 7).
+    const jar = await cookies();
+    jar.set(DEMO_COOKIE, "1", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: DEMO_REFRESH_MAX_AGE,
+    });
     return { ok: true };
   } catch (exc) {
     return {
@@ -141,6 +174,7 @@ export async function sessionUebernehmen(session: {
     return { ok: false, error: "Unvollständige Sitzung erhalten." };
   }
   await persistSession(session, COOKIES);
+  await demoMarkierungLoeschen();
   return { ok: true };
 }
 
@@ -214,6 +248,7 @@ export async function register(input: {
       },
     });
     await persistSession(session, COOKIES);
+    await demoMarkierungLoeschen();
     return { ok: true };
   } catch (exc) {
     const error =
@@ -225,6 +260,10 @@ export async function register(input: {
 /** Logout: beide Session-Arten beenden (FastAPI-Cookies + Supabase-Session). */
 export async function logout(): Promise<void> {
   await clearSession(COOKIES);
+  // Die Vorfuehr-Markierung MUSS mit weg: bliebe sie liegen, wuerde die
+  // Middleware die naechste — echte — Sitzung dieses Browsers ebenfalls nur
+  // zwei Stunden halten und den Nutzer grundlos wieder abmelden.
+  (await cookies()).delete(DEMO_COOKIE);
 
   // Supabase-OAuth-Session (z. B. Google) ebenfalls beenden — ignoriert, wenn
   // gar keine Supabase-Session existiert.

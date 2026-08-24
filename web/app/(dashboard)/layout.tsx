@@ -13,9 +13,12 @@
 // Nicht in der Middleware, weil die laut ADR-0015 keine Auth-Schranke sein darf
 // (Middleware-Bypass per `x-middleware-subrequest`); Begründung in
 // lib/rollen-guard.ts.
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { PORTAL_ROLLEN } from "@/lib/rollen-guard";
+import { PFAD_HEADER } from "@/lib/demo-cookie";
+import { loginMitZiel } from "@/lib/rueckziel";
 
 import { AppSidebar } from "@/components/app-sidebar";
 // Der Sprach-Assistent ist abgeschaltet (siehe unten) — Import bewusst nicht
@@ -81,7 +84,15 @@ export default async function DashboardLayout({
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) redirect("/login");
+    if (!user) {
+      // Mit RUECKZIEL, damit die Anmeldung dort endet, wo der Nutzer hin
+      // wollte. Ohne das landete jeder auf dem Dashboard — wer aus einer
+      // Benachrichtigungs-Mail auf eine bestimmte Aufgabe geklickt hatte,
+      // musste sie sich danach in seiner Liste wiedersuchen. Den Pfad kennt
+      // eine Server Component nicht selbst; die Middleware reicht ihn als
+      // Header herein. Fehlt er, bleibt es beim nackten `/login`.
+      redirect(loginMitZiel((await headers()).get(PFAD_HEADER)));
+    }
     email = user.email ?? "";
     // Rolle/Berechtigungen kommen später aus dem FastAPI-Profil; vorerst leer.
     role = null;

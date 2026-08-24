@@ -9202,7 +9202,8 @@
     "google": "Google",
     "apple": "Apple",
     "noAccount": "Noch kein myNextDays-Kunde?",
-    "signupLink": "Jetzt kostenlos testen"
+    "signupLink": "Jetzt kostenlos testen",
+    "weiterHinweis": "Dieser Link gehört zu deinem Betrieb. Melde dich an, um ihn zu öffnen."
   },
   "portalSaetze": {
     "add": "Satz hinzufügen",

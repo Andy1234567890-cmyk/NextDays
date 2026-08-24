@@ -28,7 +28,7 @@
 import type { Metadata } from "next";
 
 import { AufgabeSeite } from "@/components/reservierungen/aufgabe-seite";
-import { getMe } from "@/lib/auth";
+import { benachrichtigungsZiel } from "@/lib/benachrichtigungs-ziel";
 
 export const metadata: Metadata = {
   // Der Titel steht bewusst NICHT in der Metadata: er käme aus der Aufgabe, und
@@ -44,13 +44,17 @@ export default async function AufgabeDeepLinkPage({
   params: Promise<{ taskId: string }>;
 }) {
   const { taskId } = await params;
+  // Ziel einer Benachrichtigung: im richtigen Konto oeffnen, sonst zurueck zur
+  // Anmeldung MIT diesem Pfad als Rueckziel. Begruendung und der live
+  // beobachtete Fehlweg stehen in `lib/benachrichtigungs-ziel.ts`.
+  const me = await benachrichtigungsZiel(`/aufgaben/${taskId}`);
+
   // Wer Aufgaben VERTEILT, darf das auch aus der Mail heraus. Diese Seite ist
   // die einzige Detailansicht, die aus einer Benachrichtigung geöffnet wird —
   // ein Verwalter, der hier eine falsch zugewiesene Aufgabe vor sich hat,
   // müsste sonst den Umweg über /team nehmen. Die Rolle kommt vom Server
   // (`/auth/me`, aus der DB), nicht aus dem Client; der Endpunkt prüft
   // `MANAGE_TASKS` ohnehin erneut.
-  const me = await getMe();
   const darfZuweisen =
     me?.role === "admin" ||
     me?.role === "co_admin" ||
