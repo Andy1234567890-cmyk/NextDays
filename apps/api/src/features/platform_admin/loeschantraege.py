@@ -149,7 +149,21 @@ def abschliessen(
             .execute()
         ).data or []
     except APIError as exc:
-        log.warning("loeschantrag_abschliessen_fehler", error=str(exc)[:200])
+        # Code UND Constraint mitloggen, nicht nur `str(exc)`: derselbe Pfad
+        # scheiterte im Ereignis-Monitor an einem Fremdschlüssel, und im Log
+        # stand nur „APIError" — die Ursache musste von Hand in der DB
+        # nachgestellt werden. Ein Fehler, den man nicht sieht, ist nicht
+        # behebbar (Wurzel 5).
+        log.error(
+            "loeschantrag_abschliessen_fehler",
+            antrag=antrag_id,
+            ziel_status=status,
+            user_id=ctx.user_id,
+            db_code=getattr(exc, "code", None),
+            db_message=(getattr(exc, "message", None) or "")[:300],
+            db_details=(getattr(exc, "details", None) or "")[:300],
+            db_hint=(getattr(exc, "hint", None) or "")[:200],
+        )
         raise
 
     if not rows:

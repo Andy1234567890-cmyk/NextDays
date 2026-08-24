@@ -3589,9 +3589,40 @@ class ChannelsMixin:
         """Webhook-Ereignis in channex_webhook_event schreiben (Live-Ereignis-
         liste: Airbnb-Anfragen, Sync-/Rate-Fehler, unmapped Bookings, Reviews,
         Kanal-Statuswechsel). Ohne Tenant-Mapping wird NICHT persistiert (die
-        Tabelle ist tenant-scoped; kontolose Events stehen im Log)."""
+        Tabelle ist tenant-scoped; kontolose Events stehen im Log).
+
+        GESPEICHERT WIRD DER INHALT, NICHT DER UMSCHLAG (Wurzel 2/4).
+        Channex liefert hier den vollen Umschlag
+        `{event, payload: {...}, user_id, timestamp, property_id}`. Bis zu
+        diesem Fix landete genau der als `payload` in der Tabelle, während der
+        Journal-Tick (`live_feed_sync._journal_ereignis_spiegeln`) NUR den
+        Inhalt ablegt. Dasselbe Ereignis lag damit in ZWEI Formen in derselben
+        Spalte, und weil die Ereignis-ID einmal auf `payload.live_feed_event_id`
+        und einmal auf `payload.payload.live_feed_event_id` sitzt, griff der
+        UNIQUE-Index aus 0284 nie: er liest die SPALTE, die dieser Pfad leer
+        liess.
+
+        Live gemessen (24.08.2026, Staging-DB): 284 Ereignispaare doppelt —
+        u. a. 338 `review`-Zeilen fuer 179 Ereignisse und 213 `booking_new` fuer
+        105. Jeder Fehler und jede Buchung stand zweimal in der Ereignisliste
+        und musste zweimal quittiert werden. `inbox.anfragen._entdoppelt` faengt
+        das seither in der ANZEIGE ab — ein Pflaster auf dem Schreibfehler.
+
+        Die flache Form ist die richtige, weil die Umschlag-Felder eigene
+        Spalten haben (`event`, `property_id`, `created_at`) und die Leser sie
+        dort erwarten. Die zwei Entpacker
+        (`nachrichten_eingang.payload_aus`, `inbox.anfragen._kern`) bleiben
+        stehen: sie tragen den Altbestand, der noch verschachtelt gespeichert
+        ist.
+        """
         if self._db is None or tenant_id is None:
             return
+        # Die Ereignis-ID VOR dem Auspacken ziehen: sie steht im Umschlag
+        # (`live_feed_event_id`/`event_id`), nicht im Inhalt.
+        live_id = self._live_feed_event_id(payload)
+        payload = self._webhook_inhalt(payload)
+        if live_id is None:
+            live_id = self._live_feed_event_id(payload)
         if event in self._ERROR_EVENTS:
             severity = "error"
         elif event in self._ACTION_EVENTS:
@@ -3621,14 +3652,36 @@ class ChannelsMixin:
             "severity": severity,
         }
         # Die Channex-Ereignis-ID ist der EINZIGE Weg, eine Airbnb-Anfrage später
-        # zu beantworten (`POST live_feed/{id}/resolve`). Sie wird deshalb aus dem
-        # Rohpayload gezogen, BEVOR der 32-KB-Deckel oben ihn ersetzt hätte.
-        live_id = self._live_feed_event_id(payload)
+        # zu beantworten (`POST live_feed/{id}/resolve`) — und seit diesem Fix
+        # zugleich der fachliche Schluessel des UNIQUE-Index. Sie steht oben
+        # bereits fest (aus dem Umschlag gezogen, bevor der 32-KB-Deckel ihn
+        # ersetzt haben koennte).
         if live_id:
             zeile["live_feed_event_id"] = live_id
+            # Kennen wir das Ereignis schon (Webhook-Redelivery, oder der
+            # Journal-Tick war schneller), ist NICHTS zu tun: die vorhandene
+            # Zeile traegt den echten Eingangszeitpunkt (Wurzel 5b) und einen
+            # etwaigen `resolved`-Zustand (Wurzel 1). Ein Insert wuerde am
+            # UNIQUE-Index aus 0284 scheitern, ein Update den Quittungsstand
+            # ueberschreiben — beides falsch.
+            if self._ereignis_schon_gespeichert(str(tenant_id), live_id):
+                log.info(
+                    "webhook_event_bereits_vorhanden",
+                    webhook_event=event, live_feed_event_id=live_id,
+                )
+                return
         try:
             self._db.table("channex_webhook_event").insert(zeile).execute()
         except Exception as exc:  # noqa: BLE001 — Persistenz nie den Ingest kippen
+            # 23505 heisst hier „war schon da": der Guard oben und der Index
+            # koennen sich ueberkreuzen, wenn Webhook und Tick gleichzeitig
+            # laufen. Das ist der gewuenschte Ausgang, kein Fehler.
+            if "23505" in str(exc) or "duplicate" in str(exc).lower():
+                log.info(
+                    "webhook_event_doppelt_abgewehrt",
+                    webhook_event=event, live_feed_event_id=live_id,
+                )
+                return
             log.warning("webhook_event_persist_failed", error=str(exc)[:200])
 
         # Zusätzlich in den abonnierbaren Worker-Verlauf (0379). `severity`
@@ -3644,6 +3697,50 @@ class ChannelsMixin:
             property_id=str(property_id) if property_id else None,
             quelle_tabelle="channex_webhook_event",
         )
+
+    def _ereignis_schon_gespeichert(self, tenant_id: str, live_id: str) -> bool:
+        """Liegt dieses Channex-Ereignis bereits in der Ereignisliste?
+
+        Bewusst hier und nicht per Aufruf von
+        `LiveFeedSyncMixin._journal_ereignis_bekannt`: dieselbe Frage, aber der
+        Webhook-Pfad soll nicht an der Reihenfolge der Mixins in
+        `ChannelManagerService` haengen (und `ChannelsMixin` wird in Tests auch
+        allein gebaut). Die Abfrage ist auf den Tenant gescopt (Wurzel 3) —
+        derselbe Scope wie der UNIQUE-Index aus 0284.
+
+        Fail-OPEN ist hier richtig: laesst sich nicht pruefen, wird eingefuegt
+        und der UNIQUE-Index entscheidet. Ein „vielleicht doppelt" darf ein
+        Ereignis nie verschlucken (Wurzel 5).
+        """
+        if self._db is None:
+            return False
+        try:
+            treffer = (
+                self._db.table("channex_webhook_event")
+                .select("id")
+                .eq("tenant_id", tenant_id)
+                .eq("live_feed_event_id", live_id)
+                .limit(1)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — Ingest nie kippen (200 zurück)
+            log.warning("webhook_event_dedup_pruefung_fehlgeschlagen",
+                        error=str(exc)[:200])
+            return False
+        return bool(treffer)
+
+    @staticmethod
+    def _webhook_inhalt(payload: dict[str, Any]) -> dict[str, Any]:
+        """Den Umschlag auspacken: `{event, payload: {...}, …}` → der Inhalt.
+
+        Der Gegenpart zu `nachrichten_eingang.payload_aus` und
+        `inbox.anfragen._kern` — nur wird hier beim SCHREIBEN ausgepackt, damit
+        die Leser gar nicht mehr unterscheiden muessen. Ein Payload, der schon
+        flach ist (oder dessen `payload` kein Objekt ist), bleibt unveraendert:
+        nichts erfinden, nichts wegwerfen (Wurzel 4).
+        """
+        innen = payload.get("payload")
+        return innen if isinstance(innen, dict) else payload
 
     @staticmethod
     def _live_feed_event_id(payload: dict[str, Any]) -> str | None:

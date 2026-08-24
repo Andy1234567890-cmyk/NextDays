@@ -21,6 +21,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
+from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger
@@ -69,6 +70,66 @@ WORKER = Quelle(
 NOTIZ_MAX = 2000
 
 
+#: Postgres-Fehlerklassen, die wir BENENNEN können statt sie als 500 zu zeigen.
+#: 23503 = Fremdschlüssel verletzt, 23502 = NOT NULL, 23514 = CHECK.
+_DB_MELDUNGEN = {
+    "23503": (
+        "Die Quittung liess sich nicht speichern: der Bearbeiter ist in der "
+        "Datenbank nicht als Benutzer hinterlegt.",
+        409,
+    ),
+    "23502": (
+        "Die Quittung liess sich nicht speichern: ein Pflichtfeld fehlt.",
+        409,
+    ),
+    "23514": (
+        "Die Quittung liess sich nicht speichern: die Datenbank hat den Wert "
+        "abgelehnt.",
+        409,
+    ),
+}
+
+
+def _db_fehler(
+    exc: APIError, *, aktion: str, quelle: Quelle, ereignis_id: str, ctx: AuthContext
+) -> ErledigenFehler:
+    """Einen `APIError` in eine BENANNTE Meldung übersetzen — und ihn loggen.
+
+    Warum das hier steht und nicht als nackter 500 durchläuft (Wurzel 5): live
+    lieferte dieser Pfad `internal_error`, und im Log stand
+    `{"error": "APIError", "event": "unhandled_error"}` — kein Code, kein
+    Constraint, keine Meldung. Der Fehler (ein Fremdschlüssel auf `public.users`,
+    den ein Backoffice-Admin nie erfüllen kann) musste von Hand in der DB
+    nachgestellt werden, um überhaupt gefunden zu werden. Ein Fehler, den man
+    nicht sieht, ist nicht behebbar.
+
+    Bewusst NICHT breit: gefangen wird ausschliesslich `APIError`, und nur
+    bekannte Codes werden übersetzt. Alles andere wird re-raised und bleibt ein
+    500 — ein unbekannter Fehler darf nicht als handliche 409 verkleidet
+    verschwinden.
+    """
+    code = getattr(exc, "code", None)
+    log.error(
+        "ereignis_quittung_db_fehler",
+        aktion=aktion,
+        quelle=quelle.name,
+        ereignis_id=ereignis_id,
+        user_id=ctx.user_id,
+        db_code=code,
+        db_message=(getattr(exc, "message", None) or "")[:300],
+        db_details=(getattr(exc, "details", None) or "")[:300],
+        db_hint=(getattr(exc, "hint", None) or "")[:200],
+    )
+    eintrag = _DB_MELDUNGEN.get(code or "")
+    if eintrag is None:
+        # Unbekannt → nicht verkleiden. Das Log oben trägt jetzt die Ursache.
+        raise exc
+    meldung, status = eintrag
+    return ErledigenFehler(meldung, status_code=status)
+
+
+
+
 def erledigen(
     db: Client,
     ctx: AuthContext,
@@ -108,15 +169,25 @@ def erledigen(
         # eine Notiz, die verloren ging (Wurzel 4).
         "resolution": {"note": text} if text else None,
     }
-    treffer = (
-        db.table(quelle.tabelle)
-        .update(aenderung)
-        .eq("id", ereignis_id)
-        # Nur die noch offene Zeile: Läuft parallel ein zweiter Klick, gewinnt
-        # der erste und der zweite findet nichts mehr (Wurzel 2, DB-seitig).
-        .eq("resolved", False)
-        .execute()
-    ).data or []
+    try:
+        treffer = (
+            db.table(quelle.tabelle)
+            .update(aenderung)
+            .eq("id", ereignis_id)
+            # Nur die noch offene Zeile: Läuft parallel ein zweiter Klick,
+            # gewinnt der erste und der zweite findet nichts mehr (Wurzel 2,
+            # DB-seitig).
+            .eq("resolved", False)
+            .execute()
+        ).data or []
+    except APIError as exc:
+        raise _db_fehler(
+            exc,
+            aktion="erledigen",
+            quelle=quelle,
+            ereignis_id=ereignis_id,
+            ctx=ctx,
+        ) from exc
     if not treffer:
         # Zwischen Laden und Schreiben hat jemand anderes abgehakt — kein
         # Fehler, sondern genau das gewünschte Ergebnis.
@@ -147,12 +218,21 @@ def wieder_oeffnen(
     vorher = _laden(db, quelle, ereignis_id)
     if not vorher.get("resolved"):
         return _antwort(vorher)
-    treffer = (
-        db.table(quelle.tabelle)
-        .update({"resolved": False, "resolved_at": None, "resolved_by": None})
-        .eq("id", ereignis_id)
-        .execute()
-    ).data or []
+    try:
+        treffer = (
+            db.table(quelle.tabelle)
+            .update({"resolved": False, "resolved_at": None, "resolved_by": None})
+            .eq("id", ereignis_id)
+            .execute()
+        ).data or []
+    except APIError as exc:
+        raise _db_fehler(
+            exc,
+            aktion="oeffnen",
+            quelle=quelle,
+            ereignis_id=ereignis_id,
+            ctx=ctx,
+        ) from exc
     log.info(
         "ereignis_wieder_geoeffnet",
         quelle=quelle.name,
