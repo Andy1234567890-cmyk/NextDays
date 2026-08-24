@@ -420,8 +420,27 @@ class AirbnbObjektAbrufMixin:
         Antwort von `POST channels/{id}/mappings` trägt Preis, Gebühren,
         Aufenthalts- und Buchungsregeln des Listings zurück.
 
-        Idempotent (Wurzel 2): besteht die Zuordnung schon, werden ihre Settings
-        aus dem Kanal-Objekt gelesen, statt eine zweite anzulegen.
+        Idempotent (Wurzel 2), auf ZWEI Ebenen — die zweite fehlte:
+
+        1. Vorab: trägt das Kanal-Objekt schon einen Eintrag mit unserer
+           `listing_id`, wird nicht erneut angelegt.
+        2. Und wenn Channex die Zuordnung trotzdem ablehnt, weil sie am
+           RATE-PLAN schon hängt. Live gemessen (24.08.2026 06:50,
+           „FeWo *Stjerneskud*", Kanal 21ec5429…):
+
+               POST channels/{id}/mappings → 422
+               {"mapping": ["rate plan already exists"]}
+
+           Das ist kein Fehler, sondern der Zielzustand — wie in
+           `objekt_kanal._portal_anpassung_mappings` und
+           `oauth_channels._zuordnung_schreiben_und_pruefen`, die beide genau
+           so prüfen. Warum Schritt 1 den Fall nicht fängt: er sucht nach
+           `settings.listing_id`, Channex lehnt aber nach RATE-PLAN ab. Ein
+           Eintrag, dessen `settings` die `listing_id` nicht (mehr) trägt —
+           oder ein Rate-Plan, der bereits an einem ANDEREN Kanal hängt
+           (belegt an `create_channel_mapping`: Channex schlägt die Neuanlage
+           dann dem anderen Kanal zu) — rutscht durch die Vorab-Prüfung und
+           schlägt erst hier auf.
         """
         # Ist-Stand: der einzige Ort, an dem Mappings lesbar sind (kein GET-Pfad
         # für `channels/{id}/mappings`, live geprüft → 404).
@@ -448,9 +467,41 @@ class AirbnbObjektAbrufMixin:
 
         # Airbnb nimmt EINEN Preis je Anzeige („Airbnb allows you to map only 1
         # rate plan") — der Grundpreis, also der erste.
-        antwort = self._channex.create_channel_mapping(  # type: ignore[attr-defined]
-            channel_id, eigene[0], {"listing_id": listing_id}
+        #
+        # Eigener Trace-Schritt: ohne ihn trägt dieser Aufruf im
+        # `channex_debug_log` das Etikett des LETZTEN Content-Schritts
+        # (`hotel_policy`, gesetzt in `content_sync`) — der Trace-Kontext gilt,
+        # bis er neu gesetzt wird. Genau daran war der gemessene 422 nicht
+        # auffindbar: er stand unter einem fremden Namen im Verlauf.
+        self._trace_step(  # type: ignore[attr-defined]
+            tenant_id=tenant_id, property_id=property_id,
+            step="airbnb_listing_mapping",
         )
+        try:
+            antwort = self._channex.create_channel_mapping(  # type: ignore[attr-defined]
+                channel_id, eigene[0], {"listing_id": listing_id}
+            )
+        except ChannexError as exc:
+            if "already exists" not in str(exc).lower():
+                # Jeder ANDERE Grund schlägt durch (Wurzel 5): nur das eine,
+                # benannte Signal ist der Zielzustand.
+                raise
+            # Die Zuordnung BESTEHT — aber ihre Nutzlast kommt hier nicht mit:
+            # ein 422 hat keine Antwort-Nutzlast. Weitergelaufen wird deshalb
+            # NICHT mit einem leeren `settings` (das wäre Wurzel 4/5: der
+            # Preis-Schritt meldete „Airbnb hat keinen Preis übergeben", obwohl
+            # nur die Nutzlast fehlte). Woher die Werte stattdessen kommen und
+            # warum NICHT aus dem Kanal-Objekt, steht im Modul-Docstring von
+            # `airbnb_mapping_nachlesen` — mit dem Beleg dafür.
+            log.info(
+                "airbnb_listing_mapping_bestand_bereits",
+                tenant_id=tenant_id, property_id=property_id,
+                listing_id=listing_id, channel_id=channel_id,
+                rate_plan_id=eigene[0],
+            )
+            return self._settings_vom_bestehenden_mapping(
+                channel_id, eigene[0], property_id
+            )
         settings = (
             ((antwort.get("data") or {}).get("attributes") or {}).get("settings")
             or {}

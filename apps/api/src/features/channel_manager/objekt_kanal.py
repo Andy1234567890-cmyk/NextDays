@@ -899,10 +899,43 @@ class ObjektKanalMixin:
         `paar_fuer_portal_plan` kein Paar und der Plan wird NICHT zugeordnet
         (fail-closed) — statt auf „alle Paare" zurueckzufallen und die
         Restriktion einer Wochenrate auf die Standard-Rate zu legen.
+
+        NUR PORTALE MIT RATEN-EBENE (gemessen 24.08.2026, „FeWo *Stjerneskud*"):
+        fuer einen Airbnb-Kanal lief hier
+            POST channels/mapping_details
+            {"channel":"AirBNB","settings":{"hotel_id":"226976381"}}  -> HTTP 400
+        Zwei Gruende, warum dieser Aufruf strukturell nie gelingen kann:
+        1. `hotel_id` ist kein Airbnb-Feld. Der Airbnb-Katalog fuehrt als
+           `params` nur code, email, min_stay_type, send_email_notifications,
+           booking_amount_settings, cohost_payout_calculations
+           (`airbnb_oauth.airbnb_settings_bauen`, `channex_client` Zeile 1673);
+           die Konto-Identitaet steckt bei OAuth in den Tokens am KANAL, nicht
+           in einer Kennung. Channex-Doku (channel-api-examples/airbnb):
+           „There is no `hotel_id` field — Airbnb uses `listing_id` instead."
+        2. Selbst mit den richtigen Settings gaebe es hier nichts zu holen:
+           Airbnb hat keine Raten-EBENE. Channex-Doku
+           (channel-mapping-guides/airbnb): „Airbnb allows you to map only 1
+           rate plan." `_normalize_mapping_rooms` liefert je Listing genau EINE
+           Rate mit der Listing-ID als Code, und Rate-Titel je Ratencode gibt es
+           dort nicht.
+        Der Aufruf kostete also bei JEDEM Content-Sync Channex-Kontingent und
+        schrieb eine Fehlerzeile in `channex_debug_log`, wo sie echte Fehler
+        unauffindbar macht. Deshalb frueh und BENANNT ueberspringen — dasselbe
+        Muster (und dieselbe Allowlist) wie `portal_raten_abgleich`: ein neues
+        Portal laeuft erst nach einer Messung mit, nicht per Vermutung.
         """
+        from .portal_raten_abgleich import PORTALE_MIT_RATEN
+
         hotel_id = conn.get("ota_hotel_id")
         portal = conn.get("ota_portal_code")
         if not hotel_id or not portal:
+            return {}
+        if str(portal) not in PORTALE_MIT_RATEN:
+            # Kein Fehler, sondern „hier gibt es nichts zu fragen" (s. o.).
+            log.info(
+                "portal_rate_titel_uebersprungen_ohne_raten_ebene",
+                portal=portal,
+            )
             return {}
         try:
             details = self._channex.get_channel_mapping_details(
@@ -938,10 +971,36 @@ class ObjektKanalMixin:
         Plan nach der Rate, dieser Name ist die Verbindung. Traegt kein Titel
         des Portals diesen Namen, ist es ein normaler Zusatz-Plan
         („Frühbucher", „Langzeit") — der gilt fuer das ganze Zimmer.
+
+        OHNE TITEL ist die Namensprobe BLIND (gefunden 24.08.2026 beim
+        Nachverfolgen des `mapping_details`-400). Faellt der Titel-Abruf aus,
+        ist `titel_je_code` leer, kein Name trifft je zu — und die Antwort waere
+        pauschal `None` = „alle Paare des Zimmers". Fuer einen Plan, der wie eine
+        Portal-Rate heisst, ist das genau die Zuordnung, die
+        `paar_fuer_portal_plan` als den GROESSEREN Schaden ausrechnet: der
+        Wochen-Plan mit min_stay 7 laege auch auf der Standard-Rate, Booking
+        verkaufte sie erst ab sieben Naechten, und es verstiesse gegen Channex'
+        Eindeutigkeit („One OTA room+rate pair should map to at most one local
+        rate plan"). Unwissen darf nicht als Freigabe gelesen werden (Wurzel 4/5).
+
+        Entschieden wird darum am NAMEN, nicht am leeren dict: heisst der Plan
+        wie eine Portal-Ratenkategorie (`_klingt_wie_portal_rate` — dieselbe
+        Vorpruefung, die den Plan ueberhaupt in diesen Lauf geholt hat), ist er
+        ohne Titel nicht sicher zuzuordnen → `_KEIN_ZIEL`. Ein Plan, der NICHT so
+        heisst („Frühbucher", „Langzeit"), ist ein echter Zusatz-Plan fuer das
+        ganze Zimmer; der braucht die Titel gar nicht und behaelt seinen Weg —
+        sonst haetten Portale ohne Raten-Ebene (Airbnb, s. `_portal_rate_titel`)
+        ab jetzt gar keine Zuordnung mehr bekommen.
         """
         gesucht = (plan_name or "").strip().lower()
         if not gesucht:
             return None
+        if not titel_je_code:
+            return (
+                self._KEIN_ZIEL
+                if _klingt_wie_portal_rate(plan_name)
+                else None
+            )
         namen = {(t or "").strip().lower() for t in titel_je_code.values()}
         if gesucht not in namen:
             return None  # kein Portal-Raten-Plan

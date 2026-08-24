@@ -1044,3 +1044,68 @@ class ObjektVerkaufStandResponse(BaseModel):
     titel: str | None = None
     status: str | None = None
     portale: list[dict[str, Any]] = Field(default_factory=list)
+
+
+# --- Portal-Raten-Auswahl (Dialog „Preisplan anlegen") -----------------------
+class PortalRateAuswahl(BaseModel):
+    """EINE Rate, die das Portal führt — als Auswahl statt als Tippvorlage.
+
+    `title` ist der Portal-Titel EXAKT. Er ist kein Anzeigetext, sondern der
+    ZUORDNUNGS-SCHLÜSSEL: `portal_raten_plaene.paar_fuer_portal_plan` findet das
+    OTA-Paar eines Preisplans ausschließlich über Namensgleichheit. Ein hier
+    normalisierter Titel (Groß-/Kleinschreibung, Bindestriche) ergäbe genau den
+    Plan, der beim Portal nie ankommt.
+
+    `belegt` ist DREIWERTIG und das absichtlich: `true` = die Rate hat schon
+    ihren eigenen Plan (die Oberfläche zeigt sie ausgegraut, damit der Nutzer
+    sieht, dass sie versorgt ist, statt einen zweiten Plan mit demselben Namen
+    anzulegen — dann wäre der Name nicht mehr eindeutig und `paar_fuer_portal_plan`
+    ordnete fail-closed GAR NICHTS mehr zu), `false` = frei, `null` = der Kanal
+    war nicht lesbar, die Belegung ist UNBEKANNT (Wurzel 5 — kein „frei" aus
+    einem fehlgeschlagenen Abruf).
+
+    `min_stay` ist ein VORSCHLAG aus dem Titel (7 bei Wochen-, 30 bei
+    Monats-Wörtern, `min_stay_aus_titel`). `null` heißt „nicht erkannt", nicht
+    „kein Mindestaufenthalt" — kein geratener Wert (Wurzel 4).
+    """
+
+    rate_plan_code: str
+    title: str
+    room_type_code: str | None = None
+    portal: str
+    belegt: bool | None = None
+    min_stay: int | None = None
+
+
+class PortalRatenAuswahlPortal(BaseModel):
+    """Die Raten EINES verbundenen Portals plus die Güte des Abrufs.
+
+    `abruf_ok` trennt „das Portal führt keine Raten" von „der Abruf ist
+    fehlgeschlagen" — in einer leeren Liste sehen beide gleich aus, und ohne
+    dieses Feld behauptete die Oberfläche bei jeder Störung „keine Raten frei"
+    (Wurzel 5). `kanal_lesbar` trennt zusätzlich „Raten bekannt, Belegung
+    unbekannt" ab; dann tragen alle Raten `belegt: null`.
+
+    `truncated`: die Antwort des Portals wurde auf `MAX_RATEN_JE_PORTAL` gekappt
+    (Wurzel 8). Sichtbar, nicht still — sonst fehlte dem Nutzer eine Rate, ohne
+    dass es jemand merkt.
+    """
+
+    portal: str
+    portal_label: str
+    abruf_ok: bool = False
+    kanal_lesbar: bool = False
+    truncated: bool = False
+    rates: list[PortalRateAuswahl] = Field(default_factory=list)
+
+
+class PortalRatenAuswahlResponse(BaseModel):
+    """Alle Raten-Portale eines Objekts, je Portal gruppiert.
+
+    Eine leere `portals`-Liste heißt „kein verbundenes Portal mit Raten-Ebene" —
+    Airbnb erscheint hier NIE (keine Raten-Ebene: eine „Rate" je Listing mit der
+    Listing-ID als Code, `PORTALE_MIT_RATEN` ist eine Allowlist).
+    """
+
+    property_id: str
+    portals: list[PortalRatenAuswahlPortal] = Field(default_factory=list)

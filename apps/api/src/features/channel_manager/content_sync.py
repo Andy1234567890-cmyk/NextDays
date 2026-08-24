@@ -329,6 +329,13 @@ class ContentSyncMixin:
         except ChannexError as exc:
             self._mark_property_sync(db, tenant_id, property_id, "error", exc.message)
             raise self._wrap_channex(exc) from exc
+        finally:
+            # Wurzel 1 (Gegenzustand): der Trace-Schritt gilt, bis er neu gesetzt
+            # wird. Ohne dieses Raeumen trug JEDER spaetere Channex-Call desselben
+            # Service-Objekts das Etikett des letzten Content-Schritts
+            # (`hotel_policy`) — siehe `_trace_step_beenden`. Im `finally`, weil
+            # es auch bei einem Abbruch gelten muss.
+            self._trace_step_beenden()
 
         self._mark_property_sync(db, tenant_id, property_id, "ok", None)
         log.info("channex_content_synced", tenant_id=tenant_id, property_id=property_id)

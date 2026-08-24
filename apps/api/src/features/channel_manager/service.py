@@ -27,6 +27,7 @@ from .airbnb_historie import AirbnbHistorieMixin
 from .airbnb_historie_dienst import AirbnbHistorieDienstMixin
 from .airbnb_historie_import import AirbnbHistorieImportMixin
 from .airbnb_lesestand import AirbnbLesestandMixin
+from .airbnb_mapping_nachlesen import AirbnbMappingNachlesenMixin
 from .airbnb_objekt_abruf import AirbnbObjektAbrufMixin
 from .airbnb_profilbilder import AirbnbProfilbilderMixin
 from .airbnb_registrierung import AirbnbRegistrierungMixin
@@ -58,6 +59,7 @@ from .objekt_kanal import ObjektKanalMixin
 from .objekt_verkauf import ObjektVerkaufMixin
 from .ota_extras import OtaExtrasMixin
 from .portal_raten_abgleich import PortalRatenAbgleichMixin
+from .portal_raten_auswahl import PortalRatenAuswahlMixin
 from .property_mapping import PropertyMappingMixin
 from .reviews_sync import ReviewsSyncMixin
 from .schemas import ChannexDebugEntry, ChannexDebugResponse, SliceHealth
@@ -101,6 +103,11 @@ class ChannelManagerService(
     # Room-Type und Rate-Plan bei Channex anzulegen — ohne sie gibt es kein
     # Mapping und Airbnb liefert keinen Preis.
     AirbnbObjektAbrufMixin,
+    # VOR/neben AirbnbObjektAbrufMixin gelesen: dessen `_listing_mapping_setzen`
+    # ruft `_settings_vom_bestehenden_mapping`, wenn Channex die Zuordnung mit
+    # „rate plan already exists" ablehnt (dann fehlt die Antwort-Nutzlast). Nur
+    # lesend — zwei GETs an den Mapping-Endpunkten.
+    AirbnbMappingNachlesenMixin,
     # Liest Adresse, Beschreibung, Ausstattung und Fotos DIREKT bei Airbnb —
     # mit dem OAuth-Token, das im Channex-Kanal liegt. Über Channex kommen nur
     # acht Felder (kein Content, keine Adresse); Airbnbs eigene API gibt alles
@@ -181,6 +188,12 @@ class ChannelManagerService(
     # Rate-Ebene). Kein zweiter Weg dorthin: dasselbe
     # `portal_raten_plaene.plan_fuer_portal_rate` wie der Aufbau-Pfad.
     PortalRatenAbgleichMixin,
+    # Nach PortalRatenAbgleichMixin: die LESENDE Auswahl-Liste des Dialogs
+    # „Preisplan anlegen" nutzt dessen `_kanaele_mit_raten`, `_portal_raten` und
+    # `_belegte_ratencodes`. Eine zweite Lese-Regel „welche Rate ist versorgt"
+    # waere die zweite Wahrheit, die genau dann auseinanderlaeuft, wenn es
+    # zaehlt. Sie schreibt nichts — kein Job, kein Content-Sync.
+    PortalRatenAuswahlMixin,
     ReviewsSyncMixin,
     FullSyncMixin,
     CsvImportMixin,
@@ -282,6 +295,33 @@ class ChannelManagerService(
         aufrufen — der Kontext gilt, bis er neu gesetzt wird."""
         self._trace_ctx = {
             "tenant_id": tenant_id, "property_id": property_id, "step": step,
+        }
+
+    def _trace_step_beenden(self) -> None:
+        """Den Trace-Schritt zuruecksetzen — der Gegenzustand zu `_trace_step`.
+
+        Wurzel 1: `_trace_step` setzt Instanz-Zustand, der gilt, BIS er neu
+        gesetzt wird. Wer einen Ablauf mit mehreren Schritten beendet, ohne den
+        letzten zu raeumen, etikettiert damit jeden spaeteren Channex-Call
+        dieses Service-Objekts mit einem fremden Namen.
+
+        Live passiert (24.08.2026, „FeWo *Stjerneskud*"): `sync_content` setzt
+        als letzten Schritt `hotel_policy`; der darauf folgende
+        `POST channels/{id}/mappings` stand in `channex_debug_log` deshalb als
+        step „hotel_policy", obwohl er mit der Hotel-Policy nichts zu tun hat.
+        Der 422 „rate plan already exists" war unter diesem Namen fuer den
+        Betrieb nicht auffindbar — ein Fehler, den man nicht findet, ist ein
+        Fehler, den niemand behebt.
+
+        Tenant und Objekt bleiben STEHEN: ohne Tenant schreibt der Sink gar
+        nichts (RLS/NOT NULL), ein Aufruf ohne eigenen Schritt waere dann
+        unsichtbar statt nur unbenannt. Er laeuft dann unter dem neutralen
+        „call", das `_persist_trace` einsetzt.
+        """
+        self._trace_ctx = {
+            "tenant_id": self._trace_ctx.get("tenant_id"),
+            "property_id": self._trace_ctx.get("property_id"),
+            "step": None,
         }
 
     def _persist_trace(self, trace: ChannexCallTrace) -> None:

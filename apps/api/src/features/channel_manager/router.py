@@ -79,6 +79,7 @@ from .schemas import (
     PinnedChannelsResponse,
     PortalPriceAdjustmentRequest,
     PortalPriceAdjustmentResponse,
+    PortalRatenAuswahlResponse,
     PrepareChannelRequest,
     PrepareChannelResponse,
     PropertyConnectRequest,
@@ -925,6 +926,35 @@ def abgaben_status(
     Regelsatz nur für die Anzeige."""
     try:
         return AbgabenStatusResponse(**service.abgaben_status(ctx, property_id))
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/properties/{property_id}/portal-raten",
+    response_model=PortalRatenAuswahlResponse,
+)
+def portal_raten_auswahl(
+    property_id: str, ctx: _read, service: ChannelManagerServiceDep
+) -> PortalRatenAuswahlResponse:
+    """Die Raten, die die verbundenen Portale führen — mit Vorschlag je Rate.
+
+    Speist den Dialog „Preisplan anlegen": statt den Portal-Titel abzutippen,
+    WÄHLT der Nutzer die Rate. Die Zuordnung eines Preisplans zu einer Portal-Rate
+    läuft ausschließlich über Namensgleichheit
+    (`portal_raten_plaene.paar_fuer_portal_plan`) — ein getippter „Wochenpreis"
+    neben Bookings „Wochenrate" ergibt einen Plan, der nie beim Portal ankommt.
+
+    Rein lesend: `mapping_details` (POST, aber eine reine Abfrage) und
+    `GET /channels/{id}`. Kein Schreibaufruf, kein Job.
+
+    Belegte Raten kommen MIT (`belegt: true`) statt weggefiltert — der Nutzer
+    soll sehen, dass sie versorgt sind. `abruf_ok: false` heißt „wir wissen
+    nicht, was das Portal führt", NICHT „nichts frei" (Wurzel 5)."""
+    try:
+        return PortalRatenAuswahlResponse(
+            **service.portal_raten_auswahl(ctx, property_id)
+        )
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

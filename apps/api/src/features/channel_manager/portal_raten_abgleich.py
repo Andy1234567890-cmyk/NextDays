@@ -677,6 +677,15 @@ class PortalRatenAbgleichMixin:
         nach Zimmer getrennt — die Raten-TITEL sind der Schluessel, und
         `paar_fuer_portal_plan` verlangt ohnehin, dass ein Titel im ganzen
         Bestand eindeutig ist; sonst ordnet es fail-closed gar nicht zu.
+
+        Jede Rate traegt zusaetzlich `room_type_code` — das Zimmer, unter dem
+        das Portal sie fuehrt. Es steht am ZIMMER, nicht an der Rate
+        (`_normalize_mapping_rooms` gibt `[{id, title, rates:[…]}]` zurueck),
+        und geht ohne diesen Schritt verloren. Der Abgleich braucht es nicht
+        (er ordnet ueber Titel zu), die Auswahl-Liste des Dialogs
+        „Preisplan anlegen" schon: dort sagt es dem Nutzer, welches Zimmer eine
+        Rate bepreist. Ein zweiter `mapping_details`-Abruf nur dafuer waere ein
+        weiterer Channex-Call fuer bereits gelesene Daten.
         """
         portal = str(conn.get("ota_portal_code") or "")
         hotel_id = conn.get("ota_hotel_id")
@@ -698,7 +707,10 @@ class PortalRatenAbgleichMixin:
                 if code is None or str(code) in gesehen:
                     continue
                 gesehen.add(str(code))
-                raten.append(rate)
+                # Kopie, kein In-place-Schreiben: das Rate-Dict gehoert der
+                # Normalisierung, und ein Aufrufer, der es weiterverwendet,
+                # soll keinen Schluessel vorfinden, den das Portal nie sendete.
+                raten.append({**rate, "room_type_code": room.get("id")})
         return raten
 
 
