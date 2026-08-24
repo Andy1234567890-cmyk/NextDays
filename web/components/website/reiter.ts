@@ -19,6 +19,11 @@ export const BAUKASTEN_BASIS = "/website";
 export const REITER_IDS = [
   "design",
   "seiten",
+  "seo",
+  // Anfragen aus den Formular-Abschnitten (0436). Eigener Reiter und kein
+  // Unterpunkt: es sind eingehende Nachrichten von Gästen, keine Einstellung.
+  // Wer sie sucht, sucht sie nicht unter „SEO" und nicht unter „Design".
+  "anfragen",
   "einstellungen",
   "objekte",
   "widgets",
@@ -31,6 +36,12 @@ export type ReiterId = (typeof REITER_IDS)[number];
 export const REITER_HREF: Record<ReiterId, string> = {
   design: `${BAUKASTEN_BASIS}/design`,
   seiten: `${BAUKASTEN_BASIS}/seiten`,
+  // SEO steht NEBEN den Einstellungen und nicht darin (0430): es sind fünf
+  // Unterpunkte mit Tabellen und einer eigenen Import-Maske. Hostaway hat es
+  // aus demselben Grund als eigenen Bereich („SEO/AEO" mit Untermenü) —
+  // gedrängt unter „Einstellungen" wären es zehn Punkte in einer Spalte.
+  seo: `${BAUKASTEN_BASIS}/seo`,
+  anfragen: `${BAUKASTEN_BASIS}/anfragen`,
   einstellungen: `${BAUKASTEN_BASIS}/einstellungen/adresse`,
   objekte: `${BAUKASTEN_BASIS}/objekte`,
   widgets: `${BAUKASTEN_BASIS}/widgets`,
@@ -51,6 +62,24 @@ export const EINSTELLUNGEN_UNTERPUNKTE = [
 
 export type EinstellungenUnterpunkt =
   (typeof EINSTELLUNGEN_UNTERPUNKTE)[number];
+
+/** Unterpunkte des SEO-Reiters (0430). Reihenfolge = Reihenfolge in der Spalte,
+ *  und sie folgt der Arbeitsweise: erst die site-weiten Angaben (der Rückfall
+ *  für alles), dann Seite für Seite, dann die strukturierten Daten, dann die
+ *  Messung, zuletzt die Weiterleitungen — die braucht nur, wer umzieht.
+ *
+ *  Der erste Punkt heißt `uebersicht` und nicht `allgemein`: er zeigt nicht nur
+ *  Felder, sondern auch, was daraus entsteht (sitemap.xml, robots.txt,
+ *  llms.txt). Ohne diese Anzeige weiß niemand, dass es die Dateien gibt. */
+export const SEO_UNTERPUNKTE = [
+  "uebersicht",
+  "seiten",
+  "schema",
+  "messung",
+  "weiterleitungen",
+] as const;
+
+export type SeoUnterpunkt = (typeof SEO_UNTERPUNKTE)[number];
 
 /** Welcher Reiter zu einem Pfad gehört. `null`, wenn der Pfad nicht im
  *  Baukasten liegt — dann ist kein Reiter aktiv, statt willkürlich den ersten

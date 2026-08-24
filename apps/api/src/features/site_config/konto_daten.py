@@ -124,3 +124,65 @@ def kontakt_mit_firmendaten(
         sprachen = list((inhalt.get("address") or {}).keys()) or ["de"]
         out["address"] = {s: firma["address"] for s in sprachen}
     return out
+
+
+def firmen_schema_daten(db: Client, tenant_id: str) -> dict[str, str | None]:
+    """Anschrift des Betriebs in EINZELTEILEN — für strukturierte Daten (0430).
+
+    ``firmendaten`` liefert die Anschrift als fertige, mehrzeilige Adresszeile;
+    das ist richtig für eine Fußzeile und falsch für JSON-LD. Schema.org
+    verlangt eine ``PostalAddress`` mit getrennten Feldern (``streetAddress``,
+    ``postalCode``, ``addressLocality``, ``addressCountry``) — eine
+    zusammengeklebte Zeile dort einzusetzen ist der Fehler, den Googles
+    Testwerkzeug als „unstrukturiert" zurückmeldet.
+
+    Deshalb eine zweite Funktion statt eines Schalters an der ersten: die zwei
+    Aufrufer wollen wirklich Verschiedenes, und ein `zerlegt=True` würde beiden
+    Rückgabetypen dieselbe Signatur aufzwingen.
+
+    Das Länderkürzel bleibt hier ERHALTEN, anders als in ``firmendaten``: „DK"
+    liest sich in einer Adresszeile falsch, ist aber genau das, was Schema.org
+    für ``addressCountry`` erwartet (ISO 3166-1 alpha-2).
+
+    Fehlt eine Angabe, bleibt sie ``None`` — der Aufrufer lässt das Feld dann
+    im Schema weg statt eine Anschrift zu erfinden (Wurzel 4)."""
+    firma = (
+        db.table("tenant_billing_profile")
+        .select(
+            "legal_name, email, phone_number, company_street, "
+            "company_house_number, company_postal_code, company_city, "
+            "company_country"
+        )
+        .eq("tenant_id", tenant_id)
+        .limit(1)
+        .execute()
+    ).data or []
+    f = firma[0] if firma else {}
+    betrieb = (
+        db.table("tenants")
+        .select("name")
+        .eq("id", tenant_id)
+        .limit(1)
+        .execute()
+    ).data or []
+    name = (betrieb[0].get("name") if betrieb else None) or f.get("legal_name")
+
+    strasse = " ".join(
+        teil
+        for teil in (f.get("company_street"), f.get("company_house_number"))
+        if teil
+    ).strip()
+
+    def wert(schluessel: str) -> str | None:
+        roh = (f.get(schluessel) or "").strip()
+        return roh or None
+
+    return {
+        "name": name or None,
+        "street": strasse or None,
+        "postal_code": wert("company_postal_code"),
+        "city": wert("company_city"),
+        "country": wert("company_country"),
+        "phone": wert("phone_number"),
+        "email": wert("email"),
+    }

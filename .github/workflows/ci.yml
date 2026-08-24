@@ -409,6 +409,17 @@ jobs:
         if: steps.pruefen.outputs.laufen == 'true'
         run: node scripts/i18n/entwickler-namespace-pruefen.mjs
 
+      # Ein Abschnittstyp des Website-Baukastens steht an SIEBEN Stellen (DB-CHECK,
+      # Pydantic-Enum, content-Schema, zwei TypeScript-Unions, der Editor-Katalog
+      # und das switch im Renderer) plus Label und Hinweis in 24 Sprachen. Keine
+      # dieser Stellen prüft die anderen: `tsc` sieht nur die eigene Kopie, und
+      # ein Typ, der im Katalog steht, aber im Renderer fehlt, ist ein Abschnitt,
+      # den der Kunde anlegen kann und der in der Vorschau leer bleibt — ohne
+      # Fehlermeldung. Dieselbe Klasse Fehler wie bei den Kanal-Enums.
+      - name: Abschnitts-Typen des Baukastens deckungsgleich
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: node scripts/i18n/blocktypen-pruefen.mjs
+
       # Der Scope-Katalog wird von DREI Stellen gelesen: dem Backend (was das
       # Dashboard vergeben darf), der Auswahl in der Oberfläche und den
       # Etiketten in 24 Sprachen. Fehlt ein Bereich in der Oberfläche, kann

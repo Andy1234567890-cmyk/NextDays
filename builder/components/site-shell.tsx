@@ -15,6 +15,8 @@ import { themeOf } from "@/lib/theme";
 
 import { CookieHinweis } from "./cookie-hinweis";
 import { Kundencode } from "./kundencode";
+import { PopupFlaeche } from "./popup-flaeche";
+import { SiteKopfdaten } from "./site-kopfdaten";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 
@@ -25,6 +27,9 @@ export function SiteShell({
   jahr,
   sprache,
   flaeche = "oeffentlich",
+  seitenHtml,
+  tenantId,
+  vorschau = false,
   children,
 }: {
   branding: SiteBranding | null | undefined;
@@ -37,6 +42,20 @@ export function SiteShell({
    *  custom_js aus und bindet nur das Conversion-Pixel ein — die Trennung
    *  steckt in lib/code-injection.ts, hier wird nur die Fläche benannt. */
   flaeche?: CodeFlaeche;
+  /** Kopf-HTML NUR dieser Seite (0430) — siehe components/kundencode.tsx. */
+  seitenHtml?: string | null;
+  /** Für die Pop-ups (0437): ihre Abschnitte brauchen den Tenant, um Objekte
+   *  und Bewertungen zu laden. Fehlt er, gibt es keine Pop-ups — dieselbe
+   *  Regel wie bei jedem anderen Abschnitt. */
+  tenantId?: string | null;
+  /** Läuft dieser Rahmen im Editor-iframe (0430)?
+   *
+   *  Dann KEIN Google-Tag und keine strukturierten Daten. Beides ist im Entwurf
+   *  nicht nur überflüssig, sondern schädlich: jeder Blick des Betriebs auf
+   *  seine eigene Vorschau würde als Besuch gezählt und seine Statistik
+   *  verfälschen — bei einer Seite, an der man arbeitet, sind das Dutzende
+   *  Aufrufe am Tag. */
+  vorschau?: boolean;
   children: ReactNode;
 }) {
   const txt = texte(sprache);
@@ -54,7 +73,18 @@ export function SiteShell({
   // Fläche entscheidet, was davon greift.
   const beiwerk = (
     <>
-      <Kundencode branding={branding} flaeche={flaeche} />
+      <Kundencode
+        branding={branding}
+        flaeche={flaeche}
+        seitenHtml={seitenHtml}
+      />
+      {vorschau ? null : <SiteKopfdaten branding={branding} />}
+      {/* Pop-ups hängen am RAHMEN und nicht an einer Route: sie erscheinen
+          überall, wo ihr Auslöser greift. In der Vorschau bleiben sie aus —
+          sonst legt sich beim Bearbeiten ein Fenster über den Editor. */}
+      {vorschau || !tenantId ? null : (
+        <PopupFlaeche tenantId={tenantId} sprache={sprache} />
+      )}
       {branding?.cookie_banner ? (
         <CookieHinweis
           text={txt.cookieText}

@@ -5,6 +5,9 @@
 import { fontStack } from "@/lib/fonts-catalog";
 import { type EditierModus, NICHT_EDITIERBAR } from "@/lib/editier-kontext";
 import { pickText } from "@/lib/i18n";
+import { texte } from "@/lib/texte";
+
+import { AbschnittLeer } from "./abschnitt-leer";
 import { sanitizeHtml } from "@/lib/sanitize";
 
 export function RichTextBlock({
@@ -18,7 +21,14 @@ export function RichTextBlock({
   modus?: EditierModus;
 }) {
   const html = sanitizeHtml(pickText(content.html, modus.locale));
-  if (!html) return null;
+  if (!html) {
+    return (
+      <AbschnittLeer
+        modus={modus}
+        grund={texte(modus.locale).leerText}
+      />
+    );
+  }
   const centered = content.align === "center";
   const stack = fontStack(
     typeof content.font_family === "string" ? content.font_family : null,

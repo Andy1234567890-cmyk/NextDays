@@ -70,6 +70,13 @@ export function HeroBlock({
             <img
               src={imageUrl}
               alt=""
+              // IMMER sofort, unabhängig von der Lazy-Einstellung: dieses Bild
+              // ist auf einer Unterkunfts-Website fast immer das Element, das
+              // Googles „Largest Contentful Paint" misst. Lazy geladen wird die
+              // Kennzahl SCHLECHTER, weil der Browser erst nach dem Layout
+              // damit anfängt (Begründung in lib/bilder.ts).
+              loading="eager"
+              fetchPriority="high"
               className="absolute inset-0 size-full object-cover"
             />
           ) : (
@@ -111,6 +118,9 @@ export function HeroBlock({
         <img
           src={imageUrl}
           alt=""
+          // Wie oben: das Vollbild des ersten Abschnitts ist das LCP-Element.
+          loading="eager"
+          fetchPriority="high"
           className="absolute inset-0 -z-10 size-full object-cover"
         />
       ) : (

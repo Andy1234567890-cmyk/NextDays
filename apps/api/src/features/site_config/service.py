@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-import secrets
 import time
 from datetime import UTC, datetime
 
@@ -23,11 +22,16 @@ from supabase import Client
 from src.core.config import get_settings
 from src.core.logging import get_logger
 from src.core.security import AuthContext
-from src.core.supabase import public_storage_url
 
-from . import konto_daten
+from . import konto_daten, seiten
 from . import templates as site_templates
 from .cloudflare_client import CloudflareClient, CloudflareError
+
+# Re-Export: bestehende Importe `from .service import SiteConfigError` bleiben
+# gültig. Die Klasse selbst liegt in `fehler.py`, weil die Mixins sie brauchen
+# und ein Import aus `service` ein Zirkel wäre.
+from .fehler import SiteConfigError
+from .mediathek import MediathekMixin
 from .schemas import (
     BlockCreate,
     BlockListResponse,
@@ -42,16 +46,15 @@ from .schemas import (
     DnsRecord,
     DomainCreate,
     DomainStatus,
-    MediumListResponse,
-    MediumResponse,
     NavArea,
     PageCreate,
     PageListResponse,
     PageResponse,
+    PageType,
     PageUpdate,
     PublicBlock,
     PublicNav,
-    PublicNavItem,
+    PublicOrganization,
     PublicPageMeta,
     PublicPageResponse,
     PublicSiteResponse,
@@ -60,6 +63,16 @@ from .schemas import (
 )
 
 log = get_logger("nextdays.site_config")
+
+
+def _jetzt_iso() -> str:
+    """Der aktuelle Zeitpunkt als ISO-Text.
+
+    Für das Erscheinungsdatum eines neuen Blog-Beitrags (0438), wenn der Kunde
+    keines angibt. Das ist KEIN Verstoß gegen Wurzel 5b: gefragt ist, wann
+    DIESER Beitrag angelegt wurde, und das ist genau jetzt — es geht nicht um
+    den Zeitpunkt eines fremden Ereignisses."""
+    return datetime.now(UTC).isoformat()
 
 # Alle Branding-Spalten. Sie werden AUFGEZÄHLT und nicht per `*` geholt:
 # `select("*")` würde jede neue Spalte automatisch mitliefern — auch eine, die
@@ -80,7 +93,13 @@ _BRANDING_COLS = (
     "languages, default_language, show_guest_breakdown, show_base_prices, "
     # 0426: Code-Injection und Rechts-Schalter.
     "head_html, head_css, custom_js, checkout_js, cookie_banner, "
-    "cookie_policy_page_id, privacy_consent, privacy_policy_page_id, is_offline"
+    "cookie_policy_page_id, privacy_consent, privacy_policy_page_id, is_offline, "
+    # 0430: SEO/AEO site-weit, Google-Tag, strukturierte Daten, Core Web Vitals.
+    "seo_title, seo_description, seo_keywords, noindex, gtag_id, "
+    "schema_organization, schema_breadcrumbs, schema_lodging, schema_faq, "
+    "lazy_loading, system_fonts_first, "
+    # 0435: Theme-Breite und Schriftgrößen-Faktoren.
+    "content_width, heading_scale, body_scale"
 )
 _DOMAIN_COLS = (
     "id, tenant_id, domain, cf_custom_hostname_id, status, ssl_status, "
@@ -90,41 +109,21 @@ _DOMAIN_COLS = (
 _PUBLIC_COLS = f"tenant_id, {_BRANDING_COLS}"
 _PAGE_COLS = (
     "id, slug, title, seo_title, seo_description, og_image_url, is_home, "
-    "is_published, nav_area, nav_order, languages"
+    "is_published, nav_area, nav_order, languages, "
+    # 0430: SEO je Seite.
+    "seo_keywords, canonical_url, head_html, noindex, "
+    # 0433: Seitentypen (externer Menüpunkt, Ordner, 404).
+    "page_type, external_url, parent_id, "
+    # 0437: Pop-up-Auslöser.
+    "popup_trigger, popup_value, popup_device, popup_once, "
+    # 0438: Blog-Beitrag.
+    "published_at, author, cover_image_url, excerpt, tags"
 )
 _BLOCK_COLS = "id, page_id, type, position, content, settings"
 _MEDIA_COLS = "id, url, filename, mime, bytes, created_at"
 
 
-def _bild_typ(content: bytes) -> str | None:
-    """Der WIRKLICHE Bildtyp aus den Anfangsbytes, oder None.
-
-    Wurzel 8: der `content_type` des Clients ist eine Behauptung — er wird von
-    der Gegenseite gesetzt und kostet nichts. Deshalb entscheidet die Signatur:
-    JPEG ``FF D8 FF``, PNG ``89 50 4E 47 0D 0A 1A 0A``, WebP ``RIFF....WEBP``.
-
-    Gleiche Prüfung wie in tasks/service.py — bewusst als Kopie und nicht als
-    Import: ein Slice soll für seine Upload-Sicherheit nicht an einem fremden
-    Slice hängen, und die Signaturen ändern sich nie."""
-    if content.startswith(b"\xff\xd8\xff"):
-        return "image/jpeg"
-    if content.startswith(b"\x89PNG\r\n\x1a\n"):
-        return "image/png"
-    if content[:4] == b"RIFF" and content[8:12] == b"WEBP":
-        return "image/webp"
-    return None
-
-
-class SiteConfigError(Exception):
-    """Fachlicher Fehler; vom Router auf HTTP-Status gemappt."""
-
-    def __init__(self, message: str, *, status_code: int = 400) -> None:
-        super().__init__(message)
-        self.message = message
-        self.status_code = status_code
-
-
-class SiteConfigService:
+class SiteConfigService(MediathekMixin):
     slice_name = "site_config"
 
     def __init__(
@@ -286,7 +285,14 @@ class SiteConfigService:
         self, ctx: AuthContext, domain_id: str
     ) -> CustomDomainResponse:
         """Holt den aktuellen CF-Status und spiegelt ihn in die DB (pending→active
-        /error). Invalidiert bei active den by-domain-Cache."""
+        /error).
+
+        Kein Zwischenspeicher zu leeren: `resolve_site_by_domain` fragt bei
+        jedem Aufruf die Datenbank. Der Satz „invalidiert den by-domain-Cache"
+        stand hier, obwohl es diesen Cache nie gab — nachgeprüft am 24.08.2026
+        gegen den ganzen Slice und gegen HEAD. Er bleibt hier als Warnung
+        stehen: ein Kommentar, der eine Vorkehrung beschreibt, die es nicht
+        gibt, ist gefährlicher als gar keiner — er beendet die Suche."""
         tenant_id = self._require_tenant(ctx)
         row = self._own_domain(tenant_id, domain_id)
         cf_id = row.get("cf_custom_hostname_id")
@@ -390,11 +396,61 @@ class SiteConfigService:
                 slug = self._slug_von(tenant_id, str(seiten_id))
                 if slug is not None:
                     gesetzt[ziel] = slug
-        return PublicSiteResponse(
+        antwort = PublicSiteResponse(
             **gesetzt,
             tenant_id=tenant_id,
             nav=self._public_nav(tenant_id),
         )
+        # Firmenangaben fürs Organization-Schema NUR laden, wenn der Schalter an
+        # ist (0430). Sonst wären es zwei Datenbankabfragen pro Seitenansicht
+        # für ein Ergebnis, das niemand ausliefert.
+        if antwort.schema_organization:
+            antwort.organization = self._organisation(tenant_id)
+        antwort.payments_ready = self._zahlungen_bereit(tenant_id)
+        return antwort
+
+    def _zahlungen_bereit(self, tenant_id: str) -> bool:
+        """Kann dieser Betrieb online Geld annehmen?
+
+        Stripe ODER PayPal genügt. Beide werden geprüft, weil ein Betrieb sich
+        für einen der beiden Wege entscheiden kann — und weil „nur PayPal" ein
+        gültiger Zustand ist, in dem die Buchungsstrecke funktioniert.
+
+        Bei Stripe zählt `stripe_charges_enabled` und nicht die bloße Existenz
+        eines Kontos: ein angelegter Custom Account, dessen KYC noch aussteht,
+        nimmt kein Geld an. Genau dieser Zustand dauert Tage und ist der Grund
+        für die Prüfung.
+
+        Fehlt die Zeile ganz (Betrieb ohne Abrechnungsprofil), ist die Antwort
+        `False` — fail-closed (Wurzel 5). Eine Buchungsstrecke anzubieten, von
+        der wir nicht wissen, ob sie kassieren kann, wäre die schlechtere
+        Annahme."""
+        rows = (
+            self._db.table("tenant_billing_profile")
+            .select("stripe_charges_enabled, paypal_email")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            return False
+        profil = rows[0]
+        return bool(profil.get("stripe_charges_enabled")) or bool(
+            (profil.get("paypal_email") or "").strip()
+        )
+
+    def _organisation(self, tenant_id: str) -> PublicOrganization | None:
+        """Firmenangaben für strukturierte Daten, oder ``None``.
+
+        ``None`` bei fehlendem Namen: ein ``Organization``-Schema ohne ``name``
+        ist für Google unbrauchbar, und ein erfundener Name wäre eine
+        Falschaussage in maschinenlesbarer Form (Wurzel 4). Die restlichen
+        Felder dürfen einzeln fehlen — ein Schema mit Name und Ort ohne Telefon
+        ist gültig und besser als keines."""
+        daten = konto_daten.firmen_schema_daten(self._db, tenant_id)
+        if not daten.get("name"):
+            return None
+        return PublicOrganization(**daten)
 
     def _slug_von(self, tenant_id: str, page_id: str) -> str | None:
         """Slug einer eigenen Seite. `None`, wenn sie nicht (mehr) existiert
@@ -472,7 +528,19 @@ class SiteConfigService:
             .limit(1)
             .execute()
         ).data or []
-        slug = req.slug
+        # Deckel und Slug-Regeln stehen in `seiten_regeln` — dort auch, warum.
+        if seiten.zaehle_seiten(self._db, tenant_id) >= (
+            seiten.MAX_SEITEN
+        ):
+            raise SiteConfigError(
+                f"Mehr als {seiten.MAX_SEITEN} Seiten sind nicht "
+                "möglich.",
+                status_code=422,
+            )
+        try:
+            titel, slug = seiten.titel_und_slug(req)
+        except ValueError as exc:
+            raise SiteConfigError(str(exc), status_code=400) from exc
         # Slug-Kollision vorab abfangen (DB-unique ist der harte Backstop).
         if (
             self._db.table("site_pages")
@@ -487,21 +555,96 @@ class SiteConfigService:
             )
         payload = {
             "tenant_id": tenant_id,
-            "title": req.title,
+            "title": titel,
             "slug": slug,
             "is_home": not existing,
             "nav_area": req.nav_area.value,
             # Neue Seite hinten in ihrem Navigationsbereich einsortieren, damit
             # sie nicht auf Position 0 vor die Startseite springt.
             "nav_order": self._next_nav_order(tenant_id, req.nav_area.value),
+            # 0433
+            "page_type": req.page_type.value,
+            "external_url": req.external_url,
+            "parent_id": req.parent_id,
+            # 0437 — nur beim Pop-up gesetzt; der CHECK in 0437 erzwingt das,
+            # und das Schema hat es bereits geprüft.
+            "popup_trigger": (
+                req.popup_trigger.value if req.popup_trigger else None
+            ),
+            "popup_value": req.popup_value,
+            "popup_device": req.popup_device,
+            "popup_once": req.popup_once,
+            # 0438 — nur beim Beitrag gesetzt (CHECK in 0438).
+            #
+            # `published_at` fällt bewusst auf JETZT zurück, wenn der Kunde kein
+            # Datum angibt: ein Beitrag ohne Datum hätte keine Position in der
+            # Reihenfolge und stünde je nach Abfrage irgendwo. Das ist kein
+            # erfundener Wert — er legt ihn in diesem Moment an.
+            "published_at": (
+                req.published_at
+                if req.page_type is not PageType.post
+                else (req.published_at or _jetzt_iso())
+            ),
+            "author": req.author,
+            "cover_image_url": req.cover_image_url,
+            "excerpt": req.excerpt,
+            "tags": req.tags,
         }
+        if seiten.ist_ohne_inhalt(req.page_type):
+            payload["is_home"] = False
+        # `_own_page` erzwingt den Tenant-Scope (Wurzel 3), `pruefe_ordner` den
+        # Typ. Ohne beides könnte eine Seite an einen fremden Ordner gehängt
+        # werden oder an eine normale Seite — und die Navigation bekäme eine
+        # Verschachtelung, die der CHECK aus 0433 verbietet.
+        if req.parent_id:
+            try:
+                seiten.pruefe_ordner(
+                    self._own_page(tenant_id, req.parent_id)
+                )
+            except ValueError as exc:
+                raise SiteConfigError(str(exc), status_code=422) from exc
         res = self._db.table("site_pages").insert(payload).execute()
         if not res.data:
             raise SiteConfigError(
                 "Seite konnte nicht angelegt werden.", status_code=500
             )
+        neue_id = res.data[0]["id"]
+        # Die Vorlage NACH dem Anlegen: sie braucht die page_id. Ein Fehler hier
+        # lässt die Seite stehen (leer) statt sie zurückzurollen — eine
+        # halbfertige Seite kann der Kunde sehen und löschen, eine verschluckte
+        # nicht (Wurzel 5).
+        if req.template:
+            try:
+                seiten.vorlage_anwenden(
+                    self._db,
+                    tenant_id,
+                    neue_id,
+                    req.template,
+                    konto_daten.firmendaten(self._db, tenant_id),
+                )
+            except ValueError as exc:
+                raise SiteConfigError(str(exc), status_code=422) from exc
         # Frisch laden, damit DB-Defaults (is_published/nav_order) gefüllt sind.
-        return self._load_page(tenant_id, res.data[0]["id"])
+        return self._load_page(tenant_id, neue_id)
+
+    def duplicate_page(self, ctx: AuthContext, page_id: str) -> PageResponse:
+        """Eine Seite samt Blöcken kopieren (0433).
+
+        Der Deckel gilt auch hier: Duplizieren ist der bequemste Weg, 200 Seiten
+        zu erzeugen. Was NICHT mitkopiert wird (SEO-Felder, `is_published`,
+        `is_home`) und warum jedes einzeln, steht in `seiten.duplizieren`."""
+        tenant_id = self._require_tenant(ctx)
+        if seiten.zaehle_seiten(self._db, tenant_id) >= seiten.MAX_SEITEN:
+            raise SiteConfigError(
+                f"Mehr als {seiten.MAX_SEITEN} Seiten sind nicht möglich.",
+                status_code=422,
+            )
+        quelle = self._own_page(tenant_id, page_id)
+        try:
+            neu = seiten.duplizieren(self._db, tenant_id, quelle, page_id)
+        except ValueError as exc:
+            raise SiteConfigError(str(exc), status_code=409) from exc
+        return self._load_page(tenant_id, neu["id"])
 
     def update_page(
         self, ctx: AuthContext, page_id: str, req: PageUpdate
@@ -828,170 +971,6 @@ class SiteConfigService:
             "tenant_id", tenant_id
         ).execute()
 
-    # === Mediathek (Dashboard, MANAGE_SITE_CONFIG) ==========================
-
-    #: Bucket der Mediathek (Migration 0422). Öffentlich, weil die Bilder als
-    #: <img src> in gespeicherte Blöcke wandern.
-    MEDIA_BUCKET = "site-media"
-    #: Erlaubte Bildtypen → Dateiendung. SVG fehlt bewusst: es darf <script>
-    #: tragen und wäre im public Bucket Stored-XSS (Wurzel 8).
-    MEDIA_MIME = {
-        "image/jpeg": "jpg",
-        "image/png": "png",
-        "image/webp": "webp",
-    }
-    MEDIA_MAX_BYTES = 20 * 1024 * 1024
-    #: Obergrenze je Betrieb — kein unbegrenzter Bereich (Wurzel 8). Reicht für
-    #: jede echte Vermieter-Website und verhindert, dass ein Konto den Bucket
-    #: füllt.
-    MEDIA_MAX_COUNT = 500
-
-    def list_media(
-        self, ctx: AuthContext, *, limit: int = 100, offset: int = 0
-    ) -> MediumListResponse:
-        """Bildbestand des Betriebs, neueste zuerst."""
-        tenant_id = self._require_tenant(ctx)
-        # Harte Obergrenze auch hier: ein Client, der limit=100000 schickt, darf
-        # keine unbegrenzte Antwort auslösen.
-        limit = max(1, min(limit, 200))
-        offset = max(0, offset)
-        rows = (
-            self._db.table("site_media")
-            .select(_MEDIA_COLS)
-            .eq("tenant_id", tenant_id)
-            .order("created_at", desc=True)
-            .range(offset, offset + limit - 1)
-            .execute()
-        ).data or []
-        items = [MediumResponse(**self._medium_row(r)) for r in rows]
-        return MediumListResponse(items=items, total=len(items))
-
-    def add_medium(
-        self,
-        ctx: AuthContext,
-        content: bytes,
-        *,
-        filename: str | None = None,
-    ) -> MediumResponse:
-        """Ein Bild in die Mediathek legen.
-
-        Der Typ wird aus den ANFANGSBYTES bestimmt, nicht aus dem, was der Client
-        behauptet: ein `content_type` ist eine Angabe der Gegenseite und kostet
-        nichts. Wer „image/jpeg" schreibt und HTML oder SVG schickt, hätte sonst
-        eine Datei im öffentlichen Bucket, die der Browser als Dokument ausführt
-        (Wurzel 8)."""
-        tenant_id = self._require_tenant(ctx)
-        mime = _bild_typ(content)
-        if mime is None or mime not in self.MEDIA_MIME:
-            raise SiteConfigError(
-                "Nur JPEG, PNG oder WebP.", status_code=415
-            )
-        if len(content) > self.MEDIA_MAX_BYTES:
-            raise SiteConfigError("Bild ist zu groß (max. 20 MB).", status_code=413)
-
-        # Gegenzustand zur Obergrenze: erst zählen, dann schreiben. Sonst wächst
-        # der Bestand still über das Limit (Wurzel 1).
-        vorhanden = (
-            self._db.table("site_media")
-            .select("id", count="exact")
-            .eq("tenant_id", tenant_id)
-            .limit(1)
-            .execute()
-        )
-        if (vorhanden.count or 0) >= self.MEDIA_MAX_COUNT:
-            raise SiteConfigError(
-                f"Die Mediathek ist voll (max. {self.MEDIA_MAX_COUNT} Bilder). "
-                "Löschen Sie ältere Bilder, um Platz zu machen.",
-                status_code=409,
-            )
-
-        ext = self.MEDIA_MIME[mime]
-        # Nicht-ratbarer Name: der Bucket ist öffentlich, der Pfad ist der
-        # einzige Schutz vor dem Erraten fremder Bilder.
-        path = f"{tenant_id}/{secrets.token_hex(16)}.{ext}"
-        try:
-            self._db.storage.from_(self.MEDIA_BUCKET).upload(
-                path, content, {"content-type": mime}
-            )
-        except Exception as exc:  # noqa: BLE001 — Storage-Fehler einheitlich
-            log.warning(
-                "site_media_upload_failed", tenant_id=tenant_id, error=str(exc)
-            )
-            raise SiteConfigError("Upload fehlgeschlagen.", status_code=502) from exc
-
-        url = public_storage_url(self.MEDIA_BUCKET, path)
-        payload = {
-            "tenant_id": tenant_id,
-            "path": path,
-            "url": url,
-            # Nur der Anzeigename, gekürzt. Er landet in keinem Pfad und in
-            # keinem href — der echte Pfad ist der Token oben.
-            "filename": (filename or "")[:200] or None,
-            "mime": mime,
-            "bytes": len(content),
-        }
-        res = self._db.table("site_media").insert(payload).execute()
-        if not res.data:
-            # Die Datei liegt schon im Bucket; ohne DB-Zeile wäre sie eine Waise,
-            # die niemand mehr findet oder löschen kann. Also aufräumen.
-            self._entferne_datei(path)
-            raise SiteConfigError(
-                "Bild konnte nicht gespeichert werden.", status_code=500
-            )
-        log.info("site_media_added", tenant_id=tenant_id, bytes=len(content))
-        return MediumResponse(**self._medium_row(res.data[0]))
-
-    def remove_medium(self, ctx: AuthContext, medium_id: str) -> None:
-        """Ein Bild aus der Mediathek entfernen — Zeile UND Datei.
-
-        Beide Seiten, sonst bleibt eine Waise im Bucket, die Platz belegt und
-        weiterhin öffentlich erreichbar ist (Wurzel 1: jede Aktion hat einen
-        Gegenzustand).
-
-        Was NICHT passiert: Abschnitte, die dieses Bild noch verwenden, werden
-        nicht angetastet. Ein Bild aus einem veröffentlichten Block zu entfernen
-        wäre eine stille Änderung an einer lebenden Seite — der Kunde sieht das
-        fehlende Bild in der Vorschau und entscheidet selbst."""
-        tenant_id = self._require_tenant(ctx)
-        row = self._own_medium(tenant_id, medium_id)
-        self._db.table("site_media").delete().eq("id", medium_id).eq(
-            "tenant_id", tenant_id
-        ).execute()
-        self._entferne_datei(row["path"])
-        log.info("site_media_removed", tenant_id=tenant_id, medium_id=medium_id)
-
-    def _entferne_datei(self, path: str) -> None:
-        """Datei aus dem Bucket löschen. Best-effort: schlägt es fehl, ist die
-        DB-Zeile schon weg und das Bild aus der Mediathek verschwunden — ein
-        harter Fehler hier würde dem Kunden einen Misserfolg melden, obwohl die
-        Aktion für ihn stattgefunden hat."""
-        try:
-            self._db.storage.from_(self.MEDIA_BUCKET).remove([path])
-        except Exception as exc:  # noqa: BLE001 — Aufräumen kippt nicht den Pfad
-            log.warning("site_media_file_orphan", path=path, error=str(exc))
-
-    def _own_medium(self, tenant_id: str, medium_id: str) -> dict:
-        rows = (
-            self._db.table("site_media")
-            .select("id, path")
-            .eq("id", medium_id)
-            .eq("tenant_id", tenant_id)
-            .limit(1)
-            .execute()
-        ).data or []
-        if not rows:
-            raise SiteConfigError(
-                "Bild gehört nicht zu diesem Konto.", status_code=404
-            )
-        return rows[0]
-
-    @staticmethod
-    def _medium_row(row: dict) -> dict:
-        out = {k: row.get(k) for k in MediumResponse.model_fields}
-        created = row.get("created_at")
-        out["created_at"] = str(created) if created else None
-        return out
-
     def apply_template(
         self, ctx: AuthContext, template_id: str
     ) -> PageListResponse:
@@ -1096,6 +1075,44 @@ class SiteConfigService:
 
     # === Page-Builder: öffentlicher Resolver (service-role, kein JWT) ========
 
+    @staticmethod
+    def _seo_meta(page: dict, branding: PublicSiteResponse) -> PublicPageMeta:
+        """SEO-Angaben einer Seite mit dem site-weiten Rückfall auflösen (0430).
+
+        Hostaway formuliert die Regel als „Site-SEO-Hierarchie": die Angaben der
+        Seite haben Vorrang, die site-weiten gelten für alle Seiten ohne eigene.
+        Sie steht GENAU HIER und nicht im Renderer — beide Resolver (veröffentlicht
+        und Entwurf) gehen durch diese Methode, und der Renderer bekommt einen
+        fertigen Wert. Die Alternative wäre dieselbe `coalesce`-Kette an drei
+        Stellen, von denen zwei irgendwann abweichen.
+
+        `title` bleibt IMMER der echte Seitentitel: er benennt die Seite im
+        Baukasten und in der Navigation. Was in den Browser-Tab kommt, ist
+        `seo_title` — dass der fehlen darf, ist der Normalfall.
+
+        `canonical_url` bekommt bewusst KEINEN site-weiten Rückfall: eine
+        kanonische Adresse zeigt auf EINE bestimmte Seite. Ein site-weiter Wert
+        würde jede Unterseite als Duplikat der Startseite deklarieren und die
+        Website aus dem Index nehmen — der Klassiker unter den SEO-Unfällen.
+
+        `noindex` ist eine ODER-Verknüpfung, keine Hierarchie: steht die ganze
+        Website auf „nicht indexieren", darf eine einzelne Seite das nicht
+        aufheben. Andernfalls wäre der Hauptschalter wirkungslos, sobald irgendwo
+        `noindex=false` gespeichert ist — und genau das ist der Default."""
+        return PublicPageMeta(
+            slug=page["slug"],
+            title=page["title"],
+            seo_title=page.get("seo_title") or branding.seo_title,
+            seo_description=(
+                page.get("seo_description") or branding.seo_description
+            ),
+            og_image_url=page.get("og_image_url"),
+            seo_keywords=page.get("seo_keywords") or branding.seo_keywords,
+            canonical_url=page.get("canonical_url"),
+            head_html=page.get("head_html"),
+            noindex=bool(page.get("noindex")) or branding.noindex,
+        )
+
     def resolve_page(self, host: str, slug: str | None = None) -> PublicPageResponse:
         """Host → veröffentlichte Seite (Home bei slug=None) + geordnete Blöcke +
         Branding. NUR is_published, nur öffentliche Felder. Unbekannt → 404.
@@ -1116,6 +1133,12 @@ class SiteConfigService:
             .eq("tenant_id", tenant_id)
             .eq("is_published", True)
         )
+        # Ordner und die Fehlerseite haben keine Adresse (0433): ein Ordner ist
+        # kein Ziel, und die 404-Seite ist die Antwort auf eine falsche Adresse.
+        # Ohne diesen Filter wäre der Ordner unter seinem abgeleiteten Slug
+        # („/ordner-umgebung") als leere Seite erreichbar — und die Fehlerseite
+        # unter „/404" als normale Seite.
+        query = query.eq("page_type", "normal")
         query = (
             query.eq("is_home", True)
             if slug is None or slug == ""
@@ -1132,15 +1155,10 @@ class SiteConfigService:
             .order("position")
             .execute()
         ).data or []
+        branding = self._public_branding(tenant_id)
         return PublicPageResponse(
             tenant_id=tenant_id,
-            page=PublicPageMeta(
-                slug=page["slug"],
-                title=page["title"],
-                seo_title=page.get("seo_title"),
-                seo_description=page.get("seo_description"),
-                og_image_url=page.get("og_image_url"),
-            ),
+            page=self._seo_meta(page, branding),
             blocks=[
                 PublicBlock(
                     type=BlockType(b["type"]),
@@ -1149,20 +1167,20 @@ class SiteConfigService:
                 )
                 for b in block_rows
             ],
-            branding=self._public_branding(tenant_id),
+            branding=branding,
         )
 
     def _public_nav(self, tenant_id: str) -> PublicNav:
         """Menüstruktur der Kunden-Site — nur VERÖFFENTLICHTE Seiten.
 
-        Ohne das war jede Unterseite, die der Kunde anlegte, für Gäste
-        unerreichbar: die Kopfzeile zeigte nur Logo und einen festen Knopf.
-        Seiten mit ``nav_area='none'`` bleiben absichtlich aus beiden Listen —
-        sie sind nur per Direktlink erreichbar. Ein Entwurf erscheint nie im
-        Menü, sonst führt der Link ins 404."""
+        Der Aufbau (Ordner, externe Menüpunkte, Rückfall bei unveröffentlichtem
+        Ordner) steht in `seiten.navigation_bauen`: es ist Seitenstruktur, nicht
+        Datenzugriff, und der Service liegt an der `pylint`-Zeilengrenze."""
         rows = (
             self._db.table("site_pages")
-            .select("slug, title, nav_area")
+            .select(
+                "id, slug, title, nav_area, page_type, external_url, parent_id"
+            )
             .eq("tenant_id", tenant_id)
             .eq("is_published", True)
             .in_("nav_area", ["header", "footer"])
@@ -1170,13 +1188,7 @@ class SiteConfigService:
             .order("created_at")
             .execute()
         ).data or []
-        kopf: list[PublicNavItem] = []
-        fuss: list[PublicNavItem] = []
-        for r in rows:
-            eintrag = PublicNavItem(slug=r["slug"], title=r["title"])
-            ziel = fuss if r["nav_area"] == "footer" else kopf
-            ziel.append(eintrag)
-        return PublicNav(header=kopf, footer=fuss)
+        return seiten.navigation_bauen(rows)
 
     # === Page-Builder: Draft-Vorschau (Editor-iframe) =======================
 
@@ -1239,15 +1251,10 @@ class SiteConfigService:
             .order("position")
             .execute()
         ).data or []
+        branding = self._public_branding(tenant_id)
         return PublicPageResponse(
             tenant_id=tenant_id,
-            page=PublicPageMeta(
-                slug=page["slug"],
-                title=page["title"],
-                seo_title=page.get("seo_title"),
-                seo_description=page.get("seo_description"),
-                og_image_url=page.get("og_image_url"),
-            ),
+            page=self._seo_meta(page, branding),
             blocks=[
                 PublicBlock(
                     type=BlockType(b["type"]),
@@ -1256,7 +1263,7 @@ class SiteConfigService:
                 )
                 for b in block_rows
             ],
-            branding=self._public_branding(tenant_id),
+            branding=branding,
         )
 
     def _verify_draft(self, tenant_id: str, page_id: str, token: str) -> bool:

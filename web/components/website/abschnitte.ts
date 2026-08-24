@@ -36,7 +36,22 @@ export type FeldArt =
   | "zahl"
   | "schalter"
   | "auswahl"
-  | "objekte"; // Auswahl eigener Objekte
+  | "objekte" // Auswahl eigener Objekte
+  // Liste von Frage-Antwort-Paaren, beide MEHRSPRACHIG (0431). Eigene Art und
+  // nicht „textlang" mit Konvention: aus einem Textfeld lässt sich nicht
+  // ableiten, was Frage und was Antwort ist — und genau diese Trennung ist der
+  // Grund für den Abschnitt (sie erzeugt das FAQPage-JSON-LD).
+  | "fragen"
+  // Liste von Gästestimmen: Zitat (mehrsprachig) + Name + Ort (0432).
+  | "stimmen"
+  // Liste von Merkmalen: Symbol + Überschrift + Text (0432).
+  | "merkmale"
+  // Ein Symbol aus der festen Auswahl (0432). Kein freies Iconify-Feld: ein
+  // Name, den der Renderer nicht kennt, zeigt nichts an, und niemand käme
+  // darauf, dass er sich vertippt hat.
+  | "symbol"
+  // Liste von Formularfeldern: Name, Art, Beschriftung, Pflicht (0436).
+  | "formfelder";
 
 export type Feld = {
   /** Schlüssel im `content` des Abschnitts. */
@@ -220,6 +235,91 @@ export const ABSCHNITTE: Abschnitt[] = [
       // Obergrenze wie im Backend-Schema (ReviewsContent.limit: 1–24).
       { key: "limit", art: "zahl", label: "anzahl", min: 1, max: 24 },
       { key: "show_categories", art: "schalter", label: "kategorienZeigen" },
+    ],
+  },
+  {
+    typ: "features",
+    gruppe: "inhalt",
+    icon: "ph:squares-four",
+    label: "features",
+    hinweis: "featuresHinweis",
+    felder: [
+      { key: "headline", art: "text", label: "ueberschrift" },
+      { key: "items", art: "merkmale", label: "merkmale" },
+      // 2–4 wie im Backend-Schema: bei fünf sind die Texte auf einem Laptop
+      // unlesbar schmal, bei einer wäre es eine Liste (dafür gibt es Text).
+      { key: "columns", art: "zahl", label: "spalten", min: 2, max: 4 },
+    ],
+  },
+  {
+    typ: "testimonials",
+    gruppe: "inhalt",
+    icon: "ph:quotes",
+    label: "testimonials",
+    hinweis: "testimonialsHinweis",
+    felder: [
+      { key: "headline", art: "text", label: "ueberschrift" },
+      { key: "items", art: "stimmen", label: "stimmen" },
+    ],
+  },
+  {
+    typ: "faq",
+    gruppe: "inhalt",
+    icon: "ph:question",
+    label: "faq",
+    hinweis: "faqHinweis",
+    felder: [
+      { key: "headline", art: "text", label: "ueberschrift" },
+      { key: "items", art: "fragen", label: "fragen" },
+    ],
+  },
+  {
+    typ: "posts",
+    gruppe: "inhalt",
+    icon: "ph:newspaper",
+    label: "posts",
+    hinweis: "postsHinweis",
+    felder: [
+      { key: "headline", art: "text", label: "ueberschrift" },
+      // 1–9 wie im Backend-Schema: weniger ist keine Liste, mehr gehört auf
+      // die Blog-Seite.
+      { key: "limit", art: "zahl", label: "anzahl", min: 1, max: 9 },
+    ],
+  },
+  {
+    typ: "form",
+    gruppe: "buchung",
+    icon: "ph:list-checks",
+    label: "form",
+    hinweis: "formHinweis",
+    felder: [
+      { key: "headline", art: "text", label: "ueberschrift" },
+      { key: "intro", art: "textlang", label: "einleitung" },
+      { key: "fields", art: "formfelder", label: "formularfelder" },
+      { key: "submit_label", art: "text", label: "knopfText" },
+      { key: "success_text", art: "textlang", label: "danketext" },
+      // Einsprachig: eine E-Mail-Adresse wird nicht übersetzt. Leer = die
+      // Adresse aus dem Firmenprofil.
+      { key: "recipient", art: "einfachtext", label: "empfaenger" },
+      // Nur intern, für die Antwortenliste — nicht gast-sichtbar.
+      { key: "form_name", art: "einfachtext", label: "formularName" },
+    ],
+  },
+  {
+    typ: "map",
+    gruppe: "buchung",
+    icon: "ph:map-pin",
+    label: "map",
+    hinweis: "mapHinweis",
+    felder: [
+      { key: "headline", art: "text", label: "ueberschrift" },
+      // Einsprachig: eine Anschrift wird nicht übersetzt. Leer = die Anschrift
+      // aus dem Firmenprofil (der Renderer setzt sie ein).
+      { key: "address", art: "einfachtext", label: "adresse" },
+      // Grenzen wie bei Google: 1 = Welt, 20 = Gebäude. Darüber ist die Karte
+      // leer.
+      { key: "zoom", art: "zahl", label: "zoom", min: 1, max: 20 },
+      { key: "height", art: "zahl", label: "hoehe", min: 200, max: 800 },
     ],
   },
   {

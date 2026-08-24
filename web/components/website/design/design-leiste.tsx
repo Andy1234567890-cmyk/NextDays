@@ -9,6 +9,7 @@
 //
 // „Weitere Optionen" führt in Unterseiten derselben Leiste (Logo), damit die
 // Grundansicht kurz bleibt.
+import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 
@@ -79,12 +80,25 @@ export function DesignLeiste({
         flaeche: stand.secondary_color,
         hintergrund: stand.background_color,
         schrift: stand.foreground_color,
+        // Die Farbrollen aus 0426. Sie fehlten hier, und damit meldete die
+        // Prüfung „alles lesbar", während eine dunkle Kopfzeile mit dunklen
+        // Links die Navigation unsichtbar machte.
+        kopfHintergrund: stand.header_background,
+        kopfLink: stand.header_link_color,
+        fussHintergrund: stand.footer_background,
+        link: stand.link_color,
+        markenName: stand.brand_name_color,
       }),
     [
       stand.primary_color,
       stand.secondary_color,
       stand.background_color,
       stand.foreground_color,
+      stand.header_background,
+      stand.header_link_color,
+      stand.footer_background,
+      stand.link_color,
+      stand.brand_name_color,
     ],
   );
 
@@ -308,6 +322,55 @@ export function DesignLeiste({
         />
       </div>
 
+      {/* -------------------------------------------- Größen und Breite (0435) */}
+      <LeisteTitel>{t("design.groessenTitel")}</LeisteTitel>
+      <p className="px-4 pb-2 text-xs text-muted-foreground">
+        {t("design.groessenHinweis")}
+      </p>
+      <div className="flex flex-col gap-3 px-4">
+        {/* Drei Regler, nicht sechzig. Hostaway lässt Größe, Gewicht,
+            Zeilenhöhe und Laufweite je Ebene und je Gerät einstellen — 60
+            Werte. Wer eine Ferienwohnung vermietet, trifft davon keine 60
+            Entscheidungen; er will, dass die Überschriften etwas größer sind.
+
+            Alle drei zeigen „Standard", solange nichts gewählt ist, und lassen
+            sich dorthin zurücksetzen: `null` ist ein echter Zustand und nicht
+            derselbe wie „100 %". */}
+        <RegelFeld
+          label={t("design.inhaltsbreite")}
+          wert={stand.content_width}
+          min={960}
+          max={1920}
+          schritt={40}
+          einheit="px"
+          standardLabel={t("design.groesseStandard")}
+          zuruecksetzen={t("design.groesseZuruecksetzen")}
+          onChange={(v) => setze({ content_width: v })}
+        />
+        <RegelFeld
+          label={t("design.ueberschriftenGroesse")}
+          wert={stand.heading_scale}
+          min={80}
+          max={130}
+          schritt={5}
+          einheit="%"
+          standardLabel={t("design.groesseStandard")}
+          zuruecksetzen={t("design.groesseZuruecksetzen")}
+          onChange={(v) => setze({ heading_scale: v })}
+        />
+        <RegelFeld
+          label={t("design.textGroesse")}
+          wert={stand.body_scale}
+          min={80}
+          max={130}
+          schritt={5}
+          einheit="%"
+          standardLabel={t("design.groesseStandard")}
+          zuruecksetzen={t("design.groesseZuruecksetzen")}
+          onChange={(v) => setze({ body_scale: v })}
+        />
+      </div>
+
       {/* ----------------------------------------------------------- Buttons */}
       <LeisteTitel>{t("design.buttonsTitel")}</LeisteTitel>
       <p className="px-4 pb-2 text-xs text-muted-foreground">
@@ -430,5 +493,72 @@ function SchriftFeld({
         ))}
       </select>
     </label>
+  );
+}
+
+
+/** Ein Regler mit Zurücksetzen (0435).
+ *
+ *  Der Punkt ist der dritte Zustand: `null` heißt „nie gewählt", und das ist
+ *  NICHT dasselbe wie der Mittelwert. Ein `<input type="range">` kann das nicht
+ *  darstellen — er zeigt immer eine Position. Deshalb steht daneben, dass der
+ *  Standard gilt, und ein Knopf, der dorthin zurückführt.
+ *
+ *  Ohne diesen Knopf gäbe es keinen Weg zurück: wer einmal 105 % gewählt hat,
+ *  hätte für immer 105 % gespeichert, auch wenn er es nicht mehr will. */
+function RegelFeld({
+  label,
+  wert,
+  min,
+  max,
+  schritt,
+  einheit,
+  standardLabel,
+  zuruecksetzen,
+  onChange,
+}: {
+  label: string;
+  wert: number | null;
+  min: number;
+  max: number;
+  schritt: number;
+  einheit: string;
+  standardLabel: string;
+  zuruecksetzen: string;
+  onChange: (v: number | null) => void;
+}) {
+  // Die Reglerposition, solange nichts gewählt ist: die Mitte für Faktoren,
+  // der kleinere Wert für die Breite. Sie ist nur die ANZEIGE — gespeichert
+  // wird erst beim Ziehen.
+  const anzeige = wert ?? (einheit === "%" ? 100 : min);
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-xs font-medium">{label}</span>
+        <span className="flex items-center gap-2 text-xs text-muted-foreground">
+          {wert === null ? standardLabel : `${wert} ${einheit}`}
+          {wert !== null ? (
+            <button
+              type="button"
+              onClick={() => onChange(null)}
+              title={zuruecksetzen}
+              aria-label={zuruecksetzen}
+              className="transition hover:text-destructive"
+            >
+              <Icon icon="ph:arrow-counter-clockwise" className="size-3.5" />
+            </button>
+          ) : null}
+        </span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={schritt}
+        value={anzeige}
+        onChange={(e) => onChange(Number(e.target.value))}
+        aria-label={label}
+      />
+    </div>
   );
 }

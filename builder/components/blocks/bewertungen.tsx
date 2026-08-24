@@ -8,6 +8,9 @@
 // Sternreihe wäre eine Null-Bewertung (Wurzel 4).
 import { type EditierModus, NICHT_EDITIERBAR, editierbar } from "@/lib/editier-kontext";
 import { pickText } from "@/lib/i18n";
+import { texte } from "@/lib/texte";
+
+import { AbschnittLeer } from "./abschnitt-leer";
 import {
   KATEGORIEN,
   ladeBewertungen,
@@ -54,7 +57,19 @@ export async function BewertungenBlock({
     { tenantId, propertyId },
     limit,
   );
-  if (!daten || daten.count === 0 || daten.average == null) return null;
+  // Im Entwurf einen Platzhalter statt gar nichts: sonst legt der Kunde den
+  // Abschnitt an, sieht in der Vorschau nichts und kann ihn nicht einmal
+  // anklicken. Live bleibt es beim Verschwinden — ein leerer Bewertungskasten
+  // auf der Gästeseite wäre schlechter als keiner.
+  if (!daten || daten.count === 0 || daten.average == null) {
+    return (
+      <AbschnittLeer
+        modus={modus}
+        titel={headline || undefined}
+        grund={texte(modus.locale).leerBewertungen}
+      />
+    );
+  }
 
   return (
     <section className="mx-auto max-w-7xl px-6 py-16">

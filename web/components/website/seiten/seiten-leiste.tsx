@@ -19,8 +19,10 @@ import { toast } from "sonner";
 import {
   type NavArea,
   type Page,
+  type PageType,
   createPage,
   deletePage,
+  duplicatePage,
   publishPage,
   reorderPages,
   setHomePage,
@@ -29,6 +31,7 @@ import {
 } from "@/lib/site-pages";
 
 import { VorlagenStart } from "../vorlagen-start";
+import { NeueSeite } from "./neue-seite";
 import { SeitenEinstellungen } from "./seiten-einstellungen";
 
 const BEREICHE: NavArea[] = ["header", "footer", "none"];
@@ -64,12 +67,29 @@ export function SeitenLeiste({
     });
   }
 
-  function anlegen(bereich: NavArea) {
-    const name = titel.trim();
-    if (!name) return;
+  function anlegen(
+    bereich: NavArea,
+    name: string,
+    typ: PageType,
+    externalUrl: string | null,
+    parentId: string | null,
+    popup: Parameters<typeof createPage>[6],
+    template: string | null,
+  ) {
     setTitel("");
     setNeuIn(null);
-    fuehreAus(() => createPage(name, "", bereich));
+    fuehreAus(() =>
+      createPage(
+        name,
+        "",
+        bereich,
+        typ,
+        externalUrl,
+        parentId,
+        popup,
+        template,
+      ),
+    );
   }
 
   function verschiebe(seite: Page, richtung: -1 | 1) {
@@ -119,34 +139,15 @@ export function SeitenLeiste({
             </div>
 
             {neuIn === bereich ? (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  anlegen(bereich);
-                }}
-                className="flex gap-1 px-4 pb-2"
-              >
-                {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
-                <input
-                  autoFocus
-                  value={titel}
-                  maxLength={200}
-                  placeholder={t("seiten.titelPlatzhalter")}
-                  onChange={(e) => setTitel(e.target.value)}
-                  onBlur={() => {
-                    if (!titel.trim()) setNeuIn(null);
-                  }}
-                  className="min-w-0 flex-1 rounded-(--radius) border border-border bg-transparent px-2 py-1 text-sm"
-                />
-                <button
-                  type="submit"
-                  disabled={pending || !titel.trim()}
-                  aria-label={t("seiten.anlegen")}
-                  className="rounded-(--radius) border border-border px-2 text-sm transition hover:bg-secondary disabled:opacity-40"
-                >
-                  <Icon icon="ph:check" className="size-4" />
-                </button>
-              </form>
+              <NeueSeite
+                bereich={bereich}
+                pages={pages}
+                pending={pending}
+                onAnlegen={(name, typ, url, parent, popup, template) =>
+                  anlegen(bereich, name, typ, url, parent, popup, template)
+                }
+                onAbbrechen={() => setNeuIn(null)}
+              />
             ) : null}
 
             {imBereich.length === 0 ? (
@@ -338,6 +339,25 @@ function SeitenZeile({
               setMenue(false);
             }}
           />
+
+          {/* Duplizieren gibt es nur für Seiten mit Inhalt (0433): einen Ordner
+              zu kopieren hieße eine leere Gruppe zu erzeugen, und einen externen
+              Menüpunkt einen zweiten Link auf dasselbe Ziel.
+
+              Die Kopie ist immer ein ENTWURF und ohne die SEO-Felder des
+              Originals — sonst stünden zwei Seiten mit demselben Meta-Titel
+              live, also genau der Befund, den die SEO-Prüfung meldet. */}
+          {seite.page_type === "normal" ? (
+            <MenuePunkt
+              icon="ph:copy"
+              label={t("seiten.duplizieren")}
+              disabled={pending}
+              onClick={() => {
+                onAktion(() => duplicatePage(seite.id));
+                setMenue(false);
+              }}
+            />
+          ) : null}
 
           {/* Die Startseite ist nicht löschbar: ohne sie liefert die Domain
               nichts. Das Backend hat dafür einen eigenen Riegel (genau eine Home

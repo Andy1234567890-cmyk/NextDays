@@ -4,6 +4,7 @@
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 
+import type { BildLaden } from "@/lib/bilder";
 import { type Listing, formatCurrency } from "@/lib/listings";
 import { texte } from "@/lib/texte";
 
@@ -13,6 +14,7 @@ export function ListingCard({
   listing,
   sprache,
   preisZeigen = true,
+  laden = "lazy",
 }: {
   listing: Listing;
   /** Sprache der Website — für die festen Texte der Karte. */
@@ -24,6 +26,10 @@ export function ListingCard({
    *  das nicht will, schaltet es ab — dann steht dort nichts statt eines
    *  Preises, der nicht gilt. */
   preisZeigen?: boolean;
+  /** Ladeart des Kartenbildes (0430). Default „lazy": Karten stehen fast immer
+   *  unter der Falz — nur die erste Karte eines Rasters direkt am Seitenanfang
+   *  bekommt „eager". */
+  laden?: BildLaden;
 }) {
   const txt = texte(sprache);
   const foto = listing.fotos[0];
@@ -35,6 +41,8 @@ export function ListingCard({
           <img
             src={foto}
             alt={listing.titel}
+            loading={laden}
+            fetchPriority={laden === "eager" ? "high" : undefined}
             className="size-full object-cover transition-transform group-hover:scale-105"
           />
         ) : (

@@ -4820,10 +4820,10 @@
     },
     "taskStatusAction": {
       "open": "Lägg tillbaka",
-      "reopen": "Öppna igen",
       "accepted": "Acceptera",
       "in_progress": "Starta",
-      "done": "Slutför"
+      "done": "Slutför",
+      "reopen": "Öppna igen"
     },
     "taskStatusChanged": {
       "open": "Tillbakalagd.",
@@ -7128,7 +7128,8 @@
       "einstellungen": "Inställningar",
       "objekte": "Boenden",
       "widgets": "Widgetar",
-      "seo": "SEO"
+      "seo": "SEO",
+      "anfragen": "Förfrågningar"
     },
     "kopf": {
       "websiteAnsehen": "Visa webbplatsen",
@@ -7228,7 +7229,14 @@
       "logoZiel": "Logotypens klickmål",
       "logoZielLeer": "Startsida",
       "namensGroesse": "Namnets storlek",
-      "sloganText": "Text"
+      "sloganText": "Text",
+      "groessenTitel": "Storlekar",
+      "groessenHinweis": "Innehållets bredd och textens storlek. Utan val gäller mallens värden.",
+      "inhaltsbreite": "Innehållsbredd",
+      "ueberschriftenGroesse": "Rubriker",
+      "textGroesse": "Brödtext",
+      "groesseStandard": "Standard",
+      "groesseZuruecksetzen": "Återställ till standard"
     },
     "paletten": {
       "schlicht": "Enkel",
@@ -7246,7 +7254,10 @@
       "schriftAufHintergrund": "Text mot bakgrunden",
       "schriftAufFlaeche": "Text på ytor",
       "buttonText": "Text på knappar",
-      "linkAufHintergrund": "Länkar mot bakgrunden"
+      "linkAufHintergrund": "Länkar mot bakgrunden",
+      "kopfLinkAufKopf": "Meny på sidhuvudet",
+      "markenNameAufKopf": "Företagsnamn på sidhuvudet",
+      "textAufFuss": "Text på sidfoten"
     },
     "seiten": {
       "bereichTitel": {
@@ -7314,7 +7325,64 @@
       "alleSprachenHinweis": "Normalfallet — sidan visas överallt där din webbplats visas.",
       "abbrechen": "Avbryt",
       "speichern": "Spara",
-      "einstellungenGespeichert": "Sidinställningarna är sparade."
+      "einstellungenGespeichert": "Sidinställningarna är sparade.",
+      "duplizieren": "Duplicera",
+      "typ": {
+        "normal": {
+          "name": "Sida",
+          "hinweis": "En sida som du fyller med avsnitt."
+        },
+        "external": {
+          "name": "Extern menypunkt",
+          "hinweis": "En menypunkt som leder till en annan webbplats.",
+          "adresseHinweis": "Öppnas i ett nytt fönster."
+        },
+        "folder": {
+          "name": "Menymapp",
+          "hinweis": "Grupperar sidor i menyn. Är ingen sida i sig.",
+          "zuordnen": "I mappen",
+          "keiner": "Ingen mapp"
+        },
+        "error404": {
+          "name": "Felsida (404)",
+          "hinweis": "Det en gäst ser vid en felstavning. Bara en per webbplats."
+        },
+        "post": {
+          "name": "Blogginlägg",
+          "hinweis": "Ett inlägg till bloggen. Visas på /blog, inte i menyn."
+        }
+      },
+      "vorlage": {
+        "label": "Mall",
+        "keine": "Tom sida",
+        "ueber_uns": "Om oss",
+        "kontakt": "Kontakt",
+        "anfahrt": "Hitta hit",
+        "hausordnung": "Ordningsregler",
+        "umgebung": "Omgivningen",
+        "faq": "Vanliga frågor"
+      },
+      "popup": {
+        "ausloeser": "När den visas",
+        "trigger": {
+          "delay": "Efter några sekunder",
+          "exit": "När sidan lämnas",
+          "scroll": "Efter läst andel"
+        },
+        "einheitSekunden": "sekunder",
+        "einheitProzent": "procent",
+        "hinweis": "Visas en gång per besökare. På telefonen blir ”När sidan lämnas” en visning efter 20 sekunder."
+      },
+      "beitrag": {
+        "datum": "Publiceringsdatum",
+        "datumHinweis": "I framtiden = schemalagt. Inlägget publiceras då av sig självt.",
+        "autor": "Författare",
+        "titelbild": "Omslagsbild",
+        "anriss": "Ingress",
+        "anrissHinweis": "Texten i inläggslistan. Tomt = början på första stycket.",
+        "schlagwoerter": "Nyckelord",
+        "schlagwoerterHinweis": "Kommaseparerade, högst åtta."
+      }
     },
     "vorlagen": {
       "titel": "Börja med en mall",
@@ -7356,7 +7424,14 @@
       "objektIdPlatzhalter": "Boende-id",
       "objektHinzufuegen": "Lägg till",
       "frageHinzufuegen": "Lägg till fråga",
-      "fragenMax": "Fler än {max} frågor är inte möjligt."
+      "fragenMax": "Fler än {max} frågor är inte möjligt.",
+      "stimmeHinzufuegen": "Lägg till röst",
+      "stimmenMax": "Fler än {max} röster är inte möjligt.",
+      "merkmalHinzufuegen": "Lägg till fördel",
+      "merkmaleMax": "Fler än {max} fördelar är inte möjligt.",
+      "darstellung": "Utseende",
+      "feldHinzufuegen": "Lägg till fält",
+      "formfelderMax": "Fler än {max} fält är inte möjligt."
     },
     "abschnitte": {
       "hero": "Toppbild",
@@ -7382,7 +7457,17 @@
       "gallery": "Galleri",
       "galleryHinweis": "Flera bilder i ett rutnät.",
       "faq": "Frågor och svar",
-      "faqHinweis": "Utfällbara frågor. Med struktur visas de även i sökresultatet."
+      "faqHinweis": "Utfällbara frågor. Med struktur visas de även i sökresultatet.",
+      "map": "Karta",
+      "mapHinweis": "Visar läget. Utan adress används den från företagsprofilen.",
+      "testimonials": "Gäströster",
+      "testimonialsHinweis": "Egna inskrivna citat. För riktiga omdömen finns ett eget avsnitt.",
+      "features": "Fördelar",
+      "featuresHinweis": "Det du erbjuder — ikon, rubrik, text i spalter.",
+      "form": "Formulär",
+      "formHinweis": "Ett formulär som gäster fyller i. Förfrågningarna hamnar i fliken ”Förfrågningar”.",
+      "posts": "Senaste inläggen",
+      "postsHinweis": "Visar de nyaste blogginläggen. Själva bloggen ligger på /blog."
     },
     "felder": {
       "eyebrow": "Liten rad ovanför",
@@ -7426,7 +7511,71 @@
       "formularZeigen": "Visa kontaktformulär",
       "fragen": "Frågor",
       "frage": "Fråga",
-      "antwort": "Svar"
+      "antwort": "Svar",
+      "zoom": "Zoomnivå",
+      "stimmen": "Röster",
+      "merkmale": "Fördelar",
+      "zitat": "Citat",
+      "name": "Namn",
+      "ort": "Ort",
+      "symbol": "Ikon",
+      "symbolKeines": "Ingen ikon",
+      "spalten": "Spalter",
+      "symbolName": {
+        "wlan": "Wi-Fi",
+        "parken": "Parkering",
+        "kueche": "Kök",
+        "fruehstueck": "Frukost",
+        "pool": "Pool",
+        "sauna": "Bastu",
+        "haustiere": "Husdjur",
+        "familie": "Familj",
+        "fahrrad": "Cykel",
+        "strand": "Strand",
+        "berge": "Berg",
+        "garten": "Trädgård",
+        "kamin": "Öppen spis",
+        "waschmaschine": "Tvättmaskin",
+        "klimaanlage": "Luftkonditionering",
+        "barrierefrei": "Tillgänglig",
+        "schluessel": "Nyckel",
+        "uhr": "Klocka",
+        "herz": "Hjärta",
+        "stern": "Stjärna",
+        "haus": "Hus",
+        "karte": "Karta"
+      },
+      "hintergrundfarbe": "Bakgrundsfärg",
+      "hintergrundbild": "Bakgrundsbild",
+      "abdunkeln": "Gör bilden mörkare",
+      "abdunkelnHinweis": "Behövs för att texten på bilden ska vara läsbar.",
+      "abstand": "Avstånd ovanför och nedanför",
+      "abstandWert": {
+        "none": "Sammandraget",
+        "sm": "Tätt",
+        "md": "Normalt",
+        "lg": "Luftigt"
+      },
+      "einleitung": "Inledning",
+      "formularfelder": "Fält",
+      "knopfText": "Text på knappen",
+      "danketext": "Text efter att det skickats",
+      "empfaenger": "E-post för förfrågningar",
+      "formularName": "Internt namn",
+      "feldart": "Typ av fält",
+      "pflichtfeld": "Obligatoriskt fält",
+      "optionenHinweis": "Ett alternativ per rad",
+      "feldartName": {
+        "text": "Text (en rad)",
+        "textarea": "Text (flera rader)",
+        "email": "E-post",
+        "phone": "Telefon",
+        "number": "Tal",
+        "date": "Datum",
+        "select": "Val",
+        "checkbox": "Kryssruta",
+        "consent": "Dataskyddssamtycke"
+      }
     },
     "vorschau": {
       "titel": "Förhandsvisning",
@@ -7694,7 +7843,83 @@
         "importErgebnis": "{neu} nya, {geaendert} ändrade, {uebersprungen} överhoppade.",
         "weitereFehler": "{anzahl} ytterligare rader med fel.",
         "vorrangHinweis": "En omdirigering fungerar bara om det inte finns någon sida under den gamla adressen. En befintlig sida har alltid företräde."
+      },
+      "pruefung": {
+        "titel": "Vad som fortfarande saknas",
+        "hinweis": "Vi kontrollerar det vi kan kontrollera. Om en sida hittas väl avgör Google — inte den här listan.",
+        "beheben": "Åtgärda",
+        "weitere": "och {anzahl} fler",
+        "nichtsVeroeffentlicht": "Ingen sida är publicerad än — det finns inget att kontrollera.",
+        "allesGepflegt": "Allt vi kan kontrollera är i ordning.",
+        "allesGepflegtHinweis": "{anzahl} publicerade sidor utan anmärkning. Det är ingen garanti för bra placeringar, men grunden stämmer.",
+        "code": {
+          "site_noindex": {
+            "titel": "Webbplatsen är utesluten ur sökindexet",
+            "titelMit": "Webbplatsen är utesluten ur sökindexet ({anzahl} sidor berörs)",
+            "hinweis": "Så länge reglaget är på hittar ingen den här webbplatsen via en sökmotor."
+          },
+          "keine_domain": {
+            "titel": "Ingen egen domän ansluten",
+            "titelMit": "Ingen egen domän ansluten",
+            "hinweis": "Utan en egen adress finns ingen sitemap.xml, ingen robots.txt och ingen llms.txt."
+          },
+          "seiten_ohne_titel": {
+            "titel": "Sidor utan Meta title",
+            "titelMit": "{anzahl} sidor utan Meta title",
+            "hinweis": "Meta title är rubriken i sökresultatet. Saknas den tar Google någon text från sidan."
+          },
+          "seiten_ohne_beschreibung": {
+            "titel": "Sidor utan Meta description",
+            "titelMit": "{anzahl} sidor utan Meta description",
+            "hinweis": "Texten under titeln avgör om någon klickar."
+          },
+          "seiten_gleiche_beschreibung": {
+            "titel": "Sidor med den webbplatsövergripande beskrivningen",
+            "titelMit": "{anzahl} sidor använder den webbplatsövergripande beskrivningen",
+            "hinweis": "De här sidorna har en beskrivning — men alla samma. En egen per sida ger betydligt mer."
+          },
+          "doppelte_titel": {
+            "titel": "Sidor med samma Meta title",
+            "titelMit": "{anzahl} sidor med samma Meta title",
+            "hinweis": "Två sidor med samma titel konkurrerar om samma sökning. Google rapporterar det själv i Search Console."
+          },
+          "kein_firmenname": {
+            "titel": "Företagsprofil utan namn",
+            "titelMit": "Företagsprofil utan namn",
+            "hinweis": "Utan namn i företagsprofilen levererar webbplatsen inga verksamhetsuppgifter till Google — reglaget under ”Strukturerad data” får ingen effekt."
+          },
+          "keine_anschrift": {
+            "titel": "Företagsprofil utan adress",
+            "titelMit": "Företagsprofil utan adress",
+            "hinweis": "Med en adress kan Google knyta verksamheten till en ort och visa den i den lokala sökningen."
+          },
+          "keine_messung": {
+            "titel": "Inget Google-id angivet",
+            "titelMit": "Inget Google-id angivet",
+            "hinweis": "Utan id vet du inte hur många besökare webbplatsen har och varifrån de kommer."
+          },
+          "objekte_ohne_text": {
+            "titel": "Boenden utan beskrivning",
+            "titelMit": "{anzahl} boenden utan beskrivning",
+            "hinweis": "En boendesida utan text består av bilder, pris och kalender. Beskrivningen är dess enda innehåll."
+          },
+          "zahlung_nicht_bereit": {
+            "titel": "Betalningar är inte uppsatta ännu",
+            "titelMit": "Betalningar är inte uppsatta ännu",
+            "hinweis": "Webbplatsen tar emot förfrågningar men inga bokningar med betalning. Så länge Stripe inte är redo att debitera eller ingen PayPal-adress är sparad ser gästen ”Skicka förfrågan” i stället för ”Boka och betala”."
+          }
+        }
       }
+    },
+    "anfragen": {
+      "titel": "Förfrågningar",
+      "keine": "Inga förfrågningar har kommit in än.",
+      "ungelesen": "{anzahl} olästa",
+      "alleGelesen": "Alla lästa.",
+      "ohneName": "Formulär",
+      "csvExport": "Hämta som CSV",
+      "loeschen": "Ta bort permanent",
+      "geloescht": "Förfrågan borttagen."
     }
   },
   "dynamicPricing": {

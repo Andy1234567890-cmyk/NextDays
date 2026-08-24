@@ -13,7 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from src.core.security import AuthContext
-from src.features.site_config import konto_daten
+from src.features.site_config import konto_daten, weiterleitungen
 from src.features.site_config.schemas import (
     BlockCreate,
     BlockType,
@@ -21,7 +21,11 @@ from src.features.site_config.schemas import (
     BrandingUpdate,
     DomainCreate,
     PageCreate,
+    PageUpdate,
     PublicSiteResponse,
+    RedirectCreate,
+    RedirectImportRequest,
+    RedirectUpdate,
 )
 from src.features.site_config.service import SiteConfigError, SiteConfigService
 
@@ -109,9 +113,21 @@ class _Query:
     def limit(self, _n: int) -> _Query:
         return self
 
+    # Spalten-DEFAULTS der echten DB, die dieses Mock sonst nicht kennt.
+    #
+    # Nötig geworden mit `page_type` (0433): die Spalte hat in Postgres
+    # `default 'normal'`, also trägt JEDE bestehende Zeile diesen Wert. Ein
+    # Fixture, das ihn nicht setzt, ist trotzdem eine normale Seite — ohne diese
+    # Tabelle würde `.eq("page_type", "normal")` sie hier aussortieren und neun
+    # Tests wären grün oder rot je nachdem, ob jemand das Feld mitgeschrieben
+    # hat. Das wäre ein Testfehler, kein Befund.
+    _SPALTEN_DEFAULT = {"page_type": "normal"}
+
     def _match(self, row: dict) -> bool:
-        if not all(str(row.get(c)) == str(v) for c, v in self._filters):
-            return False
+        for c, v in self._filters:
+            ist = row.get(c, self._SPALTEN_DEFAULT.get(c))
+            if str(ist) != str(v):
+                return False
         if any(str(row.get(c)) == str(v) for c, v in self._neq):
             return False
         if self._in is not None:
@@ -1520,3 +1536,561 @@ def test_rechts_seite_eines_fremden_betriebs_wird_nicht_verlinkt() -> None:
     tables["tenant_site_config"][0]["privacy_policy_page_id"] = "p-fremd"
     out = _svc(tables).resolve_site_by_domain("a.de")
     assert out.privacy_policy_slug is None
+
+
+# --- SEO/AEO: Hierarchie Seite → Site (0430) ---------------------------------
+def _seo_tables(**config) -> dict[str, list[dict]]:
+    """Ein Betrieb, eine aktive Domain, eine veröffentlichte Startseite.
+    `config` überschreibt Felder der Site-Config, `seite_*` die der Seite."""
+    seite = {
+        "id": "p1",
+        "tenant_id": "t-A",
+        "slug": "",
+        "title": "Start",
+        "is_home": True,
+        "is_published": True,
+        "nav_area": "header",
+        "nav_order": 0,
+    }
+    for k in list(config):
+        if k.startswith("seite_"):
+            seite[k.removeprefix("seite_")] = config.pop(k)
+    return {
+        "tenant_custom_domains": [
+            {
+                "id": "d1",
+                "tenant_id": "t-A",
+                "domain": "a.de",
+                "status": "active",
+                "ssl_status": "active",
+            }
+        ],
+        "tenant_site_config": [{"tenant_id": "t-A", **config}],
+        "site_pages": [seite],
+        "site_blocks": [],
+    }
+
+
+def test_seo_seite_schlaegt_site() -> None:
+    """Die Hierarchie, die Hostaway „Site SEO Hierarchy" nennt: was an der Seite
+    steht, gewinnt. Der site-weite Wert ist nur der Rückfall."""
+    out = _svc(
+        _seo_tables(
+            seo_title="Site-Titel",
+            seo_description="Site-Beschreibung",
+            seite_seo_title="Seiten-Titel",
+        )
+    ).resolve_page("a.de")
+    assert out.page.seo_title == "Seiten-Titel"
+    # Die Beschreibung hat die Seite NICHT gesetzt → site-weiter Rückfall.
+    assert out.page.seo_description == "Site-Beschreibung"
+
+
+def test_seo_ohne_beides_bleibt_leer() -> None:
+    """Kein erfundener Meta-Titel aus dem Seitentitel (Wurzel 4). `title` ist
+    der Name der Seite im Baukasten, nicht ihre SEO-Aussage."""
+    out = _svc(_seo_tables()).resolve_page("a.de")
+    assert out.page.seo_title is None
+    assert out.page.seo_description is None
+    assert out.page.title == "Start"
+
+
+def test_noindex_der_site_ueberstimmt_die_seite() -> None:
+    """Der Hauptschalter darf nicht durch eine einzelne Seite aufgehoben werden.
+    `noindex=false` ist der Default JEDER Seite — mit einer Hierarchie statt
+    einer ODER-Verknüpfung wäre der site-weite Schalter also wirkungslos."""
+    out = _svc(_seo_tables(noindex=True, seite_noindex=False)).resolve_page("a.de")
+    assert out.page.noindex is True
+
+
+def test_noindex_der_seite_wirkt_allein() -> None:
+    """Gegenprobe: eine einzelne Seite sperren, ohne die ganze Website."""
+    out = _svc(_seo_tables(noindex=False, seite_noindex=True)).resolve_page("a.de")
+    assert out.page.noindex is True
+    assert out.branding.noindex is False
+
+
+def test_canonical_hat_keinen_site_rueckfall() -> None:
+    """Ein site-weiter Canonical würde jede Unterseite zum Duplikat der
+    Startseite erklären. Deshalb gibt es ihn nicht — und die Seite ohne eigenen
+    Wert liefert `None`, nicht irgendetwas."""
+    out = _svc(_seo_tables(seo_title="X")).resolve_page("a.de")
+    assert out.page.canonical_url is None
+
+
+def test_gtag_format_wird_erzwungen() -> None:
+    """Der Wert landet in einem <script src> jeder Gast-Seite (Wurzel 8)."""
+    with pytest.raises(ValidationError):
+        BrandingUpdate(gtag_id="'><script>alert(1)</script>")
+    # Die vier echten Präfixe müssen durchgehen.
+    for gueltig in ("G-ABCD1234", "UA-12345-1", "AW-9988776", "DC-1234567"):
+        assert BrandingUpdate(gtag_id=gueltig).gtag_id == gueltig
+
+
+def test_organisation_ohne_namen_kein_schema() -> None:
+    """Ein Organization-Schema ohne `name` ist für Google unbrauchbar, ein
+    erfundener Name eine Falschaussage in maschinenlesbarer Form."""
+    tables = _seo_tables()
+    tables["tenants"] = [{"id": "t-A", "name": None}]
+    tables["tenant_billing_profile"] = [{"tenant_id": "t-A", "legal_name": None}]
+    out = _svc(tables).resolve_site_by_domain("a.de")
+    assert out.organization is None
+
+
+def test_organisation_kommt_aus_dem_firmenprofil() -> None:
+    """Keine zweite Eingabemaske für die Anschrift — die Quelle ist das Konto."""
+    tables = _seo_tables()
+    tables["tenants"] = [{"id": "t-A", "name": "Nordlicht"}]
+    tables["tenant_billing_profile"] = [
+        {
+            "tenant_id": "t-A",
+            "legal_name": "Nordlicht ApS",
+            "company_street": "Havvej",
+            "company_house_number": "12",
+            "company_postal_code": "9881",
+            "company_city": "Bindslev",
+            "company_country": "DK",
+            "phone_number": "+45 12 34 56 78",
+            "email": "hej@nordlicht.example",
+        }
+    ]
+    out = _svc(tables).resolve_site_by_domain("a.de")
+    assert out.organization is not None
+    assert out.organization.name == "Nordlicht"
+    assert out.organization.street == "Havvej 12"
+    # Das Länderkürzel BLEIBT hier — anders als in der Adresszeile der Fußzeile.
+    # Schema.org erwartet für `addressCountry` genau ISO 3166-1 alpha-2.
+    assert out.organization.country == "DK"
+
+
+def test_organisation_wird_ohne_schalter_nicht_geladen() -> None:
+    """Zwei Datenbankabfragen pro Seitenansicht für etwas, das niemand
+    ausliefert, wären reine Kosten."""
+    tables = _seo_tables(schema_organization=False)
+    tables["tenants"] = [{"id": "t-A", "name": "Nordlicht"}]
+    tables["tenant_billing_profile"] = [{"tenant_id": "t-A"}]
+    out = _svc(tables).resolve_site_by_domain("a.de")
+    assert out.organization is None
+    assert out.schema_organization is False
+
+
+def test_seiten_head_html_nur_allowlist() -> None:
+    """Dieselbe Allowlist wie site-weit: <meta>/<link>/<title>, keine Skripte."""
+    with pytest.raises(ValidationError):
+        PageUpdate(head_html='<script>alert(1)</script>')
+    ok = PageUpdate(
+        head_html='<meta name="robots" content="max-image-preview:large">'
+    )
+    assert ok.head_html is not None and "robots" in ok.head_html
+
+
+# --- URL-Weiterleitungen (0430) ---------------------------------------------
+def test_quellpfad_wird_normalisiert() -> None:
+    """Was eindeutig gemeint ist, wird angenommen — statt den Kunden auf eine
+    Fehlersuche zu schicken. Hostaway listet genau diese Formfehler als die
+    häufigsten Ursachen dafür, dass eine Weiterleitung nicht greift."""
+    for eingabe, erwartet in (
+        ("alt", "/alt"),
+        ("/Alt/", "/alt"),
+        ("/alt?ref=newsletter", "/alt"),
+        ("/alt#oben", "/alt"),
+        ("  /ALT  ", "/alt"),
+        ("/", "/"),
+    ):
+        assert RedirectCreate(source_path=eingabe, target="/neu").source_path == (
+            erwartet
+        ), eingabe
+
+
+def test_quellpfad_mit_fremder_domain_wird_abgelehnt() -> None:
+    """Als Pfad `/x` zu deuten wäre geraten: der Kunde meint vielleicht wirklich
+    eine fremde Seite, und die kann diese Website nicht weiterleiten."""
+    with pytest.raises(ValidationError):
+        RedirectCreate(source_path="https://fremd.de/x", target="/neu")
+
+
+def test_ziel_nur_pfad_oder_http() -> None:
+    """Eine Weiterleitung schickt den Gast, der die KUNDENDOMAIN aufgerufen hat,
+    irgendwohin. Ein `javascript:`-Ziel wäre Code unter fremdem Vertrauen."""
+    for boese in (
+        "javascript:alert(1)",
+        "data:text/html,<script>alert(1)</script>",
+        "vbscript:msgbox",
+        "neu-ohne-slash",
+    ):
+        with pytest.raises(ValidationError):
+            RedirectCreate(source_path="/alt", target=boese)
+    assert RedirectCreate(source_path="/alt", target="/neu").target == "/neu"
+    assert (
+        RedirectCreate(source_path="/alt", target="https://neu.de/x").target
+        == "https://neu.de/x"
+    )
+
+
+def test_selbstschleife_wird_abgelehnt() -> None:
+    """/alt → /alt blockiert laut Hostaway ALLE beteiligten Weiterleitungen.
+    Der Fall passiert wirklich: der Kunde verwechselt die Richtung."""
+    with pytest.raises(ValidationError):
+        RedirectCreate(source_path="/alt", target="/alt")
+    # Auch mit abweichender Schreibweise/Schluss-Schrägstrich.
+    with pytest.raises(ValidationError):
+        RedirectCreate(source_path="/Alt", target="/alt/")
+
+
+def test_weiterleitung_wird_aufgeloest() -> None:
+    tables = _seo_tables()
+    tables["site_redirects"] = [
+        {
+            "id": "r1",
+            "tenant_id": "t-A",
+            "source_path": "/alt",
+            "target": "/neu",
+            "redirect_type": 301,
+            "is_active": True,
+        }
+    ]
+    treffer = weiterleitungen.aufloesen(_DB(tables), "t-A", "/alt")
+    assert treffer == {"target": "/neu", "redirect_type": 301}
+
+
+def test_weiterleitung_trifft_auch_mit_query_und_gross() -> None:
+    """Der Lesepfad normalisiert genauso wie das Speichern — sonst trifft
+    `/Alt/?utm_source=mail` seinen eigenen Eintrag nicht."""
+    tables = _seo_tables()
+    tables["site_redirects"] = [
+        {
+            "id": "r1",
+            "tenant_id": "t-A",
+            "source_path": "/alt",
+            "target": "/neu",
+            "redirect_type": 301,
+            "is_active": True,
+        }
+    ]
+    treffer = weiterleitungen.aufloesen(
+        _DB(tables), "t-A", "/Alt/?utm_source=mail"
+    )
+    assert treffer is not None and treffer["target"] == "/neu"
+
+
+def test_inaktive_weiterleitung_greift_nicht() -> None:
+    tables = _seo_tables()
+    tables["site_redirects"] = [
+        {
+            "id": "r1",
+            "tenant_id": "t-A",
+            "source_path": "/alt",
+            "target": "/neu",
+            "redirect_type": 301,
+            "is_active": False,
+        }
+    ]
+    assert weiterleitungen.aufloesen(_DB(tables), "t-A", "/alt") is None
+
+
+def test_weiterleitung_eines_fremden_betriebs_greift_nicht() -> None:
+    """Service-Role umgeht RLS — der Tenant-Scope muss im Code stehen (Wurzel 3).
+    Ohne ihn könnte ein Betrieb den Verkehr eines anderen umlenken."""
+    tables = _seo_tables()
+    tables["site_redirects"] = [
+        {
+            "id": "r1",
+            "tenant_id": "t-FREMD",
+            "source_path": "/alt",
+            "target": "https://boese.example",
+            "redirect_type": 301,
+            "is_active": True,
+        }
+    ]
+    assert weiterleitungen.aufloesen(_DB(tables), "t-A", "/alt") is None
+
+
+def test_aendern_scoped_auf_den_eigenen_betrieb() -> None:
+    """Item-Level-Autorisierung mit demselben Scope wie die Liste (Wurzel 9)."""
+    tables = _seo_tables()
+    tables["site_redirects"] = [
+        {
+            "id": "r1",
+            "tenant_id": "t-FREMD",
+            "source_path": "/alt",
+            "target": "/neu",
+            "redirect_type": 301,
+            "is_active": True,
+            "created_at": "2026-08-24T10:00:00Z",
+        }
+    ]
+    with pytest.raises(SiteConfigError) as exc:
+        weiterleitungen.aendern(
+            _DB(tables),
+            "t-A",
+            "r1",
+            RedirectUpdate(target="/gekapert"),
+            fehler=SiteConfigError,
+        )
+    assert exc.value.status_code == 404
+
+
+def test_import_deckel_bei_200_zeilen() -> None:
+    """Jeder unbegrenzte Bereich braucht eine Obergrenze (Wurzel 8)."""
+    zeilen = [
+        RedirectCreate(source_path=f"/alt-{i}", target=f"/neu-{i}")
+        for i in range(201)
+    ]
+    with pytest.raises(ValidationError):
+        RedirectImportRequest(items=zeilen)
+
+
+# --- SEO-Befunde (Etappe B) --------------------------------------------------
+def _befund_tables(**extra) -> dict[str, list[dict]]:
+    """Ein Betrieb mit aktiver Domain, gepflegter Config und einer
+    veröffentlichten Startseite. `extra` überschreibt Tabellen."""
+    tables = {
+        "tenant_custom_domains": [
+            {
+                "id": "d1",
+                "tenant_id": "t-A",
+                "domain": "a.de",
+                "status": "active",
+                "ssl_status": "active",
+            }
+        ],
+        "tenant_site_config": [
+            {
+                "tenant_id": "t-A",
+                "noindex": False,
+                "gtag_id": "G-ABCD1234",
+                "seo_description": None,
+                "schema_organization": True,
+            }
+        ],
+        "site_pages": [
+            {
+                "id": "p1",
+                "tenant_id": "t-A",
+                "slug": "",
+                "title": "Start",
+                "seo_title": "Nordlicht — Ferien in Dänemark",
+                "seo_description": "Zwei Häuser direkt an der Nordsee.",
+                "is_published": True,
+                "noindex": False,
+                "is_home": True,
+            }
+        ],
+        "tenants": [{"id": "t-A", "name": "Nordlicht"}],
+        "tenant_billing_profile": [
+            {
+                "tenant_id": "t-A",
+                "company_city": "Bindslev",
+                # Abrechnungsfähig: sonst meldet die Prüfung zu Recht
+                # `zahlung_nicht_bereit`, und jeder Test, der „keine Befunde"
+                # erwartet, würde daran scheitern.
+                "stripe_charges_enabled": True,
+            }
+        ],
+        "properties": [],
+    }
+    tables.update(extra)
+    return tables
+
+
+def _codes(tables: dict) -> list[str]:
+    from src.features.site_config.seo import seo_befunde
+
+    return [b["code"] for b in seo_befunde(_DB(tables), "t-A")]
+
+
+def test_gepflegte_website_hat_keine_befunde() -> None:
+    """Die Gegenprobe zuerst: eine vollständig gepflegte Site darf keine
+    Befunde erzeugen. Ohne diesen Test wäre eine Liste, die IMMER etwas meldet,
+    nicht von einer richtigen zu unterscheiden."""
+    assert _codes(_befund_tables()) == []
+
+
+def test_seite_ohne_titel_wird_gemeldet() -> None:
+    tables = _befund_tables()
+    tables["site_pages"][0]["seo_title"] = None
+    assert "seiten_ohne_titel" in _codes(tables)
+
+
+def test_entwurf_erzeugt_keinen_befund() -> None:
+    """An einem Entwurf ist ein fehlender Meta-Titel unfertige Arbeit, kein
+    Mangel. Ihn zu melden würde die Liste mit Dingen füllen, die der Kunde
+    gerade selbst in der Hand hat."""
+    tables = _befund_tables()
+    tables["site_pages"].append(
+        {
+            "id": "p2",
+            "tenant_id": "t-A",
+            "slug": "neu",
+            "title": "Neu",
+            "seo_title": None,
+            "seo_description": None,
+            "is_published": False,
+            "noindex": False,
+        }
+    )
+    assert _codes(tables) == []
+
+
+def test_doppelte_titel_werden_gemeldet() -> None:
+    """Zwei Seiten mit demselben Titel konkurrieren um dieselbe Suchanfrage —
+    der Befund, den Google in der Search Console selbst meldet. Hostaway prüft
+    ihn nicht."""
+    tables = _befund_tables()
+    tables["site_pages"].append(
+        {
+            "id": "p2",
+            "tenant_id": "t-A",
+            "slug": "ueber-uns",
+            "title": "Über uns",
+            # Groß-/Kleinschreibung darf keinen Unterschied machen.
+            "seo_title": "NORDLICHT — Ferien in Dänemark",
+            "seo_description": "Wer wir sind.",
+            "is_published": True,
+            "noindex": False,
+        }
+    )
+    codes = _codes(tables)
+    assert "doppelte_titel" in codes
+
+
+def test_site_noindex_ist_ein_fehler() -> None:
+    tables = _befund_tables()
+    tables["tenant_site_config"][0]["noindex"] = True
+    from src.features.site_config.seo import seo_befunde
+
+    befunde = seo_befunde(_DB(tables), "t-A")
+    noindex = next(b for b in befunde if b["code"] == "site_noindex")
+    assert noindex["schwere"] == "fehler"
+    # Fehler stehen oben — die Oberfläche soll nicht sortieren müssen.
+    assert befunde[0]["code"] == "site_noindex"
+
+
+def test_ohne_domain_gibt_es_die_drei_dateien_nicht() -> None:
+    tables = _befund_tables(tenant_custom_domains=[])
+    assert "keine_domain" in _codes(tables)
+
+
+def test_gleiche_beschreibung_ist_nur_ein_hinweis() -> None:
+    """Ist die site-weite Beschreibung gesetzt, hat jede Seite eine — nur eben
+    überall dieselbe. Das ist ein Hinweis, kein fehlender Wert."""
+    tables = _befund_tables()
+    tables["tenant_site_config"][0]["seo_description"] = "Ferien an der Nordsee."
+    tables["site_pages"][0]["seo_description"] = None
+    from src.features.site_config.seo import seo_befunde
+
+    befund = next(
+        b
+        for b in seo_befunde(_DB(tables), "t-A")
+        if b["code"] == "seiten_gleiche_beschreibung"
+    )
+    assert befund["schwere"] == "hinweis"
+
+
+def test_objekt_ohne_beschreibung_wird_gemeldet() -> None:
+    """Eine Objektseite ohne Text ist für Google eine dünne Seite: Bilder,
+    Preis, Kalender — und kein Inhalt."""
+    tables = _befund_tables(
+        properties=[
+            {
+                "id": "o1",
+                "tenant_id": "t-A",
+                # `title` und NICHT `name`: so heisst die Spalte in der echten
+                # Tabelle. Der Test stand hier zusammen mit der Abfrage auf
+                # `name` -- beide falsch, beide gruen, weil die nachgebaute
+                # Datenbank jede Spalte annimmt. Live war es ein 500
+                # (24.08.2026). Gegen diese Klasse laeuft jetzt
+                # scripts/diagnose/db-spalten-pruefen.py.
+                "title": "Feriehus Kornblomst",
+                "description": None,
+                "status": "active",
+                "listed_on_website": True,
+            }
+        ]
+    )
+    from src.features.site_config.seo import seo_befunde
+
+    befund = next(
+        b for b in seo_befunde(_DB(tables), "t-A") if b["code"] == "objekte_ohne_text"
+    )
+    assert befund["anzahl"] == 1
+    assert befund["seiten"][0]["titel"] == "Feriehus Kornblomst"
+
+
+def test_firmenprofil_ohne_namen_verhindert_das_schema() -> None:
+    """Der Schalter steht an, aber ohne Namen liefert der Renderer kein Schema.
+    Die häufigste Ursache für „mein Betrieb erscheint nicht bei Google" — und
+    niemand sucht sie im Firmenprofil, weil der Schalter im Baukasten steht."""
+    tables = _befund_tables(tenants=[{"id": "t-A", "name": None}])
+    tables["tenant_billing_profile"] = [{"tenant_id": "t-A", "legal_name": None}]
+    assert "kein_firmenname" in _codes(tables)
+
+
+def test_befunde_sind_auf_zehn_seiten_gedeckelt() -> None:
+    """Die ANZAHL bleibt vollständig, die Liste wird gekürzt. Sonst stünde bei
+    200 betroffenen Seiten „10" da — eine Falschaussage."""
+    tables = _befund_tables()
+    tables["site_pages"] = [
+        {
+            "id": f"p{i}",
+            "tenant_id": "t-A",
+            "slug": f"s{i}",
+            "title": f"Seite {i}",
+            "seo_title": None,
+            "seo_description": "x",
+            "is_published": True,
+            "noindex": False,
+        }
+        for i in range(25)
+    ]
+    from src.features.site_config.seo import seo_befunde
+
+    befund = next(
+        b for b in seo_befunde(_DB(tables), "t-A") if b["code"] == "seiten_ohne_titel"
+    )
+    assert befund["anzahl"] == 25
+    assert len(befund["seiten"]) == 10
+
+
+def test_ohne_zahlungskonto_wird_gewarnt() -> None:
+    """Der Befund mit der größten Wirkung: die Website funktioniert, aber kein
+    Geschäft kommt zustande.
+
+    Ohne abrechnungsfähiges Konto durchläuft ein Gast die ganze
+    Buchungsstrecke, eine Reservierung entsteht, und der Zahlungsschritt
+    scheitert mit einem 409."""
+    tables = _befund_tables()
+    tables["tenant_billing_profile"] = [
+        {"tenant_id": "t-A", "company_city": "Bindslev"}
+    ]
+    assert "zahlung_nicht_bereit" in _codes(tables)
+
+
+def test_mit_paypal_reicht_es() -> None:
+    """Stripe ODER PayPal genügt — „nur PayPal" ist ein gültiger Zustand, in dem
+    die Buchungsstrecke funktioniert."""
+    tables = _befund_tables()
+    tables["tenant_billing_profile"] = [
+        {
+            "tenant_id": "t-A",
+            "company_city": "Bindslev",
+            "paypal_email": "zahlung@nordlicht.example",
+        }
+    ]
+    assert "zahlung_nicht_bereit" not in _codes(tables)
+
+
+def test_zahlungsbereitschaft_im_oeffentlichen_branding() -> None:
+    """Der Renderer braucht die Angabe, um auf den Anfrage-Weg umzuschalten.
+
+    `stripe_charges_enabled` und nicht die bloße Existenz eines Kontos: ein
+    angelegter Custom Account, dessen KYC noch aussteht, nimmt kein Geld an —
+    und genau dieser Zustand dauert Tage."""
+    tables = _seo_tables()
+    tables["tenant_billing_profile"] = [
+        {"tenant_id": "t-A", "stripe_account_id": "acct_1", "stripe_charges_enabled": False}
+    ]
+    assert _svc(tables).resolve_site_by_domain("a.de").payments_ready is False
+
+    tables["tenant_billing_profile"][0]["stripe_charges_enabled"] = True
+    assert _svc(tables).resolve_site_by_domain("a.de").payments_ready is True

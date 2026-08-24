@@ -134,23 +134,91 @@ function NavLinks({
           : "flex flex-wrap items-center gap-x-6 gap-y-2 text-sm"
       }
     >
-      {nav.map((item) => {
-        const aktiv = item.slug === aktiverSlug;
-        return (
-          <Link
-            key={item.slug}
-            href={pfad(item.slug)}
-            aria-current={aktiv ? "page" : undefined}
-            className={
-              "font-medium transition hover:text-primary " +
-              (aktiv ? "text-primary" : "text-foreground/80")
-            }
-          >
-            {item.title}
-          </Link>
-        );
-      })}
+      {nav.map((item) => (
+        <NavEintrag
+          key={item.external_url ?? item.slug}
+          item={item}
+          aktiverSlug={aktiverSlug}
+        />
+      ))}
     </nav>
+  );
+}
+
+/** Ein Menüpunkt: Seite, externer Link oder Ordner (0433).
+ *
+ *  Drei Formen, weil es drei Dinge sind — und die Unterschiede sind für den Gast
+ *  sichtbar:
+ *
+ *  * Eine SEITE ist ein `Link` (Next-Navigation, kein Neuladen).
+ *  * Ein EXTERNER Punkt ist ein `<a>` mit `target="_blank"` und
+ *    `rel="noopener noreferrer"`. Ohne `noopener` kann die fremde Seite über
+ *    `window.opener` auf die Kundenseite zugreifen; ohne `noreferrer` erfährt
+ *    sie, von welcher Unterseite der Gast kam. Das kleine Symbol daneben ist
+ *    keine Zierde: es sagt vorher, dass ein neues Fenster aufgeht.
+ *  * Ein ORDNER ist kein Link, sondern eine Gruppe. `<details>`/`<summary>`
+ *    statt eines Hover-Menüs: das bringt Tastaturbedienung und
+ *    Screenreader-Ansage mit und funktioniert auf dem Telefon, wo es kein
+ *    Hover gibt. */
+function NavEintrag({
+  item,
+  aktiverSlug,
+}: {
+  item: NavItem;
+  aktiverSlug?: string;
+}) {
+  const klasse =
+    "font-medium transition hover:text-primary " +
+    (item.slug === aktiverSlug ? "text-primary" : "text-foreground/80");
+
+  if (item.is_folder) {
+    const kinder = item.children ?? [];
+    if (kinder.length === 0) return null;
+    return (
+      <details className="group relative">
+        <summary className={`${klasse} cursor-pointer list-none`}>
+          {item.title}
+          <span aria-hidden className="pl-1 text-xs">
+            ▾
+          </span>
+        </summary>
+        <div className="absolute left-0 top-full z-20 mt-2 flex min-w-44 flex-col gap-1 rounded-xl border border-border bg-background p-2 shadow-lg">
+          {kinder.map((kind) => (
+            <NavEintrag
+              key={kind.external_url ?? kind.slug}
+              item={kind}
+              aktiverSlug={aktiverSlug}
+            />
+          ))}
+        </div>
+      </details>
+    );
+  }
+
+  if (item.external_url) {
+    return (
+      <a
+        href={item.external_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={klasse}
+      >
+        {item.title}
+        <span aria-hidden className="pl-1 text-xs">
+          ↗
+        </span>
+      </a>
+    );
+  }
+
+  return (
+    <Link
+      href={pfad(item.slug)}
+      aria-current={item.slug === aktiverSlug ? "page" : undefined}
+      className={klasse}
+    >
+      {item.title}
+    </Link>
   );
 }
 

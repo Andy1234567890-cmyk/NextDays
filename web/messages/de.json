@@ -4866,10 +4866,10 @@
     },
     "taskStatusAction": {
       "open": "Zurücklegen",
-      "reopen": "Wieder öffnen",
       "accepted": "Annehmen",
       "in_progress": "Anfangen",
-      "done": "Abschließen"
+      "done": "Abschließen",
+      "reopen": "Wieder öffnen"
     },
     "taskStatusChanged": {
       "open": "Zurückgelegt.",
@@ -7345,7 +7345,14 @@
       "zurListe": "Alle Abschnitte",
       "zurueck": "Zur Übersicht",
       "frageHinzufuegen": "Frage hinzufügen",
-      "fragenMax": "Mehr als {max} Fragen sind nicht möglich."
+      "fragenMax": "Mehr als {max} Fragen sind nicht möglich.",
+      "stimmeHinzufuegen": "Stimme hinzufügen",
+      "stimmenMax": "Mehr als {max} Stimmen sind nicht möglich.",
+      "merkmalHinzufuegen": "Merkmal hinzufügen",
+      "merkmaleMax": "Mehr als {max} Merkmale sind nicht möglich.",
+      "darstellung": "Darstellung",
+      "feldHinzufuegen": "Feld hinzufügen",
+      "formfelderMax": "Mehr als {max} Felder sind nicht möglich."
     },
     "pages": {
       "newPage": "Neue Seite",
@@ -7433,7 +7440,14 @@
       "ungespeichert": "Ungespeicherte Änderungen",
       "verwerfen": "Verwerfen",
       "weitereOptionen": "Weitere Optionen",
-      "zurueck": "Zurück"
+      "zurueck": "Zurück",
+      "groessenTitel": "Größen",
+      "groessenHinweis": "Breite des Inhalts und Größe der Schrift. Ohne Auswahl gelten die Werte der Vorlage.",
+      "inhaltsbreite": "Inhaltsbreite",
+      "ueberschriftenGroesse": "Überschriften",
+      "textGroesse": "Fließtext",
+      "groesseStandard": "Standard",
+      "groesseZuruecksetzen": "Auf Standard zurücksetzen"
     },
     "paletten": {
       "holz": "Holz",
@@ -7451,7 +7465,10 @@
       "buttonText": "Text auf Buttons",
       "linkAufHintergrund": "Links auf dem Hintergrund",
       "schriftAufFlaeche": "Schrift auf Flächen",
-      "schriftAufHintergrund": "Schrift auf dem Hintergrund"
+      "schriftAufHintergrund": "Schrift auf dem Hintergrund",
+      "kopfLinkAufKopf": "Menü auf der Kopfzeile",
+      "markenNameAufKopf": "Firmenname auf der Kopfzeile",
+      "textAufFuss": "Text auf der Fußzeile"
     },
     "kopf": {
       "entwurfAnsehen": "Entwurf ansehen",
@@ -7475,7 +7492,8 @@
       "objekte": "Objekte",
       "seiten": "Seiten",
       "widgets": "Widgets",
-      "seo": "SEO"
+      "seo": "SEO",
+      "anfragen": "Anfragen"
     },
     "baukasten": {
       "keinZugriff": "Sie haben keinen Zugriff auf den Website-Baukasten."
@@ -7546,7 +7564,64 @@
         "header": "In die Kopfzeile",
         "none": "Nicht verlinken"
       },
-      "zurueckziehen": "Zurückziehen"
+      "zurueckziehen": "Zurückziehen",
+      "duplizieren": "Duplizieren",
+      "typ": {
+        "normal": {
+          "name": "Seite",
+          "hinweis": "Eine Seite, die Sie mit Abschnitten füllen."
+        },
+        "external": {
+          "name": "Externer Menüpunkt",
+          "hinweis": "Ein Menüpunkt, der auf eine fremde Website führt.",
+          "adresseHinweis": "Öffnet sich in einem neuen Fenster."
+        },
+        "folder": {
+          "name": "Menü-Ordner",
+          "hinweis": "Gruppiert Seiten im Menü. Selbst keine Seite.",
+          "zuordnen": "Im Ordner",
+          "keiner": "Kein Ordner"
+        },
+        "error404": {
+          "name": "Fehlerseite (404)",
+          "hinweis": "Was ein Gast sieht, wenn er sich vertippt. Nur eine je Website."
+        },
+        "post": {
+          "name": "Blog-Beitrag",
+          "hinweis": "Ein Beitrag für den Blog. Erscheint unter /blog, nicht im Menü."
+        }
+      },
+      "vorlage": {
+        "label": "Vorlage",
+        "keine": "Leere Seite",
+        "ueber_uns": "Über uns",
+        "kontakt": "Kontakt",
+        "anfahrt": "Anfahrt",
+        "hausordnung": "Hausordnung",
+        "umgebung": "Umgebung",
+        "faq": "Häufige Fragen"
+      },
+      "popup": {
+        "ausloeser": "Wann es erscheint",
+        "trigger": {
+          "delay": "Nach einigen Sekunden",
+          "exit": "Beim Verlassen der Seite",
+          "scroll": "Nach gelesenem Anteil"
+        },
+        "einheitSekunden": "Sekunden",
+        "einheitProzent": "Prozent",
+        "hinweis": "Erscheint einmal je Besucher. Auf dem Telefon wird aus „Beim Verlassen“ eine Anzeige nach 20 Sekunden."
+      },
+      "beitrag": {
+        "datum": "Erscheinungsdatum",
+        "datumHinweis": "In der Zukunft = geplant. Der Beitrag erscheint dann von selbst.",
+        "autor": "Autor",
+        "titelbild": "Titelbild",
+        "anriss": "Anriss",
+        "anrissHinweis": "Der Text in der Beitragsliste. Leer = der Anfang des ersten Absatzes.",
+        "schlagwoerter": "Schlagwörter",
+        "schlagwoerterHinweis": "Kommagetrennt, höchstens acht."
+      }
     },
     "vorlagen": {
       "angewendet": "Vorlage angewendet.",
@@ -7672,7 +7747,17 @@
       "spacer": "Abstand",
       "spacerHinweis": "Leerraum zwischen zwei Abschnitten.",
       "faq": "Fragen & Antworten",
-      "faqHinweis": "Aufklappbare Fragen. Erscheinen mit Struktur auch im Suchergebnis."
+      "faqHinweis": "Aufklappbare Fragen. Erscheinen mit Struktur auch im Suchergebnis.",
+      "map": "Karte",
+      "mapHinweis": "Zeigt die Lage. Ohne Adresse wird die aus dem Firmenprofil verwendet.",
+      "testimonials": "Gästestimmen",
+      "testimonialsHinweis": "Selbst eingetippte Zitate. Für echte Bewertungen gibt es einen eigenen Abschnitt.",
+      "features": "Merkmale",
+      "featuresHinweis": "Was Sie bieten — Symbol, Überschrift, Text in Spalten.",
+      "form": "Formular",
+      "formHinweis": "Ein Formular, das Gäste ausfüllen. Die Anfragen landen im Reiter „Anfragen“.",
+      "posts": "Letzte Beiträge",
+      "postsHinweis": "Zeigt die neuesten Blog-Beiträge. Der Blog selbst liegt unter /blog."
     },
     "felder": {
       "abstandGross": "Groß",
@@ -7705,7 +7790,7 @@
       "linksbuendig": "Linksbündig",
       "mindestGaeste": "Ab wie vielen Gästen",
       "objekte": "Objekte",
-      "platzhalter": "Platzhaltertext",
+      "platzhalter": "Platzhalter",
       "subheading": "Unterüberschrift",
       "suchbegriff": "Filter",
       "telefon": "Telefon",
@@ -7716,7 +7801,71 @@
       "ziel": "Ziel",
       "fragen": "Fragen",
       "frage": "Frage",
-      "antwort": "Antwort"
+      "antwort": "Antwort",
+      "zoom": "Zoomstufe",
+      "stimmen": "Stimmen",
+      "merkmale": "Merkmale",
+      "zitat": "Zitat",
+      "name": "Name",
+      "ort": "Ort",
+      "symbol": "Symbol",
+      "symbolKeines": "Kein Symbol",
+      "spalten": "Spalten",
+      "symbolName": {
+        "wlan": "WLAN",
+        "parken": "Parkplatz",
+        "kueche": "Küche",
+        "fruehstueck": "Frühstück",
+        "pool": "Pool",
+        "sauna": "Sauna",
+        "haustiere": "Haustiere",
+        "familie": "Familie",
+        "fahrrad": "Fahrrad",
+        "strand": "Strand",
+        "berge": "Berge",
+        "garten": "Garten",
+        "kamin": "Kamin",
+        "waschmaschine": "Waschmaschine",
+        "klimaanlage": "Klimaanlage",
+        "barrierefrei": "Barrierefrei",
+        "schluessel": "Schlüssel",
+        "uhr": "Uhr",
+        "herz": "Herz",
+        "stern": "Stern",
+        "haus": "Haus",
+        "karte": "Karte"
+      },
+      "hintergrundfarbe": "Hintergrundfarbe",
+      "hintergrundbild": "Hintergrundbild",
+      "abdunkeln": "Bild abdunkeln",
+      "abdunkelnHinweis": "Nötig, damit Text auf dem Bild lesbar bleibt.",
+      "abstand": "Abstand oben und unten",
+      "abstandWert": {
+        "none": "Zusammengezogen",
+        "sm": "Eng",
+        "md": "Normal",
+        "lg": "Luftig"
+      },
+      "einleitung": "Einleitung",
+      "formularfelder": "Felder",
+      "knopfText": "Text auf dem Knopf",
+      "danketext": "Text nach dem Absenden",
+      "empfaenger": "E-Mail für Anfragen",
+      "formularName": "Interner Name",
+      "feldart": "Art des Feldes",
+      "pflichtfeld": "Pflichtfeld",
+      "optionenHinweis": "Eine Option pro Zeile",
+      "feldartName": {
+        "text": "Text (einzeilig)",
+        "textarea": "Text (mehrzeilig)",
+        "email": "E-Mail",
+        "phone": "Telefon",
+        "number": "Zahl",
+        "date": "Datum",
+        "select": "Auswahl",
+        "checkbox": "Häkchen",
+        "consent": "Datenschutz-Zustimmung"
+      }
     },
     "vorschau": {
       "desktop": "Computer",
@@ -7895,7 +8044,83 @@
         "importErgebnis": "{neu} neu, {geaendert} geändert, {uebersprungen} übersprungen.",
         "weitereFehler": "{anzahl} weitere Zeilen mit Fehlern.",
         "vorrangHinweis": "Eine Weiterleitung greift nur, wenn es unter der alten Adresse keine Seite gibt. Eine bestehende Seite hat immer Vorrang."
+      },
+      "pruefung": {
+        "titel": "Was noch fehlt",
+        "hinweis": "Geprüft wird, was wir prüfen können. Ob eine Seite gut gefunden wird, entscheidet Google — nicht diese Liste.",
+        "beheben": "Beheben",
+        "weitere": "und {anzahl} weitere",
+        "nichtsVeroeffentlicht": "Noch keine Seite veröffentlicht — es gibt nichts zu prüfen.",
+        "allesGepflegt": "Alles gepflegt, was wir prüfen können.",
+        "allesGepflegtHinweis": "{anzahl} veröffentlichte Seiten ohne Befund. Das ist keine Garantie für gute Platzierungen, aber die Grundlage stimmt.",
+        "code": {
+          "site_noindex": {
+            "titel": "Website ist aus dem Suchindex genommen",
+            "titelMit": "Website ist aus dem Suchindex genommen ({anzahl} Seiten betroffen)",
+            "hinweis": "Solange der Schalter an ist, findet niemand diese Website über eine Suchmaschine."
+          },
+          "keine_domain": {
+            "titel": "Keine eigene Domain verbunden",
+            "titelMit": "Keine eigene Domain verbunden",
+            "hinweis": "Ohne eigene Adresse gibt es keine sitemap.xml, keine robots.txt und keine llms.txt."
+          },
+          "seiten_ohne_titel": {
+            "titel": "Seiten ohne Meta-Titel",
+            "titelMit": "{anzahl} Seiten ohne Meta-Titel",
+            "hinweis": "Der Meta-Titel ist die Überschrift im Suchergebnis. Fehlt er, nimmt Google irgendeinen Text der Seite."
+          },
+          "seiten_ohne_beschreibung": {
+            "titel": "Seiten ohne Meta-Beschreibung",
+            "titelMit": "{anzahl} Seiten ohne Meta-Beschreibung",
+            "hinweis": "Der Text unter dem Titel entscheidet, ob geklickt wird."
+          },
+          "seiten_gleiche_beschreibung": {
+            "titel": "Seiten mit der site-weiten Beschreibung",
+            "titelMit": "{anzahl} Seiten nutzen die site-weite Beschreibung",
+            "hinweis": "Diese Seiten haben eine Beschreibung — aber alle dieselbe. Eine eigene je Seite wirkt deutlich mehr."
+          },
+          "doppelte_titel": {
+            "titel": "Seiten mit demselben Meta-Titel",
+            "titelMit": "{anzahl} Seiten mit demselben Meta-Titel",
+            "hinweis": "Zwei Seiten mit gleichem Titel konkurrieren um dieselbe Suchanfrage. Google meldet das selbst in der Search Console."
+          },
+          "kein_firmenname": {
+            "titel": "Firmenprofil ohne Namen",
+            "titelMit": "Firmenprofil ohne Namen",
+            "hinweis": "Ohne Namen im Firmenprofil liefert die Website keine Betriebsangaben an Google — der Schalter unter „Strukturierte Daten“ bleibt wirkungslos."
+          },
+          "keine_anschrift": {
+            "titel": "Firmenprofil ohne Anschrift",
+            "titelMit": "Firmenprofil ohne Anschrift",
+            "hinweis": "Mit Anschrift kann Google den Betrieb einem Ort zuordnen und in der lokalen Suche zeigen."
+          },
+          "keine_messung": {
+            "titel": "Keine Google-Kennung hinterlegt",
+            "titelMit": "Keine Google-Kennung hinterlegt",
+            "hinweis": "Ohne Kennung wissen Sie nicht, wie viele Besucher die Website hat und woher sie kommen."
+          },
+          "objekte_ohne_text": {
+            "titel": "Objekte ohne Beschreibung",
+            "titelMit": "{anzahl} Objekte ohne Beschreibung",
+            "hinweis": "Eine Objektseite ohne Text besteht aus Bildern, Preis und Kalender. Die Beschreibung ist ihr einziger Inhalt."
+          },
+          "zahlung_nicht_bereit": {
+            "titel": "Zahlungen noch nicht eingerichtet",
+            "titelMit": "Zahlungen noch nicht eingerichtet",
+            "hinweis": "Die Website nimmt Anfragen entgegen, aber keine Buchungen mit Zahlung. Solange Stripe nicht abrechnungsfähig ist oder keine PayPal-Adresse hinterlegt ist, sieht der Gast „Anfrage senden“ statt „Reservieren & bezahlen“."
+          }
+        }
       }
+    },
+    "anfragen": {
+      "titel": "Anfragen",
+      "keine": "Noch keine Anfragen eingegangen.",
+      "ungelesen": "{anzahl} ungelesen",
+      "alleGelesen": "Alle gelesen.",
+      "ohneName": "Formular",
+      "csvExport": "Als CSV herunterladen",
+      "loeschen": "Endgültig löschen",
+      "geloescht": "Anfrage gelöscht."
     }
   },
   "dynamicPricing": {

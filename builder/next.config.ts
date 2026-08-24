@@ -39,7 +39,30 @@ const nextConfig: NextConfig = {
   async headers() {
     // Google-Fonts: die Kunden-Sites laden die im Baukasten gewählten Schriften
     // von dort. Ohne diese Freigabe steht die Seite in der Fallback-Schrift.
-    const gemeinsam = { dev: IST_DEV, googleFonts: true } as const;
+    // `googleTag`: der Betrieb kann im Baukasten seine Google-Kennung eintragen
+    // (0430). Ohne diese Freigabe blockt `script-src 'self'` gtag.js still — die
+    // Einstellung wäre eine Attrappe, und der Grund stünde nur in der
+    // Browser-Konsole.
+    // `frameSrc`: der Karten-Abschnitt (0432) bettet Googles Maps-Embed-API als
+    // iframe ein. Ohne diese Freigabe greift `default-src 'self'` und der
+    // Rahmen bleibt LEER — ohne Fehlermeldung, nur mit einer CSP-Zeile in der
+    // Browser-Konsole. Genau daran ist im Dashboard schon eine
+    // OpenStreetMap-Karte gescheitert (web/components/reservierungen/
+    // property-location.tsx), deshalb steht es hier von Anfang an.
+    //
+    // Die Embed-API und NICHT die JS-API (`@vis.gl/react-google-maps`, wie im
+    // Dashboard): sie versteht eine ADRESSE direkt. Die JS-API braucht
+    // Koordinaten, also einen Geocoding-Aufruf pro Seitenansicht — für eine
+    // Karte, die nur einen Ort zeigt, wäre das ein zweiter kostenpflichtiger
+    // Dienst und ein zusätzliches JS-Bundle auf jeder Gästeseite.
+    const gemeinsam = {
+      dev: IST_DEV,
+      googleFonts: true,
+      googleTag: true,
+      // Nicht in das `as const` gezogen: `CspOptions.frameSrc` erwartet ein
+      // veränderliches `string[]`, und ein `readonly`-Tupel passt darauf nicht.
+      frameSrc: ["https://www.google.com"] as string[],
+    } as const;
     return [
       {
         // Alles AUSSER /render und /widget: kein Framing.

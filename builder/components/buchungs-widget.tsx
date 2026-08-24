@@ -25,6 +25,7 @@ export function BuchungsWidget({
   sprache,
   datenschutzPflicht = false,
   datenschutzHref = null,
+  zahlungenBereit = true,
 }: {
   listing: Listing;
   /** Sprache der Website — für die festen Beschriftungen (lib/texte.ts).
@@ -41,6 +42,17 @@ export function BuchungsWidget({
   /** Pfad zur Datenschutzerklärung. Fehlt sie, gibt es kein Link — aber das
    *  Häkchen bleibt: die Pflicht hängt an der Einstellung, nicht am Link. */
   datenschutzHref?: string | null;
+  /** Kann der Betrieb online Geld annehmen (Stripe abrechnungsfähig oder
+   *  PayPal hinterlegt)?
+   *
+   *  `false` schaltet auf den ANFRAGE-Weg: der Gast schickt eine Anfrage, der
+   *  Betrieb antwortet. Das ist kein Notbehelf, sondern der richtige Zustand
+   *  für einen Betrieb, dessen Zahlungskonto noch nicht freigeschaltet ist —
+   *  die KYC-Prüfung bei Stripe dauert Tage.
+   *
+   *  Default `true`, damit ein fehlender Wert nicht stillschweigend die
+   *  Zahlung abschaltet. Der Aufrufer setzt ihn aus dem Branding. */
+  zahlungenBereit?: boolean;
 }) {
   const txt = texte(sprache);
   const [checkIn, setCheckIn] = useState("");
@@ -191,24 +203,46 @@ export function BuchungsWidget({
         </label>
       ) : null}
 
-      {/* Schritt 2: Bezahlen (Stripe Payment Element) — erscheint, sobald die
-          Reservierung angelegt ist. */}
+      {/* Schritt 2: Bezahlen — ODER die Bestätigung der Anfrage.
+          Welcher der beiden Wege gilt, entscheidet `zahlungenBereit`: es sagt,
+          ob der Betrieb überhaupt Geld annehmen kann (Stripe abrechnungsfähig
+          oder PayPal hinterlegt).
+
+          Ohne diese Unterscheidung durchlief der Gast die ganze Strecke, die
+          Reservierung entstand — und der Zahlungsschritt scheiterte mit einem
+          409 („Stripe ist noch nicht abrechnungsfähig verbunden"). Der Betrieb
+          erfuhr davon nichts, der Gast brach ab. */}
       {status.kind === "done" && status.reservationId ? (
         <div className="mt-4">
-          <StripeCheckout reservationId={status.reservationId} />
+          {zahlungenBereit ? (
+            <StripeCheckout reservationId={status.reservationId} />
+          ) : (
+            <p className="rounded-2xl border border-border px-4 py-3 text-center text-sm">
+              {txt.anfrageGesendet}
+            </p>
+          )}
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={reservieren}
-          disabled={status.kind === "loading"}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-3 font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
-        >
-          {status.kind === "loading" ? (
-            <Icon icon="ph:spinner" className="size-4 animate-spin" />
-          ) : null}
-          Reservieren &amp; bezahlen
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={reservieren}
+            disabled={status.kind === "loading"}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-3 font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+          >
+            {status.kind === "loading" ? (
+              <Icon icon="ph:spinner" className="size-4 animate-spin" />
+            ) : null}
+            {/* Vorher stand hier „Reservieren & bezahlen" als deutscher Text
+                im Markup — auf JEDER Kundenseite, auch der dänischen. */}
+            {zahlungenBereit ? txt.reservierenBezahlen : txt.anfrageSenden}
+          </button>
+          {zahlungenBereit ? null : (
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              {txt.anfrageHinweis}
+            </p>
+          )}
+        </>
       )}
 
       {status.msg && status.kind === "error" && (

@@ -4820,10 +4820,10 @@
     },
     "taskStatusAction": {
       "open": "Grąžinti",
-      "reopen": "Atidaryti iš naujo",
       "accepted": "Priimti",
       "in_progress": "Pradėti",
-      "done": "Užbaigti"
+      "done": "Užbaigti",
+      "reopen": "Atidaryti iš naujo"
     },
     "taskStatusChanged": {
       "open": "Grąžinta.",
@@ -7128,7 +7128,8 @@
       "einstellungen": "Nustatymai",
       "objekte": "Objektai",
       "widgets": "Valdikliai",
-      "seo": "SEO"
+      "seo": "SEO",
+      "anfragen": "Užklausos"
     },
     "kopf": {
       "websiteAnsehen": "Peržiūrėti svetainę",
@@ -7228,7 +7229,14 @@
       "logoZiel": "Logotipo paspaudimo tikslas",
       "logoZielLeer": "Pradinis puslapis",
       "namensGroesse": "Pavadinimo dydis",
-      "sloganText": "Tekstas"
+      "sloganText": "Tekstas",
+      "groessenTitel": "Dydžiai",
+      "groessenHinweis": "Turinio plotis ir šrifto dydis. Be pasirinkimo galioja šablono reikšmės.",
+      "inhaltsbreite": "Turinio plotis",
+      "ueberschriftenGroesse": "Antraštės",
+      "textGroesse": "Pagrindinis tekstas",
+      "groesseStandard": "Standartas",
+      "groesseZuruecksetzen": "Grąžinti standartą"
     },
     "paletten": {
       "schlicht": "Paprasta",
@@ -7246,7 +7254,10 @@
       "schriftAufHintergrund": "Tekstas ant fono",
       "schriftAufFlaeche": "Tekstas ant sričių",
       "buttonText": "Mygtukų tekstas",
-      "linkAufHintergrund": "Nuorodos ant fono"
+      "linkAufHintergrund": "Nuorodos ant fono",
+      "kopfLinkAufKopf": "Meniu ant antraštės",
+      "markenNameAufKopf": "Įmonės pavadinimas ant antraštės",
+      "textAufFuss": "Tekstas ant poraštės"
     },
     "seiten": {
       "bereichTitel": {
@@ -7314,7 +7325,64 @@
       "alleSprachenHinweis": "Įprastas atvejis — puslapis pasirodo visur, kur pasirodo jūsų svetainė.",
       "abbrechen": "Atsisakyti",
       "speichern": "Išsaugoti",
-      "einstellungenGespeichert": "Puslapio nustatymai išsaugoti."
+      "einstellungenGespeichert": "Puslapio nustatymai išsaugoti.",
+      "duplizieren": "Dubliuoti",
+      "typ": {
+        "normal": {
+          "name": "Puslapis",
+          "hinweis": "Puslapis, kurį užpildote skiltimis."
+        },
+        "external": {
+          "name": "Išorinis meniu punktas",
+          "hinweis": "Meniu punktas, vedantis į svetimą svetainę.",
+          "adresseHinweis": "Atsidaro naujame lange."
+        },
+        "folder": {
+          "name": "Meniu aplankas",
+          "hinweis": "Grupuoja puslapius meniu. Pats nėra puslapis.",
+          "zuordnen": "Aplanke",
+          "keiner": "Be aplanko"
+        },
+        "error404": {
+          "name": "Klaidos puslapis (404)",
+          "hinweis": "Tai, ką svečias mato suklydęs rašydamas. Tik vienas svetainei."
+        },
+        "post": {
+          "name": "Tinklaraščio įrašas",
+          "hinweis": "Įrašas tinklaraščiui. Rodomas adresu /blog, ne meniu."
+        }
+      },
+      "vorlage": {
+        "label": "Šablonas",
+        "keine": "Tuščias puslapis",
+        "ueber_uns": "Apie mus",
+        "kontakt": "Kontaktai",
+        "anfahrt": "Kaip mus rasti",
+        "hausordnung": "Vidaus taisyklės",
+        "umgebung": "Apylinkės",
+        "faq": "Dažni klausimai"
+      },
+      "popup": {
+        "ausloeser": "Kada rodoma",
+        "trigger": {
+          "delay": "Po kelių sekundžių",
+          "exit": "Išeinant iš puslapio",
+          "scroll": "Perskaičius dalį"
+        },
+        "einheitSekunden": "sekundžių",
+        "einheitProzent": "procentų",
+        "hinweis": "Rodoma vieną kartą kiekvienam lankytojui. Telefone „Išeinant iš puslapio“ virsta rodymu po 20 sekundžių."
+      },
+      "beitrag": {
+        "datum": "Paskelbimo data",
+        "datumHinweis": "Ateityje = suplanuota. Įrašas tada pasirodo savaime.",
+        "autor": "Autorius",
+        "titelbild": "Viršelio nuotrauka",
+        "anriss": "Santrauka",
+        "anrissHinweis": "Tekstas įrašų sąraše. Tuščia = pirmos pastraipos pradžia.",
+        "schlagwoerter": "Raktažodžiai",
+        "schlagwoerterHinweis": "Atskirti kableliais, ne daugiau kaip aštuoni."
+      }
     },
     "vorlagen": {
       "titel": "Pradėkite nuo šablono",
@@ -7356,7 +7424,14 @@
       "objektIdPlatzhalter": "Objekto kodas",
       "objektHinzufuegen": "Pridėti",
       "frageHinzufuegen": "Pridėti klausimą",
-      "fragenMax": "Daugiau nei {max} klausimų neįmanoma."
+      "fragenMax": "Daugiau nei {max} klausimų neįmanoma.",
+      "stimmeHinzufuegen": "Pridėti rekomendaciją",
+      "stimmenMax": "Daugiau nei {max} rekomendacijų neįmanoma.",
+      "merkmalHinzufuegen": "Pridėti savybę",
+      "merkmaleMax": "Daugiau nei {max} savybių neįmanoma.",
+      "darstellung": "Išvaizda",
+      "feldHinzufuegen": "Pridėti lauką",
+      "formfelderMax": "Daugiau nei {max} laukų negalima."
     },
     "abschnitte": {
       "hero": "Titulinė nuotrauka",
@@ -7382,7 +7457,17 @@
       "gallery": "Galerija",
       "galleryHinweis": "Kelios nuotraukos tinkleliu.",
       "faq": "Klausimai ir atsakymai",
-      "faqHinweis": "Išskleidžiami klausimai. Su struktūriniais duomenimis jie rodomi ir paieškos rezultatuose."
+      "faqHinweis": "Išskleidžiami klausimai. Su struktūriniais duomenimis jie rodomi ir paieškos rezultatuose.",
+      "map": "Žemėlapis",
+      "mapHinweis": "Rodo vietą. Be adreso naudojamas adresas iš įmonės profilio.",
+      "testimonials": "Rekomendacijos",
+      "testimonialsHinweis": "Pačių įvestos citatos. Tikriems atsiliepimams yra atskira dalis.",
+      "features": "Savybės",
+      "featuresHinweis": "Ką siūlote — piktograma, antraštė, tekstas stulpeliais.",
+      "form": "Forma",
+      "formHinweis": "Forma, kurią pildo svečiai. Užklausos patenka į kortelę „Užklausos“.",
+      "posts": "Naujausi įrašai",
+      "postsHinweis": "Rodo naujausius tinklaraščio įrašus. Pats tinklaraštis yra adresu /blog."
     },
     "felder": {
       "eyebrow": "Maža eilutė viršuje",
@@ -7426,7 +7511,71 @@
       "formularZeigen": "Rodyti kontaktų formą",
       "fragen": "Klausimai",
       "frage": "Klausimas",
-      "antwort": "Atsakymas"
+      "antwort": "Atsakymas",
+      "zoom": "Mastelis",
+      "stimmen": "Rekomendacijos",
+      "merkmale": "Savybės",
+      "zitat": "Citata",
+      "name": "Vardas",
+      "ort": "Vietovė",
+      "symbol": "Piktograma",
+      "symbolKeines": "Be piktogramos",
+      "spalten": "Stulpeliai",
+      "symbolName": {
+        "wlan": "Wi-Fi",
+        "parken": "Parkavimas",
+        "kueche": "Virtuvė",
+        "fruehstueck": "Pusryčiai",
+        "pool": "Baseinas",
+        "sauna": "Pirtis",
+        "haustiere": "Gyvūnai",
+        "familie": "Šeima",
+        "fahrrad": "Dviratis",
+        "strand": "Paplūdimys",
+        "berge": "Kalnai",
+        "garten": "Sodas",
+        "kamin": "Židinys",
+        "waschmaschine": "Skalbimo mašina",
+        "klimaanlage": "Oro kondicionierius",
+        "barrierefrei": "Be barjerų",
+        "schluessel": "Raktas",
+        "uhr": "Laikrodis",
+        "herz": "Širdis",
+        "stern": "Žvaigždė",
+        "haus": "Namas",
+        "karte": "Žemėlapis"
+      },
+      "hintergrundfarbe": "Fono spalva",
+      "hintergrundbild": "Fono paveikslėlis",
+      "abdunkeln": "Patamsinti paveikslėlį",
+      "abdunkelnHinweis": "Reikalinga, kad tekstas ant paveikslėlio liktų įskaitomas.",
+      "abstand": "Atstumas viršuje ir apačioje",
+      "abstandWert": {
+        "none": "Suglaudinta",
+        "sm": "Ankšta",
+        "md": "Įprasta",
+        "lg": "Erdvu"
+      },
+      "einleitung": "Įžanga",
+      "formularfelder": "Laukai",
+      "knopfText": "Mygtuko tekstas",
+      "danketext": "Tekstas po išsiuntimo",
+      "empfaenger": "El. paštas užklausoms",
+      "formularName": "Vidinis pavadinimas",
+      "feldart": "Lauko rūšis",
+      "pflichtfeld": "Privalomas laukas",
+      "optionenHinweis": "Viena parinktis eilutėje",
+      "feldartName": {
+        "text": "Tekstas (viena eilutė)",
+        "textarea": "Tekstas (kelios eilutės)",
+        "email": "El. paštas",
+        "phone": "Telefonas",
+        "number": "Skaičius",
+        "date": "Data",
+        "select": "Pasirinkimas",
+        "checkbox": "Žymimasis langelis",
+        "consent": "Sutikimas dėl duomenų"
+      }
     },
     "vorschau": {
       "titel": "Peržiūra",
@@ -7694,7 +7843,83 @@
         "importErgebnis": "{neu} nauji, {geaendert} pakeisti, {uebersprungen} praleisti.",
         "weitereFehler": "Dar {anzahl} eilutės su klaidomis.",
         "vorrangHinweis": "Peradresavimas veikia tik tada, kai senuoju adresu nėra puslapio. Esamas puslapis visada turi pirmenybę."
+      },
+      "pruefung": {
+        "titel": "Ko dar trūksta",
+        "hinweis": "Tikriname tai, ką galime patikrinti. Ar puslapis bus gerai randamas, sprendžia Google — ne šis sąrašas.",
+        "beheben": "Ištaisyti",
+        "weitere": "ir dar {anzahl}",
+        "nichtsVeroeffentlicht": "Kol kas nepaskelbtas nė vienas puslapis — nėra ko tikrinti.",
+        "allesGepflegt": "Viskas, ką galime patikrinti, yra tvarkinga.",
+        "allesGepflegtHinweis": "{anzahl} paskelbtų puslapių be pastabų. Tai negarantuoja gerų pozicijų, bet pagrindas tvarkingas.",
+        "code": {
+          "site_noindex": {
+            "titel": "Svetainė išbraukta iš paieškos indekso",
+            "titelMit": "Svetainė išbraukta iš paieškos indekso (paveikta {anzahl} puslapių)",
+            "hinweis": "Kol perjungiklis įjungtas, šios svetainės niekas neranda per paieškos sistemą."
+          },
+          "keine_domain": {
+            "titel": "Nesusietas savas domenas",
+            "titelMit": "Nesusietas savas domenas",
+            "hinweis": "Be savo adreso nėra nei sitemap.xml, nei robots.txt, nei llms.txt."
+          },
+          "seiten_ohne_titel": {
+            "titel": "Puslapiai be meta antraštės",
+            "titelMit": "{anzahl} puslapių be meta antraštės",
+            "hinweis": "Meta antraštė yra paieškos rezultato antraštė. Jei jos nėra, Google paima bet kokį puslapio tekstą."
+          },
+          "seiten_ohne_beschreibung": {
+            "titel": "Puslapiai be meta aprašo",
+            "titelMit": "{anzahl} puslapių be meta aprašo",
+            "hinweis": "Tekstas po antrašte nusprendžia, ar bus spustelėta."
+          },
+          "seiten_gleiche_beschreibung": {
+            "titel": "Puslapiai su visai svetainei skirtu aprašu",
+            "titelMit": "{anzahl} puslapių naudoja visai svetainei skirtą aprašą",
+            "hinweis": "Šie puslapiai aprašą turi — bet visi tą patį. Savas aprašas kiekvienam puslapiui veikia gerokai stipriau."
+          },
+          "doppelte_titel": {
+            "titel": "Puslapiai su ta pačia meta antrašte",
+            "titelMit": "{anzahl} puslapių su ta pačia meta antrašte",
+            "hinweis": "Du puslapiai su ta pačia antrašte konkuruoja dėl tos pačios užklausos. Google tai pats praneša Search Console."
+          },
+          "kein_firmenname": {
+            "titel": "Įmonės profilis be pavadinimo",
+            "titelMit": "Įmonės profilis be pavadinimo",
+            "hinweis": "Be pavadinimo įmonės profilyje svetainė neperduoda Google jokių įmonės duomenų — perjungiklis skyriuje „Struktūriniai duomenys“ lieka be poveikio."
+          },
+          "keine_anschrift": {
+            "titel": "Įmonės profilis be adreso",
+            "titelMit": "Įmonės profilis be adreso",
+            "hinweis": "Su adresu Google gali priskirti įmonę vietai ir rodyti ją vietinėje paieškoje."
+          },
+          "keine_messung": {
+            "titel": "Nenurodytas Google identifikatorius",
+            "titelMit": "Nenurodytas Google identifikatorius",
+            "hinweis": "Be identifikatoriaus nežinote, kiek lankytojų turi svetainė ir iš kur jie atkeliauja."
+          },
+          "objekte_ohne_text": {
+            "titel": "Objektai be aprašo",
+            "titelMit": "{anzahl} objektų be aprašo",
+            "hinweis": "Objekto puslapis be teksto — tai nuotraukos, kaina ir kalendorius. Aprašas yra vienintelis jo turinys."
+          },
+          "zahlung_nicht_bereit": {
+            "titel": "Mokėjimai dar nesukonfigūruoti",
+            "titelMit": "Mokėjimai dar nesukonfigūruoti",
+            "hinweis": "Svetainė priima užklausas, bet ne rezervacijas su mokėjimu. Kol Stripe nėra pasirengęs nuskaityti mokėjimo arba nenurodytas PayPal adresas, svečias mato „Siųsti užklausą“, o ne „Rezervuoti ir mokėti“."
+          }
+        }
       }
+    },
+    "anfragen": {
+      "titel": "Užklausos",
+      "keine": "Užklausų dar negauta.",
+      "ungelesen": "{anzahl} neperskaitytų",
+      "alleGelesen": "Viskas perskaityta.",
+      "ohneName": "Forma",
+      "csvExport": "Atsisiųsti kaip CSV",
+      "loeschen": "Ištrinti negrįžtamai",
+      "geloescht": "Užklausa ištrinta."
     }
   },
   "dynamicPricing": {

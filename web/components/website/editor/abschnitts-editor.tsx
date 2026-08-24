@@ -389,6 +389,16 @@ export function AbschnittsEditor({
     setZeilen((z) => z.map((r) => (r.key === key ? { ...r, content } : r)));
   }
 
+  /** Die Darstellungs-Einstellungen eines Abschnitts (0432).
+   *
+   *  Sie wurden bisher NUR durchgereicht: `background_color`, `padding` und die
+   *  Stil-Werte standen im Backend-Schema (`BlockSettings`) und in der
+   *  Datenbank, aber es gab keine Oberfläche, sie zu setzen. Damit waren sie
+   *  eine Attrappe — der Renderer liest sie, niemand konnte sie füllen. */
+  function aendereSettings(key: string, settings: Record<string, unknown>) {
+    setZeilen((z) => z.map((r) => (r.key === key ? { ...r, settings } : r)));
+  }
+
   function entferne(key: string) {
     setZeilen((z) => z.filter((r) => r.key !== key));
     setAktiv((a) => (a === key ? null : a));
@@ -438,7 +448,9 @@ export function AbschnittsEditor({
       <AbschnittInspektor
         typ={aktiveZeile.typ}
         content={aktiveZeile.content}
+        settings={aktiveZeile.settings}
         onChange={(c) => aendere(aktiveZeile.key, c)}
+        onSettings={(st) => aendereSettings(aktiveZeile.key, st)}
       />
     </LeisteUnterseite>
   ) : (

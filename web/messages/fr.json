@@ -4822,10 +4822,10 @@
     },
     "taskStatusAction": {
       "open": "Remettre",
-      "reopen": "Rouvrir",
       "accepted": "Accepter",
       "in_progress": "Commencer",
-      "done": "Terminer"
+      "done": "Terminer",
+      "reopen": "Rouvrir"
     },
     "taskStatusChanged": {
       "open": "Remise.",
@@ -7130,7 +7130,8 @@
       "einstellungen": "Paramètres",
       "objekte": "Logements",
       "widgets": "Widgets",
-      "seo": "SEO"
+      "seo": "SEO",
+      "anfragen": "Demandes"
     },
     "kopf": {
       "websiteAnsehen": "Voir le site",
@@ -7230,7 +7231,14 @@
       "logoZiel": "Cible du clic sur le logo",
       "logoZielLeer": "Page d'accueil",
       "namensGroesse": "Taille du nom",
-      "sloganText": "Texte"
+      "sloganText": "Texte",
+      "groessenTitel": "Tailles",
+      "groessenHinweis": "Largeur du contenu et taille du texte. Sans choix, les valeurs du modèle s’appliquent.",
+      "inhaltsbreite": "Largeur du contenu",
+      "ueberschriftenGroesse": "Titres",
+      "textGroesse": "Texte courant",
+      "groesseStandard": "Standard",
+      "groesseZuruecksetzen": "Rétablir la valeur standard"
     },
     "paletten": {
       "schlicht": "Sobre",
@@ -7248,7 +7256,10 @@
       "schriftAufHintergrund": "Texte sur l'arrière-plan",
       "schriftAufFlaeche": "Texte sur les surfaces",
       "buttonText": "Texte des boutons",
-      "linkAufHintergrund": "Liens sur l'arrière-plan"
+      "linkAufHintergrund": "Liens sur l'arrière-plan",
+      "kopfLinkAufKopf": "Menu sur l’en-tête",
+      "markenNameAufKopf": "Nom de l’entreprise sur l’en-tête",
+      "textAufFuss": "Texte sur le pied de page"
     },
     "seiten": {
       "bereichTitel": {
@@ -7316,7 +7327,64 @@
       "alleSprachenHinweis": "Le cas normal — la page paraît partout où votre site paraît.",
       "abbrechen": "Annuler",
       "speichern": "Enregistrer",
-      "einstellungenGespeichert": "Paramètres de la page enregistrés."
+      "einstellungenGespeichert": "Paramètres de la page enregistrés.",
+      "duplizieren": "Dupliquer",
+      "typ": {
+        "normal": {
+          "name": "Page",
+          "hinweis": "Une page que vous remplissez de sections."
+        },
+        "external": {
+          "name": "Élément de menu externe",
+          "hinweis": "Un élément de menu qui mène à un site externe.",
+          "adresseHinweis": "S’ouvre dans une nouvelle fenêtre."
+        },
+        "folder": {
+          "name": "Dossier de menu",
+          "hinweis": "Regroupe des pages dans le menu. N’est pas une page.",
+          "zuordnen": "Dans le dossier",
+          "keiner": "Aucun dossier"
+        },
+        "error404": {
+          "name": "Page d’erreur (404)",
+          "hinweis": "Ce que voit un client en cas de faute de frappe. Une seule par site."
+        },
+        "post": {
+          "name": "Article de blog",
+          "hinweis": "Un article pour le blog. Apparaît sous /blog, pas dans le menu."
+        }
+      },
+      "vorlage": {
+        "label": "Modèle",
+        "keine": "Page vide",
+        "ueber_uns": "À propos",
+        "kontakt": "Contact",
+        "anfahrt": "Accès",
+        "hausordnung": "Règlement intérieur",
+        "umgebung": "Les environs",
+        "faq": "Questions fréquentes"
+      },
+      "popup": {
+        "ausloeser": "Quand il apparaît",
+        "trigger": {
+          "delay": "Après quelques secondes",
+          "exit": "À la sortie de la page",
+          "scroll": "Après une part lue"
+        },
+        "einheitSekunden": "secondes",
+        "einheitProzent": "pour cent",
+        "hinweis": "Apparaît une fois par visiteur. Sur le téléphone, « À la sortie » devient un affichage après 20 secondes."
+      },
+      "beitrag": {
+        "datum": "Date de publication",
+        "datumHinweis": "Dans le futur = programmé. L’article paraît alors de lui-même.",
+        "autor": "Auteur",
+        "titelbild": "Image à la une",
+        "anriss": "Chapeau",
+        "anrissHinweis": "Le texte dans la liste des articles. Vide = le début du premier paragraphe.",
+        "schlagwoerter": "Mots-clés",
+        "schlagwoerterHinweis": "Séparés par des virgules, huit au maximum."
+      }
     },
     "vorlagen": {
       "titel": "Commencer avec un modèle",
@@ -7358,7 +7426,14 @@
       "objektIdPlatzhalter": "Identifiant du logement",
       "objektHinzufuegen": "Ajouter",
       "frageHinzufuegen": "Ajouter une question",
-      "fragenMax": "Plus de {max} questions ne sont pas possibles."
+      "fragenMax": "Plus de {max} questions ne sont pas possibles.",
+      "stimmeHinzufuegen": "Ajouter un témoignage",
+      "stimmenMax": "Plus de {max} témoignages ne sont pas possibles.",
+      "merkmalHinzufuegen": "Ajouter un atout",
+      "merkmaleMax": "Plus de {max} atouts ne sont pas possibles.",
+      "darstellung": "Apparence",
+      "feldHinzufuegen": "Ajouter un champ",
+      "formfelderMax": "Il n’est pas possible d’avoir plus de {max} champs."
     },
     "abschnitte": {
       "hero": "Image principale",
@@ -7384,7 +7459,17 @@
       "gallery": "Galerie",
       "galleryHinweis": "Plusieurs images en grille.",
       "faq": "Questions et réponses",
-      "faqHinweis": "Questions dépliables. Avec les données structurées, elles apparaissent aussi dans les résultats de recherche."
+      "faqHinweis": "Questions dépliables. Avec les données structurées, elles apparaissent aussi dans les résultats de recherche.",
+      "map": "Carte",
+      "mapHinweis": "Affiche la situation. Sans adresse, celle du profil de l’entreprise est utilisée.",
+      "testimonials": "Témoignages",
+      "testimonialsHinweis": "Citations saisies par vous-même. Les avis authentiques ont leur propre section.",
+      "features": "Atouts",
+      "featuresHinweis": "Ce que vous proposez — icône, titre, texte en colonnes.",
+      "form": "Formulaire",
+      "formHinweis": "Un formulaire que les clients remplissent. Les demandes arrivent dans l’onglet « Demandes ».",
+      "posts": "Derniers articles",
+      "postsHinweis": "Affiche les articles de blog les plus récents. Le blog lui-même se trouve sous /blog."
     },
     "felder": {
       "eyebrow": "Petite ligne au-dessus",
@@ -7428,7 +7513,71 @@
       "formularZeigen": "Afficher le formulaire de contact",
       "fragen": "Questions",
       "frage": "Question",
-      "antwort": "Réponse"
+      "antwort": "Réponse",
+      "zoom": "Niveau de zoom",
+      "stimmen": "Témoignages",
+      "merkmale": "Atouts",
+      "zitat": "Citation",
+      "name": "Nom",
+      "ort": "Lieu",
+      "symbol": "Icône",
+      "symbolKeines": "Aucune icône",
+      "spalten": "Colonnes",
+      "symbolName": {
+        "wlan": "Wi-Fi",
+        "parken": "Parking",
+        "kueche": "Cuisine",
+        "fruehstueck": "Petit-déjeuner",
+        "pool": "Piscine",
+        "sauna": "Sauna",
+        "haustiere": "Animaux",
+        "familie": "Famille",
+        "fahrrad": "Vélo",
+        "strand": "Plage",
+        "berge": "Montagne",
+        "garten": "Jardin",
+        "kamin": "Cheminée",
+        "waschmaschine": "Lave-linge",
+        "klimaanlage": "Climatisation",
+        "barrierefrei": "Accessible",
+        "schluessel": "Clé",
+        "uhr": "Horloge",
+        "herz": "Cœur",
+        "stern": "Étoile",
+        "haus": "Maison",
+        "karte": "Carte"
+      },
+      "hintergrundfarbe": "Couleur de fond",
+      "hintergrundbild": "Image de fond",
+      "abdunkeln": "Assombrir l’image",
+      "abdunkelnHinweis": "Nécessaire pour que le texte reste lisible sur l’image.",
+      "abstand": "Espace en haut et en bas",
+      "abstandWert": {
+        "none": "Resserré",
+        "sm": "Serré",
+        "md": "Normal",
+        "lg": "Aéré"
+      },
+      "einleitung": "Introduction",
+      "formularfelder": "Champs",
+      "knopfText": "Texte du bouton",
+      "danketext": "Texte après l’envoi",
+      "empfaenger": "E-mail pour les demandes",
+      "formularName": "Nom interne",
+      "feldart": "Type de champ",
+      "pflichtfeld": "Champ obligatoire",
+      "optionenHinweis": "Une option par ligne",
+      "feldartName": {
+        "text": "Texte (une ligne)",
+        "textarea": "Texte (plusieurs lignes)",
+        "email": "E-mail",
+        "phone": "Téléphone",
+        "number": "Nombre",
+        "date": "Date",
+        "select": "Sélection",
+        "checkbox": "Case à cocher",
+        "consent": "Consentement RGPD"
+      }
     },
     "vorschau": {
       "titel": "Aperçu",
@@ -7696,7 +7845,83 @@
         "importErgebnis": "{neu} nouvelles, {geaendert} modifiées, {uebersprungen} ignorées.",
         "weitereFehler": "{anzahl} autres lignes comportant des erreurs.",
         "vorrangHinweis": "Une redirection ne s'applique que s'il n'existe aucune page sous l'ancienne adresse. Une page existante a toujours la priorité."
+      },
+      "pruefung": {
+        "titel": "Ce qui manque encore",
+        "hinweis": "Nous vérifions ce que nous pouvons vérifier. C’est Google qui décide si une page est bien trouvée — pas cette liste.",
+        "beheben": "Corriger",
+        "weitere": "et {anzahl} de plus",
+        "nichtsVeroeffentlicht": "Aucune page publiée pour l’instant — il n’y a rien à vérifier.",
+        "allesGepflegt": "Tout ce que nous pouvons vérifier est en ordre.",
+        "allesGepflegtHinweis": "{anzahl} pages publiées sans anomalie. Ce n’est pas une garantie de bon classement, mais la base est bonne.",
+        "code": {
+          "site_noindex": {
+            "titel": "Le site est exclu de l’index de recherche",
+            "titelMit": "Le site est exclu de l’index de recherche ({anzahl} pages concernées)",
+            "hinweis": "Tant que l’interrupteur est activé, personne ne trouve ce site via un moteur de recherche."
+          },
+          "keine_domain": {
+            "titel": "Aucun domaine propre relié",
+            "titelMit": "Aucun domaine propre relié",
+            "hinweis": "Sans adresse propre, il n’y a ni sitemap.xml, ni robots.txt, ni llms.txt."
+          },
+          "seiten_ohne_titel": {
+            "titel": "Pages sans balise title",
+            "titelMit": "{anzahl} pages sans balise title",
+            "hinweis": "La balise title est le titre affiché dans le résultat de recherche. Si elle manque, Google reprend un texte quelconque de la page."
+          },
+          "seiten_ohne_beschreibung": {
+            "titel": "Pages sans Meta description",
+            "titelMit": "{anzahl} pages sans Meta description",
+            "hinweis": "Le texte sous le titre décide si l’on clique."
+          },
+          "seiten_gleiche_beschreibung": {
+            "titel": "Pages utilisant la description globale du site",
+            "titelMit": "{anzahl} pages utilisent la description globale du site",
+            "hinweis": "Ces pages ont bien une description — mais toutes la même. Une description propre à chaque page a beaucoup plus d’effet."
+          },
+          "doppelte_titel": {
+            "titel": "Pages avec la même balise title",
+            "titelMit": "{anzahl} pages avec la même balise title",
+            "hinweis": "Deux pages au même titre se concurrencent sur la même requête. Google le signale lui-même dans la Search Console."
+          },
+          "kein_firmenname": {
+            "titel": "Profil d’entreprise sans nom",
+            "titelMit": "Profil d’entreprise sans nom",
+            "hinweis": "Sans nom dans le profil d’entreprise, le site ne transmet aucune information sur l’établissement à Google — l’interrupteur sous « Données structurées » reste sans effet."
+          },
+          "keine_anschrift": {
+            "titel": "Profil d’entreprise sans adresse",
+            "titelMit": "Profil d’entreprise sans adresse",
+            "hinweis": "Avec une adresse, Google peut rattacher l’établissement à un lieu et l’afficher dans la recherche locale."
+          },
+          "keine_messung": {
+            "titel": "Aucun identifiant Google enregistré",
+            "titelMit": "Aucun identifiant Google enregistré",
+            "hinweis": "Sans identifiant, vous ne savez pas combien de visiteurs le site reçoit ni d’où ils viennent."
+          },
+          "objekte_ohne_text": {
+            "titel": "Logements sans description",
+            "titelMit": "{anzahl} logements sans description",
+            "hinweis": "Une page de logement sans texte se résume aux photos, au prix et au calendrier. La description est son seul contenu."
+          },
+          "zahlung_nicht_bereit": {
+            "titel": "Paiements pas encore configurés",
+            "titelMit": "Paiements pas encore configurés",
+            "hinweis": "Le site accepte les demandes, mais pas les réservations avec paiement. Tant que Stripe n’est pas prêt à encaisser ou qu’aucune adresse PayPal n’est enregistrée, le client voit « Envoyer une demande » au lieu de « Réserver et payer »."
+          }
+        }
       }
+    },
+    "anfragen": {
+      "titel": "Demandes",
+      "keine": "Aucune demande reçue pour l’instant.",
+      "ungelesen": "{anzahl} non lues",
+      "alleGelesen": "Tout est lu.",
+      "ohneName": "Formulaire",
+      "csvExport": "Télécharger en CSV",
+      "loeschen": "Supprimer définitivement",
+      "geloescht": "Demande supprimée."
     }
   },
   "dynamicPricing": {

@@ -2,12 +2,16 @@
 
 // Cookie-Hinweis der Kunden-Website (0426).
 //
-// Bewusst schlicht und ohne Zustimmungs-Verwaltung: dieser Hinweis begleitet
-// eine Seite, die selbst keine Tracking-Cookies setzt. Sobald der Betrieb per
-// `custom_js` ein Analytics-Skript einbindet, braucht er eine echte
-// Consent-Lösung — das sagt der Text im Baukasten auch, und die Entscheidung
-// bleibt bei ihm. Ein Banner, das „Zustimmung" behauptet und trotzdem beim
-// ersten Aufruf lädt, wäre schlimmer als keines.
+// Schlicht, aber nicht wirkungslos: der Klick schaltet Googles Consent Mode v2
+// von „denied" auf „granted" (0430). Vorher hat gtag.js zwar geladen, aber keine
+// Cookies gesetzt und keine personenbezogenen Daten gesendet — der Default steht
+// in components/google-tag.tsx und läuft VOR dem Skript.
+//
+// Für eigenen Code des Betriebs (`custom_js`) gilt das NICHT: den bindet der
+// Renderer unverändert ein, und wer dort ein Analytics-Skript einträgt, braucht
+// seine eigene Consent-Lösung. Das sagt der Text im Baukasten auch. Ein Banner,
+// das „Zustimmung" behauptet, während fremder Code längst läuft, wäre schlimmer
+// als keines — deshalb wird hier nur das freigegeben, was wir selbst laden.
 //
 // Die Auswahl liegt in `localStorage` und nicht in einem Cookie: sie betrifft
 // nur diesen Browser, muss den Server nie erreichen, und ein Cookie für die
@@ -71,6 +75,25 @@ export function CookieHinweis({
         <button
           type="button"
           onClick={() => {
+            // Googles Consent Mode v2: die vier Signale freigeben. `gtag`
+            // existiert nur, wenn der Betrieb eine Mess-Kennung eingetragen
+            // hat — deshalb die Prüfung und kein Import.
+            //
+            // Diese Zeilen stehen VOR dem localStorage-Schreiben: schlägt das
+            // Speichern fehl (privates Fenster), soll die Zustimmung für DIESE
+            // Sitzung trotzdem gelten. Der Hinweis kommt beim nächsten Aufruf
+            // wieder, was der ehrliche Ausgang ist.
+            const gtag = (
+              window as unknown as {
+                gtag?: (...args: unknown[]) => void;
+              }
+            ).gtag;
+            gtag?.("consent", "update", {
+              ad_storage: "granted",
+              ad_user_data: "granted",
+              ad_personalization: "granted",
+              analytics_storage: "granted",
+            });
             try {
               window.localStorage.setItem(SCHLUESSEL, "ok");
             } catch {

@@ -4820,10 +4820,10 @@
     },
     "taskStatusAction": {
       "open": "Nolikt atpakaļ",
-      "reopen": "Atvērt atkārtoti",
       "accepted": "Pieņemt",
       "in_progress": "Sākt",
-      "done": "Pabeigt"
+      "done": "Pabeigt",
+      "reopen": "Atvērt atkārtoti"
     },
     "taskStatusChanged": {
       "open": "Nolikts atpakaļ.",
@@ -7128,7 +7128,8 @@
       "einstellungen": "Iestatījumi",
       "objekte": "Objekti",
       "widgets": "Sīkrīki",
-      "seo": "SEO"
+      "seo": "SEO",
+      "anfragen": "Pieprasījumi"
     },
     "kopf": {
       "websiteAnsehen": "Skatīt vietni",
@@ -7228,7 +7229,14 @@
       "logoZiel": "Logotipa klikšķa mērķis",
       "logoZielLeer": "Sākumlapa",
       "namensGroesse": "Nosaukuma izmērs",
-      "sloganText": "Teksts"
+      "sloganText": "Teksts",
+      "groessenTitel": "Izmēri",
+      "groessenHinweis": "Satura platums un burtu izmērs. Bez izvēles ir spēkā veidnes vērtības.",
+      "inhaltsbreite": "Satura platums",
+      "ueberschriftenGroesse": "Virsraksti",
+      "textGroesse": "Pamatteksts",
+      "groesseStandard": "Standarts",
+      "groesseZuruecksetzen": "Atpakaļ uz standartu"
     },
     "paletten": {
       "schlicht": "Vienkāršs",
@@ -7246,7 +7254,10 @@
       "schriftAufHintergrund": "Teksts uz fona",
       "schriftAufFlaeche": "Teksts uz virsmām",
       "buttonText": "Uzraksts uz pogām",
-      "linkAufHintergrund": "Saites uz fona"
+      "linkAufHintergrund": "Saites uz fona",
+      "kopfLinkAufKopf": "Izvēlne uz galvenes",
+      "markenNameAufKopf": "Uzņēmuma nosaukums uz galvenes",
+      "textAufFuss": "Teksts uz kājenes"
     },
     "seiten": {
       "bereichTitel": {
@@ -7314,7 +7325,64 @@
       "alleSprachenHinweis": "Parastais gadījums — lapa parādās visur, kur parādās jūsu vietne.",
       "abbrechen": "Atcelt",
       "speichern": "Saglabāt",
-      "einstellungenGespeichert": "Lapas iestatījumi saglabāti."
+      "einstellungenGespeichert": "Lapas iestatījumi saglabāti.",
+      "duplizieren": "Dublēt",
+      "typ": {
+        "normal": {
+          "name": "Lapa",
+          "hinweis": "Lapa, ko piepildāt ar sadaļām."
+        },
+        "external": {
+          "name": "Ārējs izvēlnes punkts",
+          "hinweis": "Izvēlnes punkts, kas ved uz svešu vietni.",
+          "adresseHinweis": "Atveras jaunā logā."
+        },
+        "folder": {
+          "name": "Izvēlnes mape",
+          "hinweis": "Grupē lapas izvēlnē. Pati nav lapa.",
+          "zuordnen": "Mapē",
+          "keiner": "Bez mapes"
+        },
+        "error404": {
+          "name": "Kļūdas lapa (404)",
+          "hinweis": "Tas, ko viesis redz pēc drukas kļūdas. Tikai viena katrai vietnei."
+        },
+        "post": {
+          "name": "Emuāra ieraksts",
+          "hinweis": "Ieraksts emuāram. Parādās /blog, nevis izvēlnē."
+        }
+      },
+      "vorlage": {
+        "label": "Veidne",
+        "keine": "Tukša lapa",
+        "ueber_uns": "Par mums",
+        "kontakt": "Kontakti",
+        "anfahrt": "Kā mūs atrast",
+        "hausordnung": "Iekšējās kārtības noteikumi",
+        "umgebung": "Apkārtne",
+        "faq": "Biežie jautājumi"
+      },
+      "popup": {
+        "ausloeser": "Kad tas parādās",
+        "trigger": {
+          "delay": "Pēc dažām sekundēm",
+          "exit": "Pametot lapu",
+          "scroll": "Pēc izlasītās daļas"
+        },
+        "einheitSekunden": "sekundes",
+        "einheitProzent": "procenti",
+        "hinweis": "Parādās vienu reizi katram apmeklētājam. Telefonā „Pametot lapu“ kļūst par parādīšanos pēc 20 sekundēm."
+      },
+      "beitrag": {
+        "datum": "Publicēšanas datums",
+        "datumHinweis": "Nākotnē = ieplānots. Ieraksts tad parādās pats.",
+        "autor": "Autors",
+        "titelbild": "Titulbilde",
+        "anriss": "Ievads",
+        "anrissHinweis": "Teksts ierakstu sarakstā. Tukšs = pirmās rindkopas sākums.",
+        "schlagwoerter": "Atslēgvārdi",
+        "schlagwoerterHinweis": "Atdalīti ar komatiem, ne vairāk kā astoņi."
+      }
     },
     "vorlagen": {
       "titel": "Sākt ar veidni",
@@ -7356,7 +7424,14 @@
       "objektIdPlatzhalter": "Objekta identifikators",
       "objektHinzufuegen": "Pievienot",
       "frageHinzufuegen": "Pievienot jautājumu",
-      "fragenMax": "Vairāk par {max} jautājumiem nav iespējams."
+      "fragenMax": "Vairāk par {max} jautājumiem nav iespējams.",
+      "stimmeHinzufuegen": "Pievienot ieteikumu",
+      "stimmenMax": "Vairāk par {max} ieteikumiem nav iespējams.",
+      "merkmalHinzufuegen": "Pievienot īpašību",
+      "merkmaleMax": "Vairāk par {max} īpašībām nav iespējams.",
+      "darstellung": "Izskats",
+      "feldHinzufuegen": "Pievienot lauku",
+      "formfelderMax": "Vairāk nekā {max} lauki nav iespējami."
     },
     "abschnitte": {
       "hero": "Titulattēls",
@@ -7382,7 +7457,17 @@
       "gallery": "Galerija",
       "galleryHinweis": "Vairāki attēli režģī.",
       "faq": "Jautājumi un atbildes",
-      "faqHinweis": "Izvēršami jautājumi. Ar strukturētiem datiem tie parādās arī meklēšanas rezultātos."
+      "faqHinweis": "Izvēršami jautājumi. Ar strukturētiem datiem tie parādās arī meklēšanas rezultātos.",
+      "map": "Karte",
+      "mapHinweis": "Rāda atrašanās vietu. Bez adreses tiek izmantota uzņēmuma profilā norādītā.",
+      "testimonials": "Ieteikumi",
+      "testimonialsHinweis": "Pašu ievadīti citāti. Īstajām atsauksmēm ir atsevišķa sadaļa.",
+      "features": "Īpašības",
+      "featuresHinweis": "Ko piedāvājat — ikona, virsraksts, teksts kolonnās.",
+      "form": "Veidlapa",
+      "formHinweis": "Veidlapa, ko aizpilda viesi. Pieprasījumi nonāk cilnē „Pieprasījumi”.",
+      "posts": "Jaunākie ieraksti",
+      "postsHinweis": "Rāda jaunākos emuāra ierakstus. Pats emuārs atrodas /blog."
     },
     "felder": {
       "eyebrow": "Maza rindiņa virs virsraksta",
@@ -7426,7 +7511,71 @@
       "formularZeigen": "Rādīt kontaktu veidlapu",
       "fragen": "Jautājumi",
       "frage": "Jautājums",
-      "antwort": "Atbilde"
+      "antwort": "Atbilde",
+      "zoom": "Tālummaiņas līmenis",
+      "stimmen": "Ieteikumi",
+      "merkmale": "Īpašības",
+      "zitat": "Citāts",
+      "name": "Vārds",
+      "ort": "Vieta",
+      "symbol": "Ikona",
+      "symbolKeines": "Bez ikonas",
+      "spalten": "Kolonnas",
+      "symbolName": {
+        "wlan": "Wi-Fi",
+        "parken": "Autostāvvieta",
+        "kueche": "Virtuve",
+        "fruehstueck": "Brokastis",
+        "pool": "Baseins",
+        "sauna": "Pirts",
+        "haustiere": "Mājdzīvnieki",
+        "familie": "Ģimene",
+        "fahrrad": "Velosipēds",
+        "strand": "Pludmale",
+        "berge": "Kalni",
+        "garten": "Dārzs",
+        "kamin": "Kamīns",
+        "waschmaschine": "Veļas mašīna",
+        "klimaanlage": "Gaisa kondicionieris",
+        "barrierefrei": "Piekļūstams",
+        "schluessel": "Atslēga",
+        "uhr": "Pulkstenis",
+        "herz": "Sirds",
+        "stern": "Zvaigzne",
+        "haus": "Māja",
+        "karte": "Karte"
+      },
+      "hintergrundfarbe": "Fona krāsa",
+      "hintergrundbild": "Fona attēls",
+      "abdunkeln": "Padarīt attēlu tumšāku",
+      "abdunkelnHinweis": "Nepieciešams, lai teksts uz attēla paliktu salasāms.",
+      "abstand": "Atstarpe augšā un apakšā",
+      "abstandWert": {
+        "none": "Saspiests",
+        "sm": "Šaurs",
+        "md": "Normāls",
+        "lg": "Plašs"
+      },
+      "einleitung": "Ievads",
+      "formularfelder": "Lauki",
+      "knopfText": "Teksts uz pogas",
+      "danketext": "Teksts pēc nosūtīšanas",
+      "empfaenger": "E-pasts pieprasījumiem",
+      "formularName": "Iekšējais nosaukums",
+      "feldart": "Lauka veids",
+      "pflichtfeld": "Obligāts lauks",
+      "optionenHinweis": "Viena iespēja rindā",
+      "feldartName": {
+        "text": "Teksts (viena rinda)",
+        "textarea": "Teksts (vairākas rindas)",
+        "email": "E-pasts",
+        "phone": "Tālrunis",
+        "number": "Skaitlis",
+        "date": "Datums",
+        "select": "Izvēle",
+        "checkbox": "Izvēles rūtiņa",
+        "consent": "Piekrišana datu apstrādei"
+      }
     },
     "vorschau": {
       "titel": "Priekšskatījums",
@@ -7694,7 +7843,83 @@
         "importErgebnis": "{neu} jaunas, {geaendert} mainītas, {uebersprungen} izlaistas.",
         "weitereFehler": "Vēl {anzahl} rindas ar kļūdām.",
         "vorrangHinweis": "Pāradresācija darbojas tikai tad, ja vecajā adresē nav lapas. Esošai lapai vienmēr ir priekšroka."
+      },
+      "pruefung": {
+        "titel": "Kas vēl trūkst",
+        "hinweis": "Pārbaudām to, ko varam pārbaudīt. To, vai lapa tiek labi atrasta, izlemj Google — nevis šis saraksts.",
+        "beheben": "Novērst",
+        "weitere": "un vēl {anzahl}",
+        "nichtsVeroeffentlicht": "Vēl nav publicēta neviena lapa — nav ko pārbaudīt.",
+        "allesGepflegt": "Viss, ko varam pārbaudīt, ir kārtībā.",
+        "allesGepflegtHinweis": "{anzahl} publicētas lapas bez konstatējumiem. Tā nav garantija labām pozīcijām, bet pamats ir kārtībā.",
+        "code": {
+          "site_noindex": {
+            "titel": "Vietne ir izslēgta no meklēšanas indeksa",
+            "titelMit": "Vietne ir izslēgta no meklēšanas indeksa (ietekmētas {anzahl} lapas)",
+            "hinweis": "Kamēr slēdzis ir ieslēgts, šo vietni neviens meklētājprogrammā neatrod."
+          },
+          "keine_domain": {
+            "titel": "Nav pievienots savs domēns",
+            "titelMit": "Nav pievienots savs domēns",
+            "hinweis": "Bez savas adreses nav ne sitemap.xml, ne robots.txt, ne llms.txt."
+          },
+          "seiten_ohne_titel": {
+            "titel": "Lapas bez meta virsraksta",
+            "titelMit": "{anzahl} lapas bez meta virsraksta",
+            "hinweis": "Meta virsraksts ir virsraksts meklēšanas rezultātā. Ja tā nav, Google paņem kādu lapas tekstu."
+          },
+          "seiten_ohne_beschreibung": {
+            "titel": "Lapas bez meta apraksta",
+            "titelMit": "{anzahl} lapas bez meta apraksta",
+            "hinweis": "Teksts zem virsraksta izšķir, vai uz saiti noklikšķina."
+          },
+          "seiten_gleiche_beschreibung": {
+            "titel": "Lapas ar visai vietnei kopīgo aprakstu",
+            "titelMit": "{anzahl} lapas izmanto visai vietnei kopīgo aprakstu",
+            "hinweis": "Šīm lapām apraksts ir — bet visām viens un tas pats. Savs apraksts katrai lapai dod ievērojami vairāk."
+          },
+          "doppelte_titel": {
+            "titel": "Lapas ar vienu un to pašu meta virsrakstu",
+            "titelMit": "{anzahl} lapas ar vienu un to pašu meta virsrakstu",
+            "hinweis": "Divas lapas ar vienādu virsrakstu sacenšas par vienu un to pašu meklējumu. Google to pats ziņo Search Console."
+          },
+          "kein_firmenname": {
+            "titel": "Uzņēmuma profils bez nosaukuma",
+            "titelMit": "Uzņēmuma profils bez nosaukuma",
+            "hinweis": "Bez nosaukuma uzņēmuma profilā vietne nenodod Google nekādus uzņēmuma datus — slēdzis sadaļā „Strukturētie dati“ paliek bez ietekmes."
+          },
+          "keine_anschrift": {
+            "titel": "Uzņēmuma profils bez adreses",
+            "titelMit": "Uzņēmuma profils bez adreses",
+            "hinweis": "Ar adresi Google var piesaistīt uzņēmumu vietai un parādīt to vietējā meklēšanā."
+          },
+          "keine_messung": {
+            "titel": "Nav norādīts Google identifikators",
+            "titelMit": "Nav norādīts Google identifikators",
+            "hinweis": "Bez identifikatora jūs nezināt, cik apmeklētāju vietnei ir un no kurienes tie nāk."
+          },
+          "objekte_ohne_text": {
+            "titel": "Objekti bez apraksta",
+            "titelMit": "{anzahl} objekti bez apraksta",
+            "hinweis": "Objekta lapa bez teksta sastāv no attēliem, cenas un kalendāra. Apraksts ir tās vienīgais saturs."
+          },
+          "zahlung_nicht_bereit": {
+            "titel": "Maksājumi vēl nav iestatīti",
+            "titelMit": "Maksājumi vēl nav iestatīti",
+            "hinweis": "Vietne pieņem pieprasījumus, bet ne rezervācijas ar apmaksu. Kamēr Stripe nav gatavs norēķiniem vai nav norādīta PayPal adrese, viesis redz „Nosūtīt pieprasījumu“, nevis „Rezervēt un maksāt“."
+          }
+        }
       }
+    },
+    "anfragen": {
+      "titel": "Pieprasījumi",
+      "keine": "Vēl nav saņemts neviens pieprasījums.",
+      "ungelesen": "{anzahl} neizlasīti",
+      "alleGelesen": "Viss izlasīts.",
+      "ohneName": "Veidlapa",
+      "csvExport": "Lejupielādēt kā CSV",
+      "loeschen": "Dzēst neatgriezeniski",
+      "geloescht": "Pieprasījums dzēsts."
     }
   },
   "dynamicPricing": {

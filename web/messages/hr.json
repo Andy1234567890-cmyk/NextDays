@@ -4822,10 +4822,10 @@
     },
     "taskStatusAction": {
       "open": "Vrati",
-      "reopen": "Ponovno otvori",
       "accepted": "Prihvati",
       "in_progress": "Započni",
-      "done": "Završi"
+      "done": "Završi",
+      "reopen": "Ponovno otvori"
     },
     "taskStatusChanged": {
       "open": "Vraćeno.",
@@ -7130,7 +7130,8 @@
       "einstellungen": "Postavke",
       "objekte": "Objekti",
       "widgets": "Widgeti",
-      "seo": "SEO"
+      "seo": "SEO",
+      "anfragen": "Upiti"
     },
     "kopf": {
       "websiteAnsehen": "Pogledaj web-stranicu",
@@ -7230,7 +7231,14 @@
       "logoZiel": "Cilj klika na logotip",
       "logoZielLeer": "Početna stranica",
       "namensGroesse": "Veličina naziva",
-      "sloganText": "Tekst"
+      "sloganText": "Tekst",
+      "groessenTitel": "Veličine",
+      "groessenHinweis": "Širina sadržaja i veličina pisma. Bez odabira vrijede vrijednosti predloška.",
+      "inhaltsbreite": "Širina sadržaja",
+      "ueberschriftenGroesse": "Naslovi",
+      "textGroesse": "Tekući tekst",
+      "groesseStandard": "Standard",
+      "groesseZuruecksetzen": "Natrag na standard"
     },
     "paletten": {
       "schlicht": "Jednostavna",
@@ -7248,7 +7256,10 @@
       "schriftAufHintergrund": "Tekst na pozadini",
       "schriftAufFlaeche": "Tekst na površinama",
       "buttonText": "Tekst na gumbima",
-      "linkAufHintergrund": "Veze na pozadini"
+      "linkAufHintergrund": "Veze na pozadini",
+      "kopfLinkAufKopf": "Izbornik na zaglavlju",
+      "markenNameAufKopf": "Naziv firme na zaglavlju",
+      "textAufFuss": "Tekst na podnožju"
     },
     "seiten": {
       "bereichTitel": {
@@ -7316,7 +7327,64 @@
       "alleSprachenHinweis": "Uobičajen slučaj — stranica se prikazuje svugdje gdje se prikazuje vaša web-stranica.",
       "abbrechen": "Odustani",
       "speichern": "Sačuvaj",
-      "einstellungenGespeichert": "Postavke stranice su sačuvane."
+      "einstellungenGespeichert": "Postavke stranice su sačuvane.",
+      "duplizieren": "Dupliciraj",
+      "typ": {
+        "normal": {
+          "name": "Stranica",
+          "hinweis": "Stranica koju ispunjavate odjeljcima."
+        },
+        "external": {
+          "name": "Vanjska stavka izbornika",
+          "hinweis": "Stavka izbornika koja vodi na tuđe web-mjesto.",
+          "adresseHinweis": "Otvara se u novom prozoru."
+        },
+        "folder": {
+          "name": "Mapa izbornika",
+          "hinweis": "Grupira stranice u izborniku. Sama nije stranica.",
+          "zuordnen": "U mapi",
+          "keiner": "Bez mape"
+        },
+        "error404": {
+          "name": "Stranica pogreške (404)",
+          "hinweis": "Ono što gost vidi kod pogreške u upisu. Samo jedna po web-mjestu."
+        },
+        "post": {
+          "name": "Objava na blogu",
+          "hinweis": "Objava za blog. Prikazuje se na /blog, ne u izborniku."
+        }
+      },
+      "vorlage": {
+        "label": "Predložak",
+        "keine": "Prazna stranica",
+        "ueber_uns": "O nama",
+        "kontakt": "Kontakt",
+        "anfahrt": "Kako do nas",
+        "hausordnung": "Kućni red",
+        "umgebung": "Okolica",
+        "faq": "Česta pitanja"
+      },
+      "popup": {
+        "ausloeser": "Kada se prikazuje",
+        "trigger": {
+          "delay": "Nakon nekoliko sekundi",
+          "exit": "Pri napuštanju stranice",
+          "scroll": "Nakon pročitanog dijela"
+        },
+        "einheitSekunden": "sekundi",
+        "einheitProzent": "posto",
+        "hinweis": "Prikazuje se jednom po posjetitelju. Na telefonu „Pri napuštanju“ postaje prikaz nakon 20 sekundi."
+      },
+      "beitrag": {
+        "datum": "Datum objave",
+        "datumHinweis": "U budućnosti = zakazano. Objava se tada pojavljuje sama.",
+        "autor": "Autor",
+        "titelbild": "Naslovna slika",
+        "anriss": "Sažetak",
+        "anrissHinweis": "Tekst u popisu objava. Prazno = početak prvog odlomka.",
+        "schlagwoerter": "Ključne riječi",
+        "schlagwoerterHinweis": "Odvojene zarezom, najviše osam."
+      }
     },
     "vorlagen": {
       "titel": "Počnite s predloškom",
@@ -7358,7 +7426,14 @@
       "objektIdPlatzhalter": "Oznaka objekta",
       "objektHinzufuegen": "Dodaj",
       "frageHinzufuegen": "Dodaj pitanje",
-      "fragenMax": "Više od {max} pitanja nije moguće."
+      "fragenMax": "Više od {max} pitanja nije moguće.",
+      "stimmeHinzufuegen": "Dodaj izjavu",
+      "stimmenMax": "Više od {max} izjava nije moguće.",
+      "merkmalHinzufuegen": "Dodaj značajku",
+      "merkmaleMax": "Više od {max} značajki nije moguće.",
+      "darstellung": "Izgled",
+      "feldHinzufuegen": "Dodaj polje",
+      "formfelderMax": "Više od {max} polja nije moguće."
     },
     "abschnitte": {
       "hero": "Naslovna slika",
@@ -7384,7 +7459,17 @@
       "gallery": "Galerija",
       "galleryHinweis": "Više slika u mreži.",
       "faq": "Pitanja i odgovori",
-      "faqHinweis": "Pitanja koja se otvaraju. Sa strukturiranim podacima prikazuju se i u rezultatima pretraživanja."
+      "faqHinweis": "Pitanja koja se otvaraju. Sa strukturiranim podacima prikazuju se i u rezultatima pretraživanja.",
+      "map": "Karta",
+      "mapHinweis": "Prikazuje položaj. Bez adrese koristi se ona iz profila poduzeća.",
+      "testimonials": "Izjave gostiju",
+      "testimonialsHinweis": "Vlastito upisani citati. Za prave ocjene postoji zaseban odjeljak.",
+      "features": "Značajke",
+      "featuresHinweis": "Što nudite — ikona, naslov, tekst u stupcima.",
+      "form": "Obrazac",
+      "formHinweis": "Obrazac koji gosti ispunjavaju. Upiti stižu u karticu „Upiti“.",
+      "posts": "Najnovije objave",
+      "postsHinweis": "Prikazuje najnovije objave s bloga. Sam blog nalazi se na /blog."
     },
     "felder": {
       "eyebrow": "Mali redak iznad",
@@ -7404,7 +7489,7 @@
       "ausrichtung": "Poravnanje",
       "linksbuendig": "Lijevo",
       "zentriert": "U sredini",
-      "beschriftung": "Tekst gumba",
+      "beschriftung": "Oznaka",
       "ziel": "Odredište",
       "buttonPrimaer": "Istaknut",
       "buttonSekundaer": "Suzdržan",
@@ -7428,7 +7513,71 @@
       "formularZeigen": "Prikaži obrazac za kontakt",
       "fragen": "Pitanja",
       "frage": "Pitanje",
-      "antwort": "Odgovor"
+      "antwort": "Odgovor",
+      "zoom": "Razina zumiranja",
+      "stimmen": "Izjave",
+      "merkmale": "Značajke",
+      "zitat": "Citat",
+      "name": "Ime",
+      "ort": "Mjesto",
+      "symbol": "Ikona",
+      "symbolKeines": "Bez ikone",
+      "spalten": "Stupci",
+      "symbolName": {
+        "wlan": "Wi-Fi",
+        "parken": "Parkiranje",
+        "kueche": "Kuhinja",
+        "fruehstueck": "Doručak",
+        "pool": "Bazen",
+        "sauna": "Sauna",
+        "haustiere": "Kućni ljubimci",
+        "familie": "Obitelj",
+        "fahrrad": "Bicikl",
+        "strand": "Plaža",
+        "berge": "Planine",
+        "garten": "Vrt",
+        "kamin": "Kamin",
+        "waschmaschine": "Perilica rublja",
+        "klimaanlage": "Klimatizacija",
+        "barrierefrei": "Pristupačno",
+        "schluessel": "Ključ",
+        "uhr": "Sat",
+        "herz": "Srce",
+        "stern": "Zvijezda",
+        "haus": "Kuća",
+        "karte": "Karta"
+      },
+      "hintergrundfarbe": "Boja pozadine",
+      "hintergrundbild": "Slika pozadine",
+      "abdunkeln": "Potamni sliku",
+      "abdunkelnHinweis": "Potrebno kako bi tekst na slici ostao čitljiv.",
+      "abstand": "Odmak gore i dolje",
+      "abstandWert": {
+        "none": "Stisnuto",
+        "sm": "Usko",
+        "md": "Normalno",
+        "lg": "Prozračno"
+      },
+      "einleitung": "Uvod",
+      "formularfelder": "Polja",
+      "knopfText": "Tekst na gumbu",
+      "danketext": "Tekst nakon slanja",
+      "empfaenger": "E-mail za upite",
+      "formularName": "Interni naziv",
+      "feldart": "Vrsta polja",
+      "pflichtfeld": "Obavezno polje",
+      "optionenHinweis": "Jedna opcija po retku",
+      "feldartName": {
+        "text": "Tekst (jedan redak)",
+        "textarea": "Tekst (više redaka)",
+        "email": "E-mail",
+        "phone": "Telefon",
+        "number": "Broj",
+        "date": "Datum",
+        "select": "Odabir",
+        "checkbox": "Potvrdni okvir",
+        "consent": "Privola za obradu"
+      }
     },
     "vorschau": {
       "titel": "Pregled",
@@ -7696,7 +7845,83 @@
         "importErgebnis": "{neu} novih, {geaendert} promijenjenih, {uebersprungen} preskočenih.",
         "weitereFehler": "{anzahl} daljnjih redaka s pogreškama.",
         "vorrangHinweis": "Preusmjeravanje djeluje samo ako na staroj adresi nema stranice. Postojeća stranica uvijek ima prednost."
+      },
+      "pruefung": {
+        "titel": "Što još nedostaje",
+        "hinweis": "Provjeravamo ono što možemo provjeriti. Hoće li se stranica dobro pronaći, odlučuje Google — ne ovaj popis.",
+        "beheben": "Ispravi",
+        "weitere": "i još {anzahl}",
+        "nichtsVeroeffentlicht": "Još nije objavljena nijedna stranica — nema što provjeriti.",
+        "allesGepflegt": "Sve što možemo provjeriti je uredno.",
+        "allesGepflegtHinweis": "{anzahl} objavljenih stranica bez nalaza. To nije jamstvo dobrih pozicija, ali temelj je dobar.",
+        "code": {
+          "site_noindex": {
+            "titel": "Web-stranica je izuzeta iz indeksa pretraživanja",
+            "titelMit": "Web-stranica je izuzeta iz indeksa pretraživanja (zahvaćeno {anzahl} stranica)",
+            "hinweis": "Dok je prekidač uključen, nitko ne pronalazi ovu web-stranicu putem pretraživača."
+          },
+          "keine_domain": {
+            "titel": "Nije povezana vlastita domena",
+            "titelMit": "Nije povezana vlastita domena",
+            "hinweis": "Bez vlastite adrese nema sitemap.xml, robots.txt ni llms.txt."
+          },
+          "seiten_ohne_titel": {
+            "titel": "Stranice bez meta naslova",
+            "titelMit": "{anzahl} stranica bez meta naslova",
+            "hinweis": "Meta naslov je naslov u rezultatu pretraživanja. Ako ga nema, Google uzima bilo koji tekst sa stranice."
+          },
+          "seiten_ohne_beschreibung": {
+            "titel": "Stranice bez meta opisa",
+            "titelMit": "{anzahl} stranica bez meta opisa",
+            "hinweis": "Tekst pod naslovom odlučuje hoće li netko kliknuti."
+          },
+          "seiten_gleiche_beschreibung": {
+            "titel": "Stranice s opisom za cijelu web-stranicu",
+            "titelMit": "{anzahl} stranica koristi opis za cijelu web-stranicu",
+            "hinweis": "Te stranice imaju opis — ali sve isti. Vlastiti opis za svaku stranicu djeluje znatno više."
+          },
+          "doppelte_titel": {
+            "titel": "Stranice s istim meta naslovom",
+            "titelMit": "{anzahl} stranica s istim meta naslovom",
+            "hinweis": "Dvije stranice s istim naslovom natječu se za isti upit. Google to sam prijavljuje u Search Consoleu."
+          },
+          "kein_firmenname": {
+            "titel": "Profil poduzeća bez naziva",
+            "titelMit": "Profil poduzeća bez naziva",
+            "hinweis": "Bez naziva u profilu poduzeća web-stranica ne dostavlja Googleu podatke o poslovanju — prekidač pod „Strukturirani podaci“ ostaje bez učinka."
+          },
+          "keine_anschrift": {
+            "titel": "Profil poduzeća bez adrese",
+            "titelMit": "Profil poduzeća bez adrese",
+            "hinweis": "S adresom Google može poslovanje povezati s mjestom i prikazati ga u lokalnom pretraživanju."
+          },
+          "keine_messung": {
+            "titel": "Nije unesena Google oznaka",
+            "titelMit": "Nije unesena Google oznaka",
+            "hinweis": "Bez oznake ne znate koliko posjetitelja web-stranica ima i odakle dolaze."
+          },
+          "objekte_ohne_text": {
+            "titel": "Objekti bez opisa",
+            "titelMit": "{anzahl} objekata bez opisa",
+            "hinweis": "Stranica objekta bez teksta sastoji se od slika, cijene i kalendara. Opis je njezin jedini sadržaj."
+          },
+          "zahlung_nicht_bereit": {
+            "titel": "Plaćanja još nisu postavljena",
+            "titelMit": "Plaćanja još nisu postavljena",
+            "hinweis": "Web-mjesto prima upite, ali ne i rezervacije s plaćanjem. Dok Stripe nije spreman za naplatu ili nije unesena PayPal adresa, gost vidi „Pošalji upit“ umjesto „Rezerviraj i plati“."
+          }
+        }
       }
+    },
+    "anfragen": {
+      "titel": "Upiti",
+      "keine": "Još nije stigao nijedan upit.",
+      "ungelesen": "{anzahl} nepročitanih",
+      "alleGelesen": "Sve pročitano.",
+      "ohneName": "Obrazac",
+      "csvExport": "Preuzmi kao CSV",
+      "loeschen": "Trajno izbriši",
+      "geloescht": "Upit izbrisan."
     }
   },
   "dynamicPricing": {

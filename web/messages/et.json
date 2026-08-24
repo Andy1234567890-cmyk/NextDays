@@ -4822,10 +4822,10 @@
     },
     "taskStatusAction": {
       "open": "Pane tagasi",
-      "reopen": "Ava uuesti",
       "accepted": "Võta vastu",
       "in_progress": "Alusta",
-      "done": "Lõpeta"
+      "done": "Lõpeta",
+      "reopen": "Ava uuesti"
     },
     "taskStatusChanged": {
       "open": "Tagasi pandud.",
@@ -7130,7 +7130,8 @@
       "einstellungen": "Seaded",
       "objekte": "Objektid",
       "widgets": "Vidinad",
-      "seo": "SEO"
+      "seo": "SEO",
+      "anfragen": "Päringud"
     },
     "kopf": {
       "websiteAnsehen": "Vaata veebilehte",
@@ -7230,7 +7231,14 @@
       "logoZiel": "Logo kliki sihtkoht",
       "logoZielLeer": "Avaleht",
       "namensGroesse": "Nime suurus",
-      "sloganText": "Tekst"
+      "sloganText": "Tekst",
+      "groessenTitel": "Suurused",
+      "groessenHinweis": "Sisu laius ja kirja suurus. Ilma valikuta kehtivad malli väärtused.",
+      "inhaltsbreite": "Sisu laius",
+      "ueberschriftenGroesse": "Pealkirjad",
+      "textGroesse": "Põhitekst",
+      "groesseStandard": "Standard",
+      "groesseZuruecksetzen": "Tagasi standardile"
     },
     "paletten": {
       "schlicht": "Lihtne",
@@ -7248,7 +7256,10 @@
       "schriftAufHintergrund": "Kiri taustal",
       "schriftAufFlaeche": "Kiri pindadel",
       "buttonText": "Nuppude kiri",
-      "linkAufHintergrund": "Lingid taustal"
+      "linkAufHintergrund": "Lingid taustal",
+      "kopfLinkAufKopf": "Menüü päisel",
+      "markenNameAufKopf": "Ettevõtte nimi päisel",
+      "textAufFuss": "Tekst jalusel"
     },
     "seiten": {
       "bereichTitel": {
@@ -7316,7 +7327,64 @@
       "alleSprachenHinweis": "Tavaline juhtum — leht ilmub kõikjal, kus teie veebileht ilmub.",
       "abbrechen": "Katkesta",
       "speichern": "Salvesta",
-      "einstellungenGespeichert": "Lehe seaded on salvestatud."
+      "einstellungenGespeichert": "Lehe seaded on salvestatud.",
+      "duplizieren": "Dubleeri",
+      "typ": {
+        "normal": {
+          "name": "Leht",
+          "hinweis": "Leht, mille täidate osadega."
+        },
+        "external": {
+          "name": "Väline menüüpunkt",
+          "hinweis": "Menüüpunkt, mis viib võõrale veebisaidile.",
+          "adresseHinweis": "Avaneb uues aknas."
+        },
+        "folder": {
+          "name": "Menüükaust",
+          "hinweis": "Rühmitab lehti menüüs. Ise ei ole leht.",
+          "zuordnen": "Kaustas",
+          "keiner": "Kaustata"
+        },
+        "error404": {
+          "name": "Vealeht (404)",
+          "hinweis": "See, mida külaline näeb kirjavea korral. Ainult üks veebisaidi kohta."
+        },
+        "post": {
+          "name": "Blogipostitus",
+          "hinweis": "Postitus blogi jaoks. Ilmub aadressil /blog, mitte menüüs."
+        }
+      },
+      "vorlage": {
+        "label": "Mall",
+        "keine": "Tühi leht",
+        "ueber_uns": "Meist",
+        "kontakt": "Kontakt",
+        "anfahrt": "Kuidas meile jõuda",
+        "hausordnung": "Kodukord",
+        "umgebung": "Ümbrus",
+        "faq": "Korduma kippuvad küsimused"
+      },
+      "popup": {
+        "ausloeser": "Millal see ilmub",
+        "trigger": {
+          "delay": "Mõne sekundi pärast",
+          "exit": "Lehelt lahkumisel",
+          "scroll": "Loetud osa järel"
+        },
+        "einheitSekunden": "sekundit",
+        "einheitProzent": "protsenti",
+        "hinweis": "Ilmub üks kord külastaja kohta. Telefonis muutub „Lehelt lahkumisel“ kuvamiseks 20 sekundi pärast."
+      },
+      "beitrag": {
+        "datum": "Avaldamise kuupäev",
+        "datumHinweis": "Tulevikus = ajastatud. Postitus ilmub siis ise.",
+        "autor": "Autor",
+        "titelbild": "Tiitelpilt",
+        "anriss": "Sissejuhatus",
+        "anrissHinweis": "Tekst postituste loendis. Tühi = esimese lõigu algus.",
+        "schlagwoerter": "Märksõnad",
+        "schlagwoerterHinweis": "Komadega eraldatud, kõige rohkem kaheksa."
+      }
     },
     "vorlagen": {
       "titel": "Alusta malliga",
@@ -7358,7 +7426,14 @@
       "objektIdPlatzhalter": "Objekti tunnus",
       "objektHinzufuegen": "Lisa",
       "frageHinzufuegen": "Lisa küsimus",
-      "fragenMax": "Rohkem kui {max} küsimust ei ole võimalik."
+      "fragenMax": "Rohkem kui {max} küsimust ei ole võimalik.",
+      "stimmeHinzufuegen": "Lisa soovitus",
+      "stimmenMax": "Rohkem kui {max} soovitust ei ole võimalik.",
+      "merkmalHinzufuegen": "Lisa omadus",
+      "merkmaleMax": "Rohkem kui {max} omadust ei ole võimalik.",
+      "darstellung": "Välimus",
+      "feldHinzufuegen": "Lisa väli",
+      "formfelderMax": "Rohkem kui {max} välja ei ole võimalik."
     },
     "abschnitte": {
       "hero": "Tiitelpilt",
@@ -7384,7 +7459,17 @@
       "gallery": "Galerii",
       "galleryHinweis": "Mitu pilti ruudustikuna.",
       "faq": "Küsimused ja vastused",
-      "faqHinweis": "Avanevad küsimused. Struktuuriga kuvatakse neid ka otsingutulemustes."
+      "faqHinweis": "Avanevad küsimused. Struktuuriga kuvatakse neid ka otsingutulemustes.",
+      "map": "Kaart",
+      "mapHinweis": "Näitab asukohta. Aadressi puudumisel kasutatakse ettevõtte profiili aadressi.",
+      "testimonials": "Soovitused",
+      "testimonialsHinweis": "Ise sisestatud tsitaadid. Tõeliste arvustuste jaoks on eraldi osa.",
+      "features": "Omadused",
+      "featuresHinweis": "Mida te pakute — ikoon, pealkiri, tekst veergudes.",
+      "form": "Vorm",
+      "formHinweis": "Vorm, mille külalised täidavad. Päringud jõuavad vahekaardile „Päringud“.",
+      "posts": "Viimased postitused",
+      "postsHinweis": "Näitab uusimaid blogipostitusi. Blogi ise asub aadressil /blog."
     },
     "felder": {
       "eyebrow": "Väike rida selle kohal",
@@ -7404,7 +7489,7 @@
       "ausrichtung": "Joondus",
       "linksbuendig": "Vasakjoondus",
       "zentriert": "Keskjoondus",
-      "beschriftung": "Kiri",
+      "beschriftung": "Silt",
       "ziel": "Sihtkoht",
       "buttonPrimaer": "Esiletõstetud",
       "buttonSekundaer": "Tagasihoidlik",
@@ -7428,7 +7513,71 @@
       "formularZeigen": "Näita kontaktivormi",
       "fragen": "Küsimused",
       "frage": "Küsimus",
-      "antwort": "Vastus"
+      "antwort": "Vastus",
+      "zoom": "Suurendusaste",
+      "stimmen": "Soovitused",
+      "merkmale": "Omadused",
+      "zitat": "Tsitaat",
+      "name": "Nimi",
+      "ort": "Koht",
+      "symbol": "Ikoon",
+      "symbolKeines": "Ikooni pole",
+      "spalten": "Veerud",
+      "symbolName": {
+        "wlan": "Wi-Fi",
+        "parken": "Parkimine",
+        "kueche": "Köök",
+        "fruehstueck": "Hommikusöök",
+        "pool": "Bassein",
+        "sauna": "Saun",
+        "haustiere": "Lemmikloomad",
+        "familie": "Pere",
+        "fahrrad": "Jalgratas",
+        "strand": "Rand",
+        "berge": "Mäed",
+        "garten": "Aed",
+        "kamin": "Kamin",
+        "waschmaschine": "Pesumasin",
+        "klimaanlage": "Kliimaseade",
+        "barrierefrei": "Ligipääsetav",
+        "schluessel": "Võti",
+        "uhr": "Kell",
+        "herz": "Süda",
+        "stern": "Täht",
+        "haus": "Maja",
+        "karte": "Kaart"
+      },
+      "hintergrundfarbe": "Taustavärv",
+      "hintergrundbild": "Taustapilt",
+      "abdunkeln": "Tumenda pilti",
+      "abdunkelnHinweis": "Vajalik, et pildil olev tekst jääks loetavaks.",
+      "abstand": "Vahe üleval ja all",
+      "abstandWert": {
+        "none": "Kokku tõmmatud",
+        "sm": "Kitsas",
+        "md": "Tavaline",
+        "lg": "Õhuline"
+      },
+      "einleitung": "Sissejuhatus",
+      "formularfelder": "Väljad",
+      "knopfText": "Nupu tekst",
+      "danketext": "Tekst pärast saatmist",
+      "empfaenger": "E-post päringute jaoks",
+      "formularName": "Sisemine nimi",
+      "feldart": "Välja liik",
+      "pflichtfeld": "Kohustuslik väli",
+      "optionenHinweis": "Üks valik rea kohta",
+      "feldartName": {
+        "text": "Tekst (üks rida)",
+        "textarea": "Tekst (mitu rida)",
+        "email": "E-post",
+        "phone": "Telefon",
+        "number": "Arv",
+        "date": "Kuupäev",
+        "select": "Valik",
+        "checkbox": "Märkeruut",
+        "consent": "Andmekaitse nõusolek"
+      }
     },
     "vorschau": {
       "titel": "Eelvaade",
@@ -7696,7 +7845,83 @@
         "importErgebnis": "{neu} uut, {geaendert} muudetud, {uebersprungen} vahele jäetud.",
         "weitereFehler": "Veel {anzahl} rida vigadega.",
         "vorrangHinweis": "Ümbersuunamine rakendub ainult siis, kui vanal aadressil lehte ei ole. Olemasoleval lehel on alati eesõigus."
+      },
+      "pruefung": {
+        "titel": "Mis veel puudub",
+        "hinweis": "Kontrollime seda, mida saame kontrollida. Kas lehte leitakse hästi, otsustab Google — mitte see loend.",
+        "beheben": "Paranda",
+        "weitere": "ja veel {anzahl}",
+        "nichtsVeroeffentlicht": "Ükski leht pole veel avaldatud — kontrollida pole midagi.",
+        "allesGepflegt": "Kõik, mida saame kontrollida, on korras.",
+        "allesGepflegtHinweis": "{anzahl} avaldatud lehte ilma leiuta. See ei taga häid positsioone, kuid alus on paigas.",
+        "code": {
+          "site_noindex": {
+            "titel": "Veebileht on otsinguindeksist välja jäetud",
+            "titelMit": "Veebileht on otsinguindeksist välja jäetud (puudutab {anzahl} lehte)",
+            "hinweis": "Kuni lüliti on sees, ei leia keegi seda veebilehte otsingumootori kaudu."
+          },
+          "keine_domain": {
+            "titel": "Oma domeeni pole ühendatud",
+            "titelMit": "Oma domeeni pole ühendatud",
+            "hinweis": "Ilma oma aadressita pole sitemap.xml-i, robots.txt-i ega llms.txt-i."
+          },
+          "seiten_ohne_titel": {
+            "titel": "Lehed ilma metapealkirjata",
+            "titelMit": "{anzahl} lehte ilma metapealkirjata",
+            "hinweis": "Metapealkiri on otsingutulemuse pealkiri. Kui see puudub, võtab Google lehelt suvalise teksti."
+          },
+          "seiten_ohne_beschreibung": {
+            "titel": "Lehed ilma metakirjelduseta",
+            "titelMit": "{anzahl} lehte ilma metakirjelduseta",
+            "hinweis": "Pealkirja all olev tekst otsustab, kas tulemusele klõpsatakse."
+          },
+          "seiten_gleiche_beschreibung": {
+            "titel": "Lehed kogu saidi kirjeldusega",
+            "titelMit": "{anzahl} lehte kasutab kogu saidi kirjeldust",
+            "hinweis": "Neil lehtedel on kirjeldus — kuid kõigil sama. Igal lehel oma kirjeldus mõjub tunduvalt rohkem."
+          },
+          "doppelte_titel": {
+            "titel": "Lehed sama metapealkirjaga",
+            "titelMit": "{anzahl} lehte sama metapealkirjaga",
+            "hinweis": "Kaks sama pealkirjaga lehte konkureerivad sama otsingupäringu pärast. Google teatab sellest ise Search Console’is."
+          },
+          "kein_firmenname": {
+            "titel": "Ettevõtte profiil ilma nimeta",
+            "titelMit": "Ettevõtte profiil ilma nimeta",
+            "hinweis": "Ilma nimeta ettevõtte profiilis ei edasta veebileht Google’ile ettevõtte andmeid — lüliti jaotises „Struktureeritud andmed“ jääb mõjuta."
+          },
+          "keine_anschrift": {
+            "titel": "Ettevõtte profiil ilma aadressita",
+            "titelMit": "Ettevõtte profiil ilma aadressita",
+            "hinweis": "Aadressiga saab Google ettevõtte kohaga siduda ja kohalikus otsingus näidata."
+          },
+          "keine_messung": {
+            "titel": "Google’i tunnust pole salvestatud",
+            "titelMit": "Google’i tunnust pole salvestatud",
+            "hinweis": "Ilma tunnuseta ei tea te, kui palju külastajaid veebilehel on ja kust nad tulevad."
+          },
+          "objekte_ohne_text": {
+            "titel": "Objektid ilma kirjelduseta",
+            "titelMit": "{anzahl} objekti ilma kirjelduseta",
+            "hinweis": "Objektileht ilma tekstita koosneb piltidest, hinnast ja kalendrist. Kirjeldus on selle ainus sisu."
+          },
+          "zahlung_nicht_bereit": {
+            "titel": "Maksed pole veel seadistatud",
+            "titelMit": "Maksed pole veel seadistatud",
+            "hinweis": "Veebileht võtab vastu päringuid, kuid mitte maksega broneeringuid. Kuni Stripe pole arveldusvalmis või PayPali aadressi pole salvestatud, näeb külaline „Saada päring“, mitte „Broneeri ja maksa“."
+          }
+        }
       }
+    },
+    "anfragen": {
+      "titel": "Päringud",
+      "keine": "Päringuid ei ole veel tulnud.",
+      "ungelesen": "{anzahl} lugemata",
+      "alleGelesen": "Kõik loetud.",
+      "ohneName": "Vorm",
+      "csvExport": "Laadi alla CSV-na",
+      "loeschen": "Kustuta lõplikult",
+      "geloescht": "Päring kustutatud."
     }
   },
   "dynamicPricing": {

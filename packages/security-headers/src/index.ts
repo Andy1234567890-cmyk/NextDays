@@ -45,6 +45,19 @@ export interface CspOptions {
    *  nicht und die Seite steht in der Fallback-Schrift — ohne sichtbaren Fehler
    *  außer einer CSP-Zeile in der Konsole. */
   googleFonts?: boolean;
+  /** Google-Tag (gtag.js) freigeben — Analytics, Ads, Campaign Manager.
+   *
+   *  Nur für Apps, in denen ein Kunde seine eigene Mess-Kennung eintragen kann;
+   *  aktuell ist das der Seiten-Renderer (builder/). Ohne diese Option blockt
+   *  `script-src 'self'` das Skript still: die Kennung steht im Baukasten, der
+   *  Betrieb sieht keine Zahlen, und der Grund steht nur in der Browser-Konsole
+   *  — genau die Art Attrappe, die Wurzel 4 verbietet.
+   *
+   *  `connect-src` und `img-src` brauchen keinen Zusatz: beide führen bereits
+   *  `https:`, und die Mess-Aufrufe gehen ausschließlich dorthin. Nur
+   *  `script-src` ist eng (kein `https:`), deshalb steht hier ein einzelner
+   *  Host statt einer Liste. */
+  googleTag?: boolean;
 }
 
 // Genau die Hosts, die die Google-Maps-JS-API braucht — nicht mehr.
@@ -63,6 +76,12 @@ const MAPS_IMG = ["https://maps.googleapis.com", "https://maps.gstatic.com", "ht
 const MAPS_STYLE = ["https://fonts.googleapis.com"];
 const MAPS_FONT = ["https://fonts.gstatic.com"];
 
+// gtag.js kommt ausschließlich von diesem Host — auch für Ads (AW-) und
+// Campaign Manager (DC-). `www.google-analytics.com` ist NICHT nötig: das ist
+// das Mess-Ziel (connect-src/img-src, dort deckt `https:` es ab), nicht die
+// Skript-Quelle.
+const TAG_SCRIPT = ["https://www.googletagmanager.com"];
+
 /** Baut den CSP-Header-Wert für eine App. */
 export function buildCsp(opts: CspOptions = {}): string {
   const {
@@ -72,8 +91,13 @@ export function buildCsp(opts: CspOptions = {}): string {
     dev = false,
     googleMaps = false,
     googleFonts = false,
+    googleTag = false,
   } = opts;
-  const scriptExtra = googleMaps ? " " + MAPS_SCRIPT.join(" ") : "";
+  const scriptHosts = [
+    ...(googleMaps ? MAPS_SCRIPT : []),
+    ...(googleTag ? TAG_SCRIPT : []),
+  ];
+  const scriptExtra = scriptHosts.length > 0 ? " " + scriptHosts.join(" ") : "";
   // `wss:` MUSS mit: ein WebSocket-Ziel wird gegen sein EIGENES Schema geprüft,
   // `https:` deckt es NICHT ab. Ohne diesen Eintrag blockt die CSP jede
   // Realtime-Verbindung (supabase `wss://…/realtime/v1/websocket`) — die UI sieht

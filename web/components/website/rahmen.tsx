@@ -56,25 +56,45 @@ function WebsiteAnsehen({
     return () => document.removeEventListener("mousedown", aufKlick);
   }, [offen]);
 
+  // NUR die ID als Abhängigkeit, nicht das Seiten-Objekt: `startseite` kommt aus
+  // `pages.find(...)` und ist bei jedem Render ein NEUES Objekt. Stand es in der
+  // Liste, lief der Effekt bei jedem Render neu — und weil `setHolt(true)` selbst
+  // einen Render auslöst, setzte das Cleanup `lebt = false`, BEVOR die Antwort
+  // ankam. Danach verwarf `if (!lebt) return` das Ergebnis, `holt` blieb true, und
+  // im Menü stand für immer „Entwurf wird vorbereitet …" (live gesehen am
+  // 24.08.2026). `holt` gehört aus demselben Grund nicht in die Liste: es triggert
+  // sich sonst selbst.
+  const startseitenId = startseite?.id ?? null;
   useEffect(() => {
-    if (!offen || !startseite || !RENDERER || entwurfUrl || holt) return;
-    setHolt(true);
+    if (!offen || !startseitenId || !RENDERER) return;
     let lebt = true;
-    createDraftToken(startseite.id).then((res) => {
-      if (!lebt) return;
-      setHolt(false);
-      if (res.ok) {
-        setEntwurfUrl(
-          `${RENDERER}/render/${startseite.id}?token=${encodeURIComponent(res.data.token)}`,
-        );
-      }
-      // Bei einem Fehler bleibt der Entwurfs-Eintrag aus. Ein Link, der auf eine
-      // 404 führt, wäre schlechter als keiner — der Live-Eintrag bleibt.
-    });
+    setHolt(true);
+    createDraftToken(startseitenId)
+      .then((res) => {
+        if (!lebt) return;
+        if (res.ok) {
+          setEntwurfUrl(
+            `${RENDERER}/render/${startseitenId}?token=${encodeURIComponent(res.data.token)}`,
+          );
+        }
+        // Bei einem abgelehnten Token bleibt der Entwurfs-Eintrag aus. Ein Link,
+        // der auf eine 404 führt, wäre schlechter als keiner — der Live-Eintrag
+        // bleibt.
+      })
+      .catch(() => {
+        // Wirft die Server-Action (Netzfehler, 500, abgebrochene Anfrage), lief
+        // vorher NIE ein `setHolt(false)` — die Meldung „wird vorbereitet" stand
+        // dann bis zum Neuladen. Fehler sind hier ein normaler Ausgang, kein
+        // Sonderfall (Wurzel 5): der Zustand muss aufgelöst werden, auch wenn es
+        // nichts zu zeigen gibt.
+      })
+      .finally(() => {
+        if (lebt) setHolt(false);
+      });
     return () => {
       lebt = false;
     };
-  }, [offen, startseite, entwurfUrl, holt]);
+  }, [offen, startseitenId]);
 
   if (!startseite && !liveDomain) return null;
 

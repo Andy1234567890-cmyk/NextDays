@@ -12,6 +12,14 @@ import { headers } from "next/headers";
 export type NavItem = {
   slug: string;
   title: string;
+  /** Ziel eines EXTERNEN Menüpunkts (0433). Gesetzt heißt: dieser Eintrag führt
+   *  auf eine fremde Website, und der Renderer darf den Pfad nicht selbst bauen
+   *  — die Adresse gehört nicht zu dieser Site. */
+  external_url?: string | null;
+  /** true = eine Gruppe im Menü, selbst kein Ziel. */
+  is_folder?: boolean;
+  /** Einträge eines Ordners. Genau eine Ebene tief. */
+  children?: NavItem[];
 };
 
 /** Navigation der Kunden-Site, nach Bereich getrennt (0421). Seiten mit
@@ -99,6 +107,52 @@ export type SiteBranding = {
   /** Menüstruktur der Site (0421). Gilt site-weit, deshalb im Branding und nicht
    *  an der einzelnen Seite — die Middleware löst sie einmal pro Request auf. */
   nav?: SiteNav;
+  // --- SEO/AEO (0430) ------------------------------------------------------
+  // Der Rückfall für Seiten ohne eigene Angaben ist BEREITS aufgelöst, wenn eine
+  // Seite geladen wird (`page.seo_title` trägt dann den site-weiten Wert). Diese
+  // Felder stehen hier für die Stellen, die keine Seite haben: robots.txt,
+  // llms.txt und das Root-Layout.
+  seo_title: string | null;
+  seo_description: string | null;
+  seo_keywords: string | null;
+  noindex: boolean;
+  gtag_id: string | null;
+  schema_organization: boolean;
+  schema_breadcrumbs: boolean;
+  schema_lodging: boolean;
+  schema_faq: boolean;
+  lazy_loading: boolean;
+  system_fonts_first: boolean;
+  // --- Theme: Breite und Schriftgrößen (0435) ------------------------------
+  /** Maximale Inhaltsbreite in px (960–1920). `null` = die Breiten, die die
+   *  Abschnitte selbst setzen. */
+  content_width: number | null;
+  /** Faktor auf die Überschriften-Größen in Prozent (80–130). `null` = 100. */
+  heading_scale: number | null;
+  body_scale: number | null;
+  /** Firmenangaben fürs Organization-Schema. `null`, wenn der Schalter aus ist
+   *  oder das Firmenprofil keinen Namen führt — dann liefert der Renderer kein
+   *  Schema statt eines mit leeren Feldern. */
+  organization: SiteOrganization | null;
+  /** Kann dieser Betrieb online Geld annehmen (Stripe abrechnungsfähig oder
+   *  PayPal hinterlegt)?
+   *
+   *  `false` schaltet die Buchungsstrecke auf den Anfrage-Weg um. Es ist kein
+   *  Geheimnis: ob eine Website eine Zahlung annimmt, sieht jeder, der sie
+   *  benutzt — es steht kein Kontostand und keine Kennung darin. */
+  payments_ready: boolean;
+};
+
+/** Firmenangaben für strukturierte Daten (0430). Quelle ist das Firmenprofil
+ *  des Betriebs, nicht ein zweites Formular im Baukasten. */
+export type SiteOrganization = {
+  name: string | null;
+  street: string | null;
+  postal_code: string | null;
+  city: string | null;
+  country: string | null;
+  phone: string | null;
+  email: string | null;
 };
 
 export type SiteContext = {

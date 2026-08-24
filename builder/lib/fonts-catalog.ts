@@ -137,7 +137,24 @@ export function fontStack(family: string | null | undefined): string | null {
  * Google-Fonts-Stylesheet-URL für eine Menge von Familien (deduped). Liefert
  * null, wenn keine ladbare (Google-)Familie dabei ist.
  */
-export function googleFontsHref(families: Array<string | null | undefined>): string | null {
+export function googleFontsHref(
+  families: Array<string | null | undefined>,
+  /** `font-display` der geladenen Schriften (0430).
+   *
+   *  `swap` — der Text ist SOFORT in der Systemschrift lesbar und wechselt,
+   *  sobald die Marken-Schrift da ist. Schnell, aber sichtbar: die Seite
+   *  „blinkt" beim Wechsel.
+   *
+   *  `block` — der Text bleibt bis zu drei Sekunden unsichtbar und erscheint
+   *  direkt in der Marken-Schrift. Kein Wechsel, aber bei langsamer Verbindung
+   *  eine leere Seite.
+   *
+   *  Der Default ist `swap`, weil das der Zustand ist, den jede bestehende
+   *  Kundenseite hat — ein neuer Parameter darf kein Verhalten still ändern
+   *  (Wurzel 1). Die Umstellung auf `block` ist eine bewusste Entscheidung des
+   *  Betriebs im Baukasten. */
+  display: "swap" | "block" = "swap",
+): string | null {
   const params = new Set<string>();
   for (const fam of families) {
     const eintrag = fontByFamily(fam);
@@ -145,5 +162,5 @@ export function googleFontsHref(families: Array<string | null | undefined>): str
   }
   if (params.size === 0) return null;
   const query = [...params].map((p) => `family=${p}`).join("&");
-  return `https://fonts.googleapis.com/css2?${query}&display=swap`;
+  return `https://fonts.googleapis.com/css2?${query}&display=${display}`;
 }

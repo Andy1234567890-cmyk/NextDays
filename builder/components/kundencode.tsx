@@ -15,12 +15,23 @@ import type { SiteBranding } from "@/lib/site-context";
 export function Kundencode({
   branding,
   flaeche,
+  seitenHtml,
 }: {
   branding: SiteBranding | null | undefined;
   flaeche: CodeFlaeche;
+  /** Kopf-HTML NUR dieser Seite (0430). Hostaway erwartet das Schema-Markup
+   *  einer einzelnen Seite genau dort — „nur auf den Seiten, wo der Inhalt
+   *  steht, sonst verwirrt es die Suchmaschinen". Dieselbe Allowlist wie
+   *  site-weit (meta/link/title), geprüft beim Speichern.
+   *
+   *  Auf der Zahlungsseite wird es genauso ausgelassen wie das site-weite: dort
+   *  läuft kein Kundencode, und ein <link> auf eine fremde Ressource ist auch
+   *  Kundencode. */
+  seitenHtml?: string | null;
 }) {
   const { html, css, js } = codeStuecke(branding, flaeche);
-  if (!html && !css && !js) return null;
+  const seite = flaeche === "oeffentlich" ? (seitenHtml?.trim() || null) : null;
+  if (!html && !css && !js && !seite) return null;
 
   return (
     <>
@@ -31,6 +42,9 @@ export function Kundencode({
           Dokumentinhalt, nicht die DOM-Position. */}
       {html ? (
         <div hidden dangerouslySetInnerHTML={{ __html: html }} />
+      ) : null}
+      {seite ? (
+        <div hidden dangerouslySetInnerHTML={{ __html: seite }} />
       ) : null}
       {css ? (
         <style dangerouslySetInnerHTML={{ __html: cssFuerElement(css) }} />

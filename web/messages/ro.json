@@ -4820,10 +4820,10 @@
     },
     "taskStatusAction": {
       "open": "Pune înapoi",
-      "reopen": "Redeschide",
       "accepted": "Acceptă",
       "in_progress": "Începe",
-      "done": "Finalizează"
+      "done": "Finalizează",
+      "reopen": "Redeschide"
     },
     "taskStatusChanged": {
       "open": "Pusă înapoi.",
@@ -7128,7 +7128,8 @@
       "einstellungen": "Setări",
       "objekte": "Proprietăți",
       "widgets": "Widgeturi",
-      "seo": "SEO"
+      "seo": "SEO",
+      "anfragen": "Cereri"
     },
     "kopf": {
       "websiteAnsehen": "Vezi site-ul",
@@ -7228,7 +7229,14 @@
       "logoZiel": "Ținta clicului pe logo",
       "logoZielLeer": "Pagina principală",
       "namensGroesse": "Mărimea numelui",
-      "sloganText": "Text"
+      "sloganText": "Text",
+      "groessenTitel": "Dimensiuni",
+      "groessenHinweis": "Lățimea conținutului și mărimea literelor. Fără o alegere se aplică valorile șablonului.",
+      "inhaltsbreite": "Lățimea conținutului",
+      "ueberschriftenGroesse": "Titluri",
+      "textGroesse": "Text curent",
+      "groesseStandard": "Standard",
+      "groesseZuruecksetzen": "Înapoi la standard"
     },
     "paletten": {
       "schlicht": "Sobru",
@@ -7246,7 +7254,10 @@
       "schriftAufHintergrund": "Textul pe fundal",
       "schriftAufFlaeche": "Textul pe suprafețe",
       "buttonText": "Textul de pe butoane",
-      "linkAufHintergrund": "Linkurile pe fundal"
+      "linkAufHintergrund": "Linkurile pe fundal",
+      "kopfLinkAufKopf": "Meniul pe antet",
+      "markenNameAufKopf": "Numele firmei pe antet",
+      "textAufFuss": "Textul pe subsol"
     },
     "seiten": {
       "bereichTitel": {
@@ -7314,7 +7325,64 @@
       "alleSprachenHinweis": "Cazul normal — pagina apare oriunde apare site-ul dvs.",
       "abbrechen": "Anulează",
       "speichern": "Salvează",
-      "einstellungenGespeichert": "Setările paginii au fost salvate."
+      "einstellungenGespeichert": "Setările paginii au fost salvate.",
+      "duplizieren": "Duplică",
+      "typ": {
+        "normal": {
+          "name": "Pagină",
+          "hinweis": "O pagină pe care o umpleți cu secțiuni."
+        },
+        "external": {
+          "name": "Element de meniu extern",
+          "hinweis": "Un element de meniu care duce la un site străin.",
+          "adresseHinweis": "Se deschide într-o fereastră nouă."
+        },
+        "folder": {
+          "name": "Dosar de meniu",
+          "hinweis": "Grupează pagini în meniu. El însuși nu este o pagină.",
+          "zuordnen": "În dosar",
+          "keiner": "Fără dosar"
+        },
+        "error404": {
+          "name": "Pagină de eroare (404)",
+          "hinweis": "Ce vede un oaspete după o greșeală de scriere. Doar una pe site."
+        },
+        "post": {
+          "name": "Articol de blog",
+          "hinweis": "Un articol pentru blog. Apare la /blog, nu în meniu."
+        }
+      },
+      "vorlage": {
+        "label": "Șablon",
+        "keine": "Pagină goală",
+        "ueber_uns": "Despre noi",
+        "kontakt": "Contact",
+        "anfahrt": "Cum ajungeți",
+        "hausordnung": "Regulamentul casei",
+        "umgebung": "Împrejurimile",
+        "faq": "Întrebări frecvente"
+      },
+      "popup": {
+        "ausloeser": "Când apare",
+        "trigger": {
+          "delay": "După câteva secunde",
+          "exit": "La părăsirea paginii",
+          "scroll": "După partea citită"
+        },
+        "einheitSekunden": "secunde",
+        "einheitProzent": "procente",
+        "hinweis": "Apare o singură dată per vizitator. Pe telefon, „La părăsirea paginii” devine o afișare după 20 de secunde."
+      },
+      "beitrag": {
+        "datum": "Data publicării",
+        "datumHinweis": "În viitor = programat. Articolul apare atunci de la sine.",
+        "autor": "Autor",
+        "titelbild": "Imagine principală",
+        "anriss": "Introducere",
+        "anrissHinweis": "Textul din lista de articole. Gol = începutul primului paragraf.",
+        "schlagwoerter": "Cuvinte-cheie",
+        "schlagwoerterHinweis": "Separate prin virgulă, cel mult opt."
+      }
     },
     "vorlagen": {
       "titel": "Începe cu un șablon",
@@ -7356,7 +7424,14 @@
       "objektIdPlatzhalter": "Cod proprietate",
       "objektHinzufuegen": "Adaugă",
       "frageHinzufuegen": "Adaugă întrebare",
-      "fragenMax": "Nu sunt posibile mai mult de {max} întrebări."
+      "fragenMax": "Nu sunt posibile mai mult de {max} întrebări.",
+      "stimmeHinzufuegen": "Adaugă mărturie",
+      "stimmenMax": "Nu sunt posibile mai mult de {max} mărturii.",
+      "merkmalHinzufuegen": "Adaugă caracteristică",
+      "merkmaleMax": "Nu sunt posibile mai mult de {max} caracteristici.",
+      "darstellung": "Aspect",
+      "feldHinzufuegen": "Adaugă câmp",
+      "formfelderMax": "Mai mult de {max} câmpuri nu este posibil."
     },
     "abschnitte": {
       "hero": "Imagine principală",
@@ -7382,7 +7457,17 @@
       "gallery": "Galerie",
       "galleryHinweis": "Mai multe imagini în grilă.",
       "faq": "Întrebări și răspunsuri",
-      "faqHinweis": "Întrebări care se extind. Cu date structurate apar și în rezultatele căutării."
+      "faqHinweis": "Întrebări care se extind. Cu date structurate apar și în rezultatele căutării.",
+      "map": "Hartă",
+      "mapHinweis": "Arată amplasarea. Fără adresă se folosește cea din profilul firmei.",
+      "testimonials": "Mărturii",
+      "testimonialsHinweis": "Citate introduse de dumneavoastră. Pentru recenzii reale există o secțiune separată.",
+      "features": "Caracteristici",
+      "featuresHinweis": "Ce oferiți — pictogramă, titlu, text pe coloane.",
+      "form": "Formular",
+      "formHinweis": "Un formular pe care îl completează oaspeții. Cererile ajung în fila „Cereri”.",
+      "posts": "Ultimele articole",
+      "postsHinweis": "Afișează cele mai noi articole de blog. Blogul în sine se află la /blog."
     },
     "felder": {
       "eyebrow": "Rând mic deasupra",
@@ -7402,7 +7487,7 @@
       "ausrichtung": "Aliniere",
       "linksbuendig": "La stânga",
       "zentriert": "Centrat",
-      "beschriftung": "Textul butonului",
+      "beschriftung": "Eticheta",
       "ziel": "Destinație",
       "buttonPrimaer": "Evidențiat",
       "buttonSekundaer": "Discret",
@@ -7426,7 +7511,71 @@
       "formularZeigen": "Arată formularul de contact",
       "fragen": "Întrebări",
       "frage": "Întrebare",
-      "antwort": "Răspuns"
+      "antwort": "Răspuns",
+      "zoom": "Nivel de zoom",
+      "stimmen": "Mărturii",
+      "merkmale": "Caracteristici",
+      "zitat": "Citat",
+      "name": "Nume",
+      "ort": "Localitate",
+      "symbol": "Pictogramă",
+      "symbolKeines": "Fără pictogramă",
+      "spalten": "Coloane",
+      "symbolName": {
+        "wlan": "Wi-Fi",
+        "parken": "Parcare",
+        "kueche": "Bucătărie",
+        "fruehstueck": "Mic dejun",
+        "pool": "Piscină",
+        "sauna": "Saună",
+        "haustiere": "Animale de companie",
+        "familie": "Familie",
+        "fahrrad": "Bicicletă",
+        "strand": "Plajă",
+        "berge": "Munți",
+        "garten": "Grădină",
+        "kamin": "Cămin",
+        "waschmaschine": "Mașină de spălat",
+        "klimaanlage": "Aer condiționat",
+        "barrierefrei": "Accesibil",
+        "schluessel": "Cheie",
+        "uhr": "Ceas",
+        "herz": "Inimă",
+        "stern": "Stea",
+        "haus": "Casă",
+        "karte": "Hartă"
+      },
+      "hintergrundfarbe": "Culoare de fundal",
+      "hintergrundbild": "Imagine de fundal",
+      "abdunkeln": "Întunecă imaginea",
+      "abdunkelnHinweis": "Necesar pentru ca textul de pe imagine să rămână lizibil.",
+      "abstand": "Spațiu sus și jos",
+      "abstandWert": {
+        "none": "Comprimat",
+        "sm": "Îngust",
+        "md": "Normal",
+        "lg": "Aerisit"
+      },
+      "einleitung": "Introducere",
+      "formularfelder": "Câmpuri",
+      "knopfText": "Textul de pe buton",
+      "danketext": "Textul după trimitere",
+      "empfaenger": "E-mail pentru cereri",
+      "formularName": "Nume intern",
+      "feldart": "Tipul câmpului",
+      "pflichtfeld": "Câmp obligatoriu",
+      "optionenHinweis": "O opțiune pe rând",
+      "feldartName": {
+        "text": "Text (un rând)",
+        "textarea": "Text (mai multe rânduri)",
+        "email": "E-mail",
+        "phone": "Telefon",
+        "number": "Număr",
+        "date": "Dată",
+        "select": "Selecție",
+        "checkbox": "Casetă de bifat",
+        "consent": "Consimțământ privind datele"
+      }
     },
     "vorschau": {
       "titel": "Previzualizare",
@@ -7694,7 +7843,83 @@
         "importErgebnis": "{neu} noi, {geaendert} modificate, {uebersprungen} omise.",
         "weitereFehler": "{anzahl} rânduri suplimentare cu erori.",
         "vorrangHinweis": "O redirecționare acționează doar dacă la adresa veche nu există nicio pagină. O pagină existentă are întotdeauna prioritate."
+      },
+      "pruefung": {
+        "titel": "Ce mai lipsește",
+        "hinweis": "Verificăm ceea ce putem verifica. Dacă o pagină este găsită bine decide Google — nu această listă.",
+        "beheben": "Remediază",
+        "weitere": "și încă {anzahl}",
+        "nichtsVeroeffentlicht": "Nicio pagină publicată încă — nu este nimic de verificat.",
+        "allesGepflegt": "Tot ce putem verifica este în ordine.",
+        "allesGepflegtHinweis": "{anzahl} pagini publicate fără constatări. Nu este o garanție pentru poziții bune, dar baza este corectă.",
+        "code": {
+          "site_noindex": {
+            "titel": "Site-ul este exclus din indexul de căutare",
+            "titelMit": "Site-ul este exclus din indexul de căutare ({anzahl} pagini afectate)",
+            "hinweis": "Cât timp comutatorul este activ, nimeni nu găsește acest site printr-un motor de căutare."
+          },
+          "keine_domain": {
+            "titel": "Niciun domeniu propriu conectat",
+            "titelMit": "Niciun domeniu propriu conectat",
+            "hinweis": "Fără o adresă proprie nu există sitemap.xml, nici robots.txt, nici llms.txt."
+          },
+          "seiten_ohne_titel": {
+            "titel": "Pagini fără meta-titlu",
+            "titelMit": "{anzahl} pagini fără meta-titlu",
+            "hinweis": "Meta-titlul este titlul din rezultatul căutării. Dacă lipsește, Google preia un text oarecare din pagină."
+          },
+          "seiten_ohne_beschreibung": {
+            "titel": "Pagini fără meta-descriere",
+            "titelMit": "{anzahl} pagini fără meta-descriere",
+            "hinweis": "Textul de sub titlu decide dacă se dă clic."
+          },
+          "seiten_gleiche_beschreibung": {
+            "titel": "Pagini cu descrierea valabilă pentru tot site-ul",
+            "titelMit": "{anzahl} pagini folosesc descrierea valabilă pentru tot site-ul",
+            "hinweis": "Aceste pagini au o descriere — dar toate aceeași. Una proprie pentru fiecare pagină are un efect considerabil mai mare."
+          },
+          "doppelte_titel": {
+            "titel": "Pagini cu același meta-titlu",
+            "titelMit": "{anzahl} pagini cu același meta-titlu",
+            "hinweis": "Două pagini cu același titlu concurează pentru aceeași căutare. Google semnalează acest lucru chiar în Search Console."
+          },
+          "kein_firmenname": {
+            "titel": "Profil de firmă fără nume",
+            "titelMit": "Profil de firmă fără nume",
+            "hinweis": "Fără nume în profilul firmei, site-ul nu transmite Google date despre unitate — comutatorul de la „Date structurate” rămâne fără efect."
+          },
+          "keine_anschrift": {
+            "titel": "Profil de firmă fără adresă",
+            "titelMit": "Profil de firmă fără adresă",
+            "hinweis": "Cu o adresă, Google poate asocia unitatea unui loc și o poate afișa în căutarea locală."
+          },
+          "keine_messung": {
+            "titel": "Niciun identificator Google salvat",
+            "titelMit": "Niciun identificator Google salvat",
+            "hinweis": "Fără identificator nu știți câți vizitatori are site-ul și de unde vin."
+          },
+          "objekte_ohne_text": {
+            "titel": "Proprietăți fără descriere",
+            "titelMit": "{anzahl} proprietăți fără descriere",
+            "hinweis": "O pagină de proprietate fără text este formată din imagini, preț și calendar. Descrierea este singurul ei conținut."
+          },
+          "zahlung_nicht_bereit": {
+            "titel": "Plățile nu sunt încă configurate",
+            "titelMit": "Plățile nu sunt încă configurate",
+            "hinweis": "Site-ul primește cereri, dar nu și rezervări cu plată. Cât timp Stripe nu este pregătit pentru încasare sau nu este salvată o adresă PayPal, oaspetele vede „Trimite cererea” în loc de „Rezervă și plătește”."
+          }
+        }
       }
+    },
+    "anfragen": {
+      "titel": "Cereri",
+      "keine": "Nu a sosit încă nicio cerere.",
+      "ungelesen": "{anzahl} necitite",
+      "alleGelesen": "Toate citite.",
+      "ohneName": "Formular",
+      "csvExport": "Descarcă în format CSV",
+      "loeschen": "Șterge definitiv",
+      "geloescht": "Cerere ștearsă."
     }
   },
   "dynamicPricing": {

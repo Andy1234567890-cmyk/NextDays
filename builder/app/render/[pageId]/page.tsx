@@ -69,6 +69,10 @@ export default async function DraftRenderPage({
         // Standardsprache der Website. Sonst bearbeitet der Kunde die dänische
         // Fassung und sieht daneben die deutsche.
         sprache={modus.locale}
+        // Kein Google-Tag und keine strukturierten Daten im Editor-iframe
+        // (0430): jeder Blick des Betriebs auf seine eigene Vorschau würde
+        // sonst als Besuch in seiner Statistik landen.
+        vorschau
       >
         <BlockRenderer
           blocks={site.blocks}

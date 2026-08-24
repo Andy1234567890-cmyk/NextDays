@@ -73,3 +73,32 @@ body {
   border: 1px solid var(--primary);
   box-shadow: none;
 }
+
+/* --- Inhaltsbreite und Schriftgrößen des Kunden (0435) --------------------
+ *
+ * Drei Variablen, die das Theme setzt (lib/theme.ts) — oder eben nicht. Ist
+ * eine nicht gesetzt, greift hier der Rückfall, und der ist genau das, was
+ * bisher galt: `none` für die Breite (die Abschnitte begrenzen sich selbst) und
+ * Faktor 1 für die Schrift. So sieht eine bestehende Kundenseite unverändert
+ * aus (Wurzel 1).
+ *
+ * Warum `max-width` per Attribut-Selektor und nicht per Klasse: die Abschnitte
+ * setzen ihre Breite mit Tailwind (`max-w-5xl`, `max-w-6xl`), und die soll
+ * bestehen bleiben, solange der Kunde nichts gewählt hat. Erst mit gesetzter
+ * Variable gewinnt sein Wert — deshalb `min()`: die kleinere der beiden
+ * Breiten. Ein Kunde, der 1920 wählt, macht einen `max-w-3xl`-Textabschnitt
+ * nicht plötzlich bildschirmbreit; das wäre unlesbar.
+ */
+[style*="--content-width"] :is(.max-w-3xl, .max-w-5xl, .max-w-6xl) {
+  max-width: min(100%, var(--content-width));
+}
+
+/* Die Faktoren wirken auf die Schriftgrößen der Abschnitte. `em` statt `rem`
+ * wäre hier falsch: die Abschnitte setzen `text-3xl` und Ähnliches in `rem`,
+ * und ein verschachteltes `em` würde sich multiplizieren. */
+[style*="--heading-scale"] :is(h1, h2, h3) {
+  font-size: calc(1em * var(--heading-scale, 1));
+}
+[style*="--body-scale"] :is(p, li) {
+  font-size: calc(1em * var(--body-scale, 1));
+}

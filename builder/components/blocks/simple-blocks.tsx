@@ -1,17 +1,28 @@
 // Schlanke Render-Blöcke auf Template-Niveau: Bild, Galerie, Button, Spacer,
 // Kontakt. Großzügige Aspect-Ratios, Rundungen, Hover-States, Lesetypografie.
+import type { BildLaden } from "@/lib/bilder";
 import { type EditierModus, NICHT_EDITIERBAR, editierbar } from "@/lib/editier-kontext";
 import { pickText } from "@/lib/i18n";
+import { texte } from "@/lib/texte";
+
+import { AbschnittLeer } from "./abschnitt-leer";
 
 export function ImageBlock({
   content,
   modus = NICHT_EDITIERBAR,
+  laden = "lazy",
 }: {
   content: Record<string, unknown>;
   modus?: EditierModus;
+  /** Ladeart des Bildes (0430) — hängt an der Position des Blocks. */
+  laden?: BildLaden;
 }) {
   const url = typeof content.url === "string" ? content.url : null;
-  if (!url) return null;
+  if (!url) {
+    return (
+      <AbschnittLeer modus={modus} grund={texte(modus.locale).leerBild} />
+    );
+  }
   const alt = pickText(content.alt, modus.locale);
   const caption = pickText(content.caption, modus.locale);
   return (
@@ -20,6 +31,12 @@ export function ImageBlock({
       <img
         src={url}
         alt={alt}
+        loading={laden}
+        // `fetchPriority` nur beim sofort geladenen Bild: es sagt dem Browser,
+        // dieses eine Bild VOR den anderen Anfragen zu holen. Auf jedem Bild
+        // gesetzt wäre es wirkungslos — Priorität ist eine Reihenfolge, keine
+        // Eigenschaft.
+        fetchPriority={laden === "eager" ? "high" : undefined}
         className="w-full rounded-3xl object-cover shadow-sm"
       />
       {caption ? (
@@ -34,11 +51,25 @@ export function ImageBlock({
   );
 }
 
-export function GalleryBlock({ content }: { content: Record<string, unknown> }) {
+export function GalleryBlock({
+  content,
+  modus = NICHT_EDITIERBAR,
+  laden = "lazy",
+}: {
+  content: Record<string, unknown>;
+  /** Nur für den Platzhalter im Entwurf — die Galerie selbst hat keine
+   *  bearbeitbaren Textstellen. */
+  modus?: EditierModus;
+  laden?: BildLaden;
+}) {
   const images = Array.isArray(content.images)
     ? (content.images as Array<Record<string, unknown>>)
     : [];
-  if (images.length === 0) return null;
+  if (images.length === 0) {
+    return (
+      <AbschnittLeer modus={modus} grund={texte(modus.locale).leerGalerie} />
+    );
+  }
   return (
     <div className="mx-auto grid max-w-6xl grid-cols-2 gap-4 px-6 py-12 md:grid-cols-3">
       {images.map((img, i) => {
@@ -55,6 +86,12 @@ export function GalleryBlock({ content }: { content: Record<string, unknown> }) 
             <img
               src={url}
               alt={pickText(img.alt)}
+              // Nur das GROSSE erste Bild folgt der Einstellung; die kleineren
+              // stehen in einem Raster darunter und laden immer erst beim
+              // Scrollen. Eine Galerie mit zwölf Bildern sofort zu laden wäre
+              // der eine Fall, in dem der Schalter nichts retten könnte.
+              loading={i === 0 ? laden : "lazy"}
+              fetchPriority={i === 0 && laden === "eager" ? "high" : undefined}
               className="aspect-square size-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           </div>
@@ -73,7 +110,13 @@ export function ButtonBlock({
 }) {
   const label = pickText(content.label, modus.locale);
   const href = typeof content.href === "string" ? content.href : null;
-  if (!label || !href) return null;
+  // Beides ist nötig: eine Beschriftung ohne Ziel führt nirgendwohin, ein Ziel
+  // ohne Beschriftung ist unsichtbar.
+  if (!label || !href) {
+    return (
+      <AbschnittLeer modus={modus} grund={texte(modus.locale).leerButton} />
+    );
+  }
   const secondary = content.variant === "secondary";
   return (
     <div className="mx-auto max-w-3xl px-6 py-8 text-center">

@@ -4822,10 +4822,10 @@
     },
     "taskStatusAction": {
       "open": "Visszatesz",
-      "reopen": "Újranyitás",
       "accepted": "Elfogad",
       "in_progress": "Elkezd",
-      "done": "Lezár"
+      "done": "Lezár",
+      "reopen": "Újranyitás"
     },
     "taskStatusChanged": {
       "open": "Visszatéve.",
@@ -7130,7 +7130,8 @@
       "einstellungen": "Beállítások",
       "objekte": "Szálláshelyek",
       "widgets": "Widgetek",
-      "seo": "SEO"
+      "seo": "SEO",
+      "anfragen": "Megkeresések"
     },
     "kopf": {
       "websiteAnsehen": "Weboldal megtekintése",
@@ -7230,7 +7231,14 @@
       "logoZiel": "A logóra kattintás célja",
       "logoZielLeer": "Kezdőlap",
       "namensGroesse": "A név mérete",
-      "sloganText": "Szöveg"
+      "sloganText": "Szöveg",
+      "groessenTitel": "Méretek",
+      "groessenHinweis": "A tartalom szélessége és a betűk mérete. Választás nélkül a sablon értékei érvényesek.",
+      "inhaltsbreite": "A tartalom szélessége",
+      "ueberschriftenGroesse": "Címsorok",
+      "textGroesse": "Folyószöveg",
+      "groesseStandard": "Alapérték",
+      "groesseZuruecksetzen": "Vissza az alapértékre"
     },
     "paletten": {
       "schlicht": "Egyszerű",
@@ -7248,7 +7256,10 @@
       "schriftAufHintergrund": "Szöveg a háttéren",
       "schriftAufFlaeche": "Szöveg a felületeken",
       "buttonText": "A gombok felirata",
-      "linkAufHintergrund": "Linkek a háttéren"
+      "linkAufHintergrund": "Linkek a háttéren",
+      "kopfLinkAufKopf": "Menü a fejlécen",
+      "markenNameAufKopf": "Cégnév a fejlécen",
+      "textAufFuss": "Szöveg a láblécen"
     },
     "seiten": {
       "bereichTitel": {
@@ -7316,7 +7327,64 @@
       "alleSprachenHinweis": "A szokásos eset — az oldal ott jelenik meg, ahol a weboldala megjelenik.",
       "abbrechen": "Mégse",
       "speichern": "Mentés",
-      "einstellungenGespeichert": "Az oldalbeállítások elmentve."
+      "einstellungenGespeichert": "Az oldalbeállítások elmentve.",
+      "duplizieren": "Duplikálás",
+      "typ": {
+        "normal": {
+          "name": "Oldal",
+          "hinweis": "Oldal, amelyet szakaszokkal tölt fel."
+        },
+        "external": {
+          "name": "Külső menüpont",
+          "hinweis": "Menüpont, amely idegen webhelyre vezet.",
+          "adresseHinweis": "Új ablakban nyílik meg."
+        },
+        "folder": {
+          "name": "Menümappa",
+          "hinweis": "Oldalakat csoportosít a menüben. Maga nem oldal.",
+          "zuordnen": "A mappában",
+          "keiner": "Nincs mappa"
+        },
+        "error404": {
+          "name": "Hibaoldal (404)",
+          "hinweis": "Amit a vendég elgépelés után lát. Webhelyenként csak egy."
+        },
+        "post": {
+          "name": "Blogbejegyzés",
+          "hinweis": "Bejegyzés a bloghoz. A /blog címen jelenik meg, nem a menüben."
+        }
+      },
+      "vorlage": {
+        "label": "Sablon",
+        "keine": "Üres oldal",
+        "ueber_uns": "Rólunk",
+        "kontakt": "Kapcsolat",
+        "anfahrt": "Megközelítés",
+        "hausordnung": "Házirend",
+        "umgebung": "A környék",
+        "faq": "Gyakori kérdések"
+      },
+      "popup": {
+        "ausloeser": "Mikor jelenjen meg",
+        "trigger": {
+          "delay": "Néhány másodperc után",
+          "exit": "Az oldal elhagyásakor",
+          "scroll": "Az elolvasott rész után"
+        },
+        "einheitSekunden": "másodperc",
+        "einheitProzent": "százalék",
+        "hinweis": "Látogatónként egyszer jelenik meg. Telefonon az „Az oldal elhagyásakor” 20 másodperc utáni megjelenéssé válik."
+      },
+      "beitrag": {
+        "datum": "Megjelenés dátuma",
+        "datumHinweis": "A jövőben = ütemezett. A bejegyzés akkor magától megjelenik.",
+        "autor": "Szerző",
+        "titelbild": "Címkép",
+        "anriss": "Bevezető",
+        "anrissHinweis": "A bejegyzéslistában megjelenő szöveg. Üresen = az első bekezdés eleje.",
+        "schlagwoerter": "Címkék",
+        "schlagwoerterHinweis": "Vesszővel elválasztva, legfeljebb nyolc."
+      }
     },
     "vorlagen": {
       "titel": "Kezdés sablonnal",
@@ -7358,7 +7426,14 @@
       "objektIdPlatzhalter": "Szálláshely azonosítója",
       "objektHinzufuegen": "Hozzáadás",
       "frageHinzufuegen": "Kérdés hozzáadása",
-      "fragenMax": "Legfeljebb {max} kérdés lehetséges."
+      "fragenMax": "Legfeljebb {max} kérdés lehetséges.",
+      "stimmeHinzufuegen": "Vélemény hozzáadása",
+      "stimmenMax": "Legfeljebb {max} vélemény lehetséges.",
+      "merkmalHinzufuegen": "Jellemző hozzáadása",
+      "merkmaleMax": "Legfeljebb {max} jellemző lehetséges.",
+      "darstellung": "Megjelenés",
+      "feldHinzufuegen": "Mező hozzáadása",
+      "formfelderMax": "{max} mezőnél több nem lehetséges."
     },
     "abschnitte": {
       "hero": "Főkép",
@@ -7384,7 +7459,17 @@
       "gallery": "Galéria",
       "galleryHinweis": "Több kép rácsban.",
       "faq": "Kérdések és válaszok",
-      "faqHinweis": "Lenyitható kérdések. Strukturált adatokkal a találatok között is megjelennek."
+      "faqHinweis": "Lenyitható kérdések. Strukturált adatokkal a találatok között is megjelennek.",
+      "map": "Térkép",
+      "mapHinweis": "A helyszínt mutatja. Cím nélkül a céges profil címét használjuk.",
+      "testimonials": "Vendégvélemények",
+      "testimonialsHinweis": "Saját kézzel beírt idézetek. A valódi értékeléseknek külön szakasza van.",
+      "features": "Jellemzők",
+      "featuresHinweis": "Amit kínál — ikon, címsor, szöveg oszlopokban.",
+      "form": "Űrlap",
+      "formHinweis": "Űrlap, amelyet a vendégek kitöltenek. A megkeresések a „Megkeresések” fülön jelennek meg.",
+      "posts": "Legutóbbi bejegyzések",
+      "postsHinweis": "A legfrissebb blogbejegyzéseket mutatja. Maga a blog a /blog címen található."
     },
     "felder": {
       "eyebrow": "Kis sor a címsor felett",
@@ -7428,7 +7513,71 @@
       "formularZeigen": "Kapcsolatfelvételi űrlap megjelenítése",
       "fragen": "Kérdések",
       "frage": "Kérdés",
-      "antwort": "Válasz"
+      "antwort": "Válasz",
+      "zoom": "Nagyítási szint",
+      "stimmen": "Vélemények",
+      "merkmale": "Jellemzők",
+      "zitat": "Idézet",
+      "name": "Név",
+      "ort": "Helység",
+      "symbol": "Ikon",
+      "symbolKeines": "Nincs ikon",
+      "spalten": "Oszlopok",
+      "symbolName": {
+        "wlan": "Wi-Fi",
+        "parken": "Parkolás",
+        "kueche": "Konyha",
+        "fruehstueck": "Reggeli",
+        "pool": "Úszómedence",
+        "sauna": "Szauna",
+        "haustiere": "Házi kedvencek",
+        "familie": "Család",
+        "fahrrad": "Kerékpár",
+        "strand": "Strand",
+        "berge": "Hegyek",
+        "garten": "Kert",
+        "kamin": "Kandalló",
+        "waschmaschine": "Mosógép",
+        "klimaanlage": "Légkondicionálás",
+        "barrierefrei": "Akadálymentes",
+        "schluessel": "Kulcs",
+        "uhr": "Óra",
+        "herz": "Szív",
+        "stern": "Csillag",
+        "haus": "Ház",
+        "karte": "Térkép"
+      },
+      "hintergrundfarbe": "Háttérszín",
+      "hintergrundbild": "Háttérkép",
+      "abdunkeln": "Kép elsötétítése",
+      "abdunkelnHinweis": "Szükséges ahhoz, hogy a képen lévő szöveg olvasható maradjon.",
+      "abstand": "Térköz felül és alul",
+      "abstandWert": {
+        "none": "Összehúzott",
+        "sm": "Szűk",
+        "md": "Normál",
+        "lg": "Levegős"
+      },
+      "einleitung": "Bevezető",
+      "formularfelder": "Mezők",
+      "knopfText": "A gomb felirata",
+      "danketext": "Szöveg az elküldés után",
+      "empfaenger": "E-mail a megkeresésekhez",
+      "formularName": "Belső név",
+      "feldart": "A mező fajtája",
+      "pflichtfeld": "Kötelező mező",
+      "optionenHinweis": "Soronként egy lehetőség",
+      "feldartName": {
+        "text": "Szöveg (egy sor)",
+        "textarea": "Szöveg (több sor)",
+        "email": "E-mail",
+        "phone": "Telefon",
+        "number": "Szám",
+        "date": "Dátum",
+        "select": "Választás",
+        "checkbox": "Jelölőnégyzet",
+        "consent": "Adatkezelési hozzájárulás"
+      }
     },
     "vorschau": {
       "titel": "Előnézet",
@@ -7696,7 +7845,83 @@
         "importErgebnis": "{neu} új, {geaendert} módosított, {uebersprungen} kihagyott.",
         "weitereFehler": "További {anzahl} hibás sor.",
         "vorrangHinweis": "Az átirányítás csak akkor érvényesül, ha a régi címen nincs oldal. A meglévő oldalnak mindig elsőbbsége van."
+      },
+      "pruefung": {
+        "titel": "Mi hiányzik még",
+        "hinweis": "Azt ellenőrizzük, amit ellenőrizni tudunk. Hogy egy oldalt jól megtalálnak-e, azt a Google dönti el — nem ez a lista.",
+        "beheben": "Javítás",
+        "weitere": "és további {anzahl}",
+        "nichtsVeroeffentlicht": "Még nincs közzétett oldal — nincs mit ellenőrizni.",
+        "allesGepflegt": "Minden rendben, amit ellenőrizni tudunk.",
+        "allesGepflegtHinweis": "{anzahl} közzétett oldal észrevétel nélkül. Ez nem garancia a jó helyezésre, de az alap rendben van.",
+        "code": {
+          "site_noindex": {
+            "titel": "A weboldal ki van zárva a keresési indexből",
+            "titelMit": "A weboldal ki van zárva a keresési indexből ({anzahl} oldalt érint)",
+            "hinweis": "Amíg a kapcsoló be van kapcsolva, senki nem találja meg ezt a weboldalt keresőn keresztül."
+          },
+          "keine_domain": {
+            "titel": "Nincs saját domain összekapcsolva",
+            "titelMit": "Nincs saját domain összekapcsolva",
+            "hinweis": "Saját cím nélkül nincs sitemap.xml, nincs robots.txt és nincs llms.txt."
+          },
+          "seiten_ohne_titel": {
+            "titel": "Oldalak meta-cím nélkül",
+            "titelMit": "{anzahl} oldal meta-cím nélkül",
+            "hinweis": "A meta-cím a találat főcíme. Ha hiányzik, a Google az oldal valamelyik szövegét használja."
+          },
+          "seiten_ohne_beschreibung": {
+            "titel": "Oldalak meta-leírás nélkül",
+            "titelMit": "{anzahl} oldal meta-leírás nélkül",
+            "hinweis": "A cím alatti szöveg dönti el, hogy rákattintanak-e."
+          },
+          "seiten_gleiche_beschreibung": {
+            "titel": "Oldalak a webhely egészére szóló leírással",
+            "titelMit": "{anzahl} oldal a webhely egészére szóló leírást használja",
+            "hinweis": "Ezeknek az oldalaknak van leírása — de mindnek ugyanaz. Az oldalonként saját leírás jóval többet ér."
+          },
+          "doppelte_titel": {
+            "titel": "Oldalak ugyanazzal a meta-címmel",
+            "titelMit": "{anzahl} oldal ugyanazzal a meta-címmel",
+            "hinweis": "Két azonos címmel rendelkező oldal ugyanarra a keresésre versenyez. A Google ezt maga is jelzi a Search Console-ban."
+          },
+          "kein_firmenname": {
+            "titel": "Cégprofil név nélkül",
+            "titelMit": "Cégprofil név nélkül",
+            "hinweis": "Név nélkül a cégprofilban a weboldal nem ad át céges adatokat a Google-nak — a „Strukturált adatok” alatti kapcsoló hatástalan marad."
+          },
+          "keine_anschrift": {
+            "titel": "Cégprofil cím nélkül",
+            "titelMit": "Cégprofil cím nélkül",
+            "hinweis": "Címmel a Google helyhez tudja kötni a vállalkozást, és megjelenítheti a helyi keresésben."
+          },
+          "keine_messung": {
+            "titel": "Nincs megadva Google-azonosító",
+            "titelMit": "Nincs megadva Google-azonosító",
+            "hinweis": "Azonosító nélkül nem tudja, hány látogatója van a weboldalnak, és honnan érkeznek."
+          },
+          "objekte_ohne_text": {
+            "titel": "Szálláshelyek leírás nélkül",
+            "titelMit": "{anzahl} szálláshely leírás nélkül",
+            "hinweis": "Egy szálláshely oldala szöveg nélkül képekből, árból és naptárból áll. A leírás az egyetlen tartalma."
+          },
+          "zahlung_nicht_bereit": {
+            "titel": "A fizetés még nincs beállítva",
+            "titelMit": "A fizetés még nincs beállítva",
+            "hinweis": "A weboldal érdeklődéseket fogad, de fizetéssel járó foglalásokat nem. Amíg a Stripe nem áll készen a terhelésre, vagy nincs megadva PayPal-cím, a vendég a „Foglalás és fizetés” helyett az „Érdeklődés küldése” gombot látja."
+          }
+        }
       }
+    },
+    "anfragen": {
+      "titel": "Megkeresések",
+      "keine": "Még nem érkezett megkeresés.",
+      "ungelesen": "{anzahl} olvasatlan",
+      "alleGelesen": "Minden elolvasva.",
+      "ohneName": "Űrlap",
+      "csvExport": "Letöltés CSV-ként",
+      "loeschen": "Végleges törlés",
+      "geloescht": "Megkeresés törölve."
     }
   },
   "dynamicPricing": {

@@ -3,12 +3,15 @@
 // Premium-Foto-Karten (Hover-Lift). DAS ist der Buchungs-Vorsprung ggü. reinen
 // Website-Buildern.
 import { ListingCard } from "@/components/listing-card";
+import type { BildLaden } from "@/lib/bilder";
 import { type EditierModus, NICHT_EDITIERBAR, editierbar } from "@/lib/editier-kontext";
 import { pickText } from "@/lib/i18n";
 import { type SuchParams, ladeInserate } from "@/lib/inserate";
 import type { Listing } from "@/lib/listings";
 import { getSiteContext } from "@/lib/site-context";
 import { texte } from "@/lib/texte";
+
+import { AbschnittLeer } from "./abschnitt-leer";
 
 /** Höchstzahl an Objekten, die ein Block rendert.
  *
@@ -30,19 +33,24 @@ function Grid({
   listings,
   sprache,
   preisZeigen,
+  laden,
 }: {
   listings: Listing[];
   sprache: string;
   preisZeigen: boolean;
+  /** Ladeart der Kartenbilder (0430). Nur die ERSTE Karte folgt ihr — die
+   *  übrigen stehen im Raster darunter und laden immer beim Scrollen. */
+  laden: BildLaden;
 }) {
   return (
     <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-      {listings.map((listing) => (
+      {listings.map((listing, i) => (
         <ListingCard
           key={listing.id}
           listing={listing}
           sprache={sprache}
           preisZeigen={preisZeigen}
+          laden={i === 0 ? laden : "lazy"}
         />
       ))}
     </div>
@@ -79,12 +87,14 @@ export async function PropertiesGridBlock({
   tenantId,
   search,
   modus = NICHT_EDITIERBAR,
+  laden = "lazy",
 }: {
   content: Record<string, unknown>;
   tenantId: string;
   search?: SuchParams;
   /** Editier-Marker nur in der Entwurfs-Vorschau. */
   modus?: EditierModus;
+  laden?: BildLaden;
 }) {
   const headline = pickText(content.headline, modus.locale);
   const params: SuchParams = {
@@ -118,6 +128,7 @@ export async function PropertiesGridBlock({
         listings={listings}
         sprache={modus.locale}
         preisZeigen={preisZeigen}
+        laden={laden}
       />
     </Section>
   );
@@ -128,11 +139,13 @@ export async function FeaturedPropertiesBlock({
   content,
   tenantId,
   modus = NICHT_EDITIERBAR,
+  laden = "lazy",
 }: {
   content: Record<string, unknown>;
   tenantId: string;
   /** Editier-Marker nur in der Entwurfs-Vorschau. */
   modus?: EditierModus;
+  laden?: BildLaden;
 }) {
   const headline = pickText(content.headline, modus.locale);
   const ids = Array.isArray(content.property_ids)
@@ -140,8 +153,17 @@ export async function FeaturedPropertiesBlock({
         (x): x is string => typeof x === "string",
       )
     : [];
-  // Ohne Auswahl wird NICHTS gerendert (nicht „alle") — der Block bleibt leer.
-  if (ids.length === 0) return null;
+  // Ohne Auswahl wird LIVE nichts gerendert (nicht „alle") — sonst zeigte ein
+  // vergessener Block das ganze Inventar. Im Entwurf steht dafür ein Hinweis.
+  if (ids.length === 0) {
+    return (
+      <AbschnittLeer
+        modus={modus}
+        titel={headline || undefined}
+        grund={texte(modus.locale).leerObjekte}
+      />
+    );
+  }
   const listings = (await ladeInserate({ propertyIds: ids }, tenantId)).slice(
     0,
     MAX_KARTEN,
@@ -157,6 +179,7 @@ export async function FeaturedPropertiesBlock({
         // Preis-Schalter gilt trotzdem: er ist eine Entscheidung über die
         // Preisdarstellung der Website, nicht über diesen einen Block.
         preisZeigen={branding?.show_base_prices !== false}
+        laden={laden}
       />
     </Section>
   );

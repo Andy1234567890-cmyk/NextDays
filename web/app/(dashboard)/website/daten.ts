@@ -55,6 +55,29 @@ export const LEERES_BRANDING: Branding = {
   privacy_consent: false,
   privacy_policy_page_id: null,
   is_offline: false,
+  // --- SEO/AEO (0430) -----------------------------------------------------
+  seo_title: null,
+  seo_description: null,
+  seo_keywords: null,
+  noindex: false,
+  gtag_id: null,
+  // Die vier Schema-Schalter stehen auf AN wie ihre Spalten-Defaults: der
+  // Renderer baut das JSON-LD aus geprüften eigenen Feldern, das ist kein
+  // Kundencode. Ein Standard „aus" hieße nur, dass fast niemand strukturierte
+  // Daten ausliefert.
+  schema_organization: true,
+  schema_breadcrumbs: true,
+  schema_lodging: true,
+  schema_faq: true,
+  lazy_loading: true,
+  // true, weil der Renderer seine Schriften schon immer mit `display=swap`
+  // lädt — der Schalter beschreibt den Ist-Zustand, er stellt ihn nicht um.
+  system_fonts_first: true,
+  // null = nie gewählt. Der Renderer nimmt dann die Werte, die er heute schon
+  // verwendet — eine bestehende Seite sieht unverändert aus (Wurzel 1).
+  content_width: null,
+  heading_scale: null,
+  body_scale: null,
 };
 
 export type BaukastenDaten = Awaited<ReturnType<typeof ladeBaukasten>>;

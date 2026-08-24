@@ -4822,10 +4822,10 @@
     },
     "taskStatusAction": {
       "open": "Palauta",
-      "reopen": "Avaa uudelleen",
       "accepted": "Ota vastaan",
       "in_progress": "Aloita",
-      "done": "Päätä"
+      "done": "Päätä",
+      "reopen": "Avaa uudelleen"
     },
     "taskStatusChanged": {
       "open": "Palautettu.",
@@ -7130,7 +7130,8 @@
       "einstellungen": "Asetukset",
       "objekte": "Kohteet",
       "widgets": "Widgetit",
-      "seo": "SEO"
+      "seo": "SEO",
+      "anfragen": "Yhteydenotot"
     },
     "kopf": {
       "websiteAnsehen": "Katso sivustoa",
@@ -7230,7 +7231,14 @@
       "logoZiel": "Logon napsautuksen kohde",
       "logoZielLeer": "Etusivu",
       "namensGroesse": "Nimen koko",
-      "sloganText": "Teksti"
+      "sloganText": "Teksti",
+      "groessenTitel": "Koot",
+      "groessenHinweis": "Sisällön leveys ja kirjasinkoko. Ilman valintaa käytetään mallin arvoja.",
+      "inhaltsbreite": "Sisällön leveys",
+      "ueberschriftenGroesse": "Otsikot",
+      "textGroesse": "Leipäteksti",
+      "groesseStandard": "Vakio",
+      "groesseZuruecksetzen": "Palauta vakioarvoon"
     },
     "paletten": {
       "schlicht": "Yksinkertainen",
@@ -7248,7 +7256,10 @@
       "schriftAufHintergrund": "Teksti taustan päällä",
       "schriftAufFlaeche": "Teksti pinnoilla",
       "buttonText": "Painikkeiden teksti",
-      "linkAufHintergrund": "Linkit taustan päällä"
+      "linkAufHintergrund": "Linkit taustan päällä",
+      "kopfLinkAufKopf": "Valikko ylätunnisteen päällä",
+      "markenNameAufKopf": "Yrityksen nimi ylätunnisteen päällä",
+      "textAufFuss": "Teksti alatunnisteen päällä"
     },
     "seiten": {
       "bereichTitel": {
@@ -7316,7 +7327,64 @@
       "alleSprachenHinweis": "Tavallinen tapaus — sivu näkyy kaikkialla, missä sivustosi näkyy.",
       "abbrechen": "Peruuta",
       "speichern": "Tallenna",
-      "einstellungenGespeichert": "Sivun asetukset tallennettu."
+      "einstellungenGespeichert": "Sivun asetukset tallennettu.",
+      "duplizieren": "Monista",
+      "typ": {
+        "normal": {
+          "name": "Sivu",
+          "hinweis": "Sivu, jonka täytät osioilla."
+        },
+        "external": {
+          "name": "Ulkoinen valikkokohta",
+          "hinweis": "Valikkokohta, joka johtaa toiselle verkkosivustolle.",
+          "adresseHinweis": "Avautuu uuteen ikkunaan."
+        },
+        "folder": {
+          "name": "Valikkokansio",
+          "hinweis": "Ryhmittelee sivuja valikossa. Ei ole itse sivu.",
+          "zuordnen": "Kansiossa",
+          "keiner": "Ei kansiota"
+        },
+        "error404": {
+          "name": "Virhesivu (404)",
+          "hinweis": "Se, minkä vieras näkee kirjoitusvirheen jälkeen. Vain yksi sivustoa kohti."
+        },
+        "post": {
+          "name": "Blogiartikkeli",
+          "hinweis": "Artikkeli blogiin. Näkyy osoitteessa /blog, ei valikossa."
+        }
+      },
+      "vorlage": {
+        "label": "Malli",
+        "keine": "Tyhjä sivu",
+        "ueber_uns": "Tietoa meistä",
+        "kontakt": "Yhteystiedot",
+        "anfahrt": "Saapuminen",
+        "hausordnung": "Järjestyssäännöt",
+        "umgebung": "Ympäristö",
+        "faq": "Usein kysytyt kysymykset"
+      },
+      "popup": {
+        "ausloeser": "Milloin se näkyy",
+        "trigger": {
+          "delay": "Muutaman sekunnin kuluttua",
+          "exit": "Sivulta poistuttaessa",
+          "scroll": "Luetun osuuden jälkeen"
+        },
+        "einheitSekunden": "sekuntia",
+        "einheitProzent": "prosenttia",
+        "hinweis": "Näkyy kerran vierailijaa kohden. Puhelimessa ”Sivulta poistuttaessa” muuttuu näyttämiseksi 20 sekunnin kuluttua."
+      },
+      "beitrag": {
+        "datum": "Julkaisupäivä",
+        "datumHinweis": "Tulevaisuudessa = ajastettu. Artikkeli julkaistaan silloin itsestään.",
+        "autor": "Kirjoittaja",
+        "titelbild": "Pääkuva",
+        "anriss": "Ingressi",
+        "anrissHinweis": "Teksti artikkelilistassa. Tyhjä = ensimmäisen kappaleen alku.",
+        "schlagwoerter": "Avainsanat",
+        "schlagwoerterHinweis": "Pilkulla erotettuina, enintään kahdeksan."
+      }
     },
     "vorlagen": {
       "titel": "Aloita mallista",
@@ -7358,7 +7426,14 @@
       "objektIdPlatzhalter": "Kohteen tunnus",
       "objektHinzufuegen": "Lisää",
       "frageHinzufuegen": "Lisää kysymys",
-      "fragenMax": "Yli {max} kysymystä ei ole mahdollista."
+      "fragenMax": "Yli {max} kysymystä ei ole mahdollista.",
+      "stimmeHinzufuegen": "Lisää kommentti",
+      "stimmenMax": "Yli {max} kommenttia ei ole mahdollista.",
+      "merkmalHinzufuegen": "Lisää ominaisuus",
+      "merkmaleMax": "Yli {max} ominaisuutta ei ole mahdollista.",
+      "darstellung": "Ulkoasu",
+      "feldHinzufuegen": "Lisää kenttä",
+      "formfelderMax": "Yli {max} kenttää ei ole mahdollista."
     },
     "abschnitte": {
       "hero": "Pääkuva",
@@ -7384,7 +7459,17 @@
       "gallery": "Galleria",
       "galleryHinweis": "Useita kuvia ruudukkona.",
       "faq": "Kysymykset ja vastaukset",
-      "faqHinweis": "Avattavat kysymykset. Rakenteisina ne näkyvät myös hakutuloksissa."
+      "faqHinweis": "Avattavat kysymykset. Rakenteisina ne näkyvät myös hakutuloksissa.",
+      "map": "Kartta",
+      "mapHinweis": "Näyttää sijainnin. Ilman osoitetta käytetään yritysprofiilin osoitetta.",
+      "testimonials": "Vieraiden kommentit",
+      "testimonialsHinweis": "Itse kirjoitetut sitaatit. Aidoille arvosteluille on oma osio.",
+      "features": "Ominaisuudet",
+      "featuresHinweis": "Mitä tarjoat — kuvake, otsikko, teksti palstoina.",
+      "form": "Lomake",
+      "formHinweis": "Lomake, jonka vieraat täyttävät. Yhteydenotot päätyvät välilehdelle ”Yhteydenotot”.",
+      "posts": "Uusimmat artikkelit",
+      "postsHinweis": "Näyttää uusimmat blogiartikkelit. Itse blogi on osoitteessa /blog."
     },
     "felder": {
       "eyebrow": "Pieni rivi yläpuolella",
@@ -7404,7 +7489,7 @@
       "ausrichtung": "Tasaus",
       "linksbuendig": "Vasemmalle",
       "zentriert": "Keskelle",
-      "beschriftung": "Teksti",
+      "beschriftung": "Selite",
       "ziel": "Kohde",
       "buttonPrimaer": "Korostettu",
       "buttonSekundaer": "Huomaamaton",
@@ -7428,7 +7513,71 @@
       "formularZeigen": "Näytä yhteydenottolomake",
       "fragen": "Kysymykset",
       "frage": "Kysymys",
-      "antwort": "Vastaus"
+      "antwort": "Vastaus",
+      "zoom": "Zoomaustaso",
+      "stimmen": "Kommentit",
+      "merkmale": "Ominaisuudet",
+      "zitat": "Sitaatti",
+      "name": "Nimi",
+      "ort": "Paikkakunta",
+      "symbol": "Kuvake",
+      "symbolKeines": "Ei kuvaketta",
+      "spalten": "Palstat",
+      "symbolName": {
+        "wlan": "Wi-Fi",
+        "parken": "Pysäköinti",
+        "kueche": "Keittiö",
+        "fruehstueck": "Aamiainen",
+        "pool": "Uima-allas",
+        "sauna": "Sauna",
+        "haustiere": "Lemmikit",
+        "familie": "Perhe",
+        "fahrrad": "Polkupyörä",
+        "strand": "Ranta",
+        "berge": "Vuoret",
+        "garten": "Puutarha",
+        "kamin": "Takka",
+        "waschmaschine": "Pyykinpesukone",
+        "klimaanlage": "Ilmastointi",
+        "barrierefrei": "Esteetön",
+        "schluessel": "Avain",
+        "uhr": "Kello",
+        "herz": "Sydän",
+        "stern": "Tähti",
+        "haus": "Talo",
+        "karte": "Kartta"
+      },
+      "hintergrundfarbe": "Taustaväri",
+      "hintergrundbild": "Taustakuva",
+      "abdunkeln": "Tummenna kuvaa",
+      "abdunkelnHinweis": "Tarvitaan, jotta kuvan päällä oleva teksti pysyy luettavana.",
+      "abstand": "Väli ylhäällä ja alhaalla",
+      "abstandWert": {
+        "none": "Kokoon puristettu",
+        "sm": "Tiivis",
+        "md": "Normaali",
+        "lg": "Ilmava"
+      },
+      "einleitung": "Johdanto",
+      "formularfelder": "Kentät",
+      "knopfText": "Painikkeen teksti",
+      "danketext": "Teksti lähettämisen jälkeen",
+      "empfaenger": "Sähköposti yhteydenotoille",
+      "formularName": "Sisäinen nimi",
+      "feldart": "Kentän laji",
+      "pflichtfeld": "Pakollinen kenttä",
+      "optionenHinweis": "Yksi vaihtoehto riviä kohti",
+      "feldartName": {
+        "text": "Teksti (yksi rivi)",
+        "textarea": "Teksti (monta riviä)",
+        "email": "Sähköposti",
+        "phone": "Puhelin",
+        "number": "Luku",
+        "date": "Päivämäärä",
+        "select": "Valinta",
+        "checkbox": "Valintaruutu",
+        "consent": "Tietosuojasuostumus"
+      }
     },
     "vorschau": {
       "titel": "Esikatselu",
@@ -7696,7 +7845,83 @@
         "importErgebnis": "{neu} uutta, {geaendert} muutettu, {uebersprungen} ohitettu.",
         "weitereFehler": "{anzahl} muuta riviä, joissa on virheitä.",
         "vorrangHinweis": "Uudelleenohjaus toimii vain, jos vanhassa osoitteessa ei ole sivua. Olemassa oleva sivu on aina etusijalla."
+      },
+      "pruefung": {
+        "titel": "Mitä vielä puuttuu",
+        "hinweis": "Tarkistamme sen, minkä voimme tarkistaa. Sen, löytyykö sivu hyvin, ratkaisee Google — ei tämä luettelo.",
+        "beheben": "Korjaa",
+        "weitere": "ja {anzahl} muuta",
+        "nichtsVeroeffentlicht": "Yhtään sivua ei ole vielä julkaistu — tarkistettavaa ei ole.",
+        "allesGepflegt": "Kaikki, minkä voimme tarkistaa, on kunnossa.",
+        "allesGepflegtHinweis": "{anzahl} julkaistua sivua ilman huomautuksia. Se ei takaa hyviä sijoituksia, mutta perusta on kunnossa.",
+        "code": {
+          "site_noindex": {
+            "titel": "Verkkosivusto on poistettu hakuindeksistä",
+            "titelMit": "Verkkosivusto on poistettu hakuindeksistä (koskee {anzahl} sivua)",
+            "hinweis": "Niin kauan kuin kytkin on päällä, kukaan ei löydä tätä sivustoa hakukoneesta."
+          },
+          "keine_domain": {
+            "titel": "Omaa verkkotunnusta ei ole yhdistetty",
+            "titelMit": "Omaa verkkotunnusta ei ole yhdistetty",
+            "hinweis": "Ilman omaa osoitetta ei ole sitemap.xml-, robots.txt- eikä llms.txt-tiedostoa."
+          },
+          "seiten_ohne_titel": {
+            "titel": "Sivut ilman Meta-otsikkoa",
+            "titelMit": "{anzahl} sivua ilman Meta-otsikkoa",
+            "hinweis": "Meta-otsikko on hakutuloksen otsikko. Jos se puuttuu, Google poimii sivulta jonkin tekstin."
+          },
+          "seiten_ohne_beschreibung": {
+            "titel": "Sivut ilman Meta-kuvausta",
+            "titelMit": "{anzahl} sivua ilman Meta-kuvausta",
+            "hinweis": "Otsikon alla oleva teksti ratkaisee, klikataanko tulosta."
+          },
+          "seiten_gleiche_beschreibung": {
+            "titel": "Sivut, joilla on koko sivuston kuvaus",
+            "titelMit": "{anzahl} sivua käyttää koko sivuston kuvausta",
+            "hinweis": "Näillä sivuilla on kuvaus — mutta kaikilla sama. Oma kuvaus jokaiselle sivulle vaikuttaa selvästi enemmän."
+          },
+          "doppelte_titel": {
+            "titel": "Sivut, joilla on sama Meta-otsikko",
+            "titelMit": "{anzahl} sivua, joilla on sama Meta-otsikko",
+            "hinweis": "Kaksi samalla otsikolla varustettua sivua kilpailee samasta hausta. Google ilmoittaa siitä itse Search Consolessa."
+          },
+          "kein_firmenname": {
+            "titel": "Yritysprofiili ilman nimeä",
+            "titelMit": "Yritysprofiili ilman nimeä",
+            "hinweis": "Ilman nimeä yritysprofiilissa sivusto ei toimita Googlelle yritystietoja — kohdan ”Rakenteiset tiedot” kytkin jää tehottomaksi."
+          },
+          "keine_anschrift": {
+            "titel": "Yritysprofiili ilman osoitetta",
+            "titelMit": "Yritysprofiili ilman osoitetta",
+            "hinweis": "Osoitteen avulla Google voi yhdistää yrityksen paikkakuntaan ja näyttää sen paikallisessa haussa."
+          },
+          "keine_messung": {
+            "titel": "Google-tunnistetta ei ole tallennettu",
+            "titelMit": "Google-tunnistetta ei ole tallennettu",
+            "hinweis": "Ilman tunnistetta et tiedä, kuinka monta vierailijaa sivustolla on ja mistä he tulevat."
+          },
+          "objekte_ohne_text": {
+            "titel": "Kohteet ilman kuvausta",
+            "titelMit": "{anzahl} kohdetta ilman kuvausta",
+            "hinweis": "Kohdesivu ilman tekstiä koostuu kuvista, hinnasta ja kalenterista. Kuvaus on sen ainoa sisältö."
+          },
+          "zahlung_nicht_bereit": {
+            "titel": "Maksuja ei ole vielä otettu käyttöön",
+            "titelMit": "Maksuja ei ole vielä otettu käyttöön",
+            "hinweis": "Sivusto ottaa vastaan tiedusteluja mutta ei varauksia maksulla. Niin kauan kuin Stripe ei ole veloitusvalmis tai PayPal-osoitetta ei ole tallennettu, vieras näkee ”Lähetä tiedustelu” eikä ”Varaa ja maksa”."
+          }
+        }
       }
+    },
+    "anfragen": {
+      "titel": "Yhteydenotot",
+      "keine": "Yhteydenottoja ei ole vielä tullut.",
+      "ungelesen": "{anzahl} lukematonta",
+      "alleGelesen": "Kaikki luettu.",
+      "ohneName": "Lomake",
+      "csvExport": "Lataa CSV-muodossa",
+      "loeschen": "Poista lopullisesti",
+      "geloescht": "Yhteydenotto poistettu."
     }
   },
   "dynamicPricing": {

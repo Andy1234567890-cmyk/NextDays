@@ -4822,10 +4822,10 @@
     },
     "taskStatusAction": {
       "open": "Læg tilbage",
-      "reopen": "Åbn igen",
       "accepted": "Accepter",
       "in_progress": "Start",
-      "done": "Afslut"
+      "done": "Afslut",
+      "reopen": "Åbn igen"
     },
     "taskStatusChanged": {
       "open": "Lagt tilbage.",
@@ -7130,7 +7130,8 @@
       "einstellungen": "Indstillinger",
       "objekte": "Boliger",
       "widgets": "Widgets",
-      "seo": "SEO"
+      "seo": "SEO",
+      "anfragen": "Forespørgsler"
     },
     "kopf": {
       "websiteAnsehen": "Se hjemmesiden",
@@ -7230,7 +7231,14 @@
       "logoZiel": "Logoets klikmål",
       "logoZielLeer": "Forside",
       "namensGroesse": "Navnets størrelse",
-      "sloganText": "Tekst"
+      "sloganText": "Tekst",
+      "groessenTitel": "Størrelser",
+      "groessenHinweis": "Indholdets bredde og skriftens størrelse. Uden valg gælder skabelonens værdier.",
+      "inhaltsbreite": "Indholdsbredde",
+      "ueberschriftenGroesse": "Overskrifter",
+      "textGroesse": "Brødtekst",
+      "groesseStandard": "Standard",
+      "groesseZuruecksetzen": "Nulstil til standard"
     },
     "paletten": {
       "schlicht": "Enkel",
@@ -7248,7 +7256,10 @@
       "schriftAufHintergrund": "Tekst på baggrunden",
       "schriftAufFlaeche": "Tekst på flader",
       "buttonText": "Tekst på knapper",
-      "linkAufHintergrund": "Links på baggrunden"
+      "linkAufHintergrund": "Links på baggrunden",
+      "kopfLinkAufKopf": "Menu på sidehovedet",
+      "markenNameAufKopf": "Firmanavn på sidehovedet",
+      "textAufFuss": "Tekst på sidefoden"
     },
     "seiten": {
       "bereichTitel": {
@@ -7316,7 +7327,64 @@
       "alleSprachenHinweis": "Normaltilfældet — siden vises alle steder, hvor dit website vises.",
       "abbrechen": "Annullér",
       "speichern": "Gem",
-      "einstellungenGespeichert": "Sideindstillinger gemt."
+      "einstellungenGespeichert": "Sideindstillinger gemt.",
+      "duplizieren": "Dupliker",
+      "typ": {
+        "normal": {
+          "name": "Side",
+          "hinweis": "En side, som du fylder med afsnit."
+        },
+        "external": {
+          "name": "Eksternt menupunkt",
+          "hinweis": "Et menupunkt, der fører til et fremmed websted.",
+          "adresseHinweis": "Åbner i et nyt vindue."
+        },
+        "folder": {
+          "name": "Menumappe",
+          "hinweis": "Grupperer sider i menuen. Er ikke selv en side.",
+          "zuordnen": "I mappen",
+          "keiner": "Ingen mappe"
+        },
+        "error404": {
+          "name": "Fejlside (404)",
+          "hinweis": "Det, en gæst ser ved en tastefejl. Kun én pr. websted."
+        },
+        "post": {
+          "name": "Blogindlæg",
+          "hinweis": "Et indlæg til bloggen. Vises på /blog, ikke i menuen."
+        }
+      },
+      "vorlage": {
+        "label": "Skabelon",
+        "keine": "Tom side",
+        "ueber_uns": "Om os",
+        "kontakt": "Kontakt",
+        "anfahrt": "Sådan finder du os",
+        "hausordnung": "Husorden",
+        "umgebung": "Omgivelserne",
+        "faq": "Ofte stillede spørgsmål"
+      },
+      "popup": {
+        "ausloeser": "Hvornår den vises",
+        "trigger": {
+          "delay": "Efter nogle sekunder",
+          "exit": "Når siden forlades",
+          "scroll": "Efter læst andel"
+        },
+        "einheitSekunden": "sekunder",
+        "einheitProzent": "procent",
+        "hinweis": "Vises én gang pr. besøgende. På telefonen bliver »Når siden forlades« til en visning efter 20 sekunder."
+      },
+      "beitrag": {
+        "datum": "Udgivelsesdato",
+        "datumHinweis": "I fremtiden = planlagt. Indlægget udkommer så af sig selv.",
+        "autor": "Forfatter",
+        "titelbild": "Forsidebillede",
+        "anriss": "Manchet",
+        "anrissHinweis": "Teksten i indlægslisten. Tom = starten på første afsnit.",
+        "schlagwoerter": "Nøgleord",
+        "schlagwoerterHinweis": "Adskilt med komma, højst otte."
+      }
     },
     "vorlagen": {
       "titel": "Start med en skabelon",
@@ -7358,7 +7426,14 @@
       "objektIdPlatzhalter": "Bolig-ID",
       "objektHinzufuegen": "Tilføj",
       "frageHinzufuegen": "Tilføj spørgsmål",
-      "fragenMax": "Mere end {max} spørgsmål er ikke muligt."
+      "fragenMax": "Mere end {max} spørgsmål er ikke muligt.",
+      "stimmeHinzufuegen": "Tilføj udsagn",
+      "stimmenMax": "Mere end {max} udsagn er ikke muligt.",
+      "merkmalHinzufuegen": "Tilføj facilitet",
+      "merkmaleMax": "Mere end {max} faciliteter er ikke muligt.",
+      "darstellung": "Udseende",
+      "feldHinzufuegen": "Tilføj felt",
+      "formfelderMax": "Mere end {max} felter er ikke muligt."
     },
     "abschnitte": {
       "hero": "Topbillede",
@@ -7384,7 +7459,17 @@
       "gallery": "Galleri",
       "galleryHinweis": "Flere billeder i et gitter.",
       "faq": "Spørgsmål og svar",
-      "faqHinweis": "Foldbare spørgsmål. Med struktur vises de også i søgeresultatet."
+      "faqHinweis": "Foldbare spørgsmål. Med struktur vises de også i søgeresultatet.",
+      "map": "Kort",
+      "mapHinweis": "Viser beliggenheden. Uden adresse bruges den fra firmaprofilen.",
+      "testimonials": "Gæsteudsagn",
+      "testimonialsHinweis": "Selvindtastede citater. Til rigtige anmeldelser findes der et eget afsnit.",
+      "features": "Faciliteter",
+      "featuresHinweis": "Det, du tilbyder — ikon, overskrift, tekst i spalter.",
+      "form": "Formular",
+      "formHinweis": "En formular, som gæster udfylder. Forespørgslerne havner i fanen „Forespørgsler“.",
+      "posts": "Seneste indlæg",
+      "postsHinweis": "Viser de nyeste blogindlæg. Selve bloggen ligger på /blog."
     },
     "felder": {
       "eyebrow": "Lille linje ovenover",
@@ -7404,7 +7489,7 @@
       "ausrichtung": "Justering",
       "linksbuendig": "Venstrestillet",
       "zentriert": "Centreret",
-      "beschriftung": "Tekst",
+      "beschriftung": "Ledetekst",
       "ziel": "Mål",
       "buttonPrimaer": "Fremhævet",
       "buttonSekundaer": "Diskret",
@@ -7428,7 +7513,71 @@
       "formularZeigen": "Vis kontaktformular",
       "fragen": "Spørgsmål",
       "frage": "Spørgsmål",
-      "antwort": "Svar"
+      "antwort": "Svar",
+      "zoom": "Zoomniveau",
+      "stimmen": "Udsagn",
+      "merkmale": "Faciliteter",
+      "zitat": "Citat",
+      "name": "Navn",
+      "ort": "Sted",
+      "symbol": "Ikon",
+      "symbolKeines": "Intet ikon",
+      "spalten": "Spalter",
+      "symbolName": {
+        "wlan": "Wi-Fi",
+        "parken": "Parkering",
+        "kueche": "Køkken",
+        "fruehstueck": "Morgenmad",
+        "pool": "Pool",
+        "sauna": "Sauna",
+        "haustiere": "Kæledyr",
+        "familie": "Familie",
+        "fahrrad": "Cykel",
+        "strand": "Strand",
+        "berge": "Bjerge",
+        "garten": "Have",
+        "kamin": "Kamin",
+        "waschmaschine": "Vaskemaskine",
+        "klimaanlage": "Aircondition",
+        "barrierefrei": "Tilgængelig",
+        "schluessel": "Nøgle",
+        "uhr": "Ur",
+        "herz": "Hjerte",
+        "stern": "Stjerne",
+        "haus": "Hus",
+        "karte": "Kort"
+      },
+      "hintergrundfarbe": "Baggrundsfarve",
+      "hintergrundbild": "Baggrundsbillede",
+      "abdunkeln": "Gør billedet mørkere",
+      "abdunkelnHinweis": "Nødvendigt, så teksten på billedet bliver læsbar.",
+      "abstand": "Afstand foroven og forneden",
+      "abstandWert": {
+        "none": "Sammentrukket",
+        "sm": "Tæt",
+        "md": "Normal",
+        "lg": "Luftig"
+      },
+      "einleitung": "Indledning",
+      "formularfelder": "Felter",
+      "knopfText": "Tekst på knappen",
+      "danketext": "Tekst efter afsendelsen",
+      "empfaenger": "E-mail til forespørgsler",
+      "formularName": "Internt navn",
+      "feldart": "Feltets art",
+      "pflichtfeld": "Obligatorisk felt",
+      "optionenHinweis": "Én mulighed pr. linje",
+      "feldartName": {
+        "text": "Tekst (én linje)",
+        "textarea": "Tekst (flere linjer)",
+        "email": "E-mail",
+        "phone": "Telefon",
+        "number": "Tal",
+        "date": "Dato",
+        "select": "Valg",
+        "checkbox": "Afkrydsning",
+        "consent": "Databeskyttelsessamtykke"
+      }
     },
     "vorschau": {
       "titel": "Forhåndsvisning",
@@ -7696,7 +7845,83 @@
         "importErgebnis": "{neu} nye, {geaendert} ændrede, {uebersprungen} sprunget over.",
         "weitereFehler": "{anzahl} yderligere linjer med fejl.",
         "vorrangHinweis": "En omdirigering virker kun, hvis der ikke findes en side under den gamle adresse. En eksisterende side har altid forrang."
+      },
+      "pruefung": {
+        "titel": "Hvad der stadig mangler",
+        "hinweis": "Vi tjekker det, vi kan tjekke. Om en side bliver fundet godt, afgør Google — ikke denne liste.",
+        "beheben": "Ret",
+        "weitere": "og {anzahl} flere",
+        "nichtsVeroeffentlicht": "Ingen side er offentliggjort endnu — der er intet at tjekke.",
+        "allesGepflegt": "Alt, hvad vi kan tjekke, er i orden.",
+        "allesGepflegtHinweis": "{anzahl} offentliggjorte sider uden fund. Det er ingen garanti for gode placeringer, men grundlaget er på plads.",
+        "code": {
+          "site_noindex": {
+            "titel": "Websitet er taget ud af søgeindekset",
+            "titelMit": "Websitet er taget ud af søgeindekset ({anzahl} sider berørt)",
+            "hinweis": "Så længe kontakten er slået til, finder ingen dette website via en søgemaskine."
+          },
+          "keine_domain": {
+            "titel": "Intet eget domæne forbundet",
+            "titelMit": "Intet eget domæne forbundet",
+            "hinweis": "Uden en egen adresse findes der ingen sitemap.xml, ingen robots.txt og ingen llms.txt."
+          },
+          "seiten_ohne_titel": {
+            "titel": "Sider uden Meta title",
+            "titelMit": "{anzahl} sider uden Meta title",
+            "hinweis": "Meta title er overskriften i søgeresultatet. Mangler den, tager Google en tilfældig tekst fra siden."
+          },
+          "seiten_ohne_beschreibung": {
+            "titel": "Sider uden Meta description",
+            "titelMit": "{anzahl} sider uden Meta description",
+            "hinweis": "Teksten under titlen afgør, om der bliver klikket."
+          },
+          "seiten_gleiche_beschreibung": {
+            "titel": "Sider med den websitedækkende beskrivelse",
+            "titelMit": "{anzahl} sider bruger den websitedækkende beskrivelse",
+            "hinweis": "Disse sider har en beskrivelse — men alle den samme. En egen til hver side virker betydeligt bedre."
+          },
+          "doppelte_titel": {
+            "titel": "Sider med den samme Meta title",
+            "titelMit": "{anzahl} sider med den samme Meta title",
+            "hinweis": "To sider med samme titel konkurrerer om den samme søgning. Google melder det selv i Search Console."
+          },
+          "kein_firmenname": {
+            "titel": "Firmaprofil uden navn",
+            "titelMit": "Firmaprofil uden navn",
+            "hinweis": "Uden navn i firmaprofilen leverer websitet ingen virksomhedsoplysninger til Google — kontakten under »Strukturerede data« virker ikke."
+          },
+          "keine_anschrift": {
+            "titel": "Firmaprofil uden adresse",
+            "titelMit": "Firmaprofil uden adresse",
+            "hinweis": "Med en adresse kan Google knytte virksomheden til et sted og vise den i den lokale søgning."
+          },
+          "keine_messung": {
+            "titel": "Intet Google-id angivet",
+            "titelMit": "Intet Google-id angivet",
+            "hinweis": "Uden id ved du ikke, hvor mange besøgende websitet har, og hvor de kommer fra."
+          },
+          "objekte_ohne_text": {
+            "titel": "Boliger uden beskrivelse",
+            "titelMit": "{anzahl} boliger uden beskrivelse",
+            "hinweis": "En boligside uden tekst består af billeder, pris og kalender. Beskrivelsen er dens eneste indhold."
+          },
+          "zahlung_nicht_bereit": {
+            "titel": "Betalinger er endnu ikke sat op",
+            "titelMit": "Betalinger er endnu ikke sat op",
+            "hinweis": "Hjemmesiden tager imod forespørgsler, men ikke bookinger med betaling. Så længe Stripe ikke er klar til afregning, eller der ikke er angivet en PayPal-adresse, ser gæsten »Send forespørgsel« i stedet for »Reservér og betal«."
+          }
+        }
       }
+    },
+    "anfragen": {
+      "titel": "Forespørgsler",
+      "keine": "Der er endnu ikke kommet nogen forespørgsler.",
+      "ungelesen": "{anzahl} ulæste",
+      "alleGelesen": "Alle læst.",
+      "ohneName": "Formular",
+      "csvExport": "Hent som CSV",
+      "loeschen": "Slet endeligt",
+      "geloescht": "Forespørgsel slettet."
     }
   },
   "dynamicPricing": {

@@ -4822,10 +4822,10 @@
     },
     "taskStatusAction": {
       "open": "Vrátit",
-      "reopen": "Znovu otevřít",
       "accepted": "Přijmout",
       "in_progress": "Začít",
-      "done": "Dokončit"
+      "done": "Dokončit",
+      "reopen": "Znovu otevřít"
     },
     "taskStatusChanged": {
       "open": "Vráceno.",
@@ -7130,7 +7130,8 @@
       "einstellungen": "Nastavení",
       "objekte": "Objekty",
       "widgets": "Widgety",
-      "seo": "SEO"
+      "seo": "SEO",
+      "anfragen": "Poptávky"
     },
     "kopf": {
       "websiteAnsehen": "Zobrazit web",
@@ -7230,7 +7231,14 @@
       "logoZiel": "Cíl kliknutí na logo",
       "logoZielLeer": "Domovská stránka",
       "namensGroesse": "Velikost názvu",
-      "sloganText": "Text"
+      "sloganText": "Text",
+      "groessenTitel": "Velikosti",
+      "groessenHinweis": "Šířka obsahu a velikost písma. Bez volby platí hodnoty šablony.",
+      "inhaltsbreite": "Šířka obsahu",
+      "ueberschriftenGroesse": "Nadpisy",
+      "textGroesse": "Běžný text",
+      "groesseStandard": "Standard",
+      "groesseZuruecksetzen": "Zpět na standard"
     },
     "paletten": {
       "schlicht": "Jednoduchá",
@@ -7248,7 +7256,10 @@
       "schriftAufHintergrund": "Text na pozadí",
       "schriftAufFlaeche": "Text na plochách",
       "buttonText": "Text na tlačítkách",
-      "linkAufHintergrund": "Odkazy na pozadí"
+      "linkAufHintergrund": "Odkazy na pozadí",
+      "kopfLinkAufKopf": "Menu na záhlaví",
+      "markenNameAufKopf": "Název firmy na záhlaví",
+      "textAufFuss": "Text na zápatí"
     },
     "seiten": {
       "bereichTitel": {
@@ -7316,7 +7327,64 @@
       "alleSprachenHinweis": "Běžný případ — stránka se zobrazí všude, kde se zobrazuje váš web.",
       "abbrechen": "Zrušit",
       "speichern": "Uložit",
-      "einstellungenGespeichert": "Nastavení stránky uloženo."
+      "einstellungenGespeichert": "Nastavení stránky uloženo.",
+      "duplizieren": "Duplikovat",
+      "typ": {
+        "normal": {
+          "name": "Stránka",
+          "hinweis": "Stránka, kterou naplníte sekcemi."
+        },
+        "external": {
+          "name": "Externí položka menu",
+          "hinweis": "Položka menu, která vede na cizí web.",
+          "adresseHinweis": "Otevře se v novém okně."
+        },
+        "folder": {
+          "name": "Složka menu",
+          "hinweis": "Seskupuje stránky v menu. Sama není stránkou.",
+          "zuordnen": "Ve složce",
+          "keiner": "Žádná složka"
+        },
+        "error404": {
+          "name": "Chybová stránka (404)",
+          "hinweis": "To, co host uvidí při překlepu. Jen jedna na web."
+        },
+        "post": {
+          "name": "Příspěvek na blog",
+          "hinweis": "Příspěvek pro blog. Zobrazí se na /blog, ne v nabídce."
+        }
+      },
+      "vorlage": {
+        "label": "Šablona",
+        "keine": "Prázdná stránka",
+        "ueber_uns": "O nás",
+        "kontakt": "Kontakt",
+        "anfahrt": "Jak se k nám dostanete",
+        "hausordnung": "Domovní řád",
+        "umgebung": "Okolí",
+        "faq": "Časté otázky"
+      },
+      "popup": {
+        "ausloeser": "Kdy se zobrazí",
+        "trigger": {
+          "delay": "Po několika sekundách",
+          "exit": "Při opuštění stránky",
+          "scroll": "Po přečtené části"
+        },
+        "einheitSekunden": "sekund",
+        "einheitProzent": "procent",
+        "hinweis": "Zobrazí se jednou na návštěvníka. Na telefonu se z „Při opuštění“ stane zobrazení po 20 sekundách."
+      },
+      "beitrag": {
+        "datum": "Datum zveřejnění",
+        "datumHinweis": "V budoucnosti = naplánováno. Příspěvek se pak zobrazí sám.",
+        "autor": "Autor",
+        "titelbild": "Titulní obrázek",
+        "anriss": "Perex",
+        "anrissHinweis": "Text v seznamu příspěvků. Prázdné = začátek prvního odstavce.",
+        "schlagwoerter": "Klíčová slova",
+        "schlagwoerterHinweis": "Oddělená čárkou, nejvýše osm."
+      }
     },
     "vorlagen": {
       "titel": "Začít se šablonou",
@@ -7358,7 +7426,14 @@
       "objektIdPlatzhalter": "Identifikátor objektu",
       "objektHinzufuegen": "Přidat",
       "frageHinzufuegen": "Přidat otázku",
-      "fragenMax": "Více než {max} otázek není možné."
+      "fragenMax": "Více než {max} otázek není možné.",
+      "stimmeHinzufuegen": "Přidat ohlas",
+      "stimmenMax": "Více než {max} ohlasů není možné.",
+      "merkmalHinzufuegen": "Přidat vlastnost",
+      "merkmaleMax": "Více než {max} vlastností není možné.",
+      "darstellung": "Vzhled",
+      "feldHinzufuegen": "Přidat pole",
+      "formfelderMax": "Více než {max} polí není možné."
     },
     "abschnitte": {
       "hero": "Hlavní obrázek",
@@ -7384,7 +7459,17 @@
       "gallery": "Galerie",
       "galleryHinweis": "Několik obrázků v mřížce.",
       "faq": "Otázky a odpovědi",
-      "faqHinweis": "Rozbalovací otázky. Se strukturou se zobrazí i ve výsledcích hledání."
+      "faqHinweis": "Rozbalovací otázky. Se strukturou se zobrazí i ve výsledcích hledání.",
+      "map": "Mapa",
+      "mapHinweis": "Zobrazuje polohu. Bez adresy se použije adresa z profilu firmy.",
+      "testimonials": "Ohlasy hostů",
+      "testimonialsHinweis": "Vlastní vepsané citáty. Pro skutečná hodnocení je samostatná sekce.",
+      "features": "Vlastnosti",
+      "featuresHinweis": "Co nabízíte — ikona, nadpis, text ve sloupcích.",
+      "form": "Formulář",
+      "formHinweis": "Formulář, který hosté vyplní. Poptávky se objeví v záložce „Poptávky“.",
+      "posts": "Nejnovější příspěvky",
+      "postsHinweis": "Zobrazuje nejnovější příspěvky z blogu. Samotný blog je na /blog."
     },
     "felder": {
       "eyebrow": "Malý řádek nad nadpisem",
@@ -7404,7 +7489,7 @@
       "ausrichtung": "Zarovnání",
       "linksbuendig": "Vlevo",
       "zentriert": "Na střed",
-      "beschriftung": "Popis",
+      "beschriftung": "Popisek",
       "ziel": "Cíl",
       "buttonPrimaer": "Výrazné",
       "buttonSekundaer": "Nevýrazné",
@@ -7428,7 +7513,71 @@
       "formularZeigen": "Zobrazit kontaktní formulář",
       "fragen": "Otázky",
       "frage": "Otázka",
-      "antwort": "Odpověď"
+      "antwort": "Odpověď",
+      "zoom": "Úroveň přiblížení",
+      "stimmen": "Ohlasy",
+      "merkmale": "Vlastnosti",
+      "zitat": "Citát",
+      "name": "Jméno",
+      "ort": "Místo",
+      "symbol": "Ikona",
+      "symbolKeines": "Bez ikony",
+      "spalten": "Sloupce",
+      "symbolName": {
+        "wlan": "Wi-Fi",
+        "parken": "Parkování",
+        "kueche": "Kuchyně",
+        "fruehstueck": "Snídaně",
+        "pool": "Bazén",
+        "sauna": "Sauna",
+        "haustiere": "Domácí zvířata",
+        "familie": "Rodina",
+        "fahrrad": "Kolo",
+        "strand": "Pláž",
+        "berge": "Hory",
+        "garten": "Zahrada",
+        "kamin": "Krb",
+        "waschmaschine": "Pračka",
+        "klimaanlage": "Klimatizace",
+        "barrierefrei": "Bezbariérové",
+        "schluessel": "Klíč",
+        "uhr": "Hodiny",
+        "herz": "Srdce",
+        "stern": "Hvězda",
+        "haus": "Dům",
+        "karte": "Mapa"
+      },
+      "hintergrundfarbe": "Barva pozadí",
+      "hintergrundbild": "Obrázek pozadí",
+      "abdunkeln": "Ztmavit obrázek",
+      "abdunkelnHinweis": "Potřebné, aby text na obrázku zůstal čitelný.",
+      "abstand": "Odstup nahoře a dole",
+      "abstandWert": {
+        "none": "Stažené",
+        "sm": "Úzké",
+        "md": "Normální",
+        "lg": "Vzdušné"
+      },
+      "einleitung": "Úvod",
+      "formularfelder": "Pole",
+      "knopfText": "Text na tlačítku",
+      "danketext": "Text po odeslání",
+      "empfaenger": "E-mail pro poptávky",
+      "formularName": "Interní název",
+      "feldart": "Druh pole",
+      "pflichtfeld": "Povinné pole",
+      "optionenHinweis": "Jedna možnost na řádek",
+      "feldartName": {
+        "text": "Text (jeden řádek)",
+        "textarea": "Text (více řádků)",
+        "email": "E-mail",
+        "phone": "Telefon",
+        "number": "Číslo",
+        "date": "Datum",
+        "select": "Výběr",
+        "checkbox": "Zaškrtávací pole",
+        "consent": "Souhlas se zpracováním"
+      }
     },
     "vorschau": {
       "titel": "Náhled",
@@ -7696,7 +7845,83 @@
         "importErgebnis": "{neu} nových, {geaendert} změněných, {uebersprungen} přeskočených.",
         "weitereFehler": "{anzahl} dalších řádků s chybami.",
         "vorrangHinweis": "Přesměrování se uplatní jen tehdy, když na staré adrese žádná stránka není. Existující stránka má vždy přednost."
+      },
+      "pruefung": {
+        "titel": "Co ještě chybí",
+        "hinweis": "Kontrolujeme to, co zkontrolovat můžeme. O tom, jak dobře se stránka najde, rozhoduje Google — ne tento seznam.",
+        "beheben": "Opravit",
+        "weitere": "a {anzahl} dalších",
+        "nichtsVeroeffentlicht": "Zatím není zveřejněná žádná stránka — není co kontrolovat.",
+        "allesGepflegt": "Vše, co můžeme zkontrolovat, je v pořádku.",
+        "allesGepflegtHinweis": "{anzahl} zveřejněných stránek bez zjištění. Není to záruka dobrých pozic, ale základ je v pořádku.",
+        "code": {
+          "site_noindex": {
+            "titel": "Web je vyňat z indexu vyhledávačů",
+            "titelMit": "Web je vyňat z indexu vyhledávačů (dotčeno {anzahl} stránek)",
+            "hinweis": "Dokud je přepínač zapnutý, tento web nikdo přes vyhledávač nenajde."
+          },
+          "keine_domain": {
+            "titel": "Není připojena vlastní doména",
+            "titelMit": "Není připojena vlastní doména",
+            "hinweis": "Bez vlastní adresy neexistuje žádná sitemap.xml, žádná robots.txt ani žádná llms.txt."
+          },
+          "seiten_ohne_titel": {
+            "titel": "Stránky bez meta titulku",
+            "titelMit": "{anzahl} stránek bez meta titulku",
+            "hinweis": "Meta titulek je nadpis ve výsledku hledání. Když chybí, Google vezme ze stránky nějaký text."
+          },
+          "seiten_ohne_beschreibung": {
+            "titel": "Stránky bez meta popisu",
+            "titelMit": "{anzahl} stránek bez meta popisu",
+            "hinweis": "Text pod titulkem rozhoduje o tom, zda někdo klikne."
+          },
+          "seiten_gleiche_beschreibung": {
+            "titel": "Stránky s popisem pro celý web",
+            "titelMit": "{anzahl} stránek používá popis pro celý web",
+            "hinweis": "Tyto stránky popis mají — ale všechny stejný. Vlastní popis pro každou stránku působí výrazně víc."
+          },
+          "doppelte_titel": {
+            "titel": "Stránky se stejným meta titulkem",
+            "titelMit": "{anzahl} stránek se stejným meta titulkem",
+            "hinweis": "Dvě stránky se stejným titulkem si konkurují ve stejném dotazu. Google to sám hlásí v Search Console."
+          },
+          "kein_firmenname": {
+            "titel": "Firemní profil bez názvu",
+            "titelMit": "Firemní profil bez názvu",
+            "hinweis": "Bez názvu ve firemním profilu web nedodává Googlu žádné údaje o provozu — přepínač v části „Strukturovaná data“ zůstává bez účinku."
+          },
+          "keine_anschrift": {
+            "titel": "Firemní profil bez adresy",
+            "titelMit": "Firemní profil bez adresy",
+            "hinweis": "S adresou může Google provoz přiřadit k místu a zobrazit jej v místním hledání."
+          },
+          "keine_messung": {
+            "titel": "Není uvedeno žádné ID Google",
+            "titelMit": "Není uvedeno žádné ID Google",
+            "hinweis": "Bez ID nevíte, kolik má web návštěvníků a odkud přicházejí."
+          },
+          "objekte_ohne_text": {
+            "titel": "Objekty bez popisu",
+            "titelMit": "{anzahl} objektů bez popisu",
+            "hinweis": "Stránka objektu bez textu se skládá z obrázků, ceny a kalendáře. Popis je jejím jediným obsahem."
+          },
+          "zahlung_nicht_bereit": {
+            "titel": "Platby zatím nejsou nastavené",
+            "titelMit": "Platby zatím nejsou nastavené",
+            "hinweis": "Web přijímá poptávky, ale ne rezervace s platbou. Dokud Stripe není připravený k vyúčtování nebo není uvedená adresa PayPal, vidí host „Odeslat poptávku“ místo „Rezervovat a zaplatit“."
+          }
+        }
       }
+    },
+    "anfragen": {
+      "titel": "Poptávky",
+      "keine": "Zatím nepřišla žádná poptávka.",
+      "ungelesen": "{anzahl} nepřečtených",
+      "alleGelesen": "Vše přečteno.",
+      "ohneName": "Formulář",
+      "csvExport": "Stáhnout jako CSV",
+      "loeschen": "Nenávratně smazat",
+      "geloescht": "Poptávka smazána."
     }
   },
   "dynamicPricing": {

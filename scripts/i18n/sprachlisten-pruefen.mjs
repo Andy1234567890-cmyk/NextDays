@@ -2,7 +2,10 @@
 //
 // Es gibt vier Kopien, und jede hat einen Grund:
 //   1. web/i18n/locales.ts            — Oberfläche des Dashboards
-//   2. apps/api/.../schemas.py        — Validierung beim Speichern (_SITE_LOCALES)
+//   2. apps/api/.../basis.py          — Validierung beim Speichern (_SITE_LOCALES).
+//      Lag bis 0436 in `schemas.py`; beim Zeilen-Split wanderte die Liste mit
+//      den übrigen Validatoren nach `basis.py`. `schemas.py` re-exportiert sie,
+//      aber geprüft wird die QUELLE — dort steht die Wahrheit.
 //   3. builder/lib/sprache.ts         — Prüfung des ?lang= aus der Adresszeile
 //   4. builder/lib/texte.ts           — Anzeigenamen im Sprachwähler (SPRACH_NAMEN)
 //
@@ -44,9 +47,9 @@ const quellen = {
     /export const LOCALES = \[([\s\S]*?)\] as const;/,
     "liste",
   ),
-  "apps/api schemas.py": codes(
+  "apps/api basis.py": codes(
     "Backend",
-    "apps/api/src/features/site_config/schemas.py",
+    "apps/api/src/features/site_config/basis.py",
     /_SITE_LOCALES = frozenset\(\s*\{([\s\S]*?)\}\s*\)/,
     "liste",
   ),

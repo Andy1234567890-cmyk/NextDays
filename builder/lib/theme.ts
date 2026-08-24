@@ -111,6 +111,26 @@ export function brandStyle(
   if (branding.button_radius) {
     vars["--button-radius"] = RADIUS_REM[branding.button_radius];
   }
+  // --- Breite und Schriftgrößen (0435) ------------------------------------
+  // Als CSS-Variablen und nicht als Klassen: die Werte kommen aus der DB, und
+  // eine Tailwind-Klasse mit dynamischem Wert (`max-w-[1440px]`) existiert im
+  // gebauten CSS nicht — sie fehlt einfach, ohne Fehlermeldung.
+  //
+  // `NULL` in der DB heißt „nie gewählt": dann wird die Variable NICHT gesetzt,
+  // und der Rückfall in globals.css greift. So sieht eine bestehende
+  // Kundenseite nach dem Deploy unverändert aus (Wurzel 1).
+  if (branding.content_width) {
+    vars["--content-width"] = `${branding.content_width}px`;
+  }
+  if (branding.heading_scale) {
+    // Als Faktor, nicht als Größe: die Überschriften-Stufen stehen in einem
+    // gestalteten Verhältnis zueinander. `globals.css` multipliziert damit.
+    vars["--heading-scale"] = String(branding.heading_scale / 100);
+  }
+  if (branding.body_scale) {
+    vars["--body-scale"] = String(branding.body_scale / 100);
+  }
+
   return vars as CSSProperties;
 }
 
@@ -121,17 +141,24 @@ export function siteFontsHref(
   branding: SiteBranding | null | undefined,
 ): string | null {
   if (!branding) return null;
-  return googleFontsHref([
-    branding.font_family,
-    branding.heading_font,
-    branding.button_font,
+  return googleFontsHref(
+    [
+      branding.font_family,
+      branding.heading_font,
+      branding.button_font,
     // Firmenname und Slogan können eigene Familien haben (0426). Fehlten sie
     // hier, stünden beide in der Fallback-Schrift und die Einstellung wäre in
     // der Vorschau unsichtbar — der Fehler, der bei den ersten drei Rollen
     // schon einmal passiert ist.
-    branding.logo_name_font,
-    branding.slogan_font,
-  ]);
+      branding.logo_name_font,
+      branding.slogan_font,
+    ],
+    // Der Schalter „Systemschrift zeigen, bis die eigene geladen ist" (0430).
+    // AN = `swap` (sofort lesbar, sichtbarer Wechsel), AUS = `block` (kein
+    // Wechsel, dafür kurz gar kein Text). `false` ist hier die Ausnahme, nicht
+    // der Normalfall — siehe Begründung in fonts-catalog.ts.
+    branding.system_fonts_first === false ? "block" : "swap",
+  );
 }
 
 /** Klassen für den Marken-Button (Kopfzeile, Abschnitte, Buchungsstrecke).

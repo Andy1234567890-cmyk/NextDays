@@ -66,6 +66,17 @@ export function pruefeFarben(farben: {
   flaeche: string | null;
   hintergrund: string | null;
   schrift: string | null;
+  // --- Farbrollen aus 0426 -----------------------------------------------
+  // Sie fehlten hier, obwohl es sie im Baukasten seit 0426 gibt: Kopf- und
+  // Fußzeile haben eigene Hintergründe, und genau dort entsteht der häufigste
+  // Lesbarkeitsfehler — ein dunkler Header mit den dunklen Standard-Linkfarben.
+  // Ohne diese Paare hat die Prüfung „alles lesbar" gemeldet, während die
+  // Navigation unsichtbar war.
+  kopfHintergrund?: string | null;
+  kopfLink?: string | null;
+  fussHintergrund?: string | null;
+  link?: string | null;
+  markenName?: string | null;
 }): Befund[] {
   const befunde: Befund[] = [];
 
@@ -102,6 +113,31 @@ export function pruefeFarben(farben: {
       a: farben.primaer,
       b: farben.hintergrund,
       schwelle: 3,
+    },
+    // --- Kopf- und Fußzeile (0426) ----------------------------------------
+    // Die Navigation ist Text und kein Bedienelement im Sinne von SC 1.4.11 —
+    // sie muss LESBAR sein, nicht nur erkennbar. Deshalb 4.5 und nicht 3.
+    {
+      schluessel: "kopfLinkAufKopf",
+      a: farben.kopfLink ?? farben.schrift ?? null,
+      b: farben.kopfHintergrund ?? null,
+      schwelle: 4.5,
+    },
+    // Der Firmenname neben dem Logo. Er ist groß (SC 1.4.3: großer Text) →
+    // 3.0 genügt.
+    {
+      schluessel: "markenNameAufKopf",
+      a: farben.markenName ?? null,
+      b: farben.kopfHintergrund ?? null,
+      schwelle: 3,
+    },
+    // Die Fußzeile trägt Impressum und Datenschutz — Pflichtangaben, die
+    // lesbar sein MÜSSEN. Ohne eigene Linkfarbe gilt die Textfarbe.
+    {
+      schluessel: "textAufFuss",
+      a: farben.link ?? farben.schrift ?? null,
+      b: farben.fussHintergrund ?? null,
+      schwelle: 4.5,
     },
   ];
 

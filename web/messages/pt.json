@@ -4820,10 +4820,10 @@
     },
     "taskStatusAction": {
       "open": "Devolver",
-      "reopen": "Reabrir",
       "accepted": "Aceitar",
       "in_progress": "Começar",
-      "done": "Concluir"
+      "done": "Concluir",
+      "reopen": "Reabrir"
     },
     "taskStatusChanged": {
       "open": "Devolvida.",
@@ -7128,7 +7128,8 @@
       "einstellungen": "Configurações",
       "objekte": "Alojamentos",
       "widgets": "Widgets",
-      "seo": "SEO"
+      "seo": "SEO",
+      "anfragen": "Pedidos"
     },
     "kopf": {
       "websiteAnsehen": "Ver o site",
@@ -7228,7 +7229,14 @@
       "logoZiel": "Destino do clique no logótipo",
       "logoZielLeer": "Página inicial",
       "namensGroesse": "Tamanho do nome",
-      "sloganText": "Texto"
+      "sloganText": "Texto",
+      "groessenTitel": "Tamanhos",
+      "groessenHinweis": "Largura do conteúdo e tamanho da letra. Sem escolha aplicam-se os valores do modelo.",
+      "inhaltsbreite": "Largura do conteúdo",
+      "ueberschriftenGroesse": "Títulos",
+      "textGroesse": "Texto corrido",
+      "groesseStandard": "Padrão",
+      "groesseZuruecksetzen": "Repor o padrão"
     },
     "paletten": {
       "schlicht": "Sóbria",
@@ -7246,7 +7254,10 @@
       "schriftAufHintergrund": "Texto sobre o fundo",
       "schriftAufFlaeche": "Texto sobre as áreas",
       "buttonText": "Texto dos botões",
-      "linkAufHintergrund": "Links sobre o fundo"
+      "linkAufHintergrund": "Links sobre o fundo",
+      "kopfLinkAufKopf": "Menu sobre o cabeçalho",
+      "markenNameAufKopf": "Nome da empresa sobre o cabeçalho",
+      "textAufFuss": "Texto sobre o rodapé"
     },
     "seiten": {
       "bereichTitel": {
@@ -7314,7 +7325,64 @@
       "alleSprachenHinweis": "O caso normal — a página aparece onde o seu site aparece.",
       "abbrechen": "Cancelar",
       "speichern": "Guardar",
-      "einstellungenGespeichert": "Definições da página guardadas."
+      "einstellungenGespeichert": "Definições da página guardadas.",
+      "duplizieren": "Duplicar",
+      "typ": {
+        "normal": {
+          "name": "Página",
+          "hinweis": "Uma página que preenche com secções."
+        },
+        "external": {
+          "name": "Item de menu externo",
+          "hinweis": "Um item de menu que leva a outro site.",
+          "adresseHinweis": "Abre numa janela nova."
+        },
+        "folder": {
+          "name": "Pasta de menu",
+          "hinweis": "Agrupa páginas no menu. Não é uma página.",
+          "zuordnen": "Na pasta",
+          "keiner": "Sem pasta"
+        },
+        "error404": {
+          "name": "Página de erro (404)",
+          "hinweis": "O que um hóspede vê quando se engana a escrever. Apenas uma por site."
+        },
+        "post": {
+          "name": "Artigo do blogue",
+          "hinweis": "Um artigo para o blogue. Aparece em /blog, não no menu."
+        }
+      },
+      "vorlage": {
+        "label": "Modelo",
+        "keine": "Página vazia",
+        "ueber_uns": "Sobre nós",
+        "kontakt": "Contacto",
+        "anfahrt": "Como chegar",
+        "hausordnung": "Regras da casa",
+        "umgebung": "Os arredores",
+        "faq": "Perguntas frequentes"
+      },
+      "popup": {
+        "ausloeser": "Quando aparece",
+        "trigger": {
+          "delay": "Ao fim de alguns segundos",
+          "exit": "Ao sair da página",
+          "scroll": "Após uma parte lida"
+        },
+        "einheitSekunden": "segundos",
+        "einheitProzent": "por cento",
+        "hinweis": "Aparece uma vez por visitante. No telemóvel, «Ao sair» passa a ser uma exibição ao fim de 20 segundos."
+      },
+      "beitrag": {
+        "datum": "Data de publicação",
+        "datumHinweis": "No futuro = agendado. O artigo aparece então por si.",
+        "autor": "Autor",
+        "titelbild": "Imagem de capa",
+        "anriss": "Resumo",
+        "anrissHinweis": "O texto na lista de artigos. Vazio = o início do primeiro parágrafo.",
+        "schlagwoerter": "Palavras-chave",
+        "schlagwoerterHinweis": "Separadas por vírgulas, no máximo oito."
+      }
     },
     "vorlagen": {
       "titel": "Começar com um modelo",
@@ -7356,7 +7424,14 @@
       "objektIdPlatzhalter": "Identificador do alojamento",
       "objektHinzufuegen": "Adicionar",
       "frageHinzufuegen": "Adicionar pergunta",
-      "fragenMax": "Não é possível ter mais de {max} perguntas."
+      "fragenMax": "Não é possível ter mais de {max} perguntas.",
+      "stimmeHinzufuegen": "Adicionar testemunho",
+      "stimmenMax": "Não é possível ter mais de {max} testemunhos.",
+      "merkmalHinzufuegen": "Adicionar característica",
+      "merkmaleMax": "Não é possível ter mais de {max} características.",
+      "darstellung": "Aspeto",
+      "feldHinzufuegen": "Adicionar campo",
+      "formfelderMax": "Não é possível ter mais de {max} campos."
     },
     "abschnitte": {
       "hero": "Imagem principal",
@@ -7382,7 +7457,17 @@
       "gallery": "Galeria",
       "galleryHinweis": "Várias imagens em grelha.",
       "faq": "Perguntas e respostas",
-      "faqHinweis": "Perguntas expansíveis. Com dados estruturados aparecem também nos resultados de pesquisa."
+      "faqHinweis": "Perguntas expansíveis. Com dados estruturados aparecem também nos resultados de pesquisa.",
+      "map": "Mapa",
+      "mapHinweis": "Mostra a localização. Sem endereço é usado o do perfil da empresa.",
+      "testimonials": "Testemunhos",
+      "testimonialsHinweis": "Citações escritas por si. Para avaliações reais existe uma secção própria.",
+      "features": "Características",
+      "featuresHinweis": "O que oferece — ícone, título, texto em colunas.",
+      "form": "Formulário",
+      "formHinweis": "Um formulário que os hóspedes preenchem. Os pedidos chegam ao separador «Pedidos».",
+      "posts": "Últimos artigos",
+      "postsHinweis": "Mostra os artigos mais recentes do blogue. O blogue em si está em /blog."
     },
     "felder": {
       "eyebrow": "Linha pequena acima",
@@ -7402,7 +7487,7 @@
       "ausrichtung": "Alinhamento",
       "linksbuendig": "À esquerda",
       "zentriert": "Centrado",
-      "beschriftung": "Texto do botão",
+      "beschriftung": "Etiqueta",
       "ziel": "Destino",
       "buttonPrimaer": "Destacado",
       "buttonSekundaer": "Discreto",
@@ -7426,7 +7511,71 @@
       "formularZeigen": "Mostrar formulário de contacto",
       "fragen": "Perguntas",
       "frage": "Pergunta",
-      "antwort": "Resposta"
+      "antwort": "Resposta",
+      "zoom": "Nível de zoom",
+      "stimmen": "Testemunhos",
+      "merkmale": "Características",
+      "zitat": "Citação",
+      "name": "Nome",
+      "ort": "Local",
+      "symbol": "Ícone",
+      "symbolKeines": "Sem ícone",
+      "spalten": "Colunas",
+      "symbolName": {
+        "wlan": "Wi-Fi",
+        "parken": "Estacionamento",
+        "kueche": "Cozinha",
+        "fruehstueck": "Pequeno-almoço",
+        "pool": "Piscina",
+        "sauna": "Sauna",
+        "haustiere": "Animais",
+        "familie": "Família",
+        "fahrrad": "Bicicleta",
+        "strand": "Praia",
+        "berge": "Montanha",
+        "garten": "Jardim",
+        "kamin": "Lareira",
+        "waschmaschine": "Máquina de lavar",
+        "klimaanlage": "Ar condicionado",
+        "barrierefrei": "Acessível",
+        "schluessel": "Chave",
+        "uhr": "Relógio",
+        "herz": "Coração",
+        "stern": "Estrela",
+        "haus": "Casa",
+        "karte": "Mapa"
+      },
+      "hintergrundfarbe": "Cor de fundo",
+      "hintergrundbild": "Imagem de fundo",
+      "abdunkeln": "Escurecer a imagem",
+      "abdunkelnHinweis": "Necessário para que o texto sobre a imagem continue legível.",
+      "abstand": "Espaço acima e abaixo",
+      "abstandWert": {
+        "none": "Comprimido",
+        "sm": "Estreito",
+        "md": "Normal",
+        "lg": "Amplo"
+      },
+      "einleitung": "Introdução",
+      "formularfelder": "Campos",
+      "knopfText": "Texto do botão",
+      "danketext": "Texto após o envio",
+      "empfaenger": "E-mail para os pedidos",
+      "formularName": "Nome interno",
+      "feldart": "Tipo de campo",
+      "pflichtfeld": "Campo obrigatório",
+      "optionenHinweis": "Uma opção por linha",
+      "feldartName": {
+        "text": "Texto (uma linha)",
+        "textarea": "Texto (várias linhas)",
+        "email": "E-mail",
+        "phone": "Telefone",
+        "number": "Número",
+        "date": "Data",
+        "select": "Seleção",
+        "checkbox": "Caixa de seleção",
+        "consent": "Consentimento de privacidade"
+      }
     },
     "vorschau": {
       "titel": "Pré-visualização",
@@ -7694,7 +7843,83 @@
         "importErgebnis": "{neu} novos, {geaendert} alterados, {uebersprungen} ignorados.",
         "weitereFehler": "{anzahl} outras linhas com erros.",
         "vorrangHinweis": "Um redirecionamento só atua se não existir nenhuma página no endereço antigo. Uma página existente tem sempre prioridade."
+      },
+      "pruefung": {
+        "titel": "O que ainda falta",
+        "hinweis": "Verificamos o que podemos verificar. Se uma página é bem encontrada, decide o Google — não esta lista.",
+        "beheben": "Corrigir",
+        "weitere": "e mais {anzahl}",
+        "nichtsVeroeffentlicht": "Ainda não há nenhuma página publicada — não há nada para verificar.",
+        "allesGepflegt": "Tudo o que podemos verificar está em ordem.",
+        "allesGepflegtHinweis": "{anzahl} páginas publicadas sem constatações. Não é garantia de boas posições, mas a base está correta.",
+        "code": {
+          "site_noindex": {
+            "titel": "O site está excluído do índice de pesquisa",
+            "titelMit": "O site está excluído do índice de pesquisa ({anzahl} páginas afetadas)",
+            "hinweis": "Enquanto o interruptor estiver ligado, ninguém encontra este site através de um motor de busca."
+          },
+          "keine_domain": {
+            "titel": "Nenhum domínio próprio ligado",
+            "titelMit": "Nenhum domínio próprio ligado",
+            "hinweis": "Sem um endereço próprio não existe sitemap.xml, nem robots.txt, nem llms.txt."
+          },
+          "seiten_ohne_titel": {
+            "titel": "Páginas sem tag title",
+            "titelMit": "{anzahl} páginas sem tag title",
+            "hinweis": "A tag title é o título no resultado de pesquisa. Se faltar, o Google usa um texto qualquer da página."
+          },
+          "seiten_ohne_beschreibung": {
+            "titel": "Páginas sem Meta description",
+            "titelMit": "{anzahl} páginas sem Meta description",
+            "hinweis": "O texto abaixo do título decide se há clique."
+          },
+          "seiten_gleiche_beschreibung": {
+            "titel": "Páginas com a descrição de todo o site",
+            "titelMit": "{anzahl} páginas usam a descrição de todo o site",
+            "hinweis": "Estas páginas têm uma descrição — mas todas a mesma. Uma descrição própria por página tem muito mais efeito."
+          },
+          "doppelte_titel": {
+            "titel": "Páginas com a mesma tag title",
+            "titelMit": "{anzahl} páginas com a mesma tag title",
+            "hinweis": "Duas páginas com o mesmo título competem pela mesma pesquisa. O Google indica-o na Search Console."
+          },
+          "kein_firmenname": {
+            "titel": "Perfil da empresa sem nome",
+            "titelMit": "Perfil da empresa sem nome",
+            "hinweis": "Sem nome no perfil da empresa, o site não fornece dados do negócio ao Google — o interruptor em «Dados estruturados» fica sem efeito."
+          },
+          "keine_anschrift": {
+            "titel": "Perfil da empresa sem endereço",
+            "titelMit": "Perfil da empresa sem endereço",
+            "hinweis": "Com um endereço, o Google pode associar o negócio a um local e mostrá-lo na pesquisa local."
+          },
+          "keine_messung": {
+            "titel": "Nenhum identificador Google guardado",
+            "titelMit": "Nenhum identificador Google guardado",
+            "hinweis": "Sem identificador não sabe quantos visitantes o site tem nem de onde vêm."
+          },
+          "objekte_ohne_text": {
+            "titel": "Alojamentos sem descrição",
+            "titelMit": "{anzahl} alojamentos sem descrição",
+            "hinweis": "Uma página de alojamento sem texto resume-se a imagens, preço e calendário. A descrição é o seu único conteúdo."
+          },
+          "zahlung_nicht_bereit": {
+            "titel": "Pagamentos ainda não configurados",
+            "titelMit": "Pagamentos ainda não configurados",
+            "hinweis": "O site aceita pedidos de informação, mas não reservas com pagamento. Enquanto o Stripe não estiver pronto para cobrar ou não houver um endereço PayPal guardado, o hóspede vê «Enviar pedido» em vez de «Reservar e pagar»."
+          }
+        }
       }
+    },
+    "anfragen": {
+      "titel": "Pedidos",
+      "keine": "Ainda não chegou nenhum pedido.",
+      "ungelesen": "{anzahl} por ler",
+      "alleGelesen": "Tudo lido.",
+      "ohneName": "Formulário",
+      "csvExport": "Transferir como CSV",
+      "loeschen": "Eliminar definitivamente",
+      "geloescht": "Pedido eliminado."
     }
   },
   "dynamicPricing": {

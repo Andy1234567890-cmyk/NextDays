@@ -4820,10 +4820,10 @@
     },
     "taskStatusAction": {
       "open": "Erġa' poġġi",
-      "reopen": "Iftaħ mill-ġdid",
       "accepted": "Aċċetta",
       "in_progress": "Ibda",
-      "done": "Temm"
+      "done": "Temm",
+      "reopen": "Iftaħ mill-ġdid"
     },
     "taskStatusChanged": {
       "open": "Impoġġi lura.",
@@ -7128,7 +7128,8 @@
       "einstellungen": "Settings",
       "objekte": "Proprjetajiet",
       "widgets": "Widgets",
-      "seo": "SEO"
+      "seo": "SEO",
+      "anfragen": "Talbiet"
     },
     "kopf": {
       "websiteAnsehen": "Ara l-websajt",
@@ -7228,7 +7229,14 @@
       "logoZiel": "Destinazzjoni tal-klikk fuq il-logo",
       "logoZielLeer": "Paġna ewlenija",
       "namensGroesse": "Daqs tal-isem",
-      "sloganText": "Test"
+      "sloganText": "Test",
+      "groessenTitel": "Daqsijiet",
+      "groessenHinweis": "Il-wisa’ tal-kontenut u d-daqs tal-kitba. Mingħajr għażla japplikaw il-valuri tal-mudell.",
+      "inhaltsbreite": "Wisa’ tal-kontenut",
+      "ueberschriftenGroesse": "Titli",
+      "textGroesse": "Test kurrenti",
+      "groesseStandard": "Standard",
+      "groesseZuruecksetzen": "Lura għall-istandard"
     },
     "paletten": {
       "schlicht": "Sempliċi",
@@ -7246,7 +7254,10 @@
       "schriftAufHintergrund": "Test fuq l-isfond",
       "schriftAufFlaeche": "Test fuq is-superfiċji",
       "buttonText": "Kitba fuq il-buttuni",
-      "linkAufHintergrund": "Links fuq l-isfond"
+      "linkAufHintergrund": "Links fuq l-isfond",
+      "kopfLinkAufKopf": "Menu fuq ras il-paġna",
+      "markenNameAufKopf": "Isem tal-kumpanija fuq ras il-paġna",
+      "textAufFuss": "Test fuq qiegħ il-paġna"
     },
     "seiten": {
       "bereichTitel": {
@@ -7314,7 +7325,64 @@
       "alleSprachenHinweis": "Il-każ normali — il-paġna tidher kull fejn tidher il-websajt tiegħek.",
       "abbrechen": "Ikkanċella",
       "speichern": "Issejvja",
-      "einstellungenGespeichert": "Is-settings tal-paġna ġew issejvjati."
+      "einstellungenGespeichert": "Is-settings tal-paġna ġew issejvjati.",
+      "duplizieren": "Ikkupja",
+      "typ": {
+        "normal": {
+          "name": "Paġna",
+          "hinweis": "Paġna li timla b’sezzjonijiet."
+        },
+        "external": {
+          "name": "Element tal-menu estern",
+          "hinweis": "Element tal-menu li jwassal għal sit ieħor.",
+          "adresseHinweis": "Jinfetaħ f’tieqa ġdida."
+        },
+        "folder": {
+          "name": "Kartella tal-menu",
+          "hinweis": "Tiġbor paġni fil-menu. Hi stess mhijiex paġna.",
+          "zuordnen": "Fil-kartella",
+          "keiner": "Ebda kartella"
+        },
+        "error404": {
+          "name": "Paġna ta’ żball (404)",
+          "hinweis": "Dak li jara mistieden wara żball fil-kitba. Waħda biss għal kull sit."
+        },
+        "post": {
+          "name": "Artiklu tal-blog",
+          "hinweis": "Artiklu għall-blog. Jidher fuq /blog, mhux fil-menu."
+        }
+      },
+      "vorlage": {
+        "label": "Mudell",
+        "keine": "Paġna vojta",
+        "ueber_uns": "Dwarna",
+        "kontakt": "Kuntatt",
+        "anfahrt": "Kif issibna",
+        "hausordnung": "Regoli tad-dar",
+        "umgebung": "L-inħawi",
+        "faq": "Mistoqsijiet frekwenti"
+      },
+      "popup": {
+        "ausloeser": "Meta jidher",
+        "trigger": {
+          "delay": "Wara ftit sekondi",
+          "exit": "Meta wieħed jitlaq mill-paġna",
+          "scroll": "Wara sehem moqri"
+        },
+        "einheitSekunden": "sekondi",
+        "einheitProzent": "fil-mija",
+        "hinweis": "Jidher darba għal kull viżitatur. Fuq it-telefon, “Meta wieħed jitlaq” isir wiri wara 20 sekonda."
+      },
+      "beitrag": {
+        "datum": "Data tal-pubblikazzjoni",
+        "datumHinweis": "Fil-futur = skedat. L-artiklu mbagħad jidher waħdu.",
+        "autor": "Awtur",
+        "titelbild": "Ritratt prinċipali",
+        "anriss": "Qosor",
+        "anrissHinweis": "It-test fil-lista tal-artikli. Vojt = il-bidu tal-ewwel paragrafu.",
+        "schlagwoerter": "Kliem prinċipali",
+        "schlagwoerterHinweis": "Separati b’virgola, tmienja l-aktar."
+      }
     },
     "vorlagen": {
       "titel": "Ibda b'mudell",
@@ -7356,7 +7424,14 @@
       "objektIdPlatzhalter": "Kodiċi tal-proprjetà",
       "objektHinzufuegen": "Żid",
       "frageHinzufuegen": "Żid mistoqsija",
-      "fragenMax": "Mhux possibbli iżjed minn {max} mistoqsijiet."
+      "fragenMax": "Mhux possibbli iżjed minn {max} mistoqsijiet.",
+      "stimmeHinzufuegen": "Żid kumment",
+      "stimmenMax": "Mhux possibbli iżjed minn {max} kummenti.",
+      "merkmalHinzufuegen": "Żid karatteristika",
+      "merkmaleMax": "Mhux possibbli iżjed minn {max} karatteristiċi.",
+      "darstellung": "Dehra",
+      "feldHinzufuegen": "Żid qasam",
+      "formfelderMax": "Mhux possibbli aktar minn {max} oqsma."
     },
     "abschnitte": {
       "hero": "Immaġni prinċipali",
@@ -7382,7 +7457,17 @@
       "gallery": "Gallerija",
       "galleryHinweis": "Diversi immaġini f'gradilja.",
       "faq": "Mistoqsijiet u tweġibiet",
-      "faqHinweis": "Mistoqsijiet li jinfetħu. Bid-data strutturata jidhru wkoll fir-riżultati tat-tiftix."
+      "faqHinweis": "Mistoqsijiet li jinfetħu. Bid-data strutturata jidhru wkoll fir-riżultati tat-tiftix.",
+      "map": "Mappa",
+      "mapHinweis": "Turi l-post. Mingħajr indirizz jintuża dak mill-profil tal-kumpanija.",
+      "testimonials": "Kummenti tal-mistednin",
+      "testimonialsHinweis": "Kwotazzjonijiet imdaħħla minnek stess. Għar-reċensjonijiet veri hemm taqsima għaliha.",
+      "features": "Karatteristiċi",
+      "featuresHinweis": "Dak li toffri — ikona, titlu, test f’kolonni.",
+      "form": "Formola",
+      "formHinweis": "Formola li l-mistednin jimlew. It-talbiet jaslu fit-tab “Talbiet”.",
+      "posts": "L-aħħar artikli",
+      "postsHinweis": "Juri l-aktar artikli ġodda tal-blog. Il-blog innifsu jinsab fuq /blog."
     },
     "felder": {
       "eyebrow": "Linja żgħira fuq it-titlu",
@@ -7402,7 +7487,7 @@
       "ausrichtung": "Allinjament",
       "linksbuendig": "Max-xellug",
       "zentriert": "Fiċ-ċentru",
-      "beschriftung": "Kitba",
+      "beschriftung": "Tikketta",
       "ziel": "Destinazzjoni",
       "buttonPrimaer": "Enfasizzata",
       "buttonSekundaer": "Diskreta",
@@ -7411,7 +7496,7 @@
       "abstandMittel": "Medju",
       "abstandGross": "Kbir",
       "abstandSehrGross": "Kbir ħafna",
-      "platzhalter": "Test ta' eżempju",
+      "platzhalter": "Test ta’ eżempju",
       "datumZeigen": "Staqsi għad-dati",
       "gaesteZeigen": "Staqsi għan-numru ta' mistednin",
       "ueberschrift": "Titlu",
@@ -7426,7 +7511,71 @@
       "formularZeigen": "Uri l-formola tal-kuntatt",
       "fragen": "Mistoqsijiet",
       "frage": "Mistoqsija",
-      "antwort": "Tweġiba"
+      "antwort": "Tweġiba",
+      "zoom": "Livell ta’ zoom",
+      "stimmen": "Kummenti",
+      "merkmale": "Karatteristiċi",
+      "zitat": "Kwotazzjoni",
+      "name": "Isem",
+      "ort": "Post",
+      "symbol": "Ikona",
+      "symbolKeines": "Bl-ebda ikona",
+      "spalten": "Kolonni",
+      "symbolName": {
+        "wlan": "Wi-Fi",
+        "parken": "Parkeġġ",
+        "kueche": "Kċina",
+        "fruehstueck": "Kolazzjon",
+        "pool": "Pixxina",
+        "sauna": "Sawna",
+        "haustiere": "Annimali",
+        "familie": "Familja",
+        "fahrrad": "Rota",
+        "strand": "Bajja",
+        "berge": "Muntanji",
+        "garten": "Ġnien",
+        "kamin": "Kamin",
+        "waschmaschine": "Magna tal-ħwejjeġ",
+        "klimaanlage": "Arja kkundizzjonata",
+        "barrierefrei": "Aċċessibbli",
+        "schluessel": "Ċavetta",
+        "uhr": "Arloġġ",
+        "herz": "Qalb",
+        "stern": "Stilla",
+        "haus": "Dar",
+        "karte": "Mappa"
+      },
+      "hintergrundfarbe": "Kulur tal-isfond",
+      "hintergrundbild": "Immaġni tal-isfond",
+      "abdunkeln": "Skura l-immaġni",
+      "abdunkelnHinweis": "Meħtieġ biex it-test fuq l-immaġni jibqa’ jinqara.",
+      "abstand": "Spazju fuq u taħt",
+      "abstandWert": {
+        "none": "Miġbur",
+        "sm": "Dejjaq",
+        "md": "Normali",
+        "lg": "Arjuż"
+      },
+      "einleitung": "Introduzzjoni",
+      "formularfelder": "Oqsma",
+      "knopfText": "Kitba fuq il-buttuna",
+      "danketext": "Test wara li tintbagħat",
+      "empfaenger": "E-mail għat-talbiet",
+      "formularName": "Isem intern",
+      "feldart": "Tip ta’ qasam",
+      "pflichtfeld": "Qasam obbligatorju",
+      "optionenHinweis": "Għażla waħda f’kull linja",
+      "feldartName": {
+        "text": "Test (linja waħda)",
+        "textarea": "Test (aktar minn linja)",
+        "email": "E-mail",
+        "phone": "Telefon",
+        "number": "Numru",
+        "date": "Data",
+        "select": "Għażla",
+        "checkbox": "Kaxxa tal-immarkar",
+        "consent": "Kunsens tal-privatezza"
+      }
     },
     "vorschau": {
       "titel": "Ħarsa minn qabel",
@@ -7694,7 +7843,83 @@
         "importErgebnis": "{neu} ġodda, {geaendert} mibdula, {uebersprungen} maqbuża.",
         "weitereFehler": "{anzahl} ringieli oħra bi żbalji.",
         "vorrangHinweis": "Ridirezzjoni taħdem biss jekk fl-indirizz qadim ma jkunx hemm paġna. Paġna eżistenti dejjem tieħu preċedenza."
+      },
+      "pruefung": {
+        "titel": "X’għadu nieqes",
+        "hinweis": "Niċċekkjaw dak li nistgħu niċċekkjaw. Jekk paġna tinstab tajjeb jiddeċiedi Google — mhux din il-lista.",
+        "beheben": "Irranġa",
+        "weitere": "u {anzahl} oħra",
+        "nichtsVeroeffentlicht": "Għadha ma ġiet ippubblikata l-ebda paġna — ma hemm xejn x’jiġi ċċekkjat.",
+        "allesGepflegt": "Dak kollu li nistgħu niċċekkjaw huwa f’ordni.",
+        "allesGepflegtHinweis": "{anzahl} paġni ppubblikati mingħajr sejbiet. Din mhijiex garanzija ta’ pożizzjonijiet tajbin, imma l-bażi hija tajba.",
+        "code": {
+          "site_noindex": {
+            "titel": "Il-websajt hija eskluża mill-indiċi tat-tfittxija",
+            "titelMit": "Il-websajt hija eskluża mill-indiċi tat-tfittxija ({anzahl} paġni affettwati)",
+            "hinweis": "Sakemm is-swiċċ ikun mixgħul, ħadd ma jsib din il-websajt permezz ta’ mutur tat-tfittxija."
+          },
+          "keine_domain": {
+            "titel": "L-ebda dominju proprju mhu konness",
+            "titelMit": "L-ebda dominju proprju mhu konness",
+            "hinweis": "Mingħajr indirizz proprju ma hemmx sitemap.xml, ma hemmx robots.txt u ma hemmx llms.txt."
+          },
+          "seiten_ohne_titel": {
+            "titel": "Paġni mingħajr Meta-titlu",
+            "titelMit": "{anzahl} paġni mingħajr Meta-titlu",
+            "hinweis": "Il-Meta-titlu huwa t-titlu fir-riżultat tat-tfittxija. Jekk jonqos, Google jieħu kwalunkwe test mill-paġna."
+          },
+          "seiten_ohne_beschreibung": {
+            "titel": "Paġni mingħajr Meta-deskrizzjoni",
+            "titelMit": "{anzahl} paġni mingħajr Meta-deskrizzjoni",
+            "hinweis": "It-test taħt it-titlu jiddeċiedi jekk jingħata klikk jew le."
+          },
+          "seiten_gleiche_beschreibung": {
+            "titel": "Paġni bid-deskrizzjoni għall-websajt kollha",
+            "titelMit": "{anzahl} paġni jużaw id-deskrizzjoni għall-websajt kollha",
+            "hinweis": "Dawn il-paġni għandhom deskrizzjoni — imma kollha l-istess. Deskrizzjoni proprja għal kull paġna taħdem ħafna aktar."
+          },
+          "doppelte_titel": {
+            "titel": "Paġni bl-istess Meta-titlu",
+            "titelMit": "{anzahl} paġni bl-istess Meta-titlu",
+            "hinweis": "Żewġ paġni bl-istess titlu jikkompetu għall-istess tfittxija. Google jirrapporta dan huwa stess fis-Search Console."
+          },
+          "kein_firmenname": {
+            "titel": "Profil tan-negozju mingħajr isem",
+            "titelMit": "Profil tan-negozju mingħajr isem",
+            "hinweis": "Mingħajr isem fil-profil tan-negozju, il-websajt ma tagħti l-ebda dettall tan-negozju lil Google — is-swiċċ taħt “Dejta strutturata” jibqa’ bla effett."
+          },
+          "keine_anschrift": {
+            "titel": "Profil tan-negozju mingħajr indirizz",
+            "titelMit": "Profil tan-negozju mingħajr indirizz",
+            "hinweis": "Bl-indirizz Google jista’ jorbot in-negozju ma’ post u jurih fit-tfittxija lokali."
+          },
+          "keine_messung": {
+            "titel": "L-ebda identifikatur ta’ Google mhu mdaħħal",
+            "titelMit": "L-ebda identifikatur ta’ Google mhu mdaħħal",
+            "hinweis": "Mingħajr identifikatur ma tafx kemm viżitaturi għandha l-websajt u minn fejn jiġu."
+          },
+          "objekte_ohne_text": {
+            "titel": "Proprjetajiet mingħajr deskrizzjoni",
+            "titelMit": "{anzahl} proprjetajiet mingħajr deskrizzjoni",
+            "hinweis": "Paġna ta’ proprjetà mingħajr test tikkonsisti f’ritratti, prezz u kalendarju. Id-deskrizzjoni hija l-uniku kontenut tagħha."
+          },
+          "zahlung_nicht_bereit": {
+            "titel": "Il-ħlasijiet għadhom ma ġewx issettjati",
+            "titelMit": "Il-ħlasijiet għadhom ma ġewx issettjati",
+            "hinweis": "Is-sit jaċċetta mistoqsijiet, iżda mhux prenotazzjonijiet bi ħlas. Sakemm Stripe ma jkunx lest biex jiċċarġja jew ma jkunx imdaħħal indirizz PayPal, il-mistieden jara “Ibgħat mistoqsija” minflok “Irriserva u ħallas”."
+          }
+        }
       }
+    },
+    "anfragen": {
+      "titel": "Talbiet",
+      "keine": "Għadha ma waslet ebda talba.",
+      "ungelesen": "{anzahl} mhux moqrija",
+      "alleGelesen": "Kollox moqri.",
+      "ohneName": "Formola",
+      "csvExport": "Niżżel bħala CSV",
+      "loeschen": "Ħassar għal dejjem",
+      "geloescht": "It-talba tħassret."
     }
   },
   "dynamicPricing": {

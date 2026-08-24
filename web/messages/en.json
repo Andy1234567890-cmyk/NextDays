@@ -4843,10 +4843,10 @@
     },
     "taskStatusAction": {
       "open": "Put back",
-      "reopen": "Reopen",
       "accepted": "Accept",
       "in_progress": "Start",
-      "done": "Complete"
+      "done": "Complete",
+      "reopen": "Reopen"
     },
     "taskStatusChanged": {
       "open": "Put back.",
@@ -7222,7 +7222,14 @@
       "zurListe": "All sections",
       "zurueck": "Back to overview",
       "frageHinzufuegen": "Add question",
-      "fragenMax": "More than {max} questions are not possible."
+      "fragenMax": "More than {max} questions are not possible.",
+      "stimmeHinzufuegen": "Add testimonial",
+      "stimmenMax": "More than {max} testimonials are not possible.",
+      "merkmalHinzufuegen": "Add feature",
+      "merkmaleMax": "More than {max} features are not possible.",
+      "darstellung": "Appearance",
+      "feldHinzufuegen": "Add field",
+      "formfelderMax": "More than {max} fields are not possible."
     },
     "pages": {
       "newPage": "New page",
@@ -7310,7 +7317,14 @@
       "ungespeichert": "Unsaved changes",
       "verwerfen": "Discard",
       "weitereOptionen": "More options",
-      "zurueck": "Back"
+      "zurueck": "Back",
+      "groessenTitel": "Sizes",
+      "groessenHinweis": "Width of the content and size of the type. Without a choice, the values of the template apply.",
+      "inhaltsbreite": "Content width",
+      "ueberschriftenGroesse": "Headings",
+      "textGroesse": "Body text",
+      "groesseStandard": "Default",
+      "groesseZuruecksetzen": "Reset to default"
     },
     "paletten": {
       "holz": "Wood",
@@ -7328,7 +7342,10 @@
       "buttonText": "Text on buttons",
       "linkAufHintergrund": "Links against the background",
       "schriftAufFlaeche": "Text on surfaces",
-      "schriftAufHintergrund": "Text against the background"
+      "schriftAufHintergrund": "Text against the background",
+      "kopfLinkAufKopf": "Menu on the header",
+      "markenNameAufKopf": "Business name on the header",
+      "textAufFuss": "Text on the footer"
     },
     "kopf": {
       "entwurfAnsehen": "View draft",
@@ -7352,7 +7369,8 @@
       "objekte": "Properties",
       "seiten": "Pages",
       "widgets": "Widgets",
-      "seo": "SEO"
+      "seo": "SEO",
+      "anfragen": "Enquiries"
     },
     "baukasten": {
       "keinZugriff": "You do not have access to the website builder."
@@ -7423,7 +7441,64 @@
         "header": "To the header",
         "none": "Don't link"
       },
-      "zurueckziehen": "Unpublish"
+      "zurueckziehen": "Unpublish",
+      "duplizieren": "Duplicate",
+      "typ": {
+        "normal": {
+          "name": "Page",
+          "hinweis": "A page that you fill with sections."
+        },
+        "external": {
+          "name": "External menu item",
+          "hinweis": "A menu item that leads to another website.",
+          "adresseHinweis": "Opens in a new window."
+        },
+        "folder": {
+          "name": "Menu folder",
+          "hinweis": "Groups pages in the menu. Not a page itself.",
+          "keiner": "No folder",
+          "zuordnen": "In folder"
+        },
+        "error404": {
+          "name": "Error page (404)",
+          "hinweis": "What a guest sees after a typo. Only one per website."
+        },
+        "post": {
+          "name": "Blog post",
+          "hinweis": "A post for the blog. Appears at /blog, not in the menu."
+        }
+      },
+      "vorlage": {
+        "label": "Template",
+        "keine": "Empty page",
+        "ueber_uns": "About us",
+        "kontakt": "Contact",
+        "anfahrt": "Getting here",
+        "hausordnung": "House rules",
+        "umgebung": "The area",
+        "faq": "Frequently asked questions"
+      },
+      "popup": {
+        "ausloeser": "When it appears",
+        "trigger": {
+          "delay": "After a few seconds",
+          "exit": "When leaving the page",
+          "scroll": "After a share of the page is read"
+        },
+        "einheitSekunden": "seconds",
+        "einheitProzent": "percent",
+        "hinweis": "Appears once per visitor. On the phone, “When leaving” becomes a display after 20 seconds."
+      },
+      "beitrag": {
+        "datum": "Publication date",
+        "datumHinweis": "In the future = scheduled. The post then appears by itself.",
+        "autor": "Author",
+        "titelbild": "Cover image",
+        "anriss": "Teaser",
+        "anrissHinweis": "The text in the post list. Empty = the start of the first paragraph.",
+        "schlagwoerter": "Tags",
+        "schlagwoerterHinweis": "Comma-separated, eight at most."
+      }
     },
     "vorlagen": {
       "angewendet": "Template applied.",
@@ -7549,7 +7624,17 @@
       "spacer": "Spacer",
       "spacerHinweis": "Empty space between two sections.",
       "faq": "Questions & answers",
-      "faqHinweis": "Expandable questions. With structured data they also appear in search results."
+      "faqHinweis": "Expandable questions. With structured data they also appear in search results.",
+      "map": "Map",
+      "mapHinweis": "Shows the location. Without an address, the one from the company profile is used.",
+      "testimonials": "Testimonials",
+      "testimonialsHinweis": "Quotes you type in yourself. There is a separate section for real reviews.",
+      "features": "Features",
+      "featuresHinweis": "What you offer — icon, heading, text in columns.",
+      "form": "Form",
+      "formHinweis": "A form that guests fill in. The enquiries land in the “Enquiries” tab.",
+      "posts": "Latest posts",
+      "postsHinweis": "Shows the newest blog posts. The blog itself lives at /blog."
     },
     "felder": {
       "abstandGross": "Large",
@@ -7593,7 +7678,71 @@
       "ziel": "Destination",
       "fragen": "Questions",
       "frage": "Question",
-      "antwort": "Answer"
+      "antwort": "Answer",
+      "zoom": "Zoom level",
+      "stimmen": "Testimonials",
+      "merkmale": "Features",
+      "zitat": "Quote",
+      "name": "Name",
+      "ort": "Location",
+      "symbol": "Icon",
+      "symbolKeines": "No icon",
+      "spalten": "Columns",
+      "symbolName": {
+        "wlan": "Wi-Fi",
+        "parken": "Parking",
+        "kueche": "Kitchen",
+        "fruehstueck": "Breakfast",
+        "pool": "Pool",
+        "sauna": "Sauna",
+        "haustiere": "Pets",
+        "familie": "Family",
+        "fahrrad": "Bicycle",
+        "strand": "Beach",
+        "berge": "Mountains",
+        "garten": "Garden",
+        "kamin": "Fireplace",
+        "waschmaschine": "Washing machine",
+        "klimaanlage": "Air conditioning",
+        "barrierefrei": "Accessible",
+        "schluessel": "Key",
+        "uhr": "Clock",
+        "herz": "Heart",
+        "stern": "Star",
+        "haus": "House",
+        "karte": "Map"
+      },
+      "hintergrundfarbe": "Background colour",
+      "hintergrundbild": "Background image",
+      "abdunkeln": "Darken image",
+      "abdunkelnHinweis": "Needed so that text stays legible on the image.",
+      "abstand": "Spacing above and below",
+      "abstandWert": {
+        "none": "Collapsed",
+        "sm": "Tight",
+        "md": "Normal",
+        "lg": "Airy"
+      },
+      "einleitung": "Introduction",
+      "formularfelder": "Fields",
+      "knopfText": "Text on the button",
+      "danketext": "Text after sending",
+      "empfaenger": "Email for enquiries",
+      "formularName": "Internal name",
+      "feldart": "Type of field",
+      "pflichtfeld": "Required field",
+      "optionenHinweis": "One option per line",
+      "feldartName": {
+        "text": "Text (single line)",
+        "textarea": "Text (multiple lines)",
+        "email": "Email",
+        "phone": "Phone",
+        "number": "Number",
+        "date": "Date",
+        "select": "Selection",
+        "checkbox": "Checkbox",
+        "consent": "Privacy consent"
+      }
     },
     "vorschau": {
       "desktop": "Computer",
@@ -7772,7 +7921,83 @@
         "importErgebnis": "{neu} new, {geaendert} changed, {uebersprungen} skipped.",
         "weitereFehler": "{anzahl} further rows with errors.",
         "vorrangHinweis": "A redirect only takes effect when there is no page at the old address. An existing page always takes precedence."
+      },
+      "pruefung": {
+        "titel": "What is still missing",
+        "hinweis": "We check what we can check. Whether a page is found well is decided by Google — not by this list.",
+        "beheben": "Fix",
+        "weitere": "and {anzahl} more",
+        "nichtsVeroeffentlicht": "No page published yet — there is nothing to check.",
+        "allesGepflegt": "Everything we can check is in order.",
+        "allesGepflegtHinweis": "{anzahl} published pages with no findings. That is no guarantee of good rankings, but the basics are right.",
+        "code": {
+          "site_noindex": {
+            "titel": "Website is excluded from the search index",
+            "titelMit": "Website is excluded from the search index ({anzahl} pages affected)",
+            "hinweis": "As long as the switch is on, nobody will find this website through a search engine."
+          },
+          "keine_domain": {
+            "titel": "No own domain connected",
+            "titelMit": "No own domain connected",
+            "hinweis": "Without an address of your own there is no sitemap.xml, no robots.txt and no llms.txt."
+          },
+          "seiten_ohne_titel": {
+            "titel": "Pages without a Meta title",
+            "titelMit": "{anzahl} pages without a Meta title",
+            "hinweis": "The Meta title is the headline in the search result. If it is missing, Google takes some text from the page instead."
+          },
+          "seiten_ohne_beschreibung": {
+            "titel": "Pages without a Meta description",
+            "titelMit": "{anzahl} pages without a Meta description",
+            "hinweis": "The text below the title decides whether people click."
+          },
+          "seiten_gleiche_beschreibung": {
+            "titel": "Pages using the site-wide description",
+            "titelMit": "{anzahl} pages use the site-wide description",
+            "hinweis": "These pages do have a description — but all of them the same one. One of their own per page achieves considerably more."
+          },
+          "doppelte_titel": {
+            "titel": "Pages with the same Meta title",
+            "titelMit": "{anzahl} pages with the same Meta title",
+            "hinweis": "Two pages with the same title compete for the same search query. Google reports this itself in the Search Console."
+          },
+          "kein_firmenname": {
+            "titel": "Company profile without a name",
+            "titelMit": "Company profile without a name",
+            "hinweis": "Without a name in the company profile the website delivers no business details to Google — the switch under “Structured data” stays without effect."
+          },
+          "keine_anschrift": {
+            "titel": "Company profile without an address",
+            "titelMit": "Company profile without an address",
+            "hinweis": "With an address Google can tie the business to a place and show it in local search."
+          },
+          "keine_messung": {
+            "titel": "No Google ID stored",
+            "titelMit": "No Google ID stored",
+            "hinweis": "Without an ID you do not know how many visitors the website has and where they come from."
+          },
+          "objekte_ohne_text": {
+            "titel": "Properties without a description",
+            "titelMit": "{anzahl} properties without a description",
+            "hinweis": "A property page without text consists of images, price and calendar. The description is its only content."
+          },
+          "zahlung_nicht_bereit": {
+            "titel": "Payments not set up yet",
+            "titelMit": "Payments not set up yet",
+            "hinweis": "The website takes enquiries, but no bookings with payment. As long as Stripe is not ready to charge or no PayPal address is stored, the guest sees “Send enquiry” instead of “Reserve & pay”."
+          }
+        }
       }
+    },
+    "anfragen": {
+      "titel": "Enquiries",
+      "keine": "No enquiries received yet.",
+      "ungelesen": "{anzahl} unread",
+      "alleGelesen": "All read.",
+      "ohneName": "Form",
+      "csvExport": "Download as CSV",
+      "loeschen": "Delete permanently",
+      "geloescht": "Enquiry deleted."
     }
   },
   "dynamicPricing": {

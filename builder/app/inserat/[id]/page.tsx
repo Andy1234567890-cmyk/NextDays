@@ -2,12 +2,16 @@
 // und seitliches Buchungs-Widget. Daten aus dem Backend (booking_engine,
 // nur active Objekte). Keine erfundenen Bewertungen/Texte.
 import { Icon } from "@iconify/react";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { BuchungsWidget } from "@/components/buchungs-widget";
 import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import { SiteShell } from "@/components/site-shell";
+import { ObjektStrukturierteDaten } from "@/components/strukturierte-daten";
+import { aktuellerHost } from "@/lib/host";
 import { ladeInserat } from "@/lib/inserate";
+import { basisUrl } from "@/lib/seo";
 import { getSiteContext, navOf } from "@/lib/site-context";
 import { spracheWaehlen } from "@/lib/sprache";
 
@@ -23,6 +27,76 @@ const AMENITY_META: Record<string, { icon: string; label: string }> = {
   pets: { icon: "ph:paw-print", label: "Haustiere erlaubt" },
 };
 
+/** Die <head>-Angaben einer Objektseite (0430).
+ *
+ *  Sie fehlten vollständig: jede Objektseite trug den Titel der Website und die
+ *  Beschreibung aus dem Root-Layout. Damit hatten zwanzig Objekte im
+ *  Suchergebnis zwanzigmal dieselbe Zeile — für Google das Kennzeichen
+ *  austauschbarer Seiten, und für den Gast kein Hinweis, welche Unterkunft er
+ *  anklickt.
+ *
+ *  Der Titel ist der Objektname, die Beschreibung ihr Anfang. Beides sind echte
+ *  Daten des Objekts, kein erfundener Text: der Auszug ist eine Kürzung, keine
+ *  Erfindung (Wurzel 4). Fehlt die Beschreibung, fehlt auch die Meta-Angabe —
+ *  dann schreibt Google sich selbst eine aus dem Seiteninhalt, und die ist
+ *  besser als ein generischer Satz. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const { tenantId, branding } = await getSiteContext();
+  const host = await aktuellerHost();
+  if (!tenantId || !host) return {};
+  const listing = await ladeInserat(id, {}, tenantId);
+  if (!listing) return {};
+
+  const marke = branding?.site_name?.trim();
+  const titel = marke ? `${listing.titel} — ${marke}` : listing.titel;
+  const absolut = `${basisUrl(host)}/inserat/${listing.id}`;
+  // Auf 300 Zeichen kürzen und am letzten Satzende abschneiden: ein Auszug, der
+  // mitten im Wort endet, liest sich in einem Suchergebnis wie ein Fehler.
+  const roh = listing.beschreibung?.trim();
+  let auszug: string | null = null;
+  if (roh) {
+    const kurz = roh.slice(0, 300);
+    const ende = Math.max(
+      kurz.lastIndexOf(". "),
+      kurz.lastIndexOf("! "),
+      kurz.lastIndexOf("? "),
+    );
+    auszug = roh.length > 300 && ende > 80 ? kurz.slice(0, ende + 1) : kurz;
+  }
+  const bild = listing.fotos[0];
+
+  return {
+    metadataBase: new URL(basisUrl(host)),
+    title: titel,
+    ...(auszug ? { description: auszug } : {}),
+    alternates: { canonical: absolut },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: { index: true, follow: true, "max-image-preview": "large" },
+    },
+    openGraph: {
+      type: "website",
+      url: absolut,
+      title: titel,
+      ...(marke ? { siteName: marke } : {}),
+      ...(auszug ? { description: auszug } : {}),
+      ...(bild ? { images: [{ url: bild }] } : {}),
+    },
+    twitter: {
+      card: bild ? "summary_large_image" : "summary",
+      title: titel,
+      ...(auszug ? { description: auszug } : {}),
+      ...(bild ? { images: [bild] } : {}),
+    },
+  };
+}
+
 export default async function InseratPage({
   params,
 }: {
@@ -37,6 +111,9 @@ export default async function InseratPage({
   if (!listing) notFound();
 
   const galerieHues = [0, 20, 40, 60, 80].map((d) => (listing.hue + d) % 360);
+  // Für die strukturierten Daten braucht es absolute Adressen — ein relativer
+  // Wert in einem JSON-LD ist für Google wertlos.
+  const host = await aktuellerHost();
 
   return (
     <SiteShell
@@ -45,6 +122,13 @@ export default async function InseratPage({
       jahr={new Date().getFullYear()}
       sprache={spracheWaehlen(branding)}
     >
+      {host ? (
+        <ObjektStrukturierteDaten
+          branding={branding}
+          basisUrl={basisUrl(host)}
+          objekt={listing}
+        />
+      ) : null}
       <div className="mx-auto w-full max-w-6xl px-6 py-6">
         {/* Titelzeile */}
         <div className="mb-4">
@@ -168,6 +252,10 @@ export default async function InseratPage({
                     ? `/${branding.privacy_policy_slug}`
                     : null
                 }
+                // Kann der Betrieb überhaupt kassieren? Ohne diese Angabe
+                // durchlief der Gast die ganze Strecke und scheiterte am
+                // Zahlungsschritt mit einem 409.
+                zahlungenBereit={branding?.payments_ready === true}
               />
             </div>
           </div>

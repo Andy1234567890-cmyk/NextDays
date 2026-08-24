@@ -4822,10 +4822,10 @@
     },
     "taskStatusAction": {
       "open": "Cuir ar ais",
-      "reopen": "Athoscail",
       "accepted": "Glac leis",
       "in_progress": "Tosaigh",
-      "done": "Críochnaigh"
+      "done": "Críochnaigh",
+      "reopen": "Athoscail"
     },
     "taskStatusChanged": {
       "open": "Curtha ar ais.",
@@ -7130,7 +7130,8 @@
       "einstellungen": "Socruithe",
       "objekte": "Réadmhaoin",
       "widgets": "Giuirléidí",
-      "seo": "SEO"
+      "seo": "SEO",
+      "anfragen": "Fiosruithe"
     },
     "kopf": {
       "websiteAnsehen": "Féach ar an suíomh",
@@ -7230,7 +7231,14 @@
       "logoZiel": "Sprioc cliceáil an lógó",
       "logoZielLeer": "Leathanach baile",
       "namensGroesse": "Méid an ainm",
-      "sloganText": "Téacs"
+      "sloganText": "Téacs",
+      "groessenTitel": "Méideanna",
+      "groessenHinweis": "Leithead an ábhair agus méid an chló. Gan rogha, baineann luachanna an teimpléid.",
+      "inhaltsbreite": "Leithead an ábhair",
+      "ueberschriftenGroesse": "Ceannteidil",
+      "textGroesse": "Príomhthéacs",
+      "groesseStandard": "Réamhshocrú",
+      "groesseZuruecksetzen": "Ar ais go dtí an réamhshocrú"
     },
     "paletten": {
       "schlicht": "Simplí",
@@ -7248,7 +7256,10 @@
       "schriftAufHintergrund": "Téacs ar an gcúlra",
       "schriftAufFlaeche": "Téacs ar dhromchlaí",
       "buttonText": "Lipéad ar chnaipí",
-      "linkAufHintergrund": "Naisc ar an gcúlra"
+      "linkAufHintergrund": "Naisc ar an gcúlra",
+      "kopfLinkAufKopf": "Roghchlár ar an gceanntásc",
+      "markenNameAufKopf": "Ainm an ghnólachta ar an gceanntásc",
+      "textAufFuss": "Téacs ar an mbuntásc"
     },
     "seiten": {
       "bereichTitel": {
@@ -7316,7 +7327,64 @@
       "alleSprachenHinweis": "An gnáthchás — feictear an leathanach gach áit a bhfeictear do shuíomh.",
       "abbrechen": "Cealaigh",
       "speichern": "Sábháil",
-      "einstellungenGespeichert": "Socruithe an leathanaigh sábháilte."
+      "einstellungenGespeichert": "Socruithe an leathanaigh sábháilte.",
+      "duplizieren": "Cóipeáil",
+      "typ": {
+        "normal": {
+          "name": "Leathanach",
+          "hinweis": "Leathanach a líonann tú le rannóga."
+        },
+        "external": {
+          "name": "Mír roghchláir sheachtrach",
+          "hinweis": "Mír roghchláir a threoraíonn chuig suíomh gréasáin eile.",
+          "adresseHinweis": "Osclaítear i bhfuinneog nua."
+        },
+        "folder": {
+          "name": "Fillteán roghchláir",
+          "hinweis": "Grúpálann sé leathanaigh sa roghchlár. Ní leathanach é féin.",
+          "zuordnen": "San fhillteán",
+          "keiner": "Gan fhillteán"
+        },
+        "error404": {
+          "name": "Leathanach earráide (404)",
+          "hinweis": "An rud a fheiceann aoi tar éis botún cló. Ceann amháin in aghaidh an tsuímh."
+        },
+        "post": {
+          "name": "Postáil bhlag",
+          "hinweis": "Postáil don bhlag. Taispeántar ag /blog í, ní sa roghchlár."
+        }
+      },
+      "vorlage": {
+        "label": "Teimpléad",
+        "keine": "Leathanach folamh",
+        "ueber_uns": "Fúinn",
+        "kontakt": "Teagmháil",
+        "anfahrt": "Conas teacht chugainn",
+        "hausordnung": "Rialacha an tí",
+        "umgebung": "An ceantar",
+        "faq": "Ceisteanna coitianta"
+      },
+      "popup": {
+        "ausloeser": "Cathain a thaispeántar é",
+        "trigger": {
+          "delay": "Tar éis cúpla soicind",
+          "exit": "Agus an leathanach á fhágáil",
+          "scroll": "Tar éis sciar léite"
+        },
+        "einheitSekunden": "soicind",
+        "einheitProzent": "faoin gcéad",
+        "hinweis": "Taispeántar uair amháin in aghaidh an chuairteora é. Ar an bhfón, déantar taispeáint tar éis 20 soicind de “Agus an leathanach á fhágáil”."
+      },
+      "beitrag": {
+        "datum": "Dáta foilsithe",
+        "datumHinweis": "Sa todhchaí = sceidealta. Foilsítear an phostáil léi féin ansin.",
+        "autor": "Údar",
+        "titelbild": "Íomhá chlúdaigh",
+        "anriss": "Achoimre",
+        "anrissHinweis": "An téacs i liosta na bpostálacha. Folamh = tús an chéad ailt.",
+        "schlagwoerter": "Clibeanna",
+        "schlagwoerterHinweis": "Scartha le camóg, ocht gcinn ar a mhéad."
+      }
     },
     "vorlagen": {
       "titel": "Tosaigh le teimpléad",
@@ -7358,7 +7426,14 @@
       "objektIdPlatzhalter": "Aitheantóir cóiríochta",
       "objektHinzufuegen": "Cuir leis",
       "frageHinzufuegen": "Cuir ceist leis",
-      "fragenMax": "Ní féidir níos mó ná {max} ceist a chur leis."
+      "fragenMax": "Ní féidir níos mó ná {max} ceist a chur leis.",
+      "stimmeHinzufuegen": "Cuir teistiméireacht leis",
+      "stimmenMax": "Ní féidir níos mó ná {max} teistiméireacht a chur leis.",
+      "merkmalHinzufuegen": "Cuir gné leis",
+      "merkmaleMax": "Ní féidir níos mó ná {max} gné a chur leis.",
+      "darstellung": "Cuma",
+      "feldHinzufuegen": "Cuir réimse leis",
+      "formfelderMax": "Ní féidir níos mó ná {max} réimse a bheith ann."
     },
     "abschnitte": {
       "hero": "Príomhíomhá",
@@ -7384,7 +7459,17 @@
       "gallery": "Gailearaí",
       "galleryHinweis": "Roinnt íomhánna i ngreille.",
       "faq": "Ceisteanna agus freagraí",
-      "faqHinweis": "Ceisteanna inleathnaithe. Le sonraí struchtúrtha taispeántar iad i dtorthaí cuardaigh freisin."
+      "faqHinweis": "Ceisteanna inleathnaithe. Le sonraí struchtúrtha taispeántar iad i dtorthaí cuardaigh freisin.",
+      "map": "Léarscáil",
+      "mapHinweis": "Taispeánann an suíomh. Gan seoladh úsáidtear an ceann ó phróifíl na cuideachta.",
+      "testimonials": "Teistiméireachtaí",
+      "testimonialsHinweis": "Sleachta a chlóscríobhann tú féin. Tá rannóg dá gcuid féin ag léirmheasanna fíora.",
+      "features": "Gnéithe",
+      "featuresHinweis": "An rud a chuireann tú ar fáil — íocón, ceannteideal, téacs i gcolúin.",
+      "form": "Foirm",
+      "formHinweis": "Foirm a líonann aíonna isteach. Tagann na fiosruithe isteach sa chluaisín “Fiosruithe”.",
+      "posts": "Postálacha is déanaí",
+      "postsHinweis": "Taispeánann sé na postálacha blag is nuaí. Tá an blag féin ag /blog."
     },
     "felder": {
       "eyebrow": "Líne bheag os cionn",
@@ -7428,7 +7513,71 @@
       "formularZeigen": "Taispeáin an fhoirm teagmhála",
       "fragen": "Ceisteanna",
       "frage": "Ceist",
-      "antwort": "Freagra"
+      "antwort": "Freagra",
+      "zoom": "Leibhéal súmála",
+      "stimmen": "Teistiméireachtaí",
+      "merkmale": "Gnéithe",
+      "zitat": "Sliocht",
+      "name": "Ainm",
+      "ort": "Áit",
+      "symbol": "Íocón",
+      "symbolKeines": "Gan íocón",
+      "spalten": "Colúin",
+      "symbolName": {
+        "wlan": "Wi-Fi",
+        "parken": "Páirceáil",
+        "kueche": "Cistin",
+        "fruehstueck": "Bricfeasta",
+        "pool": "Linn snámha",
+        "sauna": "Sauna",
+        "haustiere": "Peataí",
+        "familie": "Teaghlach",
+        "fahrrad": "Rothar",
+        "strand": "Trá",
+        "berge": "Sléibhte",
+        "garten": "Gairdín",
+        "kamin": "Tine oscailte",
+        "waschmaschine": "Meaisín níocháin",
+        "klimaanlage": "Aerchóiriú",
+        "barrierefrei": "Inrochtana",
+        "schluessel": "Eochair",
+        "uhr": "Clog",
+        "herz": "Croí",
+        "stern": "Réalta",
+        "haus": "Teach",
+        "karte": "Léarscáil"
+      },
+      "hintergrundfarbe": "Dath an chúlra",
+      "hintergrundbild": "Íomhá chúlra",
+      "abdunkeln": "Dorchaigh an íomhá",
+      "abdunkelnHinweis": "Riachtanach chun go bhfanfaidh téacs ar an íomhá inléite.",
+      "abstand": "Spás thuas agus thíos",
+      "abstandWert": {
+        "none": "Comhbhrúite",
+        "sm": "Cúng",
+        "md": "Gnáth",
+        "lg": "Fairsing"
+      },
+      "einleitung": "Réamhrá",
+      "formularfelder": "Réimsí",
+      "knopfText": "Téacs ar an gcnaipe",
+      "danketext": "Téacs tar éis an tseolta",
+      "empfaenger": "Ríomhphost do na fiosruithe",
+      "formularName": "Ainm inmheánach",
+      "feldart": "Cineál an réimse",
+      "pflichtfeld": "Réimse riachtanach",
+      "optionenHinweis": "Rogha amháin sa líne",
+      "feldartName": {
+        "text": "Téacs (líne amháin)",
+        "textarea": "Téacs (línte iomadúla)",
+        "email": "Ríomhphost",
+        "phone": "Teileafón",
+        "number": "Uimhir",
+        "date": "Dáta",
+        "select": "Rogha",
+        "checkbox": "Ticbhosca",
+        "consent": "Toiliú cosanta sonraí"
+      }
     },
     "vorschau": {
       "titel": "Réamhamharc",
@@ -7696,7 +7845,83 @@
         "importErgebnis": "{neu} nua, {geaendert} athraithe, {uebersprungen} scipeáilte.",
         "weitereFehler": "{anzahl} líne eile le hearráidí.",
         "vorrangHinweis": "Ní fheidhmíonn atreorú ach mura bhfuil leathanach ann ag an seanseoladh. Bíonn tosaíocht i gcónaí ag leathanach atá ann cheana."
+      },
+      "pruefung": {
+        "titel": "Cad atá in easnamh fós",
+        "hinweis": "Seiceálaimid an méid is féidir linn a sheiceáil. Is Google a shocraíonn an bhfaightear leathanach go maith — ní an liosta seo.",
+        "beheben": "Ceartaigh",
+        "weitere": "agus {anzahl} eile",
+        "nichtsVeroeffentlicht": "Níl aon leathanach foilsithe go fóill — níl aon rud le seiceáil.",
+        "allesGepflegt": "Tá gach rud is féidir linn a sheiceáil in ord.",
+        "allesGepflegtHinweis": "{anzahl} leathanach foilsithe gan aon fhadhb. Ní ráthaíocht ar dhea-rangú é sin, ach tá an bunús ceart.",
+        "code": {
+          "site_noindex": {
+            "titel": "Tá an suíomh gréasáin fágtha as an innéacs cuardaigh",
+            "titelMit": "Tá an suíomh gréasáin fágtha as an innéacs cuardaigh ({anzahl} leathanach i gceist)",
+            "hinweis": "Fad a bheidh an lasc air, ní gheobhaidh aon duine an suíomh seo trí inneall cuardaigh."
+          },
+          "keine_domain": {
+            "titel": "Níl fearann dá chuid féin ceangailte",
+            "titelMit": "Níl fearann dá chuid féin ceangailte",
+            "hinweis": "Gan seoladh dá chuid féin, níl aon sitemap.xml, aon robots.txt ná aon llms.txt ann."
+          },
+          "seiten_ohne_titel": {
+            "titel": "Leathanaigh gan meiteatheideal",
+            "titelMit": "{anzahl} leathanach gan meiteatheideal",
+            "hinweis": "Is é an meiteatheideal an ceannlíne sa toradh cuardaigh. Má tá sé in easnamh, tógann Google téacs éigin ón leathanach."
+          },
+          "seiten_ohne_beschreibung": {
+            "titel": "Leathanaigh gan meiteathuairisc",
+            "titelMit": "{anzahl} leathanach gan meiteathuairisc",
+            "hinweis": "Socraíonn an téacs faoin teideal an gcliceálfar é."
+          },
+          "seiten_gleiche_beschreibung": {
+            "titel": "Leathanaigh a úsáideann tuairisc an tsuímh ar fad",
+            "titelMit": "{anzahl} leathanach a úsáideann tuairisc an tsuímh ar fad",
+            "hinweis": "Tá tuairisc ar na leathanaigh seo — ach an ceann céanna ar fad. Bíonn tuairisc dá gcuid féin ar gach leathanach i bhfad níos éifeachtaí."
+          },
+          "doppelte_titel": {
+            "titel": "Leathanaigh a bhfuil an meiteatheideal céanna orthu",
+            "titelMit": "{anzahl} leathanach a bhfuil an meiteatheideal céanna orthu",
+            "hinweis": "Bíonn dhá leathanach a bhfuil an teideal céanna orthu in iomaíocht ar an iarratas cuardaigh céanna. Tuairiscíonn Google é sin sa Search Console."
+          },
+          "kein_firmenname": {
+            "titel": "Próifíl ghnólachta gan ainm",
+            "titelMit": "Próifíl ghnólachta gan ainm",
+            "hinweis": "Gan ainm sa phróifíl ghnólachta, ní sheolann an suíomh aon sonraí gnó chuig Google — fanann an lasc faoi “Sonraí struchtúrtha” gan éifeacht."
+          },
+          "keine_anschrift": {
+            "titel": "Próifíl ghnólachta gan seoladh",
+            "titelMit": "Próifíl ghnólachta gan seoladh",
+            "hinweis": "Le seoladh, is féidir le Google an gnólacht a cheangal le háit agus é a thaispeáint sa chuardach áitiúil."
+          },
+          "keine_messung": {
+            "titel": "Níl aon aitheantóir Google stóráilte",
+            "titelMit": "Níl aon aitheantóir Google stóráilte",
+            "hinweis": "Gan aitheantóir, níl a fhios agat cé mhéad cuairteoir a thagann ar an suíomh ná cárb as a dtagann siad."
+          },
+          "objekte_ohne_text": {
+            "titel": "Réadmhaoin gan tuairisc",
+            "titelMit": "{anzahl} réadmhaoin gan tuairisc",
+            "hinweis": "Ní bhíonn i leathanach réadmhaoine gan téacs ach íomhánna, praghas agus féilire. Is í an tuairisc an t-aon inneachar atá air."
+          },
+          "zahlung_nicht_bereit": {
+            "titel": "Níl íocaíochtaí socraithe fós",
+            "titelMit": "Níl íocaíochtaí socraithe fós",
+            "hinweis": "Glacann an suíomh le fiosruithe, ach ní ghlacann sé le háirithintí le híocaíocht. Fad is nach bhfuil Stripe réidh le muirearú nó nach bhfuil seoladh PayPal sábháilte, feiceann an t-aoi “Seol fiosrúchán” in ionad “Cuir in áirithe agus íoc”."
+          }
+        }
       }
+    },
+    "anfragen": {
+      "titel": "Fiosruithe",
+      "keine": "Níl aon fhiosrú tagtha isteach fós.",
+      "ungelesen": "{anzahl} gan léamh",
+      "alleGelesen": "Gach ceann léite.",
+      "ohneName": "Foirm",
+      "csvExport": "Íoslódáil mar CSV",
+      "loeschen": "Scrios go buan",
+      "geloescht": "Fiosrú scriosta."
     }
   },
   "dynamicPricing": {

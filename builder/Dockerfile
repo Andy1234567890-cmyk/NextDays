@@ -53,6 +53,18 @@ ENV DASHBOARD_ORIGIN=$DASHBOARD_ORIGIN
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
+# Karten-Abschnitt (0432): der Schlüssel steht im `src` eines iframes und ist
+# damit ohnehin öffentlich — er MUSS `NEXT_PUBLIC_` heißen und zur Bauzeit da
+# sein. Fehlt er, zeigt der Abschnitt statt der Karte einen Link auf Google
+# Maps: das ist die ehrliche Alternative (Wurzel 4) und funktioniert ohne jeden
+# Dienst. Eine leere graue Fläche wäre der Fehler.
+#
+# Wichtig für den Betrieb: der Schlüssel gehört in der Google Cloud Console auf
+# die Kunden-Domains eingeschränkt (HTTP-Referrer), sonst kann ihn jeder
+# verwenden, der ihn im Seitenquelltext liest.
+ARG NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+ENV NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+
 WORKDIR /repo/builder
 RUN bun run build
 

@@ -9,219 +9,54 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-import nh3
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-_HEX_RE = r"^#[0-9a-fA-F]{6}$"
-
-# Erlaubte Link-Schemata für gast-sichtbare hrefs (W-2, Stored-XSS-Schutz):
-# nur http(s)/mailto/tel + relative Pfade. `javascript:`/`data:`/`vbscript:`
-# u. a. werden abgelehnt. Fail-closed (Wurzel 5).
-_SAFE_HREF_SCHEMES = ("http://", "https://", "mailto:", "tel:")
-
-
-# Allowlist für gast-sichtbares Rich-Text (TipTap-Ausgabe). Nur Formatierung,
-# keine Skript-/Einbettungs-Vektoren. nh3 (ammonia) parst echtes HTML statt
-# Regex → entfernt <script>/<svg>/onerror/unquotierte javascript:-hrefs zuverlässig.
-_RICH_TEXT_TAGS = {
-    "p", "br", "strong", "b", "em", "i", "u", "s", "strike",
-    "ul", "ol", "li", "blockquote", "code", "pre",
-    "h1", "h2", "h3", "h4", "h5", "h6", "a", "span",
-}
-# `rel` NICHT hier — nh3 setzt es selbst via link_rel (sonst ValueError).
-_RICH_TEXT_ATTRS = {"a": {"href", "title", "target"}, "span": {"style"}}
-
-
-def _sanitize_rich_html(value: dict[str, str]) -> dict[str, str]:
-    """TipTap-HTML je Locale serverseitig mit echtem Allowlist-Parser säubern
-    (W-1, Stored-XSS). Ersetzt den umgehbaren Regex-Sanitizer im Renderer als
-    verbindlichen Backstop beim Speichern (Wurzel 5, fail-closed)."""
-    return {
-        locale: nh3.clean(
-            html or "",
-            tags=_RICH_TEXT_TAGS,
-            attributes=_RICH_TEXT_ATTRS,
-            url_schemes={"http", "https", "mailto", "tel"},
-            link_rel="noopener noreferrer nofollow",
-        )
-        for locale, html in (value or {}).items()
-    }
-
-
-def _validate_href(value: str | None) -> str | None:
-    """href/cta_href darf beim Gast-Klick kein Skript auslösen. Ein absoluter
-    Link muss ein erlaubtes Schema tragen; relative Pfade (beginnen mit / oder #
-    oder enthalten vor dem ersten / kein ':') sind erlaubt."""
-    if value is None:
-        return None
-    v = value.strip()
-    if not v:
-        return None
-    lower = v.lower()
-    if lower.startswith(_SAFE_HREF_SCHEMES):
-        return v
-    # Relativ/anchor: erlaubt, solange KEIN Schema (kein ':' vor dem ersten '/').
-    scheme_sep = v.find(":")
-    slash = v.find("/")
-    is_relative = scheme_sep == -1 or (slash != -1 and slash < scheme_sep)
-    if v.startswith(("/", "#", "?")) or is_relative:
-        return v
-    raise ValueError("Nicht erlaubtes Link-Schema (nur http(s)/mailto/tel/relativ).")
-
-
-# Sprachen, in denen eine Kunden-Website stehen kann: die 24 EU-Amtssprachen.
-# Muss mit `LOCALES` in `web/i18n/locales.ts` deckungsgleich sein — eine Sprache,
-# für die es keine Oberfläche gibt, wäre eine halbe Website.
-_SITE_LOCALES = frozenset(
-    {
-        "bg", "cs", "da", "de", "el", "en", "es", "et", "fi", "fr", "ga", "hr",
-        "hu", "it", "lt", "lv", "mt", "nl", "pl", "pt", "ro", "sk", "sl", "sv",
-    }
+# pylint: disable=unused-import
+# Re-Export: die geteilten Validatoren und `BlockType` liegen in `basis.py`, die
+# content-Schemas je Abschnitt in `block_inhalte.py`. Beide wurden ausgelagert,
+# weil diese Datei über die `pylint`-Zeilengrenze gelaufen ist — die IMPORTE der
+# übrigen Module bleiben davon unberührt (`from .schemas import BlockType` gilt
+# weiter).
+from .basis import (  # noqa: F401  — Re-Export für die übrigen Module
+    _GTAG_RE,
+    _HEX_RE,
+    _SITE_LOCALES,
+    BlockType,
+    _sanitize_rich_html,
+    _validate_head_html,
+    _validate_href,
+    _validate_kein_html,
+    _validate_locales,
+    _validate_redirect_target,
+    _validate_social,
+    _validate_source_path,
 )
-
-# Tags, die im Kunden-HTML des <head> erlaubt sind.
-#
-# BEWUSST OHNE `script`: der Zweck dieses Feldes ist Verifizierung und
-# Ressourcen-Verweise (google-site-verification, ein Preconnect, ein
-# Canonical-Link). Für Code gibt es `custom_js`, und das lässt die
-# Zahlungsstrecke aus. Wäre `script` hier erlaubt, wäre das HTML-Feld der Weg,
-# an genau dieser Trennung vorbei ein Skript in den Checkout zu bekommen.
-_HEAD_TAGS = frozenset({"meta", "link", "title"})
-
-# `http-equiv` ist BEWUSST nicht dabei. Damit fällt `<meta http-equiv="refresh"
-# content="0;url=…">` weg — eine Weiterleitung der ganzen Kundenseite, die als
-# „Verifizierungs-Tag" getarnt in diesem Feld steht und beim nächsten Ansehen
-# niemandem auffällt. Wer seine Seite weiterleiten will, tut das im DNS oder in
-# der Domain-Einstellung, wo es sichtbar ist.
-_HEAD_ATTRS: dict[str, set[str]] = {
-    "meta": {"name", "property", "content", "charset"},
-    "link": {"rel", "href", "type", "sizes", "crossorigin", "as", "media"},
-    "title": set(),
-}
-
-
-def _validate_head_html(value: str | None) -> str | None:
-    """Kunden-HTML für den <head> auf eine Tag-Allowlist einschränken.
-
-    Mit `nh3` und nicht per Regex: HTML per Zeichenkettenprüfung zu säubern ist
-    der Klassiker unter den umgehbaren Filtern (`<img/onerror=…` kommt an jedem
-    `<script`-Verbot vorbei). `nh3` parst und baut neu — was nicht in der
-    Allowlist steht, existiert danach nicht mehr.
-
-    Wird der Inhalt dabei VOLLSTÄNDIG entfernt, ist das ein Fehler und kein
-    stiller Erfolg: der Kunde hätte sonst ein leeres Feld gespeichert und würde
-    den Grund nie erfahren (Wurzel 5)."""
-    if value is None:
-        return None
-    v = value.strip()
-    if not v:
-        return None
-    sauber = nh3.clean(
-        v,
-        tags=set(_HEAD_TAGS),
-        attributes={k: set(a) for k, a in _HEAD_ATTRS.items()},
-        # Nur http(s): ein `javascript:` in einem link-href ist kein Verweis,
-        # sondern Code.
-        url_schemes={"http", "https"},
-        # Kein `rel="noopener"` anhängen — das ist eine Regel für Links im
-        # Seiteninhalt und hätte im <head> nichts zu bedeuten; sie würde nur ein
-        # vom Kunden gesetztes `rel` überschreiben.
-        link_rel=None,
-    ).strip()
-    if not sauber:
-        raise ValueError(
-            "Im Kopfzeilen-HTML sind nur <meta>, <link> und <title> erlaubt. "
-            "Skripte gehören in das JavaScript-Feld."
-        )
-    # Hat der Parser Attribute VERWORFEN, ist das ein Fehler und kein Erfolg.
-    #
-    # Der Fall, der es nötig macht: `<link rel=stylesheet href="javascript:…">`
-    # kommt als `<link rel="stylesheet">` zurück — sicher, aber sinnlos. Ohne
-    # diese Prüfung hätte der Kunde einen Verweis ohne Ziel gespeichert und
-    # nichts hätte ihm gesagt, dass sein href verworfen wurde (Wurzel 5).
-    #
-    # Das ist KEINE Säuberung per Zeichenkette (die wäre umgehbar), sondern ein
-    # Vergleich NACH dem echten Parser: gezählt wird, ob gleich viele
-    # Nutzlast-Attribute übrig sind.
-    # `http-equiv` steht mit in der Liste, obwohl es kein Nutzlast-Attribut ist:
-    # es ist nicht erlaubt, und ohne diese Zeile bliebe ein
-    # `<meta http-equiv="refresh" content="…">` als wirkungsloses
-    # `<meta content="…">` stehen — gespeichert, ohne Wirkung, ohne Hinweis.
-    for attribut in ("href", "content", "src", "http-equiv"):
-        if v.lower().count(attribut + "=") > sauber.lower().count(attribut + "="):
-            raise ValueError(
-                f"Ein {attribut}-Wert wurde verworfen — erlaubt sind nur "
-                "vollständige http(s)-Adressen."
-            )
-    return sauber
-
-
-def _validate_kein_html(value: str | None) -> str | None:
-    """CSS-/JS-Feld: nur Länge und Leerraum, KEINE Struktur-Prüfung.
-
-    Ein `</style>`-Ausbruch im CSS wäre ein Problem — der Renderer verhindert ihn
-    dort, wo er entsteht, indem er den Inhalt nicht in ein Element schreibt,
-    sondern über eine CSS-Datei-Route ausliefert. Hier zu „säubern" würde
-    gültiges CSS zerstören (ein `>` im Selektor ist normal)."""
-    if value is None:
-        return None
-    v = value.strip()
-    return v or None
-
-
-def _validate_locales(value: list[str] | None) -> list[str] | None:
-    """Sprachliste prüfen: bekannte Codes, keine Dubletten, mindestens eine.
-
-    Eine leere Liste wird zu `None` — „keine Sprache" ist kein gültiger Zustand
-    für eine Website, „noch nicht gewählt" schon."""
-    if value is None:
-        return None
-    gesehen: list[str] = []
-    for roh in value:
-        code = (roh or "").strip().lower()
-        if not code:
-            continue
-        if code not in _SITE_LOCALES:
-            raise ValueError(f"Unbekannte Sprache: {roh}")
-        if code not in gesehen:
-            gesehen.append(code)
-    return gesehen or None
-
-
-# Social-Netzwerke, die die Fußzeile der Kunden-Site rendert. Die Liste ist die
-# Allowlist: ein unbekannter Schlüssel wird abgelehnt statt still gespeichert und
-# nie angezeigt — sonst tippt der Kunde seinen Threads-Link ein, sieht ihn
-# nirgends und hält den Baukasten für kaputt.
-#
-# Muss mit `SOCIAL` in `builder/components/site-footer.tsx` deckungsgleich sein.
-_SOCIAL_KEYS = frozenset(
-    {"instagram", "facebook", "youtube", "linkedin", "pinterest", "tiktok"}
+from .block_inhalte import (  # noqa: F401  — Re-Export
+    ButtonContent,
+    ContactContent,
+    FaqContent,
+    FaqItem,
+    FeaturedPropertiesContent,
+    FeatureItem,
+    FeaturesContent,
+    FormContent,
+    FormField,
+    FormFieldType,
+    GalleryContent,
+    GalleryImage,
+    HeroContent,
+    ImageContent,
+    MapContent,
+    PostsContent,
+    PropertiesGridContent,
+    ReviewsContent,
+    RichTextContent,
+    SearchContent,
+    SpacerContent,
+    TestimonialItem,
+    TestimonialsContent,
+    validate_block_content,
 )
-
-
-def _validate_social(value: dict[str, str]) -> dict[str, str]:
-    """Social-Links prüfen: bekannter Schlüssel, absolute http(s)-Adresse.
-
-    Diese Werte landen ungeprüft in einem `href` der Gast-Fußzeile. Der Renderer
-    hat einen eigenen Backstop, aber der Schutz gehört ans SPEICHERN — sonst
-    liegt ein `javascript:`-Wert in der Datenbank und wartet auf die erste
-    Anzeigestelle, die ihn ohne Prüfung ausgibt (Wurzel 8).
-
-    Leere Werte werden entfernt, nicht als Leerstring gespeichert: „kein
-    Instagram" ist das Fehlen des Schlüssels, nicht ein leerer Link."""
-    out: dict[str, str] = {}
-    for key, raw in (value or {}).items():
-        if key not in _SOCIAL_KEYS:
-            raise ValueError(f"Unbekanntes Netzwerk: {key}")
-        v = (raw or "").strip()
-        if not v:
-            continue
-        if not v.lower().startswith(("http://", "https://")):
-            raise ValueError(
-                f"{key}: nur vollständige http(s)-Adressen (z. B. https://…)."
-            )
-        out[key] = v
-    return out
 
 
 class BookingMode(StrEnum):
@@ -338,6 +173,36 @@ class BrandingBase(BaseModel):
     privacy_policy_page_id: str | None = None
     is_offline: bool = False
 
+    # --- SEO/AEO site-weit (0430) ------------------------------------------
+    # Der Rückfall für jede Seite ohne eigene Angabe. Die Längen sind die
+    # Empfehlungen der Suchmaschinen (Titel ~60, Beschreibung ~160 Zeichen),
+    # aber als GROSSZÜGIGE Obergrenze und nicht als Zwang: eine Suchmaschine
+    # schneidet zu lange Texte ab, das ist kein Fehler. Ein hartes Limit bei 60
+    # würde einen deutschen Titel unmöglich machen (Komposita).
+    seo_title: str | None = Field(default=None, max_length=200)
+    seo_description: str | None = Field(default=None, max_length=500)
+    seo_keywords: str | None = Field(default=None, max_length=500)
+    noindex: bool = False
+    gtag_id: str | None = Field(default=None, pattern=_GTAG_RE)
+    # Strukturierte Daten. Standard AN, weil der Renderer sie aus geprüften
+    # eigenen Feldern baut — es ist kein Kundencode (siehe Migration 0430).
+    schema_organization: bool = True
+    schema_breadcrumbs: bool = True
+    schema_lodging: bool = True
+    schema_faq: bool = True
+    # Core Web Vitals.
+    lazy_loading: bool = True
+    # Default true, weil der Renderer seine Schriften schon immer mit
+    # `display=swap` lädt — siehe Begründung in Migration 0430.
+    system_fonts_first: bool = True
+
+    # --- Theme: Breite und Schriftgrößen (0435) -----------------------------
+    # Grenzen wie die CHECKs in 0435. Sie stehen hier ZUSÄTZLICH, damit der Kunde
+    # eine Meldung bekommt statt eines 23514-Fehlers.
+    content_width: int | None = Field(default=None, ge=960, le=1920)
+    heading_scale: int | None = Field(default=None, ge=80, le=130)
+    body_scale: int | None = Field(default=None, ge=80, le=130)
+
     _v_logo_url = field_validator("logo_url")(_validate_href)
     _v_hero_image_url = field_validator("hero_image_url")(_validate_href)
     _v_favicon_url = field_validator("favicon_url")(_validate_href)
@@ -420,10 +285,24 @@ class CustomDomainListResponse(BaseModel):
 # --- Öffentlicher Resolver (KEIN JWT, service-role) ---------------------------
 class PublicNavItem(BaseModel):
     """Ein Menüpunkt der Kunden-Site. Nur Titel + Slug — der Renderer baut den
-    Pfad selbst (``""`` = "/"), es wandert keine fertige URL durch die API."""
+    Pfad selbst (``""`` = "/"), es wandert keine fertige URL durch die API.
+
+    Die Ausnahme ist ``external_url`` (0433): ein Menüpunkt, der nach außen
+    führt, HAT eine fertige Adresse — sie ist sein ganzer Inhalt. Der Renderer
+    kann sie nicht bauen, weil sie nicht zu dieser Website gehört.
+
+    ``children`` sind die Einträge eines Ordners. Genau eine Ebene tief; ein
+    Kind hat selbst nie Kinder (CHECK in 0433)."""
 
     slug: str
     title: str
+    external_url: str | None = None
+    # `folder` heißt: dieser Eintrag ist selbst KEIN Ziel. Der Renderer macht
+    # daraus eine Gruppe, keinen Link — ohne dieses Feld müsste er aus einer
+    # leeren `children`-Liste raten, und ein Ordner ohne veröffentlichte Kinder
+    # sähe aus wie eine Seite.
+    is_folder: bool = False
+    children: list[PublicNavItem] = Field(default_factory=list)
 
 
 class PublicNav(BaseModel):
@@ -435,6 +314,30 @@ class PublicNav(BaseModel):
 
     header: list[PublicNavItem] = Field(default_factory=list)
     footer: list[PublicNavItem] = Field(default_factory=list)
+
+
+class PublicOrganization(BaseModel):
+    """Firmenangaben für das Organization-/LocalBusiness-JSON-LD (0430).
+
+    Die Quelle ist das FIRMENPROFIL des Betriebs, nicht ein zweites Formular im
+    Baukasten: sonst pflegt der Betrieb seine Anschrift an zwei Stellen und eine
+    davon veraltet still (dieselbe Begründung wie in der Kontakt-Ansicht).
+
+    Jedes Feld darf fehlen. Der Renderer liefert dann entweder ein Schema ohne
+    dieses Feld oder — bei fehlendem Namen — gar keins. Eine erfundene Anschrift
+    in strukturierten Daten ist eine Falschaussage gegenüber Google (Wurzel 4).
+
+    Was hier NICHT hineingehört: Steuernummer, Handelsregister, IBAN. Diese
+    Felder stehen im selben Firmenprofil und sind für ein öffentliches,
+    JWT-loses Schema tabu."""
+
+    name: str | None = None
+    street: str | None = None
+    postal_code: str | None = None
+    city: str | None = None
+    country: str | None = None
+    phone: str | None = None
+    email: str | None = None
 
 
 class PublicSiteResponse(BaseModel):
@@ -495,6 +398,45 @@ class PublicSiteResponse(BaseModel):
     # gilt — die Middleware löst das Branding einmal pro Request auf, damit hat
     # jede Route dieselbe Navigation aus derselben Quelle.
     nav: PublicNav = Field(default_factory=PublicNav)
+    # --- SEO/AEO (0430) -----------------------------------------------------
+    # Der Renderer erzeugt daraus Meta-Tags, robots.txt, sitemap.xml, llms.txt
+    # und das JSON-LD. Alles davon ist öffentlich sichtbar, sobald die Seite
+    # ausgeliefert wird — hier steckt kein Geheimnis.
+    seo_title: str | None = None
+    seo_description: str | None = None
+    seo_keywords: str | None = None
+    noindex: bool = False
+    gtag_id: str | None = None
+    schema_organization: bool = True
+    schema_breadcrumbs: bool = True
+    schema_lodging: bool = True
+    schema_faq: bool = True
+    lazy_loading: bool = True
+    system_fonts_first: bool = True
+    content_width: int | None = None
+    heading_scale: int | None = None
+    body_scale: int | None = None
+    # Firmenangaben fürs Organization-Schema. `None`, wenn der Schalter aus ist
+    # ODER das Firmenprofil keinen Namen führt — der Renderer lässt das Schema
+    # dann weg statt eines mit leeren Feldern.
+    organization: PublicOrganization | None = None
+    # --- Kann dieser Betrieb online Geld annehmen? --------------------------
+    # Aus `tenant_billing_profile.stripe_charges_enabled` (bzw. PayPal).
+    #
+    # Warum das auf einer ÖFFENTLICHEN Antwort steht: ohne diese Angabe zeigt
+    # die Website eine Buchungsstrecke, an deren Ende der Gast alles ausgefüllt
+    # hat, eine Reservierung entstanden ist — und der Zahlungsschritt mit einem
+    # 409 scheitert („Stripe ist noch nicht abrechnungsfähig verbunden").
+    # Der Betrieb erfährt davon nichts, der Gast bricht ab.
+    #
+    # Mit ihr schaltet der Renderer auf den ANFRAGE-Pfad um, den es ohnehin gibt
+    # (`booking_mode = inquiry`): der Gast schickt eine Anfrage, der Betrieb
+    # antwortet. Das ist kein Notbehelf, sondern der richtige Zustand für einen
+    # Betrieb, der noch kein Zahlungskonto hat.
+    #
+    # Es ist KEIN Geheimnis: ob eine Website eine Zahlung annimmt, sieht jeder,
+    # der sie benutzt. Es steht kein Kontostand und keine Kennung darin.
+    payments_ready: bool = False
 
 
 class SliceHealth(BaseModel):
@@ -503,154 +445,25 @@ class SliceHealth(BaseModel):
 
 
 # === Page-Builder: Seiten + Blöcke ==========================================
-class BlockType(StrEnum):
-    """Die ersten Block-Typen des Page-Builders. Erweiterbar (DB nutzt check,
-    kein enum, damit weitere Typen ohne ALTER TYPE dazukommen können)."""
-
-    hero = "hero"
-    rich_text = "rich_text"
-    image = "image"
-    gallery = "gallery"
-    button = "button"
-    spacer = "spacer"
-    contact = "contact"
-    search = "search"
-    properties_grid = "properties_grid"
-    featured_properties = "featured_properties"
-    reviews = "reviews"
-
-
-# --- getypte content-Schemas je Block-Typ (kein freies Any) ------------------
-# Mehrsprachige Texte als dict[str, str] (Locale → Text, Muster wie about_text).
-class HeroContent(BaseModel):
-    heading: dict[str, str] = Field(default_factory=dict)
-    subheading: dict[str, str] = Field(default_factory=dict)
-    eyebrow: dict[str, str] = Field(default_factory=dict)
-    image_url: str | None = None
-    cta_label: dict[str, str] = Field(default_factory=dict)
-    cta_href: str | None = None
-    # Layout-Variante: "fullscreen" | "split" | "centered".
-    variant: str = "fullscreen"
-    # Optionale Schrift-Familie (Schlüssel aus dem Font-Katalog); None = Marke.
-    font_family: str | None = None
-
-    _v_cta_href = field_validator("cta_href")(_validate_href)
-    # Bild-Adressen gehören zur selben Allowlist wie jeder andere Link des
-    # Slices. Ohne sie kamen `javascript:`- und `data:`-URIs durch: im
-    # <img>-Kontext nicht ausführbar, aber ein data:-URI schreibt mehrere
-    # Megabyte in die Inhaltsspalte, und ein beliebiger Host wird zum
-    # Tracking-Pixel auf der Gästeseite (Wurzel 8).
-    _v_image_url = field_validator("image_url")(_validate_href)
-
-
-class RichTextContent(BaseModel):
-    html: dict[str, str] = Field(default_factory=dict)  # TipTap-HTML je Locale
-    align: str = "left"  # "left" | "center"
-    font_family: str | None = None
-
-    _v_html = field_validator("html")(_sanitize_rich_html)
-
-
-class ImageContent(BaseModel):
-    url: str | None = None
-    alt: dict[str, str] = Field(default_factory=dict)
-    caption: dict[str, str] = Field(default_factory=dict)
-
-    _v_url = field_validator("url")(_validate_href)
-
-
-class GalleryImage(BaseModel):
-    url: str
-    alt: dict[str, str] = Field(default_factory=dict)
-
-    _v_url = field_validator("url")(_validate_href)
-
-
-class GalleryContent(BaseModel):
-    images: list[GalleryImage] = Field(default_factory=list)
-
-
-class ButtonContent(BaseModel):
-    label: dict[str, str] = Field(default_factory=dict)
-    href: str | None = None
-    variant: str = "primary"  # "primary" | "secondary"
-
-    _v_href = field_validator("href")(_validate_href)
-
-
-class SpacerContent(BaseModel):
-    size: str = "md"  # "sm" | "md" | "lg" | "xl"
-
-
-class ContactContent(BaseModel):
-    headline: dict[str, str] = Field(default_factory=dict)
-    email: str | None = None
-    phone: str | None = None
-    address: dict[str, str] = Field(default_factory=dict)
-    show_form: bool = False
-
-
-class SearchContent(BaseModel):
-    placeholder: dict[str, str] = Field(default_factory=dict)
-    show_guests: bool = True
-    show_dates: bool = True
-
-
-class PropertiesGridContent(BaseModel):
-    headline: dict[str, str] = Field(default_factory=dict)
-    q: str | None = None
-    guests: int | None = None
-    limit: int | None = None
-
-
-class FeaturedPropertiesContent(BaseModel):
-    headline: dict[str, str] = Field(default_factory=dict)
-    property_ids: list[str] = Field(default_factory=list)
-
-
-class ReviewsContent(BaseModel):
-    """Bewertungs-Block der eigenen Website.
-
-    Zeigt AUSSCHLIESSLICH eigene, verifizierte myBestDays-Bewertungen. Portal-
-    Bewertungen (Booking.com/Airbnb) gehören nicht hierher: deren Nutzungs-
-    bedingungen erlauben das Weiterveröffentlichen nur eingeschränkt.
-
-    ``property_id`` leer = Bewertungen aller Objekte des Betriebs."""
-
-    headline: dict[str, str] = Field(default_factory=dict)
-    property_id: str | None = None
-    # Wie viele Bewertungen gezeigt werden. Obergrenze, damit ein Block nicht
-    # unbegrenzt viele Zeilen rendert (Wurzel 8).
-    limit: int = Field(default=6, ge=1, le=24)
-    show_categories: bool = True
-
-
-_CONTENT_MODEL: dict[BlockType, type[BaseModel]] = {
-    BlockType.hero: HeroContent,
-    BlockType.rich_text: RichTextContent,
-    BlockType.image: ImageContent,
-    BlockType.gallery: GalleryContent,
-    BlockType.button: ButtonContent,
-    BlockType.spacer: SpacerContent,
-    BlockType.contact: ContactContent,
-    BlockType.search: SearchContent,
-    BlockType.properties_grid: PropertiesGridContent,
-    BlockType.featured_properties: FeaturedPropertiesContent,
-    BlockType.reviews: ReviewsContent,
-}
-
-
-def validate_block_content(block_type: BlockType, content: dict) -> dict:
-    """Validiert das content-dict gegen das Schema des Block-Typs und gibt das
-    normalisierte dict zurück. Wirft ValueError bei ungültigem Inhalt."""
-    model = _CONTENT_MODEL[block_type]
-    return model.model_validate(content or {}).model_dump(mode="json")
-
 
 class BlockSettings(BaseModel):
     """Generische Darstellungs-Settings, für alle Block-Typen gleich."""
 
     background_color: str | None = Field(default=None, pattern=_HEX_RE)
+    # --- Hintergrundbild je Abschnitt (0432) --------------------------------
+    # Steht hier und nicht im `content` eines Typs: ein Hintergrund ist eine
+    # Eigenschaft der Fläche, nicht des Inhalts — und damit für JEDEN Typ
+    # dieselbe. Im `content` wäre es fünfzehn Felder statt einem.
+    #
+    # Dieselbe href-Allowlist wie jedes andere gast-sichtbare Bild: ohne sie
+    # kommen `javascript:`- und `data:`-URIs durch (im Hintergrund nicht
+    # ausführbar, aber ein data:-URI schreibt Megabyte in die Inhaltsspalte und
+    # ein fremder Host wird zum Tracking-Pixel auf der Gästeseite, Wurzel 8).
+    background_image_url: str | None = None
+    # Dunkle Auflage über dem Bild, damit der Text darauf lesbar bleibt.
+    # 0 = keine. Ohne diesen Wert ist ein Hintergrundbild in der Praxis
+    # unbenutzbar: heller Text auf hellem Himmel.
+    background_overlay: float = Field(default=0.0, ge=0.0, le=0.9)
     padding: str = "md"  # "none" | "sm" | "md" | "lg"
     full_width: bool = False
     # Framer-artige Stil-Steuerung (im Style-Inspektor bearbeitbar).
@@ -659,8 +472,41 @@ class BlockSettings(BaseModel):
     radius: int = Field(default=0, ge=0, le=200)  # px
     rotation: int = Field(default=0, ge=-180, le=180)  # Grad
 
+    _v_background_image_url = field_validator("background_image_url")(
+        _validate_href
+    )
+
 
 # --- Seiten (Dashboard) ------------------------------------------------------
+class PageType(StrEnum):
+    """Was eine Zeile in `site_pages` ist (0433).
+
+    Vier Typen, weil vier Dinge in derselben geordneten Navigationsliste stehen
+    und nur einer davon eine Seite mit Blöcken ist:
+
+    * ``normal``   — eine Seite. Der Regelfall.
+    * ``external``  — ein Menüpunkt, der nach außen führt („Bewertungen bei
+      Google"). Als normale Seite gebaut bräuchte er eine leere Seite mit einem
+      Button darauf: zwei Klicks für den Gast statt einem.
+    * ``folder``    — eine Gruppe im Menü, selbst keine Seite („Umgebung ▾").
+    * ``error404``  — die Fehlerseite. Hat Blöcke, aber keine Adresse: sie ist
+      die Antwort auf eine falsche. In keiner Navigation, in keiner Sitemap.
+    """
+
+    normal = "normal"
+    external = "external"
+    folder = "folder"
+    error404 = "error404"
+    # 0437 — ein Pop-up. Auch das ist eine Seite: es hat Abschnitte, wird im
+    # Editor gebaut und veröffentlicht. Es erscheint nur nicht über eine
+    # Adresse, sondern über einen Auslöser.
+    popup = "popup"
+    # 0438 — ein Blog-Beitrag. Auch das ist eine Seite: dieselben Abschnitte,
+    # derselbe Editor, derselbe Veröffentlichungs-Pfad. Er hat nur zusätzlich
+    # ein Datum, einen Autor und Schlagwörter.
+    post = "post"
+
+
 class NavArea(StrEnum):
     """Wo eine Seite in der Navigation der Kunden-Site hängt (0421).
 
@@ -673,10 +519,52 @@ class NavArea(StrEnum):
     none = "none"
 
 
+class PopupTrigger(StrEnum):
+    """Wann ein Pop-up erscheint (0437).
+
+    * ``delay``  — nach N Sekunden auf der Seite.
+    * ``exit``   — wenn der Zeiger die Seite nach oben verlässt
+      (Verlassensabsicht). Auf dem Telefon gibt es das nicht; dort greift
+      ersatzweise eine Verzögerung (siehe Renderer).
+    * ``scroll`` — wenn N Prozent der Seite gelesen sind.
+    """
+
+    delay = "delay"
+    exit = "exit"
+    scroll = "scroll"
+
+
 class PageCreate(BaseModel):
-    title: str = Field(min_length=1, max_length=200)
+    title: str = Field(default="", max_length=200)
+    # --- Seiten-Vorlage (0434, Etappe D) ------------------------------------
+    # Legt die Seite mit einem fertigen Abschnitts-Satz an („Über uns",
+    # „Kontakt", „Anfahrt", …). `None` = leere Seite, der bisherige Zustand.
+    #
+    # Beim Anlegen und nicht danach: Hostaway lässt erst eine leere Seite
+    # erzeugen und dann einen „Designed Section" hineinlegen — zwei Schritte für
+    # eine Absicht. Der Titel und der Slug dürfen leer bleiben, dann kommen sie
+    # aus der Vorlage.
+    template: str | None = Field(default=None, max_length=40)
     slug: str = Field(default="", max_length=200)
     nav_area: NavArea = NavArea.header
+    # --- Seitentypen (0433) -------------------------------------------------
+    page_type: PageType = PageType.normal
+    external_url: str | None = None
+    parent_id: str | None = None
+    # --- Pop-up (0437) ------------------------------------------------------
+    # Nur bei `page_type = popup`. Der Wert bedeutet Sekunden bei `delay` und
+    # Prozent bei `scroll` — ein Feld für beides, weil immer nur ein Auslöser
+    # aktiv ist.
+    popup_trigger: PopupTrigger | None = None
+    popup_value: int | None = Field(default=None, ge=1, le=120)
+    popup_device: str | None = None
+    popup_once: bool = True
+    # --- Blog-Beitrag (0438) ------------------------------------------------
+    published_at: str | None = None
+    author: str | None = Field(default=None, max_length=120)
+    cover_image_url: str | None = None
+    excerpt: str | None = Field(default=None, max_length=500)
+    tags: list[str] | None = Field(default=None, max_length=8)
 
     @field_validator("slug")
     @classmethod
@@ -686,21 +574,143 @@ class PageCreate(BaseModel):
             raise ValueError("Slug darf nur a-z, 0-9 und - enthalten.")
         return v
 
+    @field_validator("external_url")
+    @classmethod
+    def _externe_adresse(cls, v: str | None) -> str | None:
+        """Nur vollständige http(s)-Adressen.
+
+        Strenger als `_validate_href`, das auch relative Pfade erlaubt: ein
+        RELATIVER Pfad in einem „externen" Menüpunkt ist ein Widerspruch — er
+        zeigt dann auf die eigene Website, und dafür gibt es den normalen
+        Seitentyp. `mailto:`/`tel:` fallen bewusst mit weg: sie gehören in den
+        Kontakt-Abschnitt, nicht in die Hauptnavigation (Wurzel 8)."""
+        if v is None:
+            return None
+        wert = v.strip()
+        if not wert:
+            return None
+        if not wert.lower().startswith(("http://", "https://")):
+            raise ValueError(
+                "Ein externer Menüpunkt braucht eine vollständige Adresse "
+                "(https://…)."
+            )
+        if len(wert) > 2000:
+            raise ValueError("Adresse ist zu lang (max. 2000 Zeichen).")
+        return wert
+
+    @model_validator(mode="after")
+    def _titel_oder_vorlage(self) -> PageCreate:
+        """Ohne Titel braucht es eine Vorlage — sonst hätte die Seite keinen
+        Namen. Vorher war `title` schlicht Pflicht; mit Vorlagen kommt er von
+        dort, und ein Pflichtfeld wäre dann eine Frage, deren Antwort schon
+        feststeht."""
+        # `title` ist zur Laufzeit ein `str`; weil der Default als `Field(...)`
+        # geschrieben ist, hält astroid es statisch für `FieldInfo`.
+        # pylint: disable=no-member
+        if not self.title.strip() and not self.template:
+            raise ValueError("Die Seite braucht einen Titel.")
+        return self
+
+    @model_validator(mode="after")
+    def _popup_stimmig(self) -> PageCreate:
+        """Auslöser und Typ müssen zusammenpassen (0437).
+
+        Beide Richtungen, weil beide Fälle still schiefgehen:
+
+        * Ein Pop-up OHNE Auslöser wäre unsichtbar — gebaut, veröffentlicht,
+          und niemand sieht es je.
+        * Ein Auslöser an einer normalen Seite wäre gespeichert und wirkungslos,
+          und niemand fände den Grund.
+
+        Der Wertebereich hängt am Auslöser: ``scroll`` ist ein Prozentsatz
+        (1–100), ``delay`` sind Sekunden (1–120). Ein Prozentsatz über 100 kann
+        nie erreicht werden — das Pop-up erschiene nie."""
+        if self.page_type is PageType.popup:
+            if self.popup_trigger is None:
+                raise ValueError("Ein Pop-up braucht einen Auslöser.")
+            if (
+                self.popup_trigger is PopupTrigger.scroll
+                and self.popup_value is not None
+                and self.popup_value > 100
+            ):
+                raise ValueError(
+                    "Beim Auslöser für den gelesenen Anteil sind höchstens "
+                    "100 Prozent möglich."
+                )
+        elif (
+            self.popup_trigger is not None
+            or self.popup_value is not None
+            or self.popup_device is not None
+        ):
+            raise ValueError(
+                "Auslöser gibt es nur beim Pop-up."
+            )
+        if self.popup_device is not None and self.popup_device not in (
+            "mobile",
+            "desktop",
+        ):
+            raise ValueError("Gerät muss mobile oder desktop sein.")
+        return self
+
+    @model_validator(mode="after")
+    def _typ_stimmig(self) -> PageCreate:
+        """Typ und Felder müssen zusammenpassen — dieselben Regeln wie die
+        CHECKs in 0433, nur mit einer Meldung statt eines 23514-Fehlers.
+
+        Der Ordner ist der Fall, der ohne Prüfung still schiefgeht: er hat keine
+        eigene Adresse, und ein Slug daran würde eine Seite versprechen, die es
+        nicht gibt."""
+        if self.page_type is PageType.external and not self.external_url:
+            raise ValueError("Ein externer Menüpunkt braucht eine Adresse.")
+        if self.page_type is not PageType.external and self.external_url:
+            raise ValueError(
+                "Eine Adresse gibt es nur beim externen Menüpunkt."
+            )
+        if self.page_type in (PageType.folder, PageType.error404):
+            if self.parent_id:
+                raise ValueError(
+                    "Ein Ordner und die Fehlerseite hängen an keinem Ordner."
+                )
+        return self
+
 
 class PageUpdate(BaseModel):
     title: str | None = Field(default=None, max_length=200)
     slug: str | None = Field(default=None, max_length=200)
-    seo_title: str | None = None
-    seo_description: str | None = None
+    seo_title: str | None = Field(default=None, max_length=200)
+    seo_description: str | None = Field(default=None, max_length=500)
     og_image_url: str | None = None
+    # --- SEO je Seite (0430) ------------------------------------------------
+    # Diese Angaben schlagen die site-weiten (tenant_site_config): eine eigene
+    # Beschreibung je Seite ist der Kern von SEO, eine geteilte ist der
+    # häufigste Anfängerfehler.
+    seo_keywords: str | None = Field(default=None, max_length=500)
+    # Abweichende kanonische Adresse. Nur nötig, wenn derselbe Inhalt unter
+    # zwei Adressen erreichbar ist (Kampagnen-Duplikat, Umzug mit Altbestand).
+    # NULL heisst „diese Seite ist das Original" — der Renderer setzt dann ihre
+    # eigene Adresse, statt das Feld weglassen zu muessen.
+    canonical_url: str | None = None
+    # Kopf-HTML NUR dieser Seite (seitenspezifisches JSON-LD). Dieselbe
+    # Allowlist wie site-weit: <meta>, <link>, <title> — keine Skripte.
+    head_html: str | None = Field(default=None, max_length=8_000)
+    noindex: bool | None = None
     nav_area: NavArea | None = None
     nav_order: int | None = None
+    # --- Seitentypen (0433) -------------------------------------------------
+    # `page_type` ist NICHT änderbar: aus einer Seite mit Blöcken einen Ordner zu
+    # machen würde die Blöcke unerreichbar zurücklassen (sie hängen an der
+    # page_id, nicht am Typ). Wer den Typ wechseln will, legt neu an — dann ist
+    # der Verlust sichtbar statt still.
+    external_url: str | None = None
+    parent_id: str | None = None
     # Sprachen, in denen DIESE Seite existiert (0426). `None` = alle Sprachen der
     # Website — der Normalfall, der keinen Eintrag braucht.
     languages: list[str] | None = None
 
     _v_og_image_url = field_validator("og_image_url")(_validate_href)
     _v_languages = field_validator("languages")(_validate_locales)
+    _v_canonical_url = field_validator("canonical_url")(_validate_href)
+    _v_head_html = field_validator("head_html")(_validate_head_html)
 
     @field_validator("slug")
     @classmethod
@@ -720,6 +730,26 @@ class PageResponse(BaseModel):
     seo_title: str | None = None
     seo_description: str | None = None
     og_image_url: str | None = None
+    # --- SEO je Seite (0430) ------------------------------------------------
+    seo_keywords: str | None = None
+    canonical_url: str | None = None
+    head_html: str | None = None
+    noindex: bool = False
+    # --- Seitentypen (0433) -------------------------------------------------
+    page_type: PageType = PageType.normal
+    external_url: str | None = None
+    parent_id: str | None = None
+    # --- Pop-up (0437) ------------------------------------------------------
+    popup_trigger: PopupTrigger | None = None
+    popup_value: int | None = None
+    popup_device: str | None = None
+    popup_once: bool = True
+    # --- Blog-Beitrag (0438) ------------------------------------------------
+    published_at: str | None = None
+    author: str | None = None
+    cover_image_url: str | None = None
+    excerpt: str | None = None
+    tags: list[str] | None = None
     is_home: bool = False
     is_published: bool = False
     nav_area: NavArea = NavArea.header
@@ -837,6 +867,15 @@ class PublicPageMeta(BaseModel):
     seo_title: str | None = None
     seo_description: str | None = None
     og_image_url: str | None = None
+    # --- SEO je Seite (0430) ------------------------------------------------
+    # Der Resolver liefert hier den BEREITS aufgelösten Wert: fehlt der
+    # Seiten-Titel, steht der site-weite drin. Die Hierarchie („Seite schlägt
+    # Site") gehört an EINE Stelle — sie im Renderer ein zweites Mal zu bauen
+    # wäre die Art Dublette, die irgendwann auseinanderläuft.
+    seo_keywords: str | None = None
+    canonical_url: str | None = None
+    head_html: str | None = None
+    noindex: bool = False
 
 
 class PublicPageResponse(BaseModel):
@@ -849,6 +888,317 @@ class PublicPageResponse(BaseModel):
     genau die Art Dublette, die irgendwann auseinanderläuft."""
 
     tenant_id: str
+    page: PublicPageMeta
+    blocks: list[PublicBlock] = Field(default_factory=list)
+    branding: PublicSiteResponse
+
+
+# === URL-Weiterleitungen (0430) =============================================
+# Warum eine eigene Ressource und kein Feld an der Config: eine Weiterleitung
+# wird einzeln angelegt, einzeln gelöscht, muss eindeutig sein und wird pro
+# 404 GESUCHT. Als JSON-Array müsste der Renderer bei jedem Fehlschlag die
+# ganze Liste laden und in Python durchsuchen.
+class RedirectType(StrEnum):
+    """301 = dauerhaft (überträgt die Platzierung), 302 = vorübergehend.
+
+    Als Enum und nicht als int, damit die Oberfläche zwei benannte Optionen
+    zeigt statt eines Zahlenfeldes. Die DB speichert die Zahl (0430)."""
+
+    permanent = "301"
+    temporary = "302"
+
+
+class RedirectCreate(BaseModel):
+    source_path: str = Field(min_length=1, max_length=500)
+    target: str = Field(min_length=1, max_length=2_000)
+    redirect_type: RedirectType = RedirectType.permanent
+    is_active: bool = True
+
+    _v_source = field_validator("source_path")(_validate_source_path)
+    _v_target = field_validator("target")(_validate_redirect_target)
+
+    @model_validator(mode="after")
+    def _keine_selbstschleife(self) -> RedirectCreate:
+        """Quelle und Ziel dürfen nicht dieselbe Adresse sein.
+
+        Hostaway listet „Redirect loops and self-references" als Fehlerursache
+        und schreibt dazu: eine solche Konfiguration blockiert ALLE beteiligten
+        Weiterleitungen. Die einstufige Selbstschleife lässt sich hier beim
+        Speichern erkennen — und sie ist der Fall, der wirklich passiert
+        (Kunde trägt /alt → /alt ein, weil er die Richtung verwechselt).
+
+        Längere Ketten (A→B→C→A) fängt der Renderer beim Auflösen ab: er folgt
+        einer Weiterleitung genau EINMAL. Sie hier zu prüfen hieße, den ganzen
+        Graphen im Speicher zu halten und bei jedem Schreiben neu zu bewerten."""
+        # Beide Felder sind zur Laufzeit `str`. Weil ihr Default als
+        # `Field(...)` geschrieben ist, hält astroid sie statisch für
+        # `FieldInfo` und meldet `rstrip` als fehlend — dasselbe Muster steht
+        # ungemeldet in anderen Validatoren des Slices, deren Felder ohne
+        # `Field(...)` deklariert sind.
+        # pylint: disable=no-member
+        if self.source_path.rstrip("/").lower() == self.target.rstrip("/").lower():
+            raise ValueError("Quelle und Ziel sind identisch — das ist eine Schleife.")
+        return self
+
+
+class RedirectUpdate(BaseModel):
+    """Teil-Update. `source_path` ist NICHT änderbar: der Pfad IST die Identität
+    der Weiterleitung (unique je Tenant). Wer ihn ändern will, legt eine neue an
+    und löscht die alte — dann ist der Zwischenzustand sichtbar statt still."""
+
+    target: str | None = Field(default=None, max_length=2_000)
+    redirect_type: RedirectType | None = None
+    is_active: bool | None = None
+
+    _v_target = field_validator("target")(_validate_redirect_target)
+
+
+class RedirectResponse(BaseModel):
+    id: str
+    source_path: str
+    target: str
+    redirect_type: RedirectType
+    is_active: bool
+    created_at: str | None = None
+
+
+class RedirectListResponse(BaseModel):
+    items: list[RedirectResponse]
+    total: int
+
+
+class RedirectImportRequest(BaseModel):
+    """Mehrere Weiterleitungen in einem Zug (CSV-Import der Oberfläche).
+
+    Der Deckel liegt bei 200 Zeilen wie bei Hostaway — nicht als Nachahmung,
+    sondern weil jeder unbegrenzte Bereich eine Obergrenze braucht (Wurzel 8):
+    ohne sie ist eine 50-MB-CSV ein Datenbank-Schreibsturm über eine einzige
+    HTTP-Anfrage."""
+
+    items: list[RedirectCreate] = Field(min_length=1, max_length=200)
+    # Vorhandene Einträge mit demselben Quellpfad überschreiben statt den ganzen
+    # Import abzulehnen. Standard AUS: ein Import, der bestehende Weiterleitungen
+    # still ändert, ist die unangenehmere Überraschung.
+    overwrite: bool = False
+
+
+class RedirectImportResult(BaseModel):
+    """Was der Import wirklich getan hat — getrennt nach Wirkung.
+
+    Drei Zahlen und nicht eine: „12 importiert" verschweigt, dass 8 davon
+    bestehende Einträge überschrieben haben. Die Fehlerliste trägt die
+    Zeilennummer, damit der Kunde sie in seiner Datei findet."""
+
+    created: int = 0
+    updated: int = 0
+    skipped: int = 0
+    errors: list[str] = Field(default_factory=list)
+
+
+# === Sitemap / robots / llms (0430) =========================================
+class SitemapPage(BaseModel):
+    """Eine Seite in der Sitemap. `slug` ist leer für die Startseite — den Pfad
+    baut der Renderer, damit die Pfad-Bildung an einer Stelle liegt."""
+
+    slug: str
+    title: str = ""
+    lastmod: str | None = None
+    is_home: bool = False
+    languages: list[str] | None = None
+
+
+class SitemapProperty(BaseModel):
+    id: str
+    lastmod: str | None = None
+
+
+class SitemapPost(BaseModel):
+    """Ein Blog-Beitrag in der Sitemap (0438)."""
+
+    slug: str
+    title: str = ""
+    lastmod: str | None = None
+
+
+class SitemapResponse(BaseModel):
+    """Datengrundlage für sitemap.xml, robots.txt und llms.txt.
+
+    `abgeschnitten` ist bewusst Teil der Antwort: eine Sitemap, die nur die
+    Hälfte enthält und vollständig aussieht, lässt Google die andere Hälfte
+    ignorieren, ohne dass jemand die Ursache findet. Der Renderer schreibt es
+    als Kommentar in die Datei."""
+
+    pages: list[SitemapPage] = Field(default_factory=list)
+    properties: list[SitemapProperty] = Field(default_factory=list)
+    posts: list[SitemapPost] = Field(default_factory=list)
+    abgeschnitten: bool = False
+    # Site-weite Angaben, die der Renderer für robots.txt und llms.txt braucht,
+    # ohne dafür einen zweiten Request zu stellen.
+    noindex: bool = False
+    site_name: str | None = None
+    seo_description: str | None = None
+    default_language: str | None = None
+    languages: list[str] | None = None
+
+
+class RedirectResolveResponse(BaseModel):
+    """Antwort des öffentlichen Weiterleitungs-Lesepfads.
+
+    `target` ist `None`, wenn es für diesen Pfad keine aktive Weiterleitung gibt
+    — der Renderer zeigt dann seine 404-Seite. Ein 404 der API wäre hier falsch:
+    „keine Weiterleitung" ist die normale Antwort, nicht ein Fehler."""
+
+    target: str | None = None
+    redirect_type: int | None = None
+
+
+# === SEO-Befunde (Etappe B) =================================================
+class SeoBefundSeite(BaseModel):
+    """Eine Seite (oder ein Objekt) in einem Befund. `slug` ist bei Objekten
+    leer — ihre Adresse ist /inserat/<id> und hat keinen."""
+
+    id: str
+    titel: str = ""
+    slug: str = ""
+
+
+class SeoBefund(BaseModel):
+    """Ein Befund der SEO-Prüfung.
+
+    `code` und nicht ein fertiger Satz: die Oberfläche übersetzt ihn in 24
+    Sprachen. Ein Text aus dem Backend wäre auf Deutsch — und der Betrieb kann
+    sein Dashboard auf Dänisch führen.
+
+    `anzahl` ist die VOLLE Zahl, `seiten` höchstens die ersten zehn. Sonst
+    stünde bei 200 betroffenen Seiten „10" da, und die Zahl wäre eine
+    Falschaussage."""
+
+    code: str
+    schwere: str  # "fehler" | "warnung" | "hinweis"
+    anzahl: int = 0
+    seiten: list[SeoBefundSeite] = Field(default_factory=list)
+
+
+class SeoPruefungResponse(BaseModel):
+    """Ergebnis der SEO-Prüfung.
+
+    Bewusst OHNE Punktzahl. Eine Zahl wie „87/100" wäre eine erfundene
+    Bewertung (Wurzel 4): niemand kann sagen, was die fehlenden 13 Punkte sind,
+    und Google bewertet ohnehin anders. Was zählt, ist die Liste."""
+
+    items: list[SeoBefund] = Field(default_factory=list)
+    # Wie viele veröffentlichte Seiten geprüft wurden. Ohne diese Zahl ist eine
+    # leere Befundliste zweideutig: alles gepflegt — oder es gibt noch keine
+    # veröffentlichte Seite?
+    geprueft: int = 0
+
+
+# === Formular-Einsendungen (0436, Etappe F) =================================
+class FormSubmissionRequest(BaseModel):
+    """Was ein Gast absendet.
+
+    `block_id` und nicht `page_id` + Index: der Block ist die Identität des
+    Formulars. Verschiebt der Betrieb es auf eine andere Seite, funktioniert der
+    Absende-Weg weiter.
+
+    `daten` ist ein freies dict, weil die Felder der Betrieb festlegt. Was darin
+    erlaubt ist, entscheidet `formulare.einsendung_pruefen` gegen die
+    Felddefinition des Blocks — unbekannte Schlüssel fliegen weg."""
+
+    block_id: str
+    daten: dict[str, str | int | float | bool | None] = Field(
+        default_factory=dict
+    )
+    # reCAPTCHA-Token des Browsers. Ohne ihn lehnt der Endpunkt ab, wenn der
+    # Dienst konfiguriert ist (fail-closed, Wurzel 5).
+    recaptcha_token: str | None = None
+
+
+class FormSubmissionResponse(BaseModel):
+    """Antwort an den GAST. Bewusst minimal: er braucht nur zu wissen, dass es
+    angekommen ist. Die gespeicherten Daten zurückzugeben wäre eine
+    Einladung, den Endpunkt als Spiegel zu missbrauchen."""
+
+    ok: bool = True
+
+
+class FormSubmission(BaseModel):
+    """Eine Einsendung für die Antwortenliste im Dashboard."""
+
+    id: str
+    block_id: str | None = None
+    form_name: str | None = None
+    daten: dict[str, str] = Field(default_factory=dict)
+    created_at: str | None = None
+    is_read: bool = False
+
+
+class FormSubmissionListResponse(BaseModel):
+    items: list[FormSubmission] = Field(default_factory=list)
+    total: int = 0
+
+
+# === Pop-ups (0437, Etappe G) ===============================================
+class PublicPopup(BaseModel):
+    """Ein Pop-up für den Renderer.
+
+    Enthält Auslöser UND Blöcke: der Renderer braucht beides in einem Zug, und
+    ein zweiter Abruf je Pop-up wäre bei drei Pop-ups drei zusätzliche Anfragen
+    pro Seitenansicht.
+
+    `id` reist mit, weil der Browser sich merken muss, welches Pop-up er schon
+    gezeigt hat (`popup_once`). Ohne stabile Kennung müsste er den Titel
+    nehmen — und der ändert sich."""
+
+    id: str
+    title: str = ""
+    trigger: PopupTrigger
+    value: int | None = None
+    device: str | None = None
+    once: bool = True
+    blocks: list[PublicBlock] = Field(default_factory=list)
+
+
+class PublicPopupListResponse(BaseModel):
+    """Die Pop-ups einer Website.
+
+    Leere Liste = keine. Das ist der Normalfall und kein Fehler — deshalb 200
+    und nicht 404."""
+
+    items: list[PublicPopup] = Field(default_factory=list)
+
+
+# === Blog (0438, Etappe H) ==================================================
+class PublicPost(BaseModel):
+    """Ein Beitrag in der Liste.
+
+    OHNE Blöcke: die Liste zeigt Titel, Anriss und Bild. Die Abschnitte eines
+    Beitrags wären bei zwanzig Einträgen zwanzig Block-Bäume in einer Antwort —
+    für eine Übersicht, die davon nichts anzeigt."""
+
+    slug: str
+    title: str
+    excerpt: str | None = None
+    author: str | None = None
+    cover_image_url: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    published_at: str | None = None
+
+
+class PublicPostListResponse(BaseModel):
+    items: list[PublicPost] = Field(default_factory=list)
+    total: int = 0
+    # Alle vorkommenden Schlagwörter, für die Filterleiste. Aus DIESER Seite der
+    # Liste und nicht aus allen Beiträgen: eine zweite Abfrage über den ganzen
+    # Bestand nur für die Leiste wäre der teurere Teil des Aufrufs.
+    tags: list[str] = Field(default_factory=list)
+
+
+class PublicPostResponse(BaseModel):
+    """Ein einzelner Beitrag mit seinen Abschnitten."""
+
+    tenant_id: str
+    post: PublicPost
     page: PublicPageMeta
     blocks: list[PublicBlock] = Field(default_factory=list)
     branding: PublicSiteResponse

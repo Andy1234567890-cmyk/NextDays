@@ -4820,10 +4820,10 @@
     },
     "taskStatusAction": {
       "open": "Terugleggen",
-      "reopen": "Opnieuw openen",
       "accepted": "Accepteren",
       "in_progress": "Starten",
-      "done": "Afronden"
+      "done": "Afronden",
+      "reopen": "Opnieuw openen"
     },
     "taskStatusChanged": {
       "open": "Teruggelegd.",
@@ -7128,7 +7128,8 @@
       "einstellungen": "Instellingen",
       "objekte": "Accommodaties",
       "widgets": "Widgets",
-      "seo": "SEO"
+      "seo": "SEO",
+      "anfragen": "Aanvragen"
     },
     "kopf": {
       "websiteAnsehen": "Website bekijken",
@@ -7228,7 +7229,14 @@
       "logoZiel": "Doel van de logoklik",
       "logoZielLeer": "Startpagina",
       "namensGroesse": "Grootte van de naam",
-      "sloganText": "Tekst"
+      "sloganText": "Tekst",
+      "groessenTitel": "Groottes",
+      "groessenHinweis": "Breedte van de inhoud en grootte van het lettertype. Zonder keuze gelden de waarden van het sjabloon.",
+      "inhaltsbreite": "Breedte van de inhoud",
+      "ueberschriftenGroesse": "Koppen",
+      "textGroesse": "Broodtekst",
+      "groesseStandard": "Standaard",
+      "groesseZuruecksetzen": "Terug naar standaard"
     },
     "paletten": {
       "schlicht": "Sober",
@@ -7246,7 +7254,10 @@
       "schriftAufHintergrund": "Tekst op de achtergrond",
       "schriftAufFlaeche": "Tekst op vlakken",
       "buttonText": "Tekst op knoppen",
-      "linkAufHintergrund": "Links op de achtergrond"
+      "linkAufHintergrund": "Links op de achtergrond",
+      "kopfLinkAufKopf": "Menu op de koptekst",
+      "markenNameAufKopf": "Bedrijfsnaam op de koptekst",
+      "textAufFuss": "Tekst op de voettekst"
     },
     "seiten": {
       "bereichTitel": {
@@ -7314,7 +7325,64 @@
       "alleSprachenHinweis": "Het normale geval — de pagina verschijnt overal waar uw website verschijnt.",
       "abbrechen": "Annuleren",
       "speichern": "Opslaan",
-      "einstellungenGespeichert": "Pagina-instellingen opgeslagen."
+      "einstellungenGespeichert": "Pagina-instellingen opgeslagen.",
+      "duplizieren": "Dupliceren",
+      "typ": {
+        "normal": {
+          "name": "Pagina",
+          "hinweis": "Een pagina die u met secties vult."
+        },
+        "external": {
+          "name": "Extern menu-item",
+          "hinweis": "Een menu-item dat naar een externe website leidt.",
+          "adresseHinweis": "Opent in een nieuw venster."
+        },
+        "folder": {
+          "name": "Menumap",
+          "hinweis": "Groepeert pagina’s in het menu. Zelf geen pagina.",
+          "zuordnen": "In de map",
+          "keiner": "Geen map"
+        },
+        "error404": {
+          "name": "Foutpagina (404)",
+          "hinweis": "Wat een gast ziet na een typefout. Slechts één per website."
+        },
+        "post": {
+          "name": "Blogbericht",
+          "hinweis": "Een bericht voor de blog. Verschijnt op /blog, niet in het menu."
+        }
+      },
+      "vorlage": {
+        "label": "Sjabloon",
+        "keine": "Lege pagina",
+        "ueber_uns": "Over ons",
+        "kontakt": "Contact",
+        "anfahrt": "Route",
+        "hausordnung": "Huisregels",
+        "umgebung": "De omgeving",
+        "faq": "Veelgestelde vragen"
+      },
+      "popup": {
+        "ausloeser": "Wanneer hij verschijnt",
+        "trigger": {
+          "delay": "Na enkele seconden",
+          "exit": "Bij het verlaten van de pagina",
+          "scroll": "Na een gelezen deel"
+        },
+        "einheitSekunden": "seconden",
+        "einheitProzent": "procent",
+        "hinweis": "Verschijnt één keer per bezoeker. Op de telefoon wordt “Bij het verlaten” een weergave na 20 seconden."
+      },
+      "beitrag": {
+        "datum": "Publicatiedatum",
+        "datumHinweis": "In de toekomst = gepland. Het bericht verschijnt dan vanzelf.",
+        "autor": "Auteur",
+        "titelbild": "Omslagafbeelding",
+        "anriss": "Intro",
+        "anrissHinweis": "De tekst in de berichtenlijst. Leeg = het begin van de eerste alinea.",
+        "schlagwoerter": "Trefwoorden",
+        "schlagwoerterHinweis": "Gescheiden door komma’s, hoogstens acht."
+      }
     },
     "vorlagen": {
       "titel": "Beginnen met een sjabloon",
@@ -7356,7 +7424,14 @@
       "objektIdPlatzhalter": "Accommodatiecode",
       "objektHinzufuegen": "Toevoegen",
       "frageHinzufuegen": "Vraag toevoegen",
-      "fragenMax": "Meer dan {max} vragen zijn niet mogelijk."
+      "fragenMax": "Meer dan {max} vragen zijn niet mogelijk.",
+      "stimmeHinzufuegen": "Reactie toevoegen",
+      "stimmenMax": "Meer dan {max} reacties zijn niet mogelijk.",
+      "merkmalHinzufuegen": "Kenmerk toevoegen",
+      "merkmaleMax": "Meer dan {max} kenmerken zijn niet mogelijk.",
+      "darstellung": "Weergave",
+      "feldHinzufuegen": "Veld toevoegen",
+      "formfelderMax": "Meer dan {max} velden zijn niet mogelijk."
     },
     "abschnitte": {
       "hero": "Titelafbeelding",
@@ -7382,7 +7457,17 @@
       "gallery": "Galerij",
       "galleryHinweis": "Meerdere afbeeldingen als raster.",
       "faq": "Vragen en antwoorden",
-      "faqHinweis": "Uitklapbare vragen. Met structuur verschijnen ze ook in de zoekresultaten."
+      "faqHinweis": "Uitklapbare vragen. Met structuur verschijnen ze ook in de zoekresultaten.",
+      "map": "Kaart",
+      "mapHinweis": "Toont de ligging. Zonder adres wordt dat uit het bedrijfsprofiel gebruikt.",
+      "testimonials": "Gastenreacties",
+      "testimonialsHinweis": "Zelf ingetypte citaten. Voor echte beoordelingen is er een eigen sectie.",
+      "features": "Kenmerken",
+      "featuresHinweis": "Wat u biedt — icoon, kop, tekst in kolommen.",
+      "form": "Formulier",
+      "formHinweis": "Een formulier dat gasten invullen. De aanvragen komen in het tabblad „Aanvragen” terecht.",
+      "posts": "Laatste berichten",
+      "postsHinweis": "Toont de nieuwste blogberichten. De blog zelf staat op /blog."
     },
     "felder": {
       "eyebrow": "Kleine regel erboven",
@@ -7402,7 +7487,7 @@
       "ausrichtung": "Uitlijning",
       "linksbuendig": "Links uitgelijnd",
       "zentriert": "Gecentreerd",
-      "beschriftung": "Knoptekst",
+      "beschriftung": "Label",
       "ziel": "Bestemming",
       "buttonPrimaer": "Opvallend",
       "buttonSekundaer": "Subtiel",
@@ -7426,7 +7511,71 @@
       "formularZeigen": "Contactformulier tonen",
       "fragen": "Vragen",
       "frage": "Vraag",
-      "antwort": "Antwoord"
+      "antwort": "Antwoord",
+      "zoom": "Zoomniveau",
+      "stimmen": "Reacties",
+      "merkmale": "Kenmerken",
+      "zitat": "Citaat",
+      "name": "Naam",
+      "ort": "Plaats",
+      "symbol": "Icoon",
+      "symbolKeines": "Geen icoon",
+      "spalten": "Kolommen",
+      "symbolName": {
+        "wlan": "Wifi",
+        "parken": "Parkeren",
+        "kueche": "Keuken",
+        "fruehstueck": "Ontbijt",
+        "pool": "Zwembad",
+        "sauna": "Sauna",
+        "haustiere": "Huisdieren",
+        "familie": "Familie",
+        "fahrrad": "Fiets",
+        "strand": "Strand",
+        "berge": "Bergen",
+        "garten": "Tuin",
+        "kamin": "Open haard",
+        "waschmaschine": "Wasmachine",
+        "klimaanlage": "Airco",
+        "barrierefrei": "Toegankelijk",
+        "schluessel": "Sleutel",
+        "uhr": "Klok",
+        "herz": "Hart",
+        "stern": "Ster",
+        "haus": "Huis",
+        "karte": "Kaart"
+      },
+      "hintergrundfarbe": "Achtergrondkleur",
+      "hintergrundbild": "Achtergrondafbeelding",
+      "abdunkeln": "Afbeelding donkerder maken",
+      "abdunkelnHinweis": "Nodig, zodat tekst op de afbeelding leesbaar blijft.",
+      "abstand": "Ruimte boven en onder",
+      "abstandWert": {
+        "none": "Samengetrokken",
+        "sm": "Krap",
+        "md": "Normaal",
+        "lg": "Ruim"
+      },
+      "einleitung": "Inleiding",
+      "formularfelder": "Velden",
+      "knopfText": "Tekst op de knop",
+      "danketext": "Tekst na het verzenden",
+      "empfaenger": "E-mail voor aanvragen",
+      "formularName": "Interne naam",
+      "feldart": "Soort veld",
+      "pflichtfeld": "Verplicht veld",
+      "optionenHinweis": "Eén optie per regel",
+      "feldartName": {
+        "text": "Tekst (één regel)",
+        "textarea": "Tekst (meerdere regels)",
+        "email": "E-mail",
+        "phone": "Telefoon",
+        "number": "Getal",
+        "date": "Datum",
+        "select": "Keuze",
+        "checkbox": "Vinkje",
+        "consent": "Privacytoestemming"
+      }
     },
     "vorschau": {
       "titel": "Voorbeeld",
@@ -7694,7 +7843,83 @@
         "importErgebnis": "{neu} nieuw, {geaendert} gewijzigd, {uebersprungen} overgeslagen.",
         "weitereFehler": "{anzahl} andere regels met fouten.",
         "vorrangHinweis": "Een omleiding werkt alleen als er onder het oude adres geen pagina bestaat. Een bestaande pagina heeft altijd voorrang."
+      },
+      "pruefung": {
+        "titel": "Wat nog ontbreekt",
+        "hinweis": "We controleren wat we kunnen controleren. Of een pagina goed gevonden wordt, bepaalt Google — niet deze lijst.",
+        "beheben": "Oplossen",
+        "weitere": "en {anzahl} meer",
+        "nichtsVeroeffentlicht": "Nog geen pagina gepubliceerd — er is niets te controleren.",
+        "allesGepflegt": "Alles wat we kunnen controleren is in orde.",
+        "allesGepflegtHinweis": "{anzahl} gepubliceerde pagina’s zonder bevindingen. Dat is geen garantie voor goede posities, maar de basis is goed.",
+        "code": {
+          "site_noindex": {
+            "titel": "Website is uit de zoekindex gehaald",
+            "titelMit": "Website is uit de zoekindex gehaald ({anzahl} pagina’s getroffen)",
+            "hinweis": "Zolang de schakelaar aan staat, vindt niemand deze website via een zoekmachine."
+          },
+          "keine_domain": {
+            "titel": "Geen eigen domein verbonden",
+            "titelMit": "Geen eigen domein verbonden",
+            "hinweis": "Zonder eigen adres is er geen sitemap.xml, geen robots.txt en geen llms.txt."
+          },
+          "seiten_ohne_titel": {
+            "titel": "Pagina’s zonder Meta title",
+            "titelMit": "{anzahl} pagina’s zonder Meta title",
+            "hinweis": "De Meta title is de kop in het zoekresultaat. Ontbreekt die, dan neemt Google een willekeurige tekst van de pagina."
+          },
+          "seiten_ohne_beschreibung": {
+            "titel": "Pagina’s zonder Meta description",
+            "titelMit": "{anzahl} pagina’s zonder Meta description",
+            "hinweis": "De tekst onder de titel bepaalt of er geklikt wordt."
+          },
+          "seiten_gleiche_beschreibung": {
+            "titel": "Pagina’s met de sitebrede beschrijving",
+            "titelMit": "{anzahl} pagina’s gebruiken de sitebrede beschrijving",
+            "hinweis": "Deze pagina’s hebben wel een beschrijving — maar alle dezelfde. Een eigen beschrijving per pagina werkt aanzienlijk beter."
+          },
+          "doppelte_titel": {
+            "titel": "Pagina’s met dezelfde Meta title",
+            "titelMit": "{anzahl} pagina’s met dezelfde Meta title",
+            "hinweis": "Twee pagina’s met dezelfde titel concurreren om dezelfde zoekopdracht. Google meldt dat zelf in de Search Console."
+          },
+          "kein_firmenname": {
+            "titel": "Bedrijfsprofiel zonder naam",
+            "titelMit": "Bedrijfsprofiel zonder naam",
+            "hinweis": "Zonder naam in het bedrijfsprofiel levert de website geen bedrijfsgegevens aan Google — de schakelaar onder “Gestructureerde data” blijft zonder effect."
+          },
+          "keine_anschrift": {
+            "titel": "Bedrijfsprofiel zonder adres",
+            "titelMit": "Bedrijfsprofiel zonder adres",
+            "hinweis": "Met een adres kan Google het bedrijf aan een plaats koppelen en in de lokale zoekresultaten tonen."
+          },
+          "keine_messung": {
+            "titel": "Geen Google-ID vastgelegd",
+            "titelMit": "Geen Google-ID vastgelegd",
+            "hinweis": "Zonder ID weet u niet hoeveel bezoekers de website heeft en waar ze vandaan komen."
+          },
+          "objekte_ohne_text": {
+            "titel": "Accommodaties zonder beschrijving",
+            "titelMit": "{anzahl} accommodaties zonder beschrijving",
+            "hinweis": "Een accommodatiepagina zonder tekst bestaat uit foto’s, prijs en kalender. De beschrijving is de enige inhoud."
+          },
+          "zahlung_nicht_bereit": {
+            "titel": "Betalingen nog niet ingericht",
+            "titelMit": "Betalingen nog niet ingericht",
+            "hinweis": "De website neemt aanvragen aan, maar geen boekingen met betaling. Zolang Stripe niet klaar is om af te rekenen of er geen PayPal-adres is opgeslagen, ziet de gast “Aanvraag versturen” in plaats van “Reserveren en betalen”."
+          }
+        }
       }
+    },
+    "anfragen": {
+      "titel": "Aanvragen",
+      "keine": "Er zijn nog geen aanvragen binnengekomen.",
+      "ungelesen": "{anzahl} ongelezen",
+      "alleGelesen": "Alles gelezen.",
+      "ohneName": "Formulier",
+      "csvExport": "Als CSV downloaden",
+      "loeschen": "Definitief verwijderen",
+      "geloescht": "Aanvraag verwijderd."
     }
   },
   "dynamicPricing": {

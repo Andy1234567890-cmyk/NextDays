@@ -81,6 +81,35 @@ export type Branding = {
   privacy_consent: boolean;
   privacy_policy_page_id: string | null;
   is_offline: boolean;
+  // --- SEO/AEO site-weit (0430) -----------------------------------------
+  // Rückfall für jede Seite ohne eigene Angabe. Die Hierarchie („Seite schlägt
+  // Website") löst der Backend-Resolver auf — hier stehen nur die Rohwerte.
+  seo_title: string | null;
+  seo_description: string | null;
+  /** Kommagetrennt. Große Suchmaschinen werten Keywords nicht mehr; das Feld
+   *  existiert für kleinere Verzeichnisse und für Altbestand. */
+  seo_keywords: string | null;
+  /** true = die GANZE Website aus dem Suchindex halten. */
+  noindex: boolean;
+  /** Google-Tag: G- (Analytics), UA- (Altbestand), AW- (Ads), DC- (Campaign
+   *  Manager). Format wird serverseitig erzwungen. */
+  gtag_id: string | null;
+  // --- Strukturierte Daten (JSON-LD) ------------------------------------
+  schema_organization: boolean;
+  schema_breadcrumbs: boolean;
+  schema_lodging: boolean;
+  schema_faq: boolean;
+  // --- Core Web Vitals --------------------------------------------------
+  lazy_loading: boolean;
+  system_fonts_first: boolean;
+  // --- Theme: Breite und Schriftgrößen (0435) ------------------------------
+  /** Maximale Inhaltsbreite in px (960–1920). `null` = die Breiten, die die
+   *  Abschnitte selbst setzen — der bisherige Zustand. */
+  content_width: number | null;
+  /** Faktor auf die Überschriften-Größen in Prozent (80–130). `null` = 100. */
+  heading_scale: number | null;
+  /** Dasselbe für den Fließtext. */
+  body_scale: number | null;
 };
 
 export type BrandingInput = Partial<Branding>;

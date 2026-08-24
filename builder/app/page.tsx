@@ -1,13 +1,29 @@
 // Startseite einer Kunden-Site = die im Baukasten komponierte Home-Page
 // (geordnete Abschnitte), gerendert pro Custom-Domain. KEIN Marktplatz-Klon.
+import type { Metadata } from "next";
+
 import { BlockRenderer } from "@/components/blocks/block-renderer";
 import { NichtEingerichtet } from "@/components/nicht-eingerichtet";
 import { SiteShell } from "@/components/site-shell";
 import { aktuellerHost } from "@/lib/host";
 import type { SuchParams } from "@/lib/inserate";
+import { seitenMetadaten } from "@/lib/metadaten";
 import { ladeSeite } from "@/lib/site";
 import { getSiteContext, navOf } from "@/lib/site-context";
 import { spracheWaehlen } from "@/lib/sprache";
+
+/** Die <head>-Angaben der Startseite (0430).
+ *
+ *  Dieselbe Funktion wie bei den Unterseiten — der Titel bekommt hier nur
+ *  keinen Marken-Zusatz angehängt, weil er auf der Startseite doppelt stünde. */
+export async function generateMetadata(): Promise<Metadata> {
+  const { branding } = await getSiteContext();
+  const host = await aktuellerHost();
+  if (!host) return {};
+  const site = await ladeSeite(host);
+  if (!site) return {};
+  return seitenMetadaten({ branding, host, page: site.page });
+}
 
 export default async function HomePage({
   searchParams,
@@ -45,6 +61,8 @@ export default async function HomePage({
       aktiverSlug=""
       jahr={new Date().getFullYear()}
       sprache={spracheWaehlen(branding, sp.lang)}
+      seitenHtml={site.page.head_html}
+      tenantId={site.tenant_id}
     >
       <BlockRenderer
         blocks={site.blocks}
