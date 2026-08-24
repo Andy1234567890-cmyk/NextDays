@@ -24,7 +24,23 @@ import { securityHeaders } from "@nextdays/security-headers";
  * (Wurzel 5). Ein Standardwert wie „localhost:3000" wäre in Produktion eine
  * offene Tür, und niemand würde es merken, weil die Vorschau lokal ja ginge.
  */
-const DASHBOARD_ORIGIN = process.env.DASHBOARD_ORIGIN ?? "";
+/** Erlaubte Dashboard-Origins, komma-getrennt.
+ *
+ *  MEHRERE, weil es real mehrere gibt: das Dashboard lauscht lokal je nach
+ *  belegtem Port auf 3000 ODER 3001, und neben der Produktion steht Staging.
+ *  Vorher nahm die Variable genau EINEN Wert — passte er nicht, blockte der
+ *  Browser den iframe und zeigte „localhost hat die Verbindung abgelehnt".
+ *  Diese Meldung liest sich wie ein toter Server und schickt jeden in die
+ *  falsche Richtung; in Wahrheit lief alles, nur `frame-ancestors` nannte
+ *  einen anderen Port (gemessen am 24.08.2026: Dashboard auf 3001,
+ *  DASHBOARD_ORIGIN auf 3000).
+ *
+ *  Leere Teile fliegen raus, damit ein Komma am Ende nicht zu einem
+ *  wertlosen Eintrag in der Richtlinie wird. */
+const DASHBOARD_ORIGINS = (process.env.DASHBOARD_ORIGIN ?? "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 const IST_DEV = process.env.NODE_ENV !== "production";
 
@@ -99,8 +115,8 @@ const nextConfig: NextConfig = {
         source: "/render/:path*",
         headers: securityHeaders({
           ...gemeinsam,
-          frameAncestors: DASHBOARD_ORIGIN
-            ? `'self' ${DASHBOARD_ORIGIN}`
+          frameAncestors: DASHBOARD_ORIGINS.length
+            ? `'self' ${DASHBOARD_ORIGINS.join(" ")}`
             : "'none'",
         }),
       },

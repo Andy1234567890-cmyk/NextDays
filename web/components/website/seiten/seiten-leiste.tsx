@@ -50,8 +50,11 @@ export function SeitenLeiste({
   const t = useTranslations("website");
   const router = useRouter();
   const [pending, start] = useTransition();
+  // Nur WELCHER Bereich seinen Dialog offen hat. Den eingetippten Titel führt
+  // der Dialog `NeueSeite` selbst — hier lag er zusätzlich, wurde gesetzt und
+  // nie gelesen. Ein zweiter Halter für denselben Wert ist keine Vorsicht,
+  // sondern die Stelle, an der beide auseinanderlaufen.
   const [neuIn, setNeuIn] = useState<NavArea | null>(null);
-  const [titel, setTitel] = useState("");
   // Welche Seite ihre Einstellungen offen hat. Als ID und nicht als Objekt: nach
   // einem `router.refresh()` ist das Page-Objekt ein neues, und ein
   // festgehaltenes wäre der Stand von vorher.
@@ -76,7 +79,6 @@ export function SeitenLeiste({
     popup: Parameters<typeof createPage>[6],
     template: string | null,
   ) {
-    setTitel("");
     setNeuIn(null);
     fuehreAus(() =>
       createPage(
@@ -128,10 +130,7 @@ export function SeitenLeiste({
                 type="button"
                 aria-label={t("seiten.neueSeite")}
                 title={t("seiten.neueSeite")}
-                onClick={() => {
-                  setNeuIn(bereich);
-                  setTitel("");
-                }}
+                onClick={() => setNeuIn(bereich)}
                 className="text-muted-foreground transition hover:text-foreground"
               >
                 <Icon icon="ph:plus" className="size-4" />
