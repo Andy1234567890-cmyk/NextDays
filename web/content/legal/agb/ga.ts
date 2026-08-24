@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // (Stripe Connected Account Agreement) — URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Téarmaí agus Coinníollacha Ginearálta do Ghníomhaireachtaí agus do Bhainisteoirí Réadmhaoine",
-  stand: "Arna nuashonrú: 30 Iúil 2026",
+  stand: "Arna nuashonrú: 13 Lúnasa 2026",
   intro: [
     "Rialaíonn na Téarmaí agus Coinníollacha seo (na “Téarmaí” anseo feasta) úsáid ardán bogearraí myNextDays (an “tArdán” anseo feasta) ag gníomhaireachtaí, bainisteoirí réadmhaoine, tiarnaí talún agus úsáideoirí gnó eile (an “tÚsáideoir” anseo feasta).",
     "Is é myNextDays ApS, cuideachta faoi theorainn scaireanna (anpartsselskab) faoi dhlí na Danmhairge, Hirtshalsvej 21, 9881 Bindslev, an Danmhairg, cláraithe i gClár Lárnach Gnólachtaí na Danmhairge (CVR) faoi uimhir CVR 46615182 a oibríonn an tArdán (“myNextDays” nó “muidne” anseo feasta).",
@@ -105,14 +105,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Maoin intleachtúil",
+      heading: "§ 12 Úsáid intleachta saorga",
+      paragraphs: [
+        "Baineann myNextDays úsáid as córais intleachta saorga i bhfeidhmeanna aonair, go háirithe le haghaidh moltaí praghsanna (praghsáil dhinimiciúil), le haghaidh moltaí freagra i mbosca isteach na dteachtaireachtaí agus le tacaíocht sa tseirbhís chustaiméirí. Gineann na feidhmeanna sin moltaí; is faoin Úsáideoir atá an cinneadh agus an fhreagracht as a n-úsáid. Ní ionann moltaí praghsanna agus measúnú tráchtála an Úsáideora féin.",
+        "Má bhíonn aíonna ag idirghníomhú go díreach le córas intleachta saorga, nochtar sin dóibh (Airteagal 50(1) de Rialachán (AE) 2024/1689 — “an Gníomh um Intleacht Shaorga”). Ní mór don Úsáideoir téacsanna a ghin córas intleachta saorga nó a d’athraigh sé go substaintiúil agus a chuireann an tÚsáideoir ar aghaidh chuig aíonna a mharcáil mar sin, a mhéid a bhfuil oibleagáid dhlíthiúil air sin a dhéanamh.",
+        "Ní oibríonn myNextDays aon chóras intleachta saorga a mheastar a bheith ina chóras ardriosca de réir Iarscríbhinn III den Ghníomh um Intleacht Shaorga, ná aon chleachtas atá coiscthe faoi Airteagal 5 den Ghníomh um Intleacht Shaorga. Ní úsáidtear ionchuir an Úsáideora ná sonraí a aíonna chun samhlacha a thraenáil gan treoir ar leith.",
+        "Ní cead don Úsáideoir na feidhmeanna intleachta saorga a úsáid chun cuma chumarsáide daonna a chruthú d’aíonna san áit a bhfuil oibleagáid nochta ann, ná chun dearbhuithe atá ceangailteach ó thaobh dlí a dhéanamh gan scrúdú dá chuid féin.",
+        "Má nascann an tÚsáideoir a chuntas, tríd an gcomhéadan atá ceaptha chuige sin, le cúntóir intleachta saorga dá chuid féin (mar shampla Claude ó Anthropic), tá feidhm ag an méid seo a leanas: tugann an tÚsáideoir an conradh maidir leis an tseirbhís sin i gcrích é féin agus tá sé freagrach as a húsáid. Is é an nasc sin a threoir chuig myNextDays na sonraí a scaoil sé a thabhairt ar aghaidh ansin — lena n-áirítear aistriú chuig tríú tír má tá an soláthraí lonnaithe lasmuigh den Aontas Eorpach. Cinntíonn an tÚsáideoir go bhfuil bunús dlí aige chuige sin, go n-ainmníonn a fhaisnéis phríobháideachais féin an faighteoir agus go bhfuil na cosaintí is gá don aistriú i bhfeidhm.",
+        "Le haghaidh naisc dá leithéid, úsáideann an tÚsáideoir cineál rochtana a dtairgeann an soláthraí próiseáil sonraí thar ceann an rialaitheora lena aghaidh agus a chuireann úsáid na sonraí chun samhlacha a thraenáil as an áireamh — i gcás Claude, is iad na rochtana do chustaiméirí gnó (Team, Enterprise nó API) atá i gceist. Ní chomhlíonann rochtana d’úsáid phríobháideach an méid sin go rialta; níl siad oiriúnach do shonraí aíonna dá bharr. Ní féidir le myNextDays a aithint cén rochtain a úsáideann an tÚsáideoir, agus tarraingíonn sé aird air sin sa dialóg toilithe.",
+        "Tugann an tÚsáideoir aird air nach mbíonn ábhar a chóipeálann sé de láimh as an gcomhéadan úsáideora isteach i réimse ionchuir an chúntóra clúdaithe go rialta ag srianta conarthacha an tsoláthraí — murab ionann agus na sonraí a fhaightear tríd an gcomhéadan.",
+        "Sonraí a thagann ó phortál áirithinte, ní úsáideann an tÚsáideoir iad, fiú tríd an gcomhéadan, ach chun an áirithint faoi seach a láimhseáil agus freastal a dhéanamh air — ní chun daoine a mheas, ní chun próifílí a chruthú agus ní le haghaidh fógraíochta. Leagann na portáil an teorannú cuspóra sin síos ina dtéarmaí féin.",
+      ],
+    },
+    {
+      heading: "§ 13 Gearáin agus idirghabháil",
+      paragraphs: [
+        "Coinníonn myNextDays córas inmheánach saor in aisce um láimhseáil gearán d’úsáideoirí gnó (Airteagal 11 de Rialachán (AE) 2019/1150 — “an Rialachán P2B”). Is féidir gearáin — go háirithe faoi sháruithe líomhnaithe ar na Téarmaí seo, faoi fhadhbanna teicniúla a bhfuil tionchar suntasach acu nó faoi bhearta a ghlacann myNextDays i leith an Úsáideora — a chur isteach go neamhfhoirmiúil chuig info@mynextdays.dk nó tríd an tseirbhís tacaíochta sa fheidhmchlár. Admhaítear go bhfuarthas an gearán; déantar é a phróiseáil go pras agus laistigh de thréimhse réasúnta, agus i gcásanna simplí de ghnáth laistigh de 14 lá. Cuirtear an toradh in iúl don Úsáideoir i dteanga shoiléir.",
+        "Mura dtagtar ar chomhaontú sa nós imeachta gearáin, tá myNextDays sásta dul, i gcomhar leis an Úsáideoir, chuig na hidirghabhálaithe seo a leanas lasmuigh de na cúirteanna (Airteagal 12 den Rialachán P2B): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Ginéiv 20, an Eilvéis — bíonn na nósanna imeachta ar fáil go cianda agus i níos mó ná teanga amháin; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 Cóbanhávan K, an Danmhairg — stát bunaíochta an oibreora.",
+        "Ní chuireann an t-ainmniú sin d’oibleagáid ar an Úsáideoir nós imeachta idirghabhála a dhéanamh; ní dhéantar difear don cheart dul chun cúirte. Glacann myNextDays páirt i gcostais réasúnta idirghabhála; eascraíonn an roinnt as rialacha an idirghabhálaí faoi seach agus as imthosca an cháis aonair.",
+        "Foilsíonn myNextDays go bliantúil faisnéis faoi líon na ngearán, faoi fhad na próiseála agus faoi na bearta a glacadh.",
+      ],
+    },
+    {
+      heading: "§ 14 Maoin intleachtúil",
       paragraphs: [
         "Is le myNextDays nó lena cheadúnóirí gach ceart san Ardán, ina bhogearraí agus ina ábhar (seachas an t-ábhar a chuireann an tÚsáideoir isteach). Le linn théarma an chonartha, faigheann an tÚsáideoir ceart simplí, neamh-inaistrithe an tArdán a úsáid a mhéid a comhaontaíodh sa chonradh.",
         "Deonaíonn an tÚsáideoir do myNextDays, maidir leis an ábhar a chuireann sé isteach, na cearta úsáide simplí atá riachtanach chun an tArdán a oibriú (go háirithe stóráil, atáirgeadh, taispeáint agus tarchur chuig bealaí nasctha).",
       ],
     },
     {
-      heading: "§ 13 Dliteanas",
+      heading: "§ 15 Dliteanas",
       paragraphs: [
         "Tá myNextDays faoi dhliteanas gan teorainn i leith intinne agus mórfhaillí agus i leith damáiste a eascraíonn as díobháil don bheatha, don chorp nó don tsláinte.",
         "I gcásanna gnáthfhaillí, níl myNextDays faoi dhliteanas ach amháin i leith shárú oibleagáidí conarthacha bunriachtanacha (oibleagáidí cairdinéalta), teoranta don damáiste intuartha is gnách don chonradh. Ní dhéantar difear don dliteanas faoin dlí um dhliteanas táirgí ná faoi ráthaíochtaí a glacadh.",
@@ -120,7 +142,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Téarma, foirceannadh agus fionraí",
+      heading: "§ 16 Téarma, foirceannadh agus fionraí",
       paragraphs: [
         "Eascraíonn an téarma agus na tréimhsí fógra as an gconradh faoi seach. Ní dhéantar difear don cheart chun foirceannadh urghnách ar chúis mhaith.",
         "Féadfaidh myNextDays rochtain ar an Ardán nó ar fheidhmeanna aonair (lena n-áirítear glacadh íocaíochtaí agus eisíocaíochtaí) a chur ar fionraí go sealadach má tá comharthaí nithiúla ann go ndearnadh sárú ar na Téarmaí seo, calaois nó úsáid mhí-úsáideach, nó má cheanglaítear ar myNextDays é sin a dhéanamh le dlí nó le hordú ó sholáthraí seirbhíse íocaíochta. Cuirfear an tÚsáideoir ar an eolas faoin bhfionraí a mhéid a cheadaítear le dlí.",
@@ -128,14 +150,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 Athruithe ar na Téarmaí seo",
+      heading: "§ 17 Athruithe ar na Téarmaí seo",
       paragraphs: [
         "Féadfaidh myNextDays na Téarmaí seo a leasú le héifeacht don todhchaí más gá sin ar chúiseanna bailí (go háirithe athruithe ar an reachtaíocht, ar an gcásdlí nó ar cheanglais soláthraithe seirbhíse íocaíochta) agus mura gcuirtear an tÚsáideoir faoi mhíbhuntáiste míréasúnta dá bharr.",
         "Fógrófar leasuithe don Úsáideoir i bhfoirm téacs sé seachtaine ar a laghad sula dtiocfaidh siad i bhfeidhm. Mura ndéanann an tÚsáideoir agóid laistigh de thréimhse an fhógra nó má leanann sé de bheith ag úsáid an Ardáin tar éis do na leasuithe teacht i bhfeidhm, measfar go bhfuil glactha leis na Téarmaí leasaithe; tarraingeofar aird go sonrach ar an iarmhairt seo san fhógra.",
       ],
     },
     {
-      heading: "§ 16 Forálacha deiridh",
+      heading: "§ 18 Forálacha deiridh",
       paragraphs: [
         "Beidh feidhm ag dlí an stáit ina bhfuil oifig chláraithe an oibreora, gan Coinbhinsiún na Náisiún Aontaithe maidir le Conarthaí le haghaidh Díol Idirnáisiúnta Earraí a chur san áireamh. Ní dhéantar difear d’fhorálacha sainordaitheacha an stáit ina bhfuil oifig chláraithe an Úsáideora.",
         "Is é oifig chláraithe an oibreora — a mhéid a cheadaítear le dlí — an t-aon ionad dlínse le haghaidh gach díospóide a eascraíonn as an gconradh seo nó i dtaca leis.",

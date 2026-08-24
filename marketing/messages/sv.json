@@ -424,7 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Plattformen för uthyrare av semesterboenden",
-    "description": "Plattformen för hotell, förmedlare och uthyrare av semesterboenden: channel manager, kalender, direktbokning, gästkommunikation och fakturering på ett ställe. Byggd i Danmark, driftad inom EU. Från 19,90 € per månad. Testa gratis i 30 dagar."
+    "description": "Plattformen för hotell, förmedlare och uthyrare av semesterboenden: channel manager, kalender, direktbokning, gästkommunikation och fakturering på ett ställe. Byggd i Danmark, driftad inom EU. Testa gratis i 30 dagar.",
+    "descriptionMitPreis": "Plattformen för hotell, förmedlare och uthyrare av semesterboenden: channel manager, kalender, direktbokning, gästkommunikation och fakturering på ett ställe. Byggd i Danmark, driftad inom EU. Från {preis} per månad. Testa gratis i 30 dagar."
   },
   "nav": {
     "funktionen": "Funktioner",
@@ -828,9 +829,9 @@
     "appLaden": "Ladda ner appen",
     "spalten": {
       "produkt": "Produkt",
-      "loesungen": "Lösningar",
       "ressourcen": "Resurser",
-      "unternehmen": "Företag"
+      "unternehmen": "Företag",
+      "rechtliches": "Juridisk information"
     },
     "produkt": {
       "pms": "Property management",
@@ -839,26 +840,14 @@
       "zahlungen": "Betalningar",
       "mobileApp": "Mobilapp"
     },
-    "loesungen": {
-      "hotels": "Hotell",
-      "bnb": "B&B",
-      "gaestehaeuser": "Gästhus",
-      "ferienwohnungen": "Semesterboenden",
-      "campingplaetze": "Campingplatser"
-    },
     "ressourcen": {
-      "blog": "Blogg",
       "hilfeCenter": "Hjälpcenter",
       "status": "Systemstatus",
-      "leitfaeden": "Guider",
       "api": "API-dokumentation"
     },
     "unternehmen": {
       "ueberUns": "Om oss",
-      "karriere": "Karriär",
-      "partner": "Partner",
-      "kontakt": "Kontakt",
-      "presse": "Press"
+      "kontakt": "Kontakt"
     },
     "copyright": "© 2026 myNextDays. Med ensamrätt.",
     "agb": "Villkor",
@@ -867,6 +856,9 @@
     "cookies": "Cookiepolicy",
     "avv": "Personuppgiftsbiträde",
     "kontoLoeschen": "Radera konto"
+  },
+  "legal": {
+    "stand": "Senast uppdaterad: {datum}"
   },
   "abschluss": {
     "heading": "Redo att sköta ditt boende från ett ställe?",
@@ -980,6 +972,7 @@
       "unsereRechnung": "Grundavgift + objektstege",
       "proMonat": "/månad",
       "ohnePreis": "ej publicerat",
+      "waehrungshinweis": "Alla belopp i den här jämförelsen anges i euro — även vårt eget. Leverantörerna publicerar sina priser i euro; att räkna om dem till din valuta skulle innebära att anta en växelkurs som redan imorgon kan vara fel.",
       "fussnote": "Per {stand}, avläst direkt på leverantörernas prissidor. Månadspriser utan årsbindning visas; där en leverantör marknadsför årspriset står det i beräkningen. Utan garanti — leverantörens aktuella prislista gäller.",
       "ersparnis": "{prozent} % under snittet"
     },
@@ -2028,5 +2021,38 @@
     "noResultsHintLink": "bläddra bland kategorierna",
     "browseCategories": "Bläddra bland kategorier",
     "brandTitle": "myNextDays Hjälp"
+  },
+  "einwilligung": {
+    "titel": "Ditt samtycke",
+    "text": "Den här webbplatsen använder inga analys-, annons- eller spårningstjänster; typsnitt och ikoner levereras från vår egen server. Nödvändigt är bara det du själv ställer in eller efterfrågar. Därför behöver vi ditt samtycke till exakt en sak: det externa skräppostskyddet i vårt kontaktformulär.",
+    "richtlinie": "Läs cookiepolicyn",
+    "allesAblehnen": "Avvisa alla",
+    "allesAnnehmen": "Acceptera alla",
+    "auswahlOeffnen": "Visa val",
+    "auswahlSchliessen": "Dölj val",
+    "auswahlSpeichern": "Spara val",
+    "immerAktiv": "Alltid aktiv",
+    "kategorien": {
+      "notwendig": {
+        "titel": "Nödvändigt",
+        "text": "Ditt språkval och — bara om du själv öppnar chatten — identifieraren för din konversation på den här enheten. Utan dessa uppgifter kan webbplatsen inte levereras så som du har begärt den. De används varken för annonser eller för statistik."
+      },
+      "spamschutz": {
+        "titel": "Skräppostskydd för kontaktformuläret",
+        "text": "Vårt kontaktformulär skyddas mot automatiserade massmeddelanden med reCAPTCHA Enterprise från Google. Om du tillåter det laddar din webbläsare ett skript från google.com när du fyller i formuläret och skickar därmed din IP-adress till Google. Utan ditt tillstånd laddas ingenting från Google; du kan i stället nå oss via e-post."
+      }
+    },
+    "einstellungen": {
+      "titel": "Hantera ditt samtycke",
+      "text": "Du kan ändra eller återkalla ditt beslut här när som helst. Det gäller för den här webbläsaren och sparas endast på din enhet.",
+      "offen": "Du har ännu inte tagit något beslut. Inget valfritt är aktivt.",
+      "stand": "Ditt beslut från {datum}.",
+      "gespeichert": "Sparat."
+    },
+    "kontakt": {
+      "hinweis": "Innan du skickar behöver vi ditt tillstånd för det externa skräppostskyddet (reCAPTCHA från Google). Utan det kan vi inte ta emot formuläret — så håller vi automatiserade massmeddelanden borta.",
+      "erlauben": "Tillåt skräppostskydd",
+      "alternative": "Vill du inte det? Skriv till oss på {email} i stället."
+    }
   }
 }

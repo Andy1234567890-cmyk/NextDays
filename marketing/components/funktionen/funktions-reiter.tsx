@@ -130,9 +130,9 @@ export function FunktionsReiter({
               id={`${id}-panel-${i}`}
               aria-labelledby={`${id}-tab-${i}`}
               hidden={aktiv !== i}
-              className="grid items-center gap-12 lg:grid-cols-2"
+              className="grid min-w-0 items-center gap-12 lg:grid-cols-2"
             >
-              <div className="order-2 lg:order-1">
+              <div className="order-2 min-w-0 lg:order-1">
                 <p className="eyebrow">{t(`${r.key}.titel`)}</p>
                 <h3 className="mt-4 font-display text-2xl font-extrabold leading-tight sm:text-3xl">
                   {t(`${r.key}.heading`)}
@@ -156,7 +156,7 @@ export function FunktionsReiter({
                   />
                 </TelefonBuehne>
               ) : (
-                <div className="order-1 rounded-[2rem] bg-surface-warm p-8 lg:order-2 lg:p-10">
+                <div className="order-1 min-w-0 rounded-[2rem] bg-surface-warm p-6 sm:p-8 lg:order-2 lg:p-10">
                   <Grafik
                     art={r.grafik}
                     gruppe={gruppe}

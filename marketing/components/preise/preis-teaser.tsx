@@ -13,6 +13,7 @@ import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { anzeigewaehrung } from "@/lib/anzeigewaehrung";
 import { formatCurrency } from "@/lib/currency";
 import { formatProzent, holePreisliste } from "@/lib/preise";
 import { staffelPreisCent } from "@/lib/tarif";
@@ -20,7 +21,10 @@ import { staffelPreisCent } from "@/lib/tarif";
 export async function PreisTeaser({ locale }: { locale: string }) {
   const t = await getTranslations("benefits.preisBanner");
   const tp = await getTranslations("preise.teaser");
-  const liste = await holePreisliste();
+  // Preise in der Währung der gewählten Sprache (lib/anzeigewaehrung). Was
+  // wirklich kommt, sagt `liste.currency` — und genau damit wird unten
+  // formatiert, nie mit einer Annahme.
+  const liste = await holePreisliste(anzeigewaehrung(locale));
 
   const einstiegCent = liste ? staffelPreisCent(liste.grundtarif_tiers, 1) : null;
   // Günstigster Objektpreis = letzte Stufe der Staffel. Sie ist die unbegrenzte
@@ -33,8 +37,13 @@ export async function PreisTeaser({ locale }: { locale: string }) {
   return (
     <section id="preise" className="scroll-mt-24 bg-surface-warm pb-24">
       <div className="mx-auto max-w-7xl px-6">
-        <div className="grid items-center gap-10 rounded-3xl border border-border bg-card px-8 py-10 shadow-soft lg:grid-cols-[1.6fr_1fr] lg:px-12">
-          <div>
+        {/* `min-w-0` an Raster UND Zellen: Grid-Spalten sind sonst mindestens
+            so breit wie ihr breitester unteilbarer Inhalt (`min-width: auto`).
+            Auf Dänisch schob die Preiszelle das Raster bei 320 px auf 336 px
+            und die Seite scrollte quer. Mobil zudem weniger Innenabstand —
+            64 px Polster von 320 px sind ein Fünftel des Bildschirms. */}
+        <div className="grid min-w-0 items-center gap-10 rounded-3xl border border-border bg-card px-6 py-10 shadow-soft sm:px-8 lg:grid-cols-[1.6fr_1fr] lg:px-12">
+          <div className="min-w-0">
             <p className="eyebrow">{t("eyebrow")}</p>
             <h3 className="mt-4 font-display text-2xl font-semibold leading-tight sm:text-3xl">
               {t("heading")}
@@ -42,10 +51,14 @@ export async function PreisTeaser({ locale }: { locale: string }) {
             <p className="mt-4 text-muted-foreground">{t("text")}</p>
           </div>
 
-          <div className="flex flex-col items-start gap-2 rounded-2xl bg-surface-accent p-6">
+          <div className="flex min-w-0 flex-col items-start gap-2 rounded-2xl bg-surface-accent p-5 sm:p-6">
             {liste && einstiegCent !== null ? (
               <>
-                <p className="whitespace-nowrap">
+                {/* Betrag und Zeiteinheit dürfen umbrechen — „19,90 €" bleibt
+                    durch das eigene <span> in sich zusammen. Ein
+                    `whitespace-nowrap` über die ganze Zeile machte die Zelle
+                    unteilbar und damit breiter als der Bildschirm. */}
+                <p>
                   <span className="font-display text-4xl font-semibold tabular-nums text-accent">
                     {formatCurrency(einstiegCent / 100, liste.currency, locale)}
                   </span>

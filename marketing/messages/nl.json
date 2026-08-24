@@ -424,7 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Het platform voor verhuurders van vakantieaccommodaties",
-    "description": "Het platform voor hotels, agentschappen en verhuurders van vakantieaccommodaties: channel manager, kalender, directe boekingen, gastcommunicatie en facturatie op één plek. Gebouwd in Denemarken, gehost in de EU. Vanaf € 19,90 per maand. 30 dagen gratis proberen."
+    "description": "Het platform voor hotels, agentschappen en verhuurders van vakantieaccommodaties: channel manager, kalender, directe boekingen, gastcommunicatie en facturatie op één plek. Gebouwd in Denemarken, gehost in de EU. 30 dagen gratis proberen.",
+    "descriptionMitPreis": "Het platform voor hotels, agentschappen en verhuurders van vakantieaccommodaties: channel manager, kalender, directe boekingen, gastcommunicatie en facturatie op één plek. Gebouwd in Denemarken, gehost in de EU. Vanaf {preis} per maand. 30 dagen gratis proberen."
   },
   "nav": {
     "funktionen": "Functies",
@@ -828,9 +829,9 @@
     "appLaden": "App downloaden",
     "spalten": {
       "produkt": "Product",
-      "loesungen": "Oplossingen",
       "ressourcen": "Bronnen",
-      "unternehmen": "Bedrijf"
+      "unternehmen": "Bedrijf",
+      "rechtliches": "Juridisch"
     },
     "produkt": {
       "pms": "Property management",
@@ -839,26 +840,14 @@
       "zahlungen": "Betalingen",
       "mobileApp": "Mobiele app"
     },
-    "loesungen": {
-      "hotels": "Hotels",
-      "bnb": "B&B's",
-      "gaestehaeuser": "Pensions",
-      "ferienwohnungen": "Vakantiewoningen",
-      "campingplaetze": "Campings"
-    },
     "ressourcen": {
-      "blog": "Blog",
       "hilfeCenter": "Helpcentrum",
       "status": "Systeemstatus",
-      "leitfaeden": "Handleidingen",
       "api": "API-documentatie"
     },
     "unternehmen": {
       "ueberUns": "Over ons",
-      "karriere": "Werken bij",
-      "partner": "Partners",
-      "kontakt": "Contact",
-      "presse": "Pers"
+      "kontakt": "Contact"
     },
     "copyright": "© 2026 myNextDays. Alle rechten voorbehouden.",
     "agb": "Voorwaarden",
@@ -867,6 +856,9 @@
     "cookies": "Cookiebeleid",
     "avv": "Verwerkersovereenkomst",
     "kontoLoeschen": "Account verwijderen"
+  },
+  "legal": {
+    "stand": "Laatst bijgewerkt: {datum}"
   },
   "abschluss": {
     "heading": "Klaar om je accommodatie vanaf één plek te sturen?",
@@ -980,6 +972,7 @@
       "unsereRechnung": "Basisbedrag + objectstaffel",
       "proMonat": "/maand",
       "ohnePreis": "niet gepubliceerd",
+      "waehrungshinweis": "Alle bedragen in deze vergelijking staan in euro — ook ons eigen bedrag. De aanbieders publiceren hun prijzen in euro; ze omrekenen naar jouw munteenheid zou een wisselkoers beweren die morgen al niet meer klopt.",
       "fussnote": "Stand {stand}, zelf afgelezen op de prijspagina's van de aanbieders. Genoemd zijn maandprijzen zonder jaarbinding; waar een aanbieder met de jaarprijs adverteert, staat die in de berekening. Zonder garantie — de actuele prijslijst van de aanbieder is bepalend.",
       "ersparnis": "{prozent} % goedkoper dan gemiddeld"
     },
@@ -2028,5 +2021,38 @@
     "noResultsHintLink": "blader door de categorieën",
     "browseCategories": "Categorieën doorbladeren",
     "brandTitle": "myNextDays-hulp"
+  },
+  "einwilligung": {
+    "titel": "Uw toestemming",
+    "text": "Deze website gebruikt geen analyse-, advertentie- of trackingdiensten; onze lettertypen en pictogrammen staan op onze eigen server. Noodzakelijk is alleen wat u zelf instelt of opvraagt. Uw toestemming hebben we daarom voor precies één ding nodig: de externe spambeveiliging van ons contactformulier.",
+    "richtlinie": "Cookiebeleid lezen",
+    "allesAblehnen": "Alles weigeren",
+    "allesAnnehmen": "Alles accepteren",
+    "auswahlOeffnen": "Keuzes weergeven",
+    "auswahlSchliessen": "Keuzes verbergen",
+    "auswahlSpeichern": "Keuzes opslaan",
+    "immerAktiv": "Altijd actief",
+    "kategorien": {
+      "notwendig": {
+        "titel": "Noodzakelijk",
+        "text": "Uw taalkeuze en — alleen als u de chat zelf opent — het kenmerk van uw gesprek op dit apparaat. Zonder deze gegevens kan de pagina niet worden geleverd zoals u die hebt opgevraagd. Ze dienen niet voor advertenties en niet voor statistieken."
+      },
+      "spamschutz": {
+        "titel": "Spambeveiliging van het contactformulier",
+        "text": "Ons contactformulier is met reCAPTCHA Enterprise van Google beveiligd tegen geautomatiseerde massaberichten. Als u dat toestaat, laadt uw browser tijdens het invullen van het formulier een script van google.com en verzendt daarbij uw IP-adres naar Google. Zonder uw toestemming wordt er niets van Google geladen; u kunt ons dan per e-mail bereiken."
+      }
+    },
+    "einstellungen": {
+      "titel": "Uw toestemming beheren",
+      "text": "U kunt uw keuze hier op elk moment wijzigen of intrekken. Ze geldt voor deze browser en wordt alleen op uw apparaat opgeslagen.",
+      "offen": "U hebt nog niet gekozen. Er is niets optioneels actief.",
+      "stand": "Uw keuze van {datum}.",
+      "gespeichert": "Opgeslagen."
+    },
+    "kontakt": {
+      "hinweis": "Voordat u verzendt, hebben we uw toestemming nodig voor de externe spambeveiliging (reCAPTCHA van Google). Zonder die toestemming nemen we het formulier niet aan — zo houden we geautomatiseerde massaberichten buiten.",
+      "erlauben": "Spambeveiliging toestaan",
+      "alternative": "Wilt u dat niet? Schrijf ons dan naar {email}."
+    }
   }
 }

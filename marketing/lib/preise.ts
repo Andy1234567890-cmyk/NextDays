@@ -53,12 +53,26 @@ export type Preisliste = {
  * `revalidate: 600` deckt sich mit dem TTL-Cache im Backend
  * (`PUBLIC_PRICING_TTL_SEKUNDEN`) — Stripe-Preise sind immutable, sie ändern
  * sich nur, wenn wir einen neuen Preis anlegen.
+ *
+ * `waehrung` ist ein WUNSCH (ISO-4217, aus `lib/anzeigewaehrung`). Hat Stripe
+ * für sie keine Beträge, antwortet das Backend in seiner Standardwährung — das
+ * Feld `currency` der Antwort sagt, welche es wurde, und JEDE Anzeigestelle
+ * formatiert mit genau diesem Feld. Hier wird nichts umgerechnet.
+ *
+ * Die Währung steht im Query, damit Nexts Cache sie unterscheidet: ohne sie im
+ * URL hätten alle Sprachen denselben Cache-Eintrag geteilt und der erste
+ * Besucher hätte entschieden, welche Währung die nächsten zehn Minuten alle
+ * sehen.
  */
-export async function holePreisliste(): Promise<Preisliste | null> {
+export async function holePreisliste(
+  waehrung: string = "EUR",
+): Promise<Preisliste | null> {
   try {
-    const res = await fetch(`${API_BASE}/subscriptions/public/pricing`, {
-      next: { revalidate: 600 },
-    });
+    const query = new URLSearchParams({ currency: waehrung });
+    const res = await fetch(
+      `${API_BASE}/subscriptions/public/pricing?${query.toString()}`,
+      { next: { revalidate: 600 } },
+    );
     if (!res.ok) return null;
     const daten = (await res.json()) as Preisliste;
     // Ohne Staffel gibt es keinen Preis zu zeigen. Lieber der Hinweis „Preise

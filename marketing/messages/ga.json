@@ -424,7 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – An t-ardán d'óstaigh cíosanna saoire",
-    "description": "An t-ardán d'óstáin, do ghníomhaireachtaí agus d'óstaigh cíosanna saoire: channel manager, féilire, áirithintí díreacha, teachtaireachtaí aíonna agus cuntasaíocht in aon áit amháin. Tógtha sa Danmhairg, óstáilte san AE. Ó €19,90 sa mhí. Saor in aisce ar feadh 30 lá."
+    "description": "An t-ardán d'óstáin, do ghníomhaireachtaí agus d'óstaigh cíosanna saoire: channel manager, féilire, áirithintí díreacha, teachtaireachtaí aíonna agus cuntasaíocht in aon áit amháin. Tógtha sa Danmhairg, óstáilte san AE. Saor in aisce ar feadh 30 lá.",
+    "descriptionMitPreis": "An t-ardán d'óstáin, do ghníomhaireachtaí agus d'óstaigh cíosanna saoire: channel manager, féilire, áirithintí díreacha, teachtaireachtaí aíonna agus cuntasaíocht in aon áit amháin. Tógtha sa Danmhairg, óstáilte san AE. Ó {preis} sa mhí. Saor in aisce ar feadh 30 lá."
   },
   "nav": {
     "funktionen": "Gnéithe",
@@ -828,9 +829,9 @@
     "appLaden": "Íoslódáil an aip",
     "spalten": {
       "produkt": "Táirge",
-      "loesungen": "Réitigh",
       "ressourcen": "Acmhainní",
-      "unternehmen": "Comhlacht"
+      "unternehmen": "Comhlacht",
+      "rechtliches": "Dlíthiúil"
     },
     "produkt": {
       "pms": "Property management",
@@ -839,26 +840,14 @@
       "zahlungen": "Íocaíochtaí",
       "mobileApp": "Aip mhóibíleach"
     },
-    "loesungen": {
-      "hotels": "Óstáin",
-      "bnb": "Tithe B&B",
-      "gaestehaeuser": "Tithe aíochta",
-      "ferienwohnungen": "Cíosanna saoire",
-      "campingplaetze": "Láithreáin champála"
-    },
     "ressourcen": {
-      "blog": "Blag",
       "hilfeCenter": "Ionad cabhrach",
       "status": "Stádas an chórais",
-      "leitfaeden": "Treoracha",
       "api": "Doiciméadú API"
     },
     "unternehmen": {
       "ueberUns": "Fúinn",
-      "karriere": "Gairmeacha",
-      "partner": "Comhpháirtithe",
-      "kontakt": "Teagmháil",
-      "presse": "Preas"
+      "kontakt": "Teagmháil"
     },
     "copyright": "© 2026 myNextDays. Gach ceart ar cosaint.",
     "agb": "Téarmaí",
@@ -867,6 +856,9 @@
     "cookies": "Beartas fianán",
     "avv": "Próiseáil sonraí",
     "kontoLoeschen": "Scrios cuntas"
+  },
+  "legal": {
+    "stand": "Arna nuashonrú: {datum}"
   },
   "abschluss": {
     "heading": "Réidh le d'áitreabh a rith ó aon áit amháin?",
@@ -980,6 +972,7 @@
       "unsereRechnung": "Táille bhunúsach + sraitheanna maoine",
       "proMonat": "/mí",
       "ohnePreis": "gan foilsiú",
+      "waehrungshinweis": "Tá gach suim sa chomparáid seo in euro — an ceann s'againne san áireamh freisin. Foilsíonn na soláthraithe a gcuid praghsanna in euro; dá n-athrófaí iad go dtí d'airgeadra féin, bheadh sé sin ag maíomh ráta malairte a d'fhéadfadh a bheith mícheart amárach féin.",
       "fussnote": "Amhail {stand}, léite go díreach ó leathanaigh phraghsanna na soláthraithe. Taispeántar praghsanna míosúla gan ceangaltas bliantúil; nuair a fhógraíonn soláthraí an praghas bliantúil, tá sé sa ríomh. Gan bharánta — is é liosta praghsanna reatha an tsoláthraí atá cinntitheach.",
       "ersparnis": "{prozent} % faoin meán"
     },
@@ -2028,5 +2021,38 @@
     "noResultsHintLink": "brabhsáil na catagóirí",
     "browseCategories": "Brabhsáil na catagóirí",
     "brandTitle": "Cabhair myNextDays"
+  },
+  "einwilligung": {
+    "titel": "Do thoiliú",
+    "text": "Ní úsáideann an suíomh gréasáin seo seirbhísí anailísíochta, fógraíochta ná rianaithe ar bith; tá ár gclófhoirne agus ár n-ícónna ar ár bhfreastalaí féin. Níl aon rud riachtanach ach an rud a shocraíonn nó a iarrann tú féin. Mar sin, níl do thoiliú ag teastáil uainn ach le haghaidh aon ní amháin: an chosaint turscair sheachtrach ar ár bhfoirm teagmhála.",
+    "richtlinie": "Léigh an polasaí fianán",
+    "allesAblehnen": "Diúltaigh uile",
+    "allesAnnehmen": "Ceadaigh uile",
+    "auswahlOeffnen": "Taispeáin roghanna",
+    "auswahlSchliessen": "Folaigh roghanna",
+    "auswahlSpeichern": "Sábháil roghanna",
+    "immerAktiv": "Gníomhach i gcónaí",
+    "kategorien": {
+      "notwendig": {
+        "titel": "Riachtanach",
+        "text": "Do rogha teanga agus — ach má osclaíonn tú an comhrá tú féin — aitheantóir do chomhrá ar an ngléas seo. Gan iad ní féidir an suíomh a sheachadadh mar a d'iarr tú é. Ní úsáidtear iad le haghaidh fógraíochta ná staitisticí."
+      },
+      "spamschutz": {
+        "titel": "Cosaint turscair na foirme teagmhála",
+        "text": "Tá ár bhfoirm teagmhála cosanta ar theachtaireachtaí uathoibrithe ollmhóra le reCAPTCHA Enterprise ó Google. Má cheadaíonn tú é, lódálann do bhrabhsálaí script ó google.com agus tú ag líonadh na foirme, agus seolann sé do sheoladh IP chuig Google ar an mbealach sin. Gan do chead ní lódáiltear aon rud ó Google; is féidir leat teagmháil a dhéanamh linn trí ríomhphost ina ionad sin."
+      }
+    },
+    "einstellungen": {
+      "titel": "Bainistigh do thoiliú",
+      "text": "Is féidir leat do chinneadh a athrú nó a tharraingt siar anseo tráth ar bith. Baineann sé leis an mbrabhsálaí seo agus stóráiltear é ar do ghléas amháin.",
+      "offen": "Níl cinneadh déanta agat go fóill. Níl aon rud roghnach gníomhach.",
+      "stand": "Do chinneadh ó {datum}.",
+      "gespeichert": "Sábháilte."
+    },
+    "kontakt": {
+      "hinweis": "Sula seolann tú é, teastaíonn do chead uainn don chosaint turscair sheachtrach (reCAPTCHA ó Google). Gan é ní féidir linn an fhoirm a ghlacadh — sin mar a choinnímid teachtaireachtaí uathoibrithe ollmhóra amach.",
+      "erlauben": "Ceadaigh an chosaint",
+      "alternative": "Nach mian leat sin? Scríobh chugainn ag {email} ina ionad sin."
+    }
   }
 }

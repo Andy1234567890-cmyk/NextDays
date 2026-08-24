@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // (Stripe Connected Account Agreement) — URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Általános Szerződési Feltételek (ÁSZF) ügynökségek és szállásadók részére",
-  stand: "Utolsó frissítés: 2026. július 30.",
+  stand: "Utolsó frissítés: 2026. augusztus 13.",
   intro: [
     "Jelen Általános Szerződési Feltételek (a továbbiakban: „ÁSZF”) a myNextDays szoftverplatform (a továbbiakban: „Platform”) ügynökségek, szállásadók, ingatlankezelők és egyéb üzleti felhasználók (a továbbiakban: „Felhasználó”) általi használatát szabályozzák.",
     "A Platform szolgáltatója: myNextDays ApS, dán jog szerinti korlátolt felelősségű társaság (anpartsselskab), Hirtshalsvej 21, 9881 Bindslev, Dánia, a dán Központi Cégnyilvántartásban (CVR) CVR-szám 46615182 alatt bejegyezve (a továbbiakban: „myNextDays” vagy „mi”).",
@@ -105,14 +105,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Szellemi tulajdon",
+      heading: "§ 12 A mesterséges intelligencia alkalmazása",
+      paragraphs: [
+        "A myNextDays egyes funkciókban mesterséges intelligenciát alkalmazó rendszereket használ, különösen árajánlásokhoz (Dynamic Pricing), az üzenetek beérkező postafiókjában megjelenő válaszjavaslatokhoz, valamint a támogatás során nyújtott segítséghez. Ezek a funkciók javaslatokat állítanak elő; a felhasználásukról szóló döntés és az azért való felelősség a Felhasználót terheli. Az árajánlások nem helyettesítik a saját kereskedelmi mérlegelést.",
+        "Ha a vendégek közvetlenül kapcsolatba lépnek egy mesterséges intelligenciát alkalmazó rendszerrel, erről tájékoztatást kapnak (az (EU) 2024/1689 rendelet — „mesterséges intelligenciáról szóló rendelet” — 50. cikk (1) bekezdése). Azokat a szövegeket, amelyeket mesterséges intelligenciát alkalmazó rendszer állított elő vagy lényegesen módosított, és amelyeket a Felhasználó továbbad a vendégeknek, a Felhasználó köteles ekként megjelölni, amennyiben erre jogszabályi kötelezettség terheli.",
+        "A myNextDays nem üzemeltet olyan, mesterséges intelligenciát alkalmazó rendszereket, amelyek a mesterséges intelligenciáról szóló rendelet III. melléklete szerint nagy kockázatú rendszernek minősülnek, és nem alkalmaz a mesterséges intelligenciáról szóló rendelet 5. cikke szerint tiltott gyakorlatokat. A Felhasználó által bevitt adatokat és vendégeinek adatait külön megbízás nélkül nem használják fel modellek betanításához.",
+        "A Felhasználó nem használhatja a mesterséges intelligenciát alkalmazó funkciókat arra, hogy a vendégekben az emberi kommunikáció látszatát keltse ott, ahol tájékoztatási kötelezettség áll fenn, sem arra, hogy saját vizsgálat nélkül jogilag kötelező érvényű nyilatkozatokat tegyen.",
+        "Ha a Felhasználó a fiókját az erre szolgáló interfészen keresztül összekapcsolja egy saját, mesterséges intelligencián alapuló asszisztenssel (például az Anthropic Claude nevű szolgáltatásával), a következők érvényesek: a Felhasználó maga köti meg az e szolgáltatásra vonatkozó szerződést, és ő felel annak alkalmazásáért. Az összekapcsolás a myNextDays felé adott utasításának minősül arra, hogy az engedélyezett adatokat oda kiadja — beleértve a harmadik országba történő továbbítást is, ha a szolgáltató az Európai Unión kívül található. A Felhasználó biztosítja, hogy ehhez jogalappal rendelkezik, hogy saját adatvédelmi tájékoztatója megjelöli a címzettet, és hogy a továbbításhoz szükséges garanciák fennállnak.",
+        "Ilyen összekapcsoláshoz a Felhasználó olyan hozzáférést vesz igénybe, amelyre a szolgáltató adatfeldolgozást vállal, és amelynél kizárja az adatok modellek betanítására való felhasználását — a Claude esetében ezek az üzleti hozzáférések (Team, Enterprise vagy API). A magáncélú használatra szánt hozzáférések ezt rendszerint nem teljesítik; ezért vendégadatokhoz nem alkalmasak. A myNextDays nem tudja felismerni, hogy a Felhasználó melyik hozzáférést használja, és erre a hozzájárulási párbeszédpanelben felhívja a figyelmet.",
+        "A Felhasználó ennek során figyelembe veszi, hogy azok a tartalmak, amelyeket a felületről kézzel másol be az asszisztens beviteli mezőjébe, rendszerint nem tartoznak a szolgáltató szerződéses korlátozásai alá — eltérően az interfészen keresztül lekért adatoktól.",
+        "A foglalási portálról származó adatokat a Felhasználó az interfészen keresztül is kizárólag az adott foglalás lebonyolítására és kezelésére használja — nem személyek értékelésére, profilalkotásra vagy reklámcélokra. A portálok ezt a célhoz kötöttséget saját feltételeikben írják elő.",
+      ],
+    },
+    {
+      heading: "§ 13 Panaszok és közvetítés",
+      paragraphs: [
+        "A myNextDays az üzleti felhasználók számára ingyenes belső panaszkezelést tart fenn (az (EU) 2019/1150 rendelet — „P2B-rendelet” — 11. cikke). A panaszok — különösen a jelen ÁSZF állított megsértésére, a jelentős kihatású műszaki problémákra vagy a myNextDays Felhasználóval szemben tett intézkedéseire vonatkozóan — formai kötöttség nélkül benyújthatók az info@mynextdays.dk címre vagy az alkalmazásban elérhető támogatáson keresztül. A beérkezést visszaigazolják; az ügyintézés gyorsan és észszerű határidőn belül történik, egyszerű megítélésű esetekben rendszerint 14 napon belül. Az eredményt a Felhasználóval világos nyelven közlik.",
+        "Ha a panaszeljárásban nem jön létre megegyezés, a myNextDays kész arra, hogy a Felhasználóval együtt bírósági eljáráson kívül a következő közvetítőkhöz forduljon (a P2B-rendelet 12. cikke): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Genf 20, Svájc — az eljárások távolról és több nyelven is lefolytathatók; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 Koppenhága K, Dánia — a szolgáltató székhelye szerinti állam.",
+        "A megnevezés nem kötelezi a Felhasználót közvetítői eljárás lefolytatására; a bírósághoz fordulás joga érintetlen marad. A közvetítés észszerű költségeihez a myNextDays hozzájárul; a megosztás az adott közvetítő szabályzata és az egyedi eset körülményei szerint alakul.",
+        "A myNextDays évente közzéteszi a panaszok számára, az ügyintézési időre és a megtett intézkedésekre vonatkozó adatokat.",
+      ],
+    },
+    {
+      heading: "§ 14 Szellemi tulajdon",
       paragraphs: [
         "A Platformhoz, annak szoftveréhez és tartalmaihoz fűződő valamennyi jog (a Felhasználó által feltöltött tartalmak kivételével) a myNextDays-t, illetve annak licencadóit illeti. A Felhasználó a szerződés időtartamára egyszerű, át nem ruházható jogot kap a Platform szerződésben meghatározott terjedelmű használatára.",
         "A Felhasználó az általa feltöltött tartalmakon a Platform üzemeltetéséhez szükséges egyszerű felhasználási jogokat engedi át a myNextDays részére (különösen a tárolás, a többszörözés, a megjelenítés és a kapcsolt csatornák részére történő továbbítás céljából).",
       ],
     },
     {
-      heading: "§ 13 Felelősség",
+      heading: "§ 15 Felelősség",
       paragraphs: [
         "A myNextDays korlátlanul felel szándékosság és súlyos gondatlanság esetén, valamint az élet, a testi épség vagy az egészség megsértéséből eredő károkért.",
         "Enyhe gondatlanság esetén a myNextDays csak a lényeges szerződéses kötelezettségek (kardinális kötelezettségek) megszegéséért felel, a szerződésre jellemző, előre látható kár mértékéig. A termékfelelősségi jogszabályok szerinti, valamint a vállalt garanciákból eredő felelősség érintetlen marad.",
@@ -120,7 +142,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Időtartam, felmondás és felfüggesztés",
+      heading: "§ 16 Időtartam, felmondás és felfüggesztés",
       paragraphs: [
         "Az időtartam és a felmondási határidők az adott szerződésből következnek. A fontos okból történő rendkívüli felmondás joga érintetlen marad.",
         "A myNextDays átmenetileg felfüggesztheti a Platformhoz vagy egyes funkciókhoz való hozzáférést (ideértve a fizetések elfogadását és a kifizetéseket is), ha konkrét jelek utalnak a jelen ÁSZF megsértésére, csalásra vagy visszaélésszerű használatra, vagy ha a myNextDays erre jogszabály vagy valamely pénzforgalmi szolgáltató rendelkezése alapján köteles. A Felhasználó a felfüggesztésről tájékoztatást kap, amennyiben ez jogilag megengedett.",
@@ -128,14 +150,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 A jelen ÁSZF módosítása",
+      heading: "§ 17 A jelen ÁSZF módosítása",
       paragraphs: [
         "A myNextDays a jövőre nézve módosíthatja a jelen ÁSZF-et, amennyiben ez alapos okból szükséges (különösen jogszabályváltozások, a bírói gyakorlat változásai vagy a pénzforgalmi szolgáltatók követelményei miatt), és a Felhasználót ezáltal nem éri méltánytalan hátrány.",
         "A módosításokról a Felhasználó legalább hat héttel a hatálybalépésük előtt szöveges formában értesítést kap. Ha a Felhasználó az értesítési határidőn belül nem emel kifogást, vagy a hatálybalépést követően tovább használja a Platformot, a módosított ÁSZF elfogadottnak minősül; erre a jogkövetkezményre az értesítés külön felhívja a figyelmet.",
       ],
     },
     {
-      heading: "§ 16 Záró rendelkezések",
+      heading: "§ 18 Záró rendelkezések",
       paragraphs: [
         "A szolgáltató székhelye szerinti állam joga alkalmazandó, az áruk nemzetközi adásvételi szerződéseiről szóló ENSZ-egyezmény kizárásával. A Felhasználó székhelye szerinti állam kógens rendelkezései érintetlenek maradnak.",
         "A jelen szerződésből eredő vagy azzal összefüggő valamennyi jogvita kizárólagos illetékességi helye — amennyiben ez jogilag megengedett — a szolgáltató székhelye.",

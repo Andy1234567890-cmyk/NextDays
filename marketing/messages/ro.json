@@ -424,7 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Platforma pentru proprietarii de cazări de vacanță",
-    "description": "Platforma pentru hoteluri, agenții și proprietari de cazări de vacanță: channel manager, calendar, rezervare directă, comunicare cu oaspeții și facturare într-un singur loc. Construită în Danemarca, găzduită în UE. De la 19,90 €/lună. 30 de zile gratuit."
+    "description": "Platforma pentru hoteluri, agenții și proprietari de cazări de vacanță: channel manager, calendar, rezervare directă, comunicare cu oaspeții și facturare într-un singur loc. Construită în Danemarca, găzduită în UE. 30 de zile gratuit.",
+    "descriptionMitPreis": "Platforma pentru hoteluri, agenții și proprietari de cazări de vacanță: channel manager, calendar, rezervare directă, comunicare cu oaspeții și facturare într-un singur loc. Construită în Danemarca, găzduită în UE. De la {preis}/lună. 30 de zile gratuit."
   },
   "nav": {
     "funktionen": "Funcții",
@@ -828,9 +829,9 @@
     "appLaden": "Descarcă aplicația",
     "spalten": {
       "produkt": "Produs",
-      "loesungen": "Soluții",
       "ressourcen": "Resurse",
-      "unternehmen": "Companie"
+      "unternehmen": "Companie",
+      "rechtliches": "Informații juridice"
     },
     "produkt": {
       "pms": "Property management",
@@ -839,26 +840,14 @@
       "zahlungen": "Plăți",
       "mobileApp": "Aplicație mobilă"
     },
-    "loesungen": {
-      "hotels": "Hoteluri",
-      "bnb": "B&B",
-      "gaestehaeuser": "Case de oaspeți",
-      "ferienwohnungen": "Apartamente de vacanță",
-      "campingplaetze": "Campinguri"
-    },
     "ressourcen": {
-      "blog": "Blog",
       "hilfeCenter": "Centru de ajutor",
       "status": "Starea sistemului",
-      "leitfaeden": "Ghiduri",
       "api": "Documentație API"
     },
     "unternehmen": {
       "ueberUns": "Despre noi",
-      "karriere": "Cariere",
-      "partner": "Parteneri",
-      "kontakt": "Contact",
-      "presse": "Presă"
+      "kontakt": "Contact"
     },
     "copyright": "© 2026 myNextDays. Toate drepturile rezervate.",
     "agb": "Termeni și condiții",
@@ -867,6 +856,9 @@
     "cookies": "Politica de cookie-uri",
     "avv": "Prelucrarea datelor",
     "kontoLoeschen": "Ștergeți contul"
+  },
+  "legal": {
+    "stand": "Ultima actualizare: {datum}"
   },
   "abschluss": {
     "heading": "Ești gata să îți conduci cazarea dintr-un singur loc?",
@@ -980,6 +972,7 @@
       "unsereRechnung": "Taxă de bază + praguri pe proprietate",
       "proMonat": "/lună",
       "ohnePreis": "nepublicat",
+      "waehrungshinweis": "Toate sumele din această comparație sunt în euro — inclusiv a noastră. Furnizorii își publică prețurile în euro; convertirea lor în moneda ta ar însemna să presupunem un curs de schimb care mâine s-ar putea să nu mai fie valabil.",
       "fussnote": "Situația la {stand}, citită direct de pe paginile de prețuri ale furnizorilor. Sunt indicate prețuri lunare fără angajament anual; unde un furnizor promovează prețul anual, acesta apare în calcul. Fără garanție — decisivă este lista de prețuri actuală a furnizorului.",
       "ersparnis": "cu {prozent} % sub medie"
     },
@@ -2028,5 +2021,38 @@
     "noResultsHintLink": "răsfoiți categoriile",
     "browseCategories": "Răsfoiește categoriile",
     "brandTitle": "Ajutor myNextDays"
+  },
+  "einwilligung": {
+    "titel": "Consimțământul dumneavoastră",
+    "text": "Acest site nu utilizează servicii de analiză, de publicitate sau de urmărire; fonturile și pictogramele sunt livrate de pe serverul nostru propriu. Necesar este numai ceea ce setați sau solicitați dumneavoastră. De aceea avem nevoie de consimțământul dumneavoastră pentru exact un singur lucru: protecția externă antispam a formularului nostru de contact.",
+    "richtlinie": "Citiți politica privind cookie-urile",
+    "allesAblehnen": "Refuzați toate",
+    "allesAnnehmen": "Acceptați toate",
+    "auswahlOeffnen": "Afișați opțiunile",
+    "auswahlSchliessen": "Ascundeți opțiunile",
+    "auswahlSpeichern": "Salvați opțiunile",
+    "immerAktiv": "Întotdeauna activ",
+    "kategorien": {
+      "notwendig": {
+        "titel": "Necesare",
+        "text": "Alegerea dumneavoastră privind limba și — numai dacă deschideți chatul dumneavoastră înșivă — identificatorul conversației dumneavoastră pe acest dispozitiv. Fără aceste date, site-ul nu poate fi livrat așa cum l-ați solicitat. Ele nu servesc nici publicității, nici statisticilor."
+      },
+      "spamschutz": {
+        "titel": "Protecția antispam a formularului de contact",
+        "text": "Formularul nostru de contact este protejat împotriva mesajelor automatizate în masă prin reCAPTCHA Enterprise de la Google. Dacă permiteți acest lucru, browserul dumneavoastră încarcă un script de pe google.com în timp ce completați formularul și transmite astfel adresa dumneavoastră IP către Google. Fără permisiunea dumneavoastră nu se încarcă nimic de la Google; în acest caz ne puteți contacta prin e-mail."
+      }
+    },
+    "einstellungen": {
+      "titel": "Gestionarea consimțământului dumneavoastră",
+      "text": "Vă puteți modifica sau retrage decizia aici în orice moment. Aceasta este valabilă pentru acest browser și este stocată numai pe dispozitivul dumneavoastră.",
+      "offen": "Încă nu ați luat o decizie. Nimic opțional nu este activ.",
+      "stand": "Decizia dumneavoastră din {datum}.",
+      "gespeichert": "Salvat."
+    },
+    "kontakt": {
+      "hinweis": "Înainte de trimitere avem nevoie de permisiunea dumneavoastră pentru protecția externă antispam (reCAPTCHA de la Google). Fără ea nu putem accepta formularul — astfel ținem la distanță mesajele automatizate în masă.",
+      "erlauben": "Permiteți protecția antispam",
+      "alternative": "Preferați să nu? Scrieți-ne în schimb la {email}."
+    }
   }
 }

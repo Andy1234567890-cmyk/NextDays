@@ -424,7 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – nuomotojų platforma atostogų būstams",
-    "description": "Platforma viešbučiams, agentūroms ir atostogų būstų nuomotojams: kanalų valdymo sistema, kalendorius, tiesioginės rezervacijos, bendravimas su svečiais ir apskaita vienoje vietoje. Sukurta Danijoje, talpinama ES. Nuo 19,90 € per mėnesį. 30 dienų nemokamai."
+    "description": "Platforma viešbučiams, agentūroms ir atostogų būstų nuomotojams: kanalų valdymo sistema, kalendorius, tiesioginės rezervacijos, bendravimas su svečiais ir apskaita vienoje vietoje. Sukurta Danijoje, talpinama ES. 30 dienų nemokamai.",
+    "descriptionMitPreis": "Platforma viešbučiams, agentūroms ir atostogų būstų nuomotojams: kanalų valdymo sistema, kalendorius, tiesioginės rezervacijos, bendravimas su svečiais ir apskaita vienoje vietoje. Sukurta Danijoje, talpinama ES. Nuo {preis} per mėnesį. 30 dienų nemokamai."
   },
   "nav": {
     "funktionen": "Funkcijos",
@@ -828,9 +829,9 @@
     "appLaden": "Atsisiųskite programėlę",
     "spalten": {
       "produkt": "Produktas",
-      "loesungen": "Sprendimai",
       "ressourcen": "Ištekliai",
-      "unternehmen": "Įmonė"
+      "unternehmen": "Įmonė",
+      "rechtliches": "Teisinė informacija"
     },
     "produkt": {
       "pms": "Property Management",
@@ -839,26 +840,14 @@
       "zahlungen": "Mokėjimai",
       "mobileApp": "Mobilioji programėlė"
     },
-    "loesungen": {
-      "hotels": "Viešbučiai",
-      "bnb": "B&B",
-      "gaestehaeuser": "Svečių namai",
-      "ferienwohnungen": "Atostogų butai",
-      "campingplaetze": "Kempingai"
-    },
     "ressourcen": {
-      "blog": "Tinklaraštis",
       "hilfeCenter": "Pagalbos centras",
       "status": "Sistemos būsena",
-      "leitfaeden": "Vadovai",
       "api": "API dokumentacija"
     },
     "unternehmen": {
       "ueberUns": "Apie mus",
-      "karriere": "Karjera",
-      "partner": "Partneriai",
-      "kontakt": "Kontaktai",
-      "presse": "Spaudai"
+      "kontakt": "Kontaktai"
     },
     "copyright": "© 2026 myNextDays. Visos teisės saugomos.",
     "agb": "Sąlygos",
@@ -867,6 +856,9 @@
     "cookies": "Slapukų politika",
     "avv": "Duomenų tvarkymas",
     "kontoLoeschen": "Ištrinti paskyrą"
+  },
+  "legal": {
+    "stand": "Redakcija: {datum}"
   },
   "abschluss": {
     "heading": "Pasiruošę valdyti savo objektą iš vienos vietos?",
@@ -980,6 +972,7 @@
       "unsereRechnung": "Bazinis mokestis + objektų pakopos",
       "proMonat": "/mėn.",
       "ohnePreis": "neskelbiama",
+      "waehrungshinweis": "Visos šio palyginimo sumos nurodytos eurais — taip pat ir mūsų. Paslaugų teikėjai skelbia savo kainas eurais; jų perskaičiavimas į jūsų valiutą reikštų valiutos kurso teiginį, kuris jau rytoj gali būti neteisingas.",
       "fussnote": "Būklė {stand}, nuskaityta tiesiai iš tiekėjų kainų puslapių. Nurodytos mėnesio kainos be metinio įsipareigojimo; kur tiekėjas reklamuoja metinę kainą, ji nurodyta skaičiavime. Be garantijos — lemia aktualus tiekėjo kainoraštis.",
       "ersparnis": "{prozent} % pigiau nei vidurkis"
     },
@@ -2028,5 +2021,38 @@
     "noResultsHintLink": "naršykite kategorijas",
     "browseCategories": "Naršyti kategorijas",
     "brandTitle": "myNextDays pagalba"
+  },
+  "einwilligung": {
+    "titel": "Jūsų sutikimas",
+    "text": "Šioje svetainėje nenaudojamos analizės, reklamos ar sekimo paslaugos; šriftai ir piktogramos yra mūsų pačių serveryje. Būtina tik tai, ką patys nustatote arba užsisakote. Todėl jūsų sutikimo mums reikia tik vienam dalykui — išorinei mūsų kontaktų formos apsaugai nuo šlamšto.",
+    "richtlinie": "Skaityti slapukų politiką",
+    "allesAblehnen": "Atmesti visus",
+    "allesAnnehmen": "Priimti visus",
+    "auswahlOeffnen": "Rodyti pasirinkimus",
+    "auswahlSchliessen": "Slėpti pasirinkimus",
+    "auswahlSpeichern": "Įrašyti pasirinkimus",
+    "immerAktiv": "Visada įjungta",
+    "kategorien": {
+      "notwendig": {
+        "titel": "Būtini",
+        "text": "Jūsų kalbos pasirinkimas ir — tik jei pokalbių langą atveriate patys — jūsų pokalbio identifikatorius šiame įrenginyje. Be šių duomenų svetainės nepavyktų pateikti taip, kaip jos pageidavote. Jie nenaudojami nei reklamai, nei statistikai."
+      },
+      "spamschutz": {
+        "titel": "Kontaktų formos apsauga nuo šlamšto",
+        "text": "Mūsų kontaktų forma nuo automatinių masinių žinučių apsaugota „Google“ paslauga reCAPTCHA Enterprise. Jei tai leisite, pildant formą jūsų naršyklė įkels scenarijų iš google.com ir kartu perduos jūsų IP adresą „Google“. Be jūsų leidimo iš „Google“ nieko neįkeliama; tokiu atveju su mumis galite susisiekti el. paštu."
+      }
+    },
+    "einstellungen": {
+      "titel": "Tvarkyti savo sutikimą",
+      "text": "Savo sprendimą čia galite bet kada pakeisti arba atšaukti. Jis taikomas šiai naršyklei ir saugomas tik jūsų įrenginyje.",
+      "offen": "Dar nenusprendėte. Nė vienas pasirenkamas elementas neįjungtas.",
+      "stand": "Jūsų sprendimas nuo {datum}.",
+      "gespeichert": "Įrašyta."
+    },
+    "kontakt": {
+      "hinweis": "Prieš išsiunčiant mums reikia jūsų leidimo išorinei apsaugai nuo šlamšto („Google“ reCAPTCHA). Be jo formos nepriimame — taip užkardome automatines masines žinutes.",
+      "erlauben": "Leisti apsaugą",
+      "alternative": "Nenorite? Tada rašykite mums adresu {email}."
+    }
   }
 }

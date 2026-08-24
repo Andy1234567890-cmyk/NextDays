@@ -81,10 +81,32 @@ def get_pricing(ctx: _billing, service: ServiceDep) -> PricingResponse:
 # durch den TTL-Cache geschlossen, der Scraper-Aspekt durch den
 # `listings`-Bucket des Rate-Limiters (240/60 pro IP, core/ratelimit_middleware).
 @router.get("/public/pricing", response_model=PublicPricingResponse)
-def get_public_pricing(service: ServiceDep) -> PublicPricingResponse:
-    """Preisliste + Provisionskonditionen für die öffentliche Preisseite."""
+def get_public_pricing(
+    service: ServiceDep,
+    currency: Annotated[
+        str | None,
+        Query(
+            min_length=3,
+            max_length=3,
+            pattern="^[A-Za-z]{3}$",
+            description=(
+                "Gewünschte Anzeigewährung als ISO-4217-Code. Nur ein WUNSCH: "
+                "hat Stripe für sie keine Beträge, antwortet die Liste in der "
+                "Standardwährung. Das Feld `currency` der Antwort sagt immer, "
+                "welche Währung tatsächlich drinsteht."
+            ),
+        ),
+    ] = None,
+) -> PublicPricingResponse:
+    """Preisliste + Provisionskonditionen für die öffentliche Preisseite.
+
+    Die Längen-/Musterprüfung steht schon hier, damit unsinniger Input mit 422
+    endet, bevor er den Service erreicht — der Endpunkt ist öffentlich
+    (Wurzel 8). Der Service prüft denselben Code nochmals, weil er auch von der
+    eingeloggten Billing-UI aus aufgerufen wird.
+    """
     try:
-        return service.get_public_pricing()
+        return service.get_public_pricing(currency)
     except SubscriptionsError as exc:
         raise _handle(exc) from exc
 

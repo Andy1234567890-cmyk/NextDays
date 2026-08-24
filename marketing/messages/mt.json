@@ -424,7 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Il-pjattaforma għal min jikri akkomodazzjoni tal-vaganzi",
-    "description": "Il-pjattaforma għal lukandi, aġenziji u sidien ta' akkomodazzjoni tal-vaganzi: channel manager, kalendarju, booking dirett, komunikazzjoni mal-mistednin u kontabilità f'post wieħed. Mibnija fid-Danimarka, ospitata fl-UE. Minn €19.90 fix-xahar. B'xejn għal 30 jum."
+    "description": "Il-pjattaforma għal lukandi, aġenziji u sidien ta' akkomodazzjoni tal-vaganzi: channel manager, kalendarju, booking dirett, komunikazzjoni mal-mistednin u kontabilità f'post wieħed. Mibnija fid-Danimarka, ospitata fl-UE. B'xejn għal 30 jum.",
+    "descriptionMitPreis": "Il-pjattaforma għal lukandi, aġenziji u sidien ta' akkomodazzjoni tal-vaganzi: channel manager, kalendarju, booking dirett, komunikazzjoni mal-mistednin u kontabilità f'post wieħed. Mibnija fid-Danimarka, ospitata fl-UE. Minn {preis} fix-xahar. B'xejn għal 30 jum."
   },
   "nav": {
     "funktionen": "Funzjonijiet",
@@ -828,9 +829,9 @@
     "appLaden": "Niżżel l-app",
     "spalten": {
       "produkt": "Prodott",
-      "loesungen": "Soluzzjonijiet",
       "ressourcen": "Riżorsi",
-      "unternehmen": "Kumpanija"
+      "unternehmen": "Kumpanija",
+      "rechtliches": "Legali"
     },
     "produkt": {
       "pms": "Property management",
@@ -839,26 +840,14 @@
       "zahlungen": "Ħlasijiet",
       "mobileApp": "App mobbli"
     },
-    "loesungen": {
-      "hotels": "Lukandi",
-      "bnb": "B&Bs",
-      "gaestehaeuser": "Guest houses",
-      "ferienwohnungen": "Akkomodazzjoni tal-vaganzi",
-      "campingplaetze": "Siti tal-camping"
-    },
     "ressourcen": {
-      "blog": "Blog",
       "hilfeCenter": "Ċentru tal-għajnuna",
       "status": "Stat tas-sistema",
-      "leitfaeden": "Gwidi",
       "api": "Dokumentazzjoni API"
     },
     "unternehmen": {
       "ueberUns": "Dwarna",
-      "karriere": "Karrieri",
-      "partner": "Sħab",
-      "kontakt": "Kuntatt",
-      "presse": "Stampa"
+      "kontakt": "Kuntatt"
     },
     "copyright": "© 2026 myNextDays. Id-drittijiet kollha riżervati.",
     "agb": "Termini",
@@ -867,6 +856,9 @@
     "cookies": "Politika tal-cookies",
     "avv": "Ipproċessar tad-dejta",
     "kontoLoeschen": "Ħassar il-kont"
+  },
+  "legal": {
+    "stand": "L-aħħar aġġornament: {datum}"
   },
   "abschluss": {
     "heading": "Lest biex tmexxi l-propjetà tiegħek minn post wieħed?",
@@ -980,6 +972,7 @@
       "unsereRechnung": "Ħlas bażiku + livelli skont il-proprjetà",
       "proMonat": "/xahar",
       "ohnePreis": "mhux ippubblikat",
+      "waehrungshinweis": "L-ammonti kollha f'dan il-paragun huma f'euro — inkluż tagħna stess. Il-fornituri jippubblikaw il-prezzijiet tagħhom f'euro; il-konverżjoni tagħhom għall-munita tiegħek tfisser li tafferma rata tal-kambju li għada stess tista' ma tibqax valida.",
       "fussnote": "Sa {stand}, maqrija direttament mill-paġni tal-prezzijiet tal-fornituri. Huma indikati prezzijiet ta' kull xahar mingħajr rabta annwali; fejn fornitur jirreklama l-prezz annwali, dan jidher fil-kalkolu. Mingħajr garanzija — tgħodd il-lista tal-prezzijiet attwali tal-fornitur.",
       "ersparnis": "{prozent} % irħas mill-medja"
     },
@@ -2028,5 +2021,38 @@
     "noResultsHintLink": "fittex fil-kategoriji",
     "browseCategories": "Fittex fil-kategoriji",
     "brandTitle": "Għajnuna myNextDays"
+  },
+  "einwilligung": {
+    "titel": "Il-kunsens tiegħek",
+    "text": "Dan is-sit web ma jużax servizzi ta' analitika, reklamar jew traċċar; il-fonts u l-ikoni jinsabu fuq is-server tagħna stess. Meħtieġ huwa biss dak li tissettja jew titlob int stess. Għalhekk għandna bżonn il-kunsens tiegħek għal ħaġa waħda biss: il-protezzjoni esterna kontra l-ispam tal-formola ta' kuntatt tagħna.",
+    "richtlinie": "Aqra l-politika dwar il-cookies",
+    "allesAblehnen": "Irrifjuta kollox",
+    "allesAnnehmen": "Aċċetta kollox",
+    "auswahlOeffnen": "Uri l-għażliet",
+    "auswahlSchliessen": "Aħbi l-għażliet",
+    "auswahlSpeichern": "Salva l-għażliet",
+    "immerAktiv": "Dejjem attiv",
+    "kategorien": {
+      "notwendig": {
+        "titel": "Meħtieġa",
+        "text": "L-għażla tal-lingwa tiegħek u — biss jekk tiftaħ iċ-chat int stess — l-identifikatur tal-konversazzjoni tiegħek fuq dan l-apparat. Mingħajrhom is-sit ma jistax jiġi mogħti kif tlabtu int. Ma jintużawx la għal reklamar u lanqas għal statistika."
+      },
+      "spamschutz": {
+        "titel": "Protezzjoni kontra l-ispam tal-formola ta' kuntatt",
+        "text": "Il-formola ta' kuntatt tagħna hija protetta kontra messaġġi massivi awtomatizzati permezz ta' reCAPTCHA Enterprise ta' Google. Jekk tippermetti dan, waqt li timla l-formola l-browser tiegħek jgħabbi skript minn google.com u b'hekk jibgħat l-indirizz IP tiegħek lil Google. Mingħajr il-permess tiegħek ma jitgħabba xejn minn Google; f'dak il-każ tista' tikkuntattjana bl-email."
+      }
+    },
+    "einstellungen": {
+      "titel": "Immaniġġja l-kunsens tiegħek",
+      "text": "Tista' tibdel jew tirtira d-deċiżjoni tiegħek hawn f'kull ħin. Tapplika għal dan il-browser u tinħażen biss fuq l-apparat tiegħek.",
+      "offen": "Għadek ma ddeċidejtx. Xejn li huwa fakultattiv mhu attiv.",
+      "stand": "Id-deċiżjoni tiegħek tal-{datum}.",
+      "gespeichert": "Ġie salvat."
+    },
+    "kontakt": {
+      "hinweis": "Qabel ma tibgħat, għandna bżonn il-permess tiegħek għall-protezzjoni esterna kontra l-ispam (reCAPTCHA ta' Google). Mingħajrha ma nistgħux naċċettaw il-formola — hekk inżommu barra l-messaġġi massivi awtomatizzati.",
+      "erlauben": "Ippermetti l-protezzjoni",
+      "alternative": "Ma tridx? Iktbilna minflok fuq {email}."
+    }
   }
 }

@@ -12,9 +12,12 @@
 // Systemstil (Radius, Schatten, Akzentrot), echte Portal-Logos aus
 // `public/marketing/channels` und die Zeichnungen aus `preis-illustrationen`.
 // Alles ist HTML/SVG — keine Bilddatei, die bei einer Farbänderung veraltet.
+import { useLocale } from "next-intl";
 import Image from "next/image";
 
 import { GRUPPEN_ILLUSTRATION } from "@/components/preise/preis-illustrationen";
+import { anzeigewaehrung } from "@/lib/anzeigewaehrung";
+import { currencySymbol } from "@/lib/currency";
 
 type Props = { titel: string; punkte: readonly string[] };
 
@@ -201,8 +204,21 @@ export function GrafikPreise({ titel, punkte }: Props) {
   );
 }
 
+/** Beispiel-Auszahlung in der Grafik. Dekorativ, kein beworbener Betrag. */
+const BEISPIEL_AUSZAHLUNG = 1240;
+
 /** Zahlungs-Karte mit Statuszeilen. */
 export function GrafikZahlung({ titel, punkte }: Props) {
+  const locale = useLocale();
+  // Das Zeichen war hier als „€" hartkodiert und stand damit auch vor einem
+  // dänischen oder polnischen Leser (Wurzel 4: nie ein € hardcoden). Die Karte
+  // stellt die Oberfläche dar, und die zeigt die Währung des Betriebs —
+  // deshalb dasselbe Zeichen und dieselbe Zahlenschreibweise wie der Rest der
+  // Seite. Der BETRAG bleibt ein Beispiel: er kommt aus keiner Preisliste und
+  // wäre aus keiner ableitbar; er behauptet keinen Preis, sondern zeigt, wie
+  // eine Auszahlung in der Software aussieht.
+  const zeichen = currencySymbol(anzeigewaehrung(locale), locale);
+
   return (
     <div className="flex flex-col gap-4">
       <div className="rounded-3xl bg-primary p-6 text-primary-foreground shadow-float">
@@ -210,7 +226,11 @@ export function GrafikZahlung({ titel, punkte }: Props) {
           {titel}
         </p>
         <p className="mt-3 font-display text-3xl font-extrabold tabular-nums">
-          €&nbsp;1.240,00
+          {zeichen}&nbsp;
+          {new Intl.NumberFormat(locale, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }).format(BEISPIEL_AUSZAHLUNG)}
         </p>
         <div className="mt-5 flex gap-2">
           <span className="h-1.5 flex-1 rounded-full bg-accent" />

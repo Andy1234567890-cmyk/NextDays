@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // (recommended disclosure language) — Wortlaut und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Terms and Conditions for Agencies and Property Managers",
-  stand: "Last updated: 30 July 2026",
+  stand: "Last updated: 13 August 2026",
   intro: [
     "These Terms and Conditions (the “Terms”) govern the use of the myNextDays software platform (the “Platform”) by agencies, property managers, landlords and other business users (the “User”).",
     "The Platform is operated by myNextDays ApS, a private limited company (anpartsselskab) under Danish law, Hirtshalsvej 21, 9881 Bindslev, Denmark, registered in the Danish Central Business Register (CVR) under CVR no. 46615182 (“myNextDays”, “we”).",
@@ -105,14 +105,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Intellectual property",
+      heading: "§ 12 Use of artificial intelligence",
+      paragraphs: [
+        "myNextDays uses AI systems in individual functions, in particular for price recommendations (dynamic pricing), for suggested replies in the message inbox and for assistance in support. These functions generate suggestions; the decision to use them and the responsibility for that use rest with the User. Price recommendations do not replace the User’s own commercial assessment.",
+        "Where guests interact directly with an AI system, this is disclosed to them in accordance with Article 50(1) of Regulation (EU) 2024/1689 (the “AI Act”). Texts that an AI system has generated or materially altered and that the User passes on to guests must be marked as such by the User, to the extent that a statutory obligation to do so applies to them.",
+        "myNextDays does not operate any AI systems that qualify as high-risk systems under Annex III of the AI Act, nor any practices prohibited under Article 5 of the AI Act. Input from the User and data relating to their guests are not used to train models without a separate mandate.",
+        "The User may not use the AI functions in order to create the impression of human communication towards guests where a disclosure obligation exists, or in order to issue legally binding declarations without their own assessment.",
+        "If the User connects their account to their own AI assistant (such as Claude by Anthropic) via the interface provided for that purpose, the following applies: the User concludes the contract for that service themselves and is responsible for its use. The connection constitutes their instruction to myNextDays to release the shared data to that service — including a transfer to a third country if the provider is established outside the European Union. The User ensures that they have a legal basis for this, that their own privacy information identifies the recipient and that the safeguards required for the transfer are in place.",
+        "For such a connection, the User uses an access plan for which the provider offers processing on behalf of the controller and excludes any use of the data to train models — in the case of Claude, these are the business plans (Team, Enterprise or API). Plans for private use regularly do not meet this requirement; they are therefore unsuitable for guest data. myNextDays cannot detect which plan the User is using and points this out in the consent dialogue.",
+        "In doing so, the User takes into account that content which they copy by hand from the user interface into an input field of the assistant is regularly not covered by the provider’s contractual restrictions — unlike the data retrieved via the interface.",
+        "Data originating from a booking portal is used by the User, including via the interface, only for the handling and servicing of the respective booking — not for the assessment of individuals, for profiling or for advertising. The portals stipulate this purpose limitation in their own terms.",
+      ],
+    },
+    {
+      heading: "§ 13 Complaints and mediation",
+      paragraphs: [
+        "myNextDays maintains a free internal complaint-handling system for business users pursuant to Article 11 of Regulation (EU) 2019/1150 (the “P2B Regulation”). Complaints — in particular regarding alleged breaches of these Terms, technical problems with a significant impact or measures taken by myNextDays against the User — may be submitted without any particular form to info@mynextdays.dk or via the support function in the application. Receipt is confirmed; processing takes place promptly and within a reasonable period, in straightforward cases usually within 14 days. The result is communicated to the User in plain language.",
+        "If no agreement is reached in the complaint procedure, myNextDays is willing to turn, together with the User, to the following mediators out of court (Article 12 of the P2B Regulation): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Geneva 20, Switzerland — proceedings also remotely and in several languages; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 Copenhagen K, Denmark — the state in which the operator has its registered office.",
+        "The designation does not oblige the User to conduct mediation proceedings; the right to bring proceedings before a court remains unaffected. myNextDays contributes to the reasonable costs of a mediation; the allocation is governed by the rules of the respective mediator and by the circumstances of the individual case.",
+        "myNextDays publishes annual information on the volume of complaints, the processing times and the measures taken.",
+      ],
+    },
+    {
+      heading: "§ 14 Intellectual property",
       paragraphs: [
         "All rights in the Platform, its software and its content (except content contributed by the User) belong to myNextDays or its licensors. For the term of the contract, the User receives a simple, non-transferable right to use the Platform to the extent agreed in the contract.",
         "The User grants myNextDays the simple usage rights to the content they contribute that are required to operate the Platform (in particular storage, reproduction, display and transmission to connected channels).",
       ],
     },
     {
-      heading: "§ 13 Liability",
+      heading: "§ 15 Liability",
       paragraphs: [
         "myNextDays is liable without limitation for intent and gross negligence and for damage resulting from injury to life, body or health.",
         "In cases of simple negligence, myNextDays is only liable for the breach of essential contractual obligations (cardinal obligations), limited to the foreseeable damage typical for the contract. Liability under product liability law and under guarantees assumed remains unaffected.",
@@ -120,7 +142,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Term, termination and suspension",
+      heading: "§ 16 Term, termination and suspension",
       paragraphs: [
         "Term and notice periods result from the respective contract. The right to extraordinary termination for good cause remains unaffected.",
         "myNextDays may temporarily suspend access to the Platform or individual functions (including acceptance of payments and payouts) if there are concrete indications of a breach of these Terms, of fraud or of abusive use, or if myNextDays is required to do so by law or by order of a payment service provider. The User will be informed of the suspension to the extent legally permissible.",
@@ -128,14 +150,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 Changes to these Terms",
+      heading: "§ 17 Changes to these Terms",
       paragraphs: [
         "myNextDays may amend these Terms with effect for the future where this is necessary for valid reasons (in particular changes in legislation, case law or requirements of payment service providers) and the User is not unreasonably disadvantaged as a result.",
         "Amendments will be announced to the User in text form at least six weeks before they take effect. If the User does not object within the announcement period or continues to use the Platform after the amendments take effect, the amended Terms are deemed accepted; the announcement will specifically point out this consequence.",
       ],
     },
     {
-      heading: "§ 16 Final provisions",
+      heading: "§ 18 Final provisions",
       paragraphs: [
         "The law of the state in which the operator has its registered office applies, excluding the UN Convention on Contracts for the International Sale of Goods. Mandatory provisions of the state in which the User has its registered office remain unaffected.",
         "The exclusive place of jurisdiction for all disputes arising out of or in connection with this contract is — to the extent legally permissible — the registered office of the operator.",

@@ -424,7 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Platformen for udlejere af feriebolig",
-    "description": "Platformen til hoteller, bureauer og udlejere af ferieboliger: channel manager, kalender, direkte booking, gæstekommunikation og afregning ét sted. Bygget i Danmark, hostet i EU. Fra 19,90 € om måneden. Prøv gratis i 30 dage."
+    "description": "Platformen til hoteller, bureauer og udlejere af ferieboliger: channel manager, kalender, direkte booking, gæstekommunikation og afregning ét sted. Bygget i Danmark, hostet i EU. Prøv gratis i 30 dage.",
+    "descriptionMitPreis": "Platformen til hoteller, bureauer og udlejere af ferieboliger: channel manager, kalender, direkte booking, gæstekommunikation og afregning ét sted. Bygget i Danmark, hostet i EU. Fra {preis} om måneden. Prøv gratis i 30 dage."
   },
   "nav": {
     "funktionen": "Funktioner",
@@ -828,9 +829,9 @@
     "appLaden": "Hent appen",
     "spalten": {
       "produkt": "Produkt",
-      "loesungen": "Løsninger",
       "ressourcen": "Ressourcer",
-      "unternehmen": "Virksomhed"
+      "unternehmen": "Virksomhed",
+      "rechtliches": "Juridisk"
     },
     "produkt": {
       "pms": "Property management",
@@ -839,26 +840,14 @@
       "zahlungen": "Betalinger",
       "mobileApp": "Mobilapp"
     },
-    "loesungen": {
-      "hotels": "Hoteller",
-      "bnb": "B&B'er",
-      "gaestehaeuser": "Gæstehuse",
-      "ferienwohnungen": "Ferieboliger",
-      "campingplaetze": "Campingpladser"
-    },
     "ressourcen": {
-      "blog": "Blog",
       "hilfeCenter": "Hjælpecenter",
       "status": "Systemstatus",
-      "leitfaeden": "Guides",
       "api": "API-dokumentation"
     },
     "unternehmen": {
       "ueberUns": "Om os",
-      "karriere": "Karriere",
-      "partner": "Partnere",
-      "kontakt": "Kontakt",
-      "presse": "Presse"
+      "kontakt": "Kontakt"
     },
     "copyright": "© 2026 myNextDays. Alle rettigheder forbeholdes.",
     "agb": "Betingelser",
@@ -867,6 +856,9 @@
     "cookies": "Cookiepolitik",
     "avv": "Databehandling",
     "kontoLoeschen": "Slet konto"
+  },
+  "legal": {
+    "stand": "Senest opdateret: {datum}"
   },
   "abschluss": {
     "heading": "Klar til at styre din overnatningsvirksomhed ét sted?",
@@ -980,6 +972,7 @@
       "unsereRechnung": "Grundgebyr + enhedstrin",
       "proMonat": "/måned",
       "ohnePreis": "ikke offentliggjort",
+      "waehrungshinweis": "Alle beløb i denne sammenligning er i euro — også vores eget. Udbyderne offentliggør deres priser i euro; at omregne dem til din valuta ville forudsætte en valutakurs, der måske allerede i morgen ikke længere stemmer.",
       "fussnote": "Pr. {stand}, aflæst direkte på udbydernes prissider. Der vises månedspriser uden årsbinding; hvor en udbyder markedsfører årsprisen, står den i beregningen. Uden ansvar — udbyderens aktuelle prisliste er gældende.",
       "ersparnis": "{prozent} % billigere end gennemsnittet"
     },
@@ -2028,5 +2021,38 @@
     "noResultsHintLink": "gennemse kategorierne",
     "browseCategories": "Gennemse kategorier",
     "brandTitle": "myNextDays Hjælp"
+  },
+  "einwilligung": {
+    "titel": "Dit samtykke",
+    "text": "Denne hjemmeside bruger ingen analyse-, reklame- eller sporingstjenester; skrifttyper og ikoner ligger på vores egen server. Nødvendigt er kun det, du selv indstiller eller anmoder om. Derfor har vi brug for dit samtykke til præcis én ting: den eksterne spambeskyttelse på vores kontaktformular.",
+    "richtlinie": "Læs cookiepolitikken",
+    "allesAblehnen": "Afvis alle",
+    "allesAnnehmen": "Accepter alle",
+    "auswahlOeffnen": "Vis valg",
+    "auswahlSchliessen": "Skjul valg",
+    "auswahlSpeichern": "Gem valg",
+    "immerAktiv": "Altid aktiv",
+    "kategorien": {
+      "notwendig": {
+        "titel": "Nødvendige",
+        "text": "Dit sprogvalg og — kun hvis du selv åbner chatten — identifikatoren for din samtale på denne enhed. Uden disse oplysninger kan siden ikke leveres, som du har anmodet om. De bruges hverken til reklame eller til statistik."
+      },
+      "spamschutz": {
+        "titel": "Kontaktformularens spambeskyttelse",
+        "text": "Vores kontaktformular er beskyttet mod automatiserede massebeskeder med reCAPTCHA Enterprise fra Google. Hvis du tillader det, indlæser din browser et script fra google.com, mens du udfylder formularen, og sender dermed din IP-adresse til Google. Uden din tilladelse indlæses intet fra Google; du kan i stedet skrive til os på e-mail."
+      }
+    },
+    "einstellungen": {
+      "titel": "Administrer dit samtykke",
+      "text": "Du kan altid ændre eller tilbagekalde din beslutning her. Den gælder for denne browser og gemmes kun på din enhed.",
+      "offen": "Du har endnu ikke taget stilling. Intet valgfrit er aktivt.",
+      "stand": "Din beslutning fra {datum}.",
+      "gespeichert": "Gemt."
+    },
+    "kontakt": {
+      "hinweis": "Før du sender, har vi brug for din tilladelse til den eksterne spambeskyttelse (reCAPTCHA fra Google). Uden den kan vi ikke modtage formularen — sådan holder vi automatiserede massebeskeder ude.",
+      "erlauben": "Tillad spambeskyttelse",
+      "alternative": "Vil du ikke det? Så skriv til os på {email} i stedet."
+    }
   }
 }

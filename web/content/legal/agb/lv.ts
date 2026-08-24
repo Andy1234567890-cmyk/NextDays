@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // (recommended disclosure language) — Wortlaut und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Vispārīgie darījumu noteikumi aģentūrām un izīrētājiem",
-  stand: "Redakcija: 2026. gada 30. jūlijs",
+  stand: "Redakcija: 2026. gada 13. augusts",
   intro: [
     "Šie vispārīgie darījumu noteikumi (turpmāk — „Noteikumi”) regulē programmatūras platformas myNextDays (turpmāk — „Platforma”) lietošanu, ko veic aģentūras, izīrētāji, īpašumu pārvaldītāji un citi komerciāli lietotāji (turpmāk — „Lietotājs”).",
     "Platformas nodrošinātāja ir myNextDays ApS, sabiedrība ar ierobežotu atbildību (anpartsselskab) saskaņā ar Dānijas tiesībām, Hirtshalsvej 21, 9881 Bindslev, Dānija, reģistrēta Dānijas Centrālajā uzņēmumu reģistrā (CVR) ar CVR Nr. 46615182 (turpmāk — „myNextDays” vai „mēs”).",
@@ -105,14 +105,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Intelektuālais īpašums",
+      heading: "§ 12 Mākslīgā intelekta izmantošana",
+      paragraphs: [
+        "myNextDays atsevišķās funkcijās izmanto mākslīgā intelekta sistēmas, jo īpaši cenu ieteikumiem (dinamiskā cenu noteikšana), atbilžu ieteikumiem ziņojumu iesūtnē un atbalsta dienesta darba atvieglošanai. Šīs funkcijas rada ieteikumus; lēmums un atbildība par to izmantošanu ir Lietotājam. Cenu ieteikumi neaizstāj Lietotāja paša komerciālo izvērtējumu.",
+        "Ja viesi tieši mijiedarbojas ar mākslīgā intelekta sistēmu, tas viņiem tiek atklāts (Regulas (ES) 2024/1689, „Mākslīgā intelekta akts”, 50. panta 1. punkts). Tekstus, ko mākslīgā intelekta sistēma ir radījusi vai būtiski mainījusi un ko Lietotājs nodod viesiem, Lietotājam ir jāapzīmē, ciktāl uz viņu attiecas šāds likumā noteikts pienākums.",
+        "myNextDays nedarbina mākslīgā intelekta sistēmas, kas saskaņā ar Mākslīgā intelekta akta III pielikumu uzskatāmas par augsta riska sistēmām, un neveic praksi, kas aizliegta saskaņā ar Mākslīgā intelekta akta 5. pantu. Lietotāja ievadītos datus un viņa viesu datus bez atsevišķa uzdevuma neizmanto modeļu apmācībai.",
+        "Lietotājs nedrīkst izmantot mākslīgā intelekta funkcijas, lai viesiem radītu iespaidu par cilvēka veiktu saziņu tur, kur pastāv atklāšanas pienākums, vai lai sniegtu juridiski saistošus paziņojumus bez paša veiktas pārbaudes.",
+        "Ja Lietotājs savu kontu, izmantojot šim nolūkam paredzēto saskarni, savieno ar savu mākslīgā intelekta asistentu (piemēram, Anthropic Claude), piemēro turpmāko: Lietotājs līgumu par šo pakalpojumu slēdz pats un ir atbildīgs par tā izmantošanu. Savienojums ir viņa norādījums myNextDays izsniegt turp apstiprinātos datus — tostarp nodošanu uz trešo valsti, ja pakalpojuma sniedzēja atrašanās vieta ir ārpus Eiropas Savienības. Lietotājs nodrošina, ka viņam tam ir tiesiskais pamats, ka viņa paša privātuma informācijā ir norādīts saņēmējs un ka nodošanai nepieciešamās garantijas ir izpildītas.",
+        "Šādam savienojumam Lietotājs izmanto piekļuvi, attiecībā uz kuru pakalpojuma sniedzējs piedāvā datu apstrādi pēc pasūtījuma un izslēdz datu izmantošanu modeļu apmācībai — Claude gadījumā tās ir komercklientu piekļuves (Team, Enterprise vai API). Piekļuves privātai lietošanai to parasti nenodrošina; tāpēc viesu datiem tās nav piemērotas. myNextDays nevar noteikt, kuru piekļuvi Lietotājs izmanto, un norāda uz to piekrišanas dialoglodziņā.",
+        "Lietotājs turklāt ņem vērā, ka saturu, ko viņš no lietotāja saskarnes ar roku iekopē asistenta ievades laukā, pakalpojuma sniedzēja līgumiskie ierobežojumi parasti neaptver — atšķirībā no datiem, kas iegūti ar saskarnes starpniecību.",
+        "Datus, kas iegūti no rezervāciju portāla, Lietotājs arī ar saskarnes starpniecību izmanto tikai attiecīgās rezervācijas noformēšanai un apkalpošanai — nevis personu vērtēšanai, profilēšanai vai reklāmai. Šo mērķa ierobežojumu portāli paredz savos noteikumos.",
+      ],
+    },
+    {
+      heading: "§ 13 Sūdzības un mediācija",
+      paragraphs: [
+        "myNextDays komerciāliem lietotājiem uztur bezmaksas iekšējo sūdzību izskatīšanas sistēmu (Regulas (ES) 2019/1150, „P2B regula”, 11. pants). Sūdzības — jo īpaši par apgalvotiem šo Noteikumu pārkāpumiem, par tehniskām problēmām ar būtisku ietekmi vai par myNextDays pasākumiem attiecībā pret Lietotāju — var iesniegt brīvā formā uz info@mynextdays.dk vai ar lietotnē pieejamā atbalsta dienesta starpniecību. Saņemšana tiek apstiprināta; izskatīšana notiek ātri un saprātīgā termiņā, vienkāršos gadījumos parasti 14 dienu laikā. Rezultātu Lietotājam paziņo skaidrā valodā.",
+        "Ja sūdzību izskatīšanas procedūrā vienošanās netiek panākta, myNextDays ir gatava kopā ar Lietotāju ārpustiesas kārtībā vērsties pie šādiem mediatoriem (P2B regulas 12. pants): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Ženēva 20, Šveice — procedūras arī attālināti un vairākās valodās; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 Kopenhāgena K, Dānija — nodrošinātājas mītnes valsts.",
+        "Norādīšana neuzliek Lietotājam pienākumu īstenot mediācijas procedūru; tiesības vērsties tiesā paliek neskartas. Mediācijas saprātīgo izmaksu segšanā myNextDays piedalās; to sadalījumu nosaka attiecīgā mediatora reglaments un konkrētā gadījuma apstākļi.",
+        "myNextDays katru gadu publicē informāciju par sūdzību apjomu, izskatīšanas ilgumu un veiktajiem pasākumiem.",
+      ],
+    },
+    {
+      heading: "§ 14 Intelektuālais īpašums",
       paragraphs: [
         "Visas tiesības uz Platformu, tās programmatūru un saturu (izņemot Lietotāja ievietoto saturu) pieder myNextDays vai tās licences devējiem. Lietotājs uz līguma darbības laiku saņem vienkāršas, nenododamas tiesības lietot Platformu līgumā noteiktajā apjomā.",
         "Attiecībā uz Lietotāja ievietoto saturu Lietotājs piešķir myNextDays Platformas darbībai nepieciešamās vienkāršās lietošanas tiesības (jo īpaši glabāšanai, pavairošanai, attēlošanai un pārsūtīšanai uz pieslēgtajiem kanāliem).",
       ],
     },
     {
-      heading: "§ 13 Atbildība",
+      heading: "§ 15 Atbildība",
       paragraphs: [
         "myNextDays atbild bez ierobežojumiem par nodomu un rupju neuzmanību, kā arī par kaitējumu, kas radies dzīvības, ķermeņa vai veselības aizskāruma dēļ.",
         "Vieglas neuzmanības gadījumā myNextDays atbild tikai par būtisku līgumsaistību (kardinālo pienākumu) pārkāpumu, un atbildība ir ierobežota ar līgumam tipisko, paredzamo kaitējumu. Atbildība saskaņā ar produktatbildības tiesību aktiem, kā arī no uzņemtajām garantijām paliek neskarta.",
@@ -120,7 +142,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Termiņš, izbeigšana un bloķēšana",
+      heading: "§ 16 Termiņš, izbeigšana un bloķēšana",
       paragraphs: [
         "Līguma termiņš un uzteikuma termiņi izriet no attiecīgā līguma. Tiesības uz ārkārtas izbeigšanu svarīga iemesla dēļ paliek neskartas.",
         "myNextDays var uz laiku bloķēt piekļuvi Platformai vai atsevišķām funkcijām (tostarp maksājumu pieņemšanai un izmaksām), ja pastāv konkrētas norādes uz šo Noteikumu pārkāpumu, krāpšanu vai ļaunprātīgu izmantošanu vai ja myNextDays to prasa likums vai maksājumu pakalpojumu sniedzēja rīkojums. Lietotājs par bloķēšanu tiek informēts, ciktāl tas ir tiesiski pieļaujams.",
@@ -128,14 +150,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 Šo Noteikumu grozījumi",
+      heading: "§ 17 Šo Noteikumu grozījumi",
       paragraphs: [
         "myNextDays var grozīt šos Noteikumus ar spēku nākotnē, ciktāl tas ir nepieciešams pamatotu iemeslu dēļ (jo īpaši tiesību aktu grozījumu, judikatūras izmaiņu vai maksājumu pakalpojumu sniedzēju prasību dēļ) un Lietotājs tādējādi netiek nesamērīgi nostādīts neizdevīgākā stāvoklī.",
         "Par grozījumiem Lietotājam paziņo teksta formā vismaz sešas nedēļas pirms to stāšanās spēkā. Ja Lietotājs paziņošanas termiņā neiebilst vai pēc grozījumu stāšanās spēkā turpina lietot Platformu, grozītie Noteikumi ir uzskatāmi par pieņemtiem; uz šīm sekām paziņojumā tiek īpaši norādīts.",
       ],
     },
     {
-      heading: "§ 16 Nobeiguma noteikumi",
+      heading: "§ 18 Nobeiguma noteikumi",
       paragraphs: [
         "Piemērojamas ir tās valsts tiesības, kurā nodrošinātājai ir juridiskā adrese, izslēdzot ANO Konvenciju par starptautiskajiem preču pirkuma-pārdevuma līgumiem. Tās valsts imperatīvās tiesību normas, kurā Lietotājam ir juridiskā adrese, paliek neskartas.",
         "Ekskluzīvā piekritība visiem strīdiem, kas izriet no šā līguma vai ir ar to saistīti, — ciktāl tas ir tiesiski pieļaujams — ir nodrošinātājas juridiskās adreses vietā.",

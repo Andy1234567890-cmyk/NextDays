@@ -23,16 +23,16 @@
 // übereinstimmen — beide aus derselben Code-Realität gepflegt.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, RECHTSSTAND } from "./anbieter";
+import { ANBIETER, RECHTSSTAND_ISO } from "../anbieter";
 
-import type { LegalDoc } from "./types";
+import type { LegalDoc } from "../types";
 
 export const avv: LegalDoc = {
   slug: "auftragsverarbeitung",
   title: "Vereinbarung zur Auftragsverarbeitung",
   metaDescription:
     "Auftragsverarbeitung nach Art. 28 DSGVO zwischen myNextDays ApS und den Betrieben, die die Plattform nutzen: Gegenstand, Weisungen, Sicherheit, Unterauftragsverarbeiter.",
-  stand: RECHTSSTAND,
+  standIso: RECHTSSTAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -246,3 +246,8 @@ export const avv: LegalDoc = {
     },
   ],
 };
+
+// Default-Export ist die Schnittstelle des Loaders (content/legal/laden.ts):
+// jede der 24 Sprachfassungen exportiert ihr Dokument so. Der benannte
+// Export bleibt daneben stehen, damit bestehende Importe nicht brechen.
+export default avv;

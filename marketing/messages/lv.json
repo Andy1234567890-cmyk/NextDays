@@ -424,7 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – platforma brīvdienu mājokļu iznomātājiem",
-    "description": "Platforma viesnīcām, aģentūrām un brīvdienu mājokļu iznomātājiem: kanālu pārvaldnieks, kalendārs, tiešās rezervācijas, saziņa ar viesiem un norēķini vienuviet. Izstrādāts Dānijā, mitināts ES. No 19,90 € mēnesī. 30 dienas bez maksas."
+    "description": "Platforma viesnīcām, aģentūrām un brīvdienu mājokļu iznomātājiem: kanālu pārvaldnieks, kalendārs, tiešās rezervācijas, saziņa ar viesiem un norēķini vienuviet. Izstrādāts Dānijā, mitināts ES. 30 dienas bez maksas.",
+    "descriptionMitPreis": "Platforma viesnīcām, aģentūrām un brīvdienu mājokļu iznomātājiem: kanālu pārvaldnieks, kalendārs, tiešās rezervācijas, saziņa ar viesiem un norēķini vienuviet. Izstrādāts Dānijā, mitināts ES. No {preis} mēnesī. 30 dienas bez maksas."
   },
   "nav": {
     "funktionen": "Funkcijas",
@@ -828,9 +829,9 @@
     "appLaden": "Lejupielādēt lietotni",
     "spalten": {
       "produkt": "Produkts",
-      "loesungen": "Risinājumi",
       "ressourcen": "Resursi",
-      "unternehmen": "Uzņēmums"
+      "unternehmen": "Uzņēmums",
+      "rechtliches": "Juridiskā informācija"
     },
     "produkt": {
       "pms": "Property Management",
@@ -839,26 +840,14 @@
       "zahlungen": "Maksājumi",
       "mobileApp": "Mobilā lietotne"
     },
-    "loesungen": {
-      "hotels": "Viesnīcas",
-      "bnb": "B&B",
-      "gaestehaeuser": "Viesu nami",
-      "ferienwohnungen": "Brīvdienu dzīvokļi",
-      "campingplaetze": "Kempingi"
-    },
     "ressourcen": {
-      "blog": "Blogs",
       "hilfeCenter": "Palīdzības centrs",
       "status": "Sistēmas statuss",
-      "leitfaeden": "Ceļveži",
       "api": "API dokumentācija"
     },
     "unternehmen": {
       "ueberUns": "Par mums",
-      "karriere": "Karjera",
-      "partner": "Partneri",
-      "kontakt": "Kontakti",
-      "presse": "Presei"
+      "kontakt": "Kontakti"
     },
     "copyright": "© 2026 myNextDays. Visas tiesības aizsargātas.",
     "agb": "Noteikumi",
@@ -867,6 +856,9 @@
     "cookies": "Sīkdatņu politika",
     "avv": "Datu apstrāde",
     "kontoLoeschen": "Dzēst kontu"
+  },
+  "legal": {
+    "stand": "Redakcija: {datum}"
   },
   "abschluss": {
     "heading": "Vai esat gatavi vadīt savu naktsmītni no vienas vietas?",
@@ -980,6 +972,7 @@
       "unsereRechnung": "Pamatmaksa + objektu pakāpes",
       "proMonat": "/mēn.",
       "ohnePreis": "nav publicēts",
+      "waehrungshinweis": "Visas šajā salīdzinājumā minētās summas ir norādītas eiro — arī mūsu pašu. Pakalpojumu sniedzēji publicē savas cenas eiro; to pārrēķināšana jūsu valūtā nozīmētu apgalvot valūtas kursu, kas jau rīt var vairs nebūt patiess.",
       "fussnote": "Stāvoklis uz {stand}, nolasīts tieši no pakalpojumu sniedzēju cenu lapām. Norādītas mēneša cenas bez gada saistībām; ja sniedzējs reklamē gada cenu, tā redzama aprēķinā. Bez garantijas — noteicošais ir sniedzēja aktuālais cenrādis.",
       "ersparnis": "par {prozent} % lētāk nekā vidēji"
     },
@@ -2028,5 +2021,38 @@
     "noResultsHintLink": "pārlūkojiet kategorijas",
     "browseCategories": "Pārlūkot kategorijas",
     "brandTitle": "myNextDays palīdzība"
+  },
+  "einwilligung": {
+    "titel": "Jūsu piekrišana",
+    "text": "Šajā tīmekļa vietnē netiek izmantoti analītikas, reklāmas vai izsekošanas pakalpojumi; fonti un ikonas atrodas mūsu pašu serverī. Nepieciešams ir tikai tas, ko jūs pats iestatāt vai pieprasāt. Tāpēc jūsu piekrišana mums ir vajadzīga tikai vienai lietai — mūsu saziņas veidlapas ārējai aizsardzībai pret mēstulēm.",
+    "richtlinie": "Lasīt sīkdatņu politiku",
+    "allesAblehnen": "Noraidīt visu",
+    "allesAnnehmen": "Pieņemt visu",
+    "auswahlOeffnen": "Rādīt izvēles",
+    "auswahlSchliessen": "Slēpt izvēles",
+    "auswahlSpeichern": "Saglabāt izvēles",
+    "immerAktiv": "Vienmēr aktīvs",
+    "kategorien": {
+      "notwendig": {
+        "titel": "Nepieciešamās",
+        "text": "Jūsu valodas izvēle un — tikai tad, ja tērzēšanu atverat pats — jūsu sarunas identifikators šajā ierīcē. Bez šiem datiem vietni nevar piegādāt tā, kā jūs to pieprasījāt. Tie netiek izmantoti ne reklāmai, ne statistikai."
+      },
+      "spamschutz": {
+        "titel": "Saziņas veidlapas aizsardzība pret mēstulēm",
+        "text": "Mūsu saziņas veidlapu pret automatizētiem masu ziņojumiem aizsargā Google pakalpojums reCAPTCHA Enterprise. Ja to atļaujat, veidlapas aizpildīšanas laikā jūsu pārlūkprogramma ielādē skriptu no google.com un tādējādi nosūta jūsu IP adresi Google. Bez jūsu atļaujas no Google netiek ielādēts nekas; tādā gadījumā varat sazināties ar mums pa e-pastu."
+      }
+    },
+    "einstellungen": {
+      "titel": "Pārvaldīt savu piekrišanu",
+      "text": "Savu lēmumu šeit varat jebkurā laikā mainīt vai atsaukt. Tas attiecas uz šo pārlūkprogrammu un tiek saglabāts tikai jūsu ierīcē.",
+      "offen": "Jūs vēl neesat izlēmis. Neviens neobligāts elements nav aktīvs.",
+      "stand": "Jūsu lēmums no {datum}.",
+      "gespeichert": "Saglabāts."
+    },
+    "kontakt": {
+      "hinweis": "Pirms nosūtīšanas mums ir vajadzīga jūsu atļauja ārējai aizsardzībai pret mēstulēm (Google reCAPTCHA). Bez tās veidlapu nepieņemam — tā mēs neļaujam iekļūt automatizētiem masu ziņojumiem.",
+      "erlauben": "Atļaut aizsardzību",
+      "alternative": "Nevēlaties to? Tad rakstiet mums uz {email}."
+    }
   }
 }

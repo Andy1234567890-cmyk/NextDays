@@ -22,10 +22,19 @@
 // reCAPTCHA-Enterprise-Token (wird serverseitig bewertet, `lib/captcha.ts`),
 // und das IP-Rate-Limit der API. Das Token wird erst BEIM ABSENDEN geholt — es
 // ist nur zwei Minuten gültig.
+//
+// DIE ZWEITE STUFE BRAUCHT EINE EINWILLIGUNG: reCAPTCHA ist der einzige
+// Drittanbieter, den diese App im Browser lädt. Ohne erteilte Einwilligung lädt
+// `lib/captcha.ts` nichts und das Token bleibt `null` — die API weist das
+// fail-closed ab. Statt den Besucher in diesen Fehler laufen zu lassen, steht
+// die Erlaubnis sichtbar VOR dem Absenden, zusammen mit dem Weg ohne Formular
+// (E-Mail). Ablehnen bleibt damit eine echte Möglichkeit und kostet keinen
+// Kontakt.
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { type FormEvent, useRef, useState } from "react";
 
+import { useEinwilligung } from "@/components/einwilligung/use-einwilligung";
 import { SectionHeading } from "@/components/marketing/section-kit";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -35,6 +44,8 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ANBIETER } from "@/content/legal/anbieter";
 import { captchaVorbereiten } from "@/lib/captcha";
+import { RECAPTCHA_SITE_KEY } from "@/lib/config";
+import { NICHTS_ERLAUBT } from "@/lib/einwilligung";
 import {
   KONTAKT_THEMEN,
   KontaktFehler,
@@ -61,7 +72,20 @@ const POSTFAECHER = {
 
 export function KontaktFormular() {
   const t = useTranslations("kontakt.formular");
+  const tEin = useTranslations("einwilligung.kontakt");
   const locale = useLocale();
+  const { entscheidung, geladen, speichern } = useEinwilligung();
+
+  // Fehlt die Einwilligung, ist das Formular nicht absendbar — aber nur, wenn
+  // überhaupt ein Schlüssel konfiguriert ist. Lokal (kein Schlüssel) lädt
+  // nichts von Google, also ist auch nichts zu erlauben; dann darf hier kein
+  // Hinweis stehen, der einen Dienst behauptet, den es nicht gibt.
+  // `geladen` verhindert, dass der Hinweis vor dem Lesen des Speichers
+  // aufblitzt und gleich wieder verschwindet.
+  const spamschutzFehlt =
+    RECAPTCHA_SITE_KEY !== "" &&
+    geladen &&
+    entscheidung?.auswahl.spamschutz !== true;
 
   // Fehlertext NACH STATUS, nicht der `detail` der API: die Seite läuft in 24
   // Sprachen, die API-Texte sind deutsch. Ein griechischer Besucher las bisher
@@ -108,6 +132,9 @@ export function KontaktFormular() {
   async function absenden(ev: FormEvent<HTMLFormElement>) {
     ev.preventDefault();
     if (laeuft) return;
+    // Rückhalt: der Knopf ist in diesem Fall schon deaktiviert. Ein Absenden
+    // per Tastatur oder aus einem Skript soll aber nicht in einen 403 laufen.
+    if (spamschutzFehlt) return;
     const formular = ev.currentTarget;
     const felder = new FormData(formular);
 
@@ -341,12 +368,44 @@ export function KontaktFormular() {
                   />
                 </div>
 
+                {/* Einwilligung für den externen Spamschutz — erst hier,
+                    nicht beim Seitenaufruf. Der Knopf erteilt genau DIESE
+                    Kategorie und lässt alle anderen unberührt. */}
+                {spamschutzFehlt ? (
+                  <div className="min-w-0 rounded-2xl bg-surface-warm p-5">
+                    <p className="break-words text-sm leading-relaxed text-muted-foreground">
+                      <Icon
+                        icon="ph:shield-check"
+                        className="mr-2 inline size-4 align-[-0.2em] text-accent"
+                      />
+                      {tEin("hinweis")}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-4 w-full sm:w-auto"
+                      onClick={() =>
+                        speichern({
+                          ...(entscheidung?.auswahl ?? NICHTS_ERLAUBT),
+                          spamschutz: true,
+                        })
+                      }
+                    >
+                      {tEin("erlauben")}
+                    </Button>
+                    <p className="mt-3 break-words text-xs leading-relaxed text-muted-foreground">
+                      {tEin("alternative", { email: ANBIETER.email })}
+                    </p>
+                  </div>
+                ) : null}
+
                 <Button
                   type="submit"
                   variant="accent"
                   size="lg"
                   className="mt-2"
-                  disabled={laeuft}
+                  disabled={laeuft || spamschutzFehlt}
                 >
                   {laeuft ? t("laeuft") : t("absenden")}
                 </Button>

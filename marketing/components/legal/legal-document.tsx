@@ -1,6 +1,7 @@
 // EINZIGER Renderer für alle Rechtsdokumente dieser App (Impressum,
 // Datenschutz, Cookie-Richtlinie, Auftragsverarbeitung). Kein Dokument bringt
 // eigenes Layout mit — Inhalt liegt ausschließlich in content/legal/*.
+import { getLocale, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -164,12 +165,36 @@ function Abschnitt({
   );
 }
 
+/**
+ * Die Stand-Zeile in der Sprache des Besuchers.
+ *
+ * `standIso` gewinnt gegen `stand`: das Datum wird hier mit
+ * `Intl.DateTimeFormat` geschrieben und der Satz darum kommt aus
+ * `legal.stand` — damit steht in keiner der 120 Sprachdateien mehr ein Datum
+ * als Text. `stand` bleibt als Rückfall, solange noch Dateien darauf zeigen;
+ * ist beides leer, entfällt die Zeile, statt eine leere Fläche zu zeigen.
+ */
+async function StandZeile({ doc }: { doc: LegalDoc }) {
+  if (doc.standIso) {
+    const locale = await getLocale();
+    const t = await getTranslations("legal");
+    const datum = new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(
+      // `T00:00:00Z` fixiert den Tag auf UTC — ohne das verschiebt eine
+      // Zeitzone westlich von Greenwich das Datum um einen Tag zurück.
+      new Date(`${doc.standIso}T00:00:00Z`),
+    );
+    return <p className="text-sm text-muted-foreground">{t("stand", { datum })}</p>;
+  }
+  if (!doc.stand) return null;
+  return <p className="text-sm text-muted-foreground">{doc.stand}</p>;
+}
+
 export function LegalDocument({ doc }: { doc: LegalDoc }) {
   return (
     <article className="mx-auto w-full max-w-3xl px-6 py-16">
       <header className="flex flex-col gap-3">
         <h1 className="font-display text-3xl sm:text-4xl">{doc.title}</h1>
-        <p className="text-sm text-muted-foreground">{doc.stand}</p>
+        <StandZeile doc={doc} />
       </header>
 
       <div className="mt-8 flex flex-col gap-4">

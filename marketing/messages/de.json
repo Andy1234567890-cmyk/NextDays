@@ -424,7 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Die Vermieter-Plattform für Ferienunterkünfte",
-    "description": "Die Plattform für Hotels, Agenturen und Vermieter von Ferienunterkünften: Channel-Manager, Kalender, Direktbuchung, Gästekommunikation und Abrechnung an einem Ort. In Dänemark gebaut, EU-gehostet. Ab 19,90 €/Monat. 30 Tage kostenlos testen."
+    "description": "Die Plattform für Hotels, Agenturen und Vermieter von Ferienunterkünften: Channel-Manager, Kalender, Direktbuchung, Gästekommunikation und Abrechnung an einem Ort. In Dänemark gebaut, EU-gehostet. 30 Tage kostenlos testen.",
+    "descriptionMitPreis": "Die Plattform für Hotels, Agenturen und Vermieter von Ferienunterkünften: Channel-Manager, Kalender, Direktbuchung, Gästekommunikation und Abrechnung an einem Ort. In Dänemark gebaut, EU-gehostet. Ab {preis}/Monat. 30 Tage kostenlos testen."
   },
   "nav": {
     "funktionen": "Funktionen",
@@ -828,9 +829,9 @@
     "appLaden": "App herunterladen",
     "spalten": {
       "produkt": "Produkt",
-      "loesungen": "Lösungen",
       "ressourcen": "Ressourcen",
-      "unternehmen": "Unternehmen"
+      "unternehmen": "Unternehmen",
+      "rechtliches": "Rechtliches"
     },
     "produkt": {
       "pms": "Property-Management",
@@ -839,26 +840,14 @@
       "zahlungen": "Zahlungen",
       "mobileApp": "Mobile App"
     },
-    "loesungen": {
-      "hotels": "Hotels",
-      "bnb": "B&B",
-      "gaestehaeuser": "Gästehäuser",
-      "ferienwohnungen": "Ferienwohnungen",
-      "campingplaetze": "Campingplätze"
-    },
     "ressourcen": {
-      "blog": "Blog",
       "hilfeCenter": "Hilfe-Center",
       "status": "Systemstatus",
-      "leitfaeden": "Leitfäden",
       "api": "API-Dokumentation"
     },
     "unternehmen": {
       "ueberUns": "Über uns",
-      "karriere": "Karriere",
-      "partner": "Partner",
-      "kontakt": "Kontakt",
-      "presse": "Presse"
+      "kontakt": "Kontakt"
     },
     "copyright": "© 2026 myNextDays. Alle Rechte vorbehalten.",
     "agb": "AGB",
@@ -867,6 +856,9 @@
     "cookies": "Cookie-Richtlinie",
     "avv": "Auftragsverarbeitung",
     "kontoLoeschen": "Konto löschen"
+  },
+  "legal": {
+    "stand": "Stand: {datum}"
   },
   "abschluss": {
     "heading": "Bereit, deine Unterkunft an einem Ort zu steuern?",
@@ -980,6 +972,7 @@
       "unsereRechnung": "Grundgebühr + Objekt-Staffel",
       "proMonat": "/Monat",
       "ohnePreis": "nicht veröffentlicht",
+      "waehrungshinweis": "Alle Beträge in diesem Vergleich stehen in Euro — auch unser eigener. Die Anbieter veröffentlichen ihre Preise in Euro; sie in deine Währung umzurechnen würde einen Wechselkurs behaupten, der morgen schon nicht mehr stimmt.",
       "fussnote": "Stand {stand}, selbst auf den Preisseiten der Anbieter abgelesen. Genannt sind Monatspreise ohne Jahresbindung; wo ein Anbieter mit dem Jahrespreis wirbt, steht dieser im Rechenweg. Angaben ohne Gewähr — maßgeblich ist die jeweils aktuelle Preisliste des Anbieters.",
       "ersparnis": "{prozent} % günstiger als der Schnitt"
     },
@@ -2028,5 +2021,38 @@
     "noResultsHintLink": "durchstöbern Sie die Kategorien",
     "browseCategories": "Kategorien durchstöbern",
     "brandTitle": "myNextDays Hilfe"
+  },
+  "einwilligung": {
+    "titel": "Ihre Einwilligung",
+    "text": "Diese Website nutzt keine Analyse-, Werbe- oder Tracking-Dienste; Schriften und Symbole liegen auf unserem eigenen Server. Notwendig ist nur, was Sie selbst einstellen oder anfordern. Ihre Einwilligung brauchen wir daher für genau eine Sache: den externen Spamschutz unseres Kontaktformulars.",
+    "richtlinie": "Cookie-Richtlinie lesen",
+    "allesAblehnen": "Alle ablehnen",
+    "allesAnnehmen": "Alle annehmen",
+    "auswahlOeffnen": "Auswahl anzeigen",
+    "auswahlSchliessen": "Auswahl verbergen",
+    "auswahlSpeichern": "Auswahl speichern",
+    "immerAktiv": "Immer aktiv",
+    "kategorien": {
+      "notwendig": {
+        "titel": "Notwendig",
+        "text": "Ihre Sprachwahl und — nur wenn Sie den Chat selbst öffnen — die Kennung Ihrer Unterhaltung auf diesem Gerät. Ohne diese Angaben lässt sich die Seite nicht so ausliefern, wie Sie sie angefordert haben. Sie dienen weder der Werbung noch der Statistik."
+      },
+      "spamschutz": {
+        "titel": "Spamschutz des Kontaktformulars",
+        "text": "Unser Kontaktformular ist mit reCAPTCHA Enterprise von Google gegen automatisierte Massenzuschriften geschützt. Erlauben Sie das, lädt Ihr Browser beim Ausfüllen des Formulars ein Skript von google.com und übermittelt dabei Ihre IP-Adresse an Google. Ohne Ihre Erlaubnis wird nichts von Google geladen; Sie erreichen uns dann per E-Mail."
+      }
+    },
+    "einstellungen": {
+      "titel": "Ihre Einwilligung verwalten",
+      "text": "Sie können Ihre Entscheidung hier jederzeit ändern oder widerrufen. Sie gilt für diesen Browser und wird nur auf Ihrem Gerät gespeichert.",
+      "offen": "Sie haben noch nicht entschieden. Es ist nichts Optionales aktiv.",
+      "stand": "Ihre Entscheidung vom {datum}.",
+      "gespeichert": "Gespeichert."
+    },
+    "kontakt": {
+      "hinweis": "Vor dem Absenden brauchen wir Ihre Erlaubnis für den externen Spamschutz (reCAPTCHA von Google). Ohne ihn nehmen wir das Formular nicht an — so halten wir automatisierte Massenzuschriften heraus.",
+      "erlauben": "Spamschutz erlauben",
+      "alternative": "Sie möchten das nicht? Schreiben Sie uns stattdessen an {email}."
+    }
   }
 }

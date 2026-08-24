@@ -15,7 +15,16 @@
 // Ohne Schlüssel (lokal) passiert hier NICHTS und es kommt `null` zurück. Die
 // API entscheidet dann über ihre eigene Sandbox, ob sie das durchlässt — der
 // Browser darf diese Entscheidung nicht treffen.
+//
+// EINWILLIGUNG IST VORAUSSETZUNG: Dies ist der einzige Drittanbieter, den diese
+// App im Browser lädt, und damit die einzige Stelle, an der die
+// Einwilligungs-Leiste wirklich etwas schaltet (lib/einwilligung.ts). Ohne
+// erteilte Einwilligung wird das Skript-Tag NICHT angelegt — kein Request an
+// google.com, keine IP-Übermittlung. Fail-closed: „nicht entschieden" zählt wie
+// „nicht erlaubt". Wer hier eine Ausnahme einbaut, macht die Leiste zur
+// Attrappe.
 import { RECAPTCHA_SITE_KEY } from "@/lib/config";
+import { istErlaubt } from "@/lib/einwilligung";
 
 const SKRIPT_ID = "nd-recaptcha-enterprise";
 
@@ -42,6 +51,11 @@ let ladevorgang: Promise<Grecaptcha> | null = null;
 export function captchaVorbereiten(): Promise<Grecaptcha> | null {
   if (!RECAPTCHA_SITE_KEY) return null;
   if (typeof window === "undefined") return null;
+  // Vor der Einwilligung nichts laden. Die Prüfung steht VOR dem Zwischen-
+  // speicher: erteilt jemand die Einwilligung erst später, ist `ladevorgang`
+  // noch leer und der nächste Aufruf holt das Skript dann — ohne Neuladen der
+  // Seite.
+  if (!istErlaubt("spamschutz")) return null;
   if (ladevorgang) return ladevorgang;
 
   ladevorgang = new Promise<Grecaptcha>((resolve, reject) => {

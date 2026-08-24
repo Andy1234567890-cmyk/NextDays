@@ -424,7 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – A platform nyaralószállás-kiadóknak",
-    "description": "A platform szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak: channel manager, naptár, közvetlen foglalás, vendégkommunikáció és számlázás egy helyen. Dániában fejlesztve, EU-s tárhelyen. 19,90 €/hó-tól. 30 napig ingyenes."
+    "description": "A platform szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak: channel manager, naptár, közvetlen foglalás, vendégkommunikáció és számlázás egy helyen. Dániában fejlesztve, EU-s tárhelyen. 30 napig ingyenes.",
+    "descriptionMitPreis": "A platform szállodáknak, ügynökségeknek és nyaralószállás-kiadóknak: channel manager, naptár, közvetlen foglalás, vendégkommunikáció és számlázás egy helyen. Dániában fejlesztve, EU-s tárhelyen. {preis}/hó-tól. 30 napig ingyenes."
   },
   "nav": {
     "funktionen": "Funkciók",
@@ -828,9 +829,9 @@
     "appLaden": "Alkalmazás letöltése",
     "spalten": {
       "produkt": "Termék",
-      "loesungen": "Megoldások",
       "ressourcen": "Források",
-      "unternehmen": "Vállalat"
+      "unternehmen": "Vállalat",
+      "rechtliches": "Jogi információk"
     },
     "produkt": {
       "pms": "Property Management",
@@ -839,26 +840,14 @@
       "zahlungen": "Fizetés",
       "mobileApp": "Mobilalkalmazás"
     },
-    "loesungen": {
-      "hotels": "Szállodák",
-      "bnb": "B&B-k",
-      "gaestehaeuser": "Vendégházak",
-      "ferienwohnungen": "Nyaralóapartmanok",
-      "campingplaetze": "Kempingek"
-    },
     "ressourcen": {
-      "blog": "Blog",
       "hilfeCenter": "Súgóközpont",
       "status": "Rendszerállapot",
-      "leitfaeden": "Útmutatók",
       "api": "API-dokumentáció"
     },
     "unternehmen": {
       "ueberUns": "Rólunk",
-      "karriere": "Karrier",
-      "partner": "Partnerek",
-      "kontakt": "Kapcsolat",
-      "presse": "Sajtó"
+      "kontakt": "Kapcsolat"
     },
     "copyright": "© 2026 myNextDays. Minden jog fenntartva.",
     "agb": "ÁSZF",
@@ -867,6 +856,9 @@
     "cookies": "Cookie-szabályzat",
     "avv": "Adatfeldolgozás",
     "kontoLoeschen": "Fiók törlése"
+  },
+  "legal": {
+    "stand": "Utolsó frissítés: {datum}"
   },
   "abschluss": {
     "heading": "Készen áll, hogy egy helyről irányítsa a szálláshelyét?",
@@ -980,6 +972,7 @@
       "unsereRechnung": "Alapdíj + ingatlansávok",
       "proMonat": "/hó",
       "ohnePreis": "nincs közzétéve",
+      "waehrungshinweis": "Ebben az összehasonlításban minden összeg euróban szerepel — a miénk is. A szolgáltatók euróban teszik közzé áraikat; ezeket az Ön pénznemére átváltani azt jelentené, hogy olyan árfolyamot állítunk be, amely holnapra már nem biztos, hogy érvényes.",
       "fussnote": "{stand} állapot, közvetlenül a szolgáltatók ároldalairól leolvasva. Havi árak éves elköteleződés nélkül szerepelnek; ahol a szolgáltató az éves árat hirdeti, az a számításban áll. Garancia nélkül — a szolgáltató mindenkori árlistája az irányadó.",
       "ersparnis": "{prozent} %-kal az átlag alatt"
     },
@@ -2028,5 +2021,38 @@
     "noResultsHintLink": "böngéssze a kategóriákat",
     "browseCategories": "Kategóriák böngészése",
     "brandTitle": "myNextDays súgó"
+  },
+  "einwilligung": {
+    "titel": "Az Ön hozzájárulása",
+    "text": "Ez a weboldal nem használ elemzési, reklám- vagy nyomkövetési szolgáltatásokat; a betűtípusok és az ikonok a saját szerverünkön találhatók. Csak az szükséges, amit Ön maga állít be vagy kér. Az Ön hozzájárulására ezért pontosan egyetlen dolog miatt van szükségünk: a kapcsolatfelvételi űrlapunk külső spamvédelme miatt.",
+    "richtlinie": "Cookie-szabályzat elolvasása",
+    "allesAblehnen": "Összes elutasítása",
+    "allesAnnehmen": "Összes elfogadása",
+    "auswahlOeffnen": "Beállítások mutatása",
+    "auswahlSchliessen": "Beállítások elrejtése",
+    "auswahlSpeichern": "Beállítások mentése",
+    "immerAktiv": "Mindig aktív",
+    "kategorien": {
+      "notwendig": {
+        "titel": "Szükséges",
+        "text": "Az Ön nyelvválasztása és — csak akkor, ha a csevegést Ön maga nyitja meg — a beszélgetése azonosítója ezen az eszközön. Ezek nélkül az oldal nem szolgáltatható úgy, ahogyan Ön kérte. Nem szolgálnak sem reklám-, sem statisztikai célokat."
+      },
+      "spamschutz": {
+        "titel": "A kapcsolatfelvételi űrlap spamvédelme",
+        "text": "Kapcsolatfelvételi űrlapunkat a Google reCAPTCHA Enterprise szolgáltatása védi az automatizált körlevelektől. Ha ezt engedélyezi, böngészője az űrlap kitöltése közben szkriptet tölt be a google.com címről, és ezzel elküldi az IP-címét a Google-nak. Az Ön engedélye nélkül semmi sem töltődik be a Google-tól; ilyenkor e-mailben ér el minket."
+      }
+    },
+    "einstellungen": {
+      "titel": "A hozzájárulás kezelése",
+      "text": "Döntését itt bármikor módosíthatja vagy visszavonhatja. A döntés erre a böngészőre érvényes, és kizárólag az Ön eszközén tárolódik.",
+      "offen": "Még nem döntött. Semmilyen opcionális elem nem aktív.",
+      "stand": "Az Ön döntése: {datum}.",
+      "gespeichert": "Mentve."
+    },
+    "kontakt": {
+      "hinweis": "Az elküldés előtt szükségünk van az engedélyére a külső spamvédelemhez (a Google reCAPTCHA szolgáltatása). Enélkül nem tudjuk elfogadni az űrlapot — így tartjuk távol az automatizált körleveleket.",
+      "erlauben": "Spamvédelem engedélyezése",
+      "alternative": "Nem szeretné? Írjon nekünk inkább a {email} címre."
+    }
   }
 }

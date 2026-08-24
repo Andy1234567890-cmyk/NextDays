@@ -41,8 +41,20 @@ export type LegalDoc = {
   title: string;
   /** <meta name="description"> der Seite. */
   metaDescription: string;
-  /** „Stand: 30. Juli 2026" — sichtbar unter dem Titel. */
-  stand: string;
+  /**
+   * @deprecated Fertiger Satz „Stand: 6. August 2026". Führt dazu, dass eine
+   * Sprachfassung entweder deutschen Text zeigt oder das Datum als übersetztes
+   * Literal doppelt pflegt. Neue Fassungen setzen `standIso`.
+   */
+  stand?: string;
+  /**
+   * Stand-Datum als ISO-Datum (`YYYY-MM-DD`), z. B. `RECHTSSTAND_ISO`.
+   *
+   * Der Renderer macht daraus den Satz in der Sprache des Besuchers. Ist
+   * `standIso` gesetzt, gewinnt es gegen `stand` — so lässt sich Datei für
+   * Datei umstellen, ohne dass zwischendurch etwas bricht.
+   */
+  standIso?: string;
   intro: string[];
   sections: LegalSection[];
   /** Abschnitte mit 1., 2., 3. … numerieren (Verträge ja, Impressum nein). */

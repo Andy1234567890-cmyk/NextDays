@@ -424,7 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Platforma pre prenajímateľov rekreačných ubytovaní",
-    "description": "Platforma pre hotely, agentúry a prenajímateľov rekreačných ubytovaní: channel manager, kalendár, priame rezervácie, komunikácia s hosťami a fakturácia na jednom mieste. Vyvinuté v Dánsku, hostované v EÚ. Od 19,90 € mesačne. 30 dní zadarmo."
+    "description": "Platforma pre hotely, agentúry a prenajímateľov rekreačných ubytovaní: channel manager, kalendár, priame rezervácie, komunikácia s hosťami a fakturácia na jednom mieste. Vyvinuté v Dánsku, hostované v EÚ. 30 dní zadarmo.",
+    "descriptionMitPreis": "Platforma pre hotely, agentúry a prenajímateľov rekreačných ubytovaní: channel manager, kalendár, priame rezervácie, komunikácia s hosťami a fakturácia na jednom mieste. Vyvinuté v Dánsku, hostované v EÚ. Od {preis} mesačne. 30 dní zadarmo."
   },
   "nav": {
     "funktionen": "Funkcie",
@@ -828,9 +829,9 @@
     "appLaden": "Stiahnuť aplikáciu",
     "spalten": {
       "produkt": "Produkt",
-      "loesungen": "Riešenia",
       "ressourcen": "Materiály",
-      "unternehmen": "Spoločnosť"
+      "unternehmen": "Spoločnosť",
+      "rechtliches": "Právne informácie"
     },
     "produkt": {
       "pms": "Property Management",
@@ -839,26 +840,14 @@
       "zahlungen": "Platby",
       "mobileApp": "Mobilná aplikácia"
     },
-    "loesungen": {
-      "hotels": "Hotely",
-      "bnb": "B&B",
-      "gaestehaeuser": "Penzióny",
-      "ferienwohnungen": "Rekreačné apartmány",
-      "campingplaetze": "Kempy"
-    },
     "ressourcen": {
-      "blog": "Blog",
       "hilfeCenter": "Centrum pomoci",
       "status": "Stav systému",
-      "leitfaeden": "Príručky",
       "api": "Dokumentácia API"
     },
     "unternehmen": {
       "ueberUns": "O nás",
-      "karriere": "Kariéra",
-      "partner": "Partneri",
-      "kontakt": "Kontakt",
-      "presse": "Pre médiá"
+      "kontakt": "Kontakt"
     },
     "copyright": "© 2026 myNextDays. Všetky práva vyhradené.",
     "agb": "Obchodné podmienky",
@@ -867,6 +856,9 @@
     "cookies": "Zásady cookies",
     "avv": "Spracúvanie údajov",
     "kontoLoeschen": "Vymazať účet"
+  },
+  "legal": {
+    "stand": "Stav ku dňu: {datum}"
   },
   "abschluss": {
     "heading": "Pripravení riadiť svoje ubytovanie z jedného miesta?",
@@ -980,6 +972,7 @@
       "unsereRechnung": "Základný poplatok + pásma za objekty",
       "proMonat": "/mes.",
       "ohnePreis": "nezverejnené",
+      "waehrungshinweis": "Všetky sumy v tomto porovnaní sú uvedené v eurách — aj tá naša. Poskytovatelia zverejňujú svoje ceny v eurách; ich prepočet na vašu menu by znamenal tvrdiť výmenný kurz, ktorý už zajtra nemusí platiť.",
       "fussnote": "Stav {stand}, odčítané priamo z cenových stránok poskytovateľov. Uvedené sú mesačné ceny bez ročnej viazanosti; ak poskytovateľ inzeruje ročnú cenu, je uvedená vo výpočte. Bez záruky — rozhodujúci je aktuálny cenník poskytovateľa.",
       "ersparnis": "o {prozent} % lacnejšie než priemer"
     },
@@ -2028,5 +2021,38 @@
     "noResultsHintLink": "prezrite si kategórie",
     "browseCategories": "Prehliadať kategórie",
     "brandTitle": "Pomoc myNextDays"
+  },
+  "einwilligung": {
+    "titel": "Váš súhlas",
+    "text": "Táto webová stránka nepoužíva analytické, reklamné ani sledovacie služby; písma a ikony sú poskytované z nášho vlastného servera. Nutné je len to, čo si sami nastavíte alebo vyžiadate. Váš súhlas preto potrebujeme na presne jednu vec: na externú ochranu nášho kontaktného formulára pred spamom.",
+    "richtlinie": "Prečítať si zásady používania cookies",
+    "allesAblehnen": "Odmietnuť všetko",
+    "allesAnnehmen": "Prijať všetko",
+    "auswahlOeffnen": "Zobraziť možnosti",
+    "auswahlSchliessen": "Skryť možnosti",
+    "auswahlSpeichern": "Uložiť možnosti",
+    "immerAktiv": "Vždy aktívne",
+    "kategorien": {
+      "notwendig": {
+        "titel": "Nutné",
+        "text": "Váš výber jazyka a — len ak si chat otvoríte sami — identifikátor vášho rozhovoru na tomto zariadení. Bez týchto údajov nie je možné doručiť stránku tak, ako ste si ju vyžiadali. Neslúžia ani na reklamu, ani na štatistiku."
+      },
+      "spamschutz": {
+        "titel": "Ochrana kontaktného formulára pred spamom",
+        "text": "Náš kontaktný formulár je chránený pred automatizovanými hromadnými správami pomocou reCAPTCHA Enterprise od spoločnosti Google. Ak to povolíte, váš prehliadač počas vypĺňania formulára načíta skript z google.com a odošle pri tom vašu adresu IP spoločnosti Google. Bez vášho povolenia sa od Google nenačíta nič; v takom prípade nás zastihnete e-mailom."
+      }
+    },
+    "einstellungen": {
+      "titel": "Správa vášho súhlasu",
+      "text": "Svoje rozhodnutie tu môžete kedykoľvek zmeniť alebo odvolať. Platí pre tento prehliadač a ukladá sa iba na vašom zariadení.",
+      "offen": "Ešte ste sa nerozhodli. Nič voliteľné nie je aktívne.",
+      "stand": "Vaše rozhodnutie z {datum}.",
+      "gespeichert": "Uložené."
+    },
+    "kontakt": {
+      "hinweis": "Pred odoslaním potrebujeme vaše povolenie na externú ochranu pred spamom (reCAPTCHA od Google). Bez neho formulár neprijmeme — takto zabraňujeme automatizovaným hromadným správam.",
+      "erlauben": "Povoliť ochranu pred spamom",
+      "alternative": "Nechcete to? Napíšte nám namiesto toho na {email}."
+    }
   }
 }

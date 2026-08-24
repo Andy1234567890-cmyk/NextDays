@@ -199,15 +199,41 @@ body {
    @theme-Variable --font-display — letztere wird auf :root ausgewertet, wo
    --font-fraunces noch nicht existiert und damit leer bliebe.
    So kann das Gewicht pro Element per Utility gesteuert werden (z. B.
-   normale Navigation vs. extra-fette Überschriften). */
+   normale Navigation vs. extra-fette Überschriften).
+
+   Der Umbruch langer Wörter steht hier ebenfalls — siehe die Begründung an
+   h1–h3 darunter; er gilt auch für Display-Text ausserhalb von Überschriften
+   (Kennzahlen, große Zitate). */
 .font-display {
   font-family: var(--font-fraunces), sans-serif;
+  hyphens: auto;
+  overflow-wrap: break-word;
 }
 
 /* Echte Überschriften: Fraunces extra bold. */
 h1, h2, h3 {
   font-family: var(--font-fraunces), sans-serif;
   font-weight: 800; /* Extra Bold — Fraunces ist Variable Font bis 900 */
+
+  /* Umbruch langer Wörter. KEINE Kosmetik, sondern die Ursache eines
+     Querscrolls: „Buchungsplattformen." ist bei 36 px 410 px breit und stand
+     in einem 327 px breiten Container. Ohne Trennung wächst die Grid-Spalte
+     auf die Wortbreite, die Seite wird breiter als der Bildschirm und scrollt
+     seitlich (live gemessen auf /funktionen/channel-manager, 390 px).
+
+     Zwei Regeln, weil eine nicht genügt:
+     · `hyphens: auto` trennt sauber nach den Silbenregeln der Sprache — es
+       wirkt nur, weil <html lang={locale}> gesetzt ist (app/layout.tsx), und
+       nur, wenn der Browser für diese Sprache ein Wörterbuch hat.
+     · `overflow-wrap: break-word` ist der Rückhalt für alle Sprachen ohne
+       Wörterbuch: es bricht erst, wenn ein Wort sonst NICHT passt, und
+       verändert normale Zeilen nicht.
+
+     Das ist eine Klasse, kein Einzelfall: dieselben Vorlagen tragen 24
+     Sprachen, und Deutsch, Finnisch, Ungarisch und Griechisch bilden längere
+     Komposita als die Referenzbreite je vorsah. */
+  hyphens: auto;
+  overflow-wrap: break-word;
 }
 
 /* Wandernde Wellenkanten: das SVG ist doppelt so breit wie die Sektion und

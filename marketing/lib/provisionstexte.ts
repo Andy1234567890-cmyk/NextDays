@@ -19,6 +19,7 @@
 // selben Request, `revalidate: 600`); die Server Component holt sie EINMAL und
 // gibt den fertig formatierten String als Prop weiter — auch an die
 // Client-Komponenten, die selbst keinen Zugang zum Backend haben.
+import { anzeigewaehrung } from "@/lib/anzeigewaehrung";
 import { formatProzent, holePreisliste } from "@/lib/preise";
 
 /**
@@ -46,7 +47,11 @@ export type Provisionssaetze = {
 export async function holeProvisionssaetze(
   locale: string,
 ): Promise<Provisionssaetze> {
-  const liste = await holePreisliste();
+  // Dieselbe Währung anfragen wie alle anderen Aufrufer, obwohl hier nur
+  // Prozentsätze gebraucht werden: sonst entstehen im Request ZWEI
+  // verschiedene Anfragen, Next dedupliziert nicht mehr, und der Endpunkt wird
+  // pro Seitenaufruf doppelt gerufen.
+  const liste = await holePreisliste(anzeigewaehrung(locale));
   if (!liste) return { extern: null, marktplatz: null };
   return {
     extern: formatProzent(liste.commission_external_percent, locale),

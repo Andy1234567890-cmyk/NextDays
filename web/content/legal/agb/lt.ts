@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // (recommended disclosure language) — Sinn und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Bendrosios sąlygos agentūroms ir nuomotojams",
-  stand: "Redakcija: 2026 m. liepos 30 d.",
+  stand: "Redakcija: 2026 m. rugpjūčio 13 d.",
   intro: [
     "Šios bendrosios sąlygos (toliau — „Sąlygos“) reglamentuoja, kaip agentūros, nuomotojai, būstų administratoriai ir kiti verslo naudotojai (toliau — „Naudotojas“) naudojasi programinės įrangos platforma myNextDays (toliau — „Platforma“).",
     "Platformos teikėja yra myNextDays ApS, pagal Danijos teisę įsteigta uždaroji akcinė bendrovė (anpartsselskab), Hirtshalsvej 21, 9881 Bindslev, Danija, įregistruota Danijos centriniame įmonių registre (CVR) CVR Nr. 46615182 (toliau — „myNextDays“ arba „mes“).",
@@ -105,14 +105,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Intelektinė nuosavybė",
+      heading: "§ 12 Dirbtinio intelekto naudojimas",
+      paragraphs: [
+        "myNextDays atskirose funkcijose naudoja dirbtinio intelekto sistemas, visų pirma kainų rekomendacijoms (dinaminiam kainų nustatymui), atsakymų pasiūlymams pranešimų gautuosiuose ir pagalbai teikiant klientų aptarnavimą. Šios funkcijos parengia pasiūlymus; sprendimas juos naudoti ir atsakomybė už tai tenka Naudotojui. Kainų rekomendacijos nepakeičia paties Naudotojo komercinio įvertinimo.",
+        "Jei svečiai tiesiogiai bendrauja su dirbtinio intelekto sistema, jiems apie tai atskleidžiama (Reglamento (ES) 2024/1689 — „Dirbtinio intelekto akto“ 50 straipsnio 1 dalis). Tekstus, kuriuos dirbtinio intelekto sistema sukūrė arba iš esmės pakeitė ir kuriuos Naudotojas perduoda svečiams, Naudotojas privalo pažymėti kaip tokius, jei jam tai nustato teisės aktuose įtvirtinta pareiga.",
+        "myNextDays neeksploatuoja dirbtinio intelekto sistemų, kurios pagal Dirbtinio intelekto akto III priedą laikomos didelės rizikos sistemomis, ir netaiko praktikos, kuri pagal Dirbtinio intelekto akto 5 straipsnį yra uždrausta. Naudotojo įvedami duomenys ir jo svečių duomenys be atskiro pavedimo modeliams mokyti nenaudojami.",
+        "Naudotojas negali naudoti dirbtinio intelekto funkcijų tam, kad svečiams sukurtų žmogaus bendravimo įspūdį ten, kur egzistuoja atskleidimo pareiga, arba kad pateiktų teisiškai įpareigojančius pareiškimus pats jų nepatikrinęs.",
+        "Jei Naudotojas per tam skirtą sąsają sujungia savo paskyrą su savo pasirinktu dirbtinio intelekto asistentu (pavyzdžiui, Anthropic sukurtu Claude), taikoma tai, kas nurodyta toliau. Sutartį dėl tokios paslaugos Naudotojas sudaro pats ir yra atsakingas už jos naudojimą. Sujungimas yra jo nurodymas myNextDays perduoti ten jo atvertus duomenis — įskaitant perdavimą į trečiąją valstybę, jei teikėjo buveinė yra už Europos Sąjungos ribų. Naudotojas užtikrina, kad tam turi teisinį pagrindą, kad jo paties duomenų apsaugos informacijoje nurodytas gavėjas ir kad yra pateiktos reikalingos perdavimo garantijos.",
+        "Tokiam sujungimui Naudotojas naudoja tokį prieigos būdą, kuriam teikėjas siūlo duomenų tvarkymą pagal pavedimą ir kuriam netaikomas duomenų naudojimas modeliams mokyti — Claude atveju tai yra verslo klientams skirti prieigos būdai (Team, Enterprise arba API). Privačiam naudojimui skirti prieigos būdai šių reikalavimų paprastai neatitinka; todėl svečių duomenims jie netinka. myNextDays negali atpažinti, kurį prieigos būdą Naudotojas naudoja, ir į tai atkreipia dėmesį sutikimo dialogo lange.",
+        "Naudotojas atsižvelgia į tai, kad turiniui, kurį jis iš naudotojo sąsajos ranka nukopijuoja į asistento įvesties laukelį, teikėjo sutartiniai apribojimai paprastai netaikomi — kitaip nei duomenims, gaunamiems per sąsają.",
+        "Duomenis, gaunamus iš užsakymo portalo, Naudotojas ir per sąsają naudoja tik atitinkamai rezervacijai vykdyti ir svečiams aptarnauti — ne asmenims vertinti, profiliams sudaryti ar reklamai. Šią naudojimo tikslo ribą portalai nustato savo pačių sąlygose.",
+      ],
+    },
+    {
+      heading: "§ 13 Skundai ir mediacija",
+      paragraphs: [
+        "myNextDays verslo naudotojams teikia nemokamą vidinę skundų nagrinėjimo sistemą (Reglamento (ES) 2019/1150 — „P2B reglamento“ 11 straipsnis). Skundus — visų pirma dėl tariamų šių Sąlygų pažeidimų, dėl techninių problemų, turinčių reikšmingą įtaką, arba dėl myNextDays taikomų priemonių Naudotojo atžvilgiu — galima laisva forma pateikti adresu info@mynextdays.dk arba per programoje esantį pagalbos kanalą. Gavimas patvirtinamas; skundas nagrinėjamas nedelsiant ir per pagrįstą terminą, o nesudėtingais atvejais paprastai per 14 dienų. Rezultatas Naudotojui pranešamas aiškia kalba.",
+        "Jei nagrinėjant skundą susitarti nepavyksta, myNextDays yra pasirengusi kartu su Naudotoju neteismine tvarka kreiptis į šiuos mediatorius (P2B reglamento 12 straipsnis): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Ženeva 20, Šveicarija — procedūros galimos ir nuotoliniu būdu bei keliomis kalbomis; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 Kopenhaga K, Danija — teikėjos buveinės valstybė.",
+        "Šis nurodymas neįpareigoja Naudotojo vykdyti mediacijos procedūros; teisė kreiptis į teismą lieka nepakitusi. Prie pagrįstų mediacijos išlaidų myNextDays prisideda; jų paskirstymas nustatomas pagal atitinkamo mediatoriaus taisykles ir konkretaus atvejo aplinkybes.",
+        "myNextDays kasmet skelbia informaciją apie gautų skundų skaičių, jų nagrinėjimo trukmę ir taikytas priemones.",
+      ],
+    },
+    {
+      heading: "§ 14 Intelektinė nuosavybė",
       paragraphs: [
         "Visos teisės į Platformą, jos programinę įrangą ir turinį (išskyrus Naudotojo pateiktą turinį) priklauso myNextDays arba jos licencijų davėjams. Sutarties galiojimo laikotarpiui Naudotojas įgyja paprastą, neperleidžiamą teisę naudotis Platforma sutartyje sutarta apimtimi.",
         "Naudotojas suteikia myNextDays paprastas naudojimo teises į savo pateiktą turinį, kiek tai būtina Platformai eksploatuoti (visų pirma saugoti, atgaminti, rodyti ir perduoti prijungtiems kanalams).",
       ],
     },
     {
-      heading: "§ 13 Atsakomybė",
+      heading: "§ 15 Atsakomybė",
       paragraphs: [
         "myNextDays neribotai atsako už tyčią ir didelį neatsargumą, taip pat už žalą, atsiradusią dėl gyvybės atėmimo, kūno sužalojimo ar sveikatos sutrikdymo.",
         "Paprasto neatsargumo atveju myNextDays atsako tik už esminių sutartinių pareigų (kardinaliųjų pareigų) pažeidimą, apsiribojant sutarčiai tipiška, numatoma žala. Atsakomybė pagal atsakomybės už gaminius teisės aktus ir pagal prisiimtas garantijas lieka nepakitusi.",
@@ -120,7 +142,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Galiojimo terminas, nutraukimas ir blokavimas",
+      heading: "§ 16 Galiojimo terminas, nutraukimas ir blokavimas",
       paragraphs: [
         "Galiojimo terminas ir įspėjimo apie nutraukimą terminai nustatomi atitinkamoje sutartyje. Teisė nutraukti sutartį nepaprastąja tvarka dėl svarbios priežasties lieka nepakitusi.",
         "myNextDays gali laikinai užblokuoti prieigą prie Platformos arba atskirų funkcijų (įskaitant mokėjimų priėmimą ir išmokas), jei yra konkrečių požymių, kad pažeidžiamos šios Sąlygos, vykdomas sukčiavimas arba piktnaudžiaujama naudojimusi, arba jei myNextDays tai daryti privalo pagal teisės aktus ar mokėjimo paslaugų teikėjo nurodymą. Naudotojas apie blokavimą informuojamas, kiek tai teisiškai leidžiama.",
@@ -128,14 +150,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 Šių Sąlygų pakeitimai",
+      heading: "§ 17 Šių Sąlygų pakeitimai",
       paragraphs: [
         "myNextDays gali keisti šias Sąlygas ateičiai, jei tai būtina dėl svarių priežasčių (visų pirma teisės aktų pakeitimų, teismų praktikos pokyčių ar mokėjimo paslaugų teikėjų reikalavimų) ir dėl to Naudotojas nėra nepagrįstai nuskriaudžiamas.",
         "Apie pakeitimus Naudotojui pranešama tekstine forma likus ne mažiau kaip šešioms savaitėms iki jų įsigaliojimo. Jei Naudotojas per pranešimo laikotarpį nepareiškia prieštaravimo arba po įsigaliojimo toliau naudojasi Platforma, pakeistos Sąlygos laikomos priimtomis; į šią pasekmę pranešime atskirai atkreipiamas dėmesys.",
       ],
     },
     {
-      heading: "§ 16 Baigiamosios nuostatos",
+      heading: "§ 18 Baigiamosios nuostatos",
       paragraphs: [
         "Taikoma valstybės, kurioje teikėja turi registruotą buveinę, teisė, netaikant Jungtinių Tautų konvencijos dėl tarptautinio prekių pirkimo–pardavimo sutarčių. Imperatyvios valstybės, kurioje Naudotojas turi buveinę, nuostatos lieka nepakitusios.",
         "Išimtinė teismingumo vieta visiems ginčams, kylantiems iš šios sutarties ar su ja susijusiems, — kiek tai teisiškai leidžiama — yra teikėjos buveinė.",

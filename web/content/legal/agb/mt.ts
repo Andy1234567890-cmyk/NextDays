@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // Account Agreement) — Wortlaut und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Termini u Kundizzjonijiet għall-Aġenziji u s-Sidien il-Kera",
-  stand: "L-aħħar aġġornament: 30 ta' Lulju 2026",
+  stand: "L-aħħar aġġornament: 13 ta' Awwissu 2026",
   intro: [
     "Dawn it-Termini u Kundizzjonijiet Ġenerali (minn hawn 'il quddiem it-“Termini”) jirregolaw l-użu tal-pjattaforma tas-software myNextDays (minn hawn 'il quddiem il-“Pjattaforma”) minn aġenziji, sidien il-kera, amministraturi tal-proprjetà u utenti kummerċjali oħra (minn hawn 'il quddiem l-“Utent”).",
     "Il-Pjattaforma hija operata minn myNextDays ApS, kumpanija b'responsabbiltà limitata (anpartsselskab) taħt il-liġi Daniża, Hirtshalsvej 21, 9881 Bindslev, id-Danimarka, irreġistrata fir-Reġistru Ċentrali tan-Negozju Daniż (CVR) bin-numru CVR 46615182 (minn hawn 'il quddiem “myNextDays” jew “aħna”).",
@@ -105,14 +105,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Proprjetà intellettwali",
+      heading: "§ 12 L-użu tal-intelliġenza artifiċjali",
+      paragraphs: [
+        "myNextDays tuża sistemi ta' intelliġenza artifiċjali fi funzjonijiet individwali, b'mod partikolari għal rakkomandazzjonijiet ta' prezzijiet (dynamic pricing), għal suġġerimenti ta' tweġibiet fil-kaxxa tal-messaġġi u għall-appoġġ fis-servizz ta' assistenza. Dawn il-funzjonijiet jiġġeneraw suġġerimenti; id-deċiżjoni u r-responsabbiltà għall-użu tagħhom huma tal-Utent. Ir-rakkomandazzjonijiet ta' prezzijiet ma jissostitwixxux l-evalwazzjoni kummerċjali tal-Utent stess.",
+        "Jekk il-mistednin jinteraġixxu direttament ma' sistema ta' intelliġenza artifiċjali, dan jiġi żvelat lilhom (l-Artikolu 50(1) tar-Regolament (UE) 2024/1689 — l-“Att dwar l-Intelliġenza Artifiċjali”). It-testi li sistema ta' intelliġenza artifiċjali ġġenerat jew biddlet b'mod sostanzjali u li l-Utent jgħaddi lill-mistednin għandhom jiġu identifikati bħala tali mill-Utent, sa fejn dan ikun obbligat bil-liġi li jagħmel dan.",
+        "myNextDays ma topera ebda sistema ta' intelliġenza artifiċjali li titqies ta' riskju għoli skont l-Anness III tal-Att dwar l-Intelliġenza Artifiċjali, u ebda prattika pprojbita skont l-Artikolu 5 tal-Att dwar l-Intelliġenza Artifiċjali. L-inputs tal-Utent u d-data tal-mistednin tiegħu ma jintużawx għat-taħriġ ta' mudelli mingħajr inkarigu separat.",
+        "L-Utent ma jistax juża l-funzjonijiet ta' intelliġenza artifiċjali biex joħloq fil-konfront tal-mistednin l-impressjoni ta' komunikazzjoni umana fejn ikun hemm obbligu ta' żvelar, jew biex jagħmel dikjarazzjonijiet legalment vinkolanti mingħajr verifika tiegħu stess.",
+        "Jekk l-Utent jgħaqqad il-kont tiegħu, permezz tal-interfaċċa maħsuba għal dan, ma' assistent ta' intelliġenza artifiċjali tiegħu stess (bħal Claude ta' Anthropic), japplika dan li ġej: l-Utent jikkonkludi hu stess il-kuntratt dwar dak is-servizz u huwa responsabbli għall-użu tiegħu. Il-konnessjoni hija l-istruzzjoni tiegħu lil myNextDays biex tgħaddi hemmhekk id-data awtorizzata — inkluż trasferiment lejn pajjiż terz jekk il-fornitur ikun stabbilit barra mill-Unjoni Ewropea. L-Utent jiżgura li għandu bażi legali għal dan, li l-informazzjoni tiegħu stess dwar il-protezzjoni tad-data tindika r-riċevitur u li s-salvagwardji meħtieġa għat-trasferiment ikunu fis-seħħ.",
+        "Għal tali konnessjoni, l-Utent juża tip ta' aċċess li għalih il-fornitur joffri pproċessar tad-data f'isem il-kontrollur u li jeskludi l-użu tad-data għat-taħriġ ta' mudelli — fil-każ ta' Claude dawn huma l-aċċessi għall-klijenti kummerċjali (Team, Enterprise jew API). L-aċċessi għall-użu privat regolarment ma jissodisfawx dan; għalhekk mhumiex adattati għad-data tal-mistednin. myNextDays ma tistax tagħraf liema aċċess juża l-Utent u tiġbed l-attenzjoni għal dan fid-djalogu tal-kunsens.",
+        "L-Utent iqis li l-kontenut li jikkopja bl-idejn mill-interfaċċa tal-utent f'kaxxa ta' input tal-assistent regolarment ma jkunx kopert mir-restrizzjonijiet kuntrattwali tal-fornitur — b'differenza mid-data li tinkiseb permezz tal-interfaċċa.",
+        "Id-data li tiġi minn portal ta' prenotazzjoni tintuża mill-Utent, ukoll permezz tal-interfaċċa, biss għall-ipproċessar u l-kura tal-prenotazzjoni rispettiva — mhux għall-evalwazzjoni ta' persuni, għat-tfassil ta' profili jew għal reklamar. Il-portali jistabbilixxu din il-limitazzjoni tal-iskop fil-kundizzjonijiet tagħhom stess.",
+      ],
+    },
+    {
+      heading: "§ 13 Ilmenti u medjazzjoni",
+      paragraphs: [
+        "myNextDays iżżomm għall-utenti kummerċjali sistema interna bla ħlas għat-trattament tal-ilmenti (l-Artikolu 11 tar-Regolament (UE) 2019/1150 — ir-“Regolament P2B”). L-ilmenti — b'mod partikolari dwar ksur allegat ta' dawn it-Termini, dwar problemi tekniċi bi impatt sinifikanti jew dwar miżuri ta' myNextDays fil-konfront tal-Utent — jistgħu jitressqu mingħajr formalità fuq info@mynextdays.dk jew permezz tas-servizz ta' assistenza fl-applikazzjoni. L-irċevuta tiġi kkonfermata; it-trattament isir fil-pront u fi żmien raġonevoli, u f'każijiet sempliċi normalment fi żmien 14 jum. Ir-riżultat jiġi kkomunikat lill-Utent bi lingwaġġ ċar.",
+        "Jekk fil-proċedura tal-ilment ma jintlaħaqx ftehim, myNextDays hija lesta li tirrikorri mal-Utent, barra mill-qrati, għand il-medjaturi li ġejjin (l-Artikolu 12 tar-Regolament P2B): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Ġinevra 20, l-Isvizzera — il-proċeduri huma possibbli wkoll mill-bogħod u f'diversi lingwi; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 Kopenħagen K, id-Danimarka — l-Istat tas-sede tal-operatur.",
+        "Din l-indikazzjoni ma tobbligax lill-Utent li jwettaq proċedura ta' medjazzjoni; id-dritt li jiġi adit tribunal jibqa' mhux affettwat. myNextDays tikkontribwixxi għall-ispejjeż raġonevoli ta' medjazzjoni; it-tqassim tagħhom jirriżulta mir-regoli tal-medjatur rispettiv u miċ-ċirkostanzi tal-każ individwali.",
+        "myNextDays tippubblika kull sena informazzjoni dwar l-għadd ta' ilmenti, dwar it-tul tat-trattament u dwar il-miżuri meħuda.",
+      ],
+    },
+    {
+      heading: "§ 14 Proprjetà intellettwali",
       paragraphs: [
         "Id-drittijiet kollha fil-Pjattaforma, fis-software tagħha u fil-kontenut tagħha (bl-eċċezzjoni tal-kontenut imdaħħal mill-Utent) huma ta' myNextDays jew tal-liċenzjaturi tagħha. Għat-tul tal-kuntratt, l-Utent jirċievi dritt sempliċi u mhux trasferibbli li juża l-Pjattaforma sal-punt miftiehem fil-kuntratt.",
         "Fir-rigward tal-kontenut imdaħħal minnu, l-Utent jagħti lil myNextDays id-drittijiet ta' użu sempliċi meħtieġa għat-tħaddim tal-Pjattaforma (b'mod partikolari għall-ħażna, ir-riproduzzjoni, il-wiri u t-trażmissjoni lill-kanali konnessi).",
       ],
     },
     {
-      heading: "§ 13 Responsabbiltà",
+      heading: "§ 15 Responsabbiltà",
       paragraphs: [
         "myNextDays hija responsabbli mingħajr limitu għal intenzjoni u negliġenza serja, kif ukoll għal danni li jirriżultaw minn ħsara lill-ħajja, lill-ġisem jew lis-saħħa.",
         "F'każ ta' negliġenza sempliċi, myNextDays hija responsabbli biss għall-ksur ta' obbligi kuntrattwali essenzjali (obbligi kardinali), limitatament għad-dannu prevedibbli u tipiku għall-kuntratt. Ir-responsabbiltà skont il-liġi dwar ir-responsabbiltà għall-prodotti u skont garanziji mogħtija tibqa' mhux affettwata.",
@@ -120,7 +142,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Tul, terminazzjoni u sospensjoni",
+      heading: "§ 16 Tul, terminazzjoni u sospensjoni",
       paragraphs: [
         "It-tul u l-perjodi ta' avviż jirriżultaw mill-kuntratt rispettiv. Id-dritt ta' terminazzjoni straordinarja għal raġuni valida jibqa' mhux affettwat.",
         "myNextDays tista' tissospendi temporanjament l-aċċess għall-Pjattaforma jew funzjonijiet individwali (inklużi l-aċċettazzjoni tal-ħlasijiet u l-pagamenti lill-Utent) jekk ikun hemm indikazzjonijiet konkreti ta' ksur ta' dawn it-Termini, ta' frodi jew ta' użu abbużiv, jew jekk myNextDays tkun obbligata tagħmel dan bil-liġi jew b'ordni ta' fornitur ta' servizzi ta' ħlas. L-Utent jiġi infurmat bis-sospensjoni sa fejn dan ikun legalment permess.",
@@ -128,14 +150,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 Bidliet f'dawn it-Termini",
+      heading: "§ 17 Bidliet f'dawn it-Termini",
       paragraphs: [
         "myNextDays tista' temenda dawn it-Termini b'effett għall-futur meta dan ikun meħtieġ għal raġunijiet validi (b'mod partikolari bidliet fil-leġiżlazzjoni, fil-ġurisprudenza jew fir-rekwiżiti tal-fornituri ta' servizzi ta' ħlas) u l-Utent ma jiġix żvantaġġat b'mod mhux raġonevoli b'riżultat ta' dan.",
         "Il-bidliet jitħabbru lill-Utent f'forma testwali mill-inqas sitt ġimgħat qabel ma jidħlu fis-seħħ. Jekk l-Utent ma joġġezzjonax fi żmien il-perjodu tat-tħabbira jew ikompli juża l-Pjattaforma wara d-dħul fis-seħħ, it-Termini emendati jitqiesu aċċettati; din il-konsegwenza tiġi indikata speċifikament fit-tħabbira.",
       ],
     },
     {
-      heading: "§ 16 Dispożizzjonijiet finali",
+      heading: "§ 18 Dispożizzjonijiet finali",
       paragraphs: [
         "Tapplika l-liġi tal-Istat fejn l-operatur għandu s-sede rreġistrata tiegħu, bl-esklużjoni tal-Konvenzjoni tan-NU dwar Kuntratti għall-Bejgħ Internazzjonali ta' Merkanzija. Id-dispożizzjonijiet mandatorji tal-Istat fejn l-Utent għandu s-sede tiegħu jibqgħu mhux affettwati.",
         "Il-post esklussiv ta' ġurisdizzjoni għat-tilwim kollu li jirriżulta minn dan il-kuntratt jew b'rabta miegħu huwa — sa fejn legalment permess — is-sede rreġistrata tal-operatur.",

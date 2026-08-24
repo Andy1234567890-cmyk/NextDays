@@ -71,7 +71,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   for (const eintrag of RECHTSDOKUMENTE) {
     eintraege.push({
-      url: siteUrl(`/${eintrag.doc.slug}`),
+      url: siteUrl(`/${eintrag.slug}`),
       lastModified: stand,
       changeFrequency: "yearly",
       priority: 0.3,

@@ -424,7 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – La plataforma para anfitriones de alojamientos turísticos",
-    "description": "La plataforma para hoteles, agencias y anfitriones de alojamientos turísticos: channel manager, calendario, reserva directa, comunicación con huéspedes y facturación en un solo lugar. Creada en Dinamarca, alojada en la UE. Desde 19,90 €/mes. 30 días gratis."
+    "description": "La plataforma para hoteles, agencias y anfitriones de alojamientos turísticos: channel manager, calendario, reserva directa, comunicación con huéspedes y facturación en un solo lugar. Creada en Dinamarca, alojada en la UE. 30 días gratis.",
+    "descriptionMitPreis": "La plataforma para hoteles, agencias y anfitriones de alojamientos turísticos: channel manager, calendario, reserva directa, comunicación con huéspedes y facturación en un solo lugar. Creada en Dinamarca, alojada en la UE. Desde {preis}/mes. 30 días gratis."
   },
   "nav": {
     "funktionen": "Funciones",
@@ -828,9 +829,9 @@
     "appLaden": "Descargar la app",
     "spalten": {
       "produkt": "Producto",
-      "loesungen": "Soluciones",
       "ressourcen": "Recursos",
-      "unternehmen": "Empresa"
+      "unternehmen": "Empresa",
+      "rechtliches": "Legal"
     },
     "produkt": {
       "pms": "Property management",
@@ -839,26 +840,14 @@
       "zahlungen": "Pagos",
       "mobileApp": "App móvil"
     },
-    "loesungen": {
-      "hotels": "Hoteles",
-      "bnb": "B&B",
-      "gaestehaeuser": "Casas de huéspedes",
-      "ferienwohnungen": "Apartamentos turísticos",
-      "campingplaetze": "Campings"
-    },
     "ressourcen": {
-      "blog": "Blog",
       "hilfeCenter": "Centro de ayuda",
       "status": "Estado del sistema",
-      "leitfaeden": "Guías",
       "api": "Documentación de la API"
     },
     "unternehmen": {
       "ueberUns": "Sobre nosotros",
-      "karriere": "Empleo",
-      "partner": "Partners",
-      "kontakt": "Contacto",
-      "presse": "Prensa"
+      "kontakt": "Contacto"
     },
     "copyright": "© 2026 myNextDays. Todos los derechos reservados.",
     "agb": "Condiciones",
@@ -867,6 +856,9 @@
     "cookies": "Política de cookies",
     "avv": "Tratamiento de datos",
     "kontoLoeschen": "Eliminar cuenta"
+  },
+  "legal": {
+    "stand": "Última actualización: {datum}"
   },
   "abschluss": {
     "heading": "¿Listo para gestionar tu alojamiento desde un solo lugar?",
@@ -980,6 +972,7 @@
       "unsereRechnung": "Cuota base + tramos por alojamiento",
       "proMonat": "/mes",
       "ohnePreis": "no publicado",
+      "waehrungshinweis": "Todos los importes de esta comparación están en euros, incluido el nuestro. Los proveedores publican sus precios en euros; convertirlos a tu moneda supondría afirmar un tipo de cambio que mañana podría dejar de ser correcto.",
       "fussnote": "A {stand}, consultado directamente en las páginas de precios de los proveedores. Se indican precios mensuales sin permanencia anual; cuando un proveedor anuncia el precio anual, aparece en el cálculo. Sin garantía: prevalece la lista de precios vigente del proveedor.",
       "ersparnis": "{prozent} % por debajo de la media"
     },
@@ -2028,5 +2021,38 @@
     "noResultsHintLink": "explore las categorías",
     "browseCategories": "Explorar las categorías",
     "brandTitle": "Ayuda de myNextDays"
+  },
+  "einwilligung": {
+    "titel": "Su consentimiento",
+    "text": "Este sitio web no utiliza servicios de análisis, publicidad ni seguimiento; las tipografías y los iconos se alojan en nuestro propio servidor. Solo es necesario lo que usted mismo configura o solicita. Por eso necesitamos su consentimiento para una única cosa: la protección antispam externa de nuestro formulario de contacto.",
+    "richtlinie": "Leer la política de cookies",
+    "allesAblehnen": "Rechazar todo",
+    "allesAnnehmen": "Aceptar todo",
+    "auswahlOeffnen": "Mostrar opciones",
+    "auswahlSchliessen": "Ocultar opciones",
+    "auswahlSpeichern": "Guardar opciones",
+    "immerAktiv": "Siempre activo",
+    "kategorien": {
+      "notwendig": {
+        "titel": "Necesarias",
+        "text": "Su elección de idioma y — solo si abre usted mismo el chat — el identificador de su conversación en este dispositivo. Sin estos datos, la página no puede entregarse tal como usted la ha solicitado. No sirven ni para publicidad ni para estadísticas."
+      },
+      "spamschutz": {
+        "titel": "Protección antispam del formulario de contacto",
+        "text": "Nuestro formulario de contacto está protegido contra mensajes masivos automatizados mediante reCAPTCHA Enterprise de Google. Si lo permite, su navegador cargará un script de google.com mientras rellena el formulario y transmitirá así su dirección IP a Google. Sin su permiso no se carga nada de Google; en ese caso puede escribirnos por correo electrónico."
+      }
+    },
+    "einstellungen": {
+      "titel": "Gestionar su consentimiento",
+      "text": "Puede cambiar o retirar su decisión aquí en cualquier momento. Se aplica a este navegador y se guarda únicamente en su dispositivo.",
+      "offen": "Aún no ha tomado ninguna decisión. No hay nada opcional activo.",
+      "stand": "Su decisión del {datum}.",
+      "gespeichert": "Guardado."
+    },
+    "kontakt": {
+      "hinweis": "Antes de enviar necesitamos su permiso para la protección antispam externa (reCAPTCHA de Google). Sin ella no podemos aceptar el formulario: así mantenemos fuera los mensajes masivos automatizados.",
+      "erlauben": "Permitir antispam",
+      "alternative": "¿Prefiere no hacerlo? Escríbanos entonces a {email}."
+    }
   }
 }

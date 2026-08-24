@@ -28,7 +28,14 @@ export function DokuBereiche({
   ];
 
   return (
-    <nav className="flex items-center gap-1">
+    // `min-w-0` + `overflow-x-auto`: die Reiter dürfen SCHMALER werden als
+    // ihr Inhalt und scrollen dann in sich, statt die Kopfzeile — und damit
+    // die ganze Seite — breiter zu machen. Ohne das hatte diese Leiste bei
+    // 390 px 214 px feste Breite und schob die Seite auf 533 px.
+    // Die Beschriftungen kommen aus 24 Sprachdateien; eine Breitengrenze, die
+    // für „Documentation/API reference" passt, passt für die längste Fassung
+    // nicht. Deshalb scrollen statt schätzen.
+    <nav className="flex min-w-0 items-center gap-1 overflow-x-auto">
       {tabs.map((t) => (
         <Link
           key={t.href}
@@ -37,7 +44,10 @@ export function DokuBereiche({
           className={
             // Der aktive Tab trägt eine Unterkante statt einer Füllung: so
             // bleibt die Kopfzeile ruhig, und der Tab liest sich als Reiter.
-            "-mb-px border-b-2 px-3 py-3.5 text-sm transition-colors " +
+            // Mobil enger und kleiner, damit BEIDE Reiter ohne Wischen
+            // sichtbar sind — ein Reiter, den man erst finden muss, ist auf
+            // dem Telefon der einzige Weg vom Leitfaden zur Referenz.
+            "-mb-px shrink-0 whitespace-nowrap border-b-2 px-2 py-3.5 text-xs transition-colors sm:px-3 sm:text-sm " +
             (t.aktiv
               ? "border-accent font-medium text-foreground"
               : "border-transparent text-muted-foreground hover:text-foreground")

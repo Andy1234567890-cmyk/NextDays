@@ -1,0 +1,364 @@
+// Estnische Übersetzung von `de.ts`.
+//
+// Inhaltliche Änderungen gehören ZUERST in `de.ts` und werden von dort
+// nachgezogen — hier wird ausschließlich übersetzt. Die Struktur (Abschnitte,
+// Reihenfolge, Anzahl der Absätze) ist mit `de.ts` deckungsgleich zu halten.
+import { AGB_URL } from "@/lib/app-url";
+
+import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
+
+import type { LegalDoc } from "../types";
+
+export const datenschutz: LegalDoc = {
+  slug: "datenschutz",
+  title: "Andmekaitseteade",
+  metaDescription:
+    "Kuidas myNextDays isikuandmeid töötleb: eesmärgid, õiguslikud alused, vastuvõtjad, säilitamise tähtajad ja teie õigused isikuandmete kaitse üldmääruse (IKÜM) järgi.",
+  standIso: RECHTSSTAND_ISO,
+  numbered: true,
+  toc: true,
+  intro: [
+    `Käesolev teade kirjeldab, kuidas ${ANBIETER.firma} töötleb isikuandmeid — käesoleva veebilehe külastamisel, platvormi myNextDays kasutamisel (juhtimislaud, turuplats ja mobiilirakendus) ning meie klientidega peetava ärisuhte raames.`,
+    "Aluseks on määrus (EL) 2016/679 (isikuandmete kaitse üldmäärus, edaspidi „IKÜM“) ning Taani andmekaitseseadus (databeskyttelsesloven). Me ei müü andmeid, ei koosta profiile ega kasuta oma veebilehtedel analüüsi-, jälgimis- ega reklaamiteenuseid. Turunduslikel eesmärkidel töötleme andmeid üksnes seal, kus olete andnud selleks sõnaselge nõusoleku — nimelt meie uudiskirja jaoks (vt jaotist „Suhtlus“), millest saate igal ajal ühe klõpsuga loobuda.",
+  ],
+  sections: [
+    {
+      heading: "Vastutav töötleja",
+      paragraphs: [
+        "Käesolevas teates kirjeldatud töötlemistoimingute eest vastutav töötleja on:",
+      ],
+      zeilen: [
+        {
+          label: "Ettevõte",
+          werte: [ANBIETER.firma, `CVR-nr. ${ANBIETER.cvr}`],
+        },
+        {
+          label: "Aadress",
+          werte: [ANBIETER.strasse, ANBIETER.ort, ANBIETER.land],
+        },
+        {
+          label: "E-post",
+          werte: [ANBIETER.email],
+          href: `mailto:${ANBIETER.email}`,
+        },
+        {
+          label: "Telefon",
+          werte: [ANBIETER.telefon],
+          href: `tel:${ANBIETER.telefonE164}`,
+        },
+      ],
+    },
+    {
+      heading: "Kohaldamisala ja rollid",
+      unterpunkte: [
+        {
+          paragraphs: [
+            "Käesoleva veebilehe külastamise, teie kliendikonto ja meie ärisuhte korraldamise osas oleme vastutav töötleja IKÜM artikli 4 punkti 7 tähenduses.",
+          ],
+        },
+        {
+          paragraphs: [
+            "Andmete osas, mida meie kliendid (üürileandjad, hotellid, agentuurid) töötlevad platvormil oma külaliste, omanike ja töötajate kohta, on vastutavad töötlejad kliendid ja meie oleme volitatud töötleja IKÜM artikli 28 tähenduses. Üksikasjad on esitatud [volitatud töötlemise lepingus](/auftragsverarbeitung).",
+          ],
+        },
+        {
+          paragraphs: [
+            "Kui broneerite külalisena majutuse meie turuplatsi kaudu, töötleme teie broneeringu- ja kontaktandmeid nii enda nimel (turuplatsi käitamine, maksete töötlemine) kui ka võõrustava ettevõtte jaoks. Teie majutusleping sõlmitakse üksnes ettevõttega; kõrvuti kehtib ka selle ettevõtte andmekaitseteave.",
+          ],
+        },
+      ],
+    },
+    {
+      heading: "Käesoleva veebilehe külastamine",
+      unterpunkte: [
+        {
+          titel: "Serveri logifailid",
+          paragraphs: [
+            "Iga päringu korral edastab teie brauser tehniliselt vajalikud andmed, mille meie veebiserver logib: IP-aadress, kuupäev ja kellaaeg, päritud aadress, edastatud andmemaht, olekukood, viitaja (referrer) ja brauseri tunnus. Eesmärk on lehe kättesaadavaks tegemine ning rünnakute ja tõrgete tuvastamine ja tõrjumine. Õiguslik alus on IKÜM artikli 6 lõike 1 punkt f; meie õigustatud huvi on turvaline ja stabiilne käitamine. Logisid säilitatakse üksnes nii kaua, kui see on käitamiseks ja turvalisuseks vajalik, ning neid ei liideta muude andmetega.",
+          ],
+        },
+        {
+          titel: "Kirjatüübid",
+          paragraphs: [
+            "Kasutatavad kirjatüübid on manustatud lokaalselt meie serveris. Ühendust Google Fontsi ega muu kirjatüübiteenusega ei looda.",
+          ],
+        },
+        {
+          titel: "Ikoonid",
+          paragraphs: [
+            "Selle veebilehe ikoonid asuvad samamoodi nagu kirjatüübid meie juures: need lisatakse lehele meie serveris ja neid ei laadita eraldi ikooniteenuselt. Ühendust kolmanda isikuga seejuures ei looda ja teie IP-aadressi ei edastata kellelegi.",
+          ],
+        },
+        {
+          titel: "Kontaktvormi rämpspostikaitse (reCAPTCHA)",
+          paragraphs: [
+            "Meie kontaktvorm on automatiseeritud massipöördumiste vastu kaitstud ettevõtja Google Ireland Limited lahendusega reCAPTCHA Enterprise. Üksnes juhul, kui te sellega nõustute, laadib teie brauser vormi täitmisel skripti aadressilt www.google.com; seejuures edastatakse teie IP-aadress ja andmed teie tegevuse kohta vormil Google’ile ning neid analüüsitakse seal, et eristada inimest skriptist. Õiguslik alus on IKÜM artikli 6 lõike 1 punkt a (nõusolek); täiendavalt kohaldub [Google’i privaatsuspoliitika](https://policies.google.com/privacy).",
+            "Ilma teie nõusolekuta Google’ilt midagi ei laadita ja sinna andmeid ei liigu; sel juhul me vormi vastu ei võta, kuid võite meile igal ajal e-kirja saata. Oma nõusolekut saate muuta või tagasi võtta [küpsisepoliitikas](/cookie-richtlinie).",
+          ],
+        },
+        {
+          titel: "Analüüsi ei tehta, reklaami ei ole",
+          paragraphs: [
+            "Me ei kasuta analüüsi-, jälgimis- ega reklaamiteenuseid (ei Google Analyticsit, pikslijälgijaid ega reklaamivõrgustikke) ega koosta profiile. Millised küpsised on platvormil tehniliselt vajalikud, on kirjas [küpsisepoliitikas](/cookie-richtlinie).",
+          ],
+        },
+      ],
+    },
+    {
+      heading: "Kliendikonto ja platvormi kasutamine",
+      paragraphs: [
+        "Konto registreerimiseks ja pidamiseks töötleme andmeid, mille sisestate teie või teie ettevõte: nimi, ärinimi ja õiguslik vorm, aadress, e-posti aadress, telefoninumber, roll ja õigused, registriandmed (nt äriregistri või käibemaksukohustuslase number), pangakonto väljamaksete jaoks ning sisu, mis kontos luuakse.",
+        "Juurdepääsu turvamiseks töötleme lisaks sisselogimislogisid (sisselogimise aeg, IP-aadress, seade ja brauser) ning — kui see on aktiveeritud — kaheastmelise autentimise andmeid.",
+        "Sisselogimine Google’i kontoga: e-posti ja parooli asemel saate sisse logida ka Google’i kontoga. Kui valite selle tee, saame Google Ireland Limitedilt üksnes teie e-posti aadressi, teie nime, teie profiilipildi ja teie Google’i konto tunnuse (õigusalad „openid“, „email“, „profile“) — sõnaselgelt mitte juurdepääsu teie e-kirjadele, kontaktidele, failidele ega kalendrile. Teie Google’i parooli me teada ei saa. Google töötleb sisselogimistoimingut seejuures iseseisva vastutava töötlejana; kohaldub [Google’i privaatsuspoliitika](https://policies.google.com/privacy). Õiguslik alus on IKÜM artikli 6 lõike 1 punkt b, kuna sisselogimine teenib lepingu täitmist; selle sisselogimisviisi valimine on vabatahtlik ja alati asendatav e-posti ja parooliga sisselogimisega.",
+        "Õiguslik alus on IKÜM artikli 6 lõike 1 punkt b (kasutuslepingu täitmine, vt [üldtingimused](" +
+          AGB_URL +
+          ")), juurdepääsu turvamise osas IKÜM artikli 6 lõike 1 punkt f ning maksu- ja äriõiguslikust säilitamiskohustusest tulenevalt IKÜM artikli 6 lõike 1 punkt c.",
+      ],
+    },
+    {
+      heading: "Broneeringud, külaliste ja objektide andmed",
+      paragraphs: [
+        "Platvormil töödeldakse broneeringuid, külaliste andmeid, sõnumeid, ülesandeid ja arveldusi. Nende hulka kuuluvad eelkõige külalise nimi ja kontaktandmed, saabumine ja lahkumine, reisijate arv, hinnad ja maksestaatus, sõnumivahetuse ajalugu ning — kui ettevõte neid kogub — registreerimisandmed ja erisoovid.",
+        "See töötlemine toimub vastava ettevõtte ülesandel ja juhiste kohaselt. Me ei kasuta neid andmeid oma eesmärkidel, reklaamiks ega tehisintellektimudelite treenimiseks.",
+        "Ühe ettevõtte sees on andmed rollide kaupa eraldatud: koristus- ja teenindustöötajad ei näe finants- ega müügiandmeid, omanikud näevad üksnes oma objekte. Eri ettevõtete andmed on tehniliselt eraldatud (kliendipõhised juurdepääsureeglid andmebaasis).",
+      ],
+    },
+    {
+      heading: "Maksete töötlemine",
+      unterpunkte: [
+        {
+          titel: "Stripe",
+          paragraphs: [
+            "Kaardimaksed ja väljamaksed toimuvad ettevõtja Stripe Payments Europe, Limited (Iirimaa) kaudu. Seejuures edastatakse Stripe’ile makseks vajalikud andmed (summa, valuuta, makseviis, nimi, e-posti aadress, broneeringu viide) ning meie klientide kontode puhul seaduses ette nähtud tuvastamisandmed (omanik, tegelikud kasusaajad, isikut tõendava dokumendi andmed, pangakonto). Täielikud kaardiandmed meie süsteemidesse ei jõua. Õiguslikud alused on IKÜM artikli 6 lõike 1 punkt b ning tuvastamis- ja rahapesu tõkestamise kohustuste osas IKÜM artikli 6 lõike 1 punkt c. Üksikasjad on esitatud [Stripe’i privaatsuspoliitikas](https://stripe.com/privacy).",
+            "Lisateenuste makselingid: kui ettevõte esitab külalisele lisateenuse (nt koristuse või pesu) eest arve makselingi kaudu, viib see link Stripe’i hallatavale makselehele. Edastame selleks Stripe’ile teenuse nimetuse, summa, valuuta ning sisemise viite broneeringule ja ettevõttele; ettevõtte logo kantakse üle tema Stripe’i kontole, et leht kannaks tema kaubamärki. Makselehel endal kogub Stripe külalise makse- ja seadmeandmeid enda vastutusel. Meile jõuavad tagasi üksnes makse staatus, summa, kinnipeetud summad ja makse tunnused — kaardiandmeid mitte.",
+          ],
+        },
+        {
+          titel: "PayPal",
+          paragraphs: [
+            "Kui ettevõte pakub makseviisina PayPali, edastatakse makseandmed ettevõtjale PayPal (Europe) S.à r.l. et Cie, S.C.A. (Luksemburg). Kohaldub [PayPali privaatsuspoliitika](https://www.paypal.com/de/webapps/mpp/ua/privacy-full).",
+          ],
+        },
+      ],
+    },
+    {
+      heading: "Müügikanalid ja portaalid",
+      paragraphs: [
+        "Kui ettevõte müüb oma objekte portaalide, nagu Booking.com, Airbnb või Expedia, kaudu, vahetatakse saadavusi, hindu, piiranguid ja broneeringuandmeid vastava portaaliga meie ühendusteenuse osutaja Channex.io Ltd (Ühendkuningriik) kaudu. Sellest suunast saame portaali broneeringu- ja külalisandmed.",
+        "Vastava portaali suhtes kehtivad selle enda andmekaitsetingimused; selles ulatuses on portaal iseseisvalt vastutav. Edastamise õiguslik alus on IKÜM artikli 6 lõike 1 punkt b koostoimes ettevõtte antud ülesandega.",
+      ],
+    },
+    {
+      heading: "Suhtlus",
+      unterpunkte: [
+        {
+          titel: "E-post",
+          paragraphs: [
+            "Kasutamisega seotud e-kirju (broneeringukinnitused, süsteemiteated, klienditugi, kinnitus- ja kutselingid) saadame ja võtame vastu oma meiliserveri kaudu, mida haldame ise. Nende sõnumite jaoks ei ole kaasatud ühtegi välist saatmisteenust.",
+          ],
+        },
+        {
+          titel: "Uudiskiri ja eelregistreerimine",
+          paragraphs: [
+            "Meie veebilehel saate registreeruda myNextDaysi uudiste saamiseks (eelregistreerimine/uudiskiri). Seejuures töödeldakse teie e-posti aadressi, keelt ja kohta, kus te end registreerisite.",
+            "Registreerimine toimub kahekordse kinnitamise (double opt-in) korras: pärast registreerumist saate e-kirja kinnituslingiga; registreerimine jõustub alles sellel klõpsamisega. Nõusoleku tõendamiseks salvestame registreerimise ja kinnitamise aja, seejuures kasutatud IP-aadressi, brauseri tunnuse ning sõnastuse, millega te nõustusite. Need andmed teenivad üksnes IKÜM artikli 7 lõikes 1 nõutud tõendamise eesmärki ja neid ei analüüsita reklaami jaoks.",
+            "Õiguslik alus on teie nõusolek IKÜM artikli 6 lõike 1 punkti a alusel; tõendi säilitamine tugineb IKÜM artikli 6 lõike 1 punktile c koostoimes IKÜM artikli 7 lõikega 1. Võite nõusoleku igal ajal tulevikku suunatud mõjuga tagasi võtta — iga uudiskirja e-kirjas oleva loobumislingi kaudu või vormivabalt meile e-kirja saates. Tagasivõtmine ei mõjuta kuni selle hetkeni toimunud töötlemise õiguspärasust.",
+            "Uudiskirjade haldamiseks ja saatmiseks kasutame volitatud töötlejana Brevot (Sendinblue SAS, 106 boulevard Haussmann, 75008 Paris, Prantsusmaa; Saksamaa esindus: Brevo GmbH, Köpenicker Straße 126, 10179 Berlin). Edastatakse teie e-posti aadress ja nimetatud lisaandmed (keel, allikas). Andmeid töödeldakse Euroopa Liidu piires asuvates serverites (Prantsusmaa ja Saksamaa); Brevoga on sõlmitud IKÜM artikli 28 kohane volitatud töötlemise leping. Kohaldub [Brevo privaatsuspoliitika](https://www.brevo.com/legal/privacypolicy/).",
+            "Kui saadame uudiskirja, mõõdab Brevo meie ülesandel, kas sõnum avati ja kas selles sisalduvatel linkidel klõpsati. See mõõtmine aitab meil sisu ja sagedust kohandada; see on osa nõusolekust ja lõpeb teie loobumisega. Andmeid ei liideta muude andmeallikatega ega koostata profiile.",
+            "Kuni kinnitus puudub, teie aadressile kirju ei saadeta ega edastata seda Brevole; kinnitamata kanne aegub seitsme päeva pärast. Pärast loobumist blokeerime aadressi saatmise jaoks ja säilitame nõusoleku- ning loobumistõendit nii kaua, kui sellest tulenevaid nõudeid saab esitada; nõudmisel kustutame selle täielikult.",
+          ],
+        },
+        {
+          titel: "Sõnumid platvormil",
+          paragraphs: [
+            "Külalise ja ettevõtte vahelisi sõnumeid säilitatakse platvormil, et mõlemad pooled saaksid ajalugu vaadata. Kui ettevõte blokeerib külalise, suletakse sõnumikanal; olemasolevad sõnumid jäävad jälgitavuse huvides alles.",
+          ],
+        },
+        {
+          titel: "WhatsApp",
+          paragraphs: [
+            "Kui ettevõte kasutab WhatsAppi ühendust, edastatakse sõnumite sisu ja osaliste telefoninumbrid ettevõtja Meta Platforms Ireland Limited teenuse WhatsApp Business Platform kaudu. Selle funktsiooni kasutamise otsustab ettevõte; ilma aktiveerimiseta edastamist ei toimu.",
+          ],
+        },
+      ],
+    },
+    {
+      heading: "Automatiseeritud funktsioonid ja tehisintellekt",
+      paragraphs: [
+        "Siin kirjeldatud funktsioonide suhtes kehtib lisaks IKÜM-ile määrus (EL) 2024/1689 (tehisintellektimäärus, „AI Act“), mille artiklist 50 tulenevaid läbipaistvuskohustusi kohaldatakse alates 2. augustist 2026.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Vastusesoovitused",
+          paragraphs: [
+            "Sõnumite postkastis pakutavate vastusesoovituste jaoks kasutame — kui funktsioon on ettevõtte jaoks aktiveeritud — ettevõtja Groq, Inc. (USA) keelemudeliteenust. Seejuures edastatakse teenusele vastav sõnumikontekst. Soovitusi ei saadeta automaatselt; saatmise üle otsustab alati inimene. Automatiseeritud otsuste tegemist õigusliku mõjuga IKÜM artikli 22 tähenduses ei toimu.",
+            "Seega ei ole tegemist tehisintellektisüsteemiga, mis suhtleb tehisintellektimääruse artikli 50 lõike 1 tähenduses vahetult füüsiliste isikutega: kohustuse eelduseks on OTSENE suhtlus, mille käigus tehisintellekt ise suhtleb isikuga ja mitte inimvahendaja kaudu. Siin pakub funktsioon ettevõttele teksti, mida töötaja kontrollib, saab muuta ja ise ära saadab — töötaja on see vahendaja, külaline peab kirjavahetust ettevõttega ja mitte vestlusrobotiga. Automaatselt vastavat assistenti kasutusel ei ole. Meie hinnangul ei täida funktsioon ka ühtegi tehisintellektimääruse III lisas nimetatud suure riskiga tehisintellekti koosseisu.",
+            "Külalistele saadetavad sõnumid ei ole ühtlasi „avalikku huvi pakkuvaid küsimusi käsitlev tekst“ tehisintellektimääruse artikli 50 lõike 4 tähenduses: neid ei avaldata, vaid saadetakse individuaalselt kindlale isikule, ja need puudutavad viibimise korraldamist. Sellest sõltumata kehtib siin saatva töötaja tehtav inimkontroll.",
+            "Kui edaspidi pakutaks funktsiooni, mis vastab külalistele iseseisvalt — ilma inimese heakskiiduta —, juhitakse külalise tähelepanu dialoogi alguses nähtavalt sellele, et ta kirjutab tehisintellektisüsteemiga. Ilma sellist teadet sellist funktsiooni ei pakuta.",
+          ],
+        },
+        {
+          titel: "Rollid tehisintellektimääruse järgi",
+          paragraphs: [
+            "Tootesse sisse ehitatud tehisintellektifunktsioonide osas oleme juurutaja tehisintellektimääruse artikli 3 punkti 4 tähenduses; aluseks olevate keelemudelite pakkujad on vastavad mudelipakkujad. Kui ettevõte kasutab neid funktsioone oma kutsetegevuse raames, on ta omakorda nende juurutaja ja tal on tehisintellektimääruse artiklist 4 tulenev tehisintellektipädevuse kohustus, mis kehtib alates 2. veebruarist 2025 sõltumata ettevõtte suurusest. Alates 27. juulist 2026 kehtib see määruse (EL) 2026/1744 redaktsioonis: pakkujad ja juurutajad võtavad meetmeid oma töötajate tehisintellektipädevuse arendamise toetamiseks; kindlat taset ei pea seejuures sõnaselgelt tagama. Meie toetame seda juhistega rakenduses ja meie abikeskuses; oma töötajate koolitamine jääb ettevõtte ülesandeks.",
+            "Kui ettevõte ühendab oma konto oma tehisintellektiassistendiga (vt järgmist punkti), on ta ka selle juurutaja tehisintellektimääruse tähenduses — tema otsustab kasutamise üle ja sõnastab päringud. Liides ise ei ole tehisintellektisüsteem: see loeb andmeid andmebaasist ja väljastab neid, tegemata järeldusi; tehisintellektimääruse põhjendus 12 eristab selliseid süsteeme sõnaselgelt tehisintellektist.",
+          ],
+        },
+        {
+          titel: "Ühendamine oma tehisintellektiassistendiga",
+          paragraphs: [
+            "Ettevõte saab ühendada oma konto liidese kaudu tehisintellektiassistendiga, mille ta on ise valinud ja millega tal on oma leping — näiteks Claude ettevõttelt Anthropic PBC (USA). Kui selline ühendus on antud, saab assistent ettevõtte päringu alusel lugeda: hõivatust, saadavust ja päevahindu; broneeringuid koos külalise nime, viibimise ajavahemiku, objekti, broneerimiskanali, staatuse ning summa ja valuutaga, niivõrd kui päringu esitava konto roll tohib summasid näha; ja postkasti vestluste ülevaadet. Ilma antud ühenduseta edastamist ei toimu.",
+            "Seejuures ei edastata külaliste e-posti aadressi ja telefoninumbrit, kaardiandmeid, pangakontosid ja maksetõendeid, juurdepääsukoode ega objektidokumentatsiooni. Broneeringumärkmed ja külaliste sõnumite sisu on vaikimisi välistatud, kuna need võivad sisaldada andmeid tervise kohta või muid IKÜM artiklis 9 nimetatud eriliigilisi andmeid; ettevõte peab need ühenduse andmisel sõnaselgelt ja eraldi lubama.",
+            "Ühenduse saab anda üksnes konto rolliga „Administraator“, mitte iga juurdepääsu omav konto. Iga päring logitakse ja on ettevõttele nähtav jaotises „Konto → Ühendused“; ta saab ühenduse seal igal ajal katkestada ning juurdepääs lõpeb sellega kohe.",
+            "Õiguslikult on see edastamine ettevõtte juhis meile (IKÜM artikli 28 lõike 3 punkt a). Assistendi pakkuja ei ole meie alltöötleja — me ei anna talle ülesandeid ega juhiseid; tema töötleb andmeid lepingu alusel, mille ettevõte on temaga ise sõlminud. Selle töötlemise õigusliku aluse, oma külaliste teavitamise ja kolmandasse riiki edastamise tagatiste eest vastutab seetõttu ettevõte.",
+          ],
+        },
+        {
+          titel: "Tõlked",
+          paragraphs: [
+            "Objekti- ja sisutekste saab tõlkida ettevõtja Google Ireland Limited teenuse Cloud Translation API kaudu. Edastatakse tõlgitavad tekstid; isikuandmed üksnes ulatuses, milles need nendes tekstides sisalduvad.",
+          ],
+        },
+        {
+          titel: "Hinnasoovitused",
+          paragraphs: [
+            "Hinnasoovituste jaoks kasutame väliste allikate turu-, ilma- ja vahetuskursiandmeid. Need päringud ei sisalda isikuandmeid, vaid üksnes asukohta, ajavahemikku ja objekti tunnuseid.",
+          ],
+        },
+      ],
+    },
+    {
+      heading: "Meie klientide veebilehed ja domeenid",
+      paragraphs: [
+        "Kui ettevõte loob lehekoostaja abil oma veebilehe oma domeeniga, haldame selleks vajalikke DNS-kirjeid ettevõtja Cloudflare, Inc. kaudu. Seejuures edastatakse domeeni- ja konfiguratsiooniandmeid; kliendi veebilehe külastajate andmeid töötleme nii, nagu käesolevas teates kirjeldatud.",
+        "Kliendi veebilehe sisu, teenuseosutaja andmete (impressum) ja andmekaitseteabe eest vastutab vastav ettevõte.",
+      ],
+    },
+    {
+      heading: "Majutamine ja salvestamine",
+      paragraphs: [
+        "Platvorm, andmebaas, meediafailid ja meiliserver töötavad ettevõtja Hetzner Online GmbH (Saksamaa) serverites Helsingi andmekeskuses (Soome) — seega Euroopa Liidu piires. Hetzneriga on sõlmitud volitatud töötlemise leping.",
+        "Varukoopiad tehakse krüpteeritult ja neid hoitakse krüpteeritult ELi piires asuva salvestusteenuse pakkuja juures.",
+      ],
+    },
+    {
+      heading: "Vastuvõtjate ülevaade",
+      paragraphs: [
+        "Lisaks nimetatud teenusepakkujatele edastame isikuandmeid üksnes juhul, kui oleme selleks seadusest tulenevalt kohustatud (nt maksuhaldurile, õiguskaitseasutustele) või kui teie või vastutav ettevõte seda nõuab.",
+      ],
+      list: [
+        "Hetzner Online GmbH (Saksamaa/Soome) — majutamine, andmebaas, meediafailid, meiliserver",
+        "Stripe Payments Europe, Limited (Iirimaa) — maksed, väljamaksed, isikusamasuse kontroll",
+        "PayPal (Europe) S.à r.l. et Cie, S.C.A. (Luksemburg) — maksed, kui see on aktiveeritud",
+        "Channex.io Ltd (Ühendkuningriik) — ühendus broneerimisportaalidega",
+        "Meta Platforms Ireland Limited (Iirimaa) — WhatsAppi sõnumid, kui see on aktiveeritud",
+        "Sendinblue SAS / Brevo (Prantsusmaa, Saksamaa) — uudiskirja haldamine ja saatmine, üksnes nõusoleku korral",
+        "Google Ireland Limited (Iirimaa) — tõlked; kontaktvormi rämpspostikaitse (reCAPTCHA Enterprise), üksnes nõusoleku korral; sisselogimine Google’i kontoga, kui seda kasutatakse",
+        "Groq, Inc. (USA) — vastusesoovitused, kui see on aktiveeritud",
+        "Cloudflare, Inc. (USA) — DNS-i haldamine kliendi domeenide jaoks",
+      ],
+      unterpunkte: [
+        {
+          paragraphs: [
+            "Selles loetelus ei ole teenuseid, mille ettevõte lepib ise kokku kolmanda isikuga ja ühendab liidese kaudu oma kontoga — näiteks tehisintellektiassistent nagu Claude ettevõttelt Anthropic PBC (USA). Need ei ole meie tellitud teenusepakkujad, vaid vastuvõtjad vastava ettevõtte juhise alusel; ilma tema ühenduseta andmeid sinna ei liigu. USA kaubandusministeeriumi ametliku osalejate loetelu kohaselt ei ole Anthropic EU-US Data Privacy Frameworki alusel sertifitseeritud; edastamine tugineb seetõttu standardsetele andmekaitseklauslitele, mille eest peab vastutava töötlejana vastutama vastav ettevõte.",
+          ],
+        },
+      ],
+    },
+    {
+      heading: "Edastamine kolmandatesse riikidesse",
+      paragraphs: [
+        "Töötlemine toimub põhimõtteliselt Euroopa Liidu piires. Eespool nimetatud väljaspool ELi asuvate teenuste puhul võib toimuda edastamine kolmandasse riiki.",
+        "Ettevõtjate Groq, Inc. ja Cloudflare, Inc. (USA) puhul tugineme edastamisel Euroopa Komisjoni standardsetele andmekaitseklauslitele IKÜM artikli 46 lõike 2 punkti c alusel, niivõrd kui vastuvõtja ei saa tugineda kaitse piisavuse otsusele (EU-US Data Privacy Framework).",
+        "Maksete töötlemise lepingupartner on Stripe Payments Europe, Limited (Iirimaa). Niivõrd kui Stripe kasutab seejuures ettevõtjat Stripe, LLC (USA), on viimane sertifitseeritud EU-US Data Privacy Frameworki alusel; edastamine tugineb selles ulatuses Euroopa Komisjoni kaitse piisavuse otsusele IKÜM artikli 45 alusel. Täiendavalt kehtivad standardsed andmekaitseklauslid [Stripe’i volitatud töötlemise lepingust](https://stripe.com/legal/dpa).",
+        "Ettevõtja Channex.io Ltd (Ühendkuningriik) puhul kehtib Euroopa Komisjoni kaitse piisavuse otsus Ühendkuningriigi kohta; kui see langeb ära, kohaldatakse standardseid andmekaitseklausleid.",
+      ],
+    },
+    {
+      heading: "Kolmandate riikide asutuste juurdepääs (US CLOUD Act)",
+      paragraphs: [
+        "Teenusepakkujad, kes alluvad Ameerika Ühendriikide jurisdiktsioonile, võivad olla USA CLOUD Acti (Clarifying Lawful Overseas Use of Data Act, 2018) alusel kohustatud andmeid USA asutustele välja andma — ka siis, kui need andmed asuvad Euroopa Liidu piires paiknevates serverites. Selline juurdepääs võib olla IKÜM-iga vastuolus ja teenusepakkujal võib olla õiguslikult keelatud meid või teid sellest teavitada. Ei EU-US Data Privacy Frameworki kaitse piisavuse otsus ega standardsed andmekaitseklauslid seda riski ei välista.",
+        "Piirame seda riski sellega, et kandvad süsteemid — platvorm, andmebaas, meediafailid, meiliserver ja varukoopiad — töötavad Euroopa teenusepakkujate juures Euroopa Liidu piires, kus USA jurisdiktsioon ei kehti.",
+      ],
+      unterpunkte: [
+        {
+          titel: "Puudutatud teenused",
+          paragraphs: [
+            "USA jurisdiktsioon võib kõne alla tulla üksnes järgmiste selgelt piiritletud lisateenuste puhul:",
+          ],
+          list: [
+            "Groq, Inc. (USA) — vastusesoovitused sõnumite postkastis, üksnes juhul, kui ettevõte funktsiooni aktiveerib. Edastatakse vastav sõnumikontekst.",
+            "Cloudflare, Inc. (USA) — DNS-i haldamine kliendi domeenide jaoks. Edastatakse domeeni- ja konfiguratsiooniandmed, mitte külaliste andmed.",
+            "Google LLC (USA) — üksnes Google’i kontoga sisselogimise ja tõlgete puhul; lepingupartner on kummalgi juhul Google Ireland Limited, kuid USA emaettevõtja juurdepääs ei ole sellegipoolest välistatud.",
+          ],
+        },
+        {
+          titel: "Välditavus",
+          paragraphs: [
+            "Platvormi kasutamine on võimalik ka nende teenusteta: vastusesoovitused on välja lülitatavad, DNS-i haldamine puudutab üksnes oma domeeniga kliente ning Google’i kontoga sisselogimine on vabatahtlik alternatiiv e-posti ja parooliga sisselogimisele.",
+          ],
+        },
+        {
+          titel: "Piiritlemine Euroopa õigusest",
+          paragraphs: [
+            "CLOUD Act on Ameerika Ühendriikide õigus, mitte Euroopa Liidu õigus. Seda tuleb eristada EU Data Actist (määrus (EL) 2023/2854), mis reguleerib andmetöötlusteenuste vahetamist ja ülekantavust, ning Cloud and AI Development Actist, mis on käesoleva teate seisuga Euroopa õigusloomemenetluses.",
+          ],
+        },
+      ],
+    },
+    {
+      heading: "Säilitamise tähtaeg",
+      list: [
+        "Kontoandmed: ärisuhte kestuse ajal; seejärel kustutamine, kui säilitamiskohustus puudub.",
+        "Broneeringu-, arve- ja makseandmed: Taani raamatupidamisseaduse kohaselt viis aastat pärast selle majandusaasta lõppu, millesse need kuuluvad; Saksamaal asuvate klientide puhul võivad kehtida pikemad äri- ja maksuõiguslikud tähtajad.",
+        "Sõnumid ja külaliste andmed platvormil: vastutava ettevõtte juhiste kohaselt, kõige kauem kuni selle ettevõtte poolt kustutamiseni või lepingu lõppemiseni.",
+        "Uudiskiri: kuni nõusoleku tagasivõtmiseni; kinnitamata registreerimised aeguvad seitsme päeva pärast. Nõusoleku- ja loobumistõend jääb sellest kaugemale alles nii kaua, kui seda on tõendina vaja.",
+        "Sisselogimislogid ja turvasündmused: lühiajaliselt rünnakute tuvastamiseks.",
+        "Serveri logifailid: üksnes nii kaua, kui see on käitamiseks ja turvalisuseks vajalik.",
+        "Varukoopiad: rotatsiooni korras, kuni need asendatakse uuemate varukoopiatega.",
+      ],
+    },
+    {
+      heading: "Teie õigused",
+      paragraphs: [
+        "Teil on õigus tutvuda andmetega (artikkel 15), nõuda nende parandamist (artikkel 16), kustutamist (artikkel 17), töötlemise piiramist (artikkel 18) ja andmete ülekandmist (artikkel 20) ning esitada vastuväide õigustatud huvil põhinevale töötlemisele (IKÜM artikkel 21). Antud nõusoleku võite igal ajal tulevikku suunatud mõjuga tagasi võtta.",
+        `Pöörduge selleks aadressil [${ANBIETER.email}](mailto:${ANBIETER.email}). Kui teie andmed puudutavad platvormi kasutamist ettevõtte poolt, edastame teie päringu vastutavale ettevõttele või toetame seda vastamisel.`,
+        `Lisaks saate esitada kaebuse andmekaitse järelevalveasutusele — meie suhtes on pädev ${AUFSICHTSBEHOERDE.name}, ${AUFSICHTSBEHOERDE.strasse}, ${AUFSICHTSBEHOERDE.ort}, ${AUFSICHTSBEHOERDE.land}, [${AUFSICHTSBEHOERDE.email}](mailto:${AUFSICHTSBEHOERDE.email}). Võite pöörduda ka oma elukoha järelevalveasutuse poole.`,
+      ],
+    },
+    {
+      // Eigener Abschnitt, weil Google Play ihn abgleicht: die Löschseite muss
+      // in der Datenschutzerklärung genannt sein und dieselbe Adresse tragen
+      // wie im Datensicherheitsformular. Ein Abschnitt „Ihre Rechte", der die
+      // Löschung nur als DSGVO-Artikel erwähnt, genügt der Prüfung nicht —
+      // gefordert ist der konkrete, benannte Weg.
+      heading: "Konto ja rakenduse andmete kustutamine",
+      paragraphs: [
+        "Oma konto kustutamist saate igal ajal ise taotleda — rakenduses jaotises ‚Profiil → Konto‘ või meie veebivormi kaudu:",
+        "[mynextdays.com/konto-loeschen](https://mynextdays.com/konto-loeschen)",
+        "Veebitee toimib teadlikult ka siis, kui rakendus ei ole enam paigaldatud või kui te ei saa enam sisse logida. Kuritarvitamise vältimiseks toimub see kahes etapis: sisestate oma konto e-posti aadressi ja saate täpselt sellele aadressile kinnituslingi. Alles selle avamine muudab taotluse kehtivaks — üksnes sisestatud aadress ei tekita mingit tagajärge. Menetleme taotlust 30 päeva jooksul ja vastame e-kirjaga.",
+        "Kontoga koos kustutame teie sisselogimisandmed, teie profiili, teie objekti- ja kalendriandmed ning teie sõnumid. Ei kustutata dokumente, mille suhtes kehtib seadusest tulenev säilitamiskohustus — eelkõige arved ja arveldatud perioodide broneeringutõendid (Taani õigusest tulenev raamatupidamiskohustus, üldjuhul viis aastat). Need dokumendid blokeeritakse tähtaja lõpuni, st neid säilitatakse üksnes selle kohustuse täitmiseks ja kustutatakse seejärel.",
+      ],
+    },
+    {
+      heading: "Töötlemise turvalisus",
+      paragraphs: [
+        "Kaitseme töötlemist IKÜM artiklile 32 vastavate tehniliste ja korralduslike meetmetega, eelkõige: läbiv transpordikrüpteering (TLS), kliendipõhised juurdepääsureeglid vahetult andmebaasis, rollipõhised õigused finants- ja teenindusandmete eraldamisega, valikuline kaheastmeline autentimine, sisselogimiskatsete piiramine, krüpteeritud varukoopiad korrapärase taastamistestiga ning turvalisuse seisukohalt oluliste sündmuste logimine.",
+      ],
+    },
+    {
+      heading: "Andmete esitamise kohustus",
+      paragraphs: [
+        "Andmed, mida vajame lepingu sõlmimiseks, arveldamiseks ja seadusest tulenevate kohustuste täitmiseks, on nõutavad — ilma nendeta ei saa me platvormi pakkuda. Kõik ülejäänud andmed on vabatahtlikud.",
+      ],
+    },
+    {
+      heading: "Käesoleva teate muutmine",
+      paragraphs: [
+        "Kohandame käesolevat teadet, kui muutub töötlemine, kasutatavad teenusepakkujad või õiguslik olukord. Kehtib alati siin avaldatud redaktsioon; ülal olev kuupäev näitab seisu.",
+      ],
+    },
+  ],
+};
+
+export default datenschutz;

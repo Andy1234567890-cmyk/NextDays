@@ -14,11 +14,21 @@
 //   Cloudflare (features/site_config/cloudflare_client.py)
 //   Meta/WhatsApp (features/whatsapp/client.py → graph.facebook.com)
 //   Brevo/Sendinblue (features/newsletter/brevo_client.py → api.brevo.com)
-//   Iconify (marketing lädt Icons zur Laufzeit von api.iconify.design)
+//   Google Ireland (reCAPTCHA Enterprise, marketing/lib/captcha.ts → Skript von
+//     www.google.com; lädt NUR nach Einwilligung, marketing/lib/einwilligung.ts)
 //   Google Sign-In (web/lib/oauth-login.ts → GoTrue EXTERNAL_GOOGLE, Scopes
 //     openid/email/profile; OAuth-Client 275621779169-p776…)
 // Neuer ausgehender Dienst mit Personenbezug → hier nachtragen, sonst ist die
 // Erklärung unvollständig (Art. 13 Abs. 1 lit. e DSGVO).
+//
+// NICHT MEHR IN DER LISTE (Stand 24.08.2026): Iconify. Die Marketing-Seite holte
+// ihre Symbole früher zur Laufzeit von api.iconify.design; seit
+// marketing/components/ui/icon.tsx werden sie serverseitig aus dem
+// eingecheckten Satz components/ui/icon-set.ts gerendert (Generator
+// scripts/generate-icon-set.mjs, das Paket @iconify-json/ph ist eine
+// devDependency und wird nicht ausgeliefert). Es gibt keinen Abruf mehr, also
+// auch keinen Empfänger — der Abschnitt „Symbole“ sagt das ausdrücklich, damit
+// die Zeile nicht aus einer alten Fassung zurückkehrt.
 //
 // Der Abschnitt „US CLOUD Act" ist Pflichtinhalt für den Google-OAuth-
 // Zustimmungsbildschirm (Google prüft die verlinkte Erklärung). NICHT zu
@@ -30,16 +40,16 @@
 // keine Frist konfiguriert ist, wird hier bewusst KEINE Zahl behauptet.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND } from "./anbieter";
+import { ANBIETER, AUFSICHTSBEHOERDE, RECHTSSTAND_ISO } from "../anbieter";
 
-import type { LegalDoc } from "./types";
+import type { LegalDoc } from "../types";
 
 export const datenschutz: LegalDoc = {
   slug: "datenschutz",
   title: "Datenschutzerklärung",
   metaDescription:
     "Wie myNextDays personenbezogene Daten verarbeitet: Zwecke, Rechtsgrundlagen, Empfänger, Speicherdauer und Ihre Rechte nach der DSGVO.",
-  stand: RECHTSSTAND,
+  standIso: RECHTSSTAND_ISO,
   numbered: true,
   toc: true,
   intro: [
@@ -109,9 +119,16 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
-          titel: "Symbole (Iconify)",
+          titel: "Symbole",
           paragraphs: [
-            "Die Symbole dieser Website werden zur Laufzeit von api.iconify.design (Iconify) geladen. Dabei wird Ihre IP-Adresse an diesen Dienst übermittelt, technisch bedingt durch den Abruf. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (einheitliche Darstellung der Oberfläche). Es werden keine Cookies gesetzt und keine Inhalte Ihres Besuchs übertragen.",
+            "Die Symbole dieser Website liegen ebenso wie die Schriften bei uns: Sie werden auf unserem Server in die Seite eingesetzt und nicht von einem Symbol-Dienst nachgeladen. Es findet dabei keine Verbindung zu einem Dritten statt, und Ihre IP-Adresse wird an niemanden übermittelt.",
+          ],
+        },
+        {
+          titel: "Spamschutz des Kontaktformulars (reCAPTCHA)",
+          paragraphs: [
+            "Unser Kontaktformular ist gegen automatisierte Massenzuschriften mit reCAPTCHA Enterprise der Google Ireland Limited geschützt. Nur wenn Sie dem zustimmen, lädt Ihr Browser beim Ausfüllen des Formulars ein Skript von www.google.com; dabei werden Ihre IP-Adresse und Angaben zu Ihrer Interaktion mit dem Formular an Google übermittelt und dort ausgewertet, um Mensch und Skript zu unterscheiden. Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO (Einwilligung); ergänzend gilt die [Datenschutzerklärung von Google](https://policies.google.com/privacy).",
+            "Ohne Ihre Einwilligung wird nichts von Google geladen und es fließen keine Daten dorthin; das Formular nehmen wir dann nicht an, Sie können uns aber jederzeit eine E-Mail schreiben. Ihre Einwilligung können Sie in der [Cookie-Richtlinie](/cookie-richtlinie) ändern oder widerrufen.",
           ],
         },
         {
@@ -219,7 +236,7 @@ export const datenschutz: LegalDoc = {
           titel: "Rollen nach der KI-Verordnung",
           paragraphs: [
             "Für die im Produkt eingebauten KI-Funktionen sind wir Betreiber im Sinne von Art. 3 Nr. 4 der KI-Verordnung; Anbieter der zugrunde liegenden Sprachmodelle sind die jeweiligen Modellanbieter. Nutzt ein Betrieb diese Funktionen im Rahmen seiner beruflichen Tätigkeit, ist er dafür seinerseits Betreiber und trifft ihn die Pflicht zur KI-Kompetenz nach Art. 4 der KI-Verordnung, die seit dem 2. Februar 2025 unabhängig von der Unternehmensgröße gilt. Seit dem 27. Juli 2026 gilt sie in der Fassung der Verordnung (EU) 2026/1744: Anbieter und Betreiber ergreifen Maßnahmen, um die Entwicklung der KI-Kompetenz ihres Personals zu unterstützen; ein bestimmtes Niveau muss dabei ausdrücklich nicht garantiert werden. Wir unterstützen durch Hinweise in der Anwendung und in unserem Hilfe-Center; die Schulung der eigenen Mitarbeitenden bleibt Aufgabe des Betriebs.",
-            "Verbindet ein Betrieb sein Konto mit einem eigenen KI-Assistenten (siehe oben), ist er auch dafür Betreiber im Sinne der KI-Verordnung — er entscheidet über den Einsatz und formuliert die Anfragen. Die Schnittstelle selbst ist kein KI-System: sie liest Daten aus der Datenbank und gibt sie aus, ohne Ableitungen zu treffen; Erwägungsgrund 12 der KI-Verordnung grenzt solche Systeme ausdrücklich von KI ab.",
+            "Verbindet ein Betrieb sein Konto mit einem eigenen KI-Assistenten (siehe den folgenden Punkt), ist er auch dafür Betreiber im Sinne der KI-Verordnung — er entscheidet über den Einsatz und formuliert die Anfragen. Die Schnittstelle selbst ist kein KI-System: sie liest Daten aus der Datenbank und gibt sie aus, ohne Ableitungen zu treffen; Erwägungsgrund 12 der KI-Verordnung grenzt solche Systeme ausdrücklich von KI ab.",
           ],
         },
         {
@@ -271,10 +288,9 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (Vereinigtes Königreich) — Anbindung an Buchungsportale",
         "Meta Platforms Ireland Limited (Irland) — WhatsApp-Nachrichten, sofern aktiviert",
         "Sendinblue SAS / Brevo (Frankreich, Deutschland) — Newsletter-Verwaltung und -Versand, nur bei Einwilligung",
-        "Google Ireland Limited (Irland) — Übersetzungen; Anmeldung mit Google, sofern genutzt",
+        "Google Ireland Limited (Irland) — Übersetzungen; Spamschutz des Kontaktformulars (reCAPTCHA Enterprise), nur bei Einwilligung; Anmeldung mit Google, sofern genutzt",
         "Groq, Inc. (USA) — Antwortvorschläge, sofern aktiviert",
         "Cloudflare, Inc. (USA) — DNS-Verwaltung für Kunden-Domains",
-        "Iconify (api.iconify.design) — Symbole dieser Website",
       ],
       unterpunkte: [
         {
@@ -379,3 +395,8 @@ export const datenschutz: LegalDoc = {
     },
   ],
 };
+
+// Default-Export ist die Schnittstelle des Loaders (content/legal/laden.ts):
+// jede der 24 Sprachfassungen exportiert ihr Dokument so. Der benannte
+// Export bleibt daneben stehen, damit bestehende Importe nicht brechen.
+export default datenschutz;

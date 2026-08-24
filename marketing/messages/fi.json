@@ -424,7 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Alusta lomamajoituksen vuokraajille",
-    "description": "Alusta hotelleille, välitystoimistoille ja lomamajoituksen vuokraajille: channel manager, kalenteri, suoravaraus, vierasviestintä ja laskutus yhdessä paikassa. Rakennettu Tanskassa, isännöity EU:ssa. Alkaen 19,90 € kuukaudessa. Kokeile 30 päivää maksutta."
+    "description": "Alusta hotelleille, välitystoimistoille ja lomamajoituksen vuokraajille: channel manager, kalenteri, suoravaraus, vierasviestintä ja laskutus yhdessä paikassa. Rakennettu Tanskassa, isännöity EU:ssa. Kokeile 30 päivää maksutta.",
+    "descriptionMitPreis": "Alusta hotelleille, välitystoimistoille ja lomamajoituksen vuokraajille: channel manager, kalenteri, suoravaraus, vierasviestintä ja laskutus yhdessä paikassa. Rakennettu Tanskassa, isännöity EU:ssa. Alkaen {preis} kuukaudessa. Kokeile 30 päivää maksutta."
   },
   "nav": {
     "funktionen": "Ominaisuudet",
@@ -828,9 +829,9 @@
     "appLaden": "Lataa sovellus",
     "spalten": {
       "produkt": "Tuote",
-      "loesungen": "Ratkaisut",
       "ressourcen": "Aineistot",
-      "unternehmen": "Yritys"
+      "unternehmen": "Yritys",
+      "rechtliches": "Oikeudelliset tiedot"
     },
     "produkt": {
       "pms": "Property management",
@@ -839,26 +840,14 @@
       "zahlungen": "Maksut",
       "mobileApp": "Mobiilisovellus"
     },
-    "loesungen": {
-      "hotels": "Hotellit",
-      "bnb": "B&B-kohteet",
-      "gaestehaeuser": "Vierastalot",
-      "ferienwohnungen": "Loma-asunnot",
-      "campingplaetze": "Leirintäalueet"
-    },
     "ressourcen": {
-      "blog": "Blogi",
       "hilfeCenter": "Ohjekeskus",
       "status": "Järjestelmän tila",
-      "leitfaeden": "Oppaat",
       "api": "API-dokumentaatio"
     },
     "unternehmen": {
       "ueberUns": "Tietoa meistä",
-      "karriere": "Ura",
-      "partner": "Kumppanit",
-      "kontakt": "Yhteystiedot",
-      "presse": "Media"
+      "kontakt": "Yhteystiedot"
     },
     "copyright": "© 2026 myNextDays. Kaikki oikeudet pidätetään.",
     "agb": "Käyttöehdot",
@@ -867,6 +856,9 @@
     "cookies": "Evästekäytäntö",
     "avv": "Tietojenkäsittely",
     "kontoLoeschen": "Poista tili"
+  },
+  "legal": {
+    "stand": "Viimeksi päivitetty: {datum}"
   },
   "abschluss": {
     "heading": "Valmis hoitamaan majoituskohteesi yhdestä paikasta?",
@@ -980,6 +972,7 @@
       "unsereRechnung": "Perusmaksu + kohdeportaat",
       "proMonat": "/kk",
       "ohnePreis": "ei julkaistu",
+      "waehrungshinweis": "Kaikki tämän vertailun summat ovat euroina — myös meidän omamme. Palveluntarjoajat julkaisevat hintansa euroina; niiden muuntaminen sinun valuuttaasi tarkoittaisi vaihtokurssin olettamista, joka voi olla väärä jo huomenna.",
       "fussnote": "Tilanne {stand}, luettu suoraan toimittajien hinnastosivuilta. Esitetyt hinnat ovat kuukausihintoja ilman vuosisitoumusta; jos toimittaja markkinoi vuosihintaa, se näkyy laskutavassa. Ilman takuuta — toimittajan voimassa oleva hinnasto ratkaisee.",
       "ersparnis": "{prozent} % keskiarvoa halvempi"
     },
@@ -2028,5 +2021,38 @@
     "noResultsHintLink": "selaa luokkia",
     "browseCategories": "Selaa luokkia",
     "brandTitle": "myNextDays-ohje"
+  },
+  "einwilligung": {
+    "titel": "Suostumuksesi",
+    "text": "Tämä verkkosivusto ei käytä analytiikka-, mainonta- eikä seurantapalveluita; kirjasimet ja kuvakkeet ovat omalla palvelimellamme. Välttämätöntä on vain se, mitä itse asetat tai pyydät. Siksi tarvitsemme suostumuksesi vain yhteen asiaan: yhteydenottolomakkeemme ulkoiseen roskapostisuojaukseen.",
+    "richtlinie": "Lue evästekäytäntö",
+    "allesAblehnen": "Hylkää kaikki",
+    "allesAnnehmen": "Hyväksy kaikki",
+    "auswahlOeffnen": "Näytä valinnat",
+    "auswahlSchliessen": "Piilota valinnat",
+    "auswahlSpeichern": "Tallenna valinnat",
+    "immerAktiv": "Aina käytössä",
+    "kategorien": {
+      "notwendig": {
+        "titel": "Välttämättömät",
+        "text": "Kielivalintasi ja — vain jos avaat keskustelun itse — keskustelusi tunniste tällä laitteella. Ilman niitä sivustoa ei voi toimittaa sellaisena kuin sitä pyysit. Niitä ei käytetä mainontaan eikä tilastointiin."
+      },
+      "spamschutz": {
+        "titel": "Yhteydenottolomakkeen roskapostisuojaus",
+        "text": "Yhteydenottolomakkeemme on suojattu automaattisia massaviestejä vastaan Googlen reCAPTCHA Enterprise -palvelulla. Jos annat siihen luvan, selaimesi lataa lomakkeen täyttämisen aikana komentosarjan osoitteesta google.com ja lähettää samalla IP-osoitteesi Googlelle. Ilman lupaasi Googlelta ei ladata mitään; voit tavoittaa meidät silloin sähköpostilla."
+      }
+    },
+    "einstellungen": {
+      "titel": "Hallitse suostumustasi",
+      "text": "Voit muuttaa tai peruuttaa päätöksesi täällä milloin tahansa. Se koskee tätä selainta, ja se tallennetaan vain laitteellesi.",
+      "offen": "Et ole vielä tehnyt päätöstä. Mikään valinnainen ei ole käytössä.",
+      "stand": "Päätöksesi {datum}.",
+      "gespeichert": "Tallennettu."
+    },
+    "kontakt": {
+      "hinweis": "Ennen lähettämistä tarvitsemme lupasi ulkoiseen roskapostisuojaukseen (Googlen reCAPTCHA). Ilman sitä emme voi ottaa lomaketta vastaan — näin pidämme automaattiset massaviestit poissa.",
+      "erlauben": "Salli roskapostisuojaus",
+      "alternative": "Etkö halua sitä? Kirjoita meille sen sijaan osoitteeseen {email}."
+    }
   }
 }

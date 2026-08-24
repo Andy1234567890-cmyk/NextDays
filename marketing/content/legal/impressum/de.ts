@@ -9,16 +9,16 @@
 // Firmen-/Registerdaten kommen AUSSCHLIESSLICH aus ./anbieter.ts.
 import { AGB_URL } from "@/lib/app-url";
 
-import { ANBIETER, RECHTSSTAND } from "./anbieter";
+import { ANBIETER, RECHTSSTAND_ISO } from "../anbieter";
 
-import type { LegalDoc } from "./types";
+import type { LegalDoc } from "../types";
 
 export const impressum: LegalDoc = {
   slug: "impressum",
   title: "Impressum",
   metaDescription:
     "Anbieterangaben der myNextDays ApS nach § 7 der dänischen E-handelslov: Firma, Anschrift, Direktion, CVR-Nummer und Kontakt.",
-  stand: RECHTSSTAND,
+  standIso: RECHTSSTAND_ISO,
   numbered: false,
   toc: false,
   intro: [
@@ -129,3 +129,8 @@ export const impressum: LegalDoc = {
     },
   ],
 };
+
+// Default-Export ist die Schnittstelle des Loaders (content/legal/laden.ts):
+// jede der 24 Sprachfassungen exportiert ihr Dokument so. Der benannte
+// Export bleibt daneben stehen, damit bestehende Importe nicht brechen.
+export default impressum;

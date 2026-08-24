@@ -6,7 +6,7 @@ import type { LegalDoc } from "../types";
 // Stripes offiziellen Empfehlungstext angelehnt, URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Almindelige forretningsbetingelser for bureauer og udlejere",
-  stand: "Senest opdateret: 30. juli 2026",
+  stand: "Senest opdateret: 13. august 2026",
   intro: [
     "Disse almindelige forretningsbetingelser (herefter »betingelserne«) regulerer bureauers, udlejeres, ejendomsadministratorers og andre erhvervsmæssige brugeres (herefter »brugeren«) brug af softwareplatformen myNextDays (herefter »platformen«).",
     "Udbyderen af platformen er myNextDays ApS, et anpartsselskab efter dansk ret, Hirtshalsvej 21, 9881 Bindslev, Danmark, registreret i Det Centrale Virksomhedsregister (CVR) under CVR-nr. 46615182 (herefter »myNextDays« eller »vi«).",
@@ -106,14 +106,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Immaterielle rettigheder",
+      heading: "§ 12 Anvendelse af kunstig intelligens",
+      paragraphs: [
+        "myNextDays anvender i enkelte funktioner AI-systemer, navnlig til prisanbefalinger (dynamic pricing), til svarforslag i beskedindbakken og til støtte i supporten. Disse funktioner frembringer forslag; beslutningen om og ansvaret for deres anvendelse ligger hos brugeren. Prisanbefalinger erstatter ikke brugerens egen forretningsmæssige vurdering.",
+        "Interagerer gæster umiddelbart med et AI-system, oplyses de herom (artikel 50, stk. 1, i forordning (EU) 2024/1689 — »AI-forordningen«). Tekster, som et AI-system har frembragt eller ændret væsentligt, og som brugeren videregiver til gæster, skal brugeren gøre opmærksom på, i det omfang brugeren har en lovbestemt pligt hertil.",
+        "myNextDays driver ikke AI-systemer, der efter bilag III til AI-forordningen anses for højrisikosystemer, og ingen former for praksis, der er forbudt efter artikel 5 i AI-forordningen. Brugerens input og oplysninger om brugerens gæster anvendes ikke til træning af modeller uden særskilt instruks.",
+        "Brugeren må ikke anvende AI-funktionerne til at give gæster indtryk af en menneskelig kommunikation, hvor der gælder en oplysningspligt, eller til at afgive juridisk bindende erklæringer uden selv at have kontrolleret dem.",
+        "Forbinder brugeren sin konto med en egen AI-assistent (f.eks. Claude fra Anthropic) via den grænseflade, der er beregnet hertil, gælder følgende: Brugeren indgår selv aftalen om denne tjeneste og er ansvarlig for anvendelsen af den. Forbindelsen er brugerens instruks til myNextDays om at videregive de frigivne data dertil — herunder en overførsel til et tredjeland, hvis udbyderen har hjemsted uden for Den Europæiske Union. Brugeren sikrer, at brugeren har et retligt grundlag herfor, at brugerens egne oplysninger om databeskyttelse angiver modtageren, og at de nødvendige garantier for overførslen foreligger.",
+        "Til en sådan forbindelse anvender brugeren en adgang, hvor udbyderen tilbyder databehandling på kundens vegne og udelukker, at dataene anvendes til træning af modeller — hos Claude er det erhvervsadgangene (Team, Enterprise eller API). Adgange til privat brug opfylder som regel ikke dette; de er derfor uegnede til gæstedata. myNextDays kan ikke se, hvilken adgang brugeren anvender, og gør opmærksom på dette i samtykkedialogen.",
+        "Brugeren er herved opmærksom på, at indhold, som brugeren fra brugerfladen manuelt kopierer ind i et indtastningsfelt hos assistenten, som regel ikke omfattes af udbyderens kontraktlige begrænsninger — i modsætning til de data, der hentes via grænsefladen.",
+        "Data, der stammer fra en bookingportal, anvender brugeren også via grænsefladen udelukkende til afvikling og betjening af den pågældende booking — ikke til vurdering af personer, til profilering eller til markedsføring. Portalerne fastsætter denne formålsbegrænsning i deres egne betingelser.",
+      ],
+    },
+    {
+      heading: "§ 13 Klager og mægling",
+      paragraphs: [
+        "myNextDays har for erhvervsmæssige brugere en gratis intern klagebehandling (artikel 11 i forordning (EU) 2019/1150 — »P2B-forordningen«). Klager — navnlig over påståede overtrædelser af disse betingelser, over tekniske problemer med væsentlig betydning eller over foranstaltninger truffet af myNextDays over for brugeren — kan indgives uformelt til info@mynextdays.dk eller via supporten i programmet. Modtagelsen bekræftes; behandlingen sker hurtigt og inden for en rimelig frist, i enkle sager som regel inden for 14 dage. Resultatet meddeles brugeren i et klart sprog.",
+        "Opnås der ikke enighed under klagebehandlingen, er myNextDays indstillet på sammen med brugeren at søge en udenretlig løsning hos følgende mæglere (artikel 12 i P2B-forordningen): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Genève 20, Schweiz — sager kan også behandles på afstand og på flere sprog; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 København K, Danmark — udbyderens hjemstat.",
+        "Angivelsen forpligter ikke brugeren til at gennemføre en mægling; retten til at indbringe sagen for en domstol berøres ikke. myNextDays deltager i de rimelige omkostninger ved en mægling; fordelingen følger den pågældende mæglers regler og omstændighederne i den konkrete sag.",
+        "myNextDays offentliggør årligt oplysninger om antallet af klager, behandlingstiden og de foranstaltninger, der er truffet.",
+      ],
+    },
+    {
+      heading: "§ 14 Immaterielle rettigheder",
       paragraphs: [
         "Alle rettigheder til platformen, dens software og dens indhold (bortset fra det indhold, som brugeren har lagt op) tilhører myNextDays eller dennes licensgivere. Brugeren får i aftaleperioden en simpel, ikke-overdragelig ret til at bruge platformen i det aftalte omfang.",
         "Brugeren giver myNextDays de simple brugsrettigheder til det indhold, som brugeren har lagt op, der er nødvendige for driften af platformen (navnlig til lagring, reproduktion, visning og overførsel til tilsluttede kanaler).",
       ],
     },
     {
-      heading: "§ 13 Ansvar",
+      heading: "§ 15 Ansvar",
       paragraphs: [
         "myNextDays hæfter ubegrænset for forsæt og grov uagtsomhed samt for skader som følge af krænkelse af liv, legeme eller helbred.",
         "Ved simpel uagtsomhed hæfter myNextDays kun for tilsidesættelse af væsentlige kontraktforpligtelser (kardinalforpligtelser), begrænset til den for aftalen typiske, påregnelige skade. Ansvar efter produktansvarslovgivningen samt for afgivne garantier berøres ikke.",
@@ -121,7 +143,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Løbetid, opsigelse og spærring",
+      heading: "§ 16 Løbetid, opsigelse og spærring",
       paragraphs: [
         "Løbetid og opsigelsesvarsler fremgår af den pågældende aftale. Retten til ekstraordinær opsigelse af væsentlig grund berøres ikke.",
         "myNextDays kan midlertidigt spærre adgangen til platformen eller enkelte funktioner (herunder modtagelse af betalinger og udbetalinger), hvis der er konkrete tegn på overtrædelse af disse betingelser, på svig eller på misbrug, eller hvis myNextDays er forpligtet hertil ved lov eller efter påbud fra en betalingstjenesteudbyder. Brugeren underrettes om spærringen, i det omfang det er lovligt.",
@@ -129,14 +151,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 Ændringer af disse betingelser",
+      heading: "§ 17 Ændringer af disse betingelser",
       paragraphs: [
         "myNextDays kan ændre disse betingelser med virkning for fremtiden, i det omfang det er nødvendigt af vægtige grunde (navnlig lovændringer, ændringer i retspraksis eller krav fra betalingstjenesteudbydere), og brugeren ikke stilles urimeligt ringere herved.",
         "Ændringer varsles over for brugeren i tekstform mindst seks uger, inden de træder i kraft. Gør brugeren ikke indsigelse inden for varslingsfristen, eller fortsætter brugeren med at bruge platformen efter ikrafttrædelsen, anses de ændrede betingelser for accepteret; der gøres særskilt opmærksom på denne retsvirkning i varslingen.",
       ],
     },
     {
-      heading: "§ 16 Afsluttende bestemmelser",
+      heading: "§ 18 Afsluttende bestemmelser",
       paragraphs: [
         "Retten i den stat, hvor udbyderen har sit hjemsted, finder anvendelse med udelukkelse af FN's konvention om aftaler om internationale køb (CISG). Ufravigelige regler i den stat, hvor brugeren har sit hjemsted, berøres ikke.",
         "Eksklusivt værneting for alle tvister, der udspringer af eller har forbindelse med denne aftale, er — i det omfang det er lovligt — udbyderens hjemsted.",

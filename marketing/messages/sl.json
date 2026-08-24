@@ -424,7 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – platforma za ponudnike nastanitev",
-    "description": "Platforma za hotele, agencije in ponudnike počitniških nastanitev: channel manager, koledar, direktne rezervacije, komunikacija z gosti in obračun na enem mestu. Razvito na Danskem, gostovanje v EU. Od 19,90 € na mesec. 30 dni brezplačno."
+    "description": "Platforma za hotele, agencije in ponudnike počitniških nastanitev: channel manager, koledar, direktne rezervacije, komunikacija z gosti in obračun na enem mestu. Razvito na Danskem, gostovanje v EU. 30 dni brezplačno.",
+    "descriptionMitPreis": "Platforma za hotele, agencije in ponudnike počitniških nastanitev: channel manager, koledar, direktne rezervacije, komunikacija z gosti in obračun na enem mestu. Razvito na Danskem, gostovanje v EU. Od {preis} na mesec. 30 dni brezplačno."
   },
   "nav": {
     "funktionen": "Funkcije",
@@ -828,9 +829,9 @@
     "appLaden": "Prenesite aplikacijo",
     "spalten": {
       "produkt": "Izdelek",
-      "loesungen": "Rešitve",
       "ressourcen": "Viri",
-      "unternehmen": "Podjetje"
+      "unternehmen": "Podjetje",
+      "rechtliches": "Pravne informacije"
     },
     "produkt": {
       "pms": "Property Management",
@@ -839,26 +840,14 @@
       "zahlungen": "Plačila",
       "mobileApp": "Mobilna aplikacija"
     },
-    "loesungen": {
-      "hotels": "Hoteli",
-      "bnb": "B&B",
-      "gaestehaeuser": "Gostišča",
-      "ferienwohnungen": "Počitniška stanovanja",
-      "campingplaetze": "Kampi"
-    },
     "ressourcen": {
-      "blog": "Blog",
       "hilfeCenter": "Center za pomoč",
       "status": "Stanje sistema",
-      "leitfaeden": "Vodniki",
       "api": "Dokumentacija API"
     },
     "unternehmen": {
       "ueberUns": "O nas",
-      "karriere": "Kariera",
-      "partner": "Partnerji",
-      "kontakt": "Kontakt",
-      "presse": "Za medije"
+      "kontakt": "Kontakt"
     },
     "copyright": "© 2026 myNextDays. Vse pravice pridržane.",
     "agb": "Pogoji",
@@ -867,6 +856,9 @@
     "cookies": "Politika piškotkov",
     "avv": "Obdelava podatkov",
     "kontoLoeschen": "Izbriši račun"
+  },
+  "legal": {
+    "stand": "Zadnja posodobitev: {datum}"
   },
   "abschluss": {
     "heading": "Ste pripravljeni voditi svojo nastanitev z enega mesta?",
@@ -980,6 +972,7 @@
       "unsereRechnung": "Osnovna naročnina + stopnje po enotah",
       "proMonat": "/mesec",
       "ohnePreis": "ni objavljeno",
+      "waehrungshinweis": "Vsi zneski v tej primerjavi so navedeni v evrih — tudi naš lastni. Ponudniki svoje cene objavljajo v evrih; njihov preračun v vašo valuto bi pomenil trditev o menjalnem tečaju, ki morda že jutri ne bo več veljal.",
       "fussnote": "Stanje {stand}, odčitano neposredno s cenikov ponudnikov. Navedene so mesečne cene brez letne vezave; kjer ponudnik oglašuje letno ceno, je ta v izračunu. Brez jamstva — velja aktualni cenik ponudnika.",
       "ersparnis": "{prozent} % ceneje od povprečja"
     },
@@ -2028,5 +2021,38 @@
     "noResultsHintLink": "prebrskajte kategorije",
     "browseCategories": "Prebrskaj kategorije",
     "brandTitle": "Pomoč myNextDays"
+  },
+  "einwilligung": {
+    "titel": "Vaše soglasje",
+    "text": "To spletno mesto ne uporablja analitičnih, oglaševalskih ali sledilnih storitev; pisave in ikone strežemo z lastnega strežnika. Potrebno je le tisto, kar sami nastavite ali zahtevate. Vaše soglasje zato potrebujemo za natanko eno stvar: za zunanjo zaščito našega kontaktnega obrazca pred neželeno pošto.",
+    "richtlinie": "Preberite pravilnik o piškotkih",
+    "allesAblehnen": "Zavrnite vse",
+    "allesAnnehmen": "Sprejmite vse",
+    "auswahlOeffnen": "Prikaži možnosti",
+    "auswahlSchliessen": "Skrij možnosti",
+    "auswahlSpeichern": "Shrani možnosti",
+    "immerAktiv": "Vedno aktivno",
+    "kategorien": {
+      "notwendig": {
+        "titel": "Potrebno",
+        "text": "Vaša izbira jezika in — le če klepet odprete sami — identifikator vašega pogovora na tej napravi. Brez teh podatkov strani ni mogoče prikazati tako, kot ste jo zahtevali. Ne služijo niti oglaševanju niti statistiki."
+      },
+      "spamschutz": {
+        "titel": "Zaščita kontaktnega obrazca pred neželeno pošto",
+        "text": "Naš kontaktni obrazec je pred samodejnimi množičnimi sporočili zaščiten s storitvijo reCAPTCHA Enterprise družbe Google. Če to dovolite, vaš brskalnik med izpolnjevanjem obrazca naloži skript z google.com in pri tem posreduje vaš naslov IP družbi Google. Brez vašega dovoljenja se od Googla ne naloži nič; v tem primeru nas dosežete po e-pošti."
+      }
+    },
+    "einstellungen": {
+      "titel": "Upravljanje vašega soglasja",
+      "text": "Svojo odločitev lahko tukaj kadar koli spremenite ali prekličete. Velja za ta brskalnik in se shrani samo na vaši napravi.",
+      "offen": "Še se niste odločili. Nič neobveznega ni aktivno.",
+      "stand": "Vaša odločitev z dne {datum}.",
+      "gespeichert": "Shranjeno."
+    },
+    "kontakt": {
+      "hinweis": "Pred pošiljanjem potrebujemo vaše dovoljenje za zunanjo zaščito pred neželeno pošto (reCAPTCHA družbe Google). Brez njega obrazca ne moremo sprejeti — tako preprečujemo samodejna množična sporočila.",
+      "erlauben": "Dovolite zaščito pred spamom",
+      "alternative": "Tega ne želite? Pišite nam raje na {email}."
+    }
   }
 }

@@ -424,7 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – The platform for holiday rental hosts",
-    "description": "The platform for hotels, agencies and holiday rental hosts: channel manager, calendar, direct booking, guest messaging and accounting in one place. Built in Denmark, hosted in the EU. From €19.90 per month. Free for 30 days."
+    "description": "The platform for hotels, agencies and holiday rental hosts: channel manager, calendar, direct booking, guest messaging and accounting in one place. Built in Denmark, hosted in the EU. Free for 30 days.",
+    "descriptionMitPreis": "The platform for hotels, agencies and holiday rental hosts: channel manager, calendar, direct booking, guest messaging and accounting in one place. Built in Denmark, hosted in the EU. From {preis} per month. Free for 30 days."
   },
   "nav": {
     "funktionen": "Features",
@@ -828,9 +829,9 @@
     "appLaden": "Download the app",
     "spalten": {
       "produkt": "Product",
-      "loesungen": "Solutions",
       "ressourcen": "Resources",
-      "unternehmen": "Company"
+      "unternehmen": "Company",
+      "rechtliches": "Legal"
     },
     "produkt": {
       "pms": "Property management",
@@ -839,26 +840,14 @@
       "zahlungen": "Payments",
       "mobileApp": "Mobile app"
     },
-    "loesungen": {
-      "hotels": "Hotels",
-      "bnb": "B&Bs",
-      "gaestehaeuser": "Guest houses",
-      "ferienwohnungen": "Holiday rentals",
-      "campingplaetze": "Campsites"
-    },
     "ressourcen": {
-      "blog": "Blog",
       "hilfeCenter": "Help centre",
       "status": "System status",
-      "leitfaeden": "Guides",
       "api": "API documentation"
     },
     "unternehmen": {
       "ueberUns": "About us",
-      "karriere": "Careers",
-      "partner": "Partners",
-      "kontakt": "Contact",
-      "presse": "Press"
+      "kontakt": "Contact"
     },
     "copyright": "© 2026 myNextDays. All rights reserved.",
     "agb": "Terms",
@@ -867,6 +856,9 @@
     "cookies": "Cookie policy",
     "avv": "Data processing",
     "kontoLoeschen": "Delete account"
+  },
+  "legal": {
+    "stand": "Last updated: {datum}"
   },
   "abschluss": {
     "heading": "Ready to run your property from one place?",
@@ -980,6 +972,7 @@
       "unsereRechnung": "Base fee + property tiers",
       "proMonat": "/month",
       "ohnePreis": "not published",
+      "waehrungshinweis": "All amounts in this comparison are shown in euros — including our own. The providers publish their prices in euros; converting them into your currency would assert an exchange rate that might no longer hold tomorrow.",
       "fussnote": "As of {stand}, read directly from the providers' pricing pages. Monthly prices without annual commitment are shown; where a provider advertises the annual price, it appears in the calculation column. Without warranty — the provider's current price list prevails.",
       "ersparnis": "{prozent} % below the average"
     },
@@ -2028,5 +2021,38 @@
     "noResultsHintLink": "browse the categories",
     "browseCategories": "Browse categories",
     "brandTitle": "myNextDays help"
+  },
+  "einwilligung": {
+    "titel": "Your consent",
+    "text": "This website uses no analytics, advertising or tracking services; our fonts and icons are served from our own server. Only what you set or request yourself is necessary. So we need your consent for exactly one thing: the external spam protection on our contact form.",
+    "richtlinie": "Read the cookie policy",
+    "allesAblehnen": "Reject all",
+    "allesAnnehmen": "Accept all",
+    "auswahlOeffnen": "Show choices",
+    "auswahlSchliessen": "Hide choices",
+    "auswahlSpeichern": "Save choices",
+    "immerAktiv": "Always on",
+    "kategorien": {
+      "notwendig": {
+        "titel": "Necessary",
+        "text": "Your language choice and — only if you open the chat yourself — the identifier of your conversation on this device. Without them the site cannot be delivered the way you asked for it. They are used neither for advertising nor for statistics."
+      },
+      "spamschutz": {
+        "titel": "Contact form spam protection",
+        "text": "Our contact form is protected against automated bulk messages by reCAPTCHA Enterprise from Google. If you allow it, your browser loads a script from google.com while you fill in the form and thereby sends your IP address to Google. Without your permission nothing is loaded from Google; you can reach us by email instead."
+      }
+    },
+    "einstellungen": {
+      "titel": "Manage your consent",
+      "text": "You can change or withdraw your decision here at any time. It applies to this browser and is stored on your device only.",
+      "offen": "You have not decided yet. Nothing optional is active.",
+      "stand": "Your decision from {datum}.",
+      "gespeichert": "Saved."
+    },
+    "kontakt": {
+      "hinweis": "Before you send, we need your permission for the external spam protection (reCAPTCHA from Google). Without it we cannot accept the form — that is how we keep automated bulk messages out.",
+      "erlauben": "Allow spam protection",
+      "alternative": "Would you rather not? Write to us at {email} instead."
+    }
   }
 }

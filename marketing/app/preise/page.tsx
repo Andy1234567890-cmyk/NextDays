@@ -25,6 +25,7 @@ import { PreisProvisionen } from "@/components/preise/preis-provisionen";
 import { PreisInklusive, PreisRechner } from "@/components/preise/preis-rechner";
 import { PreisVergleich } from "@/components/preise/preis-vergleich";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { anzeigewaehrung, istFremdwaehrung } from "@/lib/anzeigewaehrung";
 import { holePreisliste } from "@/lib/preise";
 import { holeProvisionssaetze } from "@/lib/provisionstexte";
 
@@ -53,7 +54,13 @@ const ZUSAGEN: readonly { key: string; icon: IconName }[] = [
 export default async function PreisePage() {
   const t = await getTranslations("preise.hero");
   const locale = await getLocale();
-  const liste = await holePreisliste();
+  const liste = await holePreisliste(anzeigewaehrung(locale));
+  // Zweite Liste in EURO — nur für den Wettbewerbsvergleich, dessen fremde
+  // Preise in Euro recherchiert sind. Bei einer Euro-Sprache ist es dieselbe
+  // URL wie oben, Next dedupliziert sie im Request; bei DKK/SEK/… ist es ein
+  // zusätzlicher Aufruf, den der 600-s-Cache auf beiden Seiten abfängt.
+  const listeEur =
+    anzeigewaehrung(locale) === "EUR" ? liste : await holePreisliste("EUR");
   // Dieselbe Preisliste, nur als fertig formatierte Sätze für die Fließtexte
   // (`PreisInklusive`, Megamenü). Next dedupliziert den Fetch im Request.
   const saetze = await holeProvisionssaetze(locale);
@@ -144,7 +151,13 @@ export default async function PreisePage() {
 
         <PreisProvisionen liste={liste} />
         <PreisModule liste={liste} />
-        <PreisVergleich liste={liste} />
+        {/* Der Vergleich bekommt bewusst die EURO-Liste, nicht `liste`: die
+            Wettbewerbspreise sind in Euro abgelesen. Bei Euro-Sprachen ist es
+            dieselbe Anfrage und Next dedupliziert sie. */}
+        <PreisVergleich
+          liste={listeEur}
+          inFremdwaehrung={istFremdwaehrung(locale)}
+        />
         <PreisFaq />
         <SectionWave from="text-background" to="bg-surface-warm" />
         <MarketingCta />

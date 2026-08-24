@@ -58,11 +58,11 @@ export default async function EntwicklerLayout({
     <div className="flex min-h-screen flex-col bg-background font-sans text-foreground">
       {/* ── Kopfzeile ──────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
-        <div className="flex h-14 items-center gap-5 px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2">
+        <div className="flex h-14 items-center gap-3 px-4 sm:gap-5 sm:px-6">
+          <Link href="/" className="flex shrink-0 items-center gap-2">
             <Logo heightRem={1.6} />
           </Link>
-          <span className="hidden rounded-full bg-surface-warm px-2.5 py-0.5 font-mono text-[0.6875rem] text-muted-foreground sm:inline">
+          <span className="hidden shrink-0 rounded-full bg-surface-warm px-2.5 py-0.5 font-mono text-[0.6875rem] text-muted-foreground sm:inline">
             {API_INFO.version}
           </span>
 
@@ -71,7 +71,15 @@ export default async function EntwicklerLayout({
             referenz={t("bereiche.referenz")}
           />
 
-          <div className="ml-auto flex items-center gap-1 text-sm">
+          {/* Nebenziele erst ab `md`. Bei 390 px war diese Kopfzeile 533 px
+              breit: die Seite scrollte quer und „openapi.json" wie „Zur
+              Website" lagen ausserhalb des Bildschirms. Beide Ziele bleiben
+              mobil erreichbar — das Logo links führt auf die Website, und
+              openapi.json steht im Text der Doku-Startseite. Die zwei
+              Bereichs-Reiter bleiben dagegen sichtbar: die Sidebar zeigt
+              immer nur den GEÖFFNETEN Bereich, ohne die Reiter käme man vom
+              Leitfaden nie zur Referenz. */}
+          <div className="ml-auto hidden shrink-0 items-center gap-1 text-sm md:flex">
             <a
               href={`${API_INFO.basis}/openapi.json`}
               target="_blank"

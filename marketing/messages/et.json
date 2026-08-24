@@ -424,7 +424,8 @@
   },
   "meta": {
     "title": "myNextDays – Platvorm puhkemajutuse väljaüürijatele",
-    "description": "Platvorm hotellidele, agentuuridele ja puhkemajutuse väljaüürijatele: channel manager, kalender, otsebroneering, külalissuhtlus ja arveldus ühes kohas. Ehitatud Taanis, majutatud EL-is. Alates 19,90 € kuus. Proovi 30 päeva tasuta."
+    "description": "Platvorm hotellidele, agentuuridele ja puhkemajutuse väljaüürijatele: channel manager, kalender, otsebroneering, külalissuhtlus ja arveldus ühes kohas. Ehitatud Taanis, majutatud EL-is. Proovi 30 päeva tasuta.",
+    "descriptionMitPreis": "Platvorm hotellidele, agentuuridele ja puhkemajutuse väljaüürijatele: channel manager, kalender, otsebroneering, külalissuhtlus ja arveldus ühes kohas. Ehitatud Taanis, majutatud EL-is. Alates {preis} kuus. Proovi 30 päeva tasuta."
   },
   "nav": {
     "funktionen": "Funktsioonid",
@@ -828,9 +829,9 @@
     "appLaden": "Laadi rakendus alla",
     "spalten": {
       "produkt": "Toode",
-      "loesungen": "Lahendused",
       "ressourcen": "Materjalid",
-      "unternehmen": "Ettevõte"
+      "unternehmen": "Ettevõte",
+      "rechtliches": "Õiguslik teave"
     },
     "produkt": {
       "pms": "Property management",
@@ -839,26 +840,14 @@
       "zahlungen": "Maksed",
       "mobileApp": "Mobiilirakendus"
     },
-    "loesungen": {
-      "hotels": "Hotellid",
-      "bnb": "B&B-d",
-      "gaestehaeuser": "Külalistemajad",
-      "ferienwohnungen": "Puhkemajutus",
-      "campingplaetze": "Kämpingud"
-    },
     "ressourcen": {
-      "blog": "Blogi",
       "hilfeCenter": "Abikeskus",
       "status": "Süsteemi olek",
-      "leitfaeden": "Juhendid",
       "api": "API dokumentatsioon"
     },
     "unternehmen": {
       "ueberUns": "Meist",
-      "karriere": "Karjäär",
-      "partner": "Partnerid",
-      "kontakt": "Kontakt",
-      "presse": "Meedia"
+      "kontakt": "Kontakt"
     },
     "copyright": "© 2026 myNextDays. Kõik õigused kaitstud.",
     "agb": "Tingimused",
@@ -867,6 +856,9 @@
     "cookies": "Küpsiste poliitika",
     "avv": "Andmete töötlemine",
     "kontoLoeschen": "Kustuta konto"
+  },
+  "legal": {
+    "stand": "Viimati uuendatud: {datum}"
   },
   "abschluss": {
     "heading": "Valmis oma majutusettevõtet ühest kohast juhtima?",
@@ -980,6 +972,7 @@
       "unsereRechnung": "Põhitasu + objektiastmed",
       "proMonat": "/kuus",
       "ohnePreis": "pole avaldatud",
+      "waehrungshinweis": "Kõik selles võrdluses toodud summad on eurodes — ka meie enda oma. Teenusepakkujad avaldavad oma hinnad eurodes; nende ümberarvestamine sinu valuutasse tähendaks vahetuskursi väitmist, mis võib juba homme enam paika mitte pidada.",
       "fussnote": "Seisuga {stand}, loetud otse pakkujate hinnalehtedelt. Näidatud on kuuhinnad ilma aastase seotuseta; kui pakkuja reklaamib aastahinda, on see arvutuses. Ilma garantiita — määrav on pakkuja kehtiv hinnakiri.",
       "ersparnis": "{prozent} % keskmisest odavam"
     },
@@ -2028,5 +2021,38 @@
     "noResultsHintLink": "sirvi kategooriaid",
     "browseCategories": "Sirvi kategooriaid",
     "brandTitle": "myNextDays abi"
+  },
+  "einwilligung": {
+    "titel": "Teie nõusolek",
+    "text": "See veebisait ei kasuta analüüsi-, reklaami- ega jälgimisteenuseid; kirjatüübid ja ikoonid asuvad meie enda serveris. Vajalik on üksnes see, mida te ise seadistate või küsite. Seetõttu vajame teie nõusolekut ainult ühe asja jaoks: meie kontaktivormi välise rämpspostikaitse jaoks.",
+    "richtlinie": "Loe küpsiste põhimõtteid",
+    "allesAblehnen": "Keela kõik",
+    "allesAnnehmen": "Luba kõik",
+    "auswahlOeffnen": "Näita valikuid",
+    "auswahlSchliessen": "Peida valikud",
+    "auswahlSpeichern": "Salvesta valikud",
+    "immerAktiv": "Alati sees",
+    "kategorien": {
+      "notwendig": {
+        "titel": "Vajalikud",
+        "text": "Teie keelevalik ja — ainult siis, kui avate vestluse ise — teie vestluse tunnus sellel seadmel. Ilma nendeta ei saa lehte teile nii kuvada, nagu te seda küsisite. Neid ei kasutata ei reklaamiks ega statistikaks."
+      },
+      "spamschutz": {
+        "titel": "Kontaktivormi rämpspostikaitse",
+        "text": "Meie kontaktivorm on automaatsete masssõnumite eest kaitstud Google'i reCAPTCHA Enterprise'iga. Kui te selle lubate, laadib teie brauser vormi täitmise ajal skripti aadressilt google.com ja edastab seejuures teie IP-aadressi Google'ile. Ilma teie loata ei laadita Google'ist midagi; sel juhul saate meiega ühendust e-posti teel."
+      }
+    },
+    "einstellungen": {
+      "titel": "Halda oma nõusolekut",
+      "text": "Te võite oma otsust siin igal ajal muuta või tagasi võtta. See kehtib selles brauseris ja salvestatakse ainult teie seadmes.",
+      "offen": "Te ei ole veel otsustanud. Ükski valikuline teenus ei ole aktiivne.",
+      "stand": "Teie otsus {datum}.",
+      "gespeichert": "Salvestatud."
+    },
+    "kontakt": {
+      "hinweis": "Enne saatmist vajame teie luba välise rämpspostikaitse jaoks (Google'i reCAPTCHA). Ilma selleta me vormi vastu ei võta — nii hoiame automaatsed masssõnumid eemal.",
+      "erlauben": "Luba rämpspostikaitse",
+      "alternative": "Te ei soovi seda? Kirjutage meile selle asemel aadressil {email}."
+    }
   }
 }

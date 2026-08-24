@@ -46,9 +46,15 @@ export function KontaktAnschrift() {
 
   return (
     <section className="bg-background">
-      <div className="mx-auto grid max-w-7xl gap-6 px-6 py-24 lg:grid-cols-[1fr_1fr]">
+      {/* `min-w-0` an Raster und Karten: die eine Spalte, die bei 320 px
+          entsteht, ist sonst so breit wie der breiteste unteilbare Inhalt
+          BEIDER Karten (Grid-`min-width: auto`) — hier die E-Mail-Adresse und
+          die Registernummern. Gemessen: 316 px Karte in 272 px Platz, also
+          20 px Querscroll, in allen 24 Sprachen gleich. Mobil zudem weniger
+          Innenabstand. */}
+      <div className="mx-auto grid min-w-0 max-w-7xl gap-6 px-6 py-24 lg:grid-cols-[1fr_1fr]">
         {/* Anschrift + Kanäle */}
-        <div className="flex flex-col gap-8 rounded-3xl bg-surface-accent p-8 sm:p-10">
+        <div className="flex min-w-0 flex-col gap-8 rounded-3xl bg-surface-accent p-6 sm:p-10">
           <div>
             <p className="eyebrow">{t("eyebrow")}</p>
             <h2 className="mt-4 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -70,9 +76,9 @@ export function KontaktAnschrift() {
               <li key={k.href}>
                 <a
                   href={k.href}
-                  className="inline-flex items-center gap-3 font-medium transition-colors hover:text-accent"
+                  className="inline-flex min-w-0 items-center gap-3 break-all font-medium transition-colors hover:text-accent"
                 >
-                  <span className="flex size-10 items-center justify-center rounded-full bg-card text-accent">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card text-accent">
                     <Icon icon={k.icon} className="size-5" />
                   </span>
                   {k.label}
@@ -83,7 +89,7 @@ export function KontaktAnschrift() {
         </div>
 
         {/* Firmendaten */}
-        <div className="rounded-3xl border border-border p-8 sm:p-10">
+        <div className="min-w-0 rounded-3xl border border-border p-6 sm:p-10">
           <p className="eyebrow">{t("firmaEyebrow")}</p>
           <h2 className="mt-4 font-display text-2xl font-semibold tracking-tight sm:text-3xl">
             {t("firmaHeading")}
@@ -92,11 +98,13 @@ export function KontaktAnschrift() {
             {t("firmaText")}
           </p>
 
-          <dl className="mt-8 grid gap-x-8 gap-y-5 sm:grid-cols-2">
+          <dl className="mt-8 grid min-w-0 gap-x-8 gap-y-5 sm:grid-cols-2">
             {zeilen.map((z) => (
-              <div key={z.key}>
+              <div key={z.key} className="min-w-0">
                 <dt className="text-sm text-muted-foreground">{t(z.key)}</dt>
-                <dd className="mt-1 font-medium">{z.wert}</dd>
+                {/* Register-/Steuernummern sind unteilbare Zeichenketten und
+                    schieben die Spalte sonst über den Bildschirm. */}
+                <dd className="mt-1 break-words font-medium">{z.wert}</dd>
               </div>
             ))}
           </dl>

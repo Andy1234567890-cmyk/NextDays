@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // (Stripe Connected Account Agreement) — Wortlaut sinngemäß, URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Všeobecné obchodní podmínky (VOP) pro agentury a pronajímatele",
-  stand: "Stav ke dni: 30. července 2026",
+  stand: "Stav ke dni: 13. srpna 2026",
   intro: [
     "Tyto všeobecné obchodní podmínky (dále jen „VOP“) upravují užívání softwarové platformy myNextDays (dále jen „platforma“) agenturami, pronajímateli, správci nemovitostí a dalšími podnikatelskými uživateli (dále jen „uživatel“).",
     "Provozovatelem platformy je myNextDays ApS, společnost s ručením omezeným (anpartsselskab) podle dánského práva, Hirtshalsvej 21, 9881 Bindslev, Dánsko, zapsaná v dánském Centrálním registru podniků (CVR) pod CVR č. 46615182 (dále jen „myNextDays“ nebo „my“).",
@@ -105,14 +105,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Duševní vlastnictví",
+      heading: "§ 12 Využití umělé inteligence",
+      paragraphs: [
+        "myNextDays v jednotlivých funkcích využívá systémy umělé inteligence, zejména pro cenová doporučení (dynamic pricing), pro návrhy odpovědí v doručené poště zpráv a pro podporu v rámci zákaznické podpory. Tyto funkce vytvářejí návrhy; rozhodnutí o jejich použití a odpovědnost za ně nese uživatel. Cenová doporučení nenahrazují vlastní obchodní posouzení.",
+        "Pokud hosté komunikují přímo se systémem umělé inteligence, je jim to oznámeno (čl. 50 odst. 1 nařízení (EU) 2024/1689 — „aktu o umělé inteligenci“). Texty, které systém umělé inteligence vytvořil nebo podstatně změnil a které uživatel předává hostům, je uživatel povinen označit, pokud mu to ukládá zákonná povinnost.",
+        "myNextDays neprovozuje systémy umělé inteligence, které se podle přílohy III aktu o umělé inteligenci považují za vysoce rizikové, ani praktiky zakázané podle čl. 5 aktu o umělé inteligenci. Vstupy uživatele a údaje jeho hostů se bez zvláštního pokynu nepoužívají k trénování modelů.",
+        "Uživatel nesmí funkce umělé inteligence používat k tomu, aby u hostů vyvolával dojem lidské komunikace tam, kde existuje povinnost informovat, ani k tomu, aby činil právně závazná prohlášení bez vlastního posouzení.",
+        "Pokud uživatel propojí svůj účet prostřednictvím k tomu určeného rozhraní s vlastním asistentem umělé inteligence (například Claude od Anthropic), platí následující: uživatel uzavírá smlouvu o této službě sám a je odpovědný za její využití. Propojení je jeho pokynem myNextDays, aby tam uvolněné údaje vydala — včetně přenosu do třetí země, má-li poskytovatel sídlo mimo Evropskou unii. Uživatel zajistí, že k tomu má právní základ, že jeho vlastní informace o ochraně osobních údajů uvádějí příjemce a že jsou dány potřebné záruky pro přenos.",
+        "Pro takové propojení uživatel použije přístup, pro nějž poskytovatel nabízí zpracování osobních údajů z pověření a vylučuje použití údajů k trénování modelů — u Claude jsou to přístupy pro firemní zákazníky (Team, Enterprise nebo API). Přístupy pro soukromé použití to zpravidla nesplňují; pro údaje hostů jsou proto nevhodné. myNextDays nemůže rozpoznat, který přístup uživatel používá, a upozorňuje na to v dialogu se souhlasem.",
+        "Uživatel přitom bere na vědomí, že obsah, který z uživatelského prostředí ručně zkopíruje do vstupního pole asistenta, zpravidla nepodléhá smluvním omezením poskytovatele — na rozdíl od údajů získaných prostřednictvím rozhraní.",
+        "Údaje, které pocházejí z rezervačního portálu, používá uživatel i prostřednictvím rozhraní pouze k vyřízení a obsluze příslušné rezervace — nikoli k hodnocení osob, k profilování nebo k reklamě. Portály toto účelové omezení stanoví ve svých vlastních podmínkách.",
+      ],
+    },
+    {
+      heading: "§ 13 Stížnosti a mediace",
+      paragraphs: [
+        "myNextDays vede pro podnikatelské uživatele bezplatný interní systém řešení stížností (čl. 11 nařízení (EU) 2019/1150 — „nařízení P2B“). Stížnosti — zejména na tvrzená porušení těchto VOP, na technické problémy s významným dopadem nebo na opatření myNextDays vůči uživateli — lze podat bez zvláštní formy na info@mynextdays.dk nebo prostřednictvím podpory v aplikaci. Přijetí je potvrzeno; vyřízení probíhá bez zbytečného odkladu a v přiměřené lhůtě, u jednoduše položených případů zpravidla do 14 dnů. Výsledek je uživateli sdělen jasným jazykem.",
+        "Nedojde-li ve stížnostním řízení k dohodě, je myNextDays připravena obrátit se s uživatelem mimosoudně na tyto mediátory (čl. 12 nařízení P2B): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Ženeva 20, Švýcarsko — řízení i na dálku a vícejazyčně; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 Kodaň K, Dánsko — stát sídla poskytovatele.",
+        "Uvedení mediátorů uživatele nezavazuje k provedení mediačního řízení; právo obrátit se na soud zůstává nedotčeno. Na přiměřených nákladech mediace se myNextDays podílí; jejich rozdělení se řídí pravidly příslušného mediátora a okolnostmi jednotlivého případu.",
+        "myNextDays každoročně zveřejňuje údaje o počtu stížností, o době jejich vyřizování a o přijatých opatřeních.",
+      ],
+    },
+    {
+      heading: "§ 14 Duševní vlastnictví",
       paragraphs: [
         "Veškerá práva k platformě, jejímu softwaru a jejímu obsahu (s výjimkou obsahu vloženého uživatelem) náleží myNextDays, resp. jejím poskytovatelům licencí. Uživatel získává na dobu trvání smlouvy nevýhradní, nepřenosné právo užívat platformu ve smluvně sjednaném rozsahu.",
         "K obsahu vloženému uživatelem poskytuje uživatel myNextDays nevýhradní užívací práva nezbytná pro provoz platformy (zejména k ukládání, rozmnožování, zobrazování a přenosu do napojených kanálů).",
       ],
     },
     {
-      heading: "§ 13 Odpovědnost",
+      heading: "§ 15 Odpovědnost",
       paragraphs: [
         "myNextDays odpovídá neomezeně za úmysl a hrubou nedbalost, jakož i za škody způsobené újmou na životě, těle nebo zdraví.",
         "V případě prosté nedbalosti odpovídá myNextDays pouze za porušení podstatných smluvních povinností (kardinálních povinností), a to v rozsahu omezeném na předvídatelnou škodu typickou pro daný typ smlouvy. Odpovědnost podle zákona o odpovědnosti za vady výrobku a z převzatých záruk zůstává nedotčena.",
@@ -120,7 +142,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Doba trvání, výpověď a zablokování",
+      heading: "§ 16 Doba trvání, výpověď a zablokování",
       paragraphs: [
         "Doba trvání a výpovědní lhůty vyplývají z příslušné smlouvy. Právo na mimořádnou výpověď ze závažného důvodu zůstává nedotčeno.",
         "myNextDays může dočasně zablokovat přístup k platformě nebo jednotlivé funkce (včetně přijímání plateb a výplat), existují-li konkrétní náznaky porušení těchto VOP, podvodu nebo zneužití, nebo je-li k tomu myNextDays povinna ze zákona či na základě pokynu poskytovatele platebních služeb. O zablokování bude uživatel informován, pokud je to právně přípustné.",
@@ -128,14 +150,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 Změny těchto VOP",
+      heading: "§ 17 Změny těchto VOP",
       paragraphs: [
         "myNextDays může tyto VOP měnit s účinností do budoucna, pokud je to nezbytné ze závažných důvodů (zejména kvůli změnám právních předpisů, změnám judikatury nebo požadavkům poskytovatelů platebních služeb) a uživatel tím není nepřiměřeně znevýhodněn.",
         "Změny budou uživateli oznámeny v textové podobě nejméně šest týdnů před nabytím účinnosti. Nevznese-li uživatel v oznámené lhůtě námitku nebo bude-li platformu po nabytí účinnosti nadále užívat, považují se změněné VOP za přijaté; na tento následek bude v oznámení zvlášť upozorněno.",
       ],
     },
     {
-      heading: "§ 16 Závěrečná ustanovení",
+      heading: "§ 18 Závěrečná ustanovení",
       paragraphs: [
         "Použije se právo státu, v němž má provozovatel své sídlo, s vyloučením Úmluvy OSN o smlouvách o mezinárodní koupi zboží. Kogentní předpisy státu, v němž má uživatel své sídlo, zůstávají nedotčeny.",
         "Výlučně místně příslušným soudem pro všechny spory vyplývající z této smlouvy nebo vzniklé v souvislosti s ní je — pokud je to právně přípustné — soud v sídle provozovatele.",

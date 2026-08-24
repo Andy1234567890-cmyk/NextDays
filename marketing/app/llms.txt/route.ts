@@ -109,7 +109,7 @@ export async function GET(): Promise<Response> {
   zeilen.push("");
   zeilen.push(`- [Terms](${siteUrl("/agb")})`);
   for (const eintrag of RECHTSDOKUMENTE) {
-    zeilen.push(`- [${eintrag.doc.slug}](${siteUrl(`/${eintrag.doc.slug}`)})`);
+    zeilen.push(`- [${eintrag.slug}](${siteUrl(`/${eintrag.slug}`)})`);
   }
   zeilen.push("");
 

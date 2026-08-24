@@ -8,26 +8,27 @@
 // Der Link im Zustimmungsbildschirm wäre damit ein 404 gewesen.
 //
 // Sprache folgt dem nd_locale-Cookie (identisch zur web-App), Inhalt kommt
-// sprachweise aus content/legal/agb.
+// sprachweise aus content/legal/agb (Loader: content/legal/laden.ts,
+// derselbe wie fuer die vier anderen Rechtsdokumente).
 import { getLocale } from "next-intl/server";
 
 import { LegalDocument } from "@/components/legal/legal-document";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { MarketingNav } from "@/components/marketing/marketing-nav";
-import { loadAgb } from "@/content/legal/agb-laden";
+import { ladeRechtsdokument } from "@/content/legal/laden";
 import type { Locale } from "@/i18n/locales";
 
 import type { Metadata } from "next";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = (await getLocale()) as Locale;
-  const doc = await loadAgb(locale);
+  const doc = await ladeRechtsdokument("agb", locale);
   return { title: `${doc.title} — myNextDays`, description: doc.metaDescription };
 }
 
 export default async function Page() {
   const locale = (await getLocale()) as Locale;
-  const doc = await loadAgb(locale);
+  const doc = await ladeRechtsdokument("agb", locale);
 
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans text-foreground">

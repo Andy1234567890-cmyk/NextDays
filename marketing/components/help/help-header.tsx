@@ -19,8 +19,12 @@ export async function HelpHeader() {
           <Logo heightRem={2} />
         </Link>
         <HeaderSearchSlot />
-        <div className="ml-auto flex items-center gap-2">
-          <Button asChild variant="accent" size="sm">
+        {/* „Kontakt" erst ab `sm`: bei 320 px passten Logo + Knopf + Sprache
+            nicht in die Zeile (58 px Überhang, Querscroll). Der Weg zum
+            Kontakt bleibt auf jeder Seite über den Footer offen, die
+            Sprachwahl hat mobil kein zweites Ziel. */}
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <Button asChild variant="accent" size="sm" className="hidden sm:inline-flex">
             <Link href="/kontakt">{t("contact")}</Link>
           </Button>
           <LanguageSwitcher />

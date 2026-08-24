@@ -82,5 +82,41 @@ export const AUFSICHTSBEHOERDE = {
   website: "https://www.datatilsynet.dk",
 } as const;
 
-/** Gemeinsames Stand-Datum aller Rechtsdokumente dieser App. */
+/**
+ * Gemeinsames Stand-Datum aller Rechtsdokumente dieser App — als ISO-Datum,
+ * NICHT als fertiger Satz.
+ *
+ * Warum: Die deutsche Fassung `"Stand: 6. August 2026"` stand in 58 der 120
+ * Sprachdateien und erschien damit auf jeder polnischen, dänischen und
+ * ungarischen Rechtsseite auf DEUTSCH (live geprüft 24.08.2026, u. a. alle 24
+ * Impressum- und alle 24 Cookie-Seiten). Der naheliegende Ausweg — den Satz in
+ * jede der 120 Dateien übersetzt hineinschreiben — hat den nächsten Fehler
+ * schon eingebaut: ändert sich das Datum, muss es 120-mal nachgezogen werden,
+ * und die erste vergessene Datei behauptet einen falschen Stand.
+ *
+ * Deshalb liegt hier nur noch das DATUM. Beschriftung und Schreibweise macht
+ * der Renderer (`components/legal/legal-document.tsx`) aus der Sprache des
+ * Besuchers: `Intl.DateTimeFormat` für das Datum, der Übersetzungsschlüssel
+ * `legal.stand` für den Satz darum.
+ *
+ * Format bewusst `YYYY-MM-DD`: `new Date("2026-08-06")` ist damit in jeder
+ * Zeitzone derselbe Tag (UTC-Mitternacht) — ein Datum wie `"6.8.2026"` wird je
+ * nach Umgebung anders oder gar nicht gelesen.
+ */
+export const RECHTSSTAND_ISO = "2026-08-06";
+
+/**
+ * @deprecated Der fertige deutsche Satz. KEINE Sprachdatei zeigt mehr darauf —
+ * die 96 Fassungen von Datenschutz, Impressum, Cookie-Richtlinie und
+ * Auftragsverarbeitung setzen `standIso: RECHTSSTAND_ISO`.
+ *
+ * Steht trotzdem noch hier, weil die 24 AGB-Fassungen ihren Stand als
+ * übersetztes Literal tragen und dabei ein ANDERES Datum nennen: `agb/de.ts`
+ * den 13. August 2026, die 23 Übersetzungen den 30. Juli 2026. Die AGB hat
+ * damit einen eigenen — und in sich widersprüchlichen — Stand, der nicht
+ * stillschweigend auf RECHTSSTAND_ISO gezogen werden darf. Erst wenn geklärt
+ * ist, welches Datum gilt, bekommt die AGB ihr eigenes `AGB_STAND_ISO`; dann
+ * entfallen diese Konstante UND `stand?: string` in `types.ts` samt dem
+ * Rückfall-Zweig in `components/legal/legal-document.tsx`.
+ */
 export const RECHTSSTAND = "Stand: 6. August 2026";

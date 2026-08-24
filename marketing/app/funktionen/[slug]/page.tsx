@@ -105,7 +105,14 @@ export default async function FunktionsSeite({
       <main className="flex-1">
         {/* 1. Hero */}
         <section className="bg-gradient-to-b from-surface-warm to-background">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-16 pt-14 lg:grid-cols-[1fr_1.05fr]">
+          {/* `min-w-0` an jedem Raster dieser Vorlage: eine Grid-Spalte ist
+              standardmaessig mindestens so breit wie ihr breitester unteilbarer
+              Inhalt (`min-width: auto`). Bei 320 px hat das die Seite quer
+              scrollen lassen — auf Deutsch wegen „Buchungsplattformen." in der
+              Ueberschrift, auf Daenisch wegen „Onlinebetalinger" zwei Abschnitte
+              weiter unten. Die Silbentrennung in globals.css loest den Text,
+              `min-w-0` loest das Raster; es braucht beides. */}
+            <div className="mx-auto grid min-w-0 max-w-7xl items-center gap-12 px-6 pb-16 pt-14 lg:grid-cols-[1fr_1.05fr]">
             <div>
               {/* Eyebrow statt Chip mit Icon: die Startseite und jede Sektion
                   darauf beginnen mit derselben kleinen Kategoriezeile
@@ -201,7 +208,7 @@ export default async function FunktionsSeite({
             Karten-Rahmen. Die Ruhe kommt aus dem Weißraum, nicht aus Rahmen. */}
         <section className="bg-surface-warm">
           <div className="mx-auto max-w-7xl px-6 py-24">
-            <div className="grid gap-12 md:grid-cols-3">
+            <div className="grid min-w-0 gap-12 md:grid-cols-3">
               {nutzen.map((n, i) => (
                 <div key={n} className="flex flex-col items-center text-center">
                   {/* Nummer statt dreimal desselben Häkchens: drei gleiche
@@ -237,7 +244,7 @@ export default async function FunktionsSeite({
             className={i % 2 === 0 ? "bg-surface-warm" : "bg-background"}
           >
             <div
-              className={`mx-auto grid max-w-7xl items-center gap-12 px-6 py-24 lg:grid-cols-2 ${
+              className={`mx-auto grid min-w-0 max-w-7xl items-center gap-12 px-6 py-24 lg:grid-cols-2 ${
                 i % 2 === 0 ? "" : "lg:[&>*:first-child]:order-2"
               }`}
             >
@@ -313,7 +320,7 @@ export default async function FunktionsSeite({
             <h2 className="font-display text-2xl font-extrabold tracking-tight">
               {tr("weiter")}
             </h2>
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <ul className="mt-8 grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {andere.map((f) => {
                 const Bild = GRUPPEN_ILLUSTRATION[f.key];
                 return (

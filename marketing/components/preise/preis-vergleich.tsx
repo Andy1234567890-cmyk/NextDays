@@ -24,7 +24,32 @@ import { formatCurrency } from "@/lib/currency";
 import type { Preisliste } from "@/lib/preise";
 import { staffelPreisCent } from "@/lib/tarif";
 
-export function PreisVergleich({ liste }: { liste: Preisliste | null }) {
+export function PreisVergleich({
+  liste,
+  inFremdwaehrung = false,
+}: {
+  /**
+   * Die EURO-Preisliste — nicht die Anzeigewährung des Besuchers.
+   *
+   * Die Wettbewerbszahlen sind in Euro von den Preisseiten der Anbieter
+   * abgelesen (content/wettbewerb.ts). Ein Kronen-Betrag neben Euro-Beträgen
+   * wäre ein Vergleich mit dem stillen Kurs 1:1 — also eine Falschaussage.
+   * Deshalb rechnet dieser Vergleich durchgehend in Euro, auf BEIDEN Seiten,
+   * und sagt das dem Leser (siehe `inFremdwaehrung`).
+   */
+  liste: Preisliste | null;
+  /**
+   * Sieht der Besucher den Rest der Seite in einer anderen Währung? Dann
+   * bekommt der Vergleich eine Zeile, die erklärt, warum hier Euro steht.
+   *
+   * Vorher entfiel bei Fremdwährung die GANZE Sektion — stillschweigend. Für
+   * sechs Sprachen (da, sv, pl, cs, hu, ro) fehlte damit das stärkste
+   * Argument der Preisseite, und niemand konnte sehen, dass etwas fehlt.
+   * Weglassen ist keine Lösung für „Einheiten passen nicht zusammen";
+   * benennen ist eine.
+   */
+  inFremdwaehrung?: boolean;
+}) {
   const t = useTranslations("preise.vergleich");
   const locale = useLocale();
 
@@ -33,9 +58,9 @@ export function PreisVergleich({ liste }: { liste: Preisliste | null }) {
   const unsCent = liste ? staffelPreisCent(liste.grundtarif_tiers, VERGLEICH_OBJEKTE) : null;
   if (!liste || unsCent === null) return null;
 
-  // Die Wettbewerbszahlen sind in EUR recherchiert. Steht unsere Preisliste in
-  // einer anderen Währung (Stripe-Anker), wäre die Spalte ein Äpfel-Birnen-
-  // Vergleich mit implizitem Kurs 1:1 — dann entfällt die Sektion (Wurzel 4).
+  // Sicherung, kein Sonderfall: der Aufrufer MUSS die Euro-Liste übergeben.
+  // Käme hier etwas anderes an, stünden Euro-Wettbewerbspreise neben einem
+  // Nicht-Euro-Betrag — dann lieber nichts zeigen als das Falsche (Wurzel 4).
   if (liste.currency.toUpperCase() !== "EUR") return null;
 
   // Längster Balken = teuerster veröffentlichter Preis. Zahlen allein lassen
@@ -129,6 +154,18 @@ export function PreisVergleich({ liste }: { liste: Preisliste | null }) {
             </li>
           ))}
         </ul>
+
+        {/* Nur wenn der Rest der Seite eine andere Währung zeigt. Steht die
+            Seite selbst in Euro, wäre der Hinweis eine Selbstverständlichkeit. */}
+        {inFremdwaehrung ? (
+          <p className="mt-6 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
+            {/* `ph:globe` statt eines Münz-Symbols: das Icon-Set dieser App ist
+                lokal und getypt (components/ui/icon-set.ts) — ein neues Symbol
+                gehört über den Generator hinzugefügt, nicht per String. */}
+            <Icon icon="ph:globe" className="mt-0.5 size-4 shrink-0" />
+            {t("waehrungshinweis")}
+          </p>
+        ) : null}
 
         <p className="mt-6 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
           <Icon icon="ph:info" className="mt-0.5 size-4 shrink-0" />

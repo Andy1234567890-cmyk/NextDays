@@ -180,17 +180,34 @@ export function MarketingNav({
           ))}
         </ul>
 
+        {/* Rechte Gruppe. Unter `md` steht hier NUR der Mobil-Knopf.
+            Sprache, „Anmelden" und der CTA erscheinen erst ab `md` — genau ab
+            der Breite, ab der auch die Linkliste sichtbar wird und der
+            Mobil-Knopf verschwindet.
+
+            Warum sie mobil ganz weg sind und nicht bloß kleiner: der CTA ist
+            in 24 Sprachen zwischen „Start gratis" (da) und deutlich längeren
+            Fassungen breit. Bei 390 px ergaben Logo + CTA + Knopf zusammen
+            452 px — die Seite scrollte quer und der Mobil-Knopf lag bei
+            x = 412 KOMPLETT ausserhalb des Bildschirms. Auf dem Telefon war
+            damit auf JEDER Seite dieser App überhaupt keine Navigation
+            erreichbar. Eine Grenze, die von der Textlänge einer von 24
+            Sprachen abhängt, ist keine Grenze; deshalb tragen alle drei
+            Elemente dieselbe wie der Knopf.
+
+            Verloren geht nichts: das Mobil-Panel darunter enthält beide Knöpfe
+            und die Sprachwahl, und der Hero trägt seinen eigenen CTA. */}
         <div className="flex items-center gap-4">
-          <div className="hidden sm:block">
+          <div className="hidden md:block">
             <LanguageSwitcher />
           </div>
           <Link
             href={LOGIN_URL}
-            className="hidden text-sm font-medium transition-colors hover:text-accent sm:block"
+            className="hidden text-sm font-medium transition-colors hover:text-accent md:block"
           >
             {t("anmelden")}
           </Link>
-          <Button asChild variant="accent">
+          <Button asChild variant="accent" className="hidden md:inline-flex">
             <Link href={SIGNUP_URL}>{t("kostenlosStarten")}</Link>
           </Button>
 

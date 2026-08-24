@@ -2,9 +2,32 @@
 """Legt die myNextDays-Abo-Preisliste idempotent in Stripe an (SDK).
 
 Quelle der Wahrheit: myNextDays_Preisliste.pdf (Stand 07/2026).
-Betraege in EUR (Anker 19,90 EUR). Die Umrechnung in die uebrigen EU-Waehrungen
-uebernimmt Stripe Adaptive Pricing im Checkout (Stripe-Kurs, kein erfundener
-Wert) — daher wird hier NUR EUR angelegt.
+Betraege in EUR (Anker 19,90 EUR), plus feste Betraege in den sechs
+Nicht-EUR-Waehrungen der EU als `currency_options` (siehe Abschnitt
+"Waehrungsoptionen" unten).
+
+WARUM NICHT MEHR NUR EUR (Aenderung 24.08.2026):
+Vorher trug jeder Preis nur EUR, und die Umrechnung sollte Stripe Adaptive
+Pricing im Checkout uebernehmen. Das deckt den Checkout ab — aber NICHT die
+oeffentliche Preisseite: die liest `/subscriptions/public/pricing` und zeigte
+einem daenischen Besucher "19,90 EUR". Ein Preis in einer Waehrung, die der
+Besucher nicht benutzt, ist keine Angabe, sondern eine Umrechnungsaufgabe.
+`currency_options` loest beides mit EINER Quelle: die Preisseite liest den
+Betrag der Besucher-Waehrung, und Checkout waehlt dieselbe Zahl automatisch
+anhand der IP (Stripe-Doku "Preise in mehreren Waehrungen verwenden") — Seite
+und Rechnung koennen so nicht auseinanderlaufen.
+
+RUECKWEG (am 24.08.2026 an einem Wegwerf-Preis im Live-Konto BEWIESEN):
+`currency_options` laesst sich NICHT wieder entfernen. Stripe antwortet auf
+`currency_options=` mit "You cannot unset currency_options." und auf
+`currency_options[dkk]=` mit `parameter_invalid_empty`. Der Weg zurueck ist
+derselbe wie bei einer Betragsaenderung und funktioniert, weil der ganze Code
+Preise ueber den `lookup_key` adressiert, nie ueber die ID:
+    1. neuen Preis mit denselben EUR-Betraegen anlegen, ohne
+       `currency_options`, mit `transfer_lookup_key=true`
+    2. alten Preis `active=false`
+Der `lookup_key` wandert dabei atomar mit; laufende Abos behalten ihren alten
+Preis und bleiben unberuehrt.
 
 Idempotenz (Wurzel 2): jedes Produkt/jeder Preis traegt einen stabilen
 `lookup_key` (Preise) bzw. `metadata.mnd_key` (Produkte). Ein zweiter Lauf
@@ -20,12 +43,100 @@ Der Key wird NUR aus der Umgebung gelesen, nie hardcoded/geloggt.
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 
 import stripe
 
-CURRENCY = "eur"  # Anker. Nicht-EUR laeuft ueber Adaptive Pricing im Checkout.
+CURRENCY = "eur"  # Standardwaehrung jedes Preises. Weitere via currency_options.
+
+# Der lookup_key des Grundtarifs. Deckungsgleich mit GRUNDTARIF_LOOKUP_KEY in
+# apps/api/src/features/subscriptions/schemas.py — dort liest die API ihn, hier
+# wird er angelegt. Als Konstante, weil er unten dreimal vorkommt.
+GRUNDTARIF_LK = "mnd_grundtarif_month"
+
+# --- Waehrungsoptionen ----------------------------------------------------
+# WELCHE WAEHRUNGEN: die sechs Waehrungen, die es in der EU neben dem Euro
+# ueberhaupt noch gibt. BGN steht bewusst NICHT dabei — Bulgarien hat den Euro
+# am 01.01.2026 eingefuehrt (Ratsbeschluss 08.07.2025, feste Umstellung
+# 1 EUR = 1,95583 BGN); die EZB fuehrt BGN seither nicht mehr im Kursblatt.
+# Kroatien (2023) und die uebrigen 20 Euro-Laender brauchen ohnehin nichts.
+#
+# EZB-Referenzkurse vom 24.08.2026 (eurofxref-daily). Sie sind hier NICHT die
+# Preisquelle, sondern die Pruefgrundlage: Preise sind Festlegungen, keine
+# Tageskurse. Ein Preis, der sich mit dem Kurs bewegt, ist kein Preis.
+FX_STAND = "2026-08-24"  # EZB eurofxref-daily
+FX_ECB = {
+    "dkk": 7.4757,
+    "sek": 11.0805,
+    "pln": 4.3078,
+    "czk": 24.100,
+    "huf": 362.55,
+    "ron": 5.2504,
+}
+
+# Rundungsschritt in der KLEINSTEN Einheit. Alle sechs sind bei Stripe
+# Zwei-Dezimal-Waehrungen (die "durch 100 teilbar"-Regel fuer HUF gilt laut
+# Stripe-Doku nur fuer AUSZAHLUNGEN, nicht fuer Belastungen). Trotzdem wird auf
+# ganze Einheiten gerundet — ein Abo-Preis mit Oere/Groschen liest sich falsch.
+# HUF auf 10 Forint, weil 1 Forint eine Groessenordnung kleiner ist als 1 Krone.
+FX_SCHRITT = {"dkk": 100, "sek": 100, "pln": 100, "czk": 100, "huf": 1000, "ron": 100}
+
+# Die FESTGELEGTEN Betraege je Waehrung, in der kleinsten Einheit.
+# Regel, mit der sie entstanden sind und die `_assert_currency_math` prueft:
+# EUR-Betrag x EZB-Kurs, dann AUFGERUNDET auf den Schritt aus FX_SCHRITT.
+# Aufgerundet, nie abgerundet: sonst waere eine Waehrung guenstiger als der
+# EUR-Anker und wir wuerden dieselbe Leistung je Land unterschiedlich teuer
+# verkaufen, ohne es entschieden zu haben.
+#
+# `tiers` spiegelt GRADUATED_TIERS in derselben Reihenfolge (die Assertion
+# prueft die Laenge), `module` die Schluessel von FIXED_PRICES (dito).
+CURRENCY_OPTIONS: dict[str, dict] = {
+    "dkk": {
+        "tiers": [14900, 4500, 3800, 3000],
+        "module": {"modul3_flat": 22500, "modul4_flat": 14900,
+                   "modul4_per_seat": 1900, "modul6_flat": 448600,
+                   "modul6_per_room": 1200},
+    },
+    "sek": {
+        "tiers": [22100, 6700, 5600, 4500],
+        "module": {"modul3_flat": 33300, "modul4_flat": 22100,
+                   "modul4_per_seat": 2800, "modul6_flat": 664900,
+                   "modul6_per_room": 1700},
+    },
+    "pln": {
+        "tiers": [8600, 2600, 2200, 1800],
+        "module": {"modul3_flat": 13000, "modul4_flat": 8600,
+                   "modul4_per_seat": 1100, "modul6_flat": 258500,
+                   "modul6_per_room": 700},
+    },
+    "czk": {
+        "tiers": [48000, 14500, 12100, 9700],
+        "module": {"modul3_flat": 72300, "modul4_flat": 48000,
+                   "modul4_per_seat": 6100, "modul6_flat": 1446000,
+                   "modul6_per_room": 3700},
+    },
+    "huf": {
+        "tiers": [722000, 218000, 182000, 146000],
+        "module": {"modul3_flat": 1088000, "modul4_flat": 722000,
+                   "modul4_per_seat": 91000, "modul6_flat": 21753000,
+                   "modul6_per_room": 55000},
+    },
+    "ron": {
+        "tiers": [10500, 3200, 2700, 2100],
+        "module": {"modul3_flat": 15800, "modul4_flat": 10500,
+                   "modul4_per_seat": 1400, "modul6_flat": 315100,
+                   "modul6_per_room": 800},
+    },
+}
+
+# Obergrenze der erlaubten Abweichung nach oben (Faktor auf den umgerechneten
+# Betrag). Sie faengt den einzigen Fehler, den eine Aufrundungsregel nicht
+# faengt: eine Null zu viel. Der groesste echte Abstand liegt bei 1,083
+# (PLN, 1,50 EUR -> 7 PLN; bei kleinen Betraegen wirkt die Aufrundung am
+# staerksten), deshalb 1,15.
+FX_TOLERANZ = 1.15
 
 # --- Produkte -------------------------------------------------------------
 # mnd_key = stabiler interner Schluessel (metadata), NICHT die Stripe-ID.
@@ -169,6 +280,82 @@ def _assert_pdf_math() -> None:
     print("  Modulpreise stimmen (Modul 3/4/6, je monatlich) ✓")
 
 
+def _aufrunden(betrag_eur_cent: int, waehrung: str) -> int:
+    """EUR-Cent -> Betrag in der kleinsten Einheit von `waehrung`, aufgerundet.
+
+    Genau die Regel, mit der die Zahlen in CURRENCY_OPTIONS entstanden sind —
+    hier EINMAL als Code, damit die Assertion die Regel prueft und nicht eine
+    zweite Abschrift der Zahlen (Wurzel 4).
+    """
+    schritt = FX_SCHRITT[waehrung]
+    roh = int(betrag_eur_cent * FX_ECB[waehrung] + 0.5)
+    return int(-(-roh // schritt) * schritt)
+
+
+def _assert_ein_betrag(waehrung: str, bezeichnung: str, eur_cent: int,
+                       betrag: int) -> None:
+    """Ein Betrag gegen den Kurswert. Zwei Schranken, beide notwendig."""
+    soll = _aufrunden(eur_cent, waehrung)
+    obergrenze = int(eur_cent * FX_ECB[waehrung] * FX_TOLERANZ)
+    if betrag < soll:
+        _die(f"{waehrung.upper()} '{bezeichnung}': {betrag} liegt UNTER dem "
+             f"aufgerundeten Kurswert {soll} (EUR {eur_cent / 100:.2f} x "
+             f"{FX_ECB[waehrung]}, Stand {FX_STAND})")
+    if betrag > obergrenze:
+        _die(f"{waehrung.upper()} '{bezeichnung}': {betrag} liegt ueber der "
+             f"Toleranz {obergrenze} ({FX_TOLERANZ}x Kurswert) — Tippfehler?")
+
+
+def _assert_currency_math() -> None:
+    """Prueft JEDEN festgelegten Fremdwaehrungsbetrag gegen EUR-Betrag x Kurs.
+
+    Zusaetzlich Vollstaendigkeit: fehlt eine Stufe oder ein Modul, waere die
+    Waehrung im Checkout unvollstaendig und Stripe fiele fuer den GANZEN
+    Vorgang auf EUR zurueck — ein Fehler, den niemand sieht.
+    """
+    if set(CURRENCY_OPTIONS) != set(FX_ECB) or set(FX_SCHRITT) != set(FX_ECB):
+        _die("Waehrungslisten weichen ab: CURRENCY_OPTIONS/FX_ECB/FX_SCHRITT "
+             f"= {sorted(CURRENCY_OPTIONS)} / {sorted(FX_ECB)} / "
+             f"{sorted(FX_SCHRITT)}")
+    for waehrung, spec in CURRENCY_OPTIONS.items():
+        stufen = spec["tiers"]
+        if len(stufen) != len(GRADUATED_TIERS):
+            _die(f"{waehrung.upper()}: {len(stufen)} Staffelstufen, "
+                 f"die Staffel hat {len(GRADUATED_TIERS)}")
+        for i, (tier, betrag) in enumerate(zip(GRADUATED_TIERS, stufen,
+                                               strict=True)):
+            eur = int(tier.get("flat_amount") or tier.get("unit_amount") or 0)
+            _assert_ein_betrag(waehrung, f"Stufe {i + 1}", eur, betrag)
+        if set(spec["module"]) != set(FIXED_PRICES):
+            _die(f"{waehrung.upper()}: Modul-Betraege weichen ab, "
+                 f"fehlt={sorted(set(FIXED_PRICES) - set(spec['module']))}, "
+                 f"unerwartet={sorted(set(spec['module']) - set(FIXED_PRICES))}")
+        for lk, betrag in spec["module"].items():
+            eur = int(FIXED_PRICES[lk]["unit_amount"])
+            _assert_ein_betrag(waehrung, lk, eur, betrag)
+    print(f"  Fremdwaehrungsbetraege stimmen (EZB-Kurse {FX_STAND}, "
+          f"{len(CURRENCY_OPTIONS)} Waehrungen) ✓")
+
+
+def _tier_currency_option(waehrung: str) -> list[dict]:
+    """`tiers` fuer eine Waehrung, in derselben Form wie GRADUATED_TIERS.
+
+    Welche Stufe `flat_amount` und welche `unit_amount` traegt, wird AUS der
+    EUR-Staffel uebernommen — nicht erneut entschieden. Sonst koennte eine
+    Waehrung eine Pauschale dort tragen, wo EUR einen Stueckpreis hat.
+    """
+    raus = []
+    betraege = CURRENCY_OPTIONS[waehrung]["tiers"]
+    for tier, betrag in zip(GRADUATED_TIERS, betraege, strict=True):
+        eintrag: dict = {"up_to": tier["up_to"]}
+        if tier.get("flat_amount") is not None:
+            eintrag["flat_amount"] = betrag
+        else:
+            eintrag["unit_amount"] = betrag
+        raus.append(eintrag)
+    return raus
+
+
 def _find_product(mnd_key: str):  # noqa: ANN202
     res = stripe.Product.search(query=f"metadata['mnd_key']:'{mnd_key}'", limit=1)
     return res.data[0] if res.data else None
@@ -177,6 +364,94 @@ def _find_product(mnd_key: str):  # noqa: ANN202
 def _find_price(lookup_key: str):  # noqa: ANN202
     res = stripe.Price.list(lookup_keys=[lookup_key], limit=1)
     return res.data[0] if res.data else None
+
+
+def _vorhandene_waehrungen(price_id: str) -> set[str]:
+    """Welche Waehrungen der Preis SCHON traegt (ohne die Standardwaehrung).
+
+    Zwei Fallstricke, beide hier live aufgelaufen:
+    · `currency_options` kommt NICHT von allein mit — es muss expandiert werden.
+    · Ein `StripeObject` ist kein `dict`. `.keys()` darauf wirft
+      `AttributeError: keys`, weil JEDER Attributzugriff als Feldzugriff auf die
+      Nutzdaten gedeutet wird — der Name landet in `self._data` und fehlt dort.
+      Genau deshalb ist auch `to_dict_recursive` nicht erreichbar (heisst in
+      dieser SDK-Version `_to_dict_recursive`). Was oeffentlich existiert und
+      traegt, ist `to_dict()`.
+    """
+    p = stripe.Price.retrieve(price_id, expand=["currency_options"])
+    opts = p["currency_options"] if "currency_options" in _felder(p) else None
+    if opts is None:
+        return set()
+    return set(_als_dict(opts).keys()) - {CURRENCY}
+
+
+def _felder(objekt) -> set[str]:  # noqa: ANN001
+    """Welche Felder ein `StripeObject` (oder Dict) wirklich traegt."""
+    if isinstance(objekt, dict):
+        return set(objekt.keys())
+    try:
+        return set(_als_dict(objekt).keys())
+    except Exception:  # noqa: BLE001 - kein Feld lesbar => keine Felder
+        return set()
+
+
+def _als_dict(objekt) -> dict:  # noqa: ANN001
+    """`StripeObject` -> gewoehnliches Dict. Kein privater Zugriff, kein Raten."""
+    if isinstance(objekt, dict):
+        return dict(objekt)
+    umwandeln = getattr(objekt, "to_dict", None)
+    if callable(umwandeln):
+        return dict(umwandeln())
+    # Letzter Ausweg: die JSON-Darstellung, die jedes StripeObject liefert.
+    return dict(json.loads(str(objekt)))
+
+
+def ensure_currency_options(price, lookup_key: str, apply: bool) -> None:
+    """Fehlende Waehrungen an einen bestehenden Preis anfuegen. Idempotent.
+
+    Was hier NICHT passiert: eine bereits gesetzte Waehrung ueberschreiben. Sie
+    wird nur gemeldet. Weicht ihr Betrag von der Festlegung ab, ist entweder
+    die Tabelle oder Stripe falsch, und das muss ein Mensch entscheiden — still
+    ueberschreiben hiesse, den Preis eines laufenden Vorgangs zu aendern.
+
+    Der zweite Lauf schreibt nichts mehr (Wurzel 2): `_vorhandene_waehrungen`
+    liest den Ist-Stand, und nur die Differenz geht raus.
+    """
+    if price is None:
+        print(f"    + [DRY] '{lookup_key}': alle Waehrungen wuerden angefuegt "
+              "(Preis existiert noch nicht)")
+        return
+    gesetzt = _vorhandene_waehrungen(price.id)
+    fehlend = [w for w in CURRENCY_OPTIONS if w not in gesetzt]
+    if gesetzt:
+        print(f"    = '{lookup_key}': schon gesetzt "
+              f"{sorted(w.upper() for w in gesetzt)}")
+    if not fehlend:
+        return
+    ist_staffel = price.billing_scheme == "tiered"
+    optionen: dict[str, dict] = {}
+    for waehrung in fehlend:
+        if ist_staffel:
+            optionen[waehrung] = {"tiers": _tier_currency_option(waehrung)}
+        else:
+            betrag = CURRENCY_OPTIONS[waehrung]["module"].get(lookup_key)
+            if betrag is None:
+                _die(f"Kein {waehrung.upper()}-Betrag fuer '{lookup_key}' "
+                     "in CURRENCY_OPTIONS")
+            optionen[waehrung] = {"unit_amount": betrag}
+    if not apply:
+        print(f"    + [DRY] '{lookup_key}': {[w.upper() for w in fehlend]} "
+              f"wuerden angefuegt: {optionen}")
+        return
+    stripe.Price.modify(price.id, currency_options=optionen)
+    # Zuruecklesen: ein 200 ist kein Beweis, dass es ankam.
+    nachher = _vorhandene_waehrungen(price.id)
+    offen = [w for w in fehlend if w not in nachher]
+    if offen:
+        _die(f"'{lookup_key}': {[w.upper() for w in offen]} nach dem Schreiben "
+             "nicht zurueckgelesen")
+    print(f"    + '{lookup_key}': {[w.upper() for w in fehlend]} angefuegt "
+          f"(jetzt {sorted(w.upper() for w in nachher)})")
 
 
 def ensure_product(mnd_key: str, spec: dict, apply: bool):  # noqa: ANN202
@@ -235,6 +510,7 @@ def main() -> None:
 
     print("\n[0] PDF-Betragspruefung")
     _assert_pdf_math()
+    _assert_currency_math()
 
     print("\n[1] Produkte")
     prods = {k: ensure_product(k, v, apply) for k, v in PRODUCTS.items()}
@@ -242,7 +518,7 @@ def main() -> None:
     print("\n[2] Grundtarif — graduated Preis")
     gt = prods.get("grundtarif")
     ensure_price(
-        "mnd_grundtarif_month", gt.id if gt else "<dry>",
+        GRUNDTARIF_LK, gt.id if gt else "<dry>",
         {"recurring": {"interval": "month"},
          "billing_scheme": "tiered", "tiers_mode": "graduated",
          "tiers": GRADUATED_TIERS},
@@ -250,10 +526,18 @@ def main() -> None:
     )
 
     print("\n[3] Modul-Preise")
+    modulpreise = {}
     for lk, spec in FIXED_PRICES.items():
         prod = prods.get(spec["product"])
         params = {k: v for k, v in spec.items() if k != "product"}
-        ensure_price(lk, prod.id if prod else "<dry>", params, apply)
+        modulpreise[lk] = ensure_price(
+            lk, prod.id if prod else "<dry>", params, apply
+        )
+
+    print("\n[3b] Waehrungsoptionen (DKK/SEK/PLN/CZK/HUF/RON)")
+    ensure_currency_options(_find_price(GRUNDTARIF_LK), GRUNDTARIF_LK, apply)
+    for lk, preis in modulpreise.items():
+        ensure_currency_options(preis, lk, apply)
 
     print("\n[4] Hinweise")
     print("  - WhatsApp ist KEIN Zusatzmodul: der Kanal gehoert zum Grundtarif.")
@@ -266,8 +550,13 @@ def main() -> None:
     print("    (Migration 0277), je Waehrung ein eigenes Invoice-Item.")
     print("    KEIN Billing-Meter: ein Meter ist waehrungslos und wuerde EUR-")
     print("    und DKK-Buchungen zu einer sinnlosen Summe addieren (24 Laender).")
-    print("  - Nicht-EUR (DKK/SEK/PLN/CZK/HUF/RON/BGN): Adaptive Pricing im")
-    print("    Checkout (Stripe-Kurs), kein currency_options am graduated Preis.")
+    print("  - Nicht-EUR (DKK/SEK/PLN/CZK/HUF/RON): feste Betraege als")
+    print("    currency_options an jedem Preis (Tabelle oben, EZB-Kurse als")
+    print("    Pruefgrundlage). Checkout waehlt sie automatisch nach IP.")
+    print("    BGN entfaellt: Bulgarien hat den Euro am 01.01.2026 eingefuehrt.")
+    print("  - currency_options sind NICHT entfernbar. Rueckweg: neuen Preis")
+    print("    ohne sie anlegen mit transfer_lookup_key=true, alten auf")
+    print("    active=false (siehe Modul-Docstring).")
     if not apply:
         print("\n>> DRY-RUN. Mit --apply real anlegen.")
 
