@@ -125,74 +125,74 @@
       "text": "Dati fiscali e dati per l'attivazione dei pagamenti."
     },
     "branch": {
-      "title": "Verkaufst du schon auf Buchungsportalen?",
-      "text": "Booking.com, Airbnb & Co. — hast du dort schon Objekte, oder fängst du neu an?",
-      "switchTitle": "Ja, ich wechsle",
-      "switchText": "Ich habe schon Objekte auf Booking, Airbnb & Co. und möchte sie importieren.",
-      "newTitle": "Nein, ich fange neu an",
-      "newText": "Ich lege meine Objekte neu an und verbinde die Portale danach."
+      "title": "Vendi già sui portali di prenotazione?",
+      "text": "Booking.com, Airbnb e simili — hai già strutture lì o parti da zero?",
+      "switchTitle": "Sì, sto cambiando",
+      "switchText": "Ho già strutture su Booking, Airbnb e simili e voglio importarle.",
+      "newTitle": "No, parto da zero",
+      "newText": "Creo le mie strutture da zero e collego i portali in un secondo momento."
     },
     "switch": {
-      "title": "Bestehende Objekte importieren",
-      "intro": "So holst du deine bestehenden Booking-/Airbnb-Objekte zu myNextDays — ohne Doppelbuchungen.",
+      "title": "Importare le strutture esistenti",
+      "intro": "Ecco come portare su myNextDays le tue strutture già presenti su Booking/Airbnb — senza doppie prenotazioni.",
       "cutover": {
-        "title": "Wichtig vor dem Verbinden",
-        "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
-        "b": "Vergangene Buchungen und manuelle Sperren kommen NICHT automatisch mit. Trage sie nach dem Import selbst nach.",
-        "c": "Lass dein altes System als Backup laufen und beobachte die ersten Tage genau.",
-        "ack": "Ich habe das verstanden.",
-        "doneTitle": "Hinweise von vor dem Verbinden (erledigt)"
+        "title": "Importante prima del collegamento",
+        "a": "Scollega ogni portale dal tuo sistema precedente prima di collegarlo qui — per ogni canale può inviare dati un SOLO sistema.",
+        "b": "Le prenotazioni passate e i blocchi manuali NON vengono importati automaticamente. Inseriscili tu dopo l'importazione.",
+        "c": "Lascia attivo il tuo vecchio sistema come backup e controlla con attenzione i primi giorni.",
+        "ack": "Ho capito.",
+        "doneTitle": "Indicazioni prima del collegamento (completate)"
       },
       "step1": {
-        "title": "Objekt anlegen",
-        "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
-        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}",
+        "title": "Crea la struttura",
+        "text": "Crea una struttura per ogni annuncio esistente — nome, tipo e prezzo base bastano per l'assegnazione.",
+        "count": "{count, plural, =0 {Nessuna struttura ancora} one {# struttura} many {# strutture} other {# strutture}}",
         "airbnbHint": "Arrivi da Airbnb? Salta questo passaggio: i tuoi alloggi vengono importati automaticamente quando colleghi Airbnb."
       },
       "step2": {
-        "title": "Portal verbinden & zuordnen",
-        "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
-        "connect": "Portal verbinden",
-        "connectMore": "Weiteres Portal verbinden",
-        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“."
+        "title": "Collegare e assegnare il portale",
+        "text": "Collega Booking, Airbnb e simili e assegna 1:1 le camere dei portali alle tue strutture. Prenotazioni e disponibilità arrivano poi automaticamente.",
+        "connect": "Collega il portale",
+        "connectMore": "Collega un altro portale",
+        "alreadyConnected": "Un portale è già collegato e le tue strutture sono state trasmesse — qui non devi collegare nulla di nuovo. Usa „Collega un altro portale“ solo per un ULTERIORE portale (ad es. Booking)."
       },
       "pull": {
-        "button": "Objekte aus Portal holen",
-        "result": "{count, plural, =0 {Keine neuen Objekte gefunden} one {# Objekt übernommen} other {# Objekte übernommen}}"
+        "button": "Recupera le strutture dal portale",
+        "result": "{count, plural, =0 {Nessuna nuova struttura trovata} one {# struttura importata} many {# strutture importate} other {# strutture importate}}"
       },
-      "finishCta": "Import abschließen",
-      "finishHint": "Bitte bestätige zuerst den Hinweis oben und lege mindestens ein Objekt an.",
+      "finishCta": "Completa l'importazione",
+      "finishHint": "Conferma prima l'avviso qui sopra e crea almeno una struttura.",
       "bookings": {
-        "title": "Bestehende Buchungen einlesen",
-        "text": "Hol dir die Reservierungen deiner verbundenen Portale in deinen Kalender.",
-        "includePast": "Auch vergangene Buchungen einlesen",
-        "pastHint": "Hinweis: Portale liefern in der Regel nur Buchungen ab dem Zeitpunkt der Verbindung. Bereits abgereiste Gäste von davor sind oft nicht mehr abrufbar.",
-        "button": "Buchungen einlesen",
-        "result": "{count, plural, =0 {Keine Buchungen gefunden} one {# Buchung eingelesen} other {# Buchungen eingelesen}}"
+        "title": "Importare le prenotazioni esistenti",
+        "text": "Porta le prenotazioni dei portali collegati nel tuo calendario.",
+        "includePast": "Importa anche le prenotazioni passate",
+        "pastHint": "Nota: di norma i portali forniscono solo le prenotazioni a partire dal momento del collegamento. Gli ospiti già partiti prima di quella data spesso non sono più recuperabili.",
+        "button": "Importa le prenotazioni",
+        "result": "{count, plural, =0 {Nessuna prenotazione trovata} one {# prenotazione importata} many {# prenotazioni importate} other {# prenotazioni importate}}"
       },
       "csv": {
-        "title": "Alte & direkte Buchungen per Datei importieren",
-        "text": "Für Buchungen, die nicht über die Portale kommen (Direktbuchungen, vergangene Reservierungen aus deinem alten System).",
-        "downloadTemplate": "Vorlage herunterladen",
-        "upload": "CSV hochladen",
-        "hint": "Lade die Vorlage, fülle sie aus (Datum als JJJJ-MM-TT) und lade sie wieder hoch. Pflicht: Objekt, Gastname, Anreise, Abreise. Doppelte Zeilen werden übersprungen.",
-        "result": "{imported} von {total} Buchungen importiert.",
-        "skipped": "{count, plural, one {# Zeile übersprungen (Duplikat/Objekt fehlt)} other {# Zeilen übersprungen (Duplikat/Objekt fehlt)}}",
-        "failed": "{count, plural, one {# Zeile mit Fehler} other {# Zeilen mit Fehlern}}:"
+        "title": "Importare prenotazioni vecchie e dirette da file",
+        "text": "Per le prenotazioni che non arrivano dai portali (prenotazioni dirette, prenotazioni passate del tuo vecchio sistema).",
+        "downloadTemplate": "Scarica il modello",
+        "upload": "Carica il CSV",
+        "hint": "Scarica il modello, compilalo (date nel formato AAAA-MM-GG) e caricalo di nuovo. Obbligatori: struttura, nome dell'ospite, arrivo, partenza. Le righe duplicate vengono saltate.",
+        "result": "Importate {imported} di {total} prenotazioni.",
+        "skipped": "{count, plural, one {# riga saltata (duplicato/struttura mancante)} many {# righe saltate (duplicato/struttura mancante)} other {# righe saltate (duplicato/struttura mancante)}}",
+        "failed": "{count, plural, one {# riga con errore} many {# righe con errori} other {# righe con errori}}:"
       },
       "lodgify": {
-        "title": "Buchungen aus Lodgify holen",
-        "text": "Wenn du von Lodgify wechselst: importiere deine Buchungen direkt per API-Schlüssel (nur lesend, es wird nichts in Lodgify geändert).",
-        "keyLabel": "Lodgify-API-Schlüssel",
-        "keyPlaceholder": "Aus Lodgify: Einstellungen → Public API",
-        "keyHint": "Der Schlüssel wird nur für diesen Import genutzt und nicht gespeichert. Wir lesen ausschließlich – wir ändern nichts in Lodgify.",
-        "preview": "Vorschau laden",
-        "import": "{count, plural, one {# Buchung importieren} other {# Buchungen importieren}}",
-        "previewResult": "{importable} von {total} Buchungen können importiert werden.",
-        "result": "{imported} von {total} Buchungen importiert."
+        "title": "Recuperare le prenotazioni da Lodgify",
+        "text": "Se passi da Lodgify: importa le tue prenotazioni direttamente con la chiave API (solo lettura, nulla viene modificato in Lodgify).",
+        "keyLabel": "Chiave API Lodgify",
+        "keyPlaceholder": "Da Lodgify: Impostazioni → Public API",
+        "keyHint": "La chiave viene usata solo per questa importazione e non viene salvata. Leggiamo soltanto — non modifichiamo nulla in Lodgify.",
+        "preview": "Carica l'anteprima",
+        "import": "{count, plural, one {Importa # prenotazione} many {Importa # prenotazioni} other {Importa # prenotazioni}}",
+        "previewResult": "{importable} di {total} prenotazioni possono essere importate.",
+        "result": "Importate {imported} di {total} prenotazioni."
       },
       "finish": {
-        "notRegistered": "Mindestens ein Objekt muss an die Buchungsportale übermittelt sein, bevor du das Onboarding abschließt. Verbinde in Schritt 2 ein Portal — dabei wird das Objekt automatisch übertragen."
+        "notRegistered": "Almeno una struttura deve essere stata trasmessa ai portali di prenotazione prima di concludere l'onboarding. Collega un portale nel passaggio 2 — la struttura viene trasmessa automaticamente."
       }
     }
   },
@@ -208,7 +208,7 @@
     "websiteDesign": "Design",
     "websitePages": "Pagine",
     "websiteDomain": "Indirizzo",
-    "channelManager": "Channel Manager",
+    "channelManager": "Channel manager",
     "guests": "Ospiti",
     "tasks": "Attività",
     "invoices": "Fatture",
@@ -364,7 +364,7 @@
     "sourceManual": "Manual",
     "sourceChannex": "Dal tour operator",
     "clear": "Clear",
-    "readonly": "Portal",
+    "readonly": "Portale",
     "toIncl": "Fino al",
     "calendarHint": "Trascina sui giorni di un alloggio per selezionare un periodo.",
     "legendOpen": "Libero",
@@ -399,11 +399,11 @@
     "resetConfirm": "Sì, rimuovi tutti",
     "resetting": "Resetting …",
     "cancel": "Cancel",
-    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
-    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
-    "reasonRequired": "Bitte einen Grund wählen.",
-    "skippedBooked": "{count} gebuchte Tage wurden übersprungen — verkaufte Tage lassen sich nicht stoppen.",
-    "skippedBookedAll": "Kein Tag gestoppt: alle {count} Tage im Zeitraum sind gebucht."
+    "noteRequired": "Con „Altro“ è necessaria una nota.",
+    "noteRequiredLabel": "Nota (obbligatoria con „Altro“)",
+    "reasonRequired": "Scegli un motivo.",
+    "skippedBooked": "{count} giorni prenotati sono stati saltati — i giorni venduti non possono essere bloccati.",
+    "skippedBookedAll": "Nessun giorno bloccato: tutti i {count} giorni del periodo sono prenotati."
   },
   "inbox": {
     "title": "Inbox",
@@ -3899,7 +3899,7 @@
       "streetPlaceholder": "Via Esempio 123",
       "bankPlaceholder": "Deutsche Bank",
       "holderPlaceholder": "Mario Rossi",
-      "ibanPlaceholder": "DE89 3704 0044 0532 0130 00"
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00"
     },
     "pdf": {
       "qrCode": "Codice QR",
@@ -4201,7 +4201,7 @@
       },
       "emptyState": "Nessuna prenotazione trovata.",
       "loading": "Caricamento…",
-      "ownerStay": "Eigennutzung",
+      "ownerStay": "Soggiorno del proprietario",
       "limit": "Limite ({count})",
       "limitAll": "Tutti",
       "columnsMenu": "Colonne",
@@ -4619,8 +4619,8 @@
       "openGuestCard": "Apri scheda ospite",
       "photos": "Foto",
       "noPhotosFound": "Per questa prenotazione non è stata trovata alcuna foto.",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Soggiorno del proprietario",
+      "ownerStayHint": "Nessun ricavo — né fattura né commissione, non compare nel rendiconto del proprietario.",
       "viaChannel": "tramite {channel}",
       "receivedOn": "arrivata da noi il {date}",
       "bookedOn": "prenotata il {date}"
@@ -4976,7 +4976,7 @@
   },
   "objects": {
     "channelChips": {
-      "website": "Website",
+      "website": "Sito web",
       "platform": "Platform",
       "portals": "Portals",
       "state": {
@@ -4993,7 +4993,7 @@
       "publishAll": "Pubblica ovunque",
       "publishedAll": "Struttura pubblicata su tutti i canali.",
       "draftHint": "Questa struttura è una bozza e non viene venduta su nessun canale. Impostala su «Attiva» per pubblicarla.",
-      "groupWebsite": "Website",
+      "groupWebsite": "Sito web",
       "groupPlatform": "Marketplace",
       "groupPortals": "Portali",
       "connectPortal": "Collega un portale",
@@ -5045,7 +5045,7 @@
       "sortAz": "A–Z",
       "sortZa": "Z–A",
       "menuOpen": "Azioni",
-      "menuEdit": "Bearbeiten",
+      "menuEdit": "Modifica",
       "menuDelete": "Delete",
       "deleteConfirm": "Eliminare davvero l’alloggio «{title}»?",
       "deleteOk": "Alloggio eliminato.",
@@ -5344,16 +5344,16 @@
       "removeAmenityAriaLabel": "Rimuovi {amenity}",
       "amenitiesSearchPlaceholder": "Cerca dotazioni …",
       "noSearchResults": "Nessun risultato.",
-      "zimmerErneutLaden": "Erneut versuchen",
-      "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerFertig": "Fertig",
+      "zimmerErneutLaden": "Riprova",
+      "zimmerLaedt": "Caricamento delle stanze …",
+      "zimmerFertig": "Fatto",
       "zimmerBettenHinweis": "Importato da Airbnb e mantenuto in myNextDays e myBestDays — i portali di prenotazione non accettano la disposizione dei letti.",
-      "masseinheitLabel": "Maßeinheit",
+      "masseinheitLabel": "Unità di misura",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
       "sizeSqftPrefix": "{size} ft² · ",
-      "gaesteWeniger": "Ein Gast weniger",
-      "gaesteMehr": "Ein Gast mehr",
+      "gaesteWeniger": "Un ospite in meno",
+      "gaesteMehr": "Un ospite in più",
       "zimmerSuffixPrivat": "privato",
       "zimmerSuffixGemeinschaftlich": "condiviso",
       "zimmerErhoehen": "Aggiungi {room}",
@@ -5983,20 +5983,20 @@
         "schliessen": "Chiudi"
       },
       "airbnbPull": {
-        "button": "Bei Airbnb abrufen",
-        "hint": "Ordnet dieses Objekt bei Airbnb zu und holt den Preis von dort.",
-        "priceTaken": "Preis von Airbnb übernommen: {price} · Mindestaufenthalt {nights} Nächte",
-        "noPrice": "Airbnb hat keinen Preis übergeben. Die Zuordnung steht.",
-        "currency": "Währung: {currency}",
-        "timezone": "Zeitzone: {timezone}",
-        "alsoTaken": "Ebenfalls übernommen: {fields}",
+        "button": "Recupera da Airbnb",
+        "hint": "Assegna questa struttura su Airbnb e ne recupera il prezzo.",
+        "priceTaken": "Prezzo ripreso da Airbnb: {price} · soggiorno minimo {nights} notti",
+        "noPrice": "Airbnb non ha trasmesso alcun prezzo. L'assegnazione è attiva.",
+        "currency": "Valuta: {currency}",
+        "timezone": "Fuso orario: {timezone}",
+        "alsoTaken": "Ripresi anche: {fields}",
         "field": {
-          "check_in_from": "Check-in-Zeit",
-          "check_out_until": "Check-out-Zeit",
-          "pets_allowed": "Haustiere erlaubt",
-          "pets_max": "Anzahl Haustiere",
-          "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte",
+          "check_in_from": "Orario di check-in",
+          "check_out_until": "Orario di check-out",
+          "pets_allowed": "Animali ammessi",
+          "pets_max": "Numero di animali",
+          "smoking_allowed": "Fumo",
+          "max_nights": "Notti massime",
           "address": "Indirizzo",
           "postal_code": "CAP",
           "city": "Città",
@@ -6170,14 +6170,14 @@
         "booked": "Prenotato",
         "blocked": "Bloccato",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "blockedAndStopSell": "Bloccato + stop-sell",
         "contractEnd": "Contratto rescisso"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "tutti i canali",
       "nightsCount": "{count, plural, one {# notte} other {# notti}}",
       "daysCount": "{count, plural, one {# giorno} other {# giorni}}",
-      "ownerStay": "Eigentümer-Aufenthalt"
+      "ownerStay": "Soggiorno del proprietario"
     },
     "calendarViews": {
       "viewLabel": "Vista",
@@ -6197,10 +6197,10 @@
       "blocking": "Blocco…",
       "createBlockedPeriod": "Crea periodo bloccato",
       "priceMinStayBlock": "Prezzo / Soggiorno minimo / Blocco …",
-      "ownerStay": "Eigennutzung eintragen",
-      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
-      "setStopSell": "Stop-Sell setzen",
-      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
+      "ownerStay": "Registra soggiorno del proprietario",
+      "createBlockedPeriodHint": "Disponibilità 0 — il giorno è chiuso su tutti i canali",
+      "setStopSell": "Imposta stop-sell",
+      "setStopSellHint": "Il giorno resta libero ma non viene venduto — con motivo"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Numero di ospiti impostato per questa struttura",
@@ -6430,11 +6430,11 @@
       "occupancy": "Occupazione",
       "propertyNights": "{booked}/{total} notti-struttura",
       "revenue": "Fatturato",
-      "stopSellClear": "Stop-Sell aufheben",
-      "stopSellClearing": "Hebe auf…",
-      "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
-      "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "stopSellClear": "Rimuovi stop-sell",
+      "stopSellClearing": "Rimozione…",
+      "stopSellClearNothing": "Qui non c'era nessuno stop-sell da rimuovere.",
+      "stopSellEditReason": "Modifica motivo",
+      "stopSellPortalLocked": "Impostato dal portale — rimovibile solo lì.",
       "legend": "Legenda",
       "contractEndLocked": "Questo blocco deriva dalla fine del contratto. Si può modificare solo tramite la data di fine nella scheda della struttura."
     },
@@ -6453,29 +6453,29 @@
       "feesHint": "Pulizia ecc.",
       "personsValue": "{count} pers.",
       "guestsLabel": "Ospiti",
-      "stayKind": "Art des Aufenthalts",
-      "stayKindGuest": "Gastbuchung",
-      "stayKindOwner": "Eigennutzung",
-      "ownerLabel": "Eigentümer",
-      "ownerContact": "Kontaktdaten des Eigentümers",
-      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "stayKind": "Tipo di soggiorno",
+      "stayKindGuest": "Prenotazione di un ospite",
+      "stayKindOwner": "Soggiorno del proprietario",
+      "ownerLabel": "Proprietario",
+      "ownerContact": "Dati di contatto del proprietario",
+      "ownerStayHint": "Il soggiorno proprietario occupa il calendario come una prenotazione, ma non genera ricavi: nessun prezzo, nessuna fattura, nessuna commissione e nulla nel rendiconto del proprietario.",
       "steps": {
-        "details": "Details",
-        "prices": "Preise & Extras",
-        "policy": "Richtlinien"
+        "details": "Dettagli",
+        "prices": "Prezzi ed extra",
+        "policy": "Condizioni"
       },
       "headings": {
-        "details": "Reservierungsdetails",
-        "prices": "Preise & Extras festlegen",
-        "policy": "Richtlinien festlegen"
+        "details": "Dettagli della prenotazione",
+        "prices": "Definisci prezzi ed extra",
+        "policy": "Definisci le condizioni"
       },
-      "ownerSection": "Eigentümer",
-      "ownerLoading": "Eigentümer wird ermittelt…",
-      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
-      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
-      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
-      "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "ownerSection": "Proprietario",
+      "ownerLoading": "Ricerca del proprietario…",
+      "ownerLoadFailed": "Impossibile caricare il proprietario.",
+      "ownerMissing": "Per questa struttura non è registrato alcun proprietario.",
+      "ownerMissingHint": "Un soggiorno proprietario richiede un proprietario registrato. Creane uno in Proprietari e assegnagli questa struttura.",
+      "ownerMissingLink": "Vai ai proprietari",
+      "ownerFromRecord": "Ripresi dall'anagrafica del proprietario. I dati di contatto si modificano in Proprietari.",
       "stayNameLabel": "Chi soggiorna",
       "stayNamePlaceholder": "Nome della persona",
       "stayNameHint": "Lascia vuoto per il proprietario. Altrimenti il nome di chi usa il periodo — famiglia, amici, artigiani.",
@@ -6492,8 +6492,8 @@
       "otaPayout": "Pagamento dal portale",
       "stillOpen": "Ancora aperti",
       "cancelReasonPlaceholder": "Motivo dell'annullamento (verrà documentato) …",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Soggiorno del proprietario",
+      "ownerStayHint": "Nessun ricavo — né fattura né commissione, non compare nel rendiconto del proprietario.",
       "openBooking": "Alla prenotazione completa",
       "messageGuest": "Scrivi all'ospite"
     },
@@ -6702,7 +6702,7 @@
     "seasonApplyNoSpans": "Questa stagione non ha periodi dipinti. Dipingila prima oppure trasferisci solo la definizione senza periodi."
   },
   "channels": {
-    "title": "Channel Manager",
+    "title": "Channel manager",
     "subtitle": "Collega i tuoi portali di prenotazione e distribuisci automaticamente disponibilità e prezzi su tutti i canali.",
     "categoryOta": "Portali di prenotazione",
     "categoryMarketplace": "Marketplace proprio",
@@ -6784,7 +6784,7 @@
       "sendUserTaxes": "Invia le mie imposte",
       "blockedNote": "Finché è disattivato, non vengono inviate imposte proprie a questo canale."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "linkedPending": "{count, plural, =0 {Account collegato · assegnazione da completare} one {Account collegato · # struttura ancora da assegnare} many {Account collegato · # strutture ancora da assegnare} other {Account collegato · # strutture ancora da assegnare}}",
     "activateChannel": "Attiva canale",
     "activateDone": "{portal} è ora attivo.",
     "activateFailed": "Non è stato possibile attivare il canale.",
@@ -6940,7 +6940,7 @@
     "clientSecret": "Client secret",
     "copy": "Copia",
     "copied": "Copiato.",
-    "done": "Fertig",
+    "done": "Fatto",
     "colName": "Nome",
     "colEnv": "Ambiente",
     "colScopes": "Autorizzazioni",
@@ -7008,7 +7008,7 @@
       "nurMitEntsprechung": "solo caratteristiche con corrispondenza nel portale",
       "nichtDeckungsgleich": "le categorie non coincidono del tutto",
       "ohneBeleg": "non confermato — stiamo verificando",
-      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
+      "ohneZimmerZuordnung": "senza assegnazione alla singola camera"
     },
     "status": {
       "voll": "transferred",
@@ -7048,7 +7048,7 @@
       "kaution": "Cauzione",
       "lizenznummer": "Numero di licenza/registrazione",
       "mietvertrag": "Contratto di locazione",
-      "zimmerAusstattung": "Ausstattung der Zimmer"
+      "zimmerAusstattung": "Dotazioni delle stanze"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -7086,7 +7086,7 @@
       "create": "Crea condizione",
       "update": "Aggiorna condizione",
       "empty": "Ancora nessuna condizione. Crea la tua prima condizione di prenotazione — piano di pagamento, cancellazione e cauzione.",
-      "colName": "Name",
+      "colName": "Nome",
       "colPaymentPlan": "Piano di pagamento",
       "colCancellation": "Cancellazione",
       "colDeposit": "Cauzione",
@@ -7141,7 +7141,7 @@
       "amount": "Importo",
       "depositStep3": "3. Tempi di preautorizzazione",
       "preauthFromHint": "Da quando viene preautorizzata la carta dell'ospite.",
-      "days": "Tage",
+      "days": "Giorni",
       "preauthUntilHint": "Fino a quando è possibile una preautorizzazione — dopo questa data le preautorizzazioni aperte vengono liberate.",
       "releaseDays": "Liberare X giorni dopo la partenza",
       "preauthWarnStrong": "Le preautorizzazioni spesso possono essere garantite solo per circa 7 giorni.",
@@ -7440,7 +7440,7 @@
       "search": "Ricerca",
       "searchHinweis": "Barra di ricerca con date e numero di ospiti.",
       "propertiesGrid": "Strutture",
-      "propertiesGridHinweis": "Tutte le strutture in griglia, con prezzi reali.",
+      "propertiesGridHinweis": "Gli alloggi in una griglia, con i prezzi reali se attivati.",
       "featuredProperties": "Strutture in evidenza",
       "featuredPropertiesHinweis": "Solo le strutture che sceglie Lei.",
       "reviews": "Recensioni",
@@ -7487,7 +7487,7 @@
       "mindestGaeste": "Da quanti ospiti",
       "anzahl": "Numero",
       "objekte": "Strutture",
-      "kategorienZeigen": "Mostra le singole valutazioni",
+      "kategorienZeigen": "Mostra le valutazioni per categoria",
       "email": "E-mail",
       "telefon": "Telefono",
       "adresse": "Indirizzo",
@@ -7632,7 +7632,7 @@
       },
       "typBeschreibung": {
         "suche": "Destinazione, periodo e ospiti — porta all'elenco degli alloggi del tuo sito.",
-        "buchen": "Periodo e ospiti — porta direttamente nel tuo flusso di prenotazione."
+        "buchen": "Periodo e ospiti — porta all’elenco degli alloggi del tuo sito, senza campo destinazione."
       },
       "sprache": "Lingua",
       "spracheHinweis": "La lingua in cui il campo compare sull'altro sito.",
@@ -7868,7 +7868,7 @@
       "hrbPlaceholder": "HRB 12345",
       "courtPlaceholder": "es. Berlino (Charlottenburg)",
       "employeesPlaceholder": "es. 7",
-      "ibanPlaceholder": "DE00 0000 0000 0000 0000 00",
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00",
       "preferredLanguage": "Lingua preferita",
       "chooseLanguage": "Scegli lingua",
       "descriptionPlaceholder": "Breve descrizione della tua azienda…"

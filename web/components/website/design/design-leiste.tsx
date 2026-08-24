@@ -161,7 +161,7 @@ export function DesignLeiste({
             onChange={(v) => setze({ logo_name_font: v })}
           />
           <Feld
-            label={`${t("design.namensGroesse")} · ${stand.logo_name_size ?? 18} pt`}
+            label={`${t("design.namensGroesse")} · ${stand.logo_name_size ?? 18} px`}
           >
             <input
               type="range"

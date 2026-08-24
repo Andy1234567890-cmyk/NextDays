@@ -125,74 +125,74 @@
       "text": "Davčni podatki in podatki za aktivacijo plačil."
     },
     "branch": {
-      "title": "Verkaufst du schon auf Buchungsportalen?",
-      "text": "Booking.com, Airbnb & Co. — hast du dort schon Objekte, oder fängst du neu an?",
-      "switchTitle": "Ja, ich wechsle",
-      "switchText": "Ich habe schon Objekte auf Booking, Airbnb & Co. und möchte sie importieren.",
-      "newTitle": "Nein, ich fange neu an",
-      "newText": "Ich lege meine Objekte neu an und verbinde die Portale danach."
+      "title": "Ali že prodajate prek rezervacijskih portalov?",
+      "text": "Booking.com, Airbnb in drugi — imate tam že objekte ali začenjate na novo?",
+      "switchTitle": "Da, prehajam",
+      "switchText": "Objekte imam že na Bookingu, Airbnbju in drugih in jih želim uvoziti.",
+      "newTitle": "Ne, začenjam na novo",
+      "newText": "Svoje objekte ustvarim na novo, portale pa povežem pozneje."
     },
     "switch": {
-      "title": "Bestehende Objekte importieren",
-      "intro": "So holst du deine bestehenden Booking-/Airbnb-Objekte zu myNextDays — ohne Doppelbuchungen.",
+      "title": "Uvoz obstoječih objektov",
+      "intro": "Tako svoje obstoječe objekte z Bookinga/Airbnbja prenesete v myNextDays — brez dvojnih rezervacij.",
       "cutover": {
-        "title": "Wichtig vor dem Verbinden",
-        "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
-        "b": "Vergangene Buchungen und manuelle Sperren kommen NICHT automatisch mit. Trage sie nach dem Import selbst nach.",
-        "c": "Lass dein altes System als Backup laufen und beobachte die ersten Tage genau.",
-        "ack": "Ich habe das verstanden.",
-        "doneTitle": "Hinweise von vor dem Verbinden (erledigt)"
+        "title": "Pomembno pred povezovanjem",
+        "a": "Vsak portal odklopite od svojega prejšnjega sistema, preden ga povežete tukaj — na en kanal sme pošiljati podatke vedno le EN sistem.",
+        "b": "Pretekle rezervacije in ročne zapore se NE prenesejo samodejno. Po uvozu jih vnesite sami.",
+        "c": "Stari sistem naj teče kot varnostna kopija in prve dni natančno spremljajte.",
+        "ack": "To sem razumel.",
+        "doneTitle": "Napotki pred povezavo (opravljeno)"
       },
       "step1": {
-        "title": "Objekt anlegen",
-        "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
-        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}",
+        "title": "Ustvari objekt",
+        "text": "Za vsako obstoječo objavo ustvarite objekt — za dodelitev zadostujejo ime, vrsta in osnovna cena.",
+        "count": "{count, plural, =0 {Še brez objektov} one {# objekt} two {# objekta} few {# objekti} other {# objektov}}",
         "airbnbHint": "Prihajate z Airbnbja? Ta korak preskočite — vaše nastanitve se prenesejo samodejno, ko povežete Airbnb."
       },
       "step2": {
-        "title": "Portal verbinden & zuordnen",
-        "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
-        "connect": "Portal verbinden",
-        "connectMore": "Weiteres Portal verbinden",
-        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“."
+        "title": "Povezava in dodelitev portala",
+        "text": "Povežite Booking, Airbnb in druge ter portalne sobe 1:1 dodelite svojim objektom. Rezervacije in razpoložljivost nato prihajajo samodejno.",
+        "connect": "Poveži portal",
+        "connectMore": "Poveži še en portal",
+        "alreadyConnected": "En portal je že povezan in vaši objekti so posredovani — tukaj ni treba ničesar znova povezovati. Možnost „Poveži dodatni portal“ uporabite le za DODATNI portal (npr. Booking)."
       },
       "pull": {
-        "button": "Objekte aus Portal holen",
-        "result": "{count, plural, =0 {Keine neuen Objekte gefunden} one {# Objekt übernommen} other {# Objekte übernommen}}"
+        "button": "Pridobi objekte s portala",
+        "result": "{count, plural, =0 {Novih objektov ni bilo najdenih} one {Prevzet # objekt} two {Prevzeta # objekta} few {Prevzeti # objekti} other {Prevzetih # objektov}}"
       },
-      "finishCta": "Import abschließen",
-      "finishHint": "Bitte bestätige zuerst den Hinweis oben und lege mindestens ein Objekt an.",
+      "finishCta": "Zaključi uvoz",
+      "finishHint": "Najprej potrdite napotek zgoraj in ustvarite vsaj en objekt.",
       "bookings": {
-        "title": "Bestehende Buchungen einlesen",
-        "text": "Hol dir die Reservierungen deiner verbundenen Portale in deinen Kalender.",
-        "includePast": "Auch vergangene Buchungen einlesen",
-        "pastHint": "Hinweis: Portale liefern in der Regel nur Buchungen ab dem Zeitpunkt der Verbindung. Bereits abgereiste Gäste von davor sind oft nicht mehr abrufbar.",
-        "button": "Buchungen einlesen",
-        "result": "{count, plural, =0 {Keine Buchungen gefunden} one {# Buchung eingelesen} other {# Buchungen eingelesen}}"
+        "title": "Uvoz obstoječih rezervacij",
+        "text": "Prenesite rezervacije svojih povezanih portalov v svoj koledar.",
+        "includePast": "Uvozi tudi pretekle rezervacije",
+        "pastHint": "Opomba: portali običajno posredujejo le rezervacije od trenutka povezave naprej. Gostje, ki so odpotovali pred tem, pogosto niso več na voljo.",
+        "button": "Uvozi rezervacije",
+        "result": "{count, plural, =0 {Nobena rezervacija ni bila najdena} one {Uvožena # rezervacija} two {Uvoženi # rezervaciji} few {Uvožene # rezervacije} other {Uvoženih # rezervacij}}"
       },
       "csv": {
-        "title": "Alte & direkte Buchungen per Datei importieren",
-        "text": "Für Buchungen, die nicht über die Portale kommen (Direktbuchungen, vergangene Reservierungen aus deinem alten System).",
-        "downloadTemplate": "Vorlage herunterladen",
-        "upload": "CSV hochladen",
-        "hint": "Lade die Vorlage, fülle sie aus (Datum als JJJJ-MM-TT) und lade sie wieder hoch. Pflicht: Objekt, Gastname, Anreise, Abreise. Doppelte Zeilen werden übersprungen.",
-        "result": "{imported} von {total} Buchungen importiert.",
-        "skipped": "{count, plural, one {# Zeile übersprungen (Duplikat/Objekt fehlt)} other {# Zeilen übersprungen (Duplikat/Objekt fehlt)}}",
-        "failed": "{count, plural, one {# Zeile mit Fehler} other {# Zeilen mit Fehlern}}:"
+        "title": "Uvoz starih in neposrednih rezervacij iz datoteke",
+        "text": "Za rezervacije, ki ne pridejo prek portalov (neposredne rezervacije, pretekle rezervacije iz vašega starega sistema).",
+        "downloadTemplate": "Prenesi predlogo",
+        "upload": "Naloži CSV",
+        "hint": "Prenesite predlogo, jo izpolnite (datum kot LLLL-MM-DD) in jo znova naložite. Obvezno: objekt, ime gosta, prihod, odhod. Podvojene vrstice se preskočijo.",
+        "result": "Uvoženih {imported} od {total} rezervacij.",
+        "skipped": "{count, plural, one {# vrstica preskočena (dvojnik/manjka objekt)} two {# vrstici preskočeni (dvojnik/manjka objekt)} few {# vrstice preskočene (dvojnik/manjka objekt)} other {# vrstic preskočenih (dvojnik/manjka objekt)}}",
+        "failed": "{count, plural, one {# vrstica z napako} two {# vrstici z napakami} few {# vrstice z napakami} other {# vrstic z napakami}}:"
       },
       "lodgify": {
-        "title": "Buchungen aus Lodgify holen",
-        "text": "Wenn du von Lodgify wechselst: importiere deine Buchungen direkt per API-Schlüssel (nur lesend, es wird nichts in Lodgify geändert).",
-        "keyLabel": "Lodgify-API-Schlüssel",
-        "keyPlaceholder": "Aus Lodgify: Einstellungen → Public API",
-        "keyHint": "Der Schlüssel wird nur für diesen Import genutzt und nicht gespeichert. Wir lesen ausschließlich – wir ändern nichts in Lodgify.",
-        "preview": "Vorschau laden",
-        "import": "{count, plural, one {# Buchung importieren} other {# Buchungen importieren}}",
-        "previewResult": "{importable} von {total} Buchungen können importiert werden.",
-        "result": "{imported} von {total} Buchungen importiert."
+        "title": "Prenos rezervacij iz Lodgifyja",
+        "text": "Če prehajate z Lodgifyja: rezervacije uvozite neposredno s ključem API (samo branje, v Lodgifyju se nič ne spremeni).",
+        "keyLabel": "Ključ API Lodgify",
+        "keyPlaceholder": "Iz Lodgifyja: Nastavitve → Public API",
+        "keyHint": "Ključ se uporabi samo za ta uvoz in se ne shrani. Samo beremo — v Lodgifyju ničesar ne spremenimo.",
+        "preview": "Naloži predogled",
+        "import": "{count, plural, one {Uvozi # rezervacijo} two {Uvozi # rezervaciji} few {Uvozi # rezervacije} other {Uvozi # rezervacij}}",
+        "previewResult": "{importable} od {total} rezervacij je mogoče uvoziti.",
+        "result": "Uvoženih {imported} od {total} rezervacij."
       },
       "finish": {
-        "notRegistered": "Mindestens ein Objekt muss an die Buchungsportale übermittelt sein, bevor du das Onboarding abschließt. Verbinde in Schritt 2 ein Portal — dabei wird das Objekt automatisch übertragen."
+        "notRegistered": "Preden zaključite uvajanje, mora biti na rezervacijske portale posredovan vsaj en objekt. V 2. koraku povežite portal — objekt se posreduje samodejno."
       }
     }
   },
@@ -208,7 +208,7 @@
     "websiteDesign": "Videz",
     "websitePages": "Strani",
     "websiteDomain": "Naslov",
-    "channelManager": "Channel Manager",
+    "channelManager": "Channel manager",
     "guests": "Gostje",
     "tasks": "Naloge",
     "invoices": "Računi",
@@ -399,11 +399,11 @@
     "resetConfirm": "Da, odstrani vse",
     "resetting": "Resetting …",
     "cancel": "Cancel",
-    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
-    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
-    "reasonRequired": "Bitte einen Grund wählen.",
-    "skippedBooked": "{count} gebuchte Tage wurden übersprungen — verkaufte Tage lassen sich nicht stoppen.",
-    "skippedBookedAll": "Kein Tag gestoppt: alle {count} Tage im Zeitraum sind gebucht."
+    "noteRequired": "Pri „Drugo“ je opomba obvezna.",
+    "noteRequiredLabel": "Opomba (obvezna pri „Drugo“)",
+    "reasonRequired": "Izberite razlog.",
+    "skippedBooked": "{count} rezerviranih dni je bilo preskočenih — prodanih dni ni mogoče ustaviti.",
+    "skippedBookedAll": "Noben dan ni ustavljen: vsi dnevi v obdobju ({count}) so rezervirani."
   },
   "inbox": {
     "title": "Inbox",
@@ -3899,7 +3899,7 @@
       "streetPlaceholder": "Vzorčna ulica 123",
       "bankPlaceholder": "Deutsche Bank",
       "holderPlaceholder": "Janez Novak",
-      "ibanPlaceholder": "DE89 3704 0044 0532 0130 00"
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00"
     },
     "pdf": {
       "qrCode": "QR koda",
@@ -4201,7 +4201,7 @@
       },
       "emptyState": "Ni najdenih rezervacij.",
       "loading": "Nalaganje …",
-      "ownerStay": "Eigennutzung",
+      "ownerStay": "Bivanje lastnika",
       "limit": "Omejitev ({count})",
       "limitAll": "Vse",
       "columnsMenu": "Stolpci",
@@ -4619,8 +4619,8 @@
       "openGuestCard": "Odpri kartico gosta",
       "photos": "Fotografije",
       "noPhotosFound": "Za to rezervacijo ni bilo najdenih slik.",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Bivanje lastnika",
+      "ownerStayHint": "Brez prihodka — ne računa ne provizije, ni v obračunu lastnika.",
       "viaChannel": "prek {channel}",
       "receivedOn": "prejeto pri nas dne {date}",
       "bookedOn": "rezervirano dne {date}"
@@ -4976,7 +4976,7 @@
   },
   "objects": {
     "channelChips": {
-      "website": "Website",
+      "website": "Spletna stran",
       "platform": "Platform",
       "portals": "Portals",
       "state": {
@@ -4993,7 +4993,7 @@
       "publishAll": "Objavi povsod",
       "publishedAll": "Objekt objavljen na vseh kanalih.",
       "draftHint": "Ta objekt je osnutek in se ne prodaja na nobenem kanalu. Nastavite ga na »Aktiven«, da ga objavite.",
-      "groupWebsite": "Website",
+      "groupWebsite": "Spletna stran",
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Poveži portal",
@@ -5045,7 +5045,7 @@
       "sortAz": "A–Z",
       "sortZa": "Z–A",
       "menuOpen": "Dejanja",
-      "menuEdit": "Bearbeiten",
+      "menuEdit": "Uredi",
       "menuDelete": "Delete",
       "deleteConfirm": "Res izbrisati nastanitev „{title}“?",
       "deleteOk": "Nastanitev izbrisana.",
@@ -5344,16 +5344,16 @@
       "removeAmenityAriaLabel": "Odstrani {amenity}",
       "amenitiesSearchPlaceholder": "Išči opremo …",
       "noSearchResults": "Ni zadetkov.",
-      "zimmerErneutLaden": "Erneut versuchen",
-      "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerFertig": "Fertig",
+      "zimmerErneutLaden": "Poskusite znova",
+      "zimmerLaedt": "Sobe se nalagajo …",
+      "zimmerFertig": "Končano",
       "zimmerBettenHinweis": "Prevzeto iz Airbnb in ostane v myNextDays in myBestDays — rezervacijski portali razporeda postelj ne sprejemajo.",
-      "masseinheitLabel": "Maßeinheit",
+      "masseinheitLabel": "Merska enota",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
       "sizeSqftPrefix": "{size} ft² · ",
-      "gaesteWeniger": "Ein Gast weniger",
-      "gaesteMehr": "Ein Gast mehr",
+      "gaesteWeniger": "En gost manj",
+      "gaesteMehr": "En gost več",
       "zimmerSuffixPrivat": "zasebno",
       "zimmerSuffixGemeinschaftlich": "skupno",
       "zimmerErhoehen": "Dodaj {room}",
@@ -5983,20 +5983,20 @@
         "schliessen": "Zapri"
       },
       "airbnbPull": {
-        "button": "Bei Airbnb abrufen",
-        "hint": "Ordnet dieses Objekt bei Airbnb zu und holt den Preis von dort.",
-        "priceTaken": "Preis von Airbnb übernommen: {price} · Mindestaufenthalt {nights} Nächte",
-        "noPrice": "Airbnb hat keinen Preis übergeben. Die Zuordnung steht.",
-        "currency": "Währung: {currency}",
-        "timezone": "Zeitzone: {timezone}",
-        "alsoTaken": "Ebenfalls übernommen: {fields}",
+        "button": "Pridobi iz Airbnb",
+        "hint": "Dodeli ta objekt pri Airbnb in od tam prevzame ceno.",
+        "priceTaken": "Cena prevzeta od Airbnb: {price} · najkrajše bivanje {nights} noči",
+        "noPrice": "Airbnb ni posredoval cene. Dodelitev je vzpostavljena.",
+        "currency": "Valuta: {currency}",
+        "timezone": "Časovni pas: {timezone}",
+        "alsoTaken": "Prevzeto tudi: {fields}",
         "field": {
-          "check_in_from": "Check-in-Zeit",
-          "check_out_until": "Check-out-Zeit",
-          "pets_allowed": "Haustiere erlaubt",
-          "pets_max": "Anzahl Haustiere",
-          "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte",
+          "check_in_from": "Čas prijave",
+          "check_out_until": "Čas odjave",
+          "pets_allowed": "Hišni ljubljenčki dovoljeni",
+          "pets_max": "Število hišnih ljubljenčkov",
+          "smoking_allowed": "Kajenje",
+          "max_nights": "Največje število nočitev",
           "address": "Naslov",
           "postal_code": "Poštna številka",
           "city": "Mesto",
@@ -6170,14 +6170,14 @@
         "booked": "Zasedeno",
         "blocked": "Blokirano",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "blockedAndStopSell": "Blokirano + stop-sell",
         "contractEnd": "Pogodba prekinjena"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "vsi kanali",
       "nightsCount": "{count, plural, one {# noč} two {# noči} few {# noči} other {# noči}}",
       "daysCount": "{count, plural, one {# dan} two {# dneva} few {# dni} other {# dni}}",
-      "ownerStay": "Eigentümer-Aufenthalt"
+      "ownerStay": "Bivanje lastnika"
     },
     "calendarViews": {
       "viewLabel": "Pogled",
@@ -6197,10 +6197,10 @@
       "blocking": "Blokiranje…",
       "createBlockedPeriod": "Ustvari blokirano obdobje",
       "priceMinStayBlock": "Cena / minimalno bivanje / blokada …",
-      "ownerStay": "Eigennutzung eintragen",
-      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
-      "setStopSell": "Stop-Sell setzen",
-      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
+      "ownerStay": "Vnesi bivanje lastnika",
+      "createBlockedPeriodHint": "Razpoložljivost 0 — dan je zaprt povsod",
+      "setStopSell": "Nastavi stop-sell",
+      "setStopSellHint": "Dan ostane prost, vendar se ne prodaja — z razlogom"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Število oseb, nastavljeno za to nastanitev",
@@ -6430,11 +6430,11 @@
       "occupancy": "Zasedenost",
       "propertyNights": "{booked}/{total} objekt-noči",
       "revenue": "Promet",
-      "stopSellClear": "Stop-Sell aufheben",
-      "stopSellClearing": "Hebe auf…",
-      "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
-      "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "stopSellClear": "Odpravi stop-sell",
+      "stopSellClearing": "Odpravljanje…",
+      "stopSellClearNothing": "Tu ni bilo nobene ustavitve prodaje za odpravo.",
+      "stopSellEditReason": "Spremeni razlog",
+      "stopSellPortalLocked": "Nastavljeno s strani portala — odpravite lahko le tam.",
       "legend": "Legenda",
       "contractEndLocked": "Ta blokada izhaja iz konca pogodbe. Spremeniti jo je mogoče le prek končnega datuma v kartici objekta."
     },
@@ -6453,29 +6453,29 @@
       "feesHint": "Čiščenje itd.",
       "personsValue": "{count} os.",
       "guestsLabel": "Gostje",
-      "stayKind": "Art des Aufenthalts",
-      "stayKindGuest": "Gastbuchung",
-      "stayKindOwner": "Eigennutzung",
-      "ownerLabel": "Eigentümer",
-      "ownerContact": "Kontaktdaten des Eigentümers",
-      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "stayKind": "Vrsta bivanja",
+      "stayKindGuest": "Rezervacija gosta",
+      "stayKindOwner": "Bivanje lastnika",
+      "ownerLabel": "Lastnik",
+      "ownerContact": "Kontaktni podatki lastnika",
+      "ownerStayHint": "Lastniško bivanje zasede koledar kot rezervacija, vendar ne ustvari prihodka: brez cene, brez računa, brez provizije in brez postavke v obračunu lastnika.",
       "steps": {
-        "details": "Details",
-        "prices": "Preise & Extras",
-        "policy": "Richtlinien"
+        "details": "Podrobnosti",
+        "prices": "Cene in dodatki",
+        "policy": "Pogoji"
       },
       "headings": {
-        "details": "Reservierungsdetails",
-        "prices": "Preise & Extras festlegen",
-        "policy": "Richtlinien festlegen"
+        "details": "Podrobnosti rezervacije",
+        "prices": "Določite cene in dodatke",
+        "policy": "Določite pogoje"
       },
-      "ownerSection": "Eigentümer",
-      "ownerLoading": "Eigentümer wird ermittelt…",
-      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
-      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
-      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
-      "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "ownerSection": "Lastnik",
+      "ownerLoading": "Ugotavljanje lastnika…",
+      "ownerLoadFailed": "Lastnika ni bilo mogoče naložiti.",
+      "ownerMissing": "Za ta objekt ni vpisanega lastnika.",
+      "ownerMissingHint": "Lastniško bivanje potrebuje vpisanega lastnika. Ustvarite ga pri Lastniki in mu dodelite ta objekt.",
+      "ownerMissingLink": "K lastnikom",
+      "ownerFromRecord": "Prevzeto iz matičnih podatkov lastnika. Kontaktne podatke spremenite pri Lastniki.",
       "stayNameLabel": "Kdo tam biva",
       "stayNamePlaceholder": "Ime osebe",
       "stayNameHint": "Pustite prazno za lastnika samega. Sicer ime osebe, ki uporablja obdobje — družina, prijatelji, mojstri.",
@@ -6492,8 +6492,8 @@
       "otaPayout": "Izplačilo s portala",
       "stillOpen": "Še odprto",
       "cancelReasonPlaceholder": "Razlog stornacije (bo dokumentiran) …",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Bivanje lastnika",
+      "ownerStayHint": "Brez prihodka — ne računa ne provizije, ni v obračunu lastnika.",
       "openBooking": "Na celotno rezervacijo",
       "messageGuest": "Napiši gostu"
     },
@@ -6702,7 +6702,7 @@
     "seasonApplyNoSpans": "Ta sezona nima pobarvanih obdobij. Najprej jo pobarvajte ali prenesite samo definicijo brez obdobij."
   },
   "channels": {
-    "title": "Channel Manager",
+    "title": "Channel manager",
     "subtitle": "Povežite svoje rezervacijske portale in samodejno razporejajte razpoložljivost ter cene po vseh kanalih.",
     "categoryOta": "Rezervacijski portali",
     "categoryMarketplace": "Lastna tržnica",
@@ -6784,7 +6784,7 @@
       "sendUserTaxes": "Pošlji lastne davke",
       "blockedNote": "Dokler je to izklopljeno, temu kanalu ne pošiljamo lastnih davkov."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "linkedPending": "{count, plural, =0 {Račun povezan · dodelitev odprta} one {Račun povezan · # objekt je treba še dodeliti} two {Račun povezan · # objekta je treba še dodeliti} few {Račun povezan · # objekte je treba še dodeliti} other {Račun povezan · # objektov je treba še dodeliti}}",
     "activateChannel": "Aktiviraj kanal",
     "activateDone": "{portal} je zdaj aktiven.",
     "activateFailed": "Kanala ni bilo mogoče aktivirati.",
@@ -6940,7 +6940,7 @@
     "clientSecret": "Skrivnost odjemalca",
     "copy": "Kopiraj",
     "copied": "Kopirano.",
-    "done": "Fertig",
+    "done": "Končano",
     "colName": "Name",
     "colEnv": "Okolje",
     "colScopes": "Dovoljenja",
@@ -7008,7 +7008,7 @@
       "nurMitEntsprechung": "samo značilnosti z ustreznico v portalu",
       "nichtDeckungsgleich": "kategorije se ne ujemajo povsem",
       "ohneBeleg": "ni potrjeno — preverjamo",
-      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
+      "ohneZimmerZuordnung": "brez dodelitve posamezni sobi"
     },
     "status": {
       "voll": "transferred",
@@ -7048,7 +7048,7 @@
       "kaution": "Varščina",
       "lizenznummer": "Številka licence/registracije",
       "mietvertrag": "Najemna pogodba",
-      "zimmerAusstattung": "Ausstattung der Zimmer"
+      "zimmerAusstattung": "Oprema sob"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -7086,7 +7086,7 @@
       "create": "Ustvari pogoj",
       "update": "Posodobi pogoj",
       "empty": "Zaenkrat ni pogojev. Ustvarite svoj prvi rezervacijski pogoj — plačilni načrt, odpoved in varščino.",
-      "colName": "Name",
+      "colName": "Naziv",
       "colPaymentPlan": "Plačilni načrt",
       "colCancellation": "Stornacija",
       "colDeposit": "Varščina",
@@ -7141,7 +7141,7 @@
       "amount": "Znesek",
       "depositStep3": "3. Časi predavtorizacije",
       "preauthFromHint": "Od kdaj se kartica gosta predavtorizira.",
-      "days": "Tage",
+      "days": "Dnevi",
       "preauthUntilHint": "Do kdaj je mogoča predavtorizacija — po tem datumu se odprte predavtorizacije sprostijo.",
       "releaseDays": "Sprosti dni po odhodu",
       "preauthWarnStrong": "Predavtorizacije je pogosto mogoče zagotoviti le za približno 7 dni.",
@@ -7440,7 +7440,7 @@
       "search": "Iskanje",
       "searchHinweis": "Iskalna vrstica z datumi in številom gostov.",
       "propertiesGrid": "Objekti",
-      "propertiesGridHinweis": "Vsi objekti v mreži, s pravimi cenami.",
+      "propertiesGridHinweis": "Nastanitve v mreži, z resničnimi cenami, če so vklopljene.",
       "featuredProperties": "Izbrani objekti",
       "featuredPropertiesHinweis": "Samo objekti, ki jih izberete.",
       "reviews": "Ocene",
@@ -7487,7 +7487,7 @@
       "mindestGaeste": "Od koliko gostov naprej",
       "anzahl": "Število",
       "objekte": "Objekti",
-      "kategorienZeigen": "Pokaži posamezne ocene",
+      "kategorienZeigen": "Pokaži ocene po kategorijah",
       "email": "E-pošta",
       "telefon": "Telefon",
       "adresse": "Naslov",
@@ -7632,7 +7632,7 @@
       },
       "typBeschreibung": {
         "suche": "Destinacija, obdobje in število gostov — vodi na seznam objektov vaše spletne strani.",
-        "buchen": "Obdobje in število gostov — vodi neposredno v vaš postopek rezervacije."
+        "buchen": "Obdobje in število gostov — vodi na seznam nastanitev na vaši spletni strani, brez polja za destinacijo."
       },
       "sprache": "Jezik",
       "spracheHinweis": "Jezik, v katerem se polje prikaže na tuji strani.",
@@ -7868,7 +7868,7 @@
       "hrbPlaceholder": "HRB 12345",
       "courtPlaceholder": "npr. Berlin (Charlottenburg)",
       "employeesPlaceholder": "npr. 7",
-      "ibanPlaceholder": "DE00 0000 0000 0000 0000 00",
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00",
       "preferredLanguage": "Prednostni jezik",
       "chooseLanguage": "Izberi jezik",
       "descriptionPlaceholder": "Kratek opis vašega podjetja…"

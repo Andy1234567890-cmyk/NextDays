@@ -125,74 +125,74 @@
       "text": "Mokesčių duomenys ir mokėjimų aktyvavimo duomenys."
     },
     "branch": {
-      "title": "Verkaufst du schon auf Buchungsportalen?",
-      "text": "Booking.com, Airbnb & Co. — hast du dort schon Objekte, oder fängst du neu an?",
-      "switchTitle": "Ja, ich wechsle",
-      "switchText": "Ich habe schon Objekte auf Booking, Airbnb & Co. und möchte sie importieren.",
-      "newTitle": "Nein, ich fange neu an",
-      "newText": "Ich lege meine Objekte neu an und verbinde die Portale danach."
+      "title": "Ar jau parduodate per rezervacijų portalus?",
+      "text": "„Booking.com“, „Airbnb“ ir kiti — ar jau turite objektų tose platformose, ar pradedate nuo nulio?",
+      "switchTitle": "Taip, keičiu sistemą",
+      "switchText": "Jau turiu objektų „Booking“, „Airbnb“ ir kitur ir noriu juos importuoti.",
+      "newTitle": "Ne, pradedu nuo nulio",
+      "newText": "Objektus sukursiu iš naujo, o portalus prijungsiu vėliau."
     },
     "switch": {
-      "title": "Bestehende Objekte importieren",
-      "intro": "So holst du deine bestehenden Booking-/Airbnb-Objekte zu myNextDays — ohne Doppelbuchungen.",
+      "title": "Esamų objektų importas",
+      "intro": "Taip savo esamus „Booking“ / „Airbnb“ objektus perkelsite į myNextDays — be dvigubų rezervacijų.",
       "cutover": {
-        "title": "Wichtig vor dem Verbinden",
-        "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
-        "b": "Vergangene Buchungen und manuelle Sperren kommen NICHT automatisch mit. Trage sie nach dem Import selbst nach.",
-        "c": "Lass dein altes System als Backup laufen und beobachte die ersten Tage genau.",
-        "ack": "Ich habe das verstanden.",
-        "doneTitle": "Hinweise von vor dem Verbinden (erledigt)"
+        "title": "Svarbu prieš prijungimą",
+        "a": "Kiekvieną portalą atjunkite nuo ankstesnės sistemos prieš prijungdami jį čia — į vieną kanalą duomenis visada gali siųsti tik VIENA sistema.",
+        "b": "Ankstesnės rezervacijos ir rankiniai blokavimai NEperkeliami automatiškai. Po importo įveskite juos patys.",
+        "c": "Senąją sistemą palikite veikti kaip atsarginę ir pirmas dienas atidžiai stebėkite.",
+        "ack": "Aš tai supratau.",
+        "doneTitle": "Nurodymai prieš prijungimą (atlikta)"
       },
       "step1": {
-        "title": "Objekt anlegen",
-        "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
-        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}",
+        "title": "Sukurti objektą",
+        "text": "Kiekvienam esamam skelbimui sukurkite objektą — priskyrimui pakanka pavadinimo, tipo ir bazinės kainos.",
+        "count": "{count, plural, =0 {Objektų dar nėra} one {# objektas} few {# objektai} other {# objektų}}",
         "airbnbHint": "Ateinate iš Airbnb? Praleiskite šį veiksmą — jūsų objektai bus perkelti automatiškai prijungus Airbnb."
       },
       "step2": {
-        "title": "Portal verbinden & zuordnen",
-        "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
-        "connect": "Portal verbinden",
-        "connectMore": "Weiteres Portal verbinden",
-        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“."
+        "title": "Portalo prijungimas ir priskyrimas",
+        "text": "Prijunkite „Booking“, „Airbnb“ ir kitus ir priskirkite portalų kambarius 1:1 savo objektams. Rezervacijos ir pasiekiamumas vėliau atkeliauja automatiškai.",
+        "connect": "Prijungti portalą",
+        "connectMore": "Prijungti kitą portalą",
+        "alreadyConnected": "Vienas portalas jau prijungtas ir jūsų objektai perduoti — čia nieko iš naujo prijungti nereikia. „Prijungti kitą portalą“ naudokite tik PAPILDOMAM portalui (pvz., „Booking“)."
       },
       "pull": {
-        "button": "Objekte aus Portal holen",
-        "result": "{count, plural, =0 {Keine neuen Objekte gefunden} one {# Objekt übernommen} other {# Objekte übernommen}}"
+        "button": "Gauti objektus iš portalo",
+        "result": "{count, plural, =0 {Naujų objektų nerasta} one {Perimtas # objektas} few {Perimti # objektai} other {Perimta # objektų}}"
       },
-      "finishCta": "Import abschließen",
-      "finishHint": "Bitte bestätige zuerst den Hinweis oben und lege mindestens ein Objekt an.",
+      "finishCta": "Užbaigti importą",
+      "finishHint": "Pirmiausia patvirtinkite pastabą viršuje ir sukurkite bent vieną objektą.",
       "bookings": {
-        "title": "Bestehende Buchungen einlesen",
-        "text": "Hol dir die Reservierungen deiner verbundenen Portale in deinen Kalender.",
-        "includePast": "Auch vergangene Buchungen einlesen",
-        "pastHint": "Hinweis: Portale liefern in der Regel nur Buchungen ab dem Zeitpunkt der Verbindung. Bereits abgereiste Gäste von davor sind oft nicht mehr abrufbar.",
-        "button": "Buchungen einlesen",
-        "result": "{count, plural, =0 {Keine Buchungen gefunden} one {# Buchung eingelesen} other {# Buchungen eingelesen}}"
+        "title": "Esamų rezervacijų įkėlimas",
+        "text": "Perkelkite savo prijungtų portalų rezervacijas į savo kalendorių.",
+        "includePast": "Įtraukti ir ankstesnes rezervacijas",
+        "pastHint": "Pastaba: portalai paprastai pateikia tik rezervacijas nuo prijungimo momento. Anksčiau išvykusių svečių dažnai jau nebeįmanoma gauti.",
+        "button": "Įkelti rezervacijas",
+        "result": "{count, plural, =0 {Rezervacijų nerasta} one {Įkelta # rezervacija} few {Įkeltos # rezervacijos} other {Įkelta # rezervacijų}}"
       },
       "csv": {
-        "title": "Alte & direkte Buchungen per Datei importieren",
-        "text": "Für Buchungen, die nicht über die Portale kommen (Direktbuchungen, vergangene Reservierungen aus deinem alten System).",
-        "downloadTemplate": "Vorlage herunterladen",
-        "upload": "CSV hochladen",
-        "hint": "Lade die Vorlage, fülle sie aus (Datum als JJJJ-MM-TT) und lade sie wieder hoch. Pflicht: Objekt, Gastname, Anreise, Abreise. Doppelte Zeilen werden übersprungen.",
-        "result": "{imported} von {total} Buchungen importiert.",
-        "skipped": "{count, plural, one {# Zeile übersprungen (Duplikat/Objekt fehlt)} other {# Zeilen übersprungen (Duplikat/Objekt fehlt)}}",
-        "failed": "{count, plural, one {# Zeile mit Fehler} other {# Zeilen mit Fehlern}}:"
+        "title": "Senų ir tiesioginių rezervacijų importas iš failo",
+        "text": "Rezervacijoms, kurios nepatenka per portalus (tiesioginės rezervacijos, ankstesnės rezervacijos iš jūsų senosios sistemos).",
+        "downloadTemplate": "Atsisiųsti šabloną",
+        "upload": "Įkelti CSV",
+        "hint": "Atsisiųskite šabloną, jį užpildykite (data formatu MMMM-MM-DD) ir vėl įkelkite. Būtina: objektas, svečio vardas, atvykimas, išvykimas. Pasikartojančios eilutės praleidžiamos.",
+        "result": "Importuota {imported} iš {total} rezervacijų.",
+        "skipped": "{count, plural, one {Praleista # eilutė (dublikatas / nėra objekto)} few {Praleistos # eilutės (dublikatas / nėra objekto)} other {Praleista # eilučių (dublikatas / nėra objekto)}}",
+        "failed": "{count, plural, one {# eilutė su klaida} few {# eilutės su klaidomis} other {# eilučių su klaidomis}}:"
       },
       "lodgify": {
-        "title": "Buchungen aus Lodgify holen",
-        "text": "Wenn du von Lodgify wechselst: importiere deine Buchungen direkt per API-Schlüssel (nur lesend, es wird nichts in Lodgify geändert).",
-        "keyLabel": "Lodgify-API-Schlüssel",
-        "keyPlaceholder": "Aus Lodgify: Einstellungen → Public API",
-        "keyHint": "Der Schlüssel wird nur für diesen Import genutzt und nicht gespeichert. Wir lesen ausschließlich – wir ändern nichts in Lodgify.",
-        "preview": "Vorschau laden",
-        "import": "{count, plural, one {# Buchung importieren} other {# Buchungen importieren}}",
-        "previewResult": "{importable} von {total} Buchungen können importiert werden.",
-        "result": "{imported} von {total} Buchungen importiert."
+        "title": "Rezervacijų gavimas iš „Lodgify“",
+        "text": "Jei pereinate iš „Lodgify“: importuokite savo rezervacijas tiesiogiai su API raktu (tik skaitymas, „Lodgify“ niekas nekeičiama).",
+        "keyLabel": "Lodgify API raktas",
+        "keyPlaceholder": "Iš „Lodgify“: Nustatymai → Public API",
+        "keyHint": "Raktas naudojamas tik šiam importui ir nesaugomas. Tik skaitome — „Lodgify“ nieko nekeičiame.",
+        "preview": "Įkelti peržiūrą",
+        "import": "{count, plural, one {Importuoti # rezervaciją} few {Importuoti # rezervacijas} other {Importuoti # rezervacijų}}",
+        "previewResult": "Galima importuoti {importable} iš {total} rezervacijų.",
+        "result": "Importuota {imported} iš {total} rezervacijų."
       },
       "finish": {
-        "notRegistered": "Mindestens ein Objekt muss an die Buchungsportale übermittelt sein, bevor du das Onboarding abschließt. Verbinde in Schritt 2 ein Portal — dabei wird das Objekt automatisch übertragen."
+        "notRegistered": "Prieš baigiant paruošimą į rezervacijų portalus turi būti perduotas bent vienas objektas. 2 veiksme prijunkite portalą — objektas perduodamas automatiškai."
       }
     }
   },
@@ -208,7 +208,7 @@
     "websiteDesign": "Dizainas",
     "websitePages": "Puslapiai",
     "websiteDomain": "Adresas",
-    "channelManager": "Channel Manager",
+    "channelManager": "Channel manager",
     "guests": "Svečiai",
     "tasks": "Užduotys",
     "invoices": "Sąskaitos",
@@ -364,7 +364,7 @@
     "sourceManual": "Manual",
     "sourceChannex": "Iš kelionių organizatoriaus",
     "clear": "Clear",
-    "readonly": "Portal",
+    "readonly": "Portalas",
     "toIncl": "Iki",
     "calendarHint": "Vilkite per objekto dienas, kad pasirinktumėte laikotarpį.",
     "legendOpen": "Laisva",
@@ -399,11 +399,11 @@
     "resetConfirm": "Taip, pašalinti visus",
     "resetting": "Resetting …",
     "cancel": "Cancel",
-    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
-    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
-    "reasonRequired": "Bitte einen Grund wählen.",
-    "skippedBooked": "{count} gebuchte Tage wurden übersprungen — verkaufte Tage lassen sich nicht stoppen.",
-    "skippedBookedAll": "Kein Tag gestoppt: alle {count} Tage im Zeitraum sind gebucht."
+    "noteRequired": "Pasirinkus „Kita“, pastaba yra būtina.",
+    "noteRequiredLabel": "Pastaba (būtina pasirinkus „Kita“)",
+    "reasonRequired": "Pasirinkite priežastį.",
+    "skippedBooked": "Praleista rezervuotų dienų: {count} — parduotų dienų sustabdyti negalima.",
+    "skippedBookedAll": "Nesustabdyta nė viena diena: visos {count} laikotarpio dienos yra rezervuotos."
   },
   "inbox": {
     "title": "Inbox",
@@ -3899,7 +3899,7 @@
       "streetPlaceholder": "Pavyzdinė g. 123",
       "bankPlaceholder": "Deutsche Bank",
       "holderPlaceholder": "Jonas Jonaitis",
-      "ibanPlaceholder": "DE89 3704 0044 0532 0130 00"
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00"
     },
     "pdf": {
       "qrCode": "QR kodas",
@@ -4201,7 +4201,7 @@
       },
       "emptyState": "Rezervacijų nerasta.",
       "loading": "Įkeliama…",
-      "ownerStay": "Eigennutzung",
+      "ownerStay": "Savininko viešnagė",
       "limit": "Riba ({count})",
       "limitAll": "Visi",
       "columnsMenu": "Stulpeliai",
@@ -4619,8 +4619,8 @@
       "openGuestCard": "Atidaryti svečio kortelę",
       "photos": "Nuotraukos",
       "noPhotosFound": "Šiai rezervacijai nuotraukų nerasta.",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Savininko viešnagė",
+      "ownerStayHint": "Jokių pajamų — nei sąskaitos, nei komisinių, neįtraukiama į savininko atsiskaitymą.",
       "viaChannel": "per {channel}",
       "receivedOn": "gauta pas mus {date}",
       "bookedOn": "rezervuota {date}"
@@ -4976,7 +4976,7 @@
   },
   "objects": {
     "channelChips": {
-      "website": "Website",
+      "website": "Svetainė",
       "platform": "Platform",
       "portals": "Portals",
       "state": {
@@ -4993,7 +4993,7 @@
       "publishAll": "Paskelbti visur",
       "publishedAll": "Objektas paskelbtas visuose kanaluose.",
       "draftHint": "Šis objektas yra juodraštis ir neparduodamas jokiame kanale. Nustatykite jį kaip „Aktyvų“, kad paskelbtumėte.",
-      "groupWebsite": "Website",
+      "groupWebsite": "Svetainė",
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Prijungti portalą",
@@ -5045,7 +5045,7 @@
       "sortAz": "A–Ž",
       "sortZa": "Ž–A",
       "menuOpen": "Veiksmai",
-      "menuEdit": "Bearbeiten",
+      "menuEdit": "Redaguoti",
       "menuDelete": "Delete",
       "deleteConfirm": "Tikrai ištrinti objektą „{title}“?",
       "deleteOk": "Objektas ištrintas.",
@@ -5344,16 +5344,16 @@
       "removeAmenityAriaLabel": "Pašalinti {amenity}",
       "amenitiesSearchPlaceholder": "Ieškoti ausstattung …",
       "noSearchResults": "Rezultatų nėra.",
-      "zimmerErneutLaden": "Erneut versuchen",
-      "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerFertig": "Fertig",
+      "zimmerErneutLaden": "Bandyti dar kartą",
+      "zimmerLaedt": "Kambariai įkeliami …",
+      "zimmerFertig": "Baigta",
       "zimmerBettenHinweis": "Perimama iš Airbnb ir lieka myNextDays bei myBestDays — rezervacijų portalai lovų išdėstymo nepriima.",
-      "masseinheitLabel": "Maßeinheit",
+      "masseinheitLabel": "Matavimo vienetas",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
       "sizeSqftPrefix": "{size} ft² · ",
-      "gaesteWeniger": "Ein Gast weniger",
-      "gaesteMehr": "Ein Gast mehr",
+      "gaesteWeniger": "Vienu svečiu mažiau",
+      "gaesteMehr": "Vienu svečiu daugiau",
       "zimmerSuffixPrivat": "privatus",
       "zimmerSuffixGemeinschaftlich": "bendras",
       "zimmerErhoehen": "Pridėti: {room}",
@@ -5983,20 +5983,20 @@
         "schliessen": "Uždaryti"
       },
       "airbnbPull": {
-        "button": "Bei Airbnb abrufen",
-        "hint": "Ordnet dieses Objekt bei Airbnb zu und holt den Preis von dort.",
-        "priceTaken": "Preis von Airbnb übernommen: {price} · Mindestaufenthalt {nights} Nächte",
-        "noPrice": "Airbnb hat keinen Preis übergeben. Die Zuordnung steht.",
-        "currency": "Währung: {currency}",
-        "timezone": "Zeitzone: {timezone}",
-        "alsoTaken": "Ebenfalls übernommen: {fields}",
+        "button": "Gauti iš Airbnb",
+        "hint": "Priskiria šį objektą „Airbnb“ ir iš ten paima kainą.",
+        "priceTaken": "Kaina perimta iš „Airbnb“: {price} · minimali viešnagė {nights} naktys",
+        "noPrice": "„Airbnb“ nepateikė kainos. Priskyrimas atliktas.",
+        "currency": "Valiuta: {currency}",
+        "timezone": "Laiko zona: {timezone}",
+        "alsoTaken": "Taip pat perimta: {fields}",
         "field": {
-          "check_in_from": "Check-in-Zeit",
-          "check_out_until": "Check-out-Zeit",
-          "pets_allowed": "Haustiere erlaubt",
-          "pets_max": "Anzahl Haustiere",
-          "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte",
+          "check_in_from": "Registracijos laikas",
+          "check_out_until": "Išvykimo laikas",
+          "pets_allowed": "Gyvūnai leidžiami",
+          "pets_max": "Gyvūnų skaičius",
+          "smoking_allowed": "Rūkymas",
+          "max_nights": "Daugiausia naktų",
           "address": "Adresas",
           "postal_code": "Pašto kodas",
           "city": "Miestas",
@@ -6170,14 +6170,14 @@
         "booked": "Užsakyta",
         "blocked": "Užblokuota",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "blockedAndStopSell": "Užblokuota + stop-sell",
         "contractEnd": "Sutartis nutraukta"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "visi kanalai",
       "nightsCount": "{count, plural, one {# naktis} few {# naktys} many {# nakties} other {# naktų}}",
       "daysCount": "{count, plural, one {# diena} few {# dienos} many {# dienos} other {# dienų}}",
-      "ownerStay": "Eigentümer-Aufenthalt"
+      "ownerStay": "Savininko viešnagė"
     },
     "calendarViews": {
       "viewLabel": "Rodinys",
@@ -6197,10 +6197,10 @@
       "blocking": "Blokuoti…",
       "createBlockedPeriod": "Sukurti blokavimo laikotarpį",
       "priceMinStayBlock": "Kaina / Min-Stay / Blokavimas …",
-      "ownerStay": "Eigennutzung eintragen",
-      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
-      "setStopSell": "Stop-Sell setzen",
-      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
+      "ownerStay": "Įrašyti savininko viešnagę",
+      "createBlockedPeriodHint": "Pasiekiamumas 0 — diena uždaryta visur",
+      "setStopSell": "Nustatyti stop-sell",
+      "setStopSellHint": "Diena lieka laisva, bet neparduodama — su priežastimi"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Šiam objektui nustatytas svečių skaičius",
@@ -6430,11 +6430,11 @@
       "occupancy": "Užimtumas",
       "propertyNights": "{booked}/{total} objekto naktų",
       "revenue": "Apyvarta",
-      "stopSellClear": "Stop-Sell aufheben",
-      "stopSellClearing": "Hebe auf…",
-      "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
-      "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "stopSellClear": "Atšaukti stop-sell",
+      "stopSellClearing": "Atšaukiama…",
+      "stopSellClearNothing": "Čia nebuvo jokio pardavimo stabdymo, kurį būtų galima atšaukti.",
+      "stopSellEditReason": "Keisti priežastį",
+      "stopSellPortalLocked": "Nustatyta portalo — atšaukti galima tik ten.",
       "legend": "Legenda",
       "contractEndLocked": "Ši blokada kyla iš sutarties pabaigos. Ją galima pakeisti tik per pabaigos datą objekto kortelėje."
     },
@@ -6453,29 +6453,29 @@
       "feesHint": "Valymas ir kt.",
       "personsValue": "{count} asm.",
       "guestsLabel": "Svečiai",
-      "stayKind": "Art des Aufenthalts",
-      "stayKindGuest": "Gastbuchung",
-      "stayKindOwner": "Eigennutzung",
-      "ownerLabel": "Eigentümer",
-      "ownerContact": "Kontaktdaten des Eigentümers",
-      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "stayKind": "Viešnagės tipas",
+      "stayKindGuest": "Svečio rezervacija",
+      "stayKindOwner": "Savininko viešnagė",
+      "ownerLabel": "Savininkas",
+      "ownerContact": "Savininko kontaktiniai duomenys",
+      "ownerStayHint": "Savininko viešnagė užima kalendorių kaip rezervacija, tačiau nesukuria pajamų: jokios kainos, sąskaitos, komisinių ir jokio įrašo savininko atsiskaityme.",
       "steps": {
-        "details": "Details",
-        "prices": "Preise & Extras",
-        "policy": "Richtlinien"
+        "details": "Duomenys",
+        "prices": "Kainos ir papildomos paslaugos",
+        "policy": "Sąlygos"
       },
       "headings": {
-        "details": "Reservierungsdetails",
-        "prices": "Preise & Extras festlegen",
-        "policy": "Richtlinien festlegen"
+        "details": "Rezervacijos duomenys",
+        "prices": "Nustatykite kainas ir papildomas paslaugas",
+        "policy": "Nustatykite sąlygas"
       },
-      "ownerSection": "Eigentümer",
-      "ownerLoading": "Eigentümer wird ermittelt…",
-      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
-      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
-      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
-      "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "ownerSection": "Savininkas",
+      "ownerLoading": "Nustatomas savininkas…",
+      "ownerLoadFailed": "Savininko nepavyko įkelti.",
+      "ownerMissing": "Šiam objektui nėra nurodyto savininko.",
+      "ownerMissingHint": "Savininko viešnagei reikia nurodyto savininko. Sukurkite jį skiltyje Savininkai ir priskirkite jam šį objektą.",
+      "ownerMissingLink": "Į savininkus",
+      "ownerFromRecord": "Perimta iš savininko pagrindinių duomenų. Kontaktiniai duomenys keičiami skiltyje Savininkai.",
       "stayNameLabel": "Kas apsistoja",
       "stayNamePlaceholder": "Asmens vardas",
       "stayNameHint": "Palikite tuščią, jei tai pats savininkas. Kitu atveju asmens, kuris naudojasi laikotarpiu, vardas — šeima, draugai, meistrai.",
@@ -6492,8 +6492,8 @@
       "otaPayout": "Portalo išmoka",
       "stillOpen": "Dar neapmokėta",
       "cancelReasonPlaceholder": "Atšaukimo priežastis (bus fiksuojama) …",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Savininko viešnagė",
+      "ownerStayHint": "Jokių pajamų — nei sąskaitos, nei komisinių, neįtraukiama į savininko atsiskaitymą.",
       "openBooking": "Peržiūrėti visą rezervaciją",
       "messageGuest": "Rašyti svečiui"
     },
@@ -6702,7 +6702,7 @@
     "seasonApplyNoSpans": "Šis sezonas neturi pažymėtų laikotarpių. Pirmiausia jį pažymėkite arba perkelkite tik apibrėžimą be laikotarpių."
   },
   "channels": {
-    "title": "Channel Manager",
+    "title": "Channel manager",
     "subtitle": "Prijunkite savo rezervacijų portalus ir automatiškai paskirstykite laisvas dienas bei kainas visiems kanalams.",
     "categoryOta": "Rezervacijų portalai",
     "categoryMarketplace": "Sava prekyvietė",
@@ -6784,7 +6784,7 @@
       "sendUserTaxes": "Siųsti savo mokesčius",
       "blockedNote": "Kol tai išjungta, į šį kanalą savi mokesčiai neperduodami."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "linkedPending": "{count, plural, =0 {Paskyra prijungta · priskyrimas neatliktas} one {Paskyra prijungta · dar reikia priskirti # objektą} few {Paskyra prijungta · dar reikia priskirti # objektus} other {Paskyra prijungta · dar reikia priskirti # objektų}}",
     "activateChannel": "Aktyvinti kanalą",
     "activateDone": "{portal} dabar aktyvus.",
     "activateFailed": "Kanalo nepavyko aktyvinti.",
@@ -6940,7 +6940,7 @@
     "clientSecret": "Kliento paslaptis",
     "copy": "Kopijuoti",
     "copied": "Nukopijuota.",
-    "done": "Fertig",
+    "done": "Baigta",
     "colName": "Name",
     "colEnv": "Aplinka",
     "colScopes": "Teisės",
@@ -7008,7 +7008,7 @@
       "nurMitEntsprechung": "tik savybės, turinčios atitikmenį portale",
       "nichtDeckungsgleich": "kategorijos nesutampa visiškai",
       "ohneBeleg": "nepatvirtinta — tikriname",
-      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
+      "ohneZimmerZuordnung": "be priskyrimo atskiram kambariui"
     },
     "status": {
       "voll": "transferred",
@@ -7048,7 +7048,7 @@
       "kaution": "Užstatas",
       "lizenznummer": "Licencijos / registracijos numeris",
       "mietvertrag": "Nuomos sutartis",
-      "zimmerAusstattung": "Ausstattung der Zimmer"
+      "zimmerAusstattung": "Kambarių įranga"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -7086,7 +7086,7 @@
       "create": "Sukurti sąlygą",
       "update": "Atnaujinti sąlygą",
       "empty": "Kol kas nėra sąlygų. Sukurkite savo pirmąją rezervacijos sąlygą — mokėjimo planą, atšaukimą ir užstatą.",
-      "colName": "Name",
+      "colName": "Pavadinimas",
       "colPaymentPlan": "Mokėjimo planas",
       "colCancellation": "Atšaukimas",
       "colDeposit": "Užstatas",
@@ -7141,7 +7141,7 @@
       "amount": "Suma",
       "depositStep3": "3. Išankstinio autorizavimo laikai",
       "preauthFromHint": "Nuo kada svečio kortelė iš anksto autorizuojama.",
-      "days": "Tage",
+      "days": "Dienos",
       "preauthUntilHint": "Iki kada galima atlikti išankstinį autorizavimą — po šios datos atviri išankstiniai autorizavimai atlaisvinami.",
       "releaseDays": "Atlaisvinti dienas po išvykimo",
       "preauthWarnStrong": "Išankstinius autorizavimus dažnai galima garantuoti tik apie 7 dienas.",
@@ -7440,7 +7440,7 @@
       "search": "Paieška",
       "searchHinweis": "Paieškos juosta su datomis ir svečių skaičiumi.",
       "propertiesGrid": "Objektai",
-      "propertiesGridHinweis": "Visi objektai tinkleliu, su tikromis kainomis.",
+      "propertiesGridHinweis": "Objektai tinklelyje, su tikromis kainomis, jei jos įjungtos.",
       "featuredProperties": "Išskirti objektai",
       "featuredPropertiesHinweis": "Tik tie objektai, kuriuos pasirinksite.",
       "reviews": "Atsiliepimai",
@@ -7487,7 +7487,7 @@
       "mindestGaeste": "Nuo kelių svečių",
       "anzahl": "Kiekis",
       "objekte": "Objektai",
-      "kategorienZeigen": "Rodyti atskirus vertinimus",
+      "kategorienZeigen": "Rodyti vertinimus pagal kategorijas",
       "email": "El. paštas",
       "telefon": "Telefonas",
       "adresse": "Adresas",
@@ -7632,7 +7632,7 @@
       },
       "typBeschreibung": {
         "suche": "Kryptis, laikotarpis ir svečių skaičius — nuveda į jūsų svetainės objektų sąrašą.",
-        "buchen": "Laikotarpis ir svečių skaičius — nuveda tiesiai į jūsų rezervacijos procesą."
+        "buchen": "Laikotarpis ir svečių skaičius — nuveda į jūsų svetainės objektų sąrašą, be kelionės tikslo lauko."
       },
       "sprache": "Kalba",
       "spracheHinweis": "Kalba, kuria laukas pasirodo svetimoje svetainėje.",
@@ -7868,7 +7868,7 @@
       "hrbPlaceholder": "HRB 12345",
       "courtPlaceholder": "pvz., Berlynas (Šarlotenburgas)",
       "employeesPlaceholder": "pvz., 7",
-      "ibanPlaceholder": "DE00 0000 0000 0000 0000 00",
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00",
       "preferredLanguage": "Pageidaujama kalba",
       "chooseLanguage": "Pasirinkite kalbą",
       "descriptionPlaceholder": "Trumpas jūsų įmonės aprašymas…"

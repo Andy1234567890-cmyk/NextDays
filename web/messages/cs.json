@@ -125,74 +125,74 @@
       "text": "Daňové údaje a data pro aktivaci plateb."
     },
     "branch": {
-      "title": "Verkaufst du schon auf Buchungsportalen?",
-      "text": "Booking.com, Airbnb & Co. — hast du dort schon Objekte, oder fängst du neu an?",
-      "switchTitle": "Ja, ich wechsle",
-      "switchText": "Ich habe schon Objekte auf Booking, Airbnb & Co. und möchte sie importieren.",
-      "newTitle": "Nein, ich fange neu an",
-      "newText": "Ich lege meine Objekte neu an und verbinde die Portale danach."
+      "title": "Prodáváte už na rezervačních portálech?",
+      "text": "Booking.com, Airbnb a další — máte tam už objekty, nebo začínáte znovu?",
+      "switchTitle": "Ano, přecházím",
+      "switchText": "Už mám objekty na Booking, Airbnb a dalších a chci je importovat.",
+      "newTitle": "Ne, začínám od začátku",
+      "newText": "Své objekty vytvořím od začátku a portály propojím až potom."
     },
     "switch": {
-      "title": "Bestehende Objekte importieren",
-      "intro": "So holst du deine bestehenden Booking-/Airbnb-Objekte zu myNextDays — ohne Doppelbuchungen.",
+      "title": "Import existujících objektů",
+      "intro": "Takto převedete své existující objekty z Bookingu/Airbnb do myNextDays — bez dvojích rezervací.",
       "cutover": {
-        "title": "Wichtig vor dem Verbinden",
-        "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
-        "b": "Vergangene Buchungen und manuelle Sperren kommen NICHT automatisch mit. Trage sie nach dem Import selbst nach.",
-        "c": "Lass dein altes System als Backup laufen und beobachte die ersten Tage genau.",
-        "ack": "Ich habe das verstanden.",
-        "doneTitle": "Hinweise von vor dem Verbinden (erledigt)"
+        "title": "Důležité před připojením",
+        "a": "Každý portál odpojte od svého dosavadního systému, než ho propojíte zde — na jeden kanál smí odesílat data vždy jen JEDEN systém.",
+        "b": "Minulé rezervace a ruční blokace se NEPŘENESOU automaticky. Po importu je zadejte sami.",
+        "c": "Nechte svůj starý systém běžet jako záložní a první dny pozorně sledujte.",
+        "ack": "Rozumím tomu.",
+        "doneTitle": "Pokyny z doby před propojením (hotovo)"
       },
       "step1": {
-        "title": "Objekt anlegen",
-        "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
-        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}",
+        "title": "Vytvořit objekt",
+        "text": "Pro každou existující inzerci vytvořte jeden objekt — k přiřazení stačí název, druh a základní cena.",
+        "count": "{count, plural, =0 {Zatím žádné objekty} one {# objekt} few {# objekty} many {# objektu} other {# objektů}}",
         "airbnbHint": "Přecházíte z Airbnb? Tento krok přeskočte — vaše objekty se převedou automaticky při propojení s Airbnb."
       },
       "step2": {
-        "title": "Portal verbinden & zuordnen",
-        "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
-        "connect": "Portal verbinden",
-        "connectMore": "Weiteres Portal verbinden",
-        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“."
+        "title": "Propojení a přiřazení portálu",
+        "text": "Propojte Booking, Airbnb a další a přiřaďte pokoje portálů 1:1 ke svým objektům. Rezervace a dostupnost pak přicházejí automaticky.",
+        "connect": "Připojit portál",
+        "connectMore": "Připojit další portál",
+        "alreadyConnected": "Jeden portál je už propojen a vaše objekty jsou přeneseny — zde nemusíte nic propojovat znovu. Volbu „Propojit další portál“ použijte jen pro DALŠÍ portál (např. Booking)."
       },
       "pull": {
-        "button": "Objekte aus Portal holen",
-        "result": "{count, plural, =0 {Keine neuen Objekte gefunden} one {# Objekt übernommen} other {# Objekte übernommen}}"
+        "button": "Načíst objekty z portálu",
+        "result": "{count, plural, =0 {Nenalezeny žádné nové objekty} one {# objekt převzat} few {# objekty převzaty} many {# objektu převzato} other {# objektů převzato}}"
       },
-      "finishCta": "Import abschließen",
-      "finishHint": "Bitte bestätige zuerst den Hinweis oben und lege mindestens ein Objekt an.",
+      "finishCta": "Dokončit import",
+      "finishHint": "Nejprve prosím potvrďte pokyn výše a vytvořte alespoň jeden objekt.",
       "bookings": {
-        "title": "Bestehende Buchungen einlesen",
-        "text": "Hol dir die Reservierungen deiner verbundenen Portale in deinen Kalender.",
-        "includePast": "Auch vergangene Buchungen einlesen",
-        "pastHint": "Hinweis: Portale liefern in der Regel nur Buchungen ab dem Zeitpunkt der Verbindung. Bereits abgereiste Gäste von davor sind oft nicht mehr abrufbar.",
-        "button": "Buchungen einlesen",
-        "result": "{count, plural, =0 {Keine Buchungen gefunden} one {# Buchung eingelesen} other {# Buchungen eingelesen}}"
+        "title": "Načtení existujících rezervací",
+        "text": "Načtěte si rezervace ze svých propojených portálů do kalendáře.",
+        "includePast": "Načíst i minulé rezervace",
+        "pastHint": "Upozornění: portály obvykle poskytují jen rezervace od okamžiku propojení. Hosté, kteří odjeli dříve, už často nejsou dostupní.",
+        "button": "Importovat rezervace",
+        "result": "{count, plural, =0 {Nenalezeny žádné rezervace} one {# rezervace načtena} few {# rezervace načteny} many {# rezervace načteno} other {# rezervací načteno}}"
       },
       "csv": {
-        "title": "Alte & direkte Buchungen per Datei importieren",
-        "text": "Für Buchungen, die nicht über die Portale kommen (Direktbuchungen, vergangene Reservierungen aus deinem alten System).",
-        "downloadTemplate": "Vorlage herunterladen",
-        "upload": "CSV hochladen",
-        "hint": "Lade die Vorlage, fülle sie aus (Datum als JJJJ-MM-TT) und lade sie wieder hoch. Pflicht: Objekt, Gastname, Anreise, Abreise. Doppelte Zeilen werden übersprungen.",
-        "result": "{imported} von {total} Buchungen importiert.",
-        "skipped": "{count, plural, one {# Zeile übersprungen (Duplikat/Objekt fehlt)} other {# Zeilen übersprungen (Duplikat/Objekt fehlt)}}",
-        "failed": "{count, plural, one {# Zeile mit Fehler} other {# Zeilen mit Fehlern}}:"
+        "title": "Import starých a přímých rezervací ze souboru",
+        "text": "Pro rezervace, které nepřicházejí přes portály (přímé rezervace, minulé rezervace z vašeho starého systému).",
+        "downloadTemplate": "Stáhnout šablonu",
+        "upload": "Nahrát CSV",
+        "hint": "Stáhněte si šablonu, vyplňte ji (datum jako RRRR-MM-DD) a znovu ji nahrajte. Povinné: objekt, jméno hosta, příjezd, odjezd. Duplicitní řádky se přeskočí.",
+        "result": "Importováno {imported} z {total} rezervací.",
+        "skipped": "{count, plural, one {# řádek přeskočen (duplikát/chybí objekt)} few {# řádky přeskočeny (duplikát/chybí objekt)} many {# řádku přeskočeno (duplikát/chybí objekt)} other {# řádků přeskočeno (duplikát/chybí objekt)}}",
+        "failed": "{count, plural, one {# řádek s chybou} few {# řádky s chybami} many {# řádku s chybami} other {# řádků s chybami}}:"
       },
       "lodgify": {
-        "title": "Buchungen aus Lodgify holen",
-        "text": "Wenn du von Lodgify wechselst: importiere deine Buchungen direkt per API-Schlüssel (nur lesend, es wird nichts in Lodgify geändert).",
-        "keyLabel": "Lodgify-API-Schlüssel",
-        "keyPlaceholder": "Aus Lodgify: Einstellungen → Public API",
-        "keyHint": "Der Schlüssel wird nur für diesen Import genutzt und nicht gespeichert. Wir lesen ausschließlich – wir ändern nichts in Lodgify.",
-        "preview": "Vorschau laden",
-        "import": "{count, plural, one {# Buchung importieren} other {# Buchungen importieren}}",
-        "previewResult": "{importable} von {total} Buchungen können importiert werden.",
-        "result": "{imported} von {total} Buchungen importiert."
+        "title": "Načtení rezervací z Lodgify",
+        "text": "Přecházíte-li z Lodgify: importujte své rezervace přímo pomocí API klíče (pouze pro čtení, v Lodgify se nic nemění).",
+        "keyLabel": "Klíč API pro Lodgify",
+        "keyPlaceholder": "Z Lodgify: Nastavení → Public API",
+        "keyHint": "Klíč se použije pouze pro tento import a neukládá se. Pouze čteme — v Lodgify nic neměníme.",
+        "preview": "Načíst náhled",
+        "import": "{count, plural, one {Importovat # rezervaci} few {Importovat # rezervace} many {Importovat # rezervace} other {Importovat # rezervací}}",
+        "previewResult": "Importovat lze {importable} z {total} rezervací.",
+        "result": "Importováno {imported} z {total} rezervací."
       },
       "finish": {
-        "notRegistered": "Mindestens ein Objekt muss an die Buchungsportale übermittelt sein, bevor du das Onboarding abschließt. Verbinde in Schritt 2 ein Portal — dabei wird das Objekt automatisch übertragen."
+        "notRegistered": "Než dokončíte úvodní nastavení, musí být na rezervační portály přenesen alespoň jeden objekt. Propojte portál v kroku 2 — objekt se při tom přenese automaticky."
       }
     }
   },
@@ -208,7 +208,7 @@
     "websiteDesign": "Vzhled",
     "websitePages": "Stránky",
     "websiteDomain": "Adresa",
-    "channelManager": "Channel Manager",
+    "channelManager": "Správce kanálů",
     "guests": "Hosté",
     "tasks": "Úkoly",
     "invoices": "Faktury",
@@ -364,7 +364,7 @@
     "sourceManual": "Manual",
     "sourceChannex": "Od cestovní kanceláře",
     "clear": "Clear",
-    "readonly": "Portal",
+    "readonly": "Portál",
     "toIncl": "Do",
     "calendarHint": "Tažením přes dny objektu vyberte období.",
     "legendOpen": "Volné",
@@ -399,11 +399,11 @@
     "resetConfirm": "Ano, zrušit vše",
     "resetting": "Resetting …",
     "cancel": "Cancel",
-    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
-    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
-    "reasonRequired": "Bitte einen Grund wählen.",
-    "skippedBooked": "{count} gebuchte Tage wurden übersprungen — verkaufte Tage lassen sich nicht stoppen.",
-    "skippedBookedAll": "Kein Tag gestoppt: alle {count} Tage im Zeitraum sind gebucht."
+    "noteRequired": "U možnosti „Jiné“ je potřeba poznámka.",
+    "noteRequiredLabel": "Poznámka (povinná u „Jiné“)",
+    "reasonRequired": "Vyberte prosím důvod.",
+    "skippedBooked": "{count} rezervovaných dnů bylo přeskočeno — prodané dny nelze zastavit.",
+    "skippedBookedAll": "Nezastaven žádný den: všech {count} dnů v období je rezervováno."
   },
   "inbox": {
     "title": "Inbox",
@@ -3901,7 +3901,7 @@
       "streetPlaceholder": "Vzorová ulice 123",
       "bankPlaceholder": "Deutsche Bank",
       "holderPlaceholder": "Jan Novák",
-      "ibanPlaceholder": "DE89 3704 0044 0532 0130 00"
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00"
     },
     "pdf": {
       "qrCode": "QR kód",
@@ -4203,7 +4203,7 @@
       },
       "emptyState": "Nebyly nalezeny žádné rezervace.",
       "loading": "Načítání…",
-      "ownerStay": "Eigennutzung",
+      "ownerStay": "Vlastní užívání",
       "limit": "Limit ({count})",
       "limitAll": "Vše",
       "columnsMenu": "Sloupce",
@@ -4621,8 +4621,8 @@
       "openGuestCard": "Otevřít kartu hosta",
       "photos": "Fotky",
       "noPhotosFound": "K této rezervaci nebyly nalezeny žádné obrázky.",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Pobyt vlastníka",
+      "ownerStayHint": "Žádný obrat — ani faktura, ani provize, není ve vyúčtování vlastníka.",
       "viaChannel": "přes {channel}",
       "receivedOn": "přijato u nás dne {date}",
       "bookedOn": "rezervováno dne {date}"
@@ -4978,7 +4978,7 @@
   },
   "objects": {
     "channelChips": {
-      "website": "Website",
+      "website": "Webová stránka",
       "platform": "Platform",
       "portals": "Portals",
       "state": {
@@ -4995,7 +4995,7 @@
       "publishAll": "Zveřejnit všude",
       "publishedAll": "Objekt zveřejněn na všech kanálech.",
       "draftHint": "Tento objekt je koncept a neprodává se na žádném kanálu. Nastavte jej na „Aktivní“, aby se zveřejnil.",
-      "groupWebsite": "Website",
+      "groupWebsite": "Webová stránka",
       "groupPlatform": "Tržiště",
       "groupPortals": "Portály",
       "connectPortal": "Připojit portál",
@@ -5047,7 +5047,7 @@
       "sortAz": "A–Z",
       "sortZa": "Z–A",
       "menuOpen": "Akce",
-      "menuEdit": "Bearbeiten",
+      "menuEdit": "Upravit",
       "menuDelete": "Delete",
       "deleteConfirm": "Opravdu smazat objekt „{title}“?",
       "deleteOk": "Objekt smazán.",
@@ -5346,16 +5346,16 @@
       "removeAmenityAriaLabel": "Odebrat {amenity}",
       "amenitiesSearchPlaceholder": "Hledat vybavení …",
       "noSearchResults": "Žádné výsledky.",
-      "zimmerErneutLaden": "Erneut versuchen",
-      "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerFertig": "Fertig",
+      "zimmerErneutLaden": "Zkusit znovu",
+      "zimmerLaedt": "Pokoje se načítají …",
+      "zimmerFertig": "Hotovo",
       "zimmerBettenHinweis": "Načítá se z Airbnb a zůstává v myNextDays a myBestDays — rezervační portály rozpis lůžek nepřijímají.",
-      "masseinheitLabel": "Maßeinheit",
+      "masseinheitLabel": "Jednotka míry",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
       "sizeSqftPrefix": "{size} ft² · ",
-      "gaesteWeniger": "Ein Gast weniger",
-      "gaesteMehr": "Ein Gast mehr",
+      "gaesteWeniger": "O jednoho hosta méně",
+      "gaesteMehr": "O jednoho hosta více",
       "zimmerSuffixPrivat": "soukromé",
       "zimmerSuffixGemeinschaftlich": "sdílené",
       "zimmerErhoehen": "Přidat {room}",
@@ -5930,7 +5930,7 @@
         "zweibettzimmer": "Twin room",
         "familienzimmer": "Family room",
         "junior_suite": "Junior suite",
-        "suite": "Suite"
+        "suite": "Apartmá"
       }
     },
     "sync": {
@@ -5985,20 +5985,20 @@
         "schliessen": "Zavřít"
       },
       "airbnbPull": {
-        "button": "Bei Airbnb abrufen",
-        "hint": "Ordnet dieses Objekt bei Airbnb zu und holt den Preis von dort.",
-        "priceTaken": "Preis von Airbnb übernommen: {price} · Mindestaufenthalt {nights} Nächte",
-        "noPrice": "Airbnb hat keinen Preis übergeben. Die Zuordnung steht.",
-        "currency": "Währung: {currency}",
-        "timezone": "Zeitzone: {timezone}",
-        "alsoTaken": "Ebenfalls übernommen: {fields}",
+        "button": "Načíst z Airbnb",
+        "hint": "Přiřadí tento objekt na Airbnb a převezme odtud cenu.",
+        "priceTaken": "Cena převzata z Airbnb: {price} · minimální pobyt {nights} nocí",
+        "noPrice": "Airbnb nepředalo žádnou cenu. Přiřazení je hotové.",
+        "currency": "Měna: {currency}",
+        "timezone": "Časové pásmo: {timezone}",
+        "alsoTaken": "Rovněž převzato: {fields}",
         "field": {
-          "check_in_from": "Check-in-Zeit",
-          "check_out_until": "Check-out-Zeit",
-          "pets_allowed": "Haustiere erlaubt",
-          "pets_max": "Anzahl Haustiere",
-          "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte",
+          "check_in_from": "Čas příjezdu",
+          "check_out_until": "Čas odjezdu",
+          "pets_allowed": "Domácí zvířata povolena",
+          "pets_max": "Počet domácích zvířat",
+          "smoking_allowed": "Kouření",
+          "max_nights": "Maximální počet nocí",
           "address": "Adresa",
           "postal_code": "PSČ",
           "city": "Město",
@@ -6172,14 +6172,14 @@
         "booked": "Obsazeno",
         "blocked": "Blokováno",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "blockedAndStopSell": "Blokováno + Stop-Sell",
         "contractEnd": "Smlouva ukončena"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "všechny kanály",
       "nightsCount": "{count, plural, one {# noc} few {# noci} many {# noci} other {# nocí}}",
       "daysCount": "{count, plural, one {# den} few {# dny} many {# dne} other {# dní}}",
-      "ownerStay": "Eigentümer-Aufenthalt"
+      "ownerStay": "Pobyt vlastníka"
     },
     "calendarViews": {
       "viewLabel": "Zobrazení",
@@ -6199,10 +6199,10 @@
       "blocking": "Blokování…",
       "createBlockedPeriod": "Vytvořit blokované období",
       "priceMinStayBlock": "Cena / min. pobyt / blokace …",
-      "ownerStay": "Eigennutzung eintragen",
-      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
-      "setStopSell": "Stop-Sell setzen",
-      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
+      "ownerStay": "Zadat vlastní užívání",
+      "createBlockedPeriodHint": "Dostupnost 0 — den je zavřený všude",
+      "setStopSell": "Nastavit Stop-Sell",
+      "setStopSellHint": "Den zůstává volný, ale neprodává se — s důvodem"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Počet osob nastavený pro tento objekt",
@@ -6432,11 +6432,11 @@
       "occupancy": "Obsazenost",
       "propertyNights": "{booked}/{total} objektonocí",
       "revenue": "Tržby",
-      "stopSellClear": "Stop-Sell aufheben",
-      "stopSellClearing": "Hebe auf…",
-      "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
-      "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "stopSellClear": "Zrušit Stop-Sell",
+      "stopSellClearing": "Ruším…",
+      "stopSellClearNothing": "Zde nebyl žádný Stop-Sell ke zrušení.",
+      "stopSellEditReason": "Změnit důvod",
+      "stopSellPortalLocked": "Nastaveno portálem — zrušit lze jen tam.",
       "legend": "Legenda",
       "contractEndLocked": "Tato blokace vychází z konce smlouvy. Změnit ji lze pouze přes datum konce v kartě objektu."
     },
@@ -6455,29 +6455,29 @@
       "feesHint": "Úklid apod.",
       "personsValue": "{count} os.",
       "guestsLabel": "Hosté",
-      "stayKind": "Art des Aufenthalts",
-      "stayKindGuest": "Gastbuchung",
-      "stayKindOwner": "Eigennutzung",
-      "ownerLabel": "Eigentümer",
-      "ownerContact": "Kontaktdaten des Eigentümers",
-      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "stayKind": "Druh pobytu",
+      "stayKindGuest": "Rezervace hosta",
+      "stayKindOwner": "Vlastní užívání",
+      "ownerLabel": "Vlastník",
+      "ownerContact": "Kontaktní údaje vlastníka",
+      "ownerStayHint": "Vlastní využití obsadí kalendář jako rezervace, ale nevytváří žádný obrat: žádná cena, žádná faktura, žádná provize a nic ve vyúčtování vlastníka.",
       "steps": {
-        "details": "Details",
-        "prices": "Preise & Extras",
-        "policy": "Richtlinien"
+        "details": "Podrobnosti",
+        "prices": "Ceny a příplatky",
+        "policy": "Pravidla"
       },
       "headings": {
-        "details": "Reservierungsdetails",
-        "prices": "Preise & Extras festlegen",
-        "policy": "Richtlinien festlegen"
+        "details": "Podrobnosti rezervace",
+        "prices": "Nastavit ceny a příplatky",
+        "policy": "Nastavit pravidla"
       },
-      "ownerSection": "Eigentümer",
-      "ownerLoading": "Eigentümer wird ermittelt…",
-      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
-      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
-      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
-      "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "ownerSection": "Vlastník",
+      "ownerLoading": "Zjišťuje se vlastník…",
+      "ownerLoadFailed": "Vlastníka se nepodařilo načíst.",
+      "ownerMissing": "K tomuto objektu není uveden žádný vlastník.",
+      "ownerMissingHint": "Vlastní využití vyžaduje uvedeného vlastníka. Vytvořte ho v části Vlastníci a přiřaďte mu tento objekt.",
+      "ownerMissingLink": "Na vlastníky",
+      "ownerFromRecord": "Převzato z kmenových dat vlastníka. Změny kontaktních údajů se provádějí v části Vlastníci.",
       "stayNameLabel": "Kdo tam bydlí",
       "stayNamePlaceholder": "Jméno osoby",
       "stayNameHint": "Ponechte prázdné pro samotného vlastníka. Jinak jméno osoby, která období využívá — rodina, přátelé, řemeslníci.",
@@ -6494,8 +6494,8 @@
       "otaPayout": "Výplata od portálu",
       "stillOpen": "Stále otevřeno",
       "cancelReasonPlaceholder": "Důvod zrušení (bude zaznamenán) …",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Pobyt vlastníka",
+      "ownerStayHint": "Žádný obrat — ani faktura, ani provize, není ve vyúčtování vlastníka.",
       "openBooking": "Na celou rezervaci",
       "messageGuest": "Napsat hostovi"
     },
@@ -6704,7 +6704,7 @@
     "seasonApplyNoSpans": "Tato sezóna nemá žádná vybarvená období. Nejprve ji vybarvěte, nebo přeneste pouze definici bez období."
   },
   "channels": {
-    "title": "Channel Manager",
+    "title": "Správce kanálů",
     "subtitle": "Propojte své rezervační portály a rozdělujte dostupnost a ceny automaticky do všech kanálů.",
     "categoryOta": "Rezervační portály",
     "categoryMarketplace": "Vlastní tržiště",
@@ -6786,7 +6786,7 @@
       "sendUserTaxes": "Odesílat vlastní daně",
       "blockedNote": "Dokud je to vypnuté, na kanál se neposílají žádné vlastní daně."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "linkedPending": "{count, plural, =0 {Účet propojen · přiřazení chybí} one {Účet propojen · # objekt zbývá přiřadit} few {Účet propojen · # objekty zbývají přiřadit} many {Účet propojen · # objektu zbývá přiřadit} other {Účet propojen · # objektů zbývá přiřadit}}",
     "activateChannel": "Aktivovat kanál",
     "activateDone": "{portal} je nyní aktivní.",
     "activateFailed": "Kanál nelze aktivovat.",
@@ -6942,7 +6942,7 @@
     "clientSecret": "Client secret",
     "copy": "Kopírovat",
     "copied": "Zkopírováno.",
-    "done": "Fertig",
+    "done": "Hotovo",
     "colName": "Název",
     "colEnv": "Prostředí",
     "colScopes": "Oprávnění",
@@ -7010,7 +7010,7 @@
       "nurMitEntsprechung": "jen vlastnosti s odpovídajícím prvkem v portálu",
       "nichtDeckungsgleich": "kategorie se zcela neshodují",
       "ohneBeleg": "nepotvrzeno — ověřujeme to",
-      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
+      "ohneZimmerZuordnung": "bez přiřazení k jednotlivému pokoji"
     },
     "status": {
       "voll": "transferred",
@@ -7050,7 +7050,7 @@
       "kaution": "Kauce",
       "lizenznummer": "Číslo licence/registrace",
       "mietvertrag": "Nájemní smlouva",
-      "zimmerAusstattung": "Ausstattung der Zimmer"
+      "zimmerAusstattung": "Vybavení pokojů"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -7088,7 +7088,7 @@
       "create": "Vytvořit podmínku",
       "update": "Aktualizovat podmínku",
       "empty": "Zatím žádné podmínky. Vytvořte svou první rezervační podmínku — platební plán, storno a kauci.",
-      "colName": "Name",
+      "colName": "Jméno",
       "colPaymentPlan": "Platební plán",
       "colCancellation": "Storno",
       "colDeposit": "Kauce",
@@ -7143,7 +7143,7 @@
       "amount": "Částka",
       "depositStep3": "3. Časy předautorizace",
       "preauthFromHint": "Od kdy se karta hosta předautorizuje.",
-      "days": "Tage",
+      "days": "Dny",
       "preauthUntilHint": "Do kdy lze předautorizaci provést — po tomto datu se otevřené předautorizace uvolní.",
       "releaseDays": "Uvolnit dní po odjezdu",
       "preauthWarnStrong": "Předautorizace lze často zaručit jen zhruba na 7 dní.",
@@ -7442,7 +7442,7 @@
       "search": "Hledání",
       "searchHinweis": "Vyhledávací lišta s datem a počtem hostů.",
       "propertiesGrid": "Objekty",
-      "propertiesGridHinweis": "Všechny objekty v mřížce, se skutečnými cenami.",
+      "propertiesGridHinweis": "Objekty v mřížce, se skutečnými cenami, pokud jsou zapnuté.",
       "featuredProperties": "Vybrané objekty",
       "featuredPropertiesHinweis": "Jen objekty, které si vyberete.",
       "reviews": "Hodnocení",
@@ -7489,7 +7489,7 @@
       "mindestGaeste": "Od kolika hostů",
       "anzahl": "Počet",
       "objekte": "Objekty",
-      "kategorienZeigen": "Zobrazit jednotlivá hodnocení",
+      "kategorienZeigen": "Zobrazit hodnocení podle kategorií",
       "email": "E-mail",
       "telefon": "Telefon",
       "adresse": "Adresa",
@@ -7589,7 +7589,7 @@
       "erweitert": {
         "titel": "Pokročilé",
         "hinweis": "Zásahy pro pokročilé. Vše zde působí na váš veřejný web.",
-        "faviconTitel": "Favicon",
+        "faviconTitel": "Favikona",
         "faviconHinweis": "Malá ikona na kartách prohlížeče a v záložkách.",
         "codeTitel": "Vlastní kód",
         "codeHinweis": "Pro verifikační značky, analytický skript nebo vlastní vzhled. Nic z toho neběží v platebním procesu.",
@@ -7634,7 +7634,7 @@
       },
       "typBeschreibung": {
         "suche": "Destinace, období a počet hostů — vede na seznam objektů vašeho webu.",
-        "buchen": "Období a počet hostů — vede přímo do vašeho rezervačního procesu."
+        "buchen": "Období a počet hostů — vede na seznam objektů na vašem webu, bez pole pro destinaci."
       },
       "sprache": "Jazyk",
       "spracheHinweis": "Jazyk, ve kterém se pole zobrazí na cizím webu.",
@@ -7870,7 +7870,7 @@
       "hrbPlaceholder": "HRB 12345",
       "courtPlaceholder": "např. Berlín (Charlottenburg)",
       "employeesPlaceholder": "např. 7",
-      "ibanPlaceholder": "DE00 0000 0000 0000 0000 00",
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00",
       "preferredLanguage": "Preferovaný jazyk",
       "chooseLanguage": "Vyberte jazyk",
       "descriptionPlaceholder": "Krátký popis vaší firmy…"

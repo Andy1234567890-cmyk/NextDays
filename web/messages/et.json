@@ -125,74 +125,74 @@
       "text": "Maksuandmed ja makseaktiveerimise andmed."
     },
     "branch": {
-      "title": "Verkaufst du schon auf Buchungsportalen?",
-      "text": "Booking.com, Airbnb & Co. — hast du dort schon Objekte, oder fängst du neu an?",
-      "switchTitle": "Ja, ich wechsle",
-      "switchText": "Ich habe schon Objekte auf Booking, Airbnb & Co. und möchte sie importieren.",
-      "newTitle": "Nein, ich fange neu an",
-      "newText": "Ich lege meine Objekte neu an und verbinde die Portale danach."
+      "title": "Kas müüd juba broneerimisportaalides?",
+      "text": "Booking.com, Airbnb jm — kas sul on seal juba objektid või alustad nullist?",
+      "switchTitle": "Jah, vahetan",
+      "switchText": "Mul on juba objektid Bookingus, Airbnb-s jm ning tahan need importida.",
+      "newTitle": "Ei, alustan algusest",
+      "newText": "Loon oma objektid nullist ja ühendan portaalid pärast."
     },
     "switch": {
-      "title": "Bestehende Objekte importieren",
-      "intro": "So holst du deine bestehenden Booking-/Airbnb-Objekte zu myNextDays — ohne Doppelbuchungen.",
+      "title": "Olemasolevate objektide import",
+      "intro": "Nii tood oma olemasolevad Bookingu/Airbnb objektid myNextDaysi — ilma topeltbroneeringuteta.",
       "cutover": {
-        "title": "Wichtig vor dem Verbinden",
-        "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
-        "b": "Vergangene Buchungen und manuelle Sperren kommen NICHT automatisch mit. Trage sie nach dem Import selbst nach.",
-        "c": "Lass dein altes System als Backup laufen und beobachte die ersten Tage genau.",
-        "ack": "Ich habe das verstanden.",
-        "doneTitle": "Hinweise von vor dem Verbinden (erledigt)"
+        "title": "Tähtis enne ühendamist",
+        "a": "Lahuta iga portaal oma senisest süsteemist enne, kui ühendad selle siin — kanali kohta tohib andmeid saata alati ainult ÜKS süsteem.",
+        "b": "Möödunud broneeringud ja käsitsi seatud sulud EI tule automaatselt kaasa. Sisesta need pärast importi ise.",
+        "c": "Jäta oma vana süsteem varusüsteemina tööle ja jälgi esimesi päevi tähelepanelikult.",
+        "ack": "Sain sellest aru.",
+        "doneTitle": "Juhised enne ühendamist (tehtud)"
       },
       "step1": {
-        "title": "Objekt anlegen",
-        "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
-        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}",
+        "title": "Loo objekt",
+        "text": "Loo iga olemasoleva kuulutuse kohta üks objekt — sidumiseks piisab nimest, liigist ja põhihinnast.",
+        "count": "{count, plural, =0 {Veel ühtegi objekti} one {# objekt} other {# objekti}}",
         "airbnbHint": "Tuled Airbnbst? Jäta see samm vahele — sinu objektid võetakse üle automaatselt, kui ühendad Airbnbga."
       },
       "step2": {
-        "title": "Portal verbinden & zuordnen",
-        "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
-        "connect": "Portal verbinden",
-        "connectMore": "Weiteres Portal verbinden",
-        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“."
+        "title": "Portaali ühendamine ja sidumine",
+        "text": "Ühenda Booking, Airbnb jm ning seo portaali toad 1:1 oma objektidega. Broneeringud ja saadavus tulevad seejärel automaatselt.",
+        "connect": "Ühenda portaal",
+        "connectMore": "Ühenda veel üks portaal",
+        "alreadyConnected": "Üks portaal on juba ühendatud ja sinu objektid on edastatud — siin ei pea midagi uuesti ühendama. Kasuta valikut „Ühenda veel üks portaal“ ainult TÄIENDAVA portaali jaoks (nt Booking)."
       },
       "pull": {
-        "button": "Objekte aus Portal holen",
-        "result": "{count, plural, =0 {Keine neuen Objekte gefunden} one {# Objekt übernommen} other {# Objekte übernommen}}"
+        "button": "Too objektid portaalist",
+        "result": "{count, plural, =0 {Uusi objekte ei leitud} one {# objekt üle võetud} other {# objekti üle võetud}}"
       },
-      "finishCta": "Import abschließen",
-      "finishHint": "Bitte bestätige zuerst den Hinweis oben und lege mindestens ein Objekt an.",
+      "finishCta": "Lõpeta import",
+      "finishHint": "Palun kinnita kõigepealt ülalolev juhis ja loo vähemalt üks objekt.",
       "bookings": {
-        "title": "Bestehende Buchungen einlesen",
-        "text": "Hol dir die Reservierungen deiner verbundenen Portale in deinen Kalender.",
-        "includePast": "Auch vergangene Buchungen einlesen",
-        "pastHint": "Hinweis: Portale liefern in der Regel nur Buchungen ab dem Zeitpunkt der Verbindung. Bereits abgereiste Gäste von davor sind oft nicht mehr abrufbar.",
-        "button": "Buchungen einlesen",
-        "result": "{count, plural, =0 {Keine Buchungen gefunden} one {# Buchung eingelesen} other {# Buchungen eingelesen}}"
+        "title": "Olemasolevate broneeringute sisselugemine",
+        "text": "Too ühendatud portaalide broneeringud oma kalendrisse.",
+        "includePast": "Loe sisse ka möödunud broneeringud",
+        "pastHint": "Märkus: portaalid annavad reeglina ainult broneeringuid alates ühendamise hetkest. Enne seda lahkunud külalisi ei ole sageli enam võimalik pärida.",
+        "button": "Impordi broneeringud",
+        "result": "{count, plural, =0 {Broneeringuid ei leitud} one {# broneering loetud sisse} other {# broneeringut loetud sisse}}"
       },
       "csv": {
-        "title": "Alte & direkte Buchungen per Datei importieren",
-        "text": "Für Buchungen, die nicht über die Portale kommen (Direktbuchungen, vergangene Reservierungen aus deinem alten System).",
-        "downloadTemplate": "Vorlage herunterladen",
-        "upload": "CSV hochladen",
-        "hint": "Lade die Vorlage, fülle sie aus (Datum als JJJJ-MM-TT) und lade sie wieder hoch. Pflicht: Objekt, Gastname, Anreise, Abreise. Doppelte Zeilen werden übersprungen.",
-        "result": "{imported} von {total} Buchungen importiert.",
-        "skipped": "{count, plural, one {# Zeile übersprungen (Duplikat/Objekt fehlt)} other {# Zeilen übersprungen (Duplikat/Objekt fehlt)}}",
-        "failed": "{count, plural, one {# Zeile mit Fehler} other {# Zeilen mit Fehlern}}:"
+        "title": "Vanade ja otsebroneeringute import failist",
+        "text": "Broneeringute jaoks, mis ei tule portaalide kaudu (otsebroneeringud, möödunud broneeringud sinu vanast süsteemist).",
+        "downloadTemplate": "Laadi mall alla",
+        "upload": "Laadi CSV üles",
+        "hint": "Laadi mall alla, täida see (kuupäev kujul AAAA-KK-PP) ja laadi uuesti üles. Kohustuslik: objekt, külalise nimi, saabumine, lahkumine. Korduvad read jäetakse vahele.",
+        "result": "Imporditud {imported} broneeringut {total}-st.",
+        "skipped": "{count, plural, one {# rida vahele jäetud (duplikaat/objekt puudub)} other {# rida vahele jäetud (duplikaat/objekt puudub)}}",
+        "failed": "{count, plural, one {# rida veaga} other {# rida vigadega}}:"
       },
       "lodgify": {
-        "title": "Buchungen aus Lodgify holen",
-        "text": "Wenn du von Lodgify wechselst: importiere deine Buchungen direkt per API-Schlüssel (nur lesend, es wird nichts in Lodgify geändert).",
-        "keyLabel": "Lodgify-API-Schlüssel",
-        "keyPlaceholder": "Aus Lodgify: Einstellungen → Public API",
-        "keyHint": "Der Schlüssel wird nur für diesen Import genutzt und nicht gespeichert. Wir lesen ausschließlich – wir ändern nichts in Lodgify.",
-        "preview": "Vorschau laden",
-        "import": "{count, plural, one {# Buchung importieren} other {# Buchungen importieren}}",
-        "previewResult": "{importable} von {total} Buchungen können importiert werden.",
-        "result": "{imported} von {total} Buchungen importiert."
+        "title": "Broneeringute toomine Lodgifyst",
+        "text": "Kui vahetad Lodgify vastu: impordi oma broneeringud otse API võtmega (ainult lugemine, Lodgifys ei muudeta midagi).",
+        "keyLabel": "Lodgify API võti",
+        "keyPlaceholder": "Lodgifyst: Seaded → Public API",
+        "keyHint": "Võtit kasutatakse ainult selle impordi jaoks ja seda ei salvestata. Me ainult loeme — Lodgifys me midagi ei muuda.",
+        "preview": "Laadi eelvaade",
+        "import": "{count, plural, one {Impordi # broneering} other {Impordi # broneeringut}}",
+        "previewResult": "{total} broneeringust saab importida {importable}.",
+        "result": "Imporditud {imported} broneeringut {total}-st."
       },
       "finish": {
-        "notRegistered": "Mindestens ein Objekt muss an die Buchungsportale übermittelt sein, bevor du das Onboarding abschließt. Verbinde in Schritt 2 ein Portal — dabei wird das Objekt automatisch übertragen."
+        "notRegistered": "Enne kui lõpetad kasutuselevõtu, peab vähemalt üks objekt olema broneerimisportaalidesse edastatud. Ühenda 2. sammus portaal — objekt edastatakse seejuures automaatselt."
       }
     }
   },
@@ -208,7 +208,7 @@
     "websiteDesign": "Kujundus",
     "websitePages": "Lehed",
     "websiteDomain": "Aadress",
-    "channelManager": "Channel Manager",
+    "channelManager": "Kanalihaldur",
     "guests": "Külalised",
     "tasks": "Ülesanded",
     "invoices": "Arved",
@@ -364,7 +364,7 @@
     "sourceManual": "Manual",
     "sourceChannex": "Reisikorraldajalt",
     "clear": "Clear",
-    "readonly": "Portal",
+    "readonly": "Portaal",
     "toIncl": "Kuni",
     "calendarHint": "Perioodi valimiseks lohistage üle objekti päevade.",
     "legendOpen": "Vaba",
@@ -399,11 +399,11 @@
     "resetConfirm": "Jah, eemalda kõik",
     "resetting": "Resetting …",
     "cancel": "Cancel",
-    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
-    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
-    "reasonRequired": "Bitte einen Grund wählen.",
-    "skippedBooked": "{count} gebuchte Tage wurden übersprungen — verkaufte Tage lassen sich nicht stoppen.",
-    "skippedBookedAll": "Kein Tag gestoppt: alle {count} Tage im Zeitraum sind gebucht."
+    "noteRequired": "Valiku „Muu“ puhul on märkus kohustuslik.",
+    "noteRequiredLabel": "Märkus (kohustuslik valiku „Muu“ puhul)",
+    "reasonRequired": "Palun vali põhjus.",
+    "skippedBooked": "{count} broneeritud päeva jäeti vahele — müüdud päevi ei saa peatada.",
+    "skippedBookedAll": "Ühtegi päeva ei peatatud: kõik {count} päeva perioodis on broneeritud."
   },
   "inbox": {
     "title": "Inbox",
@@ -3901,7 +3901,7 @@
       "streetPlaceholder": "Näidistänav 123",
       "bankPlaceholder": "Deutsche Bank",
       "holderPlaceholder": "Jaan Tamm",
-      "ibanPlaceholder": "DE89 3704 0044 0532 0130 00"
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00"
     },
     "pdf": {
       "qrCode": "QR-kood",
@@ -4203,7 +4203,7 @@
       },
       "emptyState": "Broneeringuid ei leitud.",
       "loading": "Laadib…",
-      "ownerStay": "Eigennutzung",
+      "ownerStay": "Omaniku kasutus",
       "limit": "Piirang ({count})",
       "limitAll": "Kõik",
       "columnsMenu": "Veerud",
@@ -4621,8 +4621,8 @@
       "openGuestCard": "Ava külaliskaart",
       "photos": "Fotod",
       "noPhotosFound": "Selle broneeringu kohta pilte ei leitud.",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Omaniku viibimine",
+      "ownerStayHint": "Käivet ei teki — ei arvet ega vahendustasu, ei kajastu omaniku arvelduses.",
       "viaChannel": "kanali {channel} kaudu",
       "receivedOn": "meile saabus {date}",
       "bookedOn": "broneeritud {date}"
@@ -4978,7 +4978,7 @@
   },
   "objects": {
     "channelChips": {
-      "website": "Website",
+      "website": "Veebisait",
       "platform": "Platform",
       "portals": "Portals",
       "state": {
@@ -4995,7 +4995,7 @@
       "publishAll": "Avalda kõikjal",
       "publishedAll": "Objekt avaldatud kõigis kanalites.",
       "draftHint": "See objekt on mustand ja seda ei müüda üheski kanalis. Seadista see olekusse „Aktiivne“, et see avaldada.",
-      "groupWebsite": "Website",
+      "groupWebsite": "Veebisait",
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Ühenda portaal",
@@ -5047,7 +5047,7 @@
       "sortAz": "A–Y",
       "sortZa": "Y–A",
       "menuOpen": "Toimingud",
-      "menuEdit": "Bearbeiten",
+      "menuEdit": "Muuda",
       "menuDelete": "Delete",
       "deleteConfirm": "Kas tõesti kustutada objekt „{title}“?",
       "deleteOk": "Objekt kustutatud.",
@@ -5346,16 +5346,16 @@
       "removeAmenityAriaLabel": "Eemalda {amenity}",
       "amenitiesSearchPlaceholder": "Otsi mugavusi …",
       "noSearchResults": "Vasteid ei leitud.",
-      "zimmerErneutLaden": "Erneut versuchen",
-      "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerFertig": "Fertig",
+      "zimmerErneutLaden": "Proovi uuesti",
+      "zimmerLaedt": "Tube laaditakse …",
+      "zimmerFertig": "Valmis",
       "zimmerBettenHinweis": "Võetakse Airbnb-st ja jääb myNextDays'i ja myBestDays'i — broneerimisportaalid voodite jaotust vastu ei võta.",
-      "masseinheitLabel": "Maßeinheit",
+      "masseinheitLabel": "Mõõtühik",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
       "sizeSqftPrefix": "{size} ft² · ",
-      "gaesteWeniger": "Ein Gast weniger",
-      "gaesteMehr": "Ein Gast mehr",
+      "gaesteWeniger": "Üks külaline vähem",
+      "gaesteMehr": "Üks külaline rohkem",
       "zimmerSuffixPrivat": "privaatne",
       "zimmerSuffixGemeinschaftlich": "jagatud",
       "zimmerErhoehen": "Lisa {room}",
@@ -5930,7 +5930,7 @@
         "zweibettzimmer": "Twin room",
         "familienzimmer": "Family room",
         "junior_suite": "Junior suite",
-        "suite": "Suite"
+        "suite": "Sviit"
       }
     },
     "sync": {
@@ -5985,20 +5985,20 @@
         "schliessen": "Sulge"
       },
       "airbnbPull": {
-        "button": "Bei Airbnb abrufen",
-        "hint": "Ordnet dieses Objekt bei Airbnb zu und holt den Preis von dort.",
-        "priceTaken": "Preis von Airbnb übernommen: {price} · Mindestaufenthalt {nights} Nächte",
-        "noPrice": "Airbnb hat keinen Preis übergeben. Die Zuordnung steht.",
-        "currency": "Währung: {currency}",
-        "timezone": "Zeitzone: {timezone}",
-        "alsoTaken": "Ebenfalls übernommen: {fields}",
+        "button": "Too Airbnb-st",
+        "hint": "Seob selle objekti Airbnb-s ja toob hinna sealt.",
+        "priceTaken": "Hind võetud Airbnb-st: {price} · minimaalne viibimisaeg {nights} ööd",
+        "noPrice": "Airbnb ei edastanud hinda. Sidumine on paigas.",
+        "currency": "Valuuta: {currency}",
+        "timezone": "Ajavöönd: {timezone}",
+        "alsoTaken": "Samuti võetud: {fields}",
         "field": {
-          "check_in_from": "Check-in-Zeit",
-          "check_out_until": "Check-out-Zeit",
-          "pets_allowed": "Haustiere erlaubt",
-          "pets_max": "Anzahl Haustiere",
-          "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte",
+          "check_in_from": "Saabumisaeg",
+          "check_out_until": "Lahkumisaeg",
+          "pets_allowed": "Lemmikloomad lubatud",
+          "pets_max": "Lemmikloomade arv",
+          "smoking_allowed": "Suitsetamine",
+          "max_nights": "Maksimaalne ööde arv",
           "address": "Aadress",
           "postal_code": "Sihtnumber",
           "city": "Linn",
@@ -6172,14 +6172,14 @@
         "booked": "Broneeritud",
         "blocked": "Suletud",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "blockedAndStopSell": "Suletud + Stop-Sell",
         "contractEnd": "Leping lõpetatud"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "kõik kanalid",
       "nightsCount": "{count, plural, one {# öö} other {# ööd}}",
       "daysCount": "{count, plural, one {# päev} other {# päeva}}",
-      "ownerStay": "Eigentümer-Aufenthalt"
+      "ownerStay": "Omaniku viibimine"
     },
     "calendarViews": {
       "viewLabel": "Vaade",
@@ -6199,10 +6199,10 @@
       "blocking": "Suletakse…",
       "createBlockedPeriod": "Loo suletud periood",
       "priceMinStayBlock": "Hind / minimaalne viibimine / sulgemine …",
-      "ownerStay": "Eigennutzung eintragen",
-      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
-      "setStopSell": "Stop-Sell setzen",
-      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
+      "ownerStay": "Sisesta omaniku kasutus",
+      "createBlockedPeriodHint": "Saadavus 0 — päev on kõikjal suletud",
+      "setStopSell": "Määra Stop-Sell",
+      "setStopSellHint": "Päev jääb vabaks, kuid seda ei müüda — koos põhjusega"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Selle majutuse jaoks määratud külaliste arv",
@@ -6432,11 +6432,11 @@
       "occupancy": "Täituvus",
       "propertyNights": "{booked}/{total} objektiööd",
       "revenue": "Käive",
-      "stopSellClear": "Stop-Sell aufheben",
-      "stopSellClearing": "Hebe auf…",
-      "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
-      "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "stopSellClear": "Eemalda Stop-Sell",
+      "stopSellClearing": "Eemaldan…",
+      "stopSellClearNothing": "Siin ei olnud ühtegi Stop-Sell'i, mida eemaldada.",
+      "stopSellEditReason": "Muuda põhjust",
+      "stopSellPortalLocked": "Määratud portaali poolt — eemaldada saab ainult seal.",
       "legend": "Legend",
       "contractEndLocked": "See sulgemine tuleneb lepingu lõpust. Seda saab muuta ainult objekti kaardil oleva lõppkuupäeva kaudu."
     },
@@ -6455,29 +6455,29 @@
       "feesHint": "Koristus jne",
       "personsValue": "{count} in.",
       "guestsLabel": "Külalised",
-      "stayKind": "Art des Aufenthalts",
-      "stayKindGuest": "Gastbuchung",
-      "stayKindOwner": "Eigennutzung",
-      "ownerLabel": "Eigentümer",
-      "ownerContact": "Kontaktdaten des Eigentümers",
-      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "stayKind": "Viibimise liik",
+      "stayKindGuest": "Külalise broneering",
+      "stayKindOwner": "Omaniku kasutus",
+      "ownerLabel": "Omanik",
+      "ownerContact": "Omaniku kontaktandmed",
+      "ownerStayHint": "Omanikukasutus hõivab kalendri nagu broneering, kuid ei tekita käivet: ei hinda, ei arvet, ei vahendustasu ega midagi omaniku arvelduses.",
       "steps": {
-        "details": "Details",
-        "prices": "Preise & Extras",
-        "policy": "Richtlinien"
+        "details": "Üksikasjad",
+        "prices": "Hinnad ja lisad",
+        "policy": "Reeglid"
       },
       "headings": {
-        "details": "Reservierungsdetails",
-        "prices": "Preise & Extras festlegen",
-        "policy": "Richtlinien festlegen"
+        "details": "Broneeringu üksikasjad",
+        "prices": "Määra hinnad ja lisad",
+        "policy": "Määra reeglid"
       },
-      "ownerSection": "Eigentümer",
-      "ownerLoading": "Eigentümer wird ermittelt…",
-      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
-      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
-      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
-      "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "ownerSection": "Omanik",
+      "ownerLoading": "Omanikku tuvastatakse…",
+      "ownerLoadFailed": "Omanikku ei õnnestunud laadida.",
+      "ownerMissing": "Sellele objektile ei ole omanikku määratud.",
+      "ownerMissingHint": "Omanikukasutus eeldab määratud omanikku. Loo ta jaotises Omanikud ja seo temaga see objekt.",
+      "ownerMissingLink": "Omanike juurde",
+      "ownerFromRecord": "Võetud omaniku põhiandmetest. Kontaktandmeid muudetakse jaotises Omanikud.",
       "stayNameLabel": "Kes seal peatub",
       "stayNamePlaceholder": "Isiku nimi",
       "stayNameHint": "Jäta tühjaks omaniku enda puhul. Muidu selle isiku nimi, kes perioodi kasutab — pere, sõbrad, meistrid.",
@@ -6494,8 +6494,8 @@
       "otaPayout": "Väljamakse portaalilt",
       "stillOpen": "Veel avatud",
       "cancelReasonPlaceholder": "Tühistamise põhjus (dokumenteeritakse) …",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Omaniku viibimine",
+      "ownerStayHint": "Käivet ei teki — ei arvet ega vahendustasu, ei kajastu omaniku arvelduses.",
       "openBooking": "Kogu broneeringu juurde",
       "messageGuest": "Kirjuta külalisele"
     },
@@ -6704,7 +6704,7 @@
     "seasonApplyNoSpans": "Sellel hooajal pole värvitud perioode. Värvige see esmalt või kandke üle ainult määratlus ilma perioodideta."
   },
   "channels": {
-    "title": "Channel Manager",
+    "title": "Kanalihaldur",
     "subtitle": "Ühenda oma broneerimisportaalid ja jaga saadavus ning hinnad automaatselt kõigisse kanalitesse.",
     "categoryOta": "Broneerimisportaalid",
     "categoryMarketplace": "Oma turuplats",
@@ -6786,7 +6786,7 @@
       "sendUserTaxes": "Saada oma maksud",
       "blockedNote": "Kuni see on väljas, ei saadeta sellele kanalile omi makse."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "linkedPending": "{count, plural, =0 {Konto ühendatud · sidumine ootel} one {Konto ühendatud · # objekt veel siduda} other {Konto ühendatud · # objekti veel siduda}}",
     "activateChannel": "Aktiveeri kanal",
     "activateDone": "{portal} on nüüd aktiivne.",
     "activateFailed": "Kanalit ei õnnestunud aktiveerida.",
@@ -6942,7 +6942,7 @@
     "clientSecret": "Kliendi salavõti",
     "copy": "Kopeeri",
     "copied": "Kopeeritud.",
-    "done": "Fertig",
+    "done": "Valmis",
     "colName": "Name",
     "colEnv": "Keskkond",
     "colScopes": "Õigused",
@@ -7010,7 +7010,7 @@
       "nurMitEntsprechung": "ainult tunnused, millel on portaalis vaste",
       "nichtDeckungsgleich": "kategooriad ei kattu täielikult",
       "ohneBeleg": "kinnitamata — kontrollime seda",
-      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
+      "ohneZimmerZuordnung": "ilma sidumist üksiku toaga"
     },
     "status": {
       "voll": "transferred",
@@ -7050,7 +7050,7 @@
       "kaution": "Tagatisraha",
       "lizenznummer": "Litsentsi-/registreerimisnumber",
       "mietvertrag": "Üürileping",
-      "zimmerAusstattung": "Ausstattung der Zimmer"
+      "zimmerAusstattung": "Tubade mugavused"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -7088,7 +7088,7 @@
       "create": "Loo tingimus",
       "update": "Uuenda tingimust",
       "empty": "Tingimusi veel pole. Loo oma esimene broneerimistingimus — maksegraafik, tühistamine ja tagatisraha.",
-      "colName": "Name",
+      "colName": "Nimi",
       "colPaymentPlan": "Makseplaan",
       "colCancellation": "Tühistamine",
       "colDeposit": "Tagatis",
@@ -7143,7 +7143,7 @@
       "amount": "Summa",
       "depositStep3": "3. Eelautoriseerimise ajad",
       "preauthFromHint": "Millal külalise kaart eelautoriseeritakse.",
-      "days": "Tage",
+      "days": "Päevad",
       "preauthUntilHint": "Mis ajani saab eelautoriseerimist teha — pärast seda kuupäeva vabastatakse avatud eelautoriseeringud.",
       "releaseDays": "Vabasta päeva pärast lahkumist",
       "preauthWarnStrong": "Eelautoriseeringuid saab sageli garanteerida vaid umbes 7 päevaks.",
@@ -7442,7 +7442,7 @@
       "search": "Otsing",
       "searchHinweis": "Otsinguriba kuupäeva ja külaliste arvuga.",
       "propertiesGrid": "Objektid",
-      "propertiesGridHinweis": "Kõik objektid ruudustikuna, tegelike hindadega.",
+      "propertiesGridHinweis": "Objektid ruudustikus, tegelike hindadega, kui need on sisse lülitatud.",
       "featuredProperties": "Valitud objektid",
       "featuredPropertiesHinweis": "Ainult need objektid, mille te ise valite.",
       "reviews": "Arvustused",
@@ -7489,7 +7489,7 @@
       "mindestGaeste": "Alates mitmest külalisest",
       "anzahl": "Arv",
       "objekte": "Objektid",
-      "kategorienZeigen": "Näita üksikhinnanguid",
+      "kategorienZeigen": "Näita hinnanguid kategooriate kaupa",
       "email": "E-post",
       "telefon": "Telefon",
       "adresse": "Aadress",
@@ -7634,7 +7634,7 @@
       },
       "typBeschreibung": {
         "suche": "Sihtkoht, periood ja külaliste arv — viib teie veebilehe objektide loendisse.",
-        "buchen": "Periood ja külaliste arv — viib otse teie broneerimisprotsessi."
+        "buchen": "Periood ja külaliste arv — viib teie veebilehe objektide loendisse, ilma sihtkoha väljata."
       },
       "sprache": "Keel",
       "spracheHinweis": "Keel, milles väli võõral lehel ilmub.",
@@ -7870,7 +7870,7 @@
       "hrbPlaceholder": "HRB 12345",
       "courtPlaceholder": "nt Berliin (Charlottenburg)",
       "employeesPlaceholder": "nt 7",
-      "ibanPlaceholder": "DE00 0000 0000 0000 0000 00",
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00",
       "preferredLanguage": "Eelistatud keel",
       "chooseLanguage": "Vali keel",
       "descriptionPlaceholder": "Lühikirjeldus sinu ettevõttest…"

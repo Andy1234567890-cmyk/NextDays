@@ -125,74 +125,74 @@
       "text": "Date fiscale și datele pentru activarea plăților."
     },
     "branch": {
-      "title": "Verkaufst du schon auf Buchungsportalen?",
-      "text": "Booking.com, Airbnb & Co. — hast du dort schon Objekte, oder fängst du neu an?",
-      "switchTitle": "Ja, ich wechsle",
-      "switchText": "Ich habe schon Objekte auf Booking, Airbnb & Co. und möchte sie importieren.",
-      "newTitle": "Nein, ich fange neu an",
-      "newText": "Ich lege meine Objekte neu an und verbinde die Portale danach."
+      "title": "Vindeți deja prin portaluri de rezervări?",
+      "text": "Booking.com, Airbnb etc. — aveți deja proprietăți acolo sau începeți de la zero?",
+      "switchTitle": "Da, fac trecerea",
+      "switchText": "Am deja proprietăți pe Booking, Airbnb etc. și vreau să le import.",
+      "newTitle": "Nu, încep de la zero",
+      "newText": "Îmi creez proprietățile de la zero și conectez portalurile după aceea."
     },
     "switch": {
-      "title": "Bestehende Objekte importieren",
-      "intro": "So holst du deine bestehenden Booking-/Airbnb-Objekte zu myNextDays — ohne Doppelbuchungen.",
+      "title": "Importați proprietățile existente",
+      "intro": "Așa vă aduceți proprietățile existente de pe Booking/Airbnb în myNextDays — fără suprarezervări.",
       "cutover": {
-        "title": "Wichtig vor dem Verbinden",
-        "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
-        "b": "Vergangene Buchungen und manuelle Sperren kommen NICHT automatisch mit. Trage sie nach dem Import selbst nach.",
-        "c": "Lass dein altes System als Backup laufen und beobachte die ersten Tage genau.",
-        "ack": "Ich habe das verstanden.",
-        "doneTitle": "Hinweise von vor dem Verbinden (erledigt)"
+        "title": "Important înainte de conectare",
+        "a": "Deconectați fiecare portal de vechiul dvs. sistem înainte de a-l conecta aici — pe fiecare canal poate trimite date DOAR UN sistem.",
+        "b": "Rezervările din trecut și blocajele manuale NU se preiau automat. Introduceți-le dvs. după import.",
+        "c": "Lăsați vechiul sistem să funcționeze ca rezervă și urmăriți atent primele zile.",
+        "ack": "Am înțeles.",
+        "doneTitle": "Indicații de dinaintea conectării (finalizat)"
       },
       "step1": {
-        "title": "Objekt anlegen",
-        "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
-        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}",
+        "title": "Creează proprietatea",
+        "text": "Creați o proprietate pentru fiecare anunț existent — numele, tipul și prețul de bază sunt suficiente pentru atribuire.",
+        "count": "{count, plural, =0 {Încă nicio proprietate} one {# proprietate} few {# proprietăți} other {# de proprietăți}}",
         "airbnbHint": "Vii de la Airbnb? Sari peste acest pas — proprietățile tale sunt preluate automat când conectezi Airbnb."
       },
       "step2": {
-        "title": "Portal verbinden & zuordnen",
-        "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
-        "connect": "Portal verbinden",
-        "connectMore": "Weiteres Portal verbinden",
-        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“."
+        "title": "Conectare și atribuire portal",
+        "text": "Conectați Booking, Airbnb etc. și atribuiți camerele portalurilor 1:1 proprietăților dvs. Rezervările și disponibilitatea vin apoi automat.",
+        "connect": "Conectează portalul",
+        "connectMore": "Conectează încă un portal",
+        "alreadyConnected": "Un portal este deja conectat și proprietățile dvs. au fost transmise — nu trebuie să reconectați nimic aici. Folosiți „Conectează alt portal” doar pentru un portal SUPLIMENTAR (de ex. Booking)."
       },
       "pull": {
-        "button": "Objekte aus Portal holen",
-        "result": "{count, plural, =0 {Keine neuen Objekte gefunden} one {# Objekt übernommen} other {# Objekte übernommen}}"
+        "button": "Preia proprietățile din portal",
+        "result": "{count, plural, =0 {Nicio proprietate nouă găsită} one {# proprietate preluată} few {# proprietăți preluate} other {# de proprietăți preluate}}"
       },
-      "finishCta": "Import abschließen",
-      "finishHint": "Bitte bestätige zuerst den Hinweis oben und lege mindestens ein Objekt an.",
+      "finishCta": "Finalizează importul",
+      "finishHint": "Confirmați mai întâi indicația de mai sus și creați cel puțin o proprietate.",
       "bookings": {
-        "title": "Bestehende Buchungen einlesen",
-        "text": "Hol dir die Reservierungen deiner verbundenen Portale in deinen Kalender.",
-        "includePast": "Auch vergangene Buchungen einlesen",
-        "pastHint": "Hinweis: Portale liefern in der Regel nur Buchungen ab dem Zeitpunkt der Verbindung. Bereits abgereiste Gäste von davor sind oft nicht mehr abrufbar.",
-        "button": "Buchungen einlesen",
-        "result": "{count, plural, =0 {Keine Buchungen gefunden} one {# Buchung eingelesen} other {# Buchungen eingelesen}}"
+        "title": "Importați rezervările existente",
+        "text": "Aduceți rezervările din portalurile conectate în calendarul dvs.",
+        "includePast": "Importă și rezervările din trecut",
+        "pastHint": "Observație: de regulă portalurile livrează doar rezervările începând din momentul conectării. Oaspeții care au plecat înainte de acest moment adesea nu mai pot fi preluați.",
+        "button": "Importă rezervările",
+        "result": "{count, plural, =0 {Nicio rezervare găsită} one {# rezervare importată} few {# rezervări importate} other {# de rezervări importate}}"
       },
       "csv": {
-        "title": "Alte & direkte Buchungen per Datei importieren",
-        "text": "Für Buchungen, die nicht über die Portale kommen (Direktbuchungen, vergangene Reservierungen aus deinem alten System).",
-        "downloadTemplate": "Vorlage herunterladen",
-        "upload": "CSV hochladen",
-        "hint": "Lade die Vorlage, fülle sie aus (Datum als JJJJ-MM-TT) und lade sie wieder hoch. Pflicht: Objekt, Gastname, Anreise, Abreise. Doppelte Zeilen werden übersprungen.",
-        "result": "{imported} von {total} Buchungen importiert.",
-        "skipped": "{count, plural, one {# Zeile übersprungen (Duplikat/Objekt fehlt)} other {# Zeilen übersprungen (Duplikat/Objekt fehlt)}}",
-        "failed": "{count, plural, one {# Zeile mit Fehler} other {# Zeilen mit Fehlern}}:"
+        "title": "Importați rezervări vechi și directe din fișier",
+        "text": "Pentru rezervările care nu vin prin portaluri (rezervări directe, rezervări din trecut din vechiul dvs. sistem).",
+        "downloadTemplate": "Descarcă șablonul",
+        "upload": "Încarcă CSV",
+        "hint": "Descărcați șablonul, completați-l (data ca AAAA-LL-ZZ) și încărcați-l din nou. Obligatoriu: proprietate, numele oaspetelui, sosire, plecare. Rândurile duplicate sunt omise.",
+        "result": "{imported} din {total} rezervări importate.",
+        "skipped": "{count, plural, one {# rând omis (duplicat/proprietate lipsă)} few {# rânduri omise (duplicat/proprietate lipsă)} other {# de rânduri omise (duplicat/proprietate lipsă)}}",
+        "failed": "{count, plural, one {# rând cu eroare} few {# rânduri cu erori} other {# de rânduri cu erori}}:"
       },
       "lodgify": {
-        "title": "Buchungen aus Lodgify holen",
-        "text": "Wenn du von Lodgify wechselst: importiere deine Buchungen direkt per API-Schlüssel (nur lesend, es wird nichts in Lodgify geändert).",
-        "keyLabel": "Lodgify-API-Schlüssel",
-        "keyPlaceholder": "Aus Lodgify: Einstellungen → Public API",
-        "keyHint": "Der Schlüssel wird nur für diesen Import genutzt und nicht gespeichert. Wir lesen ausschließlich – wir ändern nichts in Lodgify.",
-        "preview": "Vorschau laden",
-        "import": "{count, plural, one {# Buchung importieren} other {# Buchungen importieren}}",
-        "previewResult": "{importable} von {total} Buchungen können importiert werden.",
-        "result": "{imported} von {total} Buchungen importiert."
+        "title": "Preluați rezervările din Lodgify",
+        "text": "Dacă treceți de la Lodgify: importați-vă rezervările direct cu cheia API (doar citire, nu se modifică nimic în Lodgify).",
+        "keyLabel": "Cheie API Lodgify",
+        "keyPlaceholder": "Din Lodgify: Setări → Public API",
+        "keyHint": "Cheia este folosită doar pentru acest import și nu este salvată. Doar citim — nu modificăm nimic în Lodgify.",
+        "preview": "Încarcă previzualizarea",
+        "import": "{count, plural, one {Importă # rezervare} few {Importă # rezervări} other {Importă # de rezervări}}",
+        "previewResult": "{importable} din {total} rezervări pot fi importate.",
+        "result": "{imported} din {total} rezervări importate."
       },
       "finish": {
-        "notRegistered": "Mindestens ein Objekt muss an die Buchungsportale übermittelt sein, bevor du das Onboarding abschließt. Verbinde in Schritt 2 ein Portal — dabei wird das Objekt automatisch übertragen."
+        "notRegistered": "Cel puțin o proprietate trebuie transmisă către portalurile de rezervări înainte de a finaliza onboardingul. Conectați un portal la pasul 2 — proprietatea este transmisă automat."
       }
     }
   },
@@ -208,7 +208,7 @@
     "websiteDesign": "Design",
     "websitePages": "Pagini",
     "websiteDomain": "Adresă",
-    "channelManager": "Channel Manager",
+    "channelManager": "Channel manager",
     "guests": "Oaspeți",
     "tasks": "Sarcini",
     "invoices": "Facturi",
@@ -399,11 +399,11 @@
     "resetConfirm": "Da, elimină tot",
     "resetting": "Resetting …",
     "cancel": "Cancel",
-    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
-    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
-    "reasonRequired": "Bitte einen Grund wählen.",
-    "skippedBooked": "{count} gebuchte Tage wurden übersprungen — verkaufte Tage lassen sich nicht stoppen.",
-    "skippedBookedAll": "Kein Tag gestoppt: alle {count} Tage im Zeitraum sind gebucht."
+    "noteRequired": "La „Altele” este necesară o notă.",
+    "noteRequiredLabel": "Notă (obligatorie la „Altele”)",
+    "reasonRequired": "Alegeți un motiv.",
+    "skippedBooked": "{count} zile rezervate au fost omise — zilele vândute nu pot fi oprite.",
+    "skippedBookedAll": "Nicio zi oprită: toate cele {count} zile din perioadă sunt rezervate."
   },
   "inbox": {
     "title": "Inbox",
@@ -3899,7 +3899,7 @@
       "streetPlaceholder": "Strada Exemplu 123",
       "bankPlaceholder": "Deutsche Bank",
       "holderPlaceholder": "Ion Popescu",
-      "ibanPlaceholder": "DE89 3704 0044 0532 0130 00"
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00"
     },
     "pdf": {
       "qrCode": "Cod QR",
@@ -4201,7 +4201,7 @@
       },
       "emptyState": "Nu s-au găsit rezervări.",
       "loading": "Se încarcă…",
-      "ownerStay": "Eigennutzung",
+      "ownerStay": "Sejur proprietar",
       "limit": "Limită ({count})",
       "limitAll": "Toate",
       "columnsMenu": "Coloane",
@@ -4619,8 +4619,8 @@
       "openGuestCard": "Deschide fișa oaspetelui",
       "photos": "Fotografii",
       "noPhotosFound": "Nu au fost găsite fotografii pentru această rezervare.",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Sejur proprietar",
+      "ownerStayHint": "Fără venit — nici factură, nici comision, nu apare în decontul proprietarului.",
       "viaChannel": "prin {channel}",
       "receivedOn": "primită la noi pe {date}",
       "bookedOn": "rezervată pe {date}"
@@ -4976,7 +4976,7 @@
   },
   "objects": {
     "channelChips": {
-      "website": "Website",
+      "website": "Site web",
       "platform": "Platform",
       "portals": "Portals",
       "state": {
@@ -4993,7 +4993,7 @@
       "publishAll": "Publică peste tot",
       "publishedAll": "Proprietate publicată pe toate canalele.",
       "draftHint": "Această proprietate este o ciornă și nu este vândută pe niciun canal. Setați-o pe „Activă” pentru a o publica.",
-      "groupWebsite": "Website",
+      "groupWebsite": "Site web",
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Conectează portal",
@@ -5045,7 +5045,7 @@
       "sortAz": "A–Z",
       "sortZa": "Z–A",
       "menuOpen": "Acțiuni",
-      "menuEdit": "Bearbeiten",
+      "menuEdit": "Editează",
       "menuDelete": "Delete",
       "deleteConfirm": "Sigur ștergeți proprietatea „{title}”?",
       "deleteOk": "Proprietate ștearsă.",
@@ -5344,16 +5344,16 @@
       "removeAmenityAriaLabel": "Elimină {amenity}",
       "amenitiesSearchPlaceholder": "Caută facilități …",
       "noSearchResults": "Niciun rezultat.",
-      "zimmerErneutLaden": "Erneut versuchen",
-      "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerFertig": "Fertig",
+      "zimmerErneutLaden": "Încearcă din nou",
+      "zimmerLaedt": "Se încarcă camerele …",
+      "zimmerFertig": "Gata",
       "zimmerBettenHinweis": "Se preia din Airbnb și rămâne în myNextDays și myBestDays — portalurile de rezervări nu acceptă configurația paturilor.",
-      "masseinheitLabel": "Maßeinheit",
+      "masseinheitLabel": "Unitate de măsură",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
       "sizeSqftPrefix": "{size} ft² · ",
-      "gaesteWeniger": "Ein Gast weniger",
-      "gaesteMehr": "Ein Gast mehr",
+      "gaesteWeniger": "Un oaspete mai puțin",
+      "gaesteMehr": "Un oaspete mai mult",
       "zimmerSuffixPrivat": "privat",
       "zimmerSuffixGemeinschaftlich": "comun",
       "zimmerErhoehen": "Adăugați {room}",
@@ -5983,20 +5983,20 @@
         "schliessen": "Închide"
       },
       "airbnbPull": {
-        "button": "Bei Airbnb abrufen",
-        "hint": "Ordnet dieses Objekt bei Airbnb zu und holt den Preis von dort.",
-        "priceTaken": "Preis von Airbnb übernommen: {price} · Mindestaufenthalt {nights} Nächte",
-        "noPrice": "Airbnb hat keinen Preis übergeben. Die Zuordnung steht.",
-        "currency": "Währung: {currency}",
-        "timezone": "Zeitzone: {timezone}",
-        "alsoTaken": "Ebenfalls übernommen: {fields}",
+        "button": "Preluare de la Airbnb",
+        "hint": "Atribuie această proprietate pe Airbnb și preia prețul de acolo.",
+        "priceTaken": "Preț preluat de la Airbnb: {price} · sejur minim {nights} nopți",
+        "noPrice": "Airbnb nu a transmis niciun preț. Atribuirea este activă.",
+        "currency": "Monedă: {currency}",
+        "timezone": "Fus orar: {timezone}",
+        "alsoTaken": "Preluat de asemenea: {fields}",
         "field": {
-          "check_in_from": "Check-in-Zeit",
-          "check_out_until": "Check-out-Zeit",
-          "pets_allowed": "Haustiere erlaubt",
-          "pets_max": "Anzahl Haustiere",
-          "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte",
+          "check_in_from": "Ora de check-in",
+          "check_out_until": "Ora de check-out",
+          "pets_allowed": "Animale permise",
+          "pets_max": "Număr de animale",
+          "smoking_allowed": "Fumat",
+          "max_nights": "Număr maxim de nopți",
           "address": "Adresă",
           "postal_code": "Cod poștal",
           "city": "Oraș",
@@ -6170,14 +6170,14 @@
         "booked": "Rezervat",
         "blocked": "Blocat",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "blockedAndStopSell": "Blocat + stop-sell",
         "contractEnd": "Contract reziliat"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "toate canalele",
       "nightsCount": "{count, plural, one {# noapte} few {# nopți} other {# de nopți}}",
       "daysCount": "{count, plural, one {# zi} few {# zile} other {# de zile}}",
-      "ownerStay": "Eigentümer-Aufenthalt"
+      "ownerStay": "Sejur proprietar"
     },
     "calendarViews": {
       "viewLabel": "Vizualizare",
@@ -6197,10 +6197,10 @@
       "blocking": "Blocare…",
       "createBlockedPeriod": "Creează perioadă blocată",
       "priceMinStayBlock": "Preț / Min-Stay / Blocare …",
-      "ownerStay": "Eigennutzung eintragen",
-      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
-      "setStopSell": "Stop-Sell setzen",
-      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
+      "ownerStay": "Înregistrează sejur proprietar",
+      "createBlockedPeriodHint": "Disponibilitate 0 — ziua este închisă pe toate canalele",
+      "setStopSell": "Setează stop-sell",
+      "setStopSellHint": "Ziua rămâne liberă, dar nu se vinde — cu motiv"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Numărul de persoane setat pentru această proprietate",
@@ -6430,11 +6430,11 @@
       "occupancy": "Grad de ocupare",
       "propertyNights": "{booked}/{total} nopți-proprietate",
       "revenue": "Venituri",
-      "stopSellClear": "Stop-Sell aufheben",
-      "stopSellClearing": "Hebe auf…",
-      "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
-      "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "stopSellClear": "Anulează stop-sell",
+      "stopSellClearing": "Se anulează…",
+      "stopSellClearNothing": "Aici nu exista niciun stop-sell de eliminat.",
+      "stopSellEditReason": "Modifică motivul",
+      "stopSellPortalLocked": "Setat de portal — se poate elimina doar acolo.",
       "legend": "Legendă",
       "contractEndLocked": "Această blocare provine din sfârșitul contractului. Poate fi modificată doar prin data de sfârșit din fișa proprietății."
     },
@@ -6453,29 +6453,29 @@
       "feesHint": "Curățenie etc.",
       "personsValue": "{count} pers.",
       "guestsLabel": "Oaspeți",
-      "stayKind": "Art des Aufenthalts",
-      "stayKindGuest": "Gastbuchung",
-      "stayKindOwner": "Eigennutzung",
-      "ownerLabel": "Eigentümer",
-      "ownerContact": "Kontaktdaten des Eigentümers",
-      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "stayKind": "Tipul sejurului",
+      "stayKindGuest": "Rezervare a unui oaspete",
+      "stayKindOwner": "Sejur proprietar",
+      "ownerLabel": "Proprietar",
+      "ownerContact": "Datele de contact ale proprietarului",
+      "ownerStayHint": "Sejurul proprietarului ocupă calendarul ca o rezervare, dar nu generează venit: fără preț, fără factură, fără comision și nimic în decontul proprietarului.",
       "steps": {
-        "details": "Details",
-        "prices": "Preise & Extras",
-        "policy": "Richtlinien"
+        "details": "Detalii",
+        "prices": "Prețuri și extre",
+        "policy": "Condiții"
       },
       "headings": {
-        "details": "Reservierungsdetails",
-        "prices": "Preise & Extras festlegen",
-        "policy": "Richtlinien festlegen"
+        "details": "Detaliile rezervării",
+        "prices": "Stabilește prețurile și extrele",
+        "policy": "Stabilește condițiile"
       },
-      "ownerSection": "Eigentümer",
-      "ownerLoading": "Eigentümer wird ermittelt…",
-      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
-      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
-      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
-      "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "ownerSection": "Proprietar",
+      "ownerLoading": "Se determină proprietarul…",
+      "ownerLoadFailed": "Proprietarul nu a putut fi încărcat.",
+      "ownerMissing": "Pentru această proprietate nu este înregistrat niciun proprietar.",
+      "ownerMissingHint": "Un sejur al proprietarului necesită un proprietar înregistrat. Creați-l la Proprietari și atribuiți-i această proprietate.",
+      "ownerMissingLink": "Către proprietari",
+      "ownerFromRecord": "Preluate din datele de bază ale proprietarului. Datele de contact se modifică la Proprietari.",
       "stayNameLabel": "Cine stă acolo",
       "stayNamePlaceholder": "Numele persoanei",
       "stayNameHint": "Lăsați gol pentru proprietar. Altfel numele persoanei care folosește perioada — familie, prieteni, meșteri.",
@@ -6492,8 +6492,8 @@
       "otaPayout": "Plată de la portal",
       "stillOpen": "Încă deschise",
       "cancelReasonPlaceholder": "Motivul anulării (va fi documentat) …",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Sejur proprietar",
+      "ownerStayHint": "Fără venit — nici factură, nici comision, nu apare în decontul proprietarului.",
       "openBooking": "Către rezervarea completă",
       "messageGuest": "Scrie oaspetelui"
     },
@@ -6702,7 +6702,7 @@
     "seasonApplyNoSpans": "Acest sezon nu are perioade colorate. Colorați-l mai întâi sau transferați doar definiția fără perioade."
   },
   "channels": {
-    "title": "Channel Manager",
+    "title": "Channel manager",
     "subtitle": "Conectați-vă portalurile de rezervări și distribuiți automat disponibilitatea și prețurile pe toate canalele.",
     "categoryOta": "Portaluri de rezervări",
     "categoryMarketplace": "Piață proprie",
@@ -6784,7 +6784,7 @@
       "sendUserTaxes": "Trimite taxele proprii",
       "blockedNote": "Cât timp este dezactivat, nu se trimit taxe proprii către acest canal."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "linkedPending": "{count, plural, =0 {Cont conectat · atribuire în așteptare} one {Cont conectat · # proprietate de atribuit} few {Cont conectat · # proprietăți de atribuit} other {Cont conectat · # de proprietăți de atribuit}}",
     "activateChannel": "Activează canalul",
     "activateDone": "{portal} este acum activ.",
     "activateFailed": "Canalul nu a putut fi activat.",
@@ -6940,7 +6940,7 @@
     "clientSecret": "Secret client",
     "copy": "Copiază",
     "copied": "Copiat.",
-    "done": "Fertig",
+    "done": "Gata",
     "colName": "Name",
     "colEnv": "Mediu",
     "colScopes": "Permisiuni",
@@ -7008,7 +7008,7 @@
       "nurMitEntsprechung": "doar caracteristicile cu echivalent în portal",
       "nichtDeckungsgleich": "categoriile nu se suprapun complet",
       "ohneBeleg": "neconfirmat — verificăm",
-      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
+      "ohneZimmerZuordnung": "fără atribuire la camera individuală"
     },
     "status": {
       "voll": "transferred",
@@ -7048,7 +7048,7 @@
       "kaution": "Garanție",
       "lizenznummer": "Număr de licență/înregistrare",
       "mietvertrag": "Contract de închiriere",
-      "zimmerAusstattung": "Ausstattung der Zimmer"
+      "zimmerAusstattung": "Dotările camerelor"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -7086,7 +7086,7 @@
       "create": "Creează condiție",
       "update": "Actualizează condiția",
       "empty": "Încă nu există condiții. Creați prima dvs. condiție de rezervare — plan de plată, anulare și garanție.",
-      "colName": "Name",
+      "colName": "Nume",
       "colPaymentPlan": "Plan de plată",
       "colCancellation": "Anulare",
       "colDeposit": "Garanție",
@@ -7141,7 +7141,7 @@
       "amount": "Sumă",
       "depositStep3": "3. Termene de preautorizare",
       "preauthFromHint": "De când se preautorizează cardul oaspetelui.",
-      "days": "Tage",
+      "days": "Zile",
       "preauthUntilHint": "Până când se poate face o preautorizare — după această dată preautorizările deschise sunt eliberate.",
       "releaseDays": "Eliberează zile după plecare",
       "preauthWarnStrong": "Preautorizările pot fi adesea garantate doar pentru circa 7 zile.",
@@ -7440,7 +7440,7 @@
       "search": "Căutare",
       "searchHinweis": "Bară de căutare cu date și număr de oaspeți.",
       "propertiesGrid": "Proprietăți",
-      "propertiesGridHinweis": "Toate proprietățile în grilă, cu prețuri reale.",
+      "propertiesGridHinweis": "Proprietăți într-o grilă, cu prețuri reale dacă sunt activate.",
       "featuredProperties": "Proprietăți alese",
       "featuredPropertiesHinweis": "Doar proprietățile pe care le alegeți.",
       "reviews": "Recenzii",
@@ -7487,7 +7487,7 @@
       "mindestGaeste": "De la câți oaspeți",
       "anzahl": "Număr",
       "objekte": "Proprietăți",
-      "kategorienZeigen": "Arată notele individuale",
+      "kategorienZeigen": "Arată notele pe categorii",
       "email": "E-mail",
       "telefon": "Telefon",
       "adresse": "Adresă",
@@ -7632,7 +7632,7 @@
       },
       "typBeschreibung": {
         "suche": "Destinație, perioadă și număr de oaspeți — duce la lista de proprietăți a site-ului dvs.",
-        "buchen": "Perioadă și număr de oaspeți — duce direct în fluxul dvs. de rezervare."
+        "buchen": "Perioadă și număr de oaspeți — duce la lista de proprietăți de pe site-ul dvs., fără câmp de destinație."
       },
       "sprache": "Limbă",
       "spracheHinweis": "Limba în care apare câmpul pe site-ul străin.",
@@ -7868,7 +7868,7 @@
       "hrbPlaceholder": "HRB 12345",
       "courtPlaceholder": "de ex. Berlin (Charlottenburg)",
       "employeesPlaceholder": "de ex. 7",
-      "ibanPlaceholder": "DE00 0000 0000 0000 0000 00",
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00",
       "preferredLanguage": "Limba preferată",
       "chooseLanguage": "Selectați limba",
       "descriptionPlaceholder": "Scurtă descriere a companiei dvs.…"

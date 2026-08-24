@@ -3901,7 +3901,7 @@
       "streetPlaceholder": "Musterstraße 123",
       "bankPlaceholder": "Deutsche Bank",
       "holderPlaceholder": "Max Mustermann",
-      "ibanPlaceholder": "DE89 3704 0044 0532 0130 00"
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00"
     },
     "pdf": {
       "qrCode": "QR-Code",
@@ -7487,7 +7487,7 @@
     },
     "design": {
       "alleGespeichert": "Alles gespeichert",
-      "buttonEcken": "Rand",
+      "buttonEcken": "Ecken",
       "buttonFuellung": "Stil",
       "buttonRand": {
         "pill": "Oval",
@@ -7605,7 +7605,7 @@
       "speichert": "speichert …",
       "veroeffentlichen": "Veröffentlichen",
       "veroeffentlicht": "{anzahl, plural, one {Eine Seite veröffentlicht} other {# Seiten veröffentlicht}}",
-      "veroeffentlicht0": "Veröffentlicht …",
+      "veroeffentlicht0": "Wird veröffentlicht …",
       "websiteAnsehen": "Website ansehen"
     },
     "reiter": {
@@ -7800,7 +7800,7 @@
       "image": "Bild",
       "imageHinweis": "Ein Bild mit Bildunterschrift.",
       "propertiesGrid": "Objekte",
-      "propertiesGridHinweis": "Alle Objekte in einem Raster, mit echten Preisen.",
+      "propertiesGridHinweis": "Objekte in einem Raster, mit echten Preisen, sofern eingeschaltet.",
       "reviews": "Bewertungen",
       "reviewsHinweis": "Ihre eigenen, verifizierten Gästebewertungen.",
       "richText": "Text",
@@ -7837,7 +7837,7 @@
       "heroVollbild": "Vollbild",
       "heroZentriert": "Zentriert über dem Bild",
       "hoehe": "Höhe",
-      "kategorienZeigen": "Einzelbewertungen anzeigen",
+      "kategorienZeigen": "Bewertungen je Kategorie anzeigen",
       "linksbuendig": "Linksbündig",
       "mindestGaeste": "Ab wie vielen Gästen",
       "objekte": "Objekte",
@@ -7910,7 +7910,7 @@
         "suche": "Suchfeld"
       },
       "typBeschreibung": {
-        "buchen": "Zeitraum und Gästezahl — führt direkt in Ihre Buchungsstrecke.",
+        "buchen": "Zeitraum und Gästezahl — führt zur Objektliste auf Ihrer Website, ohne Reiseziel-Feld.",
         "suche": "Reiseziel, Zeitraum und Gästezahl — führt zur Objektliste auf Ihrer Website."
       },
       "typLabel": "Art des Widgets"
@@ -8137,7 +8137,7 @@
       "hrbPlaceholder": "HRB 12345",
       "courtPlaceholder": "z. B. Berlin (Charlottenburg)",
       "employeesPlaceholder": "z. B. 7",
-      "ibanPlaceholder": "DE00 0000 0000 0000 0000 00",
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00",
       "preferredLanguage": "Bevorzugte Sprache",
       "chooseLanguage": "Sprache wählen",
       "descriptionPlaceholder": "Kurze Beschreibung deines Unternehmens…"

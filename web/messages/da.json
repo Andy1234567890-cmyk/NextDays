@@ -125,74 +125,74 @@
       "text": "Skatteoplysninger og data til betalingsaktivering."
     },
     "branch": {
-      "title": "Verkaufst du schon auf Buchungsportalen?",
-      "text": "Booking.com, Airbnb & Co. — hast du dort schon Objekte, oder fängst du neu an?",
-      "switchTitle": "Ja, ich wechsle",
-      "switchText": "Ich habe schon Objekte auf Booking, Airbnb & Co. und möchte sie importieren.",
-      "newTitle": "Nein, ich fange neu an",
-      "newText": "Ich lege meine Objekte neu an und verbinde die Portale danach."
+      "title": "Sælger du allerede på bookingportaler?",
+      "text": "Booking.com, Airbnb m.fl. — har du allerede objekter der, eller starter du forfra?",
+      "switchTitle": "Ja, jeg skifter",
+      "switchText": "Jeg har allerede objekter på Booking, Airbnb m.fl. og vil importere dem.",
+      "newTitle": "Nej, jeg starter forfra",
+      "newText": "Jeg opretter mine objekter fra bunden og forbinder portalerne bagefter."
     },
     "switch": {
-      "title": "Bestehende Objekte importieren",
-      "intro": "So holst du deine bestehenden Booking-/Airbnb-Objekte zu myNextDays — ohne Doppelbuchungen.",
+      "title": "Importér eksisterende objekter",
+      "intro": "Sådan flytter du dine eksisterende Booking-/Airbnb-objekter til myNextDays — uden dobbeltbookinger.",
       "cutover": {
-        "title": "Wichtig vor dem Verbinden",
-        "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
-        "b": "Vergangene Buchungen und manuelle Sperren kommen NICHT automatisch mit. Trage sie nach dem Import selbst nach.",
-        "c": "Lass dein altes System als Backup laufen und beobachte die ersten Tage genau.",
-        "ack": "Ich habe das verstanden.",
-        "doneTitle": "Hinweise von vor dem Verbinden (erledigt)"
+        "title": "Vigtigt før tilslutningen",
+        "a": "Afbryd hver portal fra dit hidtidige system, før du forbinder den her — der må kun være ÉT system, der sender data pr. kanal.",
+        "b": "Tidligere bookinger og manuelle spærringer følger IKKE automatisk med. Indtast dem selv efter importen.",
+        "c": "Lad dit gamle system køre som backup, og hold godt øje de første dage.",
+        "ack": "Jeg har forstået det.",
+        "doneTitle": "Bemærkninger fra før forbindelsen (afsluttet)"
       },
       "step1": {
-        "title": "Objekt anlegen",
-        "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
-        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}",
+        "title": "Opret objekt",
+        "text": "Opret ét objekt pr. eksisterende annonce — navn, type og grundpris er nok til at tildele.",
+        "count": "{count, plural, =0 {Endnu ingen objekter} one {# objekt} other {# objekter}}",
         "airbnbHint": "Kommer du fra Airbnb? Så spring dette trin over — dine boliger overføres automatisk, når du forbinder Airbnb."
       },
       "step2": {
-        "title": "Portal verbinden & zuordnen",
-        "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
-        "connect": "Portal verbinden",
-        "connectMore": "Weiteres Portal verbinden",
-        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“."
+        "title": "Forbind og tildel portal",
+        "text": "Forbind Booking, Airbnb m.fl., og tildel portalernes værelser 1:1 til dine objekter. Bookinger og tilgængelighed følger derefter automatisk.",
+        "connect": "Tilslut portal",
+        "connectMore": "Tilslut endnu en portal",
+        "alreadyConnected": "En portal er allerede forbundet, og dine objekter er overført — du behøver ikke forbinde igen her. Brug kun „Forbind endnu en portal“ til en YDERLIGERE portal (f.eks. Booking)."
       },
       "pull": {
-        "button": "Objekte aus Portal holen",
-        "result": "{count, plural, =0 {Keine neuen Objekte gefunden} one {# Objekt übernommen} other {# Objekte übernommen}}"
+        "button": "Hent objekter fra portalen",
+        "result": "{count, plural, =0 {Ingen nye objekter fundet} one {# objekt overtaget} other {# objekter overtaget}}"
       },
-      "finishCta": "Import abschließen",
-      "finishHint": "Bitte bestätige zuerst den Hinweis oben und lege mindestens ein Objekt an.",
+      "finishCta": "Afslut import",
+      "finishHint": "Bekræft først bemærkningen ovenfor, og opret mindst ét objekt.",
       "bookings": {
-        "title": "Bestehende Buchungen einlesen",
-        "text": "Hol dir die Reservierungen deiner verbundenen Portale in deinen Kalender.",
-        "includePast": "Auch vergangene Buchungen einlesen",
-        "pastHint": "Hinweis: Portale liefern in der Regel nur Buchungen ab dem Zeitpunkt der Verbindung. Bereits abgereiste Gäste von davor sind oft nicht mehr abrufbar.",
-        "button": "Buchungen einlesen",
-        "result": "{count, plural, =0 {Keine Buchungen gefunden} one {# Buchung eingelesen} other {# Buchungen eingelesen}}"
+        "title": "Indlæs eksisterende bookinger",
+        "text": "Hent reservationerne fra dine forbundne portaler ind i din kalender.",
+        "includePast": "Indlæs også tidligere bookinger",
+        "pastHint": "Bemærk: portalerne leverer som regel kun bookinger fra tidspunktet for forbindelsen og frem. Gæster, der er rejst før det, kan ofte ikke længere hentes.",
+        "button": "Indlæs bookinger",
+        "result": "{count, plural, =0 {Ingen bookinger fundet} one {# booking indlæst} other {# bookinger indlæst}}"
       },
       "csv": {
-        "title": "Alte & direkte Buchungen per Datei importieren",
-        "text": "Für Buchungen, die nicht über die Portale kommen (Direktbuchungen, vergangene Reservierungen aus deinem alten System).",
-        "downloadTemplate": "Vorlage herunterladen",
-        "upload": "CSV hochladen",
-        "hint": "Lade die Vorlage, fülle sie aus (Datum als JJJJ-MM-TT) und lade sie wieder hoch. Pflicht: Objekt, Gastname, Anreise, Abreise. Doppelte Zeilen werden übersprungen.",
-        "result": "{imported} von {total} Buchungen importiert.",
-        "skipped": "{count, plural, one {# Zeile übersprungen (Duplikat/Objekt fehlt)} other {# Zeilen übersprungen (Duplikat/Objekt fehlt)}}",
-        "failed": "{count, plural, one {# Zeile mit Fehler} other {# Zeilen mit Fehlern}}:"
+        "title": "Importér gamle og direkte bookinger fra en fil",
+        "text": "Til bookinger, der ikke kommer via portalerne (direkte bookinger, tidligere reservationer fra dit gamle system).",
+        "downloadTemplate": "Download skabelon",
+        "upload": "Upload CSV",
+        "hint": "Hent skabelonen, udfyld den (dato som ÅÅÅÅ-MM-DD) og upload den igen. Påkrævet: objekt, gæstenavn, ankomst, afrejse. Dublerede rækker springes over.",
+        "result": "{imported} af {total} bookinger importeret.",
+        "skipped": "{count, plural, one {# række sprunget over (dublet/objekt mangler)} other {# rækker sprunget over (dublet/objekt mangler)}}",
+        "failed": "{count, plural, one {# række med fejl} other {# rækker med fejl}}:"
       },
       "lodgify": {
-        "title": "Buchungen aus Lodgify holen",
-        "text": "Wenn du von Lodgify wechselst: importiere deine Buchungen direkt per API-Schlüssel (nur lesend, es wird nichts in Lodgify geändert).",
-        "keyLabel": "Lodgify-API-Schlüssel",
-        "keyPlaceholder": "Aus Lodgify: Einstellungen → Public API",
-        "keyHint": "Der Schlüssel wird nur für diesen Import genutzt und nicht gespeichert. Wir lesen ausschließlich – wir ändern nichts in Lodgify.",
-        "preview": "Vorschau laden",
-        "import": "{count, plural, one {# Buchung importieren} other {# Buchungen importieren}}",
-        "previewResult": "{importable} von {total} Buchungen können importiert werden.",
-        "result": "{imported} von {total} Buchungen importiert."
+        "title": "Hent bookinger fra Lodgify",
+        "text": "Skifter du fra Lodgify: importér dine bookinger direkte med en API-nøgle (kun læsning, der ændres intet i Lodgify).",
+        "keyLabel": "Lodgify-API-nøgle",
+        "keyPlaceholder": "Fra Lodgify: Indstillinger → Public API",
+        "keyHint": "Nøglen bruges kun til denne import og gemmes ikke. Vi læser udelukkende — vi ændrer intet i Lodgify.",
+        "preview": "Indlæs forhåndsvisning",
+        "import": "{count, plural, one {Importér # booking} other {Importér # bookinger}}",
+        "previewResult": "{importable} af {total} bookinger kan importeres.",
+        "result": "{imported} af {total} bookinger importeret."
       },
       "finish": {
-        "notRegistered": "Mindestens ein Objekt muss an die Buchungsportale übermittelt sein, bevor du das Onboarding abschließt. Verbinde in Schritt 2 ein Portal — dabei wird das Objekt automatisch übertragen."
+        "notRegistered": "Mindst ét objekt skal være overført til bookingportalerne, før du afslutter onboardingen. Forbind en portal i trin 2 — objektet overføres automatisk."
       }
     }
   },
@@ -208,7 +208,7 @@
     "websiteDesign": "Design",
     "websitePages": "Sider",
     "websiteDomain": "Adresse",
-    "channelManager": "Channel Manager",
+    "channelManager": "Kanalmanager",
     "guests": "Gæster",
     "tasks": "Opgaver",
     "invoices": "Fakturaer",
@@ -399,11 +399,11 @@
     "resetConfirm": "Ja, ophæv alle",
     "resetting": "Resetting …",
     "cancel": "Cancel",
-    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
-    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
-    "reasonRequired": "Bitte einen Grund wählen.",
-    "skippedBooked": "{count} gebuchte Tage wurden übersprungen — verkaufte Tage lassen sich nicht stoppen.",
-    "skippedBookedAll": "Kein Tag gestoppt: alle {count} Tage im Zeitraum sind gebucht."
+    "noteRequired": "Ved „Andet“ er en note påkrævet.",
+    "noteRequiredLabel": "Note (påkrævet ved „Andet“)",
+    "reasonRequired": "Vælg venligst en årsag.",
+    "skippedBooked": "{count} bookede dage blev sprunget over — solgte dage kan ikke stoppes.",
+    "skippedBookedAll": "Ingen dag stoppet: alle {count} dage i perioden er bookede."
   },
   "inbox": {
     "title": "Inbox",
@@ -3901,7 +3901,7 @@
       "streetPlaceholder": "Eksempelvej 123",
       "bankPlaceholder": "Deutsche Bank",
       "holderPlaceholder": "Jens Jensen",
-      "ibanPlaceholder": "DE89 3704 0044 0532 0130 00"
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00"
     },
     "pdf": {
       "qrCode": "QR-kode",
@@ -4203,7 +4203,7 @@
       },
       "emptyState": "Ingen bookinger fundet.",
       "loading": "Indlæser…",
-      "ownerStay": "Eigennutzung",
+      "ownerStay": "Egen benyttelse",
       "limit": "Grænse ({count})",
       "limitAll": "Alle",
       "columnsMenu": "Kolonner",
@@ -4621,8 +4621,8 @@
       "openGuestCard": "Åbn gæstekort",
       "photos": "Billeder",
       "noPhotosFound": "Der blev ikke fundet billeder til denne booking.",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Ejerophold",
+      "ownerStayHint": "Ingen omsætning — hverken faktura eller kommission, ikke med i ejerafregningen.",
       "viaChannel": "via {channel}",
       "receivedOn": "modtaget hos os den {date}",
       "bookedOn": "booket den {date}"
@@ -4978,7 +4978,7 @@
   },
   "objects": {
     "channelChips": {
-      "website": "Website",
+      "website": "Websted",
       "platform": "Platform",
       "portals": "Portals",
       "state": {
@@ -4995,7 +4995,7 @@
       "publishAll": "Offentliggør overalt",
       "publishedAll": "Bolig offentliggjort på alle kanaler.",
       "draftHint": "Denne bolig er et udkast og sælges ikke på nogen kanal. Sæt den til \"Aktiv\" for at offentliggøre den.",
-      "groupWebsite": "Website",
+      "groupWebsite": "Websted",
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Forbind portal",
@@ -5047,7 +5047,7 @@
       "sortAz": "A–Z",
       "sortZa": "Z–A",
       "menuOpen": "Handlinger",
-      "menuEdit": "Bearbeiten",
+      "menuEdit": "Rediger",
       "menuDelete": "Löschen",
       "deleteConfirm": "Vil du virkelig slette boligen “{title}”?",
       "deleteOk": "Bolig slettet.",
@@ -5346,16 +5346,16 @@
       "removeAmenityAriaLabel": "Fjern {amenity}",
       "amenitiesSearchPlaceholder": "Søg faciliteter …",
       "noSearchResults": "Ingen resultater.",
-      "zimmerErneutLaden": "Erneut versuchen",
-      "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerFertig": "Fertig",
+      "zimmerErneutLaden": "Prøv igen",
+      "zimmerLaedt": "Værelser indlæses …",
+      "zimmerFertig": "Færdig",
       "zimmerBettenHinweis": "Hentes fra Airbnb og forbliver hos myNextDays og myBestDays — bookingportalerne modtager ikke sengeoversigter.",
-      "masseinheitLabel": "Maßeinheit",
+      "masseinheitLabel": "Måleenhed",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
       "sizeSqftPrefix": "{size} ft² · ",
-      "gaesteWeniger": "Ein Gast weniger",
-      "gaesteMehr": "Ein Gast mehr",
+      "gaesteWeniger": "Én gæst mindre",
+      "gaesteMehr": "Én gæst mere",
       "zimmerSuffixPrivat": "privat",
       "zimmerSuffixGemeinschaftlich": "fælles",
       "zimmerErhoehen": "Tilføj {room}",
@@ -5985,20 +5985,20 @@
         "schliessen": "Luk"
       },
       "airbnbPull": {
-        "button": "Bei Airbnb abrufen",
-        "hint": "Ordnet dieses Objekt bei Airbnb zu und holt den Preis von dort.",
-        "priceTaken": "Preis von Airbnb übernommen: {price} · Mindestaufenthalt {nights} Nächte",
-        "noPrice": "Airbnb hat keinen Preis übergeben. Die Zuordnung steht.",
-        "currency": "Währung: {currency}",
-        "timezone": "Zeitzone: {timezone}",
-        "alsoTaken": "Ebenfalls übernommen: {fields}",
+        "button": "Hent fra Airbnb",
+        "hint": "Tildeler dette objekt hos Airbnb og henter prisen derfra.",
+        "priceTaken": "Pris overtaget fra Airbnb: {price} · minimumsophold {nights} nætter",
+        "noPrice": "Airbnb sendte ingen pris. Tildelingen er på plads.",
+        "currency": "Valuta: {currency}",
+        "timezone": "Tidszone: {timezone}",
+        "alsoTaken": "Også overtaget: {fields}",
         "field": {
-          "check_in_from": "Check-in-Zeit",
-          "check_out_until": "Check-out-Zeit",
-          "pets_allowed": "Haustiere erlaubt",
-          "pets_max": "Anzahl Haustiere",
-          "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte",
+          "check_in_from": "Check-in-tid",
+          "check_out_until": "Check-ud-tid",
+          "pets_allowed": "Kæledyr tilladt",
+          "pets_max": "Antal kæledyr",
+          "smoking_allowed": "Rygning",
+          "max_nights": "Maksimalt antal nætter",
           "address": "Adresse",
           "postal_code": "Postnummer",
           "city": "By",
@@ -6172,14 +6172,14 @@
         "booked": "Booket",
         "blocked": "Spærret",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "blockedAndStopSell": "Spærret + Stop-Sell",
         "contractEnd": "Kontrakt opsagt"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "alle kanaler",
       "nightsCount": "{count, plural, one {# nat} other {# nætter}}",
       "daysCount": "{count, plural, one {# dag} other {# dage}}",
-      "ownerStay": "Eigentümer-Aufenthalt"
+      "ownerStay": "Ejerophold"
     },
     "calendarViews": {
       "viewLabel": "Visning",
@@ -6199,10 +6199,10 @@
       "blocking": "Spærrer…",
       "createBlockedPeriod": "Opret spærret periode",
       "priceMinStayBlock": "Pris / min. ophold / spærring …",
-      "ownerStay": "Eigennutzung eintragen",
-      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
-      "setStopSell": "Stop-Sell setzen",
-      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
+      "ownerStay": "Registrer egen benyttelse",
+      "createBlockedPeriodHint": "Tilgængelighed 0 — dagen er lukket alle steder",
+      "setStopSell": "Sæt Stop-Sell",
+      "setStopSellHint": "Dagen forbliver ledig, men sælges ikke — med årsag"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Antal personer indstillet for denne bolig",
@@ -6432,11 +6432,11 @@
       "occupancy": "Belægning",
       "propertyNights": "{booked}/{total} bolignætter",
       "revenue": "Omsætning",
-      "stopSellClear": "Stop-Sell aufheben",
-      "stopSellClearing": "Hebe auf…",
-      "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
-      "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "stopSellClear": "Ophæv Stop-Sell",
+      "stopSellClearing": "Ophæver…",
+      "stopSellClearNothing": "Der var ingen Stop-Sell at ophæve her.",
+      "stopSellEditReason": "Ændr årsag",
+      "stopSellPortalLocked": "Sat af portalen — kan kun ophæves der.",
       "legend": "Signaturforklaring",
       "contractEndLocked": "Denne blokering kommer fra kontraktudløbet. Den kan kun ændres via slutdatoen i objektkartoteket."
     },
@@ -6455,29 +6455,29 @@
       "feesHint": "Rengøring osv.",
       "personsValue": "{count} pers.",
       "guestsLabel": "Gæster",
-      "stayKind": "Art des Aufenthalts",
-      "stayKindGuest": "Gastbuchung",
-      "stayKindOwner": "Eigennutzung",
-      "ownerLabel": "Eigentümer",
-      "ownerContact": "Kontaktdaten des Eigentümers",
-      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "stayKind": "Opholdstype",
+      "stayKindGuest": "Gædsbooking",
+      "stayKindOwner": "Egen benyttelse",
+      "ownerLabel": "Ejer",
+      "ownerContact": "Ejerens kontaktoplysninger",
+      "ownerStayHint": "Eget brug optager kalenderen som en booking, men skaber ingen omsætning: ingen pris, ingen faktura, ingen kommission og intet i ejerafregningen.",
       "steps": {
-        "details": "Details",
-        "prices": "Preise & Extras",
-        "policy": "Richtlinien"
+        "details": "Detaljer",
+        "prices": "Priser og ekstra",
+        "policy": "Retningslinjer"
       },
       "headings": {
-        "details": "Reservierungsdetails",
-        "prices": "Preise & Extras festlegen",
-        "policy": "Richtlinien festlegen"
+        "details": "Reservationsdetaljer",
+        "prices": "Fastlæg priser og ekstra",
+        "policy": "Fastlæg retningslinjer"
       },
-      "ownerSection": "Eigentümer",
-      "ownerLoading": "Eigentümer wird ermittelt…",
-      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
-      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
-      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
-      "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "ownerSection": "Ejer",
+      "ownerLoading": "Ejeren findes…",
+      "ownerLoadFailed": "Ejeren kunne ikke indlæses.",
+      "ownerMissing": "Der er ikke registreret nogen ejer for dette objekt.",
+      "ownerMissingHint": "Eget brug kræver en registreret ejer. Opret ejeren under Ejere, og tildel dette objekt til vedkommende.",
+      "ownerMissingLink": "Til ejerne",
+      "ownerFromRecord": "Overtaget fra ejerens stamdata. Ændringer af kontaktoplysningerne sker under Ejere.",
       "stayNameLabel": "Hvem bor der",
       "stayNamePlaceholder": "Personens navn",
       "stayNameHint": "Lad stå tomt for ejeren selv. Ellers navnet på den person, der bruger perioden — familie, venner, håndværkere.",
@@ -6494,8 +6494,8 @@
       "otaPayout": "Udbetaling fra portal",
       "stillOpen": "Stadig åben",
       "cancelReasonPlaceholder": "Årsag til annullering (dokumenteres) …",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Ejerophold",
+      "ownerStayHint": "Ingen omsætning — hverken faktura eller kommission, ikke med i ejerafregningen.",
       "openBooking": "Til hele bookingen",
       "messageGuest": "Skriv til gæsten"
     },
@@ -6704,7 +6704,7 @@
     "seasonApplyNoSpans": "Denne sæson har ingen markerede perioder. Markér den først, eller overfør kun definitionen uden perioder."
   },
   "channels": {
-    "title": "Channel Manager",
+    "title": "Kanalmanager",
     "subtitle": "Forbind dine bookingportaler, og fordel tilgængelighed og priser automatisk på tværs af alle kanaler.",
     "categoryOta": "Bookingportaler",
     "categoryMarketplace": "Eget marked",
@@ -6786,7 +6786,7 @@
       "sendUserTaxes": "Send egne skatter",
       "blockedNote": "Så længe dette er slået fra, sendes ingen egne skatter til kanalen."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "linkedPending": "{count, plural, =0 {Konto forbundet · tildeling mangler} one {Konto forbundet · # objekt skal stadig tildeles} other {Konto forbundet · # objekter skal stadig tildeles}}",
     "activateChannel": "Aktiver kanal",
     "activateDone": "{portal} er nu aktiv.",
     "activateFailed": "Kanalen kunne ikke aktiveres.",
@@ -6942,7 +6942,7 @@
     "clientSecret": "Client secret",
     "copy": "Kopiér",
     "copied": "Kopieret.",
-    "done": "Fertig",
+    "done": "Færdig",
     "colName": "Name",
     "colEnv": "Miljø",
     "colScopes": "Tilladelser",
@@ -7010,7 +7010,7 @@
       "nurMitEntsprechung": "kun egenskaber med et modstykke i portalen",
       "nichtDeckungsgleich": "kategorierne stemmer ikke helt overens",
       "ohneBeleg": "ikke bekræftet — vi undersøger det",
-      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
+      "ohneZimmerZuordnung": "uden tildeling til det enkelte værelse"
     },
     "status": {
       "voll": "transferred",
@@ -7050,7 +7050,7 @@
       "kaution": "Depositum",
       "lizenznummer": "Licens-/registreringsnummer",
       "mietvertrag": "Lejekontrakt",
-      "zimmerAusstattung": "Ausstattung der Zimmer"
+      "zimmerAusstattung": "Værelsernes faciliteter"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -7088,7 +7088,7 @@
       "create": "Opret betingelse",
       "update": "Opdater betingelse",
       "empty": "Ingen betingelser endnu. Opret din første bookingbetingelse — betalingsplan, afbestilling og depositum.",
-      "colName": "Name",
+      "colName": "Navn",
       "colPaymentPlan": "Betalingsplan",
       "colCancellation": "Annullering",
       "colDeposit": "Depositum",
@@ -7143,7 +7143,7 @@
       "amount": "Beløb",
       "depositStep3": "3. Tidspunkter for forhåndsautorisation",
       "preauthFromHint": "Fra hvornår gæstens kort forhåndsautoriseres.",
-      "days": "Tage",
+      "days": "Dage",
       "preauthUntilHint": "Hvor længe en forhåndsautorisation kan foretages — efter denne dato frigives åbne forhåndsautorisationer.",
       "releaseDays": "Frigiv dage efter afrejse",
       "preauthWarnStrong": "Forhåndsautorisationer kan ofte kun garanteres i omkring 7 dage.",
@@ -7271,7 +7271,7 @@
       "buttonFuellung": "Stil",
       "buttonSolide": "Fyldt",
       "buttonUmrandet": "Med kant",
-      "buttonEcken": "Kant",
+      "buttonEcken": "Hjørner",
       "buttonRand": {
         "sharp": "Skarp",
         "rounded": "Rundet",
@@ -7442,7 +7442,7 @@
       "search": "Søgning",
       "searchHinweis": "Søgefelt med dato og antal gæster.",
       "propertiesGrid": "Boliger",
-      "propertiesGridHinweis": "Alle boliger i et gitter, med rigtige priser.",
+      "propertiesGridHinweis": "Objekter i et gitter, med rigtige priser, hvis de er slået til.",
       "featuredProperties": "Udvalgte boliger",
       "featuredPropertiesHinweis": "Kun de boliger, du vælger.",
       "reviews": "Anmeldelser",
@@ -7489,7 +7489,7 @@
       "mindestGaeste": "Fra hvor mange gæster",
       "anzahl": "Antal",
       "objekte": "Boliger",
-      "kategorienZeigen": "Vis delkarakterer",
+      "kategorienZeigen": "Vis kategoribedømmelser",
       "email": "E-mail",
       "telefon": "Telefon",
       "adresse": "Adresse",
@@ -7634,7 +7634,7 @@
       },
       "typBeschreibung": {
         "suche": "Rejsemål, periode og antal gæster — fører til boliglisten på dit website.",
-        "buchen": "Periode og antal gæster — fører direkte ind i dit bookingflow."
+        "buchen": "Periode og antal gæster — fører til objektlisten på dit website, uden feltet til rejsemål."
       },
       "sprache": "Sprog",
       "spracheHinweis": "Sproget, feltet vises i på den fremmede side.",
@@ -7870,7 +7870,7 @@
       "hrbPlaceholder": "HRB 12345",
       "courtPlaceholder": "f.eks. Berlin (Charlottenburg)",
       "employeesPlaceholder": "f.eks. 7",
-      "ibanPlaceholder": "DE00 0000 0000 0000 0000 00",
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00",
       "preferredLanguage": "Foretrukket sprog",
       "chooseLanguage": "Vælg sprog",
       "descriptionPlaceholder": "Kort beskrivelse af din virksomhed…"

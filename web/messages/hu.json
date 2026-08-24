@@ -125,74 +125,74 @@
       "text": "Adóadatok és a fizetésaktiváláshoz szükséges adatok."
     },
     "branch": {
-      "title": "Verkaufst du schon auf Buchungsportalen?",
-      "text": "Booking.com, Airbnb & Co. — hast du dort schon Objekte, oder fängst du neu an?",
-      "switchTitle": "Ja, ich wechsle",
-      "switchText": "Ich habe schon Objekte auf Booking, Airbnb & Co. und möchte sie importieren.",
-      "newTitle": "Nein, ich fange neu an",
-      "newText": "Ich lege meine Objekte neu an und verbinde die Portale danach."
+      "title": "Árul már foglalási portálokon?",
+      "text": "Booking.com, Airbnb és társai — vannak már ott ingatlanai, vagy a nulláról indul?",
+      "switchTitle": "Igen, váltok",
+      "switchText": "Már vannak ingatlanaim a Bookingon, az Airbnb-n és másokon, és importálni szeretném őket.",
+      "newTitle": "Nem, most kezdem",
+      "newText": "Az ingatlanaimat a nulláról hozom létre, és a portálokat utána kapcsolom össze."
     },
     "switch": {
-      "title": "Bestehende Objekte importieren",
-      "intro": "So holst du deine bestehenden Booking-/Airbnb-Objekte zu myNextDays — ohne Doppelbuchungen.",
+      "title": "Meglévő ingatlanok importálása",
+      "intro": "Így hozza át meglévő Booking-/Airbnb-ingatlanait a myNextDaysbe — dupla foglalások nélkül.",
       "cutover": {
-        "title": "Wichtig vor dem Verbinden",
-        "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
-        "b": "Vergangene Buchungen und manuelle Sperren kommen NICHT automatisch mit. Trage sie nach dem Import selbst nach.",
-        "c": "Lass dein altes System als Backup laufen und beobachte die ersten Tage genau.",
-        "ack": "Ich habe das verstanden.",
-        "doneTitle": "Hinweise von vor dem Verbinden (erledigt)"
+        "title": "Fontos a csatlakoztatás előtt",
+        "a": "Minden portált válasszon le az eddigi rendszeréről, mielőtt itt összekapcsolja — csatornánként mindig csak EGY rendszer küldhet adatokat.",
+        "b": "A korábbi foglalások és a kézi zárolások NEM kerülnek át automatikusan. Az importálás után maga vigye be őket.",
+        "c": "Hagyja a régi rendszerét tartalékként működni, és az első napokat kísérje figyelemmel.",
+        "ack": "Ezt megértettem.",
+        "doneTitle": "Az összekapcsolás előtti tudnivalók (elvégezve)"
       },
       "step1": {
-        "title": "Objekt anlegen",
-        "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
-        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}",
+        "title": "Objektum létrehozása",
+        "text": "Minden meglévő hirdetéshez hozzon létre egy ingatlant — a hozzárendeléshez elég a név, a fajta és az alapár.",
+        "count": "{count, plural, =0 {Még nincs ingatlan} one {# ingatlan} other {# ingatlan}}",
         "airbnbHint": "Airbnb-ről jön? Hagyja ki ezt a lépést — a szállásai automatikusan átkerülnek, amikor összekapcsolja az Airbnb-t."
       },
       "step2": {
-        "title": "Portal verbinden & zuordnen",
-        "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
-        "connect": "Portal verbinden",
-        "connectMore": "Weiteres Portal verbinden",
-        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“."
+        "title": "Portál összekapcsolása és hozzárendelése",
+        "text": "Kapcsolja össze a Bookingot, az Airbnb-t és a többit, és rendelje a portál szobáit 1:1 az ingatlanaihoz. A foglalások és az elérhetőség ezután automatikusan érkeznek.",
+        "connect": "Portál csatlakoztatása",
+        "connectMore": "További portál csatlakoztatása",
+        "alreadyConnected": "Egy portál már össze van kapcsolva, és az ingatlanai át vannak adva — itt nem kell újra összekapcsolni semmit. A „További portál összekapcsolása“ lehetőséget csak EGY TOVÁBBI portálhoz használja (pl. Booking)."
       },
       "pull": {
-        "button": "Objekte aus Portal holen",
-        "result": "{count, plural, =0 {Keine neuen Objekte gefunden} one {# Objekt übernommen} other {# Objekte übernommen}}"
+        "button": "Objektumok letöltése a portálról",
+        "result": "{count, plural, =0 {Nem található új ingatlan} one {# ingatlan átvéve} other {# ingatlan átvéve}}"
       },
-      "finishCta": "Import abschließen",
-      "finishHint": "Bitte bestätige zuerst den Hinweis oben und lege mindestens ein Objekt an.",
+      "finishCta": "Importálás befejezése",
+      "finishHint": "Kérjük, először hagyja jóvá a fenti tudnivalót, és hozzon létre legalább egy ingatlant.",
       "bookings": {
-        "title": "Bestehende Buchungen einlesen",
-        "text": "Hol dir die Reservierungen deiner verbundenen Portale in deinen Kalender.",
-        "includePast": "Auch vergangene Buchungen einlesen",
-        "pastHint": "Hinweis: Portale liefern in der Regel nur Buchungen ab dem Zeitpunkt der Verbindung. Bereits abgereiste Gäste von davor sind oft nicht mehr abrufbar.",
-        "button": "Buchungen einlesen",
-        "result": "{count, plural, =0 {Keine Buchungen gefunden} one {# Buchung eingelesen} other {# Buchungen eingelesen}}"
+        "title": "Meglévő foglalások beolvasása",
+        "text": "Hozza be az összekapcsolt portálok foglalásait a naptárába.",
+        "includePast": "A korábbi foglalások beolvasása is",
+        "pastHint": "Megjegyzés: a portálok általában csak az összekapcsolás pillanatától kezdve adnak foglalásokat. Az azelőtt elutazott vendégek gyakran már nem hívhatók le.",
+        "button": "Foglalások beolvasása",
+        "result": "{count, plural, =0 {Nem található foglalás} one {# foglalás beolvasva} other {# foglalás beolvasva}}"
       },
       "csv": {
-        "title": "Alte & direkte Buchungen per Datei importieren",
-        "text": "Für Buchungen, die nicht über die Portale kommen (Direktbuchungen, vergangene Reservierungen aus deinem alten System).",
-        "downloadTemplate": "Vorlage herunterladen",
-        "upload": "CSV hochladen",
-        "hint": "Lade die Vorlage, fülle sie aus (Datum als JJJJ-MM-TT) und lade sie wieder hoch. Pflicht: Objekt, Gastname, Anreise, Abreise. Doppelte Zeilen werden übersprungen.",
-        "result": "{imported} von {total} Buchungen importiert.",
-        "skipped": "{count, plural, one {# Zeile übersprungen (Duplikat/Objekt fehlt)} other {# Zeilen übersprungen (Duplikat/Objekt fehlt)}}",
-        "failed": "{count, plural, one {# Zeile mit Fehler} other {# Zeilen mit Fehlern}}:"
+        "title": "Régi és közvetlen foglalások importálása fájlból",
+        "text": "Olyan foglalásokhoz, amelyek nem a portálokon keresztül érkeznek (közvetlen foglalások, korábbi foglalások a régi rendszeréből).",
+        "downloadTemplate": "Sablon letöltése",
+        "upload": "CSV feltöltése",
+        "hint": "Töltse le a sablont, töltse ki (a dátum ÉÉÉÉ-HH-NN formában), majd töltse fel újra. Kötelező: ingatlan, vendég neve, érkezés, elutazás. A duplikált sorokat kihagyjuk.",
+        "result": "{total} foglalásból {imported} importálva.",
+        "skipped": "{count, plural, one {# sor kihagyva (duplikátum/hiányzó ingatlan)} other {# sor kihagyva (duplikátum/hiányzó ingatlan)}}",
+        "failed": "{count, plural, one {# hibás sor} other {# hibás sor}}:"
       },
       "lodgify": {
-        "title": "Buchungen aus Lodgify holen",
-        "text": "Wenn du von Lodgify wechselst: importiere deine Buchungen direkt per API-Schlüssel (nur lesend, es wird nichts in Lodgify geändert).",
-        "keyLabel": "Lodgify-API-Schlüssel",
-        "keyPlaceholder": "Aus Lodgify: Einstellungen → Public API",
-        "keyHint": "Der Schlüssel wird nur für diesen Import genutzt und nicht gespeichert. Wir lesen ausschließlich – wir ändern nichts in Lodgify.",
-        "preview": "Vorschau laden",
-        "import": "{count, plural, one {# Buchung importieren} other {# Buchungen importieren}}",
-        "previewResult": "{importable} von {total} Buchungen können importiert werden.",
-        "result": "{imported} von {total} Buchungen importiert."
+        "title": "Foglalások áthozása a Lodgifyból",
+        "text": "Ha a Lodgifyról vált: importálja foglalásait közvetlenül API-kulccsal (csak olvasás, a Lodgifyban semmi nem változik).",
+        "keyLabel": "Lodgify API-kulcs",
+        "keyPlaceholder": "A Lodgifyból: Beállítások → Public API",
+        "keyHint": "A kulcsot csak ehhez az importáláshoz használjuk, és nem mentjük el. Kizárólag olvasunk — a Lodgifyban semmit nem módosítunk.",
+        "preview": "Előnézet betöltése",
+        "import": "{count, plural, one {# foglalás importálása} other {# foglalás importálása}}",
+        "previewResult": "{total} foglalásból {importable} importálható.",
+        "result": "{total} foglalásból {imported} importálva."
       },
       "finish": {
-        "notRegistered": "Mindestens ein Objekt muss an die Buchungsportale übermittelt sein, bevor du das Onboarding abschließt. Verbinde in Schritt 2 ein Portal — dabei wird das Objekt automatisch übertragen."
+        "notRegistered": "Legalább egy ingatlant át kell adni a foglalási portáloknak, mielőtt befejezi a bevezetést. Kapcsoljon össze egy portált a 2. lépésben — az ingatlan ekkor automatikusan átkerül."
       }
     }
   },
@@ -208,7 +208,7 @@
     "websiteDesign": "Megjelenés",
     "websitePages": "Oldalak",
     "websiteDomain": "Cím",
-    "channelManager": "Channel Manager",
+    "channelManager": "Csatornakezelő",
     "guests": "Vendégek",
     "tasks": "Feladatok",
     "invoices": "Számlák",
@@ -364,7 +364,7 @@
     "sourceManual": "Manual",
     "sourceChannex": "Az utazásszervezőtől",
     "clear": "Clear",
-    "readonly": "Portal",
+    "readonly": "Portál",
     "toIncl": "Eddig",
     "calendarHint": "Húzza az egeret az objektum napjain egy időszak kijelöléséhez.",
     "legendOpen": "Szabad",
@@ -399,11 +399,11 @@
     "resetConfirm": "Igen, mindet feloldom",
     "resetting": "Resetting …",
     "cancel": "Cancel",
-    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
-    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
-    "reasonRequired": "Bitte einen Grund wählen.",
-    "skippedBooked": "{count} gebuchte Tage wurden übersprungen — verkaufte Tage lassen sich nicht stoppen.",
-    "skippedBookedAll": "Kein Tag gestoppt: alle {count} Tage im Zeitraum sind gebucht."
+    "noteRequired": "Az „Egyéb“ esetén megjegyzés szükséges.",
+    "noteRequiredLabel": "Megjegyzés (kötelező az „Egyéb“ esetén)",
+    "reasonRequired": "Kérjük, válasszon egy okot.",
+    "skippedBooked": "{count} lefoglalt napot kihagytunk — az eladott napokat nem lehet leállítani.",
+    "skippedBookedAll": "Egyetlen nap sem lett leállítva: az időszak mind a {count} napja le van foglalva."
   },
   "inbox": {
     "title": "Inbox",
@@ -3901,7 +3901,7 @@
       "streetPlaceholder": "Minta utca 123.",
       "bankPlaceholder": "Deutsche Bank",
       "holderPlaceholder": "Kovács János",
-      "ibanPlaceholder": "DE89 3704 0044 0532 0130 00"
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00"
     },
     "pdf": {
       "qrCode": "QR-kód",
@@ -4203,7 +4203,7 @@
       },
       "emptyState": "Nem található foglalás.",
       "loading": "Betöltés…",
-      "ownerStay": "Eigennutzung",
+      "ownerStay": "Saját használat",
       "limit": "Korlát ({count})",
       "limitAll": "Mind",
       "columnsMenu": "Oszlopok",
@@ -4621,8 +4621,8 @@
       "openGuestCard": "Vendégkártya megnyitása",
       "photos": "Fotók",
       "noPhotosFound": "Ehhez a foglaláshoz nem található kép.",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Tulajdonos tartózkodása",
+      "ownerStayHint": "Nincs forgalom — sem számla, sem jutalék, nem szerepel a tulajdonosi elszámolásban.",
       "viaChannel": "a következő csatornán: {channel}",
       "receivedOn": "hozzánk beérkezett: {date}",
       "bookedOn": "foglalás dátuma: {date}"
@@ -4978,7 +4978,7 @@
   },
   "objects": {
     "channelChips": {
-      "website": "Website",
+      "website": "Weboldal",
       "platform": "Platform",
       "portals": "Portals",
       "state": {
@@ -4995,7 +4995,7 @@
       "publishAll": "Közzététel mindenhol",
       "publishedAll": "A szálláshely minden csatornán közzétéve.",
       "draftHint": "Ez a szálláshely piszkozat, és egyetlen csatornán sem értékesíthető. Állítsa „Aktív” állapotra a közzétételhez.",
-      "groupWebsite": "Website",
+      "groupWebsite": "Weboldal",
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Portál csatlakoztatása",
@@ -5047,7 +5047,7 @@
       "sortAz": "A–Z",
       "sortZa": "Z–A",
       "menuOpen": "Műveletek",
-      "menuEdit": "Bearbeiten",
+      "menuEdit": "Szerkesztés",
       "menuDelete": "Delete",
       "deleteConfirm": "Biztosan törli a(z) „{title}” szálláshelyet?",
       "deleteOk": "A szálláshely törölve.",
@@ -5346,16 +5346,16 @@
       "removeAmenityAriaLabel": "{amenity} eltávolítása",
       "amenitiesSearchPlaceholder": "Felszereltség keresése …",
       "noSearchResults": "Nincs találat.",
-      "zimmerErneutLaden": "Erneut versuchen",
-      "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerFertig": "Fertig",
+      "zimmerErneutLaden": "Újrapróbálkozás",
+      "zimmerLaedt": "A szobák betöltése …",
+      "zimmerFertig": "Kész",
       "zimmerBettenHinweis": "Az Airbnb-ből érkezik, és a myNextDays és myBestDays rendszerben marad — a foglalási portálok nem fogadnak ágyelrendezést.",
-      "masseinheitLabel": "Maßeinheit",
+      "masseinheitLabel": "Mértékegység",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
       "sizeSqftPrefix": "{size} ft² · ",
-      "gaesteWeniger": "Ein Gast weniger",
-      "gaesteMehr": "Ein Gast mehr",
+      "gaesteWeniger": "Egy vendéggel kevesebb",
+      "gaesteMehr": "Egy vendéggel több",
       "zimmerSuffixPrivat": "privát",
       "zimmerSuffixGemeinschaftlich": "közös",
       "zimmerErhoehen": "{room} hozzáadása",
@@ -5930,7 +5930,7 @@
         "zweibettzimmer": "Twin room",
         "familienzimmer": "Family room",
         "junior_suite": "Junior suite",
-        "suite": "Suite"
+        "suite": "Lakosztály"
       }
     },
     "sync": {
@@ -5985,20 +5985,20 @@
         "schliessen": "Bezárás"
       },
       "airbnbPull": {
-        "button": "Bei Airbnb abrufen",
-        "hint": "Ordnet dieses Objekt bei Airbnb zu und holt den Preis von dort.",
-        "priceTaken": "Preis von Airbnb übernommen: {price} · Mindestaufenthalt {nights} Nächte",
-        "noPrice": "Airbnb hat keinen Preis übergeben. Die Zuordnung steht.",
-        "currency": "Währung: {currency}",
-        "timezone": "Zeitzone: {timezone}",
-        "alsoTaken": "Ebenfalls übernommen: {fields}",
+        "button": "Letöltés az Airbnb-ről",
+        "hint": "Hozzárendeli ezt az ingatlant az Airbnb-n, és onnan veszi át az árat.",
+        "priceTaken": "Ár átvéve az Airbnb-ről: {price} · minimális tartózkodás {nights} éjszaka",
+        "noPrice": "Az Airbnb nem adott meg árat. A hozzárendelés érvényben van.",
+        "currency": "Valuta: {currency}",
+        "timezone": "Időzóna: {timezone}",
+        "alsoTaken": "Szintén átvéve: {fields}",
         "field": {
-          "check_in_from": "Check-in-Zeit",
-          "check_out_until": "Check-out-Zeit",
-          "pets_allowed": "Haustiere erlaubt",
-          "pets_max": "Anzahl Haustiere",
-          "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte",
+          "check_in_from": "Bejelentkezés ideje",
+          "check_out_until": "Kijelentkezés ideje",
+          "pets_allowed": "Kisállat engedélyezett",
+          "pets_max": "Kisállatok száma",
+          "smoking_allowed": "Dohányzás",
+          "max_nights": "Maximális éjszakák száma",
           "address": "Cím",
           "postal_code": "Postai irányítószám",
           "city": "Város",
@@ -6172,14 +6172,14 @@
         "booked": "Foglalt",
         "blocked": "Zárolt",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "blockedAndStopSell": "Zárolt + Stop-Sell",
         "contractEnd": "Szerződés felmondva"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "minden csatorna",
       "nightsCount": "{count, plural, one {# éjszaka} other {# éjszaka}}",
       "daysCount": "{count, plural, one {# nap} other {# nap}}",
-      "ownerStay": "Eigentümer-Aufenthalt"
+      "ownerStay": "Tulajdonos tartózkodása"
     },
     "calendarViews": {
       "viewLabel": "Nézet",
@@ -6199,10 +6199,10 @@
       "blocking": "Zárolás…",
       "createBlockedPeriod": "Zárolt időszak létrehozása",
       "priceMinStayBlock": "Ár / Min-Stay / Zárolás …",
-      "ownerStay": "Eigennutzung eintragen",
-      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
-      "setStopSell": "Stop-Sell setzen",
-      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
+      "ownerStay": "Saját használat rögzítése",
+      "createBlockedPeriodHint": "Elérhetőség 0 — a nap mindenhol zárva van",
+      "setStopSell": "Stop-Sell beállítása",
+      "setStopSellHint": "A nap szabad marad, de nem kerül eladásra — okkal együtt"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Ehhez a szálláshelyhez beállított létszám",
@@ -6432,11 +6432,11 @@
       "occupancy": "Kihasználtság",
       "propertyNights": "{booked}/{total} szálláséjszaka",
       "revenue": "Bevétel",
-      "stopSellClear": "Stop-Sell aufheben",
-      "stopSellClearing": "Hebe auf…",
-      "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
-      "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "stopSellClear": "Stop-Sell feloldása",
+      "stopSellClearing": "Feloldás…",
+      "stopSellClearNothing": "Itt nem volt feloldható Stop-Sell.",
+      "stopSellEditReason": "Ok módosítása",
+      "stopSellPortalLocked": "A portál állította be — csak ott oldható fel.",
       "legend": "Jelmagyarázat",
       "contractEndLocked": "Ez a zárolás a szerződés végéből ered. Csak az objektum adatlapján lévő záró dátummal módosítható."
     },
@@ -6455,29 +6455,29 @@
       "feesHint": "Takarítás stb.",
       "personsValue": "{count} fő",
       "guestsLabel": "Vendégek",
-      "stayKind": "Art des Aufenthalts",
-      "stayKindGuest": "Gastbuchung",
-      "stayKindOwner": "Eigennutzung",
-      "ownerLabel": "Eigentümer",
-      "ownerContact": "Kontaktdaten des Eigentümers",
-      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "stayKind": "A tartózkodás típusa",
+      "stayKindGuest": "Vendégfoglalás",
+      "stayKindOwner": "Saját használat",
+      "ownerLabel": "Tulajdonos",
+      "ownerContact": "A tulajdonos elérhetőségei",
+      "ownerStayHint": "A saját használat úgy foglalja el a naptárat, mint egy foglalás, de nem keletkezik forgalom: nincs ár, nincs számla, nincs jutalék, és nem szerepel a tulajdonosi elszámolásban.",
       "steps": {
-        "details": "Details",
-        "prices": "Preise & Extras",
-        "policy": "Richtlinien"
+        "details": "Részletek",
+        "prices": "Árak és extrák",
+        "policy": "Szabályok"
       },
       "headings": {
-        "details": "Reservierungsdetails",
-        "prices": "Preise & Extras festlegen",
-        "policy": "Richtlinien festlegen"
+        "details": "A foglalás részletei",
+        "prices": "Árak és extrák megadása",
+        "policy": "Szabályok megadása"
       },
-      "ownerSection": "Eigentümer",
-      "ownerLoading": "Eigentümer wird ermittelt…",
-      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
-      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
-      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
-      "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "ownerSection": "Tulajdonos",
+      "ownerLoading": "A tulajdonos meghatározása…",
+      "ownerLoadFailed": "A tulajdonost nem sikerült betölteni.",
+      "ownerMissing": "Ehhez az ingatlanhoz nincs tulajdonos megadva.",
+      "ownerMissingHint": "A saját használathoz megadott tulajdonos kell. Hozza létre a Tulajdonosok részben, és rendelje hozzá ezt az ingatlant.",
+      "ownerMissingLink": "A tulajdonosokhoz",
+      "ownerFromRecord": "A tulajdonos törzsadataiból átvéve. Az elérhetőségek módosítása a Tulajdonosok részben történik.",
       "stayNameLabel": "Ki tartózkodik ott",
       "stayNamePlaceholder": "A személy neve",
       "stayNameHint": "Hagyja üresen a tulajdonos esetén. Egyébként annak a személynek a neve, aki az időszakot használja — család, barátok, mesteremberek.",
@@ -6494,8 +6494,8 @@
       "otaPayout": "Kifizetés a portáltól",
       "stillOpen": "Még nyitott",
       "cancelReasonPlaceholder": "A lemondás indoka (dokumentálásra kerül) …",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Tulajdonos tartózkodása",
+      "ownerStayHint": "Nincs forgalom — sem számla, sem jutalék, nem szerepel a tulajdonosi elszámolásban.",
       "openBooking": "A teljes foglaláshoz",
       "messageGuest": "Írás a vendégnek"
     },
@@ -6704,7 +6704,7 @@
     "seasonApplyNoSpans": "Ennek a szezonnak nincsenek megrajzolt időszakai. Először rajzolja meg, vagy csak a definíciót vigye át időszakok nélkül."
   },
   "channels": {
-    "title": "Channel Manager",
+    "title": "Csatornakezelő",
     "subtitle": "Csatlakoztassa foglalási portáljait, és ossza el a szabad kapacitást és az árakat automatikusan minden csatornára.",
     "categoryOta": "Foglalási portálok",
     "categoryMarketplace": "Saját piactér",
@@ -6786,7 +6786,7 @@
       "sendUserTaxes": "Saját adók küldése",
       "blockedNote": "Amíg ez ki van kapcsolva, nem küldünk saját adót erre a csatornára."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "linkedPending": "{count, plural, =0 {Fiók összekapcsolva · hozzárendelés folyamatban} one {Fiók összekapcsolva · # ingatlan hozzárendelése hiányzik} other {Fiók összekapcsolva · # ingatlan hozzárendelése hiányzik}}",
     "activateChannel": "Csatorna aktiválása",
     "activateDone": "A(z) {portal} most aktív.",
     "activateFailed": "A csatornát nem sikerült aktiválni.",
@@ -6942,7 +6942,7 @@
     "clientSecret": "Ügyfélkulcs",
     "copy": "Másolás",
     "copied": "Másolva.",
-    "done": "Fertig",
+    "done": "Kész",
     "colName": "Name",
     "colEnv": "Környezet",
     "colScopes": "Jogosultságok",
@@ -7010,7 +7010,7 @@
       "nurMitEntsprechung": "csak azok a jellemzők, amelyeknek van megfelelője a portálon",
       "nichtDeckungsgleich": "a kategóriák nem fedik egymást teljesen",
       "ohneBeleg": "nincs megerősítve — ellenőrizzük",
-      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
+      "ohneZimmerZuordnung": "az egyes szobához való hozzárendelés nélkül"
     },
     "status": {
       "voll": "transferred",
@@ -7050,7 +7050,7 @@
       "kaution": "Kaució",
       "lizenznummer": "Engedély-/nyilvántartási szám",
       "mietvertrag": "Bérleti szerződés",
-      "zimmerAusstattung": "Ausstattung der Zimmer"
+      "zimmerAusstattung": "A szobák felszereltsége"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -7088,7 +7088,7 @@
       "create": "Feltétel létrehozása",
       "update": "Feltétel frissítése",
       "empty": "Még nincsenek feltételek. Hozza létre első foglalási feltételét — fizetési terv, lemondás és kaució.",
-      "colName": "Name",
+      "colName": "Név",
       "colPaymentPlan": "Fizetési terv",
       "colCancellation": "Lemondás",
       "colDeposit": "Kaució",
@@ -7143,7 +7143,7 @@
       "amount": "Összeg",
       "depositStep3": "3. Előengedélyezési időpontok",
       "preauthFromHint": "Mikortól kerül előengedélyezésre a vendég kártyája.",
-      "days": "Tage",
+      "days": "Napok",
       "preauthUntilHint": "Meddig végezhető el az előengedélyezés — ezután a nyitott előengedélyezések felszabadulnak.",
       "releaseDays": "Felszabadítás a távozás után x nappal",
       "preauthWarnStrong": "Az előengedélyezések gyakran csak körülbelül 7 napra garantálhatók.",
@@ -7442,7 +7442,7 @@
       "search": "Keresés",
       "searchHinweis": "Keresősáv dátummal és vendégszámmal.",
       "propertiesGrid": "Szálláshelyek",
-      "propertiesGridHinweis": "Az összes szálláshely rácsban, valós árakkal.",
+      "propertiesGridHinweis": "Szállások rácsban, valós árakkal, ha be van kapcsolva.",
       "featuredProperties": "Kiemelt szálláshelyek",
       "featuredPropertiesHinweis": "Csak azok a szálláshelyek, amelyeket kiválaszt.",
       "reviews": "Értékelések",
@@ -7489,7 +7489,7 @@
       "mindestGaeste": "Legalább ennyi vendégtől",
       "anzahl": "Mennyiség",
       "objekte": "Szálláshelyek",
-      "kategorienZeigen": "Részértékelések megjelenítése",
+      "kategorienZeigen": "Kategóriánkénti értékelések megjelenítése",
       "email": "E-mail",
       "telefon": "Telefon",
       "adresse": "Cím",
@@ -7634,7 +7634,7 @@
       },
       "typBeschreibung": {
         "suche": "Úti cél, időszak és vendégszám — a weboldala szálláslistájához vezet.",
-        "buchen": "Időszak és vendégszám — közvetlenül a foglalási folyamatába vezet."
+        "buchen": "Időszak és vendégszám — a weboldala szálláslistájára vezet, úti cél mező nélkül."
       },
       "sprache": "Nyelv",
       "spracheHinweis": "Az a nyelv, amelyen a mező az idegen oldalon megjelenik.",
@@ -7870,7 +7870,7 @@
       "hrbPlaceholder": "HRB 12345",
       "courtPlaceholder": "pl. Berlin (Charlottenburg)",
       "employeesPlaceholder": "pl. 7",
-      "ibanPlaceholder": "DE00 0000 0000 0000 0000 00",
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00",
       "preferredLanguage": "Előnyben részesített nyelv",
       "chooseLanguage": "Válasszon nyelvet",
       "descriptionPlaceholder": "Rövid leírás a cégéről…"

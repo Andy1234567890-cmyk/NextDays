@@ -125,74 +125,74 @@
       "text": "Dettalji tat-taxxa u d-data għall-attivazzjoni tal-ħlasijiet."
     },
     "branch": {
-      "title": "Verkaufst du schon auf Buchungsportalen?",
-      "text": "Booking.com, Airbnb & Co. — hast du dort schon Objekte, oder fängst du neu an?",
-      "switchTitle": "Ja, ich wechsle",
-      "switchText": "Ich habe schon Objekte auf Booking, Airbnb & Co. und möchte sie importieren.",
-      "newTitle": "Nein, ich fange neu an",
-      "newText": "Ich lege meine Objekte neu an und verbinde die Portale danach."
+      "title": "Diġà tbigħ fuq portali tal-prenotazzjonijiet?",
+      "text": "Booking.com, Airbnb u oħrajn — diġà għandek proprjetajiet hemm, jew qed tibda mill-bidu?",
+      "switchTitle": "Iva, qed naqleb",
+      "switchText": "Diġà għandi proprjetajiet fuq Booking, Airbnb u oħrajn u nixtieq nimportahom.",
+      "newTitle": "Le, qed nibda mill-ġdid",
+      "newText": "Se noħloq il-proprjetajiet tiegħi mill-ġdid u ngħaqqad il-portali wara."
     },
     "switch": {
-      "title": "Bestehende Objekte importieren",
-      "intro": "So holst du deine bestehenden Booking-/Airbnb-Objekte zu myNextDays — ohne Doppelbuchungen.",
+      "title": "Importa l-proprjetajiet eżistenti",
+      "intro": "Hekk iġġib il-proprjetajiet eżistenti tiegħek ta' Booking/Airbnb għal myNextDays — mingħajr prenotazzjonijiet doppji.",
       "cutover": {
-        "title": "Wichtig vor dem Verbinden",
-        "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
-        "b": "Vergangene Buchungen und manuelle Sperren kommen NICHT automatisch mit. Trage sie nach dem Import selbst nach.",
-        "c": "Lass dein altes System als Backup laufen und beobachte die ersten Tage genau.",
-        "ack": "Ich habe das verstanden.",
-        "doneTitle": "Hinweise von vor dem Verbinden (erledigt)"
+        "title": "Importanti qabel il-konnessjoni",
+        "a": "Aqla' kull portal mis-sistema preċedenti tiegħek qabel tgħaqqdu hawn — għal kull kanal tista' tibgħat data sistema WAĦDA biss.",
+        "b": "Il-prenotazzjonijiet tal-passat u l-imblokki manwali MA jinġarrux awtomatikament. Daħħalhom int wara l-importazzjoni.",
+        "c": "Ħalli s-sistema qadima tiegħek taħdem bħala backup u osserva mill-qrib l-ewwel jiem.",
+        "ack": "Fhimt dan.",
+        "doneTitle": "Indikazzjonijiet minn qabel il-konnessjoni (lest)"
       },
       "step1": {
-        "title": "Objekt anlegen",
-        "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
-        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}",
+        "title": "Oħloq proprjetà",
+        "text": "Oħloq proprjetà għal kull elenkar eżistenti — l-isem, it-tip u l-prezz bażiku huma biżżejjed għall-assenjazzjoni.",
+        "count": "{count, plural, =0 {Għadha ebda proprjetà} one {# proprjetà} two {# proprjetajiet} few {# proprjetajiet} many {# proprjetà} other {# proprjetà}}",
         "airbnbHint": "Ġej minn Airbnb? Aqbeż dan il-pass — il-proprjetajiet tiegħek jiġu importati awtomatikament meta tikkonnettja Airbnb."
       },
       "step2": {
-        "title": "Portal verbinden & zuordnen",
-        "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
-        "connect": "Portal verbinden",
-        "connectMore": "Weiteres Portal verbinden",
-        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“."
+        "title": "Għaqqad u assenja portal",
+        "text": "Għaqqad Booking, Airbnb u oħrajn u assenja l-kmamar tal-portali 1:1 għall-proprjetajiet tiegħek. Il-prenotazzjonijiet u d-disponibbiltà mbagħad jaslu awtomatikament.",
+        "connect": "Qabbad il-portal",
+        "connectMore": "Qabbad portal ieħor",
+        "alreadyConnected": "Portal huwa diġà konness u l-proprjetajiet tiegħek intbagħtu — hawn ma għandekx bżonn tgħaqqad xejn mill-ġdid. Uża „Għaqqad portal oħra“ biss għal portal ADDIZZJONALI (eż. Booking)."
       },
       "pull": {
-        "button": "Objekte aus Portal holen",
-        "result": "{count, plural, =0 {Keine neuen Objekte gefunden} one {# Objekt übernommen} other {# Objekte übernommen}}"
+        "button": "Iġbor il-proprjetajiet mill-portal",
+        "result": "{count, plural, =0 {Ma nstabet ebda proprjetà ġdida} one {# proprjetà ttieħdet} two {# proprjetajiet ittieħdu} few {# proprjetajiet ittieħdu} many {# proprjetà ttieħdet} other {# proprjetà ttieħdet}}"
       },
-      "finishCta": "Import abschließen",
-      "finishHint": "Bitte bestätige zuerst den Hinweis oben und lege mindestens ein Objekt an.",
+      "finishCta": "Temm l-importazzjoni",
+      "finishHint": "L-ewwel ikkonferma l-indikazzjoni ta' hawn fuq u oħloq għall-inqas proprjetà waħda.",
       "bookings": {
-        "title": "Bestehende Buchungen einlesen",
-        "text": "Hol dir die Reservierungen deiner verbundenen Portale in deinen Kalender.",
-        "includePast": "Auch vergangene Buchungen einlesen",
-        "pastHint": "Hinweis: Portale liefern in der Regel nur Buchungen ab dem Zeitpunkt der Verbindung. Bereits abgereiste Gäste von davor sind oft nicht mehr abrufbar.",
-        "button": "Buchungen einlesen",
-        "result": "{count, plural, =0 {Keine Buchungen gefunden} one {# Buchung eingelesen} other {# Buchungen eingelesen}}"
+        "title": "Aqra l-prenotazzjonijiet eżistenti",
+        "text": "Ġib il-prenotazzjonijiet tal-portali konnessi tiegħek fil-kalendarju tiegħek.",
+        "includePast": "Aqra wkoll prenotazzjonijiet tal-passat",
+        "pastHint": "Nota: normalment il-portali jipprovdu biss prenotazzjonijiet mill-mument tal-konnessjoni 'l quddiem. Il-mistednin li telqu qabel dak iż-żmien spiss ma jkunux aktar disponibbli.",
+        "button": "Importa l-prenotazzjonijiet",
+        "result": "{count, plural, =0 {Ma nstabet ebda prenotazzjoni} one {# prenotazzjoni inqrat} two {# prenotazzjonijiet inqraw} few {# prenotazzjonijiet inqraw} many {# prenotazzjoni inqrat} other {# prenotazzjoni inqrat}}"
       },
       "csv": {
-        "title": "Alte & direkte Buchungen per Datei importieren",
-        "text": "Für Buchungen, die nicht über die Portale kommen (Direktbuchungen, vergangene Reservierungen aus deinem alten System).",
-        "downloadTemplate": "Vorlage herunterladen",
-        "upload": "CSV hochladen",
-        "hint": "Lade die Vorlage, fülle sie aus (Datum als JJJJ-MM-TT) und lade sie wieder hoch. Pflicht: Objekt, Gastname, Anreise, Abreise. Doppelte Zeilen werden übersprungen.",
-        "result": "{imported} von {total} Buchungen importiert.",
-        "skipped": "{count, plural, one {# Zeile übersprungen (Duplikat/Objekt fehlt)} other {# Zeilen übersprungen (Duplikat/Objekt fehlt)}}",
-        "failed": "{count, plural, one {# Zeile mit Fehler} other {# Zeilen mit Fehlern}}:"
+        "title": "Importa prenotazzjonijiet qodma u diretti minn fajl",
+        "text": "Għal prenotazzjonijiet li ma jaslux mill-portali (prenotazzjonijiet diretti, prenotazzjonijiet tal-passat mis-sistema qadima tiegħek).",
+        "downloadTemplate": "Niżżel il-mudell",
+        "upload": "Tella' l-CSV",
+        "hint": "Niżżel il-mudell, imlih (data bħala SSSS-XX-JJ) u tellgħu mill-ġdid. Obbligatorji: proprjetà, isem il-mistieden, wasla, tluq. Ir-ringieli duplikati jinqabżu.",
+        "result": "Ġew importati {imported} minn {total} prenotazzjonijiet.",
+        "skipped": "{count, plural, one {# ringiela nqabżet (duplikat/proprjetà nieqsa)} two {# ringieli nqabżu (duplikat/proprjetà nieqsa)} few {# ringieli nqabżu (duplikat/proprjetà nieqsa)} many {# ringiela nqabżet (duplikat/proprjetà nieqsa)} other {# ringiela nqabżet (duplikat/proprjetà nieqsa)}}",
+        "failed": "{count, plural, one {# ringiela bi żball} two {# ringieli bi żbalji} few {# ringieli bi żbalji} many {# ringiela bi żball} other {# ringiela bi żball}}:"
       },
       "lodgify": {
-        "title": "Buchungen aus Lodgify holen",
-        "text": "Wenn du von Lodgify wechselst: importiere deine Buchungen direkt per API-Schlüssel (nur lesend, es wird nichts in Lodgify geändert).",
-        "keyLabel": "Lodgify-API-Schlüssel",
-        "keyPlaceholder": "Aus Lodgify: Einstellungen → Public API",
-        "keyHint": "Der Schlüssel wird nur für diesen Import genutzt und nicht gespeichert. Wir lesen ausschließlich – wir ändern nichts in Lodgify.",
-        "preview": "Vorschau laden",
-        "import": "{count, plural, one {# Buchung importieren} other {# Buchungen importieren}}",
-        "previewResult": "{importable} von {total} Buchungen können importiert werden.",
-        "result": "{imported} von {total} Buchungen importiert."
+        "title": "Ġib il-prenotazzjonijiet minn Lodgify",
+        "text": "Qed tbiddel minn Lodgify? Importa l-prenotazzjonijiet tiegħek direttament biċ-ċavetta API (qari biss — xejn ma jinbidel f'Lodgify).",
+        "keyLabel": "Ċavetta API ta' Lodgify",
+        "keyPlaceholder": "Minn Lodgify: Settings → Public API",
+        "keyHint": "Iċ-ċavetta tintuża biss għal din l-importazzjoni u ma tiġix issejvjata. Aħna naqraw biss — ma nbidlu xejn f'Lodgify.",
+        "preview": "Agħbi l-preview",
+        "import": "{count, plural, one {Importa # prenotazzjoni} two {Importa # prenotazzjonijiet} few {Importa # prenotazzjonijiet} many {Importa # prenotazzjoni} other {Importa # prenotazzjoni}}",
+        "previewResult": "{importable} minn {total} prenotazzjonijiet jistgħu jiġu importati.",
+        "result": "Ġew importati {imported} minn {total} prenotazzjonijiet."
       },
       "finish": {
-        "notRegistered": "Mindestens ein Objekt muss an die Buchungsportale übermittelt sein, bevor du das Onboarding abschließt. Verbinde in Schritt 2 ein Portal — dabei wird das Objekt automatisch übertragen."
+        "notRegistered": "Għall-inqas proprjetà waħda trid tkun ġiet mibgħuta lill-portali tal-prenotazzjonijiet qabel tikkonkludi l-onboarding. Għaqqad portal fil-pass 2 — il-proprjetà tintbagħat awtomatikament."
       }
     }
   },
@@ -208,7 +208,7 @@
     "websiteDesign": "Dizinn",
     "websitePages": "Paġni",
     "websiteDomain": "Indirizz",
-    "channelManager": "Channel Manager",
+    "channelManager": "Channel manager",
     "guests": "Mistednin",
     "tasks": "Kompiti",
     "invoices": "Fatturi",
@@ -399,11 +399,11 @@
     "resetConfirm": "Iva, neħħi kollox",
     "resetting": "Resetting …",
     "cancel": "Cancel",
-    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
-    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
-    "reasonRequired": "Bitte einen Grund wählen.",
-    "skippedBooked": "{count} gebuchte Tage wurden übersprungen — verkaufte Tage lassen sich nicht stoppen.",
-    "skippedBookedAll": "Kein Tag gestoppt: alle {count} Tage im Zeitraum sind gebucht."
+    "noteRequired": "Bi „Oħrajn“ hija meħtieġa nota.",
+    "noteRequiredLabel": "Nota (obbligatorja bi „Oħrajn“)",
+    "reasonRequired": "Jekk jogħġbok agħżel raġuni.",
+    "skippedBooked": "{count} jiem prenotati nqabżu — il-jiem mibjugħa ma jistgħux jiġu mwaqqfa.",
+    "skippedBookedAll": "Ebda jum ma twaqqaf: il-{count} jiem kollha fil-perjodu huma prenotati."
   },
   "inbox": {
     "title": "Inbox",
@@ -3899,7 +3899,7 @@
       "streetPlaceholder": "Musterstraße 123",
       "bankPlaceholder": "Deutsche Bank",
       "holderPlaceholder": "Joseph Borg",
-      "ibanPlaceholder": "DE89 3704 0044 0532 0130 00"
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00"
     },
     "pdf": {
       "qrCode": "Kodiċi QR",
@@ -4201,7 +4201,7 @@
       },
       "emptyState": "Ma nstabet l-ebda riżervazzjoni.",
       "loading": "Qed jitgħabba…",
-      "ownerStay": "Eigennutzung",
+      "ownerStay": "Soġġorn tas-sid",
       "limit": "Limitu ({count})",
       "limitAll": "Kollha",
       "columnsMenu": "Kolonni",
@@ -4619,8 +4619,8 @@
       "openGuestCard": "Iftaħ il-kartella tal-mistieden",
       "photos": "Ritratti",
       "noPhotosFound": "Għal din il-prenotazzjoni ma nstab l-ebda ritratt.",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Soġġorn tas-sid",
+      "ownerStayHint": "Ebda dħul — la fattura u lanqas kummissjoni, ma jidhirx fir-rendikont tas-sid.",
       "viaChannel": "permezz ta’ {channel}",
       "receivedOn": "waslet għandna fi {date}",
       "bookedOn": "prenotata fi {date}"
@@ -4976,7 +4976,7 @@
   },
   "objects": {
     "channelChips": {
-      "website": "Website",
+      "website": "Websajt",
       "platform": "Platform",
       "portals": "Portals",
       "state": {
@@ -4993,7 +4993,7 @@
       "publishAll": "Ippubblika kullimkien",
       "publishedAll": "Il-proprjetà ġiet ippubblikata fuq il-kanali kollha.",
       "draftHint": "Din il-proprjetà hija abbozz u ma tinbiegħx fuq l-ebda kanal. Issettjaha għal „Attiva“ biex tippubblikaha.",
-      "groupWebsite": "Website",
+      "groupWebsite": "Websajt",
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Qabbad portal",
@@ -5045,7 +5045,7 @@
       "sortAz": "A–Ż",
       "sortZa": "Ż–A",
       "menuOpen": "Azzjonijiet",
-      "menuEdit": "Bearbeiten",
+      "menuEdit": "Immodifika",
       "menuDelete": "Delete",
       "deleteConfirm": "Tassew tixtieq tħassar il-proprjetà „{title}“?",
       "deleteOk": "Il-proprjetà tħassret.",
@@ -5344,16 +5344,16 @@
       "removeAmenityAriaLabel": "Neħħi {amenity}",
       "amenitiesSearchPlaceholder": "Fittex ftehim …",
       "noSearchResults": "L-ebda riżultat.",
-      "zimmerErneutLaden": "Erneut versuchen",
-      "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerFertig": "Fertig",
+      "zimmerErneutLaden": "Erġa' pprova",
+      "zimmerLaedt": "Il-kmamar qed jitgħabbew …",
+      "zimmerFertig": "Lest",
       "zimmerBettenHinweis": "Jinġieb minn Airbnb u jibqa' f'myNextDays u myBestDays — il-portali tal-ibbukkjar ma jaċċettawx tqassim tas-sodod.",
-      "masseinheitLabel": "Maßeinheit",
+      "masseinheitLabel": "Unità tal-kejl",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
       "sizeSqftPrefix": "{size} ft² · ",
-      "gaesteWeniger": "Ein Gast weniger",
-      "gaesteMehr": "Ein Gast mehr",
+      "gaesteWeniger": "Mistieden wieħed inqas",
+      "gaesteMehr": "Mistieden wieħed aktar",
       "zimmerSuffixPrivat": "privat",
       "zimmerSuffixGemeinschaftlich": "komuni",
       "zimmerErhoehen": "Żid {room}",
@@ -5983,20 +5983,20 @@
         "schliessen": "Agħlaq"
       },
       "airbnbPull": {
-        "button": "Bei Airbnb abrufen",
-        "hint": "Ordnet dieses Objekt bei Airbnb zu und holt den Preis von dort.",
-        "priceTaken": "Preis von Airbnb übernommen: {price} · Mindestaufenthalt {nights} Nächte",
-        "noPrice": "Airbnb hat keinen Preis übergeben. Die Zuordnung steht.",
-        "currency": "Währung: {currency}",
-        "timezone": "Zeitzone: {timezone}",
-        "alsoTaken": "Ebenfalls übernommen: {fields}",
+        "button": "Iġbor minn Airbnb",
+        "hint": "Jassenja din il-proprjetà fuq Airbnb u jiġbor il-prezz minn hemm.",
+        "priceTaken": "Prezz meħud minn Airbnb: {price} · soġġorn minimu {nights} iljieli",
+        "noPrice": "Airbnb ma bagħatx ebda prezz. L-assenjazzjoni saret.",
+        "currency": "Munita: {currency}",
+        "timezone": "Żona tal-ħin: {timezone}",
+        "alsoTaken": "Ittieħed ukoll: {fields}",
         "field": {
-          "check_in_from": "Check-in-Zeit",
-          "check_out_until": "Check-out-Zeit",
-          "pets_allowed": "Haustiere erlaubt",
-          "pets_max": "Anzahl Haustiere",
-          "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte",
+          "check_in_from": "Ħin tal-check-in",
+          "check_out_until": "Ħin tal-check-out",
+          "pets_allowed": "Annimali domestiċi permessi",
+          "pets_max": "Numru ta' annimali domestiċi",
+          "smoking_allowed": "Tipjip",
+          "max_nights": "Massimu ta' ljieli",
           "address": "Indirizz",
           "postal_code": "Kodiċi postali",
           "city": "Belt",
@@ -6170,14 +6170,14 @@
         "booked": "Ibbukkjat",
         "blocked": "Imblukkat",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "blockedAndStopSell": "Imblukkat + stop-sell",
         "contractEnd": "Kuntratt terminat"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "il-kanali kollha",
       "nightsCount": "{count, plural, one {# lejl} two {# lejl} few {# iljieli} many {# lejl} other {# lejl}}",
       "daysCount": "{count, plural, one {# jum} two {# jumejn} few {# ijiem} many {# jum} other {# jum}}",
-      "ownerStay": "Eigentümer-Aufenthalt"
+      "ownerStay": "Soġġorn tas-sid"
     },
     "calendarViews": {
       "viewLabel": "Veduta",
@@ -6197,10 +6197,10 @@
       "blocking": "Qed jimblokka…",
       "createBlockedPeriod": "Oħloq perjodu mblukkat",
       "priceMinStayBlock": "Prezz / Soġġorn Minimu / Imblukkar …",
-      "ownerStay": "Eigennutzung eintragen",
-      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
-      "setStopSell": "Stop-Sell setzen",
-      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
+      "ownerStay": "Daħħal soġġorn tas-sid",
+      "createBlockedPeriodHint": "Disponibbiltà 0 — il-jum huwa magħluq kullimkien",
+      "setStopSell": "Issettja stop-sell",
+      "setStopSellHint": "Il-jum jibqa' liberu, imma ma jinbiegħx — b'raġuni"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Numru ta' mistednin issettjat għal din il-proprjetà",
@@ -6430,11 +6430,11 @@
       "occupancy": "Okkupazzjoni",
       "propertyNights": "{booked}/{total} iljieli ta' proprjetà",
       "revenue": "Dħul",
-      "stopSellClear": "Stop-Sell aufheben",
-      "stopSellClearing": "Hebe auf…",
-      "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
-      "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "stopSellClear": "Neħħi l-stop-sell",
+      "stopSellClearing": "Qed jitneħħa…",
+      "stopSellClearNothing": "Hawn ma kien hemm ebda stop-sell x'jitneħħa.",
+      "stopSellEditReason": "Ibdel ir-raġuni",
+      "stopSellPortalLocked": "Issettjat mill-portal — jista' jitneħħa biss minn hemm.",
       "legend": "Leġġenda",
       "contractEndLocked": "Dan l-imblukkar ġej mit-tmiem tal-kuntratt. Jista’ jinbidel biss permezz tad-data tat-tmiem fil-fajl tal-proprjetà."
     },
@@ -6453,29 +6453,29 @@
       "feesHint": "Tindif eċċ.",
       "personsValue": "{count} pers.",
       "guestsLabel": "Mistednin",
-      "stayKind": "Art des Aufenthalts",
-      "stayKindGuest": "Gastbuchung",
-      "stayKindOwner": "Eigennutzung",
-      "ownerLabel": "Eigentümer",
-      "ownerContact": "Kontaktdaten des Eigentümers",
-      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "stayKind": "Tip ta' soġġorn",
+      "stayKindGuest": "Prenotazzjoni ta' mistieden",
+      "stayKindOwner": "Soġġorn tas-sid",
+      "ownerLabel": "Sid",
+      "ownerContact": "Dettalji ta' kuntatt tas-sid",
+      "ownerStayHint": "Is-soġġorn tas-sid jokkupa l-kalendarju bħal prenotazzjoni, imma ma jiġġenerax dħul: ebda prezz, ebda fattura, ebda kummissjoni u xejn fir-rendikont tas-sid.",
       "steps": {
-        "details": "Details",
-        "prices": "Preise & Extras",
-        "policy": "Richtlinien"
+        "details": "Dettalji",
+        "prices": "Prezzijiet u extras",
+        "policy": "Kundizzjonijiet"
       },
       "headings": {
-        "details": "Reservierungsdetails",
-        "prices": "Preise & Extras festlegen",
-        "policy": "Richtlinien festlegen"
+        "details": "Dettalji tar-riżervazzjoni",
+        "prices": "Iddefinixxi l-prezzijiet u l-extras",
+        "policy": "Iddefinixxi l-kundizzjonijiet"
       },
-      "ownerSection": "Eigentümer",
-      "ownerLoading": "Eigentümer wird ermittelt…",
-      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
-      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
-      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
-      "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "ownerSection": "Sid",
+      "ownerLoading": "Qed jiġi identifikat is-sid…",
+      "ownerLoadFailed": "Is-sid ma setax jiġi mtella'.",
+      "ownerMissing": "Għal din il-proprjetà ma hemm ebda sid irreġistrat.",
+      "ownerMissingHint": "Soġġorn tas-sid jeħtieġ sid irreġistrat. Oħloqh taħt Sidien u assenjalu din il-proprjetà.",
+      "ownerMissingLink": "Għas-sidien",
+      "ownerFromRecord": "Meħud mid-data bażika tas-sid. Id-dettalji ta' kuntatt jinbidlu taħt Sidien.",
       "stayNameLabel": "Min qed joqgħod",
       "stayNamePlaceholder": "Isem il-persuna",
       "stayNameHint": "Ħalli vojt għas-sid innifsu. Inkella l-isem tal-persuna li tuża l-perjodu — familja, ħbieb, bennejja.",
@@ -6492,8 +6492,8 @@
       "otaPayout": "Pagament mill-portal",
       "stillOpen": "Għadhom miftuħa",
       "cancelReasonPlaceholder": "Raġuni tal-kanċellazzjoni (tiġi ddokumentata) …",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Soġġorn tas-sid",
+      "ownerStayHint": "Ebda dħul — la fattura u lanqas kummissjoni, ma jidhirx fir-rendikont tas-sid.",
       "openBooking": "Għall-prenotazzjoni sħiħa",
       "messageGuest": "Ikteb lill-mistieden"
     },
@@ -6702,7 +6702,7 @@
     "seasonApplyNoSpans": "Dan l-istaġun m'għandu l-ebda perjodi mmarkati. Immarkah l-ewwel, jew ittrasferixxi biss id-definizzjoni mingħajr perjodi."
   },
   "channels": {
-    "title": "Channel Manager",
+    "title": "Channel manager",
     "subtitle": "Qabbad il-portali tal-prenotazzjonijiet tiegħek u qassam id-disponibbiltà u l-prezzijiet awtomatikament fuq il-kanali kollha.",
     "categoryOta": "Portali tal-prenotazzjonijiet",
     "categoryMarketplace": "Suq tagħna stess",
@@ -6784,7 +6784,7 @@
       "sendUserTaxes": "Ibgħat it-taxxi tiegħek",
       "blockedNote": "Sakemm dan huwa mitfi, ma jintbagħtux taxxi tagħna lil dan il-kanal."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "linkedPending": "{count, plural, =0 {Kont konness · assenjazzjoni pendenti} one {Kont konness · # proprjetà għad trid tiġi assenjata} two {Kont konness · # proprjetajiet għad iridu jiġu assenjati} few {Kont konness · # proprjetajiet għad iridu jiġu assenjati} many {Kont konness · # proprjetà għad trid tiġi assenjata} other {Kont konness · # proprjetà għad trid tiġi assenjata}}",
     "activateChannel": "Attiva l-kanal",
     "activateDone": "{portal} huwa attiv issa.",
     "activateFailed": "Il-kanal ma setax jiġi attivat.",
@@ -6940,7 +6940,7 @@
     "clientSecret": "Sigriet tal-klijent",
     "copy": "Ikkupja",
     "copied": "Ikkupjat.",
-    "done": "Fertig",
+    "done": "Lest",
     "colName": "Name",
     "colEnv": "Ambjent",
     "colScopes": "Permessi",
@@ -7008,7 +7008,7 @@
       "nurMitEntsprechung": "biss karatteristiċi li għandhom ekwivalenti fil-portal",
       "nichtDeckungsgleich": "il-kategoriji ma jaqblux għalkollox",
       "ohneBeleg": "mhux ikkonfermat — qed niċċekkjaw",
-      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
+      "ohneZimmerZuordnung": "mingħajr assenjazzjoni għall-kamra individwali"
     },
     "status": {
       "voll": "transferred",
@@ -7048,7 +7048,7 @@
       "kaution": "Depożitu",
       "lizenznummer": "Numru tal-liċenzja/reġistrazzjoni",
       "mietvertrag": "Kuntratt ta' kera",
-      "zimmerAusstattung": "Ausstattung der Zimmer"
+      "zimmerAusstattung": "Tagħmir tal-kmamar"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -7086,7 +7086,7 @@
       "create": "Oħloq kundizzjoni",
       "update": "Aġġorna l-kundizzjoni",
       "empty": "Għad m'hemmx kundizzjonijiet. Oħloq l-ewwel kundizzjoni tal-prenotazzjoni tiegħek — pjan ta' ħlas, kanċellazzjoni u depożitu.",
-      "colName": "Name",
+      "colName": "Isem",
       "colPaymentPlan": "Pjan ta' ħlas",
       "colCancellation": "Kanċellazzjoni",
       "colDeposit": "Depożitu",
@@ -7141,7 +7141,7 @@
       "amount": "Ammont",
       "depositStep3": "3. Ħinijiet tal-preawtorizzazzjoni",
       "preauthFromHint": "Minn meta tiġi preawtorizzata l-karta tal-mistieden.",
-      "days": "Tage",
+      "days": "Jiem",
       "preauthUntilHint": "Sa meta tista' ssir preawtorizzazzjoni — wara din id-data l-preawtorizzazzjonijiet miftuħa jiġu rilaxxati.",
       "releaseDays": "Illibera jiem wara t-tluq",
       "preauthWarnStrong": "Il-preawtorizzazzjonijiet spiss jistgħu jiġu garantiti biss għal madwar 7 ijiem.",
@@ -7440,7 +7440,7 @@
       "search": "Tfittxija",
       "searchHinweis": "Strixxa ta' tfittxija bid-dati u n-numru ta' mistednin.",
       "propertiesGrid": "Proprjetajiet",
-      "propertiesGridHinweis": "Il-proprjetajiet kollha f'gradilja, bil-prezzijiet reali.",
+      "propertiesGridHinweis": "Proprjetajiet fi grilja, bil-prezzijiet reali jekk ikunu mixgħula.",
       "featuredProperties": "Proprjetajiet magħżula",
       "featuredPropertiesHinweis": "Biss il-proprjetajiet li tagħżel int.",
       "reviews": "Reċensjonijiet",
@@ -7487,7 +7487,7 @@
       "mindestGaeste": "Minn kemm-il mistieden",
       "anzahl": "Numru",
       "objekte": "Proprjetajiet",
-      "kategorienZeigen": "Uri l-valutazzjonijiet individwali",
+      "kategorienZeigen": "Uri l-valutazzjonijiet skont il-kategorija",
       "email": "E-mail",
       "telefon": "Telefon",
       "adresse": "Indirizz",
@@ -7632,7 +7632,7 @@
       },
       "typBeschreibung": {
         "suche": "Destinazzjoni, perjodu u għadd ta' mistednin — twassal għal-lista tal-proprjetajiet tal-websajt tiegħek.",
-        "buchen": "Perjodu u għadd ta' mistednin — twassal direttament fil-proċess tal-booking tiegħek."
+        "buchen": "Perjodu u għadd ta' mistednin — twassal għal-lista tal-proprjetajiet fis-sit tiegħek, mingħajr qasam tad-destinazzjoni."
       },
       "sprache": "Lingwa",
       "spracheHinweis": "Il-lingwa li fiha tidher il-kaxxa fuq il-websajt l-oħra.",
@@ -7868,7 +7868,7 @@
       "hrbPlaceholder": "HRB 12345",
       "courtPlaceholder": "eż. Berlin (Charlottenburg)",
       "employeesPlaceholder": "eż. 7",
-      "ibanPlaceholder": "DE00 0000 0000 0000 0000 00",
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00",
       "preferredLanguage": "Lingwa preferuta",
       "chooseLanguage": "Agħżel lingwa",
       "descriptionPlaceholder": "Deskrizzjoni qasira tal-kumpanija tiegħek…"

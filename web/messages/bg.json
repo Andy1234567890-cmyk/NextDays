@@ -125,74 +125,74 @@
       "text": "Данъчни данни и данни за активиране на плащанията."
     },
     "branch": {
-      "title": "Verkaufst du schon auf Buchungsportalen?",
-      "text": "Booking.com, Airbnb & Co. — hast du dort schon Objekte, oder fängst du neu an?",
-      "switchTitle": "Ja, ich wechsle",
-      "switchText": "Ich habe schon Objekte auf Booking, Airbnb & Co. und möchte sie importieren.",
-      "newTitle": "Nein, ich fange neu an",
-      "newText": "Ich lege meine Objekte neu an und verbinde die Portale danach."
+      "title": "Продавате ли вече през резервационни портали?",
+      "text": "Booking.com, Airbnb и др. — вече имате ли обекти там, или започвате отначало?",
+      "switchTitle": "Да, преминавам",
+      "switchText": "Вече имам обекти в Booking, Airbnb и др. и искам да ги внеса.",
+      "newTitle": "Не, започвам отначало",
+      "newText": "Ще създам обектите си от нулата и ще свържа порталите след това."
     },
     "switch": {
-      "title": "Bestehende Objekte importieren",
-      "intro": "So holst du deine bestehenden Booking-/Airbnb-Objekte zu myNextDays — ohne Doppelbuchungen.",
+      "title": "Внасяне на съществуващи обекти",
+      "intro": "Така пренасяте съществуващите си обекти от Booking/Airbnb в myNextDays — без двойни резервации.",
       "cutover": {
-        "title": "Wichtig vor dem Verbinden",
-        "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
-        "b": "Vergangene Buchungen und manuelle Sperren kommen NICHT automatisch mit. Trage sie nach dem Import selbst nach.",
-        "c": "Lass dein altes System als Backup laufen und beobachte die ersten Tage genau.",
-        "ack": "Ich habe das verstanden.",
-        "doneTitle": "Hinweise von vor dem Verbinden (erledigt)"
+        "title": "Важно преди свързването",
+        "a": "Разкачете всеки портал от предишната си система, преди да го свържете тук — за всеки канал само ЕДНА система може да подава данни.",
+        "b": "Миналите резервации и ръчните блокировки НЕ се пренасят автоматично. Въведете ги сами след внасянето.",
+        "c": "Оставете старата си система да работи като резерва и наблюдавайте внимателно първите дни.",
+        "ack": "Разбрах това.",
+        "doneTitle": "Указания от преди свързването (изпълнени)"
       },
       "step1": {
-        "title": "Objekt anlegen",
-        "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
-        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}",
+        "title": "Създаване на обект",
+        "text": "Създайте по един обект за всяка съществуваща обява — име, вид и базова цена са достатъчни за присвояването.",
+        "count": "{count, plural, =0 {Още няма обекти} one {# обект} other {# обекта}}",
         "airbnbHint": "Идвате от Airbnb? Пропуснете тази стъпка — обектите ви се прехвърлят автоматично, когато свържете Airbnb."
       },
       "step2": {
-        "title": "Portal verbinden & zuordnen",
-        "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
-        "connect": "Portal verbinden",
-        "connectMore": "Weiteres Portal verbinden",
-        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“."
+        "title": "Свързване и присвояване на портал",
+        "text": "Свържете Booking, Airbnb и др. и присвоете стаите на портала 1:1 към обектите си. Резервациите и наличността идват след това автоматично.",
+        "connect": "Свързване на портал",
+        "connectMore": "Свързване на друг портал",
+        "alreadyConnected": "Вече е свързан портал и обектите ви са предадени — тук не е нужно да свързвате отново. Използвайте „Свързване на друг портал“ само за ДОПЪЛНИТЕЛЕН портал (напр. Booking)."
       },
       "pull": {
-        "button": "Objekte aus Portal holen",
-        "result": "{count, plural, =0 {Keine neuen Objekte gefunden} one {# Objekt übernommen} other {# Objekte übernommen}}"
+        "button": "Извличане на обектите от портала",
+        "result": "{count, plural, =0 {Няма намерени нови обекти} one {# взет обект} other {# взети обекта}}"
       },
-      "finishCta": "Import abschließen",
-      "finishHint": "Bitte bestätige zuerst den Hinweis oben und lege mindestens ein Objekt an.",
+      "finishCta": "Завършване на импортирането",
+      "finishHint": "Моля, потвърдете първо указанието по-горе и създайте поне един обект.",
       "bookings": {
-        "title": "Bestehende Buchungen einlesen",
-        "text": "Hol dir die Reservierungen deiner verbundenen Portale in deinen Kalender.",
-        "includePast": "Auch vergangene Buchungen einlesen",
-        "pastHint": "Hinweis: Portale liefern in der Regel nur Buchungen ab dem Zeitpunkt der Verbindung. Bereits abgereiste Gäste von davor sind oft nicht mehr abrufbar.",
-        "button": "Buchungen einlesen",
-        "result": "{count, plural, =0 {Keine Buchungen gefunden} one {# Buchung eingelesen} other {# Buchungen eingelesen}}"
+        "title": "Внасяне на съществуващи резервации",
+        "text": "Вземете резервациите от свързаните си портали в календара.",
+        "includePast": "Внеси и минали резервации",
+        "pastHint": "Забележка: порталите обикновено подават само резервации от момента на свързването нататък. Гости, отпътували преди това, често вече не могат да бъдат извлечени.",
+        "button": "Импортиране на резервациите",
+        "result": "{count, plural, =0 {Няма намерени резервации} one {# внесена резервация} other {# внесени резервации}}"
       },
       "csv": {
-        "title": "Alte & direkte Buchungen per Datei importieren",
-        "text": "Für Buchungen, die nicht über die Portale kommen (Direktbuchungen, vergangene Reservierungen aus deinem alten System).",
-        "downloadTemplate": "Vorlage herunterladen",
-        "upload": "CSV hochladen",
-        "hint": "Lade die Vorlage, fülle sie aus (Datum als JJJJ-MM-TT) und lade sie wieder hoch. Pflicht: Objekt, Gastname, Anreise, Abreise. Doppelte Zeilen werden übersprungen.",
-        "result": "{imported} von {total} Buchungen importiert.",
-        "skipped": "{count, plural, one {# Zeile übersprungen (Duplikat/Objekt fehlt)} other {# Zeilen übersprungen (Duplikat/Objekt fehlt)}}",
-        "failed": "{count, plural, one {# Zeile mit Fehler} other {# Zeilen mit Fehlern}}:"
+        "title": "Внасяне на стари и директни резервации от файл",
+        "text": "За резервации, които не идват през порталите (директни резервации, минали резервации от старата ви система).",
+        "downloadTemplate": "Изтегляне на шаблона",
+        "upload": "Качване на CSV",
+        "hint": "Изтеглете шаблона, попълнете го (дата като ГГГГ-ММ-ДД) и го качете отново. Задължителни: обект, име на гост, пристигане, отпътуване. Дублираните редове се пропускат.",
+        "result": "Внесени {imported} от {total} резервации.",
+        "skipped": "{count, plural, one {# пропуснат ред (дублиран/липсва обект)} other {# пропуснати реда (дублирани/липсва обект)}}",
+        "failed": "{count, plural, one {# ред с грешка} other {# реда с грешки}}:"
       },
       "lodgify": {
-        "title": "Buchungen aus Lodgify holen",
-        "text": "Wenn du von Lodgify wechselst: importiere deine Buchungen direkt per API-Schlüssel (nur lesend, es wird nichts in Lodgify geändert).",
-        "keyLabel": "Lodgify-API-Schlüssel",
-        "keyPlaceholder": "Aus Lodgify: Einstellungen → Public API",
-        "keyHint": "Der Schlüssel wird nur für diesen Import genutzt und nicht gespeichert. Wir lesen ausschließlich – wir ändern nichts in Lodgify.",
-        "preview": "Vorschau laden",
-        "import": "{count, plural, one {# Buchung importieren} other {# Buchungen importieren}}",
-        "previewResult": "{importable} von {total} Buchungen können importiert werden.",
-        "result": "{imported} von {total} Buchungen importiert."
+        "title": "Вземане на резервации от Lodgify",
+        "text": "Ако преминавате от Lodgify: внесете резервациите си директно чрез API ключ (само за четене, в Lodgify не се променя нищо).",
+        "keyLabel": "API ключ за Lodgify",
+        "keyPlaceholder": "От Lodgify: Настройки → Public API",
+        "keyHint": "Ключът се използва само за това внасяне и не се запазва. Ние само четем — не променяме нищо в Lodgify.",
+        "preview": "Зареждане на визуализацията",
+        "import": "{count, plural, one {Внасяне на # резервация} other {Внасяне на # резервации}}",
+        "previewResult": "{importable} от {total} резервации могат да бъдат внесени.",
+        "result": "Внесени {imported} от {total} резервации."
       },
       "finish": {
-        "notRegistered": "Mindestens ein Objekt muss an die Buchungsportale übermittelt sein, bevor du das Onboarding abschließt. Verbinde in Schritt 2 ein Portal — dabei wird das Objekt automatisch übertragen."
+        "notRegistered": "Поне един обект трябва да е предаден към резервационните портали, преди да завършите въвеждането. Свържете портал в стъпка 2 — при това обектът се предава автоматично."
       }
     }
   },
@@ -208,7 +208,7 @@
     "websiteDesign": "Дизайн",
     "websitePages": "Страници",
     "websiteDomain": "Адрес",
-    "channelManager": "Channel Manager",
+    "channelManager": "Мениджър на каналите",
     "guests": "Гости",
     "tasks": "Задачи",
     "invoices": "Фактури",
@@ -364,7 +364,7 @@
     "sourceManual": "Manual",
     "sourceChannex": "От туроператора",
     "clear": "Clear",
-    "readonly": "Portal",
+    "readonly": "Портал",
     "toIncl": "До",
     "calendarHint": "Плъзнете през дните на обект, за да изберете период.",
     "legendOpen": "Свободно",
@@ -399,11 +399,11 @@
     "resetConfirm": "Да, премахни всички",
     "resetting": "Resetting …",
     "cancel": "Cancel",
-    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
-    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
-    "reasonRequired": "Bitte einen Grund wählen.",
-    "skippedBooked": "{count} gebuchte Tage wurden übersprungen — verkaufte Tage lassen sich nicht stoppen.",
-    "skippedBookedAll": "Kein Tag gestoppt: alle {count} Tage im Zeitraum sind gebucht."
+    "noteRequired": "При „Друго“ е необходима бележка.",
+    "noteRequiredLabel": "Бележка (задължителна при „Друго“)",
+    "reasonRequired": "Моля, изберете причина.",
+    "skippedBooked": "{count} резервирани дни бяха пропуснати — продадените дни не могат да бъдат спрени.",
+    "skippedBookedAll": "Няма спрян ден: всички {count} дни в периода са резервирани."
   },
   "inbox": {
     "title": "Inbox",
@@ -3901,7 +3901,7 @@
       "streetPlaceholder": "Примерна улица 123",
       "bankPlaceholder": "Deutsche Bank",
       "holderPlaceholder": "Иван Иванов",
-      "ibanPlaceholder": "DE89 3704 0044 0532 0130 00"
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00"
     },
     "pdf": {
       "qrCode": "QR код",
@@ -4203,7 +4203,7 @@
       },
       "emptyState": "Не са намерени резервации.",
       "loading": "Зареждане…",
-      "ownerStay": "Eigennutzung",
+      "ownerStay": "Собствено ползване",
       "limit": "Лимит ({count})",
       "limitAll": "Всички",
       "columnsMenu": "Колони",
@@ -4621,8 +4621,8 @@
       "openGuestCard": "Отвори картата на госта",
       "photos": "Снимки",
       "noPhotosFound": "За тази резервация не бяха намерени снимки.",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Престой на собственика",
+      "ownerStayHint": "Без оборот — нито фактура, нито комисиона, не влиза в разчета със собственика.",
       "viaChannel": "чрез {channel}",
       "receivedOn": "получена при нас на {date}",
       "bookedOn": "резервирана на {date}"
@@ -4978,7 +4978,7 @@
   },
   "objects": {
     "channelChips": {
-      "website": "Website",
+      "website": "Уебсайт",
       "platform": "Platform",
       "portals": "Portals",
       "state": {
@@ -4995,7 +4995,7 @@
       "publishAll": "Публикуване навсякъде",
       "publishedAll": "Обектът е публикуван във всички канали.",
       "draftHint": "Този обект е чернова и не се продава в нито един канал. Задайте го на „Активен“, за да го публикувате.",
-      "groupWebsite": "Website",
+      "groupWebsite": "Уебсайт",
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Свързване на портал",
@@ -5047,7 +5047,7 @@
       "sortAz": "А–Я",
       "sortZa": "Я–А",
       "menuOpen": "Действия",
-      "menuEdit": "Bearbeiten",
+      "menuEdit": "Редактиране",
       "menuDelete": "Delete",
       "deleteConfirm": "Наистина ли да изтриете обекта „{title}“?",
       "deleteOk": "Обектът е изтрит.",
@@ -5346,16 +5346,16 @@
       "removeAmenityAriaLabel": "Премахни {amenity}",
       "amenitiesSearchPlaceholder": "Търсене на удобство …",
       "noSearchResults": "Няма резултати.",
-      "zimmerErneutLaden": "Erneut versuchen",
-      "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerFertig": "Fertig",
+      "zimmerErneutLaden": "Опитай отново",
+      "zimmerLaedt": "Стаите се зареждат …",
+      "zimmerFertig": "Готово",
       "zimmerBettenHinweis": "Взема се от Airbnb и остава в myNextDays и myBestDays — резервационните портали не приемат разпределение на леглата.",
-      "masseinheitLabel": "Maßeinheit",
+      "masseinheitLabel": "Мерна единица",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
       "sizeSqftPrefix": "{size} ft² · ",
-      "gaesteWeniger": "Ein Gast weniger",
-      "gaesteMehr": "Ein Gast mehr",
+      "gaesteWeniger": "Един гост по-малко",
+      "gaesteMehr": "Един гост повече",
       "zimmerSuffixPrivat": "частно",
       "zimmerSuffixGemeinschaftlich": "общо",
       "zimmerErhoehen": "Добавяне на {room}",
@@ -5930,7 +5930,7 @@
         "zweibettzimmer": "Twin room",
         "familienzimmer": "Family room",
         "junior_suite": "Junior suite",
-        "suite": "Suite"
+        "suite": "Апартамент"
       }
     },
     "sync": {
@@ -5985,20 +5985,20 @@
         "schliessen": "Затваряне"
       },
       "airbnbPull": {
-        "button": "Bei Airbnb abrufen",
-        "hint": "Ordnet dieses Objekt bei Airbnb zu und holt den Preis von dort.",
-        "priceTaken": "Preis von Airbnb übernommen: {price} · Mindestaufenthalt {nights} Nächte",
-        "noPrice": "Airbnb hat keinen Preis übergeben. Die Zuordnung steht.",
-        "currency": "Währung: {currency}",
-        "timezone": "Zeitzone: {timezone}",
-        "alsoTaken": "Ebenfalls übernommen: {fields}",
+        "button": "Извличане от Airbnb",
+        "hint": "Присвоява този обект в Airbnb и взема цената оттам.",
+        "priceTaken": "Цената е взета от Airbnb: {price} · минимален престой {nights} нощувки",
+        "noPrice": "Airbnb не подаде цена. Присвояването е налице.",
+        "currency": "Валута: {currency}",
+        "timezone": "Часова зона: {timezone}",
+        "alsoTaken": "Също взето: {fields}",
         "field": {
-          "check_in_from": "Check-in-Zeit",
-          "check_out_until": "Check-out-Zeit",
-          "pets_allowed": "Haustiere erlaubt",
-          "pets_max": "Anzahl Haustiere",
-          "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte",
+          "check_in_from": "Час на настаняване",
+          "check_out_until": "Час на напускане",
+          "pets_allowed": "Домашни любимци са разрешени",
+          "pets_max": "Брой домашни любимци",
+          "smoking_allowed": "Пушене",
+          "max_nights": "Максимален брой нощувки",
           "address": "Адрес",
           "postal_code": "Пощенски код",
           "city": "Град",
@@ -6172,14 +6172,14 @@
         "booked": "Резервирано",
         "blocked": "Блокирано",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "blockedAndStopSell": "Блокирано + Stop-Sell",
         "contractEnd": "Договорът е прекратен"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "всички канали",
       "nightsCount": "{count, plural, one {# нощ} other {# нощи}}",
       "daysCount": "{count, plural, one {# ден} other {# дни}}",
-      "ownerStay": "Eigentümer-Aufenthalt"
+      "ownerStay": "Престой на собственика"
     },
     "calendarViews": {
       "viewLabel": "Изглед",
@@ -6199,10 +6199,10 @@
       "blocking": "Блокиране…",
       "createBlockedPeriod": "Създай период на блокиране",
       "priceMinStayBlock": "Цена / Min-Stay / Блокиране …",
-      "ownerStay": "Eigennutzung eintragen",
-      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
-      "setStopSell": "Stop-Sell setzen",
-      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
+      "ownerStay": "Въвеждане на собствено ползване",
+      "createBlockedPeriodHint": "Наличност 0 — денят е затворен навсякъде",
+      "setStopSell": "Задаване на Stop-Sell",
+      "setStopSellHint": "Денят остава свободен, но не се продава — с причина"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Брой гости, зададен за този обект",
@@ -6432,11 +6432,11 @@
       "occupancy": "Заетост",
       "propertyNights": "{booked}/{total} обект-нощувки",
       "revenue": "Оборот",
-      "stopSellClear": "Stop-Sell aufheben",
-      "stopSellClearing": "Hebe auf…",
-      "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
-      "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "stopSellClear": "Премахване на Stop-Sell",
+      "stopSellClearing": "Премахва се…",
+      "stopSellClearNothing": "Тук нямаше Stop-Sell за премахване.",
+      "stopSellEditReason": "Промяна на причината",
+      "stopSellPortalLocked": "Зададено от портала — може да се премахне само там.",
       "legend": "Легенда",
       "contractEndLocked": "Тази блокировка идва от края на договора. Може да се промени само чрез крайната дата в картона на обекта."
     },
@@ -6455,29 +6455,29 @@
       "feesHint": "Почистване и др.",
       "personsValue": "{count} души",
       "guestsLabel": "Гости",
-      "stayKind": "Art des Aufenthalts",
-      "stayKindGuest": "Gastbuchung",
-      "stayKindOwner": "Eigennutzung",
-      "ownerLabel": "Eigentümer",
-      "ownerContact": "Kontaktdaten des Eigentümers",
-      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "stayKind": "Вид на престоя",
+      "stayKindGuest": "Резервация на гост",
+      "stayKindOwner": "Собствено ползване",
+      "ownerLabel": "Собственик",
+      "ownerContact": "Данни за контакт на собственика",
+      "ownerStayHint": "Ползването от собственика заема календара като резервация, но не създава оборот: без цена, без фактура, без комисиона и нищо в разчета със собственика.",
       "steps": {
-        "details": "Details",
-        "prices": "Preise & Extras",
-        "policy": "Richtlinien"
+        "details": "Детайли",
+        "prices": "Цени и допълнения",
+        "policy": "Правила"
       },
       "headings": {
-        "details": "Reservierungsdetails",
-        "prices": "Preise & Extras festlegen",
-        "policy": "Richtlinien festlegen"
+        "details": "Детайли за резервацията",
+        "prices": "Определяне на цени и допълнения",
+        "policy": "Определяне на правилата"
       },
-      "ownerSection": "Eigentümer",
-      "ownerLoading": "Eigentümer wird ermittelt…",
-      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
-      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
-      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
-      "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "ownerSection": "Собственик",
+      "ownerLoading": "Собственикът се определя…",
+      "ownerLoadFailed": "Собственикът не можа да бъде зареден.",
+      "ownerMissing": "За този обект няма въведен собственик.",
+      "ownerMissingHint": "Ползването от собственика изисква въведен собственик. Създайте го в „Собственици“ и му присвоете този обект.",
+      "ownerMissingLink": "Към собствениците",
+      "ownerFromRecord": "Взето от основните данни на собственика. Промените в данните за контакт се правят в „Собственици“.",
       "stayNameLabel": "Кой живее там",
       "stayNamePlaceholder": "Име на лицето",
       "stayNameHint": "Оставете празно за самия собственик. В противен случай името на лицето, което ползва периода — семейство, приятели, майстори.",
@@ -6494,8 +6494,8 @@
       "otaPayout": "Изплащане от портала",
       "stillOpen": "Все още открити",
       "cancelReasonPlaceholder": "Причина за анулирането (ще бъде документирана) …",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Престой на собственика",
+      "ownerStayHint": "Без оборот — нито фактура, нито комисиона, не влиза в разчета със собственика.",
       "openBooking": "Към цялата резервация",
       "messageGuest": "Съобщение до госта"
     },
@@ -6704,7 +6704,7 @@
     "seasonApplyNoSpans": "Този сезон няма оцветени периоди. Първо го оцветете или прехвърлете само определението без периоди."
   },
   "channels": {
-    "title": "Channel Manager",
+    "title": "Мениджър на каналите",
     "subtitle": "Свържете своите портали за резервации и разпределяйте наличност и цени автоматично във всички канали.",
     "categoryOta": "Портали за резервации",
     "categoryMarketplace": "Собствен пазар",
@@ -6786,7 +6786,7 @@
       "sendUserTaxes": "Изпращане на собствени данъци",
       "blockedNote": "Докато това е изключено, към канала не се изпращат собствени данъци."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "linkedPending": "{count, plural, =0 {Профилът е свързан · присвояването предстои} one {Профилът е свързан · остава да се присвои # обект} other {Профилът е свързан · остават да се присвоят # обекта}}",
     "activateChannel": "Активиране на канала",
     "activateDone": "{portal} вече е активен.",
     "activateFailed": "Каналът не можа да бъде активиран.",
@@ -6942,7 +6942,7 @@
     "clientSecret": "Клиентска тайна",
     "copy": "Копиране",
     "copied": "Копирано.",
-    "done": "Fertig",
+    "done": "Готово",
     "colName": "Name",
     "colEnv": "Среда",
     "colScopes": "Права",
@@ -7010,7 +7010,7 @@
       "nurMitEntsprechung": "само характеристики със съответствие в портала",
       "nichtDeckungsgleich": "категориите не съвпадат напълно",
       "ohneBeleg": "непотвърдено — проверяваме го",
-      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
+      "ohneZimmerZuordnung": "без присвояване към отделна стая"
     },
     "status": {
       "voll": "transferred",
@@ -7050,7 +7050,7 @@
       "kaution": "Депозит",
       "lizenznummer": "Номер на лиценз/регистрация",
       "mietvertrag": "Договор за наем",
-      "zimmerAusstattung": "Ausstattung der Zimmer"
+      "zimmerAusstattung": "Удобства в стаите"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -7088,7 +7088,7 @@
       "create": "Създаване на условие",
       "update": "Актуализиране на условието",
       "empty": "Все още няма условия. Създайте първото си условие за резервация — план за плащане, анулиране и депозит.",
-      "colName": "Name",
+      "colName": "Име",
       "colPaymentPlan": "План за плащане",
       "colCancellation": "Анулиране",
       "colDeposit": "Депозит",
@@ -7143,7 +7143,7 @@
       "amount": "Сума",
       "depositStep3": "3. Времена на преавторизация",
       "preauthFromHint": "От кога се преавторизира картата на госта.",
-      "days": "Tage",
+      "days": "Дни",
       "preauthUntilHint": "До кога може да се извърши преавторизация — след тази дата откритите преавторизации се освобождават.",
       "releaseDays": "Освобождаване дни след заминаването",
       "preauthWarnStrong": "Преавторизациите често могат да се гарантират само за около 7 дни.",
@@ -7442,7 +7442,7 @@
       "search": "Търсене",
       "searchHinweis": "Лента за търсене с дати и брой гости.",
       "propertiesGrid": "Обекти",
-      "propertiesGridHinweis": "Всички обекти в мрежа, с истински цени.",
+      "propertiesGridHinweis": "Обектите в решетка, с истински цени, ако са включени.",
       "featuredProperties": "Избрани обекти",
       "featuredPropertiesHinweis": "Само обектите, които изберете.",
       "reviews": "Отзиви",
@@ -7489,7 +7489,7 @@
       "mindestGaeste": "От колко гости",
       "anzahl": "Количество",
       "objekte": "Обекти",
-      "kategorienZeigen": "Показване на отделните оценки",
+      "kategorienZeigen": "Показване на оценките по категории",
       "email": "Имейл",
       "telefon": "Телефон",
       "adresse": "Адрес",
@@ -7589,7 +7589,7 @@
       "erweitert": {
         "titel": "Разширени",
         "hinweis": "Настройки за напреднали. Всичко тук влияе на публичния ви сайт.",
-        "faviconTitel": "Favicon",
+        "faviconTitel": "Иконка на сайта",
         "faviconHinweis": "Малката икона в раздела на браузъра и в отметките.",
         "codeTitel": "Собствен код",
         "codeHinweis": "За тагове за проверка, скрипт за анализ или собствено оформление. Нищо от това не се изпълнява в процеса на плащане.",
@@ -7634,7 +7634,7 @@
       },
       "typBeschreibung": {
         "suche": "Дестинация, период и брой гости — води към списъка с обекти на сайта ви.",
-        "buchen": "Период и брой гости — води направо към процеса ви на резервация."
+        "buchen": "Период и брой гости — води към списъка с обекти на вашия сайт, без поле за дестинация."
       },
       "sprache": "Език",
       "spracheHinweis": "Езикът, на който полето се показва в чуждия сайт.",
@@ -7870,7 +7870,7 @@
       "hrbPlaceholder": "HRB 12345",
       "courtPlaceholder": "напр. Берлин (Шарлотенбург)",
       "employeesPlaceholder": "напр. 7",
-      "ibanPlaceholder": "DE00 0000 0000 0000 0000 00",
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00",
       "preferredLanguage": "Предпочитан език",
       "chooseLanguage": "Изберете език",
       "descriptionPlaceholder": "Кратко описание на вашата фирма…"

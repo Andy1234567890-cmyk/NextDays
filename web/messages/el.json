@@ -125,74 +125,74 @@
       "text": "Φορολογικά στοιχεία και δεδομένα για την ενεργοποίηση πληρωμών."
     },
     "branch": {
-      "title": "Verkaufst du schon auf Buchungsportalen?",
-      "text": "Booking.com, Airbnb & Co. — hast du dort schon Objekte, oder fängst du neu an?",
-      "switchTitle": "Ja, ich wechsle",
-      "switchText": "Ich habe schon Objekte auf Booking, Airbnb & Co. und möchte sie importieren.",
-      "newTitle": "Nein, ich fange neu an",
-      "newText": "Ich lege meine Objekte neu an und verbinde die Portale danach."
+      "title": "Πουλάτε ήδη μέσω πυλών κρατήσεων;",
+      "text": "Booking.com, Airbnb κ.ά. — έχετε ήδη καταλύματα εκεί ή ξεκινάτε από την αρχή;",
+      "switchTitle": "Ναι, αλλάζω",
+      "switchText": "Έχω ήδη καταλύματα σε Booking, Airbnb κ.ά. και θέλω να τα εισαγάγω.",
+      "newTitle": "Όχι, ξεκινώ από την αρχή",
+      "newText": "Θα δημιουργήσω τα καταλύματά μου από την αρχή και θα συνδέσω τις πύλες μετά."
     },
     "switch": {
-      "title": "Bestehende Objekte importieren",
-      "intro": "So holst du deine bestehenden Booking-/Airbnb-Objekte zu myNextDays — ohne Doppelbuchungen.",
+      "title": "Εισαγωγή υφιστάμενων καταλυμάτων",
+      "intro": "Έτσι μεταφέρετε τα υφιστάμενα καταλύματά σας από Booking/Airbnb στο myNextDays — χωρίς διπλές κρατήσεις.",
       "cutover": {
-        "title": "Wichtig vor dem Verbinden",
-        "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
-        "b": "Vergangene Buchungen und manuelle Sperren kommen NICHT automatisch mit. Trage sie nach dem Import selbst nach.",
-        "c": "Lass dein altes System als Backup laufen und beobachte die ersten Tage genau.",
-        "ack": "Ich habe das verstanden.",
-        "doneTitle": "Hinweise von vor dem Verbinden (erledigt)"
+        "title": "Σημαντικό πριν από τη σύνδεση",
+        "a": "Αποσυνδέστε κάθε πύλη από το προηγούμενο σύστημά σας προτού τη συνδέσετε εδώ — ανά κανάλι επιτρέπεται να στέλνει δεδομένα μόνο ΕΝΑ σύστημα.",
+        "b": "Οι παλαιότερες κρατήσεις και τα χειροκίνητα μπλοκαρίσματα ΔΕΝ μεταφέρονται αυτόματα. Καταχωρίστε τα μόνοι σας μετά την εισαγωγή.",
+        "c": "Αφήστε το παλιό σύστημά σας να λειτουργεί ως αντίγραφο ασφαλείας και παρακολουθήστε προσεκτικά τις πρώτες ημέρες.",
+        "ack": "Το κατάλαβα.",
+        "doneTitle": "Υποδείξεις πριν από τη σύνδεση (ολοκληρώθηκαν)"
       },
       "step1": {
-        "title": "Objekt anlegen",
-        "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
-        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}",
+        "title": "Δημιουργία καταλύματος",
+        "text": "Δημιουργήστε ένα κατάλυμα για κάθε υφιστάμενη καταχώριση — όνομα, είδος και βασική τιμή αρκούν για την αντιστοίχιση.",
+        "count": "{count, plural, =0 {Κανένα κατάλυμα ακόμη} one {# κατάλυμα} other {# καταλύματα}}",
         "airbnbHint": "Έρχεστε από το Airbnb; Παραλείψτε αυτό το βήμα — τα καταλύματά σας μεταφέρονται αυτόματα όταν συνδέσετε το Airbnb."
       },
       "step2": {
-        "title": "Portal verbinden & zuordnen",
-        "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
-        "connect": "Portal verbinden",
-        "connectMore": "Weiteres Portal verbinden",
-        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“."
+        "title": "Σύνδεση και αντιστοίχιση πύλης",
+        "text": "Συνδέστε Booking, Airbnb κ.ά. και αντιστοιχίστε τα δωμάτια των πυλών 1:1 στα καταλύματά σας. Οι κρατήσεις και η διαθεσιμότητα έρχονται στη συνέχεια αυτόματα.",
+        "connect": "Σύνδεση πύλης",
+        "connectMore": "Σύνδεση άλλης πύλης",
+        "alreadyConnected": "Μια πύλη είναι ήδη συνδεδεμένη και τα καταλύματά σας έχουν μεταβιβαστεί — δεν χρειάζεται να συνδέσετε ξανά εδώ. Χρησιμοποιήστε το «Σύνδεση άλλης πύλης» μόνο για ΕΠΙΠΛΕΟΝ πύλη (π.χ. Booking)."
       },
       "pull": {
-        "button": "Objekte aus Portal holen",
-        "result": "{count, plural, =0 {Keine neuen Objekte gefunden} one {# Objekt übernommen} other {# Objekte übernommen}}"
+        "button": "Λήψη καταλυμάτων από την πύλη",
+        "result": "{count, plural, =0 {Δεν βρέθηκαν νέα καταλύματα} one {# κατάλυμα ελήφθη} other {# καταλύματα ελήφθησαν}}"
       },
-      "finishCta": "Import abschließen",
-      "finishHint": "Bitte bestätige zuerst den Hinweis oben und lege mindestens ein Objekt an.",
+      "finishCta": "Ολοκλήρωση εισαγωγής",
+      "finishHint": "Επιβεβαιώστε πρώτα την υπόδειξη παραπάνω και δημιουργήστε τουλάχιστον ένα κατάλυμα.",
       "bookings": {
-        "title": "Bestehende Buchungen einlesen",
-        "text": "Hol dir die Reservierungen deiner verbundenen Portale in deinen Kalender.",
-        "includePast": "Auch vergangene Buchungen einlesen",
-        "pastHint": "Hinweis: Portale liefern in der Regel nur Buchungen ab dem Zeitpunkt der Verbindung. Bereits abgereiste Gäste von davor sind oft nicht mehr abrufbar.",
-        "button": "Buchungen einlesen",
-        "result": "{count, plural, =0 {Keine Buchungen gefunden} one {# Buchung eingelesen} other {# Buchungen eingelesen}}"
+        "title": "Εισαγωγή υφιστάμενων κρατήσεων",
+        "text": "Φέρτε τις κρατήσεις από τις συνδεδεμένες πύλες σας στο ημερολόγιό σας.",
+        "includePast": "Εισαγωγή και παλαιότερων κρατήσεων",
+        "pastHint": "Σημείωση: οι πύλες συνήθως παρέχουν κρατήσεις μόνο από τη στιγμή της σύνδεσης και μετά. Επισκέπτες που αναχώρησαν πριν από αυτό συχνά δεν είναι πλέον διαθέσιμοι.",
+        "button": "Εισαγωγή κρατήσεων",
+        "result": "{count, plural, =0 {Δεν βρέθηκαν κρατήσεις} one {# κράτηση εισήχθη} other {# κρατήσεις εισήχθησαν}}"
       },
       "csv": {
-        "title": "Alte & direkte Buchungen per Datei importieren",
-        "text": "Für Buchungen, die nicht über die Portale kommen (Direktbuchungen, vergangene Reservierungen aus deinem alten System).",
-        "downloadTemplate": "Vorlage herunterladen",
-        "upload": "CSV hochladen",
-        "hint": "Lade die Vorlage, fülle sie aus (Datum als JJJJ-MM-TT) und lade sie wieder hoch. Pflicht: Objekt, Gastname, Anreise, Abreise. Doppelte Zeilen werden übersprungen.",
-        "result": "{imported} von {total} Buchungen importiert.",
-        "skipped": "{count, plural, one {# Zeile übersprungen (Duplikat/Objekt fehlt)} other {# Zeilen übersprungen (Duplikat/Objekt fehlt)}}",
-        "failed": "{count, plural, one {# Zeile mit Fehler} other {# Zeilen mit Fehlern}}:"
+        "title": "Εισαγωγή παλαιών και απευθείας κρατήσεων από αρχείο",
+        "text": "Για κρατήσεις που δεν έρχονται μέσω των πυλών (απευθείας κρατήσεις, παλαιότερες κρατήσεις από το προηγούμενο σύστημά σας).",
+        "downloadTemplate": "Λήψη προτύπου",
+        "upload": "Μεταφόρτωση CSV",
+        "hint": "Κατεβάστε το υπόδειγμα, συμπληρώστε το (ημερομηνία ως ΕΕΕΕ-ΜΜ-ΗΗ) και ανεβάστε το ξανά. Υποχρεωτικά: κατάλυμα, όνομα επισκέπτη, άφιξη, αναχώρηση. Οι διπλότυπες γραμμές παραλείπονται.",
+        "result": "Εισήχθησαν {imported} από {total} κρατήσεις.",
+        "skipped": "{count, plural, one {# γραμμή παραλείφθηκε (διπλότυπο/λείπει κατάλυμα)} other {# γραμμές παραλείφθηκαν (διπλότυπο/λείπει κατάλυμα)}}",
+        "failed": "{count, plural, one {# γραμμή με σφάλμα} other {# γραμμές με σφάλματα}}:"
       },
       "lodgify": {
-        "title": "Buchungen aus Lodgify holen",
-        "text": "Wenn du von Lodgify wechselst: importiere deine Buchungen direkt per API-Schlüssel (nur lesend, es wird nichts in Lodgify geändert).",
-        "keyLabel": "Lodgify-API-Schlüssel",
-        "keyPlaceholder": "Aus Lodgify: Einstellungen → Public API",
-        "keyHint": "Der Schlüssel wird nur für diesen Import genutzt und nicht gespeichert. Wir lesen ausschließlich – wir ändern nichts in Lodgify.",
-        "preview": "Vorschau laden",
-        "import": "{count, plural, one {# Buchung importieren} other {# Buchungen importieren}}",
-        "previewResult": "{importable} von {total} Buchungen können importiert werden.",
-        "result": "{imported} von {total} Buchungen importiert."
+        "title": "Ανάκτηση κρατήσεων από το Lodgify",
+        "text": "Αν αλλάζετε από το Lodgify: εισαγάγετε τις κρατήσεις σας απευθείας με κλειδί API (μόνο ανάγνωση, δεν αλλάζει τίποτα στο Lodgify).",
+        "keyLabel": "Κλειδί API του Lodgify",
+        "keyPlaceholder": "Από το Lodgify: Ρυθμίσεις → Public API",
+        "keyHint": "Το κλειδί χρησιμοποιείται μόνο για αυτήν την εισαγωγή και δεν αποθηκεύεται. Διαβάζουμε μόνο — δεν αλλάζουμε τίποτα στο Lodgify.",
+        "preview": "Φόρτωση προεπισκόπησης",
+        "import": "{count, plural, one {Εισαγωγή # κράτησης} other {Εισαγωγή # κρατήσεων}}",
+        "previewResult": "{importable} από {total} κρατήσεις μπορούν να εισαχθούν.",
+        "result": "Εισήχθησαν {imported} από {total} κρατήσεις."
       },
       "finish": {
-        "notRegistered": "Mindestens ein Objekt muss an die Buchungsportale übermittelt sein, bevor du das Onboarding abschließt. Verbinde in Schritt 2 ein Portal — dabei wird das Objekt automatisch übertragen."
+        "notRegistered": "Τουλάχιστον ένα κατάλυμα πρέπει να έχει σταλεί στις πύλες κρατήσεων προτού ολοκληρώσετε την αρχική ρύθμιση. Συνδέστε μια πύλη στο βήμα 2 — το κατάλυμα μεταβιβάζεται αυτόματα."
       }
     }
   },
@@ -208,7 +208,7 @@
     "websiteDesign": "Σχεδίαση",
     "websitePages": "Σελίδες",
     "websiteDomain": "Διεύθυνση",
-    "channelManager": "Channel Manager",
+    "channelManager": "Διαχειριστής καναλιών",
     "guests": "Επισκέπτες",
     "tasks": "Εργασίες",
     "invoices": "Τιμολόγια",
@@ -364,7 +364,7 @@
     "sourceManual": "Manual",
     "sourceChannex": "Από τον tour operator",
     "clear": "Clear",
-    "readonly": "Portal",
+    "readonly": "Πύλη",
     "toIncl": "Έως",
     "calendarHint": "Σύρετε πάνω στις ημέρες ενός καταλύματος για να επιλέξετε περίοδο.",
     "legendOpen": "Ελεύθερο",
@@ -399,11 +399,11 @@
     "resetConfirm": "Ναι, άρση όλων",
     "resetting": "Resetting …",
     "cancel": "Cancel",
-    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
-    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
-    "reasonRequired": "Bitte einen Grund wählen.",
-    "skippedBooked": "{count} gebuchte Tage wurden übersprungen — verkaufte Tage lassen sich nicht stoppen.",
-    "skippedBookedAll": "Kein Tag gestoppt: alle {count} Tage im Zeitraum sind gebucht."
+    "noteRequired": "Στην επιλογή «Άλλο» απαιτείται σημείωση.",
+    "noteRequiredLabel": "Σημείωση (υποχρεωτική στο «Άλλο»)",
+    "reasonRequired": "Επιλέξτε μια αιτία.",
+    "skippedBooked": "{count} κρατημένες ημέρες παραλείφθηκαν — οι πωλημένες ημέρες δεν μπορούν να σταματήσουν.",
+    "skippedBookedAll": "Καμία ημέρα δεν σταμάτησε: και οι {count} ημέρες της περιόδου είναι κρατημένες."
   },
   "inbox": {
     "title": "Inbox",
@@ -3901,7 +3901,7 @@
       "streetPlaceholder": "Οδός Παραδείγματος 123",
       "bankPlaceholder": "Deutsche Bank",
       "holderPlaceholder": "Γιώργος Παπαδόπουλος",
-      "ibanPlaceholder": "DE89 3704 0044 0532 0130 00"
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00"
     },
     "pdf": {
       "qrCode": "QR-code",
@@ -4203,7 +4203,7 @@
       },
       "emptyState": "Δεν βρέθηκαν κρατήσεις.",
       "loading": "Φόρτωση…",
-      "ownerStay": "Eigennutzung",
+      "ownerStay": "Ιδιοχρησία",
       "limit": "Όριο ({count})",
       "limitAll": "Όλα",
       "columnsMenu": "Στήλες",
@@ -4621,8 +4621,8 @@
       "openGuestCard": "Άνοιγμα κάρτας επισκέπτη",
       "photos": "Φωτογραφίες",
       "noPhotosFound": "Δεν βρέθηκαν εικόνες για αυτή την κράτηση.",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Διαμονή ιδιοκτήτη",
+      "ownerStayHint": "Χωρίς έσοδα — ούτε τιμολόγιο ούτε προμήθεια, δεν περιλαμβάνεται στην εκκαθάριση ιδιοκτήτη.",
       "viaChannel": "μέσω {channel}",
       "receivedOn": "παραλήφθηκε από εμάς στις {date}",
       "bookedOn": "κρατήθηκε στις {date}"
@@ -4978,7 +4978,7 @@
   },
   "objects": {
     "channelChips": {
-      "website": "Website",
+      "website": "Ιστότοπος",
       "platform": "Platform",
       "portals": "Portals",
       "state": {
@@ -4995,7 +4995,7 @@
       "publishAll": "Δημοσίευση παντού",
       "publishedAll": "Το κατάλυμα δημοσιεύτηκε σε όλα τα κανάλια.",
       "draftHint": "Αυτό το κατάλυμα είναι πρόχειρο και δεν πωλείται σε κανένα κανάλι. Ορίστε το σε «Ενεργό» για να δημοσιευτεί.",
-      "groupWebsite": "Website",
+      "groupWebsite": "Ιστότοπος",
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Σύνδεση πύλης",
@@ -5047,7 +5047,7 @@
       "sortAz": "Α–Ω",
       "sortZa": "Ω–Α",
       "menuOpen": "Ενέργειες",
-      "menuEdit": "Bearbeiten",
+      "menuEdit": "Επεξεργασία",
       "menuDelete": "Delete",
       "deleteConfirm": "Να διαγραφεί πράγματι το κατάλυμα «{title}»;",
       "deleteOk": "Το κατάλυμα διαγράφηκε.",
@@ -5346,16 +5346,16 @@
       "removeAmenityAriaLabel": "Αφαίρεση {amenity}",
       "amenitiesSearchPlaceholder": "Αναζήτηση παροχών …",
       "noSearchResults": "Κανένα αποτέλεσμα.",
-      "zimmerErneutLaden": "Erneut versuchen",
-      "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerFertig": "Fertig",
+      "zimmerErneutLaden": "Δοκιμάστε ξανά",
+      "zimmerLaedt": "Τα δωμάτια φορτώνονται …",
+      "zimmerFertig": "Έτοιμο",
       "zimmerBettenHinweis": "Λαμβάνεται από το Airbnb και παραμένει στο myNextDays και το myBestDays — οι πύλες κρατήσεων δεν δέχονται διάταξη κλινών.",
-      "masseinheitLabel": "Maßeinheit",
+      "masseinheitLabel": "Μονάδα μέτρησης",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
       "sizeSqftPrefix": "{size} ft² · ",
-      "gaesteWeniger": "Ein Gast weniger",
-      "gaesteMehr": "Ein Gast mehr",
+      "gaesteWeniger": "Ένας επισκέπτης λιγότερος",
+      "gaesteMehr": "Ένας επισκέπτης περισσότερος",
       "zimmerSuffixPrivat": "ιδιωτικό",
       "zimmerSuffixGemeinschaftlich": "κοινόχρηστο",
       "zimmerErhoehen": "Προσθήκη: {room}",
@@ -5930,7 +5930,7 @@
         "zweibettzimmer": "Twin room",
         "familienzimmer": "Family room",
         "junior_suite": "Junior suite",
-        "suite": "Suite"
+        "suite": "Σουίτα"
       }
     },
     "sync": {
@@ -5985,20 +5985,20 @@
         "schliessen": "Κλείσιμο"
       },
       "airbnbPull": {
-        "button": "Bei Airbnb abrufen",
-        "hint": "Ordnet dieses Objekt bei Airbnb zu und holt den Preis von dort.",
-        "priceTaken": "Preis von Airbnb übernommen: {price} · Mindestaufenthalt {nights} Nächte",
-        "noPrice": "Airbnb hat keinen Preis übergeben. Die Zuordnung steht.",
-        "currency": "Währung: {currency}",
-        "timezone": "Zeitzone: {timezone}",
-        "alsoTaken": "Ebenfalls übernommen: {fields}",
+        "button": "Λήψη από το Airbnb",
+        "hint": "Αντιστοιχίζει αυτό το κατάλυμα στην Airbnb και ανακτά την τιμή από εκεί.",
+        "priceTaken": "Η τιμή ελήφθη από την Airbnb: {price} · ελάχιστη διαμονή {nights} διανυκτερεύσεις",
+        "noPrice": "Η Airbnb δεν έστειλε τιμή. Η αντιστοίχιση ισχύει.",
+        "currency": "Νόμισμα: {currency}",
+        "timezone": "Ζώνη ώρας: {timezone}",
+        "alsoTaken": "Ελήφθησαν επίσης: {fields}",
         "field": {
-          "check_in_from": "Check-in-Zeit",
-          "check_out_until": "Check-out-Zeit",
-          "pets_allowed": "Haustiere erlaubt",
-          "pets_max": "Anzahl Haustiere",
-          "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte",
+          "check_in_from": "Ώρα άφιξης",
+          "check_out_until": "Ώρα αναχώρησης",
+          "pets_allowed": "Επιτρέπονται κατοικίδια",
+          "pets_max": "Αριθμός κατοικίδιων",
+          "smoking_allowed": "Κάπνισμα",
+          "max_nights": "Μέγιστες διανυκτερεύσεις",
           "address": "Διεύθυνση",
           "postal_code": "Ταχυδρομικός κώδικας",
           "city": "Πόλη",
@@ -6172,14 +6172,14 @@
         "booked": "Κλεισμένο",
         "blocked": "Μπλοκαρισμένο",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "blockedAndStopSell": "Μπλοκαρισμένο + Stop-Sell",
         "contractEnd": "Η σύμβαση τερματίστηκε"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "όλα τα κανάλια",
       "nightsCount": "{count, plural, one {# διανυκτέρευση} other {# διανυκτερεύσεις}}",
       "daysCount": "{count, plural, one {# ημέρα} other {# ημέρες}}",
-      "ownerStay": "Eigentümer-Aufenthalt"
+      "ownerStay": "Διαμονή ιδιοκτήτη"
     },
     "calendarViews": {
       "viewLabel": "Προβολή",
@@ -6199,10 +6199,10 @@
       "blocking": "Μπλοκάρισμα…",
       "createBlockedPeriod": "Δημιουργία μπλοκαρισμένης περιόδου",
       "priceMinStayBlock": "Τιμή / ελάχιστη διαμονή / μπλοκάρισμα …",
-      "ownerStay": "Eigennutzung eintragen",
-      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
-      "setStopSell": "Stop-Sell setzen",
-      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
+      "ownerStay": "Καταχώριση ιδιοχρησίας",
+      "createBlockedPeriodHint": "Διαθεσιμότητα 0 — η ημέρα είναι κλειστή παντού",
+      "setStopSell": "Ορισμός Stop-Sell",
+      "setStopSellHint": "Η ημέρα παραμένει ελεύθερη, αλλά δεν πωλείται — με αιτία"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Αριθμός ατόμων που έχει οριστεί για αυτό το κατάλυμα",
@@ -6432,11 +6432,11 @@
       "occupancy": "Πληρότητα",
       "propertyNights": "{booked}/{total} διανυκτερεύσεις καταλύματος",
       "revenue": "Τζίρος",
-      "stopSellClear": "Stop-Sell aufheben",
-      "stopSellClearing": "Hebe auf…",
-      "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
-      "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "stopSellClear": "Άρση Stop-Sell",
+      "stopSellClearing": "Γίνεται άρση…",
+      "stopSellClearNothing": "Δεν υπήρχε Stop-Sell εδώ για άρση.",
+      "stopSellEditReason": "Αλλαγή αιτίας",
+      "stopSellPortalLocked": "Ορίστηκε από την πύλη — αίρεται μόνο εκεί.",
       "legend": "Υπόμνημα",
       "contractEndLocked": "Αυτό το κλείσιμο προέρχεται από τη λήξη της σύμβασης. Αλλάζει μόνο μέσω της ημερομηνίας λήξης στην καρτέλα του καταλύματος."
     },
@@ -6455,29 +6455,29 @@
       "feesHint": "Καθαριότητα κ.λπ.",
       "personsValue": "{count} άτ.",
       "guestsLabel": "Επισκέπτες",
-      "stayKind": "Art des Aufenthalts",
-      "stayKindGuest": "Gastbuchung",
-      "stayKindOwner": "Eigennutzung",
-      "ownerLabel": "Eigentümer",
-      "ownerContact": "Kontaktdaten des Eigentümers",
-      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "stayKind": "Είδος διαμονής",
+      "stayKindGuest": "Κράτηση επισκέπτη",
+      "stayKindOwner": "Ιδιοχρησία",
+      "ownerLabel": "Ιδιοκτήτης",
+      "ownerContact": "Στοιχεία επικοινωνίας του ιδιοκτήτη",
+      "ownerStayHint": "Η ιδιοχρησία δεσμεύει το ημερολόγιο όπως μια κράτηση, αλλά δεν δημιουργεί έσοδα: καμία τιμή, κανένα τιμολόγιο, καμία προμήθεια και τίποτα στην εκκαθάριση ιδιοκτήτη.",
       "steps": {
-        "details": "Details",
-        "prices": "Preise & Extras",
-        "policy": "Richtlinien"
+        "details": "Λεπτομέρειες",
+        "prices": "Τιμές και εξτρά",
+        "policy": "Κανόνες"
       },
       "headings": {
-        "details": "Reservierungsdetails",
-        "prices": "Preise & Extras festlegen",
-        "policy": "Richtlinien festlegen"
+        "details": "Λεπτομέρειες κράτησης",
+        "prices": "Ορισμός τιμών και εξτρά",
+        "policy": "Ορισμός κανόνων"
       },
-      "ownerSection": "Eigentümer",
-      "ownerLoading": "Eigentümer wird ermittelt…",
-      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
-      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
-      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
-      "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "ownerSection": "Ιδιοκτήτης",
+      "ownerLoading": "Γίνεται εντοπισμός του ιδιοκτήτη…",
+      "ownerLoadFailed": "Ο ιδιοκτήτης δεν μπόρεσε να φορτωθεί.",
+      "ownerMissing": "Για αυτό το κατάλυμα δεν έχει καταχωριστεί ιδιοκτήτης.",
+      "ownerMissingHint": "Η ιδιοχρησία απαιτεί καταχωρισμένο ιδιοκτήτη. Δημιουργήστε τον στην ενότητα Ιδιοκτήτες και αντιστοιχίστε του αυτό το κατάλυμα.",
+      "ownerMissingLink": "Στους ιδιοκτήτες",
+      "ownerFromRecord": "Ελήφθη από τα βασικά στοιχεία του ιδιοκτήτη. Οι αλλαγές στα στοιχεία επικοινωνίας γίνονται στην ενότητα Ιδιοκτήτες.",
       "stayNameLabel": "Ποιος μένει εκεί",
       "stayNamePlaceholder": "Όνομα του ατόμου",
       "stayNameHint": "Αφήστε το κενό για τον ίδιο τον ιδιοκτήτη. Διαφορετικά το όνομα του ατόμου που χρησιμοποιεί την περίοδο — οικογένεια, φίλοι, τεχνίτες.",
@@ -6494,8 +6494,8 @@
       "otaPayout": "Πληρωμή από την πύλη",
       "stillOpen": "Ακόμη ανοιχτά",
       "cancelReasonPlaceholder": "Αιτία ακύρωσης (θα καταγραφεί) …",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Διαμονή ιδιοκτήτη",
+      "ownerStayHint": "Χωρίς έσοδα — ούτε τιμολόγιο ούτε προμήθεια, δεν περιλαμβάνεται στην εκκαθάριση ιδιοκτήτη.",
       "openBooking": "Στην πλήρη κράτηση",
       "messageGuest": "Μήνυμα στον επισκέπτη"
     },
@@ -6704,7 +6704,7 @@
     "seasonApplyNoSpans": "Αυτή η σεζόν δεν έχει χρωματισμένες περιόδους. Χρωματίστε την πρώτα ή μεταφέρετε μόνο τον ορισμό χωρίς περιόδους."
   },
   "channels": {
-    "title": "Channel Manager",
+    "title": "Διαχειριστής καναλιών",
     "subtitle": "Συνδέστε τις πύλες κρατήσεών σας και διανείμετε αυτόματα διαθεσιμότητα και τιμές σε όλα τα κανάλια.",
     "categoryOta": "Πύλες κρατήσεων",
     "categoryMarketplace": "Δική μας αγορά",
@@ -6786,7 +6786,7 @@
       "sendUserTaxes": "Αποστολή δικών σας φόρων",
       "blockedNote": "Όσο αυτό είναι κλειστό, δεν στέλνονται δικοί σας φόροι στο κανάλι."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "linkedPending": "{count, plural, =0 {Ο λογαριασμός συνδέθηκε · η αντιστοίχιση εκκρεμεί} one {Ο λογαριασμός συνδέθηκε · # κατάλυμα προς αντιστοίχιση} other {Ο λογαριασμός συνδέθηκε · # καταλύματα προς αντιστοίχιση}}",
     "activateChannel": "Ενεργοποίηση καναλιού",
     "activateDone": "Το {portal} είναι πλέον ενεργό.",
     "activateFailed": "Το κανάλι δεν μπόρεσε να ενεργοποιηθεί.",
@@ -6942,7 +6942,7 @@
     "clientSecret": "Μυστικό πελάτη",
     "copy": "Αντιγραφή",
     "copied": "Αντιγράφηκε.",
-    "done": "Fertig",
+    "done": "Έτοιμο",
     "colName": "Name",
     "colEnv": "Περιβάλλον",
     "colScopes": "Δικαιώματα",
@@ -7010,7 +7010,7 @@
       "nurMitEntsprechung": "μόνο χαρακτηριστικά με αντιστοιχία στην πύλη",
       "nichtDeckungsgleich": "οι κατηγορίες δεν ταυτίζονται πλήρως",
       "ohneBeleg": "μη επιβεβαιωμένο — το ελέγχουμε",
-      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
+      "ohneZimmerZuordnung": "χωρίς αντιστοίχιση στο μεμονωμένο δωμάτιο"
     },
     "status": {
       "voll": "transferred",
@@ -7050,7 +7050,7 @@
       "kaution": "Εγγύηση",
       "lizenznummer": "Αριθμός άδειας/μητρώου",
       "mietvertrag": "Μισθωτήριο συμβόλαιο",
-      "zimmerAusstattung": "Ausstattung der Zimmer"
+      "zimmerAusstattung": "Παροχές των δωματίων"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -7088,7 +7088,7 @@
       "create": "Δημιουργία όρου",
       "update": "Ενημέρωση όρου",
       "empty": "Δεν υπάρχουν ακόμη όροι. Δημιουργήστε τον πρώτο σας όρο κράτησης — πλάνο πληρωμών, ακύρωση και εγγύηση.",
-      "colName": "Name",
+      "colName": "Όνομα",
       "colPaymentPlan": "Πρόγραμμα πληρωμών",
       "colCancellation": "Ακύρωση",
       "colDeposit": "Εγγύηση",
@@ -7143,7 +7143,7 @@
       "amount": "Ποσό",
       "depositStep3": "3. Χρόνοι προέγκρισης",
       "preauthFromHint": "Από πότε προεγκρίνεται η κάρτα του επισκέπτη.",
-      "days": "Tage",
+      "days": "Ημέρες",
       "preauthUntilHint": "Μέχρι πότε μπορεί να γίνει προέγκριση — μετά από αυτή την ημερομηνία οι ανοιχτές προεγκρίσεις αποδεσμεύονται.",
       "releaseDays": "Αποδέσμευση ημερών μετά την αναχώρηση",
       "preauthWarnStrong": "Οι προεγκρίσεις συχνά μπορούν να διασφαλιστούν μόνο για περίπου 7 ημέρες.",
@@ -7442,7 +7442,7 @@
       "search": "Αναζήτηση",
       "searchHinweis": "Γραμμή αναζήτησης με ημερομηνίες και αριθμό επισκεπτών.",
       "propertiesGrid": "Καταλύματα",
-      "propertiesGridHinweis": "Όλα τα καταλύματα σε πλέγμα, με πραγματικές τιμές.",
+      "propertiesGridHinweis": "Καταλύματα σε κάνναβο, με πραγματικές τιμές, εφόσον είναι ενεργές.",
       "featuredProperties": "Επιλεγμένα καταλύματα",
       "featuredPropertiesHinweis": "Μόνο τα καταλύματα που επιλέγετε.",
       "reviews": "Κριτικές",
@@ -7489,7 +7489,7 @@
       "mindestGaeste": "Από πόσους επισκέπτες",
       "anzahl": "Πλήθος",
       "objekte": "Καταλύματα",
-      "kategorienZeigen": "Εμφάνιση μεμονωμένων βαθμολογιών",
+      "kategorienZeigen": "Εμφάνιση βαθμολογιών ανά κατηγορία",
       "email": "E-mail",
       "telefon": "Τηλέφωνο",
       "adresse": "Διεύθυνση",
@@ -7589,7 +7589,7 @@
       "erweitert": {
         "titel": "Για προχωρημένους",
         "hinweis": "Ρυθμίσεις για προχωρημένους. Όλα εδώ επηρεάζουν τον δημόσιο ιστότοπό σας.",
-        "faviconTitel": "Favicon",
+        "faviconTitel": "Εικονίδιο ιστοσελίδας",
         "faviconHinweis": "Το μικρό εικονίδιο στις καρτέλες του περιηγητή και στους σελιδοδείκτες.",
         "codeTitel": "Δικός σας κώδικας",
         "codeHinweis": "Για ετικέτες επαλήθευσης, ένα σκριπτ αναλυτικών ή δική σας μορφοποίηση. Τίποτα από αυτά δεν εκτελείται στη ροή πληρωμής.",
@@ -7634,7 +7634,7 @@
       },
       "typBeschreibung": {
         "suche": "Προορισμός, περίοδος και αριθμός επισκεπτών — οδηγεί στη λίστα καταλυμάτων του ιστότοπού σας.",
-        "buchen": "Περίοδος και αριθμός επισκεπτών — οδηγεί απευθείας στη ροή κράτησής σας."
+        "buchen": "Περίοδος και αριθμός επισκεπτών — οδηγεί στη λίστα καταλυμάτων του ιστότοπού σας, χωρίς πεδίο προορισμού."
       },
       "sprache": "Γλώσσα",
       "spracheHinweis": "Η γλώσσα στην οποία εμφανίζεται το πεδίο στον ξένο ιστότοπο.",
@@ -7870,7 +7870,7 @@
       "hrbPlaceholder": "HRB 12345",
       "courtPlaceholder": "π.χ. Βερολίνο (Charlottenburg)",
       "employeesPlaceholder": "π.χ. 7",
-      "ibanPlaceholder": "DE00 0000 0000 0000 0000 00",
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00",
       "preferredLanguage": "Προτιμώμενη γλώσσα",
       "chooseLanguage": "Επιλέξτε γλώσσα",
       "descriptionPlaceholder": "Σύντομη περιγραφή της εταιρείας σας…"

@@ -125,74 +125,74 @@
       "text": "Fiscale gegevens en de gegevens voor betalingsactivering."
     },
     "branch": {
-      "title": "Verkaufst du schon auf Buchungsportalen?",
-      "text": "Booking.com, Airbnb & Co. — hast du dort schon Objekte, oder fängst du neu an?",
-      "switchTitle": "Ja, ich wechsle",
-      "switchText": "Ich habe schon Objekte auf Booking, Airbnb & Co. und möchte sie importieren.",
-      "newTitle": "Nein, ich fange neu an",
-      "newText": "Ich lege meine Objekte neu an und verbinde die Portale danach."
+      "title": "Verkoop je al via boekingsportalen?",
+      "text": "Booking.com, Airbnb e.d. — heb je daar al objecten of begin je nieuw?",
+      "switchTitle": "Ja, ik stap over",
+      "switchText": "Ik heb al objecten op Booking, Airbnb e.d. en wil ze importeren.",
+      "newTitle": "Nee, ik begin nieuw",
+      "newText": "Ik maak mijn objecten nieuw aan en verbind de portalen daarna."
     },
     "switch": {
-      "title": "Bestehende Objekte importieren",
-      "intro": "So holst du deine bestehenden Booking-/Airbnb-Objekte zu myNextDays — ohne Doppelbuchungen.",
+      "title": "Bestaande objecten importeren",
+      "intro": "Zo breng je je bestaande Booking-/Airbnb-objecten naar myNextDays — zonder dubbele boekingen.",
       "cutover": {
-        "title": "Wichtig vor dem Verbinden",
-        "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
-        "b": "Vergangene Buchungen und manuelle Sperren kommen NICHT automatisch mit. Trage sie nach dem Import selbst nach.",
-        "c": "Lass dein altes System als Backup laufen und beobachte die ersten Tage genau.",
-        "ack": "Ich habe das verstanden.",
-        "doneTitle": "Hinweise von vor dem Verbinden (erledigt)"
+        "title": "Belangrijk voordat je verbindt",
+        "a": "Koppel elk portaal los van je vorige systeem voordat je het hier verbindt — per kanaal mag altijd maar ÉÉN systeem pushen.",
+        "b": "Boekingen uit het verleden en handmatige blokkades komen NIET automatisch mee. Voer ze na de import zelf in.",
+        "c": "Laat je oude systeem als back-up doorlopen en volg de eerste dagen nauwlettend.",
+        "ack": "Ik heb dit begrepen.",
+        "doneTitle": "Aanwijzingen van voor het verbinden (afgerond)"
       },
       "step1": {
-        "title": "Objekt anlegen",
-        "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
-        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}",
+        "title": "Object aanmaken",
+        "text": "Maak voor elke bestaande vermelding een object aan — naam, soort en basisprijs zijn genoeg om toe te wijzen.",
+        "count": "{count, plural, =0 {Nog geen objecten} one {# object} other {# objecten}}",
         "airbnbHint": "Kom je van Airbnb? Sla deze stap over — je objecten worden automatisch overgenomen wanneer je Airbnb verbindt."
       },
       "step2": {
-        "title": "Portal verbinden & zuordnen",
-        "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
-        "connect": "Portal verbinden",
-        "connectMore": "Weiteres Portal verbinden",
-        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“."
+        "title": "Portaal verbinden & toewijzen",
+        "text": "Verbind Booking, Airbnb e.d. en wijs de portaalkamers 1:1 aan je objecten toe. Boekingen en beschikbaarheid komen daarna automatisch.",
+        "connect": "Portaal verbinden",
+        "connectMore": "Nog een portaal verbinden",
+        "alreadyConnected": "Er is al een portaal verbonden en je objecten zijn verzonden — je hoeft hier niets opnieuw te verbinden. Gebruik „Nog een portaal verbinden” alleen voor een EXTRA portaal (bijv. Booking)."
       },
       "pull": {
-        "button": "Objekte aus Portal holen",
-        "result": "{count, plural, =0 {Keine neuen Objekte gefunden} one {# Objekt übernommen} other {# Objekte übernommen}}"
+        "button": "Objecten uit portaal halen",
+        "result": "{count, plural, =0 {Geen nieuwe objecten gevonden} one {# object overgenomen} other {# objecten overgenomen}}"
       },
-      "finishCta": "Import abschließen",
-      "finishHint": "Bitte bestätige zuerst den Hinweis oben und lege mindestens ein Objekt an.",
+      "finishCta": "Import afronden",
+      "finishHint": "Bevestig eerst de melding hierboven en maak minstens één object aan.",
       "bookings": {
-        "title": "Bestehende Buchungen einlesen",
-        "text": "Hol dir die Reservierungen deiner verbundenen Portale in deinen Kalender.",
-        "includePast": "Auch vergangene Buchungen einlesen",
-        "pastHint": "Hinweis: Portale liefern in der Regel nur Buchungen ab dem Zeitpunkt der Verbindung. Bereits abgereiste Gäste von davor sind oft nicht mehr abrufbar.",
-        "button": "Buchungen einlesen",
-        "result": "{count, plural, =0 {Keine Buchungen gefunden} one {# Buchung eingelesen} other {# Buchungen eingelesen}}"
+        "title": "Bestaande boekingen inlezen",
+        "text": "Haal de reserveringen van je verbonden portalen in je kalender.",
+        "includePast": "Ook boekingen uit het verleden inlezen",
+        "pastHint": "Let op: portalen leveren in de regel alleen boekingen vanaf het moment van de verbinding. Gasten die daarvoor al vertrokken zijn, zijn vaak niet meer op te vragen.",
+        "button": "Boekingen inlezen",
+        "result": "{count, plural, =0 {Geen boekingen gevonden} one {# boeking ingelezen} other {# boekingen ingelezen}}"
       },
       "csv": {
-        "title": "Alte & direkte Buchungen per Datei importieren",
-        "text": "Für Buchungen, die nicht über die Portale kommen (Direktbuchungen, vergangene Reservierungen aus deinem alten System).",
-        "downloadTemplate": "Vorlage herunterladen",
-        "upload": "CSV hochladen",
-        "hint": "Lade die Vorlage, fülle sie aus (Datum als JJJJ-MM-TT) und lade sie wieder hoch. Pflicht: Objekt, Gastname, Anreise, Abreise. Doppelte Zeilen werden übersprungen.",
-        "result": "{imported} von {total} Buchungen importiert.",
-        "skipped": "{count, plural, one {# Zeile übersprungen (Duplikat/Objekt fehlt)} other {# Zeilen übersprungen (Duplikat/Objekt fehlt)}}",
-        "failed": "{count, plural, one {# Zeile mit Fehler} other {# Zeilen mit Fehlern}}:"
+        "title": "Oude & directe boekingen via bestand importeren",
+        "text": "Voor boekingen die niet via de portalen binnenkomen (directe boekingen, oude reserveringen uit je vorige systeem).",
+        "downloadTemplate": "Sjabloon downloaden",
+        "upload": "CSV uploaden",
+        "hint": "Download het sjabloon, vul het in (datum als JJJJ-MM-DD) en upload het weer. Verplicht: object, gastnaam, aankomst, vertrek. Dubbele regels worden overgeslagen.",
+        "result": "{imported} van {total} boekingen geïmporteerd.",
+        "skipped": "{count, plural, one {# regel overgeslagen (duplicaat/object ontbreekt)} other {# regels overgeslagen (duplicaat/object ontbreekt)}}",
+        "failed": "{count, plural, one {# regel met een fout} other {# regels met fouten}}:"
       },
       "lodgify": {
-        "title": "Buchungen aus Lodgify holen",
-        "text": "Wenn du von Lodgify wechselst: importiere deine Buchungen direkt per API-Schlüssel (nur lesend, es wird nichts in Lodgify geändert).",
-        "keyLabel": "Lodgify-API-Schlüssel",
-        "keyPlaceholder": "Aus Lodgify: Einstellungen → Public API",
-        "keyHint": "Der Schlüssel wird nur für diesen Import genutzt und nicht gespeichert. Wir lesen ausschließlich – wir ändern nichts in Lodgify.",
-        "preview": "Vorschau laden",
-        "import": "{count, plural, one {# Buchung importieren} other {# Buchungen importieren}}",
-        "previewResult": "{importable} von {total} Buchungen können importiert werden.",
-        "result": "{imported} von {total} Buchungen importiert."
+        "title": "Boekingen uit Lodgify halen",
+        "text": "Als je overstapt van Lodgify: importeer je boekingen direct met een API-sleutel (alleen lezen, er wordt niets in Lodgify gewijzigd).",
+        "keyLabel": "Lodgify-API-sleutel",
+        "keyPlaceholder": "Uit Lodgify: Instellingen → Public API",
+        "keyHint": "De sleutel wordt alleen voor deze import gebruikt en niet opgeslagen. We lezen uitsluitend — we wijzigen niets in Lodgify.",
+        "preview": "Voorbeeld laden",
+        "import": "{count, plural, one {# boeking importeren} other {# boekingen importeren}}",
+        "previewResult": "{importable} van {total} boekingen kunnen worden geïmporteerd.",
+        "result": "{imported} van {total} boekingen geïmporteerd."
       },
       "finish": {
-        "notRegistered": "Mindestens ein Objekt muss an die Buchungsportale übermittelt sein, bevor du das Onboarding abschließt. Verbinde in Schritt 2 ein Portal — dabei wird das Objekt automatisch übertragen."
+        "notRegistered": "Er moet minstens één object naar de boekingsportalen zijn verzonden voordat je het onboarding afsluit. Verbind in stap 2 een portaal — daarbij wordt het object automatisch verzonden."
       }
     }
   },
@@ -208,7 +208,7 @@
     "websiteDesign": "Design",
     "websitePages": "Pagina's",
     "websiteDomain": "Adres",
-    "channelManager": "Channel Manager",
+    "channelManager": "Channelmanager",
     "guests": "Gasten",
     "tasks": "Taken",
     "invoices": "Facturen",
@@ -364,7 +364,7 @@
     "sourceManual": "Manual",
     "sourceChannex": "Van de touroperator",
     "clear": "Clear",
-    "readonly": "Portal",
+    "readonly": "Portaal",
     "toIncl": "Tot en met",
     "calendarHint": "Sleep over de dagen van een object om een periode te selecteren.",
     "legendOpen": "Vrij",
@@ -399,11 +399,11 @@
     "resetConfirm": "Ja, alles opheffen",
     "resetting": "Resetting …",
     "cancel": "Cancel",
-    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
-    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
-    "reasonRequired": "Bitte einen Grund wählen.",
-    "skippedBooked": "{count} gebuchte Tage wurden übersprungen — verkaufte Tage lassen sich nicht stoppen.",
-    "skippedBookedAll": "Kein Tag gestoppt: alle {count} Tage im Zeitraum sind gebucht."
+    "noteRequired": "Bij „Overig” is een notitie verplicht.",
+    "noteRequiredLabel": "Notitie (verplicht bij „Overig”)",
+    "reasonRequired": "Kies een reden.",
+    "skippedBooked": "{count} geboekte dagen zijn overgeslagen — verkochte dagen kunnen niet worden gestopt.",
+    "skippedBookedAll": "Geen dag gestopt: alle {count} dagen in de periode zijn geboekt."
   },
   "inbox": {
     "title": "Inbox",
@@ -3899,7 +3899,7 @@
       "streetPlaceholder": "Voorbeeldstraat 123",
       "bankPlaceholder": "Deutsche Bank",
       "holderPlaceholder": "Jan Jansen",
-      "ibanPlaceholder": "DE89 3704 0044 0532 0130 00"
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00"
     },
     "pdf": {
       "qrCode": "QR-code",
@@ -4201,7 +4201,7 @@
       },
       "emptyState": "Geen boekingen gevonden.",
       "loading": "Laden…",
-      "ownerStay": "Eigennutzung",
+      "ownerStay": "Eigenaarsverblijf",
       "limit": "Limiet ({count})",
       "limitAll": "Alle",
       "columnsMenu": "Kolommen",
@@ -4619,8 +4619,8 @@
       "openGuestCard": "Gastkaart openen",
       "photos": "Foto's",
       "noPhotosFound": "Voor deze boeking zijn geen afbeeldingen gevonden.",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Eigenaarsverblijf",
+      "ownerStayHint": "Geen omzet — geen factuur en geen commissie, niet in de eigenarenafrekening.",
       "viaChannel": "via {channel}",
       "receivedOn": "bij ons ontvangen op {date}",
       "bookedOn": "geboekt op {date}"
@@ -5045,7 +5045,7 @@
       "sortAz": "A–Z",
       "sortZa": "Z–A",
       "menuOpen": "Acties",
-      "menuEdit": "Bearbeiten",
+      "menuEdit": "Bewerken",
       "menuDelete": "Delete",
       "deleteConfirm": "Accommodatie ‘{title}’ echt verwijderen?",
       "deleteOk": "Accommodatie verwijderd.",
@@ -5344,16 +5344,16 @@
       "removeAmenityAriaLabel": "{amenity} verwijderen",
       "amenitiesSearchPlaceholder": "Voorzieningen zoeken …",
       "noSearchResults": "Geen resultaten.",
-      "zimmerErneutLaden": "Erneut versuchen",
-      "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerFertig": "Fertig",
+      "zimmerErneutLaden": "Opnieuw proberen",
+      "zimmerLaedt": "Kamers worden geladen …",
+      "zimmerFertig": "Klaar",
       "zimmerBettenHinweis": "Wordt overgenomen uit Airbnb en blijft bij myNextDays en myBestDays — de boekingsportalen accepteren geen bedindeling.",
-      "masseinheitLabel": "Maßeinheit",
+      "masseinheitLabel": "Maateenheid",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
       "sizeSqftPrefix": "{size} ft² · ",
-      "gaesteWeniger": "Ein Gast weniger",
-      "gaesteMehr": "Ein Gast mehr",
+      "gaesteWeniger": "Eén gast minder",
+      "gaesteMehr": "Eén gast meer",
       "zimmerSuffixPrivat": "privé",
       "zimmerSuffixGemeinschaftlich": "gedeeld",
       "zimmerErhoehen": "{room} toevoegen",
@@ -5983,20 +5983,20 @@
         "schliessen": "Sluiten"
       },
       "airbnbPull": {
-        "button": "Bei Airbnb abrufen",
-        "hint": "Ordnet dieses Objekt bei Airbnb zu und holt den Preis von dort.",
-        "priceTaken": "Preis von Airbnb übernommen: {price} · Mindestaufenthalt {nights} Nächte",
-        "noPrice": "Airbnb hat keinen Preis übergeben. Die Zuordnung steht.",
-        "currency": "Währung: {currency}",
-        "timezone": "Zeitzone: {timezone}",
-        "alsoTaken": "Ebenfalls übernommen: {fields}",
+        "button": "Ophalen bij Airbnb",
+        "hint": "Wijst dit object toe bij Airbnb en haalt de prijs daar op.",
+        "priceTaken": "Prijs van Airbnb overgenomen: {price} · minimumverblijf {nights} nachten",
+        "noPrice": "Airbnb heeft geen prijs meegegeven. De toewijzing staat.",
+        "currency": "Valuta: {currency}",
+        "timezone": "Tijdzone: {timezone}",
+        "alsoTaken": "Ook overgenomen: {fields}",
         "field": {
-          "check_in_from": "Check-in-Zeit",
-          "check_out_until": "Check-out-Zeit",
-          "pets_allowed": "Haustiere erlaubt",
-          "pets_max": "Anzahl Haustiere",
-          "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte",
+          "check_in_from": "Check-intijd",
+          "check_out_until": "Check-uittijd",
+          "pets_allowed": "Huisdieren toegestaan",
+          "pets_max": "Aantal huisdieren",
+          "smoking_allowed": "Roken",
+          "max_nights": "Maximaal aantal nachten",
           "address": "Adres",
           "postal_code": "Postcode",
           "city": "Plaats",
@@ -6170,14 +6170,14 @@
         "booked": "Geboekt",
         "blocked": "Geblokkeerd",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "blockedAndStopSell": "Geblokkeerd + verkoopstop",
         "contractEnd": "Contract beëindigd"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "alle kanalen",
       "nightsCount": "{count, plural, one {# nacht} other {# nachten}}",
       "daysCount": "{count, plural, one {# dag} other {# dagen}}",
-      "ownerStay": "Eigentümer-Aufenthalt"
+      "ownerStay": "Eigenaarsverblijf"
     },
     "calendarViews": {
       "viewLabel": "Weergave",
@@ -6197,10 +6197,10 @@
       "blocking": "Blokkeren…",
       "createBlockedPeriod": "Geblokkeerde periode aanmaken",
       "priceMinStayBlock": "Prijs / Minimumverblijf / Blokkering …",
-      "ownerStay": "Eigennutzung eintragen",
-      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
-      "setStopSell": "Stop-Sell setzen",
-      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
+      "ownerStay": "Eigenaarsverblijf vastleggen",
+      "createBlockedPeriodHint": "Beschikbaarheid 0 — de dag is overal dicht",
+      "setStopSell": "Verkoopstop instellen",
+      "setStopSellHint": "Dag blijft vrij, maar wordt niet verkocht — met reden"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Voor dit object ingesteld aantal personen",
@@ -6430,11 +6430,11 @@
       "occupancy": "Bezetting",
       "propertyNights": "{booked}/{total} accommodatienachten",
       "revenue": "Omzet",
-      "stopSellClear": "Stop-Sell aufheben",
-      "stopSellClearing": "Hebe auf…",
-      "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
-      "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "stopSellClear": "Verkoopstop opheffen",
+      "stopSellClearing": "Opheffen…",
+      "stopSellClearNothing": "Hier was geen verkoopstop om op te heffen.",
+      "stopSellEditReason": "Reden wijzigen",
+      "stopSellPortalLocked": "Door het portaal gezet — alleen daar op te heffen.",
       "legend": "Legenda",
       "contractEndLocked": "Deze blokkering komt van het einde van het contract. Dit is alleen te wijzigen via de einddatum in het objectdossier."
     },
@@ -6453,29 +6453,29 @@
       "feesHint": "Schoonmaak enz.",
       "personsValue": "{count} pers.",
       "guestsLabel": "Gasten",
-      "stayKind": "Art des Aufenthalts",
-      "stayKindGuest": "Gastbuchung",
-      "stayKindOwner": "Eigennutzung",
-      "ownerLabel": "Eigentümer",
-      "ownerContact": "Kontaktdaten des Eigentümers",
-      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "stayKind": "Soort verblijf",
+      "stayKindGuest": "Gastenboeking",
+      "stayKindOwner": "Eigenaarsverblijf",
+      "ownerLabel": "Eigenaar",
+      "ownerContact": "Contactgegevens van de eigenaar",
+      "ownerStayHint": "Een eigen verblijf bezet de kalender als een boeking, maar levert geen omzet op: geen prijs, geen factuur, geen commissie en niets in de eigenarenafrekening.",
       "steps": {
-        "details": "Details",
-        "prices": "Preise & Extras",
-        "policy": "Richtlinien"
+        "details": "Gegevens",
+        "prices": "Prijzen & extra's",
+        "policy": "Voorwaarden"
       },
       "headings": {
-        "details": "Reservierungsdetails",
-        "prices": "Preise & Extras festlegen",
-        "policy": "Richtlinien festlegen"
+        "details": "Reserveringsgegevens",
+        "prices": "Prijzen & extra's vastleggen",
+        "policy": "Voorwaarden vastleggen"
       },
-      "ownerSection": "Eigentümer",
-      "ownerLoading": "Eigentümer wird ermittelt…",
-      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
-      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
-      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
-      "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "ownerSection": "Eigenaar",
+      "ownerLoading": "Eigenaar wordt opgezocht…",
+      "ownerLoadFailed": "Eigenaar kon niet worden geladen.",
+      "ownerMissing": "Voor dit object is geen eigenaar vastgelegd.",
+      "ownerMissingHint": "Een eigen verblijf heeft een vastgelegde eigenaar nodig. Maak die aan bij Eigenaren en wijs dit object aan hem toe.",
+      "ownerMissingLink": "Naar de eigenaren",
+      "ownerFromRecord": "Overgenomen uit de stamgegevens van de eigenaar. Contactgegevens wijzig je bij Eigenaren.",
       "stayNameLabel": "Wie er verblijft",
       "stayNamePlaceholder": "Naam van de persoon",
       "stayNameHint": "Laat leeg voor de eigenaar zelf. Anders de naam van de persoon die de periode gebruikt — familie, vrienden, vaklieden.",
@@ -6492,8 +6492,8 @@
       "otaPayout": "Uitbetaling van portaal",
       "stillOpen": "Nog open",
       "cancelReasonPlaceholder": "Reden van annulering (wordt gedocumenteerd) …",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Eigenaarsverblijf",
+      "ownerStayHint": "Geen omzet — geen factuur en geen commissie, niet in de eigenarenafrekening.",
       "openBooking": "Naar de volledige boeking",
       "messageGuest": "Gast berichten"
     },
@@ -6702,7 +6702,7 @@
     "seasonApplyNoSpans": "Dit seizoen heeft geen ingekleurde periodes. Kleur het eerst in of draag alleen de definitie zonder periodes over."
   },
   "channels": {
-    "title": "Channel Manager",
+    "title": "Channelmanager",
     "subtitle": "Verbind je boekingsportalen en verdeel beschikbaarheid en prijzen automatisch over alle kanalen.",
     "categoryOta": "Boekingsportalen",
     "categoryMarketplace": "Eigen marktplaats",
@@ -6784,7 +6784,7 @@
       "sendUserTaxes": "Eigen belastingen verzenden",
       "blockedNote": "Zolang dit uit staat, gaan er geen eigen belastingen naar dit kanaal."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "linkedPending": "{count, plural, =0 {Account verbonden · toewijzing open} one {Account verbonden · # object nog toe te wijzen} other {Account verbonden · # objecten nog toe te wijzen}}",
     "activateChannel": "Kanaal activeren",
     "activateDone": "{portal} is nu actief.",
     "activateFailed": "Het kanaal kon niet worden geactiveerd.",
@@ -6940,7 +6940,7 @@
     "clientSecret": "Client secret",
     "copy": "Kopiëren",
     "copied": "Gekopieerd.",
-    "done": "Fertig",
+    "done": "Klaar",
     "colName": "Naam",
     "colEnv": "Omgeving",
     "colScopes": "Rechten",
@@ -7008,7 +7008,7 @@
       "nurMitEntsprechung": "alleen kenmerken met een equivalent in het portaal",
       "nichtDeckungsgleich": "categorieën komen niet volledig overeen",
       "ohneBeleg": "niet bevestigd — we controleren dit",
-      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
+      "ohneZimmerZuordnung": "zonder toewijzing aan de afzonderlijke kamer"
     },
     "status": {
       "voll": "transferred",
@@ -7048,7 +7048,7 @@
       "kaution": "Borg",
       "lizenznummer": "Licentie-/registratienummer",
       "mietvertrag": "Huurovereenkomst",
-      "zimmerAusstattung": "Ausstattung der Zimmer"
+      "zimmerAusstattung": "Voorzieningen van de kamers"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -7086,7 +7086,7 @@
       "create": "Voorwaarde aanmaken",
       "update": "Voorwaarde bijwerken",
       "empty": "Nog geen voorwaarden. Maak je eerste boekingsvoorwaarde aan — betaalplan, annulering en borg.",
-      "colName": "Name",
+      "colName": "Naam",
       "colPaymentPlan": "Betalingsplan",
       "colCancellation": "Annulering",
       "colDeposit": "Borg",
@@ -7141,7 +7141,7 @@
       "amount": "Bedrag",
       "depositStep3": "3. Voorautorisatietijden",
       "preauthFromHint": "Vanaf wanneer de kaart van de gast wordt voorgeautoriseerd.",
-      "days": "Tage",
+      "days": "Dagen",
       "preauthUntilHint": "Tot wanneer een voorautorisatie kan plaatsvinden — na deze datum worden openstaande voorautorisaties vrijgegeven.",
       "releaseDays": "Dagen na vertrek vrijgeven",
       "preauthWarnStrong": "Voorautorisaties kunnen vaak maar ongeveer 7 dagen worden gegarandeerd.",
@@ -7269,7 +7269,7 @@
       "buttonFuellung": "Stijl",
       "buttonSolide": "Gevuld",
       "buttonUmrandet": "Omlijnd",
-      "buttonEcken": "Rand",
+      "buttonEcken": "Hoeken",
       "buttonRand": {
         "sharp": "Scherp",
         "rounded": "Afgerond",
@@ -7440,7 +7440,7 @@
       "search": "Zoeken",
       "searchHinweis": "Zoekbalk met datum en aantal gasten.",
       "propertiesGrid": "Accommodaties",
-      "propertiesGridHinweis": "Alle accommodaties als raster, met echte prijzen.",
+      "propertiesGridHinweis": "Objecten in een raster, met echte prijzen als die aan staan.",
       "featuredProperties": "Uitgelichte accommodaties",
       "featuredPropertiesHinweis": "Alleen de accommodaties die u kiest.",
       "reviews": "Beoordelingen",
@@ -7487,7 +7487,7 @@
       "mindestGaeste": "Vanaf hoeveel gasten",
       "anzahl": "Aantal",
       "objekte": "Accommodaties",
-      "kategorienZeigen": "Losse beoordelingen tonen",
+      "kategorienZeigen": "Beoordelingen per categorie tonen",
       "email": "E-mail",
       "telefon": "Telefoon",
       "adresse": "Adres",
@@ -7632,7 +7632,7 @@
       },
       "typBeschreibung": {
         "suche": "Bestemming, periode en aantal gasten — leidt naar de accommodatielijst van uw website.",
-        "buchen": "Periode en aantal gasten — leidt direct naar uw boekingsproces."
+        "buchen": "Periode en aantal gasten — leidt naar de objectenlijst op uw website, zonder bestemmingsveld."
       },
       "sprache": "Taal",
       "spracheHinweis": "De taal waarin het veld op de andere pagina verschijnt.",
@@ -7868,7 +7868,7 @@
       "hrbPlaceholder": "HRB 12345",
       "courtPlaceholder": "bijv. Berlijn (Charlottenburg)",
       "employeesPlaceholder": "bijv. 7",
-      "ibanPlaceholder": "DE00 0000 0000 0000 0000 00",
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00",
       "preferredLanguage": "Voorkeurstaal",
       "chooseLanguage": "Taal kiezen",
       "descriptionPlaceholder": "Korte beschrijving van je bedrijf…"

@@ -125,74 +125,74 @@
       "text": "Sonraí cánach agus sonraí do ghníomhachtú íocaíochtaí."
     },
     "branch": {
-      "title": "Verkaufst du schon auf Buchungsportalen?",
-      "text": "Booking.com, Airbnb & Co. — hast du dort schon Objekte, oder fängst du neu an?",
-      "switchTitle": "Ja, ich wechsle",
-      "switchText": "Ich habe schon Objekte auf Booking, Airbnb & Co. und möchte sie importieren.",
-      "newTitle": "Nein, ich fange neu an",
-      "newText": "Ich lege meine Objekte neu an und verbinde die Portale danach."
+      "title": "An bhfuil tú ag díol ar thairseacha áirithinte cheana?",
+      "text": "Booking.com, Airbnb agus eile — an bhfuil maoine agat ansin cheana, nó an bhfuil tú ag tosú as an nua?",
+      "switchTitle": "Tá, táim ag aistriú",
+      "switchText": "Tá maoine agam cheana ar Booking, Airbnb agus eile agus ba mhaith liom iad a iompórtáil.",
+      "newTitle": "Níl, táim ag tosú as an nua",
+      "newText": "Cruthóidh mé mo mhaoine ón tús agus ceanglóidh mé na tairseacha ina dhiaidh sin."
     },
     "switch": {
-      "title": "Bestehende Objekte importieren",
-      "intro": "So holst du deine bestehenden Booking-/Airbnb-Objekte zu myNextDays — ohne Doppelbuchungen.",
+      "title": "Maoine atá ann cheana a iompórtáil",
+      "intro": "Seo mar a thugann tú do mhaoine Booking/Airbnb atá ann cheana chuig myNextDays — gan áirithintí dúbailte.",
       "cutover": {
-        "title": "Wichtig vor dem Verbinden",
-        "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
-        "b": "Vergangene Buchungen und manuelle Sperren kommen NICHT automatisch mit. Trage sie nach dem Import selbst nach.",
-        "c": "Lass dein altes System als Backup laufen und beobachte die ersten Tage genau.",
-        "ack": "Ich habe das verstanden.",
-        "doneTitle": "Hinweise von vor dem Verbinden (erledigt)"
+        "title": "Tábhachtach roimh an nasc",
+        "a": "Dícheangail gach tairseach ó do chóras roimhe seo sula gceanglaíonn tú anseo í — ní cheadaítear ach AON chóras amháin a sheolann sonraí in aghaidh gach cainéil.",
+        "b": "NÍ thagann áirithintí a bhí ann roimhe seo ná bloic láimhe leo go huathoibríoch. Cuir isteach tú féin iad tar éis an iompórtála.",
+        "c": "Fág do sheanchóras ag rith mar chúltaca agus coimeád súil ghéar ar na chéad laethanta.",
+        "ack": "Tuigim é sin.",
+        "doneTitle": "Nótaí ó roimh an gceangal (déanta)"
       },
       "step1": {
-        "title": "Objekt anlegen",
-        "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
-        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}",
+        "title": "Cruthaigh réadmhaoin",
+        "text": "Cruthaigh maoin amháin do gach fógra atá ann cheana — is leor ainm, cineál agus bunphraghas chun é a shannadh.",
+        "count": "{count, plural, =0 {Gan aon mhaoin go fóill} one {# mhaoin} two {# mhaoin} few {# mhaoin} many {# maoin} other {# maoin}}",
         "airbnbHint": "Ag teacht ó Airbnb? Scipeáil an chéim seo — déantar do mhaoine a iompórtáil go huathoibríoch nuair a nascann tú Airbnb."
       },
       "step2": {
-        "title": "Portal verbinden & zuordnen",
-        "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
-        "connect": "Portal verbinden",
-        "connectMore": "Weiteres Portal verbinden",
-        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“."
+        "title": "Tairseach a cheangal agus a shannadh",
+        "text": "Ceangail Booking, Airbnb agus eile agus sann seomraí na tairsí 1:1 do do mhaoine. Tagann áirithintí agus infhaighteacht go huathoibríoch ina dhiaidh sin.",
+        "connect": "Nasc tairseach",
+        "connectMore": "Nasc tairseach eile",
+        "alreadyConnected": "Tá tairseach ceangailte cheana agus tá do mhaoine seolta — ní gá aon rud a cheangal arís anseo. Ná húsáid „Ceangail tairseach eile“ ach le haghaidh tairsí BREISE (m.sh. Booking)."
       },
       "pull": {
-        "button": "Objekte aus Portal holen",
-        "result": "{count, plural, =0 {Keine neuen Objekte gefunden} one {# Objekt übernommen} other {# Objekte übernommen}}"
+        "button": "Faigh na réadmhaoine ón tairseach",
+        "result": "{count, plural, =0 {Níor aimsíodh aon mhaoin nua} one {# mhaoin tógtha} two {# mhaoin tógtha} few {# mhaoin tógtha} many {# maoin tógtha} other {# maoin tógtha}}"
       },
-      "finishCta": "Import abschließen",
-      "finishHint": "Bitte bestätige zuerst den Hinweis oben und lege mindestens ein Objekt an.",
+      "finishCta": "Críochnaigh an iompórtáil",
+      "finishHint": "Deimhnigh an nóta thuas ar dtús agus cruthaigh maoin amháin ar a laghad.",
       "bookings": {
-        "title": "Bestehende Buchungen einlesen",
-        "text": "Hol dir die Reservierungen deiner verbundenen Portale in deinen Kalender.",
-        "includePast": "Auch vergangene Buchungen einlesen",
-        "pastHint": "Hinweis: Portale liefern in der Regel nur Buchungen ab dem Zeitpunkt der Verbindung. Bereits abgereiste Gäste von davor sind oft nicht mehr abrufbar.",
-        "button": "Buchungen einlesen",
-        "result": "{count, plural, =0 {Keine Buchungen gefunden} one {# Buchung eingelesen} other {# Buchungen eingelesen}}"
+        "title": "Áirithintí atá ann a léamh isteach",
+        "text": "Tarraing áirithintí do thairseacha ceangailte isteach i do fhéilire.",
+        "includePast": "Léigh áirithintí a bhí ann roimhe seo isteach freisin",
+        "pastHint": "Nóta: ní sholáthraíonn tairseacha, mar riail, ach áirithintí ó nóiméad an cheangail ar aghaidh. Is minic nach féidir aoinna a d'imigh roimhe sin a fháil a thuilleadh.",
+        "button": "Iompórtáil na háirithintí",
+        "result": "{count, plural, =0 {Níor aimsíodh aon áirithint} one {# áirithint léite isteach} two {# áirithint léite isteach} few {# áirithint léite isteach} many {# n-áirithint léite isteach} other {# áirithint léite isteach}}"
       },
       "csv": {
-        "title": "Alte & direkte Buchungen per Datei importieren",
-        "text": "Für Buchungen, die nicht über die Portale kommen (Direktbuchungen, vergangene Reservierungen aus deinem alten System).",
-        "downloadTemplate": "Vorlage herunterladen",
-        "upload": "CSV hochladen",
-        "hint": "Lade die Vorlage, fülle sie aus (Datum als JJJJ-MM-TT) und lade sie wieder hoch. Pflicht: Objekt, Gastname, Anreise, Abreise. Doppelte Zeilen werden übersprungen.",
-        "result": "{imported} von {total} Buchungen importiert.",
-        "skipped": "{count, plural, one {# Zeile übersprungen (Duplikat/Objekt fehlt)} other {# Zeilen übersprungen (Duplikat/Objekt fehlt)}}",
-        "failed": "{count, plural, one {# Zeile mit Fehler} other {# Zeilen mit Fehlern}}:"
+        "title": "Seanáirithintí agus áirithintí díreacha a iompórtáil as comhad",
+        "text": "Le haghaidh áirithintí nach dtagann trí na tairseacha (áirithintí díreacha, áirithintí a bhí ann roimhe seo as do sheanchóras).",
+        "downloadTemplate": "Íoslódáil an teimpléad",
+        "upload": "Uaslódáil CSV",
+        "hint": "Íoslódáil an teimpléad, líon isteach é (dáta mar BBBB-MM-LL) agus uaslódáil arís é. Éigeantach: maoin, ainm an aoi, teacht, imeacht. Ligtear rónna dúblacha thar ceal.",
+        "result": "Iompórtáladh {imported} as {total} áirithint.",
+        "skipped": "{count, plural, one {Ligeadh # ró thar ceal (dúblach/maoin ar iarraidh)} two {Ligeadh # ró thar ceal (dúblach/maoin ar iarraidh)} few {Ligeadh # ró thar ceal (dúblach/maoin ar iarraidh)} many {Ligeadh # ró thar ceal (dúblach/maoin ar iarraidh)} other {Ligeadh # ró thar ceal (dúblach/maoin ar iarraidh)}}",
+        "failed": "{count, plural, one {# ró le hearráid} two {# ró le hearráid} few {# ró le hearráidí} many {# ró le hearráidí} other {# ró le hearráidí}}:"
       },
       "lodgify": {
-        "title": "Buchungen aus Lodgify holen",
-        "text": "Wenn du von Lodgify wechselst: importiere deine Buchungen direkt per API-Schlüssel (nur lesend, es wird nichts in Lodgify geändert).",
-        "keyLabel": "Lodgify-API-Schlüssel",
-        "keyPlaceholder": "Aus Lodgify: Einstellungen → Public API",
-        "keyHint": "Der Schlüssel wird nur für diesen Import genutzt und nicht gespeichert. Wir lesen ausschließlich – wir ändern nichts in Lodgify.",
-        "preview": "Vorschau laden",
-        "import": "{count, plural, one {# Buchung importieren} other {# Buchungen importieren}}",
-        "previewResult": "{importable} von {total} Buchungen können importiert werden.",
-        "result": "{imported} von {total} Buchungen importiert."
+        "title": "Áirithintí a fháil ó Lodgify",
+        "text": "Má tá tú ag athrú ó Lodgify: iompórtáil do áirithintí go díreach le eochair API (léamh amháin, ní athraítear aon rud i Lodgify).",
+        "keyLabel": "Eochair API Lodgify",
+        "keyPlaceholder": "As Lodgify: Socruithe → Public API",
+        "keyHint": "Ní úsáidtear an eochair ach le haghaidh an iompórtála seo agus ní shábháiltear í. Ní dhéanaimid ach léamh — ní athraímid aon rud i Lodgify.",
+        "preview": "Lódáil an réamhamharc",
+        "import": "{count, plural, one {Iompórtáil # áirithint} two {Iompórtáil # áirithint} few {Iompórtáil # áirithint} many {Iompórtáil # n-áirithint} other {Iompórtáil # áirithint}}",
+        "previewResult": "Is féidir {importable} as {total} áirithint a iompórtáil.",
+        "result": "Iompórtáladh {imported} as {total} áirithint."
       },
       "finish": {
-        "notRegistered": "Mindestens ein Objekt muss an die Buchungsportale übermittelt sein, bevor du das Onboarding abschließt. Verbinde in Schritt 2 ein Portal — dabei wird das Objekt automatisch übertragen."
+        "notRegistered": "Ní mór maoin amháin ar a laghad a bheith seolta chuig na tairseacha áirithinte sula gcuireann tú an tús-shocrú i gcrích. Ceangail tairseach i gcéim 2 — seoltar an mhaoin go huathoibríoch leis sin."
       }
     }
   },
@@ -208,7 +208,7 @@
     "websiteDesign": "Dearadh",
     "websitePages": "Leathanaigh",
     "websiteDomain": "Seoladh",
-    "channelManager": "Channel Manager",
+    "channelManager": "Bainisteoir cainéal",
     "guests": "Aíonna",
     "tasks": "Tascanna",
     "invoices": "Sonraisc",
@@ -364,7 +364,7 @@
     "sourceManual": "Manual",
     "sourceChannex": "Ón turasóireachtóir",
     "clear": "Clear",
-    "readonly": "Portal",
+    "readonly": "Tairseach",
     "toIncl": "Go dtí",
     "calendarHint": "Tarraing thar laethanta réadmhaoine chun tréimhse a roghnú.",
     "legendOpen": "Saor",
@@ -399,11 +399,11 @@
     "resetConfirm": "Sea, bain gach ceann",
     "resetting": "Resetting …",
     "cancel": "Cancel",
-    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
-    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
-    "reasonRequired": "Bitte einen Grund wählen.",
-    "skippedBooked": "{count} gebuchte Tage wurden übersprungen — verkaufte Tage lassen sich nicht stoppen.",
-    "skippedBookedAll": "Kein Tag gestoppt: alle {count} Tage im Zeitraum sind gebucht."
+    "noteRequired": "Le „Eile“ tá nóta riachtanach.",
+    "noteRequiredLabel": "Nóta (riachtanach le „Eile“)",
+    "reasonRequired": "Roghnaigh cúis, le do thoil.",
+    "skippedBooked": "Ligeadh {count} lá áirithe thar ceal — ní féidir laethanta atá díolta a stopadh.",
+    "skippedBookedAll": "Níor stopadh aon lá: tá gach ceann de na {count} lá sa tréimhse áirithe."
   },
   "inbox": {
     "title": "Inbox",
@@ -3901,7 +3901,7 @@
       "streetPlaceholder": "Sráid Shamplach 123",
       "bankPlaceholder": "Deutsche Bank",
       "holderPlaceholder": "Seán Ó Briain",
-      "ibanPlaceholder": "DE89 3704 0044 0532 0130 00"
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00"
     },
     "pdf": {
       "qrCode": "Cód QR",
@@ -4203,7 +4203,7 @@
       },
       "emptyState": "Níor aimsíodh aon áirithint.",
       "loading": "Á lódáil…",
-      "ownerStay": "Eigennutzung",
+      "ownerStay": "Úsáid an úinéara",
       "limit": "Teorainn ({count})",
       "limitAll": "Uile",
       "columnsMenu": "Colúin",
@@ -4621,8 +4621,8 @@
       "openGuestCard": "Oscail cárta an aoi",
       "photos": "Grianghraif",
       "noPhotosFound": "Níor aimsíodh aon ghrianghraf don áirithint seo.",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Fanacht an úinéara",
+      "ownerStayHint": "Gan ioncam — gan sonrasc ná coimisiún, níl sé i ráiteas an úinéara.",
       "viaChannel": "trí {channel}",
       "receivedOn": "faighte againn ar {date}",
       "bookedOn": "curtha in áirithe ar {date}"
@@ -4978,7 +4978,7 @@
   },
   "objects": {
     "channelChips": {
-      "website": "Website",
+      "website": "Suíomh gréasáin",
       "platform": "Platform",
       "portals": "Portals",
       "state": {
@@ -4995,7 +4995,7 @@
       "publishAll": "Foilsigh gach áit",
       "publishedAll": "Áit foilsithe ar gach cainéal.",
       "draftHint": "Is dréacht í an áit seo agus ní dhíoltar ar aon chainéal í. Socraigh í mar „Gníomhach“ chun í a fhoilsiú.",
-      "groupWebsite": "Website",
+      "groupWebsite": "Suíomh gréasáin",
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Nasc tairseach",
@@ -5047,7 +5047,7 @@
       "sortAz": "A–Z",
       "sortZa": "Z–A",
       "menuOpen": "Gníomhartha",
-      "menuEdit": "Bearbeiten",
+      "menuEdit": "Cuir in eagar",
       "menuDelete": "Delete",
       "deleteConfirm": "An bhfuil tú cinnte gur mhaith leat an áit „{title}“ a scriosadh?",
       "deleteOk": "Áit scriosta.",
@@ -5346,16 +5346,16 @@
       "removeAmenityAriaLabel": "Bain {amenity}",
       "amenitiesSearchPlaceholder": "Cuardaigh saoráidí …",
       "noSearchResults": "Níor aimsíodh aon toradh.",
-      "zimmerErneutLaden": "Erneut versuchen",
-      "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerFertig": "Fertig",
+      "zimmerErneutLaden": "Bain triail eile as",
+      "zimmerLaedt": "Seomraí á lódáil …",
+      "zimmerFertig": "Déanta",
       "zimmerBettenHinweis": "Tugtha isteach ó Airbnb agus fanann sé le myNextDays agus myBestDays — ní ghlacann na tairseacha áirithinte le leagan amach na leapacha.",
-      "masseinheitLabel": "Maßeinheit",
+      "masseinheitLabel": "Aonad tomhais",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
       "sizeSqftPrefix": "{size} ft² · ",
-      "gaesteWeniger": "Ein Gast weniger",
-      "gaesteMehr": "Ein Gast mehr",
+      "gaesteWeniger": "Aoi amháin níos lú",
+      "gaesteMehr": "Aoi amháin níos mó",
       "zimmerSuffixPrivat": "príobháideach",
       "zimmerSuffixGemeinschaftlich": "comhroinnte",
       "zimmerErhoehen": "Cuir {room} leis",
@@ -5930,7 +5930,7 @@
         "zweibettzimmer": "Twin room",
         "familienzimmer": "Family room",
         "junior_suite": "Junior suite",
-        "suite": "Suite"
+        "suite": "Sraith seomraí"
       }
     },
     "sync": {
@@ -5985,20 +5985,20 @@
         "schliessen": "Dún"
       },
       "airbnbPull": {
-        "button": "Bei Airbnb abrufen",
-        "hint": "Ordnet dieses Objekt bei Airbnb zu und holt den Preis von dort.",
-        "priceTaken": "Preis von Airbnb übernommen: {price} · Mindestaufenthalt {nights} Nächte",
-        "noPrice": "Airbnb hat keinen Preis übergeben. Die Zuordnung steht.",
-        "currency": "Währung: {currency}",
-        "timezone": "Zeitzone: {timezone}",
-        "alsoTaken": "Ebenfalls übernommen: {fields}",
+        "button": "Faigh ó Airbnb",
+        "hint": "Sannann sé an mhaoin seo ar Airbnb agus tarraingíonn an praghas as sin.",
+        "priceTaken": "Praghas tógtha ó Airbnb: {price} · íosfhanacht {nights} oíche",
+        "noPrice": "Níor sheol Airbnb aon phraghas. Tá an sannadh i bhfeidhm.",
+        "currency": "Airgeadra: {currency}",
+        "timezone": "Crios ama: {timezone}",
+        "alsoTaken": "Tógtha freisin: {fields}",
         "field": {
-          "check_in_from": "Check-in-Zeit",
-          "check_out_until": "Check-out-Zeit",
-          "pets_allowed": "Haustiere erlaubt",
-          "pets_max": "Anzahl Haustiere",
-          "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte",
+          "check_in_from": "Am seiceála isteach",
+          "check_out_until": "Am seiceála amach",
+          "pets_allowed": "Peataí ceadaithe",
+          "pets_max": "Líon na bpeataí",
+          "smoking_allowed": "Caitheamh tobac",
+          "max_nights": "Uaslíon oícheanta",
           "address": "Seoladh",
           "postal_code": "Cód poist",
           "city": "Cathair",
@@ -6172,14 +6172,14 @@
         "booked": "Curtha in áirithe",
         "blocked": "Blocáilte",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "blockedAndStopSell": "Blocáilte + Stop-Sell",
         "contractEnd": "Conradh críochnaithe"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "gach cainéal",
       "nightsCount": "{count, plural, one {# oíche} two {# oíche} few {# oíche} many {# n-oíche} other {# oíche}}",
       "daysCount": "{count, plural, one {# lá} two {# lá} few {# lá} many {# lá} other {# lá}}",
-      "ownerStay": "Eigentümer-Aufenthalt"
+      "ownerStay": "Fanacht an úinéara"
     },
     "calendarViews": {
       "viewLabel": "Amharc",
@@ -6199,10 +6199,10 @@
       "blocking": "Ag blocáil…",
       "createBlockedPeriod": "Cruthaigh tréimhse bhlocáilte",
       "priceMinStayBlock": "Praghas / Fanacht Íosta / Blocáil …",
-      "ownerStay": "Eigennutzung eintragen",
-      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
-      "setStopSell": "Stop-Sell setzen",
-      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
+      "ownerStay": "Cuir úsáid an úinéara isteach",
+      "createBlockedPeriodHint": "Infhaighteacht 0 — tá an lá dúnta i ngach áit",
+      "setStopSell": "Socraigh Stop-Sell",
+      "setStopSellHint": "Fanann an lá saor, ach ní dhíoltar é — le cúis"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Líon na n-aíonna socraithe don áit seo",
@@ -6432,11 +6432,11 @@
       "occupancy": "Áitíocht",
       "propertyNights": "{booked}/{total} oíche áite",
       "revenue": "Ioncam",
-      "stopSellClear": "Stop-Sell aufheben",
-      "stopSellClearing": "Hebe auf…",
-      "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
-      "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "stopSellClear": "Bain an Stop-Sell",
+      "stopSellClearing": "Á bhaint…",
+      "stopSellClearNothing": "Ní raibh aon Stop-Sell le baint anseo.",
+      "stopSellEditReason": "Athraigh an chúis",
+      "stopSellPortalLocked": "Socraithe ag an tairseach — ní féidir é a bhaint ach ansin.",
       "legend": "Eochair",
       "contractEndLocked": "Tagann an bac seo ó dheireadh an chonartha. Ní féidir é a athrú ach tríd an dáta deiridh i gcomhad na maoine."
     },
@@ -6455,29 +6455,29 @@
       "feesHint": "Glanadh srl.",
       "personsValue": "{count} duine",
       "guestsLabel": "Aíonna",
-      "stayKind": "Art des Aufenthalts",
-      "stayKindGuest": "Gastbuchung",
-      "stayKindOwner": "Eigennutzung",
-      "ownerLabel": "Eigentümer",
-      "ownerContact": "Kontaktdaten des Eigentümers",
-      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "stayKind": "Cineál na fanachta",
+      "stayKindGuest": "Áirithint aoi",
+      "stayKindOwner": "Úsáid an úinéara",
+      "ownerLabel": "Úinéir",
+      "ownerContact": "Sonraí teagmhála an úinéara",
+      "ownerStayHint": "Líonann úsáid ag an úinéir an féilire ar nós áirithinte, ach ní chruthaíonn sí ioncam ar bith: gan phraghas, gan sonrasc, gan choimisiún agus gan aon rud i ráiteas an úinéara.",
       "steps": {
-        "details": "Details",
-        "prices": "Preise & Extras",
-        "policy": "Richtlinien"
+        "details": "Sonraí",
+        "prices": "Praghsanna agus breiseáin",
+        "policy": "Rialacha"
       },
       "headings": {
-        "details": "Reservierungsdetails",
-        "prices": "Preise & Extras festlegen",
-        "policy": "Richtlinien festlegen"
+        "details": "Sonraí na háirithinte",
+        "prices": "Socraigh praghsanna agus breiseáin",
+        "policy": "Socraigh na rialacha"
       },
-      "ownerSection": "Eigentümer",
-      "ownerLoading": "Eigentümer wird ermittelt…",
-      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
-      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
-      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
-      "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "ownerSection": "Úinéir",
+      "ownerLoading": "An úinéir á aimsiú…",
+      "ownerLoadFailed": "Níorbh fhéidir an úinéir a lódáil.",
+      "ownerMissing": "Níl aon úinéir taifeadta don mhaoin seo.",
+      "ownerMissingHint": "Teastaíonn úinéir taifeadta le haghaidh úsáide ag an úinéir. Cruthaigh é faoi Úinéirí agus sann an mhaoin seo dó.",
+      "ownerMissingLink": "Chuig na húinéirí",
+      "ownerFromRecord": "Tógtha ó bhunsonraí an úinéara. Déantar athruithe ar na sonraí teagmhála faoi Úinéirí.",
       "stayNameLabel": "Cé atá ag fanacht",
       "stayNamePlaceholder": "Ainm an duine",
       "stayNameHint": "Fág folamh don úinéir féin. Nó ainm an duine a úsáideann an tréimhse — teaghlach, cairde, ceardaithe.",
@@ -6494,8 +6494,8 @@
       "otaPayout": "Íocaíocht ón tairseach",
       "stillOpen": "Fós oscailte",
       "cancelReasonPlaceholder": "Cúis an chealaithe (déanfar é a dhoiciméadú) …",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Fanacht an úinéara",
+      "ownerStayHint": "Gan ioncam — gan sonrasc ná coimisiún, níl sé i ráiteas an úinéara.",
       "openBooking": "Go dtí an áirithint iomlán",
       "messageGuest": "Scríobh chuig an aoi"
     },
@@ -6704,7 +6704,7 @@
     "seasonApplyNoSpans": "Níl aon tréimhsí péinteáilte ag an séasúr seo. Péinteáil ar dtús é, nó aistrigh an sainmhíniú amháin gan tréimhsí."
   },
   "channels": {
-    "title": "Channel Manager",
+    "title": "Bainisteoir cainéal",
     "subtitle": "Nasc do thairseacha áirithinte agus scaip infhaighteacht agus praghsanna go huathoibríoch ar na cainéil go léir.",
     "categoryOta": "Tairseacha áirithinte",
     "categoryMarketplace": "Margadh dár gcuid féin",
@@ -6786,7 +6786,7 @@
       "sendUserTaxes": "Seol cánacha féin",
       "blockedNote": "Fad is atá sé seo múchta, ní sheoltar aon cháin dá gcuid chuig an gcainéal."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "linkedPending": "{count, plural, =0 {Cuntas ceangailte · sannadh ar feitheamh} one {Cuntas ceangailte · # mhaoin fós le sannadh} two {Cuntas ceangailte · # mhaoin fós le sannadh} few {Cuntas ceangailte · # mhaoin fós le sannadh} many {Cuntas ceangailte · # maoin fós le sannadh} other {Cuntas ceangailte · # maoin fós le sannadh}}",
     "activateChannel": "Gníomhachtaigh an cainéal",
     "activateDone": "Tá {portal} gníomhach anois.",
     "activateFailed": "Níorbh fhéidir an cainéal a ghníomhachtú.",
@@ -6942,7 +6942,7 @@
     "clientSecret": "Rún cliaint",
     "copy": "Cóipeáil",
     "copied": "Cóipeáilte.",
-    "done": "Fertig",
+    "done": "Déanta",
     "colName": "Name",
     "colEnv": "Timpeallacht",
     "colScopes": "Ceadanna",
@@ -7010,7 +7010,7 @@
       "nurMitEntsprechung": "gnéithe a bhfuil comhionannas acu sa tairseach amháin",
       "nichtDeckungsgleich": "ní thagann na catagóirí le chéile go hiomlán",
       "ohneBeleg": "gan deimhniú — táimid á sheiceáil",
-      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
+      "ohneZimmerZuordnung": "gan sannadh don seomra aonair"
     },
     "status": {
       "voll": "transferred",
@@ -7050,7 +7050,7 @@
       "kaution": "Éarlais",
       "lizenznummer": "Uimhir cheadúnais/chláraithe",
       "mietvertrag": "Conradh cíosa",
-      "zimmerAusstattung": "Ausstattung der Zimmer"
+      "zimmerAusstattung": "Áiseanna na seomraí"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -7088,7 +7088,7 @@
       "create": "Cruthaigh coinníoll",
       "update": "Nuashonraigh an coinníoll",
       "empty": "Níl aon choinníollacha ann fós. Cruthaigh do chéad choinníoll áirithinte — plean íocaíochta, cealú agus éarlais.",
-      "colName": "Name",
+      "colName": "Ainm",
       "colPaymentPlan": "Plean íocaíochta",
       "colCancellation": "Cealú",
       "colDeposit": "Éarlais",
@@ -7143,7 +7143,7 @@
       "amount": "Méid",
       "depositStep3": "3. Amanna réamh-údaraithe",
       "preauthFromHint": "Ón uair a réamh-údaraítear cárta an aoi.",
-      "days": "Tage",
+      "days": "Laethanta",
       "preauthUntilHint": "Go dtí cén uair is féidir réamh-údarú a dhéanamh — tar éis an dáta seo scaoiltear réamh-údaruithe oscailte.",
       "releaseDays": "Scaoil laethanta tar éis imeachta",
       "preauthWarnStrong": "Is minic nach féidir réamh-údaruithe a ráthú ach ar feadh timpeall 7 lá.",
@@ -7442,7 +7442,7 @@
       "search": "Cuardach",
       "searchHinweis": "Barra cuardaigh le dátaí agus líon na n-aíonna.",
       "propertiesGrid": "Cóiríochtaí",
-      "propertiesGridHinweis": "Gach cóiríocht i ngreille, le praghsanna fíora.",
+      "propertiesGridHinweis": "Maoine i ngreille, le fíorphraghsanna má tá siad casta air.",
       "featuredProperties": "Cóiríochtaí roghnaithe",
       "featuredPropertiesHinweis": "Na cóiríochtaí a roghnaíonn tú amháin.",
       "reviews": "Léirmheasanna",
@@ -7489,7 +7489,7 @@
       "mindestGaeste": "Líon aíonna ar a laghad",
       "anzahl": "Líon",
       "objekte": "Cóiríochtaí",
-      "kategorienZeigen": "Taispeáin na rátálacha aonair",
+      "kategorienZeigen": "Taispeáin rátálacha de réir catagóire",
       "email": "Ríomhphost",
       "telefon": "Teileafón",
       "adresse": "Seoladh",
@@ -7634,7 +7634,7 @@
       },
       "typBeschreibung": {
         "suche": "Ceann scríbe, tréimhse agus líon aíonna — treoraíonn go liosta réadmhaoine do shuímh.",
-        "buchen": "Tréimhse agus líon aíonna — treoraíonn go díreach isteach i do shruth áirithinte."
+        "buchen": "Tréimhse agus líon aíonna — treoraíonn go liosta na maoine ar do shuíomh, gan réimse ceann scríbe."
       },
       "sprache": "Teanga",
       "spracheHinweis": "An teanga ina bhfeictear an réimse ar an suíomh eile.",
@@ -7870,7 +7870,7 @@
       "hrbPlaceholder": "HRB 12345",
       "courtPlaceholder": "m.sh. Beirlín (Charlottenburg)",
       "employeesPlaceholder": "m.sh. 7",
-      "ibanPlaceholder": "DE00 0000 0000 0000 0000 00",
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00",
       "preferredLanguage": "Teanga is fearr leat",
       "chooseLanguage": "Roghnaigh teanga",
       "descriptionPlaceholder": "Cur síos gairid ar do chomhlacht…"

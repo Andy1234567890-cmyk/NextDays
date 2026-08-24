@@ -125,74 +125,74 @@
       "text": "Skatteuppgifter och data för betalningsaktivering."
     },
     "branch": {
-      "title": "Verkaufst du schon auf Buchungsportalen?",
-      "text": "Booking.com, Airbnb & Co. — hast du dort schon Objekte, oder fängst du neu an?",
-      "switchTitle": "Ja, ich wechsle",
-      "switchText": "Ich habe schon Objekte auf Booking, Airbnb & Co. und möchte sie importieren.",
-      "newTitle": "Nein, ich fange neu an",
-      "newText": "Ich lege meine Objekte neu an und verbinde die Portale danach."
+      "title": "Säljer du redan via bokningsportaler?",
+      "text": "Booking.com, Airbnb m.fl. — har du redan objekt där, eller börjar du från början?",
+      "switchTitle": "Ja, jag byter",
+      "switchText": "Jag har redan objekt på Booking, Airbnb m.fl. och vill importera dem.",
+      "newTitle": "Nej, jag börjar från början",
+      "newText": "Jag lägger upp mina objekt från början och ansluter portalerna efteråt."
     },
     "switch": {
-      "title": "Bestehende Objekte importieren",
-      "intro": "So holst du deine bestehenden Booking-/Airbnb-Objekte zu myNextDays — ohne Doppelbuchungen.",
+      "title": "Importera befintliga objekt",
+      "intro": "Så flyttar du dina befintliga Booking-/Airbnb-objekt till myNextDays — utan dubbelbokningar.",
       "cutover": {
-        "title": "Wichtig vor dem Verbinden",
-        "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
-        "b": "Vergangene Buchungen und manuelle Sperren kommen NICHT automatisch mit. Trage sie nach dem Import selbst nach.",
-        "c": "Lass dein altes System als Backup laufen und beobachte die ersten Tage genau.",
-        "ack": "Ich habe das verstanden.",
-        "doneTitle": "Hinweise von vor dem Verbinden (erledigt)"
+        "title": "Viktigt innan du ansluter",
+        "a": "Koppla bort varje portal från ditt tidigare system innan du ansluter den här — per kanal får bara ETT system pusha.",
+        "b": "Tidigare bokningar och manuella spärrar följer INTE med automatiskt. Lägg in dem själv efter importen.",
+        "c": "Låt ditt gamla system gå kvar som backup och håll noga koll de första dagarna.",
+        "ack": "Jag har förstått detta.",
+        "doneTitle": "Anvisningar inför anslutningen (klart)"
       },
       "step1": {
-        "title": "Objekt anlegen",
-        "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
-        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}",
+        "title": "Skapa objekt",
+        "text": "Lägg upp ett objekt för varje befintlig annons — namn, typ och grundpris räcker för tilldelningen.",
+        "count": "{count, plural, =0 {Inga objekt än} one {# objekt} other {# objekt}}",
         "airbnbHint": "Kommer du från Airbnb? Hoppa över det här steget — dina objekt hämtas automatiskt när du ansluter Airbnb."
       },
       "step2": {
-        "title": "Portal verbinden & zuordnen",
-        "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
-        "connect": "Portal verbinden",
-        "connectMore": "Weiteres Portal verbinden",
-        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“."
+        "title": "Anslut & tilldela portal",
+        "text": "Anslut Booking, Airbnb m.fl. och tilldela portalrummen 1:1 till dina objekt. Bokningar och tillgänglighet kommer därefter automatiskt.",
+        "connect": "Anslut portal",
+        "connectMore": "Anslut ytterligare en portal",
+        "alreadyConnected": "En portal är redan ansluten och dina objekt är överförda — du behöver inte ansluta något igen här. Använd „Anslut ytterligare portal” bara för en YTTERLIGARE portal (t.ex. Booking)."
       },
       "pull": {
-        "button": "Objekte aus Portal holen",
-        "result": "{count, plural, =0 {Keine neuen Objekte gefunden} one {# Objekt übernommen} other {# Objekte übernommen}}"
+        "button": "Hämta objekt från portalen",
+        "result": "{count, plural, =0 {Inga nya objekt hittades} one {# objekt hämtat} other {# objekt hämtade}}"
       },
-      "finishCta": "Import abschließen",
-      "finishHint": "Bitte bestätige zuerst den Hinweis oben und lege mindestens ein Objekt an.",
+      "finishCta": "Slutför importen",
+      "finishHint": "Bekräfta först anvisningen ovan och lägg upp minst ett objekt.",
       "bookings": {
-        "title": "Bestehende Buchungen einlesen",
-        "text": "Hol dir die Reservierungen deiner verbundenen Portale in deinen Kalender.",
-        "includePast": "Auch vergangene Buchungen einlesen",
-        "pastHint": "Hinweis: Portale liefern in der Regel nur Buchungen ab dem Zeitpunkt der Verbindung. Bereits abgereiste Gäste von davor sind oft nicht mehr abrufbar.",
-        "button": "Buchungen einlesen",
-        "result": "{count, plural, =0 {Keine Buchungen gefunden} one {# Buchung eingelesen} other {# Buchungen eingelesen}}"
+        "title": "Läs in befintliga bokningar",
+        "text": "Hämta reservationerna från dina anslutna portaler till din kalender.",
+        "includePast": "Läs även in tidigare bokningar",
+        "pastHint": "Obs: portalerna levererar som regel bara bokningar från och med anslutningstillfället. Gäster som redan checkat ut före dess går ofta inte längre att hämta.",
+        "button": "Läs in bokningar",
+        "result": "{count, plural, =0 {Inga bokningar hittades} one {# bokning inläst} other {# bokningar inlästa}}"
       },
       "csv": {
-        "title": "Alte & direkte Buchungen per Datei importieren",
-        "text": "Für Buchungen, die nicht über die Portale kommen (Direktbuchungen, vergangene Reservierungen aus deinem alten System).",
-        "downloadTemplate": "Vorlage herunterladen",
-        "upload": "CSV hochladen",
-        "hint": "Lade die Vorlage, fülle sie aus (Datum als JJJJ-MM-TT) und lade sie wieder hoch. Pflicht: Objekt, Gastname, Anreise, Abreise. Doppelte Zeilen werden übersprungen.",
-        "result": "{imported} von {total} Buchungen importiert.",
-        "skipped": "{count, plural, one {# Zeile übersprungen (Duplikat/Objekt fehlt)} other {# Zeilen übersprungen (Duplikat/Objekt fehlt)}}",
-        "failed": "{count, plural, one {# Zeile mit Fehler} other {# Zeilen mit Fehlern}}:"
+        "title": "Importera gamla & direkta bokningar via fil",
+        "text": "För bokningar som inte kommer via portalerna (direktbokningar, tidigare reservationer från ditt gamla system).",
+        "downloadTemplate": "Ladda ner mall",
+        "upload": "Ladda upp CSV",
+        "hint": "Ladda ned mallen, fyll i den (datum som ÅÅÅÅ-MM-DD) och ladda upp den igen. Obligatoriskt: objekt, gästnamn, ankomst, avresa. Dubbletter hoppas över.",
+        "result": "{imported} av {total} bokningar importerade.",
+        "skipped": "{count, plural, one {# rad överhoppad (dubblett/objekt saknas)} other {# rader överhoppade (dubblett/objekt saknas)}}",
+        "failed": "{count, plural, one {# rad med fel} other {# rader med fel}}:"
       },
       "lodgify": {
-        "title": "Buchungen aus Lodgify holen",
-        "text": "Wenn du von Lodgify wechselst: importiere deine Buchungen direkt per API-Schlüssel (nur lesend, es wird nichts in Lodgify geändert).",
-        "keyLabel": "Lodgify-API-Schlüssel",
-        "keyPlaceholder": "Aus Lodgify: Einstellungen → Public API",
-        "keyHint": "Der Schlüssel wird nur für diesen Import genutzt und nicht gespeichert. Wir lesen ausschließlich – wir ändern nichts in Lodgify.",
-        "preview": "Vorschau laden",
-        "import": "{count, plural, one {# Buchung importieren} other {# Buchungen importieren}}",
-        "previewResult": "{importable} von {total} Buchungen können importiert werden.",
-        "result": "{imported} von {total} Buchungen importiert."
+        "title": "Hämta bokningar från Lodgify",
+        "text": "Byter du från Lodgify? Importera dina bokningar direkt med API-nyckel (endast läsning — inget ändras i Lodgify).",
+        "keyLabel": "Lodgify-API-nyckel",
+        "keyPlaceholder": "Från Lodgify: Inställningar → Public API",
+        "keyHint": "Nyckeln används bara för den här importen och sparas inte. Vi läser bara — vi ändrar ingenting i Lodgify.",
+        "preview": "Läs in förhandsvisning",
+        "import": "{count, plural, one {Importera # bokning} other {Importera # bokningar}}",
+        "previewResult": "{importable} av {total} bokningar kan importeras.",
+        "result": "{imported} av {total} bokningar importerade."
       },
       "finish": {
-        "notRegistered": "Mindestens ein Objekt muss an die Buchungsportale übermittelt sein, bevor du das Onboarding abschließt. Verbinde in Schritt 2 ein Portal — dabei wird das Objekt automatisch übertragen."
+        "notRegistered": "Minst ett objekt måste vara överfört till bokningsportalerna innan du avslutar onboardingen. Anslut en portal i steg 2 — objektet överförs då automatiskt."
       }
     }
   },
@@ -208,7 +208,7 @@
     "websiteDesign": "Design",
     "websitePages": "Sidor",
     "websiteDomain": "Adress",
-    "channelManager": "Channel Manager",
+    "channelManager": "Channel manager",
     "guests": "Gäster",
     "tasks": "Uppgifter",
     "invoices": "Fakturor",
@@ -399,11 +399,11 @@
     "resetConfirm": "Ja, ta bort alla",
     "resetting": "Resetting …",
     "cancel": "Cancel",
-    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
-    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
-    "reasonRequired": "Bitte einen Grund wählen.",
-    "skippedBooked": "{count} gebuchte Tage wurden übersprungen — verkaufte Tage lassen sich nicht stoppen.",
-    "skippedBookedAll": "Kein Tag gestoppt: alle {count} Tage im Zeitraum sind gebucht."
+    "noteRequired": "Vid „Övrigt” krävs en anteckning.",
+    "noteRequiredLabel": "Anteckning (obligatorisk vid „Övrigt”)",
+    "reasonRequired": "Välj en orsak.",
+    "skippedBooked": "{count} bokade dagar hoppades över — sålda dagar kan inte stoppas.",
+    "skippedBookedAll": "Ingen dag stoppad: alla {count} dagar i perioden är bokade."
   },
   "inbox": {
     "title": "Inbox",
@@ -3899,7 +3899,7 @@
       "streetPlaceholder": "Mustergatan 123",
       "bankPlaceholder": "Deutsche Bank",
       "holderPlaceholder": "Anna Andersson",
-      "ibanPlaceholder": "DE89 3704 0044 0532 0130 00"
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00"
     },
     "pdf": {
       "qrCode": "QR-kod",
@@ -4201,7 +4201,7 @@
       },
       "emptyState": "Inga bokningar hittades.",
       "loading": "Laddar…",
-      "ownerStay": "Eigennutzung",
+      "ownerStay": "Ägarvistelse",
       "limit": "Gräns ({count})",
       "limitAll": "Alla",
       "columnsMenu": "Kolumner",
@@ -4619,8 +4619,8 @@
       "openGuestCard": "Öppna gästkort",
       "photos": "Bilder",
       "noPhotosFound": "Inga bilder hittades för denna bokning.",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Ägarvistelse",
+      "ownerStayHint": "Ingen omsättning — varken faktura eller provision, ingår inte i ägaravräkningen.",
       "viaChannel": "via {channel}",
       "receivedOn": "inkommen hos oss den {date}",
       "bookedOn": "bokad den {date}"
@@ -4976,7 +4976,7 @@
   },
   "objects": {
     "channelChips": {
-      "website": "Website",
+      "website": "Webbplats",
       "platform": "Platform",
       "portals": "Portals",
       "state": {
@@ -4993,7 +4993,7 @@
       "publishAll": "Publicera överallt",
       "publishedAll": "Objektet publicerat i alla kanaler.",
       "draftHint": "Det här objektet är ett utkast och säljs inte i någon kanal. Sätt det till \"Aktivt\" för att publicera.",
-      "groupWebsite": "Website",
+      "groupWebsite": "Webbplats",
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Anslut portal",
@@ -5045,7 +5045,7 @@
       "sortAz": "A–Z",
       "sortZa": "Z–A",
       "menuOpen": "Åtgärder",
-      "menuEdit": "Bearbeiten",
+      "menuEdit": "Redigera",
       "menuDelete": "Delete",
       "deleteConfirm": "Vill du verkligen ta bort boendet ”{title}”?",
       "deleteOk": "Boende borttaget.",
@@ -5344,16 +5344,16 @@
       "removeAmenityAriaLabel": "Ta bort {amenity}",
       "amenitiesSearchPlaceholder": "Sök utrustning …",
       "noSearchResults": "Inga träffar.",
-      "zimmerErneutLaden": "Erneut versuchen",
-      "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerFertig": "Fertig",
+      "zimmerErneutLaden": "Försök igen",
+      "zimmerLaedt": "Rummen läses in …",
+      "zimmerFertig": "Klart",
       "zimmerBettenHinweis": "Hämtas från Airbnb och stannar i myNextDays och myBestDays — bokningsportalerna tar inte emot sängöversikter.",
-      "masseinheitLabel": "Maßeinheit",
+      "masseinheitLabel": "Måttenhet",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
       "sizeSqftPrefix": "{size} ft² · ",
-      "gaesteWeniger": "Ein Gast weniger",
-      "gaesteMehr": "Ein Gast mehr",
+      "gaesteWeniger": "En gäst mindre",
+      "gaesteMehr": "En gäst mer",
       "zimmerSuffixPrivat": "privat",
       "zimmerSuffixGemeinschaftlich": "delat",
       "zimmerErhoehen": "Lägg till {room}",
@@ -5983,20 +5983,20 @@
         "schliessen": "Stäng"
       },
       "airbnbPull": {
-        "button": "Bei Airbnb abrufen",
-        "hint": "Ordnet dieses Objekt bei Airbnb zu und holt den Preis von dort.",
-        "priceTaken": "Preis von Airbnb übernommen: {price} · Mindestaufenthalt {nights} Nächte",
-        "noPrice": "Airbnb hat keinen Preis übergeben. Die Zuordnung steht.",
-        "currency": "Währung: {currency}",
-        "timezone": "Zeitzone: {timezone}",
-        "alsoTaken": "Ebenfalls übernommen: {fields}",
+        "button": "Hämta från Airbnb",
+        "hint": "Tilldelar det här objektet hos Airbnb och hämtar priset därifrån.",
+        "priceTaken": "Pris hämtat från Airbnb: {price} · minsta vistelse {nights} nätter",
+        "noPrice": "Airbnb skickade inget pris. Tilldelningen är klar.",
+        "currency": "Valuta: {currency}",
+        "timezone": "Tidszon: {timezone}",
+        "alsoTaken": "Även hämtat: {fields}",
         "field": {
-          "check_in_from": "Check-in-Zeit",
-          "check_out_until": "Check-out-Zeit",
-          "pets_allowed": "Haustiere erlaubt",
-          "pets_max": "Anzahl Haustiere",
-          "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte",
+          "check_in_from": "Incheckningstid",
+          "check_out_until": "Utcheckningstid",
+          "pets_allowed": "Husdjur tillåtna",
+          "pets_max": "Antal husdjur",
+          "smoking_allowed": "Rökning",
+          "max_nights": "Högsta antal nätter",
           "address": "Adress",
           "postal_code": "Postnummer",
           "city": "Ort",
@@ -6170,14 +6170,14 @@
         "booked": "Bokad",
         "blocked": "Blockerad",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "blockedAndStopSell": "Blockerad + säljstopp",
         "contractEnd": "Avtalet uppsagt"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "alla kanaler",
       "nightsCount": "{count, plural, one {# natt} other {# nätter}}",
       "daysCount": "{count, plural, one {# dag} other {# dagar}}",
-      "ownerStay": "Eigentümer-Aufenthalt"
+      "ownerStay": "Ägarvistelse"
     },
     "calendarViews": {
       "viewLabel": "Vy",
@@ -6197,10 +6197,10 @@
       "blocking": "Blockerar…",
       "createBlockedPeriod": "Skapa blockerad period",
       "priceMinStayBlock": "Pris / Minsta vistelse / Blockering …",
-      "ownerStay": "Eigennutzung eintragen",
-      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
-      "setStopSell": "Stop-Sell setzen",
-      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
+      "ownerStay": "Registrera ägarvistelse",
+      "createBlockedPeriodHint": "Tillgänglighet 0 — dagen är stängd överallt",
+      "setStopSell": "Sätt säljstopp",
+      "setStopSellHint": "Dagen förblir ledig men säljs inte — med orsak"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Antal gäster inställt för detta objekt",
@@ -6430,11 +6430,11 @@
       "occupancy": "Beläggning",
       "propertyNights": "{booked}/{total} objektnätter",
       "revenue": "Omsättning",
-      "stopSellClear": "Stop-Sell aufheben",
-      "stopSellClearing": "Hebe auf…",
-      "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
-      "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "stopSellClear": "Ta bort säljstopp",
+      "stopSellClearing": "Tar bort…",
+      "stopSellClearNothing": "Här fanns inget säljstopp att ta bort.",
+      "stopSellEditReason": "Ändra orsak",
+      "stopSellPortalLocked": "Satt av portalen — kan bara tas bort där.",
       "legend": "Teckenförklaring",
       "contractEndLocked": "Den här blockeringen kommer från avtalets slut. Den kan bara ändras via slutdatumet i objektkortet."
     },
@@ -6453,29 +6453,29 @@
       "feesHint": "Städning m.m.",
       "personsValue": "{count} pers.",
       "guestsLabel": "Gäster",
-      "stayKind": "Art des Aufenthalts",
-      "stayKindGuest": "Gastbuchung",
-      "stayKindOwner": "Eigennutzung",
-      "ownerLabel": "Eigentümer",
-      "ownerContact": "Kontaktdaten des Eigentümers",
-      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "stayKind": "Typ av vistelse",
+      "stayKindGuest": "Gästbokning",
+      "stayKindOwner": "Ägarvistelse",
+      "ownerLabel": "Ägare",
+      "ownerContact": "Ägarens kontaktuppgifter",
+      "ownerStayHint": "En ägarvistelse belägger kalendern som en bokning men ger ingen omsättning: inget pris, ingen faktura, ingen provision och inget i ägaravräkningen.",
       "steps": {
-        "details": "Details",
-        "prices": "Preise & Extras",
-        "policy": "Richtlinien"
+        "details": "Detaljer",
+        "prices": "Priser och tillägg",
+        "policy": "Villkor"
       },
       "headings": {
-        "details": "Reservierungsdetails",
-        "prices": "Preise & Extras festlegen",
-        "policy": "Richtlinien festlegen"
+        "details": "Bokningsdetaljer",
+        "prices": "Ange priser och tillägg",
+        "policy": "Ange villkoren"
       },
-      "ownerSection": "Eigentümer",
-      "ownerLoading": "Eigentümer wird ermittelt…",
-      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
-      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
-      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
-      "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "ownerSection": "Ägare",
+      "ownerLoading": "Ägaren hämtas…",
+      "ownerLoadFailed": "Ägaren kunde inte hämtas.",
+      "ownerMissing": "För det här objektet finns ingen ägare registrerad.",
+      "ownerMissingHint": "En ägarvistelse kräver en registrerad ägare. Lägg upp ägaren under Ägare och tilldela det här objektet.",
+      "ownerMissingLink": "Till ägarna",
+      "ownerFromRecord": "Hämtat från ägarens grunduppgifter. Kontaktuppgifter ändras under Ägare.",
       "stayNameLabel": "Vem bor där",
       "stayNamePlaceholder": "Personens namn",
       "stayNameHint": "Lämna tomt för ägaren själv. Annars namnet på den person som använder perioden — familj, vänner, hantverkare.",
@@ -6492,8 +6492,8 @@
       "otaPayout": "Utbetalning från portalen",
       "stillOpen": "Fortfarande öppna",
       "cancelReasonPlaceholder": "Orsak till avbokningen (dokumenteras) …",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Ägarvistelse",
+      "ownerStayHint": "Ingen omsättning — varken faktura eller provision, ingår inte i ägaravräkningen.",
       "openBooking": "Till hela bokningen",
       "messageGuest": "Skriv till gästen"
     },
@@ -6702,7 +6702,7 @@
     "seasonApplyNoSpans": "Den här säsongen har inga målade perioder. Måla den först eller överför endast definitionen utan perioder."
   },
   "channels": {
-    "title": "Channel Manager",
+    "title": "Channel manager",
     "subtitle": "Anslut dina bokningsportaler och fördela tillgänglighet och priser automatiskt över alla kanaler.",
     "categoryOta": "Bokningsportaler",
     "categoryMarketplace": "Egen marknadsplats",
@@ -6784,7 +6784,7 @@
       "sendUserTaxes": "Skicka egna skatter",
       "blockedNote": "Så länge detta är av skickas inga egna skatter till kanalen."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "linkedPending": "{count, plural, =0 {Konto anslutet · tilldelning återstår} one {Konto anslutet · # objekt återstår att tilldela} other {Konto anslutet · # objekt återstår att tilldela}}",
     "activateChannel": "Aktivera kanal",
     "activateDone": "{portal} är nu aktiv.",
     "activateFailed": "Kanalen kunde inte aktiveras.",
@@ -6940,7 +6940,7 @@
     "clientSecret": "Client secret",
     "copy": "Kopiera",
     "copied": "Kopierat.",
-    "done": "Fertig",
+    "done": "Klart",
     "colName": "Name",
     "colEnv": "Miljö",
     "colScopes": "Behörigheter",
@@ -7008,7 +7008,7 @@
       "nurMitEntsprechung": "endast egenskaper med motsvarighet i portalen",
       "nichtDeckungsgleich": "kategorierna stämmer inte helt överens",
       "ohneBeleg": "inte bekräftat — vi kontrollerar det",
-      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
+      "ohneZimmerZuordnung": "utan tilldelning till det enskilda rummet"
     },
     "status": {
       "voll": "transferred",
@@ -7048,7 +7048,7 @@
       "kaution": "Deposition",
       "lizenznummer": "Licens-/registreringsnummer",
       "mietvertrag": "Hyresavtal",
-      "zimmerAusstattung": "Ausstattung der Zimmer"
+      "zimmerAusstattung": "Rummens utrustning"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -7086,7 +7086,7 @@
       "create": "Skapa villkor",
       "update": "Uppdatera villkor",
       "empty": "Inga villkor ännu. Skapa ditt första bokningsvillkor — betalningsplan, avbokning och deposition.",
-      "colName": "Name",
+      "colName": "Namn",
       "colPaymentPlan": "Betalningsplan",
       "colCancellation": "Avbokning",
       "colDeposit": "Deposition",
@@ -7141,7 +7141,7 @@
       "amount": "Belopp",
       "depositStep3": "3. Tider för förhandsauktorisering",
       "preauthFromHint": "Från när gästens kort förhandsauktoriseras.",
-      "days": "Tage",
+      "days": "Dagar",
       "preauthUntilHint": "Fram till när en förhandsauktorisering kan göras — efter detta datum frigörs öppna förhandsauktoriseringar.",
       "releaseDays": "Frigör dagar efter avresa",
       "preauthWarnStrong": "Förhandsauktoriseringar kan ofta bara garanteras i cirka 7 dagar.",
@@ -7269,7 +7269,7 @@
       "buttonFuellung": "Stil",
       "buttonSolide": "Fylld",
       "buttonUmrandet": "Med ram",
-      "buttonEcken": "Kant",
+      "buttonEcken": "Hörn",
       "buttonRand": {
         "sharp": "Skarp",
         "rounded": "Rundad",
@@ -7440,7 +7440,7 @@
       "search": "Sök",
       "searchHinweis": "Sökfält med datum och antal gäster.",
       "propertiesGrid": "Boenden",
-      "propertiesGridHinweis": "Alla boenden i ett rutnät, med verkliga priser.",
+      "propertiesGridHinweis": "Objekt i ett rutnät, med riktiga priser om de är påslagna.",
       "featuredProperties": "Utvalda boenden",
       "featuredPropertiesHinweis": "Bara de boenden du väljer.",
       "reviews": "Omdömen",
@@ -7487,7 +7487,7 @@
       "mindestGaeste": "Från hur många gäster",
       "anzahl": "Antal",
       "objekte": "Boenden",
-      "kategorienZeigen": "Visa delbetyg",
+      "kategorienZeigen": "Visa kategoribetyg",
       "email": "E-post",
       "telefon": "Telefon",
       "adresse": "Adress",
@@ -7632,7 +7632,7 @@
       },
       "typBeschreibung": {
         "suche": "Resmål, period och antal gäster — leder till boendelistan på din webbplats.",
-        "buchen": "Period och antal gäster — leder direkt in i ditt bokningsflöde."
+        "buchen": "Period och antal gäster — leder till objektlistan på din webbplats, utan destinationsfält."
       },
       "sprache": "Språk",
       "spracheHinweis": "Språket fältet visas på på den andra sidan.",
@@ -7868,7 +7868,7 @@
       "hrbPlaceholder": "HRB 12345",
       "courtPlaceholder": "t.ex. Berlin (Charlottenburg)",
       "employeesPlaceholder": "t.ex. 7",
-      "ibanPlaceholder": "DE00 0000 0000 0000 0000 00",
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00",
       "preferredLanguage": "Föredraget språk",
       "chooseLanguage": "Välj språk",
       "descriptionPlaceholder": "Kort beskrivning av ditt företag…"

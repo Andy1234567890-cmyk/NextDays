@@ -401,7 +401,7 @@
     "cancel": "Cancel",
     "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
     "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
-    "reasonRequired": "Bitte einen Grund wählen.",
+    "reasonRequired": "Please choose a reason.",
     "skippedBooked": "{count} gebuchte Tage wurden übersprungen — verkaufte Tage lassen sich nicht stoppen.",
     "skippedBookedAll": "Kein Tag gestoppt: alle {count} Tage im Zeitraum sind gebucht."
   },
@@ -3901,7 +3901,7 @@
       "streetPlaceholder": "Sample Street 123",
       "bankPlaceholder": "Deutsche Bank",
       "holderPlaceholder": "John Smith",
-      "ibanPlaceholder": "DE89 3704 0044 0532 0130 00"
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00"
     },
     "pdf": {
       "qrCode": "QR code",
@@ -4203,7 +4203,7 @@
       },
       "emptyState": "No bookings found.",
       "loading": "Loading…",
-      "ownerStay": "Eigennutzung",
+      "ownerStay": "Owner stay",
       "limit": "Limit ({count})",
       "limitAll": "All",
       "columnsMenu": "Columns",
@@ -5367,16 +5367,16 @@
       "removeAmenityAriaLabel": "Remove {amenity}",
       "amenitiesSearchPlaceholder": "Search amenities …",
       "noSearchResults": "No matches.",
-      "zimmerErneutLaden": "Erneut versuchen",
-      "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerFertig": "Fertig",
+      "zimmerErneutLaden": "Try again",
+      "zimmerLaedt": "Loading rooms …",
+      "zimmerFertig": "Done",
       "zimmerBettenHinweis": "Imported from Airbnb and kept within myNextDays and myBestDays — the booking portals do not accept a bed layout.",
-      "masseinheitLabel": "Maßeinheit",
+      "masseinheitLabel": "Unit of measurement",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
       "sizeSqftPrefix": "{size} ft² · ",
-      "gaesteWeniger": "Ein Gast weniger",
-      "gaesteMehr": "Ein Gast mehr",
+      "gaesteWeniger": "One fewer guest",
+      "gaesteMehr": "One more guest",
       "zimmerSuffixPrivat": "private",
       "zimmerSuffixGemeinschaftlich": "shared",
       "zimmerErhoehen": "Add {room}",
@@ -6193,14 +6193,14 @@
         "booked": "Booked",
         "blocked": "Blocked",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "blockedAndStopSell": "Blocked + Stop-Sell",
         "contractEnd": "Contract terminated"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "all channels",
       "nightsCount": "{count, plural, one {# night} other {# nights}}",
       "daysCount": "{count, plural, one {# day} other {# days}}",
-      "ownerStay": "Eigentümer-Aufenthalt"
+      "ownerStay": "Owner stay"
     },
     "calendarViews": {
       "viewLabel": "View",
@@ -6220,9 +6220,9 @@
       "blocking": "Blocking…",
       "createBlockedPeriod": "Create blocked period",
       "priceMinStayBlock": "Price / Min-Stay / Block …",
-      "ownerStay": "Eigennutzung eintragen",
+      "ownerStay": "Add owner stay",
       "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
-      "setStopSell": "Stop-Sell setzen",
+      "setStopSell": "Set Stop-Sell",
       "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
     },
     "propertyLabel": {
@@ -6453,10 +6453,10 @@
       "inPeriod": "in the period",
       "avgNightPrice": "avg. nightly rate",
       "mixedCurrencies": "mixed currencies",
-      "stopSellClear": "Stop-Sell aufheben",
-      "stopSellClearing": "Hebe auf…",
+      "stopSellClear": "Lift Stop-Sell",
+      "stopSellClearing": "Lifting…",
       "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
-      "stopSellEditReason": "Grund ändern",
+      "stopSellEditReason": "Change reason",
       "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
       "legend": "Legend",
       "contractEndLocked": "This block comes from the contract end. It can only be changed via the end date in the property file."
@@ -6476,28 +6476,28 @@
       "feesHint": "Cleaning etc.",
       "personsValue": "{count} pers.",
       "guestsLabel": "Guests",
-      "stayKind": "Art des Aufenthalts",
-      "stayKindGuest": "Gastbuchung",
-      "stayKindOwner": "Eigennutzung",
-      "ownerLabel": "Eigentümer",
+      "stayKind": "Type of stay",
+      "stayKindGuest": "Guest booking",
+      "stayKindOwner": "Owner stay",
+      "ownerLabel": "Owner",
       "ownerContact": "Kontaktdaten des Eigentümers",
       "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
       "steps": {
         "details": "Details",
-        "prices": "Preise & Extras",
-        "policy": "Richtlinien"
+        "prices": "Prices & extras",
+        "policy": "Policies"
       },
       "headings": {
-        "details": "Reservierungsdetails",
-        "prices": "Preise & Extras festlegen",
-        "policy": "Richtlinien festlegen"
+        "details": "Reservation details",
+        "prices": "Set prices & extras",
+        "policy": "Set policies"
       },
-      "ownerSection": "Eigentümer",
+      "ownerSection": "Owner",
       "ownerLoading": "Eigentümer wird ermittelt…",
       "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
       "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
       "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
-      "ownerMissingLink": "Zu den Eigentümern",
+      "ownerMissingLink": "Go to owners",
       "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
       "stayNameLabel": "Who is staying",
       "stayNamePlaceholder": "Name of the person",
@@ -6515,7 +6515,7 @@
       "otaPayout": "Payout from portal",
       "stillOpen": "Still open",
       "cancelReasonPlaceholder": "Reason for the cancellation (will be recorded) …",
-      "ownerStay": "Eigentümer-Aufenthalt",
+      "ownerStay": "Owner stay",
       "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
       "openBooking": "To the full booking",
       "messageGuest": "Message guest"
@@ -7071,7 +7071,7 @@
       "kaution": "Security deposit",
       "lizenznummer": "Licence/registration number",
       "mietvertrag": "Rental agreement",
-      "zimmerAusstattung": "Ausstattung der Zimmer"
+      "zimmerAusstattung": "Room amenities"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -7677,7 +7677,7 @@
       "image": "Image",
       "imageHinweis": "A single image with a caption.",
       "propertiesGrid": "Properties",
-      "propertiesGridHinweis": "All properties in a grid, with real prices.",
+      "propertiesGridHinweis": "Properties in a grid, with real prices if they are switched on.",
       "reviews": "Reviews",
       "reviewsHinweis": "Your own, verified guest reviews.",
       "richText": "Text",
@@ -7787,7 +7787,7 @@
         "suche": "Search field"
       },
       "typBeschreibung": {
-        "buchen": "Dates and number of guests — leads straight into your booking flow.",
+        "buchen": "Dates and number of guests — leads to the property list on your website, without a destination field.",
         "suche": "Destination, dates and number of guests — leads to the property list on your website."
       },
       "typLabel": "Widget type"
@@ -8014,7 +8014,7 @@
       "hrbPlaceholder": "HRB 12345",
       "courtPlaceholder": "e.g. Berlin (Charlottenburg)",
       "employeesPlaceholder": "e.g. 7",
-      "ibanPlaceholder": "DE00 0000 0000 0000 0000 00",
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00",
       "preferredLanguage": "Preferred language",
       "chooseLanguage": "Choose language",
       "descriptionPlaceholder": "Short description of your company…"

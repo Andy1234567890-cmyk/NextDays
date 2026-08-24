@@ -125,74 +125,74 @@
       "text": "Verotiedot ja maksujen aktivoinnin tiedot."
     },
     "branch": {
-      "title": "Verkaufst du schon auf Buchungsportalen?",
-      "text": "Booking.com, Airbnb & Co. — hast du dort schon Objekte, oder fängst du neu an?",
-      "switchTitle": "Ja, ich wechsle",
-      "switchText": "Ich habe schon Objekte auf Booking, Airbnb & Co. und möchte sie importieren.",
-      "newTitle": "Nein, ich fange neu an",
-      "newText": "Ich lege meine Objekte neu an und verbinde die Portale danach."
+      "title": "Myytkö jo varausportaaleissa?",
+      "text": "Booking.com, Airbnb ym. — onko sinulla siellä jo kohteita, vai aloitatko alusta?",
+      "switchTitle": "Kyllä, vaihdan",
+      "switchText": "Minulla on jo kohteita Bookingissa, Airbnb:ssä ym. ja haluan tuoda ne.",
+      "newTitle": "Ei, aloitan alusta",
+      "newText": "Luon kohteeni alusta ja yhdistän portaalit vasta sen jälkeen."
     },
     "switch": {
-      "title": "Bestehende Objekte importieren",
-      "intro": "So holst du deine bestehenden Booking-/Airbnb-Objekte zu myNextDays — ohne Doppelbuchungen.",
+      "title": "Tuo olemassa olevat kohteet",
+      "intro": "Näin tuot olemassa olevat Booking-/Airbnb-kohteesi myNextDaysiin — ilman kaksoisvarauksia.",
       "cutover": {
-        "title": "Wichtig vor dem Verbinden",
-        "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
-        "b": "Vergangene Buchungen und manuelle Sperren kommen NICHT automatisch mit. Trage sie nach dem Import selbst nach.",
-        "c": "Lass dein altes System als Backup laufen und beobachte die ersten Tage genau.",
-        "ack": "Ich habe das verstanden.",
-        "doneTitle": "Hinweise von vor dem Verbinden (erledigt)"
+        "title": "Tärkeää ennen yhdistämistä",
+        "a": "Irrota jokainen portaali aiemmasta järjestelmästäsi, ennen kuin yhdistät sen tähän — kanavaa kohti vain YKSI järjestelmä saa lähettää tietoja.",
+        "b": "Menneet varaukset ja käsin tehdyt sulut EIVÄT siirry automaattisesti. Syötä ne itse tuonnin jälkeen.",
+        "c": "Jätä vanha järjestelmäsi käyntiin varmistukseksi ja seuraa ensimmäisiä päiviä tarkasti.",
+        "ack": "Olen ymmärtänyt tämän.",
+        "doneTitle": "Ohjeet ennen yhdistämistä (tehty)"
       },
       "step1": {
-        "title": "Objekt anlegen",
-        "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
-        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}",
+        "title": "Luo kohde",
+        "text": "Luo yksi kohde jokaista olemassa olevaa ilmoitusta kohti — nimi, laji ja perushinta riittävät liittämiseen.",
+        "count": "{count, plural, =0 {Ei vielä kohteita} one {# kohde} other {# kohdetta}}",
         "airbnbHint": "Tuletko Airbnb:stä? Ohita tämä vaihe — kohteesi tuodaan automaattisesti, kun yhdistät Airbnb:n."
       },
       "step2": {
-        "title": "Portal verbinden & zuordnen",
-        "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
-        "connect": "Portal verbinden",
-        "connectMore": "Weiteres Portal verbinden",
-        "alreadyConnected": "Ein Portal ist schon verbunden und deine Objekte sind übertragen — du musst hier nichts erneut verbinden. Nur für ein WEITERES Portal (z. B. Booking) noch einmal auf „Weiteres Portal verbinden“."
+        "title": "Portaalin yhdistäminen ja liittäminen",
+        "text": "Yhdistä Booking, Airbnb ym. ja liitä portaalin huoneet 1:1 kohteisiisi. Varaukset ja saatavuus tulevat sen jälkeen automaattisesti.",
+        "connect": "Yhdistä portaali",
+        "connectMore": "Yhdistä toinen portaali",
+        "alreadyConnected": "Yksi portaali on jo yhdistetty ja kohteesi on lähetetty — täällä ei tarvitse yhdistää uudelleen. Käytä kohtaa „Yhdistä toinen portaali“ vain LISÄportaalille (esim. Booking)."
       },
       "pull": {
-        "button": "Objekte aus Portal holen",
-        "result": "{count, plural, =0 {Keine neuen Objekte gefunden} one {# Objekt übernommen} other {# Objekte übernommen}}"
+        "button": "Hae kohteet portaalista",
+        "result": "{count, plural, =0 {Uusia kohteita ei löytynyt} one {# kohde otettu käyttöön} other {# kohdetta otettu käyttöön}}"
       },
-      "finishCta": "Import abschließen",
-      "finishHint": "Bitte bestätige zuerst den Hinweis oben und lege mindestens ein Objekt an.",
+      "finishCta": "Viimeistele tuonti",
+      "finishHint": "Vahvista ensin yllä oleva ohje ja luo vähintään yksi kohde.",
       "bookings": {
-        "title": "Bestehende Buchungen einlesen",
-        "text": "Hol dir die Reservierungen deiner verbundenen Portale in deinen Kalender.",
-        "includePast": "Auch vergangene Buchungen einlesen",
-        "pastHint": "Hinweis: Portale liefern in der Regel nur Buchungen ab dem Zeitpunkt der Verbindung. Bereits abgereiste Gäste von davor sind oft nicht mehr abrufbar.",
-        "button": "Buchungen einlesen",
-        "result": "{count, plural, =0 {Keine Buchungen gefunden} one {# Buchung eingelesen} other {# Buchungen eingelesen}}"
+        "title": "Olemassa olevien varausten sisäänluku",
+        "text": "Hae yhdistettyjen portaaliesi varaukset kalenteriisi.",
+        "includePast": "Lue sisään myös menneet varaukset",
+        "pastHint": "Huomio: portaalit toimittavat yleensä vain varaukset yhdistämishetkestä eteenpäin. Ennen sitä lähteneitä vieraita ei useinkaan voi enää hakea.",
+        "button": "Tuo varaukset",
+        "result": "{count, plural, =0 {Varauksia ei löytynyt} one {# varaus luettu sisään} other {# varausta luettu sisään}}"
       },
       "csv": {
-        "title": "Alte & direkte Buchungen per Datei importieren",
-        "text": "Für Buchungen, die nicht über die Portale kommen (Direktbuchungen, vergangene Reservierungen aus deinem alten System).",
-        "downloadTemplate": "Vorlage herunterladen",
-        "upload": "CSV hochladen",
-        "hint": "Lade die Vorlage, fülle sie aus (Datum als JJJJ-MM-TT) und lade sie wieder hoch. Pflicht: Objekt, Gastname, Anreise, Abreise. Doppelte Zeilen werden übersprungen.",
-        "result": "{imported} von {total} Buchungen importiert.",
-        "skipped": "{count, plural, one {# Zeile übersprungen (Duplikat/Objekt fehlt)} other {# Zeilen übersprungen (Duplikat/Objekt fehlt)}}",
-        "failed": "{count, plural, one {# Zeile mit Fehler} other {# Zeilen mit Fehlern}}:"
+        "title": "Tuo vanhat ja suorat varaukset tiedostosta",
+        "text": "Varauksille, jotka eivät tule portaalien kautta (suoravaraukset, menneet varaukset vanhasta järjestelmästäsi).",
+        "downloadTemplate": "Lataa mallipohja",
+        "upload": "Lataa CSV",
+        "hint": "Lataa pohja, täytä se (päivämäärä muodossa VVVV-KK-PP) ja lataa se takaisin. Pakolliset: kohde, vieraan nimi, saapuminen, lähtö. Kaksoisrivit ohitetaan.",
+        "result": "Tuotiin {imported}/{total} varausta.",
+        "skipped": "{count, plural, one {# rivi ohitettu (kaksoiskappale/kohde puuttuu)} other {# riviä ohitettu (kaksoiskappale/kohde puuttuu)}}",
+        "failed": "{count, plural, one {# rivi virheellinen} other {# riviä virheellisiä}}:"
       },
       "lodgify": {
-        "title": "Buchungen aus Lodgify holen",
-        "text": "Wenn du von Lodgify wechselst: importiere deine Buchungen direkt per API-Schlüssel (nur lesend, es wird nichts in Lodgify geändert).",
-        "keyLabel": "Lodgify-API-Schlüssel",
-        "keyPlaceholder": "Aus Lodgify: Einstellungen → Public API",
-        "keyHint": "Der Schlüssel wird nur für diesen Import genutzt und nicht gespeichert. Wir lesen ausschließlich – wir ändern nichts in Lodgify.",
-        "preview": "Vorschau laden",
-        "import": "{count, plural, one {# Buchung importieren} other {# Buchungen importieren}}",
-        "previewResult": "{importable} von {total} Buchungen können importiert werden.",
-        "result": "{imported} von {total} Buchungen importiert."
+        "title": "Hae varaukset Lodgifystä",
+        "text": "Jos vaihdat Lodgifystä: tuo varauksesi suoraan API-avaimella (vain luku, Lodgifyssä ei muuteta mitään).",
+        "keyLabel": "Lodgifyn API-avain",
+        "keyPlaceholder": "Lodgifystä: Asetukset → Public API",
+        "keyHint": "Avainta käytetään vain tähän tuontiin eikä sitä tallenneta. Luemme vain — emme muuta mitään Lodgifyssä.",
+        "preview": "Lataa esikatselu",
+        "import": "{count, plural, one {Tuo # varaus} other {Tuo # varausta}}",
+        "previewResult": "{total} varauksesta {importable} voidaan tuoda.",
+        "result": "Tuotiin {imported}/{total} varausta."
       },
       "finish": {
-        "notRegistered": "Mindestens ein Objekt muss an die Buchungsportale übermittelt sein, bevor du das Onboarding abschließt. Verbinde in Schritt 2 ein Portal — dabei wird das Objekt automatisch übertragen."
+        "notRegistered": "Vähintään yksi kohde on lähetettävä varausportaaleihin, ennen kuin päätät käyttöönoton. Yhdistä portaali vaiheessa 2 — kohde lähetetään samalla automaattisesti."
       }
     }
   },
@@ -208,7 +208,7 @@
     "websiteDesign": "Ulkoasu",
     "websitePages": "Sivut",
     "websiteDomain": "Osoite",
-    "channelManager": "Channel Manager",
+    "channelManager": "Kanavien hallinta",
     "guests": "Vieraat",
     "tasks": "Tehtävät",
     "invoices": "Laskut",
@@ -364,7 +364,7 @@
     "sourceManual": "Manual",
     "sourceChannex": "Matkanjärjestäjältä",
     "clear": "Clear",
-    "readonly": "Portal",
+    "readonly": "Portaali",
     "toIncl": "Asti",
     "calendarHint": "Vedä kohteen päivien yli valitaksesi ajanjakson.",
     "legendOpen": "Vapaa",
@@ -399,11 +399,11 @@
     "resetConfirm": "Kyllä, poista kaikki",
     "resetting": "Resetting …",
     "cancel": "Cancel",
-    "noteRequired": "Bei „Sonstiges“ ist eine Notiz nötig.",
-    "noteRequiredLabel": "Notiz (Pflicht bei „Sonstiges“)",
-    "reasonRequired": "Bitte einen Grund wählen.",
-    "skippedBooked": "{count} gebuchte Tage wurden übersprungen — verkaufte Tage lassen sich nicht stoppen.",
-    "skippedBookedAll": "Kein Tag gestoppt: alle {count} Tage im Zeitraum sind gebucht."
+    "noteRequired": "Kohdassa „Muu“ tarvitaan muistiinpano.",
+    "noteRequiredLabel": "Muistiinpano (pakollinen kohdassa „Muu“)",
+    "reasonRequired": "Valitse syy.",
+    "skippedBooked": "{count} varattua päivää ohitettiin — myytyjä päiviä ei voi pysäyttää.",
+    "skippedBookedAll": "Yhtään päivää ei pysäytetty: kaikki {count} päivää jaksolla ovat varattuja."
   },
   "inbox": {
     "title": "Inbox",
@@ -3901,7 +3901,7 @@
       "streetPlaceholder": "Esimerkkikatu 123",
       "bankPlaceholder": "Deutsche Bank",
       "holderPlaceholder": "Matti Meikäläinen",
-      "ibanPlaceholder": "DE89 3704 0044 0532 0130 00"
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00"
     },
     "pdf": {
       "qrCode": "QR-koodi",
@@ -4203,7 +4203,7 @@
       },
       "emptyState": "Varauksia ei löytynyt.",
       "loading": "Ladataan…",
-      "ownerStay": "Eigennutzung",
+      "ownerStay": "Omistajan käyttö",
       "limit": "Raja ({count})",
       "limitAll": "Kaikki",
       "columnsMenu": "Sarakkeet",
@@ -4621,8 +4621,8 @@
       "openGuestCard": "Avaa vieraskortti",
       "photos": "Kuvat",
       "noPhotosFound": "Tälle varaukselle ei löytynyt kuvia.",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Omistajan oleskelu",
+      "ownerStayHint": "Ei myyntiä — ei laskua eikä provisiota, ei mukana omistajan tilityksessä.",
       "viaChannel": "kanavan {channel} kautta",
       "receivedOn": "vastaanotettu meille {date}",
       "bookedOn": "varattu {date}"
@@ -4978,7 +4978,7 @@
   },
   "objects": {
     "channelChips": {
-      "website": "Website",
+      "website": "Verkkosivusto",
       "platform": "Platform",
       "portals": "Portals",
       "state": {
@@ -4995,7 +4995,7 @@
       "publishAll": "Julkaise kaikkialla",
       "publishedAll": "Kohde julkaistu kaikissa kanavissa.",
       "draftHint": "Tämä kohde on luonnos eikä sitä myydä missään kanavassa. Aseta se tilaan \"Aktiivinen\" julkaistaksesi sen.",
-      "groupWebsite": "Website",
+      "groupWebsite": "Verkkosivusto",
       "groupPlatform": "Plattform",
       "groupPortals": "Portale",
       "connectPortal": "Yhdistä portaali",
@@ -5047,7 +5047,7 @@
       "sortAz": "A–Ö",
       "sortZa": "Ö–A",
       "menuOpen": "Toiminnot",
-      "menuEdit": "Bearbeiten",
+      "menuEdit": "Muokkaa",
       "menuDelete": "Delete",
       "deleteConfirm": "Haluatko varmasti poistaa kohteen ”{title}”?",
       "deleteOk": "Kohde poistettu.",
@@ -5346,16 +5346,16 @@
       "removeAmenityAriaLabel": "Poista {amenity}",
       "amenitiesSearchPlaceholder": "Hae varusteita …",
       "noSearchResults": "Ei hakutuloksia.",
-      "zimmerErneutLaden": "Erneut versuchen",
-      "zimmerLaedt": "Zimmer werden geladen …",
-      "zimmerFertig": "Fertig",
+      "zimmerErneutLaden": "Yritä uudelleen",
+      "zimmerLaedt": "Huoneita ladataan …",
+      "zimmerFertig": "Valmis",
       "zimmerBettenHinweis": "Tuodaan Airbnb:stä ja säilyy myNextDays- ja myBestDays-palveluissa — varausportaalit eivät ota vastaan vuodejakaumaa.",
-      "masseinheitLabel": "Maßeinheit",
+      "masseinheitLabel": "Mittayksikkö",
       "masseinheitQm": "m²",
       "masseinheitQft": "ft²",
       "sizeSqftPrefix": "{size} ft² · ",
-      "gaesteWeniger": "Ein Gast weniger",
-      "gaesteMehr": "Ein Gast mehr",
+      "gaesteWeniger": "Yksi vieras vähemmän",
+      "gaesteMehr": "Yksi vieras enemmän",
       "zimmerSuffixPrivat": "yksityinen",
       "zimmerSuffixGemeinschaftlich": "jaettu",
       "zimmerErhoehen": "Lisää {room}",
@@ -5930,7 +5930,7 @@
         "zweibettzimmer": "Twin room",
         "familienzimmer": "Family room",
         "junior_suite": "Junior suite",
-        "suite": "Suite"
+        "suite": "Sviitti"
       }
     },
     "sync": {
@@ -5985,20 +5985,20 @@
         "schliessen": "Sulje"
       },
       "airbnbPull": {
-        "button": "Bei Airbnb abrufen",
-        "hint": "Ordnet dieses Objekt bei Airbnb zu und holt den Preis von dort.",
-        "priceTaken": "Preis von Airbnb übernommen: {price} · Mindestaufenthalt {nights} Nächte",
-        "noPrice": "Airbnb hat keinen Preis übergeben. Die Zuordnung steht.",
-        "currency": "Währung: {currency}",
-        "timezone": "Zeitzone: {timezone}",
-        "alsoTaken": "Ebenfalls übernommen: {fields}",
+        "button": "Hae Airbnb:stä",
+        "hint": "Liittää tämän kohteen Airbnb:ssä ja hakee hinnan sieltä.",
+        "priceTaken": "Hinta otettu Airbnb:stä: {price} · vähimmäisoleskelu {nights} yötä",
+        "noPrice": "Airbnb ei palauttanut hintaa. Liitos on tehty.",
+        "currency": "Valuutta: {currency}",
+        "timezone": "Aikavyöhyke: {timezone}",
+        "alsoTaken": "Otettiin myös: {fields}",
         "field": {
-          "check_in_from": "Check-in-Zeit",
-          "check_out_until": "Check-out-Zeit",
-          "pets_allowed": "Haustiere erlaubt",
-          "pets_max": "Anzahl Haustiere",
-          "smoking_allowed": "Rauchen",
-          "max_nights": "Maximale Nächte",
+          "check_in_from": "Sisäänkirjautumisaika",
+          "check_out_until": "Uloskirjautumisaika",
+          "pets_allowed": "Lemmikit sallittu",
+          "pets_max": "Lemmikkien määrä",
+          "smoking_allowed": "Tupakointi",
+          "max_nights": "Enimmäisyöpymiset",
           "address": "Osoite",
           "postal_code": "Postinumero",
           "city": "Kaupunki",
@@ -6172,14 +6172,14 @@
         "booked": "Varattu",
         "blocked": "Suljettu",
         "stopSell": "Stop-Sell",
-        "blockedAndStopSell": "Gesperrt + Stop-Sell",
+        "blockedAndStopSell": "Suljettu + Stop-Sell",
         "contractEnd": "Sopimus irtisanottu"
       },
       "stopSellOta": "OTA",
       "stopSellAllChannels": "kaikki kanavat",
       "nightsCount": "{count, plural, one {# yö} other {# yötä}}",
       "daysCount": "{count, plural, one {# päivä} other {# päivää}}",
-      "ownerStay": "Eigentümer-Aufenthalt"
+      "ownerStay": "Omistajan oleskelu"
     },
     "calendarViews": {
       "viewLabel": "Näkymä",
@@ -6199,10 +6199,10 @@
       "blocking": "Suljetaan…",
       "createBlockedPeriod": "Luo suljettu ajanjakso",
       "priceMinStayBlock": "Hinta / vähimmäisoleskelu / sulku …",
-      "ownerStay": "Eigennutzung eintragen",
-      "createBlockedPeriodHint": "Verfügbarkeit 0 — der Tag ist überall zu",
-      "setStopSell": "Stop-Sell setzen",
-      "setStopSellHint": "Tag bleibt frei, wird aber nicht verkauft — mit Grund"
+      "ownerStay": "Kirjaa omistajan käyttö",
+      "createBlockedPeriodHint": "Saatavuus 0 — päivä on suljettu kaikkialla",
+      "setStopSell": "Aseta Stop-Sell",
+      "setStopSellHint": "Päivä pysyy vapaana, mutta sitä ei myydä — syyn kanssa"
     },
     "propertyLabel": {
       "maxGuestsTitle": "Tälle kohteelle asetettu henkilömäärä",
@@ -6432,11 +6432,11 @@
       "occupancy": "Käyttöaste",
       "propertyNights": "{booked}/{total} kohdeyötä",
       "revenue": "Liikevaihto",
-      "stopSellClear": "Stop-Sell aufheben",
-      "stopSellClearing": "Hebe auf…",
-      "stopSellClearNothing": "Hier war kein Stop-Sell zum Aufheben.",
-      "stopSellEditReason": "Grund ändern",
-      "stopSellPortalLocked": "Vom Portal gesetzt — nur dort aufhebbar.",
+      "stopSellClear": "Poista Stop-Sell",
+      "stopSellClearing": "Poistetaan…",
+      "stopSellClearNothing": "Täällä ei ollut Stop-Selliä poistettavaksi.",
+      "stopSellEditReason": "Muuta syytä",
+      "stopSellPortalLocked": "Portaalin asettama — voidaan poistaa vain siellä.",
       "legend": "Selite",
       "contractEndLocked": "Tämä sulku johtuu sopimuksen päättymisestä. Sitä voi muuttaa vain kohteen kortin päättymispäivän kautta."
     },
@@ -6455,29 +6455,29 @@
       "feesHint": "Siivous jne.",
       "personsValue": "{count} hlö",
       "guestsLabel": "Vieraat",
-      "stayKind": "Art des Aufenthalts",
-      "stayKindGuest": "Gastbuchung",
-      "stayKindOwner": "Eigennutzung",
-      "ownerLabel": "Eigentümer",
-      "ownerContact": "Kontaktdaten des Eigentümers",
-      "ownerStayHint": "Eigennutzung belegt den Kalender wie eine Buchung, erzeugt aber keinen Umsatz: kein Preis, keine Rechnung, keine Provision und nichts in der Eigentümer-Abrechnung.",
+      "stayKind": "Oleskelun tyyppi",
+      "stayKindGuest": "Vieraan varaus",
+      "stayKindOwner": "Omistajan käyttö",
+      "ownerLabel": "Omistaja",
+      "ownerContact": "Omistajan yhteystiedot",
+      "ownerStayHint": "Omistajan oma käyttö varaa kalenterin kuin varaus, mutta ei tuota myyntiä: ei hintaa, ei laskua, ei provisiota eikä mitään omistajan tilitykseen.",
       "steps": {
-        "details": "Details",
-        "prices": "Preise & Extras",
-        "policy": "Richtlinien"
+        "details": "Tiedot",
+        "prices": "Hinnat ja lisät",
+        "policy": "Säännöt"
       },
       "headings": {
-        "details": "Reservierungsdetails",
-        "prices": "Preise & Extras festlegen",
-        "policy": "Richtlinien festlegen"
+        "details": "Varauksen tiedot",
+        "prices": "Määritä hinnat ja lisät",
+        "policy": "Määritä säännöt"
       },
-      "ownerSection": "Eigentümer",
-      "ownerLoading": "Eigentümer wird ermittelt…",
-      "ownerLoadFailed": "Eigentümer konnte nicht geladen werden.",
-      "ownerMissing": "Für dieses Objekt ist kein Eigentümer hinterlegt.",
-      "ownerMissingHint": "Eine Eigennutzung braucht den hinterlegten Eigentümer. Lege ihn unter Eigentümer an und ordne ihm dieses Objekt zu.",
-      "ownerMissingLink": "Zu den Eigentümern",
-      "ownerFromRecord": "Aus den Eigentümer-Stammdaten übernommen. Änderungen an den Kontaktdaten erfolgen unter Eigentümer.",
+      "ownerSection": "Omistaja",
+      "ownerLoading": "Omistajaa selvitetään…",
+      "ownerLoadFailed": "Omistajaa ei voitu ladata.",
+      "ownerMissing": "Tälle kohteelle ei ole tallennettu omistajaa.",
+      "ownerMissingHint": "Omistajan oma käyttö vaatii tallennetun omistajan. Luo hänet kohdassa Omistajat ja liitä tämä kohde hänelle.",
+      "ownerMissingLink": "Omistajiin",
+      "ownerFromRecord": "Otettu omistajan perustiedoista. Yhteystietojen muutokset tehdään kohdassa Omistajat.",
       "stayNameLabel": "Kuka majoittuu",
       "stayNamePlaceholder": "Henkilön nimi",
       "stayNameHint": "Jätä tyhjäksi omistajalle. Muuten sen henkilön nimi, joka käyttää jakson — perhe, ystävät, remonttimiehet.",
@@ -6494,8 +6494,8 @@
       "otaPayout": "Maksu portaalilta",
       "stillOpen": "Vielä avoinna",
       "cancelReasonPlaceholder": "Peruutuksen syy (kirjataan) …",
-      "ownerStay": "Eigentümer-Aufenthalt",
-      "ownerStayHint": "Kein Umsatz — weder Rechnung noch Provision, nicht in der Eigentümer-Abrechnung.",
+      "ownerStay": "Omistajan oleskelu",
+      "ownerStayHint": "Ei myyntiä — ei laskua eikä provisiota, ei mukana omistajan tilityksessä.",
       "openBooking": "Koko varaukseen",
       "messageGuest": "Kirjoita vieraalle"
     },
@@ -6704,7 +6704,7 @@
     "seasonApplyNoSpans": "Tällä sesongilla ei ole maalattuja jaksoja. Maalaa se ensin tai siirrä vain määritys ilman jaksoja."
   },
   "channels": {
-    "title": "Channel Manager",
+    "title": "Kanavien hallinta",
     "subtitle": "Yhdistä varausportaalisi ja jaa saatavuus ja hinnat automaattisesti kaikkiin kanaviin.",
     "categoryOta": "Varausportaalit",
     "categoryMarketplace": "Oma markkinapaikka",
@@ -6786,7 +6786,7 @@
       "sendUserTaxes": "Lähetä omat verot",
       "blockedNote": "Kun tämä on pois, kanavalle ei lähetetä omia veroja."
     },
-    "linkedPending": "{count, plural, =0 {Konto verbunden · Zuordnung offen} one {Konto verbunden · # Objekt noch zuzuordnen} other {Konto verbunden · # Objekte noch zuzuordnen}}",
+    "linkedPending": "{count, plural, =0 {Tili yhdistetty · liitos kesken} one {Tili yhdistetty · # kohde vielä liitettävä} other {Tili yhdistetty · # kohdetta vielä liitettävä}}",
     "activateChannel": "Aktivoi kanava",
     "activateDone": "{portal} on nyt aktiivinen.",
     "activateFailed": "Kanavaa ei voitu aktivoida.",
@@ -6942,7 +6942,7 @@
     "clientSecret": "Client secret",
     "copy": "Kopioi",
     "copied": "Kopioitu.",
-    "done": "Fertig",
+    "done": "Valmis",
     "colName": "Name",
     "colEnv": "Ympäristö",
     "colScopes": "Oikeudet",
@@ -7010,7 +7010,7 @@
       "nurMitEntsprechung": "vain ominaisuudet, joilla on vastine portaalissa",
       "nichtDeckungsgleich": "kategoriat eivät täsmää täysin",
       "ohneBeleg": "ei vahvistettu — selvitämme asiaa",
-      "ohneZimmerZuordnung": "ohne Zuordnung zum einzelnen Zimmer"
+      "ohneZimmerZuordnung": "ilman liitosta yksittäiseen huoneeseen"
     },
     "status": {
       "voll": "transferred",
@@ -7050,7 +7050,7 @@
       "kaution": "Vakuus",
       "lizenznummer": "Lisenssi-/rekisterinumero",
       "mietvertrag": "Vuokrasopimus",
-      "zimmerAusstattung": "Ausstattung der Zimmer"
+      "zimmerAusstattung": "Huoneiden varusteet"
     },
     "gruppen": {
       "stammdaten": "Basic data",
@@ -7088,7 +7088,7 @@
       "create": "Luo ehto",
       "update": "Päivitä ehto",
       "empty": "Ei vielä ehtoja. Luo ensimmäinen varausehtosi — maksusuunnitelma, peruutus ja vakuus.",
-      "colName": "Name",
+      "colName": "Nimi",
       "colPaymentPlan": "Maksusuunnitelma",
       "colCancellation": "Peruutus",
       "colDeposit": "Vakuusmaksu",
@@ -7143,7 +7143,7 @@
       "amount": "Summa",
       "depositStep3": "3. Esivaltuutuksen ajankohdat",
       "preauthFromHint": "Mistä alkaen vieraan kortti esivaltuutetaan.",
-      "days": "Tage",
+      "days": "Päivät",
       "preauthUntilHint": "Mihin asti esivaltuutus voidaan tehdä — tämän päivämäärän jälkeen avoimet esivaltuutukset vapautetaan.",
       "releaseDays": "Vapauta päivää lähdön jälkeen",
       "preauthWarnStrong": "Esivaltuutukset voidaan usein taata vain noin 7 päiväksi.",
@@ -7442,7 +7442,7 @@
       "search": "Haku",
       "searchHinweis": "Hakupalkki, jossa päivämäärät ja vieraiden määrä.",
       "propertiesGrid": "Kohteet",
-      "propertiesGridHinweis": "Kaikki kohteet ruudukkona, todellisilla hinnoilla.",
+      "propertiesGridHinweis": "Kohteet ruudukossa, todellisilla hinnoilla, jos ne on kytketty päälle.",
       "featuredProperties": "Valitut kohteet",
       "featuredPropertiesHinweis": "Vain ne kohteet, jotka itse valitset.",
       "reviews": "Arvostelut",
@@ -7489,7 +7489,7 @@
       "mindestGaeste": "Vähintään näin monta vierasta",
       "anzahl": "Määrä",
       "objekte": "Kohteet",
-      "kategorienZeigen": "Näytä osa-arviot",
+      "kategorienZeigen": "Näytä kategoria-arviot",
       "email": "Sähköposti",
       "telefon": "Puhelin",
       "adresse": "Osoite",
@@ -7634,7 +7634,7 @@
       },
       "typBeschreibung": {
         "suche": "Kohde, ajanjakso ja vieraiden määrä — johtaa sivustosi kohdeluetteloon.",
-        "buchen": "Ajanjakso ja vieraiden määrä — johtaa suoraan varausvaiheeseesi."
+        "buchen": "Ajanjakso ja vieraiden määrä — johtaa verkkosivustosi kohdelistaan ilman määränpääkenttää."
       },
       "sprache": "Kieli",
       "spracheHinweis": "Kieli, jolla kenttä näkyy toisella sivulla.",
@@ -7870,7 +7870,7 @@
       "hrbPlaceholder": "HRB 12345",
       "courtPlaceholder": "esim. Berliini (Charlottenburg)",
       "employeesPlaceholder": "esim. 7",
-      "ibanPlaceholder": "DE00 0000 0000 0000 0000 00",
+      "ibanPlaceholder": "XX00 0000 0000 0000 0000 00",
       "preferredLanguage": "Ensisijainen kieli",
       "chooseLanguage": "Valitse kieli",
       "descriptionPlaceholder": "Lyhyt kuvaus yrityksestäsi…"
