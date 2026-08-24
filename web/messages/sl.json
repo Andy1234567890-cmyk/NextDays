@@ -7350,6 +7350,10 @@
         "post": {
           "name": "Prispevek na blogu",
           "hinweis": "Prispevek za blog. Prikaže se na /blog, ne v meniju."
+        },
+        "popup": {
+          "name": "Pojavno okno",
+          "hinweis": "Okno, ki se položi čez stran. V meniju ga ni."
         }
       },
       "vorlage": {

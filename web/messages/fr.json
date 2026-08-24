@@ -7352,6 +7352,10 @@
         "post": {
           "name": "Article de blog",
           "hinweis": "Un article pour le blog. Apparaît sous /blog, pas dans le menu."
+        },
+        "popup": {
+          "name": "Fenêtre surgissante",
+          "hinweis": "Une fenêtre qui se pose sur la page. Pas dans le menu."
         }
       },
       "vorlage": {

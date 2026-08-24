@@ -7352,6 +7352,10 @@
         "post": {
           "name": "Objava na blogu",
           "hinweis": "Objava za blog. Prikazuje se na /blog, ne u izborniku."
+        },
+        "popup": {
+          "name": "Skočni prozor",
+          "hinweis": "Prozor koji se postavlja preko stranice. Nije u izborniku."
         }
       },
       "vorlage": {

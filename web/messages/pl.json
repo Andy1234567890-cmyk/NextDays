@@ -7350,6 +7350,10 @@
         "post": {
           "name": "Wpis na blogu",
           "hinweis": "Wpis na bloga. Pojawia się pod /blog, nie w menu."
+        },
+        "popup": {
+          "name": "Wyskakujące okno",
+          "hinweis": "Okno, które nakłada się na stronę. Nie ma go w menu."
         }
       },
       "vorlage": {

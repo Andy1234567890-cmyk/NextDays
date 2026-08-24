@@ -7352,6 +7352,10 @@
         "post": {
           "name": "Blogipostitus",
           "hinweis": "Postitus blogi jaoks. Ilmub aadressil /blog, mitte menüüs."
+        },
+        "popup": {
+          "name": "Hüpikaken",
+          "hinweis": "Aken, mis asetub lehe peale. Menüüs seda ei ole."
         }
       },
       "vorlage": {

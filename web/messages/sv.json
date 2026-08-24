@@ -7350,6 +7350,10 @@
         "post": {
           "name": "Blogginlägg",
           "hinweis": "Ett inlägg till bloggen. Visas på /blog, inte i menyn."
+        },
+        "popup": {
+          "name": "Popup",
+          "hinweis": "Ett fönster som läggs över sidan. Inte i menyn."
         }
       },
       "vorlage": {

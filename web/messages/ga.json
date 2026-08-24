@@ -7352,6 +7352,10 @@
         "post": {
           "name": "Postáil bhlag",
           "hinweis": "Postáil don bhlag. Taispeántar ag /blog í, ní sa roghchlár."
+        },
+        "popup": {
+          "name": "Preabfhuinneog",
+          "hinweis": "Fuinneog a leagtar anuas ar an leathanach. Níl sí sa roghchlár."
         }
       },
       "vorlage": {

@@ -7350,6 +7350,10 @@
         "post": {
           "name": "Artiklu tal-blog",
           "hinweis": "Artiklu għall-blog. Jidher fuq /blog, mhux fil-menu."
+        },
+        "popup": {
+          "name": "Tieqa popup",
+          "hinweis": "Tieqa li titqiegħed fuq il-paġna. Mhijiex fil-menu."
         }
       },
       "vorlage": {

@@ -7350,6 +7350,10 @@
         "post": {
           "name": "Príspevok na blog",
           "hinweis": "Príspevok pre blog. Zobrazí sa na /blog, nie v ponuke."
+        },
+        "popup": {
+          "name": "Vyskakovacie okno",
+          "hinweis": "Okno, ktoré sa položí cez stránku. V ponuke nie je."
         }
       },
       "vorlage": {

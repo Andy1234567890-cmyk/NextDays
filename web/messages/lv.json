@@ -7350,6 +7350,10 @@
         "post": {
           "name": "Emuāra ieraksts",
           "hinweis": "Ieraksts emuāram. Parādās /blog, nevis izvēlnē."
+        },
+        "popup": {
+          "name": "Uznirstošais logs",
+          "hinweis": "Logs, kas novietojas pāri lapai. Izvēlnē tā nav."
         }
       },
       "vorlage": {

@@ -7352,6 +7352,10 @@
         "post": {
           "name": "Blogbejegyzés",
           "hinweis": "Bejegyzés a bloghoz. A /blog címen jelenik meg, nem a menüben."
+        },
+        "popup": {
+          "name": "Felugró ablak",
+          "hinweis": "Ablak, amely az oldal fölé kerül. A menüben nem jelenik meg."
         }
       },
       "vorlage": {

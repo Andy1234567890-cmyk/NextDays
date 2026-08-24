@@ -7352,6 +7352,10 @@
         "post": {
           "name": "Blogindlæg",
           "hinweis": "Et indlæg til bloggen. Vises på /blog, ikke i menuen."
+        },
+        "popup": {
+          "name": "Pop-up",
+          "hinweis": "Et vindue, der lægger sig over siden. Ikke i menuen."
         }
       },
       "vorlage": {

@@ -7352,6 +7352,10 @@
         "post": {
           "name": "Entrada de blog",
           "hinweis": "Una entrada para el blog. Aparece en /blog, no en el menú."
+        },
+        "popup": {
+          "name": "Ventana emergente",
+          "hinweis": "Una ventana que se superpone a la página. No aparece en el menú."
         }
       },
       "vorlage": {

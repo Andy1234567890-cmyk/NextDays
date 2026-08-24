@@ -7350,6 +7350,10 @@
         "post": {
           "name": "Articol de blog",
           "hinweis": "Un articol pentru blog. Apare la /blog, nu în meniu."
+        },
+        "popup": {
+          "name": "Fereastră pop-up",
+          "hinweis": "O fereastră care se așază peste pagină. Nu apare în meniu."
         }
       },
       "vorlage": {

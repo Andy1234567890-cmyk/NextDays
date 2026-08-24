@@ -7350,6 +7350,10 @@
         "post": {
           "name": "Artigo do blogue",
           "hinweis": "Um artigo para o blogue. Aparece em /blog, não no menu."
+        },
+        "popup": {
+          "name": "Janela pop-up",
+          "hinweis": "Uma janela que se sobrepõe à página. Não aparece no menu."
         }
       },
       "vorlage": {

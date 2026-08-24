@@ -7466,6 +7466,10 @@
         "post": {
           "name": "Blog post",
           "hinweis": "A post for the blog. Appears at /blog, not in the menu."
+        },
+        "popup": {
+          "name": "Pop-up",
+          "hinweis": "A window that appears on top of the page. Not in the menu."
         }
       },
       "vorlage": {

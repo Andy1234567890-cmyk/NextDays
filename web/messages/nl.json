@@ -7350,6 +7350,10 @@
         "post": {
           "name": "Blogbericht",
           "hinweis": "Een bericht voor de blog. Verschijnt op /blog, niet in het menu."
+        },
+        "popup": {
+          "name": "Pop-up",
+          "hinweis": "Een venster dat over de pagina heen komt. Niet in het menu."
         }
       },
       "vorlage": {

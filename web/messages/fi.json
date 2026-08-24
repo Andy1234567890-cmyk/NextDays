@@ -7352,6 +7352,10 @@
         "post": {
           "name": "Blogiartikkeli",
           "hinweis": "Artikkeli blogiin. Näkyy osoitteessa /blog, ei valikossa."
+        },
+        "popup": {
+          "name": "Ponnahdusikkuna",
+          "hinweis": "Ikkuna, joka asettuu sivun päälle. Ei valikossa."
         }
       },
       "vorlage": {

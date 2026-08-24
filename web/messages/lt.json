@@ -7350,6 +7350,10 @@
         "post": {
           "name": "Tinklaraščio įrašas",
           "hinweis": "Įrašas tinklaraščiui. Rodomas adresu /blog, ne meniu."
+        },
+        "popup": {
+          "name": "Iššokantis langas",
+          "hinweis": "Langas, kuris užsideda ant puslapio. Meniu jo nėra."
         }
       },
       "vorlage": {

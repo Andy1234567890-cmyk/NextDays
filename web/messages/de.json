@@ -7589,6 +7589,10 @@
         "post": {
           "name": "Blog-Beitrag",
           "hinweis": "Ein Beitrag für den Blog. Erscheint unter /blog, nicht im Menü."
+        },
+        "popup": {
+          "name": "Popup",
+          "hinweis": "Ein Fenster, das sich über die Seite legt. Nicht im Menü."
         }
       },
       "vorlage": {
