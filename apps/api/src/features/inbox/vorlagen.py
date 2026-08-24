@@ -271,6 +271,20 @@ class VorlagenMixin:
         # Sprachfassungen an eine Vorlage, die dieser Betrieb nicht besitzt
         # (Wurzel 3 — der Scope entscheidet, nicht die mitgeschickte ID).
         texte = self._sprachfassungen_schreiben(db, tenant_id, template_id, req.texts)
+        # Wurzel 1 — der Gegenzustand einer Vorlagen-Änderung sind die bereits
+        # EINGEPLANTEN Automails. `_automation_body` materialisiert den Text je
+        # Buchung beim Planen; die Zeile in `automation_scheduled_message` hält
+        # ihn danach fest, und der Versand kennt nur diese Zeile, nicht die
+        # Vorlage. Ohne Neuplanung ging der ALTE Wortlaut weiter hinaus, bis
+        # der stündliche Worker-Tick zufällig vorbeikam.
+        #
+        # Das trifft die Sprachfassungen am härtesten: wer die fehlende
+        # italienische Fassung nachpflegt, um genau diesen Gast zu erreichen,
+        # sieht bis zu einer Stunde lang keine Wirkung — und wenn die Automail
+        # in dieser Stunde fällig wird, bekommt der Gast trotzdem die alte
+        # Sprache. `update_automation` macht das seit 0307 richtig; der
+        # Vorlagen-Pfad schreibt denselben Text und tat es nicht.
+        self.replan_tenant(tenant_id)
         return self._als_vorlage(upd[0], texte)
 
     def delete_template(self, ctx: AuthContext, template_id: str) -> None:
@@ -278,6 +292,13 @@ class VorlagenMixin:
         db.table("message_template").delete().eq("tenant_id", tenant_id).eq(
             "id", template_id
         ).execute()
+        # Gegenzustand (Wurzel 1): der Fremdschlüssel setzt `template_id` der
+        # Regeln auf NULL, aber die schon eingeplanten Automails tragen den
+        # Text der gelöschten Vorlage weiter und würden ihn versenden. Nach der
+        # Neuplanung greift entweder der eigene Text der Regel oder sie wird
+        # stillgelegt (`_stilllegen`) — beides ist richtig, „gelöscht und
+        # trotzdem verschickt" ist es nicht.
+        self.replan_tenant(tenant_id)
 
     # -- KI-Einstellungen ------------------------------------------------------
     def get_ai_settings(self, ctx: AuthContext) -> AiSettings:

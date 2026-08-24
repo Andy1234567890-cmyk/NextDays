@@ -13,6 +13,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@nextdays/ui/button";
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { Input } from "@nextdays/ui/input";
 import {
   htmlIstLeer,
@@ -43,6 +44,7 @@ const LEER = { subject: "", body: "" };
 
 export function TemplatesTab() {
   const t = useTranslations("inbox");
+  const tGemein = useTranslations("common");
   const [items, setItems] = useState<MessageTemplate[]>([]);
   const [sprachen, setSprachen] = useState<MessageLanguage[]>([]);
   // Sprachcode → Name. Kommt vom Server (EINE Quelle, `core.languages`), damit
@@ -56,8 +58,36 @@ export function TemplatesTab() {
   const [fassungen, setFassungen] = useState<Fassungen>({ [GRUNDFASSUNG]: LEER });
   const [aktiv, setAktiv] = useState<string>(GRUNDFASSUNG);
   const [error, setError] = useState<string | null>(null);
+  /** Getrennt von `error`: das ist der Fehler des SPEICHERNS und steht am
+   *  Formular. Ein Ladefehler gehört über die Liste, sonst steht er dort, wo
+   *  gerade niemand hinsieht. */
+  const [ladefehler, setLadefehler] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const editorGriff = useRef<ComposerGriff | null>(null);
+
+  /** LADEFEHLER WERDEN ANGEZEIGT, NICHT VERSCHLUCKT (Wurzel 5).
+   *
+   *  Bis 24.08.2026 stand hier nur `if (res.ok) setItems(...)`. Schlug der
+   *  Aufruf fehl, blieb `items` leer und die Liste zeigte „Noch keine
+   *  Vorlagen." — dasselbe Bild wie bei einem Betrieb, der wirklich keine hat.
+   *  Live standen 18 Vorlagen in der DB und die Oberfläche behauptete null,
+   *  während die Sprachen daneben sauber luden. Wer keine Vorlage sieht, kann
+   *  auch keine Sprachfassung pflegen — die Sprachen-Einstellung wirkte
+   *  dadurch wie ein toter Schalter.
+   *
+   *  Jeder der drei Aufrufe wird einzeln gemeldet: fällt nur der Sprachkatalog
+   *  aus, sind die Vorlagen trotzdem brauchbar. */
+  /** Sprachen des Betriebs, für die DIESE Vorlage keine Fassung hat.
+   *
+   *  Gäste dieser Sprachen bekommen die Standardsprache oder die Grundfassung —
+   *  nicht ihre eigene. Der Vergleich läuft über die gepflegten Sprachen des
+   *  Betriebs, nicht über alle 24: eine Vorlage ohne Suaheli-Fassung ist kein
+   *  Mangel, eine ohne Englisch-Fassung in einem Betrieb, der Englisch führt,
+   *  schon. */
+  function fehlendeSprachen(tpl: MessageTemplate): string[] {
+    const da = new Set(tpl.texts.map((x) => x.lang));
+    return sprachen.map((s) => s.code).filter((c) => !da.has(c));
+  }
 
   async function load() {
     const [res, spr, kat] = await Promise.all([
@@ -70,6 +100,10 @@ export function TemplatesTab() {
     if (kat.ok) {
       setNamen(Object.fromEntries(kat.data.items.map((o) => [o.code, o.name])));
     }
+    const fehler = [res, spr, kat]
+      .filter((r) => !r.ok)
+      .map((r) => (r as { error: string }).error);
+    setLadefehler(fehler.length ? [...new Set(fehler)].join(" · ") : null);
   }
   useEffect(() => {
     load();
@@ -163,7 +197,22 @@ export function TemplatesTab() {
     <div className="grid min-h-0 flex-1 grid-cols-12 gap-4 overflow-y-auto p-6">
       {/* Liste */}
       <div className="col-span-12 lg:col-span-7">
-        <h2 className="mb-3 font-display text-lg font-extrabold">{t("tabTemplates")}</h2>
+        <div className="mb-3 flex items-center gap-1.5">
+          <h2 className="font-display text-lg font-extrabold">{t("tabTemplates")}</h2>
+          {/* Die drei Werkzeuge (Vorlagen · Automatisierungen · Sprachen)
+              hängen zusammen, aber nichts sagte das. Wer eine Vorlage in drei
+              Sprachen pflegt und dann einen italienischen Gast auf Deutsch
+              anschreiben sieht, hat keine Stelle, an der er nachlesen könnte,
+              warum. Diese Reihenfolge ist die Antwort. */}
+          <InfoHinweis
+            titel={t("langChainTitle")}
+            text={t("langChainText")}
+            ariaLabel={tGemein("explain", { label: t("langChainTitle") })}
+          />
+        </div>
+        {ladefehler && (
+          <p className="mb-3 text-sm text-destructive">{ladefehler}</p>
+        )}
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("templatesEmpty")}</p>
         ) : (
@@ -183,9 +232,15 @@ export function TemplatesTab() {
                   <span className="line-clamp-2 text-sm text-muted-foreground">
                     {tpl.body}
                   </span>
-                  {/* Welche Sprachen gepflegt sind, ohne die Vorlage zu öffnen —
-                      sonst sieht man eine halb übersetzte Vorlage nicht. */}
-                  {tpl.texts.length > 0 && (
+                  {/* Welche Sprachen gepflegt sind UND welche fehlen — beides,
+                      ohne die Vorlage zu öffnen.
+
+                      Nur die vorhandenen zu zeigen war die halbe Auskunft: eine
+                      Vorlage mit „DE DA EN" sieht vollständig aus, auch wenn der
+                      Betrieb vier Sprachen führt. Die fehlende ist aber genau
+                      die, wegen der ein Gast den falschen Text bekommt. Sie
+                      steht deshalb daneben, nicht als Fußnote irgendwo. */}
+                  {(tpl.texts.length > 0 || fehlendeSprachen(tpl).length > 0) && (
                     <span className="mt-1.5 flex flex-wrap gap-1">
                       {tpl.texts.map((x) => (
                         <span
@@ -193,6 +248,14 @@ export function TemplatesTab() {
                           className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
                         >
                           {x.lang.toUpperCase()}
+                        </span>
+                      ))}
+                      {fehlendeSprachen(tpl).map((code) => (
+                        <span
+                          key={code}
+                          className="rounded-full border border-dashed border-destructive/50 px-2 py-0.5 text-xs text-destructive"
+                        >
+                          {code.toUpperCase()} · {t("tplLangMissing")}
                         </span>
                       ))}
                     </span>

@@ -1174,6 +1174,7 @@ def test_lastminute_anker_vor_der_buchung_geht_nicht_raus() -> None:
         == "pending"
     )
 
+
 # --- Auslöser: Anker + Richtung kommen aus dem Auslöser (0307) ---------------
 def test_ausloeser_katalog_ist_vollstaendig() -> None:
     """Alle sechs Auslöser — „Nach Anreise" und „Vor Abreise" fehlten bis 0307."""
@@ -2094,6 +2095,18 @@ class _SprachQuery:
     def limit(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
         return self
 
+    # Seit 24.08.2026 planen die Sprach- und Vorlagen-Endpunkte neu (Wurzel 1),
+    # und `replan_tenant` filtert die Threads über `.gte`/`.lt`. Die Attrappe
+    # kennt keine Bereichsfilter — sie muss sie auch nicht auswerten: die
+    # Tabelle `channex_booking` ist in diesen Tests leer, die Neuplanung läuft
+    # also über null Threads. Ohne die beiden Methoden bricht sie mit
+    # AttributeError ab, und der Test misst dann die Attrappe statt der Regel.
+    def gte(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+        return self
+
+    def lt(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+        return self
+
     def update(self, patch):  # noqa: ANN001, ANN201
         self._patch = patch
         return self
@@ -2191,6 +2204,37 @@ def test_regionale_variante_wird_auf_basissprache_normiert() -> None:
     svc.add_message_language(_CTX, "de-AT")
     liste = svc.list_message_languages(_CTX)
     assert [s.code for s in liste.items] == ["de"]
+
+
+def test_sprach_und_vorlagen_aenderungen_planen_neu() -> None:
+    """DER ZUSAMMENHANG, DER FEHLTE (24.08.2026).
+
+    `_automation_body` materialisiert den Text je Buchung beim PLANEN und legt
+    ihn in `automation_scheduled_message.body` ab. Der Versand kennt nur diese
+    Zeile. Wer also die Standardsprache umstellt, eine Sprachfassung nachpflegt
+    oder eine Sprache entfernt, ändert damit den Text KÜNFTIGER Nachrichten —
+    aber die bereits eingeplanten blieben stehen, bis der stündliche
+    Worker-Tick zufällig vorbeikam.
+
+    Für den Betreiber sah das aus, als arbeiteten Vorlagen, Automatisierungen
+    und Spracheinstellung nicht zusammen: der eine Klick, der den falschen
+    Rückfall korrigiert, blieb bis zu einer Stunde wirkungslos, und eine in
+    dieser Stunde fällige Automail ging noch in der alten Sprache raus.
+
+    `update_automation` macht das seit 0307 richtig (Wurzel 1). Dieser Test
+    hält fest, dass die vier übrigen Schreibpfade auf denselben Zustand es
+    ebenfalls tun."""
+    db = _SprachDB()
+    svc = InboxService(service_client=db, channex=_FakeChannex())
+    gerufen: list[str] = []
+    svc.replan_tenant = lambda tenant_id: gerufen.append(tenant_id) or {}  # type: ignore[method-assign]
+
+    svc.add_message_language(_CTX, "de")
+    svc.add_message_language(_CTX, "da")
+    svc.set_default_message_language(_CTX, "da")
+    svc.remove_message_language(_CTX, "de")
+    assert len(gerufen) == 4, gerufen
+    assert set(gerufen) == {_CTX.tenant_id}
 
 
 def test_unbekannte_sprache_wird_abgewiesen() -> None:

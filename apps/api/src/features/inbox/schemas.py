@@ -70,6 +70,23 @@ class InboxThread(BaseModel):
     # Telefonnummer des Gastes: die Liste gruppiert daran den WhatsApp-Verlauf
     # als Unterpunkt UNTER seine Buchung (sonst steht er unverbunden daneben).
     guest_phone: str | None = None
+    # Sprache des Gastes beim Portal — ROHWERT („it", „de-AT", „nb"), normiert
+    # wird beim Vergleich (`core.languages.basis_sprache`).
+    #
+    # WARUM SIE AM THREAD HÄNGT: bis 24.08.2026 kannte nur die Automail-Planung
+    # sie (`planung._gastsprache`). Die Oberfläche des Gesprächs bekam sie erst
+    # über die Reservierungs-Karte NEBENAN — und das Vorlagen-Menü im Composer,
+    # das direkt darunter sitzt, fügte deshalb IMMER die Grundfassung ein.
+    # Der Betrieb pflegte 18 Vorlagen in drei Sprachen und schrieb seine
+    # dänischen Gäste von Hand auf Englisch an, weil nichts die gepflegte
+    # dänische Fassung anbot. Am Thread steht die Sprache dort, wo jeder
+    # Verbraucher sie braucht, statt in einem Nebenfenster.
+    #
+    # KEINE MASKIERUNG: die Sprache ist kein Kontaktweg (anders als Mail und
+    # Telefon, die `mask.contact_value` je Rolle ausblendet). Sie steuert, in
+    # welcher Fassung geantwortet wird — wer den Thread beantworten darf, muss
+    # das wissen.
+    guest_language: str | None = None
     status: str | None = None       # new | modified | cancelled
     arrival_date: str | None = None
     departure_date: str | None = None

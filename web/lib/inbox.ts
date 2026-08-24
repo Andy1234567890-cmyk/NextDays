@@ -27,6 +27,9 @@ export type InboxThread = {
   guest_avatar_url: string | null;
   guest_email: string | null;
   guest_phone: string | null;
+  /** Sprache des Gastes beim Portal, Rohwert („it", „de-AT"). Entscheidet,
+   *  welche Sprachfassung einer Vorlage eingesetzt wird (`lib/fassung`). */
+  guest_language: string | null;
   status: string | null;
   arrival_date: string | null;
   departure_date: string | null;

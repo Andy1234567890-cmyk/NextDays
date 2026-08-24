@@ -38,6 +38,7 @@ import {
   type InboxMessage,
   type InboxStatus,
   type InboxThread,
+  type MessageLanguage,
   type MessageTemplate,
   type ScheduledMessage,
   type TeamMember,
@@ -50,6 +51,7 @@ import {
   listAttachments,
   listScheduled,
   listTeam,
+  listMessageLanguages,
   listTemplates,
   renderForThread,
   scheduleMessage,
@@ -58,6 +60,7 @@ import {
   uploadAttachment,
 } from "@/lib/inbox";
 import { type InboxAccess } from "@/lib/inbox-access";
+import { fassungWaehlen } from "@/lib/fassung";
 import { channelLabelLoose } from "@/lib/channel-logos";
 
 // --- Konversation (Chat + KI-Vorschlag + Antwortfeld) -----------------------
@@ -96,6 +99,7 @@ export function Conversation({
   const [aiEditing, setAiEditing] = useState(false);
   const [aiLoading, startAi] = useTransition();
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
+  const [sprachen, setSprachen] = useState<MessageLanguage[]>([]);
   const [showTemplates, setShowTemplates] = useState(false);
   const [starred, setStarred] = useState(thread.is_starred);
   // Zuweisen / Snooze / Geplant-senden.
@@ -285,14 +289,38 @@ export function Conversation({
     })();
   }
 
-  // Vorlagen + Team einmal laden.
+  // Vorlagen + Team + Sprachen einmal laden.
+  //
+  // Die Sprachen gehören dazu, seit das Vorlagen-Menü die Fassung für DIESEN
+  // Gast einsetzt (`lib/fassung`): ohne die Standardsprache des Betriebs kennt
+  // der Client nur zwei der drei Ränge und fiele auf die Grundfassung zurück,
+  // obwohl eine gepflegte Fassung dasteht.
   useEffect(() => {
     (async () => {
-      const [tpl, tm] = await Promise.all([listTemplates(), listTeam()]);
+      const [tpl, tm, spr] = await Promise.all([
+        listTemplates(),
+        listTeam(),
+        listMessageLanguages(),
+      ]);
       if (tpl.ok) setTemplates(tpl.data.items);
       if (tm.ok) setTeam(tm.data.items);
+      if (spr.ok) setSprachen(spr.data.items);
     })();
   }, []);
+
+  /** Standardsprache des Betriebs — der zweite Rang der Auswahl. */
+  const standardsprache = sprachen.find((x) => x.is_default)?.code ?? null;
+
+  /** Welche Fassung dieser Vorlage an DIESEN Gast ginge. Dieselbe Rangfolge
+   *  wie beim Server-Versand (`lib/fassung`), damit eine von Hand eingefügte
+   *  Vorlage nicht in einer anderen Sprache steht als die Automail daneben. */
+  function fassungFuerGast(tpl: MessageTemplate) {
+    return fassungWaehlen(
+      tpl.texts.map((x) => ({ lang: x.lang, body: x.body })),
+      tpl.body,
+      { gastsprache: thread.guest_language, standard: standardsprache },
+    );
+  }
 
   // Interne Notiz (gelb) hinzufügen → sofort im Verlauf zeigen.
   function addInternalNote() {
@@ -975,19 +1003,41 @@ export function Conversation({
                     {t("templatesEmpty")}
                   </p>
                 ) : (
-                  templates.map((tpl) => (
-                    <button
-                      key={tpl.id}
-                      type="button"
-                      onClick={() => vorlageEinfuegen(tpl.body)}
-                      className="flex w-full flex-col gap-0.5 rounded-(--radius) p-2 text-left hover:bg-muted/50"
-                    >
-                      <span className="text-sm font-medium">{tpl.title}</span>
-                      <span className="line-clamp-1 text-xs text-muted-foreground">
-                        {tpl.body}
-                      </span>
-                    </button>
-                  ))
+                  templates.map((tpl) => {
+                    // NICHT `tpl.body`: das ist die Grundfassung und ging bis
+                    // 24.08.2026 an jeden Gast, auch wenn seine Sprache
+                    // gepflegt war. Der Vorschautext zeigt genau das, was
+                    // eingesetzt wird — sonst steht im Menü eine andere
+                    // Sprache als danach im Editor.
+                    const wahl = fassungFuerGast(tpl);
+                    return (
+                      <button
+                        key={tpl.id}
+                        type="button"
+                        onClick={() => vorlageEinfuegen(wahl.text)}
+                        className="flex w-full flex-col gap-0.5 rounded-(--radius) p-2 text-left hover:bg-muted/50"
+                      >
+                        <span className="flex items-center gap-1.5 text-sm font-medium">
+                          <span className="min-w-0 flex-1 truncate">{tpl.title}</span>
+                          {wahl.sprache && (
+                            <span
+                              className={
+                                "shrink-0 rounded-full px-1.5 py-0.5 text-[0.625rem] font-semibold " +
+                                (wahl.gastspracheGepflegt
+                                  ? "bg-muted text-muted-foreground"
+                                  : "bg-destructive/10 text-destructive")
+                              }
+                            >
+                              {wahl.sprache.toUpperCase()}
+                            </span>
+                          )}
+                        </span>
+                        <span className="line-clamp-1 text-xs text-muted-foreground">
+                          {wahl.text}
+                        </span>
+                      </button>
+                    );
+                  })
                 )}
               </div>
             )}

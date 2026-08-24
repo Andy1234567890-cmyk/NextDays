@@ -25,6 +25,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
 import { MultiSelect } from "@nextdays/ui/multi-select";
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { type ComposerGriff } from "@/components/inbox/composer-editor";
 import {
@@ -71,6 +72,7 @@ const LEER = { subject: "", body: "" };
 
 export function AutomationsTab() {
   const t = useTranslations("inbox");
+  const tGemein = useTranslations("common");
   const [items, setItems] = useState<Automation[]>([]);
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
   const [props, setProps] = useState<Prop[]>([]);
@@ -94,6 +96,9 @@ export function AutomationsTab() {
   const [sprachen, setSprachen] = useState<MessageLanguage[]>([]);
   const [sprachNamen, setSprachNamen] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
+  /** Getrennt von `error` (Speichern-Fehler am Formular): ein Ladefehler
+   *  gehört über die Liste. */
+  const [ladefehler, setLadefehler] = useState<string | null>(null);
   const [pending, start] = useTransition();
   // Sendezeit in Ortszeit des Objekts statt UTC. Ohne hinterlegte Zeitzone
   // plant der Server für dieses Objekt bewusst NICHT (kein stilles UTC).
@@ -117,6 +122,12 @@ export function AutomationsTab() {
 
   const beiNachricht = trigger === "message_received";
 
+  /** LADEFEHLER WERDEN ANGEZEIGT, NICHT VERSCHLUCKT (Wurzel 5) — dieselbe
+   *  Lehre wie im Vorlagen-Reiter. Fünf Aufrufe, von denen bis 24.08.2026
+   *  keiner seinen Fehlschlag meldete: „Noch keine Automatisierungen." sah
+   *  identisch aus, ob der Betrieb keine hat oder der Aufruf scheiterte.
+   *  Live liefen fünf Regeln und verschickten Post, während dieser Reiter
+   *  behauptete, es gäbe keine. */
   async function load() {
     const [a, tpl, p, spr, kat] = await Promise.all([
       listAutomations(),
@@ -134,6 +145,10 @@ export function AutomationsTab() {
         Object.fromEntries(kat.data.items.map((o) => [o.code, o.name])),
       );
     }
+    const fehler = [a, tpl, p, spr, kat]
+      .filter((r) => !r.ok)
+      .map((r) => (r as { error: string }).error);
+    setLadefehler(fehler.length ? [...new Set(fehler)].join(" · ") : null);
   }
   useEffect(() => {
     load();
@@ -352,11 +367,51 @@ export function AutomationsTab() {
     return `${houses} · ${chans}`;
   }
 
+  /** Name der Vorlage, aus der diese Regel ihren Text nimmt — oder der
+   *  Hinweis, dass sie einen eigenen führt. Eine gelöschte Vorlage hinterlässt
+   *  `template_id = null` (Fremdschlüssel ON DELETE SET NULL); dann steht dort
+   *  „eigener Text", was der Wahrheit entspricht: ab da gilt `message`. */
+  function textquelle(a: Automation): string {
+    if (!a.template_id) return t("autoNoTemplate");
+    const tpl = templates.find((x) => x.id === a.template_id);
+    return tpl ? tpl.title : t("autoNoTemplate");
+  }
+
+  /** Sprachen des Betriebs ohne Fassung — an der QUELLE gemessen, aus der die
+   *  Regel wirklich liest. Bei gewählter Vorlage sind das deren Fassungen,
+   *  sonst die der Regel. Diese Unterscheidung ist der ganze Punkt: die eigenen
+   *  Fassungen einer Regel mit Vorlage werden nie gelesen, und sie als
+   *  „gepflegt" zu zeigen wäre die falsche Entwarnung. */
+  function fehlendeSprachen(a: Automation): string[] {
+    const quelle = a.template_id
+      ? (templates.find((x) => x.id === a.template_id)?.texts ?? [])
+      : (a.texts ?? []);
+    const da = new Set(quelle.map((x) => x.lang));
+    return sprachen.map((s) => s.code).filter((c) => !da.has(c));
+  }
+
   return (
     <div className="grid min-h-0 flex-1 grid-cols-12 gap-4 overflow-y-auto p-6">
       {/* Liste */}
       <div className="col-span-12 lg:col-span-7">
-        <h2 className="mb-3 font-display text-lg font-extrabold">{t("tabAutomations")}</h2>
+        <div className="mb-3 flex items-center gap-1.5">
+          <h2 className="font-display text-lg font-extrabold">
+            {t("tabAutomations")}
+          </h2>
+          {/* Zwei Fragen, die die Maske nicht beantwortete und an denen sich
+              der Betrieb reihum verlief: woher der Text kommt, wenn eine
+              Vorlage gewählt ist (aus der VORLAGE — der eigene Text der Regel
+              ist dann tot), und wann eine Änderung wirkt (beim Einplanen wird
+              der Wortlaut festgeschrieben). */}
+          <InfoHinweis
+            titel={t("autoSourceTitle")}
+            text={[t("autoSourceText"), t("langChainText")]}
+            ariaLabel={tGemein("explain", { label: t("autoSourceTitle") })}
+          />
+        </div>
+        {ladefehler && (
+          <p className="mb-3 text-sm text-destructive">{ladefehler}</p>
+        )}
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("autoEmpty")}</p>
         ) : (
@@ -376,6 +431,23 @@ export function AutomationsTab() {
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {assignLabel(a)}
+                  </span>
+                  {/* WOHER DER TEXT KOMMT, an der Regel selbst. Die Liste nannte
+                      Auslöser, Zeitplan und Zuweisung — nur nicht die Quelle des
+                      Wortlauts. Wer eine Sprachfassung sucht, suchte sie
+                      deshalb in der Regel, obwohl sie in der Vorlage steht. */}
+                  <span className="mt-1.5 flex flex-wrap items-center gap-1">
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                      {textquelle(a)}
+                    </span>
+                    {fehlendeSprachen(a).map((code) => (
+                      <span
+                        key={code}
+                        className="rounded-full border border-dashed border-destructive/50 px-2 py-0.5 text-xs text-destructive"
+                      >
+                        {code.toUpperCase()} · {t("tplLangMissing")}
+                      </span>
+                    ))}
                   </span>
                 </div>
                 <button

@@ -723,6 +723,24 @@ class BookingEngineService(SchaufensterMixin, AbsichtMixin):
                     "name": name,
                     "mail": reservation.get("guest_email") or "",
                     "phone": reservation.get("guest_phone") or "",
+                    # Sprache des Gastes — der Schlüssel, an dem die
+                    # Nachrichten-Automatisierung ihre Sprachfassung wählt
+                    # (`inbox/sprachen.fassung_waehlen`). Ohne ihn bekam
+                    # ausgerechnet unser EIGENER Marktplatz als einziger Kanal
+                    # keine Gastsprache mit — Booking.com und Airbnb liefern
+                    # sie, myBestDays nicht — und jeder Gast von dort landete
+                    # auf der Standardsprache des Betriebs.
+                    #
+                    # Nur, wenn die Reservierung wirklich eine trägt: fehlt
+                    # sie, bleibt das Feld weg, statt eine Sprache zu behaupten
+                    # (Wurzel 4). `_customer_of` im Posteingang wirft leere
+                    # Werte ohnehin nicht weg, sondern lässt die rohe Payload
+                    # gewinnen — ein "" würde dort als gesetzt gelten.
+                    **(
+                        {"language": reservation["guest_language"]}
+                        if reservation.get("guest_language")
+                        else {}
+                    ),
                 },
                 "raw": {"source": "booking_engine"},
             }

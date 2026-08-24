@@ -12,8 +12,14 @@
 // hat je erfasst, welche welche ist. Diese Texte einer Sprache zuzuschreiben
 // hieße zu behaupten, was keiner weiß — und ein dänischer Text, der als
 // „deutsche Fassung" gilt, geht an deutsche Gäste hinaus, ohne dass die fehlende
-// deutsche Fassung je auffällt. Die Grundfassung ist deshalb ein eigener Reiter
-// und bleibt der Rückfall für jede Sprache ohne eigene Fassung.
+// deutsche Fassung je auffällt. Die Grundfassung ist deshalb ein eigener Reiter.
+//
+// SIE IST DER LETZTE RANG, NICHT DER ERSTE RÜCKFALL: vor ihr greift die Fassung
+// in der Standardsprache des Betriebs. Wer alle Vorlagen in seiner Standard-
+// sprache pflegt, erreicht die Grundfassung nie — genau das führte am
+// 24.08.2026 dazu, dass ein italienischer Gast die deutsche Fassung bekam,
+// obwohl die Grundfassung englisch ist. Welche Sprache das ist, steht seither
+// in „Sprachen verwalten" (`langDefaultHint`).
 //
 // Solange der Betrieb KEINE Sprachen verwaltet, zeigt diese Komponente gar keine
 // Reiter — dann ist die Grundfassung schlicht „der Text", genau wie vorher.

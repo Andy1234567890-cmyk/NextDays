@@ -34,6 +34,10 @@ export function whatsAppToThread(c: WhatsAppConversation): InboxThread {
     guest_avatar_url: null,
     guest_email: null,
     guest_phone: null,
+    // WhatsApp führt keine Sprache des Gastes — null, kein geratener Wert.
+    // Das Vorlagen-Menü fällt dadurch auf die Standardsprache des Betriebs
+    // zurück, wie vor 0363 auch.
+    guest_language: null,
     status: null,
     arrival_date: null,
     departure_date: null,

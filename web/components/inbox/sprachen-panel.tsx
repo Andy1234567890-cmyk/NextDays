@@ -4,8 +4,9 @@
 //
 // Die Sprachen entscheiden, welcher Wortlaut an einen Gast geht: für jede
 // verwaltete Sprache lässt sich in Vorlagen und Regeln eine eigene Fassung
-// pflegen, und genau EINE ist der Standard (der Rückfall, wenn die Sprache des
-// Gastes keine Fassung hat).
+// pflegen, und genau EINE ist der Standard — der Rückfall für JEDEN Gast, dessen
+// Sprache nicht gepflegt ist. Erst wenn auch die Standardsprache keine Fassung
+// hat, greift die Grundfassung (`sprachen.fassung_waehlen`).
 //
 // WARUM DAS SPEICHERN SOFORT PASSIERT, ohne „Speichern"-Knopf: jede Zeile hier
 // ist eine einzelne Entscheidung („diese Sprache pflegen wir", „diese ist der
@@ -22,6 +23,7 @@ import { Icon } from "@iconify/react";
 import { useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import {
   type LanguageOption,
@@ -35,6 +37,7 @@ import {
 
 export function SprachenAnsicht() {
   const t = useTranslations("inbox");
+  const tGemein = useTranslations("common");
   const [sprachen, setSprachen] = useState<MessageLanguage[]>([]);
   const [katalog, setKatalog] = useState<LanguageOption[]>([]);
   const [geladen, setGeladen] = useState(false);
@@ -55,6 +58,7 @@ export function SprachenAnsicht() {
   // Schon gepflegte Sprachen stehen nicht mehr in der Auswahl — sie erneut
   // anzubieten sähe aus, als könnte man sie zweimal führen.
   const offen = katalog.filter((o) => !sprachen.some((s) => s.code === o.code));
+  const standard = sprachen.find((s) => s.is_default) ?? null;
 
   /** Antwort des Servers übernehmen; ein Fehler wird ANGEZEIGT, nicht
    *  verschluckt (der Server begründet z. B., warum die Standardsprache nicht
@@ -74,6 +78,18 @@ export function SprachenAnsicht() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
+      {/* Die Rangfolge steht hier, wo sie entschieden wird. Ohne sie ist der
+          Stern eine Geschmacksfrage; mit ihr ist er die Antwort auf „warum
+          bekommt mein italienischer Gast Deutsch". */}
+      <div className="flex items-center gap-1.5">
+        <h3 className="font-semibold">{t("autoLanguagesTitle")}</h3>
+        <InfoHinweis
+          titel={t("langChainTitle")}
+          text={t("langChainText")}
+          ariaLabel={tGemein("explain", { label: t("langChainTitle") })}
+        />
+      </div>
+
       <NativeSelect
         value=""
         disabled={pending || offen.length === 0}
@@ -93,6 +109,21 @@ export function SprachenAnsicht() {
 
       {geladen && sprachen.length === 0 && (
         <p className="text-sm text-muted-foreground">{t("langEmpty")}</p>
+      )}
+
+      {/* WAS „STANDARD" KOSTET, STEHT JETZT DA. Der Stern war bis 24.08.2026 ein
+          Sternsymbol ohne Aussage — die Folge (jeder Gast, dessen Sprache nicht
+          gepflegt ist, bekommt DIESE Fassung) stand nirgends. Live führte das
+          dazu, dass der Beta-Betrieb `de` zum Standard machte, obwohl seine
+          Grundfassungen englisch sind: ein italienischer Booking.com-Gast bekam
+          am 24.08. die deutsche Vorlage, nicht die englische Grundfassung. Die
+          Zeile nennt die Sprache beim Namen, damit die Wahl sichtbar ist. */}
+      {standard && (
+        <p className="text-sm text-muted-foreground">
+          {t("langDefaultHint", {
+            sprache: namen[standard.code] ?? standard.code.toUpperCase(),
+          })}
+        </p>
       )}
 
       <ul className="flex flex-col rounded-2xl border border-border">
@@ -128,7 +159,13 @@ export function SprachenAnsicht() {
                   onClick={() => {
                     // Die Folge steht IM Dialog: mit der Sprache gehen ihre
                     // Texte in allen Vorlagen und Regeln.
-                    if (!window.confirm(`${t("langRemove")} — ${t("langBaseHint")}`)) {
+                    // `langBaseHint` stand hier falsch: es beschreibt die
+                    // Grundfassung, nicht die Folge des Löschens.
+                    if (
+                      !window.confirm(
+                        `${t("langRemove")} — ${t("langRemoveHint")}`,
+                      )
+                    ) {
                       return;
                     }
                     anwenden(() => removeMessageLanguage(s.code));

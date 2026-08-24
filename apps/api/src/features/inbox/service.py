@@ -265,6 +265,7 @@ class InboxService(
                     guest_name=mask.name(self._guest_name(customer)),
                     guest_email=mask.contact_value(customer.get("mail") or customer.get("email")),
                     guest_phone=mask.contact_value(telefon_anzeigen(customer.get("phone"))),
+                    guest_language=customer.get("language") or None,
                     status=r.get("status"),
                     arrival_date=r.get("arrival_date"),
                     departure_date=r.get("departure_date"),

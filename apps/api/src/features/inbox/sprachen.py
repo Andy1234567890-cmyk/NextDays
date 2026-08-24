@@ -244,9 +244,31 @@ class SprachenMixin:
 
     Nur Hülle: die Arbeit machen die Funktionen oben, damit die Planung sie ohne
     Service-Instanz nutzen kann (`standardsprache`, `fassung_waehlen`).
+
+    JEDE SCHREIBENDE SPRACH-AKTION PLANT NEU (Wurzel 1). Die Sprachen sind kein
+    reiner Anzeige-Datensatz: sie entscheiden über `fassung_waehlen` und damit
+    über den Text, den `planung._automation_body` in die schon eingeplanten
+    Automails schreibt. Diese Zeilen sind der Gegenzustand — der Versand kennt
+    nur sie, nicht die Einstellung.
+
+    Ohne die Neuplanung war der Zusammenhang für den Betreiber unsichtbar:
+    die Standardsprache umzustellen (der EINE Klick, mit dem sich der falsche
+    Rückfall korrigieren lässt) blieb bis zum nächsten stündlichen Worker-Tick
+    wirkungslos, und eine in dieser Stunde fällige Automail ging noch in der
+    alten Sprache raus. Beim Entfernen einer Sprache ist es schlimmer als
+    unsichtbar: `sprache_entfernen` löscht ihre Fassungen, die eingeplanten
+    Zeilen tragen den gelöschten Text aber weiter — genau der Fall, vor dem
+    `_sprachfassungen_schreiben` eine Ebene höher warnt.
+
+    Auch beim HINZUFÜGEN, obwohl eine frische Sprache noch keine Fassung hat:
+    die erste Sprache wird automatisch die Standardsprache, und damit ändert
+    sich der Rückfall für jeden Gast.
     """
 
     def _require(self, ctx: AuthContext) -> tuple[Client, str]:  # vom Service
+        raise NotImplementedError
+
+    def replan_tenant(self, tenant_id: str) -> dict:  # aus PlanungMixin
         raise NotImplementedError
 
     def list_message_languages(self, ctx: AuthContext) -> MessageLanguageList:
@@ -255,15 +277,21 @@ class SprachenMixin:
 
     def add_message_language(self, ctx: AuthContext, code: str) -> MessageLanguageList:
         db, tenant_id = self._require(ctx)
-        return sprache_hinzufuegen(db, tenant_id, code)
+        liste = sprache_hinzufuegen(db, tenant_id, code)
+        self.replan_tenant(tenant_id)
+        return liste
 
     def set_default_message_language(self, ctx: AuthContext, code: str) -> MessageLanguageList:
         db, tenant_id = self._require(ctx)
-        return standard_setzen(db, tenant_id, code)
+        liste = standard_setzen(db, tenant_id, code)
+        self.replan_tenant(tenant_id)
+        return liste
 
     def remove_message_language(self, ctx: AuthContext, code: str) -> MessageLanguageList:
         db, tenant_id = self._require(ctx)
-        return sprache_entfernen(db, tenant_id, code)
+        liste = sprache_entfernen(db, tenant_id, code)
+        self.replan_tenant(tenant_id)
+        return liste
 
 
 def fassung_waehlen(

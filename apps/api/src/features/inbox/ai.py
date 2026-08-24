@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 import httpx
 
 from src.core.config import get_settings
+from src.core.languages import sprach_name
 from src.core.logging import get_logger
 
 if TYPE_CHECKING:
@@ -87,8 +88,24 @@ class GroqClient:
         language = getattr(settings, "language", None) or "auto"
         signature = getattr(settings, "signature", None)
         extra = getattr(settings, "extra_prompt", None)
+        # „Automatisch" heißt: in der Sprache des Gastes — und die STEHT in der
+        # Buchung (`guest_language`, vom Portal). Sie hier zu benennen ist der
+        # Unterschied zwischen einer Anweisung, die das Modell erfüllen kann,
+        # und einer, die es raten muss: bei einer noch leeren Konversation
+        # („noch keine Nachrichten") gibt es keinen Text, aus dem sich eine
+        # Sprache ableiten ließe, und der Vorschlag kam deutsch heraus — auch
+        # für einen italienischen Gast. Dasselbe Feld entscheidet einen Schritt
+        # weiter über die Sprachfassung der Automails; beide Wege lesen es jetzt.
+        #
+        # Fehlt es, bleibt es beim bisherigen Wortlaut: kein geratener
+        # Sprachcode (Wurzel 4).
+        gastsprache = sprach_name(getattr(r, "guest_language", None))
         lang_line = (
-            "in der Sprache des Gastes"
+            (
+                f"auf {gastsprache} (Sprache des Gastes)"
+                if gastsprache
+                else "in der Sprache des Gastes"
+            )
             if language == "auto"
             else f"auf {language.upper()}"
         )
