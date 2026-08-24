@@ -1424,8 +1424,9 @@ def _deckung_db(rules: list[dict], props: list[dict], zuordnung: dict) -> MagicM
                 rules
             )
         elif name == "properties":
-            kette = q.select.return_value.eq.return_value.order.return_value
-            kette.execute.return_value.data = props
+            # select → eq(tenant) → is_(archived_at) → order → execute
+            kette = q.select.return_value.eq.return_value.is_.return_value
+            kette.order.return_value.execute.return_value.data = props
         elif name == "task_rule_assignments":
             rows = [
                 {"rule_id": rid, "property_id": pid}

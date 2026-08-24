@@ -12,6 +12,7 @@ import Link from "next/link";
 import { Icon } from "@iconify/react";
 import { getMe } from "@/lib/auth";
 import { listProperties } from "@/lib/properties";
+import { ruleCoverage } from "@/lib/tasks";
 
 export default async function ObjektePage({
   searchParams,
@@ -28,12 +29,21 @@ export default async function ObjektePage({
   // Die Archiv-Zahl kommt IMMER mit, auch in der normalen Ansicht: nur so gibt
   // es überhaupt einen sichtbaren Weg ins Archiv. Ohne sie wüsste niemand, dass
   // dort etwas liegt.
-  const [res, archivRes, me, t] = await Promise.all([
+  // Regel-Deckung mitladen: ein neu angelegtes Objekt fällt aus einer Regel,
+  // der schon Objekte zugeordnet sind — sie gilt dann NUR für die gelisteten.
+  // Bisher erfuhr man das nirgends: die Aufgaben blieben einfach aus. Der
+  // Hinweis gehört genau hierhin, weil hier Objekte entstehen; wer keine
+  // Aufgabenverwaltung darf, bekommt einen Fehler und damit kein Banner.
+  const [res, archivRes, me, t, tAufgaben, deckung] = await Promise.all([
     listProperties({ archiviert: archiv }),
     archiv ? Promise.resolve(null) : listProperties({ archiviert: true }),
     getMe(),
     getTranslations("objects"),
+    getTranslations("reservations"),
+    archiv ? Promise.resolve(null) : ruleCoverage(),
   ]);
+  const ohneRegel =
+    deckung?.ok && deckung.data.betroffen.length > 0 ? deckung.data : null;
   const archivAnzahl = archiv
     ? res.ok
       ? res.data.items.length
@@ -86,6 +96,27 @@ export default async function ObjektePage({
           {!archiv && <NewPropertyButton accommodationType={accommodationType} />}
         </div>
       </div>
+
+      {ohneRegel && (
+        <Card className="border-warning/40 bg-warning/10 p-4">
+          <p className="flex items-center gap-2 text-sm font-semibold">
+            <Icon icon="ph:warning-circle" className="size-4 shrink-0" />
+            {tAufgaben("ruleList.deckung.titel")}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {tAufgaben("ruleList.deckung.text", {
+              count: ohneRegel.betroffen.length,
+              total: ohneRegel.objekte,
+            })}
+          </p>
+          <Button asChild variant="outline" size="sm" className="mt-3">
+            <Link href="/reservierungen/aufgaben/planmaessig">
+              <Icon icon="ph:list-checks" className="size-4" />
+              {tAufgaben("ruleList.kindTitle.auto")}
+            </Link>
+          </Button>
+        </Card>
+      )}
 
       {!res.ok ? (
         <Card className="p-5 text-sm text-destructive">

@@ -171,6 +171,10 @@ with wirksam as (
                              where a.rule_id=w.rule_id and a.property_id=p.id))
          ) as ohne_abreise
   from properties p join tenants tn on tn.id=p.tenant_id
+  -- Archivierte Objekte (0416) bleiben draussen: ein gekuendigtes Objekt wird
+  -- nicht mehr vermietet und braucht keine Regel. Sonst stuende der Hinweis
+  -- dauerhaft und waere nach kurzer Zeit Rauschen, das niemand liest.
+  where p.archived_at is null
 )
 select betrieb, objekt,
        case when ohne_anreise and ohne_abreise then 'keine Regel'

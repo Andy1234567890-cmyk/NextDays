@@ -2027,10 +2027,18 @@ class TasksService:
             .not_.is_("start_trigger", "null")
             .execute()
         ).data or []
+        # ARCHIVIERTE Objekte bleiben draußen (0416): ein gekündigtes Objekt
+        # wird nicht mehr vermietet und braucht keine Regel. Ohne diesen Filter
+        # bliebe der Hinweis dauerhaft stehen und wäre nach kurzer Zeit
+        # Hintergrundrauschen, das niemand mehr liest — live betraf das
+        # „Fewo-Mosbjerg-Sindal", am 21.08. archiviert.
+        # ENTWÜRFE bleiben drin: ein Entwurf geht irgendwann live, und dann soll
+        # die Regel schon greifen.
         props = (
             db.table("properties")
             .select("id, title")
             .eq("tenant_id", tenant_id)
+            .is_("archived_at", "null")
             .order("title")
             .execute()
         ).data or []
