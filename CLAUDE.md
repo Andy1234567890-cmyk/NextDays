@@ -263,6 +263,15 @@ App-Wechsel (`lib/appwechsel.ts`), keine Navigation.
   (`mobile-bestdays`, `mobile-nextdays`); geteilte Dateien in beiden gleich.
 - DB-Änderung? Migration schreiben und via `supabase/apply-migrations.sh` live
   einspielen (nie automatisch), JEDE neue public-Tabelle bekommt RLS.
+- Trigger angefasst (neu, geändert, `create or replace`)? Danach
+  `bash scripts/diagnose/db-trigger-pruefen.sh` — es löst jeden Trigger der
+  Live-DB per No-Op-`update` in einer zurückgerollten Transaktion aus und sucht
+  statisch nach `coalesce(<enum-spalte>, '…')`. Ein Trigger, der beim Auswerten
+  SEINER EIGENEN Bedingung wirft, killt JEDE Änderung an seiner Tabelle, auch
+  die, die mit seinem Ereignis nichts zu tun hat — der INSERT-Pfad läuft dabei
+  weiter, das System sieht also lebendig aus. Live am 23.08.2026 (0418→0424):
+  `coalesce(old.status, '') <> 'done'` legte Aufgaben UND Buchungen lahm,
+  gemeldet als „ich kann Aufgaben nicht abschließen in der App".
 - Realtime: jede neue Liste/Detail-UI abonniert alle speisenden Tabellen. Ein Abo
   wirkt nur, wenn BEIDES stimmt: `select` für `authenticated` auf der Tabelle
   (RLS entscheidet dann, welche Zeilen) UND Mitgliedschaft in der Publikation

@@ -384,12 +384,48 @@ def create_app() -> FastAPI:
     # Serverfehler: angreiferkontrollierter Input darf keinen 500 werfen
     # (Wurzel 5). Deshalb zentral auf 422 abbilden, statt in jedem Slice einzeln
     # zu prüfen. Jeder andere PostgREST-Fehler bleibt ein echter 500.
+    #
+    # NICHT jedes 22P02 ist aber ein Client-Wert — und diese Gleichsetzung hat
+    # live drei Tage Diagnose gekostet (23.08.2026): ein Trigger auf
+    # `public.tasks` verglich ein Enum mit dem Leerstring
+    # (`coalesce(old.status, '')`, 0418) und ließ JEDES Update auflaufen mit
+    #   invalid input value for enum public.task_status: ""
+    # Der Handler hier machte daraus „Ungültiger Wert im Aufruf." (422) und ein
+    # `log.info` OHNE die Postgres-Meldung. In der App stand damit „Zustand
+    # nicht geändert · Ungültiger Wert im Aufruf" — es sah nach einem Fehler der
+    # App aus, obwohl die App fehlerfrei war, und im Server-Log stand nichts,
+    # womit man es hätte finden können.
+    #
+    # Die Trennung läuft deshalb über die Fehlerklasse, nicht über den Code:
+    #   * „invalid input syntax for type <typ>" — ein LITERAL, das der Aufrufer
+    #     geliefert hat (Pfad-UUID, Datum, Zahl), passt nicht auf den Spaltentyp
+    #     → Eingabefehler → 422.
+    #   * alles andere, insbesondere „invalid input value for enum" — ein
+    #     Enum-Wert aus dem Body ist von Pydantic geprüft, bevor er hier ankommt.
+    #     Kommt trotzdem ein ungültiger in der DB an, stammt er von UNS: ein
+    #     Trigger, ein von Hand gebauter PostgREST-Filter (siehe
+    #     `sperrantrag_kollisionen`, 12.08.2026) oder eine fehlende Migration
+    #     → Serverfehler → 500, mit Stacktrace im Log.
+    # In BEIDEN Fällen wandert die Postgres-Meldung ins Log (serverseitig, nie
+    # in die Antwort): ohne sie ist ein 22P02 nicht zu unterscheiden von jedem
+    # anderen und die Ursache bleibt unsichtbar.
     @app.exception_handler(PostgrestAPIError)
     async def _postgrest(request: Request, exc: PostgrestAPIError):  # noqa: ANN202
         if getattr(exc, "code", None) != "22P02":
             return await _unhandled(request, exc)
+        meldung = str(getattr(exc, "message", "") or "")
+        if "invalid input syntax for type" not in meldung:
+            # Kein Client-Literal → unser Fehler. `_unhandled` loggt mit
+            # Stacktrace und antwortet 500 — genau das, was den Trigger-Bruch
+            # am ersten Tag sichtbar gemacht hätte.
+            return await _unhandled(request, exc)
         rid = getattr(request.state, "request_id", None)
-        log.info("ungueltiger_parameter", path=request.url.path, request_id=rid)
+        log.warning(
+            "ungueltiger_parameter",
+            path=request.url.path,
+            request_id=rid,
+            db_meldung=meldung,
+        )
         return JSONResponse(
             status_code=422,
             content={"detail": "Ungültiger Wert im Aufruf.", "request_id": rid},
