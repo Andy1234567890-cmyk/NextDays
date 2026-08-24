@@ -1,6 +1,7 @@
 """Auswertung EINER Kennung fuer den Trockenlauf portal-raten-abgleich.sh.
 
-Liest drei Umgebungsvariablen und gibt EINE Zeile `<anzahl>|<befund>` aus:
+Liest drei Umgebungsvariablen und gibt EINE Zeile
+`<anzahl-anlegen>|<anzahl-loeschen>|<befund>` aus:
 
   RATEN   Antwort von POST /channels/mapping_details (was das Portal fuehrt)
   KANAL   Antwort von GET  /channels/{id}            (worauf jede Rate zeigt)
@@ -13,6 +14,14 @@ Trockenlauf keine zweite Wahrheit erfindet:
            Titel) ODER sie ist die PRIMAERE Rate eines namensfremden Plans (im
            Regelfall der Grundpreis) — die behaelt er.
   FEHLT  = jede andere Rate, deren Titel kein lokaler Plan traegt.
+  VERWAIST = umgekehrte Richtung: ein KANAL-Eintrag, dessen `rate_plan_code` das
+           Portal nicht mehr fuehrt. Er wird nicht bloss unordentlich
+           mitgeschleppt, er kippt den Preis-Push des ganzen Zimmers. Live am
+           24.08.2026 02:02 bei „Feriehus Line" (Hotel 11659051):
+           <Error Code="RATE_NOT_ACTIVE_FOR_ROOM" ShortText="Rate '65900767' is
+           not active for room '1165905102'"/> -> Result: Failure.
+           `portal_raten_abgleich._verwaiste_kanal_eintraege_entfernen` loescht
+           diese Eintraege; dieses Skript zeigt nur, WELCHE es waeren.
 
 Warum nicht einfach „ist gemappt": weil dann nichts fehlte. Live gemessen am
 23.08.2026 zeigen bei „Bedstefars lille skovhus" BEIDE Booking-Raten auf
@@ -77,16 +86,22 @@ kanal_roh = _laden("KANAL")
 name_je_cx, plan_namen = _plannamen()
 
 if not raten:
-    print("0|? mapping_details lieferte keine Rate (nicht gemessen)")
+    # Fail-closed, genau wie der Job: leer heisst „nicht gemessen". Ein
+    # Trockenlauf, der hier ALLE Kanal-Eintraege als verwaist meldete, wuerde
+    # zum Loeschen des ganzen Mappings raten.
+    print("0|0|? mapping_details lieferte keine Rate (nicht gemessen)")
     raise SystemExit(0)
 if not kanal_roh.get("data"):
-    print("0|? Kanal nicht lesbar — worauf die Raten zeigen, ist unbekannt")
+    print("0|0|? Kanal nicht lesbar — worauf die Raten zeigen, ist unbekannt")
     raise SystemExit(0)
 
 # Belegt: eigener (namensgleicher) Plan, sonst die EINE Rate, die ein
 # namensfremder Plan je Zimmer behalten darf.
 belegt: set[str] = set()
 behalten: set[tuple[str, str]] = set()
+# Kanal-Eintraege, deren Ratencode das Portal nicht mehr fuehrt:
+# (code, room_type_code, mapping_id-vorhanden).
+verwaist: list[tuple[str, str, bool]] = []
 zuordnungen = (kanal_roh["data"].get("attributes") or {}).get("rate_plans") or []
 for eintrag in zuordnungen:
     settings = eintrag.get("settings") or {}
@@ -94,6 +109,15 @@ for eintrag in zuordnungen:
     if code is None:
         continue
     code = str(code)
+    if code not in raten:
+        # Der Eintrag zeigt auf eine Rate, die das Portal nicht mehr fuehrt.
+        # `id` ist die `mapping_id` — sie steht nur hier, es gibt keinen
+        # GET-Pfad fuer Mappings; ohne sie ist der Eintrag nicht loeschbar.
+        verwaist.append((
+            code, str(settings.get("room_type_code")),
+            bool(eintrag.get("id")),
+        ))
+        continue
     plan_cx = str(eintrag.get("rate_plan_id"))
     name = (name_je_cx.get(plan_cx) or "").strip()
     titel = raten.get(code, "")
@@ -129,5 +153,13 @@ else:
     teile.append("nichts offen")
 if ohne_titel:
     teile.append(f"{len(ohne_titel)} offene Rate(n) ohne Titel -> uebersprungen")
+if verwaist:
+    teile.append(
+        "WUERDE LOESCHEN: " + ", ".join(
+            f"{c}@{raum}" + ("" if hat_id else " (ohne mapping_id -> bleibt)")
+            for c, raum, hat_id in sorted(verwaist)
+        )
+    )
 
-print(f"{len(fehlt)}|" + "; ".join(teile))
+loeschbar = sum(1 for _c, _r, hat_id in verwaist if hat_id)
+print(f"{len(fehlt)}|{loeschbar}|" + "; ".join(teile))

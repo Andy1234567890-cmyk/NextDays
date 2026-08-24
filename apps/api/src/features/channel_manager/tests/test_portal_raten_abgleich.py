@@ -173,13 +173,19 @@ class _Db:
 
 
 class _Channex:
-    """Genau die ZWEI lesenden Calls dieses Laufs — `get_channel_mapping_details`
-    (was das Portal fuehrt) und `get_channel` (was schon zugeordnet ist).
+    """Die zwei LESENDEN Calls des Laufs plus den EINEN loeschenden.
 
-    Kein Schreib-Call ist definiert. Ein `create_channel_mapping` oder
-    `update_channel` waere hier ein AttributeError, was diesen Doppelgaenger zur
-    Wache darueber macht, dass der Lauf selbst nichts an Channex schreibt — das
-    tut erst der Content-Sync-Handler (Schritt e)."""
+    Lesend: `get_channel_mapping_details` (was das Portal fuehrt) und
+    `get_channel` (was schon zugeordnet ist). Loeschend:
+    `delete_channel_mapping` — Schritt (f), seit dem 24.08.2026 Teil des Laufs,
+    weil ein verwaister Eintrag den Preis-Push des ganzen Zimmers kippt
+    (`RATE_NOT_ACTIVE_FOR_ROOM`).
+
+    `create_channel_mapping` und `update_channel` sind weiterhin NICHT
+    definiert. Damit bleibt dieser Doppelgaenger die Wache darueber, dass der
+    Lauf nichts ANLEGT und nichts UEBERSCHREIBT — das tut erst der
+    Content-Sync-Handler (Schritt e). Ein zusaetzlicher Schreibweg waere hier
+    ein AttributeError."""
 
     def __init__(
         self, antwort: dict[str, Any] | ChannexError,
@@ -197,6 +203,11 @@ class _Channex:
         # Ratencodes, deren Eintrag als ATTRAPPE gebaut wird (ohne `occupancy`
         # und `pricing_type`) — der live gemessene Fehlzustand.
         self.attrappe_codes: set[str] = set()
+        # Schritt (f): die tatsaechlich abgesetzten DELETEs, als
+        # (channel_id, mapping_id) — die Liste IST die Behauptung der Tests.
+        self.geloescht: list[tuple[str, str]] = []
+        # Fehler, den `delete_channel_mapping` wirft, statt zu loeschen.
+        self.loesch_fehler: ChannexError | None = None
 
     def get_channel_mapping_details(
         self, *, channel: str, settings: dict[str, Any]
@@ -226,6 +237,10 @@ class _Channex:
                 "attributes": {
                     "rate_plans": [
                         {
+                            # Die `mapping_id` — sie steht ausschliesslich hier
+                            # im Kanal-Objekt, es gibt keinen GET-Pfad fuer
+                            # Mappings (`channex_client.delete_channel_mapping`).
+                            "id": f"map-{code}-{plan}",
                             "rate_plan_id": plan,
                             "settings": {
                                 "room_type_code": 1220760101,
@@ -244,6 +259,15 @@ class _Channex:
                 }
             }
         }
+
+
+    def delete_channel_mapping(
+        self, channel_id: str, mapping_id: str
+    ) -> dict[str, Any]:
+        if self.loesch_fehler is not None:
+            raise self.loesch_fehler
+        self.geloescht.append((channel_id, mapping_id))
+        return {}
 
 
 def _details(rates: list[dict[str, Any]]) -> dict[str, Any]:
@@ -766,3 +790,234 @@ def test_attrappe_loest_sync_auch_ohne_neuen_plan(monkeypatch: Any) -> None:
     # Flag nachzieht, ist unerheblich — geprueft wird `zu_heilen`.
     assert ergebnis["zu_heilen"] == 1
     assert eingereiht, "Attrappe muss den Sync ausloesen"
+
+
+# --- Schritt (f): verwaiste Kanal-Eintraege loeschen -------------------------
+# Der Booking-Fehler vom 24.08.2026 02:02 (Channel Action View, „Feriehus Line",
+# Hotel 11659051, Zimmer 1165905102):
+#
+#     OTA_HotelRateAmountNotifRQ mit zwei RateAmountMessage:
+#       RatePlanCode="65900673" InvTypeCode="1165905102"  -> gueltig
+#       RatePlanCode="65900767" InvTypeCode="1165905102"  -> verwaist
+#     <Error Code="RATE_NOT_ACTIVE_FOR_ROOM"
+#            ShortText="Rate '65900767' is not active for room '1165905102'"/>
+#     Result: Failure
+#
+# Ein verwaister Eintrag kippt damit die Preise ALLER Raten des Zimmers. Die
+# zweite Nachricht erzeugt Channex aus dem Kanal-Mapping, nicht unser Push
+# (`ari_push.push_rates_batch` sendet nur `rate_plan_id`, nie einen
+# `rate_plan_code`) — deshalb ist das Loeschen des Eintrags die vollstaendige
+# Behebung.
+
+# Genau die Live-Lage von „Feriehus Line".
+LINE_GUELTIG = {"id": 65900673, "title": "Standard Rate"}
+LINE_VERWAIST = 65900767
+
+
+def test_feriehus_line_verwaiste_rate_wird_geloescht(monkeypatch: Any) -> None:
+    """DER REGRESSIONSTEST zum Booking-Fehler RATE_NOT_ACTIVE_FOR_ROOM.
+
+    Das Portal fuehrt nur noch 65900673. Im Kanal stehen beide Codes, beide auf
+    dem Grundpreis. Geloescht werden darf GENAU der Eintrag von 65900767 — der
+    gueltige bleibt, sonst haette das Zimmer gar keine Rate mehr und der
+    Preis-Push kippte weiterhin, nur mit anderem Fehler.
+    """
+    db = _Db()
+    channex = _Channex(_details([LINE_GUELTIG]))
+    channex.zuordnungen = [
+        ("cx-grundpreis", LINE_GUELTIG["id"], True),
+        ("cx-grundpreis", LINE_VERWAIST, False),
+    ]
+    ergebnis, eingereiht = _lauf(db, channex, monkeypatch)
+
+    assert channex.geloescht == [("ch-1", f"map-{LINE_VERWAIST}-cx-grundpreis")]
+    assert ergebnis["verwaist_geloescht"] == 1
+    # Kein Plan angelegt: die gueltige Rate traegt den Grundpreis als primaere
+    # Zuordnung, sie ist versorgt. Ein reiner Loeschlauf reiht deshalb auch
+    # keinen Content-Sync ein — das Loeschen ist am Kanal schon passiert.
+    assert db.inserts == []
+    assert eingereiht == []
+
+
+def test_zweiter_lauf_loescht_nichts_mehr(monkeypatch: Any) -> None:
+    """Wurzel 2: der Lauf kommt TAEGLICH wieder.
+
+    Der zweite Lauf sieht den Eintrag nicht mehr im Kanal — und darf dann nicht
+    ersatzweise irgendetwas anderes loeschen. Ohne diese Sperre waere jeder Tag
+    ein weiterer DELETE gegen ein Live-Konto.
+    """
+    db = _Db()
+    channex = _Channex(_details([LINE_GUELTIG]))
+    channex.zuordnungen = [
+        ("cx-grundpreis", LINE_GUELTIG["id"], True),
+        ("cx-grundpreis", LINE_VERWAIST, False),
+    ]
+    erst, _ = _lauf(db, channex, monkeypatch)
+    assert erst["verwaist_geloescht"] == 1
+
+    # Der Kanal nach dem Loeschen: nur noch die gueltige Rate.
+    channex.geloescht.clear()
+    channex.zuordnungen = [("cx-grundpreis", LINE_GUELTIG["id"], True)]
+    zweit, eingereiht = _lauf(db, channex, monkeypatch)
+
+    assert channex.geloescht == []
+    assert zweit["verwaist_geloescht"] == 0
+    assert eingereiht == []
+
+
+def test_mapping_details_leer_loescht_nichts(monkeypatch: Any) -> None:
+    """FAIL-CLOSED (Wurzel 5) — der wichtigste Test dieser Gruppe.
+
+    Ein `mapping_details` ohne Raten ist ein fehlgeschlagener Abruf, kein Portal
+    ohne Raten. Wer daraus „alle Codes verwaist" ableitete, raeumte bei jeder
+    Stoerung das GANZE Mapping ab und nahm dem Objekt jede Rate — aus einer
+    voruebergehenden Stoerung wuerde ein Verkaufsstopp.
+    """
+    db = _Db()
+    channex = _Channex(_details([]))
+    channex.zuordnungen = [
+        ("cx-grundpreis", LINE_GUELTIG["id"], True),
+        ("cx-grundpreis", LINE_VERWAIST, False),
+    ]
+    ergebnis, eingereiht = _lauf(db, channex, monkeypatch)
+
+    assert channex.geloescht == []
+    assert ergebnis["verwaist_geloescht"] == 0
+    assert eingereiht == []
+
+
+def test_channex_error_beim_abruf_loescht_nichts(monkeypatch: Any) -> None:
+    """Fail-closed auch bei einem harten Fehler des Abrufs (Wurzel 5).
+
+    Ein ChannexError bedeutet: wir WISSEN nicht, was das Portal fuehrt. Aus
+    Nichtwissen darf keine Loeschung folgen.
+    """
+    db = _Db()
+    channex = _Channex(ChannexError("channex down", status_code=503))
+    channex.zuordnungen = [
+        ("cx-grundpreis", LINE_GUELTIG["id"], True),
+        ("cx-grundpreis", LINE_VERWAIST, False),
+    ]
+    ergebnis, eingereiht = _lauf(db, channex, monkeypatch)
+
+    assert channex.geloescht == []
+    assert ergebnis["verwaist_geloescht"] == 0
+    assert eingereiht == []
+
+
+def test_kanal_unlesbar_loescht_nichts(monkeypatch: Any) -> None:
+    """Kanal nicht lesbar -> es ist unbekannt, WELCHE Eintraege dort stehen.
+
+    Ohne das Kanal-Objekt gibt es auch keine `mapping_id`; ein DELETE waere
+    geraten (Wurzel 4).
+    """
+    db = _Db()
+    channex = _Channex(
+        _details([LINE_GUELTIG]),
+        gemappt=ChannexError("kanal weg", status_code=502),
+    )
+    ergebnis, _ = _lauf(db, channex, monkeypatch)
+
+    assert channex.geloescht == []
+    assert ergebnis["verwaist_geloescht"] == 0
+
+
+def test_airbnb_eintrag_ohne_ratencode_wird_nie_geloescht(
+    monkeypatch: Any,
+) -> None:
+    """Airbnb mappt ueber `listing_id`, nicht ueber `rate_plan_code`.
+
+    Ein Eintrag ohne Ratencode ist deshalb NIE verwaist. Ihn an den Ratencodes
+    eines anderen Portals zu messen hiesse, jede Airbnb-Zuordnung zu loeschen —
+    „7 OTAs, jede eigene Einstellung".
+
+    Geprueft wird direkt an `verwaiste_mit_mapping_id`: an einem
+    BookingCom-Kanal kaeme ein Airbnb-Eintrag nicht vor, die Sperre muss aber
+    dort sitzen, wo entschieden wird.
+    """
+    from src.features.channel_manager.verwaiste_raten import (
+        verwaiste_mit_mapping_id,
+    )
+
+    eintraege = [
+        {"id": "map-airbnb", "rate_plan_id": "cx-grundpreis",
+         "settings": {"listing_id": "1234567890"}},
+        {"id": "map-verwaist", "rate_plan_id": "cx-grundpreis",
+         "settings": {"room_type_code": 1165905102,
+                      "rate_plan_code": LINE_VERWAIST}},
+    ]
+    treffer = verwaiste_mit_mapping_id(
+        eintraege, {str(LINE_GUELTIG["id"])}
+    )
+
+    assert [m for m, _ in treffer] == ["map-verwaist"]
+    del monkeypatch
+
+
+def test_eintrag_ohne_mapping_id_wird_ausgelassen() -> None:
+    """Ohne `mapping_id` gibt es keinen Loeschpfad.
+
+    Die ID steht ausschliesslich im Kanal-Objekt unter `rate_plans[].id`; es
+    gibt keinen GET-Pfad fuer Mappings. Ein geratener Pfad waere ein erfundener
+    Wert (Wurzel 4) — der Eintrag wird geloggt und ausgelassen.
+    """
+    from src.features.channel_manager.verwaiste_raten import (
+        verwaiste_mit_mapping_id,
+    )
+
+    treffer = verwaiste_mit_mapping_id(
+        [{"rate_plan_id": "cx-grundpreis",
+          "settings": {"rate_plan_code": LINE_VERWAIST}}],
+        {str(LINE_GUELTIG["id"])},
+    )
+
+    assert treffer == []
+
+
+def test_loesch_fehler_kippt_den_lauf_nicht(monkeypatch: Any) -> None:
+    """Ein abgelehntes DELETE wird NICHT als erledigt gemeldet (Wurzel 5).
+
+    Der Eintrag bleibt stehen, der Zaehler bleibt 0 — der taegliche Lauf
+    versucht es wieder. Wichtig ist beides: keine Falschmeldung UND kein
+    Abbruch, denn die Neuanlage der Wochenrate soll trotzdem laufen.
+    """
+    db = _Db()
+    channex = _Channex(_details([LINE_GUELTIG, WOCHE]))
+    channex.zuordnungen = [
+        ("cx-grundpreis", LINE_GUELTIG["id"], True),
+        ("cx-grundpreis", LINE_VERWAIST, False),
+    ]
+    channex.loesch_fehler = ChannexError(
+        "nope", status_code=502, channex_status=422
+    )
+    ergebnis, eingereiht = _lauf(db, channex, monkeypatch)
+
+    assert ergebnis["verwaist_geloescht"] == 0
+    # Die Wochenrate bekommt trotzdem ihren Plan: ein gescheitertes DELETE darf
+    # den restlichen Lauf nicht verhindern.
+    assert [i["name"] for i in db.inserts] == ["Wochenrate"]
+    assert eingereiht == [(TENANT, OBJEKT)]
+
+
+def test_vierundzwanzig_null_vier_ist_zielzustand(monkeypatch: Any) -> None:
+    """404 = schon weg = Zielzustand (Wurzel 2), aber nicht gezaehlt.
+
+    Der Lauf hat es nicht getan, also darf er es nicht behaupten (Wurzel 4).
+    """
+    db = _Db()
+    channex = _Channex(_details([LINE_GUELTIG]))
+    channex.zuordnungen = [
+        ("cx-grundpreis", LINE_GUELTIG["id"], True),
+        ("cx-grundpreis", LINE_VERWAIST, False),
+    ]
+    # `channex_status`, NICHT `status_code`: 404 heisst hier „Channex kennt das
+    # Mapping nicht mehr". Der erste Entwurf dieses Tests setzte `status_code`
+    # und pruefte damit versehentlich den generischen Fehlerzweig — beide Zweige
+    # geben 0 zurueck, der Test war gruen ohne die 404-Regel zu beruehren.
+    channex.loesch_fehler = ChannexError(
+        "gone", status_code=502, channex_status=404
+    )
+    ergebnis, _ = _lauf(db, channex, monkeypatch)
+
+    assert ergebnis["verwaist_geloescht"] == 0
+    assert channex.geloescht == []

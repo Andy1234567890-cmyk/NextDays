@@ -25,7 +25,47 @@ WAS DIESER LAUF TUT:
   c) fuer jede uebrige Rate ohne namensgleichen lokalen Plan einen anlegen
      (`portal_raten_plaene.plan_fuer_portal_rate`, idempotent ueber
      `vorhandene_plan_namen` — Wurzel 2),
-  d) bei mindestens einem neuen Plan den Content-Sync einreihen.
+  d) bei mindestens einem neuen Plan den Content-Sync einreihen,
+  f) VERWAISTE Kanal-Eintraege loeschen — Codes, die das Portal nicht mehr
+     fuehrt (`verwaiste_kanal_eintraege_entfernen`, s. u.).
+
+SCHRITT (f) — WARUM DER ABGLEICH SEIT DEM 24.08.2026 AUCH LOESCHT:
+Ein Kanal-Eintrag, dessen `rate_plan_code` das Portal nicht mehr fuehrt, blieb
+bisher fuer immer stehen: `verwaiste_raten.ohne_verwaiste` lief nur beim
+additiven Kanal-PUT (`channels._merge_channel_rate_plans`), also nur, wenn
+ueberhaupt geschrieben wurde. Channex sendet den Eintrag aber bei JEDEM
+Preis-Push mit, und Booking.com lehnt dann die GANZE Nachricht ab. Live gemessen
+(24.08.2026 02:02, Channel Action View, „Feriehus Line", Hotel 11659051):
+
+    OTA_HotelRateAmountNotifRQ, zwei RateAmountMessage:
+      RatePlanCode="65900673" InvTypeCode="1165905102"  -> gueltig
+      RatePlanCode="65900767" InvTypeCode="1165905102"  -> verwaist
+    Antwort:
+      <Error Code="RATE_NOT_ACTIVE_FOR_ROOM"
+             ShortText="Rate '65900767' is not active for room '1165905102'"
+             Details="room_ids: 1165905102; hotel_ids: 11659051;
+                      dates: 2028-01-05,2028-01-05; rate_ids: 65900767;"/>
+    Result: Failure (Execution 312 ms)
+
+Der Mindestaufenthalt-Push derselben Aktion (OTA_HotelAvailNotif, eigene
+Nachricht) lief mit `<Success/>` durch — nur die Preis-Nachricht kippt, weil sie
+die Raten NAMENTLICH nennt. Ein verwaister Eintrag blockiert damit die Preise
+ALLER Raten des Zimmers, nicht nur seine eigenen.
+
+Die zweite `RateAmountMessage` kommt NICHT von uns: `ari_push.push_rates_batch`
+sendet je Wert ausschliesslich `property_id` + `rate_plan_id` (unsere
+Channex-Plan-ID) — nie einen `rate_plan_code`
+(`ari_push.py:1494-1497`). Die Aufspaltung in OTA-Raten macht Channex aus seinem
+Kanal-Mapping. Deshalb ist das Loeschen des Eintrags die VOLLSTAENDIGE Behebung;
+ein Filter in unserem Push haette daran nichts geaendert.
+
+Der Modul-Kopf von `verwaiste_raten` sagte bis heute „BEWUSST NICHT: automatisch
+bei Channex loeschen … der Abgleich MELDET". Das war richtig, solange der
+verwaiste Eintrag nur unordentlich war. Seit er den Preis-Push des ganzen
+Zimmers kippt, ist das Stehenlassen der Eingriff und das Loeschen der
+Gegenzustand (Wurzel 1). Gedeckt ist es, weil geloescht wird, was das Portal
+selbst nicht mehr fuehrt: der Betrieb hat die Rate im Extranet entfernt, wir
+ziehen nur nach — und ausschliesslich in UNSEREM Kanal-Mapping, nie im Extranet.
 
 WELCHE RATE ARBEIT IST — „BELEGT" IST NICHT „GEMAPPT":
 Der erste Entwurf dieses Laufs liess jede Rate aus, die im Kanal irgendeinem
@@ -140,15 +180,18 @@ class PortalRatenAbgleichMixin:
         Rueckgabe (fuer den Job-Verlauf, damit dort steht was passiert ist und
         keine Taetigkeit behauptet wird, Wurzel 4):
         `{"kanaele": n, "portal_raten": n, "angelegt": n, "nachgezogen": n,
-        "sync_eingereiht": b}` — `nachgezogen` sind Plaene, deren verlorene
-        Portal-Freigabe wieder gesetzt wurde (s. `portalfreigabe_nachziehen`).
+        "verwaist_geloescht": n, "sync_eingereiht": b}` — `nachgezogen` sind
+        Plaene, deren verlorene Portal-Freigabe wieder gesetzt wurde
+        (s. `portalfreigabe_nachziehen`), `verwaist_geloescht` die Kanal-
+        Eintraege, deren Ratencode das Portal nicht mehr fuehrt (Schritt f im
+        Modul-Kopf — sie kippten den Preis-Push des ganzen Zimmers).
         """
         db = self._require_db()
         conns = self._kanaele_mit_raten(db, tenant_id, property_id)
         if not conns:
             return {
                 "kanaele": 0, "portal_raten": 0, "angelegt": 0,
-                "nachgezogen": 0,
+                "nachgezogen": 0, "verwaist_geloescht": 0,
                 "sync_eingereiht": False,
             }
 
@@ -170,7 +213,7 @@ class PortalRatenAbgleichMixin:
             )
             return {
                 "kanaele": len(conns), "portal_raten": 0, "angelegt": 0,
-                "nachgezogen": 0,
+                "nachgezogen": 0, "verwaist_geloescht": 0,
                 "sync_eingereiht": False,
             }
 
@@ -178,6 +221,7 @@ class PortalRatenAbgleichMixin:
         raten_gesamt = 0
         angelegt = 0
         nachgezogen = 0
+        verwaist_geloescht = 0
         # Raten, deren eigener Plan nur als Attrappe zugeordnet ist (s. u.).
         zu_heilen = 0
         for conn in conns:
@@ -205,7 +249,18 @@ class PortalRatenAbgleichMixin:
                     portal=portal,
                 )
                 continue
-            belegt, attrappen = gelesen
+            belegt, attrappen, kanal_eintraege = gelesen
+            # Schritt (f): erst den Gegenzustand, dann die Neuanlage. Die
+            # Reihenfolge ist Absicht — ein verwaister Eintrag kippt den
+            # Preis-Push des ganzen Zimmers (RATE_NOT_ACTIVE_FOR_ROOM, s.
+            # Modul-Kopf), also wird er weggeraeumt, auch wenn danach
+            # nichts anzulegen ist und der Lauf ohne Content-Sync endet.
+            verwaist_geloescht += self._verwaiste_kanal_eintraege_entfernen(
+                tenant_id=tenant_id, property_id=property_id, portal=portal,
+                channel_id=str(conn.get("channex_channel_id") or ""),
+                kanal_eintraege=kanal_eintraege,
+                portal_codes=set(titel_je_code),
+            )
             # Eine Attrappe ist ARBEIT, auch wenn nichts anzulegen ist: der
             # Plan steht da, sein Flag stimmt, nur seine Kanal-Zuordnung traegt
             # nichts. Ohne diesen Zaehler blieben `angelegt` und `nachgezogen`
@@ -308,9 +363,16 @@ class PortalRatenAbgleichMixin:
             # der Lauf muss beim zweiten Mal NICHTS tun). Ein nachgezogenes Flag
             # zaehlt dazu, denn erst der Content-Sync ruft im selben Handler
             # `freigegebene_plaene_zuordnen`, die es liest.
+            # Ein reiner Loeschlauf reiht KEINEN Content-Sync ein: das
+            # Loeschen ist am Kanal schon passiert (DELETE …/mappings/{id}), und
+            # ein Content-Sync wuerde ueber `_merge_channel_rate_plans` nur das
+            # additive PUT nachschieben, das nichts mehr zu tun hat. Wurzel 2:
+            # der zweite Lauf findet keinen verwaisten Eintrag mehr und tut
+            # nichts.
             return {
                 "kanaele": len(conns), "portal_raten": raten_gesamt,
                 "angelegt": 0, "nachgezogen": 0, "zu_heilen": 0,
+                "verwaist_geloescht": verwaist_geloescht,
                 "sync_eingereiht": False,
             }
 
@@ -326,11 +388,13 @@ class PortalRatenAbgleichMixin:
             tenant_id=tenant_id, property_id=property_id,
             kanaele=len(conns), portal_raten=raten_gesamt, angelegt=angelegt,
             nachgezogen=nachgezogen, zu_heilen=zu_heilen,
+            verwaist_geloescht=verwaist_geloescht,
         )
         return {
             "kanaele": len(conns), "portal_raten": raten_gesamt,
             "angelegt": angelegt, "nachgezogen": nachgezogen,
-            "zu_heilen": zu_heilen, "sync_eingereiht": True,
+            "zu_heilen": zu_heilen, "verwaist_geloescht": verwaist_geloescht,
+            "sync_eingereiht": True,
         }
 
     def _kanaele_mit_raten(
@@ -358,8 +422,15 @@ class PortalRatenAbgleichMixin:
     def _belegte_ratencodes(
         self, db: Client, tenant_id: str, property_id: str,
         conn: dict[str, Any], titel_je_code: dict[str, str],
-    ) -> tuple[set[str], set[str]] | None:
+    ) -> tuple[set[str], set[str], list[dict[str, Any]]] | None:
         """Die Ratencodes, die ihren EIGENEN Plan schon haben.
+
+        Drittes Element ist das ROHE `rate_plans`-Array des Kanals. Es wird
+        zurueckgegeben, statt den Kanal ein zweites Mal zu holen: Schritt (f)
+        braucht dieselbe Antwort, um die verwaisten Eintraege samt ihrer
+        `mapping_id` zu finden, und ein zweiter `GET /channels/{id}` waere ein
+        weiterer Channex-Call je Objekt und Lauf fuer bereits gelesene Daten
+        (Budget-Rechnung im Modul-Kopf).
 
         `None` heisst „Kanal nicht lesbar" — dann wird nichts angelegt
         (fail-closed, Wurzel 5). Der Unterschied zu einer leeren Menge ist
@@ -419,6 +490,9 @@ class PortalRatenAbgleichMixin:
             # Eine Antwort ohne `data` ist kein leerer Kanal, sondern eine
             # Antwort, die wir nicht deuten koennen.
             return None
+        kanal_eintraege = (
+            (daten.get("attributes") or {}).get("rate_plans") or []
+        )
         namen = self._plannamen_je_channex_id(db, tenant_id, property_id)
         belegt: set[str] = set()
         # Raten, deren eigener Plan nur als Attrappe zugeordnet ist. Sie sind
@@ -428,7 +502,7 @@ class PortalRatenAbgleichMixin:
         # Je (Plan, Zimmer) die EINE primaere Rate, die ein namensfremder Plan
         # behalten darf — siehe Docstring, Punkt 2.
         behalten: set[tuple[str, str]] = set()
-        for eintrag in (daten.get("attributes") or {}).get("rate_plans") or []:
+        for eintrag in kanal_eintraege:
             settings = eintrag.get("settings") or {}
             code = settings.get("rate_plan_code")
             if code is None:
@@ -465,7 +539,94 @@ class PortalRatenAbgleichMixin:
             if schluessel not in behalten:
                 behalten.add(schluessel)
                 belegt.add(code)
-        return belegt, attrappen
+        return belegt, attrappen, kanal_eintraege
+
+    def _verwaiste_kanal_eintraege_entfernen(
+        self, *, tenant_id: str, property_id: str, portal: str,
+        channel_id: str, kanal_eintraege: list[dict[str, Any]],
+        portal_codes: set[str],
+    ) -> int:
+        """Schritt (f): Kanal-Eintraege loeschen, deren Rate das Portal nicht
+        mehr fuehrt. Rueckgabe: Anzahl der geloeschten Eintraege.
+
+        WARUM DAS LOESCHEN NOETIG IST (der Beleg, nicht die Vermutung).
+        Booking.com, Channel Action View, 24.08.2026 02:02, „Feriehus Line"
+        (Hotel 11659051, Zimmer 1165905102): der Preis-Push enthielt ZWEI
+        `RateAmountMessage`, 65900673 (gueltig) und 65900767 (verwaist), und die
+        Antwort war
+
+            <Error Code="RATE_NOT_ACTIVE_FOR_ROOM"
+                   ShortText="Rate '65900767' is not active for room
+                              '1165905102'"/>
+            Result: Failure
+
+        also der Verlust der Preise ALLER Raten dieses Zimmers, nicht nur der
+        verwaisten. Der Mindestaufenthalt-Push derselben Aktion
+        (`OTA_HotelAvailNotif`) lief mit `<Success/>` — er nennt die Raten nicht
+        namentlich, der Preis-Push tut es.
+
+        WER DIE ZWEITE NACHRICHT ERZEUGT: Channex, aus diesem Mapping.
+        `ari_push.push_rates_batch` sendet je Wert nur `property_id` +
+        `rate_plan_id` (unsere Channex-Plan-ID), niemals einen
+        `rate_plan_code` — `ari_push.py:1494-1497`. Unser Push kann den Code
+        also gar nicht auslassen; nur dieses Mapping kennt ihn.
+
+        FAIL-CLOSED (Wurzel 5), zwei Sperren, beide in `verwaiste_raten`:
+        * `portal_codes` leer -> `verwaiste_eintraege` gibt LEER zurueck. Ein
+          `mapping_details` ohne Raten ist ein fehlgeschlagener Abruf, kein
+          Portal ohne Raten; wer daraus „alles verwaist" ableitete, raeumte bei
+          jeder Stoerung das ganze Mapping ab. Der Aufrufer erreicht diese
+          Stelle bei einem Fehlschlag ohnehin nicht (`if not raten: continue`),
+          die Sperre bleibt als zweiter Boden.
+        * Eintrag ohne `rate_plan_code` -> nie verwaist. Airbnb mappt ueber
+          `listing_id`; ihn an Ratencodes zu messen hiesse, jede
+          Airbnb-Zuordnung zu loeschen.
+
+        IDEMPOTENZ (Wurzel 2): der zweite Lauf sieht den Eintrag nicht mehr im
+        Kanal und loescht nichts. Ein 404 gilt als Zielzustand — dasselbe
+        Muster wie `objekt_kanal._paar_vom_alten_traeger_loesen`, das den
+        DELETE-Weg bereits geht (es gibt keinen zweiten).
+        """
+        if not channel_id or not kanal_eintraege:
+            return 0
+        from .verwaiste_raten import verwaiste_mit_mapping_id
+
+        geloescht = 0
+        for mapping_id, settings in verwaiste_mit_mapping_id(
+            kanal_eintraege, portal_codes
+        ):
+            try:
+                self._channex.delete_channel_mapping(channel_id, mapping_id)
+            except ChannexError as exc:
+                if exc.channex_status == 404:
+                    # Schon weg = Zielzustand (Wurzel 2), nicht gezaehlt: der
+                    # Lauf hat es nicht getan.
+                    continue
+                # Kein breites `except`: nur der Channex-Fehler wird hier
+                # abgefangen, und er beendet den Lauf NICHT — der naechste
+                # verwaiste Eintrag und die Neuanlage sollen ihre Chance haben.
+                # Der Fehler bleibt sichtbar und der Eintrag stehen; der
+                # taegliche Lauf versucht es wieder (Wurzel 5: nichts wird
+                # still als „done" markiert).
+                log.warning(
+                    "kanal_verwaiste_rate_nicht_geloescht",
+                    tenant_id=tenant_id, property_id=property_id,
+                    portal=portal, channel_id=channel_id,
+                    mapping_id=mapping_id,
+                    rate_plan_code=settings.get("rate_plan_code"),
+                    error=str(exc)[:200],
+                )
+                continue
+            geloescht += 1
+            log.info(
+                "kanal_verwaiste_rate_geloescht",
+                tenant_id=tenant_id, property_id=property_id, portal=portal,
+                channel_id=channel_id, mapping_id=mapping_id,
+                rate_plan_code=settings.get("rate_plan_code"),
+                room_type_code=settings.get("room_type_code"),
+                portal_fuehrt=sorted(portal_codes),
+            )
+        return geloescht
 
     def _plannamen_je_channex_id(
         self, db: Client, tenant_id: str, property_id: str

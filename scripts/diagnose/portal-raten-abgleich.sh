@@ -5,7 +5,7 @@
 #   was das Portal fuehrt      (POST /channels/mapping_details -> rooms[].rates[])
 #   was der Kanal zuordnet     (GET  /channels/{id} -> rate_plans[].settings)
 #   welche Plaene wir haben    (rate_plans, per SSH auf der Server-DB)
-#   -> was `abgleich_portal_raten` ANLEGEN WUERDE
+#   -> was `abgleich_portal_raten` ANLEGEN und LOESCHEN WUERDE
 #
 # Hintergrund: `channels._plaene_fuer_uebrige_raten` legt je Portal-Rate einen
 # eigenen Preisplan an, laeuft aber nur beim VERBINDEN eines Kanals. Fuer die 18
@@ -13,6 +13,16 @@
 # fuehrt Booking zwei Raten (Standard Rate, Wochenrate), lokal stand nur der
 # Grundpreis. Booking fuehrt Restriktionen auf RATE-Ebene: eine Rate ohne
 # eigenen Plan ist bei uns unsichtbar und traegt keinen Mindestaufenthalt.
+#
+# LOESCHEN (seit 24.08.2026 Teil des Jobs): ein Kanal-Eintrag, dessen
+# `rate_plan_code` das Portal nicht mehr fuehrt, kippt den PREIS-Push des ganzen
+# Zimmers. Live bei "Feriehus Line" (Hotel 11659051, Zimmer 1165905102):
+#   <Error Code="RATE_NOT_ACTIVE_FOR_ROOM"
+#          ShortText="Rate '65900767' is not active for room '1165905102'"/>
+#   Result: Failure
+# Der Mindestaufenthalt-Push derselben Aktion lief mit <Success/> durch — nur
+# die Preis-Nachricht nennt die Raten namentlich. Dieses Skript ZEIGT die
+# Eintraege; geloescht werden sie ausschliesslich vom Job.
 #
 # NUR LESEN. `mapping_details` ist trotz POST eine reine Leseabfrage (sie legt
 # nichts an); `GET /channels/{id}` ebenso. Kein PUT/PATCH/DELETE, keine
@@ -73,6 +83,7 @@ printf '%s\n' "-----------------------------------------------------------------
 
 GESAMT=0
 FEHLT=0
+VERWAIST=0
 
 while IFS='|' read -r PROP TITEL PORTAL HOTEL CHANNEL PLAENE; do
   [ -n "$PROP" ] || continue
@@ -91,16 +102,20 @@ while IFS='|' read -r PROP TITEL PORTAL HOTEL CHANNEL PLAENE; do
 
   AUSGABE="$(RATEN="$RATEN" KANAL="$KANAL" PLAENE="$PLAENE" \
     python3 "$HIER/portal_raten_abgleich_auswertung.py")"
-  BEFUND="${AUSGABE#*|}"
   ANZAHL="${AUSGABE%%|*}"
+  REST="${AUSGABE#*|}"
+  ANZAHL_VERWAIST="${REST%%|*}"
+  BEFUND="${REST#*|}"
   FEHLT=$((FEHLT + ANZAHL))
+  VERWAIST=$((VERWAIST + ANZAHL_VERWAIST))
 
   printf '%-30.30s %-12.12s %-10.10s %s\n' \
     "$TITEL" "$PORTAL" "$HOTEL" "$BEFUND"
 done <<< "$ZEILEN"
 
 printf '%s\n' "-------------------------------------------------------------------------------"
-echo "  $GESAMT Kennung(en) geprueft; $FEHLT Preisplan/-plaene wuerde der Abgleich anlegen."
+echo "  $GESAMT Kennung(en) geprueft; $FEHLT Preisplan/-plaene wuerde der"
+echo "  Abgleich anlegen, $VERWAIST verwaiste(n) Kanal-Eintrag loeschen."
 echo
 echo "  Anlegen tut das der Job 'abgleich_portal_raten' (taeglich am"
 echo "  reconcile-Tick, worker._enqueue_portal_raten_abgleich). Dieses Skript"

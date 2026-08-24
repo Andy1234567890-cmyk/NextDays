@@ -53,7 +53,16 @@ def einreihen(db: Client, bucket: int) -> int:
 
     Idempotent auch OHNE den Bucket (Wurzel 2): der Job selbst laesst jede Rate
     aus, die ihren eigenen Plan schon hat, und reiht ohne neuen Plan keinen
-    Content-Sync ein — kein Insert, kein Channex-Schreibaufruf.
+    Content-Sync ein — kein Insert, kein Content-Schreibaufruf.
+
+    EINEN Channex-SCHREIBaufruf macht der Job seit dem 24.08.2026 doch: er
+    loescht Kanal-Eintraege, deren `rate_plan_code` das Portal nicht mehr fuehrt
+    (`DELETE channels/{id}/mappings/{mapping_id}`). Auch der ist idempotent —
+    der zweite Lauf findet den Eintrag nicht mehr, und ein 404 gilt als
+    Zielzustand. Begruendung samt Booking-Fehlermeldung
+    (`RATE_NOT_ACTIVE_FOR_ROOM`, „Feriehus Line", 24.08.2026 02:02) im Kopf von
+    `portal_raten_abgleich`; ohne dieses Loeschen kippte der Preis-Push des
+    ganzen Zimmers.
     """
     rows = (
         db.table("channex_channel_connection")

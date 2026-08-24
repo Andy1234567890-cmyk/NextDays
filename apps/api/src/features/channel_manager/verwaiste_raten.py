@@ -21,11 +21,32 @@ Verfuegbarkeit weiter floss: eine Rate, die verkauft, aber keine Regel kennt.
 Wurzel 1 (Gegenzustand): wer Zuordnungen neu setzt, muss die freigewordenen
 alten pflegen. Diese Datei ist dieser Gegenzustand.
 
-BEWUSST NICHT: automatisch bei Channex loeschen. Ein `mapping_details`, das
-eine Rate nicht listet, ist kein Beweis, dass sie beim Portal weg ist — der
-Abruf kann eingeschraenkt antworten, und ein stiller Loeschlauf gegen ein
-Live-Konto ist genau der Eingriff, den [[live-konto-schreibtest-verboten]]
-verbietet. Der Abgleich MELDET, und der Betrieb entscheidet.
+SEIT DEM 24.08.2026 WIRD AUCH GELOESCHT — und zwar am Kanal, nicht im Extranet.
+Der Modul-Kopf sagte hier bis dahin das Gegenteil („der Abgleich MELDET, und der
+Betrieb entscheidet"). Das war richtig, solange ein verwaister Eintrag nur
+unordentlich war. Er ist es nicht: Booking.com lehnt die GANZE Preis-Nachricht
+ab, sobald sie eine nicht mehr gefuehrte Rate nennt. Gemessen am 24.08.2026
+02:02 (Channel Action View, „Feriehus Line", Hotel 11659051, Zimmer
+1165905102) — zwei `RateAmountMessage`, 65900673 gueltig und 65900767 verwaist:
+
+    <Error Code="RATE_NOT_ACTIVE_FOR_ROOM"
+           ShortText="Rate '65900767' is not active for room '1165905102'"/>
+    Result: Failure
+
+Damit verlieren ALLE Raten des Zimmers ihre Preise, nicht nur die verwaiste. Der
+Mindestaufenthalt-Push derselben Aktion (`OTA_HotelAvailNotif`, eigene
+Nachricht) lief mit `<Success/>` durch — nur die Preis-Nachricht nennt die Raten
+namentlich. Das Stehenlassen ist ab hier der Eingriff, das Loeschen der
+Gegenzustand (Wurzel 1).
+
+Zwei Grenzen bleiben unveraendert:
+* Geloescht wird ausschliesslich UNSER Kanal-Mapping bei Channex
+  (`DELETE channels/{id}/mappings/{mapping_id}`), NIE etwas im Extranet des
+  Portals. Die Rate hat der Betrieb dort selbst entfernt; wir ziehen nach.
+* Ein `mapping_details` ohne Raten loescht NICHTS. Ein eingeschraenkt
+  antwortender Abruf ist kein Portal ohne Raten — siehe `verwaiste_eintraege`.
+Der loeschende Pfad steht in
+`portal_raten_abgleich._verwaiste_kanal_eintraege_entfernen`.
 """
 from __future__ import annotations
 
@@ -104,3 +125,30 @@ def ohne_verwaiste(
         )
     verwaiste_ids = {id(e) for e in verwaist}
     return [e for e in (rate_plans or []) if id(e) not in verwaiste_ids]
+
+
+def verwaiste_mit_mapping_id(
+    rate_plans: list[dict[str, Any]], portal_codes: set[str]
+) -> list[tuple[str, dict[str, Any]]]:
+    """Die verwaisten Eintraege, die sich UEBERHAUPT loeschen lassen.
+
+    `[(mapping_id, settings), ...]`. Die `mapping_id` steht ausschliesslich im
+    Kanal-Objekt unter `attributes.rate_plans[].id` — es gibt keinen GET-Pfad
+    fuer Mappings (siehe `channex_client.delete_channel_mapping`). Ein Eintrag
+    ohne diese `id` ist nicht loeschbar; er wird geloggt und ausgelassen, statt
+    einen geratenen Pfad zu bauen (Wurzel 4).
+    """
+    loeschbar: list[tuple[str, dict[str, Any]]] = []
+    for eintrag in verwaiste_eintraege(rate_plans, portal_codes):
+        settings = eintrag.get("settings") or {}
+        mapping_id = str(eintrag.get("id") or "")
+        if not mapping_id:
+            log.warning(
+                "kanal_verwaiste_rate_ohne_mapping_id",
+                rate_plan_code=settings.get("rate_plan_code"),
+                room_type_code=settings.get("room_type_code"),
+                rate_plan_id=eintrag.get("rate_plan_id"),
+            )
+            continue
+        loeschbar.append((mapping_id, settings))
+    return loeschbar
