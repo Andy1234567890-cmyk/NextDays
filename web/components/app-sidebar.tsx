@@ -92,6 +92,43 @@ const MAIN: readonly NavItem[] = [
   // täglich nachgezogen. Steht deshalb flach unter Aufgaben und NICHT mehr in
   // der Vertriebs-Gruppe — sonst stünde er zweimal.
   { key: "dynamicPricing", href: "/dynamic-pricing", icon: "ph:lightning" },
+  // Kanalmanager und Bewertungen stehen flach unter der Preissteuerung, nicht
+  // in einer Vertriebs-Gruppe: beides ist Tagesgeschäft (ein Kanal-Fehler
+  // sperrt den Verkauf, eine unbeantwortete Bewertung kostet Ranking) und war
+  // hinter dem zugeklappten Menü erst nach zwei Klicks erreichbar. Die Gruppe
+  // „distribution" enthielt nur diese zwei Punkte und ist damit entfallen.
+  { key: "channelManager", href: "/channels", icon: "ph:arrows-left-right" },
+  { key: "reviews", href: "/bewertungen", icon: "ph:star", req: "view_reviews" },
+];
+
+// Fuß der Navigation: kontoweite Flächen, die zu keinem Objekt und keiner
+// Buchung gehören. Sie standen in der aufklappbaren Gruppe „Werkzeuge" — ein
+// Deckel über genau zwei Punkten, der beide hinter einen zusätzlichen Klick
+// legte und im Icon-Modus nur als Werkzeugkasten-Symbol erschien. Jetzt stehen
+// sie flach, aber UNTEN: sie werden selten gebraucht und sollen die täglichen
+// Punkte oben nicht verdrängen. Eigener Block NACH den Gruppen — `MAIN` würde
+// sie an den Anfang setzen.
+const BOTTOM: readonly NavItem[] = [
+  // „Erweiterungen" ist der Modul-Verkauf (Kacheln + Detailseite mit
+  // „Aktivieren") — bewusst NICHT in der Abrechnung, dort stehen Tarif und
+  // Rechnungen. Buchen kostet Geld → manage_billing.
+  { key: "extensions", href: "/erweiterungen", icon: "ph:puzzle-piece", req: "manage_billing" },
+  // Neuerungen: die offiziellen Ankündigungen des Plattform-Teams. Kein
+  // `req`, weil das keine Betriebs-Berechtigung ist, sondern eine Frage
+  // der Rolle — Adressat sind die Entscheider des Betriebs. Deshalb
+  // `rollen` (greift vor dem Admin-Kurzschluss oben in canSee).
+  //
+  // /neuerungen steht bewusst NICHT in OWNER_ALLOWED_HREFS oder
+  // STAFF_ALLOWED_HREFS: diese Whitelists sind das Gegenteil hiervon
+  // (sie öffnen für owner/staff), und beide Rollen sollen den Punkt gar
+  // nicht sehen. Der Serverpfad hält das gegen: /neuerungen antwortet für
+  // sie mit 404 (notFound), der Backend-Slice mit 403.
+  {
+    key: "announcements",
+    href: "/neuerungen",
+    icon: "ph:megaphone",
+    rollen: ["admin", "co_admin"],
+  },
 ];
 
 // Thematische Gruppen; werden zur Laufzeit nach Beherbergungsart gebaut.
@@ -251,19 +288,6 @@ function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] 
         { key: "travelAgencies", href: "/reisebueros", icon: "ph:handshake", req: "manage_partners" },
       ],
     },
-    {
-      groupKey: "distribution",
-      icon: "ph:broadcast",
-      items: [
-        { key: "channelManager", href: "/channels", icon: "ph:arrows-left-right" },
-        // Bewertungen aller Kanäle (Portale + myBestDays) — Vertriebsarbeit:
-        // eine unbeantwortete Bewertung kostet Sichtbarkeit im Ranking.
-        { key: "reviews", href: "/bewertungen", icon: "ph:star", req: "view_reviews" },
-        // „dynamicPricing" steht oben in MAIN, der Website-Baukasten hat seine
-        // EIGENE Gruppe (unten) — hier keinen der beiden wiederholen, sonst
-        // stünde er zweimal in der Sidebar.
-      ],
-    },
     // Website-Baukasten als eigene Gruppe, nicht als Punkt unter „Vertrieb":
     // die eigene Website ist ein eigener Verkaufsweg (Direktbuchung), und man
     // arbeitet an ihr in drei klar getrennten Bereichen. Jeder Bereich ist ein
@@ -307,36 +331,10 @@ const HIDDEN_AT_LAUNCH: ReadonlySet<string> = new Set([
   "jobs",
 ]);
 
-// Betriebsart-unabhängige Gruppen (Werkzeuge/Marktplatz/HR/Jobs).
+// Betriebsart-unabhängige Gruppen (Marktplatz/HR/Jobs). „Werkzeuge" ist
+// aufgelöst — seine zwei Punkte stehen flach in `BOTTOM`.
 // `groupKey` = i18n-Schlüssel (Namespace "nav.groups").
 const STATIC_GROUPS: readonly NavGroup[] = [
-  {
-    // Werkzeuge: kontoweite Flächen, die zu keinem Objekt und keiner Buchung
-    // gehören. „Erweiterungen" ist der Modul-Verkauf (Kacheln + Detailseite mit
-    // „Aktivieren") — bewusst NICHT in der Abrechnung, dort stehen Tarif und
-    // Rechnungen. Buchen kostet Geld → manage_billing.
-    groupKey: "tools",
-    icon: "ph:toolbox",
-    items: [
-      { key: "extensions", href: "/erweiterungen", icon: "ph:puzzle-piece", req: "manage_billing" },
-      // Neuerungen: die offiziellen Ankündigungen des Plattform-Teams. Kein
-      // `req`, weil das keine Betriebs-Berechtigung ist, sondern eine Frage
-      // der Rolle — Adressat sind die Entscheider des Betriebs. Deshalb
-      // `rollen` (greift vor dem Admin-Kurzschluss oben in canSee).
-      //
-      // /neuerungen steht bewusst NICHT in OWNER_ALLOWED_HREFS oder
-      // STAFF_ALLOWED_HREFS: diese Whitelists sind das Gegenteil hiervon
-      // (sie öffnen für owner/staff), und beide Rollen sollen den Punkt gar
-      // nicht sehen. Der Serverpfad hält das gegen: /neuerungen antwortet für
-      // sie mit 404 (notFound), der Backend-Slice mit 403.
-      {
-        key: "announcements",
-        href: "/neuerungen",
-        icon: "ph:megaphone",
-        rollen: ["admin", "co_admin"],
-      },
-    ],
-  },
   {
     groupKey: "marketplace",
     icon: "ph:storefront",
@@ -452,6 +450,7 @@ export function AppSidebar({
   // Präfix-Vergleich auch ihn.
   const alleHrefs = [
     ...MAIN.map((i) => i.href),
+    ...BOTTOM.map((i) => i.href),
     ...buildGroups(accommodationType).flatMap((g) => g.items.map((i) => i.href)),
   ];
   const isActive = ({ href: pfad, exact }: NavItem) => {
@@ -502,6 +501,7 @@ export function AppSidebar({
   };
 
   const mainItems = MAIN.filter(canSee);
+  const bottomItems = BOTTOM.filter(canSee);
   const groups = buildGroups(accommodationType);
 
   // Anzeigename + Initialen aus der E-Mail ableiten (bis echtes Profil da ist).
@@ -641,6 +641,43 @@ export function AppSidebar({
             </Collapsible>
           );
         })}
+
+        {/* Fuß der Navigation: flache Punkte NACH den Gruppen (Erweiterungen,
+            Neuerungen). `mt-auto` schiebt den Block an den unteren Rand, damit
+            er auch bei kurzer Navigation unten sitzt und nicht direkt an der
+            letzten Gruppe klebt. */}
+        {bottomItems.length > 0 ? (
+          <SidebarGroup className="mt-auto">
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {bottomItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    {istDemo && istGesperrt(item.href) ? (
+                      <DemoGesperrt
+                        icon={item.icon}
+                        label={t(item.key)}
+                        tourKey={item.key}
+                      />
+                    ) : (
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive(item)}
+                        tooltip={t(item.key)}
+                      >
+                        <Link href={item.href} data-tour={item.key}>
+                          <Icon icon={item.icon} />
+                          <span className="font-display font-normal">
+                            {t(item.key)}
+                          </span>
+                        </Link>
+                      </SidebarMenuButton>
+                    )}
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ) : null}
       </SidebarContent>
 
       {/* User-Block unten — Klick öffnet das Konto-Menü. */}
