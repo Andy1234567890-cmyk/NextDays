@@ -4820,6 +4820,7 @@
     },
     "taskStatusAction": {
       "open": "Pune înapoi",
+      "reopen": "Redeschide",
       "accepted": "Acceptă",
       "in_progress": "Începe",
       "done": "Finalizează"

@@ -4822,6 +4822,7 @@
     },
     "taskStatusAction": {
       "open": "Palauta",
+      "reopen": "Avaa uudelleen",
       "accepted": "Ota vastaan",
       "in_progress": "Aloita",
       "done": "Päätä"

@@ -4820,6 +4820,7 @@
     },
     "taskStatusAction": {
       "open": "Lägg tillbaka",
+      "reopen": "Öppna igen",
       "accepted": "Acceptera",
       "in_progress": "Starta",
       "done": "Slutför"

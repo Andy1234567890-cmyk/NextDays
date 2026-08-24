@@ -4822,6 +4822,7 @@
     },
     "taskStatusAction": {
       "open": "Remettre",
+      "reopen": "Rouvrir",
       "accepted": "Accepter",
       "in_progress": "Commencer",
       "done": "Terminer"

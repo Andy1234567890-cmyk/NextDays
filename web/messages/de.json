@@ -4866,6 +4866,7 @@
     },
     "taskStatusAction": {
       "open": "Zurücklegen",
+      "reopen": "Wieder öffnen",
       "accepted": "Annehmen",
       "in_progress": "Anfangen",
       "done": "Abschließen"

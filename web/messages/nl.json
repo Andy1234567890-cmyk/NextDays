@@ -4820,6 +4820,7 @@
     },
     "taskStatusAction": {
       "open": "Terugleggen",
+      "reopen": "Opnieuw openen",
       "accepted": "Accepteren",
       "in_progress": "Starten",
       "done": "Afronden"

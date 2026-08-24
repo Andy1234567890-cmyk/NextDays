@@ -44,6 +44,7 @@ import {
   AUFGABE_TONE,
   aufgabeTon,
   naechsterStatus,
+  zurueckStatus,
 } from "@/lib/aufgabenstatus";
 import { formatCurrency } from "@/lib/currency";
 import { fotoAufnehmen, fotoWaehlen, type FotoErgebnis } from "@/lib/foto";
@@ -331,7 +332,11 @@ export default function TaskDetail() {
     );
   }
 
-  const done = detail.status === "done";
+  // Die Fußleiste zeigt den Abschluss nur, wo er möglich ist. Vorher hing sie
+  // allein an `!done` — eine ABGEBROCHENE Aufgabe bot „Aufgabe abschließen“ an,
+  // und der Server lehnt diesen Wechsel ab (`cancelled` → nur `open`).
+  const abschliessbar =
+    detail.status !== "done" && detail.status !== "cancelled";
   const heute = heuteIso();
   const ton = aufgabeTon(detail, heute);
   const tonFarbe = AUFGABE_TONE[ton];
@@ -342,6 +347,7 @@ export default function TaskDetail() {
   // „heute" zu behaupten (Wurzel 4).
   const tag = tagRoh ? tagKurz(tagRoh.slice(0, 10)) : null;
   const weiter = naechsterStatus(detail.status);
+  const zurueck = zurueckStatus(detail.status);
   const punkte = detail.checklist.filter((p) => p.label !== SAMMEL_LABEL);
   const offenePflichtfotos = punkte.filter(
     (p) => p.requires_photo && p.photos.length === 0,
@@ -434,7 +440,7 @@ export default function TaskDetail() {
         )}
 
         {/* --- Arbeitszustand --- */}
-        {(weiter || detail.needs_inspection) && (
+        {(weiter || zurueck || detail.needs_inspection) && (
           <Abschnitt titel="Zustand">
             {detail.needs_inspection && (
               <Zeile
@@ -456,6 +462,22 @@ export default function TaskDetail() {
               >
                 {`Auf „${AUFGABE_STATUS_LABEL[weiter]}“ setzen`}
               </Btn>
+            )}
+            {zurueck && (
+              <>
+                <Btn
+                  variant="outline"
+                  block
+                  onPress={saving ? undefined : () => zustandWeiter(zurueck)}
+                >
+                  Wieder öffnen
+                </Btn>
+                <Txt v="xs" faint>
+                  {detail.status === "done"
+                    ? "Nimmt den Abschluss zurück — samt Zeitpunkt, Urheber und QA-Stand."
+                    : "Holt die abgesagte Aufgabe zurück in die Arbeit."}
+                </Txt>
+              </>
             )}
           </Abschnitt>
         )}
@@ -653,7 +675,7 @@ export default function TaskDetail() {
         </Abschnitt>
 
         {/* --- Vertretung: der Weg der ausführenden Person aus der Aufgabe. --- */}
-        {darfVertretung && !done && (
+        {darfVertretung && abschliessbar && (
           <Abschnitt titel="Vertretung">
             <Txt v="sm" soft>
               Wenn du die Aufgabe nicht übernehmen kannst, gib sie zur
@@ -826,7 +848,7 @@ export default function TaskDetail() {
         </Col>
       </Sheet>
 
-      {!done && (
+      {abschliessbar && (
         <View
           style={{
             position: "absolute",

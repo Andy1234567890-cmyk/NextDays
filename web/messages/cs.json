@@ -4822,6 +4822,7 @@
     },
     "taskStatusAction": {
       "open": "Vrátit",
+      "reopen": "Znovu otevřít",
       "accepted": "Přijmout",
       "in_progress": "Začít",
       "done": "Dokončit"

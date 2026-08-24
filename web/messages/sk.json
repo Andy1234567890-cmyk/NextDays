@@ -4820,6 +4820,7 @@
     },
     "taskStatusAction": {
       "open": "Vrátiť",
+      "reopen": "Znovu otvoriť",
       "accepted": "Prijať",
       "in_progress": "Začať",
       "done": "Dokončiť"

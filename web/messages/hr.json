@@ -4822,6 +4822,7 @@
     },
     "taskStatusAction": {
       "open": "Vrati",
+      "reopen": "Ponovno otvori",
       "accepted": "Prihvati",
       "in_progress": "Započni",
       "done": "Završi"

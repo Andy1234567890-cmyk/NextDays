@@ -1848,8 +1848,29 @@ class TasksService:
         """Aufgabe abschließen. Alle requires_photo-Items MÜSSEN ein Foto haben
         (sonst 422). Bei needs_inspection → inspection_state='to_review'.
         Mit `ctx` gilt der Objekt-Scope aus `list_tasks` (Wurzel 9) — sonst
-        könnte ein Mitarbeiter fremde Aufgaben abschließen."""
+        könnte ein Mitarbeiter fremde Aufgaben abschließen.
+
+        Der Übergang wird hier genauso geprüft wie in `set_status`: dieser
+        Endpunkt ist die ZWEITE Tür zu `done`, und eine Regel, die nur an einer
+        von zwei Türen hängt, ist keine Regel (Wurzel 5). Ohne die Prüfung ließ
+        sich eine ABGEBROCHENE Aufgabe über `POST /{id}/complete` abschließen,
+        obwohl `_STATUS_WECHSEL` aus `cancelled` nur `open` erlaubt — die
+        Massenaktion `bulk_complete` lief durch dieselbe Lücke."""
         detail = self.get_detail(tenant_id, task_id, ctx)
+        aktuell = detail.status.value
+        if aktuell == TaskStatus.done.value:
+            # Idempotent (Wurzel 2): der zweite Abschluss würde `completed_by`
+            # auf den zweiten Tipper umschreiben — die Aufgabe hätte plötzlich
+            # jemand anderes erledigt, und `completed_at` wanderte nach vorn.
+            return detail
+        if TaskStatus.done.value not in self._STATUS_WECHSEL.get(
+            aktuell, frozenset()
+        ):
+            raise TaskError(
+                f"Wechsel von '{aktuell}' nach '{TaskStatus.done.value}' "
+                "ist nicht vorgesehen.",
+                status_code=422,
+            )
         missing = [
             i for i in detail.checklist if i.requires_photo and not i.photos
         ]

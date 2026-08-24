@@ -4822,6 +4822,7 @@
     },
     "taskStatusAction": {
       "open": "Visszatesz",
+      "reopen": "Újranyitás",
       "accepted": "Elfogad",
       "in_progress": "Elkezd",
       "done": "Lezár"

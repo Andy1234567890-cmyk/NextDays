@@ -3,6 +3,7 @@ import {
   AUFGABE_STATUS_LABEL,
   aufgabeTon,
   naechsterStatus,
+  zurueckStatus,
 } from "@/lib/aufgabenstatus";
 
 function lokal(iso: string, stunde = 9): string {
@@ -80,5 +81,23 @@ describe("aufgabeTon", () => {
     // eigene Entscheidung.
     expect(naechsterStatus("done")).toBeNull();
     expect(naechsterStatus("cancelled")).toBeNull();
+  });
+
+  it("bietet aus jedem Endzustand den Rueckweg nach offen", () => {
+    // „Erledigt" war in der App eine Sackgasse: kein „weiter", kein „zurück",
+    // der ganze Zustand-Abschnitt verschwand. Der Server erlaubt den Wechsel
+    // (`_STATUS_WECHSEL`: done → open, cancelled → open) — nur die Oberfläche
+    // bot ihn nicht an.
+    expect(zurueckStatus("done")).toBe("open");
+    expect(zurueckStatus("cancelled")).toBe("open");
+  });
+
+  it("bietet im laufenden Betrieb keinen Rueckweg an", () => {
+    // Aus einer laufenden Aufgabe ist „offen" ein gewöhnlicher Schritt der
+    // Statusleiste, kein Zurücknehmen — sonst stünden zwei Knöpfe für
+    // dasselbe Ziel nebeneinander.
+    expect(zurueckStatus("open")).toBeNull();
+    expect(zurueckStatus("accepted")).toBeNull();
+    expect(zurueckStatus("in_progress")).toBeNull();
   });
 });

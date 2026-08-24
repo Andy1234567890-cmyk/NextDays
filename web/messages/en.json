@@ -4843,6 +4843,7 @@
     },
     "taskStatusAction": {
       "open": "Put back",
+      "reopen": "Reopen",
       "accepted": "Accept",
       "in_progress": "Start",
       "done": "Complete"

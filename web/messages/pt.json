@@ -4820,6 +4820,7 @@
     },
     "taskStatusAction": {
       "open": "Devolver",
+      "reopen": "Reabrir",
       "accepted": "Aceitar",
       "in_progress": "Começar",
       "done": "Concluir"

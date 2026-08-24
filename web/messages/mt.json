@@ -4820,6 +4820,7 @@
     },
     "taskStatusAction": {
       "open": "Erġa' poġġi",
+      "reopen": "Iftaħ mill-ġdid",
       "accepted": "Aċċetta",
       "in_progress": "Ibda",
       "done": "Temm"

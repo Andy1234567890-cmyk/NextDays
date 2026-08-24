@@ -4820,6 +4820,7 @@
     },
     "taskStatusAction": {
       "open": "Odłóż",
+      "reopen": "Otwórz ponownie",
       "accepted": "Przyjmij",
       "in_progress": "Zacznij",
       "done": "Zakończ"

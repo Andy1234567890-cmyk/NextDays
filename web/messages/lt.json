@@ -4820,6 +4820,7 @@
     },
     "taskStatusAction": {
       "open": "Grąžinti",
+      "reopen": "Atidaryti iš naujo",
       "accepted": "Priimti",
       "in_progress": "Pradėti",
       "done": "Užbaigti"

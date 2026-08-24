@@ -4820,6 +4820,7 @@
     },
     "taskStatusAction": {
       "open": "Nolikt atpakaļ",
+      "reopen": "Atvērt atkārtoti",
       "accepted": "Pieņemt",
       "in_progress": "Sākt",
       "done": "Pabeigt"

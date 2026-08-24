@@ -262,6 +262,51 @@ def test_complete_task_ok_when_photos_present() -> None:
     assert update_payload["inspection_state"] == "to_review"
 
 
+def test_complete_task_lehnt_abgebrochene_aufgabe_ab() -> None:
+    """`cancelled` → `done` gibt es nicht — auch nicht über `/complete`.
+
+    `_STATUS_WECHSEL` erlaubt aus `cancelled` nur `open`. Solange die Prüfung
+    allein in `set_status` stand, war `POST /{id}/complete` die zweite, offene
+    Tür: eine abgesagte Aufgabe ließ sich abschließen, und `bulk_complete`
+    tat es gleich reihenweise (Wurzel 5).
+    """
+    from src.features.tasks.schemas import TaskDetail
+
+    svc, m = _svc()
+    svc.get_detail = MagicMock(  # type: ignore[method-assign]
+        return_value=TaskDetail(
+            id="t1", tenant_id="T", title="Endreinigung",
+            status=TaskStatus.cancelled, checklist=[],
+        )
+    )
+    with pytest.raises(TaskError) as exc:
+        svc.complete_task("T", "t1", "u1")
+    assert exc.value.status_code == 422
+    m.table.return_value.update.assert_not_called()
+
+
+def test_complete_task_zweiter_abschluss_schreibt_nicht_um() -> None:
+    """Doppelter Abschluss ist kein Fehler, aber auch keine Neuzuschreibung.
+
+    Ohne den Idempotenz-Zweig hätte der zweite Aufruf `completed_by` auf den
+    zweiten Tipper gesetzt und `completed_at` nach vorn geschoben — die
+    Aufgabe hätte plötzlich jemand anderes erledigt (Wurzel 2).
+    """
+    from src.features.tasks.schemas import TaskDetail
+
+    svc, m = _svc()
+    detail = TaskDetail(
+        id="t1", tenant_id="T", title="Endreinigung",
+        status=TaskStatus.done, checklist=[],
+    )
+    svc.get_detail = MagicMock(return_value=detail)  # type: ignore[method-assign]
+    ergebnis = svc.complete_task("T", "t1", "u2")
+    assert ergebnis is detail
+    # Kein zweites `update`: `completed_at`/`completed_by` stehen in der DB und
+    # bleiben stehen, wie sie beim ERSTEN Abschluss gesetzt wurden.
+    m.table.return_value.update.assert_not_called()
+
+
 # --- PM-Modul: Inspektions-Entscheidung ---
 
 def test_inspect_reject_reopens_task() -> None:

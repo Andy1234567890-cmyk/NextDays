@@ -4822,6 +4822,7 @@
     },
     "taskStatusAction": {
       "open": "Pane tagasi",
+      "reopen": "Ava uuesti",
       "accepted": "Võta vastu",
       "in_progress": "Alusta",
       "done": "Lõpeta"

@@ -40,6 +40,22 @@ export function naechsterStatus(s: TaskStatus): TaskStatus | null {
   return null;
 }
 
+/**
+ * Der Rückweg aus einem Endzustand — erledigt/abgebrochen → offen.
+ *
+ * Spiegelt `TasksService._STATUS_WECHSEL`, wo aus `done` und `cancelled` genau
+ * EIN Weg zurückführt. Ohne diese Funktion war „Erledigt" in der App eine
+ * Sackgasse: `naechsterStatus` gibt dort null, der Zustand-Abschnitt
+ * verschwand, und wer versehentlich abgeschlossen hatte, kam nur noch über die
+ * Datenbank zurück — der Server hätte den Wechsel die ganze Zeit erlaubt.
+ *
+ * Bewusst getrennt von `naechsterStatus`: Zurücknehmen ist kein „weiter",
+ * sondern ein Eingriff, und es steht in der Oberfläche auch nicht wie einer da.
+ */
+export function zurueckStatus(s: TaskStatus): TaskStatus | null {
+  return s === "done" || s === "cancelled" ? "open" : null;
+}
+
 /** Welche Bedeutung die Karte trägt — nicht der rohe Status. */
 export type AufgabeTon = "done" | "cancelled" | "today" | "unassigned" | "plain";
 

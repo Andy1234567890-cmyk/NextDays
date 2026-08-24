@@ -4822,6 +4822,7 @@
     },
     "taskStatusAction": {
       "open": "Върни",
+      "reopen": "Отвори отново",
       "accepted": "Приеми",
       "in_progress": "Започни",
       "done": "Приключи"

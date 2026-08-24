@@ -22,6 +22,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DemoBand } from "@/components/DemoBand";
 import { ZeitWahl, type ZeitOption } from "@/components/dashboard/ZeitWahl";
+import { BuchungsPanel } from "@/components/buchung/BuchungsPanel";
 import { AnfrageKarte } from "@/components/inbox/AnfrageKarte";
 import {
   aktiveFilter,
@@ -33,19 +34,17 @@ import { VerwaltenSheet } from "@/components/inbox/VerwaltenSheet";
 import { AntwortWerkzeuge } from "@/components/inbox/AntwortWerkzeuge";
 import { VorgangSheet } from "@/components/inbox/VorgangSheet";
 import { Icon } from "@/components/ui/Icon";
-import { Card, Chip, Col, Divider, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Chip, Col, Row, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState } from "@/components/ui/patterns";
 import { useAuth } from "@/contexts/AuthContext";
 import { channelMeta } from "@/lib/calendar-channels";
-import { formatCurrency } from "@/lib/currency";
 import { inboxAccessFor } from "@/lib/inbox-access";
+import { heuteIso } from "@/lib/kalendertag";
 import { portalLabel } from "@/lib/portal-logos";
 import {
   getAnfrage,
   getInboxMessages,
-  getInboxReservation,
   istAnfrageThread,
-  istBuchungsThread,
   listInboxThreads,
   markInboxThreadRead,
   nachAktivitaet,
@@ -55,7 +54,6 @@ import {
   translateText,
   type InboxMessage,
   type InboxThread,
-  type ReservationDetail,
 } from "@/lib/inbox";
 import type { ReservationChannel } from "@/lib/reservations";
 import type { HostTabParamList } from "@/navigation/types";
@@ -490,29 +488,6 @@ function ThreadRow({ thread, onPress }: { thread: InboxThread; onPress: () => vo
 // Rollback sie eindeutig entfernen kann.
 let tempSeq = 0;
 
-/**
- * Eine Detailzeile der Buchung. Gibt `null` zurück, wenn der Wert fehlt: ein
- * serverseitig maskiertes Feld (kein Kontaktrecht) soll die Zeile GAR NICHT
- * zeigen, statt eine leere Beschriftung dastehen zu lassen.
- */
-function detailZeile(
-  t: ReturnType<typeof useTheme>,
-  label: string,
-  wert: string | null,
-) {
-  if (!wert) return null;
-  return (
-    <Row key={label} style={{ justifyContent: "space-between", gap: 12 }}>
-      <Txt v="sm" soft>
-        {label}
-      </Txt>
-      <Txt v="sm" numberOfLines={1} style={{ flexShrink: 1, textAlign: "right" }}>
-        {wert}
-      </Txt>
-    </Row>
-  );
-}
-
 // Ab wann eine Nachricht gekürzt wird. Gemessen an den echten Automails dieses
 // Betriebs: die Anreise-Info hat rund 40 Zeilen, eine normale Gastantwort zwei
 // bis vier. 12 angezeigte Zeilen zeigen den Anfang und lassen den Rest des
@@ -534,8 +509,6 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
   // Eine Anfrage ist kein Chat mit Verlauf, sondern eine Entscheidung mit Frist
   // — sie steht deshalb ÜBER dem Verlauf, nicht darin.
   const [anfrage, setAnfrage] = useState<AnfrageDetail | null>(null);
-  const [reservierung, setReservierung] = useState<ReservationDetail | null>(null);
-  const [detailsOffen, setDetailsOffen] = useState(false);
   // Übersetzung je Nachricht — Schalter unter der Blase, wie bei Airbnb und
   // Booking. Nie automatisch beim Öffnen: das kostet je Zeichen und übersetzt
   // Nachrichten, die niemand liest.
@@ -556,6 +529,17 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
   const [geplantZahl, setGeplantZahl] = useState(0);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  // Die Buchung hinter diesem Gespräch — als dasselbe Panel, das Kalender,
+  // Buchungsliste und Übersicht öffnen (`components/buchung/BuchungsPanel`).
+  //
+  // Hier stand bis 24.08.2026 eine EIGENE, aufklappbare Karte im Verlauf: eine
+  // dritte Fassung derselben Buchung, dünner als die anderen beiden (keine
+  // Aktionen, kein Zahlungsstand, kein Storno) und obendrein unsichtbar, weil
+  // sie ÜBER dem Chat wuchs und die Ansicht sofort wieder ans Ende sprang. Sie
+  // ist ersatzlos weg — nicht repariert: zwei Oberflächen für dieselbe Sache
+  // heißt, jede Änderung zweimal pflegen, und die schwächere fällt still
+  // zurück (dieselbe Begründung wie in `screens/ReservationDetail.tsx`).
+  const [buchungOffen, setBuchungOffen] = useState(false);
   const verlauf = useRef<ScrollView>(null);
   // Steht der Verlauf am unteren Rand? Startet auf `true`, damit der erste
   // Aufbau eines frisch geöffneten Threads immer unten landet.
@@ -585,25 +569,6 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
   useEffect(() => {
     anfrageLaden();
   }, [anfrageLaden]);
-
-  // Buchungsdetails nur für Buchungs-Threads. Das betrifft nicht nur Anfragen:
-  // ein Marktplatz- (`mb:`), Übernahme- (`ue:`) oder WhatsApp-Thread (`wa:`)
-  // hat ebenfalls keine `channex_booking`-Zeile, auf die der Endpunkt zeigen
-  // könnte. Vorher lief der Aufruf dort in einen Fehler, der still als „keine
-  // Details" endete — und der Knopf im Vorgang-Sheet fehlte ohne Erklärung.
-  useEffect(() => {
-    if (!istBuchungsThread(thread.id)) {
-      setReservierung(null);
-      return;
-    }
-    let aktuell = true;
-    getInboxReservation(thread.id).then((res) => {
-      if (aktuell) setReservierung(res.ok ? res.data : null);
-    });
-    return () => {
-      aktuell = false;
-    };
-  }, [thread.id]);
 
   // Geöffnet heißt gelesen — dasselbe Verhalten wie im Web
   // (`web/components/inbox/inbox-list.tsx`). Die App zeigte den Verlauf und
@@ -769,60 +734,6 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
               load();
             }}
           />
-        )}
-
-        {detailsOffen && reservierung && (
-          <Card style={{ gap: 8 }}>
-            <Txt v="sm" style={{ fontFamily: t.fonts.semibold }}>
-              Buchung
-            </Txt>
-            <Divider />
-            {detailZeile(t, "Objekt", reservierung.listing_name)}
-            {detailZeile(t, "Anreise", reservierung.check_in)}
-            {detailZeile(t, "Abreise", reservierung.check_out)}
-            {detailZeile(
-              t,
-              "Nächte",
-              reservierung.nights != null ? String(reservierung.nights) : null,
-            )}
-            {detailZeile(
-              t,
-              "Gäste",
-              reservierung.adults != null
-                ? `${reservierung.adults}${
-                    reservierung.children ? ` + ${reservierung.children}` : ""
-                  }`
-                : null,
-            )}
-            {/* Kontakt und Beträge kommen serverseitig maskiert: fehlt dem
-                Betrachter die Sicht, steht hier `null` und die Zeile entfällt.
-                Kein Ersatztext, kein „—" (Wurzel 4). */}
-            {detailZeile(t, "E-Mail", reservierung.guest_email)}
-            {detailZeile(t, "Telefon", reservierung.guest_phone)}
-            {detailZeile(
-              t,
-              "Gesamt",
-              reservierung.total_amount != null && reservierung.currency
-                ? formatCurrency(reservierung.total_amount, reservierung.currency)
-                : null,
-            )}
-            {detailZeile(
-              t,
-              "Bezahlt",
-              reservierung.paid_amount != null && reservierung.currency
-                ? formatCurrency(reservierung.paid_amount, reservierung.currency)
-                : null,
-            )}
-            {detailZeile(t, "Portal", reservierung.ota_name)}
-            {detailZeile(t, "Portal-Code", reservierung.ota_reservation_code)}
-            {/* Erklärt leere Gastfelder, statt sie als „nicht vorhanden"
-                dastehen zu lassen. */}
-            {reservierung.is_imported && (
-              <Txt v="xs" soft>
-                Aus einem Bestands-Import — Gastdaten liegen beim Portal.
-              </Txt>
-            )}
-          </Card>
         )}
 
         {messages?.map((m, i) => {
@@ -1119,8 +1030,8 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
         onClose={() => setVorgangOffen(false)}
         thread={thread}
         access={access}
-        hatDetails={!!reservierung}
-        onDetails={() => setDetailsOffen((v) => !v)}
+        hatDetails={!!thread.reservation_id}
+        onDetails={() => setBuchungOffen(true)}
         onGeaendert={(verlassen) => {
           // Nach einem Status-Wechsel gehört der Thread nicht mehr in diese
           // Ansicht — zurück zur Liste, die sich beim Aufbau neu holt. Sonst
@@ -1129,6 +1040,18 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
           else load();
         }}
       />
+
+      {/* Dieselbe Buchungsansicht wie überall sonst — sie fährt ÜBER dem
+          Gespräch ein, damit der Verlauf stehen bleibt, aus dem man kommt.
+          `reservation_id` kann fehlen (Thread ohne verknüpfte Reservierung);
+          dann bietet das Sheet den Punkt gar nicht erst an (Wurzel 4). */}
+      {buchungOffen && thread.reservation_id && (
+        <BuchungsPanel
+          reservationId={thread.reservation_id}
+          heuteIso={heuteIso()}
+          onClose={() => setBuchungOffen(false)}
+        />
+      )}
     </KeyboardAvoidingView>
   );
 }

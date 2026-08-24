@@ -58,7 +58,7 @@ export function VorgangSheet({
   access: InboxAccess;
   /** Es gibt Buchungsdetails (Anfragen haben keine). */
   hatDetails: boolean;
-  /** Buchungsdetails im Verlauf ein-/ausklappen. */
+  /** Die vollständige Buchungsansicht öffnen. */
   onDetails: () => void;
   /** Liste neu laden und (bei Status-Wechsel) den Thread verlassen. */
   onGeaendert: (verlassen: boolean) => void;

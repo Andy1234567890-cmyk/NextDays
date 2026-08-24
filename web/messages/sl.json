@@ -4820,6 +4820,7 @@
     },
     "taskStatusAction": {
       "open": "Vrni",
+      "reopen": "Znova odpri",
       "accepted": "Sprejmi",
       "in_progress": "Začni",
       "done": "Zaključi"

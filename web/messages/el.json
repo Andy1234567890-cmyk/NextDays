@@ -4822,6 +4822,7 @@
     },
     "taskStatusAction": {
       "open": "Επιστροφή",
+      "reopen": "Άνοιγμα ξανά",
       "accepted": "Αποδοχή",
       "in_progress": "Έναρξη",
       "done": "Ολοκλήρωση"

@@ -4822,6 +4822,7 @@
     },
     "taskStatusAction": {
       "open": "Læg tilbage",
+      "reopen": "Åbn igen",
       "accepted": "Accepter",
       "in_progress": "Start",
       "done": "Afslut"

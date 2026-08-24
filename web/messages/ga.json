@@ -4822,6 +4822,7 @@
     },
     "taskStatusAction": {
       "open": "Cuir ar ais",
+      "reopen": "Athoscail",
       "accepted": "Glac leis",
       "in_progress": "Tosaigh",
       "done": "Críochnaigh"

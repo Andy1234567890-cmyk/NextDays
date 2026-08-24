@@ -104,8 +104,14 @@ export function TaskDetailInhalt({
   const missingPhotos =
     detail?.checklist.filter((i) => i.requires_photo && i.photos.length === 0) ??
     [];
+  // `cancelled` gehört mit in die Sperre: aus einer abgesagten Aufgabe führt
+  // serverseitig nur `open` zurück (`_STATUS_WECHSEL`). Der Knopf bot einen
+  // Weg an, den `POST /{id}/complete` inzwischen mit 422 ablehnt.
   const canComplete =
-    detail !== null && detail.status !== "done" && missingPhotos.length === 0;
+    detail !== null &&
+    detail.status !== "done" &&
+    detail.status !== "cancelled" &&
+    missingPhotos.length === 0;
 
   /** Jede schreibende Aktion liefert die Aufgabe frisch zurück — der Zustand
    *  kommt vom Server, nicht aus einer lokalen Annahme darüber, was passiert
@@ -319,39 +325,45 @@ export function TaskDetailInhalt({
       </div>
 
       {/* Statusleiste: annehmen · anfangen · zurücklegen. Der Abschluss hat
-          seinen eigenen Knopf unten, weil an ihm die Foto-Pflicht hängt. */}
-      {detail.status !== "cancelled" && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span
-            className={`inline-flex items-center gap-1.5 text-sm ${
-              AUFGABEN_STATUS[detail.status].farbe
-            }`}
-          >
-            <Icon
-              icon={AUFGABEN_STATUS[detail.status].icon}
-              className="size-4"
-            />
-            {t(`taskStatus.${detail.status}`)}
-          </span>
-          <span className="flex flex-wrap gap-1.5">
-            {naechsteZustaende(detail.status)
-              // „Erledigt" fehlt hier bewusst: der Abschluss läuft über den
-              // Knopf unten, damit die Foto-Pflicht davor steht.
-              .filter((s) => s !== "done")
-              .map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  disabled={saving}
-                  onClick={() => void statusSetzen(s)}
-                  className="rounded-full border border-border px-2.5 py-1 text-xs transition-colors hover:bg-secondary disabled:opacity-50"
-                >
-                  {t(`taskStatusAction.${s}`)}
-                </button>
-              ))}
-          </span>
-        </div>
-      )}
+          seinen eigenen Knopf unten, weil an ihm die Foto-Pflicht hängt.
+          Auch bei `cancelled` sichtbar: `naechsteZustaende` bietet dort genau
+          „wieder öffnen" an, und das war der einzige Weg zurück — die Leiste
+          auszublenden machte die Absage zur Sackgasse. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span
+          className={`inline-flex items-center gap-1.5 text-sm ${
+            AUFGABEN_STATUS[detail.status].farbe
+          }`}
+        >
+          <Icon
+            icon={AUFGABEN_STATUS[detail.status].icon}
+            className="size-4"
+          />
+          {t(`taskStatus.${detail.status}`)}
+        </span>
+        <span className="flex flex-wrap gap-1.5">
+          {naechsteZustaende(detail.status)
+            // „Erledigt" fehlt hier bewusst: der Abschluss läuft über den
+            // Knopf unten, damit die Foto-Pflicht davor steht.
+            .filter((s) => s !== "done")
+            .map((s) => (
+              <button
+                key={s}
+                type="button"
+                disabled={saving}
+                onClick={() => void statusSetzen(s)}
+                className="rounded-full border border-border px-2.5 py-1 text-xs transition-colors hover:bg-secondary disabled:opacity-50"
+              >
+                {/* Aus einem Endzustand heißt „open" nicht zurücklegen,
+                    sondern wieder öffnen — dieselbe Aktion, andere Bedeutung. */}
+                {s === "open" &&
+                (detail.status === "done" || detail.status === "cancelled")
+                  ? t("taskStatusAction.reopen")
+                  : t(`taskStatusAction.${s}`)}
+              </button>
+            ))}
+        </span>
+      </div>
 
       {detail.checklist.length > 0 && (
         <ul className="flex flex-col gap-1.5">
