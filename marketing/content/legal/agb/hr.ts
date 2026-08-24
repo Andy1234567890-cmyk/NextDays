@@ -15,7 +15,7 @@ export const agb: LegalDoc = {
   numbered: false,
   toc: true,
   title: "Opći uvjeti poslovanja za agencije i iznajmljivače",
-  stand: "Posljednje ažuriranje: 30. srpnja 2026.",
+  stand: "Posljednje ažuriranje: 13. kolovoza 2026.",
   intro: [
     "Ovi Opći uvjeti poslovanja (u daljnjem tekstu „Uvjeti”) uređuju korištenje softverske platforme myNextDays (u daljnjem tekstu „Platforma”) od strane agencija, iznajmljivača, upravitelja nekretnina i drugih poslovnih korisnika (u daljnjem tekstu „Korisnik”).",
     "Pružatelj Platforme je myNextDays ApS, društvo s ograničenom odgovornošću (anpartsselskab) po danskom pravu, Hirtshalsvej 21, 9881 Bindslev, Danska, registrirano u danskom Središnjem registru poslovnih subjekata (CVR) pod CVR br. 46615182 (u daljnjem tekstu „myNextDays” ili „mi”).",
@@ -115,14 +115,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Intelektualno vlasništvo",
+      heading: "§ 12 Uporaba umjetne inteligencije",
+      paragraphs: [
+        "myNextDays u pojedinim funkcijama koristi sustave umjetne inteligencije, osobito za preporuke cijena (Dynamic Pricing), za predloge odgovora u ulaznoj pošti poruka i za pomoć u službi za podršku. Te funkcije stvaraju predloge; odluka o njihovoj uporabi i odgovornost za nju leže na Korisniku. Preporuke cijena ne zamjenjuju vlastitu poslovnu procjenu.",
+        "Ako gosti neposredno komuniciraju sa sustavom umjetne inteligencije, o tome ih se obavještava (članak 50. stavak 1. Uredbe (EU) 2024/1689 — „Akt o umjetnoj inteligenciji”). Tekstove koje je sustav umjetne inteligencije izradio ili bitno izmijenio, a koje Korisnik prosljeđuje gostima, Korisnik je dužan označiti kao takve, u mjeri u kojoj ga na to obvezuje zakonska obveza.",
+        "myNextDays ne upravlja sustavima umjetne inteligencije koji se prema Prilogu III. Akta o umjetnoj inteligenciji smatraju sustavima visokog rizika, niti praksama zabranjenima člankom 5. Akta o umjetnoj inteligenciji. Unosi Korisnika i podaci njegovih gostiju ne koriste se za treniranje modela bez posebnog naloga.",
+        "Korisnik ne smije koristiti funkcije umjetne inteligencije kako bi kod gostiju stvorio privid ljudske komunikacije tamo gdje postoji obveza objave, ni kako bi davao pravno obvezujuće izjave bez vlastite provjere.",
+        "Ako Korisnik svoj račun putem za to predviđenog sučelja poveže s vlastitim asistentom umjetne inteligencije (primjerice Claude tvrtke Anthropic), primjenjuje se sljedeće: Korisnik sam sklapa ugovor o toj usluzi i odgovoran je za njezinu uporabu. Povezivanje je njegova uputa društvu myNextDays da tamo izda odobrene podatke — uključujući prijenos u treću zemlju, ako pružatelj ima sjedište izvan Europske unije. Korisnik osigurava da za to ima pravnu osnovu, da njegove vlastite informacije o zaštiti podataka navode primatelja i da postoje potrebne garancije za prijenos.",
+        "Za takvo povezivanje Korisnik koristi pristup za koji pružatelj nudi obradu podataka po nalogu i isključuje uporabu podataka za treniranje modela — kod usluge Claude to su pristupi za poslovne korisnike (Team, Enterprise ili API). Pristupi za privatnu uporabu to redovito ne ispunjavaju; zbog toga su neprikladni za podatke gostiju. myNextDays ne može prepoznati koji pristup Korisnik koristi i na to upozorava u dijalogu za privolu.",
+        "Korisnik pritom uzima u obzir da sadržaji koje iz korisničkog sučelja rukom kopira u polje za unos asistenta redovito nisu obuhvaćeni ugovornim ograničenjima pružatelja — drukčije od podataka koji se dohvaćaju putem sučelja.",
+        "Podatke koji potječu s rezervacijskog portala Korisnik i putem sučelja koristi samo za provedbu i praćenje dotične rezervacije — ne za ocjenjivanje osoba, za izradu profila ili za oglašavanje. Portali tu vezanost svrhom propisuju u svojim vlastitim uvjetima.",
+      ],
+    },
+    {
+      heading: "§ 13 Pritužbe i mirenje",
+      paragraphs: [
+        "myNextDays za poslovne korisnike vodi besplatan interni sustav upravljanja pritužbama (članak 11. Uredbe (EU) 2019/1150 — „Uredba P2B”). Pritužbe — osobito u pogledu navodnih povreda ovih Uvjeta, tehničkih problema sa znatnim učinkom ili mjera društva myNextDays prema Korisniku — mogu se neformalno podnijeti na info@mynextdays.dk ili putem podrške u aplikaciji. Primitak se potvrđuje; obrada se provodi brzo i u razumnom roku, a u jednostavnim slučajevima u pravilu u roku od 14 dana. Rezultat se Korisniku priopćava jasnim jezikom.",
+        "Ako u postupku pritužbe ne dođe do sporazuma, myNextDays je spreman s Korisnikom se izvansudski obratiti sljedećim izmiriteljima (članak 12. Uredbe P2B): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Ženeva 20, Švicarska — postupci i na daljinu te višejezično; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 Kopenhagen K, Danska — država sjedišta pružatelja.",
+        "Imenovanje ne obvezuje Korisnika na provođenje postupka mirenja; pravo na obraćanje sudu ostaje netaknuto. myNextDays sudjeluje u razumnim troškovima mirenja; raspodjela se određuje prema pravilniku dotičnog izmiritelja i okolnostima pojedinačnog slučaja.",
+        "myNextDays godišnje objavljuje podatke o broju pritužbi, trajanju obrade i poduzetim mjerama.",
+      ],
+    },
+    {
+      heading: "§ 14 Intelektualno vlasništvo",
       paragraphs: [
         "Sva prava na Platformi, njezinu softveru i njezinim sadržajima (osim sadržaja koje je unio Korisnik) pripadaju društvu myNextDays odnosno njegovim davateljima licencija. Korisnik za vrijeme trajanja ugovora dobiva jednostavno, neprenosivo pravo korištenja Platforme u ugovorenom opsegu.",
         "Korisnik na sadržajima koje unese daje društvu myNextDays jednostavna prava korištenja potrebna za rad Platforme (osobito za pohranu, umnožavanje, prikazivanje i prijenos na povezane kanale).",
       ],
     },
     {
-      heading: "§ 13 Odgovornost",
+      heading: "§ 15 Odgovornost",
       paragraphs: [
         "myNextDays odgovara neograničeno za namjeru i grubu nepažnju te za štete nastale povredom života, tijela ili zdravlja.",
         "Kod obične nepažnje myNextDays odgovara samo za povredu bitnih ugovornih obveza (kardinalnih obveza), ograničeno na predvidivu štetu tipičnu za ugovor. Odgovornost prema propisima o odgovornosti za proizvode te iz preuzetih jamstava ostaje netaknuta.",
@@ -130,7 +152,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Trajanje, otkaz i blokada",
+      heading: "§ 16 Trajanje, otkaz i blokada",
       paragraphs: [
         "Trajanje i otkazni rokovi proizlaze iz dotičnog ugovora. Pravo na izvanredni otkaz iz važnog razloga ostaje netaknuto.",
         "myNextDays može privremeno blokirati pristup Platformi ili pojedinim funkcijama (uključujući primanje uplata i isplate) ako postoje konkretne naznake povrede ovih Uvjeta, prijevare ili zlouporabe, ili ako je myNextDays na to obvezan zakonom ili nalogom pružatelja platnih usluga. Korisnik će o blokadi biti obaviješten u mjeri u kojoj je to pravno dopušteno.",
@@ -138,14 +160,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 Izmjene ovih Uvjeta",
+      heading: "§ 17 Izmjene ovih Uvjeta",
       paragraphs: [
         "myNextDays može izmijeniti ove Uvjete s učinkom za budućnost ako je to potrebno iz opravdanih razloga (osobito zbog izmjena zakonodavstva, promjena sudske prakse ili zahtjeva pružatelja platnih usluga) i ako Korisnik time nije nerazmjerno stavljen u nepovoljniji položaj.",
         "Izmjene se Korisniku najavljuju u tekstualnom obliku najmanje šest tjedana prije stupanja na snagu. Ako Korisnik ne prigovori u roku najave ili nastavi koristiti Platformu nakon stupanja izmjena na snagu, izmijenjeni Uvjeti smatraju se prihvaćenima; na tu će se posljedicu u najavi posebno upozoriti.",
       ],
     },
     {
-      heading: "§ 16 Završne odredbe",
+      heading: "§ 18 Završne odredbe",
       paragraphs: [
         "Primjenjuje se pravo države u kojoj pružatelj ima sjedište, uz isključenje Konvencije UN-a o ugovorima o međunarodnoj prodaji robe. Prisilni propisi države u kojoj Korisnik ima sjedište ostaju netaknuti.",
         "Isključivo mjesto nadležnosti za sve sporove koji proizlaze iz ovog ugovora ili u vezi s njim jest — u mjeri u kojoj je to zakonski dopušteno — sjedište pružatelja.",

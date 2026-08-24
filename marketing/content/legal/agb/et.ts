@@ -15,7 +15,7 @@ export const agb: LegalDoc = {
   numbered: false,
   toc: true,
   title: "Üldtingimused agentuuridele ja üürileandjatele",
-  stand: "Seisuga: 30. juuli 2026",
+  stand: "Seisuga: 13. august 2026",
   intro: [
     "Käesolevad üldtingimused (edaspidi „tingimused“) reguleerivad tarkvaraplatvormi myNextDays (edaspidi „platvorm“) kasutamist agentuuride, üürileandjate, kinnisvarahaldurite ja muude ärikasutajate (edaspidi „kasutaja“) poolt.",
     "Platvormi pakkuja on myNextDays ApS, Taani õiguse alusel asutatud osaühing (anpartsselskab), Hirtshalsvej 21, 9881 Bindslev, Taani, registreeritud Taani äriregistris (CVR) numbri CVR 46615182 all (edaspidi „myNextDays“ või „meie“).",
@@ -115,14 +115,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Intellektuaalne omand",
+      heading: "§ 12 Tehisintellekti kasutamine",
+      paragraphs: [
+        "myNextDays kasutab üksikutes funktsioonides tehisintellektisüsteeme, eelkõige hinnasoovituste (dünaamiline hinnastamine), sõnumite postkasti vastusesoovituste ja klienditoe abistamise jaoks. Need funktsioonid loovad ettepanekuid; otsus ja vastutus nende kasutamise eest lasuvad kasutajal. Hinnasoovitused ei asenda kasutaja enda ärilist kontrolli.",
+        "Kui külalised suhtlevad vahetult tehisintellektisüsteemiga, avaldatakse see neile (määruse (EL) 2024/1689, „tehisintellekti määrus“, artikli 50 lõige 1). Tekstid, mille tehisintellektisüsteem on loonud või oluliselt muutnud ja mida kasutaja külalistele edastab, peab kasutaja tähistama niivõrd, kuivõrd tal on selleks seadusest tulenev kohustus.",
+        "myNextDays ei käita tehisintellektisüsteeme, mis on tehisintellekti määruse III lisa kohaselt suure riskiga süsteemid, ega tehisintellekti määruse artikli 5 kohaselt keelatud tavasid. Kasutaja sisestatud andmeid ja tema külaliste andmeid ei kasutata ilma eraldi tellimuseta mudelite treenimiseks.",
+        "Kasutaja ei tohi kasutada tehisintellekti funktsioone selleks, et jätta külalistele mulje inimestevahelisest suhtlusest seal, kus kehtib avaldamiskohustus, ega selleks, et anda õiguslikult siduvaid kinnitusi ilma omapoolset kontrolli teostamata.",
+        "Kui kasutaja ühendab oma konto selleks ette nähtud liidese kaudu enda tehisintellekti assistendiga (näiteks Anthropic’i Claude), kehtib järgmine: kasutaja sõlmib selle teenuse lepingu ise ja vastutab selle kasutamise eest. Ühendus on tema korraldus myNextDaysile anda vabastatud andmed sinna välja — sealhulgas edastamine kolmandasse riiki, kui teenusepakkuja asukoht on väljaspool Euroopa Liitu. Kasutaja tagab, et tal on selleks õiguslik alus, et tema enda andmekaitseteabes on nimetatud vastuvõtja ja et edastamiseks nõutavad tagatised on olemas.",
+        "Sellise ühenduse jaoks kasutab kasutaja juurdepääsu, mille puhul pakkuja pakub volitatud töötlemist ja välistab andmete kasutamise mudelite treenimiseks — Claude’i puhul on need ärikliendi juurdepääsud (Team, Enterprise või API). Erakasutuseks mõeldud juurdepääsud seda üldjuhul ei taga; seetõttu ei sobi need külaliste andmete jaoks. myNextDays ei saa tuvastada, millist juurdepääsu kasutaja kasutab, ja juhib sellele tähelepanu nõusolekuaknas.",
+        "Kasutaja arvestab seejuures, et sisu, mille ta kopeerib kasutajaliidesest käsitsi assistendi sisestusväljale, ei ole üldjuhul pakkuja lepinguliste piirangutega kaetud — erinevalt liidese kaudu päritud andmetest.",
+        "Broneerimisportaalist pärinevaid andmeid kasutab kasutaja ka liidese kaudu üksnes vastava broneeringu töötlemiseks ja teenindamiseks — mitte isikute hindamiseks, profiilide koostamiseks ega reklaami jaoks. Portaalid näevad selle eesmärgipiirangu ette oma tingimustes.",
+      ],
+    },
+    {
+      heading: "§ 13 Kaebused ja vahendus",
+      paragraphs: [
+        "myNextDays haldab ärikasutajate jaoks tasuta sisemist kaebuste lahendamise süsteemi (määruse (EL) 2019/1150, „P2B määrus“, artikkel 11). Kaebusi — eelkõige käesolevate tingimuste väidetavate rikkumiste, olulise mõjuga tehniliste probleemide või myNextDaysi kasutaja suhtes võetud meetmete kohta — saab esitada vormivabalt aadressil info@mynextdays.dk või rakenduses oleva klienditoe kaudu. Kaebuse kättesaamist kinnitatakse; menetlemine toimub kiiresti ja mõistliku aja jooksul, lihtsate juhtumite puhul üldjuhul 14 päeva jooksul. Tulemus teatatakse kasutajale selges keeles.",
+        "Kui kaebemenetluses kokkulepet ei saavutata, on myNextDays valmis pöörduma koos kasutajaga kohtuväliselt järgmiste vahendajate poole (P2B määruse artikkel 12): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Genf 20, Šveits — menetlused ka kaugteel ja mitmes keeles; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 Kopenhaagen K, Taani — platvormi pakkuja asukohariik.",
+        "Nimetamine ei kohusta kasutajat vahendusmenetlust läbi viima; õigus pöörduda kohtusse jääb puutumata. Vahenduse mõistlikes kuludes osaleb myNextDays; jaotus sõltub vastava vahendaja reglemendist ja üksikjuhtumi asjaoludest.",
+        "myNextDays avaldab igal aastal andmed kaebuste hulga, menetlemise kestuse ja võetud meetmete kohta.",
+      ],
+    },
+    {
+      heading: "§ 14 Intellektuaalne omand",
       paragraphs: [
         "Kõik õigused platvormile, selle tarkvarale ja sisule (välja arvatud kasutaja lisatud sisu) kuuluvad myNextDaysile või tema litsentsiandjatele. Kasutaja saab lepingu kehtivuse ajaks lihtsa, mitteüleantava õiguse kasutada platvormi lepingus kokku lepitud ulatuses.",
         "Enda lisatud sisu suhtes annab kasutaja myNextDaysile platvormi käitamiseks vajalikud lihtsad kasutusõigused (eelkõige salvestamiseks, reprodutseerimiseks, kuvamiseks ja edastamiseks ühendatud kanalitele).",
       ],
     },
     {
-      heading: "§ 13 Vastutus",
+      heading: "§ 15 Vastutus",
       paragraphs: [
         "myNextDays vastutab piiramatult tahtluse ja raske hooletuse eest ning elu, keha või tervise kahjustamisest tuleneva kahju eest.",
         "Kerge hooletuse korral vastutab myNextDays üksnes oluliste lepinguliste kohustuste (kardinaalkohustuste) rikkumise eest, piirdudes lepingule tüüpilise ettenähtava kahjuga. Vastutus tootevastutust reguleerivate õigusaktide alusel ja võetud garantiidest tulenev vastutus jääb puutumata.",
@@ -130,7 +152,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Kehtivusaeg, ülesütlemine ja blokeerimine",
+      heading: "§ 16 Kehtivusaeg, ülesütlemine ja blokeerimine",
       paragraphs: [
         "Lepingu kehtivusaeg ja ülesütlemistähtajad tulenevad vastavast lepingust. Õigus lepingu erakorraliseks ülesütlemiseks mõjuval põhjusel jääb puutumata.",
         "myNextDays võib ajutiselt blokeerida juurdepääsu platvormile või üksikutele funktsioonidele (sealhulgas maksete vastuvõtmisele ja väljamaksetele), kui esinevad konkreetsed märgid käesolevate tingimuste rikkumisest, pettusest või kuritarvitavast kasutamisest või kui myNextDays on selleks kohustatud seaduse või makseteenuse pakkuja korralduse alusel. Kasutajat teavitatakse blokeerimisest, niivõrd kui see on õiguslikult lubatud.",
@@ -138,14 +160,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 Käesolevate tingimuste muutmine",
+      heading: "§ 17 Käesolevate tingimuste muutmine",
       paragraphs: [
         "myNextDays võib käesolevaid tingimusi tulevikku suunatud mõjuga muuta, kui see on mõjuvatel põhjustel vajalik (eelkõige õigusaktide muudatused, kohtupraktika muutumine või makseteenuse pakkujate nõuded) ja kasutajat ei seata sellega ebamõistlikult ebasoodsasse olukorda.",
         "Muudatustest teavitatakse kasutajat tekstivormis vähemalt kuus nädalat enne nende jõustumist. Kui kasutaja ei esita teavitamistähtaja jooksul vastuväidet või jätkab platvormi kasutamist pärast muudatuste jõustumist, loetakse muudetud tingimused vastuvõetuks; sellele tagajärjele juhitakse teates eraldi tähelepanu.",
       ],
     },
     {
-      heading: "§ 16 Lõppsätted",
+      heading: "§ 18 Lõppsätted",
       paragraphs: [
         "Kohaldatakse selle riigi õigust, kus on platvormi pakkuja asukoht, välistades ÜRO konventsiooni kaupade rahvusvahelise ostu-müügi lepingute kohta (CISG). Kasutaja asukohariigi imperatiivsed sätted jäävad puutumata.",
         "Kõigi käesolevast lepingust või sellega seoses tekkivate vaidluste ainupädev kohtualluvus on — seadusega lubatud ulatuses — platvormi pakkuja asukoha järgne kohus.",

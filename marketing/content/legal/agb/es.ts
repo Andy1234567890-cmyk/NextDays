@@ -16,7 +16,7 @@ export const agb: LegalDoc = {
   toc: true,
   title:
     "Condiciones generales de contratación (CGC) para agencias y arrendadores",
-  stand: "Última actualización: 30 de julio de 2026",
+  stand: "Última actualización: 13 de agosto de 2026",
   intro: [
     "Las presentes Condiciones generales de contratación (en adelante, las «Condiciones») regulan el uso de la plataforma de software myNextDays (en adelante, la «Plataforma») por parte de agencias, arrendadores, administradores de fincas y otros usuarios profesionales (en adelante, el «Usuario»).",
     "La Plataforma es operada por myNextDays ApS, sociedad de responsabilidad limitada (anpartsselskab) de derecho danés, Hirtshalsvej 21, 9881 Bindslev, Dinamarca, inscrita en el Registro Central de Empresas de Dinamarca (CVR) con el n.º CVR 46615182 (en adelante, «myNextDays» o «nosotros»).",
@@ -116,14 +116,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Propiedad intelectual",
+      heading: "§ 12 Uso de inteligencia artificial",
+      paragraphs: [
+        "myNextDays emplea sistemas de IA en determinadas funciones, en particular para recomendaciones de precios (dynamic pricing), para sugerencias de respuesta en la bandeja de entrada de mensajes y para la asistencia en el soporte. Estas funciones generan propuestas; la decisión sobre su utilización y la responsabilidad por ella corresponden al Usuario. Las recomendaciones de precios no sustituyen un examen comercial propio.",
+        "Cuando los huéspedes interactúan directamente con un sistema de IA, se les informa de ello (artículo 50, apartado 1, del Reglamento (UE) 2024/1689 — «Reglamento de Inteligencia Artificial»). Los textos que un sistema de IA haya generado o modificado sustancialmente y que el Usuario transmita a los huéspedes deberán ser identificados como tales por el Usuario, en la medida en que le incumba una obligación legal al respecto.",
+        "myNextDays no opera sistemas de IA que, conforme al anexo III del Reglamento de Inteligencia Artificial, se consideren sistemas de alto riesgo, ni prácticas prohibidas conforme al artículo 5 del Reglamento de Inteligencia Artificial. Las entradas del Usuario y los datos de sus huéspedes no se utilizan para el entrenamiento de modelos sin un encargo específico.",
+        "El Usuario no podrá utilizar las funciones de IA para dar a los huéspedes la apariencia de una comunicación humana allí donde exista un deber de información, ni para emitir declaraciones jurídicamente vinculantes sin un examen propio.",
+        "Si el Usuario conecta su cuenta, a través de la interfaz prevista a tal efecto, con un asistente de IA propio (por ejemplo, Claude de Anthropic), se aplicará lo siguiente: el Usuario celebra por sí mismo el contrato sobre ese servicio y es responsable de su utilización. La conexión constituye su instrucción a myNextDays de comunicar allí los datos habilitados — incluida una transferencia a un tercer país si el proveedor tiene su sede fuera de la Unión Europea. El Usuario se asegura de que dispone de una base jurídica para ello, de que su propia información de protección de datos identifica al destinatario y de que concurren las garantías exigidas para la transferencia.",
+        "Para una conexión de este tipo, el Usuario empleará un acceso para el que el proveedor ofrezca un encargo de tratamiento y excluya la utilización de los datos para el entrenamiento de modelos — en el caso de Claude, se trata de los accesos para clientes empresariales (Team, Enterprise o API). Los accesos para uso privado no cumplen habitualmente este requisito; por ello no son adecuados para datos de huéspedes. myNextDays no puede reconocer qué acceso utiliza el Usuario y así lo advierte en el cuadro de diálogo de consentimiento.",
+        "El Usuario tendrá en cuenta que los contenidos que copie manualmente desde la interfaz de usuario en un campo de entrada del asistente no quedan habitualmente cubiertos por las restricciones contractuales del proveedor — a diferencia de los datos consultados a través de la interfaz.",
+        "Los datos procedentes de un portal de reservas los utilizará el Usuario, también a través de la interfaz, únicamente para la gestión y la atención de la respectiva reserva — no para la evaluación de personas, la elaboración de perfiles o la publicidad. Los portales establecen esta vinculación a la finalidad en sus propias condiciones.",
+      ],
+    },
+    {
+      heading: "§ 13 Reclamaciones y mediación",
+      paragraphs: [
+        "myNextDays mantiene para los usuarios profesionales un sistema interno de gestión de reclamaciones gratuito (artículo 11 del Reglamento (UE) 2019/1150 — «Reglamento P2B»). Las reclamaciones — en particular las relativas a supuestas infracciones de las presentes Condiciones, a problemas técnicos con repercusión considerable o a medidas de myNextDays frente al Usuario — pueden presentarse sin sujeción a forma alguna en info@mynextdays.dk o a través del soporte en la aplicación. Se confirmará su recepción; la tramitación se realizará con celeridad y en un plazo razonable, por regla general en un plazo de 14 días en los casos sencillos. El resultado se comunicará al Usuario en un lenguaje claro.",
+        "Si en el procedimiento de reclamación no se alcanza un acuerdo, myNextDays está dispuesta a dirigirse junto con el Usuario, con carácter extrajudicial, a los siguientes mediadores (artículo 12 del Reglamento P2B): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Ginebra 20, Suiza — procedimientos también a distancia y multilingües; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 Copenhague K, Dinamarca — Estado del domicilio social de la operadora.",
+        "La designación no obliga al Usuario a llevar a cabo un procedimiento de mediación; el derecho a acudir a los tribunales permanece inalterado. myNextDays participa en los costes razonables de una mediación; el reparto se rige por el reglamento del respectivo mediador y por las circunstancias del caso concreto.",
+        "myNextDays publica anualmente información sobre el número de reclamaciones, la duración de su tramitación y las medidas adoptadas.",
+      ],
+    },
+    {
+      heading: "§ 14 Propiedad intelectual",
       paragraphs: [
         "Todos los derechos sobre la Plataforma, su software y sus contenidos (a excepción de los contenidos publicados por el Usuario) corresponden a myNextDays o a sus licenciantes. Durante la vigencia del contrato, el Usuario recibe un derecho simple e intransferible a utilizar la Plataforma en el alcance acordado contractualmente.",
         "Sobre los contenidos que publique, el Usuario concede a myNextDays los derechos de uso simples necesarios para la explotación de la Plataforma (en particular, para su almacenamiento, reproducción, visualización y transmisión a los canales conectados).",
       ],
     },
     {
-      heading: "§ 13 Responsabilidad",
+      heading: "§ 15 Responsabilidad",
       paragraphs: [
         "myNextDays responde de forma ilimitada en caso de dolo y negligencia grave, así como de los daños derivados de lesiones a la vida, la integridad física o la salud.",
         "En caso de negligencia leve, myNextDays solo responde por el incumplimiento de obligaciones contractuales esenciales (obligaciones cardinales), limitándose a los daños previsibles y típicos del contrato. La responsabilidad derivada de la legislación sobre responsabilidad por productos defectuosos, así como de las garantías asumidas, permanece inalterada.",
@@ -131,7 +153,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Duración, resolución y bloqueo",
+      heading: "§ 16 Duración, resolución y bloqueo",
       paragraphs: [
         "La duración y los plazos de preaviso se desprenden del contrato correspondiente. El derecho a la resolución extraordinaria por causa justificada permanece inalterado.",
         "myNextDays podrá bloquear temporalmente el acceso a la Plataforma o a funciones concretas (incluidas la aceptación de pagos y los desembolsos) si existen indicios concretos de una infracción de las presentes Condiciones, de fraude o de un uso abusivo, o si myNextDays está obligada a ello por ley o por orden de un proveedor de servicios de pago. El Usuario será informado del bloqueo en la medida en que ello sea legalmente admisible.",
@@ -139,14 +161,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 Modificaciones de las presentes Condiciones",
+      heading: "§ 17 Modificaciones de las presentes Condiciones",
       paragraphs: [
         "myNextDays podrá modificar las presentes Condiciones con efectos para el futuro, siempre que ello sea necesario por motivos justificados (en particular, cambios legislativos, cambios en la jurisprudencia o requisitos de los proveedores de servicios de pago) y el Usuario no resulte perjudicado de forma desproporcionada.",
         "Las modificaciones se anunciarán al Usuario en forma de texto al menos seis semanas antes de su entrada en vigor. Si el Usuario no se opone dentro del plazo de anuncio o continúa utilizando la Plataforma tras la entrada en vigor, las Condiciones modificadas se considerarán aceptadas; en el anuncio se advertirá expresamente de esta consecuencia.",
       ],
     },
     {
-      heading: "§ 16 Disposiciones finales",
+      heading: "§ 18 Disposiciones finales",
       paragraphs: [
         "Se aplicará el Derecho del Estado en el que la operadora tenga su domicilio social, con exclusión de la Convención de las Naciones Unidas sobre los Contratos de Compraventa Internacional de Mercaderías. Las disposiciones imperativas del Estado en el que el Usuario tenga su domicilio social permanecen inalteradas.",
         "El fuero exclusivo para todos los litigios derivados de este contrato o relacionados con él será — en la medida en que sea legalmente admisible — el del domicilio social de la operadora.",

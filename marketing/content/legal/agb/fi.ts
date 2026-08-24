@@ -15,7 +15,7 @@ export const agb: LegalDoc = {
   numbered: false,
   toc: true,
   title: "Yleiset sopimusehdot välitystoimistoille ja vuokranantajille",
-  stand: "Päivitetty: 30. heinäkuuta 2026",
+  stand: "Päivitetty: 13. elokuuta 2026",
   intro: [
     "Nämä yleiset sopimusehdot (jäljempänä ”ehdot”) sääntelevät myNextDays-ohjelmistoalustan (jäljempänä ”alusta”) käyttöä, kun käyttäjinä ovat välitystoimistot, vuokranantajat, isännöintiyritykset ja muut elinkeinonharjoittajat (jäljempänä ”käyttäjä”).",
     "Alustan tarjoaa myNextDays ApS, Tanskan oikeuden mukainen osakeyhtiö (anpartsselskab), Hirtshalsvej 21, 9881 Bindslev, Tanska, rekisteröity Tanskan kaupparekisteriin (CVR) numerolla CVR 46615182 (jäljempänä ”myNextDays” tai ”me”).",
@@ -115,14 +115,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Immateriaalioikeudet",
+      heading: "§ 12 Tekoälyn käyttö",
+      paragraphs: [
+        "myNextDays hyödyntää yksittäisissä toiminnoissa tekoälyjärjestelmiä, erityisesti hintasuosituksissa (dynaaminen hinnoittelu), viestien saapuneet-kansion vastausehdotuksissa ja asiakastuen avustamisessa. Nämä toiminnot tuottavat ehdotuksia; päätös ja vastuu niiden käytöstä kuuluvat käyttäjälle. Hintasuositukset eivät korvaa käyttäjän omaa liiketaloudellista arviointia.",
+        "Jos vieraat ovat vuorovaikutuksessa suoraan tekoälyjärjestelmän kanssa, siitä kerrotaan heille (asetuksen (EU) 2024/1689, ”tekoälyasetus”, 50 artiklan 1 kohta). Tekstit, jotka tekoälyjärjestelmä on tuottanut tai olennaisesti muuttanut ja jotka käyttäjä välittää vieraille, käyttäjän on merkittävä sellaisiksi siltä osin kuin hänellä on tähän lakisääteinen velvollisuus.",
+        "myNextDays ei käytä tekoälyjärjestelmiä, joita pidetään tekoälyasetuksen liitteessä III tarkoitettuina suuririskisinä järjestelminä, eikä tekoälyasetuksen 5 artiklan mukaisesti kiellettyjä käytäntöjä. Käyttäjän syöttämiä tietoja ja hänen vieraidensa tietoja ei käytetä ilman erillistä toimeksiantoa mallien kouluttamiseen.",
+        "Käyttäjä ei saa käyttää tekoälytoimintoja luodakseen vieraille vaikutelmaa inhimillisestä viestinnästä silloin, kun tiedonantovelvollisuus on olemassa, eikä antaakseen oikeudellisesti sitovia ilmoituksia ilman omaa tarkistusta.",
+        "Jos käyttäjä yhdistää tilinsä tähän tarkoitukseen varatun rajapinnan kautta omaan tekoälyavustajaansa (esimerkiksi Anthropicin Claude), sovelletaan seuraavaa: käyttäjä tekee kyseistä palvelua koskevan sopimuksen itse ja vastaa sen käytöstä. Yhteys on hänen myNextDaysille antamansa ohje luovuttaa hyväksytyt tiedot sinne — mukaan lukien siirto kolmanteen maahan, jos palveluntarjoajan kotipaikka on Euroopan unionin ulkopuolella. Käyttäjä varmistaa, että hänellä on tähän oikeusperuste, että hänen omissa tietosuojatiedoissaan mainitaan vastaanottaja ja että siirrolle vaaditut suojatoimet ovat olemassa.",
+        "Tällaista yhteyttä varten käyttäjä käyttää käyttöoikeutta, jonka osalta palveluntarjoaja tarjoaa henkilötietojen käsittelyä toimeksiannosta ja sulkee pois tietojen käytön mallien kouluttamiseen — Claudessa nämä ovat yritysasiakkaiden käyttöoikeudet (Team, Enterprise tai API). Yksityiskäyttöön tarkoitetut käyttöoikeudet eivät säännönmukaisesti täytä tätä; siksi ne eivät sovellu vierastietoihin. myNextDays ei voi havaita, mitä käyttöoikeutta käyttäjä käyttää, ja huomauttaa tästä suostumusikkunassa.",
+        "Käyttäjä ottaa tällöin huomioon, että sisältöä, jonka hän kopioi käyttöliittymästä käsin avustajan syöttökenttään, palveluntarjoajan sopimusperusteiset rajoitukset eivät säännönmukaisesti kata — toisin kuin rajapinnan kautta haettuja tietoja.",
+        "Varausportaalista peräisin olevia tietoja käyttäjä käyttää myös rajapinnan kautta vain kyseisen varauksen käsittelyyn ja hoitamiseen — ei henkilöiden arviointiin, profilointiin tai markkinointiin. Portaalit määräävät tästä käyttötarkoituksen sidonnaisuudesta omissa ehdoissaan.",
+      ],
+    },
+    {
+      heading: "§ 13 Valitukset ja sovittelu",
+      paragraphs: [
+        "myNextDays ylläpitää elinkeinonharjoittajina toimiville käyttäjille maksutonta sisäistä valitustenkäsittelyjärjestelmää (asetuksen (EU) 2019/1150, ”P2B-asetus”, 11 artikla). Valitukset — erityisesti näiden ehtojen väitetyistä rikkomisista, merkittävästi vaikuttavista teknisistä ongelmista tai myNextDaysin käyttäjään kohdistamista toimenpiteistä — voidaan toimittaa vapaamuotoisesti osoitteeseen info@mynextdays.dk tai sovelluksessa olevan asiakastuen kautta. Vastaanotto vahvistetaan; käsittely tapahtuu joutuisasti ja kohtuullisessa ajassa, yksinkertaisissa tapauksissa yleensä 14 päivän kuluessa. Tulos ilmoitetaan käyttäjälle selkeällä kielellä.",
+        "Jos valitusmenettelyssä ei päästä sopimukseen, myNextDays on valmis kääntymään käyttäjän kanssa tuomioistuimen ulkopuolisesti seuraavien sovittelijoiden puoleen (P2B-asetuksen 12 artikla): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Geneve 20, Sveitsi — menettelyt myös etäyhteydellä ja monikielisesti; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 Kööpenhamina K, Tanska — alustan tarjoajan kotipaikkavaltio.",
+        "Nimeäminen ei velvoita käyttäjää toteuttamaan sovittelumenettelyä; oikeus saattaa asia tuomioistuimen käsiteltäväksi jää voimaan. myNextDays osallistuu sovittelun kohtuullisiin kustannuksiin; niiden jakautuminen määräytyy kyseisen sovittelijan sääntöjen ja yksittäistapauksen olosuhteiden mukaan.",
+        "myNextDays julkaisee vuosittain tiedot valitusten määrästä, käsittelyn kestosta ja toteutetuista toimenpiteistä.",
+      ],
+    },
+    {
+      heading: "§ 14 Immateriaalioikeudet",
       paragraphs: [
         "Kaikki oikeudet alustaan, sen ohjelmistoon ja sisältöihin (lukuun ottamatta käyttäjän lisäämiä sisältöjä) kuuluvat myNextDaysille tai sen lisenssinantajille. Käyttäjä saa sopimuskauden ajaksi yksinkertaisen, ei-siirrettävän oikeuden käyttää alustaa sopimuksessa sovitussa laajuudessa.",
         "Käyttäjä myöntää myNextDaysille lisäämiinsä sisältöihin alustan toiminnan edellyttämät yksinkertaiset käyttöoikeudet (erityisesti tallentamiseen, kopiointiin, näyttämiseen ja välittämiseen liitettyihin kanaviin).",
       ],
     },
     {
-      heading: "§ 13 Vastuu",
+      heading: "§ 15 Vastuu",
       paragraphs: [
         "myNextDays vastaa rajoituksetta tahallisuudesta ja törkeästä huolimattomuudesta sekä vahingoista, jotka johtuvat hengen, kehon tai terveyden vahingoittamisesta.",
         "Lievän huolimattomuuden tapauksissa myNextDays vastaa vain olennaisten sopimusvelvoitteiden (kardinaalivelvoitteiden) rikkomisesta, ja vastuu rajoittuu sopimukselle tyypilliseen, ennakoitavissa olevaan vahinkoon. Tuotevastuulainsäädännön mukainen vastuu sekä annetuista takuista johtuva vastuu jäävät voimaan.",
@@ -130,7 +152,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Sopimuskausi, irtisanominen ja käytön estäminen",
+      heading: "§ 16 Sopimuskausi, irtisanominen ja käytön estäminen",
       paragraphs: [
         "Sopimuskausi ja irtisanomisajat määräytyvät kulloisenkin sopimuksen mukaan. Oikeus sopimuksen purkamiseen painavasta syystä jää voimaan.",
         "myNextDays voi tilapäisesti estää pääsyn alustalle tai yksittäisiin toimintoihin (mukaan lukien maksujen vastaanottaminen ja tilitykset), jos on konkreettisia viitteitä näiden ehtojen rikkomisesta, petoksesta tai väärinkäytöstä tai jos myNextDays on siihen velvollinen lain tai maksupalveluntarjoajan määräyksen perusteella. Käyttäjälle ilmoitetaan estosta siltä osin kuin se on oikeudellisesti sallittua.",
@@ -138,14 +160,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 Näiden ehtojen muuttaminen",
+      heading: "§ 17 Näiden ehtojen muuttaminen",
       paragraphs: [
         "myNextDays voi muuttaa näitä ehtoja tulevaisuutta koskevin vaikutuksin, jos se on tarpeen painavista syistä (erityisesti lainsäädännön muutokset, oikeuskäytännön muutokset tai maksupalveluntarjoajien vaatimukset) eikä muutos aseta käyttäjää kohtuuttomasti epäedulliseen asemaan.",
         "Muutoksista ilmoitetaan käyttäjälle tekstimuodossa vähintään kuusi viikkoa ennen niiden voimaantuloa. Jos käyttäjä ei vastusta muutoksia ilmoitusajan kuluessa tai jatkaa alustan käyttöä muutosten voimaantulon jälkeen, muutetut ehdot katsotaan hyväksytyiksi; tästä seurauksesta mainitaan ilmoituksessa erikseen.",
       ],
     },
     {
-      heading: "§ 16 Loppumääräykset",
+      heading: "§ 18 Loppumääräykset",
       paragraphs: [
         "Sovelletaan sen valtion lakia, jossa alustan tarjoajalla on kotipaikka, lukuun ottamatta YK:n kansainvälistä tavaran kauppaa koskevaa yleissopimusta (CISG). Sen valtion pakottavat säännökset, jossa käyttäjällä on kotipaikka, jäävät voimaan.",
         "Yksinomainen oikeuspaikka kaikissa tästä sopimuksesta johtuvissa tai siihen liittyvissä riidoissa on — siltä osin kuin se on lain mukaan sallittua — alustan tarjoajan kotipaikka.",

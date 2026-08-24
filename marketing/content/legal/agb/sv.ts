@@ -16,7 +16,7 @@ export const agb: LegalDoc = {
   numbered: false,
   toc: true,
   title: "Allmänna villkor för byråer och uthyrare",
-  stand: "Senast uppdaterad: 30 juli 2026",
+  stand: "Senast uppdaterad: 13 augusti 2026",
   intro: [
     "Dessa allmänna villkor (nedan ”villkoren”) reglerar byråers, uthyrares, fastighetsförvaltares och andra kommersiella användares (nedan ”användaren”) användning av programvaruplattformen myNextDays (nedan ”plattformen”).",
     "Plattformen tillhandahålls av myNextDays ApS, ett privat aktiebolag (anpartsselskab) enligt dansk rätt, Hirtshalsvej 21, 9881 Bindslev, Danmark, registrerat i det danska centrala företagsregistret (CVR) under CVR-nr 46615182 (nedan ”myNextDays” eller ”vi”).",
@@ -116,14 +116,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Immateriella rättigheter",
+      heading: "§ 12 Användning av artificiell intelligens",
+      paragraphs: [
+        "myNextDays använder i enskilda funktioner AI-system, i synnerhet för prisrekommendationer (dynamic pricing), för svarsförslag i meddelandeinkorgen och för stöd i supporten. Dessa funktioner tar fram förslag; beslutet om och ansvaret för hur de används ligger hos användaren. Prisrekommendationer ersätter inte användarens egen affärsmässiga bedömning.",
+        "Om gäster interagerar direkt med ett AI-system informeras de om detta (artikel 50.1 i förordning (EU) 2024/1689 — ”AI-förordningen”). Texter som ett AI-system har tagit fram eller väsentligt ändrat och som användaren vidarebefordrar till gäster ska användaren märka ut, i den mån användaren har en lagstadgad skyldighet till detta.",
+        "myNextDays driver inga AI-system som enligt bilaga III till AI-förordningen anses vara högrisksystem och inga sådana förfaranden som är förbjudna enligt artikel 5 i AI-förordningen. Användarens inmatningar och uppgifter om användarens gäster används inte för träning av modeller utan en särskild instruktion.",
+        "Användaren får inte använda AI-funktionerna för att ge gäster intryck av en mänsklig kommunikation där det finns en informationsskyldighet, eller för att lämna rättsligt bindande förklaringar utan egen kontroll.",
+        "Om användaren via det gränssnitt som är avsett för detta ansluter sitt konto till en egen AI-assistent (t.ex. Claude från Anthropic) gäller följande: Användaren ingår själv avtalet om denna tjänst och ansvarar för användningen av den. Anslutningen utgör användarens instruktion till myNextDays att lämna ut de frigivna uppgifterna dit — inbegripet en överföring till ett tredjeland om leverantören har sitt säte utanför Europeiska unionen. Användaren säkerställer att det finns en rättslig grund för detta, att användarens egen dataskyddsinformation anger mottagaren och att de nödvändiga garantierna för överföringen finns.",
+        "För en sådan anslutning använder användaren en åtkomst där leverantören erbjuder behandling av personuppgifter för kundens räkning och utesluter att uppgifterna används för träning av modeller — hos Claude är det företagsåtkomsterna (Team, Enterprise eller API). Åtkomster för privat bruk uppfyller regelmässigt inte detta; de är därför olämpliga för gästuppgifter. myNextDays kan inte se vilken åtkomst användaren använder och upplyser om detta i samtyckesdialogen.",
+        "Användaren beaktar därvid att innehåll som denne från användargränssnittet manuellt kopierar in i ett inmatningsfält hos assistenten regelmässigt inte omfattas av leverantörens avtalsmässiga begränsningar — i motsats till de uppgifter som hämtas via gränssnittet.",
+        "Uppgifter som kommer från en bokningsportal använder användaren även via gränssnittet endast för att hantera och betjäna den aktuella bokningen — inte för att bedöma personer, för profilering eller för marknadsföring. Portalerna föreskriver denna ändamålsbegränsning i sina egna villkor.",
+      ],
+    },
+    {
+      heading: "§ 13 Klagomål och medling",
+      paragraphs: [
+        "myNextDays har för kommersiella användare en kostnadsfri intern klagomålshantering (artikel 11 i förordning (EU) 2019/1150 — ”P2B-förordningen”). Klagomål — i synnerhet om påstådda överträdelser av dessa villkor, om tekniska problem med betydande verkan eller om åtgärder som myNextDays vidtagit mot användaren — kan lämnas in formlöst till info@mynextdays.dk eller via supporten i applikationen. Mottagandet bekräftas; handläggningen sker skyndsamt och inom rimlig tid, i enkla fall som regel inom 14 dagar. Resultatet meddelas användaren på ett klart språk.",
+        "Om ingen överenskommelse nås under klagomålsförfarandet är myNextDays berett att tillsammans med användaren vända sig till följande medlare utanför domstol (artikel 12 i P2B-förordningen): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Genève 20, Schweiz — förfaranden även på distans och på flera språk; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 København K, Danmark — den stat där operatören har sitt säte.",
+        "Angivandet förpliktar inte användaren att genomföra ett medlingsförfarande; rätten att väcka talan vid domstol påverkas inte. myNextDays deltar i de rimliga kostnaderna för en medling; fördelningen följer respektive medlares regler och omständigheterna i det enskilda fallet.",
+        "myNextDays offentliggör årligen uppgifter om antalet klagomål, handläggningstiden och de åtgärder som vidtagits.",
+      ],
+    },
+    {
+      heading: "§ 14 Immateriella rättigheter",
       paragraphs: [
         "Samtliga rättigheter till plattformen, dess programvara och dess innehåll (med undantag för innehåll som användaren har lagt in) tillkommer myNextDays respektive dess licensgivare. Användaren erhåller för avtalstiden en enkel, icke överlåtbar rätt att använda plattformen i den omfattning som avtalats.",
         "Till det innehåll som användaren lägger in upplåter användaren åt myNextDays de enkla nyttjanderätter som krävs för driften av plattformen (i synnerhet för lagring, mångfaldigande, visning och överföring till anslutna kanaler).",
       ],
     },
     {
-      heading: "§ 13 Ansvar",
+      heading: "§ 15 Ansvar",
       paragraphs: [
         "myNextDays ansvarar obegränsat vid uppsåt och grov vårdslöshet samt för skador till följd av skada på liv, kropp eller hälsa.",
         "Vid ringa vårdslöshet ansvarar myNextDays endast för åsidosättande av väsentliga avtalsförpliktelser (kardinalförpliktelser), begränsat till den för avtalet typiska, förutsebara skadan. Ansvar enligt produktansvarslagstiftningen samt enligt lämnade garantier påverkas inte.",
@@ -131,7 +153,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Avtalstid, uppsägning och avstängning",
+      heading: "§ 16 Avtalstid, uppsägning och avstängning",
       paragraphs: [
         "Avtalstid och uppsägningstider framgår av det aktuella avtalet. Rätten att säga upp avtalet i förtid av viktig grund påverkas inte.",
         "myNextDays kan tillfälligt spärra åtkomsten till plattformen eller enskilda funktioner (inklusive mottagande av betalningar och utbetalningar) om det finns konkreta tecken på överträdelse av dessa villkor, på bedrägeri eller på missbruk, eller om myNextDays är skyldigt att göra det enligt lag eller till följd av ett åläggande från en betaltjänstleverantör. Användaren informeras om spärrningen i den mån detta är rättsligt tillåtet.",
@@ -139,14 +161,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 Ändringar av dessa villkor",
+      heading: "§ 17 Ändringar av dessa villkor",
       paragraphs: [
         "myNextDays kan ändra dessa villkor med verkan för framtiden, i den mån detta är nödvändigt av godtagbara skäl (i synnerhet lagändringar, ändringar i rättspraxis eller krav från betaltjänstleverantörer) och användaren inte missgynnas oskäligt av detta.",
         "Ändringar aviseras användaren i textform minst sex veckor innan de träder i kraft. Om användaren inte invänder inom aviseringsfristen eller fortsätter att använda plattformen efter ikraftträdandet anses de ändrade villkoren godkända; denna följd framhålls särskilt i aviseringen.",
       ],
     },
     {
-      heading: "§ 16 Slutbestämmelser",
+      heading: "§ 18 Slutbestämmelser",
       paragraphs: [
         "Lagen i den stat där operatören har sitt säte tillämpas, med uteslutande av FN:s konvention om avtal om internationella köp av varor (CISG). Tvingande bestämmelser i den stat där användaren har sitt säte påverkas inte.",
         "Exklusivt forum för alla tvister som uppstår ur eller i samband med detta avtal är — i den mån det är rättsligt tillåtet — den ort där operatören har sitt säte.",

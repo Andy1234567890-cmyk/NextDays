@@ -15,7 +15,7 @@ export const agb: LegalDoc = {
   numbered: false,
   toc: true,
   title: "Condizioni generali di contratto (CGC) per agenzie e locatori",
-  stand: "Ultimo aggiornamento: 30 luglio 2026",
+  stand: "Ultimo aggiornamento: 13 agosto 2026",
   intro: [
     "Le presenti Condizioni generali di contratto (di seguito «CGC») disciplinano l’utilizzo della piattaforma software myNextDays (di seguito «Piattaforma») da parte di agenzie, locatori, amministratori immobiliari e altri utenti professionali (di seguito «Utente»).",
     "La Piattaforma è gestita da myNextDays ApS, società a responsabilità limitata (anpartsselskab) di diritto danese, Hirtshalsvej 21, 9881 Bindslev, Danimarca, iscritta nel Registro centrale delle imprese danese (CVR) con n. CVR 46615182 (di seguito «myNextDays» o «noi»).",
@@ -115,14 +115,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Proprietà intellettuale",
+      heading: "§ 12 Impiego dell’intelligenza artificiale",
+      paragraphs: [
+        "myNextDays impiega sistemi di IA in singole funzioni, in particolare per le raccomandazioni di prezzo (dynamic pricing), per i suggerimenti di risposta nella posta in arrivo dei messaggi e per il supporto nell’assistenza. Tali funzioni generano proposte; la decisione sul loro utilizzo e la relativa responsabilità spettano all’Utente. Le raccomandazioni di prezzo non sostituiscono una valutazione commerciale propria.",
+        "Qualora gli ospiti interagiscano direttamente con un sistema di IA, ciò viene loro comunicato (articolo 50, paragrafo 1, del regolamento (UE) 2024/1689 — «regolamento sull’intelligenza artificiale»). I testi generati o modificati in misura sostanziale da un sistema di IA che l’Utente trasmette agli ospiti devono essere contrassegnati come tali dall’Utente, nella misura in cui gli incomba un obbligo di legge in tal senso.",
+        "myNextDays non gestisce sistemi di IA che, ai sensi dell’allegato III del regolamento sull’intelligenza artificiale, siano considerati sistemi ad alto rischio, né pratiche vietate ai sensi dell’articolo 5 del regolamento sull’intelligenza artificiale. Gli input dell’Utente e i dati dei suoi ospiti non vengono utilizzati per l’addestramento di modelli in assenza di un incarico specifico.",
+        "L’Utente non può utilizzare le funzioni di IA per dare agli ospiti l’apparenza di una comunicazione umana laddove sussista un obbligo di informazione, né per rendere dichiarazioni giuridicamente vincolanti senza una propria verifica.",
+        "Qualora l’Utente colleghi il proprio account, tramite l’apposita interfaccia, a un assistente di IA proprio (ad esempio Claude di Anthropic), vale quanto segue: l’Utente stipula direttamente il contratto relativo a tale servizio ed è responsabile del suo impiego. Il collegamento costituisce la sua istruzione a myNextDays di trasmettere ivi i dati abilitati — incluso un trasferimento verso un paese terzo se il fornitore ha sede fuori dell’Unione europea. L’Utente assicura di disporre di una base giuridica a tal fine, che le proprie informazioni sulla protezione dei dati indichino il destinatario e che sussistano le garanzie necessarie per il trasferimento.",
+        "Per un collegamento di questo tipo l’Utente impiega un accesso per il quale il fornitore offra un trattamento dei dati per conto del titolare ed escluda l’utilizzo dei dati per l’addestramento di modelli — nel caso di Claude si tratta degli accessi per clienti business (Team, Enterprise o API). Gli accessi per uso privato di regola non soddisfano tale requisito; per i dati degli ospiti sono quindi inidonei. myNextDays non può riconoscere quale accesso l’Utente utilizzi e ne dà avviso nella finestra di dialogo di consenso.",
+        "L’Utente tiene conto del fatto che i contenuti che copia manualmente dall’interfaccia utente in un campo di immissione dell’assistente di regola non sono coperti dalle limitazioni contrattuali del fornitore — a differenza dei dati richiamati tramite l’interfaccia.",
+        "I dati provenienti da un portale di prenotazione vengono utilizzati dall’Utente, anche tramite l’interfaccia, esclusivamente per la gestione e l’assistenza della rispettiva prenotazione — non per la valutazione di persone, per la profilazione o per finalità pubblicitarie. I portali prescrivono tale vincolo di finalità nelle proprie condizioni.",
+      ],
+    },
+    {
+      heading: "§ 13 Reclami e mediazione",
+      paragraphs: [
+        "myNextDays mette a disposizione degli utenti professionali un sistema interno gratuito di gestione dei reclami (articolo 11 del regolamento (UE) 2019/1150 — «regolamento P2B»). I reclami — in particolare quelli relativi a presunte violazioni delle presenti CGC, a problemi tecnici con effetti rilevanti o a misure di myNextDays nei confronti dell’Utente — possono essere presentati senza vincoli di forma all’indirizzo info@mynextdays.dk oppure tramite il supporto nell’applicazione. La ricezione viene confermata; la trattazione avviene con tempestività ed entro un termine adeguato, nei casi semplici di regola entro 14 giorni. L’esito viene comunicato all’Utente in un linguaggio chiaro.",
+        "Se nel procedimento di reclamo non si raggiunge un accordo, myNextDays è disponibile a rivolgersi insieme all’Utente, in via extragiudiziale, ai seguenti mediatori (articolo 12 del regolamento P2B): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Ginevra 20, Svizzera — procedimenti anche a distanza e multilingue; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 Copenaghen K, Danimarca — Stato in cui ha sede il gestore.",
+        "L’indicazione non obbliga l’Utente a svolgere un procedimento di mediazione; resta impregiudicato il diritto di adire un giudice. myNextDays partecipa ai costi ragionevoli di una mediazione; la ripartizione è determinata dal regolamento del rispettivo mediatore e dalle circostanze del caso concreto.",
+        "myNextDays pubblica annualmente informazioni sul numero dei reclami, sulla durata della trattazione e sulle misure adottate.",
+      ],
+    },
+    {
+      heading: "§ 14 Proprietà intellettuale",
       paragraphs: [
         "Tutti i diritti sulla Piattaforma, sul suo software e sui suoi contenuti (ad eccezione dei contenuti immessi dall’Utente) spettano a myNextDays o ai suoi licenzianti. L’Utente riceve, per la durata del contratto, un diritto non esclusivo e non trasferibile di utilizzare la Piattaforma nella misura concordata contrattualmente.",
         "Sui contenuti da lui immessi, l’Utente concede a myNextDays i diritti d’uso non esclusivi necessari per il funzionamento della Piattaforma (in particolare per la memorizzazione, la riproduzione, la visualizzazione e la trasmissione ai canali collegati).",
       ],
     },
     {
-      heading: "§ 13 Responsabilità",
+      heading: "§ 15 Responsabilità",
       paragraphs: [
         "myNextDays risponde senza limitazioni per dolo e colpa grave nonché per i danni derivanti da lesioni alla vita, al corpo o alla salute.",
         "In caso di colpa lieve, myNextDays risponde solo per la violazione di obblighi contrattuali essenziali (obblighi cardinali), limitatamente al danno prevedibile e tipico del contratto. Restano impregiudicate la responsabilità ai sensi della legge sulla responsabilità da prodotto nonché quella derivante da garanzie assunte.",
@@ -130,7 +152,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Durata, disdetta e blocco",
+      heading: "§ 16 Durata, disdetta e blocco",
       paragraphs: [
         "La durata e i termini di disdetta risultano dal rispettivo contratto. Resta impregiudicato il diritto alla risoluzione straordinaria per giusta causa.",
         "myNextDays può bloccare temporaneamente l’accesso alla Piattaforma o singole funzioni (inclusi l’accettazione dei pagamenti e i versamenti) qualora vi siano indizi concreti di una violazione delle presenti CGC, di frode o di un utilizzo abusivo, oppure qualora myNextDays vi sia obbligata per legge o per disposizione di un prestatore di servizi di pagamento. L’Utente viene informato del blocco, nella misura consentita dalla legge.",
@@ -138,14 +160,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 Modifiche delle presenti CGC",
+      heading: "§ 17 Modifiche delle presenti CGC",
       paragraphs: [
         "myNextDays può modificare le presenti CGC con effetto per il futuro, nella misura in cui ciò sia necessario per motivi validi (in particolare modifiche legislative, mutamenti della giurisprudenza o requisiti dei prestatori di servizi di pagamento) e l’Utente non ne risulti irragionevolmente svantaggiato.",
         "Le modifiche vengono annunciate all’Utente in forma testuale almeno sei settimane prima della loro entrata in vigore. Se l’Utente non si oppone entro il termine di preavviso o continua a utilizzare la Piattaforma dopo l’entrata in vigore, le CGC modificate si considerano accettate; nell’annuncio si richiama espressamente l’attenzione su tale conseguenza.",
       ],
     },
     {
-      heading: "§ 16 Disposizioni finali",
+      heading: "§ 18 Disposizioni finali",
       paragraphs: [
         "Si applica il diritto dello Stato in cui il gestore ha la propria sede, con esclusione della Convenzione delle Nazioni Unite sui contratti di compravendita internazionale di merci. Restano impregiudicate le disposizioni imperative dello Stato in cui l’Utente ha la propria sede.",
         "Foro competente esclusivo per tutte le controversie derivanti dal presente contratto o ad esso connesse è — nella misura consentita dalla legge — la sede del gestore.",

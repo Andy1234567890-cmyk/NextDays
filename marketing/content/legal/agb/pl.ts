@@ -15,7 +15,7 @@ export const agb: LegalDoc = {
   numbered: false,
   toc: true,
   title: "Ogólne Warunki Handlowe (Regulamin) dla agencji i wynajmujących",
-  stand: "Stan na: 30 lipca 2026 r.",
+  stand: "Stan na: 13 sierpnia 2026 r.",
   intro: [
     "Niniejsze Ogólne Warunki Handlowe (zwane dalej „Regulaminem”) określają zasady korzystania z platformy oprogramowania myNextDays (zwanej dalej „Platformą”) przez agencje, wynajmujących, zarządców nieruchomości oraz innych użytkowników prowadzących działalność gospodarczą (zwanych dalej „Użytkownikiem”).",
     "Dostawcą Platformy jest myNextDays ApS, spółka z ograniczoną odpowiedzialnością (anpartsselskab) prawa duńskiego, Hirtshalsvej 21, 9881 Bindslev, Dania, zarejestrowana w duńskim Centralnym Rejestrze Przedsiębiorców (CVR) pod numerem CVR 46615182 (zwana dalej „myNextDays” lub „my”).",
@@ -115,14 +115,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Własność intelektualna",
+      heading: "§ 12 Wykorzystanie sztucznej inteligencji",
+      paragraphs: [
+        "myNextDays wykorzystuje w poszczególnych funkcjach systemy sztucznej inteligencji, w szczególności do rekomendacji cenowych (dynamic pricing), do propozycji odpowiedzi w skrzynce odbiorczej wiadomości oraz do wspomagania pomocy technicznej. Funkcje te generują propozycje; decyzja o ich wykorzystaniu i odpowiedzialność za nie należą do Użytkownika. Rekomendacje cenowe nie zastępują własnej oceny handlowej.",
+        "Jeżeli goście wchodzą w bezpośrednią interakcję z systemem sztucznej inteligencji, są o tym informowani (art. 50 ust. 1 rozporządzenia (UE) 2024/1689 — „aktu w sprawie sztucznej inteligencji”). Teksty, które system sztucznej inteligencji wygenerował lub istotnie zmienił i które Użytkownik przekazuje gościom, Użytkownik ma obowiązek oznaczyć, o ile ciąży na nim taki obowiązek prawny.",
+        "myNextDays nie eksploatuje systemów sztucznej inteligencji, które zgodnie z załącznikiem III do aktu w sprawie sztucznej inteligencji uznaje się za systemy wysokiego ryzyka, ani nie stosuje praktyk zakazanych na podstawie art. 5 aktu w sprawie sztucznej inteligencji. Dane wprowadzane przez Użytkownika oraz dane jego gości nie są bez odrębnego zlecenia wykorzystywane do trenowania modeli.",
+        "Użytkownik nie może wykorzystywać funkcji sztucznej inteligencji do wywoływania u gości wrażenia komunikacji z człowiekiem tam, gdzie istnieje obowiązek ujawnienia, ani do składania prawnie wiążących oświadczeń bez własnej weryfikacji.",
+        "Jeżeli Użytkownik połączy swoje konto za pośrednictwem przewidzianego do tego interfejsu programistycznego z własnym asystentem sztucznej inteligencji (na przykład Claude firmy Anthropic), obowiązuje następujące: Użytkownik samodzielnie zawiera umowę o korzystanie z tej usługi i jest odpowiedzialny za jej wykorzystanie. Połączenie stanowi jego polecenie dla myNextDays, aby przekazała tam udostępnione dane — w tym przekazanie do kraju trzeciego, jeżeli dostawca ma siedzibę poza Unią Europejską. Użytkownik zapewnia, że ma do tego podstawę prawną, że jego własne informacje o ochronie danych wskazują odbiorcę oraz że spełnione są wymagane gwarancje dotyczące przekazywania.",
+        "Do takiego połączenia Użytkownik wykorzystuje dostęp, dla którego dostawca oferuje powierzenie przetwarzania danych i wyklucza wykorzystywanie danych do trenowania modeli — w przypadku Claude są to dostępy dla klientów biznesowych (Team, Enterprise lub API). Dostępy przeznaczone do użytku prywatnego z reguły tego nie spełniają; z tego powodu nie są odpowiednie dla danych gości. myNextDays nie może rozpoznać, jakiego dostępu używa Użytkownik, i wskazuje na to w okienku dialogowym zgody.",
+        "Użytkownik uwzględnia przy tym, że treści, które ręcznie kopiuje z interfejsu użytkownika do pola wprowadzania asystenta, z reguły nie są objęte umownymi ograniczeniami dostawcy — inaczej niż dane pobierane za pośrednictwem interfejsu programistycznego.",
+        "Dane pochodzące z portalu rezerwacyjnego Użytkownik wykorzystuje również za pośrednictwem interfejsu programistycznego wyłącznie do realizacji i obsługi danej rezerwacji — nie do oceny osób, do profilowania ani do celów reklamowych. Portale narzucają to ograniczenie celu we własnych warunkach.",
+      ],
+    },
+    {
+      heading: "§ 13 Skargi i mediacja",
+      paragraphs: [
+        "myNextDays prowadzi dla użytkowników prowadzących działalność gospodarczą bezpłatny wewnętrzny system rozpatrywania skarg (art. 11 rozporządzenia (UE) 2019/1150 — „rozporządzenia P2B”). Skargi — w szczególności dotyczące zarzucanych naruszeń niniejszego Regulaminu, problemów technicznych o istotnym oddziaływaniu lub środków podjętych przez myNextDays wobec Użytkownika — można zgłaszać w dowolnej formie na adres info@mynextdays.dk lub za pośrednictwem pomocy technicznej w aplikacji. Otrzymanie skargi jest potwierdzane; jej rozpatrzenie następuje niezwłocznie i w odpowiednim terminie, w sprawach nieskomplikowanych z reguły w ciągu 14 dni. Wynik jest przekazywany Użytkownikowi jasnym językiem.",
+        "Jeżeli w postępowaniu skargowym nie dojdzie do porozumienia, myNextDays jest gotowa zwrócić się wraz z Użytkownikiem pozasądowo do następujących mediatorów (art. 12 rozporządzenia P2B): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Genewa 20, Szwajcaria — postępowania także na odległość i w wielu językach; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 Kopenhaga K, Dania — państwo siedziby dostawcy.",
+        "Wskazanie mediatorów nie zobowiązuje Użytkownika do przeprowadzenia postępowania mediacyjnego; prawo do wystąpienia do sądu pozostaje nienaruszone. W rozsądnych kosztach mediacji myNextDays partycypuje; ich podział wynika z regulaminu danego mediatora oraz z okoliczności konkretnego przypadku.",
+        "myNextDays publikuje corocznie informacje o liczbie skarg, o czasie ich rozpatrywania oraz o podjętych środkach.",
+      ],
+    },
+    {
+      heading: "§ 14 Własność intelektualna",
       paragraphs: [
         "Wszelkie prawa do Platformy, jej oprogramowania i treści (z wyjątkiem treści zamieszczanych przez Użytkownika) przysługują myNextDays lub jej licencjodawcom. Użytkownik otrzymuje na okres obowiązywania umowy niewyłączne, nieprzenoszalne prawo do korzystania z Platformy w zakresie uzgodnionym w umowie.",
         "W odniesieniu do treści zamieszczanych przez Użytkownika Użytkownik udziela myNextDays niewyłącznych praw do korzystania z nich w zakresie niezbędnym do prowadzenia Platformy (w szczególności do przechowywania, zwielokrotniania, wyświetlania i przekazywania do połączonych kanałów).",
       ],
     },
     {
-      heading: "§ 13 Odpowiedzialność",
+      heading: "§ 15 Odpowiedzialność",
       paragraphs: [
         "myNextDays ponosi nieograniczoną odpowiedzialność za winę umyślną i rażące niedbalstwo oraz za szkody wynikające z naruszenia życia, ciała lub zdrowia.",
         "W przypadku zwykłego niedbalstwa myNextDays odpowiada wyłącznie za naruszenie istotnych obowiązków umownych (obowiązków kardynalnych), w granicach typowej dla umowy, możliwej do przewidzenia szkody. Odpowiedzialność na podstawie przepisów o odpowiedzialności za produkt oraz z tytułu udzielonych gwarancji pozostaje nienaruszona.",
@@ -130,7 +152,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Okres obowiązywania, wypowiedzenie i blokada",
+      heading: "§ 16 Okres obowiązywania, wypowiedzenie i blokada",
       paragraphs: [
         "Okres obowiązywania i terminy wypowiedzenia wynikają z danej umowy. Prawo do nadzwyczajnego wypowiedzenia z ważnego powodu pozostaje nienaruszone.",
         "myNextDays może tymczasowo zablokować dostęp do Platformy lub poszczególne funkcje (w tym przyjmowanie płatności i wypłaty), jeżeli istnieją konkretne przesłanki naruszenia niniejszego Regulaminu, oszustwa lub nadużycia albo jeżeli myNextDays jest do tego zobowiązana przepisami prawa lub poleceniem dostawcy usług płatniczych. Użytkownik zostanie poinformowany o blokadzie, o ile jest to prawnie dopuszczalne.",
@@ -138,14 +160,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 Zmiany niniejszego Regulaminu",
+      heading: "§ 17 Zmiany niniejszego Regulaminu",
       paragraphs: [
         "myNextDays może zmienić niniejszy Regulamin ze skutkiem na przyszłość, o ile jest to konieczne z ważnych przyczyn (w szczególności z powodu zmian przepisów prawa, orzecznictwa lub wymogów dostawców usług płatniczych), a Użytkownik nie zostanie przez to nadmiernie pokrzywdzony.",
         "Zmiany będą zapowiadane Użytkownikowi w formie tekstowej co najmniej sześć tygodni przed ich wejściem w życie. Jeżeli Użytkownik nie zgłosi sprzeciwu w okresie zapowiedzi lub będzie nadal korzystać z Platformy po wejściu zmian w życie, zmieniony Regulamin uznaje się za przyjęty; na ten skutek zostanie osobno zwrócona uwaga w zapowiedzi.",
       ],
     },
     {
-      heading: "§ 16 Postanowienia końcowe",
+      heading: "§ 18 Postanowienia końcowe",
       paragraphs: [
         "Zastosowanie ma prawo państwa, w którym dostawca Platformy ma swoją siedzibę, z wyłączeniem Konwencji Narodów Zjednoczonych o umowach międzynarodowej sprzedaży towarów. Bezwzględnie obowiązujące przepisy państwa, w którym Użytkownik ma swoją siedzibę, pozostają nienaruszone.",
         "Wyłącznie właściwym sądem dla wszystkich sporów wynikających z niniejszej umowy lub z nią związanych jest — w zakresie prawnie dopuszczalnym — sąd właściwy dla siedziby dostawcy Platformy.",

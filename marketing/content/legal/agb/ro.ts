@@ -16,7 +16,7 @@ export const agb: LegalDoc = {
   numbered: false,
   toc: true,
   title: "Condiții generale de afaceri (CGA) pentru agenții și locatori",
-  stand: "Ultima actualizare: 30 iulie 2026",
+  stand: "Ultima actualizare: 13 august 2026",
   intro: [
     "Prezentele condiții generale de afaceri (denumite în continuare „CGA”) reglementează utilizarea platformei software myNextDays (denumită în continuare „Platforma”) de către agenții, locatori, administratori de imobile și alți utilizatori comerciali (denumiți în continuare „Utilizatorul”).",
     "Furnizorul Platformei este myNextDays ApS, societate cu răspundere limitată (anpartsselskab) de drept danez, Hirtshalsvej 21, 9881 Bindslev, Danemarca, înregistrată în Registrul Central al Întreprinderilor din Danemarca (CVR) cu nr. CVR 46615182 (denumit în continuare „myNextDays” sau „noi”).",
@@ -116,14 +116,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Proprietate intelectuală",
+      heading: "§ 12 Utilizarea inteligenței artificiale",
+      paragraphs: [
+        "myNextDays utilizează în anumite funcții sisteme de inteligență artificială, în special pentru recomandări de prețuri (Dynamic Pricing), pentru sugestii de răspuns în cutia de mesaje primite și pentru sprijinul acordat în cadrul asistenței. Aceste funcții generează sugestii; decizia privind utilizarea lor și răspunderea pentru aceasta revin Utilizatorului. Recomandările de prețuri nu înlocuiesc propria verificare comercială.",
+        "În cazul în care oaspeții interacționează direct cu un sistem de inteligență artificială, acest lucru le este comunicat (articolul 50 alineatul (1) din Regulamentul (UE) 2024/1689 — „Regulamentul privind inteligența artificială”). Textele generate sau modificate în mod substanțial de un sistem de inteligență artificială și pe care Utilizatorul le transmite oaspeților trebuie marcate ca atare de către Utilizator, în măsura în care acesta are o obligație legală în acest sens.",
+        "myNextDays nu operează sisteme de inteligență artificială care, potrivit anexei III la Regulamentul privind inteligența artificială, sunt considerate sisteme cu grad ridicat de risc, și nici practici interzise potrivit articolului 5 din Regulamentul privind inteligența artificială. Datele introduse de Utilizator și datele oaspeților săi nu sunt utilizate pentru antrenarea modelelor în lipsa unei însărcinări separate.",
+        "Utilizatorul nu are dreptul să folosească funcțiile de inteligență artificială pentru a crea față de oaspeți aparența unei comunicări umane acolo unde există o obligație de informare, sau pentru a emite declarații cu efect juridic obligatoriu fără o verificare proprie.",
+        "Dacă Utilizatorul își conectează contul, prin interfața prevăzută în acest scop, la un asistent de inteligență artificială propriu (de exemplu Claude de la Anthropic), se aplică următoarele: Utilizatorul încheie el însuși contractul privind acest serviciu și răspunde pentru utilizarea acestuia. Conectarea reprezintă instrucțiunea sa adresată myNextDays de a transmite acolo datele autorizate — inclusiv un transfer către o țară terță, dacă furnizorul are sediul în afara Uniunii Europene. Utilizatorul se asigură că dispune de o bază legală în acest scop, că propriile sale informații privind protecția datelor indică destinatarul și că garanțiile necesare pentru transfer există.",
+        "Pentru o astfel de conectare, Utilizatorul folosește un acces pentru care furnizorul oferă o prelucrare a datelor pe bază de împuternicire și exclude utilizarea datelor pentru antrenarea modelelor — în cazul Claude, acestea sunt accesele pentru clienți de afaceri (Team, Enterprise sau API). Accesele destinate utilizării private nu îndeplinesc de regulă această condiție; de aceea, ele sunt nepotrivite pentru datele oaspeților. myNextDays nu poate identifica ce acces folosește Utilizatorul și atrage atenția asupra acestui aspect în dialogul de consimțământ.",
+        "Utilizatorul ține cont în acest context de faptul că conținuturile pe care le copiază manual din interfața de utilizare într-un câmp de introducere al asistentului nu sunt, de regulă, acoperite de restricțiile contractuale ale furnizorului — diferit de datele preluate prin interfață.",
+        "Datele care provin de la un portal de rezervări sunt utilizate de Utilizator, și prin interfață, numai pentru derularea și gestionarea rezervării respective — nu pentru evaluarea persoanelor, pentru crearea de profiluri sau în scopuri publicitare. Portalurile prevăd această limitare a scopului în propriile lor condiții.",
+      ],
+    },
+    {
+      heading: "§ 13 Reclamații și mediere",
+      paragraphs: [
+        "myNextDays menține pentru utilizatorii comerciali un sistem intern gratuit de gestionare a reclamațiilor (articolul 11 din Regulamentul (UE) 2019/1150 — „Regulamentul P2B”). Reclamațiile — în special cele privind pretinse încălcări ale prezentelor CGA, probleme tehnice cu impact considerabil sau măsuri luate de myNextDays față de Utilizator — pot fi depuse fără formalități la info@mynextdays.dk sau prin asistența din aplicație. Primirea este confirmată; soluționarea are loc cu promptitudine și într-un termen rezonabil, în cazurile simple de regulă în termen de 14 zile. Rezultatul este comunicat Utilizatorului într-un limbaj clar.",
+        "Dacă în cadrul procedurii de reclamație nu se ajunge la un acord, myNextDays este dispusă să se adreseze împreună cu Utilizatorul, pe cale extrajudiciară, următorilor mediatori (articolul 12 din Regulamentul P2B): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Geneva 20, Elveția — proceduri posibile și la distanță și în mai multe limbi; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 Copenhaga K, Danemarca — statul în care furnizorul își are sediul.",
+        "Desemnarea nu obligă Utilizatorul să desfășoare o procedură de mediere; dreptul de a se adresa unei instanțe rămâne neatins. myNextDays participă la costurile rezonabile ale unei medieri; repartizarea acestora se stabilește potrivit regulamentului mediatorului respectiv și circumstanțelor cazului concret.",
+        "myNextDays publică anual informații privind numărul reclamațiilor, durata soluționării și măsurile luate.",
+      ],
+    },
+    {
+      heading: "§ 14 Proprietate intelectuală",
       paragraphs: [
         "Toate drepturile asupra Platformei, asupra software-ului și conținuturilor acesteia (cu excepția conținuturilor introduse de Utilizator) aparțin myNextDays, respectiv licențiatorilor săi. Utilizatorul primește, pe durata contractului, un drept simplu, netransferabil, de a utiliza Platforma în limitele convenite prin contract.",
         "Asupra conținuturilor introduse de Utilizator, acesta acordă myNextDays drepturile simple de utilizare necesare pentru operarea Platformei (în special pentru stocare, reproducere, afișare și transmitere către canalele conectate).",
       ],
     },
     {
-      heading: "§ 13 Răspundere",
+      heading: "§ 15 Răspundere",
       paragraphs: [
         "myNextDays răspunde nelimitat pentru intenție și neglijență gravă, precum și pentru prejudiciile rezultate din vătămarea vieții, a integrității corporale sau a sănătății.",
         "În caz de neglijență simplă, myNextDays răspunde numai pentru încălcarea obligațiilor contractuale esențiale (obligații cardinale), limitat la prejudiciul previzibil, tipic pentru contract. Răspunderea potrivit legislației privind răspunderea pentru produse, precum și cea rezultată din garanțiile asumate rămâne neatinsă.",
@@ -131,7 +153,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Durată, reziliere și blocare",
+      heading: "§ 16 Durată, reziliere și blocare",
       paragraphs: [
         "Durata și termenele de reziliere rezultă din contractul respectiv. Dreptul la rezilierea extraordinară pentru motive întemeiate rămâne neatins.",
         "myNextDays poate bloca temporar accesul la Platformă sau la anumite funcții (inclusiv acceptarea plăților și viramentele) dacă există indicii concrete privind o încălcare a prezentelor CGA, o fraudă sau o utilizare abuzivă ori dacă myNextDays este obligată la aceasta prin lege sau prin dispoziția unui prestator de servicii de plată. Utilizatorul va fi informat despre blocare, în măsura în care acest lucru este permis de lege.",
@@ -139,14 +161,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 Modificarea prezentelor CGA",
+      heading: "§ 17 Modificarea prezentelor CGA",
       paragraphs: [
         "myNextDays poate modifica prezentele CGA cu efect pentru viitor, în măsura în care acest lucru este necesar din motive întemeiate (în special modificări legislative, modificări ale jurisprudenței sau cerințe ale prestatorilor de servicii de plată), iar Utilizatorul nu este dezavantajat în mod nerezonabil prin aceasta.",
         "Modificările vor fi anunțate Utilizatorului în formă text cu cel puțin șase săptămâni înainte de intrarea lor în vigoare. Dacă Utilizatorul nu se opune în termenul de anunțare sau continuă să utilizeze Platforma după intrarea în vigoare, CGA modificate se consideră acceptate; asupra acestei consecințe se va atrage atenția în mod expres în anunț.",
       ],
     },
     {
-      heading: "§ 16 Dispoziții finale",
+      heading: "§ 18 Dispoziții finale",
       paragraphs: [
         "Se aplică dreptul statului în care furnizorul își are sediul, cu excluderea Convenției ONU asupra contractelor de vânzare internațională de mărfuri. Dispozițiile imperative ale statului în care Utilizatorul își are sediul rămân neatinse.",
         "Instanța competentă exclusiv pentru toate litigiile care decurg din sau în legătură cu prezentul contract este — în măsura permisă de lege — cea de la sediul furnizorului.",

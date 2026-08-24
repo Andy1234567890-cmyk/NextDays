@@ -15,7 +15,7 @@ export const agb: LegalDoc = {
   numbered: false,
   toc: true,
   title: "Algemene voorwaarden (AV) voor agentschappen en verhuurders",
-  stand: "Laatst bijgewerkt: 30 juli 2026",
+  stand: "Laatst bijgewerkt: 13 augustus 2026",
   intro: [
     "Deze algemene voorwaarden (hierna “Voorwaarden”) regelen het gebruik van het softwareplatform myNextDays (hierna “Platform”) door agentschappen, verhuurders, vastgoedbeheerders en andere zakelijke gebruikers (hierna “Gebruiker”).",
     "Het Platform wordt geëxploiteerd door myNextDays ApS, een besloten vennootschap (anpartsselskab) naar Deens recht, Hirtshalsvej 21, 9881 Bindslev, Denemarken, ingeschreven in het Deense Centrale Ondernemingsregister (CVR) onder CVR-nr. 46615182 (hierna “myNextDays” of “wij”).",
@@ -115,14 +115,36 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 12 Intellectuele eigendom",
+      heading: "§ 12 Inzet van kunstmatige intelligentie",
+      paragraphs: [
+        "myNextDays zet in afzonderlijke functies AI-systemen in, in het bijzonder voor prijsaanbevelingen (dynamic pricing), voor antwoordsuggesties in de berichten-inbox en voor ondersteuning bij support. Deze functies genereren suggesties; de beslissing over het gebruik ervan en de verantwoordelijkheid daarvoor liggen bij de Gebruiker. Prijsaanbevelingen vervangen geen eigen commerciële beoordeling.",
+        "Interacteren gasten rechtstreeks met een AI-systeem, dan wordt hen dat meegedeeld overeenkomstig artikel 50, lid 1, van Verordening (EU) 2024/1689 (de “AI-verordening”). Teksten die een AI-systeem heeft gegenereerd of wezenlijk heeft gewijzigd en die de Gebruiker aan gasten doorgeeft, dient de Gebruiker als zodanig aan te duiden, voor zover hem daartoe een wettelijke verplichting treft.",
+        "myNextDays exploiteert geen AI-systemen die op grond van bijlage III bij de AI-verordening als systemen met een hoog risico gelden, en geen op grond van artikel 5 van de AI-verordening verboden praktijken. Invoer van de Gebruiker en gegevens van zijn gasten worden zonder afzonderlijke opdracht niet gebruikt voor het trainen van modellen.",
+        "De Gebruiker mag de AI-functies niet gebruiken om bij gasten de schijn van menselijke communicatie te wekken waar een openbaarmakingsplicht bestaat, of om juridisch bindende verklaringen af te geven zonder eigen beoordeling.",
+        "Verbindt de Gebruiker zijn account via de daarvoor bestemde interface met een eigen AI-assistent (bijvoorbeeld Claude van Anthropic), dan geldt het volgende: de Gebruiker sluit de overeenkomst over die dienst zelf en is verantwoordelijk voor het gebruik ervan. De verbinding is zijn instructie aan myNextDays om de vrijgegeven gegevens daarheen te verstrekken — met inbegrip van een doorgifte naar een derde land indien de aanbieder buiten de Europese Unie is gevestigd. De Gebruiker zorgt ervoor dat hij daarvoor een rechtsgrondslag heeft, dat zijn eigen privacy-informatie de ontvanger vermeldt en dat de voor de doorgifte vereiste waarborgen aanwezig zijn.",
+        "Voor een dergelijke verbinding gebruikt de Gebruiker een toegang waarvoor de aanbieder een verwerking in opdracht aanbiedt en het gebruik van de gegevens voor het trainen van modellen uitsluit — bij Claude zijn dat de zakelijke toegangen (Team, Enterprise of API). Toegangen voor privégebruik voldoen daar in de regel niet aan; voor gastgegevens zijn ze daarom niet geschikt. myNextDays kan niet zien welke toegang de Gebruiker gebruikt en wijst hierop in het toestemmingsvenster.",
+        "De Gebruiker houdt er daarbij rekening mee dat inhoud die hij vanuit de gebruikersinterface met de hand in een invoerveld van de assistent kopieert, in de regel niet onder de contractuele beperkingen van de aanbieder valt — anders dan de via de interface opgehaalde gegevens.",
+        "Gegevens die uit een boekingsportaal afkomstig zijn, gebruikt de Gebruiker ook via de interface alleen voor de afwikkeling en begeleiding van de betreffende boeking — niet voor de beoordeling van personen, voor profilering of voor reclame. De portalen schrijven deze doelbinding in hun eigen voorwaarden voor.",
+      ],
+    },
+    {
+      heading: "§ 13 Klachten en mediation",
+      paragraphs: [
+        "myNextDays onderhoudt voor zakelijke gebruikers een kosteloos intern klachtenbeheer overeenkomstig artikel 11 van Verordening (EU) 2019/1150 (de “P2B-verordening”). Klachten — in het bijzonder over gestelde schendingen van deze Voorwaarden, over technische problemen met aanzienlijke gevolgen of over maatregelen van myNextDays tegen de Gebruiker — kunnen vormvrij worden ingediend via info@mynextdays.dk of via de support in de applicatie. De ontvangst wordt bevestigd; de behandeling vindt voortvarend en binnen een redelijke termijn plaats, bij eenvoudige gevallen in de regel binnen 14 dagen. Het resultaat wordt de Gebruiker in duidelijke taal meegedeeld.",
+        "Komt het in de klachtenprocedure niet tot een overeenstemming, dan is myNextDays bereid zich met de Gebruiker buitengerechtelijk tot de volgende mediators te wenden (artikel 12 van de P2B-verordening): (1) WIPO Arbitration and Mediation Center, 34 chemin des Colombettes, 1211 Geneva 20, Switzerland — procedures ook op afstand en meertalig; (2) Voldgiftsinstituttet — Danish Institute of Arbitration, Kronprinsessegade 28, 1306 Copenhagen K, Denmark — staat van vestiging van de exploitant.",
+        "De benoeming verplicht de Gebruiker niet een mediationprocedure te voeren; het recht om zich tot de rechter te wenden blijft onverlet. Aan de redelijke kosten van een mediation draagt myNextDays bij; de verdeling wordt bepaald door het reglement van de betreffende mediator en door de omstandigheden van het concrete geval.",
+        "myNextDays publiceert jaarlijks gegevens over het aantal klachten, de behandelingsduur en de getroffen maatregelen.",
+      ],
+    },
+    {
+      heading: "§ 14 Intellectuele eigendom",
       paragraphs: [
         "Alle rechten op het Platform, de software en de inhoud ervan (met uitzondering van de door de Gebruiker geplaatste content) komen toe aan myNextDays respectievelijk haar licentiegevers. De Gebruiker verkrijgt voor de looptijd van de overeenkomst een eenvoudig, niet-overdraagbaar recht om het Platform te gebruiken in de contractueel overeengekomen omvang.",
         "Op de door de Gebruiker geplaatste content verleent de Gebruiker aan myNextDays de voor de exploitatie van het Platform vereiste eenvoudige gebruiksrechten (in het bijzonder voor opslag, verveelvoudiging, weergave en doorgifte aan gekoppelde kanalen).",
       ],
     },
     {
-      heading: "§ 13 Aansprakelijkheid",
+      heading: "§ 15 Aansprakelijkheid",
       paragraphs: [
         "myNextDays is onbeperkt aansprakelijk voor opzet en grove nalatigheid alsmede voor schade als gevolg van letsel aan leven, lichaam of gezondheid.",
         "Bij lichte nalatigheid is myNextDays alleen aansprakelijk voor de schending van wezenlijke contractuele verplichtingen (kardinale verplichtingen), beperkt tot de voor de overeenkomst typische, voorzienbare schade. De aansprakelijkheid op grond van het productaansprakelijkheidsrecht en uit verstrekte garanties blijft onverlet.",
@@ -130,7 +152,7 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 14 Looptijd, opzegging en blokkering",
+      heading: "§ 16 Looptijd, opzegging en blokkering",
       paragraphs: [
         "Looptijd en opzegtermijnen blijken uit de betreffende overeenkomst. Het recht op buitengewone opzegging wegens gewichtige reden blijft onverlet.",
         "myNextDays kan de toegang tot het Platform of afzonderlijke functies (waaronder het accepteren van betalingen en uitbetalingen) tijdelijk blokkeren indien er concrete aanwijzingen zijn voor een schending van deze Voorwaarden, voor fraude of voor misbruik, of indien myNextDays daartoe wettelijk of op last van een betaaldienstverlener verplicht is. De Gebruiker wordt over de blokkering geïnformeerd, voor zover dit wettelijk is toegestaan.",
@@ -138,14 +160,14 @@ export const agb: LegalDoc = {
       ],
     },
     {
-      heading: "§ 15 Wijzigingen van deze Voorwaarden",
+      heading: "§ 17 Wijzigingen van deze Voorwaarden",
       paragraphs: [
         "myNextDays kan deze Voorwaarden met werking voor de toekomst wijzigen, voor zover dit om gegronde redenen noodzakelijk is (in het bijzonder wetswijzigingen, wijzigingen in de rechtspraak of eisen van betaaldienstverleners) en de Gebruiker daardoor niet onredelijk wordt benadeeld.",
         "Wijzigingen worden ten minste zes weken vóór de inwerkingtreding in tekstvorm aan de Gebruiker aangekondigd. Maakt de Gebruiker niet binnen de aankondigingstermijn bezwaar of blijft hij het Platform na de inwerkingtreding gebruiken, dan gelden de gewijzigde Voorwaarden als aanvaard; op dit gevolg wordt in de aankondiging afzonderlijk gewezen.",
       ],
     },
     {
-      heading: "§ 16 Slotbepalingen",
+      heading: "§ 18 Slotbepalingen",
       paragraphs: [
         "Het recht van de staat waarin de exploitant haar zetel heeft is van toepassing, met uitsluiting van het Weens Koopverdrag. Dwingende bepalingen van de staat waarin de Gebruiker zijn zetel heeft blijven onverlet.",
         "Exclusief bevoegde rechter voor alle geschillen die voortvloeien uit of verband houden met deze overeenkomst is — voor zover wettelijk toegestaan — die van de zetel van de exploitant.",
