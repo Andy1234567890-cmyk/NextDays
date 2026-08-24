@@ -119,7 +119,10 @@ export default function GuestLogin() {
         keyboardShouldPersistTaps="handled"
       >
         <Col gap={10} style={{ alignItems: "center", paddingTop: 24, paddingBottom: 6 }}>
-          <Image source={t.marke.logo} style={{ width: 168, height: 62 }} resizeMode="contain" />
+          {/* Breite folgt dem Seitenverhältnis des Logos (1461:403 ≈ 3.63). Mit den
+              alten 168 blieb das Bild bei `contain` nur ~46 px hoch statt 62 —
+              nicht verzerrt, aber kleiner als gedacht. */}
+          <Image source={t.marke.logo} style={{ width: 225, height: 62 }} resizeMode="contain" />
           <Txt v="h1" style={{ textAlign: "center" }}>
             {registrieren ? "Konto erstellen" : "Einloggen oder registrieren"}
           </Txt>

@@ -98,10 +98,11 @@ describe("istUeberfaellig", () => {
 });
 
 describe("gruppiereNachTag", () => {
-  const a = { title: "A", start_at: lokal("2026-08-22", 10), due_at: null };
-  const b = { title: "B", start_at: lokal("2026-08-21", 14), due_at: null };
-  const c = { title: "C", start_at: lokal("2026-08-21", 8), due_at: null };
-  const ohne = { title: "D", start_at: null, due_at: null };
+  const offen = "open" as const;
+  const a = { title: "A", status: offen, start_at: lokal("2026-08-22", 10), due_at: null };
+  const b = { title: "B", status: offen, start_at: lokal("2026-08-21", 14), due_at: null };
+  const c = { title: "C", status: offen, start_at: lokal("2026-08-21", 8), due_at: null };
+  const ohne = { title: "D", status: offen, start_at: null, due_at: null };
 
   it("sortiert Tage aufsteigend und innerhalb des Tages nach Zeit", () => {
     const gruppen = gruppiereNachTag([a, b, c]);
@@ -120,6 +121,26 @@ describe("gruppiereNachTag", () => {
     expect(zaehler.get("2026-08-21")).toBe(2);
     expect(zaehler.get("2026-08-22")).toBe(1);
     expect(zaehler.size).toBe(2);
+  });
+
+  it("zählt nur OFFENE — ein durchgearbeiteter Tag bekommt keinen Punkt", () => {
+    // Beide Aufgaben des 21.08. sind abgeschlossen: der Tag verschwindet aus
+    // der Zählung, statt wie ein Tag mit offener Arbeit auszusehen.
+    const zaehler = zaehleProTag([
+      { ...b, status: "done" as const },
+      { ...c, status: "cancelled" as const },
+      a,
+    ]);
+    expect(zaehler.get("2026-08-21")).toBeUndefined();
+    expect(zaehler.get("2026-08-22")).toBe(1);
+  });
+
+  it("angenommen und in Arbeit sind offen — die Arbeit läuft noch", () => {
+    const zaehler = zaehleProTag([
+      { ...b, status: "accepted" as const },
+      { ...c, status: "in_progress" as const },
+    ]);
+    expect(zaehler.get("2026-08-21")).toBe(2);
   });
 });
 
@@ -155,15 +176,29 @@ describe("Beschriftungen", () => {
 });
 
 describe("monatsGrenzen", () => {
-  it("umfasst den ganzen Monat inklusive letztem Tag", () => {
+  it("umfasst den Monat plus eine Woche Rand auf jeder Seite", () => {
     const { von, bis } = monatsGrenzen("2026-08-21");
-    expect(von).toBe("2026-08-01T00:00:00.000Z");
-    // Bis zum Ende des 31. — mit „2026-08-31T00:00:00" fiele jede Aufgabe des
-    // letzten Tages aus dem String-Vergleich des Servers heraus.
-    expect(bis).toBe("2026-08-31T23:59:59.000Z");
+    // Eine Woche VOR dem Monat: die Woche des 1. August beginnt im Juli, und
+    // der Wochenstreifen zeigt diese Tage — ohne Rand blieben sie leer.
+    expect(von).toBe("2026-07-25T00:00:00.000Z");
+    // Bis zum Ende des Randes hinter dem 31. — mit „2026-08-31T00:00:00" fiele
+    // jede Aufgabe des letzten Tages aus dem String-Vergleich des Servers.
+    expect(bis).toBe("2026-09-07T23:59:59.000Z");
   });
 
   it("trifft auch den Februar eines Schaltjahres", () => {
-    expect(monatsGrenzen("2028-02-10").bis).toBe("2028-02-29T23:59:59.000Z");
+    // Der 29. ist der letzte Februartag 2028; der Rand reicht bis in den März.
+    expect(monatsGrenzen("2028-02-10").bis).toBe("2028-03-07T23:59:59.000Z");
+  });
+
+  it("deckt jeden Tag des Wochenstreifens ab, auch über die Monatsgrenze", () => {
+    // Der Fehler, den der Rand behebt: `wochenTage("2026-09-01")` enthält den
+    // 31. August. Lädt der Screen nur den September, hat dieser Tag keine
+    // Aufgaben und keinen Punkt — obwohl dort welche liegen.
+    const { von, bis } = monatsGrenzen("2026-09-01");
+    for (const tag of wochenTage("2026-09-01")) {
+      expect(tag >= von.slice(0, 10)).toBe(true);
+      expect(tag <= bis.slice(0, 10)).toBe(true);
+    }
   });
 });

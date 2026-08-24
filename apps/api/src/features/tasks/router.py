@@ -230,21 +230,19 @@ def sync_reservation(
 def internal_tick(
     x_internal_cron_secret: Annotated[str | None, Header()] = None,
 ) -> dict[str, int]:
-    """Interner Cron-Trigger: rollt wiederkehrende Regeln über ALLE Tenants aus.
+    """Interner Cron-Trigger: rollt die Regeln über ALLE Tenants aus.
+
+    Zwei Läufe, beide über alle Tenants: die wiederkehrenden Regeln
+    materialisieren, und die planmäßigen gegen die Buchungen im Fenster
+    abgleichen (der Nachzug für Buchungen, die vor ihrer Regel bestanden).
 
     Kein JWT — über INTERNAL_CRON_SECRET abgesichert (Wurzel 5: fehlt das
     Secret, wird fail-closed abgewiesen). Derselbe Lauf steckt im Worker-Tick;
     dieser Endpunkt ist die Handkurbel bzw. der Scheduled-Task.
     """
     require_internal_cron_secret(x_internal_cron_secret)
-    db = get_service_client()
-    service = TasksService(client=db)
-    today = datetime.now(UTC).date()
-    tenants = (db.table("tenants").select("id").execute()).data or []
-    created = sum(
-        service.materialize_recurring(str(t["id"]), today) for t in tenants
-    )
-    return {"tenants": len(tenants), "created": created}
+    service = TasksService(client=get_service_client())
+    return service.regeln_ausrollen(datetime.now(UTC).date())
 
 
 @router.post("/checklist/item", status_code=201)

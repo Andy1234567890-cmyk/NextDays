@@ -1124,11 +1124,17 @@ class Worker:
         return InboxService(service_client=self._db).replan_all_tenants()
 
     async def _tasks_tick(self, loop_time: float) -> None:
-        """Stündlich wiederkehrende Aufgaben-Regeln ausrollen (0272).
+        """Stündlich die Aufgaben-Regeln ausrollen (0272).
 
         Bis dahin hatten regelmäßige Aufgaben keinen Ausführenden: sie ließen
         sich anlegen, erzeugten aber nie eine Aufgabe. Ein Tenant mit kaputter
-        Regel kippt weder den Tick noch die übrigen Tenants."""
+        Regel kippt weder den Tick noch die übrigen Tenants.
+
+        Zweiter Lauf im selben Tick: der Abgleich der PLANMÄSSIGEN Regeln gegen
+        die Buchungen im Fenster. Er ist das Auffangnetz für jeden
+        Schreibpfad, der die Engine nicht ruft, und für Regeln, die nach einer
+        Buchung entstanden — live fehlte deshalb eine Anreise-Aufgabe zu einer
+        Anreise am selben Tag (23.08.2026)."""
         if loop_time - self._last_tasks_tick < TASKS_TICK_SECONDS:
             return
         self._last_tasks_tick = loop_time
@@ -1138,23 +1144,13 @@ class Worker:
             log.warning("tasks_tick_failed", error=str(exc)[:200])
 
     def _materialize_recurring_tasks(self) -> None:
-        from src.features.tasks.engine import materialize_recurring
+        from src.features.tasks.service import TasksService
 
-        today = datetime.now(UTC).date()
-        created = 0
-        for tenant in (self._db.table("tenants").select("id").execute()).data or []:
-            try:
-                created += materialize_recurring(
-                    self._db, str(tenant["id"]), today=today
-                )
-            except Exception as exc:  # noqa: BLE001 — ein Tenant kippt nicht alle
-                log.warning(
-                    "tasks_materialize_failed",
-                    tenant_id=str(tenant["id"]),
-                    error=str(exc)[:200],
-                )
-        if created:
-            log.info("tasks_tick", created=created)
+        stand = TasksService(client=self._db).regeln_ausrollen(
+            datetime.now(UTC).date()
+        )
+        if stand["created"] or stand["nachgezogen"]:
+            log.info("tasks_tick", **stand)
 
     async def _balance_tick(self, loop_time: float) -> None:
         """Stündlich fällige Restzahlungen (Split-Payment) off-session belasten.

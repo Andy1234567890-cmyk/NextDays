@@ -1,6 +1,15 @@
 // myBestDays-Logo (freigestellte PNGs). Portiert aus plattform/ — das Bild ist
 // bereits auf die sichtbare BBox getrimmt, daher reicht sein Seitenverhaeltnis.
-const ASPECT = 1461 / 578;
+// Seitenverhältnis des getrimmten Bildes. Es steht hier als Zahl und nicht als
+// `height: auto`, weil das Logo in Kopfzeilen neben Text sitzt: ohne feste
+// Breite springt das Layout, sobald das PNG geladen ist.
+//
+// Beim Wechsel auf die Figma-Logo-Familie (24.08.2026) hat sich das Verhältnis
+// geändert — 578 stand hier noch aus der alten Fassung und hätte die neue
+// Sperrung gestaucht, weil die Breite aus der Höhe berechnet wird. Wer das Bild
+// austauscht, MUSS diese Zahl mitziehen; `magick <datei> -format "%wx%h" info:`
+// nennt sie.
+const ASPECT = 1461 / 403;
 
 export function Logo({
   heightRem = 2.25,

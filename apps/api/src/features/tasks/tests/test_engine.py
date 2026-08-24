@@ -14,8 +14,10 @@ from src.features.tasks.engine import (
     _monthly_day,
     _occurrences,
     _parse_clock,
+    _regel_anwenden,
     _reservation_anchors,
     _trigger_time,
+    sync_for_reservation,
 )
 
 _RESERVATION = {
@@ -177,3 +179,75 @@ def test_jaehrlich_haelt_den_monat_des_anfangsdatums() -> None:
         date(2028, 12, 31),
     )
     assert days == [date(2026, 4, 15), date(2027, 4, 15), date(2028, 4, 15)]
+
+
+# --- Endzustände und Nachzug (0272 / Anreise-Aufgabe fehlte live) ----------
+
+
+class _KeineDb:
+    """Client, der jeden Zugriff verbietet.
+
+    Für die Zweige, die GAR NICHT in die DB gehen dürfen: eine offene Anfrage
+    plant keine Reinigung, und ein Nachzug rührt eine vorhandene Aufgabe nicht
+    an. Ein Mock, der Zugriffe still zulässt, würde beides nicht beweisen.
+    """
+
+    def table(self, name: str) -> object:  # pragma: no cover - darf nie laufen
+        raise AssertionError(f"unerwarteter DB-Zugriff auf {name}")
+
+
+def test_offene_anfrage_erzeugt_keine_aufgabe() -> None:
+    """`requested` ist noch kein Verkauf — nichts anlegen, nichts wegräumen.
+
+    Die Aufgaben entstehen erst mit dem Annehmen (`accept_request`), das erneut
+    hier hereinkommt, dann mit `confirmed`.
+    """
+    res = {**_RESERVATION, "status": "requested"}
+    assert sync_for_reservation(_KeineDb(), "t1", res) == 0
+
+
+@pytest.mark.parametrize("status", ["cancelled", "declined", "expired"])
+def test_endzustaende_raeumen_die_aufgaben_weg(
+    status: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Abgelehnt und abgelaufen sind derselbe Gegenzustand wie storniert.
+
+    Bis hierher prüfte die Engine nur `cancelled`: eine abgelehnte Anfrage ließ
+    ihre Reinigung stehen (Wurzel 1).
+    """
+    gerufen: list[str] = []
+    monkeypatch.setattr(
+        "src.features.tasks.engine._on_cancelled",
+        lambda db, tenant_id, reservation_id: gerufen.append(reservation_id) or 1,
+    )
+    res = {**_RESERVATION, "status": status}
+    assert sync_for_reservation(_KeineDb(), "t1", res) == 1
+    assert gerufen == ["r1"]
+
+
+def test_nachzug_ruehrt_vorhandene_aufgabe_nicht_an() -> None:
+    """`verschieben=False`: der stündliche Abgleich legt nur Fehlendes an.
+
+    Sonst schriebe jeder Lauf dieselben Werte erneut in jede Aufgabe — reine
+    Schreiblast plus ein Realtime-Ereignis pro Aufgabe und Stunde, ohne dass
+    sich etwas geändert hätte.
+    """
+    regel = {
+        "id": "rule1",
+        "name": "Anreise-Check",
+        "start_trigger": "days_before_check_in",
+        "start_offset_minutes": -1440,
+        "end_trigger": "check_in",
+        "end_offset_minutes": 0,
+    }
+    beruehrt = _regel_anwenden(
+        _KeineDb(),
+        "t1",
+        regel,
+        _RESERVATION,
+        _anchors(),
+        [],
+        {"id": "task1", "status": "open"},
+        verschieben=False,
+    )
+    assert beruehrt is False

@@ -1,4 +1,5 @@
 """Tests für den tasks-Slice (Lastenheft §2.5 + §4.3)."""
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -11,7 +12,12 @@ from src.features.tasks.schemas import (
     TaskCreate,
     TaskStatus,
 )
-from src.features.tasks.service import TaskError, TasksService
+from src.features.tasks.service import (
+    TaskError,
+    TasksService,
+    _als_zeitpunkt,
+    _utc,
+)
 from src.main import create_app
 
 client = TestClient(create_app())
@@ -1382,3 +1388,25 @@ def test_umweisung_hin_und_zurueck_meldet_zweimal(
     svc.set_assignee("T", "t1", "u1", _admin())
     assert len(schluessel) == 2
     assert all(v for v in schluessel), "jeder Wechsel braucht einen Stempel"
+
+
+def test_fenstergrenze_wird_als_zeitpunkt_verglichen() -> None:
+    """Eine Aufgabe GENAU auf der unteren Fenstergrenze bleibt im Kalender.
+
+    Vorher verglich der Kalender ISO-Strings: die App schickt
+    `…T00:00:00.000Z`, Python schreibt `…+00:00`, und bei gleicher Sekunde
+    entschied die ASCII-Ordnung von '+' (0x2B) und '.' (0x2E) — die Aufgabe fiel
+    heraus, ohne dass irgendwo ein Fehler entstand.
+    """
+    grenze = _als_zeitpunkt("2026-08-01T00:00:00.000Z", "month_from")
+    assert grenze == datetime(2026, 8, 1, tzinfo=UTC)
+    # Derselbe Zeitpunkt, anders geschrieben — als Zeitpunkt identisch, als
+    # String kleiner.
+    assert _utc(datetime(2026, 8, 1, tzinfo=UTC)) >= grenze
+    assert "2026-08-01T00:00:00+00:00" < "2026-08-01T00:00:00.000Z"
+
+
+def test_unlesbare_fenstergrenze_faellt_hart_durch() -> None:
+    with pytest.raises(TaskError) as exc:
+        _als_zeitpunkt("naechster Monat", "month_to")
+    assert exc.value.status_code == 422

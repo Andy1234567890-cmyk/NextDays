@@ -640,6 +640,26 @@ class BookingEngineService(SchaufensterMixin, AbsichtMixin):
             ).strip(),
         )
 
+        # Planmäßige Aufgaben (Anreise-Check, Endreinigung …) aus den Regeln
+        # erzeugen — derselbe Schritt, den `ReservationsService.create` und der
+        # OTA-Import längst gehen. Er fehlte hier: eine Buchung über den
+        # Marktplatz erzeugte zwar „Zusatzleistung vorbereiten" (dieser Nachlauf
+        # ruft `purchase_addons` bedingungslos), aber NIE eine Anreise- oder
+        # Reinigungsaufgabe. Bei einer ANFRAGE (`requested`) legt die Engine
+        # bewusst nichts an — erst das Annehmen macht daraus einen Verkauf.
+        # Best effort wie die übrigen Schritte: die Buchung ist committet und
+        # darf an einer Aufgabe nicht mehr scheitern.
+        try:
+            from src.features.tasks.engine import sync_nach_id  # noqa: PLC0415
+
+            sync_nach_id(self._db(), tenant_id, str(row["id"]))
+        except Exception as exc:  # noqa: BLE001 — Aufgaben sind der Nebenpfad
+            log.warning(
+                "public_booking_tasks_failed",
+                reservation_id=str(row["id"]),
+                error=str(exc),
+            )
+
         log.info(
             "public_booking_created",
             tenant_id=tenant_id,

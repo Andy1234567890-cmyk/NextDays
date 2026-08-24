@@ -52,6 +52,27 @@ MAX_OCCURRENCES_PER_RULE = 400
 
 _CONFLICT = "23505"
 
+# Zustände, in denen eine Reservierung nichts mehr auslöst und ihre planmäßigen
+# Aufgaben weg müssen (Wurzel 1: Gegenzustand). `cancelled` war lange der
+# einzige geprüfte Wert — `declined`/`expired` aus dem Anfrage-Modell (Request
+# to Book) ließen eine erzeugte Reinigung stehen, obwohl der Verkauf nie
+# zustande kam.
+_ENDSTATUS = frozenset({"cancelled", "declined", "expired"})
+
+# Eine offene Anfrage ist noch kein Verkauf und darf keine Reinigung planen.
+# Aufgaben entstehen erst mit dem Annehmen (`accept_request` → confirmed) bzw.
+# mit der bezahlten Buchung. `pending` gehört NICHT hierher: das ist eine echte
+# Buchung, die nur noch nicht bezahlt ist.
+_UNVERBINDLICH = frozenset({"requested"})
+
+# Wie viele Reservierungen ein Nachzieh-Lauf je Tenant betrachtet (Wurzel 8:
+# jeder unbegrenzte Bereich bekommt eine Obergrenze).
+MAX_NACHZUG_RESERVIERUNGEN = 500
+
+# PostgREST bekommt `in_`-Listen über die URL — in Blöcken, nicht als eine
+# Riesenliste.
+_BLOCK = 100
+
 _WEEKDAY_POSITIONS = {"first": 0, "second": 1, "third": 2, "fourth": 3}
 
 
@@ -374,6 +395,214 @@ def _insert_task(
 # ---------------------------------------------------------------------------
 
 
+def _regel_anwenden(
+    db: Client,
+    tenant_id: str,
+    rule: dict[str, object],
+    reservation: dict[str, object],
+    anchors: tuple[datetime, datetime],
+    items: list[dict[str, object]],
+    known: dict[str, object] | None,
+    *,
+    verschieben: bool = True,
+) -> bool:
+    """EINE planmäßige Regel auf EINE Reservierung anwenden.
+
+    Der gemeinsame Kern von `sync_for_reservation` (ein Schreibpfad, alle
+    Regeln einer Buchung) und `nachziehen_planmaessig` (ein Tick, alle
+    Buchungen einer Regel). Rückgabe: True, wenn eine Aufgabe entstand oder
+    verschoben wurde.
+
+    `verschieben=False` legt nur Fehlendes an und lässt Vorhandenes in Ruhe —
+    so schreibt der stündliche Abgleich nicht bei jedem Lauf dieselben Werte
+    erneut in jede Aufgabe (Realtime-Rauschen, Schreiblast ohne Änderung).
+    """
+    try:
+        start = _trigger_time(
+            str(rule.get("start_trigger") or "") or None,
+            int(rule.get("start_offset_minutes") or 0),
+            reservation,
+            anchors,
+        )
+        end = _trigger_time(
+            str(rule.get("end_trigger") or "") or None,
+            int(rule.get("end_offset_minutes") or 0),
+            reservation,
+            anchors,
+        )
+    except RuleEngineError as exc:
+        # Eine kaputt konfigurierte Regel darf die übrigen nicht mitreißen.
+        log.warning("task_rule_trigger_unbekannt", rule_id=rule["id"], error=str(exc))
+        return False
+    if start is None:
+        # Ohne Start-Trigger kann die Regel nichts auslösen — sie ist noch
+        # nicht fertig konfiguriert, kein Grund für einen Fehler.
+        return False
+    if end is None and rule.get("duration_minutes"):
+        end = start + timedelta(minutes=int(rule["duration_minutes"]))
+
+    property_id = reservation.get("property_id")
+    if known:
+        if not verschieben:
+            return False
+        if known.get("status") in (TaskStatus.done.value, TaskStatus.cancelled.value):
+            # Erledigtes bleibt erledigt: eine Verschiebung der Buchung macht
+            # eine bereits gemachte Reinigung nicht ungeschehen.
+            return False
+        db.table("tasks").update(
+            {
+                "start_at": start.isoformat(),
+                "end_at": end.isoformat() if end else None,
+                "due_at": (end or start).isoformat(),
+                "property_id": property_id,
+            }
+        ).eq("id", known["id"]).eq("tenant_id", tenant_id).execute()
+        return True
+
+    return bool(
+        _insert_task(
+            db,
+            _task_payload(
+                tenant_id,
+                rule,
+                property_id=str(property_id) if property_id else None,
+                reservation_id=str(reservation["id"]),
+                occurrence_on=None,
+                start=start,
+                end=end,
+                source=TaskSource.auto,
+            ),
+            items,
+        )
+    )
+
+
+def nachziehen_planmaessig(
+    db: Client,
+    tenant_id: str,
+    *,
+    today: date,
+    horizon_days: int = HORIZON_DAYS,
+    rule_id: str | None = None,
+) -> int:
+    """Planmäßige Regeln gegen ALLE Buchungen im Fenster abgleichen.
+
+    Der fehlende Gegenzustand zur Regel selbst (Wurzel 1). Eine planmäßige
+    Aufgabe entstand bisher ausschließlich in dem Moment, in dem eine
+    Reservierung geschrieben wurde. Wer eine Regel NACH einer Buchung anlegte —
+    oder ihr später ein Objekt zuordnete — bekam für diese Buchung nie eine
+    Aufgabe, und es gab keinen Weg dahin außer dem Nachzügler-Knopf, einzeln,
+    pro Buchung.
+
+    LIVE PASSIERT (23.08.2026): die Buchung „Feriehus Britt" vom 10.08. mit
+    Anreise am 23.08. hatte keine Anreise-Aufgabe, weil die Regel „Velk T"
+    erst am 13.08. angelegt wurde. Gemeldet wurde das als „heute ist eine
+    Anreise, dazu gibt es keine Aufgabe" — genau die Klasse Fehler, die
+    niemand als Fehler erkennt, weil die Liste ja gefüllt aussieht.
+
+    Zweite Wirkung: der Lauf ist das Auffangnetz für jeden Schreibpfad, der
+    `sync_for_reservation` nicht ruft. Er ERSETZT den Aufruf nicht — eine
+    Aufgabe soll sofort da sein, nicht erst beim nächsten Tick.
+
+    Nur ANLEGEN, nie verschieben: das Verschieben gehört dem Schreibpfad, der
+    den neuen Zeitraum kennt. `rule_id` grenzt den Lauf auf eine Regel ein
+    (Aufruf direkt nach dem Speichern einer Regel).
+    """
+    rules = [
+        r
+        for r in _rules(db, tenant_id, "auto")
+        if rule_id is None or str(r["id"]) == rule_id
+    ]
+    if not rules:
+        return 0
+    assignments = _rule_properties(db, [str(r["id"]) for r in rules])
+    items = _template_items(db, tenant_id, {_checklist_source(r) for r in rules})
+
+    # Fenster: alles, was noch nicht abgereist ist, bis zum Horizont. Eine
+    # Buchung, die schon abgereist ist, braucht keine Anreise-Aufgabe mehr.
+    reservations = (
+        db.table("reservations")
+        .select(
+            "id, property_id, status, check_in, check_out, "
+            "checkin_time, checkout_time, created_at"
+        )
+        .eq("tenant_id", tenant_id)
+        .gte("check_out", today.isoformat())
+        .lte("check_in", (today + timedelta(days=horizon_days)).isoformat())
+        .not_.in_("status", list(_ENDSTATUS | _UNVERBINDLICH))
+        .order("check_in")
+        .limit(MAX_NACHZUG_RESERVIERUNGEN)
+        .execute()
+    ).data or []
+    if not reservations:
+        return 0
+
+    known = _vorhandene_aufgaben(
+        db, tenant_id, [str(r["id"]) for r in reservations]
+    )
+
+    created = 0
+    for reservation in reservations:
+        anchors = _reservation_anchors(reservation)
+        if anchors is None:
+            continue
+        reservation_id = str(reservation["id"])
+        property_id = str(reservation.get("property_id") or "")
+        for rule in rules:
+            zuordnung = assignments.get(str(rule["id"]))
+            if zuordnung and property_id not in zuordnung:
+                continue
+            if _regel_anwenden(
+                db,
+                tenant_id,
+                rule,
+                reservation,
+                anchors,
+                items.get(_checklist_source(rule), []),
+                known.get((reservation_id, str(rule["id"]))),
+                verschieben=False,
+            ):
+                created += 1
+
+    if created:
+        log.info(
+            "task_rules_nachgezogen",
+            tenant_id=tenant_id,
+            rules=len(rules),
+            reservations=len(reservations),
+            created=created,
+        )
+    if len(reservations) == MAX_NACHZUG_RESERVIERUNGEN:
+        # Keine stille Deckelung: was der Lauf nicht erreicht hat, muss man
+        # sehen können (sonst liest sich „fertig" wie „alles abgedeckt").
+        log.warning(
+            "task_rules_nachzug_gedeckelt",
+            tenant_id=tenant_id,
+            limit=MAX_NACHZUG_RESERVIERUNGEN,
+        )
+    return created
+
+
+def _vorhandene_aufgaben(
+    db: Client, tenant_id: str, reservation_ids: list[str]
+) -> dict[tuple[str, str], dict[str, object]]:
+    """Schon erzeugte Regel-Aufgaben als {(reservation_id, rule_id): Zeile}."""
+    out: dict[tuple[str, str], dict[str, object]] = {}
+    for start in range(0, len(reservation_ids), _BLOCK):
+        block = reservation_ids[start : start + _BLOCK]
+        rows = (
+            db.table("tasks")
+            .select("id, rule_id, reservation_id, status")
+            .eq("tenant_id", tenant_id)
+            .in_("reservation_id", block)
+            .not_.is_("rule_id", "null")
+            .execute()
+        ).data or []
+        for row in rows:
+            out[(str(row["reservation_id"]), str(row["rule_id"]))] = row
+    return out
+
+
 def sync_for_reservation(
     db: Client, tenant_id: str, reservation: dict[str, object]
 ) -> int:
@@ -384,8 +613,14 @@ def sync_for_reservation(
     Rückgabe: Zahl der angelegten oder verschobenen Aufgaben.
     """
     reservation_id = str(reservation["id"])
-    if str(reservation.get("status") or "") == "cancelled":
+    status = str(reservation.get("status") or "")
+    if status in _ENDSTATUS:
         return _on_cancelled(db, tenant_id, reservation_id)
+    if status in _UNVERBINDLICH:
+        # Weder anlegen noch wegräumen: eine offene Anfrage hatte nie Aufgaben.
+        # Angenommen wird sie über `accept_request`, das erneut hierher kommt —
+        # dann mit `confirmed`.
+        return 0
 
     anchors = _reservation_anchors(reservation)
     if anchors is None:
@@ -422,62 +657,15 @@ def sync_for_reservation(
 
     touched = 0
     for rule in matching:
-        try:
-            start = _trigger_time(
-                str(rule.get("start_trigger") or "") or None,
-                int(rule.get("start_offset_minutes") or 0),
-                reservation,
-                anchors,
-            )
-            end = _trigger_time(
-                str(rule.get("end_trigger") or "") or None,
-                int(rule.get("end_offset_minutes") or 0),
-                reservation,
-                anchors,
-            )
-        except RuleEngineError as exc:
-            # Eine kaputt konfigurierte Regel darf die übrigen nicht mitreißen.
-            log.warning("task_rule_trigger_unbekannt", rule_id=rule["id"], error=str(exc))
-            continue
-        if start is None:
-            # Ohne Start-Trigger kann die Regel nichts auslösen — sie ist noch
-            # nicht fertig konfiguriert, kein Grund für einen Fehler.
-            continue
-        if end is None and rule.get("duration_minutes"):
-            end = start + timedelta(minutes=int(rule["duration_minutes"]))
-
-        known = existing.get(str(rule["id"]))
-        if known:
-            if known.get("status") in (TaskStatus.done.value, TaskStatus.cancelled.value):
-                # Erledigtes bleibt erledigt: eine Verschiebung der Buchung
-                # macht eine bereits gemachte Reinigung nicht ungeschehen.
-                continue
-            db.table("tasks").update(
-                {
-                    "start_at": start.isoformat(),
-                    "end_at": end.isoformat() if end else None,
-                    "due_at": (end or start).isoformat(),
-                    "property_id": property_id,
-                }
-            ).eq("id", known["id"]).eq("tenant_id", tenant_id).execute()
-            touched += 1
-            continue
-
-        created = _insert_task(
+        if _regel_anwenden(
             db,
-            _task_payload(
-                tenant_id,
-                rule,
-                property_id=str(property_id) if property_id else None,
-                reservation_id=reservation_id,
-                occurrence_on=None,
-                start=start,
-                end=end,
-                source=TaskSource.auto,
-            ),
+            tenant_id,
+            rule,
+            reservation,
+            anchors,
             items.get(_checklist_source(rule), []),
-        )
-        if created:
+            existing.get(str(rule["id"])),
+        ):
             touched += 1
 
     log.info(

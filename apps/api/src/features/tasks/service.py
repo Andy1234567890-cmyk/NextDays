@@ -44,7 +44,11 @@ from src.features.notification_settings.ereignisse import (
     melde_vertretung_gesucht,
 )
 
-from .engine import materialize_recurring, sync_for_reservation
+from .engine import (
+    materialize_recurring,
+    nachziehen_planmaessig,
+    sync_for_reservation,
+)
 from .kosten_rueckmeldung import (
     kosten_einfuegen,
     kosten_entfernen,
@@ -92,6 +96,34 @@ from .schemas import (
 )
 
 log = get_logger("nextdays.tasks")
+
+
+def _utc(wert: datetime) -> datetime:
+    """Zeitstempel als UTC-bewusster Wert. Ein zeitzonenloser Wert aus
+    Altdaten gilt als UTC — so wie die DB ihn geschrieben hat."""
+    return wert if wert.tzinfo else wert.replace(tzinfo=UTC)
+
+
+def _als_zeitpunkt(wert: str, feld: str) -> datetime:
+    """Eine Fenstergrenze des Kalenders als Zeitpunkt.
+
+    Vorher verglich der Kalender ISO-STRINGS
+    (`month_from <= (start_at or due_at).isoformat() <= month_to`). Das hängt am
+    Textformat statt am Zeitpunkt: die App schickt `…T00:00:00.000Z`, Python
+    schreibt `…+00:00`. Bei gleicher Sekunde entscheidet dann die ASCII-Ordnung
+    von '+' und '.' — eine Aufgabe genau auf der unteren Fenstergrenze fiel aus
+    dem Kalender heraus, ohne dass irgendwo ein Fehler entstand.
+
+    Ein unlesbarer Wert ist ein Fehler des Aufrufers (422), kein Anlass für ein
+    geratenes Fenster (Wurzel 4).
+    """
+    try:
+        gelesen = datetime.fromisoformat(wert.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise TaskError(
+            f"Ungültiger Zeitpunkt in {feld}.", status_code=422
+        ) from exc
+    return _utc(gelesen)
 
 # Foto-Upload (Checklisten-Nachweise → privater Bucket task-photos).
 _TASK_PHOTO_BUCKET = "task-photos"
@@ -319,6 +351,55 @@ class TasksService:
     def materialize_recurring(self, tenant_id: str, today: date) -> int:
         """Wiederkehrende Regeln ausrollen (Worker-Tick)."""
         return materialize_recurring(self._db(), tenant_id, today=today)
+
+    def nachziehen_planmaessig(
+        self, tenant_id: str, today: date, *, rule_id: str | None = None
+    ) -> int:
+        """Planmäßige Regeln gegen die Buchungen im Fenster abgleichen.
+
+        Zwei Aufrufer: der Worker-Tick (alle Regeln, Auffangnetz für jeden
+        Schreibpfad, der die Engine nicht ruft) und das Speichern einer Regel
+        (nur diese Regel, damit ihre Aufgaben sofort stehen statt erst beim
+        nächsten Tick).
+        """
+        return nachziehen_planmaessig(
+            self._db(), tenant_id, today=today, rule_id=rule_id
+        )
+
+    def regeln_ausrollen(self, today: date) -> dict[str, int]:
+        """Beide Regel-Läufe über ALLE Tenants: regelmäßige materialisieren,
+        planmäßige gegen die Buchungen im Fenster nachziehen.
+
+        EINE Stelle für den Worker-Tick und den internen Cron-Endpunkt. Vorher
+        stand die Tenant-Schleife zweimal im Code — und prompt fehlte der
+        Nachzug in einer der beiden Kopien.
+
+        Ein Tenant mit kaputter Regel kippt weder den Lauf noch die übrigen
+        Tenants: jeder Schritt wird je Tenant gefangen und protokolliert.
+        """
+        db = self._db()
+        tenants = (db.table("tenants").select("id").execute()).data or []
+        created = 0
+        nachgezogen = 0
+        for tenant in tenants:
+            tenant_id = str(tenant["id"])
+            try:
+                created += materialize_recurring(db, tenant_id, today=today)
+            except APIError:  # noqa: BLE001 — ein Tenant kippt nicht alle
+                log.exception(
+                    "tasks_materialize_failed", extra={"tenant_id": tenant_id}
+                )
+            try:
+                nachgezogen += nachziehen_planmaessig(db, tenant_id, today=today)
+            except APIError:  # noqa: BLE001 — ein Tenant kippt nicht alle
+                log.exception(
+                    "tasks_nachzug_failed", extra={"tenant_id": tenant_id}
+                )
+        return {
+            "tenants": len(tenants),
+            "created": created,
+            "nachgezogen": nachgezogen,
+        }
 
     def generate_for_addon(
         self,
@@ -1192,11 +1273,13 @@ class TasksService:
         rows = self._filtered_tasks(
             tenant_id, assignee_ids=assignee_ids, rule_ids=rule_ids
         )
+        von = _als_zeitpunkt(month_from, "month_from")
+        bis = _als_zeitpunkt(month_to, "month_to")
         picked = [
             t
             for t in rows
             if (t.start_at or t.due_at)
-            and month_from <= (t.start_at or t.due_at).isoformat() <= month_to
+            and von <= _utc(t.start_at or t.due_at) <= bis
         ]
         picked.sort(key=lambda t: (t.start_at or t.due_at))
         return self._enrich(tenant_id, picked)
@@ -2080,6 +2163,7 @@ class TasksService:
         self._require_own_template(tenant_id, req.template_rule_id)
         row = self._insert("task_rules", self._rule_payload(tenant_id, req))
         self._replace_rule_children(tenant_id, row["id"], req)
+        self._regel_nachziehen(tenant_id, str(row["id"]))
         return self.get_rule(tenant_id, row["id"])
 
     def update_rule(
@@ -2126,7 +2210,38 @@ class TasksService:
         self._zustaendigen_nachziehen(
             tenant_id, rule_id, alter_zustaendiger, req.assignee_id
         )
+        self._regel_nachziehen(tenant_id, rule_id)
         return self.get_rule(tenant_id, rule_id)
+
+    def _regel_nachziehen(self, tenant_id: str, rule_id: str) -> None:
+        """Fehlende Aufgaben dieser Regel für BESTEHENDE Buchungen anlegen.
+
+        Der Gegenzustand zum Speichern einer Regel (Wurzel 1). Eine planmäßige
+        Aufgabe entstand bisher nur im Moment des Reservierungs-Schreibens —
+        wer eine Regel nach einer Buchung anlegte oder ihr später ein Objekt
+        zuordnete, bekam für diese Buchung nie eine Aufgabe.
+
+        LIVE PASSIERT (23.08.2026): Buchung „Feriehus Britt" vom 10.08., Anreise
+        23.08., ohne Anreise-Aufgabe — die Regel „Velk T" wurde erst am 13.08.
+        angelegt. Gemeldet als „heute ist eine Anreise, dazu gibt es keine
+        Aufgabe".
+
+        Best-effort (Wurzel 5): die Regel IST gespeichert. Ein Fehler hier darf
+        den Aufrufer nicht glauben lassen, das Speichern sei misslungen — er
+        würde es wiederholen. Der stündliche Tick holt den Nachzug ohnehin.
+        """
+        try:
+            nachziehen_planmaessig(
+                self._db(),
+                tenant_id,
+                today=datetime.now(UTC).date(),
+                rule_id=rule_id,
+            )
+        except APIError:  # noqa: BLE001 - Nachzug, nicht der Hauptpfad
+            log.exception(
+                "regel_aufgaben_nachziehen_fehlgeschlagen",
+                extra={"rule_id": rule_id},
+            )
 
     def _zustaendigen_nachziehen(
         self, tenant_id: str, rule_id: str, alt: str, neu: str | None

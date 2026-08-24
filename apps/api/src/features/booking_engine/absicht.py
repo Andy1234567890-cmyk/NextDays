@@ -475,6 +475,21 @@ class AbsichtMixin:
             except Exception as exc:  # noqa: BLE001
                 log.warning("absicht_loyalty_failed", error=str(exc))
 
+        # Planmäßige Aufgaben aus den Regeln erzeugen. Fehlte auf diesem Pfad
+        # ganz: eine bezahlte Marktplatz-Buchung bekam „Zusatzleistung
+        # vorbereiten" (oben, bedingungslos), aber nie eine Anreise- oder
+        # Reinigungsaufgabe.
+        try:
+            from src.features.tasks.engine import sync_nach_id  # noqa: PLC0415
+
+            sync_nach_id(self._db(), tenant_id, reservation_id)
+        except Exception as exc:  # noqa: BLE001 — Aufgaben sind der Nebenpfad
+            log.warning(
+                "absicht_tasks_failed",
+                reservation_id=reservation_id,
+                error=str(exc),
+            )
+
         kontakt = daten.get("contact") or {}
         self._posteingang_thread_anlegen(
             tenant_id=tenant_id,

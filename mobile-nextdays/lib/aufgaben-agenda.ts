@@ -10,7 +10,7 @@
 // 23:30 Ortszeit beginnt, stünde damit unter dem FOLGETAG, und der Hinweis
 // „heute fällig" widerspräche der Gruppe, unter der sie steht.
 import { isoLocal, parseLocal } from "@/lib/calendar-grid";
-import type { Task } from "@/lib/tasks";
+import type { Task, TaskStatus } from "@/lib/tasks";
 
 type Terminiert = Pick<Task, "start_at" | "due_at" | "end_at">;
 
@@ -47,12 +47,22 @@ export function zeitfenster(task: Terminiert): string | null {
   return faellig ? `fällig ${faellig}` : null;
 }
 
+/**
+ * Abgeschlossen — erledigt oder abgebrochen, also nichts mehr zu tun.
+ *
+ * EINE Quelle für „überfällig" und für die Punktmarker: `accepted` und
+ * `in_progress` gelten als OFFEN, denn die Arbeit läuft noch.
+ */
+export function istAbgeschlossen(status: TaskStatus): boolean {
+  return status === "done" || status === "cancelled";
+}
+
 /** Offen und der Tag liegt vor heute. */
 export function istUeberfaellig(
   task: Pick<Task, "status" | "start_at" | "due_at">,
   heuteIso: string,
 ): boolean {
-  if (task.status === "done" || task.status === "cancelled") return false;
+  if (istAbgeschlossen(task.status)) return false;
   const tag = aufgabenTag(task);
   return tag !== null && tag < heuteIso;
 }
@@ -102,12 +112,20 @@ function vergleicheZeit<T extends Pick<Task, "start_at" | "due_at" | "title">>(
   return za === zb ? a.title.localeCompare(b.title, "de") : za.localeCompare(zb);
 }
 
-/** Wie viele Aufgaben je Tag — für die Punktmarker des Wochenstreifens. */
-export function zaehleProTag<T extends Pick<Task, "start_at" | "due_at">>(
-  aufgaben: T[],
-): Map<string, number> {
+/**
+ * Wie viele OFFENE Aufgaben je Tag — für die Punktmarker des Wochenstreifens.
+ *
+ * Der Punkt sagt „hier ist noch etwas zu tun". Gezählt wurde vorher unabhängig
+ * vom Status: ein durchgearbeiteter Tag sah damit aus wie ein Tag mit offener
+ * Arbeit, und unter allen sieben Tagen der Woche stand ein Punkt — der Streifen
+ * sagte nichts mehr aus.
+ */
+export function zaehleProTag<
+  T extends Pick<Task, "status" | "start_at" | "due_at">,
+>(aufgaben: T[]): Map<string, number> {
   const zaehler = new Map<string, number>();
   for (const a of aufgaben) {
+    if (istAbgeschlossen(a.status)) continue;
     const tag = aufgabenTag(a);
     if (tag === null) continue;
     zaehler.set(tag, (zaehler.get(tag) ?? 0) + 1);
@@ -187,10 +205,31 @@ export function monatLabel(iso: string): string {
   return `${MONATE_LANG[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-/** Die Monatsgrenzen für `GET /tasks/calendar` (`month_from`/`month_to`). */
+/** Wie weit der Ladebereich über den Monat hinausreicht — der Wochenstreifen
+ * greift höchstens sechs Tage in den Nachbarmonat. */
+const RAND_TAGE = 7;
+
+/**
+ * Der Ladebereich für `GET /tasks/calendar` (`month_from`/`month_to`): der
+ * Monat des Ankertags PLUS eine Woche Rand auf jeder Seite.
+ *
+ * Der Rand ist kein Vorrat, sondern Notwendigkeit. Der Wochenstreifen
+ * (`wochenTage`) läuft über die Monatsgrenze — die Woche des 1. September
+ * beginnt am 31. August. Geladen wurde aber nur der Monat des GEWÄHLTEN Tages:
+ * die Nachbarmonats-Tage im selben Streifen standen ohne Punktmarker da und
+ * ihre Aufgaben fehlten in der Tagesliste, bis man ausdrücklich dorthin
+ * wechselte — dann fehlten umgekehrt die sechs Tage der anderen Seite.
+ *
+ * Der Rand deckt zugleich den Zeitzonen-Versatz ab: die Grenzen sind
+ * UTC-Zeitpunkte, die Tageszuordnung in der Ansicht ist lokal (`aufgabenTag`).
+ * Ohne Rand fiel eine Aufgabe am 1. um 01:00 Ortszeit (= letzter Tag 23:00
+ * UTC) aus dem Fenster.
+ */
 export function monatsGrenzen(iso: string): { von: string; bis: string } {
   const d = parseLocal(iso);
-  const von = new Date(Date.UTC(d.getFullYear(), d.getMonth(), 1));
-  const bis = new Date(Date.UTC(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59));
+  const von = new Date(Date.UTC(d.getFullYear(), d.getMonth(), 1 - RAND_TAGE));
+  const bis = new Date(
+    Date.UTC(d.getFullYear(), d.getMonth() + 1, RAND_TAGE, 23, 59, 59),
+  );
   return { von: von.toISOString(), bis: bis.toISOString() };
 }

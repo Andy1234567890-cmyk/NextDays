@@ -1057,6 +1057,12 @@ class BookingsSyncMixin:
                 db.table("reservations").update(row).eq(
                     "id", bekannt[0]["id"]
                 ).execute()
+                # Aufgaben-Gegenzustand (Wurzel 1): die Buchung ist jetzt
+                # storniert, ihre planmäßigen Aufgaben müssen weg. Ohne diesen
+                # Aufruf blieb die Reinigung eines stornierten Aufenthalts in
+                # der Liste stehen — der Import kannte nur den Live-Pfad
+                # (`_upsert_booking`), nicht diesen Nachtrag.
+                sync_nach_id(db, tenant_id, str(bekannt[0]["id"]))
             else:
                 db.table("reservations").upsert(
                     row, on_conflict="source_channex_booking_id"

@@ -1916,6 +1916,11 @@ class WritesMixin(ReservationsBase):
             float(current.get("total_amount") or 0),
             current.get("currency"),
         )
+        # Aus der Anfrage ist ein Verkauf geworden — JETZT entstehen die
+        # planmäßigen Aufgaben. Die Engine legt für `requested` bewusst nichts
+        # an (eine offene Anfrage plant keine Reinigung); ohne diesen Aufruf
+        # bekam eine angenommene Anfrage nie eine Anreise-/Reinigungsaufgabe.
+        self._sync_task_rules(tenant_id, reservation_id)
         self._log_event(
             tenant_id, reservation_id, "request_accepted", by_user_id=ctx.user_id,
         )
@@ -1987,6 +1992,12 @@ class WritesMixin(ReservationsBase):
         self._cancel_dynpricing_usage(tenant_id, reservation_id)
         self._cancel_commission(tenant_id, reservation_id)
 
+        # Aufgaben-Gegenzustand (Wurzel 1): eine abgelehnte Anfrage darf keine
+        # Reinigung stehen lassen. Regulär ist hier nichts zu räumen — die
+        # Engine legt für `requested` nichts an —, ausser bei Anfragen aus dem
+        # Portal-Import, die vor dieser Regel Aufgaben bekamen. Der Aufruf
+        # räumt sie weg statt sie für immer in der Liste stehen zu lassen.
+        self._sync_task_rules(tenant_id, reservation_id)
         self._log_event(
             tenant_id, reservation_id, "request_declined", by_user_id=ctx.user_id,
             detail={"reason": clean_reason} if clean_reason else None,
@@ -2042,6 +2053,8 @@ class WritesMixin(ReservationsBase):
                 # best-effort und loggen je Reservierung — kein zweiter try.
                 self._cancel_dynpricing_usage(r["tenant_id"], r["id"])
                 self._cancel_commission(r["tenant_id"], r["id"])
+                # Aufgaben-Gegenzustand wie bei decline (Wurzel 1).
+                self._sync_task_rules(str(r["tenant_id"]), str(r["id"]))
                 self._log_event(
                     r["tenant_id"], r["id"], "request_expired", by_user_id=None,
                 )

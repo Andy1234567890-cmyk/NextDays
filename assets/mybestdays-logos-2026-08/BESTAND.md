@@ -1,48 +1,62 @@
-# Bestand — heruntergeladen 24.08.2026 aus Figma
+# myBestDays-Logos, Figma-Stand 24.08.2026 (2. Satz)
 
-Quelle: Datei `Zz6U7tFTK8NayAq19hUZWC`, Seiten `mbd-seite-1..4`, Stand 21.08.2026.
-Geholt über den Figma-MCP (`download_assets`) — die Frames selbst, NICHT nachgebaut.
+Quelle: Datei `Zz6U7tFTK8NayAq19hUZWC`, 13 Frames. Geholt über den Figma-MCP
+(`download_assets`) — die Original-Frames, nichts nachgebaut.
 
-| Datei (`roh/`)                          | Figma-Node | Größe   | Farben im SVG                          |
-| --------------------------------------- | ---------- | ------- | -------------------------------------- |
-| `mbd_lockup`                            | 56:281     | 247×71  | `#030203` `#CC0504` `#F6F6F6`          |
-| `mbd_lockup_negativ`                    | 56:333     | 167×48  | `#262626` `#CC0504` + weiß             |
-| `mbd_lockup_einfarbig_schwarz`          | 56:346     | 167×48  | schwarz                                |
-| `mbd_lockup_einfarbig_weiss`            | 56:359     | 167×48  | `#262626` + weiß                       |
-| `mbd_lockup_positiv-quadratflaeche`     | 56:372     | 160×46  | wie `mbd_lockup`                       |
-| `mbd_bildmarke`                         | 56:392     | 159×81  | `#CC0504` `#F6F6F6`                    |
-| `mbd_bildmarke_einfarbig`               | 56:405     | 159×81  | schwarz                                |
-| `mbd_appicon_dunkel`                    | 56:171     | 139×96  | `#262626` + weiß                       |
-| `mbd_appicon_hell`                      | 61:204     | 139×96  | **`#B82028`** + weiß                   |
-| `mbd_favicon_16`                        | 56:444     | 24×12   | `#CC0504` `#F6F6F6`                    |
-| `mbd_favicon_32`                        | 56:457     | 41×21   | `#CC0504` `#F6F6F6`                    |
-| `mbd_favicon_48`                        | 56:470     | 57×29   | `#CC0504` `#F6F6F6`                    |
+`roh/` ist der unveränderte Bestand, `einsatz/` die daraus erzeugten
+Zielformate. Ausgerollt wurde aus `einsatz/`.
 
-## Vier Punkte, die vor dem Einsetzen zu klären sind
+## Bestand
 
-**1. Das helle App-Icon trägt `#B82028`, nicht das Markenrot `#CC0504`.**
-`#B82028` ist die Akzentfarbe von myNextDays (`globals.css` aller Frontends). Das
-dunkle Icon und jede andere Fassung nutzen `#CC0504`. Entweder ist im hellen Icon
-ein Rest der myNextDays-Vorlage stehen geblieben, oder es ist so gewollt. Nicht
-selbst geändert — Regel 1 auf Seite 4 lässt nur die Originaldatei zu, und eine
-Farbe zu tauschen wäre genau das Nachbauen, das ausgeschlossen ist.
+| Datei (`roh/`) | Node | Größe | Farben | Rolle |
+| --- | --- | --- | --- | --- |
+| `84-31_mbd-lockup` | 84:31 | 210×60,36 | `#030203` `#CC0504` | Sperrung **positiv** |
+| `84-53_mbd-lockup` | 84:53 | 210×60,36 | `#CC0504` + weiß | Sperrung **negativ** |
+| `84-75_mbd-lockup` | 84:75 | 210×60,36 | schwarz | Sperrung einfarbig schwarz |
+| `84-97_mbd-lockup` | 84:97 | 210×60,36 | weiß | Sperrung einfarbig weiß |
+| `77-105_vertikal-lockup` | 77:105 | 172×144 | `#CC0505` | vertikal / quadratisch |
+| `77-116` | 77:116 | 172×144 | `#CC0505` | vertikal, zweite Fassung |
+| `77-135` | 77:135 | 159×81 | `#CC0505` | Bildmarke farbig |
+| `77-144` | 77:144 | 159×81 | `#1A1A1A` | Bildmarke einfarbig |
+| `77-160` | 77:160 | **96×96** | `#1A1A1A` + weiß | App-Icon dunkel |
+| `77-165` | 77:165 | **96×96** | `#CC0505` + weiß | App-Icon hell |
+| `77-177` | 77:177 | 13×7 | `#CC0504` | Favicon-Stufe klein |
+| `77-184` | 77:184 | 26×14 | `#CC0504` | Favicon-Stufe mittel |
+| `77-191` | 77:191 | 39×20 | `#CC0504` | Favicon-Stufe groß |
 
-**2. Die App-Icon-Frames sind 96×96, exportiert wird 139×96.**
-Der Inhalt (`logo-positiv`, 125×58 bei x=14) ragt über den Rahmen, weil die
-Frames `clipsContent` nicht gesetzt haben. Der Export nimmt deshalb die
-Bounding-Box. Für ein App-Icon braucht es das quadratische Format —
-entweder in Figma auf Clipping stellen oder die Ränder beim Erzeugen der
-Icon-Größen abschneiden.
+## Behoben gegenüber dem ersten Satz
 
-**3. `#F6F6F6` ist ein deckender Kartenhintergrund, keine Transparenz.**
-`mbd_lockup`, `mbd_bildmarke` und die drei Favicons tragen ein Rechteck in
-`#F6F6F6` unter dem Zeichen. Seite 4 verlangt aber „PNG mit transparentem
-Hintergrund". Auf einer weißen Fläche fällt das nicht auf, auf einer farbigen
-schon: dort erscheint ein hellgrauer Kasten. Die Fassungen `negativ`,
-`einfarbig_schwarz` und `einfarbig_weiss` haben ihn nicht.
+- Die Sperrungen sind **transparent** — der deckende `#F6F6F6`-Kasten ist weg.
+- Die App-Icons sind **96×96 und damit quadratisch**; der Clipping-Fehler
+  (Export 139×96) ist behoben.
+- Das helle App-Icon trägt kein `#B82028` mehr (das war myNextDays-Rot).
 
-**4. Eine vertikale Fassung gibt es nicht als eigenes Asset.**
-Seite 2 zeigt unter „Vertikale Ausrichtung" dieselbe horizontale Sperrung.
-Node 56:372 ist deshalb hier als `..._positiv-quadratflaeche` abgelegt statt als
-`vertikal` — ein Dateiname `mbd_lockup_vertikal` hätte etwas behauptet, was die
-Datei nicht ist.
+## Was beim Ausrollen zu beachten war
+
+**Die 4x-PNG-Exporte haben einen deckenden Frame-Hintergrund** (`#F0F0F3` beim
+positiven, `#1A1A1A` beim negativen), die SVGs dagegen nicht. Ausgerollt wurde
+deshalb aus den **SVGs**: `magick -background none -density 900 … -trim +repage`.
+Das Trimmen ist nötig, weil die Logo-Komponenten zusagen, das Bild sei „auf die
+sichtbare BBox getrimmt", und ihr Seitenverhältnis daraus berechnen.
+
+**Das Seitenverhältnis hat sich geändert**: 1461×578 (2,53:1) → 1461×403
+(3,63:1). Regel 2 der Guidelines verbietet, es anzupassen — also folgt der Code
+dem Bild, nicht umgekehrt. Nachgezogen in `plattform/`, `gastgeber/` und
+`storybook/components/plattform/logo.tsx` (`ASPECT`) sowie in
+`mobile-bestdays/screens/GuestLogin.tsx` (feste Breite). Alle übrigen
+Einbindungen rendern mit `w-auto object-contain` und brauchten nichts.
+
+## Zwei offene Punkte in den Assets selbst
+
+1. **Zwei Rottöne.** Die vier Sperrungen und die drei Favicons tragen
+   `#CC0504`, die vertikalen Fassungen, Bildmarken und App-Icons `#CC0505` —
+   ein Zeichen Unterschied. Sichtbar ist das nicht, aber `#CC0504` ist das
+   Markenrot aus den Guidelines (Seite 4). Nicht selbst geändert.
+2. **Die Favicon-Stufen sind nicht quadratisch** (13×7, 26×14, 39×20). Ein
+   Favicon braucht ein quadratisches Format; das sind die Proportionen der
+   Bildmarke. Für 16/32/48 px müsste die Marke in eine quadratische Fläche
+   gesetzt werden — eine Gestaltungsentscheidung, keine Konvertierung.
+
+Nicht ausgerollt, weil keine Zielstelle sie erwartet: die einfarbigen
+Sperrungen, die vertikalen Fassungen, die Bildmarken und die App-Icons. Sie
+liegen hier bereit.
