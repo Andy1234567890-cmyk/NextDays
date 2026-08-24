@@ -2026,6 +2026,7 @@
     "titel": "Az Ön hozzájárulása",
     "text": "Ez a weboldal nem használ elemzési, reklám- vagy nyomkövetési szolgáltatásokat; a betűtípusok és az ikonok a saját szerverünkön találhatók. Csak az szükséges, amit Ön maga állít be vagy kér. Az Ön hozzájárulására ezért pontosan egyetlen dolog miatt van szükségünk: a kapcsolatfelvételi űrlapunk külső spamvédelme miatt.",
     "richtlinie": "Cookie-szabályzat elolvasása",
+    "knopf": "Süti beállítások",
     "allesAblehnen": "Összes elutasítása",
     "allesAnnehmen": "Összes elfogadása",
     "auswahlOeffnen": "Beállítások mutatása",
@@ -2041,13 +2042,6 @@
         "titel": "A kapcsolatfelvételi űrlap spamvédelme",
         "text": "Kapcsolatfelvételi űrlapunkat a Google reCAPTCHA Enterprise szolgáltatása védi az automatizált körlevelektől. Ha ezt engedélyezi, böngészője az űrlap kitöltése közben szkriptet tölt be a google.com címről, és ezzel elküldi az IP-címét a Google-nak. Az Ön engedélye nélkül semmi sem töltődik be a Google-tól; ilyenkor e-mailben ér el minket."
       }
-    },
-    "einstellungen": {
-      "titel": "A hozzájárulás kezelése",
-      "text": "Döntését itt bármikor módosíthatja vagy visszavonhatja. A döntés erre a böngészőre érvényes, és kizárólag az Ön eszközén tárolódik.",
-      "offen": "Még nem döntött. Semmilyen opcionális elem nem aktív.",
-      "stand": "Az Ön döntése: {datum}.",
-      "gespeichert": "Mentve."
     },
     "kontakt": {
       "hinweis": "Az elküldés előtt szükségünk van az engedélyére a külső spamvédelemhez (a Google reCAPTCHA szolgáltatása). Enélkül nem tudjuk elfogadni az űrlapot — így tartjuk távol az automatizált körleveleket.",

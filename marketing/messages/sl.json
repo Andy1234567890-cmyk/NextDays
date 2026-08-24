@@ -2026,6 +2026,7 @@
     "titel": "Vaše soglasje",
     "text": "To spletno mesto ne uporablja analitičnih, oglaševalskih ali sledilnih storitev; pisave in ikone strežemo z lastnega strežnika. Potrebno je le tisto, kar sami nastavite ali zahtevate. Vaše soglasje zato potrebujemo za natanko eno stvar: za zunanjo zaščito našega kontaktnega obrazca pred neželeno pošto.",
     "richtlinie": "Preberite pravilnik o piškotkih",
+    "knopf": "Nastavitve piškotkov",
     "allesAblehnen": "Zavrnite vse",
     "allesAnnehmen": "Sprejmite vse",
     "auswahlOeffnen": "Prikaži možnosti",
@@ -2041,13 +2042,6 @@
         "titel": "Zaščita kontaktnega obrazca pred neželeno pošto",
         "text": "Naš kontaktni obrazec je pred samodejnimi množičnimi sporočili zaščiten s storitvijo reCAPTCHA Enterprise družbe Google. Če to dovolite, vaš brskalnik med izpolnjevanjem obrazca naloži skript z google.com in pri tem posreduje vaš naslov IP družbi Google. Brez vašega dovoljenja se od Googla ne naloži nič; v tem primeru nas dosežete po e-pošti."
       }
-    },
-    "einstellungen": {
-      "titel": "Upravljanje vašega soglasja",
-      "text": "Svojo odločitev lahko tukaj kadar koli spremenite ali prekličete. Velja za ta brskalnik in se shrani samo na vaši napravi.",
-      "offen": "Še se niste odločili. Nič neobveznega ni aktivno.",
-      "stand": "Vaša odločitev z dne {datum}.",
-      "gespeichert": "Shranjeno."
     },
     "kontakt": {
       "hinweis": "Pred pošiljanjem potrebujemo vaše dovoljenje za zunanjo zaščito pred neželeno pošto (reCAPTCHA družbe Google). Brez njega obrazca ne moremo sprejeti — tako preprečujemo samodejna množična sporočila.",

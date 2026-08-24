@@ -61,6 +61,27 @@ export const EINWILLIGUNG_FASSUNG = 1;
  */
 export const EINWILLIGUNG_EREIGNIS = "nd:einwilligung";
 
+/**
+ * Ereignis, das die Leiste ERNEUT öffnet — der Widerrufsweg.
+ *
+ * Ausgelöst vom Footer-Eintrag „Cookie-Einstellungen". Das ist die übliche
+ * Umsetzung von Art. 7 Abs. 3 DSGVO („so einfach widerrufbar wie erteilt"):
+ * ein dauerhaft erreichbarer Link, der dasselbe Banner wieder aufruft, mit dem
+ * die Einwilligung erteilt wurde. Cookiebot, CookieYes und Usercentrics machen
+ * es genauso (Footer-Link oder Symbol am Seitenrand).
+ *
+ * Bewusst NICHT: ein Bedienfeld mitten in der Cookie-Richtlinie. Das stand hier
+ * einen halben Tag und war der falsche Ort — eine Rechtsseite ist der Text,
+ * nicht die Bedienoberfläche, und der Widerruf wäre dort zwei Klicks entfernt
+ * statt einem.
+ *
+ * Ein Ereignis statt eines Zustands im Speicher: die gespeicherte Entscheidung
+ * bleibt beim Öffnen unangetastet. Wer die Leiste aufruft und wieder weggeht,
+ * hat nichts widerrufen — widerrufen wird erst mit dem Klick auf einen der
+ * Knöpfe.
+ */
+export const EINWILLIGUNG_OEFFNEN = "nd:einwilligung-oeffnen";
+
 export type Entscheidung = {
   fassung: number;
   /** ISO-8601, UTC. Nur für die Anzeige „Ihre Entscheidung vom …". */

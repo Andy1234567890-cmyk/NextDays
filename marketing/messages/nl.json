@@ -2026,6 +2026,7 @@
     "titel": "Uw toestemming",
     "text": "Deze website gebruikt geen analyse-, advertentie- of trackingdiensten; onze lettertypen en pictogrammen staan op onze eigen server. Noodzakelijk is alleen wat u zelf instelt of opvraagt. Uw toestemming hebben we daarom voor precies één ding nodig: de externe spambeveiliging van ons contactformulier.",
     "richtlinie": "Cookiebeleid lezen",
+    "knopf": "Cookie-instellingen",
     "allesAblehnen": "Alles weigeren",
     "allesAnnehmen": "Alles accepteren",
     "auswahlOeffnen": "Keuzes weergeven",
@@ -2041,13 +2042,6 @@
         "titel": "Spambeveiliging van het contactformulier",
         "text": "Ons contactformulier is met reCAPTCHA Enterprise van Google beveiligd tegen geautomatiseerde massaberichten. Als u dat toestaat, laadt uw browser tijdens het invullen van het formulier een script van google.com en verzendt daarbij uw IP-adres naar Google. Zonder uw toestemming wordt er niets van Google geladen; u kunt ons dan per e-mail bereiken."
       }
-    },
-    "einstellungen": {
-      "titel": "Uw toestemming beheren",
-      "text": "U kunt uw keuze hier op elk moment wijzigen of intrekken. Ze geldt voor deze browser en wordt alleen op uw apparaat opgeslagen.",
-      "offen": "U hebt nog niet gekozen. Er is niets optioneels actief.",
-      "stand": "Uw keuze van {datum}.",
-      "gespeichert": "Opgeslagen."
     },
     "kontakt": {
       "hinweis": "Voordat u verzendt, hebben we uw toestemming nodig voor de externe spambeveiliging (reCAPTCHA van Google). Zonder die toestemming nemen we het formulier niet aan — zo houden we geautomatiseerde massaberichten buiten.",

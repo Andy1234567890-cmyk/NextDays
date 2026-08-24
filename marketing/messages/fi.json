@@ -2026,6 +2026,7 @@
     "titel": "Suostumuksesi",
     "text": "Tämä verkkosivusto ei käytä analytiikka-, mainonta- eikä seurantapalveluita; kirjasimet ja kuvakkeet ovat omalla palvelimellamme. Välttämätöntä on vain se, mitä itse asetat tai pyydät. Siksi tarvitsemme suostumuksesi vain yhteen asiaan: yhteydenottolomakkeemme ulkoiseen roskapostisuojaukseen.",
     "richtlinie": "Lue evästekäytäntö",
+    "knopf": "Evästeasetukset",
     "allesAblehnen": "Hylkää kaikki",
     "allesAnnehmen": "Hyväksy kaikki",
     "auswahlOeffnen": "Näytä valinnat",
@@ -2041,13 +2042,6 @@
         "titel": "Yhteydenottolomakkeen roskapostisuojaus",
         "text": "Yhteydenottolomakkeemme on suojattu automaattisia massaviestejä vastaan Googlen reCAPTCHA Enterprise -palvelulla. Jos annat siihen luvan, selaimesi lataa lomakkeen täyttämisen aikana komentosarjan osoitteesta google.com ja lähettää samalla IP-osoitteesi Googlelle. Ilman lupaasi Googlelta ei ladata mitään; voit tavoittaa meidät silloin sähköpostilla."
       }
-    },
-    "einstellungen": {
-      "titel": "Hallitse suostumustasi",
-      "text": "Voit muuttaa tai peruuttaa päätöksesi täällä milloin tahansa. Se koskee tätä selainta, ja se tallennetaan vain laitteellesi.",
-      "offen": "Et ole vielä tehnyt päätöstä. Mikään valinnainen ei ole käytössä.",
-      "stand": "Päätöksesi {datum}.",
-      "gespeichert": "Tallennettu."
     },
     "kontakt": {
       "hinweis": "Ennen lähettämistä tarvitsemme lupasi ulkoiseen roskapostisuojaukseen (Googlen reCAPTCHA). Ilman sitä emme voi ottaa lomaketta vastaan — näin pidämme automaattiset massaviestit poissa.",

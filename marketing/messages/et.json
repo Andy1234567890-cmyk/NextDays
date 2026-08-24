@@ -2026,6 +2026,7 @@
     "titel": "Teie nõusolek",
     "text": "See veebisait ei kasuta analüüsi-, reklaami- ega jälgimisteenuseid; kirjatüübid ja ikoonid asuvad meie enda serveris. Vajalik on üksnes see, mida te ise seadistate või küsite. Seetõttu vajame teie nõusolekut ainult ühe asja jaoks: meie kontaktivormi välise rämpspostikaitse jaoks.",
     "richtlinie": "Loe küpsiste põhimõtteid",
+    "knopf": "Küpsiste seaded",
     "allesAblehnen": "Keela kõik",
     "allesAnnehmen": "Luba kõik",
     "auswahlOeffnen": "Näita valikuid",
@@ -2041,13 +2042,6 @@
         "titel": "Kontaktivormi rämpspostikaitse",
         "text": "Meie kontaktivorm on automaatsete masssõnumite eest kaitstud Google'i reCAPTCHA Enterprise'iga. Kui te selle lubate, laadib teie brauser vormi täitmise ajal skripti aadressilt google.com ja edastab seejuures teie IP-aadressi Google'ile. Ilma teie loata ei laadita Google'ist midagi; sel juhul saate meiega ühendust e-posti teel."
       }
-    },
-    "einstellungen": {
-      "titel": "Halda oma nõusolekut",
-      "text": "Te võite oma otsust siin igal ajal muuta või tagasi võtta. See kehtib selles brauseris ja salvestatakse ainult teie seadmes.",
-      "offen": "Te ei ole veel otsustanud. Ükski valikuline teenus ei ole aktiivne.",
-      "stand": "Teie otsus {datum}.",
-      "gespeichert": "Salvestatud."
     },
     "kontakt": {
       "hinweis": "Enne saatmist vajame teie luba välise rämpspostikaitse jaoks (Google'i reCAPTCHA). Ilma selleta me vormi vastu ei võta — nii hoiame automaatsed masssõnumid eemal.",

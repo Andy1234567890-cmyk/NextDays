@@ -2026,6 +2026,7 @@
     "titel": "Your consent",
     "text": "This website uses no analytics, advertising or tracking services; our fonts and icons are served from our own server. Only what you set or request yourself is necessary. So we need your consent for exactly one thing: the external spam protection on our contact form.",
     "richtlinie": "Read the cookie policy",
+    "knopf": "Cookie settings",
     "allesAblehnen": "Reject all",
     "allesAnnehmen": "Accept all",
     "auswahlOeffnen": "Show choices",
@@ -2041,13 +2042,6 @@
         "titel": "Contact form spam protection",
         "text": "Our contact form is protected against automated bulk messages by reCAPTCHA Enterprise from Google. If you allow it, your browser loads a script from google.com while you fill in the form and thereby sends your IP address to Google. Without your permission nothing is loaded from Google; you can reach us by email instead."
       }
-    },
-    "einstellungen": {
-      "titel": "Manage your consent",
-      "text": "You can change or withdraw your decision here at any time. It applies to this browser and is stored on your device only.",
-      "offen": "You have not decided yet. Nothing optional is active.",
-      "stand": "Your decision from {datum}.",
-      "gespeichert": "Saved."
     },
     "kontakt": {
       "hinweis": "Before you send, we need your permission for the external spam protection (reCAPTCHA from Google). Without it we cannot accept the form — that is how we keep automated bulk messages out.",

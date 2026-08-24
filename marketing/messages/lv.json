@@ -2026,6 +2026,7 @@
     "titel": "Jūsu piekrišana",
     "text": "Šajā tīmekļa vietnē netiek izmantoti analītikas, reklāmas vai izsekošanas pakalpojumi; fonti un ikonas atrodas mūsu pašu serverī. Nepieciešams ir tikai tas, ko jūs pats iestatāt vai pieprasāt. Tāpēc jūsu piekrišana mums ir vajadzīga tikai vienai lietai — mūsu saziņas veidlapas ārējai aizsardzībai pret mēstulēm.",
     "richtlinie": "Lasīt sīkdatņu politiku",
+    "knopf": "Sīkfailu iestatījumi",
     "allesAblehnen": "Noraidīt visu",
     "allesAnnehmen": "Pieņemt visu",
     "auswahlOeffnen": "Rādīt izvēles",
@@ -2041,13 +2042,6 @@
         "titel": "Saziņas veidlapas aizsardzība pret mēstulēm",
         "text": "Mūsu saziņas veidlapu pret automatizētiem masu ziņojumiem aizsargā Google pakalpojums reCAPTCHA Enterprise. Ja to atļaujat, veidlapas aizpildīšanas laikā jūsu pārlūkprogramma ielādē skriptu no google.com un tādējādi nosūta jūsu IP adresi Google. Bez jūsu atļaujas no Google netiek ielādēts nekas; tādā gadījumā varat sazināties ar mums pa e-pastu."
       }
-    },
-    "einstellungen": {
-      "titel": "Pārvaldīt savu piekrišanu",
-      "text": "Savu lēmumu šeit varat jebkurā laikā mainīt vai atsaukt. Tas attiecas uz šo pārlūkprogrammu un tiek saglabāts tikai jūsu ierīcē.",
-      "offen": "Jūs vēl neesat izlēmis. Neviens neobligāts elements nav aktīvs.",
-      "stand": "Jūsu lēmums no {datum}.",
-      "gespeichert": "Saglabāts."
     },
     "kontakt": {
       "hinweis": "Pirms nosūtīšanas mums ir vajadzīga jūsu atļauja ārējai aizsardzībai pret mēstulēm (Google reCAPTCHA). Bez tās veidlapu nepieņemam — tā mēs neļaujam iekļūt automatizētiem masu ziņojumiem.",

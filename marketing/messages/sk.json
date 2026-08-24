@@ -2026,6 +2026,7 @@
     "titel": "Váš súhlas",
     "text": "Táto webová stránka nepoužíva analytické, reklamné ani sledovacie služby; písma a ikony sú poskytované z nášho vlastného servera. Nutné je len to, čo si sami nastavíte alebo vyžiadate. Váš súhlas preto potrebujeme na presne jednu vec: na externú ochranu nášho kontaktného formulára pred spamom.",
     "richtlinie": "Prečítať si zásady používania cookies",
+    "knopf": "Nastavenia cookies",
     "allesAblehnen": "Odmietnuť všetko",
     "allesAnnehmen": "Prijať všetko",
     "auswahlOeffnen": "Zobraziť možnosti",
@@ -2041,13 +2042,6 @@
         "titel": "Ochrana kontaktného formulára pred spamom",
         "text": "Náš kontaktný formulár je chránený pred automatizovanými hromadnými správami pomocou reCAPTCHA Enterprise od spoločnosti Google. Ak to povolíte, váš prehliadač počas vypĺňania formulára načíta skript z google.com a odošle pri tom vašu adresu IP spoločnosti Google. Bez vášho povolenia sa od Google nenačíta nič; v takom prípade nás zastihnete e-mailom."
       }
-    },
-    "einstellungen": {
-      "titel": "Správa vášho súhlasu",
-      "text": "Svoje rozhodnutie tu môžete kedykoľvek zmeniť alebo odvolať. Platí pre tento prehliadač a ukladá sa iba na vašom zariadení.",
-      "offen": "Ešte ste sa nerozhodli. Nič voliteľné nie je aktívne.",
-      "stand": "Vaše rozhodnutie z {datum}.",
-      "gespeichert": "Uložené."
     },
     "kontakt": {
       "hinweis": "Pred odoslaním potrebujeme vaše povolenie na externú ochranu pred spamom (reCAPTCHA od Google). Bez neho formulár neprijmeme — takto zabraňujeme automatizovaným hromadným správam.",

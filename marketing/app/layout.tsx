@@ -7,6 +7,7 @@ import localFont from "next/font/local";
 
 import "./globals.css";
 
+import { EinwilligungsKnopf } from "@/components/einwilligung/einwilligungs-knopf";
 import { EinwilligungsLeiste } from "@/components/einwilligung/einwilligungs-leiste";
 import { SupportChat } from "@/components/support-chat";
 import { VoranmeldungPopup } from "@/components/voranmeldung-popup";
@@ -94,6 +95,10 @@ export default async function RootLayout({
               einzige Drittanbieter, den diese App im Browser lädt
               (lib/einwilligung.ts). Widerruf auf /cookie-richtlinie. */}
           <EinwilligungsLeiste />
+          {/* Cookie-Symbol unten links: der dauerhafte Weg zurück zur
+              Einwilligung (Art. 7 Abs. 3 DSGVO). Es erscheint erst, wenn
+              eine Entscheidung vorliegt — vorher steht die Leiste da. */}
+          <EinwilligungsKnopf />
         </NextIntlClientProvider>
       </body>
     </html>

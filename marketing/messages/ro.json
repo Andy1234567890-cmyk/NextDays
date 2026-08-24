@@ -2026,6 +2026,7 @@
     "titel": "Consimțământul dumneavoastră",
     "text": "Acest site nu utilizează servicii de analiză, de publicitate sau de urmărire; fonturile și pictogramele sunt livrate de pe serverul nostru propriu. Necesar este numai ceea ce setați sau solicitați dumneavoastră. De aceea avem nevoie de consimțământul dumneavoastră pentru exact un singur lucru: protecția externă antispam a formularului nostru de contact.",
     "richtlinie": "Citiți politica privind cookie-urile",
+    "knopf": "Setări cookie-uri",
     "allesAblehnen": "Refuzați toate",
     "allesAnnehmen": "Acceptați toate",
     "auswahlOeffnen": "Afișați opțiunile",
@@ -2041,13 +2042,6 @@
         "titel": "Protecția antispam a formularului de contact",
         "text": "Formularul nostru de contact este protejat împotriva mesajelor automatizate în masă prin reCAPTCHA Enterprise de la Google. Dacă permiteți acest lucru, browserul dumneavoastră încarcă un script de pe google.com în timp ce completați formularul și transmite astfel adresa dumneavoastră IP către Google. Fără permisiunea dumneavoastră nu se încarcă nimic de la Google; în acest caz ne puteți contacta prin e-mail."
       }
-    },
-    "einstellungen": {
-      "titel": "Gestionarea consimțământului dumneavoastră",
-      "text": "Vă puteți modifica sau retrage decizia aici în orice moment. Aceasta este valabilă pentru acest browser și este stocată numai pe dispozitivul dumneavoastră.",
-      "offen": "Încă nu ați luat o decizie. Nimic opțional nu este activ.",
-      "stand": "Decizia dumneavoastră din {datum}.",
-      "gespeichert": "Salvat."
     },
     "kontakt": {
       "hinweis": "Înainte de trimitere avem nevoie de permisiunea dumneavoastră pentru protecția externă antispam (reCAPTCHA de la Google). Fără ea nu putem accepta formularul — astfel ținem la distanță mesajele automatizate în masă.",

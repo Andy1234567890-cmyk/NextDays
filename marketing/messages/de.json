@@ -2026,6 +2026,7 @@
     "titel": "Ihre Einwilligung",
     "text": "Diese Website nutzt keine Analyse-, Werbe- oder Tracking-Dienste; Schriften und Symbole liegen auf unserem eigenen Server. Notwendig ist nur, was Sie selbst einstellen oder anfordern. Ihre Einwilligung brauchen wir daher für genau eine Sache: den externen Spamschutz unseres Kontaktformulars.",
     "richtlinie": "Cookie-Richtlinie lesen",
+    "knopf": "Cookie-Einstellungen",
     "allesAblehnen": "Alle ablehnen",
     "allesAnnehmen": "Alle annehmen",
     "auswahlOeffnen": "Auswahl anzeigen",
@@ -2041,13 +2042,6 @@
         "titel": "Spamschutz des Kontaktformulars",
         "text": "Unser Kontaktformular ist mit reCAPTCHA Enterprise von Google gegen automatisierte Massenzuschriften geschützt. Erlauben Sie das, lädt Ihr Browser beim Ausfüllen des Formulars ein Skript von google.com und übermittelt dabei Ihre IP-Adresse an Google. Ohne Ihre Erlaubnis wird nichts von Google geladen; Sie erreichen uns dann per E-Mail."
       }
-    },
-    "einstellungen": {
-      "titel": "Ihre Einwilligung verwalten",
-      "text": "Sie können Ihre Entscheidung hier jederzeit ändern oder widerrufen. Sie gilt für diesen Browser und wird nur auf Ihrem Gerät gespeichert.",
-      "offen": "Sie haben noch nicht entschieden. Es ist nichts Optionales aktiv.",
-      "stand": "Ihre Entscheidung vom {datum}.",
-      "gespeichert": "Gespeichert."
     },
     "kontakt": {
       "hinweis": "Vor dem Absenden brauchen wir Ihre Erlaubnis für den externen Spamschutz (reCAPTCHA von Google). Ohne ihn nehmen wir das Formular nicht an — so halten wir automatisierte Massenzuschriften heraus.",

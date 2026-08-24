@@ -1,6 +1,15 @@
 // Rechtsseite — Inhalt liegt sprachweise unter content/legal/cookies/<locale>.ts
 // und wird vom gemeinsamen LegalDocument gerendert.
 //
+// NUR TEXT, kein Bedienfeld. Hier stand kurzzeitig die Einwilligungs-Verwaltung
+// mit Schaltern und Knöpfen; sie ist am 24.08.2026 wieder raus. Der Widerruf
+// nach Art. 7 Abs. 3 DSGVO läuft über den Footer-Eintrag
+// „Cookie-Einstellungen", der die Leiste erneut öffnet — das ist die übliche
+// Umsetzung (Cookiebot, CookieYes, Usercentrics: dauerhafter Footer-Link oder
+// Symbol, das das Banner wieder aufruft), und sie erfüllt „so einfach
+// widerrufbar wie erteilt" mit demselben einen Klick. Eine Rechtsseite ist der
+// Text, nicht die Bedienoberfläche.
+//
 // Bis zum 24.08.2026 stand hier ein statischer Import der deutschen Fassung.
 // Die Seite zeigte dadurch in ALLEN 24 Sprachen deutschen Rechtstext unter
 // übersetzter Navigation — bei einem Rechtstext die schlechteste Art Fehler,
@@ -8,7 +17,6 @@
 // nd_locale-Cookie, wie bei den AGB.
 import { getLocale } from "next-intl/server";
 
-import { EinwilligungsEinstellungen } from "@/components/einwilligung/einwilligungs-einstellungen";
 import { LegalDocument } from "@/components/legal/legal-document";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { MarketingNav } from "@/components/marketing/marketing-nav";
@@ -32,13 +40,6 @@ export default async function Page() {
       <MarketingNav />
       <main className="flex-1">
         <LegalDocument doc={doc} />
-        {/* Der Widerruf gehört auf DIESE Seite: Die Einwilligungs-Leiste
-            verlinkt hierher, und ohne diesen Baustein wäre die Einwilligung
-            nur erteilbar, nicht änderbar (Art. 7 Abs. 3 DSGVO). Die Texte
-            kommen aus messages/<locale>.json (Namespace „einwilligung"),
-            nicht aus dem Rechtsdokument — deshalb ist er hier sprachfest,
-            unabhängig vom Loader oben. Anker: #einwilligung. */}
-        <EinwilligungsEinstellungen />
       </main>
       <MarketingFooter />
     </div>

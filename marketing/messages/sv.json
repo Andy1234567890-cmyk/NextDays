@@ -2026,6 +2026,7 @@
     "titel": "Ditt samtycke",
     "text": "Den här webbplatsen använder inga analys-, annons- eller spårningstjänster; typsnitt och ikoner levereras från vår egen server. Nödvändigt är bara det du själv ställer in eller efterfrågar. Därför behöver vi ditt samtycke till exakt en sak: det externa skräppostskyddet i vårt kontaktformulär.",
     "richtlinie": "Läs cookiepolicyn",
+    "knopf": "Cookie-inställningar",
     "allesAblehnen": "Avvisa alla",
     "allesAnnehmen": "Acceptera alla",
     "auswahlOeffnen": "Visa val",
@@ -2041,13 +2042,6 @@
         "titel": "Skräppostskydd för kontaktformuläret",
         "text": "Vårt kontaktformulär skyddas mot automatiserade massmeddelanden med reCAPTCHA Enterprise från Google. Om du tillåter det laddar din webbläsare ett skript från google.com när du fyller i formuläret och skickar därmed din IP-adress till Google. Utan ditt tillstånd laddas ingenting från Google; du kan i stället nå oss via e-post."
       }
-    },
-    "einstellungen": {
-      "titel": "Hantera ditt samtycke",
-      "text": "Du kan ändra eller återkalla ditt beslut här när som helst. Det gäller för den här webbläsaren och sparas endast på din enhet.",
-      "offen": "Du har ännu inte tagit något beslut. Inget valfritt är aktivt.",
-      "stand": "Ditt beslut från {datum}.",
-      "gespeichert": "Sparat."
     },
     "kontakt": {
       "hinweis": "Innan du skickar behöver vi ditt tillstånd för det externa skräppostskyddet (reCAPTCHA från Google). Utan det kan vi inte ta emot formuläret — så håller vi automatiserade massmeddelanden borta.",

@@ -2026,6 +2026,7 @@
     "titel": "Su consentimiento",
     "text": "Este sitio web no utiliza servicios de análisis, publicidad ni seguimiento; las tipografías y los iconos se alojan en nuestro propio servidor. Solo es necesario lo que usted mismo configura o solicita. Por eso necesitamos su consentimiento para una única cosa: la protección antispam externa de nuestro formulario de contacto.",
     "richtlinie": "Leer la política de cookies",
+    "knopf": "Configuración de cookies",
     "allesAblehnen": "Rechazar todo",
     "allesAnnehmen": "Aceptar todo",
     "auswahlOeffnen": "Mostrar opciones",
@@ -2041,13 +2042,6 @@
         "titel": "Protección antispam del formulario de contacto",
         "text": "Nuestro formulario de contacto está protegido contra mensajes masivos automatizados mediante reCAPTCHA Enterprise de Google. Si lo permite, su navegador cargará un script de google.com mientras rellena el formulario y transmitirá así su dirección IP a Google. Sin su permiso no se carga nada de Google; en ese caso puede escribirnos por correo electrónico."
       }
-    },
-    "einstellungen": {
-      "titel": "Gestionar su consentimiento",
-      "text": "Puede cambiar o retirar su decisión aquí en cualquier momento. Se aplica a este navegador y se guarda únicamente en su dispositivo.",
-      "offen": "Aún no ha tomado ninguna decisión. No hay nada opcional activo.",
-      "stand": "Su decisión del {datum}.",
-      "gespeichert": "Guardado."
     },
     "kontakt": {
       "hinweis": "Antes de enviar necesitamos su permiso para la protección antispam externa (reCAPTCHA de Google). Sin ella no podemos aceptar el formulario: así mantenemos fuera los mensajes masivos automatizados.",

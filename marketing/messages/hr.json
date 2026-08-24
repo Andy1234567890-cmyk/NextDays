@@ -2026,6 +2026,7 @@
     "titel": "Vaša privola",
     "text": "Ova web stranica ne koristi usluge analitike, oglašavanja ni praćenja; naši fontovi i ikone nalaze se na našem vlastitom poslužitelju. Nužno je samo ono što sami postavite ili zatražite. Zato nam je vaša privola potrebna za samo jednu stvar: za vanjsku zaštitu našeg obrasca za kontakt od neželjene pošte.",
     "richtlinie": "Pročitajte pravila o kolačićima",
+    "knopf": "Postavke kolačića",
     "allesAblehnen": "Odbijte sve",
     "allesAnnehmen": "Prihvatite sve",
     "auswahlOeffnen": "Prikažite odabir",
@@ -2041,13 +2042,6 @@
         "titel": "Zaštita obrasca za kontakt od neželjene pošte",
         "text": "Naš obrazac za kontakt zaštićen je od automatiziranih masovnih poruka pomoću reCAPTCHA Enterprise od Googlea. Ako to dopustite, vaš preglednik pri ispunjavanju obrasca učitava skriptu s google.com i pritom prenosi vašu IP adresu Googleu. Bez vašeg dopuštenja s Googlea se ne učitava ništa; u tom nas slučaju možete kontaktirati e-poštom."
       }
-    },
-    "einstellungen": {
-      "titel": "Upravljajte svojom privolom",
-      "text": "Svoju odluku možete ovdje u svakom trenutku promijeniti ili povući. Vrijedi za ovaj preglednik i pohranjuje se samo na vašem uređaju.",
-      "offen": "Još niste odlučili. Ništa neobavezno nije aktivno.",
-      "stand": "Vaša odluka od {datum}.",
-      "gespeichert": "Spremljeno."
     },
     "kontakt": {
       "hinweis": "Prije slanja potrebno nam je vaše dopuštenje za vanjsku zaštitu od neželjene pošte (reCAPTCHA od Googlea). Bez njega ne možemo prihvatiti obrazac — tako sprječavamo automatizirane masovne poruke.",

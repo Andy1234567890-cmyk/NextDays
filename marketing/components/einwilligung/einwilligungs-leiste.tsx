@@ -1,7 +1,14 @@
 "use client";
 
-// Die Einwilligungs-Leiste. Erscheint einmal, solange nichts entschieden ist,
-// und danach nie wieder — der Widerruf liegt auf /cookie-richtlinie.
+// Die Einwilligungs-Leiste. Erscheint von allein, solange nichts entschieden
+// ist — und danach nur noch, wenn der Besucher sie selbst wieder aufruft.
+//
+// WIDERRUF: über den Footer-Eintrag „Cookie-Einstellungen", der das Ereignis
+// EINWILLIGUNG_OEFFNEN schickt. Das ist derselbe eine Klick wie beim Erteilen
+// (Art. 7 Abs. 3 DSGVO) und die verbreitete Umsetzung — Cookiebot, CookieYes
+// und Usercentrics benutzen ebenfalls einen dauerhaften Footer-Link bzw. ein
+// Symbol, das das Banner wieder aufruft. Ein Bedienfeld in der
+// Cookie-Richtlinie wäre der falsche Ort: die Rechtsseite ist der Text.
 //
 // GLEICHRANGIGE KNÖPFE: „Alle ablehnen" und „Alle annehmen" tragen dieselbe
 // Variante, dieselbe Größe und stehen in derselben Reihe. Kein „annehmen" in
@@ -15,7 +22,7 @@
 // will, klickt „Alle ablehnen"; das ist ein Klick, genauso wie annehmen.
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { KategorienFeld } from "@/components/einwilligung/kategorien-feld";
 import { useEinwilligung } from "@/components/einwilligung/use-einwilligung";
@@ -23,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import {
   ALLES_ERLAUBT,
   type Auswahl,
+  EINWILLIGUNG_OEFFNEN,
   NICHTS_ERLAUBT,
   type OptionaleKategorie,
   optionaleDiensteVorhanden,
@@ -33,15 +41,43 @@ export function EinwilligungsLeiste() {
   const { entscheidung, geladen, speichern } = useEinwilligung();
   const [auswahl, setAuswahl] = useState<Auswahl>(NICHTS_ERLAUBT);
   const [detailsOffen, setDetailsOffen] = useState(false);
+  // Erneut geöffnet per Footer-Eintrag. Getrennt von der Frage, ob schon
+  // entschieden wurde: sonst müsste der Widerruf die gespeicherte Entscheidung
+  // löschen, um die Leiste zu zeigen — und wer dann weggeht, ohne zu klicken,
+  // hätte ungefragt alles widerrufen.
+  const [erneutOffen, setErneutOffen] = useState(false);
+
+  useEffect(() => {
+    const oeffnen = () => setErneutOffen(true);
+    window.addEventListener(EINWILLIGUNG_OEFFNEN, oeffnen);
+    return () => window.removeEventListener(EINWILLIGUNG_OEFFNEN, oeffnen);
+  }, []);
+
+  // Beim erneuten Öffnen die bereits getroffene Wahl vorbelegen — der
+  // Besucher soll seinen Stand sehen und ändern, nicht bei Null anfangen.
+  useEffect(() => {
+    if (erneutOffen && entscheidung) setAuswahl(entscheidung.auswahl);
+  }, [erneutOffen, entscheidung]);
 
   // Nichts rendern, solange der Speicher nicht gelesen ist (Hydration), wenn
-  // eine Entscheidung vorliegt — oder wenn es in dieser Umgebung gar keinen
-  // optionalen Dienst gibt (dann wäre die Leiste eine Attrappe, siehe
-  // lib/einwilligung.ts).
-  if (!geladen || entscheidung || !optionaleDiensteVorhanden()) return null;
+  // eine Entscheidung vorliegt UND die Leiste nicht erneut aufgerufen wurde —
+  // oder wenn es in dieser Umgebung gar keinen optionalen Dienst gibt (dann
+  // wäre die Leiste eine Attrappe, siehe lib/einwilligung.ts).
+  if (!geladen || !optionaleDiensteVorhanden()) return null;
+  if (entscheidung && !erneutOffen) return null;
 
   const setzen = (kategorie: OptionaleKategorie, an: boolean) =>
     setAuswahl((vorher) => ({ ...vorher, [kategorie]: an }));
+
+  // Speichern MUSS das erneute Öffnen mit zurücknehmen. Ohne das blieb die
+  // Leiste nach einem Widerruf offen stehen: die gespeicherte Entscheidung war
+  // neu, aber `erneutOffen` stand noch auf `true` und hat den Ausstieg oben
+  // überstimmt (live gemessen — Leiste UND Knopf gleichzeitig sichtbar).
+  const entscheiden = (gewaehlt: Auswahl) => {
+    speichern(gewaehlt);
+    setErneutOffen(false);
+    setDetailsOffen(false);
+  };
 
   return (
     // `inset-x-0` + Innenabstand statt fester Breite: bei 320 px bleibt der
@@ -78,14 +114,14 @@ export function EinwilligungsLeiste() {
           <Button
             type="button"
             className="flex-1"
-            onClick={() => speichern(NICHTS_ERLAUBT)}
+            onClick={() => entscheiden(NICHTS_ERLAUBT)}
           >
             {t("allesAblehnen")}
           </Button>
           <Button
             type="button"
             className="flex-1"
-            onClick={() => speichern(ALLES_ERLAUBT)}
+            onClick={() => entscheiden(ALLES_ERLAUBT)}
           >
             {t("allesAnnehmen")}
           </Button>
@@ -108,7 +144,7 @@ export function EinwilligungsLeiste() {
               variant="outline"
               size="sm"
               className="flex-1"
-              onClick={() => speichern(auswahl)}
+              onClick={() => entscheiden(auswahl)}
             >
               {t("auswahlSpeichern")}
             </Button>

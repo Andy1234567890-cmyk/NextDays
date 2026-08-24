@@ -2026,6 +2026,7 @@
     "titel": "Il-kunsens tiegħek",
     "text": "Dan is-sit web ma jużax servizzi ta' analitika, reklamar jew traċċar; il-fonts u l-ikoni jinsabu fuq is-server tagħna stess. Meħtieġ huwa biss dak li tissettja jew titlob int stess. Għalhekk għandna bżonn il-kunsens tiegħek għal ħaġa waħda biss: il-protezzjoni esterna kontra l-ispam tal-formola ta' kuntatt tagħna.",
     "richtlinie": "Aqra l-politika dwar il-cookies",
+    "knopf": "Settings tal-cookies",
     "allesAblehnen": "Irrifjuta kollox",
     "allesAnnehmen": "Aċċetta kollox",
     "auswahlOeffnen": "Uri l-għażliet",
@@ -2041,13 +2042,6 @@
         "titel": "Protezzjoni kontra l-ispam tal-formola ta' kuntatt",
         "text": "Il-formola ta' kuntatt tagħna hija protetta kontra messaġġi massivi awtomatizzati permezz ta' reCAPTCHA Enterprise ta' Google. Jekk tippermetti dan, waqt li timla l-formola l-browser tiegħek jgħabbi skript minn google.com u b'hekk jibgħat l-indirizz IP tiegħek lil Google. Mingħajr il-permess tiegħek ma jitgħabba xejn minn Google; f'dak il-każ tista' tikkuntattjana bl-email."
       }
-    },
-    "einstellungen": {
-      "titel": "Immaniġġja l-kunsens tiegħek",
-      "text": "Tista' tibdel jew tirtira d-deċiżjoni tiegħek hawn f'kull ħin. Tapplika għal dan il-browser u tinħażen biss fuq l-apparat tiegħek.",
-      "offen": "Għadek ma ddeċidejtx. Xejn li huwa fakultattiv mhu attiv.",
-      "stand": "Id-deċiżjoni tiegħek tal-{datum}.",
-      "gespeichert": "Ġie salvat."
     },
     "kontakt": {
       "hinweis": "Qabel ma tibgħat, għandna bżonn il-permess tiegħek għall-protezzjoni esterna kontra l-ispam (reCAPTCHA ta' Google). Mingħajrha ma nistgħux naċċettaw il-formola — hekk inżommu barra l-messaġġi massivi awtomatizzati.",

@@ -2026,6 +2026,7 @@
     "titel": "Jūsų sutikimas",
     "text": "Šioje svetainėje nenaudojamos analizės, reklamos ar sekimo paslaugos; šriftai ir piktogramos yra mūsų pačių serveryje. Būtina tik tai, ką patys nustatote arba užsisakote. Todėl jūsų sutikimo mums reikia tik vienam dalykui — išorinei mūsų kontaktų formos apsaugai nuo šlamšto.",
     "richtlinie": "Skaityti slapukų politiką",
+    "knopf": "Slapukų nustatymai",
     "allesAblehnen": "Atmesti visus",
     "allesAnnehmen": "Priimti visus",
     "auswahlOeffnen": "Rodyti pasirinkimus",
@@ -2041,13 +2042,6 @@
         "titel": "Kontaktų formos apsauga nuo šlamšto",
         "text": "Mūsų kontaktų forma nuo automatinių masinių žinučių apsaugota „Google“ paslauga reCAPTCHA Enterprise. Jei tai leisite, pildant formą jūsų naršyklė įkels scenarijų iš google.com ir kartu perduos jūsų IP adresą „Google“. Be jūsų leidimo iš „Google“ nieko neįkeliama; tokiu atveju su mumis galite susisiekti el. paštu."
       }
-    },
-    "einstellungen": {
-      "titel": "Tvarkyti savo sutikimą",
-      "text": "Savo sprendimą čia galite bet kada pakeisti arba atšaukti. Jis taikomas šiai naršyklei ir saugomas tik jūsų įrenginyje.",
-      "offen": "Dar nenusprendėte. Nė vienas pasirenkamas elementas neįjungtas.",
-      "stand": "Jūsų sprendimas nuo {datum}.",
-      "gespeichert": "Įrašyta."
     },
     "kontakt": {
       "hinweis": "Prieš išsiunčiant mums reikia jūsų leidimo išorinei apsaugai nuo šlamšto („Google“ reCAPTCHA). Be jo formos nepriimame — taip užkardome automatines masines žinutes.",

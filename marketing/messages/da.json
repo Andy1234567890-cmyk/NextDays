@@ -2026,6 +2026,7 @@
     "titel": "Dit samtykke",
     "text": "Denne hjemmeside bruger ingen analyse-, reklame- eller sporingstjenester; skrifttyper og ikoner ligger på vores egen server. Nødvendigt er kun det, du selv indstiller eller anmoder om. Derfor har vi brug for dit samtykke til præcis én ting: den eksterne spambeskyttelse på vores kontaktformular.",
     "richtlinie": "Læs cookiepolitikken",
+    "knopf": "Cookieindstillinger",
     "allesAblehnen": "Afvis alle",
     "allesAnnehmen": "Accepter alle",
     "auswahlOeffnen": "Vis valg",
@@ -2041,13 +2042,6 @@
         "titel": "Kontaktformularens spambeskyttelse",
         "text": "Vores kontaktformular er beskyttet mod automatiserede massebeskeder med reCAPTCHA Enterprise fra Google. Hvis du tillader det, indlæser din browser et script fra google.com, mens du udfylder formularen, og sender dermed din IP-adresse til Google. Uden din tilladelse indlæses intet fra Google; du kan i stedet skrive til os på e-mail."
       }
-    },
-    "einstellungen": {
-      "titel": "Administrer dit samtykke",
-      "text": "Du kan altid ændre eller tilbagekalde din beslutning her. Den gælder for denne browser og gemmes kun på din enhed.",
-      "offen": "Du har endnu ikke taget stilling. Intet valgfrit er aktivt.",
-      "stand": "Din beslutning fra {datum}.",
-      "gespeichert": "Gemt."
     },
     "kontakt": {
       "hinweis": "Før du sender, har vi brug for din tilladelse til den eksterne spambeskyttelse (reCAPTCHA fra Google). Uden den kan vi ikke modtage formularen — sådan holder vi automatiserede massebeskeder ude.",

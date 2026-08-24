@@ -2026,6 +2026,7 @@
     "titel": "Twoja zgoda",
     "text": "Ta witryna nie korzysta z usług analitycznych, reklamowych ani śledzących; czcionki i ikony są udostępniane z naszego własnego serwera. Niezbędne jest tylko to, co sami Państwo ustawią lub o co poproszą. Państwa zgody potrzebujemy zatem dokładnie w jednej sprawie: zewnętrznej ochrony przed spamem w naszym formularzu kontaktowym.",
     "richtlinie": "Zapoznaj się z polityką plików cookie",
+    "knopf": "Ustawienia plików cookie",
     "allesAblehnen": "Odrzuć wszystkie",
     "allesAnnehmen": "Akceptuj wszystkie",
     "auswahlOeffnen": "Pokaż wybór",
@@ -2041,13 +2042,6 @@
         "titel": "Ochrona formularza kontaktowego przed spamem",
         "text": "Nasz formularz kontaktowy jest chroniony przed automatycznymi masowymi wiadomościami za pomocą reCAPTCHA Enterprise od Google. Jeśli wyrażą Państwo na to zgodę, przeglądarka podczas wypełniania formularza wczyta skrypt z google.com i przekaże przy tym Państwa adres IP do Google. Bez Państwa zgody nic nie jest wczytywane z Google; mogą Państwo napisać do nas e-mailem."
       }
-    },
-    "einstellungen": {
-      "titel": "Zarządzanie zgodą",
-      "text": "Swoją decyzję mogą Państwo w każdej chwili zmienić lub wycofać. Obowiązuje ona dla tej przeglądarki i jest zapisywana wyłącznie na Państwa urządzeniu.",
-      "offen": "Nie podjęli Państwo jeszcze decyzji. Nic opcjonalnego nie jest aktywne.",
-      "stand": "Państwa decyzja z {datum}.",
-      "gespeichert": "Zapisano."
     },
     "kontakt": {
       "hinweis": "Przed wysłaniem potrzebujemy Państwa zgody na zewnętrzną ochronę przed spamem (reCAPTCHA od Google). Bez niej nie możemy przyjąć formularza — w ten sposób powstrzymujemy automatyczne masowe wiadomości.",
