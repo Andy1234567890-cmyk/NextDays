@@ -430,6 +430,14 @@ jobs:
         if: steps.pruefen.outputs.laufen == 'true'
         run: node scripts/diagnose/melde-ziele-pruefen.mjs
 
+      # Mailtexte sind ein Python-Dict. Eine fehlende Sprache ist kein Syntax-
+      # und kein Testfehler — sie wird zur Mail im Fallback, also in einer
+      # Sprache, die der Empfänger nicht gewählt hat. Live am 24.08.2026: ein
+      # dänischer Betrieb bekam einen deutschen Betreff.
+      - name: Mailtexte in allen Sprachen vorhanden
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: python3 scripts/i18n/mail-texte-pruefen.py
+
       # Der Scope-Katalog wird von DREI Stellen gelesen: dem Backend (was das
       # Dashboard vergeben darf), der Auswahl in der Oberfläche und den
       # Etiketten in 24 Sprachen. Fehlt ein Bereich in der Oberfläche, kann

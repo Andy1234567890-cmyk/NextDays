@@ -833,15 +833,19 @@ def melde_zustellproblem(
         if not empfaenger:
             return
         dispatcher = _dispatcher(db)
+        zustell_key = (
+            "benachrichtigung.zustellung_gescheitert"
+            if endgueltig
+            else "benachrichtigung.zustellung_verzoegert"
+        )
         for user_id in sorted(empfaenger):
             dispatcher.sende(
                 user_id=user_id,
                 schluessel=SCHLUESSEL_ZUSTELLPROBLEM,
-                betreff=(
-                    "Nachricht nicht zugestellt"
-                    if endgueltig
-                    else "Nachricht verzoegert"
-                ),
+                betreff=mail_text(zustell_key, _GLOCKEN_SPRACHE),
+                betreff_key=zustell_key,
+                # `grund` ist der Wortlaut des Portals und bleibt, wie er kam
+                # (Wurzel 4: kein uebersetzter Ersatz fuer eine fremde Meldung).
                 text=grund[:500],
                 tenant_id=tenant_id,
                 property_id=property_id,
@@ -906,15 +910,27 @@ def melde_gastnachricht(
         if not empfaenger:
             return
         dispatcher = _dispatcher(db)
-        titel = (
-            f"Neue Nachricht von {absender}" if absender else "Neue Gastnachricht"
+        # Betreff ueber den Katalog, nicht als deutscher Satz an Ort und Stelle:
+        # `betreff` ist nur die Fassung fuer die GLOCKE (gespeicherte Zeile,
+        # deshalb im Fallback gerendert), `betreff_key`/`betreff_werte` bringen
+        # die Mail in die Sprache des Empfaengers. Vorher stand hier Deutsch —
+        # ein daenischer Betrieb las „Neue Nachricht von …" ueber einer
+        # englischen Gastnachricht.
+        schluessel_titel = (
+            "benachrichtigung.nachricht_neu"
+            if absender
+            else "benachrichtigung.nachricht_neu_anonym"
         )
+        werte = {"absender": absender} if absender else {}
+        titel = mail_text(schluessel_titel, _GLOCKEN_SPRACHE, **werte)
         text = (vorschau or "").strip()[:_VORSCHAU_ZEICHEN]
         for user_id in sorted(empfaenger):
             dispatcher.sende(
                 user_id=user_id,
                 schluessel=SCHLUESSEL_NACHRICHT,
                 betreff=titel,
+                betreff_key=schluessel_titel,
+                betreff_werte=werte,
                 text=text,
                 tenant_id=tenant_id,
                 ziel_pfad=f"/posteingang/{thread_id}",
@@ -937,10 +953,12 @@ SCHLUESSEL_ANFRAGE = "anfrage_offen"
 # Die Anfragearten, ueber die gemeldet wird — dieselben drei, die der
 # Posteingang als Thread fuehrt. Eine geschlossene Menge, damit ein neues
 # Ereignis des Aggregators nicht stillschweigend als „Anfrage" gemeldet wird.
+# Katalog-SCHLUESSEL statt deutscher Saetze: der Betreff wird erst uebersetzt,
+# wenn die Empfaengersprache feststeht (siehe mail_texte.py).
 _ANFRAGE_TITEL = {
-    "inquiry": "Neue Voranfrage",
-    "reservation_request": "Neue Buchungsanfrage",
-    "alteration_request": "Aenderungswunsch zu einer Buchung",
+    "inquiry": "benachrichtigung.anfrage_voranfrage",
+    "reservation_request": "benachrichtigung.anfrage_buchung",
+    "alteration_request": "benachrichtigung.anfrage_aenderung",
 }
 
 
@@ -981,8 +999,8 @@ def melde_offene_anfrage(
         empfaenger = _betriebsleitung(db, tenant_id)
         if not empfaenger:
             return
-        titel = _ANFRAGE_TITEL.get(art)
-        if titel is None:
+        titel_key = _ANFRAGE_TITEL.get(art)
+        if titel_key is None:
             # Kein erfundener Sammelbegriff: eine unbekannte Art ist ein
             # Hinweis auf neues Portal-Verhalten, das wir sehen wollen.
             log.info("anfrage_meldung_unbekannte_art", art=art)
@@ -993,7 +1011,8 @@ def melde_offene_anfrage(
             dispatcher.sende(
                 user_id=user_id,
                 schluessel=SCHLUESSEL_ANFRAGE,
-                betreff=titel,
+                betreff=mail_text(titel_key, _GLOCKEN_SPRACHE),
+                betreff_key=titel_key,
                 text=text,
                 tenant_id=tenant_id,
                 property_id=property_id,
