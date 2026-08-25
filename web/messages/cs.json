@@ -4460,7 +4460,10 @@
         "guestChanged": "Údaje o hostovi změněny",
         "addonMarkedPaid": "Doplňková služba označena jako zaplacená",
         "addonUnmarkedPaid": "Označení „zaplaceno“ zrušeno",
-        "addonCancelled": "Doplňková služba stornována"
+        "addonCancelled": "Doplňková služba stornována",
+        "surchargePaid": "Doúčtování zaplaceno",
+        "surchargePaidManually": "Doúčtování označeno jako zaplacené",
+        "surchargeUnpaid": "Označení zaplaceno zrušeno"
       },
       "title": {
         "onProperty": " v objektu {property}",
@@ -4489,7 +4492,8 @@
         "text": "Text",
         "amount": "Částka",
         "type": "Typ",
-        "service": "Služba"
+        "service": "Služba",
+        "withdrawnReason": "Důvod zrušení"
       }
     },
     "bookingDetail": {
@@ -4926,6 +4930,38 @@
       "keepPrice": "Ponechat cenu",
       "recalcPrice": "Přepočítat cenu",
       "saving": "Ukládá se…"
+    },
+    "nachberechnung": {
+      "titel": "Doúčtování",
+      "offen": "Zbývá uhradit: {amount}",
+      "erklaerung": "Pokud pobyt dodatečně zdražil, může host doplatek zaplatit kartou přes platební odkaz. Peníze jdou přímo na tvůj účet Stripe — bez provize.",
+      "betragLabel": "Částka ({currency})",
+      "grundLabel": "Důvod",
+      "grundPlatzhalter": "např. prodloužení o 2 noci",
+      "linkErstellen": "Vytvořit platební odkaz",
+      "linkErstellenBusy": "Vytváří se …",
+      "linkOffen": "Otevřený platební odkaz na {amount} — {grund}",
+      "betragVeraltet": "Celková částka rezervace se od vytvoření tohoto odkazu změnila. Zkontroluj ji a případně vytvoř nový odkaz.",
+      "linkKopieren": "Kopírovat odkaz",
+      "linkKopiert": "Platební odkaz zkopírován.",
+      "linkKopierenFehlgeschlagen": "Kopírování se nezdařilo — odkaz je zobrazen vedle.",
+      "perMailSenden": "Odeslat e-mailem",
+      "mailVersandt": "Host obdržel platební odkaz e-mailem.",
+      "linkZurueckziehen": "Zrušit",
+      "linkZurueckgezogen": "Platební odkaz byl zrušen.",
+      "betragUngueltig": "Zadej prosím částku větší než 0.",
+      "grundFehlt": "Uveď prosím důvod (alespoň 3 znaky).",
+      "alsBezahltMarkieren": "Označit jako zaplaceno",
+      "alsBezahltErfolg": "Doúčtování je označeno jako zaplacené.",
+      "bezahltErfassen": "Zaznamenat jako zaplaceno",
+      "bezahltTitel": "Zaplaceno",
+      "herkunftManuell": "potvrzeno ručně",
+      "herkunftKarte": "kartou",
+      "ruecknahme": "Zrušit označení zaplaceno",
+      "ruecknahmeGrundLabel": "Důvod zrušení",
+      "ruecknahmeGrundPlatzhalter": "např. zadáno omylem",
+      "ruecknahmeBestaetigen": "Zrušit",
+      "ruecknahmeErfolg": "Označení zaplaceno bylo zrušeno."
     }
   },
   "objects": {

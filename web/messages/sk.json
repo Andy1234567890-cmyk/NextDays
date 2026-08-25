@@ -4458,7 +4458,10 @@
         "guestChanged": "Údaje zákazníka zmenené",
         "addonMarkedPaid": "Doplnková služba označená ako zaplatená",
         "addonUnmarkedPaid": "Označenie „zaplatené“ zrušené",
-        "addonCancelled": "Doplnková služba stornovaná"
+        "addonCancelled": "Doplnková služba stornovaná",
+        "surchargePaid": "Doplatok zaplatený",
+        "surchargePaidManually": "Doplatok zaznamenaný ako zaplatený",
+        "surchargeUnpaid": "Označenie zaplatené zrušené"
       },
       "title": {
         "onProperty": " v objekte {property}",
@@ -4487,7 +4490,8 @@
         "text": "Text",
         "amount": "Suma",
         "type": "Druh",
-        "service": "Služba"
+        "service": "Služba",
+        "withdrawnReason": "Dôvod zrušenia"
       }
     },
     "bookingDetail": {
@@ -4924,6 +4928,38 @@
       "keepPrice": "Zachovať cenu",
       "recalcPrice": "Prepočítať cenu",
       "saving": "Mení sa…"
+    },
+    "nachberechnung": {
+      "titel": "Doplatok",
+      "offen": "Ešte neuhradené: {amount}",
+      "erklaerung": "Ak sa pobyt dodatočne predražil, môže hosť rozdiel uhradiť kartou cez platobný odkaz. Peniaze idú priamo na tvoj Stripe účet — bez provízie.",
+      "betragLabel": "Suma ({currency})",
+      "grundLabel": "Dôvod",
+      "grundPlatzhalter": "napr. predĺženie o 2 noci",
+      "linkErstellen": "Vytvoriť platobný odkaz",
+      "linkErstellenBusy": "Vytvára sa …",
+      "linkOffen": "Otvorený platobný odkaz na {amount} — {grund}",
+      "betragVeraltet": "Suma rezervácie sa od vytvorenia tohto odkazu zmenila. Skontroluj to a v prípade potreby vytvor nový odkaz.",
+      "linkKopieren": "Kopírovať odkaz",
+      "linkKopiert": "Platobný odkaz skopírovaný.",
+      "linkKopierenFehlgeschlagen": "Kopírovanie nie je možné — odkaz je zobrazený vedľa.",
+      "perMailSenden": "Odoslať e-mailom",
+      "mailVersandt": "Hosť dostal platobný odkaz e-mailom.",
+      "linkZurueckziehen": "Stiahnuť",
+      "linkZurueckgezogen": "Platobný odkaz bol stiahnutý.",
+      "betragUngueltig": "Zadaj sumu väčšiu ako 0.",
+      "grundFehlt": "Uveď dôvod (minimálne 3 znaky).",
+      "alsBezahltMarkieren": "Označiť ako zaplatené",
+      "alsBezahltErfolg": "Doplatok je zaznamenaný ako zaplatený.",
+      "bezahltErfassen": "Zaznamenať ako zaplatené",
+      "bezahltTitel": "Zaplatené",
+      "herkunftManuell": "potvrdené ručne",
+      "herkunftKarte": "kartou",
+      "ruecknahme": "Zrušiť označenie zaplatené",
+      "ruecknahmeGrundLabel": "Dôvod zrušenia",
+      "ruecknahmeGrundPlatzhalter": "napr. zadané omylom",
+      "ruecknahmeBestaetigen": "Zrušiť",
+      "ruecknahmeErfolg": "Označenie zaplatené bolo zrušené."
     }
   },
   "objects": {

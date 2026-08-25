@@ -4458,7 +4458,10 @@
         "guestChanged": "Klienta dati mainīti",
         "addonMarkedPaid": "Papildpakalpojums atzīmēts kā apmaksāts",
         "addonUnmarkedPaid": "Atzīme „apmaksāts“ atsaukta",
-        "addonCancelled": "Papildpakalpojums atcelts"
+        "addonCancelled": "Papildpakalpojums atcelts",
+        "surchargePaid": "Papildu maksājums apmaksāts",
+        "surchargePaidManually": "Papildu maksājums atzīmēts kā apmaksāts",
+        "surchargeUnpaid": "Apmaksas atzīme atcelta"
       },
       "title": {
         "onProperty": " objektā {property}",
@@ -4487,7 +4490,8 @@
         "text": "Teksts",
         "amount": "Summa",
         "type": "Veids",
-        "service": "Pakalpojums"
+        "service": "Pakalpojums",
+        "withdrawnReason": "Atcelšanas iemesls"
       }
     },
     "bookingDetail": {
@@ -4924,6 +4928,38 @@
       "keepPrice": "Saglabāt cenu",
       "recalcPrice": "Pārrēķināt cenu",
       "saving": "Tiek mainīts…"
+    },
+    "nachberechnung": {
+      "titel": "Papildu maksa",
+      "offen": "Vēl jāapmaksā: {amount}",
+      "erklaerung": "Ja uzturēšanās vēlāk kļuvusi dārgāka, viesis starpību var samaksāt ar karti, izmantojot maksājuma saiti. Nauda nonāk tieši jūsu Stripe kontā — bez komisijas.",
+      "betragLabel": "Summa ({currency})",
+      "grundLabel": "Iemesls",
+      "grundPlatzhalter": "piem., pagarināts par 2 naktīm",
+      "linkErstellen": "Izveidot maksājuma saiti",
+      "linkErstellenBusy": "Tiek izveidota …",
+      "linkOffen": "Atvērta maksājuma saite par {amount} — {grund}",
+      "betragVeraltet": "Rezervācijas summa ir mainījusies kopš šīs saites izveides. Lūdzu, pārbaudiet un, ja nepieciešams, izveidojiet jaunu saiti.",
+      "linkKopieren": "Kopēt saiti",
+      "linkKopiert": "Maksājuma saite nokopēta.",
+      "linkKopierenFehlgeschlagen": "Neizdevās kopēt — saite ir redzama blakus.",
+      "perMailSenden": "Sūtīt pa e-pastu",
+      "mailVersandt": "Viesis ir saņēmis maksājuma saiti pa e-pastu.",
+      "linkZurueckziehen": "Atsaukt",
+      "linkZurueckgezogen": "Maksājuma saite ir atsaukta.",
+      "betragUngueltig": "Lūdzu, ievadiet summu, kas lielāka par 0.",
+      "grundFehlt": "Lūdzu, norādiet iemeslu (vismaz 3 rakstzīmes).",
+      "alsBezahltMarkieren": "Atzīmēt kā apmaksātu",
+      "alsBezahltErfolg": "Papildu maksājums atzīmēts kā apmaksāts.",
+      "bezahltErfassen": "Reģistrēt kā apmaksātu",
+      "bezahltTitel": "Apmaksāts",
+      "herkunftManuell": "apstiprināts manuāli",
+      "herkunftKarte": "ar karti",
+      "ruecknahme": "Atcelt apmaksas atzīmi",
+      "ruecknahmeGrundLabel": "Atcelšanas iemesls",
+      "ruecknahmeGrundPlatzhalter": "piem., ievadīts kļūdaini",
+      "ruecknahmeBestaetigen": "Atcelt",
+      "ruecknahmeErfolg": "Apmaksas atzīme ir atcelta."
     }
   },
   "objects": {

@@ -158,6 +158,69 @@ class WritesMixin(ReservationsBase):
                 error=str(exc)[:200],
             )
 
+    def _nachberechnung_link_schliessen(
+        self, tenant_id: str, reservation_id: str
+    ) -> None:
+        """Offenen Nachberechnungs-Link der Buchung schließen (0469).
+
+        Gegenzustand (Wurzel 1) zu jeder Änderung, die den geforderten Betrag
+        hinfällig macht: Move/Reprice und Storno. Der Link lautet auf einen
+        Betrag, der aus dem Stand der Buchung abgeleitet wurde; danach nimmt die
+        Stripe-URL Geld an, das niemand mehr schuldet.
+
+        Ausdrücklich NICHT best-effort (anders als die Provisions-Nachpflege
+        darüber): Ein fehlgeschlagenes Schließen bei Stripe lässt eine zahlbare
+        URL stehen. Deshalb wird der Fehler in einen ReservationError übersetzt
+        und der aufrufende Vorgang bricht ab (fail-closed, Wurzel 5) — er ist
+        wiederholbar, eine falsch eingezogene Zahlung nicht.
+        """
+        if self._client is None:
+            return
+        from src.features.payments.nachberechnung import (  # noqa: PLC0415
+            ziehe_link_zurueck_bei_betragsaenderung,
+        )
+        from src.features.payments.service import PaymentsError  # noqa: PLC0415
+
+        try:
+            ziehe_link_zurueck_bei_betragsaenderung(
+                self._client, tenant_id=tenant_id, reservation_id=reservation_id
+            )
+        except PaymentsError as exc:
+            raise ReservationError(exc.message, status_code=exc.status_code) from exc
+
+    def _geplante_restzahlung_anpassen(
+        self, reservation_id: str, *, total_amount: float, paid_amount: float
+    ) -> None:
+        """Geplante Restzahlung an einen neu gerechneten Buchungsbetrag angleichen.
+
+        Best-effort: Die Buchung ist zu diesem Zeitpunkt schon verschoben und
+        neu bepreist. Scheitert die Angleichung, bleibt die alte geplante Zahlung
+        stehen — das ist ein sichtbarer Betrag in der Zahlungsansicht, kein
+        stiller Verlust, und der Betrieb kann die Differenz per
+        Nachberechnungs-Link kassieren. Den bereits vollzogenen Move dafür
+        zurückzudrehen wäre der größere Schaden (Kalendertage sind schon
+        umgezogen).
+        """
+        if self._client is None:
+            return
+        try:
+            from src.features.payments.service import (  # noqa: PLC0415
+                passe_restzahlung_an,
+            )
+
+            passe_restzahlung_an(
+                self._client,
+                reservation_id=reservation_id,
+                total_amount=total_amount,
+                paid_amount=paid_amount,
+            )
+        except Exception as exc:  # noqa: BLE001 — s. Docstring
+            log.warning(
+                "geplante_restzahlung_anpassen_fehlgeschlagen",
+                reservation_id=reservation_id,
+                error=str(exc)[:200],
+            )
+
     def create(
         self,
         ctx: AuthContext,
@@ -939,6 +1002,15 @@ class WritesMixin(ReservationsBase):
                 for line in quote.lines
             ]
 
+        # Ein offener Nachberechnungs-Link (0469) lautet auf einen Betrag, der
+        # aus DIESEM Stand der Buchung abgeleitet wurde (Zeitraum + Preis).
+        # Nach dem Move stimmt die Ableitung nicht mehr, die Stripe-URL nimmt
+        # aber weiter Geld an — deshalb VOR der Änderung schließen (Wurzel 1).
+        # Fail-closed: Scheitert das bei Stripe, wirft es einen 502 und der Move
+        # findet nicht statt. Ein nicht verschobener Zeitraum ist reparabel,
+        # eine offene URL auf einen veralteten Betrag ist echtes Geld.
+        self._nachberechnung_link_schliessen(tenant_id, reservation_id)
+
         # Reservierungs-Zeile ZUERST umziehen: der EXCLUDE-Constraint
         # reservations_no_local_overlap (0104) validiert den Ziel-Zeitraum
         # atomar gegen alle anderen lokalen Buchungen. Kollidiert er, schlägt
@@ -1100,6 +1172,19 @@ class WritesMixin(ReservationsBase):
             # Betrag-Währung-Paarung (Wurzel 4).
             update_fields.get("currency", current.get("currency")),
         )
+        # Geplante Restzahlung (Split Payment, 0166) an den neuen Betrag
+        # anpassen — sonst zieht der stündliche Worker-Tick später die ALTE,
+        # zu niedrige Summe ein und die Differenz fällt niemandem auf: Buchung
+        # „bezahlt", Kasse zu wenig (Wurzel 1). Nur bei reprice, denn ohne
+        # Neuberechnung ist der Betrag unverändert.
+        if req.reprice:
+            self._geplante_restzahlung_anpassen(
+                reservation_id,
+                total_amount=float(
+                    update_fields.get("total_amount", current.get("total_amount")) or 0
+                ),
+                paid_amount=float(current.get("paid_amount") or 0),
+            )
         # UND die 0,5-%-Nutzungsmeldung mit demselben Stand (Wurzel 1). Sie
         # stand hier nicht, waehrend `cancel()` BEIDE Ledger abraeumt — ein
         # Upsell von 200 auf 450 zog also die Provision nach, die Modulgebuehr
@@ -1144,6 +1229,18 @@ class WritesMixin(ReservationsBase):
                 "repriced",
                 by_user_id=ctx.user_id,
                 detail={
+                    # Der VORHERIGE Betrag gehört dazu, nicht nur der neue: aus
+                    # ihm ergibt sich die Differenz, die dem Gast nachberechnet
+                    # wird (`payments/nachberechnung.py` belegt damit die
+                    # Vorbelegung des Betrags). Ohne ihn ließ sich aus der
+                    # Zeitleiste nicht ablesen, was die Verlängerung gekostet
+                    # hat — der Betrieb musste rechnen, und wir hätten die Zahl
+                    # nur erfinden können (Wurzel 4).
+                    "previous_total": (
+                        float(current.get("total_amount"))
+                        if current.get("total_amount") is not None
+                        else None
+                    ),
                     "total_amount": update_fields.get("total_amount"),
                     "currency": current.get("currency"),
                 },
@@ -1274,6 +1371,12 @@ class WritesMixin(ReservationsBase):
                 "stornieren — bitte die Stornierung im Portal auslösen.",
                 status_code=409,
             )
+
+        # Eine stornierte Buchung fordert nichts mehr — ein offener
+        # Nachberechnungs-Link (0469) würde danach Geld für einen Aufenthalt
+        # annehmen, den es nicht gibt (Wurzel 1). Vor dem Status-Wechsel und
+        # fail-closed: lieber ein abgebrochener Storno als eine zahlbare URL.
+        self._nachberechnung_link_schliessen(tenant_id, reservation_id)
 
         now = datetime.now(UTC).isoformat()
         upd = (

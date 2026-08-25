@@ -4458,7 +4458,10 @@
         "guestChanged": "Klantgegevens gewijzigd",
         "addonMarkedPaid": "Extra als betaald gemarkeerd",
         "addonUnmarkedPaid": "Markering betaald ongedaan gemaakt",
-        "addonCancelled": "Extra geannuleerd"
+        "addonCancelled": "Extra geannuleerd",
+        "surchargePaid": "Naberekening betaald",
+        "surchargePaidManually": "Naberekening als betaald geregistreerd",
+        "surchargeUnpaid": "Betaalmarkering ongedaan gemaakt"
       },
       "title": {
         "onProperty": " bij {property}",
@@ -4487,7 +4490,8 @@
         "text": "Tekst",
         "amount": "Bedrag",
         "type": "Soort",
-        "service": "Dienst"
+        "service": "Dienst",
+        "withdrawnReason": "Reden voor het ongedaan maken"
       }
     },
     "bookingDetail": {
@@ -4924,6 +4928,38 @@
       "keepPrice": "Prijs behouden",
       "recalcPrice": "Prijs herberekenen",
       "saving": "Wordt gewijzigd…"
+    },
+    "nachberechnung": {
+      "titel": "Naberekening",
+      "offen": "Nog openstaand: {amount}",
+      "erklaerung": "Als het verblijf achteraf duurder is geworden, kan de gast het verschil met kaart betalen via een betaallink. Het geld gaat rechtstreeks naar jouw Stripe-account — zonder commissie.",
+      "betragLabel": "Bedrag ({currency})",
+      "grundLabel": "Reden",
+      "grundPlatzhalter": "bijv. 2 nachten verlengd",
+      "linkErstellen": "Betaallink aanmaken",
+      "linkErstellenBusy": "Wordt aangemaakt …",
+      "linkOffen": "Openstaande betaallink voor {amount} — {grund}",
+      "betragVeraltet": "Het boekingsbedrag is gewijzigd sinds deze link is aangemaakt. Controleer dit en maak indien nodig een nieuwe link aan.",
+      "linkKopieren": "Link kopiëren",
+      "linkKopiert": "Betaallink gekopieerd.",
+      "linkKopierenFehlgeschlagen": "Kopiëren niet mogelijk — de link staat ernaast.",
+      "perMailSenden": "Per e-mail versturen",
+      "mailVersandt": "De gast heeft de betaallink per e-mail ontvangen.",
+      "linkZurueckziehen": "Intrekken",
+      "linkZurueckgezogen": "De betaallink is ingetrokken.",
+      "betragUngueltig": "Voer een bedrag groter dan 0 in.",
+      "grundFehlt": "Geef een reden op (minimaal 3 tekens).",
+      "alsBezahltMarkieren": "Als betaald markeren",
+      "alsBezahltErfolg": "De naberekening is als betaald geregistreerd.",
+      "bezahltErfassen": "Als betaald registreren",
+      "bezahltTitel": "Betaald",
+      "herkunftManuell": "handmatig bevestigd",
+      "herkunftKarte": "per kaart",
+      "ruecknahme": "Betaalmarkering ongedaan maken",
+      "ruecknahmeGrundLabel": "Reden voor het ongedaan maken",
+      "ruecknahmeGrundPlatzhalter": "bijv. verkeerd ingevoerd",
+      "ruecknahmeBestaetigen": "Ongedaan maken",
+      "ruecknahmeErfolg": "De betaalmarkering is ongedaan gemaakt."
     }
   },
   "objects": {

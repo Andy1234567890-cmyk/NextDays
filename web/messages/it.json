@@ -4458,7 +4458,10 @@
         "guestChanged": "Dati del cliente modificati",
         "addonMarkedPaid": "Servizio aggiuntivo contrassegnato come pagato",
         "addonUnmarkedPaid": "Contrassegno di pagato rimosso",
-        "addonCancelled": "Servizio aggiuntivo annullato"
+        "addonCancelled": "Servizio aggiuntivo annullato",
+        "surchargePaid": "Supplemento pagato",
+        "surchargePaidManually": "Supplemento registrato come pagato",
+        "surchargeUnpaid": "Segno di pagato annullato"
       },
       "title": {
         "onProperty": " su {property}",
@@ -4487,7 +4490,8 @@
         "text": "Testo",
         "amount": "Importo",
         "type": "Tipo",
-        "service": "Servizio"
+        "service": "Servizio",
+        "withdrawnReason": "Motivo dell'annullamento"
       }
     },
     "bookingDetail": {
@@ -4924,6 +4928,38 @@
       "keepPrice": "Mantieni prezzo",
       "recalcPrice": "Ricalcola prezzo",
       "saving": "Modifica in corso…"
+    },
+    "nachberechnung": {
+      "titel": "Addebito aggiuntivo",
+      "offen": "Ancora da pagare: {amount}",
+      "erklaerung": "Se il soggiorno è diventato più costoso in un secondo momento, l'ospite può pagare la differenza con carta tramite un link di pagamento. Il denaro va direttamente al tuo conto Stripe — senza commissioni.",
+      "betragLabel": "Importo ({currency})",
+      "grundLabel": "Motivo",
+      "grundPlatzhalter": "ad es. prolungamento di 2 notti",
+      "linkErstellen": "Crea link di pagamento",
+      "linkErstellenBusy": "Creazione in corso …",
+      "linkOffen": "Link di pagamento aperto per {amount} — {grund}",
+      "betragVeraltet": "L'importo della prenotazione è cambiato da quando è stato creato questo link. Verificalo e, se necessario, crea un nuovo link.",
+      "linkKopieren": "Copia link",
+      "linkKopiert": "Link di pagamento copiato.",
+      "linkKopierenFehlgeschlagen": "Impossibile copiare — il link è mostrato accanto.",
+      "perMailSenden": "Invia per email",
+      "mailVersandt": "L'ospite ha ricevuto il link di pagamento via email.",
+      "linkZurueckziehen": "Ritira",
+      "linkZurueckgezogen": "Il link di pagamento è stato ritirato.",
+      "betragUngueltig": "Inserisci un importo maggiore di 0.",
+      "grundFehlt": "Indica un motivo (almeno 3 caratteri).",
+      "alsBezahltMarkieren": "Segna come pagato",
+      "alsBezahltErfolg": "Il supplemento è registrato come pagato.",
+      "bezahltErfassen": "Registra come pagato",
+      "bezahltTitel": "Pagato",
+      "herkunftManuell": "confermato manualmente",
+      "herkunftKarte": "con carta",
+      "ruecknahme": "Annulla il segno di pagato",
+      "ruecknahmeGrundLabel": "Motivo dell'annullamento",
+      "ruecknahmeGrundPlatzhalter": "ad es. inserito per errore",
+      "ruecknahmeBestaetigen": "Annulla",
+      "ruecknahmeErfolg": "Il segno di pagato è stato annullato."
     }
   },
   "objects": {

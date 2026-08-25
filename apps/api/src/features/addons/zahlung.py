@@ -26,6 +26,7 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.payments import stripe_client as sc
+from src.features.payments.stripe_client import META_ZWECK
 
 from .schemas import AddonStatus, ZahlungslinkResponse
 
@@ -38,10 +39,10 @@ _LINK_COLS = (
     "payment_intent_id, paid_at, created_at"
 )
 
-# Metadata-Schlüssel am Stripe-Objekt. `nd_zweck` ist der Filter im Webhook:
-# ohne ihn würde jedes fremde checkout.session.completed (Tarif-Abo, künftige
-# Checkout-Nutzungen) hier landen.
-META_ZWECK = "nd_zweck"
+# Wert des Zweck-Schlüssels (`stripe_client.META_ZWECK`) für DIESEN Zahlweg.
+# Der Schlüsselname selbst liegt bei `stripe_client`, weil ihn auch die
+# Nachberechnung (0469) setzt und der Webhook-Filter nur greift, solange beide
+# denselben schreiben.
 META_ZWECK_ADDON = "addon"
 
 
@@ -309,7 +310,7 @@ class AddonZahlungService:
         fee = netto * bps // 10000
         titel = _titel(offen)
         try:
-            link = sc.create_addon_payment_link(
+            link = sc.create_payment_link(
                 acct=acct,
                 currency=currency,
                 amount_cents=betrag,

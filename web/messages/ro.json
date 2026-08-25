@@ -4458,7 +4458,10 @@
         "guestChanged": "Date client modificate",
         "addonMarkedPaid": "Serviciu suplimentar marcat ca plătit",
         "addonUnmarkedPaid": "Marcajul „plătit” a fost retras",
-        "addonCancelled": "Serviciu suplimentar anulat"
+        "addonCancelled": "Serviciu suplimentar anulat",
+        "surchargePaid": "Suprataxă plătită",
+        "surchargePaidManually": "Suprataxă înregistrată ca plătită",
+        "surchargeUnpaid": "Marcaj de plată anulat"
       },
       "title": {
         "onProperty": " la {property}",
@@ -4487,7 +4490,8 @@
         "text": "Text",
         "amount": "Sumă",
         "type": "Tip",
-        "service": "Serviciu"
+        "service": "Serviciu",
+        "withdrawnReason": "Motivul anulării"
       }
     },
     "bookingDetail": {
@@ -4924,6 +4928,38 @@
       "keepPrice": "Păstrează prețul",
       "recalcPrice": "Recalculează prețul",
       "saving": "Se modifică…"
+    },
+    "nachberechnung": {
+      "titel": "Recalculare",
+      "offen": "Sumă restantă: {amount}",
+      "erklaerung": "Dacă sejurul a devenit ulterior mai scump, oaspetele poate achita diferența cu cardul printr-un link de plată. Banii ajung direct în contul tău Stripe — fără comision.",
+      "betragLabel": "Sumă ({currency})",
+      "grundLabel": "Motiv",
+      "grundPlatzhalter": "de ex. prelungire cu 2 nopți",
+      "linkErstellen": "Creează link de plată",
+      "linkErstellenBusy": "Se creează …",
+      "linkOffen": "Link de plată deschis pentru {amount} — {grund}",
+      "betragVeraltet": "Suma rezervării s-a schimbat de când a fost creat acest link. Te rugăm să verifici și, dacă este necesar, să creezi un link nou.",
+      "linkKopieren": "Copiază linkul",
+      "linkKopiert": "Link de plată copiat.",
+      "linkKopierenFehlgeschlagen": "Copierea nu este posibilă — linkul este afișat alături.",
+      "perMailSenden": "Trimite prin e-mail",
+      "mailVersandt": "Oaspetele a primit linkul de plată prin e-mail.",
+      "linkZurueckziehen": "Retrage",
+      "linkZurueckgezogen": "Linkul de plată a fost retras.",
+      "betragUngueltig": "Introdu o sumă mai mare de 0.",
+      "grundFehlt": "Indică un motiv (minimum 3 caractere).",
+      "alsBezahltMarkieren": "Marchează ca plătit",
+      "alsBezahltErfolg": "Suprataxa a fost înregistrată ca plătită.",
+      "bezahltErfassen": "Înregistrează ca plătit",
+      "bezahltTitel": "Plătit",
+      "herkunftManuell": "confirmat manual",
+      "herkunftKarte": "cu cardul",
+      "ruecknahme": "Anulează marcajul de plată",
+      "ruecknahmeGrundLabel": "Motivul anulării",
+      "ruecknahmeGrundPlatzhalter": "de ex. introdus greșit",
+      "ruecknahmeBestaetigen": "Anulează",
+      "ruecknahmeErfolg": "Marcajul de plată a fost anulat."
     }
   },
   "objects": {

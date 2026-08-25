@@ -30,6 +30,9 @@ from src.core.logging import get_logger
 from src.features.addons.zahlung import verbuche_checkout_session
 from src.features.donations.service import DonationsService
 from src.features.payments import stripe_client as sc
+from src.features.payments.nachberechnung import (
+    verbuche_checkout_session as verbuche_nachberechnung_session,
+)
 from src.features.payouts.service import PayoutsService
 
 log = get_logger("nextdays.payments.webhook")
@@ -114,10 +117,19 @@ def _dispatch_stripe_event(
 ) -> dict[str, str] | None:
     match event_type:
         case "checkout.session.completed":
-            # Zusatzleistungen, per Zahlungslink im verbundenen Konto bezahlt
-            # (0386). Der Aufruf filtert selbst auf seine Metadata und lässt
-            # fremde Checkout-Sessions unberührt.
-            if not verbuche_checkout_session(db, obj, account=account):
+            # Zwei Zahlwege kommen als Payment-Link-Session zurück:
+            # Zusatzleistungen (0386) und die Nachberechnung einer
+            # Website-Buchung (0469). Jeder Aufruf filtert selbst auf seine
+            # Zweck-Metadata (`stripe_client.META_ZWECK`) und lässt fremde
+            # Sessions unberührt — deshalb ist die Reihenfolge gleichgültig und
+            # keine der beiden kann die Session des anderen verbuchen. Erst wenn
+            # BEIDE ablehnen, gehört die Session zu etwas anderem (Tarif-Abo).
+            verarbeitet = verbuche_checkout_session(db, obj, account=account)
+            if not verarbeitet:
+                verarbeitet = verbuche_nachberechnung_session(
+                    db, obj, account=account
+                )
+            if not verarbeitet:
                 log.info("stripe_webhook_checkout_fremd", event_type=event_type)
         case "account.updated":
             _handle_account_updated(db, obj, now_iso)

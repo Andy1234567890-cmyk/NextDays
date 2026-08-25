@@ -4460,7 +4460,10 @@
         "guestChanged": "Vendégadatok módosítva",
         "addonMarkedPaid": "Kiegészítő szolgáltatás fizetettként megjelölve",
         "addonUnmarkedPaid": "Fizetett jelölés visszavonva",
-        "addonCancelled": "Kiegészítő szolgáltatás lemondva"
+        "addonCancelled": "Kiegészítő szolgáltatás lemondva",
+        "surchargePaid": "Pótdíj kifizetve",
+        "surchargePaidManually": "Pótdíj fizetettként rögzítve",
+        "surchargeUnpaid": "Fizetve jelölés visszavonva"
       },
       "title": {
         "onProperty": " ezen: {property}",
@@ -4489,7 +4492,8 @@
         "text": "Szöveg",
         "amount": "Összeg",
         "type": "Típus",
-        "service": "Szolgáltatás"
+        "service": "Szolgáltatás",
+        "withdrawnReason": "Visszavonás oka"
       }
     },
     "bookingDetail": {
@@ -4926,6 +4930,38 @@
       "keepPrice": "Ár megtartása",
       "recalcPrice": "Ár újraszámítása",
       "saving": "Módosítás folyamatban…"
+    },
+    "nachberechnung": {
+      "titel": "Pótdíj",
+      "offen": "Még fennálló összeg: {amount}",
+      "erklaerung": "Ha a tartózkodás utólag drágább lett, a vendég a különbözetet kártyával, fizetési linken keresztül fizetheti ki. A pénz közvetlenül a Stripe-fiókodra érkezik — jutalék nélkül.",
+      "betragLabel": "Összeg ({currency})",
+      "grundLabel": "Indok",
+      "grundPlatzhalter": "pl. 2 éjszakával hosszabbítva",
+      "linkErstellen": "Fizetési link létrehozása",
+      "linkErstellenBusy": "Létrehozás …",
+      "linkOffen": "Nyitott fizetési link: {amount} — {grund}",
+      "betragVeraltet": "A foglalás összege megváltozott azóta, hogy ez a link létrejött. Kérjük, ellenőrizd, és szükség esetén hozz létre új linket.",
+      "linkKopieren": "Link másolása",
+      "linkKopiert": "A fizetési link másolva.",
+      "linkKopierenFehlgeschlagen": "Másolás nem sikerült — a link mellette látható.",
+      "perMailSenden": "Küldés e-mailben",
+      "mailVersandt": "A vendég e-mailben megkapta a fizetési linket.",
+      "linkZurueckziehen": "Visszavonás",
+      "linkZurueckgezogen": "A fizetési link visszavonva.",
+      "betragUngueltig": "Adj meg egy 0-nál nagyobb összeget.",
+      "grundFehlt": "Adj meg egy indokot (legalább 3 karakter).",
+      "alsBezahltMarkieren": "Megjelölés fizetettként",
+      "alsBezahltErfolg": "A pótdíj fizetettként van rögzítve.",
+      "bezahltErfassen": "Rögzítés fizetettként",
+      "bezahltTitel": "Fizetve",
+      "herkunftManuell": "kézzel megerősítve",
+      "herkunftKarte": "kártyával",
+      "ruecknahme": "Fizetve jelölés visszavonása",
+      "ruecknahmeGrundLabel": "Visszavonás oka",
+      "ruecknahmeGrundPlatzhalter": "pl. tévesen rögzítve",
+      "ruecknahmeBestaetigen": "Visszavonás",
+      "ruecknahmeErfolg": "A fizetve jelölés vissza lett vonva."
     }
   },
   "objects": {

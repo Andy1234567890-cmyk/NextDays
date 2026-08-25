@@ -4460,7 +4460,10 @@
         "guestChanged": "Данните на клиента са променени",
         "addonMarkedPaid": "Допълнителна услуга, маркирана като платена",
         "addonUnmarkedPaid": "Маркировката „платено“ е отменена",
-        "addonCancelled": "Допълнителна услуга анулирана"
+        "addonCancelled": "Допълнителна услуга анулирана",
+        "surchargePaid": "Доплащане платено",
+        "surchargePaidManually": "Доплащане отбелязано като платено",
+        "surchargeUnpaid": "Маркировката за платено е отменена"
       },
       "title": {
         "onProperty": " в {property}",
@@ -4489,7 +4492,8 @@
         "text": "Текст",
         "amount": "Сума",
         "type": "Вид",
-        "service": "Услуга"
+        "service": "Услуга",
+        "withdrawnReason": "Причина за отмяната"
       }
     },
     "bookingDetail": {
@@ -4926,6 +4930,38 @@
       "keepPrice": "Запазване на цената",
       "recalcPrice": "Преизчисляване на цената",
       "saving": "Запазва се…"
+    },
+    "nachberechnung": {
+      "titel": "Доплащане",
+      "offen": "Все още дължимо: {amount}",
+      "erklaerung": "Ако престоят стане по-скъп впоследствие, гостът може да плати разликата с карта чрез платежна връзка. Парите отиват директно в твоята Stripe сметка — без комисиона.",
+      "betragLabel": "Сума ({currency})",
+      "grundLabel": "Причина",
+      "grundPlatzhalter": "напр. удължаване с 2 нощувки",
+      "linkErstellen": "Създаване на платежна връзка",
+      "linkErstellenBusy": "Създава се …",
+      "linkOffen": "Отворена платежна връзка за {amount} — {grund}",
+      "betragVeraltet": "Общата сума на резервацията се е променила, откакто беше създадена тази връзка. Моля, провери и при нужда създай нова връзка.",
+      "linkKopieren": "Копиране на връзката",
+      "linkKopiert": "Платежната връзка е копирана.",
+      "linkKopierenFehlgeschlagen": "Копирането не е възможно — връзката е показана до бутона.",
+      "perMailSenden": "Изпращане по имейл",
+      "mailVersandt": "Гостът получи платежната връзка по имейл.",
+      "linkZurueckziehen": "Оттегляне",
+      "linkZurueckgezogen": "Платежната връзка е оттеглена.",
+      "betragUngueltig": "Моля, въведи сума по-голяма от 0.",
+      "grundFehlt": "Моля, посочи причина (поне 3 символа).",
+      "alsBezahltMarkieren": "Маркирай като платено",
+      "alsBezahltErfolg": "Доплащането е отбелязано като платено.",
+      "bezahltErfassen": "Отбележи като платено",
+      "bezahltTitel": "Платено",
+      "herkunftManuell": "потвърдено ръчно",
+      "herkunftKarte": "с карта",
+      "ruecknahme": "Отмени маркировката за платено",
+      "ruecknahmeGrundLabel": "Причина за отмяната",
+      "ruecknahmeGrundPlatzhalter": "напр. въведено погрешно",
+      "ruecknahmeBestaetigen": "Отмени",
+      "ruecknahmeErfolg": "Маркировката за платено е отменена."
     }
   },
   "objects": {

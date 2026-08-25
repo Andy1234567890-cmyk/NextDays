@@ -82,6 +82,17 @@ class Settings(BaseSettings):
     rate_limit_refresh: str = "60/60"
     # Streng: teure Zahlungs-Endpunkte (pro IP).
     rate_limit_payments: str = "30/60"
+    # Nachberechnung (0469). Eigener Eimer, LOCKERER als der payments-Eimer:
+    # Der Lesepfad `GET .../nachberechnung` läuft bei JEDEM Öffnen einer
+    # Buchungsdetailseite und kommt als Next-Server-Action aus EINEM Container
+    # ohne X-Forwarded-For — der IP-Zähler gilt damit für alle Nutzer aller
+    # Betriebe gemeinsam. Mit 30/60 (payments) hätten wenige gleichzeitig
+    # arbeitende Rezeptionen 429 gesehen, ohne dass ein Angriff vorliegt; genau
+    # dieser Fehler trat am 12.08.2026 an `/auth/mfa/status` live auf.
+    # Der Schreibpfad braucht kein strengeres Dach: er verlangt einen Klick,
+    # ist je Betrag+Grund idempotent und der Mailversand hat sein eigenes,
+    # strengeres Limit (rate_limit_einladung_resend).
+    rate_limit_nachberechnung: str = "120/60"
     # Öffentliche (nicht-eingeloggte) Such-/Listings-/Kalender-Endpunkte:
     # Scraper-Schutz PRO IP. 240/60 statt 60/60 — 60 war zu knapp und traf bei
     # Büro-NAT (mehrere Mitarbeiter, eine IP) mehrere Nutzer gemeinsam.

@@ -4460,7 +4460,10 @@
         "guestChanged": "Sonraí an chustaiméara athraithe",
         "addonMarkedPaid": "Seirbhís bhreise marcáilte mar íoctha",
         "addonUnmarkedPaid": "Baineadh an marc „íoctha”",
-        "addonCancelled": "Seirbhís bhreise cealaithe"
+        "addonCancelled": "Seirbhís bhreise cealaithe",
+        "surchargePaid": "Breisiontas íoctha",
+        "surchargePaidManually": "Breisiontas taifeadta mar íoctha",
+        "surchargeUnpaid": "Marcáil íoctha cealaithe"
       },
       "title": {
         "onProperty": " ar {property}",
@@ -4489,7 +4492,8 @@
         "text": "Téacs",
         "amount": "Méid",
         "type": "Cineál",
-        "service": "Seirbhís"
+        "service": "Seirbhís",
+        "withdrawnReason": "Cúis leis an gcealú"
       }
     },
     "bookingDetail": {
@@ -4926,6 +4930,38 @@
       "keepPrice": "Coinnigh an praghas",
       "recalcPrice": "Athríomh an praghas",
       "saving": "Á athrú…"
+    },
+    "nachberechnung": {
+      "titel": "Muirear breise",
+      "offen": "Fós gan íoc: {amount}",
+      "erklaerung": "Má d'éirigh an fanacht níos costasaí ina dhiaidh sin, is féidir leis an aoi an difríocht a íoc le cárta trí nasc íocaíochta. Téann an t-airgead díreach chuig do chuntas Stripe — gan aon choimisiún.",
+      "betragLabel": "Méid ({currency})",
+      "grundLabel": "Cúis",
+      "grundPlatzhalter": "m.sh. sínte faoi 2 oíche",
+      "linkErstellen": "Cruthaigh nasc íocaíochta",
+      "linkErstellenBusy": "Á chruthú…",
+      "linkOffen": "Nasc íocaíochta oscailte le haghaidh {amount} — {grund}",
+      "betragVeraltet": "Tá iomlán na háirithinte athraithe ó cruthaíodh an nasc seo. Seiceáil é agus cruthaigh nasc nua más gá.",
+      "linkKopieren": "Cóipeáil an nasc",
+      "linkKopiert": "Nasc íocaíochta cóipeáilte.",
+      "linkKopierenFehlgeschlagen": "Níorbh fhéidir cóipeáil — tá an nasc le feiceáil in aice láimhe.",
+      "perMailSenden": "Seol trí ríomhphost",
+      "mailVersandt": "Fuair an t-aoi an nasc íocaíochta trí ríomhphost.",
+      "linkZurueckziehen": "Tarraing siar",
+      "linkZurueckgezogen": "Tarraingíodh siar an nasc íocaíochta.",
+      "betragUngueltig": "Iontráil méid níos mó ná 0, le do thoil.",
+      "grundFehlt": "Tabhair cúis le do thoil (íosmhéid 3 charachtar).",
+      "alsBezahltMarkieren": "Marcáil mar íoctha",
+      "alsBezahltErfolg": "Tá an breisiontas taifeadta mar íoctha.",
+      "bezahltErfassen": "Taifead mar íoctha",
+      "bezahltTitel": "Íoctha",
+      "herkunftManuell": "deimhnithe de láimh",
+      "herkunftKarte": "trí chárta",
+      "ruecknahme": "Cealaigh an marcáil íoctha",
+      "ruecknahmeGrundLabel": "Cúis leis an gcealú",
+      "ruecknahmeGrundPlatzhalter": "m.sh. iontráladh í trí earráid",
+      "ruecknahmeBestaetigen": "Cealaigh",
+      "ruecknahmeErfolg": "Cealaíodh an mharcáil íoctha."
     }
   },
   "objects": {

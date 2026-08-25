@@ -4458,7 +4458,10 @@
         "guestChanged": "Dados do cliente alterados",
         "addonMarkedPaid": "Serviço adicional marcado como pago",
         "addonUnmarkedPaid": "Marcação de pago retirada",
-        "addonCancelled": "Serviço adicional anulado"
+        "addonCancelled": "Serviço adicional anulado",
+        "surchargePaid": "Valor adicional pago",
+        "surchargePaidManually": "Valor adicional registado como pago",
+        "surchargeUnpaid": "Marcação como pago anulada"
       },
       "title": {
         "onProperty": " em {property}",
@@ -4487,7 +4490,8 @@
         "text": "Texto",
         "amount": "Valor",
         "type": "Tipo",
-        "service": "Serviço"
+        "service": "Serviço",
+        "withdrawnReason": "Motivo da anulação"
       }
     },
     "bookingDetail": {
@@ -4924,6 +4928,38 @@
       "keepPrice": "Manter preço",
       "recalcPrice": "Recalcular preço",
       "saving": "A alterar…"
+    },
+    "nachberechnung": {
+      "titel": "Cobrança adicional",
+      "offen": "Ainda em aberto: {amount}",
+      "erklaerung": "Se a estadia ficou mais cara posteriormente, o hóspede pode pagar a diferença com cartão através de um link de pagamento. O dinheiro vai diretamente para a tua conta Stripe — sem comissão.",
+      "betragLabel": "Valor ({currency})",
+      "grundLabel": "Motivo",
+      "grundPlatzhalter": "p. ex. prorrogação de 2 noites",
+      "linkErstellen": "Criar link de pagamento",
+      "linkErstellenBusy": "A criar …",
+      "linkOffen": "Link de pagamento em aberto de {amount} — {grund}",
+      "betragVeraltet": "O valor da reserva mudou desde que este link foi criado. Verifica e, se necessário, cria um novo link.",
+      "linkKopieren": "Copiar link",
+      "linkKopiert": "Link de pagamento copiado.",
+      "linkKopierenFehlgeschlagen": "Não foi possível copiar — o link está indicado ao lado.",
+      "perMailSenden": "Enviar por e-mail",
+      "mailVersandt": "O hóspede recebeu o link de pagamento por e-mail.",
+      "linkZurueckziehen": "Retirar",
+      "linkZurueckgezogen": "O link de pagamento foi retirado.",
+      "betragUngueltig": "Indica um valor maior que 0.",
+      "grundFehlt": "Indica um motivo (mínimo 3 caracteres).",
+      "alsBezahltMarkieren": "Marcar como pago",
+      "alsBezahltErfolg": "O valor adicional foi registado como pago.",
+      "bezahltErfassen": "Registar como pago",
+      "bezahltTitel": "Pago",
+      "herkunftManuell": "confirmado manualmente",
+      "herkunftKarte": "com cartão",
+      "ruecknahme": "Desmarcar como pago",
+      "ruecknahmeGrundLabel": "Motivo da anulação",
+      "ruecknahmeGrundPlatzhalter": "por exemplo, registado por engano",
+      "ruecknahmeBestaetigen": "Anular",
+      "ruecknahmeErfolg": "A marcação como pago foi anulada."
     }
   },
   "objects": {

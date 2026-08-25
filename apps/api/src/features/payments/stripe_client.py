@@ -512,9 +512,17 @@ def refund(
     return {"id": ref.id, "status": ref.status}
 
 
-# --- Zusatzleistungen: Zahlungslink im verbundenen Konto ----------------------
+# --- Zahlungslink im verbundenen Konto ----------------------------------------
 
-def create_addon_payment_link(
+# Metadata-Schlüssel am Stripe-Objekt, über den der Webhook erkennt, WOZU eine
+# Checkout-Session gehört. Er steht hier und nicht bei einem der Zwecke, weil
+# ihn inzwischen zwei lesen (Zusatzleistungen 0386, Nachberechnung 0469) und der
+# Filter im Webhook fehlschlägt, sobald zwei Module den Schlüssel getrennt
+# buchstabieren. Ohne ihn landete jede fremde `checkout.session.completed`
+# (Tarif-Abo, künftige Checkout-Nutzungen) in einem der Verbuchungspfade.
+META_ZWECK = "nd_zweck"
+
+def create_payment_link(
     *,
     acct: str,
     currency: str,
@@ -525,7 +533,14 @@ def create_addon_payment_link(
     idempotency_key: str,
     client: StripeClient | None = None,
 ) -> dict[str, Any]:
-    """Zahlungslink für offene Zusatzleistungen — DIRECT CHARGE im Konto des Betriebs.
+    """Zahlungslink über einen Betrag — DIRECT CHARGE im Konto des Betriebs.
+
+    Zwei Zwecke teilen ihn: offene Zusatzleistungen (`addons/zahlung.py`, 0386)
+    und die Nachberechnung einer Website-Buchung
+    (`payments/nachberechnung.py`, 0469). Der Helfer kennt keinen von beiden —
+    er bekommt Betrag, Produktname, Provisionsanteil und Metadata. Deshalb heißt
+    er nicht mehr `create_addon_payment_link`: unter dem alten Namen hätte der
+    zweite Zweck seine eigene Kopie bekommen.
 
     Alle drei Aufrufe (Preis, Link) laufen mit ``stripe_account``-Header, der
     Charge entsteht also im verbundenen Konto: Das Geld wird dort gutgeschrieben

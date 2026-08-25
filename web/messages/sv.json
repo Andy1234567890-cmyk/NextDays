@@ -4458,7 +4458,10 @@
         "guestChanged": "Kunduppgifter ändrade",
         "addonMarkedPaid": "Tilläggstjänst markerad som betald",
         "addonUnmarkedPaid": "Betald-markeringen borttagen",
-        "addonCancelled": "Tilläggstjänst annullerad"
+        "addonCancelled": "Tilläggstjänst annullerad",
+        "surchargePaid": "Tilläggsavgift betald",
+        "surchargePaidManually": "Tilläggsavgift registrerad som betald",
+        "surchargeUnpaid": "Betald-markering ångrad"
       },
       "title": {
         "onProperty": " på {property}",
@@ -4487,7 +4490,8 @@
         "text": "Text",
         "amount": "Belopp",
         "type": "Typ",
-        "service": "Tjänst"
+        "service": "Tjänst",
+        "withdrawnReason": "Orsak till att ångra"
       }
     },
     "bookingDetail": {
@@ -4924,6 +4928,38 @@
       "keepPrice": "Behåll priset",
       "recalcPrice": "Räkna om priset",
       "saving": "Ändrar…"
+    },
+    "nachberechnung": {
+      "titel": "Tilläggsdebitering",
+      "offen": "Kvar att betala: {amount}",
+      "erklaerung": "Om vistelsen blev dyrare i efterhand kan gästen betala mellanskillnaden med kort via en betalningslänk. Pengarna går direkt till ditt Stripe-konto — utan provision.",
+      "betragLabel": "Belopp ({currency})",
+      "grundLabel": "Anledning",
+      "grundPlatzhalter": "t.ex. förlängning med 2 nätter",
+      "linkErstellen": "Skapa betalningslänk",
+      "linkErstellenBusy": "Skapar …",
+      "linkOffen": "Öppen betalningslänk på {amount} — {grund}",
+      "betragVeraltet": "Bokningsbeloppet har ändrats sedan länken skapades. Kontrollera och skapa vid behov en ny länk.",
+      "linkKopieren": "Kopiera länk",
+      "linkKopiert": "Betalningslänk kopierad.",
+      "linkKopierenFehlgeschlagen": "Det gick inte att kopiera — länken visas bredvid.",
+      "perMailSenden": "Skicka via e-post",
+      "mailVersandt": "Gästen har fått betalningslänken via e-post.",
+      "linkZurueckziehen": "Dra tillbaka",
+      "linkZurueckgezogen": "Betalningslänken har dragits tillbaka.",
+      "betragUngueltig": "Ange ett belopp större än 0.",
+      "grundFehlt": "Ange en anledning (minst 3 tecken).",
+      "alsBezahltMarkieren": "Markera som betald",
+      "alsBezahltErfolg": "Tilläggsavgiften är registrerad som betald.",
+      "bezahltErfassen": "Registrera som betald",
+      "bezahltTitel": "Betald",
+      "herkunftManuell": "bekräftad manuellt",
+      "herkunftKarte": "med kort",
+      "ruecknahme": "Ångra betald-markering",
+      "ruecknahmeGrundLabel": "Orsak till att ångra",
+      "ruecknahmeGrundPlatzhalter": "t.ex. felaktigt registrerad",
+      "ruecknahmeBestaetigen": "Ångra",
+      "ruecknahmeErfolg": "Betald-markeringen har ångrats."
     }
   },
   "objects": {

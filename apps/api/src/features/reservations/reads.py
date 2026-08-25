@@ -1127,7 +1127,17 @@ class ReadsMixin(ReservationsBase):
     # aufheben. Beim Buchungs-Storno (`cancelled`) bleibt der Grund sichtbar —
     # dort ist er betriebliche Information, kein Betrag.
     _MONEY_REASON_KINDS = frozenset(
-        {"addon_marked_paid", "addon_unmarked_paid", "addon_cancelled"}
+        {
+            "addon_marked_paid",
+            "addon_unmarked_paid",
+            "addon_cancelled",
+            # Nachberechnung (0469/0470): `grund` benennt, WOFÜR nachberechnet
+            # wurde („Verlängerung um 2 Nächte"), `reason` bei der Rücknahme,
+            # warum der Betrag wieder wegfiel. Beide beschreiben einen Geldvorgang.
+            "surcharge_paid",
+            "surcharge_paid_manually",
+            "surcharge_unpaid",
+        }
     )
 
     @classmethod
@@ -1141,12 +1151,18 @@ class ReadsMixin(ReservationsBase):
         if mask.amounts:
             return detail
         redacted = dict(detail)
-        if kind in cls._MONEY_REASON_KINDS and "reason" in redacted:
-            redacted["reason"] = None
+        if kind in cls._MONEY_REASON_KINDS:
+            for freitext in ("reason", "grund"):
+                if freitext in redacted:
+                    redacted[freitext] = None
         # `total` tragen die Zusatzleistungs-Ereignisse (addons, 0397); ohne den
         # Schlüssel hier hätte Personal ohne Finanzeinblick den Betrag einer
         # stornierten Position in der Zeitleiste gelesen (§4.3).
-        for money_key in ("total_amount", "total"):
+        # `amount` tragen der synthetische payments-Eintrag und die
+        # Nachberechnungs-Ereignisse; `previous_total` das `repriced`-Ereignis
+        # (seit 0469). Ohne sie las Personal ohne Finanzeinblick den Betrag einer
+        # Zahlung bzw. den Preis VOR der Verlängerung aus der Zeitleiste (§4.3).
+        for money_key in ("total_amount", "total", "amount", "previous_total"):
             if money_key in redacted:
                 redacted[money_key] = None
         return redacted

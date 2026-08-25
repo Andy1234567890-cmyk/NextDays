@@ -4481,7 +4481,10 @@
         "guestChanged": "Gastdaten geändert",
         "addonMarkedPaid": "Zusatzleistung als bezahlt markiert",
         "addonUnmarkedPaid": "Bezahlt-Markierung zurückgenommen",
-        "addonCancelled": "Zusatzleistung storniert"
+        "addonCancelled": "Zusatzleistung storniert",
+        "surchargePaid": "Nachberechnung bezahlt",
+        "surchargePaidManually": "Nachberechnung als bezahlt vermerkt",
+        "surchargeUnpaid": "Bezahlt-Markierung zurückgenommen"
       },
       "title": {
         "onProperty": " auf {property}",
@@ -4510,7 +4513,8 @@
         "text": "Text",
         "amount": "Betrag",
         "type": "Art",
-        "service": "Leistung"
+        "service": "Leistung",
+        "withdrawnReason": "Grund der Rücknahme"
       }
     },
     "bookingDetail": {
@@ -5059,6 +5063,38 @@
       "keepPrice": "Preis behalten",
       "recalcPrice": "Preis neu berechnen",
       "saving": "Wird geändert…"
+    },
+    "nachberechnung": {
+      "titel": "Nachberechnung",
+      "offen": "Noch offen: {amount}",
+      "erklaerung": "Wurde der Aufenthalt nachträglich teurer, kann der Gast die Differenz per Zahlungslink mit Karte bezahlen. Das Geld geht direkt auf dein Stripe-Konto — provisionsfrei.",
+      "betragLabel": "Betrag ({currency})",
+      "grundLabel": "Grund",
+      "grundPlatzhalter": "z. B. Verlängerung um 2 Nächte",
+      "linkErstellen": "Zahlungslink erstellen",
+      "linkErstellenBusy": "Wird erstellt …",
+      "linkOffen": "Offener Zahlungslink über {amount} — {grund}",
+      "betragVeraltet": "Der Buchungsbetrag hat sich geändert, seit dieser Link erstellt wurde. Bitte prüfen und den Link gegebenenfalls neu erstellen.",
+      "linkKopieren": "Link kopieren",
+      "linkKopiert": "Zahlungslink kopiert.",
+      "linkKopierenFehlgeschlagen": "Kopieren nicht möglich — der Link steht daneben.",
+      "perMailSenden": "Per E-Mail senden",
+      "mailVersandt": "Der Gast hat den Zahlungslink per E-Mail erhalten.",
+      "linkZurueckziehen": "Zurückziehen",
+      "linkZurueckgezogen": "Der Zahlungslink ist zurückgezogen.",
+      "betragUngueltig": "Bitte einen Betrag größer als 0 eingeben.",
+      "grundFehlt": "Bitte einen Grund angeben (mindestens 3 Zeichen).",
+      "alsBezahltMarkieren": "Als bezahlt markieren",
+      "alsBezahltErfolg": "Die Nachberechnung ist als bezahlt vermerkt.",
+      "bezahltErfassen": "Als bezahlt erfassen",
+      "bezahltTitel": "Bezahlt",
+      "herkunftManuell": "von Hand bestätigt",
+      "herkunftKarte": "per Karte",
+      "ruecknahme": "Bezahlt-Markierung zurücknehmen",
+      "ruecknahmeGrundLabel": "Grund der Rücknahme",
+      "ruecknahmeGrundPlatzhalter": "z. B. falsch erfasst",
+      "ruecknahmeBestaetigen": "Zurücknehmen",
+      "ruecknahmeErfolg": "Die Bezahlt-Markierung ist zurückgenommen."
     }
   },
   "objects": {

@@ -18,10 +18,15 @@ from src.core.config import get_settings
 from src.core.logging import get_logger
 from src.core.security import AuthContext, get_current_user
 from src.core.supabase import get_service_client
-from src.features.auth.dependencies import require_permission
+from src.features.auth.dependencies import (
+    require_granular_permission,
+    require_permission,
+)
+from src.features.auth.granular_permissions import Permission
 from src.features.auth.permissions import Capability
 
 from .identity import IdentityService
+from .nachberechnung import NachberechnungService
 from .paypal_webhook import handle_paypal_event
 from .schemas import (
     BookingPaymentResult,
@@ -33,6 +38,10 @@ from .schemas import (
     ExternalAccountRequest,
     IdentityVerificationRequest,
     IdentityVerificationResponse,
+    NachberechnungBezahlt,
+    NachberechnungCreate,
+    NachberechnungLink,
+    NachberechnungStatus,
     PaymentsDiagnostics,
     PaymentSettings,
     PaymentSettingsResponse,
@@ -68,6 +77,27 @@ def get_identity_service() -> IdentityService:
 
 
 IdentityServiceDep = Annotated[IdentityService, Depends(get_identity_service)]
+
+
+def get_nachberechnung_service() -> NachberechnungService:
+    return NachberechnungService(service_client=get_service_client())
+
+
+NachberechnungServiceDep = Annotated[
+    NachberechnungService, Depends(get_nachberechnung_service)
+]
+# Wer den Zeitraum einer Buchung ändern darf, muss die Folge auch kassieren
+# können — die Nachberechnung ist der Gegenwert zur Verlängerung. Deshalb
+# MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS und NICHT die Finanz-Capability
+# MANAGE_BILLING: Betriebsfinanzen (Saldo, Auszahlungen) werden hier nicht
+# sichtbar, und die Rezeption soll den Link schicken können, ohne Einblick in
+# die Abrechnung des Betriebs zu bekommen (§4.3).
+_kalender = Annotated[
+    AuthContext, Depends(require_permission(Capability.MANAGE_CALENDAR))
+]
+_kalender_schreiben = Depends(
+    require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)
+)
 
 
 @router.get("/health", response_model=SliceHealth)
@@ -324,6 +354,155 @@ def refund_payment(
 
 
 # --- Stripe Webhook (kein JWT — via Stripe-Signatur gesichert) ----------------
+
+# --- Nachberechnung einer Website-Buchung (0469) ------------------------------
+#
+# Ein Aufenthalt wird nachträglich teurer (manuelle Verlängerung, Zusatzgast,
+# Schaden) und der Gast soll die Differenz per Karte zahlen. Der Charge läuft im
+# verbundenen Konto des Betriebs und ist provisionsfrei (0380). Nur für
+# `channel='website'` — bei OTA-Buchungen kassiert das Portal, bei `direct` ist
+# der Zahlweg außerhalb des Systems vereinbart.
+
+@router.get(
+    "/reservations/{reservation_id}/nachberechnung",
+    response_model=NachberechnungStatus,
+)
+def nachberechnung_lesen(
+    reservation_id: str,
+    service: NachberechnungServiceDep,
+    ctx: _kalender,
+) -> NachberechnungStatus:
+    """Stand der Nachberechnung: offener Betrag, Vorschlag, offener Link.
+
+    Ein Aufruf statt dreier, damit die Oberfläche den Knopf nicht aus mehreren
+    Quellen zusammenrät. Gleicht dabei mit Stripe ab, ob ein offener Link
+    inzwischen bezahlt wurde (Netz unter dem Webhook)."""
+    try:
+        return service.lesen(ctx, reservation_id)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/reservations/{reservation_id}/nachberechnung",
+    response_model=NachberechnungLink,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[_kalender_schreiben],
+)
+def nachberechnung_erstellen(
+    reservation_id: str,
+    req: NachberechnungCreate,
+    service: NachberechnungServiceDep,
+    ctx: _kalender,
+) -> NachberechnungLink:
+    """Zahlungslink über eine Nachberechnung erstellen.
+
+    Idempotent: ein offener Link mit demselben Betrag und Grund wird
+    zurückgegeben, statt einen zweiten zu erzeugen."""
+    try:
+        return service.erstellen(ctx, reservation_id, req)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/reservations/{reservation_id}/nachberechnung/senden",
+    response_model=NachberechnungLink,
+    dependencies=[_kalender_schreiben],
+)
+def nachberechnung_senden(
+    reservation_id: str,
+    service: NachberechnungServiceDep,
+    ctx: _kalender,
+) -> NachberechnungLink:
+    """Den offenen Zahlungslink per E-Mail an den Gast schicken (in seiner
+    Sprache, Marke myBestDays)."""
+    try:
+        return service.senden(ctx, reservation_id)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/reservations/{reservation_id}/nachberechnung/bezahlt",
+    response_model=NachberechnungLink,
+    dependencies=[_kalender_schreiben],
+)
+def nachberechnung_als_bezahlt(
+    reservation_id: str,
+    service: NachberechnungServiceDep,
+    ctx: _kalender,
+) -> NachberechnungLink:
+    """Den offenen Zahlungslink als bezahlt markieren (Gast hat bar/überwiesen).
+
+    Schließt den Link ZUERST bei Stripe, damit keine bezahlbare URL mit
+    demselben Betrag im Umlauf bleibt."""
+    try:
+        return service.als_bezahlt_markieren(ctx, reservation_id)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/reservations/{reservation_id}/nachberechnung/erfasst",
+    response_model=NachberechnungLink,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[_kalender_schreiben],
+)
+def nachberechnung_bezahlt_erfassen(
+    reservation_id: str,
+    req: NachberechnungCreate,
+    service: NachberechnungServiceDep,
+    ctx: _kalender,
+) -> NachberechnungLink:
+    """Eine bereits bezahlte Nachberechnung erfassen — ohne Zahlungslink.
+
+    Für den Fall, dass der Gast an der Rezeption gezahlt hat: dieselben
+    Schranken wie beim Link (Kanal, Währung, Betrag ≤ offen)."""
+    try:
+        return service.bezahlt_erfassen(ctx, reservation_id, req)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/reservations/{reservation_id}/nachberechnung/{link_id}/offen",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[_kalender_schreiben],
+)
+def nachberechnung_bezahlt_zuruecknehmen(
+    reservation_id: str,
+    link_id: str,
+    req: NachberechnungBezahlt,
+    service: NachberechnungServiceDep,
+    ctx: _kalender,
+) -> None:
+    """Eine fälschlich gesetzte Bezahlt-Markierung zurücknehmen (Grund Pflicht).
+
+    Nur bei manuellen Markierungen — eine über Stripe eingegangene Zahlung wird
+    erstattet, nicht umgedeutet."""
+    try:
+        service.bezahlt_zuruecknehmen(ctx, reservation_id, link_id, req.grund)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete(
+    "/reservations/{reservation_id}/nachberechnung",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[_kalender_schreiben],
+)
+def nachberechnung_zurueckziehen(
+    reservation_id: str,
+    service: NachberechnungServiceDep,
+    ctx: _kalender,
+) -> None:
+    """Offenen Zahlungslink zurückziehen (bei Stripe deaktivieren)."""
+    try:
+        service.zurueckziehen(ctx, reservation_id)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
 
 @router.post("/webhook", include_in_schema=False)
 async def stripe_webhook(

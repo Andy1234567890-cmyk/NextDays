@@ -133,6 +133,95 @@ def _to_cents(amount: float) -> int:
     return int(round(amount * 100))
 
 
+def connected_account(db: Client, tenant_id: str) -> str:
+    """Connected Account des Tenants — nur wenn er Zahlungen empfangen darf.
+
+    Modulfunktion, weil sie inzwischen zwei Wege brauchen: der Buchungs-/
+    Kautions-Pfad dieses Service und die Nachberechnung (`nachberechnung.py`,
+    0469). Eine zweite Abfrage dort hätte irgendwann die Prüfung auf
+    `stripe_charges_enabled` verloren — dann entstünden Zahlungslinks in einem
+    Konto, das noch offene Angaben bei Stripe hat, und der Gast läuft in einen
+    Fehler auf der Zahlseite.
+    """
+    prof = (
+        db.table("tenant_billing_profile")
+        .select("stripe_account_id, stripe_charges_enabled")
+        .eq("tenant_id", tenant_id)
+        .limit(1)
+        .execute()
+    ).data
+    acct = prof[0]["stripe_account_id"] if prof else None
+    enabled = bool(prof[0]["stripe_charges_enabled"]) if prof else False
+    if not acct or not enabled:
+        raise PaymentsError(
+            "Online-Zahlung nicht verfügbar (Konto nicht freigeschaltet).",
+            status_code=409,
+        )
+    return str(acct)
+
+
+def passe_restzahlung_an(
+    db: Client, *, reservation_id: str, total_amount: float, paid_amount: float
+) -> None:
+    """Geplante Restzahlung an einen geänderten Buchungsbetrag anpassen.
+
+    WURZEL 1 — der Gegenzustand, der bis 0469 fehlte: `reservations.move()` mit
+    `reprice=True` hebt `total_amount` an (Verlängerung, Zusatzgast), die bei der
+    Anzahlung angelegte `balance`-Zeile blieb aber auf dem ALTEN Betrag stehen —
+    `_schedule_balance` legt genau eine an und kehrt bei vorhandener Zeile sofort
+    zurück. Der stündliche Worker-Tick zog danach die alte, zu niedrige Summe
+    ein und die Differenz fiel niemandem auf: Buchung „bezahlt", Kasse zu wenig.
+    Umgekehrt (Verkürzung) hätte er zu viel eingezogen.
+
+    Gerechnet wird `total − bereits bezahlt`, also aus demselben Stand, den auch
+    der Lesepfad als „noch offen" ausweist (`reservations/reads.py`).
+
+    Angefasst wird NUR eine Zeile, die noch `scheduled` ist. `charging` läuft
+    gerade bei Stripe (ein Update mitten im Charge wäre eine zweite Wahrheit),
+    `done/failed/needs_action` sind abgeschlossene Zustände. Sinkt der Rest auf
+    0 oder darunter, entfällt die geplante Zahlung (`cancelled`, 0469) — sie
+    stehen zu lassen hieße, dass der Tick sie später doch noch einzieht.
+
+    Es wird KEINE Zeile neu angelegt: ohne gespeicherte Karte
+    (`stripe_customer_id`) könnte der Worker sie nie belasten, und eine
+    dauerhaft `scheduled` liegende Zahlung ohne Zahlweg wäre eine Attrappe
+    (Wurzel 4). Für solche Buchungen ist der Nachberechnungs-Link der Weg.
+    """
+    rows = (
+        db.table("payments")
+        .select("id, amount, scheduled_status")
+        .eq("reservation_id", reservation_id)
+        .eq("type", "balance")
+        .eq("scheduled_status", "scheduled")
+        .limit(1)
+        .execute()
+    ).data or []
+    if not rows:
+        return
+    zeile = rows[0]
+    rest = round(float(total_amount or 0) - float(paid_amount or 0), 2)
+    if rest <= 0:
+        felder: dict[str, object] = {"scheduled_status": "cancelled"}
+    elif abs(rest - float(zeile.get("amount") or 0)) < 0.005:
+        return  # unverändert — kein Schreibvorgang, kein Log-Rauschen
+    else:
+        felder = {"amount": rest}
+    (
+        db.table("payments")
+        .update(felder)
+        .eq("id", zeile["id"])
+        .eq("scheduled_status", "scheduled")
+        .execute()
+    )
+    log.info(
+        "geplante_restzahlung_angepasst",
+        reservation_id=reservation_id,
+        payment_id=str(zeile["id"]),
+        alt=float(zeile.get("amount") or 0),
+        neu=rest,
+    )
+
+
 
 
 def _quadratisch(content: bytes) -> bytes:
@@ -983,21 +1072,7 @@ class PaymentsService:
 
     def _connected_account(self, db: Client, tenant_id: str) -> str:
         """Connected Account des Tenants — nur wenn er Zahlungen empfangen darf."""
-        prof = (
-            db.table("tenant_billing_profile")
-            .select("stripe_account_id, stripe_charges_enabled")
-            .eq("tenant_id", tenant_id)
-            .limit(1)
-            .execute()
-        ).data
-        acct = prof[0]["stripe_account_id"] if prof else None
-        enabled = bool(prof[0]["stripe_charges_enabled"]) if prof else False
-        if not acct or not enabled:
-            raise PaymentsError(
-                "Online-Zahlung nicht verfügbar (Konto nicht freigeschaltet).",
-                status_code=409,
-            )
-        return acct
+        return connected_account(db, tenant_id)
 
     def _merchant_descriptor(self, db: Client, tenant_id: str) -> str | None:
         """Name des Händlers für die Kartenabrechnung (Stripe statement descriptor).

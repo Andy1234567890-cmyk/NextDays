@@ -87,7 +87,7 @@ class _StripeFake:
 def _stripe(monkeypatch: pytest.MonkeyPatch) -> _StripeFake:
     fake = _StripeFake()
     monkeypatch.setattr(
-        z.sc, "create_addon_payment_link", lambda **kw: fake.create(**kw)
+        z.sc, "create_payment_link", lambda **kw: fake.create(**kw)
     )
     monkeypatch.setattr(
         z.sc, "deactivate_payment_link", lambda lid, **kw: fake.deactivate(lid, **kw)

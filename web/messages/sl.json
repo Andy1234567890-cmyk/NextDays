@@ -4458,7 +4458,10 @@
         "guestChanged": "Podatki o gostu spremenjeni",
         "addonMarkedPaid": "Dodatna storitev označena kot plačana",
         "addonUnmarkedPaid": "Oznaka »plačano« preklicana",
-        "addonCancelled": "Dodatna storitev preklicana"
+        "addonCancelled": "Dodatna storitev preklicana",
+        "surchargePaid": "Doplačilo plačano",
+        "surchargePaidManually": "Doplačilo označeno kot plačano",
+        "surchargeUnpaid": "Oznaka plačano preklicana"
       },
       "title": {
         "onProperty": " na {property}",
@@ -4487,7 +4490,8 @@
         "text": "Besedilo",
         "amount": "Znesek",
         "type": "Vrsta",
-        "service": "Storitev"
+        "service": "Storitev",
+        "withdrawnReason": "Razlog preklica"
       }
     },
     "bookingDetail": {
@@ -4924,6 +4928,38 @@
       "keepPrice": "Ohrani ceno",
       "recalcPrice": "Preračunaj ceno",
       "saving": "Spreminjanje…"
+    },
+    "nachberechnung": {
+      "titel": "Doplačilo",
+      "offen": "Še odprto: {amount}",
+      "erklaerung": "Če je bivanje naknadno postalo dražje, lahko gost razliko plača s kartico prek plačilne povezave. Denar gre neposredno na tvoj Stripe račun — brez provizije.",
+      "betragLabel": "Znesek ({currency})",
+      "grundLabel": "Razlog",
+      "grundPlatzhalter": "npr. podaljšanje za 2 noči",
+      "linkErstellen": "Ustvari plačilno povezavo",
+      "linkErstellenBusy": "Ustvarjanje …",
+      "linkOffen": "Odprta plačilna povezava za {amount} — {grund}",
+      "betragVeraltet": "Znesek rezervacije se je od ustvarjanja te povezave spremenil. Preveri in po potrebi ustvari novo povezavo.",
+      "linkKopieren": "Kopiraj povezavo",
+      "linkKopiert": "Plačilna povezava kopirana.",
+      "linkKopierenFehlgeschlagen": "Kopiranje ni mogoče — povezava je prikazana poleg.",
+      "perMailSenden": "Pošlji po e-pošti",
+      "mailVersandt": "Gost je prejel plačilno povezavo po e-pošti.",
+      "linkZurueckziehen": "Umakni",
+      "linkZurueckgezogen": "Plačilna povezava je bila umaknjena.",
+      "betragUngueltig": "Vnesi znesek, večji od 0.",
+      "grundFehlt": "Navedi razlog (najmanj 3 znaki).",
+      "alsBezahltMarkieren": "Označi kot plačano",
+      "alsBezahltErfolg": "Doplačilo je označeno kot plačano.",
+      "bezahltErfassen": "Zabeleži kot plačano",
+      "bezahltTitel": "Plačano",
+      "herkunftManuell": "potrjeno ročno",
+      "herkunftKarte": "s kartico",
+      "ruecknahme": "Prekliči oznako plačano",
+      "ruecknahmeGrundLabel": "Razlog preklica",
+      "ruecknahmeGrundPlatzhalter": "npr. napačno vneseno",
+      "ruecknahmeBestaetigen": "Prekliči",
+      "ruecknahmeErfolg": "Oznaka plačano je bila preklicana."
     }
   },
   "objects": {

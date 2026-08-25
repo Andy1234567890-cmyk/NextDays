@@ -4460,7 +4460,10 @@
         "guestChanged": "Kliendiandmeid muudetud",
         "addonMarkedPaid": "Lisateenus märgitud makstuks",
         "addonUnmarkedPaid": "Makstuks märkimine võetud tagasi",
-        "addonCancelled": "Lisateenus tühistatud"
+        "addonCancelled": "Lisateenus tühistatud",
+        "surchargePaid": "Lisaarve tasutud",
+        "surchargePaidManually": "Lisaarve märgitud tasutuks",
+        "surchargeUnpaid": "Tasutud märge tühistatud"
       },
       "title": {
         "onProperty": " objektil {property}",
@@ -4489,7 +4492,8 @@
         "text": "Tekst",
         "amount": "Summa",
         "type": "Liik",
-        "service": "Teenus"
+        "service": "Teenus",
+        "withdrawnReason": "Tühistamise põhjus"
       }
     },
     "bookingDetail": {
@@ -4926,6 +4930,38 @@
       "keepPrice": "Säilita hind",
       "recalcPrice": "Arvuta hind uuesti",
       "saving": "Salvestamine…"
+    },
+    "nachberechnung": {
+      "titel": "Lisaarve",
+      "offen": "Veel tasumata: {amount}",
+      "erklaerung": "Kui viibimine läks hiljem kallimaks, saab külaline vahe tasuda kaardiga makselingi kaudu. Raha läheb otse sinu Stripe kontole — ilma vahendustasuta.",
+      "betragLabel": "Summa ({currency})",
+      "grundLabel": "Põhjus",
+      "grundPlatzhalter": "nt pikendus 2 öö võrra",
+      "linkErstellen": "Loo makselink",
+      "linkErstellenBusy": "Loomine …",
+      "linkOffen": "Avatud makselink summale {amount} — {grund}",
+      "betragVeraltet": "Broneeringu kogusumma on pärast selle lingi loomist muutunud. Palun kontrolli ja vajadusel loo uus link.",
+      "linkKopieren": "Kopeeri link",
+      "linkKopiert": "Makselink kopeeritud.",
+      "linkKopierenFehlgeschlagen": "Kopeerimine ei õnnestunud — link on kuvatud kõrval.",
+      "perMailSenden": "Saada e-postiga",
+      "mailVersandt": "Külaline sai makselingi e-postiga.",
+      "linkZurueckziehen": "Tühista",
+      "linkZurueckgezogen": "Makselink on tühistatud.",
+      "betragUngueltig": "Palun sisesta summa, mis on suurem kui 0.",
+      "grundFehlt": "Palun sisesta põhjus (vähemalt 3 tähemärki).",
+      "alsBezahltMarkieren": "Märgi tasutuks",
+      "alsBezahltErfolg": "Lisaarve on märgitud tasutuks.",
+      "bezahltErfassen": "Kanna tasutuna",
+      "bezahltTitel": "Tasutud",
+      "herkunftManuell": "kinnitatud käsitsi",
+      "herkunftKarte": "kaardiga",
+      "ruecknahme": "Tühista tasutud märge",
+      "ruecknahmeGrundLabel": "Tühistamise põhjus",
+      "ruecknahmeGrundPlatzhalter": "nt sisestati ekslikult",
+      "ruecknahmeBestaetigen": "Tühista",
+      "ruecknahmeErfolg": "Tasutud märge on tühistatud."
     }
   },
   "objects": {

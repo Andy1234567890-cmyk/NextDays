@@ -63,6 +63,7 @@ class _Buckets:
         self.mfa_status = parse_limit(settings.rate_limit_mfa_status)
         self.public_support = parse_limit(settings.rate_limit_public_support)
         self.einladung_resend = parse_limit(settings.rate_limit_einladung_resend)
+        self.nachberechnung = parse_limit(settings.rate_limit_nachberechnung)
 
 
 def _is_exempt(path: str) -> bool:
@@ -177,7 +178,22 @@ _AUTH_PUBLIC_PATHS = (
 _EINLADUNG_RESEND_PATHS = (
     "/invite/",
     "/portalzugang/erneut-senden",
+    # Zahlungslink einer Nachberechnung an den GAST mailen (0469). Derselbe
+    # Grund wie oben: der Aufruf befüllt ein fremdes Postfach, und die Bremse
+    # darf nicht nur am Zielkonto hängen. Der payments-Bucket (30/60) greift
+    # zwar auch — diese Regel steht davor und ist strenger (10/60), weil hier
+    # nicht Stripe die Last trägt, sondern unsere Absenderdomain die
+    # Reputation.
+    "/nachberechnung/senden",
 )
+
+# Nachberechnung einer Website-Buchung (0469). Eigener Bucket, weil der
+# Lesepfad an der Buchungsdetailseite hängt und der payments-Bucket (30/60) für
+# EINEN gemeinsamen IP-Zähler aller Nutzer zu eng ist — Begründung an
+# `rate_limit_nachberechnung` in config.py. `/nachberechnung/senden` ist davon
+# ausgenommen: es steht in `_EINLADUNG_RESEND_PATHS`, dessen Regel VOR dieser
+# steht und mit 10/60 greift (fremdes Postfach).
+_NACHBERECHNUNG_PATHS = ("/nachberechnung",)
 
 # Token-Erneuerung. Eigener Bucket, gekeyt PRO NUTZER statt pro IP (siehe
 # `rate_limit_refresh` in config.py und `_subject_from_refresh_body`): das ist
@@ -298,6 +314,10 @@ _BUCKET_REGELN: tuple[tuple[str, tuple[str, ...], str, bool], ...] = (
     # im Login-Bucket. Der erste Treffer gewinnt.
     ("einladung_resend", _EINLADUNG_RESEND_PATHS, "einladung_resend", True),
     ("auth", _AUTH_PATHS, "auth", True),
+    # VOR "payments": die Nachberechnungs-Pfade beginnen mit /payments/ und
+    # lägen sonst im engeren payments-Bucket (s. _NACHBERECHNUNG_PATHS).
+    # NACH "einladung_resend", damit `/nachberechnung/senden` dort bleibt.
+    ("nachberechnung", _NACHBERECHNUNG_PATHS, "nachberechnung", False),
     ("payments", ("/payments/",), "payments", True),
     ("public_support", _PUBLIC_SUPPORT_PATHS, "public_support", True),
     ("public_support", _NEWSLETTER_PATHS, "public_support", True),

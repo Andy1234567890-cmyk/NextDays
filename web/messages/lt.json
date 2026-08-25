@@ -4458,7 +4458,10 @@
         "guestChanged": "Kliento duomenys pakeisti",
         "addonMarkedPaid": "Papildoma paslauga pažymėta kaip apmokėta",
         "addonUnmarkedPaid": "Žyma „apmokėta“ atšaukta",
-        "addonCancelled": "Papildoma paslauga atšaukta"
+        "addonCancelled": "Papildoma paslauga atšaukta",
+        "surchargePaid": "Papildomas mokestis apmokėtas",
+        "surchargePaidManually": "Papildomas mokestis pažymėtas kaip apmokėtas",
+        "surchargeUnpaid": "Apmokėjimo žyma atšaukta"
       },
       "title": {
         "onProperty": " objekte {property}",
@@ -4487,7 +4490,8 @@
         "text": "Tekstas",
         "amount": "Suma",
         "type": "Tipas",
-        "service": "Paslauga"
+        "service": "Paslauga",
+        "withdrawnReason": "Atšaukimo priežastis"
       }
     },
     "bookingDetail": {
@@ -4924,6 +4928,38 @@
       "keepPrice": "Palikti kainą",
       "recalcPrice": "Perskaičiuoti kainą",
       "saving": "Keičiama…"
+    },
+    "nachberechnung": {
+      "titel": "Papildomas mokestis",
+      "offen": "Dar neapmokėta: {amount}",
+      "erklaerung": "Jei viešnagė vėliau pabrango, svečias skirtumą gali sumokėti kortele per mokėjimo nuorodą. Pinigai patenka tiesiai į jūsų Stripe sąskaitą — be komisinio mokesčio.",
+      "betragLabel": "Suma ({currency})",
+      "grundLabel": "Priežastis",
+      "grundPlatzhalter": "pvz., pratęsta 2 naktimis",
+      "linkErstellen": "Sukurti mokėjimo nuorodą",
+      "linkErstellenBusy": "Kuriama …",
+      "linkOffen": "Atvira mokėjimo nuoroda už {amount} — {grund}",
+      "betragVeraltet": "Rezervacijos suma pasikeitė nuo tada, kai buvo sukurta ši nuoroda. Patikrinkite ir, jei reikia, sukurkite naują nuorodą.",
+      "linkKopieren": "Kopijuoti nuorodą",
+      "linkKopiert": "Mokėjimo nuoroda nukopijuota.",
+      "linkKopierenFehlgeschlagen": "Nepavyko nukopijuoti — nuoroda rodoma šalia.",
+      "perMailSenden": "Siųsti el. paštu",
+      "mailVersandt": "Svečias gavo mokėjimo nuorodą el. paštu.",
+      "linkZurueckziehen": "Atšaukti",
+      "linkZurueckgezogen": "Mokėjimo nuoroda atšaukta.",
+      "betragUngueltig": "Įveskite didesnę nei 0 sumą.",
+      "grundFehlt": "Nurodykite priežastį (bent 3 simboliai).",
+      "alsBezahltMarkieren": "Pažymėti kaip apmokėtą",
+      "alsBezahltErfolg": "Papildomas mokestis pažymėtas kaip apmokėtas.",
+      "bezahltErfassen": "Registruoti kaip apmokėtą",
+      "bezahltTitel": "Apmokėta",
+      "herkunftManuell": "patvirtinta rankiniu būdu",
+      "herkunftKarte": "kortele",
+      "ruecknahme": "Atšaukti apmokėjimo žymą",
+      "ruecknahmeGrundLabel": "Atšaukimo priežastis",
+      "ruecknahmeGrundPlatzhalter": "pvz., įvesta per klaidą",
+      "ruecknahmeBestaetigen": "Atšaukti",
+      "ruecknahmeErfolg": "Apmokėjimo žyma atšaukta."
     }
   },
   "objects": {

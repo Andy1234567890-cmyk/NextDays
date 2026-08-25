@@ -4458,7 +4458,10 @@
         "guestChanged": "Dane gościa zmienione",
         "addonMarkedPaid": "Usługa dodatkowa oznaczona jako opłacona",
         "addonUnmarkedPaid": "Wycofano oznaczenie „opłacone”",
-        "addonCancelled": "Usługa dodatkowa anulowana"
+        "addonCancelled": "Usługa dodatkowa anulowana",
+        "surchargePaid": "Dopłata opłacona",
+        "surchargePaidManually": "Dopłata oznaczona jako opłacona",
+        "surchargeUnpaid": "Oznaczenie jako opłacone cofnięte"
       },
       "title": {
         "onProperty": " w obiekcie {property}",
@@ -4487,7 +4490,8 @@
         "text": "Tekst",
         "amount": "Kwota",
         "type": "Rodzaj",
-        "service": "Usługa"
+        "service": "Usługa",
+        "withdrawnReason": "Powód cofnięcia"
       }
     },
     "bookingDetail": {
@@ -4924,6 +4928,38 @@
       "keepPrice": "Zachowaj cenę",
       "recalcPrice": "Przelicz cenę",
       "saving": "Zmienianie…"
+    },
+    "nachberechnung": {
+      "titel": "Dopłata",
+      "offen": "Do zapłaty: {amount}",
+      "erklaerung": "Jeśli pobyt okazał się droższy, gość może dopłacić różnicę kartą przez link do płatności. Pieniądze trafiają bezpośrednio na Twoje konto Stripe — bez prowizji.",
+      "betragLabel": "Kwota ({currency})",
+      "grundLabel": "Powód",
+      "grundPlatzhalter": "np. przedłużenie o 2 noce",
+      "linkErstellen": "Utwórz link do płatności",
+      "linkErstellenBusy": "Tworzenie …",
+      "linkOffen": "Otwarty link do płatności na {amount} — {grund}",
+      "betragVeraltet": "Kwota rezerwacji zmieniła się od czasu utworzenia tego linku. Sprawdź i w razie potrzeby utwórz nowy link.",
+      "linkKopieren": "Kopiuj link",
+      "linkKopiert": "Link do płatności skopiowany.",
+      "linkKopierenFehlgeschlagen": "Kopiowanie niemożliwe — link jest widoczny obok.",
+      "perMailSenden": "Wyślij e-mailem",
+      "mailVersandt": "Gość otrzymał link do płatności e-mailem.",
+      "linkZurueckziehen": "Wycofaj",
+      "linkZurueckgezogen": "Link do płatności został wycofany.",
+      "betragUngueltig": "Podaj kwotę większą niż 0.",
+      "grundFehlt": "Podaj powód (co najmniej 3 znaki).",
+      "alsBezahltMarkieren": "Oznacz jako opłacone",
+      "alsBezahltErfolg": "Dopłata została oznaczona jako opłacona.",
+      "bezahltErfassen": "Zarejestruj jako opłacone",
+      "bezahltTitel": "Opłacone",
+      "herkunftManuell": "potwierdzone ręcznie",
+      "herkunftKarte": "kartą",
+      "ruecknahme": "Cofnij oznaczenie jako opłacone",
+      "ruecknahmeGrundLabel": "Powód cofnięcia",
+      "ruecknahmeGrundPlatzhalter": "np. wprowadzone przez pomyłkę",
+      "ruecknahmeBestaetigen": "Cofnij",
+      "ruecknahmeErfolg": "Oznaczenie jako opłacone zostało cofnięte."
     }
   },
   "objects": {

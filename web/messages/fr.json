@@ -4460,7 +4460,10 @@
         "guestChanged": "Données client modifiées",
         "addonMarkedPaid": "Option marquée comme payée",
         "addonUnmarkedPaid": "Mention payé annulée",
-        "addonCancelled": "Option annulée"
+        "addonCancelled": "Option annulée",
+        "surchargePaid": "Facture complémentaire payée",
+        "surchargePaidManually": "Facture complémentaire enregistrée comme payée",
+        "surchargeUnpaid": "Marquage payé annulé"
       },
       "title": {
         "onProperty": " sur {property}",
@@ -4489,7 +4492,8 @@
         "text": "Texte",
         "amount": "Montant",
         "type": "Type",
-        "service": "Prestation"
+        "service": "Prestation",
+        "withdrawnReason": "Motif de l'annulation"
       }
     },
     "bookingDetail": {
@@ -4926,6 +4930,38 @@
       "keepPrice": "Conserver le prix",
       "recalcPrice": "Recalculer le prix",
       "saving": "Modification en cours…"
+    },
+    "nachberechnung": {
+      "titel": "Facturation complémentaire",
+      "offen": "Encore dû : {amount}",
+      "erklaerung": "Si le séjour est devenu plus cher a posteriori, le client peut régler la différence par carte via un lien de paiement. L'argent est versé directement sur ton compte Stripe — sans commission.",
+      "betragLabel": "Montant ({currency})",
+      "grundLabel": "Motif",
+      "grundPlatzhalter": "p. ex. prolongation de 2 nuits",
+      "linkErstellen": "Créer un lien de paiement",
+      "linkErstellenBusy": "Création en cours…",
+      "linkOffen": "Lien de paiement ouvert pour {amount} — {grund}",
+      "betragVeraltet": "Le montant total de la réservation a changé depuis la création de ce lien. Vérifie-le et crée un nouveau lien si nécessaire.",
+      "linkKopieren": "Copier le lien",
+      "linkKopiert": "Lien de paiement copié.",
+      "linkKopierenFehlgeschlagen": "Copie impossible — le lien est affiché à côté.",
+      "perMailSenden": "Envoyer par e-mail",
+      "mailVersandt": "Le client a reçu le lien de paiement par e-mail.",
+      "linkZurueckziehen": "Retirer",
+      "linkZurueckgezogen": "Le lien de paiement a été retiré.",
+      "betragUngueltig": "Merci de saisir un montant supérieur à 0.",
+      "grundFehlt": "Merci d'indiquer un motif (3 caractères minimum).",
+      "alsBezahltMarkieren": "Marquer comme payé",
+      "alsBezahltErfolg": "La facture complémentaire est enregistrée comme payée.",
+      "bezahltErfassen": "Enregistrer comme payé",
+      "bezahltTitel": "Payé",
+      "herkunftManuell": "confirmé manuellement",
+      "herkunftKarte": "par carte",
+      "ruecknahme": "Annuler le marquage payé",
+      "ruecknahmeGrundLabel": "Motif de l'annulation",
+      "ruecknahmeGrundPlatzhalter": "par ex. saisie erronée",
+      "ruecknahmeBestaetigen": "Annuler",
+      "ruecknahmeErfolg": "Le marquage payé a été annulé."
     }
   },
   "objects": {

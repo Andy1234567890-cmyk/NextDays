@@ -1498,6 +1498,13 @@ doppelte Belastung). Add-ons/Upsells am OTA vorbei sind separat (addons-Slice).
 | `POST`  | `/api/v1/payments/deposit/{payment_id}/capture`    | MANAGE_BILLING — Kaution einziehen (Schaden)         |
 | `POST`  | `/api/v1/payments/deposit/{payment_id}/release`    | MANAGE_BILLING — Kaution freigeben                   |
 | `POST`  | `/api/v1/payments/{payment_id}/refund`             | MANAGE_BILLING — (Teil-)Erstattung                   |
+| `GET`   | `/api/v1/payments/reservations/{id}/nachberechnung` | MANAGE_CALENDAR — Stand: offener Betrag, Vorschlag aus dem letzten `repriced`-Ereignis, offene und bereits bezahlte Nachberechnungen (mit Stripe-Abgleich) |
+| `POST`  | `/api/v1/payments/reservations/{id}/nachberechnung` | MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS — Zahlungslink über eine Nachberechnung; `{amount, grund}`. NUR `channel='website'` (sonst 409), Betrag ≤ offen (sonst 422), provisionsfrei (0380), idempotent je Betrag+Grund |
+| `POST`  | `/api/v1/payments/reservations/{id}/nachberechnung/senden` | MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS — Link per Mail an den Gast (seine Sprache, Marke myBestDays); eigener Rate-Limit-Bucket 10/60 |
+| `POST`  | `/api/v1/payments/reservations/{id}/nachberechnung/bezahlt` | MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS — offenen Link als bezahlt markieren (Gast hat bar/überwiesen); deaktiviert ihn zuerst bei Stripe |
+| `POST`  | `/api/v1/payments/reservations/{id}/nachberechnung/erfasst` | MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS — bereits bezahlte Nachberechnung OHNE Link erfassen; `{amount, grund}` |
+| `POST`  | `/api/v1/payments/reservations/{id}/nachberechnung/{link_id}/offen` | MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS — manuelle Bezahlt-Markierung zurücknehmen, `{grund}` Pflicht. Nur bei `paid_manually`, nicht bei festgeschriebener Rechnung (GoBD) |
+| `DELETE`| `/api/v1/payments/reservations/{id}/nachberechnung` | MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS — offenen Link zurückziehen (bei Stripe deaktivieren) |
 | `POST`  | `/api/v1/payments/webhook`                         | Stripe-Signatur (kein JWT)                           |
 
 **Kaution** = manual-capture PaymentIntent über `properties.deposit_amount`.

@@ -4458,7 +4458,10 @@
         "guestChanged": "Dejta tal-klijent mibdula",
         "addonMarkedPaid": "Servizz addizzjonali mmarkat bħala mħallas",
         "addonUnmarkedPaid": "Il-marka „mħallas” tneħħiet",
-        "addonCancelled": "Servizz addizzjonali kkanċellat"
+        "addonCancelled": "Servizz addizzjonali kkanċellat",
+        "surchargePaid": "Spiża addizzjonali mħallsa",
+        "surchargePaidManually": "Spiża addizzjonali rreġistrata bħala mħallsa",
+        "surchargeUnpaid": "Marka ta' ħlas irtirata"
       },
       "title": {
         "onProperty": " fuq {property}",
@@ -4487,7 +4490,8 @@
         "text": "Test",
         "amount": "Ammont",
         "type": "Tip",
-        "service": "Servizz"
+        "service": "Servizz",
+        "withdrawnReason": "Raġuni għall-irtirar"
       }
     },
     "bookingDetail": {
@@ -4924,6 +4928,38 @@
       "keepPrice": "Żomm il-prezz",
       "recalcPrice": "Erġa' ikkalkula l-prezz",
       "saving": "Qed jinbidel…"
+    },
+    "nachberechnung": {
+      "titel": "Ħlas addizzjonali",
+      "offen": "Għad fadal: {amount}",
+      "erklaerung": "Jekk is-soġġorn sar aktar għali wara, il-mistieden jista' jħallas id-differenza bil-karta permezz ta' link ta' ħlas. Il-flus imorru direttament fil-kont Stripe tiegħek — mingħajr kummissjoni.",
+      "betragLabel": "Ammont ({currency})",
+      "grundLabel": "Raġuni",
+      "grundPlatzhalter": "pereżempju, estiż b'2 iljieli",
+      "linkErstellen": "Oħloq link ta' ħlas",
+      "linkErstellenBusy": "Qed jinħoloq …",
+      "linkOffen": "Link ta' ħlas miftuħ għal {amount} — {grund}",
+      "betragVeraltet": "L-ammont tal-prenotazzjoni nbidel minn meta nħoloq dan il-link. Jekk jogħġbok iċċekkjah u, jekk meħtieġ, oħloq link ġdid.",
+      "linkKopieren": "Ikkopja l-link",
+      "linkKopiert": "Il-link ta' ħlas ġie kkopjat.",
+      "linkKopierenFehlgeschlagen": "Ma setax jiġi kkopjat — il-link jidher ħdejh.",
+      "perMailSenden": "Ibgħat bl-email",
+      "mailVersandt": "Il-mistieden irċieva l-link ta' ħlas bl-email.",
+      "linkZurueckziehen": "Irtira",
+      "linkZurueckgezogen": "Il-link ta' ħlas ġie rtirat.",
+      "betragUngueltig": "Jekk jogħġbok daħħal ammont akbar minn 0.",
+      "grundFehlt": "Jekk jogħġbok agħti raġuni (mill-inqas 3 karattri).",
+      "alsBezahltMarkieren": "Immarka bħala mħallas",
+      "alsBezahltErfolg": "L-ispiża addizzjonali ġiet irreġistrata bħala mħallsa.",
+      "bezahltErfassen": "Irreġistra bħala mħallas",
+      "bezahltTitel": "Imħallas",
+      "herkunftManuell": "ikkonfermat manwalment",
+      "herkunftKarte": "bil-karta",
+      "ruecknahme": "Irtira l-marka ta' ħlas",
+      "ruecknahmeGrundLabel": "Raġuni għall-irtirar",
+      "ruecknahmeGrundPlatzhalter": "eż. imdaħħal bi żball",
+      "ruecknahmeBestaetigen": "Irtira",
+      "ruecknahmeErfolg": "Il-marka ta' ħlas ġiet irtirata."
     }
   },
   "objects": {

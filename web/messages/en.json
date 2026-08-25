@@ -4481,7 +4481,10 @@
         "guestChanged": "Customer data changed",
         "addonMarkedPaid": "Add-on service marked as paid",
         "addonUnmarkedPaid": "Paid mark undone",
-        "addonCancelled": "Add-on service cancelled"
+        "addonCancelled": "Add-on service cancelled",
+        "surchargePaid": "Additional charge paid",
+        "surchargePaidManually": "Additional charge recorded as paid",
+        "surchargeUnpaid": "Paid mark undone"
       },
       "title": {
         "onProperty": " at {property}",
@@ -4510,7 +4513,8 @@
         "text": "Text",
         "amount": "Amount",
         "type": "Type",
-        "service": "Service"
+        "service": "Service",
+        "withdrawnReason": "Reason for undoing"
       }
     },
     "bookingDetail": {
@@ -4947,6 +4951,38 @@
       "keepPrice": "Keep price",
       "recalcPrice": "Recalculate price",
       "saving": "Saving…"
+    },
+    "nachberechnung": {
+      "titel": "Additional charge",
+      "offen": "Still outstanding: {amount}",
+      "erklaerung": "If the stay became more expensive after the fact, the guest can pay the difference by card via a payment link. The money goes straight to your Stripe account — no commission.",
+      "betragLabel": "Amount ({currency})",
+      "grundLabel": "Reason",
+      "grundPlatzhalter": "e.g. extended by 2 nights",
+      "linkErstellen": "Create payment link",
+      "linkErstellenBusy": "Creating …",
+      "linkOffen": "Open payment link for {amount} — {grund}",
+      "betragVeraltet": "The booking total has changed since this link was created. Please check it and create a new link if needed.",
+      "linkKopieren": "Copy link",
+      "linkKopiert": "Payment link copied.",
+      "linkKopierenFehlgeschlagen": "Could not copy — the link is shown next to it.",
+      "perMailSenden": "Send by email",
+      "mailVersandt": "The guest has received the payment link by email.",
+      "linkZurueckziehen": "Withdraw",
+      "linkZurueckgezogen": "The payment link has been withdrawn.",
+      "betragUngueltig": "Please enter an amount greater than 0.",
+      "grundFehlt": "Please give a reason (at least 3 characters).",
+      "alsBezahltMarkieren": "Mark as paid",
+      "alsBezahltErfolg": "The additional charge is recorded as paid.",
+      "bezahltErfassen": "Record as paid",
+      "bezahltTitel": "Paid",
+      "herkunftManuell": "confirmed manually",
+      "herkunftKarte": "by card",
+      "ruecknahme": "Undo paid mark",
+      "ruecknahmeGrundLabel": "Reason for undoing",
+      "ruecknahmeGrundPlatzhalter": "e.g. entered by mistake",
+      "ruecknahmeBestaetigen": "Undo",
+      "ruecknahmeErfolg": "The paid mark has been undone."
     }
   },
   "objects": {

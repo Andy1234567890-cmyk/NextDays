@@ -13,6 +13,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useState } from "react";
 
 import { ReservationAddonsSection } from "@/components/kalender/reservation-addons-section";
+import { NachberechnungAbschnitt } from "@/components/reservierungen/nachberechnung-abschnitt";
 import { BookingConditionsCard } from "@/components/reservierungen/booking-conditions-card";
 import { BookingDetailTabs } from "@/components/reservierungen/booking-detail-tabs";
 import { BookingGuestSheet } from "@/components/reservierungen/booking-guest-sheet";
@@ -52,6 +53,12 @@ const SendDocumentModal = dynamic(
     ),
   { ssr: false },
 );
+
+// Die FREMDEN Portale. `portal` (unser Marktplatz myBestDays) und `website`
+// (eigene Buchungsstrecke) gehören NICHT dazu — dort verkaufen und kassieren
+// wir selbst. Spiegelt `PaymentsService._OTA_CHANNELS` im Backend; wer hier
+// einen Kanal ergänzt, ergänzt ihn dort auch.
+const OTA_KANAELE = ["booking", "airbnb", "vrbo", "ota_other"];
 
 export function BookingDetail({ reservationId }: { reservationId: string }) {
   const t = useTranslations("reservations");
@@ -117,7 +124,14 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
   );
   const meta = channelMeta(data.channel as AvailabilitySource);
   const isCancelled = data.status === "cancelled";
-  const isOta = data.channel !== "direct";
+  // OTA heißt: ein FREMDES Portal hat verkauft und kassiert womöglich selbst.
+  // Vorher stand hier `channel !== "direct"` — damit galten auch `website`
+  // (eigene Buchungsstrecke) und `portal` (unser Marktplatz) als OTA, und eine
+  // Website-Buchung bekam im Zahlungsblock „Das Portal hat zur Zahlung nichts
+  // gemeldet" zu lesen. Es gibt dort kein Portal, das etwas melden könnte: das
+  // ist eine Falschaussage über Geld (Wurzel 4). Dieselbe Liste wie
+  // `istPortalBuchung` unten und wie `PaymentsService._OTA_CHANNELS`.
+  const isOta = OTA_KANAELE.includes(data.channel);
   // Eigentümer-Aufenthalt (0241): belegt den Kalender, ist aber kein Umsatz —
   // Zahlungen, Rechnung und Zusatzleistungen entfallen, weil es sie nicht gibt.
   const isOwnerStay = data.is_owner_stay;
@@ -129,9 +143,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
   // lokale Move hebt sie dort nicht auf und die Nächte würden doppelt verkauft.
   // `channel='portal'` (myBestDays) gehört NICHT dazu — der Marktplatz ist
   // unser eigener Kanal ohne Fremd-Bestand.
-  const istPortalBuchung = ["booking", "airbnb", "vrbo", "ota_other"].includes(
-    data.channel,
-  );
+  const istPortalBuchung = OTA_KANAELE.includes(data.channel);
   const zeitraumAenderbar =
     !isCancelled &&
     !istPortalBuchung &&
@@ -709,6 +721,17 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
               </>
             )}
           </Card>
+          )}
+
+          {/* Nachberechnung (0469): Der Aufenthalt wurde nachträglich teurer
+              (Verlängerung, Zusatzgast) und der Gast zahlt die Differenz per
+              Zahlungslink. Die Komponente zeigt sich nur, wenn das Backend den
+              Weg für diese Buchung erlaubt (nur eigene Website-Buchungen). */}
+          {!isCancelled && !isOwnerStay && (
+            <NachberechnungAbschnitt
+              reservationId={reservationId}
+              onChanged={d.reload}
+            />
           )}
 
           {/* Zusatzleistungen — bei einer Eigennutzung gibt es nichts zu verkaufen. */}

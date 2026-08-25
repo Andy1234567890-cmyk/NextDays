@@ -4460,7 +4460,10 @@
         "guestChanged": "Kundedata ændret",
         "addonMarkedPaid": "Tillægsydelse markeret som betalt",
         "addonUnmarkedPaid": "Markeringen betalt er fjernet",
-        "addonCancelled": "Tillægsydelse annulleret"
+        "addonCancelled": "Tillægsydelse annulleret",
+        "surchargePaid": "Efterberegning betalt",
+        "surchargePaidManually": "Efterberegning registreret som betalt",
+        "surchargeUnpaid": "Betalt-markering fortrudt"
       },
       "title": {
         "onProperty": " på {property}",
@@ -4489,7 +4492,8 @@
         "text": "Tekst",
         "amount": "Beløb",
         "type": "Type",
-        "service": "Ydelse"
+        "service": "Ydelse",
+        "withdrawnReason": "Årsag til fortrydelse"
       }
     },
     "bookingDetail": {
@@ -4926,6 +4930,38 @@
       "keepPrice": "Behold pris",
       "recalcPrice": "Genberegn pris",
       "saving": "Gemmer…"
+    },
+    "nachberechnung": {
+      "titel": "Efterregning",
+      "offen": "Stadig udestående: {amount}",
+      "erklaerung": "Hvis opholdet efterfølgende er blevet dyrere, kan gæsten betale differencen med kort via et betalingslink. Pengene går direkte til din Stripe-konto — uden provision.",
+      "betragLabel": "Beløb ({currency})",
+      "grundLabel": "Årsag",
+      "grundPlatzhalter": "f.eks. forlænget med 2 nætter",
+      "linkErstellen": "Opret betalingslink",
+      "linkErstellenBusy": "Opretter …",
+      "linkOffen": "Åbent betalingslink på {amount} — {grund}",
+      "betragVeraltet": "Bookingens samlede beløb er ændret, siden dette link blev oprettet. Tjek det, og opret evt. et nyt link.",
+      "linkKopieren": "Kopiér link",
+      "linkKopiert": "Betalingslink kopieret.",
+      "linkKopierenFehlgeschlagen": "Kunne ikke kopiere — linket vises ved siden af.",
+      "perMailSenden": "Send via e-mail",
+      "mailVersandt": "Gæsten har modtaget betalingslinket via e-mail.",
+      "linkZurueckziehen": "Træk tilbage",
+      "linkZurueckgezogen": "Betalingslinket er trukket tilbage.",
+      "betragUngueltig": "Indtast venligst et beløb større end 0.",
+      "grundFehlt": "Angiv venligst en årsag (mindst 3 tegn).",
+      "alsBezahltMarkieren": "Marker som betalt",
+      "alsBezahltErfolg": "Efterberegningen er registreret som betalt.",
+      "bezahltErfassen": "Registrer som betalt",
+      "bezahltTitel": "Betalt",
+      "herkunftManuell": "bekræftet manuelt",
+      "herkunftKarte": "med kort",
+      "ruecknahme": "Fortryd betalt-markering",
+      "ruecknahmeGrundLabel": "Årsag til fortrydelse",
+      "ruecknahmeGrundPlatzhalter": "f.eks. indtastet forkert",
+      "ruecknahmeBestaetigen": "Fortryd",
+      "ruecknahmeErfolg": "Betalt-markeringen er fortrudt."
     }
   },
   "objects": {

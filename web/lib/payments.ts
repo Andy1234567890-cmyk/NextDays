@@ -209,3 +209,124 @@ export async function setBankAccount(
   if (res.ok) revalidatePath("/konto");
   return res;
 }
+
+// --- Nachberechnung einer Website-Buchung (0469) -----------------------------
+//
+// Ein Aufenthalt wird nachträglich teurer (manuelle Verlängerung, Zusatzgast,
+// Schaden). Der Gast zahlt die Differenz über einen Stripe-Zahlungslink; der
+// Charge läuft im verbundenen Konto des Betriebs und ist provisionsfrei
+// (Website-Buchungen laufen nicht über die Plattform). Nur für
+// `channel === "website"` — das entscheidet das Backend, nicht die Oberfläche.
+
+export type NachberechnungLink = {
+  id: string;
+  reservation_id: string;
+  /** null bei einer direkt als bezahlt erfassten Nachberechnung (kein Link). */
+  url: string | null;
+  currency: string;
+  amount_cents: number;
+  application_fee_cents: number;
+  fee_bps: number;
+  status: "open" | "paid" | "cancelled";
+  grund: string;
+  /** true = der Betrieb hat die Zahlung von Hand bestätigt (bar/Überweisung);
+   *  false = per Stripe eingegangen. Nur eine manuelle Markierung lässt sich
+   *  zurücknehmen. */
+  bezahlt_manuell: boolean;
+  basis_total_amount: number;
+  /** Der Buchungsbetrag hat sich seit Erstellung des Links geändert — der Link
+   *  lautet auf einen veralteten Stand und sollte neu erstellt werden. */
+  betrag_veraltet: boolean;
+  paid_at: string | null;
+  created_at: string | null;
+};
+
+export type NachberechnungStatus = {
+  moeglich: boolean;
+  hinweis: string | null;
+  currency: string;
+  offen_amount: number | null;
+  vorschlag_amount: number | null;
+  link: NachberechnungLink | null;
+  /** Bereits bezahlte Nachberechnungen, neueste zuerst. */
+  bezahlt: NachberechnungLink[];
+};
+
+/** Stand der Nachberechnung: offener Betrag, Vorschlag, offener Link.
+ *  Gleicht serverseitig mit Stripe ab, ob inzwischen bezahlt wurde. */
+export async function getNachberechnung(
+  reservationId: string,
+): Promise<Result<NachberechnungStatus>> {
+  return call(
+    `/reservations/${encodeURIComponent(reservationId)}/nachberechnung`,
+  );
+}
+
+/** Zahlungslink über eine Nachberechnung erstellen (idempotent: gleicher
+ *  Betrag + gleicher Grund geben den bestehenden Link zurück). */
+export async function createNachberechnung(
+  reservationId: string,
+  betrag: number,
+  grund: string,
+): Promise<Result<NachberechnungLink>> {
+  return call(
+    `/reservations/${encodeURIComponent(reservationId)}/nachberechnung`,
+    { method: "POST", body: { amount: betrag, grund } },
+  );
+}
+
+/** Den offenen Zahlungslink per E-Mail an den Gast schicken (in seiner Sprache). */
+export async function sendNachberechnung(
+  reservationId: string,
+): Promise<Result<NachberechnungLink>> {
+  return call(
+    `/reservations/${encodeURIComponent(reservationId)}/nachberechnung/senden`,
+    { method: "POST" },
+  );
+}
+
+/** Offenen Zahlungslink zurückziehen (bei Stripe deaktivieren). */
+export async function deleteNachberechnung(
+  reservationId: string,
+): Promise<Result<null>> {
+  return call(
+    `/reservations/${encodeURIComponent(reservationId)}/nachberechnung`,
+    { method: "DELETE" },
+  );
+}
+
+/** Den offenen Zahlungslink als bezahlt markieren (Gast hat bar/überwiesen).
+ *  Schließt den Link zuerst bei Stripe, damit keine zweite Zahlung möglich ist. */
+export async function markNachberechnungBezahlt(
+  reservationId: string,
+): Promise<Result<NachberechnungLink>> {
+  return call(
+    `/reservations/${encodeURIComponent(reservationId)}/nachberechnung/bezahlt`,
+    { method: "POST" },
+  );
+}
+
+/** Eine bereits bezahlte Nachberechnung direkt erfassen — ohne Zahlungslink. */
+export async function erfasseNachberechnungBezahlt(
+  reservationId: string,
+  betrag: number,
+  grund: string,
+): Promise<Result<NachberechnungLink>> {
+  return call(
+    `/reservations/${encodeURIComponent(reservationId)}/nachberechnung/erfasst`,
+    { method: "POST", body: { amount: betrag, grund } },
+  );
+}
+
+/** Eine fälschlich gesetzte Bezahlt-Markierung zurücknehmen (Grund Pflicht).
+ *  Nur bei manuellen Markierungen — eine Stripe-Zahlung wird erstattet. */
+export async function nimmNachberechnungZurueck(
+  reservationId: string,
+  linkId: string,
+  grund: string,
+): Promise<Result<null>> {
+  return call(
+    `/reservations/${encodeURIComponent(reservationId)}/nachberechnung/${encodeURIComponent(linkId)}/offen`,
+    { method: "POST", body: { grund } },
+  );
+}

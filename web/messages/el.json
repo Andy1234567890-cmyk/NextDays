@@ -4460,7 +4460,10 @@
         "guestChanged": "Τα στοιχεία πελάτη άλλαξαν",
         "addonMarkedPaid": "Πρόσθετη υπηρεσία σημάνθηκε ως πληρωμένη",
         "addonUnmarkedPaid": "Η σήμανση «πληρωμένο» ανακλήθηκε",
-        "addonCancelled": "Πρόσθετη υπηρεσία ακυρώθηκε"
+        "addonCancelled": "Πρόσθετη υπηρεσία ακυρώθηκε",
+        "surchargePaid": "Πρόσθετη χρέωση πληρώθηκε",
+        "surchargePaidManually": "Πρόσθετη χρέωση καταγράφηκε ως πληρωμένη",
+        "surchargeUnpaid": "Η σήμανση πληρωμής αναιρέθηκε"
       },
       "title": {
         "onProperty": " στο {property}",
@@ -4489,7 +4492,8 @@
         "text": "Κείμενο",
         "amount": "Ποσό",
         "type": "Τύπος",
-        "service": "Υπηρεσία"
+        "service": "Υπηρεσία",
+        "withdrawnReason": "Λόγος αναίρεσης"
       }
     },
     "bookingDetail": {
@@ -4926,6 +4930,38 @@
       "keepPrice": "Διατήρηση τιμής",
       "recalcPrice": "Επανυπολογισμός τιμής",
       "saving": "Αποθήκευση…"
+    },
+    "nachberechnung": {
+      "titel": "Πρόσθετη χρέωση",
+      "offen": "Εκκρεμεί ακόμη: {amount}",
+      "erklaerung": "Αν η διαμονή έγινε πιο ακριβή εκ των υστέρων, ο επισκέπτης μπορεί να πληρώσει τη διαφορά με κάρτα μέσω συνδέσμου πληρωμής. Τα χρήματα πηγαίνουν απευθείας στον λογαριασμό σου στο Stripe — χωρίς προμήθεια.",
+      "betragLabel": "Ποσό ({currency})",
+      "grundLabel": "Αιτία",
+      "grundPlatzhalter": "π.χ. παράταση κατά 2 διανυκτερεύσεις",
+      "linkErstellen": "Δημιουργία συνδέσμου πληρωμής",
+      "linkErstellenBusy": "Δημιουργείται …",
+      "linkOffen": "Ανοιχτός σύνδεσμος πληρωμής για {amount} — {grund}",
+      "betragVeraltet": "Το συνολικό ποσό της κράτησης έχει αλλάξει από τότε που δημιουργήθηκε αυτός ο σύνδεσμος. Έλεγξέ το και δημιούργησε νέο σύνδεσμο αν χρειάζεται.",
+      "linkKopieren": "Αντιγραφή συνδέσμου",
+      "linkKopiert": "Ο σύνδεσμος πληρωμής αντιγράφηκε.",
+      "linkKopierenFehlgeschlagen": "Δεν ήταν δυνατή η αντιγραφή — ο σύνδεσμος εμφανίζεται δίπλα.",
+      "perMailSenden": "Αποστολή με e-mail",
+      "mailVersandt": "Ο επισκέπτης έλαβε τον σύνδεσμο πληρωμής μέσω e-mail.",
+      "linkZurueckziehen": "Απόσυρση",
+      "linkZurueckgezogen": "Ο σύνδεσμος πληρωμής έχει αποσυρθεί.",
+      "betragUngueltig": "Παρακαλώ εισάγετε ποσό μεγαλύτερο από 0.",
+      "grundFehlt": "Παρακαλώ δώστε μια αιτία (τουλάχιστον 3 χαρακτήρες).",
+      "alsBezahltMarkieren": "Σήμανση ως πληρωμένο",
+      "alsBezahltErfolg": "Η πρόσθετη χρέωση καταγράφηκε ως πληρωμένη.",
+      "bezahltErfassen": "Καταγραφή ως πληρωμένο",
+      "bezahltTitel": "Πληρωμένο",
+      "herkunftManuell": "επιβεβαιώθηκε χειροκίνητα",
+      "herkunftKarte": "με κάρτα",
+      "ruecknahme": "Αναίρεση σήμανσης πληρωμής",
+      "ruecknahmeGrundLabel": "Λόγος αναίρεσης",
+      "ruecknahmeGrundPlatzhalter": "π.χ. λανθασμένη καταχώριση",
+      "ruecknahmeBestaetigen": "Αναίρεση",
+      "ruecknahmeErfolg": "Η σήμανση πληρωμής αναιρέθηκε."
     }
   },
   "objects": {

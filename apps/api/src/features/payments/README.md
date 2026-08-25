@@ -72,7 +72,75 @@ Vertical Slice für Online-Zahlungen über **Stripe** (primäres Gateway) und
 | POST | `/deposit/{payment_id}/capture` | MANAGE_BILLING |
 | POST | `/deposit/{payment_id}/release` | MANAGE_BILLING |
 | POST | `/{payment_id}/refund` | MANAGE_BILLING |
+| GET | `/reservations/{reservation_id}/nachberechnung` | MANAGE_CALENDAR |
+| POST | `/reservations/{reservation_id}/nachberechnung` | MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS |
+| POST | `/reservations/{reservation_id}/nachberechnung/senden` | MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS |
+| POST | `/reservations/{reservation_id}/nachberechnung/bezahlt` | MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS |
+| POST | `/reservations/{reservation_id}/nachberechnung/erfasst` | MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS |
+| POST | `/reservations/{reservation_id}/nachberechnung/{link_id}/offen` | MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS |
+| DELETE | `/reservations/{reservation_id}/nachberechnung` | MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS |
 | POST | `/webhook` | Stripe-Signatur (kein JWT) |
+
+## Nachberechnung einer Website-Buchung (0469, `nachberechnung.py`)
+
+Ein Aufenthalt wird nachträglich teurer — der Regelfall ist die manuelle
+Verlängerung, bei der `reservations.move(reprice=True)` den Preis neu rechnet.
+Der Gast zahlt die Differenz über einen **Stripe Payment Link**.
+
+- **Nur `channel='website'`.** Bei einer OTA-Buchung kassiert das Portal (dort
+  wird auch verlängert), beim Marktplatz läuft die Zahlung über die eigene
+  Buchungsstrecke, bei `direct` (Telefon/vor Ort) ist der Zahlweg außerhalb des
+  Systems vereinbart. Ein gesetztes `source_channex_booking_id` sperrt zusätzlich
+  (fail-closed), auch wenn der Kanal `website` sagt.
+- **Provisionsfrei.** 0380: eine Buchung über die eigene Website läuft nicht
+  über uns. `application_fee_cents = 0`; der 5-%-Satz `tenants.addon_fee_bps`
+  gilt für Zusatzleistungen und wird hier NICHT herangezogen.
+- **Warum ein Link und kein off-session-Charge:** Der reale Anlass war eine aus
+  Lodgify übernommene Buchung — kein Stripe-Customer, keine gespeicherte Karte.
+  `charge_due_balance` kann dort nichts belasten.
+- **Betrag:** Client-Vorschlag, serverseitig gegen `total_amount − paid_amount`
+  geprüft (mehr → 422). Vorbelegung in der Oberfläche aus dem `repriced`-
+  Ereignis (`detail.previous_total`, seit 0469); fehlt es (Altbestand), gibt es
+  keinen Vorschlag statt einer erfundenen Zahl.
+- **Grund ist Pflicht** (3–500 Zeichen). Er ist der Produktname auf der
+  Stripe-Zahlseite und steht in der Mail an den Gast — kein Gastname dort.
+- **Gegenzustände (Wurzel 1):** `move()` und `cancel()` schließen einen offenen
+  Link VOR der Änderung (fail-closed, ein 502 bricht den Vorgang ab). Eine
+  bezahlte Nachberechnung erhöht `reservations.paid_amount` und zieht die
+  geplante Restzahlung nach (`passe_restzahlung_an`) — sonst zöge der
+  stündliche Worker-Tick den alten Betrag ein.
+- **Verbuchung:** `payments`-Zeile Typ `surcharge` mit der Checkout-Session als
+  `gateway_ref` (nicht dem PaymentIntent — sonst greift der
+  `payment_intent.succeeded`-Pfad und plant eine Auszahlung). Idempotent über
+  den Link-Claim (`status open → paid`) plus Unique-Index auf der Session.
+- **Zustellung:** `/senden` mailt den Link in der Sprache des Gastes unter der
+  Marke myBestDays. Eigener Rate-Limit-Bucket (10/60), weil der Aufruf ein
+  fremdes Postfach befüllt.
+### Bezahlt ohne Karte (0470)
+
+- **Sichtbarkeit:** `GET .../nachberechnung` liefert neben dem offenen Link die
+  Liste der bereits BEZAHLTEN Nachberechnungen (`bezahlt[]`, neueste zuerst) mit
+  Betrag, Grund, Zeitpunkt und Herkunft. Ohne sie verschwand nach der Zahlung
+  jede Spur: sichtbar blieb allein ein gestiegenes `paid_amount`.
+- **`/bezahlt`** markiert den offenen Link als bezahlt (Gast hat bar/überwiesen).
+  Reihenfolge: ZUERST bei Stripe deaktivieren, dann buchen — andernfalls nimmt
+  die URL weiter Geld an, während die Zahlung schon verbucht ist.
+- **`/erfasst`** legt eine bereits bezahlte Nachberechnung ohne Link an (Zahlung
+  an der Rezeption). Die Stripe-Spalten sind seit 0470 optional; ein CHECK
+  erzwingt alles-oder-nichts, ein zweiter, dass eine Zeile ohne Link nie `open`
+  ist (sie würde den „ein offener Link je Buchung"-Index blockieren).
+- **`/{link_id}/offen`** nimmt eine manuelle Bezahlt-Markierung zurück (Grund
+  Pflicht). NUR bei `paid_manually`: eine über Stripe eingegangene Zahlung ist
+  eine Tatsache und wird erstattet, nicht umgedeutet. Blockiert bei
+  festgeschriebener Rechnung (GoBD). Gegenzustand: Beleg wird gelöscht (es ist
+  kein Geld geflossen), `paid_amount` sinkt, geplante Restzahlung wird nachgezogen.
+- **Zeitleiste:** `surcharge_paid` (Stripe), `surcharge_paid_manually`,
+  `surcharge_unpaid` — mit Label und Symbol in `booking-timeline.tsx`. Beträge
+  (`amount`, `previous_total`) und die Freitexte (`grund`/`reason`) hängen an der
+  Betrags-Maske (§4.3), sonst läse Personal ohne Finanzeinblick sie mit.
+- **Diagnose:** `bash scripts/diagnose/nachberechnung-pruefen.sh` (read-only
+  gegen die Live-DB: unzulässige offene Links, veraltete Basisbeträge, bezahlte
+  Links ohne Beleg, falsche geplante Restzahlungen, Direktpfad/RLS).
 
 ## Konfiguration
 

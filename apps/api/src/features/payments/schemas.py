@@ -288,3 +288,92 @@ class IdentityVerificationResponse(BaseModel):
     """Nur die Stripe-Hosted-URL, auf die das Frontend weiterleitet."""
 
     url: str
+
+
+# --- Nachberechnung (0469) ---------------------------------------------------
+
+class NachberechnungCreate(BaseModel):
+    """Nachberechnung einer Website-Buchung, die der Gast per Link zahlt.
+
+    `amount` ist ein VORSCHLAG des Clients, nicht die Wahrheit: der Server prüft
+    ihn gegen den offenen Betrag der Buchung und lehnt alles darüber ab
+    (Wurzel 3). `grund` ist Pflicht — der Betrag steht später in der Mail an den
+    Gast, in der Zeitleiste und in der Rechnung, und eine Forderung ohne
+    Begründung ist dort nicht nachvollziehbar (dieselbe Regel wie beim
+    Addon-Storno, 0397). Freitext, weil die realen Gründe (Verlängerung,
+    Zusatzgast, Schaden, Vertragsänderung) nicht abschließend aufzählbar sind.
+    """
+
+    amount: float = Field(gt=0)
+    grund: str = Field(min_length=3, max_length=500)
+
+
+class NachberechnungBezahlt(BaseModel):
+    """Rücknahme einer manuellen Bezahlt-Markierung (0470).
+
+    Grund ist Pflicht: Der Betrag fällt aus `paid_amount`, aus der Rechnung und
+    aus der Eigentümer-Abrechnung heraus — dasselbe Muster wie beim
+    Addon-Storno (0397). Freitext, weil die realen Gründe (falsch erfasst,
+    Zahlung kam nicht an, Doppelerfassung) nicht abschließend aufzählbar sind.
+    """
+
+    grund: str = Field(min_length=3, max_length=500)
+
+
+class NachberechnungLink(BaseModel):
+    """Stripe-Zahlungslink über eine Nachberechnung.
+
+    Beträge in Cent (kleinste Einheit), damit nichts über Float-Rundung
+    verloren geht. `application_fee_cents` ist bei Website-Buchungen 0 — sie
+    sind provisionsfrei (0380); das Feld steht trotzdem am Beleg, damit der
+    historische Satz ablesbar bleibt.
+    """
+
+    id: str
+    reservation_id: str
+    # None bei einer Nachberechnung, die der Betrieb direkt als bezahlt erfasst
+    # hat (bar/Überweisung, 0470) — dafür entsteht kein Stripe-Link.
+    url: str | None = None
+    currency: str
+    amount_cents: int
+    application_fee_cents: int
+    fee_bps: int
+    status: str
+    grund: str
+    # true = der Betrieb hat die Zahlung von Hand bestätigt; false = per Stripe
+    # eingegangen. Nur eine manuelle Markierung lässt sich zurücknehmen.
+    bezahlt_manuell: bool = False
+    paid_at: str | None = None
+    created_at: str | None = None
+    # `total_amount` der Buchung bei Erstellung. Weicht es vom aktuellen Stand
+    # ab, wurde der Buchungsbetrag danach erneut geändert und der Link lautet
+    # auf einen veralteten Stand — die Oberfläche warnt dann (Wurzel 1).
+    basis_total_amount: float
+    betrag_veraltet: bool = False
+
+
+class NachberechnungStatus(BaseModel):
+    """Was die Buchungsansicht über die Nachberechnung wissen muss — in EINEM
+    Aufruf, damit die Oberfläche den Knopf nicht aus drei Quellen zusammenrät.
+
+    `moeglich=False` heißt: für diese Buchung gibt es diesen Weg nicht (falscher
+    Kanal, storniert, nichts offen). `hinweis` benennt den Grund im Klartext,
+    statt den Knopf ohne Erklärung auszugrauen.
+    """
+
+    moeglich: bool
+    hinweis: str | None = None
+    currency: str
+    # Offener Betrag der Buchung (total − bezahlt). None = nicht bestimmbar.
+    offen_amount: float | None = None
+    # Vorbelegung: die Differenz aus der letzten Preis-Neuberechnung. None,
+    # wenn sie sich nicht belegen lässt (Altbestand ohne `previous_total` am
+    # Ereignis) — dann bleibt das Feld leer, statt eine Zahl zu erfinden
+    # (Wurzel 4).
+    vorschlag_amount: float | None = None
+    link: NachberechnungLink | None = None
+    # Bereits bezahlte Nachberechnungen dieser Buchung, neueste zuerst. Ohne sie
+    # verschwand nach der Zahlung jede Spur aus der Buchungsansicht: sichtbar
+    # blieb allein ein gestiegenes `paid_amount`, dem niemand ansieht, wofür es
+    # gestiegen ist.
+    bezahlt: list[NachberechnungLink] = []

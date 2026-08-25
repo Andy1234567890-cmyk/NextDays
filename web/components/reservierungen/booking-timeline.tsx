@@ -56,6 +56,13 @@ const KIND_META: Record<
   addon_marked_paid: { icon: "ph:check-circle-fill", labelKey: "kind.addonMarkedPaid", tone: "text-success", cat: "payment" },
   addon_unmarked_paid: { icon: "ph:arrow-u-up-left", labelKey: "kind.addonUnmarkedPaid", tone: "text-foreground", cat: "payment" },
   addon_cancelled: { icon: "ph:x-circle-fill", labelKey: "kind.addonCancelled", tone: "text-destructive", cat: "payment" },
+  // Nachberechnung (0469/0470): der Aufenthalt wurde nachträglich teurer und der
+  // Gast hat die Differenz gezahlt — per Zahlungslink oder von Hand bestätigt.
+  // Beide getrennt, weil der Unterschied zählt: das eine belegt Stripe, das
+  // andere ist eine Aussage des Betriebs.
+  surcharge_paid: { icon: "ph:currency-circle-dollar-fill", labelKey: "kind.surchargePaid", tone: "text-success", cat: "payment" },
+  surcharge_paid_manually: { icon: "ph:hand-coins", labelKey: "kind.surchargePaidManually", tone: "text-success", cat: "payment" },
+  surcharge_unpaid: { icon: "ph:arrow-u-up-left", labelKey: "kind.surchargeUnpaid", tone: "text-foreground", cat: "payment" },
 };
 
 function useFilters(t: T): { key: Category; label: string }[] {
@@ -223,6 +230,17 @@ function cardRows(t: T, ev: TimelineEvent, currency: string, locale: string): [s
       push(t("bookingTimeline.row.service"), pickName(d.name));
       push(t("bookingTimeline.row.price"), money(d.total));
       push(t("bookingTimeline.row.reason"), s(d.reason));
+      break;
+    // Nachberechnung (0469/0470). `grund` ist die Nachberechnung selbst
+    // („Verlängerung um 2 Nächte"), `reason` bei der Rücknahme der Grund, warum
+    // die Bezahlt-Markierung wieder wegfiel — zwei verschiedene Aussagen, die
+    // beide in die Zeitleiste gehören.
+    case "surcharge_paid":
+    case "surcharge_paid_manually":
+    case "surcharge_unpaid":
+      push(t("bookingTimeline.row.amount"), money(d.amount));
+      push(t("bookingTimeline.row.reason"), s(d.grund));
+      push(t("bookingTimeline.row.withdrawnReason"), s(d.reason));
       break;
     default:
       break;

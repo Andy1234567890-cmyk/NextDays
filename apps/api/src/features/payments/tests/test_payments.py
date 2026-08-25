@@ -200,6 +200,10 @@ class _Q:
         self._store = store
         self._name = name
         self._eq: dict = {}
+        self._neq: dict = {}
+        self._is_null: list = []
+        self._not_null: list = []
+        self._negated = False
         self._payload = None
         self._op = "select"
 
@@ -231,6 +235,27 @@ class _Q:
         self._eq[c] = v
         return self
 
+    # neq / is_ / not_ braucht die Rechnungsprüfung der Nachberechnung
+    # (0470, `_pruefe_keine_rechnung`): sie fragt nach einer festgeschriebenen
+    # Rechnung (`invoice_number is not null`, `status != cancelled`,
+    # `deleted_at is null`). Ohne diese drei Methoden wirft der Fake einen
+    # AttributeError, und der Test hätte die Prüfung gar nicht erreicht.
+    def neq(self, c, v):  # noqa: ANN001, ANN201
+        self._neq[c] = v
+        return self
+
+    def is_(self, c, v):  # noqa: ANN001, ANN201
+        if str(v).lower() != "null":
+            raise NotImplementedError("Fake unterstützt nur is_(col, 'null')")
+        (self._not_null if self._negated else self._is_null).append(c)
+        self._negated = False
+        return self
+
+    @property
+    def not_(self):  # noqa: ANN201
+        self._negated = True
+        return self
+
     def order(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
         return self
 
@@ -255,7 +280,15 @@ class _Q:
                 return _Res([])
             rows.append(row)
             return _Res([row])
-        match = [r for r in rows if all(r.get(k) == v for k, v in self._eq.items())]
+        def passt(r) -> bool:  # noqa: ANN001
+            return (
+                all(r.get(k) == v for k, v in self._eq.items())
+                and all(r.get(k) != v for k, v in self._neq.items())
+                and all(r.get(k) is None for k in self._is_null)
+                and all(r.get(k) is not None for k in self._not_null)
+            )
+
+        match = [r for r in rows if passt(r)]
         if self._op == "update":
             for r in match:
                 r.update(self._payload)

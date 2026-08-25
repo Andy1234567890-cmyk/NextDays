@@ -4460,7 +4460,10 @@
         "guestChanged": "Podaci o gostu promijenjeni",
         "addonMarkedPaid": "Dodatna usluga označena kao plaćena",
         "addonUnmarkedPaid": "Oznaka „plaćeno” povučena",
-        "addonCancelled": "Dodatna usluga otkazana"
+        "addonCancelled": "Dodatna usluga otkazana",
+        "surchargePaid": "Doplata plaćena",
+        "surchargePaidManually": "Doplata označena kao plaćena",
+        "surchargeUnpaid": "Oznaka plaćeno poništena"
       },
       "title": {
         "onProperty": " na {property}",
@@ -4489,7 +4492,8 @@
         "text": "Tekst",
         "amount": "Iznos",
         "type": "Vrsta",
-        "service": "Usluga"
+        "service": "Usluga",
+        "withdrawnReason": "Razlog poništenja"
       }
     },
     "bookingDetail": {
@@ -4926,6 +4930,38 @@
       "keepPrice": "Zadrži cijenu",
       "recalcPrice": "Ponovno izračunaj cijenu",
       "saving": "Mijenja se…"
+    },
+    "nachberechnung": {
+      "titel": "Naknadni obračun",
+      "offen": "Još nepodmireno: {amount}",
+      "erklaerung": "Ako je boravak naknadno postao skuplji, gost može platiti razliku karticom putem poveznice za plaćanje. Novac ide izravno na tvoj Stripe račun — bez provizije.",
+      "betragLabel": "Iznos ({currency})",
+      "grundLabel": "Razlog",
+      "grundPlatzhalter": "npr. produženje za 2 noći",
+      "linkErstellen": "Izradi poveznicu za plaćanje",
+      "linkErstellenBusy": "Izrada u tijeku …",
+      "linkOffen": "Otvorena poveznica za plaćanje za {amount} — {grund}",
+      "betragVeraltet": "Ukupan iznos rezervacije promijenio se otkako je ova poveznica izrađena. Provjeri i po potrebi izradi novu poveznicu.",
+      "linkKopieren": "Kopiraj poveznicu",
+      "linkKopiert": "Poveznica za plaćanje kopirana.",
+      "linkKopierenFehlgeschlagen": "Kopiranje nije moguće — poveznica je prikazana pored.",
+      "perMailSenden": "Pošalji e-poštom",
+      "mailVersandt": "Gost je primio poveznicu za plaćanje e-poštom.",
+      "linkZurueckziehen": "Povuci",
+      "linkZurueckgezogen": "Poveznica za plaćanje je povučena.",
+      "betragUngueltig": "Unesi iznos veći od 0.",
+      "grundFehlt": "Navedi razlog (najmanje 3 znaka).",
+      "alsBezahltMarkieren": "Označi kao plaćeno",
+      "alsBezahltErfolg": "Doplata je označena kao plaćena.",
+      "bezahltErfassen": "Zabilježi kao plaćeno",
+      "bezahltTitel": "Plaćeno",
+      "herkunftManuell": "potvrđeno ručno",
+      "herkunftKarte": "karticom",
+      "ruecknahme": "Poništi oznaku plaćeno",
+      "ruecknahmeGrundLabel": "Razlog poništenja",
+      "ruecknahmeGrundPlatzhalter": "npr. pogrešno uneseno",
+      "ruecknahmeBestaetigen": "Poništi",
+      "ruecknahmeErfolg": "Oznaka plaćeno je poništena."
     }
   },
   "objects": {

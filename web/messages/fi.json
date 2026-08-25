@@ -4460,7 +4460,10 @@
         "guestChanged": "Asiakastietoja muutettu",
         "addonMarkedPaid": "Lisäpalvelu merkitty maksetuksi",
         "addonUnmarkedPaid": "Maksettu-merkintä poistettu",
-        "addonCancelled": "Lisäpalvelu peruttu"
+        "addonCancelled": "Lisäpalvelu peruttu",
+        "surchargePaid": "Lisälasku maksettu",
+        "surchargePaidManually": "Lisälasku merkitty maksetuksi",
+        "surchargeUnpaid": "Maksumerkintä peruttu"
       },
       "title": {
         "onProperty": " kohteessa {property}",
@@ -4489,7 +4492,8 @@
         "text": "Teksti",
         "amount": "Summa",
         "type": "Tyyppi",
-        "service": "Palvelu"
+        "service": "Palvelu",
+        "withdrawnReason": "Perumisen syy"
       }
     },
     "bookingDetail": {
@@ -4926,6 +4930,38 @@
       "keepPrice": "Säilytä hinta",
       "recalcPrice": "Laske hinta uudelleen",
       "saving": "Tallennetaan…"
+    },
+    "nachberechnung": {
+      "titel": "Lisälasku",
+      "offen": "Vielä avoinna: {amount}",
+      "erklaerung": "Jos oleskelu kallistui jälkikäteen, vieras voi maksaa erotuksen kortilla maksulinkin kautta. Raha menee suoraan Stripe-tilillesi — ilman provisiota.",
+      "betragLabel": "Summa ({currency})",
+      "grundLabel": "Syy",
+      "grundPlatzhalter": "esim. pidennys 2 yöllä",
+      "linkErstellen": "Luo maksulinkki",
+      "linkErstellenBusy": "Luodaan…",
+      "linkOffen": "Avoin maksulinkki summasta {amount} — {grund}",
+      "betragVeraltet": "Varauksen kokonaissumma on muuttunut sen jälkeen, kun tämä linkki luotiin. Tarkista tiedot ja luo tarvittaessa uusi linkki.",
+      "linkKopieren": "Kopioi linkki",
+      "linkKopiert": "Maksulinkki kopioitu.",
+      "linkKopierenFehlgeschlagen": "Kopiointi epäonnistui — linkki näkyy vieressä.",
+      "perMailSenden": "Lähetä sähköpostitse",
+      "mailVersandt": "Vieras on saanut maksulinkin sähköpostitse.",
+      "linkZurueckziehen": "Peruuta",
+      "linkZurueckgezogen": "Maksulinkki on peruutettu.",
+      "betragUngueltig": "Anna summa, joka on suurempi kuin 0.",
+      "grundFehlt": "Anna syy (vähintään 3 merkkiä).",
+      "alsBezahltMarkieren": "Merkitse maksetuksi",
+      "alsBezahltErfolg": "Lisälasku on merkitty maksetuksi.",
+      "bezahltErfassen": "Kirjaa maksetuksi",
+      "bezahltTitel": "Maksettu",
+      "herkunftManuell": "vahvistettu manuaalisesti",
+      "herkunftKarte": "kortilla",
+      "ruecknahme": "Peru maksumerkintä",
+      "ruecknahmeGrundLabel": "Perumisen syy",
+      "ruecknahmeGrundPlatzhalter": "esim. kirjattu virheellisesti",
+      "ruecknahmeBestaetigen": "Peru",
+      "ruecknahmeErfolg": "Maksumerkintä on peruttu."
     }
   },
   "objects": {
