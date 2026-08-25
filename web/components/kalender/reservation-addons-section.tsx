@@ -48,11 +48,23 @@ type Bestaetigung = "cancel" | "unpaid" | "refund";
 export function ReservationAddonsSection({
   reservationId,
   currency,
+  storniert = false,
   onChanged,
 }: {
   reservationId: string;
   // Währung der Reservierung (kann null sein, wenn keine hinterlegt ist).
   currency: string | null;
+  /** Die Buchung ist storniert (0473).
+   *
+   *  Dann wird NICHTS mehr verkauft — kein Katalog, kein Zahlungslink —, aber
+   *  die bestehenden Positionen bleiben sichtbar und erstattbar. Vorher war der
+   *  ganze Abschnitt bei stornierten Buchungen ausgeblendet („da gibt es nichts
+   *  zu verkaufen"), was für den VERKAUF richtig war und für schon
+   *  vereinnahmtes Geld falsch: Genau bei der stornierten Buchung 6179a5d0 lagen
+   *  150,00 DKK des Gastes im Verbundkonto, und der Erstatten-Knopf war
+   *  unerreichbar. Ein Weg, der nur dort fehlt, wo man ihn braucht, ist kein
+   *  Weg. */
+  storniert?: boolean;
   onChanged?: () => void;
 }) {
   const t = useTranslations("calendar");
@@ -309,15 +321,28 @@ export function ReservationAddonsSection({
     .reduce((s, p) => s + p.total, 0);
   const offeneAnzahl = purchased.filter((p) => p.status === "pending").length;
 
+  // Bei Storno wird die Liste auf das reduziert, was GELD getragen hat: bezahlte
+  // und erstattete Positionen. Eine stornierte Buchung braucht keine Aufstellung
+  // dessen, was nie bezahlt wurde — und die Summe der 150 DKK steht in der Karte
+  // „Zahlungsanforderung" schon als Transaktion. Hier bleibt nur, was noch eine
+  // Handlung erlaubt (Erstatten) oder eine bereits erfolgte belegt.
+  const sichtbar = storniert
+    ? purchased.filter((p) => p.status === "paid" || p.refunded_at)
+    : purchased;
+
+  // Nichts mit Geldbezug → kein Abschnitt. Sonst stünde bei jeder stornierten
+  // Buchung eine leere Karte, die nur Platz kostet.
+  if (storniert && sichtbar.length === 0) return null;
+
   return (
     <div className="rounded-(--radius) border p-3">
       <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         {t("reservationAddonsSection.title")}
       </p>
 
-      {purchased.length > 0 ? (
+      {sichtbar.length > 0 ? (
         <div className="mb-3 flex flex-col gap-2">
-          {purchased.map((p) => (
+          {sichtbar.map((p) => (
             <div key={p.id} className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between gap-2 text-sm">
                 <span className="flex min-w-0 items-center gap-2">
@@ -552,10 +577,15 @@ export function ReservationAddonsSection({
               )}
             </div>
           ))}
-          <div className="mt-1 flex justify-between border-t pt-1.5 text-sm font-semibold">
-            <span>{t("reservationAddonsSection.totalLabel")}</span>
-            <span>{money(total)}</span>
-          </div>
+          {/* Summe nur im laufenden Betrieb: bei Storno wäre sie die dritte
+              Wiederholung derselben Zahl (Karte „Zahlungen", Transaktionszeile
+              in „Zahlungsanforderung", hier). */}
+          {!storniert && (
+            <div className="mt-1 flex justify-between border-t pt-1.5 text-sm font-semibold">
+              <span>{t("reservationAddonsSection.totalLabel")}</span>
+              <span>{money(total)}</span>
+            </div>
+          )}
         </div>
       ) : (
         <p className="mb-3 text-sm text-muted-foreground">
@@ -566,7 +596,7 @@ export function ReservationAddonsSection({
       {/* Zahlungslink: Der Gast bezahlt die offenen Zusatzleistungen per Karte.
           Der Charge läuft im verbundenen Stripe-Konto des Betriebs, das Geld
           wird dort gutgeschrieben und über Konto → Abrechnung ausgezahlt. */}
-      {(offeneAnzahl > 0 || link) && (
+      {!storniert && (offeneAnzahl > 0 || link) && (
         <div className="mb-3 flex flex-col gap-2 rounded-(--radius) border border-border p-2.5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -638,7 +668,7 @@ export function ReservationAddonsSection({
           Die Menge steht daneben, weil sie bei „pro Gast" die Personenzahl IST:
           eine Buchung über 4 Personen bestellt oft nur 2 Wäschepakete. Sie wird
           mit der Gästezahl vorbelegt, sobald eine Leistung gewählt ist. */}
-      {catalog.length > 0 ? (
+      {storniert ? null : catalog.length > 0 ? (
         <div className="flex flex-wrap items-end gap-2">
           <label className="flex min-w-40 flex-1 flex-col gap-1">
             <span className="text-xs text-muted-foreground">

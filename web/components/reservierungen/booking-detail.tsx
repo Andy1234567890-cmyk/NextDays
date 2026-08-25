@@ -601,148 +601,6 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
             )}
           </Card>
 
-          {/* Zahlungen (..-Fortschrittsbalken) — beim Eigentümer-Aufenthalt
-              gibt es keine; die Karte entfällt komplett. */}
-          {!isOwnerStay && (
-          <Card className="flex flex-col gap-3 p-5">
-            <h2 className="font-display text-lg font-bold">
-              {t("bookingDetail.payments")}
-            </h2>
-            {total == null ? (
-              <p className="text-sm text-muted-foreground">
-                {t("bookingDetail.noAmountAccess")}
-              </p>
-            ) : !hatPreis ? (
-              // Ohne Preis gibt es keinen Zahlungsstand: ein Balken bei 0 von 0
-              // sähe aus wie „nichts bezahlt", obwohl nichts zu bezahlen ist.
-              <p className="text-sm text-muted-foreground">
-                {t("bookingDetail.noPriceInfo")}
-              </p>
-            ) : (
-              <>
-                <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
-                  <span>
-                    {t("bookingDetail.booking")}{" "}
-                    <span className="font-semibold">
-                      {money(total, data.currency)}
-                    </span>
-                    {zahlwegBekannt && paidPct != null && (
-                      <span className="text-muted-foreground"> · {paidPct}%</span>
-                    )}
-                  </span>
-                  <span className="text-muted-foreground">
-                    {/* Ohne gemeldeten Zahlweg keine „noch offen"-Aussage:
-                        das Portal hat zur Zahlung nichts geliefert. */}
-                    {zahlwegBekannt
-                      ? `${t("bookingDetail.stillDue", {
-                          amount: money(data.due_amount, data.currency),
-                        })} · ${t("bookingDetail.paidAmount", {
-                          amount: money(paid, data.currency),
-                        })}`
-                      : t("bookingDetail.paymentUnreported")}
-                  </span>
-                </div>
-                {zahlwegBekannt && (
-                  <div className="h-2.5 overflow-hidden rounded-full bg-secondary">
-                    <div
-                      className="h-full rounded-full bg-success transition-all"
-                      style={{ width: `${paidPct ?? 0}%` }}
-                    />
-                  </div>
-                )}
-
-                {/* Zahlungsweg des Portals (0240). Ohne diese Zeile fragt die
-                    Rezeption beim Gast nach, obwohl das Portal längst kassiert
-                    hat — oder sie kassiert nicht, obwohl sie müsste. */}
-                {data.payment_collect ? (
-                  <p className="flex flex-wrap items-center gap-2 rounded-(--radius) bg-secondary/60 p-3 text-sm">
-                    <Icon
-                      icon={
-                        data.payment_collect === "ota"
-                          ? "ph:check-circle"
-                          : "ph:hand-coins"
-                      }
-                      className="size-4 shrink-0 text-muted-foreground"
-                    />
-                    <span>
-                      {t(`bookingDetail.paymentCollect.${data.payment_collect}`)}
-                      {data.payment_method_ota
-                        ? ` · ${t(`bookingDetail.paymentMethod.${data.payment_method_ota}`)}`
-                        : ""}
-                    </span>
-                  </p>
-                ) : null}
-
-                {/* Portalprovision + vom Portal einbehaltene Steuern: der
-                    Unterschied zwischen Umsatz und Erlös. Die Auszahlung ist
-                    Brutto − Provision − einbehaltene Steuern — ohne die
-                    Steuern wäre sie zu hoch (Booking behält z. B. City Tax
-                    direkt ein). */}
-                {data.ota_commission != null ||
-                data.ota_withheld_taxes != null ? (
-                  <div className="space-y-1 text-sm">
-                    {data.ota_commission != null ? (
-                      <p className="flex flex-wrap items-baseline justify-between gap-2">
-                        <span className="text-muted-foreground">
-                          {t("bookingDetail.otaCommission")}
-                        </span>
-                        <span className="font-semibold">
-                          −{money(data.ota_commission, data.currency)}
-                        </span>
-                      </p>
-                    ) : null}
-                    {data.ota_withheld_taxes != null ? (
-                      <p className="flex flex-wrap items-baseline justify-between gap-2">
-                        <span className="text-muted-foreground">
-                          {t("bookingDetail.withheldTaxes")}
-                        </span>
-                        <span className="font-semibold">
-                          −{money(data.ota_withheld_taxes, data.currency)}
-                        </span>
-                      </p>
-                    ) : null}
-                    {/* Auszahlung nur mit gemeldeter Provision — ohne sie wäre
-                        jeder Betrag erfunden (Provision null heißt „nicht
-                        geliefert", nicht 0). */}
-                    {data.ota_commission != null ? (
-                      <p className="flex flex-wrap items-baseline justify-end gap-2 text-muted-foreground">
-                        {t("bookingDetail.netPayout", {
-                          amount: money(
-                            total -
-                              data.ota_commission -
-                              (data.ota_withheld_taxes ?? 0),
-                            data.currency,
-                          ),
-                        })}
-                      </p>
-                    ) : null}
-                  </div>
-                ) : null}
-              </>
-            )}
-          </Card>
-          )}
-
-          {/* Nachberechnung (0469): Der Aufenthalt wurde nachträglich teurer
-              (Verlängerung, Zusatzgast) und der Gast zahlt die Differenz per
-              Zahlungslink. Die Komponente zeigt sich nur, wenn das Backend den
-              Weg für diese Buchung erlaubt (nur eigene Website-Buchungen). */}
-          {!isCancelled && !isOwnerStay && (
-            <NachberechnungAbschnitt
-              reservationId={reservationId}
-              onChanged={d.reload}
-            />
-          )}
-
-          {/* Zusatzleistungen — bei einer Eigennutzung gibt es nichts zu verkaufen. */}
-          {!isCancelled && !isOwnerStay && (
-            <Card className="p-5">
-              <ReservationAddonsSection
-                reservationId={reservationId}
-                currency={data.currency}
-              />
-            </Card>
-          )}
 
           {/* Rechnungsstellung als eigene Karte (..-Struktur). Sie stand
               vorher als Fußzeile in der Kostenaufteilung — dort sucht sie
@@ -826,9 +684,19 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
               (0384). Unsere eigene Kondition darunter gilt für Direktbuchungen. */}
           {!isOwnerStay && <BookingOtaTermsCard data={data} />}
 
-          {/* Buchungskonditionen + Zahlungsplan/Transaktionen (..-
-              Karten „Buchungskonditionen" und „Zahlungsanforderung"). Bei einer
-              Eigennutzung gibt es keine Kondition und kein Geld. */}
+          {/* EINE Geldkarte (25.08.2026). Vorher standen hier vier Karten mit
+              denselben Beträgen: „Zahlungen" (Fortschritt),
+              „Zahlungsanforderung" (Plan + Transaktionen), „Zusatzleistungen"
+              und „Nachberechnung". Dieselben 150,00 DKK erschienen dreimal auf
+              der Seite; beim Storno fiel es auf.
+
+              Zusammengelegt über die Slots von BookingConditionsCard und nicht
+              durch Verschieben: Plan und Transaktionen kommen aus DEM EINEN
+              Abruf dieser Komponente. Ein zweites Rendern hätte den Abruf
+              verdoppelt und könnte kurzzeitig zwei verschiedene Beträge zeigen.
+
+              Die Karte „Buchungskonditionen" (Richtlinien) rendert dieselbe
+              Komponente weiter getrennt darüber — Vertragstext, kein Geld. */}
           {!isOwnerStay && (
             <BookingConditionsCard
               reservationId={reservationId}
@@ -836,6 +704,159 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
               reloadKey={`${data.status}-${data.paid_amount ?? ""}-${
                 data.checked_out_at ?? ""
               }`}
+              geldKopf={
+                /* Zahlungsfortschritt — bis 25.08.2026 eine eigene Karte
+                   „Zahlungen" direkt über dieser. Zwei Karten mit derselben
+                   Summe untereinander sind keine zwei Auskünfte. */
+                <div className="flex flex-col gap-3">
+                {total == null ? (
+                  <p className="text-sm text-muted-foreground">
+                    {t("bookingDetail.noAmountAccess")}
+                  </p>
+                ) : !hatPreis ? (
+                  // Ohne Preis gibt es keinen Zahlungsstand: ein Balken bei 0 von 0
+                  // sähe aus wie „nichts bezahlt", obwohl nichts zu bezahlen ist.
+                  <p className="text-sm text-muted-foreground">
+                    {t("bookingDetail.noPriceInfo")}
+                  </p>
+                ) : (
+                  <>
+                    <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+                      <span>
+                        {t("bookingDetail.booking")}{" "}
+                        <span className="font-semibold">
+                          {money(total, data.currency)}
+                        </span>
+                        {zahlwegBekannt && paidPct != null && (
+                          <span className="text-muted-foreground"> · {paidPct}%</span>
+                        )}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {/* Ohne gemeldeten Zahlweg keine „noch offen"-Aussage:
+                            das Portal hat zur Zahlung nichts geliefert. */}
+                        {zahlwegBekannt
+                          ? `${t("bookingDetail.stillDue", {
+                              amount: money(data.due_amount, data.currency),
+                            })} · ${t("bookingDetail.paidAmount", {
+                              amount: money(paid, data.currency),
+                            })}`
+                          : t("bookingDetail.paymentUnreported")}
+                      </span>
+                    </div>
+                    {zahlwegBekannt && (
+                      <div className="h-2.5 overflow-hidden rounded-full bg-secondary">
+                        <div
+                          className="h-full rounded-full bg-success transition-all"
+                          style={{ width: `${paidPct ?? 0}%` }}
+                        />
+                      </div>
+                    )}
+
+                    {/* Zahlungsweg des Portals (0240). Ohne diese Zeile fragt die
+                        Rezeption beim Gast nach, obwohl das Portal längst kassiert
+                        hat — oder sie kassiert nicht, obwohl sie müsste. */}
+                    {data.payment_collect ? (
+                      <p className="flex flex-wrap items-center gap-2 rounded-(--radius) bg-secondary/60 p-3 text-sm">
+                        <Icon
+                          icon={
+                            data.payment_collect === "ota"
+                              ? "ph:check-circle"
+                              : "ph:hand-coins"
+                          }
+                          className="size-4 shrink-0 text-muted-foreground"
+                        />
+                        <span>
+                          {t(`bookingDetail.paymentCollect.${data.payment_collect}`)}
+                          {data.payment_method_ota
+                            ? ` · ${t(`bookingDetail.paymentMethod.${data.payment_method_ota}`)}`
+                            : ""}
+                        </span>
+                      </p>
+                    ) : null}
+
+                    {/* Portalprovision + vom Portal einbehaltene Steuern: der
+                        Unterschied zwischen Umsatz und Erlös. Die Auszahlung ist
+                        Brutto − Provision − einbehaltene Steuern — ohne die
+                        Steuern wäre sie zu hoch (Booking behält z. B. City Tax
+                        direkt ein). */}
+                    {data.ota_commission != null ||
+                    data.ota_withheld_taxes != null ? (
+                      <div className="space-y-1 text-sm">
+                        {data.ota_commission != null ? (
+                          <p className="flex flex-wrap items-baseline justify-between gap-2">
+                            <span className="text-muted-foreground">
+                              {t("bookingDetail.otaCommission")}
+                            </span>
+                            <span className="font-semibold">
+                              −{money(data.ota_commission, data.currency)}
+                            </span>
+                          </p>
+                        ) : null}
+                        {data.ota_withheld_taxes != null ? (
+                          <p className="flex flex-wrap items-baseline justify-between gap-2">
+                            <span className="text-muted-foreground">
+                              {t("bookingDetail.withheldTaxes")}
+                            </span>
+                            <span className="font-semibold">
+                              −{money(data.ota_withheld_taxes, data.currency)}
+                            </span>
+                          </p>
+                        ) : null}
+                        {/* Auszahlung nur mit gemeldeter Provision — ohne sie wäre
+                            jeder Betrag erfunden (Provision null heißt „nicht
+                            geliefert", nicht 0). */}
+                        {data.ota_commission != null ? (
+                          <p className="flex flex-wrap items-baseline justify-end gap-2 text-muted-foreground">
+                            {t("bookingDetail.netPayout", {
+                              amount: money(
+                                total -
+                                  data.ota_commission -
+                                  (data.ota_withheld_taxes ?? 0),
+                                data.currency,
+                              ),
+                            })}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </>
+                )}
+                </div>
+              }
+              geldFuss={
+                /* Positionen mit Aktionen — unter dem Journal, weil sie
+                   erklären, WOFÜR die Zeilen darüber stehen. Kein eigener
+                   `!isOwnerStay`-Wächter mehr: die ganze Karte hängt schon
+                   daran, ein zweiter wäre eine Bedingung, die nie greift und
+                   die beim nächsten Umbau falsch mitgezogen wird. Beide
+                   Abschnitte rahmenlos — sie sitzen in dieser Karte. */
+                <div className="flex flex-col gap-4 border-t pt-3">
+                {/* Nachberechnung (0469): der Aufenthalt wurde nachträglich
+                    teurer, der Gast zahlt die Differenz per Zahlungslink. Auch
+                    bei Storno sichtbar (0473): Das Backend antwortet dann
+                    `moeglich: false`, liefert aber die bereits BEZAHLTEN
+                    Nachberechnungen mit — und die müssen erstattbar bleiben.
+                    Ohne offenen Link und ohne bezahlte Position rendert die
+                    Komponente null. */}
+                <NachberechnungAbschnitt
+                  reservationId={reservationId}
+                  rahmenlos
+                  onChanged={d.reload}
+                />
+                {/* Zusatzleistungen. Bei Storno wird nichts mehr verkauft (die
+                    Komponente blendet Katalog und Zahlungslink selbst aus), aber
+                    schon bezahltes Geld bleibt erstattbar. Vorher hing hier ein
+                    `!isCancelled`, und genau dadurch war der Erstatten-Knopf bei
+                    der stornierten Buchung 6179a5d0 nicht erreichbar — bei der
+                    einzigen Buchung, die ihn brauchte. */}
+                <ReservationAddonsSection
+                  reservationId={reservationId}
+                  currency={data.currency}
+                  storniert={isCancelled}
+                  onChanged={d.reload}
+                />
+                </div>
+              }
             />
           )}
 

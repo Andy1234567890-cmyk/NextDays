@@ -581,10 +581,17 @@ export function ReservationDetailSlider({
               {/* Zusatzleistungen — Schnelltaste: Extra-Angebote zu dieser
                   Buchung dazubuchen (jeder Kanal, auch OTA wie Booking).
                   Bei einer Eigennutzung gibt es nichts zu verkaufen. */}
-              {!isCancelled && !isOwnerStay && (
+              {/* Auch bei Storno (0473): verkauft wird dann nichts mehr, aber
+                  schon bezahlte Positionen bleiben erstattbar. Dieselbe
+                  Begründung wie im Buchungsdetail — ein Erstattungsweg, der
+                  genau bei der stornierten Buchung fehlt, ist keiner. Ohne
+                  Position rendert die Komponente null. */}
+              {!isOwnerStay && (
                 <ReservationAddonsSection
                   reservationId={reservationId}
                   currency={data.currency}
+                  storniert={isCancelled}
+                  onChanged={d.reload}
                 />
               )}
 

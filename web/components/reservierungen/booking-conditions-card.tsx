@@ -34,10 +34,33 @@ export function BookingConditionsCard({
   // Realtime-Abo auf `payments`: die Tabelle ist für Clients gesperrt
   // (CLAUDE.md Wurzel 6, Finanzen), ein Abo darauf wäre eine stumme Attrappe.
   reloadKey,
+  geldKopf,
+  geldFuss,
 }: {
   reservationId: string;
   currency: string;
   reloadKey?: unknown;
+  /** Inhalt ÜBER dem Zahlungsplan (der Zahlungsfortschritt der Buchung).
+   *
+   *  WARUM SLOTS UND KEINE EIGENEN KARTEN (25.08.2026): Die Buchungsansicht
+   *  hatte vier Karten, die alle dasselbe Geld zeigten — „Zahlungen"
+   *  (Fortschritt), „Zahlungsanforderung" (Plan + Transaktionen),
+   *  „Zusatzleistungen" (Positionen) und „Nachberechnung". Dieselben 150,00 DKK
+   *  standen dadurch dreimal auf der Seite, und beim Storno fiel es auf.
+   *
+   *  Zusammengelegt wird über Slots und nicht durch Verschieben der Blöcke, weil
+   *  Plan und Transaktionen aus DIESEM einen Abruf kommen
+   *  (`/reservations/{id}/conditions`). Ein zweites Rendern dieser Komponente
+   *  neben dem Fortschritt hätte den Abruf verdoppelt — zwei Fetches, die
+   *  kurzzeitig verschiedene Beträge zeigen können. Ein Datenstand, eine Karte.
+   *
+   *  Die Karte „Buchungskonditionen" (Richtlinien) bleibt getrennt: das ist
+   *  Vertragstext, kein Geld. */
+  geldKopf?: React.ReactNode;
+  /** Inhalt UNTER den Transaktionen: Positionslisten mit Aktionen
+   *  (Zusatzleistungen, Nachberechnung). Sie gehören unter das Journal, weil
+   *  sie erklären, WOFÜR die Zeilen darüber stehen. */
+  geldFuss?: React.ReactNode;
 }) {
   const t = useTranslations("reservations");
   const locale = useLocale();
@@ -200,11 +223,13 @@ export function BookingConditionsCard({
         </Card>
       )}
 
-      {(hatPlan || hatZahlungen || !!waehrung) && (
+      {(hatPlan || hatZahlungen || !!waehrung || geldKopf || geldFuss) && (
         <Card className="flex flex-col gap-3 p-5">
           <h2 className="font-display text-lg font-bold">
             {t("bookingConditions.paymentRequest")}
           </h2>
+
+          {geldKopf}
 
           {hatPlan && (
             <div className="flex flex-col gap-1 text-sm">
@@ -279,6 +304,8 @@ export function BookingConditionsCard({
               {t("bookingConditions.noTransactions")}
             </p>
           )}
+
+          {geldFuss}
         </Card>
       )}
     </>

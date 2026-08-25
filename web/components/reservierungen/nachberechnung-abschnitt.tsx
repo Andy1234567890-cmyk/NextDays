@@ -43,9 +43,14 @@ import {
 
 export function NachberechnungAbschnitt({
   reservationId,
+  rahmenlos = false,
   onChanged,
 }: {
   reservationId: string;
+  /** Ohne eigene Karte rendern — für den Fall, dass der Abschnitt in einer
+   *  fremden Karte sitzt (die zusammengelegte Geldkarte der Buchungsansicht,
+   *  25.08.2026). Eine <Card> in einer <Card> ist eine Kiste in der Kiste. */
+  rahmenlos?: boolean;
   /** Wird nach jeder Änderung gerufen, die den offenen Betrag verschiebt. */
   onChanged?: () => void;
 }) {
@@ -272,8 +277,18 @@ export function NachberechnungAbschnitt({
 
   const link = stand.link;
 
+  // Seit dem Zusammenlegen der Geldkarten (25.08.2026) steht dieser Abschnitt
+  // INNERHALB der Karte „Zahlungsanforderung". Eine eigene <Card> darin wäre
+  // eine Karte in der Karte — deshalb rahmenlos, wenn der Aufrufer es sagt.
+  const Rahmen = rahmenlos ? "section" : Card;
   return (
-    <Card className="flex flex-col gap-2 p-5">
+    <Rahmen
+      className={
+        rahmenlos
+          ? "flex flex-col gap-2"
+          : "flex flex-col gap-2 p-5"
+      }
+    >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <span className="flex items-center gap-1.5">
           <h2 className="font-display text-lg font-bold">{t("titel")}</h2>
@@ -566,6 +581,6 @@ export function NachberechnungAbschnitt({
           ))}
         </div>
       )}
-    </Card>
+    </Rahmen>
   );
 }
