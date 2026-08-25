@@ -212,7 +212,9 @@ def test_rate_plan_aus_channex_id() -> None:
          "local_rate_plan_id": "rp-lokal"},
     ])
     attrs = {"rooms": [{"rate_plan_id": "cx-rp-1"}]}
-    assert BookingsSyncMixin()._rate_plan_der_buchung(db, "t1", attrs) == "rp-lokal"
+    assert BookingsSyncMixin()._rate_plan_der_buchung(db, "t1", attrs) == (
+        "rp-lokal", None,
+    )
 
 
 def test_unmapped_rate_ergibt_none_statt_rateversuch() -> None:
@@ -220,7 +222,9 @@ def test_unmapped_rate_ergibt_none_statt_rateversuch() -> None:
 
     Channex schickt dann nur den Portal-Code (`meta.rate_plan_code`). Ihn auf
     „irgendeinen" Plan zu legen wäre schlimmer als die Lücke: der Betrieb sähe
-    einen Preis, zu dem nie verkauft wurde.
+    einen Preis, zu dem nie verkauft wurde. Das zweite Rückgabeelement trägt
+    den Portal-Code (0432) — der Aufrufer braucht ihn, um sofort statt erst am
+    nächsten Tages-Tick einen Abgleich anzustoßen.
     """
     from src.features.channel_manager.bookings_sync import BookingsSyncMixin
 
@@ -229,7 +233,9 @@ def test_unmapped_rate_ergibt_none_statt_rateversuch() -> None:
         "ota_reservation_code": "5318907572",
         "rooms": [{"rate_plan_id": None, "meta": {"rate_plan_code": "47588687"}}],
     }
-    assert BookingsSyncMixin()._rate_plan_der_buchung(db, "t1", attrs) is None
+    assert BookingsSyncMixin()._rate_plan_der_buchung(db, "t1", attrs) == (
+        None, "47588687",
+    )
 
 
 def test_airbnb_ohne_portal_code_ist_keine_unmapped_rate() -> None:
@@ -253,7 +259,9 @@ def test_airbnb_ohne_portal_code_ist_keine_unmapped_rate() -> None:
         "ota_name": "AirBNB",
         "rooms": [{"rate_plan_id": "cx-rp-airbnb", "meta": {}}],
     }
-    assert BookingsSyncMixin()._rate_plan_der_buchung(db, "t1", attrs) == "rp-lokal"
+    assert BookingsSyncMixin()._rate_plan_der_buchung(db, "t1", attrs) == (
+        "rp-lokal", None,
+    )
 
 
 def test_buchung_ohne_rooms_ergibt_none() -> None:
@@ -262,4 +270,6 @@ def test_buchung_ohne_rooms_ergibt_none() -> None:
 
     db = _RatePlanDb([])
     for attrs in ({}, {"rooms": []}, {"rooms": "kaputt"}):
-        assert BookingsSyncMixin()._rate_plan_der_buchung(db, "t1", attrs) is None
+        assert BookingsSyncMixin()._rate_plan_der_buchung(db, "t1", attrs) == (
+            None, None,
+        )

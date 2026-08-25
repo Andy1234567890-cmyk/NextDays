@@ -180,11 +180,18 @@ class PortalRatenAbgleichMixin:
         Rueckgabe (fuer den Job-Verlauf, damit dort steht was passiert ist und
         keine Taetigkeit behauptet wird, Wurzel 4):
         `{"kanaele": n, "portal_raten": n, "angelegt": n, "nachgezogen": n,
-        "verwaist_geloescht": n, "sync_eingereiht": b}` — `nachgezogen` sind
-        Plaene, deren verlorene Portal-Freigabe wieder gesetzt wurde
-        (s. `portalfreigabe_nachziehen`), `verwaist_geloescht` die Kanal-
-        Eintraege, deren Ratencode das Portal nicht mehr fuehrt (Schritt f im
-        Modul-Kopf — sie kippten den Preis-Push des ganzen Zimmers).
+        "verwaist_geloescht": n, "sync_eingereiht": b, "gesehene_ratencodes":
+        [...]}` — `nachgezogen` sind Plaene, deren verlorene Portal-Freigabe
+        wieder gesetzt wurde (s. `portalfreigabe_nachziehen`),
+        `verwaist_geloescht` die Kanal-Eintraege, deren Ratencode das Portal
+        nicht mehr fuehrt (Schritt f im Modul-Kopf — sie kippten den
+        Preis-Push des ganzen Zimmers). `gesehene_ratencodes` sind alle
+        Portal-Ratencodes, die MINDESTENS EIN Kanal dieses Objekts in DIESEM
+        Lauf noch fuehrt (0432) — der Job-Handler prueft damit, ob ein per
+        Sofort-Trigger gemeldeter Code beim Portal ueberhaupt noch existiert.
+        `vollstaendig` ist nur `True`, wenn JEDER Kanal lesbar war; ist er
+        `False`, darf der Aufrufer aus einem fehlenden Code NICHT schliessen,
+        dass er beim Portal nicht mehr existiert (Wurzel 5).
         """
         db = self._require_db()
         conns = self._kanaele_mit_raten(db, tenant_id, property_id)
@@ -192,7 +199,8 @@ class PortalRatenAbgleichMixin:
             return {
                 "kanaele": 0, "portal_raten": 0, "angelegt": 0,
                 "nachgezogen": 0, "verwaist_geloescht": 0,
-                "sync_eingereiht": False,
+                "sync_eingereiht": False, "gesehene_ratencodes": [],
+                "vollstaendig": False,
             }
 
         from .portal_raten_plaene import (
@@ -214,7 +222,8 @@ class PortalRatenAbgleichMixin:
             return {
                 "kanaele": len(conns), "portal_raten": 0, "angelegt": 0,
                 "nachgezogen": 0, "verwaist_geloescht": 0,
-                "sync_eingereiht": False,
+                "sync_eingereiht": False, "gesehene_ratencodes": [],
+                "vollstaendig": False,
             }
 
         bekannt = vorhandene_plan_namen(db, property_id)
@@ -224,17 +233,37 @@ class PortalRatenAbgleichMixin:
         verwaist_geloescht = 0
         # Raten, deren eigener Plan nur als Attrappe zugeordnet ist (s. u.).
         zu_heilen = 0
+        # Alle Ratencodes, die MINDESTENS EIN Portal-Kanal dieses Objekts in
+        # diesem Lauf tatsaechlich noch fuehrt (ueber `mapping_details`
+        # gelesen) — nicht ob sie schon einen eigenen Plan haben. Der Aufrufer
+        # (Job-Handler, 0432) prueft damit, ob ein per Sofort-Trigger
+        # gemeldeter Code beim Portal noch existiert; fehlt er hier, ist er
+        # bereits abgelaufen und NICHT ueber diesen Lauf aufloesbar (Wurzel 4:
+        # kein Raten anhand alter Codes).
+        #
+        # `vollstaendig` bleibt `False`, sobald AUCH NUR EIN Kanal nicht lesbar
+        # war (`_portal_raten` faengt Channex-Fehler ab und gibt `[]` zurueck —
+        # ununterscheidbar von „Portal fuehrt wirklich nichts"). Ohne dieses
+        # Flag wuerde ein voruebergehender Channex-Ausfall denselben leeren
+        # Stand liefern wie ein tatsaechlich toter Ratencode — der Aufrufer
+        # duerfte dann NIE aus einer leeren `gesehene_codes`-Menge schliessen,
+        # der Code sei abgelaufen (Wurzel 5: fail-closed, nicht "leer heisst
+        # erledigt").
+        gesehene_codes: set[str] = set()
+        vollstaendig = True
         for conn in conns:
             portal = str(conn.get("ota_portal_code") or "")
             raten = self._portal_raten(conn)
             if not raten:
                 # Fail-closed: leer heisst „Abruf lieferte nichts", nicht
                 # „Portal fuehrt keine Raten" (Wurzel 5).
+                vollstaendig = False
                 continue
             raten_gesamt += len(raten)
             titel_je_code = {
                 str(r.get("id")): (r.get("title") or "") for r in raten
             }
+            gesehene_codes.update(titel_je_code)
             gelesen = self._belegte_ratencodes(
                 db, tenant_id, property_id, conn, titel_je_code
             )
@@ -374,6 +403,8 @@ class PortalRatenAbgleichMixin:
                 "angelegt": 0, "nachgezogen": 0, "zu_heilen": 0,
                 "verwaist_geloescht": verwaist_geloescht,
                 "sync_eingereiht": False,
+                "gesehene_ratencodes": sorted(gesehene_codes),
+                "vollstaendig": vollstaendig,
             }
 
         # Der Gegenzustand zum Anlegen (Wurzel 1) haengt an DIESEM Job:
@@ -395,6 +426,8 @@ class PortalRatenAbgleichMixin:
             "angelegt": angelegt, "nachgezogen": nachgezogen,
             "zu_heilen": zu_heilen, "verwaist_geloescht": verwaist_geloescht,
             "sync_eingereiht": True,
+            "gesehene_ratencodes": sorted(gesehene_codes),
+            "vollstaendig": vollstaendig,
         }
 
     def _kanaele_mit_raten(

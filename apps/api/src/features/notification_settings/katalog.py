@@ -167,6 +167,14 @@ KATALOG: tuple[Kategorie, ...] = (
     # man wegschalten koennen soll — es ist der einzige Weg, auf dem der
     # Betrieb ueberhaupt davon erfaehrt (bis hierher gab es keinen).
     Kategorie("zustellproblem", Tab.KONTO, "aktivitaet", ()),
+    # Eine Buchung kam mit einer Portal-Rate an, die keinem eigenen Preisplan
+    # zugeordnet werden konnte, und blieb es auch nach dem sofortigen Abgleich
+    # (0432 — der Ratencode war beim Eintreffen der Buchung bereits ungueltig,
+    # keine Datenquelle mehr vorhanden, um ihn zu benennen). Nur die Glocke:
+    # dieselbe Begruendung wie bei Zustellproblemen — der Betrieb soll es im
+    # eigenen Preise-Bereich nachtragen koennen, ohne dass ein fremdes Wort
+    # wie „Channex" je auftaucht (Wurzel: Kunde sieht nie den Aggregator).
+    Kategorie("portal_rate_verwaist", Tab.KONTO, "aktivitaet", ()),
     # Eine offene Portal-Anfrage (Voranfrage, Buchungsanfrage,
     # Aenderungswunsch, 0398). E-MAIL IST PFLICHT und das ist keine Willkuer:
     # Anders als bei einer Gastnachricht ist Nichtstun hier eine ENTSCHEIDUNG —

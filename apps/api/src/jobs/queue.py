@@ -107,6 +107,43 @@ def try_enqueue_content_sync(
                     error=str(exc)[:200])
 
 
+def try_enqueue_portal_raten_abgleich_sofort(
+    db: Client, tenant_id: str, property_id: str, *, portal_rate_code: str,
+) -> None:
+    """Portal-Raten-Abgleich SOFORT einreihen, statt auf den Tages-Tick zu
+    warten (0432).
+
+    Gleicher Job-Typ `abgleich_portal_raten` wie `portal_raten_tick.einreihen`
+    — derselbe Handler liest ohnehin den aktuellen Channex-Stand, ein eigener
+    Job-Typ wäre nur eine zweite Implementierung derselben Arbeit. Eigener
+    `dedup_key`-Namensraum (`suffix="sofort"`), damit dieser Job NICHT mit dem
+    tagesaktuellen Tick-Job verschmilzt: „letzter gewinnt" auf demselben
+    Schlüssel würde sonst den bereits wartenden Tages-Job durch einen sofort
+    fälligen ersetzen und umgekehrt — zwei unabhängige Anlässe (täglich vs.
+    ausgelöst durch eine konkrete Buchung), die sich nicht gegenseitig
+    verdrängen sollen.
+
+    `portal_rate_code` geht NUR für die kundensichtbare Meldung mit, falls der
+    Abgleich den Code auch jetzt nicht auflösen kann (`ereignisse.
+    melde_portal_rate_verwaist`) — er fließt nie in den Abgleich selbst ein
+    (der arbeitet ausschließlich über den Live-Read von Channex, Wurzel 4)."""
+    try:
+        enqueue(
+            db, "abgleich_portal_raten", tenant_id=tenant_id,
+            payload={
+                "tenant_id": tenant_id, "property_id": property_id,
+                "portal_rate_code": portal_rate_code,
+            },
+            dedup_key=dedup_key(
+                tenant_id, property_id, "abgleich_portal_raten",
+                suffix=f"sofort:{portal_rate_code}",
+            ),
+        )
+    except Exception as exc:  # noqa: BLE001 — Einreihen darf den Request nie kippen
+        log.warning("enqueue_portal_raten_sofort_failed", property_id=property_id,
+                    error=str(exc)[:200])
+
+
 def try_enqueue_tax_sync(db: Client, tenant_id: str, property_id: str) -> None:
     """Nur die Steuern eines Objekts nach Channex spiegeln (coalesced je Objekt).
 

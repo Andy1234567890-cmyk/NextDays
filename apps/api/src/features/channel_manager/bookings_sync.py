@@ -26,7 +26,10 @@ from src.features.guests.identity import (
 )
 from src.features.notification_settings.ereignisse import melde_buchungs_ereignis
 from src.features.tasks.engine import sync_nach_id
-from src.jobs.queue import try_enqueue_recompute
+from src.jobs.queue import (
+    try_enqueue_portal_raten_abgleich_sofort,
+    try_enqueue_recompute,
+)
 
 from .ari_push import _group_iso_days_to_ranges
 from .channex_client import ChannexError
@@ -526,8 +529,16 @@ class BookingsSyncMixin:
 
     def _rate_plan_der_buchung(
         self, db: Client, tenant_id: str, attrs: dict[str, Any]
-    ) -> str | None:
+    ) -> tuple[str | None, str | None]:
         """Der LOKALE Preisplan, zu dem diese Buchung zustande kam.
+
+        Rückgabe `(local_rate_plan_id, unmapped_portal_code)`: das zweite
+        Element ist NUR bei einer echten Lücke gesetzt (Portal-Code vorhanden,
+        aber nicht auflösbar) — beim Airbnb-Normalfall (kein Code gemeldet)
+        bleibt es `None`. Der Aufrufer braucht diese Unterscheidung, um NUR bei
+        einer echten Lücke den Sofort-Abgleich anzustoßen (0432); beide Fälle
+        an `rate_plan_id is None` festzumachen würde Airbnb-Buchungen bei
+        jedem Import unnötig einen Abgleich-Job einreihen lassen.
 
         Channex meldet zwei Dinge je Zimmer, und beide sind brauchbar:
 
@@ -571,10 +582,10 @@ class BookingsSyncMixin:
         """
         rooms = attrs.get("rooms")
         if not isinstance(rooms, list) or not rooms:
-            return None
+            return None, None
         erstes = next((r for r in rooms if isinstance(r, dict)), None)
         if erstes is None:
-            return None
+            return None, None
 
         cx_rp_id = erstes.get("rate_plan_id")
         if cx_rp_id:
@@ -588,13 +599,13 @@ class BookingsSyncMixin:
                 .execute()
             ).data or []
             if treffer and treffer[0].get("local_rate_plan_id"):
-                return str(treffer[0]["local_rate_plan_id"])
+                return str(treffer[0]["local_rate_plan_id"]), None
             log.warning(
                 "channex_rate_plan_nicht_in_map",
                 buchung=attrs.get("ota_reservation_code"),
                 channex_rate_plan_id=str(cx_rp_id),
             )
-            return None
+            return None, None
 
         # Kein aufgelöster Plan. Bei AIRBNB ist das der Normalfall (das Portal
         # meldet keinen) — dann ist hier nichts zu berichten. Nur bei Kanälen,
@@ -618,7 +629,8 @@ class BookingsSyncMixin:
                     "dieser Rate nicht gesteuert."
                 ),
             )
-        return None
+            return None, str(portal_code)
+        return None, None
 
     def _objekt_zuordnung(
         self, db: Client, tenant_id: str, channex_property_id: str | None,
@@ -1454,12 +1466,30 @@ class BookingsSyncMixin:
             "ota_details": ota_zusatzdetails(attrs),
             # Zugewiesene Einheit (0265) — einmal bestimmt, siehe oben.
             "unit_id": einheit,
-            # ZU WELCHEM PREIS die Buchung zustande kam. Channex liefert das
-            # mit, wir haben es bis 11.08.2026 verworfen: live trugen 0 von 226
-            # projizierten Reservierungen einen `rate_plan_id`, obwohl Channex
-            # bei 67 von 77 Buchungen die aufgelöste ID mitschickte.
-            "rate_plan_id": self._rate_plan_der_buchung(db, tenant_id, attrs),
         }
+        # ZU WELCHEM PREIS die Buchung zustande kam. Channex liefert das mit,
+        # wir haben es bis 11.08.2026 verworfen: live trugen 0 von 226
+        # projizierten Reservierungen einen `rate_plan_id`, obwohl Channex bei
+        # 67 von 77 Buchungen die aufgelöste ID mitschickte.
+        rate_plan_id, unmapped_portal_code = self._rate_plan_der_buchung(
+            db, tenant_id, attrs
+        )
+        row["rate_plan_id"] = rate_plan_id
+        if unmapped_portal_code:
+            # Sofort statt erst am naechsten Tages-Tick abgleichen (0432): der
+            # taegliche `abgleich_portal_raten` liest immer nur den AKTUELLEN
+            # Channex-Stand — ein Ratencode, der zwischen zwei Laeufen kurz
+            # existiert und in einer Buchung landet, kann bis zum naechsten
+            # Lauf schon wieder verschwunden und dann NIE MEHR aufloesbar sein
+            # (belegt an "Feriehus Perlen Tversted", Code 55775628: beim
+            # Eintreffen der Buchung bereits toter Zwischen-Code). Frueher
+            # Abgleich erhoeht die Chance, den Code noch lebend zu erwischen;
+            # gefunden wird er ueber denselben Live-Read wie der Tages-Tick,
+            # nie ueber einen erratenen Ersatzwert (Wurzel 4).
+            try_enqueue_portal_raten_abgleich_sofort(
+                db, tenant_id, property_id,
+                portal_rate_code=unmapped_portal_code,
+            )
         # Portal-kassiert (payment_collect='ota' = „guest already pay at OTA")
         # als bezahlt führen — kein Portal liefert ein eigenes Bezahlt-Feld,
         # der Status MUSS abgeleitet werden (Branchenstandard). Sonst zeigt

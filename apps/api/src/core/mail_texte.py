@@ -1379,6 +1379,166 @@ TEXTE: dict[str, dict[str, str]] = {
         "sl": "Sporočilo je zakasnjeno",
         "sv": "Meddelandet är försenat",
     },
+    "benachrichtigung.portal_rate_verwaist": {
+        "bg": "Незададена цена в портал",
+        "cs": "Nepřiřazená cena na portálu",
+        "da": "Ikke tildelt pris på portal",
+        "de": "Nicht zugeordneter Preis im Portal",
+        "el": "Μη αντιστοιχισμένη τιμή στην πύλη",
+        "en": "Unmapped rate on a booking channel",
+        "es": "Tarifa no asignada en el portal",
+        "et": "Portaalis määramata hind",
+        "fi": "Kohdistamaton hinta portaalissa",
+        "fr": "Tarif non associé sur le portail",
+        "ga": "Ráta neamhléirithe ar an tairseach",
+        "hr": "Nepridružena cijena na portalu",
+        "hu": "Nem hozzárendelt ár a portálon",
+        "it": "Tariffa non associata sul portale",
+        "lt": "Nepriskirtas tarifas portale",
+        "lv": "Nepiešķirta cena portālā",
+        "mt": "Rata mhux immappjata fuq il-portal",
+        "nl": "Niet-gekoppeld tarief op het portaal",
+        "pl": "Niezmapowana stawka na portalu",
+        "pt": "Tarifa não associada no portal",
+        "ro": "Tarif nealocat pe portal",
+        "sk": "Nepriradená cena na portáli",
+        "sl": "Nepovezana cena na portalu",
+        "sv": "Ej matchat pris i portalen",
+    },
+    "benachrichtigung.portal_rate_verwaist_text": {
+        "bg": (
+            "Постъпи резервация с цена от портала, която не съответства на "
+            "нито един от твоите ценови планове за {objekt}. Провери "
+            "разделите с цени и добави при нужда съответстващ план."
+        ),
+        "cs": (
+            "Přišla rezervace s cenou z portálu, kterou nelze přiřadit "
+            "žádnému z tvých cenových plánů pro {objekt}. Zkontroluj sekci "
+            "cen a v případě potřeby doplň odpovídající plán."
+        ),
+        "da": (
+            "Der kom en reservation med en pris fra portalen, som ikke kunne "
+            "matches til nogen af dine prisplaner for {objekt}. Tjek "
+            "prisoversigten, og tilføj eventuelt en matchende plan."
+        ),
+        "de": (
+            "Eine Buchung kam mit einem Preis vom Portal an, der keinem "
+            "deiner Preispläne für {objekt} zugeordnet werden konnte. Prüfe "
+            "deinen Preise-Bereich und ergänze bei Bedarf einen passenden "
+            "Plan."
+        ),
+        "el": (
+            "Έφτασε μια κράτηση με τιμή από την πύλη που δεν αντιστοιχεί σε "
+            "κανένα από τα τιμολογιακά σου σχέδια για {objekt}. Έλεγξε την "
+            "ενότητα τιμών και πρόσθεσε, αν χρειάζεται, ένα αντίστοιχο "
+            "σχέδιο."
+        ),
+        "en": (
+            "A booking arrived with a rate from the booking channel that "
+            "could not be matched to any of your rate plans for {objekt}. "
+            "Check your pricing section and add a matching plan if needed."
+        ),
+        "es": (
+            "Llegó una reserva con una tarifa del portal que no se pudo "
+            "asignar a ninguno de tus planes de precios para {objekt}. "
+            "Revisa tu sección de precios y añade un plan adecuado si hace "
+            "falta."
+        ),
+        "et": (
+            "Saabus broneering portaali hinnaga, mida ei õnnestunud siduda "
+            "ühegi objekti {objekt} hinnaplaaniga. Kontrolli hindade "
+            "jaotist ja lisa vajadusel sobiv plaan."
+        ),
+        "fi": (
+            "Saapui varaus portaalin hinnalla, jota ei voitu yhdistää "
+            "mihinkään kohteen {objekt} hintasuunnitelmaan. Tarkista "
+            "hinnoitteluosio ja lisää tarvittaessa sopiva suunnitelma."
+        ),
+        "fr": (
+            "Une réservation est arrivée avec un tarif du portail qui n'a "
+            "pu être associé à aucun de tes plans tarifaires pour {objekt}. "
+            "Vérifie ta section tarifs et ajoute un plan correspondant si "
+            "nécessaire."
+        ),
+        "ga": (
+            "Tháinig áirithint isteach le ráta ón tairseach nár féidir a "
+            "mheaitseáil le haon cheann de do phleananna rátaí do {objekt}. "
+            "Seiceáil d'earnáil praghsála agus cuir plean oiriúnach leis má "
+            "tá gá leis."
+        ),
+        "hr": (
+            "Stigla je rezervacija s cijenom s portala koja se nije mogla "
+            "povezati ni s jednim tvojim cjenovnim planom za {objekt}. "
+            "Provjeri odjeljak cijena i po potrebi dodaj odgovarajući plan."
+        ),
+        "hu": (
+            "Egy foglalás a portál olyan árával érkezett, amelyet nem "
+            "sikerült hozzárendelni egyik {objekt} árazási tervedhez sem. "
+            "Ellenőrizd az árak menüpontot, és szükség esetén adj hozzá egy "
+            "megfelelő tervet."
+        ),
+        "it": (
+            "È arrivata una prenotazione con una tariffa del portale che "
+            "non è stato possibile associare a nessuno dei tuoi piani "
+            "tariffari per {objekt}. Controlla la sezione prezzi e "
+            "aggiungi un piano corrispondente se necessario."
+        ),
+        "lt": (
+            "Gauta rezervacija su portalo kaina, kurios nepavyko susieti su "
+            "jokiu {objekt} kainų planu. Patikrink kainų skiltį ir "
+            "prireikus pridėk atitinkamą planą."
+        ),
+        "lv": (
+            "Pienāca rezervācija ar portāla cenu, kuru neizdevās sasaistīt "
+            "ne ar vienu no {objekt} cenu plāniem. Pārbaudi cenu sadaļu un "
+            "vajadzības gadījumā pievieno atbilstošu plānu."
+        ),
+        "mt": (
+            "Waslet prenotazzjoni b'rata mill-portal li ma setgħetx "
+            "tiġi mmappjata ma' ebda wieħed mill-pjanijiet tar-rati tiegħek "
+            "għal {objekt}. Iċċekkja t-taqsima tal-prezzijiet u żid pjan "
+            "xieraq jekk ikun hemm bżonn."
+        ),
+        "nl": (
+            "Er kwam een boeking binnen met een tarief van het portaal dat "
+            "niet aan een van je tariefplannen voor {objekt} kon worden "
+            "gekoppeld. Controleer je prijzenoverzicht en voeg indien nodig "
+            "een passend plan toe."
+        ),
+        "pl": (
+            "Nadeszła rezerwacja ze stawką z portalu, której nie udało się "
+            "dopasować do żadnego z twoich planów cenowych dla {objekt}. "
+            "Sprawdź sekcję cen i w razie potrzeby dodaj odpowiedni plan."
+        ),
+        "pt": (
+            "Chegou uma reserva com uma tarifa do portal que não foi "
+            "possível associar a nenhum dos teus planos de preços para "
+            "{objekt}. Verifica a tua secção de preços e adiciona um plano "
+            "correspondente, se necessário."
+        ),
+        "ro": (
+            "A sosit o rezervare cu un tarif de la portal care nu a putut "
+            "fi asociat niciunui plan tarifar pentru {objekt}. Verifică "
+            "secțiunea de prețuri și adaugă, dacă este necesar, un plan "
+            "corespunzător."
+        ),
+        "sk": (
+            "Prišla rezervácia s cenou z portálu, ktorú sa nepodarilo "
+            "priradiť k žiadnemu z tvojich cenových plánov pre {objekt}. "
+            "Skontroluj sekciu cien a v prípade potreby doplň zodpovedajúci "
+            "plán."
+        ),
+        "sl": (
+            "Prispela je rezervacija s ceno s portala, ki je ni bilo mogoče "
+            "povezati z nobenim od tvojih cenovnih načrtov za {objekt}. "
+            "Preveri razdelek s cenami in po potrebi dodaj ustrezen načrt."
+        ),
+        "sv": (
+            "En bokning kom in med ett pris från portalen som inte kunde "
+            "matchas mot någon av dina prisplaner för {objekt}. Kontrollera "
+            "din prissektion och lägg till en matchande plan vid behov."
+        ),
+    },
     # --- Vertretung (0415) ------------------------------------------------
     # Drei Saetze: die Anfrage an moegliche Vertreter, die Uebernahme und die
     # Ablehnung zurueck an den Anfragenden. Der Titel IST die Meldung, deshalb

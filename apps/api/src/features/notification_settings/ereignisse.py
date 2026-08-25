@@ -965,6 +965,73 @@ def melde_zustellproblem(
         )
 
 
+# --- Portal-Rate verwaist (0432) ---------------------------------------------
+SCHLUESSEL_PORTAL_RATE_VERWAIST = "portal_rate_verwaist"
+
+
+def melde_portal_rate_verwaist(
+    db: Client, *, tenant_id: str, property_id: str, portal_rate_code: str,
+) -> None:
+    """„Eine Buchung kam mit einer Portal-Rate an, die keinem eigenen
+    Preisplan zugeordnet werden konnte — auch nach dem Sofort-Abgleich nicht."
+
+    WOZU: Der Automatismus (`portal_raten_abgleichen`) legt fuer eine noch
+    beim Portal gefuehrte Rate automatisch einen Plan an, ohne dass der
+    Betrieb je etwas sieht. Fuer einen Ratencode, der beim Eintreffen der
+    Buchung schon nicht mehr gefuehrt wird, gibt es dafuer KEINE Datenquelle
+    (0432, "Feriehus Perlen Tversted", Code 55775628) — der Betrieb muss es
+    im eigenen Preise-Bereich nachtragen. Bis hierher erfuhr er davon gar
+    nicht: die Luecke stand nur im Server-Log.
+
+    NIE "Channex" im Text — der Betrieb sieht nur "Portale" (siehe Katalog-
+    Kommentar). NUR die Glocke, aus derselben Erwaegung wie bei
+    Zustellproblemen: eine Portal-seitige Ratenumstellung trifft oft mehrere
+    Buchungen kurz hintereinander, eine Mail je Treffer waere eine Flut.
+
+    ENTDOPPLUNG ueber den Ratencode, nicht die Buchung: dieselbe tote Rate
+    kann mehrere Buchungen betreffen, aber der Betrieb muss nur EINMAL
+    hingewiesen werden (partieller UNIQUE-Index auf `gelesen_am is null`,
+    Wurzel 2)."""
+    try:
+        empfaenger = _betriebsleitung(db, tenant_id)
+        if not empfaenger:
+            return
+        zeile = (
+            db.table("properties")
+            .select("name")
+            .eq("id", property_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        objekt = str(zeile[0]["name"]) if zeile and zeile[0].get("name") else ""
+        dispatcher = _dispatcher(db)
+        text_key = "benachrichtigung.portal_rate_verwaist_text"
+        for user_id in sorted(empfaenger):
+            dispatcher.sende(
+                user_id=user_id,
+                schluessel=SCHLUESSEL_PORTAL_RATE_VERWAIST,
+                betreff=mail_text(
+                    "benachrichtigung.portal_rate_verwaist", _GLOCKEN_SPRACHE,
+                ),
+                betreff_key="benachrichtigung.portal_rate_verwaist",
+                text=mail_text(text_key, _GLOCKEN_SPRACHE, objekt=objekt),
+                text_key=text_key,
+                text_werte={"objekt": objekt},
+                tenant_id=tenant_id,
+                property_id=property_id,
+                ziel_pfad=f"/objekte/{property_id}/preise",
+                dedup_key=f"portal_rate_verwaist:{tenant_id}:{portal_rate_code}",
+            )
+    except Exception as exc:  # noqa: BLE001 — Meldung kippt den Abgleich nie
+        log.warning(
+            "portal_rate_verwaist_meldung_fehlgeschlagen",
+            tenant_id=tenant_id,
+            property_id=property_id,
+            portal_rate_code=portal_rate_code,
+            error=str(exc)[:200],
+        )
+
+
 # --- Neue Gastnachricht im Posteingang (0406) -------------------------------
 
 SCHLUESSEL_NACHRICHT = "messages"

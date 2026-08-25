@@ -104,11 +104,25 @@ def handle(
     Ein Fehler kippt den Job auf Retry: dieser Lauf ist der einzige Weg, auf dem
     eine im Extranet angelegte Rate bei uns einen Plan bekommt — ihn still als
     „done" zu verbuchen waere Wurzel 5.
+
+    `payload["portal_rate_code"]` ist NUR beim Sofort-Trigger gesetzt (0432,
+    `try_enqueue_portal_raten_abgleich_sofort`): meldet der Abgleich diesen
+    Code danach immer noch nicht unter `gesehene_ratencodes` UND lief er
+    VOLLSTAENDIG (`vollstaendig=True`, jeder Kanal lesbar), ist er beim Portal
+    bereits nicht mehr aktiv — dann bekommt der Betrieb die kundensichtbare
+    Meldung (`melde_portal_rate_verwaist`), weil kein weiterer Lauf das je
+    aufloesen kann. War der Abgleich UNVOLLSTAENDIG (ein Kanal-Read scheiterte),
+    bleibt die Meldung aus (Wurzel 5): ein voruebergehender Channex-Ausfall
+    ist kein Beweis, dass der Code tot ist — der naechste Tages-Tick prueft
+    von selbst erneut.
     """
     # Lokaler Import: der Dienst zieht die halbe channel_manager-Schicht nach
     # sich, und dieses Modul wird beim Worker-Start importiert (Tick).
     from src.features.channel_manager.channex_client import ChannexClient
     from src.features.channel_manager.service import ChannelManagerService
+    from src.features.notification_settings.ereignisse import (
+        melde_portal_rate_verwaist,
+    )
 
     svc = ChannelManagerService(
         service_client=db,
@@ -118,6 +132,16 @@ def handle(
     )
     if not svc.is_channex_configured:
         return None
-    return svc.portal_raten_abgleichen(
-        payload["tenant_id"], payload["property_id"]
-    )
+    tenant_id, property_id = payload["tenant_id"], payload["property_id"]
+    ergebnis = svc.portal_raten_abgleichen(tenant_id, property_id)
+    portal_rate_code = payload.get("portal_rate_code")
+    if (
+        portal_rate_code
+        and ergebnis.get("vollstaendig")
+        and str(portal_rate_code) not in (ergebnis.get("gesehene_ratencodes") or ())
+    ):
+        melde_portal_rate_verwaist(
+            db, tenant_id=tenant_id, property_id=property_id,
+            portal_rate_code=str(portal_rate_code),
+        )
+    return ergebnis
