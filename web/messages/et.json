@@ -8051,7 +8051,6 @@
         "title": "Kaheastmeline autentimine (2FA)",
         "intro": "Kaitseb sinu kontot lisaks paroolile teise teguriga.",
         "noneActive": "Teist tegurit pole veel seadistatud. Soovitame autentimisrakendust.",
-        "requiredNotice": "Sinu rolli puhul on teine tegur kohustuslik. Palun seadista see kohe.",
         "active": "Aktiivne",
         "setUp": "Seadista",
         "totp": {
@@ -8153,7 +8152,6 @@
           "passkeyTitle": "Eemalda pääsuvõti",
           "lastFactorBlocked": "See on sinu viimane teine tegur ja sinu rolli puhul on üks kohustuslik. Loo esmalt varukoodid või seadista veel üks tegur."
         },
-        "requiredWithDeadline": "Sinu rolli puhul on teine tegur kohustuslik. Seadista see hiljemalt {date} — pärast seda ei ole sisselogimine ilma teise tegurita enam võimalik.",
         "statusFailed": "Kaheastmelise autentimise olekut ei õnnestunud laadida. Palun laadi leht uuesti."
       },
       "recovery": {
@@ -9212,14 +9210,6 @@
       "smsSent": "Kood on saadetud.",
       "resend": "Saada kood uuesti",
       "recoveryRedeemedHint": "Kood lunastati, kuid ainuüksi sellest sisselogimiseks ei piisa. Palun logi sisse mõne seadistatud teguriga või pöördu oma meeskonna poole."
-    },
-    "mfaSetup": {
-      "title": "Seadista kaheastmeline autentimine",
-      "intro": "Sinu rolli puhul on teine tegur kohustuslik. Seadista see kohe, et jätkata.",
-      "why": "Administraatorina on sul ligipääs finantsandmetele, külaliste andmetele ja kogu ettevõtte seadetele. Teine tegur hoiab ära selle, et varastatud paroolist üksi piisaks.",
-      "goToSettings": "Seadista kohe",
-      "later": "Tuleta hiljem meelde",
-      "introWithDeadline": "Sinu rolli puhul on teine tegur kohustuslik. Seadista see hiljemalt {date} — pärast seda ei ole sisselogimine ilma teise tegurita enam võimalik."
     }
   },
   "sprache": {

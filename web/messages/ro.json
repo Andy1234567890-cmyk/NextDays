@@ -8049,7 +8049,6 @@
         "title": "Autentificare în doi pași (2FA)",
         "intro": "Vă protejează contul cu un al doilea factor, pe lângă parolă.",
         "noneActive": "Încă nu este configurat niciun al doilea factor. Vă recomandăm aplicația de autentificare.",
-        "requiredNotice": "Pentru rolul dumneavoastră, al doilea factor este obligatoriu. Configurați-l acum.",
         "active": "Activ",
         "setUp": "Configurează",
         "totp": {
@@ -8151,7 +8150,6 @@
           "passkeyTitle": "Elimină cheia de acces",
           "lastFactorBlocked": "Acesta este ultimul dumneavoastră al doilea factor, iar pentru rolul dumneavoastră este obligatoriu unul. Creați mai întâi coduri de recuperare sau configurați un alt factor."
         },
-        "requiredWithDeadline": "Pentru rolul dumneavoastră, al doilea factor este obligatoriu. Configurați-l până la {date} — după această dată autentificarea fără al doilea factor nu mai este posibilă.",
         "statusFailed": "Starea autentificării în doi pași nu a putut fi încărcată. Reîncărcați pagina."
       },
       "recovery": {
@@ -9210,14 +9208,6 @@
       "smsSent": "Codul a fost trimis.",
       "resend": "Retrimite codul",
       "recoveryRedeemedHint": "Codul a fost folosit, dar singur nu este suficient pentru autentificare. Autentificați-vă cu unul dintre factorii configurați sau adresați-vă echipei dumneavoastră."
-    },
-    "mfaSetup": {
-      "title": "Configurați autentificarea în doi pași",
-      "intro": "Pentru rolul dumneavoastră, al doilea factor este obligatoriu. Configurați-l acum pentru a continua.",
-      "why": "În calitate de administrator aveți acces la datele financiare, la datele oaspeților și la setările întregii unități. Al doilea factor împiedică o parolă furată să fie suficientă prin ea însăși.",
-      "goToSettings": "Configurează acum",
-      "later": "Amintește-mi mai târziu",
-      "introWithDeadline": "Pentru rolul dumneavoastră, al doilea factor este obligatoriu. Configurați-l până la {date} — după această dată autentificarea fără al doilea factor nu mai este posibilă."
     }
   },
   "sprache": {

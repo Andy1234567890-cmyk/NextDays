@@ -8127,7 +8127,6 @@
         "title": "Two-factor authentication (2FA)",
         "intro": "Protects your account with a second factor on top of your password.",
         "noneActive": "No second factor is set up yet. We recommend the authenticator app.",
-        "requiredNotice": "A second factor is mandatory for your role. Please set one up now.",
         "active": "Active",
         "setUp": "Set up",
         "totp": {
@@ -8229,7 +8228,6 @@
           "passkeyTitle": "Remove passkey",
           "lastFactorBlocked": "This is your last second factor, and your role requires one. Create recovery codes first, or set up another factor."
         },
-        "requiredWithDeadline": "A second factor is mandatory for your role. Set it up by {date} — after that, signing in without a second factor is no longer possible.",
         "statusFailed": "The two-factor authentication status couldn't be loaded. Please reload the page."
       },
       "recovery": {
@@ -9288,14 +9286,6 @@
       "smsSent": "The code has been sent.",
       "resend": "Send code again",
       "recoveryRedeemedHint": "The code was redeemed, but on its own it isn't enough to sign in. Please sign in with one of the factors you've set up, or contact your team."
-    },
-    "mfaSetup": {
-      "title": "Set up two-factor authentication",
-      "intro": "A second factor is mandatory for your role. Set it up now to continue.",
-      "why": "As an administrator you have access to financial data, guest data and the settings of the entire business. A second factor makes sure a stolen password alone isn't enough.",
-      "goToSettings": "Set up now",
-      "later": "Remind me later",
-      "introWithDeadline": "A second factor is mandatory for your role. Set it up by {date} — after that, signing in without a second factor is no longer possible."
     }
   },
   "sprache": {

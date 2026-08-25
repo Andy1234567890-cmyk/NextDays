@@ -33,8 +33,6 @@ import { getSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 import { DiagnoseStarter } from "@/components/diagnose-starter";
-import { MfaPflichtHinweis } from "@/components/auth/mfa-pflicht-hinweis";
-import { getMfaStatus } from "@/lib/mfa";
 import { AnkuendigungPopup } from "@/components/announcements/ankuendigung-popup";
 
 export default async function DashboardLayout({
@@ -100,24 +98,6 @@ export default async function DashboardLayout({
     capabilities = [];
   }
 
-  // 2FA-Pflicht: Status EINMAL serverseitig holen. Ob die Rolle einen Faktor
-  // BRAUCHT, entscheidet das Backend (`mfa_required`, Rolle aus der DB) — nicht
-  // die Rolle aus dem JWT, die hier nur fuer die Navigation dient (Wurzel 7).
-  // Bei einem Fehler wird NICHT gemahnt: eine Mahnung auf Verdacht waere eine
-  // Falschaussage (Wurzel 4/5).
-  const mfa = await getMfaStatus();
-  // In der Vorfuehrung nicht mahnen (0407): einrichten KANN der Besucher den
-  // zweiten Faktor nicht — das Enrollment ist ein Schreibvorgang, den der
-  // Demo-Riegel ablehnt. Eine Mahnung mit Frist, die niemand erfuellen kann,
-  // ist eine Aufforderung ins Leere und sieht nach einem Defekt aus.
-  const zweiterFaktorFehlt =
-    !me?.is_demo &&
-    mfa.ok &&
-    mfa.data.mfa_required &&
-    !mfa.data.mfa_enrolled;
-  // Echte Restfrist aus dem Backend (ISO) — nie selbst berechnet.
-  const mfaFrist = mfa.ok ? mfa.data.mfa_grace_until : null;
-
   return (
     <SidebarProvider>
       {/* Live-Chat mit dem Team: liegt im Layout, damit die Unterhaltung beim
@@ -158,7 +138,6 @@ export default async function DashboardLayout({
           <Topbar />
           {/* Inhaltsbereich — hier kommen später KPI-Kacheln & Charts hinein. */}
           <main className="flex min-h-0 min-w-0 flex-1 flex-col p-4 md:p-6">
-            {zweiterFaktorFehlt && <MfaPflichtHinweis fristIso={mfaFrist} />}
             {children}
           </main>
         </SidebarInset>

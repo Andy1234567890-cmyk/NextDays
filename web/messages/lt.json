@@ -8049,7 +8049,6 @@
         "title": "Dviejų veiksnių autentifikavimas (2FA)",
         "intro": "Apsaugo jūsų paskyrą antruoju veiksniu – papildomai prie slaptažodžio.",
         "noneActive": "Antrasis veiksnys dar nenustatytas. Rekomenduojame autentifikavimo programėlę.",
-        "requiredNotice": "Jūsų vaidmeniui antrasis veiksnys yra privalomas. Nustatykite jį dabar.",
         "active": "Aktyvus",
         "setUp": "Nustatyti",
         "totp": {
@@ -8151,7 +8150,6 @@
           "passkeyTitle": "Pašalinti prieigos raktą",
           "lastFactorBlocked": "Tai paskutinis jūsų antrasis veiksnys, o jūsų vaidmeniui vienas yra privalomas. Pirmiausia sukurkite atsarginius kodus arba nustatykite dar vieną veiksnį."
         },
-        "requiredWithDeadline": "Jūsų vaidmeniui antrasis veiksnys yra privalomas. Nustatykite jį iki {date} — po to prisijungti be antrojo veiksnio nebebus galima.",
         "statusFailed": "Nepavyko įkelti dviejų veiksnių autentifikavimo būsenos. Įkelkite puslapį iš naujo."
       },
       "recovery": {
@@ -9210,14 +9208,6 @@
       "smsSent": "Kodas išsiųstas.",
       "resend": "Siųsti kodą dar kartą",
       "recoveryRedeemedHint": "Kodas panaudotas, tačiau vien jo prisijungti nepakanka. Prisijunkite vienu iš savo nustatytų veiksnių arba kreipkitės į savo komandą."
-    },
-    "mfaSetup": {
-      "title": "Nustatyti dviejų veiksnių autentifikavimą",
-      "intro": "Jūsų vaidmeniui antrasis veiksnys yra privalomas. Nustatykite jį dabar, kad galėtumėte tęsti.",
-      "why": "Kaip administratorius turite prieigą prie finansinių duomenų, svečių duomenų ir visos įmonės nustatymų. Antrasis veiksnys neleidžia, kad pakaktų vien pavogto slaptažodžio.",
-      "goToSettings": "Nustatyti dabar",
-      "later": "Priminti vėliau",
-      "introWithDeadline": "Jūsų vaidmeniui antrasis veiksnys yra privalomas. Nustatykite jį iki {date} — po to prisijungti be antrojo veiksnio nebebus galima."
     }
   },
   "sprache": {

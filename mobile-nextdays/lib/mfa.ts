@@ -20,7 +20,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { CONFIG } from "@/lib/config";
-import { getRefreshTokenFuerMfa, getToken } from "@/lib/auth";
+import { getRefreshTokenFuerMfa, getToken, uebernehmeMfaSession } from "@/lib/auth";
 
 export type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -95,11 +95,22 @@ export async function totpBestaetigen(
   const supabase = holeClient();
   const heraus = await supabase.auth.mfa.challenge({ factorId });
   if (heraus.error) return { ok: false, error: heraus.error.message };
-  const { error } = await supabase.auth.mfa.verify({
+  const { data, error } = await supabase.auth.mfa.verify({
     factorId,
     challengeId: heraus.data.id,
     code,
   });
   if (error) return { ok: false, error: error.message };
+  // GoTrue stellt bei erfolgreichem Verify ein FRISCHES Token mit aal2 aus —
+  // ohne es zu übernehmen, bliebe das alte aal1-Token im Schlüsselbund liegen
+  // und jeder folgende Aufruf schlüge weiter am Guard fehl (Wurzel 1: der neue
+  // Zustand — „Faktor da" — braucht den passenden Gegenzustand am Token).
+  if (data?.access_token && data.refresh_token) {
+    await uebernehmeMfaSession({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_in: data.expires_in ?? 3600,
+    });
+  }
   return { ok: true, data: true };
 }

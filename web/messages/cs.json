@@ -8051,7 +8051,6 @@
         "title": "Dvoufázové ověření (2FA)",
         "intro": "Chrání váš účet druhým faktorem navíc k heslu.",
         "noneActive": "Zatím není nastaven žádný druhý faktor. Doporučujeme ověřovací aplikaci.",
-        "requiredNotice": "Pro vaši roli je druhý faktor povinný. Nastavte si jej nyní.",
         "active": "Aktivní",
         "setUp": "Nastavit",
         "totp": {
@@ -8153,7 +8152,6 @@
           "passkeyTitle": "Odebrat přístupový klíč",
           "lastFactorBlocked": "Toto je váš poslední druhý faktor a pro vaši roli je povinný. Nejprve si vytvořte záložní kódy nebo nastavte další faktor."
         },
-        "requiredWithDeadline": "Pro vaši roli je druhý faktor povinný. Nastavte si jej do {date} — poté už přihlášení bez druhého faktoru nebude možné.",
         "statusFailed": "Stav dvoufázového ověření se nepodařilo načíst. Načtěte stránku znovu."
       },
       "recovery": {
@@ -9212,14 +9210,6 @@
       "smsSent": "Kód byl odeslán.",
       "resend": "Odeslat kód znovu",
       "recoveryRedeemedHint": "Kód byl uplatněn, sám o sobě však k přihlášení nestačí. Přihlaste se prosím některým ze svých nastavených faktorů nebo se obraťte na svůj tým."
-    },
-    "mfaSetup": {
-      "title": "Nastavení dvoufázového ověření",
-      "intro": "Pro vaši roli je druhý faktor povinný. Nastavte si jej nyní, abyste mohli pokračovat.",
-      "why": "Jako správce máte přístup k finančním údajům, údajům hostů a nastavení celého provozu. Druhý faktor zajistí, že samotné odcizené heslo nestačí.",
-      "goToSettings": "Nastavit nyní",
-      "later": "Připomenout později",
-      "introWithDeadline": "Pro vaši roli je druhý faktor povinný. Nastavte si jej do {date} — poté už přihlášení bez druhého faktoru nebude možné."
     }
   },
   "sprache": {

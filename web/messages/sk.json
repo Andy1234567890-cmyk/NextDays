@@ -8049,7 +8049,6 @@
         "title": "Dvojfaktorové overenie (2FA)",
         "intro": "Chráni váš účet druhým faktorom navyše k heslu.",
         "noneActive": "Zatiaľ nie je nastavený žiadny druhý faktor. Odporúčame overovaciu aplikáciu.",
-        "requiredNotice": "Pre vašu rolu je druhý faktor povinný. Nastavte si ho teraz.",
         "active": "Aktívne",
         "setUp": "Nastaviť",
         "totp": {
@@ -8151,7 +8150,6 @@
           "passkeyTitle": "Odstrániť prístupový kľúč",
           "lastFactorBlocked": "Toto je váš posledný druhý faktor a pre vašu rolu je povinný. Najprv si vytvorte záložné kódy alebo nastavte ďalší faktor."
         },
-        "requiredWithDeadline": "Pre vašu rolu je druhý faktor povinný. Nastavte si ho do {date} — potom už prihlásenie bez druhého faktora nebude možné.",
         "statusFailed": "Stav dvojfaktorového overenia sa nepodarilo načítať. Načítajte stránku znova."
       },
       "recovery": {
@@ -9210,14 +9208,6 @@
       "smsSent": "Kód bol odoslaný.",
       "resend": "Odoslať kód znova",
       "recoveryRedeemedHint": "Kód bol uplatnený, sám osebe však na prihlásenie nestačí. Prihláste sa niektorým zo svojich nastavených faktorov alebo sa obráťte na svoj tím."
-    },
-    "mfaSetup": {
-      "title": "Nastavenie dvojfaktorového overenia",
-      "intro": "Pre vašu rolu je druhý faktor povinný. Nastavte si ho teraz, aby ste mohli pokračovať.",
-      "why": "Ako správca máte prístup k finančným údajom, údajom hostí a nastaveniam celej prevádzky. Druhý faktor zabezpečí, že samotné odcudzené heslo nestačí.",
-      "goToSettings": "Nastaviť teraz",
-      "later": "Pripomenúť neskôr",
-      "introWithDeadline": "Pre vašu rolu je druhý faktor povinný. Nastavte si ho do {date} — potom už prihlásenie bez druhého faktora nebude možné."
     }
   },
   "sprache": {

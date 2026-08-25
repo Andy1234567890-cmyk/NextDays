@@ -242,12 +242,12 @@ def _mfa_gate(request: Request, ctx: AuthContext) -> None:
     deshalb das TOKEN — egal wo es herkommt, es muss an dieser Stelle vorbei,
     weil jeder geschuetzte Endpunkt ueber `get_current_user` laeuft.
 
-    Drei Faelle, alle fail-closed:
-      1. `aal2`                       → durch.
+    Zwei-Faktor ist freiwillig (keine Rollen-Pflicht, s. `mfa_service.py`) —
+    dieser Riegel erzwingt nur, was jemand SELBST eingerichtet hat:
+      1. `aal2`                        → durch.
       2. `aal1` + verifizierte Faktoren → 401, der Faktor ist zu loesen.
          (Genau der Angriff: Direkt-Login mit Passwort allein.)
-      3. `aal1` + Pflichtrolle ohne Faktor → 401 nach Ablauf der Frist,
-         waehrend der Frist durch mit Aufforderungs-Header.
+      3. `aal1` + kein Faktor           → durch. Nichts zu loesen, keine Pflicht.
 
     Der Import liegt in der Funktion, weil `features.auth` seinerseits
     `core.security` importiert — ein Modul-Import waere ein Zirkel.

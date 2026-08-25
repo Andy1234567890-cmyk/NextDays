@@ -706,15 +706,17 @@ class MfaFactor(BaseModel):
 
 
 class MfaStatusResponse(BaseModel):
-    """Der 2FA-Zustand des eigenen Kontos."""
+    """Der 2FA-Zustand des eigenen Kontos.
+
+    Zwei-Faktor ist freiwillig (Entscheidung vom 25.08.2026, s.
+    `mfa_service.py`) — dieses Schema enthaelt deshalb bewusst KEIN
+    „Pflicht"/"Frist"-Feld mehr. Ein Feld, das nur noch False/None sein kann,
+    waere eine zweite, irrefuehrende Wahrheit ueber den Zugang.
+    """
 
     factors: list[MfaFactor] = []
     aal: str                          # aal1 | aal2 (aus dem aktuellen Token)
-    mfa_required: bool                # Pflicht fuer diese Rolle?
     mfa_enrolled: bool                # mindestens ein verifizierter Faktor
-    # Ende der Einrichtungsfrist (ISO). None, wenn keine Pflicht besteht oder
-    # bereits ein Faktor existiert.
-    mfa_grace_until: str | None = None
     recovery_codes_left: int = 0
     # Kann dieser Server den SMS-Faktor ueberhaupt ausliefern? Kommt aus der
     # Server-Konfiguration (`mfa_sms_available`), nicht aus einer Vermutung im

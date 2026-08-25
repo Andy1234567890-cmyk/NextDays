@@ -8049,7 +8049,6 @@
         "title": "Autenticação de dois fatores (2FA)",
         "intro": "Protege a sua conta com um segundo fator, além da palavra-passe.",
         "noneActive": "Ainda não configurou nenhum segundo fator. Recomendamos a aplicação de autenticação.",
-        "requiredNotice": "Para a sua função, um segundo fator é obrigatório. Configure um agora.",
         "active": "Ativo",
         "setUp": "Configurar",
         "totp": {
@@ -8151,7 +8150,6 @@
           "passkeyTitle": "Remover a chave de acesso",
           "lastFactorBlocked": "Este é o seu último segundo fator e a sua função exige um. Gere primeiro códigos de recuperação ou configure outro fator."
         },
-        "requiredWithDeadline": "Para a sua função, um segundo fator é obrigatório. Configure-o até {date} — a partir daí, deixa de ser possível iniciar sessão sem um segundo fator.",
         "statusFailed": "Não foi possível carregar o estado da autenticação de dois fatores. Recarregue a página."
       },
       "recovery": {
@@ -9210,14 +9208,6 @@
       "smsSent": "O código foi enviado.",
       "resend": "Enviar o código novamente",
       "recoveryRedeemedHint": "O código foi utilizado, mas por si só não é suficiente para iniciar sessão. Inicie sessão com um dos fatores que configurou ou contacte a sua equipa."
-    },
-    "mfaSetup": {
-      "title": "Configurar a autenticação de dois fatores",
-      "intro": "Para a sua função, um segundo fator é obrigatório. Configure-o agora para continuar.",
-      "why": "Enquanto administrador, tem acesso a dados financeiros, a dados dos hóspedes e às definições de todo o negócio. Um segundo fator impede que uma palavra-passe roubada seja suficiente por si só.",
-      "goToSettings": "Configurar agora",
-      "later": "Lembrar mais tarde",
-      "introWithDeadline": "Para a sua função, um segundo fator é obrigatório. Configure-o até {date} — a partir daí, deixa de ser possível iniciar sessão sem um segundo fator."
     }
   },
   "sprache": {

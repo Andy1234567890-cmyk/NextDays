@@ -8049,7 +8049,6 @@
         "title": "Autenticazione a due fattori (2FA)",
         "intro": "Protegge il tuo account con un secondo fattore oltre alla password.",
         "noneActive": "Non hai ancora configurato un secondo fattore. Ti consigliamo l'app di autenticazione.",
-        "requiredNotice": "Per il tuo ruolo il secondo fattore è obbligatorio. Configuralo ora.",
         "active": "Attivo",
         "setUp": "Configura",
         "totp": {
@@ -8151,7 +8150,6 @@
           "passkeyTitle": "Rimuovi la chiave d'accesso",
           "lastFactorBlocked": "Questo è il tuo ultimo secondo fattore e il tuo ruolo ne richiede uno. Genera prima i codici di recupero oppure configura un altro fattore."
         },
-        "requiredWithDeadline": "Per il tuo ruolo il secondo fattore è obbligatorio. Configuralo entro il {date}: dopo questa data non sarà più possibile accedere senza un secondo fattore.",
         "statusFailed": "Non è stato possibile caricare lo stato dell'autenticazione a due fattori. Ricarica la pagina."
       },
       "recovery": {
@@ -9210,14 +9208,6 @@
       "smsSent": "Il codice è stato inviato.",
       "resend": "Invia di nuovo il codice",
       "recoveryRedeemedHint": "Il codice è stato utilizzato, ma da solo non basta per accedere. Accedi con uno dei fattori che hai configurato oppure rivolgiti al tuo team."
-    },
-    "mfaSetup": {
-      "title": "Configura l'autenticazione a due fattori",
-      "intro": "Per il tuo ruolo il secondo fattore è obbligatorio. Configuralo ora per continuare.",
-      "why": "Come amministratore hai accesso ai dati finanziari, ai dati degli ospiti e alle impostazioni dell'intera struttura. Un secondo fattore impedisce che basti una password rubata.",
-      "goToSettings": "Configura ora",
-      "later": "Ricordamelo più tardi",
-      "introWithDeadline": "Per il tuo ruolo il secondo fattore è obbligatorio. Configuralo entro il {date}: dopo questa data non sarà più possibile accedere senza un secondo fattore."
     }
   },
   "sprache": {

@@ -8049,7 +8049,6 @@
         "title": "Tweestapsverificatie (2FA)",
         "intro": "Beschermt je account met een tweede factor naast je wachtwoord.",
         "noneActive": "Er is nog geen tweede factor ingesteld. We raden de authenticator-app aan.",
-        "requiredNotice": "Voor jouw rol is een tweede factor verplicht. Stel er nu een in.",
         "active": "Actief",
         "setUp": "Instellen",
         "totp": {
@@ -8151,7 +8150,6 @@
           "passkeyTitle": "Passkey verwijderen",
           "lastFactorBlocked": "Dit is je laatste tweede factor en voor jouw rol is er één verplicht. Maak eerst herstelcodes aan of stel een andere factor in."
         },
-        "requiredWithDeadline": "Voor jouw rol is een tweede factor verplicht. Stel hem uiterlijk {date} in — daarna is inloggen zonder tweede factor niet meer mogelijk.",
         "statusFailed": "De status van de tweestapsverificatie kon niet worden geladen. Laad de pagina opnieuw."
       },
       "recovery": {
@@ -9210,14 +9208,6 @@
       "smsSent": "De code is verstuurd.",
       "resend": "Code opnieuw versturen",
       "recoveryRedeemedHint": "De code is ingewisseld, maar is op zichzelf niet genoeg om in te loggen. Log in met een van de factoren die je hebt ingesteld of neem contact op met je team."
-    },
-    "mfaSetup": {
-      "title": "Tweestapsverificatie instellen",
-      "intro": "Voor jouw rol is een tweede factor verplicht. Stel hem nu in om verder te gaan.",
-      "why": "Als beheerder heb je toegang tot financiële gegevens, gastgegevens en de instellingen van het hele bedrijf. Een tweede factor zorgt ervoor dat een gestolen wachtwoord alleen niet genoeg is.",
-      "goToSettings": "Nu instellen",
-      "later": "Later herinneren",
-      "introWithDeadline": "Voor jouw rol is een tweede factor verplicht. Stel hem uiterlijk {date} in — daarna is inloggen zonder tweede factor niet meer mogelijk."
     }
   },
   "sprache": {

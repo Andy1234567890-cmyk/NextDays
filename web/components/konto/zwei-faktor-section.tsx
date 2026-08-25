@@ -8,11 +8,14 @@
 //   4. Wiederherstellungscodes          — FastAPI `/auth/mfa/recovery-codes`
 //
 // Quelle der Wahrheit ist AUSSCHLIESSLICH `GET /auth/mfa/status`: welche
-// Faktoren es gibt, ob die Rolle einen verlangt, wie lange die Frist noch
-// läuft und wie viele Wiederherstellungscodes übrig sind. Nichts davon wird
-// hier abgeleitet oder geraten.
+// Faktoren es gibt und wie viele Wiederherstellungscodes übrig sind. Nichts
+// davon wird hier abgeleitet oder geraten.
+//
+// 2FA ist freiwillig (Entscheidung vom 25.08.2026) — es gibt kein
+// Pflicht-/Fristfeld mehr und keinen mahnenden Hinweis. Ein Betrieb haftet
+// nicht dafür, dass jemand keinen zweiten Faktor einrichtet.
 import { Icon } from "@iconify/react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
@@ -37,7 +40,6 @@ export function ZweiFaktorSection({
   onGeaendert: () => void;
 }) {
   const t = useTranslations("account.security.twoFactor");
-  const locale = useLocale();
   const [assistent, setAssistent] = useState<Assistent>(null);
   const [zuEntfernen, setZuEntfernen] = useState<MfaFactor | null>(null);
 
@@ -49,8 +51,6 @@ export function ZweiFaktorSection({
   const sms = vonTyp("phone");
   const passkey = vonTyp("webauthn");
 
-  const frist = status.mfa_grace_until;
-
   return (
     <section className="flex flex-col gap-3">
       <div>
@@ -58,27 +58,9 @@ export function ZweiFaktorSection({
         <p className="text-sm text-muted-foreground">{t("intro")}</p>
       </div>
 
-      {/* Pflicht-Hinweis mit ECHTER Frist aus dem Backend. Fehlt sie, wird
-          kein Datum erfunden (Wurzel 4) — dann nur der Hinweis ohne Frist. */}
-      {status.mfa_required && !status.mfa_enrolled && (
-        <div
-          className="flex items-start gap-2 rounded-(--radius) border border-destructive/40 bg-destructive/5 p-3"
-          role="note"
-        >
-          <Icon
-            icon="ph:shield-warning"
-            className="mt-0.5 size-4 shrink-0 text-destructive"
-            aria-hidden
-          />
-          <p className="text-sm text-destructive">
-            {frist
-              ? t("requiredWithDeadline", { date: datumFormatieren(frist, locale) })
-              : t("requiredNotice")}
-          </p>
-        </div>
-      )}
-
-      {!status.mfa_required && !status.mfa_enrolled && (
+      {/* Freiwillig: kein Pflicht-Hinweis mehr, nur die neutrale Auskunft,
+          dass noch kein Faktor aktiv ist. */}
+      {!status.mfa_enrolled && (
         <div
           className="flex items-start gap-2 rounded-(--radius) border border-border bg-secondary p-3"
           role="note"
@@ -212,23 +194,6 @@ export function ZweiFaktorSection({
   );
 }
 
-/** ISO-Datum → lokale Kurzform. Bewusst ohne Bibliothek und ohne Annahme über
- *  das Format: ist der Wert nicht lesbar, wird er unverändert gezeigt statt
- *  ein „Invalid Date" zu behaupten.
- *
- *  `locale` kommt als Parameter herein (Projektmuster, vgl. `monatsName` in
- *  `provisions-verlauf.tsx`) — ein Hook ginge in einer Hilfsfunktion nicht.
- *  Ohne dieses Argument nähme `toLocaleDateString` die Sprache des BROWSERS
- *  statt der eingestellten Oberflächensprache. */
-function datumFormatieren(iso: string, locale: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString(locale, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
 
 function FaktorKarte({
   icon,

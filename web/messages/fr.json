@@ -8051,7 +8051,6 @@
         "title": "Authentification à deux facteurs (2FA)",
         "intro": "Protège votre compte avec un deuxième facteur en plus du mot de passe.",
         "noneActive": "Aucun deuxième facteur n'est encore configuré. Nous recommandons l'application d'authentification.",
-        "requiredNotice": "Un deuxième facteur est obligatoire pour votre rôle. Configurez-en un dès maintenant.",
         "active": "Actif",
         "setUp": "Configurer",
         "totp": {
@@ -8153,7 +8152,6 @@
           "passkeyTitle": "Supprimer la clé d'accès",
           "lastFactorBlocked": "C'est votre dernier deuxième facteur, et votre rôle en exige un. Générez d'abord des codes de récupération ou configurez un autre facteur."
         },
-        "requiredWithDeadline": "Un deuxième facteur est obligatoire pour votre rôle. Configurez-le avant le {date} — au-delà, la connexion sans deuxième facteur ne sera plus possible.",
         "statusFailed": "Impossible de charger l'état de l'authentification à deux facteurs. Veuillez recharger la page."
       },
       "recovery": {
@@ -9212,14 +9210,6 @@
       "smsSent": "Le code a été envoyé.",
       "resend": "Renvoyer le code",
       "recoveryRedeemedHint": "Le code a bien été utilisé, mais il ne suffit pas à lui seul pour se connecter. Connectez-vous avec l'un des facteurs que vous avez configurés ou adressez-vous à votre équipe."
-    },
-    "mfaSetup": {
-      "title": "Configurer l'authentification à deux facteurs",
-      "intro": "Un deuxième facteur est obligatoire pour votre rôle. Configurez-le maintenant pour continuer.",
-      "why": "En tant qu'administrateur, vous avez accès aux données financières, aux données des clients et aux réglages de tout l'établissement. Un deuxième facteur évite qu'un mot de passe volé suffise à lui seul.",
-      "goToSettings": "Configurer maintenant",
-      "later": "Me le rappeler plus tard",
-      "introWithDeadline": "Un deuxième facteur est obligatoire pour votre rôle. Configurez-le avant le {date} — au-delà, la connexion sans deuxième facteur ne sera plus possible."
     }
   },
   "sprache": {

@@ -90,14 +90,13 @@ export type MfaFaktor = {
   status: string;
 };
 
+// 2FA ist freiwillig (keine Rollen-Pflicht, Entscheidung vom 25.08.2026) —
+// kein Pflicht-/Fristfeld mehr im Contract.
 export type MfaStatus = {
   factors: MfaFaktor[];
   /** aal1 = nur Passwort, aal2 = zweiter Faktor gelöst. */
   aal: string;
-  mfa_required: boolean;
   mfa_enrolled: boolean;
-  /** Ende der Einrichtungsfrist (ISO) — null, wenn keine Pflicht besteht. */
-  mfa_grace_until: string | null;
   recovery_codes_left: number;
   sms_available?: boolean;
 };

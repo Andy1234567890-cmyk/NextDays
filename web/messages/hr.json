@@ -8051,7 +8051,6 @@
         "title": "Dvofaktorska autentifikacija (2FA)",
         "intro": "Štiti vaš račun drugim faktorom uz lozinku.",
         "noneActive": "Drugi faktor još nije postavljen. Preporučujemo aplikaciju za autentifikaciju.",
-        "requiredNotice": "Za vašu je ulogu drugi faktor obvezan. Postavite ga sada.",
         "active": "Aktivno",
         "setUp": "Postavi",
         "totp": {
@@ -8153,7 +8152,6 @@
           "passkeyTitle": "Ukloni pristupni ključ",
           "lastFactorBlocked": "Ovo je vaš posljednji drugi faktor, a za vašu je ulogu jedan obvezan. Najprije izradite kodove za oporavak ili postavite dodatni faktor."
         },
-        "requiredWithDeadline": "Za vašu je ulogu drugi faktor obvezan. Postavite ga do {date} — nakon toga prijava bez drugog faktora više neće biti moguća.",
         "statusFailed": "Stanje dvofaktorske autentifikacije nije bilo moguće učitati. Ponovno učitajte stranicu."
       },
       "recovery": {
@@ -9212,14 +9210,6 @@
       "smsSent": "Kôd je poslan.",
       "resend": "Ponovno pošalji kôd",
       "recoveryRedeemedHint": "Kôd je iskorišten, ali sam po sebi nije dovoljan za prijavu. Prijavite se jednim od svojih postavljenih faktora ili se obratite svojem timu."
-    },
-    "mfaSetup": {
-      "title": "Postavljanje dvofaktorske autentifikacije",
-      "intro": "Za vašu je ulogu drugi faktor obvezan. Postavite ga sada da biste nastavili.",
-      "why": "Kao administrator imate pristup financijskim podacima, podacima gostiju i postavkama cijelog objekta. Drugi faktor sprječava da ukradena lozinka sama bude dovoljna.",
-      "goToSettings": "Postavi sada",
-      "later": "Podsjeti me poslije",
-      "introWithDeadline": "Za vašu je ulogu drugi faktor obvezan. Postavite ga do {date} — nakon toga prijava bez drugog faktora više neće biti moguća."
     }
   },
   "sprache": {

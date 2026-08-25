@@ -1,5 +1,5 @@
-"""Zwei-Faktor-Authentifizierung: Pflicht-Erzwingung (AAL2) und der eine
-Faktor, den GoTrue nicht kennt (Wiederherstellungscodes).
+"""Zwei-Faktor-Authentifizierung: freiwillige Faktoren (AAL2) und der eine
+Baustein, den GoTrue nicht kennt (Wiederherstellungscodes).
 
 Leitgedanke (CLAUDE.md, Wurzel 7): Der direkte GoTrue-Login
 (`POST /auth/v1/token`, anon-Key) umgeht JEDE App-Route. Eine 2FA, die nur in
@@ -13,20 +13,26 @@ Leitgedanke (CLAUDE.md, Wurzel 7): Der direkte GoTrue-Login
   Dieser Claim ist die einzige Quelle der Wahrheit und wird zentral in
   `core.security.get_current_user` geprueft — also auf JEDEM Endpunkt und
   unabhaengig davon, ueber welchen Weg das Token entstanden ist.
-- Die Rolle fuer die Pflichtpruefung kommt aus der **DB** (`public.users.role`),
-  nie aus dem JWT: eine entzogene Admin-Rolle wuerde sonst bis zum Token-Ablauf
-  weitergelten (Wurzel 7).
 
-Wiederherstellungscodes sind der Rettungsweg und liegen in
-`public.mfa_recovery_code` — nur als SHA-256-Hash (Wurzel 6), Einloesung als
-atomarer DB-Claim (Wurzel 2), byteweiser Vergleich (Wurzel 5).
+FREIWILLIG, KEINE PFLICHT (Entscheidung vom 25.08.2026): Es gab hier eine
+Rollen-Pflicht (`PFLICHT_ROLLEN` = admin/co_admin, 14-Tage-Frist,
+`mfa_enforcement`), die ein Konto ohne Faktor nach Fristablauf aussperrte. Sie
+ist ersatzlos entfernt: ein Betrieb haftet nicht dafuer, dass jemand keinen
+zweiten Faktor einrichtet, und eine Sperre mit Ausweg-Frist ist genau die Art
+erzwungener Kontrolle, die es nicht mehr geben soll. `mfa_gate.py` prueft
+seither nur noch, ob ein VORHANDENER Faktor geloest wurde — nie, ob einer
+existieren MUSS.
+
+Wiederherstellungscodes sind der Rettungsweg fuer wer freiwillig einen Faktor
+eingerichtet hat und liegen in `public.mfa_recovery_code` — nur als
+SHA-256-Hash (Wurzel 6), Einloesung als atomarer DB-Claim (Wurzel 2),
+byteweiser Vergleich (Wurzel 5).
 """
 from __future__ import annotations
 
 import hashlib
 import secrets
-from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 
 from postgrest.exceptions import APIError
 from supabase import Client
@@ -36,20 +42,6 @@ from src.core.security import secrets_match
 
 log = get_logger("nextdays.auth.mfa")
 
-# Rollen, fuer die ein zweiter Faktor PFLICHT ist (Entscheidung des Nutzers).
-# Bewusst ein frozenset an EINER Stelle: eine weitere Pflichtrolle ist ein
-# Eintrag hier, keine zweite Verzweigung irgendwo im Guard.
-PFLICHT_ROLLEN = frozenset({"admin", "co_admin"})
-
-# Einrichtungsfrist fuer BESTANDSKONTEN einer Pflichtrolle, die noch keinen
-# Faktor haben. Begruendung siehe Migration 0341: eine sofort greifende Sperre
-# haette mit dem Einspielen jeden bestehenden Admin ausgesperrt, auch den, der
-# den Fehler beheben muesste. Waehrend der Frist kommt der Nutzer durch und
-# bekommt bei jedem Request die Aufforderung; danach ist zu.
-# Die Frist gilt NUR fuer das Fehlen eines Faktors — wer einen hat, muss ihn
-# ab sofort loesen (dort gibt es keine Kulanz).
-GRACE_DAUER = timedelta(days=14)
-
 # Anzahl und Entropie der Wiederherstellungscodes. 10 Codes a 10 Zeichen aus
 # einem 32er-Alphabet = ~50 Bit je Code — weit ausserhalb von Bruteforce, und
 # der Einloese-Endpunkt liegt zusaetzlich im strengen `mfa`-Rate-Limit-Bucket.
@@ -58,16 +50,6 @@ _RECOVERY_CODE_LAENGE = 10
 # Crockford-Base32 ohne I/L/O/U: keine Verwechslung von 0/O und 1/I/L beim
 # Abtippen, kein zufaelliges Bilden anstoessiger Woerter (kein U).
 _ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
-
-# Pfade, die ein Konto unter Enrollment-Zwang noch benutzen darf — sonst
-# koennte es die geforderte 2FA gar nicht erst einrichten (das waere eine
-# Sperre ohne Ausweg). Bewusst eng: nur die 2FA-Einrichtung selbst, die
-# Kontoanzeige und das Abmelden.
-ENROLLMENT_ERLAUBTE_PFADE = (
-    "/auth/mfa/",
-    "/auth/account",
-    "/auth/logout",
-)
 
 
 class MfaError(Exception):
@@ -79,40 +61,8 @@ class MfaError(Exception):
         self.status_code = status_code
 
 
-@dataclass(frozen=True)
-class MfaPflicht:
-    """Ergebnis der Pflichtpruefung fuer EINEN Nutzer.
-
-    `erzwingen` = der Zugang ist zu (Frist abgelaufen oder nie eine gehabt).
-    `grace_until` = solange darf er noch durch, wird aber aufgefordert.
-    """
-
-    pflichtig: bool
-    hat_faktor: bool
-    erzwingen: bool
-    grace_until: datetime | None
-
-
 def _now() -> datetime:
     return datetime.now(UTC)
-
-
-def _zeit(wert: str) -> datetime:
-    """Einen Zeitstempel aus der DB robust als AWARE datetime lesen.
-
-    Wichtig, weil `_now()` aware ist: ein NAIVER Wert (Zeitstempel ohne
-    Offset) wuerde beim Vergleich `_now() >= grace_until` einen TypeError
-    werfen — und der ist KEIN MfaError, liefe also am fail-closed-Zweig des
-    Guards vorbei in einen 500. Genau die Konten, die dann nicht mehr
-    durchkaemen, sind die pflichtigen ohne Faktor: sie koennten die geforderte
-    2FA nicht einmal mehr einrichten, weil auch /auth/mfa/* stuerbe.
-    Dasselbe Muster wie `inbox.scheduler._parse` — bewusst keine dritte
-    Variante mit eigenem Verhalten.
-    """
-    dt = datetime.fromisoformat(wert.replace("Z", "+00:00"))
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=UTC)
-    return dt
 
 
 def _hash_code(code: str) -> str:
@@ -168,170 +118,12 @@ class MfaService:
     def hat_faktor(self, user_id: str) -> bool:
         return bool(self.faktoren(user_id))
 
-    # -- Pflicht-Erzwingung -------------------------------------------------
-
-    def rolle_aus_db(self, user_id: str) -> str | None:
-        """Die Rolle aus `public.users` — die Quelle der Wahrheit.
-
-        NICHT aus `ctx.role` (JWT): ein entzogener Admin behielte seine Rolle
-        sonst bis zum Token-Ablauf und damit auch seine Pflicht-Ausnahme
-        (Wurzel 7).
-        """
-        res = (
-            self._db.table("users")
-            .select("role")
-            .eq("id", user_id)
-            .limit(1)
-            .execute()
-        )
-        return res.data[0].get("role") if res.data else None
-
-    def pflicht_pruefen(
-        self, user_id: str, *, rolle: str | None, tenant_id: str | None = None
-    ) -> MfaPflicht:
-        """Muss dieser Nutzer einen zweiten Faktor haben, und ist er faellig?
-
-        Setzt die Frist beim ERSTEN Kontakt eines pflichtigen Kontos ohne
-        Faktor (nicht vorab fuer alle) — so laeuft sie ab dem ersten Login und
-        nicht ab dem Zeitpunkt der Migration, an dem niemand die Aufforderung
-        gesehen haette.
-
-        AUSNAHME VORFUEHR-MANDANT (0407): dort gibt es keine Pflicht. Der
-        Vorfuehr-Zugang traegt Rolle `admin` und waere damit pflichtig — aber
-        einrichten KANN ihn niemand: das Enrollment ist ein Schreibvorgang, den
-        der Demo-Riegel ablehnt. Die Folge waere, dass sich die Vorfuehrung nach
-        Ablauf der Frist selbst abschaltet (gemessen: Frist lief auf den
-        23.08.2026) und jeder Besucher einen 401 saehe. Eine Pflicht, die
-        strukturell nicht erfuellbar ist, ist keine Sicherheitsmassnahme,
-        sondern eine Zeitbombe.
-
-        Der Zugang ist dadurch nicht schwaecher geschuetzt: er kann
-        ausschliesslich lesen, und was er liest, ist ein Bestand aus erfundenen
-        Buchungen.
-        """
-        if tenant_id and self._ist_demo_mandant(tenant_id):
-            return MfaPflicht(
-                pflichtig=False, hat_faktor=False, erzwingen=False, grace_until=None
-            )
-
-        if rolle not in PFLICHT_ROLLEN:
-            return MfaPflicht(
-                pflichtig=False, hat_faktor=False, erzwingen=False, grace_until=None
-            )
-
-        if self.hat_faktor(user_id):
-            # Faktor vorhanden → Frist ist gegenstandslos. Einmalig festhalten,
-            # damit sie nie wieder neu vergeben wird (auch nicht, wenn der
-            # Nutzer den Faktor spaeter entfernt).
-            self._enrollment_festhalten(user_id)
-            return MfaPflicht(
-                pflichtig=True, hat_faktor=True, erzwingen=False, grace_until=None
-            )
-
-        grace_until = self._grace_holen_oder_setzen(user_id)
-        return MfaPflicht(
-            pflichtig=True,
-            hat_faktor=False,
-            erzwingen=_now() >= grace_until,
-            grace_until=grace_until,
-        )
-
-    def _ist_demo_mandant(self, tenant_id: str) -> bool:
-        """Ist das der oeffentliche Vorfuehr-Mandant? (0407)
-
-        Ein Lesefehler heisst NICHT „Demo": faellt die Abfrage aus, gilt die
-        Pflicht weiter. Das ist die sichere Richtung — im Zweifel mahnen statt
-        eine Pflicht stillschweigend fallen zu lassen (Wurzel 5).
-        """
-        try:
-            res = (
-                self._db.table("tenants")
-                .select("is_demo")
-                .eq("id", tenant_id)
-                .limit(1)
-                .execute()
-            )
-        except Exception as exc:  # noqa: BLE001 — im Zweifel gilt die Pflicht
-            log.warning(
-                "mfa_demo_pruefung_fehlgeschlagen",
-                tenant_id=tenant_id,
-                error=str(exc)[:200],
-            )
-            return False
-        rows = res.data or []
-        return bool(rows and rows[0].get("is_demo"))
-
-    def _grace_holen_oder_setzen(self, user_id: str) -> datetime:
-        """Die Frist dieses Nutzers. Fehlt sie, wird sie JETZT + GRACE_DAUER
-        gesetzt und zurueckgegeben.
-
-        Idempotent (Wurzel 2): der Insert laeuft als upsert mit
-        `ignore_duplicates`, damit zwei parallele Requests desselben Nutzers
-        nicht zwei Fristen anlegen bzw. die bestehende verlaengern. Ein Retry
-        darf die Frist NIE nach hinten schieben — sonst koennte ein Konto sie
-        durch simples Neuladen ewig verlaengern.
-        """
-        res = (
-            self._db.table("mfa_enforcement")
-            .select("grace_until, enrolled_at")
-            .eq("user_id", user_id)
-            .limit(1)
-            .execute()
-        )
-        row = res.data[0] if res.data else None
-        if row and row.get("grace_until"):
-            return _zeit(row["grace_until"])
-
-        grace_until = _now() + GRACE_DAUER
-        try:
-            self._db.table("mfa_enforcement").upsert(
-                {"user_id": user_id, "grace_until": grace_until.isoformat()},
-                on_conflict="user_id",
-                ignore_duplicates=True,
-            ).execute()
-        except APIError as exc:
-            log.error("mfa_grace_setzen_failed", user_id=user_id, error=str(exc))
-            raise MfaError("2FA-Status nicht ermittelbar.", status_code=503) from exc
-
-        # Zurueckgelesen statt den lokal berechneten Wert zu glauben: hat ein
-        # paralleler Request die Zeile zuerst angelegt, gilt DESSEN Frist.
-        nach = (
-            self._db.table("mfa_enforcement")
-            .select("grace_until")
-            .eq("user_id", user_id)
-            .limit(1)
-            .execute()
-        )
-        if nach.data and nach.data[0].get("grace_until"):
-            return _zeit(nach.data[0]["grace_until"])
-        return grace_until
-
-    def _enrollment_festhalten(self, user_id: str) -> None:
-        """`enrolled_at` einmalig setzen, sobald ein Faktor existiert."""
-        try:
-            res = (
-                self._db.table("mfa_enforcement")
-                .select("enrolled_at")
-                .eq("user_id", user_id)
-                .limit(1)
-                .execute()
-            )
-            if res.data and res.data[0].get("enrolled_at"):
-                return
-            self._db.table("mfa_enforcement").upsert(
-                {
-                    "user_id": user_id,
-                    "enrolled_at": _now().isoformat(),
-                    "grace_until": None,
-                },
-                on_conflict="user_id",
-            ).execute()
-        except APIError as exc:  # noqa: BLE001 — Buchhaltung, nie den Login kippen
-            # Best effort: `enrolled_at` ist eine Notiz, keine Zugangskontrolle.
-            # Der Faktor existiert bereits — der Nutzer kommt so oder so durch.
-            log.warning("mfa_enrollment_notiz_failed", user_id=user_id, error=str(exc))
-
-    # -- Wiederherstellungscodes -------------------------------------------
+    # -- Wiederherstellungscodes ---------------------------------------------
+    #
+    # Der Rettungsweg fuer wer freiwillig einen Faktor eingerichtet hat und das
+    # Geraet verliert. Keine Pflicht-Erzwingung mehr hier (s. Moduldoc) — wer
+    # keinen Faktor hat, kommt ueber `mfa_gate.mfa_zugang_pruefen` ohnehin durch
+    # und braucht auch keine Wiederherstellungscodes.
 
     def codes_erzeugen(self, user_id: str) -> list[str]:
         """Neue Wiederherstellungscodes. ERSETZT alle bisherigen.
@@ -415,36 +207,21 @@ class MfaService:
             verbleibend=self.codes_offen(user_id),
         )
 
-    # -- Faktor entfernen (Aussperr-Schutz) --------------------------------
+    # -- Faktor entfernen ----------------------------------------------------
 
     def faktor_entfernen_erlaubt(self, user_id: str, factor_id: str) -> None:
-        """Darf dieser Faktor weg, ohne den Nutzer auszusperren?
+        """Gehoert dieser Faktor wirklich dem Nutzer?
 
-        Es geht NICHT darum, das Entfernen zu erschweren, sondern darum, dass
-        ein Pflicht-Konto sich nicht selbst den letzten Schluessel wegnimmt und
-        danach vom eigenen Guard ausgesperrt wird. Bleibt ein anderer Faktor
-        ODER ein Wiederherstellungscode, ist alles offen.
+        Keine weitere Huerde mehr (kein „letzter Faktor eines Pflicht-Kontos" —
+        es gibt keine Pflicht, s. Moduldoc): wer freiwillig einen Faktor
+        eingerichtet hat, darf ihn auch wieder entfernen, ohne Recovery-Codes
+        vorweisen zu muessen.
         """
         vorhandene = self.faktoren(user_id)
         if not any(f.get("id") == factor_id for f in vorhandene):
             # Wurzel 9: nur eigene Faktoren — die Liste ist bereits auf den
             # Nutzer gescoped, ein fremder factor_id trifft hier nichts.
             raise MfaError("Faktor nicht gefunden.", status_code=404)
-
-        if len(vorhandene) > 1:
-            return
-
-        rolle = self.rolle_aus_db(user_id)
-        if rolle not in PFLICHT_ROLLEN:
-            return
-
-        if self.codes_offen(user_id) == 0:
-            raise MfaError(
-                "Das ist der letzte zweite Faktor und es sind keine "
-                "Wiederherstellungscodes übrig. Erzeuge zuerst neue Codes "
-                "oder richte einen weiteren Faktor ein.",
-                status_code=409,
-            )
 
     def faktor_entfernen(self, user_id: str, factor_id: str) -> None:
         """EINEN Faktor entfernen. Die Erlaubnis prueft
@@ -499,20 +276,6 @@ class MfaService:
             self._db.table("mfa_recovery_code").delete().eq(
                 "user_id", user_id
             ).execute()
-            self._db.table("mfa_enforcement").upsert(
-                {
-                    "user_id": user_id,
-                    "enrolled_at": None,
-                    # Die Frist NUR anstossen, wenn das Konto noch keine hatte
-                    # bzw. die alte schon abgelaufen ist — siehe
-                    # `_reset_frist`. Sie hier bedingungslos auf „jetzt + 14
-                    # Tage" zu setzen, machte den Admin-Reset zum Schalter,
-                    # mit dem sich die Pflicht beliebig oft verlaengern
-                    # laesst (Faktor anlegen → reset → 14 neue Tage → …).
-                    "grace_until": self._reset_frist(user_id).isoformat(),
-                },
-                on_conflict="user_id",
-            ).execute()
         except APIError as exc:
             log.error("mfa_reset_failed", user_id=user_id, error=str(exc))
             raise MfaError(
@@ -520,32 +283,6 @@ class MfaService:
             ) from exc
         log.info("mfa_factors_reset", user_id=user_id, anzahl=len(vorher))
         return vorher
-
-    def _reset_frist(self, user_id: str) -> datetime:
-        """Die Frist, die nach einem Admin-Reset gilt.
-
-        Eine noch LAUFENDE Frist bleibt unangetastet — nur wenn keine da ist
-        oder die alte bereits abgelaufen war, gibt es eine neue. Damit ist der
-        Reset ein Rettungsweg und kein Umgehungsschalter: Wer die Pflicht
-        aussitzen wollte, gewinnt durch wiederholte Resets keine Zeit.
-
-        Ein Konto, dessen Frist laengst abgelaufen ist, bekommt bewusst eine
-        neue — sonst waere es nach der Rettung sofort wieder gesperrt und der
-        Reset waere wirkungslos (Aussperr-Schutz).
-        """
-        res = (
-            self._db.table("mfa_enforcement")
-            .select("grace_until")
-            .eq("user_id", user_id)
-            .limit(1)
-            .execute()
-        )
-        row = res.data[0] if res.data else None
-        if row and row.get("grace_until"):
-            bestehend = _zeit(row["grace_until"])
-            if bestehend > _now():
-                return bestehend
-        return _now() + GRACE_DAUER
 
     def reset_auditieren(
         self,

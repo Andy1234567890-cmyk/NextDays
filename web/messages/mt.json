@@ -8049,7 +8049,6 @@
         "title": "Awtentikazzjoni b'żewġ fatturi (2FA)",
         "intro": "Tipproteġi l-kont tiegħek b'tieni fattur flimkien mal-password.",
         "noneActive": "Għadu ma ġie ssettjat l-ebda tieni fattur. Nirrakkomandaw l-app ta' awtentikazzjoni.",
-        "requiredNotice": "Għar-rwol tiegħek it-tieni fattur huwa obbligatorju. Jekk jogħġbok issettjah issa.",
         "active": "Attiv",
         "setUp": "Issettja",
         "totp": {
@@ -8151,7 +8150,6 @@
           "passkeyTitle": "Neħħi l-passkey",
           "lastFactorBlocked": "Dan huwa l-aħħar tieni fattur tiegħek u għar-rwol tiegħek wieħed huwa obbligatorju. L-ewwel oħloq kodiċijiet ta' rkupru jew issettja fattur ieħor."
         },
-        "requiredWithDeadline": "Għar-rwol tiegħek it-tieni fattur huwa obbligatorju. Issettjah sa {date} — wara dan, il-login mingħajr tieni fattur ma jibqax possibbli.",
         "statusFailed": "L-istatus tal-awtentikazzjoni b'żewġ fatturi ma setax jitgħabba. Jekk jogħġbok erġa' agħbi l-paġna."
       },
       "recovery": {
@@ -9210,14 +9208,6 @@
       "smsSent": "Il-kodiċi ntbagħat.",
       "resend": "Erġa' ibgħat il-kodiċi",
       "recoveryRedeemedHint": "Il-kodiċi ġie użat, iżda waħdu mhuwiex biżżejjed għal-login. Jekk jogħġbok idħol b'wieħed mill-fatturi li ssettjajt jew ikkuntattja lit-tim tiegħek."
-    },
-    "mfaSetup": {
-      "title": "Issettja l-awtentikazzjoni b'żewġ fatturi",
-      "intro": "Għar-rwol tiegħek it-tieni fattur huwa obbligatorju. Issettjah issa biex tkompli.",
-      "why": "Bħala amministratur għandek aċċess għad-dejta finanzjarja, id-dejta tal-mistednin u s-settings tan-negozju kollu. It-tieni fattur jipprevjeni li password misruqa waħedha tkun biżżejjed.",
-      "goToSettings": "Issettja issa",
-      "later": "Fakkarni aktar tard",
-      "introWithDeadline": "Għar-rwol tiegħek it-tieni fattur huwa obbligatorju. Issettjah sa {date} — wara dan, il-login mingħajr tieni fattur ma jibqax possibbli."
     }
   },
   "sprache": {

@@ -8051,7 +8051,6 @@
         "title": "Fíordheimhniú dhá fhachtóir (2FA)",
         "intro": "Cosnaíonn sé do chuntas le dara fachtóir sa bhreis ar an bpasfhocal.",
         "noneActive": "Níl aon dara fachtóir socraithe fós. Molaimid an aip fhíordheimhnithe.",
-        "requiredNotice": "Tá dara fachtóir riachtanach don ról atá agat. Socraigh anois é.",
         "active": "Gníomhach",
         "setUp": "Socraigh",
         "totp": {
@@ -8153,7 +8152,6 @@
           "passkeyTitle": "Bain an eochair rochtana",
           "lastFactorBlocked": "Seo é an dara fachtóir deireanach atá agat agus tá ceann amháin riachtanach don ról atá agat. Cruthaigh cóid chúltaca ar dtús nó socraigh fachtóir eile."
         },
-        "requiredWithDeadline": "Tá dara fachtóir riachtanach don ról atá agat. Socraigh faoin {date} é — ina dhiaidh sin ní bheidh sé indéanta logáil isteach gan dara fachtóir.",
         "statusFailed": "Níorbh fhéidir stádas an fhíordheimhnithe dhá fhachtóir a lódáil. Athlódáil an leathanach le do thoil."
       },
       "recovery": {
@@ -9212,14 +9210,6 @@
       "smsSent": "Seoladh an cód.",
       "resend": "Seol an cód arís",
       "recoveryRedeemedHint": "Úsáideadh an cód, ach ní leor é leis féin chun logáil isteach. Logáil isteach le ceann de na fachtóirí atá socraithe agat nó déan teagmháil le d'fhoireann."
-    },
-    "mfaSetup": {
-      "title": "Socraigh fíordheimhniú dhá fhachtóir",
-      "intro": "Tá dara fachtóir riachtanach don ról atá agat. Socraigh anois é chun leanúint ar aghaidh.",
-      "why": "Mar riarthóir tá rochtain agat ar shonraí airgeadais, ar shonraí aíonna agus ar shocruithe an ghnó ar fad. Cuireann dara fachtóir cosc air go mbeadh pasfhocal goidte leis féin dóthanach.",
-      "goToSettings": "Socraigh anois",
-      "later": "Cuir i gcuimhne dom níos déanaí",
-      "introWithDeadline": "Tá dara fachtóir riachtanach don ról atá agat. Socraigh faoin {date} é — ina dhiaidh sin ní bheidh sé indéanta logáil isteach gan dara fachtóir."
     }
   },
   "sprache": {

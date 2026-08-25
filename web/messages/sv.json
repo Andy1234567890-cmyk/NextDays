@@ -8049,7 +8049,6 @@
         "title": "Tvåfaktorsautentisering (2FA)",
         "intro": "Skyddar ditt konto med en andra faktor utöver lösenordet.",
         "noneActive": "Du har ännu inte konfigurerat någon andra faktor. Vi rekommenderar autentiseringsappen.",
-        "requiredNotice": "En andra faktor är obligatorisk för din roll. Konfigurera en nu.",
         "active": "Aktiv",
         "setUp": "Konfigurera",
         "totp": {
@@ -8151,7 +8150,6 @@
           "passkeyTitle": "Ta bort lösenordsnyckeln",
           "lastFactorBlocked": "Det här är din sista andra faktor och din roll kräver en. Skapa först återställningskoder eller konfigurera ytterligare en faktor."
         },
-        "requiredWithDeadline": "En andra faktor är obligatorisk för din roll. Konfigurera den senast den {date} — därefter går det inte längre att logga in utan en andra faktor.",
         "statusFailed": "Statusen för tvåfaktorsautentiseringen kunde inte laddas. Ladda om sidan."
       },
       "recovery": {
@@ -9210,14 +9208,6 @@
       "smsSent": "Koden har skickats.",
       "resend": "Skicka koden igen",
       "recoveryRedeemedHint": "Koden har lösts in, men den räcker inte på egen hand för att logga in. Logga in med en av de faktorer du har konfigurerat eller kontakta ditt team."
-    },
-    "mfaSetup": {
-      "title": "Konfigurera tvåfaktorsautentisering",
-      "intro": "En andra faktor är obligatorisk för din roll. Konfigurera den nu för att fortsätta.",
-      "why": "Som administratör har du åtkomst till ekonomiska uppgifter, gästuppgifter och inställningarna för hela verksamheten. En andra faktor gör att ett stulet lösenord inte räcker på egen hand.",
-      "goToSettings": "Konfigurera nu",
-      "later": "Påminn mig senare",
-      "introWithDeadline": "En andra faktor är obligatorisk för din roll. Konfigurera den senast den {date} — därefter går det inte längre att logga in utan en andra faktor."
     }
   },
   "sprache": {

@@ -8051,7 +8051,6 @@
         "title": "Autenticación en dos pasos (2FA)",
         "intro": "Protege tu cuenta con un segundo factor además de la contraseña.",
         "noneActive": "Todavía no has configurado ningún segundo factor. Te recomendamos la app de autenticación.",
-        "requiredNotice": "Para tu rol es obligatorio un segundo factor. Configúralo ahora.",
         "active": "Activo",
         "setUp": "Configurar",
         "totp": {
@@ -8153,7 +8152,6 @@
           "passkeyTitle": "Eliminar la llave de acceso",
           "lastFactorBlocked": "Este es tu último segundo factor y tu rol exige uno. Genera primero códigos de recuperación o configura otro factor."
         },
-        "requiredWithDeadline": "Para tu rol es obligatorio un segundo factor. Configúralo antes del {date}: a partir de esa fecha ya no será posible iniciar sesión sin un segundo factor.",
         "statusFailed": "No se ha podido cargar el estado de la autenticación en dos pasos. Vuelve a cargar la página."
       },
       "recovery": {
@@ -9212,14 +9210,6 @@
       "smsSent": "El código se ha enviado.",
       "resend": "Enviar el código de nuevo",
       "recoveryRedeemedHint": "El código se ha canjeado, pero por sí solo no basta para iniciar sesión. Inicia sesión con uno de los factores que tienes configurados o ponte en contacto con tu equipo."
-    },
-    "mfaSetup": {
-      "title": "Configurar la autenticación en dos pasos",
-      "intro": "Para tu rol es obligatorio un segundo factor. Configúralo ahora para continuar.",
-      "why": "Como administrador tienes acceso a los datos financieros, a los datos de los huéspedes y a los ajustes de todo el negocio. Un segundo factor impide que baste con robar tu contraseña.",
-      "goToSettings": "Configurar ahora",
-      "later": "Recordármelo más tarde",
-      "introWithDeadline": "Para tu rol es obligatorio un segundo factor. Configúralo antes del {date}: a partir de esa fecha ya no será posible iniciar sesión sin un segundo factor."
     }
   },
   "sprache": {

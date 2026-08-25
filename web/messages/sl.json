@@ -8049,7 +8049,6 @@
         "title": "Dvostopenjsko preverjanje (2FA)",
         "intro": "Vaš račun zaščiti z drugim dejavnikom poleg gesla.",
         "noneActive": "Drugi dejavnik še ni nastavljen. Priporočamo aplikacijo za preverjanje pristnosti.",
-        "requiredNotice": "Za vašo vlogo je drugi dejavnik obvezen. Nastavite ga zdaj.",
         "active": "Aktivno",
         "setUp": "Nastavi",
         "totp": {
@@ -8151,7 +8150,6 @@
           "passkeyTitle": "Odstrani ključ za dostop",
           "lastFactorBlocked": "To je vaš zadnji drugi dejavnik, za vašo vlogo pa je eden obvezen. Najprej ustvarite obnovitvene kode ali nastavite dodatni dejavnik."
         },
-        "requiredWithDeadline": "Za vašo vlogo je drugi dejavnik obvezen. Nastavite ga do {date} — po tem prijava brez drugega dejavnika ne bo več mogoča.",
         "statusFailed": "Stanja dvostopenjskega preverjanja ni bilo mogoče naložiti. Znova naložite stran."
       },
       "recovery": {
@@ -9210,14 +9208,6 @@
       "smsSent": "Koda je bila poslana.",
       "resend": "Ponovno pošlji kodo",
       "recoveryRedeemedHint": "Koda je bila unovčena, vendar sama za prijavo ne zadostuje. Prijavite se z enim od svojih nastavljenih dejavnikov ali se obrnite na svojo ekipo."
-    },
-    "mfaSetup": {
-      "title": "Nastavitev dvostopenjskega preverjanja",
-      "intro": "Za vašo vlogo je drugi dejavnik obvezen. Nastavite ga zdaj, da nadaljujete.",
-      "why": "Kot skrbnik imate dostop do finančnih podatkov, podatkov gostov in nastavitev celotnega obrata. Drugi dejavnik prepreči, da bi ukradeno geslo samo po sebi zadostovalo.",
-      "goToSettings": "Nastavi zdaj",
-      "later": "Opomni pozneje",
-      "introWithDeadline": "Za vašo vlogo je drugi dejavnik obvezen. Nastavite ga do {date} — po tem prijava brez drugega dejavnika ne bo več mogoča."
     }
   },
   "sprache": {

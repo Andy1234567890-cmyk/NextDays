@@ -8051,7 +8051,6 @@
         "title": "Tofaktorgodkendelse (2FA)",
         "intro": "Beskytter din konto med en anden faktor ud over adgangskoden.",
         "noneActive": "Du har endnu ikke konfigureret en anden faktor. Vi anbefaler godkendelsesappen.",
-        "requiredNotice": "En anden faktor er obligatorisk for din rolle. Konfigurer en nu.",
         "active": "Aktiv",
         "setUp": "Konfigurer",
         "totp": {
@@ -8153,7 +8152,6 @@
           "passkeyTitle": "Fjern loginnøgle",
           "lastFactorBlocked": "Det er din sidste anden faktor, og din rolle kræver en. Opret først genoprettelseskoder, eller konfigurer en anden faktor."
         },
-        "requiredWithDeadline": "En anden faktor er obligatorisk for din rolle. Konfigurer den senest den {date} — derefter er det ikke længere muligt at logge ind uden en anden faktor.",
         "statusFailed": "Status for tofaktorgodkendelsen kunne ikke indlæses. Genindlæs siden."
       },
       "recovery": {
@@ -9212,14 +9210,6 @@
       "smsSent": "Koden er sendt.",
       "resend": "Send koden igen",
       "recoveryRedeemedHint": "Koden er indløst, men den er ikke nok til login i sig selv. Log ind med en af de faktorer, du har konfigureret, eller kontakt dit team."
-    },
-    "mfaSetup": {
-      "title": "Konfigurer tofaktorgodkendelse",
-      "intro": "En anden faktor er obligatorisk for din rolle. Konfigurer den nu for at fortsætte.",
-      "why": "Som administrator har du adgang til økonomidata, gæstedata og indstillingerne for hele virksomheden. En anden faktor forhindrer, at en stjålet adgangskode alene er nok.",
-      "goToSettings": "Konfigurer nu",
-      "later": "Påmind mig senere",
-      "introWithDeadline": "En anden faktor er obligatorisk for din rolle. Konfigurer den senest den {date} — derefter er det ikke længere muligt at logge ind uden en anden faktor."
     }
   },
   "sprache": {

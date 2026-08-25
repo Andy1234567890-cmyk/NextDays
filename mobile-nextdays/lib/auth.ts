@@ -90,6 +90,31 @@ async function getRefreshToken(): Promise<string | null> {
   return cachedRefresh;
 }
 
+/**
+ * Eine Session, die AUSSERHALB dieses Moduls entsteht (0341: erfolgreiches
+ * TOTP-Enrollment gegen GoTrue, `lib/mfa.ts`), als aktuelle App-Session
+ * übernehmen — dieselbe Ablage wie Login/Refresh.
+ *
+ * Ohne diesen Weg blieb nach dem ERSTEN Einrichten eines Faktors das alte
+ * aal1-Token im Schlüsselbund stehen: `supabase.auth.mfa.verify()` stellt
+ * zwar ein frisches aal2-Token aus, aber `totpBestaetigen()` gab bisher nur
+ * `{ ok: true }` zurück und warf es weg. Die App hätte den Faktor erfolgreich
+ * eingerichtet und wäre trotzdem draußen geblieben — jeder folgende Aufruf
+ * hätte weiter mit dem alten aal1-Token gegen den Guard gelaufen.
+ */
+export async function uebernehmeMfaSession(session: {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+}): Promise<void> {
+  await storeSession({
+    access_token: session.access_token,
+    refresh_token: session.refresh_token,
+    token_type: "bearer",
+    expires_in: session.expires_in,
+  });
+}
+
 // Beide Tokens atomar setzen (bei Login/Refresh) oder löschen (Logout).
 // Benachrichtigt danach die Token-Abonnenten (Realtime setAuth erneuern).
 async function storeSession(session: SessionResponse | null): Promise<void> {

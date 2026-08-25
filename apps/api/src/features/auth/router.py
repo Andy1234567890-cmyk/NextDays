@@ -996,15 +996,12 @@ def phone_verify(
 def mfa_status(
     ctx: CurrentUser, service: MfaServiceDep, settings: SettingsDep
 ) -> MfaStatusResponse:
-    """Faktoren, Pflicht-Status und Rest-Wiederherstellungscodes des EIGENEN
-    Kontos. Nutzer ausschliesslich aus dem Token (Wurzel 3) — es gibt bewusst
-    keinen `user_id`-Parameter, der einen fremden Status ausliefern koennte."""
+    """Faktoren und Rest-Wiederherstellungscodes des EIGENEN Kontos. 2FA ist
+    freiwillig (kein Pflicht-Feld mehr, s. `mfa_service.py`). Nutzer
+    ausschliesslich aus dem Token (Wurzel 3) — es gibt bewusst keinen
+    `user_id`-Parameter, der einen fremden Status ausliefern koennte."""
     try:
         faktoren = service.faktoren(ctx.user_id)
-        rolle = service.rolle_aus_db(ctx.user_id)
-        pflicht = service.pflicht_pruefen(
-            ctx.user_id, rolle=rolle, tenant_id=ctx.tenant_id
-        )
         return MfaStatusResponse(
             factors=[
                 MfaFactor(
@@ -1017,11 +1014,7 @@ def mfa_status(
                 for f in faktoren
             ],
             aal=ctx.aal,
-            mfa_required=pflicht.pflichtig,
-            mfa_enrolled=pflicht.hat_faktor,
-            mfa_grace_until=(
-                pflicht.grace_until.isoformat() if pflicht.grace_until else None
-            ),
+            mfa_enrolled=bool(faktoren),
             recovery_codes_left=service.codes_offen(ctx.user_id),
             sms_available=settings.mfa_sms_available,
         )

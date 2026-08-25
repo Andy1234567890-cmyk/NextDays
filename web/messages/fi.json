@@ -8051,7 +8051,6 @@
         "title": "Kaksivaiheinen vahvistus (2FA)",
         "intro": "Suojaa tilisi salasanan lisäksi toisella vahvistustavalla.",
         "noneActive": "Toista vahvistustapaa ei ole vielä määritetty. Suosittelemme todennussovellusta.",
-        "requiredNotice": "Roolisi edellyttää toista vahvistustapaa. Määritä se nyt.",
         "active": "Käytössä",
         "setUp": "Määritä",
         "totp": {
@@ -8153,7 +8152,6 @@
           "passkeyTitle": "Poista pääsyavain",
           "lastFactorBlocked": "Tämä on viimeinen toinen vahvistustapasi, ja roolisi edellyttää sellaista. Luo ensin varakoodit tai määritä toinen vahvistustapa."
         },
-        "requiredWithDeadline": "Roolisi edellyttää toista vahvistustapaa. Määritä se {date} mennessä — sen jälkeen kirjautuminen ilman toista vahvistustapaa ei ole enää mahdollista.",
         "statusFailed": "Kaksivaiheisen vahvistuksen tilaa ei voitu ladata. Lataa sivu uudelleen."
       },
       "recovery": {
@@ -9212,14 +9210,6 @@
       "smsSent": "Koodi on lähetetty.",
       "resend": "Lähetä koodi uudelleen",
       "recoveryRedeemedHint": "Koodi on lunastettu, mutta se ei yksin riitä kirjautumiseen. Kirjaudu jollakin määrittämälläsi vahvistustavalla tai ota yhteyttä tiimiisi."
-    },
-    "mfaSetup": {
-      "title": "Määritä kaksivaiheinen vahvistus",
-      "intro": "Roolisi edellyttää toista vahvistustapaa. Määritä se nyt jatkaaksesi.",
-      "why": "Järjestelmänvalvojana sinulla on pääsy talous- ja asiakastietoihin sekä koko yrityksen asetuksiin. Toinen vahvistustapa estää sen, että varastettu salasana yksin riittäisi.",
-      "goToSettings": "Määritä nyt",
-      "later": "Muistuta myöhemmin",
-      "introWithDeadline": "Roolisi edellyttää toista vahvistustapaa. Määritä se {date} mennessä — sen jälkeen kirjautuminen ilman toista vahvistustapaa ei ole enää mahdollista."
     }
   },
   "sprache": {

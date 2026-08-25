@@ -8051,7 +8051,6 @@
         "title": "Kétlépcsős azonosítás (2FA)",
         "intro": "A jelszó mellett egy második lépéssel védi a fiókját.",
         "noneActive": "Még nincs beállítva második lépés. A hitelesítő alkalmazást ajánljuk.",
-        "requiredNotice": "Az Ön szerepköréhez kötelező a második lépés. Állítsa be most.",
         "active": "Aktív",
         "setUp": "Beállítás",
         "totp": {
@@ -8153,7 +8152,6 @@
           "passkeyTitle": "Azonosítókulcs eltávolítása",
           "lastFactorBlocked": "Ez az utolsó második lépése, az Ön szerepköréhez pedig kötelező egy ilyen. Előbb hozzon létre helyreállítási kódokat, vagy állítson be további lépést."
         },
-        "requiredWithDeadline": "Az Ön szerepköréhez kötelező a második lépés. Állítsa be {date} dátumig — ezt követően a bejelentkezés második lépés nélkül már nem lehetséges.",
         "statusFailed": "A kétlépcsős azonosítás állapotát nem sikerült betölteni. Töltse be újra az oldalt."
       },
       "recovery": {
@@ -9212,14 +9210,6 @@
       "smsSent": "A kódot elküldtük.",
       "resend": "Kód újraküldése",
       "recoveryRedeemedHint": "A kódot beváltottuk, önmagában azonban nem elegendő a bejelentkezéshez. Jelentkezzen be a beállított lépései egyikével, vagy forduljon a csapatához."
-    },
-    "mfaSetup": {
-      "title": "Kétlépcsős azonosítás beállítása",
-      "intro": "Az Ön szerepköréhez kötelező a második lépés. A folytatáshoz állítsa be most.",
-      "why": "Adminisztrátorként hozzáfér a pénzügyi adatokhoz, a vendégadatokhoz és az egész szálláshely beállításaihoz. A második lépés megakadályozza, hogy egy ellopott jelszó önmagában elegendő legyen.",
-      "goToSettings": "Beállítás most",
-      "later": "Emlékeztessen később",
-      "introWithDeadline": "Az Ön szerepköréhez kötelező a második lépés. Állítsa be {date} dátumig — ezt követően a bejelentkezés második lépés nélkül már nem lehetséges."
     }
   },
   "sprache": {

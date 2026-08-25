@@ -8049,7 +8049,6 @@
         "title": "Uwierzytelnianie dwuskładnikowe (2FA)",
         "intro": "Chroni Twoje konto dodatkowym składnikiem obok hasła.",
         "noneActive": "Nie skonfigurowano jeszcze drugiego składnika. Zalecamy aplikację uwierzytelniającą.",
-        "requiredNotice": "Dla Twojej roli drugi składnik jest obowiązkowy. Skonfiguruj go teraz.",
         "active": "Aktywne",
         "setUp": "Skonfiguruj",
         "totp": {
@@ -8151,7 +8150,6 @@
           "passkeyTitle": "Usuń klucz dostępu",
           "lastFactorBlocked": "To jest Twój ostatni drugi składnik, a dla Twojej roli jest on obowiązkowy. Najpierw wygeneruj kody odzyskiwania lub skonfiguruj kolejny składnik."
         },
-        "requiredWithDeadline": "Dla Twojej roli drugi składnik jest obowiązkowy. Skonfiguruj go do {date} — po tym terminie logowanie bez drugiego składnika nie będzie już możliwe.",
         "statusFailed": "Nie udało się wczytać stanu uwierzytelniania dwuskładnikowego. Odśwież stronę."
       },
       "recovery": {
@@ -9210,14 +9208,6 @@
       "smsSent": "Kod został wysłany.",
       "resend": "Wyślij kod ponownie",
       "recoveryRedeemedHint": "Kod został wykorzystany, ale sam nie wystarcza do zalogowania. Zaloguj się jednym ze skonfigurowanych składników lub zwróć się do swojego zespołu."
-    },
-    "mfaSetup": {
-      "title": "Skonfiguruj uwierzytelnianie dwuskładnikowe",
-      "intro": "Dla Twojej roli drugi składnik jest obowiązkowy. Skonfiguruj go teraz, aby kontynuować.",
-      "why": "Jako administrator masz dostęp do danych finansowych, danych gości i ustawień całego obiektu. Drugi składnik sprawia, że samo skradzione hasło nie wystarczy.",
-      "goToSettings": "Skonfiguruj teraz",
-      "later": "Przypomnij później",
-      "introWithDeadline": "Dla Twojej roli drugi składnik jest obowiązkowy. Skonfiguruj go do {date} — po tym terminie logowanie bez drugiego składnika nie będzie już możliwe."
     }
   },
   "sprache": {

@@ -8049,7 +8049,6 @@
         "title": "Divfaktoru autentifikācija (2FA)",
         "intro": "Aizsargā jūsu kontu ar otru faktoru papildus parolei.",
         "noneActive": "Otrs faktors vēl nav iestatīts. Iesakām autentifikācijas lietotni.",
-        "requiredNotice": "Jūsu lomai otrs faktors ir obligāts. Lūdzu, iestatiet to tagad.",
         "active": "Aktīvs",
         "setUp": "Iestatīt",
         "totp": {
@@ -8151,7 +8150,6 @@
           "passkeyTitle": "Noņemt piekļuves atslēgu",
           "lastFactorBlocked": "Šis ir jūsu pēdējais otrais faktors, un jūsu lomai viens ir obligāts. Vispirms izveidojiet rezerves kodus vai iestatiet vēl vienu faktoru."
         },
-        "requiredWithDeadline": "Jūsu lomai otrs faktors ir obligāts. Iestatiet to līdz {date} — pēc tam pieteikšanās bez otrā faktora vairs nebūs iespējama.",
         "statusFailed": "Neizdevās ielādēt divfaktoru autentifikācijas statusu. Lūdzu, pārlādējiet lapu."
       },
       "recovery": {
@@ -9210,14 +9208,6 @@
       "smsSent": "Kods ir nosūtīts.",
       "resend": "Nosūtīt kodu vēlreiz",
       "recoveryRedeemedHint": "Kods ir izmantots, taču ar to vien pieteikšanai nepietiek. Lūdzu, piesakieties ar kādu no saviem iestatītajiem faktoriem vai vērsieties pie savas komandas."
-    },
-    "mfaSetup": {
-      "title": "Iestatīt divfaktoru autentifikāciju",
-      "intro": "Jūsu lomai otrs faktors ir obligāts. Iestatiet to tagad, lai turpinātu.",
-      "why": "Kā administratoram jums ir piekļuve finanšu datiem, viesu datiem un visa uzņēmuma iestatījumiem. Otrs faktors novērš to, ka pietiktu tikai ar nozagtu paroli.",
-      "goToSettings": "Iestatīt tagad",
-      "later": "Atgādināt vēlāk",
-      "introWithDeadline": "Jūsu lomai otrs faktors ir obligāts. Iestatiet to līdz {date} — pēc tam pieteikšanās bez otrā faktora vairs nebūs iespējama."
     }
   },
   "sprache": {

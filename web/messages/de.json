@@ -8250,7 +8250,6 @@
         "title": "Zwei-Faktor-Authentifizierung (2FA)",
         "intro": "Schützt dein Konto mit einem zweiten Faktor zusätzlich zum Passwort.",
         "noneActive": "Es ist noch kein zweiter Faktor eingerichtet. Wir empfehlen die Authentifizierungs-App.",
-        "requiredNotice": "Für deine Rolle ist ein zweiter Faktor verpflichtend. Bitte richte jetzt einen ein.",
         "active": "Aktiv",
         "setUp": "Einrichten",
         "totp": {
@@ -8352,7 +8351,6 @@
           "passkeyTitle": "Passkey entfernen",
           "lastFactorBlocked": "Das ist dein letzter zweiter Faktor und für deine Rolle ist einer verpflichtend. Erzeuge zuerst Wiederherstellungscodes oder richte einen weiteren Faktor ein."
         },
-        "requiredWithDeadline": "Für deine Rolle ist ein zweiter Faktor verpflichtend. Richte ihn bis zum {date} ein — danach ist die Anmeldung ohne zweiten Faktor nicht mehr möglich.",
         "statusFailed": "Der Status der Zwei-Faktor-Authentifizierung konnte nicht geladen werden. Bitte lade die Seite neu."
       },
       "recovery": {
@@ -9411,14 +9409,6 @@
       "smsSent": "Der Code wurde gesendet.",
       "resend": "Code erneut senden",
       "recoveryRedeemedHint": "Der Code wurde eingelöst, reicht für die Anmeldung allein aber nicht aus. Bitte melde dich mit einem deiner eingerichteten Faktoren an oder wende dich an dein Team."
-    },
-    "mfaSetup": {
-      "title": "Zwei-Faktor-Authentifizierung einrichten",
-      "intro": "Für deine Rolle ist ein zweiter Faktor verpflichtend. Richte ihn jetzt ein, um fortzufahren.",
-      "why": "Als Administrator hast du Zugriff auf Finanzdaten, Gastdaten und die Einstellungen des gesamten Betriebs. Ein zweiter Faktor verhindert, dass ein gestohlenes Passwort allein ausreicht.",
-      "goToSettings": "Jetzt einrichten",
-      "later": "Später erinnern",
-      "introWithDeadline": "Für deine Rolle ist ein zweiter Faktor verpflichtend. Richte ihn bis zum {date} ein — danach ist die Anmeldung ohne zweiten Faktor nicht mehr möglich."
     }
   },
   "sprache": {

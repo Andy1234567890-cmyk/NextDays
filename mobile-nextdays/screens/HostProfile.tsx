@@ -333,17 +333,8 @@ export default function HostProfile() {
                     <Txt v="xs" soft>
                       {zweiterFaktor.length
                         ? `${zweiterFaktor.length} Faktor${zweiterFaktor.length > 1 ? "en" : ""} aktiv · Sitzung ${mfa.aal}`
-                        : mfa.mfa_required
-                          ? "Pflicht für diese Rolle — noch nicht eingerichtet"
-                          : "nicht eingerichtet"}
+                        : "nicht eingerichtet — freiwillig"}
                     </Txt>
-                    {/* Die Frist ist der Punkt, an dem der Zugang sonst
-                        stehenbleibt — sie gehört sichtbar hierher. */}
-                    {mfa.mfa_grace_until && !zweiterFaktor.length && (
-                      <Txt v="xs" color={t.palette.accent}>
-                        Einzurichten bis {datum(mfa.mfa_grace_until)}
-                      </Txt>
-                    )}
                   </Col>
                   <Chip variant={zweiterFaktor.length ? "on" : ""}>
                     {zweiterFaktor.length ? "aktiv" : "aus"}
@@ -375,9 +366,7 @@ export default function HostProfile() {
                       onPress={() =>
                         Alert.alert(
                           "Faktor entfernen?",
-                          mfa.mfa_required && zweiterFaktor.length === 1
-                            ? "Für deine Rolle ist Zwei-Faktor Pflicht. Ohne Faktor läuft die Einrichtungsfrist erneut."
-                            : "Danach genügt dein Passwort zum Anmelden.",
+                          "Danach genügt dein Passwort zum Anmelden.",
                           [
                             { text: "Abbrechen", style: "cancel" },
                             {

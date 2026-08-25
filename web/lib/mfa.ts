@@ -2,6 +2,7 @@
 
 // MFA-Server-Actions (GoTrue-nativ, 0341).
 //
+// 2FA ist freiwillig (keine Rollen-Pflicht, Entscheidung vom 25.08.2026).
 // Aufteilung, die der Contract vorgibt (docs/API.md „Zwei-Faktor-
 // Authentifizierung (MFA/AAL2) — GoTrue-nativ"):
 //   - Enrollment/Challenge/Verify der drei ECHTEN Faktoren (totp, phone,
@@ -9,8 +10,7 @@
 //     Sie werden bewusst NICHT durch die FastAPI gespiegelt — was GoTrue nativ
 //     kann, wird nicht nachgebaut, sonst gäbe es zwei Wahrheiten.
 //   - Status, Wiederherstellungscodes und das Entfernen eines Faktors laufen
-//     über die FastAPI (/auth/mfa/*), weil dort die Pflicht-/Aussperr-Regeln
-//     sitzen (letzter Faktor nur mit übrigen Recovery-Codes → 409).
+//     über die FastAPI (/auth/mfa/*).
 import { ApiError, api } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";
 import { sessionTokens } from "@/lib/session-token";
@@ -25,17 +25,14 @@ export type MfaFactor = {
   created_at: string | null;
 };
 
-/** GET /auth/mfa/status (MfaStatusResponse). */
+/** GET /auth/mfa/status (MfaStatusResponse). Kein Pflicht-/Fristfeld mehr —
+ *  2FA ist freiwillig. */
 export type MfaStatus = {
   factors: MfaFactor[];
   /** 'aal1' | 'aal2' — der Claim ist die einzige Wahrheit über den 2. Faktor. */
   aal: string;
-  /** Rolle verlangt einen zweiten Faktor (admin/co_admin). */
-  mfa_required: boolean;
   /** Mindestens ein verifizierter Faktor vorhanden. */
   mfa_enrolled: boolean;
-  /** Ende der Übergangsfrist als ISO-Datum, sonst null. NIE selbst berechnen. */
-  mfa_grace_until: string | null;
   recovery_codes_left: number;
   /** Kann dieser Server den SMS-Faktor ausliefern? Kommt vom Backend, wird hier
    *  NICHT geraten: ohne konfigurierten Anbieter antwortet GoTrue auf die
@@ -64,7 +61,7 @@ async function call<T>(
   }
 }
 
-/** Faktoren + Pflichtstatus des eigenen Kontos. */
+/** Faktoren + Wiederherstellungscodes des eigenen Kontos. */
 export async function getMfaStatus(): Promise<Result<MfaStatus>> {
   return call<MfaStatus>("/auth/mfa/status");
 }
