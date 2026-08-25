@@ -1539,6 +1539,98 @@ TEXTE: dict[str, dict[str, str]] = {
         "mt": "{kanal}", "nl": "{kanal}", "pl": "{kanal}", "pt": "{kanal}",
         "ro": "{kanal}", "sk": "{kanal}", "sl": "{kanal}", "sv": "{kanal}",
     },
+    # Dritte Fassung: Gast bekannt, Kanal NICHT. Ohne sie griff bei einem
+    # Kanal ohne Katalogtext weiterhin `buchung_rumpf` mit `{kanal}` — und
+    # `None` wurde beim Formatieren zum Wort „None". Live am 24.08.2026:
+    # „Otto · None" stand so in Glocke UND Postfach (Wurzel 4 — ein
+    # fehlender Wert darf nie als Ersatztext erscheinen).
+    "benachrichtigung.buchung_rumpf_ohne_kanal": {
+        "bg": "{gast}",
+        "cs": "{gast}",
+        "da": "{gast}",
+        "de": "{gast}",
+        "el": "{gast}",
+        "en": "{gast}",
+        "es": "{gast}",
+        "et": "{gast}",
+        "fi": "{gast}",
+        "fr": "{gast}",
+        "ga": "{gast}",
+        "hr": "{gast}",
+        "hu": "{gast}",
+        "it": "{gast}",
+        "lt": "{gast}",
+        "lv": "{gast}",
+        "mt": "{gast}",
+        "nl": "{gast}",
+        "pl": "{gast}",
+        "pt": "{gast}",
+        "ro": "{gast}",
+        "sk": "{gast}",
+        "sl": "{gast}",
+        "sv": "{gast}",
+    },
+    # Die Eckdaten der Buchung. Sie fehlten bis hierher vollständig: die
+    # Meldung nannte nur „Vorname · Kanal", also weder WANN noch für WIE
+    # VIELE. Wer sie las, musste sich einloggen und suchen — gemeldet am
+    # 25.08.2026 („keine Hinweise"). Die Daten stehen dem Eigentümer wie
+    # dem Betrieb zu; Preis und Kontaktdaten bleiben draußen (§4.2).
+    # `{anreise}`/`{abreise}` sind bereits formatierte ISO-Daten — dieselbe
+    # Form wie in `sperrantraege`, damit hier keine 24. Datumsregel steht.
+    "benachrichtigung.buchung_zeitraum": {
+        "bg": "Пристигане: {anreise} · Заминаване: {abreise} · "
+              "Нощувки: {naechte} · Гости: {gaeste}",
+        "cs": "Příjezd: {anreise} · Odjezd: {abreise} · Nocí: {naechte} · Hosté: {gaeste}",
+        "da": "Ankomst: {anreise} · Afrejse: {abreise} · Nætter: {naechte} · Gæster: {gaeste}",
+        "de": "Anreise: {anreise} · Abreise: {abreise} · Nächte: {naechte} · Gäste: {gaeste}",
+        "el": "Άφιξη: {anreise} · Αναχώρηση: {abreise} · "
+              "Διανυκτερεύσεις: {naechte} · Επισκέπτες: {gaeste}",
+        "en": "Arrival: {anreise} · Departure: {abreise} · Nights: {naechte} · Guests: {gaeste}",
+        "es": "Llegada: {anreise} · Salida: {abreise} · Noches: {naechte} · Huéspedes: {gaeste}",
+        "et": "Saabumine: {anreise} · Lahkumine: {abreise} · Ööd: {naechte} · Külalised: {gaeste}",
+        "fi": "Saapuminen: {anreise} · Lähtö: {abreise} · Yöt: {naechte} · Vieraat: {gaeste}",
+        "fr": "Arrivée: {anreise} · Départ: {abreise} · Nuits: {naechte} · Voyageurs: {gaeste}",
+        "ga": "Teacht: {anreise} · Imeacht: {abreise} · Oícheanta: {naechte} · Aíonna: {gaeste}",
+        "hr": "Dolazak: {anreise} · Odlazak: {abreise} · Noćenja: {naechte} · Gosti: {gaeste}",
+        "hu": "Érkezés: {anreise} · Távozás: {abreise} · Éjszakák: {naechte} · Vendégek: {gaeste}",
+        "it": "Arrivo: {anreise} · Partenza: {abreise} · Notti: {naechte} · Ospiti: {gaeste}",
+        "lt": "Atvykimas: {anreise} · Išvykimas: {abreise} · Naktys: {naechte} · Svečiai: {gaeste}",
+        "lv": "Ierašanās: {anreise} · Izbraukšana: {abreise} · Naktis: {naechte} · Viesi: {gaeste}",
+        "mt": "Wasla: {anreise} · Tluq: {abreise} · Iljieli: {naechte} · Mistednin: {gaeste}",
+        "nl": "Aankomst: {anreise} · Vertrek: {abreise} · Nachten: {naechte} · Gasten: {gaeste}",
+        "pl": "Przyjazd: {anreise} · Wyjazd: {abreise} · Noce: {naechte} · Goście: {gaeste}",
+        "pt": "Chegada: {anreise} · Partida: {abreise} · Noites: {naechte} · Hóspedes: {gaeste}",
+        "ro": "Sosire: {anreise} · Plecare: {abreise} · Nopți: {naechte} · Oaspeți: {gaeste}",
+        "sk": "Príchod: {anreise} · Odchod: {abreise} · Noci: {naechte} · Hostia: {gaeste}",
+        "sl": "Prihod: {anreise} · Odhod: {abreise} · Noči: {naechte} · Gostje: {gaeste}",
+        "sv": "Ankomst: {anreise} · Avresa: {abreise} · Nätter: {naechte} · Gäster: {gaeste}",
+    },
+    "benachrichtigung.buchung_zeitraum_ohne_gaeste": {
+        "bg": "Пристигане: {anreise} · Заминаване: {abreise} · Нощувки: {naechte}",
+        "cs": "Příjezd: {anreise} · Odjezd: {abreise} · Nocí: {naechte}",
+        "da": "Ankomst: {anreise} · Afrejse: {abreise} · Nætter: {naechte}",
+        "de": "Anreise: {anreise} · Abreise: {abreise} · Nächte: {naechte}",
+        "el": "Άφιξη: {anreise} · Αναχώρηση: {abreise} · Διανυκτερεύσεις: {naechte}",
+        "en": "Arrival: {anreise} · Departure: {abreise} · Nights: {naechte}",
+        "es": "Llegada: {anreise} · Salida: {abreise} · Noches: {naechte}",
+        "et": "Saabumine: {anreise} · Lahkumine: {abreise} · Ööd: {naechte}",
+        "fi": "Saapuminen: {anreise} · Lähtö: {abreise} · Yöt: {naechte}",
+        "fr": "Arrivée: {anreise} · Départ: {abreise} · Nuits: {naechte}",
+        "ga": "Teacht: {anreise} · Imeacht: {abreise} · Oícheanta: {naechte}",
+        "hr": "Dolazak: {anreise} · Odlazak: {abreise} · Noćenja: {naechte}",
+        "hu": "Érkezés: {anreise} · Távozás: {abreise} · Éjszakák: {naechte}",
+        "it": "Arrivo: {anreise} · Partenza: {abreise} · Notti: {naechte}",
+        "lt": "Atvykimas: {anreise} · Išvykimas: {abreise} · Naktys: {naechte}",
+        "lv": "Ierašanās: {anreise} · Izbraukšana: {abreise} · Naktis: {naechte}",
+        "mt": "Wasla: {anreise} · Tluq: {abreise} · Iljieli: {naechte}",
+        "nl": "Aankomst: {anreise} · Vertrek: {abreise} · Nachten: {naechte}",
+        "pl": "Przyjazd: {anreise} · Wyjazd: {abreise} · Noce: {naechte}",
+        "pt": "Chegada: {anreise} · Partida: {abreise} · Noites: {naechte}",
+        "ro": "Sosire: {anreise} · Plecare: {abreise} · Nopți: {naechte}",
+        "sk": "Príchod: {anreise} · Odchod: {abreise} · Noci: {naechte}",
+        "sl": "Prihod: {anreise} · Odhod: {abreise} · Noči: {naechte}",
+        "sv": "Ankomst: {anreise} · Avresa: {abreise} · Nätter: {naechte}",
+    },
     # -- Buchungskanäle ------------------------------------------------------
     # Die Kanalzeile der Buchungsmeldung („Vorname · Kanal") trug den ROHEN
     # Enum-Wert der Datenbank: der Eigentümer las „direct" statt „Direkt".
@@ -1549,6 +1641,11 @@ TEXTE: dict[str, dict[str, str]] = {
     # „Direkt" und „Anderes Portal". Werte = `ReservationChannel`
     # (reservations/schemas.py); ein neuer Enum-Wert MUSS hier einen Eintrag
     # bekommen, sonst wirft `text()` (fail-closed, Wurzel 5).
+    # Dass dieser Satz allein nicht trägt, hat `website` bewiesen: der Wert kam
+    # mit dem eigenen Buchungsformular dazu und stand hier nie — der Backstop
+    # in `_kanal_wert` schluckte ihn zu `None`, woraus die Meldung „Otto · None"
+    # wurde. Seit `kanal-enums-pruefen.mjs` (Prüfung 5) hält ein Skript diesen
+    # Block am DB-Enum, statt sich auf einen Kommentar zu verlassen.
     "kanal.direct": {
         "bg": "Директно", "cs": "Přímo", "da": "Direkte", "de": "Direkt",
         "el": "Απευθείας", "en": "Direct", "es": "Directa", "et": "Otse",
@@ -1593,6 +1690,32 @@ TEXTE: dict[str, dict[str, str]] = {
         "hu": "Vrbo", "it": "Vrbo", "lt": "Vrbo", "lv": "Vrbo",
         "mt": "Vrbo", "nl": "Vrbo", "pl": "Vrbo", "pt": "Vrbo",
         "ro": "Vrbo", "sk": "Vrbo", "sl": "Vrbo", "sv": "Vrbo",
+    },
+    "kanal.website": {
+        "bg": "Уебсайт",
+        "cs": "Web",
+        "da": "Hjemmeside",
+        "de": "Website",
+        "el": "Ιστότοπος",
+        "en": "Website",
+        "es": "Sitio web",
+        "et": "Veebisait",
+        "fi": "Verkkosivusto",
+        "fr": "Site web",
+        "ga": "Suíomh gréasáin",
+        "hr": "Web-stranica",
+        "hu": "Weboldal",
+        "it": "Sito web",
+        "lt": "Svetainė",
+        "lv": "Vietne",
+        "mt": "Websajt",
+        "nl": "Website",
+        "pl": "Strona WWW",
+        "pt": "Site",
+        "ro": "Site web",
+        "sk": "Web",
+        "sl": "Spletna stran",
+        "sv": "Webbplats",
     },
     "kanal.portal": {
         "bg": "myBestDays", "cs": "myBestDays", "da": "myBestDays",

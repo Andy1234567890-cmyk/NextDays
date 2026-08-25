@@ -30,11 +30,13 @@ from supabase import Client
 
 from src.core.config import get_settings
 from src.core.logging import configure_logging, get_logger
+from src.core.pflichtumgebung import Pflichtwert, pflichtvariablen_melden
 from src.core.supabase import get_service_client
 from src.features.channel_manager.common import ist_demo_mapping
 from src.features.properties.vertragsende import vertragsenden_nachziehen
 from src.jobs import (
     feed_nachpflege,
+    geld_laeufe,
     portal_raten_tick,
     public_api_storno,
     worker_verlauf,
@@ -671,6 +673,44 @@ HANDLERS: dict[
 }
 
 
+# --- Konfigurationsmängel laut melden ---------------------------------------
+#
+# Die Mechanik steht in `core.pflichtumgebung` (sie gilt für jeden eigenständig
+# deployten Prozess); HIER steht nur, was DIESER Prozess braucht.
+#
+# Anlass (25.08.2026): `api` und `worker` fahren denselben Code, sind in Coolify
+# aber zwei Anwendungen mit je eigener Variablenliste. Live trug die API
+# `STRIPE_SECRET_KEY`, `APP_BASE_URL` und die `COMPANY_*` — der Worker keine
+# einzige davon, obwohl genau er die Gast-Automails und die drei geldbewegenden
+# Läufe fährt.
+# Der Anwendungsname steht in `jobs.geld_laeufe` — eine Quelle, damit die
+# Startprüfung und die Laufzeit-Meldungen nicht auseinanderlaufen.
+COOLIFY_APP = geld_laeufe.COOLIFY_APP
+
+# Nur Werte, für die es keinen Ersatz gibt (Wurzel 4) und deren Fehlen sonst
+# unbemerkt bliebe. `folge` ist Teil der Meldung, nicht Kommentar.
+_PFLICHT_ENV: tuple[Pflichtwert, ...] = (
+    Pflichtwert(
+        "STRIPE_SECRET_KEY", "stripe_secret_key",
+        "Einzug fälliger Restzahlungen, Auszahlungslauf, Provisions- und "
+        "Nutzungsabrechnung",
+    ),
+    Pflichtwert(
+        "APP_BASE_URL", "app_base_url",
+        "Links in Gast-Automails, Bewertungsanfragen und Meldungsmails",
+    ),
+    Pflichtwert(
+        "COMPANY_LEGAL_NAME", "company_legal_name",
+        "Anbieterangaben in der Fußzeile jeder Mail",
+    ),
+)
+
+
+def _pflichtvariablen_melden() -> list[str]:
+    """Beim Start EINMAL sagen, welche Pflichtvariable diesem Prozess fehlt."""
+    return pflichtvariablen_melden(_PFLICHT_ENV, coolify_app=COOLIFY_APP)
+
+
 # --- Worker-Kern ------------------------------------------------------------
 
 class Worker:
@@ -1161,30 +1201,9 @@ class Worker:
             return
         self._last_balance_tick = loop_time
         try:
-            await asyncio.to_thread(self._charge_due_balances)
+            await asyncio.to_thread(geld_laeufe.charge_due_balances, self._db)
         except Exception as exc:  # noqa: BLE001
             log.warning("balance_tick_failed", error=str(exc)[:200])
-
-    def _charge_due_balances(self) -> None:
-        """Fällige, noch offene Restzahlungen laden und je Zeile belasten. Jeder
-        Charge ist idempotent (claim auf 'charging' + Stripe-idempotency_key);
-        ein Fehler einer Zeile stoppt die übrigen nicht (best-effort je Zeile)."""
-        from src.features.payments.service import PaymentsError, PaymentsService
-
-        svc = PaymentsService(service_client=self._db)
-        ids = svc.due_balance_payment_ids()
-        charged = 0
-        for pid in ids:
-            try:
-                svc.charge_due_balance(payment_id=pid)
-                charged += 1
-            except PaymentsError as exc:
-                # needs_action/failed hat charge_due_balance bereits persistiert.
-                log.warning(
-                    "balance_charge_failed", payment_id=pid, error=exc.message
-                )
-        if ids:
-            log.info("balance_tick", due=len(ids), charged=charged)
 
     async def _payout_tick(self, loop_time: float) -> None:
         """Fällige Auszahlungen an Betriebe ausführen (0217).
@@ -1202,19 +1221,9 @@ class Worker:
             return
         self._last_payout_tick = loop_time
         try:
-            await asyncio.to_thread(self._run_payouts)
+            await asyncio.to_thread(geld_laeufe.run_payouts, self._db)
         except Exception as exc:  # noqa: BLE001
             log.warning("payout_tick_failed", error=str(exc)[:200])
-
-    def _run_payouts(self) -> None:
-        """Zurückhaltungen freigeben, dann fällige Auszahlungen abarbeiten."""
-        from src.features.payouts.service import PayoutsService
-
-        svc = PayoutsService(db=self._db)
-        freigegeben = svc.gib_holds_frei()
-        bilanz = svc.fuehre_lauf_aus()
-        if bilanz["geprueft"] or freigegeben:
-            log.info("payout_tick", freigegeben=freigegeben, **bilanz)
 
     async def _commission_tick(self, loop_time: float) -> None:
         """Am Monatsersten die OTA-Provisionen des Vormonats abrechnen.
@@ -1234,24 +1243,15 @@ class Worker:
         heute = datetime.now(UTC).date()
         if heute.day != COMMISSION_BILLING_DAY:
             return
+        from src.features.subscriptions.errors import (  # noqa: PLC0415
+            SubscriptionsConfigError,
+        )
         try:
-            await asyncio.to_thread(self._bill_commissions, heute)
+            await asyncio.to_thread(geld_laeufe.bill_commissions, self._db, heute)
+        except SubscriptionsConfigError as exc:
+            geld_laeufe.melde_commission_mangel(exc, heute)
         except Exception as exc:  # noqa: BLE001 — Tick darf den Worker nie killen
             log.warning("commission_tick_failed", error=str(exc)[:200])
-
-    def _bill_commissions(self, heute: date) -> None:
-        """Offene Provisionen + Nutzungsgebühren aller Betriebe für den
-        Vormonat fakturieren. Beide Läufe sind idempotent (deterministischer
-        Stripe-idempotency_key je Tenant/Periode)."""
-        from src.features.subscriptions.service import SubscriptionsService
-
-        svc = SubscriptionsService(service_client=self._db)
-        periode = svc.abgelaufene_periode(heute)
-        svc.bill_all_tenants_for_period(period=periode)
-        # Modul „Dynamische Preise" (0,5 % vom Buchungsumsatz), je Währung ein
-        # eigenes Invoice-Item. Eigener Lauf, damit ein Fehler im einen Pfad
-        # den anderen nicht mitreißt (Wurzel 5).
-        svc.bill_all_dynpricing(period=periode)
 
     async def _bookings_tick(self, loop_time: float) -> None:
         """Alle 5 min einen kontoweiten Booking-Feed-Pull einreihen (Backstop —
@@ -1481,6 +1481,10 @@ class Worker:
 
 async def _main() -> None:
     configure_logging("INFO", json_logs=True)
+    # VOR dem ersten Tick: sagen, was diesem Prozess fehlt. Danach kommt der
+    # Provisionslauf erst am naechsten Monatsersten wieder vorbei — eine
+    # Meldung, die auf ihn wartet, kommt vier Wochen zu spaet.
+    _pflichtvariablen_melden()
     worker = Worker()
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGTERM, signal.SIGINT):

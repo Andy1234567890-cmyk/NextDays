@@ -254,9 +254,38 @@ App-Wechsel (`lib/appwechsel.ts`), keine Navigation.
   daher im Kopf geprüft und beim Deploy von Coolify gefangen; schlägt der
   Deploy-Build fehl, wird er behoben, nie per `ignoreBuildErrors` unterdrückt
   (Wurzel 4/5).
+- Mail/Benachrichtigung berührt? `bash scripts/diagnose/mail-umgebung-pruefen.sh`
+  — vergleicht die Umgebung JEDES mailversendenden Prozesses (api UND worker)
+  gegen die Pflichtliste. `api` und `worker` fahren denselben Code, sind in
+  Coolify aber zwei Anwendungen mit eigener Variablenliste; nichts verglich
+  sie. Live am 25.08.2026: die API trug `APP_BASE_URL` und die acht
+  `COMPANY_*`, der Worker keine einzige — jede Gast-Automail und jede
+  Bewertungsanfrage ging ohne Anbieterangaben und ohne Link hinaus, Push aus
+  dem Worker gar nicht. Gemeldet wurde es nicht vom System, sondern vom Auge
+  („diese Mails haben keinen Link"). Ein Konfigurationswert, dessen Fehlen
+  still bleibt, ist derselbe Fehler wie ein verschluckter Exception (Wurzel 5):
+  neue Sinks loggen den Mangel LAUT, statt die Ausgabe stumm zu kürzen.
+- Sprachdatei berührt? `node scripts/i18n/deutsche-restwerte-pruefen.mjs` — meldet
+  PRO SPRACHE jeden Wert, der in `web/messages/<sprache>.json` noch wortgleich
+  auf Deutsch steht. Die bestehenden i18n-Gates prüfen nur VOLLSTÄNDIGKEIT: ein
+  Schlüssel, der in der bulgarischen Datei den deutschen Text trägt, ist für sie
+  vorhanden, strukturgleich und platzhaltertreu — er ist nur nicht übersetzt.
+  `uebersetzungs-luecken-pruefen.mjs` fängt davon nur, was in ≥ 80 % der
+  Sprachen gleichzeitig deutsch steht; genau daran lief der reale Anlass vorbei
+  (25.08.2026): der ganze `inbox.*`-Namensraum stand in 15 von 23 Sprachen auf
+  Deutsch — 65 %, also unter der Schwelle, also stumm, bis es jemandem auffiel
+  („Anreise/Abreise/Nächte" im griechischen Posteingang). Gemessen waren es
+  4 881 deutsche Restwerte über alle Sprachen. Was zu Recht gleich steht
+  (Marken, Kürzel, Wörter, die in DIESER Sprache wirklich gleich lauten), steht
+  mit Grund und Sprachliste in `deutsche-restwerte-allowlist.json` — nie
+  pauschal „gilt überall", nie eingetragen, nur damit die Zahl sinkt.
 - Kanal/Enum berührt? `node scripts/i18n/kanal-enums-pruefen.mjs` — hält
   DB-Enum → Pydantic → Frontend-Unions → Kanal-Meta → `calendar.channel.*`
-  aller 24 Sprachen deckungsgleich. Ein neuer Backend-Kanalwert ohne diese
+  aller 24 Sprachen UND den serverseitigen Mail-Katalog `kanal.*`
+  deckungsgleich (fünf Stellen). Der Mail-Katalog kam am 25.08.2026 dazu:
+  `website` stand in allen vier anderen Stellen, nur nicht dort — der Backstop
+  gab `None` zurück, und `"{gast} · {kanal}".format(kanal=None)` schrieb das
+  Wort „None" in Glocke und Postfach. Ein neuer Backend-Kanalwert ohne diese
   Kette ist ein `MISSING_MESSAGE` plus stiller Farb-Fallback auf einen FREMDEN
   Kanal (so sah eine Expedia-Buchung aus wie myBestDays).
 - Mobile berührt? `tsc --noEmit` + Jest grün in JEDER betroffenen App

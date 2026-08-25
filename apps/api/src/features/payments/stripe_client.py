@@ -98,6 +98,22 @@ def get_stripe() -> StripeClient:
     )
 
 
+def stripe_konfiguriert() -> bool:
+    """Liegt ein Stripe-Secret-Key in dieser Umgebung? Ohne Netz, ohne Client.
+
+    Gedacht für Start-/Vorabprüfungen (Worker), die einen Konfigurationsmangel
+    LAUT melden sollen, bevor der erste Geldfluss über ihn stolpert. Live am
+    25.08.2026 nachgemessen: `nextdays-api` trug `STRIPE_SECRET_KEY`, der
+    Prozess `nextdays-worker` nicht — beide fahren denselben Code, sind in
+    Coolify aber zwei Anwendungen mit je eigener Variablenliste. Genau dieser
+    Drift blieb still, weil ihn niemand fragt.
+
+    `get_stripe()` bleibt der einzige Weg zum Client; diese Funktion baut
+    keinen und ist deshalb auch im Test gefahrlos aufrufbar.
+    """
+    return bool(get_settings().stripe_secret_key.get_secret_value())
+
+
 def get_or_create_customer(
     *,
     email: str | None,

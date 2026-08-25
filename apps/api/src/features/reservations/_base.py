@@ -469,9 +469,9 @@ class ReservationsBase:
         kein `property_id` und keinen Gastnamen, und diese neun Signaturen
         umzubauen wäre ein größerer Eingriff als eine Abfrage im Nebenpfad.
 
-        Was mitgeht, ist der Datensplit (Wurzel 3): NUR Vorname und Kanal —
-        `total_amount` wird gar nicht erst geladen, damit es auch niemand
-        versehentlich in den Text nimmt.
+        Was mitgeht, ist der Datensplit (Wurzel 3): Vorname, Kanal und die
+        Eckdaten des Aufenthalts — `total_amount` wird gar nicht erst geladen,
+        damit es auch niemand versehentlich in den Text nimmt.
         """
         from src.features.notification_settings.ereignisse import (  # noqa: PLC0415
             BUCHUNGS_EREIGNISSE,
@@ -484,7 +484,13 @@ class ReservationsBase:
             rows = (
                 self._db()
                 .table("reservations")
-                .select("property_id, guest_id, channel, ota_name")
+                .select(
+                    "property_id, guest_id, channel, ota_name, "
+                    # Die Eckdaten der Meldung. `total_amount` fehlt hier
+                    # weiterhin bewusst — was nicht geladen wird, kann auch
+                    # niemand versehentlich in den Text nehmen (§4.2).
+                    "check_in, check_out, adults, children"
+                )
                 .eq("id", reservation_id)
                 .eq("tenant_id", tenant_id)
                 .limit(1)
@@ -513,6 +519,10 @@ class ReservationsBase:
                 # der Eigentümer las bei einer Direktbuchung „direct".
                 quelle=row.get("ota_name"),
                 kanal=row.get("channel"),
+                check_in=row.get("check_in"),
+                check_out=row.get("check_out"),
+                erwachsene=row.get("adults"),
+                kinder=row.get("children"),
             )
         except Exception as exc:  # noqa: BLE001 — Nebenpfad, kippt die Buchung nicht
             log.warning(

@@ -42,6 +42,75 @@ ohne Einladungsmails ist kein nutzbares Feature.
 Beleg: `deploy/ENVIRONMENT.md:17-22`.
 **Wer:** Nutzer selbst (Coolify).
 
+**Stand 25.08.2026 — ERLEDIGT.** Der Drift lag beim `worker`: nachgemessen im
+laufenden Container (`bash scripts/diagnose/mail-umgebung-pruefen.sh`) trug die
+API alles, der Worker nichts davon. Die zwölf Variablen sind inzwischen gesetzt
+und der Worker ist neu deployt; das Skript meldet beide Prozesse vollständig.
+
+| Prozess | `APP_BASE_URL` | `COMPANY_*` | `FCM_SERVICE_ACCOUNT_JSON` | `MARKETPLACE_BASE_URL` | `STRIPE_SECRET_KEY` |
+|---|---|---|---|---|---|
+| `nextdays-api` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `nextdays-worker` (vorher) | ❌ | ❌ | ❌ | ❌ | ❌ |
+| `nextdays-worker` (nach Deploy) | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+Das ist keine Kleinigkeit: der Worker fährt die Gast-Automails
+(`InboxService.dispatch_due_automations`, `worker.py:1096`), die
+Bewertungsanfragen (`reviews.automation`, `worker.py:1054`) und die
+Zustellproblem-Meldungen (`inbox/planung.py:1411`). Jede dieser Mails geht
+derzeit **ohne Anbieterangaben und ohne Link** hinaus, und Push aus dem Worker
+gar nicht (kein FCM-Schlüssel).
+
+Beide Anwendungen fahren **denselben Code aus demselben Repo**, sind in Coolify
+aber zwei Anwendungen mit je eigener, handgepflegter Variablenliste — nichts
+verglich sie. Das Skript oben tut es jetzt; es gehört vor jeden Deploy, der
+Mails berührt.
+
+### 1.1b Derselbe Drift trifft die drei Geld-Läufe des Workers
+Nachgeprüft am 25.08.2026: dem Worker fehlt auch **`STRIPE_SECRET_KEY`**
+(`STRIPE_PLATFORM_FEE_PCT` und `STRIPE_WEBHOOK_SECRET` hat er).
+`STRIPE_PUBLISHABLE_KEY` braucht er nicht — den liest nur der Request-Pfad.
+
+Betroffen sind die drei geldbewegenden Läufe, die ausschließlich dort fahren
+(jetzt gebündelt in `apps/api/src/jobs/geld_laeufe.py`):
+
+| Lauf | Takt | ohne Schlüssel |
+|---|---|---|
+| Einzug fälliger Restzahlungen | stündlich | kein Einzug |
+| Auszahlungen an die Betriebe | Tick | keine Auszahlung |
+| Provisions- + Nutzungsabrechnung | **nur am Monatsersten** | keine Faktura, nächster Versuch in einem Monat |
+
+**Belegbarer Schaden: nicht nachgewiesen.** Der Container läuft erst seit dem
+24.08., der Provisionslauf kam seither nicht vorbei, und der Einzugslauf fand
+keine fälligen Zeilen — es gibt also keine Logzeile, die den Ausfall zeigt. Das
+ist kein Entlastungsbeweis, sondern genau das Problem: der Mangel wäre auch
+dann unsichtbar geblieben, wenn er zugeschlagen hätte.
+
+**Im Code behoben** (die eigentliche Wurzel, unabhängig von der Variablen):
+- Alle drei Läufe fingen den Fehlschlag im breiten `except Exception` des Ticks
+  und schrieben `log.warning` — dieselbe Zeile wie bei einer abgelehnten Karte.
+  Jetzt: eigener Ereignisname je Lauf, Stufe **ERROR**, Handlungsanweisung in
+  der Meldung (`core/pflichtumgebung.py`).
+- Der Worker meldet beim **Start**, welche Pflichtvariable ihm fehlt — sonst
+  fiele es beim Provisionslauf frühestens am nächsten Monatsersten auf.
+- Eigene Fehlertypen `PaymentsConfigError` / `SubscriptionsConfigError`
+  (Unterklassen, Router unverändert): ein Betriebsmangel trifft ALLE Zeilen,
+  eine abgelehnte Karte EINE. Die Monatsläufe isolierten bisher beides gleich.
+- **Der teuerste Einzelfall:** `charge_due_balance` löste den Stripe-Client erst
+  auf, NACHDEM die Zeile auf `charging` stand. Ein fehlender Schlüssel schrieb
+  sie damit auf `failed` — obwohl sie nie bei Stripe war — und der stündliche
+  Tick greift `failed` nie wieder auf. Echte Forderungen wären dauerhaft
+  verloren gewesen (Wurzel 1). Der Client wird jetzt vor dem Claim aufgelöst,
+  und ein Konfigurationsfehler innerhalb des Aufrufs nimmt den Claim zurück.
+
+**Erledigt am 25.08.2026:** die zwölf Variablen sind beim Worker gesetzt und
+die Anwendung ist neu deployt (ein `docker restart` hätte nicht gereicht).
+Gegengeprüft: `mail-umgebung-pruefen.sh` meldet beide Prozesse vollständig.
+
+Was damit sofort wirkt, ist nur die KONFIGURATION. Die Code-Fixes oben
+(Eckdaten in der Meldung, `kanal.website`, die lauten Konfigurationsmeldungen,
+der `charge_due_balance`-Riegel) wirken erst mit dem nächsten Deploy von
+`apps/api`.
+
 ### 1.2 GoTrue-Redeploy für die MFA-Schalter
 Die neuen `GOTRUE_MFA_*`- und `GOTRUE_WEBAUTHN_*`-Zeilen stehen in
 `deploy/supabase/docker-compose.yml:215-258`, greifen aber erst, wenn der

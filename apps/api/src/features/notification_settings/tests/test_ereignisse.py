@@ -221,9 +221,13 @@ def test_nur_vorname_geht_mit(dispatcher: _Dispatcher) -> None:
         _DB(_tables()), tenant_id="t-1", reservation_id="r-1", kind="created",
         property_id="p-1", gast_vorname="Anna Musterfrau", quelle="Airbnb",
     )
-    text = dispatcher.aufrufe[0]["text"]
-    assert "Anna" in text
-    assert "Musterfrau" not in text
+    # Gegen den GESAMTEN Aufruf geprueft, nicht nur gegen `text`: der Rumpf
+    # entsteht seit dem 25.08.2026 aus Katalogschluesseln plus Werten, damit
+    # er in der Sprache des Empfaengers gerendert wird. Ein Test, der nur den
+    # Rohtext ansieht, wuerde einen durchgereichten Nachnamen uebersehen.
+    inhalt = str(dispatcher.aufrufe[0])
+    assert "Anna" in inhalt
+    assert "Musterfrau" not in inhalt
 
 
 def test_kein_betrag_in_der_meldung(dispatcher: _Dispatcher) -> None:
@@ -620,3 +624,86 @@ def test_zustellproblem_kippt_den_versand_nicht(
         _DB(_zustell_tables()), tenant_id="t-1", quelle_id="msg-1",
         grund="egal", endgueltig=True,
     )  # darf nicht werfen
+
+
+# --- Der Rumpf der Buchungsmeldung (25.08.2026) -----------------------------
+#
+# Gemeldet wurde: „diese Mails haben keinen Link und keinerlei Hinweise."
+# Der Rumpf bestand aus „Vorname · Kanal" — weder wann noch fuer wie viele.
+# Dazu kam ein zweiter, stiller Fehler derselben Art: fehlte der Kanal, blieb
+# `{kanal}` im Satz stehen und wurde beim Formatieren zum Wort „None"
+# („Otto · None", live in Glocke und Postfach).
+
+
+def _rumpf(aufruf: dict) -> str:
+    """Den Rumpf so rendern, wie der Dispatcher es fuer die Mail tut."""
+    keys = aufruf["text_key"] or []
+    if isinstance(keys, str):
+        keys = [keys]
+    werte = {
+        k: (mail_text(v.schluessel, FALLBACK) if isinstance(v, Katalogwert) else v)
+        for k, v in (aufruf["text_werte"] or {}).items()
+    }
+    return "\n\n".join(mail_text(k, FALLBACK, **werte) for k in keys)
+
+
+def test_meldung_nennt_zeitraum_naechte_und_gaeste(dispatcher: _Dispatcher) -> None:
+    """Der zweite Absatz traegt die Eckdaten — daran erkennt der Empfaenger
+    die Buchung, ohne sich einzuloggen."""
+    ereignisse.melde_buchungs_ereignis(
+        _DB(_tables()), tenant_id="t-1", reservation_id="r-1", kind="created",
+        property_id="p-1", gast_vorname="Anna", quelle="Airbnb",
+        check_in="2027-05-20", check_out="2027-05-22",
+        erwachsene=2, kinder=2,
+    )
+    rumpf = _rumpf(dispatcher.aufrufe[0])
+    assert "2027-05-20" in rumpf
+    assert "2027-05-22" in rumpf
+    # Zwei Naechte, HIER gerechnet — nicht vom Aufrufer uebernommen.
+    assert "2" in rumpf
+    # Kinder zaehlen mit: 2 + 2 = 4. „2 Gaeste" waere eine Falschaussage.
+    assert "4" in rumpf
+
+
+def test_fehlender_kanal_wird_nie_zum_wort_none(dispatcher: _Dispatcher) -> None:
+    """Wurzel 4: ein fehlender Wert darf sich nicht als Text ausgeben."""
+    ereignisse.melde_buchungs_ereignis(
+        _DB(_tables()), tenant_id="t-1", reservation_id="r-1", kind="created",
+        property_id="p-1", gast_vorname="Otto", quelle=None, kanal=None,
+    )
+    rumpf = _rumpf(dispatcher.aufrufe[0])
+    assert rumpf == "Otto"
+    assert "None" not in rumpf
+
+
+def test_jeder_kanal_des_enums_hat_einen_mailtext() -> None:
+    """Der Backstop in `_kanal_wert` verschluckt einen unbekannten Kanal — und
+    genau das machte aus `website` ein „None". Der Katalog muss vollstaendig
+    sein, nicht der Backstop tragen."""
+    from src.features.reservations.schemas import ReservationChannel
+
+    for kanal in ReservationChannel:
+        assert f"kanal.{kanal.value}" in TEXTE, kanal.value
+
+
+def test_unplausibler_zeitraum_ergibt_keinen_absatz(dispatcher: _Dispatcher) -> None:
+    """Lieber eine kuerzere Meldung als „0 Naechte" (Wurzel 4)."""
+    ereignisse.melde_buchungs_ereignis(
+        _DB(_tables()), tenant_id="t-1", reservation_id="r-1", kind="created",
+        property_id="p-1", gast_vorname="Anna", quelle="Airbnb",
+        check_in="2027-05-22", check_out="2027-05-20",
+    )
+    aufruf = dispatcher.aufrufe[0]
+    assert aufruf["text_key"] == ["benachrichtigung.buchung_rumpf"]
+
+
+def test_fehlende_gaestezahl_nimmt_die_fassung_ohne(dispatcher: _Dispatcher) -> None:
+    """Ohne Belegung entfaellt der Gaeste-Teil, der Zeitraum bleibt."""
+    ereignisse.melde_buchungs_ereignis(
+        _DB(_tables()), tenant_id="t-1", reservation_id="r-1", kind="created",
+        property_id="p-1", gast_vorname="Anna", quelle="Airbnb",
+        check_in="2027-05-20", check_out="2027-05-22",
+    )
+    keys = dispatcher.aufrufe[0]["text_key"]
+    assert keys[-1] == "benachrichtigung.buchung_zeitraum_ohne_gaeste"
+    assert "2027-05-20" in _rumpf(dispatcher.aufrufe[0])

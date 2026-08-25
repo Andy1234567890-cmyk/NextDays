@@ -10,11 +10,19 @@
 // (Expedia-Buchung sah aus wie myBestDays) und ein Filter, der die Buchung
 // nicht findet.
 //
-// Geprüft wird deshalb vierfach, entlang der ganzen Kette DB → API → UI:
+// Geprüft wird deshalb fünffach, entlang der ganzen Kette DB → API → UI:
 //   1. das Pydantic-Enum kennt jeden Wert des DB-Enums (aus den Migrationen),
 //   2. die Union je Frontend deckt die Backend-Werte ab,
 //   3. das Kanal-Meta-Mapping kennt jeden Wert (Farbe/Logo),
-//   4. jede web-Sprachdatei hat calendar.channel.<wert>.
+//   4. jede web-Sprachdatei hat calendar.channel.<wert>,
+//   5. der SERVERSEITIGE Mail-Katalog hat kanal.<wert> in allen 24 Sprachen.
+//
+// Schritt 5 kam am 25.08.2026 dazu. `website` (eigenes Buchungsformular) stand
+// in DB, Pydantic, allen Unions und allen Sprachdateien — nur nicht in
+// `core/mail_texte.py`. Der Backstop dort gab für den unbekannten Schlüssel
+// `None` zurück, und `"{gast} · {kanal}".format(kanal=None)` machte daraus das
+// Wort „None": „Otto · None" ging so in Glocke UND Postfach. Eine Mail erreicht
+// keinen Message-Katalog mehr — was dort fehlt, fällt erst dem Empfänger auf.
 //
 // Schritt 1 ist der Anfang der Kette: `availability_source` trug in der DB seit
 // Migration 0119 den Wert 'ical' (iCal-Import), den das Pydantic-Enum nicht
@@ -124,6 +132,25 @@ for (const datei of readdirSync(nachrichten).filter((n) => n.endsWith(".json")))
   pruefe(`web/messages/${datei} calendar.channel`, quellen, Object.keys(kanal));
 }
 
+// 5 — Der serverseitige Mail-Katalog. Er ist die einzige Stelle der Kette, die
+// das Haus verlässt: fehlt ein Kanal hier, steht der Mangel im Postfach eines
+// Kunden, nicht in einer Konsole. Geprüft wird jeder Kanal in JEDER Sprache.
+const mailTexte = lies("apps", "api", "src", "core", "mail_texte.py");
+const mailSprachen = [
+  ...new Set(
+    [...mailTexte.matchAll(/^\s*"([a-z]{2})": "/gm)].map((m) => m[1]),
+  ),
+].sort();
+for (const kanal of kanaele) {
+  const block = mailTexte.split(`"kanal.${kanal}": {`)[1]?.split("\n    },")[0];
+  if (block === undefined) {
+    fehler.push(`✗ apps/api core/mail_texte.py: fehlt kanal.${kanal}`);
+    continue;
+  }
+  const drin = [...block.matchAll(/"([a-z]{2})":/g)].map((m) => m[1]);
+  pruefe(`apps/api core/mail_texte.py kanal.${kanal}`, mailSprachen, drin);
+}
+
 for (const z of fehler) console.error(z);
 if (fehler.length) {
   console.error(
@@ -134,5 +161,6 @@ if (fehler.length) {
 }
 console.log(
   `✓ Kanal-Enums deckungsgleich (${quellen.length} Quellen, ${kanaele.length}` +
-    " Kanäle) in web, mobile-nextdays und allen Sprachdateien.",
+    " Kanäle) in web, mobile-nextdays, allen Sprachdateien und dem" +
+    ` Mail-Katalog (${mailSprachen.length} Sprachen).`,
 );

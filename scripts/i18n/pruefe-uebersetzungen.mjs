@@ -10,6 +10,10 @@
 //  2. Überzählige Keys (Übersetzer hat etwas erfunden, das es nicht gibt)
 //  3. Platzhalter-Treue: {name}, {pct} müssen identisch übernommen sein —
 //     ein verlorener Platzhalter bricht die Oberfläche zur Laufzeit.
+//  3b. Dokumentmarken-Treue: [%GESAMTBETRAG%] & Co. dürfen NICHT übersetzt
+//     werden — sie sind Schaltstellen, die `placeholderSystem.ts` gegen die
+//     deutschen Namen ersetzt. Eine übersetzte Marke steht roh in der Rechnung
+//     beim Kunden (live in ro.json gefunden, 25.08.2026).
 //
 // Aufruf: node scripts/i18n/pruefe-uebersetzungen.mjs gastgeber
 import { readdirSync, readFileSync } from "node:fs";
@@ -44,6 +48,24 @@ const PLURAL_KATEGORIEN = new Set([
   "zero", "one", "two", "few", "many", "other",
   "plural", "select", "selectordinal",
 ]);
+
+// Die ZWEITE Platzhalter-Form: `[%GESAMTBETRAG%]`, `[%VOLLEANREDE%]` & Co. in
+// den Rechnungs- und Dokumenttexten. Sie sehen aus wie Text, sind aber
+// Schaltstellen — `web/utils/placeholderSystem.ts` ersetzt sie per Regex gegen
+// genau DIESE, deutschen Namen. Eine übersetzte Marke wird nie ersetzt und
+// steht roh in der Rechnung beim Kunden.
+//
+// Genau das lag live in `ro.json` (gefunden 25.08.2026, vorbestehend):
+// `[%FORMULA_ADRESARE%]` statt `[%VOLLEANREDE%]`, dazu `[%SUMA_TOTALA%]`,
+// `[%NUMAR_FACTURA%]`, `[%TERMEN_PLATA%]`, `[%DATA_FACTURII%]`,
+// `[%PERSOANA_CONTACT%]`. Ein rumänischer Betrieb hätte seine Rechnungen mit
+// diesen Markierungen im Text verschickt. Die bestehende Prüfung sah es nicht:
+// sie kennt nur die `{name}`-Form.
+//
+// Diese Marken werden deshalb NICHT übersetzt — der umgebende Satz schon.
+function dokumentMarken(text) {
+  return new Set(String(text).match(/\[%[A-Z0-9_]+%\]/g) ?? []);
+}
 
 function platzhalter(text) {
   // Echte Variablen haben genau zwei Formen:
@@ -108,6 +130,18 @@ for (const datei of dateien) {
       return a.size !== b.size || [...a].some((n) => !b.has(n));
     });
 
+  // Dokumentmarken müssen WORTGLEICH übernommen sein — anders als der Satz
+  // drumherum. Eigene Liste statt gemeinsam mit `kaputt`, damit die Meldung
+  // sagt, WELCHE Art Platzhalter fehlt: die eine ist ein Übersetzungsfehler,
+  // die andere eine kaputte Rechnung.
+  const marken = basisKeys
+    .filter((k) => k in uebersetzt)
+    .filter((k) => {
+      const a = dokumentMarken(basis[k]);
+      const b = dokumentMarken(uebersetzt[k]);
+      return a.size !== b.size || [...a].some((n) => !b.has(n));
+    });
+
   // Häufigster realer Fehler: Der Übersetzer weicht auf Englisch aus, statt in
   // die Zielsprache zu übersetzen. Fällt sonst niemandem auf, weil die Datei
   // vollständig aussieht. Heuristik über typische englische Funktionswörter.
@@ -135,6 +169,7 @@ for (const datei of dateien) {
     fehlen.length === 0 &&
     ueberzaehlig.length === 0 &&
     kaputt.length === 0 &&
+    marken.length === 0 &&
     englisch.length === 0;
   if (!ok) fehlerhaft += 1;
 
@@ -144,6 +179,7 @@ for (const datei of dateien) {
       (fehlen.length ? `  fehlend: ${fehlen.length}` : "") +
       (ueberzaehlig.length ? `  überzählig: ${ueberzaehlig.length}` : "") +
       (kaputt.length ? `  PLATZHALTER KAPUTT: ${kaputt.length}` : "") +
+      (marken.length ? `  DOKUMENTMARKE ÜBERSETZT: ${marken.length}` : "") +
       (englisch.length ? `  ENGLISCH statt Zielsprache: ${englisch.length}` : "") +
       `  unübersetzt: ${anteilGleich}%`,
   );
@@ -156,6 +192,15 @@ for (const datei of dateien) {
     console.log(`      Platzhalter: ${k}`);
     console.log(`        de: ${basis[k]}`);
     console.log(`        ${sprache}: ${uebersetzt[k]}`);
+  }
+  for (const k of marken.slice(0, 3)) {
+    // Marken einzeln zeigen, nicht den ganzen Text: die Meldung soll sagen,
+    // welche Schaltstelle nicht mehr greift, nicht den Rechnungstext abdrucken.
+    console.log(
+      `      Dokumentmarke: ${k}` +
+        `  de=${[...dokumentMarken(basis[k])].join(" ")}` +
+        `  ${sprache}=${[...dokumentMarken(uebersetzt[k])].join(" ")}`,
+    );
   }
 }
 

@@ -30,7 +30,7 @@ from src.core.supabase import fetch_all_rows
 from src.features.owner_statements.tax import EU_COUNTRIES as _EU_LAENDER
 
 from .dynpricing import DynPricingBillingMixin
-from .errors import SubscriptionsError, field
+from .errors import SubscriptionsConfigError, SubscriptionsError, field
 from .preisliste import PreislisteMixin
 from .provisionsaufstellung import AufstellungMixin
 from .provisionsdeckel import ProvisionsdeckelMixin
@@ -97,7 +97,10 @@ class SubscriptionsService(
         try:
             return get_stripe()
         except StripeNotConfiguredError as exc:
-            raise SubscriptionsError(str(exc), status_code=503) from exc
+            # Eigener Typ, damit die Monatsläufe den Betriebsmangel nicht wie
+            # einen kaputten Datensatz je Betrieb wegisolieren (siehe
+            # SubscriptionsConfigError).
+            raise SubscriptionsConfigError(str(exc), status_code=503) from exc
 
     def health(self) -> SliceHealth:
         return SliceHealth(status="ok")
@@ -1294,6 +1297,16 @@ class SubscriptionsService(
         for tid in tenant_ids:
             try:
                 anzahl = self.bill_pending_commissions(tid, period=period)
+            except SubscriptionsConfigError:
+                # Kein Datensatz-, sondern ein Betriebsmangel: er trifft JEDEN
+                # Betrieb gleich. Die Schleife fortzusetzen erzeugte nur N-mal
+                # dieselbe Warnung und verdeckte die eine behebbare Ursache —
+                # der Aufrufer (Worker) meldet sie stattdessen laut.
+                log.error(
+                    "commission_billing_nicht_konfiguriert",
+                    period=period, offene_tenants=len(tenant_ids),
+                )
+                raise
             except SubscriptionsError as exc:
                 bilanz["fehler"] += 1
                 log.warning(

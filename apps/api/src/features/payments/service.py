@@ -80,6 +80,24 @@ class PaymentsError(Exception):
         self.param = param
 
 
+class PaymentsConfigError(PaymentsError):
+    """Der Zahlungsweg ist auf DIESEM Prozess gar nicht konfiguriert.
+
+    Abgegrenzt von einem gewöhnlichen `PaymentsError`, weil beide völlig
+    verschiedene Konsequenzen haben: eine abgelehnte Karte betrifft EINE Zeile
+    und ist final, ein fehlender `STRIPE_SECRET_KEY` betrifft ALLE Zeilen und
+    ist behebbar. Wer beides gleich behandelt, schreibt einen behebbaren
+    Betriebsmangel als endgültigen Zahlungsausfall in die Datenbank.
+
+    Genau das drohte am 25.08.2026: `nextdays-worker` (Coolify-Anwendung id 9)
+    hatte keinen `STRIPE_SECRET_KEY`; `charge_due_balance` hätte jede fällige
+    Restzahlung auf `failed` gesetzt — ein Zustand, den der stündliche Tick
+    nie wieder aufgreift, weil er nur `scheduled` liest. Der Worker hätte das
+    als `log.warning("balance_charge_failed")` gemeldet, also genauso wie eine
+    gedeckte Ablehnung (Wurzel 5).
+    """
+
+
 @contextmanager
 def _stripe_errors():  # noqa: ANN202
     """Übersetzt Stripe-SDK-Fehler in saubere PaymentsError, damit sie als
@@ -170,15 +188,20 @@ class PaymentsService:
     @property
     def _stripe(self) -> StripeClient:
         """StripeClient — injiziert (Test) oder lazy aus der Config. Fehlt der
-        Key, wird StripeNotConfiguredError in einen klaren PaymentsError (503)
-        übersetzt, damit das Frontend „Stripe nicht konfiguriert" sieht statt
-        eines kryptischen Auth-Fehlers."""
+        Key, wird StripeNotConfiguredError in einen klaren PaymentsConfigError
+        (503) übersetzt, damit das Frontend „Stripe nicht konfiguriert" sieht
+        statt eines kryptischen Auth-Fehlers.
+
+        Der eigene Typ (Unterklasse von PaymentsError, für Router und alle
+        bestehenden `except PaymentsError` also unverändert) macht den
+        Betriebsmangel für Hintergrundläufe unterscheidbar — siehe
+        PaymentsConfigError."""
         if self._injected_stripe is not None:
             return self._injected_stripe
         try:
             return get_stripe()
         except StripeNotConfiguredError as exc:
-            raise PaymentsError(str(exc), status_code=503) from exc
+            raise PaymentsConfigError(str(exc), status_code=503) from exc
 
     def health(self) -> SliceHealth:
         return SliceHealth(slice=self.slice_name)
@@ -1555,9 +1578,16 @@ class PaymentsService:
             return {"payment_id": payment_id, "status": "scheduled", "skipped": True}
         acct = self._connected_account(db, res["tenant_id"])
         amount_cents = _to_cents(float(bal["amount"]))
-        # Claim: erst auf 'charging' setzen, damit ein zweiter Worker-Lauf dieselbe
-        # Zeile nicht parallel chargt (Wurzel 2). Der Stripe-idempotency_key ist
-        # der zweite Backstop.
+        # Den Stripe-Client VOR dem Claim auflösen. Er stand früher als
+        # `client=self._stripe` unten in der Argumentliste und wurde damit erst
+        # AUSGEWERTET, nachdem die Zeile bereits auf 'charging' stand — ein
+        # fehlender STRIPE_SECRET_KEY lief dann in das `except PaymentsError`
+        # unten und schrieb 'failed'. Die Zeile war nie bei Stripe, wurde aber
+        # abgeschrieben, und der stündliche Tick greift sie nie wieder auf
+        # (er liest nur 'scheduled'). Hier oben bleibt sie unangetastet
+        # 'scheduled' und läuft nach dem Setzen der Variablen von selbst weiter
+        # (Wurzel 1: kein halber Gegenzustand, Wurzel 5: kein stiller Ausfall).
+        stripe = self._stripe
         self._update_payment(db, payment_id, {"scheduled_status": "charging"})
         idem_key = f"balance:{payment_id}"
         try:
@@ -1582,8 +1612,15 @@ class PaymentsService:
                         "reservation_id": bal["reservation_id"],
                         "type": "balance",
                     },
-                    client=self._stripe,
+                    client=stripe,
                 )
+        except PaymentsConfigError:
+            # Zweiter Riegel für denselben Denkfehler: taucht ein Konfigurations-
+            # mangel doch noch INNERHALB des Aufrufs auf, wird die Zeile nicht
+            # abgeschrieben, sondern der Claim zurückgenommen — sonst bliebe sie
+            # für immer auf 'charging' liegen (Wurzel 1).
+            self._update_payment(db, payment_id, {"scheduled_status": "scheduled"})
+            raise
         except PaymentsError as exc:
             # authentication_required (3DS) vs. echte Ablehnung unterscheiden.
             needs_action = "authentication" in (exc.message or "").lower()

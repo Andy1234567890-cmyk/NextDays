@@ -1,0 +1,4019 @@
+{
+  "hinweis": "Begründete Ausnahmen für scripts/i18n/deutsche-restwerte-pruefen.mjs. Ein Eintrag sagt: dieser Wert steht in DIESEN Sprachen ABSICHTLICH wortgleich zum Deutschen — er ist kein vergessener deutscher Text. Die Sprachliste ist Pflicht und wird je Sprache entschieden: dieselbe Zeichenkette ist in nl richtig (\"Website\") und in pl falsch (\"Strona\"). Nur Marken, Kürzel, Masken und technische Marken tragen \"alle\". Nichts wird pauschal aus der Skript-Ausgabe übernommen, nur damit die Zahl sinkt — wer unsicher ist, übersetzt lieber. Stand 25.08.2026: 4881 gemessene deutsche Restwerte, davon 1730 übersetzt, der Rest je Sprache geprüft und hier begründet.",
+  "gruende": {
+    "marke": "Eigenname/Produktname — wird nie übersetzt (myNextDays, myBestDays, Airbnb, Booking.com, Vrbo, Stripe, PayPal, WhatsApp, Apple, Google, DATEV, iPad, ZUGFeRD, GoBD)",
+    "kuerzel": "Internationales Kürzel — IBAN, BIC, SWIFT, VIP, SMS, ID, ADR, OTA, CC, BCC, SEO, WC, TV, PDF, QR, EU, N/A",
+    "maske": "Format-Maske, Beispiel- oder Musterwert — XX00 0000 …, HRB 12345, jane.doe@gmail.com, Musterstraße 123",
+    "technisch": "Technische Vorlagenmarke, die die Gegenseite maschinell liest — DOC_META:, [%PLATZHALTER%], NAME: {value}",
+    "international": "Das Wort lautet in dieser Sprache tatsächlich gleich (Fremdwort/Internationalismus) — geprüft je Sprache, nicht geraten",
+    "fachbegriff": "Fachbegriff der Branche, den diese Sprache unübersetzt führt (Check-in, Stop-Sell, Resort, Dynamic Pricing)"
+  },
+  "erlaubt": [
+    {
+      "wert": "myNextDays",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "myBestDays",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "myNextDays-ID:",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "Airbnb",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "Airbnb: {grund}",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "Booking.com",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "Vrbo",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "DATEV",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "WhatsApp",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "Apple",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "Google",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "iPad",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "Deutsche Bank",
+      "grund": "maske",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "ZUGFeRD-PDF",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "IBAN",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "BIC",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "BIC / SWIFT",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "ADR",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "VIP",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "SMS",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "ID",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "ID:",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "ID {id}",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "SEO",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "CC",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "BCC",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "+ CC",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "+ BCC",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "QR Code",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "TV",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "HRB 12345",
+      "grund": "maske",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "XX00 0000 0000 0000 0000 00",
+      "grund": "maske",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "+49 123 456789",
+      "grund": "maske",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "+49 170 …",
+      "grund": "maske",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "ref-1, ref-2, …",
+      "grund": "maske",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "finance.TechnicalTemplate.professionalServices",
+      "grund": "technisch",
+      "sprachen": "alle"
+    },
+    {
+      "wert": ".jpg, .jpeg, .png (max. 10 MB)",
+      "grund": "maske",
+      "sprachen": [
+        "cs",
+        "en",
+        "hu",
+        "it",
+        "nl",
+        "ro",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "{size} ft² · ",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "el",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "lt",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "{size} m² · ",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "el",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "lt",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "A–Z",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "lv",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Adapter",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "et",
+        "hr",
+        "hu",
+        "nl",
+        "pl",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Admin",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "fr",
+        "hr",
+        "it",
+        "nl",
+        "pl",
+        "ro",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Administrator",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "en",
+        "hr",
+        "pl",
+        "ro"
+      ]
+    },
+    {
+      "wert": "Adresse",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "fr"
+      ]
+    },
+    {
+      "wert": "Adresse *",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "fr"
+      ]
+    },
+    {
+      "wert": "Aerobic",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "fi",
+        "ro"
+      ]
+    },
+    {
+      "wert": "Aktiv",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Aktuell",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Alle",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Apartment",
+      "grund": "international",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "April",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "mt",
+        "nl",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Archiv",
+      "grund": "international",
+      "sprachen": [
+        "cs"
+      ]
+    },
+    {
+      "wert": "Artikelnummer",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Audio",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "en",
+        "es",
+        "fr",
+        "it",
+        "lv",
+        "nl",
+        "pl",
+        "ro"
+      ]
+    },
+    {
+      "wert": "August",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "et",
+        "ro",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Automation",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Automatisch",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Autor",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "es",
+        "et",
+        "hr",
+        "pl",
+        "pt",
+        "ro",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Autor:",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "es",
+        "et",
+        "hr",
+        "pl",
+        "pt",
+        "ro",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Avatar",
+      "grund": "technisch",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "et",
+        "fr",
+        "hr",
+        "hu",
+        "it",
+        "mt",
+        "nl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Balkon",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "hr",
+        "nl",
+        "pl",
+        "sl"
+      ]
+    },
+    {
+      "wert": "Ballons",
+      "grund": "international",
+      "sprachen": [
+        "fr"
+      ]
+    },
+    {
+      "wert": "Bank",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "en",
+        "hu",
+        "mt",
+        "nl",
+        "pl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Bar",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "fr",
+        "hr",
+        "it",
+        "mt",
+        "nl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Basis",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Beige",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "es",
+        "fi",
+        "fr",
+        "it",
+        "mt",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Belgien",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Bidet",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "fr",
+        "it",
+        "nl",
+        "pl",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Bild",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Bilder",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Billard",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "fr"
+      ]
+    },
+    {
+      "wert": "Bingo",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "hr",
+        "it",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Blog",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Boot",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Bowling",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "fr",
+        "hu",
+        "it",
+        "mt",
+        "pt",
+        "ro",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Branche",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Breakout",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Brutto",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "pl",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Bulgarien",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Business Tax ID",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "it",
+        "nl",
+        "pl",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Button",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Casino",
+      "grund": "international",
+      "sprachen": [
+        "en",
+        "es",
+        "fr",
+        "nl",
+        "pt"
+      ]
+    },
+    {
+      "wert": "Channel Manager",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Chat starten",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Check-in",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "el",
+        "en",
+        "es",
+        "it",
+        "mt",
+        "nl",
+        "pt",
+        "ro",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Check-in: {checkIn} · Check-out: {checkOut}",
+      "grund": "maske",
+      "sprachen": [
+        "da",
+        "en",
+        "it",
+        "mt",
+        "nl",
+        "ro",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Check-ins",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "en",
+        "mt",
+        "nl",
+        "pt"
+      ]
+    },
+    {
+      "wert": "Check-out",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en",
+        "it",
+        "mt",
+        "nl",
+        "pt",
+        "ro"
+      ]
+    },
+    {
+      "wert": "Check-outs",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "en",
+        "mt",
+        "nl",
+        "pt"
+      ]
+    },
+    {
+      "wert": "Client-ID",
+      "grund": "technisch",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Code",
+      "grund": "kuerzel",
+      "sprachen": [
+        "en",
+        "fr",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Compliance",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Computer",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "it",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Countdown",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en",
+        "mt"
+      ]
+    },
+    {
+      "wert": "Dart",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Dashboard",
+      "grund": "technisch",
+      "sprachen": [
+        "da",
+        "en",
+        "it",
+        "mt",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Datum",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "hr",
+        "nl",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Datum:",
+      "grund": "maske",
+      "sprachen": [
+        "cs",
+        "hr",
+        "nl",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Design",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "en",
+        "fr",
+        "it",
+        "nl",
+        "pt",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Desktop",
+      "grund": "technisch",
+      "sprachen": [
+        "en",
+        "it",
+        "mt",
+        "nl",
+        "ro"
+      ]
+    },
+    {
+      "wert": "Details",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Di",
+      "grund": "kuerzel",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Direkt",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Divers",
+      "grund": "international",
+      "sprachen": [
+        "ro"
+      ]
+    },
+    {
+      "wert": "Do",
+      "grund": "kuerzel",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Doe",
+      "grund": "maske",
+      "sprachen": [
+        "da",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hu",
+        "nl",
+        "pl",
+        "pt",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Dokument",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "et",
+        "hr",
+        "mt",
+        "pl",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Dokument:",
+      "grund": "maske",
+      "sprachen": [
+        "cs",
+        "da",
+        "et",
+        "hr",
+        "mt",
+        "pl",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Dokumenttyp",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Dr., Prof., etc.",
+      "grund": "kuerzel",
+      "sprachen": [
+        "en",
+        "es",
+        "pt",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Dynamic",
+      "grund": "technisch",
+      "sprachen": [
+        "bg",
+        "cs",
+        "da",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "hr",
+        "it",
+        "mt",
+        "nl",
+        "pl"
+      ]
+    },
+    {
+      "wert": "Dynamic Pricing aktiv",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "wert": "Dynamisch",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "E-Invoice QR Code",
+      "grund": "technisch",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Effekt",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Effektiv: ",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "wert": "Elegant",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "en",
+        "nl",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Elektriker",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "English",
+      "grund": "international",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Español",
+      "grund": "international",
+      "sprachen": [
+        "es"
+      ]
+    },
+    {
+      "wert": "Estland",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Etage",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "wert": "EU",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "fi",
+        "hr",
+        "hu",
+        "nl",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Export",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "en",
+        "nl",
+        "ro",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Extras",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en",
+        "es",
+        "fr",
+        "mt",
+        "pt"
+      ]
+    },
+    {
+      "wert": "Familie",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl",
+        "ro"
+      ]
+    },
+    {
+      "wert": "Favicon",
+      "grund": "technisch",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hu",
+        "it",
+        "mt",
+        "nl",
+        "pl",
+        "ro",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Favorit",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Fax",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "fr",
+        "hu",
+        "it",
+        "mt",
+        "nl",
+        "pt",
+        "ro",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Februar",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "sl"
+      ]
+    },
+    {
+      "wert": "Filter",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "en",
+        "et",
+        "nl",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Firma",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "pl",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Fitness",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "et",
+        "fr",
+        "hr",
+        "it",
+        "lv",
+        "mt",
+        "nl",
+        "pt",
+        "ro",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Fitnesscenter",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "wert": "Form",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Format",
+      "grund": "technisch",
+      "sprachen": [
+        "da",
+        "en",
+        "fr",
+        "hr",
+        "mt",
+        "pl",
+        "ro",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Format: {format}",
+      "grund": "maske",
+      "sprachen": [
+        "da",
+        "en",
+        "hr",
+        "mt",
+        "pl",
+        "ro",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Formell",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Formular",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "ro"
+      ]
+    },
+    {
+      "wert": "Foto",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "es",
+        "et",
+        "it",
+        "nl",
+        "pt",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Fotoalbum",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "et",
+        "nl",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Fotos",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "es",
+        "pt"
+      ]
+    },
+    {
+      "wert": "Fr",
+      "grund": "kuerzel",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "wert": "Français",
+      "grund": "international",
+      "sprachen": [
+        "fr"
+      ]
+    },
+    {
+      "wert": "ft²",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "el",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "lt",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Futon",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Galerie",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "fr",
+        "ro"
+      ]
+    },
+    {
+      "wert": "Garage",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "fr",
+        "it",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Garantie",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "fr",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Gas",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "es",
+        "it",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Gasgrill",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "wert": "Gast",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Gelegen in <strong>{city}</strong>",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Geometrisch",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Glamping",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "GoBD-konform",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "hu"
+      ]
+    },
+    {
+      "wert": "Grill",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "et",
+        "pl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Haarstyling",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Handmassage",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Herr",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Hostel",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "en",
+        "et",
+        "hr",
+        "hu",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl"
+      ]
+    },
+    {
+      "wert": "Hotel",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "hr",
+        "hu",
+        "it",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl"
+      ]
+    },
+    {
+      "wert": "iCal-URL",
+      "grund": "kuerzel",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "in",
+      "grund": "international",
+      "sprachen": [
+        "en",
+        "it"
+      ]
+    },
+    {
+      "wert": "inaktiv",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Inaktiv",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Inspektion",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Irland",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Italien",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Ja",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Jane",
+      "grund": "maske",
+      "sprachen": [
+        "da",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hu",
+        "nl",
+        "pl",
+        "pt",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Januar",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "sl"
+      ]
+    },
+    {
+      "wert": "Jobs",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Juli",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "jun., sen., MBA",
+      "grund": "kuerzel",
+      "sprachen": [
+        "da",
+        "lv",
+        "mt",
+        "pl"
+      ]
+    },
+    {
+      "wert": "Juni",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Kalender",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "et",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Kalender-API",
+      "grund": "kuerzel",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Kamin",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "et",
+        "hr",
+        "mt",
+        "sl"
+      ]
+    },
+    {
+      "wert": "Kampagne",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "wert": "Kanal",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "et",
+        "hr",
+        "mt",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Karaoke",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "hr",
+        "hu",
+        "it",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Karte",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "lv"
+      ]
+    },
+    {
+      "wert": "Kategorie",
+      "grund": "international",
+      "sprachen": [
+        "cs"
+      ]
+    },
+    {
+      "wert": "Keywords",
+      "grund": "technisch",
+      "sprachen": [
+        "da",
+        "en",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Kilometer",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Kinderclub",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Klein",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Komfort",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "pl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Kommission (%)",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "wert": "Kommunikation",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Kontakt",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "et",
+        "hr",
+        "pl",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Kontakt {index}",
+      "grund": "maske",
+      "sprachen": [
+        "cs",
+        "da",
+        "et",
+        "hr",
+        "pl",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Kontaktperson",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Kontakttyp",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Konto",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "et",
+        "pl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Kontotyp",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Kontrast",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "et",
+        "hr",
+        "pl",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Kopenhagen",
+      "grund": "maske",
+      "sprachen": [
+        "hr",
+        "nl",
+        "sl"
+      ]
+    },
+    {
+      "wert": "Kroatien",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Kunde",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "wert": "Kunde:",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "wert": "Kursiv",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Kursiv (Cmd + I)",
+      "grund": "maske",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Land",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Land *",
+      "grund": "maske",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Laptop",
+      "grund": "international",
+      "sprachen": [
+        "en",
+        "hu",
+        "it",
+        "mt",
+        "nl",
+        "pl",
+        "ro"
+      ]
+    },
+    {
+      "wert": "Lavendel",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "et",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Layout",
+      "grund": "technisch",
+      "sprachen": [
+        "da",
+        "en",
+        "it",
+        "mt",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Leitweg-ID",
+      "grund": "technisch",
+      "sprachen": [
+        "bg",
+        "cs",
+        "da",
+        "es",
+        "et",
+        "hr",
+        "hu",
+        "it",
+        "lt",
+        "lv",
+        "mt",
+        "nl",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Lettland",
+      "grund": "international",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Lichttherapie",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Lila",
+      "grund": "international",
+      "sprachen": [
+        "hu",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Limit ({count})",
+      "grund": "technisch",
+      "sprachen": [
+        "cs",
+        "en",
+        "pl",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Link",
+      "grund": "technisch",
+      "sprachen": [
+        "da",
+        "en",
+        "et",
+        "it",
+        "mt",
+        "nl",
+        "pl",
+        "ro"
+      ]
+    },
+    {
+      "wert": "Link URL:",
+      "grund": "technisch",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Link-URL",
+      "grund": "technisch",
+      "sprachen": [
+        "da",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Liste",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "fr"
+      ]
+    },
+    {
+      "wert": "Litauen",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Live",
+      "grund": "kuerzel",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Logo",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "it",
+        "mt",
+        "nl",
+        "pl",
+        "ro",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Luftig",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "wert": "Luxemburg",
+      "grund": "international",
+      "sprachen": [
+        "fi",
+        "hu",
+        "nl",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "wert": "m²",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "el",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "lt",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Mai",
+      "grund": "international",
+      "sprachen": [
+        "et",
+        "fr",
+        "ro"
+      ]
+    },
+    {
+      "wert": "Malta",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "hr",
+        "it",
+        "lt",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Marketing",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "en",
+        "es",
+        "fr",
+        "hr",
+        "hu",
+        "it",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Massage",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "fr",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Max",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "en",
+        "et",
+        "fr",
+        "hu",
+        "it",
+        "nl",
+        "ro",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Max H",
+      "grund": "kuerzel",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Maximum: {amount}",
+      "grund": "maske",
+      "sprachen": [
+        "cs",
+        "en",
+        "hu",
+        "nl",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Methode",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Mi",
+      "grund": "kuerzel",
+      "sprachen": [
+        "es",
+        "ro"
+      ]
+    },
+    {
+      "wert": "Min",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "et",
+        "fr",
+        "hr",
+        "hu",
+        "it",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Min H",
+      "grund": "kuerzel",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Minibar",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "da",
+        "es",
+        "it",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Minigolf",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "hr",
+        "hu",
+        "it",
+        "mt",
+        "pl",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Minuten",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Mobil",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "hu",
+        "ro",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Modus",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Morgen",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Motorboot",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "N/A",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "et",
+        "hr",
+        "hu",
+        "lv",
+        "ro",
+        "sk",
+        "sl"
+      ]
+    },
+    {
+      "wert": "Nacht",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Name",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Name *",
+      "grund": "technisch",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Name:",
+      "grund": "technisch",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Navigation",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "en",
+        "fr"
+      ]
+    },
+    {
+      "wert": "Netto",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "it",
+        "nl",
+        "pl",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "netto {betrag}",
+      "grund": "maske",
+      "sprachen": [
+        "da",
+        "fi",
+        "it",
+        "nl",
+        "pl",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Netto: {amount}",
+      "grund": "maske",
+      "sprachen": [
+        "da",
+        "it",
+        "nl",
+        "pl",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Neutral",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "en",
+        "sv"
+      ]
+    },
+    {
+      "wert": "No Data Found",
+      "grund": "technisch",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Normal",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "es",
+        "fr",
+        "pt",
+        "ro"
+      ]
+    },
+    {
+      "wert": "November",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "et",
+        "hu",
+        "nl",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Nr.",
+      "grund": "kuerzel",
+      "sprachen": [
+        "da",
+        "lt",
+        "lv",
+        "nl",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Nummer",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Objekt",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "et",
+        "hr",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Objektfotos",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "wert": "Objektinformation",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Offset Y",
+      "grund": "kuerzel",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Oktober",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "optional",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Optional",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Orange",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "fr",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Organisation",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "en",
+        "fr",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Ort",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Ort *",
+      "grund": "maske",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "OSS – One-Stop-Shop",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "fi",
+        "hr",
+        "it",
+        "mt",
+        "nl",
+        "pl",
+        "ro",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Oval",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Partner",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "et",
+        "hr",
+        "hu",
+        "it",
+        "nl",
+        "pl",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Passkey",
+      "grund": "technisch",
+      "sprachen": [
+        "en",
+        "mt",
+        "nl"
+      ]
+    },
+    {
+      "wert": "PDF generation failed",
+      "grund": "technisch",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "PDF generation failed ({status}): {errorText}",
+      "grund": "technisch",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "PDF generation returned empty result",
+      "grund": "technisch",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Periode",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Periode {number}",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Permalink",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Person",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "en",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Personal",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "es",
+        "et",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Personen",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Personen ({count})",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Plattform",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Polen",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Pool",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Poolbar",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Pop-up",
+      "grund": "technisch",
+      "sprachen": [
+        "da",
+        "en",
+        "it",
+        "mt",
+        "nl",
+        "pt",
+        "ro"
+      ]
+    },
+    {
+      "wert": "Popup",
+      "grund": "technisch",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Portal",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "en",
+        "es",
+        "hr",
+        "mt",
+        "pl",
+        "pt",
+        "ro",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Portale",
+      "grund": "international",
+      "sprachen": [
+        "pl"
+      ]
+    },
+    {
+      "wert": "Portalprovision",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Portier",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Portugal",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "es",
+        "et",
+        "fr",
+        "hr",
+        "nl",
+        "pt",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Position",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en",
+        "fr",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Position {number}",
+      "grund": "maske",
+      "sprachen": [
+        "da",
+        "fr",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Pride",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "el",
+        "en",
+        "et",
+        "fi",
+        "fr",
+        "hr",
+        "hu",
+        "it",
+        "lt",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Primär",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "privat",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "mt",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Privat",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "mt",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Promotions",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en",
+        "fr"
+      ]
+    },
+    {
+      "wert": "Provision",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Provision (%)",
+      "grund": "maske",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Punkt",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "et",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Rabatt",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Rabatt %",
+      "grund": "maske",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Radio",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "es",
+        "fi",
+        "fr",
+        "hr",
+        "it",
+        "lv",
+        "nl",
+        "pl",
+        "ro",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Regel {number}",
+      "grund": "maske",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Resort",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "hr",
+        "it",
+        "mt",
+        "nl",
+        "pt",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Restaurant",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "fr",
+        "nl",
+        "ro"
+      ]
+    },
+    {
+      "wert": "Reverse Charge",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "mt"
+      ]
+    },
+    {
+      "wert": "Rolle",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "wert": "Rosa",
+      "grund": "international",
+      "sprachen": [
+        "es",
+        "it",
+        "pt",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Rumänien",
+      "grund": "international",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Sa",
+      "grund": "kuerzel",
+      "sprachen": [
+        "fr",
+        "ga"
+      ]
+    },
+    {
+      "wert": "Safe",
+      "grund": "international",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Saison",
+      "grund": "international",
+      "sprachen": [
+        "fr"
+      ]
+    },
+    {
+      "wert": "Saisons",
+      "grund": "international",
+      "sprachen": [
+        "fr"
+      ]
+    },
+    {
+      "wert": "Sand",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Sauna",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "it",
+        "nl",
+        "pl",
+        "pt",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Schweiz",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Segment",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "et",
+        "fr",
+        "hr",
+        "mt",
+        "nl",
+        "pl",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "September",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "et",
+        "nl",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Service",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Services",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en",
+        "fr"
+      ]
+    },
+    {
+      "wert": "Shampoo",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "fi",
+        "it",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Shuttleservice",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Signatur",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Skibus",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Skonto",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "mt",
+        "pl",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Skonto ({percent}%):",
+      "grund": "maske",
+      "sprachen": [
+        "hr",
+        "mt",
+        "pl"
+      ]
+    },
+    {
+      "wert": "Skonto (%)",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "hr",
+        "mt",
+        "pl",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Skonto %",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "hr",
+        "mt",
+        "pl",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Slogan",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "et",
+        "fr",
+        "hr",
+        "it",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Smartphone",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "es",
+        "fr",
+        "it",
+        "mt",
+        "nl",
+        "pt",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Snackbar",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Sofa",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "hr",
+        "lt",
+        "pl"
+      ]
+    },
+    {
+      "wert": "Solarium",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "fi",
+        "fr",
+        "it",
+        "nl",
+        "pl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Spanien",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Squash",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "hr",
+        "hu",
+        "it",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Stand",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Standard",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "fr",
+        "hu",
+        "it",
+        "mt",
+        "ro",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Standard (12)",
+      "grund": "maske",
+      "sprachen": [
+        "da",
+        "it",
+        "mt",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Standard-iCal",
+      "grund": "kuerzel",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Standardrabatt (%)",
+      "grund": "maske",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Standardtext",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "Startdatum",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Statistik",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Status",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "en",
+        "hr",
+        "nl",
+        "pl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Status:",
+      "grund": "maske",
+      "sprachen": [
+        "da",
+        "en",
+        "hr",
+        "nl",
+        "pl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Status: {status}",
+      "grund": "maske",
+      "sprachen": [
+        "da",
+        "en",
+        "hr",
+        "nl",
+        "pl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Stil",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "hr",
+        "mt",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Stop",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "nl",
+        "pl",
+        "ro",
+        "sk",
+        "sl"
+      ]
+    },
+    {
+      "wert": "Stop-Sell",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es"
+      ]
+    },
+    {
+      "wert": "Storno",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "hr",
+        "it",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Strand",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "hu",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Stripe verbinden",
+      "grund": "marke",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Suite",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "en",
+        "es",
+        "fr",
+        "it",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Swimmingpool",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "wert": "Tags",
+      "grund": "technisch",
+      "sprachen": [
+        "da",
+        "en",
+        "mt",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Tarif",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Team",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "en",
+        "it",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Technisch",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Telefon",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "et",
+        "hr",
+        "hu",
+        "pl",
+        "ro",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Telefon *",
+      "grund": "maske",
+      "sprachen": [
+        "cs",
+        "da",
+        "et",
+        "hr",
+        "hu",
+        "pl",
+        "ro",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Telefonnummer",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Template could not be rendered. Please make sure the document preview is visible and try again.",
+      "grund": "technisch",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Template is not ready yet. Please wait for the document preview to load completely.",
+      "grund": "technisch",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Terrasse",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "fr"
+      ]
+    },
+    {
+      "wert": "Test",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "et",
+        "fr",
+        "hr",
+        "it",
+        "mt",
+        "nl",
+        "pl",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Text",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "en",
+        "ro",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Text (optional)",
+      "grund": "technisch",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "Texte",
+      "grund": "international",
+      "sprachen": [
+        "ro"
+      ]
+    },
+    {
+      "wert": "Ticketservice",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Tipp:",
+      "grund": "international",
+      "sprachen": [
+        "hu"
+      ]
+    },
+    {
+      "wert": "Titel",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Toaster",
+      "grund": "international",
+      "sprachen": [
+        "en",
+        "mt"
+      ]
+    },
+    {
+      "wert": "Tonfall",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "sv"
+      ]
+    },
+    {
+      "wert": "TOT Registration ID",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "it",
+        "nl",
+        "pl",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Transaktion",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Typ",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "pl",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Typ:",
+      "grund": "maske",
+      "sprachen": [
+        "cs",
+        "pl",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Ungarn",
+      "grund": "international",
+      "sprachen": [
+        "da"
+      ]
+    },
+    {
+      "wert": "Ventilator",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "hr",
+        "nl",
+        "ro",
+        "sl"
+      ]
+    },
+    {
+      "wert": "Video",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "et",
+        "fi",
+        "hr",
+        "it",
+        "lv",
+        "nl",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Villa",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "en",
+        "es",
+        "et",
+        "fr",
+        "hu",
+        "it",
+        "mt",
+        "nl",
+        "pt",
+        "sv"
+      ]
+    },
+    {
+      "wert": "WC",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "et",
+        "fi",
+        "hr",
+        "hu",
+        "it",
+        "pl",
+        "ro",
+        "sk"
+      ]
+    },
+    {
+      "wert": "Webhooks",
+      "grund": "technisch",
+      "sprachen": [
+        "da",
+        "el",
+        "en",
+        "es",
+        "fr",
+        "ga",
+        "hr",
+        "it",
+        "lt",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Website",
+      "grund": "international",
+      "sprachen": [
+        "en",
+        "nl"
+      ]
+    },
+    {
+      "wert": "Widgets",
+      "grund": "technisch",
+      "sprachen": [
+        "da",
+        "en",
+        "es",
+        "fr",
+        "mt",
+        "nl",
+        "pt"
+      ]
+    },
+    {
+      "wert": "Wimpel",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Windsurfen",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "wert": "Yukata",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "Z–A",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "lv",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "amenities.bar",
+      "grund": "international",
+      "sprachen": [
+        "pl"
+      ]
+    },
+    {
+      "schluessel": "amenities.fitness",
+      "grund": "international",
+      "sprachen": [
+        "pl"
+      ]
+    }
+  ]
+}

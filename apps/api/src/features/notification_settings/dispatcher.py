@@ -465,11 +465,29 @@ class NotificationDispatcher:
 
         Der Button entsteht NUR, wenn ein `ziel_pfad` da ist UND die Adresse des
         Dashboards konfiguriert ist. Fehlt sie, gibt es keinen Link — eine
-        geratene Domain waere ein erfundener Wert (Wurzel 4), und die Mail sagt
-        ohne Button immer noch alles Noetige.
+        geratene Domain waere ein erfundener Wert (Wurzel 4).
+
+        Fehlt sie, wird das aber LAUT: bis hierher fiel der Button stumm weg,
+        und genau so gingen wochenlang Buchungsmeldungen ohne jeden Link
+        hinaus, ohne dass irgendetwas es meldete (aufgefallen erst per Auge am
+        25.08.2026). Ursache war kein Codefehler, sondern ein Konfigurations-
+        Drift: die API-Anwendung trug `APP_BASE_URL`, der WORKER-Prozess —
+        derselbe Code, eigene Coolify-Anwendung — trug sie nie. Ein Fehlen,
+        das niemand bemerkt, ist die eigentliche Wurzel; deshalb `log.error`
+        statt Schweigen (Wurzel 5).
         """
         roh = getattr(get_settings(), "app_base_url", "")
         basis = roh.rstrip("/") if isinstance(roh, str) else ""
+        if ziel_pfad and not basis:
+            log.error(
+                "mail_ohne_link_app_base_url_fehlt",
+                ziel_pfad=ziel_pfad,
+                hinweis=(
+                    "APP_BASE_URL ist in diesem Prozess nicht gesetzt — die "
+                    "Mail geht ohne Link hinaus. In JEDER Anwendung setzen, "
+                    "die Mails verschickt (api UND worker)."
+                ),
+            )
         aktion = (
             Aktion(
                 text=mail_text(
@@ -483,7 +501,13 @@ class NotificationDispatcher:
         return mail_rendern(
             MailInhalt(
                 titel=betreff,
-                absaetze=[text] if text else [],
+                # AUFTEILEN, nicht als einen Klumpen durchreichen: `text` kann
+                # aus mehreren Katalogschluesseln stammen und traegt dann die
+                # Absatzgrenze `\n\n` in sich. Als EIN Element landete alles in
+                # einem einzigen `<p>`, in dem der Umbruch zu einem Leerzeichen
+                # zusammenfaellt — die Mail sah aus wie ein Satz ohne Struktur,
+                # obwohl der Absender Absaetze gebaut hatte.
+                absaetze=[a for a in text.split("\n\n") if a.strip()],
                 aktion=aktion,
                 sprache=sprache,
             )

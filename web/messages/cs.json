@@ -644,7 +644,7 @@
     "field_check_out": "Odjezd",
     "field_checkin_time": "Čas příjezdu",
     "field_checkout_time": "Čas odjezdu",
-    "field_nights": "Noci",
+    "field_nights": "Nocí",
     "field_guests": "Hosté",
     "field_adults": "Dospělí",
     "field_children": "Děti",
@@ -1127,8 +1127,8 @@
       "from": "Od",
       "to": "Do",
       "basis": "Základ",
-      "checkIn": "Check-in",
-      "checkOut": "Check-out",
+      "checkIn": "Příjezd",
+      "checkOut": "Odjezd",
       "statuses": "Stav rezervace",
       "statusCount": "{count} stavů",
       "title": "Filtry",
@@ -1816,8 +1816,8 @@
     "seasonTo": "Sezóna do",
     "pricePerNight": "Cena/noc ({currency})",
     "basis": "Základ",
-    "basis_net": "Netto",
-    "basis_gross": "Brutto",
+    "basis_net": "Bez DPH",
+    "basis_gross": "S DPH",
     "minStay": "Min. nocí",
     "addRate": "Přidat cenový řádek",
     "confirmDelete": "Opravdu smazat? Tuto akci nelze vrátit zpět.",
@@ -2509,7 +2509,7 @@
       "descriptionPlaceholder": "Popis",
       "quantityLabel": "Množství",
       "taxRateLabel": "DPH %",
-      "netAmount": "Netto: {amount}",
+      "netAmount": "Bez DPH: {amount}",
       "addPosition": "Přidat položku"
     },
     "invoicesClient": {
@@ -5087,7 +5087,7 @@
       "itemContact": "Kontakt",
       "itemFile": "Kartotéka",
       "itemMessagesPlaceholder": "Zástupné symboly zpráv",
-      "itemCompliance": "Compliance",
+      "itemCompliance": "Soulad s předpisy",
       "itemPrices": "Ceny",
       "itemAddons": "Doplňkové služby",
       "itemAvailability": "Dostupnost",
@@ -5098,7 +5098,7 @@
       "itemSync": "Synchronizace"
     },
     "complianceForm": {
-      "title": "Compliance",
+      "title": "Soulad s předpisy",
       "websiteSection": "Web",
       "registrationDetails": "Registrační údaje",
       "registrationDetailsHint": "Uveďte registrační údaje svého objektu, abyste splnili místní předpisy.",
@@ -5222,7 +5222,7 @@
       "basisPerUnit": "Za jednotku",
       "surfaceBookingEngine": "Rezervační stránka",
       "surfaceGuestPortal": "Portál pro hosty",
-      "surfaceCheckin": "Check-in",
+      "surfaceCheckin": "Příjezd",
       "availabilityAnytime": "Kdykoli",
       "availabilityBeforeCheckin": "Pouze před příjezdem",
       "nameDe": "Název (německy)",
@@ -5348,7 +5348,7 @@
       "blockedDays": {
         "title": "Zablokované dny check-in/check-out",
         "hint": "Určete, ve které dny v týdnu není možný check-in a check-out.",
-        "summary": "Check-in: {checkIn} · Check-out: {checkOut}",
+        "summary": "Příjezd: {checkIn} · Odjezd: {checkOut}",
         "allAvailable": "všechny dny dostupné",
         "blockedCount": "{count, plural, one {# den zablokován} few {# dny zablokovány} other {# dnů zablokováno}}",
         "checkInTitle": "Zablokované dny pro check-in",
@@ -5702,7 +5702,7 @@
       "extraSurface": {
         "booking_engine": "Rezervační cesta",
         "guest_portal": "Portál hosta",
-        "checkin": "Check-in"
+        "checkin": "Příjezd"
       },
       "extraAvailability": {
         "anytime": "Kdykoli",
@@ -5748,7 +5748,7 @@
       "bookabilityCardHint": "Jak jsou rezervace přijímány.",
       "timesCardTitle": "Časy check-in/check-out",
       "timesCardHint": "Nastavte časy check-in a check-out.",
-      "checkInOutPill": "Check-in: {checkIn} · Check-out: {checkOut}",
+      "checkInOutPill": "Příjezd: {checkIn} · Odjezd: {checkOut}",
       "legalInfoHeading": "Právní údaje (web)",
       "ratesInfoCardTitle": "Informace o sazbách",
       "ratesInfoCardHint": "Doplňkové informace na stránce sazeb vašeho webu.",
@@ -6899,7 +6899,7 @@
     "scopeRates": "Ceny",
     "scopeGuests": "Hosté",
     "scopeTasks": "Úkoly",
-    "scopeWebhooks": "Webhooks",
+    "scopeWebhooks": "Webhooky",
     "docsLink": "Dokumentace API"
   },
   "supportChat": {
@@ -9029,7 +9029,7 @@
       "location": "Poloha",
       "value": "Cena a kvalita",
       "accuracy": "Přesnost popisu",
-      "checkin": "Check-in",
+      "checkin": "Příjezd",
       "clean": "Čistota",
       "comfort": "Pohodlí",
       "facilities": "Vybavení",
@@ -9338,7 +9338,7 @@
       "zusatzleistungen": "Doplňkové služby",
       "leer": "Zatím žádné pohyby.",
       "gebuehr": "Poplatek {betrag}",
-      "netto": "netto {betrag}",
+      "netto": "čistá částka {betrag}",
       "verfuegbarAb": "dostupné od {datum}",
       "typ": {
         "charge": "Platba kartou",

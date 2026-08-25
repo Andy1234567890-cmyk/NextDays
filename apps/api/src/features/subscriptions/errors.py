@@ -32,3 +32,21 @@ class SubscriptionsError(Exception):
         super().__init__(message)
         self.message = message
         self.status_code = status_code
+
+
+class SubscriptionsConfigError(SubscriptionsError):
+    """Die Abrechnung ist auf DIESEM Prozess gar nicht konfiguriert.
+
+    Eigener Typ (Unterklasse, für Router und bestehende `except
+    SubscriptionsError` also unverändert), weil die Monatsläufe je Betrieb
+    isolieren: ein kaputter Datensatz betrifft EINEN Betrieb und darf die
+    übrigen nicht stoppen, ein fehlender `STRIPE_SECRET_KEY` betrifft ALLE.
+    Ohne die Unterscheidung schreibt der Lauf für jeden Betrieb dieselbe
+    Warnung und meldet am Ende „fehler = <alle>" — die gemeinsame, behebbare
+    Ursache steht dann nirgends.
+
+    Anlass (25.08.2026): `nextdays-worker` (Coolify-Anwendung id 9) fährt den
+    Provisionslauf am Monatsersten, hatte aber keinen `STRIPE_SECRET_KEY` —
+    anders als `nextdays-api`. Der Lauf wäre folgenlos durchgelaufen
+    (Wurzel 5).
+    """

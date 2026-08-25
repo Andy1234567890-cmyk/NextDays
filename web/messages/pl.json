@@ -98,7 +98,7 @@
         "hostel": "Hostel",
         "guest_house": "Pensjonat",
         "villa": "Willa",
-        "resort": "Resort"
+        "resort": "Kurort"
       }
     },
     "done": {
@@ -347,7 +347,7 @@
     "GB": "Wielka Brytania"
   },
   "stopSell": {
-    "title": "Stop-Sell",
+    "title": "Wstrzymanie sprzedaży",
     "description": "Zablokuj dni dla sprzedaży przez touroperatorów (np. TUI). Rezerwacje przez Twoje własne platformy pozostają bez zmian.",
     "setTitle": "Ustaw stop-sell",
     "property": "Property",
@@ -2674,9 +2674,9 @@
       "documentTypeQuote": "Wycena",
       "documentTypeReminder": "Przypomnienie",
       "documentTypeCreditNote": "Nota kredytowa",
-      "documentTypeCancellation": "Storno",
+      "documentTypeCancellation": "Korekta",
       "loadErrorToast": "Błąd podczas wczytywania danych {documentLabel}",
-      "layoutStandard": "Standard",
+      "layoutStandard": "Standardowy",
       "layoutNeutral": "Neutralny",
       "layoutElegant": "Elegancki",
       "layoutTechnical": "Techniczny",
@@ -2785,7 +2785,7 @@
       "loading": "Wczytywanie edytora…",
       "missingFieldError": "Błąd: brak pola {field}",
       "fontSize": "Rozmiar czcionki",
-      "fontSizeDefault": "Standard (12)",
+      "fontSizeDefault": "Domyślny (12)",
       "bold": "Pogrubienie (Cmd + B)",
       "italic": "Kursywa (Cmd + I)",
       "underline": "Podkreślenie (Cmd + U)",
@@ -2810,7 +2810,7 @@
       "indent": "Zwiększ wcięcie",
       "textTemplate": "Szablon tekstu",
       "textTemplates": "Szablony tekstu",
-      "defaultBadge": "Standard",
+      "defaultBadge": "Domyślny",
       "createTextTemplate": "Utwórz szablon tekstu",
       "noTextTemplates": "Brak dostępnych szablonów tekstu",
       "placeholder": "Symbol zastępczy"
@@ -2819,7 +2819,7 @@
       "loading": "Wczytywanie edytora tekstu nagłówka…",
       "missingField": "Błąd: brak pola {field}",
       "fontSize": "Rozmiar czcionki",
-      "fontSizeDefault": "Standard (12)",
+      "fontSizeDefault": "Domyślny (12)",
       "bold": "Pogrubienie (Cmd + B)",
       "italic": "Kursywa (Cmd + I)",
       "underline": "Podkreślenie (Cmd + U)",
@@ -2834,7 +2834,7 @@
       "indentIncrease": "Zwiększ wcięcie",
       "headerTemplate": "Szablon tekstu nagłówka",
       "headerTemplatesLabel": "Szablony tekstu nagłówka",
-      "default": "Standard",
+      "default": "Domyślny",
       "createHeaderTemplate": "Utwórz szablon tekstu nagłówka",
       "noHeaderTemplates": "Brak dostępnych szablonów tekstu nagłówka",
       "placeholder": "Symbol zastępczy"
@@ -3202,7 +3202,7 @@
       "statusPaid": "Opłacona",
       "statusOverdue": "Przeterminowana",
       "statusCancelled": "Anulowana",
-      "statusStorno": "Storno",
+      "statusStorno": "Korekta",
       "reasonRequired": "Proszę podać powód faktury korygującej",
       "mustBeLoggedIn": "Musisz być zalogowany",
       "createSuccess": "Faktura korygująca utworzona pomyślnie",
@@ -3298,7 +3298,7 @@
       "chooseMatchingAmount": "Proszę wybrać transakcję o pasującej kwocie.",
       "toleranceHint": "Powiązać można tylko transakcje o różnicy maksymalnie 5% lub 1 €.",
       "understood": "Rozumiem",
-      "transactionTypeStandard": "Standard",
+      "transactionTypeStandard": "Standardowa",
       "noDescription": "Brak opisu",
       "unknownAccount": "Nieznane konto",
       "loadError": "Błąd podczas wczytywania transakcji",
@@ -3361,7 +3361,7 @@
       "statusOpen": "Otwarta",
       "statusOverdue": "Zaległa",
       "statusPaid": "Opłacona",
-      "statusCancelled": "Storno",
+      "statusCancelled": "Anulowana",
       "dueToday": "Dzisiaj",
       "dueTomorrow": "Jutro",
       "dueInDays": "Za {days} dni",
@@ -3435,7 +3435,7 @@
         "selectTemplate": "Wybierz szablon"
       },
       "layout": {
-        "standard": "Standard",
+        "standard": "Standardowy",
         "neutral": "Neutralny",
         "elegant": "Elegancki",
         "technical": "Techniczny",
@@ -3609,7 +3609,7 @@
         "delivery": "List przewozowy",
         "order": "Zlecenie",
         "creditNote": "Nota kredytowa",
-        "cancellation": "Storno",
+        "cancellation": "Korekta",
         "contract": "Umowa",
         "receipt": "Potwierdzenie",
         "generic": "Dokument"
@@ -4992,7 +4992,7 @@
       "idLabel": "ID",
       "noMatch": "Żaden obiekt nie pasuje do filtrów.",
       "resultCount": "{count, plural, one {# obiekt} few {# obiekty} many {# obiektów} other {# obiektu}}",
-      "sortDefault": "Standard",
+      "sortDefault": "Domyślne",
       "sortAz": "A–Z",
       "sortZa": "Z–A",
       "menuOpen": "Akcje",
@@ -6111,7 +6111,7 @@
         "open": "Wolne",
         "booked": "Zarezerwowane",
         "blocked": "Zablokowane",
-        "stopSell": "Stop-Sell",
+        "stopSell": "Wstrzymanie sprzedaży",
         "blockedAndStopSell": "Zablokowane + stop-sell",
         "contractEnd": "Umowa rozwiązana"
       },
@@ -7023,7 +7023,7 @@
       "colCancellation": "Anulowanie",
       "colDeposit": "Kaucja",
       "colValidity": "Ważność",
-      "defaultBadge": "Standard",
+      "defaultBadge": "Domyślne",
       "actions": "Akcje",
       "edit": "Edytuj warunki",
       "markDefault": "Oznacz jako warunki domyślne",
@@ -7235,7 +7235,7 @@
       "inhaltsbreite": "Szerokość treści",
       "ueberschriftenGroesse": "Nagłówki",
       "textGroesse": "Tekst ciągły",
-      "groesseStandard": "Standard",
+      "groesseStandard": "Standardowy",
       "groesseZuruecksetzen": "Powrót do standardu"
     },
     "paletten": {
@@ -8880,7 +8880,7 @@
     "nd_underfloor_heating": "Ogrzewanie podłogowe",
     "nd_wood_stove": "Piec na drewno/kaflowy",
     "nd_door_buzzer": "Domofon",
-    "nd_concierge": "Portier",
+    "nd_concierge": "Konsjerż",
     "nd_key_card": "Karta dostępu",
     "nd_internet_broadband": "Internet szerokopasmowy",
     "nd_internet_dialup": "Internet dial-up",

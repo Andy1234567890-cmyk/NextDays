@@ -26,7 +26,7 @@ from src.core.logging import get_logger
 from src.core.supabase import fetch_all_rows
 
 from .entitlements import modul_aktiv
-from .errors import SubscriptionsError
+from .errors import SubscriptionsConfigError, SubscriptionsError
 from .errors import field as _f
 from .schemas import DYNPRICING_MODULE_KEY, DYNPRICING_RATE
 
@@ -150,6 +150,14 @@ class DynPricingBillingMixin:
         for tid in tenant_ids:
             try:
                 anzahl = self.bill_pending_dynpricing(tid, period=period)
+            except SubscriptionsConfigError:
+                # Wie im Provisionslauf: ein fehlender Stripe-Key trifft alle
+                # Betriebe, nicht einen Datensatz — nicht wegisolieren.
+                log.error(
+                    "dynpricing_billing_nicht_konfiguriert",
+                    period=period, offene_tenants=len(tenant_ids),
+                )
+                raise
             except SubscriptionsError as exc:
                 bilanz["fehler"] += 1
                 log.warning(

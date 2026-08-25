@@ -32,6 +32,7 @@ jede faengt breit und markiert das mit `# noqa: BLE001`.
 """
 from __future__ import annotations
 
+from datetime import date
 from typing import TYPE_CHECKING
 
 from supabase import Client
@@ -482,6 +483,10 @@ def melde_buchungs_ereignis(  # noqa: PLR0913 — ein Ereignis mit seinen Felder
     gast_vorname: str | None = None,
     quelle: str | None = None,
     kanal: str | None = None,
+    check_in: object = None,
+    check_out: object = None,
+    erwachsene: int | None = None,
+    kinder: int | None = None,
 ) -> None:
     """Buchungseingang / Aenderung / Storno an Eigentuemer UND Betrieb.
 
@@ -496,10 +501,27 @@ def melde_buchungs_ereignis(  # noqa: PLR0913 — ein Ereignis mit seinen Felder
     zufaellig auch als Eigentuemer eingetragen war, erfuhr von einer neuen
     Portal-Buchung ueberhaupt nichts.
 
-    Der Inhalt respektiert den Datensplit (Wurzel 3): NUR Vorname und Quelle
-    gehen mit, nie der Gast-Gesamtpreis und nie Kontaktdaten. Der Aufrufer
-    liefert bereits den Vornamen; hier wird zusaetzlich abgeschnitten, falls
-    doch ein voller Name durchgereicht wird — Verteidigung in der Tiefe.
+    Der Inhalt respektiert den Datensplit (Wurzel 3): Vorname, Quelle und die
+    ECKDATEN des Aufenthalts gehen mit, nie der Gast-Gesamtpreis und nie
+    Kontaktdaten. Der Aufrufer liefert bereits den Vornamen; hier wird
+    zusaetzlich abgeschnitten, falls doch ein voller Name durchgereicht wird —
+    Verteidigung in der Tiefe.
+
+    `check_in`/`check_out`/`erwachsene`/`kinder` sind der zweite Absatz der
+    Meldung. Die Gaestezahl wird HIER summiert, nicht vom Aufrufer: es gibt
+    drei Aufrufer, und drei Additionen sind drei Gelegenheiten, die Kinder zu
+    vergessen. Bis
+    dahin bestand sie NUR aus „Vorname · Kanal": weder Zeitraum noch Anzahl,
+    also nichts, woran man die Buchung erkannt haette. Gemeldet am 25.08.2026
+    („diese Mails haben keinerlei Hinweise") — wer sie las, musste sich
+    einloggen und die Buchung suchen. Fehlt eines der drei, entfaellt genau
+    dieser Teil; nichts wird geraten (Wurzel 4).
+
+    Der BETRAG bleibt bewusst draussen, obwohl der Betrieb ihn sehen duerfte:
+    die Meldung geht an beide Kreise mit demselben Text, und §4.2 verbietet
+    ihn dem Eigentuemer. Ihn nur einem Kreis mitzugeben hiesse, zwei Fassungen
+    zu fuehren — dann muesste die Maskierung an ZWEI Stellen stimmen. Der
+    Betrag steht hinter dem Link, wo der Rollen-Datensplit serverseitig greift.
     """
     if kind not in BUCHUNGS_EREIGNISSE:
         return
@@ -525,11 +547,19 @@ def melde_buchungs_ereignis(  # noqa: PLR0913 — ein Ereignis mit seinen Felder
         # in der Oberflaeche gelesen, die ihre eigene Sprachwahl hat), die Mail
         # den Schluessel plus den Kanal als `Katalogwert` — sie geht in der
         # Sprache des jeweiligen Eigentuemers raus.
-        text = " · ".join(
-            t
-            for t in (vorname, _kanal_text(kanal_wert, _GLOCKEN_SPRACHE))
-            if t
+        rumpf_keys, rumpf_werte = _rumpf_bausteine(
+            vorname,
+            kanal_wert,
+            _eckdaten(check_in, check_out, erwachsene, kinder),
         )
+        # Kein Rohtext-Rueckfall mehr: der Rumpf entsteht ausschliesslich aus
+        # `rumpf_keys`, und zwar je Empfaenger in DESSEN Sprache. Der frueher
+        # hier gebaute Satz war im FALLBACK gerendert und diente nur als
+        # Rueckfall, wenn kein Schluessel mitkam — sind gar keine Bausteine da
+        # (weder Gast noch Kanal noch Eckdaten), bleibt der Rumpf leer und die
+        # Meldung besteht aus ihrem Betreff. Das ist ehrlicher als ein Satz,
+        # der aus lauter Leerstellen zusammengesetzt ist.
+        text = ""
         dispatcher = _dispatcher(db)
         # (Empfaenger, Kategorie, dedup-Praefix) statt zweier kopierter
         # Bloecke: bis auf den Katalog-Schluessel — und damit die
@@ -574,16 +604,12 @@ def melde_buchungs_ereignis(  # noqa: PLR0913 — ein Ereignis mit seinen Felder
                 # Jetzt Katalogschluessel + `Katalogwert`, damit der Kanal in
                 # der Sprache des Empfaengers steht (0335-Mechanik).
                 text=text,
-                text_key=(
-                    "benachrichtigung.buchung_rumpf"
-                    if vorname
-                    else "benachrichtigung.buchung_rumpf_ohne_gast"
-                ),
-                text_werte=(
-                    {"gast": vorname, "kanal": kanal_wert}
-                    if vorname
-                    else {"kanal": kanal_wert}
-                ),
+                # LISTE, nicht ein Schluessel: der Dispatcher rendert daraus
+                # ABSAETZE (Gast/Kanal, darunter die Eckdaten). Welche
+                # Bausteine drin sind, entscheidet `_rumpf_bausteine` allein
+                # danach, was wirklich vorliegt.
+                text_key=rumpf_keys or None,
+                text_werte=rumpf_werte or None,
                 tenant_id=tenant_id,
                 # `/portal/buchungen/{id}` gab es in KEINER App — derselbe
                 # 404 wie bei der Aufgaben-Meldung oben. Beide Kreise sind
@@ -717,6 +743,98 @@ def _gehoert_zum_tenant(db: Client, user_id: str, tenant_id: str) -> bool:
     return bool(rows)
 
 
+def _tag(wert: object) -> date | None:
+    """Ein Datum aus dem, was die Datenbank liefert — oder nichts.
+
+    Supabase gibt `date`-Spalten als ISO-String zurueck, Tests und interne
+    Aufrufer reichen ein echtes `date`. Beides wird angenommen; alles andere
+    (None, Zeitstempel mit Zeitanteil, Unfug) ergibt None, worauf der ganze
+    Eckdaten-Absatz entfaellt. Kein geratenes Datum (Wurzel 4).
+    """
+    if isinstance(wert, date):
+        return wert
+    if not isinstance(wert, str):
+        return None
+    try:
+        return date.fromisoformat(wert.strip()[:10])
+    except ValueError:
+        return None
+
+
+def _eckdaten(
+    check_in: object,
+    check_out: object,
+    erwachsene: int | None,
+    kinder: int | None,
+) -> dict[str, object] | None:
+    """Zeitraum, Naechte und Gaestezahl als fertige Werte — alles oder nichts.
+
+    Die Naechte werden HIER gerechnet und nicht vom Aufrufer uebernommen: sie
+    sind eine Ableitung aus An- und Abreise, und jede zweite Rechenstelle
+    waere eine, die irgendwann abweicht.
+
+    Fehlt eines der beiden Daten oder ist der Zeitraum unplausibel (Abreise
+    nicht nach Anreise), gibt es KEINEN Eckdaten-Absatz — lieber eine kuerzere
+    Meldung als eine mit „0 Naechte" oder einem erfundenen Ersatzdatum.
+    Die Gaestezahl darf dagegen fehlen; dann greift die Fassung ohne sie.
+    Kinder zaehlen mit — eine Familie mit zwei Kindern ist zu viert da, und
+    „2 Gaeste" waere eine Falschaussage, keine Kuerzung.
+    """
+    an, ab = _tag(check_in), _tag(check_out)
+    if an is None or ab is None:
+        return None
+    naechte = (ab - an).days
+    if naechte < 1:
+        return None
+    werte: dict[str, object] = {
+        "anreise": an.isoformat(),
+        "abreise": ab.isoformat(),
+        "naechte": naechte,
+    }
+    gaeste = (erwachsene or 0) + (kinder or 0)
+    if gaeste > 0:
+        werte["gaeste"] = gaeste
+    return werte
+
+
+def _rumpf_bausteine(
+    vorname: str | None,
+    kanal_wert: object,
+    eckdaten: dict[str, object] | None,
+) -> tuple[list[str], dict[str, object]]:
+    """Katalogschluessel und Werte des Meldungs-Rumpfs — nur fuer VORHANDENES.
+
+    Die Auswahl haengt an dem, was wirklich da ist, statt an einem einzigen
+    „hat Vorname?"-Zweig. Der alte Zweig waehlte bei bekanntem Gast IMMER die
+    Fassung mit `{kanal}`; war der Kanal None, formatierte Python ihn zum Wort
+    „None". Live am 24.08.2026 stand so „Otto · None" in Glocke UND Postfach —
+    ein fehlender Wert, der sich als Text ausgibt (Wurzel 4).
+
+    Die Rueckgabe ist eine LISTE von Schluesseln: der Dispatcher rendert daraus
+    Absaetze in der Sprache des jeweiligen Empfaengers.
+    """
+    keys: list[str] = []
+    werte: dict[str, object] = {}
+    if vorname and kanal_wert:
+        keys.append("benachrichtigung.buchung_rumpf")
+        werte["gast"] = vorname
+        werte["kanal"] = kanal_wert
+    elif vorname:
+        keys.append("benachrichtigung.buchung_rumpf_ohne_kanal")
+        werte["gast"] = vorname
+    elif kanal_wert:
+        keys.append("benachrichtigung.buchung_rumpf_ohne_gast")
+        werte["kanal"] = kanal_wert
+    if eckdaten:
+        keys.append(
+            "benachrichtigung.buchung_zeitraum"
+            if "gaeste" in eckdaten
+            else "benachrichtigung.buchung_zeitraum_ohne_gaeste"
+        )
+        werte.update(eckdaten)
+    return keys, werte
+
+
 def _kanal_wert(quelle: str | None, kanal: str | None) -> object:
     """Den Kanal der Buchung als uebersetzbaren ODER woertlichen Wert.
 
@@ -746,20 +864,6 @@ def _kanal_wert(quelle: str | None, kanal: str | None) -> object:
         log.warning("buchungs_kanal_ohne_katalogtext", kanal=kanal)
         return None
     return Katalogwert(schluessel)
-
-
-def _kanal_text(wert: object, sprache: str) -> str | None:
-    """Denselben Wert fuer die GLOCKE ausschreiben (Serversprache).
-
-    Die Glocke ist eine gespeicherte Zeile in der Oberflaeche und bekommt
-    darum den fertigen Text, nicht den Schluessel — anders als die Mail, die
-    das Haus verlaesst.
-    """
-    from .dispatcher import Katalogwert  # noqa: PLC0415 — Zyklus zur Ladezeit
-
-    if isinstance(wert, Katalogwert):
-        return mail_text(wert.schluessel, sprache)
-    return str(wert) if wert else None
 
 
 def _nur_vorname(name: str | None) -> str | None:

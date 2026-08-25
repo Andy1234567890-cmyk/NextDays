@@ -1124,7 +1124,10 @@ class BookingsSyncMixin:
         # kein Name als ein falscher, aber hier ist er verfuegbar).
         _spalten = (
             "id, checked_out_at, check_in, check_out, property_id,"
-            " payment_collect, unit_id, guest_id"
+            " payment_collect, unit_id, guest_id,"
+            # Die Gaestezahl der STORNIERTEN Buchung. Sie steht nur hier: die
+            # eingehende Storno-Payload traegt keine Belegung mehr.
+            " adults, children"
         )
         existing = (
             db.table("reservations")
@@ -1312,6 +1315,14 @@ class BookingsSyncMixin:
                     ),
                     quelle=ota_name,
                     kanal=channel,
+                    # Der STORNIERTE Zeitraum, also der aus der bestehenden
+                    # Zeile — nicht der aus der eingehenden Payload. Wer die
+                    # Meldung liest, muss wissen, welche Nächte gerade wieder
+                    # frei geworden sind.
+                    check_in=old_check_in,
+                    check_out=old_check_out,
+                    erwachsene=existing[0].get("adults"),
+                    kinder=existing[0].get("children"),
                 )
             return True
 
@@ -1544,6 +1555,15 @@ class BookingsSyncMixin:
                     # wörtlich hinaus, der Enum wird übersetzt.
                     quelle=ota_name,
                     kanal=channel,
+                    # Die Eckdaten, aus derselben Payload, aus der die Zeile
+                    # entstanden ist. `infants` bleibt draußen: Säuglinge
+                    # zählen bei keinem Portal in die Belegung, und in der
+                    # Meldung wären sie eine Zahl, die der Empfänger im
+                    # Dashboard nicht wiederfindet.
+                    check_in=arrival,
+                    check_out=departure,
+                    erwachsene=adults,
+                    kinder=children,
                 )
 
         if already_checked_out:

@@ -396,6 +396,14 @@ class PayoutsService:
                     bilanz["verrechnet"] += 1
             except _Uebersprungen:
                 bilanz["uebersprungen"] += 1
+            except sc.StripeNotConfiguredError:
+                # Betriebsmangel, kein Zeilenfehler: ohne STRIPE_SECRET_KEY
+                # scheitert JEDE Zeile, und `_merke_fehler` schriebe sie
+                # reihenweise auf 'failed'. Der Lauf bricht hier ab und meldet
+                # es dem Aufrufer, der es als Konfigurationsfehler ausweist
+                # (Wurzel 5) — die Zeilen bleiben unangetastet fällig.
+                log.error("payout_run_nicht_konfiguriert", offen=len(faellige))
+                raise
             except Exception as exc:  # noqa: BLE001 — je Zeile isolieren
                 bilanz["fehler"] += 1
                 self._merke_fehler(zeile["id"], str(exc)[:300])
@@ -563,6 +571,11 @@ class PayoutsService:
 
         try:
             charge = sc.retrieve_charge(charge_id)
+        except sc.StripeNotConfiguredError:
+            # Fehlt der Key, hilft kein „Transfer läuft trotzdem": der Transfer
+            # gleich darunter scheitert am selben Mangel. Durchreichen, damit
+            # der Lauf ihn als das meldet, was er ist (Wurzel 5).
+            raise
         except Exception as exc:  # noqa: BLE001 — Transfer soll trotzdem laufen
             log.warning(
                 "charge_lookup_failed", charge_id=charge_id, error=str(exc)[:150]

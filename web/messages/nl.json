@@ -347,7 +347,7 @@
     "GB": "Verenigd Koninkrijk"
   },
   "stopSell": {
-    "title": "Stop-Sell",
+    "title": "Verkoopstop",
     "description": "Blokkeer dagen voor verkoop via touroperators (bijv. TUI). Boekingen via je eigen platforms blijven onaangetast.",
     "setTitle": "Stop-sell instellen",
     "property": "Property",
@@ -2674,7 +2674,7 @@
       "documentTypeQuote": "Offerte",
       "documentTypeReminder": "Herinnering",
       "documentTypeCreditNote": "Creditfactuur",
-      "documentTypeCancellation": "Storno",
+      "documentTypeCancellation": "Creditnota",
       "loadErrorToast": "Fout bij het laden van de {documentLabel}-gegevens",
       "layoutStandard": "Standaard",
       "layoutNeutral": "Neutraal",
@@ -4206,7 +4206,7 @@
       "periodFallback": "Periode {number}",
       "loading": "Laden…",
       "noData": "Geen gegevens.",
-      "breakout": "Breakout",
+      "breakout": "Uitsplitsing",
       "allProperties": "Alle accommodaties",
       "selectedProperties": "{count, plural, one {# geselecteerde accommodatie} other {# geselecteerde accommodaties}}"
     },
@@ -6111,7 +6111,7 @@
         "open": "Vrij",
         "booked": "Geboekt",
         "blocked": "Geblokkeerd",
-        "stopSell": "Stop-Sell",
+        "stopSell": "Verkoopstop",
         "blockedAndStopSell": "Geblokkeerd + verkoopstop",
         "contractEnd": "Contract beëindigd"
       },
@@ -8331,7 +8331,7 @@
       "fees": "Kosten"
     },
     "roles": {
-      "admin": "Admin",
+      "admin": "Beheerder",
       "co_admin": "Co-beheerder",
       "owner": "Eigenaar van de accommodatie",
       "ownerShort": "Eigenaar",
@@ -9238,7 +9238,7 @@
     "breakdown": "{provision} % commissie + {fee} % betaalkosten",
     "breakdownNoFee": "{provision} % commissie, geen betaalkosten",
     "cancel": "Annuleren",
-    "channel": "Portal",
+    "channel": "Portaal",
     "channelLocked": "De portal van een bestaand tarief kan niet worden gewijzigd. Maak voor een andere portal een nieuw tarief aan.",
     "create": "Tarief aanmaken",
     "created": "Tarief aangemaakt",
