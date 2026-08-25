@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="splash_background_color">#FFFFFF</color>
+    <!-- Hintergrund des adaptiven App-Icons. Der Wert ist AUS DEM ICON
+         gemessen (#0A0A0A, dieselbe Flaeche wie in AppIcon-1024.png), nicht
+         geschaetzt: Foreground und Background muessen exakt zusammenpassen,
+         sonst sitzt das Chevron auf einer anderen Schwarzstufe als das
+         Legacy-Icon daneben. -->
+    <color name="ic_launcher_background">#0A0A0A</color>
 </resources>
