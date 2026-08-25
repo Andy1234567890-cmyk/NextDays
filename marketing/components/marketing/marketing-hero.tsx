@@ -85,10 +85,10 @@ export function MarketingHero() {
           </ul>
 
           <div className="mt-7 flex flex-wrap items-center gap-4">
-            <Button asChild size="lg" variant="accent" className="min-w-48 text-base">
+            <Button asChild size="lg" variant="accent" className="w-full min-w-48 text-base sm:w-auto">
               <Link href={SIGNUP_URL}>{t("ctaTrial")}</Link>
             </Button>
-            <Button asChild size="lg" variant="default" className="min-w-40 text-base">
+            <Button asChild size="lg" variant="default" className="w-full min-w-48 text-base sm:w-auto">
               <Link href={DEMO_URL} className="gap-2">
                 <Icon icon="ph:play-circle" className="size-5" />
                 {t("ctaDemo")}

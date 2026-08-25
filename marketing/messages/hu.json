@@ -585,7 +585,7 @@
     },
     "marktplatz": {
       "frage": "Mi az a myBestDays?",
-      "antwort": "A myBestDays a saját piacterünk vendégeknek — foglalási csatorna a Booking.com és az Airbnb szintjén, csak jóval alacsonyabb jutalékkal. Az ott láthatóvá tett objektumok megjelennek a piactéren és a vendégeknek szóló myBestDays appban. Ez a láthatóság önálló kapcsoló, a portáloktól függetlenül."
+      "antwort": "A myBestDays a saját piacterünk vendégeknek — foglalási csatorna a Booking.com és az Airbnb szintjén, csak jóval alacsonyabb jutalékkal. Az objektumaid automatikusan megjelennek a piactéren és a vendégeknek szóló myBestDays appban."
     },
     "zahlungen": {
       "frage": "Hogyan működnek a fizetések, előlegek és számlák?",

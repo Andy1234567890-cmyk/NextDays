@@ -585,7 +585,7 @@
     },
     "marktplatz": {
       "frage": "Kas ir myBestDays?",
-      "antwort": "myBestDays ir mūsu paša tirgus viesiem — rezervāciju kanāls līdzvērtīgi Booking.com un Airbnb, tikai ar būtiski zemāku komisiju. Objekti, kurus tur padari redzamus, parādās tirgū un viesu myBestDays lietotnē. Šī redzamība ir atsevišķs slēdzis, neatkarīgs no portāliem."
+      "antwort": "myBestDays ir mūsu paša tirgus viesiem — rezervāciju kanāls līdzvērtīgi Booking.com un Airbnb, tikai ar būtiski zemāku komisiju. Tavi objekti automātiski parādās tirgū un viesu myBestDays lietotnē."
     },
     "zahlungen": {
       "frage": "Kā darbojas maksājumi, avansi un rēķini?",

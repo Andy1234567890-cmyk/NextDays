@@ -585,7 +585,7 @@
     },
     "marktplatz": {
       "frage": "Kas yra myBestDays?",
-      "antwort": "myBestDays yra mūsų pačių prekyvietė svečiams — rezervacijų kanalas lygiomis su Booking.com ir Airbnb, tik su daug mažesniais komisiniais. Objektai, kuriuos ten padarote matomus, atsiranda prekyvietėje ir svečių myBestDays programėlėje. Šis matomumas yra atskiras jungtukas, nepriklausomas nuo portalų."
+      "antwort": "myBestDays yra mūsų pačių prekyvietė svečiams — rezervacijų kanalas lygiomis su Booking.com ir Airbnb, tik su daug mažesniais komisiniais. Jūsų objektai automatiškai atsiranda prekyvietėje ir svečių myBestDays programėlėje."
     },
     "zahlungen": {
       "frage": "Kaip veikia mokėjimai, avansai ir sąskaitos?",

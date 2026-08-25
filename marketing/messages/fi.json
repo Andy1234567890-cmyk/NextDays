@@ -585,7 +585,7 @@
     },
     "marktplatz": {
       "frage": "Mikä on myBestDays?",
-      "antwort": "myBestDays on oma markkinapaikkamme vieraille — varauskanava samalla viivalla Booking.comin ja Airbnb:n kanssa, vain selvästi pienemmällä välityspalkkiolla. Kohteet, jotka teet siellä näkyviksi, ilmestyvät markkinapaikalle ja vieraiden myBestDays-sovellukseen. Tämä näkyvyys on oma kytkin, portaaleista riippumaton."
+      "antwort": "myBestDays on oma markkinapaikkamme vieraille — varauskanava samalla viivalla Booking.comin ja Airbnb:n kanssa, vain selvästi pienemmällä välityspalkkiolla. Kohteesi näkyvät automaattisesti markkinapaikalla ja vieraiden myBestDays-sovelluksessa."
     },
     "zahlungen": {
       "frage": "Miten maksut, ennakot ja laskut toimivat?",

@@ -585,7 +585,7 @@
     },
     "marktplatz": {
       "frage": "Mis on myBestDays?",
-      "antwort": "myBestDays on meie oma turg külalistele — broneerimiskanal Booking.comi ja Airbnb kõrval, ainult tunduvalt madalama komisjoniga. Objektid, mille sa seal nähtavaks teed, ilmuvad turule ja külaliste myBestDaysi rakendusse. See nähtavus on eraldi lüliti, portaalidest sõltumatu."
+      "antwort": "myBestDays on meie oma turg külalistele — broneerimiskanal Booking.comi ja Airbnb kõrval, ainult tunduvalt madalama komisjoniga. Sinu objektid ilmuvad automaatselt turule ja külaliste myBestDaysi rakendusse."
     },
     "zahlungen": {
       "frage": "Kuidas toimivad maksed, ettemaksud ja arved?",
