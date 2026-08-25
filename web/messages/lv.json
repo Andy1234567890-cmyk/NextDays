@@ -4461,7 +4461,10 @@
         "addonCancelled": "Papildpakalpojums atcelts",
         "surchargePaid": "Papildu maksājums apmaksāts",
         "surchargePaidManually": "Papildu maksājums atzīmēts kā apmaksāts",
-        "surchargeUnpaid": "Apmaksas atzīme atcelta"
+        "surchargeUnpaid": "Apmaksas atzīme atcelta",
+        "addonRefunded": "Papildpakalpojums atmaksāts",
+        "surchargeRefunded": "Pēcapmaksa atmaksāta",
+        "addonRefundFaellig": "Atmaksas statuss: gaida"
       },
       "title": {
         "onProperty": " objektā {property}",
@@ -4491,7 +4494,9 @@
         "amount": "Summa",
         "type": "Veids",
         "service": "Pakalpojums",
-        "withdrawnReason": "Atcelšanas iemesls"
+        "withdrawnReason": "Atcelšanas iemesls",
+        "refunded": "Atmaksāts",
+        "openRefund": "Atvērta atmaksas summa"
       }
     },
     "bookingDetail": {
@@ -4959,7 +4964,14 @@
       "ruecknahmeGrundLabel": "Atcelšanas iemesls",
       "ruecknahmeGrundPlatzhalter": "piem., ievadīts kļūdaini",
       "ruecknahmeBestaetigen": "Atcelt",
-      "ruecknahmeErfolg": "Apmaksas atzīme ir atcelta."
+      "ruecknahmeErfolg": "Apmaksas atzīme ir atcelta.",
+      "erstatten": "Atmaksāt",
+      "erstattungBestaetigung": "{betrag} tiks atmaksāti viesim.",
+      "erstattungGrundLabel": "Atmaksas iemesls",
+      "erstattungGrundPlatzhalter": "piem., rezervācija atcelta",
+      "erstattungBestaetigen": "Veikt atmaksu",
+      "erstattungErfolg": "Summa atmaksāta.",
+      "erstattetHinweis": "Atmaksāts: {betrag} {datum}"
     }
   },
   "objects": {
@@ -6311,7 +6323,11 @@
       "reasonLabel": "Iemesls",
       "reasonPlaceholder": "piem., kļūdas dēļ atzīmēts kā apmaksāts",
       "reasonRequired": "Lūdzu, norādiet iemeslu (vismaz 3 rakstzīmes).",
-      "reasonLogged": "Iemesls: {grund}"
+      "reasonLogged": "Iemesls: {grund}",
+      "refundAction": "Atmaksāt",
+      "refundConfirm": "{betrag} tiks atmaksāti viesim. Vienums tiks atcelts un noņemts no rēķina un norēķiniem.",
+      "refundSuccess": "Summa atmaksāta.",
+      "refundedNote": "Atmaksāts: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Objekts",
@@ -9312,7 +9328,11 @@
       "auszahlen": "Pieprasīt izmaksu",
       "nochNichtFreigeschaltet": "Izmaksas tavam kontam vēl nav aktivizētas.",
       "automatischHinweis": "Tavs atlikums tiek izmaksāts automātiski. Lai pieprasītu izmaksu, zemāk izvēlies “Tikai pēc pieprasījuma”.",
-      "ausstehendHinweis": "Gaidošais atlikums kļūs pieejams pēc norēķinu perioda."
+      "ausstehendHinweis": "Gaidošais atlikums kļūs pieejams pēc norēķinu perioda.",
+      "einlage": "Kā drošības nauda",
+      "einlageFreiAb": "Būs pieejams no {datum}",
+      "einlageErstattungFaellig": "Atmaksas statuss: atvērts",
+      "einlageHinweis": "Daļa no atlikuma ir rezervēta kā drošības nauda iespējamām atmaksām. Tā būs pieejama, tiklīdz attiecīgās uzturēšanās būs beigušās."
     },
     "rhythmus": {
       "titel": "Izmaksu ritms",

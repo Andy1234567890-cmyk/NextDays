@@ -4461,7 +4461,10 @@
         "addonCancelled": "Tilläggstjänst annullerad",
         "surchargePaid": "Tilläggsavgift betald",
         "surchargePaidManually": "Tilläggsavgift registrerad som betald",
-        "surchargeUnpaid": "Betald-markering ångrad"
+        "surchargeUnpaid": "Betald-markering ångrad",
+        "addonRefunded": "Tilläggstjänst återbetald",
+        "surchargeRefunded": "Efterdebitering återbetald",
+        "addonRefundFaellig": "Återbetalning väntar"
       },
       "title": {
         "onProperty": " på {property}",
@@ -4491,7 +4494,9 @@
         "amount": "Belopp",
         "type": "Typ",
         "service": "Tjänst",
-        "withdrawnReason": "Orsak till att ångra"
+        "withdrawnReason": "Orsak till att ångra",
+        "refunded": "Återbetald",
+        "openRefund": "Öppet återbetalningsbelopp"
       }
     },
     "bookingDetail": {
@@ -4959,7 +4964,14 @@
       "ruecknahmeGrundLabel": "Orsak till att ångra",
       "ruecknahmeGrundPlatzhalter": "t.ex. felaktigt registrerad",
       "ruecknahmeBestaetigen": "Ångra",
-      "ruecknahmeErfolg": "Betald-markeringen har ångrats."
+      "ruecknahmeErfolg": "Betald-markeringen har ångrats.",
+      "erstatten": "Återbetala",
+      "erstattungBestaetigung": "{betrag} kommer att återbetalas till gästen.",
+      "erstattungGrundLabel": "Anledning till återbetalning",
+      "erstattungGrundPlatzhalter": "t.ex. bokning avbokad",
+      "erstattungBestaetigen": "Utför återbetalning",
+      "erstattungErfolg": "Belopp återbetalat.",
+      "erstattetHinweis": "Återbetalat: {betrag} den {datum}"
     }
   },
   "objects": {
@@ -6311,7 +6323,11 @@
       "reasonLabel": "Orsak",
       "reasonPlaceholder": "t.ex. markerad som betald av misstag",
       "reasonRequired": "Ange en orsak (minst 3 tecken).",
-      "reasonLogged": "Orsak: {grund}"
+      "reasonLogged": "Orsak: {grund}",
+      "refundAction": "Återbetala",
+      "refundConfirm": "{betrag} kommer att återbetalas till gästen. Posten annulleras och tas bort från faktura och avräkning.",
+      "refundSuccess": "Belopp återbetalat.",
+      "refundedNote": "Återbetalat: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -9312,7 +9328,11 @@
       "auszahlen": "Begär utbetalning",
       "nochNichtFreigeschaltet": "Utbetalningar är ännu inte aktiverade för ditt konto.",
       "automatischHinweis": "Ditt saldo betalas ut automatiskt. Vill du begära utbetalning väljer du ”Endast på begäran” nedan.",
-      "ausstehendHinweis": "Väntande saldo blir tillgängligt efter avvecklingstiden."
+      "ausstehendHinweis": "Väntande saldo blir tillgängligt efter avvecklingstiden.",
+      "einlage": "Bundet som säkerhet",
+      "einlageFreiAb": "Släpps den {datum}",
+      "einlageErstattungFaellig": "Återbetalning väntar",
+      "einlageHinweis": "En del av saldot är bundet som säkerhet för eventuella återbetalningar. Det släpps när de berörda vistelserna är avslutade."
     },
     "rhythmus": {
       "titel": "Utbetalningsrytm",

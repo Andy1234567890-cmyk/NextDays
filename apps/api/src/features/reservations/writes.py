@@ -188,6 +188,41 @@ class WritesMixin(ReservationsBase):
         except PaymentsError as exc:
             raise ReservationError(exc.message, status_code=exc.status_code) from exc
 
+    def _addon_zahlungslinks_abschliessen(
+        self, tenant_id: str, reservation_id: str
+    ) -> None:
+        """Zusatzleistungs-Zahlungslinks beim Storno der Buchung abschließen (0473).
+
+        Die Lücke, die den Fall vom 25.08.2026 verursacht hat: Für die
+        NACHBERECHNUNG gab es diesen Gegenzustand seit 0469
+        (`_nachberechnung_link_schliessen`), für die ZUSATZLEISTUNGEN nicht.
+        Buchung 6179a5d0 wurde storniert und trug danach eine bezahlbare
+        Stripe-URL über 150,00 DKK weiter — bezahlt hatte der Gast sie sogar
+        schon, und das Geld lag unsichtbar im Verbundkonto.
+
+        Nicht bezahlt → Link zu. Bezahlt → Geldeingang nachverbuchen und als
+        erstattungsfällig in die Zeitleiste (nicht automatisch erstatten: eine
+        Erstattung braucht einen Grund und ist eine kaufmännische Entscheidung).
+        Details in `addons.zahlung.bei_buchungsstorno`.
+
+        Wie beim Nachberechnungs-Link ausdrücklich NICHT best-effort: Scheitert
+        der Abgleich, bricht das Storno ab (fail-closed, Wurzel 5). Ein Storno
+        ist wiederholbar, eine zu Unrecht eingezogene Zahlung nicht.
+        """
+        if self._client is None:
+            return
+        from src.features.addons.zahlung import (  # noqa: PLC0415
+            ZahlungslinkFehler,
+            bei_buchungsstorno,
+        )
+
+        try:
+            bei_buchungsstorno(
+                self._client, tenant_id=tenant_id, reservation_id=reservation_id
+            )
+        except ZahlungslinkFehler as exc:
+            raise ReservationError(exc.message, status_code=exc.status_code) from exc
+
     def _geplante_restzahlung_anpassen(
         self, reservation_id: str, *, total_amount: float, paid_amount: float
     ) -> None:
@@ -1377,6 +1412,9 @@ class WritesMixin(ReservationsBase):
         # annehmen, den es nicht gibt (Wurzel 1). Vor dem Status-Wechsel und
         # fail-closed: lieber ein abgebrochener Storno als eine zahlbare URL.
         self._nachberechnung_link_schliessen(tenant_id, reservation_id)
+        # Dasselbe für die Zusatzleistungen (0473) — diese Zeile fehlte und war
+        # der Kern des Falls vom 25.08.2026.
+        self._addon_zahlungslinks_abschliessen(tenant_id, reservation_id)
 
         now = datetime.now(UTC).isoformat()
         upd = (

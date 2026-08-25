@@ -4463,7 +4463,10 @@
         "addonCancelled": "Tillægsydelse annulleret",
         "surchargePaid": "Efterberegning betalt",
         "surchargePaidManually": "Efterberegning registreret som betalt",
-        "surchargeUnpaid": "Betalt-markering fortrudt"
+        "surchargeUnpaid": "Betalt-markering fortrudt",
+        "addonRefunded": "Tillægsydelse refunderet",
+        "surchargeRefunded": "Efterberegning refunderet",
+        "addonRefundFaellig": "Afventer refusion"
       },
       "title": {
         "onProperty": " på {property}",
@@ -4493,7 +4496,9 @@
         "amount": "Beløb",
         "type": "Type",
         "service": "Ydelse",
-        "withdrawnReason": "Årsag til fortrydelse"
+        "withdrawnReason": "Årsag til fortrydelse",
+        "refunded": "Refunderet",
+        "openRefund": "Åbent refusionsbeløb"
       }
     },
     "bookingDetail": {
@@ -4961,7 +4966,14 @@
       "ruecknahmeGrundLabel": "Årsag til fortrydelse",
       "ruecknahmeGrundPlatzhalter": "f.eks. indtastet forkert",
       "ruecknahmeBestaetigen": "Fortryd",
-      "ruecknahmeErfolg": "Betalt-markeringen er fortrudt."
+      "ruecknahmeErfolg": "Betalt-markeringen er fortrudt.",
+      "erstatten": "Refunder",
+      "erstattungBestaetigung": "{betrag} refunderes til gæsten.",
+      "erstattungGrundLabel": "Årsag til refundering",
+      "erstattungGrundPlatzhalter": "f.eks. booking annulleret",
+      "erstattungBestaetigen": "Udløs refundering",
+      "erstattungErfolg": "Beløb refunderet.",
+      "erstattetHinweis": "Refunderet: {betrag} den {datum}"
     }
   },
   "objects": {
@@ -6313,7 +6325,11 @@
       "reasonLabel": "Årsag",
       "reasonPlaceholder": "f.eks. markeret som betalt ved en fejl",
       "reasonRequired": "Angiv en årsag (mindst 3 tegn).",
-      "reasonLogged": "Årsag: {grund}"
+      "reasonLogged": "Årsag: {grund}",
+      "refundAction": "Refunder",
+      "refundConfirm": "{betrag} refunderes til gæsten. Posten annulleres og fjernes fra faktura og afregning.",
+      "refundSuccess": "Beløb refunderet.",
+      "refundedNote": "Refunderet: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -9314,7 +9330,11 @@
       "auszahlen": "Anmod om udbetaling",
       "nochNichtFreigeschaltet": "Udbetalinger er endnu ikke aktiveret for din konto.",
       "automatischHinweis": "Din saldo udbetales automatisk. Vil du anmode om udbetaling, så vælg „Kun efter anmodning“ nedenfor.",
-      "ausstehendHinweis": "Saldo undervejs bliver til rådighed efter afviklingsperioden."
+      "ausstehendHinweis": "Saldo undervejs bliver til rådighed efter afviklingsperioden.",
+      "einlage": "Bundet som sikkerhed",
+      "einlageFreiAb": "Frigives den {datum}",
+      "einlageErstattungFaellig": "Afventer refusion",
+      "einlageHinweis": "En del af saldoen er bundet som sikkerhed for mulige refusioner. Den frigives, når de berørte ophold er afsluttet."
     },
     "rhythmus": {
       "titel": "Udbetalingsrytme",

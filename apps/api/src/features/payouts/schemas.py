@@ -126,13 +126,31 @@ class StripeGuthaben(BaseModel):
     konto_verbunden: bool
     stripe_account_id: str | None = None
     payouts_enabled: bool = False
-    # Rhythmus laut Stripe (leer, solange kein Konto verbunden ist).
+    # Der Rhythmus, nach dem WIR auszahlen (`payout_settings.verbund_interval`).
+    # Seit 0473 steht bei Stripe selbst dauerhaft `manual`, damit die
+    # Sicherheitseinlage überhaupt zurückgehalten werden kann — der Wert hier
+    # ist deshalb NICHT mehr der Stripe-Wert, sondern der Wunsch des Betriebs.
+    # Leer, solange kein Konto verbunden oder der Wunsch noch nicht übernommen
+    # ist (dann wird nichts erfunden, Wurzel 4).
     interval: str = ""
     weekly_anchor: str | None = None
     monthly_anchor: int | None = None
     verfuegbar: list[StripeSaldoPosten] = []
     ausstehend: list[StripeSaldoPosten] = []
     letzte_auszahlungen: list[StripeAuszahlung] = []
+    # Sicherheitseinlage (0473): der Teil des verfügbaren Guthabens, der als
+    # Deckung für mögliche Erstattungen zurückgehalten wird — bezahlte
+    # Zusatzleistungen und Nachberechnungen, deren Aufenthalt noch nicht sicher
+    # vorbei ist, sowie alles Stornierte, das noch nicht erstattet wurde.
+    einlage: list[StripeSaldoPosten] = []
+    # `verfuegbar − einlage`, nie negativ. Das ist der Betrag, den der Betrieb
+    # tatsächlich abrufen kann; ihn aus zwei Zahlen selbst zu bilden hätte die
+    # Oberfläche irgendwann anders gerundet als der Server.
+    auszahlbar: list[StripeSaldoPosten] = []
+    # Wann die nächste Einlage frei wird (ISO-Datum) — die Auskunft, die den
+    # Unterschied zwischen „zurückgehalten" und „weg" macht. None, wenn nichts
+    # zurückgehalten wird.
+    einlage_frei_ab: str | None = None
 
 
 class StripeAuszahlungAnfordern(BaseModel):

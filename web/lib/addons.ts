@@ -58,6 +58,13 @@ export type ReservationAddon = {
   cancel_reason: string | null;
   cancelled_by: string | null;
   cancelled_at: string | null;
+  /** Erstattung (0473). Eine erstattete Position ist gleichzeitig `cancelled` —
+   *  ohne diese Felder wäre nicht unterscheidbar, ob nur storniert oder wirklich
+   *  Geld zurückgezahlt wurde. Betrag in CENT, damit Öre-Beträge (DKK) genau die
+   *  Zahl zeigen, die Stripe erstattet hat. */
+  refunded_cents: number;
+  refunded_at: string | null;
+  refund_reason: string | null;
 };
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -247,6 +254,25 @@ export async function cancelReservationAddon(
   });
 }
 
+/** Eine per Karte bezahlte Zusatzleistung erstatten (0473).
+ *
+ *  Der Gast bekommt 100 % dessen, was er gezahlt hat; die Erstattung läuft im
+ *  verbundenen Konto des Betriebs. Kein Betragsfeld: Ein Client-Betrag wäre eine
+ *  zweite Wahrheit über eine Geldbewegung. Der Grund ist Pflicht und steht
+ *  danach am Beleg und in der Buchungs-Zeitleiste.
+ *
+ *  Die Position wird dabei storniert — sie fällt aus Rechnung,
+ *  Eigentümer-Abrechnung und Gast-Portal heraus. */
+export async function refundReservationAddon(
+  resAddonId: string,
+  reason: string,
+): Promise<Result<ReservationAddon>> {
+  return call(`/addons/reservation-addons/${resAddonId}/refund`, {
+    method: "POST",
+    body: { reason },
+  });
+}
+
 /** Ein Medium (Foto) hochladen (multipart) → aktualisiertes Add-on.
  *  JPEG/PNG/WebP, 10 KB–20 MB, max. 5 (serverseitig validiert). */
 export async function uploadAddonMedia(
@@ -297,7 +323,7 @@ export type Zahlungslink = {
   amount_cents: number;
   application_fee_cents: number;
   fee_bps: number;
-  status: "open" | "paid" | "cancelled";
+  status: "open" | "paid" | "cancelled" | "refunded" | "partially_refunded";
   positionen: number;
   paid_at: string | null;
   created_at: string | null;

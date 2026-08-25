@@ -17,6 +17,7 @@ import {
   addReservationAddon,
   availableReservationAddons,
   cancelReservationAddon,
+  refundReservationAddon,
   changeReservationAddonQty,
   createZahlungslink,
   deleteZahlungslink,
@@ -37,6 +38,12 @@ function localized(
 ): string {
   return name.de || name.en || Object.values(name)[0] || fallback;
 }
+
+/** Was der Bestätigungsblock gerade abfragt. Als Union statt Boolean, weil die
+ *  drei Vorgänge Verschiedenes bedeuten: `unpaid` korrigiert eine Fehleingabe
+ *  (kein Geld geflossen), `refund` bewegt echtes Geld zurück, `cancel` nimmt
+ *  eine Position heraus. Sie dürfen in der Oberfläche nicht gleich aussehen. */
+type Bestaetigung = "cancel" | "unpaid" | "refund";
 
 export function ReservationAddonsSection({
   reservationId,
@@ -83,7 +90,11 @@ export function ReservationAddonsSection({
   // bestätigt wird: beide verlangen einen Grund, haben aber verschiedene Folgen
   // (Position weg vs. Position wieder offen).
   const [confirmId, setConfirmId] = useState<string | null>(null);
-  const [confirmKind, setConfirmKind] = useState<"cancel" | "unpaid">("cancel");
+  // Drei Vorgänge, drei Folgen — deshalb eine Art, kein Boolean:
+  //   cancel  → Position weg (kein Geld im Spiel)
+  //   unpaid  → Position wieder offen (falscher Haken, kein Geld geflossen)
+  //   refund  → Geld geht an den Gast zurück, Position weg (0473)
+  const [confirmKind, setConfirmKind] = useState<Bestaetigung>("cancel");
   // Pflicht-Grund. Er wird am Vorgang und in der Buchungs-Zeitleiste
   // protokolliert — ein Betrag, der aus Rechnung und Eigentümer-Abrechnung
   // herausfällt, muss erklärbar bleiben.
@@ -96,7 +107,7 @@ export function ReservationAddonsSection({
   /** Bestätigungsfeld für eine Zeile öffnen/schließen und den Grund leeren.
    *  Der Grund wird bewusst NICHT zwischen zwei Zeilen mitgeschleppt — sonst
    *  landet die Begründung der einen Position am Storno der anderen. */
-  function nachfragen(id: string, art: "cancel" | "unpaid") {
+  function nachfragen(id: string, art: Bestaetigung) {
     setConfirmId((c) => (c === id && confirmKind === art ? null : id));
     setConfirmKind(art);
     setGrund("");
@@ -229,10 +240,14 @@ export function ReservationAddonsSection({
       return;
     }
     setCancelling(true);
-    const res =
-      confirmKind === "unpaid"
-        ? await unmarkReservationAddonPaid(id, text)
-        : await cancelReservationAddon(id, text);
+    let res;
+    if (confirmKind === "unpaid") {
+      res = await unmarkReservationAddonPaid(id, text);
+    } else if (confirmKind === "refund") {
+      res = await refundReservationAddon(id, text);
+    } else {
+      res = await cancelReservationAddon(id, text);
+    }
     setCancelling(false);
     if (!res.ok) {
       // Das Feld bleibt offen: Der eingetippte Grund darf bei einem 409 nicht
@@ -246,7 +261,9 @@ export function ReservationAddonsSection({
     toast.success(
       confirmKind === "unpaid"
         ? t("reservationAddonsSection.unmarkPaidSuccess")
-        : t("reservationAddonsSection.cancelSuccess"),
+        : confirmKind === "refund"
+          ? t("reservationAddonsSection.refundSuccess")
+          : t("reservationAddonsSection.cancelSuccess"),
     );
     // Beides ändert die fällige Summe der Buchung → Detail neu rechnen.
     onChanged?.();
@@ -382,6 +399,24 @@ export function ReservationAddonsSection({
                       {t("reservationAddonsSection.unmarkPaidAction")}
                     </button>
                   )}
+                  {/* Erstatten (0473): der Rückweg für echtes Geld. Steht neben
+                      der Rücknahme, weil beim Status „bezahlt" von außen nicht
+                      erkennbar ist, WELCHER der beiden Fälle vorliegt — manuell
+                      gehakt oder per Karte eingegangen. Der Server weiß es und
+                      lehnt den jeweils falschen Weg mit 409 ab; ihn hier zu
+                      erraten hieße, einen der beiden Knöpfe fälschlich zu
+                      verstecken. Nach der Erstattung ist die Position storniert
+                      (`refunded_at` gesetzt), der Knopf verschwindet. */}
+                  {p.status === "paid" && !p.refunded_at && (
+                    <button
+                      type="button"
+                      onClick={() => nachfragen(p.id, "refund")}
+                      disabled={cancelling}
+                      className="text-xs font-medium text-muted-foreground hover:text-destructive hover:underline disabled:opacity-50"
+                    >
+                      {t("reservationAddonsSection.refundAction")}
+                    </button>
+                  )}
                   {/* Storno für falsch gebuchte Zusatzleistungen — auch für
                       manuell auf „bezahlt" gesetzte (der Live-Fall). Die Zeile
                       bleibt als Beleg stehen, der Betrag fällt heraus. */}
@@ -439,6 +474,18 @@ export function ReservationAddonsSection({
               )}
               {/* Bereits protokollierter Grund: steht dauerhaft an der Position,
                   damit später niemand rätseln muss, warum der Betrag fehlt. */}
+              {/* Erstattet ist nicht storniert: Beim Storno fällt ein Betrag
+                  nur aus der Abrechnung, hier ist Geld zurückgeflossen. Ohne
+                  diese Zeile stünde beides gleich da — und niemand könnte im
+                  Nachhinein sagen, ob der Gast sein Geld bekommen hat. */}
+              {p.refunded_at && confirmId !== p.id && (
+                <p className="text-xs font-medium text-accent">
+                  {t("reservationAddonsSection.refundedNote", {
+                    betrag: money(p.refunded_cents / 100),
+                  })}
+                  {` · ${new Date(p.refunded_at).toLocaleString(locale)}`}
+                </p>
+              )}
               {p.cancel_reason && confirmId !== p.id && (
                 <p className="text-xs text-muted-foreground">
                   {t("reservationAddonsSection.reasonLogged", {
@@ -454,7 +501,11 @@ export function ReservationAddonsSection({
                   <p className="text-xs text-destructive">
                     {confirmKind === "unpaid"
                       ? t("reservationAddonsSection.unmarkPaidConfirm")
-                      : t("reservationAddonsSection.cancelConfirm")}
+                      : confirmKind === "refund"
+                        ? t("reservationAddonsSection.refundConfirm", {
+                            betrag: money(p.total),
+                          })
+                        : t("reservationAddonsSection.cancelConfirm")}
                   </p>
                   <label className="flex flex-col gap-1">
                     <span className="text-xs text-muted-foreground">
@@ -492,7 +543,9 @@ export function ReservationAddonsSection({
                         ? t("reservationAddonsSection.cancelBusy")
                         : confirmKind === "unpaid"
                           ? t("reservationAddonsSection.unmarkPaidAction")
-                          : t("reservationAddonsSection.cancelAction")}
+                          : confirmKind === "refund"
+                            ? t("reservationAddonsSection.refundAction")
+                            : t("reservationAddonsSection.cancelAction")}
                     </Button>
                   </span>
                 </div>

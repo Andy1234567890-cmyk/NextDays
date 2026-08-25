@@ -38,7 +38,8 @@ _ADDON_COLS = (
 )
 _RES_ADDON_COLS = (
     "id, reservation_id, addon_id, name, price, basis, tax_rate, qty, total, "
-    "status, charged_at, created_at, cancel_reason, cancelled_by, cancelled_at"
+    "status, charged_at, created_at, cancel_reason, cancelled_by, cancelled_at, "
+    "refunded_cents, refunded_at, refund_reason, refunded_by"
 )
 
 # Grund-Freitext bei Storno/Rücknahme (0397). Die Grenzen spiegeln den
@@ -625,7 +626,11 @@ class AddonsService(VerteilungMixin):
                 .select("id, status, stripe_payment_link_id, stripe_account_id")
                 .eq("tenant_id", tenant_id)
                 .eq("reservation_id", str(row["reservation_id"]))
-                .in_("status", ["paid", "open"])
+                # `partially_refunded` gehört dazu (0473): Ist eine Position
+                # eines Links erstattet, bleibt die ANDERE per Karte bezahlt —
+                # ohne diesen Wert wäre ihre Bezahlt-Markierung plötzlich
+                # zurücknehmbar und der Betrag fiele lautlos aus der Abrechnung.
+                .in_("status", ["paid", "open", "partially_refunded"])
                 .execute()
             ).data or []
             rows: list[dict] = []
@@ -983,6 +988,215 @@ class AddonsService(VerteilungMixin):
         )
         return ReservationAddonResponse(**_res_addon_row(res.data[0]))
 
+    def erstatte_reservation_addon(
+        self, ctx: AuthContext, res_addon_id: str, reason: str
+    ) -> ReservationAddonResponse:
+        """Eine per Karte bezahlte Zusatzleistung erstatten (0473).
+
+        DER FALL (25.08.2026, live): Buchung 6179a5d0 wurde vom Portal
+        storniert, das „Wäschepaket" für 150,00 DKK war per Zahlungslink bezahlt
+        und das Geld lag im Verbundkonto. Bis hierhin gab es dafür keinen Weg
+        zurück — `_bezahlt_fehler` verwies mit 409 auf „bitte den Betrag
+        erstatten", eine Route dafür existierte aber nicht. Dieselbe Sackgasse
+        wie am 14.08.2026 bei der Bezahlt-Markierung (0397), eine Ebene höher.
+
+        Der Gast bekommt IMMER 100 % dessen, was er für DIESE Position gezahlt
+        hat (Entscheidung des Nutzers): Bemessungsgrundlage ist der
+        Positionsbetrag aus `addon_payment_link_items` — der Schnappschuss beim
+        Erstellen des Links —, nicht `total` (ein späterer Preis- oder
+        Mengenwechsel darf die Erstattung nicht verändern) und auch nicht der
+        Betrag abzüglich unserer Provision. Die Provision bleibt bei uns
+        (`refund_application_fee` nicht gesetzt, s. `payments.erstattung_direkt`).
+
+        Reihenfolge, jeder Schritt mit Grund:
+          1. Grund prüfen (Pflicht, wie beim Storno 0397).
+          2. Position tenant-gescoped laden (Wurzel 3).
+          3. Rechnung prüfen: festgeschrieben → 409 (GoBD, Storno-Rechnung).
+          4. Den Zahlungslink dieser Position finden. Keiner → 409: manuell
+             gehakte Beträge werden zurückgenommen, nicht erstattet (0397).
+          5. Steht der Link bei uns `open`, den Geldeingang ZUERST nachverbuchen
+             (`hole_zahlungsstand_nach`) — sonst entstünde ein Erstattungsbeleg
+             ohne Elternbeleg und die Position bliebe als Forderung stehen.
+          6. Bei Stripe erstatten (fail-closed: kein Buchungsschritt vorher).
+          7. Erst danach unsere Bücher: Link fortschreiben, Position auf
+             `cancelled` mit Erstattungsspuren, Rechnungsentwurf neu, Aufgabe zu,
+             Zeitleiste.
+
+        Idempotent (Wurzel 2): Eine bereits erstattete Position gibt ihre Zeile
+        unverändert zurück, statt ein zweites Geldereignis auszulösen. Zusätzlich
+        trägt der Stripe-Aufruf einen deterministischen Idempotency-Key aus
+        Positions-ID und Betrag — zwei gleichzeitige Klicks passieren beide den
+        Status-Guard, bevor einer schreibt.
+        """
+        from src.features.payments.erstattung_direkt import (  # noqa: PLC0415
+            ErstattungFehler,
+            erstatte,
+        )
+
+        from .zahlung import (  # noqa: PLC0415 — s. _schliesse_offenen_zahlungslink
+            ZahlungslinkFehler,
+            finde_link_fuer_position,
+            hole_zahlungsstand_nach,
+            vermerke_erstattung_am_link,
+        )
+
+        tenant_id = self._require_tenant(ctx)
+        grund = self._pruefe_grund(reason)
+        row = self._own_res_addon(tenant_id, res_addon_id)
+        reservation_id = str(row["reservation_id"])
+        if row.get("refunded_at"):
+            # Schon erstattet: kein zweites Geldereignis, kein 409 — der Nutzer
+            # hat bekommen, was er wollte (Wurzel 2).
+            return ReservationAddonResponse(**_res_addon_row(row))
+        self._assert_not_invoiced(tenant_id, reservation_id)
+
+        try:
+            treffer = finde_link_fuer_position(
+                self._db,
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+                res_addon_id=res_addon_id,
+            )
+        except APIError as exc:
+            # Ohne belastbare Auskunft der Link-Tabelle wird nicht erstattet:
+            # Ein „kein Link gefunden" aus einem DB-Fehler abzuleiten hieße, den
+            # Betrieb auf die Rücknahme zu verweisen, während echtes Geld liegt.
+            log.warning(
+                "addon_erstattung_link_lookup_fehlgeschlagen",
+                reservation_id=reservation_id,
+                error=str(exc)[:200],
+            )
+            raise AddonError(
+                "Der Zahlungsstand konnte nicht geprüft werden — Erstattung "
+                "abgebrochen.",
+                status_code=503,
+            ) from exc
+        if treffer is None:
+            raise AddonError(
+                "Zu dieser Zusatzleistung ist keine Kartenzahlung eingegangen. "
+                "Eine irrtümlich gesetzte Bezahlt-Markierung wird "
+                "zurückgenommen, nicht erstattet.",
+                status_code=409,
+            )
+        link, positions_cents = treffer
+        try:
+            link = hole_zahlungsstand_nach(self._db, link)
+        except ZahlungslinkFehler as exc:
+            raise AddonError(exc.message, status_code=exc.status_code) from exc
+
+        offen_cents = positions_cents - int(row.get("refunded_cents") or 0)
+        if offen_cents <= 0:
+            return ReservationAddonResponse(**_res_addon_row(row))
+        intent = str(link.get("payment_intent_id") or "")
+        session = str(link.get("checkout_session_id") or "")
+        if not intent:
+            # Wurzel 4: kein Ersatzwert. Ohne Intent gibt es keinen Charge, den
+            # wir erstatten könnten — das ist ein Datenfehler, kein Sonderfall,
+            # der sich mit der Session-ID überbrücken ließe (die akzeptiert
+            # Stripe nicht).
+            raise AddonError(
+                "Zu diesem Zahlungslink ist kein Stripe-Zahlungsvorgang "
+                "hinterlegt — Erstattung nicht möglich. Bitte den Vorgang im "
+                "Stripe-Konto prüfen.",
+                status_code=409,
+            )
+
+        try:
+            ergebnis = erstatte(
+                self._db,
+                payment_intent_id=intent,
+                acct=str(link["stripe_account_id"]),
+                betrag_cents=offen_cents,
+                currency=str(link["currency"]),
+                reservation_id=reservation_id,
+                quell_session_id=session,
+                idempotenz_schluessel=f"addonrefund:{res_addon_id}:{offen_cents}",
+                kontext={"res_addon_id": res_addon_id, "link_id": str(link["id"])},
+            )
+        except ErstattungFehler as exc:
+            raise AddonError(exc.message, status_code=exc.status_code) from exc
+
+        # Ab hier ist das Geld beim Gast. Kein Schritt darunter darf den Vorgang
+        # noch als Fehlschlag melden — sonst löst der Nutzer eine Erstattung
+        # erneut aus, die stattgefunden hat.
+        try:
+            vermerke_erstattung_am_link(
+                self._db, link, betrag_cents=offen_cents
+            )
+        except ZahlungslinkFehler as exc:
+            log.error(
+                "addon_erstattung_link_nicht_fortgeschrieben",
+                reservation_id=reservation_id,
+                link_id=str(link["id"]),
+                refund_id=ergebnis["refund_id"],
+                grund=exc.message,
+            )
+
+        # Die Position wird `cancelled` — nicht ein neuer Status `refunded`:
+        # Sechs Umsatzleser entscheiden über `== 'cancelled'` und hätten jeden
+        # anderen Endzustand als Erlös gezählt (s. Kopf von 0473). Der CHECK
+        # `reservation_addons_refund_nur_storniert` erzwingt es zusätzlich.
+        res = (
+            self._db.table("reservation_addons")
+            .update(
+                {
+                    "status": AddonStatus.cancelled.value,
+                    "cancel_reason": grund,
+                    "cancelled_by": ctx.user_id,
+                    "cancelled_at": _now_iso(),
+                    "refunded_cents": int(row.get("refunded_cents") or 0)
+                    + offen_cents,
+                    "refunded_at": _now_iso(),
+                    "refund_reason": grund,
+                    "refunded_by": ctx.user_id,
+                }
+            )
+            .eq("tenant_id", tenant_id)
+            .eq("id", res_addon_id)
+            .is_("refunded_at", "null")
+            .execute()
+        )
+        if not res.data:
+            # Ein zweiter Aufruf war schneller. Das Geld ist trotzdem draußen
+            # (Stripes Idempotency-Key hat den zweiten Refund abgefangen) — also
+            # den aktuellen Stand zurückgeben statt einen Fehler zu werfen.
+            log.warning(
+                "addon_erstattung_zeile_schon_vermerkt",
+                res_addon_id=res_addon_id,
+                refund_id=ergebnis["refund_id"],
+            )
+            return ReservationAddonResponse(
+                **_res_addon_row(self._own_res_addon(tenant_id, res_addon_id))
+            )
+        self._baue_rechnungsentwurf_neu(
+            tenant_id, reservation_id, storno_steht_schon=True
+        )
+        self._close_addon_task(tenant_id, row)
+        log.info(
+            "reservation_addon_erstattet",
+            tenant_id=tenant_id,
+            id=res_addon_id,
+            betrag_cents=offen_cents,
+            currency=str(link["currency"]),
+            refund_id=ergebnis["refund_id"],
+            by=ctx.user_id,
+        )
+        self._log_timeline(
+            tenant_id,
+            reservation_id,
+            "addon_refunded",
+            ctx,
+            {
+                "name": row.get("name") or {},
+                "amount": round(offen_cents / 100, 2),
+                "currency": str(link["currency"]),
+                "reason": grund,
+                "refund_id": ergebnis["refund_id"],
+            },
+        )
+        return ReservationAddonResponse(**_res_addon_row(res.data[0]))
+
+
     def _assert_not_invoiced(self, tenant_id: str, reservation_id: str) -> None:
         """409, wenn zur Buchung schon eine festgeschriebene Rechnung existiert.
 
@@ -1222,6 +1436,12 @@ def _res_addon_row(r: dict) -> dict:
         "cancel_reason": r.get("cancel_reason"),
         "cancelled_by": (str(r["cancelled_by"]) if r.get("cancelled_by") else None),
         "cancelled_at": r.get("cancelled_at"),
+        # Erstattung (0473). `refunded_cents` bleibt Cent-genau bis in die
+        # Oberfläche: Ein Rundungsschritt hier würde bei DKK-Beträgen mit Öre
+        # eine andere Zahl anzeigen als die, die Stripe zurückgezahlt hat.
+        "refunded_cents": int(r.get("refunded_cents") or 0),
+        "refunded_at": r.get("refunded_at"),
+        "refund_reason": r.get("refund_reason"),
     }
 
 

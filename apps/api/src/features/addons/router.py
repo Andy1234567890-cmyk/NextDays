@@ -26,6 +26,7 @@ from .schemas import (
     ReservationAddonCancel,
     ReservationAddonListResponse,
     ReservationAddonQty,
+    ReservationAddonRefund,
     ReservationAddonResponse,
     SliceHealth,
     ZahlungslinkResponse,
@@ -285,6 +286,42 @@ def cancel_reservation_addon(
     einer festgeschriebenen Rechnung steht."""
     try:
         return service.cancel_reservation_addon(ctx, res_addon_id, payload.reason)
+    except AddonError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/reservation-addons/{res_addon_id}/refund",
+    response_model=ReservationAddonResponse,
+)
+def erstatte_reservation_addon(
+    res_addon_id: str,
+    payload: ReservationAddonRefund,
+    service: AddonsServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> ReservationAddonResponse:
+    """Eine per Karte bezahlte Zusatzleistung erstatten (0473).
+
+    Der Gast bekommt 100 % dessen, was er für diese Position gezahlt hat; die
+    Erstattung läuft im verbundenen Konto des Betriebs, unsere Provision bleibt
+    einbehalten. Der Grund ist Pflicht und steht danach am Beleg und in der
+    Buchungs-Zeitleiste. Die Position wird dabei storniert — sie fällt damit aus
+    Rechnung, Eigentümer-Abrechnung und Gast-Portal heraus.
+
+    Berechtigung bewusst dieselbe wie im übrigen Slice (MANAGE_PROPERTIES) und
+    NICHT MANAGE_BILLING: Wer eine Zusatzleistung verkaufen und kassieren darf,
+    muss sie auch zurückzahlen können. Ein strengeres Recht hier hätte genau die
+    Sackgasse gebaut, die dieser Endpunkt auflöst — die Rezeption nimmt Geld an,
+    kann es aber nicht zurückgeben und wird auf jemanden verwiesen, der nie
+    kommt. Finanzdaten des Betriebs (Saldo, Auszahlungen) werden dabei nicht
+    sichtbar; die liegen weiter unter MANAGE_BILLING in /payouts.
+
+    409, wenn zu der Position gar keine Kartenzahlung eingegangen ist (dann ist
+    die Rücknahme der Bezahlt-Markierung der richtige Weg) oder sie auf einer
+    festgeschriebenen Rechnung steht. 503, wenn der Zahlungsstand bei Stripe
+    nicht prüfbar ist — dann wird nicht erstattet (fail-closed)."""
+    try:
+        return service.erstatte_reservation_addon(ctx, res_addon_id, payload.reason)
     except AddonError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

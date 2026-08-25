@@ -4463,7 +4463,10 @@
         "addonCancelled": "Doplňková služba stornována",
         "surchargePaid": "Doúčtování zaplaceno",
         "surchargePaidManually": "Doúčtování označeno jako zaplacené",
-        "surchargeUnpaid": "Označení zaplaceno zrušeno"
+        "surchargeUnpaid": "Označení zaplaceno zrušeno",
+        "addonRefunded": "Doplňková služba vrácena",
+        "surchargeRefunded": "Zpětné vyúčtování vráceno",
+        "addonRefundFaellig": "Vrácení peněz čeká na vyřízení"
       },
       "title": {
         "onProperty": " v objektu {property}",
@@ -4493,7 +4496,9 @@
         "amount": "Částka",
         "type": "Typ",
         "service": "Služba",
-        "withdrawnReason": "Důvod zrušení"
+        "withdrawnReason": "Důvod zrušení",
+        "refunded": "Vráceno",
+        "openRefund": "Otevřená částka k vrácení"
       }
     },
     "bookingDetail": {
@@ -4961,7 +4966,14 @@
       "ruecknahmeGrundLabel": "Důvod zrušení",
       "ruecknahmeGrundPlatzhalter": "např. zadáno omylem",
       "ruecknahmeBestaetigen": "Zrušit",
-      "ruecknahmeErfolg": "Označení zaplaceno bylo zrušeno."
+      "ruecknahmeErfolg": "Označení zaplaceno bylo zrušeno.",
+      "erstatten": "Vrátit peníze",
+      "erstattungBestaetigung": "{betrag} bude vráceno hostovi.",
+      "erstattungGrundLabel": "Důvod vrácení peněz",
+      "erstattungGrundPlatzhalter": "např. rezervace zrušena",
+      "erstattungBestaetigen": "Spustit vrácení peněz",
+      "erstattungErfolg": "Částka vrácena.",
+      "erstattetHinweis": "Vráceno: {betrag} dne {datum}"
     }
   },
   "objects": {
@@ -6313,7 +6325,11 @@
       "reasonLabel": "Důvod",
       "reasonPlaceholder": "např. omylem označeno jako zaplaceno",
       "reasonRequired": "Zadejte prosím důvod (nejméně 3 znaky).",
-      "reasonLogged": "Důvod: {grund}"
+      "reasonLogged": "Důvod: {grund}",
+      "refundAction": "Vrácení peněz",
+      "refundConfirm": "{betrag} bude vráceno hostovi. Položka bude zrušena a odstraněna z faktury a vyúčtování.",
+      "refundSuccess": "Částka vrácena.",
+      "refundedNote": "Vráceno: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -9314,7 +9330,11 @@
       "auszahlen": "Požádat o výplatu",
       "nochNichtFreigeschaltet": "Výplaty zatím nejsou pro tvůj účet povolené.",
       "automatischHinweis": "Tvůj zůstatek se vyplácí automaticky. Pro výplatu na požádání nastav níže „Jen na požádání“.",
-      "ausstehendHinweis": "Čekající zůstatek bude k dispozici po zúčtovací lhůtě."
+      "ausstehendHinweis": "Čekající zůstatek bude k dispozici po zúčtovací lhůtě.",
+      "einlage": "Vázáno jako záloha",
+      "einlageFreiAb": "Uvolní se {datum}",
+      "einlageErstattungFaellig": "Vrácení peněz otevřeno",
+      "einlageHinweis": "Část zůstatku je vázána jako záloha pro případné vrácení peněz. Uvolní se, jakmile dotčené pobyty skončí."
     },
     "rhythmus": {
       "titel": "Rytmus výplat",

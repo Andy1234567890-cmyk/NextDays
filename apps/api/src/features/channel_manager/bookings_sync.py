@@ -800,6 +800,32 @@ class BookingsSyncMixin:
         return pm.data[0]["property_id"] if pm.data else None
 
     @staticmethod
+    def _addon_links_bei_ota_storno(
+        db: Client, tenant_id: str, reservation_id: str
+    ) -> None:
+        """Zusatzleistungs-Zahlungslinks eines OTA-Stornos abschließen (0473).
+
+        Best-effort mit lautem Log — die Begründung steht an der Aufrufstelle.
+        Der Import-Lauf darf an einer Stripe-Störung nicht scheitern, weil ein
+        nicht geschriebener OTA-Storno zur Überbuchung führt.
+        """
+        try:
+            from src.features.addons.zahlung import (  # noqa: PLC0415
+                bei_buchungsstorno,
+            )
+
+            bei_buchungsstorno(
+                db, tenant_id=tenant_id, reservation_id=reservation_id
+            )
+        except Exception as exc:  # noqa: BLE001 — s. Aufrufstelle: Lauf schützen
+            log.error(
+                "ota_storno_addon_zahlungslink_nicht_abgeschlossen",
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+                error=str(exc)[:300],
+            )
+
+    @staticmethod
     def _date_range_nights(check_in: str, check_out: str) -> list[str]:
         """Belegte Nächte [check_in, check_out) als ISO-Datumsliste (Abreisetag
         exklusiv)."""
@@ -1240,6 +1266,25 @@ class BookingsSyncMixin:
                 # `sync_for_reservation` erkennt den Storno am Status und ruft
                 # `_on_cancelled`; manuelle Aufgaben bleiben unangetastet.
                 sync_nach_id(db, tenant_id, str(existing[0]["id"]))
+                # Zusatzleistungs-Zahlungslinks abschließen (0473). Genau dieser
+                # Pfad hat den Fall vom 25.08.2026 erzeugt: Buchung 6179a5d0
+                # wurde von Booking.com storniert, `cancel()` läuft hier NICHT
+                # (eine OTA-Buchung ist lokal gar nicht stornierbar, 409), und
+                # der bezahlte Addon-Link über 150,00 DKK blieb bei uns `open`,
+                # während das Geld im Verbundkonto lag.
+                #
+                # ANDERS ALS IM LOKALEN STORNO: hier best-effort, NICHT
+                # fail-closed. Der lokale Storno darf abbrechen und wiederholt
+                # werden; dieser Import-Lauf darf es nicht — bleibt der OTA-Storno
+                # ungeschrieben, sind die Nächte weiter belegt, obwohl das Portal
+                # sie wieder verkauft: Überbuchung. Eine Stripe-Störung darf
+                # diesen Schaden nicht auslösen. Sie wird deshalb LAUT geloggt
+                # (und `scripts/diagnose/erstattung-pruefen.sh` findet den
+                # Rückstand: offener Link auf stornierter Buchung), statt den
+                # Lauf zu kippen oder still zu bleiben (Wurzel 5).
+                self._addon_links_bei_ota_storno(
+                    db, tenant_id, str(existing[0]["id"])
+                )
             elif local_property_id is not None:
                 # Bestandsimport (CSV/Lodgify): eine bereits stornierte Buchung,
                 # die wir noch nicht kennen, TROTZDEM als storniert anlegen —

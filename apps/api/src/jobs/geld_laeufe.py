@@ -86,24 +86,49 @@ def charge_due_balances(db: Client) -> None:
 
 
 def run_payouts(db: Client) -> None:
-    """Zurückhaltungen freigeben, dann fällige Auszahlungen abarbeiten."""
+    """Zurückhaltungen freigeben, Plattform-Auszahlungen, dann Verbundkonten.
+
+    Drei Schritte, zwei Töpfe: `gib_holds_frei` + `fuehre_lauf_aus` betreffen den
+    PLATTFORM-Saldo (Marktplatz-Buchungen per Transfer), `run_verbund_auszahlungen`
+    die Stripe-Konten der Betriebe (Zusatzleistungen, Nachberechnungen,
+    Direktbuchungen als Direct Charge). Sie werden nie vermischt — sonst wäre
+    dasselbe Geld zweimal unterwegs (Wurzel 1).
+    """
     from src.features.payments.stripe_client import (  # noqa: PLC0415
         StripeNotConfiguredError,
     )
     from src.features.payouts.service import PayoutsService  # noqa: PLC0415
+    from src.features.payouts.stripe_saldo import (  # noqa: PLC0415
+        run_verbund_auszahlungen,
+    )
 
     svc = PayoutsService(db=db)
     try:
         freigegeben = svc.gib_holds_frei()
         bilanz = svc.fuehre_lauf_aus()
+        # Zweiter Topf, seit 0473 (s. `payouts/sicherheitseinlage.py`): Die
+        # VERBUNDKONTEN zahlen nicht mehr von selbst aus — bei Stripe steht
+        # `manual`, damit die Sicherheitseinlage zurückgehalten werden kann. Ohne
+        # diesen Lauf bekäme ein Betrieb mit dem Wunsch „täglich" nie wieder eine
+        # automatische Auszahlung. Läuft NACH `fuehre_lauf_aus`, weil dessen
+        # Transfers erst den Saldo bilden, der hier ausgezahlt wird; in derselben
+        # Runde ist das Geld dann noch `pending` und wird beim nächsten Tick
+        # erfasst — kein Verlust, nur ein Tag Versatz.
+        verbund = run_verbund_auszahlungen(db)
     except StripeNotConfiguredError as exc:
         # Ohne Schlüssel scheitert jede Zeile; der Lauf reicht den Mangel
         # bewusst durch, statt die Zeilen reihenweise auf 'failed' zu schreiben.
         # Sie bleiben fällig und laufen später von selbst.
         _mangel("payout_tick_nicht_konfiguriert", exc)
         return
-    if bilanz["geprueft"] or freigegeben:
-        log.info("payout_tick", freigegeben=freigegeben, **bilanz)
+    if bilanz["geprueft"] or freigegeben or verbund["ausgezahlt"]:
+        log.info(
+            "payout_tick",
+            freigegeben=freigegeben,
+            **bilanz,
+            verbund_ausgezahlt=verbund["ausgezahlt"],
+            verbund_fehler=verbund["fehler"],
+        )
 
 
 def bill_commissions(db: Client, heute: date) -> None:

@@ -4461,7 +4461,10 @@
         "addonCancelled": "Serviço adicional anulado",
         "surchargePaid": "Valor adicional pago",
         "surchargePaidManually": "Valor adicional registado como pago",
-        "surchargeUnpaid": "Marcação como pago anulada"
+        "surchargeUnpaid": "Marcação como pago anulada",
+        "addonRefunded": "Serviço adicional reembolsado",
+        "surchargeRefunded": "Recálculo reembolsado",
+        "addonRefundFaellig": "Reembolso pendente"
       },
       "title": {
         "onProperty": " em {property}",
@@ -4491,7 +4494,9 @@
         "amount": "Valor",
         "type": "Tipo",
         "service": "Serviço",
-        "withdrawnReason": "Motivo da anulação"
+        "withdrawnReason": "Motivo da anulação",
+        "refunded": "Reembolsado",
+        "openRefund": "Valor de reembolso em aberto"
       }
     },
     "bookingDetail": {
@@ -4959,7 +4964,14 @@
       "ruecknahmeGrundLabel": "Motivo da anulação",
       "ruecknahmeGrundPlatzhalter": "por exemplo, registado por engano",
       "ruecknahmeBestaetigen": "Anular",
-      "ruecknahmeErfolg": "A marcação como pago foi anulada."
+      "ruecknahmeErfolg": "A marcação como pago foi anulada.",
+      "erstatten": "Reembolsar",
+      "erstattungBestaetigung": "{betrag} serão reembolsados ao hóspede.",
+      "erstattungGrundLabel": "Motivo do reembolso",
+      "erstattungGrundPlatzhalter": "Ex: Reserva cancelada",
+      "erstattungBestaetigen": "Processar reembolso",
+      "erstattungErfolg": "Valor reembolsado.",
+      "erstattetHinweis": "Reembolsado: {betrag} em {datum}"
     }
   },
   "objects": {
@@ -6311,7 +6323,11 @@
       "reasonLabel": "Motivo",
       "reasonPlaceholder": "p. ex. marcado como pago por engano",
       "reasonRequired": "Indique um motivo (pelo menos 3 caracteres).",
-      "reasonLogged": "Motivo: {grund}"
+      "reasonLogged": "Motivo: {grund}",
+      "refundAction": "Reembolsar",
+      "refundConfirm": "{betrag} serão reembolsados ao hóspede. O item será cancelado e removido da fatura e do extrato.",
+      "refundSuccess": "Valor reembolsado.",
+      "refundedNote": "Reembolsado: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Propriedade",
@@ -9312,7 +9328,11 @@
       "auszahlen": "Pedir pagamento",
       "nochNichtFreigeschaltet": "Os pagamentos ainda não estão ativos para a tua conta.",
       "automatischHinweis": "O teu saldo é pago automaticamente. Para pedir um pagamento, define o ritmo abaixo como «Apenas a pedido».",
-      "ausstehendHinweis": "O saldo pendente fica disponível após o prazo de liquidação."
+      "ausstehendHinweis": "O saldo pendente fica disponível após o prazo de liquidação.",
+      "einlage": "Retido como garantia",
+      "einlageFreiAb": "Será liberado a partir de {datum}",
+      "einlageErstattungFaellig": "Reembolso pendente",
+      "einlageHinweis": "Parte do saldo está retida como garantia para possíveis reembolsos. Será liberada assim que as estadias afetadas terminarem."
     },
     "rhythmus": {
       "titel": "Ritmo dos pagamentos",

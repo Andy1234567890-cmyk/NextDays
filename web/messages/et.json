@@ -4463,7 +4463,10 @@
         "addonCancelled": "Lisateenus tühistatud",
         "surchargePaid": "Lisaarve tasutud",
         "surchargePaidManually": "Lisaarve märgitud tasutuks",
-        "surchargeUnpaid": "Tasutud märge tühistatud"
+        "surchargeUnpaid": "Tasutud märge tühistatud",
+        "addonRefunded": "Lisateenus tagastatud",
+        "surchargeRefunded": "Järelarvestus tagastatud",
+        "addonRefundFaellig": "Tagasimakse ootel"
       },
       "title": {
         "onProperty": " objektil {property}",
@@ -4493,7 +4496,9 @@
         "amount": "Summa",
         "type": "Liik",
         "service": "Teenus",
-        "withdrawnReason": "Tühistamise põhjus"
+        "withdrawnReason": "Tühistamise põhjus",
+        "refunded": "Tagastatud",
+        "openRefund": "Avatud tagasimakse summa"
       }
     },
     "bookingDetail": {
@@ -4961,7 +4966,14 @@
       "ruecknahmeGrundLabel": "Tühistamise põhjus",
       "ruecknahmeGrundPlatzhalter": "nt sisestati ekslikult",
       "ruecknahmeBestaetigen": "Tühista",
-      "ruecknahmeErfolg": "Tasutud märge on tühistatud."
+      "ruecknahmeErfolg": "Tasutud märge on tühistatud.",
+      "erstatten": "Tagastamine",
+      "erstattungBestaetigung": "{betrag} tagastatakse külalisele.",
+      "erstattungGrundLabel": "Tagastamise põhjus",
+      "erstattungGrundPlatzhalter": "nt broneering tühistatud",
+      "erstattungBestaetigen": "Käivita tagasimakse",
+      "erstattungErfolg": "Summa tagastatud.",
+      "erstattetHinweis": "Tagastatud: {betrag} {datum}"
     }
   },
   "objects": {
@@ -6313,7 +6325,11 @@
       "reasonLabel": "Põhjus",
       "reasonPlaceholder": "nt kogemata makstuks märgitud",
       "reasonRequired": "Palun märgi põhjus (vähemalt 3 tähemärki).",
-      "reasonLogged": "Põhjus: {grund}"
+      "reasonLogged": "Põhjus: {grund}",
+      "refundAction": "Tagastama",
+      "refundConfirm": "{betrag} tagastatakse külalisele. Kirje tühistatakse ning eemaldatakse arvelt ja arveldusest.",
+      "refundSuccess": "Summa tagastatud.",
+      "refundedNote": "Tagastatud: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -9314,7 +9330,11 @@
       "auszahlen": "Taotle väljamakset",
       "nochNichtFreigeschaltet": "Väljamaksed ei ole sinu kontol veel avatud.",
       "automatischHinweis": "Sinu jääk makstakse välja automaatselt. Taotluse alusel väljamakseks vali allpool „Ainult taotluse alusel“.",
-      "ausstehendHinweis": "Ootel jääk muutub kättesaadavaks pärast arveldusperioodi."
+      "ausstehendHinweis": "Ootel jääk muutub kättesaadavaks pärast arveldusperioodi.",
+      "einlage": "Tagatisena seotud",
+      "einlageFreiAb": "Vabaneb alates {datum}",
+      "einlageErstattungFaellig": "Tagasimakse ootel",
+      "einlageHinweis": "Osa saldost on seotud tagatisena võimalike tagasimaksete jaoks. See vabaneb pärast asjaomaste peatumiste lõppemist."
     },
     "rhythmus": {
       "titel": "Väljamakse rütm",

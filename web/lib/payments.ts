@@ -227,7 +227,7 @@ export type NachberechnungLink = {
   amount_cents: number;
   application_fee_cents: number;
   fee_bps: number;
-  status: "open" | "paid" | "cancelled";
+  status: "open" | "paid" | "cancelled" | "refunded" | "partially_refunded";
   grund: string;
   /** true = der Betrieb hat die Zahlung von Hand bestätigt (bar/Überweisung);
    *  false = per Stripe eingegangen. Nur eine manuelle Markierung lässt sich
@@ -239,6 +239,12 @@ export type NachberechnungLink = {
   betrag_veraltet: boolean;
   paid_at: string | null;
   created_at: string | null;
+  /** Erstattung (0473). Betrag in CENT — der Gast bekommt 100 % dessen, was er
+   *  gezahlt hat, und die Zahl muss genau die sein, die Stripe zurückgezahlt hat.
+   *  `refunded_at` gesetzt = das Geld ist zurück (nicht bloß storniert). */
+  refunded_cents: number;
+  refunded_at: string | null;
+  refund_reason: string | null;
 };
 
 export type NachberechnungStatus = {
@@ -327,6 +333,26 @@ export async function nimmNachberechnungZurueck(
 ): Promise<Result<null>> {
   return call(
     `/reservations/${encodeURIComponent(reservationId)}/nachberechnung/${encodeURIComponent(linkId)}/offen`,
+    { method: "POST", body: { grund } },
+  );
+}
+
+/** Eine per KARTE bezahlte Nachberechnung erstatten (0473, Grund Pflicht).
+ *
+ *  Das Gegenstück zu `nimmNachberechnungZurueck` und buchhalterisch dessen
+ *  Gegenteil: Dort wurde nur ein falscher Haken gesetzt (kein Geld geflossen,
+ *  Beleg wird entfernt), hier geht echtes Geld an den Gast zurück und der Beleg
+ *  bleibt stehen. Der Server lehnt den jeweils falschen Weg mit 409 ab.
+ *
+ *  Kein Betragsfeld: Der Gast bekommt immer den vollen Betrag; ein
+ *  Client-Betrag wäre eine zweite Wahrheit über eine Geldbewegung. */
+export async function erstatteNachberechnung(
+  reservationId: string,
+  linkId: string,
+  grund: string,
+): Promise<Result<NachberechnungLink>> {
+  return call(
+    `/reservations/${encodeURIComponent(reservationId)}/nachberechnung/${encodeURIComponent(linkId)}/erstatten`,
     { method: "POST", body: { grund } },
   );
 }

@@ -4463,7 +4463,10 @@
         "addonCancelled": "Seirbhís bhreise cealaithe",
         "surchargePaid": "Breisiontas íoctha",
         "surchargePaidManually": "Breisiontas taifeadta mar íoctha",
-        "surchargeUnpaid": "Marcáil íoctha cealaithe"
+        "surchargeUnpaid": "Marcáil íoctha cealaithe",
+        "addonRefunded": "Aisíoc breiseán",
+        "surchargeRefunded": "Aisíoc iar-mhuirir",
+        "addonRefundFaellig": "Aisíoc ar feitheamh"
       },
       "title": {
         "onProperty": " ar {property}",
@@ -4493,7 +4496,9 @@
         "amount": "Méid",
         "type": "Cineál",
         "service": "Seirbhís",
-        "withdrawnReason": "Cúis leis an gcealú"
+        "withdrawnReason": "Cúis leis an gcealú",
+        "refunded": "Aisíoctha",
+        "openRefund": "Méid aisíocaíochta oscailte"
       }
     },
     "bookingDetail": {
@@ -4961,7 +4966,14 @@
       "ruecknahmeGrundLabel": "Cúis leis an gcealú",
       "ruecknahmeGrundPlatzhalter": "m.sh. iontráladh í trí earráid",
       "ruecknahmeBestaetigen": "Cealaigh",
-      "ruecknahmeErfolg": "Cealaíodh an mharcáil íoctha."
+      "ruecknahmeErfolg": "Cealaíodh an mharcáil íoctha.",
+      "erstatten": "Aisíoc",
+      "erstattungBestaetigung": "Déanfar {betrag} a aisíoc leis an aoi.",
+      "erstattungGrundLabel": "Cúis an aisíoca",
+      "erstattungGrundPlatzhalter": "e.g. Cuireadh an áirithint ar ceal",
+      "erstattungBestaetigen": "Aisíoc a spreagadh",
+      "erstattungErfolg": "Suim aisíoctha.",
+      "erstattetHinweis": "Aisíoctha: {betrag} ar {datum}"
     }
   },
   "objects": {
@@ -6313,7 +6325,11 @@
       "reasonLabel": "Cúis",
       "reasonPlaceholder": "m.sh. marcáilte mar íoctha trí dhearmad",
       "reasonRequired": "Tabhair cúis le do thoil (3 charachtar ar a laghad).",
-      "reasonLogged": "Cúis: {grund}"
+      "reasonLogged": "Cúis: {grund}",
+      "refundAction": "Aisíoc",
+      "refundConfirm": "Aisíocfar {betrag} leis an aoi. Cuirfear an t-iontráil ar ceal agus bainfear den sonrasc agus den bhille é.",
+      "refundSuccess": "Méid aisíoctha.",
+      "refundedNote": "Aisíoctha: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Maoin",
@@ -9314,7 +9330,11 @@
       "auszahlen": "Iarr íocaíocht",
       "nochNichtFreigeschaltet": "Níl íocaíochtaí amach cumasaithe do do chuntas fós.",
       "automatischHinweis": "Íoctar d’iarmhéid amach go huathoibríoch. Le híocaíocht ar iarratas, roghnaigh „Ar iarratas amháin“ thíos.",
-      "ausstehendHinweis": "Bíonn iarmhéid ar feitheamh ar fáil tar éis na tréimhse socraithe."
+      "ausstehendHinweis": "Bíonn iarmhéid ar feitheamh ar fáil tar éis na tréimhse socraithe.",
+      "einlage": "Coinnithe mar urrús",
+      "einlageFreiAb": "Saor ó {datum}",
+      "einlageErstattungFaellig": "Aisíoc ar feitheamh",
+      "einlageHinweis": "Tá cuid den iarmhéid coinnithe mar urrús le haghaidh aisíocaíochtaí féideartha. Scaoilfear é nuair a bheidh na tréimhsí fanachta lena mbaineann thart."
     },
     "rhythmus": {
       "titel": "Rithim na n-íocaíochtaí",

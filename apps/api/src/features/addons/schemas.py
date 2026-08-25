@@ -154,6 +154,14 @@ class ReservationAddonResponse(BaseModel):
     cancel_reason: str | None = None
     cancelled_by: str | None = None
     cancelled_at: str | None = None
+    # Erstattung (0473). Eine erstattete Position ist gleichzeitig `cancelled`
+    # (s. Migration) — ohne diese Felder wäre in der Oberfläche nicht
+    # unterscheidbar, ob ein Betrag nur storniert oder wirklich Geld
+    # zurückgezahlt wurde. Betrag in CENT, damit Öre-Beträge (DKK) exakt die
+    # Zahl zeigen, die Stripe erstattet hat.
+    refunded_cents: int = 0
+    refunded_at: str | None = None
+    refund_reason: str | None = None
 
 
 class ReservationAddonListResponse(BaseModel):
@@ -200,6 +208,21 @@ class ReservationAddonCancel(BaseModel):
     — eine Enum hätte beim ersten unpassenden Fall ein „sonstiges" erzwungen und
     die Auskunft entwertet. Die Obergrenze spiegelt den CHECK der Spalte
     (Wurzel 8).
+    """
+
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class ReservationAddonRefund(BaseModel):
+    """Grund für die Erstattung einer per Karte bezahlten Zusatzleistung (0473).
+
+    Eigenes Schema statt Wiederverwendung von `ReservationAddonCancel`, obwohl
+    das Feld gleich aussieht: Eine Erstattung ist ein GELDEREIGNIS, ein Storno
+    nicht. Wer später ein Feld ergänzt (Teilbetrag, Kulanz-Kennzeichen), soll das
+    nicht versehentlich am Storno-Weg mittun. Der Betrag ist bewusst NICHT
+    wählbar — der Gast bekommt immer 100 % dessen, was er für diese Position
+    gezahlt hat (Entscheidung vom 25.08.2026); ein Client-Betrag wäre eine
+    zweite Wahrheit über eine Geldbewegung (Wurzel 3).
     """
 
     reason: str = Field(min_length=3, max_length=500)

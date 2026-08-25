@@ -4484,7 +4484,10 @@
         "addonCancelled": "Add-on service cancelled",
         "surchargePaid": "Additional charge paid",
         "surchargePaidManually": "Additional charge recorded as paid",
-        "surchargeUnpaid": "Paid mark undone"
+        "surchargeUnpaid": "Paid mark undone",
+        "addonRefunded": "Additional service refunded",
+        "surchargeRefunded": "Recalculation refunded",
+        "addonRefundFaellig": "Refund pending"
       },
       "title": {
         "onProperty": " at {property}",
@@ -4514,7 +4517,9 @@
         "amount": "Amount",
         "type": "Type",
         "service": "Service",
-        "withdrawnReason": "Reason for undoing"
+        "withdrawnReason": "Reason for undoing",
+        "refunded": "Refunded",
+        "openRefund": "Open refund amount"
       }
     },
     "bookingDetail": {
@@ -4982,7 +4987,14 @@
       "ruecknahmeGrundLabel": "Reason for undoing",
       "ruecknahmeGrundPlatzhalter": "e.g. entered by mistake",
       "ruecknahmeBestaetigen": "Undo",
-      "ruecknahmeErfolg": "The paid mark has been undone."
+      "ruecknahmeErfolg": "The paid mark has been undone.",
+      "erstatten": "Refund",
+      "erstattungBestaetigung": "{betrag} will be refunded to the guest.",
+      "erstattungGrundLabel": "Reason for refund",
+      "erstattungGrundPlatzhalter": "e.g. booking cancelled",
+      "erstattungBestaetigen": "Issue refund",
+      "erstattungErfolg": "Amount refunded.",
+      "erstattetHinweis": "Refunded: {betrag} on {datum}"
     }
   },
   "objects": {
@@ -6334,7 +6346,11 @@
       "reasonLabel": "Reason",
       "reasonPlaceholder": "e.g. marked as paid by mistake",
       "reasonRequired": "Please state a reason (at least 3 characters).",
-      "reasonLogged": "Reason: {grund}"
+      "reasonLogged": "Reason: {grund}",
+      "refundAction": "Refund",
+      "refundConfirm": "{betrag} will be refunded to the guest. The item will be cancelled and removed from the invoice and billing.",
+      "refundSuccess": "Amount refunded.",
+      "refundedNote": "Refunded: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Property",
@@ -9390,7 +9406,11 @@
       "auszahlen": "Request payout",
       "nochNichtFreigeschaltet": "Payouts are not enabled for your account yet.",
       "automatischHinweis": "Your balance is paid out automatically. To request a payout, set the schedule below to “On request only”.",
-      "ausstehendHinweis": "Pending funds become available after the settlement period."
+      "ausstehendHinweis": "Pending funds become available after the settlement period.",
+      "einlage": "Held as security",
+      "einlageFreiAb": "Released from {datum}",
+      "einlageErstattungFaellig": "Refund pending",
+      "einlageHinweis": "Part of the balance is held as security for potential refunds. It will be released once the affected stays are over."
     },
     "rhythmus": {
       "titel": "Payout schedule",

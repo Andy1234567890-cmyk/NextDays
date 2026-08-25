@@ -63,6 +63,18 @@ export type Guthaben = {
   verfuegbar: SaldoPosten[];
   ausstehend: SaldoPosten[];
   letzte_auszahlungen: StripeAuszahlung[];
+  /** Sicherheitseinlage (0473): der Teil des verfügbaren Guthabens, der als
+   *  Deckung für mögliche Erstattungen zurückgehalten wird — bezahlte
+   *  Zusatzleistungen und Nachberechnungen, deren Aufenthalt noch nicht sicher
+   *  vorbei ist, plus alles Stornierte, das noch nicht erstattet wurde. */
+  einlage: SaldoPosten[];
+  /** `verfuegbar − einlage`, nie negativ. Der Betrag, der wirklich abrufbar ist
+   *  — serverseitig gerechnet, damit die Oberfläche nicht anders rundet. */
+  auszahlbar: SaldoPosten[];
+  /** Wann die nächste Einlage frei wird (ISO-Datum). null bei einlage = 0 ODER
+   *  wenn das Zurückgehaltene zu STORNIERTEN Buchungen gehört — dort gibt es
+   *  kein Freigabedatum, sondern eine fällige Erstattung. */
+  einlage_frei_ab: string | null;
 };
 
 /** Plattform-Ledger (Marktplatz-Buchungen) — zweite Hälfte der Abrechnung. */

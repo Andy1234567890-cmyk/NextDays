@@ -206,6 +206,23 @@ class Settings(BaseSettings):
     mfa_sms_available: bool = False
     stripe_secret_key: SecretStr = SecretStr("")
     stripe_webhook_secret: SecretStr = SecretStr("")
+    # Signaturschlüssel des CONNECT-Webhook-Endpunkts (0473). Getrennt vom
+    # Konto-Endpunkt, weil Stripe je Endpunkt ein eigenes Secret ausstellt und
+    # Connect-Events (`checkout.session.completed` aus einem verbundenen Konto)
+    # nur über einen Endpunkt mit `connect: true` überhaupt zugestellt werden.
+    #
+    # WARUM ES DIESE VARIABLE GIBT: Bis zum 25.08.2026 existierte genau EIN
+    # Endpunkt, ohne `connect` und ohne `checkout.session.completed` in den
+    # abonnierten Events. Damit hat KEIN Zahlungseingang eines Verbundkontos je
+    # einen Webhook ausgelöst; bemerkt wurden sie ausschließlich vom
+    # Nachlese-Abgleich, der nur beim Öffnen der Buchung läuft. Live-Folge: eine
+    # bezahlte Zusatzleistung über 150,00 DKK lag fünf Tage unbemerkt im
+    # Verbundkonto und fiel erst durch einen Storno auf.
+    #
+    # Leer = kein Connect-Endpunkt eingerichtet. Dann greift weiter nur der
+    # Nachlese-Abgleich; das ist ein BETRIEBS-Mangel, nicht ein Code-Zustand, und
+    # wird beim Start gemeldet (`pflichtumgebung`).
+    stripe_connect_webhook_secret: SecretStr = SecretStr("")
     stripe_publishable_key: str = ""          # NEXT_PUBLIC_ im Frontend
     # VERALTET — ohne Wirkung. Die Provision kommt ausschließlich aus
     # tenants.platform_fee_bps und gilt nur für Portal-Buchungen (Preisliste §2).

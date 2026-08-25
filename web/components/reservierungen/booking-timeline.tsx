@@ -63,6 +63,16 @@ const KIND_META: Record<
   surcharge_paid: { icon: "ph:currency-circle-dollar-fill", labelKey: "kind.surchargePaid", tone: "text-success", cat: "payment" },
   surcharge_paid_manually: { icon: "ph:hand-coins", labelKey: "kind.surchargePaidManually", tone: "text-success", cat: "payment" },
   surcharge_unpaid: { icon: "ph:arrow-u-up-left", labelKey: "kind.surchargeUnpaid", tone: "text-foreground", cat: "payment" },
+  // Erstattung (0473). Bewusst NICHT mit dem Storno zusammengelegt: Beim Storno
+  // fällt ein Betrag nur aus der Abrechnung, hier ist Geld an den Gast
+  // zurückgeflossen. Wer später wissen will, ob der Gast sein Geld bekommen hat,
+  // muss das in der Zeitleiste sehen können.
+  addon_refunded: { icon: "ph:arrow-u-down-left", labelKey: "kind.addonRefunded", tone: "text-destructive", cat: "payment" },
+  surcharge_refunded: { icon: "ph:arrow-u-down-left", labelKey: "kind.surchargeRefunded", tone: "text-destructive", cat: "payment" },
+  // Offener Posten, kein abgeschlossener Vorgang: Die Buchung ist storniert, das
+  // Geld des Gastes liegt aber noch im Konto des Betriebs. Genau dieser Zustand
+  // war am 25.08.2026 unsichtbar — 150,00 DKK, die niemand mehr zuordnete.
+  addon_refund_faellig: { icon: "ph:warning-circle-fill", labelKey: "kind.addonRefundFaellig", tone: "text-warning", cat: "payment" },
 };
 
 function useFilters(t: T): { key: Category; label: string }[] {
@@ -238,9 +248,22 @@ function cardRows(t: T, ev: TimelineEvent, currency: string, locale: string): [s
     case "surcharge_paid":
     case "surcharge_paid_manually":
     case "surcharge_unpaid":
+    case "surcharge_refunded":
       push(t("bookingTimeline.row.amount"), money(d.amount));
       push(t("bookingTimeline.row.reason"), s(d.grund));
       push(t("bookingTimeline.row.withdrawnReason"), s(d.reason));
+      break;
+    // Erstattung einer Zusatzleistung (0473): Leistung, zurückgezahlter Betrag,
+    // Pflicht-Grund. `refund_id` bleibt bewusst draußen — eine Stripe-Referenz
+    // ist für den Betrieb keine Auskunft, sie steht im Log und im Beleg.
+    case "addon_refunded":
+      push(t("bookingTimeline.row.service"), pickName(d.name));
+      push(t("bookingTimeline.row.refunded"), money(d.amount));
+      push(t("bookingTimeline.row.reason"), s(d.reason));
+      break;
+    // Fällige Erstattung: Buchung storniert, Geld noch beim Betrieb.
+    case "addon_refund_faellig":
+      push(t("bookingTimeline.row.openRefund"), money(d.amount));
       break;
     default:
       break;

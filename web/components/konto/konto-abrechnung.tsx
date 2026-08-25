@@ -276,6 +276,12 @@ function Saldo({
         {waehrungen.map((cur) => {
           const verfuegbar = betrag(guthaben.verfuegbar, cur);
           const ausstehend = betrag(guthaben.ausstehend, cur);
+          // Sicherheitseinlage (0473): zurückgehaltene Deckung für mögliche
+          // Erstattungen. `auszahlbar` kommt vom Server und wird NICHT hier aus
+          // verfügbar − einlage gebildet — sonst zeigt die Oberfläche irgendwann
+          // eine andere Zahl als die, mit der der Server rechnet.
+          const einlage = betrag(guthaben.einlage, cur);
+          const auszahlbar = betrag(guthaben.auszahlbar, cur);
           return (
             <div
               key={cur}
@@ -298,10 +304,37 @@ function Saldo({
                     {geld(ausstehend, cur)}
                   </p>
                 </div>
+                {/* Die Einlage wird nur gezeigt, wenn wirklich etwas
+                    zurückgehalten wird. Eine Dauerzeile „0,00" würde eine
+                    Einschränkung suggerieren, die nicht besteht. */}
+                {einlage > 0 && (
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      {t("guthaben.einlage")}
+                    </p>
+                    <p className="text-lg text-foreground">
+                      {geld(einlage, cur)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {guthaben.einlage_frei_ab
+                        ? t("guthaben.einlageFreiAb", {
+                            datum: new Date(
+                              guthaben.einlage_frei_ab,
+                            ).toLocaleDateString(),
+                          })
+                        : t("guthaben.einlageErstattungFaellig")}
+                    </p>
+                  </div>
+                )}
               </div>
               <Button
                 onClick={() => void onAuszahlen(cur)}
-                disabled={busy || verfuegbar <= 0 || !nurAufAntrag || !guthaben.payouts_enabled}
+                disabled={
+                  busy ||
+                  auszahlbar <= 0 ||
+                  !nurAufAntrag ||
+                  !guthaben.payouts_enabled
+                }
               >
                 <Icon icon="ph:bank" className="size-4" />
                 {t("guthaben.auszahlen")}
@@ -310,6 +343,22 @@ function Saldo({
           );
         })}
 
+        {/* Der Unterschied zwischen „kein Guthaben" und „gebundenes Guthaben"
+            muss im Klartext stehen: Sonst liest der Betrieb einen Betrag und
+            einen ausgegrauten Knopf ohne Erklärung. */}
+        {waehrungen.some(
+          (cur) =>
+            betrag(guthaben.einlage, cur) > 0 &&
+            betrag(guthaben.auszahlbar, cur) <= 0,
+        ) && (
+          <p className="text-sm text-muted-foreground">
+            <Icon
+              icon="ph:shield-check"
+              className="mr-1.5 inline size-4 align-text-bottom"
+            />
+            {t("guthaben.einlageHinweis")}
+          </p>
+        )}
         {!guthaben.payouts_enabled && (
           <p className="text-sm text-muted-foreground">
             <Icon

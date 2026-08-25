@@ -350,6 +350,29 @@ class NachberechnungLink(BaseModel):
     # auf einen veralteten Stand — die Oberfläche warnt dann (Wurzel 1).
     basis_total_amount: float
     betrag_veraltet: bool = False
+    # Erstattung (0473). Cent, weil Öre-Beträge (DKK) sonst gerundet anders
+    # aussehen als der Betrag, den Stripe zurückgezahlt hat. 0 = nichts
+    # erstattet.
+    refunded_cents: int = 0
+    refunded_at: str | None = None
+    refund_reason: str | None = None
+
+
+class NachberechnungRefund(BaseModel):
+    """Grund für die Erstattung einer per Karte bezahlten Nachberechnung (0473).
+
+    Getrennt von `NachberechnungBezahlt`, obwohl das Feld gleich aussieht: Das
+    eine korrigiert eine FEHLEINGABE (kein Geld geflossen, Beleg wird gelöscht),
+    das andere ist eine echte GELDBEWEGUNG (Beleg bleibt, Erstattungszeile kommt
+    dazu). Ein gemeinsames Schema hätte die beiden Wege optisch gleichgesetzt —
+    und sie sind buchhalterisch das Gegenteil voneinander.
+
+    Kein Betragsfeld: Der Gast bekommt immer 100 % dessen, was er gezahlt hat
+    (Entscheidung vom 25.08.2026). Ein Client-Betrag wäre eine zweite Wahrheit
+    über eine Geldbewegung (Wurzel 3).
+    """
+
+    grund: str = Field(min_length=3, max_length=500)
 
 
 class NachberechnungStatus(BaseModel):

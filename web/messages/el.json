@@ -4463,7 +4463,10 @@
         "addonCancelled": "Πρόσθετη υπηρεσία ακυρώθηκε",
         "surchargePaid": "Πρόσθετη χρέωση πληρώθηκε",
         "surchargePaidManually": "Πρόσθετη χρέωση καταγράφηκε ως πληρωμένη",
-        "surchargeUnpaid": "Η σήμανση πληρωμής αναιρέθηκε"
+        "surchargeUnpaid": "Η σήμανση πληρωμής αναιρέθηκε",
+        "addonRefunded": "Επιστροφή χρημάτων για πρόσθετη υπηρεσία",
+        "surchargeRefunded": "Επιστροφή χρημάτων για εκ των υστέρων χρέωση",
+        "addonRefundFaellig": "Εκκρεμής επιστροφή χρημάτων"
       },
       "title": {
         "onProperty": " στο {property}",
@@ -4493,7 +4496,9 @@
         "amount": "Ποσό",
         "type": "Τύπος",
         "service": "Υπηρεσία",
-        "withdrawnReason": "Λόγος αναίρεσης"
+        "withdrawnReason": "Λόγος αναίρεσης",
+        "refunded": "Επιστράφηκε",
+        "openRefund": "Ανοιχτό ποσό επιστροφής"
       }
     },
     "bookingDetail": {
@@ -4961,7 +4966,14 @@
       "ruecknahmeGrundLabel": "Λόγος αναίρεσης",
       "ruecknahmeGrundPlatzhalter": "π.χ. λανθασμένη καταχώριση",
       "ruecknahmeBestaetigen": "Αναίρεση",
-      "ruecknahmeErfolg": "Η σήμανση πληρωμής αναιρέθηκε."
+      "ruecknahmeErfolg": "Η σήμανση πληρωμής αναιρέθηκε.",
+      "erstatten": "Επιστροφή χρημάτων",
+      "erstattungBestaetigung": "Το ποσό των {betrag} θα επιστραφεί στον επισκέπτη.",
+      "erstattungGrundLabel": "Λόγος επιστροφής χρημάτων",
+      "erstattungGrundPlatzhalter": "π.χ. Ακυρωμένη κράτηση",
+      "erstattungBestaetigen": "Εκτέλεση επιστροφής χρημάτων",
+      "erstattungErfolg": "Το ποσό επιστράφηκε.",
+      "erstattetHinweis": "Επιστράφηκε: {betrag} στις {datum}"
     }
   },
   "objects": {
@@ -6313,7 +6325,11 @@
       "reasonLabel": "Αιτία",
       "reasonPlaceholder": "π.χ. σημάνθηκε ως πληρωμένο εκ παραδρομής",
       "reasonRequired": "Δηλώστε μια αιτία (τουλάχιστον 3 χαρακτήρες).",
-      "reasonLogged": "Αιτία: {grund}"
+      "reasonLogged": "Αιτία: {grund}",
+      "refundAction": "Επιστροφή χρημάτων",
+      "refundConfirm": "Το ποσό των {betrag} θα επιστραφεί στον επισκέπτη. Το στοιχείο θα ακυρωθεί και θα αφαιρεθεί από το τιμολόγιο και την πληρωμή.",
+      "refundSuccess": "Το ποσό επιστράφηκε.",
+      "refundedNote": "Επιστράφηκε: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Κατάλυμα",
@@ -9314,7 +9330,11 @@
       "auszahlen": "Αίτημα πληρωμής",
       "nochNichtFreigeschaltet": "Οι πληρωμές δεν έχουν ενεργοποιηθεί ακόμη για τον λογαριασμό σου.",
       "automatischHinweis": "Το υπόλοιπό σου καταβάλλεται αυτόματα. Για πληρωμή κατόπιν αιτήματος επίλεξε παρακάτω «Μόνο κατόπιν αιτήματος».",
-      "ausstehendHinweis": "Το εκκρεμές υπόλοιπο γίνεται διαθέσιμο μετά την περίοδο εκκαθάρισης."
+      "ausstehendHinweis": "Το εκκρεμές υπόλοιπο γίνεται διαθέσιμο μετά την περίοδο εκκαθάρισης.",
+      "einlage": "Δεσμευμένο ως εγγύηση",
+      "einlageFreiAb": "Ελευθερώνεται στις {datum}",
+      "einlageErstattungFaellig": "Εκκρεμεί επιστροφή χρημάτων",
+      "einlageHinweis": "Μέρος του υπολοίπου δεσμεύεται ως εγγύηση για πιθανές επιστροφές χρημάτων. Απελευθερώνεται μόλις ολοκληρωθούν οι σχετικές διαμονές."
     },
     "rhythmus": {
       "titel": "Ρυθμός πληρωμών",

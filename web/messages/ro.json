@@ -4461,7 +4461,10 @@
         "addonCancelled": "Serviciu suplimentar anulat",
         "surchargePaid": "Suprataxă plătită",
         "surchargePaidManually": "Suprataxă înregistrată ca plătită",
-        "surchargeUnpaid": "Marcaj de plată anulat"
+        "surchargeUnpaid": "Marcaj de plată anulat",
+        "addonRefunded": "Serviciu suplimentar rambursat",
+        "surchargeRefunded": "Recalculare rambursată",
+        "addonRefundFaellig": "Rambursare în așteptare"
       },
       "title": {
         "onProperty": " la {property}",
@@ -4491,7 +4494,9 @@
         "amount": "Sumă",
         "type": "Tip",
         "service": "Serviciu",
-        "withdrawnReason": "Motivul anulării"
+        "withdrawnReason": "Motivul anulării",
+        "refunded": "Rambursat",
+        "openRefund": "Sumă deschisă de rambursat"
       }
     },
     "bookingDetail": {
@@ -4959,7 +4964,14 @@
       "ruecknahmeGrundLabel": "Motivul anulării",
       "ruecknahmeGrundPlatzhalter": "de ex. introdus greșit",
       "ruecknahmeBestaetigen": "Anulează",
-      "ruecknahmeErfolg": "Marcajul de plată a fost anulat."
+      "ruecknahmeErfolg": "Marcajul de plată a fost anulat.",
+      "erstatten": "Rambursare",
+      "erstattungBestaetigung": "{betrag} vor fi rambursate oaspetelui.",
+      "erstattungGrundLabel": "Motivul rambursării",
+      "erstattungGrundPlatzhalter": "ex. rezervare anulată",
+      "erstattungBestaetigen": "Inițiați rambursarea",
+      "erstattungErfolg": "Suma a fost rambursată.",
+      "erstattetHinweis": "Rambursat: {betrag} la {datum}"
     }
   },
   "objects": {
@@ -6311,7 +6323,11 @@
       "reasonLabel": "Motiv",
       "reasonPlaceholder": "de ex. marcat ca plătit din greșeală",
       "reasonRequired": "Indicați un motiv (minimum 3 caractere).",
-      "reasonLogged": "Motiv: {grund}"
+      "reasonLogged": "Motiv: {grund}",
+      "refundAction": "Rambursare",
+      "refundConfirm": "{betrag} vor fi rambursate oaspetelui. Poziția va fi anulată și eliminată din factură și decontare.",
+      "refundSuccess": "Sumă rambursată.",
+      "refundedNote": "Rambursat: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Proprietate",
@@ -9312,7 +9328,11 @@
       "auszahlen": "Solicită plata",
       "nochNichtFreigeschaltet": "Plățile nu sunt încă activate pentru contul tău.",
       "automatischHinweis": "Soldul tău este plătit automat. Pentru o plată la cerere, setează mai jos „Doar la cerere”.",
-      "ausstehendHinweis": "Soldul în așteptare devine disponibil după perioada de decontare."
+      "ausstehendHinweis": "Soldul în așteptare devine disponibil după perioada de decontare.",
+      "einlage": "Blocat ca garanție",
+      "einlageFreiAb": "Va fi deblocat la {datum}",
+      "einlageErstattungFaellig": "Rambursare în așteptare",
+      "einlageHinweis": "O parte din sold este blocată ca garanție pentru posibile rambursări. Aceasta va fi deblocată odată ce sejururile în cauză s-au încheiat."
     },
     "rhythmus": {
       "titel": "Ritmul plăților",

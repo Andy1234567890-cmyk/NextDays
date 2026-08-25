@@ -4461,7 +4461,10 @@
         "addonCancelled": "Doplnková služba stornovaná",
         "surchargePaid": "Doplatok zaplatený",
         "surchargePaidManually": "Doplatok zaznamenaný ako zaplatený",
-        "surchargeUnpaid": "Označenie zaplatené zrušené"
+        "surchargeUnpaid": "Označenie zaplatené zrušené",
+        "addonRefunded": "Doplnková služba vrátená",
+        "surchargeRefunded": "Dodatočný poplatok vrátený",
+        "addonRefundFaellig": "Vrátenie platby čaká"
       },
       "title": {
         "onProperty": " v objekte {property}",
@@ -4491,7 +4494,9 @@
         "amount": "Suma",
         "type": "Druh",
         "service": "Služba",
-        "withdrawnReason": "Dôvod zrušenia"
+        "withdrawnReason": "Dôvod zrušenia",
+        "refunded": "Vrátené",
+        "openRefund": "Otvorená suma na vrátenie"
       }
     },
     "bookingDetail": {
@@ -4959,7 +4964,14 @@
       "ruecknahmeGrundLabel": "Dôvod zrušenia",
       "ruecknahmeGrundPlatzhalter": "napr. zadané omylom",
       "ruecknahmeBestaetigen": "Zrušiť",
-      "ruecknahmeErfolg": "Označenie zaplatené bolo zrušené."
+      "ruecknahmeErfolg": "Označenie zaplatené bolo zrušené.",
+      "erstatten": "Vrátiť peniaze",
+      "erstattungBestaetigung": "{betrag} bude vrátených hosťovi.",
+      "erstattungGrundLabel": "Dôvod vrátenia peňazí",
+      "erstattungGrundPlatzhalter": "napr. rezervácia zrušená",
+      "erstattungBestaetigen": "Vykonať vrátenie peňazí",
+      "erstattungErfolg": "Suma vrátená.",
+      "erstattetHinweis": "Vrátené: {betrag} dňa {datum}"
     }
   },
   "objects": {
@@ -6311,7 +6323,11 @@
       "reasonLabel": "Dôvod",
       "reasonPlaceholder": "napr. omylom označené ako zaplatené",
       "reasonRequired": "Zadajte dôvod (najmenej 3 znaky).",
-      "reasonLogged": "Dôvod: {grund}"
+      "reasonLogged": "Dôvod: {grund}",
+      "refundAction": "Vrátiť peniaze",
+      "refundConfirm": "{betrag} bude vrátených hosťovi. Položka bude zrušená a odstránená z faktúry a vyúčtovania.",
+      "refundSuccess": "Suma vrátená.",
+      "refundedNote": "Vrátené: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -9312,7 +9328,11 @@
       "auszahlen": "Požiadať o výplatu",
       "nochNichtFreigeschaltet": "Výplaty zatiaľ nie sú pre tvoj účet povolené.",
       "automatischHinweis": "Tvoj zostatok sa vypláca automaticky. Pre výplatu na požiadanie nastav nižšie „Len na požiadanie“.",
-      "ausstehendHinweis": "Čakajúci zostatok bude k dispozícii po zúčtovacej lehote."
+      "ausstehendHinweis": "Čakajúci zostatok bude k dispozícii po zúčtovacej lehote.",
+      "einlage": "Zviazané ako zábezpeka",
+      "einlageFreiAb": "Uvoľní sa {datum}",
+      "einlageErstattungFaellig": "Vrátenie platby otvorené",
+      "einlageHinweis": "Časť zostatku je viazaná ako zábezpeka pre prípadné vrátenia platby. Uvoľní sa, akonáhle dotknuté pobyty skončia."
     },
     "rhythmus": {
       "titel": "Rytmus výplat",

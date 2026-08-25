@@ -4461,7 +4461,10 @@
         "addonCancelled": "Servizz addizzjonali kkanċellat",
         "surchargePaid": "Spiża addizzjonali mħallsa",
         "surchargePaidManually": "Spiża addizzjonali rreġistrata bħala mħallsa",
-        "surchargeUnpaid": "Marka ta' ħlas irtirata"
+        "surchargeUnpaid": "Marka ta' ħlas irtirata",
+        "addonRefunded": "Servizz addizzjonali rimborżat",
+        "surchargeRefunded": "Kalkolu mill-ġdid rimborżat",
+        "addonRefundFaellig": "Rimborż pendenti"
       },
       "title": {
         "onProperty": " fuq {property}",
@@ -4491,7 +4494,9 @@
         "amount": "Ammont",
         "type": "Tip",
         "service": "Servizz",
-        "withdrawnReason": "Raġuni għall-irtirar"
+        "withdrawnReason": "Raġuni għall-irtirar",
+        "refunded": "Rimborsat",
+        "openRefund": "Ammont ta' rifużjoni pendenti"
       }
     },
     "bookingDetail": {
@@ -4959,7 +4964,14 @@
       "ruecknahmeGrundLabel": "Raġuni għall-irtirar",
       "ruecknahmeGrundPlatzhalter": "eż. imdaħħal bi żball",
       "ruecknahmeBestaetigen": "Irtira",
-      "ruecknahmeErfolg": "Il-marka ta' ħlas ġiet irtirata."
+      "ruecknahmeErfolg": "Il-marka ta' ħlas ġiet irtirata.",
+      "erstatten": "Rifużjoni",
+      "erstattungBestaetigung": "{betrag} se jiġu rimborsati lill-klijent.",
+      "erstattungGrundLabel": "Raġuni għar-rifużjoni",
+      "erstattungGrundPlatzhalter": "eż. prenotazzjoni kkanċellata",
+      "erstattungBestaetigen": "Ibda rifużjoni",
+      "erstattungErfolg": "Ammont rifuż.",
+      "erstattetHinweis": "Rifuż: {betrag} fil-{datum}"
     }
   },
   "objects": {
@@ -6311,7 +6323,11 @@
       "reasonLabel": "Raġuni",
       "reasonPlaceholder": "eż. immarkat bħala mħallas bi żball",
       "reasonRequired": "Jekk jogħġbok agħti raġuni (minimu 3 karattri).",
-      "reasonLogged": "Raġuni: {grund}"
+      "reasonLogged": "Raġuni: {grund}",
+      "refundAction": "Rifużjoni",
+      "refundConfirm": "{betrag} se jitħallsu lura lill-klijent. L-oġġett se jiġi kkanċellat u jitneħħa mill-fattura u l-kontijiet.",
+      "refundSuccess": "Ammont rifuż.",
+      "refundedNote": "Rifuż: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Proprjetà",
@@ -9312,7 +9328,11 @@
       "auszahlen": "Itlob ħlas",
       "nochNichtFreigeschaltet": "Il-ħlasijiet għadhom mhux attivati għall-kont tiegħek.",
       "automatischHinweis": "Il-bilanċ tiegħek jitħallas awtomatikament. Għal ħlas fuq talba, agħżel „Fuq talba biss” hawn taħt.",
-      "ausstehendHinweis": "Il-bilanċ pendenti jsir disponibbli wara l-perjodu ta’ saldu."
+      "ausstehendHinweis": "Il-bilanċ pendenti jsir disponibbli wara l-perjodu ta’ saldu.",
+      "einlage": "Marbut bħala sigurtà",
+      "einlageFreiAb": "Jinħeles minn {datum}",
+      "einlageErstattungFaellig": "Rifużjoni pendenti",
+      "einlageHinweis": "Parti mill-bilanċ hija marbuta bħala sigurtà għal rifużjonijiet potenzjali. Din tiġi rilaxxata ladarba l-waqfiet affettwati jkunu spiċċaw."
     },
     "rhythmus": {
       "titel": "Ritmu tal-ħlasijiet",

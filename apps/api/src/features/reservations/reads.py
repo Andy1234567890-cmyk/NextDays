@@ -1137,6 +1137,12 @@ class ReadsMixin(ReservationsBase):
             "surcharge_paid",
             "surcharge_paid_manually",
             "surcharge_unpaid",
+            # Erstattung (0473): `reason` ist der Pflicht-Grund einer
+            # Geldrückzahlung („Buchung storniert, 150 DKK erstattet") und damit
+            # Freitext ÜBER Geld — nicht anders zu behandeln als der
+            # Storno-Grund darüber (§4.3).
+            "addon_refunded",
+            "surcharge_refunded",
         }
     )
 

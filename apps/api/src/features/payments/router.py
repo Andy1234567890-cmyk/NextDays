@@ -41,6 +41,7 @@ from .schemas import (
     NachberechnungBezahlt,
     NachberechnungCreate,
     NachberechnungLink,
+    NachberechnungRefund,
     NachberechnungStatus,
     PaymentsDiagnostics,
     PaymentSettings,
@@ -487,6 +488,34 @@ def nachberechnung_bezahlt_zuruecknehmen(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post(
+    "/reservations/{reservation_id}/nachberechnung/{link_id}/erstatten",
+    response_model=NachberechnungLink,
+    dependencies=[_kalender_schreiben],
+)
+def nachberechnung_erstatten(
+    reservation_id: str,
+    link_id: str,
+    req: NachberechnungRefund,
+    service: NachberechnungServiceDep,
+    ctx: _kalender,
+) -> NachberechnungLink:
+    """Eine per Karte bezahlte Nachberechnung erstatten (0473, Grund Pflicht).
+
+    Der Gast bekommt 100 % zurück, die Erstattung läuft im verbundenen Konto.
+    Der Zahlungsbeleg bleibt stehen und bekommt eine Erstattungszeile daneben —
+    anders als bei der Rücknahme einer manuellen Markierung, wo es keinen
+    Geldfluss gab und der Beleg entfernt wird.
+
+    409 bei einer manuell erfassten Zahlung (dann Rücknahme statt Erstattung),
+    bei einer nicht bezahlten Nachberechnung und bei festgeschriebener Rechnung
+    (GoBD → Stornorechnung)."""
+    try:
+        return service.erstatten(ctx, reservation_id, link_id, req.grund)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.delete(
     "/reservations/{reservation_id}/nachberechnung",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -515,9 +544,28 @@ async def stripe_webhook(
     import stripe  # noqa: PLC0415
 
     payload = await request.body()
-    webhook_secret = get_settings().stripe_webhook_secret.get_secret_value()
+    einstellungen = get_settings()
+    # ZWEI Endpunkte, zwei Secrets (0473): der Konto-Endpunkt (unsere eigenen
+    # Events) und der CONNECT-Endpunkt (Events aus den verbundenen Konten der
+    # Betriebe — u. a. `checkout.session.completed`, der Zahlungseingang einer
+    # Zusatzleistung). Stripe stellt je Endpunkt ein eigenes Signing-Secret aus,
+    # beide zeigen aber auf DIESE Route. Deshalb wird gegen jedes konfigurierte
+    # Secret geprüft und das erste akzeptiert.
+    #
+    # Bewusst NICHT über getrennte Routen gelöst: Der Handler ist derselbe, und
+    # eine zweite Route hätte bedeutet, dass jeder neue Event-Typ an zwei Stellen
+    # eingetragen werden muss — genau die Art Doppelpflege, an der
+    # `checkout.session.completed` schon einmal verloren gegangen ist.
+    secrets = [
+        s
+        for s in (
+            einstellungen.stripe_webhook_secret.get_secret_value(),
+            einstellungen.stripe_connect_webhook_secret.get_secret_value(),
+        )
+        if s
+    ]
 
-    if not webhook_secret:
+    if not secrets:
         log.warning("stripe_webhook_secret_not_configured")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -529,16 +577,27 @@ async def stripe_webhook(
             detail="Fehlender Stripe-Signature Header.",
         )
 
-    try:
-        event = stripe.Webhook.construct_event(
-            payload=payload, sig_header=stripe_signature, secret=webhook_secret
+    event = None
+    letzter_fehler: Exception | None = None
+    for secret in secrets:
+        try:
+            event = stripe.Webhook.construct_event(
+                payload=payload, sig_header=stripe_signature, secret=secret
+            )
+            break
+        except stripe.SignatureVerificationError as exc:
+            letzter_fehler = exc
+    if event is None:
+        # Fail-closed (Wurzel 5): Passt zu KEINEM Secret, wird nichts verarbeitet.
+        log.warning(
+            "stripe_webhook_invalid_signature",
+            error=str(letzter_fehler),
+            geprueft=len(secrets),
         )
-    except stripe.SignatureVerificationError as exc:
-        log.warning("stripe_webhook_invalid_signature", error=str(exc))
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Ungültige Stripe-Signatur.",
-        ) from exc
+        ) from letzter_fehler
 
     db = get_service_client()
     handle_stripe_event(db, event, now_iso=datetime.now(UTC).isoformat())

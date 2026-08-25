@@ -4461,7 +4461,10 @@
         "addonCancelled": "Dodatna storitev preklicana",
         "surchargePaid": "Doplačilo plačano",
         "surchargePaidManually": "Doplačilo označeno kot plačano",
-        "surchargeUnpaid": "Oznaka plačano preklicana"
+        "surchargeUnpaid": "Oznaka plačano preklicana",
+        "addonRefunded": "Dodatna storitev povrnjena",
+        "surchargeRefunded": "Dodatni stroški povrnjeni",
+        "addonRefundFaellig": "Povračilo odprto"
       },
       "title": {
         "onProperty": " na {property}",
@@ -4491,7 +4494,9 @@
         "amount": "Znesek",
         "type": "Vrsta",
         "service": "Storitev",
-        "withdrawnReason": "Razlog preklica"
+        "withdrawnReason": "Razlog preklica",
+        "refunded": "Vračilo",
+        "openRefund": "Odprt znesek vračila"
       }
     },
     "bookingDetail": {
@@ -4959,7 +4964,14 @@
       "ruecknahmeGrundLabel": "Razlog preklica",
       "ruecknahmeGrundPlatzhalter": "npr. napačno vneseno",
       "ruecknahmeBestaetigen": "Prekliči",
-      "ruecknahmeErfolg": "Oznaka plačano je bila preklicana."
+      "ruecknahmeErfolg": "Oznaka plačano je bila preklicana.",
+      "erstatten": "Vračilo",
+      "erstattungBestaetigung": "{betrag} bo vrnjen gostu.",
+      "erstattungGrundLabel": "Razlog za vračilo",
+      "erstattungGrundPlatzhalter": "npr. rezervacija preklicana",
+      "erstattungBestaetigen": "Sproži vračilo",
+      "erstattungErfolg": "Znesek vrnjen.",
+      "erstattetHinweis": "Vračilo: {betrag} dne {datum}"
     }
   },
   "objects": {
@@ -6311,7 +6323,11 @@
       "reasonLabel": "Razlog",
       "reasonPlaceholder": "npr. nepravilno označeno kot plačano",
       "reasonRequired": "Vnesite razlog (najmanj 3 znake).",
-      "reasonLogged": "Razlog: {grund}"
+      "reasonLogged": "Razlog: {grund}",
+      "refundAction": "Vračilo",
+      "refundConfirm": "{betrag} bo vrnjen gostu. Postavka bo preklicana in odstranjena z računa in obračuna.",
+      "refundSuccess": "Znesek vrnjen.",
+      "refundedNote": "Vračilo: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Nastanitev",
@@ -9312,7 +9328,11 @@
       "auszahlen": "Zahtevaj izplačilo",
       "nochNichtFreigeschaltet": "Izplačila za tvoj račun še niso omogočena.",
       "automatischHinweis": "Tvoje dobroimetje se izplača samodejno. Za izplačilo na zahtevo spodaj izberi »Samo na zahtevo«.",
-      "ausstehendHinweis": "Dobroimetje v obdelavi bo na voljo po poravnalnem roku."
+      "ausstehendHinweis": "Dobroimetje v obdelavi bo na voljo po poravnalnem roku.",
+      "einlage": "Varnostno vezano",
+      "einlageFreiAb": "Sprosti se {datum}",
+      "einlageErstattungFaellig": "Vračilo odprto",
+      "einlageHinweis": "Del dobroimetja je vezan kot varščina za morebitna vračila. Sprosti se, ko se zadevna bivanja zaključijo."
     },
     "rhythmus": {
       "titel": "Ritem izplačil",

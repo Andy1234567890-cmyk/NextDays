@@ -27,8 +27,64 @@ class _Query:
         self._rows = rows
         self._filters: list[tuple[str, object]] = []
         self._in: tuple[str, list[str]] | None = None
+        self._not = False
+        self._update: dict | None = None
+        self._insert: object | None = None
 
     def select(self, *_c: object) -> _Query:
+        return self
+
+    def update(self, werte: dict) -> _Query:
+        """Minimal-Update für die Fake-DB (0473).
+
+        Gebraucht, seit die Abrechnungsseite offene Zahlungslinks mit Stripe
+        abgleicht und einen bezahlten über `verbuche_zahlung` nachträgt. Die
+        Filter (`eq`/`in_`/`is_`) werden dabei erst in `execute()` ausgewertet —
+        deshalb hält `update` die Werte nur vor und schreibt dort.
+        """
+        self._update = dict(werte)
+        return self
+
+    def insert(self, werte: object) -> _Query:
+        self._insert = werte
+        return self
+
+    def upsert(self, werte: dict, **_k: object) -> _Query:
+        """Minimal-Upsert für die Fake-DB (0473).
+
+        Gebraucht, seit der Auszahlungs-Rhythmus in `payout_settings` landet und
+        nicht mehr direkt an Stripe geht. Ersetzt die Zeile mit demselben
+        `tenant_id` bzw. legt sie an — genau das Verhalten, das der Service von
+        `on_conflict="tenant_id"` erwartet.
+        """
+        schluessel = werte.get("tenant_id")
+        for i, r in enumerate(self._rows):
+            if str(r.get("tenant_id")) == str(schluessel):
+                self._rows[i] = {**r, **werte}
+                return self
+        self._rows.append(dict(werte))
+        return self
+
+    @property
+    def not_(self) -> _Query:
+        self._not = True
+        return self
+
+    def is_(self, col: str, wert: str) -> _Query:
+        """Nur `is_("spalte", "null")` — mit `not_.` davor die Umkehrung.
+
+        Mehr braucht der Slice nicht; ein allgemeiner Filter hier wäre eine
+        zweite, ungetestete Abfrage-Implementierung.
+        """
+        gesetzt = self._not
+        self._not = False
+        if wert != "null":
+            return self
+        self._rows = [
+            r
+            for r in self._rows
+            if (r.get(col) is not None) == gesetzt
+        ]
         return self
 
     def eq(self, col: str, val: object) -> _Query:
@@ -46,6 +102,12 @@ class _Query:
         return self
 
     def execute(self) -> _Result:
+        if self._insert is not None:
+            neu = (
+                self._insert if isinstance(self._insert, list) else [self._insert]
+            )
+            self._rows.extend(dict(z) for z in neu)
+            return _Result(list(neu))
         treffer = [
             r
             for r in self._rows
@@ -54,6 +116,9 @@ class _Query:
         if self._in:
             col, werte = self._in
             treffer = [r for r in treffer if str(r.get(col)) in werte]
+        if self._update is not None:
+            for r in treffer:
+                r.update(self._update)
         return _Result(treffer)
 
 
@@ -63,7 +128,12 @@ class _DB:
         self.tables.update(weitere)
 
     def table(self, name: str) -> _Query:
-        return _Query(self.tables.get(name, []))
+        # setdefault statt get: Ein `upsert` auf eine bislang unbekannte Tabelle
+        # (payout_settings, wenn der Betrieb noch nichts eingestellt hat) muss in
+        # die Fake-DB schreiben und beim nächsten Lesen wieder auftauchen. Mit
+        # `get(name, [])` landete er in einer Wegwerfliste, und der Test hätte
+        # eine Persistenz bestätigt, die es nicht gibt.
+        return _Query(self.tables.setdefault(name, []))
 
 
 def _db(acct: str | None = "acct_1") -> _DB:
@@ -248,13 +318,43 @@ def test_pending_zaehlt_nicht_als_verfuegbar(stripe: _StripeFake) -> None:
 
 # --- Rhythmus ----------------------------------------------------------------
 
-def test_rhythmus_setzen_geht_an_stripe_und_liest_zurueck(stripe: _StripeFake) -> None:
-    res = StripeSaldoService(_db()).rhythmus_setzen(
+def test_rhythmus_setzen_landet_bei_uns_nicht_bei_stripe(stripe: _StripeFake) -> None:
+    """Seit 0473 steuert unser Lauf den Rhythmus, nicht Stripe.
+
+    Vorher ging `rhythmus_setzen` direkt an Stripe. Das ist jetzt falsch: Stripe
+    kennt die Sicherheitseinlage nicht und würde den ganzen Saldo auszahlen,
+    auch den als Deckung zurückgehaltenen Teil. Der Wunsch liegt deshalb in
+    `payout_settings.verbund_interval`, bei Stripe bleibt `manual`.
+    """
+    db = _db()
+    res = StripeSaldoService(db).rhythmus_setzen(
         CTX, StripeRhythmusUpdate(interval="weekly", weekly_anchor="thursday")
     )
-    assert stripe.schedules[0]["interval"] == "weekly"
-    assert stripe.schedules[0]["weekly_anchor"] == "thursday"
+    gespeichert = db.tables["payout_settings"][0]
+    assert gespeichert["verbund_interval"] == "weekly"
+    assert gespeichert["verbund_weekly_anchor"] == "thursday"
     assert res.interval == "weekly"
+    assert res.weekly_anchor == "thursday"
+    # An Stripe geht aus diesem Aufruf KEIN Rhythmus mehr. Die einzige
+    # Umstellung, die noch passiert, ist das Erzwingen von `manual` — und die
+    # entfällt hier, weil der Fake schon auf `manual` steht.
+    assert stripe.schedules == []
+
+
+def test_rhythmus_setzen_raeumt_alten_anker_weg(stripe: _StripeFake) -> None:
+    """Wechsel monatlich → täglich darf keinen Monatstag stehen lassen (Wurzel 1).
+
+    Sonst zahlte der Lauf nach einem späteren Wechsel zurück auf „monatlich" an
+    einem Tag aus, den niemand mehr gewählt hat.
+    """
+    db = _db()
+    svc = StripeSaldoService(db)
+    svc.rhythmus_setzen(CTX, StripeRhythmusUpdate(interval="monthly", monthly_anchor=15))
+    assert db.tables["payout_settings"][0]["verbund_monthly_anchor"] == 15
+    svc.rhythmus_setzen(CTX, StripeRhythmusUpdate(interval="daily"))
+    zeile = db.tables["payout_settings"][0]
+    assert zeile["verbund_interval"] == "daily"
+    assert zeile["verbund_monthly_anchor"] is None
 
 
 def test_rhythmus_manual_erlaubt_danach_die_auszahlung(stripe: _StripeFake) -> None:

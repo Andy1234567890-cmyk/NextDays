@@ -4461,7 +4461,10 @@
         "addonCancelled": "Papildoma paslauga atšaukta",
         "surchargePaid": "Papildomas mokestis apmokėtas",
         "surchargePaidManually": "Papildomas mokestis pažymėtas kaip apmokėtas",
-        "surchargeUnpaid": "Apmokėjimo žyma atšaukta"
+        "surchargeUnpaid": "Apmokėjimo žyma atšaukta",
+        "addonRefunded": "Papildoma paslauga grąžinta",
+        "surchargeRefunded": "Papildomas mokestis grąžintas",
+        "addonRefundFaellig": "Grąžinimas neįvykdytas"
       },
       "title": {
         "onProperty": " objekte {property}",
@@ -4491,7 +4494,9 @@
         "amount": "Suma",
         "type": "Tipas",
         "service": "Paslauga",
-        "withdrawnReason": "Atšaukimo priežastis"
+        "withdrawnReason": "Atšaukimo priežastis",
+        "refunded": "Grąžinta",
+        "openRefund": "Atvira grąžinimo suma"
       }
     },
     "bookingDetail": {
@@ -4959,7 +4964,14 @@
       "ruecknahmeGrundLabel": "Atšaukimo priežastis",
       "ruecknahmeGrundPlatzhalter": "pvz., įvesta per klaidą",
       "ruecknahmeBestaetigen": "Atšaukti",
-      "ruecknahmeErfolg": "Apmokėjimo žyma atšaukta."
+      "ruecknahmeErfolg": "Apmokėjimo žyma atšaukta.",
+      "erstatten": "Grąžinti",
+      "erstattungBestaetigung": "Suma {betrag} bus grąžinta svečiui.",
+      "erstattungGrundLabel": "Grąžinimo priežastis",
+      "erstattungGrundPlatzhalter": "pvz., užsakymas atšauktas",
+      "erstattungBestaetigen": "Inicijuoti grąžinimą",
+      "erstattungErfolg": "Suma grąžinta.",
+      "erstattetHinweis": "Grąžinta: {betrag} {datum}"
     }
   },
   "objects": {
@@ -6311,7 +6323,11 @@
       "reasonLabel": "Priežastis",
       "reasonPlaceholder": "pvz., per klaidą pažymėta kaip apmokėta",
       "reasonRequired": "Nurodykite priežastį (bent 3 simboliai).",
-      "reasonLogged": "Priežastis: {grund}"
+      "reasonLogged": "Priežastis: {grund}",
+      "refundAction": "Grąžinti",
+      "refundConfirm": "Suma {betrag} bus grąžinta svečiui. Ši eilutė bus atšaukta ir pašalinta iš sąskaitos faktūros ir atsiskaitymo.",
+      "refundSuccess": "Suma grąžinta.",
+      "refundedNote": "Grąžinta: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Objektas",
@@ -9312,7 +9328,11 @@
       "auszahlen": "Prašyti išmokos",
       "nochNichtFreigeschaltet": "Išmokos tavo sąskaitai dar neįjungtos.",
       "automatischHinweis": "Tavo likutis išmokamas automatiškai. Jei nori išmokos pagal prašymą, žemiau pasirink „Tik pagal prašymą“.",
-      "ausstehendHinweis": "Laukiantis likutis tampa prieinamas pasibaigus atsiskaitymo terminui."
+      "ausstehendHinweis": "Laukiantis likutis tampa prieinamas pasibaigus atsiskaitymo terminui.",
+      "einlage": "Saugumo užstatas",
+      "einlageFreiAb": "Bus atleistas nuo {datum}",
+      "einlageErstattungFaellig": "Grąžinimas nebaigtas",
+      "einlageHinweis": "Dalis balanso yra saugumo užstatas galimiems grąžinimams. Jis bus atleistas, kai atitinkamos viešnagės pasibaigs."
     },
     "rhythmus": {
       "titel": "Išmokų ritmas",

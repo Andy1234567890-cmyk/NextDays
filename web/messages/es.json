@@ -4463,7 +4463,10 @@
         "addonCancelled": "Servicio adicional anulado",
         "surchargePaid": "Cargo adicional pagado",
         "surchargePaidManually": "Cargo adicional registrado como pagado",
-        "surchargeUnpaid": "Marca de pagado anulada"
+        "surchargeUnpaid": "Marca de pagado anulada",
+        "addonRefunded": "Servicio adicional reembolsado",
+        "surchargeRefunded": "Recargo reembolsado",
+        "addonRefundFaellig": "Reembolso pendiente"
       },
       "title": {
         "onProperty": " en {property}",
@@ -4493,7 +4496,9 @@
         "amount": "Importe",
         "type": "Tipo",
         "service": "Servicio",
-        "withdrawnReason": "Motivo de la anulación"
+        "withdrawnReason": "Motivo de la anulación",
+        "refunded": "Reembolsado",
+        "openRefund": "Importe de reembolso pendiente"
       }
     },
     "bookingDetail": {
@@ -4961,7 +4966,14 @@
       "ruecknahmeGrundLabel": "Motivo de la anulación",
       "ruecknahmeGrundPlatzhalter": "p. ej. registrado por error",
       "ruecknahmeBestaetigen": "Anular",
-      "ruecknahmeErfolg": "La marca de pagado se ha anulado."
+      "ruecknahmeErfolg": "La marca de pagado se ha anulado.",
+      "erstatten": "Reembolsar",
+      "erstattungBestaetigung": "Se reembolsarán {betrag} al huésped.",
+      "erstattungGrundLabel": "Motivo del reembolso",
+      "erstattungGrundPlatzhalter": "p. ej. reserva cancelada",
+      "erstattungBestaetigen": "Realizar reembolso",
+      "erstattungErfolg": "Importe reembolsado.",
+      "erstattetHinweis": "Reembolsado: {betrag} el {datum}"
     }
   },
   "objects": {
@@ -6313,7 +6325,11 @@
       "reasonLabel": "Motivo",
       "reasonPlaceholder": "p. ej., marcado como pagado por error",
       "reasonRequired": "Indica un motivo (al menos 3 caracteres).",
-      "reasonLogged": "Motivo: {grund}"
+      "reasonLogged": "Motivo: {grund}",
+      "refundAction": "Reembolsar",
+      "refundConfirm": "Se reembolsarán {betrag} al huésped. La posición se cancelará y se eliminará de la factura y la contabilidad.",
+      "refundSuccess": "Importe reembolsado.",
+      "refundedNote": "Reembolsado: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Propiedad",
@@ -9314,7 +9330,11 @@
       "auszahlen": "Solicitar pago",
       "nochNichtFreigeschaltet": "Los pagos aún no están habilitados para tu cuenta.",
       "automatischHinweis": "Tu saldo se paga automáticamente. Para solicitar un pago, cambia el ritmo de abajo a «Solo bajo solicitud».",
-      "ausstehendHinweis": "El saldo pendiente estará disponible tras el plazo de liquidación."
+      "ausstehendHinweis": "El saldo pendiente estará disponible tras el plazo de liquidación.",
+      "einlage": "Retención de seguridad",
+      "einlageFreiAb": "Liberación: {datum}",
+      "einlageErstattungFaellig": "Reembolso pendiente",
+      "einlageHinweis": "Parte del saldo está retenida como seguridad para posibles reembolsos. Se liberará una vez finalizadas las estancias afectadas."
     },
     "rhythmus": {
       "titel": "Ritmo de pagos",

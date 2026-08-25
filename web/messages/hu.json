@@ -4463,7 +4463,10 @@
         "addonCancelled": "Kiegészítő szolgáltatás lemondva",
         "surchargePaid": "Pótdíj kifizetve",
         "surchargePaidManually": "Pótdíj fizetettként rögzítve",
-        "surchargeUnpaid": "Fizetve jelölés visszavonva"
+        "surchargeUnpaid": "Fizetve jelölés visszavonva",
+        "addonRefunded": "Kiegészítő szolgáltatás visszatérítve",
+        "surchargeRefunded": "Utólagos terhelés visszatérítve",
+        "addonRefundFaellig": "Visszatérítés függőben"
       },
       "title": {
         "onProperty": " ezen: {property}",
@@ -4493,7 +4496,9 @@
         "amount": "Összeg",
         "type": "Típus",
         "service": "Szolgáltatás",
-        "withdrawnReason": "Visszavonás oka"
+        "withdrawnReason": "Visszavonás oka",
+        "refunded": "Visszatérítve",
+        "openRefund": "Nyitott visszatérítési összeg"
       }
     },
     "bookingDetail": {
@@ -4961,7 +4966,14 @@
       "ruecknahmeGrundLabel": "Visszavonás oka",
       "ruecknahmeGrundPlatzhalter": "pl. tévesen rögzítve",
       "ruecknahmeBestaetigen": "Visszavonás",
-      "ruecknahmeErfolg": "A fizetve jelölés vissza lett vonva."
+      "ruecknahmeErfolg": "A fizetve jelölés vissza lett vonva.",
+      "erstatten": "Visszatérítés",
+      "erstattungBestaetigung": "{betrag} visszatérítésre kerül a vendégnek.",
+      "erstattungGrundLabel": "Visszatérítés oka",
+      "erstattungGrundPlatzhalter": "pl. foglalás törölve",
+      "erstattungBestaetigen": "Visszatérítés indítása",
+      "erstattungErfolg": "Összeg visszatérítve.",
+      "erstattetHinweis": "Visszatérítve: {betrag} ekkor: {datum}"
     }
   },
   "objects": {
@@ -6313,7 +6325,11 @@
       "reasonLabel": "Ok",
       "reasonPlaceholder": "pl. tévedésből fizetettként megjelölve",
       "reasonRequired": "Adjon meg egy okot (legalább 3 karakter).",
-      "reasonLogged": "Ok: {grund}"
+      "reasonLogged": "Ok: {grund}",
+      "refundAction": "Visszatérítés",
+      "refundConfirm": "{betrag} visszatérítésre kerül a vendégnek. A tétel törlődik, és kikerül a számlából és az elszámolásból.",
+      "refundSuccess": "Összeg visszatérítve.",
+      "refundedNote": "Visszatérítve: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Ingatlan",
@@ -9314,7 +9330,11 @@
       "auszahlen": "Kifizetés igénylése",
       "nochNichtFreigeschaltet": "A kifizetések még nincsenek engedélyezve a fiókodhoz.",
       "automatischHinweis": "Az egyenleged automatikusan kifizetésre kerül. Igény szerinti kifizetéshez állítsd lent „Csak igénylésre” értékre.",
-      "ausstehendHinweis": "A függőben lévő egyenleg az elszámolási idő után válik elérhetővé."
+      "ausstehendHinweis": "A függőben lévő egyenleg az elszámolási idő után válik elérhetővé.",
+      "einlage": "Biztosítékként lekötve",
+      "einlageFreiAb": "Felszabadul ekkor: {datum}",
+      "einlageErstattungFaellig": "Visszatérítés függőben",
+      "einlageHinweis": "Az egyenleg egy része biztosítékként le van kötve az esetleges visszatérítésekre. Akkor szabadul fel, amint az érintett tartózkodások véget érnek."
     },
     "rhythmus": {
       "titel": "Kifizetési ütem",

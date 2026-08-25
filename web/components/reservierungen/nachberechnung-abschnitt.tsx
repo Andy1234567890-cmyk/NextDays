@@ -35,6 +35,7 @@ import {
   erfasseNachberechnungBezahlt,
   getNachberechnung,
   markNachberechnungBezahlt,
+  erstatteNachberechnung,
   nimmNachberechnungZurueck,
   sendNachberechnung,
   type NachberechnungStatus,
@@ -62,6 +63,14 @@ export function NachberechnungAbschnitt({
   // deshalb ein eigenes Feld statt eines stillen Klicks.
   const [ruecknahmeId, setRuecknahmeId] = useState<string | null>(null);
   const [ruecknahmeGrund, setRuecknahmeGrund] = useState("");
+  // Erstattung einer per Karte bezahlten Nachberechnung (0473). Eigener Zustand
+  // neben der Rücknahme, weil die beiden buchhalterisch Gegenteile sind: Die
+  // Rücknahme korrigiert eine Fehleingabe (kein Geld geflossen, Beleg wird
+  // gelöscht), die Erstattung zahlt echtes Geld zurück (Beleg bleibt, eine
+  // Erstattungszeile kommt dazu). Ein gemeinsames Feld hätte beide Wege optisch
+  // gleichgesetzt.
+  const [erstattungId, setErstattungId] = useState<string | null>(null);
+  const [erstattungGrund, setErstattungGrund] = useState("");
 
   const laden = useCallback(async () => {
     const res = await getNachberechnung(reservationId);
@@ -226,6 +235,33 @@ export function NachberechnungAbschnitt({
     await laden();
     onChanged?.();
     toast.success(t("ruecknahmeErfolg"));
+  }
+
+  async function erstattungBestaetigen() {
+    if (!erstattungId) return;
+    if (erstattungGrund.trim().length < 3) {
+      toast.error(t("grundFehlt"));
+      return;
+    }
+    setBusy(true);
+    const res = await erstatteNachberechnung(
+      reservationId,
+      erstattungId,
+      erstattungGrund.trim(),
+    );
+    setBusy(false);
+    if (!res.ok) {
+      // Feld offen lassen: Der eingetippte Grund darf bei einem 409 nicht
+      // verloren gehen.
+      toast.error(res.error);
+      return;
+    }
+    setErstattungId(null);
+    setErstattungGrund("");
+    await laden();
+    // Die Erstattung senkt `paid_amount` der Buchung → Detail neu rechnen.
+    onChanged?.();
+    toast.success(t("erstattungErfolg"));
   }
 
   // Ohne Stand (Ladefehler) und ohne Möglichkeit UND ohne offenen Link gibt es
@@ -417,10 +453,74 @@ export function NachberechnungAbschnitt({
                   {money(z.amount_cents / 100)}
                 </span>
               </div>
+              {/* Schon erstattet: dauerhaft sichtbar, damit später nachvollziehbar
+                  bleibt, dass der Gast sein Geld zurückbekommen hat. */}
+              {z.refunded_at && (
+                <p className="text-xs text-destructive">
+                  {t("erstattetHinweis", {
+                    betrag: money(z.refunded_cents / 100),
+                    datum: new Date(z.refunded_at).toLocaleDateString(locale),
+                  })}
+                  {z.refund_reason ? ` · ${z.refund_reason}` : ""}
+                </p>
+              )}
+              {/* Erstatten NUR bei einer Kartenzahlung (0473) — das Gegenstück
+                  zur Rücknahme darunter. Beide Knöpfe schließen sich aus:
+                  `bezahlt_manuell` entscheidet, welcher Weg fachlich richtig
+                  ist, und das Backend prüft dasselbe erneut. */}
+              {!z.bezahlt_manuell && !z.refunded_at && erstattungId !== z.id && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErstattungId(z.id);
+                    setErstattungGrund("");
+                  }}
+                  className="self-start text-xs text-muted-foreground underline hover:text-destructive"
+                >
+                  {t("erstatten")}
+                </button>
+              )}
+              {erstattungId === z.id && (
+                <div className="flex flex-col gap-2 rounded-(--radius) border border-destructive/30 p-2">
+                  <p className="text-xs text-destructive">
+                    {t("erstattungBestaetigung", {
+                      betrag: money(z.amount_cents / 100),
+                    })}
+                  </p>
+                  <div className="flex flex-wrap items-end gap-2">
+                    <label className="flex min-w-48 flex-1 flex-col gap-1 text-xs text-muted-foreground">
+                      {t("erstattungGrundLabel")}
+                      <Input
+                        value={erstattungGrund}
+                        onChange={(e) => setErstattungGrund(e.target.value)}
+                        maxLength={500}
+                        placeholder={t("erstattungGrundPlatzhalter")}
+                      />
+                    </label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={() => void erstattungBestaetigen()}
+                      disabled={busy || erstattungGrund.trim().length < 3}
+                    >
+                      {t("erstattungBestaetigen")}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setErstattungId(null)}
+                    >
+                      {tc("cancel")}
+                    </Button>
+                  </div>
+                </div>
+              )}
               {/* Rücknahme NUR bei einer manuellen Markierung: eine über Stripe
                   eingegangene Zahlung ist eine Tatsache und wird erstattet,
                   nicht umgedeutet (das entscheidet auch das Backend). */}
-              {z.bezahlt_manuell && ruecknahmeId !== z.id && (
+              {z.bezahlt_manuell && !z.refunded_at && ruecknahmeId !== z.id && (
                 <button
                   type="button"
                   onClick={() => {

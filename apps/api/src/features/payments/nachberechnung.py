@@ -69,7 +69,7 @@ _LINK_COLS = (
     "stripe_price_id, stripe_product_id, url, currency, amount_cents, "
     "application_fee_cents, fee_bps, status, grund, basis_total_amount, "
     "checkout_session_id, payment_intent_id, paid_at, created_at, "
-    "paid_manually, unpaid_at"
+    "paid_manually, unpaid_at, refunded_cents, refunded_at, refund_reason"
 )
 
 _RES_COLS = (
@@ -108,6 +108,9 @@ def _antwort(row: dict, *, aktuelles_total: float | None = None) -> Nachberechnu
         betrag_veraltet=veraltet,
         paid_at=row.get("paid_at"),
         created_at=row.get("created_at"),
+        refunded_cents=int(row.get("refunded_cents") or 0),
+        refunded_at=row.get("refunded_at"),
+        refund_reason=row.get("refund_reason"),
     )
 
 
@@ -324,6 +327,7 @@ class NachberechnungService:
             session_id=str(session["id"]),
             payment_intent=session.get("payment_intent"),
             amount_total=session.get("amount_total"),
+            bezahlt_am=session.get("created"),
         )
         rows = (
             self._db.table("reservation_charge_links")
@@ -684,6 +688,143 @@ class NachberechnungService:
             by=ctx.user_id,
         )
 
+    def erstatten(
+        self, ctx: AuthContext, reservation_id: str, link_id: str, grund: str
+    ) -> NachberechnungLink:
+        """Eine per KARTE bezahlte Nachberechnung erstatten (0473).
+
+        Das Gegenstück zu `bezahlt_zuruecknehmen` — und buchhalterisch dessen
+        Gegenteil: Dort wurde nur ein falscher Haken gesetzt (Beleg weg, kein
+        Geldfluss), hier ist echtes Geld eingegangen und geht zurück. Der Beleg
+        BLEIBT deshalb stehen und bekommt eine Erstattungszeile daneben; gelöscht
+        wird nichts. `bezahlt_zuruecknehmen` verwies bislang auf „bitte über die
+        Zahlungsansicht erstatten" — dort gab es diesen Weg nicht.
+
+        Der Gast bekommt 100 % des Betrags; unsere Provision bleibt einbehalten
+        (bei Website-Buchungen ist sie ohnehin 0, weil sie provisionsfrei sind,
+        0380 — das Feld bleibt trotzdem unangetastet, statt hier eine Annahme
+        über den Satz zu treffen).
+
+        Gegenzustände, die mit müssen (Wurzel 1) — beide waren beim
+        Bezahlt-Erfassen aufgebaut worden und müssen jetzt zurück:
+          * `reservations.paid_amount` sinkt wieder, sonst führt die Buchung ein
+            „bereits bezahlt", das der Gast nicht mehr bezahlt hat, und der
+            Check-out schreibt es in die Rechnung fest.
+          * Die geplante Restzahlung wird nachgezogen (`passe_restzahlung_an` in
+            `_senke_bezahlt`), sonst zieht der Worker-Tick zu wenig ein.
+
+        Fail-closed: Erst Stripe, dann unsere Bücher. Eine festgeschriebene
+        Rechnung sperrt (GoBD) — eine erstattete Position aus einer nummerierten
+        Rechnung zu nehmen wäre ein Beleg-Bruch; das läuft über die
+        Stornorechnung.
+        """
+        from .erstattung_direkt import ErstattungFehler, erstatte  # noqa: PLC0415
+
+        tenant_id = self._tenant(ctx)
+        self._reservierung(tenant_id, reservation_id)
+        grund_sauber = (grund or "").strip()
+        if len(grund_sauber) < 3:
+            raise PaymentsError(
+                "Bitte einen Grund angeben (mindestens 3 Zeichen).",
+                status_code=422,
+            )
+        rows = (
+            self._db.table("reservation_charge_links")
+            .select(_LINK_COLS)
+            .eq("tenant_id", tenant_id)
+            .eq("reservation_id", reservation_id)
+            .eq("id", link_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise PaymentsError("Nachberechnung nicht gefunden.", status_code=404)
+        zeile = rows[0]
+        if zeile.get("refunded_at"):
+            # Idempotent (Wurzel 2): schon erstattet → kein zweites
+            # Geldereignis, aber auch kein Fehler.
+            return _antwort(zeile)
+        if str(zeile.get("status")) != "paid":
+            raise PaymentsError(
+                "Diese Nachberechnung ist nicht bezahlt — es gibt nichts zu "
+                "erstatten.",
+                status_code=409,
+            )
+        if zeile.get("paid_manually"):
+            raise PaymentsError(
+                "Diese Zahlung wurde von Hand als bezahlt erfasst, es ist kein "
+                "Geld über Stripe eingegangen. Bitte die Bezahlt-Markierung "
+                "zurücknehmen statt zu erstatten.",
+                status_code=409,
+            )
+        intent = str(zeile.get("payment_intent_id") or "")
+        acct = str(zeile.get("stripe_account_id") or "")
+        if not intent or not acct:
+            # Wurzel 4: kein Ersatzwert. Ohne Intent und Konto gibt es keinen
+            # Charge, den wir erstatten könnten — das ist ein Datenfehler.
+            raise PaymentsError(
+                "Zu dieser Nachberechnung ist kein Stripe-Zahlungsvorgang "
+                "hinterlegt — Erstattung nicht möglich.",
+                status_code=409,
+            )
+        self._pruefe_keine_rechnung(tenant_id, reservation_id)
+
+        betrag = int(zeile["amount_cents"]) - int(zeile.get("refunded_cents") or 0)
+        if betrag <= 0:
+            return _antwort(zeile)
+        try:
+            ergebnis = erstatte(
+                self._db,
+                payment_intent_id=intent,
+                acct=acct,
+                betrag_cents=betrag,
+                currency=str(zeile["currency"]),
+                reservation_id=reservation_id,
+                quell_session_id=str(zeile.get("checkout_session_id") or ""),
+                idempotenz_schluessel=f"surchargerefund:{link_id}:{betrag}",
+                kontext={"link_id": link_id},
+            )
+        except ErstattungFehler as exc:
+            raise PaymentsError(exc.message, status_code=exc.status_code) from exc
+
+        # Ab hier ist das Geld beim Gast — kein Schritt darunter darf den Vorgang
+        # noch als Fehlschlag melden.
+        geclaimt = (
+            self._db.table("reservation_charge_links")
+            .update(
+                {
+                    "status": "refunded",
+                    "refunded_cents": int(zeile["amount_cents"]),
+                    "refunded_at": _jetzt(),
+                    "refund_reason": grund_sauber,
+                    "refunded_by": ctx.user_id,
+                }
+            )
+            .eq("id", link_id)
+            .is_("refunded_at", "null")
+            .execute()
+        ).data or []
+        if not geclaimt:
+            log.warning(
+                "nachberechnung_erstattung_schon_vermerkt",
+                id=link_id,
+                refund_id=ergebnis["refund_id"],
+            )
+            return _antwort(zeile)
+        _senke_bezahlt(
+            self._db, zeile, grund=grund_sauber, kind="surcharge_refunded"
+        )
+        log.info(
+            "nachberechnung_erstattet",
+            tenant_id=tenant_id,
+            reservation_id=reservation_id,
+            id=link_id,
+            betrag_cents=betrag,
+            refund_id=ergebnis["refund_id"],
+            by=ctx.user_id,
+        )
+        return _antwort(geclaimt[0])
+
     def _pruefe_keine_rechnung(self, tenant_id: str, reservation_id: str) -> None:
         """409, wenn zur Buchung schon eine festgeschriebene Rechnung existiert.
 
@@ -884,6 +1025,7 @@ def verbuche_zahlung(
     session_id: str,
     payment_intent: str | None,
     amount_total: int | None,
+    bezahlt_am: int | None = None,
 ) -> None:
     """Bezahlte Nachberechnung verbuchen: Beleg, `paid_amount`, Zeitleiste.
 
@@ -894,6 +1036,12 @@ def verbuche_zahlung(
 
     Betragsabgleich (Wurzel 5): Weicht die bezahlte Summe vom Link ab, wird
     NICHT verbucht — lieber sichtbar offen als still falsch.
+
+    ``bezahlt_am`` ist der Stripe-Zeitstempel der Session (Unix-Sekunden) und
+    damit der Zeitpunkt der GASTzahlung. Er wird als `paid_at` geschrieben, nicht
+    unsere Uhr (Wurzel 5b) — dieser Weg läuft auch als Nachlese Tage nach der
+    Zahlung, und dann beschreibt unsere Uhr nur unsere Verarbeitung. Fehlt der
+    Wert, wird die eigene Uhr genommen UND das laut gemeldet.
     """
     link_id = str(link["id"])
     if amount_total is not None and int(amount_total) != int(link["amount_cents"]):
@@ -904,7 +1052,13 @@ def verbuche_zahlung(
             erhalten=int(amount_total),
         )
         return
-    jetzt = _jetzt()
+    if bezahlt_am is None:
+        log.warning(
+            "nachberechnung_ohne_quell_zeitstempel", id=link_id, session=session_id
+        )
+        gezahlt = _jetzt()
+    else:
+        gezahlt = datetime.fromtimestamp(int(bezahlt_am), UTC).isoformat()
     geclaimt = (
         db.table("reservation_charge_links")
         .update(
@@ -912,7 +1066,7 @@ def verbuche_zahlung(
                 "status": "paid",
                 "checkout_session_id": session_id,
                 "payment_intent_id": payment_intent,
-                "paid_at": jetzt,
+                "paid_at": gezahlt,
             }
         )
         .eq("id", link_id)
@@ -1059,11 +1213,18 @@ def _storniere_manuell(db: Client, link: dict, *, grund: str) -> None:
         .eq("gateway_ref", f"manuell:{link['id']}")
         .execute()
     )
-    _senke_bezahlt(db, link, grund=grund)
+    _senke_bezahlt(db, link, grund=grund, kind="surcharge_unpaid")
 
 
-def _senke_bezahlt(db: Client, link: dict, *, grund: str) -> None:
+def _senke_bezahlt(db: Client, link: dict, *, grund: str, kind: str) -> None:
     """`reservations.paid_amount` um eine zurückgenommene Nachberechnung senken.
+
+    `kind` ist PFLICHT und hat bewusst keinen Default: Zwei Wege senken den
+    bezahlten Betrag und sie bedeuten Gegensätzliches — die Rücknahme einer
+    Fehleingabe (`surcharge_unpaid`, kein Geld geflossen) und eine echte
+    Erstattung (`surcharge_refunded`, Geld ist zurückgegangen). Ein Default
+    hätte den nächsten Aufrufer stillschweigend die falsche Auskunft in die
+    Zeitleiste schreiben lassen.
 
     Spiegelbild zu `_erhoehe_bezahlt`. Ohne diesen Schritt behielte die Buchung
     ein „bereits bezahlt", das niemand gezahlt hat — und der Check-out schriebe
@@ -1104,7 +1265,7 @@ def _senke_bezahlt(db: Client, link: dict, *, grund: str) -> None:
             {
                 "tenant_id": str(link["tenant_id"]),
                 "reservation_id": reservation_id,
-                "kind": "surcharge_unpaid",
+                "kind": kind,
                 "detail": {
                     "amount": round(int(link["amount_cents"]) / 100, 2),
                     "currency": str(link["currency"]),
@@ -1180,5 +1341,6 @@ def verbuche_checkout_session(
         session_id=str(_feld(session, "id")),
         payment_intent=_feld(session, "payment_intent"),
         amount_total=_feld(session, "amount_total"),
+        bezahlt_am=_feld(session, "created"),
     )
     return True

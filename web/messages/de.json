@@ -4484,7 +4484,10 @@
         "addonCancelled": "Zusatzleistung storniert",
         "surchargePaid": "Nachberechnung bezahlt",
         "surchargePaidManually": "Nachberechnung als bezahlt vermerkt",
-        "surchargeUnpaid": "Bezahlt-Markierung zurückgenommen"
+        "surchargeUnpaid": "Bezahlt-Markierung zurückgenommen",
+        "addonRefunded": "Zusatzleistung erstattet",
+        "surchargeRefunded": "Nachberechnung erstattet",
+        "addonRefundFaellig": "Erstattung offen"
       },
       "title": {
         "onProperty": " auf {property}",
@@ -4514,7 +4517,9 @@
         "amount": "Betrag",
         "type": "Art",
         "service": "Leistung",
-        "withdrawnReason": "Grund der Rücknahme"
+        "withdrawnReason": "Grund der Rücknahme",
+        "refunded": "Erstattet",
+        "openRefund": "Offener Erstattungsbetrag"
       }
     },
     "bookingDetail": {
@@ -5094,7 +5099,14 @@
       "ruecknahmeGrundLabel": "Grund der Rücknahme",
       "ruecknahmeGrundPlatzhalter": "z. B. falsch erfasst",
       "ruecknahmeBestaetigen": "Zurücknehmen",
-      "ruecknahmeErfolg": "Die Bezahlt-Markierung ist zurückgenommen."
+      "ruecknahmeErfolg": "Die Bezahlt-Markierung ist zurückgenommen.",
+      "erstatten": "Erstatten",
+      "erstattungBestaetigung": "{betrag} werden dem Gast zurückgezahlt.",
+      "erstattungGrundLabel": "Grund der Erstattung",
+      "erstattungGrundPlatzhalter": "z. B. Buchung storniert",
+      "erstattungBestaetigen": "Erstattung auslösen",
+      "erstattungErfolg": "Betrag erstattet.",
+      "erstattetHinweis": "Erstattet: {betrag} am {datum}"
     }
   },
   "objects": {
@@ -6457,7 +6469,11 @@
       "reasonLabel": "Grund",
       "reasonPlaceholder": "z. B. versehentlich als bezahlt markiert",
       "reasonRequired": "Bitte einen Grund angeben (mindestens 3 Zeichen).",
-      "reasonLogged": "Grund: {grund}"
+      "reasonLogged": "Grund: {grund}",
+      "refundAction": "Erstatten",
+      "refundConfirm": "{betrag} werden dem Gast zurückgezahlt. Die Position wird storniert und fällt aus Rechnung und Abrechnung heraus.",
+      "refundSuccess": "Betrag erstattet.",
+      "refundedNote": "Erstattet: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Objekt",
@@ -10015,7 +10031,11 @@
       "auszahlen": "Auszahlung beantragen",
       "nochNichtFreigeschaltet": "Auszahlungen sind für dein Konto noch nicht freigeschaltet.",
       "automatischHinweis": "Dein Guthaben wird automatisch ausgezahlt. Für eine Auszahlung auf Antrag stelle den Rhythmus unten auf „Nur auf Antrag“.",
-      "ausstehendHinweis": "Ausstehendes Guthaben wird nach der Abwicklungsfrist verfügbar."
+      "ausstehendHinweis": "Ausstehendes Guthaben wird nach der Abwicklungsfrist verfügbar.",
+      "einlage": "Als Sicherheit gebunden",
+      "einlageFreiAb": "Wird frei ab {datum}",
+      "einlageErstattungFaellig": "Erstattung offen",
+      "einlageHinweis": "Ein Teil des Guthabens ist als Sicherheit für mögliche Erstattungen gebunden. Er wird frei, sobald die betroffenen Aufenthalte vorbei sind."
     },
     "rhythmus": {
       "titel": "Auszahlungs-Rhythmus",

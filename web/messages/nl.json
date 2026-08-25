@@ -4461,7 +4461,10 @@
         "addonCancelled": "Extra geannuleerd",
         "surchargePaid": "Naberekening betaald",
         "surchargePaidManually": "Naberekening als betaald geregistreerd",
-        "surchargeUnpaid": "Betaalmarkering ongedaan gemaakt"
+        "surchargeUnpaid": "Betaalmarkering ongedaan gemaakt",
+        "addonRefunded": "Extra terugbetaald",
+        "surchargeRefunded": "Nacalculatie terugbetaald",
+        "addonRefundFaellig": "Terugbetaling open"
       },
       "title": {
         "onProperty": " bij {property}",
@@ -4491,7 +4494,9 @@
         "amount": "Bedrag",
         "type": "Soort",
         "service": "Dienst",
-        "withdrawnReason": "Reden voor het ongedaan maken"
+        "withdrawnReason": "Reden voor het ongedaan maken",
+        "refunded": "Terugbetaald",
+        "openRefund": "Openstaand terug te betalen bedrag"
       }
     },
     "bookingDetail": {
@@ -4959,7 +4964,14 @@
       "ruecknahmeGrundLabel": "Reden voor het ongedaan maken",
       "ruecknahmeGrundPlatzhalter": "bijv. verkeerd ingevoerd",
       "ruecknahmeBestaetigen": "Ongedaan maken",
-      "ruecknahmeErfolg": "De betaalmarkering is ongedaan gemaakt."
+      "ruecknahmeErfolg": "De betaalmarkering is ongedaan gemaakt.",
+      "erstatten": "Terugbetalen",
+      "erstattungBestaetigung": "{betrag} wordt aan de gast terugbetaald.",
+      "erstattungGrundLabel": "Reden voor terugbetaling",
+      "erstattungGrundPlatzhalter": "Bijv. boeking geannuleerd",
+      "erstattungBestaetigen": "Terugbetaling uitvoeren",
+      "erstattungErfolg": "Bedrag terugbetaald.",
+      "erstattetHinweis": "Terugbetaald: {betrag} op {datum}"
     }
   },
   "objects": {
@@ -6311,7 +6323,11 @@
       "reasonLabel": "Reden",
       "reasonPlaceholder": "bijv. per ongeluk als betaald gemarkeerd",
       "reasonRequired": "Geef een reden op (minimaal 3 tekens).",
-      "reasonLogged": "Reden: {grund}"
+      "reasonLogged": "Reden: {grund}",
+      "refundAction": "Terugbetalen",
+      "refundConfirm": "{betrag} wordt terugbetaald aan de gast. Het item wordt geannuleerd en verwijderd van factuur en afrekening.",
+      "refundSuccess": "Bedrag terugbetaald.",
+      "refundedNote": "Terugbetaald: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Object",
@@ -9312,7 +9328,11 @@
       "auszahlen": "Uitbetaling aanvragen",
       "nochNichtFreigeschaltet": "Uitbetalingen zijn nog niet vrijgegeven voor je account.",
       "automatischHinweis": "Je saldo wordt automatisch uitbetaald. Wil je op aanvraag uitbetalen, zet het ritme hieronder op „Alleen op aanvraag”.",
-      "ausstehendHinweis": "Saldo in behandeling komt na de verwerkingstermijn beschikbaar."
+      "ausstehendHinweis": "Saldo in behandeling komt na de verwerkingstermijn beschikbaar.",
+      "einlage": "Geblokkeerd als borg",
+      "einlageFreiAb": "Vrijgegeven op {datum}",
+      "einlageErstattungFaellig": "Terugbetaling open",
+      "einlageHinweis": "Een deel van het tegoed is geblokkeerd als borg voor mogelijke terugbetalingen. Het wordt vrijgegeven zodra de betreffende verblijven zijn afgelopen."
     },
     "rhythmus": {
       "titel": "Uitbetalingsritme",

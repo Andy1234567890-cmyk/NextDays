@@ -4461,7 +4461,10 @@
         "addonCancelled": "Servizio aggiuntivo annullato",
         "surchargePaid": "Supplemento pagato",
         "surchargePaidManually": "Supplemento registrato come pagato",
-        "surchargeUnpaid": "Segno di pagato annullato"
+        "surchargeUnpaid": "Segno di pagato annullato",
+        "addonRefunded": "Servizio extra rimborsato",
+        "surchargeRefunded": "Ricalcolo rimborsato",
+        "addonRefundFaellig": "Rimborso in sospeso"
       },
       "title": {
         "onProperty": " su {property}",
@@ -4491,7 +4494,9 @@
         "amount": "Importo",
         "type": "Tipo",
         "service": "Servizio",
-        "withdrawnReason": "Motivo dell'annullamento"
+        "withdrawnReason": "Motivo dell'annullamento",
+        "refunded": "Rimborsato",
+        "openRefund": "Importo rimborsabile aperto"
       }
     },
     "bookingDetail": {
@@ -4959,7 +4964,14 @@
       "ruecknahmeGrundLabel": "Motivo dell'annullamento",
       "ruecknahmeGrundPlatzhalter": "ad es. inserito per errore",
       "ruecknahmeBestaetigen": "Annulla",
-      "ruecknahmeErfolg": "Il segno di pagato è stato annullato."
+      "ruecknahmeErfolg": "Il segno di pagato è stato annullato.",
+      "erstatten": "Rimborsa",
+      "erstattungBestaetigung": "{betrag} saranno rimborsati all'ospite.",
+      "erstattungGrundLabel": "Motivo del rimborso",
+      "erstattungGrundPlatzhalter": "es. prenotazione annullata",
+      "erstattungBestaetigen": "Avvia rimborso",
+      "erstattungErfolg": "Importo rimborsato.",
+      "erstattetHinweis": "Rimborsato: {betrag} il {datum}"
     }
   },
   "objects": {
@@ -6311,7 +6323,11 @@
       "reasonLabel": "Motivo",
       "reasonPlaceholder": "ad es. contrassegnato come pagato per errore",
       "reasonRequired": "Indica un motivo (almeno 3 caratteri).",
-      "reasonLogged": "Motivo: {grund}"
+      "reasonLogged": "Motivo: {grund}",
+      "refundAction": "Rimborsa",
+      "refundConfirm": "{betrag} saranno rimborsati all'ospite. La posizione verrà annullata ed eliminata dalla fattura e dalla contabilità.",
+      "refundSuccess": "Importo rimborsato.",
+      "refundedNote": "Rimborsato: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Struttura",
@@ -9312,7 +9328,11 @@
       "auszahlen": "Richiedi pagamento",
       "nochNichtFreigeschaltet": "I pagamenti non sono ancora abilitati per il tuo conto.",
       "automatischHinweis": "Il tuo saldo viene pagato automaticamente. Per un pagamento su richiesta imposta il ritmo qui sotto su «Solo su richiesta».",
-      "ausstehendHinweis": "Il saldo in sospeso diventa disponibile dopo il periodo di regolamento."
+      "ausstehendHinweis": "Il saldo in sospeso diventa disponibile dopo il periodo di regolamento.",
+      "einlage": "Vincolato come garanzia",
+      "einlageFreiAb": "Sblocco a partire dal {datum}",
+      "einlageErstattungFaellig": "Rimborso in sospeso",
+      "einlageHinweis": "Una parte del credito è vincolata come garanzia per eventuali rimborsi. Verrà sbloccata una volta terminati i soggiorni interessati."
     },
     "rhythmus": {
       "titel": "Ritmo dei pagamenti",

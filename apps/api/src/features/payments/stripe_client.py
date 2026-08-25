@@ -636,6 +636,13 @@ def find_paid_session(
                 "payment_intent": getattr(session, "payment_intent", None),
                 "amount_total": getattr(session, "amount_total", None),
                 "currency": getattr(session, "currency", None),
+                # WANN der Gast bezahlt hat — aus der Quelle, nicht von unserer
+                # Uhr (Wurzel 5b). Dieser Abgleich läuft Tage nach der Zahlung:
+                # live am 25.08.2026 wurde eine Zahlung vom 20.08. 15:54 nach-
+                # verbucht und trug danach „25.08. 16:34". Eine plausible, falsche
+                # Angabe über ein fremdes Ereignis — genau der Fehler, den
+                # niemand als Bug erkennt.
+                "created": getattr(session, "created", None),
             }
     return None
 

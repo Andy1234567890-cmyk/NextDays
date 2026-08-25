@@ -4461,7 +4461,10 @@
         "addonCancelled": "Usługa dodatkowa anulowana",
         "surchargePaid": "Dopłata opłacona",
         "surchargePaidManually": "Dopłata oznaczona jako opłacona",
-        "surchargeUnpaid": "Oznaczenie jako opłacone cofnięte"
+        "surchargeUnpaid": "Oznaczenie jako opłacone cofnięte",
+        "addonRefunded": "Zwrot dodatkowej usługi",
+        "surchargeRefunded": "Zwrot ponownego naliczenia",
+        "addonRefundFaellig": "Zwrot otwarty"
       },
       "title": {
         "onProperty": " w obiekcie {property}",
@@ -4491,7 +4494,9 @@
         "amount": "Kwota",
         "type": "Rodzaj",
         "service": "Usługa",
-        "withdrawnReason": "Powód cofnięcia"
+        "withdrawnReason": "Powód cofnięcia",
+        "refunded": "Zwrócono",
+        "openRefund": "Otwarta kwota zwrotu"
       }
     },
     "bookingDetail": {
@@ -4959,7 +4964,14 @@
       "ruecknahmeGrundLabel": "Powód cofnięcia",
       "ruecknahmeGrundPlatzhalter": "np. wprowadzone przez pomyłkę",
       "ruecknahmeBestaetigen": "Cofnij",
-      "ruecknahmeErfolg": "Oznaczenie jako opłacone zostało cofnięte."
+      "ruecknahmeErfolg": "Oznaczenie jako opłacone zostało cofnięte.",
+      "erstatten": "Zwrot",
+      "erstattungBestaetigung": "Kwota {betrag} zostanie zwrócona gościowi.",
+      "erstattungGrundLabel": "Powód zwrotu",
+      "erstattungGrundPlatzhalter": "np. rezerwacja anulowana",
+      "erstattungBestaetigen": "Zrealizuj zwrot",
+      "erstattungErfolg": "Kwota zwrócona.",
+      "erstattetHinweis": "Zwrócono: {betrag} w dniu {datum}"
     }
   },
   "objects": {
@@ -6311,7 +6323,11 @@
       "reasonLabel": "Powód",
       "reasonPlaceholder": "np. omyłkowo oznaczone jako opłacone",
       "reasonRequired": "Podaj powód (co najmniej 3 znaki).",
-      "reasonLogged": "Powód: {grund}"
+      "reasonLogged": "Powód: {grund}",
+      "refundAction": "Zwrot",
+      "refundConfirm": "{betrag} zostanie zwrócone gościowi. Pozycja zostanie anulowana i usunięta z faktury i rozliczenia.",
+      "refundSuccess": "Kwota zwrócona.",
+      "refundedNote": "Zwrócono: {betrag}"
     },
     "ratesView": {
       "propertyLabel": "Obiekt",
@@ -9312,7 +9328,11 @@
       "auszahlen": "Zleć wypłatę",
       "nochNichtFreigeschaltet": "Wypłaty nie są jeszcze aktywne dla Twojego konta.",
       "automatischHinweis": "Twoje saldo jest wypłacane automatycznie. Aby wypłacać na żądanie, ustaw poniżej „Tylko na żądanie”.",
-      "ausstehendHinweis": "Saldo oczekujące staje się dostępne po okresie rozliczeniowym."
+      "ausstehendHinweis": "Saldo oczekujące staje się dostępne po okresie rozliczeniowym.",
+      "einlage": "Zablokowane jako kaucja",
+      "einlageFreiAb": "Dostępne od {datum}",
+      "einlageErstattungFaellig": "Zwrot oczekuje",
+      "einlageHinweis": "Część środków jest zablokowana jako kaucja na poczet ewentualnych zwrotów. Zostanie ona zwolniona po zakończeniu pobytów, których dotyczy."
     },
     "rhythmus": {
       "titel": "Rytm wypłat",
