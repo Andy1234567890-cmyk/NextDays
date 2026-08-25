@@ -24,7 +24,7 @@
 // Menü — die Linkliste war schlicht `hidden md:flex`, ein Besucher am Telefon
 // kam nur über Logo und CTA weiter. Jetzt öffnet ein Knopf ein Vollbild-Panel
 // mit denselben Zielen.
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 
@@ -86,7 +86,6 @@ export function MarketingNav({
 }: { satzExtern?: string | null } = {}) {
   const t = useTranslations("nav");
   const tf = useTranslations("features.gruppen");
-  const locale = useLocale();
   const [megaOffen, setMegaOffen] = useState(false);
   const [mobilOffen, setMobilOffen] = useState(false);
   const megaId = useId();
@@ -180,12 +179,12 @@ export function MarketingNav({
           ))}
         </ul>
 
-        {/* Rechte Gruppe. Unter `md` steht hier NUR der Mobil-Knopf.
-            Sprache, „Anmelden" und der CTA erscheinen erst ab `md` — genau ab
-            der Breite, ab der auch die Linkliste sichtbar wird und der
-            Mobil-Knopf verschwindet.
+        {/* Rechte Gruppe. Unter `md` stehen hier NUR der kompakte
+            Sprachwähler (Flagge) und der Mobil-Knopf. „Anmelden" und der CTA
+            erscheinen erst ab `md` — genau ab der Breite, ab der auch die
+            Linkliste sichtbar wird und der Mobil-Knopf verschwindet.
 
-            Warum sie mobil ganz weg sind und nicht bloß kleiner: der CTA ist
+            Warum diese zwei mobil ganz weg sind und nicht bloß kleiner: der CTA ist
             in 24 Sprachen zwischen „Start gratis" (da) und deutlich längeren
             Fassungen breit. Bei 390 px ergaben Logo + CTA + Knopf zusammen
             452 px — die Seite scrollte quer und der Mobil-Knopf lag bei
@@ -195,8 +194,11 @@ export function MarketingNav({
             Sprachen abhängt, ist keine Grenze; deshalb tragen alle drei
             Elemente dieselbe wie der Knopf.
 
-            Verloren geht nichts: das Mobil-Panel darunter enthält beide Knöpfe
-            und die Sprachwahl, und der Hero trägt seinen eigenen CTA. */}
+            Verloren geht nichts: das Mobil-Panel darunter enthält beide
+            Knöpfe, und der Hero trägt seinen eigenen CTA. Die Sprachwahl
+            bleibt dagegen in der Leiste sichtbar (kompakte Variante) — sie
+            kostet nur einen Kreis und ist der erste Griff eines Besuchers,
+            dem die Seite in der falschen Sprache begegnet. */}
         <div className="flex items-center gap-4">
           <div className="hidden md:block">
             <LanguageSwitcher />
@@ -210,6 +212,19 @@ export function MarketingNav({
           <Button asChild variant="accent" className="hidden md:inline-flex">
             <Link href={SIGNUP_URL}>{t("kostenlosStarten")}</Link>
           </Button>
+
+          {/* Sprachwahl mobil: NEBEN dem Menü-Knopf, nicht nur im Panel
+              darunter. Sie war bis eben ausschließlich hinter zwei Klicks
+              (Menü öffnen → nach unten scrollen) erreichbar — bei einer Seite,
+              die EU-weit in 24 Sprachen ausspielt, ist die Sprachwahl aber der
+              erste Griff eines Besuchers, dem die Seite in der falschen
+              Sprache begegnet.
+              Kompakte Variante: nur die Flagge im gleichen Kreis wie der
+              Menü-Knopf. Zwei Kreise à 2,5 rem plus Logo passen bei 390 px
+              (Logo 8,4 rem + 2×2,5 rem + Abstände ≈ 15 rem von 24,4 rem). */}
+          <div className="md:hidden">
+            <LanguageSwitcher variante="kompakt" />
+          </div>
 
           {/* Mobil-Knopf: erst ab hier gibt es auf schmalen Schirmen überhaupt
               eine Navigation. */}
@@ -402,9 +417,11 @@ export function MarketingNav({
               {t("anmelden")}
             </Link>
           </Button>
-          <div className="pt-2">
-            <LanguageSwitcher key={locale} />
-          </div>
+          {/* Die Sprachwahl steht jetzt in der Kopfzeile selbst (kompakte
+              Variante) und ist deshalb hier NICHT nochmal aufgeführt: zwei
+              Auslöser für dasselbe Modal auf einem Schirm — einer sichtbar,
+              einer hinter dem Panel-Scroll — lesen sich wie zwei verschiedene
+              Einstellungen. */}
         </div>
       </div>
     ) : null}

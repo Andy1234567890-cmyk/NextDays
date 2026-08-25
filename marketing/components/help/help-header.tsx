@@ -21,13 +21,23 @@ export async function HelpHeader() {
         <HeaderSearchSlot />
         {/* „Kontakt" erst ab `sm`: bei 320 px passten Logo + Knopf + Sprache
             nicht in die Zeile (58 px Überhang, Querscroll). Der Weg zum
-            Kontakt bleibt auf jeder Seite über den Footer offen, die
-            Sprachwahl hat mobil kein zweites Ziel. */}
+            Kontakt bleibt auf jeder Seite über den Footer offen; die
+            Sprachwahl bleibt, weil sie mobil kein zweites Ziel hat. */}
         <div className="ml-auto flex shrink-0 items-center gap-2">
           <Button asChild variant="accent" size="sm" className="hidden sm:inline-flex">
             <Link href="/kontakt">{t("contact")}</Link>
           </Button>
-          <LanguageSwitcher />
+          {/* Mobil nur die Flagge, ab `sm` Flagge + Sprachname: hier steht
+              zusätzlich die Suche in der Zeile, und der Endonym-Name ist in
+              mehreren der 24 Sprachen so lang („Slovenščina", „Български"),
+              dass er die Rechnung von 320 px wieder kippen würde, die den
+              Kontakt-Knopf oben schon ab `sm` verlegt hat. */}
+          <span className="sm:hidden">
+            <LanguageSwitcher variante="kompakt" />
+          </span>
+          <span className="hidden sm:block">
+            <LanguageSwitcher />
+          </span>
         </div>
       </div>
     </header>
