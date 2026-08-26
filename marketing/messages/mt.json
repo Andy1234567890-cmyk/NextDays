@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Nikseb paġna tal-booking tiegħi mingħajr kommissjoni tal-portal?",
-      "antwort": "Iva. Ma' kull kont jiġu portal tal-booking tiegħek, widget għas-sit eżistenti u bini ta' websajt bid-dominju tiegħek. Il-bookings diretti jiswew {satz} minflok il-kommissjoni ta' 15–18 % tal-portali kbar, jaħdmu fuq l-istess kalendarju u l-istess prezzijiet — u l-flus jidħlu direttament fil-kont tiegħek.",
+      "antwort": "Iva. Kull kont jinkludi portal ta' prenotazzjoni proprju, widget għall-websajt eżistenti, u bennej tal-websajt b'dominju proprju. Il-prenotazzjonijiet permezz ta' dawn huma mingħajr kummissjoni, jużaw l-istess kalendarju u l-istess prezzijiet — u l-flus imorru direttament fil-kont tiegħek.",
       "satzUnbekannt": "ferm inqas"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Sistema waħda. Login wieħed.",
     "baldBadge": "Dalwaqt",
-    "hinweis": "Il-fatturar bażiku huwa inkluż mit-tnedija. Il-kontabilità avvanzata (esportazzjoni DATEV), il-ġestjoni tal-persunal, is-suq tal-fornituri tas-servizzi u l-funzjonijiet tal-lukandi huma moduli addizzjonali.",
+    "hinweis": "Il-fatturi bażiċi huma inklużi mat-tnedija. Il-kontabilità avvanzata (esportazzjoni DATEV), il-ġestjoni tal-impjegati, is-suq tal-fornituri tas-servizzi, il-funzjonijiet tal-lukandi u l-avatar huma moduli addizzjonali.",
     "eyebrow": "Funzjonijiet",
     "sub": "Aċċess wieħed għan-negozju, għas-sidien, għall-mistednin u għat-tindif — kull rwol jara eżattament il-qasam tiegħu.",
     "alleAnsehen": "Skopri l-funzjonijiet kollha fil-prova",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Booking dirett",
-        "items": "Portal tal-booking tiegħek, widget tal-booking, website builder, dominju tiegħek, {satz} minflok 15–18 % kummissjoni OTA",
+        "items": "Paġna ta' prenotazzjoni u widget tal-prenotazzjoni fil-bennej tal-websajt b'dominju proprju. Il-prenotazzjonijiet permezz ta' dan huma mingħajr kummissjoni.",
         "satzUnbekannt": "ferm inqas"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "myNextDays twieldet mir-rutina tagħna stess tal-kiri. Qed nibnu eżattament is-softwer li fittixna għalxejn fis-suq. Softwer wieħed għal kollox!",
       "name": "Jeanine Ågaard",
-      "location": "Fundatriċi myNextDays / AirSmil"
+      "location": "Fundatriċi ta' myNextDays / Sid ta' AirSmil"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Ippjanar tax-xiftijiet u tax-xogħol għat-tindif, ir-reception u l-manutenzjoni.",
       "hotelTitel": "Lukanda",
       "hotelText": "Tħaddim tar-reception b'front desk — għal binjiet b'diversi tipi ta' kmamar. Iffatturat għal kull kamra, mhux għal kull binja.",
+      "avatarTitel": "Avatar",
+      "avatarText": "Avatar b'kontroll tal-vuċi u AI concierge: iwieġeb il-mistoqsijiet tal-klijenti fuq il-paġna tal-ibbukkjar tiegħek u fl-inbox. Iċċarġjat għal kull kumpanija, mhux għal kull proprjetà.",
       "dynamischTitel": "Prezzijiet dinamiċi",
       "dynamischText": "Il-prezzijiet tiegħek jaġġustaw waħedhom: skont l-okkupazzjoni, l-istaġun u ż-żmien bil-quddiem. Jiġi kkalkulat biss fuq prenotazzjonijiet li jsiru waqt li l-modulu jkun mixgħul.",
       "proMonat": "fix-xahar",
       "oder": "jew",
       "jeNutzer": "għal kull utent fix-xahar",
       "jeZimmer": "għal kull kamra fix-xahar",
+      "jeBetrieb": "għal kull kumpanija fix-xahar",
       "vomUmsatz": "mid-dħul mill-prenotazzjonijiet",
       "hinweis": "Il-moduli jistgħu jinxtegħlu u jintfew kull xahar — l-aċċess jaħdem mill-ewwel, il-fatturar huwa proporzjonat."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Ara l-prezzijiet kollha",
-      "abObjekt": "Kull proprjetà oħra minn {betrag}",
+      "abObjekt": "Kull proprjetà addizzjonali {betrag}",
+      "abObjektStaffel": "Kull proprjetà addizzjonali {betrag}, irħas minn {ab}. proprjetà",
       "provision": "Sit tiegħek {direkt} · portali {portale}",
       "tarif": "Pjan wieħed għal kulħadd, inkluża l-1 proprjetà"
     }

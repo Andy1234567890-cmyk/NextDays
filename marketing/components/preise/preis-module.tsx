@@ -17,7 +17,7 @@ import { modul, modulNachKey, type Preisliste } from "@/lib/preise";
 
 // Reihenfolge = Verbreitung: Buchhaltung betrifft fast jeden Betrieb, die
 // Hotel-Rezeption die wenigsten.
-type Einheit = "proMonat" | "jeNutzer" | "jeZimmer";
+type Einheit = "proMonat" | "jeNutzer" | "jeZimmer" | "jeBetrieb";
 
 const MODULE: readonly {
   key: string;
@@ -69,6 +69,15 @@ const MODULE: readonly {
     alternativ: { lookup: "modul6_flat", einheit: "proMonat" },
     bald: true,
   },
+  {
+    // Je BETRIEB, nicht je Objekt: der Avatar hängt am Konto, nicht an einer
+    // Unterkunft. Ohne diese Bezugsgröße im Label läse sich der Betrag als
+    // Objektpreis und wäre bei zehn Objekten eine zehnfach falsche Erwartung.
+    key: "avatar",
+    lookup: "modul7_flat",
+    einheit: "jeBetrieb",
+    bald: true,
+  },
 ];
 
 export function PreisModule({ liste }: { liste: Preisliste | null }) {
@@ -93,7 +102,7 @@ export function PreisModule({ liste }: { liste: Preisliste | null }) {
       <div className="mx-auto max-w-7xl px-6 py-24">
         <SectionHeading eyebrow={t("eyebrow")} heading={t("heading")} sub={t("sub")} />
 
-        <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {MODULE.map((m) => {
             const preis = modul(liste, m.lookup);
             if (!preis) return null;

@@ -334,6 +334,7 @@ def _sync_module_entitlements(
         "modul4_per_seat": "modul4_mitarbeiter",
         "modul6_flat": "modul6_hotel",
         "modul6_per_room": "modul6_hotel",
+        "modul7_flat": "modul7_avatar",
     }
     sub_active = _field(obj, "status") in ("active", "trialing", "past_due")
     items = _field(_field(obj, "items", {}) or {}, "data", []) or []

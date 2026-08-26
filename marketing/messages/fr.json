@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Ai-je une page de réservation sans commission de portail ?",
-      "antwort": "Oui. Chaque compte comprend son propre portail de réservation, un widget pour votre site existant et un créateur de site avec votre domaine. Les réservations directes coûtent {satz} au lieu des 15–18 % de commission des grands portails, utilisent le même calendrier et les mêmes tarifs — et l'argent arrive directement sur votre compte.",
+      "antwort": "Oui. Chaque compte comprend son propre portail de réservation, un widget pour le site web existant et un constructeur de site web avec son propre domaine. Les réservations effectuées par ce biais sont sans commission, passent par le même calendrier et les mêmes prix — et l'argent est versé directement sur votre compte.",
       "satzUnbekannt": "bien moins"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Un système. Un identifiant.",
     "baldBadge": "Bientôt disponible",
-    "hinweis": "La facturation de base est incluse dès le lancement. La comptabilité avancée (export DATEV), la gestion du personnel, la place de marché des prestataires et les fonctions hôtelières sont des modules complémentaires.",
+    "hinweis": "Les factures de base sont incluses au lancement. La comptabilité avancée (export DATEV), la gestion des employés, la place de marché des prestataires de services, les fonctions hôtelières et l'avatar sont des modules complémentaires.",
     "eyebrow": "Fonctionnalités",
     "sub": "Un accès pour l'établissement, les propriétaires, les voyageurs et le ménage : chaque rôle voit exactement son périmètre.",
     "alleAnsehen": "Découvrir toutes les fonctionnalités pendant l'essai",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Réservation directe",
-        "items": "Portail de réservation dédié, widget de réservation, créateur de site web, nom de domaine propre, {satz} au lieu de 15 à 18 % de commission OTA",
+        "items": "Page de réservation et widget de réservation dans le constructeur de site web avec votre propre domaine. Les réservations effectuées par ce biais sont sans commission.",
         "satzUnbekannt": "bien moins"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "myNextDays est né de notre propre quotidien de loueurs. Nous développons exactement le logiciel que nous avons cherché en vain sur le marché. Un seul logiciel pour tout !",
       "name": "Jeanine Ågaard",
-      "location": "Fondatrice de myNextDays / AirSmil"
+      "location": "Fondatrice de myNextDays / Propriétaire d'AirSmil"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Planification des équipes et des interventions pour le ménage, la réception et la technique.",
       "hotelTitel": "Hôtel",
       "hotelText": "Exploitation de la réception avec front desk — pour les maisons à plusieurs types de chambres. Facturé par chambre, pas par établissement.",
+      "avatarTitel": "Avatar",
+      "avatarText": "Avatar avec commande vocale et concierge IA : répond aux questions des clients sur votre page de réservation et dans la boîte de réception. Facturé par entreprise, et non par hébergement.",
       "dynamischTitel": "Tarifs dynamiques",
       "dynamischText": "Vos prix s'ajustent d'eux-mêmes : au taux d'occupation, à la saison et au délai de réservation. Facturé uniquement sur les réservations créées pendant que le module tourne.",
       "proMonat": "par mois",
       "oder": "ou",
       "jeNutzer": "par utilisateur et par mois",
       "jeZimmer": "par chambre et par mois",
+      "jeBetrieb": "par entreprise et par mois",
       "vomUmsatz": "du chiffre d'affaires des réservations",
       "hinweis": "Les modules s'activent et se résilient au mois — l'accès est immédiat, la facturation au prorata."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Voir tous les tarifs",
-      "abObjekt": "Chaque logement supplémentaire à partir de {betrag}",
+      "abObjekt": "Chaque hébergement supplémentaire {betrag}",
+      "abObjektStaffel": "Chaque hébergement supplémentaire {betrag}, à partir du {ab}e hébergement, le prix est réduit",
       "provision": "Site personnel {direkt} · portails {portale}",
       "tarif": "Une offre pour tous, 1er logement inclus"
     }

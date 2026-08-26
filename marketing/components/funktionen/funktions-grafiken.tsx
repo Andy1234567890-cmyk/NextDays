@@ -23,13 +23,16 @@ type Props = { titel: string; punkte: readonly string[] };
 
 /** Kachel-Raster der verbundenen Portale (Referenz: Logo-Kacheln mit Farbtupfern). */
 export function GrafikKanaele() {
+  // myBestDays steht am ENDE der Reihe, nicht am Anfang — dieselbe Reihenfolge
+  // wie in `marketing-channels.tsx`, damit die eigene Marke nicht zweimal
+  // verschieden einsortiert ist.
   const logos = [
-    { src: "/marketing/channels/mybestdays.png", alt: "myBestDays" },
     { src: "/marketing/channels/booking-com.svg", alt: "Booking.com" },
     { src: "/marketing/channels/airbnb.png", alt: "Airbnb" },
     { src: "/marketing/channels/expedia.svg", alt: "Expedia" },
     { src: "/marketing/channels/google.svg", alt: "Google" },
     { src: "/marketing/channels/agoda.svg", alt: "Agoda" },
+    { src: "/marketing/channels/mybestdays.png", alt: "myBestDays" },
   ];
   return (
     <div className="relative">

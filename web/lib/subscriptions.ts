@@ -34,6 +34,7 @@ export type ModuleKey =
   | "modul4_mitarbeiter"
   | "modul5_jobmarkt"
   | "modul6_hotel"
+  | "modul7_avatar"
   | "dynamische_preise";
 
 export type ModuleEntitlement = {

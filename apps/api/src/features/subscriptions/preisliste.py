@@ -59,6 +59,7 @@ _MODULE_PRICE_VARIANTS: dict[str, tuple[str, str | None]] = {
     "modul4_per_seat": ("modul4_per_seat", "Nutzer"),
     "modul6_hotel": ("modul6_flat", None),
     "modul6_per_room": ("modul6_per_room", "Zimmer"),
+    "modul7_avatar": ("modul7_flat", None),
 }
 
 

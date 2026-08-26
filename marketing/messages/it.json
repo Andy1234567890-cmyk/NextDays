@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Ho una pagina di prenotazione propria senza commissioni di portale?",
-      "antwort": "Sì. Ogni account comprende un portale di prenotazione proprio, un widget per il sito esistente e un costruttore di siti con dominio proprio. Le prenotazioni dirette costano {satz}, invece del 15–18 % di commissione dei grandi portali, usano lo stesso calendario e gli stessi prezzi — e il denaro arriva direttamente sul tuo conto.",
+      "antwort": "Sì. Ogni account include un portale di prenotazione personalizzato, un widget per il sito web esistente e un costruttore di siti web con un dominio personalizzato. Le prenotazioni effettuate tramite questi canali sono esenti da commissioni, utilizzano lo stesso calendario e gli stessi prezzi, e il denaro va direttamente sul vostro conto.",
       "satzUnbekannt": "molto meno"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Un sistema. Un accesso.",
     "baldBadge": "In arrivo",
-    "hinweis": "La fatturazione base è inclusa dal lancio. La contabilità avanzata (esportazione DATEV), la gestione del personale, il marketplace dei fornitori e le funzioni per hotel sono moduli aggiuntivi.",
+    "hinweis": "Le fatture di base sono incluse al lancio. Contabilità avanzata (esportazione DATEV), gestione del personale, marketplace dei fornitori di servizi, funzioni alberghiere e l'avatar sono moduli aggiuntivi.",
     "eyebrow": "Funzioni",
     "sub": "Un accesso per la struttura, i proprietari, gli ospiti e le pulizie: ogni ruolo vede esattamente la sua area.",
     "alleAnsehen": "Scopri tutte le funzioni nella prova gratuita",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Prenotazione diretta",
-        "items": "Portale di prenotazione tuo, widget di prenotazione, creatore di siti, dominio proprio, {satz} invece del 15–18 % di commissione OTA",
+        "items": "Pagina di prenotazione e widget di prenotazione nel costruttore di siti web con dominio proprio. Le prenotazioni effettuate tramite questo canale sono esenti da commissioni.",
         "satzUnbekannt": "molto meno"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "myNextDays è nata dalla nostra quotidianità come affittuari. Costruiamo esattamente il software che abbiamo cercato invano sul mercato. Un software per tutto!",
       "name": "Jeanine Ågaard",
-      "location": "Fondatrice di myNextDays / AirSmil"
+      "location": "Fondatrice myNextDays / Titolare AirSmil"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Pianificazione di turni e interventi per pulizie, reception e manutenzione.",
       "hotelTitel": "Hotel",
       "hotelText": "Gestione della reception con front desk, per strutture con più tipologie di camera. Fatturato per camera, non per struttura.",
+      "avatarTitel": "Avatar",
+      "avatarText": "Avatar con controllo vocale e concierge AI: risponde alle domande degli ospiti sulla tua pagina di prenotazione e nella casella di posta. Fatturazione per azienda, non per alloggio.",
       "dynamischTitel": "Prezzi dinamici",
       "dynamischText": "I tuoi prezzi si adeguano da soli: all'occupazione, alla stagione e all'anticipo. Si calcola solo sulle prenotazioni create mentre il modulo è attivo.",
       "proMonat": "al mese",
       "oder": "oppure",
       "jeNutzer": "per utente al mese",
       "jeZimmer": "per camera al mese",
+      "jeBetrieb": "al mese per azienda",
       "vomUmsatz": "del fatturato delle prenotazioni",
       "hinweis": "I moduli si attivano e disattivano ogni mese: l'accesso è immediato, la fatturazione proporzionale."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Vedi tutti i prezzi",
-      "abObjekt": "Ogni struttura in più da {betrag}",
+      "abObjekt": "Ogni alloggio aggiuntivo {betrag}",
+      "abObjektStaffel": "Ogni alloggio aggiuntivo {betrag}, dal {ab}° alloggio il prezzo sarà più conveniente",
       "provision": "Sito proprio {direkt} · portali {portale}",
       "tarif": "Un piano per tutti, 1ª struttura inclusa"
     }

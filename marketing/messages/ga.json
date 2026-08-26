@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "An bhfaighidh mé leathanach áirithinte dom féin gan coimisiún tairsí?",
-      "antwort": "Gheobhaidh. Le gach cuntas tagann tairseach áirithinte féin, giuirléid don suíomh atá ann agus tógálaí suímh le fearann dá chuid féin. Cosnaíonn áirithintí díreacha {satz} in ionad choimisiún 15–18 % na dtairseach mór, ritheann iad ar an bhféilire céanna agus ar na praghsanna céanna — agus téann an t-airgead díreach isteach i do chuntas.",
+      "antwort": "Tá. Cuimsíonn gach cuntas tairseach áirithinte féin, giuirléid don láithreán gréasáin atá ann cheana féin, agus tógálaí láithreán gréasáin le do réimse féin. Níl aon choimisiún ar áirithintí a dhéantar tríd seo, úsáideann siad an féilire agus na praghsanna céanna — agus téann an t-airgead díreach chuig do chuntas.",
       "satzUnbekannt": "i bhfad níos lú"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Córas amháin. Logáil isteach amháin.",
     "baldBadge": "Ag teacht go luath",
-    "hinweis": "Tá bunsonrascadh san áireamh ón seoladh. Is modúil bhreise iad cuntasaíocht ardleibhéil (easpórtáil DATEV), bainistíocht foirne, margadh na soláthraithe seirbhíse agus gnéithe óstáin.",
+    "hinweis": "Tá bunbhilleálacha san áireamh ag an seoladh. Is modúil bhreise iad cuntasaíocht leathnaithe (easpórtáil DATEV), bainistíocht fostaithe, margadh soláthraithe seirbhíse, feidhmeanna óstáin agus an avatar.",
     "eyebrow": "Gnéithe",
     "sub": "Logáil isteach amháin don ghnó, do na húinéirí, do na haíonna agus don ghlantachán — feiceann gach ról a réimse féin go beacht.",
     "alleAnsehen": "Faigh amach faoi gach gné sa triail saor in aisce",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Áirithint dhíreach",
-        "items": "Do thairseach áirithinte féin, giuirléid áirithinte, tógálaí suímh, d'fhearann féin, {satz} in ionad coimisiún OTA de 15–18 %",
+        "items": "Leathanach áirithinte féin agus giuirléid áirithinte sa tógálaí láithreán gréasáin le do réimse féin. Níl aon choimisiún ar áirithintí a dhéantar tríd seo.",
         "satzUnbekannt": "i bhfad níos lú"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "D'fhás myNextDays as ár ngnáthshaol féin i ligean ar cíos. Táimid ag tógáil go díreach an bogearra a bhí á lorg againn go neamhbhrí sa mhargadh. Bogearra amháin do gach rud!",
       "name": "Jeanine Ågaard",
-      "location": "Bunaitheoir myNextDays / AirSmil"
+      "location": "Bunaitheoir myNextDays / Úinéir AirSmil"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Pleanáil sealanna agus tascanna do ghlanadh, fáiltiú agus cothabháil.",
       "hotelTitel": "Óstán",
       "hotelText": "Oibriú an fháiltithe le deasc tosaigh — do thithe le go leor cineálacha seomraí. Billeáilte in aghaidh an tseomra, ní in aghaidh an tí.",
+      "avatarTitel": "Avatar",
+      "avatarText": "Avatar le rialú gutha agus concierge AI: freagraíonn sé ceisteanna ó aíonna ar do leathanach áirithinte agus i do bhosca isteach. Billeáilte in aghaidh an ghnó, ní in aghaidh na maoine.",
       "dynamischTitel": "Praghsanna dinimiciúla",
       "dynamischText": "Athraíonn do phraghsanna iad féin: de réir áitíochta, séasúir agus achair roimh ré. Ní ghearrtar ach ar áirithintí a chruthaítear agus an modúl ag rith.",
       "proMonat": "in aghaidh na míosa",
       "oder": "nó",
       "jeNutzer": "in aghaidh an úsáideora sa mhí",
       "jeZimmer": "in aghaidh an tseomra sa mhí",
+      "jeBetrieb": "in aghaidh an ghnó in aghaidh na míosa",
       "vomUmsatz": "de láimhdeachas na n-áirithintí",
       "hinweis": "Is féidir modúil a chur ar siúl agus a mhúchadh go míosúil — feidhmíonn an rochtain láithreach, tá an billeáil comhréireach."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Féach ar na praghsanna go léir",
-      "abObjekt": "Gach maoin bhreise ó {betrag}",
+      "abObjekt": "Gach lóistín breise {betrag}",
+      "abObjektStaffel": "Gach lóistín breise {betrag}, ó {ab}. lóistín ar aghaidh beidh sé níos saoire",
       "provision": "Suíomh féin {direkt} · tairseacha {portale}",
       "tarif": "Plean amháin do chách, an chéad mhaoin san áireamh"
     }

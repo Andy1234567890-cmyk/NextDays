@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Saanko oman varaussivun ilman portaalikomissiota?",
-      "antwort": "Kyllä. Jokaiseen tiliin kuuluu oma varausportaali, widget nykyiselle verkkosivullesi ja sivustorakentaja omalla verkkotunnuksella. Suoravarauksen hinta on {satz}, kun suuret portaalit ottavat 15–18 %; ne kulkevat samassa kalenterissa ja samoilla hinnoilla — ja rahat menevät suoraan tilillesi.",
+      "antwort": "Kyllä. Jokaiseen tiliin kuuluu oma varausportaali, widget olemassa olevalle verkkosivustolle ja verkkosivustotyökalu omalla verkkotunnuksella. Näiden kautta tehdyt varaukset ovat provisiovapaita, käyttävät samaa kalenteria ja samoja hintoja – ja rahat menevät suoraan tilillesi.",
       "satzUnbekannt": "huomattavasti vähemmän"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Yksi järjestelmä. Yksi kirjautuminen.",
     "baldBadge": "Pian saatavilla",
-    "hinweis": "Peruslaskutus on mukana heti julkaisussa. Laajennettu kirjanpito (DATEV-vienti), henkilöstöhallinta, palveluntarjoajien markkinapaikka ja hotelliominaisuudet ovat lisämoduuleja.",
+    "hinweis": "Peruslaskut sisältyvät julkaisuun. Laajennettu kirjanpito (DATEV-vienti), henkilöstöhallinto, palveluntarjoajien markkinapaikka, hotellitoiminnot ja Avatar ovat lisämoduuleja.",
     "eyebrow": "Ominaisuudet",
     "sub": "Yksi kirjautuminen yritykselle, omistajille, vieraille ja siivoukselle – jokainen rooli näkee täsmälleen oman alueensa.",
     "alleAnsehen": "Tutustu kaikkiin ominaisuuksiin maksuttomalla kokeilujaksolla",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Suoravaraus",
-        "items": "Oma varausportaali, varaus-widget, verkkosivueditori, oma verkkotunnus, {satz} — portaalit ottavat 15–18 %",
+        "items": "Oma varausportaali ja varauswidget verkkosivustotyökalussa omalla verkkotunnuksella. Näiden kautta tehdyt varaukset ovat provisiovapaita.",
         "satzUnbekannt": "huomattavasti vähemmän"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "myNextDays syntyi omasta vuokraustoiminnan arjestamme. Rakennamme juuri sitä ohjelmistoa, jota etsimme turhaan markkinoilta. Yksi ohjelmisto kaikkeen!",
       "name": "Jeanine Ågaard",
-      "location": "Perustaja, myNextDays / AirSmil"
+      "location": "myNextDaysin perustaja / AirSmilin omistaja"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Vuoro- ja tehtäväsuunnittelu siivoukselle, vastaanotolle ja huollolle.",
       "hotelTitel": "Hotelli",
       "hotelText": "Vastaanoton käyttö front deskillä — taloille, joissa on useita huonetyyppejä. Laskutetaan huoneittain, ei taloittain.",
+      "avatarTitel": "Avatar",
+      "avatarText": "Tekoälyavustaja ja puheohjaus: vastaa asiakkaiden kysymyksiin varaus-sivustollasi ja postilaatikossa. Laskutetaan yrityskohtaisesti, ei majoituskohteittain.",
       "dynamischTitel": "Dynaamiset hinnat",
       "dynamischText": "Hintasi mukautuvat itsestään: käyttöasteeseen, kauteen ja varausaikaan. Veloitetaan vain varauksista, jotka syntyvät moduulin ollessa käytössä.",
       "proMonat": "kuukaudessa",
       "oder": "tai",
       "jeNutzer": "käyttäjää kohti kuukaudessa",
       "jeZimmer": "huonetta kohti kuukaudessa",
+      "jeBetrieb": "yritystä kohti kuukaudessa",
       "vomUmsatz": "varausliikevaihdosta",
       "hinweis": "Moduuleja voi ottaa käyttöön ja lopettaa kuukausittain — käyttöoikeus alkaa heti, laskutus suhteutetaan."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Katso kaikki hinnat",
-      "abObjekt": "Jokainen lisäkohde alkaen {betrag}",
+      "abObjekt": "Jokainen lisämajoitus {betrag}",
+      "abObjektStaffel": "Jokainen lisämajoitus {betrag}, alkaen {ab}. majoituksesta hinta on edullisempi",
       "provision": "Oma sivusto {direkt} · portaalit {portale}",
       "tarif": "Yksi paketti kaikille, sis. 1. kohteen"
     }

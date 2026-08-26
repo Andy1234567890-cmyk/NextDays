@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Får jeg min egen bookingside uden portalkommission?",
-      "antwort": "Ja. Til hver konto hører en egen bookingportal, en widget til den eksisterende hjemmeside og en hjemmesidebygger med eget domæne. Direkte bookinger koster {satz} i stedet for de store portalers 15–18 %, kører på samme kalender og samme priser — og pengene går direkte ind på din konto.",
+      "antwort": "Ja. Hver konto inkluderer en egen bookingportal, en widget til den eksisterende hjemmeside og en hjemmesidebygger med eget domæne. Bookinger herigennem er provisionsfrie, bruger den samme kalender og de samme priser – og pengene går direkte ind på din konto.",
       "satzUnbekannt": "markant mindre"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Ét system. Ét login.",
     "baldBadge": "Kommer snart",
-    "hinweis": "Basisfakturering er med fra lanceringen. Udvidet bogføring (DATEV-eksport), medarbejderstyring, markedspladsen for leverandører og hotelfunktioner er tilkøbsmoduler.",
+    "hinweis": "Basisregninger er inkluderet ved lanceringen. Udvidet bogføring (DATEV-eksport), medarbejderstyring, leverandør-markedsplads, hotelfunktioner og avataren er tillægsmoduler.",
     "eyebrow": "Funktioner",
     "sub": "Ét login til virksomheden, ejerne, gæsterne og rengøringen – hver rolle ser præcis sit eget område.",
     "alleAnsehen": "Udforsk alle funktioner i den gratis prøveperiode",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Direkte booking",
-        "items": "Egen bookingportal, booking-widget, hjemmesidebygger, eget domæne, {satz} i stedet for 15–18 % OTA-kommission",
+        "items": "Egen bookingside og booking-widget i hjemmesidebyggeren med eget domæne. Bookinger herigennem er provisionsfrie.",
         "satzUnbekannt": "markant mindre"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "myNextDays er opstået af vores egen udlejningshverdag. Vi bygger netop den software, vi forgæves ledte efter på markedet. En software til alt!",
       "name": "Jeanine Ågaard",
-      "location": "Stifter, myNextDays / AirSmil"
+      "location": "Grundlægger af myNextDays / Ejer af AirSmil"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Vagt- og opgaveplanlægning til rengøring, reception og teknik.",
       "hotelTitel": "Hotel",
       "hotelText": "Receptionsdrift med front desk — til huse med flere værelsestyper. Afregnes pr. værelse, ikke pr. hus.",
+      "avatarTitel": "Avatar",
+      "avatarText": "Avatar med stemmestyring og AI-concierge: besvarer gæstespørgsmål på din bookingside og i indbakken. Faktureres pr. virksomhed, ikke pr. ejendom.",
       "dynamischTitel": "Dynamiske priser",
       "dynamischText": "Dine priser tilpasser sig selv: til belægning, sæson og forudbestilling. Der beregnes kun af bookinger, der opstår, mens modulet kører.",
       "proMonat": "pr. måned",
       "oder": "eller",
       "jeNutzer": "pr. bruger pr. måned",
       "jeZimmer": "pr. værelse pr. måned",
+      "jeBetrieb": "pr. virksomhed pr. måned",
       "vomUmsatz": "af bookingomsætningen",
       "hinweis": "Moduler kan til- og fravælges månedligt — adgangen virker straks, afregningen sker forholdsmæssigt."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Se alle priser",
-      "abObjekt": "Hver yderligere enhed fra {betrag}",
+      "abObjekt": "Hver ekstra bolig {betrag}",
+      "abObjektStaffel": "Hver ekstra bolig {betrag}, fra den {ab}. bolig bliver det billigere",
       "provision": "Egen hjemmeside {direkt} · portaler {portale}",
       "tarif": "Én pakke til alle, inkl. 1. enhed"
     }

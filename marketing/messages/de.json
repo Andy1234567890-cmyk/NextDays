@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Bekomme ich eine eigene Buchungsseite ohne Portalprovision?",
-      "antwort": "Ja. Zu jedem Konto gehören ein eigenes Buchungsportal, ein Widget für die bestehende Website und ein Website-Baukasten mit eigener Domain. Direktbuchungen kosten {satz} statt der 15–18 % Provision der großen Portale, laufen über denselben Kalender und dieselben Preise — und das Geld geht direkt auf dein Konto.",
+      "antwort": "Ja. Zu jedem Konto gehören ein eigenes Buchungsportal, ein Widget für die bestehende Website und ein Website-Baukasten mit eigener Domain. Buchungen darüber sind provisionsfrei, laufen über denselben Kalender und dieselben Preise — und das Geld geht direkt auf dein Konto.",
       "satzUnbekannt": "deutlich weniger"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Ein System. Ein Login.",
     "baldBadge": "In Kürze",
-    "hinweis": "Basis-Rechnungen sind zum Launch dabei. Erweiterte Buchhaltung (DATEV-Export), Mitarbeiter-Management, Dienstleister-Marktplatz und Hotel-Funktionen sind Zusatzmodule.",
+    "hinweis": "Basis-Rechnungen sind zum Launch dabei. Erweiterte Buchhaltung (DATEV-Export), Mitarbeiter-Management, Dienstleister-Marktplatz, Hotel-Funktionen und der Avatar sind Zusatzmodule.",
     "eyebrow": "Funktionen",
     "sub": "Ein Zugang für Betrieb, Eigentümer, Gäste und Reinigung — jede Rolle sieht genau ihren Bereich.",
     "alleAnsehen": "Alle Funktionen im Test entdecken",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Direktbuchung",
-        "items": "Eigenes Buchungsportal, Buchungs-Widget, Website-Baukasten, eigene Domain, {satz} statt 15–18 % OTA-Provision",
+        "items": "Eigene Buchungsseite und Buchungs-Widget im Website-Baukasten mit eigener Domain. Buchungen hierüber sind provisionsfrei.",
         "satzUnbekannt": "deutlich weniger"
       },
       "preise": {
@@ -747,9 +747,9 @@
     "eyebrow": "Hinter der Plattform",
     "heading": "Warum wir myNextDays gebaut haben.",
     "gruenderin": {
-      "quote": "myNextDays ist aus unserem eigenen Vermietungsalltag entstanden. Wir bauen genau die Software, die wir am Markt vergeblich gesucht haben. Eine Software für Alles!",
+      "quote": "myNextDays ist aus unserem eigenen Vermietungsalltag entstanden. Wir bauen genau die Software, die wir am Markt vergeblich gesucht haben. Eine Software für alles!",
       "name": "Jeanine Ågaard",
-      "location": "Gründerin myNextDays / AirSmil"
+      "location": "Gründerin myNextDays / Inhaberin AirSmil"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Schicht- und Einsatzplanung für Reinigung, Rezeption und Haustechnik.",
       "hotelTitel": "Hotel",
       "hotelText": "Rezeptionsbetrieb mit Front Desk — für Häuser mit mehreren Zimmertypen. Abgerechnet je Zimmer, nicht je Haus.",
+      "avatarTitel": "Avatar",
+      "avatarText": "Avatar mit Sprachsteuerung und KI-Concierge: beantwortet Gästefragen auf deiner Buchungsseite und im Posteingang. Abgerechnet je Betrieb, nicht je Objekt.",
       "dynamischTitel": "Dynamische Preise",
       "dynamischText": "Deine Preise passen sich von selbst an: an die Auslastung, die Jahreszeit und den Vorlauf. Berechnet wird nur auf Buchungen, die entstehen, solange das Modul läuft.",
       "proMonat": "pro Monat",
       "oder": "oder",
       "jeNutzer": "je Nutzer im Monat",
       "jeZimmer": "je Zimmer im Monat",
+      "jeBetrieb": "pro Betrieb im Monat",
       "vomUmsatz": "vom Buchungsumsatz",
       "hinweis": "Module lassen sich monatlich zu- und abbestellen — der Zugang wirkt sofort, die Abrechnung anteilig."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Alle Preise ansehen",
-      "abObjekt": "Jedes weitere Objekt ab {betrag}",
+      "abObjekt": "Jedes weitere Objekt {betrag}",
+      "abObjektStaffel": "Jedes weitere Objekt {betrag}, ab dem {ab}. Objekt wird es günstiger",
       "provision": "Eigene Website {direkt} · Portale {portale}",
       "tarif": "Ein Tarif für alle, inkl. 1. Objekt"
     }
@@ -1845,7 +1849,7 @@
       "sub": "Die im dänischen Handelsregister eingetragene Direktion der myNextDays ApS.",
       "jeanine": {
         "rolle": "Gründerin und Direktorin",
-        "text": "myNextDays ist aus unserem eigenen Vermietungsalltag entstanden. Wir bauen genau die Software, die wir am Markt vergeblich gesucht haben. Eine Software für Alles!"
+        "text": "myNextDays ist aus unserem eigenen Vermietungsalltag entstanden. Wir bauen genau die Software, die wir am Markt vergeblich gesucht haben. Eine Software für alles!"
       },
       "torsten": {
         "rolle": "Direktor",

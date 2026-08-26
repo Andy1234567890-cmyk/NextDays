@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Dostanu vlastní rezervační stránku bez provize portálu?",
-      "antwort": "Ano. Ke každému účtu patří vlastní rezervační portál, widget pro existující web a stavebnice webu s vlastní domenou. Přímé rezervace stojí {satz} místo 15–18 % provize velkých portálů, běží na stejném kalendáři a stejných cenách — a peníze jdou přímo na váš účet.",
+      "antwort": "Ano. Každý účet zahrnuje vlastní rezervační portál, widget pro stávající webové stránky a nástroj pro tvorbu webových stránek s vlastní doménou. Rezervace provedené zde jsou bez provize, používají stejný kalendář a stejné ceny — a peníze jdou přímo na váš účet.",
       "satzUnbekannt": "výrazně méně"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Jeden systém. Jedno přihlášení.",
     "baldBadge": "Již brzy",
-    "hinweis": "Základní fakturace je součástí od startu. Rozšířené účetnictví (export DATEV), správa zaměstnanců, marketplace dodavatelů a hotelové funkce jsou doplňkové moduly.",
+    "hinweis": "Základní faktury jsou součástí spuštění. Rozšířené účetnictví (export DATEV), správa zaměstnanců, tržiště poskytovatelů služeb, hotelové funkce a avatar jsou doplňkové moduly.",
     "eyebrow": "Funkce",
     "sub": "Jeden přístup pro provoz, vlastníky, hosty i úklid — každá role vidí přesně svou oblast.",
     "alleAnsehen": "Objevte všechny funkce v testovací verzi",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Přímé rezervace",
-        "items": "Vlastní rezervační portál, rezervační widget, tvůrce webu, vlastní doména, {satz} místo 15–18 % provize OTA",
+        "items": "Vlastní rezervační stránka a rezervační widget v nástroji pro tvorbu webových stránek s vlastní doménou. Rezervace provedené zde jsou bez provize.",
         "satzUnbekannt": "výrazně méně"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "myNextDays vznikl z naší vlastní každodenní praxe v pronájmu. Stavíme přesně ten software, který jsme na trhu marně hledali. Software na všechno!",
       "name": "Jeanine Ågaard",
-      "location": "Zakladatelka myNextDays / AirSmil"
+      "location": "Zakladatelka myNextDays / Majitelka AirSmil"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Plánování směn a úkolů pro úklid, recepci a údržbu.",
       "hotelTitel": "Hotel",
       "hotelText": "Provoz recepce s front deskem — pro domy s více typy pokojů. Účtuje se za pokoj, ne za dům.",
+      "avatarTitel": "Avatar",
+      "avatarText": "Avatar s hlasovým ovládáním a AI concierge: odpovídá na dotazy hostů na vaší rezervační stránce a v doručené poště. Účtováno za společnost, nikoli za ubytování.",
       "dynamischTitel": "Dynamické ceny",
       "dynamischText": "Vaše ceny se přizpůsobují samy: obsazenosti, sezoně a předstihu. Účtuje se jen z rezervací, které vzniknou, když modul běží.",
       "proMonat": "měsíčně",
       "oder": "nebo",
       "jeNutzer": "za uživatele měsíčně",
       "jeZimmer": "za pokoj měsíčně",
+      "jeBetrieb": "za společnost měsíčně",
       "vomUmsatz": "z obratu rezervací",
       "hinweis": "Moduly lze měsíčně zapnout i vypnout — přístup platí ihned, vyúčtování poměrně."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Zobrazit všechny ceny",
-      "abObjekt": "Každý další objekt od {betrag}",
+      "abObjekt": "Každé další ubytování {betrag}",
+      "abObjektStaffel": "Každé další ubytování {betrag}, od {ab}. ubytování je cena nižší",
       "provision": "Vlastní web {direkt} · portály {portale}",
       "tarif": "Jeden tarif pro všechny, vč. 1. objektu"
     }

@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Tenho uma página de reservas própria sem comissão de portal?",
-      "antwort": "Sim. Cada conta inclui o seu portal de reservas, um widget para o site existente e um construtor de sites com domínio próprio. As reservas diretas custam {satz} em vez dos 15–18 % de comissão dos grandes portais, usam o mesmo calendário e os mesmos preços — e o dinheiro entra diretamente na tua conta.",
+      "antwort": "Sim. Cada conta inclui um portal de reservas próprio, um widget para o site existente e um construtor de sites com domínio próprio. As reservas feitas através dele são isentas de comissão, utilizam o mesmo calendário e os mesmos preços — e o dinheiro vai diretamente para a sua conta.",
       "satzUnbekannt": "muito menos"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Um sistema. Um acesso.",
     "baldBadge": "Em breve",
-    "hinweis": "A faturação base está incluída no lançamento. A contabilidade avançada (exportação DATEV), a gestão de colaboradores, o marketplace de prestadores e as funcionalidades para hotelaria são módulos adicionais.",
+    "hinweis": "As faturas básicas estão incluídas no lançamento. Contabilidade avançada (exportação DATEV), gestão de funcionários, mercado de prestadores de serviços, funções de hotel e o avatar são módulos adicionais.",
     "eyebrow": "Funcionalidades",
     "sub": "Um acesso para o negócio, os proprietários, os hóspedes e as limpezas: cada perfil vê exatamente a sua área.",
     "alleAnsehen": "Descobrir todas as funcionalidades no teste gratuito",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Reserva direta",
-        "items": "Portal de reservas próprio, widget de reservas, construtor de sites, domínio próprio, {satz} em vez de 15–18 % de comissão OTA",
+        "items": "Página de reservas própria e widget de reservas no construtor de sites com domínio próprio. As reservas feitas através dele são isentas de comissão.",
         "satzUnbekannt": "muito menos"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "A myNextDays nasceu do nosso próprio dia a dia de arrendamento. Estamos a construir exatamente o software que procurámos em vão no mercado. Um software para tudo!",
       "name": "Jeanine Ågaard",
-      "location": "Fundadora da myNextDays / AirSmil"
+      "location": "Fundadora da myNextDays / Proprietária da AirSmil"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Planeamento de turnos e tarefas para limpeza, receção e manutenção.",
       "hotelTitel": "Hotel",
       "hotelText": "Operação de receção com front desk — para casas com vários tipos de quarto. Faturado por quarto, não por casa.",
+      "avatarTitel": "Avatar",
+      "avatarText": "Avatar com controlo de voz e concierge de IA: responde a perguntas de hóspedes na sua página de reservas e na caixa de entrada. Cobrado por empresa, não por alojamento.",
       "dynamischTitel": "Preços dinâmicos",
       "dynamischText": "Os seus preços ajustam-se sozinhos: à ocupação, à época e à antecedência. Só é cobrado sobre reservas criadas enquanto o módulo está ativo.",
       "proMonat": "por mês",
       "oder": "ou",
       "jeNutzer": "por utilizador e por mês",
       "jeZimmer": "por quarto e por mês",
+      "jeBetrieb": "por empresa por mês",
       "vomUmsatz": "da receita das reservas",
       "hinweis": "Os módulos podem ser ativados e cancelados mensalmente — o acesso é imediato, a faturação proporcional."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Ver todos os preços",
-      "abObjekt": "Cada alojamento adicional a partir de {betrag}",
+      "abObjekt": "Cada acomodação adicional {betrag}",
+      "abObjektStaffel": "Cada acomodação adicional {betrag}, a partir da {ab}ª acomodação fica mais barato",
       "provision": "Site próprio {direkt} · portais {portale}",
       "tarif": "Um plano para todos, 1.º alojamento incluído"
     }

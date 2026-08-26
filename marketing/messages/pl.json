@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Czy dostanę własną stronę rezerwacji bez prowizji portalu?",
-      "antwort": "Tak. Do każdego konta należą własny portal rezerwacyjny, widget na istniejącą stronę i kreator stron z własną domeną. Rezerwacje bezpośrednie kosztują {satz} zamiast 15–18 % prowizji dużych portali, korzystają z tego samego kalendarza i tych samych cen — a pieniądze wpływają wprost na twoje konto.",
+      "antwort": "Tak. Każde konto zawiera własny portal rezerwacji, widżet dla istniejącej strony internetowej oraz kreator stron internetowych z własną domeną. Rezerwacje dokonane w ten sposób są wolne od prowizji, korzystają z tego samego kalendarza i tych samych cen — a pieniądze trafiają bezpośrednio na Twoje konto.",
       "satzUnbekannt": "znacznie mniej"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Jeden system. Jedno logowanie.",
     "baldBadge": "Wkrótce",
-    "hinweis": "Podstawowe faktury są dostępne od startu. Rozszerzona księgowość (eksport DATEV), zarządzanie pracownikami, marketplace usługodawców i funkcje hotelowe to moduły dodatkowe.",
+    "hinweis": "Podstawowe faktury są dostępne w momencie uruchomienia. Rozszerzona księgowość (eksport DATEV), zarządzanie pracownikami, rynek usługodawców, funkcje hotelowe i awatar to moduły dodatkowe.",
     "eyebrow": "Funkcje",
     "sub": "Jeden dostęp dla obiektu, właścicieli, gości i serwisu sprzątającego — każda rola widzi dokładnie swój obszar.",
     "alleAnsehen": "Poznaj wszystkie funkcje w wersji testowej",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Rezerwacje bezpośrednie",
-        "items": "Własny portal rezerwacyjny, widget rezerwacyjny, kreator stron, własna domena, {satz} zamiast 15–18 % prowizji OTA",
+        "items": "Własna strona rezerwacji i widżet rezerwacji w kreatorze stron internetowych z własną domeną. Rezerwacje dokonane w ten sposób są wolne od prowizji.",
         "satzUnbekannt": "znacznie mniej"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "myNextDays powstał z naszej własnej codzienności wynajmu. Budujemy dokładnie takie oprogramowanie, jakiego na rynku szukaliśmy na próżno. Jedno oprogramowanie do wszystkiego!",
       "name": "Jeanine Ågaard",
-      "location": "Założycielka myNextDays / AirSmil"
+      "location": "Założycielka myNextDays / Właścicielka AirSmil"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Planowanie zmian i zadań dla sprzątania, recepcji i techniki.",
       "hotelTitel": "Hotel",
       "hotelText": "Obsługa recepcji z front deskiem — dla obiektów z kilkoma typami pokoi. Rozliczane za pokój, nie za obiekt.",
+      "avatarTitel": "Awatar",
+      "avatarText": "Awatar ze sterowaniem głosowym i konsjerżem AI: odpowiada na pytania gości na Twojej stronie rezerwacji i w skrzynce odbiorczej. Rozliczane za firmę, nie za obiekt.",
       "dynamischTitel": "Ceny dynamiczne",
       "dynamischText": "Twoje ceny dopasowują się same: do obłożenia, sezonu i wyprzedzenia. Naliczamy tylko od rezerwacji powstałych, gdy moduł działa.",
       "proMonat": "miesięcznie",
       "oder": "albo",
       "jeNutzer": "za użytkownika miesięcznie",
       "jeZimmer": "za pokój miesięcznie",
+      "jeBetrieb": "za firmę miesięcznie",
       "vomUmsatz": "od obrotu z rezerwacji",
       "hinweis": "Moduły można włączać i wyłączać co miesiąc — dostęp działa od razu, rozliczenie jest proporcjonalne."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Zobacz wszystkie ceny",
-      "abObjekt": "Każdy kolejny obiekt od {betrag}",
+      "abObjekt": "Każde kolejne zakwaterowanie {betrag}",
+      "abObjektStaffel": "Każde kolejne zakwaterowanie {betrag}, od {ab}. zakwaterowania jest taniej",
       "provision": "Własna strona {direkt} · portale {portale}",
       "tarif": "Jeden plan dla wszystkich, z 1. obiektem"
     }

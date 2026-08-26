@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Dobivam li vlastitu stranicu za rezervacije bez provizije portala?",
-      "antwort": "Da. Svakom računu pripadaju vlastiti rezervacijski portal, widget za postojeću stranicu i graditelj web-stranica s vlastitom domenom. Direktne rezervacije koštaju {satz} umjesto 15–18 % provizije velikih portala, idu na istom kalendaru i istim cijenama — a novac ide direktno na tvoj račun.",
+      "antwort": "Da. Svaki račun uključuje vlastiti portal za rezervacije, widget za postojeću web stranicu i alat za izradu web stranica s vlastitom domenom. Rezervacije putem njih su bez provizije, koriste isti kalendar i iste cijene — a novac ide izravno na vaš račun.",
       "satzUnbekannt": "znatno manje"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Jedan sustav. Jedna prijava.",
     "baldBadge": "Uskoro",
-    "hinweis": "Osnovni računi uključeni su od samog početka. Napredno računovodstvo (DATEV izvoz), upravljanje djelatnicima, tržište pružatelja usluga i hotelske funkcije dodatni su moduli.",
+    "hinweis": "Osnovni računi uključeni su pri pokretanju. Prošireno knjigovodstvo (DATEV izvoz), upravljanje zaposlenicima, tržnica pružatelja usluga, hotelske funkcije i avatar su dodatni moduli.",
     "eyebrow": "Funkcije",
     "sub": "Jedan pristup za tvrtku, vlasnike, goste i čišćenje — svaka uloga vidi točno svoje područje.",
     "alleAnsehen": "Otkrijte sve funkcije u besplatnom probnom razdoblju",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Izravna rezervacija",
-        "items": "Vlastiti portal za rezervacije, widget za rezervacije, alat za izradu stranica, vlastita domena, {satz} umjesto 15–18 % OTA provizije",
+        "items": "Vlastita stranica za rezervacije i widget za rezervacije u alatu za izradu web stranica s vlastitom domenom. Rezervacije putem ovoga su bez provizije.",
         "satzUnbekannt": "znatno manje"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "myNextDays je nastao iz naše vlastite svakodnevice u iznajmljivanju. Gradimo upravo onaj softver koji smo uzalud tražili na tržištu. Jedan softver za sve!",
       "name": "Jeanine Ågaard",
-      "location": "Osnivačica myNextDays / AirSmil"
+      "location": "Osnivačica myNextDays / Vlasnica AirSmil"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Planiranje smjena i zadataka za čišćenje, recepciju i tehniku.",
       "hotelTitel": "Hotel",
       "hotelText": "Rad recepcije s front deskom — za kuće s više tipova soba. Obračunava se po sobi, ne po kući.",
+      "avatarTitel": "Avatar",
+      "avatarText": "Avatar s glasovnom kontrolom i AI conciergeom: odgovara na pitanja gostiju na vašoj stranici za rezervacije i u pristigloj pošti. Naplaćuje se po tvrtki, ne po smještajnoj jedinici.",
       "dynamischTitel": "Dinamične cijene",
       "dynamischText": "Vaše se cijene prilagođavaju same: popunjenosti, sezoni i vremenu unaprijed. Naplaćuje se samo na rezervacije koje nastanu dok modul radi.",
       "proMonat": "mjesečno",
       "oder": "ili",
       "jeNutzer": "po korisniku mjesečno",
       "jeZimmer": "po sobi mjesečno",
+      "jeBetrieb": "mjesečno po tvrtki",
       "vomUmsatz": "od prometa rezervacija",
       "hinweis": "Moduli se mogu uključiti i isključiti svaki mjesec — pristup vrijedi odmah, obračun je razmjeran."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Pogledajte sve cijene",
-      "abObjekt": "Svaki sljedeći objekt od {betrag}",
+      "abObjekt": "Svaki dodatni smještaj {betrag}",
+      "abObjektStaffel": "Svaki dodatni smještaj {betrag}, od {ab}. smještaja je povoljnije",
       "provision": "Vlastita stranica {direkt} · portali {portale}",
       "tarif": "Jedan paket za sve, uklj. 1. objekt"
     }

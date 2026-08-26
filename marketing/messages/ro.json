@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Primesc o pagină proprie de rezervare fără comision de portal?",
-      "antwort": "Da. Fiecare cont include propriul portal de rezervare, un widget pentru site-ul existent și un constructor de site cu domeniu propriu. Rezervările directe costă {satz} în loc de comisionul de 15–18 % al portalurilor mari, folosesc același calendar și aceleași prețuri — iar banii intră direct în contul tău.",
+      "antwort": "Da. Fiecare cont include un portal de rezervare propriu, un widget pentru site-ul existent și un constructor de site-uri cu domeniu propriu. Rezervările făcute prin acestea sunt fără comision, utilizează același calendar și aceleași prețuri — iar banii intră direct în contul dumneavoastră.",
       "satzUnbekannt": "considerabil mai puțin"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Un sistem. Un singur cont.",
     "baldBadge": "În curând",
-    "hinweis": "Facturarea de bază este inclusă de la lansare. Contabilitatea avansată (export DATEV), gestionarea angajaților, marketplace-ul de furnizori și funcțiile hoteliere sunt module suplimentare.",
+    "hinweis": "Facturile de bază sunt incluse la lansare. Contabilitatea avansată (export DATEV), gestionarea angajaților, piața de furnizori de servicii, funcțiile hoteliere și avatarul sunt module suplimentare.",
     "eyebrow": "Funcții",
     "sub": "Un singur acces pentru unitate, proprietari, oaspeți și curățenie: fiecare rol vede exact zona sa.",
     "alleAnsehen": "Descoperă toate funcțiile în perioada de test",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Rezervare directă",
-        "items": "Portal de rezervări propriu, widget de rezervare, constructor de site-uri, domeniu propriu, {satz} în loc de 15–18 % comision OTA",
+        "items": "Pagină de rezervare proprie și widget de rezervare în constructorul de site-uri cu domeniu propriu. Rezervările făcute prin aceasta sunt fără comision.",
         "satzUnbekannt": "considerabil mai puțin"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "myNextDays s-a născut din propria noastră activitate zilnică de închiriere. Construim exact software-ul pe care l-am căutat în zadar pe piață. Un singur software pentru tot!",
       "name": "Jeanine Ågaard",
-      "location": "Fondatoare myNextDays / AirSmil"
+      "location": "Fondator myNextDays / Proprietar AirSmil"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Planificarea turelor și a sarcinilor pentru curățenie, recepție și mentenanță.",
       "hotelTitel": "Hotel",
       "hotelText": "Operarea recepției cu front desk — pentru clădiri cu mai multe tipuri de camere. Se facturează pe cameră, nu pe clădire.",
+      "avatarTitel": "Avatar",
+      "avatarText": "Avatar cu control vocal și concierge AI: răspunde la întrebările oaspeților pe pagina dvs. de rezervare și în căsuța poștală. Taxat per companie, nu per proprietate.",
       "dynamischTitel": "Prețuri dinamice",
       "dynamischText": "Prețurile tale se ajustează singure: după grad de ocupare, sezon și timpul până la sosire. Se calculează doar la rezervările create cât timp modulul rulează.",
       "proMonat": "pe lună",
       "oder": "sau",
       "jeNutzer": "per utilizator pe lună",
       "jeZimmer": "per cameră pe lună",
+      "jeBetrieb": "pe companie pe lună",
       "vomUmsatz": "din veniturile din rezervări",
       "hinweis": "Modulele pot fi activate și oprite lunar — accesul e imediat, facturarea proporțională."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Vezi toate prețurile",
-      "abObjekt": "Fiecare proprietate în plus de la {betrag}",
+      "abObjekt": "Fiecare cazare suplimentară {betrag}",
+      "abObjektStaffel": "Fiecare cazare suplimentară {betrag}, de la a {ab}-a cazare prețul este mai mic",
       "provision": "Site propriu {direkt} · portaluri {portale}",
       "tarif": "Un plan pentru toți, prima proprietate inclusă"
     }

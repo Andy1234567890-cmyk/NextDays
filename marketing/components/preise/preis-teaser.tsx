@@ -7,8 +7,15 @@
 // Jetzt kommen dieselben Zahlen aus derselben Quelle wie die Preisseite.
 //
 // Die Karte zeigt bewusst nur den EINSTIEG (Grundgebühr inkl. erstem Objekt)
-// und den günstigsten Objektpreis der letzten Staffelstufe — die vollständige
-// Rechnung gehört auf /preise, nicht in einen Teaser.
+// und den Preis des NÄCHSTEN Objekts — die vollständige Rechnung gehört auf
+// /preise, nicht in einen Teaser.
+//
+// Warum die zweite Stufe und nicht die günstigste (26.08.2026): dort stand
+// „Jedes weitere Objekt ab 4,00 €". Das ist der Preis ab dem 101. Objekt — für
+// den Leser mit drei Ferienwohnungen also eine Zahl, die er nie zahlt, und beim
+// Blick auf die Rechnung eine Enttäuschung. Genannt wird jetzt, was das zweite
+// Objekt WIRKLICH kostet (6,00 €), plus der Hinweis, ab welchem Objekt es
+// günstiger wird. Beide Werte kommen aus der Staffel, keiner ist getippt.
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
@@ -27,12 +34,29 @@ export async function PreisTeaser({ locale }: { locale: string }) {
   const liste = await holePreisliste(anzeigewaehrung(locale));
 
   const einstiegCent = liste ? staffelPreisCent(liste.grundtarif_tiers, 1) : null;
-  // Günstigster Objektpreis = letzte Stufe der Staffel. Sie ist die unbegrenzte
-  // („ab 101 Objekten"), deshalb `up_to === null`; fehlt sie, wird nichts
-  // behauptet.
-  const guenstigsteStufe = liste?.grundtarif_tiers.find(
-    (stufe) => stufe.up_to === null && stufe.unit_amount != null,
+  // Die erste Stufe MIT Objektpreis: sie gilt ab dem zweiten Objekt (die erste
+  // Stufe ist die Grundgebühr für das erste). Fehlt sie, wird nichts behauptet.
+  const stufen = liste?.grundtarif_tiers ?? [];
+  const naechsteStufeIndex = stufen.findIndex(
+    (stufe) => stufe.unit_amount != null,
   );
+  const naechsteStufe =
+    naechsteStufeIndex >= 0 ? stufen[naechsteStufeIndex] : undefined;
+  // Ab welchem Objekt es günstiger wird = Obergrenze dieser Stufe + 1 — und nur,
+  // wenn danach überhaupt eine billigere Stufe kommt. Ohne diese Prüfung
+  // verspräche der Satz eine Vergünstigung, die es nicht gibt.
+  const naechstBilligere = stufen
+    .slice(naechsteStufeIndex + 1)
+    .find(
+      (stufe) =>
+        stufe.unit_amount != null &&
+        naechsteStufe?.unit_amount != null &&
+        stufe.unit_amount < naechsteStufe.unit_amount,
+    );
+  const abObjekt =
+    naechstBilligere && naechsteStufe?.up_to != null
+      ? naechsteStufe.up_to + 1
+      : null;
 
   return (
     <section id="preise" className="scroll-mt-24 bg-surface-warm pb-24">
@@ -67,14 +91,15 @@ export async function PreisTeaser({ locale }: { locale: string }) {
                   </span>
                 </p>
                 <p className="text-sm font-medium">{tp("tarif")}</p>
-                {guenstigsteStufe?.unit_amount != null ? (
+                {naechsteStufe?.unit_amount != null ? (
                   <p className="text-sm text-muted-foreground">
-                    {tp("abObjekt", {
+                    {tp(abObjekt !== null ? "abObjektStaffel" : "abObjekt", {
                       betrag: formatCurrency(
-                        guenstigsteStufe.unit_amount / 100,
+                        naechsteStufe.unit_amount / 100,
                         liste.currency,
                         locale,
                       ),
+                      ab: abObjekt ?? "",
                     })}
                   </p>
                 ) : null}

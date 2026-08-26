@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Krijg ik een eigen boekingspagina zonder portaalcommissie?",
-      "antwort": "Ja. Bij elk account horen een eigen boekingsportaal, een widget voor je bestaande website en een websitebouwer met eigen domein. Directe boekingen kosten {satz} in plaats van de 15–18 % commissie van de grote portalen, lopen op dezelfde agenda en dezelfde prijzen — en het geld gaat direct naar jouw rekening.",
+      "antwort": "Ja. Elk account heeft een eigen boekingsportaal, een widget voor de bestaande website en een websitebouwer met een eigen domein. Boekingen via deze weg zijn provisievrij, lopen via dezelfde kalender en dezelfde prijzen — en het geld gaat direct naar uw rekening.",
       "satzUnbekannt": "aanzienlijk minder"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Eén systeem. Eén login.",
     "baldBadge": "Binnenkort",
-    "hinweis": "Basisfacturatie zit er vanaf de lancering in. Uitgebreide boekhouding (DATEV-export), personeelsbeheer, de marktplaats voor dienstverleners en hotelfuncties zijn aanvullende modules.",
+    "hinweis": "Basis facturen zijn inbegrepen bij de lancering. Uitgebreide boekhouding (DATEV-export), medewerkersbeheer, dienstverlenersmarktplaats, hotelfuncties en de avatar zijn extra modules.",
     "eyebrow": "Functies",
     "sub": "Eén toegang voor het bedrijf, eigenaren, gasten en schoonmaak – elke rol ziet precies het eigen gedeelte.",
     "alleAnsehen": "Ontdek alle functies in de gratis proefperiode",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Directe boekingen",
-        "items": "Eigen boekingsportaal, boekingswidget, websitebouwer, eigen domein, {satz} in plaats van 15–18 % OTA-commissie",
+        "items": "Eigen boekingspagina en boekingswidget in de websitebouwer met eigen domein. Boekingen via deze weg zijn provisievrij.",
         "satzUnbekannt": "aanzienlijk minder"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "myNextDays is ontstaan uit onze eigen verhuurpraktijk. We bouwen precies de software die we op de markt tevergeefs hebben gezocht. Eén software voor alles!",
       "name": "Jeanine Ågaard",
-      "location": "Oprichter myNextDays / AirSmil"
+      "location": "Oprichter myNextDays / Eigenaar AirSmil"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Dienst- en inzetplanning voor schoonmaak, receptie en technische dienst.",
       "hotelTitel": "Hotel",
       "hotelText": "Receptiebedrijf met front desk — voor huizen met meerdere kamertypes. Afgerekend per kamer, niet per huis.",
+      "avatarTitel": "Avatar",
+      "avatarText": "Avatar met spraakbesturing en AI-conciërge: beantwoordt gastvragen op uw boekingspagina en in de inbox. Afgerekend per bedrijf, niet per accommodatie.",
       "dynamischTitel": "Dynamische prijzen",
       "dynamischText": "Je prijzen passen zichzelf aan: aan bezetting, seizoen en boekingstermijn. Er wordt alleen gerekend over boekingen die ontstaan terwijl de module loopt.",
       "proMonat": "per maand",
       "oder": "of",
       "jeNutzer": "per gebruiker per maand",
       "jeZimmer": "per kamer per maand",
+      "jeBetrieb": "per bedrijf per maand",
       "vomUmsatz": "van de boekingsomzet",
       "hinweis": "Modules zijn maandelijks bij en af te boeken — de toegang werkt meteen, de facturatie naar rato."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Alle prijzen bekijken",
-      "abObjekt": "Elk volgend object vanaf {betrag}",
+      "abObjekt": "Elke extra accommodatie {betrag}",
+      "abObjektStaffel": "Elke extra accommodatie {betrag}, vanaf de {ab}e accommodatie wordt het goedkoper",
       "provision": "Eigen website {direkt} · portalen {portale}",
       "tarif": "Eén abonnement voor iedereen, incl. 1e object"
     }

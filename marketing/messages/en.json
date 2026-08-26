@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Do I get my own booking page without portal commission?",
-      "antwort": "Yes. Every account includes its own booking portal, a widget for your existing website and a website builder with your own domain. Direct bookings cost {satz} instead of the 15–18 % commission of the large portals, run on the same calendar and the same prices — and the money goes straight to your account.",
+      "antwort": "Yes. Each account includes its own booking portal, a widget for the existing website, and a website builder with its own domain. Bookings made through these are commission-free, use the same calendar and prices — and the money goes directly to your account.",
       "satzUnbekannt": "far less"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "One system. One login.",
     "baldBadge": "Coming soon",
-    "hinweis": "Basic invoicing is included at launch. Advanced accounting (DATEV export), staff management, the service provider marketplace and hotel features are add-on modules.",
+    "hinweis": "Basic invoices are included at launch. Advanced accounting (DATEV export), employee management, service provider marketplace, hotel functions, and the avatar are additional modules.",
     "eyebrow": "Features",
     "sub": "One login for the business, owners, guests and housekeeping — every role sees exactly its own area.",
     "alleAnsehen": "Explore every feature in the free trial",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Direct booking",
-        "items": "Your own booking portal, booking widget, website builder, own domain, {satz} instead of 15–18% OTA commission",
+        "items": "Own booking page and booking widget in the website builder with your own domain. Bookings made through this are commission-free.",
         "satzUnbekannt": "far less"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "myNextDays grew out of our own everyday rental business. We're building exactly the software we searched for in vain on the market. One software for everything!",
       "name": "Jeanine Ågaard",
-      "location": "Founder, myNextDays / AirSmil"
+      "location": "Founder myNextDays / Owner AirSmil"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Shift and assignment planning for housekeeping, reception and maintenance.",
       "hotelTitel": "Hotel",
       "hotelText": "Reception operations with a front desk — for houses with several room types. Billed per room, not per house.",
+      "avatarTitel": "Avatar",
+      "avatarText": "Avatar with voice control and AI concierge: answers guest questions on your booking page and in the inbox. Billed per company, not per accommodation.",
       "dynamischTitel": "Dynamic pricing",
       "dynamischText": "Your prices adjust by themselves: to occupancy, season and lead time. Charged only on bookings created while the module is running.",
       "proMonat": "per month",
       "oder": "or",
       "jeNutzer": "per user per month",
       "jeZimmer": "per room per month",
+      "jeBetrieb": "per company per month",
       "vomUmsatz": "of booking revenue",
       "hinweis": "Modules can be added and cancelled monthly — access takes effect immediately, billing is pro rata."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "See all prices",
-      "abObjekt": "Every further property from {betrag}",
+      "abObjekt": "Each additional property {betrag}",
+      "abObjektStaffel": "Each additional property {betrag}, from the {ab}. property it gets cheaper",
       "provision": "Own website {direkt} · channels {portale}",
       "tarif": "One plan for everyone, incl. 1st property"
     }

@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Kapok saját foglalási oldalt portáljutalék nélkül?",
-      "antwort": "Igen. Minden fiókhoz tartozik saját foglalási portál, egy widget a meglévő weboldalra és egy weboldal-építő saját domainnel. Közvetlen foglalásnál a mi díjunk {satz}, míg a nagy portálok 15–18 % jutalékot kérnek; ugyanazon a naptáron és ugyanazokkal az árakkal fut — a pénz pedig közvetlenül a te számládra megy.",
+      "antwort": "Igen. Minden fiókhoz tartozik egy saját foglalási portál, egy widget a meglévő weboldalhoz és egy weboldal-készítő saját domainnel. Az ezen keresztül történő foglalások jutalékmentesek, ugyanazt a naptárat és árakat használják – és a pénz közvetlenül az Ön számlájára kerül.",
       "satzUnbekannt": "jelentősen kevesebb"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Egy rendszer. Egy belépés.",
     "baldBadge": "Hamarosan",
-    "hinweis": "Az alapszámlázás induláskor elérhető. A kibővített könyvelés (DATEV-export), a munkatárs-kezelés, a szolgáltatói piactér és a szállodai funkciók kiegészítő modulok.",
+    "hinweis": "Az alap számlák a bevezetéskor rendelkezésre állnak. A kibővített könyvelés (DATEV export), a munkatárs-menedzsment, a szolgáltatói piactér, a szállodai funkciók és az Avatar kiegészítő modulok.",
     "eyebrow": "Funkciók",
     "sub": "Egy belépés az üzemeltetésnek, a tulajdonosoknak, a vendégeknek és a takarításnak — minden szerep pontosan a saját területét látja.",
     "alleAnsehen": "Fedezze fel az összes funkciót a próbaidőszakban",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Közvetlen foglalás",
-        "items": "Saját foglalási portál, foglalási widget, weboldal-építő, saját domain, a mi díjunk {satz} a portálok 15–18 % jutaléka helyett",
+        "items": "Saját foglalási oldal és foglalási widget a weboldal-készítőben saját domainnel. Az ezen keresztül történő foglalások jutalékmentesek.",
         "satzUnbekannt": "jelentősen kevesebb"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "A myNextDays a saját bérbeadói mindennapjainkból született. Pontosan azt a szoftvert építjük, amelyet a piacon hiába kerestünk. Egy szoftver mindenre!",
       "name": "Jeanine Ågaard",
-      "location": "A myNextDays / AirSmil alapítója"
+      "location": "A myNextDays alapítója / Az AirSmil tulajdonosa"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Műszak- és feladattervezés takarításhoz, recepcióhoz és karbantartáshoz.",
       "hotelTitel": "Hotel",
       "hotelText": "Recepciós működés front deskkel — több szobatípusú házakhoz. Szobánként számlázva, nem házanként.",
+      "avatarTitel": "Avatar",
+      "avatarText": "Avatar hangvezérléssel és AI-concierge-szel: válaszol a vendégek kérdéseire a foglalási oldalon és a beérkező levelek között. Vállalatonként, nem szállásonként kerül elszámolásra.",
       "dynamischTitel": "Dinamikus árak",
       "dynamischText": "Az áraid maguktól igazodnak: a kihasználtsághoz, a szezonhoz és az előfoglalási időhöz. Csak a modul futása alatt keletkező foglalások után számolunk.",
       "proMonat": "havonta",
       "oder": "vagy",
       "jeNutzer": "felhasználónként havonta",
       "jeZimmer": "szobánként havonta",
+      "jeBetrieb": "cégenként havonta",
       "vomUmsatz": "a foglalási bevételből",
       "hinweis": "A modulok havonta be- és kikapcsolhatók — a hozzáférés azonnal él, a számlázás arányos."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Összes ár megtekintése",
-      "abObjekt": "Minden további ingatlan {betrag}-tól",
+      "abObjekt": "Minden további szállás {betrag}",
+      "abObjektStaffel": "Minden további szállás {betrag}, a(z) {ab}. szállástól olcsóbb",
       "provision": "Saját weboldal {direkt} · portálok {portale}",
       "tarif": "Egy csomag mindenkinek, az 1. ingatlannal"
     }

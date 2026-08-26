@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "¿Tengo una página de reservas propia sin comisión de portal?",
-      "antwort": "Sí. Cada cuenta incluye su propio portal de reservas, un widget para tu web actual y un constructor de webs con dominio propio. Las reservas directas cuestan {satz} en lugar del 15–18 % de comisión de los grandes portales, usan el mismo calendario y los mismos precios — y el dinero va directo a tu cuenta.",
+      "antwort": "Sí. Cada cuenta incluye un portal de reservas propio, un widget para el sitio web existente y un creador de sitios web con dominio propio. Las reservas realizadas a través de este canal están libres de comisiones, utilizan el mismo calendario y los mismos precios, y el dinero va directamente a su cuenta.",
       "satzUnbekannt": "mucho menos"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Un sistema. Un acceso.",
     "baldBadge": "Muy pronto",
-    "hinweis": "La facturación básica está incluida desde el lanzamiento. La contabilidad avanzada (exportación DATEV), la gestión de personal, el marketplace de proveedores y las funciones de hotel son módulos adicionales.",
+    "hinweis": "Las facturas básicas se incluyen en el lanzamiento. La contabilidad avanzada (exportación DATEV), la gestión de empleados, el mercado de proveedores de servicios, las funciones de hotel y el avatar son módulos adicionales.",
     "eyebrow": "Funciones",
     "sub": "Un acceso para el negocio, los propietarios, los huéspedes y la limpieza: cada rol ve exactamente su área.",
     "alleAnsehen": "Descubre todas las funciones en la prueba gratuita",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Reserva directa",
-        "items": "Portal de reservas propio, widget de reservas, creador de webs, dominio propio, {satz} en lugar del 15–18 % de comisión OTA",
+        "items": "Página de reservas propia y widget de reservas en el creador de sitios web con dominio propio. Las reservas realizadas a través de este canal están libres de comisiones.",
         "satzUnbekannt": "mucho menos"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "myNextDays nació de nuestro propio día a día alquilando propiedades. Estamos creando exactamente el software que buscamos en vano en el mercado. ¡Un software para todo!",
       "name": "Jeanine Ågaard",
-      "location": "Fundadora de myNextDays / AirSmil"
+      "location": "Fundadora de myNextDays / Propietaria de AirSmil"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Planificación de turnos y tareas para limpieza, recepción y mantenimiento.",
       "hotelTitel": "Hotel",
       "hotelText": "Recepción con front desk, para casas con varios tipos de habitación. Se factura por habitación, no por casa.",
+      "avatarTitel": "Avatar",
+      "avatarText": "Avatar con control de voz y conserje de IA: responde a las preguntas de los huéspedes en su página de reservas y en la bandeja de entrada. Se factura por empresa, no por alojamiento.",
       "dynamischTitel": "Precios dinámicos",
       "dynamischText": "Tus precios se ajustan solos: a la ocupación, la temporada y la antelación. Solo se cobra sobre reservas creadas mientras el módulo está activo.",
       "proMonat": "al mes",
       "oder": "o",
       "jeNutzer": "por usuario y mes",
       "jeZimmer": "por habitación y mes",
+      "jeBetrieb": "por empresa al mes",
       "vomUmsatz": "de los ingresos por reservas",
       "hinweis": "Los módulos se contratan y cancelan cada mes: el acceso es inmediato y la facturación, proporcional."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Ver todos los precios",
-      "abObjekt": "Cada alojamiento adicional desde {betrag}",
+      "abObjekt": "Cada alojamiento adicional {betrag}",
+      "abObjektStaffel": "Cada alojamiento adicional {betrag}, a partir del {ab}. alojamiento es más económico",
       "provision": "Web propia {direkt} · portales {portale}",
       "tarif": "Un plan para todos, 1.er alojamiento incluido"
     }

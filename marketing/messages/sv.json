@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Får jag en egen bokningssida utan portalprovision?",
-      "antwort": "Ja. Till varje konto hör en egen bokningsportal, en widget för din befintliga webbplats och en webbplatsbyggare med eget domännamn. Direktbokningar kostar {satz} i stället för de stora portalernas 15–18 %, körs på samma kalender och samma priser — och pengarna går direkt till ditt konto.",
+      "antwort": "Ja. Varje konto inkluderar en egen bokningsportal, en widget för den befintliga webbplatsen och en webbplatsbyggare med egen domän. Bokningar via dessa är provisionsfria, använder samma kalender och priser – och pengarna går direkt till ditt konto.",
       "satzUnbekannt": "betydligt mindre"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Ett system. En inloggning.",
     "baldBadge": "Kommer snart",
-    "hinweis": "Grundläggande fakturering ingår från lanseringen. Utökad bokföring (DATEV-export), personalhantering, marknadsplatsen för tjänsteleverantörer och hotellfunktioner är tilläggsmoduler.",
+    "hinweis": "Grundläggande fakturor ingår vid lanseringen. Utökad bokföring (DATEV-export), personalhantering, marknadsplats för tjänsteleverantörer, hotellfunktioner och avataren är tilläggsmoduler.",
     "eyebrow": "Funktioner",
     "sub": "En inloggning för verksamheten, ägarna, gästerna och städningen – varje roll ser exakt sitt eget område.",
     "alleAnsehen": "Upptäck alla funktioner i den kostnadsfria testperioden",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Direktbokning",
-        "items": "Egen bokningsportal, bokningswidget, webbplatsbyggare, egen domän, {satz} i stället för 15–18 % OTA-provision",
+        "items": "Egen bokningssida och bokningswidget i webbplatsbyggaren med egen domän. Bokningar via denna är provisionsfria.",
         "satzUnbekannt": "betydligt mindre"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "myNextDays har vuxit fram ur vår egen uthyrningsvardag. Vi bygger precis den programvara som vi förgäves letade efter på marknaden. En programvara för allt!",
       "name": "Jeanine Ågaard",
-      "location": "Grundare, myNextDays / AirSmil"
+      "location": "Grundare av myNextDays / Ägare av AirSmil"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Skift- och uppdragsplanering för städ, reception och fastighetsteknik.",
       "hotelTitel": "Hotell",
       "hotelText": "Receptionsdrift med front desk — för hus med flera rumstyper. Debiteras per rum, inte per hus.",
+      "avatarTitel": "Avatar",
+      "avatarText": "Avatar med röststyrning och AI-concierge: svarar på gästfrågor på din bokningssida och i inkorgen. Debiteras per företag, inte per boende.",
       "dynamischTitel": "Dynamiska priser",
       "dynamischText": "Dina priser anpassar sig själva: efter beläggning, säsong och framförhållning. Beräknas bara på bokningar som uppstår medan modulen är igång.",
       "proMonat": "per månad",
       "oder": "eller",
       "jeNutzer": "per användare och månad",
       "jeZimmer": "per rum och månad",
+      "jeBetrieb": "per företag per månad",
       "vomUmsatz": "av bokningsomsättningen",
       "hinweis": "Moduler kan läggas till och sägas upp månadsvis — tillgången gäller genast, faktureringen sker proportionellt."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Se alla priser",
-      "abObjekt": "Varje ytterligare objekt från {betrag}",
+      "abObjekt": "Varje ytterligare boende {betrag}",
+      "abObjektStaffel": "Varje ytterligare boende {betrag}, från och med det {ab}. boendet blir det billigare",
       "provision": "Egen webbplats {direkt} · portaler {portale}",
       "tarif": "En plan för alla, inkl. 1:a objektet"
     }

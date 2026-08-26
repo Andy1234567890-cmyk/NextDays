@@ -62,21 +62,21 @@ const UEBERWACHT = [
       },
       // Startseiten-Teaser.
       { pfad: "preise.teaser.provision", platzhalter: "portale" },
-      // Die drei kundenwirksamsten Stellen — FAQ und Funktionsliste, wo ein
-      // Interessent liest, BEVOR er die Preisseite überhaupt öffnet. Sie
-      // stellen unseren Satz dem der Portale gegenüber und dürfen deshalb die
-      // FREMDEN 15–18 % literal nennen: `flexibel` schaltet von
-      // `PROZENT_LITERAL` auf `EIGENER_SATZ_LITERAL` um (Begründung dort).
+      // FAQ-Antwort und Stichwortzeile „Direktbuchung" nennen seit dem
+      // 26.08.2026 GAR KEINE Zahl mehr, sondern die Aussage selbst:
+      // Direktbuchungen sind provisionsfrei. Vorher stand dort
+      // „{satz} statt 15–18 % OTA-Provision" — das las sich, als koste eine
+      // Direktbuchung 0,5 %, obwohl der Satz die PORTAL-Buchungen betrifft
+      // (die Preisseite weist Direktbuchungen mit „0 %" aus). Eine
+      // Formulierung, die den eigenen Preis höher aussehen lässt, als er ist,
+      // ist derselbe Fehler wie eine erfundene Zahl.
       //
-      // Gerendert werden sie über `lib/provisionstexte.ts` (Server holt den
-      // Satz) plus `lib/gruppen-stichworte.ts` (setzt ihn an allen sechs
-      // Render-Stellen der Stichwortzeile gleich ein).
-      { pfad: "faq.direkt.antwort", platzhalter: "satz", flexibel: true },
-      {
-        pfad: "features.gruppen.direkt.items",
-        platzhalter: "satz",
-        flexibel: true,
-      },
+      // Geprüft wird deshalb nur noch, dass hier KEINE Prozentzahl auftaucht
+      // (`PROZENT_LITERAL`, kein `flexibel`) — weder unsere noch eine fremde.
+      { pfad: "faq.direkt.antwort", nurVorhanden: true },
+      { pfad: "features.gruppen.direkt.items", nurVorhanden: true },
+      // Der Marktplatz-Punkt nennt weiter UNSEREN All-in-Satz und darf die
+      // fremde Portalprovision literal danebenstellen (`flexibel`).
       {
         pfad: "funktionen.direkt.block.eins.punkte.c",
         platzhalter: "satz",

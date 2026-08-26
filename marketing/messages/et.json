@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Kas saan oma broneerimislehe ilma portaali komisjonita?",
-      "antwort": "Jah. Iga konto juurde kuuluvad oma broneerimisportaal, vidin olemasolevale veebilehele ja veebilehe koostaja oma domeeniga. Otsebroneeringu tasu on {satz}, suurte portaalide 15–18 % komisjoni asemel; need käivad samas kalendris ja samade hindadega — ning raha läheb otse sinu kontole.",
+      "antwort": "Jah. Iga kontoga kaasneb oma broneerimisportaal, vidin olemasolevale veebisaidile ja veebilehe koostaja koos oma domeeniga. Broneeringud nende kaudu on vahendustasuta, kasutavad sama kalendrit ja samu hindu – ning raha läheb otse teie kontole.",
       "satzUnbekannt": "tunduvalt vähem"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Üks süsteem. Üks sisselogimine.",
     "baldBadge": "Tulekul",
-    "hinweis": "Põhiarveldus on kaasas juba käivitamisel. Laiendatud raamatupidamine (DATEV-eksport), töötajate haldus, teenusepakkujate turg ja hotellifunktsioonid on lisamoodulid.",
+    "hinweis": "Põhiarved on käivitamisel kaasas. Laiendatud raamatupidamine (DATEV-eksport), töötajate haldamine, teenusepakkujate turg, hotellifunktsioonid ja avatar on lisamoodulid.",
     "eyebrow": "Funktsioonid",
     "sub": "Üks sisselogimine ettevõttele, omanikele, külalistele ja koristusele – iga roll näeb täpselt oma ala.",
     "alleAnsehen": "Avasta kõik funktsioonid tasuta prooviperioodil",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Otsebroneering",
-        "items": "Oma broneerimisportaal, broneerimisvidin, veebilehe koostaja, oma domeen, tasu {satz} portaalide 15–18 % komisjoni asemel",
+        "items": "Oma broneerimisleht ja broneerimisvidin veebilehe koostajas koos oma domeeniga. Broneeringud nende kaudu on vahendustasuta.",
         "satzUnbekannt": "tunduvalt vähem"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "myNextDays sai alguse meie enda igapäevasest üürileandmise tegevusest. Me ehitame täpselt sellist tarkvara, mida me turult asjatult otsisime. Üks tarkvara kõige jaoks!",
       "name": "Jeanine Ågaard",
-      "location": "Asutaja, myNextDays / AirSmil"
+      "location": "myNextDays asutaja / AirSmil omanik"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Vahetuste ja tööde planeerimine koristusele, vastuvõtule ja tehnikale.",
       "hotelTitel": "Hotell",
       "hotelText": "Vastuvõtu töö front deskiga — mitme toatüübiga majadele. Arveldatakse toa, mitte maja kaupa.",
+      "avatarTitel": "Avatar",
+      "avatarText": "Hääljuhtimisega avatar ja tehisintellekti concierge: vastab külaliste küsimustele teie broneerimislehel ja postkastis. Arveldatakse ettevõtte, mitte majutuskoha kohta.",
       "dynamischTitel": "Dünaamilised hinnad",
       "dynamischText": "Sinu hinnad kohanduvad ise: täituvuse, hooaja ja etteteatamisajaga. Arvestatakse ainult broneeringutelt, mis tekivad mooduli töötamise ajal.",
       "proMonat": "kuus",
       "oder": "või",
       "jeNutzer": "kasutaja kohta kuus",
       "jeZimmer": "toa kohta kuus",
+      "jeBetrieb": "ettevõtte kohta kuus",
       "vomUmsatz": "broneeringute käibest",
       "hinweis": "Mooduleid saab kuu kaupa sisse ja välja lülitada — ligipääs kehtib kohe, arveldus on proportsionaalne."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Vaata kõiki hindu",
-      "abObjekt": "Iga järgmine objekt alates {betrag}",
+      "abObjekt": "Iga järgmine majutus {betrag}",
+      "abObjektStaffel": "Iga järgmine majutus {betrag}, alates {ab}. majutusest on soodsam",
       "provision": "Oma veebileht {direkt} · portaalid {portale}",
       "tarif": "Üks pakett kõigile, sh 1. objekt"
     }

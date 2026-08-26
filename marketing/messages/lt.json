@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Ar gausiu savo rezervacijų puslapį be portalo komisinių?",
-      "antwort": "Taip. Kiekvienai paskyrai priklauso savas rezervacijų portalas, valdiklis esamai svetainei ir svetainių kūrimo įrankis su savu domenu. Tiesioginės rezervacijos kainuoja {satz} vietoje 15–18 % didžiųjų portalų komisinių, veikia tame pačiame kalendoriuje ir tomis pačiomis kainomis — o pinigai patenka tiesiai į jūsų sąskaitą.",
+      "antwort": "Taip. Kiekviena paskyra apima nuosavą užsakymų portalą, valdiklį esamai svetainei ir svetainių kūrimo įrankį su nuosavu domenu. Užsakymai per juos yra be komisinių, vykdomi per tą patį kalendorių ir tuos pačius kainoraščius – o pinigai patenka tiesiai į jūsų sąskaitą.",
       "satzUnbekannt": "gerokai mažiau"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Viena sistema. Vienas prisijungimas.",
     "baldBadge": "Netrukus",
-    "hinweis": "Pagrindinės sąskaitos įtrauktos jau nuo starto. Išplėstinė buhalterija (DATEV eksportas), darbuotojų valdymas, paslaugų teikėjų prekyvietė ir viešbučių funkcijos yra papildomi moduliai.",
+    "hinweis": "Pagrindinės sąskaitos faktūros yra įtrauktos nuo paleidimo. Išplėstinė apskaita (DATEV eksportas), darbuotojų valdymas, paslaugų teikėjų prekyvietė, viešbučio funkcijos ir avataras yra papildomi moduliai.",
     "eyebrow": "Funkcijos",
     "sub": "Viena prieiga verslui, savininkams, svečiams ir valymo tarnybai — kiekvienas vaidmuo mato tiksliai savo sritį.",
     "alleAnsehen": "Išbandykite visas funkcijas nemokamo bandymo metu",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Tiesioginė rezervacija",
-        "items": "Savas rezervacijų portalas, rezervacijų valdiklis, svetainių kūrimo įrankis, savas domenas, {satz} vietoj 15–18 % OTA komisijos",
+        "items": "Savo užsakymų puslapis ir užsakymų valdiklis svetainių kūrimo įrankyje su nuosavu domenu. Užsakymai per čia yra be komisinių.",
         "satzUnbekannt": "gerokai mažiau"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "myNextDays gimė iš mūsų pačių nuomos kasdienybės. Kuriame būtent tokią programinę įrangą, kokios veltui ieškojome rinkoje. Viena programinė įranga viskam!",
       "name": "Jeanine Ågaard",
-      "location": "myNextDays / AirSmil įkūrėja"
+      "location": "myNextDays įkūrėja / AirSmil savininkė"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Pamainų ir užduočių planavimas valymui, registratūrai ir technikai.",
       "hotelTitel": "Viešbutis",
       "hotelText": "Registratūros darbas su front desk — pastatams su keliais kambarių tipais. Apskaičiuojama už kambarį, ne už pastatą.",
+      "avatarTitel": "Avataras",
+      "avatarText": "Avataras su valdymu balsu ir dirbtinio intelekto konsjeržu: atsako į svečių klausimus jūsų užsakymų puslapyje ir gautuosiuose. Apmokestinama įmonei, o ne apgyvendinimo įstaigai.",
       "dynamischTitel": "Dinaminės kainos",
       "dynamischText": "Jūsų kainos prisitaiko pačios: prie užimtumo, sezono ir rezervacijos laiko. Skaičiuojama tik nuo rezervacijų, atsiradusių moduliui veikiant.",
       "proMonat": "per mėnesį",
       "oder": "arba",
       "jeNutzer": "už naudotoją per mėnesį",
       "jeZimmer": "už kambarį per mėnesį",
+      "jeBetrieb": "įmonei per mėnesį",
       "vomUmsatz": "nuo rezervacijų apyvartos",
       "hinweis": "Modulius galima įjungti ir išjungti kas mėnesį — prieiga veikia iš karto, atsiskaitymas proporcingas."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Žiūrėti visas kainas",
-      "abObjekt": "Kiekvienas kitas objektas nuo {betrag}",
+      "abObjekt": "Kiekviena papildoma apgyvendinimo vieta {betrag}",
+      "abObjektStaffel": "Kiekviena papildoma apgyvendinimo vieta {betrag}, nuo {ab}. apgyvendinimo vietos kaina mažėja",
       "provision": "Sava svetainė {direkt} · portalai {portale}",
       "tarif": "Vienas planas visiems, su 1-uoju objektu"
     }

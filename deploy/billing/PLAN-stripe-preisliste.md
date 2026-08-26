@@ -91,10 +91,11 @@ Ein Produkt, ein wiederkehrender Preis (`interval=month`), `billing_scheme=tiere
 
 | Modul | Preis | Stripe-Abbildung |
 |---|---|---|
-| Modul 3 Buchhaltung | 30,00 €/Monat | recurring flat |
+| Modul 3 Buchhaltung | 29,90 €/Monat | recurring flat |
 | Modul 4 Mitarbeiter | 19,90 €/Monat **ODER** 2,50 €/Nutzer | zwei Preise (flat + per-seat `quantity`), Kunde wählt einen |
 | Modul 5 Jobmarkt | 2 % vom Umsatz | **kein fixer Preis** → Usage/Invoice-Item nachgelagert (wie Provisionen) |
 | Modul 6 Hotel | ab 600,00 €/Monat **ODER** 1,50 €/Zimmer | zwei Preise (flat + per-room) |
+| Modul 7 Avatar | 89,90 €/Monat je Betrieb | recurring flat |
 
 Jedes Modul = eigenes Subscription-Item, nur wenn gebucht. Entitlement steuert
 Feature-Zugang im System (siehe „Systemintegration").

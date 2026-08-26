@@ -23,6 +23,7 @@ MODULE_PRICE_LOOKUP: dict[str, str] = {
     "modul3_buchhaltung": "modul3_flat",
     "modul4_mitarbeiter": "modul4_flat",
     "modul6_hotel": "modul6_flat",
+    "modul7_avatar": "modul7_flat",
 }
 MODULE_KEYS = frozenset(
     {
@@ -30,6 +31,7 @@ MODULE_KEYS = frozenset(
         "modul4_mitarbeiter",
         "modul5_jobmarkt",
         "modul6_hotel",
+        "modul7_avatar",
         "dynamische_preise",
     }
 )

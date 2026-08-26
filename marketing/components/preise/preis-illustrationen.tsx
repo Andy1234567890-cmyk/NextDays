@@ -174,6 +174,21 @@ function Hotel({ className }: Props) {
   );
 }
 
+/** Avatar: Gesicht im Sprechfeld mit Schallwellen — KI, die antwortet. */
+function Avatar({ className }: Props) {
+  return (
+    <svg viewBox="0 0 96 96" className={className} aria-hidden>
+      <rect x="12" y="18" width="52" height="44" rx="10" {...STROKE} />
+      <path d="M28 62v12l14-12" {...STROKE} />
+      <circle cx="30" cy="36" r="3.5" fill="currentColor" />
+      <circle cx="46" cy="36" r="3.5" fill="currentColor" />
+      <path d="M30 48c4 3.5 12 3.5 16 0" {...STROKE} opacity="0.55" />
+      <path d="M74 30a18 18 0 0 1 0 36" {...STROKE} opacity="0.45" />
+      <path d="M72 40a9 9 0 0 1 0 16" {...STROKE} opacity="0.3" />
+    </svg>
+  );
+}
+
 /** Marktplatz: Marktstand mit Gästen davor (myBestDays). */
 function Marktplatz({ className }: Props) {
   return (
@@ -224,6 +239,7 @@ export const MODUL_ILLUSTRATION: Record<
   buchhaltung: Buchhaltung,
   mitarbeiter: Team,
   hotel: Hotel,
+  avatar: Avatar,
   dynamisch: Preise,
 };
 

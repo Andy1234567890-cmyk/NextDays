@@ -8,18 +8,19 @@
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 
-// myBestDays steht ZUERST und nicht am Ende der Fremdportale: es ist unser
-// eigener Marktplatz und ein gleichrangiger Vertriebskanal — wer myNextDays
-// bucht, bekommt ihn ohne Zusatzvertrag. Genau das ist das Verkaufsargument,
-// das die Reihe sonst nicht erzählt.
+// myBestDays steht am ENDE der Reihe. Vorher stand es vorn, weil es unser
+// eigener Marktplatz ist; die Reihe beginnt jetzt aber mit den Portalen, die
+// der Leser kennt — die eigene Marke schließt sie ab, statt sie anzuführen.
+// Entscheidung vom 26.08.2026; dieselbe Reihenfolge gilt in
+// `funktionen/funktions-grafiken.tsx` (GrafikKanaele).
 const CHANNELS = [
-  { src: "/marketing/channels/mybestdays.png", alt: "myBestDays" },
   { src: "/marketing/channels/booking-com.svg", alt: "Booking.com" },
   { src: "/marketing/channels/airbnb.png", alt: "Airbnb" },
   { src: "/marketing/channels/expedia.svg", alt: "Expedia" },
   { src: "/marketing/channels/google.svg", alt: "Google" },
   { src: "/marketing/channels/agoda.svg", alt: "Agoda" },
   { src: "/marketing/channels/tripadvisor.svg", alt: "Tripadvisor" },
+  { src: "/marketing/channels/mybestdays.png", alt: "myBestDays" },
 ];
 
 export function MarketingChannels() {

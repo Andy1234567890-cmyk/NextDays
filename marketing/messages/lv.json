@@ -580,7 +580,7 @@
     },
     "direkt": {
       "frage": "Vai saņemu savu rezervāciju lapu bez portāla komisijas?",
-      "antwort": "Jā. Katram kontam pieder savs rezervāciju portāls, logrīks esošajai vietnei un vietņu veidotājs ar savu domēnu. Tiešās rezervācijas maksā {satz}, nevis lielo portālu 15–18 % komisiju, darbojas tajā pašā kalendārā un ar tām pašām cenām — un nauda nonāk tieši tavā kontā.",
+      "antwort": "Jā. Katrā kontā ir savs rezervēšanas portāls, logrīks esošajai vietnei un vietņu veidotājs ar savu domēnu. Rezervācijas, kas veiktas, izmantojot šo, ir bez komisijas maksas, izmanto to pašu kalendāru un tās pašas cenas — un nauda nonāk tieši jūsu kontā.",
       "satzUnbekannt": "ievērojami mazāk"
     },
     "marktplatz": {
@@ -666,7 +666,7 @@
   "features": {
     "heading": "Viena sistēma. Viena pieteikšanās.",
     "baldBadge": "Drīzumā",
-    "hinweis": "Pamata rēķini ir iekļauti jau no starta. Paplašinātā grāmatvedība (DATEV eksports), darbinieku pārvaldība, pakalpojumu sniedzēju tirgus un viesnīcu funkcijas ir papildu moduļi.",
+    "hinweis": "Pamata rēķini ir iekļauti palaišanas brīdī. Paplašināta grāmatvedība (DATEV eksports), darbinieku pārvaldība, pakalpojumu sniedzēju tirgus, viesnīcu funkcijas un avatars ir papildu moduļi.",
     "eyebrow": "Funkcijas",
     "sub": "Viena piekļuve uzņēmumam, īpašniekiem, viesiem un uzkopšanai — katra loma redz tieši savu jomu.",
     "alleAnsehen": "Iepazīstiet visas funkcijas bezmaksas izmēģinājumā",
@@ -685,7 +685,7 @@
       },
       "direkt": {
         "title": "Tiešā rezervācija",
-        "items": "Savs rezervāciju portāls, rezervāciju logrīks, mājaslapu veidotājs, savs domēns, {satz}, nevis 15–18 % OTA komisija",
+        "items": "Sava rezervēšanas lapa un rezervēšanas logrīks vietņu veidotājā ar savu domēnu. Rezervācijas, kas veiktas, izmantojot šo, ir bez komisijas maksas.",
         "satzUnbekannt": "ievērojami mazāk"
       },
       "preise": {
@@ -749,7 +749,7 @@
     "gruenderin": {
       "quote": "myNextDays radās no mūsu pašu izīrēšanas ikdienas. Mēs veidojam tieši to programmatūru, ko veltīgi meklējām tirgū. Viena programmatūra visam!",
       "name": "Jeanine Ågaard",
-      "location": "myNextDays / AirSmil dibinātāja"
+      "location": "myNextDays dibinātāja / AirSmil īpašniece"
     }
   },
   "stimmen": {
@@ -956,12 +956,15 @@
       "mitarbeiterText": "Maiņu un darbu plānošana uzkopšanai, reģistratūrai un tehniskajam dienestam.",
       "hotelTitel": "Viesnīca",
       "hotelText": "Reģistratūras darbs ar front desk — mājām ar vairākiem numuru tipiem. Rēķina par numuru, nevis par māju.",
+      "avatarTitel": "Avatars",
+      "avatarText": "Avatars ar balss vadību un AI konsjeržu: atbild uz viesu jautājumiem jūsu rezervācijas lapā un iesūtnē. Norēķini par uzņēmumu, nevis par naktsmītni.",
       "dynamischTitel": "Dinamiskās cenas",
       "dynamischText": "Tavas cenas pielāgojas pašas: noslodzei, sezonai un rezervēšanas laikam. Aprēķina tikai par rezervācijām, kas rodas, kamēr modulis darbojas.",
       "proMonat": "mēnesī",
       "oder": "vai",
       "jeNutzer": "par lietotāju mēnesī",
       "jeZimmer": "par numuru mēnesī",
+      "jeBetrieb": "par uzņēmumu mēnesī",
       "vomUmsatz": "no rezervāciju apgrozījuma",
       "hinweis": "Moduļus var ieslēgt un izslēgt ik mēnesi — piekļuve darbojas uzreiz, rēķins ir proporcionāls."
     },
@@ -1007,7 +1010,8 @@
     },
     "teaser": {
       "cta": "Skatīt visas cenas",
-      "abObjekt": "Katrs nākamais objekts no {betrag}",
+      "abObjekt": "Katrs nākamais īpašums {betrag}",
+      "abObjektStaffel": "Katrs nākamais īpašums {betrag}, no {ab}. īpašuma cena ir zemāka",
       "provision": "Sava mājaslapa {direkt} · portāli {portale}",
       "tarif": "Viens plāns visiem, ieskaitot 1. objektu"
     }

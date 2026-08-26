@@ -95,39 +95,45 @@ FX_SCHRITT = {"dkk": 100, "sek": 100, "pln": 100, "czk": 100, "huf": 1000, "ron"
 CURRENCY_OPTIONS: dict[str, dict] = {
     "dkk": {
         "tiers": [14900, 4500, 3800, 3000],
-        "module": {"modul3_flat": 22500, "modul4_flat": 14900,
+        "module": {"modul3_flat": 22400, "modul4_flat": 14900,
                    "modul4_per_seat": 1900, "modul6_flat": 448600,
-                   "modul6_per_room": 1200},
+                   "modul6_per_room": 1200,
+                   "modul7_flat": 67300},
     },
     "sek": {
         "tiers": [22100, 6700, 5600, 4500],
-        "module": {"modul3_flat": 33300, "modul4_flat": 22100,
+        "module": {"modul3_flat": 33200, "modul4_flat": 22100,
                    "modul4_per_seat": 2800, "modul6_flat": 664900,
-                   "modul6_per_room": 1700},
+                   "modul6_per_room": 1700,
+                   "modul7_flat": 99700},
     },
     "pln": {
         "tiers": [8600, 2600, 2200, 1800],
-        "module": {"modul3_flat": 13000, "modul4_flat": 8600,
+        "module": {"modul3_flat": 12900, "modul4_flat": 8600,
                    "modul4_per_seat": 1100, "modul6_flat": 258500,
-                   "modul6_per_room": 700},
+                   "modul6_per_room": 700,
+                   "modul7_flat": 38800},
     },
     "czk": {
         "tiers": [48000, 14500, 12100, 9700],
-        "module": {"modul3_flat": 72300, "modul4_flat": 48000,
+        "module": {"modul3_flat": 72100, "modul4_flat": 48000,
                    "modul4_per_seat": 6100, "modul6_flat": 1446000,
-                   "modul6_per_room": 3700},
+                   "modul6_per_room": 3700,
+                   "modul7_flat": 216700},
     },
     "huf": {
         "tiers": [722000, 218000, 182000, 146000],
-        "module": {"modul3_flat": 1088000, "modul4_flat": 722000,
+        "module": {"modul3_flat": 1085000, "modul4_flat": 722000,
                    "modul4_per_seat": 91000, "modul6_flat": 21753000,
-                   "modul6_per_room": 55000},
+                   "modul6_per_room": 55000,
+                   "modul7_flat": 3260000},
     },
     "ron": {
         "tiers": [10500, 3200, 2700, 2100],
-        "module": {"modul3_flat": 15800, "modul4_flat": 10500,
+        "module": {"modul3_flat": 15700, "modul4_flat": 10500,
                    "modul4_per_seat": 1400, "modul6_flat": 315100,
-                   "modul6_per_room": 800},
+                   "modul6_per_room": 800,
+                   "modul7_flat": 47300},
     },
 }
 
@@ -153,6 +159,11 @@ PRODUCTS = {
                            "desc": "Schicht- & Einsatzplanung."},
     "modul6_hotel": {"name": "Modul 6 - Hotel",
                      "desc": "Front Desk."},
+    # Modul 7 war frueher WhatsApp; das Modul wurde zurueckgenommen (Migration
+    # 0256, Metas No-Resale-Klausel) und die Nummer ist seitdem frei.
+    "modul7_avatar": {"name": "Modul 7 - Avatar",
+                      "desc": "KI-Avatar mit Sprachsteuerung und Concierge fuer "
+                      "Gastfragen. Je Betrieb, nicht je Objekt."},
     "dynamische_preise": {
         "name": "Dynamische Preise",
         "desc": "Automatische Preisoptimierung (Auslastung, Vorlauf, Saison, "
@@ -179,7 +190,7 @@ GRADUATED_TIERS = [
 
 # Fixe Modul-Preise (recurring monatlich, per_unit).
 FIXED_PRICES = {
-    "modul3_flat": {"product": "modul3_buchhaltung", "unit_amount": 3000,
+    "modul3_flat": {"product": "modul3_buchhaltung", "unit_amount": 2990,
                     "recurring": {"interval": "month"}},
     # Modul 4: zwei Alternativpreise (Kunde waehlt einen).
     "modul4_flat": {"product": "modul4_mitarbeiter", "unit_amount": 1990,
@@ -191,6 +202,9 @@ FIXED_PRICES = {
                     "recurring": {"interval": "month"}},
     "modul6_per_room": {"product": "modul6_hotel", "unit_amount": 150,
                         "recurring": {"interval": "month"}},
+    # Modul 7: EIN Preis je Betrieb — kein Objekt- und kein Nutzerbezug.
+    "modul7_flat": {"product": "modul7_avatar", "unit_amount": 8990,
+                    "recurring": {"interval": "month"}},
 }
 
 
@@ -232,16 +246,18 @@ def _graduated_cost(objects: int) -> int:
 
 # Soll-Betraege der Modul-Preise in Cent. Referenz: PLAN-stripe-preisliste.md
 # Zeile 94-97 (Tabelle "Zusatzmodule", Abschnitt 3 der Preisliste):
-#   Z. 94  Modul 3 Buchhaltung   30,00 EUR/Monat                 -> 3000
+#   Z. 94  Modul 3 Buchhaltung   29,90 EUR/Monat                 -> 2990
 #   Z. 95  Modul 4 Mitarbeiter   19,90 EUR/Monat ODER 2,50/Nutzer -> 1990 / 250
 #   Z. 97  Modul 6 Hotel        600,00 EUR/Monat ODER 1,50/Zimmer -> 60000 / 150
+#   Z. 98  Modul 7 Avatar        89,90 EUR/Monat je Betrieb       -> 8990
 # Modul 5 (Jobmarkt, 2 % vom Umsatz, Z. 96) hat bewusst KEINEN Stripe-Preis.
 EXPECTED_FIXED_AMOUNTS = {
-    "modul3_flat": 3000,
+    "modul3_flat": 2990,
     "modul4_flat": 1990,
     "modul4_per_seat": 250,
     "modul6_flat": 60000,
     "modul6_per_room": 150,
+    "modul7_flat": 8990,
 }
 
 
@@ -277,7 +293,7 @@ def _assert_pdf_math() -> None:
         if recurring != {"interval": "month"}:
             _die(f"Modulpreis '{lk}' ist nicht monatlich wiederkehrend: "
                  f"{recurring!r} (Preisliste: '/Monat')")
-    print("  Modulpreise stimmen (Modul 3/4/6, je monatlich) ✓")
+    print("  Modulpreise stimmen (Modul 3/4/6/7, je monatlich) ✓")
 
 
 def _aufrunden(betrag_eur_cent: int, waehrung: str) -> int:
@@ -473,10 +489,36 @@ def ensure_product(mnd_key: str, spec: dict, apply: bool):  # noqa: ANN202
 def ensure_price(lookup_key: str, product_id: str, params: dict, apply: bool):
     existing = _find_price(lookup_key)
     if existing:
-        # Drift-Check: gleicht der vorhandene Preis dem Soll? (nur melden, nie mutieren)
-        print(f"  = Preis '{lookup_key}' existiert: {existing.id} "
-              f"(active={existing.active})")
-        return existing
+        soll = params.get("unit_amount")
+        ist = existing.unit_amount if "unit_amount" in _felder(existing) else None
+        if soll is None or ist == soll:
+            print(f"  = Preis '{lookup_key}' existiert: {existing.id} "
+                  f"(active={existing.active})")
+            return existing
+        # Betrag geaendert. Stripe-Preise sind unveraenderlich: der Betrag laesst
+        # sich nicht nachziehen, und `currency_options` eines bestehenden Preises
+        # sind ebenfalls nicht ueberschreibbar. Der einzige Weg ist ein NEUER
+        # Preis, der den lookup_key uebernimmt (`transfer_lookup_key`) — damit
+        # zeigen alle Aufrufer (Preisseite, Checkout, Webhook) ohne Codeaenderung
+        # auf den neuen Betrag, und der alte Preis bleibt fuer laufende Abos
+        # bestehen (archiviert, aber weiter abrechenbar).
+        print(f"  ! Preis '{lookup_key}': {ist} Cent in Stripe, "
+              f"Preisliste sagt {soll} Cent")
+        if not apply:
+            print(f"    + [DRY] neuer Preis {soll} Cent wuerde angelegt und "
+                  f"'{lookup_key}' von {existing.id} uebernehmen")
+            return existing
+        neu = stripe.Price.create(product=product_id, currency=CURRENCY, **params)
+        stripe.Price.modify(neu.id, lookup_key=lookup_key,
+                            transfer_lookup_key=True)
+        # Zuruecklesen: ein 200 ist kein Beweis, dass es ankam.
+        nachher = _find_price(lookup_key)
+        if nachher is None or nachher.id != neu.id:
+            _die(f"'{lookup_key}' zeigt nach dem Wechsel nicht auf {neu.id}")
+        stripe.Price.modify(existing.id, active=False)
+        print(f"    + '{lookup_key}' -> {neu.id} ({soll} Cent), "
+              f"alter Preis {existing.id} archiviert")
+        return nachher
     if not apply:
         print(f"  + [DRY] Preis '{lookup_key}' wuerde angelegt: {params}")
         return None
