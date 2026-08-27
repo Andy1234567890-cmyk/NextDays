@@ -9,6 +9,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 
 import { EinwilligungsDienste } from "@/components/einwilligungs-dienste";
+import { GoogleTag } from "@/components/google-tag";
 import { EinwilligungsKnopf } from "@/components/einwilligung/einwilligungs-knopf";
 import { EinwilligungsLeiste } from "@/components/einwilligung/einwilligungs-leiste";
 import { SupportChat } from "@/components/support-chat";
@@ -95,6 +96,12 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
+      {/* Das Google-Tag im Einwilligungsmodus. Es MUSS vor allem anderen
+          stehen: sein erstes Skript (`beforeInteractive`) setzt die Vorgabe
+          „alles verweigert", und Google schreibt dazu, dass die Reihenfolge
+          entscheidend ist — kommt die Vorgabe nach dem Tag, gilt sie nicht.
+          Begründung und Datenschutz-Abwägung in components/google-tag.tsx. */}
+      <GoogleTag />
       <body className={`${inter.variable} ${fraunces.variable} antialiased`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}

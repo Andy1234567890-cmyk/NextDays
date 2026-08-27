@@ -17,7 +17,8 @@
 // versucht, sich zu verbinden").
 //
 // Geprüft wird:
-//   1. VOR der Einwilligung: kein Request an Google (Art. 5 Abs. 3 ePrivacy).
+//   1. VOR der Einwilligung: kein TREFFER und kein COOKIE. Das Tag selbst darf
+//      laden (Einwilligungsmodus), der Meta-Pixel nicht.
 //   2. NACH der Einwilligung: mindestens ein `/g/collect` mit `en=page_view`.
 //   3. Der Einwilligungsstand im Treffer (`gcs`): G111 heißt „analytics
 //      erlaubt", G100 heißt „alles verweigert" — Letzteres wäre ein Treffer,
@@ -25,6 +26,8 @@
 //   4. Jeder dataLayer-Eintrag ist `[object Arguments]`, nie `[object Array]`.
 //      Das ist die Regressionsprobe für genau den Bug von oben.
 //   5. Beim Widerruf: `gcs` fällt zurück und `_ga` verschwindet.
+//   6. JEDE der geprüften Unterseiten sendet GENAU EINEN page_view — nicht null
+//      (dann zählt nur die Einstiegsseite) und nicht zwei (Doppelzählung).
 //
 // AUFRUF (Playwright liegt nicht im Repo, siehe einwilligung-e2e.mjs):
 //   node scripts/diagnose/ga4-treffer-pruefen.mjs [https://mynextdays.com]
@@ -66,11 +69,39 @@ seite.on("request", (r) => {
 
 console.log(`\n== 1. Vor der Einwilligung (${BASIS}) ==`);
 await seite.goto(BASIS, { waitUntil: "networkidle" });
-await seite.waitForTimeout(1500);
+await seite.waitForTimeout(2000);
+// WAS HIER GEPRÜFT WIRD, HAT SICH AM 27.08.2026 GEÄNDERT — mit der Umstellung
+// auf den Einwilligungsmodus („Advanced Consent Mode",
+// components/google-tag.tsx) LÄDT das Tag bewusst vor der Einwilligung. Die
+// frühere Prüfung „kein Request an Google" schlug daher zu Recht fehl und wäre
+// falsch, wenn sie bliebe.
+//
+// Entscheidend ist seither nicht, OB das Tag lädt, sondern was es tut:
+//   · KEIN Messtreffer (`/g/collect`) — auch kein „cookieloser Ping", den
+//     Google für diesen Modus beschreibt
+//   · KEIN Cookie
+//   · der Meta-Pixel lädt weiterhin GAR NICHT — er hat keinen
+//     Einwilligungsmodus, ohne Zustimmung darf er nicht existieren
 pruefe(
-  "kein Request an Google/Meta",
-  fremdskripte.length === 0,
-  fremdskripte.length ? fremdskripte.join(", ") : "",
+  "kein Messtreffer ohne Einwilligung",
+  treffer.length === 0,
+  treffer.length ? treffer.map((t) => `${t.ereignis}(gcs=${t.gcs})`).join(", ") : "",
+);
+const cookiesVorher = await seite.evaluate(() =>
+  document.cookie
+    .split(";")
+    .map((c) => c.trim().split("=")[0])
+    .filter((n) => n === "_ga" || n.startsWith("_ga_") || n === "_fbp"),
+);
+pruefe(
+  "kein Mess-/Werbe-Cookie ohne Einwilligung",
+  cookiesVorher.length === 0,
+  cookiesVorher.join(", "),
+);
+pruefe(
+  "Meta-Pixel lädt nicht ohne Einwilligung",
+  fremdskripte.filter((u) => u.includes("facebook")).length === 0,
+  fremdskripte.filter((u) => u.includes("facebook")).join(", "),
 );
 
 console.log("\n== 2. Nach erteilter Einwilligung ==");
@@ -113,7 +144,32 @@ if (seitenaufruf) {
   );
 }
 
-console.log("\n== 3. Regressionsprobe: dataLayer-Einträge sind Arguments ==");
+// Mehrere Seiten prüfen, nicht nur die Einstiegsseite.
+//
+// WARUM: Die erste Fassung dieses Skripts prüfte NUR die Startseite und gab
+// „alle Prüfungen bestanden" zurück, während `/preise`, `/funktionen`,
+// `/kontakt` und `/ueber-uns` keinen einzigen Treffer sendeten (27.08.2026,
+// Ursache war ein useRef-Guard in einwilligungs-dienste.tsx). Ein Zähler, der
+// nur auf einer Seite geprüft wird, ist nicht geprüft: der Fehler „nur die
+// Einstiegsseite zählt" sieht auf genau dieser Seite fehlerfrei aus.
+console.log("\n== 3. Folgeseiten ==");
+const UNTERSEITEN = ["/preise", "/funktionen", "/kontakt", "/ueber-uns"];
+for (const pfad of UNTERSEITEN) {
+  treffer.length = 0;
+  await seite.goto(BASIS + pfad, { waitUntil: "networkidle" });
+  await seite
+    .waitForRequest((r) => r.url().includes("/g/collect"), { timeout: 6000 })
+    .catch(() => null);
+  await seite.waitForTimeout(300);
+  const eigener = treffer.filter((t) => t.ereignis === "page_view");
+  pruefe(
+    `${pfad} sendet einen page_view`,
+    eigener.length > 0,
+    eigener.length > 1 ? `ACHTUNG: ${eigener.length}-mal — Doppelzählung` : "",
+  );
+}
+
+console.log("\n== 4. Regressionsprobe: dataLayer-Einträge sind Arguments ==");
 const formen = await seite.evaluate(() =>
   (window.dataLayer ?? []).map((e) => Object.prototype.toString.call(e)),
 );
@@ -124,7 +180,7 @@ pruefe(
   arrays ? `${arrays} von ${formen.length} sind [object Array] — der gtag-Stub schiebt kein arguments` : `${formen.length} Einträge geprüft`,
 );
 
-console.log("\n== 4. Widerruf ==");
+console.log("\n== 5. Widerruf ==");
 await seite.evaluate(
   ([schluessel, fassung]) => {
     window.localStorage.setItem(

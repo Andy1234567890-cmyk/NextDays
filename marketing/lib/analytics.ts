@@ -1,43 +1,22 @@
-// GA4-Reichweitenmessung im Browser — Skript erst nach Einwilligung.
+// GA4-Reichweitenmessung: Einwilligungsstand und Seitenaufrufe.
 //
-// WARUM NICHT `@next/third-parties/google`: Dessen `<GoogleAnalytics>` lädt das
-// Tag beim Rendern und kennt keinen Weg, den Einwilligungsstand nachträglich zu
-// ändern (vercel/next.js#66718). Wir brauchen genau das: die Leiste entscheidet
-// NACH dem ersten Rendern, und ein Widerruf muss ohne Neuladen greifen. Deshalb
-// dasselbe Muster wie beim Captcha (lib/captcha.ts): eigenes Skript-Tag, erst
-// wenn erlaubt.
+// DAS TAG LÄDT HIER NICHT. Es steht seit dem 27.08.2026 im Layout
+// (components/google-tag.tsx) und lädt auf jeder Seite im Verweigerungs-Modus
+// („Advanced Consent Mode"), weil Googles Anleitung das für den EWR so vorgibt
+// und weil Googles Prüfwerkzeuge ein erst nach dem Klick nachgeladenes Tag
+// grundsätzlich nicht finden. Die Begründung samt Datenschutz-Abwägung steht
+// dort, nicht hier doppelt.
 //
-// EINWILLIGUNG IST VORAUSSETZUNG. Fail-closed: „nicht entschieden" zählt wie
-// „nicht erlaubt", ein gesperrter Speicher ebenso (lib/einwilligung.ts). Ohne
-// Zustimmung entsteht KEIN Skript-Tag, also kein Request an googletagmanager.com
-// und keine IP-Übermittlung. Wer hier eine Ausnahme einbaut, macht die Leiste
-// zur Attrappe und die Cookie-Richtlinie unwahr.
+// Diese Datei hat danach zwei Aufgaben:
+//   · `analyticsStarten` / `analyticsWiderrufen` — den Einwilligungsstand an
+//     Google melden (`consent update`) und beim Widerruf die Cookies räumen.
+//   · `seitenaufrufMelden` — der EINZIGE Zähler. Das Tag ist mit
+//     `send_page_view: false` konfiguriert, weil der App Router keinen
+//     Vollaufruf pro Seite macht; ohne diese Funktion hätte die Einstiegsseite
+//     alle Zugriffe und jede Unterseite null.
 //
-// CONSENT MODE V2 — die Reihenfolge ist vorgeschrieben und nicht beliebig
-// (developers.google.com/tag-platform/security/guides/consent): dataLayer und
-// gtag definieren → `consent default` auf `denied` → `set`-Befehle
-// (`ads_data_redaction`, `url_passthrough`) → DANN das Skript laden → `config`
-// → später `consent update`. Läuft es in anderer Reihenfolge, greifen die
-// Vorgaben nicht: die Doku verlangt die `set`-Befehle ausdrücklich VOR jedem
-// `config`. Wir setzen alles im gleichen Zug, in dem wir das Tag anlegen, und
-// zwar VOR dem Anhängen des Skripts.
-//
-// WELCHER DOKU-REITER GILT: die Google-Seite hat zwei — „gtag.js" und „Tag
-// Manager". Für uns gilt AUSSCHLIESSLICH gtag.js: wir laden
-// `googletagmanager.com/gtag/js` direkt, es gibt keinen GTM-Container
-// (`gtm.js`) und keine Vorlage. Der GTM-Reiter verlangt `setDefaultConsentState`
-// und `updateConsentState` und warnt ausdrücklich davor,
-// `gtag('consent','update',…)` zu verwenden — diese Warnung gilt NUR innerhalb
-// einer GTM-Vorlage, weil dort gtag-Befehle hinter allen ausstehenden
-// Datenschicht-Nachrichten in die Warteschlange kommen. Ohne Container gibt es
-// diese Warteschlange nicht; `gtag('consent', …)` ist hier der von Google
-// vorgeschriebene Weg. Wer später GTM einführt, muss diese Datei auf die
-// Consent-APIs umstellen — nicht beides mischen.
-//
-// Warum die vier Werbe-Parameter überhaupt auftauchen, obwohl wir nicht werben:
-// Consent Mode v2 verlangt sie, und sie bleiben dauerhaft auf `denied` — genau
-// das ist die Aussage „keine Werbe-Einwilligung, auch nicht implizit". Sie
-// werden NIE auf `granted` gesetzt.
+// Die vier Werbe-Parameter werden hier NIE auf `granted` gesetzt — dafür ist
+// lib/pixel.ts zuständig, und nur mit Einwilligung „marketing".
 import { GA_MEASUREMENT_ID } from "@/lib/config";
 import { cookiesLoeschen } from "@/lib/cookie-loeschen";
 import { istErlaubt } from "@/lib/einwilligung";
@@ -99,143 +78,30 @@ export function analyticsStarten(): boolean {
   if (!GA_MEASUREMENT_ID) return false;
   if (!istErlaubt("analytisch")) return false;
 
-  // Das Skript-Tag entsteht genau EINMAL, die Zustimmung wird JEDES MAL
-  // nachgezogen. Diese Trennung ist der Kern der Funktion und war zuerst
-  // falsch: ein früher `return`, sobald das Tag existierte, übersprang das
-  // `consent update` weiter unten. Folge — Zustimmung, Widerruf, erneute
-  // Zustimmung im selben Seitenaufruf (über das Cookie-Symbol jederzeit
-  // möglich) ließ `analytics_storage` auf `denied` stehen, während die Funktion
-  // `true` zurückgab: es wurde nichts mehr gemessen, und die Rückgabe behauptete
-  // das Gegenteil. Genau Wurzel 1 — der Gegenzustand (`denied`) wurde gesetzt,
-  // aber beim Zurückschalten nicht mitgepflegt.
+  // Das Tag LÄDT HIER NICHT MEHR. Seit dem 27.08.2026 steht es im Layout
+  // (components/google-tag.tsx) und lädt auf jeder Seite im Verweigerungs-
+  // Modus, wie Googles Anleitung zum Einwilligungsmodus es vorgibt. Diese
+  // Funktion hat nur noch eine Aufgabe: die Zustimmung nachziehen.
   //
-  // `consent update` ist ein Zustandssetzer, kein Ereignis: ihn mehrfach mit
-  // demselben Wert zu senden ist folgenlos, ihn zu VERPASSEN ist der teure
-  // Fehler. Also läuft er immer.
-  const bereitsGeladen = document.getElementById(SKRIPT_ID) !== null;
+  // Warum das die richtige Trennung ist: `consent update` ist ein
+  // Zustandssetzer, kein Ereignis. Ihn mehrfach mit demselben Wert zu senden
+  // ist folgenlos, ihn zu VERPASSEN ist der teure Fehler — also läuft er bei
+  // jedem Aufruf. Vorher war beides in einer Funktion verschränkt, und ein
+  // früher `return` beim schon geladenen Skript übersprang das Update: nach
+  // Zustimmung, Widerruf und erneuter Zustimmung im selben Seitenaufruf stand
+  // `analytics_storage` auf `denied`, während die Funktion `true` zurückgab.
   const gtag = gtagVorbereiten();
-
-  if (!bereitsGeladen) {
-    // 1) Vorgabe: alles verweigert. Sie gilt für den kurzen Moment zwischen
-    //    Skript-Start und dem `update` unten — und dauerhaft für die vier
-    //    Werbe-Parameter.
-    //
-    //    KEIN `wait_for_update`: die Doku sieht es fuer Banner vor, die
-    //    ASYNCHRON NACH den Google-Tags laden — dort muss gtag.js auf die
-    //    Entscheidung warten. Bei uns ist die Reihenfolge umgekehrt: dieses Tag
-    //    entsteht ueberhaupt erst, WEIL die Einwilligung schon vorliegt, und
-    //    das `update` folgt wenige Zeilen weiter unten im selben Aufruf. Eine
-    //    Wartezeit wuerde hier nur den ersten Treffer puffern, ohne dass
-    //    jemand auf etwas wartet. Ich hatte den Parameter am 27.08.2026
-    //    eingebaut, weil er in der Doku steht — ohne zu pruefen, ob die
-    //    Voraussetzung zutrifft. Sie trifft nicht zu.
-    gtag("consent", "default", {
-      ad_storage: "denied",
-      ad_user_data: "denied",
-      ad_personalization: "denied",
-      analytics_storage: "denied",
-    });
-
-    // 2) Anzeigendaten unkenntlich machen, solange `ad_storage` verweigert ist.
-    //    Wirkt laut Doku NUR bei `ad_storage: 'denied'` — also bei uns immer,
-    //    solange niemand „Marketing" erlaubt. Google entfernt dann die
-    //    Anzeigenklick-IDs aus den Netzwerkanfragen und sendet sie über eine
-    //    Domain ohne Drittanbieter-Cookies. Erlaubt jemand Marketing, setzt
-    //    lib/pixel.ts `ad_storage` auf `granted` und der Parameter wird
-    //    folgenlos — er muss deshalb NICHT zurückgenommen werden.
-    gtag("set", "ads_data_redaction", true);
-
-    // 3) Keine Weitergabe von Kennungen über URL-Parameter.
-    //
-    //    Die Doku beschreibt `url_passthrough: true` als Weg, ohne Cookies zu
-    //    messen: Google hängt `gclid`, `_gl`, `wbraid` & Co. an interne Links
-    //    und trägt die Kennung so von Seite zu Seite. Das ist für uns
-    //    ausdrücklich FALSCH und steht hier explizit auf `false`, statt
-    //    weggelassen zu werden: es würde die Ablehnung des Besuchers
-    //    aushebeln — wer Cookies verweigert, hätte danach eine Kennung in der
-    //    Adresszeile. Die Zeile ist Absicht, kein Vergessen; wer sie auf `true`
-    //    dreht, muss die Cookie-Richtlinie mit ändern.
-    gtag("set", "url_passthrough", false);
-
-    // 4) Skript laden. `async`, damit es das Rendern nicht blockiert.
-    const skript = document.createElement("script");
-    skript.id = SKRIPT_ID;
-    skript.async = true;
-    skript.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GA_MEASUREMENT_ID)}`;
-    // Der erste Seitenaufruf wird erst gemeldet, wenn gtag.js geladen ist.
-    //
-    // ZUR EHRLICHKEIT DER BEGRUENDUNG: Diese Konstruktion entstand am
-    // 27.08.2026 aus einer FALSCHEN Diagnose. Das Symptom war „Tag gefunden,
-    // keine Treffer gesendet", und ich hielt den Zeitpunkt des ersten Treffers
-    // fuer die Ursache. Das war er nicht — der Fehler lag im Stub oben, der ein
-    // Array statt `arguments` einreihte, weshalb gtag.js JEDEN Befehl verwarf.
-    //
-    // Der `onload` bleibt trotzdem, weil er unabhaengig davon richtig ist: er
-    // meldet den Treffer, wenn der Empfaenger nachweislich da ist, statt sich
-    // auf das Abspielen der Warteschlange zu verlassen. Er ist keine Notluege,
-    // aber er war auch nicht die Loesung.
-    //
-    // `onerror` meldet NICHT nach: schlaegt das Laden fehl (CSP, Blocker,
-    // Netzausfall), gibt es niemanden, der den Treffer verarbeiten koennte. Ein
-    // Nachmelden ins Leere wuerde den Fehler verschleiern, statt ihn zu zeigen
-    // (Wurzel 5) — der Fehlschlag wird stattdessen laut protokolliert.
-    skript.onload = () => {
-      seitenaufrufMelden(window.location.pathname + window.location.search);
-    };
-    skript.onerror = () => {
-      console.error(
-        "[analytics] gtag.js konnte nicht geladen werden — es wird nicht gemessen." +
-          " Haeufigste Ursache: die CSP erlaubt googletagmanager.com nicht.",
-      );
-    };
-    document.head.appendChild(skript);
-
-    // 5) Grundkonfiguration.
-    gtag("js", new Date());
-    gtag("config", GA_MEASUREMENT_ID, {
-    // IP-Kürzung ist in GA4 immer an und nicht abschaltbar; hier steht deshalb
-    // nur, was wir zusätzlich einschränken:
-    //
-    // `anonymize_ip` gibt es in GA4 NICHT mehr (es war Universal Analytics) —
-    // es hier zu setzen wäre eine wirkungslose Beruhigungszeile.
-    //
-    // Keine Google-Signale, keine Werbe-Personalisierung: damit entstehen keine
-    // geräteübergreifenden Profile und keine Zielgruppenlisten.
-      // Der Seitenaufruf wird AUSSCHLIESSLICH von `seitenaufrufMelden`
-      // gezählt. Ohne diese Zeile feuert gtag.js beim `config` selbst einen
-      // `page_view` (Standard ist `true`), und der Effekt in
-      // components/analytics-messung.tsx läuft beim ersten Rendern ebenfalls
-      // los: die Einstiegsseite wurde DOPPELT gezählt, jede Folgeseite
-      // einfach. Absprungrate und „Aufrufe pro Sitzung" wären verfälscht —
-      // plausibel genug, dass es niemandem auffällt.
-      //
-      // Eine Quelle statt zwei ist auch inhaltlich richtiger: gtag leitet den
-      // Pfad aus `location` ab und protokolliert bei einer Zustimmung mitten
-      // im Besuch die falsche Seite.
-      send_page_view: false,
-      allow_google_signals: false,
-      allow_ad_personalization_signals: false,
-    });
-  }
-
-  // 6) Zustimmung nachziehen — NUR die Statistik. Die Werbe-Parameter bleiben
-  //    verweigert, weil dafür niemand um Zustimmung gebeten wurde und es auch
-  //    keinen Dienst gibt, der sie bräuchte. Läuft bei JEDEM Aufruf (siehe
-  //    oben), nicht nur beim ersten.
   gtag("consent", "update", { analytics_storage: "granted" });
 
-  // Erteilt jemand die Zustimmung erst mitten im Besuch, hat der Effekt in
+  // Den Seitenaufruf melden, sobald zugestimmt wird. Erteilt jemand die
+  // Zustimmung mitten im Besuch, hat der Effekt in
   // components/einwilligungs-dienste.tsx seinen `page_view` für diese Seite
-  // längst abgeschickt — verworfen, weil damals nichts erlaubt war. Ohne
-  // Nachmeldung wäre die Seite, auf der zugestimmt wurde, die einzige
-  // ungezählte.
+  // längst abgeschickt — verworfen, weil damals nichts erlaubt war. Ohne diese
+  // Zeile wäre die Seite, auf der zugestimmt wurde, die einzige ungezählte.
   //
-  // Beim ERSTEN Laden übernimmt das `skript.onload` oben. Hier bleibt nur der
-  // Fall, dass gtag.js schon läuft (Widerruf und erneute Zustimmung im selben
-  // Seitenaufruf) — dann gibt es kein `onload` mehr, das feuern könnte.
-  if (bereitsGeladen) {
-    seitenaufrufMelden(window.location.pathname + window.location.search);
-  }
+  // Doppelt gezählt wird dabei nichts: `seitenaufrufMelden` sperrt denselben
+  // Pfad über `letzterPfad`.
+  seitenaufrufMelden(window.location.pathname + window.location.search);
 
   return true;
 }
