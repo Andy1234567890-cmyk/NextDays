@@ -209,7 +209,7 @@ jobs:
       # verteilt installierbare Artefakte.
       - name: Bei Google anmelden (schluessellos)
         if: inputs.artefakt == 'apk'
-        uses: google-github-actions/auth@71f986410dfbc7added4569d411d040a91dc6935 # v2.1.8
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           project_id: project-460d8aaf-4b7d-4d13-b3a
           workload_identity_provider: projects/683362094842/locations/global/workloadIdentityPools/github/providers/github
