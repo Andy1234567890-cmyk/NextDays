@@ -48,7 +48,9 @@ type GtagArgumente = unknown[];
 
 declare global {
   interface Window {
-    dataLayer?: GtagArgumente[];
+    // `IArguments`, weil der Stub das `arguments`-Objekt schiebt (siehe
+    // `gtagVorbereiten`) und gtag.js selbst ebenfalls solche Einträge anlegt.
+    dataLayer?: (GtagArgumente | IArguments)[];
     gtag?: (...args: GtagArgumente) => void;
   }
 }
@@ -61,11 +63,25 @@ declare global {
 function gtagVorbereiten(): (...args: GtagArgumente) => void {
   window.dataLayer = window.dataLayer ?? [];
   if (!window.gtag) {
-    window.gtag = function gtag(...args: GtagArgumente) {
-      // Muss `arguments` in die Warteschlange schieben, nicht ein Array davon —
-      // gtag.js liest die Einträge als Argumentlisten. Ein `push([...])` würde
-      // von Google als EIN Argument gelesen und stillschweigend ignoriert.
-      window.dataLayer?.push(args);
+    // MUSS das `arguments`-Objekt schieben, NICHT ein Array davon. Googles
+    // Vorlage lautet wortgleich `function gtag(){dataLayer.push(arguments);}`
+    // (developers.google.com/tag-platform/gtagjs/install?hl=de).
+    //
+    // Hier stand vorher `(...args) => dataLayer.push(args)`. Ein Rest-Parameter
+    // ist ein ECHTES Array, `arguments` nur array-ARTIG — gtag.js unterscheidet
+    // beides und behandelt ein echtes Array nicht als Befehl. Folge: die
+    // Einträge landen sauber in der dataLayer, aber es geht KEIN Messtreffer an
+    // Google. Genau so sah es live aus (27.08.2026): der Google Tag Assistant
+    // fand das Tag und meldete „von diesem Tag wurden keine Treffer gesendet".
+    // Der Kommentar an dieser Stelle beschrieb die Regel schon richtig, während
+    // der Code darunter dagegen verstieß.
+    //
+    // `prefer-rest-params` ist deshalb hier bewusst abgeschaltet: die Regel
+    // empfiehlt Rest-Parameter, aber genau die funktionieren an dieser Stelle
+    // nicht. Eine Lint-Regel schlägt keine fremde Laufzeit-Vorgabe.
+    window.gtag = function gtag() {
+      // eslint-disable-next-line prefer-rest-params -- gtag.js verlangt IArguments
+      window.dataLayer?.push(arguments);
     };
   }
   return window.gtag;
@@ -146,12 +162,18 @@ export function analyticsStarten(): boolean {
     skript.id = SKRIPT_ID;
     skript.async = true;
     skript.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GA_MEASUREMENT_ID)}`;
-    // Der erste Seitenaufruf wird erst gemeldet, wenn gtag.js WIRKLICH geladen
-    // ist. Vorher ist `window.gtag` nur unser Stub, der in die dataLayer
-    // schiebt — ein so frueh eingereihter Treffer wird von gtag.js beim Start
-    // verworfen, statt gesendet. Live sichtbar am 27.08.2026
-    // im Google Tag Assistant: das Tag wurde gefunden, aber „von diesem Tag
-    // wurden keine Treffer gesendet" — das Tag war da, der Treffer nicht.
+    // Der erste Seitenaufruf wird erst gemeldet, wenn gtag.js geladen ist.
+    //
+    // ZUR EHRLICHKEIT DER BEGRUENDUNG: Diese Konstruktion entstand am
+    // 27.08.2026 aus einer FALSCHEN Diagnose. Das Symptom war „Tag gefunden,
+    // keine Treffer gesendet", und ich hielt den Zeitpunkt des ersten Treffers
+    // fuer die Ursache. Das war er nicht — der Fehler lag im Stub oben, der ein
+    // Array statt `arguments` einreihte, weshalb gtag.js JEDEN Befehl verwarf.
+    //
+    // Der `onload` bleibt trotzdem, weil er unabhaengig davon richtig ist: er
+    // meldet den Treffer, wenn der Empfaenger nachweislich da ist, statt sich
+    // auf das Abspielen der Warteschlange zu verlassen. Er ist keine Notluege,
+    // aber er war auch nicht die Loesung.
     //
     // `onerror` meldet NICHT nach: schlaegt das Laden fehl (CSP, Blocker,
     // Netzausfall), gibt es niemanden, der den Treffer verarbeiten koennte. Ein

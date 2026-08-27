@@ -139,8 +139,12 @@ function adsStarten(): void {
   if (!GOOGLE_ADS_ID) return;
   window.dataLayer = window.dataLayer ?? [];
   if (!window.gtag) {
-    window.gtag = function gtag(...args: unknown[]) {
-      window.dataLayer?.push(args);
+    // `arguments`, nicht ein Array — siehe die ausfuehrliche Begruendung in
+    // lib/analytics.ts. Ein echtes Array verarbeitet gtag.js nicht als Befehl,
+    // die Treffer bleiben stumm liegen.
+    window.gtag = function gtag() {
+      // eslint-disable-next-line prefer-rest-params -- gtag.js verlangt IArguments
+      window.dataLayer?.push(arguments);
     };
   }
 
