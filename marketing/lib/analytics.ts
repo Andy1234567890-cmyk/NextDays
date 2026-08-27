@@ -104,21 +104,20 @@ export function analyticsStarten(): boolean {
     //    Skript-Start und dem `update` unten — und dauerhaft für die vier
     //    Werbe-Parameter.
     //
-    //    `wait_for_update` gibt Google an, wie viele Millisekunden es auf ein
-    //    `consent update` warten soll, bevor es mit der Vorgabe sendet. Die
-    //    Doku verlangt es für Einwilligungslösungen, die ASYNCHRON laden — und
-    //    genau das sind wir: die Entscheidung liegt im localStorage und wird
-    //    von einer Client-Komponente gelesen, die nach dem ersten Rendern
-    //    läuft. Das `update` unten folgt zwar im selben Aufruf, aber
-    //    `appendChild` und das Ausführen von gtag.js liegen dazwischen; ohne
-    //    diese Zeile darf Google die Vorgabe sofort verarbeiten und der erste
-    //    Treffer zählt ohne Kennung. 500 ms ist der Wert aus der Doku.
+    //    KEIN `wait_for_update`: die Doku sieht es fuer Banner vor, die
+    //    ASYNCHRON NACH den Google-Tags laden — dort muss gtag.js auf die
+    //    Entscheidung warten. Bei uns ist die Reihenfolge umgekehrt: dieses Tag
+    //    entsteht ueberhaupt erst, WEIL die Einwilligung schon vorliegt, und
+    //    das `update` folgt wenige Zeilen weiter unten im selben Aufruf. Eine
+    //    Wartezeit wuerde hier nur den ersten Treffer puffern, ohne dass
+    //    jemand auf etwas wartet. Ich hatte den Parameter am 27.08.2026
+    //    eingebaut, weil er in der Doku steht — ohne zu pruefen, ob die
+    //    Voraussetzung zutrifft. Sie trifft nicht zu.
     gtag("consent", "default", {
       ad_storage: "denied",
       ad_user_data: "denied",
       ad_personalization: "denied",
       analytics_storage: "denied",
-      wait_for_update: 500,
     });
 
     // 2) Anzeigendaten unkenntlich machen, solange `ad_storage` verweigert ist.
@@ -147,6 +146,26 @@ export function analyticsStarten(): boolean {
     skript.id = SKRIPT_ID;
     skript.async = true;
     skript.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GA_MEASUREMENT_ID)}`;
+    // Der erste Seitenaufruf wird erst gemeldet, wenn gtag.js WIRKLICH geladen
+    // ist. Vorher ist `window.gtag` nur unser Stub, der in die dataLayer
+    // schiebt — ein so frueh eingereihter Treffer wird von gtag.js beim Start
+    // verworfen, statt gesendet. Live sichtbar am 27.08.2026
+    // im Google Tag Assistant: das Tag wurde gefunden, aber „von diesem Tag
+    // wurden keine Treffer gesendet" — das Tag war da, der Treffer nicht.
+    //
+    // `onerror` meldet NICHT nach: schlaegt das Laden fehl (CSP, Blocker,
+    // Netzausfall), gibt es niemanden, der den Treffer verarbeiten koennte. Ein
+    // Nachmelden ins Leere wuerde den Fehler verschleiern, statt ihn zu zeigen
+    // (Wurzel 5) — der Fehlschlag wird stattdessen laut protokolliert.
+    skript.onload = () => {
+      seitenaufrufMelden(window.location.pathname + window.location.search);
+    };
+    skript.onerror = () => {
+      console.error(
+        "[analytics] gtag.js konnte nicht geladen werden — es wird nicht gemessen." +
+          " Haeufigste Ursache: die CSP erlaubt googletagmanager.com nicht.",
+      );
+    };
     document.head.appendChild(skript);
 
     // 5) Grundkonfiguration.
@@ -184,11 +203,15 @@ export function analyticsStarten(): boolean {
   gtag("consent", "update", { analytics_storage: "granted" });
 
   // Erteilt jemand die Zustimmung erst mitten im Besuch, hat der Effekt in
-  // analytics-messung.tsx seinen `page_view` für diese Seite längst
-  // abgeschickt — verworfen, weil damals nichts erlaubt war. Ohne diese Zeile
-  // wäre die Seite, auf der zugestimmt wurde, die einzige ungezählte. Nur beim
-  // erstmaligen Laden, sonst zählte jeder Widerruf-und-wieder-Klick erneut.
-  if (!bereitsGeladen) {
+  // components/einwilligungs-dienste.tsx seinen `page_view` für diese Seite
+  // längst abgeschickt — verworfen, weil damals nichts erlaubt war. Ohne
+  // Nachmeldung wäre die Seite, auf der zugestimmt wurde, die einzige
+  // ungezählte.
+  //
+  // Beim ERSTEN Laden übernimmt das `skript.onload` oben. Hier bleibt nur der
+  // Fall, dass gtag.js schon läuft (Widerruf und erneute Zustimmung im selben
+  // Seitenaufruf) — dann gibt es kein `onload` mehr, das feuern könnte.
+  if (bereitsGeladen) {
     seitenaufrufMelden(window.location.pathname + window.location.search);
   }
 

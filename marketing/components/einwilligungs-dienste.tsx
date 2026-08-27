@@ -14,7 +14,7 @@
 // ohne Neuladen aus der Messung fallen — sonst zählt der Rest des Besuchs
 // weiter, obwohl gerade widerrufen wurde.
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { analyticsStarten, analyticsWiderrufen, seitenaufrufMelden } from "@/lib/analytics";
 import { captchaWiderrufen } from "@/lib/captcha";
@@ -65,9 +65,22 @@ export function EinwilligungsDienste() {
   // gezählt. Live gemessen am 26.08.2026: ein Klick auf /preise ergab
   // `['/preise', '/preise']` in der dataLayer. Ein String wird wertverglichen,
   // damit feuert der Effekt genau bei echtem Seitenwechsel.
+  //
+  // Beim ERSTEN Rendern meldet dieser Effekt NICHT — dort uebernimmt das
+  // `skript.onload` in analyticsStarten, weil gtag.js zu diesem Zeitpunkt noch
+  // laedt und ein jetzt eingereihter Treffer verworfen wuerde. Dieser Effekt
+  // ist fuer die FOLGENDEN Seitenwechsel zustaendig, bei denen gtag.js schon
+  // laeuft. `seitenaufrufMelden` ist gegen Doppelzaehlung ohnehin gesperrt
+  // (`letzterPfad`), das Auslassen hier verhindert das Gegenteil: einen
+  // Treffer, den niemand verarbeitet.
   const abfrage = suchparameter?.toString() ?? "";
+  const erstesRendern = useRef(true);
   useEffect(() => {
     if (!pfad) return;
+    if (erstesRendern.current) {
+      erstesRendern.current = false;
+      return;
+    }
     seitenaufrufMelden(abfrage ? `${pfad}?${abfrage}` : pfad);
   }, [pfad, abfrage]);
 
