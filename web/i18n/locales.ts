@@ -66,6 +66,89 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   sv: "Svenska",
 };
 
+// Flagge je Sprache, als Iconify-Name (twemoji, dasselbe Set wie
+// `lib/policy-meta.ts`).
+//
+// Diese Liste ist die EINZIGE Quelle für Sprachflaggen im Dashboard. Sie steht
+// in JEDEM Sprachumschalter: Topbar, Auth-Seiten, Baukasten-Kopfzeile und der
+// Sprachauswahl für E-Mail-Empfänger (Vorgabe vom 27.08.2026; die Kopfzeile des
+// Baukastens führte sie seit dem 26.08.2026, Vorbild Hostaway).
+//
+// Gewählt ist jeweils das Land, dessen Amtssprache sie ist und nach dem der
+// ISO-639-1-Code gebildet wurde — für die mehrländrigen Sprachen also DE, FR,
+// PT, SV. Eine Sprache deckt sich nicht mit einem Land (Deutsch: DE/AT/CH,
+// Französisch: FR/BE/LU); die Flagge ist deshalb die schnelle Wiedererkennung,
+// das Endonym daneben die verbindliche Angabe. Wo beide Platz haben, stehen
+// beide — die Flagge ersetzt das Wort nur dort, wo ohnehin nur ein Symbol
+// hinpasst (Icon-Button der Topbar).
+export const LOCALE_FLAGS: Record<Locale, string> = {
+  bg: "twemoji:flag-bulgaria",
+  cs: "twemoji:flag-czechia",
+  da: "twemoji:flag-denmark",
+  de: "twemoji:flag-germany",
+  el: "twemoji:flag-greece",
+  en: "twemoji:flag-united-kingdom",
+  es: "twemoji:flag-spain",
+  et: "twemoji:flag-estonia",
+  fi: "twemoji:flag-finland",
+  fr: "twemoji:flag-france",
+  ga: "twemoji:flag-ireland",
+  hr: "twemoji:flag-croatia",
+  hu: "twemoji:flag-hungary",
+  it: "twemoji:flag-italy",
+  lt: "twemoji:flag-lithuania",
+  lv: "twemoji:flag-latvia",
+  mt: "twemoji:flag-malta",
+  nl: "twemoji:flag-netherlands",
+  pl: "twemoji:flag-poland",
+  pt: "twemoji:flag-portugal",
+  ro: "twemoji:flag-romania",
+  sk: "twemoji:flag-slovakia",
+  sl: "twemoji:flag-slovenia",
+  sv: "twemoji:flag-sweden",
+};
+
+// Flaggen-EMOJI je Sprache — dieselbe Zuordnung wie `LOCALE_FLAGS`, nur als
+// Unicode-Zeichen statt als Iconify-Name.
+//
+// Zwei Listen für dieselbe Sache, weil es zwei Rendering-Wege gibt und keiner
+// den anderen kann: ein natives `<option>` rendert AUSSCHLIESSLICH Text — ein
+// `<Icon>` darin wird nicht angezeigt, kein SVG, kein Bild. Wer in der
+// E-Mail-Sprachauswahl (`components/sprache-auswahl.tsx`) eine Flagge will,
+// braucht sie deshalb als Zeichen im Optionstext. Umgekehrt ist twemoji dort
+// die bessere Wahl, wo HTML erlaubt ist: das Emoji sieht auf jedem System
+// anders aus (und auf Windows zeigen ältere Fassungen statt der Flagge nur die
+// zwei Buchstaben des Ländercodes).
+//
+// Die beiden Listen MÜSSEN dieselben Länder tragen; `scripts/i18n/
+// sprachlisten-pruefen.mjs` erzwingt das.
+export const LOCALE_FLAG_EMOJI: Record<Locale, string> = {
+  bg: "🇧🇬",
+  cs: "🇨🇿",
+  da: "🇩🇰",
+  de: "🇩🇪",
+  el: "🇬🇷",
+  en: "🇬🇧",
+  es: "🇪🇸",
+  et: "🇪🇪",
+  fi: "🇫🇮",
+  fr: "🇫🇷",
+  ga: "🇮🇪",
+  hr: "🇭🇷",
+  hu: "🇭🇺",
+  it: "🇮🇹",
+  lt: "🇱🇹",
+  lv: "🇱🇻",
+  mt: "🇲🇹",
+  nl: "🇳🇱",
+  pl: "🇵🇱",
+  pt: "🇵🇹",
+  ro: "🇷🇴",
+  sk: "🇸🇰",
+  sl: "🇸🇮",
+  sv: "🇸🇪",
+};
+
 // Name des Cookies, in dem die gewählte Sprache liegt.
 export const LOCALE_COOKIE = "nd_locale";
 

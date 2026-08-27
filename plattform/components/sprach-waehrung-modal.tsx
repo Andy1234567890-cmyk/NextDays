@@ -18,6 +18,7 @@ import { useLocale, useTranslations } from "next-intl";
 import {
   LOCALES,
   LOCALE_COOKIE,
+  LOCALE_FLAGS,
   LOCALE_LABELS,
   LOCALE_REGIONS,
   type Locale,
@@ -68,7 +69,14 @@ export function SprachWaehrungModal({
           onClick={() => setOffen(true)}
           className="flex min-h-11 items-center gap-1.5 text-sm font-medium hover:underline sm:min-h-0"
         >
-          <Icon icon="ph:globe" className="size-4" />
+          {/* Flagge der AKTIVEN Sprache statt eines Globus: der Globus sah
+              bei allen 24 Sprachen gleich aus, die Flagge beantwortet die
+              Frage „welche Sprache ist gerade an?" ohne Aufklappen. */}
+          <Icon
+            icon={LOCALE_FLAGS[aktiv as Locale]}
+            className="size-4 shrink-0"
+            aria-hidden
+          />
           {/* Sprachname als Endonym + Sprachcode — aus dem AKTIVEN Locale, nicht
               als fester Text. Vorher stand hier „Deutsch (DE)" im Code, auch
               wenn die Seite gerade griechisch war. */}
@@ -77,11 +85,18 @@ export function SprachWaehrungModal({
       ) : (
         <button
           type="button"
-          aria-label={t("waehlen")}
+          // Die Flagge allein ist kein lesbarer Name — das Label trägt
+          // deshalb die aktive Sprache, sonst hört ein Screenreader nur
+          // „Schaltfläche".
+          aria-label={`${t("waehlen")}: ${LOCALE_LABELS[aktiv as Locale] ?? aktiv}`}
           onClick={() => setOffen(true)}
           className="flex size-11 items-center justify-center rounded-full transition-colors hover:bg-secondary md:size-10"
         >
-          <Icon icon="ph:globe" className="size-5" />
+          <Icon
+            icon={LOCALE_FLAGS[aktiv as Locale]}
+            className="size-5 shrink-0"
+            aria-hidden
+          />
         </button>
       )}
 
@@ -134,11 +149,20 @@ export function SprachWaehrungModal({
                     (locale === aktiv ? "border-foreground" : "border-transparent")
                   }
                 >
-                  <span className="block text-sm font-medium">
-                    {LOCALE_LABELS[locale]}
-                  </span>
-                  <span className="block text-sm text-muted-foreground">
-                    {LOCALE_REGIONS[locale]}
+                  <span className="flex items-center gap-2">
+                    <Icon
+                      icon={LOCALE_FLAGS[locale]}
+                      className="size-4 shrink-0"
+                      aria-hidden
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium">
+                        {LOCALE_LABELS[locale]}
+                      </span>
+                      <span className="block text-sm text-muted-foreground">
+                        {LOCALE_REGIONS[locale]}
+                      </span>
+                    </span>
                   </span>
                 </button>
               ))}

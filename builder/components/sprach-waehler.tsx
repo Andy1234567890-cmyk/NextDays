@@ -9,9 +9,10 @@
 // Kein Cookie: die Website hat keinen Anmeldezustand, in dem eine Vorliebe
 // hinterlegt wäre. Ein Cookie für die Sprachwahl wäre außerdem ein weiterer
 // Grund für einen Cookie-Hinweis.
+import { Icon } from "@iconify/react";
 import Link from "next/link";
 
-import { SPRACH_NAMEN } from "@/lib/texte";
+import { SPRACH_FLAGGEN_ICON, SPRACH_NAMEN } from "@/lib/texte";
 
 export function SprachWaehler({
   sprachen,
@@ -50,6 +51,23 @@ export function SprachWaehler({
             // lesen können, was hinter „SL" steckt.
             title={SPRACH_NAMEN[code] ?? code}
           >
+            {/* Flagge vor dem Kürzel: „DA" allein ist für den Gast ein
+                Buchstabenpaar, die Flagge daneben erkennt er im Vorbeigehen.
+                Sie steht VOR dem Kürzel, nie an seiner Stelle — eine Flagge
+                ist ein Land, keine Sprache (Deutsch: DE/AT/CH).
+
+                Als twemoji und nicht als Emoji: Regional-Indicator-Paare
+                haben unter Windows keine Glyphe, Chrome und Edge zeigen dort
+                nur den Ländercode in einem Kasten. Fehlt die Flagge zu einem
+                Code, bleibt es beim Kürzel allein — kein Ersatzzeichen, das
+                ein falsches Land behauptet. */}
+            {SPRACH_FLAGGEN_ICON[code] ? (
+              <Icon
+                icon={SPRACH_FLAGGEN_ICON[code]!}
+                aria-hidden
+                className="me-1 inline-block size-3.5 align-[-0.15em]"
+              />
+            ) : null}
             {code}
           </Link>
         );

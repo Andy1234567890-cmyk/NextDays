@@ -7,20 +7,19 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Select } from "@/components/select";
+import {
+  LOCALES,
+  LOCALE_FLAG_EMOJI,
+  LOCALE_LABELS,
+} from "@/i18n/locales";
 import { type GuestMe, guestUpdateMe } from "@/lib/guest-auth";
 import { clearGuestSession } from "@/lib/guest-session";
 
-// EU-Amtssprachen (Auswahl der gängigsten) — Codes, die das Backend erwartet.
-const LOCALES = [
-  { code: "de", label: "Deutsch" },
-  { code: "en", label: "English" },
-  { code: "fr", label: "Français" },
-  { code: "es", label: "Español" },
-  { code: "it", label: "Italiano" },
-  { code: "nl", label: "Nederlands" },
-  { code: "pl", label: "Polski" },
-  { code: "da", label: "Dansk" },
-];
+// Sprachen aus der ZENTRALEN Liste (i18n/locales.ts), nicht aus einer eigenen
+// Aufzählung. Hier standen bis zum 27.08.2026 acht handverlesene „gängigste"
+// Sprachen — ein Gast, der Griechisch oder Bulgarisch spricht, konnte seine
+// Sprache also nicht angeben, obwohl das Backend alle 24 kennt und die
+// Rechtstexte daneben in allen 24 stehen.
 
 // Gängige EU-Währungen (kein €-Default erzwingen; leer = keine Angabe).
 const CURRENCIES = ["EUR", "DKK", "SEK", "PLN", "CHF", "CZK", "HUF", "RON", "GBP"];
@@ -99,9 +98,12 @@ export function ProfilForm({ me }: { me: GuestMe }) {
             className="min-h-12 w-full rounded-xl sm:min-h-0 sm:py-2.5"
           >
             <option value="">Keine Angabe</option>
-            {LOCALES.map((l) => (
-              <option key={l.code} value={l.code}>
-                {l.label}
+            {/* Flagge als EMOJI, nicht als Symbol: ein natives <option>
+                rendert ausschliesslich Text. Sie steht VOR dem Endonym, nie an
+                seiner Stelle. */}
+            {LOCALES.map((code) => (
+              <option key={code} value={code}>
+                {LOCALE_FLAG_EMOJI[code]} {LOCALE_LABELS[code]}
               </option>
             ))}
           </Select>

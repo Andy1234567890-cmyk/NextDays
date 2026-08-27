@@ -105,6 +105,129 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   hi: "हिन्दी",
 };
 
+// Flagge je Sprache, als Iconify-Name (twemoji) und als Unicode-Emoji.
+//
+// Zwei Formen, weil es zwei Rendering-Wege gibt und keiner den anderen kann:
+// wo HTML erlaubt ist, ist twemoji die bessere Wahl (das Emoji sieht auf jedem
+// System anders aus, und aeltere Windows-Fassungen tragen fuer die
+// Regional-Indicator-Paare gar keine Glyphe). Ein natives `<option>` dagegen
+// rendert AUSSCHLIESSLICH Text; dort bliebe ein Symbol unsichtbar.
+//
+// Eine Sprache deckt sich nicht mit einem Land: die Flagge ist die schnelle
+// Wiedererkennung, das Endonym daneben die verbindliche Angabe. Sie steht
+// deshalb NEBEN dem Wort, nie an seiner Stelle.
+//
+// Diese Liste ist LAENGER als die der uebrigen Frontends, weil das
+// Gastgeber-Dashboard 44 Sprachen fuehrt statt der 24 EU-Amtssprachen. Sie ist
+// zugleich genauer: wo web/ eine mehrlaendrige Sprache auf ein Land zwingen
+// muss (`en` auf GB), traegt diese Liste die Regionalfassungen getrennt
+// (en/en-GB, pt-PT/pt-BR, zh-Hans/zh-Hant) und gibt jeder ihr eigenes Land.
+//
+// Zwei Sprachen haben kein Land, dessen Flagge sie tragen koennten:
+//   * ca (Catala)   - Katalonien ist kein Staat; die Senyera gibt es als
+//                     Unterregion-Flagge, ihr Emoji stellen viele Systeme
+//                     nicht dar.
+//   * ar (Arabisch) - Amtssprache in 22 Staaten, keiner davon namensgebend.
+// Fuer beide steht deshalb das Sprach-Symbol `ph:translate` bzw. das
+// Buch-Emoji als ehrlicher Platzhalter. Eine erfundene Flagge waere eine
+// Falschaussage ueber das Land (Wurzel 4: kein plausibler Ersatzwert).
+// Hebraeisch (he) ist unproblematisch, IL ist eindeutig.
+export const LOCALE_FLAGS: Record<Locale, string> = {
+  de: "twemoji:flag-germany",
+  en: "twemoji:flag-united-states",
+  "en-GB": "twemoji:flag-united-kingdom",
+  fr: "twemoji:flag-france",
+  es: "twemoji:flag-spain",
+  it: "twemoji:flag-italy",
+  "pt-PT": "twemoji:flag-portugal",
+  "pt-BR": "twemoji:flag-brazil",
+  nl: "twemoji:flag-netherlands",
+  ca: "ph:translate",
+  da: "twemoji:flag-denmark",
+  sv: "twemoji:flag-sweden",
+  no: "twemoji:flag-norway",
+  fi: "twemoji:flag-finland",
+  is: "twemoji:flag-iceland",
+  et: "twemoji:flag-estonia",
+  lv: "twemoji:flag-latvia",
+  lt: "twemoji:flag-lithuania",
+  pl: "twemoji:flag-poland",
+  cs: "twemoji:flag-czechia",
+  sk: "twemoji:flag-slovakia",
+  sl: "twemoji:flag-slovenia",
+  hu: "twemoji:flag-hungary",
+  ro: "twemoji:flag-romania",
+  bg: "twemoji:flag-bulgaria",
+  hr: "twemoji:flag-croatia",
+  sr: "twemoji:flag-serbia",
+  el: "twemoji:flag-greece",
+  ru: "twemoji:flag-russia",
+  uk: "twemoji:flag-ukraine",
+  ga: "twemoji:flag-ireland",
+  mt: "twemoji:flag-malta",
+  tr: "twemoji:flag-turkey",
+  ar: "ph:translate",
+  he: "twemoji:flag-israel",
+  ja: "twemoji:flag-japan",
+  ko: "twemoji:flag-south-korea",
+  "zh-Hans": "twemoji:flag-china",
+  "zh-Hant": "twemoji:flag-taiwan",
+  th: "twemoji:flag-thailand",
+  vi: "twemoji:flag-vietnam",
+  id: "twemoji:flag-indonesia",
+  ms: "twemoji:flag-malaysia",
+  tl: "twemoji:flag-philippines",
+  hi: "twemoji:flag-india",
+};
+
+export const LOCALE_FLAG_EMOJI: Record<Locale, string> = {
+  de: "🇩🇪",
+  en: "🇺🇸",
+  "en-GB": "🇬🇧",
+  fr: "🇫🇷",
+  es: "🇪🇸",
+  it: "🇮🇹",
+  "pt-PT": "🇵🇹",
+  "pt-BR": "🇧🇷",
+  nl: "🇳🇱",
+  ca: "📖",
+  da: "🇩🇰",
+  sv: "🇸🇪",
+  no: "🇳🇴",
+  fi: "🇫🇮",
+  is: "🇮🇸",
+  et: "🇪🇪",
+  lv: "🇱🇻",
+  lt: "🇱🇹",
+  pl: "🇵🇱",
+  cs: "🇨🇿",
+  sk: "🇸🇰",
+  sl: "🇸🇮",
+  hu: "🇭🇺",
+  ro: "🇷🇴",
+  bg: "🇧🇬",
+  hr: "🇭🇷",
+  sr: "🇷🇸",
+  el: "🇬🇷",
+  ru: "🇷🇺",
+  uk: "🇺🇦",
+  ga: "🇮🇪",
+  mt: "🇲🇹",
+  tr: "🇹🇷",
+  ar: "📖",
+  he: "🇮🇱",
+  ja: "🇯🇵",
+  ko: "🇰🇷",
+  "zh-Hans": "🇨🇳",
+  "zh-Hant": "🇹🇼",
+  th: "🇹🇭",
+  vi: "🇻🇳",
+  id: "🇮🇩",
+  ms: "🇲🇾",
+  tl: "🇵🇭",
+  hi: "🇮🇳",
+};
+
 // Name des Cookies, in dem die gewählte Sprache liegt (getrennt von web via host).
 export const LOCALE_COOKIE = "nd_locale";
 

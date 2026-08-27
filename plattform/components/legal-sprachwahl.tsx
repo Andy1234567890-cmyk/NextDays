@@ -13,6 +13,7 @@ import {
   LEGAL_LOCALE_LABELS,
   type LegalLocale,
 } from "@/content/legal/locales";
+import { LOCALE_FLAG_EMOJI, type Locale } from "@/i18n/locales";
 
 // `verfuegbar` sind die Sprachen, in denen es DIESEN Text wirklich gibt —
 // nicht alle 24. Eine Sprache anzubieten, deren Fassung fehlt, führte in ein
@@ -39,9 +40,13 @@ export function LegalSprachwahl({
         className="w-full rounded-full sm:w-auto sm:py-1.5"
         wrapperClassName="w-full sm:w-auto"
       >
+        {/* Flagge als EMOJI, nicht als Symbol: ein natives <option> rendert
+            ausschliesslich Text. Die Codes sind identisch zu i18n/locales.ts
+            (siehe content/legal/locales.ts), deshalb passt LOCALE_FLAG_EMOJI
+            ohne eigene Liste. */}
         {verfuegbar.map((code) => (
           <option key={code} value={code}>
-            {LEGAL_LOCALE_LABELS[code]}
+            {LOCALE_FLAG_EMOJI[code as Locale]} {LEGAL_LOCALE_LABELS[code]}
           </option>
         ))}
       </Select>

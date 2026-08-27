@@ -163,6 +163,71 @@ export const SPRACH_NAMEN: Record<string, string> = {
   sv: "Svenska",
 };
 
+/** Flaggen-Emoji einer Sprache, für den Sprachwähler.
+ *
+ *  Als Emoji und nicht als Icon-Name: der Wähler ist ab sieben Sprachen ein
+ *  natives <select>, und ein <option> rendert ausschließlich Text.
+ *  Die Flagge steht VOR dem Endonym, nie an seiner Stelle — eine Flagge ist
+ *  ein Land, keine Sprache (Deutsch: DE/AT/CH). */
+export const SPRACH_FLAGGEN: Record<string, string> = {
+  bg: "🇧🇬",
+  cs: "🇨🇿",
+  da: "🇩🇰",
+  de: "🇩🇪",
+  el: "🇬🇷",
+  en: "🇬🇧",
+  es: "🇪🇸",
+  et: "🇪🇪",
+  fi: "🇫🇮",
+  fr: "🇫🇷",
+  ga: "🇮🇪",
+  hr: "🇭🇷",
+  hu: "🇭🇺",
+  it: "🇮🇹",
+  lt: "🇱🇹",
+  lv: "🇱🇻",
+  mt: "🇲🇹",
+  nl: "🇳🇱",
+  pl: "🇵🇱",
+  pt: "🇵🇹",
+  ro: "🇷🇴",
+  sk: "🇸🇰",
+  sl: "🇸🇮",
+  sv: "🇸🇪",
+};
+
+/** Flagge einer Sprache als Iconify-Name (twemoji).
+ *
+ *  Vorzuziehen, wo HTML erlaubt ist: Regional-Indicator-Emoji haben unter
+ *  Windows keine Glyphe, Chrome und Edge zeigen dort nur die zwei Buchstaben
+ *  des Ländercodes. `SPRACH_FLAGGEN` bleibt für native <option>-Listen. */
+export const SPRACH_FLAGGEN_ICON: Record<string, string> = {
+  bg: "twemoji:flag-bulgaria",
+  cs: "twemoji:flag-czechia",
+  da: "twemoji:flag-denmark",
+  de: "twemoji:flag-germany",
+  el: "twemoji:flag-greece",
+  en: "twemoji:flag-united-kingdom",
+  es: "twemoji:flag-spain",
+  et: "twemoji:flag-estonia",
+  fi: "twemoji:flag-finland",
+  fr: "twemoji:flag-france",
+  ga: "twemoji:flag-ireland",
+  hr: "twemoji:flag-croatia",
+  hu: "twemoji:flag-hungary",
+  it: "twemoji:flag-italy",
+  lt: "twemoji:flag-lithuania",
+  lv: "twemoji:flag-latvia",
+  mt: "twemoji:flag-malta",
+  nl: "twemoji:flag-netherlands",
+  pl: "twemoji:flag-poland",
+  pt: "twemoji:flag-portugal",
+  ro: "twemoji:flag-romania",
+  sk: "twemoji:flag-slovakia",
+  sl: "twemoji:flag-slovenia",
+  sv: "twemoji:flag-sweden",
+};
+
 const KATALOG: Record<string, RendererTexte> = {
   bg: {
     cookieText: "Този сайт използва бисквитки, за да работи правилно.",

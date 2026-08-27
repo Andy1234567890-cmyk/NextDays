@@ -17,10 +17,16 @@
 // Topbar des Dashboards, hängt an dessen `common`-Namespace und ist ein
 // Icon-Button ohne sichtbaren Text. Hier steht der Umschalter allein auf einer
 // leeren Seite und muss auch dann erkennbar sein, wenn der Betrachter die
-// aktuelle Sprache NICHT versteht — deshalb ein sichtbares Globus-Symbol mit
-// dem Endonym der aktiven Sprache („Dansk", nicht „Dänisch") daneben. Die 24
-// Endonyme kommen aus `i18n/locales.ts` (LOCALE_LABELS), es gibt keine zweite
-// Liste. Keine Flaggen: eine Flagge ist ein LAND, keine Sprache.
+// aktuelle Sprache NICHT versteht — deshalb die FLAGGE der aktiven Sprache mit
+// ihrem Endonym daneben („Dansk", nicht „Dänisch"), statt eines Globus, der bei
+// allen 24 Sprachen gleich aussieht. Genau hier zahlt sich das aus: wer auf
+// einer Seite in einer fremden Sprache landet, erkennt die Flagge, bevor er das
+// Wort liest.
+//
+// Flaggen und Endonyme kommen aus `i18n/locales.ts` (LOCALE_FLAGS,
+// LOCALE_LABELS), es gibt keine zweite Liste. Die Flagge steht NEBEN dem
+// Endonym, nie an seiner Stelle: eine Sprache deckt sich nicht mit einem Land
+// (Deutsch ist DE/AT/CH), deshalb bleibt das Wort die verbindliche Angabe.
 //
 // Die Wahl landet im Cookie `nd_locale` und gewinnt danach dauerhaft gegen die
 // Automatik (erste Stufe der Kette) — wer einmal korrigiert hat, wird nicht bei
@@ -31,7 +37,12 @@ import { useRouter } from "next/navigation";
 import { useMemo, useTransition } from "react";
 
 import { setLocale } from "@/i18n/actions";
-import { LOCALES, LOCALE_LABELS, type Locale } from "@/i18n/locales";
+import {
+  LOCALES,
+  LOCALE_FLAGS,
+  LOCALE_LABELS,
+  type Locale,
+} from "@/i18n/locales";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,7 +82,11 @@ export function SprachUmschalter() {
         disabled={pending}
         className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50"
       >
-        <Icon icon="ph:globe" className="size-4" aria-hidden />
+        <Icon
+          icon={LOCALE_FLAGS[locale]}
+          className="size-4 shrink-0"
+          aria-hidden
+        />
         {LOCALE_LABELS[locale]}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto">
@@ -81,6 +96,11 @@ export function SprachUmschalter() {
             onSelect={() => waehlen(o.code)}
             className={o.code === locale ? "font-semibold" : undefined}
           >
+            <Icon
+              icon={LOCALE_FLAGS[o.code]}
+              className="mr-2 size-4 shrink-0"
+              aria-hidden
+            />
             {o.label}
           </DropdownMenuItem>
         ))}

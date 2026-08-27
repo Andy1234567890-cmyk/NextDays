@@ -9,6 +9,17 @@
 //   3. builder/lib/sprache.ts         — Prüfung des ?lang= aus der Adresszeile
 //   4. builder/lib/texte.ts           — Anzeigenamen im Sprachwähler (SPRACH_NAMEN)
 //
+// Dazu die FLAGGEN, die seit dem 27.08.2026 in jedem Sprachumschalter stehen.
+// Sie sind derselbe Fall, nur leiser: fehlt einer Sprache ihr Eintrag, rendert
+// die Stelle NICHTS — kein Fehler, keine Meldung, nur eine Lücke bei genau
+// dieser einen Sprache, während die anderen 23 stimmen.
+//   5. web/i18n/locales.ts            — LOCALE_FLAGS (Iconify) + LOCALE_FLAG_EMOJI
+//   6. plattform/i18n/locales.ts      — dieselben zwei Listen für den Marktplatz
+//   7. builder/lib/texte.ts           — SPRACH_FLAGGEN + SPRACH_FLAGGEN_ICON
+//
+// NICHT hier geprüft: gastgeber/i18n/locales.ts (44 Sprachen statt 24, eigene
+// Menge) und marketing/components/flagge.tsx (gezeichnete SVG statt Liste).
+//
 // Ein gemeinsames Paket wäre der schönere Weg, aber der Renderer und die API
 // teilen keine Laufzeit — die Python-Seite müsste die Liste ohnehin doppeln.
 // Deshalb dasselbe Muster wie bei den Kanal-Enums: bewusste Kopien plus ein
@@ -67,9 +78,61 @@ const quellen = {
   ),
 };
 
+// Die Flaggen-Listen. Sie tragen dieselben 24 Sprachen wie oben; geprüft wird
+// gegen dieselbe Bezugsmenge, damit eine neue Sprache nicht mit Namen, aber
+// ohne Flagge durchrutscht.
+const flaggen = {
+  "web LOCALE_FLAGS": codes(
+    "Dashboard-Flaggen",
+    "web/i18n/locales.ts",
+    /export const LOCALE_FLAGS[\s\S]*?\{([\s\S]*?)\n\};/,
+    "objekt",
+  ),
+  "web LOCALE_FLAG_EMOJI": codes(
+    "Dashboard-Flaggen (Emoji)",
+    "web/i18n/locales.ts",
+    /export const LOCALE_FLAG_EMOJI[\s\S]*?\{([\s\S]*?)\n\};/,
+    "objekt",
+  ),
+  "plattform LOCALE_FLAGS": codes(
+    "Marktplatz-Flaggen",
+    "plattform/i18n/locales.ts",
+    /export const LOCALE_FLAGS[\s\S]*?\{([\s\S]*?)\n\};/,
+    "objekt",
+  ),
+  "plattform LOCALE_FLAG_EMOJI": codes(
+    "Marktplatz-Flaggen (Emoji)",
+    "plattform/i18n/locales.ts",
+    /export const LOCALE_FLAG_EMOJI[\s\S]*?\{([\s\S]*?)\n\};/,
+    "objekt",
+  ),
+  "builder SPRACH_FLAGGEN": codes(
+    "Renderer-Flaggen (Emoji)",
+    "builder/lib/texte.ts",
+    /export const SPRACH_FLAGGEN: Record[\s\S]*?\{([\s\S]*?)\n\};/,
+    "objekt",
+  ),
+  "builder SPRACH_FLAGGEN_ICON": codes(
+    "Renderer-Flaggen (Icon)",
+    "builder/lib/texte.ts",
+    /export const SPRACH_FLAGGEN_ICON: Record[\s\S]*?\{([\s\S]*?)\n\};/,
+    "objekt",
+  ),
+};
+
 const [erstesName, ersteMenge] = Object.entries(quellen)[0];
 let fehler = 0;
 for (const [name, menge] of Object.entries(quellen)) {
+  const fehlt = [...ersteMenge].filter((c) => !menge.has(c));
+  const zusatz = [...menge].filter((c) => !ersteMenge.has(c));
+  if (fehlt.length || zusatz.length) {
+    console.error(
+      `✗ ${name}: fehlt ${JSON.stringify(fehlt)}, zusätzlich ${JSON.stringify(zusatz)} (Bezug: ${erstesName})`,
+    );
+    fehler++;
+  }
+}
+for (const [name, menge] of Object.entries(flaggen)) {
   const fehlt = [...ersteMenge].filter((c) => !menge.has(c));
   const zusatz = [...menge].filter((c) => !ersteMenge.has(c));
   if (fehlt.length || zusatz.length) {
@@ -84,4 +147,7 @@ if (ersteMenge.size !== 24) {
   fehler++;
 }
 if (fehler) process.exit(1);
-console.log(`✓ Sprachlisten deckungsgleich (${Object.keys(quellen).length} Quellen, ${ersteMenge.size} Sprachen).`);
+console.log(
+  `✓ Sprachlisten deckungsgleich (${Object.keys(quellen).length} Quellen, ` +
+    `${Object.keys(flaggen).length} Flaggenlisten, ${ersteMenge.size} Sprachen).`,
+);

@@ -96,6 +96,52 @@ T = {
         "Från", "Till", "Gäster", "Sök", "Språk", "Boka nu", "Sök destination", "Vuxna", "Barn", "Spädbarn", "Husdjur", "natt", "Pris på förfrågan", "Det finns inga boenden tillgängliga just nu.", "Gästernas favorit", "Ankomst", "Avresa", "Förnamn", "Efternamn", "E-post", "Godkänn integritetspolicyn.", "Läs", "Inga omdömen ännu — det här avsnittet visas med det första.", "Ingen text ännu — skriv den i fältet till vänster.", "Ingen bild vald ännu.", "Inga bilder i galleriet ännu.", "Knappen saknar text eller mål.", "Inga boenden valda ännu.", "Inga frågor än — lägg till den första till vänster.", "Ingen adress än — skriv den till vänster.", "Inga gästomdömen än.", "Inga poster än.", "Öppna i Google Maps", "Visa vägen", "Sidan hittades inte", "Den här sidan finns inte eller har flyttats.", "Till startsidan", "Inga fält än — lägg till det första till vänster.", "Skicka", "Tack — ditt meddelande har kommit fram.", "Det gick inte att skicka. Försök igen.", "Stäng", "Boka och betala", "Skicka förfrågan", "Värden bekräftar bokningen och kommer överens om betalningen med dig.", "Förfrågan skickad — du hör från oss snart.", "Blogg", "Alla", "Inga inlägg än.", "Inga inlägg än — skapa det första under ”Sidor”.", "Alla inlägg"],
 }
 
+# Flaggen-Emoji je Sprache, fuer den Waehler der Kunden-Websites.
+#
+# Als EMOJI und nicht als Icon-Name, weil der Waehler ab sieben Sprachen ein
+# natives <select> ist - ein <option> rendert ausschliesslich Text, ein Symbol
+# darin bliebe unsichtbar.
+#
+# Gewaehlt ist jeweils das Land, nach dem der ISO-639-1-Code gebildet wurde;
+# fuer die mehrlaendrigen Sprachen also DE, FR, PT, SV. Eine Sprache deckt sich
+# nicht mit einem Land (Deutsch: DE/AT/CH) - die Flagge steht deshalb VOR dem
+# Endonym, nie an seiner Stelle.
+FLAGGEN = {
+ "bg": "\U0001F1E7\U0001F1EC", "cs": "\U0001F1E8\U0001F1FF",
+ "da": "\U0001F1E9\U0001F1F0", "de": "\U0001F1E9\U0001F1EA",
+ "el": "\U0001F1EC\U0001F1F7", "en": "\U0001F1EC\U0001F1E7",
+ "es": "\U0001F1EA\U0001F1F8", "et": "\U0001F1EA\U0001F1EA",
+ "fi": "\U0001F1EB\U0001F1EE", "fr": "\U0001F1EB\U0001F1F7",
+ "ga": "\U0001F1EE\U0001F1EA", "hr": "\U0001F1ED\U0001F1F7",
+ "hu": "\U0001F1ED\U0001F1FA", "it": "\U0001F1EE\U0001F1F9",
+ "lt": "\U0001F1F1\U0001F1F9", "lv": "\U0001F1F1\U0001F1FB",
+ "mt": "\U0001F1F2\U0001F1F9", "nl": "\U0001F1F3\U0001F1F1",
+ "pl": "\U0001F1F5\U0001F1F1", "pt": "\U0001F1F5\U0001F1F9",
+ "ro": "\U0001F1F7\U0001F1F4", "sk": "\U0001F1F8\U0001F1F0",
+ "sl": "\U0001F1F8\U0001F1EE", "sv": "\U0001F1F8\U0001F1EA",
+}
+
+# Dieselben Flaggen als Iconify-Namen (twemoji).
+#
+# Wo HTML erlaubt ist, ist das Symbol dem Emoji vorzuziehen: Regional-
+# Indicator-Paare haben unter Windows keine Glyphe, Chrome und Edge zeigen dort
+# nur die zwei Buchstaben des Laendercodes in einem Kasten - der Waehler waere
+# auf dem groessten Desktop-Marktanteil eine Buchstabensuppe.
+FLAGGEN_ICON = {
+ "bg": "twemoji:flag-bulgaria", "cs": "twemoji:flag-czechia",
+ "da": "twemoji:flag-denmark", "de": "twemoji:flag-germany",
+ "el": "twemoji:flag-greece", "en": "twemoji:flag-united-kingdom",
+ "es": "twemoji:flag-spain", "et": "twemoji:flag-estonia",
+ "fi": "twemoji:flag-finland", "fr": "twemoji:flag-france",
+ "ga": "twemoji:flag-ireland", "hr": "twemoji:flag-croatia",
+ "hu": "twemoji:flag-hungary", "it": "twemoji:flag-italy",
+ "lt": "twemoji:flag-lithuania", "lv": "twemoji:flag-latvia",
+ "mt": "twemoji:flag-malta", "nl": "twemoji:flag-netherlands",
+ "pl": "twemoji:flag-poland", "pt": "twemoji:flag-portugal",
+ "ro": "twemoji:flag-romania", "sk": "twemoji:flag-slovakia",
+ "sl": "twemoji:flag-slovenia", "sv": "twemoji:flag-sweden",
+}
+
 # Anzeigenamen der Sprachen in ihrer eigenen Sprache (für den Wähler).
 NAMEN = {
  "bg": "Български", "cs": "Čeština", "da": "Dansk", "de": "Deutsch",
@@ -105,6 +151,18 @@ NAMEN = {
  "mt": "Malti", "nl": "Nederlands", "pl": "Polski", "pt": "Português",
  "ro": "Română", "sk": "Slovenčina", "sl": "Slovenščina", "sv": "Svenska",
 }
+
+assert set(FLAGGEN_ICON) == set(NAMEN), (
+    "FLAGGEN_ICON und NAMEN tragen verschiedene Sprachen: "
+    f"nur in FLAGGEN_ICON {sorted(set(FLAGGEN_ICON) - set(NAMEN))}, "
+    f"nur in NAMEN {sorted(set(NAMEN) - set(FLAGGEN_ICON))}"
+)
+
+assert set(FLAGGEN) == set(NAMEN), (
+    "FLAGGEN und NAMEN tragen verschiedene Sprachen: "
+    f"nur in FLAGGEN {sorted(set(FLAGGEN) - set(NAMEN))}, "
+    f"nur in NAMEN {sorted(set(NAMEN) - set(FLAGGEN))}"
+)
 
 for code, werte in T.items():
     assert len(werte) == len(KEYS), f"{code}: {len(werte)} statt {len(KEYS)}"
@@ -204,6 +262,27 @@ zeilen.append(" *  „Dänisch“ auf Deutsch anbietet, hilft dem dänischen Gas
 zeilen.append("export const SPRACH_NAMEN: Record<string, string> = {\n")
 for code in sorted(NAMEN):
     zeilen.append(f'  {code}: "{NAMEN[code]}",\n')
+zeilen.append("};\n\n")
+
+zeilen.append("/** Flaggen-Emoji einer Sprache, für den Sprachwähler.\n")
+zeilen.append(" *\n")
+zeilen.append(" *  Als Emoji und nicht als Icon-Name: der Wähler ist ab sieben Sprachen ein\n")
+zeilen.append(" *  natives <select>, und ein <option> rendert ausschließlich Text.\n")
+zeilen.append(" *  Die Flagge steht VOR dem Endonym, nie an seiner Stelle — eine Flagge ist\n")
+zeilen.append(" *  ein Land, keine Sprache (Deutsch: DE/AT/CH). */\n")
+zeilen.append("export const SPRACH_FLAGGEN: Record<string, string> = {\n")
+for code in sorted(FLAGGEN):
+    zeilen.append(f'  {code}: "{FLAGGEN[code]}",\n')
+zeilen.append("};\n\n")
+
+zeilen.append("/** Flagge einer Sprache als Iconify-Name (twemoji).\n")
+zeilen.append(" *\n")
+zeilen.append(" *  Vorzuziehen, wo HTML erlaubt ist: Regional-Indicator-Emoji haben unter\n")
+zeilen.append(" *  Windows keine Glyphe, Chrome und Edge zeigen dort nur die zwei Buchstaben\n")
+zeilen.append(" *  des Ländercodes. `SPRACH_FLAGGEN` bleibt für native <option>-Listen. */\n")
+zeilen.append("export const SPRACH_FLAGGEN_ICON: Record<string, string> = {\n")
+for code in sorted(FLAGGEN_ICON):
+    zeilen.append(f'  {code}: "{FLAGGEN_ICON[code]}",\n')
 zeilen.append("};\n\n")
 
 zeilen.append("const KATALOG: Record<string, RendererTexte> = {\n")

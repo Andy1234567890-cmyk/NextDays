@@ -22,7 +22,12 @@ import { Button } from "@nextdays/ui/button";
 
 import { SuchAuswahl } from "@/components/ui/such-auswahl";
 
-import { LOCALE_LABELS, LOCALE_COOKIE, type Locale } from "@/i18n/locales";
+import {
+  LOCALE_FLAG_EMOJI,
+  LOCALE_LABELS,
+  LOCALE_COOKIE,
+  type Locale,
+} from "@/i18n/locales";
 import type { Account } from "@/lib/konto";
 import { updateProfile } from "@/lib/konto-actions";
 import {
@@ -133,9 +138,12 @@ export function SpracheAbschnitt({ account }: { account: Account }) {
             disabled={busy}
             className="w-full appearance-none rounded-lg border border-border bg-background py-2.5 ps-3 pe-10 text-[0.9375rem] outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
+            {/* Flagge als EMOJI, nicht als Symbol: ein natives <option>
+                rendert ausschliesslich Text. Sie steht VOR dem Endonym, nie
+                an seiner Stelle — eine Flagge ist ein Land, keine Sprache. */}
             {LOCALES.map(([code, label]) => (
               <option key={code} value={code}>
-                {label}
+                {LOCALE_FLAG_EMOJI[code]} {label}
               </option>
             ))}
           </select>

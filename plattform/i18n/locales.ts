@@ -77,6 +77,76 @@ export const LOCALE_REGIONS: Record<Locale, string> = {
   sv: "Sverige",
 };
 
+// Flagge je Sprache, als Iconify-Name (twemoji) und als Unicode-Emoji.
+//
+// Zwei Formen, weil es zwei Rendering-Wege gibt und keiner den anderen kann:
+// wo HTML erlaubt ist, ist twemoji die bessere Wahl (das Emoji sieht auf jedem
+// System anders aus, und aeltere Windows-Fassungen tragen fuer die
+// Regional-Indicator-Paare gar keine Glyphe - Chrome und Edge zeigen dort
+// stattdessen die zwei Buchstaben des Laendercodes in einem Kasten). Ein
+// natives `<option>` dagegen rendert AUSSCHLIESSLICH Text; dort bliebe ein
+// Symbol unsichtbar, und es muss das Zeichen sein.
+//
+// Gewaehlt ist jeweils das Land, dessen Amtssprache sie ist und nach dem der
+// ISO-639-1-Code gebildet wurde, fuer die mehrlaendrigen Sprachen also DE, FR,
+// PT, SV. Eine Sprache deckt sich nicht mit einem Land (Deutsch: DE/AT/CH,
+// Franzoesisch: FR/BE/LU): die Flagge ist die schnelle Wiedererkennung, das
+// Endonym daneben die verbindliche Angabe. Sie steht deshalb NEBEN dem Wort,
+// nie an seiner Stelle.
+export const LOCALE_FLAGS: Record<Locale, string> = {
+  bg: "twemoji:flag-bulgaria",
+  cs: "twemoji:flag-czechia",
+  da: "twemoji:flag-denmark",
+  de: "twemoji:flag-germany",
+  el: "twemoji:flag-greece",
+  en: "twemoji:flag-united-kingdom",
+  es: "twemoji:flag-spain",
+  et: "twemoji:flag-estonia",
+  fi: "twemoji:flag-finland",
+  fr: "twemoji:flag-france",
+  ga: "twemoji:flag-ireland",
+  hr: "twemoji:flag-croatia",
+  hu: "twemoji:flag-hungary",
+  it: "twemoji:flag-italy",
+  lt: "twemoji:flag-lithuania",
+  lv: "twemoji:flag-latvia",
+  mt: "twemoji:flag-malta",
+  nl: "twemoji:flag-netherlands",
+  pl: "twemoji:flag-poland",
+  pt: "twemoji:flag-portugal",
+  ro: "twemoji:flag-romania",
+  sk: "twemoji:flag-slovakia",
+  sl: "twemoji:flag-slovenia",
+  sv: "twemoji:flag-sweden",
+};
+
+export const LOCALE_FLAG_EMOJI: Record<Locale, string> = {
+  bg: "🇧🇬",
+  cs: "🇨🇿",
+  da: "🇩🇰",
+  de: "🇩🇪",
+  el: "🇬🇷",
+  en: "🇬🇧",
+  es: "🇪🇸",
+  et: "🇪🇪",
+  fi: "🇫🇮",
+  fr: "🇫🇷",
+  ga: "🇮🇪",
+  hr: "🇭🇷",
+  hu: "🇭🇺",
+  it: "🇮🇹",
+  lt: "🇱🇹",
+  lv: "🇱🇻",
+  mt: "🇲🇹",
+  nl: "🇳🇱",
+  pl: "🇵🇱",
+  pt: "🇵🇹",
+  ro: "🇷🇴",
+  sk: "🇸🇰",
+  sl: "🇸🇮",
+  sv: "🇸🇪",
+};
+
 // Name des Cookies mit der gewählten Sprache. Eigener Name je Auth-/App-Welt:
 // die Gast-Seite teilt ihn NICHT mit dem PMS (web) oder dem Gastgeber-Dashboard.
 export const LOCALE_COOKIE = "nd_gast_locale";

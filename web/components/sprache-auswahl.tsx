@@ -14,8 +14,12 @@
 //     „Tschechisch"). Wer nur Tschechisch liest, erkennt „Tschechisch" nicht.
 //     Die 24 Endonyme liegen bereits zentral in `i18n/locales.ts`
 //     (LOCALE_LABELS) — genau die werden hier benutzt, keine zweite Liste.
-//   * KEINE Flaggen. Eine Flagge ist ein LAND, keine Sprache (Deutsch: DE/AT/CH,
-//     Französisch: FR/BE/LU/CA). Gilt durchgehend als Antipattern.
+//   * Flagge VOR dem Endonym (Vorgabe vom 27.08.2026, wie in allen übrigen
+//     Sprachumschaltern). Sie ersetzt das Wort nicht, sie steht davor: eine
+//     Flagge ist ein LAND, keine Sprache (Deutsch: DE/AT/CH, Französisch:
+//     FR/BE/LU/CA) — das Endonym daneben bleibt die verbindliche Angabe.
+//     Als EMOJI, nicht als Iconify-Symbol: ein natives <option> rendert nur
+//     Text, ein <Icon> darin bliebe unsichtbar (LOCALE_FLAG_EMOJI).
 //   * Sortierung alphabetisch NACH DEM ENDONYM mit `Intl.Collator` der aktiven
 //     Oberflächensprache — sonst landet „Ελληνικά" nach ASCII-Bytes irgendwo
 //     hinter „Svenska".
@@ -26,7 +30,12 @@
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 
-import { LOCALES, LOCALE_LABELS, type Locale } from "@/i18n/locales";
+import {
+  LOCALES,
+  LOCALE_FLAG_EMOJI,
+  LOCALE_LABELS,
+  type Locale,
+} from "@/i18n/locales";
 import { Label } from "@nextdays/ui/label";
 import { NativeSelect } from "@nextdays/ui/native-select";
 
@@ -108,7 +117,7 @@ export function SprachAuswahl({
         {allowEmpty && <option value="">{emptyLabel ?? t("none")}</option>}
         {optionen.map((o) => (
           <option key={o.code} value={o.code}>
-            {o.label}
+            {LOCALE_FLAG_EMOJI[o.code]} {o.label}
           </option>
         ))}
       </NativeSelect>
