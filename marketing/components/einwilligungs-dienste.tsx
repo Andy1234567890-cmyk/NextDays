@@ -14,7 +14,7 @@
 // ohne Neuladen aus der Messung fallen — sonst zählt der Rest des Besuchs
 // weiter, obwohl gerade widerrufen wurde.
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 import { analyticsStarten, analyticsWiderrufen, seitenaufrufMelden } from "@/lib/analytics";
 import { captchaWiderrufen } from "@/lib/captcha";
@@ -66,21 +66,26 @@ export function EinwilligungsDienste() {
   // `['/preise', '/preise']` in der dataLayer. Ein String wird wertverglichen,
   // damit feuert der Effekt genau bei echtem Seitenwechsel.
   //
-  // Beim ERSTEN Rendern meldet dieser Effekt NICHT — dort uebernimmt das
-  // `skript.onload` in analyticsStarten, weil gtag.js zu diesem Zeitpunkt noch
-  // laedt und ein jetzt eingereihter Treffer verworfen wuerde. Dieser Effekt
-  // ist fuer die FOLGENDEN Seitenwechsel zustaendig, bei denen gtag.js schon
-  // laeuft. `seitenaufrufMelden` ist gegen Doppelzaehlung ohnehin gesperrt
-  // (`letzterPfad`), das Auslassen hier verhindert das Gegenteil: einen
-  // Treffer, den niemand verarbeitet.
+  // KEIN „erstes Rendern auslassen" mehr. Genau das stand hier von 04:00 bis
+  // 04:15 am 27.08.2026 und war ein schwerer Fehler: die Absicht war, den
+  // ersten Treffer dem `skript.onload` in analyticsStarten zu ueberlassen. Bei
+  // einem echten Seitenaufruf montiert diese Komponente aber NEU — der Merker
+  // steht wieder auf `true` —, und wenn gtag.js zu diesem Zeitpunkt schon
+  // geladen ist, feuert `onload` nie. Dann meldet NIEMAND den Treffer.
+  //
+  // Live gemessen: die Startseite zaehlte, `/preise`, `/funktionen`,
+  // `/kontakt` und `/ueber-uns` sendeten KEINEN EINZIGEN Treffer. Die
+  // Auswertung haette alle Zugriffe der Einstiegsseite zugeschlagen und jede
+  // Unterseite mit null gefuehrt — plausibel genug, dass es niemandem auffaellt.
+  //
+  // Der Effekt meldet deshalb IMMER. Gegen Doppelzaehlung schuetzt bereits
+  // `letzterPfad` in lib/analytics.ts; kommt der `onload` dem Effekt zuvor,
+  // greift diese Sperre. Ein zu viel gemeldeter Treffer wird dort abgefangen,
+  // ein nie gemeldeter ist unrettbar verloren — die Richtung des Zweifels
+  // gehoert auf die Seite des Meldens.
   const abfrage = suchparameter?.toString() ?? "";
-  const erstesRendern = useRef(true);
   useEffect(() => {
     if (!pfad) return;
-    if (erstesRendern.current) {
-      erstesRendern.current = false;
-      return;
-    }
     seitenaufrufMelden(abfrage ? `${pfad}?${abfrage}` : pfad);
   }, [pfad, abfrage]);
 
