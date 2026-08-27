@@ -49,9 +49,18 @@ export const RECAPTCHA_SITE_KEY =
 // sendet — schlimmer als keine Messung.
 const GA_MEASUREMENT_STANDARD = "G-8V80HGPYVW";
 
-export const GA_MEASUREMENT_ID = (
-  process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? GA_MEASUREMENT_STANDARD
-).trim();
+// `||` statt `??` — der Unterschied ist im Container entscheidend: ein `ARG`
+// im Dockerfile ohne Vorgabewert setzt die Variable auf einen LEEREN STRING,
+// nicht auf „nicht vorhanden". `??` greift nur bei `undefined`, der Fallback war
+// im Image also wirkungslos. Live nachgewiesen am 27.08.2026: `_ga` wurde nach
+// erteilter Einwilligung nie gesetzt und der Google Tag Assistant fand keine
+// Tags — nicht weil die Einwilligung oder die CSP falsch waren, sondern weil
+// die Mess-ID im Bundle leer war und `analyticsStarten` deshalb sofort
+// aussteigt. Ein still abgeschalteter Dienst ist derselbe Fehler wie ein
+// verschluckter Exception (Wurzel 5).
+export const GA_MEASUREMENT_ID =
+  (process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "").trim() ||
+  GA_MEASUREMENT_STANDARD;
 
 // Werbe-Pixel (Marketing-Kategorie) — Kennungen der Dienste, die nur nach
 // Einwilligung laden dürfen.
@@ -79,7 +88,7 @@ export const GA_MEASUREMENT_ID = (
 const META_PIXEL_STANDARD = "2299389937556025";
 
 export const META_PIXEL_ID =
-  (process.env.NEXT_PUBLIC_META_PIXEL_ID ?? META_PIXEL_STANDARD).trim();
+  (process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "").trim() || META_PIXEL_STANDARD;
 export const LINKEDIN_PARTNER_ID =
   process.env.NEXT_PUBLIC_LINKEDIN_PARTNER_ID ?? "";
 export const GOOGLE_ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID ?? "";
