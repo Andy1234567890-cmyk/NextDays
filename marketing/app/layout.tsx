@@ -17,7 +17,10 @@ import { VoranmeldungPopup } from "@/components/voranmeldung-popup";
 import { anzeigewaehrung } from "@/lib/anzeigewaehrung";
 import { formatCurrency } from "@/lib/currency";
 import { holePreisliste } from "@/lib/preise";
-import { GOOGLE_SITE_VERIFICATION } from "@/lib/site-verification";
+import {
+  FACEBOOK_DOMAIN_VERIFICATION,
+  GOOGLE_SITE_VERIFICATION,
+} from "@/lib/site-verification";
 import { SITE_URL } from "@/lib/site-url";
 import { staffelPreisCent } from "@/lib/tarif";
 
@@ -77,7 +80,13 @@ export async function generateMetadata(): Promise<Metadata> {
     // Titel und Beschreibung nutzen. Eine zweite Kopie je Rechtsseite wäre
     // derselbe Wert an sechs Stellen (Wurzel 4) und würde beim nächsten
     // Wechsel auseinanderlaufen.
-    verification: { google: GOOGLE_SITE_VERIFICATION },
+    // `other` traegt jeden Nachweis, fuer den Next kein eigenes Feld hat —
+    // hier den von Meta. Er erbt sich aus demselben Grund wie der von Google
+    // auf JEDE Route: Next mischt Metadaten flach von der Wurzel zur Seite.
+    verification: {
+      google: GOOGLE_SITE_VERIFICATION,
+      other: { "facebook-domain-verification": FACEBOOK_DOMAIN_VERIFICATION },
+    },
     title: t("title"),
     description:
       liste && einstiegCent !== null

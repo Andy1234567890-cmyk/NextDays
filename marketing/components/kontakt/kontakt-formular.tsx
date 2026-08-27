@@ -46,6 +46,7 @@ import { ANBIETER } from "@/content/legal/anbieter";
 import { captchaVorbereiten } from "@/lib/captcha";
 import { RECAPTCHA_SITE_KEY } from "@/lib/config";
 import { NICHTS_ERLAUBT } from "@/lib/einwilligung";
+import { pixelEreignisMelden } from "@/lib/pixel";
 import {
   KONTAKT_THEMEN,
   KontaktFehler,
@@ -159,6 +160,16 @@ export function KontaktFormular() {
             : (Date.now() - startZeit.current) / 1000,
       });
       setErfolg(antwort.detail);
+      // Conversion an den Werbe-Pixel, erst nach der Serverantwort. Metas
+      // Standard-Event fuer eine Kontaktaufnahme heisst `Contact` („when a
+      // person initiates contact with your business"). Ohne Einwilligung
+      // „marketing" verpufft der Aufruf still (lib/pixel.ts).
+      //
+      // Das THEMA wandert NICHT mit: es waere ein selbstdefinierter Parameter
+      // mit fachlichem Inhalt („kuendigung", „datenschutz"), und Metas
+      // Nutzungsbedingungen verbieten das Senden sensibler Informationen.
+      // Der Server weiss ohnehin, welches Postfach zustaendig war.
+      pixelEreignisMelden("Contact");
       formular.reset();
     } catch (exc) {
       setFehler(fehlertext(exc));

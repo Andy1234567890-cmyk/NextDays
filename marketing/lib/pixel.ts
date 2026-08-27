@@ -12,6 +12,18 @@
 //
 // Ohne konfigurierte Kennung passiert nichts — auch mit Einwilligung. Eine
 // erfundene Kennung würde Daten an ein fremdes Konto schicken (Wurzel 4).
+//
+// KEIN `<noscript>`-Zaehlbild. Metas Vorlage enthaelt eines, und hier stand es
+// bis zum 27.08.2026 — per JavaScript angelegt, damit es die Einwilligung
+// respektiert. Damit war es sinnlos und schaedlich zugleich: sinnlos, weil ein
+// Bild, das JavaScript anlegt, genau dann fehlt, wenn JavaScript aus ist (sein
+// einziger Zweck); schaedlich, weil es bei eingeschaltetem JavaScript
+// ZUSAETZLICH zum regulaeren Treffer feuerte. Live gemessen an diesem Tag:
+// jeder Seitenaufruf sendete ZWEI `ev=PageView` an dieselbe Pixel-ID (das Bild
+// nach 1427 ms, der echte Treffer nach 2331 ms) — Meta zaehlte also jede Seite
+// doppelt, und der Bild-Treffer trug nur IP und User-Agent, weshalb Meta ihn
+// als „Selbstdefinierte Event" statt als Standard-PageView fuehrte.
+// Wer das Bild wieder einbaut, verdoppelt die Zahlen erneut.
 import {
   GOOGLE_ADS_ID,
   LINKEDIN_PARTNER_ID,
@@ -21,7 +33,6 @@ import { cookiesLoeschen } from "@/lib/cookie-loeschen";
 import { istErlaubt } from "@/lib/einwilligung";
 
 const META_ID = "nd-meta-pixel";
-const META_BILD_ID = "nd-meta-pixel-bild";
 const LINKEDIN_ID = "nd-linkedin-pixel";
 const ADS_ID = "nd-google-ads";
 
@@ -60,53 +71,91 @@ function skript(id: string, src: string): void {
 function metaStarten(): void {
   if (!META_PIXEL_ID) return;
   if (!window.fbq) {
-    const f: Fbq = function (...args: unknown[]) {
-      if (f.callMethod) f.callMethod(...args);
-      else f.queue?.push(args);
+    // MUSS das `arguments`-Objekt schieben, NICHT ein Array davon — dieselbe
+    // Regel wie beim gtag-Stub in lib/analytics.ts, wo genau dieser Fehler
+    // live dafuer sorgte, dass kein einziger Treffer hinausging. Hier stand
+    // `f.queue?.push(args)` mit einem Rest-Parameter, also einem ECHTEN Array.
+    // Metas Vorlage lautet wortgleich
+    // `n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)`
+    // (developers.facebook.com/docs/meta-pixel/get-started).
+    //
+    // Warum es trotzdem nie aufgefallen ist: fbevents.js arbeitet die
+    // Warteschlange mit `apply` ab, und `apply` nimmt ein Array genauso wie
+    // ein `arguments`-Objekt. Der Fehler war also latent, nicht wirksam. Er
+    // wird hier behoben, weil `fbq.push` (siehe unten) ohne ihn falsch liegt
+    // und weil eine Vorlage, von der man ohne Not abweicht, beim naechsten
+    // Umbau der Bibliothek zur Falle wird.
+    const f: Fbq = function () {
+      // Beim DIREKTEN Aufruf ist die Form gleichgueltig: `callMethod` bekommt
+      // einzelne Argumente, ob per `apply` oder per Spread. Entscheidend ist
+      // die Warteschlange darunter — dort MUSS das `arguments`-Objekt liegen.
+      // eslint-disable-next-line prefer-rest-params -- fbevents.js verlangt IArguments
+      if (f.callMethod) f.callMethod(...(arguments as unknown as unknown[]));
+      // eslint-disable-next-line prefer-rest-params -- s. o.
+      else f.queue?.push(arguments);
     } as Fbq;
     f.queue = [];
     f.loaded = true;
     f.version = "2.0";
+    // Metas Vorlage setzt `n.push = n`. Fremde Einbindungen (Tag-Manager,
+    // Partner-Snippets) rufen `fbq.push(...)` statt `fbq(...)`; ohne diese
+    // Zeile waere das Array-`push` von `f.queue` gemeint und der Aufruf
+    // verschwaende sich in einer Warteschlange, die niemand mehr leert.
+    f.push = f;
     window.fbq = f;
     window._fbq = f;
   }
   skript(META_ID, "https://connect.facebook.net/en_US/fbevents.js");
+  // Einwilligung ausdruecklich erteilen. Wir sind an dieser Stelle nur, WEIL
+  // „marketing" erlaubt ist (pixelStarten prueft das). Metas Vorgabe ist
+  // `grant` nach der Zustimmung; ohne den Aufruf gilt der Standard, der zwar
+  // ebenfalls erlaubt, aber nach einem vorangegangenen `revoke` (siehe
+  // pixelWiderrufen) gesperrt BLEIBT. Genau das ist der Fall, wenn jemand
+  // widerruft und im selben Besuch wieder zustimmt.
+  window.fbq?.("consent", "grant");
   window.fbq?.("init", META_PIXEL_ID);
   window.fbq?.("track", "PageView");
-  metaNoscriptBild();
 }
 
 /**
- * Das `<noscript>`-Zählpixel aus Metas Vorlage — als Bild, das der Browser
- * abruft, wenn JavaScript den regulären Weg nicht gehen kann.
+ * Meldet ein Meta-Standard-Event — der EINZIGE Weg, ein Ereignis an den Pixel
+ * zu geben. Aufrufer nennen nur den Namen, nicht `window.fbq`.
  *
- * WARUM ES NICHT IM HTML STEHT: Metas Snippet setzt es als echtes
- * `<noscript><img …></noscript>` in die Seite. Genau dort wäre es hier
- * rechtswidrig — `<noscript>`-Inhalt lädt, sobald JavaScript aus ist, und zwar
- * OHNE dass eine Einwilligung geprüft werden kann (die liegt im localStorage
- * und ist ohne JavaScript nicht lesbar). Der Zähler feuerte also ausgerechnet
- * bei den Besuchern ungefragt, die am wenigsten Skripte zulassen.
+ * Fail-closed wie der Start: ohne Einwilligung „marketing" und ohne Kennung
+ * passiert nichts. Die Prüfung steht hier und nicht bei den Aufrufern, damit
+ * niemand sie vergessen kann — ein Formular, das nach dem Widerruf noch ein
+ * Event schiebt, wäre derselbe Fehler wie ein Skript ohne Zustimmung.
  *
- * Deshalb wird das Bild hier per JavaScript angelegt — nach der Einwilligung,
- * im selben Pfad wie das Skript. Das ist derselbe Request an dieselbe URL, nur
- * an die Zustimmung gebunden. Der Preis: bei abgeschaltetem JavaScript zählt
- * Meta nichts. Das ist kein Verlust, denn dort dürfte es ohnehin nicht zählen.
+ * Läuft der Pixel noch nicht (jemand hat zugestimmt, aber diese Datei hat
+ * `metaStarten` in diesem Tab nie ausgeführt), wird er hier gestartet. Sonst
+ * ginge das erste Event verloren, und genau das erste ist die Conversion.
  *
- * `display:none` und 1×1 Pixel wie in der Vorlage; das Bild ist ein Zähler,
- * keine Grafik.
+ * `window.fbq` existiert nach `metaStarten` immer — die Warteschlange nimmt
+ * Aufrufe an, bevor fbevents.js geladen ist, und arbeitet sie danach ab.
+ *
+ * Nur STANDARD-Events, keine selbstdefinierten: `track` erwartet einen Namen
+ * aus Metas Katalog (Lead, Contact, CompleteRegistration, …). Ein Tippfehler
+ * käme in Metas Oberfläche als „Selbstdefinierte Event" an und wäre für
+ * Kampagnen-Optimierung wertlos — deshalb ist der Typ eine Aufzählung und
+ * kein `string`.
  */
-function metaNoscriptBild(): void {
-  if (document.getElementById(META_BILD_ID)) return;
-  const bild = document.createElement("img");
-  bild.id = META_BILD_ID;
-  bild.height = 1;
-  bild.width = 1;
-  bild.style.display = "none";
-  bild.alt = "";
-  bild.src =
-    `https://www.facebook.com/tr?id=${encodeURIComponent(META_PIXEL_ID)}` +
-    "&ev=PageView&noscript=1";
-  document.body.appendChild(bild);
+export type MetaEreignis =
+  | "Lead"
+  | "Contact"
+  | "CompleteRegistration"
+  | "ViewContent";
+
+export function pixelEreignisMelden(
+  ereignis: MetaEreignis,
+  parameter?: Record<string, unknown>,
+): boolean {
+  if (typeof window === "undefined") return false;
+  if (!META_PIXEL_ID) return false;
+  if (!istErlaubt("marketing")) return false;
+  metaStarten();
+  if (parameter) window.fbq?.("track", ereignis, parameter);
+  else window.fbq?.("track", ereignis);
+  return true;
 }
 
 /** LinkedIn Insight Tag. */
@@ -216,11 +265,13 @@ export function pixelStarten(): boolean {
  */
 export function pixelWiderrufen(): void {
   if (typeof window === "undefined") return;
-  // Das Zählbild entfernen. Der Request von vorhin lässt sich nicht
-  // zurücknehmen, aber ein im DOM verbliebenes Bild würde bei einer erneuten
-  // Zustimmung nicht neu geladen — und `metaNoscriptBild` hielte es für schon
-  // erledigt.
-  document.getElementById(META_BILD_ID)?.remove();
+  // Meta ausdruecklich sperren. Das geladene fbevents.js laesst sich nicht
+  // zurueckholen, aber `revoke` haelt es an: es sendet danach nichts mehr und
+  // setzt `_fbp` nicht neu. Ohne diesen Aufruf raeumte der Widerruf nur die
+  // Cookies, und das naechste Ereignis (ein Formular, ein zweiter Tab) hat sie
+  // sofort wieder angelegt — der Widerruf waere eine Attrappe gewesen
+  // (Wurzel 1: jede Aktion braucht ihren Gegenzustand).
+  window.fbq?.("consent", "revoke");
   window.gtag?.("consent", "update", {
     ad_storage: "denied",
     ad_user_data: "denied",

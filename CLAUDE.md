@@ -308,6 +308,23 @@ ist, nicht was dort steht — verifiziert wird weiterhin am Code.
   Wer eine solche Prüfung mit fester Wartezeit nach einem Klick baut, misst
   React-Latenz mit und bekommt ein flatterndes Gate — auf den eingereihten
   `dataLayer`-Eintrag warten, dann navigieren.
+- Werbe-Pixel berührt (marketing/lib/pixel.ts, ein Conversion-Punkt)?
+  `node scripts/diagnose/meta-pixel-verdrahtung-pruefen.mjs` (Quelltext, CI-fähig)
+  UND die Laufzeitprobe `scripts/diagnose/meta-pixel-im-browser.js` im echten
+  Browser — Claude Chrome oder DevTools, **NIE Playwright** (Anweisung vom
+  27.08.2026). Beide zusammen, weil keine allein reicht: der Quelltext sagt
+  nichts darüber, ob Meta den Treffer annimmt, und die Laufzeitprobe kann keine
+  Conversion auslösen, ohne echte Voranmeldungen und Mails zu erzeugen.
+  Drei stumme Fehler, die sie gefunden haben (27.08.2026): ein per JavaScript
+  angelegtes `<noscript>`-Zählbild sendete ZUSÄTZLICH zum regulären Treffer,
+  also ZWEI `ev=PageView` je Seitenaufruf — Meta zählte jede Seite doppelt und
+  führte den Bild-Treffer als „Selbstdefinierte Event"; der Stub schob ein
+  Array statt `arguments` (dieselbe Wurzel wie zweimal bei gtag, hier latent);
+  und `fbq.push = fbq` aus Metas Vorlage fehlte. Der teuerste Fund lag
+  allerdings NICHT im Code: Meta sperrte den Pixel wegen einer sensiblen
+  Datensatzkategorie, sichtbar nur als
+  `fbq.instance.locks._locks.prohibited_pixels_<id>` — Metas Diagnose schweigt
+  dazu. Deshalb prüft die Laufzeitprobe dieses Lock mit.
 - Sprachdatei berührt? `node scripts/i18n/deutsche-restwerte-pruefen.mjs` — meldet
   PRO SPRACHE jeden Wert, der in `web/messages/<sprache>.json` noch wortgleich
   auf Deutsch steht. Die bestehenden i18n-Gates prüfen nur VOLLSTÄNDIGKEIT: ein

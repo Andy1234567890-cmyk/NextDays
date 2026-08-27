@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { voranmeldungTexte } from "@/content/voranmeldung";
 import { VORANMELDUNG_ZIEL } from "@/lib/app-url";
 import { voranmelden } from "@/lib/newsletter";
+import { pixelEreignisMelden } from "@/lib/pixel";
 
 // Vor dem Start: Klicks auf Login/Registrierung öffnen das Popup.
 // Zum Start auf `false` setzen — dann führen die Knöpfe wieder in die App,
@@ -119,6 +120,17 @@ export function VoranmeldungPopup() {
         consentText: t.einwilligung,
       });
       setFertig(res.detail);
+      // Conversion an den Werbe-Pixel — NACH dem Erfolg, nicht beim Absenden:
+      // ein Klick auf „Absenden" ist keine Anmeldung, ein 422 vom Server auch
+      // nicht. Metas Standard-Event dafuer heisst `Lead` („when a sign up is
+      // completed"). Ohne Einwilligung „marketing" verpufft der Aufruf still,
+      // das entscheidet lib/pixel.ts — hier steht bewusst keine zweite
+      // Einwilligungspruefung, die auseinanderlaufen koennte.
+      //
+      // Kein `value`/`currency`: eine Voranmeldung hat keinen Geldwert, und
+      // einen zu erfinden waere ein Fantasiewert in der Kampagnen-Auswertung
+      // (Wurzel 4).
+      pixelEreignisMelden("Lead");
       setEmail("");
       setEinwilligung(false);
     } catch (exc) {

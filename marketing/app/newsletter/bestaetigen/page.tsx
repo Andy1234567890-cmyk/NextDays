@@ -21,6 +21,7 @@ import {
 } from "@/components/newsletter-status";
 import { voranmeldungTexte } from "@/content/voranmeldung";
 import { bestaetigen } from "@/lib/newsletter";
+import { pixelEreignisMelden } from "@/lib/pixel";
 
 function Inhalt() {
   const locale = useLocale();
@@ -41,6 +42,17 @@ function Inhalt() {
         const res = await bestaetigen(token);
         setMeldung(res.detail);
         setFertig(res.ok);
+        // Erst HIER ist die Anmeldung abgeschlossen — das Double-Opt-in ist
+        // bestaetigt. Metas Standard-Event dafuer heisst `CompleteRegistration`
+        // („when a registration form is completed"). Die Voranmeldung selbst
+        // meldet `Lead` (components/voranmeldung-popup.tsx): zwei Ereignisse,
+        // zwei Zeitpunkte, und nur dieses zaehlt einen bestaetigten Kontakt.
+        //
+        // `res.ok` ist die Bedingung, nicht das Ausbleiben einer Exception: ein
+        // abgelaufener oder schon benutzter Token kommt als `ok: false` mit
+        // HTTP 200 zurueck. Ohne die Pruefung zaehlte jeder zweite Klick auf
+        // einen alten Link als neue Anmeldung.
+        if (res.ok) pixelEreignisMelden("CompleteRegistration");
       } catch (exc) {
         setMeldung(exc instanceof Error ? exc.message : t.fehlerAllgemein);
       }
