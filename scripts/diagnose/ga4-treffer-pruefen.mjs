@@ -16,6 +16,21 @@
 // „keine Treffer": „Das Google-Tag-Skript wird geladen, nachdem Tag Assistant
 // versucht, sich zu verbinden").
 //
+// WIE gemessen wird, ist dabei so entscheidend wie WAS — Lehre vom 27.08.2026,
+// als eine Prüfung mit `seite.on("request")` einen Fehler MELDETE, den es nicht
+// gab: „jede per Klick geöffnete Seite, die der Besucher binnen 5 Sekunden
+// verlässt, wird nicht gezählt". Der Grund war die Messung, nicht die Seite.
+// GA4 hält Ereignisse bis zu fünf Sekunden in einer Warteschlange und leert sie
+// beim `pagehide` per `navigator.sendBeacon` — und genau diesen Beacon erfasst
+// Playwright nicht mehr, weil die Seite dabei schon verschwindet
+// (microsoft/playwright#26660). Vier Messreihen sahen deshalb einen Verlust,
+// den es nicht gab.
+// Dieses Skript hängt sich stattdessen IN DER SEITE an `sendBeacon`, `fetch`
+// und `XMLHttpRequest` und protokolliert nach `localStorage`. Der überlebt die
+// Navigation, also ist auch der Treffer sichtbar, den erst das Verlassen der
+// Seite auslöst. Wer diese Prüfung auf `seite.on("request")` zurückbaut, baut
+// den Fehlalarm von oben wieder ein.
+//
 // Geprüft wird:
 //   1. VOR der Einwilligung: kein TREFFER und kein COOKIE. Das Tag selbst darf
 //      laden (Einwilligungsmodus), der Meta-Pixel nicht.
@@ -28,6 +43,14 @@
 //   5. Beim Widerruf: `gcs` fällt zurück und `_ga` verschwindet.
 //   6. JEDE der geprüften Unterseiten sendet GENAU EINEN page_view — nicht null
 //      (dann zählt nur die Einstiegsseite) und nicht zwei (Doppelzählung).
+//   7. Google ANTWORTET auf den Treffer mit 204. Ein Request, der rausgeht,
+//      ist nur der halbe Beweis; gtag.js liest die Antwort nie und wiederholt
+//      nichts, ein abgelehnter Treffer wäre also lautlos verloren.
+//   8. Der Treffer trägt die SPRACHE, und ein Sprachwechsel zählt. Ohne
+//      Sprachpräfix in der URL sind die 24 Fassungen sonst nicht
+//      unterscheidbar (siehe lib/analytics.ts).
+//   9. Ein KURZBESUCH zählt: eine per Klick geöffnete Seite, die sofort wieder
+//      verlassen wird, muss ihren Treffer beim `pagehide` noch absetzen.
 //
 // AUFRUF (Playwright liegt nicht im Repo, siehe einwilligung-e2e.mjs):
 //   node scripts/diagnose/ga4-treffer-pruefen.mjs [https://mynextdays.com]
@@ -46,11 +69,62 @@ const pruefe = (name, bedingung, zusatz = "") => {
 
 const browser = await chromium.launch();
 const kontext = await browser.newContext({ locale: "de-DE" });
+
+/** Schlüssel, unter dem der In-Seite-Hook sein Protokoll ablegt. */
+const PROTOKOLL_SCHLUESSEL = "__ga4_pruefung";
+
+// Der Hook läuft VOR jedem Seitenskript und überlebt jede Navigation, weil sein
+// Protokoll im localStorage liegt (siehe Kopfkommentar: `seite.on("request")`
+// verpasst den Beacon beim Verlassen der Seite).
+await kontext.addInitScript((schluessel) => {
+  const merken = (url, methode) => {
+    try {
+      const text = String(url);
+      if (!text.includes("/g/collect") && !text.includes("google-analytics.com/collect")) return;
+      const p = new URL(text, location.href).searchParams;
+      const liste = JSON.parse(localStorage.getItem(schluessel) ?? "[]");
+      liste.push({ ereignis: p.get("en"), gcs: p.get("gcs"), dp: p.get("dp"), sprache: p.get("ep.sprache"), methode });
+      localStorage.setItem(schluessel, JSON.stringify(liste));
+    } catch {
+      // Das Protokoll darf den Hauptpfad NIE kippen — es misst ihn nur.
+    }
+  };
+  const beaconOrig = navigator.sendBeacon?.bind(navigator);
+  if (beaconOrig) {
+    navigator.sendBeacon = (url, daten) => {
+      merken(url, "beacon");
+      return beaconOrig(url, daten);
+    };
+  }
+  const fetchOrig = window.fetch.bind(window);
+  window.fetch = (eingabe, init) => {
+    merken(typeof eingabe === "string" ? eingabe : eingabe?.url, init?.method ?? "fetch");
+    return fetchOrig(eingabe, init);
+  };
+  const openOrig = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function open(methode, url, ...rest) {
+    merken(url, methode);
+    return openOrig.call(this, methode, url, ...rest);
+  };
+}, PROTOKOLL_SCHLUESSEL);
+
 const seite = await kontext.newPage();
+
+/** Liest das In-Seite-Protokoll aus und leert es. */
+const protokollHolen = async (ziel = seite) => {
+  const eintraege = await ziel.evaluate((schluessel) => {
+    const roh = JSON.parse(localStorage.getItem(schluessel) ?? "[]");
+    localStorage.removeItem(schluessel);
+    return roh;
+  }, PROTOKOLL_SCHLUESSEL);
+  return eintraege;
+};
 
 /** Alle Requests an Google-Messendpunkte, mit ausgelesenen Parametern. */
 const treffer = [];
 const fremdskripte = [];
+/** Antwortstatus je Treffer — nur so ist belegt, dass Google ihn ANNIMMT. */
+const antworten = [];
 seite.on("request", (r) => {
   const url = r.url();
   if (url.includes("/g/collect") || url.includes("google-analytics.com/collect")) {
@@ -65,6 +139,9 @@ seite.on("request", (r) => {
   ) {
     fremdskripte.push(url.slice(0, 80));
   }
+});
+seite.on("response", (r) => {
+  if (r.url().includes("/g/collect")) antworten.push(r.status());
 });
 
 console.log(`\n== 1. Vor der Einwilligung (${BASIS}) ==`);
@@ -82,10 +159,16 @@ await seite.waitForTimeout(2000);
 //   · KEIN Cookie
 //   · der Meta-Pixel lädt weiterhin GAR NICHT — er hat keinen
 //     Einwilligungsmodus, ohne Zustimmung darf er nicht existieren
+const vorherProtokoll = await protokollHolen();
 pruefe(
   "kein Messtreffer ohne Einwilligung",
-  treffer.length === 0,
-  treffer.length ? treffer.map((t) => `${t.ereignis}(gcs=${t.gcs})`).join(", ") : "",
+  treffer.length === 0 && vorherProtokoll.length === 0,
+  treffer.length || vorherProtokoll.length
+    ? [
+        ...treffer.map((t) => `${t.ereignis}(gcs=${t.gcs})`),
+        ...vorherProtokoll.map((t) => `${t.ereignis}@${t.methode}`),
+      ].join(", ")
+    : "",
 );
 const cookiesVorher = await seite.evaluate(() =>
   document.cookie
@@ -144,6 +227,34 @@ if (seitenaufruf) {
   );
 }
 
+// Google muss den Treffer ANNEHMEN — 204 ist die Erfolgsantwort von
+// /g/collect. Das ist eine eigene Prüfung, weil gtag.js die Antwort nie liest
+// und nichts wiederholt: ein abgelehnter Treffer wäre lautlos verloren,
+// während „der Request ging raus" grün bliebe.
+//
+// Nicht-204 heißt NICHT automatisch „kaputt" — erst nachmessen, dann handeln.
+// Am 27.08.2026 meldete ein Chrome-Erweiterungs-Netzwerkmonitor für denselben
+// Request reproduzierbar 503, während Playwright 204 mit vollständigen
+// Google-Headern sah (`server: Golfe2`, `access-control-allow-origin`). Der
+// Monitor lag falsch, nicht die Seite.
+pruefe(
+  "Google antwortet mit 204",
+  antworten.length > 0 && antworten.every((s) => s === 204),
+  antworten.length ? `Status: ${antworten.join(", ")}` : "keine Antwort erfasst",
+);
+
+// Die Sprache MUSS im Treffer stehen, sonst sind die 24 Fassungen in der
+// Auswertung nicht unterscheidbar — die URL trägt keine.
+const nachEinwilligung = await protokollHolen();
+const mitSprache = nachEinwilligung.filter((t) => t.ereignis === "page_view" && t.sprache);
+pruefe(
+  "page_view trägt den Sprachparameter",
+  mitSprache.length > 0,
+  mitSprache.length
+    ? `sprache=${mitSprache[0].sprache}`
+    : `keiner von ${nachEinwilligung.length} Einträgen hat ep.sprache`,
+);
+
 // Mehrere Seiten prüfen, nicht nur die Einstiegsseite.
 //
 // WARUM: Die erste Fassung dieses Skripts prüfte NUR die Startseite und gab
@@ -155,17 +266,141 @@ if (seitenaufruf) {
 console.log("\n== 3. Folgeseiten ==");
 const UNTERSEITEN = ["/preise", "/funktionen", "/kontakt", "/ueber-uns"];
 for (const pfad of UNTERSEITEN) {
-  treffer.length = 0;
+  await protokollHolen();
   await seite.goto(BASIS + pfad, { waitUntil: "networkidle" });
   await seite
     .waitForRequest((r) => r.url().includes("/g/collect"), { timeout: 6000 })
     .catch(() => null);
   await seite.waitForTimeout(300);
-  const eigener = treffer.filter((t) => t.ereignis === "page_view");
+  const eigene = (await protokollHolen()).filter((t) => t.ereignis === "page_view");
   pruefe(
     `${pfad} sendet einen page_view`,
-    eigener.length > 0,
-    eigener.length > 1 ? `ACHTUNG: ${eigener.length}-mal — Doppelzählung` : "",
+    eigene.length === 1,
+    eigene.length > 1 ? `ACHTUNG: ${eigene.length}-mal — Doppelzählung` : "",
+  );
+}
+
+console.log("\n== 3b. Kurzbesuch: sofort weitergeklickt ==");
+// GA4 hält Ereignisse bis zu fünf Sekunden in einer Warteschlange und leert sie
+// beim `pagehide` per sendBeacon. Diese Prüfung deckt genau den Fall ab, in dem
+// jemand eine Seite anklickt und sofort weitergeht — für eine Marketing-Seite
+// ist das die Ausstiegsseite JEDES Besuchs. Sie ist der Grund für den
+// In-Seite-Hook: mit `seite.on("request")` gemessen sähe sie einen Verlust, den
+// es nicht gibt (siehe Kopfkommentar).
+await seite.goto(BASIS + "/", { waitUntil: "networkidle" });
+await seite.waitForTimeout(2500);
+await protokollHolen();
+const kurzZiel = "/preise";
+const verweis = await seite.$(`a[href="${kurzZiel}"]`);
+if (!verweis) {
+  pruefe(`Kurzbesuch ${kurzZiel}`, false, "kein Link im DOM — Prüfung nicht durchgeführt");
+} else {
+  await verweis.click();
+  // Warten, bis der `page_view` EINGEREIHT ist — nicht eine feste Zeitspanne.
+  // Eine feste Wartezeit misst zwei Dinge gleichzeitig: wie schnell React den
+  // Effekt ausführt und ob GA4 seine Warteschlange beim Verlassen leert. Mit
+  // 300 ms fiel diese Prüfung deshalb mal grün und mal rot aus, ohne dass sich
+  // etwas geändert hatte — ein flatterndes Gate ist schlimmer als keines, weil
+  // man sein Rot irgendwann wegklickt.
+  // Was React noch nicht gemeldet hat, kann GA4 nicht senden; das wäre ein
+  // ANDERER Fehler. Geprüft wird hier nur die Warteschlange.
+  const eingereiht = await seite
+    .waitForFunction(
+      (ziel) =>
+        (window.dataLayer ?? []).some((eintrag) => {
+          const teile = Array.from(eintrag);
+          return (
+            teile[0] === "event" && teile[1] === "page_view" && teile[2]?.page_path === ziel
+          );
+        }),
+      kurzZiel,
+      { timeout: 5000 },
+    )
+    .then(() => true)
+    .catch(() => false);
+
+  if (!eingereiht) {
+    pruefe(
+      `Kurzbesuch ${kurzZiel} wird gezählt`,
+      false,
+      "der page_view wurde nie eingereiht — der Zähler meldet die Seite gar nicht",
+    );
+  } else {
+    // Sofort weg, ohne weitere Wartezeit: der Treffer steht jetzt garantiert in
+    // GA4s Warteschlange und noch nicht im Netz. Vollnavigation wie bei einem
+    // echten Besucher — sie löst `pagehide` aus, bei dem gtag.js die
+    // Warteschlange per sendBeacon leert.
+    await seite.goto(BASIS + "/kontakt", { waitUntil: "domcontentloaded" });
+    await seite.waitForTimeout(1200);
+    const kurz = (await protokollHolen()).filter(
+      (t) => t.ereignis === "page_view" && t.dp === kurzZiel,
+    );
+    pruefe(
+      `Kurzbesuch ${kurzZiel} wird gezählt`,
+      kurz.length > 0,
+      kurz.length ? `per ${kurz[0].methode}` : "Treffer blieb in der Warteschlange",
+    );
+  }
+}
+
+console.log("\n== 3c. Sprachwechsel ==");
+// Diese App hat KEIN Sprachpräfix in der URL — der Wechsel setzt das
+// nd_locale-Cookie und ruft `router.refresh()`, der Pfad bleibt gleich. Ohne
+// die Sprache in Effekt-Abhängigkeit und Zähl-Schlüssel ist er unsichtbar
+// (gemessen am 27.08.2026: Wechsel de → el auf /preise sendete NICHTS).
+//
+// Gemessen wird über den ECHTEN Umschalter, nicht über Cookie setzen +
+// `reload()`. Ein Reload ist eine Vollnavigation — dabei zählt die Seite
+// ohnehin neu, die Prüfung wäre grün und der Fehler bliebe drin. Genau das
+// unterscheidet diesen Test von einer Attrappe.
+await seite.goto(BASIS + "/preise", { waitUntil: "networkidle" });
+await seite.waitForTimeout(2500);
+const spracheVorher = await seite.evaluate(() => document.documentElement.lang);
+await protokollHolen();
+const umschalter = await seite.$('[data-testid="sprach-umschalter"]');
+if (umschalter) await umschalter.click();
+await seite.waitForTimeout(800);
+// Die Einwilligungsleiste trägt EBENFALLS `role="dialog"`. Sie ist an dieser
+// Stelle zu, weil die Zustimmung oben im localStorage steht — aber verlassen
+// wird sich darauf nicht: steht mehr als ein Dialog offen, bricht die Prüfung
+// laut ab, statt still in den falschen zu greifen (Wurzel 5). Ohne diesen
+// Zähler klickte die Probe am 27.08.2026 in den Cookie-Dialog und meldete
+// „Sprache unverändert" — ein Fehlalarm, der wie ein Befund aussah.
+const dialoge = await seite.$$('[role="dialog"]');
+const andereWahl =
+  dialoge.length === 1
+    ? await seite.$('[role="dialog"] li button:not([aria-current="true"])')
+    : null;
+if (dialoge.length > 1) {
+  pruefe(
+    "Sprachwechsel zählt",
+    false,
+    `${dialoge.length} Dialoge offen — Auswahl nicht eindeutig, Prüfung NICHT durchgeführt`,
+  );
+} else if (!andereWahl) {
+  pruefe(
+    "Sprachwechsel zählt",
+    false,
+    "Sprachumschalter nicht bedienbar — Prüfung NICHT durchgeführt, nicht bestanden",
+  );
+} else {
+  await andereWahl.click();
+  // `router.refresh()` rendert serverseitig neu; kein Ladeereignis, auf das man
+  // warten könnte — deshalb feste Wartezeit über der 5-Sekunden-Warteschlange.
+  await seite.waitForTimeout(6000);
+  const spracheNachher = await seite.evaluate(() => document.documentElement.lang);
+  const nachWechsel = (await protokollHolen()).filter((t) => t.ereignis === "page_view");
+  pruefe(
+    `Sprachwechsel ${spracheVorher} → ${spracheNachher} zählt`,
+    spracheNachher !== spracheVorher && nachWechsel.length > 0,
+    nachWechsel.length
+      ? `sprache=${nachWechsel.map((t) => t.sprache ?? "(keine)").join(", ")}`
+      : "kein Treffer — die Sprachfassungen sind in der Auswertung nicht unterscheidbar",
+  );
+  pruefe(
+    "der Treffer trägt die NEUE Sprache",
+    nachWechsel.some((t) => t.sprache === spracheNachher),
+    nachWechsel.map((t) => t.sprache ?? "(keine)").join(", "),
   );
 }
 

@@ -127,7 +127,7 @@ export function analyticsWiderrufen(): void {
   });
   // Merker zurücksetzen: wer erneut zustimmt, beginnt eine neue Messung, und
   // die Seite, auf der das passiert, muss wieder zählen dürfen.
-  letzterPfad = null;
+  letzterAufruf = null;
   ga4CookiesLoeschen();
 }
 
@@ -146,8 +146,9 @@ function ga4CookiesLoeschen(): void {
 }
 
 /**
- * Der zuletzt gemeldete Pfad. Verhindert, dass dieselbe Seite zweimal gezählt
- * wird — der Zähler muss idempotent sein, nicht nur „normalerweise einmal".
+ * Der zuletzt gemeldete Aufruf, als `sprache|pfad`. Verhindert, dass dieselbe
+ * Seite zweimal gezählt wird — der Zähler muss idempotent sein, nicht nur
+ * „normalerweise einmal".
  *
  * Zwei Wege führen real zum Doppelaufruf, beide gemessen am 26.08.2026:
  *   · React StrictMode montiert Effekte in der ENTWICKLUNG doppelt
@@ -158,26 +159,73 @@ function ga4CookiesLoeschen(): void {
  * Ein Zähler, der von einer Build-Einstellung abhängt, ist kein Zähler: die
  * Zahlen wären in der Entwicklung doppelt und in Produktion einfach, und keiner
  * der beiden Werte ließe sich prüfen.
+ *
+ * Die SPRACHE gehört in den Schlüssel, nicht nur der Pfad. Diese App hat KEIN
+ * Sprachpräfix in der URL (next.config.ts: „die Sprache kommt aus dem
+ * nd_locale-Cookie"); ein Sprachwechsel setzt das Cookie und ruft
+ * `router.refresh()`, wobei der Pfad gleich bleibt. Mit dem Pfad allein als
+ * Schlüssel war der Wechsel deshalb unsichtbar: gemessen am 27.08.2026 sendete
+ * ein Wechsel von Deutsch auf Griechisch auf `/preise` keinen einzigen Treffer.
  */
-let letzterPfad: string | null = null;
+let letzterAufruf: string | null = null;
 
 /**
- * Meldet einen Seitenwechsel — höchstens EINEN je Pfad.
+ * Die Sprache der gerenderten Seite, aus `<html lang>` (layout.tsx:107 setzt
+ * dort den next-intl-Locale).
+ *
+ * Nur als Rückfallweg für Aufrufer ohne React-Kontext (`analyticsStarten`).
+ * Fehlt das Attribut, ist die Rückgabe `undefined` und der Treffer trägt keinen
+ * Sprachparameter — NIE ein erfundener Ersatzwert wie „de" (Wurzel 4): eine
+ * falsche Sprache in der Auswertung ist schlimmer als gar keine, weil sie
+ * niemand als Fehler erkennt.
+ */
+function spracheAusDokument(): string | undefined {
+  const lang = document.documentElement.lang.trim();
+  return lang === "" ? undefined : lang;
+}
+
+/**
+ * Meldet einen Seitenwechsel — höchstens EINEN je Pfad und Sprache.
  *
  * Im App Router gibt es keinen Vollaufruf pro Seite; gtag.js feuert von sich
  * aus keinen `page_view` (`send_page_view: false`), also ist dies die einzige
  * Quelle. Ohne sie hätte die Einstiegsseite alle Zugriffe und jede Unterseite
  * null.
+ *
+ * `sprache` übergibt die aufrufende Komponente aus `useLocale()`. Sie NICHT
+ * hier aus dem DOM zu lesen ist Absicht: nach `router.refresh()` steht der neue
+ * Locale im React-Baum, bevor `<html lang>` neu gesetzt ist — wer das Dokument
+ * fragt, misst je nach Reihenfolge die alte Sprache.
  */
-export function seitenaufrufMelden(pfad: string): void {
+export function seitenaufrufMelden(pfad: string, sprache?: string): void {
   if (typeof window === "undefined") return;
   if (!GA_MEASUREMENT_ID) return;
   if (!istErlaubt("analytisch")) return;
-  if (pfad === letzterPfad) return;
-  letzterPfad = pfad;
-  window.gtag?.("event", "page_view", {
+
+  const gemeldeteSprache = sprache ?? spracheAusDokument();
+  const aufruf = `${gemeldeteSprache ?? ""}|${pfad}`;
+  if (aufruf === letzterAufruf) return;
+
+  // `gtagVorbereiten()` statt `window.gtag?.(…)`: das optionale Aufrufen war
+  // ein stiller Verlust. Blockt ein Inhaltsfilter `gtag/js`, bleibt der
+  // Inline-Stub aus components/google-tag.tsx zwar bestehen — steht `gtag` aus
+  // irgendeinem Grund aber NICHT, verschluckte das `?.` den Treffer wortlos,
+  // während der Merker darüber schon auf „gezählt" stand. Diese Reihenfolge ist
+  // deshalb umgedreht: erst einreihen, DANN merken (Wurzel 5 — nichts still als
+  // erledigt markieren, was nie passiert ist).
+  const gtag = gtagVorbereiten();
+  gtag("event", "page_view", {
     page_path: pfad,
     page_location: window.location.href,
     page_title: document.title,
+    // Ohne diesen Parameter sind die 24 Sprachfassungen in der Auswertung
+    // NICHT unterscheidbar: `page_path`, `page_location` und `page_title` sind
+    // für die deutsche und die griechische Preisseite identisch, weil die URL
+    // keine Sprache trägt. `language`/`ul` im Treffer ist die BROWSER-Sprache
+    // des Besuchers, nicht die ausgelieferte Fassung — beides fällt regelmäßig
+    // auseinander (griechischer Browser, Seite auf Englisch).
+    // In GA4 dafür eine benutzerdefinierte Dimension auf `sprache` anlegen.
+    ...(gemeldeteSprache === undefined ? {} : { sprache: gemeldeteSprache }),
   });
+  letzterAufruf = aufruf;
 }

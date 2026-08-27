@@ -13,6 +13,7 @@
 // Aktion hat einen Gegenzustand). Wer in der Leiste „Statistik" abwählt, muss
 // ohne Neuladen aus der Messung fallen — sonst zählt der Rest des Besuchs
 // weiter, obwohl gerade widerrufen wurde.
+import { useLocale } from "next-intl";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
@@ -83,11 +84,21 @@ export function EinwilligungsDienste() {
   // greift diese Sperre. Ein zu viel gemeldeter Treffer wird dort abgefangen,
   // ein nie gemeldeter ist unrettbar verloren — die Richtung des Zweifels
   // gehoert auf die Seite des Meldens.
+  // Die SPRACHE ist die dritte Abhängigkeit — ohne sie ist der Sprachwechsel
+  // ungezählt. Diese App hat kein Sprachpräfix in der URL: der Wechsel setzt
+  // das nd_locale-Cookie und ruft `router.refresh()` (components/
+  // language-switcher.tsx), wobei Pfad UND Suchparameter gleich bleiben. Mit
+  // nur `[pfad, abfrage]` feuerte der Effekt deshalb nicht, und selbst wenn er
+  // gefeuert hätte, hätte die Pfad-Sperre in lib/analytics.ts ihn verworfen.
+  // Live gemessen am 27.08.2026: ein Wechsel von Deutsch auf Griechisch auf
+  // `/preise` sendete keinen einzigen Treffer — bei 24 gepflegten Sprachfassungen
+  // war damit nicht messbar, welche davon überhaupt jemand liest.
+  const sprache = useLocale();
   const abfrage = suchparameter?.toString() ?? "";
   useEffect(() => {
     if (!pfad) return;
-    seitenaufrufMelden(abfrage ? `${pfad}?${abfrage}` : pfad);
-  }, [pfad, abfrage]);
+    seitenaufrufMelden(abfrage ? `${pfad}?${abfrage}` : pfad, sprache);
+  }, [pfad, abfrage, sprache]);
 
   return null;
 }

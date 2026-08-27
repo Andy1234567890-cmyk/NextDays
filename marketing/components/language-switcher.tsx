@@ -136,6 +136,10 @@ export function LanguageSwitcher({
         aria-haspopup="dialog"
         aria-expanded={offen}
         aria-label={t("spracheWaehlen")}
+        // Stabiler Haken für scripts/diagnose/ga4-treffer-pruefen.mjs. Das
+        // `aria-label` taugt dafür nicht: es ist übersetzt und ändert sich mit
+        // genau der Sprache, die die Prüfung wechseln will.
+        data-testid="sprach-umschalter"
         className={
           kompakt
             ? "inline-flex size-10 items-center justify-center rounded-full border border-border transition-colors hover:bg-surface-accent disabled:opacity-60"

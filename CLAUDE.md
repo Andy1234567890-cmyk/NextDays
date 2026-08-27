@@ -204,6 +204,31 @@ Dateien mit `SCHWESTERDATEI`-Kopf müssen byte-identisch bleiben, der CI-Job
 `mobile-konsistenz` prüft das. Der Wechsel zwischen beiden Welten ist ein
 App-Wechsel (`lib/appwechsel.ts`), keine Navigation.
 
+## Wissensgraph zuerst (vor jeder Suche/Änderung)
+Es gibt einen lokalen Code-Wissensgraphen (`graphify-out/graph.json`, MCP-Server
+`graphify` in `.mcp.json`, git-ignoriert, Auto-Rebuild per git-Hook):
+46.760 Knoten, 112.095 Kanten, 1.893 Communities. Er wird **zuerst** gefragt,
+nicht als Notnagel nach dem Grep.
+
+Der Unterschied ist die KANTE: `grep` findet ein Wort, der Graph findet alle
+Aufrufer, die ganze Mixin-Familie und die Docstrings als eigene Knoten.
+`get_community 317` gibt die komplette `ReservationsBase` als Cluster —
+`_release_nights`, `_release_channex`, `_push_einheiten_stand`,
+`_write_ari_outbox`, `_days_still_booked_by_others` nebeneinander: genau die
+Gegenzustands-Kette aus Wurzel 1. Wer sie per Grep sucht, findet einen Namen und
+übersieht die vier Geschwister.
+- `get_node <symbol>` → Datei + Zeile + Community, statt sie zu suchen.
+- `get_neighbors <klasse>` → alle Aufrufer. PFLICHT, bevor eine Methode geändert
+  wird, deren Aufruferzahl man nicht kennt (`cancel()` hat SECHS).
+- `get_community <id>` → die Geschwister der berührten Stelle (Wurzel 1).
+- `query_graph "<frage>"` → Einstieg in einen unbekannten Bereich; greift auch
+  auf Prosa (Docstrings, Testbeschreibungen).
+- `god_nodes` → was viel hängt, bricht viel.
+Grenzen, die kein Befund sind: `shortest_path` ist GERICHTET (fehlender Pfad
+heißt „kein direkter Aufruf", nicht „keine Verbindung" — `undirected=true`);
+`get_pr_impact`/`triage_prs` brauchen offene PRs. Der Graph sagt, WO zu lesen
+ist, nicht was dort steht — verifiziert wird weiterhin am Code.
+
 ## Qualitätsgate (vor „fertig")
 - `pytest` grün; `ruff check` sauber; `pylint` 10.00/10 auf geänderten Modulen.
 - **NIE den vollen `pytest` wiederholt laufen lassen.** Geprüft wird der
@@ -265,6 +290,24 @@ App-Wechsel (`lib/appwechsel.ts`), keine Navigation.
   („diese Mails haben keinen Link"). Ein Konfigurationswert, dessen Fehlen
   still bleibt, ist derselbe Fehler wie ein verschluckter Exception (Wurzel 5):
   neue Sinks loggen den Mangel LAUT, statt die Ausgabe stumm zu kürzen.
+- Messung/Einwilligung berührt? `node scripts/diagnose/ga4-treffer-pruefen.mjs
+  https://mynextdays.com` — jede Zeile muss grün sein. Und WIE gemessen wird,
+  ist hier so wichtig wie WAS: der Beweis ist ein Hook IN DER SEITE auf
+  `sendBeacon`/`fetch`/`XHR`, protokolliert nach `localStorage`. Nicht
+  `page.on("request")` in Playwright und nicht der Netzwerkmonitor einer
+  Chrome-Erweiterung — beide haben am 27.08.2026 nacheinander einen Fehler
+  GEMELDET, den es nicht gab: die Erweiterung erfand für `/g/collect`
+  reproduzierbar HTTP 503 (echt war 204, samt Google-Headern), und Playwright
+  meldete über vier Messreihen, jede binnen 5 s verlassene Unterseite werde
+  nicht gezählt. GA4 hält Ereignisse bis zu 5 Sekunden in einer Warteschlange
+  und leert sie beim `pagehide` per `sendBeacon` — genau diesen Beacon sieht
+  Playwright nicht mehr (microsoft/playwright#26660). Nur `pagehide` löst den
+  Flush aus, nicht `visibilitychange`, nicht `beforeunload`, nicht ein
+  Tabwechsel. Der GA4-Echtzeitbericht taugt nicht als schnelle Gegenprobe: er
+  zeigte nachweislich gesendete Unterseiten auch nach 15 Minuten nicht.
+  Wer eine solche Prüfung mit fester Wartezeit nach einem Klick baut, misst
+  React-Latenz mit und bekommt ein flatterndes Gate — auf den eingereihten
+  `dataLayer`-Eintrag warten, dann navigieren.
 - Sprachdatei berührt? `node scripts/i18n/deutsche-restwerte-pruefen.mjs` — meldet
   PRO SPRACHE jeden Wert, der in `web/messages/<sprache>.json` noch wortgleich
   auf Deutsch steht. Die bestehenden i18n-Gates prüfen nur VOLLSTÄNDIGKEIT: ein
