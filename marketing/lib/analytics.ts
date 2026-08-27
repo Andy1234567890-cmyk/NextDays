@@ -15,10 +15,24 @@
 //
 // CONSENT MODE V2 — die Reihenfolge ist vorgeschrieben und nicht beliebig
 // (developers.google.com/tag-platform/security/guides/consent): dataLayer und
-// gtag definieren → `consent default` auf `denied` → DANN das Skript laden →
-// `config` → später `consent update`. Läuft es in anderer Reihenfolge, greifen
-// die Vorgaben nicht. Wir setzen die Vorgabe deshalb im gleichen Zug, in dem
-// wir das Tag anlegen, und zwar VOR dem Anhängen des Skripts.
+// gtag definieren → `consent default` auf `denied` → `set`-Befehle
+// (`ads_data_redaction`, `url_passthrough`) → DANN das Skript laden → `config`
+// → später `consent update`. Läuft es in anderer Reihenfolge, greifen die
+// Vorgaben nicht: die Doku verlangt die `set`-Befehle ausdrücklich VOR jedem
+// `config`. Wir setzen alles im gleichen Zug, in dem wir das Tag anlegen, und
+// zwar VOR dem Anhängen des Skripts.
+//
+// WELCHER DOKU-REITER GILT: die Google-Seite hat zwei — „gtag.js" und „Tag
+// Manager". Für uns gilt AUSSCHLIESSLICH gtag.js: wir laden
+// `googletagmanager.com/gtag/js` direkt, es gibt keinen GTM-Container
+// (`gtm.js`) und keine Vorlage. Der GTM-Reiter verlangt `setDefaultConsentState`
+// und `updateConsentState` und warnt ausdrücklich davor,
+// `gtag('consent','update',…)` zu verwenden — diese Warnung gilt NUR innerhalb
+// einer GTM-Vorlage, weil dort gtag-Befehle hinter allen ausstehenden
+// Datenschicht-Nachrichten in die Warteschlange kommen. Ohne Container gibt es
+// diese Warteschlange nicht; `gtag('consent', …)` ist hier der von Google
+// vorgeschriebene Weg. Wer später GTM einführt, muss diese Datei auf die
+// Consent-APIs umstellen — nicht beides mischen.
 //
 // Warum die vier Werbe-Parameter überhaupt auftauchen, obwohl wir nicht werben:
 // Consent Mode v2 verlangt sie, und sie bleiben dauerhaft auf `denied` — genau
@@ -89,21 +103,53 @@ export function analyticsStarten(): boolean {
     // 1) Vorgabe: alles verweigert. Sie gilt für den kurzen Moment zwischen
     //    Skript-Start und dem `update` unten — und dauerhaft für die vier
     //    Werbe-Parameter.
+    //
+    //    `wait_for_update` gibt Google an, wie viele Millisekunden es auf ein
+    //    `consent update` warten soll, bevor es mit der Vorgabe sendet. Die
+    //    Doku verlangt es für Einwilligungslösungen, die ASYNCHRON laden — und
+    //    genau das sind wir: die Entscheidung liegt im localStorage und wird
+    //    von einer Client-Komponente gelesen, die nach dem ersten Rendern
+    //    läuft. Das `update` unten folgt zwar im selben Aufruf, aber
+    //    `appendChild` und das Ausführen von gtag.js liegen dazwischen; ohne
+    //    diese Zeile darf Google die Vorgabe sofort verarbeiten und der erste
+    //    Treffer zählt ohne Kennung. 500 ms ist der Wert aus der Doku.
     gtag("consent", "default", {
       ad_storage: "denied",
       ad_user_data: "denied",
       ad_personalization: "denied",
       analytics_storage: "denied",
+      wait_for_update: 500,
     });
 
-    // 2) Skript laden. `async`, damit es das Rendern nicht blockiert.
+    // 2) Anzeigendaten unkenntlich machen, solange `ad_storage` verweigert ist.
+    //    Wirkt laut Doku NUR bei `ad_storage: 'denied'` — also bei uns immer,
+    //    solange niemand „Marketing" erlaubt. Google entfernt dann die
+    //    Anzeigenklick-IDs aus den Netzwerkanfragen und sendet sie über eine
+    //    Domain ohne Drittanbieter-Cookies. Erlaubt jemand Marketing, setzt
+    //    lib/pixel.ts `ad_storage` auf `granted` und der Parameter wird
+    //    folgenlos — er muss deshalb NICHT zurückgenommen werden.
+    gtag("set", "ads_data_redaction", true);
+
+    // 3) Keine Weitergabe von Kennungen über URL-Parameter.
+    //
+    //    Die Doku beschreibt `url_passthrough: true` als Weg, ohne Cookies zu
+    //    messen: Google hängt `gclid`, `_gl`, `wbraid` & Co. an interne Links
+    //    und trägt die Kennung so von Seite zu Seite. Das ist für uns
+    //    ausdrücklich FALSCH und steht hier explizit auf `false`, statt
+    //    weggelassen zu werden: es würde die Ablehnung des Besuchers
+    //    aushebeln — wer Cookies verweigert, hätte danach eine Kennung in der
+    //    Adresszeile. Die Zeile ist Absicht, kein Vergessen; wer sie auf `true`
+    //    dreht, muss die Cookie-Richtlinie mit ändern.
+    gtag("set", "url_passthrough", false);
+
+    // 4) Skript laden. `async`, damit es das Rendern nicht blockiert.
     const skript = document.createElement("script");
     skript.id = SKRIPT_ID;
     skript.async = true;
     skript.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GA_MEASUREMENT_ID)}`;
     document.head.appendChild(skript);
 
-    // 3) Grundkonfiguration.
+    // 5) Grundkonfiguration.
     gtag("js", new Date());
     gtag("config", GA_MEASUREMENT_ID, {
     // IP-Kürzung ist in GA4 immer an und nicht abschaltbar; hier steht deshalb
@@ -131,7 +177,7 @@ export function analyticsStarten(): boolean {
     });
   }
 
-  // 4) Zustimmung nachziehen — NUR die Statistik. Die Werbe-Parameter bleiben
+  // 6) Zustimmung nachziehen — NUR die Statistik. Die Werbe-Parameter bleiben
   //    verweigert, weil dafür niemand um Zustimmung gebeten wurde und es auch
   //    keinen Dienst gibt, der sie bräuchte. Läuft bei JEDEM Aufruf (siehe
   //    oben), nicht nur beim ersten.

@@ -120,9 +120,20 @@ function linkedinStarten(): void {
 }
 
 /**
- * Google Ads (Conversion-Tracking). Nutzt dasselbe gtag.js wie die Messung —
- * `gtag` wird deshalb hier NICHT neu angelegt, sondern nur konfiguriert, wenn
- * es bereits vorhanden ist bzw. das Skript geladen wird.
+ * Google Ads (Conversion-Tracking). Nutzt dasselbe gtag.js wie die Messung.
+ *
+ * CONSENT MODE V2 — DIE VORGABE MUSS AUCH HIER STEHEN. Sie wird zwar in
+ * lib/analytics.ts gesetzt, aber nur dann, wenn „Analytisch" erlaubt ist. Wer
+ * ausschließlich „Marketing" erlaubt, lässt `analyticsStarten` nie laufen: dann
+ * lud Google Ads sein gtag.js OHNE vorheriges `consent default` — und ein
+ * gtag.js ohne Vorgabe kennt den Einwilligungsmodus nicht, verarbeitet also
+ * ungebremst. Genau der Reihenfolgefehler, den Googles Doku beschreibt
+ * („Wenn Ihr Einwilligungscode in der falschen Reihenfolge aufgerufen wird,
+ * funktionieren die Standardeinstellungen für die Einwilligung nicht").
+ *
+ * Die Vorgabe ist idempotent: setzt lib/analytics.ts sie zuerst, ist der
+ * zweite Aufruf mit denselben Werten folgenlos. Sie zu VERPASSEN ist der
+ * teure Fehler, nicht sie doppelt zu senden.
  */
 function adsStarten(): void {
   if (!GOOGLE_ADS_ID) return;
@@ -132,18 +143,39 @@ function adsStarten(): void {
       window.dataLayer?.push(args);
     };
   }
+
+  // 1) Vorgabe VOR dem Skript — alles verweigert, damit der Einwilligungsmodus
+  //    überhaupt aktiv ist. `analytics_storage` bleibt hier `denied`: darüber
+  //    entscheidet allein lib/analytics.ts, sonst würde die Marketing-Zusage
+  //    stillschweigend die Messung mitschalten.
+  window.gtag("consent", "default", {
+    ad_storage: "denied",
+    ad_user_data: "denied",
+    ad_personalization: "denied",
+    analytics_storage: "denied",
+    wait_for_update: 500,
+  });
+
+  // 2) Keine Kennungen über URL-Parameter (siehe lib/analytics.ts).
+  //    `ads_data_redaction` wird hier NICHT gesetzt: es wirkt laut Doku nur bei
+  //    `ad_storage: 'denied'`, und wir sind an dieser Stelle im Begriff, es auf
+  //    `granted` zu setzen. lib/analytics.ts setzt es für den Fall, dass
+  //    Marketing NICHT erlaubt ist — dort gehört es hin.
+  window.gtag("set", "url_passthrough", false);
+
   skript(
     ADS_ID,
     `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GOOGLE_ADS_ID)}`,
   );
-  // Werbe-Einwilligung erteilen — nur hier, nur mit „marketing". Die Messung
-  // (lib/analytics.ts) lässt diese Parameter dauerhaft auf `denied`.
-  window.gtag?.("consent", "update", {
+
+  // 3) Werbe-Einwilligung erteilen — nur hier, nur mit „marketing". Die Messung
+  //    (lib/analytics.ts) lässt diese Parameter dauerhaft auf `denied`.
+  window.gtag("consent", "update", {
     ad_storage: "granted",
     ad_user_data: "granted",
     ad_personalization: "granted",
   });
-  window.gtag?.("config", GOOGLE_ADS_ID);
+  window.gtag("config", GOOGLE_ADS_ID);
 }
 
 /**
