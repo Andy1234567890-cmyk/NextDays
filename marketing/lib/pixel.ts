@@ -171,6 +171,15 @@ function adsStarten(): void {
     `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GOOGLE_ADS_ID)}`,
   );
 
+  // `js` ist PFLICHT, nicht Zierde: der Befehl startet die Bibliothek (er
+  // erzeugt das `gtm.js`-Ereignis mit dem Startzeitstempel). Fehlt er, laedt
+  // gtag.js und sendet KEINEN EINZIGEN Treffer — nachgemessen am 27.08.2026 in
+  // einem echten Browser gegen Googles Server: mit `js` ein Treffer, ohne `js`
+  // null. Er fehlte hier, was erst beim ersten Google-Ads-Einsatz aufgefallen
+  // waere, und zwar als genau dasselbe stumme Symptom wie bei der Messung.
+  // lib/analytics.ts setzt ihn ebenfalls; doppelt ist folgenlos, fehlend nicht.
+  window.gtag("js", new Date());
+
   // 3) Werbe-Einwilligung erteilen — nur hier, nur mit „marketing". Die Messung
   //    (lib/analytics.ts) lässt diese Parameter dauerhaft auf `denied`.
   window.gtag("consent", "update", {
