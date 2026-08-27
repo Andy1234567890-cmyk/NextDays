@@ -18,14 +18,12 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Šiame pranešime aprašoma, kaip ${ANBIETER.firma} tvarko asmens duomenis — apsilankius šioje interneto svetainėje, naudojantis platforma myNextDays (valdymo skydu, prekyvieta ir mobiliąja programėle) ir vykdant verslo santykius su savo klientais.`,
-    "Pagrindas yra Reglamentas (ES) 2016/679 (BDAR) ir Danijos duomenų apsaugos įstatymas (databeskyttelsesloven). Duomenų neparduodame, profilių nekuriame ir savo interneto svetainėse nenaudojame jokių analitikos, sekimo ar reklamos paslaugų. Rinkodaros tikslais duomenis tvarkome tik tada, kai esate aiškiai sutikę — būtent naujienlaiškiui (žr. skirsnį „Komunikacija“), kurio bet kada galite atsisakyti vienu paspaudimu.",
+    "Mes neparduodame duomenų ir nekuriame profilių, kurie identifikuotų jus kaip asmenį. Šioje svetainėje mes – tik su jūsų sutikimu – matuojame mūsų puslapių pasiekiamumą ir mūsų reklamos sėkmę; abi kategorijos gali būti atskirai atšaukiamos (žr. skyrius „Pasiekiamumo matavimas“ ir „Reklama ir sėkmės matavimas“). Reklamai duomenis tvarkome tik ten, kur davėte aiškų sutikimą – būtent mūsų naujienlaiškiui (žr. skyrių „Komunikacija“), kurio prenumeratos galite bet kada atsisakyti vienu paspaudimu.",
   ],
   sections: [
     {
       heading: "Duomenų valdytojas",
-      paragraphs: [
-        "Už šiame pranešime aprašytą duomenų tvarkymą atsako:",
-      ],
+      paragraphs: ["Už šiame pranešime aprašytą duomenų tvarkymą atsako:"],
       zeilen: [
         {
           label: "Įmonė",
@@ -92,13 +90,24 @@ export const datenschutz: LegalDoc = {
           titel: "Kontaktų formos apsauga nuo šiukšlių (reCAPTCHA)",
           paragraphs: [
             "Mūsų kontaktų forma nuo automatizuotų masinių užklausų apsaugota Google Ireland Limited paslauga reCAPTCHA Enterprise. Tik jums su tuo sutikus, jūsų naršyklė užpildant formą įkelia scenarijų iš www.google.com; tuo metu jūsų IP adresas ir duomenys apie jūsų veiksmus formoje perduodami Google ir tenai įvertinami, kad būtų atskirtas žmogus nuo scenarijaus. Teisinis pagrindas yra BDAR 6 straipsnio 1 dalies a punktas (sutikimas); papildomai taikomas [Google privatumo pranešimas](https://policies.google.com/privacy).",
-            "Be jūsų sutikimo iš Google nieko neįkeliama ir jokie duomenys tenai neperduodami; tokiu atveju formos nepriimame, tačiau bet kada galite parašyti mums el. laišką. Savo sutikimą galite pakeisti arba atšaukti [slapukų politikoje](/cookie-richtlinie).",
+            "Be jūsų sutikimo niekas nebus įkelta iš „Google“ ir jokie duomenys ten nebus perduoti; tokiu atveju formos nepriimsime, tačiau visada galite mums parašyti el. laišką. Jei sutiksite, „reCAPTCHA“ nustatys savo slapuką („_GRECAPTCHA“, kurio galiojimo laiką nustato „Google“, iki šešių mėnesių), kuris naudojamas rizikos vertinimui. Savo sutikimą galite bet kada pakeisti arba atšaukti naudodami slapukų piktogramą, esančią kiekvieno puslapio apačioje kairėje; slapukas tuomet bus ištrintas.",
           ],
         },
         {
-          titel: "Jokios analitikos, jokios reklamos",
+          titel: "Pasiekiamumo matavimas („Google Analytics“)",
           paragraphs: [
-            "Nenaudojame jokių analitikos, sekimo ar reklamos paslaugų (jokio Google Analytics, jokių pikselių, jokių reklamos tinklų) ir nekuriame profilių. Kokie slapukai platformai techniškai būtini, nurodyta [slapukų politikoje](/cookie-richtlinie).",
+            "Šioje svetainėje, naudodami „Google Analytics 4“ iš „Google Ireland Limited“, matuojame, kaip naudojami mūsų puslapiai – kurie puslapiai peržiūrimi, iš kur ateina lankytojai ir kurioje vietoje jie išeina. Tikslas yra tik pagerinti pasiūlymą ir aptinkamumą.",
+            "Įkeliama tik su jūsų sutikimu. Jei sutinkate, jūsų naršyklė įkelia scenarijų iš www.googletagmanager.com ir išsaugo du slapukus („_ga“ ir „_ga_<ID>“, galiojimo laikas iki dvejų metų) su atsitiktinai sugeneruotu identifikatoriumi; perduodami šis identifikatorius, peržiūrėti puslapiai, nukreipimo šaltinis, apytikslė vieta šalies ar regiono lygiu, įrenginys ir naršyklė, taip pat jūsų IP adresas, kurį „Google“ sutrumpina prieš kiekvieną išsaugojimą. Teisinis pagrindas yra BDAR 6 str. 1 d. a punktas (sutikimas).",
+            "Mes aiškiai apribojome vertinimą: „Google“ signalai ir reklamos personalizavimas yra išjungti. Todėl nekuriama jokių tarpusavyje susijusių profilių ir jokių tikslinių grupių reklamai, ir mes neperduodame naudojimo duomenų reklamos tinklams. Su jūsų kliento paskyra sujungimas nevyksta.",
+            "„Google“ tvarko duomenis kaip mūsų duomenų tvarkytojas, remdamasi sutartimi pagal BDAR 28 str. („Google Ads“ duomenų tvarkymo sąlygos). Jūsų IP adreso sutrumpinimas vyksta serveriuose ES, prieš perduodant duomenis į JAV; taigi perduodamas pseudoniminis duomenų rinkinys. Perdavimo pagrindas yra ES Komisijos sprendimas dėl ES ir JAV duomenų privatumo sistemos (BDAR 45 str.), pagal kurį „Google LLC“ yra sertifikuota; be to, „Google“ įtraukė ES Komisijos standartines sutarčių sąlygas (BDAR 46 str.). Mes aiškiai atkreipiame dėmesį, kad JAV institucijos pagal FISA 702 skirsnį taip pat gali pasiekti sertifikuotų įmonių duomenis, todėl likutinės rizikos negalima visiškai atmesti. Papildomai galioja [„Google“ privatumo politika](https://policies.google.com/privacy).",
+            "Saugojimo trukmė: įvykių ir vartotojų duomenys mūsų nuosavybėje automatiškai ištrinami po 14 mėnesių; apibendrinti ataskaitų duomenys, nesusiję su atskirais lankytojais, išlieka ilgiau. Jūsų sutikimas pats baigiasi po šešių mėnesių.",
+            "Be jūsų sutikimo niekas neįkeliama, jokie slapukai nenustatomi ir jokie duomenys neperduodami „Google“. Jūs galite bet kada atšaukti savo sutikimą, paspaudę slapuko piktogramą apatiniame kairiajame kiekvieno puslapio kampe; matavimas tada iškart nutraukiamas ir minėti slapukai ištrinami. Po šešių mėnesių mes vėl paklausime.",
+          ],
+        },
+        {
+          titel: "Reklama ir našumo matavimas",
+          paragraphs: [
+            "Jums sutikus, naudojame rinkodaros slapukus, kad įvertintume savo reklamos sėkmę ir rodytume jums tinkamus skelbimus kitose platformose. Dalyvauja „Meta Platforms Ireland“ („Meta-Pixel“, slapukas _fbp), „LinkedIn Ireland“ („Insight-Tag“, slapukai li_gc ir bcookie) ir „Google Ireland Limited“ („Google Ads“, slapukas _gcl_au). Teisinis pagrindas yra BDAR 6 str. 1 d. a punktas. Be jūsų sutikimo joks scenarijus nebus įkeltas ir joks slapukas nebus nustatytas; atšaukus, juos ištrinsime. Išsami informacija apie kiekvieną slapuką pateikiama [Slapukų politikoje](/cookie-richtlinie).",
           ],
         },
       ],
@@ -252,7 +261,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (Jungtinė Karalystė) — sąsaja su rezervacijų portalais",
         "Meta Platforms Ireland Limited (Airija) — WhatsApp pranešimai, jeigu įjungta",
         "Sendinblue SAS / Brevo (Prancūzija, Vokietija) — naujienlaiškių administravimas ir siuntimas, tik esant sutikimui",
-        "Google Ireland Limited (Airija) — vertimai; kontaktų formos apsauga nuo šiukšlių (reCAPTCHA Enterprise), tik esant sutikimui; prisijungimas su Google, jeigu naudojamas",
+        "Google Ireland Limited (Airija) — vertimai; kontaktų formos apsauga nuo šiukšlių (reCAPTCHA Enterprise), tik esant sutikimui; prisijungimas su Google, jeigu naudojamas; Pasiekiamumo matavimas („Google Analytics 4“), tik su sutikimu",
         "Groq, Inc. (JAV) — atsakymų pasiūlymai, jeigu įjungti",
         "Cloudflare, Inc. (JAV) — klientų domenų DNS administravimas",
       ],
@@ -269,7 +278,7 @@ export const datenschutz: LegalDoc = {
       paragraphs: [
         "Duomenys iš esmės tvarkomi Europos Sąjungos teritorijoje. Naudojant pirmiau nurodytas paslaugas, kurių teikėjai įsteigti už ES ribų, duomenys gali būti perduodami į trečiąją valstybę.",
         "Groq, Inc. ir Cloudflare, Inc. (JAV) atveju perdavimą grindžiame Europos Komisijos standartinėmis sutarčių sąlygomis pagal BDAR 46 straipsnio 2 dalies c punktą, jeigu gavėjas negali remtis tinkamumo sprendimu (EU-US Data Privacy Framework).",
-      "Mokėjimų vykdymo sutarties partneris yra Stripe Payments Europe, Limited (Airija). Kiek Stripe tuo tikslu pasitelkia Stripe, LLC (JAV), ši yra sertifikuota pagal ES ir JAV duomenų privatumo sistemą (EU-US Data Privacy Framework); tiek, kiek tai susiję, perdavimas grindžiamas Europos Komisijos tinkamumo sprendimu pagal BDAR 45 straipsnį. Papildomai taikomos standartinės sutarčių sąlygos iš [Stripe duomenų tvarkymo sutarties](https://stripe.com/legal/dpa).",
+        "Mokėjimų vykdymo sutarties partneris yra Stripe Payments Europe, Limited (Airija). Kiek Stripe tuo tikslu pasitelkia Stripe, LLC (JAV), ši yra sertifikuota pagal ES ir JAV duomenų privatumo sistemą (EU-US Data Privacy Framework); tiek, kiek tai susiję, perdavimas grindžiamas Europos Komisijos tinkamumo sprendimu pagal BDAR 45 straipsnį. Papildomai taikomos standartinės sutarčių sąlygos iš [Stripe duomenų tvarkymo sutarties](https://stripe.com/legal/dpa).",
         "Channex.io Ltd (Jungtinė Karalystė) atveju taikomas Europos Komisijos tinkamumo sprendimas dėl Jungtinės Karalystės; jam nebegaliojant, taikomos standartinės sutarčių sąlygos.",
       ],
     },
@@ -288,7 +297,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (JAV) — atsakymų pasiūlymai pranešimų gautuosiuose, tik jeigu verslas šią funkciją įjungia. Perduodamas atitinkamas pranešimo kontekstas.",
             "Cloudflare, Inc. (JAV) — klientų domenų DNS administravimas. Perduodami domeno ir konfigūracijos duomenys, jokių svečių duomenų.",
-            "Google LLC (JAV) — tik prisijungiant su Google ir atliekant vertimus; sutarties partneris kiekvienu atveju yra Google Ireland Limited, tačiau JAV patronuojančiosios įmonės prieiga vis tiek nėra visiškai atmesta.",
+            "„Google LLC“ (JAV) – prisijungiant su „Google“, verčiant ir matuojant pasiekiamumą („Google Analytics 4“, tik su sutikimu); sutarties partneris yra „Google Ireland Limited“, tačiau JAV patronuojančiosios įmonės prieiga neatmetama.",
           ],
         },
         {

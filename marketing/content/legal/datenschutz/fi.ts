@@ -20,14 +20,12 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Tässä selosteessa kuvataan, miten ${ANBIETER.firma} käsittelee henkilötietoja — kun vierailet tällä verkkosivustolla, kun käytät myNextDays-alustaa (hallintapaneeli, markkinapaikka ja mobiilisovellus) ja asiakkaidemme kanssa solmitun liikesuhteen puitteissa.`,
-    "Perustana ovat asetus (EU) 2016/679 (yleinen tietosuoja-asetus) sekä Tanskan tietosuojalaki (databeskyttelsesloven). Emme myy tietoja, emme muodosta profiileja emmekä käytä verkkosivustoillamme analytiikka-, seuranta- tai mainospalveluja. Markkinointitarkoituksiin käsittelemme tietoja yksinomaan siellä, missä olet antanut siihen nimenomaisen suostumuksesi — nimittäin uutiskirjettämme varten (ks. kohta Viestintä), jonka voit peruuttaa milloin tahansa yhdellä napsautuksella.",
+    "Emme myy tietoja emmekä luo profiileja, jotka tunnistavat sinut henkilökohtaisesti. Tällä verkkosivustolla mittaamme – vain suostumuksellasi – sivujemme kattavuutta ja mainontamme menestystä; molemmat kategoriat ovat erikseen poistettavissa (katso osiot Kävijämittaus sekä Mainonta ja menestyksen mittaus). Käytämme tietojasi markkinointitarkoituksiin vain, jos olet antanut siihen nimenomaisen suostumuksesi – esimerkiksi uutiskirjeemme tilaamiseen (katso kohta Viestintä), jonka voit peruuttaa milloin tahansa yhdellä napsautuksella.",
   ],
   sections: [
     {
       heading: "Rekisterinpitäjä",
-      paragraphs: [
-        "Tässä selosteessa kuvatusta käsittelystä vastaa:",
-      ],
+      paragraphs: ["Tässä selosteessa kuvatusta käsittelystä vastaa:"],
       zeilen: [
         {
           label: "Yritys",
@@ -94,13 +92,24 @@ export const datenschutz: LegalDoc = {
           titel: "Yhteydenottolomakkeen roskapostisuoja (reCAPTCHA)",
           paragraphs: [
             "Yhteydenottolomakkeemme on suojattu automatisoituja massaviestejä vastaan Google Ireland Limitedin reCAPTCHA Enterprise -palvelulla. Vain jos annat siihen suostumuksesi, selaimesi lataa lomakkeen täyttämisen yhteydessä komentosarjan osoitteesta www.google.com; tällöin IP-osoitteesi ja tiedot vuorovaikutuksestasi lomakkeen kanssa välitetään Googlelle ja analysoidaan siellä ihmisen ja komentosarjan erottamiseksi. Oikeusperuste on yleisen tietosuoja-asetuksen 6 artiklan 1 kohdan a alakohta (suostumus); tätä täydentäen sovelletaan [Googlen tietosuojaselostetta](https://policies.google.com/privacy).",
-            "Ilman suostumustasi Googlelta ei ladata mitään eikä sinne virtaa tietoja; tällöin emme ota lomaketta vastaan, mutta voit kirjoittaa meille milloin tahansa sähköpostia. Suostumuksesi voit muuttaa tai peruuttaa [evästekäytännössä](/cookie-richtlinie).",
+            "Ilman suostumustasi Googlelta ei ladata mitään eikä sinne siirry tietoja; emme hyväksy lomaketta, mutta voit lähettää meille sähköpostia milloin tahansa. Jos annat suostumuksesi, reCAPTCHA asettaa oman evästeen (_GRECAPTCHA, Googlen määrittämä voimassaoloaika, enintään kuusi kuukautta), jota käytetään riskinarviointiin. Voit muuttaa tai peruuttaa suostumuksesi milloin tahansa napsauttamalla evästekuvaketta kunkin sivun vasemmassa alakulmassa; eväste poistetaan silloin.",
           ],
         },
         {
-          titel: "Ei analytiikkaa, ei mainontaa",
+          titel: "Kattavuuden mittaus (Google Analytics)",
           paragraphs: [
-            "Emme käytä analytiikka-, seuranta- tai mainospalveluja (ei Google Analyticsia, ei pikseleitä, ei mainosverkostoja) emmekä muodosta profiileja. Mitä evästeitä alusta teknisesti tarvitsee, ilmenee [evästekäytännöstä](/cookie-richtlinie).",
+            "Tällä verkkosivustolla mittaamme Google Ireland Limitedin Google Analytics 4:n avulla, miten sivujamme käytetään – mitä sivuja avataan, mistä kävijät tulevat ja missä vaiheessa he poistuvat. Tarkoituksena on ainoastaan tarjonnan ja löydettävyyden parantaminen.",
+            "Lataus tapahtuu ainoastaan suostumuksellasi. Jos annat suostumuksesi, selaimesi lataa skriptin osoitteesta www.googletagmanager.com ja tallentaa kaksi evästettä („_ga“ ja „_ga_<tunnus>“, voimassaoloaika enintään kaksi vuotta) satunnaisesti luodulla tunnuksella; nämä tunnukset, avatut sivut, viittauslähde, likimääräinen sijainti maa- tai aluetasolla, laite ja selain sekä IP-osoitteesi, jonka Google lyhentää ennen tallennusta, välitetään. Oikeusperusta on GDPR:n 6 artiklan 1 kohdan a alakohta (suostumus).",
+            "Olemme rajoittaneet arviointia nimenomaisesti: Google-signaalit ja mainosten personointi on kytketty pois päältä. Siksi emme luo laitteiden välisiä profiileja tai kohderyhmiä mainontaa varten, emmekä jaa käyttötietoja mainosverkostoille. Tietojen yhdistämistä asiakastiliisi ei tapahdu.",
+            "Google käsittelee tietoja toimeksiannostamme GDPR:n 28 artiklan mukaisen sopimuksen perusteella (Google Ads Data Processing Terms). IP-osoitteesi lyhennetään EU:n palvelimilla ennen tietojen siirtoa Yhdysvaltoihin; siten siirretään pseudonymisoitu tietue. Siirron perusteena on EU-komission riittävyyspäätös EU-US Data Privacy Framework -järjestelmästä (GDPR:n 45 artikla), jonka mukaisesti Google LLC on sertifioitu; lisäksi Google on sisällyttänyt EU-komission vakiolausekkeet (GDPR:n 46 artikla). Huomautamme nimenomaisesti, että Yhdysvaltain viranomaiset voivat FISA:n 702 pykälän nojalla päästä käsiksi myös sertifioitujen yritysten tietoihin, eikä jäännösriskiä voida siksi täysin poissulkea. Lisäksi sovelletaan [Googlen tietosuojakäytäntöä](https://policies.google.com/privacy).",
+            "Tallennusaika: Tapahtuma- ja käyttäjäkohtaiset tiedot poistetaan automaattisesti omaisuudestamme 14 kuukauden kuluttua; kootut raporttitiedot ilman yksittäisiin kävijöihin liittyvää viittausta säilyvät pidempään. Suostumuksesi itsessään vanhenee kuuden kuukauden kuluttua.",
+            "Ilman suostumustasi mitään ei ladata, evästeitä ei aseteta eikä tietoja siirry Googlelle. Voitte peruuttaa suostumuksenne milloin tahansa vasemmassa alakulmassa olevasta evästekuvakkeesta jokaisella sivulla; mittaus päättyy välittömästi ja mainitut evästeet poistetaan. Kuuden kuukauden kuluttua kysymme uudelleen.",
+          ],
+        },
+        {
+          titel: "Mainonta ja tulosten mittaaminen",
+          paragraphs: [
+            "Suostumuksellasi käytämme markkinointievästeitä mainontamme tehokkuuden mittaamiseen ja sopivien mainosten näyttämiseen muilla alustoilla. Mukana ovat Meta Platforms Ireland (Meta-pikseli, eväste _fbp), LinkedIn Ireland (Insight-tag, evästeet li_gc ja bcookie) ja Google Ireland Limited (Google Ads, eväste _gcl_au). Oikeusperuste on GDPR:n 6 artiklan 1 kohdan a alakohta. Ilman suostumustasi näitä skriptejä ei ladata eikä evästeitä aseteta; peruutuksen yhteydessä poistamme ne. Lisätietoja jokaisesta evästeestä on [evästekäytännössä](/cookie-richtlinie).",
           ],
         },
       ],
@@ -254,7 +263,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (Yhdistynyt kuningaskunta) — liitäntä varausportaaleihin",
         "Meta Platforms Ireland Limited (Irlanti) — WhatsApp-viestit, mikäli aktivoitu",
         "Sendinblue SAS / Brevo (Ranska, Saksa) — uutiskirjeen hallinta ja lähetys, vain suostumuksella",
-        "Google Ireland Limited (Irlanti) — käännökset; yhteydenottolomakkeen roskapostisuoja (reCAPTCHA Enterprise), vain suostumuksella; kirjautuminen Google-tunnuksella, mikäli käytössä",
+        "Google Ireland Limited (Irlanti) — käännökset; yhteydenottolomakkeen roskapostisuoja (reCAPTCHA Enterprise), vain suostumuksella; kirjautuminen Google-tunnuksella, mikäli käytössä; Kävijämittaus (Google Analytics 4), vain suostumuksella",
         "Groq, Inc. (USA) — vastausehdotukset, mikäli aktivoitu",
         "Cloudflare, Inc. (USA) — asiakkaiden verkkotunnusten DNS-hallinta",
       ],
@@ -276,7 +285,8 @@ export const datenschutz: LegalDoc = {
       ],
     },
     {
-      heading: "Kolmansien valtioiden viranomaisten pääsy tietoihin (US CLOUD Act)",
+      heading:
+        "Kolmansien valtioiden viranomaisten pääsy tietoihin (US CLOUD Act)",
       paragraphs: [
         "Palveluntarjoajat, jotka kuuluvat Yhdysvaltain oikeudenkäyttöpiiriin, voidaan Yhdysvaltain CLOUD Act (Clarifying Lawful Overseas Use of Data Act, 2018) -lain nojalla velvoittaa luovuttamaan tietoja Yhdysvaltain viranomaisille — myös silloin, kun nämä tiedot sijaitsevat Euroopan unionin alueella olevilla palvelimilla. Tällainen pääsy voi olla ristiriidassa yleisen tietosuoja-asetuksen kanssa, ja palveluntarjoaja voi olla oikeudellisesti estynyt kertomasta siitä meille tai sinulle. Sen paremmin EU-US Data Privacy Framework -järjestelyä koskeva riittävyyspäätös kuin mallisopimuslausekkeet eivät poista tätä riskiä.",
         "Rajoitamme tätä riskiä siten, että kantavat järjestelmät — alusta, tietokanta, media, postipalvelin ja varmuuskopiot — toimivat eurooppalaisilla palveluntarjoajilla EU:n alueella, missä Yhdysvaltain oikeudenkäyttövalta ei ulotu.",
@@ -290,7 +300,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (USA) — vastausehdotukset viestien saapuneet-kansiossa, vain jos yritys aktivoi toiminnon. Siirrettävää on kyseinen viestikonteksti.",
             "Cloudflare, Inc. (USA) — asiakkaiden verkkotunnusten DNS-hallinta. Siirrettäviä ovat verkkotunnus- ja määritystiedot, ei vierastietoja.",
-            "Google LLC (USA) — vain Google-tunnuksella kirjautumisen ja käännösten yhteydessä; sopimuskumppani on kussakin tapauksessa Google Ireland Limited, mutta yhdysvaltalaisen emoyhtiön pääsyä ei siitä huolimatta voida poissulkea.",
+            "Google LLC (USA) – Google-kirjautumisen, käännösten ja kävijämittauksen yhteydessä (Google Analytics 4, vain suostumuksella); sopimuskumppani on Google Ireland Limited, mutta yhdysvaltalaisen emoyhtiön pääsyä tietoihin ei voida sulkea pois.",
           ],
         },
         {

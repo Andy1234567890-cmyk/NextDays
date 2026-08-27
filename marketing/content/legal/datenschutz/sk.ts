@@ -21,7 +21,7 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Tieto zásady opisujú, ako ${ANBIETER.firma} spracúva osobné údaje — pri návšteve tejto webovej stránky, pri používaní platformy myNextDays (nástenka, trhovisko a mobilná aplikácia) a v rámci obchodného vzťahu s našimi zákazníkmi.`,
-    "Základom je nariadenie (EÚ) 2016/679 (GDPR) a dánsky zákon o ochrane údajov (databeskyttelsesloven). Údaje nepredávame, nevytvárame profily a na našich webových stránkach nepoužívame analytické, sledovacie ani reklamné služby. Na reklamné účely spracúvame údaje výlučne tam, kde ste na to dali výslovný súhlas — a to pre náš newsletter (pozri kapitolu Komunikácia), z ktorého sa môžete kedykoľvek jedným kliknutím odhlásiť.",
+    "Nepredávame údaje a nevytvárame profily, ktoré by vás identifikovali ako osobu. Na tejto webovej stránke meriame – len s vaším súhlasom – dosah našich stránok a úspešnosť našej reklamy; obe kategórie sú jednotlivo voliteľné (pozri časti Meranie dosahu a Reklama a meranie úspešnosti). Údaje na marketingové účely spracúvame výlučne vtedy, ak ste s tým výslovne súhlasili – konkrétne pre náš newsletter (pozri časť Komunikácia), ktorého odber môžete kedykoľvek zrušiť jediným kliknutím.",
   ],
   sections: [
     {
@@ -95,13 +95,24 @@ export const datenschutz: LegalDoc = {
           titel: "Ochrana kontaktného formulára pred spamom (reCAPTCHA)",
           paragraphs: [
             "Náš kontaktný formulár je chránený pred automatizovanými masovými správami pomocou reCAPTCHA Enterprise od spoločnosti Google Ireland Limited. Len ak s tým súhlasíte, načíta váš prehliadač pri vyplňovaní formulára skript z www.google.com; pritom sa spoločnosti Google poskytne vaša IP adresa a údaje o vašej interakcii s formulárom a tam sa vyhodnotia, aby sa odlíšil človek od skriptu. Právnym základom je čl. 6 ods. 1 písm. a) GDPR (súhlas); dopĺňajúco platia [zásady ochrany osobných údajov spoločnosti Google](https://policies.google.com/privacy).",
-            "Bez vášho súhlasu sa zo spoločnosti Google nič nenačíta a nepotečú tam žiadne údaje; formulár potom neprijmeme, môžete nám však kedykoľvek napísať e-mail. Svoj súhlas môžete zmeniť alebo odvolať v [zásadách používania súborov cookie](/cookie-richtlinie).",
+            "Bez vášho súhlasu sa nič nenačíta zo služby Google a nebudú tam prúdiť žiadne údaje; formulár potom neprijmeme, ale vždy nám môžete napísať e-mail. Ak súhlas udelíte, reCAPTCHA nastaví vlastnú súbor cookie (_GRECAPTCHA, doba platnosti určená spoločnosťou Google, až šesť mesiacov), ktorý slúži na posúdenie rizika. Svoj súhlas môžete kedykoľvek zmeniť alebo odvolať prostredníctvom ikony súboru cookie vľavo dole na každej stránke; súbor cookie sa potom vymaže.",
           ],
         },
         {
-          titel: "Žiadna analytika, žiadna reklama",
+          titel: "Meranie dosahu (Google Analytics)",
           paragraphs: [
-            "Nepoužívame analytické, sledovacie ani reklamné služby (žiadny Google Analytics, žiadne pixely, žiadne reklamné siete) a nevytvárame profily. Ktoré súbory cookie platforma technicky potrebuje, je uvedené v [zásadách používania súborov cookie](/cookie-richtlinie).",
+            "Na tejto webovej stránke meriame pomocou Google Analytics 4 od spoločnosti Google Ireland Limited, ako sa používajú naše stránky – ktoré stránky sa navštevujú, odkiaľ prichádzajú návštevníci a v ktorom bode odchádzajú. Účelom je výhradne zlepšenie ponuky a nájditeľnosti.",
+            "Načítanie prebieha výhradne s vaším súhlasom. Ak ho udelíte, váš prehliadač načíta skript z www.googletagmanager.com a uloží dva súbory cookie („_ga“ a „_ga_<ID>“, platnosť až dva roky) s náhodne vygenerovaným identifikátorom; prenášajú sa tento identifikátor, navštívené stránky, zdroj odkazu, približná poloha na úrovni krajiny alebo regiónu, zariadenie a prehliadač, ako aj vaša IP adresa, ktorú Google pred každým uložením skráti. Právnym základom je čl. 6 ods. 1 písm. a GDPR (súhlas).",
+            "Vyhodnotenie sme výslovne obmedzili: Signály Google a personalizácia reklamy sú vypnuté. Preto nevznikajú žiadne profily naprieč zariadeniami a žiadne cieľové skupiny pre reklamu, a neposkytujeme žiadne údaje o používaní reklamným sieťam. Spojenie s vaším zákazníckym účtom sa neuskutočňuje.",
+            "Google spracúva údaje ako náš sprostredkovateľ na základe zmluvy podľa čl. 28 GDPR (Google Ads Data Processing Terms). Skrátenie vašej IP adresy sa uskutočňuje na serveroch v EÚ predtým, ako sa údaje prenesú do USA; prenáša sa teda pseudonymný súbor údajov. Základom prenosu je rozhodnutie Európskej komisie o primeranosti pre rámec ochrany osobných údajov EÚ-USA (čl. 45 GDPR), podľa ktorého je spoločnosť Google LLC certifikovaná; okrem toho Google zahrnul štandardné zmluvné doložky Európskej komisie (čl. 46 GDPR). Výslovne upozorňujeme, že americké úrady môžu podľa § 702 FISA pristupovať aj k údajom certifikovaných spoločností a zvyškové riziko preto nemožno úplne vylúčiť. Okrem toho platí [zásada ochrany osobných údajov spoločnosti Google](https://policies.google.com/privacy).",
+            "Doba uchovávania: Údaje súvisiace s udalosťami a používateľmi sa v našej službe automaticky vymažú po 14 mesiacoch; agregované údaje správ bez odkazu na jednotlivých návštevníkov zostávajú zachované aj po tomto období. Váš súhlas samotný vyprší po šiestich mesiacoch.",
+            "Bez vášho súhlasu sa nič nenačíta, nenastaví sa žiadny súbor cookie a žiadne údaje neprúdia do spoločnosti Google. Svoj súhlas môžete kedykoľvek odvolať prostredníctvom ikony súboru cookie vľavo dole na každej stránke; meranie sa potom okamžite ukončí a uvedené súbory cookie sa vymažú. Po šiestich mesiacoch sa vás opýtame znova.",
+          ],
+        },
+        {
+          titel: "Reklama a meranie úspešnosti",
+          paragraphs: [
+            "S vaším súhlasom používame marketingové súbory cookie na meranie úspešnosti našej reklamy a zobrazovanie relevantných reklám na iných platformách. Zúčastnené sú Meta Platforms Ireland (Meta-Pixel, cookie _fbp), LinkedIn Ireland (Insight-Tag, cookies li_gc a bcookie) a Google Ireland Limited (Google Ads, cookie _gcl_au). Právnym základom je čl. 6 ods. 1 písm. a GDPR. Bez vášho súhlasu sa žiadny z týchto skriptov nenačíta a žiadny súbor cookie sa nenastaví; v prípade odvolania súhlasu ich vymažeme. Podrobnosti o každom súbore cookie nájdete v [Zásadách používania súborov cookie](/cookie-richtlinie).",
           ],
         },
       ],
@@ -255,7 +266,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (Spojené kráľovstvo) — prepojenie s rezervačnými portálmi",
         "Meta Platforms Ireland Limited (Írsko) — správy WhatsApp, ak sú aktivované",
         "Sendinblue SAS / Brevo (Francúzsko, Nemecko) — správa a odosielanie newslettera, len pri súhlase",
-        "Google Ireland Limited (Írsko) — preklady; ochrana kontaktného formulára pred spamom (reCAPTCHA Enterprise), len pri súhlase; prihlásenie pomocou Google, ak sa používa",
+        "Google Ireland Limited (Írsko) — preklady; ochrana kontaktného formulára pred spamom (reCAPTCHA Enterprise), len pri súhlase; prihlásenie pomocou Google, ak sa používa; Meranie dosahu (Google Analytics 4), len so súhlasom",
         "Groq, Inc. (USA) — návrhy odpovedí, ak sú aktivované",
         "Cloudflare, Inc. (USA) — správa DNS pre zákaznícke domény",
       ],
@@ -291,7 +302,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (USA) — návrhy odpovedí v doručenej pošte správ, len ak prevádzka funkciu aktivuje. Poskytuje sa príslušný kontext správy.",
             "Cloudflare, Inc. (USA) — správa DNS pre zákaznícke domény. Poskytujú sa údaje o doméne a konfigurácii, žiadne údaje hostí.",
-            "Google LLC (USA) — len pri prihlásení pomocou Google a pri prekladoch; zmluvným partnerom je vždy Google Ireland Limited, prístup americkej materskej spoločnosti však nie je vylúčený.",
+            "Google LLC (USA) — pri prihlásení cez Google, pri prekladoch a pri meraní dosahu (Google Analytics 4, len so súhlasom); zmluvným partnerom je vždy Google Ireland Limited, prístup materskej spoločnosti v USA však nie je vylúčený.",
           ],
         },
         {

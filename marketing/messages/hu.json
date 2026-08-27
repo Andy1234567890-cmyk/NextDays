@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "Az Ön hozzájárulása",
-    "text": "Ez a weboldal nem használ elemzési, reklám- vagy nyomkövetési szolgáltatásokat; a betűtípusok és az ikonok a saját szerverünkön találhatók. Csak az szükséges, amit Ön maga állít be vagy kér. Az Ön hozzájárulására ezért pontosan egyetlen dolog miatt van szükségünk: a kapcsolatfelvételi űrlapunk külső spamvédelme miatt.",
+    "textBeide": "Két dologhoz szükséges az Ön hozzájárulása. Ezeket egyenként engedélyezheti vagy elutasíthatja, bármikor módosíthatja és visszavonhatja. Részletek a cookie-szabályzatban.",
+    "textSpamschutz": "Egy dologhoz szükséges az Ön hozzájárulása. Ezt bármikor módosíthatja és visszavonhatja. Részletek a cookie-szabályzatban.",
+    "textStatistik": "Egy dologhoz szükséges az Ön hozzájárulása. Ezt bármikor módosíthatja és visszavonhatja. Részletek a cookie-szabályzatban.",
     "richtlinie": "Cookie-szabályzat elolvasása",
     "knopf": "Süti beállítások",
     "allesAblehnen": "Összes elutasítása",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Beállítások elrejtése",
     "auswahlSpeichern": "Beállítások mentése",
     "immerAktiv": "Mindig aktív",
+    "nichtEingerichtet": "Ebben a környezetben ez a szolgáltatás nincs beállítva – az Ön engedélyével sem tölt be semmit.",
     "kategorien": {
       "notwendig": {
-        "titel": "Szükséges",
-        "text": "Az Ön nyelvválasztása és — csak akkor, ha a csevegést Ön maga nyitja meg — a beszélgetése azonosítója ezen az eszközön. Ezek nélkül az oldal nem szolgáltatható úgy, ahogyan Ön kérte. Nem szolgálnak sem reklám-, sem statisztikai célokat."
+        "titel": "Szükséges sütik",
+        "text": "Ezek a sütik feltétlenül szükségesek a weboldal működéséhez: az Ön nyelvi választása és, ha megnyitja a csevegést, a beszélgetés azonosítója. Ezeket nem lehet kikapcsolni, mert nélkülük a weboldal nem működik a kért módon."
       },
-      "spamschutz": {
-        "titel": "A kapcsolatfelvételi űrlap spamvédelme",
-        "text": "Kapcsolatfelvételi űrlapunkat a Google reCAPTCHA Enterprise szolgáltatása védi az automatizált körlevelektől. Ha ezt engedélyezi, böngészője az űrlap kitöltése közben szkriptet tölt be a google.com címről, és ezzel elküldi az IP-címét a Google-nak. Az Ön engedélye nélkül semmi sem töltődik be a Google-tól; ilyenkor e-mailben ér el minket."
+      "funktional": {
+        "titel": "Funkcionális sütik",
+        "text": "Ezek a sütik védik kapcsolatfelvételi űrlapunkat az automatizált tömeges üzenetektől. Ha engedélyezi őket, böngészője betölti a Google reCAPTCHA-t, és továbbítja az Ön IP-címét."
+      },
+      "analytisch": {
+        "titel": "Analitikai sütik",
+        "text": "Ezekkel a sütikkel megtudjuk, mely oldalakat olvassák, és hol hagyják abba a látogatók, hogy javítsuk a weboldalt. A hirdetések személyre szabása és az eszközök közötti profilok ki vannak kapcsolva."
+      },
+      "marketing": {
+        "titel": "Marketing sütik",
+        "text": "Ezekkel a sütikkel mérjük hirdetéseink sikerét, és megfelelő hirdetéseket jelenítünk meg Önnek más platformokon. Az adatok átkerülnek a Meta, a LinkedIn és a Google részére."
       }
     },
     "kontakt": {
       "hinweis": "Az elküldés előtt szükségünk van az engedélyére a külső spamvédelemhez (a Google reCAPTCHA szolgáltatása). Enélkül nem tudjuk elfogadni az űrlapot — így tartjuk távol az automatizált körleveleket.",
       "erlauben": "Spamvédelem engedélyezése",
       "alternative": "Nem szeretné? Írjon nekünk inkább a {email} címre."
-    }
+    },
+    "angaben": {
+      "anbieter": "Szolgáltató:",
+      "dauer": "Tárolási idő:",
+      "cookies": "Sütik:",
+      "keineCookies": "nincs (csak küldéskor)",
+      "drittland": "Adatátvitel:",
+      "drittlandJa": "az USA-ba, az EU-USA adatvédelmi keretrendszer alapján",
+      "drittlandNein": "csak az EU-n belül",
+      "listeAnzeigen": "Általunk használt sütik",
+      "listeTitel": "Süti lista",
+      "name": "Név",
+      "host": "Hoszt",
+      "art": "Típus",
+      "artErst": "Saját",
+      "artDritt": "Harmadik fél",
+      "zweck": "Cél",
+      "kategorie": "Kategória",
+      "beschreibung": "Leírás"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "a Google határozza meg, legfeljebb hat hónap",
+      "dreiMonate": "körülbelül három hónap",
+      "einJahr": "körülbelül egy év",
+      "sechsMonate": "körülbelül hat hónap",
+      "zweiJahre": "legfeljebb két év"
+    },
+    "zweck": {
+      "grecaptcha": "Lehetővé teszi a Google számára a kockázatértékelést, amely megkülönbözteti az automatizált tömeges feliratkozásokat a valódi kérésektől.",
+      "ga": "Megkülönbözteti a látogatókat, hogy az ismétlődő látogatások ne legyenek duplán számolva. Véletlenszerűen generált azonosítót tartalmaz, amely nem kapcsolódik az Ön személyéhez.",
+      "gaSitzung": "Rögzíti, mikor kezdődött az aktuális látogatása, hogy az oldalmegtekintések egy munkamenethez tartozzanak.",
+      "fbp": "Hozzárendeli látogatását egy hirdetéshez, hogy mérhessük kampányaink sikerét.",
+      "gclAu": "Hozzárendeli látogatását egy Google hirdetéshez, hogy mérhessük kampányaink sikerét.",
+      "liGc": "Tárolja az Ön hozzájárulását a LinkedIn felé marketing célokra.",
+      "bcookie": "Azonosítja böngészőjét a LinkedIn felé, hogy a hirdetések és azok sikere hozzárendelhető legyen."
+    },
+    "uebersicht": {
+      "titel": "Az Ön süti beállításai",
+      "text": "Válassza ki, mely sütiket szeretné elfogadni vagy elutasítani ezen a weboldalon. Bármikor engedélyezheti és letilthatja az egyes süti kategóriák beállításait.",
+      "datenschutz": "További információk az adatvédelmi nyilatkozatban"
+    },
+    "verwalten": "Cookie-beállítások kezelése",
+    "schliessen": "Bezárás",
+    "bestaetigen": "Beállítások megerősítése"
   }
 }

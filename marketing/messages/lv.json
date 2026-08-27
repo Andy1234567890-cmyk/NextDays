@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "Jūsu piekrišana",
-    "text": "Šajā tīmekļa vietnē netiek izmantoti analītikas, reklāmas vai izsekošanas pakalpojumi; fonti un ikonas atrodas mūsu pašu serverī. Nepieciešams ir tikai tas, ko jūs pats iestatāt vai pieprasāt. Tāpēc jūsu piekrišana mums ir vajadzīga tikai vienai lietai — mūsu saziņas veidlapas ārējai aizsardzībai pret mēstulēm.",
+    "textBeide": "Divām lietām nepieciešama jūsu piekrišana. Varat tās atļaut vai noraidīt atsevišķi, mainīt un atsaukt jebkurā laikā. Sīkāka informācija sīkdatņu politikā.",
+    "textSpamschutz": "Vienai lietai nepieciešama jūsu piekrišana. Varat to mainīt un atsaukt jebkurā laikā. Sīkāka informācija sīkdatņu politikā.",
+    "textStatistik": "Vienai lietai nepieciešama jūsu piekrišana. Varat to mainīt un atsaukt jebkurā laikā. Sīkāka informācija sīkdatņu politikā.",
     "richtlinie": "Lasīt sīkdatņu politiku",
     "knopf": "Sīkfailu iestatījumi",
     "allesAblehnen": "Noraidīt visu",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Slēpt izvēles",
     "auswahlSpeichern": "Saglabāt izvēles",
     "immerAktiv": "Vienmēr aktīvs",
+    "nichtEingerichtet": "Šajā vidē šis pakalpojums nav iestatīts — tas neko neielādēs pat ar jūsu atļauju.",
     "kategorien": {
       "notwendig": {
-        "titel": "Nepieciešamās",
-        "text": "Jūsu valodas izvēle un — tikai tad, ja tērzēšanu atverat pats — jūsu sarunas identifikators šajā ierīcē. Bez šiem datiem vietni nevar piegādāt tā, kā jūs to pieprasījāt. Tie netiek izmantoti ne reklāmai, ne statistikai."
+        "titel": "Nepieciešamās sīkdatnes",
+        "text": "Šīs sīkdatnes ir absolūti nepieciešamas vietnes darbībai: jūsu valodas izvēle un, ja atverat tērzēšanu, jūsu sarunas identifikators. Tās nevar izslēgt, jo bez tām vietne nedarbotos, kā pieprasīts."
       },
-      "spamschutz": {
-        "titel": "Saziņas veidlapas aizsardzība pret mēstulēm",
-        "text": "Mūsu saziņas veidlapu pret automatizētiem masu ziņojumiem aizsargā Google pakalpojums reCAPTCHA Enterprise. Ja to atļaujat, veidlapas aizpildīšanas laikā jūsu pārlūkprogramma ielādē skriptu no google.com un tādējādi nosūta jūsu IP adresi Google. Bez jūsu atļaujas no Google netiek ielādēts nekas; tādā gadījumā varat sazināties ar mums pa e-pastu."
+      "funktional": {
+        "titel": "Funkcionālās sīkdatnes",
+        "text": "Šīs sīkdatnes aizsargā mūsu kontaktu veidlapu no automatizētiem masveida sūtījumiem. Ja tās atļaujat, jūsu pārlūkprogramma ielādē reCAPTCHA no Google un pārsūta jūsu IP adresi."
+      },
+      "analytisch": {
+        "titel": "Analītiskās sīkdatnes",
+        "text": "Ar šīm sīkdatnēm mēs uzzinām, kuras lapas tiek lasītas un kur apmeklētāji pārtrauc, lai uzlabotu vietni. Reklāmas personalizācija un starpierīču profili ir izslēgti."
+      },
+      "marketing": {
+        "titel": "Mārketinga sīkdatnes",
+        "text": "Ar šīm sīkdatnēm mēs mēram mūsu reklāmas panākumus un rādām jums atbilstošas reklāmas citās platformās. Dati tiek pārsūtīti Meta, LinkedIn un Google."
       }
     },
     "kontakt": {
       "hinweis": "Pirms nosūtīšanas mums ir vajadzīga jūsu atļauja ārējai aizsardzībai pret mēstulēm (Google reCAPTCHA). Bez tās veidlapu nepieņemam — tā mēs neļaujam iekļūt automatizētiem masu ziņojumiem.",
       "erlauben": "Atļaut aizsardzību",
       "alternative": "Nevēlaties to? Tad rakstiet mums uz {email}."
-    }
+    },
+    "angaben": {
+      "anbieter": "Pakalpojumu sniedzējs:",
+      "dauer": "Glabāšanas ilgums:",
+      "cookies": "Sīkdatnes:",
+      "keineCookies": "nav (tikai nosūtot)",
+      "drittland": "Datu pārsūtīšana:",
+      "drittlandJa": "uz ASV, pamatojoties uz ES-ASV datu privātuma regulējumu",
+      "drittlandNein": "tikai ES ietvaros",
+      "listeAnzeigen": "Mūsu izmantotās sīkdatnes",
+      "listeTitel": "Sīkdatņu saraksts",
+      "name": "Nosaukums",
+      "host": "Resursdators",
+      "art": "Veids",
+      "artErst": "Pirmās puses",
+      "artDritt": "Trešās puses",
+      "zweck": "Mērķis",
+      "kategorie": "Kategorija",
+      "beschreibung": "Apraksts"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "ko nosaka Google, līdz sešiem mēnešiem",
+      "dreiMonate": "apmēram trīs mēneši",
+      "einJahr": "apmēram viens gads",
+      "sechsMonate": "apmēram seši mēneši",
+      "zweiJahre": "līdz diviem gadiem"
+    },
+    "zweck": {
+      "grecaptcha": "Ļauj Google veikt riska novērtējumu, kas atšķir automatizētus masveida pieprasījumus no reāliem pieprasījumiem.",
+      "ga": "Atšķir apmeklētājus, lai atkārtoti apmeklējumi netiktu skaitīti divreiz. Satur nejauši ģenerētu identifikatoru, kas nav saistīts ar jūsu personu.",
+      "gaSitzung": "Reģistrē jūsu pašreizējā apmeklējuma sākumu, lai lapu skatījumi vienā sesijā būtu saistīti.",
+      "fbp": "Piešķir jūsu apmeklējumu reklāmai, lai mēs varētu novērtēt mūsu kampaņu panākumus.",
+      "gclAu": "Piešķir jūsu apmeklējumu Google reklāmai, lai mēs varētu novērtēt mūsu kampaņu panākumus.",
+      "liGc": "Saglabā jūsu piekrišanu LinkedIn reklāmas nolūkiem.",
+      "bcookie": "Identificē jūsu pārlūkprogrammu LinkedIn, lai varētu piešķirt reklāmas un to panākumus."
+    },
+    "uebersicht": {
+      "titel": "Jūsu sīkdatņu iestatījumi",
+      "text": "Izvēlieties, kuras sīkdatnes vēlaties pieņemt vai noraidīt šajā vietnē. Jūs varat jebkurā laikā aktivizēt un deaktivizēt iestatījumus katrai sīkdatņu kategorijai.",
+      "datenschutz": "Vairāk informācijas privātuma politikā"
+    },
+    "verwalten": "Pārvaldīt sīkfailu iestatījumus",
+    "schliessen": "Aizvērt",
+    "bestaetigen": "Apstiprināt iestatījumus"
   }
 }

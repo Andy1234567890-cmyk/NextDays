@@ -8,13 +8,13 @@ export const cookies: LegalDoc = {
   slug: "cookie-richtlinie",
   title: "Cookie Policy",
   metaDescription:
-    "Which cookies myNextDays sets: strictly necessary and functional cookies only, no tracking or advertising cookies.",
+    "Which cookies myNextDays sets: strictly necessary cookies plus — only with your consent — functional, analytical and marketing cookies. Every category can be switched on and off individually.",
   standIso: RECHTSSTAND_ISO,
   numbered: true,
   toc: true,
   intro: [
     `This policy explains which cookies and comparable storage technologies ${ANBIETER.firma} uses on this website and in the myNextDays platform.`,
-    "In short: we use only strictly necessary and functional cookies. There are no analytics, advertising or tracking cookies, and no usage data is shared with advertising networks.",
+    "In short: strictly necessary are only the cookies without which the website cannot work as requested. Everything else needs your consent and does not load without it — the spam protection on our contact form, the audience measurement, and the marketing cookies we use to measure how our advertising performs. You can allow or refuse each of these categories individually and withdraw your decision at any time.",
   ],
   sections: [
     {
@@ -28,14 +28,14 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Consent is required under § 9 of the Danish Cookie Executive Order (Cookie-bekendtgørelsen) (implementing Article 5(3) of Directive 2002/58/EC) only where access to your device does not serve exclusively to carry out the transmission of a communication or is not strictly necessary for a service you have explicitly requested.",
         "All cookies we set are required for logging in, session security, or a setting you have chosen yourself — we do not ask for consent for these, and conversely we do not set anything that would require consent.",
-        "There is exactly one thing you must consent to: the spam protection on our contact form. It comes from Google (reCAPTCHA Enterprise), so it is an external service, and it is loaded only once you have allowed it. A bar at the bottom of the screen asks for this — on your first visit, with equally weighted buttons for reject and accept and no pre-selection. Until you have decided, “not allowed” applies.",
+        "You need to consent to three categories, none of which loads without your permission: the spam protection on our contact form (reCAPTCHA by Google), the audience measurement on this website (Google Analytics 4) and the marketing cookies (Meta, LinkedIn, Google Ads). A window with a category list asks for this — on your first visit, with no pre-selection and a separate switch for each category. Until you have decided, “not allowed” applies, and nothing is measured or advertised.",
         "Your decision is stored in your browser's memory (local storage, value “nd_consent”); it contains only the category, the timestamp and a version number, no identifier of your person. Via the cookie icon at the bottom left of every page, you can change or withdraw it at any time. After six months we will ask again — a consent should not remain valid indefinitely.",
       ],
     },
     {
       heading: "This website",
       paragraphs: [
-        "The marketing website does not set any cookies. Fonts and icons are hosted on our own server — no third-party icon or font service is called for this. The only external service on this page is the spam protection on the contact form, and it loads only with your consent. Details are set out in the [Privacy Policy](/datenschutz).",
+        "By itself this website sets no cookies. Fonts and icons are hosted on our own server — no third-party icon or font service is called for this. Only the services you allow are added: the spam protection on the contact form, the audience measurement and the marketing services. Which cookies they set, for how long and on which host is listed below under “Third-party cookies”. You can withdraw via the cookie icon at the bottom left — the service in question stops immediately and its cookies are deleted. Details are set out in the [Privacy Policy](/datenschutz).",
       ],
     },
     {
@@ -92,7 +92,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Stores your decision about the contact form's spam protection so the consent bar doesn't ask again on every visit. Only the category, the timestamp and a version number are stored. The value never leaves your device and is not transmitted to our server; it applies to this browser. Duration: six months — after that, the bar will ask again. If you delete the value, the bar will ask again on your next visit.",
+            "Records your decision about the services requiring consent — the spam protection on the contact form and the audience measurement — so the consent bar does not ask again on every visit. Only the categories, the timestamp and a version number are stored. The value never leaves your device and is not transmitted to our server; it applies to this browser. Lifetime: six months — after that the bar asks again. If you delete the value, it asks again on your next visit.",
           ],
         },
         {
@@ -120,6 +120,67 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "When you make a payment, the payment provider (Stripe or PayPal) may set cookies on its own page that are required for processing and fraud prevention. The respective provider's terms apply to these.",
         "On websites that operators build with our site builder, the respective operator decides on any additional cookies and is responsible for the notices shown there.",
+        "Only with your consent do Google services set the following cookies on this website — two for the audience measurement, one for the spam protection. Without your consent the respective script is not loaded and none of these cookies is set; if you withdraw, we delete them.",
+      ],
+      unterpunkte: [
+        {
+          titel: "_fbp - Ad success measurement (consent required)",
+          list: [
+            "Purpose: Associates your visit with an advertisement so we can measure the success of our campaigns.",
+            "Content: A randomly generated identifier; no name, email, or account information from us.",
+            "Provider: Meta Platforms Ireland Limited, Merrion Road, Dublin 4, Ireland.",
+            "Host: mynextdays.com (first-party cookie, set by Meta's script). Duration: approximately three months.",
+          ],
+        },
+        {
+          titel: "_gcl_au - Google Ads success measurement (consent required)",
+          list: [
+            "Purpose: Associates your visit with a Google ad so we can measure the success of our campaigns.",
+            "Content: A randomly generated identifier with no personal reference.",
+            "Provider: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ireland.",
+            "Host: mynextdays.com (first-party cookie). Duration: approximately three months.",
+          ],
+        },
+        {
+          titel: "li_gc and bcookie - LinkedIn advertising (consent required)",
+          list: [
+            "Purpose: Identifies your browser to LinkedIn so that ads and their success can be attributed; li_gc also stores your consent there.",
+            "Content: A browser identifier and the consent status; no information from your account with us.",
+            "Provider: LinkedIn Ireland Unlimited Company, Wilton Plaza, Dublin 2, Ireland.",
+            "Host: linkedin.com (third-party cookies). Duration: approximately six months or one year.",
+          ],
+        },
+        {
+          titel:
+            "_GRECAPTCHA — spam protection on the contact form (consent required)",
+          list: [
+            "Host: www.google.com (third-party cookie).",
+            "Purpose: lets Google run the risk assessment that separates automated bulk messages from genuine enquiries.",
+            "Content: an identifier generated by Google for that assessment; no name, email or account details from us.",
+            "Provider: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ireland.",
+            "Lifetime: set by Google, up to six months. It is only set once you have allowed the spam protection and opened the contact form.",
+          ],
+        },
+        {
+          titel: "_ga — audience measurement (consent required)",
+          list: [
+            "Host: mynextdays.com (first-party cookie, set by Google's script).",
+            "Purpose: distinguishes visitors so that repeat visits are not counted twice.",
+            "Content: a randomly generated identifier unrelated to your person; no name, email or account details.",
+            "Provider: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ireland.",
+            "Lifetime: up to two years.",
+          ],
+        },
+        {
+          titel: "_ga_<id> — measurement session state (consent required)",
+          list: [
+            "Host: mynextdays.com (first-party cookie, set by Google's script).",
+            "Purpose: records when your current visit started, so page views of one session belong together.",
+            "Content: session timestamp and counter; the id in the name identifies our property, not you.",
+            "Provider: Google Ireland Limited.",
+            "Lifetime: up to two years.",
+          ],
+        },
       ],
     },
     {

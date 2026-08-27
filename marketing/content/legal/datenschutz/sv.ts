@@ -21,7 +21,7 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Denna policy beskriver hur ${ANBIETER.firma} behandlar personuppgifter — vid besök på den här webbplatsen, vid användning av plattformen myNextDays (kontrollpanel, marknadsplats och mobilapp) och inom ramen för affärsrelationen med våra kunder.`,
-    "Grunden är förordning (EU) 2016/679 (dataskyddsförordningen) samt den danska dataskyddslagen (databeskyttelsesloven). Vi säljer inga uppgifter, skapar inga profiler och använder inga analys-, spårnings- eller annonstjänster på våra webbplatser. För marknadsföringsändamål behandlar vi uppgifter uteslutande där du uttryckligen har lämnat samtycke — nämligen för vårt nyhetsbrev (se avsnittet Kommunikation), som du när som helst kan avbeställa med ett klick.",
+    "Vi säljer inga data och skapar inga profiler som identifierar dig som person. På denna webbplats mäter vi – endast med ditt samtycke – räckvidden för våra sidor och framgången för vår reklam; båda kategorierna kan avmarkeras individuellt (se avsnitten Räckviddsmätning samt Reklam och framgångsmätning). I reklamsyfte behandlar vi endast data där du uttryckligen har samtyckt – nämligen för vårt nyhetsbrev (se avsnittet Kommunikation), som du när som helst kan avbeställa med ett klick.",
   ],
   sections: [
     {
@@ -95,13 +95,24 @@ export const datenschutz: LegalDoc = {
           titel: "Skräppostskydd för kontaktformuläret (reCAPTCHA)",
           paragraphs: [
             "Vårt kontaktformulär är skyddat mot automatiserade massmeddelanden med reCAPTCHA Enterprise från Google Ireland Limited. Endast om du samtycker läser din webbläsare in ett skript från www.google.com när du fyller i formuläret; därvid överförs din IP-adress och uppgifter om din interaktion med formuläret till Google och analyseras där för att skilja människa från skript. Rättslig grund är artikel 6.1 a i dataskyddsförordningen (samtycke); kompletterande gäller [Googles integritetspolicy](https://policies.google.com/privacy).",
-            "Utan ditt samtycke läses ingenting in från Google och inga uppgifter flödar dit; formuläret tar vi då inte emot, men du kan alltid skriva ett e-postmeddelande till oss. Ditt samtycke kan du ändra eller återkalla i [cookiepolicyn](/cookie-richtlinie).",
+            "Utan ditt samtycke laddas inget från Google och inga data överförs dit; vi accepterar då inte formuläret, men du kan alltid skicka ett e-postmeddelande till oss. Om du ger ditt samtycke använder reCAPTCHA en egen cookie (_GRECAPTCHA, giltighetstid bestämd av Google, upp till sex månader) som används för riskbedömning. Du kan när som helst ändra eller återkalla ditt samtycke via cookie-ikonen längst ner till vänster på varje sida; cookien raderas då.",
           ],
         },
         {
-          titel: "Ingen analys, ingen annonsering",
+          titel: "Räckviddsmätning (Google Analytics)",
           paragraphs: [
-            "Vi använder inga analys-, spårnings- eller annonstjänster (inget Google Analytics, inga pixlar, inga annonsnätverk) och skapar inga profiler. Vilka cookies plattformen behöver tekniskt framgår av [cookiepolicyn](/cookie-richtlinie).",
+            "På denna webbplats mäter vi med Google Analytics 4 från Google Ireland Limited hur våra sidor används – vilka sidor som besöks, var besökare kommer ifrån och var de avbryter. Syftet är uteslutande att förbättra erbjudandet och sökbarheten.",
+            'Laddning sker endast med ditt samtycke. Om du ger ditt samtycke laddar din webbläsare ett skript från www.googletagmanager.com och lagrar två cookies ("_ga" och "_ga_<ID>", giltiga i upp till två år) med ett slumpmässigt genererat ID; detta ID, de besökta sidorna, referenskälla, ungefärlig plats på land- eller regionnivå, enhet och webbläsare samt din IP-adress, som Google förkortar före varje lagring, överförs. Rättslig grund är artikel 6.1 a i GDPR (samtycke).',
+            "Vi har uttryckligen begränsat utvärderingen: Google-signaler och reklamanpassning är avstängda. Därför skapas inga enhetsövergripande profiler och inga målgrupper för reklam, och vi vidarebefordrar inga användningsdata till annonsnätverk. Ingen sammanslagning med ditt kundkonto sker.",
+            "Google behandlar data som vår databehandlare baserat på ett avtal enligt artikel 28 i GDPR (Google Ads Data Processing Terms). Din IP-adress förkortas på servrar inom EU innan data överförs till USA; därmed överförs en pseudonymiserad datamängd. Grunden för överföringen är EU-kommissionens beslut om adekvat skyddsnivå för EU-US Data Privacy Framework (artikel 45 i GDPR), under vilket Google LLC är certifierat; dessutom har Google inkluderat EU-kommissionens standardavtalsklausuler (artikel 46 i GDPR). Vi vill uttryckligen påpeka att amerikanska myndigheter enligt Section 702 FISA även kan få tillgång till data från certifierade företag och att en kvarvarande risk därför inte helt kan uteslutas. Dessutom gäller [Googles integritetspolicy](https://policies.google.com/privacy).",
+            "Lagringstid: Händelse- och användarrelaterade data raderas automatiskt i vår egendom efter 14 månader; aggregerade rapportdata utan koppling till enskilda besökare bevaras utöver detta. Ditt samtycke upphör efter sex månader.",
+            "Utan ditt samtycke laddas inget, ingen cookie sätts och inga data flödar till Google. Du kan när som helst återkalla ditt samtycke via cookie-ikonen längst ner till vänster på varje sida; mätningen avslutas då omedelbart och de nämnda cookies raderas. Efter sex månader frågar vi igen.",
+          ],
+        },
+        {
+          titel: "Annonsering och resultatmätning",
+          paragraphs: [
+            "Med ditt samtycke använder vi marknadsföringscookies för att mäta framgången med vår annonsering och visa dig relevanta annonser på andra plattformar. Inblandade parter är Meta Platforms Ireland (Meta-pixel, cookie _fbp), LinkedIn Ireland (Insight-tagg, cookies li_gc och bcookie) och Google Ireland Limited (Google Ads, cookie _gcl_au). Den rättsliga grunden är artikel 6.1 a i GDPR. Utan ditt samtycke laddas inget av dessa skript och ingen cookie sätts; vid återkallande raderar vi dem. Detaljer om varje cookie finns i [cookiepolicyn](/cookie-richtlinie).",
           ],
         },
       ],
@@ -255,7 +266,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (Storbritannien) — anslutning till bokningsportaler",
         "Meta Platforms Ireland Limited (Irland) — WhatsApp-meddelanden, om aktiverat",
         "Sendinblue SAS / Brevo (Frankrike, Tyskland) — förvaltning och utskick av nyhetsbrev, endast vid samtycke",
-        "Google Ireland Limited (Irland) — översättningar; skräppostskydd för kontaktformuläret (reCAPTCHA Enterprise), endast vid samtycke; inloggning med Google, om det används",
+        "Google Ireland Limited (Irland) — översättningar; skräppostskydd för kontaktformuläret (reCAPTCHA Enterprise), endast vid samtycke; inloggning med Google, om det används; Räckviddsmätning (Google Analytics 4), endast med samtycke",
         "Groq, Inc. (USA) — svarsförslag, om aktiverat",
         "Cloudflare, Inc. (USA) — DNS-förvaltning för kunddomäner",
       ],
@@ -291,7 +302,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (USA) — svarsförslag i meddelandeinkorgen, endast om verksamheten aktiverar funktionen. Överförs gör det aktuella meddelandesammanhanget.",
             "Cloudflare, Inc. (USA) — DNS-förvaltning för kunddomäner. Överförs gör domän- och konfigurationsuppgifter, inga gästuppgifter.",
-            "Google LLC (USA) — endast vid inloggning med Google och vid översättningar; avtalspart är i varje fall Google Ireland Limited, men åtkomst från det amerikanska moderbolaget är ändå inte utesluten.",
+            "Google LLC (USA) — vid inloggning med Google, vid översättningar och vid räckviddsmätning (Google Analytics 4, endast med samtycke); avtalspartner är Google Ireland Limited, men åtkomst från det amerikanska moderbolaget kan inte uteslutas.",
           ],
         },
         {

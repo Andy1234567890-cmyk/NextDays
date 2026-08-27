@@ -2,11 +2,13 @@
 // next-intl-Provider. Die Sprache kommt aus dem nd_locale-Cookie
 // (i18n/request.ts) und landet auch im lang-Attribut des <html>.
 import { NextIntlClientProvider } from "next-intl";
+import { Suspense } from "react";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import localFont from "next/font/local";
 
 import "./globals.css";
 
+import { EinwilligungsDienste } from "@/components/einwilligungs-dienste";
 import { EinwilligungsKnopf } from "@/components/einwilligung/einwilligungs-knopf";
 import { EinwilligungsLeiste } from "@/components/einwilligung/einwilligungs-leiste";
 import { SupportChat } from "@/components/support-chat";
@@ -14,6 +16,7 @@ import { VoranmeldungPopup } from "@/components/voranmeldung-popup";
 import { anzeigewaehrung } from "@/lib/anzeigewaehrung";
 import { formatCurrency } from "@/lib/currency";
 import { holePreisliste } from "@/lib/preise";
+import { GOOGLE_SITE_VERIFICATION } from "@/lib/site-verification";
 import { SITE_URL } from "@/lib/site-url";
 import { staffelPreisCent } from "@/lib/tarif";
 
@@ -64,6 +67,16 @@ export async function generateMetadata(): Promise<Metadata> {
     // kanonische Links). Ohne sie warnt Next beim Bauen und setzt localhost ein —
     // eine Vorschau-Karte auf einer fremden Plattform zeigte dann ins Nichts.
     metadataBase: new URL(SITE_URL),
+    // Eigentumsnachweis für die Google Search Console. Er steht hier im
+    // Root-Layout und NICHT je Seite: Next mischt Metadaten flach von der
+    // Wurzel zur Seite, und keine Unterseite definiert `verification` — der
+    // Nachweis erbt sich damit auf JEDE Route, auch auf die Rechtsseiten
+    // (/cookie-richtlinie, /datenschutz, /impressum, /agb,
+    // /auftragsverarbeitung), die ihre eigene `generateMetadata` nur für
+    // Titel und Beschreibung nutzen. Eine zweite Kopie je Rechtsseite wäre
+    // derselbe Wert an sechs Stellen (Wurzel 4) und würde beim nächsten
+    // Wechsel auseinanderlaufen.
+    verification: { google: GOOGLE_SITE_VERIFICATION },
     title: t("title"),
     description:
       liste && einstiegCent !== null
@@ -99,6 +112,17 @@ export default async function RootLayout({
               Einwilligung (Art. 7 Abs. 3 DSGVO). Es erscheint erst, wenn
               eine Entscheidung vorliegt — vorher steht die Leiste da. */}
           <EinwilligungsKnopf />
+          {/* Hält Messung UND Spamschutz im Einklang mit der Einwilligung:
+              startet nach Zustimmung, räumt nach Widerruf die Cookies weg
+              (lib/analytics.ts, lib/captcha.ts). Rendert nichts.
+              Das <Suspense> ist Pflicht, nicht Zierde: die Komponente liest
+              `useSearchParams`, und ohne Grenze macht Next daraufhin JEDE Seite
+              dieser App dynamisch — die Startseite wäre nicht mehr statisch
+              vorgerendert, nur weil eine unsichtbare Zählkomponente im Layout
+              hängt. */}
+          <Suspense fallback={null}>
+            <EinwilligungsDienste />
+          </Suspense>
         </NextIntlClientProvider>
       </body>
     </html>

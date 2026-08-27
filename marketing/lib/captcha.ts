@@ -24,6 +24,7 @@
 // „nicht erlaubt". Wer hier eine Ausnahme einbaut, macht die Leiste zur
 // Attrappe.
 import { RECAPTCHA_SITE_KEY } from "@/lib/config";
+import { cookiesLoeschen } from "@/lib/cookie-loeschen";
 import { istErlaubt } from "@/lib/einwilligung";
 
 const SKRIPT_ID = "nd-recaptcha-enterprise";
@@ -55,7 +56,7 @@ export function captchaVorbereiten(): Promise<Grecaptcha> | null {
   // speicher: erteilt jemand die Einwilligung erst später, ist `ladevorgang`
   // noch leer und der nächste Aufruf holt das Skript dann — ohne Neuladen der
   // Seite.
-  if (!istErlaubt("spamschutz")) return null;
+  if (!istErlaubt("funktional")) return null;
   if (ladevorgang) return ladevorgang;
 
   ladevorgang = new Promise<Grecaptcha>((resolve, reject) => {
@@ -107,4 +108,29 @@ export async function captchaToken(aktion: string): Promise<string | null> {
   if (!vorbereitung) return null;
   const g = await vorbereitung;
   return g.enterprise.execute(RECAPTCHA_SITE_KEY, { action: aktion });
+}
+
+/**
+ * Widerruf: das von reCAPTCHA gesetzte Cookie entfernen und den Ladezustand
+ * zurücksetzen.
+ *
+ * Das gab es zuerst NICHT — und das war der Fehler. Die Cookie-Richtlinie sagt
+ * „bei Widerruf löschen wir sie", `_GRECAPTCHA` blieb aber liegen, weil nur der
+ * Analytics-Zweig einen Gegenzustand hatte (Wurzel 1: die Aktion war gepflegt,
+ * ihre Rücknahme nicht). Aufgefallen ist es erst, als das Cookie überhaupt
+ * benannt wurde — vorher verschwieg es der Rechtstext, und was niemand nennt,
+ * vermisst auch niemand.
+ *
+ * `ladevorgang` muss mit zurück: sonst hielte das Modul das erfüllte Versprechen
+ * fest und `captchaVorbereiten` gäbe nach erneuter Einwilligung das ALTE
+ * zurück, ohne die Einwilligungsprüfung erneut zu durchlaufen.
+ *
+ * Das geladene Skript selbst lässt sich nicht zurücknehmen — geladener Code
+ * bleibt geladen. Ohne Aufruf von `execute` sendet es aber nichts mehr, und
+ * `captchaToken` kommt wegen `istErlaubt` gar nicht mehr dorthin.
+ */
+export function captchaWiderrufen(): void {
+  if (typeof window === "undefined") return;
+  ladevorgang = null;
+  cookiesLoeschen((name) => name === "_GRECAPTCHA", "captcha");
 }

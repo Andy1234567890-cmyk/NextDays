@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "Twoja zgoda",
-    "text": "Ta witryna nie korzysta z usług analitycznych, reklamowych ani śledzących; czcionki i ikony są udostępniane z naszego własnego serwera. Niezbędne jest tylko to, co sami Państwo ustawią lub o co poproszą. Państwa zgody potrzebujemy zatem dokładnie w jednej sprawie: zewnętrznej ochrony przed spamem w naszym formularzu kontaktowym.",
+    "textBeide": "Dwie rzeczy wymagają zgody. Można je pojedynczo zezwolić lub odrzucić, zmienić i wycofać w dowolnym momencie. Szczegóły w polityce plików cookie.",
+    "textSpamschutz": "Jedna rzecz wymaga zgody. Można ją zmienić i wycofać w dowolnym momencie. Szczegóły w polityce plików cookie.",
+    "textStatistik": "Jedna rzecz wymaga zgody. Można ją zmienić i wycofać w dowolnym momencie. Szczegóły w polityce plików cookie.",
     "richtlinie": "Zapoznaj się z polityką plików cookie",
     "knopf": "Ustawienia plików cookie",
     "allesAblehnen": "Odrzuć wszystkie",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Ukryj wybór",
     "auswahlSpeichern": "Zapisz wybór",
     "immerAktiv": "Zawsze aktywne",
+    "nichtEingerichtet": "W tym środowisku usługa nie jest skonfigurowana — nie ładuje niczego, nawet za Państwa zgodą.",
     "kategorien": {
       "notwendig": {
-        "titel": "Niezbędne",
-        "text": "Państwa wybór języka oraz — tylko jeśli sami otworzą Państwo czat — identyfikator Państwa rozmowy na tym urządzeniu. Bez tych danych nie da się dostarczyć strony w takiej postaci, o jaką Państwo poprosili. Nie służą one ani reklamie, ani statystyce."
+        "titel": "Niezbędne pliki cookie",
+        "text": "Te pliki cookie są absolutnie niezbędne do działania strony internetowej: Twój wybór języka oraz, jeśli otworzysz czat, identyfikator Twojej rozmowy. Nie można ich wyłączyć, ponieważ strona internetowa nie będzie działać zgodnie z oczekiwaniami bez nich."
       },
-      "spamschutz": {
-        "titel": "Ochrona formularza kontaktowego przed spamem",
-        "text": "Nasz formularz kontaktowy jest chroniony przed automatycznymi masowymi wiadomościami za pomocą reCAPTCHA Enterprise od Google. Jeśli wyrażą Państwo na to zgodę, przeglądarka podczas wypełniania formularza wczyta skrypt z google.com i przekaże przy tym Państwa adres IP do Google. Bez Państwa zgody nic nie jest wczytywane z Google; mogą Państwo napisać do nas e-mailem."
+      "funktional": {
+        "titel": "Funkcjonalne pliki cookie",
+        "text": "Te pliki cookie chronią nasz formularz kontaktowy przed automatycznymi masowymi wiadomościami. Jeśli je zezwolisz, Twoja przeglądarka załaduje reCAPTCHA od Google i przekaże Twój adres IP."
+      },
+      "analytisch": {
+        "titel": "Analityczne pliki cookie",
+        "text": "Dzięki tym plikom cookie dowiadujemy się, które strony są czytane i gdzie odwiedzający rezygnują, aby ulepszyć stronę internetową. Personalizacja reklam i profile między urządzeniami są wyłączone."
+      },
+      "marketing": {
+        "titel": "Marketingowe pliki cookie",
+        "text": "Dzięki tym plikom cookie mierzymy sukces naszych reklam i wyświetlamy Ci odpowiednie reklamy na innych platformach. Dane są przekazywane do Meta, LinkedIn i Google."
       }
     },
     "kontakt": {
       "hinweis": "Przed wysłaniem potrzebujemy Państwa zgody na zewnętrzną ochronę przed spamem (reCAPTCHA od Google). Bez niej nie możemy przyjąć formularza — w ten sposób powstrzymujemy automatyczne masowe wiadomości.",
       "erlauben": "Włącz ochronę antyspamową",
       "alternative": "Wolą Państwo inaczej? Proszę napisać do nas na adres {email}."
-    }
+    },
+    "angaben": {
+      "anbieter": "Dostawca:",
+      "dauer": "Okres przechowywania:",
+      "cookies": "Pliki cookie:",
+      "keineCookies": "brak (tylko przy wysyłaniu)",
+      "drittland": "Przekazywanie danych:",
+      "drittlandJa": "do USA, na podstawie ram ochrony danych UE-USA",
+      "drittlandNein": "tylko w obrębie UE",
+      "listeAnzeigen": "Używane przez nas pliki cookie",
+      "listeTitel": "Lista plików cookie",
+      "name": "Nazwa",
+      "host": "Host",
+      "art": "Typ",
+      "artErst": "Pierwsza strona",
+      "artDritt": "Strona trzecia",
+      "zweck": "Cel",
+      "kategorie": "Kategoria",
+      "beschreibung": "Opis"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "ustawione przez Google, do sześciu miesięcy",
+      "dreiMonate": "około trzy miesiące",
+      "einJahr": "około roku",
+      "sechsMonate": "około sześć miesięcy",
+      "zweiJahre": "do dwóch lat"
+    },
+    "zweck": {
+      "grecaptcha": "Umożliwia Google ocenę ryzyka, która odróżnia automatyczne masowe wiadomości od prawdziwych zapytań.",
+      "ga": "Rozróżnia odwiedzających, aby powtarzające się wizyty nie były liczone podwójnie. Zawiera losowo wygenerowany identyfikator bez związku z Twoją osobą.",
+      "gaSitzung": "Rejestruje, kiedy rozpoczęła się Twoja bieżąca wizyta, aby odsłony stron należały do jednej sesji.",
+      "fbp": "Przypisuje Twoją wizytę do reklamy, abyśmy mogli mierzyć sukces naszych kampanii.",
+      "gclAu": "Przypisuje Twoją wizytę do reklamy Google, abyśmy mogli mierzyć sukces naszych kampanii.",
+      "liGc": "Zapisuje Twoją zgodę wobec LinkedIn w celach reklamowych.",
+      "bcookie": "Identyfikuje Twoją przeglądarkę wobec LinkedIn, aby można było przypisać reklamy i ich sukces."
+    },
+    "uebersicht": {
+      "titel": "Ustawienia plików cookie",
+      "text": "Wybierz, które pliki cookie chcesz akceptować lub odrzucać na tej stronie. W każdej chwili możesz włączyć i wyłączyć ustawienia dla każdej kategorii plików cookie.",
+      "datenschutz": "Więcej informacji w polityce prywatności"
+    },
+    "verwalten": "Zarządzaj ustawieniami plików cookie",
+    "schliessen": "Zamknij",
+    "bestaetigen": "Potwierdź ustawienia"
   }
 }

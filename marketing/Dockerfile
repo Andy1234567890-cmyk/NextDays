@@ -19,6 +19,18 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NODE_ENV=production
+# `NEXT_PUBLIC_*` wird beim BAUEN in das Bundle eingesetzt, nicht zur Laufzeit
+# gelesen. Ohne diese ARGs bliebe ein in Coolify gesetzter Wert im Image leer —
+# der Dienst wäre still aus, und niemand würde es merken (Wurzel 5). Coolify
+# übergibt Variablen mit dem Präfix automatisch als Build-Argument.
+#
+# Beide sind OPTIONAL und ohne Vorgabewert: fehlt sie, ist die Zeichenkette
+# leer, und der jeweilige Dienst lädt nicht (lib/config.ts, lib/analytics.ts).
+# Kein erfundener Platzhalter (Wurzel 4).
+ARG NEXT_PUBLIC_GA_MEASUREMENT_ID
+ENV NEXT_PUBLIC_GA_MEASUREMENT_ID=$NEXT_PUBLIC_GA_MEASUREMENT_ID
+ARG NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+ENV NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=$NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
 RUN bun run build
 
 # ---------------------------------------------------------------------------

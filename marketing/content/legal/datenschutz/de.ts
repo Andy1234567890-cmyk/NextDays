@@ -54,7 +54,7 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Diese Erklärung beschreibt, wie die ${ANBIETER.firma} personenbezogene Daten verarbeitet — beim Besuch dieser Website, bei der Nutzung der Plattform myNextDays (Dashboard, Marktplatz und mobile App) und im Rahmen der Geschäftsbeziehung mit unseren Kunden.`,
-    "Grundlage ist die Verordnung (EU) 2016/679 (DSGVO) sowie das dänische Datenschutzgesetz (databeskyttelsesloven). Wir verkaufen keine Daten, erstellen keine Profile und setzen auf unseren Websites keine Analyse-, Tracking- oder Werbedienste ein. Werblich verarbeiten wir Daten ausschließlich dort, wo Sie ausdrücklich eingewilligt haben — nämlich für unseren Newsletter (siehe Abschnitt Kommunikation), den Sie jederzeit mit einem Klick wieder abbestellen können.",
+    "Grundlage ist die Verordnung (EU) 2016/679 (DSGVO) sowie das dänische Datenschutzgesetz (databeskyttelsesloven). Wir verkaufen keine Daten und erstellen keine Profile, die Sie als Person identifizieren. Auf dieser Website messen wir — nur mit Ihrer Einwilligung — die Reichweite unserer Seiten und den Erfolg unserer Werbung; beide Kategorien sind einzeln abwählbar (siehe Abschnitte Reichweitenmessung sowie Werbung und Erfolgsmessung). Werblich verarbeiten wir Daten ausschließlich dort, wo Sie ausdrücklich eingewilligt haben — nämlich für unseren Newsletter (siehe Abschnitt Kommunikation), den Sie jederzeit mit einem Klick wieder abbestellen können.",
   ],
   sections: [
     {
@@ -128,13 +128,24 @@ export const datenschutz: LegalDoc = {
           titel: "Spamschutz des Kontaktformulars (reCAPTCHA)",
           paragraphs: [
             "Unser Kontaktformular ist gegen automatisierte Massenzuschriften mit reCAPTCHA Enterprise der Google Ireland Limited geschützt. Nur wenn Sie dem zustimmen, lädt Ihr Browser beim Ausfüllen des Formulars ein Skript von www.google.com; dabei werden Ihre IP-Adresse und Angaben zu Ihrer Interaktion mit dem Formular an Google übermittelt und dort ausgewertet, um Mensch und Skript zu unterscheiden. Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO (Einwilligung); ergänzend gilt die [Datenschutzerklärung von Google](https://policies.google.com/privacy).",
-            "Ohne Ihre Einwilligung wird nichts von Google geladen und es fließen keine Daten dorthin; das Formular nehmen wir dann nicht an, Sie können uns aber jederzeit eine E-Mail schreiben. Ihre Einwilligung können Sie in der [Cookie-Richtlinie](/cookie-richtlinie) ändern oder widerrufen.",
+            "Ohne Ihre Einwilligung wird nichts von Google geladen und es fließen keine Daten dorthin; das Formular nehmen wir dann nicht an, Sie können uns aber jederzeit eine E-Mail schreiben. Erteilen Sie sie, setzt reCAPTCHA ein eigenes Cookie („_GRECAPTCHA“, Laufzeit von Google festgelegt, bis zu sechs Monate), das der Risikobewertung dient. Ihre Einwilligung können Sie jederzeit über das Cookie-Symbol unten links auf jeder Seite ändern oder widerrufen; das Cookie wird dann gelöscht.",
           ],
         },
         {
-          titel: "Keine Analyse, keine Werbung",
+          titel: "Reichweitenmessung (Google Analytics)",
           paragraphs: [
-            "Wir setzen keine Analyse-, Tracking- oder Werbedienste ein (kein Google Analytics, keine Pixel, keine Werbenetzwerke) und erstellen keine Profile. Welche Cookies die Plattform technisch benötigt, steht in der [Cookie-Richtlinie](/cookie-richtlinie).",
+            "Auf dieser Website messen wir mit Google Analytics 4 der Google Ireland Limited, wie unsere Seiten genutzt werden — welche Seiten aufgerufen werden, woher Besucher kommen und an welcher Stelle sie abbrechen. Zweck ist ausschließlich die Verbesserung von Angebot und Auffindbarkeit.",
+            "Geladen wird ausschließlich mit Ihrer Einwilligung. Erteilen Sie sie, lädt Ihr Browser ein Skript von www.googletagmanager.com und speichert zwei Cookies („_ga“ und „_ga_<Kennung>“, Laufzeit bis zu zwei Jahre) mit einer zufällig erzeugten Kennung; übermittelt werden diese Kennung, die aufgerufenen Seiten, Verweisquelle, ungefährer Standort auf Länder- bzw. Regionsebene, Gerät und Browser sowie Ihre IP-Adresse, die Google vor jeder Speicherung kürzt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO (Einwilligung).",
+            "Wir haben die Auswertung ausdrücklich eingeschränkt: Google-Signale und Werbe-Personalisierung sind abgeschaltet. Es entstehen daher keine geräteübergreifenden Profile und keine Zielgruppen für Werbung, und wir geben keine Nutzungsdaten an Werbenetzwerke weiter. Eine Zusammenführung mit Ihrem Kundenkonto findet nicht statt.",
+            "Google verarbeitet die Daten als unser Auftragsverarbeiter auf Grundlage eines Vertrags nach Art. 28 DSGVO (Google Ads Data Processing Terms). Die Kürzung Ihrer IP-Adresse erfolgt auf Servern in der EU, bevor Daten in die USA übertragen werden; übermittelt wird also ein pseudonymer Datensatz. Grundlage der Übermittlung ist der Angemessenheitsbeschluss der EU-Kommission zum EU-US Data Privacy Framework (Art. 45 DSGVO), unter dem Google LLC zertifiziert ist; ergänzend hat Google die Standardvertragsklauseln der EU-Kommission (Art. 46 DSGVO) einbezogen. Wir weisen ausdrücklich darauf hin, dass US-Behörden nach Section 702 FISA auch auf Daten zertifizierter Unternehmen zugreifen können und ein Restrisiko daher nicht vollständig auszuschließen ist. Es gilt zusätzlich die [Datenschutzerklärung von Google](https://policies.google.com/privacy).",
+            "Speicherdauer: Die ereignis- und nutzerbezogenen Daten werden in unserer Property nach 14 Monaten automatisch gelöscht; aggregierte Berichtsdaten ohne Bezug zu einzelnen Besuchern bleiben darüber hinaus erhalten. Ihre Einwilligung selbst läuft nach sechs Monaten ab.",
+            "Ohne Ihre Einwilligung wird nichts geladen, es wird kein Cookie gesetzt und es fließen keine Daten zu Google. Sie können Ihre Einwilligung jederzeit über das Cookie-Symbol unten links auf jeder Seite widerrufen; die Messung endet dann sofort und die genannten Cookies werden gelöscht. Nach sechs Monaten fragen wir erneut.",
+          ],
+        },
+        {
+          titel: "Werbung und Erfolgsmessung",
+          paragraphs: [
+            "Mit Ihrer Einwilligung setzen wir Marketing-Cookies ein, um den Erfolg unserer Werbung zu messen und Ihnen passende Anzeigen auf anderen Plattformen zu zeigen. Beteiligt sind Meta Platforms Ireland (Meta-Pixel, Cookie „_fbp“), LinkedIn Ireland (Insight-Tag, Cookies „li_gc“ und „bcookie“) und Google Ireland Limited (Google Ads, Cookie „_gcl_au“). Rechtsgrundlage ist Art. 6 Abs. 1 lit. a DSGVO. Ohne Ihre Einwilligung wird keines dieser Skripte geladen und kein Cookie gesetzt; bei Widerruf löschen wir sie. Einzelheiten zu jedem Cookie stehen in der [Cookie-Richtlinie](/cookie-richtlinie).",
           ],
         },
       ],
@@ -288,7 +299,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (Vereinigtes Königreich) — Anbindung an Buchungsportale",
         "Meta Platforms Ireland Limited (Irland) — WhatsApp-Nachrichten, sofern aktiviert",
         "Sendinblue SAS / Brevo (Frankreich, Deutschland) — Newsletter-Verwaltung und -Versand, nur bei Einwilligung",
-        "Google Ireland Limited (Irland) — Übersetzungen; Spamschutz des Kontaktformulars (reCAPTCHA Enterprise), nur bei Einwilligung; Anmeldung mit Google, sofern genutzt",
+        "Google Ireland Limited (Irland) — Übersetzungen; Spamschutz des Kontaktformulars (reCAPTCHA Enterprise), nur bei Einwilligung; Reichweitenmessung (Google Analytics 4), nur bei Einwilligung; Anmeldung mit Google, sofern genutzt",
         "Groq, Inc. (USA) — Antwortvorschläge, sofern aktiviert",
         "Cloudflare, Inc. (USA) — DNS-Verwaltung für Kunden-Domains",
       ],
@@ -305,7 +316,7 @@ export const datenschutz: LegalDoc = {
       paragraphs: [
         "Die Verarbeitung findet grundsätzlich innerhalb der EU statt. Bei den oben genannten Diensten mit Sitz außerhalb der EU kann es zu einer Übermittlung in ein Drittland kommen.",
         "Für Groq, Inc. und Cloudflare, Inc. (USA) stützen wir die Übermittlung auf die Standarddatenschutzklauseln der Europäischen Kommission nach Art. 46 Abs. 2 lit. c DSGVO, soweit sich der Empfänger nicht auf einen Angemessenheitsbeschluss (EU-US Data Privacy Framework) berufen kann.",
-      "Vertragspartner der Zahlungsabwicklung ist Stripe Payments Europe, Limited (Irland). Soweit Stripe dabei auf die Stripe, LLC (USA) zurückgreift, ist diese unter dem EU-US Data Privacy Framework zertifiziert; die Übermittlung stützt sich insoweit auf den Angemessenheitsbeschluss der Europäischen Kommission nach Art. 45 DSGVO. Ergänzend gelten die Standarddatenschutzklauseln aus dem [Stripe-Auftragsverarbeitungsvertrag](https://stripe.com/legal/dpa).",
+        "Vertragspartner der Zahlungsabwicklung ist Stripe Payments Europe, Limited (Irland). Soweit Stripe dabei auf die Stripe, LLC (USA) zurückgreift, ist diese unter dem EU-US Data Privacy Framework zertifiziert; die Übermittlung stützt sich insoweit auf den Angemessenheitsbeschluss der Europäischen Kommission nach Art. 45 DSGVO. Ergänzend gelten die Standarddatenschutzklauseln aus dem [Stripe-Auftragsverarbeitungsvertrag](https://stripe.com/legal/dpa).",
         "Für Channex.io Ltd (Vereinigtes Königreich) gilt der Angemessenheitsbeschluss der Europäischen Kommission für das Vereinigte Königreich; entfällt dieser, greifen die Standarddatenschutzklauseln.",
       ],
     },
@@ -324,7 +335,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (USA) — Antwortvorschläge im Nachrichten-Posteingang, nur wenn der Betrieb die Funktion aktiviert. Übermittelt wird der jeweilige Nachrichtenkontext.",
             "Cloudflare, Inc. (USA) — DNS-Verwaltung für Kunden-Domains. Übermittelt werden Domain- und Konfigurationsdaten, keine Gästedaten.",
-            "Google LLC (USA) — nur bei der Anmeldung mit Google und bei Übersetzungen; Vertragspartner ist jeweils die Google Ireland Limited, ein Zugriff der US-Muttergesellschaft ist dennoch nicht ausgeschlossen.",
+            "Google LLC (USA) — bei der Anmeldung mit Google, bei Übersetzungen und bei der Reichweitenmessung (Google Analytics 4, nur mit Einwilligung); Vertragspartner ist jeweils die Google Ireland Limited, ein Zugriff der US-Muttergesellschaft ist dennoch nicht ausgeschlossen.",
           ],
         },
         {

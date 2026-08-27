@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "Votre consentement",
-    "text": "Ce site n'utilise aucun service d'analyse, de publicité ou de suivi ; nos polices et icônes sont hébergées sur notre propre serveur. Seul est nécessaire ce que vous réglez ou demandez vous-même. Nous n'avons donc besoin de votre consentement que pour une seule chose : la protection anti-spam externe de notre formulaire de contact.",
+    "textBeide": "Deux choses nécessitent votre consentement. Vous pouvez les autoriser ou les refuser individuellement, les modifier et les révoquer à tout moment. Détails dans la politique de cookies.",
+    "textSpamschutz": "Une chose nécessite votre consentement. Vous pouvez la modifier et la révoquer à tout moment. Détails dans la politique de cookies.",
+    "textStatistik": "Une chose nécessite votre consentement. Vous pouvez la modifier et la révoquer à tout moment. Détails dans la politique de cookies.",
     "richtlinie": "Lire la politique relative aux cookies",
     "knopf": "Paramètres des cookies",
     "allesAblehnen": "Tout refuser",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Masquer les choix",
     "auswahlSpeichern": "Enregistrer les choix",
     "immerAktiv": "Toujours actif",
+    "nichtEingerichtet": "Ce service n'est pas configuré dans cet environnement — il ne charge rien, même avec votre permission.",
     "kategorien": {
       "notwendig": {
-        "titel": "Nécessaires",
-        "text": "Votre choix de langue et — uniquement si vous ouvrez vous-même la discussion — l'identifiant de votre conversation sur cet appareil. Sans ces données, le site ne peut pas être affiché tel que vous l'avez demandé. Elles ne servent ni à la publicité ni aux statistiques."
+        "titel": "Cookies nécessaires",
+        "text": "Ces cookies sont absolument nécessaires au fonctionnement du site web : votre choix de langue et, si vous ouvrez le chat, l'identifiant de votre conversation. Ils ne peuvent pas être désactivés car le site web ne fonctionnerait pas comme demandé sans eux."
       },
-      "spamschutz": {
-        "titel": "Protection anti-spam du formulaire de contact",
-        "text": "Notre formulaire de contact est protégé contre les envois automatisés en masse par reCAPTCHA Enterprise de Google. Si vous l'autorisez, votre navigateur charge un script depuis google.com pendant que vous remplissez le formulaire et transmet ainsi votre adresse IP à Google. Sans votre autorisation, rien n'est chargé depuis Google ; vous pouvez alors nous joindre par e-mail."
+      "funktional": {
+        "titel": "Cookies fonctionnels",
+        "text": "Ces cookies protègent notre formulaire de contact contre les envois de masse automatisés. Si vous les autorisez, votre navigateur chargera reCAPTCHA de Google et transmettra votre adresse IP."
+      },
+      "analytisch": {
+        "titel": "Cookies analytiques",
+        "text": "Ces cookies nous permettent de savoir quelles pages sont lues et où les visiteurs abandonnent, afin d'améliorer le site web. La personnalisation de la publicité et les profils inter-appareils sont désactivés."
+      },
+      "marketing": {
+        "titel": "Cookies marketing",
+        "text": "Ces cookies nous permettent de mesurer le succès de nos publicités et de vous montrer des annonces pertinentes sur d'autres plateformes. Des données sont transmises à Meta, LinkedIn et Google."
       }
     },
     "kontakt": {
       "hinweis": "Avant l'envoi, nous avons besoin de votre autorisation pour la protection anti-spam externe (reCAPTCHA de Google). Sans elle, nous ne pouvons pas accepter le formulaire — c'est ainsi que nous écartons les envois automatisés en masse.",
       "erlauben": "Autoriser l'anti-spam",
       "alternative": "Vous préférez éviter ? Écrivez-nous plutôt à {email}."
-    }
+    },
+    "angaben": {
+      "anbieter": "Fournisseur :",
+      "dauer": "Durée de stockage :",
+      "cookies": "Cookies :",
+      "keineCookies": "aucun (uniquement lors de l'envoi)",
+      "drittland": "Transmission :",
+      "drittlandJa": "vers les États-Unis, sur la base du cadre de confidentialité des données UE-États-Unis",
+      "drittlandNein": "uniquement au sein de l'UE",
+      "listeAnzeigen": "Cookies que nous utilisons",
+      "listeTitel": "Liste des cookies",
+      "name": "Nom",
+      "host": "Hôte",
+      "art": "Type",
+      "artErst": "Première partie",
+      "artDritt": "Tierce partie",
+      "zweck": "Objectif",
+      "kategorie": "Catégorie",
+      "beschreibung": "Description"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "défini par Google, jusqu'à six mois",
+      "dreiMonate": "environ trois mois",
+      "einJahr": "environ un an",
+      "sechsMonate": "environ six mois",
+      "zweiJahre": "jusqu'à deux ans"
+    },
+    "zweck": {
+      "grecaptcha": "Permet à Google d'évaluer les risques, ce qui permet de distinguer les inscriptions massives automatisées des demandes réelles.",
+      "ga": "Distingue les visiteurs afin que les visites récurrentes ne soient pas comptées en double. Contient un identifiant généré aléatoirement sans rapport avec votre personne.",
+      "gaSitzung": "Enregistre le début de votre visite actuelle afin que les pages vues d'une session soient regroupées.",
+      "fbp": "Associe votre visite à une publicité afin que nous puissions mesurer le succès de nos campagnes.",
+      "gclAu": "Associe votre visite à une annonce Google afin que nous puissions mesurer le succès de nos campagnes.",
+      "liGc": "Enregistre votre consentement à l'égard de LinkedIn à des fins publicitaires.",
+      "bcookie": "Identifie votre navigateur auprès de LinkedIn afin que les annonces et leur succès puissent être attribués."
+    },
+    "uebersicht": {
+      "titel": "Vos paramètres de cookies",
+      "text": "Sélectionnez les cookies que vous souhaitez accepter ou refuser sur ce site web. Vous pouvez activer et désactiver les paramètres de chaque catégorie de cookies à tout moment.",
+      "datenschutz": "Plus d'informations dans la politique de confidentialité"
+    },
+    "verwalten": "Gérer les préférences de cookies",
+    "schliessen": "Fermer",
+    "bestaetigen": "Confirmer les préférences"
   }
 }

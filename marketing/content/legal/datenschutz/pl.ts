@@ -21,7 +21,7 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Niniejsza polityka opisuje, w jaki sposób ${ANBIETER.firma} przetwarza dane osobowe — podczas odwiedzania tej witryny, podczas korzystania z platformy myNextDays (pulpit, marketplace i aplikacja mobilna) oraz w ramach relacji handlowej z naszymi klientami.`,
-    "Podstawą jest rozporządzenie (UE) 2016/679 (RODO) oraz duńska ustawa o ochronie danych (databeskyttelsesloven). Nie sprzedajemy danych, nie tworzymy profili i nie stosujemy na naszych witrynach usług analitycznych, śledzących ani reklamowych. W celach reklamowych przetwarzamy dane wyłącznie tam, gdzie wyrazili Państwo na to wyraźną zgodę — a mianowicie w odniesieniu do naszego newslettera (zob. rozdział Komunikacja), z którego w każdej chwili można się wypisać jednym kliknięciem.",
+    "Nie sprzedajemy danych ani nie tworzymy profili, które identyfikują Państwa jako osobę. Na tej stronie internetowej mierzymy — wyłącznie za Państwa zgodą — zasięg naszych stron i skuteczność naszych reklam; obie kategorie można indywidualnie wyłączyć (patrz sekcje Pomiar zasięgu oraz Reklama i pomiar sukcesu). Dane w celach marketingowych przetwarzamy wyłącznie wtedy, gdy wyraźnie Pan/Pani wyraził/a na to zgodę — mianowicie w przypadku naszego newslettera (patrz sekcja Komunikacja), który można w każdej chwili anulować jednym kliknięciem.",
   ],
   sections: [
     {
@@ -95,13 +95,24 @@ export const datenschutz: LegalDoc = {
           titel: "Ochrona formularza kontaktowego przed spamem (reCAPTCHA)",
           paragraphs: [
             "Nasz formularz kontaktowy jest zabezpieczony przed automatycznymi masowymi wiadomościami za pomocą reCAPTCHA Enterprise firmy Google Ireland Limited. Tylko jeżeli wyrażą Państwo na to zgodę, Państwa przeglądarka wczytuje przy wypełnianiu formularza skrypt z www.google.com; przekazywane są przy tym do Google Państwa adres IP oraz informacje o Państwa interakcji z formularzem i tam analizowane, aby odróżnić człowieka od skryptu. Podstawą prawną jest art. 6 ust. 1 lit. a) RODO (zgoda); dodatkowo obowiązuje [polityka prywatności Google](https://policies.google.com/privacy).",
-            "Bez Państwa zgody nic nie jest wczytywane z Google i nie płyną tam żadne dane; formularza wtedy nie przyjmujemy, mogą jednak Państwo w każdej chwili napisać do nas wiadomość e-mail. Swoją zgodę mogą Państwo zmienić lub odwołać w [polityce plików cookie](/cookie-richtlinie).",
+            "Bez Państwa zgody nic nie zostanie załadowane z Google i żadne dane nie zostaną tam przesłane; w takim przypadku nie przyjmiemy formularza, ale zawsze mogą Państwo wysłać do nas wiadomość e-mail. Jeśli wyrażą Państwo zgodę, reCAPTCHA ustawi własne ciasteczko (_GRECAPTCHA, czas trwania określony przez Google, do sześciu miesięcy), które służy do oceny ryzyka. Mogą Państwo w każdej chwili zmienić lub odwołać swoją zgodę za pomocą ikony ciasteczka w lewym dolnym rogu każdej strony; ciasteczko zostanie wtedy usunięte.",
           ],
         },
         {
-          titel: "Brak analityki, brak reklamy",
+          titel: "Pomiar zasięgu (Google Analytics)",
           paragraphs: [
-            "Nie stosujemy usług analitycznych, śledzących ani reklamowych (bez Google Analytics, bez pikseli, bez sieci reklamowych) i nie tworzymy profili. Które pliki cookie są platformie potrzebne technicznie, opisuje [polityka plików cookie](/cookie-richtlinie).",
+            "Na tej stronie mierzymy za pomocą Google Analytics 4 firmy Google Ireland Limited, w jaki sposób są używane nasze strony – które strony są odwiedzane, skąd pochodzą odwiedzający i w którym miejscu rezygnują. Celem jest wyłącznie poprawa oferty i jej znajdowania.",
+            "Ładowanie odbywa się wyłącznie za Państwa zgodą. Jeśli ją Państwo wyrażą, Państwa przeglądarka załaduje skrypt z www.googletagmanager.com i zapisze dwa pliki cookie („_ga” i „_ga_<Kennung>”, ważne do dwóch lat) z losowo wygenerowanym identyfikatorem; przesyłane są ten identyfikator, odwiedzane strony, źródło odsyłające, przybliżona lokalizacja na poziomie kraju lub regionu, urządzenie i przeglądarka oraz Państwa adres IP, który Google skraca przed każdym zapisem. Podstawą prawną jest art. 6 ust. 1 lit. a RODO (zgoda).",
+            "Wyraźnie ograniczyliśmy analizę: sygnały Google i personalizacja reklam są wyłączone. W związku z tym nie powstają profile między urządzeniami ani grupy docelowe dla reklam, a my nie przekazujemy danych użytkowania sieciom reklamowym. Nie następuje połączenie z Państwa kontem klienta.",
+            "Google przetwarza dane jako nasz podmiot przetwarzający na podstawie umowy zgodnie z art. 28 RODO (Google Ads Data Processing Terms). Skrócenie Państwa adresu IP następuje na serwerach w UE, zanim dane zostaną przesłane do USA; przesyłany jest zatem pseudonimowy zestaw danych. Podstawą przekazania jest decyzja Komisji UE o adekwatności w sprawie ram ochrony danych UE-USA (art. 45 RODO), w ramach której Google LLC jest certyfikowane; dodatkowo Google włączyło standardowe klauzule umowne Komisji UE (art. 46 RODO). Wyraźnie wskazujemy, że władze USA zgodnie z sekcją 702 FISA mogą również uzyskiwać dostęp do danych certyfikowanych firm, a zatem nie można całkowicie wykluczyć ryzyka resztkowego. Dodatkowo obowiązuje [polityka prywatności Google](https://policies.google.com/privacy).",
+            "Okres przechowywania: Dane dotyczące zdarzeń i użytkowników są automatycznie usuwane z naszej usługi po 14 miesiącach; zagregowane dane raportowe bez odniesienia do poszczególnych odwiedzających pozostają dłużej. Państwa zgoda wygasa po sześciu miesiącach.",
+            "Bez Państwa zgody nic nie zostanie załadowane, nie zostanie ustawiony żaden plik cookie i żadne dane nie zostaną przesłane do Google. Mogą Państwo w każdej chwili wycofać swoją zgodę za pomocą ikony ciasteczka w lewym dolnym rogu każdej strony; pomiar zostanie natychmiast zakończony, a wymienione pliki cookie zostaną usunięte. Po sześciu miesiącach zapytamy ponownie.",
+          ],
+        },
+        {
+          titel: "Reklama i pomiar sukcesu",
+          paragraphs: [
+            "Za Państwa zgodą używamy marketingowych plików cookie, aby mierzyć skuteczność naszych reklam i wyświetlać Państwu odpowiednie reklamy na innych platformach. Uczestniczą w tym Meta Platforms Ireland (Meta-Pixel, plik cookie _fbp), LinkedIn Ireland (Insight-Tag, pliki cookie li_gc i bcookie) oraz Google Ireland Limited (Google Ads, plik cookie _gcl_au). Podstawą prawną jest art. 6 ust. 1 lit. a RODO. Bez Państwa zgody żaden z tych skryptów nie zostanie załadowany i żaden plik cookie nie zostanie ustawiony; w przypadku wycofania zgody usuniemy je. Szczegóły dotyczące każdego pliku cookie znajdują się w [Polityce plików cookie](/cookie-richtlinie).",
           ],
         },
       ],
@@ -255,7 +266,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (Zjednoczone Królestwo) — integracja z portalami rezerwacyjnymi",
         "Meta Platforms Ireland Limited (Irlandia) — wiadomości WhatsApp, o ile włączone",
         "Sendinblue SAS / Brevo (Francja, Niemcy) — zarządzanie newsletterem i jego wysyłka, wyłącznie za zgodą",
-        "Google Ireland Limited (Irlandia) — tłumaczenia; ochrona formularza kontaktowego przed spamem (reCAPTCHA Enterprise), wyłącznie za zgodą; logowanie przez Google, o ile wykorzystywane",
+        "Google Ireland Limited (Irlandia) — tłumaczenia; ochrona formularza kontaktowego przed spamem (reCAPTCHA Enterprise), wyłącznie za zgodą; logowanie przez Google, o ile wykorzystywane; Pomiar zasięgu (Google Analytics 4), tylko za zgodą",
         "Groq, Inc. (USA) — propozycje odpowiedzi, o ile włączone",
         "Cloudflare, Inc. (USA) — zarządzanie DNS dla domen klientów",
       ],
@@ -291,7 +302,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (USA) — propozycje odpowiedzi w skrzynce wiadomości, wyłącznie gdy przedsiębiorstwo włączy tę funkcję. Przekazywany jest dany kontekst wiadomości.",
             "Cloudflare, Inc. (USA) — zarządzanie DNS dla domen klientów. Przekazywane są dane domeny i konfiguracji, bez danych gości.",
-            "Google LLC (USA) — wyłącznie przy logowaniu przez Google i przy tłumaczeniach; partnerem umownym jest każdorazowo Google Ireland Limited, dostęp amerykańskiej spółki matki nie jest jednak wykluczony.",
+            "Google LLC (USA) — przy logowaniu za pomocą Google, przy tłumaczeniach oraz przy pomiarze zasięgu (Google Analytics 4, tylko za zgodą); partnerem umownym jest każdorazowo Google Ireland Limited, jednak dostęp amerykańskiej spółki-matki nie jest wykluczony.",
           ],
         },
         {

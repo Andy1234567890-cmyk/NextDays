@@ -8,13 +8,13 @@ export const cookies: LegalDoc = {
   slug: "cookie-richtlinie",
   title: "Beartas Fianán",
   metaDescription:
-    "Na fianáin a úsáideann myNextDays: fianáin atá riachtanach go teicniúil agus feidhmiúil amháin, gan aon fhianáin rianaithe ná fógraíochta.",
+    "Cé na fianáin a shocraíonn myNextDays: fianáin atá riachtanach go teicniúil agus – le do thoil amháin – fianáin fheidhmiúla, anailíseacha agus margaíochta. Is féidir gach catagóir a chur ar siúl agus a mhúchadh ina n-aonar.",
   standIso: RECHTSSTAND_ISO,
   numbered: true,
   toc: true,
   intro: [
     `Míníonn an beartas seo na fianáin agus na teicnící stórála comhchosúla a úsáideann ${ANBIETER.firma} ar an suíomh gréasáin seo agus ar ardán myNextDays.`,
-    "I mbeagán focal: ní úsáidimid ach fianáin atá riachtanach go teicniúil agus feidhmiúil. Níl aon fhianáin anailíse, fógraíochta ná rianaithe ann, agus ní chuirtear sonraí úsáide ar aghaidh chuig líonraí fógraíochta.",
+    "Go hachomair: Níl ach na fianáin riachtanach, gan iad ní fheidhmeoidh an suíomh Gréasáin mar a iarradh. Teastaíonn do thoiliú le gach rud eile agus ní lódálfar é gan é – cosaint turscair ár bhfoirm teagmhála, tomhas raon feidhme agus fianáin mhargaíochta, a úsáidimid chun rath ár bhfógraíochta a thomhas. Is féidir leat gach ceann de na catagóirí seo a cheadú nó a dhiúltú ina n-aonar agus do chinneadh a chúlghairm am ar bith.",
   ],
   sections: [
     {
@@ -28,14 +28,14 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Ní gá toiliú faoi Airteagal 9 den rialachán Danmhargach maidir le fianáin (Cookie-bekendtgørelsen) (lena gcuirtear Airteagal 5(3) de Threoir 2002/58/CE chun feidhme) ach amháin nuair nach mbaineann rochtain ar do ghléas go heisiach le teachtaireacht a tharchur nó nach bhfuil sí fíor-riachtanach do sheirbhís a d'iarr tú féin go sainráite.",
         "Tá gach fianán a shocraímid riachtanach don síniú isteach, do shlándáil an tseisiúin, nó do shocrú a rinne tú féin — ní iarraimid aon rud dá bharr sin, agus ní shocraímid a mhalairt ach an oiread aon rud a mbeadh toiliú ag teastáil dó.",
-        "Ní gá duit toiliú a thabhairt ach le haghaidh rud amháin go beacht: cosaint spam ár bhfoirm teagmhála. Tagann sé sin ó Google (reCAPTCHA Enterprise), is é sin le rá gur seirbhís sheachtrach í, agus ní luchtaítear í ach amháin má cheadaigh tú í. Fiafraíonn barra ag bun an scáileáin díot é sin — ar an gcéad chuairt, le cnaipí atá ar chomhchéim dar teideal “Diúltaigh” agus “Glac Leis”, gan aon roghnú réamhshocraithe. Go dtí go mbeidh cinneadh déanta agat, tá feidhm ag “níl sé ceadaithe”.",
+        "Ní mór duit toiliú a thabhairt do thrí chatagóir, nach lódálfar aon cheann acu gan do chead: cosaint turscair ár bhfoirm teagmhála (reCAPTCHA ó Google), tomhas raon feidhme an tsuímh Ghréasáin seo (Google Analytics 4) agus na fianáin mhargaíochta (Meta, LinkedIn, Google Ads). Chuige sin, iarrann fuinneog le liosta catagóirí – ar an gcéad chuairt, gan réamhroghnú, gach catagóir le lasc féin. Chomh fada agus nach bhfuil cinneadh déanta agat, tá “gan cead” i bhfeidhm, agus ní dhéanfar meastóireacht ná fógraíocht.",
         "Tá do chinneadh stóráilte i stóráil do bhrabhsálaí (Local Storage, luach “nd_consent”); ní bhfuil ann ach an chatagóir, an t-am agus uimhir leagain, gan aon sainaitheantóir pearsanta. Is féidir leat é a athrú nó a chúlghairm tráth ar bith trí dheilbhín na bhfianán i gcúinne bun chlé gach leathanaigh. Tar éis sé mhí, fiafróimid díot arís — níor cheart go mbeadh toiliú bailí gan teorainn ama.",
       ],
     },
     {
       heading: "An suíomh gréasáin seo",
       paragraphs: [
-        "Ní shocraíonn an suíomh gréasáin margaíochta aon fhianáin. Tá clófhoirne agus deilbhíní lonnaithe ar ár bhfreastalaí féin — ní ghlaotar ar aon tseirbhís deilbhín ná clófhoirne ó thríú páirtí chuige sin. Is é an t-aon tseirbhís sheachtrach ar an leathanach seo cosaint spam an fhoirm teagmhála, agus ní luchtaítear í ach le do thoiliú. Tá tuilleadh sonraí sa [Pholasaí Príobháideachais](/datenschutz).",
+        "Ní shocraíonn an suíomh Gréasáin seo fianáin as féin. Tá clónna agus siombailí ar ár bhfreastalaí féin – ní ghlaoitear ar aon seirbhís siombailí nó clónna tríú páirtí chuige sin. Níl ach na seirbhísí a cheadaíonn tú: cosaint turscair na foirme teagmhála, tomhas raon feidhme agus seirbhísí margaíochta. Cé na fianáin a shocraítear, cén tréimhse bailíochta agus cén t-óstach, tá sé thíos sa chuid “Fianáin Tríú Páirtí”. Cúlghairm tríd an deilbhín fianán ag bun ar chlé – cuirtear deireadh leis an tseirbhís ábhartha láithreach agus scriostar a fianáin. Tá sonraí sa [Beartas Príobháideachais](/datenschutz).",
       ],
     },
     {
@@ -77,7 +77,8 @@ export const cookies: LegalDoc = {
           ],
         },
         {
-          titel: "sb-… — síniú isteach le Google (riachtanach go teicniúil, ach amháin nuair a úsáidtear é)",
+          titel:
+            "sb-… — síniú isteach le Google (riachtanach go teicniúil, ach amháin nuair a úsáidtear é)",
           list: [
             "Cuspóir: coinníonn sé an seisiún nuair a shíníonn tú isteach trí Google.",
             "Ábhar: comhartha seisiúin na seirbhíse síniú isteach.",
@@ -92,7 +93,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Coinníonn sé do chinneadh maidir le cosaint spam an fhoirm teagmhála, ionas nach bhfiafróidh an barra toilithe díot arís ag gach cuairt. Ní stóráiltear ach an chatagóir, an t-am agus uimhir leagain. Ní fhágann an luach do ghléas agus ní tharchuirtear chuig ár bhfreastalaí é; baineann sé leis an mbrabhsálaí seo amháin. Tréimhse bailíochta: sé mhí — ina dhiaidh sin, fiafróidh an barra arís. Má scriosann tú an luach, fiafróidh an barra díot arís ar do chéad chuairt eile.",
+            "Coinníonn sé do chinneadh maidir leis na seirbhísí a dteastaíonn toiliú leo (cosaint turscair na foirme teagmhála agus tomhas raon feidhme).",
           ],
         },
         {
@@ -120,6 +121,68 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Nuair a dhéanann tú íocaíocht, féadfaidh an soláthraí seirbhíse íocaíochta (Stripe nó PayPal) fianáin a shocrú ar a leathanach féin atá riachtanach don phróiseáil agus don chosc ar chalaois. Baineann téarmaí an tsoláthraí ábhartha leis sin.",
         "Ar shuíomhanna gréasáin a chruthaíonn gnólachtaí lenár dtógálaí, is é an gnólacht ábhartha a chinneann faoi fhianáin bhreise agus atá freagrach as an bhfaisnéis a thugtar ansin.",
+        "Ní shocróidh seirbhísí Google fianáin ar an suíomh Gréasáin seo ach amháin le do thoiliú — dhá cheann le haghaidh tomhas an lucht féachana, ceann amháin le haghaidh cosaint turscair. Gan do thoiliú, ní lódálfar an script faoi seach agus ní shocrófar aon cheann de na fianáin seo; má tharraingíonn tú siar do thoiliú, scriosfaimid iad.",
+      ],
+      unterpunkte: [
+        {
+          titel: "_fbp — Tomhas rathúlachta fógraíochta (Éilíonn toiliú)",
+          list: [
+            "Cuspóir: Ceanglaíonn sé do chuairt le fógra chun go mbeimid in ann rathúlacht ár bhfeachtas a thomhas.",
+            "Ábhar: Aitheantóir a ghintear go randamach; níl aon ainm, ríomhphost, ná sonraí cuntais uainn.",
+            "Soláthraí: Meta Platforms Ireland Limited, Bóthar Merrion, Baile Átha Cliath 4, Éire.",
+            "Óstach: mynextdays.com (Fianán céadpháirtí, socraithe ag script Meta). Tréimhse bailíochta: thart ar thrí mhí.",
+          ],
+        },
+        {
+          titel: "_gcl_au — Tomhas rathúlachta Google Ads (Éilíonn toiliú)",
+          list: [
+            "Cuspóir: Ceanglaíonn sé do chuairt le fógra Google chun go mbeimid in ann rathúlacht ár bhfeachtas a thomhas.",
+            "Ábhar: Aitheantóir a ghintear go randamach gan aon tagairt do d'aitheantas pearsanta.",
+            "Soláthraí: Google Ireland Limited, Gordon House, Sráid Barrow, Baile Átha Cliath 4, Éire.",
+            "Óstach: mynextdays.com (Fianán céadpháirtí). Tréimhse bailíochta: thart ar thrí mhí.",
+          ],
+        },
+        {
+          titel: "li_gc agus bcookie — Fógraíocht LinkedIn (Éilíonn toiliú)",
+          list: [
+            "Cuspóir: Aithníonn sé do bhrabhsálaí do LinkedIn ionas gur féidir fógraí agus a rathúlacht a shannadh; stórálann li_gc do thoiliú ansin freisin.",
+            "Ábhar: Aitheantóir brabhsálaí chomh maith le stádas toilithe; níl aon sonraí ó do chuntas againn.",
+            "Soláthraí: LinkedIn Ireland Unlimited Company, Wilton Plaza, Baile Átha Cliath 2, Éire.",
+            "Óstach: linkedin.com (Fianáin tríú páirtí). Tréimhse bailíochta: thart ar sé mhí nó bliain.",
+          ],
+        },
+        {
+          titel:
+            "_GRECAPTCHA — Cosaint turscair an fhoirm teagmhála (toiliú ag teastáil)",
+          list: [
+            "Óstach: www.google.com (Fianán tríú páirtí).",
+            "Cuspóir: Ligeann sé do Google measúnú riosca a dhéanamh chun idirdhealú a dhéanamh idir teachtaireachtaí uathoibrithe agus fiosrúcháin fhíora.",
+            "Ábhar: Aitheantóir a ghineann Google don mheasúnú seo; níl aon ainm, ríomhphost, ná sonraí cuntais uainn.",
+            "Soláthraí: Google Ireland Limited, Gordon House, Barrow Street, Baile Átha Cliath 4, Éire.",
+            "Tréimhse: Socraithe ag Google, suas le sé mhí. Ní shocraítear é ach amháin má cheadaigh tú an chosaint turscair agus má d'oscail tú an fhoirm teagmhála.",
+          ],
+        },
+        {
+          titel: "_ga — Tomhas raon feidhme (teastaíonn toiliú)",
+          list: [
+            "Óstach: mynextdays.com (Fianán céadpháirtí, socraithe ag script Google).",
+            "Cuspóir: idirdhealaíonn sé cuairteoirí ionas nach ndéantar glaonna athfhillteacha a chomhaireamh faoi dhó.",
+            "Ábhar: aitheantóir randamach ginte gan aon bhaint le do dhuine; gan aon ainm, ríomhphost nó sonraí cuntais.",
+            "Soláthraí: Google Ireland Limited, Gordon House, Barrow Street, Baile Átha Cliath 4, Éire.",
+            "Tréimhse: suas le dhá bhliain.",
+          ],
+        },
+        {
+          titel:
+            "_ga_<aitheantóir> — Stádas seisiúin an tomhais (teastaíonn toiliú)",
+          list: [
+            "Óstach: mynextdays.com (Fianán céadpháirtí, socraithe ag script Google).",
+            "Cuspóir: taifeadann sé cathain a thosaigh do chuairt reatha, ionas go mbaineann radhairc leathanaigh de sheisiún le chéile.",
+            "Ábhar: stampa ama agus cuntar an tseisiúin; tagraíonn an t-aitheantóir san ainm dár maoin, ní duitse.",
+            "Soláthraí: Google Ireland Limited.",
+            "Tréimhse: suas le dhá bhliain.",
+          ],
+        },
       ],
     },
     {

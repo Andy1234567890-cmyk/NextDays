@@ -103,7 +103,13 @@ export const AUFSICHTSBEHOERDE = {
  * Zeitzone derselbe Tag (UTC-Mitternacht) — ein Datum wie `"6.8.2026"` wird je
  * nach Umgebung anders oder gar nicht gelesen.
  */
-export const RECHTSSTAND_ISO = "2026-08-06";
+// 26.08.2026: Datenschutzerklärung und Cookie-Richtlinie haben die
+// Reichweitenmessung (Google Analytics 4) aufgenommen — eine materielle
+// Änderung in allen 24 Fassungen. Wer den Inhalt einer Rechtsseite ändert und
+// dieses Datum stehen lässt, liefert eine Seite aus, die „Stand: 6. August
+// 2026" behauptet: eine überholte Zusicherung, die aussieht, als wäre sie
+// geprüft.
+export const RECHTSSTAND_ISO = "2026-08-26";
 
 /**
  * @deprecated Der fertige deutsche Satz. KEINE Sprachdatei zeigt mehr darauf —

@@ -8,13 +8,13 @@ export const cookies: LegalDoc = {
   slug: "cookie-richtlinie",
   title: "Cookiepolicy",
   metaDescription:
-    "Vilka cookies myNextDays använder: uteslutande tekniskt nödvändiga och funktionella cookies, inga spårnings- eller reklamcookies.",
+    "Vilka cookies myNextDays använder: tekniskt nödvändiga cookies samt – endast med ditt samtycke – funktionella, analytiska och marknadsföringscookies. Varje kategori kan aktiveras och avaktiveras individuellt.",
   standIso: RECHTSSTAND_ISO,
   numbered: true,
   toc: true,
   intro: [
     `Denna policy förklarar vilka cookies och jämförbara lagringstekniker ${ANBIETER.firma} använder på denna webbplats och i plattformen myNextDays.`,
-    "Kort sagt: vi använder uteslutande tekniskt nödvändiga och funktionella cookies. Det finns inga analys-, reklam- eller spårningscookies och ingen vidarebefordran av användningsdata till reklamnätverk.",
+    "Kort sagt: Endast de cookies som är nödvändiga för att webbplatsen ska fungera som begärt är obligatoriska. Allt annat kräver ditt samtycke och laddas inte utan det – skräppostskyddet för vårt kontaktformulär, räckviddsmätningen och marknadsföringscookies som vi använder för att mäta framgången för vår reklam. Du kan tillåta eller neka var och en av dessa kategorier individuellt och återkalla ditt beslut när som helst.",
   ],
   sections: [
     {
@@ -28,14 +28,14 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Samtycke krävs enligt artikel 9 i den danska cookieförordningen (Cookie-bekendtgørelsen) (som genomför artikel 5.3 i direktiv 2002/58/EG) endast när åtkomst till din enhet inte uteslutande syftar till att överföra ett meddelande eller inte är absolut nödvändig för en tjänst som du uttryckligen har begärt.",
         "Alla cookies som vi sätter är nödvändiga för inloggning, sessionens säkerhet eller en inställning som du själv har gjort — därför frågar vi inte efter något för dem, och sätter omvänt heller inget som skulle kräva samtycke.",
-        "Du behöver bara samtycka till en enda sak: spamskyddet i vårt kontaktformulär. Det kommer från Google (reCAPTCHA Enterprise), är alltså en extern tjänst, och laddas endast om du har tillåtit det. För detta frågar en rad längst ner på skärmen — vid första besöket, med likvärdiga knappar för ”Avvisa” och ”Acceptera” och utan förval. Så länge du inte har bestämt dig gäller ”ej tillåtet”.",
+        'Du måste samtycka till tre kategorier, som alla inte laddas utan ditt tillstånd: skräppostskyddet för vårt kontaktformulär (reCAPTCHA från Google), räckviddsmätningen av denna webbplats (Google Analytics 4) och marknadsföringscookies (Meta, LinkedIn, Google Ads). Ett fönster med en kategorilista visas för detta – vid första besöket, utan förval, varje kategori med en egen omkopplare. Så länge du inte har bestämt dig gäller "inte tillåtet", och varken utvärdering eller reklam sker.',
         "Ditt beslut lagras i din webbläsares minne (Local Storage, värdet ”nd_consent”); det innehåller endast kategorin, tidpunkten och ett versionsnummer, ingen identifiering av din person. Via cookie-ikonen längst ner till vänster på varje sida kan du när som helst ändra eller återkalla det. Efter sex månader frågar vi igen — ett samtycke ska inte gälla obegränsat.",
       ],
     },
     {
       heading: "Denna webbplats",
       paragraphs: [
-        "Marknadsföringswebbplatsen sätter inga cookies. Typsnitt och ikoner ligger på vår egen server — ingen tredje parts ikon- eller typsnittstjänst anropas för detta. Den enda externa tjänsten på denna sida är spamskyddet i kontaktformuläret, som endast laddas med ditt samtycke. Detaljer finns i [Integritetspolicyn](/datenschutz).",
+        'Denna webbplats använder inga cookies av sig själv. Typsnitt och symboler finns på vår egen server – ingen symbol- eller typsnittstjänst från tredje part används för detta. Endast de tjänster du tillåter läggs till: skräppostskyddet för kontaktformuläret, räckviddsmätningen och marknadsföringstjänsterna. Vilka cookies som används, med vilken varaktighet och på vilken värd, anges nedan i avsnittet "Tredjepartscookies". Återkallelse via cookie-ikonen längst ner till vänster – respektive tjänst avslutas omedelbart och dess cookies raderas. Detaljer finns i [Dataskyddspolicyn](/datenschutz).',
       ],
     },
     {
@@ -93,7 +93,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Sparar ditt beslut om spamskyddet i kontaktformuläret, så att samtyckesraden inte frågar igen vid varje besök. Endast kategorin, tidpunkten och ett versionsnummer sparas. Värdet lämnar inte din enhet och överförs inte till vår server; det gäller för denna webbläsare. Giltighetstid: sex månader — därefter frågar raden igen. Om du raderar värdet frågar raden igen vid nästa besök.",
+            "Registrerar ditt beslut om de tjänster som kräver samtycke (spam-skydd för kontaktformuläret och räckviddsmätning).",
           ],
         },
         {
@@ -121,6 +121,66 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Om du genomför en betalning kan betaltjänstleverantören (Stripe eller PayPal) på sin egen sida sätta cookies som krävs för hantering och bedrägeriskydd. För dessa gäller respektive leverantörs bestämmelser.",
         "På webbplatser som verksamheter skapar med vår webbplatsbyggare beslutar respektive verksamhet om ytterligare cookies och ansvarar för informationen där.",
+        "Endast med ditt samtycke använder Googles tjänster på denna webbplats följande cookies – två för räckviddsmätning, en för spam-skydd. Utan ditt samtycke laddas inte respektive skript och ingen av dessa cookies ställs in; vid återkallande raderar vi dem.",
+      ],
+      unterpunkte: [
+        {
+          titel: "_fbp – Mätning av annonsresultat (samtycke krävs)",
+          list: [
+            "Syfte: Kopplar ditt besök till en annons så att vi kan mäta hur framgångsrika våra kampanjer är.",
+            "Innehåll: Ett slumpmässigt genererat ID; inga namn-, e-post- eller kontouppgifter från oss.",
+            "Leverantör: Meta Platforms Ireland Limited, Merrion Road, Dublin 4, Irland.",
+            "Värd: mynextdays.com (förstapartscookie, inställd av Metas skript). Varaktighet: cirka tre månader.",
+          ],
+        },
+        {
+          titel: "_gcl_au – Mätning av Google Ads-resultat (samtycke krävs)",
+          list: [
+            "Syfte: Kopplar ditt besök till en Google-annons så att vi kan mäta hur framgångsrika våra kampanjer är.",
+            "Innehåll: Ett slumpmässigt genererat ID utan koppling till din person.",
+            "Leverantör: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland.",
+            "Värd: mynextdays.com (förstapartscookie). Varaktighet: cirka tre månader.",
+          ],
+        },
+        {
+          titel: "li_gc och bcookie – LinkedIn-annonsering (samtycke krävs)",
+          list: [
+            "Syfte: Identifierar din webbläsare för LinkedIn så att annonser och deras framgång kan kopplas; li_gc lagrar även ditt samtycke där.",
+            "Innehåll: Ett webbläsar-ID samt samtyckesstatus; inga uppgifter från ditt konto hos oss.",
+            "Leverantör: LinkedIn Ireland Unlimited Company, Wilton Plaza, Dublin 2, Irland.",
+            "Värd: linkedin.com (tredjepartscookies). Varaktighet: cirka sex månader respektive ett år.",
+          ],
+        },
+        {
+          titel: "_GRECAPTCHA — Spamskydd för kontaktformulär (samtycke krävs)",
+          list: [
+            "Värd: www.google.com (tredjepartscookie).",
+            "Syfte: Tillåter Google att utföra riskbedömningar för att skilja automatiserade massutskick från verkliga förfrågningar.",
+            "Innehåll: En identifierare som genereras av Google för denna bedömning; inga namn-, e-post- eller kontouppgifter från oss.",
+            "Leverantör: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland.",
+            "Varaktighet: Bestäms av Google, upp till sex månader. Det ställs in först när du har godkänt spamskyddet och öppnat kontaktformuläret.",
+          ],
+        },
+        {
+          titel: "_ga — Räckviddsmätning (samtycke krävs)",
+          list: [
+            "Värd: mynextdays.com (förstapartscookie, inställd av Googles skript).",
+            "Syfte: skiljer besökare åt så att återkommande besök inte räknas dubbelt.",
+            "Innehåll: slumpmässigt genererat ID utan koppling till din person; inga namn-, e-post- eller kontouppgifter.",
+            "Leverantör: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland.",
+            "Varaktighet: upp till två år.",
+          ],
+        },
+        {
+          titel: "_ga_<ID> — Mätningens sessionsstatus (samtycke krävs)",
+          list: [
+            "Värd: mynextdays.com (förstapartscookie, inställd av Googles skript).",
+            "Syfte: registrerar när ditt nuvarande besök började, så att sidvisningar inom en session hör ihop.",
+            "Innehåll: tidsstämpel och sessionsräknare; ID:t i namnet avser vår egendom, inte dig.",
+            "Leverantör: Google Ireland Limited.",
+            "Varaktighet: upp till två år.",
+          ],
+        },
       ],
     },
     {

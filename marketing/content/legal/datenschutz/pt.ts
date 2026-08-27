@@ -21,7 +21,7 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Esta política descreve o modo como a ${ANBIETER.firma} trata dados pessoais — na visita a este sítio Web, na utilização da plataforma myNextDays (painel de gestão, mercado e aplicação móvel) e no âmbito da relação comercial com os nossos clientes.`,
-    "A base é o Regulamento (UE) 2016/679 (RGPD) e a lei dinamarquesa de proteção de dados (databeskyttelsesloven). Não vendemos dados, não elaboramos perfis e não utilizamos nos nossos sítios Web serviços de análise, de rastreio ou de publicidade. Para fins publicitários apenas tratamos dados onde tenha dado o seu consentimento expresso — a saber, para a nossa newsletter (ver o capítulo Comunicação), da qual pode cancelar a subscrição em qualquer momento com um clique.",
+    "Não vendemos dados nem criamos perfis que o identifiquem como pessoa. Neste site, medimos — apenas com o seu consentimento — o alcance das nossas páginas e o sucesso da nossa publicidade; ambas as categorias podem ser desativadas individualmente (ver seções Medição de Alcance e Publicidade e Medição de Sucesso). Para fins promocionais, processamos dados apenas onde você consentiu explicitamente — ou seja, para nossa newsletter (consulte a seção Comunicação), que você pode cancelar a qualquer momento com um clique.",
   ],
   sections: [
     {
@@ -95,13 +95,24 @@ export const datenschutz: LegalDoc = {
           titel: "Proteção do formulário de contacto contra spam (reCAPTCHA)",
           paragraphs: [
             "O nosso formulário de contacto está protegido contra mensagens automatizadas em massa através do reCAPTCHA Enterprise da Google Ireland Limited. Só se der o seu consentimento é que o seu navegador carrega, ao preencher o formulário, um script de www.google.com; são então transmitidos à Google o seu endereço IP e informações sobre a sua interação com o formulário, ali analisados para distinguir pessoa de script. O fundamento jurídico é o artigo 6.º, n.º 1, alínea a), do RGPD (consentimento); aplica-se complementarmente a [política de privacidade da Google](https://policies.google.com/privacy).",
-            "Sem o seu consentimento nada é carregado da Google e nenhuns dados fluem para lá; nesse caso não aceitamos o formulário, mas pode escrever-nos um e-mail em qualquer momento. Pode alterar ou retirar o seu consentimento na [política de cookies](/cookie-richtlinie).",
+            "Sem o seu consentimento, nada do Google será carregado e nenhum dado será transmitido para lá; não aceitaremos o formulário, mas poderá enviar-nos um e-mail a qualquer momento. Se der o seu consentimento, o reCAPTCHA definirá o seu próprio cookie (_GRECAPTCHA, duração definida pelo Google, até seis meses), que é usado para avaliação de risco. Pode alterar ou revogar o seu consentimento a qualquer momento através do ícone de cookie no canto inferior esquerdo de cada página; o cookie será então excluído.",
           ],
         },
         {
-          titel: "Sem análise, sem publicidade",
+          titel: "Medição de Alcance (Google Analytics)",
           paragraphs: [
-            "Não utilizamos serviços de análise, de rastreio ou de publicidade (sem Google Analytics, sem pixéis, sem redes publicitárias) e não elaboramos perfis. Os cookies de que a plataforma necessita tecnicamente constam da [política de cookies](/cookie-richtlinie).",
+            "Neste site, utilizamos o Google Analytics 4 da Google Ireland Limited para medir como as nossas páginas são utilizadas — quais páginas são visitadas, de onde vêm os visitantes e em que ponto eles saem. O objetivo é exclusivamente melhorar a oferta e a capacidade de localização.",
+            'O carregamento ocorre exclusivamente com o seu consentimento. Se o conceder, o seu navegador carregará um script de www.googletagmanager.com e armazenará dois cookies ("_ga" e "_ga_<ID>", com duração de até dois anos) com um identificador gerado aleatoriamente; este identificador, as páginas visitadas, a fonte de referência, a localização aproximada a nível de país ou região, o dispositivo e o navegador, bem como o seu endereço IP, que o Google encurta antes de qualquer armazenamento, serão transmitidos. A base legal é o Art. 6, parágrafo 1, alínea a do RGPD (consentimento).',
+            "Restringimos explicitamente a avaliação: os sinais do Google e a personalização de anúncios estão desativados. Portanto, não são criados perfis entre dispositivos nem públicos-alvo para publicidade, e não partilhamos dados de utilização com redes de publicidade. Não há fusão com a sua conta de cliente.",
+            "O Google processa os dados como nosso subcontratante com base num contrato nos termos do Art. 28 do RGPD (Termos de Processamento de Dados do Google Ads). O encurtamento do seu endereço IP ocorre em servidores na UE antes que os dados sejam transferidos para os EUA; portanto, um conjunto de dados pseudónimo é transmitido. A base para a transmissão é a decisão de adequação da Comissão da UE para o Quadro de Privacidade de Dados UE-EUA (Art. 45 do RGPD), sob o qual o Google LLC é certificado; adicionalmente, o Google incluiu as cláusulas contratuais padrão da Comissão da UE (Art. 46 do RGPD). Salientamos expressamente que as autoridades dos EUA, de acordo com a Secção 702 da FISA, também podem aceder a dados de empresas certificadas e, portanto, um risco residual não pode ser completamente excluído. Além disso, aplica-se a [Política de Privacidade do Google](https://policies.google.com/privacy).",
+            "Período de armazenamento: Os dados relacionados com eventos e utilizadores são automaticamente eliminados da nossa propriedade após 14 meses; os dados de relatórios agregados sem referência a visitantes individuais são mantidos para além desse período. O seu consentimento expira após seis meses.",
+            "Sem o seu consentimento, nada é carregado, nenhum cookie é definido e nenhum dado é enviado para o Google. Pode revogar o seu consentimento a qualquer momento através do ícone de cookie no canto inferior esquerdo de cada página; a medição terminará imediatamente e os cookies mencionados serão eliminados. Após seis meses, perguntaremos novamente.",
+          ],
+        },
+        {
+          titel: "Publicidade e medição de sucesso",
+          paragraphs: [
+            "Com o seu consentimento, utilizamos cookies de marketing para medir o sucesso da nossa publicidade e para lhe mostrar anúncios relevantes noutras plataformas. Estão envolvidos Meta Platforms Ireland (Meta-Pixel, cookie _fbp), LinkedIn Ireland (Insight-Tag, cookies li_gc e bcookie) e Google Ireland Limited (Google Ads, cookie _gcl_au). A base legal é o Art. 6, parágrafo 1, alínea a do RGPD. Sem o seu consentimento, nenhum destes scripts será carregado e nenhum cookie será definido; em caso de revogação, iremos eliminá-los. Detalhes sobre cada cookie estão na [Política de Cookies](/cookie-richtlinie).",
           ],
         },
       ],
@@ -255,7 +266,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (Reino Unido) — integração com portais de reservas",
         "Meta Platforms Ireland Limited (Irlanda) — mensagens de WhatsApp, se ativado",
         "Sendinblue SAS / Brevo (França, Alemanha) — gestão e envio da newsletter, apenas com consentimento",
-        "Google Ireland Limited (Irlanda) — traduções; proteção do formulário de contacto contra spam (reCAPTCHA Enterprise), apenas com consentimento; início de sessão com a Google, se utilizado",
+        "Google Ireland Limited (Irlanda) — traduções; proteção do formulário de contacto contra spam (reCAPTCHA Enterprise), apenas com consentimento; início de sessão com a Google, se utilizado; Medição de alcance (Google Analytics 4), apenas com consentimento",
         "Groq, Inc. (EUA) — sugestões de resposta, se ativado",
         "Cloudflare, Inc. (EUA) — gestão de DNS para domínios de clientes",
       ],
@@ -291,7 +302,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (EUA) — sugestões de resposta na caixa de entrada de mensagens, apenas se a empresa ativar a funcionalidade. É transmitido o contexto da mensagem em causa.",
             "Cloudflare, Inc. (EUA) — gestão de DNS para domínios de clientes. São transmitidos dados de domínio e de configuração, nenhuns dados de hóspedes.",
-            "Google LLC (EUA) — apenas no início de sessão com a Google e nas traduções; a contraparte contratual é, em cada caso, a Google Ireland Limited, mas um acesso pela sociedade-mãe norte-americana não está, ainda assim, excluído.",
+            "Google LLC (EUA) — ao fazer login com o Google, em traduções e na medição de alcance (Google Analytics 4, apenas com consentimento); o parceiro contratual é sempre a Google Ireland Limited, mas o acesso da empresa-mãe dos EUA não está excluído.",
           ],
         },
         {

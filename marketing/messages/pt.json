@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "O seu consentimento",
-    "text": "Este sítio Web não utiliza serviços de análise, de publicidade nem de rastreio; os tipos de letra e os ícones são disponibilizados pelo nosso próprio servidor. Necessário é apenas aquilo que o próprio define ou solicita. Por isso, precisamos do seu consentimento para exatamente uma coisa: a proteção externa contra spam do nosso formulário de contacto.",
+    "textBeide": "Duas coisas precisam do seu consentimento. Pode permiti-las ou recusá-las individualmente, alterá-las e revogá-las a qualquer momento. Detalhes na política de cookies.",
+    "textSpamschutz": "Uma coisa precisa do seu consentimento. Pode alterá-la e revogá-la a qualquer momento. Detalhes na política de cookies.",
+    "textStatistik": "Uma coisa precisa do seu consentimento. Pode alterá-la e revogá-la a qualquer momento. Detalhes na política de cookies.",
     "richtlinie": "Ler a política de cookies",
     "knopf": "Definições de cookies",
     "allesAblehnen": "Rejeitar tudo",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Ocultar opções",
     "auswahlSpeichern": "Guardar opções",
     "immerAktiv": "Sempre ativo",
+    "nichtEingerichtet": "Neste ambiente, este serviço não está configurado — ele não carrega nada, mesmo com a sua permissão.",
     "kategorien": {
       "notwendig": {
-        "titel": "Necessários",
-        "text": "A sua escolha de idioma e — apenas se abrir o chat por iniciativa própria — o identificador da sua conversa neste dispositivo. Sem estes dados, não é possível apresentar o sítio da forma que solicitou. Não são utilizados para publicidade nem para estatísticas."
+        "titel": "Cookies necessários",
+        "text": "Estes cookies são estritamente necessários para o funcionamento do site: a sua seleção de idioma e, se abrir o chat, o identificador da sua conversa. Não podem ser desativados, pois o site não funcionaria como solicitado sem eles."
       },
-      "spamschutz": {
-        "titel": "Proteção contra spam do formulário de contacto",
-        "text": "O nosso formulário de contacto está protegido contra mensagens automatizadas em massa pelo reCAPTCHA Enterprise da Google. Se o permitir, o seu navegador carrega um script de google.com enquanto preenche o formulário e transmite assim o seu endereço IP à Google. Sem a sua autorização, não é carregado nada da Google; nesse caso pode contactar-nos por e-mail."
+      "funktional": {
+        "titel": "Cookies funcionais",
+        "text": "Estes cookies protegem o nosso formulário de contacto contra envios em massa automatizados. Se os permitir, o seu navegador carregará o reCAPTCHA da Google e transmitirá o seu endereço IP."
+      },
+      "analytisch": {
+        "titel": "Cookies analíticos",
+        "text": "Com estes cookies, sabemos quais páginas são lidas e onde os visitantes desistem, para melhorar o site. A personalização de anúncios e perfis entre dispositivos são desativados."
+      },
+      "marketing": {
+        "titel": "Cookies de marketing",
+        "text": "Com estes cookies, medimos o sucesso da nossa publicidade e mostramos anúncios relevantes noutras plataformas. Os dados são transmitidos para Meta, LinkedIn e Google."
       }
     },
     "kontakt": {
       "hinweis": "Antes de enviar, precisamos da sua autorização para a proteção externa contra spam (reCAPTCHA da Google). Sem ela não podemos aceitar o formulário — é assim que travamos as mensagens automatizadas em massa.",
       "erlauben": "Permitir proteção antispam",
       "alternative": "Prefere não o fazer? Escreva-nos para {email}."
-    }
+    },
+    "angaben": {
+      "anbieter": "Fornecedor:",
+      "dauer": "Duração do armazenamento:",
+      "cookies": "Cookies:",
+      "keineCookies": "nenhum (apenas ao enviar)",
+      "drittland": "Transmissão:",
+      "drittlandJa": "para os EUA, com base no EU-US Data Privacy Framework",
+      "drittlandNein": "apenas dentro da UE",
+      "listeAnzeigen": "Cookies que utilizamos",
+      "listeTitel": "Lista de cookies",
+      "name": "Nome",
+      "host": "Host",
+      "art": "Tipo",
+      "artErst": "Primeira parte",
+      "artDritt": "Terceira parte",
+      "zweck": "Finalidade",
+      "kategorie": "Categoria",
+      "beschreibung": "Descrição"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "definido pelo Google, até seis meses",
+      "dreiMonate": "cerca de três meses",
+      "einJahr": "cerca de um ano",
+      "sechsMonate": "cerca de seis meses",
+      "zweiJahre": "até dois anos"
+    },
+    "zweck": {
+      "grecaptcha": "Permite que o Google realize uma avaliação de risco que diferencia envios em massa automatizados de solicitações genuínas.",
+      "ga": "Diferencia os visitantes para que as visitas recorrentes não sejam contadas duas vezes. Contém um identificador gerado aleatoriamente sem relação com a sua pessoa.",
+      "gaSitzung": "Registra quando sua visita atual começou, para que as visualizações de página de uma sessão sejam agrupadas.",
+      "fbp": "Atribui a sua visita a um anúncio para que possamos medir o sucesso das nossas campanhas.",
+      "gclAu": "Atribui a sua visita a um anúncio da Google para que possamos medir o sucesso das nossas campanhas.",
+      "liGc": "Armazena o seu consentimento para o LinkedIn para fins publicitários.",
+      "bcookie": "Identifica o seu navegador para o LinkedIn, para que os anúncios e o seu sucesso possam ser atribuídos."
+    },
+    "uebersicht": {
+      "titel": "As suas definições de cookies",
+      "text": "Selecione quais cookies deseja aceitar ou recusar neste site. Pode ativar e desativar as definições para cada categoria de cookies a qualquer momento.",
+      "datenschutz": "Mais informações na política de privacidade"
+    },
+    "verwalten": "Gerenciar configurações de cookies",
+    "schliessen": "Fechar",
+    "bestaetigen": "Confirmar configurações"
   }
 }

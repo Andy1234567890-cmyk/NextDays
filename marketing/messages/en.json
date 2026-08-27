@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "Your consent",
-    "text": "This website uses no analytics, advertising or tracking services; our fonts and icons are served from our own server. Only what you set or request yourself is necessary. So we need your consent for exactly one thing: the external spam protection on our contact form.",
+    "textBeide": "Two things need your consent. You can allow or refuse them individually, and change or withdraw at any time. Details in the Cookie Policy.",
+    "textSpamschutz": "One thing needs your consent. You can change or withdraw it at any time. Details in the Cookie Policy.",
+    "textStatistik": "One thing needs your consent. You can change or withdraw it at any time. Details in the Cookie Policy.",
     "richtlinie": "Read the cookie policy",
     "knopf": "Cookie settings",
     "allesAblehnen": "Reject all",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Hide choices",
     "auswahlSpeichern": "Save choices",
     "immerAktiv": "Always on",
+    "nichtEingerichtet": "This service is not set up in this environment — it loads nothing even with your permission.",
     "kategorien": {
       "notwendig": {
-        "titel": "Necessary",
-        "text": "Your language choice and — only if you open the chat yourself — the identifier of your conversation on this device. Without them the site cannot be delivered the way you asked for it. They are used neither for advertising nor for statistics."
+        "titel": "Strictly necessary cookies",
+        "text": "These cookies are essential for running the website: your language choice and, if you open the chat, the id of your conversation. They cannot be switched off, because without them the website does not work as requested."
       },
-      "spamschutz": {
-        "titel": "Contact form spam protection",
-        "text": "Our contact form is protected against automated bulk messages by reCAPTCHA Enterprise from Google. If you allow it, your browser loads a script from google.com while you fill in the form and thereby sends your IP address to Google. Without your permission nothing is loaded from Google; you can reach us by email instead."
+      "funktional": {
+        "titel": "Functional cookies",
+        "text": "These cookies protect our contact form from automated bulk messages. If you allow them, your browser loads reCAPTCHA from Google, passing on your IP address."
+      },
+      "analytisch": {
+        "titel": "Analytical cookies",
+        "text": "These cookies tell us which pages get read and where visitors drop off, so we can improve the website. Ad personalisation and cross-device profiles are switched off."
+      },
+      "marketing": {
+        "titel": "Marketing cookies",
+        "text": "These cookies let us measure how our advertising performs and show you relevant ads on other platforms. Data is transmitted to Meta, LinkedIn and Google."
       }
     },
     "kontakt": {
       "hinweis": "Before you send, we need your permission for the external spam protection (reCAPTCHA from Google). Without it we cannot accept the form — that is how we keep automated bulk messages out.",
       "erlauben": "Allow spam protection",
       "alternative": "Would you rather not? Write to us at {email} instead."
-    }
+    },
+    "angaben": {
+      "anbieter": "Provider:",
+      "dauer": "Retention:",
+      "cookies": "Cookies:",
+      "keineCookies": "none (only on submission)",
+      "drittland": "Transfer:",
+      "drittlandJa": "to the USA, based on the EU-US Data Privacy Framework",
+      "drittlandNein": "within the EU only",
+      "listeAnzeigen": "Cookies we use",
+      "listeTitel": "Cookie list",
+      "name": "Name",
+      "host": "Host",
+      "art": "Type",
+      "artErst": "First-party",
+      "artDritt": "Third-party",
+      "zweck": "Purpose",
+      "kategorie": "Category",
+      "beschreibung": "Description"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "set by Google, up to six months",
+      "dreiMonate": "about three months",
+      "einJahr": "about one year",
+      "sechsMonate": "about six months",
+      "zweiJahre": "up to two years"
+    },
+    "zweck": {
+      "grecaptcha": "Lets Google run the risk assessment that separates automated bulk messages from genuine enquiries.",
+      "ga": "Distinguishes visitors so repeat visits are not counted twice. Holds a randomly generated identifier unrelated to you personally.",
+      "gaSitzung": "Records when your current visit started so page views of one session belong together.",
+      "fbp": "Attributes your visit to an ad so we can measure how our campaigns perform.",
+      "gclAu": "Attributes your visit to a Google ad so we can measure how our campaigns perform.",
+      "liGc": "Stores your consent towards LinkedIn for advertising purposes.",
+      "bcookie": "Identifies your browser to LinkedIn so ads and their performance can be attributed."
+    },
+    "uebersicht": {
+      "titel": "Your cookie settings",
+      "text": "Choose which cookies you want to accept or refuse on this website. You can enable and disable the settings for each cookie category at any time.",
+      "datenschutz": "More information in the privacy policy"
+    },
+    "verwalten": "Manage cookie settings",
+    "schliessen": "Close",
+    "bestaetigen": "Confirm settings"
   }
 }

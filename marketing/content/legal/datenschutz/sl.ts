@@ -21,14 +21,12 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Ta izjava opisuje, kako ${ANBIETER.firma} obdeluje osebne podatke — pri obisku tega spletnega mesta, pri uporabi platforme myNextDays (nadzorna plošča, tržnica in mobilna aplikacija) ter v okviru poslovnega razmerja z našimi strankami.`,
-    "Podlaga je Uredba (EU) 2016/679 (GDPR) in danski zakon o varstvu podatkov (databeskyttelsesloven). Podatkov ne prodajamo, ne oblikujemo profilov in na naših spletnih mestih ne uporabljamo analitičnih, sledilnih ali oglaševalskih storitev. Za oglaševalske namene obdelujemo podatke izključno tam, kjer ste v to izrecno privolili — namreč za naše e-novice (glejte poglavje Komunikacija), od katerih se lahko kadar koli z enim klikom odjavite.",
+    "Ne prodajamo podatkov in ne ustvarjamo profilov, ki bi vas identificirali kot osebo. Na tej spletni strani – samo z vašim soglasjem – merimo doseg naših strani in uspeh našega oglaševanja; obe kategoriji je mogoče posamično odkljukati (glejte razdelka Merjenje dosega ter Oglaševanje in merjenje uspešnosti). Podatke za namene oglaševanja obdelujemo izključno tam, kjer ste izrecno privolili – in sicer za naše e-novice (glejte poglavje Komunikacija), na katere se lahko kadar koli odjavite z enim klikom.",
   ],
   sections: [
     {
       heading: "Upravljavec",
-      paragraphs: [
-        "Za obdelave, opisane v tej izjavi, je odgovoren:",
-      ],
+      paragraphs: ["Za obdelave, opisane v tej izjavi, je odgovoren:"],
       zeilen: [
         {
           label: "Družba",
@@ -92,16 +90,28 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
-          titel: "Zaščita kontaktnega obrazca pred nezaželeno pošto (reCAPTCHA)",
+          titel:
+            "Zaščita kontaktnega obrazca pred nezaželeno pošto (reCAPTCHA)",
           paragraphs: [
             "Naš kontaktni obrazec je pred samodejnimi množičnimi sporočili zaščiten s storitvijo reCAPTCHA Enterprise družbe Google Ireland Limited. Samo če v to privolite, vaš brskalnik pri izpolnjevanju obrazca naloži skript z naslova www.google.com; pri tem se družbi Google posredujeta vaš naslov IP in podatki o vaši interakciji z obrazcem ter se tam ovrednotita, da se loči človek od skripta. Pravna podlaga je člen 6(1)(a) GDPR (privolitev); dopolnilno velja [izjava o varstvu podatkov družbe Google](https://policies.google.com/privacy).",
-            "Brez vaše privolitve se od družbe Google ne naloži nič in tja ne stečejo nobeni podatki; obrazca v tem primeru ne sprejmemo, lahko pa nam kadar koli pišete po e-pošti. Svojo privolitev lahko spremenite ali prekličete v [politiki piškotkov](/cookie-richtlinie).",
+            "Brez vašega soglasja Google ne bo naložil ničesar in tja ne bodo posredovani nobeni podatki; obrazca takrat ne bomo sprejeli, lahko pa nam kadar koli pošljete e-pošto. Če podate soglasje, reCAPTCHA nastavi lasten piškotek (_GRECAPTCHA, trajanje določi Google, do šest mesecev), ki se uporablja za oceno tveganja. Svoje soglasje lahko kadar koli spremenite ali prekličete prek ikone piškotka v spodnjem levem kotu vsake strani; piškotek bo nato izbrisan.",
           ],
         },
         {
-          titel: "Brez analitike, brez oglaševanja",
+          titel: "Merjenje dosega (Google Analytics)",
           paragraphs: [
-            "Ne uporabljamo analitičnih, sledilnih ali oglaševalskih storitev (brez Google Analytics, brez slikovnih pik, brez oglaševalskih omrežij) in ne oblikujemo profilov. Kateri piškotki so za platformo tehnično potrebni, je navedeno v [politiki piškotkov](/cookie-richtlinie).",
+            "Na tej spletni strani z Google Analytics 4 podjetja Google Ireland Limited merimo, kako se uporabljajo naše strani – katere strani so obiskane, od kod prihajajo obiskovalci in na kateri točki zapustijo stran. Namen je izključno izboljšanje ponudbe in prepoznavnosti.",
+            "Nalaganje poteka izključno z vašim soglasjem. Če ga podate, vaš brskalnik naloži skript z www.googletagmanager.com in shrani dva piškotka (»_ga« in »_ga_<ID>«, veljavnost do dveh let) z naključno generiranim ID-jem; posredujejo se ta ID, obiskane strani, vir napotitve, približna lokacija na ravni države ali regije, naprava in brskalnik ter vaš IP-naslov, ki ga Google skrajša pred vsakim shranjevanjem. Pravna podlaga je člen 6(1)(a) GDPR (soglasje).",
+            "Izrecno smo omejili analizo: Googlovi signali in personalizacija oglasov so izklopljeni. Zato ne nastajajo profili med napravami in ciljne skupine za oglaševanje, in ne posredujemo podatkov o uporabi oglaševalskim omrežjem. Združevanje z vašim uporabniškim računom ne poteka.",
+            "Google obdeluje podatke kot naš obdelovalec na podlagi pogodbe v skladu s členom 28 GDPR (Google Ads Data Processing Terms). Skrajšanje vašega IP-naslova poteka na strežnikih v EU, preden se podatki prenesejo v ZDA; torej se posreduje psevdonimiziran nabor podatkov. Podlaga za prenos je odločba Evropske komisije o ustreznosti za EU-US Data Privacy Framework (člen 45 GDPR), pod katero je Google LLC certificiran; poleg tega je Google vključil standardne pogodbene klavzule Evropske komisije (člen 46 GDPR). Izrecno opozarjamo, da lahko ameriški organi v skladu s členom 702 FISA dostopajo tudi do podatkov certificiranih podjetij in zato preostalega tveganja ni mogoče popolnoma izključiti. Poleg tega velja [Googlova politika zasebnosti](https://policies.google.com/privacy).",
+            "Trajanje shranjevanja: Podatki o dogodkih in uporabnikih se v naši lastnini samodejno izbrišejo po 14 mesecih; združeni podatki poročil brez povezave s posameznimi obiskovalci ostanejo shranjeni. Vaše soglasje samo poteče po šestih mesecih.",
+            "Brez vašega soglasja se nič ne naloži, ne nastavi se piškotek in Googlu ne tečejo podatki. Svoje soglasje lahko kadar koli prekličete prek ikone piškotka v spodnjem levem kotu vsake strani; merjenje se nato takoj konča in omenjeni piškotki se izbrišejo. Po šestih mesecih vas bomo ponovno vprašali.",
+          ],
+        },
+        {
+          titel: "Oglaševanje in merjenje uspešnosti",
+          paragraphs: [
+            "Z vašim soglasjem uporabljamo tržne piškotke za merjenje uspešnosti našega oglaševanja in prikazovanje ustreznih oglasov na drugih platformah. Vključeni so Meta Platforms Ireland (Meta-Pixel, piškotek _fbp), LinkedIn Ireland (Insight-Tag, piškotka li_gc in bcookie) in Google Ireland Limited (Google Ads, piškotek _gcl_au). Pravna podlaga je člen 6(1)(a) GDPR. Brez vašega soglasja noben od teh skriptov ne bo naložen in noben piškotek ne bo nastavljen; ob preklicu jih bomo izbrisali. Podrobnosti o vsakem piškotku so na voljo v [Pravilniku o piškotkih](/cookie-richtlinie).",
           ],
         },
       ],
@@ -255,7 +265,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (Združeno kraljestvo) — povezava z rezervacijskimi portali",
         "Meta Platforms Ireland Limited (Irska) — sporočila WhatsApp, če je vklopljeno",
         "Sendinblue SAS / Brevo (Francija, Nemčija) — upravljanje in pošiljanje e-novic, le ob privolitvi",
-        "Google Ireland Limited (Irska) — prevodi; zaščita kontaktnega obrazca pred nezaželeno pošto (reCAPTCHA Enterprise), le ob privolitvi; prijava z Google, če se uporablja",
+        "Google Ireland Limited (Irska) — prevodi; zaščita kontaktnega obrazca pred nezaželeno pošto (reCAPTCHA Enterprise), le ob privolitvi; prijava z Google, če se uporablja; Merjenje dosega (Google Analytics 4), samo s soglasjem",
         "Groq, Inc. (ZDA) — predlogi odgovorov, če je vklopljeno",
         "Cloudflare, Inc. (ZDA) — upravljanje DNS za domene strank",
       ],
@@ -291,7 +301,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (ZDA) — predlogi odgovorov v prejeti pošti sporočil, le če obrat funkcijo vklopi. Posreduje se posamezni kontekst sporočila.",
             "Cloudflare, Inc. (ZDA) — upravljanje DNS za domene strank. Posredujejo se podatki o domeni in konfiguraciji, nobeni podatki gostov.",
-            "Google LLC (ZDA) — le pri prijavi z Google in pri prevodih; pogodbeni partner je vsakič Google Ireland Limited, dostop ameriške matične družbe pa vseeno ni izključen.",
+            "Google LLC (ZDA) – ob prijavi z Googlom, pri prevodih in pri merjenju dosega (Google Analytics 4, samo s soglasjem); pogodbeni partner je Google Ireland Limited, vendar dostop matične družbe v ZDA ni izključen.",
           ],
         },
         {

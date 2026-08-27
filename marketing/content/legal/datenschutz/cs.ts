@@ -20,14 +20,12 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Tyto zásady popisují, jak společnost ${ANBIETER.firma} zpracovává osobní údaje — při návštěvě těchto webových stránek, při užívání platformy myNextDays (dashboard, tržiště a mobilní aplikace) a v rámci obchodního vztahu s našimi zákazníky.`,
-    "Základem je nařízení (EU) 2016/679 (GDPR, obecné nařízení o ochraně osobních údajů) a dánský zákon o ochraně osobních údajů (databeskyttelsesloven). Neprodáváme žádné údaje, nevytváříme profily a na našich webových stránkách nepoužíváme žádné analytické, sledovací ani reklamní služby. Pro reklamní účely zpracováváme údaje výhradně tam, kde jste k tomu výslovně dali souhlas — totiž pro náš newsletter (viz oddíl Komunikace), který můžete kdykoli jediným kliknutím odhlásit.",
+    "Neprodáváme data a nevytváříme profily, které by vás identifikovaly jako osobu. Na tomto webu měříme – pouze s vaším souhlasem – dosah našich stránek a úspěšnost naší reklamy; obě kategorie lze jednotlivě odhlásit (viz sekce Měření dosahu a Reklama a měření úspěšnosti). Pro marketingové účely zpracováváme údaje pouze tam, kde jste k tomu dali výslovný souhlas – konkrétně pro náš newsletter (viz sekce Komunikace), který můžete kdykoli odhlásit jedním kliknutím.",
   ],
   sections: [
     {
       heading: "Správce",
-      paragraphs: [
-        "Správcem zpracování popsaných v těchto zásadách je:",
-      ],
+      paragraphs: ["Správcem zpracování popsaných v těchto zásadách je:"],
       zeilen: [
         {
           label: "Společnost",
@@ -94,13 +92,24 @@ export const datenschutz: LegalDoc = {
           titel: "Ochrana kontaktního formuláře proti spamu (reCAPTCHA)",
           paragraphs: [
             "Náš kontaktní formulář je proti automatizovaným masovým zprávám chráněn službou reCAPTCHA Enterprise společnosti Google Ireland Limited. Pouze pokud s tím vyslovíte souhlas, načte váš prohlížeč při vyplňování formuláře skript z www.google.com; přitom jsou společnosti Google předány vaše IP adresa a údaje o vaší interakci s formulářem a tam vyhodnoceny s cílem odlišit člověka od skriptu. Právním základem je čl. 6 odst. 1 písm. a) GDPR (souhlas); doplňkově platí [zásady ochrany osobních údajů společnosti Google](https://policies.google.com/privacy).",
-            "Bez vašeho souhlasu se od Google nenačítá nic a neproudí tam žádné údaje; formulář v takovém případě nepřijímáme, můžete nám však kdykoli napsat e-mail. Svůj souhlas můžete změnit nebo odvolat v [pravidlech pro cookies](/cookie-richtlinie).",
+            "Bez vašeho souhlasu se z Google nic nenačte a nebudou tam proudit žádná data; formulář pak nepřijmeme, ale vždy nám můžete napsat e-mail. Pokud souhlas udělíte, reCAPTCHA nastaví vlastní soubor cookie (_GRECAPTCHA, doba platnosti stanovena společností Google, až šest měsíců), který se používá k hodnocení rizik. Svůj souhlas můžete kdykoli změnit nebo odvolat pomocí ikony souboru cookie vlevo dole na každé stránce; soubor cookie pak bude smazán.",
           ],
         },
         {
-          titel: "Žádná analytika, žádná reklama",
+          titel: "Měření dosahu (Google Analytics)",
           paragraphs: [
-            "Nepoužíváme žádné analytické, sledovací ani reklamní služby (žádný Google Analytics, žádné pixely, žádné reklamní sítě) a nevytváříme profily. Které cookies platforma technicky potřebuje, je uvedeno v [pravidlech pro cookies](/cookie-richtlinie).",
+            "Na tomto webu měříme pomocí Google Analytics 4 od Google Ireland Limited, jak jsou naše stránky používány – které stránky jsou navštěvovány, odkud návštěvníci přicházejí a v jakém bodě odcházejí. Účelem je výhradně zlepšení nabídky a nalezitelnosti.",
+            "Načítání probíhá výhradně s vaším souhlasem. Pokud jej udělíte, váš prohlížeč načte skript z www.googletagmanager.com a uloží dva soubory cookie („_ga“ a „_ga_<ID>“, platnost až dva roky) s náhodně vygenerovaným ID; přenášeny jsou toto ID, navštívené stránky, zdroj odkazu, přibližná poloha na úrovni země nebo regionu, zařízení a prohlížeč a vaše IP adresa, kterou Google před každým uložením zkrátí. Právním základem je čl. 6 odst. 1 písm. a GDPR (souhlas).",
+            "Vyhodnocení jsme výslovně omezili: Signály Google a personalizace reklamy jsou vypnuty. Nevznikají proto žádné profily napříč zařízeními a žádné cílové skupiny pro reklamu a nepředáváme žádné údaje o používání reklamním sítím. Sloučení s vaším zákaznickým účtem neprobíhá.",
+            "Google zpracovává data jako náš zpracovatel na základě smlouvy podle čl. 28 GDPR (Google Ads Data Processing Terms). Zkrácení vaší IP adresy probíhá na serverech v EU, než jsou data přenesena do USA; přenášen je tedy pseudonymní datový soubor. Základem přenosu je rozhodnutí Evropské komise o odpovídající ochraně v rámci EU-US Data Privacy Framework (čl. 45 GDPR), pod kterým je Google LLC certifikován; Google navíc zahrnul standardní smluvní doložky Evropské komise (čl. 46 GDPR). Výslovně upozorňujeme, že americké úřady mohou podle § 702 FISA přistupovat k datům certifikovaných společností a zbytkové riziko proto nelze zcela vyloučit. Dále platí [zásady ochrany osobních údajů společnosti Google](https://policies.google.com/privacy).",
+            "Doba uložení: Údaje o událostech a uživatelích jsou v naší vlastnosti automaticky smazány po 14 měsících; agregovaná data zpráv bez vztahu k jednotlivým návštěvníkům zůstávají zachována. Váš souhlas samotný vyprší po šesti měsících.",
+            "Bez vašeho souhlasu se nic nenačte, žádný soubor cookie se nenastaví a žádná data nebudou proudit do Google. Svůj souhlas můžete kdykoli odvolat pomocí ikony cookie vlevo dole na každé stránce; měření pak okamžitě skončí a uvedené soubory cookie budou smazány. Po šesti měsících se zeptáme znovu.",
+          ],
+        },
+        {
+          titel: "Reklama a měření úspěšnosti",
+          paragraphs: [
+            "S vaším souhlasem používáme marketingové soubory cookie k měření úspěšnosti naší reklamy a k zobrazování relevantních reklam na jiných platformách. Zapojeny jsou společnosti Meta Platforms Ireland (Meta-Pixel, cookie _fbp), LinkedIn Ireland (Insight-Tag, soubory cookie li_gc a bcookie) a Google Ireland Limited (Google Ads, cookie _gcl_au). Právním základem je čl. 6 odst. 1 písm. a GDPR. Bez vašeho souhlasu nebudou načteny žádné z těchto skriptů a nebudou nastaveny žádné soubory cookie; v případě odvolání je smažeme. Podrobnosti o každém souboru cookie naleznete v [Zásadách používání souborů cookie](/cookie-richtlinie).",
           ],
         },
       ],
@@ -254,7 +263,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (Spojené království) — napojení na rezervační portály",
         "Meta Platforms Ireland Limited (Irsko) — zprávy WhatsApp, je-li aktivováno",
         "Sendinblue SAS / Brevo (Francie, Německo) — správa a rozesílání newsletteru, pouze při souhlasu",
-        "Google Ireland Limited (Irsko) — překlady; ochrana kontaktního formuláře proti spamu (reCAPTCHA Enterprise), pouze při souhlasu; přihlášení pomocí Google, je-li využito",
+        "Google Ireland Limited (Irsko) — překlady; ochrana kontaktního formuláře proti spamu (reCAPTCHA Enterprise), pouze při souhlasu; přihlášení pomocí Google, je-li využito; Měření dosahu (Google Analytics 4), pouze se souhlasem",
         "Groq, Inc. (USA) — návrhy odpovědí, je-li aktivováno",
         "Cloudflare, Inc. (USA) — správa DNS pro zákaznické domény",
       ],
@@ -290,7 +299,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (USA) — návrhy odpovědí ve schránce zpráv, pouze pokud podnik tuto funkci aktivuje. Předáván je příslušný kontext zprávy.",
             "Cloudflare, Inc. (USA) — správa DNS pro zákaznické domény. Předávány jsou údaje o doméně a konfiguraci, žádné údaje hostů.",
-            "Google LLC (USA) — pouze při přihlášení pomocí Google a při překladech; smluvním partnerem je vždy Google Ireland Limited, přístup americké mateřské společnosti však není vyloučen.",
+            "Google LLC (USA) – při přihlášení přes Google, při překladech a při měření dosahu (Google Analytics 4, pouze se souhlasem); smluvním partnerem je vždy Google Ireland Limited, přístup mateřské společnosti z USA však není vyloučen.",
           ],
         },
         {

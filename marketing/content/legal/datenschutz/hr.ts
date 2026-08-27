@@ -19,7 +19,7 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Ova izjava opisuje kako društvo ${ANBIETER.firma} obrađuje osobne podatke — pri posjetu ovim internetskim stranicama, pri korištenju platforme myNextDays (nadzorna ploča, tržnica i mobilna aplikacija) te u okviru poslovnog odnosa s našim klijentima.`,
-    "Pravnu osnovu čine Uredba (EU) 2016/679 (Opća uredba o zaštiti podataka, GDPR) te danski Zakon o zaštiti podataka (databeskyttelsesloven). Ne prodajemo podatke, ne izrađujemo profile i na svojim internetskim stranicama ne koristimo usluge analitike, praćenja ni oglašavanja. U promidžbene svrhe podatke obrađujemo isključivo tamo gdje ste na to izričito pristali — naime za naš newsletter (vidjeti odjeljak Komunikacija), od kojeg se u svakom trenutku možete odjaviti jednim klikom.",
+    "Ne prodajemo podatke i ne stvaramo profile koji vas identificiraju kao osobu. Na ovoj web stranici mjerimo — samo uz vaš pristanak — doseg naših stranica i uspjeh našeg oglašavanja; obje kategorije mogu se pojedinačno odabrati (pogledajte odjeljke Mjerenje dosega te Oglašavanje i mjerenje uspjeha). U promotivne svrhe obrađujemo podatke samo tamo gdje ste izričito dali privolu — naime, za naš bilten (pogledajte odjeljak Komunikacija), koji možete otkazati u bilo kojem trenutku jednim klikom.",
   ],
   sections: [
     {
@@ -93,13 +93,24 @@ export const datenschutz: LegalDoc = {
           titel: "Zaštita kontaktnog obrasca od neželjene pošte (reCAPTCHA)",
           paragraphs: [
             "Naš kontaktni obrazac zaštićen je od automatiziranih masovnih poruka uslugom reCAPTCHA Enterprise društva Google Ireland Limited. Samo ako na to pristanete, vaš pregljednik pri ispunjavanju obrasca učitava skriptu s www.google.com; pri tome se vaša IP-adresa i podaci o vašoj interakciji s obrascem prenose društvu Google i tamo analiziraju kako bi se razlikovao čovjek od skripte. Pravna osnova je čl. 6. st. 1. t. (a) GDPR-a (privola); dodatno se primjenjuje [Googleova izjava o zaštiti podataka](https://policies.google.com/privacy).",
-            "Bez vaše privole ništa se ne učitava od društva Google i tamo ne teku nikakvi podaci; obrazac u tom slučaju ne primamo, no e-poštu nam možete napisati u svakom trenutku. Svoju privolu možete izmijeniti ili povući u [Politici kolačića](/cookie-richtlinie).",
+            "Bez vašeg pristanka, ništa se neće učitati s Googlea i nikakvi podaci neće tamo teći; tada nećemo prihvatiti obrazac, ali nam uvijek možete poslati e-poštu. Ako pristanete, reCAPTCHA postavlja vlastiti kolačić (_GRECAPTCHA, trajanje određuje Google, do šest mjeseci) koji se koristi za procjenu rizika. Svoj pristanak možete promijeniti ili opozvati u bilo kojem trenutku putem ikone kolačića u donjem lijevom kutu svake stranice; kolačić će tada biti izbrisan.",
           ],
         },
         {
-          titel: "Bez analitike, bez oglašavanja",
+          titel: "Mjerenje dosega (Google Analytics)",
           paragraphs: [
-            "Ne koristimo usluge analitike, praćenja ni oglašavanja (nema usluge Google Analytics, nema piksela, nema oglasnih mreža) i ne izrađujemo profile. Koje kolačiće Platforma tehnički zahtijeva, navedeno je u [Politici kolačića](/cookie-richtlinie).",
+            "Na ovoj web stranici koristimo Google Analytics 4 tvrtke Google Ireland Limited za mjerenje načina korištenja naših stranica – koje se stranice posjećuju, odakle posjetitelji dolaze i u kojoj točki odustaju. Svrha je isključivo poboljšanje ponude i pronalazivosti.",
+            "Učitavanje se vrši isključivo uz vaš pristanak. Ako ga date, vaš preglednik učitava skriptu s www.googletagmanager.com i pohranjuje dva kolačića („_ga“ i „_ga_<ID>“, trajanje do dvije godine) s nasumično generiranim ID-om; prenose se ovaj ID, posjećene stranice, izvor preporuke, približna lokacija na razini države ili regije, uređaj i preglednik te vaša IP adresa, koju Google skraćuje prije svakog pohranjivanja. Pravna osnova je čl. 6. st. 1. lit. a GDPR-a (pristanak).",
+            "Izričito smo ograničili analizu: Google signali i personalizacija oglasa su isključeni. Stoga se ne stvaraju profili među uređajima i ciljne skupine za oglašavanje, a mi ne prosljeđujemo podatke o korištenju oglašivačkim mrežama. Ne dolazi do spajanja s vašim korisničkim računom.",
+            "Google obrađuje podatke kao naš obrađivač na temelju ugovora prema čl. 28. GDPR-a (Google Ads Data Processing Terms). Skraćivanje vaše IP adrese odvija se na poslužiteljima u EU prije nego što se podaci prenesu u SAD; stoga se prenosi pseudonimizirani skup podataka. Osnova prijenosa je odluka Europske komisije o primjerenosti za EU-US Data Privacy Framework (čl. 45. GDPR-a), prema kojoj je Google LLC certificiran; dodatno, Google je uključio standardne ugovorne klauzule Europske komisije (čl. 46. GDPR-a). Izričito ističemo da američke vlasti prema odjeljku 702 FISA-e mogu pristupiti podacima certificiranih tvrtki i stoga se preostali rizik ne može u potpunosti isključiti. Dodatno se primjenjuje [Googleova politika privatnosti](https://policies.google.com/privacy).",
+            "Trajanje pohrane: Podaci o događajima i korisnicima automatski se brišu iz našeg vlasništva nakon 14 mjeseci; agregirani podaci izvješća bez veze s pojedinačnim posjetiteljima ostaju zadržani. Vaš pristanak istječe nakon šest mjeseci.",
+            "Bez vašeg pristanka ništa se ne učitava, ne postavlja se kolačić i ne prenose se podaci Googleu. Svoj pristanak možete povući u bilo kojem trenutku putem ikone kolačića u donjem lijevom kutu svake stranice; mjerenje se tada odmah prekida i navedeni kolačići se brišu. Nakon šest mjeseci ponovno ćemo vas pitati.",
+          ],
+        },
+        {
+          titel: "Oglašavanje i mjerenje uspješnosti",
+          paragraphs: [
+            "Uz vaš pristanak koristimo marketinške kolačiće za mjerenje uspješnosti našeg oglašavanja i prikazivanje relevantnih oglasa na drugim platformama. Uključeni su Meta Platforms Ireland (Meta-Pixel, kolačić _fbp), LinkedIn Ireland (Insight-Tag, kolačići li_gc i bcookie) i Google Ireland Limited (Google Ads, kolačić _gcl_au). Pravna osnova je čl. 6. st. 1. lit. a Opće uredbe o zaštiti podataka. Bez vašeg pristanka nijedna od ovih skripti neće biti učitana i nijedan kolačić neće biti postavljen; u slučaju povlačenja, izbrisat ćemo ih. Detalji o svakom kolačiću nalaze se u [Pravilima o kolačićima](/cookie-richtlinie).",
           ],
         },
       ],
@@ -253,7 +264,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (Ujedinjena Kraljevina) — povezivanje s portalima za rezervacije",
         "Meta Platforms Ireland Limited (Irska) — WhatsApp poruke, ako je aktivirano",
         "Sendinblue SAS / Brevo (Francuska, Njemačka) — upravljanje newsletterom i otprema, samo uz privolu",
-        "Google Ireland Limited (Irska) — prijevodi; zaštita kontaktnog obrasca od neželjene pošte (reCAPTCHA Enterprise), samo uz privolu; prijava putem Googlea, ako se koristi",
+        "Google Ireland Limited (Irska) — prijevodi; zaštita kontaktnog obrasca od neželjene pošte (reCAPTCHA Enterprise), samo uz privolu; prijava putem Googlea, ako se koristi; Mjerenje dosega (Google Analytics 4), samo uz pristanak",
         "Groq, Inc. (SAD) — predlošci odgovora, ako je aktivirano",
         "Cloudflare, Inc. (SAD) — upravljanje DNS-om za klijentske domene",
       ],
@@ -270,7 +281,7 @@ export const datenschutz: LegalDoc = {
       paragraphs: [
         "Obrada se u načelu provodi unutar EU-a. Kod gore navedenih usluga sa sjedištem izvan EU-a može doći do prijenosa u treću zemlju.",
         "Za Groq, Inc. i Cloudflare, Inc. (SAD) prijenos temeljimo na standardnim ugovornim klauzulama o zaštiti podataka Europske komisije u skladu s čl. 46. st. 2. t. (c) GDPR-a, ako se primatelj ne može pozvati na odluku o primjerenosti (EU-US Data Privacy Framework).",
-      "Ugovorni partner za obradu plaćanja je Stripe Payments Europe, Limited (Irska). U mjeri u kojoj Stripe pri tome koristi društvo Stripe, LLC (SAD), ono je certificirano u okviru EU-US Data Privacy Framework; prijenos se u tom dijelu temelji na odluci o primjerenosti Europske komisije u skladu s čl. 45. GDPR-a. Dodatno se primjenjuju standardne ugovorne klauzule o zaštiti podataka iz [Stripeova ugovora o obradi podataka](https://stripe.com/legal/dpa).",
+        "Ugovorni partner za obradu plaćanja je Stripe Payments Europe, Limited (Irska). U mjeri u kojoj Stripe pri tome koristi društvo Stripe, LLC (SAD), ono je certificirano u okviru EU-US Data Privacy Framework; prijenos se u tom dijelu temelji na odluci o primjerenosti Europske komisije u skladu s čl. 45. GDPR-a. Dodatno se primjenjuju standardne ugovorne klauzule o zaštiti podataka iz [Stripeova ugovora o obradi podataka](https://stripe.com/legal/dpa).",
         "Za Channex.io Ltd (Ujedinjena Kraljevina) primjenjuje se odluka Europske komisije o primjerenosti za Ujedinjenu Kraljevinu; ako ona prestane, primjenjuju se standardne ugovorne klauzule o zaštiti podataka.",
       ],
     },
@@ -289,7 +300,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (SAD) — predlošci odgovora u ulaznom pretincu poruka, samo ako objekt aktivira tu funkciju. Prenosi se kontekst pojedine poruke.",
             "Cloudflare, Inc. (SAD) — upravljanje DNS-om za klijentske domene. Prenose se podaci o domeni i konfiguraciji, nikakvi podaci o gostima.",
-            "Google LLC (SAD) — samo kod prijave putem Googlea i kod prijevoda; ugovorni partner je u svakom slučaju Google Ireland Limited, no pristup američkog matičnog društva time nije isključen.",
+            "Google LLC (SAD) — prilikom prijave s Googleom, za prijevode i mjerenje dosega (Google Analytics 4, samo uz pristanak); ugovorni partner je Google Ireland Limited, ali pristup američke matične tvrtke nije isključen.",
           ],
         },
         {

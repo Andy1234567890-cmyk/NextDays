@@ -8,13 +8,13 @@ export const cookies: LegalDoc = {
   slug: "cookie-richtlinie",
   title: "Politika dwar il-Cookies",
   metaDescription:
-    "Liema cookies tuża myNextDays: esklussivament cookies tekniċi meħtieġa u funzjonali, l-ebda cookie ta' traċċar jew ta' reklamar.",
+    "Liema cookies juża myNextDays: cookies teknikament meħtieġa u — bil-kunsens tiegħek biss — cookies funzjonali, analitiċi u ta' marketing. Kull kategorija tista' tiġi attivata u diżattivata individwalment.",
   standIso: RECHTSSTAND_ISO,
   numbered: true,
   toc: true,
   intro: [
     `Din il-politika tispjega liema cookies u tekniki simili ta' ħżin jintużaw minn ${ANBIETER.firma} f'dan is-sit web u fil-pjattaforma myNextDays.`,
-    "Fil-qosor: aħna nużaw esklussivament cookies tekniċi meħtieġa u funzjonali. M'hemm ebda cookies ta' analiżi, ta' reklamar jew ta' traċċar, u l-ebda trasferiment ta' data dwar l-użu lil netwerks ta' reklamar.",
+    "Fil-qosor: Il-cookies meħtieġa huma dawk biss li mingħajrhom il-websajt ma taħdimx kif mitlub. Kull ħaġa oħra teħtieġ il-kunsens tiegħek u ma titgħabba mingħajrha — il-protezzjoni kontra l-ispam tal-formola ta' kuntatt tagħna, il-kejl tal-firxa u l-cookies tal-marketing li nużaw biex ikejlu s-suċċess tar-reklamar tagħna. Tista' tippermetti jew tirrifjuta kull waħda minn dawn il-kategoriji individwalment u tirtira d-deċiżjoni tiegħek fi kwalunkwe ħin.",
   ],
   sections: [
     {
@@ -28,14 +28,14 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Kunsens huwa meħtieġ skont l-Artikolu 9 tar-regolament Daniż dwar il-cookies (Cookie-bekendtgørelsen) (li jittrasponi l-Artikolu 5(3) tad-Direttiva 2002/58/KE) biss meta l-aċċess għall-apparat tiegħek ma jservix esklussivament għat-trażmissjoni ta' messaġġ jew ma jkunx strettament meħtieġ għal servizz li int stess tkun talabt b'mod espliċitu.",
         "Il-cookies kollha li nużaw huma meħtieġa għad-dħul, is-sigurtà tas-sessjoni jew għal xi impostazzjoni li għażilt int stess — għal dan ma nitolbu xejn u lanqas ma nissettjaw xi ħaġa li teħtieġ kunsens.",
-        "Trid tagħti l-kunsens għal ħaġa waħda biss: il-protezzjoni kontra l-ispam tal-formola ta' kuntatt tagħna. Din tiġi minn Google (reCAPTCHA Enterprise), għalhekk hija servizz estern, u tinġieb biss jekk tkun ippermettejtha. Għal dan, meta żżur għall-ewwel darba, tidher barra fl-isfel tal-iskrin b'buttuni ta' importanza ndaqs għal Irrifjuta u Aċċetta u mingħajr ebda għażla minn qabel. Sakemm ma tkunx iddeċidejt, tapplika «mhux permess».",
+        "Għandek tagħti l-kunsens tiegħek għal tliet kategoriji, li kollha ma jitgħabbewx mingħajr il-permess tiegħek: il-protezzjoni kontra l-ispam tal-formola ta' kuntatt tagħna (reCAPTCHA minn Google), il-kejl tal-firxa ta' din il-websajt (Google Analytics 4) u l-cookies tal-marketing (Meta, LinkedIn, Google Ads). Għal dan, tidher tieqa b'lista ta' kategoriji — mal-ewwel żjara, mingħajr għażla minn qabel, kull kategorija bi swiċċ tagħha stess. Sakemm ma tkunx iddeċidejt, tapplika \"mhux permess\", u la jsir evalwazzjoni u lanqas reklamar.",
         "Id-deċiżjoni tiegħek tinżamm fil-ħżin tal-brawżer tiegħek (Local Storage, valur «nd_consent»); fiha biss il-kategorija, il-mument u numru ta' verżjoni, ebda identifikatur personali tiegħek. Permezz tal-ikona tal-cookies fin-naħa ta' isfel tax-xellug ta' kull paġna tista' dejjem tibdilha jew tirtiraha. Wara sitt xhur nerġgħu nistaqsu mill-ġdid — kunsens m'għandux jibqa' validu mingħajr limitu ta' żmien.",
       ],
     },
     {
       heading: "Dan is-sit web",
       paragraphs: [
-        "Is-sit web tal-marketing ma jissettjax cookies. It-tipi tal-karattri u l-ikoni jinsabu fuq is-server tagħna stess — għal dan ma jissejjaħ ebda servizz ta' tip ta' karattri jew ikoni ta' terza persuna. L-uniku servizz estern ta' dan is-sit huwa l-protezzjoni kontra l-ispam tal-formola ta' kuntatt, li tiġi biss bil-kunsens tiegħek. Id-dettalji jinsabu fil-[Politika ta' Privatezza](/datenschutz).",
+        "Din il-websajt ma tuża l-ebda cookies minnha nnifisha. Il-fonts u s-simboli jinsabu fuq is-server tagħna stess — l-ebda servizz ta' simboli jew fonts ta' parti terza ma jiġi msejjaħ għal dan. Barra minn hekk, hemm biss is-servizzi li tippermetti: il-protezzjoni kontra l-ispam tal-formola ta' kuntatt, il-kejl tal-firxa u s-servizzi tal-marketing. Liema cookies jiġu ssettjati, b'liema tul ta' żmien u fuq liema host, jinsab hawn taħt fit-taqsima \"Cookies ta' Partijiet Terzi\". Ir-revoka permezz tal-ikona tal-cookie fin-naħa t'isfel tax-xellug — is-servizz rispettiv jintemm immedjatament u l-cookies tiegħu jitħassru. Id-dettalji jinsabu fil-[Politika ta' Privatezza](/datenschutz).",
       ],
     },
     {
@@ -92,7 +92,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Iżomm id-deċiżjoni tiegħek dwar il-protezzjoni kontra l-ispam tal-formola ta' kuntatt, sabiex il-barra tal-kunsens ma terġax titlob kull darba li żżur. Jinżammu biss il-kategorija, il-mument u numru ta' verżjoni. Il-valur ma jitlaqx mill-apparat tiegħek u ma jiġix trażmess lis-server tagħna; japplika għal dan il-brawżer. Validità: sitt xhur — wara dan il-barra terġa' titlob mill-ġdid. Jekk tħassar il-valur, il-barra terġa' titlob fiż-żjara li jmiss.",
+            "Jirreġistra d-deċiżjoni tiegħek dwar is-servizzi li jeħtieġu kunsens (protezzjoni kontra l-ispam tal-formola ta' kuntatt u kejl tal-firxa).",
           ],
         },
         {
@@ -120,6 +120,69 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Jekk twettaq ħlas, il-fornitur tas-servizz ta' ħlas (Stripe jew PayPal) jista' jissettja cookies fuq is-sit tiegħu stess, meħtieġa għall-ipproċessar u l-prevenzjoni tal-frodi. Għal dan japplikaw id-dispożizzjonijiet tal-fornitur rispettiv.",
         "Fuq siti web li n-negozji joħolqu bl-għodda tagħna għall-bini ta' siti, in-negozju rispettiv jiddeċiedi dwar cookies addizzjonali u huwa responsabbli għall-informazzjoni hemmhekk.",
+        "Biss il-kunsens tiegħek jippermetti lis-servizzi ta' Google fuq din il-websajt biex jistabbilixxu l-cookies li ġejjin — tnejn għall-kejl tal-udjenza, wieħed għall-protezzjoni kontra l-ispam. Mingħajr il-kunsens tiegħek, l-iskript rispettiv ma jitgħabbiex u l-ebda waħda minn dawn il-cookies ma tiġi stabbilita; jekk tirtira l-kunsens tiegħek, aħna nħassruhom.",
+      ],
+      unterpunkte: [
+        {
+          titel: "_fbp — Kejl tal-prestazzjoni tar-reklami (jeħtieġ kunsens)",
+          list: [
+            "Għan: jassenja ż-żjara tiegħek lil reklam sabiex inkunu nistgħu nkejlu s-suċċess tal-kampanji tagħna.",
+            "Kontenut: identifikatur iġġenerat b'mod każwali; l-ebda isem, email, jew informazzjoni tal-kont mingħandna.",
+            "Fornitur: Meta Platforms Ireland Limited, Merrion Road, Dublin 4, l-Irlanda.",
+            "Host: mynextdays.com (cookie tal-ewwel parti, issettjat mill-iskript ta' Meta). Tul: madwar tliet xhur.",
+          ],
+        },
+        {
+          titel:
+            "_gcl_au — Kejl tal-prestazzjoni ta' Google Ads (jeħtieġ kunsens)",
+          list: [
+            "Għan: jassenja ż-żjara tiegħek lil reklam ta' Google sabiex inkunu nistgħu nkejlu s-suċċess tal-kampanji tagħna.",
+            "Kontenut: identifikatur iġġenerat b'mod każwali mingħajr referenza għall-persuna tiegħek.",
+            "Fornitur: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, l-Irlanda.",
+            "Host: mynextdays.com (cookie tal-ewwel parti). Tul: madwar tliet xhur.",
+          ],
+        },
+        {
+          titel: "li_gc u bcookie — Reklamar ta' LinkedIn (jeħtieġ kunsens)",
+          list: [
+            "Għan: jidentifika l-browser tiegħek lil LinkedIn sabiex ir-reklami u s-suċċess tagħhom ikunu jistgħu jiġu attribwiti; li_gc jaħżen ukoll il-kunsens tiegħek hemmhekk.",
+            "Kontenut: identifikatur tal-browser u l-istatus tal-kunsens; l-ebda informazzjoni mill-kont tiegħek magħna.",
+            "Fornitur: LinkedIn Ireland Unlimited Company, Wilton Plaza, Dublin 2, l-Irlanda.",
+            "Host: linkedin.com (cookies ta' partijiet terzi). Tul: madwar sitt xhur jew sena.",
+          ],
+        },
+        {
+          titel:
+            "_GRECAPTCHA — Protezzjoni kontra l-ispam tal-formola ta' kuntatt (jeħtieġ kunsens)",
+          list: [
+            "Host: www.google.com (Cookie ta' parti terza).",
+            "Għan: tippermetti lil Google tevalwa r-riskju, li tiddistingwi bejn talbiet awtomatizzati tal-massa u talbiet reali.",
+            "Kontenut: identifikatur ġenerat minn Google għal din l-evalwazzjoni; l-ebda isem, email jew informazzjoni dwar il-kont mingħandna.",
+            "Fornitur: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, l-Irlanda.",
+            "Tul ta' żmien: stabbilit minn Google, sa sitt xhur. Jiġi stabbilit biss jekk tkun ippermettiet il-protezzjoni kontra l-ispam u ftaħt il-formola ta' kuntatt.",
+          ],
+        },
+        {
+          titel: "_ga — Kejl tal-firxa (kunsens meħtieġ)",
+          list: [
+            "Host: mynextdays.com (Cookie tal-ewwel parti, issettjat mill-iskript ta' Google).",
+            "Għan: jiddistingwi l-viżitaturi sabiex iż-żjarat ripetuti ma jingħaddux darbtejn.",
+            "Kontenut: identifikatur iġġenerat b'mod każwali mingħajr referenza għall-persuna tiegħek; l-ebda isem, email jew dettalji tal-kont.",
+            "Fornitur: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, l-Irlanda.",
+            "Durata: sa sentejn.",
+          ],
+        },
+        {
+          titel:
+            "_ga_<Kennung> — Status tas-sessjoni tal-kejl (kunsens meħtieġ)",
+          list: [
+            "Host: mynextdays.com (Cookie tal-ewwel parti, issettjat mill-iskript ta' Google).",
+            "Għan: jirreġistra meta bdiet iż-żjara attwali tiegħek sabiex il-paġni miżjura f'sessjoni jappartjenu flimkien.",
+            "Kontenut: timestamp u kontatur tas-sessjoni; l-identifikatur fl-isem jirreferi għall-proprjetà tagħna, mhux lilek.",
+            "Fornitur: Google Ireland Limited.",
+            "Durata: sa sentejn.",
+          ],
+        },
       ],
     },
     {

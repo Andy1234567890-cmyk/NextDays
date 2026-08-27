@@ -61,9 +61,16 @@ export function EinwilligungsKnopf() {
       // liest ein Screenreader „Schaltfläche" und sonst nichts.
       title={t("knopf")}
       aria-label={t("knopf")}
-      // z-40 liegt UNTER Leiste (z-90) und Voranmelde-Popup (z-[100]) und
-      // stört damit keine Entscheidung, die gerade getroffen wird.
-      className="fixed bottom-5 left-5 z-40 flex size-11 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-card transition-colors hover:bg-surface-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      // z-[110] liegt ÜBER dem Voranmelde-Popup (z-[100]) und der Leiste
+      // (z-90). Das ist eine bewusste Umkehr: vorher stand hier z-40, womit der
+      // einzige Widerrufsweg unter einem Marketing-Overlay verschwand — solange
+      // das Popup offen war, gab es KEINEN erreichbaren Weg, eine Einwilligung
+      // zurückzunehmen (Art. 7 Abs. 3 DSGVO verlangt „jederzeit"). Ein
+      // Werbe-Overlay darf ein Widerrufsrecht nicht verdecken.
+      //
+      // Über der Leiste zu liegen ist unschädlich: die Leiste IST das Ziel des
+      // Knopfes, und ein zweiter Klick darauf ändert nichts an der Anzeige.
+      className="fixed bottom-5 left-5 z-[110] flex size-11 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-card transition-colors hover:bg-surface-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <Icon icon="ph:cookie" className="size-5" />
     </button>

@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "Váš súhlas",
-    "text": "Táto webová stránka nepoužíva analytické, reklamné ani sledovacie služby; písma a ikony sú poskytované z nášho vlastného servera. Nutné je len to, čo si sami nastavíte alebo vyžiadate. Váš súhlas preto potrebujeme na presne jednu vec: na externú ochranu nášho kontaktného formulára pred spamom.",
+    "textBeide": "Dve veci vyžadujú váš súhlas. Môžete ich jednotlivo povoliť alebo odmietnuť, kedykoľvek zmeniť a odvolať. Podrobnosti nájdete v zásadách používania súborov cookie.",
+    "textSpamschutz": "Jedna vec vyžaduje váš súhlas. Môžete ju kedykoľvek zmeniť a odvolať. Podrobnosti nájdete v zásadách používania súborov cookie.",
+    "textStatistik": "Jedna vec vyžaduje váš súhlas. Môžete ju kedykoľvek zmeniť a odvolať. Podrobnosti nájdete v zásadách používania súborov cookie.",
     "richtlinie": "Prečítať si zásady používania cookies",
     "knopf": "Nastavenia cookies",
     "allesAblehnen": "Odmietnuť všetko",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Skryť možnosti",
     "auswahlSpeichern": "Uložiť možnosti",
     "immerAktiv": "Vždy aktívne",
+    "nichtEingerichtet": "V tomto prostredí nie je táto služba nastavená – nič nenačíta ani s vaším povolením.",
     "kategorien": {
       "notwendig": {
-        "titel": "Nutné",
-        "text": "Váš výber jazyka a — len ak si chat otvoríte sami — identifikátor vášho rozhovoru na tomto zariadení. Bez týchto údajov nie je možné doručiť stránku tak, ako ste si ju vyžiadali. Neslúžia ani na reklamu, ani na štatistiku."
+        "titel": "Nevyhnutné súbory cookie",
+        "text": "Tieto súbory cookie sú nevyhnutné pre fungovanie webovej lokality: Váš výber jazyka a, ak otvoríte chat, identifikátor vašej konverzácie. Nemôžu byť vypnuté, pretože webová lokalita bez nich nebude fungovať podľa požiadaviek."
       },
-      "spamschutz": {
-        "titel": "Ochrana kontaktného formulára pred spamom",
-        "text": "Náš kontaktný formulár je chránený pred automatizovanými hromadnými správami pomocou reCAPTCHA Enterprise od spoločnosti Google. Ak to povolíte, váš prehliadač počas vypĺňania formulára načíta skript z google.com a odošle pri tom vašu adresu IP spoločnosti Google. Bez vášho povolenia sa od Google nenačíta nič; v takom prípade nás zastihnete e-mailom."
+      "funktional": {
+        "titel": "Funkčné súbory cookie",
+        "text": "Tieto súbory cookie chránia náš kontaktný formulár pred automatizovanými hromadnými správami. Ak ich povolíte, váš prehliadač načíta reCAPTCHA od spoločnosti Google a prenesie vašu IP adresu."
+      },
+      "analytisch": {
+        "titel": "Analytické súbory cookie",
+        "text": "Pomocou týchto súborov cookie zisťujeme, ktoré stránky sa čítajú a kde návštevníci odchádzajú, aby sme zlepšili webovú lokalitu. Personalizácia reklamy a profily naprieč zariadeniami sú vypnuté."
+      },
+      "marketing": {
+        "titel": "Marketingové súbory cookie",
+        "text": "Pomocou týchto súborov cookie meriame úspešnosť našej reklamy a zobrazujeme vám relevantné reklamy na iných platformách. Údaje sa prenášajú spoločnostiam Meta, LinkedIn a Google."
       }
     },
     "kontakt": {
       "hinweis": "Pred odoslaním potrebujeme vaše povolenie na externú ochranu pred spamom (reCAPTCHA od Google). Bez neho formulár neprijmeme — takto zabraňujeme automatizovaným hromadným správam.",
       "erlauben": "Povoliť ochranu pred spamom",
       "alternative": "Nechcete to? Napíšte nám namiesto toho na {email}."
-    }
+    },
+    "angaben": {
+      "anbieter": "Poskytovateľ:",
+      "dauer": "Doba uloženia:",
+      "cookies": "Cookies:",
+      "keineCookies": "žiadne (len pri odoslaní)",
+      "drittland": "Prenos:",
+      "drittlandJa": "do USA na základe rámca EU-US Data Privacy Framework",
+      "drittlandNein": "len v rámci EÚ",
+      "listeAnzeigen": "Cookies, ktoré používame",
+      "listeTitel": "Zoznam súborov cookie",
+      "name": "Názov",
+      "host": "Hostiteľ",
+      "art": "Typ",
+      "artErst": "Prvá strana",
+      "artDritt": "Tretia strana",
+      "zweck": "Účel",
+      "kategorie": "Kategória",
+      "beschreibung": "Popis"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "stanovené spoločnosťou Google, až šesť mesiacov",
+      "dreiMonate": "približne tri mesiace",
+      "einJahr": "približne jeden rok",
+      "sechsMonate": "približne šesť mesiacov",
+      "zweiJahre": "až dva roky"
+    },
+    "zweck": {
+      "grecaptcha": "Umožňuje spoločnosti Google vykonávať hodnotenie rizík, ktoré rozlišuje automatické hromadné odosielanie od skutočných požiadaviek.",
+      "ga": "Rozlišuje návštevníkov, aby sa opakované zobrazenia nezapočítavali dvakrát. Obsahuje náhodne vygenerovaný identifikátor bez odkazu na vašu osobu.",
+      "gaSitzung": "Zaznamenáva, kedy sa začala vaša aktuálna návšteva, aby zobrazenia stránok patrili k jednej relácii.",
+      "fbp": "Priradí vašu návštevu k reklamnému inzerátu, aby sme mohli merať úspešnosť našich kampaní.",
+      "gclAu": "Priradí vašu návštevu k reklame Google, aby sme mohli merať úspešnosť našich kampaní.",
+      "liGc": "Ukladá váš súhlas so spoločnosťou LinkedIn na reklamné účely.",
+      "bcookie": "Identifikuje váš prehliadač voči spoločnosti LinkedIn, aby bolo možné priradiť reklamy a ich úspešnosť."
+    },
+    "uebersicht": {
+      "titel": "Vaše nastavenia súborov cookie",
+      "text": "Vyberte, ktoré súbory cookie chcete na tejto webovej lokalite povoliť alebo zakázať. Nastavenia pre každú kategóriu súborov cookie môžete kedykoľvek aktivovať a deaktivovať.",
+      "datenschutz": "Viac informácií v zásadách ochrany osobných údajov"
+    },
+    "verwalten": "Spravovať nastavenia súborov cookie",
+    "schliessen": "Zatvoriť",
+    "bestaetigen": "Potvrdiť nastavenia"
   }
 }

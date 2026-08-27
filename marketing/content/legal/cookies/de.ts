@@ -13,14 +13,22 @@
 //                             gebraucht, ein Cookie ginge bei jedem Aufruf mit)
 //   nd_support_token        → marketing/lib/support.ts (localStorage, kein
 //                             Cookie; nur wenn der Besucher den Chat öffnet)
-// Diese Marketing-Website selbst setzt KEINE Cookies.
+//   _ga / _ga_<Kennung>     → Google Analytics 4 (marketing/lib/analytics.ts),
+//                             NUR nach Einwilligung „statistik"; von Google
+//                             gesetzt, nicht von uns. Widerruf löscht sie.
+// Von sich aus setzt diese Marketing-Website KEINE Cookies.
 // Neues Cookie/neuer Speicherwert im Frontend → hier nachtragen.
 //
 // Stand 24.08.2026: Der Abschnitt „Warum es kein Cookie-Banner gibt“ ist
-// entfallen. Es gibt jetzt eine Einwilligungs-Leiste — nicht für Cookies,
-// sondern für den EINEN externen Dienst dieser Seite (reCAPTCHA am
-// Kontaktformular, marketing/lib/captcha.ts). Wer den Abschnitt wieder
+// entfallen. Es gibt jetzt eine Einwilligungs-Leiste. Wer den Abschnitt wieder
 // einfügt, macht die Richtlinie unwahr.
+//
+// Stand 26.08.2026: Die Leiste schaltet ZWEI Dienste — reCAPTCHA am
+// Kontaktformular (marketing/lib/captcha.ts) UND die Reichweitenmessung
+// (marketing/lib/analytics.ts). Bis dahin stand hier „keine Analyse-Cookies“;
+// das war mit dem Einbau von GA4 unwahr geworden und ist mitgeändert. Bei einer
+// Rechtsseite ist eine überholte Zusicherung der gefährlichere Fehler: sie
+// sieht aus, als wäre sie geprüft.
 import { ANBIETER, RECHTSSTAND_ISO } from "../anbieter";
 
 import type { LegalDoc } from "../types";
@@ -29,13 +37,13 @@ export const cookies: LegalDoc = {
   slug: "cookie-richtlinie",
   title: "Cookie-Richtlinie",
   metaDescription:
-    "Welche Cookies myNextDays setzt: ausschließlich technisch notwendige und funktionale Cookies, keine Tracking- oder Werbe-Cookies.",
+    "Welche Cookies myNextDays setzt: technisch notwendige Cookies sowie — nur mit Ihrer Einwilligung — funktionale, analytische und Marketing-Cookies. Jede Kategorie ist einzeln an- und abschaltbar.",
   standIso: RECHTSSTAND_ISO,
   numbered: true,
   toc: true,
   intro: [
     `Diese Richtlinie erklärt, welche Cookies und vergleichbaren Speichertechniken die ${ANBIETER.firma} auf dieser Website und in der Plattform myNextDays einsetzt.`,
-    "Kurz gefasst: Wir verwenden ausschließlich technisch notwendige und funktionale Cookies. Es gibt keine Analyse-, Werbe- oder Tracking-Cookies und keine Weitergabe von Nutzungsdaten an Werbenetzwerke.",
+    "Kurz gefasst: Notwendig sind allein die Cookies, ohne die die Website nicht wie angefordert funktioniert. Alles Weitere braucht Ihre Einwilligung und lädt ohne sie nicht — der Spamschutz unseres Kontaktformulars, die Reichweitenmessung und die Marketing-Cookies, mit denen wir den Erfolg unserer Werbung messen. Sie können jede dieser Kategorien einzeln erlauben oder ablehnen und Ihre Entscheidung jederzeit widerrufen.",
   ],
   sections: [
     {
@@ -49,14 +57,14 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Eine Einwilligung ist nach § 9 der dänischen Cookie-Bekendtgørelse (Umsetzung von Art. 5 Abs. 3 der Richtlinie 2002/58/EG) nur nötig, wenn ein Zugriff auf Ihr Gerät nicht ausschließlich der Übermittlung einer Nachricht dient oder für einen ausdrücklich angeforderten Dienst unbedingt erforderlich ist.",
         "Alle Cookies, die wir setzen, sind für die Anmeldung, die Sicherheit der Sitzung oder eine von Ihnen selbst getroffene Einstellung erforderlich — dafür fragen wir nichts ab und setzen umgekehrt auch nichts, was eine Einwilligung bräuchte.",
-        "Einwilligen müssen Sie für genau eine Sache: den Spamschutz unseres Kontaktformulars. Er kommt von Google (reCAPTCHA Enterprise), ist also ein externer Dienst, und wird ausschließlich dann geladen, wenn Sie ihn erlaubt haben. Dafür fragt eine Leiste am unteren Bildschirmrand — beim ersten Besuch, mit gleichrangigen Knöpfen für Ablehnen und Annehmen und ohne Vorauswahl. Solange Sie nicht entschieden haben, gilt „nicht erlaubt“.",
+        "Einwilligen müssen Sie für drei Kategorien, die alle ohne Ihre Erlaubnis nicht geladen werden: den Spamschutz unseres Kontaktformulars (reCAPTCHA von Google), die Reichweitenmessung dieser Website (Google Analytics 4) und die Marketing-Cookies (Meta, LinkedIn, Google Ads). Dafür fragt ein Fenster mit einer Kategorie-Liste — beim ersten Besuch, ohne Vorauswahl, jede Kategorie mit eigenem Schalter. Solange Sie nicht entschieden haben, gilt „nicht erlaubt“, und es wird weder ausgewertet noch geworben.",
         "Ihre Entscheidung liegt im Speicher Ihres Browsers (Local Storage, Wert „nd_consent“); sie enthält nur die Kategorie, den Zeitpunkt und eine Fassungsnummer, keine Kennung Ihrer Person. Über das Cookie-Symbol unten links auf jeder Seite können Sie sie jederzeit ändern oder widerrufen. Nach sechs Monaten fragen wir erneut — eine Einwilligung soll nicht unbegrenzt weitergelten.",
       ],
     },
     {
       heading: "Diese Website",
       paragraphs: [
-        "Die Marketing-Website setzt keine Cookies. Schriften und Symbole liegen auf unserem eigenen Server — es wird dafür kein Symbol- oder Schrift-Dienst eines Dritten aufgerufen. Der einzige externe Dienst dieser Seite ist der Spamschutz des Kontaktformulars, und der lädt nur mit Ihrer Einwilligung. Einzelheiten stehen in der [Datenschutzerklärung](/datenschutz).",
+        "Von sich aus setzt diese Website keine Cookies. Schriften und Symbole liegen auf unserem eigenen Server — es wird dafür kein Symbol- oder Schrift-Dienst eines Dritten aufgerufen. Hinzu kommen nur die Dienste, die Sie erlauben: der Spamschutz des Kontaktformulars, die Reichweitenmessung und die Marketing-Dienste. Welche Cookies dabei gesetzt werden, mit welcher Laufzeit und auf welchem Host, steht unten im Abschnitt „Cookies Dritter“. Widerruf über das Cookie-Symbol unten links — der jeweilige Dienst endet sofort und seine Cookies werden gelöscht. Einzelheiten stehen in der [Datenschutzerklärung](/datenschutz).",
       ],
     },
     {
@@ -98,7 +106,8 @@ export const cookies: LegalDoc = {
           ],
         },
         {
-          titel: "sb-… — Anmeldung mit Google (technisch notwendig, nur bei Nutzung)",
+          titel:
+            "sb-… — Anmeldung mit Google (technisch notwendig, nur bei Nutzung)",
           list: [
             "Zweck: hält die Sitzung, wenn Sie sich über Google anmelden.",
             "Inhalt: Sitzungstoken des Anmeldedienstes.",
@@ -113,7 +122,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Hält Ihre Entscheidung über den Spamschutz des Kontaktformulars fest, damit die Einwilligungs-Leiste nicht bei jedem Aufruf erneut fragt. Gespeichert werden nur die Kategorie, der Zeitpunkt und eine Fassungsnummer. Der Wert verlässt Ihr Gerät nicht und wird nicht an unseren Server übertragen; er gilt für diesen Browser. Laufzeit: sechs Monate — danach fragt die Leiste erneut. Löschen Sie den Wert, fragt sie beim nächsten Besuch wieder.",
+            "Hält Ihre Entscheidung über die einwilligungspflichtigen Dienste fest — den Spamschutz des Kontaktformulars und die Reichweitenmessung —, damit die Einwilligungs-Leiste nicht bei jedem Aufruf erneut fragt. Gespeichert werden nur die Kategorien, der Zeitpunkt und eine Fassungsnummer. Der Wert verlässt Ihr Gerät nicht und wird nicht an unseren Server übertragen; er gilt für diesen Browser. Laufzeit: sechs Monate — danach fragt die Leiste erneut. Löschen Sie den Wert, fragt sie beim nächsten Besuch wieder.",
           ],
         },
         {
@@ -141,6 +150,71 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Wenn Sie eine Zahlung durchführen, kann der Zahlungsdienstleister (Stripe oder PayPal) auf seiner eigenen Seite Cookies setzen, die für die Abwicklung und Betrugsprävention erforderlich sind. Dafür gelten die Bestimmungen des jeweiligen Anbieters.",
         "Auf Websites, die Betriebe mit unserem Baukasten erstellen, entscheidet der jeweilige Betrieb über zusätzliche Cookies und ist für die dortigen Hinweise verantwortlich.",
+        "Nur mit Ihrer Einwilligung setzen Google-Dienste auf dieser Website die folgenden Cookies — die Reichweitenmessung zwei, der Spamschutz eines. Ohne Ihre Einwilligung wird das jeweilige Skript nicht geladen und keines dieser Cookies gesetzt; bei Widerruf löschen wir sie.",
+      ],
+      unterpunkte: [
+        {
+          titel:
+            "_fbp — Erfolgsmessung der Werbung (Einwilligung erforderlich)",
+          list: [
+            "Zweck: ordnet Ihren Besuch einer Werbeanzeige zu, damit wir den Erfolg unserer Kampagnen messen können.",
+            "Inhalt: eine zufällig erzeugte Kennung; keine Namens-, E-Mail- oder Kontoangaben von uns.",
+            "Anbieter: Meta Platforms Ireland Limited, Merrion Road, Dublin 4, Irland.",
+            "Host: mynextdays.com (Erstanbieter-Cookie, von Metas Skript gesetzt). Laufzeit: etwa drei Monate.",
+          ],
+        },
+        {
+          titel:
+            "_gcl_au — Erfolgsmessung Google Ads (Einwilligung erforderlich)",
+          list: [
+            "Zweck: ordnet Ihren Besuch einer Google-Anzeige zu, damit wir den Erfolg unserer Kampagnen messen können.",
+            "Inhalt: eine zufällig erzeugte Kennung ohne Bezug zu Ihrer Person.",
+            "Anbieter: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland.",
+            "Host: mynextdays.com (Erstanbieter-Cookie). Laufzeit: etwa drei Monate.",
+          ],
+        },
+        {
+          titel:
+            "li_gc und bcookie — LinkedIn-Werbung (Einwilligung erforderlich)",
+          list: [
+            "Zweck: kennzeichnet Ihren Browser gegenüber LinkedIn, damit Anzeigen und deren Erfolg zugeordnet werden können; li_gc speichert zusätzlich Ihre dortige Einwilligung.",
+            "Inhalt: eine Browser-Kennung sowie der Einwilligungsstand; keine Angaben aus Ihrem Konto bei uns.",
+            "Anbieter: LinkedIn Ireland Unlimited Company, Wilton Plaza, Dublin 2, Irland.",
+            "Host: linkedin.com (Drittanbieter-Cookies). Laufzeit: etwa sechs Monate bzw. ein Jahr.",
+          ],
+        },
+        {
+          titel:
+            "_GRECAPTCHA — Spamschutz des Kontaktformulars (Einwilligung erforderlich)",
+          list: [
+            "Host: www.google.com (Drittanbieter-Cookie).",
+            "Zweck: erlaubt Google die Risikobewertung, mit der automatisierte Massenzuschriften von echten Anfragen unterschieden werden.",
+            "Inhalt: eine von Google erzeugte Kennung für diese Bewertung; keine Namens-, E-Mail- oder Kontoangaben von uns.",
+            "Anbieter: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland.",
+            "Laufzeit: von Google festgelegt, bis zu sechs Monate. Gesetzt wird es erst, wenn Sie den Spamschutz erlaubt und das Kontaktformular geöffnet haben.",
+          ],
+        },
+        {
+          titel: "_ga — Reichweitenmessung (Einwilligung erforderlich)",
+          list: [
+            "Host: mynextdays.com (Erstanbieter-Cookie, von Googles Skript gesetzt).",
+            "Zweck: unterscheidet Besucher, damit wiederkehrende Aufrufe nicht doppelt gezählt werden.",
+            "Inhalt: zufällig erzeugte Kennung ohne Bezug zu Ihrer Person; keine Namens-, E-Mail- oder Kontoangaben.",
+            "Anbieter: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland.",
+            "Laufzeit: bis zu zwei Jahre.",
+          ],
+        },
+        {
+          titel:
+            "_ga_<Kennung> — Sitzungsstand der Messung (Einwilligung erforderlich)",
+          list: [
+            "Host: mynextdays.com (Erstanbieter-Cookie, von Googles Skript gesetzt).",
+            "Zweck: hält fest, wann Ihr aktueller Besuch begonnen hat, damit Seitenaufrufe einer Sitzung zusammengehören.",
+            "Inhalt: Zeitstempel und Zähler der Sitzung; die Kennung im Namen bezeichnet unsere Property, nicht Sie.",
+            "Anbieter: Google Ireland Limited.",
+            "Laufzeit: bis zu zwei Jahre.",
+          ],
+        },
       ],
     },
     {

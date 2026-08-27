@@ -8,13 +8,13 @@ export const cookies: LegalDoc = {
   slug: "cookie-richtlinie",
   title: "Küpsiste poliitika",
   metaDescription:
-    "Milliseid küpsiseid myNextDays kasutab: ainult tehniliselt vajalikud ja funktsionaalsed küpsised, ei mingeid jälgimis- ega reklaamiküpsiseid.",
+    "Milliseid küpsiseid myNextDays kasutab: tehniliselt vajalikud küpsised ja – ainult teie nõusolekul – funktsionaalsed, analüütilised ja turundusküpsised. Iga kategooria on eraldi sisse- ja väljalülitatav.",
   standIso: RECHTSSTAND_ISO,
   numbered: true,
   toc: true,
   intro: [
     `Käesolev poliitika selgitab, milliseid küpsiseid ja sarnaseid salvestustehnikaid ${ANBIETER.firma} kasutab sellel veebilehel ja platvormil myNextDays.`,
-    "Lühidalt: kasutame ainult tehniliselt vajalikke ja funktsionaalseid küpsiseid. Analüüsi-, reklaami- ega jälgimisküpsiseid ei ole ning kasutusandmeid ei anta edasi reklaamivõrgustikele.",
+    "Lühidalt: Vajalikud on ainult need küpsised, ilma milleta veebisait ei tööta nõuetekohaselt. Kõik muu vajab teie nõusolekut ja ilma selleta ei laadita – meie kontaktivormi rämpspostikaitse, leviala mõõtmine ja turundusküpsised, millega mõõdame oma reklaami edukust. Saate iga kategooria eraldi lubada või keelata ja oma otsuse igal ajal tühistada.",
   ],
   sections: [
     {
@@ -28,14 +28,14 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Nõusolek on vajalik Taani küpsiste määruse (Cookie-bekendtgørelsen) § 9 kohaselt (direktiivi 2002/58/EÜ artikli 5 lõike 3 ülevõtmine) ainult siis, kui juurdepääs teie seadmele ei teeni üksnes sõnumi edastamist või ei ole hädavajalik teie enda selgesõnaliselt taotletud teenuse jaoks.",
         "Kõik küpsised, mida me kasutame, on vajalikud sisselogimiseks, sessiooni turvalisuseks või teie enda tehtud seadistuse jaoks — selleks me midagi ei küsi ega sea vastupidi ka midagi, mis vajaks nõusolekut.",
-        "Nõusolekut vajame täpselt ühe asja jaoks: meie kontaktvormi rämpspostikaitse jaoks. See tuleb Google'ilt (reCAPTCHA Enterprise) ehk on väline teenus ja laaditakse ainult siis, kui olete selle lubanud. Selleks küsib ekraani allservas riba — esimesel külastusel, võrdväärsete nuppudega „Keeldu“ ja „Nõustu“ ning ilma eelvalikuta. Kuni te ei ole otsustanud, kehtib „ei ole lubatud“.",
+        "Te peate nõustuma kolme kategooriaga, mida ilma teie loata ei laadita: meie kontaktivormi rämpspostikaitse (Google'i reCAPTCHA), selle veebisaidi leviala mõõtmine (Google Analytics 4) ja turundusküpsised (Meta, LinkedIn, Google Ads). Selleks küsib aken kategooriate loendiga – esimesel külastusel, ilma eelvalikuta, iga kategooria oma lülitiga. Kuni te pole otsustanud, kehtib „pole lubatud“ ja midagi ei hinnata ega reklaamita.",
         "Teie otsus asub teie brauseri salvestuses (Local Storage, väärtus „nd_consent“); see sisaldab ainult kategooriat, ajahetke ja versiooninumbrit, mitte teie isikut tuvastavat teavet. Iga lehe vasakus alanurgas oleva küpsiseikooni kaudu saate seda igal ajal muuta või tagasi võtta. Kuue kuu pärast küsime uuesti — nõusolek ei peaks kehtima piiramatult.",
       ],
     },
     {
       heading: "See veebileht",
       paragraphs: [
-        "Turundusveebileht ei kasuta küpsiseid. Fondid ja ikoonid asuvad meie enda serveris — selleks ei kasutata ühegi kolmanda osapoole ikooni- või fonditeenust. Selle lehe ainus väline teenus on kontaktvormi rämpspostikaitse ja see laaditakse ainult teie nõusolekul. Üksikasjad on [Privaatsuspoliitikas](/datenschutz).",
+        "See veebisait ise küpsiseid ei kasuta. Fondid ja sümbolid asuvad meie enda serveris – selleks ei kutsuta ühtegi kolmanda osapoole sümboli- või fonditeenust. Lisaks on ainult need teenused, mida te lubate: kontaktivormi rämpspostikaitse, leviala mõõtmine ja turundusteenused. Milliseid küpsiseid seejuures kasutatakse, millise kehtivusajaga ja millisel hostil, on kirjas allpool jaotises „Kolmandate osapoolte küpsised“. Tühistamine vasakus allnurgas oleva küpsiseikooni kaudu – vastav teenus lõpeb koheselt ja selle küpsised kustutatakse. Üksikasjad on kirjas [Andmekaitseavalduses](/datenschutz).",
       ],
     },
     {
@@ -77,7 +77,8 @@ export const cookies: LegalDoc = {
           ],
         },
         {
-          titel: "sb-… — sisselogimine Google'iga (tehniliselt vajalik, ainult kasutamisel)",
+          titel:
+            "sb-… — sisselogimine Google'iga (tehniliselt vajalik, ainult kasutamisel)",
           list: [
             "Eesmärk: hoiab sessiooni, kui logite sisse Google'i kaudu.",
             "Sisu: sisselogimisteenuse sessiooniluba.",
@@ -92,7 +93,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Salvestab teie otsuse kontaktvormi rämpspostikaitse kohta, et nõusolekuriba ei küsiks seda iga külastuse korral uuesti. Salvestatakse ainult kategooria, ajahetk ja versiooninumber. Väärtus ei lahku teie seadmest ega edastata meie serverile; see kehtib selle brauseri jaoks. Kehtivusaeg: kuus kuud — pärast seda küsib riba uuesti. Kui kustutate väärtuse, küsib riba järgmisel külastusel uuesti.",
+            "Salvestab teie otsuse nõusolekut vajavate teenuste kohta (kontaktivormi rämpsposti kaitse ja ulatuse mõõtmine).",
           ],
         },
         {
@@ -120,6 +121,68 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Kui teete makse, võib makseteenuse pakkuja (Stripe või PayPal) seada oma lehel küpsiseid, mis on vajalikud tehingu läbiviimiseks ja pettuste ennetamiseks. Selle kohta kehtivad vastava pakkuja tingimused.",
         "Veebilehtedel, mida ettevõtted loovad meie ehitajaga, otsustab vastav ettevõte täiendavate küpsiste üle ja vastutab seal esitatud teabe eest.",
+        "Ainult teie nõusolekul kasutavad Google'i teenused sellel veebisaidil järgmisi küpsiseid – kaks küpsist ulatuse mõõtmiseks, üks rämpsposti kaitseks. Ilma teie nõusolekuta vastavat skripti ei laeta ja ühtegi neist küpsistest ei seadistata; nõusoleku tagasivõtmisel kustutame need.",
+      ],
+      unterpunkte: [
+        {
+          titel: "_fbp – reklaami tulemuslikkuse mõõtmine (vajalik nõusolek)",
+          list: [
+            "Eesmärk: seostab teie külastuse reklaamiga, et saaksime mõõta oma kampaaniate edukust.",
+            "Sisu: juhuslikult genereeritud identifikaator; me ei kogu nime, e-posti ega kontoteavet.",
+            "Pakkuja: Meta Platforms Ireland Limited, Merrion Road, Dublin 4, Iirimaa.",
+            "Host: mynextdays.com (esimese osapoole küpsis, mille on seadistanud Meta skript). Kehtivusaeg: umbes kolm kuud.",
+          ],
+        },
+        {
+          titel:
+            "_gcl_au – Google Adsi tulemuslikkuse mõõtmine (vajalik nõusolek)",
+          list: [
+            "Eesmärk: seostab teie külastuse Google'i reklaamiga, et saaksime mõõta oma kampaaniate edukust.",
+            "Sisu: juhuslikult genereeritud identifikaator, mis ei ole seotud teie isikuga.",
+            "Pakkuja: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Iirimaa.",
+            "Host: mynextdays.com (esimese osapoole küpsis). Kehtivusaeg: umbes kolm kuud.",
+          ],
+        },
+        {
+          titel: "li_gc ja bcookie – LinkedIni reklaam (vajalik nõusolek)",
+          list: [
+            "Eesmärk: tuvastab teie brauseri LinkedInile, et saaks reklaame ja nende edukust seostada; li_gc salvestab ka teie nõusoleku.",
+            "Sisu: brauseri identifikaator ja nõusoleku olek; ei sisalda teavet teie konto kohta meie juures.",
+            "Pakkuja: LinkedIn Ireland Unlimited Company, Wilton Plaza, Dublin 2, Iirimaa.",
+            "Host: linkedin.com (kolmanda osapoole küpsised). Kehtivusaeg: umbes kuus kuud või üks aasta.",
+          ],
+        },
+        {
+          titel:
+            "_GRECAPTCHA – kontaktivormi rämpspostikaitse (nõusolek vajalik)",
+          list: [
+            "Host: www.google.com (kolmanda osapoole küpsis).",
+            "Eesmärk: võimaldab Google'il hinnata riske, eristades automatiseeritud masspostitusi tõelistest päringutest.",
+            "Sisu: Google'i loodud identifikaator selle hindamiseks; me ei edasta nime, e-posti ega konto andmeid.",
+            "Pakkuja: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Iirimaa.",
+            "Kehtivusaeg: Google'i määratud, kuni kuus kuud. See määratakse alles siis, kui olete rämpspostikaitse lubanud ja kontaktivormi avanud.",
+          ],
+        },
+        {
+          titel: "_ga — ulatuse mõõtmine (nõusolek vajalik)",
+          list: [
+            "Host: mynextdays.com (esimese osapoole küpsis, mille on seadnud Google'i skript).",
+            "Eesmärk: eristab külastajaid, et korduvaid külastusi ei loetaks topelt.",
+            "Sisu: juhuslikult genereeritud tunnus, mis ei ole seotud teie isikuga; ei sisalda nime, e-posti ega konto andmeid.",
+            "Pakkuja: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Iirimaa.",
+            "Kehtivusaeg: kuni kaks aastat.",
+          ],
+        },
+        {
+          titel: "_ga_<tunnus> — mõõtmise sessiooni olek (nõusolek vajalik)",
+          list: [
+            "Host: mynextdays.com (esimese osapoole küpsis, mille on seadnud Google'i skript).",
+            "Eesmärk: salvestab, millal teie praegune külastus algas, et lehevaatamised kuuluksid ühte sessiooni.",
+            "Sisu: ajatempel ja sessiooni loendur; nimes olev tunnus tähistab meie vara, mitte teid.",
+            "Pakkuja: Google Ireland Limited.",
+            "Kehtivusaeg: kuni kaks aastat.",
+          ],
+        },
       ],
     },
     {

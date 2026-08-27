@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "Dit samtykke",
-    "text": "Denne hjemmeside bruger ingen analyse-, reklame- eller sporingstjenester; skrifttyper og ikoner ligger på vores egen server. Nødvendigt er kun det, du selv indstiller eller anmoder om. Derfor har vi brug for dit samtykke til præcis én ting: den eksterne spambeskyttelse på vores kontaktformular.",
+    "textBeide": "To ting kræver din tilladelse. Du kan tillade eller afvise dem enkeltvis, ændre og tilbagekalde dem når som helst. Detaljer i cookiepolitikken.",
+    "textSpamschutz": "Én ting kræver din tilladelse. Du kan ændre og tilbagekalde den når som helst. Detaljer i cookiepolitikken.",
+    "textStatistik": "Én ting kræver din tilladelse. Du kan ændre og tilbagekalde den når som helst. Detaljer i cookiepolitikken.",
     "richtlinie": "Læs cookiepolitikken",
     "knopf": "Cookieindstillinger",
     "allesAblehnen": "Afvis alle",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Skjul valg",
     "auswahlSpeichern": "Gem valg",
     "immerAktiv": "Altid aktiv",
+    "nichtEingerichtet": "I dette miljø er denne tjeneste ikke konfigureret — den indlæser intet, selv med din tilladelse.",
     "kategorien": {
       "notwendig": {
-        "titel": "Nødvendige",
-        "text": "Dit sprogvalg og — kun hvis du selv åbner chatten — identifikatoren for din samtale på denne enhed. Uden disse oplysninger kan siden ikke leveres, som du har anmodet om. De bruges hverken til reklame eller til statistik."
+        "titel": "Nødvendige cookies",
+        "text": "Disse cookies er strengt nødvendige for driften af hjemmesiden: dit sprogvalg og, hvis du åbner chatten, identifikatoren for din samtale. De kan ikke deaktiveres, fordi hjemmesiden ikke fungerer som ønsket uden dem."
       },
-      "spamschutz": {
-        "titel": "Kontaktformularens spambeskyttelse",
-        "text": "Vores kontaktformular er beskyttet mod automatiserede massebeskeder med reCAPTCHA Enterprise fra Google. Hvis du tillader det, indlæser din browser et script fra google.com, mens du udfylder formularen, og sender dermed din IP-adresse til Google. Uden din tilladelse indlæses intet fra Google; du kan i stedet skrive til os på e-mail."
+      "funktional": {
+        "titel": "Funktionelle cookies",
+        "text": "Disse cookies beskytter vores kontaktformular mod automatiserede masseforsendelser. Hvis du tillader dem, indlæser din browser reCAPTCHA fra Google og overfører din IP-adresse i processen."
+      },
+      "analytisch": {
+        "titel": "Analytiske cookies",
+        "text": "Med disse cookies finder vi ud af, hvilke sider der læses, og hvor besøgende forlader siden, for at forbedre hjemmesiden. Annoncepersonalisering og tværgående profiler er deaktiveret."
+      },
+      "marketing": {
+        "titel": "Marketing-cookies",
+        "text": "Med disse cookies måler vi succesen af vores annoncering og viser dig relevante annoncer på andre platforme. Data overføres til Meta, LinkedIn og Google i processen."
       }
     },
     "kontakt": {
       "hinweis": "Før du sender, har vi brug for din tilladelse til den eksterne spambeskyttelse (reCAPTCHA fra Google). Uden den kan vi ikke modtage formularen — sådan holder vi automatiserede massebeskeder ude.",
       "erlauben": "Tillad spambeskyttelse",
       "alternative": "Vil du ikke det? Så skriv til os på {email} i stedet."
-    }
+    },
+    "angaben": {
+      "anbieter": "Udbyder:",
+      "dauer": "Lagringstid:",
+      "cookies": "Cookies:",
+      "keineCookies": "ingen (kun ved afsendelse)",
+      "drittland": "Overførsel:",
+      "drittlandJa": "til USA, baseret på EU-US Data Privacy Framework",
+      "drittlandNein": "kun inden for EU",
+      "listeAnzeigen": "Cookies, vi bruger",
+      "listeTitel": "Cookie-liste",
+      "name": "Navn",
+      "host": "Host",
+      "art": "Type",
+      "artErst": "Førstepart",
+      "artDritt": "Tredjepart",
+      "zweck": "Formål",
+      "kategorie": "Kategori",
+      "beschreibung": "Beskrivelse"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "angivet af Google, op til seks måneder",
+      "dreiMonate": "ca. tre måneder",
+      "einJahr": "ca. et år",
+      "sechsMonate": "ca. seks måneder",
+      "zweiJahre": "op til to år"
+    },
+    "zweck": {
+      "grecaptcha": "Gør det muligt for Google at udføre risikovurdering for at skelne automatiserede massetilmeldinger fra reelle anmodninger.",
+      "ga": "Adskiller besøgende, så gentagne visninger ikke tælles to gange. Indeholder et tilfældigt genereret id uden relation til dig.",
+      "gaSitzung": "Registrerer, hvornår dit nuværende besøg startede, så sidevisninger i en session hører sammen.",
+      "fbp": "Tilknytter dit besøg til en annonce, så vi kan måle succesen af vores kampagner.",
+      "gclAu": "Tilknytter dit besøg til en Google-annonce, så vi kan måle succesen af vores kampagner.",
+      "liGc": "Gemmer dit samtykke til LinkedIn til reklameformål.",
+      "bcookie": "Identificerer din browser over for LinkedIn, så annoncer og deres succes kan tilknyttes."
+    },
+    "uebersicht": {
+      "titel": "Dine cookie-indstillinger",
+      "text": "Vælg, hvilke cookies du vil acceptere eller afvise på denne hjemmeside. Du kan til enhver tid aktivere og deaktivere indstillingerne for hver cookie-kategori.",
+      "datenschutz": "Yderligere information i databeskyttelseserklæringen"
+    },
+    "verwalten": "Administrer cookieindstillinger",
+    "schliessen": "Luk",
+    "bestaetigen": "Bekræft indstillinger"
   }
 }

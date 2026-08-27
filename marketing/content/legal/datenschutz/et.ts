@@ -19,7 +19,7 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Käesolev teade kirjeldab, kuidas ${ANBIETER.firma} töötleb isikuandmeid — käesoleva veebilehe külastamisel, platvormi myNextDays kasutamisel (juhtimislaud, turuplats ja mobiilirakendus) ning meie klientidega peetava ärisuhte raames.`,
-    "Aluseks on määrus (EL) 2016/679 (isikuandmete kaitse üldmäärus, edaspidi „IKÜM“) ning Taani andmekaitseseadus (databeskyttelsesloven). Me ei müü andmeid, ei koosta profiile ega kasuta oma veebilehtedel analüüsi-, jälgimis- ega reklaamiteenuseid. Turunduslikel eesmärkidel töötleme andmeid üksnes seal, kus olete andnud selleks sõnaselge nõusoleku — nimelt meie uudiskirja jaoks (vt jaotist „Suhtlus“), millest saate igal ajal ühe klõpsuga loobuda.",
+    "Me ei müü andmeid ega loo profiile, mis teid isikuna identifitseeriksid. Sellel veebisaidil mõõdame – ainult teie nõusolekul – meie lehtede leviala ja meie reklaami edukust; mõlemad kategooriad on eraldi valitavad (vt jaotised Leviala mõõtmine ning Reklaam ja tulemuslikkuse mõõtmine). Reklaami eesmärgil töötleme andmeid ainult siis, kui olete selleks selgesõnaliselt nõusoleku andnud – nimelt meie uudiskirja jaoks (vt jaotist „Suhtlus“), mille saate igal ajal ühe klõpsuga tellimusest loobuda.",
   ],
   sections: [
     {
@@ -93,13 +93,24 @@ export const datenschutz: LegalDoc = {
           titel: "Kontaktvormi rämpspostikaitse (reCAPTCHA)",
           paragraphs: [
             "Meie kontaktvorm on automatiseeritud massipöördumiste vastu kaitstud ettevõtja Google Ireland Limited lahendusega reCAPTCHA Enterprise. Üksnes juhul, kui te sellega nõustute, laadib teie brauser vormi täitmisel skripti aadressilt www.google.com; seejuures edastatakse teie IP-aadress ja andmed teie tegevuse kohta vormil Google’ile ning neid analüüsitakse seal, et eristada inimest skriptist. Õiguslik alus on IKÜM artikli 6 lõike 1 punkt a (nõusolek); täiendavalt kohaldub [Google’i privaatsuspoliitika](https://policies.google.com/privacy).",
-            "Ilma teie nõusolekuta Google’ilt midagi ei laadita ja sinna andmeid ei liigu; sel juhul me vormi vastu ei võta, kuid võite meile igal ajal e-kirja saata. Oma nõusolekut saate muuta või tagasi võtta [küpsisepoliitikas](/cookie-richtlinie).",
+            "Ilma teie nõusolekuta ei laadita Google'ist midagi ja sinna ei edastata andmeid; me ei aktsepteeri siis vormi, kuid võite meile alati e-kirja saata. Kui annate nõusoleku, seab reCAPTCHA oma küpsise (_GRECAPTCHA, Google'i määratud kehtivusaeg, kuni kuus kuud), mida kasutatakse riskihindamiseks. Saate oma nõusolekut igal ajal muuta või tagasi võtta, kasutades iga lehe all vasakus nurgas olevat küpsiseikooni; küpsis kustutatakse seejärel.",
           ],
         },
         {
-          titel: "Analüüsi ei tehta, reklaami ei ole",
+          titel: "Ulatuse mõõtmine (Google Analytics)",
           paragraphs: [
-            "Me ei kasuta analüüsi-, jälgimis- ega reklaamiteenuseid (ei Google Analyticsit, pikslijälgijaid ega reklaamivõrgustikke) ega koosta profiile. Millised küpsised on platvormil tehniliselt vajalikud, on kirjas [küpsisepoliitikas](/cookie-richtlinie).",
+            "Sellel veebisaidil mõõdame Google Ireland Limitedi Google Analytics 4 abil, kuidas meie lehti kasutatakse – milliseid lehti külastatakse, kust külastajad tulevad ja millises punktis nad lahkuvad. Eesmärk on ainult pakkumise ja leitavuse parandamine.",
+            "Laadimine toimub ainult teie nõusolekul. Kui annate nõusoleku, laadib teie brauser skripti saidilt www.googletagmanager.com ja salvestab kaks küpsist („_ga“ ja „_ga_<ID>“, kehtivusaeg kuni kaks aastat) juhuslikult genereeritud ID-ga; edastatakse see ID, külastatud lehed, viiteallikas, ligikaudne asukoht riigi või piirkonna tasandil, seade ja brauser ning teie IP-aadress, mille Google enne salvestamist lühendab. Õiguslik alus on isikuandmete kaitse üldmääruse (GDPR) artikli 6 lõike 1 punkt a (nõusolek).",
+            "Oleme analüüsi selgesõnaliselt piiranud: Google'i signaalid ja reklaami isikupärastamine on välja lülitatud. Seega ei looda seadmeüleseid profiile ega sihtrühmi reklaami jaoks ning me ei edasta kasutusandmeid reklaamivõrkudele. Teie kliendikontoga ühendamist ei toimu.",
+            "Google töötleb andmeid meie volitatud töötlejana vastavalt GDPR-i artikli 28 kohasele lepingule (Google Ads Data Processing Terms). Teie IP-aadressi lühendamine toimub EL-i serverites enne andmete edastamist USA-sse; seega edastatakse pseudonüümne andmekogum. Edastamise aluseks on EL-i komisjoni piisavuse otsus EL-USA andmekaitseraamistiku kohta (GDPR-i artikkel 45), mille alusel Google LLC on sertifitseeritud; lisaks on Google lisanud EL-i komisjoni standardlepingutingimused (GDPR-i artikkel 46). Juhime selgesõnaliselt tähelepanu, et USA ametiasutused võivad FISA paragrahvi 702 alusel juurdepääsu saada ka sertifitseeritud ettevõtete andmetele ja seega ei saa jääkriski täielikult välistada. Lisaks kehtib [Google'i privaatsuspoliitika](https://policies.google.com/privacy).",
+            "Salvestusaeg: Sündmuse- ja kasutajapõhised andmed kustutatakse meie omandist automaatselt 14 kuu möödudes; koondatud aruandeandmed ilma üksikute külastajatega seostamata säilivad kauem. Teie nõusolek ise aegub kuue kuu pärast.",
+            "Ilma teie nõusolekuta ei laadita midagi, küpsiseid ei seata ja Google'ile andmeid ei edastata. Saate oma nõusoleku igal ajal tühistada, klõpsates iga lehe vasakus allnurgas oleval küpsiseikoonil; mõõtmine lõpeb siis koheselt ja nimetatud küpsised kustutatakse. Kuue kuu pärast küsime uuesti.",
+          ],
+        },
+        {
+          titel: "Reklaam ja tulemuslikkuse mõõtmine",
+          paragraphs: [
+            "Teie nõusolekul kasutame turundusküpsiseid, et mõõta meie reklaami edukust ja näidata teile sobivaid reklaame teistel platvormidel. Kaasatud on Meta Platforms Ireland (Meta-piksel, küpsis _fbp), LinkedIn Ireland (Insight-tag, küpsised li_gc ja bcookie) ja Google Ireland Limited (Google Ads, küpsis _gcl_au). Õiguslik alus on isikuandmete kaitse üldmääruse artikli 6 lõike 1 punkt a. Ilma teie nõusolekuta ei laeta ühtegi neist skriptidest ega seadistata ühtegi küpsist; tagasivõtmisel kustutame need. Iga küpsise kohta leiate üksikasjad [küpsiste eeskirjadest](/cookie-richtlinie).",
           ],
         },
       ],
@@ -253,7 +264,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (Ühendkuningriik) — ühendus broneerimisportaalidega",
         "Meta Platforms Ireland Limited (Iirimaa) — WhatsAppi sõnumid, kui see on aktiveeritud",
         "Sendinblue SAS / Brevo (Prantsusmaa, Saksamaa) — uudiskirja haldamine ja saatmine, üksnes nõusoleku korral",
-        "Google Ireland Limited (Iirimaa) — tõlked; kontaktvormi rämpspostikaitse (reCAPTCHA Enterprise), üksnes nõusoleku korral; sisselogimine Google’i kontoga, kui seda kasutatakse",
+        "Google Ireland Limited (Iirimaa) — tõlked; kontaktvormi rämpspostikaitse (reCAPTCHA Enterprise), üksnes nõusoleku korral; sisselogimine Google’i kontoga, kui seda kasutatakse; Ulatusmõõtmine (Google Analytics 4), ainult nõusoleku korral",
         "Groq, Inc. (USA) — vastusesoovitused, kui see on aktiveeritud",
         "Cloudflare, Inc. (USA) — DNS-i haldamine kliendi domeenide jaoks",
       ],
@@ -289,7 +300,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (USA) — vastusesoovitused sõnumite postkastis, üksnes juhul, kui ettevõte funktsiooni aktiveerib. Edastatakse vastav sõnumikontekst.",
             "Cloudflare, Inc. (USA) — DNS-i haldamine kliendi domeenide jaoks. Edastatakse domeeni- ja konfiguratsiooniandmed, mitte külaliste andmed.",
-            "Google LLC (USA) — üksnes Google’i kontoga sisselogimise ja tõlgete puhul; lepingupartner on kummalgi juhul Google Ireland Limited, kuid USA emaettevõtja juurdepääs ei ole sellegipoolest välistatud.",
+            "Google LLC (USA) – Google'iga registreerimisel, tõlgete ja ulatusmõõtmise puhul (Google Analytics 4, ainult nõusoleku korral); lepingupartner on Google Ireland Limited, kuid USA emaettevõtte juurdepääs ei ole välistatud.",
           ],
         },
         {

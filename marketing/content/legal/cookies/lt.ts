@@ -8,13 +8,13 @@ export const cookies: LegalDoc = {
   slug: "cookie-richtlinie",
   title: "Slapukų politika",
   metaDescription:
-    "Kokius slapukus naudoja myNextDays: tik techniškai būtinus ir funkcinius slapukus, jokių stebėjimo ar reklaminių slapukų.",
+    "Kokius slapukus naudoja „myNextDays“: techniškai būtinus slapukus ir – tik su jūsų sutikimu – funkcinius, analizės ir rinkodaros slapukus. Kiekviena kategorija gali būti įjungiama ir išjungiama atskirai.",
   standIso: RECHTSSTAND_ISO,
   numbered: true,
   toc: true,
   intro: [
     `Ši politika paaiškina, kokius slapukus ir panašias saugojimo technologijas ${ANBIETER.firma} naudoja šioje svetainėje ir myNextDays platformoje.`,
-    "Trumpai: naudojame tik techniškai būtinus ir funkcinius slapukus. Nėra jokių analitinių, reklaminių ar stebėjimo slapukų, o naudojimo duomenys neperduodami reklamos tinklams.",
+    "Trumpai tariant: būtini yra tik tie slapukai, be kurių svetainė neveiktų taip, kaip reikalaujama. Visiems kitiems reikalingas jūsų sutikimas ir be jo jie neįkeliami – mūsų kontaktinės formos apsauga nuo brukalų, pasiekiamumo matavimas ir rinkodaros slapukai, kuriais matuojame savo reklamos sėkmę. Kiekvienai iš šių kategorijų galite leisti arba atmesti atskirai ir bet kada atšaukti savo sprendimą.",
   ],
   sections: [
     {
@@ -28,14 +28,14 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Sutikimas pagal Danijos slapukų reglamento (Cookie-bekendtgørelsen) 9 straipsnį (kuriuo įgyvendinama Direktyvos 2002/58/EB 5 straipsnio 3 dalis) reikalingas tik tuomet, kai prieiga prie jūsų įrenginio nėra skirta išimtinai pranešimo perdavimui arba nėra būtinai reikalinga jūsų aiškiai užsakytai paslaugai teikti.",
         "Visi mūsų naudojami slapukai yra būtini prisijungimui, sesijos saugumui arba jūsų pačių pasirinktam nustatymui — dėl to mes nieko neklausiame ir taip pat nenustatome nieko, kam reikėtų sutikimo.",
-        "Sutikimą turite duoti tik dėl vieno dalyko: mūsų kontaktų formos apsaugos nuo šlamšto. Ją teikia Google (reCAPTCHA Enterprise), t. y. tai išorinė paslauga, ir ji įkeliama tik tuomet, jei tai leidote. Dėl to pirmojo apsilankymo metu ekrano apačioje rodoma juosta su lygiaverčiais mygtukais „Atmesti“ ir „Sutikti“, be jokio išankstinio pasirinkimo. Kol nenusprendėte, galioja „neleista“.",
+        "Turite sutikti su trimis kategorijomis, kurios visos nebus įkeltos be jūsų leidimo: mūsų kontaktinės formos apsauga nuo brukalų („Google reCAPTCHA“), šios svetainės pasiekiamumo matavimas („Google Analytics 4“) ir rinkodaros slapukai („Meta“, „LinkedIn“, „Google Ads“). Tam pasirodo langas su kategorijų sąrašu – pirmojo apsilankymo metu, be išankstinio pasirinkimo, kiekviena kategorija su atskiru jungikliu. Kol neapsisprendėte, galioja „neleidžiama“, ir nebus atliekamas nei vertinimas, nei reklama.",
         "Jūsų sprendimas saugomas jūsų naršyklės atmintyje (Local Storage, reikšmė „nd_consent“); jame nurodoma tik kategorija, laikas ir versijos numeris, jokio jūsų asmens identifikatoriaus. Per slapukų piktogramą kiekvieno puslapio kairiajame apatiniame kampe galite jį bet kada pakeisti arba atšaukti. Po šešių mėnesių paklausime dar kartą — sutikimas neturi galioti neribotai.",
       ],
     },
     {
       heading: "Ši svetainė",
       paragraphs: [
-        "Rinkodaros svetainė slapukų nenustato. Šriftai ir piktogramos saugomi mūsų pačių serveryje — tam nesikreipiama į jokią trečiosios šalies šriftų ar piktogramų paslaugą. Vienintelė šios svetainės išorinė paslauga yra kontaktų formos apsauga nuo šlamšto, kuri įkeliama tik gavus jūsų sutikimą. Išsamiau žr. [Privatumo politikoje](/datenschutz).",
+        "Pati ši svetainė nenaudoja jokių slapukų. Šriftai ir simboliai yra mūsų pačių serveryje – tam nenaudojama jokia trečiosios šalies simbolių ar šriftų paslauga. Pridedamos tik tos paslaugos, kurioms leidžiate: kontaktinės formos apsauga nuo brukalų, pasiekiamumo matavimas ir rinkodaros paslaugos. Kokius slapukus, kokiam laikotarpiui ir kokiame serveryje jie nustatomi, rasite žemiau, skiltyje „Trečiųjų šalių slapukai“. Atšaukti galite per slapukų piktogramą apatiniame kairiajame kampe – atitinkama paslauga iškart nutraukiama ir jos slapukai ištrinami. Išsamesnė informacija pateikiama [privatumo politikoje](/datenschutz).",
       ],
     },
     {
@@ -77,7 +77,8 @@ export const cookies: LegalDoc = {
           ],
         },
         {
-          titel: "sb-… — Prisijungimas su Google (techniškai būtinas, tik naudojant)",
+          titel:
+            "sb-… — Prisijungimas su Google (techniškai būtinas, tik naudojant)",
           list: [
             "Paskirtis: palaiko sesiją, kai prisijungiate per Google.",
             "Turinys: prisijungimo paslaugos sesijos raktas.",
@@ -92,7 +93,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Saugo jūsų sprendimą dėl kontaktų formos apsaugos nuo šlamšto, kad sutikimo juosta neklaustų iš naujo kaskart apsilankius. Saugoma tik kategorija, laikas ir versijos numeris. Reikšmė nepalieka jūsų įrenginio ir neperduodama į mūsų serverį; ji galioja šiai naršyklei. Galiojimo laikas: šeši mėnesiai — po to juosta paklaus dar kartą. Ištrynus reikšmę, juosta vėl paklaus kito apsilankymo metu.",
+            "Išsaugo jūsų sprendimą dėl paslaugų, kurioms reikalingas sutikimas (kontaktinės formos apsauga nuo brukalų ir pasiekiamumo matavimas).",
           ],
         },
         {
@@ -120,6 +121,69 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Jei atliekate mokėjimą, mokėjimo paslaugų teikėjas (Stripe arba PayPal) savo svetainėje gali nustatyti slapukus, būtinus atsiskaitymui ir apsaugai nuo sukčiavimo. Tokiu atveju taikomos atitinkamo teikėjo nuostatos.",
         "Svetainėse, kurias įmonės sukuria naudodamos mūsų svetainių kūrimo įrankį, dėl papildomų slapukų sprendžia atitinkama įmonė ir ji atsako už ten pateikiamą informaciją.",
+        "Tik su jūsų sutikimu „Google“ paslaugos šioje svetainėje naudoja šiuos slapukus – du, skirtus auditorijos matavimui, ir vieną, skirtą apsaugai nuo brukalų. Be jūsų sutikimo atitinkamas scenarijus nebus įkeltas ir jokie slapukai nebus nustatyti; atšaukus sutikimą, juos ištrinsime.",
+      ],
+      unterpunkte: [
+        {
+          titel: "_fbp – reklamos efektyvumo matavimas (reikalingas sutikimas)",
+          list: [
+            "Tikslas: susieja jūsų apsilankymą su reklama, kad galėtume įvertinti kampanijų sėkmę.",
+            "Turinys: atsitiktinai sugeneruotas identifikatorius; jokių vardų, el. pašto ar paskyros duomenų iš mūsų.",
+            "Teikėjas: „Meta Platforms Ireland Limited“, Merrion Road, Dublin 4, Airija.",
+            "Serveris: mynextdays.com (pirminis slapukas, nustatytas „Meta“ scenarijaus). Galiojimo laikas: apie trys mėnesiai.",
+          ],
+        },
+        {
+          titel:
+            "_gcl_au – „Google Ads“ efektyvumo matavimas (reikalingas sutikimas)",
+          list: [
+            "Tikslas: susieja jūsų apsilankymą su „Google“ skelbimu, kad galėtume įvertinti kampanijų sėkmę.",
+            "Turinys: atsitiktinai sugeneruotas identifikatorius, nesusijęs su jūsų asmeniu.",
+            "Teikėjas: „Google Ireland Limited“, Gordon House, Barrow Street, Dublin 4, Airija.",
+            "Serveris: mynextdays.com (pirminis slapukas). Galiojimo laikas: apie trys mėnesiai.",
+          ],
+        },
+        {
+          titel:
+            "li_gc ir bcookie – „LinkedIn“ reklama (reikalingas sutikimas)",
+          list: [
+            "Tikslas: identifikuoja jūsų naršyklę „LinkedIn“ atžvilgiu, kad būtų galima susieti skelbimus ir jų sėkmę; li_gc papildomai išsaugo jūsų sutikimą.",
+            "Turinys: naršyklės identifikatorius ir sutikimo būsena; jokių duomenų iš jūsų paskyros pas mus.",
+            "Teikėjas: „LinkedIn Ireland Unlimited Company“, Wilton Plaza, Dublin 2, Airija.",
+            "Serveris: linkedin.com (trečiųjų šalių slapukai). Galiojimo laikas: apie šešis mėnesius arba vienerius metus.",
+          ],
+        },
+        {
+          titel:
+            "_GRECAPTCHA – kontaktų formos apsauga nuo brukalų (reikalingas sutikimas)",
+          list: [
+            "Priegloba: www.google.com (trečiosios šalies slapukas).",
+            "Tikslas: leidžia „Google“ įvertinti riziką, kuri atskiria automatizuotus masinius pranešimus nuo tikrų užklausų.",
+            "Turinys: „Google“ sugeneruotas identifikatorius šiam įvertinimui; jokių mūsų vardo, el. pašto ar paskyros duomenų.",
+            "Teikėjas: „Google Ireland Limited“, Gordon House, Barrow Street, Dublin 4, Airija.",
+            "Galiojimo laikas: nustato „Google“, iki šešių mėnesių. Jis nustatomas tik tada, kai leidžiate apsaugą nuo brukalų ir atidarote kontaktų formą.",
+          ],
+        },
+        {
+          titel: "_ga – Pasiekiamumo matavimas (reikalingas sutikimas)",
+          list: [
+            "Priegloba: mynextdays.com (pirminis slapukas, nustatytas Google scenarijaus).",
+            "Tikslas: atskiria lankytojus, kad pasikartojantys apsilankymai nebūtų skaičiuojami du kartus.",
+            "Turinys: atsitiktinai sugeneruotas identifikatorius, nesusijęs su jūsų asmeniu; jokių vardo, el. pašto ar paskyros duomenų.",
+            "Teikėjas: „Google Ireland Limited“, Gordon House, Barrow Street, Dublin 4, Airija.",
+            "Galiojimo laikas: iki dvejų metų.",
+          ],
+        },
+        {
+          titel: "_ga_<ID> – Matavimo sesijos būsena (reikalingas sutikimas)",
+          list: [
+            "Priegloba: mynextdays.com (pirminis slapukas, nustatytas Google scenarijaus).",
+            "Tikslas: fiksuoja, kada prasidėjo jūsų dabartinis apsilankymas, kad sesijos puslapio peržiūros būtų susijusios.",
+            "Turinys: laiko žyma ir sesijos skaitiklis; ID pavadinime nurodo mūsų nuosavybę, o ne jus.",
+            "Teikėjas: „Google Ireland Limited“.",
+            "Galiojimo laikas: iki dvejų metų.",
+          ],
+        },
       ],
     },
     {

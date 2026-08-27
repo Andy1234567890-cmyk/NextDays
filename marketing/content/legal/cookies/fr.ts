@@ -8,13 +8,13 @@ export const cookies: LegalDoc = {
   slug: "cookie-richtlinie",
   title: "Politique de cookies",
   metaDescription:
-    "Quels cookies myNextDays utilise : exclusivement des cookies techniquement nécessaires et fonctionnels, aucun cookie de suivi ou publicitaire.",
+    "Quels cookies myNextDays utilise : des cookies techniquement nécessaires et — uniquement avec votre consentement — des cookies fonctionnels, analytiques et marketing. Chaque catégorie peut être activée et désactivée individuellement.",
   standIso: RECHTSSTAND_ISO,
   numbered: true,
   toc: true,
   intro: [
     `Cette politique explique quels cookies et techniques de stockage comparables ${ANBIETER.firma} utilise sur ce site web et sur la plateforme myNextDays.`,
-    "En bref : nous utilisons exclusivement des cookies techniquement nécessaires et fonctionnels. Il n'existe aucun cookie d'analyse, publicitaire ou de suivi, et aucune donnée d'utilisation n'est transmise à des réseaux publicitaires.",
+    "En bref : Seuls les cookies sans lesquels le site web ne fonctionne pas comme demandé sont nécessaires. Tout le reste nécessite votre consentement et ne se charge pas sans lui — la protection anti-spam de notre formulaire de contact, la mesure d'audience et les cookies marketing avec lesquels nous mesurons le succès de notre publicité. Vous pouvez autoriser ou refuser chacune de ces catégories individuellement et révoquer votre décision à tout moment.",
   ],
   sections: [
     {
@@ -28,14 +28,14 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Un consentement n'est nécessaire, en vertu de l'article 9 du règlement danois sur les cookies (Cookie-bekendtgørelsen) (transposant l'article 5, paragraphe 3, de la directive 2002/58/CE), que lorsque l'accès à votre appareil ne sert pas exclusivement à transmettre une communication ou n'est pas strictement nécessaire à un service que vous avez expressément demandé.",
         "Tous les cookies que nous déposons sont nécessaires à la connexion, à la sécurité de la session ou à un paramètre que vous avez vous-même défini — nous ne demandons donc rien pour cela et, inversement, nous ne déposons rien qui nécessiterait un consentement.",
-        "Vous devez donner votre consentement pour exactement une chose : la protection anti-spam de notre formulaire de contact. Elle provient de Google (reCAPTCHA Enterprise), il s'agit donc d'un service externe, qui n'est chargé que si vous l'avez autorisé. Un bandeau situé en bas de l'écran vous le demande — lors de votre première visite, avec des boutons de rang égal « Refuser » et « Accepter », sans sélection préalable. Tant que vous n'avez pas décidé, « non autorisé » s'applique.",
+        "Vous devez consentir à trois catégories, qui ne seront pas chargées sans votre permission : la protection anti-spam de notre formulaire de contact (reCAPTCHA de Google), la mesure d'audience de ce site web (Google Analytics 4) et les cookies marketing (Meta, LinkedIn, Google Ads). Une fenêtre avec une liste de catégories s'affiche à cet effet — lors de la première visite, sans présélection, chaque catégorie avec son propre interrupteur. Tant que vous n'avez pas pris de décision, la mention « non autorisé » s'applique, et aucune évaluation ni publicité n'est effectuée.",
         "Votre décision est conservée dans le stockage de votre navigateur (Local Storage, valeur « nd_consent ») ; elle ne contient que la catégorie, l'horodatage et un numéro de version, aucune donnée permettant de vous identifier. Vous pouvez la modifier ou la révoquer à tout moment via l'icône cookies en bas à gauche de chaque page. Au bout de six mois, nous vous la redemanderons — un consentement ne doit pas rester valable indéfiniment.",
       ],
     },
     {
       heading: "Ce site web",
       paragraphs: [
-        "Le site web marketing ne dépose aucun cookie. Les polices et les icônes sont hébergées sur notre propre serveur — aucun service tiers de polices ou d'icônes n'est sollicité à cette fin. Le seul service externe de cette page est la protection anti-spam du formulaire de contact, qui ne se charge qu'avec votre consentement. Les détails figurent dans la [politique de confidentialité](/datenschutz).",
+        "Ce site web ne dépose aucun cookie de lui-même. Les polices et les symboles sont hébergés sur notre propre serveur — aucun service de symboles ou de polices tiers n'est appelé à cet effet. Seuls les services que vous autorisez sont ajoutés : la protection anti-spam du formulaire de contact, la mesure d'audience et les services marketing. Les cookies qui sont déposés, leur durée de vie et leur hôte sont indiqués ci-dessous dans la section « Cookies tiers ». La révocation s'effectue via l'icône de cookie en bas à gauche — le service concerné prend fin immédiatement et ses cookies sont supprimés. Les détails figurent dans la [politique de confidentialité](/datenschutz).",
       ],
     },
     {
@@ -53,7 +53,8 @@ export const cookies: LegalDoc = {
           ],
         },
         {
-          titel: "nd_refresh — prolongation de session (techniquement nécessaire)",
+          titel:
+            "nd_refresh — prolongation de session (techniquement nécessaire)",
           list: [
             "Finalité : renouvelle le jeton d'accès afin que vous n'ayez pas à vous reconnecter en permanence.",
             "Contenu : jeton de renouvellement ; HttpOnly, uniquement via HTTPS.",
@@ -77,7 +78,8 @@ export const cookies: LegalDoc = {
           ],
         },
         {
-          titel: "sb-… — connexion avec Google (techniquement nécessaire, uniquement en cas d'utilisation)",
+          titel:
+            "sb-… — connexion avec Google (techniquement nécessaire, uniquement en cas d'utilisation)",
           list: [
             "Finalité : maintient la session lorsque vous vous connectez via Google.",
             "Contenu : jeton de session du service de connexion.",
@@ -92,7 +94,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Conserve votre décision concernant la protection anti-spam du formulaire de contact, afin que le bandeau de consentement ne vous la redemande pas à chaque visite. Seules la catégorie, l'horodatage et un numéro de version sont enregistrés. La valeur ne quitte pas votre appareil et n'est pas transmise à notre serveur ; elle s'applique à ce navigateur. Durée de conservation : six mois — passé ce délai, le bandeau vous interrogera à nouveau. Si vous supprimez la valeur, le bandeau vous interrogera à nouveau lors de votre prochaine visite.",
+            "Enregistre votre décision concernant les services nécessitant un consentement (protection anti-spam du formulaire de contact et mesure d'audience).",
           ],
         },
         {
@@ -120,6 +122,70 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Lorsque vous effectuez un paiement, le prestataire de paiement (Stripe ou PayPal) peut déposer, sur sa propre page, des cookies nécessaires au traitement de la transaction et à la prévention de la fraude. Les conditions du prestataire concerné s'appliquent à cet égard.",
         "Sur les sites web que les établissements créent avec notre outil de création, c'est l'établissement concerné qui décide des cookies supplémentaires et qui est responsable des informations qui y figurent.",
+        "Avec votre consentement, les services Google sur ce site web utilisent les cookies suivants : deux pour la mesure d'audience, un pour la protection contre le spam. Sans votre consentement, le script respectif ne sera pas chargé et aucun de ces cookies ne sera défini ; en cas de révocation, nous les supprimerons.",
+      ],
+      unterpunkte: [
+        {
+          titel:
+            "_fbp — Mesure de la performance publicitaire (consentement requis)",
+          list: [
+            "Objectif : associe votre visite à une publicité afin que nous puissions mesurer le succès de nos campagnes.",
+            "Contenu : un identifiant généré aléatoirement ; aucune information de nom, d'e-mail ou de compte de notre part.",
+            "Fournisseur : Meta Platforms Ireland Limited, Merrion Road, Dublin 4, Irlande.",
+            "Hébergeur : mynextdays.com (cookie de première partie, défini par le script de Meta). Durée : environ trois mois.",
+          ],
+        },
+        {
+          titel:
+            "_gcl_au — Mesure de la performance Google Ads (consentement requis)",
+          list: [
+            "Objectif : associe votre visite à une annonce Google afin que nous puissions mesurer le succès de nos campagnes.",
+            "Contenu : un identifiant généré aléatoirement sans lien avec votre personne.",
+            "Fournisseur : Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irlande.",
+            "Hébergeur : mynextdays.com (cookie de première partie). Durée : environ trois mois.",
+          ],
+        },
+        {
+          titel: "li_gc et bcookie — Publicité LinkedIn (consentement requis)",
+          list: [
+            "Objectif : identifie votre navigateur auprès de LinkedIn afin que les annonces et leur succès puissent être attribués ; li_gc stocke également votre consentement.",
+            "Contenu : un identifiant de navigateur et l'état du consentement ; aucune information de votre compte chez nous.",
+            "Fournisseur : LinkedIn Ireland Unlimited Company, Wilton Plaza, Dublin 2, Irlande.",
+            "Hébergeur : linkedin.com (cookies tiers). Durée : environ six mois ou un an.",
+          ],
+        },
+        {
+          titel:
+            "_GRECAPTCHA — Protection anti-spam du formulaire de contact (consentement requis)",
+          list: [
+            "Hôte : www.google.com (cookie tiers).",
+            "Objectif : permet à Google d'évaluer les risques afin de distinguer les envois de masse automatisés des demandes réelles.",
+            "Contenu : un identifiant généré par Google pour cette évaluation ; aucune information de nom, d'e-mail ou de compte de notre part.",
+            "Fournisseur : Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irlande.",
+            "Durée : déterminée par Google, jusqu'à six mois. Il n'est défini qu'après avoir autorisé la protection anti-spam et ouvert le formulaire de contact.",
+          ],
+        },
+        {
+          titel: "_ga — Mesure d'audience (consentement requis)",
+          list: [
+            "Hôte : mynextdays.com (cookie de première partie, défini par le script de Google).",
+            "Objectif : distingue les visiteurs afin que les visites récurrentes ne soient pas comptées en double.",
+            "Contenu : identifiant généré aléatoirement sans lien avec votre personne ; aucune information de nom, d'e-mail ou de compte.",
+            "Fournisseur : Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irlande.",
+            "Durée : jusqu'à deux ans.",
+          ],
+        },
+        {
+          titel:
+            "_ga_<ID> — État de la session de mesure (consentement requis)",
+          list: [
+            "Hôte : mynextdays.com (cookie de première partie, défini par le script de Google).",
+            "Objectif : enregistre le début de votre visite actuelle afin que les pages vues d'une session soient regroupées.",
+            "Contenu : horodatage et compteur de la session ; l'identifiant dans le nom désigne notre propriété, pas vous.",
+            "Fournisseur : Google Ireland Limited.",
+            "Durée : jusqu'à deux ans.",
+          ],
+        },
       ],
     },
     {

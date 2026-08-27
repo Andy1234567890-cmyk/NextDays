@@ -21,7 +21,7 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Deze verklaring beschrijft hoe ${ANBIETER.firma} persoonsgegevens verwerkt — bij een bezoek aan deze website, bij het gebruik van het platform myNextDays (dashboard, marktplaats en mobiele app) en in het kader van de zakelijke relatie met onze klanten.`,
-    "Grondslag is Verordening (EU) 2016/679 (AVG) en de Deense wet gegevensbescherming (databeskyttelsesloven). Wij verkopen geen gegevens, stellen geen profielen op en gebruiken op onze websites geen analyse-, tracking- of advertentiediensten. Voor reclamedoeleinden verwerken wij gegevens uitsluitend daar waar u daar uitdrukkelijk mee hebt ingestemd — namelijk voor onze nieuwsbrief (zie het hoofdstuk Communicatie), die u op elk moment met één klik weer kunt opzeggen.",
+    "Wij verkopen geen gegevens en maken geen profielen die u als persoon identificeren. Op deze website meten we – alleen met uw toestemming – het bereik van onze pagina's en het succes van onze advertenties; beide categorieën zijn afzonderlijk af te melden (zie secties Bereikmeting en Advertenties en succesmeting). Voor promotionele doeleinden verwerken wij gegevens uitsluitend indien u hiervoor uitdrukkelijk toestemming heeft gegeven — namelijk voor onze nieuwsbrief (zie sectie Communicatie), die u op elk moment met één klik kunt opzeggen.",
   ],
   sections: [
     {
@@ -95,13 +95,24 @@ export const datenschutz: LegalDoc = {
           titel: "Spambeveiliging van het contactformulier (reCAPTCHA)",
           paragraphs: [
             "Ons contactformulier is met reCAPTCHA Enterprise van Google Ireland Limited beveiligd tegen geautomatiseerde massaberichten. Alleen wanneer u daarmee instemt, laadt uw browser bij het invullen van het formulier een script van www.google.com; daarbij worden uw IP-adres en gegevens over uw interactie met het formulier aan Google doorgegeven en daar geanalyseerd om mens en script te onderscheiden. Rechtsgrond is art. 6, lid 1, onder a, AVG (toestemming); aanvullend geldt de [privacyverklaring van Google](https://policies.google.com/privacy).",
-            "Zonder uw toestemming wordt niets van Google geladen en vloeien daarheen geen gegevens; het formulier nemen wij dan niet aan, maar u kunt ons op elk moment een e-mail schrijven. Uw toestemming kunt u in het [cookiebeleid](/cookie-richtlinie) wijzigen of intrekken.",
+            "Zonder uw toestemming wordt er niets van Google geladen en worden er geen gegevens naar Google verzonden; wij accepteren het formulier dan niet, maar u kunt ons altijd een e-mail sturen. Als u toestemming geeft, plaatst reCAPTCHA een eigen cookie (_GRECAPTCHA, looptijd door Google bepaald, tot zes maanden) dat wordt gebruikt voor risicobeoordeling. U kunt uw toestemming op elk moment wijzigen of intrekken via het cookie-pictogram linksonder op elke pagina; het cookie wordt dan verwijderd.",
           ],
         },
         {
-          titel: "Geen analyse, geen reclame",
+          titel: "Bereikmeting (Google Analytics)",
           paragraphs: [
-            "Wij gebruiken geen analyse-, tracking- of advertentiediensten (geen Google Analytics, geen pixels, geen advertentienetwerken) en stellen geen profielen op. Welke cookies het platform technisch nodig heeft, staat in het [cookiebeleid](/cookie-richtlinie).",
+            "Op deze website meten wij met Google Analytics 4 van Google Ireland Limited hoe onze pagina's worden gebruikt – welke pagina's worden bezocht, waar bezoekers vandaan komen en op welk punt zij afhaken. Het doel is uitsluitend de verbetering van het aanbod en de vindbaarheid.",
+            "Het laden gebeurt uitsluitend met uw toestemming. Als u deze geeft, laadt uw browser een script van www.googletagmanager.com en slaat twee cookies op („_ga“ en „_ga_<ID>“, geldig tot twee jaar) met een willekeurig gegenereerde ID; deze ID, de bezochte pagina's, verwijzende bron, geschatte locatie op land- of regioniveau, apparaat en browser, evenals uw IP-adres, dat Google inkort voordat het wordt opgeslagen, worden verzonden. De rechtsgrondslag is art. 6 lid 1 lit. a AVG (toestemming).",
+            "Wij hebben de analyse uitdrukkelijk beperkt: Google-signalen en reclamepersonalisatie zijn uitgeschakeld. Er worden daarom geen cross-device profielen en geen doelgroepen voor reclame gecreëerd, en wij geven geen gebruiksgegevens door aan advertentienetwerken. Er vindt geen samenvoeging met uw klantenaccount plaats.",
+            "Google verwerkt de gegevens als onze verwerker op basis van een overeenkomst volgens art. 28 AVG (Google Ads Data Processing Terms). De inkorting van uw IP-adres vindt plaats op servers in de EU, voordat gegevens naar de VS worden overgedragen; er wordt dus een pseudonieme dataset overgedragen. De basis voor de overdracht is het adequaatheidsbesluit van de EU-Commissie voor het EU-US Data Privacy Framework (art. 45 AVG), waaronder Google LLC is gecertificeerd; aanvullend heeft Google de standaardcontractbepalingen van de EU-Commissie (art. 46 AVG) opgenomen. Wij wijzen er uitdrukkelijk op dat Amerikaanse autoriteiten volgens Section 702 FISA ook toegang kunnen krijgen tot gegevens van gecertificeerde bedrijven en dat een restrisico daarom niet volledig kan worden uitgesloten. Bovendien geldt de [privacyverklaring van Google](https://policies.google.com/privacy).",
+            "Opslagduur: De gebeurtenis- en gebruikersgerelateerde gegevens worden in onze property na 14 maanden automatisch verwijderd; geaggregeerde rapportagegegevens zonder betrekking op individuele bezoekers blijven langer bewaard. Uw toestemming zelf verloopt na zes maanden.",
+            "Zonder uw toestemming wordt niets geladen, wordt er geen cookie geplaatst en stromen er geen gegevens naar Google. U kunt uw toestemming te allen tijde intrekken via het cookie-icoon linksonder op elke pagina; de meting stopt dan onmiddellijk en de genoemde cookies worden verwijderd. Na zes maanden vragen wij opnieuw.",
+          ],
+        },
+        {
+          titel: "Reclame en succesmeting",
+          paragraphs: [
+            "Met uw toestemming gebruiken wij marketingcookies om het succes van onze reclame te meten en u passende advertenties op andere platforms te tonen. Betrokken zijn Meta Platforms Ireland (Meta-pixel, cookie _fbp), LinkedIn Ireland (Insight-tag, cookies li_gc en bcookie) en Google Ireland Limited (Google Ads, cookie _gcl_au). De rechtsgrondslag is art. 6 lid 1 lit. a AVG. Zonder uw toestemming wordt geen van deze scripts geladen en geen cookie geplaatst; bij intrekking verwijderen wij ze. Details over elke cookie staan in het [Cookiebeleid](/cookie-richtlinie).",
           ],
         },
       ],
@@ -255,7 +266,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (Verenigd Koninkrijk) — koppeling met boekingsportalen",
         "Meta Platforms Ireland Limited (Ierland) — WhatsApp-berichten, voor zover geactiveerd",
         "Sendinblue SAS / Brevo (Frankrijk, Duitsland) — beheer en verzending van de nieuwsbrief, alleen bij toestemming",
-        "Google Ireland Limited (Ierland) — vertalingen; spambeveiliging van het contactformulier (reCAPTCHA Enterprise), alleen bij toestemming; aanmelden met Google, voor zover gebruikt",
+        "Google Ireland Limited (Ierland) — vertalingen; spambeveiliging van het contactformulier (reCAPTCHA Enterprise), alleen bij toestemming; aanmelden met Google, voor zover gebruikt; Bereikmeting (Google Analytics 4), alleen met toestemming",
         "Groq, Inc. (VS) — antwoordsuggesties, voor zover geactiveerd",
         "Cloudflare, Inc. (VS) — DNS-beheer voor klantdomeinen",
       ],
@@ -291,7 +302,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (VS) — antwoordsuggesties in de berichtenmap, alleen wanneer het bedrijf de functie activeert. Doorgegeven wordt de betreffende berichtcontext.",
             "Cloudflare, Inc. (VS) — DNS-beheer voor klantdomeinen. Doorgegeven worden domein- en configuratiegegevens, geen gastgegevens.",
-            "Google LLC (VS) — alleen bij het aanmelden met Google en bij vertalingen; contractpartner is telkens Google Ireland Limited, een toegang door de Amerikaanse moedermaatschappij is desondanks niet uitgesloten.",
+            "Google LLC (VS) — bij aanmelding met Google, bij vertalingen en bij bereikmeting (Google Analytics 4, alleen met toestemming); contractpartner is Google Ireland Limited, toegang door het Amerikaanse moederbedrijf is echter niet uitgesloten.",
           ],
         },
         {

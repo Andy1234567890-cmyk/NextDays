@@ -18,7 +18,7 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Jelen nyilatkozat azt ismerteti, hogyan kezeli a ${ANBIETER.firma} a személyes adatokat — a jelen weboldal meglátogatásakor, a myNextDays platform (irányítópult, piactér és mobilalkalmazás) használatakor, valamint az ügyfeleinkkel fennálló üzleti kapcsolat keretében.`,
-    "Ennek alapja az (EU) 2016/679 rendelet (GDPR), valamint a dán adatvédelmi törvény (databeskyttelsesloven). Nem adunk el adatokat, nem készítünk profilokat, és weboldalainkon nem alkalmazunk elemző, nyomkövető vagy reklámszolgáltatásokat. Reklámcélból kizárólag ott kezelünk adatokat, ahol Ön ehhez kifejezetten hozzájárult — nevezetesen a hírlevelünkhöz (lásd a Kommunikáció szakaszt), amelyről bármikor, egyetlen kattintással leiratkozhat.",
+    "Nem adunk el adatokat, és nem hozunk létre olyan profilokat, amelyek Önt személyként azonosítják. Ezen a weboldalon – csak az Ön hozzájárulásával – mérjük oldalaink látogatottságát és hirdetéseink sikerét; mindkét kategória külön-külön kikapcsolható (lásd a Látogatottságmérés, valamint a Hirdetés és sikermérés szakaszokat). Promóciós célból kizárólag ott dolgozunk fel adatokat, ahol Ön kifejezetten hozzájárult – nevezetesen hírlevelünkhöz (lásd a Kommunikáció szakaszt), amelyet bármikor lemondhat egy kattintással.",
   ],
   sections: [
     {
@@ -92,13 +92,24 @@ export const datenschutz: LegalDoc = {
           titel: "A kapcsolatfelvételi űrlap spamvédelme (reCAPTCHA)",
           paragraphs: [
             "A kapcsolatfelvételi űrlapunkat a Google Ireland Limited reCAPTCHA Enterprise szolgáltatása védi az automatizált, nagy számban érkező megkeresések ellen. A böngészője csak akkor tölt be az űrlap kitöltésekor egy szkriptet a www.google.com címről, ha Ön ehhez hozzájárul; ennek során az Ön IP-címe és az űrlappal való interakciójára vonatkozó adatok továbbításra kerülnek a Google-hoz, és ott kiértékelik őket annak érdekében, hogy elkülönítsék az embert a szkripttől. A jogalap a GDPR 6. cikk (1) bekezdés a) pontja (hozzájárulás); ezt kiegészítően a [Google adatvédelmi nyilatkozata](https://policies.google.com/privacy) alkalmazandó.",
-            "Az Ön hozzájárulása nélkül a Google-tól semmi nem töltődik be, és oda nem folynak adatok; az űrlapot ilyenkor nem fogadjuk el, de bármikor írhat nekünk e-mailt. A hozzájárulását a [süti-irányelvben](/cookie-richtlinie) módosíthatja vagy visszavonhatja.",
+            "Az Ön hozzájárulása nélkül a Google semmit sem tölt be, és semmilyen adat nem kerül oda; ebben az esetben nem fogadjuk el az űrlapot, de bármikor írhat nekünk e-mailt. Ha hozzájárul, a reCAPTCHA saját sütit (_GRECAPTCHA, a Google által meghatározott érvényességi idő, legfeljebb hat hónap) állít be, amely a kockázatértékelést szolgálja. Hozzájárulását bármikor módosíthatja vagy visszavonhatja az oldal bal alsó sarkában található süti ikonon keresztül; a süti ezután törlődik.",
           ],
         },
         {
-          titel: "Nincs elemzés, nincs reklám",
+          titel: "Elérésmérés (Google Analytics)",
           paragraphs: [
-            "Nem alkalmazunk elemző, nyomkövető vagy reklámszolgáltatásokat (nincs Google Analytics, nincsenek pixelek, nincsenek reklámhálózatok), és nem készítünk profilokat. Hogy a Platform műszakilag mely sütikre szorul, a [süti-irányelvben](/cookie-richtlinie) olvasható.",
+            "Ezen a weboldalon a Google Ireland Limited Google Analytics 4 szolgáltatásával mérjük, hogyan használják oldalainkat – mely oldalakat látogatják meg, honnan érkeznek a látogatók, és hol hagyják abba. A cél kizárólag az ajánlat és a megtalálhatóság javítása.",
+            "Betöltés kizárólag az Ön hozzájárulásával történik. Ha hozzájárul, böngészője betölt egy szkriptet a www.googletagmanager.com oldalról, és két sütit („_ga” és „_ga_<azonosító>”, legfeljebb két évig érvényes) tárol egy véletlenszerűen generált azonosítóval; ez az azonosító, a meglátogatott oldalak, a hivatkozó forrás, a hozzávetőleges hely országos vagy regionális szinten, az eszköz és a böngésző, valamint az Ön IP-címe kerül továbbításra, amelyet a Google minden tárolás előtt rövidít. A jogalap az Általános Adatvédelmi Rendelet (GDPR) 6. cikk (1) bekezdés a) pontja (hozzájárulás).",
+            "Az értékelést kifejezetten korlátoztuk: a Google-jelek és a hirdetési személyre szabás ki vannak kapcsolva. Ezért nem jönnek létre eszközök közötti profilok és hirdetési célcsoportok, és nem továbbítunk felhasználási adatokat hirdetési hálózatoknak. Az Ön ügyfélfiókjával való összevonás nem történik meg.",
+            "A Google adatfeldolgozóként dolgozza fel az adatokat a GDPR 28. cikke szerinti szerződés alapján (Google Ads Adatfeldolgozási Feltételek). Az IP-cím rövidítése az EU-ban található szervereken történik, mielőtt az adatokat az USA-ba továbbítanák; így egy pszeudonim adatkészlet kerül továbbításra. A továbbítás alapja az EU Bizottságának megfelelőségi határozata az EU-USA Adatvédelmi Keretrendszerről (GDPR 45. cikk), amely alatt a Google LLC tanúsított; emellett a Google beépítette az EU Bizottságának standard szerződési záradékait (GDPR 46. cikk). Kifejezetten felhívjuk a figyelmet arra, hogy az amerikai hatóságok a FISA 702. szakasza alapján hozzáférhetnek a tanúsított vállalatok adataihoz is, és ezért a fennmaradó kockázat nem zárható ki teljesen. Ezenkívül a [Google adatvédelmi irányelvei](https://policies.google.com/privacy) is érvényesek.",
+            "Tárolási idő: Az esemény- és felhasználóspecifikus adatok 14 hónap után automatikusan törlődnek a tulajdonunkból; az egyes látogatókhoz nem kapcsolódó összesített jelentési adatok ezen túl is megmaradnak. Az Ön hozzájárulása maga hat hónap után lejár.",
+            "Az Ön hozzájárulása nélkül semmi sem töltődik be, nem kerül süti elhelyezésre, és nem áramlanak adatok a Google-hoz. Hozzájárulását bármikor visszavonhatja az oldal bal alsó sarkában található süti ikonon keresztül; a mérés ekkor azonnal leáll, és a megnevezett sütik törlődnek. Hat hónap után újra megkérdezzük.",
+          ],
+        },
+        {
+          titel: "Hirdetés és teljesítménymérés",
+          paragraphs: [
+            "Az Ön hozzájárulásával marketing sütiket használunk hirdetéseink sikerének mérésére és releváns hirdetések megjelenítésére más platformokon. Résztvevők: Meta Platforms Ireland (Meta-pixel, _fbp süti), LinkedIn Ireland (Insight-tag, li_gc és bcookie sütik) és Google Ireland Limited (Google Ads, _gcl_au süti). A jogalap az Általános Adatvédelmi Rendelet 6. cikk (1) bekezdés a) pontja. Az Ön hozzájárulása nélkül ezen szkriptek egyike sem töltődik be és süti sem kerül elhelyezésre; visszavonás esetén töröljük azokat. Az egyes sütikre vonatkozó részletek a [Süti-szabályzatban](/cookie-richtlinie) találhatók.",
           ],
         },
       ],
@@ -252,7 +263,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (Egyesült Királyság) — csatlakozás a foglalási portálokhoz",
         "Meta Platforms Ireland Limited (Írország) — WhatsApp-üzenetek, ha aktiválva van",
         "Sendinblue SAS / Brevo (Franciaország, Németország) — a hírlevél kezelése és kiküldése, csak hozzájárulás esetén",
-        "Google Ireland Limited (Írország) — fordítások; a kapcsolatfelvételi űrlap spamvédelme (reCAPTCHA Enterprise), csak hozzájárulás esetén; bejelentkezés Google-fiókkal, ha használják",
+        "Google Ireland Limited (Írország) — fordítások; a kapcsolatfelvételi űrlap spamvédelme (reCAPTCHA Enterprise), csak hozzájárulás esetén; bejelentkezés Google-fiókkal, ha használják; Hatótávolságmérés (Google Analytics 4), csak hozzájárulás esetén",
         "Groq, Inc. (USA) — válaszjavaslatok, ha aktiválva van",
         "Cloudflare, Inc. (USA) — DNS-kezelés az ügyfelek domainjeihez",
       ],
@@ -288,7 +299,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (USA) — válaszjavaslatok az üzenetek beérkező mappájában, csak akkor, ha a vállalkozás aktiválja a funkciót. Az adott üzenetkontextus kerül továbbításra.",
             "Cloudflare, Inc. (USA) — DNS-kezelés az ügyfelek domainjeihez. Domain- és konfigurációs adatok kerülnek továbbításra, vendégadatok nem.",
-            "Google LLC (USA) — csak a Google-fiókkal történő bejelentkezésnél és a fordításoknál; a szerződő partner mindkét esetben a Google Ireland Limited, az amerikai anyavállalat hozzáférése azonban ennek ellenére nem kizárt.",
+            "Google LLC (USA) – Google-fiókkal való bejelentkezés, fordítások és hatótávolságmérés (Google Analytics 4, csak hozzájárulással) esetén; a szerződéses partner minden esetben a Google Ireland Limited, de az amerikai anyavállalat hozzáférése nem kizárt.",
           ],
         },
         {

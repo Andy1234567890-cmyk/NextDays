@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "Vaša privola",
-    "text": "Ova web stranica ne koristi usluge analitike, oglašavanja ni praćenja; naši fontovi i ikone nalaze se na našem vlastitom poslužitelju. Nužno je samo ono što sami postavite ili zatražite. Zato nam je vaša privola potrebna za samo jednu stvar: za vanjsku zaštitu našeg obrasca za kontakt od neželjene pošte.",
+    "textBeide": "Dvije stvari zahtijevaju vaš pristanak. Možete ih pojedinačno dopustiti ili odbiti, promijeniti i opozvati u bilo kojem trenutku. Detalji u pravilima o kolačićima.",
+    "textSpamschutz": "Jedna stvar zahtijeva vaš pristanak. Možete je promijeniti i opozvati u bilo kojem trenutku. Detalji u pravilima o kolačićima.",
+    "textStatistik": "Jedna stvar zahtijeva vaš pristanak. Možete je promijeniti i opozvati u bilo kojem trenutku. Detalji u pravilima o kolačićima.",
     "richtlinie": "Pročitajte pravila o kolačićima",
     "knopf": "Postavke kolačića",
     "allesAblehnen": "Odbijte sve",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Sakrijte odabir",
     "auswahlSpeichern": "Spremite odabir",
     "immerAktiv": "Uvijek aktivno",
+    "nichtEingerichtet": "U ovom okruženju ova usluga nije postavljena — ne učitava ništa čak ni uz vaše dopuštenje.",
     "kategorien": {
       "notwendig": {
-        "titel": "Nužno",
-        "text": "Vaš odabir jezika i — samo ako sami otvorite razgovor — identifikator vašeg razgovora na ovom uređaju. Bez toga se stranica ne može prikazati onako kako ste je zatražili. Ne služe ni za oglašavanje ni za statistiku."
+        "titel": "Nužni kolačići",
+        "text": "Ovi kolačići su neophodni za rad web stranice: vaš odabir jezika i, ako otvorite chat, identifikator vašeg razgovora. Ne mogu se isključiti jer web stranica bez njih ne funkcionira kako je zatraženo."
       },
-      "spamschutz": {
-        "titel": "Zaštita obrasca za kontakt od neželjene pošte",
-        "text": "Naš obrazac za kontakt zaštićen je od automatiziranih masovnih poruka pomoću reCAPTCHA Enterprise od Googlea. Ako to dopustite, vaš preglednik pri ispunjavanju obrasca učitava skriptu s google.com i pritom prenosi vašu IP adresu Googleu. Bez vašeg dopuštenja s Googlea se ne učitava ništa; u tom nas slučaju možete kontaktirati e-poštom."
+      "funktional": {
+        "titel": "Funkcionalni kolačići",
+        "text": "Ovi kolačići štite naš obrazac za kontakt od automatiziranih masovnih poruka. Ako ih dopustite, vaš preglednik učitava reCAPTCHA s Googlea i pritom prenosi vašu IP adresu."
+      },
+      "analytisch": {
+        "titel": "Analitički kolačići",
+        "text": "Pomoću ovih kolačića saznajemo koje se stranice čitaju i gdje posjetitelji odustaju kako bismo poboljšali web stranicu. Personalizacija oglasa i profili među uređajima su isključeni."
+      },
+      "marketing": {
+        "titel": "Marketinški kolačići",
+        "text": "Pomoću ovih kolačića mjerimo uspjeh našeg oglašavanja i prikazujemo vam relevantne oglase na drugim platformama. Podaci se prenose na Meta, LinkedIn i Google."
       }
     },
     "kontakt": {
       "hinweis": "Prije slanja potrebno nam je vaše dopuštenje za vanjsku zaštitu od neželjene pošte (reCAPTCHA od Googlea). Bez njega ne možemo prihvatiti obrazac — tako sprječavamo automatizirane masovne poruke.",
       "erlauben": "Dopustite zaštitu",
       "alternative": "Ne želite to? Umjesto toga pišite nam na {email}."
-    }
+    },
+    "angaben": {
+      "anbieter": "Davatelj:",
+      "dauer": "Trajanje pohrane:",
+      "cookies": "Kolačići:",
+      "keineCookies": "nema (samo prilikom slanja)",
+      "drittland": "Prijenos:",
+      "drittlandJa": "u SAD, na temelju Okvira za zaštitu podataka EU-SAD",
+      "drittlandNein": "samo unutar EU-a",
+      "listeAnzeigen": "Kolačići koje koristimo",
+      "listeTitel": "Popis kolačića",
+      "name": "Naziv",
+      "host": "Domaćin",
+      "art": "Vrsta",
+      "artErst": "Prva strana",
+      "artDritt": "Treća strana",
+      "zweck": "Svrha",
+      "kategorie": "Kategorija",
+      "beschreibung": "Opis"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "postavio Google, do šest mjeseci",
+      "dreiMonate": "otprilike tri mjeseca",
+      "einJahr": "otprilike godinu dana",
+      "sechsMonate": "otprilike šest mjeseci",
+      "zweiJahre": "do dvije godine"
+    },
+    "zweck": {
+      "grecaptcha": "Omogućuje Googleu procjenu rizika koja razlikuje automatizirane masovne poruke od stvarnih upita.",
+      "ga": "Razlikuje posjetitelje kako se ponovljeni pozivi ne bi dvostruko brojali. Sadrži nasumično generirani identifikator bez veze s vašom osobom.",
+      "gaSitzung": "Bilježi kada je započeo vaš trenutni posjet, tako da prikazi stranica unutar jedne sesije pripadaju zajedno.",
+      "fbp": "Vaš posjet dodjeljuje oglasu kako bismo mogli mjeriti uspjeh naših kampanja.",
+      "gclAu": "Vaš posjet dodjeljuje Google oglasu kako bismo mogli mjeriti uspjeh naših kampanja.",
+      "liGc": "Pohranjuje vaš pristanak za LinkedIn u svrhu oglašavanja.",
+      "bcookie": "Identificira vaš preglednik prema LinkedInu kako bi se oglasi i njihov uspjeh mogli dodijeliti."
+    },
+    "uebersicht": {
+      "titel": "Vaše postavke kolačića",
+      "text": "Odaberite koje kolačiće želite prihvatiti ili odbiti na ovoj web stranici. Postavke za svaku kategoriju kolačića možete uključiti i isključiti u bilo kojem trenutku.",
+      "datenschutz": "Više informacija u izjavi o zaštiti podataka"
+    },
+    "verwalten": "Upravljanje postavkama kolačića",
+    "schliessen": "Zatvori",
+    "bestaetigen": "Potvrdi postavke"
   }
 }

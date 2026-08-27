@@ -8,13 +8,13 @@ export const cookies: LegalDoc = {
   slug: "cookie-richtlinie",
   title: "Evästekäytäntö",
   metaDescription:
-    "Mitä evästeitä myNextDays käyttää: ainoastaan teknisesti välttämättömiä ja toiminnallisia evästeitä, ei seuranta- tai mainosevästeitä.",
+    "Mitä evästeitä myNextDays asettaa: teknisesti välttämättömiä evästeitä sekä – vain suostumuksellasi – toiminnallisia, analyyttisiä ja markkinointievästeitä. Jokainen kategoria on erikseen kytkettävissä päälle ja pois päältä.",
   standIso: RECHTSSTAND_ISO,
   numbered: true,
   toc: true,
   intro: [
     `Tämä käytäntö selittää, mitä evästeitä ja vastaavia tallennustekniikoita ${ANBIETER.firma} käyttää tällä verkkosivustolla ja myNextDays-alustalla.`,
-    "Lyhyesti: käytämme ainoastaan teknisesti välttämättömiä ja toiminnallisia evästeitä. Analytiikka-, mainos- tai seurantaevästeitä ei ole, eikä käyttötietoja luovuteta mainosverkostoille.",
+    "Lyhyesti sanottuna: Välttämättömiä ovat vain evästeet, joita ilman verkkosivusto ei toimi pyydetyllä tavalla. Kaikki muu vaatii suostumuksesi eikä lataudu ilman sitä – yhteydenottolomakkeemme roskapostisuojaus, kävijämittaus ja markkinointievästeet, joilla mittaamme mainontamme menestystä. Voit sallia tai hylätä jokaisen näistä kategorioista erikseen ja peruuttaa päätöksesi milloin tahansa.",
   ],
   sections: [
     {
@@ -28,14 +28,14 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Suostumus on tarpeen Tanskan evästeasetuksen (Cookie-bekendtgørelsen) 9 §:n mukaan (direktiivin 2002/58/EY 5 artiklan 3 kohdan täytäntöönpano) vain, jos pääsy laitteeseenne ei palvele yksinomaan viestin välittämistä tai ei ole ehdottoman välttämätön nimenomaisesti pyytämänne palvelun tarjoamiseksi.",
         "Kaikki asettamamme evästeet ovat tarpeen kirjautumista, istunnon turvallisuutta tai itse tekemäänne asetusta varten — emme kysy niitä varten mitään, emmekä toisaalta aseta mitään, mikä vaatisi suostumusta.",
-        "Suostumusta tarvitsette täsmälleen yhtä asiaa varten: yhteydenottolomakkeemme roskapostisuojaa. Se tulee Googlelta (reCAPTCHA Enterprise) eli on ulkoinen palvelu, ja se ladataan vain, jos olette sallineet sen. Tätä varten näytön alareunassa kysyy palkki — ensimmäisellä käynnillä, tasavertaisilla painikkeilla ”Hylkää” ja ”Hyväksy” ilman ennalta valittua vaihtoehtoa. Kunnes olette päättäneet, on voimassa ”ei sallittu”.",
+        "Sinun on annettava suostumus kolmelle kategorialle, joita kaikkia ei ladata ilman lupaasi: yhteydenottolomakkeemme roskapostisuojaus (Googlen reCAPTCHA), tämän verkkosivuston kävijämittaus (Google Analytics 4) ja markkinointievästeet (Meta, LinkedIn, Google Ads). Tätä varten avautuu ikkuna, jossa on luettelo kategorioista – ensimmäisellä käynnillä, ilman esivalintaa, jokaisella kategorialla on oma kytkin. Niin kauan kuin et ole tehnyt päätöstä, sovelletaan ”ei sallittu” -periaatetta, eikä tietoja arvioida tai mainosteta.",
         "Päätöksenne sijaitsee selaimenne tallennustilassa (Local Storage, arvo ”nd_consent”); se sisältää vain kategorian, ajankohdan ja versionumeron, ei henkilöllisyyttänne. Voitte muuttaa tai peruuttaa sen milloin tahansa jokaisen sivun vasemmassa alakulmassa olevan evästekuvakkeen kautta. Kuuden kuukauden kuluttua kysymme uudelleen — suostumus ei saa olla voimassa rajattomasti.",
       ],
     },
     {
       heading: "Tämä verkkosivusto",
       paragraphs: [
-        "Markkinointisivusto ei aseta evästeitä. Fontit ja kuvakkeet sijaitsevat omalla palvelimellamme — niitä varten ei kutsuta minkään kolmannen osapuolen kuvake- tai fonttipalvelua. Tämän sivun ainoa ulkoinen palvelu on yhteydenottolomakkeen roskapostisuoja, ja se ladataan vain suostumuksellanne. Lisätietoja on [tietosuojaselosteessa](/datenschutz).",
+        "Tämä verkkosivusto ei itsessään aseta evästeitä. Fontit ja symbolit sijaitsevat omalla palvelimellamme – kolmannen osapuolen symboli- tai fonttipalvelua ei käytetä. Lisäksi käytössä ovat vain sallimasi palvelut: yhteydenottolomakkeen roskapostisuojaus, kävijämittaus ja markkinointipalvelut. Mitä evästeitä asetetaan, millä voimassaoloajalla ja millä isännällä, on kuvattu alla olevassa osiossa ”Kolmannen osapuolen evästeet”. Peruutus tapahtuu vasemmassa alakulmassa olevan evästekuvakkeen kautta – kyseinen palvelu päättyy välittömästi ja sen evästeet poistetaan. Yksityiskohdat löytyvät [tietosuojakäytännöstä](/datenschutz).",
       ],
     },
     {
@@ -77,7 +77,8 @@ export const cookies: LegalDoc = {
           ],
         },
         {
-          titel: "sb-… — kirjautuminen Googlella (teknisesti välttämätön, vain käytettäessä)",
+          titel:
+            "sb-… — kirjautuminen Googlella (teknisesti välttämätön, vain käytettäessä)",
           list: [
             "Tarkoitus: ylläpitää istuntoa, kun kirjaudutte sisään Googlen kautta.",
             "Sisältö: kirjautumispalvelun istuntotunniste.",
@@ -92,7 +93,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Tallentaa päätöksenne yhteydenottolomakkeen roskapostisuojasta, jotta suostumuspalkki ei kysy sitä uudelleen jokaisella käynnillä. Tallennettuna on vain kategoria, ajankohta ja versionumero. Arvo ei poistu laitteeltanne eikä sitä siirretä palvelimellemme; se koskee tätä selainta. Voimassaolo: kuusi kuukautta — sen jälkeen palkki kysyy asiaa uudelleen. Jos poistatte arvon, palkki kysyy asiaa uudelleen seuraavalla käynnillä.",
+            "Tallentaa päätöksesi suostumusta vaativista palveluista (yhteydenottolomakkeen roskapostisuojaus ja kattavuuden mittaus).",
           ],
         },
         {
@@ -120,6 +121,68 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Kun teette maksun, maksupalveluntarjoaja (Stripe tai PayPal) voi asettaa omalla sivullaan evästeitä, jotka ovat tarpeen käsittelyä ja petosten torjuntaa varten. Näihin sovelletaan kyseisen palveluntarjoajan ehtoja.",
         "Verkkosivustoilla, jotka yritykset luovat sivustorakentajallamme, kyseinen yritys päättää lisäevästeistä ja vastaa siellä annetuista tiedoista.",
+        "Vain suostumuksellasi Googlen palvelut asettavat tälle verkkosivustolle seuraavat evästeet – kaksi mittausta varten, yksi roskapostisuojaukseen. Ilman suostumustasi kyseistä skriptiä ei ladata eikä näitä evästeitä aseteta; jos peruutat suostumuksesi, poistamme ne.",
+      ],
+      unterpunkte: [
+        {
+          titel: "_fbp – Mainonnan tulosten mittaus (suostumus vaaditaan)",
+          list: [
+            "Tarkoitus: Yhdistää vierailusi mainokseen, jotta voimme mitata kampanjoidemme menestystä.",
+            "Sisältö: Satunnaisesti luotu tunniste; ei nimeä, sähköpostia tai tilitietoja meiltä.",
+            "Palveluntarjoaja: Meta Platforms Ireland Limited, Merrion Road, Dublin 4, Irlanti.",
+            "Isäntä: mynextdays.com (ensimmäisen osapuolen eväste, Metan skriptin asettama). Kesto: noin kolme kuukautta.",
+          ],
+        },
+        {
+          titel: "_gcl_au – Google Ads -tulosten mittaus (suostumus vaaditaan)",
+          list: [
+            "Tarkoitus: Yhdistää vierailusi Google-mainokseen, jotta voimme mitata kampanjoidemme menestystä.",
+            "Sisältö: Satunnaisesti luotu tunniste ilman henkilökohtaista viittausta.",
+            "Palveluntarjoaja: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irlanti.",
+            "Isäntä: mynextdays.com (ensimmäisen osapuolen eväste). Kesto: noin kolme kuukautta.",
+          ],
+        },
+        {
+          titel: "li_gc ja bcookie – LinkedIn-mainonta (suostumus vaaditaan)",
+          list: [
+            "Tarkoitus: Tunnistaa selaimesi LinkedInille, jotta mainokset ja niiden menestys voidaan yhdistää; li_gc tallentaa myös suostumuksesi siellä.",
+            "Sisältö: Selaimen tunniste sekä suostumuksen tila; ei tietoja tililtäsi meillä.",
+            "Palveluntarjoaja: LinkedIn Ireland Unlimited Company, Wilton Plaza, Dublin 2, Irlanti.",
+            "Isäntä: linkedin.com (kolmannen osapuolen evästeet). Kesto: noin kuusi kuukautta tai yksi vuosi.",
+          ],
+        },
+        {
+          titel:
+            "_GRECAPTCHA – Yhteydenottolomakkeen roskapostisuojaus (suostumus vaaditaan)",
+          list: [
+            "Isäntä: www.google.com (kolmannen osapuolen eväste).",
+            "Tarkoitus: Sallii Googlen riskinarvioinnin, jolla erotetaan automaattiset massaviestit aidoista kyselyistä.",
+            "Sisältö: Googlen luoma tunniste tätä arviointia varten; ei nimitietoja, sähköpostiosoitteita tai tilitietoja meiltä.",
+            "Palveluntarjoaja: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irlanti.",
+            "Kesto: Googlen määrittämä, enintään kuusi kuukautta. Se asetetaan vasta, kun olet sallinut roskapostisuojauksen ja avannut yhteydenottolomakkeen.",
+          ],
+        },
+        {
+          titel: "_ga – Kattavuuden mittaus (suostumus vaaditaan)",
+          list: [
+            "Isäntä: mynextdays.com (ensimmäisen osapuolen eväste, Googlen komentosarjan asettama).",
+            "Tarkoitus: erottaa kävijät, jotta toistuvia käyntejä ei lasketa kahdesti.",
+            "Sisältö: satunnaisesti luotu tunnus, joka ei liity henkilöösi; ei nimi-, sähköposti- tai tilitietoja.",
+            "Tarjoaja: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irlanti.",
+            "Kesto: enintään kaksi vuotta.",
+          ],
+        },
+        {
+          titel:
+            "_ga_<tunnus> – Mittauksen istunnon tila (suostumus vaaditaan)",
+          list: [
+            "Isäntä: mynextdays.com (ensimmäisen osapuolen eväste, Googlen komentosarjan asettama).",
+            "Tarkoitus: tallentaa, milloin nykyinen käyntisi alkoi, jotta istunnon sivunäkymät kuuluvat yhteen.",
+            "Sisältö: aikaleima ja istunnon laskuri; nimen tunnus viittaa omaisuuteemme, ei sinuun.",
+            "Tarjoaja: Google Ireland Limited.",
+            "Kesto: enintään kaksi vuotta.",
+          ],
+        },
       ],
     },
     {

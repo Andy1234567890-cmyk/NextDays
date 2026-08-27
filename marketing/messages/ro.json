@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "Consimțământul dumneavoastră",
-    "text": "Acest site nu utilizează servicii de analiză, de publicitate sau de urmărire; fonturile și pictogramele sunt livrate de pe serverul nostru propriu. Necesar este numai ceea ce setați sau solicitați dumneavoastră. De aceea avem nevoie de consimțământul dumneavoastră pentru exact un singur lucru: protecția externă antispam a formularului nostru de contact.",
+    "textBeide": "Două elemente necesită acordul dumneavoastră. Le puteți permite sau refuza individual, le puteți modifica și revoca oricând. Detalii în politica privind modulele cookie.",
+    "textSpamschutz": "Un element necesită acordul dumneavoastră. Îl puteți modifica și revoca oricând. Detalii în politica privind modulele cookie.",
+    "textStatistik": "Un element necesită acordul dumneavoastră. Îl puteți modifica și revoca oricând. Detalii în politica privind modulele cookie.",
     "richtlinie": "Citiți politica privind cookie-urile",
     "knopf": "Setări cookie-uri",
     "allesAblehnen": "Refuzați toate",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Ascundeți opțiunile",
     "auswahlSpeichern": "Salvați opțiunile",
     "immerAktiv": "Întotdeauna activ",
+    "nichtEingerichtet": "În acest mediu, acest serviciu nu este configurat — nu încarcă nimic, nici măcar cu permisiunea dumneavoastră.",
     "kategorien": {
       "notwendig": {
-        "titel": "Necesare",
-        "text": "Alegerea dumneavoastră privind limba și — numai dacă deschideți chatul dumneavoastră înșivă — identificatorul conversației dumneavoastră pe acest dispozitiv. Fără aceste date, site-ul nu poate fi livrat așa cum l-ați solicitat. Ele nu servesc nici publicității, nici statisticilor."
+        "titel": "Cookie-uri necesare",
+        "text": "Aceste cookie-uri sunt absolut necesare pentru funcționarea site-ului web: alegerea limbii dumneavoastră și, dacă deschideți chat-ul, identificatorul conversației dumneavoastră. Acestea nu pot fi dezactivate, deoarece site-ul web nu funcționează conform solicitării fără ele."
       },
-      "spamschutz": {
-        "titel": "Protecția antispam a formularului de contact",
-        "text": "Formularul nostru de contact este protejat împotriva mesajelor automatizate în masă prin reCAPTCHA Enterprise de la Google. Dacă permiteți acest lucru, browserul dumneavoastră încarcă un script de pe google.com în timp ce completați formularul și transmite astfel adresa dumneavoastră IP către Google. Fără permisiunea dumneavoastră nu se încarcă nimic de la Google; în acest caz ne puteți contacta prin e-mail."
+      "funktional": {
+        "titel": "Cookie-uri funcționale",
+        "text": "Aceste cookie-uri protejează formularul nostru de contact împotriva mesajelor automate în masă. Dacă le permiteți, browserul dumneavoastră va încărca reCAPTCHA de la Google și va transmite adresa dumneavoastră IP."
+      },
+      "analytisch": {
+        "titel": "Cookie-uri analitice",
+        "text": "Cu aceste cookie-uri aflăm ce pagini sunt citite și unde vizitatorii renunță, pentru a îmbunătăți site-ul web. Personalizarea publicității și profilurile inter-dispozitive sunt dezactivate."
+      },
+      "marketing": {
+        "titel": "Cookie-uri de marketing",
+        "text": "Cu aceste cookie-uri măsurăm succesul publicității noastre și vă afișăm anunțuri relevante pe alte platforme. Datele sunt transmise către Meta, LinkedIn și Google."
       }
     },
     "kontakt": {
       "hinweis": "Înainte de trimitere avem nevoie de permisiunea dumneavoastră pentru protecția externă antispam (reCAPTCHA de la Google). Fără ea nu putem accepta formularul — astfel ținem la distanță mesajele automatizate în masă.",
       "erlauben": "Permiteți protecția antispam",
       "alternative": "Preferați să nu? Scrieți-ne în schimb la {email}."
-    }
+    },
+    "angaben": {
+      "anbieter": "Furnizor:",
+      "dauer": "Durata stocării:",
+      "cookies": "Cookie-uri:",
+      "keineCookies": "niciunul (doar la trimitere)",
+      "drittland": "Transfer:",
+      "drittlandJa": "în SUA, în baza Cadrului de confidențialitate a datelor UE-SUA",
+      "drittlandNein": "doar în cadrul UE",
+      "listeAnzeigen": "Cookie-uri utilizate de noi",
+      "listeTitel": "Listă de module cookie",
+      "name": "Nume",
+      "host": "Gazdă",
+      "art": "Tip",
+      "artErst": "Parte primară",
+      "artDritt": "Parte terță",
+      "zweck": "Scop",
+      "kategorie": "Categorie",
+      "beschreibung": "Descriere"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "setat de Google, până la șase luni",
+      "dreiMonate": "aproximativ trei luni",
+      "einJahr": "aproximativ un an",
+      "sechsMonate": "aproximativ șase luni",
+      "zweiJahre": "până la doi ani"
+    },
+    "zweck": {
+      "grecaptcha": "Permite Google să efectueze o evaluare a riscurilor, care diferențiază înscrierile în masă automate de solicitările reale.",
+      "ga": "Diferențiază vizitatorii, astfel încât vizitele recurente să nu fie numărate de două ori. Conține un identificator generat aleatoriu, fără nicio legătură cu persoana dumneavoastră.",
+      "gaSitzung": "Înregistrează momentul în care a început vizita dumneavoastră actuală, astfel încât vizualizările de pagină dintr-o sesiune să aparțină împreună.",
+      "fbp": "Asociază vizita dumneavoastră cu o reclamă pentru a putea măsura succesul campaniilor noastre.",
+      "gclAu": "Asociază vizita dumneavoastră cu o reclamă Google pentru a putea măsura succesul campaniilor noastre.",
+      "liGc": "Salvează consimțământul dumneavoastră față de LinkedIn în scopuri publicitare.",
+      "bcookie": "Identifică browserul dumneavoastră față de LinkedIn, astfel încât anunțurile și succesul acestora să poată fi atribuite."
+    },
+    "uebersicht": {
+      "titel": "Setările dumneavoastră de cookie-uri",
+      "text": "Alegeți ce cookie-uri doriți să acceptați sau să refuzați pe acest site web. Puteți activa și dezactiva setările pentru fiecare categorie de cookie-uri în orice moment.",
+      "datenschutz": "Mai multe informații în politica de confidențialitate"
+    },
+    "verwalten": "Gestionați setările cookie",
+    "schliessen": "Închideți",
+    "bestaetigen": "Confirmați setările"
   }
 }

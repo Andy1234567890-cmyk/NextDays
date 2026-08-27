@@ -1,19 +1,25 @@
 // Einwilligung der Besucher — Modell und Speicher.
 //
-// WAS HIER WIRKLICH GESCHALTET WIRD: genau EIN Dienst, der externe Spamschutz
-// des Kontaktformulars (reCAPTCHA Enterprise, `lib/captcha.ts`). Mehr gibt es
-// in dieser App nicht, und das ist nachgezählt, nicht angenommen:
+// WAS HIER WIRKLICH GESCHALTET WIRD: ZWEI Dienste, beide von Google, beide
+// nur nach Zustimmung geladen:
+//   · „funktional" → reCAPTCHA Enterprise am Kontaktformular (`lib/captcha.ts`)
+//   · „analytisch" → GA4-Reichweitenmessung (`lib/analytics.ts`), und zwar nur
+//     wenn eine echte Mess-ID konfiguriert ist (`GA_MEASUREMENT_ID`)
+// Mehr gibt es in dieser App nicht, und das ist nachgezählt, nicht angenommen:
 //   · Schriften liegen lokal im Repo (app/layout.tsx, marketing/fonts/)
 //   · Symbole werden serverseitig aus dem eingecheckten Satz gerendert
 //     (components/ui/icon-set.ts) — kein Abruf bei api.iconify.design
 //   · Support-Chat und Voranmeldung sprechen mit UNSERER API, nicht mit Dritten
 //   · Newsletter/Brevo läuft ausschließlich serverseitig in der FastAPI
-//   · Analyse-, Werbe- oder Tracking-Dienste existieren nicht (kein Analytics,
-//     kein Pixel, kein Werbenetzwerk)
-// Deshalb steht hier KEINE Kategorie „Statistik" oder „Marketing". Eine
-// Kategorie ohne dahinterliegenden Dienst wäre eine Attrappe: sie sammelt eine
-// Einwilligung ein und schaltet nichts — genau der Fehler, den ein
-// Einwilligungs-Dialog nicht machen darf.
+//   · „marketing"  → Werbe-Pixel (`lib/pixel.ts`)
+// Die vier Punkte des Dialogs folgen der Branchenaufteilung (Booking, Cookiebot,
+// Usercentrics): Übersicht, Funktional, Analytisch, Marketing.
+//
+// Beide Zwecke werden IMMER angezeigt, auch wenn ihr Dienst in dieser Umgebung
+// nicht eingerichtet ist — sonst wäre ein Zweck nicht abwählbar, sondern
+// unsichtbar (OH Telemedien 2021, S. 14: separat einwilligen ODER ablehnen
+// können). Ob der Dienst steht, sagt `istKonfiguriert`, und die Leiste schreibt
+// es an die Kategorie.
 // Kommt ein neuer Dienst im Browser hinzu, gehört er HIER als Kategorie hinein
 // UND an seiner Ladestelle abgefragt; sonst lädt er ungefragt.
 //
@@ -24,10 +30,24 @@
 // Der Wert hat keinen Personenbezug: Kategoriename, Zeitpunkt, Fassung — keine
 // Kennung, die einen Besucher wiedererkennbar macht.
 
-import { RECAPTCHA_SITE_KEY } from "@/lib/config";
+import {
+  GA_MEASUREMENT_ID,
+  MARKETING_PIXEL_VORHANDEN,
+  RECAPTCHA_SITE_KEY,
+} from "@/lib/config";
 
-/** Die einzige optionale Kategorie — siehe Kopfkommentar. */
-export const OPTIONALE_KATEGORIEN = ["spamschutz"] as const;
+/**
+ * Alle optionalen Kategorien — siehe Kopfkommentar.
+ *
+ * Reihenfolge = Anzeigereihenfolge in der Leiste und im Einstellungsfeld.
+ * ALLE werden angezeigt; welche davon in DIESER Umgebung einen eingerichteten
+ * Dienst haben, sagt `istKonfiguriert()`.
+ */
+export const OPTIONALE_KATEGORIEN = [
+  "funktional",
+  "analytisch",
+  "marketing",
+] as const;
 
 export type OptionaleKategorie = (typeof OPTIONALE_KATEGORIEN)[number];
 
@@ -38,9 +58,31 @@ export type Auswahl = Record<OptionaleKategorie, boolean>;
  * gilt, solange niemand entschieden hat — die datenschutzfreundlichste Fassung
  * und kein „vorausgewählt".
  */
-export const NICHTS_ERLAUBT: Auswahl = { spamschutz: false };
+export const NICHTS_ERLAUBT: Auswahl = {
+  funktional: false,
+  analytisch: false,
+  marketing: false,
+};
 
-export const ALLES_ERLAUBT: Auswahl = { spamschutz: true };
+/**
+ * „Alle annehmen" — alle angezeigten Zwecke auf `true`.
+ *
+ * Bleibt eine Funktion und keine Konstante, damit sie nicht auseinanderläuft,
+ * wenn ein Zweck hinzukommt: eine handgepflegte Konstante hätte den neuen
+ * Zweck stillschweigend auf `false` gelassen, obwohl der Besucher „alle"
+ * geklickt hat.
+ *
+ * Sie setzt bewusst ALLE Zwecke, auch solche, deren Dienst hier nicht
+ * eingerichtet ist — denn genau die zeigt die Leiste jetzt ebenfalls an
+ * (kategorien-feld.tsx). Zustimmung zu einem nicht eingerichteten Dienst ist
+ * folgenlos: die Ladestellen prüfen ihren Schlüssel selbst
+ * (`analytics.ts`, `captcha.ts`) und tun ohne ihn nichts.
+ */
+export function allesErlaubt(): Auswahl {
+  const auswahl = { ...NICHTS_ERLAUBT };
+  for (const kategorie of OPTIONALE_KATEGORIEN) auswahl[kategorie] = true;
+  return auswahl;
+}
 
 export const SPEICHER_SCHLUESSEL = "nd_consent";
 
@@ -51,7 +93,12 @@ export const SPEICHER_SCHLUESSEL = "nd_consent";
  * diese Zahl würde eine alte Zustimmung stillschweigend auf etwas ausgedehnt,
  * dem niemand zugestimmt hat.
  */
-export const EINWILLIGUNG_FASSUNG = 1;
+// Fassung 2 (26.08.2026): Kategorie „statistik" (GA4) kam hinzu. Die Erhöhung
+// ist hier PFLICHT und nicht Kosmetik — ohne sie hätte jede vorhandene
+// Zustimmung zum Spamschutz stillschweigend auch die Reichweitenmessung
+// erlaubt, der nie jemand zugestimmt hat. Mit der neuen Zahl verwirft
+// `entscheidungLesen` die alten Sätze und die Leiste fragt erneut.
+export const EINWILLIGUNG_FASSUNG = 2;
 
 /**
  * Wie lange eine Einwilligung gilt, bevor erneut gefragt wird — in Tagen.
@@ -216,17 +263,46 @@ export function entscheidungSpeichern(auswahl: Auswahl): Entscheidung {
 }
 
 /**
+ * Welche Kategorien schalten in DIESER Umgebung wirklich einen Dienst?
+ *
+ * Ohne reCAPTCHA-Schlüssel lädt kein Captcha (lib/captcha.ts steigt aus), ohne
+ * Mess-ID kein GA4 (lib/analytics.ts steigt aus). Eine Kategorie, deren Dienst
+ * nicht konfiguriert ist, wird deshalb NICHT angezeigt — sie würde eine
+ * Einwilligung einsammeln und nichts schalten, also genau die Attrappe, die
+ * dieser Dialog vermeiden soll. Lokal ist beides leer; in Produktion gesetzt.
+ */
+export function optionaleKategorien(): readonly OptionaleKategorie[] {
+  return OPTIONALE_KATEGORIEN.filter(istKonfiguriert);
+}
+
+/** Ist der Dienst hinter dieser Kategorie in dieser Umgebung eingerichtet? */
+export function istKonfiguriert(kategorie: OptionaleKategorie): boolean {
+  if (kategorie === "funktional") return RECAPTCHA_SITE_KEY !== "";
+  if (kategorie === "analytisch") return GA_MEASUREMENT_ID !== "";
+  // Marketing: die Pixel-Kennungen entscheiden. Ist keine gesetzt, lädt kein
+  // Pixel — der Zweck bleibt sichtbar und abwählbar, sagt aber, dass hier
+  // nichts eingerichtet ist.
+  return MARKETING_PIXEL_VORHANDEN;
+}
+
+/**
  * Gibt es in dieser Umgebung überhaupt etwas zu entscheiden?
  *
- * Ohne konfigurierten reCAPTCHA-Schlüssel lädt die App keinen einzigen
- * Drittanbieter (lib/captcha.ts steigt dann sofort aus) — eine Leiste hätte
- * nichts zu schalten und wäre genau die Attrappe, die hier vermieden werden
- * soll. Das ist der lokale Normalfall; in Produktion ist der Schlüssel gesetzt.
- * Auf /cookie-richtlinie bleibt das Einstellungsfeld trotzdem sichtbar: wer
- * dort nachsieht, sucht die Einstellung bewusst.
+ * Immer ja, solange es einwilligungspflichtige Zwecke gibt — und die stehen im
+ * Code, nicht in einer Umgebungsvariablen.
+ *
+ * Vorher hing das an `optionaleKategorien().length > 0`, also an gesetzten
+ * Schlüsseln. Damit verschwand ohne Mess-ID nicht nur die Kategorie, sondern
+ * bei fehlenden Schlüsseln die GANZE Leiste — und mit ihr das Cookie-Symbol,
+ * also der Widerrufsweg (Art. 7 Abs. 3 DSGVO). Eine vergessene Variable hätte
+ * so die Einwilligungsverwaltung stillgelegt, ohne dass etwas auffällt.
+ *
+ * Die Zwecke sind eine Eigenschaft der Anwendung, nicht der Umgebung. Ob der
+ * Dienst dahinter gerade eingerichtet ist, sagt `istKonfiguriert` — und die UI
+ * schreibt es an die betroffene Kategorie, statt sie zu verstecken.
  */
 export function optionaleDiensteVorhanden(): boolean {
-  return RECAPTCHA_SITE_KEY !== "";
+  return OPTIONALE_KATEGORIEN.length > 0;
 }
 
 /**

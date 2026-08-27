@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "Teie nõusolek",
-    "text": "See veebisait ei kasuta analüüsi-, reklaami- ega jälgimisteenuseid; kirjatüübid ja ikoonid asuvad meie enda serveris. Vajalik on üksnes see, mida te ise seadistate või küsite. Seetõttu vajame teie nõusolekut ainult ühe asja jaoks: meie kontaktivormi välise rämpspostikaitse jaoks.",
+    "textBeide": "Kaks asja vajavad teie nõusolekut. Saate neid eraldi lubada või keelata, igal ajal muuta ja tagasi võtta. Üksikasjad leiate küpsiste eeskirjadest.",
+    "textSpamschutz": "Üks asi vajab teie nõusolekut. Saate seda igal ajal muuta ja tagasi võtta. Üksikasjad leiate küpsiste eeskirjadest.",
+    "textStatistik": "Üks asi vajab teie nõusolekut. Saate seda igal ajal muuta ja tagasi võtta. Üksikasjad leiate küpsiste eeskirjadest.",
     "richtlinie": "Loe küpsiste põhimõtteid",
     "knopf": "Küpsiste seaded",
     "allesAblehnen": "Keela kõik",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Peida valikud",
     "auswahlSpeichern": "Salvesta valikud",
     "immerAktiv": "Alati sees",
+    "nichtEingerichtet": "Selles keskkonnas pole see teenus seadistatud – see ei laadi midagi isegi teie loal.",
     "kategorien": {
       "notwendig": {
-        "titel": "Vajalikud",
-        "text": "Teie keelevalik ja — ainult siis, kui avate vestluse ise — teie vestluse tunnus sellel seadmel. Ilma nendeta ei saa lehte teile nii kuvada, nagu te seda küsisite. Neid ei kasutata ei reklaamiks ega statistikaks."
+        "titel": "Vajalikud küpsised",
+        "text": "Need küpsised on veebisaidi toimimiseks hädavajalikud: teie keelevalik ja vestluse avamisel teie vestluse identifikaator. Neid ei saa välja lülitada, sest ilma nendeta ei tööta veebisait nõuetekohaselt."
       },
-      "spamschutz": {
-        "titel": "Kontaktivormi rämpspostikaitse",
-        "text": "Meie kontaktivorm on automaatsete masssõnumite eest kaitstud Google'i reCAPTCHA Enterprise'iga. Kui te selle lubate, laadib teie brauser vormi täitmise ajal skripti aadressilt google.com ja edastab seejuures teie IP-aadressi Google'ile. Ilma teie loata ei laadita Google'ist midagi; sel juhul saate meiega ühendust e-posti teel."
+      "funktional": {
+        "titel": "Funktsionaalsed küpsised",
+        "text": "Need küpsised kaitsevad meie kontaktivormi automatiseeritud masspostituste eest. Kui lubate need, laadib teie brauser Google'ist reCAPTCHA ja edastab teie IP-aadressi."
+      },
+      "analytisch": {
+        "titel": "Analüütilised küpsised",
+        "text": "Nende küpsiste abil saame teada, milliseid lehti loetakse ja kus külastajad lahkuvad, et veebisaiti paremaks muuta. Reklaami isikupärastamine ja seadmeülesed profiilid on välja lülitatud."
+      },
+      "marketing": {
+        "titel": "Turundusküpsised",
+        "text": "Nende küpsiste abil mõõdame oma reklaami edukust ja näitame teile sobivaid reklaame teistel platvormidel. Andmed edastatakse Metale, LinkedInile ja Google'ile."
       }
     },
     "kontakt": {
       "hinweis": "Enne saatmist vajame teie luba välise rämpspostikaitse jaoks (Google'i reCAPTCHA). Ilma selleta me vormi vastu ei võta — nii hoiame automaatsed masssõnumid eemal.",
       "erlauben": "Luba rämpspostikaitse",
       "alternative": "Te ei soovi seda? Kirjutage meile selle asemel aadressil {email}."
-    }
+    },
+    "angaben": {
+      "anbieter": "Pakkuja:",
+      "dauer": "Salvestusaeg:",
+      "cookies": "Küpsised:",
+      "keineCookies": "puuduvad (ainult saatmisel)",
+      "drittland": "Edastamine:",
+      "drittlandJa": "USA-sse, vastavalt EL-USA andmekaitseraamistikule",
+      "drittlandNein": "ainult EL-i piires",
+      "listeAnzeigen": "Meie kasutatavad küpsised",
+      "listeTitel": "Küpsiste loend",
+      "name": "Nimi",
+      "host": "Host",
+      "art": "Tüüp",
+      "artErst": "Esimese osapoole oma",
+      "artDritt": "Kolmanda osapoole oma",
+      "zweck": "Eesmärk",
+      "kategorie": "Kategooria",
+      "beschreibung": "Kirjeldus"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "määratud Google'i poolt, kuni kuus kuud",
+      "dreiMonate": "umbes kolm kuud",
+      "einJahr": "umbes üks aasta",
+      "sechsMonate": "umbes kuus kuud",
+      "zweiJahre": "kuni kaks aastat"
+    },
+    "zweck": {
+      "grecaptcha": "Võimaldab Google'il hinnata riske, mis eristavad automatiseeritud masspostitusi tegelikest päringutest.",
+      "ga": "Eristab külastajaid, et korduvaid külastusi ei loetaks topelt. Sisaldab juhuslikult genereeritud identifikaatorit, mis ei ole seotud teie isikuga.",
+      "gaSitzung": "Salvestab teie praeguse külastuse algusaja, et lehevaatamised kuuluksid ühte seanssi.",
+      "fbp": "Seostab teie külastuse reklaamiga, et saaksime mõõta oma kampaaniate edukust.",
+      "gclAu": "Seostab teie külastuse Google'i reklaamiga, et saaksime mõõta oma kampaaniate edukust.",
+      "liGc": "Salvestab teie nõusoleku LinkedInile reklaami eesmärgil.",
+      "bcookie": "Identifitseerib teie brauseri LinkedInile, et reklaame ja nende edukust saaks seostada."
+    },
+    "uebersicht": {
+      "titel": "Teie küpsiste seaded",
+      "text": "Valige, milliseid küpsiseid soovite sellel veebisaidil aktsepteerida või tagasi lükata. Saate igal ajal iga küpsisekategooria seadeid aktiveerida ja deaktiveerida.",
+      "datenschutz": "Lisateave privaatsuspoliitikas"
+    },
+    "verwalten": "Küpsiste seadete haldamine",
+    "schliessen": "Sulge",
+    "bestaetigen": "Kinnita seaded"
   }
 }

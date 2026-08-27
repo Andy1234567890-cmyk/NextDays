@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "Suostumuksesi",
-    "text": "Tämä verkkosivusto ei käytä analytiikka-, mainonta- eikä seurantapalveluita; kirjasimet ja kuvakkeet ovat omalla palvelimellamme. Välttämätöntä on vain se, mitä itse asetat tai pyydät. Siksi tarvitsemme suostumuksesi vain yhteen asiaan: yhteydenottolomakkeemme ulkoiseen roskapostisuojaukseen.",
+    "textBeide": "Kaksi asiaa vaativat suostumuksenne. Voitte hyväksyä tai hylätä ne yksitellen, muuttaa tai peruuttaa milloin tahansa. Lisätietoja evästekäytännöstä.",
+    "textSpamschutz": "Yksi asia vaatii suostumuksenne. Voitte muuttaa tai peruuttaa sen milloin tahansa. Lisätietoja evästekäytännöstä.",
+    "textStatistik": "Yksi asia vaatii suostumuksenne. Voitte muuttaa tai peruuttaa sen milloin tahansa. Lisätietoja evästekäytännöstä.",
     "richtlinie": "Lue evästekäytäntö",
     "knopf": "Evästeasetukset",
     "allesAblehnen": "Hylkää kaikki",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Piilota valinnat",
     "auswahlSpeichern": "Tallenna valinnat",
     "immerAktiv": "Aina käytössä",
+    "nichtEingerichtet": "Tätä palvelua ei ole määritetty tässä ympäristössä – se ei lataa mitään edes luvallasi.",
     "kategorien": {
       "notwendig": {
-        "titel": "Välttämättömät",
-        "text": "Kielivalintasi ja — vain jos avaat keskustelun itse — keskustelusi tunniste tällä laitteella. Ilman niitä sivustoa ei voi toimittaa sellaisena kuin sitä pyysit. Niitä ei käytetä mainontaan eikä tilastointiin."
+        "titel": "Välttämättömät evästeet",
+        "text": "Nämä evästeet ovat ehdottoman välttämättömiä verkkosivuston toiminnalle: kielivalintasi ja, jos avaat chatin, keskustelusi tunniste. Niitä ei voi poistaa käytöstä, koska verkkosivusto ei toimi ilman niitä pyydetyllä tavalla."
       },
-      "spamschutz": {
-        "titel": "Yhteydenottolomakkeen roskapostisuojaus",
-        "text": "Yhteydenottolomakkeemme on suojattu automaattisia massaviestejä vastaan Googlen reCAPTCHA Enterprise -palvelulla. Jos annat siihen luvan, selaimesi lataa lomakkeen täyttämisen aikana komentosarjan osoitteesta google.com ja lähettää samalla IP-osoitteesi Googlelle. Ilman lupaasi Googlelta ei ladata mitään; voit tavoittaa meidät silloin sähköpostilla."
+      "funktional": {
+        "titel": "Toiminnalliset evästeet",
+        "text": "Nämä evästeet suojaavat yhteydenottolomakettamme automatisoiduilta massapostituksilta. Jos sallit ne, selaimesi lataa reCAPTCHAn Googlelta ja lähettää IP-osoitteesi."
+      },
+      "analytisch": {
+        "titel": "Analyyttiset evästeet",
+        "text": "Näiden evästeiden avulla saamme selville, mitä sivuja luetaan ja missä kävijät poistuvat, jotta voimme parantaa verkkosivustoa. Mainosten personointi ja laitteiden väliset profiilit on poistettu käytöstä."
+      },
+      "marketing": {
+        "titel": "Markkinointievästeet",
+        "text": "Näiden evästeiden avulla mittaamme mainontamme menestystä ja näytämme sinulle sopivia mainoksia muilla alustoilla. Tällöin tietoja lähetetään Metalle, LinkedInille ja Googlelle."
       }
     },
     "kontakt": {
       "hinweis": "Ennen lähettämistä tarvitsemme lupasi ulkoiseen roskapostisuojaukseen (Googlen reCAPTCHA). Ilman sitä emme voi ottaa lomaketta vastaan — näin pidämme automaattiset massaviestit poissa.",
       "erlauben": "Salli roskapostisuojaus",
       "alternative": "Etkö halua sitä? Kirjoita meille sen sijaan osoitteeseen {email}."
-    }
+    },
+    "angaben": {
+      "anbieter": "Palveluntarjoaja:",
+      "dauer": "Tallennusaika:",
+      "cookies": "Evästeet:",
+      "keineCookies": "ei (vain lähetettäessä)",
+      "drittland": "Tiedonsiirto:",
+      "drittlandJa": "Yhdysvaltoihin, EU-US Data Privacy Frameworkin perusteella",
+      "drittlandNein": "vain EU:n sisällä",
+      "listeAnzeigen": "Käyttämämme evästeet",
+      "listeTitel": "Evästeluettelo",
+      "name": "Nimi",
+      "host": "Isäntä",
+      "art": "Tyyppi",
+      "artErst": "Ensimmäinen osapuoli",
+      "artDritt": "Kolmas osapuoli",
+      "zweck": "Tarkoitus",
+      "kategorie": "Luokka",
+      "beschreibung": "Kuvaus"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "Googlen asettama, enintään kuusi kuukautta",
+      "dreiMonate": "noin kolme kuukautta",
+      "einJahr": "noin vuosi",
+      "sechsMonate": "noin kuusi kuukautta",
+      "zweiJahre": "enintään kaksi vuotta"
+    },
+    "zweck": {
+      "grecaptcha": "Mahdollistaa Googlen riskinarvioinnin, joka erottaa automaattiset massapostitukset aidoista pyynnöistä.",
+      "ga": "Erottaa kävijät, jotta toistuvia käyntejä ei lasketa kahdesti. Sisältää satunnaisesti luodun tunnisteen, joka ei liity henkilöösi.",
+      "gaSitzung": "Tallentaa nykyisen käyntisi alkamisajan, jotta sivun katselukerrat kuuluvat samaan istuntoon.",
+      "fbp": "Liittää vierailusi mainokseen, jotta voimme mitata kampanjoidemme menestystä.",
+      "gclAu": "Liittää vierailusi Google-mainokseen, jotta voimme mitata kampanjoidemme menestystä.",
+      "liGc": "Tallentaa suostumuksesi LinkedInille mainostarkoituksiin.",
+      "bcookie": "Tunnistaa selaimesi LinkedInille, jotta mainokset ja niiden menestys voidaan yhdistää."
+    },
+    "uebersicht": {
+      "titel": "Evästeasetuksesi",
+      "text": "Valitse, mitkä evästeet hyväksyt tai hylkäät tällä verkkosivustolla. Voit ottaa asetukset käyttöön ja poistaa ne käytöstä kullekin evästeluokalle milloin tahansa.",
+      "datenschutz": "Lisätietoja tietosuojakäytännöstä"
+    },
+    "verwalten": "Evästeasetusten hallinta",
+    "schliessen": "Sulje",
+    "bestaetigen": "Vahvista asetukset"
   }
 }

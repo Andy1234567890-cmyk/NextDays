@@ -19,7 +19,7 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Míníonn an fógra seo conas a phróiseálann ${ANBIETER.firma} sonraí pearsanta — nuair a thugtar cuairt ar an suíomh gréasáin seo, nuair a úsáidtear ardán myNextDays (an deais, an margadh agus an aip mhóibíleach) agus faoi chuimsiú an chaidrimh ghnó atá againn lenár gcustaiméirí.`,
-    "Is é Rialachán (AE) 2016/679 (RGCS) mar aon le dlí cosanta sonraí na Danmhairge (databeskyttelsesloven) an bunús. Ní dhíolaimid sonraí, ní chruthaímid próifílí agus ní úsáidimid seirbhísí anailísíochta, rianaithe ná fógraíochta ar ár suíomhanna gréasáin. Ní phróiseálaimid sonraí chun cuspóirí margaíochta ach amháin sa chás ar thoiligh tú go sainráite leis — is é sin, dár nuachtlitir (féach an t-alt Cumarsáid), a bhféadfaidh tú díliostáil uaidh am ar bith le cliceáil amháin.",
+    "Ní dhíolaimid sonraí agus ní chruthaímid próifílí a shainaithníonn tú mar dhuine. Ar an suíomh Gréasáin seo, ní thomhaisimid – ach le do thoiliú – raon feidhme ár leathanaigh agus rath ár bhfógraíochta; is féidir an dá chatagóir a dhíroghnú ina n-aonar (féach na hailt Tomhas Raon Feidhme agus Fógraíocht agus Tomhas Rathúlachta).. Maidir le fógraíocht, ní phróiseálaimid sonraí ach amháin nuair a thug tú toiliú sainráite – is é sin dár nuachtlitir (féach an rannán Cumarsáide), ar féidir leat díliostáil uaithi am ar bith le cliceáil amháin.",
   ],
   sections: [
     {
@@ -93,13 +93,24 @@ export const datenschutz: LegalDoc = {
           titel: "Cosaint ar thurscar don fhoirm teagmhála (reCAPTCHA)",
           paragraphs: [
             "Tá ár bhfoirm teagmhála cosanta ar mhórsheoltaí uathoibrithe le reCAPTCHA Enterprise ó Google Ireland Limited. Ní luchtaíonn do bhrabhsálaí script ó www.google.com le linn na foirme a líonadh ach amháin má thoilíonn tú leis; aistrítear ansin do sheoladh IP agus faisnéis faoi d’idirghníomhaíocht leis an bhfoirm chuig Google, agus déantar anailís uirthi ansin chun idirdhealú a dhéanamh idir duine agus script. Is é Airteagal 6(1)(a) den RGCS (toiliú) an bunús dlí; ina theannta sin tá [fógra príobháideachais Google](https://policies.google.com/privacy) i bhfeidhm.",
-            "Gan do thoiliú ní luchtaítear aon ní ó Google agus ní shreabhann aon sonraí chuige; ní ghlacaimid leis an bhfoirm sa chás sin, ach is féidir leat ríomhphost a scríobh chugainn am ar bith. Is féidir leat do thoiliú a athrú nó a chúlghairm sa [bheartas fianán](/cookie-richtlinie).",
+            "Gan aon toiliú uait, ní lódálfar aon rud ó Google agus ní shreabhfaidh aon sonraí chuige; ní ghlacfaimid leis an bhfoirm ansin, ach is féidir leat ríomhphost a sheoladh chugainn am ar bith. Má thugann tú toiliú, socraíonn reCAPTCHA a fhianán féin (_GRECAPTCHA, tréimhse bailíochta socraithe ag Google, suas le sé mhí), a úsáidtear le haghaidh measúnú riosca. Is féidir leat do thoiliú a athrú nó a tharraingt siar am ar bith tríd an deilbhín fianán ag bun ar chlé gach leathanaigh; scriosfar an fianán ansin.",
           ],
         },
         {
-          titel: "Gan anailísíocht, gan fógraíocht",
+          titel: "Tomhas Teachta (Google Analytics)",
           paragraphs: [
-            "Ní úsáidimid aon seirbhísí anailísíochta, rianaithe ná fógraíochta (níl Google Analytics, picteilíní ná líonraí fógraíochta i bhfeidhm) agus ní chruthaímid próifílí. Tá na fianáin a bhfuil gá teicniúil leo don Ardán leagtha amach sa [bheartas fianán](/cookie-richtlinie).",
+            "Ar an suíomh Gréasáin seo, le Google Analytics 4 ó Google Ireland Limited, déanaimid tomhas ar an gcaoi a n-úsáidtear ár leathanaigh — cé na leathanaigh a dtugtar cuairt orthu, cá as a dtagann cuairteoirí, agus cén áit a n-éiríonn siad as. Is é an t-aon chuspóir ná feabhas a chur ar an tairiscint agus ar an inaimsitheacht.",
+            "Ní dhéantar luchtú ach amháin le do thoiliú. Má thugann tú do thoiliú, luchtóidh do bhrabhsálaí script ó www.googletagmanager.com agus stórálfaidh sé dhá fhianán (“_ga” agus “_ga_<Aitheantóir>”, bailí ar feadh suas le dhá bhliain) le haitheantóir randamach ginte; seoltar an t-aitheantóir seo, na leathanaigh ar tugadh cuairt orthu, an foinse atreoraithe, an suíomh neasach ar leibhéal na tíre nó an réigiúin, an gléas agus an brabhsálaí, chomh maith le do sheoladh IP, a ghiorraíonn Google sula stóráiltear é. Is é an bonn dlíthiúil Airteagal 6(1)(a) den RGPD (toiliú).",
+            "Tá an anailís teoranta againn go sainráite: tá Comharthaí Google agus pearsanú fógraíochta díchumasaithe. Dá bhrí sin, ní chruthaítear próifílí tras-ghléasanna ná spriocghrúpaí le haghaidh fógraíochta, agus ní roinnimid sonraí úsáide le líonraí fógraíochta. Ní dhéantar comhcheangal le do chuntas custaiméara.",
+            "Próiseálann Google na sonraí mar ár bpróiseálaí ar bhonn conartha de réir Airteagal 28 den RGPD (Téarmaí Próiseála Sonraí Google Ads). Giorraítear do sheoladh IP ar fhreastalaithe san AE sula n-aistrítear sonraí chuig na SA; mar sin, aistrítear tacar sonraí bréag-ainmneach. Is é an bonn don aistriú ná cinneadh leordhóthanachta an Choimisiúin Eorpaigh maidir le Creat Príobháideachta Sonraí an AE-SAM (Airteagal 45 den RGPD), faoina bhfuil Google LLC deimhnithe; ina theannta sin, tá clásail chonarthacha chaighdeánacha an Choimisiúin Eorpaigh (Airteagal 46 den RGPD) curtha san áireamh ag Google. Tugaimid faoi deara go sainráite gur féidir le húdaráis na SA, de réir Alt 702 FISA, rochtain a fháil ar shonraí ó chuideachtaí deimhnithe agus dá bhrí sin ní féidir riosca iarmharach a chur as an áireamh go hiomlán. Tá [Beartas Príobháideachta Google](https://policies.google.com/privacy) i bhfeidhm freisin.",
+            "Tréimhse stórála: Scriosfar na sonraí a bhaineann le himeachtaí agus le húsáideoirí go huathoibríoch inár maoin tar éis 14 mhí; fanann sonraí tuairiscithe comhiomlánaithe gan tagairt do chuairteoirí aonair ina dhiaidh sin. Rachaidh do thoiliú féin in éag tar éis sé mhí.",
+            "Gan do thoiliú, ní luchtófar aon rud, ní shocrófar fianán ar bith, agus ní shreabhfaidh aon sonraí chuig Google. Is féidir leat do thoiliú a tharraingt siar am ar bith tríd an deilbhín fianán ag bun na láimhe clé de gach leathanach; cuirfear deireadh leis an tomhas láithreach ansin agus scriosfar na fianáin luaite. Tar éis sé mhí, iarrfaimid arís.",
+          ],
+        },
+        {
+          titel: "Fógraíocht agus Tomhas Feidhmíochta",
+          paragraphs: [
+            "Le do thoil, úsáidimid fianáin mhargaíochta chun rath ár bhfógraíochta a thomhas agus chun fógraí ábhartha a thaispeáint duit ar ardáin eile. Tá Meta Platforms Ireland (Meta-Pixel, fianán _fbp), LinkedIn Ireland (Insight-Tag, fianáin li_gc agus bcookie) agus Google Ireland Limited (Google Ads, fianán _gcl_au) páirteach. Is é Airteagal 6(1)(a) den RGPD an bonn dlíthiúil. Gan do thoil, ní lódálfar aon cheann de na scripteanna seo agus ní shocrófar aon fhianán; má tharraingíonn tú siar do thoil, scriosfaimid iad. Tá sonraí faoi gach fianán le fáil sa [Bheartas Fianán](/cookie-richtlinie).",
           ],
         },
       ],
@@ -253,7 +264,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (an Ríocht Aontaithe) — nascadh le tairseacha áirithinte",
         "Meta Platforms Ireland Limited (Éire) — teachtaireachtaí WhatsApp, má tá sé gníomhachtaithe",
         "Sendinblue SAS / Brevo (an Fhrainc, an Ghearmáin) — riar agus seoladh na nuachtlitreach, le toiliú amháin",
-        "Google Ireland Limited (Éire) — aistriúcháin; cosaint ar thurscar don fhoirm teagmhála (reCAPTCHA Enterprise), le toiliú amháin; síniú isteach le Google, má úsáidtear é",
+        "Google Ireland Limited (Éire) — aistriúcháin; cosaint ar thurscar don fhoirm teagmhála (reCAPTCHA Enterprise), le toiliú amháin; síniú isteach le Google, má úsáidtear é; Tomhas Raon Feidhme (Google Analytics 4), le toiliú amháin",
         "Groq, Inc. (SAM) — moltaí freagra, má tá sé gníomhachtaithe",
         "Cloudflare, Inc. (SAM) — riar DNS le haghaidh fearainn custaiméirí",
       ],
@@ -289,7 +300,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (SAM) — moltaí freagra i mbosca isteach na dteachtaireachtaí, ach amháin má ghníomhachtaíonn an gnólacht an fheidhm. Aistrítear comhthéacs na teachtaireachta faoi seach.",
             "Cloudflare, Inc. (SAM) — riar DNS le haghaidh fearainn custaiméirí. Aistrítear sonraí fearainn agus cumraíochta, ní aistrítear aon sonraí aíonna.",
-            "Google LLC (SAM) — i gcás an tsínithe isteach le Google agus i gcás aistriúchán amháin; is é Google Ireland Limited an páirtí conarthach i ngach cás, ach ní féidir rochtain ón máthairchuideachta SAM a chur as an áireamh mar sin féin.",
+            "Google LLC (SAM) — nuair a chláraítear le Google, le haistriúcháin agus le tomhas raon feidhme (Google Analytics 4, le toiliú amháin); is é Google Ireland Limited an páirtí conarthach i ngach cás, ach níl rochtain ag an máthairchuideachta SAM eisiata.",
           ],
         },
         {

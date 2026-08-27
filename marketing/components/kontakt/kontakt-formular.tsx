@@ -85,7 +85,7 @@ export function KontaktFormular() {
   const spamschutzFehlt =
     RECAPTCHA_SITE_KEY !== "" &&
     geladen &&
-    entscheidung?.auswahl.spamschutz !== true;
+    entscheidung?.auswahl.funktional !== true;
 
   // Fehlertext NACH STATUS, nicht der `detail` der API: die Seite läuft in 24
   // Sprachen, die API-Texte sind deutsch. Ein griechischer Besucher las bisher
@@ -388,7 +388,7 @@ export function KontaktFormular() {
                       onClick={() =>
                         speichern({
                           ...(entscheidung?.auswahl ?? NICHTS_ERLAUBT),
-                          spamschutz: true,
+                          funktional: true,
                         })
                       }
                     >

@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "Ihre Einwilligung",
-    "text": "Diese Website nutzt keine Analyse-, Werbe- oder Tracking-Dienste; Schriften und Symbole liegen auf unserem eigenen Server. Notwendig ist nur, was Sie selbst einstellen oder anfordern. Ihre Einwilligung brauchen wir daher für genau eine Sache: den externen Spamschutz unseres Kontaktformulars.",
+    "textBeide": "Zwei Dinge brauchen Ihre Einwilligung. Sie können sie einzeln erlauben oder ablehnen, jederzeit ändern und widerrufen. Details in der Cookie-Richtlinie.",
+    "textSpamschutz": "Eine Sache braucht Ihre Einwilligung. Sie können sie jederzeit ändern und widerrufen. Details in der Cookie-Richtlinie.",
+    "textStatistik": "Eine Sache braucht Ihre Einwilligung. Sie können sie jederzeit ändern und widerrufen. Details in der Cookie-Richtlinie.",
     "richtlinie": "Cookie-Richtlinie lesen",
     "knopf": "Cookie-Einstellungen",
     "allesAblehnen": "Alle ablehnen",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Auswahl verbergen",
     "auswahlSpeichern": "Auswahl speichern",
     "immerAktiv": "Immer aktiv",
+    "nichtEingerichtet": "In dieser Umgebung ist dieser Dienst nicht eingerichtet — er lädt auch mit Ihrer Erlaubnis nichts.",
     "kategorien": {
       "notwendig": {
-        "titel": "Notwendig",
-        "text": "Ihre Sprachwahl und — nur wenn Sie den Chat selbst öffnen — die Kennung Ihrer Unterhaltung auf diesem Gerät. Ohne diese Angaben lässt sich die Seite nicht so ausliefern, wie Sie sie angefordert haben. Sie dienen weder der Werbung noch der Statistik."
+        "titel": "Notwendige Cookies",
+        "text": "Diese Cookies sind für den Betrieb der Website unbedingt erforderlich: Ihre Sprachwahl und, wenn Sie den Chat öffnen, die Kennung Ihrer Unterhaltung. Sie können nicht abgeschaltet werden, weil die Website ohne sie nicht wie angefordert funktioniert."
       },
-      "spamschutz": {
-        "titel": "Spamschutz des Kontaktformulars",
-        "text": "Unser Kontaktformular ist mit reCAPTCHA Enterprise von Google gegen automatisierte Massenzuschriften geschützt. Erlauben Sie das, lädt Ihr Browser beim Ausfüllen des Formulars ein Skript von google.com und übermittelt dabei Ihre IP-Adresse an Google. Ohne Ihre Erlaubnis wird nichts von Google geladen; Sie erreichen uns dann per E-Mail."
+      "funktional": {
+        "titel": "Funktionale Cookies",
+        "text": "Diese Cookies schützen unser Kontaktformular vor automatisierten Massenzuschriften. Erlauben Sie sie, lädt Ihr Browser reCAPTCHA von Google und übermittelt dabei Ihre IP-Adresse."
+      },
+      "analytisch": {
+        "titel": "Analytische Cookies",
+        "text": "Mit diesen Cookies erfahren wir, welche Seiten gelesen werden und wo Besucher abbrechen, um die Website zu verbessern. Werbe-Personalisierung und geräteübergreifende Profile sind dabei abgeschaltet."
+      },
+      "marketing": {
+        "titel": "Marketing-Cookies",
+        "text": "Mit diesen Cookies messen wir den Erfolg unserer Werbung und zeigen Ihnen passende Anzeigen auf anderen Plattformen. Dabei werden Daten an Meta, LinkedIn und Google übermittelt."
       }
     },
     "kontakt": {
       "hinweis": "Vor dem Absenden brauchen wir Ihre Erlaubnis für den externen Spamschutz (reCAPTCHA von Google). Ohne ihn nehmen wir das Formular nicht an — so halten wir automatisierte Massenzuschriften heraus.",
       "erlauben": "Spamschutz erlauben",
       "alternative": "Sie möchten das nicht? Schreiben Sie uns stattdessen an {email}."
-    }
+    },
+    "angaben": {
+      "anbieter": "Anbieter:",
+      "dauer": "Speicherdauer:",
+      "cookies": "Cookies:",
+      "keineCookies": "keine (nur beim Absenden)",
+      "drittland": "Übermittlung:",
+      "drittlandJa": "in die USA, auf Grundlage des EU-US Data Privacy Framework",
+      "drittlandNein": "nur innerhalb der EU",
+      "listeAnzeigen": "Von uns genutzte Cookies",
+      "listeTitel": "Cookie-Liste",
+      "name": "Name",
+      "host": "Host",
+      "art": "Art",
+      "artErst": "Erstanbieter",
+      "artDritt": "Drittanbieter",
+      "zweck": "Zweck",
+      "kategorie": "Kategorie",
+      "beschreibung": "Beschreibung"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "von Google festgelegt, bis zu sechs Monate",
+      "dreiMonate": "etwa drei Monate",
+      "einJahr": "etwa ein Jahr",
+      "sechsMonate": "etwa sechs Monate",
+      "zweiJahre": "bis zu zwei Jahre"
+    },
+    "zweck": {
+      "grecaptcha": "Erlaubt Google die Risikobewertung, mit der automatisierte Massenzuschriften von echten Anfragen unterschieden werden.",
+      "ga": "Unterscheidet Besucher, damit wiederkehrende Aufrufe nicht doppelt gezählt werden. Enthält eine zufällig erzeugte Kennung ohne Bezug zu Ihrer Person.",
+      "gaSitzung": "Hält fest, wann Ihr aktueller Besuch begonnen hat, damit Seitenaufrufe einer Sitzung zusammengehören.",
+      "fbp": "Ordnet Ihren Besuch einer Werbeanzeige zu, damit wir den Erfolg unserer Kampagnen messen können.",
+      "gclAu": "Ordnet Ihren Besuch einer Google-Anzeige zu, damit wir den Erfolg unserer Kampagnen messen können.",
+      "liGc": "Speichert Ihre Einwilligung gegenüber LinkedIn für Werbezwecke.",
+      "bcookie": "Kennzeichnet Ihren Browser gegenüber LinkedIn, damit Anzeigen und deren Erfolg zugeordnet werden können."
+    },
+    "uebersicht": {
+      "titel": "Ihre Cookie-Einstellungen",
+      "text": "Wählen Sie aus, welche Cookies Sie auf dieser Website akzeptieren oder ablehnen möchten. Sie können die Einstellungen für jede Cookie-Kategorie jederzeit aktivieren und deaktivieren.",
+      "datenschutz": "Weitere Informationen in der Datenschutzerklärung"
+    },
+    "verwalten": "Cookie-Einstellungen verwalten",
+    "schliessen": "Schließen",
+    "bestaetigen": "Einstellungen bestätigen"
   }
 }

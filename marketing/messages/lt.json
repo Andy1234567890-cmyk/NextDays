@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "Jūsų sutikimas",
-    "text": "Šioje svetainėje nenaudojamos analizės, reklamos ar sekimo paslaugos; šriftai ir piktogramos yra mūsų pačių serveryje. Būtina tik tai, ką patys nustatote arba užsisakote. Todėl jūsų sutikimo mums reikia tik vienam dalykui — išorinei mūsų kontaktų formos apsaugai nuo šlamšto.",
+    "textBeide": "Dviems dalykams reikalingas Jūsų sutikimas. Juos galite atskirai leisti arba atmesti, bet kada pakeisti ir atšaukti. Išsamesnė informacija pateikiama slapukų politikoje.",
+    "textSpamschutz": "Vienam dalykui reikalingas Jūsų sutikimas. Jį galite bet kada pakeisti ir atšaukti. Išsamesnė informacija pateikiama slapukų politikoje.",
+    "textStatistik": "Vienam dalykui reikalingas Jūsų sutikimas. Jį galite bet kada pakeisti ir atšaukti. Išsamesnė informacija pateikiama slapukų politikoje.",
     "richtlinie": "Skaityti slapukų politiką",
     "knopf": "Slapukų nustatymai",
     "allesAblehnen": "Atmesti visus",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Slėpti pasirinkimus",
     "auswahlSpeichern": "Įrašyti pasirinkimus",
     "immerAktiv": "Visada įjungta",
+    "nichtEingerichtet": "Šioje aplinkoje ši paslauga nenustatyta – ji nieko neįkelia net su jūsų leidimu.",
     "kategorien": {
       "notwendig": {
-        "titel": "Būtini",
-        "text": "Jūsų kalbos pasirinkimas ir — tik jei pokalbių langą atveriate patys — jūsų pokalbio identifikatorius šiame įrenginyje. Be šių duomenų svetainės nepavyktų pateikti taip, kaip jos pageidavote. Jie nenaudojami nei reklamai, nei statistikai."
+        "titel": "Būtini slapukai",
+        "text": "Šie slapukai yra būtini svetainės veikimui: jūsų kalbos pasirinkimas ir, jei atidarote pokalbį, jūsų pokalbio identifikatorius. Jų negalima išjungti, nes be jų svetainė neveiks taip, kaip reikalaujama."
       },
-      "spamschutz": {
-        "titel": "Kontaktų formos apsauga nuo šlamšto",
-        "text": "Mūsų kontaktų forma nuo automatinių masinių žinučių apsaugota „Google“ paslauga reCAPTCHA Enterprise. Jei tai leisite, pildant formą jūsų naršyklė įkels scenarijų iš google.com ir kartu perduos jūsų IP adresą „Google“. Be jūsų leidimo iš „Google“ nieko neįkeliama; tokiu atveju su mumis galite susisiekti el. paštu."
+      "funktional": {
+        "titel": "Funkciniai slapukai",
+        "text": "Šie slapukai apsaugo mūsų kontaktinę formą nuo automatizuotų masinių pranešimų. Jei juos leisite, jūsų naršyklė įkels „reCAPTCHA“ iš „Google“ ir perduos jūsų IP adresą."
+      },
+      "analytisch": {
+        "titel": "Analitiniai slapukai",
+        "text": "Naudodami šiuos slapukus sužinome, kurie puslapiai yra skaitomi ir kur lankytojai pasitraukia, kad pagerintume svetainę. Reklamos personalizavimas ir įrenginių profiliai yra išjungti."
+      },
+      "marketing": {
+        "titel": "Rinkodaros slapukai",
+        "text": "Naudodami šiuos slapukus matuojame mūsų reklamos sėkmę ir rodome jums tinkamus skelbimus kitose platformose. Duomenys perduodami „Meta“, „LinkedIn“ ir „Google“."
       }
     },
     "kontakt": {
       "hinweis": "Prieš išsiunčiant mums reikia jūsų leidimo išorinei apsaugai nuo šlamšto („Google“ reCAPTCHA). Be jo formos nepriimame — taip užkardome automatines masines žinutes.",
       "erlauben": "Leisti apsaugą",
       "alternative": "Nenorite? Tada rašykite mums adresu {email}."
-    }
+    },
+    "angaben": {
+      "anbieter": "Teikėjas:",
+      "dauer": "Saugojimo trukmė:",
+      "cookies": "Slapukai:",
+      "keineCookies": "jokių (tik siunčiant)",
+      "drittland": "Perdavimas:",
+      "drittlandJa": "į JAV, remiantis ES ir JAV duomenų privatumo sistema",
+      "drittlandNein": "tik ES viduje",
+      "listeAnzeigen": "Mūsų naudojami slapukai",
+      "listeTitel": "Slapukų sąrašas",
+      "name": "Pavadinimas",
+      "host": "Serveris",
+      "art": "Tipas",
+      "artErst": "Pirmosios šalies",
+      "artDritt": "Trečiosios šalies",
+      "zweck": "Tikslas",
+      "kategorie": "Kategorija",
+      "beschreibung": "Aprašymas"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "nustatyta Google, iki šešių mėnesių",
+      "dreiMonate": "apie tris mėnesius",
+      "einJahr": "apie vienerius metus",
+      "sechsMonate": "apie šešis mėnesius",
+      "zweiJahre": "iki dvejų metų"
+    },
+    "zweck": {
+      "grecaptcha": "Leidžia „Google“ atlikti rizikos vertinimą, kuris atskiria automatizuotas masines užklausas nuo tikrų užklausų.",
+      "ga": "Atskirti lankytojus, kad pasikartojantys apsilankymai nebūtų skaičiuojami du kartus. Jame yra atsitiktinai sugeneruotas identifikatorius, nesusijęs su jumis.",
+      "gaSitzung": "Įrašo, kada prasidėjo jūsų dabartinis apsilankymas, kad puslapio peržiūros priklausytų vienai sesijai.",
+      "fbp": "Priskiria jūsų apsilankymą reklamai, kad galėtume įvertinti mūsų kampanijų sėkmę.",
+      "gclAu": "Priskiria jūsų apsilankymą „Google“ reklamai, kad galėtume įvertinti mūsų kampanijų sėkmę.",
+      "liGc": "Išsaugo jūsų sutikimą „LinkedIn“ reklamos tikslais.",
+      "bcookie": "Identifikuoja jūsų naršyklę „LinkedIn“, kad būtų galima priskirti skelbimus ir jų sėkmę."
+    },
+    "uebersicht": {
+      "titel": "Jūsų slapukų nustatymai",
+      "text": "Pasirinkite, kuriuos slapukus norite priimti arba atmesti šioje svetainėje. Galite bet kada įjungti ir išjungti kiekvienos slapukų kategorijos nustatymus.",
+      "datenschutz": "Daugiau informacijos privatumo politikoje"
+    },
+    "verwalten": "Tvarkyti slapukų nuostatas",
+    "schliessen": "Uždaryti",
+    "bestaetigen": "Patvirtinti nuostatas"
   }
 }

@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "Il-kunsens tiegħek",
-    "text": "Dan is-sit web ma jużax servizzi ta' analitika, reklamar jew traċċar; il-fonts u l-ikoni jinsabu fuq is-server tagħna stess. Meħtieġ huwa biss dak li tissettja jew titlob int stess. Għalhekk għandna bżonn il-kunsens tiegħek għal ħaġa waħda biss: il-protezzjoni esterna kontra l-ispam tal-formola ta' kuntatt tagħna.",
+    "textBeide": "Żewġ affarijiet jeħtieġu l-kunsens tiegħek. Tista' tippermettihom jew tirrifjutahom individwalment, tibdelhom u tirtirahom fi kwalunkwe ħin. Dettalji fil-politika tal-cookies.",
+    "textSpamschutz": "Ħaġa waħda teħtieġ il-kunsens tiegħek. Tista' tibdilha u tirtiraha fi kwalunkwe ħin. Dettalji fil-politika tal-cookies.",
+    "textStatistik": "Ħaġa waħda teħtieġ il-kunsens tiegħek. Tista' tibdilha u tirtiraha fi kwalunkwe ħin. Dettalji fil-politika tal-cookies.",
     "richtlinie": "Aqra l-politika dwar il-cookies",
     "knopf": "Settings tal-cookies",
     "allesAblehnen": "Irrifjuta kollox",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Aħbi l-għażliet",
     "auswahlSpeichern": "Salva l-għażliet",
     "immerAktiv": "Dejjem attiv",
+    "nichtEingerichtet": "Dan il-servizz mhuwiex stabbilit f'dan l-ambjent — ma jgħabbi xejn anke bil-permess tiegħek.",
     "kategorien": {
       "notwendig": {
-        "titel": "Meħtieġa",
-        "text": "L-għażla tal-lingwa tiegħek u — biss jekk tiftaħ iċ-chat int stess — l-identifikatur tal-konversazzjoni tiegħek fuq dan l-apparat. Mingħajrhom is-sit ma jistax jiġi mogħti kif tlabtu int. Ma jintużawx la għal reklamar u lanqas għal statistika."
+        "titel": "Cookies meħtieġa",
+        "text": "Dawn il-cookies huma strettament meħtieġa għat-tħaddim tal-websajt: l-għażla tal-lingwa tiegħek u, jekk tiftaħ iċ-chat, l-identifikatur tal-konverżazzjoni tiegħek. Ma jistgħux jintfew, minħabba li l-websajt ma taħdimx kif mitlub mingħajrhom."
       },
-      "spamschutz": {
-        "titel": "Protezzjoni kontra l-ispam tal-formola ta' kuntatt",
-        "text": "Il-formola ta' kuntatt tagħna hija protetta kontra messaġġi massivi awtomatizzati permezz ta' reCAPTCHA Enterprise ta' Google. Jekk tippermetti dan, waqt li timla l-formola l-browser tiegħek jgħabbi skript minn google.com u b'hekk jibgħat l-indirizz IP tiegħek lil Google. Mingħajr il-permess tiegħek ma jitgħabba xejn minn Google; f'dak il-każ tista' tikkuntattjana bl-email."
+      "funktional": {
+        "titel": "Cookies funzjonali",
+        "text": "Dawn il-cookies jipproteġu l-formola ta' kuntatt tagħna minn messaġġi awtomatizzati tal-massa. Jekk tippermettihom, il-browser tiegħek jgħabbi reCAPTCHA minn Google u jittrasmetti l-indirizz IP tiegħek."
+      },
+      "analytisch": {
+        "titel": "Cookies analitiċi",
+        "text": "B'dawn il-cookies, insiru nafu liema paġni jinqraw u fejn il-viżitaturi jieqfu, sabiex intejbu l-websajt. Il-personalizzazzjoni tar-reklami u l-profili bejn il-mezzi huma diżattivati."
+      },
+      "marketing": {
+        "titel": "Cookies tal-marketing",
+        "text": "B'dawn il-cookies, aħna nkejlu s-suċċess tar-reklamar tagħna u nuruk reklami rilevanti fuq pjattaformi oħra. Id-dejta tiġi trażmessa lil Meta, LinkedIn u Google."
       }
     },
     "kontakt": {
       "hinweis": "Qabel ma tibgħat, għandna bżonn il-permess tiegħek għall-protezzjoni esterna kontra l-ispam (reCAPTCHA ta' Google). Mingħajrha ma nistgħux naċċettaw il-formola — hekk inżommu barra l-messaġġi massivi awtomatizzati.",
       "erlauben": "Ippermetti l-protezzjoni",
       "alternative": "Ma tridx? Iktbilna minflok fuq {email}."
-    }
+    },
+    "angaben": {
+      "anbieter": "Fornitur:",
+      "dauer": "Żmien tal-ħażna:",
+      "cookies": "Cookies:",
+      "keineCookies": "xejn (biss meta tibgħat)",
+      "drittland": "Trażmissjoni:",
+      "drittlandJa": "lejn l-Istati Uniti, abbażi tal-Qafas tal-Privatezza tad-Data UE-Istati Uniti",
+      "drittlandNein": "biss fl-UE",
+      "listeAnzeigen": "Cookies li nużaw",
+      "listeTitel": "Lista tal-cookies",
+      "name": "Isem",
+      "host": "Host",
+      "art": "Tip",
+      "artErst": "L-ewwel parti",
+      "artDritt": "Terza parti",
+      "zweck": "Għan",
+      "kategorie": "Kategorija",
+      "beschreibung": "Deskrizzjoni"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "stabbilit minn Google, sa sitt xhur",
+      "dreiMonate": "madwar tliet xhur",
+      "einJahr": "madwar sena",
+      "sechsMonate": "madwar sitt xhur",
+      "zweiJahre": "sa sentejn"
+    },
+    "zweck": {
+      "grecaptcha": "Jippermetti lil Google tivvaluta r-riskju, li jiddistingwi bejn sottomissjonijiet awtomatizzati tal-massa u talbiet reali.",
+      "ga": "Jiddistingwi l-viżitaturi sabiex iż-żjarat ripetuti ma jingħaddux darbtejn. Fih identifikatur iġġenerat b'mod każwali mingħajr referenza għall-persuna tiegħek.",
+      "gaSitzung": "Jirreġistra meta bdiet iż-żjara attwali tiegħek sabiex il-fehmiet tal-paġna jappartjenu għal sessjoni waħda.",
+      "fbp": "Jassenja ż-żjara tiegħek lil reklam sabiex inkunu nistgħu nkejlu s-suċċess tal-kampanji tagħna.",
+      "gclAu": "Jassenja ż-żjara tiegħek lil reklam ta' Google sabiex inkunu nistgħu nkejlu s-suċċess tal-kampanji tagħna.",
+      "liGc": "Jaħżen il-kunsens tiegħek lil LinkedIn għal skopijiet ta' reklamar.",
+      "bcookie": "Jidentifika l-browser tiegħek lil LinkedIn sabiex ir-reklami u s-suċċess tagħhom ikunu jistgħu jiġu attribwiti."
+    },
+    "uebersicht": {
+      "titel": "Is-settings tal-cookies tiegħek",
+      "text": "Agħżel liema cookies tixtieq taċċetta jew tirrifjuta fuq din il-websajt. Tista' tattiva u tiddiżattiva s-settings għal kull kategorija ta' cookies fi kwalunkwe ħin.",
+      "datenschutz": "Aktar informazzjoni fil-politika tal-privatezza"
+    },
+    "verwalten": "Immaniġġja l-preferenzi tal-cookies",
+    "schliessen": "Agħlaq",
+    "bestaetigen": "Ikkonferma l-għażliet"
   }
 }

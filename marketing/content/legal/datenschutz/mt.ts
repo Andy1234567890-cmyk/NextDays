@@ -18,7 +18,7 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Dan l-avviż jiddeskrivi kif ${ANBIETER.firma} tipproċessa data personali — meta żżur dan is-sit web, meta tuża l-pjattaforma myNextDays (id-dashboard, is-suq u l-applikazzjoni mobbli) u fil-qafas tar-relazzjoni kummerċjali mal-klijenti tagħna.`,
-    "Il-bażi hija r-Regolament (UE) 2016/679 (GDPR) kif ukoll il-liġi Daniża dwar il-protezzjoni tad-data (databeskyttelsesloven). Aħna ma nbigħux data, ma noħolqux profili u ma nużaw ebda servizz ta’ analitika, tracking jew reklamar fis-siti web tagħna. Għal skopijiet ta’ reklamar nipproċessaw data biss fejn tajt il-kunsens espliċitu tiegħek — jiġifieri għan-newsletter tagħna (ara t-taqsima „Komunikazzjoni“), li tista’ tħassar l-abbonament tagħha fi kwalunkwe ħin bi klikk waħda.",
+    "Aħna ma nbiegħux data u ma noħolqux profili li jidentifikawk bħala persuna. Fuq din il-websajt, aħna — bil-kunsens tiegħek biss — ikejlu l-firxa tal-paġni tagħna u s-suċċess tar-reklamar tagħna; iż-żewġ kategoriji jistgħu jiġu diżattivati individwalment (ara t-taqsimiet Kejl tal-Firxa u Reklamar u Kejl tas-Suċċess). Aħna nipproċessaw data għal skopijiet promozzjonali biss fejn tkun tajt il-kunsens espliċitu tiegħek — jiġifieri għan-newsletter tagħna (ara t-taqsima Komunikazzjoni), li tista' tneħħi l-abbonament minnha fi kwalunkwe ħin bi klikk waħda.",
   ],
   sections: [
     {
@@ -89,16 +89,28 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
-          titel: "Protezzjoni tal-formola ta’ kuntatt kontra l-ispam (reCAPTCHA)",
+          titel:
+            "Protezzjoni tal-formola ta’ kuntatt kontra l-ispam (reCAPTCHA)",
           paragraphs: [
             "Il-formola ta’ kuntatt tagħna hija protetta kontra talbiet awtomatizzati bil-massa b’reCAPTCHA Enterprise ta’ Google Ireland Limited. Biss jekk tagħti l-kunsens tiegħek, il-browser tiegħek jitniżżel skript minn www.google.com meta timla l-formola; b’dan l-indirizz IP tiegħek u informazzjoni dwar l-interazzjoni tiegħek mal-formola jintbagħtu lil Google u jiġu evalwati hemm biex jiddistingwu bniedem minn skript. Il-bażi legali hija l-Artikolu 6(1)(a) tal-GDPR (kunsens); b’mod komplementari japplika l-[avviż tal-privatezza ta’ Google](https://policies.google.com/privacy).",
-            "Mingħajr il-kunsens tiegħek ma jitniżżel xejn minn Google u ma tgħaddi ebda data hemm; f’dak il-każ ma naċċettawx il-formola, iżda tista’ dejjem tibgħatilna posta elettronika. Il-kunsens tiegħek tista’ tibdlu jew tirtirah fil-[politika dwar il-cookies](/cookie-richtlinie).",
+            "Mingħajr il-kunsens tiegħek, xejn minn Google ma jitgħabba u l-ebda data ma tiġi trażmessa lilhom; allura aħna ma naċċettawx il-formola, iżda tista' tibgħatilna email fi kwalunkwe ħin. Jekk tagħti l-kunsens tiegħek, reCAPTCHA tistabbilixxi l-cookie tagħha stess (_GRECAPTCHA, tul ta' żmien stabbilit minn Google, sa sitt xhur) li tintuża għall-valutazzjoni tar-riskju. Tista' tibdel jew tirtira l-kunsens tiegħek fi kwalunkwe ħin permezz tal-ikona tal-cookie fin-naħa t'isfel tax-xellug ta' kull paġna; il-cookie mbagħad titħassar.",
           ],
         },
         {
-          titel: "Ebda analitika, ebda reklamar",
+          titel: "Kejl tal-Firxa (Google Analytics)",
           paragraphs: [
-            "Ma nużaw ebda servizz ta’ analitika, tracking jew reklamar (ebda Google Analytics, ebda pixels, ebda netwerks ta’ reklamar) u ma noħolqux profili. Liema cookies il-pjattaforma teħtieġ teknikament jinsab fil-[politika dwar il-cookies](/cookie-richtlinie).",
+            "Fuq din il-websajt, aħna nużaw Google Analytics 4 minn Google Ireland Limited biex inkejlu kif jintużaw il-paġni tagħna — liema paġni jiġu aċċessati, minn fejn jiġu l-viżitaturi u fejn jieqfu. L-iskop huwa esklussivament it-titjib tal-offerta u l-faċilità ta' sejbien.",
+            "It-tagħbija sseħħ biss bil-kunsens tiegħek. Jekk tagħti l-kunsens tiegħek, il-browser tiegħek jitgħabba skript minn www.googletagmanager.com u jaħżen żewġ cookies (\"_ga\" u \"_ga_<ID>\", b'validità sa sentejn) b'identifikatur ġenerat b'mod każwali; dan l-identifikatur, il-paġni aċċessati, is-sors ta' referenza, il-post approssimattiv fil-livell tal-pajjiż jew reġjun, l-apparat u l-browser, kif ukoll l-indirizz IP tiegħek, li Google tqassar qabel kull ħażna, jiġu trażmessi. Il-bażi legali hija l-Art. 6(1)(a) tal-GDPR (kunsens).",
+            "Aħna rrestrinġejna espliċitament l-analiżi: is-sinjali ta' Google u l-personalizzazzjoni tar-reklami huma diżattivati. Għalhekk, ma jinħolqux profili bejn l-apparati u ma jinħolqux udjenzi għar-reklamar, u aħna ma naqsmu l-ebda data dwar l-użu ma' netwerks ta' reklamar. Ma sseħħ l-ebda integrazzjoni mal-kont tal-klijent tiegħek.",
+            "Google tipproċessa d-data bħala l-proċessur tad-data tagħna abbażi ta' kuntratt skont l-Art. 28 tal-GDPR (Google Ads Data Processing Terms). L-indirizz IP tiegħek jitqassar fuq servers fl-UE qabel ma d-data tiġi trasferita lejn l-Istati Uniti; għalhekk, jiġi trażmess sett ta' data psewdonimu. Il-bażi għat-trasferiment hija d-deċiżjoni ta' adegwatezza tal-Kummissjoni tal-UE għall-EU-US Data Privacy Framework (Art. 45 tal-GDPR), li taħtha Google LLC hija ċċertifikata; barra minn hekk, Google inkludiet il-Klawsoli Kontrattwali Standard tal-Kummissjoni tal-UE (Art. 46 tal-GDPR). Aħna nixtiequ nindikaw espliċitament li l-awtoritajiet tal-Istati Uniti jistgħu jaċċessaw id-data ta' kumpaniji ċċertifikati skont it-Taqsima 702 tal-FISA u għalhekk riskju residwu ma jistax jiġi eskluż kompletament. Barra minn hekk, tapplika l-[Politika ta' Privatezza ta' Google](https://policies.google.com/privacy).",
+            "Perjodu ta' ħażna: Id-data relatata mal-avvenimenti u l-utenti fil-proprjetà tagħna titħassar awtomatikament wara 14-il xahar; id-data aggregata tar-rapporti mingħajr referenza għal viżitaturi individwali tinżamm lil hinn minn dan. Il-kunsens tiegħek innifsu jiskadi wara sitt xhur.",
+            "Mingħajr il-kunsens tiegħek, ma jitgħabba xejn, ma jitqiegħed l-ebda cookie u ma tiċċirkola l-ebda data lejn Google. Tista' tirrevoka l-kunsens tiegħek fi kwalunkwe ħin permezz tal-ikona tal-cookie fin-naħa t'isfel tax-xellug ta' kull paġna; il-kejl imbagħad jieqaf immedjatament u l-cookies imsemmija jitħassru. Wara sitt xhur, nerġgħu nitolbu l-kunsens.",
+          ],
+        },
+        {
+          titel: "Reklamar u kejl tal-prestazzjoni",
+          paragraphs: [
+            "Bil-kunsens tiegħek, nużaw cookies tal-marketing biex ikejlu l-prestazzjoni tar-reklami tagħna u nuruk reklami rilevanti fuq pjattaformi oħra. Dan jinvolvi Meta Platforms Ireland (Meta-Pixel, cookie _fbp), LinkedIn Ireland (Insight-Tag, cookies li_gc u bcookie) u Google Ireland Limited (Google Ads, cookie _gcl_au). Il-bażi legali hija l-Art. 6(1)(a) tal-GDPR. Mingħajr il-kunsens tiegħek, l-ebda wieħed minn dawn l-iskripts ma jitgħabba u l-ebda cookie ma tiġi ssettjata; jekk tirtira l-kunsens tiegħek, aħna nħassruhom. Dettalji dwar kull cookie jinsabu fil-[Politika tal-Cookies](/cookie-richtlinie).",
           ],
         },
       ],
@@ -252,7 +264,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (ir-Renju Unit) — konnessjoni mal-portali tal-bukkjar",
         "Meta Platforms Ireland Limited (l-Irlanda) — messaġġi WhatsApp, jekk attivat",
         "Sendinblue SAS / Brevo (Franza, il-Ġermanja) — amministrazzjoni u bagħt tan-newsletter, biss bil-kunsens",
-        "Google Ireland Limited (l-Irlanda) — traduzzjonijiet; protezzjoni tal-formola ta’ kuntatt kontra l-ispam (reCAPTCHA Enterprise), biss bil-kunsens; illoggjar bi Google, jekk użat",
+        "Google Ireland Limited (l-Irlanda) — traduzzjonijiet; protezzjoni tal-formola ta’ kuntatt kontra l-ispam (reCAPTCHA Enterprise), biss bil-kunsens; illoggjar bi Google, jekk użat; Kejl tal-firxa (Google Analytics 4), biss bil-kunsens",
         "Groq, Inc. (l-Istati Uniti) — suġġerimenti ta’ tweġiba, jekk attivati",
         "Cloudflare, Inc. (l-Istati Uniti) — amministrazzjoni tad-DNS għad-dominji tal-klijenti",
       ],
@@ -269,7 +281,7 @@ export const datenschutz: LegalDoc = {
       paragraphs: [
         "L-ipproċessar isir bħala regola fl-UE. Fil-każ tas-servizzi msemmija hawn fuq bi sede barra l-UE jista’ jkun hemm trasferiment lejn pajjiż terz.",
         "Għal Groq, Inc. u Cloudflare, Inc. (l-Istati Uniti) nibbażaw it-trasferiment fuq il-klawżoli standard tal-protezzjoni tad-data tal-Kummissjoni Ewropea skont l-Artikolu 46(2)(c) tal-GDPR, sakemm ir-riċevitur ma jkunx jista’ jistrieħ fuq deċiżjoni ta’ adegwatezza (EU-US Data Privacy Framework).",
-      "Il-parti kontraenti tal-ipproċessar tal-pagamenti hija Stripe Payments Europe, Limited (l-Irlanda). Sakemm Stripe tirrikorri għal Stripe, LLC (l-Istati Uniti), din hija ċertifikata taħt l-EU-US Data Privacy Framework; f’dak ir-rigward it-trasferiment jistrieħ fuq id-deċiżjoni ta’ adegwatezza tal-Kummissjoni Ewropea skont l-Artikolu 45 tal-GDPR. B’mod komplementari japplikaw il-klawżoli standard tal-protezzjoni tad-data mill-[ftehim ta’ Stripe dwar l-ipproċessar tad-data](https://stripe.com/legal/dpa).",
+        "Il-parti kontraenti tal-ipproċessar tal-pagamenti hija Stripe Payments Europe, Limited (l-Irlanda). Sakemm Stripe tirrikorri għal Stripe, LLC (l-Istati Uniti), din hija ċertifikata taħt l-EU-US Data Privacy Framework; f’dak ir-rigward it-trasferiment jistrieħ fuq id-deċiżjoni ta’ adegwatezza tal-Kummissjoni Ewropea skont l-Artikolu 45 tal-GDPR. B’mod komplementari japplikaw il-klawżoli standard tal-protezzjoni tad-data mill-[ftehim ta’ Stripe dwar l-ipproċessar tad-data](https://stripe.com/legal/dpa).",
         "Għal Channex.io Ltd (ir-Renju Unit) tapplika d-deċiżjoni ta’ adegwatezza tal-Kummissjoni Ewropea għar-Renju Unit; jekk din taqa’, jidħlu fis-seħħ il-klawżoli standard tal-protezzjoni tad-data.",
       ],
     },
@@ -288,7 +300,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (l-Istati Uniti) — suġġerimenti ta’ tweġiba fl-inbox tal-messaġġi, biss jekk l-impriża tattiva l-funzjoni. Jintbagħat il-kuntest tal-messaġġ ikkonċernat.",
             "Cloudflare, Inc. (l-Istati Uniti) — amministrazzjoni tad-DNS għad-dominji tal-klijenti. Jintbagħtu data tad-dominju u tal-konfigurazzjoni, ebda data tal-ospiti.",
-            "Google LLC (l-Istati Uniti) — biss fil-każ tal-illoggjar bi Google u tat-traduzzjonijiet; il-parti kontraenti hija f’kull każ Google Ireland Limited, iżda aċċess mill-kumpanija omm tal-Istati Uniti xorta ma huwiex eskluż.",
+            "Google LLC (USA) — meta tidħol ma' Google, għat-traduzzjonijiet u għall-kejl tal-firxa (Google Analytics 4, biss bil-kunsens); il-parti kontraenti hija Google Ireland Limited, iżda aċċess mill-kumpanija parent fl-Istati Uniti mhuwiex eskluż.",
           ],
         },
         {

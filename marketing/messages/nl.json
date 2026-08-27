@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "Uw toestemming",
-    "text": "Deze website gebruikt geen analyse-, advertentie- of trackingdiensten; onze lettertypen en pictogrammen staan op onze eigen server. Noodzakelijk is alleen wat u zelf instelt of opvraagt. Uw toestemming hebben we daarom voor precies één ding nodig: de externe spambeveiliging van ons contactformulier.",
+    "textBeide": "Twee zaken vereisen uw toestemming. U kunt ze afzonderlijk toestaan of weigeren, op elk moment wijzigen en intrekken. Details in het cookiebeleid.",
+    "textSpamschutz": "Eén zaak vereist uw toestemming. U kunt deze op elk moment wijzigen en intrekken. Details in het cookiebeleid.",
+    "textStatistik": "Eén zaak vereist uw toestemming. U kunt deze op elk moment wijzigen en intrekken. Details in het cookiebeleid.",
     "richtlinie": "Cookiebeleid lezen",
     "knopf": "Cookie-instellingen",
     "allesAblehnen": "Alles weigeren",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Keuzes verbergen",
     "auswahlSpeichern": "Keuzes opslaan",
     "immerAktiv": "Altijd actief",
+    "nichtEingerichtet": "Deze service is niet geconfigureerd in deze omgeving — er wordt niets geladen, zelfs niet met uw toestemming.",
     "kategorien": {
       "notwendig": {
-        "titel": "Noodzakelijk",
-        "text": "Uw taalkeuze en — alleen als u de chat zelf opent — het kenmerk van uw gesprek op dit apparaat. Zonder deze gegevens kan de pagina niet worden geleverd zoals u die hebt opgevraagd. Ze dienen niet voor advertenties en niet voor statistieken."
+        "titel": "Noodzakelijke cookies",
+        "text": "Deze cookies zijn essentieel voor de werking van de website: uw taalkeuze en, als u de chat opent, de identificatie van uw gesprek. Ze kunnen niet worden uitgeschakeld, omdat de website zonder deze cookies niet naar behoren functioneert."
       },
-      "spamschutz": {
-        "titel": "Spambeveiliging van het contactformulier",
-        "text": "Ons contactformulier is met reCAPTCHA Enterprise van Google beveiligd tegen geautomatiseerde massaberichten. Als u dat toestaat, laadt uw browser tijdens het invullen van het formulier een script van google.com en verzendt daarbij uw IP-adres naar Google. Zonder uw toestemming wordt er niets van Google geladen; u kunt ons dan per e-mail bereiken."
+      "funktional": {
+        "titel": "Functionele cookies",
+        "text": "Deze cookies beschermen ons contactformulier tegen geautomatiseerde massale inzendingen. Als u ze toestaat, laadt uw browser reCAPTCHA van Google en wordt uw IP-adres verzonden."
+      },
+      "analytisch": {
+        "titel": "Analytische cookies",
+        "text": "Met deze cookies kunnen we zien welke pagina's worden gelezen en waar bezoekers afhaken, om de website te verbeteren. Advertentiepersonalisatie en apparaatoverschrijdende profielen zijn uitgeschakeld."
+      },
+      "marketing": {
+        "titel": "Marketingcookies",
+        "text": "Met deze cookies meten we het succes van onze advertenties en tonen we u relevante advertenties op andere platforms. Gegevens worden gedeeld met Meta, LinkedIn en Google."
       }
     },
     "kontakt": {
       "hinweis": "Voordat u verzendt, hebben we uw toestemming nodig voor de externe spambeveiliging (reCAPTCHA van Google). Zonder die toestemming nemen we het formulier niet aan — zo houden we geautomatiseerde massaberichten buiten.",
       "erlauben": "Spambeveiliging toestaan",
       "alternative": "Wilt u dat niet? Schrijf ons dan naar {email}."
-    }
+    },
+    "angaben": {
+      "anbieter": "Aanbieder:",
+      "dauer": "Opslagduur:",
+      "cookies": "Cookies:",
+      "keineCookies": "geen (alleen bij verzending)",
+      "drittland": "Doorgifte:",
+      "drittlandJa": "naar de VS, op basis van het EU-US Data Privacy Framework",
+      "drittlandNein": "alleen binnen de EU",
+      "listeAnzeigen": "Cookies die wij gebruiken",
+      "listeTitel": "Cookielijst",
+      "name": "Naam",
+      "host": "Host",
+      "art": "Type",
+      "artErst": "Eerste partij",
+      "artDritt": "Derde partij",
+      "zweck": "Doel",
+      "kategorie": "Categorie",
+      "beschreibung": "Beschrijving"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "ingesteld door Google, tot zes maanden",
+      "dreiMonate": "ongeveer drie maanden",
+      "einJahr": "ongeveer een jaar",
+      "sechsMonate": "ongeveer zes maanden",
+      "zweiJahre": "tot twee jaar"
+    },
+    "zweck": {
+      "grecaptcha": "Maakt risicobeoordeling door Google mogelijk, waarmee geautomatiseerde massale inzendingen van echte verzoeken worden onderscheiden.",
+      "ga": "Onderscheidt bezoekers, zodat terugkerende oproepen niet dubbel worden geteld. Bevat een willekeurig gegenereerde ID zonder betrekking op uw persoon.",
+      "gaSitzung": "Registreert wanneer uw huidige bezoek is begonnen, zodat paginaweergaven van één sessie bij elkaar horen.",
+      "fbp": "Koppelt uw bezoek aan een advertentie, zodat we het succes van onze campagnes kunnen meten.",
+      "gclAu": "Koppelt uw bezoek aan een Google-advertentie, zodat we het succes van onze campagnes kunnen meten.",
+      "liGc": "Slaat uw toestemming voor LinkedIn op voor advertentiedoeleinden.",
+      "bcookie": "Identificeert uw browser bij LinkedIn, zodat advertenties en hun succes kunnen worden toegewezen."
+    },
+    "uebersicht": {
+      "titel": "Uw cookie-instellingen",
+      "text": "Kies welke cookies u op deze website wilt accepteren of weigeren. U kunt de instellingen voor elke cookiecategorie op elk moment in- en uitschakelen.",
+      "datenschutz": "Meer informatie in het privacybeleid"
+    },
+    "verwalten": "Cookie-instellingen beheren",
+    "schliessen": "Sluiten",
+    "bestaetigen": "Instellingen bevestigen"
   }
 }

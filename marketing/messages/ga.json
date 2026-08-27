@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "Do thoiliú",
-    "text": "Ní úsáideann an suíomh gréasáin seo seirbhísí anailísíochta, fógraíochta ná rianaithe ar bith; tá ár gclófhoirne agus ár n-ícónna ar ár bhfreastalaí féin. Níl aon rud riachtanach ach an rud a shocraíonn nó a iarrann tú féin. Mar sin, níl do thoiliú ag teastáil uainn ach le haghaidh aon ní amháin: an chosaint turscair sheachtrach ar ár bhfoirm teagmhála.",
+    "textBeide": "Teastaíonn do thoiliú le dhá rud. Is féidir leat iad a cheadú nó a dhiúltú ina n-aonar, agus iad a athrú nó a chúlghairm am ar bith. Sonraí sa Bheartas Fianán.",
+    "textSpamschutz": "Teastaíonn do thoiliú le rud amháin. Is féidir leat é a athrú nó a chúlghairm am ar bith. Sonraí sa Bheartas Fianán.",
+    "textStatistik": "Teastaíonn do thoiliú le rud amháin. Is féidir leat é a athrú nó a chúlghairm am ar bith. Sonraí sa Bheartas Fianán.",
     "richtlinie": "Léigh an polasaí fianán",
     "knopf": "Socruithe fianán",
     "allesAblehnen": "Diúltaigh uile",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Folaigh roghanna",
     "auswahlSpeichern": "Sábháil roghanna",
     "immerAktiv": "Gníomhach i gcónaí",
+    "nichtEingerichtet": "Níl an tseirbhís seo cumraithe sa timpeallacht seo — ní lódálann sí aon rud fiú le do chead.",
     "kategorien": {
       "notwendig": {
-        "titel": "Riachtanach",
-        "text": "Do rogha teanga agus — ach má osclaíonn tú an comhrá tú féin — aitheantóir do chomhrá ar an ngléas seo. Gan iad ní féidir an suíomh a sheachadadh mar a d'iarr tú é. Ní úsáidtear iad le haghaidh fógraíochta ná staitisticí."
+        "titel": "Fianáin Riachtanacha",
+        "text": "Tá na fianáin seo fíor-riachtanach chun an suíomh Gréasáin a oibriú: do rogha teanga agus, má osclaíonn tú an comhrá, aitheantóir do chomhrá. Ní féidir iad a mhúchadh, mar ní fheidhmeoidh an suíomh Gréasáin mar is gá gan iad."
       },
-      "spamschutz": {
-        "titel": "Cosaint turscair na foirme teagmhála",
-        "text": "Tá ár bhfoirm teagmhála cosanta ar theachtaireachtaí uathoibrithe ollmhóra le reCAPTCHA Enterprise ó Google. Má cheadaíonn tú é, lódálann do bhrabhsálaí script ó google.com agus tú ag líonadh na foirme, agus seolann sé do sheoladh IP chuig Google ar an mbealach sin. Gan do chead ní lódáiltear aon rud ó Google; is féidir leat teagmháil a dhéanamh linn trí ríomhphost ina ionad sin."
+      "funktional": {
+        "titel": "Fianáin Fheidhmiúla",
+        "text": "Cosnaíonn na fianáin seo ár bhfoirm teagmhála ó theachtaireachtaí uathoibrithe. Má cheadaíonn tú iad, lódálfaidh do bhrabhsálaí reCAPTCHA ó Google agus tarchuirfidh sé do sheoladh IP."
+      },
+      "analytisch": {
+        "titel": "Fianáin Anailíseacha",
+        "text": "Leis na fianáin seo, faighimid amach cé na leathanaigh a léitear agus cá háit a n-éiríonn cuairteoirí as, chun an suíomh Gréasáin a fheabhsú. Tá pearsanú fógraíochta agus próifílí tras-ghléasanna múchta."
+      },
+      "marketing": {
+        "titel": "Fianáin Margaíochta",
+        "text": "Leis na fianáin seo, déanaimid tomhas ar rath ár bhfógraíochta agus taispeánann muid fógraí ábhartha duit ar ardáin eile. Tarchuirtear sonraí chuig Meta, LinkedIn agus Google."
       }
     },
     "kontakt": {
       "hinweis": "Sula seolann tú é, teastaíonn do chead uainn don chosaint turscair sheachtrach (reCAPTCHA ó Google). Gan é ní féidir linn an fhoirm a ghlacadh — sin mar a choinnímid teachtaireachtaí uathoibrithe ollmhóra amach.",
       "erlauben": "Ceadaigh an chosaint",
       "alternative": "Nach mian leat sin? Scríobh chugainn ag {email} ina ionad sin."
-    }
+    },
+    "angaben": {
+      "anbieter": "Soláthraí:",
+      "dauer": "Fad stórála:",
+      "cookies": "Fianáin:",
+      "keineCookies": "níl aon cheann (ach amháin nuair a chuirtear isteach é)",
+      "drittland": "Tarchur:",
+      "drittlandJa": "chuig SAM, bunaithe ar Chreat Príobháideachta Sonraí an AE-SAM",
+      "drittlandNein": "laistigh den AE amháin",
+      "listeAnzeigen": "Fianáin a úsáidimid",
+      "listeTitel": "Liosta Fianán",
+      "name": "Ainm",
+      "host": "Óstach",
+      "art": "Cineál",
+      "artErst": "Céad Páirtí",
+      "artDritt": "Tríú Páirtí",
+      "zweck": "Cuspóir",
+      "kategorie": "Catagóir",
+      "beschreibung": "Cur síos"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "socraithe ag Google, suas le sé mhí",
+      "dreiMonate": "thart ar thrí mhí",
+      "einJahr": "thart ar bhliain amháin",
+      "sechsMonate": "thart ar shé mhí",
+      "zweiJahre": "suas le dhá bhliain"
+    },
+    "zweck": {
+      "grecaptcha": "Ceadaíonn sé do Google measúnú riosca a dhéanamh a dhéanann idirdhealú idir teachtaireachtaí uathoibrithe agus fíor-iarratais.",
+      "ga": "Déanann sé idirdhealú idir cuairteoirí ionas nach ndéantar glaonna athfhillteacha a chomhaireamh faoi dhó. Tá aitheantóir randamach ann gan aon tagairt do do dhuine.",
+      "gaSitzung": "Taifeadann sé cathain a thosaigh do chuairt reatha ionas go mbaineann amharcanna leathanaigh le seisiún amháin.",
+      "fbp": "Ceanglaíonn sé do chuairt le fógra chun gur féidir linn rath ár bhfeachtais a thomhas.",
+      "gclAu": "Ceanglaíonn sé do chuairt le fógra Google chun gur féidir linn rath ár bhfeachtais a thomhas.",
+      "liGc": "Sábhálann sé do thoiliú le LinkedIn chun críocha fógraíochta.",
+      "bcookie": "Aithníonn sé do bhrabhsálaí le LinkedIn ionas gur féidir fógraí agus a rath a shannadh."
+    },
+    "uebersicht": {
+      "titel": "Do Roghanna Fianán",
+      "text": "Roghnaigh cé na fianáin is mian leat a ghlacadh nó a dhiúltú ar an suíomh Gréasáin seo. Is féidir leat na socruithe do gach catagóir fianán a ghníomhachtú agus a dhíghníomhachtú am ar bith.",
+      "datenschutz": "Tuilleadh eolais sa pholasaí príobháideachta"
+    },
+    "verwalten": "Bainistigh Socruithe Fianán",
+    "schliessen": "Dún",
+    "bestaetigen": "Deimhnigh Socruithe"
   }
 }

@@ -2028,7 +2028,9 @@
   },
   "einwilligung": {
     "titel": "Il suo consenso",
-    "text": "Questo sito non utilizza servizi di analisi, pubblicità o tracciamento; i caratteri e le icone si trovano sul nostro server. È necessario soltanto ciò che lei stesso imposta o richiede. Il suo consenso ci serve quindi per una sola cosa: la protezione antispam esterna del nostro modulo di contatto.",
+    "textBeide": "Due cose richiedono il Suo consenso. Può accettarle o rifiutarle singolarmente, modificarle e revocarle in qualsiasi momento. Dettagli nella Cookie Policy.",
+    "textSpamschutz": "Una cosa richiede il Suo consenso. Può modificarla e revocarla in qualsiasi momento. Dettagli nella Cookie Policy.",
+    "textStatistik": "Una cosa richiede il Suo consenso. Può modificarla e revocarla in qualsiasi momento. Dettagli nella Cookie Policy.",
     "richtlinie": "Leggere l'informativa sui cookie",
     "knopf": "Impostazioni cookie",
     "allesAblehnen": "Rifiuta tutto",
@@ -2037,20 +2039,72 @@
     "auswahlSchliessen": "Nascondi opzioni",
     "auswahlSpeichern": "Salva opzioni",
     "immerAktiv": "Sempre attivo",
+    "nichtEingerichtet": "In questo ambiente il servizio non è configurato — non carica nulla, neanche con il suo permesso.",
     "kategorien": {
       "notwendig": {
-        "titel": "Necessari",
-        "text": "La sua scelta della lingua e — solo se apre lei stesso la chat — l'identificativo della sua conversazione su questo dispositivo. Senza questi dati la pagina non può essere fornita come lei l'ha richiesta. Non servono né per la pubblicità né per le statistiche."
+        "titel": "Cookie necessari",
+        "text": "Questi cookie sono assolutamente necessari per il funzionamento del sito web: la sua scelta della lingua e, se apre la chat, l'identificatore della sua conversazione. Non possono essere disattivati perché il sito web non funzionerebbe come richiesto senza di essi."
       },
-      "spamschutz": {
-        "titel": "Protezione antispam del modulo di contatto",
-        "text": "Il nostro modulo di contatto è protetto dai messaggi di massa automatizzati con reCAPTCHA Enterprise di Google. Se lo consente, durante la compilazione del modulo il suo browser carica uno script da google.com e trasmette così il suo indirizzo IP a Google. Senza il suo consenso non viene caricato nulla da Google; in tal caso può contattarci per e-mail."
+      "funktional": {
+        "titel": "Cookie funzionali",
+        "text": "Questi cookie proteggono il nostro modulo di contatto da invii massivi automatizzati. Se li consente, il suo browser caricherà reCAPTCHA da Google e trasmetterà il suo indirizzo IP."
+      },
+      "analytisch": {
+        "titel": "Cookie analitici",
+        "text": "Con questi cookie scopriamo quali pagine vengono lette e dove i visitatori abbandonano il sito, al fine di migliorarlo. La personalizzazione della pubblicità e i profili cross-device sono disattivati."
+      },
+      "marketing": {
+        "titel": "Cookie di marketing",
+        "text": "Con questi cookie misuriamo il successo della nostra pubblicità e le mostriamo annunci pertinenti su altre piattaforme. I dati vengono trasmessi a Meta, LinkedIn e Google."
       }
     },
     "kontakt": {
       "hinweis": "Prima dell'invio ci serve il suo consenso per la protezione antispam esterna (reCAPTCHA di Google). Senza di essa non possiamo accettare il modulo: è così che teniamo fuori i messaggi di massa automatizzati.",
       "erlauben": "Consenti antispam",
       "alternative": "Preferisce non farlo? Ci scriva invece a {email}."
-    }
+    },
+    "angaben": {
+      "anbieter": "Fornitore:",
+      "dauer": "Durata di conservazione:",
+      "cookies": "Cookie:",
+      "keineCookies": "nessuno (solo al momento dell'invio)",
+      "drittland": "Trasferimento:",
+      "drittlandJa": "negli USA, in base all'EU-US Data Privacy Framework",
+      "drittlandNein": "solo all'interno dell'UE",
+      "listeAnzeigen": "Cookie utilizzati",
+      "listeTitel": "Elenco cookie",
+      "name": "Nome",
+      "host": "Host",
+      "art": "Tipo",
+      "artErst": "Proprietario",
+      "artDritt": "Terze parti",
+      "zweck": "Scopo",
+      "kategorie": "Categoria",
+      "beschreibung": "Descrizione"
+    },
+    "dauer": {
+      "bisSechsMonateGoogle": "definito da Google, fino a sei mesi",
+      "dreiMonate": "circa tre mesi",
+      "einJahr": "circa un anno",
+      "sechsMonate": "circa sei mesi",
+      "zweiJahre": "fino a due anni"
+    },
+    "zweck": {
+      "grecaptcha": "Consente a Google di valutare il rischio, distinguendo le iscrizioni di massa automatizzate dalle richieste reali.",
+      "ga": "Distingue i visitatori in modo che le visualizzazioni ricorrenti non vengano conteggiate due volte. Contiene un identificatore generato casualmente senza alcun riferimento alla vostra persona.",
+      "gaSitzung": "Registra l'inizio della vostra visita attuale, in modo che le visualizzazioni di pagina appartengano a una sessione.",
+      "fbp": "Associa la sua visita a un annuncio pubblicitario in modo da poter misurare il successo delle nostre campagne.",
+      "gclAu": "Associa la sua visita a un annuncio Google in modo da poter misurare il successo delle nostre campagne.",
+      "liGc": "Memorizza il suo consenso a LinkedIn per scopi pubblicitari.",
+      "bcookie": "Identifica il suo browser a LinkedIn in modo che gli annunci e il loro successo possano essere attribuiti."
+    },
+    "uebersicht": {
+      "titel": "Le sue impostazioni sui cookie",
+      "text": "Selezioni quali cookie desidera accettare o rifiutare su questo sito web. Può attivare e disattivare le impostazioni per ogni categoria di cookie in qualsiasi momento.",
+      "datenschutz": "Maggiori informazioni nell'informativa sulla privacy"
+    },
+    "verwalten": "Gestisci impostazioni cookie",
+    "schliessen": "Chiudi",
+    "bestaetigen": "Conferma impostazioni"
   }
 }

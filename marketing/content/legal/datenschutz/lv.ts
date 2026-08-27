@@ -18,14 +18,12 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Šis paziņojums apraksta, kā ${ANBIETER.firma} apstrādā personas datus — apmeklējot šo tīmekļa vietni, lietojot platformu myNextDays (vadības paneli, tirdzniecības vietu un mobilo lietotni) un uzturot darījumu attiecības ar mūsu klientiem.`,
-    "Pamats ir Regula (ES) 2016/679 (VDAR), kā arī Dānijas datu aizsardzības likums (databeskyttelsesloven). Mēs nepārdodam datus, neveidojam profilus un savās tīmekļa vietnēs neizmantojam nekādus analītikas, izsekošanas vai reklāmas pakalpojumus. Reklāmas nolūkos datus apstrādājam tikai tur, kur esat skaidri devis piekrišanu — proti, mūsu jaunumu vēstkopai (sk. sadaļu „Saziņa“), no kuras jebkurā laikā varat atteikties ar vienu klikšķi.",
+    "Mēs nepārdodam datus un neveidojam profilus, kas jūs identificētu kā personu. Šajā vietnē mēs — tikai ar jūsu piekrišanu — mērām mūsu lapu sasniedzamību un mūsu reklāmas panākumus; abas kategorijas var atsevišķi atcelt (skatīt sadaļas Sasniedzamības mērīšana un Reklāma un veiksmes mērīšana). Mēs apstrādājam datus reklāmas nolūkos tikai tad, ja esat tam nepārprotami piekritis — proti, mūsu jaunumu vēstnesim (skatiet sadaļu “Saziņa”), no kura varat jebkurā laikā atteikties ar vienu klikšķi.",
   ],
   sections: [
     {
       heading: "Pārzinis",
-      paragraphs: [
-        "Par šajā paziņojumā aprakstīto apstrādi atbild:",
-      ],
+      paragraphs: ["Par šajā paziņojumā aprakstīto apstrādi atbild:"],
       zeilen: [
         {
           label: "Uzņēmums",
@@ -92,13 +90,24 @@ export const datenschutz: LegalDoc = {
           titel: "Kontaktformas aizsardzība pret surogātpastu (reCAPTCHA)",
           paragraphs: [
             "Mūsu kontaktforma pret automatizētiem masu pieprasījumiem ir aizsargāta ar Google Ireland Limited pakalpojumu reCAPTCHA Enterprise. Tikai tad, ja tam piekrītat, jūsu pārlūkprogramma, aizpildot formu, ielādē skriptu no www.google.com; pie tam jūsu IP adrese un dati par jūsu darbībām formā tiek nosūtīti Google un tur izvērtēti, lai atšķirtu cilvēku no skripta. Tiesiskais pamats ir VDAR 6. panta 1. punkta a) apakšpunkts (piekrišana); papildus piemēro [Google privātuma paziņojumu](https://policies.google.com/privacy).",
-            "Bez jūsu piekrišanas no Google netiek ielādēts nekas un dati tur neplūst; formu tādā gadījumā nepieņemam, taču jebkurā laikā varat mums rakstīt e-pastu. Savu piekrišanu varat mainīt vai atsaukt [sīkdatņu politikā](/cookie-richtlinie).",
+            "Bez jūsu piekrišanas nekas netiks ielādēts no Google un uz turieni netiks nosūtīti dati; mēs tad nepieņemsim veidlapu, taču jūs vienmēr varat mums rakstīt e-pastu. Ja jūs piekrītat, reCAPTCHA iestata savu sīkfailu (_GRECAPTCHA, Google nosaka derīguma termiņu, līdz sešiem mēnešiem), kas tiek izmantots riska novērtēšanai. Jūs varat mainīt vai atsaukt savu piekrišanu jebkurā laikā, izmantojot sīkfailu ikonu katras lapas apakšējā kreisajā stūrī; sīkfails tad tiks dzēsts.",
           ],
         },
         {
-          titel: "Nekāda analītika, nekāda reklāma",
+          titel: "Snieguma mērīšana (Google Analytics)",
           paragraphs: [
-            "Mēs neizmantojam nekādus analītikas, izsekošanas vai reklāmas pakalpojumus (nekādu Google Analytics, nekādus pikseļus, nekādus reklāmas tīklus) un neveidojam profilus. Kādas sīkdatnes platformai ir tehniski nepieciešamas, ir norādīts [sīkdatņu politikā](/cookie-richtlinie).",
+            "Šajā vietnē mēs izmantojam Google Ireland Limited pakalpojumu Google Analytics 4, lai mērītu, kā tiek izmantotas mūsu lapas — kuras lapas tiek apmeklētas, no kurienes nāk apmeklētāji un kurā brīdī viņi pārtrauc. Mērķis ir tikai uzlabot piedāvājumu un atpazīstamību.",
+            "Ielāde notiek tikai ar jūsu piekrišanu. Ja jūs to piešķirat, jūsu pārlūkprogramma ielādē skriptu no www.googletagmanager.com un saglabā divus sīkfailus („_ga“ un „_ga_<ID>“, derīguma termiņš līdz diviem gadiem) ar nejauši ģenerētu identifikatoru; tiek pārsūtīts šis identifikators, apmeklētās lapas, atsauces avots, aptuvenā atrašanās vieta valsts vai reģiona līmenī, ierīce un pārlūkprogramma, kā arī jūsu IP adrese, ko Google saīsina pirms katras saglabāšanas. Juridiskais pamats ir VDAR 6. panta 1. punkta a) apakšpunkts (piekrišana).",
+            "Mēs esam skaidri ierobežojuši novērtējumu: Google signāli un reklāmas personalizēšana ir izslēgti. Tādējādi netiek veidoti starpierīču profili un mērķauditorijas reklāmai, un mēs nenododam lietošanas datus reklāmas tīkliem. Apvienošana ar jūsu klienta kontu nenotiek.",
+            "Google apstrādā datus kā mūsu apstrādātājs, pamatojoties uz līgumu saskaņā ar VDAR 28. pantu (Google Ads datu apstrādes noteikumi). Jūsu IP adreses saīsināšana notiek serveros ES, pirms dati tiek pārsūtīti uz ASV; tādējādi tiek pārsūtīts pseidonīms datu kopums. Pārsūtīšanas pamats ir ES Komisijas lēmums par atbilstību ES-ASV datu privātuma regulējumam (VDAR 45. pants), saskaņā ar kuru Google LLC ir sertificēts; papildus Google ir iekļāvis ES Komisijas standarta līguma klauzulas (VDAR 46. pants). Mēs skaidri norādām, ka ASV iestādes saskaņā ar FISA 702. sadaļu var piekļūt arī sertificētu uzņēmumu datiem, un tādējādi atlikušo risku nevar pilnībā izslēgt. Papildus ir spēkā [Google privātuma politika](https://policies.google.com/privacy).",
+            "Uzglabāšanas ilgums: notikumu un lietotāju dati mūsu īpašumā tiek automātiski dzēsti pēc 14 mēnešiem; apkopotie ziņojumu dati bez saistības ar atsevišķiem apmeklētājiem tiek saglabāti ilgāk. Jūsu piekrišana pati par sevi beidzas pēc sešiem mēnešiem.",
+            "Bez jūsu piekrišanas nekas netiek ielādēts, netiek iestatīts neviens sīkfails un netiek pārsūtīti dati uz Google. Jūs varat atsaukt savu piekrišanu jebkurā laikā, izmantojot sīkfailu ikonu katras lapas apakšējā kreisajā stūrī; mērīšana tad nekavējoties beidzas un minētie sīkfaili tiek dzēsti. Pēc sešiem mēnešiem mēs jautāsim vēlreiz.",
+          ],
+        },
+        {
+          titel: "Reklāma un veiktspējas mērīšana",
+          paragraphs: [
+            "Ar jūsu piekrišanu mēs izmantojam mārketinga sīkfailus, lai novērtētu mūsu reklāmas panākumus un rādītu jums atbilstošas reklāmas citās platformās. Iesaistītie uzņēmumi ir Meta Platforms Ireland (Meta-Pixel, sīkfails _fbp), LinkedIn Ireland (Insight-Tag, sīkfaili li_gc un bcookie) un Google Ireland Limited (Google Ads, sīkfails _gcl_au). Tiesiskais pamats ir VDAR 6. panta 1. punkta a) apakšpunkts. Bez jūsu piekrišanas neviens no šiem skriptiem netiks ielādēts un neviens sīkfails netiks iestatīts; atsaukšanas gadījumā mēs tos dzēsīsim. Sīkāka informācija par katru sīkfailu ir pieejama [Sīkfailu politikā](/cookie-richtlinie).",
           ],
         },
       ],
@@ -252,7 +261,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (Apvienotā Karaliste) — savienojums ar rezervāciju portāliem",
         "Meta Platforms Ireland Limited (Īrija) — WhatsApp ziņojumi, ja aktivizēts",
         "Sendinblue SAS / Brevo (Francija, Vācija) — jaunumu vēstkopas pārvaldība un izsūtīšana, tikai ar piekrišanu",
-        "Google Ireland Limited (Īrija) — tulkojumi; kontaktformas aizsardzība pret surogātpastu (reCAPTCHA Enterprise), tikai ar piekrišanu; pieteikšanās ar Google, ja tiek izmantota",
+        "Google Ireland Limited (Īrija) — tulkojumi; kontaktformas aizsardzība pret surogātpastu (reCAPTCHA Enterprise), tikai ar piekrišanu; pieteikšanās ar Google, ja tiek izmantota; Sasnieguma mērīšana (Google Analytics 4), tikai ar piekrišanu",
         "Groq, Inc. (ASV) — atbilžu ieteikumi, ja aktivizēti",
         "Cloudflare, Inc. (ASV) — klientu domēnu DNS pārvaldība",
       ],
@@ -269,7 +278,7 @@ export const datenschutz: LegalDoc = {
       paragraphs: [
         "Apstrāde principā notiek Eiropas Savienībā. Izmantojot iepriekš minētos pakalpojumus, kuru sniedzēji atrodas ārpus ES, dati var tikt nodoti uz trešo valsti.",
         "Attiecībā uz Groq, Inc. un Cloudflare, Inc. (ASV) nosūtīšanu balstām uz Eiropas Komisijas standarta datu aizsardzības klauzulām saskaņā ar VDAR 46. panta 2. punkta c) apakšpunktu, ciktāl saņēmējs nevar atsaukties uz lēmumu par aizsardzības līmeņa pietiekamību (EU-US Data Privacy Framework).",
-      "Maksājumu apstrādes līgumpartneris ir Stripe Payments Europe, Limited (Īrija). Ciktāl Stripe pie tam izmanto Stripe, LLC (ASV), tā ir sertificēta atbilstoši ES un ASV datu privātuma regulējumam (EU-US Data Privacy Framework); šajā ziņā nosūtīšana balstās uz Eiropas Komisijas lēmumu par aizsardzības līmeņa pietiekamību saskaņā ar VDAR 45. pantu. Papildus piemēro standarta datu aizsardzības klauzulas no [Stripe datu apstrādes līguma](https://stripe.com/legal/dpa).",
+        "Maksājumu apstrādes līgumpartneris ir Stripe Payments Europe, Limited (Īrija). Ciktāl Stripe pie tam izmanto Stripe, LLC (ASV), tā ir sertificēta atbilstoši ES un ASV datu privātuma regulējumam (EU-US Data Privacy Framework); šajā ziņā nosūtīšana balstās uz Eiropas Komisijas lēmumu par aizsardzības līmeņa pietiekamību saskaņā ar VDAR 45. pantu. Papildus piemēro standarta datu aizsardzības klauzulas no [Stripe datu apstrādes līguma](https://stripe.com/legal/dpa).",
         "Attiecībā uz Channex.io Ltd (Apvienotā Karaliste) piemēro Eiropas Komisijas lēmumu par aizsardzības līmeņa pietiekamību Apvienotajai Karalistei; ja tas zaudē spēku, piemēro standarta datu aizsardzības klauzulas.",
       ],
     },
@@ -288,7 +297,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (ASV) — atbilžu ieteikumi ziņojumu iesūtnē, tikai tad, ja uzņēmums funkciju aktivizē. Tiek nosūtīts attiecīgais ziņojuma konteksts.",
             "Cloudflare, Inc. (ASV) — klientu domēnu DNS pārvaldība. Tiek nosūtīti domēna un konfigurācijas dati, nekādi viesu dati.",
-            "Google LLC (ASV) — tikai pieteikšanās ar Google un tulkojumu gadījumā; līgumpartneris katrā gadījumā ir Google Ireland Limited, taču ASV mātesuzņēmuma piekļuve tomēr nav izslēgta.",
+            "Google LLC (ASV) — reģistrējoties ar Google, tulkojumiem un sasnieguma mērīšanai (Google Analytics 4, tikai ar piekrišanu); līgumpartneris katrā gadījumā ir Google Ireland Limited, tomēr ASV mātesuzņēmuma piekļuve nav izslēgta.",
           ],
         },
         {

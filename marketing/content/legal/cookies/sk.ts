@@ -8,13 +8,13 @@ export const cookies: LegalDoc = {
   slug: "cookie-richtlinie",
   title: "Zásady používania súborov cookie",
   metaDescription:
-    "Aké súbory cookie myNextDays používa: výlučne technicky nevyhnutné a funkčné súbory cookie, žiadne sledovacie ani reklamné súbory cookie.",
+    "Aké súbory cookie myNextDays používa: technicky nevyhnutné súbory cookie a – len s vaším súhlasom – funkčné, analytické a marketingové súbory cookie. Každú kategóriu je možné jednotlivo zapnúť a vypnúť.",
   standIso: RECHTSSTAND_ISO,
   numbered: true,
   toc: true,
   intro: [
     `Tieto zásady vysvetľujú, ktoré súbory cookie a porovnateľné technológie ukladania spoločnosť ${ANBIETER.firma} používa na tejto webovej stránke a v platforme myNextDays.`,
-    "V skratke: používame výlučne technicky nevyhnutné a funkčné súbory cookie. Neexistujú žiadne analytické, reklamné ani sledovacie súbory cookie a žiadne odovzdávanie údajov o používaní reklamným sieťam.",
+    "Stručne povedané: Nevyhnutné sú len súbory cookie, bez ktorých webová stránka nefunguje podľa požiadaviek. Všetko ostatné si vyžaduje váš súhlas a bez neho sa nenačíta – ochrana proti spamu nášho kontaktného formulára, meranie dosahu a marketingové súbory cookie, pomocou ktorých meriame úspešnosť našej reklamy. Každú z týchto kategórií môžete jednotlivo povoliť alebo odmietnuť a svoje rozhodnutie kedykoľvek odvolať.",
   ],
   sections: [
     {
@@ -28,14 +28,14 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Súhlas je podľa § 9 dánskej vyhlášky o cookies (Cookie-bekendtgørelsen) (ktorou sa transponuje čl. 5 ods. 3 smernice 2002/58/ES) potrebný len vtedy, keď prístup k vášmu zariadeniu neslúži výlučne na prenos správy alebo nie je bezpodmienečne nevyhnutný pre výslovne požadovanú službu.",
         "Všetky súbory cookie, ktoré nastavujeme, sú potrebné na prihlásenie, na zabezpečenie relácie alebo na nastavenie, ktoré ste si sami zvolili — preto si k nim nepýtame žiadny súhlas a naopak nenastavujeme nič, na čo by bol súhlas potrebný.",
-        "Súhlas musíte udeliť len pre jednu vec: ochranu proti spamu nášho kontaktného formulára. Tá pochádza od spoločnosti Google (reCAPTCHA Enterprise), ide teda o externú službu, a načíta sa iba vtedy, ak ste ju povolili. Na to sa vás pri prvej návšteve opýta lišta v dolnej časti obrazovky — s rovnocennými tlačidlami „Odmietnuť“ a „Prijať“ a bez prednastaveného výberu. Kým sa nerozhodnete, platí „nepovolené“.",
+        "Súhlas musíte udeliť pre tri kategórie, ktoré sa bez vášho povolenia nenačítajú: ochrana proti spamu nášho kontaktného formulára (reCAPTCHA od spoločnosti Google), meranie dosahu tejto webovej stránky (Google Analytics 4) a marketingové súbory cookie (Meta, LinkedIn, Google Ads). Na to slúži okno so zoznamom kategórií – pri prvej návšteve, bez predvoľby, každá kategória s vlastným prepínačom. Pokiaľ sa nerozhodnete, platí „nepovolené“ a nič sa nevyhodnocuje ani nereklamuje.",
         "Vaše rozhodnutie je uložené v pamäti vášho prehliadača (Local Storage, hodnota „nd_consent“); obsahuje iba kategóriu, čas a číslo verzie, žiadnu identifikáciu vašej osoby. Prostredníctvom ikony cookies vľavo dole na každej stránke ju môžete kedykoľvek zmeniť alebo odvolať. Po šiestich mesiacoch sa spýtame znova — súhlas nemá platiť neobmedzene.",
       ],
     },
     {
       heading: "Táto webová stránka",
       paragraphs: [
-        "Marketingová webová stránka nenastavuje žiadne súbory cookie. Písma a ikony sú uložené na našom vlastnom serveri — na tento účel sa nevolá žiadna služba tretej strany pre ikony či písma. Jedinou externou službou tejto stránky je ochrana proti spamu kontaktného formulára, ktorá sa načíta iba s vaším súhlasom. Podrobnosti nájdete v [Zásadách ochrany osobných údajov](/datenschutz).",
+        "Táto webová stránka sama o sebe nepoužíva žiadne súbory cookie. Písma a symboly sú uložené na našom vlastnom serveri – nepoužíva sa žiadna služba symbolov ani písiem tretej strany. Pridávajú sa len služby, ktoré povolíte: ochrana proti spamu kontaktného formulára, meranie dosahu a marketingové služby. Aké súbory cookie sa pritom používajú, s akou dobou platnosti a na akom hostiteľovi, je uvedené nižšie v časti „Súbory cookie tretích strán“. Odvolanie súhlasu prostredníctvom ikony súborov cookie vľavo dole – príslušná služba sa okamžite ukončí a jej súbory cookie sa vymažú. Podrobnosti sú uvedené v [Zásadách ochrany osobných údajov](/datenschutz).",
       ],
     },
     {
@@ -93,7 +93,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Zaznamenáva vaše rozhodnutie o ochrane proti spamu kontaktného formulára, aby sa vás lišta súhlasu nepýtala znova pri každej návšteve. Ukladá sa iba kategória, čas a číslo verzie. Hodnota neopúšťa vaše zariadenie a neprenáša sa na náš server; platí pre tento prehliadač. Platnosť: šesť mesiacov — potom sa lišta opýta znova. Ak vymažete hodnotu, lišta sa pri ďalšej návšteve opýta znova.",
+            "Zaznamenáva vaše rozhodnutie o službách vyžadujúcich súhlas (ochrana proti spamu kontaktného formulára a meranie dosahu).",
           ],
         },
         {
@@ -121,6 +121,67 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Ak vykonáte platbu, poskytovateľ platobných služieb (Stripe alebo PayPal) môže na svojej vlastnej stránke nastaviť súbory cookie potrebné na spracovanie a prevenciu podvodov. Platia pre ne ustanovenia príslušného poskytovateľa.",
         "Na webových stránkach, ktoré prevádzkovatelia vytvárajú pomocou nášho konštruktéra stránok, rozhoduje o ďalších súboroch cookie príslušný prevádzkovateľ a zodpovedá za tam uvedené informácie.",
+        "S vaším súhlasom služby Google na tejto webovej stránke umiestnia nasledujúce súbory cookie – dva na meranie dosahu, jeden na ochranu pred spamom. Bez vášho súhlasu sa príslušný skript nenačíta a žiadny z týchto súborov cookie sa neumiestni; v prípade odvolania súhlasu ich vymažeme.",
+      ],
+      unterpunkte: [
+        {
+          titel: "_fbp — Meranie úspešnosti reklamy (vyžaduje sa súhlas)",
+          list: [
+            "Účel: priradí vašu návštevu k reklame, aby sme mohli merať úspešnosť našich kampaní.",
+            "Obsah: náhodne vygenerovaný identifikátor; neobsahuje žiadne meno, e-mail ani údaje o účte od nás.",
+            "Poskytovateľ: Meta Platforms Ireland Limited, Merrion Road, Dublin 4, Írsko.",
+            "Hostiteľ: mynextdays.com (súbor cookie prvej strany, nastavený skriptom Meta). Trvanie: približne tri mesiace.",
+          ],
+        },
+        {
+          titel: "_gcl_au — Meranie úspešnosti Google Ads (vyžaduje sa súhlas)",
+          list: [
+            "Účel: priradí vašu návštevu k reklame Google, aby sme mohli merať úspešnosť našich kampaní.",
+            "Obsah: náhodne vygenerovaný identifikátor bez odkazu na vašu osobu.",
+            "Poskytovateľ: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Írsko.",
+            "Hostiteľ: mynextdays.com (súbor cookie prvej strany). Trvanie: približne tri mesiace.",
+          ],
+        },
+        {
+          titel: "li_gc a bcookie — Reklama LinkedIn (vyžaduje sa súhlas)",
+          list: [
+            "Účel: identifikuje váš prehliadač pre LinkedIn, aby bolo možné priradiť reklamy a ich úspešnosť; li_gc navyše ukladá váš súhlas.",
+            "Obsah: identifikátor prehliadača a stav súhlasu; neobsahuje žiadne údaje z vášho účtu u nás.",
+            "Poskytovateľ: LinkedIn Ireland Unlimited Company, Wilton Plaza, Dublin 2, Írsko.",
+            "Hostiteľ: linkedin.com (súbory cookie tretích strán). Trvanie: približne šesť mesiacov alebo jeden rok.",
+          ],
+        },
+        {
+          titel:
+            "_GRECAPTCHA — ochrana kontaktného formulára pred spamom (vyžaduje sa súhlas)",
+          list: [
+            "Host: www.google.com (súbor cookie tretej strany).",
+            "Účel: umožňuje spoločnosti Google vyhodnotiť riziko, ktoré odlišuje automatické hromadné správy od skutočných požiadaviek.",
+            "Obsah: identifikátor vygenerovaný spoločnosťou Google pre toto hodnotenie; žiadne meno, e-mail ani údaje o účte od nás.",
+            "Poskytovateľ: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Írsko.",
+            "Trvanie: stanovené spoločnosťou Google, až šesť mesiacov. Nastaví sa až po povolení ochrany proti spamu a otvorení kontaktného formulára.",
+          ],
+        },
+        {
+          titel: "_ga – meranie dosahu (vyžaduje súhlas)",
+          list: [
+            "Host: mynextdays.com (súbor cookie prvej strany, nastavený skriptom Google).",
+            "Účel: rozlišuje návštevníkov, aby sa opakované zobrazenia nepočítali dvakrát.",
+            "Obsah: náhodne vygenerovaný identifikátor bez vzťahu k vašej osobe; žiadne meno, e-mail ani údaje o účte.",
+            "Poskytovateľ: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Írsko.",
+            "Doba platnosti: až dva roky.",
+          ],
+        },
+        {
+          titel: "_ga_<identifikátor> – stav relácie merania (vyžaduje súhlas)",
+          list: [
+            "Host: mynextdays.com (súbor cookie prvej strany, nastavený skriptom Google).",
+            "Účel: zaznamenáva, kedy sa začala vaša aktuálna návšteva, aby zobrazenia stránok v rámci jednej relácie patrili k sebe.",
+            "Obsah: časová pečiatka a počítadlo relácie; identifikátor v názve označuje našu vlastnosť, nie vás.",
+            "Poskytovateľ: Google Ireland Limited.",
+            "Doba platnosti: až dva roky.",
+          ],
+        },
       ],
     },
     {

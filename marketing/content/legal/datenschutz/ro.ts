@@ -21,7 +21,7 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Prezenta politică descrie modul în care ${ANBIETER.firma} prelucrează date cu caracter personal — la vizitarea acestui site, la utilizarea platformei myNextDays (tablou de bord, piață online și aplicație mobilă) și în cadrul relației comerciale cu clienții noștri.`,
-    "Temeiul este Regulamentul (UE) 2016/679 (RGPD), precum și legea daneză privind protecția datelor (databeskyttelsesloven). Nu vindem date, nu creăm profiluri și nu folosim pe site-urile noastre servicii de analiză, de urmărire sau de publicitate. În scopuri publicitare prelucrăm date exclusiv acolo unde v-ați dat consimțământul expres — și anume pentru buletinul nostru informativ (a se vedea capitolul Comunicare), de la care vă puteți dezabona oricând cu un singur clic.",
+    "Nu vindem date și nu creăm profiluri care să vă identifice ca persoană. Pe acest site web măsurăm — doar cu acordul dumneavoastră — audiența paginilor noastre și succesul publicității noastre; ambele categorii pot fi deselectate individual (vezi secțiunile Măsurarea audienței și Publicitate și măsurarea succesului). Procesăm date în scopuri promoționale numai acolo unde v-ați dat acordul explicit — și anume pentru newsletter-ul nostru (consultați secțiunea Comunicare), la care vă puteți dezabona oricând cu un singur clic.",
   ],
   sections: [
     {
@@ -92,16 +92,28 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
-          titel: "Protecția formularului de contact împotriva spamului (reCAPTCHA)",
+          titel:
+            "Protecția formularului de contact împotriva spamului (reCAPTCHA)",
           paragraphs: [
             "Formularul nostru de contact este protejat împotriva mesajelor automate în masă cu reCAPTCHA Enterprise de la Google Ireland Limited. Numai dacă vă dați consimțământul, browserul dumneavoastră încarcă la completarea formularului un script de la www.google.com; în acest context, adresa dumneavoastră IP și informații despre interacțiunea dumneavoastră cu formularul sunt transmise către Google și analizate acolo pentru a distinge omul de un script. Temeiul juridic este art. 6 alin. (1) lit. a) din RGPD (consimțământ); suplimentar se aplică [politica de confidențialitate a Google](https://policies.google.com/privacy).",
-            "Fără consimțământul dumneavoastră nu se încarcă nimic de la Google și nu ajung date acolo; în acest caz nu preluăm formularul, însă ne puteți scrie oricând un e-mail. Consimțământul dumneavoastră îl puteți modifica sau retrage în [politica privind modulele cookie](/cookie-richtlinie).",
+            "Fără acordul dumneavoastră, nimic nu va fi încărcat de pe Google și nu vor fi transmise date către acesta; nu vom accepta formularul, dar ne puteți scrie oricând un e-mail. Dacă vă dați acordul, reCAPTCHA va seta propriul cookie (_GRECAPTCHA, durata de viață stabilită de Google, până la șase luni), care este utilizat pentru evaluarea riscurilor. Vă puteți modifica sau revoca acordul în orice moment prin intermediul pictogramei cookie din partea stângă jos a fiecărei pagini; cookie-ul va fi apoi șters.",
           ],
         },
         {
-          titel: "Fără analiză, fără publicitate",
+          titel: "Măsurarea acoperirii (Google Analytics)",
           paragraphs: [
-            "Nu folosim servicii de analiză, de urmărire sau de publicitate (fără Google Analytics, fără pixeli, fără rețele publicitare) și nu creăm profiluri. Modulele cookie de care platforma are nevoie din punct de vedere tehnic sunt prezentate în [politica privind modulele cookie](/cookie-richtlinie).",
+            "Pe acest site web, folosim Google Analytics 4 de la Google Ireland Limited pentru a măsura modul în care sunt utilizate paginile noastre — ce pagini sunt accesate, de unde provin vizitatorii și în ce punct renunță. Scopul este exclusiv îmbunătățirea ofertei și a vizibilității.",
+            "Încărcarea se face exclusiv cu acordul dumneavoastră. Dacă îl acordați, browserul dumneavoastră va încărca un script de pe www.googletagmanager.com și va stoca două cookie-uri („_ga” și „_ga_<ID>”, valabile până la doi ani) cu un identificator generat aleatoriu; acest identificator, paginile accesate, sursa de referință, locația aproximativă la nivel de țară sau regiune, dispozitivul și browserul, precum și adresa dumneavoastră IP, pe care Google o scurtează înainte de fiecare stocare, vor fi transmise. Baza legală este Art. 6 Par. 1 lit. a GDPR (consimțământ).",
+            "Am restricționat în mod explicit evaluarea: semnalele Google și personalizarea publicitară sunt dezactivate. Prin urmare, nu se creează profiluri inter-dispozitive și nici audiențe pentru publicitate, și nu transmitem date de utilizare către rețelele publicitare. Nu are loc o combinare cu contul dumneavoastră de client.",
+            "Google prelucrează datele în calitate de procesator al nostru, în baza unui contract conform Art. 28 GDPR (Termenii de prelucrare a datelor Google Ads). Scurtarea adresei dumneavoastră IP are loc pe servere din UE, înainte ca datele să fie transferate în SUA; prin urmare, este transmis un set de date pseudonim. Baza transferului este decizia de adecvare a Comisiei UE privind Cadrul de confidențialitate a datelor UE-SUA (Art. 45 GDPR), în baza căreia Google LLC este certificată; în plus, Google a inclus clauzele contractuale standard ale Comisiei UE (Art. 46 GDPR). Atragem atenția în mod explicit că autoritățile americane, conform Secțiunii 702 FISA, pot accesa datele companiilor certificate și, prin urmare, un risc rezidual nu poate fi exclus în totalitate. Se aplică, de asemenea, [Politica de confidențialitate Google](https://policies.google.com/privacy).",
+            "Durata de stocare: Datele legate de evenimente și utilizatori sunt șterse automat din proprietatea noastră după 14 luni; datele agregate de raportare fără legătură cu vizitatori individuali rămân păstrate. Consimțământul dumneavoastră expiră după șase luni.",
+            "Fără acordul dumneavoastră, nimic nu este încărcat, niciun cookie nu este setat și nu sunt transmise date către Google. Puteți revoca oricând acordul dumneavoastră prin intermediul pictogramei cookie din stânga jos a fiecărei pagini; măsurarea se va opri imediat și cookie-urile menționate vor fi șterse. După șase luni, vă vom întreba din nou.",
+          ],
+        },
+        {
+          titel: "Publicitate și măsurarea succesului",
+          paragraphs: [
+            "Cu acordul dumneavoastră, utilizăm cookie-uri de marketing pentru a măsura succesul publicității noastre și pentru a vă afișa anunțuri relevante pe alte platforme. Sunt implicate Meta Platforms Ireland (Meta-Pixel, cookie _fbp), LinkedIn Ireland (Insight-Tag, cookie-uri li_gc și bcookie) și Google Ireland Limited (Google Ads, cookie _gcl_au). Temeiul juridic este Art. 6 alin. 1 lit. a GDPR. Fără acordul dumneavoastră, niciunul dintre aceste scripturi nu va fi încărcat și niciun cookie nu va fi setat; în cazul revocării, le vom șterge. Detalii despre fiecare cookie sunt disponibile în [Politica privind cookie-urile](/cookie-richtlinie).",
           ],
         },
       ],
@@ -200,7 +212,8 @@ export const datenschutz: LegalDoc = {
           ],
         },
         {
-          titel: "Roluri conform Regulamentului privind inteligența artificială",
+          titel:
+            "Roluri conform Regulamentului privind inteligența artificială",
           paragraphs: [
             "Pentru funcțiile de IA integrate în produs suntem utilizator în sensul art. 3 pct. 4 din Regulamentul privind inteligența artificială; furnizori ai modelelor lingvistice care stau la bază sunt furnizorii de modele respectivi. Dacă o unitate de cazare folosește aceste funcții în cadrul activității sale profesionale, ea este la rândul său utilizator și îi revine obligația de alfabetizare în domeniul IA prevăzută la art. 4 din Regulamentul privind inteligența artificială, care se aplică de la 2 februarie 2025 independent de dimensiunea întreprinderii. De la 27 iulie 2026 se aplică în versiunea Regulamentului (UE) 2026/1744: furnizorii și utilizatorii iau măsuri pentru a sprijini dezvoltarea competențelor personalului lor în domeniul IA; în mod expres nu trebuie garantat un anumit nivel. Sprijinim prin indicații în aplicație și în centrul nostru de ajutor; instruirea propriilor angajați rămâne sarcina unității de cazare.",
             "Dacă o unitate de cazare își conectează contul cu un asistent de IA propriu (a se vedea punctul următor), este utilizator și în această privință în sensul Regulamentului privind inteligența artificială — ea decide asupra utilizării și formulează solicitările. Interfața în sine nu este un sistem de IA: citește date din baza de date și le redă, fără a face deducții; considerentul 12 al Regulamentului privind inteligența artificială delimitează în mod expres astfel de sisteme de IA.",
@@ -255,7 +268,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (Regatul Unit) — conectarea la portalurile de rezervări",
         "Meta Platforms Ireland Limited (Irlanda) — mesaje WhatsApp, în măsura în care este activat",
         "Sendinblue SAS / Brevo (Franța, Germania) — administrarea și expedierea buletinului informativ, numai cu consimțământ",
-        "Google Ireland Limited (Irlanda) — traduceri; protecția formularului de contact împotriva spamului (reCAPTCHA Enterprise), numai cu consimțământ; autentificarea cu Google, în măsura în care este folosită",
+        "Google Ireland Limited (Irlanda) — traduceri; protecția formularului de contact împotriva spamului (reCAPTCHA Enterprise), numai cu consimțământ; autentificarea cu Google, în măsura în care este folosită; Măsurarea audienței (Google Analytics 4), numai cu acordul dumneavoastră",
         "Groq, Inc. (SUA) — sugestii de răspuns, în măsura în care este activat",
         "Cloudflare, Inc. (SUA) — administrarea DNS pentru domeniile clienților",
       ],
@@ -291,7 +304,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (SUA) — sugestii de răspuns în căsuța de mesaje, numai dacă unitatea de cazare activează funcția. Este transmis contextul mesajului respectiv.",
             "Cloudflare, Inc. (SUA) — administrarea DNS pentru domeniile clienților. Sunt transmise date privind domeniul și configurația, niciun fel de date ale oaspeților.",
-            "Google LLC (SUA) — numai la autentificarea cu Google și la traduceri; partenerul contractual este de fiecare dată Google Ireland Limited, un acces al societății-mamă americane nu este totuși exclus.",
+            "Google LLC (SUA) — la înregistrarea cu Google, la traduceri și la măsurarea audienței (Google Analytics 4, numai cu acordul dumneavoastră); partenerul contractual este Google Ireland Limited, dar accesul companiei-mamă din SUA nu este exclus.",
           ],
         },
         {

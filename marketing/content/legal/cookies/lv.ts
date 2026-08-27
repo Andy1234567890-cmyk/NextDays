@@ -8,13 +8,13 @@ export const cookies: LegalDoc = {
   slug: "cookie-richtlinie",
   title: "Sīkdatņu politika",
   metaDescription:
-    "Kādas sīkdatnes izmanto myNextDays: tikai tehniski nepieciešamas un funkcionālas sīkdatnes, bez izsekošanas vai reklāmas sīkdatnēm.",
+    "Kādas sīkdatnes iestata myNextDays: tehniski nepieciešamās sīkdatnes un — tikai ar jūsu piekrišanu — funkcionālās, analītiskās un mārketinga sīkdatnes. Katru kategoriju var atsevišķi ieslēgt un izslēgt.",
   standIso: RECHTSSTAND_ISO,
   numbered: true,
   toc: true,
   intro: [
     `Šī politika paskaidro, kādas sīkdatnes un līdzīgas datu glabāšanas tehnoloģijas ${ANBIETER.firma} izmanto šajā tīmekļa vietnē un myNextDays platformā.`,
-    "Īsumā: mēs izmantojam tikai tehniski nepieciešamas un funkcionālas sīkdatnes. Nav analītisko, reklāmas vai izsekošanas sīkdatņu, un lietošanas dati netiek nodoti reklāmas tīkliem.",
+    "Īsumā: nepieciešamas ir tikai tās sīkdatnes, bez kurām vietne nedarbojas, kā pieprasīts. Viss pārējais prasa jūsu piekrišanu un netiek ielādēts bez tās — mūsu kontaktu veidlapas surogātpasta aizsardzība, sasniedzamības mērīšana un mārketinga sīkdatnes, ar kurām mēs mērām mūsu reklāmas panākumus. Jūs varat atļaut vai noraidīt katru no šīm kategorijām atsevišķi un jebkurā laikā atsaukt savu lēmumu.",
   ],
   sections: [
     {
@@ -28,14 +28,14 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Piekrišana saskaņā ar Dānijas sīkdatņu noteikumu (Cookie-bekendtgørelsen) 9. pantu (ar ko īsteno Direktīvas 2002/58/EK 5. panta 3. punktu) ir nepieciešama tikai tad, ja piekļuve jūsu ierīcei nekalpo vienīgi ziņojuma pārraidīšanai vai nav obligāti nepieciešama jūsu tieši pieprasītam pakalpojumam.",
         "Visas sīkdatnes, ko mēs izmantojam, ir nepieciešamas pieteikšanās, sesijas drošības vai jūsu paša izvēlēta iestatījuma nodrošināšanai — tāpēc mēs neko neprasām un arī neuzstādām neko, kam būtu nepieciešama piekrišana.",
-        "Piekrišana jums jādod tikai vienā jautājumā: mūsu kontaktformas aizsardzībai pret surogātpastu. To nodrošina Google (reCAPTCHA Enterprise), tātad tas ir ārējs pakalpojums, un tas tiek ielādēts tikai tad, ja esat to atļāvis. Šim nolūkam pirmajā apmeklējumā ekrāna apakšā parādās josla ar vienlīdzīgas nozīmes pogām „Noraidīt“ un „Piekrist“ un bez iepriekšējas atlases. Kamēr neesat izlēmis, spēkā ir „nav atļauts“.",
+        "Jums ir jāpiekrīt trim kategorijām, kuras visas netiek ielādētas bez jūsu atļaujas: mūsu kontaktu veidlapas surogātpasta aizsardzība (reCAPTCHA no Google), šīs vietnes sasniedzamības mērīšana (Google Analytics 4) un mārketinga sīkdatnes (Meta, LinkedIn, Google Ads). Šim nolūkam tiek parādīts logs ar kategoriju sarakstu — pirmajā apmeklējuma reizē, bez iepriekšējas atlases, katra kategorija ar savu slēdzi. Kamēr neesat pieņēmis lēmumu, tiek piemērots „nav atļauts“, un netiek veikta ne analīze, ne reklāma.",
         "Jūsu izvēle tiek saglabāta jūsu pārlūkprogrammas krātuvē (Local Storage, vērtība „nd_consent“); tā satur tikai kategoriju, laiku un versijas numuru, bez jūsu personas identifikatora. Izmantojot sīkdatņu ikonu katras lapas kreisajā apakšējā stūrī, to jebkurā laikā varat mainīt vai atsaukt. Pēc sešiem mēnešiem mēs jautāsim atkārtoti — piekrišanai nav jābūt spēkā neierobežoti.",
       ],
     },
     {
       heading: "Šī tīmekļa vietne",
       paragraphs: [
-        "Mārketinga tīmekļa vietne neuzstāda sīkdatnes. Fonti un ikonas atrodas mūsu pašu serverī — tāpēc netiek izmantots neviens trešās puses fontu vai ikonu pakalpojums. Vienīgais šīs vietnes ārējais pakalpojums ir kontaktformas aizsardzība pret surogātpastu, kas tiek ielādēta tikai ar jūsu piekrišanu. Sīkāka informācija ir pieejama [Privātuma politikā](/datenschutz).",
+        "Šī vietne pati par sevi neiestata sīkdatnes. Fonti un simboli atrodas mūsu pašu serverī — netiek izmantots neviens trešās puses simbolu vai fontu pakalpojums. Tiek pievienoti tikai tie pakalpojumi, kurus jūs atļaujat: kontaktu veidlapas surogātpasta aizsardzība, sasniedzamības mērīšana un mārketinga pakalpojumi. Kādas sīkdatnes tiek iestatītas, ar kādu derīguma termiņu un uz kāda resursdatora, ir norādīts zemāk sadaļā „Trešo pušu sīkdatnes“. Atsaukšana, izmantojot sīkdatnes ikonu apakšējā kreisajā stūrī — attiecīgais pakalpojums nekavējoties beidzas un tā sīkdatnes tiek dzēstas. Sīkāka informācija ir atrodama [Privātuma politikā](/datenschutz).",
       ],
     },
     {
@@ -77,7 +77,8 @@ export const cookies: LegalDoc = {
           ],
         },
         {
-          titel: "sb-… — Pieteikšanās ar Google (tehniski nepieciešama, tikai lietošanas gadījumā)",
+          titel:
+            "sb-… — Pieteikšanās ar Google (tehniski nepieciešama, tikai lietošanas gadījumā)",
           list: [
             "Mērķis: uztur sesiju, kad piesakāties, izmantojot Google.",
             "Saturs: pieteikšanās pakalpojuma sesijas marķieris.",
@@ -92,7 +93,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Saglabā jūsu izvēli par kontaktformas aizsardzību pret surogātpastu, lai piekrišanas josla katrā apmeklējumā nejautātu no jauna. Tiek saglabāta tikai kategorija, laiks un versijas numurs. Vērtība nepamet jūsu ierīci un netiek pārsūtīta uz mūsu serveri; tā attiecas uz šo pārlūkprogrammu. Derīguma termiņš: seši mēneši — pēc tam josla jautās atkārtoti. Dzēšot vērtību, josla nākamajā apmeklējumā jautās atkal.",
+            "Fiksē Jūsu lēmumu par pakalpojumiem, kuriem nepieciešama piekrišana (kontaktu veidlapas surogātpasta aizsardzība un auditorijas mērīšana).",
           ],
         },
         {
@@ -120,6 +121,70 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Ja veicat maksājumu, maksājumu pakalpojumu sniedzējs (Stripe vai PayPal) savā vietnē var uzstādīt sīkdatnes, kas nepieciešamas darījuma apstrādei un krāpšanas novēršanai. Tām piemēro attiecīgā pakalpojumu sniedzēja noteikumus.",
         "Tīmekļa vietnēs, ko uzņēmumi izveido, izmantojot mūsu vietņu veidotāju, par papildu sīkdatnēm lemj attiecīgais uzņēmums, un tas ir atbildīgs par tur sniegto informāciju.",
+        "Tikai ar jūsu piekrišanu Google pakalpojumi šajā vietnē izmanto šādus sīkfailus — divus veiktspējas mērīšanai, vienu surogātpasta aizsardzībai. Bez jūsu piekrišanas attiecīgais skripts netiks ielādēts un neviens no šiem sīkfailiem netiks iestatīts; atsaucot piekrišanu, mēs tos dzēšam.",
+      ],
+      unterpunkte: [
+        {
+          titel: "_fbp — Reklāmas veiksmes mērīšana (nepieciešama piekrišana)",
+          list: [
+            "Mērķis: piesaista jūsu apmeklējumu reklāmai, lai mēs varētu novērtēt mūsu kampaņu panākumus.",
+            "Saturs: nejauši ģenerēts identifikators; nav vārda, e-pasta vai konta informācijas no mums.",
+            "Pakalpojumu sniedzējs: Meta Platforms Ireland Limited, Merrion Road, Dublin 4, Īrija.",
+            "Resursdators: mynextdays.com (pirmās puses sīkfails, ko iestatījis Meta skripts). Derīguma termiņš: aptuveni trīs mēneši.",
+          ],
+        },
+        {
+          titel:
+            "_gcl_au — Google Ads veiksmes mērīšana (nepieciešama piekrišana)",
+          list: [
+            "Mērķis: piesaista jūsu apmeklējumu Google reklāmai, lai mēs varētu novērtēt mūsu kampaņu panākumus.",
+            "Saturs: nejauši ģenerēts identifikators bez saistības ar jūsu personu.",
+            "Pakalpojumu sniedzējs: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Īrija.",
+            "Resursdators: mynextdays.com (pirmās puses sīkfails). Derīguma termiņš: aptuveni trīs mēneši.",
+          ],
+        },
+        {
+          titel:
+            "li_gc un bcookie — LinkedIn reklāma (nepieciešama piekrišana)",
+          list: [
+            "Mērķis: identificē jūsu pārlūkprogrammu LinkedIn, lai varētu piesaistīt reklāmas un to panākumus; li_gc papildus saglabā jūsu piekrišanu.",
+            "Saturs: pārlūkprogrammas identifikators un piekrišanas statuss; nav informācijas no jūsu konta pie mums.",
+            "Pakalpojumu sniedzējs: LinkedIn Ireland Unlimited Company, Wilton Plaza, Dublin 2, Īrija.",
+            "Resursdators: linkedin.com (trešo pušu sīkfaili). Derīguma termiņš: aptuveni seši mēneši vai viens gads.",
+          ],
+        },
+        {
+          titel:
+            "_GRECAPTCHA — Kontaktu veidlapas surogātpasta aizsardzība (nepieciešama piekrišana)",
+          list: [
+            "Resurss: www.google.com (trešās puses sīkfails).",
+            "Mērķis: ļauj Google veikt riska novērtējumu, kas atšķir automatizētus masveida sūtījumus no reāliem pieprasījumiem.",
+            "Saturs: Google ģenerēts identifikators šim novērtējumam; nav mūsu vārda, e-pasta vai konta informācijas.",
+            "Pakalpojumu sniedzējs: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Īrija.",
+            "Darbības ilgums: nosaka Google, līdz sešiem mēnešiem. Tas tiek iestatīts tikai tad, ja esat atļāvis surogātpasta aizsardzību un atvēris kontaktu veidlapu.",
+          ],
+        },
+        {
+          titel: "_ga — Auditorijas mērīšana (nepieciešama piekrišana)",
+          list: [
+            "Resurss: mynextdays.com (pirmās puses sīkfails, ko iestatījis Google skripts).",
+            "Mērķis: atšķir apmeklētājus, lai atkārtoti apmeklējumi netiktu skaitīti divreiz.",
+            "Saturs: nejauši ģenerēts identifikators bez saistības ar Jūsu personu; nav vārda, e-pasta vai konta informācijas.",
+            "Piegādātājs: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Īrija.",
+            "Darbības laiks: līdz diviem gadiem.",
+          ],
+        },
+        {
+          titel:
+            "_ga_<ID> — Mērījumu sesijas statuss (nepieciešama piekrišana)",
+          list: [
+            "Resurss: mynextdays.com (pirmās puses sīkfails, ko iestatījis Google skripts).",
+            "Mērķis: fiksē, kad sākās Jūsu pašreizējais apmeklējums, lai lapu skatījumi vienā sesijā piederētu kopā.",
+            "Saturs: laika zīmogs un sesijas skaitītājs; ID nosaukumā apzīmē mūsu īpašumu, nevis Jūs.",
+            "Piegādātājs: Google Ireland Limited.",
+            "Darbības laiks: līdz diviem gadiem.",
+          ],
+        },
       ],
     },
     {

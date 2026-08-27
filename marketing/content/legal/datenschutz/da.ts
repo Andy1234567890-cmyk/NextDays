@@ -19,7 +19,7 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `Denne politik beskriver, hvordan ${ANBIETER.firma} behandler personoplysninger — når du besøger dette websted, når du bruger myNextDays-platformen (dashboard, markedsplads og mobilapp) og som led i forretningsforholdet med vores kunder.`,
-    "Grundlaget er forordning (EU) 2016/679 (databeskyttelsesforordningen) samt den danske databeskyttelseslov (databeskyttelsesloven). Vi sælger ikke data, opretter ikke profiler og bruger ingen analyse-, sporings- eller reklametjenester på vores websteder. Til markedsføring behandler vi udelukkende data dér, hvor du udtrykkeligt har givet samtykke — nemlig til vores nyhedsbrev (se afsnittet Kommunikation), som du til enhver tid kan afmelde med ét klik.",
+    "Vi sælger ikke data og opretter ikke profiler, der identificerer dig som person. På denne hjemmeside måler vi – kun med dit samtykke – rækkevidden af vores sider og succesen af vores annoncering; begge kategorier kan fravælges individuelt (se afsnittene Rækkeviddemåling samt Annoncering og succesmåling). Vi behandler kun data til reklameformål, hvis De udtrykkeligt har givet samtykke hertil – nemlig til vores nyhedsbrev (se afsnittet Kommunikation), som De til enhver tid kan afmelde med et enkelt klik.",
   ],
   sections: [
     {
@@ -93,13 +93,24 @@ export const datenschutz: LegalDoc = {
           titel: "Spambeskyttelse af kontaktformularen (reCAPTCHA)",
           paragraphs: [
             "Vores kontaktformular er beskyttet mod automatiserede massehenvendelser med reCAPTCHA Enterprise fra Google Ireland Limited. Kun hvis du samtykker hertil, indlæser din browser et script fra www.google.com, når du udfylder formularen; i den forbindelse overføres din IP-adresse og oplysninger om din interaktion med formularen til Google og analyseres dér for at skelne mellem menneske og script. Retsgrundlaget er art. 6, stk. 1, litra a, i databeskyttelsesforordningen (samtykke); supplerende gælder [Googles privatlivspolitik](https://policies.google.com/privacy).",
-            "Uden dit samtykke indlæses intet fra Google, og der flyder ingen data dertil; formularen tager vi så ikke imod, men du kan altid skrive en e-mail til os. Du kan ændre eller tilbagekalde dit samtykke i [cookiepolitikken](/cookie-richtlinie).",
+            "Uden din tilladelse indlæses intet fra Google, og ingen data overføres dertil; vi accepterer ikke formularen, men du kan altid sende os en e-mail. Hvis du giver dit samtykke, sætter reCAPTCHA sin egen cookie (_GRECAPTCHA, varighed fastsat af Google, op til seks måneder), som bruges til risikovurdering. Du kan til enhver tid ændre eller tilbagekalde dit samtykke via cookie-ikonet nederst til venstre på hver side; cookien slettes derefter.",
           ],
         },
         {
-          titel: "Ingen analyse, ingen reklame",
+          titel: "Rækkeviddemåling (Google Analytics)",
           paragraphs: [
-            "Vi bruger ingen analyse-, sporings- eller reklametjenester (ingen Google Analytics, ingen pixels, ingen annoncenetværk) og opretter ingen profiler. Hvilke cookies platformen har teknisk brug for, fremgår af [cookiepolitikken](/cookie-richtlinie).",
+            "På denne hjemmeside måler vi med Google Analytics 4 fra Google Ireland Limited, hvordan vores sider bruges – hvilke sider der besøges, hvor besøgende kommer fra, og hvor de forlader siden. Formålet er udelukkende at forbedre tilbuddet og synligheden.",
+            "Indlæsning sker udelukkende med Deres samtykke. Hvis De giver samtykke, indlæser Deres browser et script fra www.googletagmanager.com og gemmer to cookies („_ga“ og „_ga_<ID>“, levetid op til to år) med et tilfældigt genereret ID; dette ID, de besøgte sider, henvisningskilde, omtrentlig placering på lande- eller regionsniveau, enhed og browser samt Deres IP-adresse, som Google forkorter før enhver lagring, overføres. Retsgrundlaget er art. 6, stk. 1, lit. a GDPR (samtykke).",
+            "Vi har udtrykkeligt begrænset evalueringen: Google-signaler og reklamepersonalisering er deaktiveret. Der oprettes derfor ingen tværgående profiler og ingen målgrupper til reklame, og vi videregiver ingen brugsdata til annoncenetværk. En sammenføjning med Deres kundekonto finder ikke sted.",
+            "Google behandler dataene som vores databehandler på grundlag af en kontrakt i henhold til art. 28 GDPR (Google Ads Data Processing Terms). Deres IP-adresse forkortes på servere i EU, før data overføres til USA; der overføres altså et pseudonymiseret datasæt. Grundlaget for overførslen er EU-Kommissionens tilstrækkelighedsbeslutning om EU-US Data Privacy Framework (art. 45 GDPR), under hvilket Google LLC er certificeret; derudover har Google inkluderet EU-Kommissionens standardkontraktklausuler (art. 46 GDPR). Vi gør udtrykkeligt opmærksom på, at amerikanske myndigheder i henhold til Section 702 FISA også kan få adgang til data fra certificerede virksomheder, og at en rest risiko derfor ikke kan udelukkes fuldstændigt. Googles [databeskyttelseserklæring](https://policies.google.com/privacy) gælder desuden.",
+            "Lagringsvarighed: De hændelses- og brugerrelaterede data slettes automatisk i vores ejendom efter 14 måneder; aggregerede rapportdata uden relation til individuelle besøgende bevares derudover. Deres samtykke udløber efter seks måneder.",
+            "Uden Deres samtykke indlæses intet, der sættes ingen cookie, og der overføres ingen data til Google. De kan til enhver tid tilbagekalde Deres samtykke via cookie-ikonet nederst til venstre på hver side; målingen stopper derefter øjeblikkeligt, og de nævnte cookies slettes. Efter seks måneder spørger vi igen.",
+          ],
+        },
+        {
+          titel: "Annoncering og resultatmåling",
+          paragraphs: [
+            "Med dit samtykke bruger vi marketing-cookies til at måle effekten af vores annoncering og vise dig relevante annoncer på andre platforme. Dette involverer Meta Platforms Ireland (Meta-pixel, cookie _fbp), LinkedIn Ireland (Insight-tag, cookies li_gc og bcookie) og Google Ireland Limited (Google Ads, cookie _gcl_au). Retsgrundlaget er artikel 6, stk. 1, litra a i GDPR. Uden dit samtykke indlæses ingen af disse scripts, og ingen cookies sættes; ved tilbagekaldelse sletter vi dem. Detaljer om hver cookie findes i [Cookiepolitikken](/cookie-richtlinie).",
           ],
         },
       ],
@@ -253,7 +264,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (Det Forenede Kongerige) — tilslutning til bookingportaler",
         "Meta Platforms Ireland Limited (Irland) — WhatsApp-beskeder, hvis det er aktiveret",
         "Sendinblue SAS / Brevo (Frankrig, Tyskland) — administration og udsendelse af nyhedsbreve, kun ved samtykke",
-        "Google Ireland Limited (Irland) — oversættelser; spambeskyttelse af kontaktformularen (reCAPTCHA Enterprise), kun ved samtykke; log ind med Google, hvis det bruges",
+        "Google Ireland Limited (Irland) — oversættelser; spambeskyttelse af kontaktformularen (reCAPTCHA Enterprise), kun ved samtykke; log ind med Google, hvis det bruges; Rækkeviddeanalyse (Google Analytics 4), kun med samtykke",
         "Groq, Inc. (USA) — svarforslag, hvis det er aktiveret",
         "Cloudflare, Inc. (USA) — DNS-administration for kundedomæner",
       ],
@@ -289,7 +300,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (USA) — svarforslag i beskedindbakken, kun hvis virksomheden aktiverer funktionen. Der overføres den pågældende beskedkontekst.",
             "Cloudflare, Inc. (USA) — DNS-administration for kundedomæner. Der overføres domæne- og konfigurationsdata, ingen gæstedata.",
-            "Google LLC (USA) — kun ved log ind med Google og ved oversættelser; aftalepart er i begge tilfælde Google Ireland Limited, men en adgang fra det amerikanske moderselskab er alligevel ikke udelukket.",
+            "Google LLC (USA) — ved login med Google, ved oversættelser og ved rækkeviddeanalyse (Google Analytics 4, kun med samtykke); kontraktpartner er Google Ireland Limited, men adgang fra det amerikanske moderselskab kan ikke udelukkes.",
           ],
         },
         {

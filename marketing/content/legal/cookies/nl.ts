@@ -8,13 +8,13 @@ export const cookies: LegalDoc = {
   slug: "cookie-richtlinie",
   title: "Cookiebeleid",
   metaDescription:
-    "Welke cookies myNextDays gebruikt: uitsluitend technisch noodzakelijke en functionele cookies, geen tracking- of advertentiecookies.",
+    "Welke cookies myNextDays plaatst: technisch noodzakelijke cookies en – alleen met uw toestemming – functionele, analytische en marketingcookies. Elke categorie kan afzonderlijk worden in- en uitgeschakeld.",
   standIso: RECHTSSTAND_ISO,
   numbered: true,
   toc: true,
   intro: [
     `Dit beleid legt uit welke cookies en vergelijkbare opslagtechnieken ${ANBIETER.firma} gebruikt op deze website en in het myNextDays-platform.`,
-    "Kort samengevat: wij gebruiken uitsluitend technisch noodzakelijke en functionele cookies. Er zijn geen analytische, advertentie- of trackingcookies en er worden geen gebruiksgegevens doorgegeven aan advertentienetwerken.",
+    "Kortom: Noodzakelijk zijn alleen de cookies zonder welke de website niet functioneert zoals gevraagd. Al het andere vereist uw toestemming en wordt zonder deze niet geladen – de spambeveiliging van ons contactformulier, de bereikmeting en de marketingcookies waarmee we het succes van onze advertenties meten. U kunt elk van deze categorieën afzonderlijk toestaan of weigeren en uw beslissing op elk moment intrekken.",
   ],
   sections: [
     {
@@ -28,14 +28,14 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Toestemming is op grond van § 9 van de Deense cookieverordening (Cookie-bekendtgørelsen) (uitvoering van artikel 5, lid 3, van Richtlijn 2002/58/EG) alleen nodig wanneer toegang tot uw apparaat niet uitsluitend dient om een bericht over te brengen of niet strikt noodzakelijk is voor een door u uitdrukkelijk gevraagde dienst.",
         "Alle cookies die wij plaatsen zijn noodzakelijk voor het inloggen, de beveiliging van de sessie of een door uzelf gekozen instelling — daarvoor vragen wij niets en plaatsen wij omgekeerd ook niets waarvoor toestemming nodig zou zijn.",
-        "U hoeft slechts voor één ding toestemming te geven: de spambeveiliging van ons contactformulier. Deze komt van Google (reCAPTCHA Enterprise), is dus een externe dienst, en wordt uitsluitend geladen als u dit hebt toegestaan. Daarvoor verschijnt bij het eerste bezoek een balk onderaan het scherm, met gelijkwaardige knoppen voor Weigeren en Accepteren en zonder vooraf gemaakte keuze. Zolang u niet hebt beslist, geldt „niet toegestaan”.",
+        "U moet toestemming geven voor drie categorieën, die allemaal niet worden geladen zonder uw toestemming: de spambeveiliging van ons contactformulier (reCAPTCHA van Google), de bereikmeting van deze website (Google Analytics 4) en de marketingcookies (Meta, LinkedIn, Google Ads). Hiervoor verschijnt een venster met een categorielijst – bij het eerste bezoek, zonder voorselectie, elke categorie met een eigen schakelaar. Zolang u geen beslissing heeft genomen, geldt 'niet toegestaan' en wordt er niets geëvalueerd of geadverteerd.",
         "Uw keuze wordt opgeslagen in het geheugen van uw browser (Local Storage, waarde „nd_consent”); deze bevat alleen de categorie, het tijdstip en een versienummer, geen identificatie van uw persoon. Via het cookie-icoon linksonder op elke pagina kunt u deze op elk moment wijzigen of intrekken. Na zes maanden vragen wij opnieuw — een toestemming mag niet onbeperkt geldig blijven.",
       ],
     },
     {
       heading: "Deze website",
       paragraphs: [
-        "De marketingwebsite plaatst geen cookies. Lettertypen en pictogrammen staan op onze eigen server — daarvoor wordt geen lettertype- of pictogramdienst van een derde partij aangeroepen. De enige externe dienst van deze website is de spambeveiliging van het contactformulier, en die laadt alleen met uw toestemming. Details vindt u in de [Privacyverklaring](/datenschutz).",
+        "Deze website plaatst uit zichzelf geen cookies. Lettertypen en symbolen staan op onze eigen server – er wordt geen symbool- of lettertypedienst van een derde partij opgeroepen. Alleen de diensten die u toestaat, worden toegevoegd: de spambeveiliging van het contactformulier, de bereikmeting en de marketingdiensten. Welke cookies daarbij worden geplaatst, met welke looptijd en op welke host, staat hieronder in de sectie 'Cookies van derden'. Intrekking via het cookie-symbool linksonder – de betreffende dienst eindigt onmiddellijk en de cookies worden verwijderd. Details staan in de [Privacyverklaring](/datenschutz).",
       ],
     },
     {
@@ -77,7 +77,8 @@ export const cookies: LegalDoc = {
           ],
         },
         {
-          titel: "sb-… — Inloggen met Google (technisch noodzakelijk, alleen bij gebruik)",
+          titel:
+            "sb-… — Inloggen met Google (technisch noodzakelijk, alleen bij gebruik)",
           list: [
             "Doel: houdt de sessie in stand wanneer u inlogt via Google.",
             "Inhoud: sessietoken van de inlogdienst.",
@@ -92,7 +93,7 @@ export const cookies: LegalDoc = {
         {
           titel: "nd_consent",
           paragraphs: [
-            "Bevat uw beslissing over de spambeveiliging van het contactformulier, zodat de toestemmingsbalk niet bij elk bezoek opnieuw vraagt. Er worden alleen de categorie, het tijdstip en een versienummer opgeslagen. De waarde verlaat uw apparaat niet en wordt niet naar onze server verzonden; deze geldt voor deze browser. Geldigheidsduur: zes maanden — daarna vraagt de balk opnieuw. Als u de waarde verwijdert, vraagt de balk bij het volgende bezoek opnieuw.",
+            "Legt uw beslissing vast over de diensten waarvoor toestemming nodig is (spambeveiliging van het contactformulier en bereikmeting).",
           ],
         },
         {
@@ -120,6 +121,67 @@ export const cookies: LegalDoc = {
       paragraphs: [
         "Wanneer u een betaling uitvoert, kan de betalingsdienstaanbieder (Stripe of PayPal) op zijn eigen pagina cookies plaatsen die nodig zijn voor de afhandeling en fraudepreventie. Daarvoor gelden de bepalingen van de betreffende aanbieder.",
         "Op websites die bedrijven met onze website-bouwer aanmaken, beslist het betreffende bedrijf over aanvullende cookies en is het verantwoordelijk voor de aldaar getoonde informatie.",
+        "Alleen met uw toestemming plaatsen Google-diensten op deze website de volgende cookies — twee voor bereikmeting, één voor spambeveiliging. Zonder uw toestemming wordt het betreffende script niet geladen en worden deze cookies niet geplaatst; bij intrekking verwijderen wij ze.",
+      ],
+      unterpunkte: [
+        {
+          titel: "_fbp — Reclameprestatiemeting (toestemming vereist)",
+          list: [
+            "Doel: koppelt uw bezoek aan een advertentie, zodat wij het succes van onze campagnes kunnen meten.",
+            "Inhoud: een willekeurig gegenereerde identificatie; geen naam-, e-mail- of accountgegevens van ons.",
+            "Aanbieder: Meta Platforms Ireland Limited, Merrion Road, Dublin 4, Ierland.",
+            "Host: mynextdays.com (first-party cookie, geplaatst door Meta's script). Looptijd: ongeveer drie maanden.",
+          ],
+        },
+        {
+          titel: "_gcl_au — Prestatiemeting Google Ads (toestemming vereist)",
+          list: [
+            "Doel: koppelt uw bezoek aan een Google-advertentie, zodat wij het succes van onze campagnes kunnen meten.",
+            "Inhoud: een willekeurig gegenereerde identificatie zonder persoonlijke verwijzing.",
+            "Aanbieder: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ierland.",
+            "Host: mynextdays.com (first-party cookie). Looptijd: ongeveer drie maanden.",
+          ],
+        },
+        {
+          titel: "li_gc en bcookie — LinkedIn-reclame (toestemming vereist)",
+          list: [
+            "Doel: identificeert uw browser bij LinkedIn, zodat advertenties en hun succes kunnen worden toegewezen; li_gc slaat ook uw toestemming daar op.",
+            "Inhoud: een browseridentificatie en de toestemmingsstatus; geen gegevens van uw account bij ons.",
+            "Aanbieder: LinkedIn Ireland Unlimited Company, Wilton Plaza, Dublin 2, Ierland.",
+            "Host: linkedin.com (third-party cookies). Looptijd: ongeveer zes maanden of één jaar.",
+          ],
+        },
+        {
+          titel:
+            "_GRECAPTCHA — Spambeveiliging contactformulier (toestemming vereist)",
+          list: [
+            "Host: www.google.com (third-party cookie).",
+            "Doel: stelt Google in staat een risicobeoordeling uit te voeren, die geautomatiseerde bulkberichten onderscheidt van echte aanvragen.",
+            "Inhoud: een door Google gegenereerde identificatie voor deze beoordeling; geen naam-, e-mail- of accountgegevens van ons.",
+            "Aanbieder: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ierland.",
+            "Looptijd: door Google bepaald, tot zes maanden. Het wordt pas ingesteld als u de spambeveiliging heeft toegestaan en het contactformulier heeft geopend.",
+          ],
+        },
+        {
+          titel: "_ga — Bereikmeting (toestemming vereist)",
+          list: [
+            "Host: mynextdays.com (first-party cookie, ingesteld door Google-script).",
+            "Doel: onderscheidt bezoekers, zodat terugkerende oproepen niet dubbel worden geteld.",
+            "Inhoud: willekeurig gegenereerde ID zonder betrekking op uw persoon; geen naam-, e-mail- of accountgegevens.",
+            "Aanbieder: Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ierland.",
+            "Looptijd: tot twee jaar.",
+          ],
+        },
+        {
+          titel: "_ga_<ID> — Sessiestatus van de meting (toestemming vereist)",
+          list: [
+            "Host: mynextdays.com (first-party cookie, ingesteld door Google-script).",
+            "Doel: registreert wanneer uw huidige bezoek is begonnen, zodat paginaweergaven van één sessie bij elkaar horen.",
+            "Inhoud: tijdstempel en teller van de sessie; de ID in de naam verwijst naar onze property, niet naar u.",
+            "Aanbieder: Google Ireland Limited.",
+            "Looptijd: tot twee jaar.",
+          ],
+        },
       ],
     },
     {

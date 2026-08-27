@@ -20,7 +20,7 @@ export const datenschutz: LegalDoc = {
   toc: true,
   intro: [
     `This policy describes how ${ANBIETER.firma} processes personal data — when you visit this website, when you use the myNextDays platform (dashboard, marketplace and mobile app) and in the context of the business relationship with our customers.`,
-    "It is based on Regulation (EU) 2016/679 (GDPR) and on the Danish Data Protection Act (databeskyttelsesloven). We do not sell data, we do not create profiles and we do not use any analytics, tracking or advertising services on our websites. We only process data for marketing purposes where you have expressly consented — namely for our newsletter (see the Communication section), which you can unsubscribe from at any time with a single click.",
+    "It is based on Regulation (EU) 2016/679 (GDPR) and on the Danish Data Protection Act (databeskyttelsesloven). We do not sell data and we do not build profiles that identify you as a person. On this website we measure — only with your consent — the reach of our pages and how our advertising performs; both categories can be refused individually (see the Audience measurement and Advertising and performance measurement sections). We only process data for marketing purposes where you have expressly consented — namely for our newsletter (see the Communication section), which you can unsubscribe from at any time with a single click.",
   ],
   sections: [
     {
@@ -94,13 +94,24 @@ export const datenschutz: LegalDoc = {
           titel: "Spam protection for the contact form (reCAPTCHA)",
           paragraphs: [
             "Our contact form is protected against automated bulk messages with reCAPTCHA Enterprise from Google Ireland Limited. Only if you consent does your browser load a script from www.google.com while you fill in the form; in that case your IP address and information about your interaction with the form are transmitted to Google and evaluated there in order to distinguish a human from a script. The legal basis is Art. 6(1)(a) GDPR (consent); in addition, the [Google Privacy Policy](https://policies.google.com/privacy) applies.",
-            "Without your consent nothing is loaded from Google and no data flows there; in that case we do not accept the form, but you can write to us by email at any time. You can change or withdraw your consent in the [Cookie Policy](/cookie-richtlinie).",
+            "Without your consent nothing is loaded from Google and no data flows there; we then do not accept the form, but you can email us at any time. If you give it, reCAPTCHA sets a cookie of its own (“_GRECAPTCHA”, lifetime set by Google, up to six months) used for the risk assessment. You can change or withdraw your consent at any time via the cookie icon at the bottom left of every page; the cookie is then deleted.",
           ],
         },
         {
-          titel: "No analytics, no advertising",
+          titel: "Audience measurement (Google Analytics)",
           paragraphs: [
-            "We do not use any analytics, tracking or advertising services (no Google Analytics, no pixels, no ad networks) and we do not create profiles. The cookies that the Platform technically requires are listed in the [Cookie Policy](/cookie-richtlinie).",
+            "On this website we use Google Analytics 4, provided by Google Ireland Limited, to measure how our pages are used — which pages are opened, where visitors come from and where they drop off. The sole purpose is to improve our offering and its findability.",
+            "It only loads with your consent. If you give it, your browser loads a script from www.googletagmanager.com and stores two cookies (\u201c_ga\u201d and \u201c_ga_<id>\u201d, lifetime up to two years) holding a randomly generated identifier. Transmitted are that identifier, the pages opened, the referrer, an approximate location at country or region level, device and browser, plus your IP address, which Google truncates before any storage. The legal basis is Art. 6(1)(a) GDPR (consent).",
+            "We have deliberately restricted the analysis: Google signals and ad personalisation are switched off. No cross-device profiles and no advertising audiences are created, and we do not share usage data with advertising networks. The data is not combined with your customer account.",
+            "Google processes the data as our processor under a contract pursuant to Art. 28 GDPR (Google Ads Data Processing Terms). Your IP address is truncated on servers within the EU before any transfer to the United States, so what is transferred is a pseudonymous data set. The transfer relies on the European Commission's adequacy decision for the EU-US Data Privacy Framework (Art. 45 GDPR), under which Google LLC is certified; Google has additionally incorporated the Commission's Standard Contractual Clauses (Art. 46 GDPR). We expressly point out that US authorities may access data held by certified companies under Section 702 FISA, so a residual risk cannot be fully excluded. Google's [privacy policy](https://policies.google.com/privacy) applies in addition.",
+            "Retention: event- and user-level data in our property is deleted automatically after 14 months; aggregated report data without reference to individual visitors is kept beyond that. Your consent itself expires after six months.",
+            "Without your consent nothing is loaded, no cookie is set and no data reaches Google. You can withdraw your consent at any time via the cookie icon at the bottom left of every page; measurement stops immediately and the cookies named above are deleted.",
+          ],
+        },
+        {
+          titel: "Advertising and performance measurement",
+          paragraphs: [
+            "With your consent we use marketing cookies to measure how our advertising performs and to show you relevant ads on other platforms. The parties involved are Meta Platforms Ireland (Meta pixel, cookie “_fbp”), LinkedIn Ireland (Insight tag, cookies “li_gc” and “bcookie”) and Google Ireland Limited (Google Ads, cookie “_gcl_au”). The legal basis is Art. 6(1)(a) GDPR. Without your consent none of these scripts is loaded and no cookie is set; if you withdraw, we delete them. Details on each cookie are in the [Cookie Policy](/cookie-richtlinie).",
           ],
         },
       ],
@@ -254,7 +265,7 @@ export const datenschutz: LegalDoc = {
         "Channex.io Ltd (United Kingdom) — connection to booking portals",
         "Meta Platforms Ireland Limited (Ireland) — WhatsApp messages, where activated",
         "Sendinblue SAS / Brevo (France, Germany) — newsletter administration and dispatch, only with consent",
-        "Google Ireland Limited (Ireland) — translations; spam protection for the contact form (reCAPTCHA Enterprise), only with consent; signing in with Google, where used",
+        "Google Ireland Limited (Ireland) — translations; spam protection for the contact form (reCAPTCHA Enterprise), only with consent; audience measurement (Google Analytics 4), only with consent; signing in with Google, where used",
         "Groq, Inc. (USA) — reply suggestions, where activated",
         "Cloudflare, Inc. (USA) — DNS management for customer domains",
       ],
@@ -290,7 +301,7 @@ export const datenschutz: LegalDoc = {
           list: [
             "Groq, Inc. (USA) — reply suggestions in the message inbox, only where the business activates the feature. The relevant message context is transmitted.",
             "Cloudflare, Inc. (USA) — DNS management for customer domains. Domain and configuration data is transmitted, no guest data.",
-            "Google LLC (USA) — only for signing in with Google and for translations; the contracting party in each case is Google Ireland Limited, but access by the US parent company cannot be ruled out.",
+            "Google LLC (USA) — for signing in with Google, for translations and for audience measurement (Google Analytics 4, only with consent); the contracting party in each case is Google Ireland Limited, but access by the US parent company cannot be ruled out.",
           ],
         },
         {
