@@ -9222,8 +9222,6 @@
       "layoutBearbeiten": "Editar visão geral",
       "layouts": "Layouts",
       "layoutsHinweis": "Como a visão geral da postagem aparece no site.",
-      "listenBausteine": "Blocos para listas de postagens",
-      "listenBausteineHinweis": "Estes blocos exibem postagens. Eles são adicionados a uma página através de \"Adicionar\".",
       "markiert": "{anzahl} selecionados",
       "menue": "Mais ações",
       "mitKi": "Rascunho com IA",
@@ -9248,7 +9246,6 @@
       "sortiert": "Criado",
       "status": "Status",
       "suchen": "Pesquisar por título, texto, palavra-chave ou autor",
-      "ueberHinzufuegen": "via \"Adicionar\"",
       "veroeffentlichen": "Publicar",
       "von": "por {autor}",
       "vonGrundAuf": "Do zero",
@@ -9403,7 +9400,7 @@
       },
       "zelle": {
         "leer": "Vazio",
-        "bearbeiten": "Editar {campo}"
+        "bearbeiten": "Editar {feld}"
       },
       "aufStartseite": "Show on the homepage",
       "vorschaubild": "Miniatura",

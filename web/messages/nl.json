@@ -9222,8 +9222,6 @@
       "layoutBearbeiten": "Overzicht bewerken",
       "layouts": "Lay-outs",
       "layoutsHinweis": "Hoe het berichtenoverzicht eruitziet op de website.",
-      "listenBausteine": "Bouwstenen voor berichtenlijsten",
-      "listenBausteineHinweis": "Deze bouwstenen tonen berichten. Ze worden via 'Toevoegen' aan een pagina toegevoegd.",
       "markiert": "{anzahl} geselecteerd",
       "menue": "Meer acties",
       "mitKi": "Concept met AI",
@@ -9248,7 +9246,6 @@
       "sortiert": "Gemaakt",
       "status": "Status",
       "suchen": "Zoeken op titel, tekst, trefwoord of auteur",
-      "ueberHinzufuegen": "via 'Toevoegen'",
       "veroeffentlichen": "Publiceren",
       "von": "door {autor}",
       "vonGrundAuf": "Vanaf nul",
@@ -9403,7 +9400,7 @@
       },
       "zelle": {
         "leer": "Leeg",
-        "bearbeiten": "{veld} bewerken"
+        "bearbeiten": "{feld} bewerken"
       },
       "aufStartseite": "Show on the homepage",
       "vorschaubild": "Miniatuur",
