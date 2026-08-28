@@ -34,6 +34,7 @@ import { Icon } from "@/components/ui/Icon";
 import { Chip, Col, IconBtn, Row, Segmented, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState, Sheet } from "@/components/ui/patterns";
 import { useAuth } from "@/contexts/AuthContext";
+import { protokolliereAbsturz } from "@/lib/absturzmeldung";
 import { aufgabenTag, gruppiereNachTag, tagLabel } from "@/lib/aufgaben-agenda";
 import { AUFGABE_STATUS_LABEL, naechsterStatus } from "@/lib/aufgabenstatus";
 import { heuteIso } from "@/lib/kalendertag";
@@ -148,12 +149,16 @@ export default function HostTasks({ navigation }: { navigation: any }) {
   // Recht auf die Objektliste — der Aufruf wäre ein sicherer 403.
   useEffect(() => {
     if (!canManage) return;
-    listProperties().then((r) => {
-      if (r.ok) setObjekte(r.data.items);
-    });
-    listTaskAssignees().then((r) => {
-      if (r.ok) setLeute(mitarbeiterOptionen(r.data));
-    });
+    listProperties()
+      .then((r) => {
+        if (r.ok) setObjekte(r.data.items);
+      })
+      .catch(protokolliereAbsturz);
+    listTaskAssignees()
+      .then((r) => {
+        if (r.ok) setLeute(mitarbeiterOptionen(r.data));
+      })
+      .catch(protokolliereAbsturz);
   }, [canManage]);
 
   // Offene Vertretungsanfragen. `request_substitute` haben die Rollen, die

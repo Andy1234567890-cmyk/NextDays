@@ -15,6 +15,7 @@ import { Alert, Pressable, TextInput } from "react-native";
 
 import { Btn, Col, Divider, Txt } from "@/components/ui/kit";
 import { Sheet } from "@/components/ui/patterns";
+import { protokolliereAbsturz } from "@/lib/absturzmeldung";
 import type { InboxAccess } from "@/lib/inbox-access";
 import {
   addNote,
@@ -77,7 +78,9 @@ export function VorgangSheet({
 
   useEffect(() => {
     if (ansicht !== "zuweisen" || team) return;
-    listTeam().then((res) => setTeam(res.ok ? res.data.items : []));
+    listTeam()
+      .then((res) => setTeam(res.ok ? res.data.items : []))
+      .catch(protokolliereAbsturz);
   }, [ansicht, team]);
 
   const melde = (res: { ok: boolean; error?: string }, verlassen = false) => {

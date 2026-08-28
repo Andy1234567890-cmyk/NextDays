@@ -435,6 +435,45 @@ export async function deleteAttachment(id: string): Promise<Result<void>> {
   return call(`/inbox/attachments/${id}`, { method: "DELETE" });
 }
 
+/**
+ * Eine Datei an die Konversation haengen und an den Kanal uebergeben.
+ *
+ * Bis 28.08.2026 gab es das in der App NICHT — die Anhang-Ansicht sagte
+ * ausdruecklich „Hochladen geht derzeit nur im Dashboard". Gefehlt hat genau
+ * diese Funktion: `listAttachments` und `deleteAttachment` standen laengst da,
+ * die Dateiauswahl (`lib/foto.ts`) ebenso, und der Endpunkt existiert seit
+ * jeher (`apps/api/.../inbox/router.py`, `POST /{thread_id}/attachments`).
+ *
+ * Multipart wie beim Foto-Nachweis an Aufgaben (`lib/tasks.ts`): React Native
+ * schickt Dateien als `{uri, name, type}`, nicht als `Blob`. `call()` erkennt
+ * FormData selbst und setzt dann KEINEN Content-Type — die Boundary muss die
+ * Laufzeit bestimmen.
+ *
+ * `filename` gehoert in die Query, nicht ins Formular: so liest es der Server
+ * (`request.query_params.get("filename")`). Der mitgeschickte `type` ist nur
+ * ein Hinweis — entschieden wird ueber die Magic-Bytes (Wurzel 8).
+ *
+ * Ein Fehlschlag beim KANAL ist kein Fehlschlag des Uploads: die Datei liegt
+ * dann bei uns, `sent_at` bleibt leer und `channel_error` traegt den Grund
+ * (Airbnb nimmt z. B. kein PDF). Die Oberflaeche muss beides unterscheiden.
+ */
+export async function uploadAttachment(
+  threadId: string,
+  datei: { uri: string; name: string; type: string },
+  message?: string,
+): Promise<Result<Attachment>> {
+  const form = new FormData();
+  // Der Cast ist noetig, weil die DOM-Typen fuer `append` nur Blob/string
+  // kennen; die React-Native-Laufzeit erwartet genau dieses Objekt.
+  form.append("file", datei as unknown as Blob);
+  const params = new URLSearchParams({ filename: datei.name });
+  if (message) params.set("message", message);
+  return call(`/inbox/${threadId}/attachments?${params.toString()}`, {
+    method: "POST",
+    body: form,
+  });
+}
+
 // --- Vorgang: zuweisen, Notiz, Merker, Lebenszyklus (Etappe 3) ---------------
 
 export type TeamMember = { id: string; name: string; email: string | null };

@@ -10,6 +10,7 @@ import {
 } from "@supabase/supabase-js";
 import { useEffect, useRef } from "react";
 
+import { protokolliereAbsturz } from "@/lib/absturzmeldung";
 import { CONFIG } from "@/lib/config";
 
 /**
@@ -178,6 +179,16 @@ export function useRealtime<T = Record<string, unknown>>({
       timer = setTimeout(() => cb.current?.(), debounceMs);
     };
 
+    // Die IIFE braucht ein `catch` (28.08.2026): sie lief ungeschuetzt, und
+    // gleich drei Stellen darin werfen — `tokenQuelle()` fail-closed, wenn der
+    // App-Root sie nicht gesetzt hat, `setAuth` bei Netzfehlern (der Zwilling
+    // in Zeile 72 traegt dafuer laengst ein `catch`) und `subscribe()`. Jeder
+    // dieser Wuerfe war eine unbehandelte Rejection beim Oeffnen eines
+    // Bildschirms mit Abo — im Release ein Absturz.
+    //
+    // Fail-closed bleibt: ohne Abo gibt es KEINE stillen Ersatz-Events, die
+    // Oberflaeche aktualisiert dann eben nicht live. Das ist der ehrliche
+    // Zustand, kein erfundener (Wurzel 4).
     (async () => {
       const token = await tokenQuelle().holen();
       if (cancelled) return;
@@ -202,7 +213,9 @@ export function useRealtime<T = Record<string, unknown>>({
           },
         )
         .subscribe();
-    })();
+    })().catch((e: unknown) => {
+      protokolliereAbsturz(e);
+    });
 
     return () => {
       cancelled = true;

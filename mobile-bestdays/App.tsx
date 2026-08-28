@@ -15,8 +15,10 @@ import { Linking } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { Fehlergrenze } from "@/components/Fehlergrenze";
 import { Splash } from "@/components/Splash";
 import { GuestAuthProvider, useGuestAuth } from "@/contexts/GuestAuthContext";
+import { protokolliereAbsturz } from "@/lib/absturzmeldung";
 import { getGuestToken, onGuestTokenChange } from "@/lib/guestAuth";
 import { realtimeTokenQuelleSetzen } from "@/lib/realtime";
 import { GuestTabs } from "@/navigation/GuestTabs";
@@ -123,14 +125,31 @@ function useStripeRueckweg(): void {
   const behandle = useCallback(
     async (url: string | null) => {
       if (!url) return;
-      await handleURLCallback(url);
+      // `handleURLCallback` rejectet (Stripe nicht initialisiert, unpassende
+      // URL). Ungefangen war das eine unbehandelte Rejection GENAU im Moment
+      // der Rückkehr von der Zahlung — der teuerste denkbare Zeitpunkt für
+      // einen Absturz (28.08.2026).
+      //
+      // Das SDK entscheidet selbst, ob die URL zu ihm gehört; ein Fehlschlag
+      // heißt nur, dass dieser Rückweg nicht griff. Die Buchung selbst hängt
+      // nicht daran — sie steht serverseitig, und der Bildschirm zieht beim
+      // nächsten Laden nach. Ein Absturz hier wäre also der Schaden, nicht
+      // der geschluckte Fehler (Wurzel 5: der Hauptpfad kippt nicht).
+      try {
+        await handleURLCallback(url);
+      } catch (e) {
+        protokolliereAbsturz(e);
+      }
     },
     [handleURLCallback],
   );
 
   useEffect(() => {
     // Kaltstart: die App wurde DURCH die Rückkehr gestartet.
-    void Linking.getInitialURL().then(behandle);
+    //
+    // `getInitialURL()` selbst kann ebenfalls rejecten — deshalb hängt das
+    // `catch` an der KETTE, nicht nur im Handler.
+    void Linking.getInitialURL().then(behandle).catch(protokolliereAbsturz);
     const abo = Linking.addEventListener("url", (e: { url: string }) => {
       void behandle(e.url);
     });
@@ -144,20 +163,25 @@ function StripeRueckweg({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  // Die Fehlergrenze steht GANZ AUSSEN, nicht um `<Root />`: ein Wurf in
+  // `ThemeProvider` oder `GuestAuthProvider` (beide holen beim Mount Daten)
+  // waere sonst ausserhalb des Netzes und damit weiterhin ein Absturz.
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <ThemeProvider marke={marke}>
-          <GuestAuthProvider>
-            {/* Kein StripeProvider mit festem Schlüssel: der Publishable Key
-                kommt pro Zahlung vom Server (`lib/zahlung.ts` ruft initStripe).
-                Ein Schlüssel in der App könnte zum Intent unpassend sein. */}
-            <StripeRueckweg>
-              <Root />
-            </StripeRueckweg>
-          </GuestAuthProvider>
-        </ThemeProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <Fehlergrenze>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <ThemeProvider marke={marke}>
+            <GuestAuthProvider>
+              {/* Kein StripeProvider mit festem Schlüssel: der Publishable Key
+                  kommt pro Zahlung vom Server (`lib/zahlung.ts` ruft initStripe).
+                  Ein Schlüssel in der App könnte zum Intent unpassend sein. */}
+              <StripeRueckweg>
+                <Root />
+              </StripeRueckweg>
+            </GuestAuthProvider>
+          </ThemeProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </Fehlergrenze>
   );
 }

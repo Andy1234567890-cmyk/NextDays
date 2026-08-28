@@ -10,11 +10,16 @@
 // outside a module" — kein Fehler unseres Codes, sondern die Paketform.
 // Genau so haelt es react-native-firebase in seiner EIGENEN jest.config.js
 // (`@firebase` steht dort in der Negation des Ignore-Patterns).
+//
+// `@react-native-documents` (Dateiwaehler, 28.08.2026) faellt in dieselbe
+// Klasse: das Paket liefert ESM. Ohne den Eintrag hier bricht JEDER Test, der
+// `lib/datei.ts` in seiner Importkette hat — beim Einbau waren das sofort zwei
+// Suiten, darunter `App.test.tsx`, das mit Dateiauswahl nichts zu tun hat.
 
 module.exports = {
   preset: '@react-native/jest-preset',
   setupFiles: ['<rootDir>/jest.setup.js'],
   transformIgnorePatterns: [
-    'node_modules/(?!(?:\\.pnpm/[^/]+/node_modules/)?((jest-)?react-native|@react-native(-community)?|@react-native-firebase|@firebase|@react-navigation|react-native-.*)/)',
+    'node_modules/(?!(?:\\.pnpm/[^/]+/node_modules/)?((jest-)?react-native|@react-native(-community|-documents)?|@react-native-firebase|@firebase|@react-navigation|react-native-.*)/)',
   ],
 };

@@ -38,6 +38,7 @@ import { Icon, type IconName } from "@/components/ui/Icon";
 import { Btn, Chip, Col, Progress, Row, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState, Sheet } from "@/components/ui/patterns";
 import { useAuth } from "@/contexts/AuthContext";
+import { protokolliereAbsturz } from "@/lib/absturzmeldung";
 import { zeitfenster } from "@/lib/aufgaben-agenda";
 import {
   AUFGABE_STATUS_LABEL,
@@ -148,9 +149,11 @@ export default function TaskDetail() {
   // eine Namensliste des Betriebs ohne Zweck (§4.3).
   useEffect(() => {
     if (!darfZuweisen) return;
-    listTaskAssignees().then((r) => {
-      if (r.ok) setLeute(mitarbeiterOptionen(r.data));
-    });
+    listTaskAssignees()
+      .then((r) => {
+        if (r.ok) setLeute(mitarbeiterOptionen(r.data));
+      })
+      .catch(protokolliereAbsturz);
   }, [darfZuweisen]);
 
   // Genau diese Aufgabe: ändert ein Kollege Status oder Zuweisung, zieht die

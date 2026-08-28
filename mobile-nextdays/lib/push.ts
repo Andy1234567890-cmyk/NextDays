@@ -91,19 +91,38 @@ async function tokenMelden(token: string): Promise<void> {
  * fehlt — die Oberflaeche darf dann nicht behaupten, Meldungen seien an.
  */
 export async function pushEinrichten(): Promise<boolean> {
-  const erlaubt = await berechtigungHolen();
-  if (!erlaubt) return false;
-  const m = fcm();
-  const messaging = m.getMessaging();
-  const token = await m.getToken(messaging);
-  await tokenMelden(token);
-  // Rueckgabewert (Abmeldefunktion) bewusst verworfen: der Listener lebt so
-  // lange wie die App. Ein Aufraeumen an einer Komponente waere falsch — er
-  // gehoert nicht zu einem Bildschirm.
-  m.onTokenRefresh(messaging, (neu: string) => {
-    void tokenMelden(neu);
-  });
-  return true;
+  // Das `try` haelt das Versprechen des Kommentars oben („Fehler bleiben
+  // still"), das der Code bis 28.08.2026 NICHT hielt. Der Aufrufer
+  // (`AuthContext`) startet diese Funktion mit `void` bei JEDEM Login und
+  // Kaltstart — `void` unterdrueckt nur die Lint-Warnung, es faengt nichts.
+  // Jeder Wurf hier war damit eine unbehandelte Rejection direkt nach der
+  // Anmeldung, also ein Absturz im Normalfall der App.
+  //
+  // Was wirft: `fcm()` (require der nativen Seite), `getMessaging()` (nicht
+  // initialisiertes Firebase), vor allem `getToken()` — bei Netzfehlern, bei
+  // SERVICE_NOT_AVAILABLE und bei fehlenden Play-Services.
+  try {
+    const erlaubt = await berechtigungHolen();
+    if (!erlaubt) return false;
+    const m = fcm();
+    const messaging = m.getMessaging();
+    const token = await m.getToken(messaging);
+    await tokenMelden(token);
+    // Rueckgabewert (Abmeldefunktion) bewusst verworfen: der Listener lebt so
+    // lange wie die App. Ein Aufraeumen an einer Komponente waere falsch — er
+    // gehoert nicht zu einem Bildschirm.
+    m.onTokenRefresh(messaging, (neu: string) => {
+      void tokenMelden(neu).catch(() => {
+        // Best-effort: das naechste `pushEinrichten` meldet erneut.
+      });
+    });
+    return true;
+  } catch (e) {
+    // Laut protokolliert, aber nicht toedlich: ohne Push laesst sich arbeiten,
+    // ohne App nicht.
+    console.warn("[push] Einrichtung fehlgeschlagen:", e);
+    return false;
+  }
 }
 
 /**
@@ -114,9 +133,31 @@ export async function pushEinrichten(): Promise<boolean> {
  * Sperrbildschirm, fuer den naechsten Nutzer desselben Geraets.
  */
 export async function pushAbmelden(): Promise<void> {
-  const m = fcm();
-  const token =
-    gemeldet ?? (await m.getToken(m.getMessaging()).catch(() => null));
+  // Das `try` umschliesst NUR die Token-Beschaffung, nicht den Serveraufruf.
+  //
+  // Der Unterschied ist der Gegenzustand (Wurzel 1): `fcm()` und
+  // `getMessaging()` werfen aus denselben Gruenden wie in `pushEinrichten` —
+  // und diese Funktion laeuft im Logout VOR `apiLogout()`. Ein Wurf hier hat
+  // deshalb bis 28.08.2026 den ganzen Logout gekippt: `apiLogout()` wurde nie
+  // erreicht, der Nutzer blieb angemeldet, und das Geraet bekam weiter die
+  // Meldungen des abgemeldeten Betriebs — also genau der Schaden, den diese
+  // Funktion verhindern soll, ausgeloest von ihrem eigenen Fehlschlag.
+  //
+  // Warum nicht alles in einen `try`: schlaegt der SERVERAUFRUF fehl, ist das
+  // Geraet serverseitig noch angemeldet. Das darf nicht still verschwinden —
+  // der Fehler gehoert an den Aufrufer, der den Logout dann bewusst zu Ende
+  // fuehrt oder wiederholt (Wurzel 5, kein breites Schlucken).
+  let token: string | null;
+  try {
+    const m = fcm();
+    token = gemeldet ?? (await m.getToken(m.getMessaging()).catch(() => null));
+  } catch (e) {
+    // Ohne Token laesst sich das Geraet nicht abmelden — aber der Logout
+    // selbst muss weiterlaufen. Laut protokolliert, nicht toedlich.
+    console.warn("[push] Abmeldung: kein Token ermittelbar:", e);
+    gemeldet = null;
+    return;
+  }
   gemeldet = null;
   if (!token) return;
   await call("/notification-settings/push-geraet/abmelden", {
@@ -166,25 +207,47 @@ export function zielAlsDeepLink(ziel: string | undefined): string | null {
  * in dieselben Screens waere die zweite Wahrheit, die stiller veraltet.
  */
 export function pushTapVerdrahten(): void {
-  const m = fcm();
-  const messaging = m.getMessaging();
+  // Diese Funktion laeuft in einem `useEffect` OHNE `void` und ohne try/catch
+  // beim Aufrufer. Ein Wurf hier ist damit ein SYNCHRONER Wurf im Effekt —
+  // React faengt das nicht ab, und bis 28.08.2026 gab es keine Fehlergrenze,
+  // die den Baum aufgefangen haette. `fcm()` und `getMessaging()` sind genau
+  // solche Werfer.
+  try {
+    const m = fcm();
+    const messaging = m.getMessaging();
 
-  const springen = (ziel: string | undefined) => {
-    const link = zielAlsDeepLink(ziel);
-    // Kein Fallback auf die Startseite: ein unbekanntes Ziel bedeutet, dass
-    // Server und App auseinanderlaufen. Dann ist Nichtstun ehrlicher als ein
-    // geratener Screen (Wurzel 4).
-    if (link) void Linking.openURL(link);
-  };
+    const springen = (ziel: string | undefined) => {
+      const link = zielAlsDeepLink(ziel);
+      // Kein Fallback auf die Startseite: ein unbekanntes Ziel bedeutet, dass
+      // Server und App auseinanderlaufen. Dann ist Nichtstun ehrlicher als ein
+      // geratener Screen (Wurzel 4).
+      //
+      // `openURL` rejectet, wenn kein Handler den Link annimmt (Ziel-Screen
+      // ausgeloggt nicht registriert) — ohne `catch` war das der Deep-Link-
+      // Absturz: Meldung antippen, App startet, Rejection.
+      if (link) {
+        void Linking.openURL(link).catch((e) => {
+          console.warn("[push] Sprungziel nicht erreichbar:", link, e);
+        });
+      }
+    };
 
-  m.onNotificationOpenedApp(messaging, (nachricht: { data?: { ziel?: string } }) => {
-    springen(nachricht?.data?.ziel);
-  });
-
-  // Kaltstart: die Meldung liegt schon vor, bevor irgendein Screen steht.
-  void m
-    .getInitialNotification(messaging)
-    .then((nachricht: { data?: { ziel?: string } } | null) => {
-      if (nachricht) springen(nachricht.data?.ziel);
+    m.onNotificationOpenedApp(messaging, (nachricht: { data?: { ziel?: string } }) => {
+      springen(nachricht?.data?.ziel);
     });
+
+    // Kaltstart: die Meldung liegt schon vor, bevor irgendein Screen steht.
+    void m
+      .getInitialNotification(messaging)
+      .then((nachricht: { data?: { ziel?: string } } | null) => {
+        if (nachricht) springen(nachricht.data?.ziel);
+      })
+      .catch((e: unknown) => {
+        // Dokumentierter Fall: „The current activity is not ready" liefert
+        // hier eine Rejection statt eines Wertes.
+        console.warn("[push] Start-Meldung nicht lesbar:", e);
+      });
+  } catch (e) {
+    console.warn("[push] Tap-Verdrahtung fehlgeschlagen:", e);
+  }
 }

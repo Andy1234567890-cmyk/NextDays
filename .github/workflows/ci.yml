@@ -728,9 +728,18 @@ jobs:
           # Vektor-Lockup statt aus einem PNG). Das ist UI und darf nach ADR-0016
           # divergieren — myBestDays behält sein ruhiges Einblenden. Zusammen-
           # gehalten bleibt, was Zahlen, Ziele und Zustände bestimmt.
+          # lib/absturzmeldung.ts + components/Fehlergrenze.tsx (28.08.2026):
+          # Beide entscheiden, WAS der Kunde bei einem Absturz sieht — im
+          # Release eine ruhige Meldung, KEIN Stacktrace. Driftet eine der
+          # Apps, zeigt genau sie dem Kunden interne Pfade. Das ist kein
+          # UI-Geschmack (ADR-0016), sondern ein Zustand.
+          # lib/datei.ts haelt die Grenzen des Anhang-Endpunkts (erlaubte
+          # Typen, 10 MB): eine driftende Fassung bietet Dateien an, die der
+          # Server mit 422 ablehnt.
           for f in lib/currency.ts lib/realtime.ts lib/config.ts \
                    lib/config.secrets.example.ts lib/appwechsel.ts \
-                   lib/ausstattung.ts \
+                   lib/ausstattung.ts lib/absturzmeldung.ts lib/datei.ts \
+                   components/Fehlergrenze.tsx \
                    theme/tokens.ts theme/ThemeProvider.tsx \
                    navigation/tab-style.tsx; do
             diff -u "mobile-bestdays/$f" "mobile-nextdays/$f"
@@ -751,8 +760,13 @@ jobs:
         # reproduziert sich dann nur in einer der beiden Apps.
         run: |
           set -e
+          # @react-native-documents/picker (28.08.2026): liefert den
+          # System-Dateiwaehler fuer Anhaenge. Zwei Fassungen hiessen zwei
+          # verschiedene native Module bei gleichem JS — ein Fehler, der sich
+          # dann nur in EINER App reproduziert.
           for p in react react-native @supabase/supabase-js \
-                   @react-navigation/native react-native-keychain; do
+                   @react-navigation/native react-native-keychain \
+                   @react-native-documents/picker; do
             a=$(jq -r --arg p "$p" '.dependencies[$p]' mobile-bestdays/package.json)
             b=$(jq -r --arg p "$p" '.dependencies[$p]' mobile-nextdays/package.json)
             [ "$a" = "$b" ] || { echo "$p: $a (bestdays) != $b (nextdays)"; exit 1; }

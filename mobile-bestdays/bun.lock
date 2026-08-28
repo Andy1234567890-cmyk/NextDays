@@ -6,6 +6,7 @@
       "name": "nextdays-mobile",
       "dependencies": {
         "@react-native-community/geolocation": "^3.4.0",
+        "@react-native-documents/picker": "12.0.2",
         "@react-navigation/bottom-tabs": "^7.3.0",
         "@react-navigation/native": "^7.3.0",
         "@react-navigation/native-stack": "^7.3.0",
@@ -397,6 +398,8 @@
     "@react-native-community/cli-types": ["@react-native-community/cli-types@20.1.0", "", { "dependencies": { "joi": "^17.2.1" } }, "sha512-D0kDspcwgbVXyNjwicT7Bb1JgXjijTw1JJd+qxyF/a9+sHv7TU4IchV+gN38QegeXqVyM4Ym7YZIvXMFBmyJqA=="],
 
     "@react-native-community/geolocation": ["@react-native-community/geolocation@3.4.0", "", { "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-bzZH89/cwmpkPMKKveoC72C4JH0yF4St5Ceg/ZM9pA1SqX9MlRIrIrrOGZ/+yi++xAvFDiYfihtn9TvXWU9/rA=="],
+
+    "@react-native-documents/picker": ["@react-native-documents/picker@12.0.2", "", { "peerDependencies": { "react": "*", "react-native": ">=0.79.0" } }, "sha512-tiaPQjSdsaCkKw/N8XB+DXfhOJ+KJ1OYDliBGoBHEqLI7AhUsSPhn8fRI/gHs7hpYzqOBKf+em9MUrPIA9mlWA=="],
 
     "@react-native/assets-registry": ["@react-native/assets-registry@0.86.0", "", {}, "sha512-nIaXbm2jX1OTYp0qbviJ3O6KZivoE8z3BnhUQ2LsqfZSWRoOK/n1qsiAr6oALiNKWnXY3j2KPwtYORnZzp8xew=="],
 

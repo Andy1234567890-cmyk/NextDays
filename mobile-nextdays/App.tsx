@@ -14,6 +14,7 @@ import { useEffect, useRef } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { Fehlergrenze } from "@/components/Fehlergrenze";
 import { Splash } from "@/components/Splash";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { getToken, onTokenChange } from "@/lib/auth";
@@ -173,15 +174,20 @@ function Root() {
 }
 
 export default function App() {
+  // Die Fehlergrenze steht GANZ AUSSEN, nicht um `<Root />`: ein Wurf in
+  // `ThemeProvider` oder `AuthProvider` (beide holen beim Mount Daten) waere
+  // sonst ausserhalb des Netzes und damit weiterhin ein Absturz.
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <ThemeProvider marke={marke}>
-          <AuthProvider>
-            <Root />
-          </AuthProvider>
-        </ThemeProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <Fehlergrenze>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <ThemeProvider marke={marke}>
+            <AuthProvider>
+              <Root />
+            </AuthProvider>
+          </ThemeProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </Fehlergrenze>
   );
 }

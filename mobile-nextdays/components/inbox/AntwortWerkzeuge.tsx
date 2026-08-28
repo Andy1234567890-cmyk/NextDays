@@ -42,6 +42,7 @@ import {
   getAiReply,
   istBuchungsThread,
   listAttachments,
+  uploadAttachment,
   listScheduled,
   listTemplates,
   renderForThread,
@@ -50,6 +51,7 @@ import {
   type MessageTemplate,
   type ScheduledMessage,
 } from "@/lib/inbox";
+import { dateiWaehlen } from "@/lib/datei";
 import { useTheme } from "@/theme/ThemeProvider";
 
 /**
@@ -248,6 +250,46 @@ export function AntwortWerkzeuge({
       return;
     }
     geplantLaden();
+  };
+
+  /**
+   * Datei waehlen und hochladen.
+   *
+   * Bis 28.08.2026 stand hier nur der Satz „Hochladen geht derzeit nur im
+   * Dashboard — der App fehlt die Dateiauswahl". Das stimmte, war aber kein
+   * Naturgesetz: Auswahl (`lib/foto.ts`), Endpunkt und Multipart-Muster
+   * (`lib/tasks.ts`) gab es laengst — es fehlte nur diese Verbindung.
+   *
+   * Der Waehler bietet genau das an, was der Server annimmt: Bilder UND PDF
+   * (`lib/datei.ts`). Ein Waehler, der alles anbietet und danach 422 sagt,
+   * waere eine Falle — und ein reiner Bildwaehler haette den haeufigsten
+   * Anhang des Betriebs ausgeschlossen (Rechnung, Grundriss, Anfahrtsskizze).
+   */
+  const anhangWaehlen = async () => {
+    const wahl = await dateiWaehlen();
+    // Abgebrochen ist KEIN Fehler — kein Alert, der Nutzer hat zurueckgetippt.
+    if (wahl.art === "abgebrochen") return;
+    if (wahl.art === "fehler") {
+      Alert.alert("Datei nicht gewählt", wahl.text);
+      return;
+    }
+    setBusy(true);
+    const res = await uploadAttachment(threadId, wahl.datei);
+    setBusy(false);
+    if (!res.ok) {
+      Alert.alert("Nicht hochgeladen", res.error);
+      return;
+    }
+    // Der Kanal kann die Datei abgelehnt haben, obwohl der Upload gelang. Das
+    // ist der Normalfall bei Airbnb+PDF und darf nicht als Erfolg durchgehen
+    // (Wurzel 5): die Datei liegt bei uns, beim Gast kam sie nie an.
+    if (res.data.channel_error) {
+      Alert.alert(
+        "Beim Portal nicht angekommen",
+        `${res.data.channel_error}\n\nDie Datei ist gespeichert, der Gast hat sie aber nicht erhalten.`,
+      );
+    }
+    setAnhaenge((prev) => [...(prev ?? []), res.data]);
   };
 
   const anhangLoeschen = async (id: string) => {
@@ -468,14 +510,17 @@ export function AntwortWerkzeuge({
             {ladefehler}
           </Txt>
         ) : anhaenge.length === 0 ? (
-          <Col gap={6}>
+          <Col gap={10}>
             <Txt v="sm" soft>
               Keine Anhänge in dieser Konversation.
             </Txt>
-            {/* Ehrlich benennen, statt einen Knopf zu zeigen, der nichts tut. */}
+            <Btn variant="outline" block onPress={busy ? undefined : anhangWaehlen}>
+              Datei anhängen
+            </Btn>
+            {/* Was geht, steht da — nicht was nicht geht. Die Liste ist die
+                des Servers (`_dateityp`), nicht eine geratene. */}
             <Txt v="xs" soft>
-              Hochladen geht derzeit nur im Dashboard — der App fehlt die
-              Dateiauswahl.
+              Bilder und PDF, bis 10 MB.
             </Txt>
           </Col>
         ) : (
@@ -516,6 +561,15 @@ export function AntwortWerkzeuge({
                 <Divider style={{ marginTop: 12 }} />
               </View>
             ))}
+            {/* Auch hier, nicht nur im Leerfall: sonst liesse sich genau EINE
+                Datei anhaengen und danach nie wieder eine zweite. */}
+            <Btn
+              variant="outline"
+              block
+              onPress={busy ? undefined : anhangWaehlen}
+            >
+              Weitere Datei anhängen
+            </Btn>
           </Col>
         )}
       </Sheet>

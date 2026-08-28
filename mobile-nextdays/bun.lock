@@ -5,6 +5,7 @@
     "": {
       "name": "mynextdays-mobile",
       "dependencies": {
+        "@react-native-documents/picker": "12.0.2",
         "@react-native-firebase/app": "26.3.1",
         "@react-native-firebase/messaging": "26.3.1",
         "@react-navigation/bottom-tabs": "^7.3.0",
@@ -506,6 +507,8 @@
     "@react-native-community/cli-tools": ["@react-native-community/cli-tools@20.1.0", "", { "dependencies": { "@vscode/sudo-prompt": "^9.0.0", "appdirsjs": "^1.2.4", "execa": "^5.0.0", "find-up": "^5.0.0", "launch-editor": "^2.9.1", "mime": "^2.4.1", "ora": "^5.4.1", "picocolors": "^1.1.1", "prompts": "^2.4.2", "semver": "^7.5.2" } }, "sha512-/YmzHGOkY6Bgrv4OaA1L8rFqsBlQd1EB2/ipAoKPiieV0EcB5PUamUSuNeFU3sBZZTYQCUENwX4wgOHgFUlDnQ=="],
 
     "@react-native-community/cli-types": ["@react-native-community/cli-types@20.1.0", "", { "dependencies": { "joi": "^17.2.1" } }, "sha512-D0kDspcwgbVXyNjwicT7Bb1JgXjijTw1JJd+qxyF/a9+sHv7TU4IchV+gN38QegeXqVyM4Ym7YZIvXMFBmyJqA=="],
+
+    "@react-native-documents/picker": ["@react-native-documents/picker@12.0.2", "", { "peerDependencies": { "react": "*", "react-native": ">=0.79.0" } }, "sha512-tiaPQjSdsaCkKw/N8XB+DXfhOJ+KJ1OYDliBGoBHEqLI7AhUsSPhn8fRI/gHs7hpYzqOBKf+em9MUrPIA9mlWA=="],
 
     "@react-native-firebase/app": ["@react-native-firebase/app@26.3.1", "", { "dependencies": { "firebase": "12.17.1" }, "peerDependencies": { "expo": ">=47.0.0", "react": "*", "react-native": "*" }, "optionalPeers": ["expo"] }, "sha512-Yp/IGLXCici5OYwluz29w0FCXHBpiVaQQrVKT7AOkp2fFuzXCfYVxEzOTSokIYxRtPjaMiUiGp3dhdiFtkU7zA=="],
 
