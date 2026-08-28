@@ -29,6 +29,18 @@ class PublicListing(BaseModel):
     bedrooms: int | None = None
     baths: int | None = None
     amenities: list[str] = []
+    #: Die Bezeichnungen zu ``amenities``, gleiche Reihenfolge, in der Sprache
+    #: der Anfrage (0474).
+    #:
+    #: Zusätzlich zu den Codes und nicht anstelle: die Codes sind die Wahrheit
+    #: (sie gehen an die Portale, es hängen Filter daran), die Bezeichnung ist
+    #: die Anzeige. Ohne sie zeigte die Kunden-Website die rohen Codes —
+    #: „nd_parking_included" stand live auf der Objektseite, weil der Renderer
+    #: den Label-Katalog des Dashboards nicht kennt.
+    #:
+    #: Leer, wenn keine Merkmale gepflegt sind. Ein Code ohne Label erscheint
+    #: als Code, damit er auffällt (siehe ``ausstattung_texte.bezeichnung``).
+    amenity_labels: list[str] = []
     # Haustiere erlaubt? Aus der Hotel-Policy, sonst aus den Merkmalen; ohne
     # Angabe False (fail-closed) — die Buchungsstrecke bietet die Tierauswahl
     # nur an, wo der Betrieb sie ausdrücklich zulässt.

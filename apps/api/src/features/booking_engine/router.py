@@ -57,6 +57,10 @@ def listings(
     lat: Annotated[float | None, Query(ge=-90, le=90)] = None,
     lng: Annotated[float | None, Query(ge=-180, le=180)] = None,
     radius_km: Annotated[float | None, Query(gt=0, le=500)] = None,
+    # Sprache der ANZEIGE (0474): sie bestimmt nur die Ausstattungs-Bezeichnungen,
+    # nicht die Auswahl der Objekte. Ohne Angabe Englisch, nicht Deutsch — die
+    # Strecke bedient 27 Länder (siehe pricing.schemas).
+    locale: Annotated[str, Query(max_length=10)] = "en",
 ) -> PublicListingListResponse:
     """Öffentliche Liste buchbarer (active) Objekte. Optional q/guests/start/end/
     tenant. ``property_ids`` schränkt auf konkrete Objekte ein (Featured-Block der
@@ -65,6 +69,7 @@ def listings(
     tenant-übergreifend (Marktplatz)."""
     try:
         return service.list_listings(
+            locale=locale,
             q=q,
             guests=guests,
             start=start,
@@ -101,10 +106,13 @@ def listing_detail(
     service: BookingEngineServiceDep,
     start: Annotated[date | None, Query()] = None,
     end: Annotated[date | None, Query()] = None,
+    locale: Annotated[str, Query(max_length=10)] = "en",
 ) -> PublicListingDetail:
     """Detail eines active Objekts (404, wenn nicht active)."""
     try:
-        return service.listing_detail(listing_id, start=start, end=end)
+        return service.listing_detail(
+            listing_id, start=start, end=end, locale=locale
+        )
     except BookingEngineError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

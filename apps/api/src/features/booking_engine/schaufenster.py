@@ -20,6 +20,7 @@ from src.core.dates import nights as _nights
 from src.core.logging import get_logger
 from src.core.supabase import fetch_all_rows
 
+from . import ausstattung_texte
 from .common import _as_opt_int, _assert_span, _pets_allowed
 from .errors import BookingEngineError
 from .reiseziele import land_treffer, ziele_aus_objekten
@@ -138,6 +139,7 @@ class SchaufensterMixin:
         lat: float | None = None,
         lng: float | None = None,
         radius_km: float | None = None,
+        locale: str = "en",
     ) -> PublicListingListResponse:
         """Öffentliche Liste buchbarer Objekte. STRIKT status='active' — draft/
         inactive erscheinen NIE. Default tenant-übergreifend (zentraler Marktplatz);
@@ -277,7 +279,10 @@ class SchaufensterMixin:
 
         items = [
             self._to_listing(
-                r, *prices.get(r["id"], (None, "")), rating=ratings.get(r["id"])
+                r,
+                *prices.get(r["id"], (None, "")),
+                rating=ratings.get(r["id"]),
+                locale=locale,
             )
             for r in rows
         ]
@@ -427,6 +432,7 @@ class SchaufensterMixin:
         *,
         start: date | None = None,
         end: date | None = None,
+        locale: str = "en",
     ) -> PublicListingDetail:
         """Detail eines active Objekts (404, wenn nicht active). Ungefähre Lage
         (gerundete lat/lng), Effektivpreis für den Zeitraum (falls start/end)."""
@@ -447,6 +453,7 @@ class SchaufensterMixin:
         base = self._to_listing(
             r, price, currency,
             rating=self._ratings_for_listings([listing_id]).get(listing_id),
+            locale=locale,
         )
         nights = (end - start).days if start and end else None
         return PublicListingDetail(
@@ -557,8 +564,10 @@ class SchaufensterMixin:
         price_from: float | None,
         currency: str,
         rating: tuple[float, int] | None = None,
+        locale: str = "en",
     ) -> PublicListing:
         attrs = r.get("type_attributes") or {}
+        merkmale = list(r.get("amenities") or [])
         return PublicListing(
             id=r["id"],
             title=r.get("title") or "",
@@ -569,7 +578,11 @@ class SchaufensterMixin:
             max_guests=int(r.get("max_guests") or 1),
             bedrooms=_as_opt_int(attrs.get("bedrooms")),
             baths=_as_opt_int(attrs.get("baths") or attrs.get("bathrooms")),
-            amenities=list(r.get("amenities") or []),
+            amenities=merkmale,
+            # Die Bezeichnungen mitliefern (0474). Der Renderer hat den
+            # Label-Katalog nicht — ohne diese Zeile stand „nd_parking_included"
+            # auf der Objektseite der Kunden-Website.
+            amenity_labels=ausstattung_texte.bezeichnungen(merkmale, locale),
             pets_allowed=_pets_allowed(r),
             price_from=price_from,
             currency=currency,
