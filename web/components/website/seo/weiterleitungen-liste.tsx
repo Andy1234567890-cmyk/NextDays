@@ -27,7 +27,7 @@ import {
   updateWeiterleitung,
 } from "@/lib/site-weiterleitungen";
 
-import { EinstellungenKopf } from "../einstellungen/rahmen";
+import { BereichsKopf } from "../bereichs-kopf";
 
 /** Höchstgröße einer Importdatei. 200 Zeilen à 200 Zeichen sind 40 KB; 200 KB
  *  ist großzügig und hält gleichzeitig eine versehentlich gewählte Bilddatei
@@ -135,7 +135,7 @@ export function SeoWeiterleitungenListe({
 
   return (
     <div className="flex flex-col gap-8">
-      <EinstellungenKopf
+      <BereichsKopf
         titel={t("seo.weiterleitungen.titel")}
         beschreibung={t("seo.weiterleitungen.hinweis")}
       />

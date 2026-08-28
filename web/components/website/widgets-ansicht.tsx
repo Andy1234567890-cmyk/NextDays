@@ -26,7 +26,7 @@ import { NativeSelect } from "@nextdays/ui/native-select";
 import type { Branding, ButtonRadius, CustomDomain } from "@/lib/site-config";
 import type { Page } from "@/lib/site-pages";
 
-import { EinstellungenKopf } from "./einstellungen/rahmen";
+import { BereichsKopf } from "./bereichs-kopf";
 import { BaukastenRahmen } from "./rahmen";
 
 type WidgetTyp = "suche" | "buchen";
@@ -107,7 +107,7 @@ export function WidgetsAnsicht({
       breit
       inhalt={
         <div className="mx-auto flex max-w-3xl flex-col gap-6 p-4 md:p-6">
-          <EinstellungenKopf
+          <BereichsKopf
             titel={t("widgets.titel")}
             beschreibung={t("widgets.hinweis")}
           />

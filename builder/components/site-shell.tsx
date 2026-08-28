@@ -16,6 +16,7 @@ import { themeOf } from "@/lib/theme";
 import { CookieHinweis } from "./cookie-hinweis";
 import { Kundencode } from "./kundencode";
 import { PopupFlaeche } from "./popup-flaeche";
+import { RegelFlaeche } from "./regel-flaeche";
 import { SiteKopfdaten } from "./site-kopfdaten";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
@@ -67,7 +68,14 @@ export function SiteShell({
       sprache={sprache}
     />
   );
-  const fuss = <SiteFooter branding={branding} nav={nav.footer} jahr={jahr} />;
+  const fuss = (
+    <SiteFooter
+      branding={branding}
+      nav={nav.footer}
+      jahr={jahr}
+      sprache={sprache}
+    />
+  );
   // Der eigene Code und der Cookie-Hinweis hängen am RAHMEN und nicht an den
   // Routen: sonst muss jede neue Seite daran denken, und eine vergisst es. Die
   // Fläche entscheidet, was davon greift.
@@ -85,6 +93,22 @@ export function SiteShell({
       {vorschau || !tenantId ? null : (
         <PopupFlaeche tenantId={tenantId} sprache={sprache} />
       )}
+      {/* Die Personalisierungs-Regeln (0440). Aus demselben Grund am Rahmen wie
+          die Pop-ups, und in der Vorschau ebenfalls aus: eine Hinweisleiste
+          über dem Editor wäre kein Vorschaubild, sondern ein Hindernis.
+
+          `cookieOffen`: solange der Cookie-Hinweis steht, tritt die
+          Hinweisleiste zurück. Duda beschreibt an dieser Stelle nur, dass das
+          Banner die Leiste VERDECKT, und überlässt dem Kunden, es zu merken —
+          zwei Balken übereinander sind aber kein Layout, sondern ein Fehler. */}
+      {vorschau || !tenantId ? null : (
+        <RegelFlaeche
+          tenantId={tenantId}
+          sprache={sprache}
+          standardSprache={branding?.default_language || sprache}
+          cookieOffen={Boolean(branding?.cookie_banner)}
+        />
+      )}
       {branding?.cookie_banner ? (
         <CookieHinweis
           text={txt.cookieText}
@@ -101,8 +125,11 @@ export function SiteShell({
   );
 
   if (themeOf(branding) === "seitlich") {
+    // Dieselbe Schwelle wie im Header (68.125rem = 1090 px, Hostaways eigene
+    // Zahl für sein Seitenleisten-Layout, 0468) — darunter steht die Leiste
+    // wieder über dem Inhalt statt daneben.
     return (
-      <div className="flex min-h-screen flex-col md:flex-row">
+      <div className="flex min-h-screen flex-col min-[68.125rem]:flex-row">
         {kopf}
         <div className="flex min-w-0 flex-1 flex-col">
           <main className="flex-1">{children}</main>

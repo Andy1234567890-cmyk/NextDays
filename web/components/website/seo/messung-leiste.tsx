@@ -19,7 +19,7 @@ import { toast } from "sonner";
 
 import { type Branding, setBranding } from "@/lib/site-config";
 
-import { EinstellungenKopf } from "../einstellungen/rahmen";
+import { BereichsKopf } from "../bereichs-kopf";
 import { SpeicherAnzeige } from "../schale";
 import { useAutospeichern } from "../use-autospeichern";
 import { SeoAbschnitt, SeoTextFeld } from "./felder";
@@ -60,7 +60,7 @@ export function SeoMessungLeiste({ branding }: { branding: Branding }) {
 
   return (
     <div className="flex flex-col gap-8">
-      <EinstellungenKopf
+      <BereichsKopf
         titel={t("seo.messung.titel")}
         beschreibung={t("seo.messung.hinweis")}
         aktion={

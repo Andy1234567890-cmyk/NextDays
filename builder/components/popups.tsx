@@ -19,6 +19,11 @@ import { useEffect, useState } from "react";
 
 import { texte } from "@/lib/texte";
 
+export type PopupPosition =
+  | "oben-links" | "oben-mitte" | "oben-rechts"
+  | "mitte-links" | "mitte" | "mitte-rechts"
+  | "unten-links" | "unten-mitte" | "unten-rechts";
+
 export type PopupDaten = {
   id: string;
   title: string;
@@ -26,6 +31,34 @@ export type PopupDaten = {
   value: number | null;
   device: "mobile" | "desktop" | null;
   once: boolean;
+  /** Wo das Fenster sitzt — Dudas 3×3-Punktraster (0440). Ohne Angabe: mittig,
+   *  wie es bis 0439 immer war. */
+  position?: PopupPosition | null;
+  /** Wird gerufen, sobald das Pop-up gezeigt wurde.
+   *
+   *  Gibt es das Pop-up, weil eine REGEL es einblendet (0440), muss die REGEL
+   *  sich das merken und nicht das Pop-up: dasselbe Pop-up kann unter mehreren
+   *  Regeln laufen, und „schon gesehen" gilt je Regel. Ohne diesen Haken
+   *  würde die erste Regel alle anderen mit stilllegen. */
+  merken?: (id: string) => void;
+};
+
+/** Die neun Positionen als Flexbox-Ausrichtung der Overlay-Fläche.
+ *
+ *  Als Tabelle und nicht als zusammengesetzte Klassennamen: Tailwind liest die
+ *  Klassen zur Bauzeit aus dem Quelltext. `items-${x}` wäre für den Scanner
+ *  unsichtbar und die Klasse fehlte im fertigen CSS — ein Fehler, der erst im
+ *  Deploy auffällt und dort wie ein Layout-Zufall aussieht. */
+const POSITIONEN: Record<PopupPosition, string> = {
+  "oben-links": "items-start justify-start",
+  "oben-mitte": "items-start justify-center",
+  "oben-rechts": "items-start justify-end",
+  "mitte-links": "items-center justify-start",
+  mitte: "items-center justify-center",
+  "mitte-rechts": "items-center justify-end",
+  "unten-links": "items-end justify-start",
+  "unten-mitte": "items-end justify-center",
+  "unten-rechts": "items-end justify-end",
 };
 
 /** Hat dieser Browser das Pop-up schon gesehen?
@@ -81,8 +114,14 @@ export function Popups({
     // Das erste Pop-up, das noch nicht gesehen wurde und zum Gerät passt.
     // Nur EINES gleichzeitig: zwei übereinander wären für den Gast eine
     // Sackgasse.
+    // Pop-ups mit eigenem `merken`-Haken kommen aus einer Regel; ob sie schon
+    // liefen, hat die Regel bereits entschieden (`schonGezeigt` in lib/regeln).
+    // Hier noch einmal zu prüfen hieße, dieselbe Frage an zwei Stellen zu
+    // beantworten — und irgendwann verschieden.
     const kandidat = popups.find(
-      (p) => !schonGesehen(p.id, p.once) && passtZumGeraet(p.device),
+      (p) =>
+        (p.merken ? true : !schonGesehen(p.id, p.once)) &&
+        passtZumGeraet(p.device),
     );
     if (!kandidat) return;
 
@@ -90,7 +129,10 @@ export function Popups({
     const zeige = () => {
       if (abgeraeumt) return;
       setOffen(kandidat.id);
-      merken(kandidat.id, kandidat.once);
+      // Der Haken hat Vorrang: bei einem Pop-up aus einer Regel merkt sich die
+      // REGEL, dass sie gelaufen ist — siehe `PopupDaten.merken`.
+      if (kandidat.merken) kandidat.merken(kandidat.id);
+      else merken(kandidat.id, kandidat.once);
     };
 
     if (kandidat.trigger === "delay") {
@@ -162,7 +204,10 @@ export function Popups({
       role="dialog"
       aria-modal="true"
       aria-label={aktuell.title}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className={
+        "fixed inset-0 z-50 flex bg-black/50 p-4 " +
+        (POSITIONEN[aktuell.position ?? "mitte"] ?? POSITIONEN.mitte)
+      }
       onClick={(e) => {
         // Klick auf den Hintergrund schließt — aber nur auf ihn, nicht auf den
         // Inhalt. Ohne diese Prüfung schließt jeder Klick im Fenster.

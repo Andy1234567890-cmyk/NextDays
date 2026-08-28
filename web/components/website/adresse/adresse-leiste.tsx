@@ -25,7 +25,7 @@ import {
   syncDomain,
 } from "@/lib/site-config";
 
-import { EinstellungenKopf } from "../einstellungen/rahmen";
+import { BereichsKopf } from "../bereichs-kopf";
 
 export function AdresseLeiste({ domains }: { domains: CustomDomain[] }) {
   const t = useTranslations("website");
@@ -77,7 +77,7 @@ export function AdresseLeiste({ domains }: { domains: CustomDomain[] }) {
     // ergaben einen doppelten Innenabstand und eine Spalte, die schmaler war
     // als vorgesehen.
     <div className="flex flex-col gap-6">
-      <EinstellungenKopf
+      <BereichsKopf
         titel={t("einstellungen.adresse.titel")}
         beschreibung={t("einstellungen.adresse.hinweis")}
       />

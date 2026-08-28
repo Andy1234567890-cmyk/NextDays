@@ -34,6 +34,7 @@ export async function PopupFlaeche({
     value: p.value,
     device: p.device,
     once: p.once,
+    position: (p.position ?? null) as PopupDaten["position"],
   }));
 
   // Der Inhalt je Pop-up, vorgerendert. `modus.aktiv = false`: in einem Pop-up

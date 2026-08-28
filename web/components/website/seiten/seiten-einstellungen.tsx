@@ -19,9 +19,37 @@ import { toast } from "sonner";
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
 import { LOCALE_LABELS, type Locale } from "@/i18n/locales";
-import { type Page, updatePage } from "@/lib/site-pages";
+import {
+  getPost,
+  listBlogAuthors,
+  publishPage,
+  publishPageSingle,
+  setPageAccess,
+  type Beitrag,
+  type Page,
+  unpublishPage,
+  updatePage,
+  updatePost,
+} from "@/lib/site-pages";
 
-type Reiter = "allgemein" | "seo" | "sprachen";
+type Reiter = "allgemein" | "beitrag" | "seo" | "sprachen" | "zugang";
+
+/** Ein `datetime-local`-Feld will „2026-08-25T09:30" — kein ISO mit Zone.
+ *
+ *  Umgerechnet wird in die ZEITZONE DES BEDIENERS und nicht in UTC: er plant
+ *  „Freitag um neun", und das meint neun Uhr bei ihm. Der Browser rechnet beim
+ *  Zurücklesen wieder in UTC um, sodass in der Datenbank ein eindeutiger
+ *  Zeitpunkt steht. */
+function alsFeldWert(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const p = (n: number) => String(n).padStart(2, "0");
+  return (
+    `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}` +
+    `T${p(d.getHours())}:${p(d.getMinutes())}`
+  );
+}
 
 /** Slug-Regel wie im Backend: a–z, 0–9 und Bindestrich. Hier NUR normalisiert,
  *  nicht geprüft — die Prüfung bleibt serverseitig, damit sie auch für den
@@ -65,6 +93,52 @@ export function SeitenEinstellungen({
   const [seoTitel, setSeoTitel] = useState(seite.seo_title ?? "");
   const [seoText, setSeoText] = useState(seite.seo_description ?? "");
   const [sprachen, setSprachen] = useState<string[] | null>(seite.languages);
+  // Das Passwort steht NIE im Zustand einer geladenen Seite — es kommt nie aus
+  // der API zurück. Hier steht nur, was der Kunde gerade tippt.
+  const [passwort, setPasswort] = useState("");
+
+  // --- Beitrag (0457) ------------------------------------------------------
+  // Die Beitragsfelder kommen über einen EIGENEN Abruf und nicht aus `seite`:
+  // die Seitenliste liefert nicht alle davon (der Alt-Text des Vorschaubilds
+  // etwa), und ein Dialog, der die Hälfte seiner Felder leer zeigt, löscht sie
+  // beim Speichern.
+  const istBeitrag = seite.page_type === "post";
+  const [beitrag, setBeitrag] = useState<Beitrag | null>(null);
+  const [autoren, setAutoren] = useState<string[]>([]);
+  const [live, setLive] = useState(seite.is_published);
+  const autorenId = useId();
+
+  useEffect(() => {
+    if (!istBeitrag) return;
+    let abgebrochen = false;
+    void (async () => {
+      const [b, a] = await Promise.all([getPost(seite.id), listBlogAuthors()]);
+      if (abgebrochen) return;
+      if (b.ok) setBeitrag(b.data);
+      // Die Autorenliste ist eine Bequemlichkeit. Scheitert sie, bleibt das
+      // Freitextfeld — kein Fehler-Toast für einen Vorschlag, den niemand
+      // angefordert hat.
+      if (a.ok) setAutoren(a.data.items);
+    })();
+    return () => {
+      abgebrochen = true;
+    };
+  }, [istBeitrag, seite.id]);
+
+  /** Ein Beitragsfeld ändern. Nur im Zustand — gespeichert wird mit dem Knopf,
+   *  wie bei allen anderen Feldern dieses Dialogs auch. */
+  function setzeBeitrag(patch: Partial<Beitrag>) {
+    setBeitrag((alt) => (alt ? { ...alt, ...patch } : alt));
+  }
+
+  /** Steht das Erscheinungsdatum in der Zukunft?
+   *
+   *  Das ist die ganze Planung: der Renderer vergleicht bei JEDEM Aufruf gegen
+   *  die aktuelle Zeit — es gibt keinen Hintergrundlauf, der etwas freischaltet
+   *  und ausfallen könnte. */
+  const geplant = Boolean(
+    beitrag?.published_at && new Date(beitrag.published_at).getTime() > Date.now(),
+  );
 
   // Escape schließt, und der Fokus startet im Dialog. Ohne das bliebe er in der
   // Seitenliste hinter dem Dialog: mit der Tastatur käme man gar nicht an die
@@ -94,6 +168,25 @@ export function SeitenEinstellungen({
         toast.error(res.error);
         return;
       }
+      // Die Beitragsfelder gehen an ihren EIGENEN Endpunkt: sie gelten nur an
+      // einem Beitrag (CHECK aus 0438), und an `updatePage` gehängt wären sie
+      // an jeder Seite ein Datenbankfehler statt einer Antwort.
+      if (istBeitrag && beitrag) {
+        const post = await updatePost(seite.id, {
+          published_at: beitrag.published_at,
+          author: beitrag.author?.trim() || null,
+          cover_image_url: beitrag.cover_image_url?.trim() || null,
+          excerpt: beitrag.excerpt?.trim() || null,
+          tags: beitrag.tags,
+          og_image_url: beitrag.og_image_url?.trim() || null,
+          og_image_alt: beitrag.og_image_alt?.trim() || null,
+          noindex: beitrag.noindex ?? false,
+        });
+        if (!post.ok) {
+          toast.error(post.error);
+          return;
+        }
+      }
       toast.success(t("seiten.einstellungenGespeichert"));
       onSchliessen();
     });
@@ -102,12 +195,23 @@ export function SeitenEinstellungen({
   // Die Startseite hat keinen Slug — ihre Adresse IST die Domain. Ein Feld dafür
   // wäre eine Falle: ein eingetragener Slug würde die Startseite verschieben und
   // die Domain zeigte danach ins Leere.
-  const slugFeld = !seite.is_home;
+  // Eine Systemseite (0466) hat einen festen Slug: er ist das MUSTER ihrer
+  // Route (`inserat/[id]`), keine frei wählbare Adresse. Ein umbenannter Slug
+  // beschriebe eine Seite, die es nicht gibt — das Backend weist ihn ohnehin
+  // mit 422 ab, und ein Feld, dessen Eingabe beim Speichern scheitert, ist
+  // schlechter als keines.
+  const systemseite = Boolean(seite.system_key);
+  const slugFeld = !seite.is_home && !systemseite;
   const adresse = domain
     ? `https://${domain}/${seite.is_home ? "" : slug}`
     : null;
 
-  const REITER: Reiter[] = ["allgemein", "seo", "sprachen"];
+  // Der Beitrags-Reiter steht an ZWEITER Stelle und nur an einem Beitrag: er
+  // ist das, weswegen man diesen Dialog an einem Beitrag öffnet (Datum, Autor,
+  // Schlagwörter). An einer normalen Seite gäbe es dort nichts zu sehen.
+  const REITER: Reiter[] = istBeitrag
+    ? ["allgemein", "beitrag", "seo", "sprachen", "zugang"]
+    : ["allgemein", "seo", "sprachen", "zugang"];
 
   return (
     <div
@@ -160,14 +264,26 @@ export function SeitenEinstellungen({
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5">
           {reiter === "allgemein" ? (
             <>
-              <label className="flex flex-col gap-1.5 text-sm">
-                <span className="font-medium">{t("seiten.name")}</span>
-                <Input
-                  value={titel}
-                  maxLength={200}
-                  onChange={(e) => setTitel(e.target.value)}
-                />
-              </label>
+              {/* Der Name einer Systemseite steht nicht in der Datenbank: er
+                  stünde dort in EINER Sprache, und diese Liste bedient 24. Er
+                  kommt aus dem Katalog und ist deshalb nicht editierbar. */}
+              {systemseite ? (
+                <div className="flex flex-col gap-1.5 text-sm">
+                  <span className="font-medium">{t("seiten.name")}</span>
+                  <p className="rounded-(--radius) border border-border bg-secondary px-3 py-2 text-muted-foreground">
+                    {t(`seiten.systemseiten.${seite.system_key}`)}
+                  </p>
+                </div>
+              ) : (
+                <label className="flex flex-col gap-1.5 text-sm">
+                  <span className="font-medium">{t("seiten.name")}</span>
+                  <Input
+                    value={titel}
+                    maxLength={200}
+                    onChange={(e) => setTitel(e.target.value)}
+                  />
+                </label>
+              )}
               {slugFeld ? (
                 <label className="flex flex-col gap-1.5 text-sm">
                   <span className="font-medium">{t("seiten.slug")}</span>
@@ -179,7 +295,9 @@ export function SeitenEinstellungen({
                 </label>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  {t("seiten.startseiteOhneSlug")}
+                  {systemseite
+                    ? t("seiten.systemseiteOhneSlug", { pfad: `/${seite.slug}` })
+                    : t("seiten.startseiteOhneSlug")}
                 </p>
               )}
               {adresse ? (
@@ -192,6 +310,179 @@ export function SeitenEinstellungen({
                   {t("seiten.keineDomain")}
                 </p>
               )}
+            </>
+          ) : null}
+
+          {reiter === "beitrag" && beitrag ? (
+            <>
+              {/* Der Permalink — kopierbar, und erst NACH der
+                  Veröffentlichung. Vorher wäre er ein Link, der ins Leere
+                  führt: die Adresse existiert erst, wenn der Beitrag live ist.
+                  Hostaway hält es genauso, und der Grund ist derselbe. */}
+              {live ? (
+                <label className="flex flex-col gap-1.5 text-sm">
+                  <span className="font-medium">{t("seiten.permalink")}</span>
+                  <div className="flex gap-2">
+                    <Input
+                      value={
+                        domain
+                          ? `https://${domain}/blog/${beitrag.slug}`
+                          : `/blog/${beitrag.slug}`
+                      }
+                      readOnly
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void navigator.clipboard
+                          .writeText(
+                            domain
+                              ? `https://${domain}/blog/${beitrag.slug}`
+                              : `/blog/${beitrag.slug}`,
+                          )
+                          .then(() => toast.success(t("seiten.permalinkKopiert")))
+                          // Das Schreiben in die Zwischenablage darf ohne
+                          // Nutzergeste oder ohne HTTPS scheitern. Dann sagen
+                          // wir es, statt so zu tun, als hätte es geklappt.
+                          .catch(() => toast.error(t("seiten.permalinkFehler")));
+                      }}
+                      className="shrink-0 rounded-full border border-border px-4 text-sm transition hover:bg-secondary"
+                    >
+                      {t("seiten.permalinkKopieren")}
+                    </button>
+                  </div>
+                </label>
+              ) : (
+                <p className="rounded-(--radius) border border-border bg-secondary/40 p-3 text-xs">
+                  {t("seiten.permalinkErstNachVeroeffentlichung")}
+                </p>
+              )}
+
+              <label className="flex flex-col gap-1.5 text-sm">
+                <span className="font-medium">{t("seiten.erscheintAm")}</span>
+                <Input
+                  type="datetime-local"
+                  value={alsFeldWert(beitrag.published_at)}
+                  onChange={(e) =>
+                    setzeBeitrag({
+                      published_at: e.target.value
+                        ? new Date(e.target.value).toISOString()
+                        : null,
+                    })
+                  }
+                />
+                <span className="text-xs text-muted-foreground">
+                  {t("seiten.erscheintAmHinweis")}
+                </span>
+              </label>
+              {geplant ? (
+                <p className="rounded-(--radius) border border-border bg-secondary/40 p-3 text-xs">
+                  {t("seiten.geplantHinweis")}
+                </p>
+              ) : null}
+
+              <label className="flex flex-col gap-1.5 text-sm">
+                <span className="font-medium">{t("seiten.autor")}</span>
+                <Input
+                  value={beitrag.author ?? ""}
+                  maxLength={120}
+                  list={autoren.length ? autorenId : undefined}
+                  onChange={(e) => setzeBeitrag({ author: e.target.value })}
+                />
+                {/* Eine LISTE über dem Freitextfeld, kein Ersatz dafür: der
+                    Autor eines Beitrags ist oft keiner unserer Benutzer
+                    („Familie Jensen"), und ein gelöschter Benutzer würde den
+                    Beitrag sonst anonymisieren. */}
+                {autoren.length ? (
+                  <datalist id={autorenId}>
+                    {autoren.map((n) => (
+                      <option key={n} value={n} />
+                    ))}
+                  </datalist>
+                ) : null}
+                <span className="text-xs text-muted-foreground">
+                  {t("seiten.autorHinweis")}
+                </span>
+              </label>
+
+              <label className="flex flex-col gap-1.5 text-sm">
+                <span className="font-medium">{t("seiten.titelbild")}</span>
+                <Input
+                  value={beitrag.cover_image_url ?? ""}
+                  placeholder="https://"
+                  onChange={(e) =>
+                    setzeBeitrag({ cover_image_url: e.target.value })
+                  }
+                />
+              </label>
+
+              <label className="flex flex-col gap-1.5 text-sm">
+                <span className="font-medium">{t("seiten.anriss")}</span>
+                <textarea
+                  value={beitrag.excerpt ?? ""}
+                  maxLength={500}
+                  rows={3}
+                  onChange={(e) => setzeBeitrag({ excerpt: e.target.value })}
+                  className="w-full rounded-(--radius) border border-border bg-transparent px-3 py-2 text-sm outline-none focus:border-foreground"
+                />
+                <span className="text-xs text-muted-foreground">
+                  {t("seiten.anrissHinweis")}
+                </span>
+              </label>
+
+              <label className="flex flex-col gap-1.5 text-sm">
+                <span className="font-medium">{t("seiten.schlagwoerter")}</span>
+                <Input
+                  value={(beitrag.tags ?? []).join(", ")}
+                  onChange={(e) =>
+                    setzeBeitrag({
+                      // Aufgeteilt wird beim Tippen, damit der Server dieselbe
+                      // Liste sieht wie der Bediener. Der Deckel (acht) steht
+                      // im Backend und wird dort als Fehler gemeldet — hier
+                      // still zu kürzen würde die Eingabe verschlucken.
+                      tags: e.target.value
+                        .split(",")
+                        .map((w) => w.trim())
+                        .filter(Boolean),
+                    })
+                  }
+                />
+                <span className="text-xs text-muted-foreground">
+                  {t("seiten.schlagwoerterHinweis")}
+                </span>
+              </label>
+
+              <div className="mt-2 border-t border-border pt-4">
+                <p className="text-sm font-medium">
+                  {live ? t("seiten.istLive") : t("seiten.istNichtLive")}
+                </p>
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() =>
+                    start(async () => {
+                      const res = live
+                        ? await unpublishPage(seite.id)
+                        : await publishPage(seite.id);
+                      if (!res.ok) {
+                        toast.error(res.error);
+                        return;
+                      }
+                      setLive(!live);
+                      toast.success(
+                        live
+                          ? t("seiten.zurueckgezogen")
+                          : t("seiten.beitragVeroeffentlicht"),
+                      );
+                    })
+                  }
+                  className="mt-2 rounded-full border border-border px-4 py-2 text-sm transition hover:bg-secondary disabled:opacity-50"
+                >
+                  {live
+                    ? t("seiten.veroeffentlichungAufheben")
+                    : t("seiten.erneutVeroeffentlichen")}
+                </button>
+              </div>
             </>
           ) : null}
 
@@ -246,6 +537,168 @@ export function SeitenEinstellungen({
                   className="w-full rounded-(--radius) border border-border bg-transparent px-3 py-2 text-sm outline-none focus:border-foreground"
                 />
               </label>
+
+              {/* Beitrags-SEO (0457).
+                  Nur am Beitrag, weil nur hier der Alt-Text des Vorschaubilds
+                  gepflegt werden kann — er hängt am eigenen Beitrags-Endpunkt.
+                  Die Längenangaben sind Googles Kappungsgrenzen: er misst in
+                  PIXELN (rund 512 für den Titel), was ungefähr 65 Zeichen
+                  entspricht; unter 45 Zeichen bleibt auch auf dem Telefon alles
+                  stehen. Deshalb ZWEI Zahlen und nicht eine erfundene. */}
+              {istBeitrag && beitrag ? (
+                <>
+                  <p className="rounded-(--radius) border border-border bg-secondary/40 p-3 text-xs">
+                    {t("seiten.metaTitelLaenge")}
+                  </p>
+                  <label className="flex flex-col gap-1.5 text-sm">
+                    <span className="font-medium">
+                      {t("seiten.vorschaubild")}
+                    </span>
+                    <Input
+                      value={beitrag.og_image_url ?? ""}
+                      placeholder="https://"
+                      onChange={(e) =>
+                        setzeBeitrag({ og_image_url: e.target.value })
+                      }
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {t("seiten.vorschaubildHinweis")}
+                    </span>
+                  </label>
+                  <label className="flex flex-col gap-1.5 text-sm">
+                    <span className="font-medium">
+                      {t("seiten.vorschaubildAlt")}
+                    </span>
+                    <Input
+                      value={beitrag.og_image_alt ?? ""}
+                      maxLength={200}
+                      // Ohne Vorschaubild ist der Alt-Text die Beschreibung von
+                      // nichts. Er bleibt trotzdem sichtbar (nicht versteckt),
+                      // nur nicht bedienbar — verschwundene Felder sucht man.
+                      disabled={!beitrag.og_image_url?.trim()}
+                      onChange={(e) =>
+                        setzeBeitrag({ og_image_alt: e.target.value })
+                      }
+                    />
+                    <span className="text-xs text-muted-foreground">
+                      {t("seiten.vorschaubildAltHinweis")}
+                    </span>
+                  </label>
+                  <label className="flex items-start gap-3 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={beitrag.noindex ?? false}
+                      onChange={(e) =>
+                        setzeBeitrag({ noindex: e.target.checked })
+                      }
+                      className="mt-0.5 size-4 accent-foreground"
+                    />
+                    <span>
+                      <span className="font-medium">
+                        {t("seiten.noindexBeitrag")}
+                      </span>
+                      <span className="block text-xs text-muted-foreground">
+                        {t("seiten.noindexBeitragHinweis")}
+                      </span>
+                    </span>
+                  </label>
+                </>
+              ) : null}
+            </>
+          ) : null}
+
+          {reiter === "zugang" ? (
+            <>
+              <p className="text-sm text-muted-foreground">
+                {t("seiten.zugangHinweis")}
+              </p>
+              {/* Der Satz, den auch Hostaway an diese Stelle schreibt, und er
+                  gehört hierher: es ist EIN Passwort für EINE Seite, kein
+                  Benutzerkonto. Wer das verwechselt, erwartet Rollen und
+                  „Passwort vergessen" — beides gibt es nicht. */}
+              <p className="rounded-(--radius) border border-border bg-secondary/40 p-3 text-xs">
+                {t("seiten.zugangKeinLogin")}
+              </p>
+              {seite.hat_passwort ? (
+                <p className="text-sm font-medium">
+                  {t("seiten.zugangAktiv")}
+                </p>
+              ) : null}
+              <label className="flex flex-col gap-1">
+                <span className="text-sm font-medium">
+                  {t("seiten.zugangFeld")}
+                </span>
+                <Input
+                  type="password"
+                  value={passwort}
+                  maxLength={100}
+                  autoComplete="new-password"
+                  placeholder={
+                    seite.hat_passwort
+                      ? t("seiten.zugangNeuPlatzhalter")
+                      : t("seiten.zugangPlatzhalter")
+                  }
+                  onChange={(e) => setPasswort(e.target.value)}
+                />
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={pending || !passwort.trim()}
+                  onClick={() =>
+                    start(async () => {
+                      const res = await setPageAccess(seite.id, passwort);
+                      if (!res.ok) toast.error(res.error);
+                      else {
+                        setPasswort("");
+                        toast.success(t("seiten.zugangGesetzt"));
+                      }
+                    })
+                  }
+                  className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition hover:opacity-90 disabled:opacity-50"
+                >
+                  {t("seiten.zugangSpeichern")}
+                </button>
+                {seite.hat_passwort ? (
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() =>
+                      start(async () => {
+                        const res = await setPageAccess(seite.id, null);
+                        if (!res.ok) toast.error(res.error);
+                        else toast.success(t("seiten.zugangEntfernt"));
+                      })
+                    }
+                    className="rounded-full border border-border px-4 py-2 text-sm transition hover:bg-secondary disabled:opacity-50"
+                  >
+                    {t("seiten.zugangEntfernen")}
+                  </button>
+                ) : null}
+              </div>
+
+              <div className="mt-4 border-t border-border pt-4">
+                <p className="text-sm font-medium">
+                  {t("seiten.einzelnTitel")}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {t("seiten.einzelnHinweis")}
+                </p>
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() =>
+                    start(async () => {
+                      const res = await publishPageSingle(seite.id);
+                      if (!res.ok) toast.error(res.error);
+                      else toast.success(t("seiten.einzelnFertig"));
+                    })
+                  }
+                  className="mt-2 rounded-full border border-border px-4 py-2 text-sm transition hover:bg-secondary disabled:opacity-50"
+                >
+                  {t("seiten.einzelnKnopf")}
+                </button>
+              </div>
             </>
           ) : null}
 

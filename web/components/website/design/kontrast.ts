@@ -155,3 +155,74 @@ export function pruefeFarben(farben: {
   }
   return befunde;
 }
+
+// =========================================================================
+// WCAG-Stufen im Farbwähler (Hostaway-Gleichzug)
+// =========================================================================
+//
+// Hostaway zeigt im Farbwähler vier Prüfungen nebeneinander: Regular AAA 7:1,
+// Large AAA 4.5:1, Regular AA 4.5:1, Large AA 3:1. Genau die stehen hier —
+// nicht als eigene Erfindung, sondern als die vier Schwellen aus WCAG 2.1
+// SC 1.4.3.
+//
+// „Large" ist dabei kein Geschmacksurteil: WCAG definiert es als ab 18 pt
+// (24 px) normal oder ab 14 pt (18,66 px) fett. Welche Rolle als groß gilt,
+// entscheidet deshalb ihre eingestellte Größe — nicht ihr Name.
+
+/** Die vier WCAG-Schwellen, in der Reihenfolge von streng nach mild. */
+export const WCAG_SCHWELLEN = [
+  { schluessel: "normalAAA", schwelle: 7 },
+  { schluessel: "grossAAA", schwelle: 4.5 },
+  { schluessel: "normalAA", schwelle: 4.5 },
+  { schluessel: "grossAA", schwelle: 3 },
+] as const;
+
+export type WcagSchluessel = (typeof WCAG_SCHWELLEN)[number]["schluessel"];
+
+export type WcagPunkt = {
+  schluessel: WcagSchluessel;
+  schwelle: number;
+  bestanden: boolean;
+};
+
+export type WcagPruefung = {
+  /** Auf eine Nachkommastelle gerundet — mehr behauptet eine Genauigkeit, die
+   *  bei Rundungen im Rendering ohnehin nicht trägt. */
+  verhaeltnis: number;
+  punkte: WcagPunkt[];
+};
+
+/**
+ * Kontrast zweier Farben gegen alle vier WCAG-Schwellen prüfen.
+ * `null`, wenn eine der beiden Farben fehlt oder ungültig ist — dann gibt es
+ * nichts zu behaupten (Wurzel 4: kein geratener Ersatzwert).
+ */
+export function wcagPruefung(
+  vordergrund: string | null | undefined,
+  hintergrund: string | null | undefined,
+): WcagPruefung | null {
+  if (!vordergrund || !hintergrund) return null;
+  const v = kontrast(vordergrund, hintergrund);
+  if (v === null) return null;
+  return {
+    verhaeltnis: Math.round(v * 10) / 10,
+    punkte: WCAG_SCHWELLEN.map((s) => ({
+      schluessel: s.schluessel,
+      schwelle: s.schwelle,
+      bestanden: v >= s.schwelle,
+    })),
+  };
+}
+
+/** Gilt Text dieser Größe als „groß" im Sinne von WCAG 2.1?
+ *
+ *  18 pt = 24 px normal, 14 pt = 18,66 px fett. Ohne eingestellte Größe ist die
+ *  Antwort `false` — die strengere Annahme, weil wir die tatsächliche Größe
+ *  dann nicht kennen (fail-closed, Wurzel 5). */
+export function giltAlsGross(
+  groessePx: number | null | undefined,
+  gewicht: number | null | undefined,
+): boolean {
+  if (!groessePx) return false;
+  return (gewicht ?? 400) >= 700 ? groessePx >= 18.66 : groessePx >= 24;
+}

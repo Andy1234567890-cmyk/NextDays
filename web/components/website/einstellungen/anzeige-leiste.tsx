@@ -14,7 +14,7 @@ import { type Branding, setBranding } from "@/lib/site-config";
 
 import { SpeicherAnzeige } from "../schale";
 import { useAutospeichern } from "../use-autospeichern";
-import { EinstellungenKopf } from "./rahmen";
+import { BereichsKopf } from "../bereichs-kopf";
 import { Schalter } from "./schalter";
 
 export function AnzeigeLeiste({ branding }: { branding: Branding }) {
@@ -41,7 +41,7 @@ export function AnzeigeLeiste({ branding }: { branding: Branding }) {
 
   return (
     <div className="flex flex-col gap-8">
-      <EinstellungenKopf
+      <BereichsKopf
         titel={t("einstellungen.anzeige.titel")}
         beschreibung={t("einstellungen.anzeige.hinweis")}
         aktion={

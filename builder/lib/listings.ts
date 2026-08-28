@@ -16,6 +16,13 @@ export type Listing = {
   baeder: number | null;
   gaeste: number;
   ausstattung: string[];
+  /** Die Bezeichnungen zu `ausstattung`, gleiche Reihenfolge (0474).
+   *
+   *  Getrennt von den Codes und nicht statt ihnen: die Codes sind die Wahrheit
+   *  (Filter, Portale), die Bezeichnung ist die Anzeige. Leer bei einer
+   *  Backend-Fassung ohne die Labels — der Baustein zeigt dann die Codes, weil
+   *  sichtbar falsch besser ist als still leer. */
+  ausstattungTexte?: string[];
   beschreibung: string | null;
   // Bewertungen werden NICHT erfunden — nur gesetzt, wenn echte Daten existieren.
   bewertung?: number;

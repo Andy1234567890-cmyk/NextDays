@@ -13,3 +13,24 @@ export async function aktuellerHost(): Promise<string | null> {
   const raw = h.get("x-forwarded-host") ?? h.get("host") ?? "";
   return raw.split(":")[0]!.trim().toLowerCase() || null;
 }
+
+/** Die Sprache aus dem Pfad-Präfix, gesetzt von der Middleware (0476).
+ *
+ *  `null`, wenn die Adresse kein Sprachsegment trug — dann gilt die
+ *  Standardsprache der Website, und `/kontakt` bleibt die Adresse der
+ *  Standardfassung.
+ *
+ *  Warum aus einem HEADER und nicht aus `params`: die Middleware schreibt
+ *  `/da/kontakt` intern auf `/kontakt` um, damit es den Routenbaum nur EINMAL
+ *  gibt. Nach dem Rewrite sieht die Route ihr Sprachsegment nicht mehr — der
+ *  Header ist der Weg, auf dem es trotzdem ankommt.
+ *
+ *  Der Header ist NICHT vertrauenswürdig, weil er von außen kommen könnte; die
+ *  Middleware löscht ihn deshalb bei jedem Request zuerst und setzt ihn nur
+ *  selbst (dieselbe Vorsichtsmaßnahme wie bei `x-tenant-id`). Zusätzlich prüft
+ *  `spracheWaehlen` gegen die geführten Sprachen der Website — eine erfundene
+ *  Sprache fällt dort heraus. */
+export async function spracheAusPfad(): Promise<string | null> {
+  const h = await headers();
+  return h.get("x-site-sprache")?.trim().toLowerCase() || null;
+}

@@ -21,7 +21,7 @@ import { type Branding, setBranding } from "@/lib/site-config";
 
 import { SpeicherAnzeige } from "../schale";
 import { useAutospeichern } from "../use-autospeichern";
-import { EinstellungenKopf } from "./rahmen";
+import { BereichsKopf } from "../bereichs-kopf";
 
 export function SprachenLeiste({ branding }: { branding: Branding }) {
   const t = useTranslations("website");
@@ -85,7 +85,7 @@ export function SprachenLeiste({ branding }: { branding: Branding }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <EinstellungenKopf
+      <BereichsKopf
         titel={t("einstellungen.sprachen.titel")}
         beschreibung={t("einstellungen.sprachen.hinweis")}
         aktion={

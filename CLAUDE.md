@@ -279,6 +279,31 @@ ist, nicht was dort steht — verifiziert wird weiterhin am Code.
   daher im Kopf geprüft und beim Deploy von Coolify gefangen; schlägt der
   Deploy-Build fehl, wird er behoben, nie per `ignoreBuildErrors` unterdrückt
   (Wurzel 4/5).
+- **Eine echte Seite ansehen? Über den Debug-Port, nie über Playwright und nie
+  über AppleScript.** `node scripts/diagnose/chrome-lesen.mjs` liest jede Seite
+  im laufenden Chrome aus (Kopf der Datei = Anleitung):
+  `--tabs` listet, `--oeffnen <URL>` öffnet, ein JS-Ausdruck liefert den Wert.
+  Es ist rohes Chrome-DevTools-Protokoll über WebSocket — kein Paket nötig,
+  Node bringt `WebSocket` mit.
+  Einmalig pro Sitzung, mit EIGENEM Profil, damit der Chrome des Nutzers samt
+  seinen Tabs unangetastet bleibt:
+  `nohup "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --remote-debugging-port=9222 --user-data-dir="$HOME/.cache/claude-chrome-debug" >/tmp/chrome-dbg.log 2>&1 &`
+  Warum NICHT AppleScript (`tell application "Google Chrome" to execute …
+  javascript`): das verlangt „Darstellung → Entwickler → JavaScript von Apple
+  Events erlauben", und dieses Häkchen lässt sich NICHT setzen — gemessen am
+  28.08.2026: `defaults write AllowJavaScriptAppleEvents 1` wird ignoriert, und
+  ein Menü-Klick per System Events kommt an, ohne dass sich etwas ändert
+  (`AXMenuItemMarkChar` vorher wie nachher `missing value`). macOS schützt den
+  Schalter gegen genau diese Automatisierung. Wer es trotzdem versucht,
+  verbrennt eine Stunde und behauptet am Ende, es ginge nicht — es geht, nur
+  anders. Ebenfalls kein Weg: `screencapture` (keine Aufnahmeberechtigung) und
+  Chrome neu starten, um eine Einstellung zu ziehen (schließt die Tabs des
+  Nutzers, am 28.08.2026 live passiert).
+  Die Chrome-Erweiterung „Claude in Chrome" ist etwas anderes als dieser Weg:
+  sie hängt an claude.ai bzw. `ws://localhost:8765` (`localBridge`) und wird
+  über `claude --chrome` bzw. `"chrome": true` in
+  `.claude/settings.local.json` verbunden — beides wirkt erst nach einem
+  Neustart der Sitzung, nicht mitten in ihr.
 - Mail/Benachrichtigung berührt? `bash scripts/diagnose/mail-umgebung-pruefen.sh`
   — vergleicht die Umgebung JEDES mailversendenden Prozesses (api UND worker)
   gegen die Pflichtliste. `api` und `worker` fahren denselben Code, sind in

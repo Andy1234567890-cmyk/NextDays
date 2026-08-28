@@ -2453,6 +2453,9 @@ erDiagram
         jsonb content "pro Typ Pydantic-validiert"
         jsonb settings "background_color, padding, full_width, opacity, visible, radius, rotation"
     }
+
+
+
 ```
 
 Alle vier Tabellen haben RLS (`tenant_id = current_tenant_id()`, using + with

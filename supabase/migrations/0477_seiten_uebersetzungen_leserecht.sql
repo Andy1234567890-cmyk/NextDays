@@ -1,0 +1,30 @@
+-- 0477 — Leserecht auf site_page_translations nachziehen.
+--
+-- 0476 hat die Tabelle angelegt und eine Lese-Policy dafür geschrieben:
+--
+--     create policy site_page_translations_read ... for select to authenticated
+--         using (tenant_id = public.current_tenant_id());
+--
+-- Die war WIRKUNGSLOS. Eine Policy entscheidet, WELCHE Zeilen eine Rolle sehen
+-- darf — sie erteilt aber kein Recht, die Tabelle überhaupt zu lesen. Das
+-- Tabellen-GRANT fehlte, und in diesem Schema gibt es keinen Standard, der es
+-- mitbringt: gegengeprüft an der Live-DB, `site_page_translations` hatte für
+-- `authenticated` nur `REFERENCES`, die Mutter-Tabelle `site_pages` dagegen
+-- `SELECT`.
+--
+-- Warum das eine Migration wert ist und kein Nachtrag in 0476: eine
+-- angewendete Datei läuft nie wieder. Sie zu ändern wirkt nur auf Umgebungen,
+-- die noch nie migriert haben — die Live-DB behielte den Fehler.
+--
+-- Der Riegel gegen SCHREIBEN bleibt vollständig bestehen (0476: revoke insert,
+-- update, delete + restriktive Policy). Erteilt wird ausschließlich `select`,
+-- und die Policy darüber begrenzt es auf den eigenen Mandanten.
+--
+-- Warum lesen überhaupt erlaubt ist: der Inhalt ist der Text einer
+-- ÖFFENTLICHEN Kunden-Website. Er steht ohnehin im Netz; ihn vor dem
+-- eingeloggten Mitarbeiter des eigenen Betriebs zu verstecken wäre keine
+-- Sicherheit, sondern eine Attrappe. Für `anon` bleibt es gesperrt — dort gibt
+-- es keinen Mandanten, `current_tenant_id()` wäre NULL und die Policy fiele
+-- ohnehin zu (fail-closed).
+
+grant select on public.site_page_translations to authenticated;

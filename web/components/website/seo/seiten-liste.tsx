@@ -12,19 +12,26 @@
 // Seiten hat typischerweise drei gepflegte und neun leere, und ohne Übersicht
 // findet niemand die neun.
 //
-// Ein „Alles mit KI erzeugen"-Knopf, wie Hostaway ihn hat, steht hier
-// ABSICHTLICH nicht: er erzeugt für jede Seite einen plausiblen Satz, und
-// danach sieht die Liste vollständig aus. Was drin steht, hat dann niemand
-// gelesen — bei dem Text, mit dem die Seite in Google auftritt.
-import { useTranslations } from "next-intl";
+// „Für alle Seiten erzeugen" (0463–0465, `KiAlleSeitenKnopf`) gibt es TROTZDEM
+// — die frühere Sorge bleibt real (ein Vorschlag, der keiner liest, ist
+// schlimmer als eine sichtbare Lücke), nur wird sie anders gelöst als
+// befürchtet: NUR leere Felder werden vorgeschlagen (ein gepflegter Titel wird
+// nie überschrieben), jede Zeile bleibt ein PRÜFBARER Vorschlag mit eigenem
+// Ergebnis in der Fortschrittsliste, und „vollständig" heißt danach „jede
+// Seite hat einen Text, den jemand als Vorschlag gesehen hat" — nicht
+// „niemand hat mehr hingeschaut".
+import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import type { Branding } from "@/lib/site-config";
 import { type Page, updatePage } from "@/lib/site-pages";
+import { kiHerkunftSetzen } from "@/lib/site-ki";
 
-import { EinstellungenKopf } from "../einstellungen/rahmen";
+import { BereichsKopf } from "../bereichs-kopf";
 import { SeoTextFeld, empfehlungFuer } from "./felder";
+import { KiAlleSeitenKnopf } from "./ki-alle-seiten";
+import { KiSeoKnopf } from "./ki-seo-knopf";
 
 /** Was an einer Seite noch fehlt — für die Kennzeichnung in der Liste. */
 function fehlt(seite: Page): ("titel" | "beschreibung")[] {
@@ -46,8 +53,13 @@ function SeitenZeile({
   onOeffnen: () => void;
 }) {
   const t = useTranslations("website");
+  const uiLocale = useLocale();
   const [entwurf, setEntwurf] = useState<Page>(seite);
   const [speichert, starte] = useTransition();
+  // Wurde der aktuelle Entwurf gerade durch einen KI-Vorschlag ersetzt? Nur
+  // dann setzt „Speichern" hinterher die Herkunft — ein Kunde, der von Hand
+  // weitertippt, hat den Vorschlag verlassen, und der Text ist wieder seiner.
+  const [kiHerkunft, setKiHerkunft] = useState<string | null>(null);
 
   const luecken = fehlt(seite);
   const geaendert =
@@ -110,6 +122,28 @@ function SeitenZeile({
 
       {offen ? (
         <div className="flex flex-col gap-4 border-t border-border p-4">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-medium text-muted-foreground">
+              {t("seo.felder.titel")} &amp; {t("seo.felder.beschreibung")}
+            </p>
+            <KiSeoKnopf
+              pageId={seite.id}
+              sprachen={
+                branding.languages && branding.languages.length > 0
+                  ? branding.languages
+                  : [branding.default_language ?? uiLocale]
+              }
+              spracheStandard={branding.default_language ?? uiLocale}
+              onUebernommen={(v) => {
+                setEntwurf((e) => ({
+                  ...e,
+                  seo_title: v.titel,
+                  seo_description: v.beschreibung,
+                }));
+                setKiHerkunft(v.modell);
+              }}
+            />
+          </div>
           <SeoTextFeld
             label={t("seo.felder.titel")}
             wert={entwurf.seo_title}
@@ -118,7 +152,10 @@ function SeitenZeile({
             maxLength={200}
             rueckfall={branding.seo_title}
             rueckfallLabel={t("seo.felder.rueckfall")}
-            onWert={(v) => setEntwurf((e) => ({ ...e, seo_title: v }))}
+            onWert={(v) => {
+              setEntwurf((e) => ({ ...e, seo_title: v }));
+              setKiHerkunft(null);
+            }}
           />
           <SeoTextFeld
             label={t("seo.felder.beschreibung")}
@@ -128,7 +165,10 @@ function SeitenZeile({
             mehrzeilig
             rueckfall={branding.seo_description}
             rueckfallLabel={t("seo.felder.rueckfall")}
-            onWert={(v) => setEntwurf((e) => ({ ...e, seo_description: v }))}
+            onWert={(v) => {
+              setEntwurf((e) => ({ ...e, seo_description: v }));
+              setKiHerkunft(null);
+            }}
           />
           <SeoTextFeld
             label={t("seo.felder.keywords")}
@@ -180,6 +220,19 @@ function SeitenZeile({
                     toast.error(res.error);
                     return;
                   }
+                  // Herkunft NUR setzen, wenn der gespeicherte Text wirklich
+                  // (noch) der KI-Vorschlag ist — best-effort: ein
+                  // Fehlschlag hier soll die schon gespeicherte Seite nicht
+                  // als gescheitert melden (Wurzel 5).
+                  if (kiHerkunft) {
+                    void kiHerkunftSetzen({
+                      tabelle: "site_pages",
+                      zeilen_id: seite.id,
+                      herkunft: "ai_generated",
+                      modell: kiHerkunft,
+                    });
+                    setKiHerkunft(null);
+                  }
                   toast.success(t("seo.seiten.gespeichert"));
                 })
               }
@@ -217,9 +270,10 @@ export function SeoSeitenListe({
 
   return (
     <div className="flex flex-col gap-6">
-      <EinstellungenKopf
+      <BereichsKopf
         titel={t("seo.seiten.titel")}
         beschreibung={t("seo.seiten.hinweis")}
+        aktion={<KiAlleSeitenKnopf pages={pages} branding={branding} />}
       />
 
       {pages.length === 0 ? (

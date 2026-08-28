@@ -102,3 +102,223 @@ body {
 [style*="--body-scale"] :is(p, li) {
   font-size: calc(1em * var(--body-scale, 1));
 }
+
+
+/* --- Automatische Größenanpassung je Gerät (0447) --------------------------
+ *
+ * Hostaway verkleinert Text ohne eigene Angabe automatisch: Desktop 100 %,
+ * Tablet 85 %, Mobil 80 %, dabei nie unter 16 px, auf dem Tablet höchstens
+ * 60 px und auf dem Mobilgerät höchstens 40 px.
+ *
+ * Zwei bewusste Abweichungen:
+ *
+ *  · Die Verkleinerung greift NUR bei Größen, die der Kunde im Theme gesetzt
+ *    hat. Einen Faktor 0,8 auf JEDEN Text zu legen würde jede bestehende
+ *    Kundenseite auf dem Telefon anders aussehen lassen — genau das darf eine
+ *    Änderung nicht (Wurzel 1).
+ *  · Die 16-px-Untergrenze hebt eine bewusst kleine Angabe NICHT an. Wer 12 px
+ *    einstellt, bekommt 12 px, auch auf dem Telefon (`min(16px, …)`). Die
+ *    Untergrenze verhindert, dass die automatische Verkleinerung etwas
+ *    unlesbar macht — sie überschreibt keine Entscheidung des Kunden (Wurzel 4).
+ */
+:root {
+  --txt-geraet: 1;
+  --txt-max: 1000px;
+}
+@media (max-width: 64rem) {
+  :root {
+    --txt-geraet: 0.85;
+    --txt-max: 60px;
+  }
+}
+@media (max-width: 40rem) {
+  :root {
+    --txt-geraet: 0.8;
+    --txt-max: 40px;
+  }
+}
+
+/* --- Text-Rollen DFLT · PAR · H1–H6 (0447) ---------------------------------
+ *
+ * Jede Eigenschaft hat ihre EIGENE Regel mit ihrem eigenen `[style*="…"]`-
+ * Wächter. Das ist absichtlich ausgeschrieben und nicht zusammengefasst:
+ *
+ *  · Ohne Wächter würde die Regel auch dann gelten, wenn der Kunde diese
+ *    Eigenschaft NICHT gesetzt hat — die Variable wäre leer, die Eigenschaft
+ *    fiele auf `unset` zurück und die Tailwind-Klasse des Abschnitts wäre
+ *    überschrieben. Eine bestehende Seite sähe anders aus (Wurzel 1).
+ *  · Ein gemeinsamer Wächter je Rolle hätte dasselbe Problem, sobald eine Rolle
+ *    nur teilweise gepflegt ist (nur Farbe gesetzt → Schriftstärke kaputt).
+ *  · Die Wächter-Spezifität (0,1,1) schlägt die Tailwind-Klasse (0,1,0). Nur
+ *    deshalb wirkt eine Theme-Angabe auch auf einen Abschnitt, der `font-bold`
+ *    oder `font-display` setzt.
+ *
+ * Die Variablennamen sind so gewählt, dass keiner Präfix eines anderen ist
+ * (`-size`/`-msize`, `lka/lkh/lkv/lku`) — sonst würde `[style*="--txt-h1-size"]`
+ * auch bei gesetztem `--txt-h1-size-mobile` greifen und eine leere Variable
+ * einsetzen.
+ */
+[style*="--txt-dflt-font"] body { font-family: var(--txt-dflt-font); }
+[style*="--txt-dflt-color"] body { color: var(--txt-dflt-color); }
+[style*="--txt-dflt-weight"] body { font-weight: var(--txt-dflt-weight); }
+[style*="--txt-dflt-lh"] body { line-height: var(--txt-dflt-lh); }
+[style*="--txt-dflt-ls"] body { letter-spacing: var(--txt-dflt-ls); }
+[style*="--txt-dflt-tt"] body { text-transform: var(--txt-dflt-tt); }
+[style*="--txt-dflt-shadow"] body { text-shadow: var(--txt-dflt-shadow); }
+[style*="--txt-dflt-size"] body {
+  font-size: clamp(
+    min(16px, var(--txt-dflt-size)),
+    calc(var(--txt-dflt-size) * var(--txt-geraet, 1) * var(--body-scale, 1)),
+    var(--txt-max, 1000px)
+  );
+}
+
+[style*="--txt-par-font"] p { font-family: var(--txt-par-font); }
+[style*="--txt-par-color"] p { color: var(--txt-par-color); }
+[style*="--txt-par-weight"] p { font-weight: var(--txt-par-weight); }
+[style*="--txt-par-lh"] p { line-height: var(--txt-par-lh); }
+[style*="--txt-par-ls"] p { letter-spacing: var(--txt-par-ls); }
+[style*="--txt-par-tt"] p { text-transform: var(--txt-par-tt); }
+[style*="--txt-par-shadow"] p { text-shadow: var(--txt-par-shadow); }
+[style*="--txt-par-size"] p {
+  font-size: clamp(
+    min(16px, var(--txt-par-size)),
+    calc(var(--txt-par-size) * var(--txt-geraet, 1) * var(--body-scale, 1)),
+    var(--txt-max, 1000px)
+  );
+}
+
+[style*="--txt-h1-font"] h1 { font-family: var(--txt-h1-font); }
+[style*="--txt-h1-color"] h1 { color: var(--txt-h1-color); }
+[style*="--txt-h1-weight"] h1 { font-weight: var(--txt-h1-weight); }
+[style*="--txt-h1-lh"] h1 { line-height: var(--txt-h1-lh); }
+[style*="--txt-h1-ls"] h1 { letter-spacing: var(--txt-h1-ls); }
+[style*="--txt-h1-tt"] h1 { text-transform: var(--txt-h1-tt); }
+[style*="--txt-h1-shadow"] h1 { text-shadow: var(--txt-h1-shadow); }
+[style*="--txt-h1-size"] h1 {
+  font-size: clamp(
+    min(16px, var(--txt-h1-size)),
+    calc(var(--txt-h1-size) * var(--txt-geraet, 1) * var(--heading-scale, 1)),
+    var(--txt-max, 1000px)
+  );
+}
+
+[style*="--txt-h2-font"] h2 { font-family: var(--txt-h2-font); }
+[style*="--txt-h2-color"] h2 { color: var(--txt-h2-color); }
+[style*="--txt-h2-weight"] h2 { font-weight: var(--txt-h2-weight); }
+[style*="--txt-h2-lh"] h2 { line-height: var(--txt-h2-lh); }
+[style*="--txt-h2-ls"] h2 { letter-spacing: var(--txt-h2-ls); }
+[style*="--txt-h2-tt"] h2 { text-transform: var(--txt-h2-tt); }
+[style*="--txt-h2-shadow"] h2 { text-shadow: var(--txt-h2-shadow); }
+[style*="--txt-h2-size"] h2 {
+  font-size: clamp(
+    min(16px, var(--txt-h2-size)),
+    calc(var(--txt-h2-size) * var(--txt-geraet, 1) * var(--heading-scale, 1)),
+    var(--txt-max, 1000px)
+  );
+}
+
+[style*="--txt-h3-font"] h3 { font-family: var(--txt-h3-font); }
+[style*="--txt-h3-color"] h3 { color: var(--txt-h3-color); }
+[style*="--txt-h3-weight"] h3 { font-weight: var(--txt-h3-weight); }
+[style*="--txt-h3-lh"] h3 { line-height: var(--txt-h3-lh); }
+[style*="--txt-h3-ls"] h3 { letter-spacing: var(--txt-h3-ls); }
+[style*="--txt-h3-tt"] h3 { text-transform: var(--txt-h3-tt); }
+[style*="--txt-h3-shadow"] h3 { text-shadow: var(--txt-h3-shadow); }
+[style*="--txt-h3-size"] h3 {
+  font-size: clamp(
+    min(16px, var(--txt-h3-size)),
+    calc(var(--txt-h3-size) * var(--txt-geraet, 1) * var(--heading-scale, 1)),
+    var(--txt-max, 1000px)
+  );
+}
+
+[style*="--txt-h4-font"] h4 { font-family: var(--txt-h4-font); }
+[style*="--txt-h4-color"] h4 { color: var(--txt-h4-color); }
+[style*="--txt-h4-weight"] h4 { font-weight: var(--txt-h4-weight); }
+[style*="--txt-h4-lh"] h4 { line-height: var(--txt-h4-lh); }
+[style*="--txt-h4-ls"] h4 { letter-spacing: var(--txt-h4-ls); }
+[style*="--txt-h4-tt"] h4 { text-transform: var(--txt-h4-tt); }
+[style*="--txt-h4-shadow"] h4 { text-shadow: var(--txt-h4-shadow); }
+[style*="--txt-h4-size"] h4 {
+  font-size: clamp(
+    min(16px, var(--txt-h4-size)),
+    calc(var(--txt-h4-size) * var(--txt-geraet, 1) * var(--heading-scale, 1)),
+    var(--txt-max, 1000px)
+  );
+}
+
+[style*="--txt-h5-font"] h5 { font-family: var(--txt-h5-font); }
+[style*="--txt-h5-color"] h5 { color: var(--txt-h5-color); }
+[style*="--txt-h5-weight"] h5 { font-weight: var(--txt-h5-weight); }
+[style*="--txt-h5-lh"] h5 { line-height: var(--txt-h5-lh); }
+[style*="--txt-h5-ls"] h5 { letter-spacing: var(--txt-h5-ls); }
+[style*="--txt-h5-tt"] h5 { text-transform: var(--txt-h5-tt); }
+[style*="--txt-h5-shadow"] h5 { text-shadow: var(--txt-h5-shadow); }
+[style*="--txt-h5-size"] h5 {
+  font-size: clamp(
+    min(16px, var(--txt-h5-size)),
+    calc(var(--txt-h5-size) * var(--txt-geraet, 1) * var(--heading-scale, 1)),
+    var(--txt-max, 1000px)
+  );
+}
+
+[style*="--txt-h6-font"] h6 { font-family: var(--txt-h6-font); }
+[style*="--txt-h6-color"] h6 { color: var(--txt-h6-color); }
+[style*="--txt-h6-weight"] h6 { font-weight: var(--txt-h6-weight); }
+[style*="--txt-h6-lh"] h6 { line-height: var(--txt-h6-lh); }
+[style*="--txt-h6-ls"] h6 { letter-spacing: var(--txt-h6-ls); }
+[style*="--txt-h6-tt"] h6 { text-transform: var(--txt-h6-tt); }
+[style*="--txt-h6-shadow"] h6 { text-shadow: var(--txt-h6-shadow); }
+[style*="--txt-h6-size"] h6 {
+  font-size: clamp(
+    min(16px, var(--txt-h6-size)),
+    calc(var(--txt-h6-size) * var(--txt-geraet, 1) * var(--heading-scale, 1)),
+    var(--txt-max, 1000px)
+  );
+}
+/* Eine eigene Mobilgröße gewinnt über die automatische Verkleinerung: sie ist
+ * eine Entscheidung des Kunden, die andere nur eine Rechnung. */
+@media (max-width: 40rem) {
+  [style*="--txt-dflt-msize"] body { font-size: calc(var(--txt-dflt-msize) * var(--body-scale, 1)); }
+  [style*="--txt-par-msize"] p { font-size: calc(var(--txt-par-msize) * var(--body-scale, 1)); }
+  [style*="--txt-h1-msize"] h1 { font-size: calc(var(--txt-h1-msize) * var(--heading-scale, 1)); }
+  [style*="--txt-h2-msize"] h2 { font-size: calc(var(--txt-h2-msize) * var(--heading-scale, 1)); }
+  [style*="--txt-h3-msize"] h3 { font-size: calc(var(--txt-h3-msize) * var(--heading-scale, 1)); }
+  [style*="--txt-h4-msize"] h4 { font-size: calc(var(--txt-h4-msize) * var(--heading-scale, 1)); }
+  [style*="--txt-h5-msize"] h5 { font-size: calc(var(--txt-h5-msize) * var(--heading-scale, 1)); }
+  [style*="--txt-h6-msize"] h6 { font-size: calc(var(--txt-h6-msize) * var(--heading-scale, 1)); }
+}
+
+/* Die Link-Zustände der Rolle DFLT. Hostaway führt Linkfarbe und
+ * Unterstreichung ebenfalls dort, mit den Zuständen normal/hover/besucht.
+ *
+ * `:visited` kann aus Datenschutzgründen nur die Farbe ändern — das ist eine
+ * Browser-Regel, keine Einschränkung von uns. Deshalb gibt es hier auch nur
+ * die Farbe und nicht etwa eine eigene Unterstreichung für besuchte Links. */
+[style*="--txt-dflt-lka"] a { color: var(--txt-dflt-lka); }
+[style*="--txt-dflt-lkh"] a:hover { color: var(--txt-dflt-lkh); }
+[style*="--txt-dflt-lkv"] a:visited { color: var(--txt-dflt-lkv); }
+[style*="--txt-dflt-lku"] a { text-decoration-line: var(--txt-dflt-lku); }
+
+/* --- Abstand der Abschnitte (0447) -----------------------------------------
+ *
+ * ZUSÄTZLICHER Abstand auf der Hülle jedes Abschnitts, nicht ein Ersatz für
+ * dessen eigenes `py`. Das ist dieselbe Bedeutung, die das `padding` je
+ * Abschnitt schon hat (0432) — und der Grund, warum eine bestehende Seite ohne
+ * gesetzten Wert unverändert bleibt.
+ *
+ * Auf der Hülle und nicht auf dem Abschnitt selbst: sonst würde der Theme-Wert
+ * mit der Abschnitts-Einstellung um dieselbe Eigenschaft streiten, und die
+ * feinere Angabe (die am Abschnitt) verlöre.
+ *
+ * Was Hostaway hier zusätzlich hat und wir nicht: „Spaltenabstand" und
+ * „Innerer Spaltenabstand". Unser Renderer stapelt ABSCHNITTE; eine allgemeine
+ * Spalten-Ebene gibt es nicht. Zwei Regler, die auf nichts wirken, wären
+ * Attrappen (Wurzel 4). */
+[style*="--abschnitt-abstand-y"] [data-block-index] {
+  padding-block: var(--abschnitt-abstand-y);
+}
+[style*="--abschnitt-abstand-x"] [data-block-index] {
+  padding-inline: var(--abschnitt-abstand-x);
+}

@@ -22,26 +22,40 @@ from __future__ import annotations
 
 from supabase import Client
 
+from src.core.captcha import CaptchaError, CaptchaService
+from src.core.config import get_settings
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import load_scoped
 
-from . import formulare
+from . import baum, formular_anlagen, formular_nachlauf, formulare, regeln
+from .beitrag_eigene_felder import felder_laden as eigene_felder_laden
+from .beitrag_oeffentlich import beitrag_felder_oeffentlich
+from .formular_anlagen import (
+    FormAnlage,
+    FormAnlagenListResponse,
+    FormUploadResponse,
+)
 from .schemas import (
     BlockType,
+    ContactContent,
     FormContent,
+    FormFieldType,
     FormSubmission,
     FormSubmissionListResponse,
     FormSubmissionRequest,
     FormSubmissionResponse,
     PopupTrigger,
     PublicBlock,
+    PublicBlogAngaben,
     PublicPageMeta,
     PublicPageResponse,
     PublicPopup,
     PublicPopupListResponse,
     PublicPost,
+    PublicPostEigenesFeld,
     PublicPostListResponse,
+    PublicPostNachbar,
     PublicPostResponse,
     RedirectCreate,
     RedirectImportRequest,
@@ -53,12 +67,67 @@ from .schemas import (
     SeoBefund,
     SeoPruefungResponse,
     SitemapResponse,
+    kontakt_formular_felder,
 )
-from .seiten import beitraege_laden, beitrag_laden, fehlerseite_laden, popups_laden
+from .seiten import (
+    beitraege_laden,
+    beitrag_laden,
+    blog_einstellungen_lesen,
+    fehlerseite_laden,
+    nachbarbeitraege,
+    popups_laden,
+)
 from .seo import seo_befunde, sitemap_daten
 from .service import SiteConfigError
 
 log = get_logger("nextdays.site_config.weiterleitungen")
+
+#: Aktionsname des Captcha-Tokens fuer Formulare auf Kunden-Websites (0445).
+#:
+#: MUSS mit dem String uebereinstimmen, den der Renderer an
+#: `grecaptcha.enterprise.execute` uebergibt (`builder/lib/captcha.ts`) —
+#: Google prueft ihn gegen. Ein EIGENER Name und nicht „kontakt" (der der
+#: Marketing-Seite): waere er derselbe, liesse sich ein Token, das auf unserer
+#: Kontaktseite erzeugt wurde, vor dem Formular eines Kunden wiederverwenden,
+#: und die Aktionsangabe waere wertlos.
+CAPTCHA_AKTION = "website_formular"
+
+
+def _upload_geheimnis() -> bytes:
+    """Der Schluessel, mit dem Upload-Tickets signiert werden (0445).
+
+    DASSELBE Geheimnis wie fuer die Entwurfs-Vorschau und den Seiten-Passwort-
+    Zugang (`SITE_DRAFT_SECRET`), und das ist kein Sparen: die Nachricht traegt
+    das Praefix `upload.` (siehe `formular_anlagen.ticket_erzeugen`), waehrend
+    die anderen beiden `{tenant}.{page}.{exp}` bzw. `{page}.{exp}` lauten. Die
+    Namensraeume sind damit getrennt — ein Vorschau-Token laesst sich nicht als
+    Upload-Ticket vorzeigen. Ein zweites Geheimnis waere eine zweite Variable,
+    die in einer Umgebung fehlen kann, und ein fehlendes Geheimnis ist hier ein
+    503.
+
+    Fail-CLOSED (Wurzel 5): kein hartkodierter Ersatz. Sonst koennte jeder
+    gueltige Tickets faelschen und Dateien an fremde Einsendungen haengen.
+    """
+    geheim = get_settings().site_draft_secret.get_secret_value()
+    if not geheim:
+        raise SiteConfigError(
+            "SITE_DRAFT_SECRET ist nicht konfiguriert.", status_code=503
+        )
+    return geheim.encode()
+
+
+def _erster_text(werte: dict[str, str]) -> str:
+    """Der erste gefuellte Wert einer Sprachtabelle.
+
+    Fuer eine Mail an den GAST, dessen Sprache wir nicht kennen: er hat ein
+    Formular ausgefuellt, keine Sprache gewaehlt. Die erste gepflegte Fassung
+    ist die ehrlichste Wahl — eine erfundene Uebersetzung waere schlechter, und
+    gar nichts zu schicken auch.
+    """
+    for wert in (werte or {}).values():
+        if (wert or "").strip():
+            return wert.strip()
+    return ""
 
 _COLS = "id, source_path, target, redirect_type, is_active, created_at"
 
@@ -429,8 +498,15 @@ class WeiterleitungsService:
     schneller, wer Weiterleitungen sucht.
     """
 
-    def __init__(self, db: Client, site: object) -> None:
+    def __init__(
+        self, db: Client, site: object, captcha: CaptchaService | None = None
+    ) -> None:
         self._db = db
+        # Der Spamschutz oeffentlicher Formulare (0445). Einsetzbar, damit ein
+        # Test ihn ersetzen kann — dieselbe Bauart wie im `contact`-Slice, und
+        # es ist DERSELBE Dienst mit demselben Schluessel: eine zweite
+        # Captcha-Kette waere ein zweiter Ort, an dem eine Schwelle steht.
+        self._captcha = captcha or CaptchaService()
         # Der SiteConfigService wird NUR für die Host-Auflösung gebraucht
         # (`resolve_site_by_domain`). Bewusst über die öffentliche Methode und
         # nicht über `_tenant_id_for_host`: die öffentliche prüft zusätzlich den
@@ -508,7 +584,7 @@ class WeiterleitungsService:
             return None
         blocks = (
             self._db.table("site_blocks")
-            .select("type, content, settings")
+            .select("id, parent_id, kind, span, type, content, settings")
             .eq("page_id", seite["id"])
             .order("position")
             .execute()
@@ -524,23 +600,148 @@ class WeiterleitungsService:
                 # mit den echten Seiten.
                 noindex=True,
             ),
-            blocks=[
-                PublicBlock(
-                    type=BlockType(b["type"]),
-                    content=b.get("content") or {},
-                    settings=b.get("settings") or {},
-                )
-                for b in blocks
-            ],
+            blocks=baum.baum_bauen(
+                blocks,
+                kennung=formulare.block_kennung,
+                tenant_id=branding.tenant_id,
+            ),
+            branding=branding,
+        )
+
+    def objekt_vorlage(self, host: str) -> PublicPageResponse | None:
+        """Das Master-Layout der Objektseite (0468), oder ``None``.
+
+        ``None`` heißt: dieser Betrieb hat noch keine Bausteine darauf gelegt.
+        Der Renderer zeigt dann sein eingebautes Layout — und das ist wichtig:
+        die Objektseiten bestehender Betriebe dürfen nicht leer werden, nur weil
+        es diese Vorlage jetzt gibt (Wurzel 1 — nichts am Bestand ändern, was
+        nichts damit zu tun hat).
+
+        Kein 404 im Leerfall, aus demselben Grund wie bei der Fehlerseite: der
+        Normalfall gehört nicht als Fehlermeldung ins Log.
+
+        Es gibt hier KEINE Prüfung auf „veröffentlicht". Eine dynamische Seite
+        wird nie veröffentlicht — sie existiert, sobald es Objekte gibt. Was der
+        Gast sieht, entscheidet der Status des OBJEKTS, nicht der der Vorlage.
+        """
+        branding = self._site.resolve_site_by_domain(host)  # type: ignore[attr-defined]
+        rows = (
+            self._db.table("site_pages")
+            .select("id, title")
+            .eq("tenant_id", branding.tenant_id)
+            .eq("page_type", "dynamic")
+            .eq("dynamic_source", "property")
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            return None
+        seite = rows[0]
+        blocks = (
+            self._db.table("site_blocks")
+            .select("id, parent_id, kind, span, type, content, settings")
+            .eq("page_id", seite["id"])
+            .order("position")
+            .execute()
+        ).data or []
+        if not blocks:
+            # Vorlage vorhanden, aber leer — dasselbe wie „keine Vorlage".
+            # Sonst lieferte der Renderer eine Objektseite ohne einen einzigen
+            # Abschnitt aus, und der Gast sähe eine weiße Seite.
+            return None
+        return PublicPageResponse(
+            tenant_id=branding.tenant_id,
+            page=PublicPageMeta(
+                slug="inserat/[id]",
+                title=seite.get("title") or "",
+                # Die VORLAGE steht in keinem Index — die erzeugten Objektseiten
+                # schon. `noindex` gilt hier für das Muster, nicht für sie.
+                noindex=True,
+            ),
+            blocks=baum.baum_bauen(
+                blocks,
+                kennung=formulare.block_kennung,
+                tenant_id=branding.tenant_id,
+            ),
+            branding=branding,
+        )
+
+    def systemseiten_vorlage(
+        self, host: str, key: str
+    ) -> PublicPageResponse | None:
+        """Die Bausteine einer SYSTEMSEITE (0474), oder ``None``.
+
+        Dieselbe Mechanik wie :meth:`objekt_vorlage`, nur über ``system_key``
+        statt ``dynamic_source``: Checkout, Bestätigung und Blog-Übersicht sind
+        seit 0474 gestaltbar.
+
+        ``None`` heißt „noch keine Bausteine darauf" — der Renderer zeigt dann
+        sein eingebautes Layout. Genau das schützt den Bestand: eine
+        Buchungsseite darf nicht leer werden, nur weil es diese Vorlage jetzt
+        gibt (Wurzel 1).
+
+        Kein 404 im Leerfall: der Normalfall gehört nicht als Fehlermeldung ins
+        Log.
+
+        Keine Prüfung auf „veröffentlicht": eine Systemseite wird nie
+        veröffentlicht, sie existiert, weil es ihre Route gibt.
+        """
+        branding = self._site.resolve_site_by_domain(host)  # type: ignore[attr-defined]
+        rows = (
+            self._db.table("site_pages")
+            .select("id, title, slug")
+            .eq("tenant_id", branding.tenant_id)
+            .eq("page_type", "system")
+            .eq("system_key", key)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            return None
+        seite = rows[0]
+        blocks = (
+            self._db.table("site_blocks")
+            .select("id, parent_id, kind, span, type, content, settings")
+            .eq("page_id", seite["id"])
+            .order("position")
+            .execute()
+        ).data or []
+        if not blocks:
+            # Seite vorhanden, aber leer — dasselbe wie „keine Vorlage". Sonst
+            # lieferte der Renderer eine Buchungsseite ohne einen einzigen
+            # Abschnitt aus, und der Gast sähe eine weiße Seite statt eines
+            # Buchungsformulars.
+            return None
+        return PublicPageResponse(
+            tenant_id=branding.tenant_id,
+            page=PublicPageMeta(
+                slug=seite.get("slug") or "",
+                title=seite.get("title") or "",
+                # Checkout und Bestätigung stehen in keinem Index (0466). Die
+                # Blog-Übersicht schon — ihr `noindex` steht an der Seite selbst
+                # und wird hier nicht überschrieben; dieser Wert beschreibt nur,
+                # dass die VORLAGE als solche nicht indexiert wird.
+                noindex=True,
+            ),
+            blocks=baum.baum_bauen(
+                blocks,
+                kennung=formulare.block_kennung,
+                tenant_id=branding.tenant_id,
+            ),
             branding=branding,
         )
 
     # === Formulare (0436, Etappe F) =====================================
 
     def formular_absenden(
-        self, host: str, anfrage: FormSubmissionRequest
+        self,
+        host: str,
+        anfrage: FormSubmissionRequest,
+        *,
+        ip: str | None = None,
+        user_agent: str | None = None,
     ) -> FormSubmissionResponse:
-        """Eine Formular-Einsendung eines GASTES annehmen (0436).
+        """Eine Formular-Einsendung eines GASTES annehmen (0436/0444/0445).
 
         Der einzige Weg im Slice, auf dem ein Fremder schreibt — deshalb prüft
         er der Reihe nach ALLES, statt sich auf den Browser zu verlassen:
@@ -552,8 +753,20 @@ class WeiterleitungsService:
            jemand mit einer fremden `block_id` in die Antwortenliste eines
            anderen Betriebs schreiben (Wurzel 3) oder ein Formular benutzen, das
            noch im Entwurf steckt.
-        3. Die Felder werden gegen die Definition geprüft, unbekannte fliegen
+        3. **Spamschutz** (0445): reCAPTCHA Enterprise, serverseitig bewertet,
+           über dieselbe Kette wie das Kontaktformular der Marketing-Seite
+           (`core.captcha`). Bei Hostaway ist reCAPTCHA an und NICHT
+           abschaltbar; hier ebenso — es gibt keinen Schalter im Block-Inhalt,
+           denn ein Schalter „Spamschutz aus" wäre eine Einladung.
+        4. Die Felder werden gegen die Definition geprüft, unbekannte fliegen
            weg (`formulare.einsendung_pruefen`).
+
+        Die Reihenfolge ist bedeutungstragend: der Captcha-Aufruf kostet einen
+        HTTP-Aufruf zu Google und steht deshalb NACH den billigen Prüfungen —
+        ein Bot mit erfundener `block_id` soll uns kein Google-Kontingent
+        kosten. Er steht aber VOR dem Speichern: eine Zeile, die erst
+        geschrieben und dann verworfen wird, hätte den Zähler des Betriebs
+        schon bewegt.
         """
         branding = self._site.resolve_site_by_domain(host)  # type: ignore[attr-defined]
         tenant_id = branding.tenant_id
@@ -565,7 +778,14 @@ class WeiterleitungsService:
             .limit(1)
             .execute()
         ).data or []
-        if not rows or rows[0].get("type") != BlockType.form.value:
+        # ZWEI Blocktypen dürfen hier einsenden: der Formular-Abschnitt mit
+        # seiner eigenen Feldliste, und der Kontakt-Abschnitt mit dem Schalter
+        # „Kontaktformular anzeigen". Letzterer hat keinen Feld-Baukasten, seine
+        # Felder stehen fest in `block_inhalte.kontakt_formular_felder()` —
+        # bis 27.08.2026 war der Schalter deshalb eine Attrappe ohne Formular
+        # (Prüfbericht B4).
+        erlaubte_typen = (BlockType.form.value, BlockType.contact.value)
+        if not rows or rows[0].get("type") not in erlaubte_typen:
             # Dieselbe Meldung für „gibt es nicht" und „gehört einem anderen":
             # kein Existenz-Leak an einen fremden Betrieb.
             raise SiteConfigError("Formular nicht gefunden.", status_code=404)
@@ -581,11 +801,186 @@ class WeiterleitungsService:
         if not seite or not seite[0].get("is_published"):
             raise SiteConfigError("Formular nicht gefunden.", status_code=404)
 
-        inhalt = FormContent.model_validate(block.get("content") or {})
-        formulare.speichern(
+        if block.get("type") == BlockType.contact.value:
+            kontakt = ContactContent.model_validate(block.get("content") or {})
+            # Der Schalter AUS heißt: es gibt hier kein Formular. Eine
+            # Einsendung darauf ist kein Versehen, sondern ein direkter POST
+            # (Wurzel 3: der Anfrage nicht vertrauen) — dieselbe karge Meldung
+            # wie bei einem fremden Block.
+            if not kontakt.show_form:
+                raise SiteConfigError(
+                    "Formular nicht gefunden.", status_code=404
+                )
+            # Empfänger und Überschrift kommen aus dem Kontakt-Abschnitt, die
+            # Felder aus der festen Liste. `bestaetigung` bleibt auf ihrem
+            # Standard (an) — ein Gast, der abschickt und nichts hört, schickt
+            # noch einmal.
+            inhalt = FormContent(
+                headline=kontakt.headline,
+                recipient=kontakt.email,
+                form_name="Kontakt",
+                fields=kontakt_formular_felder(),
+            )
+        else:
+            inhalt = FormContent.model_validate(block.get("content") or {})
+
+        # Spamschutz VOR dem Speichern. `CaptchaError` wird durchgereicht und
+        # nicht umgedeutet: 403 heisst „der Absender ist durchgefallen",
+        # 502/503 heisst „wir koennen gerade nicht pruefen" — zwei
+        # verschiedene Aussagen an zwei verschiedene Leute (Wurzel 5).
+        try:
+            self._captcha.pruefen(
+                anfrage.recaptcha_token,
+                aktion=CAPTCHA_AKTION,
+                ip=ip,
+                user_agent=user_agent,
+            )
+        except CaptchaError as exc:
+            raise SiteConfigError(exc.message, status_code=exc.status_code) from exc
+
+        zeile = formulare.speichern(
             self._db, tenant_id, str(block["id"]), inhalt, dict(anfrage.daten)
         )
-        return FormSubmissionResponse()
+
+        # === Nachlauf (0444) ===============================================
+        # ALLES ab hier ist best-effort. Die Einsendung IST gespeichert; kippt
+        # hier etwas, darf das den Gast nicht treffen. Er hat sein Formular
+        # abgeschickt, und dass unsere Bestaetigung nicht durchkam, ist unser
+        # Problem, nicht seins (Wurzel 5).
+        if inhalt.webhook_url:
+            formular_nachlauf.webhook_senden(
+                inhalt.webhook_url,
+                {
+                    "form_name": inhalt.form_name,
+                    "submission_id": str(zeile["id"]),
+                    "created_at": str(zeile.get("created_at") or ""),
+                    "daten": zeile.get("daten") or {},
+                },
+            )
+
+        # Bestaetigung an den ABSENDER. Die Adresse kommt aus dem Formular
+        # selbst — das erste E-Mail-Feld. Kein eigenes Pflichtfeld dafuer: ein
+        # Formular ohne E-Mail-Feld kann keine Bestaetigung schicken, und das
+        # ist in Ordnung.
+        gesendet = False
+        if inhalt.bestaetigung:
+            adresse = next(
+                (
+                    (zeile.get("daten") or {}).get(f.name, "")
+                    for f in inhalt.fields
+                    if f.type is FormFieldType.email
+                ),
+                "",
+            )
+            gesendet = formular_nachlauf.bestaetigung_senden(
+                adresse,
+                branding.site_name,
+                _erster_text(inhalt.bestaetigung_text)
+                or _erster_text(inhalt.success_text),
+                zeile.get("daten") or {},
+            )
+
+        # Ticket NUR, wenn das Formular wirklich eine Datei annimmt. Sonst
+        # bekaeme jeder Absender die Kennung seiner Einsendung und einen
+        # gueltigen Schluessel dazu — fuer eine Tuer, die es nicht gibt (0445).
+        hat_datei = any(f.type is FormFieldType.file for f in inhalt.fields)
+        return FormSubmissionResponse(
+            # Die Weiterleitung kommt in die ANTWORT und wird nicht als
+            # HTTP-302 geschickt: der Aufruf kommt aus JavaScript, und ein 302
+            # darauf laedt die Zieladresse per fetch nach, statt den Browser
+            # dorthin zu schicken. Der Renderer entscheidet.
+            weiterleitung=inhalt.weiterleitung,
+            # Wurde eine Bestaetigung an den Absender verschickt? Der Renderer
+            # sagt es dem Gast — sonst wartet er auf eine Mail, die nie kommt.
+            bestaetigung_gesendet=gesendet,
+            submission_id=str(zeile["id"]) if hat_datei else None,
+            upload_ticket=(
+                formular_anlagen.ticket_erzeugen(
+                    _upload_geheimnis(), str(zeile["id"])
+                )
+                if hat_datei
+                else None
+            ),
+        )
+
+    def formular_anlage(
+        self,
+        submission_id: str,
+        ticket: str | None,
+        feld: str,
+        dateiname: str,
+        inhalt: bytes,
+    ) -> FormUploadResponse:
+        """Eine Datei an eine bereits gespeicherte Einsendung haengen (0445).
+
+        OHNE JWT — der Absender ist ein Gast. Der Weg ist deshalb genau so eng
+        gebaut, wie er in `formular_anlagen` beschrieben ist:
+
+        1. **Ticket zuerst.** Ohne gueltiges, nicht abgelaufenes Ticket ist
+           schon der erste Schritt zu Ende (401). Es haengt an genau dieser
+           Einsendung und gilt zwei Minuten. Ohne diese Pruefung koennte jeder,
+           der eine Einsendungs-ID kennt oder raet, Dateien an die Einsendung
+           eines Fremden haengen. Das Ticket wird geprueft, BEVOR die Zeile
+           geladen wird: sonst waere die Antwortzeit ein Orakel dafuer, welche
+           IDs es gibt.
+        2. **Der Tenant kommt aus der ZEILE**, nie vom Client (Wurzel 3).
+        3. **Deckel je Einsendung.** Ohne ihn waere der Endpunkt zwei Minuten
+           lang ein unbegrenzter Bereich (Wurzel 8).
+        4. Erst dann `speichern` — dort sitzen Groessengrenze und
+           Magic-Byte-Pruefung.
+
+        Der Zaehler wird VOR dem Speichern gelesen und nicht danach: die
+        Alternative waere, erst abzulegen und dann festzustellen, dass es eine
+        zu viel war.
+        """
+        if not formular_anlagen.ticket_gilt(
+            _upload_geheimnis(), submission_id, ticket
+        ):
+            raise SiteConfigError(
+                "Der Upload-Schluessel fehlt oder ist abgelaufen.",
+                status_code=401,
+            )
+        einsendung = formular_anlagen.einsendung_pruefen(self._db, submission_id)
+        if formular_anlagen.anzahl(self._db, submission_id) >= (
+            formular_anlagen.MAX_ANLAGEN
+        ):
+            raise SiteConfigError(
+                "Es sind hoechstens "
+                f"{formular_anlagen.MAX_ANLAGEN} Anlagen je Anfrage moeglich.",
+                status_code=422,
+            )
+        zeile = formular_anlagen.speichern(
+            self._db,
+            str(einsendung["tenant_id"]),
+            submission_id,
+            feld,
+            dateiname,
+            inhalt,
+        )
+        return FormUploadResponse(
+            id=str(zeile["id"]),
+            name=str(zeile["original_name"]),
+            groesse=int(zeile["groesse"]),
+        )
+
+    def formular_anlagen_liste(
+        self, ctx: AuthContext, submission_id: str
+    ) -> FormAnlagenListResponse:
+        """Die Anlagen EINER Einsendung — mit signierter, kurzlebiger Adresse.
+
+        Auf `(submission_id, tenant_id)` gescopt, genau wie der Listen-Pfad
+        darueber (Wurzel 9): waere hier nur die ID im Filter, koennte ein
+        Betrieb die Anlagen der Einsendung eines anderen abrufen — inklusive
+        einer gueltigen Leseadresse auf die Datei.
+        """
+        return FormAnlagenListResponse(
+            items=[
+                FormAnlage(**a)
+                for a in formular_anlagen.liste(
+                    self._db, ctx.tenant_id, submission_id
+                )
+            ]
+        )
 
     def formular_liste(
         self, ctx: AuthContext, *, limit: int = 50, offset: int = 0
@@ -609,6 +1004,40 @@ class WeiterleitungsService:
     def formular_loeschen(self, ctx: AuthContext, submission_id: str) -> None:
         formulare.loeschen(self._db, ctx.tenant_id, submission_id)
 
+    # === Personalisierungs-Regeln (0440) ================================
+    # Delegationen wie bei den Formularen: die Logik steht in `regeln`, weil
+    # der oeffentliche Lesepfad sie ohne Auth-Kontext braucht.
+
+    def regeln(self, ctx: AuthContext) -> regeln.RuleListResponse:
+        return regeln.liste(self._db, ctx.tenant_id)
+
+    def regel_anlegen(
+        self, ctx: AuthContext, req: regeln.RuleCreate
+    ) -> regeln.RuleResponse:
+        return regeln.anlegen(self._db, ctx.tenant_id, req)
+
+    def regel_aendern(
+        self, ctx: AuthContext, rule_id: str, req: regeln.RuleUpdate
+    ) -> regeln.RuleResponse:
+        return regeln.aendern(self._db, ctx.tenant_id, rule_id, req)
+
+    def regel_loeschen(self, ctx: AuthContext, rule_id: str) -> None:
+        regeln.loeschen(self._db, ctx.tenant_id, rule_id)
+
+    def regeln_ordnen(
+        self, ctx: AuthContext, ids: list[str]
+    ) -> regeln.RuleListResponse:
+        return regeln.neu_ordnen(self._db, ctx.tenant_id, ids)
+
+    def regeln_oeffentlich(self, host: str) -> regeln.PublicRuleListResponse:
+        """Die aktiven Regeln eines Hosts.
+
+        Ueber `resolve_site_by_domain` und nicht ueber die Tenant-Aufloesung
+        allein: eine Website, die offline geschaltet ist, soll auch keine
+        Regeln mehr ausspielen."""
+        branding = self._site.resolve_site_by_domain(host)  # type: ignore[attr-defined]
+        return regeln.oeffentlich(self._db, branding.tenant_id)
+
     def popups(self, host: str) -> PublicPopupListResponse:
         """Die veröffentlichten Pop-ups eines Hosts mit Auslösern und Blöcken
         (0437).
@@ -629,20 +1058,26 @@ class WeiterleitungsService:
         ids = [str(z["id"]) for z in zeilen]
         blocks = (
             self._db.table("site_blocks")
-            .select("page_id, type, content, settings")
+            .select("id, parent_id, kind, span, page_id, type, content, settings")
             .in_("page_id", ids)
             .order("position")
             .execute()
         ).data or []
-        nach_seite: dict[str, list[PublicBlock]] = {i: [] for i in ids}
+        # Je Seite EINEN Baum bauen. Die Zeilen werden vorher nach Seite
+        # sortiert und nicht hinterher zusammengesetzt: ein Baum über mehrere
+        # Seiten hinweg hätte Elternteile, die zu einer anderen Seite gehören —
+        # `baum_bauen` würde sie zu Recht als verwaist melden.
+        roh_je_seite: dict[str, list[dict]] = {i: [] for i in ids}
         for b in blocks:
-            nach_seite.setdefault(str(b["page_id"]), []).append(
-                PublicBlock(
-                    type=BlockType(b["type"]),
-                    content=b.get("content") or {},
-                    settings=b.get("settings") or {},
-                )
+            roh_je_seite.setdefault(str(b["page_id"]), []).append(b)
+        nach_seite: dict[str, list[PublicBlock]] = {
+            seite_id: baum.baum_bauen(
+                zeilen,
+                kennung=formulare.block_kennung,
+                tenant_id=branding.tenant_id,
             )
+            for seite_id, zeilen in roh_je_seite.items()
+        }
         return PublicPopupListResponse(
             items=[
                 PublicPopup(
@@ -652,6 +1087,7 @@ class WeiterleitungsService:
                     value=z.get("popup_value"),
                     device=z.get("popup_device"),
                     once=bool(z.get("popup_once", True)),
+                    position=z.get("popup_position"),
                     blocks=nach_seite.get(str(z["id"]), []),
                 )
                 # Ein Pop-up ohne Blöcke wird WEGGELASSEN: ein leeres Fenster,
@@ -664,12 +1100,30 @@ class WeiterleitungsService:
     # === Blog (0438, Etappe H) ==========================================
 
     def beitraege(
-        self, host: str, *, limit: int = 20, offset: int = 0, tag: str | None = None
+        self,
+        host: str,
+        *,
+        limit: int = 20,
+        offset: int = 0,
+        tag: str | None = None,
+        tags: list[str] | None = None,
+        q: str | None = None,
     ) -> PublicPostListResponse:
-        """Die veröffentlichten Blog-Beiträge eines Hosts."""
+        """Die veröffentlichten Blog-Beiträge eines Hosts.
+
+        `tag` ist die Filterleiste der Blog-Seite (EIN Schlagwort), `tags` die
+        Mehrfachauswahl des „Alle Beiträge"-Abschnitts, `q` die Beitragssuche
+        (nur Titel). Alle drei sind Filter auf DERSELBEN Abfrage — ein zweiter
+        Endpunkt je Filter wäre eine zweite Wahrheit über dieselbe Liste."""
         branding = self._site.resolve_site_by_domain(host)  # type: ignore[attr-defined]
         rows = beitraege_laden(
-            self._db, branding.tenant_id, limit=limit, offset=offset, tag=tag
+            self._db,
+            branding.tenant_id,
+            limit=limit,
+            offset=offset,
+            tag=tag,
+            tags=tags,
+            q=q,
         )
         schlagwoerter = sorted(
             {t for r in rows for t in (r.get("tags") or []) if t}
@@ -678,14 +1132,32 @@ class WeiterleitungsService:
             items=[self._post(r) for r in rows],
             total=len(rows),
             tags=schlagwoerter,
+            blog=self._blog_angaben(branding.tenant_id),
         )
 
-    def beitrag(self, host: str, slug: str) -> PublicPostResponse:
+    def _blog_angaben(self, tenant_id: str) -> PublicBlogAngaben:
+        """Blogname und RSS-Angaben für den Renderer (0457)."""
+        e = blog_einstellungen_lesen(self._db, tenant_id)
+        return PublicBlogAngaben(
+            blog_name=e.blog_name,
+            prev_next=e.blog_prev_next,
+            rss_title=e.rss_title,
+            rss_description=e.rss_description,
+            rss_image_url=e.rss_image_url,
+        )
+
+    def beitrag(
+        self, host: str, slug: str, sprache: str | None = None
+    ) -> PublicPostResponse:
         """Ein einzelner Beitrag mit Abschnitten.
 
         404, wenn es ihn nicht gibt, er ein Entwurf ist ODER sein
         Erscheinungsdatum in der Zukunft liegt — die Vorplanung wäre sonst
-        wirkungslos, sobald jemand den Link kennt."""
+        wirkungslos, sobald jemand den Link kennt.
+
+        `sprache` wählt die Sprachfassung (0476). Ein Beitrag ist der Ort, an
+        dem `excerpt` und `og_image_alt` überhaupt vorkommen — sie wurden
+        übersetzt und wären hier ohne diesen Weg nie ausgeliefert worden."""
         branding = self._site.resolve_site_by_domain(host)  # type: ignore[attr-defined]
         row = beitrag_laden(self._db, branding.tenant_id, slug)
         if not row:
@@ -697,36 +1169,80 @@ class WeiterleitungsService:
             .order("position")
             .execute()
         ).data or []
+        vorheriger, naechster = nachbarbeitraege(
+            self._db, branding.tenant_id, row.get("published_at")
+        )
+        # Die Sprachfassung dieses Beitrags (0476). Über den Site-Service, weil
+        # dort die EINE Ladefunktion steht — eine zweite Abfrage hier wäre die
+        # Stelle, an der beim nächsten Feld eine der beiden vergessen wird.
+        fassung = self._site.sprachfassung(str(row["id"]), sprache) or {}
         return PublicPostResponse(
             tenant_id=branding.tenant_id,
-            post=self._post(row),
+            post=self._post(row, mit_text=True),
+            blog=self._blog_angaben(branding.tenant_id),
+            vorheriger=(
+                PublicPostNachbar(**vorheriger) if vorheriger else None
+            ),
+            naechster=PublicPostNachbar(**naechster) if naechster else None,
+            # Die EIGENEN Felder (0485) — nur Schluessel und Name, und nur die
+            # sichtbaren: „versteckt" gilt fuer den ganzen Betrieb, also auch
+            # fuer die Website.
+            eigene_felder=[
+                PublicPostEigenesFeld(feld_key=f.feld_key, label=f.label)
+                for f in eigene_felder_laden(
+                    self._db, branding.tenant_id
+                ).felder
+                if not f.versteckt
+            ],
             page=PublicPageMeta(
                 slug=row["slug"],
-                title=row["title"],
+                # Die Sprachfassung gewinnt — dieselbe Rangfolge wie in
+                # `_seo_meta`: Fassung → Beitrag → Website.
+                title=fassung.get("title") or row["title"],
                 # Der site-weite Rückfall gilt auch hier: ein Beitrag ohne
                 # eigenen Meta-Titel bekommt den der Website.
-                seo_title=row.get("seo_title") or branding.seo_title,
+                seo_title=(
+                    fassung.get("seo_title")
+                    or row.get("seo_title")
+                    or branding.seo_title
+                ),
                 seo_description=(
-                    row.get("seo_description")
+                    fassung.get("seo_description")
+                    or row.get("seo_description")
+                    # Der Anrisstext, auch er in seiner Sprachfassung: für
+                    # einen Beitrag ist er der natürliche Rückfall, weil er
+                    # genau das tut, was eine Meta-Beschreibung tun soll.
+                    or fassung.get("excerpt")
                     or row.get("excerpt")
                     or branding.seo_description
                 ),
                 og_image_url=row.get("og_image_url") or row.get("cover_image_url"),
+                # Der Alt-Text gehört zum BILD: fällt das Vorschaubild auf das
+                # Titelbild zurück, gilt der Alt-Text des Vorschaubilds nicht
+                # mehr — er beschriebe dann ein anderes Bild (Wurzel 4).
+                og_image_alt=(
+                    (fassung.get("og_image_alt") or row.get("og_image_alt"))
+                    if row.get("og_image_url")
+                    else None
+                ),
                 noindex=bool(row.get("noindex")) or branding.noindex,
             ),
-            blocks=[
-                PublicBlock(
-                    type=BlockType(b["type"]),
-                    content=b.get("content") or {},
-                    settings=b.get("settings") or {},
-                )
-                for b in blocks
-            ],
+            blocks=baum.baum_bauen(
+                blocks,
+                kennung=formulare.block_kennung,
+                tenant_id=branding.tenant_id,
+            ),
             branding=branding,
         )
 
     @staticmethod
-    def _post(row: dict) -> PublicPost:
+    def _post(row: dict, *, mit_text: bool = False) -> PublicPost:
+        """Eine Beitragszeile zur öffentlichen Antwort.
+
+        `mit_text` NUR auf der Detailseite: in der Liste wären zwanzig volle
+        Beitragstexte zwanzigmal Ballast in einer Antwort, die sie nicht
+        anzeigt (Wurzel 8).
+        """
         return PublicPost(
             slug=row.get("slug") or "",
             title=row.get("title") or "",
@@ -737,6 +1253,15 @@ class WeiterleitungsService:
             published_at=(
                 str(row["published_at"]) if row.get("published_at") else None
             ),
+            content_html=row.get("content_html") if mit_text else None,
+            parent_post_id=(
+                str(row["parent_post_id"]) if row.get("parent_post_id") else None
+            ),
+            # Die Vorlagenfelder (0483/0485) reisen NUR auf der Detailseite mit
+            # — dieselbe Begruendung wie beim Text: eine Uebersicht zeigt sie
+            # nicht, und zwanzig Galerien in einer Listenantwort waeren
+            # zwanzigmal Ballast (Wurzel 8).
+            felder=beitrag_felder_oeffentlich(row) if mit_text else None,
         )
 
     def sitemap(self, host: str) -> SitemapResponse:

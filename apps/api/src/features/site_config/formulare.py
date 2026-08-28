@@ -23,8 +23,9 @@ from supabase import Client
 
 from src.core.logging import get_logger
 
+from . import formular_anlagen
 from .fehler import SiteConfigError
-from .schemas import FormContent, FormFieldType
+from .schemas import BlockType, FormContent, FormFieldType
 
 log = get_logger("nextdays.site_config.formulare")
 
@@ -38,6 +39,28 @@ MAX_WERT_LAENGE = 5_000
 
 # Höchstzahl der Einsendungen, die die Liste auf einmal liefert.
 MAX_LISTE = 200
+
+
+def block_kennung(block_type: str, zeile: dict) -> str | None:
+    """Die DB-Kennung eines Blocks — NUR beim Formular-Abschnitt.
+
+    Der Renderer braucht sie zum Absenden: `POST /site/form` verlangt die
+    `block_id`, denn der Block IST die Identität des Formulars.
+
+    Und nur dort, weil eine interne Kennung sonst ohne Grund auf einer
+    Gast-Seite stünde. Genau so war es gedacht (`Block.id` in
+    `builder/lib/site.ts`: „Nur beim Formular-Abschnitt gesetzt") — nur trug
+    `PublicBlock` das Feld gar nicht, und so kam die Kennung NIE an. Der
+    Renderer schickte deshalb `block_id: ""`, PostgREST bekam einen leeren
+    String auf eine uuid-Spalte, und die Antwort war ein 422 mit dem Text
+    „Ungültiger Wert im Aufruf." — für den Gast ein unerklärliches
+    Absende-Problem, für den Betrieb ein Formular, das nie eine Anfrage
+    lieferte. Live nachgewiesen am 25.08.2026 im Browser.
+    """
+    if block_type != BlockType.form.value:
+        return None
+    kennung = zeile.get("id")
+    return str(kennung) if kennung else None
 
 
 def _text(wert: object) -> str:
@@ -198,7 +221,16 @@ def loeschen(db: Client, tenant_id: str, submission_id: str) -> None:
     Ohne Papierkorb, und das ist Absicht: es sind personenbezogene Daten, und
     ein Löschbegehren nach Art. 17 DSGVO muss zu einem echten Löschen führen.
     Ein Papierkorb, der die Zeile 30 Tage behält, wäre genau das Gegenteil.
+
+    Die DATEIEN zuerst (Wurzel 1). `site_form_uploads` hängt per
+    `on delete cascade` an der Einsendung — die Zeilen verschwinden also von
+    selbst, die Dateien im Bucket NICHT. Wer nur die Zeile löscht, lässt Dateien
+    von Dritten für immer im Speicher liegen, und der einzige Verweis auf ihren
+    Pfad ist dann weg. Schlägt das Aufräumen fehl, wirft
+    `formular_anlagen.dateien_entfernen` und die Einsendung bleibt stehen: ein
+    zweiter Versuch ist dann noch möglich, ein halbes Löschen wäre es nicht.
     """
+    formular_anlagen.dateien_entfernen(db, tenant_id, submission_id)
     rows = (
         db.table("site_form_submissions")
         .delete()

@@ -48,3 +48,8 @@ AUDIT_MyNextDays.md
 # existiert im Container nicht). Prüf-Builds gehören in ein eigenes Verzeichnis
 # AUSSERHALB des Repos.
 web/private/
+
+# graphify: lokaler Wissensgraph, nicht versioniert
+graphify-out/
+graph.json
+.claudeignore

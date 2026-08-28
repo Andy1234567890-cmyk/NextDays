@@ -420,6 +420,36 @@ jobs:
         if: steps.pruefen.outputs.laufen == 'true'
         run: node scripts/i18n/blocktypen-pruefen.mjs
 
+      # Dieselbe Logik in mehreren Kopien — die Fehlerklasse, die bei der
+      # Nachprüfung des Baukastens am 27.08.2026 DREIMAL zuschlug: die
+      # Menü-Beschriftung stand zweimal da und nur eine Kopie lernte den
+      # Nachschlag (B1), die Einstellungen zeichneten ihre Navigation neben die
+      # zentrale (C2), und der Vorschau-Token stand viermal da — nur eine Stelle
+      # hatte den `.catch`, die drei anderen hingen bei einem Netzfehler für
+      # immer auf „wird vorbereitet" (Wurzel 5). Keine dieser Kopien fällt beim
+      # Bearbeiten auf: wer die eine Stelle findet, hört auf zu suchen.
+      # Eine Menü-Kennung ohne Symbol trägt in der Oberfläche einen grauen
+      # Punkt — der sieht nicht wie ein Fehler aus, sondern wie eine
+      # Gestaltungsentscheidung. Genau deshalb wurde dieselbe Lücke DREIMAL in
+      # Folge vom Nutzer gemeldet statt vom System: die sieben
+      # Theme-Unterpunkte (B1), dann die fünf Katalog-Kategorien, dann
+      # „layout" unmittelbar nach deren Behebung.
+      - name: Menü-Kennungen des Baukastens haben Symbole
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: node scripts/diagnose/menue-symbole-pruefen.mjs
+
+      - name: Baukasten ohne doppelte Definitionen
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: node scripts/diagnose/baukasten-doppel-kopien-pruefen.mjs
+
+      # Zwei Vorlagen-Kataloge (Seiten 0434, Pop-ups 0440) stehen je an drei
+      # Stellen: Backend, Auswahlliste im Dialog, Beschriftung in 24 Sprachen.
+      # Ein Name, den nur der Dialog kennt, bringt beim Anlegen einen 422;
+      # einer, den nur das Backend kennt, ist eine tote Vorlage.
+      - name: Vorlagen-Kataloge deckungsgleich
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: node scripts/i18n/vorlagen-pruefen.mjs
+
       # Der Benachrichtigungs-Dispatcher schreibt einen Pfad in `ziel_pfad`;
       # daraus wird der Knopf „In myNextDays ansehen" in der Mail. Ob es diesen
       # Pfad im Dashboard gibt, prüft sonst nichts — und zweimal gab es ihn
@@ -468,6 +498,26 @@ jobs:
       - name: Sprachlisten deckungsgleich
         if: steps.pruefen.outputs.laufen == 'true'
         run: node scripts/i18n/sprachlisten-pruefen.mjs
+
+      # Jede Sprachdatei muss DIESELBEN Schluessel tragen wie die deutsche.
+      #
+      # Das Skript gab es schon, es lief nur nirgends — und deshalb blieb die
+      # Luecke stumm, die es findet: am 26.08.2026 fehlten in JEDER der 23
+      # Sprachen 787 Schluessel (ganze Namensraeume wie `objects.objektePage`,
+      # `ownerReporting`, `reservations.inboxSidebar`). Sichtbar wurde es erst,
+      # als jemand die Oberflaeche auf Daenisch stellte und die Konsole voll
+      # MISSING_MESSAGE lief; im Bild stand an diesen Stellen der nackte
+      # Schluesselname.
+      #
+      # `pruefe-locales-vollstaendig.mjs` (oben) faengt das NICHT: es prueft,
+      # dass es 24 DATEIEN gibt, nicht was darin steht. Eine Datei mit halbem
+      # Inhalt ist fuer es vollstaendig.
+      #
+      # Geprueft wird zusaetzlich Platzhalter-Treue ({name}, [%MARKE%]) — ein
+      # verlorener Platzhalter bricht die Oberflaeche zur Laufzeit.
+      - name: Uebersetzungen vollstaendig (web)
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: node scripts/i18n/pruefe-uebersetzungen.mjs web
 
   # Die beiden Mobile-Apps (ADR-0019) hängen nicht am Wurzel-Workspace (React
   # Native braucht sein eigenes, nicht gehobenes node_modules — deshalb hat jede
@@ -733,13 +783,10 @@ jobs:
           # Release eine ruhige Meldung, KEIN Stacktrace. Driftet eine der
           # Apps, zeigt genau sie dem Kunden interne Pfade. Das ist kein
           # UI-Geschmack (ADR-0016), sondern ein Zustand.
-          # lib/datei.ts haelt die Grenzen des Anhang-Endpunkts (erlaubte
-          # Typen, 10 MB): eine driftende Fassung bietet Dateien an, die der
-          # Server mit 422 ablehnt.
           for f in lib/currency.ts lib/realtime.ts lib/config.ts \
                    lib/config.secrets.example.ts lib/appwechsel.ts \
-                   lib/ausstattung.ts lib/absturzmeldung.ts lib/datei.ts \
-                   components/Fehlergrenze.tsx \
+                   lib/ausstattung.ts lib/absturzmeldung.ts \
+                   lib/datei.ts components/Fehlergrenze.tsx \
                    theme/tokens.ts theme/ThemeProvider.tsx \
                    navigation/tab-style.tsx; do
             diff -u "mobile-bestdays/$f" "mobile-nextdays/$f"

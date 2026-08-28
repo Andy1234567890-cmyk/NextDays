@@ -8,8 +8,10 @@
 // KEIN myBestDays-Marktplatz-Inhalt, keine festen Reiseziele. Inhalte gehören in
 // einen Abschnitt der Seite.
 import Link from "next/link";
+import { mitSprache } from "@/lib/sprache";
 
 import type { NavItem, SiteBranding } from "@/lib/site-context";
+import { BildnachweisListe } from "./blocks/bildnachweis";
 import { themeOf } from "@/lib/theme";
 
 // Social-Netzwerke, die wir in der Fußzeile zeigen. Reihenfolge = Anzeigeordnung;
@@ -33,20 +35,25 @@ function sichereUrl(raw: string | undefined): string | null {
   return /^https?:\/\//i.test(v) ? v : null;
 }
 
-function pfad(slug: string): string {
-  return slug ? `/${slug}` : "/";
+function pfad(slug: string, sprache?: string, standard?: string | null): string {
+  // Die Sprachwahl MIT ins Ziel — dieselbe Regel wie in der Kopfzeile. Ohne
+  // sie fiel jeder Fußzeilen-Link auf die Standardsprache zurück.
+  return mitSprache(slug ? `/${slug}` : "/", sprache, standard);
 }
 
 export function SiteFooter({
   branding,
   nav,
   jahr,
+  sprache,
 }: {
   branding: SiteBranding | null | undefined;
   nav: NavItem[];
   /** Anzeigejahr. Wird vom Aufrufer übergeben, damit der Renderer keine eigene
    *  Uhr befragt und der Wert im Server-Render stabil bleibt. */
   jahr: number;
+  /** Sprache der Site — nur für die Überschrift über den Bildnachweisen. */
+  sprache: string;
 }) {
   const theme = themeOf(branding);
   const social = SOCIAL.map((s) => ({
@@ -84,7 +91,7 @@ export function SiteFooter({
             {nav.map((item) => (
               <Link
                 key={item.slug}
-                href={pfad(item.slug)}
+                href={pfad(item.slug, sprache, branding?.default_language)}
                 className="font-medium text-foreground/80 transition hover:text-primary"
               >
                 {item.title}
@@ -109,6 +116,16 @@ export function SiteFooter({
             ))}
           </ul>
         ) : null}
+
+        {/* Die Bildnachweise der Stock-Fotos (Unsplash/Pexels).
+            Sie stehen hier ZUSÄTZLICH zur Nennung am jeweiligen Bild, und das
+            mit Absicht: die Nennung am Bild ist die richtige Stelle, aber sie
+            hängt an jeder einzelnen Anzeigestelle des Baukastens — eine, die
+            sie vergisst, macht die Kundenseite vertragsbrüchig, ohne dass man
+            der Seite etwas ansieht. Diese Liste hängt dagegen am RAHMEN und
+            kann von einem neuen Blocktyp nicht vergessen werden. Ohne
+            nachweispflichtige Bilder rendert sie nichts. */}
+        <BildnachweisListe branding={branding} sprache={sprache} />
 
         <div className="text-sm text-muted-foreground">
           <p>

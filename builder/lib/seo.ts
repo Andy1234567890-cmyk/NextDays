@@ -135,6 +135,8 @@ export type PopupAntwort = {
   value: number | null;
   device: "mobile" | "desktop" | null;
   once: boolean;
+  /** Position im 3×3-Raster (0440). `null` = mittig. */
+  position: string | null;
   blocks: Array<{
     type: string;
     content: Record<string, unknown>;
@@ -169,6 +171,54 @@ export async function ladePopups(host: string): Promise<PopupAntwort[]> {
   }
 }
 
+/** Die aktiven Personalisierungs-Regeln eines Hosts (0440).
+ *
+ *  Fehlschlag = leere Liste, wie bei den Pop-ups. Eine Website ohne Regeln ist
+ *  eine gültige Website; sie wegen eines Abrufproblems gar nicht auszuliefern
+ *  wäre der größere Schaden. `ort_verfuegbar` sagt, ob der Ort-Auslöser
+ *  überhaupt entscheidbar ist — ohne Geo-Dienst ruhen solche Regeln.
+ */
+export async function ladeRegeln(
+  host: string,
+): Promise<{ items: RegelAntwort[]; ortVerfuegbar: boolean }> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(
+      `${backendBasis()}/api/v1/site/rules?host=${encodeURIComponent(host)}`,
+      {
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+        signal: controller.signal,
+      },
+    );
+    if (!res.ok) return { items: [], ortVerfuegbar: false };
+    const daten = (await res.json()) as {
+      items?: RegelAntwort[];
+      ort_verfuegbar?: boolean;
+    };
+    return {
+      items: daten.items ?? [],
+      ortVerfuegbar: Boolean(daten.ort_verfuegbar),
+    };
+  } catch {
+    return { items: [], ortVerfuegbar: false };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Eine Regel, wie der öffentliche Endpunkt sie liefert. */
+export type RegelAntwort = {
+  id: string;
+  triggers: Record<string, unknown>;
+  action_type: "popup" | "top_bar" | "effect" | "script";
+  action: Record<string, unknown>;
+  seiten: string[];
+  einmal_je_besucher: boolean;
+  wieder_nach_tagen: number | null;
+};
+
 /** Ein Blog-Beitrag in der Liste (0438). */
 export type Beitrag = {
   slug: string;
@@ -180,25 +230,59 @@ export type Beitrag = {
   published_at: string | null;
 };
 
+/** Die Blog-Einstellungen des Betriebs (0457).
+ *
+ *  Alles darf leer sein: leer heißt „nicht eingestellt", und der Renderer fällt
+ *  dann auf seinen ÜBERSETZTEN Standardtitel zurück — kein erfundener Wert. */
+export type BlogAngaben = {
+  blog_name: string | null;
+  prev_next: boolean;
+  rss_title: string | null;
+  rss_description: string | null;
+  rss_image_url: string | null;
+};
+
+export const BLOG_LEER: BlogAngaben = {
+  blog_name: null,
+  prev_next: true,
+  rss_title: null,
+  rss_description: null,
+  rss_image_url: null,
+};
+
 export type BeitragsListe = {
   items: Beitrag[];
   total: number;
   /** Die Schlagwörter DIESER Seite der Liste, für die Filterleiste. */
   tags: string[];
+  blog: BlogAngaben;
 };
 
 /** Die veröffentlichten Beiträge eines Hosts.
  *
  *  Beiträge mit einem Erscheinungsdatum in der Zukunft bleiben aus — das ist
- *  die Vorplanung, und sie wird serverseitig entschieden. */
+ *  die Vorplanung, und sie wird serverseitig entschieden.
+ *
+ *  `tag` ist die Filterleiste der Blog-Seite (EIN Schlagwort), `tags` die
+ *  Mehrfachauswahl des „Alle Beiträge"-Abschnitts, `q` die Beitragssuche (nur
+ *  Titel). Alle drei werden serverseitig ausgewertet: eine Filterung im Browser
+ *  hieße, erst alles zu laden und dann das meiste wegzuwerfen. */
 export async function ladeBeitraege(
   host: string,
-  opts: { limit?: number; offset?: number; tag?: string } = {},
+  opts: {
+    limit?: number;
+    offset?: number;
+    tag?: string;
+    tags?: string[];
+    q?: string;
+  } = {},
 ): Promise<BeitragsListe> {
   const qs = new URLSearchParams({ host });
   if (opts.limit) qs.set("limit", String(opts.limit));
   if (opts.offset) qs.set("offset", String(opts.offset));
   if (opts.tag) qs.set("tag", opts.tag);
+  for (const t of opts.tags ?? []) qs.append("tags", t);
+  if (opts.q) qs.set("q", opts.q);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
@@ -210,10 +294,10 @@ export async function ladeBeitraege(
         signal: controller.signal,
       },
     );
-    if (!res.ok) return { items: [], total: 0, tags: [] };
+    if (!res.ok) return { items: [], total: 0, tags: [], blog: BLOG_LEER };
     return (await res.json()) as BeitragsListe;
   } catch {
-    return { items: [], total: 0, tags: [] };
+    return { items: [], total: 0, tags: [], blog: BLOG_LEER };
   } finally {
     clearTimeout(timer);
   }

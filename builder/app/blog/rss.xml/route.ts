@@ -42,7 +42,17 @@ export async function GET(): Promise<Response> {
   }
 
   const basis = basisUrl(host);
-  const name = daten.site_name?.trim() || host;
+  // Drei Ränge, absteigend spezifisch (0457): der eigene RSS-Titel, sonst der
+  // Blogname, sonst der Name der Website — und ganz zuletzt der Host, damit ein
+  // Feed nie ohne Titel ausgeht. Kein erfundener Wert dazwischen (Wurzel 4).
+  const blog = beitraege.blog;
+  const name =
+    blog.rss_title?.trim() ||
+    blog.blog_name?.trim() ||
+    daten.site_name?.trim() ||
+    host;
+  const beschreibung =
+    blog.rss_description?.trim() || daten.seo_description?.trim() || name;
   const eintraege = beitraege.items.map((b) => {
     const url = `${basis}/blog/${b.slug}`;
     return [
@@ -71,7 +81,19 @@ export async function GET(): Promise<Response> {
     "  <channel>",
     `    <title>${xml(name)}</title>`,
     `    <link>${xml(`${basis}/blog`)}</link>`,
-    `    <description>${xml(daten.seo_description ?? name)}</description>`,
+    `    <description>${xml(beschreibung)}</description>`,
+    // Das Kanalbild. `<image>` verlangt laut RSS-2.0-Spezifikation title und
+    // link MIT — ein `<image>` mit nur einer URL ist ungültig, und manche Leser
+    // verwerfen dann den ganzen Feed.
+    ...(blog.rss_image_url?.trim()
+      ? [
+          "    <image>",
+          `      <url>${xml(blog.rss_image_url.trim())}</url>`,
+          `      <title>${xml(name)}</title>`,
+          `      <link>${xml(`${basis}/blog`)}</link>`,
+          "    </image>",
+        ]
+      : []),
     daten.default_language
       ? `    <language>${xml(daten.default_language)}</language>`
       : null,

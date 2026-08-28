@@ -15,19 +15,119 @@
 //   · Kein Papierkorb. Löschen löscht. Es sind personenbezogene Daten, und ein
 //     Löschbegehren nach Art. 17 DSGVO muss zu einem echten Löschen führen.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useLocale, useTranslations } from "next-intl";
+
+import { zeitpunktLang } from "@/lib/chat-format";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import {
+  type FormAnlage,
   type FormEinsendung,
   einsendungenAlsCsv,
+  listFormAnlagen,
   loescheEinsendung,
   markiereEinsendungGelesen,
 } from "@/lib/site-weiterleitungen";
 
+/** Eine Größe in Kilo-/Megabyte. Keine Währung, keine Locale-Formatierung —
+ *  „1,4 MB" liest sich in jeder Sprache. */
+function groesse(bytes: number): string {
+  return bytes >= 1024 * 1024
+    ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+    : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+
+/** Die Anlagen einer Einsendung (0445).
+ *
+ *  Geladen wird ERST beim Aufklappen, und das ist keine Sparmaßnahme: die
+ *  Adressen sind signiert und gelten fünf Minuten. Sie beim Laden der Liste zu
+ *  holen hieße, für 50 Anfragen 50 Leseschlüssel zu erzeugen, von denen
+ *  niemand einen benutzt — und die abgelaufen wären, sobald jemand die erste
+ *  Anfrage öffnet.
+ *
+ *  Aus demselben Grund wird bei JEDEM Aufklappen neu geladen: eine zwischen-
+ *  gespeicherte Adresse führt nach fünf Minuten ins Leere, und der Betrieb
+ *  läse einen Fehler von Supabase statt seiner Datei. */
+function Anlagen({ submissionId }: { submissionId: string }) {
+  const t = useTranslations("website");
+  const [stand, setStand] = useState<"laedt" | "da" | "fehler">("laedt");
+  const [items, setItems] = useState<FormAnlage[]>([]);
+
+  useEffect(() => {
+    let abgebrochen = false;
+    setStand("laedt");
+    void listFormAnlagen(submissionId).then((res) => {
+      if (abgebrochen) return;
+      if (!res.ok) {
+        setStand("fehler");
+        return;
+      }
+      setItems(res.data.items);
+      setStand("da");
+    });
+    return () => {
+      abgebrochen = true;
+    };
+  }, [submissionId]);
+
+  if (stand === "laedt") {
+    return (
+      <p className="text-xs text-muted-foreground">{t("anfragen.anlagenLaden")}</p>
+    );
+  }
+  if (stand === "fehler") {
+    return (
+      <p className="text-xs text-destructive">{t("anfragen.anlagenFehler")}</p>
+    );
+  }
+  // Kein „Keine Anlagen"-Satz: die allermeisten Formulare haben gar kein
+  // Datei-Feld, und eine Zeile, die bei jeder Anfrage dasselbe Nichts meldet,
+  // ist Lärm.
+  if (items.length === 0) return null;
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className="text-xs font-semibold text-muted-foreground">
+        {t("anfragen.anlagen")}
+      </p>
+      <ul className="flex flex-col gap-1">
+        {items.map((a) => (
+          <li key={a.id} className="flex items-center gap-2 text-sm">
+            <Icon
+              icon={a.mime === "application/pdf" ? "ph:file-pdf" : "ph:image"}
+              className="size-4 shrink-0 text-muted-foreground"
+            />
+            {a.url ? (
+              <a
+                href={a.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate underline"
+              >
+                {a.name}
+              </a>
+            ) : (
+              // Kein Link ins Leere: die Signatur ist fehlgeschlagen, und ein
+              // Link, der einen Fehler von Supabase zeigt, ist schlechter als
+              // gar keiner (Wurzel 4).
+              <span className="truncate" title={t("anfragen.anlageOhneLink")}>
+                {a.name}
+              </span>
+            )}
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {groesse(a.groesse)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function AnfragenListe({ items }: { items: FormEinsendung[] }) {
   const t = useTranslations("website");
+  const locale = useLocale();
   const [offen, setOffen] = useState<string | null>(null);
   const [laeuft, starte] = useTransition();
 
@@ -120,9 +220,10 @@ export function AnfragenListe({ items }: { items: FormEinsendung[] }) {
                   </p>
                 </div>
                 <span className="shrink-0 text-xs text-muted-foreground">
-                  {e.created_at
-                    ? new Date(e.created_at).toLocaleString()
-                    : ""}
+                  {/* Über den vorhandenen Helfer und MIT Locale: ohne
+                      Argument formatiert Node anders als der Browser, und
+                      React verwirft den Teilbaum (Hydration-Fehler, B6). */}
+                  {e.created_at ? zeitpunktLang(e.created_at, locale) : ""}
                 </span>
               </button>
 
@@ -142,6 +243,7 @@ export function AnfragenListe({ items }: { items: FormEinsendung[] }) {
                       </div>
                     ))}
                   </dl>
+                  <Anlagen submissionId={e.id} />
                   <button
                     type="button"
                     disabled={laeuft}

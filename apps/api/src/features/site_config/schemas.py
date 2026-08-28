@@ -9,7 +9,13 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+    model_validator,
+)
 
 # pylint: disable=unused-import
 # Re-Export: die geteilten Validatoren und `BlockType` liegen in `basis.py`, die
@@ -22,6 +28,12 @@ from .basis import (  # noqa: F401  — Re-Export für die übrigen Module
     _HEX_RE,
     _SITE_LOCALES,
     BlockType,
+    Breiteneinheit,
+    TextSchatten,
+    TextStil,
+    ThemeFarbe,
+    ThemeFelder,
+    ThemeOeffentlich,
     _sanitize_rich_html,
     _validate_head_html,
     _validate_href,
@@ -30,8 +42,10 @@ from .basis import (  # noqa: F401  — Re-Export für die übrigen Module
     _validate_redirect_target,
     _validate_social,
     _validate_source_path,
+    slug_pruefen,
 )
 from .block_inhalte import (  # noqa: F401  — Re-Export
+    ZURUECK_AB_SEITEN,
     ButtonContent,
     ContactContent,
     FaqContent,
@@ -42,6 +56,7 @@ from .block_inhalte import (  # noqa: F401  — Re-Export
     FormContent,
     FormField,
     FormFieldType,
+    FormSeite,
     GalleryContent,
     GalleryImage,
     HeroContent,
@@ -52,10 +67,51 @@ from .block_inhalte import (  # noqa: F401  — Re-Export
     ReviewsContent,
     RichTextContent,
     SearchContent,
+    SearchPostsContent,
     SpacerContent,
     TestimonialItem,
     TestimonialsContent,
+    kontakt_formular_felder,
     validate_block_content,
+)
+from .schemas_beitragsfelder import BeitragsFelder
+from .schemas_bloecke import (  # noqa: F401  — Re-Export
+    BlockCreate,
+    BlockListResponse,
+    BlockReplaceItem,
+    BlockResponse,
+    BlocksReplaceRequest,
+    BlockUpdate,
+    ContainerMoveRequest,
+    ReorderRequest,
+)
+from .schemas_darstellung import ContainerDarstellung
+from .schemas_mediathek import (  # noqa: F401  — Re-Export
+    MediumListResponse,
+    MediumResponse,
+    PublicBildnachweis,
+)
+
+# Mediathek (0460/0461): Bilder, Ordner, Verwendungsnachweis, Stock-Anbieter.
+# Ausgelagert aus demselben Grund wie `basis.py` und `block_inhalte.py` — diese
+# Datei stand bei 1486 von 1500 erlaubten Zeilen. `from .schemas import
+# MediumResponse` gilt für die übrigen Module unverändert weiter.
+from .schemas_seo import (  # noqa: F401  — Re-Export
+    RedirectCreate,
+    RedirectImportRequest,
+    RedirectImportResult,
+    RedirectListResponse,
+    RedirectResolveResponse,
+    RedirectResponse,
+    RedirectType,
+    RedirectUpdate,
+    SeoBefund,
+    SeoBefundSeite,
+    SeoPruefungResponse,
+    SitemapPage,
+    SitemapPost,
+    SitemapProperty,
+    SitemapResponse,
 )
 
 
@@ -106,7 +162,7 @@ class ButtonRadius(StrEnum):
 
 
 # --- Branding (Dashboard) ----------------------------------------------------
-class BrandingBase(BaseModel):
+class BrandingBase(ThemeFelder):
     site_name: str | None = None
     tagline: str | None = None
     logo_url: str | None = None
@@ -195,13 +251,6 @@ class BrandingBase(BaseModel):
     # Default true, weil der Renderer seine Schriften schon immer mit
     # `display=swap` lädt — siehe Begründung in Migration 0430.
     system_fonts_first: bool = True
-
-    # --- Theme: Breite und Schriftgrößen (0435) -----------------------------
-    # Grenzen wie die CHECKs in 0435. Sie stehen hier ZUSÄTZLICH, damit der Kunde
-    # eine Meldung bekommt statt eines 23514-Fehlers.
-    content_width: int | None = Field(default=None, ge=960, le=1920)
-    heading_scale: int | None = Field(default=None, ge=80, le=130)
-    body_scale: int | None = Field(default=None, ge=80, le=130)
 
     _v_logo_url = field_validator("logo_url")(_validate_href)
     _v_hero_image_url = field_validator("hero_image_url")(_validate_href)
@@ -340,7 +389,7 @@ class PublicOrganization(BaseModel):
     email: str | None = None
 
 
-class PublicSiteResponse(BaseModel):
+class PublicSiteResponse(ThemeOeffentlich):
     """Was die öffentliche Buchungs-Site per Host bekommt — NUR öffentliche
     Branding-Felder. Bewusst KEIN cf_*-Feld, kein Domain-Status, kein Secret."""
 
@@ -413,9 +462,6 @@ class PublicSiteResponse(BaseModel):
     schema_faq: bool = True
     lazy_loading: bool = True
     system_fonts_first: bool = True
-    content_width: int | None = None
-    heading_scale: int | None = None
-    body_scale: int | None = None
     # Firmenangaben fürs Organization-Schema. `None`, wenn der Schalter aus ist
     # ODER das Firmenprofil keinen Namen führt — der Renderer lässt das Schema
     # dann weg statt eines mit leeren Feldern.
@@ -437,6 +483,11 @@ class PublicSiteResponse(BaseModel):
     # Es ist KEIN Geheimnis: ob eine Website eine Zahlung annimmt, sieht jeder,
     # der sie benutzt. Es steht kein Kontostand und keine Kennung darin.
     payments_ready: bool = False
+    # --- Bildnachweise (0461) ----------------------------------------------
+    # Stock-Fotos dieses Betriebs mit Fotograf und Profil-Adresse. Warum das auf
+    # einer ÖFFENTLICHEN Antwort steht und warum es am Bild hängt statt am
+    # Block: siehe Docstring von `PublicBildnachweis` in `schemas_mediathek.py`.
+    image_credits: list[PublicBildnachweis] = Field(default_factory=list)
 
 
 class SliceHealth(BaseModel):
@@ -446,8 +497,89 @@ class SliceHealth(BaseModel):
 
 # === Page-Builder: Seiten + Blöcke ==========================================
 
-class BlockSettings(BaseModel):
-    """Generische Darstellungs-Settings, für alle Block-Typen gleich."""
+class BlockGeraet(StrEnum):
+    """Die Geräte, für die ein Abschnitt einzeln ausgeblendet werden kann.
+
+    GENAU die drei, die der Editor auch umschalten und in der Vorschau zeigen
+    kann (``Geraet`` in ``web/components/website/vorschau.tsx``): der
+    Geräte-Umschalter der Kopfzeile hat drei Knöpfe, und jeder davon hat eine
+    eigene Vorschaubreite (390 · 820 · voll) und einen eigenen Bereich im CSS
+    (Basis · ``md`` ab 768 · ``lg`` ab 1024).
+
+    Die Reihenfolge ist die des Umschalters, von breit nach schmal — sie ist
+    zugleich die Sortierung in ``_hidden_on_normalisieren`` und damit die
+    Reihenfolge, in der die Werte in der Datenbank stehen.
+
+    ``tablet`` kam am 25.08.2026 dazu, zusammen mit Umschalter und
+    Vorschaubreite. Vorher waren es zwei, weil ein Breakpoint-Name ohne
+    Oberfläche und ohne CSS-Entsprechung eine Attrappe gewesen wäre; jetzt gibt
+    es beides. Eine Migration braucht es dafür nicht: ``hidden_on`` ist eine
+    Menge in ``settings`` (jsonb), und ein Wert, den keine bestehende Zeile
+    trägt, ändert an keiner bestehenden Zeile etwas (Wurzel 1).
+    """
+
+    desktop = "desktop"
+    tablet = "tablet"
+    mobil = "mobil"
+
+
+
+
+class BlockSettings(ContainerDarstellung):
+    """Generische Darstellungs-Settings, für alle Block-Typen gleich.
+
+    ``extra="allow"``: unbekannte Schlüssel werden DURCHGEREICHT, nicht
+    verworfen. Der Editor ist in Arbeit und bekommt laufend neue
+    Darstellungs-Felder; ein Modell, das alles Unbekannte still wegwirft, würde
+    genau die Einstellung verschlucken, die gerade dazugekommen ist — und zwar
+    lautlos, mit einer 200er-Antwort (Wurzel 5). Geprüft wird also, was hier
+    steht; alles andere bleibt unangetastet stehen.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    # --- Sichtbarkeit je Gerät (0448/0449) ----------------------------------
+    # Auf welchen Geräten dieser Abschnitt beim GAST nicht erscheint. Leer =
+    # überall sichtbar, und das ist der Zustand jedes bestehenden Abschnitts:
+    # ein neues Feld darf das Aussehen einer bestehenden Kundenseite nicht
+    # verändern (Wurzel 1).
+    #
+    # Im EDITOR wird nie etwas ausgeblendet — dort steht der Abschnitt
+    # durchscheinend mit durchgestrichenem Auge. Ein Element, das man durch
+    # Ausblenden verliert, hat keinen Rückweg, und der Rückweg ist genau das,
+    # was ein Gegenzustand braucht.
+    #
+    # `max_length` ist die reine Missbrauchsgrenze und NICHT die Zahl der
+    # Geräte: doppelte Einträge sind derselbe Zustand, kein Fehler — der
+    # Validator unten macht daraus wieder eine Menge. Stünde hier `2`,
+    # würde `["mobil", "mobil"]` mit 400 abgewiesen, obwohl es genau das
+    # meint, was gespeichert werden soll (Wurzel 2: dieselbe Eingabe
+    # zweimal gesendet muss durchgehen und denselben Zustand ergeben).
+    hidden_on: list[BlockGeraet] = Field(default_factory=list, max_length=16)
+
+    # --- Eigener Name der Ebene (28.08.2026) --------------------------------
+    # In jedem Baukasten mit Ebenen-Ansicht lässt sich ein Element umbenennen
+    # (Framer, Figma, Webflow) — und zwar aus demselben Grund: „Abschnitt"
+    # achtmal untereinander benennt nichts. Ohne eigenen Namen ist die Liste
+    # ab dem vierten Abschnitt nicht mehr lesbar.
+    #
+    # `extra="allow"` würde das Feld zwar durchreichen, aber UNGEPRÜFT: ein
+    # Name von 4 MB landete unbesehen in der Zeile und in jeder Ebenen-Liste
+    # (Wurzel 8 — jeder unbegrenzte Bereich bekommt eine Obergrenze). 60
+    # Zeichen sind mehr, als in die Spalte passen.
+    name: str | None = Field(default=None, max_length=60)
+
+    @field_validator("name")
+    @classmethod
+    def _name_leer_ist_keiner(cls, v: str | None) -> str | None:
+        """Leerzeichen sind kein Name.
+
+        Sonst trüge die Zeile einen unsichtbaren Namen und zeigte gar nichts
+        an — schlechter als der Standardname, den sie vorher hatte."""
+        if v is None:
+            return None
+        geputzt = v.strip()
+        return geputzt or None
 
     background_color: str | None = Field(default=None, pattern=_HEX_RE)
     # --- Hintergrundbild je Abschnitt (0432) --------------------------------
@@ -475,6 +607,22 @@ class BlockSettings(BaseModel):
     _v_background_image_url = field_validator("background_image_url")(
         _validate_href
     )
+
+    @field_validator("hidden_on")
+    @classmethod
+    def _hidden_on_normalisieren(
+        cls, v: list[BlockGeraet]
+    ) -> list[BlockGeraet]:
+        """Entdoppeln und in fester Reihenfolge ablegen.
+
+        `hidden_on` ist eine MENGE, keine Liste: „mobil, mobil" ist derselbe
+        Zustand wie „mobil", und „mobil, desktop" derselbe wie
+        „desktop, mobil". Ohne diese Normalisierung ergäbe dieselbe Eingabe
+        zweimal gesendet zwei verschiedene Zeilen — der Editor speichert
+        entprellt und schickt denselben Stand real mehrfach (Wurzel 2).
+        """
+        reihenfolge = list(BlockGeraet)
+        return sorted(set(v), key=reihenfolge.index)
 
 
 # --- Seiten (Dashboard) ------------------------------------------------------
@@ -505,6 +653,17 @@ class PageType(StrEnum):
     # derselbe Editor, derselbe Veröffentlichungs-Pfad. Er hat nur zusätzlich
     # ein Datum, einen Autor und Schlagwörter.
     post = "post"
+    # 0466 — eine Seite, die der RENDERER ausliefert, ohne dass jemand sie
+    # angelegt hat: die Objekt-Detailseite, die Buchung, die Bestätigung, der
+    # Blog. Sie existiert, weil es ihre Route gibt. Deshalb ohne Blöcke, ohne
+    # Navigation, nicht löschbar, mit festem Slug — editierbar sind nur ihre
+    # SEO-Angaben. Was es gibt und warum: `systemseiten.py`.
+    system = "system"
+    # 0468 — eine dynamische Seite: EIN Layout, viele Adressen. Der Renderer
+    # erzeugt daraus eine Seite je Objekt und füllt sie mit dessen Live-Daten.
+    # Sie ist der Kern der Buchungsstrecke; Einzelheiten in
+    # `dynamische_seiten.py` und `docs/BUCHUNGSSTRECKE-VORBILDER.md`.
+    dynamic = "dynamic"
 
 
 class NavArea(StrEnum):
@@ -559,6 +718,10 @@ class PageCreate(BaseModel):
     popup_value: int | None = Field(default=None, ge=1, le=120)
     popup_device: str | None = None
     popup_once: bool = True
+    # Wo das Fenster sitzt — Dudas 3×3-Raster (0440). `None` heisst „mittig",
+    # so wie es bis 0439 immer war; ein Wert ohne Vorgeschichte braucht keinen
+    # eigenen Eintrag im Raster.
+    popup_position: str | None = None
     # --- Blog-Beitrag (0438) ------------------------------------------------
     published_at: str | None = None
     author: str | None = Field(default=None, max_length=120)
@@ -569,10 +732,10 @@ class PageCreate(BaseModel):
     @field_validator("slug")
     @classmethod
     def _slugify(cls, v: str) -> str:
-        v = v.strip().lower()
-        if v and not all(c.isalnum() or c == "-" for c in v):
-            raise ValueError("Slug darf nur a-z, 0-9 und - enthalten.")
-        return v
+        # EINE Quelle für beide Slug-Validatoren (Anlegen und Ändern). Zwei
+        # Kopien hiessen: die Sprachkürzel-Sperre wird an einer Stelle
+        # nachgezogen und an der anderen vergessen.
+        return slug_pruefen(v)
 
     @field_validator("external_url")
     @classmethod
@@ -717,16 +880,21 @@ class PageUpdate(BaseModel):
     def _slugify(cls, v: str | None) -> str | None:
         if v is None:
             return None
-        v = v.strip().lower()
-        if v and not all(c.isalnum() or c == "-" for c in v):
-            raise ValueError("Slug darf nur a-z, 0-9 und - enthalten.")
-        return v
+        return slug_pruefen(v)
 
 
-class PageResponse(BaseModel):
+class PageResponse(BeitragsFelder):
+    # Erbt die Beitragsfelder (0483): die Beitragstabelle liest die Seitenliste.
     id: str
     slug: str
     title: str
+    #: Quelle einer DYNAMISCHEN Seite (0468) — heute nur `property`. Aus ihr
+    #: entsteht die Vielzahl der Adressen. `None` bei jeder anderen Seite.
+    dynamic_source: str | None = None
+    #: Kennung einer Systemseite (0466); `None` bei jeder anderen Seite. Die
+    #: Oberfläche übersetzt daraus den angezeigten Namen — der Titel in der DB
+    #: bleibt leer, weil ein deutscher Text dort in 24 Sprachen stünde.
+    system_key: str | None = None
     seo_title: str | None = None
     seo_description: str | None = None
     og_image_url: str | None = None
@@ -744,12 +912,53 @@ class PageResponse(BaseModel):
     popup_value: int | None = None
     popup_device: str | None = None
     popup_once: bool = True
+    # Wo das Fenster sitzt — Dudas 3×3-Raster (0440). `None` heisst „mittig",
+    # so wie es bis 0439 immer war; ein Wert ohne Vorgeschichte braucht keinen
+    # eigenen Eintrag im Raster.
+    popup_position: str | None = None
+    # --- Zugang und Einzelveroeffentlichung (0442) --------------------------
+    # NUR ob ein Passwort gesetzt ist, nie der Hash: das Dashboard braucht den
+    # Schalter, nicht den Wert — und ein Hash, der einmal in einer API-Antwort
+    # stand, steht danach in Browser-Verlauf, Fehlerprotokollen und im Cache
+    # jedes Zwischenspeichers.
+    hat_passwort: bool = False
+    last_single_publish_at: str | None = None
+    # true = beim Veroeffentlichen der Website ueberspringen (0443). Nicht
+    # dasselbe wie `is_published = false` — das heisst nur „steht gerade nicht
+    # live".
+    is_draft: bool = False
     # --- Blog-Beitrag (0438) ------------------------------------------------
     published_at: str | None = None
     author: str | None = None
     cover_image_url: str | None = None
     excerpt: str | None = None
     tags: list[str] | None = None
+    # --- Blog-CMS (0480) -----------------------------------------------------
+    #: Handsortierung der Beitragsliste (Ziehgriff an der Zeile).
+    post_sort: int | None = None
+    #: Dieser Beitrag ist ein KAPITEL des verwiesenen Beitrags. Die Tabelle
+    #: rückt ihn eingerückt darunter ein, die Beitragsseite listet die Kapitel.
+    parent_post_id: str | None = None
+    #: Aufrufe der öffentlichen Beitragsseite.
+    view_count: int = 0
+    #: Der Autor als Konto des Betriebs. Fehlt er, bleibt `author` als
+    #: Freitext-Name stehen (Gastautoren, Altbestand).
+    author_user_id: str | None = None
+    is_archived: bool = False
+    #: ZWEITE Sichtbarkeitsachse (0481), getrennt von `is_published`:
+    #: „fertig" und „wo sichtbar" sind zwei Fragen.
+    show_on_homepage: bool = True
+    #: Beitragstext; die Tabelle zeigt einen Auszug.
+    content_html: str | None = None
+    #: Wann die Zeile angelegt wurde — UNSERE Uhr. Das Blog-CMS zeigt sie als
+    #: „Erstellt: …" neben dem Erscheinungsdatum; sie ist ausdrücklich NICHT
+    #: dessen Ersatz, wenn dort nichts steht (Wurzel 5b).
+    created_at: str | None = None
+    #: Wann die Zeile zuletzt geändert wurde — ebenfalls UNSERE Uhr, gesetzt
+    #: vom Trigger `set_updated_at` (0087). Das Vorbild führt sie als `Edited`
+    #: neben `Created`; beide beantworten verschiedene Fragen, und keine von
+    #: beiden ist das Erscheinungsdatum.
+    updated_at: str | None = None
     is_home: bool = False
     is_published: bool = False
     nav_area: NavArea = NavArea.header
@@ -763,75 +972,12 @@ class PageListResponse(BaseModel):
 
 
 # --- Blöcke (Dashboard) ------------------------------------------------------
-class BlockCreate(BaseModel):
-    type: BlockType
-    content: dict = Field(default_factory=dict)
-    settings: dict = Field(default_factory=dict)
-
-
-class BlockUpdate(BaseModel):
-    content: dict | None = None
-    settings: dict | None = None
-
-
-class BlockResponse(BaseModel):
-    id: str
-    page_id: str
-    type: BlockType
-    position: int
-    content: dict = Field(default_factory=dict)
-    settings: dict = Field(default_factory=dict)
-
-
-class BlockListResponse(BaseModel):
-    items: list[BlockResponse]
-    total: int
-
-
-class ReorderRequest(BaseModel):
-    ordered_ids: list[str] = Field(min_length=1)
-
-
-class BlockReplaceItem(BaseModel):
-    """Ein Abschnitt im Voll-Ersatz einer Seite. ``id`` gesetzt = bestehende Zeile
-    weiterverwenden (Inhalt aktualisieren), ``None`` = neuer Abschnitt."""
-
-    id: str | None = None
-    type: BlockType
-    content: dict = Field(default_factory=dict)
-    settings: dict = Field(default_factory=dict)
-
-
-class BlocksReplaceRequest(BaseModel):
-    """Ersetzt ALLE Abschnitte einer Seite in EINEM Aufruf.
-
-    Der Editor speicherte bisher mit N+1 einzelnen HTTP-Calls (löschen, updaten,
-    anlegen, neu ordnen) ohne Transaktion — brach einer in der Mitte ab, blieb
-    die Seite halb gespeichert. Dieser Endpunkt macht den Speichervorgang zu EINER
-    idempotenten Operation: dieselbe Liste zweimal gesendet ergibt denselben
-    Zustand (Wurzel 2), und die Reihenfolge ist der Array-Index.
-
-    Obergrenze, damit eine Seite nicht unbegrenzt viele Abschnitte rendert
-    (Wurzel 8) — 60 ist weit jenseits jeder echten Kunden-Seite."""
-
-    items: list[BlockReplaceItem] = Field(default_factory=list, max_length=60)
-
+# Stehen in `schemas_bloecke.py` — hier re-exportiert, damit bestehende Importe
+# (`from .schemas import BlockCreate`) unverändert weiterlaufen.
 
 # --- Mediathek (Dashboard) ---------------------------------------------------
-class MediumResponse(BaseModel):
-    """Ein Bild im Bestand des Betriebs."""
-
-    id: str
-    url: str
-    filename: str | None = None
-    mime: str
-    bytes: int
-    created_at: str | None = None
-
-
-class MediumListResponse(BaseModel):
-    items: list[MediumResponse]
-    total: int
+# Die Mediathek-Schemas stehen in `schemas_mediathek.py` — importiert ganz oben
+# in dieser Datei und von dort re-exportiert (siehe Kommentar am Import).
 
 
 class PagesReorderRequest(BaseModel):
@@ -852,21 +998,155 @@ class DraftTokenResponse(BaseModel):
     token: str
 
 
+# --- Buchungsstrecke: die drei Formen (0474) ---------------------------------
+class ApplyStreckeRequest(BaseModel):
+    """Welche Strecken-Vorlage angewendet wird."""
+
+    strecke: str
+
+
+class StreckeSummary(BaseModel):
+    """Eine Strecken-Vorlage in der Auswahl.
+
+    Nur die Kennung und die Bausteinzahlen — KEIN Anzeigename und keine
+    Beschreibung: die stehen im Übersetzungskatalog des Dashboards
+    (`website.strecke.*`), damit die Auswahl in allen 24 Sprachen dasteht und
+    nicht in der einen, in der jemand den Katalog geschrieben hat (Wurzel 4).
+    """
+
+    key: str
+    #: Bausteine je Seite — die Oberfläche zeigt daraus „5 Abschnitte", ohne
+    #: die Liste selbst zu kennen.
+    objekt_bloecke: int
+    checkout_bloecke: int
+    bestaetigung_bloecke: int
+
+
+class StreckenListResponse(BaseModel):
+    strecken: list[StreckeSummary]
+
+
+class StreckePreviewResponse(BaseModel):
+    """Token und Beispielobjekt für die Live-Vorschau einer Strecke.
+
+    ``beispiel_objekt_id`` ist ``None``, wenn der Betrieb kein aktives Objekt
+    hat. Das ist eine Aussage, kein Fehler: die Buchungsseite lässt sich auch
+    dann ansehen, die Objektseite nicht — und die Oberfläche nennt den Grund,
+    statt eine leere Fläche zu zeigen.
+    """
+
+    token: str
+    beispiel_objekt_id: str | None = None
+
+
+# --- Vorlagen-Galerie (Reiter „Vorlagen") -----------------------------------
+# Die Liste kommt vom SERVER und steht nicht im Frontend. Vorher hatte die
+# Oberfläche die IDs hartkodiert; als das Backend sie umbenannte, lief jeder
+# Klick in ein 404 „Unbekanntes Template" — sichtbar nur als Toast. Eine
+# Aufzählung, die an zwei Stellen steht, läuft irgendwann auseinander.
+class TemplatePageSummary(BaseModel):
+    """Eine Seite der Vorlage — für die Aufzählung „was lege ich mir hier an"."""
+
+    slug: str
+    title: str
+    nav_area: NavArea
+    block_count: int
+
+
+class TemplateSummary(BaseModel):
+    """Eine ganze Website-Vorlage in der Galerie."""
+
+    id: str
+    kategorie: str
+    name: dict[str, str]
+    description: dict[str, str] = Field(default_factory=dict)
+    # Das Hero-Bild der Startseite. Es ist das Bild, das der Kunde nach dem
+    # Anwenden ganz oben sieht — deshalb taugt es als Vorschaubild, und wir
+    # brauchen kein zweites, das mit der Vorlage aus dem Takt geraten kann.
+    preview_image: str | None = None
+    primary_color: str | None = None
+    pages: list[TemplatePageSummary] = Field(default_factory=list)
+
+
+class TemplateListResponse(BaseModel):
+    templates: list[TemplateSummary] = Field(default_factory=list)
+    kategorien: list[str] = Field(default_factory=list)
+
+
+class SeitenVorlageSummary(BaseModel):
+    """Eine Vorlage für eine EINZELNE Seite (Über uns, Kontakt, FAQ …)."""
+
+    id: str
+    title: dict[str, str]
+    slug: str
+    block_count: int
+    block_types: list[str] = Field(default_factory=list)
+
+
+class SeitenVorlagenListResponse(BaseModel):
+    vorlagen: list[SeitenVorlageSummary] = Field(default_factory=list)
+
+
 # --- Öffentlicher Resolver (service-role, nur veröffentlicht) ----------------
 class PublicBlock(BaseModel):
-    """Ein Block für den öffentlichen Renderer — type + content + settings."""
+    """Ein Block für den öffentlichen Renderer — type + content + settings.
 
+    `id` reist NUR beim Formular-Abschnitt mit: der Renderer braucht sie zum
+    Absenden (`POST /site/form` verlangt die `block_id`). Bei jedem anderen
+    Abschnitt bleibt sie `None` — eine interne Kennung hat ohne Grund nichts auf
+    einer Gast-Seite verloren (`formulare.block_kennung` entscheidet das)."""
+
+    id: str | None = None
     type: BlockType
     content: dict = Field(default_factory=dict)
     settings: dict = Field(default_factory=dict)
+
+    # --- Baum (0472) --------------------------------------------------------
+    #: Was diese Zeile IST: `section`, `column`, `inner_column` oder `widget`.
+    #: Der Renderer entscheidet daran, ob er einen Rahmen zeichnet oder Inhalt.
+    kind: str = "widget"
+    #: Breitenanteil einer Spalte in Zwölfteln. `None` bei allem, was keine
+    #: Spalte ist.
+    span: int | None = None
+    #: Die Kinder dieses Knotens, in ihrer Reihenfolge.
+    #:
+    #: VERSCHACHTELT und nicht flach mit `parent_id`: der Renderer würde die
+    #: flache Liste ohnehin als Erstes zu einem Baum zusammensetzen, und jede
+    #: Stelle, die das selbst täte, wäre eine zweite Fassung derselben Logik.
+    #: Die eine Fassung steht im Resolver.
+    children: list[PublicBlock] = Field(default_factory=list)
+
+
+class PublicTrailItem(BaseModel):
+    """Eine Stufe im Brotkrumen-Pfad (0450).
+
+    ``slug`` ist ``None``, wenn die Stufe kein Ziel hat — ein Ordner (der hat
+    keine Adresse, 0433) oder eine unveröffentlichte Elternseite. Der Renderer
+    zeigt sie dann als Text. Ein Link auf eine Seite, die es öffentlich nicht
+    gibt, wäre eine 404 mitten in der Navigation."""
+
+    title: str
+    slug: str | None = None
 
 
 class PublicPageMeta(BaseModel):
     slug: str
     title: str
+    # --- Brotkrumen (0450) ---------------------------------------------------
+    # Der Weg von oben bis zur ELTERN-Seite, aus der Seitenhierarchie. Die
+    # aktuelle Seite steht nicht darin (`title` oben ist sie).
+    #
+    # Der Pfad gehört in die Antwort und nicht in den `content` des Abschnitts:
+    # er ist eine Aussage über die STRUKTUR, und die kennt nur der Server. Ihn
+    # eintippen zu lassen wäre eine zweite Wahrheit, die beim ersten Verschieben
+    # einer Seite falsch wird.
+    trail: list[PublicTrailItem] = Field(default_factory=list)
     seo_title: str | None = None
     seo_description: str | None = None
     og_image_url: str | None = None
+    # Alternativtext zum Vorschaubild (0457). Er beschreibt das BILD und nicht
+    # die Seite — deshalb ein eigenes Feld neben `seo_description`.
+    og_image_alt: str | None = None
     # --- SEO je Seite (0430) ------------------------------------------------
     # Der Resolver liefert hier den BEREITS aufgelösten Wert: fehlt der
     # Seiten-Titel, steht der site-weite drin. Die Hierarchie („Seite schlägt
@@ -891,206 +1171,19 @@ class PublicPageResponse(BaseModel):
     page: PublicPageMeta
     blocks: list[PublicBlock] = Field(default_factory=list)
     branding: PublicSiteResponse
+    #: Der Beitrag, falls die Seite einer ist (0483/0485) — sonst `None`.
+    #: Nur im Entwurfs-Render gefuellt: ein Beitrag hat keine Abschnitte, und
+    #: ohne dieses Feld blieb der Editor-iframe fuer ihn weiss (28.08.2026).
+    post: PublicPost | None = None
+    #: Die eigenen Felder (0485) — Schluessel und Name fuer die Beschriftung.
+    eigene_felder: list[PublicPostEigenesFeld] = Field(default_factory=list)
 
 
-# === URL-Weiterleitungen (0430) =============================================
-# Warum eine eigene Ressource und kein Feld an der Config: eine Weiterleitung
-# wird einzeln angelegt, einzeln gelöscht, muss eindeutig sein und wird pro
-# 404 GESUCHT. Als JSON-Array müsste der Renderer bei jedem Fehlschlag die
-# ganze Liste laden und in Python durchsuchen.
-class RedirectType(StrEnum):
-    """301 = dauerhaft (überträgt die Platzierung), 302 = vorübergehend.
+# === URL-Weiterleitungen, Sitemap, SEO-Befunde (0430) =======================
+# Ausgelagert nach `schemas_seo.py` — dieses Modul lag mit 1522 Zeilen ueber
+# pylints Grenze von 1500 (C0302). Die Namen werden oben re-exportiert, damit
+# bestehende Importe (`from .schemas import RedirectCreate`) gelten.
 
-    Als Enum und nicht als int, damit die Oberfläche zwei benannte Optionen
-    zeigt statt eines Zahlenfeldes. Die DB speichert die Zahl (0430)."""
-
-    permanent = "301"
-    temporary = "302"
-
-
-class RedirectCreate(BaseModel):
-    source_path: str = Field(min_length=1, max_length=500)
-    target: str = Field(min_length=1, max_length=2_000)
-    redirect_type: RedirectType = RedirectType.permanent
-    is_active: bool = True
-
-    _v_source = field_validator("source_path")(_validate_source_path)
-    _v_target = field_validator("target")(_validate_redirect_target)
-
-    @model_validator(mode="after")
-    def _keine_selbstschleife(self) -> RedirectCreate:
-        """Quelle und Ziel dürfen nicht dieselbe Adresse sein.
-
-        Hostaway listet „Redirect loops and self-references" als Fehlerursache
-        und schreibt dazu: eine solche Konfiguration blockiert ALLE beteiligten
-        Weiterleitungen. Die einstufige Selbstschleife lässt sich hier beim
-        Speichern erkennen — und sie ist der Fall, der wirklich passiert
-        (Kunde trägt /alt → /alt ein, weil er die Richtung verwechselt).
-
-        Längere Ketten (A→B→C→A) fängt der Renderer beim Auflösen ab: er folgt
-        einer Weiterleitung genau EINMAL. Sie hier zu prüfen hieße, den ganzen
-        Graphen im Speicher zu halten und bei jedem Schreiben neu zu bewerten."""
-        # Beide Felder sind zur Laufzeit `str`. Weil ihr Default als
-        # `Field(...)` geschrieben ist, hält astroid sie statisch für
-        # `FieldInfo` und meldet `rstrip` als fehlend — dasselbe Muster steht
-        # ungemeldet in anderen Validatoren des Slices, deren Felder ohne
-        # `Field(...)` deklariert sind.
-        # pylint: disable=no-member
-        if self.source_path.rstrip("/").lower() == self.target.rstrip("/").lower():
-            raise ValueError("Quelle und Ziel sind identisch — das ist eine Schleife.")
-        return self
-
-
-class RedirectUpdate(BaseModel):
-    """Teil-Update. `source_path` ist NICHT änderbar: der Pfad IST die Identität
-    der Weiterleitung (unique je Tenant). Wer ihn ändern will, legt eine neue an
-    und löscht die alte — dann ist der Zwischenzustand sichtbar statt still."""
-
-    target: str | None = Field(default=None, max_length=2_000)
-    redirect_type: RedirectType | None = None
-    is_active: bool | None = None
-
-    _v_target = field_validator("target")(_validate_redirect_target)
-
-
-class RedirectResponse(BaseModel):
-    id: str
-    source_path: str
-    target: str
-    redirect_type: RedirectType
-    is_active: bool
-    created_at: str | None = None
-
-
-class RedirectListResponse(BaseModel):
-    items: list[RedirectResponse]
-    total: int
-
-
-class RedirectImportRequest(BaseModel):
-    """Mehrere Weiterleitungen in einem Zug (CSV-Import der Oberfläche).
-
-    Der Deckel liegt bei 200 Zeilen wie bei Hostaway — nicht als Nachahmung,
-    sondern weil jeder unbegrenzte Bereich eine Obergrenze braucht (Wurzel 8):
-    ohne sie ist eine 50-MB-CSV ein Datenbank-Schreibsturm über eine einzige
-    HTTP-Anfrage."""
-
-    items: list[RedirectCreate] = Field(min_length=1, max_length=200)
-    # Vorhandene Einträge mit demselben Quellpfad überschreiben statt den ganzen
-    # Import abzulehnen. Standard AUS: ein Import, der bestehende Weiterleitungen
-    # still ändert, ist die unangenehmere Überraschung.
-    overwrite: bool = False
-
-
-class RedirectImportResult(BaseModel):
-    """Was der Import wirklich getan hat — getrennt nach Wirkung.
-
-    Drei Zahlen und nicht eine: „12 importiert" verschweigt, dass 8 davon
-    bestehende Einträge überschrieben haben. Die Fehlerliste trägt die
-    Zeilennummer, damit der Kunde sie in seiner Datei findet."""
-
-    created: int = 0
-    updated: int = 0
-    skipped: int = 0
-    errors: list[str] = Field(default_factory=list)
-
-
-# === Sitemap / robots / llms (0430) =========================================
-class SitemapPage(BaseModel):
-    """Eine Seite in der Sitemap. `slug` ist leer für die Startseite — den Pfad
-    baut der Renderer, damit die Pfad-Bildung an einer Stelle liegt."""
-
-    slug: str
-    title: str = ""
-    lastmod: str | None = None
-    is_home: bool = False
-    languages: list[str] | None = None
-
-
-class SitemapProperty(BaseModel):
-    id: str
-    lastmod: str | None = None
-
-
-class SitemapPost(BaseModel):
-    """Ein Blog-Beitrag in der Sitemap (0438)."""
-
-    slug: str
-    title: str = ""
-    lastmod: str | None = None
-
-
-class SitemapResponse(BaseModel):
-    """Datengrundlage für sitemap.xml, robots.txt und llms.txt.
-
-    `abgeschnitten` ist bewusst Teil der Antwort: eine Sitemap, die nur die
-    Hälfte enthält und vollständig aussieht, lässt Google die andere Hälfte
-    ignorieren, ohne dass jemand die Ursache findet. Der Renderer schreibt es
-    als Kommentar in die Datei."""
-
-    pages: list[SitemapPage] = Field(default_factory=list)
-    properties: list[SitemapProperty] = Field(default_factory=list)
-    posts: list[SitemapPost] = Field(default_factory=list)
-    abgeschnitten: bool = False
-    # Site-weite Angaben, die der Renderer für robots.txt und llms.txt braucht,
-    # ohne dafür einen zweiten Request zu stellen.
-    noindex: bool = False
-    site_name: str | None = None
-    seo_description: str | None = None
-    default_language: str | None = None
-    languages: list[str] | None = None
-
-
-class RedirectResolveResponse(BaseModel):
-    """Antwort des öffentlichen Weiterleitungs-Lesepfads.
-
-    `target` ist `None`, wenn es für diesen Pfad keine aktive Weiterleitung gibt
-    — der Renderer zeigt dann seine 404-Seite. Ein 404 der API wäre hier falsch:
-    „keine Weiterleitung" ist die normale Antwort, nicht ein Fehler."""
-
-    target: str | None = None
-    redirect_type: int | None = None
-
-
-# === SEO-Befunde (Etappe B) =================================================
-class SeoBefundSeite(BaseModel):
-    """Eine Seite (oder ein Objekt) in einem Befund. `slug` ist bei Objekten
-    leer — ihre Adresse ist /inserat/<id> und hat keinen."""
-
-    id: str
-    titel: str = ""
-    slug: str = ""
-
-
-class SeoBefund(BaseModel):
-    """Ein Befund der SEO-Prüfung.
-
-    `code` und nicht ein fertiger Satz: die Oberfläche übersetzt ihn in 24
-    Sprachen. Ein Text aus dem Backend wäre auf Deutsch — und der Betrieb kann
-    sein Dashboard auf Dänisch führen.
-
-    `anzahl` ist die VOLLE Zahl, `seiten` höchstens die ersten zehn. Sonst
-    stünde bei 200 betroffenen Seiten „10" da, und die Zahl wäre eine
-    Falschaussage."""
-
-    code: str
-    schwere: str  # "fehler" | "warnung" | "hinweis"
-    anzahl: int = 0
-    seiten: list[SeoBefundSeite] = Field(default_factory=list)
-
-
-class SeoPruefungResponse(BaseModel):
-    """Ergebnis der SEO-Prüfung.
-
-    Bewusst OHNE Punktzahl. Eine Zahl wie „87/100" wäre eine erfundene
-    Bewertung (Wurzel 4): niemand kann sagen, was die fehlenden 13 Punkte sind,
-    und Google bewertet ohnehin anders. Was zählt, ist die Liste."""
-
-    items: list[SeoBefund] = Field(default_factory=list)
-    # Wie viele veröffentlichte Seiten geprüft wurden. Ohne diese Zahl ist eine
-    # leere Befundliste zweideutig: alles gepflegt — oder es gibt noch keine
-    # veröffentlichte Seite?
-    geprueft: int = 0
 
 
 # === Formular-Einsendungen (0436, Etappe F) =================================
@@ -1120,6 +1213,24 @@ class FormSubmissionResponse(BaseModel):
     Einladung, den Endpunkt als Spiegel zu missbrauchen."""
 
     ok: bool = True
+    # Wohin der Renderer den Gast schicken soll (0444), oder `None`.
+    #
+    # In der ANTWORT und nicht als HTTP-302: der Aufruf kommt aus JavaScript,
+    # und ein 302 darauf lädt die Zieladresse per fetch nach, statt den Browser
+    # dorthin zu schicken.
+    weiterleitung: str | None = None
+    # Ob eine Bestätigung an den Absender rausging. Der Renderer sagt es ihm —
+    # sonst wartet er auf eine Mail, die nie kommt.
+    bestaetigung_gesendet: bool = False
+    # --- Nur wenn das Formular ein `file`-Feld hat (0445) --------------------
+    # Die beiden Werte für den ZWEITEN Aufruf, der die Datei bringt
+    # (`POST /site/form/{submission_id}/upload`). Sie kommen NUR mit, wenn es
+    # wirklich ein Datei-Feld gibt: eine Kennung und ein Ticket an ein Formular
+    # zu geben, das keine Datei annimmt, wäre ein Schlüssel für eine Tür, die es
+    # nicht gibt — und die Kennung einer fremden Einsendung ist der einzige
+    # Wert, den ein Angreifer für den Upload-Weg braucht.
+    submission_id: str | None = None
+    upload_ticket: str | None = None
 
 
 class FormSubmission(BaseModel):
@@ -1136,6 +1247,7 @@ class FormSubmission(BaseModel):
 class FormSubmissionListResponse(BaseModel):
     items: list[FormSubmission] = Field(default_factory=list)
     total: int = 0
+
 
 
 # === Pop-ups (0437, Etappe G) ===============================================
@@ -1156,7 +1268,45 @@ class PublicPopup(BaseModel):
     value: int | None = None
     device: str | None = None
     once: bool = True
+    # Wo das Fenster sitzt (0440). `None` = mittig — der Renderer hat denselben
+    # Rueckfall, damit ein Pop-up aus der Zeit vor 0440 aussieht wie bisher.
+    position: str | None = None
     blocks: list[PublicBlock] = Field(default_factory=list)
+
+
+class SeitenZugangRequest(BaseModel):
+    """Seitenpasswort setzen oder entfernen (0442).
+
+    Leer oder ``None`` entfernt den Schutz — dieselbe Aktion, weil „offen für
+    alle" nur die andere Stellung desselben Schalters ist.
+    """
+
+    passwort: str | None = Field(default=None, max_length=100)
+
+
+class SeitenEntwurfRequest(BaseModel):
+    """Eine Seite als Entwurf halten oder freigeben (0443)."""
+
+    entwurf: bool
+
+
+class SeitenFreischaltenRequest(BaseModel):
+    """Ein Gast gibt das Passwort einer geschützten Seite ein (0442)."""
+
+    host: str = Field(min_length=3, max_length=253)
+    slug: str | None = Field(default=None, max_length=200)
+    passwort: str = Field(min_length=1, max_length=100)
+
+
+class SeitenTicketResponse(BaseModel):
+    """Der Nachweis für eine geöffnete Seite.
+
+    Signiert, mit Ablauf, und nur für DIESE eine Seite gültig — die Seiten-ID
+    steckt in der Signatur. Der Server merkt sich nichts über den Gast; es gibt
+    nichts zu merken.
+    """
+
+    ticket: str
 
 
 class PublicPopupListResponse(BaseModel):
@@ -1168,37 +1318,29 @@ class PublicPopupListResponse(BaseModel):
     items: list[PublicPopup] = Field(default_factory=list)
 
 
-# === Blog (0438, Etappe H) ==================================================
-class PublicPost(BaseModel):
-    """Ein Beitrag in der Liste.
+# Blog (0438/0457) — ausgelagert nach `schemas_blog.py`, weil diese Datei sonst
+# ueber der pylint-Zeilengrenze liegt. Der Import steht hier UNTEN, nach den
+# Typen, die `schemas_blog` seinerseits braucht (PublicBlock, PublicPageMeta,
+# PublicSiteResponse) — sonst waere es ein Zirkelbezug.
+#
+# Der Re-Export haelt `from .schemas import PublicPost` fuer die uebrigen
+# Module gueltig; kein Aufrufer muss geaendert werden.
+# Der Import steht bewusst am Dateiende und nicht oben: `schemas_blog` holt
+# sich `PublicBlock`, `PublicPageMeta` und `PublicSiteResponse` von HIER. Oben
+# waere das ein Zirkelbezug.
+# pylint: disable=wrong-import-position
+from .schemas_blog import (  # noqa: E402,F401  — Re-Export, siehe oben
+    PublicBlogAngaben,
+    PublicPost,
+    PublicPostEigenesFeld,
+    PublicPostFelder,
+    PublicPostListResponse,
+    PublicPostNachbar,
+    PublicPostResponse,
+)
 
-    OHNE Blöcke: die Liste zeigt Titel, Anriss und Bild. Die Abschnitte eines
-    Beitrags wären bei zwanzig Einträgen zwanzig Block-Bäume in einer Antwort —
-    für eine Übersicht, die davon nichts anzeigt."""
-
-    slug: str
-    title: str
-    excerpt: str | None = None
-    author: str | None = None
-    cover_image_url: str | None = None
-    tags: list[str] = Field(default_factory=list)
-    published_at: str | None = None
-
-
-class PublicPostListResponse(BaseModel):
-    items: list[PublicPost] = Field(default_factory=list)
-    total: int = 0
-    # Alle vorkommenden Schlagwörter, für die Filterleiste. Aus DIESER Seite der
-    # Liste und nicht aus allen Beiträgen: eine zweite Abfrage über den ganzen
-    # Bestand nur für die Leiste wäre der teurere Teil des Aufrufs.
-    tags: list[str] = Field(default_factory=list)
-
-
-class PublicPostResponse(BaseModel):
-    """Ein einzelner Beitrag mit seinen Abschnitten."""
-
-    tenant_id: str
-    post: PublicPost
-    page: PublicPageMeta
-    blocks: list[PublicBlock] = Field(default_factory=list)
-    branding: PublicSiteResponse
+# Die Vorwärtsverweise in `PublicPageResponse` (`post`, `eigene_felder`) zeigen
+# auf Modelle aus `schemas_blog` — das erst HIER importiert werden kann (siehe
+# oben). `model_rebuild` löst sie auf, sobald die Namen im Modul stehen; ohne
+# diesen Aufruf wirft pydantic beim ersten Gebrauch „class not fully defined".
+PublicPageResponse.model_rebuild()

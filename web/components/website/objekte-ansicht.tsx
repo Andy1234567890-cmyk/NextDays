@@ -21,7 +21,8 @@ import type { Page } from "@/lib/site-pages";
 import { type Property, updateProperty } from "@/lib/properties";
 
 import { BaukastenRahmen } from "./rahmen";
-import { EinstellungenKopf } from "./einstellungen/rahmen";
+import { BereichsKopf } from "./bereichs-kopf";
+import { useBaukastenRealtime } from "./baukasten-realtime";
 
 export function ObjekteAnsicht({
   pages,
@@ -71,6 +72,11 @@ export function ObjekteAnsicht({
   const anzahlAn = properties.filter((p) => lokal[p.id] ?? p.listed_on_website)
     .length;
 
+  // Fremde Änderungen bemerken (Realtime). Welche Objekte die Website zeigt, steht in der Site-Konfiguration.
+  // Welche Tabellen der Baukasten abonnieren darf und warum die übrigen
+  // NICHT, steht an einer Stelle: `baukasten-realtime.ts`.
+  useBaukastenRealtime({ tabellen: ["tenant_site_config"] });
+
   return (
     <BaukastenRahmen
       pages={pages}
@@ -78,7 +84,7 @@ export function ObjekteAnsicht({
       breit
       inhalt={
         <div className="mx-auto flex max-w-3xl flex-col gap-6 p-4 md:p-6">
-          <EinstellungenKopf
+          <BereichsKopf
             titel={t("objekte.titel")}
             beschreibung={t("objekte.hinweis")}
           />

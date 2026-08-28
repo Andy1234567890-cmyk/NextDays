@@ -1,154 +1,104 @@
-// Checkout — dreistufiger Buchungsabschluss (Zahlungszeitpunkt → Zahlungsart →
-// Prüfen) mit Buchungs-Zusammenfassung seitlich. Eigenes myNextDays-Design;
-// Daten aus dem Backend (booking_engine, nur active Objekte).
+// Die Buchungsseite (0474).
+//
+// WAS HIER VORHER STAND
+// Eine Attrappe. Die Seite trug drei Kästen, von denen zwei leer und grau
+// waren, einen „Weiter"-Knopf ohne Wirkung, kein Feld für den Namen des Gastes
+// und keine Zahlung. Dazu erfundene Angaben, die wie Daten aussahen:
+// „3.–5. Juli 2026", „1 Gast", „Wenn du vor dem 1. Juli stornierst …",
+// „Seltenes Fundstück – diese Unterkunft ist normalerweise ausgebucht" — und
+// ein festes `NAECHTE = 2`, aus dem der angezeigte Preis gerechnet wurde.
+//
+// Alles davon war deutsch im Markup, auf jeder Kundenseite, auch der dänischen.
+// Und alles davon war eine Aussage im Namen des Betriebs, die niemand
+// eingegeben hatte (Wurzel 4).
+//
+// WAS JETZT HIER STEHT
+// Nichts als der Rahmen. Der Inhalt sind BAUSTEINE — `checkout_summary` und
+// `checkout_form` —, die der Betrieb im Baukasten anordnet und beschriftet. Sie
+// holen ihre Zahlen aus dem Angebot des Servers (`/booking-engine/quote`) und
+// den Zeitraum aus der Adresse, in die ihn der Buchungs-Block geschrieben hat.
+//
+// Hat der Betrieb noch keine Vorlage gewählt, gilt das eingebaute Layout
+// darunter: Zusammenfassung und Buchungsabschluss nebeneinander. Es ist derselbe
+// Aufbau, den die Vorlage „klassisch" setzt — nur ohne eigene Texte. So steht
+// ein bestehender Betrieb nicht vor einer leeren Seite (Wurzel 1).
 import { notFound } from "next/navigation";
 
-import { CheckoutSteps } from "@/components/checkout-steps";
-import { PhotoPlaceholder } from "@/components/photo-placeholder";
+import { BlockRenderer } from "@/components/blocks/block-renderer";
+import {
+  CheckoutFormBlock,
+  CheckoutSummaryBlock,
+} from "@/components/blocks/checkout-blocks";
 import { SiteShell } from "@/components/site-shell";
-import { Icon } from "@iconify/react";
+import { aktuellerHost } from "@/lib/host";
 import { ladeInserat } from "@/lib/inserate";
-import { formatCurrency } from "@/lib/listings";
 import { getSiteContext, navOf } from "@/lib/site-context";
+import { ladeSystemseitenVorlage } from "@/lib/site";
 import { spracheWaehlen } from "@/lib/sprache";
-
-const NAECHTE = 2;
 
 export default async function CheckoutPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  // `?lang=` — die Sprachwahl des Gastes. Sie fehlte hier ganz: wer die
+  // Objektseite auf Dänisch las und dort auf „Buchen" klickte, bekam den
+  // Checkout in der Standardsprache. Der Sprachwähler in der Kopfzeile schien
+  // also mitten im wichtigsten Schritt zu vergessen, was er kann.
+  searchParams: Promise<{ lang?: string }>;
 }) {
   const { id } = await params;
+  const { lang } = await searchParams;
   // Tenant-Scope (Wurzel 3): der Checkout lud das Inserat vorher UNGESCOPED —
   // mit einer fremden Objekt-ID hätte man über die Direkt-URL die Buchungsstrecke
   // eines anderen Betriebs geöffnet. Der Scope kommt aus der Domain, nicht aus
   // der Anfrage.
   const { tenantId, branding, unknown } = await getSiteContext();
   if (unknown || !tenantId) notFound();
-  const listing = await ladeInserat(id, {}, tenantId);
+  // Sprache der Website an den Server (0474) — sonst kommen die
+  // Ausstattungs-Bezeichnungen auf Englisch zurück.
+  const sprache = spracheWaehlen(branding, lang);
+  const listing = await ladeInserat(id, { locale: sprache }, tenantId);
   if (!listing) notFound();
 
-  const cur = listing.currency;
-  const zwischensumme = (listing.preisProNacht ?? 0) * NAECHTE;
-  const gesamt = Math.round(zwischensumme * 100) / 100;
+  const host = await aktuellerHost();
+  const vorlage = host
+    ? await ladeSystemseitenVorlage(host, "checkout")
+    : null;
 
   return (
     <SiteShell
       branding={branding}
       nav={navOf(branding)}
       jahr={new Date().getFullYear()}
-      sprache={spracheWaehlen(branding)}
+      sprache={sprache}
       flaeche="zahlung"
     >
-      <div className="mx-auto w-full max-w-5xl px-6 py-8">
-        <div className="mb-8 flex items-center gap-4">
-          <button
-            type="button"
-            aria-label="Zurück"
-            className="flex size-10 items-center justify-center rounded-full hover:bg-secondary"
-          >
-            <Icon icon="ph:arrow-left" className="size-5" />
-          </button>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">
-            Bestätigen und bezahlen
-          </h1>
-        </div>
-
-        <div className="grid gap-12 lg:grid-cols-[1fr_24rem]">
-          {/* Linke Spalte: Schritte — Betrag in der OBJEKT-Währung (cur), nicht
-              hart EUR (die Zusammenfassung rechts nutzt cur bereits). */}
-          <CheckoutSteps gesamt={formatCurrency(gesamt, cur)} />
-
-          {/* Rechte Spalte: Buchungs-Zusammenfassung */}
-          <div className="lg:relative">
-            <div className="lg:sticky lg:top-28">
-              <div className="rounded-2xl border border-border bg-card p-6">
-                <div className="flex gap-4 border-b border-border pb-5">
-                  <PhotoPlaceholder
-                    hue={listing.hue}
-                    className="size-24 shrink-0 rounded-xl"
-                  />
-                  <div className="min-w-0">
-                    <p className="line-clamp-2 font-medium leading-snug">
-                      {listing.titel}
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {listing.ort}
-                    </p>
-                    {listing.bewertung != null && (
-                      <p className="mt-1 flex items-center gap-1 text-sm">
-                        <Icon icon="ph:star-fill" className="size-3.5" />
-                        {listing.bewertung.toLocaleString("de-DE")}
-                        {listing.anzahlBewertungen != null &&
-                          ` (${listing.anzahlBewertungen})`}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="border-b border-border py-5">
-                  <p className="text-sm font-semibold">Kostenlose Stornierung</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Wenn du vor dem 1. Juli stornierst, erhältst du eine
-                    vollständige Rückerstattung.
-                  </p>
-                </div>
-
-                <div className="flex items-start justify-between border-b border-border py-5">
-                  <div>
-                    <p className="text-sm font-semibold">Datum</p>
-                    <p className="text-sm text-muted-foreground">3.–5. Juli 2026</p>
-                  </div>
-                  <button type="button" className="text-sm font-medium underline">
-                    Ändern
-                  </button>
-                </div>
-
-                <div className="flex items-start justify-between border-b border-border py-5">
-                  <div>
-                    <p className="text-sm font-semibold">Gäste</p>
-                    <p className="text-sm text-muted-foreground">1 Gast</p>
-                  </div>
-                  <button type="button" className="text-sm font-medium underline">
-                    Ändern
-                  </button>
-                </div>
-
-                <div className="pt-5">
-                  <p className="text-sm font-semibold">Preisdetails</p>
-                  <div className="mt-3 flex flex-col gap-2 text-sm">
-                    {listing.preisProNacht != null ? (
-                      <>
-                        <div className="flex justify-between">
-                          <span>
-                            {formatCurrency(listing.preisProNacht, cur)} × {NAECHTE} Nächte
-                          </span>
-                          <span>{formatCurrency(zwischensumme, cur)}</span>
-                        </div>
-                        <div className="mt-2 flex justify-between border-t border-border pt-3 font-semibold">
-                          <span>Gesamt ({cur})</span>
-                          <span>{formatCurrency(gesamt, cur)}</span>
-                        </div>
-                      </>
-                    ) : (
-                      <p className="text-muted-foreground">Preis auf Anfrage</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center gap-3 rounded-2xl bg-accent/10 p-4">
-                <Icon icon="ph:sparkle" className="size-6 shrink-0 text-accent" />
-                <p className="text-sm">
-                  Seltenes Fundstück – diese Unterkunft ist normalerweise
-                  ausgebucht.
-                </p>
+      {vorlage ? (
+        <BlockRenderer
+          // Die Gastsprache MIT in den Inhalt. Ohne `modus` greift der Standard
+          // `NICHT_EDITIERBAR` mit `locale: "de"` — dann stand die Kopfzeile
+          // in der Gastsprache und der gestaltete Inhalt derselben Seite auf
+          // Deutsch. Ausgerechnet auf der Seite mit Geldbezug.
+          modus={{ aktiv: false, locale: sprache }}
+          blocks={vorlage.blocks}
+          tenantId={tenantId}
+          objekt={listing}
+        />
+      ) : (
+        // Das eingebaute Layout. Die Anordnung entspricht der Vorlage
+        // „klassisch": Formular links, Zusammenfassung rechts mitlaufend.
+        <div className="mx-auto w-full max-w-5xl px-6 py-8">
+          <div className="grid gap-12 lg:grid-cols-[1fr_24rem]">
+            <CheckoutFormBlock content={{}} objekt={listing} />
+            <div className="lg:relative">
+              <div className="lg:sticky lg:top-28">
+                <CheckoutSummaryBlock content={{}} objekt={listing} />
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </SiteShell>
   );
 }

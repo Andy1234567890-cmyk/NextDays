@@ -18,6 +18,7 @@ type ApiListing = {
   bedrooms: number | null;
   baths: number | null;
   amenities: string[];
+  amenity_labels?: string[];
   price_from: number | null;
   currency: string;
   rating: number | null;
@@ -85,6 +86,11 @@ function mapList(a: ApiListing): Listing {
     baeder: a.baths,
     gaeste: a.max_guests,
     ausstattung: a.amenities ?? [],
+    // Die BEZEICHNUNGEN vom Server (0474). Der Renderer hat den Label-Katalog
+    // nicht — vor 0474 stand deshalb „nd_parking_included" auf der Objektseite.
+    // Fehlen sie (ältere Backend-Fassung), bleibt die Liste leer und der
+    // Baustein zeigt die Codes: sichtbar falsch ist besser als still leer.
+    ausstattungTexte: a.amenity_labels ?? [],
     beschreibung: null,
     // Bewertungen nur übernehmen, wenn das Backend echte Werte liefert.
     ...(a.rating != null ? { bewertung: a.rating } : {}),
@@ -107,6 +113,10 @@ export type SuchParams = {
   end?: string;
   // Featured-Block: nur diese Objekt-IDs (leeres Array → keine Objekte).
   propertyIds?: string[];
+  /** Sprache der ANZEIGE (0474) — sie bestimmt die Ausstattungs-Bezeichnungen,
+   *  nicht die Auswahl der Objekte. Ohne Angabe antwortet der Server auf
+   *  Englisch, nicht auf Deutsch. */
+  locale?: string;
 };
 
 /** Alle aktiven Inserate (optional gefiltert). Resilient: ein Backend-Fehler
@@ -117,6 +127,7 @@ export async function ladeInserate(
   tenant: string | null = null,
 ): Promise<Listing[]> {
   const qs = new URLSearchParams();
+  if (params.locale) qs.set("locale", params.locale);
   if (params.q) qs.set("q", params.q);
   if (params.guests) qs.set("guests", String(params.guests));
   if (params.start) qs.set("start", params.start);
@@ -145,6 +156,7 @@ export async function ladeInserat(
   tenant: string | null = null,
 ): Promise<Listing | null> {
   const qs = new URLSearchParams();
+  if (params.locale) qs.set("locale", params.locale);
   if (params.start) qs.set("start", params.start);
   if (params.end) qs.set("end", params.end);
   const suffix = qs.toString() ? `?${qs.toString()}` : "";

@@ -118,6 +118,63 @@
   --input: #e4e4e7;
   --ring: #b82028;
 
+  /* Markenfarbe für HAUPTAKTIONEN im Website-Baukasten: „Neuer Beitrag",
+     „Veröffentlichen", „Layout bearbeiten", dazu Fokusrahmen und Checkboxen.
+     24 Stellen in `components/website/` benutzen sie als `bg-(--brand)`,
+     `accent-(--brand)`, `focus-within:border-(--brand)`.
+
+     Sie war NIE definiert. Eine unbekannte CSS-Variable fällt nicht auf einen
+     Ersatzwert zurück, sondern auf `unset` — bei `background-color` also
+     transparent. Der Knopf „Neuer Beitrag" stand damit weiss auf weiss: voll
+     bedienbar, mit Fokus und Vorlesefunktion, aber für das Auge nicht da
+     (gemessen am 25.08.2026: `rgba(0,0,0,0)` auf Hintergrund `#ffffff`).
+     Genau die Sorte Fehler, die kein Test meldet — Wurzel 4: ein fehlender
+     Wert muss auffallen, nicht still zu etwas Plausiblem werden.
+
+     Der Wert ist das Logo-Rot, dieselbe Farbe wie `--accent`. Bewusst ein
+     eigener Name statt `var(--accent)`: der Baukasten bekommt später die
+     Farbe des BETRIEBS (er baut seine eigene Website), und dann wird genau
+     hier überschrieben — ohne dass jeder Dashboard-Akzent mitwandert. */
+  --brand: #b82028;
+  --brand-foreground: #ffffff;
+
+  /* Zeilenhintergruende der CMS-Tabellen — DECKEND, nicht durchscheinend.
+     ==================================================================
+     Eine Tabelle mit waagerechtem Scroll hat angeheftete (`position: sticky`)
+     Spalten. Eine solche Zelle muss ihren EIGENEN, deckenden Hintergrund
+     malen: die Zeile darunter scrollt mit, also liegt hinter der stehenden
+     Zelle der weggescrollte Inhalt und nicht die Zeile.
+
+     Genau das ging schief. Der Ueberfahren-Zustand stand als
+     `group-hover:bg-secondary/30` an der angehefteten Zelle und schlug die
+     deckende Grundfarbe in der Klassenreihenfolge. Gemessen am 28.08.2026:
+     `background-color: oklab(0.967 0.0004 -0.0013 / 0.3)` — 30 % Deckung.
+     Sichtbar war es als uebereinanderstehender Text: in der eingefrorenen
+     Titelspalte las man „Wi**Die alte Muehle am Fjord**anine Staud", weil die
+     Autorenspalte 3 750 px weiter rechts durch die Zelle schien.
+
+     Deshalb hier drei FERTIG GEMISCHTE Farben statt Deckungsgrade. Sie sind
+     per `color-mix` aus den Theme-Tokens gebildet und folgen damit dem
+     hellen wie dem dunklen Modus, sind aber in beiden Faellen voll deckend —
+     ein Alpha-Wert kann hier gar nicht mehr entstehen. */
+  --tabelle-zeile-ueberfahren: color-mix(in oklab, var(--foreground) 2.5%, var(--background));
+  --tabelle-zeile-gewaehlt: color-mix(in oklab, var(--brand) 12%, var(--background));
+  /* Kapitelzeilen (eingerueckt unter ihrem Buch) — und ihr eigener
+     Ueberfahren-Ton. Eine Kapitelzeile MUSS beim Ueberfahren nachdunkeln
+     koennen: gaebe es nur einen Ueberfahren-Ton fuer alle, waere er bei einer
+     Kapitelzeile entweder heller als ihr Ruhezustand (sie wuerde beim
+     Zeigen aufhellen) oder gleich (sie reagierte gar nicht). */
+  --tabelle-zeile-kapitel: color-mix(in oklab, var(--foreground) 4%, var(--background));
+  --tabelle-zeile-kapitel-ueberfahren: color-mix(in oklab, var(--foreground) 6.5%, var(--background));
+  /* Die Platte hinter einer Bildminiatur. Sie muss auf JEDEM dieser
+     Zeilentoene stehen bleiben — dunkler als der dunkelste (6.5 %), sonst
+     verschwindet ein leeres Bildfeld genau dann, wenn man mit der Maus
+     darauf zeigt. Gemessen am 28.08.2026: mit `bg-secondary` (#f4f4f5) auf
+     einer ueberfahrenen Zeile (#f5f5f5) war die Platte nicht mehr da.
+     Im Vorbild ist es dasselbe Verhaeltnis: Platte #f3f3f3 auf Zeile
+     #fcfcfc. */
+  --tabelle-bild-platte: color-mix(in oklab, var(--foreground) 9%, var(--background));
+
   --chart-1: #b82028;
   --chart-2: #0a0a0a;
   --chart-3: #2563eb;
@@ -225,6 +282,12 @@
   --muted-foreground: #a1a1aa;
   --accent: #e0454d;
   --accent-foreground: #ffffff;
+
+  /* Im Dunkelmodus ein helleres Rot — dasselbe wie `--accent` hier. Das
+     Logo-Rot des Tagmodus (#b82028) trägt auf dunklem Grund zu wenig Kontrast
+     für einen Knopf mit weisser Schrift. */
+  --brand: #e0454d;
+  --brand-foreground: #ffffff;
   --destructive: #e0454d;
   --destructive-foreground: #fafafa;
   --success: #22c55e;
@@ -457,4 +520,48 @@ h1, h2, h3 {
      .pac-container hängt am <body> und erbt das → die Vorschläge sind sichtbar,
      aber NICHT klickbar (place_changed feuert nie). Explizit reaktivieren. */
   pointer-events: auto !important;
+}
+
+/* Der Schieberegler des Inspektors (28.08.2026).
+ *
+ * Als echte Klasse und nicht als Tailwind-Variante: `::-webkit-slider-thumb`
+ * ist ein Pseudo-Element mit Herstellerpräfix, und die Utility-Schreibweise
+ * dafür wurde im Panel nicht angewandt — sichtbar als ROTER Systemregler
+ * mitten im türkisen Inspektor (Screenshot des Nutzers). Die Systemakzentfarbe
+ * des Kunden ist keine, über die wir bestimmen; also zeichnen wir den Regler
+ * vollständig selbst. */
+.nd-schieber {
+  appearance: none;
+  background: transparent;
+  height: 1rem;
+  cursor: pointer;
+}
+.nd-schieber:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.nd-schieber::-webkit-slider-runnable-track {
+  height: 0.25rem;
+  border-radius: 9999px;
+  background: var(--secondary);
+}
+.nd-schieber::-webkit-slider-thumb {
+  appearance: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-top: -0.25rem;
+  border-radius: 9999px;
+  background: var(--brand);
+}
+.nd-schieber::-moz-range-track {
+  height: 0.25rem;
+  border-radius: 9999px;
+  background: var(--secondary);
+}
+.nd-schieber::-moz-range-thumb {
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--brand);
 }

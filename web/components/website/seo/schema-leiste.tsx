@@ -18,7 +18,7 @@ import { toast } from "sonner";
 
 import { type Branding, setBranding } from "@/lib/site-config";
 
-import { EinstellungenKopf } from "../einstellungen/rahmen";
+import { BereichsKopf } from "../bereichs-kopf";
 import { Schalter } from "../einstellungen/schalter";
 import { SpeicherAnzeige } from "../schale";
 import { useAutospeichern } from "../use-autospeichern";
@@ -48,7 +48,7 @@ export function SeoSchemaLeiste({ branding }: { branding: Branding }) {
 
   return (
     <div className="flex flex-col gap-8">
-      <EinstellungenKopf
+      <BereichsKopf
         titel={t("seo.schema.titel")}
         beschreibung={t("seo.schema.hinweis")}
         aktion={

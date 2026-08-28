@@ -72,7 +72,13 @@ export function RealtimeDebugPanel() {
   return (
     // Unter der Topbar statt unten rechts: dort sitzen Andy und der Support-Chat,
     // und das Overlay hat Dialog-Buttons verdeckt.
-    <div className="fixed right-4 top-16 z-[9999] flex flex-col items-end gap-2">
+    <div
+      // UNTEN rechts und nicht oben: `top-16` lag genau auf der Knopfzeile der
+      // Seiten und überdeckte dort Bedienelemente (auf `/website/regeln` den
+      // Knopf „Neue Regel"). Ein Diagnosewerkzeug, das die Bedienung
+      // verstellt, macht die Sitzung unbrauchbar, in der es helfen soll.
+      className="fixed bottom-4 right-4 z-[9999] flex flex-col items-end gap-2"
+    >
       {open && (
         <div className="max-h-[60vh] w-80 overflow-auto rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-xl">
           <div className="mb-2 flex items-center justify-between">

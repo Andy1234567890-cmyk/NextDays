@@ -98,6 +98,31 @@ const MAIN: readonly NavItem[] = [
   // „distribution" enthielt nur diese zwei Punkte und ist damit entfallen.
   { key: "channelManager", href: "/channels", icon: "ph:arrows-left-right" },
   { key: "reviews", href: "/bewertungen", icon: "ph:star", req: "view_reviews" },
+  // Website-Baukasten: EIN Eintrag, keine aufklappbare Gruppe.
+  //
+  // Er führt in den Editor, und der Editor hat seine EIGENE Bereichsleiste
+  // (Hinzufügen · Seiten · Ebenen · Theme · SEO/AEO · Blog · Mehr) samt
+  // Menüspalte. Die drei Unterpunkte, die hier standen — Design, Seiten,
+  // Adresse — sind dort ohnehin vorhanden, und zwar vollständiger: die Leiste
+  // führt sieben Bereiche, das Untermenü führte drei davon.
+  //
+  // Ein Untermenü über einer Fläche, die ihre eigene Navigation mitbringt, ist
+  // eine zweite Wahrheit darüber, wo man ist: man klickt „Design", landet im
+  // Editor, und die Sidebar behauptet weiter „Design", während man längst über
+  // die Leiste bei „Theme" ist. Ausdrücklich so gewünscht am 26.08.2026
+  // („muss nur ein button sein kein menü mit sub unterpunkten").
+  //
+  // Ziel ist `/website/seiten`: die Seitenliste ist der Einstieg, von dem aus
+  // jede weitere Fläche des Baukastens erreichbar ist.
+  {
+    // `websiteBuilder` und nicht `website`: dieser Schlüssel steht in allen 24
+    // Sprachen gepflegt da (er beschriftete die Gruppe). Einen neuen anzulegen
+    // hieße, dieselben 24 Übersetzungen ein zweites Mal zu führen (Wurzel 2).
+    key: "websiteBuilder",
+    href: "/website/seiten",
+    icon: "ph:globe",
+    req: "access_homepage_builder",
+  },
 ];
 
 // Fuß der Navigation: kontoweite Flächen, die zu keinem Objekt und keiner
@@ -285,37 +310,6 @@ function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] 
         { key: "guestMonthlyReport", href: "/gaeste/monatsbericht", icon: "ph:chart-bar", req: "pm_guest_details" },
         { key: "vouchers", href: "/gaeste/gutscheine", icon: "ph:ticket", req: "pm_guest_details" },
         { key: "travelAgencies", href: "/reisebueros", icon: "ph:handshake", req: "manage_partners" },
-      ],
-    },
-    // Website-Baukasten als eigene Gruppe, nicht als Punkt unter „Vertrieb":
-    // die eigene Website ist ein eigener Verkaufsweg (Direktbuchung), und man
-    // arbeitet an ihr in drei klar getrennten Bereichen. Jeder Bereich ist ein
-    // eigener PFAD (`/website/design`, `/website/seiten`,
-    // `/website/einstellungen/adresse`) — vorher unterschieden sie sich nur im
-    // Query (`?reiter=`), womit ein Unterpunkt wie das Logo-Panel gar keine
-    // Adresse hatte und die Hervorhebung eine Sonderbehandlung brauchte.
-    {
-      groupKey: "website",
-      icon: "ph:globe",
-      items: [
-        {
-          key: "websiteDesign",
-          href: "/website/design",
-          icon: "ph:palette",
-          req: "access_homepage_builder",
-        },
-        {
-          key: "websitePages",
-          href: "/website/seiten",
-          icon: "ph:files",
-          req: "access_homepage_builder",
-        },
-        {
-          key: "websiteDomain",
-          href: "/website/einstellungen/adresse",
-          icon: "ph:link",
-          req: "access_homepage_builder",
-        },
       ],
     },
     ...STATIC_GROUPS.filter((g) => !HIDDEN_AT_LAUNCH.has(g.groupKey)),

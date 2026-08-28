@@ -117,6 +117,37 @@ export async function listFormEinsendungen(
   );
 }
 
+/** Eine Anlage aus einer Formular-Einsendung (0445).
+ *
+ *  `url` ist eine SIGNIERTE Adresse und gilt fünf Minuten. Sie wird bei jedem
+ *  Abruf neu erzeugt und darf deshalb NICHT zwischengespeichert werden — eine
+ *  gespeicherte Adresse wäre ein dauerhafter Leseschlüssel auf eine Datei, die
+ *  ein Fremder geschickt hat.
+ *
+ *  `null` heißt: die Signatur ist fehlgeschlagen. Die Oberfläche zeigt den
+ *  Namen dann ohne Link, statt auf ein totes Ziel zu führen (Wurzel 4). */
+export type FormAnlage = {
+  id: string;
+  feld: string;
+  name: string;
+  groesse: number;
+  mime: string;
+  url: string | null;
+  verfaellt_am: string | null;
+};
+
+/** Die Anlagen EINER Einsendung.
+ *
+ *  Eigener Aufruf und nicht Teil der Liste: die Adressen werden je Abruf frisch
+ *  signiert, und für 50 Anfragen 50 Signaturen zu bauen, von denen niemand eine
+ *  anklickt, wäre Arbeit ohne Zweck. Geladen wird erst, wenn jemand eine
+ *  Anfrage aufklappt. */
+export async function listFormAnlagen(
+  submissionId: string,
+): Promise<Result<{ items: FormAnlage[] }>> {
+  return call(`/site-config/form-submissions/${submissionId}/uploads`);
+}
+
 export async function markiereEinsendungGelesen(
   id: string,
 ): Promise<Result<null>> {

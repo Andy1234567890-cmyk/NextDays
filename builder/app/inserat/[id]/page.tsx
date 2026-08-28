@@ -9,9 +9,12 @@ import { BuchungsWidget } from "@/components/buchungs-widget";
 import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import { SiteShell } from "@/components/site-shell";
 import { ObjektStrukturierteDaten } from "@/components/strukturierte-daten";
-import { aktuellerHost } from "@/lib/host";
+import { aktuellerHost, spracheAusPfad } from "@/lib/host";
+import { BlockRenderer } from "@/components/blocks/block-renderer";
 import { ladeInserat } from "@/lib/inserate";
+import { hreflangKarte } from "@/lib/metadaten";
 import { basisUrl } from "@/lib/seo";
+import { ladeObjektVorlage } from "@/lib/site";
 import { getSiteContext, navOf } from "@/lib/site-context";
 import { spracheWaehlen } from "@/lib/sprache";
 
@@ -74,7 +77,10 @@ export async function generateMetadata({
     metadataBase: new URL(basisUrl(host)),
     title: titel,
     ...(auszug ? { description: auszug } : {}),
-    alternates: { canonical: absolut },
+    alternates: {
+      canonical: absolut,
+      languages: hreflangKarte(branding, host, `/inserat/${id}`),
+    },
     robots: {
       index: true,
       follow: true,
@@ -99,15 +105,32 @@ export async function generateMetadata({
 
 export default async function InseratPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  // `?lang=` — die Objektseite ist die Seite, auf der ein Gast am längsten
+  // liest. Sie ignorierte die Sprachwahl bisher ganz: der Wähler in der
+  // Kopfzeile stellte die Startseite um, und ein Klick auf ein Objekt fiel
+  // zurück in die Standardsprache.
+  searchParams: Promise<{ lang?: string }>;
 }) {
   const { id } = await params;
+  const { lang } = await searchParams;
   // tenant-gescoped: ein fremdes Inserat liefert mit ?tenant= aus dem Backend
   // 404 → notFound (kein Cross-Tenant-Zugriff über die Direkt-URL).
   const { tenantId, branding, unknown } = await getSiteContext();
   if (unknown || !tenantId) notFound();
-  const listing = await ladeInserat(id, {}, tenantId);
+  // Die Sprache der Website mitgeben (0474): sie bestimmt, in welcher Sprache
+  // der Server die Ausstattungs-Bezeichnungen liefert. Ohne sie antwortet er
+  // auf Englisch — und ein dänischer Gast läse englische Merkmale.
+  // Das Pfad-Präfix ZUERST, `?lang=` als Altbestand (0476). Ohne diese Zeile
+  // lieferte `/da/...` deutschen Inhalt mit Status 200 — der schlimmste Fall,
+  // weil er wie ein Erfolg aussieht.
+  const sprache = spracheWaehlen(
+    branding,
+    (await spracheAusPfad()) ?? lang,
+  );
+  const listing = await ladeInserat(id, { locale: sprache }, tenantId);
   if (!listing) notFound();
 
   const galerieHues = [0, 20, 40, 60, 80].map((d) => (listing.hue + d) % 360);
@@ -115,12 +138,20 @@ export default async function InseratPage({
   // Wert in einem JSON-LD ist für Google wertlos.
   const host = await aktuellerHost();
 
+  // Hat der Betrieb eine eigene Objekt-Vorlage gebaut (0468), gilt sie. Sonst
+  // bleibt es beim eingebauten Layout darunter.
+  //
+  // Die Reihenfolge ist Absicht: eine Vorlage ERSETZT das eingebaute Layout,
+  // sie ergänzt es nicht. Beides untereinander hieße Galerie, Beschreibung und
+  // Buchungsfeld doppelt — und zwar ohne dass jemand sähe, warum.
+  const vorlage = host ? await ladeObjektVorlage(host) : null;
+
   return (
     <SiteShell
       branding={branding}
       nav={navOf(branding)}
       jahr={new Date().getFullYear()}
-      sprache={spracheWaehlen(branding)}
+      sprache={sprache}
     >
       {host ? (
         <ObjektStrukturierteDaten
@@ -129,6 +160,16 @@ export default async function InseratPage({
           objekt={listing}
         />
       ) : null}
+      {vorlage ? (
+        <BlockRenderer
+          // Siehe checkout: ohne `modus` fällt der Inhalt auf Deutsch zurück,
+          // während Kopf- und Fußzeile in der Gastsprache stehen.
+          modus={{ aktiv: false, locale: sprache }}
+          blocks={vorlage.blocks}
+          tenantId={tenantId}
+          objekt={listing}
+        />
+      ) : (
       <div className="mx-auto w-full max-w-6xl px-6 py-6">
         {/* Titelzeile */}
         <div className="mb-4">
@@ -245,7 +286,7 @@ export default async function InseratPage({
             <div className="lg:sticky lg:top-28">
               <BuchungsWidget
                 listing={listing}
-                sprache={spracheWaehlen(branding)}
+                sprache={spracheWaehlen(branding, lang)}
                 datenschutzPflicht={branding?.privacy_consent === true}
                 datenschutzHref={
                   branding?.privacy_policy_slug
@@ -261,6 +302,7 @@ export default async function InseratPage({
           </div>
         </div>
       </div>
+      )}
     </SiteShell>
   );
 }

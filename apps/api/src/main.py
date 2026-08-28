@@ -89,6 +89,7 @@ from .features.public_portal.router import router as public_portal_router
 from .features.rates.router import router as rates_router
 from .features.reservations.router import router as reservations_router
 from .features.reviews.router import router as reviews_router
+from .features.site_config.ki_router import ki_router as site_config_ki_router
 from .features.site_config.router import manage_router as site_config_manage_router
 from .features.site_config.router import public_router as site_config_public_router
 from .features.subscriptions.router import router as subscriptions_router
@@ -173,6 +174,7 @@ _SLICE_ROUTERS = [
     booking_conditions_router,
     site_config_manage_router,
     site_config_public_router,
+    site_config_ki_router,
     ocr_router,
     public_portal_router,
     tasks_router,

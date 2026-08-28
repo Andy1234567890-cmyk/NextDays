@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import { BlockRenderer } from "@/components/blocks/block-renderer";
 import { NichtEingerichtet } from "@/components/nicht-eingerichtet";
 import { SiteShell } from "@/components/site-shell";
-import { aktuellerHost } from "@/lib/host";
+import { aktuellerHost, spracheAusPfad } from "@/lib/host";
 import type { SuchParams } from "@/lib/inserate";
 import { seitenMetadaten } from "@/lib/metadaten";
 import { ladeSeite } from "@/lib/site";
@@ -20,9 +20,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const { branding } = await getSiteContext();
   const host = await aktuellerHost();
   if (!host) return {};
-  const site = await ladeSeite(host);
+  const sprache = spracheWaehlen(branding, await spracheAusPfad());
+  const site = await ladeSeite(host, undefined, null, sprache);
   if (!site) return {};
-  return seitenMetadaten({ branding, host, page: site.page });
+  return seitenMetadaten({ branding, host, page: site.page, sprache });
 }
 
 export default async function HomePage({
@@ -42,11 +43,20 @@ export default async function HomePage({
 
   if (unknown || !host) return <NichtEingerichtet />;
 
-  const site = await ladeSeite(host);
+  const sp = await searchParams;
+  // Das Pfad-Präfix ZUERST, `?lang=` als Altbestand — dieselbe Reihenfolge wie
+  // in `app/[slug]/page.tsx`.
+  //
+  // Diese Zeilen fehlten hier: `generateMetadata` in derselben Datei las das
+  // Präfix bereits, die Komponente nicht. `/da` lieferte damit einen dänischen
+  // <title> über einem deutschen Seitenkörper — und `ladeSeite(host)` ohne
+  // Sprache holte zusätzlich die falsche Fassung vom Resolver.
+  const sprache = spracheWaehlen(branding, (await spracheAusPfad()) ?? sp.lang);
+
+  const site = await ladeSeite(host, undefined, null, sprache);
   // Keine veröffentlichte Startseite → neutraler Hinweis (kein Marktplatz).
   if (!site) return <NichtEingerichtet />;
 
-  const sp = await searchParams;
   const search: SuchParams = {
     q: sp.q,
     guests: sp.guests ? Number(sp.guests) : undefined,
@@ -60,7 +70,7 @@ export default async function HomePage({
       nav={navOf(branding)}
       aktiverSlug=""
       jahr={new Date().getFullYear()}
-      sprache={spracheWaehlen(branding, sp.lang)}
+      sprache={sprache}
       seitenHtml={site.page.head_html}
       tenantId={site.tenant_id}
     >
@@ -68,7 +78,8 @@ export default async function HomePage({
         blocks={site.blocks}
         tenantId={site.tenant_id}
         search={search}
-        modus={{ aktiv: false, locale: spracheWaehlen(branding, sp.lang) }}
+        modus={{ aktiv: false, locale: sprache }}
+        seite={site.page}
       />
     </SiteShell>
   );

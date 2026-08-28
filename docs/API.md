@@ -1498,7 +1498,7 @@ doppelte Belastung). Add-ons/Upsells am OTA vorbei sind separat (addons-Slice).
 | `POST`  | `/api/v1/payments/deposit/{payment_id}/capture`    | MANAGE_BILLING — Kaution einziehen (Schaden)         |
 | `POST`  | `/api/v1/payments/deposit/{payment_id}/release`    | MANAGE_BILLING — Kaution freigeben                   |
 | `POST`  | `/api/v1/payments/{payment_id}/refund`             | MANAGE_BILLING — (Teil-)Erstattung                   |
-| `GET`   | `/api/v1/payments/reservations/{id}/nachberechnung` | MANAGE_CALENDAR — Stand: offener Betrag, Vorschlag aus dem letzten `repriced`-Ereignis, offene und bereits bezahlte Nachberechnungen (mit Stripe-Abgleich) |
+| `GET`   | `/api/v1/payments/reservations/{id}/nachberechnung` | MANAGE_CALENDAR — Stand: offener Betrag, Vorschlag aus dem letzten `repriced`-Ereignis, offener Link (mit Stripe-Abgleich) |
 | `POST`  | `/api/v1/payments/reservations/{id}/nachberechnung` | MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS — Zahlungslink über eine Nachberechnung; `{amount, grund}`. NUR `channel='website'` (sonst 409), Betrag ≤ offen (sonst 422), provisionsfrei (0380), idempotent je Betrag+Grund |
 | `POST`  | `/api/v1/payments/reservations/{id}/nachberechnung/senden` | MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS — Link per Mail an den Gast (seine Sprache, Marke myBestDays); eigener Rate-Limit-Bucket 10/60 |
 | `POST`  | `/api/v1/payments/reservations/{id}/nachberechnung/bezahlt` | MANAGE_CALENDAR + EDIT_CALENDAR_BOOKINGS — offenen Link als bezahlt markieren (Gast hat bar/überwiesen); deaktiviert ihn zuerst bei Stripe |
@@ -2376,61 +2376,11 @@ den `builder/`-Renderer der myNextDays-Websites.
 | `PUT`    | `/api/v1/site-config/blocks/{block_id}`              | `content`/`settings` ändern (der `type` ist unveränderlich)                                                          |
 | `POST`   | `/api/v1/site-config/pages/{page_id}/blocks/reorder` | Neu ordnen: `{ordered_ids}` muss **exakt** die Block-Menge der Seite sein, sonst `400`                               |
 | `DELETE` | `/api/v1/site-config/blocks/{block_id}`              | Block löschen → `204`                                                                                                |
-| `POST`   | `/api/v1/site-config/templates/apply`                | Start-Template anwenden: `{template_id}` (`bergchalet`\|`kueste`\|`stadt`) → Seitenliste; `404` unbekanntes Template |
-
-**Block-Typen (11) + Content-Validierung:** `hero` · `rich_text` · `image` ·
-`gallery` · `button` · `spacer` · `contact` · `search` · `properties_grid` ·
-`featured_properties` · `reviews` (Migration `0266`; zeigt die eigenen,
-verifizierten myBestDays-Bewertungen — `property_id` leer = alle Objekte des
-Betriebs; Portal-Bewertungen erscheinen bewusst NICHT). Der `content` wird
-**pro Typ** gegen ein eigenes
-Pydantic-Schema validiert und normalisiert (`validate_block_content`) — Felder
-außerhalb des Schemas werden verworfen, ungültiger Inhalt → `400`. Texte sind
-i18n-Objekte (`{locale: text}`). `settings` sind typunabhängig
-(`background_color` Hex, `padding` `none|sm|md|lg`, `full_width`, `opacity`,
-`visible`, `radius`, `rotation`).
-
-**Branding-Vollausbau (Migration 0426).** Der Baukasten wurde auf den
-Branchenumfang gebracht (Vergleich: Lodgify, live abgelesen 23.08.2026). Neue
-Felder in `BrandingBase` — alle im Teil-Update setzbar, alle NULL-fähig, sofern
-nicht als Schalter gekennzeichnet:
-
-| Gruppe                | Felder                                                                                                              | Wirkung im Renderer                                                                                                                                              |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Farbrollen            | `brand_name_color`, `header_background`, `header_link_color`, `link_color`, `footer_background` (Hex)                | eigene CSS-Variablen für Kopf-/Fußzeile; vorher übernahmen beide den Seitenhintergrund, ein dunkler Header war unmöglich                                          |
-| Logo-Typografie       | `logo_name_font`, `logo_name_size` (8–48 pt), `slogan_font`, `logo_link_url`                                         | Firmenname neben dem Logo mit eigener Familie/Größe; `logo_link_url` ist das Klickziel (leer = Startseite)                                                        |
-| Sprachen              | `languages` (ISO-Codes), `default_language`                                                                          | bestimmt, in welcher Sprache der Renderer ausgibt — vorher stand dort ein festes `de`. Sprachwähler in der Kopfzeile ab zwei Sprachen, Wahl über `?lang=xx`       |
-| Anzeige (Schalter)    | `show_guest_breakdown` (Std. `true`), `show_base_prices` (Std. `true`)                                               | Suchfeld erfragt Erwachsene/Kinder/Kleinkinder getrennt; Basispreis erst nach Datumswahl                                                                          |
-| Code-Injection        | `head_html` (≤8 000), `head_css` (≤20 000), `custom_js` (≤20 000), `checkout_js` (≤8 000)                            | `head_html` nur `<meta>`/`<link>`/`<title>` (nh3-Allowlist, kein `http-equiv`, nur http(s)); `custom_js` NICHT in der Zahlungsstrecke; `checkout_js` NUR nach der Zahlung |
-| Recht (Schalter + ID) | `cookie_banner`, `cookie_policy_page_id`, `privacy_consent`, `privacy_policy_page_id`                                | Cookie-Hinweis am Seitenfuß; Datenschutz-Häkchen im Buchungs-Widget (Pflicht vor dem Reservieren)                                                                 |
-| Hauptschalter         | `is_offline`                                                                                                        | `true` → der **öffentliche** Resolver antwortet mit `404` (`by-domain` UND `page`); der Entwurfs-Render bleibt erreichbar                                          |
-
-`social_links` wird jetzt **serverseitig** validiert: nur die sechs Netzwerke,
-die die Fußzeile rendert (`instagram`, `facebook`, `youtube`, `linkedin`,
-`pinterest`, `tiktok`), und nur vollständige `http(s)`-Adressen — ein
-`javascript:`-Wert kam vorher bis in die Datenbank und wurde erst beim Rendern
-abgefangen. Unbekannter Schlüssel oder unvollständige Adresse → `422`.
-
-`PublicSiteResponse` gibt davon alles heraus, was der Renderer braucht — mit
-zwei Unterschieden zum Dashboard-Branding: `is_offline` erscheint **nicht** (die
-Seite antwortet dann ohnehin mit `404`), und die verlinkten Rechts-Seiten kommen
-als **Slug** (`cookie_policy_slug`, `privacy_policy_slug`) statt als ID. Der
-Slug wird tenant-gescoped und nur für **veröffentlichte** Seiten aufgelöst; eine
-per Direktpfad eingetragene fremde ID ergibt `null` statt eines Links auf die
-Datenschutzseite eines anderen Betriebs.
-
-Seiten tragen zusätzlich `languages` (`PageUpdate`/`PageResponse`): in welchen
-Sprachen **diese** Seite existiert. `null` = alle Sprachen der Website.
-
-**Objekt-Sichtbarkeit auf der Website.** `properties.listed_on_website` (0162)
-wurde vom Renderer nie ausgewertet — die Kunden-Website zeigte alle aktiven
-Objekte. `booking_engine.list_listings`/`list_destinations` filtern jetzt bei
-gesetztem `tenant` darauf; der Featured-Block (`property_ids`) ist bewusst
-ausgenommen, wie beim Marktplatz-Flag.
-
-**Font-Katalog:** Die Schriftauswahl des Editors (voller Google-Fonts-Katalog)
-läuft **nicht** über FastAPI, sondern über die server-seitige Next.js-Route
-`/api/google-fonts` in `apps/web` (Key `GOOGLE_FONTS_API_KEY`; ohne Key → `503`).
+| `GET`    | `/api/v1/site-config/templates`                      | Vorlagen-Galerie: `{templates[], kategorien[]}` — je Vorlage `id`, `kategorie`, `name`, `description`, `preview_image`, Seitenliste. EINZIGE Quelle der IDs |
+| `GET`    | `/api/v1/site-config/seiten-vorlagen`                | Vorlagen für EINZELNE Seiten (`ueber_uns`, `kontakt`, `anfahrt`, `hausordnung`, `umgebung`, `faq`) |
+| `POST`   | `/api/v1/site-config/templates/apply`                | Vorlage anwenden: `{template_id}` (`agentur`\|`ferienhaus`\|`hotel_klassisch`\|`hotel_boutique`\|`bergchalet`\|`kueste`\|`stadt`) → Seitenliste; `404` unbekanntes Template. Vorhandene Slugs werden übersprungen, gesetzte Branding-Felder nicht überschrieben |
+| `POST`   | `/api/v1/site-config/templates/{template_id}/preview-token` | HMAC-Token (1 h) für die Vorschau einer Vorlage, BEVOR sie angewendet wird |
+| `GET`    | `/api/v1/site/template/draft`                        | **Öffentlich, kein JWT.** `?template_id&token&slug` → gerenderte Vorlagenseite für den builder-iframe. Fail-closed: Müll/abgelaufen → `403`, unbekannt → `404` |
 
 ### Öffentlicher Resolver (`/api/v1/site`, KEIN JWT)
 

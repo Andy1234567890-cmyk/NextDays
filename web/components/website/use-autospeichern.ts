@@ -18,6 +18,7 @@
 // (Wurzel 2 — real kommt alles doppelt).
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { eigenesEchoMerken } from "./baukasten-realtime";
 import type { SpeicherStand } from "./schale";
 
 const ENTPRELLUNG_MS = 900;
@@ -110,6 +111,14 @@ export function useAutospeichern<T>({
       return;
     }
     gescheitertAn.current = null;
+    // Ab hier kommt der EIGENE Schreibvorgang als Realtime-Ereignis zurück —
+    // auch in den anderen offenen Reitern desselben Menschen, die dieselbe
+    // Tabelle abhören. Ohne diese Markierung meldete jeder von ihnen „jemand
+    // anderes hat geändert", sobald man hier eine Farbe verstellt.
+    //
+    // Zentral hier und nicht in jedem Reiter: JEDER Schreibweg des Baukastens
+    // läuft durch diesen Haken, also kann ihn keiner vergessen.
+    eigenesEchoMerken();
     setUebernommen(res.data);
     setStand("gespeichert");
   }, []);

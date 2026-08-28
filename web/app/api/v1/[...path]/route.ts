@@ -39,7 +39,15 @@ async function forward(req: NextRequest, path: string[]): Promise<NextResponse> 
 
   const respContentType = res.headers.get("content-type") ?? "";
   const text = await res.text();
-  const antwort = new NextResponse(text, {
+  // 204/205/304 tragen KEINEN Rumpf. Ihn trotzdem an `new NextResponse` zu
+  // geben ist ein Fehler in der Laufzeit ("Response with null body status
+  // cannot have body"), und der kommt beim Aufrufer als 500 an — obwohl das
+  // Backend erfolgreich war. Jedes DELETE über diesen Weg meldete deshalb
+  // einen Serverfehler und hatte trotzdem gelöscht: die Oberfläche zeigte den
+  // Fehler, die Zeile war weg (Wurzel 5 — ein Erfolg, der wie ein Fehler
+  // aussieht, ist so schlimm wie umgekehrt).
+  const ohneRumpf = res.status === 204 || res.status === 205 || res.status === 304;
+  const antwort = new NextResponse(ohneRumpf ? null : text, {
     status: res.status,
     headers: { "content-type": respContentType || "application/json" },
   });

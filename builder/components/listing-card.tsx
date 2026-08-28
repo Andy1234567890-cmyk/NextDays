@@ -6,6 +6,7 @@ import Link from "next/link";
 
 import type { BildLaden } from "@/lib/bilder";
 import { type Listing, formatCurrency } from "@/lib/listings";
+import { mitSprache } from "@/lib/sprache";
 import { texte } from "@/lib/texte";
 
 import { PhotoPlaceholder } from "./photo-placeholder";
@@ -34,7 +35,10 @@ export function ListingCard({
   const txt = texte(sprache);
   const foto = listing.fotos[0];
   return (
-    <Link href={`/inserat/${listing.id}`} className="group flex flex-col gap-3">
+    <Link
+      href={mitSprache(`/inserat/${listing.id}`, sprache)}
+      className="group flex flex-col gap-3"
+    >
       <div className="relative aspect-square overflow-hidden rounded-2xl">
         {foto ? (
           // eslint-disable-next-line @next/next/no-img-element

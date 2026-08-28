@@ -6,167 +6,18 @@
     "maske": "Format-Maske, Beispiel- oder Musterwert — XX00 0000 …, HRB 12345, jane.doe@gmail.com, Musterstraße 123",
     "technisch": "Technische Vorlagenmarke, die die Gegenseite maschinell liest — DOC_META:, [%PLATZHALTER%], NAME: {value}",
     "international": "Das Wort lautet in dieser Sprache tatsächlich gleich (Fremdwort/Internationalismus) — geprüft je Sprache, nicht geraten",
-    "fachbegriff": "Fachbegriff der Branche, den diese Sprache unübersetzt führt (Check-in, Stop-Sell, Resort, Dynamic Pricing)"
+    "fachbegriff": "Fachbegriff der Branche, den diese Sprache unübersetzt führt (Check-in, Stop-Sell, Resort, Dynamic Pricing)",
+    "vorlagenfeld": "Feldname einer uebernommenen CMS-Vorlage (0483). Er ist der EIGENNAME des Feldes und steht in allen Sprachen gleich — genau wie im Vorbild. Uebersetzt man ihn, heisst dasselbe Feld in 24 Sprachen verschieden, und die Feldkonfiguration (0481), mit der ein Betrieb es umbenennen kann, haette keinen erkennbaren Ausgangswert mehr. Wer einen deutschen Namen will, vergibt ihn dort."
   },
   "erlaubt": [
-    {
-      "wert": "myNextDays",
-      "grund": "marke",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "myBestDays",
-      "grund": "marke",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "myNextDays-ID:",
-      "grund": "marke",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "Airbnb",
-      "grund": "marke",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "Airbnb: {grund}",
-      "grund": "marke",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "Booking.com",
-      "grund": "marke",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "Vrbo",
-      "grund": "marke",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "DATEV",
-      "grund": "marke",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "WhatsApp",
-      "grund": "marke",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "Apple",
-      "grund": "marke",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "Google",
-      "grund": "marke",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "iPad",
-      "grund": "marke",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "Deutsche Bank",
-      "grund": "maske",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "ZUGFeRD-PDF",
-      "grund": "marke",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "IBAN",
-      "grund": "kuerzel",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "BIC",
-      "grund": "kuerzel",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "BIC / SWIFT",
-      "grund": "kuerzel",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "ADR",
-      "grund": "kuerzel",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "VIP",
-      "grund": "kuerzel",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "SMS",
-      "grund": "kuerzel",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "ID",
-      "grund": "kuerzel",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "ID:",
-      "grund": "kuerzel",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "ID {id}",
-      "grund": "kuerzel",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "SEO",
-      "grund": "kuerzel",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "CC",
-      "grund": "kuerzel",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "BCC",
-      "grund": "kuerzel",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "+ CC",
-      "grund": "kuerzel",
-      "sprachen": "alle"
-    },
     {
       "wert": "+ BCC",
       "grund": "kuerzel",
       "sprachen": "alle"
     },
     {
-      "wert": "QR Code",
+      "wert": "+ CC",
       "grund": "kuerzel",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "TV",
-      "grund": "kuerzel",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "HRB 12345",
-      "grund": "maske",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "XX00 0000 0000 0000 0000 00",
-      "grund": "maske",
       "sprachen": "alle"
     },
     {
@@ -177,16 +28,6 @@
     {
       "wert": "+49 170 …",
       "grund": "maske",
-      "sprachen": "alle"
-    },
-    {
-      "wert": "ref-1, ref-2, …",
-      "grund": "maske",
-      "sprachen": "alle"
-    },
-    {
-      "schluessel": "finance.TechnicalTemplate.professionalServices",
-      "grund": "technisch",
       "sprachen": "alle"
     },
     {
@@ -204,83 +45,9 @@
       ]
     },
     {
-      "wert": "{size} ft² · ",
+      "wert": "ADR",
       "grund": "kuerzel",
-      "sprachen": [
-        "cs",
-        "da",
-        "el",
-        "en",
-        "es",
-        "et",
-        "fi",
-        "fr",
-        "ga",
-        "hr",
-        "hu",
-        "it",
-        "lt",
-        "lv",
-        "mt",
-        "nl",
-        "pl",
-        "pt",
-        "ro",
-        "sk",
-        "sl",
-        "sv"
-      ]
-    },
-    {
-      "wert": "{size} m² · ",
-      "grund": "kuerzel",
-      "sprachen": [
-        "cs",
-        "da",
-        "el",
-        "en",
-        "es",
-        "et",
-        "fi",
-        "fr",
-        "ga",
-        "hr",
-        "hu",
-        "it",
-        "lt",
-        "lv",
-        "mt",
-        "nl",
-        "pl",
-        "pt",
-        "ro",
-        "sk",
-        "sl",
-        "sv"
-      ]
-    },
-    {
-      "wert": "A–Z",
-      "grund": "kuerzel",
-      "sprachen": [
-        "cs",
-        "da",
-        "en",
-        "es",
-        "fr",
-        "ga",
-        "hr",
-        "hu",
-        "it",
-        "lv",
-        "nl",
-        "pl",
-        "pt",
-        "ro",
-        "sk",
-        "sl",
-        "sv"
-      ]
+      "sprachen": "alle"
     },
     {
       "wert": "Adapter",
@@ -352,6 +119,16 @@
       ]
     },
     {
+      "wert": "Airbnb",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "Airbnb: {grund}",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
       "wert": "Aktiv",
       "grund": "fachbegriff",
       "sprachen": [
@@ -380,6 +157,11 @@
       "sprachen": [
         "en"
       ]
+    },
+    {
+      "wert": "Apple",
+      "grund": "marke",
+      "sprachen": "alle"
     },
     {
       "wert": "April",
@@ -497,6 +279,44 @@
         "sl",
         "sv"
       ]
+    },
+    {
+      "wert": "A–Z",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "es",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "lv",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "BCC",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "BIC",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "BIC / SWIFT",
+      "grund": "kuerzel",
+      "sprachen": "alle"
     },
     {
       "wert": "Balkon",
@@ -648,6 +468,11 @@
       ]
     },
     {
+      "wert": "Booking.com",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
       "wert": "Boot",
       "grund": "international",
       "sprachen": [
@@ -724,6 +549,11 @@
       "sprachen": [
         "en"
       ]
+    },
+    {
+      "wert": "CC",
+      "grund": "kuerzel",
+      "sprachen": "alle"
     },
     {
       "wert": "Casino",
@@ -856,6 +686,11 @@
       ]
     },
     {
+      "wert": "DATEV",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
       "wert": "Dart",
       "grund": "international",
       "sprachen": [
@@ -927,6 +762,11 @@
         "en",
         "nl"
       ]
+    },
+    {
+      "wert": "Deutsche Bank",
+      "grund": "maske",
+      "sprachen": "alle"
     },
     {
       "wert": "Di",
@@ -1063,6 +903,21 @@
       ]
     },
     {
+      "wert": "EU",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "fi",
+        "hr",
+        "hu",
+        "nl",
+        "sl",
+        "sv"
+      ]
+    },
+    {
       "wert": "Effekt",
       "grund": "fachbegriff",
       "sprachen": [
@@ -1124,21 +979,6 @@
       "grund": "international",
       "sprachen": [
         "da"
-      ]
-    },
-    {
-      "wert": "EU",
-      "grund": "kuerzel",
-      "sprachen": [
-        "cs",
-        "da",
-        "en",
-        "fi",
-        "hr",
-        "hu",
-        "nl",
-        "sl",
-        "sv"
       ]
     },
     {
@@ -1381,34 +1221,6 @@
       ]
     },
     {
-      "wert": "ft²",
-      "grund": "kuerzel",
-      "sprachen": [
-        "cs",
-        "da",
-        "el",
-        "en",
-        "es",
-        "et",
-        "fi",
-        "fr",
-        "ga",
-        "hr",
-        "hu",
-        "it",
-        "lt",
-        "lv",
-        "mt",
-        "nl",
-        "pl",
-        "pt",
-        "ro",
-        "sk",
-        "sl",
-        "sv"
-      ]
-    },
-    {
       "wert": "Futon",
       "grund": "fachbegriff",
       "sprachen": [
@@ -1533,6 +1345,11 @@
       ]
     },
     {
+      "wert": "Google",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
       "wert": "Grill",
       "grund": "international",
       "sprachen": [
@@ -1541,6 +1358,11 @@
         "pl",
         "sv"
       ]
+    },
+    {
+      "wert": "HRB 12345",
+      "grund": "maske",
+      "sprachen": "alle"
     },
     {
       "wert": "Haarstyling",
@@ -1601,29 +1423,24 @@
       ]
     },
     {
-      "wert": "iCal-URL",
+      "wert": "IBAN",
       "grund": "kuerzel",
-      "sprachen": [
-        "da",
-        "nl",
-        "sv"
-      ]
+      "sprachen": "alle"
     },
     {
-      "wert": "in",
-      "grund": "international",
-      "sprachen": [
-        "en",
-        "it"
-      ]
+      "wert": "ID",
+      "grund": "kuerzel",
+      "sprachen": "alle"
     },
     {
-      "wert": "inaktiv",
-      "grund": "fachbegriff",
-      "sprachen": [
-        "da",
-        "sv"
-      ]
+      "wert": "ID {id}",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "ID:",
+      "grund": "kuerzel",
+      "sprachen": "alle"
     },
     {
       "wert": "Inaktiv",
@@ -1707,16 +1524,6 @@
         "da",
         "nl",
         "sv"
-      ]
-    },
-    {
-      "wert": "jun., sen., MBA",
-      "grund": "kuerzel",
-      "sprachen": [
-        "da",
-        "lv",
-        "mt",
-        "pl"
       ]
     },
     {
@@ -2040,6 +1847,7 @@
         "it",
         "mt",
         "nl",
+        "pt",
         "sv"
       ]
     },
@@ -2106,6 +1914,7 @@
         "mt",
         "nl",
         "pl",
+        "pt",
         "ro"
       ]
     },
@@ -2144,7 +1953,11 @@
       "wert": "Live",
       "grund": "kuerzel",
       "sprachen": [
-        "en"
+        "da",
+        "en",
+        "mt",
+        "nl",
+        "sv"
       ]
     },
     {
@@ -2181,34 +1994,6 @@
         "hu",
         "nl",
         "ro",
-        "sv"
-      ]
-    },
-    {
-      "wert": "m²",
-      "grund": "kuerzel",
-      "sprachen": [
-        "cs",
-        "da",
-        "el",
-        "en",
-        "es",
-        "et",
-        "fi",
-        "fr",
-        "ga",
-        "hr",
-        "hu",
-        "it",
-        "lt",
-        "lv",
-        "mt",
-        "nl",
-        "pl",
-        "pt",
-        "ro",
-        "sk",
-        "sl",
         "sv"
       ]
     },
@@ -2499,19 +2284,6 @@
       ]
     },
     {
-      "wert": "netto {betrag}",
-      "grund": "maske",
-      "sprachen": [
-        "da",
-        "fi",
-        "it",
-        "nl",
-        "pl",
-        "sk",
-        "sv"
-      ]
-    },
-    {
       "wert": "Netto: {amount}",
       "grund": "maske",
       "sprachen": [
@@ -2587,6 +2359,24 @@
       ]
     },
     {
+      "wert": "OSS – One-Stop-Shop",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "fi",
+        "hr",
+        "it",
+        "mt",
+        "nl",
+        "pl",
+        "ro",
+        "sk",
+        "sv"
+      ]
+    },
+    {
       "wert": "Objekt",
       "grund": "fachbegriff",
       "sprachen": [
@@ -2627,13 +2417,6 @@
         "nl",
         "sl",
         "sv"
-      ]
-    },
-    {
-      "wert": "optional",
-      "grund": "fachbegriff",
-      "sprachen": [
-        "en"
       ]
     },
     {
@@ -2678,29 +2461,32 @@
       ]
     },
     {
-      "wert": "OSS – One-Stop-Shop",
-      "grund": "fachbegriff",
-      "sprachen": [
-        "cs",
-        "da",
-        "en",
-        "fi",
-        "hr",
-        "it",
-        "mt",
-        "nl",
-        "pl",
-        "ro",
-        "sk",
-        "sv"
-      ]
-    },
-    {
       "wert": "Oval",
       "grund": "fachbegriff",
       "sprachen": [
         "da",
         "sv"
+      ]
+    },
+    {
+      "wert": "PDF generation failed",
+      "grund": "technisch",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "PDF generation failed ({status}): {errorText}",
+      "grund": "technisch",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "PDF generation returned empty result",
+      "grund": "technisch",
+      "sprachen": [
+        "en"
       ]
     },
     {
@@ -2728,27 +2514,6 @@
         "en",
         "mt",
         "nl"
-      ]
-    },
-    {
-      "wert": "PDF generation failed",
-      "grund": "technisch",
-      "sprachen": [
-        "en"
-      ]
-    },
-    {
-      "wert": "PDF generation failed ({status}): {errorText}",
-      "grund": "technisch",
-      "sprachen": [
-        "en"
-      ]
-    },
-    {
-      "wert": "PDF generation returned empty result",
-      "grund": "technisch",
-      "sprachen": [
-        "en"
       ]
     },
     {
@@ -2965,16 +2730,6 @@
       ]
     },
     {
-      "wert": "privat",
-      "grund": "fachbegriff",
-      "sprachen": [
-        "da",
-        "mt",
-        "ro",
-        "sv"
-      ]
-    },
-    {
       "wert": "Privat",
       "grund": "fachbegriff",
       "sprachen": [
@@ -3016,6 +2771,11 @@
         "et",
         "sv"
       ]
+    },
+    {
+      "wert": "QR Code",
+      "grund": "kuerzel",
+      "sprachen": "alle"
     },
     {
       "wert": "Rabatt",
@@ -3116,6 +2876,16 @@
       "sprachen": [
         "sv"
       ]
+    },
+    {
+      "wert": "SEO",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "SMS",
+      "grund": "kuerzel",
+      "sprachen": "alle"
     },
     {
       "wert": "Sa",
@@ -3279,12 +3049,14 @@
       ]
     },
     {
-      "wert": "Skonto ({percent}%):",
-      "grund": "maske",
+      "wert": "Skonto %",
+      "grund": "fachbegriff",
       "sprachen": [
+        "cs",
         "hr",
         "mt",
-        "pl"
+        "pl",
+        "sk"
       ]
     },
     {
@@ -3299,14 +3071,12 @@
       ]
     },
     {
-      "wert": "Skonto %",
-      "grund": "fachbegriff",
+      "wert": "Skonto ({percent}%):",
+      "grund": "maske",
       "sprachen": [
-        "cs",
         "hr",
         "mt",
-        "pl",
-        "sk"
+        "pl"
       ]
     },
     {
@@ -3611,6 +3381,25 @@
       ]
     },
     {
+      "wert": "TOT Registration ID",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "cs",
+        "da",
+        "en",
+        "it",
+        "nl",
+        "pl",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "TV",
+      "grund": "kuerzel",
+      "sprachen": "alle"
+    },
+    {
       "wert": "Tags",
       "grund": "technisch",
       "sprachen": [
@@ -3775,6 +3564,13 @@
       ]
     },
     {
+      "wert": "Titel A–Z",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
       "wert": "Toaster",
       "grund": "international",
       "sprachen": [
@@ -3786,20 +3582,6 @@
       "wert": "Tonfall",
       "grund": "fachbegriff",
       "sprachen": [
-        "sv"
-      ]
-    },
-    {
-      "wert": "TOT Registration ID",
-      "grund": "fachbegriff",
-      "sprachen": [
-        "cs",
-        "da",
-        "en",
-        "it",
-        "nl",
-        "pl",
-        "sk",
         "sv"
       ]
     },
@@ -3837,6 +3619,11 @@
       "sprachen": [
         "da"
       ]
+    },
+    {
+      "wert": "VIP",
+      "grund": "kuerzel",
+      "sprachen": "alle"
     },
     {
       "wert": "Ventilator",
@@ -3885,6 +3672,11 @@
       ]
     },
     {
+      "wert": "Vrbo",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
       "wert": "WC",
       "grund": "kuerzel",
       "sprachen": [
@@ -3929,6 +3721,11 @@
       ]
     },
     {
+      "wert": "WhatsApp",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
       "wert": "Widgets",
       "grund": "technisch",
       "sprachen": [
@@ -3956,6 +3753,11 @@
       ]
     },
     {
+      "wert": "XX00 0000 0000 0000 0000 00",
+      "grund": "maske",
+      "sprachen": "alle"
+    },
+    {
       "wert": "Yukata",
       "grund": "fachbegriff",
       "sprachen": [
@@ -3977,6 +3779,11 @@
         "sk",
         "sv"
       ]
+    },
+    {
+      "wert": "ZUGFeRD-PDF",
+      "grund": "marke",
+      "sprachen": "alle"
     },
     {
       "wert": "Z–A",
@@ -4002,6 +3809,208 @@
       ]
     },
     {
+      "wert": "ft²",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "el",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "lt",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "iCal-URL",
+      "grund": "kuerzel",
+      "sprachen": [
+        "da",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "iPad",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "in",
+      "grund": "international",
+      "sprachen": [
+        "en",
+        "it"
+      ]
+    },
+    {
+      "wert": "inaktiv",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "sv"
+      ]
+    },
+    {
+      "wert": "jun., sen., MBA",
+      "grund": "kuerzel",
+      "sprachen": [
+        "da",
+        "lv",
+        "mt",
+        "pl"
+      ]
+    },
+    {
+      "wert": "myBestDays",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "myNextDays",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "myNextDays-ID:",
+      "grund": "marke",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "m²",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "el",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "lt",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "netto {betrag}",
+      "grund": "maske",
+      "sprachen": [
+        "da",
+        "fi",
+        "it",
+        "nl",
+        "pl",
+        "sk",
+        "sv"
+      ]
+    },
+    {
+      "wert": "optional",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "en"
+      ]
+    },
+    {
+      "wert": "privat",
+      "grund": "fachbegriff",
+      "sprachen": [
+        "da",
+        "mt",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "wert": "ref-1, ref-2, …",
+      "grund": "maske",
+      "sprachen": "alle"
+    },
+    {
+      "wert": "{size} ft² · ",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "el",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "lt",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "wert": "{size} m² · ",
+      "grund": "kuerzel",
+      "sprachen": [
+        "cs",
+        "da",
+        "el",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "lt",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
       "schluessel": "amenities.bar",
       "grund": "international",
       "sprachen": [
@@ -4013,6 +4022,260 @@
       "grund": "international",
       "sprachen": [
         "pl"
+      ]
+    },
+    {
+      "schluessel": "finance.TechnicalTemplate.professionalServices",
+      "grund": "technisch",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.aufStartseite",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.cm.adresse",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.feldArten.link",
+      "grund": "international",
+      "sprachen": [
+        "hu"
+      ]
+    },
+    {
+      "schluessel": "website.blog.felder.branche",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.buttonText",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.finalText",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.finalUeberschrift",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.galerieLinks",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.galerieOben",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.galerieRechts",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.galerieUnten",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.introText",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.introUeberschrift",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.karussell1",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.karussell2",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.karussell3",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.karussell4",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.karussellZeigen",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.kunde",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.vollerTitel",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.felder.websiteLink",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.filter",
+      "grund": "international",
+      "sprachen": [
+        "hr"
+      ]
+    },
+    {
+      "schluessel": "website.blog.layouts",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "mt",
+        "pt"
+      ]
+    },
+    {
+      "schluessel": "website.blog.status",
+      "grund": "international",
+      "sprachen": [
+        "mt",
+        "pt",
+        "ro",
+        "sl"
+      ]
+    },
+    {
+      "schluessel": "website.blog.titel",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.blog.titelbild",
+      "grund": "vorlagenfeld",
+      "sprachen": "alle"
+    },
+    {
+      "schluessel": "website.cms.filter",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "et",
+        "hr",
+        "nl",
+        "sk",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "website.cms.status",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "hr",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "sl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "website.cms.statusLive",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "fi",
+        "it",
+        "mt",
+        "nl",
+        "ro",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "website.cms.typ.link",
+      "grund": "international",
+      "sprachen": [
+        "da",
+        "en",
+        "et",
+        "hu",
+        "it",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro"
+      ]
+    },
+    {
+      "schluessel": "website.felder.anordnungRaster",
+      "grund": "international",
+      "sprachen": [
+        "nl"
+      ]
+    },
+    {
+      "schluessel": "website.menue.schema",
+      "grund": "international",
+      "sprachen": [
+        "en",
+        "it",
+        "lt",
+        "nl",
+        "sv"
+      ]
+    },
+    {
+      "schluessel": "website.reiter.cms",
+      "grund": "kuerzel",
+      "sprachen": [
+        "bg",
+        "cs",
+        "da",
+        "el",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
       ]
     }
   ]

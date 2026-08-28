@@ -138,37 +138,61 @@ export function BrotkrumenDaten({
   basisUrl,
   titel,
   pfad,
+  trail = [],
 }: {
   branding: SiteBranding | null | undefined;
   basisUrl: string;
   titel: string;
   pfad: string;
+  /** Die Zwischenstufen aus der Seitenhierarchie (0450).
+   *
+   *  Vorher war diese Liste immer leer, weil der Resolver sie nicht lieferte:
+   *  eine Seite drei Ebenen tief meldete Google trotzdem „Start › Seite". Das
+   *  war keine falsche, aber eine verkürzte Aussage — und seit es den
+   *  sichtbaren Brotkrumen-Abschnitt gibt, wäre es eine WIDERSPRÜCHLICHE:
+   *  auf der Seite steht der volle Pfad, im Schema ein anderer. Google
+   *  vergleicht beides. */
+  trail?: { title: string; slug: string | null }[];
 }): ReactElement | null {
   if (!branding?.schema_breadcrumbs) return null;
   if (!pfad || pfad === "/") return null;
+  const stufen: Array<Record<string, unknown>> = [
+    {
+      "@type": "ListItem",
+      position: 1,
+      // Der Name der Startseite ist der Name der Website. Fehlt er,
+      // steht hier der neutrale Begriff — und nicht der Domainname,
+      // der in einem Suchergebnis unbeholfen aussieht.
+      name: branding.site_name ?? "Start",
+      item: basisUrl,
+    },
+  ];
+  for (const t of trail) {
+    // Eine Stufe OHNE Adresse (Ordner, unveröffentlichte Elternseite) bekommt
+    // kein `item`. Das ist laut schema.org zulässig — ein `item`, das auf eine
+    // Seite zeigt, die es öffentlich nicht gibt, wäre dagegen ein toter Link
+    // im Suchergebnis.
+    const stufe: Record<string, unknown> = {
+      "@type": "ListItem",
+      position: stufen.length + 1,
+      name: t.title,
+    };
+    if (t.slug) stufe.item = `${basisUrl}/${t.slug}`;
+    stufen.push(stufe);
+  }
+  stufen.push({
+    "@type": "ListItem",
+    position: stufen.length + 1,
+    name: titel,
+    item: `${basisUrl}${pfad}`,
+  });
   return (
     <LdScript
       daten={[
         {
           "@context": "https://schema.org",
           "@type": "BreadcrumbList",
-          itemListElement: [
-            {
-              "@type": "ListItem",
-              position: 1,
-              // Der Name der Startseite ist der Name der Website. Fehlt er,
-              // steht hier der neutrale Begriff — und nicht der Domainname,
-              // der in einem Suchergebnis unbeholfen aussieht.
-              name: branding.site_name ?? "Start",
-              item: basisUrl,
-            },
-            {
-              "@type": "ListItem",
-              position: 2,
-              name: titel,
-              item: `${basisUrl}${pfad}`,
-            },
-          ],
+          itemListElement: stufen,
         },
       ]}
     />

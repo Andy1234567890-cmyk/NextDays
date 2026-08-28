@@ -17,34 +17,45 @@ import hmac
 import time
 from datetime import UTC, datetime
 
+from pydantic import ValidationError
 from supabase import Client
 
 from src.core.config import get_settings
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
-from . import konto_daten, seiten
-from . import templates as site_templates
-from .cloudflare_client import CloudflareClient, CloudflareError
+from . import (
+    baum,
+    dynamische_seiten,
+    formulare,
+    ki_herkunft,
+    konto_daten,
+    seiten,
+    seiten_zugang,
+    systemseiten,
+)
+from .basis import farbrollen_anwenden, farbrollen_beruehrt
+from .beitrag_eigene_felder import felder_laden as eigene_felder_laden
+from .beitrag_oeffentlich import beitrag_fuer_vorschau
+from .bloecke import BloeckeMixin
+from .cloudflare_client import CloudflareClient
+from .container import ContainerMixin
+from .domains import DomainsMixin
 
 # Re-Export: bestehende Importe `from .service import SiteConfigError` bleiben
 # gültig. Die Klasse selbst liegt in `fehler.py`, weil die Mixins sie brauchen
 # und ein Import aus `service` ein Zirkel wäre.
 from .fehler import SiteConfigError
 from .mediathek import MediathekMixin
+from .mediathek_ordner import MediathekOrdnerMixin
+from .mediathek_verwendung import MediathekVerwendungMixin
+from .rss_widget import RssWidgetMixin
 from .schemas import (
-    BlockCreate,
-    BlockListResponse,
     BlockResponse,
-    BlocksReplaceRequest,
+    BlockSettings,
     BlockType,
-    BlockUpdate,
     BrandingResponse,
     BrandingUpdate,
-    CustomDomainListResponse,
-    CustomDomainResponse,
-    DnsRecord,
-    DomainCreate,
     DomainStatus,
     NavArea,
     PageCreate,
@@ -52,15 +63,17 @@ from .schemas import (
     PageResponse,
     PageType,
     PageUpdate,
-    PublicBlock,
     PublicNav,
     PublicOrganization,
     PublicPageMeta,
     PublicPageResponse,
+    PublicPostEigenesFeld,
     PublicSiteResponse,
+    PublicTrailItem,
     SliceHealth,
     validate_block_content,
 )
+from .vorlagen import VorlagenMixin
 
 log = get_logger("nextdays.site_config")
 
@@ -99,11 +112,12 @@ _BRANDING_COLS = (
     "schema_organization, schema_breadcrumbs, schema_lodging, schema_faq, "
     "lazy_loading, system_fonts_first, "
     # 0435: Theme-Breite und Schriftgrößen-Faktoren.
-    "content_width, heading_scale, body_scale"
-)
-_DOMAIN_COLS = (
-    "id, tenant_id, domain, cf_custom_hostname_id, status, ssl_status, "
-    "last_synced_at"
+    "content_width, heading_scale, body_scale, "
+    # 0446: Designfarben-Palette und die feldweisen Verknüpfungen Rolle → Farbe.
+    "theme_colors, theme_color_links, "
+    # 0447: Text-Rollen, Breiten-Einheit, Full-width, Abschnitts-Abstand.
+    "text_styles, content_width_unit, content_full_width, "
+    "section_spacing_y, section_spacing_x"
 )
 # Öffentliche Felder + tenant_id, um vom Domain-Treffer aufs Branding zu joinen.
 _PUBLIC_COLS = f"tenant_id, {_BRANDING_COLS}"
@@ -115,15 +129,73 @@ _PAGE_COLS = (
     # 0433: Seitentypen (externer Menüpunkt, Ordner, 404).
     "page_type, external_url, parent_id, "
     # 0437: Pop-up-Auslöser.
-    "popup_trigger, popup_value, popup_device, popup_once, "
+    "popup_trigger, popup_value, popup_device, popup_once, popup_position, "
+    "access_password_hash, last_single_publish_at, is_draft, "
     # 0438: Blog-Beitrag.
-    "published_at, author, cover_image_url, excerpt, tags"
+    "published_at, author, cover_image_url, excerpt, tags, "
+    # 0480: Blog-CMS — Handsortierung, Kapitel, Aufrufe, Autor-Konto.
+    "post_sort, parent_post_id, view_count, author_user_id, is_archived, "
+    # 0481: zweite Sichtbarkeitsachse, getrennt von `is_published`.
+    "show_on_homepage, "
+    # 0483: Framer-Feldliste, aus der Konstanten erzeugt statt ausgeschrieben
+    # (Wurzel 2). Auch hier noetig: `_PAGE_COLS` ist eine Liste, kein `*`.
+    + "".join(f"post_{n}, " for n in seiten.BEITRAGSFELDER_MIT_PRAEFIX)
+    # Der Beitragstext — die Tabelle zeigt daraus einen Auszug.
+    + "content_html, "
+    # 0457: Alternativtext des Vorschaubilds. `PublicPageMeta` trägt das Feld
+    # seit damals, geladen wurde es nie — es kam also immer als `None` heraus,
+    # und ein Bild ohne Alternativtext ist für Screenreader stumm.
+    "og_image_alt, "
+    # Wann die Zeile ANGELEGT wurde. Das Blog-CMS zeigt sie in der
+    # Beitragsliste als „Erstellt: …" — und zwar NEBEN dem Erscheinungsdatum,
+    # nicht statt seiner: ein Beitrag kann heute angelegt und auf nächste Woche
+    # datiert sein, und beide Angaben beantworten verschiedene Fragen
+    # (Wurzel 5b: unsere Uhr ist der Zeitpunkt UNSERER Verarbeitung, das
+    # Erscheinungsdatum der des Betriebs).
+    "created_at, "
+    # Wann die Zeile zuletzt GEAENDERT wurde. Sie steht seit 0087 in der
+    # Tabelle (Trigger `set_updated_at`), ausgeliefert wurde sie nie — die
+    # Beitragstabelle hatte deshalb eine Spalte „Erstellt" und keine
+    # „Zuletzt geaendert", obwohl das Vorbild BEIDE fuehrt (`Created` und
+    # `Edited`, Analyse A4).
+    #
+    # Es ist UNSERE Uhr und beschreibt UNSERE Verarbeitung (Wurzel 5b):
+    # sie heisst darum „zuletzt geaendert" und nie „zuletzt bearbeitet vom
+    # Autor" — ein Import oder ein Massenlauf ruehrt sie genauso an.
+    "updated_at, "
+    # 0466: Systemseiten (Buchungsstrecke, Blog).
+    "system_key, "
+    # 0468: dynamische Objektseite.
+    "dynamic_source"
 )
-_BLOCK_COLS = "id, page_id, type, position, content, settings"
+_BLOCK_COLS = (
+    "id, page_id, type, position, content, settings, "
+    # 0472: der Baum. Der Editor braucht ihn, um Abschnitte, Spalten und
+    # Bausteine auseinanderzuhalten — ohne diese drei Felder sah er nur
+    # eine flache Liste und nannte jeden Container „Unbekannter
+    # Abschnitt".
+    "kind, parent_id, span"
+)
 _MEDIA_COLS = "id, url, filename, mime, bytes, created_at"
 
 
-class SiteConfigService(MediathekMixin):
+# Acht Mixins statt pylints Vorgabe von sieben Vorfahren. Die Zahl ist hier
+# kein Zeichen von Vererbungs-Tiefe, sondern von BREITE: jedes Mixin ist eine
+# eigene Ressource des Slice (Abschnitte, Container, Domains, Mediathek,
+# Ordner, Verwendung, RSS, Vorlagen) und erbt selbst von nichts. Der Aufrufer
+# sieht weiterhin genau einen Dienst. Die Alternative — ein Modul mit allem —
+# war der Zustand, den `max-module-lines` gerade verboten hat.
+# pylint: disable=too-many-ancestors
+class SiteConfigService(
+    BloeckeMixin,
+    ContainerMixin,
+    DomainsMixin,
+    MediathekMixin,
+    MediathekOrdnerMixin,
+    MediathekVerwendungMixin,
+    RssWidgetMixin,
+    VorlagenMixin,
+):
     slice_name = "site_config"
 
     def __init__(
@@ -186,6 +258,7 @@ class SiteConfigService(MediathekMixin):
         """Branding upserten (1:1 pro Tenant). tenant_id NIE aus Input."""
         tenant_id = self._require_tenant(ctx)
         payload = req.model_dump(mode="json", exclude_unset=True)
+        self._farbrollen_aufloesen(tenant_id, payload)
         payload["tenant_id"] = tenant_id
         res = (
             self._db.table("tenant_site_config")
@@ -198,152 +271,34 @@ class SiteConfigService(MediathekMixin):
             )
         return self.get_branding(ctx)
 
-    # --- Custom-Domains (Dashboard, MANAGE_SITE_CONFIG) ----------------------
+    # --- Designfarben: Palette, Verknüpfung, Gegenzustand (0446/0447) --------
 
-    def list_domains(self, ctx: AuthContext) -> CustomDomainListResponse:
-        tenant_id = self._require_tenant(ctx)
+    def _farbrollen_aufloesen(self, tenant_id: str, payload: dict) -> None:
+        """Verknüpfungen anwenden und `payload` um die abgeleiteten Werte
+        ergänzen.
+
+        Die Regeln stehen in ``basis.farbrollen_anwenden`` — sie sind reine
+        Logik über zwei Wörterbüchern und brauchen keine Datenbank. Hier steht
+        nur, WOHER der gespeicherte Stand kommt."""
+        if not farbrollen_beruehrt(payload):
+            return
+        farbrollen_anwenden(payload, self._theme_stand(tenant_id))
+
+    def _theme_stand(self, tenant_id: str) -> dict:
+        """Der gespeicherte Theme-Zustand, den die Auflösung braucht.
+
+        Eigene, schmale Abfrage statt `get_branding`: dort läuft der
+        Konto-Rückfall mit (Firmenname/Logo), und der hat mit Farben nichts zu
+        tun. Fehlt die Zeile ganz (Betrieb ohne Site-Konfiguration), ist der
+        Stand leer — kein Fehler, sondern der erste Speichervorgang."""
         rows = (
-            self._db.table("tenant_custom_domains")
-            .select(_DOMAIN_COLS)
+            self._db.table("tenant_site_config")
+            .select("theme_colors, theme_color_links, text_styles")
             .eq("tenant_id", tenant_id)
-            .order("created_at")
-            .execute()
-        ).data or []
-        items = [self._domain_row(r) for r in rows]
-        return CustomDomainListResponse(items=items, total=len(items))
-
-    def add_domain(
-        self, ctx: AuthContext, req: DomainCreate
-    ) -> CustomDomainResponse:
-        """Registriert eine Custom-Domain bei Cloudflare (TXT-SSL) und legt sie
-        tenant-gescoped an. Gibt CNAME + TXT-Validierungs-Record zurück."""
-        tenant_id = self._require_tenant(ctx)
-        domain = req.domain  # bereits lowercase/validiert im Schema
-
-        # Vorab-Prüfung gegen Doppelvergabe (DB-unique ist der harte Backstop).
-        existing = (
-            self._db.table("tenant_custom_domains")
-            .select("id")
-            .eq("domain", domain)
             .limit(1)
             .execute()
         ).data or []
-        if existing:
-            raise SiteConfigError("Domain ist bereits vergeben.", status_code=409)
-
-        try:
-            cf = self._cf.create_custom_hostname(domain)
-        except CloudflareError as exc:
-            raise SiteConfigError(exc.message, status_code=exc.status_code) from exc
-
-        cf_id = cf.get("id")
-        ssl = cf.get("ssl") or {}
-        payload = {
-            "tenant_id": tenant_id,
-            "domain": domain,
-            "cf_custom_hostname_id": cf_id,
-            "status": DomainStatus.pending.value,
-            "ssl_status": ssl.get("status"),
-        }
-        # Der CF-Hostname ist bereits angelegt. Schlägt der DB-Insert fehl (leere
-        # Rückgabe ODER Unique-Verletzung durch eine parallele Registrierung —
-        # die Vorab-Prüfung oben ist TOCTOU), würde er sonst als Waise bei
-        # Cloudflare zurückbleiben (nie über remove_domain aufräumbar, blockiert
-        # ggf. eine spätere legitime Registrierung). Daher: bei jedem Fehler den
-        # CF-Hostname wieder löschen (best-effort), dann sauber melden.
-        try:
-            res = self._db.table("tenant_custom_domains").insert(payload).execute()
-        except Exception as exc:  # noqa: BLE001 — DB-Fehler → CF-Rollback
-            self._rollback_cf_hostname(cf_id)
-            # Unique-Verletzung (parallele Registrierung) als 409 melden.
-            if "duplicate" in str(exc).lower() or "unique" in str(exc).lower():
-                raise SiteConfigError(
-                    "Domain ist bereits vergeben.", status_code=409
-                ) from exc
-            raise SiteConfigError(
-                "Domain konnte nicht gespeichert werden.", status_code=500
-            ) from exc
-        if not res.data:
-            self._rollback_cf_hostname(cf_id)
-            raise SiteConfigError(
-                "Domain konnte nicht gespeichert werden.", status_code=500
-            )
-        row = res.data[0]
-        return self._domain_row(row, dns_records=self._dns_records(domain, ssl))
-
-    def _rollback_cf_hostname(self, cf_id: str | None) -> None:
-        """Verwaisten Cloudflare-Custom-Hostname wieder entfernen (best-effort —
-        ein Fehler beim Aufräumen darf den ursprünglichen Fehler nicht überdecken)."""
-        if not cf_id:
-            return
-        try:
-            self._cf.delete_custom_hostname(cf_id)
-        except Exception as exc:  # noqa: BLE001
-            log.warning("cf_hostname_rollback_failed", cf_id=cf_id, error=str(exc)[:200])
-
-    def sync_domain(
-        self, ctx: AuthContext, domain_id: str
-    ) -> CustomDomainResponse:
-        """Holt den aktuellen CF-Status und spiegelt ihn in die DB (pending→active
-        /error).
-
-        Kein Zwischenspeicher zu leeren: `resolve_site_by_domain` fragt bei
-        jedem Aufruf die Datenbank. Der Satz „invalidiert den by-domain-Cache"
-        stand hier, obwohl es diesen Cache nie gab — nachgeprüft am 24.08.2026
-        gegen den ganzen Slice und gegen HEAD. Er bleibt hier als Warnung
-        stehen: ein Kommentar, der eine Vorkehrung beschreibt, die es nicht
-        gibt, ist gefährlicher als gar keiner — er beendet die Suche."""
-        tenant_id = self._require_tenant(ctx)
-        row = self._own_domain(tenant_id, domain_id)
-        cf_id = row.get("cf_custom_hostname_id")
-        if not cf_id:
-            raise SiteConfigError(
-                "Domain ist nicht mit Cloudflare verknüpft.", status_code=409
-            )
-        try:
-            cf = self._cf.get_custom_hostname(cf_id)
-        except CloudflareError as exc:
-            raise SiteConfigError(exc.message, status_code=exc.status_code) from exc
-
-        ssl = cf.get("ssl") or {}
-        new_status = self._map_cf_status(cf.get("status"), ssl.get("status"))
-        update = {
-            "status": new_status,
-            "ssl_status": ssl.get("status"),
-            "last_synced_at": datetime.now(UTC).isoformat(),
-        }
-        res = (
-            self._db.table("tenant_custom_domains")
-            .update(update)
-            .eq("id", domain_id)
-            .eq("tenant_id", tenant_id)
-            .execute()
-        )
-        updated = (res.data or [row])[0]
-        return self._domain_row(
-            updated, dns_records=self._dns_records(row["domain"], ssl)
-        )
-
-    def remove_domain(self, ctx: AuthContext, domain_id: str) -> None:
-        tenant_id = self._require_tenant(ctx)
-        row = self._own_domain(tenant_id, domain_id)
-        cf_id = row.get("cf_custom_hostname_id")
-        if cf_id:
-            try:
-                self._cf.delete_custom_hostname(cf_id)
-            except CloudflareError as exc:
-                # CF-404 ist ok (schon weg); andere Fehler durchreichen.
-                if exc.status_code != 404:
-                    raise SiteConfigError(
-                        exc.message, status_code=exc.status_code
-                    ) from exc
-        (
-            self._db.table("tenant_custom_domains")
-            .delete()
-            .eq("id", domain_id)
-            .eq("tenant_id", tenant_id)
-            .execute()
-        )
+        return rows[0] if rows else {}
 
     # --- Öffentlicher Resolver (KEIN JWT, service-role) ----------------------
 
@@ -365,8 +320,13 @@ class SiteConfigService(MediathekMixin):
             raise SiteConfigError("Unbekannte Domain.", status_code=404)
         return domain_rows[0]["tenant_id"]
 
-    def _public_branding(self, tenant_id: str) -> PublicSiteResponse:
-        """Öffentliches Branding eines Tenants (nur öffentliche Felder)."""
+    def _public_branding(
+        self, tenant_id: str, *, entwurf: bool = False
+    ) -> PublicSiteResponse:
+        """Öffentliches Branding eines Tenants (nur öffentliche Felder).
+
+        `entwurf=True` nimmt auch unveröffentlichte Seiten ins Menü — siehe
+        `_public_nav`. Nur der token-geschützte Vorschaupfad darf das."""
         cfg_rows = (
             self._db.table("tenant_site_config")
             .select(_PUBLIC_COLS)
@@ -399,7 +359,7 @@ class SiteConfigService(MediathekMixin):
         antwort = PublicSiteResponse(
             **gesetzt,
             tenant_id=tenant_id,
-            nav=self._public_nav(tenant_id),
+            nav=self._public_nav(tenant_id, nur_veroeffentlicht=not entwurf),
         )
         # Firmenangaben fürs Organization-Schema NUR laden, wenn der Schalter an
         # ist (0430). Sonst wären es zwei Datenbankabfragen pro Seitenansicht
@@ -407,6 +367,9 @@ class SiteConfigService(MediathekMixin):
         if antwort.schema_organization:
             antwort.organization = self._organisation(tenant_id)
         antwort.payments_ready = self._zahlungen_bereit(tenant_id)
+        # Bildnachweise der Stock-Fotos (0461) — Vertragspflicht, Begründung im
+        # Docstring von `MediathekMixin.bildnachweise`.
+        antwort.image_credits = self.bildnachweise(tenant_id)
         return antwort
 
     def _zahlungen_bereit(self, tenant_id: str) -> bool:
@@ -506,6 +469,14 @@ class SiteConfigService(MediathekMixin):
 
     def list_pages(self, ctx: AuthContext) -> PageListResponse:
         tenant_id = self._require_tenant(ctx)
+        # Die Systemseiten der Buchungsstrecke existieren, weil es ihre Routen
+        # gibt — nicht, weil jemand sie angelegt hat (0466). Hier ist die eine
+        # Stelle, an der sie entstehen: beim ersten Blick in die Seitenliste.
+        # Eine Migration hätte nur die HEUTIGEN Betriebe bedacht.
+        systemseiten.sicherstellen(self._db, tenant_id)
+        # Die dynamische Objektseite (0468) — dieselbe Begründung: eine
+        # Migration hätte nur die heutigen Betriebe bedacht.
+        dynamische_seiten.sicherstellen(self._db, tenant_id)
         rows = (
             self._db.table("site_pages")
             .select(_PAGE_COLS)
@@ -541,17 +512,14 @@ class SiteConfigService(MediathekMixin):
             titel, slug = seiten.titel_und_slug(req)
         except ValueError as exc:
             raise SiteConfigError(str(exc), status_code=400) from exc
-        # Slug-Kollision vorab abfangen (DB-unique ist der harte Backstop).
-        if (
-            self._db.table("site_pages")
-            .select("id")
-            .eq("tenant_id", tenant_id)
-            .eq("slug", slug)
-            .limit(1)
-            .execute()
-        ).data:
+        # Slug-Kollision vorab abfangen (die beiden Teil-Indizes aus 0484 sind
+        # der harte Backstop). Geprüft wird im ADRESSRAUM des Typs: ein
+        # Beitrag liegt unter `/blog/<slug>`, eine Seite unter `/<slug>` —
+        # gleiche Slugs sind dort kein Konflikt (Wurzel 4: keine erfundene
+        # Einschränkung).
+        if seiten.slug_belegt(self._db, tenant_id, slug, req.page_type.value):
             raise SiteConfigError(
-                "Es gibt bereits eine Seite mit diesem Slug.", status_code=409
+                seiten.slug_konflikt_text(req.page_type.value), status_code=409
             )
         payload = {
             "tenant_id": tenant_id,
@@ -574,6 +542,7 @@ class SiteConfigService(MediathekMixin):
             "popup_value": req.popup_value,
             "popup_device": req.popup_device,
             "popup_once": req.popup_once,
+            "popup_position": req.popup_position,
             # 0438 — nur beim Beitrag gesetzt (CHECK in 0438).
             #
             # `published_at` fällt bewusst auf JETZT zurück, wenn der Kunde kein
@@ -592,14 +561,14 @@ class SiteConfigService(MediathekMixin):
         }
         if seiten.ist_ohne_inhalt(req.page_type):
             payload["is_home"] = False
-        # `_own_page` erzwingt den Tenant-Scope (Wurzel 3), `pruefe_ordner` den
-        # Typ. Ohne beides könnte eine Seite an einen fremden Ordner gehängt
-        # werden oder an eine normale Seite — und die Navigation bekäme eine
-        # Verschachtelung, die der CHECK aus 0433 verbietet.
+        # `_own_page` erzwingt den Tenant-Scope (Wurzel 3), `pruefe_eltern` den
+        # Typ UND die Tiefe. Ohne beides könnte eine Seite an einen fremden
+        # Ordner gehängt werden oder das Menü beliebig tief werden — auf dem
+        # Telefon müsste man dann vier Aufklapp-Ebenen treffen.
         if req.parent_id:
             try:
-                seiten.pruefe_ordner(
-                    self._own_page(tenant_id, req.parent_id)
+                seiten.pruefe_eltern(
+                    self._db, tenant_id, self._own_page(tenant_id, req.parent_id)
                 )
             except ValueError as exc:
                 raise SiteConfigError(str(exc), status_code=422) from exc
@@ -615,13 +584,33 @@ class SiteConfigService(MediathekMixin):
         # nicht (Wurzel 5).
         if req.template:
             try:
-                seiten.vorlage_anwenden(
-                    self._db,
-                    tenant_id,
-                    neue_id,
-                    req.template,
-                    konto_daten.firmendaten(self._db, tenant_id),
-                )
+                # Zwei Kataloge, getrennt nach Seitentyp: ein Pop-up bekommt
+                # eine Pop-up-Vorlage (0440), alles andere eine Seiten-Vorlage
+                # (0434). Ein gemeinsamer Namensraum hiesse, dass jemand einen
+                # ganzseitigen Abschnitts-Satz in ein Fenster legen kann.
+                if req.page_type is PageType.popup:
+                    position = seiten.popup_vorlage_anwenden(
+                        self._db, tenant_id, neue_id, req.template
+                    )
+                    # Die Position gehoert zur Vorlage: ein Kontakt-Pop-up sitzt
+                    # unten rechts, ein Willkommen in der Mitte. Eine eigene
+                    # Angabe des Kunden gewinnt trotzdem — er hat sie getippt.
+                    if position and not req.popup_position:
+                        (
+                            self._db.table("site_pages")
+                            .update({"popup_position": position})
+                            .eq("id", neue_id)
+                            .eq("tenant_id", tenant_id)
+                            .execute()
+                        )
+                else:
+                    seiten.vorlage_anwenden(
+                        self._db,
+                        tenant_id,
+                        neue_id,
+                        req.template,
+                        konto_daten.firmendaten(self._db, tenant_id),
+                    )
             except ValueError as exc:
                 raise SiteConfigError(str(exc), status_code=422) from exc
         # Frisch laden, damit DB-Defaults (is_published/nav_order) gefüllt sind.
@@ -652,6 +641,34 @@ class SiteConfigService(MediathekMixin):
         tenant_id = self._require_tenant(ctx)
         page = self._own_page(tenant_id, page_id)
         patch = req.model_dump(mode="json", exclude_unset=True)
+        # An einer Systemseite sind nur die SEO-Angaben veränderbar (0466). Ihr
+        # Slug ist das Muster ihrer Route; ein umbenannter Slug beschriebe eine
+        # Seite, die es nicht gibt. Ihr Typ, ihre Navigation und „Startseite"
+        # ergeben ebenso wenig Sinn — sie steht in keinem Menü und ist ohne
+        # gewähltes Objekt nicht erreichbar.
+        #
+        # Abgewiesen wird ausdrücklich, statt still zu ignorieren: ein Feld, das
+        # sich speichern lässt und danach unverändert dasteht, sieht aus wie ein
+        # Fehler im Speichern (Wurzel 5).
+        if systemseiten.ist_systemseite(page) or dynamische_seiten.ist_dynamisch(
+            page
+        ):
+            gesperrt = {
+                "slug",
+                "page_type",
+                "nav_area",
+                "nav_order",
+                "parent_id",
+                "is_home",
+                "external_url",
+                "is_draft",
+            } & set(patch)
+            if gesperrt:
+                raise SiteConfigError(
+                    "An dieser Seite lassen sich nur die SEO-Angaben "
+                    f"ändern (abgewiesen: {', '.join(sorted(gesperrt))}).",
+                    status_code=422,
+                )
         # Gegenzustand (Wurzel 1): wechselt die Seite den Navigationsbereich,
         # gilt ihre alte Position im neuen Bereich nicht mehr — sonst landet sie
         # dort auf einer schon belegten Stelle und die Reihenfolge ist zufällig.
@@ -663,18 +680,16 @@ class SiteConfigService(MediathekMixin):
         ):
             patch["nav_order"] = self._next_nav_order(tenant_id, patch["nav_area"])
         if "slug" in patch:
-            clash = (
-                self._db.table("site_pages")
-                .select("id")
-                .eq("tenant_id", tenant_id)
-                .eq("slug", patch["slug"])
-                .neq("id", page_id)
-                .limit(1)
-                .execute()
-            ).data or []
-            if clash:
+            # Derselbe Helfer wie beim Anlegen (0484). Der Typ kommt aus der
+            # GESPEICHERTEN Zeile und nicht aus dem Patch: `page_type` lässt
+            # sich hier nicht ändern, und ein aus dem Rumpf gelesener Wert
+            # wäre eine zweite Quelle für dieselbe Aussage.
+            typ = str(page.get("page_type") or "")
+            if seiten.slug_belegt(
+                self._db, tenant_id, patch["slug"], typ, ausser_id=page_id
+            ):
                 raise SiteConfigError(
-                    "Es gibt bereits eine Seite mit diesem Slug.", status_code=409
+                    seiten.slug_konflikt_text(typ), status_code=409
                 )
         if patch:
             self._db.table("site_pages").update(patch).eq("id", page_id).eq(
@@ -740,343 +755,67 @@ class SiteConfigService(MediathekMixin):
         return self._load_page(tenant_id, page_id)
 
     def publish_page(self, ctx: AuthContext, page_id: str) -> PageResponse:
-        return self._set_published(ctx, page_id, True)
+        """Eine Seite live stellen.
+
+        Hebt einen Entwurf auf: wer diese Seite ausdruecklich veroeffentlicht,
+        will sie live haben — den Entwurfs-Zustand danach stehen zu lassen
+        hiesse, dass sie beim naechsten Gesamt-Veroeffentlichen wieder
+        uebersprungen wuerde, und der CHECK aus 0443 verbietet beides
+        gleichzeitig ohnehin.
+        """
+        tenant_id = self._require_tenant(ctx)
+        self._own_page(tenant_id, page_id)
+        # Freigabe-Zahn (0463, EU AI Act Art. 50 Abs. 4). Begruendung und
+        # Abgrenzung zum check-Constraint stehen in `ki_herkunft`.
+        ki_herkunft.veroeffentlichung_pruefen(self._db, tenant_id, page_id)
+        (
+            self._db.table("site_pages")
+            .update({"is_published": True, "is_draft": False})
+            .eq("id", page_id)
+            .eq("tenant_id", tenant_id)
+            .execute()
+        )
+        return self._load_page(tenant_id, page_id)
 
     def unpublish_page(self, ctx: AuthContext, page_id: str) -> PageResponse:
         return self._set_published(ctx, page_id, False)
 
     def delete_page(self, ctx: AuthContext, page_id: str) -> None:
         tenant_id = self._require_tenant(ctx)
-        self._own_page(tenant_id, page_id)
+        zeile = self._own_page(tenant_id, page_id)
+        # Eine Systemseite kann man nicht löschen — ihre Route antwortet
+        # weiterhin. Sie zu entfernen hieße nur, ihre SEO-Angaben zu verlieren
+        # und sie beim nächsten Blick in die Liste neu und leer anzulegen.
+        if systemseiten.ist_systemseite(zeile):
+            raise SiteConfigError(
+                "Systemseiten gehören zur Buchungsstrecke und lassen sich "
+                "nicht löschen.",
+                status_code=422,
+            )
+        # Dieselbe Sperre für die dynamische Seite — und aus demselben Grund:
+        # die Route antwortet weiter, gelöscht würden nur das Layout und die
+        # SEO-Angaben, und die Seite entstünde beim nächsten Blick in die Liste
+        # neu und leer.
+        if dynamische_seiten.ist_dynamisch(zeile):
+            raise SiteConfigError(
+                "Die Objektseite ist die Vorlage für alle Objekte und lässt "
+                "sich nicht löschen.",
+                status_code=422,
+            )
         # Blöcke hängen per FK on delete cascade; Seite löschen genügt.
         self._db.table("site_pages").delete().eq("id", page_id).eq(
             "tenant_id", tenant_id
         ).execute()
 
-    # === Page-Builder: Blöcke ================================================
-
-    def list_blocks(self, ctx: AuthContext, page_id: str) -> BlockListResponse:
-        tenant_id = self._require_tenant(ctx)
-        self._own_page(tenant_id, page_id)
-        rows = (
-            self._db.table("site_blocks")
-            .select(_BLOCK_COLS)
-            .eq("page_id", page_id)
-            .order("position")
-            .execute()
-        ).data or []
-        items = [BlockResponse(**r) for r in rows]
-        return BlockListResponse(items=items, total=len(items))
-
-    def add_block(
-        self, ctx: AuthContext, page_id: str, req: BlockCreate
-    ) -> BlockResponse:
-        tenant_id = self._require_tenant(ctx)
-        self._own_page(tenant_id, page_id)
-        roh = dict(req.content or {})
-        if req.type is BlockType.contact:
-            # Ein Kontakt-Abschnitt ohne Kontaktdaten ist nutzlos, und die Daten
-            # liegen im Konto. Also gleich einsetzen statt den Kunden abtippen
-            # zu lassen — was er selbst mitgeschickt hat, gewinnt.
-            roh = konto_daten.kontakt_mit_firmendaten(
-                roh, konto_daten.firmendaten(self._db, tenant_id), nur_leere=True
-            )
-        content = self._validate_content(req.type, roh)
-        rows = (
-            self._db.table("site_blocks")
-            .select("position")
-            .eq("page_id", page_id)
-            .order("position", desc=True)
-            .limit(1)
-            .execute()
-        ).data or []
-        next_pos = (rows[0]["position"] + 1) if rows else 0
-        payload = {
-            "tenant_id": tenant_id,
-            "page_id": page_id,
-            "type": req.type.value,
-            "position": next_pos,
-            "content": content,
-            "settings": req.settings or {},
-        }
-        res = self._db.table("site_blocks").insert(payload).execute()
-        if not res.data:
-            raise SiteConfigError(
-                "Block konnte nicht angelegt werden.", status_code=500
-            )
-        return BlockResponse(**self._block_row(res.data[0]))
-
-    def update_block(
-        self, ctx: AuthContext, block_id: str, req: BlockUpdate
-    ) -> BlockResponse:
-        tenant_id = self._require_tenant(ctx)
-        block = self._own_block(tenant_id, block_id)
-        patch: dict = {}
-        if req.content is not None:
-            patch["content"] = self._validate_content(
-                BlockType(block["type"]), req.content
-            )
-        if req.settings is not None:
-            patch["settings"] = req.settings
-        if patch:
-            self._db.table("site_blocks").update(patch).eq("id", block_id).eq(
-                "tenant_id", tenant_id
-            ).execute()
-        return self._load_block(tenant_id, block_id)
-
-    def reorder_blocks(
-        self, ctx: AuthContext, page_id: str, ordered_ids: list[str]
-    ) -> BlockListResponse:
-        tenant_id = self._require_tenant(ctx)
-        self._own_page(tenant_id, page_id)
-        # Alle Block-IDs der Seite laden und prüfen, dass die übergebene Liste
-        # exakt diese Menge ist (kein fremder/fehlender Block).
-        rows = (
-            self._db.table("site_blocks")
-            .select("id")
-            .eq("page_id", page_id)
-            .execute()
-        ).data or []
-        actual = {r["id"] for r in rows}
-        if set(ordered_ids) != actual:
-            raise SiteConfigError(
-                "Die Blockliste passt nicht zur Seite.", status_code=400
-            )
-        for pos, block_id in enumerate(ordered_ids):
-            self._db.table("site_blocks").update({"position": pos}).eq(
-                "id", block_id
-            ).eq("tenant_id", tenant_id).execute()
-        return self.list_blocks(ctx, page_id)
-
-    def replace_blocks(
-        self, ctx: AuthContext, page_id: str, req: BlocksReplaceRequest
-    ) -> BlockListResponse:
-        """ALLE Abschnitte einer Seite in EINEM Aufruf setzen.
-
-        Der Editor speicherte bisher mit N+1 einzelnen Requests (löschen, dann
-        updaten, dann anlegen, dann neu ordnen). Brach einer in der Mitte ab,
-        blieb die Seite halb gespeichert — und ein Doppelklick auf „Speichern"
-        lief zweimal durch dieselbe Sequenz. Hier ist der Speichervorgang EINE
-        idempotente Operation: dieselbe Liste zweimal gesendet ergibt denselben
-        Zustand (Wurzel 2).
-
-        Jede mitgeschickte Block-ID muss zu DIESER Seite gehören — nicht bloß zum
-        Tenant. Sonst könnte man mit einer fremden Block-ID aus einer anderen
-        Seite des eigenen Kontos deren Abschnitt hierher umhängen (Wurzel 3:
-        Scope serverseitig erzwingen, und zwar denselben wie im List-Pfad)."""
-        tenant_id = self._require_tenant(ctx)
-        self._own_page(tenant_id, page_id)
-
-        vorhanden = {
-            r["id"]: r["type"]
-            for r in (
-                self._db.table("site_blocks")
-                .select("id, type")
-                .eq("page_id", page_id)
-                .execute()
-            ).data
-            or []
-        }
-
-        gesendet: set[str] = set()
-        for item in req.items:
-            if item.id is None:
-                continue
-            if item.id not in vorhanden:
-                log.warning(
-                    "site_blocks_replace_fremder_abschnitt",
-                    page_id=page_id,
-                    block_id=item.id,
-                    bekannt=sorted(vorhanden),
-                )
-                raise SiteConfigError(
-                    "Ein Abschnitt gehört nicht zu dieser Seite.", status_code=400
-                )
-            if item.id in gesendet:
-                log.warning(
-                    "site_blocks_replace_doppelt",
-                    page_id=page_id,
-                    block_id=item.id,
-                )
-                raise SiteConfigError(
-                    "Ein Abschnitt kommt doppelt vor.", status_code=400
-                )
-            if vorhanden[item.id] != item.type.value:
-                # Typwechsel gibt es fachlich nicht (jeder Typ hat ein eigenes
-                # content-Schema). Der Editor schickt das nie — klar fehlschlagen
-                # statt still das falsche Schema zu validieren (Wurzel 5).
-                log.warning(
-                    "site_blocks_replace_typwechsel",
-                    page_id=page_id,
-                    block_id=item.id,
-                    war=vorhanden[item.id],
-                    neu=item.type.value,
-                )
-                raise SiteConfigError(
-                    "Ein Abschnitt kann seinen Typ nicht wechseln.",
-                    status_code=400,
-                )
-            gesendet.add(item.id)
-
-        # 1) ALLES validieren, BEVOR irgendetwas geschrieben wird (Wurzel 5:
-        #    fail-closed vor dem Seiteneffekt).
-        #
-        #    Vorher wurde zuerst gelöscht und dann in der Schreib-Schleife
-        #    validiert. Schlug ein Abschnitt weiter hinten fehl, waren die
-        #    Löschungen schon committet: der Aufrufer bekam 400 und glaubte,
-        #    nichts sei passiert — der entfernte Abschnitt war aber unwiederbring-
-        #    lich weg. Genau die Kombination trat real auf, weil eine E-Mail im
-        #    Kontakt-Abschnitt zuverlässig einen 400 auslöste.
-        geprueft = [
-            (pos, item, self._validate_content(item.type, item.content))
-            for pos, item in enumerate(req.items)
-        ]
-
-        # 2) Weggefallene Abschnitte löschen (der Gegenzustand zur neuen Liste,
-        #    Wurzel 1 — sonst bleiben gelöschte Abschnitte auf der Seite stehen).
-        entfallen = [bid for bid in vorhanden if bid not in gesendet]
-        if entfallen:
-            self._db.table("site_blocks").delete().in_("id", entfallen).eq(
-                "tenant_id", tenant_id
-            ).execute()
-
-        # 3) Bestehende aktualisieren bzw. neue anlegen; Position = Array-Index.
-        for pos, item, content in geprueft:
-            if item.id is not None:
-                self._db.table("site_blocks").update(
-                    {
-                        "position": pos,
-                        "content": content,
-                        "settings": item.settings or {},
-                    }
-                ).eq("id", item.id).eq("tenant_id", tenant_id).execute()
-                continue
-            self._db.table("site_blocks").insert(
-                {
-                    "tenant_id": tenant_id,
-                    "page_id": page_id,
-                    "type": item.type.value,
-                    "position": pos,
-                    "content": content,
-                    "settings": item.settings or {},
-                }
-            ).execute()
-
-        return self.list_blocks(ctx, page_id)
-
-    def remove_block(self, ctx: AuthContext, block_id: str) -> None:
-        tenant_id = self._require_tenant(ctx)
-        self._own_block(tenant_id, block_id)
-        self._db.table("site_blocks").delete().eq("id", block_id).eq(
-            "tenant_id", tenant_id
-        ).execute()
-
-    def apply_template(
-        self, ctx: AuthContext, template_id: str
-    ) -> PageListResponse:
-        tenant_id = self._require_tenant(ctx)
-        tmpl = site_templates.TEMPLATES.get(template_id)
-        if not tmpl:
-            raise SiteConfigError("Unbekanntes Template.", status_code=404)
-        existing_slugs = {
-            r["slug"]
-            for r in (
-                self._db.table("site_pages")
-                .select("slug")
-                .eq("tenant_id", tenant_id)
-                .execute()
-            ).data
-            or []
-        }
-        has_home = bool(
-            (
-                self._db.table("site_pages")
-                .select("id")
-                .eq("tenant_id", tenant_id)
-                .eq("is_home", True)
-                .limit(1)
-                .execute()
-            ).data
-        )
-        # Die Vorlage bringt Beispieldaten mit („hallo@bergchalet.example",
-        # „Alpenstraße 1"). Die stehen sonst auf der Kundenseite und müssten von
-        # Hand überschrieben werden — obwohl die echten Angaben im Konto liegen.
-        # Also einsetzen, wo vorhanden.
-        firma = konto_daten.firmendaten(self._db, tenant_id)
-
-        for page in tmpl["pages"]:
-            if page["slug"] in existing_slugs:
-                continue  # Slug schon vergeben → diese Template-Seite überspringen
-            is_home = bool(page.get("is_home")) and not has_home
-            if is_home:
-                has_home = True
-            nav_area = page.get("nav_area", NavArea.header.value)
-            page_res = (
-                self._db.table("site_pages")
-                .insert(
-                    {
-                        "tenant_id": tenant_id,
-                        "title": page["title"],
-                        "slug": page["slug"],
-                        "is_home": is_home,
-                        "nav_area": nav_area,
-                        "nav_order": self._next_nav_order(tenant_id, nav_area),
-                    }
-                )
-                .execute()
-            )
-            page_id = page_res.data[0]["id"]
-            for pos, block in enumerate(page.get("blocks", [])):
-                btype = BlockType(block["type"])
-                inhalt = dict(block.get("content", {}))
-                if btype is BlockType.contact:
-                    inhalt = konto_daten.kontakt_mit_firmendaten(inhalt, firma)
-                self._db.table("site_blocks").insert(
-                    {
-                        "tenant_id": tenant_id,
-                        "page_id": page_id,
-                        "type": btype.value,
-                        "position": pos,
-                        "content": self._validate_content(btype, inhalt),
-                        "settings": block.get("settings", {}),
-                    }
-                ).execute()
-        # Design-Tokens der Vorlage UND die echten Marken-Angaben des Betriebs.
-        # Name und Logo stehen im Konto — ohne diesen Schritt bleibt die
-        # Kopfzeile der Kundenseite leer, obwohl beides vorhanden ist.
-        vorgaben = dict(tmpl.get("branding") or {})
-        if firma.get("site_name"):
-            vorgaben["site_name"] = firma["site_name"]
-        if firma.get("logo_url"):
-            vorgaben["logo_url"] = firma["logo_url"]
-        self._apply_template_branding(ctx, vorgaben)
-        return self.list_pages(ctx)
-
-    def _apply_template_branding(
-        self, ctx: AuthContext, branding: dict[str, object]
-    ) -> None:
-        """Design-Tokens der Vorlage NUR in noch leere Branding-Felder schreiben.
-
-        Ohne das steht der Kunde nach einem Vorlagen-Klick vor fertigen Seiten in
-        einem fremden Standard-Look. Mit blindem Überschreiben würde er dagegen
-        seine bereits gesetzte Marke verlieren — beides falsch, deshalb füllt die
-        Vorlage nur die Lücken (Wurzel 1: den bestehenden Zustand mitpflegen,
-        nicht plattmachen)."""
-        if not branding:
-            return
-        vorhanden = self.get_branding(ctx).model_dump(mode="json")
-        patch = {
-            feld: wert
-            for feld, wert in branding.items()
-            if vorhanden.get(feld) is None
-        }
-        if patch:
-            self.set_branding(ctx, BrandingUpdate.model_validate(patch))
-
     # === Page-Builder: öffentlicher Resolver (service-role, kein JWT) ========
 
     @staticmethod
-    def _seo_meta(page: dict, branding: PublicSiteResponse) -> PublicPageMeta:
+    def _seo_meta(
+        page: dict,
+        branding: PublicSiteResponse,
+        trail: list[dict] | None = None,
+        fassung: dict | None = None,
+    ) -> PublicPageMeta:
         """SEO-Angaben einer Seite mit dem site-weiten Rückfall auflösen (0430).
 
         Hostaway formuliert die Regel als „Site-SEO-Hierarchie": die Angaben der
@@ -1098,22 +837,94 @@ class SiteConfigService(MediathekMixin):
         `noindex` ist eine ODER-Verknüpfung, keine Hierarchie: steht die ganze
         Website auf „nicht indexieren", darf eine einzelne Seite das nicht
         aufheben. Andernfalls wäre der Hauptschalter wirkungslos, sobald irgendwo
-        `noindex=false` gespeichert ist — und genau das ist der Default."""
+        `noindex=false` gespeichert ist — und genau das ist der Default.
+
+        `fassung` ist die Sprachfassung dieser Seite (0476), falls eine für die
+        angeforderte Sprache existiert. Sie steht in der Rangfolge GANZ VORN —
+        vor der Seite und vor dem site-weiten Rückfall:
+
+            Fassung → Seite → Website
+
+        Eine fehlende Fassung ist kein Fehler: dann gilt der bisherige Weg, und
+        die Seite erscheint in ihrer Ausgangssprache. Das ist bei den
+        Metadaten zulässig (Google bewertet den Hauptinhalt, und der kommt aus
+        den Abschnitten), beim `title` aber sichtbar — deshalb wird eine
+        Sprachfassung nur angelegt, wenn sie einen Titel hat.
+
+        Ein LEERES Feld der Fassung zählt nicht als Wert. `or` statt eines
+        `is not None`-Vergleichs ist hier Absicht: ein leerer Meta-Titel in der
+        dänischen Fassung soll den deutschen durchlassen, nicht einen leeren
+        `<title>` erzeugen."""
+        f = fassung or {}
         return PublicPageMeta(
             slug=page["slug"],
-            title=page["title"],
-            seo_title=page.get("seo_title") or branding.seo_title,
+            # Der Titel der Fassung gewinnt: er ist der Menüpunkt und die <h1>,
+            # also genau das, was der Gast in seiner Sprache erwartet.
+            title=f.get("title") or page["title"],
+            # Der Brotkrumen-Pfad (0450). Leer, wenn die Seite keine
+            # übergeordnete hat — der Abschnitt zeigt dann nichts, statt eine
+            # einstufige Krume zu rendern, die nichts aussagt.
+            trail=[PublicTrailItem(**t) for t in (trail or [])],
+            seo_title=(
+                f.get("seo_title") or page.get("seo_title") or branding.seo_title
+            ),
             seo_description=(
-                page.get("seo_description") or branding.seo_description
+                f.get("seo_description")
+                or page.get("seo_description")
+                or branding.seo_description
             ),
             og_image_url=page.get("og_image_url"),
-            seo_keywords=page.get("seo_keywords") or branding.seo_keywords,
+            # Der Alternativtext folgt derselben Rangfolge wie die übrigen
+            # Textfelder: Fassung vor Original. Er ist Prosa und gehört
+            # übersetzt — ein Screenreader liest ihn vor.
+            og_image_alt=f.get("og_image_alt") or page.get("og_image_alt"),
+            seo_keywords=(
+                f.get("seo_keywords")
+                or page.get("seo_keywords")
+                or branding.seo_keywords
+            ),
             canonical_url=page.get("canonical_url"),
             head_html=page.get("head_html"),
             noindex=bool(page.get("noindex")) or branding.noindex,
         )
 
-    def resolve_page(self, host: str, slug: str | None = None) -> PublicPageResponse:
+    def sprachfassung(self, page_id: str, sprache: str | None) -> dict | None:
+        """Die Sprachfassung einer Seite (0476), falls es eine gibt.
+
+        `None` bei fehlender Sprache, fehlender Zeile oder Fehler — der Aufrufer
+        faellt dann auf die Felder der Seite zurueck. KEIN Rueckfall auf eine
+        ANDERE Sprache: eine daenische Anfrage mit schwedischem Titel zu
+        beantworten waere eine Falschaussage, die niemand als Fehler erkennt
+        (dieselbe Klasse wie Wurzel 5b).
+
+        Auch `geprueft`/`quelle_hash` werden NICHT geprueft: eine veraltete
+        Fassung ist immer noch die richtige Sprache, und ein Gast, der wegen
+        eines nachgezogenen deutschen Halbsatzes wieder Deutsch zu lesen bekaeme,
+        waere schlechter dran. Veraltet zu SEHEN ist die Aufgabe des Baukastens,
+        nicht des Renderers.
+        """
+        if not sprache:
+            return None
+        rows = (
+            self._db.table("site_page_translations")
+            .select(
+                "title, seo_title, seo_description, seo_keywords, "
+                "excerpt, og_image_alt"
+            )
+            .eq("page_id", page_id)
+            .eq("sprache", sprache)
+            .limit(1)
+            .execute()
+        ).data or []
+        return rows[0] if rows else None
+
+    def resolve_page(
+        self,
+        host: str,
+        slug: str | None = None,
+        ticket: str | None = None,
+        sprache: str | None = None,
+    ) -> PublicPageResponse:
         """Host → veröffentlichte Seite (Home bei slug=None) + geordnete Blöcke +
         Branding. NUR is_published, nur öffentliche Felder. Unbekannt → 404.
 
@@ -1148,9 +959,20 @@ class SiteConfigService(MediathekMixin):
         if not page_rows:
             raise SiteConfigError("Seite nicht gefunden.", status_code=404)
         page = page_rows[0]
+        # Passwortschutz (0442). Der Riegel sitzt HIER und nicht im Renderer:
+        # der Renderer ist eine zweite Anwendung, die dieselbe API benutzt, und
+        # eine Prüfung dort wäre mit einem direkten Aufruf dieses Endpunkts
+        # umgangen. Ohne gültiges Ticket kommen die Blöcke gar nicht erst aus
+        # der Datenbank — ein 401 mit gefüllter Antwort wäre kein Schutz.
+        if page.get("access_password_hash") and not seiten_zugang.ticket_gilt(
+            self._draft_secret(), str(page["id"]), ticket
+        ):
+            raise SiteConfigError(
+                "Diese Seite ist mit einem Passwort geschützt.", status_code=401
+            )
         block_rows = (
             self._db.table("site_blocks")
-            .select("type, content, settings")
+            .select("id, parent_id, kind, span, type, content, settings")
             .eq("page_id", page["id"])
             .order("position")
             .execute()
@@ -1158,32 +980,56 @@ class SiteConfigService(MediathekMixin):
         branding = self._public_branding(tenant_id)
         return PublicPageResponse(
             tenant_id=tenant_id,
-            page=self._seo_meta(page, branding),
-            blocks=[
-                PublicBlock(
-                    type=BlockType(b["type"]),
-                    content=b.get("content") or {},
-                    settings=b.get("settings") or {},
-                )
-                for b in block_rows
-            ],
+            page=self._seo_meta(
+                page,
+                branding,
+                seiten.pfad_bauen(self._db, tenant_id, page),
+                # Die Sprachfassung (0476). Ohne sie stand hier der deutsche
+                # Titel auch auf der daenischen Adresse — und was in der
+                # Trefferliste steht, sind Titel und Beschreibung.
+                self.sprachfassung(str(page["id"]), sprache),
+            ),
+            # Der Baum entsteht an EINER Stelle (`baum.baum_bauen`) — sonst
+            # löste jeder der sieben Resolver die Eltern-Kind-Beziehung selbst
+            # auf, und sechs davon würden beim nächsten Feld vergessen.
+            blocks=baum.baum_bauen(
+                block_rows,
+                kennung=formulare.block_kennung,
+                tenant_id=tenant_id,
+            ),
             branding=branding,
         )
 
-    def _public_nav(self, tenant_id: str) -> PublicNav:
-        """Menüstruktur der Kunden-Site — nur VERÖFFENTLICHTE Seiten.
+    def _public_nav(
+        self, tenant_id: str, *, nur_veroeffentlicht: bool = True
+    ) -> PublicNav:
+        """Menüstruktur der Kunden-Site.
+
+        Auf einer GAST-Seite nur veröffentlichte Seiten — ein Entwurf hat im
+        Menü einer öffentlichen Website nichts zu suchen.
+
+        Im ENTWURF (`nur_veroeffentlicht=False`) alle: die Vorschau soll zeigen,
+        wie die Seite aussieht, und der Editor listet daneben genau diese
+        Seiten unter „Kopfzeile". Vorher lief der Entwurf über denselben Filter
+        und zeigte deshalb eine leere Kopfzeile, während links vier Seiten
+        standen — gemeldet am 26.08.2026 („Kopfzeile zeigt die Unterseiten
+        nicht an"); alle vier trugen `is_published = false`, also war die
+        Vorschau formal richtig und trotzdem unbrauchbar.
 
         Der Aufbau (Ordner, externe Menüpunkte, Rückfall bei unveröffentlichtem
         Ordner) steht in `seiten.navigation_bauen`: es ist Seitenstruktur, nicht
         Datenzugriff, und der Service liegt an der `pylint`-Zeilengrenze."""
-        rows = (
+        abfrage = (
             self._db.table("site_pages")
             .select(
                 "id, slug, title, nav_area, page_type, external_url, parent_id"
             )
             .eq("tenant_id", tenant_id)
-            .eq("is_published", True)
-            .in_("nav_area", ["header", "footer"])
+        )
+        if nur_veroeffentlicht:
+            abfrage = abfrage.eq("is_published", True)
+        rows = (
+            abfrage.in_("nav_area", ["header", "footer"])
             .order("nav_order")
             .order("created_at")
             .execute()
@@ -1220,10 +1066,62 @@ class SiteConfigService(MediathekMixin):
         sig = hmac.new(self._draft_secret(), msg, hashlib.sha256).hexdigest()
         return f"{exp}.{sig}"
 
-    def resolve_page_draft(self, page_id: str, token: str) -> PublicPageResponse:
+    # === Zugang, Entwurf, Einzelveroeffentlichung (0442/0443) =============
+    # Duenne Delegationen: die Logik steht in `seiten_zugang`, weil dieser
+    # Service sonst ueber die Zeilengrenze laeuft, die `pylint` hier setzt.
+    # Der Tenant-Scope und das Laden der Zeile bleiben HIER — sie sind die
+    # Aufgabe des Service (Wurzel 3), nicht die des Fachmoduls.
+
+    def set_page_access(
+        self, ctx: AuthContext, page_id: str, passwort: str | None
+    ) -> None:
+        tenant_id = self._require_tenant(ctx)
+        self._own_page(tenant_id, page_id)
+        seiten_zugang.zugang_setzen(self._db, tenant_id, page_id, passwort)
+
+    def set_page_draft(
+        self, ctx: AuthContext, page_id: str, entwurf: bool
+    ) -> PageResponse:
+        tenant_id = self._require_tenant(ctx)
+        seite = self._own_page(tenant_id, page_id)
+        seiten_zugang.entwurf_setzen(
+            self._db, tenant_id, page_id, seite, entwurf
+        )
+        return self._load_page(tenant_id, page_id)
+
+    def publish_page_single(self, ctx: AuthContext, page_id: str) -> PageResponse:
+        tenant_id = self._require_tenant(ctx)
+        self._own_page(tenant_id, page_id)
+        # Derselbe Zahn: die Einzelveroeffentlichung ist ein zweiter Weg live,
+        # kein anderer Massstab.
+        ki_herkunft.veroeffentlichung_pruefen(self._db, tenant_id, page_id)
+        seiten_zugang.einzeln_veroeffentlichen(self._db, tenant_id, page_id)
+        return self._load_page(tenant_id, page_id)
+
+    def seite_freischalten(
+        self, host: str, slug: str | None, passwort: str
+    ) -> str:
+        """Der einzige oeffentliche Weg (kein JWT). Der Host wird hier
+        aufgeloest — inklusive des Schalters „Website offline"."""
+        tenant_id = self._tenant_id_for_host(host)
+        if self._ist_offline(tenant_id):
+            raise SiteConfigError("Website ist offline.", status_code=404)
+        return seiten_zugang.freischalten(
+            self._db, tenant_id, slug, passwort, self._draft_secret()
+        )
+
+    def resolve_page_draft(
+        self, page_id: str, token: str, sprache: str | None = None
+    ) -> PublicPageResponse:
         """Rendert eine Seite (auch UNVERÖFFENTLICHT) für den Editor-iframe —
         nur mit gültigem, nicht abgelaufenem Token. Kein JWT (cross-origin
-        iframe). Token bindet tenant_id + page_id."""
+        iframe). Token bindet tenant_id + page_id.
+
+        `sprache` wirkt hier GENAUSO wie im öffentlichen Pfad (0476): die
+        Vorschau muss zeigen, was der Gast sieht. Stellte der Baukasten auf
+        Dänisch um und die Vorschau zeigte weiter den deutschen Titel, wäre der
+        Umschalter eine Attrappe — man würde die fehlende Fassung erst nach dem
+        Veröffentlichen bemerken."""
         # Seite + tenant aus der DB holen (service-role), dann Token verifizieren.
         # Eine syntaktisch ungültige ID (keine UUID) ist „nicht gefunden", kein 500.
         try:
@@ -1246,24 +1144,70 @@ class SiteConfigService(MediathekMixin):
             raise SiteConfigError("Ungültiger Vorschau-Token.", status_code=403)
         block_rows = (
             self._db.table("site_blocks")
-            .select("type, content, settings")
+            .select("id, parent_id, kind, span, type, content, settings")
             .eq("page_id", page_id)
             .order("position")
             .execute()
         ).data or []
-        branding = self._public_branding(tenant_id)
+        # `entwurf=True`: die Vorschau zeigt das Menü so, wie es der Editor
+        # daneben listet — auch mit noch unveröffentlichten Seiten. Auf einer
+        # Gast-Seite bleibt der Filter (siehe `_public_nav`).
+        branding = self._public_branding(tenant_id, entwurf=True)
         return PublicPageResponse(
             tenant_id=tenant_id,
-            page=self._seo_meta(page, branding),
-            blocks=[
-                PublicBlock(
-                    type=BlockType(b["type"]),
-                    content=b.get("content") or {},
-                    settings=b.get("settings") or {},
-                )
-                for b in block_rows
-            ],
+            page=self._seo_meta(
+                page, branding, None, self.sprachfassung(str(page["id"]), sprache)
+            ),
+            # Der Baum entsteht an EINER Stelle (`baum.baum_bauen`) — sonst
+            # löste jeder der sieben Resolver die Eltern-Kind-Beziehung selbst
+            # auf, und sechs davon würden beim nächsten Feld vergessen.
+            blocks=baum.baum_bauen(
+                block_rows,
+                # Im ENTWURF reist die DB-Kennung JEDES Knotens mit.
+                #
+                # Auf einer Gast-Seite gibt `formulare.block_kennung` sie nur
+                # dort heraus, wo sie gebraucht wird (Formular-Absenden) — eine
+                # interne ID hat auf einer öffentlichen Seite nichts zu suchen.
+                # Der Entwurf ist aber KEINE Gast-Seite: er läuft nur im
+                # Editor-iframe, hinter einem Token, und dort ist die ID die
+                # einzige verlässliche Zuordnung zwischen Renderer und Editor.
+                #
+                # Vorher galt hier dieselbe Regel wie öffentlich, also kam
+                # KEINE ID an. Jede Stelle, die „über die ID zuordnen, Index
+                # nur als Notweg" tut (Brücke, Overlay, Zeilenfindung), fiel
+                # damit immer auf den Notweg zurück — und der zählt im
+                # Renderer-Raum (0..17) statt im Editor-Raum (0..5). Live
+                # nachgemessen am 26.08.2026: 18 Knoten in der Vorschau, kein
+                # einziger mit `data-block-id`.
+                kennung=lambda _typ, zeile: str(zeile["id"]),
+                tenant_id=tenant_id,
+            ),
             branding=branding,
+            # Ist die Seite ein BEITRAG, reist er mit. Ein Beitrag hat keine
+            # Abschnitte — sein Inhalt steht in `content_html` und den
+            # Beitragsfeldern (0483/0485). Ohne diese Zeilen zeigte der
+            # Editor-iframe fuer einen Beitrag eine weisse Flaeche, und „Im
+            # Editor oeffnen" fuehrte ins Leere (28.08.2026).
+            #
+            # `beitrag_fuer_vorschau` steht in `weiterleitungen` neben dem
+            # oeffentlichen Weg: dieselbe Umrechnung von `post_`-Spalten in
+            # die Antwort, an genau einer Stelle (Wurzel 2).
+            post=(
+                beitrag_fuer_vorschau(page)
+                if page.get("page_type") == PageType.post.value
+                else None
+            ),
+            eigene_felder=(
+                [
+                    PublicPostEigenesFeld(feld_key=f.feld_key, label=f.label)
+                    for f in eigene_felder_laden(
+                        self._db, tenant_id
+                    ).felder
+                    if not f.versteckt
+                ]
+                if page.get("page_type") == PageType.post.value
+                else []
+            ),
         )
 
     def _verify_draft(self, tenant_id: str, page_id: str, token: str) -> bool:
@@ -1293,6 +1237,35 @@ class SiteConfigService(MediathekMixin):
             raise SiteConfigError(
                 f"Ungültiger Block-Inhalt: {exc}", status_code=400
             ) from exc
+
+    def _validate_settings(self, settings: dict | None) -> dict:
+        """Die Darstellungs-Settings eines Abschnitts prüfen und normalisieren.
+
+        BISHER GAB ES DAS NICHT. `BlockSettings` stand im Schema, wurde aber an
+        keiner Stelle aufgerufen: `settings` ging als roher `dict` vom Client in
+        die Datenbank und von dort in den Renderer. Damit war der Kommentar im
+        Renderer („die Adresse ist beim Speichern gegen die href-Allowlist
+        geprüft") schlicht falsch — `background_image_url` landete ungeprüft in
+        einem `url()`, und `background_color` ungeprüft in einem `style`
+        (Wurzel 8: Client-Input, der serverseitig gerendert wird, ist ein
+        Angriff).
+
+        Unbekannte Schlüssel bleiben erhalten (`extra="allow"` im Modell): das
+        Feld, das ein anderer Teil des Editors gerade dazubaut, darf hier nicht
+        stillschweigend verschwinden.
+        """
+        try:
+            geprueft = BlockSettings.model_validate(settings or {})
+        except ValidationError as exc:
+            log.warning(
+                "site_blocks_settings_ungueltig",
+                schluessel=sorted((settings or {}).keys()),
+                fehler=str(exc),
+            )
+            raise SiteConfigError(
+                "Ungültige Abschnitts-Einstellung.", status_code=400
+            ) from exc
+        return geprueft.model_dump(mode="json", exclude_none=True)
 
     def _own_page(self, tenant_id: str, page_id: str) -> dict:
         rows = (
@@ -1347,11 +1320,18 @@ class SiteConfigService(MediathekMixin):
         # DB-Default (nav_area, is_home, is_published) würde das Pydantic-Enum
         # sonst auf None validieren und die Antwort kippen — statt dass der
         # Schema-Default greift. Kein erfundener Ersatzwert, nur Weglassen.
-        return {
+        daten = {
             k: row[k]
             for k in PageResponse.model_fields
             if row.get(k) is not None
         }
+        # DB-Praefix `post_` (0483) nach aussen abstreifen.
+        daten.update(seiten.beitragsfelder_ohne_praefix(row))
+        # Der Hash geht NIE nach draussen (0442) — nur die Tatsache, dass es
+        # einen gibt. `_page_row` ist die eine Stelle, an der Zeilen zu
+        # Antworten werden; hier abzuleiten heisst, es nirgends zu vergessen.
+        daten["hat_passwort"] = bool(row.get("access_password_hash"))
+        return daten
 
     @staticmethod
     def _block_row(row: dict) -> dict:
@@ -1359,55 +1339,3 @@ class SiteConfigService(MediathekMixin):
         out["content"] = row.get("content") or {}
         out["settings"] = row.get("settings") or {}
         return out
-
-    # --- intern --------------------------------------------------------------
-
-    def _own_domain(self, tenant_id: str, domain_id: str) -> dict:
-        rows = (
-            self._db.table("tenant_custom_domains")
-            .select(_DOMAIN_COLS + ", domain")
-            .eq("id", domain_id)
-            .eq("tenant_id", tenant_id)
-            .limit(1)
-            .execute()
-        ).data or []
-        if not rows:
-            raise SiteConfigError(
-                "Domain gehört nicht zu diesem Konto.", status_code=404
-            )
-        return rows[0]
-
-    @staticmethod
-    def _map_cf_status(hostname_status: str | None, ssl_status: str | None) -> str:
-        """CF-Status → unser status. 'active' nur wenn Hostname aktiv UND Zert
-        ausgestellt; 'failed'/'…_timed_out' → error; sonst pending."""
-        if hostname_status == "active" and ssl_status == "active":
-            return DomainStatus.active.value
-        bad = {"failed", "deleted"}
-        if hostname_status in bad or (ssl_status and "timed_out" in ssl_status):
-            return DomainStatus.error.value
-        return DomainStatus.pending.value
-
-    def _dns_records(self, domain: str, ssl: dict) -> list[DnsRecord]:
-        """CNAME (auf den CF-Fallback-Origin) + TXT-Validierungs-Record(s)."""
-        records = [
-            DnsRecord(type="CNAME", name=domain, value=self._cf.fallback_origin),
-        ]
-        for vr in ssl.get("validation_records") or []:
-            name = vr.get("txt_name")
-            value = vr.get("txt_value")
-            if name and value:
-                records.append(DnsRecord(type="TXT", name=name, value=value))
-        return records
-
-    @staticmethod
-    def _domain_row(
-        row: dict, *, dns_records: list[DnsRecord] | None = None
-    ) -> CustomDomainResponse:
-        return CustomDomainResponse(
-            id=row["id"],
-            domain=row["domain"],
-            status=row["status"],
-            ssl_status=row.get("ssl_status"),
-            dns_records=dns_records or [],
-        )

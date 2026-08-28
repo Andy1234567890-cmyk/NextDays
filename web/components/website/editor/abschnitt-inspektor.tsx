@@ -13,7 +13,9 @@
 // Sprachliste erfunden — welche Sprachen eine Kunden-Site anbietet, ist eine
 // eigene Entscheidung und steht heute nirgends.
 import { Icon } from "@iconify/react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
+
+import { LOCALES, LOCALE_LABELS } from "@/i18n/locales";
 import { useMemo, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
@@ -24,9 +26,11 @@ import { Switch } from "@nextdays/ui/switch";
 import { Textarea } from "@nextdays/ui/textarea";
 import type { BlockType } from "@/lib/site-pages";
 
-import { type Feld, abschnittFuer } from "../abschnitte";
+import { type Feld, type UnterFeld, abschnittFuer } from "../abschnitte";
+import { useKi } from "../ki/ki-context";
 import { Mediathek } from "../mediathek";
 import { BildFeld } from "./bild-feld";
+import { KiTextknopf } from "./ki-textknopf";
 import { SymbolFeld } from "./symbol-feld";
 
 /** Feldarten, deren Wert eine Locale-Map ist.
@@ -54,12 +58,64 @@ const LISTEN_FELDER: Record<string, string[] | undefined> = {
   stimmen: ["quote"],
   merkmale: ["title", "text"],
   formfelder: ["label", "placeholder"],
+  formularseiten: ["titel"],
 };
+
+/** Formularfelder auf die Seiten ziehen, die es NOCH GIBT (0445).
+ *
+ *  Wer die dritte Seite eines Formulars löscht, hat die Felder darauf nicht
+ *  mit gemeint — aber sie zeigen weiterhin auf Seite 3. Das Backend lehnt das
+ *  ab („Diese Felder stehen auf einer Seite, die es nicht gibt", 422), und der
+ *  Kunde bekäme die Meldung erst beim Speichern der GANZEN Seite, ohne
+ *  Hinweis, welcher Abschnitt gemeint ist.
+ *
+ *  Deshalb wandern sie hier auf die letzte verbliebene Seite. Das ist KEIN
+ *  erfundener Wert im Sinne von Wurzel 4: es ist die einzige Zuordnung, die
+ *  das Feld sichtbar lässt, und sie geschieht genau in dem Moment, in dem der
+ *  Kunde die Seite entfernt — er sieht das Ergebnis sofort. */
+function aufSeitenHalten(
+  content: Record<string, unknown>,
+  seiten: unknown,
+): unknown {
+  const anzahl = Math.max(1, Array.isArray(seiten) ? seiten.length : 1);
+  const felder = Array.isArray(content.fields)
+    ? (content.fields as Array<Record<string, unknown>>)
+    : [];
+  return felder.map((f) => {
+    const s = typeof f.seite === "number" ? f.seite : 1;
+    return s > anzahl ? { ...f, seite: anzahl } : f;
+  });
+}
 
 type Karte = Record<string, string>;
 
 function alsKarte(v: unknown): Karte {
   return v && typeof v === "object" && !Array.isArray(v) ? (v as Karte) : {};
+}
+
+/** Gilt dieses Feld beim aktuellen Inhalt?
+ *
+ *  Manche Regler gehören nur zu einer bestimmten Wahl: „Beiträge je Zeile" hat
+ *  in einer einspaltigen Liste keine Bedeutung, und ein Regler, der sichtbar
+ *  ist und nichts bewirkt, ist eine Attrappe (Wurzel 4).
+ *
+ *  Ohne `nurWenn` gilt jedes Feld. Fehlt der Wert des Bezugsfeldes noch (der
+ *  Kunde hat nichts gewählt), zählt dessen `standard` — sonst verschwänden
+ *  Felder auf einem frisch eingefügten Baustein, dessen Standard sie zeigen
+ *  müsste. */
+export function feldSichtbar(
+  feld: Feld,
+  content: Record<string, unknown>,
+  geschwister: readonly Feld[],
+): boolean {
+  if (!feld.nurWenn) return true;
+  // Das Bezugsfeld steht im SELBEN Abschnitt — deshalb `geschwister` und kein
+  // Nachschlag über alle Abschnitte: zwei Typen dürfen einen Schlüssel gleich
+  // nennen, und der erste Treffer wäre dann der falsche.
+  const bezug = geschwister.find((f) => f.key === feld.nurWenn!.key);
+  const roh = content[feld.nurWenn.key];
+  const wert = typeof roh === "string" && roh ? roh : (bezug?.standard ?? "");
+  return feld.nurWenn.werte.includes(wert);
 }
 
 export function AbschnittInspektor({
@@ -68,6 +124,8 @@ export function AbschnittInspektor({
   settings,
   onChange,
   onSettings,
+  inhaltsSprache,
+  onInhaltsSprache,
 }: {
   typ: BlockType;
   content: Record<string, unknown>;
@@ -75,43 +133,54 @@ export function AbschnittInspektor({
   settings: Record<string, unknown>;
   onChange: (content: Record<string, unknown>) => void;
   onSettings: (settings: Record<string, unknown>) => void;
+  /** Welche Sprachfassung bearbeitet wird — dieselbe, die die Vorschau zeigt.
+   *
+   *  Bis 27.08.2026 führte der Inspektor sie SELBST, gelesen einmal beim
+   *  Mounten aus `useLocale()`. Wer oben in der Kopfzeile auf Englisch
+   *  umschaltete, sah eine englische Vorschau und tippte in die deutsche
+   *  Fassung — und überschrieb sie (Prüfbericht A2). Ein Zustand, der
+   *  dasselbe bedeutet wie ein anderer, muss auch derselbe sein. */
+  inhaltsSprache: string;
+  /** Umschalten hier wirkt auch auf die Vorschau. */
+  onInhaltsSprache: (sprache: string) => void;
 }) {
   const t = useTranslations("website");
-  const uiLocale = useLocale();
   const meta = abschnittFuer(typ);
-  const [sprache, setSprache] = useState(uiLocale);
+  const sprache = inhaltsSprache;
+  const setSprache = onInhaltsSprache;
 
-  // Sprachen, in denen dieser Abschnitt schon Text trägt — plus die eigene.
-  // So sieht der Kunde, was gepflegt ist, ohne eine Liste zu verwalten.
-  const sprachen = useMemo(() => {
-    const gefunden = new Set<string>([uiLocale]);
-    if (!meta) return [...gefunden];
-    for (const feld of meta.felder) {
-      // Die Frage-Liste trägt ihre Locale-Maps eine Ebene TIEFER: nicht
-      // `content.items` ist die Karte, sondern `items[i].question` und
-      // `items[i].answer`. Ohne diesen Zweig zeigte der Sprachwähler die
-      // gepflegten Sprachen eines FAQ-Abschnitts nicht an — er wäre bei einer
-      // zweisprachigen Website unbrauchbar.
-      if (LISTEN_FELDER[feld.art]) {
-        const liste = Array.isArray(content[feld.key])
-          ? (content[feld.key] as Array<Record<string, unknown>>)
-          : [];
-        for (const eintrag of liste) {
-          for (const unterfeld of LISTEN_FELDER[feld.art]!) {
-            for (const k of Object.keys(alsKarte(eintrag[unterfeld]))) {
-              gefunden.add(k);
-            }
-          }
-        }
-        continue;
-      }
+  // ALLE 24 EU-Amtssprachen — der Baukasten ist in allen 24 bearbeitbar.
+  //
+  // Vorher waren es „die Sprachen, in denen dieser Abschnitt SCHON Text trägt,
+  // plus die des Dashboards". Das klang sparsam, war aber eine Sackgasse: die
+  // Sprache, die man ANLEGEN wollte, trug ja noch keinen Text und stand damit
+  // nie zur Wahl. Ein deutscher Betrieb konnte seine dänische Fassung also
+  // nicht schreiben — der Sprachwähler zeigte genau die Sprachen, die man nicht
+  // mehr braucht, und keine, die man braucht.
+  //
+  // Die alte Sammel-Logik (Locale-Maps aus Feldern, Listen, FAQ-Unterfeldern
+  // zusammensuchen) ist damit ersatzlos entfallen — sie beantwortete eine
+  // Frage, die niemand gestellt hat.
+  const sprachen = useMemo(() => [...LOCALES], []);
+
+  // Welche Fassungen schon Text tragen — NUR für das Häkchen in der Liste, nie
+  // um die Auswahl einzuschränken. Genau diese Verwechslung war der alte
+  // Fehler: „hat Text" als Bedingung zum Bearbeiten statt als Hinweis.
+  //
+  // Es reicht die oberste Ebene der mehrsprachigen Felder. Die Listen- und
+  // FAQ-Unterfelder mitzuzählen wäre wieder die Tabelle, die beim nächsten
+  // Abschnittstyp vergessen wird — und für einen Haken ist „dieser Abschnitt
+  // hat in Dänisch etwas" genau genug.
+  const gepflegte = useMemo(() => {
+    const gefunden = new Set<string>();
+    for (const feld of meta?.felder ?? []) {
       if (!MEHRSPRACHIG.has(feld.art)) continue;
-      for (const k of Object.keys(alsKarte(content[feld.key]))) {
-        gefunden.add(k);
+      for (const [k, v] of Object.entries(alsKarte(content[feld.key]))) {
+        if (typeof v === "string" && v.trim()) gefunden.add(k);
       }
     }
-    return [...gefunden].sort();
-  }, [content, meta, uiLocale]);
+    return gefunden;
+  }, [content, meta]);
 
   if (!meta) {
     return (
@@ -122,6 +191,10 @@ export function AbschnittInspektor({
   }
 
   function setzeFeld(key: string, wert: unknown) {
+    if (key === "seiten") {
+      onChange({ ...content, seiten: wert, fields: aufSeitenHalten(content, wert) });
+      return;
+    }
     onChange({ ...content, [key]: wert });
   }
 
@@ -135,7 +208,11 @@ export function AbschnittInspektor({
   }
 
   const hatMehrsprachige = meta.felder.some(
-    (f) => MEHRSPRACHIG.has(f.art) || Boolean(LISTEN_FELDER[f.art]),
+    (f) =>
+      MEHRSPRACHIG.has(f.art) ||
+      Boolean(LISTEN_FELDER[f.art]) ||
+      (f.art === "liste" &&
+        (f.unterfelder ?? []).some((u) => MEHRSPRACHIG.has(u.art))),
   );
 
   return (
@@ -150,25 +227,38 @@ export function AbschnittInspektor({
             value={sprache}
             onChange={(e) => setSprache(e.target.value)}
             aria-label={t("editor.sprache")}
-            className="w-24"
+            className="w-36"
           >
             {sprachen.map((s) => (
               <option key={s} value={s}>
-                {s.toUpperCase()}
+                {/* Kürzel UND Endonym: bei 24 Einträgen ist „SL" allein
+                    unlesbar, „Slovenščina" allein schlecht zu überfliegen.
+                    Das Häkchen sagt, welche Fassung schon Text trägt — sonst
+                    tippt man in eine Sprache, die man längst gepflegt hat, ein
+                    zweites Mal. */}
+                {s.toUpperCase()} · {LOCALE_LABELS[s]}
+                {gepflegte.has(s) ? " ✓" : ""}
               </option>
             ))}
           </NativeSelect>
         ) : null}
       </div>
 
-      {meta.felder.map((feld) => (
+      {meta.felder
+        .filter((feld) => feldSichtbar(feld, content, meta.felder))
+        .map((feld) => (
         <FeldEingabe
           key={feld.key}
           feld={feld}
           wert={content[feld.key]}
           sprache={sprache}
+          sprachen={sprachen}
           onText={(v) => setzeText(feld.key, v)}
           onWert={(v) => setzeFeld(feld.key, v)}
+          seitenAnzahl={Math.max(
+            1,
+            Array.isArray(content.seiten) ? content.seiten.length : 1,
+          )}
         />
       ))}
 
@@ -325,27 +415,55 @@ function StilBereich({
   );
 }
 
-function FeldEingabe({
+export function FeldEingabe({
   feld,
   wert,
   sprache,
+  sprachen,
   onText,
   onWert,
+  seitenAnzahl = 1,
 }: {
   feld: Feld;
   wert: unknown;
   sprache: string;
+  /** Alle Sprachen, die dieser Abschnitt schon trägt — Zielauswahl für den
+   *  KI-Textknopf beim Übersetzen (0463–0465). KEINE erfundene Liste (Wurzel
+   *  4): es sind genau die Fassungen, die es auf diesem Abschnitt gibt. */
+  sprachen: string[];
   onText: (v: string) => void;
   onWert: (v: unknown) => void;
+  /** Wie viele Seiten das Formular hat (0445). Kommt aus einem NACHBARFELD
+   *  (`content.seiten`) und nicht aus dem eigenen Wert — die Feldliste braucht
+   *  sie, um je Feld eine Seite anbieten zu können. Der einzige Fall im
+   *  Inspektor, in dem ein Feld etwas über ein anderes wissen muss; deshalb
+   *  eine benannte Zahl und nicht das ganze `content`. */
+  seitenAnzahl?: number;
 }) {
   const t = useTranslations("website");
+  const { verfuegbar } = useKi();
   const label = t(`felder.${feld.label}`);
   const text = alsKarte(wert)[sprache] ?? "";
+
+  // Der Texteditor-Assistent (0463–0465): Kürzen, Verlängern, Ton,
+  // Rechtschreibung, Übersetzen. NUR bei „text" und „textlang" — bei
+  // „richtext" wäre das Ergebnis reiner Text ohne die HTML-Auszeichnung, die
+  // der Kunde gesetzt hat (Fett, Links), und der Knopf würde sie beim
+  // Übernehmen stillschweigend wegnehmen. Kein Knopf, solange der Assistent
+  // nicht eingerichtet ist (Wurzel „kein Knopf, der 503 liefert").
+  const kiKnopf = verfuegbar ? (
+    <KiTextknopf
+      wert={text}
+      sprache={sprache}
+      sprachen={sprachen}
+      onErsetzen={onText}
+    />
+  ) : null;
 
   switch (feld.art) {
     case "text":
       return (
-        <Zeile label={label}>
+        <Zeile label={label} aktion={kiKnopf}>
           <Input value={text} onChange={(e) => onText(e.target.value)} />
         </Zeile>
       );
@@ -362,7 +480,7 @@ function FeldEingabe({
 
     case "textlang":
       return (
-        <Zeile label={label}>
+        <Zeile label={label} aktion={kiKnopf}>
           <Textarea
             rows={3}
             value={text}
@@ -388,6 +506,8 @@ function FeldEingabe({
           label={label}
           wert={typeof wert === "string" ? wert : null}
           onWert={onWert}
+          mitAltText
+          sprache={sprache}
         />
       );
 
@@ -426,8 +546,15 @@ function FeldEingabe({
       return (
         <label className="flex items-center justify-between gap-3 text-sm">
           <span className="font-medium">{label}</span>
+          {/* Ist noch NICHTS gesetzt, gilt der Standard des Backend-Schemas
+              (`feld.standard === "true"`). Ohne das zeigte der Schalter „aus"
+              für einen Wert, der in Wahrheit „an" ist — und ein Kunde, der ihn
+              einmal anfasst und wieder loslässt, hätte eine Bestätigungsmail
+              abgeschaltet, die er nie abschalten wollte (Wurzel 4). */}
           <Switch
-            checked={wert === true}
+            checked={
+              typeof wert === "boolean" ? wert : feld.standard === "true"
+            }
             onCheckedChange={(v: boolean) => onWert(v)}
           />
         </label>
@@ -500,8 +627,37 @@ function FeldEingabe({
           wert={wert}
           sprache={sprache}
           onWert={onWert}
+          seitenAnzahl={seitenAnzahl}
         />
       );
+
+    case "formularseiten":
+      return (
+        <FormSeitenFeld
+          label={label}
+          wert={wert}
+          sprache={sprache}
+          onWert={onWert}
+        />
+      );
+
+    // --- 0450 -------------------------------------------------------------
+    case "liste":
+      return (
+        <ListeFeld
+          label={label}
+          feld={feld}
+          wert={wert}
+          sprache={sprache}
+          onWert={onWert}
+        />
+      );
+
+    case "tabelle":
+      return <TabellenFeld label={label} feld={feld} wert={wert} onWert={onWert} />;
+
+    case "datumzeit":
+      return <ZeitpunktFeld label={label} wert={wert} onWert={onWert} />;
 
     default:
       return null;
@@ -510,14 +666,22 @@ function FeldEingabe({
 
 function Zeile({
   label,
+  aktion,
   children,
 }: {
   label: string;
+  /** Ein dezentes Symbol NEBEN der Beschriftung — heute nur der KI-Textknopf
+   *  (0463–0465). Eigenes Prop und keine feste Einbettung: die meisten Felder
+   *  brauchen keins, und die Zeile soll nicht wissen, was darin steckt. */
+  aktion?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <label className="flex flex-col gap-1 text-sm">
-      <span className="text-xs font-medium">{label}</span>
+      <span className="flex items-center justify-between gap-2">
+        <span className="text-xs font-medium">{label}</span>
+        {aktion}
+      </span>
       {children}
     </label>
   );
@@ -1060,7 +1224,23 @@ function MerkmaleFeld({
  *
  *  Bei der Feldart `select` erscheint zusätzlich eine Liste von Optionen; bei
  *  allen anderen wäre sie ein Feld ohne Wirkung. */
-function FormFelderFeld({
+/** Die Seiten eines mehrstufigen Formulars (0445).
+ *
+ *  LEER heißt einseitig, und das ist der Normalfall — genau wie im
+ *  Backend-Schema. Eine Liste mit einem Eintrag wäre dasselbe in umständlich,
+ *  und der Kunde müsste erst eine Seite anlegen, um ein Formular zu bekommen.
+ *
+ *  Ein Titel je Seite, sonst nichts. Welche Felder auf welcher Seite stehen,
+ *  entscheidet die Feldliste darunter: dort steht der Feldname, und ihn hier
+ *  noch einmal zu führen wäre eine zweite Wahrheit — wer ein Feld löscht und
+ *  den Eintrag in der Seitenliste vergisst, bekäme eine Seite, die auf ein Feld
+ *  zeigt, das es nicht mehr gibt.
+ *
+ *  Wird eine Seite entfernt, ziehen die Felder, die darauf standen, auf die
+ *  letzte verbliebene (`aufSeitenHalten`). Ohne das lehnte das Backend das
+ *  Formular mit 422 ab, und der Kunde läse die Meldung erst beim Speichern der
+ *  ganzen Seite. */
+function FormSeitenFeld({
   label,
   wert,
   sprache,
@@ -1070,6 +1250,63 @@ function FormFelderFeld({
   wert: unknown;
   sprache: string;
   onWert: (v: unknown) => void;
+}) {
+  const t = useTranslations("website");
+  const liste = Array.isArray(wert)
+    ? (wert as Array<Record<string, unknown>>)
+    : [];
+  // Derselbe Deckel wie `MAX_FORM_SEITEN` im Backend. Läuft er auseinander,
+  // erlaubt die Oberfläche eine elfte Seite, die beim Speichern mit 422
+  // zurückkommt.
+  const MAX = 10;
+
+  return (
+    <ListenRahmen
+      label={label}
+      anzahl={liste.length}
+      max={MAX}
+      hinzuKnopf={t("editor.seiteHinzufuegen")}
+      maxHinweis={t("editor.formularseitenMax", { max: MAX })}
+      onNeu={() => onWert([...liste, { titel: {} }])}
+      onTauschen={(von, nach) => {
+        const k = [...liste];
+        [k[von], k[nach]] = [k[nach]!, k[von]!];
+        onWert(k);
+      }}
+      onEntfernen={(i) => onWert(liste.filter((_, j) => j !== i))}
+    >
+      {(i) => (
+        <Input
+          value={alsKarte(liste[i]?.titel)[sprache] ?? ""}
+          placeholder={t("felder.seiteTitel")}
+          onChange={(e) => {
+            const kopie = [...liste];
+            const karte = { ...alsKarte(kopie[i]?.titel) };
+            if (e.target.value) karte[sprache] = e.target.value;
+            else delete karte[sprache];
+            kopie[i] = { ...kopie[i], titel: karte };
+            onWert(kopie);
+          }}
+        />
+      )}
+    </ListenRahmen>
+  );
+}
+
+function FormFelderFeld({
+  label,
+  wert,
+  sprache,
+  onWert,
+  seitenAnzahl,
+}: {
+  label: string;
+  wert: unknown;
+  sprache: string;
+  onWert: (v: unknown) => void;
+  /** Wie viele Seiten das Formular hat. Bei 1 gibt es keine Seitenauswahl —
+   *  sie hätte genau einen Eintrag und wäre eine Eingabe ohne Wirkung. */
+  seitenAnzahl: number;
 }) {
   const t = useTranslations("website");
   const liste = Array.isArray(wert)
@@ -1120,6 +1357,11 @@ function FormFelderFeld({
     "select",
     "checkbox",
     "consent",
+    // Datei-Anlage (0445). Eine Datei je Feld, höchstens 10 MB, Verfall nach
+    // 90 Tagen — dieselben Grenzen wie bei Hostaway. Der Gast lädt sie in
+    // einem ZWEITEN Aufruf hoch, direkt nach dem Absenden; der Renderer
+    // erledigt das ohne Zutun des Betriebs.
+    "file",
   ];
 
   return (
@@ -1166,7 +1408,7 @@ function FormFelderFeld({
             {/* Platzhalter und Optionen nur, wo sie etwas tun. Ein
                 Platzhalter-Feld an einem Häkchen wäre eine Eingabe ohne
                 Wirkung. */}
-            {art !== "checkbox" && art !== "consent" ? (
+            {art !== "checkbox" && art !== "consent" && art !== "file" ? (
               <Input
                 value={alsKarte(liste[i]?.placeholder)[sprache] ?? ""}
                 placeholder={t("felder.platzhalter")}
@@ -1197,6 +1439,25 @@ function FormFelderFeld({
                 }}
               />
             ) : null}
+            {seitenAnzahl > 1 ? (
+              <NativeSelect
+                value={String(
+                  typeof liste[i]?.seite === "number" ? liste[i]!.seite : 1,
+                )}
+                onChange={(e) => {
+                  const kopie = [...liste];
+                  kopie[i] = { ...kopie[i], seite: Number(e.target.value) };
+                  onWert(kopie);
+                }}
+                aria-label={t("felder.aufSeite")}
+              >
+                {Array.from({ length: seitenAnzahl }, (_, s) => (
+                  <option key={s + 1} value={String(s + 1)}>
+                    {t("felder.aufSeiteWert", { nummer: s + 1 })}
+                  </option>
+                ))}
+              </NativeSelect>
+            ) : null}
             <div className="flex items-center justify-between gap-2 text-xs">
               <label className="flex items-center gap-2">
                 <input
@@ -1223,5 +1484,367 @@ function FormFelderFeld({
         );
       }}
     </ListenRahmen>
+  );
+}
+
+// =========================================================================
+// 0450 — generische Liste, Tabelle, Zeitpunkt
+// =========================================================================
+
+/** Ein Unterfeld eines Listen-Eintrags.
+ *
+ *  Bewusst NICHT `FeldEingabe` wiederverwendet: die Komponente arbeitet auf
+ *  dem `content` des Abschnitts und kennt die Trennung „Text (Locale-Map) vs.
+ *  Wert" über zwei getrennte Callbacks. Hier liegt der Wert eine Ebene tiefer
+ *  (`items[i].title`), und die Locale-Map gehört dem EINTRAG. Sie umzubauen
+ *  hieße, die vier bestehenden Listen-Arten (Fragen, Stimmen, Merkmale,
+ *  Formularfelder) mit umzubauen — an gepflegten Kundendaten, ohne Not. */
+function UnterFeldEingabe({
+  unterfeld,
+  eintrag,
+  sprache,
+  onEintrag,
+}: {
+  unterfeld: UnterFeld;
+  eintrag: Record<string, unknown>;
+  sprache: string;
+  onEintrag: (e: Record<string, unknown>) => void;
+}) {
+  const t = useTranslations("website");
+  const label = t(`felder.${unterfeld.label}`);
+  const wert = eintrag[unterfeld.key];
+
+  function setzeWert(v: unknown) {
+    onEintrag({ ...eintrag, [unterfeld.key]: v });
+  }
+
+  function setzeText(v: string) {
+    const karte = { ...alsKarte(wert) };
+    // Leerer Text entfernt den Eintrag — sonst stünde eine leere Zeichenkette
+    // in der Sprachkarte und der Renderer zeigte eine leere Überschrift statt
+    // gar keiner (dieselbe Regel wie oben bei `setzeText`).
+    if (v) karte[sprache] = v;
+    else delete karte[sprache];
+    setzeWert(karte);
+  }
+
+  const text = alsKarte(wert)[sprache] ?? "";
+
+  switch (unterfeld.art) {
+    case "text":
+      return (
+        <Zeile label={label}>
+          <Input value={text} onChange={(e) => setzeText(e.target.value)} />
+        </Zeile>
+      );
+    case "textlang":
+      return (
+        <Zeile label={label}>
+          <Textarea
+            rows={3}
+            value={text}
+            onChange={(e) => setzeText(e.target.value)}
+          />
+        </Zeile>
+      );
+    case "richtext":
+      return (
+        <Zeile label={label}>
+          <RichTextEditor value={text} onChange={setzeText} />
+        </Zeile>
+      );
+    case "einfachtext":
+      return (
+        <Zeile label={label}>
+          <Input
+            value={typeof wert === "string" ? wert : ""}
+            onChange={(e) => setzeWert(e.target.value || null)}
+          />
+        </Zeile>
+      );
+    case "link":
+      return (
+        <Zeile label={label}>
+          <Input
+            value={typeof wert === "string" ? wert : ""}
+            placeholder="https://"
+            onChange={(e) => setzeWert(e.target.value || null)}
+          />
+        </Zeile>
+      );
+    case "bild":
+      return (
+        <BildFeld
+          label={label}
+          wert={typeof wert === "string" ? wert : null}
+          onWert={setzeWert}
+        />
+      );
+    case "symbol":
+      return <SymbolFeld label={label} wert={wert} onWert={setzeWert} />;
+    case "zahl":
+      return (
+        <Zeile label={label}>
+          <Input
+            type="number"
+            min={unterfeld.min}
+            max={unterfeld.max}
+            value={typeof wert === "number" ? wert : ""}
+            onChange={(e) =>
+              setzeWert(e.target.value === "" ? null : Number(e.target.value))
+            }
+          />
+        </Zeile>
+      );
+    case "schalter":
+      return (
+        <label className="flex items-center justify-between gap-3 text-sm">
+          <span className="font-medium">{label}</span>
+          <Switch
+            checked={wert === true}
+            onCheckedChange={(v: boolean) => setzeWert(v)}
+          />
+        </label>
+      );
+    case "auswahl":
+      return (
+        <Zeile label={label}>
+          <NativeSelect
+            value={
+              typeof wert === "string" && wert
+                ? wert
+                : (unterfeld.standard ?? unterfeld.optionen?.[0]?.wert ?? "")
+            }
+            onChange={(e) => setzeWert(e.target.value)}
+          >
+            {(unterfeld.optionen ?? []).map((o) => (
+              <option key={o.wert} value={o.wert}>
+                {t(`felder.${o.label}`)}
+              </option>
+            ))}
+          </NativeSelect>
+        </Zeile>
+      );
+    default:
+      return null;
+  }
+}
+
+/** Die generische Liste (0450): Klapp-Einträge, Reiter, Listenposten, Dateien.
+ *
+ *  Woraus ein Eintrag besteht, steht im KATALOG (`feld.unterfelder`) — deshalb
+ *  braucht ein neuer Abschnitt dieser Art keine weitere Komponente hier. Genau
+ *  das war die Absicht: acht Basis-Widgets hätten sonst acht fast gleiche
+ *  Listen-Komponenten gebraucht.
+ *
+ *  Reihenfolge zählt bei allen: Reiter erscheinen in dieser Folge, Klapp-
+ *  Einträge auch, und beim Accordion entscheidet sie zusätzlich, welcher
+ *  Eintrag „der erste" ist (`first_open`). */
+function ListeFeld({
+  label,
+  feld,
+  wert,
+  sprache,
+  onWert,
+}: {
+  label: string;
+  feld: Feld;
+  wert: unknown;
+  sprache: string;
+  onWert: (v: unknown) => void;
+}) {
+  const t = useTranslations("website");
+  const items = Array.isArray(wert)
+    ? (wert as Array<Record<string, unknown>>)
+    : [];
+  // Ohne Katalog-Grenze wäre die Liste ein unbegrenzter Bereich (Wurzel 8).
+  // Der Wert MUSS zur Obergrenze des Backend-Schemas passen.
+  const max = feld.maxEintraege ?? 30;
+  const unterfelder = feld.unterfelder ?? [];
+
+  function setze(liste: Array<Record<string, unknown>>) {
+    onWert(liste);
+  }
+
+  return (
+    <ListenRahmen
+      label={label}
+      anzahl={items.length}
+      max={max}
+      hinzuKnopf={t("editor.eintragHinzufuegen")}
+      maxHinweis={t("editor.eintraegeMax", { max })}
+      onNeu={() => setze([...items, {}])}
+      onTauschen={(von, nach) => {
+        const k = [...items];
+        [k[von], k[nach]] = [k[nach]!, k[von]!];
+        setze(k);
+      }}
+      onEntfernen={(i) => setze(items.filter((_, j) => j !== i))}
+    >
+      {(i) => (
+        <>
+          {unterfelder.map((u) => (
+            <UnterFeldEingabe
+              key={u.key}
+              unterfeld={u}
+              eintrag={items[i] ?? {}}
+              sprache={sprache}
+              onEintrag={(e) => {
+                const k = [...items];
+                k[i] = e;
+                setze(k);
+              }}
+            />
+          ))}
+        </>
+      )}
+    </ListenRahmen>
+  );
+}
+
+/** Trennzeichen der Tabellen-Eingabe.
+ *
+ *  Tabulator zuerst, weil Excel, Numbers und Google Sheets beim Kopieren
+ *  GENAU DAS liefern: der Kunde markiert seinen Bereich, drückt Strg+C und
+ *  fügt hier ein — fertig. Das ist derselbe Weg, den Hostaway mit „copying and
+ *  pasting an existing table" meint, nur ohne CSV-Datei dazwischen.
+ *
+ *  Das Semikolon ist der Rückfall für eine aus Excel exportierte CSV-Datei in
+ *  deutscher Ländereinstellung. Ein Komma ist bewusst KEIN Trennzeichen: in
+ *  einer Preistabelle steht „1.250,00", und ein Komma-Split würde jede Zeile
+ *  zerreißen. */
+function tabelleAusText(
+  text: string,
+  maxZeilen: number,
+  maxSpalten: number,
+): string[][] {
+  return text
+    .split("\n")
+    .map((z) => z.replace(/\r$/, ""))
+    // Leerzeilen weg: sie entstehen beim Einfügen am Ende und wären sonst
+    // leere Tabellenzeilen, die niemand gewollt hat.
+    .filter((z) => z.trim())
+    .slice(0, maxZeilen)
+    .map((z) => (z.includes("\t") ? z.split("\t") : z.split(";")).slice(0, maxSpalten));
+}
+
+function tabelleAlsText(rows: unknown): string {
+  if (!Array.isArray(rows)) return "";
+  return rows
+    .filter(Array.isArray)
+    .map((z) =>
+      (z as unknown[]).map((c) => (typeof c === "string" ? c : "")).join("\t"),
+    )
+    .join("\n");
+}
+
+/** Tabellen-Eingabe (0450): eine Zeile je Zeile, Zellen mit Tabulator getrennt.
+ *
+ *  Warum ein Textfeld und kein Gitter aus Eingabefeldern: 150 × 30 Zellen sind
+ *  4.500 Eingabefelder. Ein Gitter dieser Größe ist im Browser weder bedienbar
+ *  noch schnell — und der Weg, den der Kunde ohnehin gehen will, ist Einfügen
+ *  aus seiner Tabellenkalkulation. Genau der funktioniert hier direkt.
+ *
+ *  Das ist eine bewusst benannte Schwäche und keine fertige Tabellen-
+ *  Oberfläche: Zellen lassen sich nicht einzeln anklicken, und eine Spalte
+ *  einzufügen heißt, die Zeile neu zu tippen. Hostaways Editor kann das. */
+function TabellenFeld({
+  label,
+  feld,
+  wert,
+  onWert,
+}: {
+  label: string;
+  feld: Feld;
+  wert: unknown;
+  onWert: (v: unknown) => void;
+}) {
+  const t = useTranslations("website");
+  const maxZeilen = feld.maxEintraege ?? 150;
+  const maxSpalten = feld.maxSpalten ?? 30;
+  // Der angezeigte Text wird aus den Daten abgeleitet und nicht als eigener
+  // Zustand geführt: zwei Wahrheiten über dieselbe Tabelle wären der Weg zu
+  // „ich habe getippt, gespeichert wurde etwas anderes".
+  const text = tabelleAlsText(wert);
+  const zeilen = Array.isArray(wert) ? wert.length : 0;
+
+  return (
+    <div className="flex flex-col gap-1 text-sm">
+      <span className="text-xs font-medium">{label}</span>
+      <span className="text-xs text-muted-foreground">
+        {t("editor.tabelleHinweis")}
+      </span>
+      <Textarea
+        rows={8}
+        value={text}
+        spellCheck={false}
+        className="font-mono text-xs"
+        onChange={(e) =>
+          onWert(tabelleAusText(e.target.value, maxZeilen, maxSpalten))
+        }
+      />
+      <span className="text-xs text-muted-foreground">
+        {t("editor.tabelleZeilen", { zeilen, max: maxZeilen })}
+      </span>
+    </div>
+  );
+}
+
+/** Zeitpunkt mit Datum und Uhrzeit (0450, Countdown).
+ *
+ *  Der Browser liefert `datetime-local` OHNE Zeitzone („2026-12-31T23:59").
+ *  Das Backend lehnt das ab — und zu Recht: ohne Zone liefe der Countdown je
+ *  nach Land unterschiedlich. Ergänzt wird deshalb die Zone des BEDIENERS,
+ *  und zwar sichtbar: er sieht daneben, welche gilt.
+ *
+ *  Kein stiller UTC-Ansatz (Wurzel 4): „23:59" in ein UTC-23:59 zu verwandeln
+ *  wäre in Kopenhagen eine Stunde daneben, ohne dass es jemandem auffiele. */
+function ZeitpunktFeld({
+  label,
+  wert,
+  onWert,
+}: {
+  label: string;
+  wert: unknown;
+  onWert: (v: unknown) => void;
+}) {
+  const t = useTranslations("website");
+  // Gespeichert ist UTC; angezeigt wird die Ortszeit des Bedieners.
+  const lokal = (() => {
+    if (typeof wert !== "string" || !wert) return "";
+    const d = new Date(wert);
+    if (Number.isNaN(d.getTime())) return "";
+    const p = (n: number) => String(n).padStart(2, "0");
+    return (
+      `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}` +
+      `T${p(d.getHours())}:${p(d.getMinutes())}`
+    );
+  })();
+  const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  return (
+    <div className="flex flex-col gap-1 text-sm">
+      <span className="text-xs font-medium">{label}</span>
+      <Input
+        type="datetime-local"
+        value={lokal}
+        onChange={(e) => {
+          const roh = e.target.value;
+          if (!roh) {
+            onWert(null);
+            return;
+          }
+          const d = new Date(roh);
+          // Ein unvollständiger Wert (der Browser meldet Zwischenstände) darf
+          // nicht als „Invalid Date" ins Feld — dann stünde `null` in den
+          // Daten, obwohl der Kunde gerade tippt.
+          if (Number.isNaN(d.getTime())) return;
+          onWert(d.toISOString());
+        }}
+      />
+      <span className="text-xs text-muted-foreground">
+        {t("editor.zeitzone", { zone })}
+      </span>
+    </div>
   );
 }

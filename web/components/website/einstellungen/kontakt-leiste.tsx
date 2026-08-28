@@ -25,7 +25,7 @@ import { type Branding, setBranding } from "@/lib/site-config";
 
 import { SpeicherAnzeige } from "../schale";
 import { useAutospeichern } from "../use-autospeichern";
-import { EinstellungenKopf } from "./rahmen";
+import { BereichsKopf } from "../bereichs-kopf";
 
 /** Netzwerke in Anzeigeordnung. Muss mit `SOCIAL` in
  *  `builder/components/site-footer.tsx` und `_SOCIAL_KEYS` im Backend
@@ -107,7 +107,7 @@ export function KontaktLeiste({
 
   return (
     <div className="flex flex-col gap-8">
-      <EinstellungenKopf
+      <BereichsKopf
         titel={t("einstellungen.kontakt.titel")}
         beschreibung={t("einstellungen.kontakt.hinweis")}
         aktion={

@@ -10,7 +10,7 @@
 // Die Prüfung selbst läuft serverseitig (nh3-Allowlist im Backend-Schema). Hier
 // steht die Erklärung, nicht die Kontrolle — ein Filter im Browser wäre für
 // jeden umgehbar, der die API direkt anspricht.
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -21,7 +21,7 @@ import type { Page } from "@/lib/site-pages";
 import { BildFeld } from "../editor/bild-feld";
 import { SpeicherAnzeige } from "../schale";
 import { useAutospeichern } from "../use-autospeichern";
-import { EinstellungenKopf } from "./rahmen";
+import { BereichsKopf } from "../bereichs-kopf";
 import { Schalter } from "./schalter";
 
 /** Ein mehrzeiliges Code-Feld. `spellCheck=false` und `autoCapitalize=off`,
@@ -42,6 +42,11 @@ function CodeFeld({
   maxLength: number;
   onWert: (v: string | null) => void;
 }) {
+  // Die Locale AUSDRÜCKLICH. `toLocaleString()` ohne Argument nimmt auf dem
+  // Server Nodes Systemvorgabe („8,000") und im Browser die des Nutzers
+  // („8.000") — React verwirft dann den Teilbaum und rendert ihn neu
+  // (Hydration-Fehler, Prüfbericht B6).
+  const locale = useLocale();
   const rest = maxLength - (wert?.length ?? 0);
   return (
     <label className="flex flex-col gap-1.5 text-sm">
@@ -64,7 +69,7 @@ function CodeFeld({
           lange Eingaben ab, und ohne Anzeige wäre der 422 die erste
           Rückmeldung. */}
       <span className="self-end text-xs text-muted-foreground">
-        {rest.toLocaleString()}
+        {rest.toLocaleString(locale)}
       </span>
     </label>
   );
@@ -140,7 +145,7 @@ export function ErweitertLeiste({
 
   return (
     <div className="flex flex-col gap-8">
-      <EinstellungenKopf
+      <BereichsKopf
         titel={t("einstellungen.erweitert.titel")}
         beschreibung={t("einstellungen.erweitert.hinweis")}
         aktion={

@@ -75,9 +75,34 @@ const nextConfig: NextConfig = {
       dev: IST_DEV,
       googleFonts: true,
       googleTag: true,
+      // Spamschutz der Formular-Abschnitte (0445). Ohne diese Freigabe blockt
+      // `script-src 'self'` `enterprise.js` still, das Formular schickt kein
+      // Token, und die API weist mit 403 ab — sichtbar nur in der
+      // Browser-Konsole.
+      recaptcha: true,
       // Nicht in das `as const` gezogen: `CspOptions.frameSrc` erwartet ein
       // veränderliches `string[]`, und ein `readonly`-Tupel passt darauf nicht.
-      frameSrc: ["https://www.google.com"] as string[],
+      //
+      // Die fünf Hosts unter Google gehören zu den Medien-Abschnitten (0451):
+      // Video bettet YouTube/Vimeo/Dailymotion ein, Audio SoundCloud/Mixcloud.
+      // Alle fünf sind reine iframe-Ziele — es kommt KEIN fremdes Skript in
+      // unsere Seite, `script-src` bleibt unverändert eng. Genau deshalb sind
+      // diese Einbettungen vertretbar und die Feed-Widgets von Facebook und X
+      // nicht: die verlangen ein Skript im Dokument selbst.
+      //
+      // Jeder Host steht hier, weil eine Adresse ihn wirklich benutzt
+      // (`medien-blocks.tsx`, Funktion `einbettung`). Fehlt einer, bleibt der
+      // Rahmen LEER — ohne Fehlermeldung, nur mit einer CSP-Zeile in der
+      // Browser-Konsole. `youtube-nocookie` und nicht `youtube.com`: der Rahmen
+      // setzt dort erst beim Abspielen ein Cookie.
+      frameSrc: [
+        "https://www.google.com",
+        "https://www.youtube-nocookie.com",
+        "https://player.vimeo.com",
+        "https://geo.dailymotion.com",
+        "https://w.soundcloud.com",
+        "https://player-widget.mixcloud.com",
+      ] as string[],
     } as const;
     return [
       {

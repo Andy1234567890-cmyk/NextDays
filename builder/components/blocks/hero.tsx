@@ -9,6 +9,8 @@ import { type EditierModus, NICHT_EDITIERBAR, editierbar } from "@/lib/editier-k
 import { fontStack } from "@/lib/fonts-catalog";
 import { pickText } from "@/lib/i18n";
 
+import { BildNachweis } from "./bildnachweis";
+
 type Variante = "fullscreen" | "split" | "centered";
 
 function headingStyle(content: Record<string, unknown>): CSSProperties {
@@ -22,10 +24,16 @@ export function HeroBlock({
   content,
   children,
   modus = NICHT_EDITIERBAR,
+  themeImageUrl = null,
 }: {
   content: Record<string, unknown>;
   children?: ReactNode;
   modus?: EditierModus;
+  /** Standard-Hero-Bild des Themes (0468, `Branding.hero_image_url`) — greift
+   *  NUR, solange dieser Abschnitt kein eigenes Bild trägt. Ein Hero-Abschnitt
+   *  mit eigenem `image_url` behält es unverändert; der Theme-Wert ist der
+   *  Rückfall, kein Ersatz (Wurzel 1). */
+  themeImageUrl?: string | null;
 }) {
   const heading = pickText(content.heading, modus.locale);
   const subheading = pickText(content.subheading, modus.locale);
@@ -33,7 +41,9 @@ export function HeroBlock({
   const ctaLabel = pickText(content.cta_label, modus.locale);
   const ctaHref = typeof content.cta_href === "string" ? content.cta_href : null;
   const imageUrl =
-    typeof content.image_url === "string" ? content.image_url : null;
+    typeof content.image_url === "string" && content.image_url
+      ? content.image_url
+      : themeImageUrl;
   const variante: Variante =
     content.variant === "split" || content.variant === "centered"
       ? content.variant
@@ -82,6 +92,10 @@ export function HeroBlock({
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-secondary to-muted" />
           )}
+          {/* Pflicht-Nachweis, falls dieses Bild aus einer Stock-Quelle stammt
+              (components/blocks/bildnachweis.tsx). Ohne Nachweis rendert die
+              Komponente nichts — der Rahmen bleibt dann unverändert. */}
+          <BildNachweis src={imageUrl} />
         </div>
         <div className="flex flex-col justify-center px-8 py-16 md:px-16">
           {eyebrowEl}
@@ -131,6 +145,10 @@ export function HeroBlock({
         aria-hidden
         className="absolute inset-0 -z-10 bg-gradient-to-t from-black/70 via-black/30 to-black/10"
       />
+      {/* Wie oben: nur vorhanden, wenn es zu diesem Bild einen Nachweis gibt.
+          Der Abschnitt ist bereits `relative isolate`, der Balken sitzt also in
+          seiner unteren rechten Ecke. */}
+      <BildNachweis src={imageUrl} />
       <div
         className={
           "mx-auto w-full max-w-6xl px-6 py-24 md:px-10 " +

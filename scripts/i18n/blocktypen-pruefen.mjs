@@ -140,8 +140,20 @@ pruefe("web/lib/site-pages.ts BlockType", backend,
 pruefe("builder/lib/site.ts BlockType", backend,
   tsUnion("builder/lib/site.ts", "BlockType"));
 
+// Typen, die es GIBT, aber die kein wählbarer Baustein sind.
+//
+// `container` (0472) ist Struktur: Abschnitt, Spalte, innere Spalte. Er entsteht
+// als Hülle um jeden Baustein und steht bewusst NICHT im Katalog — er stünde
+// dort als „Abschnitt" zur Auswahl neben Text und Bild, und wer ihn wählte,
+// bekäme eine leere Hülle ohne Inhalt.
+//
+// Er wird deshalb nur hier ausgenommen, nicht in den Typ-Unions: die müssen ihn
+// kennen, weil der Renderer und die API ihn verarbeiten.
+const NICHT_IM_KATALOG = ["container"];
+
 const eintraege = katalog();
-pruefe("web/components/website/abschnitte.ts ABSCHNITTE", backend,
+pruefe("web/components/website/abschnitte.ts ABSCHNITTE",
+  backend.filter((t) => !NICHT_IM_KATALOG.includes(t)),
   eintraege.map((e) => e.typ));
 pruefe("builder/components/blocks/block-renderer.tsx renderBlock", backend,
   rendererTypen());

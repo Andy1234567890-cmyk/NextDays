@@ -1,11 +1,18 @@
-// Schlanke Render-Blöcke auf Template-Niveau: Bild, Galerie, Button, Spacer,
-// Kontakt. Großzügige Aspect-Ratios, Rundungen, Hover-States, Lesetypografie.
+// Schlanke Render-Blöcke auf Template-Niveau: Bild, Button, Spacer, Kontakt.
+// Großzügige Aspect-Ratios, Rundungen, Hover-States, Lesetypografie.
+//
+// Die Galerie stand hier bis 0451 und liegt jetzt in `galerie.tsx` — siehe die
+// Begründung an ihrer alten Stelle weiter unten.
 import type { BildLaden } from "@/lib/bilder";
 import { type EditierModus, NICHT_EDITIERBAR, editierbar } from "@/lib/editier-kontext";
 import { pickText } from "@/lib/i18n";
 import { texte } from "@/lib/texte";
 
+import type { SiteBranding } from "@/lib/site-context";
+
 import { AbschnittLeer } from "./abschnitt-leer";
+import { FormularBlock } from "./formular";
+import { BildNachweis } from "./bildnachweis";
 
 export function ImageBlock({
   content,
@@ -26,7 +33,7 @@ export function ImageBlock({
   const alt = pickText(content.alt, modus.locale);
   const caption = pickText(content.caption, modus.locale);
   return (
-    <figure className="mx-auto max-w-5xl px-6 py-12">
+    <figure className="mx-auto max-w-5xl px-6 py-12 text-center">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={url}
@@ -47,59 +54,17 @@ export function ImageBlock({
           {caption}
         </figcaption>
       ) : null}
+      {/* Pflicht-Nachweis der Stock-Quelle. Rendert nichts, wenn es zu dieser
+          Adresse keinen gibt (components/blocks/bildnachweis.tsx). */}
+      <BildNachweis src={url} variante="zeile" />
     </figure>
   );
 }
 
-export function GalleryBlock({
-  content,
-  modus = NICHT_EDITIERBAR,
-  laden = "lazy",
-}: {
-  content: Record<string, unknown>;
-  /** Nur für den Platzhalter im Entwurf — die Galerie selbst hat keine
-   *  bearbeitbaren Textstellen. */
-  modus?: EditierModus;
-  laden?: BildLaden;
-}) {
-  const images = Array.isArray(content.images)
-    ? (content.images as Array<Record<string, unknown>>)
-    : [];
-  if (images.length === 0) {
-    return (
-      <AbschnittLeer modus={modus} grund={texte(modus.locale).leerGalerie} />
-    );
-  }
-  return (
-    <div className="mx-auto grid max-w-6xl grid-cols-2 gap-4 px-6 py-12 md:grid-cols-3">
-      {images.map((img, i) => {
-        const url = typeof img.url === "string" ? img.url : null;
-        if (!url) return null;
-        // Erstes Bild größer (Masonry-Anmutung).
-        const span = i === 0 ? "md:col-span-2 md:row-span-2" : "";
-        return (
-          <div
-            key={`${url}-${i}`}
-            className={`group overflow-hidden rounded-2xl ${span}`}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={url}
-              alt={pickText(img.alt)}
-              // Nur das GROSSE erste Bild folgt der Einstellung; die kleineren
-              // stehen in einem Raster darunter und laden immer erst beim
-              // Scrollen. Eine Galerie mit zwölf Bildern sofort zu laden wäre
-              // der eine Fall, in dem der Schalter nichts retten könnte.
-              loading={i === 0 ? laden : "lazy"}
-              fetchPriority={i === 0 && laden === "eager" ? "high" : undefined}
-              className="aspect-square size-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+// `GalleryBlock` stand hier bis 0451. Sie ist nach `galerie.tsx` gezogen, weil
+// sie mit der Lightbox einen Zustand im Browser bekommen hat und damit eine
+// Client-Komponente sein muss. NICHT kopiert, sondern verschoben: zwei
+// Galerie-Fassungen derselben Daten wären irgendwann auseinandergelaufen.
 
 export function ButtonBlock({
   content,
@@ -148,17 +113,58 @@ export function SpacerBlock({ content }: { content: Record<string, unknown> }) {
   return <div style={{ height: SPACER_REM[size] ?? SPACER_REM.md }} />;
 }
 
+/** Die Felder des Kontaktformulars für den Renderer.
+ *
+ *  DIESELBEN vier wie serverseitig (`block_inhalte.kontakt_formular_felder`),
+ *  und die Namen sind der Vertrag: der Absende-Endpunkt prüft die Eingaben
+ *  gegen seine Liste und wirft unbekannte Felder weg. Ein hier umbenanntes
+ *  Feld käme also stumm nicht an.
+ *
+ *  Die Beschriftungen kommen aus dem Renderer-Katalog und nicht aus dem
+ *  Block-Inhalt: der Kontakt-Abschnitt hat keinen Feld-Baukasten (dafür gibt
+ *  es den Formular-Abschnitt), er hat einen Schalter. */
+function kontaktFelder(sprache: string) {
+  const t = texte(sprache);
+  // Die Locale-Map trägt nur DIESE Sprache — der Renderer zeigt pro Aufruf
+  // genau eine, und `pickText` im Formular liest sie darüber.
+  const map = (wert: string) => ({ [sprache]: wert });
+  return [
+    { name: "name", type: "text", required: true, label: map(t.kontaktFormularName) },
+    { name: "email", type: "email", required: true, label: map(t.kontaktFormularEmail) },
+    {
+      name: "message",
+      type: "textarea",
+      required: true,
+      label: map(t.kontaktFormularNachricht),
+    },
+    {
+      name: "consent",
+      type: "consent",
+      required: true,
+      label: map(t.datenschutzZustimmung),
+    },
+  ];
+}
+
 export function ContactBlock({
   content,
   modus = NICHT_EDITIERBAR,
+  branding,
 }: {
   content: Record<string, unknown>;
   modus?: EditierModus;
+  /** Für den Datenschutz-Link am Zustimmungsfeld des Formulars. */
+  branding?: SiteBranding | null;
 }) {
   const headline = pickText(content.headline, modus.locale);
   const email = typeof content.email === "string" ? content.email : null;
   const phone = typeof content.phone === "string" ? content.phone : null;
   const address = pickText(content.address, modus.locale);
+  // Der Schalter „Kontaktformular anzeigen". Bis 27.08.2026 las ihn NIEMAND:
+  // er stand im Katalog, im Pydantic-Schema und in drei Vorlagen auf `true`,
+  // und der Renderer kannte das Feld nicht — ein Bedienelement ohne Deckung
+  // (Prüfbericht B4, Wurzel 4).
+  const zeigeFormular = content.show_form === true;
   return (
     <section className="mx-auto max-w-5xl px-6 py-20">
       <div className="rounded-3xl bg-secondary/40 px-8 py-12 md:px-14">
@@ -184,6 +190,29 @@ export function ContactBlock({
             <p className="whitespace-pre-line sm:col-span-2">{address}</p>
           ) : null}
         </div>
+        {zeigeFormular ? (
+          // Der bestehende Formular-Block, gespeist mit den festen Feldern.
+          // Kein zweites Formular: Absenden, Spamschutz, Fehlerzustände und
+          // die Bestätigung stecken dort schon (0436/0444/0445), und eine
+          // Kopie davon liefe beim ersten Fix auseinander.
+          //
+          // `-mx-*` hebt die Innenabstände der Kontaktkarte auf: der
+          // Formular-Block bringt seine eigenen mit, und zwei übereinander
+          // ließen ihn eingerückt neben den Kontaktdaten stehen.
+          <div className="-mx-8 mt-4 md:-mx-14">
+            <FormularBlock
+              content={{
+                __block_id: content.__block_id,
+                fields: kontaktFelder(modus.locale),
+                submit_label: {
+                  [modus.locale]: texte(modus.locale).kontaktFormularSenden,
+                },
+              }}
+              modus={modus}
+              branding={branding}
+            />
+          </div>
+        ) : null}
       </div>
     </section>
   );

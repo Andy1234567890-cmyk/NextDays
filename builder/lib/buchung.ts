@@ -49,6 +49,88 @@ export async function ladeVerfuegbarkeit(
   return call(`availability?${qs.toString()}`);
 }
 
+/** Eine Zeile der Preisaufschlüsselung, wie sie der Gast sieht. */
+export type AngebotsZeile = { label: string; amount: number; kind?: string | null };
+
+/** Wann der Gast zahlt — aus der Buchungskondition des Betriebs. Dieselbe
+ *  Rechnung, die der Zahlungspfad einzieht (booking_conditions.plan). */
+export type Zahlungsplan = {
+  installments: number;
+  due_now: number;
+  due_later: number;
+  /** ISO-Datum der Restzahlung; null = keine Restzahlung. */
+  balance_due_date: string | null;
+};
+
+export type StornoRegel = { days_before_arrival: number; refund_percent: number };
+
+export type Storno = { mode: string | null; rules: StornoRegel[] };
+
+export type Kaution = {
+  amount: number;
+  method: string | null;
+  currency: string | null;
+};
+
+export type Angebot = {
+  property_id: string;
+  nights: number;
+  currency: string;
+  lines: AngebotsZeile[];
+  total: number;
+  /** Alle drei null, wenn der Betrieb keine Buchungskondition gepflegt hat —
+   *  dann ist alles sofort fällig und der Checkout verspricht keine Storno-Regel
+   *  (Wurzel 4: keine erfundene Zusage). */
+  payment_plan: Zahlungsplan | null;
+  cancellation: Storno | null;
+  deposit: Kaution | null;
+  /** Hat der eingegebene Aktionscode WIRKLICH eine Aktion ausgelöst? False bei
+   *  unbekanntem Code — auch dann kann ein Rabatt in den Zeilen stehen (eine
+   *  automatische Aktion), er gehört aber nicht zum Code. Ohne diese Unterscheidung
+   *  hielte der Gast einen falschen Code für gültig. */
+  promo_code_applied: boolean;
+  priceless: boolean;
+  pets_allowed: boolean;
+  max_guests: number;
+  /** Vom Gast wählbare Gebühren mit dem SERVERSEITIG gerechneten Betrag für
+   *  diesen Aufenthalt. Nicht selbst hochrechnen: bei Prozent- oder Gast-Basis
+   *  käme der Browser auf eine andere Zahl als der Server. */
+  optional_fees: WaehlbareGebuehr[];
+};
+
+/** Eine zuwählbare Gebühr des Objekts (`optional` im Gebühren-Editor). */
+export type WaehlbareGebuehr = {
+  id: string;
+  label: string;
+  amount: number;
+  /** Bereits gewählt — der Server führt den Zustand, nicht der Browser. */
+  selected: boolean;
+};
+
+/**
+ * Verbindliche Preisaufschlüsselung vor der Buchung — dieselbe Rechnung, die
+ * der Server bei der Buchung anstellt (Gebühren, Haustiergebühr, Abgaben).
+ * Selbst rechnen (Nächte × Grundpreis) verschwiege genau diese Posten.
+ */
+export async function ladeAngebot(input: {
+  property_id: string;
+  check_in: string;
+  check_out: string;
+  guests: number;
+  pets: number;
+  /** Aktionscode des Gastes. Nur ein Filter auf die Aktionen des Objekts — den
+   *  Rabatt rechnet der Server, nie der Browser. */
+  promo_code?: string;
+  /** Sprache für die Bezeichnungen der Posten. Ohne sie antwortet der Server
+   *  auf Englisch — nicht auf Deutsch (27 Länder). */
+  locale?: string;
+  /** IDs der zugewählten optionalen Gebühren. Ohne Wahl werden sie NICHT
+   *  berechnet — der Gast entscheidet. */
+  fees?: string[];
+}): Promise<Result<Angebot>> {
+  return call("quote", { method: "POST", body: input });
+}
+
 /** Gastbuchung anlegen. end (check_out) exklusiv. */
 export async function bucheGast(input: {
   property_id: string;
@@ -59,8 +141,41 @@ export async function bucheGast(input: {
   /** DERSELBE Aktionscode wie im Angebot — ohne ihn zahlte der Gast den Preis
    *  ohne seinen Rabatt, obwohl die Strecke ihn angezeigt hat. */
   promo_code?: string;
+  /** Reisende und mitgebrachte Tiere. Beide sind preiswirksam (Gebühren „pro
+   *  Gast" bzw. „pro Tier"); ohne Angabe rechnet der Server mit 1 Gast, 0 Tieren. */
+  guests?: number;
+  pets?: number;
+  /** DIESELBE Sprache wie im Angebot: die Posten wandern als `quote_items` in
+   *  die Reservierung und stehen später auf der Rechnung. */
+  locale?: string;
+  /** DIESELBE Auswahl wie im Angebot — sonst berechnet die Buchung etwas
+   *  anderes, als die Strecke angezeigt hat. */
+  fees?: string[];
 }): Promise<
-  Result<{ id: string; property_id: string; check_in: string; check_out: string; status: string }>
+  Result<{
+    /**
+     * Seit 0409 die BuchungsABSICHT, nicht die Reservierung: Eine Buchung
+     * entsteht erst, wenn Stripe die Zahlung bestätigt hat. Vorher wurde hier
+     * sofort eine bestätigte Buchung angelegt — brach der Gast die Zahlung ab,
+     * blieb sie unbezahlt stehen und belegte den Kalender.
+     */
+    id: string;
+    property_id: string;
+    check_in: string;
+    check_out: string;
+    /** "zahlung_offen" (Sofortbuchung) oder "requested" (Anfrage-Objekt). */
+    status: string;
+    /**
+     * True = es ist noch KEINE Buchung entstanden. Die Oberfläche muss zahlen
+     * lassen und darf nichts bestätigen.
+     */
+    zahlung_erforderlich?: boolean;
+    /** Zahlungsdaten fürs Payment Element — nur bei `zahlung_erforderlich`. */
+    client_secret?: string | null;
+    publishable_key?: string | null;
+    total_amount?: number | null;
+    currency?: string | null;
+  }>
 > {
   return call("reservations", { method: "POST", body: input });
 }

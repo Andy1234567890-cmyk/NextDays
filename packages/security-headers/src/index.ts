@@ -58,6 +58,20 @@ export interface CspOptions {
    *  `script-src` ist eng (kein `https:`), deshalb steht hier ein einzelner
    *  Host statt einer Liste. */
   googleTag?: boolean;
+  /** reCAPTCHA Enterprise freigeben (nur Apps, die ein oeffentliches Formular
+   *  mit Spamschutz rendern — aktuell der Seiten-Renderer `builder/`).
+   *
+   *  ZWEI Hosts in `script-src`, beide noetig: das Lade-Skript kommt von
+   *  `www.google.com/recaptcha/enterprise.js`, seine Bibliothek von
+   *  `www.gstatic.com`. Dazu `frame-src www.google.com` — die unsichtbare
+   *  Variante haengt trotzdem einen iframe in die Seite, und ohne diese
+   *  Direktive greift der `default-src 'self'`-Rueckfall.
+   *
+   *  Fehlt die Option, blockt die CSP das Skript STILL: `grecaptcha` ist nie
+   *  definiert, das Formular schickt kein Token, und die API weist mit 403 ab.
+   *  Der Grund stuende nur in der Browser-Konsole — genau die Art Attrappe, die
+   *  Wurzel 4 verbietet. */
+  recaptcha?: boolean;
 }
 
 // Genau die Hosts, die die Google-Maps-JS-API braucht — nicht mehr.
@@ -82,6 +96,12 @@ const MAPS_FONT = ["https://fonts.gstatic.com"];
 // Skript-Quelle.
 const TAG_SCRIPT = ["https://www.googletagmanager.com"];
 
+// reCAPTCHA Enterprise. `www.google.com` liefert `enterprise.js`,
+// `www.gstatic.com` die Bibliothek dahinter; der Rahmen der Pruefung kommt
+// ebenfalls von `www.google.com`.
+const RECAPTCHA_SCRIPT = ["https://www.google.com", "https://www.gstatic.com"];
+const RECAPTCHA_FRAME = ["https://www.google.com"];
+
 /** Baut den CSP-Header-Wert für eine App. */
 export function buildCsp(opts: CspOptions = {}): string {
   const {
@@ -92,10 +112,12 @@ export function buildCsp(opts: CspOptions = {}): string {
     googleMaps = false,
     googleFonts = false,
     googleTag = false,
+    recaptcha = false,
   } = opts;
   const scriptHosts = [
     ...(googleMaps ? MAPS_SCRIPT : []),
     ...(googleTag ? TAG_SCRIPT : []),
+    ...(recaptcha ? RECAPTCHA_SCRIPT : []),
   ];
   const scriptExtra = scriptHosts.length > 0 ? " " + scriptHosts.join(" ") : "";
   // `wss:` MUSS mit: ein WebSocket-Ziel wird gegen sein EIGENES Schema geprüft,
@@ -132,8 +154,15 @@ export function buildCsp(opts: CspOptions = {}): string {
     // Nur setzen, wenn die App wirklich fremde iframes einbettet. Ohne die
     // Direktive gilt weiterhin der `default-src 'self'`-Fallback — das ist der
     // engere Zustand und soll der Standard bleiben.
-    ...(frameSrc.length > 0
-      ? [`frame-src ${["'self'", ...frameSrc].join(" ")}`]
+    // `Set` gegen Dubletten: `builder` traegt `https://www.google.com` schon
+    // fuer die Maps-Einbettung ein, und reCAPTCHA braucht denselben Host.
+    ...(frameSrc.length > 0 || recaptcha
+      ? [
+          `frame-src ${[
+            "'self'",
+            ...new Set([...frameSrc, ...(recaptcha ? RECAPTCHA_FRAME : [])]),
+          ].join(" ")}`,
+        ]
       : []),
     "base-uri 'self'",
     "form-action 'self'",

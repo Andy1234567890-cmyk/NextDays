@@ -26,6 +26,72 @@ export type SiteTheme = "klar" | "mitte" | "karte" | "seitlich";
 export type ButtonStyle = "solid" | "outline";
 export type ButtonRadius = "sharp" | "rounded" | "pill";
 
+/** Einheit der Inhaltsbreite (0447). Bestand ist `px`. */
+export type Breiteneinheit = "px" | "vw";
+
+/** Ein benannter Eintrag der Designfarben-Palette (0446).
+ *
+ *  `id` ist stabil und steht in den Verknüpfungen; `name` ist frei. Beim
+ *  Backfill tragen beide den ROLLENSCHLÜSSEL (z. B. `primary_color`) — eine
+ *  Migration darf keine Sprache festschreiben. Die Leiste übersetzt einen
+ *  Namen, der exakt einem bekannten Rollenschlüssel entspricht; sobald der
+ *  Kunde umbenennt, gilt sein Text. */
+export type ThemeFarbe = { id: string; name: string; color: string };
+
+/** Die Farbrollen, die sich mit einer Designfarbe verknüpfen lassen.
+ *
+ *  Muss mit `_ROLLE_ZIEL` in `apps/api/.../site_config/basis.py` deckungsgleich
+ *  sein — eine Rolle, die es dort nicht gibt, wird beim Speichern mit 422
+ *  abgewiesen. */
+export type Farbrolle =
+  | "brand_name_color"
+  | "header_background"
+  | "header_link_color"
+  | "primary_color"
+  | "link_color"
+  | "footer_background"
+  | "background_color"
+  | "foreground_color"
+  | "secondary_color"
+  | `text_${TextRolle}`
+  | "link_normal"
+  | "link_hover"
+  | "link_besucht";
+
+/** Text-Rollen wie bei Hostaway: DFLT (alles ohne eigene Zuordnung), PAR (der
+ *  Absatz) und H1–H6. */
+export type TextRolle =
+  | "dflt"
+  | "par"
+  | "h1"
+  | "h2"
+  | "h3"
+  | "h4"
+  | "h5"
+  | "h6";
+
+export type TextSchatten = "keiner" | "weich" | "hart";
+
+/** Eine Text-Rolle. Jedes Feld darf fehlen — dann gilt, was der Renderer ohne
+ *  sie tut (Wurzel 1). */
+export type TextStil = {
+  font?: string | null;
+  size_desktop?: number | null;
+  size_mobile?: number | null;
+  scale_text?: boolean;
+  color?: string | null;
+  weight?: number | null;
+  line_height?: number | null;
+  letter_spacing?: number | null;
+  uppercase?: boolean;
+  shadow?: TextSchatten;
+  /** Nur DFLT: Linkfarbe in drei Zuständen und die Unterstreichung. */
+  link_color?: string | null;
+  link_hover_color?: string | null;
+  link_visited_color?: string | null;
+  link_underline?: boolean | null;
+};
+
 export type Branding = {
   site_name: string | null;
   tagline: string | null;
@@ -110,6 +176,22 @@ export type Branding = {
   heading_scale: number | null;
   /** Dasselbe für den Fließtext. */
   body_scale: number | null;
+  // --- Theme: Breite, Abstand, Designfarben, Text-Rollen (0446/0447) --------
+  /** Einheit von `content_width`: px (960–1920) oder vw (50–100). */
+  content_width_unit: Breiteneinheit;
+  /** true = der Inhalt läuft über die ganze Breite. */
+  content_full_width: boolean;
+  /** ZUSÄTZLICHER Abstand je Abschnitt in px. `null` = kein Zusatz. */
+  section_spacing_y: number | null;
+  section_spacing_x: number | null;
+  /** Die benannte Palette (bis 30 Einträge). */
+  theme_colors: ThemeFarbe[];
+  /** Rolle → Kennung der verknüpften Designfarbe. Feldweise: wer eine Rolle
+   *  von Hand setzt, löst NUR deren Verknüpfung. Das Lösen erledigt der
+   *  Server — er ist die Stelle, die den Gesamtzustand kennt. */
+  theme_color_links: Partial<Record<Farbrolle, string>>;
+  /** Text-Rollen DFLT · PAR · H1–H6. */
+  text_styles: Partial<Record<TextRolle, TextStil>>;
 };
 
 export type BrandingInput = Partial<Branding>;

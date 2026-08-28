@@ -58,7 +58,9 @@ class _Buckets:
         self.listings_tenant = parse_limit(settings.rate_limit_listings_tenant)
         self.tenant = parse_limit(settings.rate_limit_tenant)
         self.ai = parse_limit(settings.rate_limit_ai)
+        self.website_ki = parse_limit(settings.rate_limit_website_ki)
         self.mcp_auth = parse_limit(settings.rate_limit_mcp_auth)
+        self.stock = parse_limit(settings.rate_limit_stock)
         self.mfa = parse_limit(settings.rate_limit_mfa)
         self.mfa_status = parse_limit(settings.rate_limit_mfa_status)
         self.public_support = parse_limit(settings.rate_limit_public_support)
@@ -213,6 +215,62 @@ _REFRESH_PATHS = ("/auth/refresh", "/guest-auth/refresh")
 # verglichen wird.
 _AI_PATHS = ("/dashboard/voice", "/content/translate", "/uebersetzen")
 
+# Stock-Foto-Suche des Website-Baukastens (0461). Jeder Aufruf geht an Pexels
+# bzw. Unsplash und verbraucht ein Kontingent, das für ALLE Betriebe gemeinsam
+# gilt (Pexels: 200/Stunde). Deshalb ein eigener strenger Bucket und nicht der
+# Default (Wurzel 8) — sonst leert ein einzelner eingeloggter Nutzer in unter
+# einer Minute, was allen anderen für eine Stunde reichen muss.
+#
+# Nicht sensibel → bei Redis-Ausfall fail-OPEN: eine Bildsuche, die während
+# eines Redis-Ausfalls ungezählt durchläuft, kostet Kontingent; sie
+# abzuweisen kostet die Arbeit des Kunden. Das Kontingent ist zusätzlich beim
+# ANBIETER gedeckelt, der Zähler ist hier also nicht die letzte Instanz.
+#
+# Die Symbolsuche (0479) liegt im SELBEN Eimer: derselbe Vorgang (ein Tastendruck
+# des Kunden löst einen Aufruf bei einem fremden Dienst aus), dieselbe
+# Größenordnung. Ein zweiter Eimer mit derselben Zahl wäre eine Zahl mehr ohne
+# eigenen Grund.
+_STOCK_PATHS = ("/site-config/stock/", "/site-config/icons/")
+
+# Bild-Import per Adresse (0479). EIN eingeloggter Aufruf löst einen ausgehenden
+# Download auf eine vom KUNDEN gelieferte Adresse aus (bis 20 MB). Im
+# Default-Eimer (300/60) wäre das derselbe Verstärker wie der RSS-Import: unser
+# Server als Downloader gegen ein fremdes Ziel. Teilt sich dessen `ai`-Limit —
+# gleiche Größenordnung, gleiche Begründung.
+_MEDIA_IMPORT_PATHS = ("/site-config/media/import",)
+
+# RSS-Import des Website-Blogs (0457). EIN eingeloggter Aufruf löst einen
+# ausgehenden Abruf auf eine vom KUNDEN gelieferte Adresse aus (bis 8 MB) und
+# legt bis zu 300 Seiten samt Abschnitten an. Im Default-Bucket (300/60) wäre
+# das ein Verstärker: unser Server als Downloader gegen ein fremdes Ziel, und
+# nebenbei 90.000 Zeilen je Minute. Eigener strenger Bucket (Wurzel 8).
+#
+# Er teilt sich das Limit des `ai`-Buckets — dieselbe Größenordnung („ein
+# einzelner eingeloggter Nutzer kann erhebliche Fremdlast erzeugen") und ein
+# eigenes Limit in der Konfiguration wäre eine Zahl mehr ohne eigenen Grund.
+# Nicht sensibel: ein Import ist wiederholbar, und ein Redis-Ausfall soll den
+# Umzug eines Kunden nicht blockieren (fail-open, Wurzel 5).
+_BLOG_IMPORT_PATHS = ("/site-config/blog/import",)
+
+# KI-Assistent des Website-Baukastens (0463–0465). EIGENER Eimer und nicht der
+# `ai`-Eimer, obwohl beide „teure Fremd-API" heißen — die Begründung steht
+# ausführlich bei `rate_limit_website_ki` in config.py. Kurz: ein Aufruf hier
+# ist teurer als ein Sprachassistent-Satz, und der Knopf sitzt in einer
+# Oberfläche, in der man ihn in Serie drücken kann. Läge er im `ai`-Eimer,
+# risse ein Kunde beim Texten seiner Website den Sprachassistenten und die
+# Ankündigungs-Übersetzung mit.
+#
+# `/site-config/ki/status` steht bewusst NICHT ausgenommen, obwohl es nur
+# liest: es wird einmal beim Öffnen des Baukastens gefragt, nicht in einer
+# Schleife, und 10/60 reicht dafür um ein Vielfaches.
+#
+# Nicht sensibel → bei Redis-Ausfall fail-OPEN: ein 503 auf diesem Pfad nähme
+# dem Betrieb den Textassistenten, während seine Website völlig in Ordnung ist.
+# Der zweite Deckel (`ki_tageslimit_je_tenant`, in der Datenbank gezählt)
+# greift auch ohne Redis — der Kostenschutz hängt also nicht an diesem Eimer
+# allein (Wurzel 5).
+_WEBSITE_KI_PATHS = ("/site-config/ki/",)
+
 # OAuth-Vorgänge des MCP-Connectors (0385). `/mcp/token` löst Autorisierungs-
 # codes ein und rotiert Refresh-Token — beides durchprobierbar; `/mcp/authorize`
 # stößt einen ausgehenden Fetch auf eine fremde URL an (Verstärkung). Der
@@ -251,6 +309,24 @@ _KONTO_LOESCHUNG_PATHS = ("/account-deletion/request",
 # öffentlichen Formulare — bei Redis-Ausfall lieber abweisen.
 _KONTAKT_PATHS = ("/contact/message",)
 
+# Formulare auf den Kunden-Websites des Baukastens (0436/0445). Genau dieselbe
+# Gefahr wie beim Kontaktformular, nur mit einem Zusatz: der zweite Aufruf
+# bringt eine DATEI von bis zu 10 MB. Im Default-Bucket (300/60 je IP) waeren
+# das rechnerisch 3 GB pro Minute und IP in einen privaten Bucket hinein — ein
+# unbegrenzter Bereich in der Wirkung, auch wenn jede einzelne Datei gedeckelt
+# ist (Wurzel 8). Dazu kostet jedes Absenden eine reCAPTCHA-Bewertung aus
+# demselben Kontingent wie das Kontaktformular.
+#
+# Der Upload-Pfad steht mit drin und nicht in einem eigenen Bucket: er ist ohne
+# ein Absenden gar nicht erreichbar (er braucht ein Ticket aus dessen Antwort),
+# und eine Einsendung mit fuenf Anlagen sind sechs Aufrufe — bei 20/60 also
+# drei vollstaendige Anfragen je Minute und IP. Das ist mehr, als ein Mensch
+# tippt, und weniger, als ein Bot braucht.
+#
+# Fail-closed wie die uebrigen oeffentlichen Formulare: bei Redis-Ausfall
+# lieber abweisen als ungedeckelt fremde Dateien annehmen.
+_SITE_FORM_PATHS = ("/site/form",)
+
 # Öffentliche Such-/Kalender-Endpunkte → Scraper-Schutz pro IP. Der iCal-Export
 # ist nicht eingeloggt (ein Kalender-Client schickt kein JWT).
 _LISTINGS_PATHS = (
@@ -263,6 +339,12 @@ _LISTINGS_PATHS = (
     "/booking-engine/availability",
     "/calendar",
     "/external-calendar/export/",
+    # RSS-Feed-Widget des Website-Baukastens (0471): reines Lesen eines im
+    # Server GECACHTEN Fremd-Feeds (`site_rss_widget_cache`, TTL 30 Min.) —
+    # dieselbe Form wie die Preisliste darüber, nicht der teure, ausgehende
+    # Abruf selbst (der läuft höchstens einmal je TTL und Feed, unabhängig
+    # davon, wie oft dieser Endpunkt aufgerufen wird).
+    "/site/rss-preview",
 )
 
 # EINGEHENDE Provider-Webhooks. Sie werden weiterhin gezählt (Missbrauchsschutz),
@@ -323,7 +405,12 @@ _BUCKET_REGELN: tuple[tuple[str, tuple[str, ...], str, bool], ...] = (
     ("public_support", _NEWSLETTER_PATHS, "public_support", True),
     ("public_support", _KONTO_LOESCHUNG_PATHS, "public_support", True),
     ("public_support", _KONTAKT_PATHS, "public_support", True),
+    ("public_support", _SITE_FORM_PATHS, "public_support", True),
     ("ai", _AI_PATHS, "ai", False),
+    ("ai", _BLOG_IMPORT_PATHS, "ai", False),
+    ("website_ki", _WEBSITE_KI_PATHS, "website_ki", False),
+    ("stock", _STOCK_PATHS, "stock", False),
+    ("ai", _MEDIA_IMPORT_PATHS, "ai", False),
     # sensibel=True: bei Redis-Ausfall lieber abweisen als den Code-/Token-
     # Tausch ungedeckelt durchlassen (fail-closed, Wurzel 5).
     ("mcp_auth", _MCP_AUTH_PATHS, "mcp_auth", True),

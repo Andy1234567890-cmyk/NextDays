@@ -24,8 +24,13 @@ import type {
   PopupTrigger,
 } from "@/lib/site-pages";
 
-/** Typ → Symbol. Die Texte stehen in den Sprachdateien. */
-const TYP_SYMBOL: Record<PageType, string> = {
+/** Typ → Symbol. Die Texte stehen in den Sprachdateien.
+ *
+ *  EXPORTIERT, weil die Seitenliste dieselben Symbole braucht: sie zeichnete
+ *  bis 27.08.2026 jede Seite als Blatt, also Ordner, Pop-up, externen Link und
+ *  404 gleich (Prüfbericht B8). Zwei Tabellen wären beim nächsten Seitentyp
+ *  auseinandergelaufen. */
+export const TYP_SYMBOL: Record<PageType, string> = {
   normal: "ph:file",
   external: "ph:arrow-square-out",
   folder: "ph:folder",
@@ -58,6 +63,29 @@ const VORLAGEN = [
   "hausordnung",
   "umgebung",
   "faq",
+];
+
+/** Pop-up-Vorlagen (0440). Eigene Liste und nicht dieselbe wie oben: die
+ *  Kataloge im Backend sind getrennt (`popup_vorlagen.py` vs.
+ *  `seiten_vorlagen.py`), weil ein ganzseitiger Abschnitts-Satz in einem
+ *  Fenster nichts verloren hat.
+ *
+ *  Reihenfolge wie im Backend: erst die leere, dann die drei häufigsten. Muss
+ *  mit `NAMEN` in `popup_vorlagen.py` übereinstimmen — ein Name, den nur diese
+ *  Liste kennt, bringt einen 422 beim Anlegen. */
+const POPUP_VORLAGEN = [
+  "leer",
+  "willkommen",
+  "angebot",
+  "letzte_chance",
+  "anfrage",
+  "kontakt",
+  "anfahrt",
+  "verfuegbarkeit",
+  "neues_objekt",
+  "bewertung",
+  "social",
+  "mehr_infos",
 ];
 
 export function NeueSeite({
@@ -134,7 +162,10 @@ export function NeueSeite({
           // Eine Vorlage gibt es nur für echte Seiten: ein Ordner hat keinen
           // Inhalt, ein externer Menüpunkt zeigt nach außen, und die
           // Fehlerseite gestaltet man selbst.
-          typ === "normal" ? vorlage || null : null,
+          // Eine Vorlage gibt es für echte Seiten UND für Pop-ups — aus zwei
+          // verschiedenen Katalogen, die das Backend am Seitentyp
+          // auseinanderhält.
+          typ === "normal" || typ === "popup" ? vorlage || null : null,
         );
       }}
       className="flex flex-col gap-2 px-4 pb-3"
@@ -171,16 +202,20 @@ export function NeueSeite({
 
       {/* Die Vorlage steht ÜBER dem Titel: wer eine wählt, bekommt den Titel
           geschenkt und muss ihn nicht erst tippen. */}
-      {typ === "normal" ? (
+      {typ === "normal" || typ === "popup" ? (
         <NativeSelect
           value={vorlage}
           onChange={(e) => setVorlage(e.target.value)}
           aria-label={t("seiten.vorlage.label")}
         >
           <option value="">{t("seiten.vorlage.keine")}</option>
-          {VORLAGEN.map((v) => (
+          {(typ === "popup" ? POPUP_VORLAGEN : VORLAGEN).map((v) => (
             <option key={v} value={v}>
-              {t(`seiten.vorlage.${v}`)}
+              {t(
+                typ === "popup"
+                  ? `seiten.popupVorlage.${v}`
+                  : `seiten.vorlage.${v}`,
+              )}
             </option>
           ))}
         </NativeSelect>
@@ -191,7 +226,11 @@ export function NeueSeite({
         maxLength={200}
         placeholder={
           vorlage
-            ? t(`seiten.vorlage.${vorlage}`)
+            ? t(
+                typ === "popup"
+                  ? `seiten.popupVorlage.${vorlage}`
+                  : `seiten.vorlage.${vorlage}`,
+              )
             : t("seiten.titelPlatzhalter")
         }
         onChange={(e) => setTitel(e.target.value)}

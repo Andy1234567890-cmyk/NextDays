@@ -11,6 +11,7 @@
 // findet sie niemand, bis jemand von außen darauf verlinkt.
 import { aktuellerHost } from "@/lib/host";
 import { basisUrl, ladeSitemap, seitenPfad } from "@/lib/seo";
+import { istSprache, mitSprache } from "@/lib/sprache";
 
 /** XML-Sonderzeichen in einer Adresse maskieren.
  *
@@ -54,12 +55,47 @@ export async function GET(): Promise<Response> {
   const basis = basisUrl(host);
   const eintraege: string[] = [];
 
+  // Die Sprachen, für die überhaupt hreflang ausgegeben wird — dieselbe Regel
+  // wie in `metadaten.ts`: nur die eingerichteten, nicht der 24er-Rückfall. Eine
+  // Sprachfassung anzukündigen, die es nicht gibt, macht aus allen Adressen
+  // Duplikate.
+  // `languages` und `default_language` kommen aus der Sitemap-Antwort selbst.
+  // Das Backend liefert sie seit 0426 mit dem ausdrücklichen Zweck „der
+  // Renderer baut daraus die hreflang-Alternativen" — getan hat er es nie, das
+  // Feld war vier Monate tote Deklaration.
+  const sprachen = (daten.languages ?? []).filter(istSprache);
+  const standard = daten.default_language;
+
+  /** Die `<xhtml:link>`-Zeilen einer Adresse — für JEDE Sprachfassung, plus
+   *  `x-default`.
+   *
+   *  Sie stehen in JEDER `<url>`, auch in der der Sprachfassung selbst: Google
+   *  verlangt, dass jede Fassung sich selbst und alle anderen listet, und
+   *  ignoriert den ganzen Satz, wenn ein Rückverweis fehlt. */
+  const alternativen = (pfad: string): string[] => {
+    if (sprachen.length < 2) return [];
+    const zeilen = sprachen.map(
+      (l) =>
+        `    <xhtml:link rel="alternate" hreflang="${xml(l)}" href="${xml(
+          basis + mitSprache(pfad, l, standard),
+        )}"/>`,
+    );
+    zeilen.push(
+      `    <xhtml:link rel="alternate" hreflang="x-default" href="${xml(
+        basis + pfad,
+      )}"/>`,
+    );
+    return zeilen;
+  };
+
   for (const seite of daten.pages) {
     const datum = lastmod(seite.lastmod);
+    const pfad = seitenPfad(seite.slug);
     eintraege.push(
       [
         "  <url>",
-        `    <loc>${xml(basis + seitenPfad(seite.slug))}</loc>`,
+        `    <loc>${xml(basis + pfad)}</loc>`,
+        ...alternativen(pfad),
         datum ? `    <lastmod>${datum}</lastmod>` : null,
         // Die Startseite ist die wichtigste Adresse der Website. `priority` ist
         // für Google seit Jahren wirkungslos, für Bing und kleinere Crawler
@@ -78,6 +114,10 @@ export async function GET(): Promise<Response> {
       [
         "  <url>",
         `    <loc>${xml(`${basis}/inserat/${objekt.id}`)}</loc>`,
+        // Objektseiten sind seit 0476 ebenfalls unter Sprachpräfix
+        // erreichbar und rendern dort übersetzt — sie brauchen dieselbe
+        // hreflang-Kette wie die Seiten, sonst ist der Satz unvollständig.
+        ...alternativen(`/inserat/${objekt.id}`),
         datum ? `    <lastmod>${datum}</lastmod>` : null,
         "  </url>",
       ]
@@ -94,6 +134,7 @@ export async function GET(): Promise<Response> {
       [
         "  <url>",
         `    <loc>${xml(`${basis}/blog/${beitrag.slug}`)}</loc>`,
+        ...alternativen(`/blog/${beitrag.slug}`),
         datum ? `    <lastmod>${datum}</lastmod>` : null,
         "  </url>",
       ]
@@ -105,7 +146,12 @@ export async function GET(): Promise<Response> {
   // /blog-Seite in der Sitemap ist eine Adresse ohne Inhalt.
   if ((daten.posts ?? []).length > 0) {
     eintraege.push(
-      ["  <url>", `    <loc>${xml(`${basis}/blog`)}</loc>`, "  </url>"].join(
+      [
+        "  <url>",
+        `    <loc>${xml(`${basis}/blog`)}</loc>`,
+        ...alternativen("/blog"),
+        "  </url>",
+      ].join(
         "\n",
       ),
     );
@@ -116,7 +162,13 @@ export async function GET(): Promise<Response> {
     daten.abgeschnitten
       ? "<!-- Diese Sitemap ist bei 5000 Adressen abgeschnitten. -->"
       : null,
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    // Der `xhtml`-Namensraum ist Pflicht, sobald `<xhtml:link>` vorkommt —
+    // ohne ihn ist die Datei kein gültiges XML und Google verwirft sie
+    // vollständig. Er steht auch dann da, wenn die Website nur eine Sprache
+    // führt: ein unbenutzter Namensraum kostet nichts, ein fehlender kostet
+    // die ganze Sitemap.
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"' +
+      ' xmlns:xhtml="http://www.w3.org/1999/xhtml">',
   ]
     .filter(Boolean)
     .join("\n");

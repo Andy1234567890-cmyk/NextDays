@@ -134,6 +134,14 @@ export type SiteBranding = {
    *  oder das Firmenprofil keinen Namen führt — dann liefert der Renderer kein
    *  Schema statt eines mit leeren Feldern. */
   organization: SiteOrganization | null;
+  /** Pflicht-Bildnachweise der Stock-Fotos dieser Site (Unsplash/Pexels).
+   *
+   *  OPTIONAL, weil ein Backend ohne dieses Feld noch im Umlauf sein kann —
+   *  fehlt es, ist die Antwort „diese Site hat keine nachweispflichtigen
+   *  Bilder", also eine LEERE Liste. Kein Ersatzwert, keine erfundene Zeile
+   *  (Wurzel 4): einen Nachweis zu erfinden wäre eine Falschaussage über den
+   *  Urheber, und ihn wegzulassen ist genau das, was das Backend hier sagt. */
+  image_credits?: Bildnachweis[] | null;
   /** Kann dieser Betrieb online Geld annehmen (Stripe abrechnungsfähig oder
    *  PayPal hinterlegt)?
    *
@@ -141,6 +149,34 @@ export type SiteBranding = {
    *  Geheimnis: ob eine Website eine Zahlung annimmt, sieht jeder, der sie
    *  benutzt — es steht kein Kontostand und keine Kennung darin. */
   payments_ready: boolean;
+};
+
+/** Ein Bildnachweis, wie ihn der öffentliche Resolver liefert
+ *  (`PublicBildnachweis` im Backend).
+ *
+ *  Er hängt an der BILDADRESSE und nicht an einem Block: welches Bildfeld
+ *  welchen Blocks das Foto zeigt, weiß der Baukasten nicht — und soll es auch
+ *  nicht wissen müssen, damit ein neuer Blocktyp den Nachweis nicht verliert.
+ *  Nachgeschlagen wird deshalb in `lib/bildnachweis.ts` über die Adresse.
+ *
+ *  Bei Unsplash ist die Nennung VERTRAGSPFLICHT, nicht Höflichkeit: wir
+ *  schließen die API-Bedingungen im Namen des Kunden ab, also muss der Nachweis
+ *  im gerenderten Auftritt stehen, nicht nur im Editor.
+ *
+ *  `photographer_url`/`provider_url` tragen die utm-Parameter bereits — sie
+ *  werden hier NICHT angehängt oder ergänzt, sonst gäbe es zwei Stellen, die
+ *  über dieselbe Adresse entscheiden. */
+export type Bildnachweis = {
+  /** Die Bildadresse — der Schlüssel, über den nachgeschlagen wird. */
+  url: string;
+  /** Anzeigename des Fotografen. */
+  photographer: string;
+  /** Profil des Fotografen, inkl. utm-Parametern. */
+  photographer_url: string;
+  /** Anzeigename der Quelle: „Unsplash" oder „Pexels". */
+  provider: string;
+  /** Startseite der Quelle, inkl. utm-Parametern. */
+  provider_url: string;
 };
 
 /** Firmenangaben für strukturierte Daten (0430). Quelle ist das Firmenprofil

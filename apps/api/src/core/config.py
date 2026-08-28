@@ -117,6 +117,28 @@ class Settings(BaseSettings):
     # Der MCP-Endpunkt selbst (`/mcp`, Werkzeugaufrufe) bleibt bewusst im
     # Default: ein Gespräch macht viele Aufrufe, 20/60 würde es abwürgen.
     rate_limit_mcp_auth: str = "20/60"
+    # Stock-Foto-Suche des Website-Baukastens (0461). Jeder Aufruf geht an eine
+    # FREMDE API mit einem Kontingent, das WIR bezahlen bzw. das für alle
+    # Betriebe gemeinsam gilt: Pexels erlaubt 200 Anfragen je Stunde und 20 000
+    # je Monat. Im Default-Bucket (300/60) könnte ein einzelner eingeloggter
+    # Nutzer das Stundenkontingent in unter einer Minute leeren — und alle
+    # anderen Betriebe säßen vor einer Suche, die nichts findet.
+    # 20/60 reicht zum Tippen und Blättern und macht das Leerlaufen unmöglich.
+    rate_limit_stock: str = "20/60"
+    # NOCH STRENGER als `ai`: die KI-Endpunkte des Website-Baukastens
+    # (`/site-config/ki/...`). Zwei Gründe für einen EIGENEN Eimer statt des
+    # `ai`-Eimers (Wurzel 8):
+    #   • Ein einzelner Aufruf schickt bis zu 12 000 Zeichen Kontext an Vertex
+    #     AI und lässt bis zu 2 048 Tokens erzeugen — teurer als ein
+    #     Sprachassistent-Satz und teurer als eine Übersetzungszeile.
+    #   • Der Baukasten läuft im Browser mit einem Knopf je Textfeld. Ein
+    #     hängengebliebener Klick oder ein Skript kann ihn in Serie auslösen;
+    #     der `ai`-Eimer würde dabei zusätzlich den Sprachassistenten und die
+    #     Ankündigungs-Übersetzung mitreißen, die nichts damit zu tun haben.
+    # Das ist die Grenze JE IP/Minute. Die zweite, fachliche Grenze ist der
+    # Tagesdeckel JE BETRIEB (`ki_tageslimit_*`) — er ist die Zählung, auf der
+    # ein späteres Guthabensystem aufsetzt.
+    rate_limit_website_ki: str = "10/60"
     # AM STRENGSTEN: die 2FA-Verifikationspfade (Wurzel 8). Hier wird ein
     # Geheimnis GEPRUEFT — ein Wiederherstellungscode bzw. ein zweiter Faktor.
     # Der Default-Bucket (300/60) erlaubte 300 Rateversuche je Minute; das ist
@@ -262,9 +284,78 @@ class Settings(BaseSettings):
     # Groq (KI-Antwortvorschläge im Posteingang). Pydantic liest case-insensitiv,
     # daher passt auch der Env-Name `Groq_API_Key`.
     groq_api_key: SecretStr = SecretStr("")
+    # Stock-Foto-Anbieter des Website-Baukastens (0461). BEIDE optional: fehlt
+    # ein Schlüssel, erscheint der Anbieter gar nicht erst in der Oberfläche
+    # (`stock.verfuegbare_anbieter`). Das ist die ehrliche Fassung — eine
+    # Suchmaske anzubieten, die verlässlich in einen Fehler läuft, wäre
+    # schlechter als sie wegzulassen (Wurzel 4: kein erfundener Ersatz).
+    #
+    # Der Schlüssel darf NIE ins Frontend: alles, was der Browser sendet, kann
+    # jeder lesen, der die Entwicklerkonsole öffnet. Deshalb kein
+    # NEXT_PUBLIC_-Gegenstück — die Suche läuft über den Proxy in diesem Dienst.
+    pexels_api_key: SecretStr = SecretStr("")
+    unsplash_access_key: SecretStr = SecretStr("")
     # llama-3.3-70b-versatile wird von Groq stillgelegt (Deprecation 2026);
     # empfohlener Production-Nachfolger: openai/gpt-oss-120b.
     groq_model: str = "openai/gpt-oss-120b"
+
+    # --- Google Vertex AI (KI-Assistent des Website-Baukastens) -------------
+    # BEWUSST NICHT Groq und nicht OpenAI. Der Posteingang (`inbox/ai.py`)
+    # bleibt bei Groq und wird davon nicht berührt; hier geht es um Texte, die
+    # auf einer ÖFFENTLICHEN Kundenwebsite landen, und damit um zwei Fragen,
+    # die beim Antwortvorschlag im Posteingang nicht gestellt werden:
+    # Datenresidenz und EU-AI-Act-Kennzeichnung.
+    #
+    # Authentifizierung: Service-Account-Schlüssel als EINZEILIGES Base64 in
+    # der Umgebung, NIE eine Datei im Repo. Warum kein API-Key: Google
+    # dokumentiert, dass ein Vertex-Aufruf mit API-Key die konfigurierte Region
+    # still ignoriert und über den GLOBALEN Endpunkt läuft — und für den
+    # globalen Endpunkt gibt es ausdrücklich KEINE Zusage zum Ort der
+    # Verarbeitung. Ein API-Key wäre also genau die Art von stiller
+    # Fehlkonfiguration, die niemand bemerkt (Wurzel 5).
+    #
+    # Warum kein Workload Identity Federation: WIF tauscht ein Token einer
+    # vertrauenswürdigen Identitätsquelle (GitHub OIDC, AWS, Azure AD) gegen
+    # ein Google-Token. Wir laufen auf Hetzner unter Coolify — dort gibt es
+    # keine solche Quelle. Ein WIF-Aufbau bräuchte erst einen eigenen
+    # OIDC-Aussteller; das Ergebnis wäre ein zusätzliches Geheimnis (der
+    # Signierschlüssel des Ausstellers) statt eines ersetzten. Der
+    # Service-Account-Schlüssel ist hier der ehrlichere Weg: EIN Geheimnis, in
+    # der Coolify-Variablenliste, rotierbar, mit `roles/aiplatform.user` als
+    # einziger Rolle.
+    vertex_service_account_b64: SecretStr = SecretStr("")
+    # Projekt, in dem `aiplatform.googleapis.com` aktiviert ist.
+    vertex_project_id: str = ""
+    # EU-Region. europe-west4 (Niederlande) und nicht europe-west1 (Belgien):
+    # Googles Datenresidenz-Seite führt die Gemini-Modelle in einer Tabelle je
+    # Region auf, und in dieser Tabelle steht europe-west4, europe-west3,
+    # europe-west2 und europe-west9 — europe-west1 kommt dort nur als
+    # allgemeines BEISPIEL für einen regionalen Endpunkt vor, nicht in der
+    # Modelltabelle. Belegt wäre die Zusage für Belgien also nicht, für die
+    # Niederlande schon.
+    #
+    # Wortlaut der Zusage (docs.cloud.google.com/vertex-ai/generative-ai/docs/
+    # learn/data-residency, gelesen am 25.08.2026): „Locational endpoints:
+    # These endpoints (like us-central1, europe-west1) ensure that ML
+    # processing remains entirely within the broader multi-regional or country
+    # jurisdiction associated with that region." Zu lesen ist das genau so, wie
+    # es dasteht — zugesagt ist die JURISDIKTION (EU), nicht das Rechenzentrum
+    # in Amsterdam. Für Art. 44 ff. DSGVO ist das die Aussage, auf die es
+    # ankommt; „die Daten bleiben in den Niederlanden" wäre eine Behauptung,
+    # die dieser Satz nicht deckt (Wurzel 4).
+    vertex_location: str = "europe-west4"
+    # Gemini 2.5 Flash für alles, was der Baukasten tut. Kurze Texte, viele
+    # Aufrufe, sofortige Antwort erwartet — Pro kostet ein Vielfaches und
+    # denkt bei „kürze diesen Absatz" über nichts nach, was Flash nicht auch
+    # weiß. Änderbar per Umgebung, falls ein Betrieb Pro will.
+    vertex_model: str = "gemini-2.5-flash"
+    # Wie viele KI-Aufrufe ein BETRIEB je Kalendertag machen darf. Kein
+    # Guthabensystem in dieser Runde — aber die Zählung dahinter
+    # (`site_ai_usage`) ist so angelegt, dass ein späteres Guthaben genau
+    # darauf aufsetzen kann. Erreicht ein Betrieb den Deckel, sagt die Antwort
+    # das LAUT (429 mit Grund und Zählerstand); es wird nichts still gekürzt
+    # und kein leerer Text zurückgegeben (Wurzel 5).
+    ki_tageslimit_je_tenant: int = 200
 
     # --- Channex (Channel-Manager / OTA-Distribution) ---
     # base_url default = Staging; für Produktion auf https://app.channex.io/api/v1.

@@ -20,8 +20,19 @@ async function forward(req: NextRequest, path: string[]): Promise<NextResponse> 
   //            if (token) headers.Authorization = `Bearer ${token}`;
 
   const method = req.method.toUpperCase();
+  // Der Körper geht als BYTES weiter, nicht als Text (0445).
+  //
+  // `req.text()` dekodiert den Körper als UTF-8. Bei JSON ist das folgenlos, bei
+  // einem `multipart/form-data` mit einer JPEG- oder PDF-Datei darin NICHT:
+  // jedes Byte, das keine gültige UTF-8-Sequenz ist, wird zu U+FFFD, und beim
+  // Zurückschreiben kommt eine ANDERE Datei heraus. Sie erreichte das Backend
+  // sogar — nur wären die Anfangsbytes zerstört, die Magic-Byte-Prüfung
+  // schlüge fehl, und der Gast läse „Nur Bilder und PDF sind möglich", obwohl
+  // er genau das geschickt hat.
   const body =
-    method === "GET" || method === "HEAD" ? undefined : await req.text();
+    method === "GET" || method === "HEAD"
+      ? undefined
+      : await req.arrayBuffer();
 
   let res: Response;
   try {
@@ -35,7 +46,15 @@ async function forward(req: NextRequest, path: string[]): Promise<NextResponse> 
 
   const respContentType = res.headers.get("content-type") ?? "";
   const text = await res.text();
-  return new NextResponse(text, {
+  // 204/205/304 tragen KEINEN Rumpf. Ihn trotzdem an `new NextResponse` zu
+  // geben ist ein Fehler in der Laufzeit ("Response with null body status
+  // cannot have body"), und der kommt beim Aufrufer als 500 an — obwohl das
+  // Backend erfolgreich war. Jedes DELETE über diesen Weg meldete deshalb
+  // einen Serverfehler und hatte trotzdem gelöscht: die Oberfläche zeigte den
+  // Fehler, die Zeile war weg (Wurzel 5 — ein Erfolg, der wie ein Fehler
+  // aussieht, ist so schlimm wie umgekehrt).
+  const ohneRumpf = res.status === 204 || res.status === 205 || res.status === 304;
+  return new NextResponse(ohneRumpf ? null : text, {
     status: res.status,
     headers: { "content-type": respContentType || "application/json" },
   });

@@ -16,6 +16,8 @@ import { loadStripe, type Stripe } from "@stripe/stripe-js";
 import { useEffect, useState } from "react";
 
 import { ladeZahlungsIntent } from "@/lib/buchung";
+import { mitSprache } from "@/lib/sprache";
+import { texte } from "@/lib/texte";
 
 type Phase =
   | { kind: "loading" }
@@ -35,18 +37,53 @@ function stripePromise(key: string): Promise<Stripe | null> {
 
 export function StripeCheckout({
   reservationId,
+  clientSecret,
+  publishableKey,
   depositHint,
   onPaid,
+  sprache = "en",
 }: {
+  /**
+   * Die Reservierung — oder, seit „Zahlung zuerst" (0409), die Buchungsabsicht.
+   * Nur noch nötig, wenn kein `clientSecret` mitkommt.
+   */
   reservationId: string;
+  /**
+   * Zahlungsdaten, die der Buchungsaufruf bereits geliefert hat (0409). Sind
+   * sie gesetzt, wird NICHT nachgeladen: Für eine Buchungsabsicht gibt es noch
+   * keine Reservierung, gegen die `/payments/booking/{id}/intent` laufen
+   * könnte — der Aufruf liefe in einen 404.
+   */
+  clientSecret?: string | null;
+  publishableKey?: string | null;
   depositHint?: string | null;
   onPaid?: () => void;
+  /**
+   * Sprache der Website. Der Renderer hat pro Request genau EINE (siehe
+   * lib/texte.ts) und reicht sie durch — ohne sie standen die fünf Texte hier
+   * deutsch im Markup jeder Kundenwebsite, auch der dänischen.
+   */
+  sprache?: string;
 }) {
+  const t = texte(sprache);
   const [phase, setPhase] = useState<Phase>({ kind: "loading" });
 
   useEffect(() => {
     let active = true;
     (async () => {
+      // Direkt bezahlen, wenn der Buchungsaufruf die Daten schon mitgebracht
+      // hat (der Normalfall seit 0409).
+      if (clientSecret) {
+        // Ohne veröffentlichbaren Schlüssel kann Stripe.js nicht laden. Das ist
+        // ein Konfigurationsfehler des Servers und wird als solcher gemeldet,
+        // statt mit einem leeren Formular zu enden (Wurzel 4/5).
+        if (!publishableKey) {
+          setPhase({ kind: "error", msg: t.zahlungNichtKonfiguriert });
+          return;
+        }
+        setPhase({ kind: "ready", clientSecret, publishableKey });
+        return;
+      }
       const res = await ladeZahlungsIntent(reservationId);
       if (!active) return;
       if (res.ok) {
@@ -62,13 +99,13 @@ export function StripeCheckout({
     return () => {
       active = false;
     };
-  }, [reservationId]);
+  }, [reservationId, clientSecret, publishableKey, t]);
 
   if (phase.kind === "loading") {
     return (
       <div className="flex items-center gap-2 py-6 text-muted-foreground">
         <Icon icon="ph:spinner" className="size-5 animate-spin" />
-        Zahlung wird vorbereitet…
+        {t.zahlungVorbereiten}
       </div>
     );
   }
@@ -85,7 +122,7 @@ export function StripeCheckout({
   if (!phase.publishableKey) {
     return (
       <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-        Zahlung derzeit nicht möglich (Konfiguration unvollständig).
+        {t.zahlungNichtKonfiguriert}
       </div>
     );
   }
@@ -101,7 +138,7 @@ export function StripeCheckout({
         },
       }}
     >
-      <PayForm depositHint={depositHint} onPaid={onPaid} />
+      <PayForm depositHint={depositHint} onPaid={onPaid} sprache={sprache} />
     </Elements>
   );
 }
@@ -109,10 +146,14 @@ export function StripeCheckout({
 function PayForm({
   depositHint,
   onPaid,
+  sprache,
 }: {
   depositHint?: string | null;
   onPaid?: () => void;
+  /** Sprache der Website — durchgereicht, nicht neu ermittelt. */
+  sprache: string;
 }) {
+  const t = texte(sprache);
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
@@ -130,13 +171,21 @@ function PayForm({
     const { error: err } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/checkout/abgeschlossen`,
+        // Die Sprache mit in den Rücksprung: nach einem Redirect-Verfahren
+        // (iDEAL, Giropay) kommt der Gast auf einer FRISCHEN Anfrage zurück,
+        // die von der vorherigen Seite nichts weiß. Ohne `lang` stünde die
+        // Bestätigung — der letzte Eindruck der Buchung — in der
+        // Standardsprache.
+        return_url: mitSprache(
+          `${window.location.origin}/checkout/abgeschlossen`,
+          sprache,
+        ),
       },
       redirect: "if_required",
     });
     setSubmitting(false);
     if (err) {
-      setError(err.message ?? "Zahlung fehlgeschlagen.");
+      setError(err.message ?? t.zahlungFehlgeschlagen);
       return;
     }
     // Bestätigung ok — der endgültige „bezahlt"-Status kommt per Webhook.
@@ -148,7 +197,7 @@ function PayForm({
     return (
       <div className="rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900">
         <Icon icon="ph:check-circle" className="mr-1 inline size-4" />
-        Zahlung erhalten — deine Buchung wird bestätigt. Du erhältst eine E-Mail.
+        {t.zahlungErhalten}
       </div>
     );
   }
@@ -178,7 +227,7 @@ function PayForm({
         ) : (
           <Icon icon="ph:lock-simple" className="size-5" />
         )}
-        Jetzt bezahlen
+        {t.zahlungJetzt}
       </button>
     </div>
   );
