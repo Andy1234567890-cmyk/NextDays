@@ -38,6 +38,11 @@ from .schemas import (
     WhatsAppStatus,
 )
 from .templates import rollout
+from .vorlagen_felder import (
+    VorlagenFeldFehler,
+    nach_katalog,
+    nach_meta,
+)
 
 log = get_logger("nextdays.whatsapp")
 
@@ -187,51 +192,126 @@ class WhatsAppService:
         """
         db, tenant_id = self._require(ctx)
         try:
-            return self._client_fuer(db, tenant_id).list_templates()
+            vorlagen = self._client_fuer(db, tenant_id).list_templates()
         except WhatsAppError as exc:
             raise WhatsAppServiceError(
                 exc.message, status_code=exc.status_code
             ) from exc
+        # Metas {{1}} zurück in {{guest_first_name}}: der Betrieb hat nie eine
+        # andere Schreibweise gesehen und soll auch keine zu sehen bekommen.
+        zuordnung = self._felder_lesen(db, tenant_id)
+        for vorlage in vorlagen:
+            reihenfolge = zuordnung.get(
+                (vorlage.get("name", ""), vorlage.get("language", "")), []
+            )
+            for komponente in vorlage.get("components") or []:
+                if (
+                    komponente.get("type", "").upper() == "BODY"
+                    and komponente.get("text")
+                ):
+                    komponente["text"] = nach_katalog(
+                        komponente["text"], reihenfolge
+                    )
+        return vorlagen
 
     # --- Vorlagen anlegen/ändern/löschen (Meta prüft jede Änderung neu) -----
     @staticmethod
-    def _pruefe_vorlagentext(text: str, beispiele: list[str]) -> list[str]:
+    def _pruefe_vorlagentext(text: str) -> list[str]:
         """Metas Textregeln vorab prüfen, statt auf die Ablehnung zu warten.
 
         Beim ersten Ausrollen unseres eigenen Satzes hat Meta sechs Vorlagen
         abgelehnt — an genau diesen beiden Regeln. Sie stehen in keiner
-        Fehlermeldung, sondern nur in der Ablehnungs-Mail, Tage später. Deshalb
-        hier, wo der Text entsteht.
+        Fehlermeldung, sondern nur in der Ablehnung, Tage später. Deshalb hier,
+        wo der Text entsteht.
+
+        Geprüft wird der Text in UNSERER Schreibweise ({{guest_first_name}}),
+        denn das ist der, den der Betrieb vor sich hat; die Umschrift in Metas
+        Positionen ändert an Anfang und Ende nichts.
         """
         fehler: list[str] = []
-        gestutzt = text.strip()
+        gestutzt = (text or "").strip()
         if not gestutzt:
-            fehler.append("Der Text darf nicht leer sein.")
-            return fehler
-        platzhalter = re.findall(r"\{\{\s*(\d+)\s*\}\}", gestutzt)
-        if platzhalter:
-            if gestutzt.startswith("{{"):
-                fehler.append(
-                    "Der Text darf nicht mit einem Platzhalter beginnen — "
-                    "Meta lehnt das ab."
-                )
-            if gestutzt.endswith("}}"):
-                fehler.append(
-                    "Nach dem letzten Platzhalter muss noch Text folgen; ein "
-                    "Satzpunkt allein genügt Meta nicht."
-                )
-            nummern = sorted({int(n) for n in platzhalter})
-            if nummern != list(range(1, len(nummern) + 1)):
-                fehler.append(
-                    "Die Platzhalter müssen lückenlos bei {{1}} beginnen und "
-                    "aufsteigend nummeriert sein."
-                )
-            if len(beispiele) != len(nummern):
-                fehler.append(
-                    f"Meta verlangt zu jedem Platzhalter einen Beispielwert: "
-                    f"{len(nummern)} Platzhalter, {len(beispiele)} Beispiele."
-                )
+            return ["Der Text darf nicht leer sein."]
+        if gestutzt.startswith("{{"):
+            fehler.append(
+                "Der Text darf nicht mit einem Platzhalter beginnen — "
+                "Meta lehnt das ab."
+            )
+        if gestutzt.endswith("}}"):
+            fehler.append(
+                "Nach dem letzten Platzhalter muss noch Text folgen; ein "
+                "Satzpunkt allein genügt Meta nicht."
+            )
         return fehler
+
+    def _felder_speichern(
+        self,
+        db: Client,
+        tenant_id: str,
+        name: str,
+        sprache: str,
+        reihenfolge: list[str],
+    ) -> None:
+        """Die Zuordnung Position → Feld sichern (Migration 0489).
+
+        Meta speichert sie nicht. Vorher die alten Zeilen löschen, sonst bliebe
+        nach dem Kürzen eines Textes eine Position stehen, die es nicht mehr
+        gibt — der Gegenzustand zur Änderung (Wurzel 1).
+        """
+        db.table("whatsapp_template_field").delete().eq(
+            "tenant_id", tenant_id
+        ).eq("template_name", name).eq("language", sprache).execute()
+        if reihenfolge:
+            db.table("whatsapp_template_field").insert(
+                [
+                    {
+                        "tenant_id": tenant_id,
+                        "template_name": name,
+                        "language": sprache,
+                        "position": i + 1,
+                        "field_key": feld,
+                    }
+                    for i, feld in enumerate(reihenfolge)
+                ]
+            ).execute()
+
+    def _felder_lesen(
+        self, db: Client, tenant_id: str
+    ) -> dict[tuple[str, str], list[str]]:
+        """Alle Zuordnungen des Betriebs, je (Vorlage, Sprache) nach Position."""
+        zeilen = (
+            db.table("whatsapp_template_field")
+            .select("template_name, language, position, field_key")
+            .eq("tenant_id", tenant_id)
+            .execute()
+        ).data or []
+        gesammelt: dict[tuple[str, str], list[tuple[int, str]]] = {}
+        for z in zeilen:
+            gesammelt.setdefault(
+                (z["template_name"], z["language"]), []
+            ).append((z["position"], z["field_key"]))
+        return {k: [feld for _, feld in sorted(v)] for k, v in gesammelt.items()}
+
+    def _komponenten(
+        self, body: str, footer: str | None
+    ) -> tuple[list[dict], list[str]]:
+        """Unseren Vorlagentext in Metas Komponenten übersetzen.
+
+        Rückgabe zusätzlich die Feldreihenfolge — sie ist das Wissen, das Meta
+        nicht speichert und das ohne uns verloren wäre.
+        """
+        if fehler := self._pruefe_vorlagentext(body):
+            raise WhatsAppServiceError(" ".join(fehler), status_code=422)
+        try:
+            meta_text, reihenfolge, beispiele = nach_meta(body)
+        except VorlagenFeldFehler as exc:
+            raise WhatsAppServiceError(str(exc), status_code=422) from exc
+        komponenten: list[dict] = [{"type": "BODY", "text": meta_text.strip()}]
+        if beispiele:
+            komponenten[0]["example"] = {"body_text": [beispiele]}
+        if footer and footer.strip():
+            komponenten.append({"type": "FOOTER", "text": footer.strip()})
+        return komponenten, reihenfolge
 
     def create_template(
         self,
@@ -241,10 +321,14 @@ class WhatsAppService:
         language: str,
         category: str,
         body: str,
-        examples: list[str] | None = None,
         footer: str | None = None,
     ) -> dict:
-        """Eine neue Vorlage in der WABA des Betriebs anlegen."""
+        """Eine neue Vorlage in der WABA des Betriebs anlegen.
+
+        ``body`` kommt in UNSERER Schreibweise ({{guest_first_name}}) und wird
+        hier in Metas Positionen übersetzt — die einzige Stelle, an der beide
+        Formen aufeinandertreffen.
+        """
         db, tenant_id = self._require(ctx)
         schluessel = (name or "").strip().lower()
         if not re.fullmatch(r"[a-z0-9_]{1,512}", schluessel):
@@ -253,16 +337,9 @@ class WhatsAppService:
                 "enthalten (Metas Vorgabe).",
                 status_code=422,
             )
-        beispiele = [b for b in (examples or []) if b.strip()]
-        if fehler := self._pruefe_vorlagentext(body, beispiele):
-            raise WhatsAppServiceError(" ".join(fehler), status_code=422)
-        komponenten: list[dict] = [{"type": "BODY", "text": body.strip()}]
-        if beispiele:
-            komponenten[0]["example"] = {"body_text": [beispiele]}
-        if footer and footer.strip():
-            komponenten.append({"type": "FOOTER", "text": footer.strip()})
+        komponenten, reihenfolge = self._komponenten(body, footer)
         try:
-            return self._client_fuer(db, tenant_id).create_template(
+            ergebnis = self._client_fuer(db, tenant_id).create_template(
                 {
                     "name": schluessel,
                     "language": language,
@@ -274,55 +351,64 @@ class WhatsAppService:
             raise WhatsAppServiceError(
                 exc.message, status_code=exc.status_code
             ) from exc
+        # Erst nach Metas Zusage speichern: eine Zuordnung zu einer Vorlage,
+        # die es dort nicht gibt, wäre eine Karteileiche.
+        self._felder_speichern(db, tenant_id, schluessel, language, reihenfolge)
+        return ergebnis
 
     def update_template(
         self,
         ctx: AuthContext,
         *,
         template_id: str,
+        name: str,
+        language: str,
         body: str,
-        examples: list[str] | None = None,
         footer: str | None = None,
     ) -> dict:
         """Text einer vorhandenen Vorlage ändern.
 
         Metas Update ersetzt ALLE Komponenten. Die Fußzeile wird deshalb
         mitgeschickt: wer sie wegließe, verlöre sie ohne Fehlermeldung
-        (Wurzel 1 — die Gegenseite der Änderung mitpflegen).
+        (Wurzel 1). Name und Sprache dienen nur dem Wiederfinden der
+        Feld-Zuordnung — ändern lassen sie sich bei Meta ohnehin nicht.
         """
         db, tenant_id = self._require(ctx)
-        beispiele = [b for b in (examples or []) if b.strip()]
-        if fehler := self._pruefe_vorlagentext(body, beispiele):
-            raise WhatsAppServiceError(" ".join(fehler), status_code=422)
-        komponenten: list[dict] = [{"type": "BODY", "text": body.strip()}]
-        if beispiele:
-            komponenten[0]["example"] = {"body_text": [beispiele]}
-        if footer and footer.strip():
-            komponenten.append({"type": "FOOTER", "text": footer.strip()})
+        komponenten, reihenfolge = self._komponenten(body, footer)
         try:
-            return self._client_fuer(db, tenant_id).update_template(
+            ergebnis = self._client_fuer(db, tenant_id).update_template(
                 template_id, komponenten
             )
         except WhatsAppError as exc:
             raise WhatsAppServiceError(
                 exc.message, status_code=exc.status_code
             ) from exc
+        self._felder_speichern(db, tenant_id, name, language, reihenfolge)
+        return ergebnis
 
     def delete_template(
         self, ctx: AuthContext, *, name: str, template_id: str | None = None
     ) -> dict:
         """Eine Vorlage löschen (mit ID genau diese Sprachfassung)."""
         db, tenant_id = self._require(ctx)
-        if not (name or "").strip():
+        gestutzt = (name or "").strip()
+        if not gestutzt:
             raise WhatsAppServiceError("Name der Vorlage fehlt.", status_code=422)
         try:
-            return self._client_fuer(db, tenant_id).delete_template(
-                name.strip(), template_id=template_id
+            ergebnis = self._client_fuer(db, tenant_id).delete_template(
+                gestutzt, template_id=template_id
             )
         except WhatsAppError as exc:
             raise WhatsAppServiceError(
                 exc.message, status_code=exc.status_code
             ) from exc
+        # Gegenzustand: die Feld-Zuordnung der gelöschten Vorlage mitnehmen,
+        # sonst bleibt sie liegen und trifft später eine gleichnamige neue
+        # Vorlage mit einer falschen Reihenfolge (Wurzel 1).
+        db.table("whatsapp_template_field").delete().eq(
+            "tenant_id", tenant_id
+        ).eq("template_name", gestutzt).execute()
+        return ergebnis
 
     def rollout_templates(self, ctx: AuthContext) -> dict:
         """Den Vorlagensatz in die WABA des Betriebs ausrollen (idempotent).

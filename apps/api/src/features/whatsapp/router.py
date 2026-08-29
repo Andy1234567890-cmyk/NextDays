@@ -168,7 +168,6 @@ def create_template(
             language=payload.language,
             category=payload.category,
             body=payload.body,
-            examples=payload.examples,
             footer=payload.footer,
         )
     except WhatsAppServiceError as exc:
@@ -187,8 +186,9 @@ def update_template(
         return service.update_template(
             ctx,
             template_id=template_id,
+            name=payload.name,
+            language=payload.language,
             body=payload.body,
-            examples=payload.examples,
             footer=payload.footer,
         )
     except WhatsAppServiceError as exc:

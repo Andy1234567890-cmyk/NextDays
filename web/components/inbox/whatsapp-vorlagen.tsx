@@ -27,11 +27,12 @@
 //     Fassung weiter.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
+import { FeldPicker } from "@/components/inbox/feld-picker";
 import {
   createWhatsAppTemplate,
   deleteWhatsAppTemplate,
@@ -68,17 +69,6 @@ function textVon(tpl: WhatsAppTemplate, typ: "BODY" | "FOOTER"): string {
   return tpl.components?.find((c) => c.type?.toUpperCase() === typ)?.text ?? "";
 }
 
-/** Die Beispielwerte, die Meta zu jedem Platzhalter verlangt. Sie stecken in
- *  `example.body_text` als EINE Zeile mit je einem Wert pro Platzhalter. */
-function beispieleVon(tpl: WhatsAppTemplate): string[] {
-  const body = tpl.components?.find((c) => c.type?.toUpperCase() === "BODY");
-  return body?.example?.body_text?.[0] ?? [];
-}
-
-function platzhalterZaehlen(text: string): number {
-  return new Set(text.match(/\{\{\s*\d+\s*\}\}/g) ?? []).size;
-}
-
 const LEER = {
   name: "",
   language: "de",
@@ -104,8 +94,29 @@ export function WhatsAppVorlagen() {
     body: string;
     footer: string;
   }>(LEER);
-  const [beispiele, setBeispiele] = useState<string[]>([]);
   const [fehler, setFehler] = useState<string | null>(null);
+  const textfeld = useRef<HTMLTextAreaElement | null>(null);
+
+  /** Platzhalter an der Cursorposition einsetzen, nicht am Ende: sie stehen
+   *  fast immer mitten im Satz („Hallo {{guest_first_name}},"). */
+  function platzhalterEinfuegen(platzhalter: string) {
+    const feld = textfeld.current;
+    if (!feld) {
+      setForm((f) => ({ ...f, body: f.body + platzhalter }));
+      return;
+    }
+    const start = feld.selectionStart ?? feld.value.length;
+    const ende = feld.selectionEnd ?? start;
+    const neu = feld.value.slice(0, start) + platzhalter + feld.value.slice(ende);
+    setForm((f) => ({ ...f, body: neu }));
+    // Cursor hinter den eingefügten Platzhalter — sonst tippt man beim
+    // Weiterschreiben mitten hinein.
+    requestAnimationFrame(() => {
+      feld.focus();
+      const pos = start + platzhalter.length;
+      feld.setSelectionRange(pos, pos);
+    });
+  }
 
   const laden = useCallback(async () => {
     const res = await listWhatsAppTemplates();
@@ -122,23 +133,9 @@ export function WhatsAppVorlagen() {
     void laden();
   }, [laden]);
 
-  // Die Zahl der Beispielfelder folgt dem Text: schreibt jemand einen
-  // Platzhalter dazu, verlangt Meta sofort auch einen Beispielwert dafür.
-  // Vorhandene Eingaben bleiben erhalten, damit Tippen im Text sie nicht
-  // wegwirft.
-  useEffect(() => {
-    const anzahl = platzhalterZaehlen(form.body);
-    setBeispiele((prev) =>
-      anzahl === prev.length
-        ? prev
-        : Array.from({ length: anzahl }, (_, i) => prev[i] ?? ""),
-    );
-  }, [form.body]);
-
   function reset() {
     setEditing(null);
     setForm(LEER);
-    setBeispiele([]);
     setFehler(null);
   }
 
@@ -151,20 +148,19 @@ export function WhatsAppVorlagen() {
       body: textVon(tpl, "BODY"),
       footer: textVon(tpl, "FOOTER"),
     });
-    setBeispiele(beispieleVon(tpl));
     setFehler(null);
   }
 
   async function speichern() {
     setFehler(null);
     setLaeuft(true);
-    const gemeinsam = {
-      body: form.body,
-      examples: beispiele,
-      footer: form.footer || null,
-    };
+    const gemeinsam = { body: form.body, footer: form.footer || null };
     const res = editing
-      ? await updateWhatsAppTemplate(editing.id, gemeinsam)
+      ? await updateWhatsAppTemplate(editing.id, {
+          ...gemeinsam,
+          name: editing.name,
+          language: editing.language,
+        })
       : await createWhatsAppTemplate({
           ...gemeinsam,
           name: form.name.trim().toLowerCase().replace(/\s+/g, "_"),
@@ -371,6 +367,7 @@ export function WhatsAppVorlagen() {
 
         <textarea
           className="min-h-40 w-full rounded-(--radius) border border-input bg-background p-3 text-sm"
+          ref={textfeld}
           value={form.body}
           onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
           placeholder={t("waTemplateBody")}
@@ -380,28 +377,10 @@ export function WhatsAppVorlagen() {
           {t("waTemplateBodyHint")}
         </p>
 
-        {/* Zu jedem Platzhalter ein Beispielwert — ohne sie lehnt Meta die
-            Vorlage ohne weitere Erklärung ab. */}
-        {beispiele.length > 0 && (
-          <div className="flex flex-col gap-2">
-            <p className="text-xs font-semibold">{t("waTemplateExamples")}</p>
-            {beispiele.map((wert, i) => (
-              <Input
-                // Die Position IST die Identität: {{1}} bleibt {{1}}, auch wenn
-                // der Wert wechselt.
-                // eslint-disable-next-line react/no-array-index-key
-                key={i}
-                value={wert}
-                onChange={(e) =>
-                  setBeispiele((prev) =>
-                    prev.map((x, j) => (j === i ? e.target.value : x)),
-                  )
-                }
-                placeholder={`{{${i + 1}}}`}
-              />
-            ))}
-          </div>
-        )}
+        {/* Derselbe Platzhalter-Katalog wie in Vorlagen und Automationen —
+            es gibt nur diesen einen. Metas positionelle Form ({{1}}) entsteht
+            erst beim Übertragen und ist hier bewusst nicht sichtbar. */}
+        <FeldPicker onInsert={platzhalterEinfuegen} />
 
         <Input
           value={form.footer}

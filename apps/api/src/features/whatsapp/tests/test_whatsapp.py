@@ -417,18 +417,49 @@ def test_vorlagentext_metas_regeln() -> None:
     """
     pruefe = WhatsAppService._pruefe_vorlagentext  # noqa: SLF001
 
-    # Variable am Anfang und am Ende: beides verboten.
-    assert pruefe("{{1}} guten Tag.", ["Anna"])
-    assert pruefe("Guten Tag {{1}}", ["Anna"])
-    # Nummerierung muss lueckenlos bei 1 beginnen.
-    assert pruefe("Hallo {{2}}, bis bald.", ["Anna"])
-    # Zu jedem Platzhalter ein Beispielwert.
-    assert pruefe("Hallo {{1}}, Ihr Zimmer {{2}} ist bereit.", ["Anna"])
-    # Leerer Text ist kein gueltiger Vorlagentext.
-    assert pruefe("   ", [])
-    # Sauberer Text mit passenden Beispielen: keine Beanstandung.
-    assert not pruefe(
-        "Hallo {{1}}, Ihr Zimmer {{2}} ist ab 15 Uhr bereit.", ["Anna", "12"]
+    assert pruefe("{{guest_first_name}}, guten Tag.")
+    assert pruefe("Guten Tag {{guest_first_name}}")
+    assert pruefe("   ")
+    assert not pruefe("Hallo {{guest_first_name}}, Ihr Zimmer ist bereit.")
+    assert not pruefe("Ihre Buchung ist bestaetigt.")
+
+
+def test_platzhalter_nur_aus_dem_katalog() -> None:
+    """Nur die benannten Felder des Katalogs sind erlaubt.
+
+    Ein erfundener Platzhalter wuerde bei Meta als Text durchgehen und beim Gast
+    woertlich ankommen — deshalb faellt er hier auf, solange der Autor noch
+    davorsitzt.
+    """
+    from src.features.whatsapp.vorlagen_felder import (
+        VorlagenFeldFehler,
+        nach_katalog,
+        nach_meta,
     )
-    # Ganz ohne Platzhalter braucht es keine Beispiele.
-    assert not pruefe("Ihre Buchung ist bestaetigt.", [])
+
+    text = (
+        "Hallo {{guest_first_name}}, Ihr Aufenthalt in {{property_name}} "
+        "ist bestaetigt."
+    )
+    meta_text, reihenfolge, beispiele = nach_meta(text)
+    assert meta_text == "Hallo {{1}}, Ihr Aufenthalt in {{2}} ist bestaetigt."
+    assert reihenfolge == ["guest_first_name", "property_name"]
+    assert len(beispiele) == 2
+    # Der Rueckweg stellt genau den Text des Betriebs wieder her.
+    assert nach_katalog(meta_text, reihenfolge) == text
+
+    with pytest.raises(VorlagenFeldFehler):
+        nach_meta("Hallo {{gibt_es_nicht}}, bis bald.")
+
+
+def test_platzhalter_doppelt_teilt_sich_die_position() -> None:
+    """Zweimal dasselbe Feld = EIN Parameter. Meta zaehlt Parameter, nicht
+    Vorkommen; ein zweiter waere nur eine weitere Stelle zum Auseinanderlaufen."""
+    from src.features.whatsapp.vorlagen_felder import nach_meta
+
+    meta_text, reihenfolge, beispiele = nach_meta(
+        "Hallo {{guest_first_name}}, bis bald {{guest_first_name}}!"
+    )
+    assert meta_text == "Hallo {{1}}, bis bald {{1}}!"
+    assert reihenfolge == ["guest_first_name"]
+    assert len(beispiele) == 1

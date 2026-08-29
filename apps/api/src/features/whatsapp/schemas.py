@@ -132,16 +132,20 @@ class TemplateCreate(BaseModel):
     name: str = Field(min_length=1, max_length=512)
     language: str = Field(min_length=2, max_length=10)
     category: Literal["UTILITY", "MARKETING", "AUTHENTICATION"] = "UTILITY"
+    # Text in UNSERER Schreibweise: {{guest_first_name}}. Metas positionelle
+    # Form entsteht erst beim Übertragen, die Beispielwerte ebenso.
     body: str = Field(min_length=1, max_length=1024)
-    # Zu jedem {{n}} ein Beispielwert — ohne sie lehnt Meta die Vorlage ab.
-    examples: list[str] = Field(default_factory=list, max_length=20)
     footer: str | None = Field(default=None, max_length=60)
 
 
 class TemplateUpdate(BaseModel):
     """Änderung einer Vorlage. Metas Update ERSETZT alle Komponenten, deshalb
-    gehört die Fußzeile mit in die Anfrage, auch wenn sie unverändert bleibt."""
+    gehört die Fußzeile mit in die Anfrage, auch wenn sie unverändert bleibt.
 
+    ``name`` und ``language`` sind nicht änderbar — sie stehen hier, weil die
+    Feld-Zuordnung an ihnen hängt und ohne sie nicht wiederzufinden wäre."""
+
+    name: str = Field(min_length=1, max_length=512)
+    language: str = Field(min_length=2, max_length=10)
     body: str = Field(min_length=1, max_length=1024)
-    examples: list[str] = Field(default_factory=list, max_length=20)
     footer: str | None = Field(default=None, max_length=60)

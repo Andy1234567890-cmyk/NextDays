@@ -178,24 +178,33 @@ export async function rolloutWhatsAppTemplates(): Promise<
 
 
 /** Eine eigene Vorlage anlegen. Meta prüft sie asynchron — sie erscheint
- *  danach mit Status PENDING in der Liste. */
+ *  danach mit Status PENDING in der Liste.
+ *
+ *  `body` trägt UNSERE Platzhalter ({{guest_first_name}}); Metas positionelle
+ *  Form und die Beispielwerte, die Meta zu jedem Platzhalter verlangt, entstehen
+ *  serverseitig. */
 export async function createWhatsAppTemplate(input: {
   name: string;
   language: string;
   category: "UTILITY" | "MARKETING" | "AUTHENTICATION";
   body: string;
-  examples: string[];
   footer?: string | null;
 }): Promise<Result<unknown>> {
   return call<unknown>("/templates/neu", { method: "POST", body: input });
 }
 
-/** Text einer Vorlage ändern. Name und Sprache sind bei Meta unveränderlich;
- *  die Fußzeile muss mitgeschickt werden, weil Metas Update alle Komponenten
+/** Text einer Vorlage ändern. Name und Sprache sind bei Meta unveränderlich —
+ *  sie gehen nur mit, damit der Server die Feld-Zuordnung wiederfindet. Die
+ *  Fußzeile muss mitgeschickt werden, weil Metas Update alle Komponenten
  *  ersetzt. */
 export async function updateWhatsAppTemplate(
   templateId: string,
-  input: { body: string; examples: string[]; footer?: string | null },
+  input: {
+    name: string;
+    language: string;
+    body: string;
+    footer?: string | null;
+  },
 ): Promise<Result<unknown>> {
   return call<unknown>(`/templates/${encodeURIComponent(templateId)}`, {
     method: "POST",
