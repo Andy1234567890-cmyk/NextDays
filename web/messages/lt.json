@@ -911,7 +911,9 @@
     "waTemplatePickHint": "Blokas bus įterptas į lauką. „WhatsApp“ leidžia nemokamus pranešimus tik per 24 valandas nuo paskutinio svečio pranešimo.",
     "waSendTemplateHint": "„Meta“ patvirtinti šablonai išsiunčiami tiesiogiai – net jei nuo paskutinio svečio pranešimo praėjo daugiau nei 24 valandos. „myNextDays“ užpildo informaciją iš rezervacijos.",
     "waSendTemplate": "Siųsti",
-    "waFormatMono": "Fiksuotas simbolių plotis"
+    "waFormatMono": "Fiksuotas simbolių plotis",
+    "badgeCalendar": "Kalendorius",
+    "badgeGuest": "Svečių kortelė"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp dar neprijungtas. Įveskite prisijungimo duomenis (Meta Cloud API) serverio nustatymuose, tada siuntimas bus aktyvus.",

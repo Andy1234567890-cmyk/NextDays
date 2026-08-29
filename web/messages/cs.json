@@ -911,7 +911,9 @@
     "waTemplatePickHint": "Blok bude vložen do pole. Bezplatné zprávy WhatsApp povoluje pouze do 24 hodin od poslední zprávy hosta.",
     "waSendTemplateHint": "Šablony ověřené společností Meta se odesílají přímo – i když od poslední zprávy hosta uplynulo více než 24 hodin. Údaje vyplňuje myNextDays z rezervace.",
     "waSendTemplate": "Odeslat",
-    "waFormatMono": "Pevná šířka znaku"
+    "waFormatMono": "Pevná šířka znaku",
+    "badgeCalendar": "Kalendář",
+    "badgeGuest": "Karta hosta"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp zatím není propojen. Zadejte přístupové údaje (Meta Cloud API) v nastavení serveru, poté bude odesílání aktivní.",

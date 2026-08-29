@@ -911,7 +911,9 @@
     "waTemplatePickHint": "O bloco de construção será inserido no campo. O WhatsApp só permite mensagens gratuitas dentro de 24 horas após a última mensagem do hóspede.",
     "waSendTemplateHint": "Os modelos verificados pela Meta são enviados diretamente — mesmo que mais de 24 horas tenham se passado desde a última mensagem do hóspede. O myNextDays preenche os dados da reserva.",
     "waSendTemplate": "Enviar",
-    "waFormatMono": "Largura fixa"
+    "waFormatMono": "Largura fixa",
+    "badgeCalendar": "Calendário",
+    "badgeGuest": "Cartão de hóspede"
   },
   "whatsapp": {
     "notConfigured": "O WhatsApp ainda não está ligado. Introduza as credenciais (Meta Cloud API) nas definições do servidor para ativar o envio.",

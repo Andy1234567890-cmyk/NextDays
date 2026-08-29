@@ -30,8 +30,10 @@ export function whatsAppToThread(c: WhatsAppConversation): InboxThread {
     // wenn der Chat einen echten Gastnamen statt der Rohnummer anzeigt.
     ota_reservation_code: c.wa_phone.replace(/\D/g, ""),
     guest_name: c.guest_name ?? `+${c.wa_phone}`,
-    // WhatsApp liefert kein Profilbild — die Initialen bleiben.
-    guest_avatar_url: null,
+    // WhatsApp selbst liefert kein Profilbild (die Cloud API gibt es nicht
+    // heraus). Was es gibt, ist das Bild des VERKNUEPFTEN Gastes — der aus
+    // der Buchung. Fehlt auch das, bleiben die Initialen.
+    guest_avatar_url: c.guest_avatar_url,
     guest_email: null,
     guest_phone: null,
     // WhatsApp führt keine Sprache des Gastes — null, kein geratener Wert.
@@ -67,6 +69,8 @@ export function whatsAppDraftThread(phone: string): InboxThread {
       id: `new:${phone}`,
       wa_phone: phone,
       guest_name: null,
+      // Neue Nummer, noch kein Gast und keine Buchung — also kein Bild.
+      guest_avatar_url: null,
       reservation_id: null,
       last_message: null,
       last_at: null,

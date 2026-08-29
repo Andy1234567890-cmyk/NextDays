@@ -911,7 +911,9 @@
     "waTemplatePickHint": "Plokk lisatakse väljale. WhatsApp lubab tasuta sõnumeid saata ainult 24 tunni jooksul pärast viimast külalise sõnumit.",
     "waSendTemplateHint": "Meta poolt heaks kiidetud mallid saadetakse otse välja – isegi kui viimasest külalise sõnumist on möödunud rohkem kui 24 tundi. myNextDays täidab andmed broneeringust.",
     "waSendTemplate": "Saada",
-    "waFormatMono": "Fikseeritud laiusega font"
+    "waFormatMono": "Fikseeritud laiusega font",
+    "badgeCalendar": "Kalender",
+    "badgeGuest": "Külalise kaart"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp pole veel ühendatud. Sisesta juurdepääsuandmed (Meta Cloud API) serveri seadetesse, siis on saatmine aktiivne.",

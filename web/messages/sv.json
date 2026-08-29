@@ -911,7 +911,9 @@
     "waTemplatePickHint": "Modulen infogas i fältet. WhatsApp tillåter endast fria meddelanden inom 24 timmar efter gästens senaste meddelande.",
     "waSendTemplateHint": "Mallar som godkänts av Meta skickas direkt – även om mer än 24 timmar har gått sedan gästens senaste meddelande. myNextDays fyller i informationen från bokningen.",
     "waSendTemplate": "Skicka",
-    "waFormatMono": "Fast teckenbredd"
+    "waFormatMono": "Fast teckenbredd",
+    "badgeCalendar": "Kalender",
+    "badgeGuest": "Gästkort"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp är ännu inte anslutet. Ange inloggningsuppgifterna (Meta Cloud API) i serverinställningarna, då är utskicket aktivt.",

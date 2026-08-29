@@ -600,23 +600,75 @@ class WhatsAppService:
         mask = load_guest_mask(db, ctx.user_id)
         res = (
             db.table("whatsapp_conversation")
-            .select("id, wa_phone, guest_name, reservation_id, last_message, last_at, is_read")
+            .select(
+                "id, wa_phone, guest_name, guest_id, reservation_id, "
+                "last_message, last_at, is_read"
+            )
             .eq("tenant_id", tenant_id)
             .order("last_at", desc=True)
             .limit(200)
             .execute()
         )
-        items = [
-            WhatsAppConversation(
-                id=c["id"], wa_phone=c["wa_phone"],
-                guest_name=mask.name(c.get("guest_name")),
-                reservation_id=c.get("reservation_id"),
-                last_message=c.get("last_message"), last_at=c.get("last_at"),
-                is_read=bool(c.get("is_read", True)),
+        zeilen = res.data or []
+        gaeste = self._gaeste_zu_konversationen(db, tenant_id, zeilen)
+        items = []
+        for c in zeilen:
+            gast = gaeste.get(str(c.get("guest_id") or ""))
+            # ZWEI Namensquellen, in dieser Reihenfolge: das WhatsApp-Profil
+            # (so nennt der Gast sich selbst), sonst der verknuepfte Gast aus
+            # der Buchung. Bis hierher gab es nur die erste — stand sie leer,
+            # zeigte die Liste die Rohnummer, obwohl der Name aus der Buchung
+            # bekannt war (live bei zwei von vier Konversationen).
+            name = c.get("guest_name") or (gast or {}).get("name")
+            items.append(
+                WhatsAppConversation(
+                    id=c["id"], wa_phone=c["wa_phone"],
+                    guest_name=mask.name(name),
+                    guest_avatar_url=(gast or {}).get("avatar_url"),
+                    reservation_id=c.get("reservation_id"),
+                    last_message=c.get("last_message"), last_at=c.get("last_at"),
+                    is_read=bool(c.get("is_read", True)),
+                )
             )
-            for c in (res.data or [])
-        ]
         return WhatsAppConversationList(items=items, total=len(items))
+
+    @staticmethod
+    def _gaeste_zu_konversationen(
+        db: Client, tenant_id: str, zeilen: list[dict]
+    ) -> dict[str, dict]:
+        """Name und Bild der verknuepften Gaeste — EIN Abruf fuer alle Zeilen.
+
+        Meta liefert im Webhook nur `wa_id` und `profile.name`, KEIN Bild (das
+        gibt die Cloud API nicht heraus). Was wir zeigen koennen, ist das Bild
+        des Gastes, den wir aus der Buchung ohnehin kennen.
+
+        Ein Abruf statt einer Abfrage je Zeile: bei 200 Konversationen waeren
+        das sonst 200 Rundreisen fuer zwei Felder.
+        """
+        ids = sorted({str(c["guest_id"]) for c in zeilen if c.get("guest_id")})
+        if not ids:
+            return {}
+        res = (
+            db.table("guests")
+            .select("id, first_name, last_name, avatar_url")
+            .eq("tenant_id", tenant_id)
+            .in_("id", ids)
+            .execute()
+        )
+        gaeste: dict[str, dict] = {}
+        for g in res.data or []:
+            teile = [
+                str(g.get("first_name") or "").strip(),
+                str(g.get("last_name") or "").strip(),
+            ]
+            name = " ".join(t for t in teile if t)
+            gaeste[str(g["id"])] = {
+                # Leerer Name bleibt None statt "" — sonst gewaenne ein
+                # namenloser Gast gegen den spaeteren Rueckfall auf die Nummer.
+                "name": name or None,
+                "avatar_url": g.get("avatar_url"),
+            }
+        return gaeste
 
     def list_messages(
         self, ctx: AuthContext, conversation_id: str
@@ -670,15 +722,30 @@ class WhatsAppService:
         ).data
         if existing:
             conv = existing[0]
+            patch: dict[str, object] = {}
             # Nachzügler: Gast verknüpfen, falls eine Alt-Konversation ohne
             # guest_id existiert (z. B. vor Einführung des Resolvers angelegt).
             if not conv.get("guest_id"):
                 guest_id = self._resolve_guest(db, tenant_id, wa_phone, guest_name)
                 if guest_id:
-                    db.table("whatsapp_conversation").update(
-                        {"guest_id": guest_id}
-                    ).eq("id", conv["id"]).execute()
-                    conv["guest_id"] = guest_id
+                    patch["guest_id"] = guest_id
+            # Namen NACHTRAGEN, nicht nur beim Anlegen (29.08.2026): bis hierher
+            # wurde `guest_name` ausschliesslich beim insert geschrieben. Stand
+            # er einmal leer — weil die Konversation aus einer AUSGEHENDEN
+            # Nachricht entstand, wo Meta keine `contacts` mitschickt —, blieb
+            # er es fuer immer, und die Liste zeigte dauerhaft die Rohnummer.
+            # Live waren so ALLE VIER Konversationen ohne Namen.
+            #
+            # Nur setzen, wenn Meta einen liefert UND er sich unterscheidet:
+            # ein leerer Wert darf einen vorhandenen nie ueberschreiben
+            # (Wurzel 1 — der Gegenzustand ist hier der schon bekannte Name).
+            if guest_name and guest_name != conv.get("guest_name"):
+                patch["guest_name"] = guest_name
+            if patch:
+                db.table("whatsapp_conversation").update(patch).eq(
+                    "id", conv["id"]
+                ).execute()
+                conv.update(patch)
             return conv
         # Neue Konversation: Gast zentral auflösen (Telefon-/Kanal-ID-Match).
         guest_id = self._resolve_guest(db, tenant_id, wa_phone, guest_name)

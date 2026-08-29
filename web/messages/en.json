@@ -911,7 +911,9 @@
     "waTemplatePickHint": "The building block is inserted into the field. WhatsApp only allows free messages within 24 hours of the last guest message.",
     "waSendTemplateHint": "Meta-approved templates are sent directly — even if more than 24 hours have passed since the last guest message. myNextDays fills in the details from the reservation.",
     "waSendTemplate": "Send",
-    "waFormatMono": "Fixed character width"
+    "waFormatMono": "Fixed character width",
+    "badgeCalendar": "Calendar",
+    "badgeGuest": "Guest card"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is not connected yet. Add the credentials (Meta Cloud API) in the server settings to activate sending.",

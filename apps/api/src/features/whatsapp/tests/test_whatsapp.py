@@ -68,6 +68,7 @@ class _Q:
         self._store = store
         self._name = name
         self._eq: dict = {}
+        self._in: dict = {}
         self._payload = None
         self._op = "select"
 
@@ -98,6 +99,10 @@ class _Q:
         # nur 'null'-Filter relevant; Resolver nutzt es nicht, no-op reicht.
         return self
 
+    def in_(self, c, werte):  # noqa: ANN001, ANN201
+        self._in[c] = list(werte)
+        return self
+
     def order(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
         return self
 
@@ -115,7 +120,12 @@ class _Q:
             row.setdefault("created_at", "2026-06-22T00:00:00Z")
             rows.append(row)
             return _Res([row])
-        match = [r for r in rows if all(r.get(k) == v for k, v in self._eq.items())]
+        match = [
+            r
+            for r in rows
+            if all(r.get(k) == v for k, v in self._eq.items())
+            and all(r.get(k) in v for k, v in self._in.items())
+        ]
         if self._op == "update":
             for r in match:
                 r.update(self._payload)
@@ -553,3 +563,135 @@ def test_ki_reservierung_ohne_buchung_bleibt_leer() -> None:
     assert detail.guest_name == "Anna"
     assert detail.listing_name is None
     assert objekt is None
+
+
+# --- Gastname und Bild in der Konversationsliste (29.08.2026) ----------------
+#
+# Die Liste zeigte fuer WhatsApp die Rohnummer statt eines Namens. Live waren
+# ALLE VIER Konversationen ohne `guest_name`, zwei davon mit einem verknuepften
+# Gast, der sehr wohl einen Namen hatte. Drei Fehler, drei Tests.
+
+
+def _db_mit_konversation(**felder):  # noqa: ANN003, ANN201
+    """Fake-DB mit einer WhatsApp-Konversation."""
+    db = _DB()
+    db.store["whatsapp_conversation"] = [
+        {
+            "id": "c1",
+            "tenant_id": "t1",
+            "wa_phone": "4915251939026",
+            "guest_name": None,
+            "guest_id": None,
+            "reservation_id": None,
+            "last_message": "Hallo",
+            "last_at": "2026-08-29T10:00:00Z",
+            "is_read": True,
+            **felder,
+        }
+    ]
+    return db
+
+
+def test_name_kommt_vom_verknuepften_gast() -> None:
+    """DER Live-Fall: `guest_name` leer, aber der Gast aus der Buchung hat
+    einen Namen. Bis hierher zeigte die Liste trotzdem die Rohnummer.
+
+    Erwartet wird "Hanna", nicht "Hanna Schaub": der Name laeuft durch die
+    zentrale Gast-Maske (Daten-Split §4). Ohne VIEW_GUEST_NAME sieht der
+    Nutzer nur den Vornamen — dieselbe Regel wie in inbox/reservations, und
+    sie gilt fuer diesen Weg genauso."""
+    db = _db_mit_konversation(guest_id="g1")
+    db.store["guests"] = [
+        {
+            "id": "g1",
+            "tenant_id": "t1",
+            "first_name": "Hanna",
+            "last_name": "Schaub",
+            "avatar_url": None,
+        }
+    ]
+    svc = WhatsAppService(service_client=db, client=_FakeClient())
+    items = svc.list_conversations(_CTX).items
+    assert items[0].guest_name == "Hanna"
+
+
+def test_whatsapp_profilname_schlaegt_den_buchungsnamen() -> None:
+    """Wie der Gast sich SELBST nennt, gewinnt gegen den Buchungsnamen — er
+    ist naeher daran, wie er angesprochen werden will."""
+    db = _db_mit_konversation(guest_name="Hanni", guest_id="g1")
+    db.store["guests"] = [
+        {
+            "id": "g1",
+            "tenant_id": "t1",
+            "first_name": "Hanna",
+            "last_name": "Schaub",
+            "avatar_url": None,
+        }
+    ]
+    svc = WhatsAppService(service_client=db, client=_FakeClient())
+    assert svc.list_conversations(_CTX).items[0].guest_name == "Hanni"
+
+
+def test_bild_kommt_vom_verknuepften_gast() -> None:
+    """WhatsApp liefert kein Profilbild (die Cloud API gibt es nicht heraus).
+    Was wir zeigen koennen, ist das Bild des Gastes aus der Buchung."""
+    db = _db_mit_konversation(guest_id="g1")
+    db.store["guests"] = [
+        {
+            "id": "g1",
+            "tenant_id": "t1",
+            "first_name": "Hanna",
+            "last_name": "Schaub",
+            "avatar_url": "https://example.test/h.jpg",
+        }
+    ]
+    svc = WhatsAppService(service_client=db, client=_FakeClient())
+    items = svc.list_conversations(_CTX).items
+    assert items[0].guest_avatar_url == "https://example.test/h.jpg"
+
+
+def test_namenloser_gast_gibt_keinen_leeren_namen() -> None:
+    """Ein Gast ohne Namen darf keinen leeren String liefern: die Oberflaeche
+    prueft auf None und faellt sonst auf die Nummer zurueck. '' waere ein
+    Name, der keiner ist (Wurzel 4)."""
+    db = _db_mit_konversation(guest_id="g1")
+    db.store["guests"] = [
+        {"id": "g1", "tenant_id": "t1", "first_name": None,
+         "last_name": None, "avatar_url": None}
+    ]
+    svc = WhatsAppService(service_client=db, client=_FakeClient())
+    assert svc.list_conversations(_CTX).items[0].guest_name is None
+
+
+def test_ohne_gast_bleibt_alles_leer() -> None:
+    """Keine Verknuepfung, kein Profilname: nichts erfinden."""
+    svc = WhatsAppService(service_client=_db_mit_konversation(), client=_FakeClient())
+    item = svc.list_conversations(_CTX).items[0]
+    assert item.guest_name is None
+    assert item.guest_avatar_url is None
+
+
+def test_name_wird_bei_bestehender_konversation_nachgetragen() -> None:
+    """Der zweite Fehler: `guest_name` wurde NUR beim Anlegen geschrieben.
+
+    Entstand die Konversation aus einer AUSGEHENDEN Nachricht — dort schickt
+    Meta keine `contacts` mit —, blieb das Feld leer, und kein spaeterer
+    Webhook hat es je nachgetragen. Live waren so alle vier Konversationen
+    ohne Namen.
+    """
+    db = _db_mit_konversation()
+    svc = WhatsAppService(service_client=db, client=_FakeClient())
+    conv = svc._upsert_conversation(  # noqa: SLF001
+        db, "t1", "4915251939026", guest_name="Christophe"
+    )
+    assert conv["guest_name"] == "Christophe"
+    assert db.store["whatsapp_conversation"][0]["guest_name"] == "Christophe"
+
+
+def test_leerer_profilname_ueberschreibt_keinen_vorhandenen() -> None:
+    """Wurzel 1 — der Gegenzustand ist hier der schon bekannte Name: ein
+    Webhook OHNE `contacts` darf ihn nicht loeschen."""
+    db = _db_mit_konversation(guest_name="Christophe")
+    svc = WhatsAppService(service_client=db, client=_FakeClient())
+    conv = svc._upsert_conversation(db, "t1", "4915251939026", guest_name=None)  # noqa: SLF001
+    assert conv["guest_name"] == "Christophe"

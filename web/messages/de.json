@@ -911,7 +911,9 @@
     "waTemplatePickHint": "Der Baustein wird in das Feld eingefügt. Freie Nachrichten erlaubt WhatsApp nur innerhalb von 24 Stunden nach der letzten Gastnachricht.",
     "waSendTemplateHint": "Von Meta geprüfte Vorlagen gehen direkt raus — auch wenn seit der letzten Gastnachricht mehr als 24 Stunden vergangen sind. Die Angaben füllt myNextDays aus der Reservierung.",
     "waSendTemplate": "Senden",
-    "waFormatMono": "Feste Zeichenbreite"
+    "waFormatMono": "Feste Zeichenbreite",
+    "badgeCalendar": "Kalender",
+    "badgeGuest": "Gästekarte"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp ist noch nicht verbunden. Zugangsdaten (Meta Cloud API) in den Server-Einstellungen hinterlegen, dann ist der Versand aktiv.",

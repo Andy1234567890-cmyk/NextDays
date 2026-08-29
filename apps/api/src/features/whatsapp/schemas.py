@@ -12,6 +12,11 @@ class WhatsAppConversation(BaseModel):
     id: str
     wa_phone: str
     guest_name: str | None = None
+    # Bild des VERKNUEPFTEN Gastes, nicht das WhatsApp-Profilbild: die Cloud
+    # API gibt letzteres nicht heraus (Webhook liefert nur `wa_id` und
+    # `profile.name`). None, wenn kein Gast verknuepft ist oder er kein Bild
+    # hat — dann zeigt die Oberflaeche die Initialen.
+    guest_avatar_url: str | None = None
     reservation_id: str | None = None
     last_message: str | None = None
     last_at: str | None = None

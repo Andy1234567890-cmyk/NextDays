@@ -911,7 +911,9 @@
     "waTemplatePickHint": "Blok će biti umetnut u polje. WhatsApp dopušta besplatne poruke samo unutar 24 sata od zadnje poruke gosta.",
     "waSendTemplateHint": "Predlošci provjereni od strane Mete šalju se izravno – čak i ako je prošlo više od 24 sata od zadnje poruke gosta. myNextDays popunjava podatke iz rezervacije.",
     "waSendTemplate": "Pošalji",
-    "waFormatMono": "Fiksna širina fonta"
+    "waFormatMono": "Fiksna širina fonta",
+    "badgeCalendar": "Kalendar",
+    "badgeGuest": "Kartica gosta"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp još nije povezan. Unesite pristupne podatke (Meta Cloud API) u postavkama poslužitelja, nakon toga je slanje aktivno.",

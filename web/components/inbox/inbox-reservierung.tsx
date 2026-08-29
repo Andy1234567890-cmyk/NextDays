@@ -94,11 +94,53 @@ export function ReservationPanel({
 
   return (
     <div className="flex flex-col gap-5 p-5">
-      <div className="flex items-center justify-between">
-        <h2 className="font-display text-lg font-extrabold">
-          {t("reservation")}
-          {res.ota_reservation_code ? ` ${res.ota_reservation_code}` : ""}
-        </h2>
+      {/* Kopf: Überschrift und die zwei Sprungziele in EINER Reihe.
+          Die Knöpfe standen bis hierher ganz unten unter dem Kalender — also
+          hinter Karte, Gästedaten, Notizen und Monatsraster. Wer die Buchung
+          öffnen wollte, musste die ganze Spalte scrollen. Oben stehen sie da,
+          wo man sie sucht: neben dem, worauf sie sich beziehen. */}
+      <div className="flex items-center justify-between gap-3">
+        {/* Die Überschrift IST der Weg zur Buchung — sie nennt die
+            Reservierung, also führt sie auch dorthin. Ohne Reservierungs-ID
+            (Anfrage, WhatsApp-Chat ohne Buchung) bleibt sie schlichter Text
+            statt eines Links ins Leere. */}
+        {thread.reservation_id ? (
+          <Link
+            href={`/reservierungen/${thread.reservation_id}`}
+            className="min-w-0 truncate font-display text-lg font-extrabold underline-offset-4 hover:underline"
+          >
+            {t("reservation")}
+            {res.ota_reservation_code ? ` ${res.ota_reservation_code}` : ""}
+          </Link>
+        ) : (
+          <h2 className="min-w-0 truncate font-display text-lg font-extrabold">
+            {t("reservation")}
+            {res.ota_reservation_code ? ` ${res.ota_reservation_code}` : ""}
+          </h2>
+        )}
+
+        <div className="flex shrink-0 items-center gap-2">
+          {thread.reservation_id && (
+            <Link
+              href={`/kalender?reservation=${thread.reservation_id}`}
+              title={t("openReservation")}
+              className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted"
+            >
+              <Icon icon="ph:calendar-check" className="size-3.5" />
+              {t("badgeCalendar")}
+            </Link>
+          )}
+          {thread.guest_id && (
+            <Link
+              href={`/gaeste/${thread.guest_id}`}
+              title={t("openGuest")}
+              className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-border px-2.5 py-1 text-xs font-medium transition-colors hover:bg-muted"
+            >
+              <Icon icon="ph:identification-card" className="size-3.5" />
+              {t("badgeGuest")}
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Reservierungs-Karte */}
@@ -256,23 +298,6 @@ export function ReservationPanel({
         <StayCalendar checkIn={res.check_in} checkOut={res.check_out} />
       )}
 
-      {thread.reservation_id && (
-        <Button asChild variant="outline" size="sm">
-          <Link href={`/kalender?reservation=${thread.reservation_id}`}>
-            <Icon icon="ph:calendar-check" className="size-4" />
-            {t("openReservation")}
-          </Link>
-        </Button>
-      )}
-
-      {thread.guest_id && (
-        <Button asChild variant="outline" size="sm">
-          <Link href={`/gaeste/${thread.guest_id}`}>
-            <Icon icon="ph:identification-card" className="size-4" />
-            {t("openGuest")}
-          </Link>
-        </Button>
-      )}
     </div>
   );
 }

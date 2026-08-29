@@ -10,6 +10,9 @@ export type WhatsAppConversation = {
   id: string;
   wa_phone: string;
   guest_name: string | null;
+  /** Bild des VERKNÜPFTEN Gastes — WhatsApp selbst liefert keines (die Cloud
+   *  API gibt das Profilbild nicht heraus). `null` = Initialen anzeigen. */
+  guest_avatar_url: string | null;
   reservation_id: string | null;
   last_message: string | null;
   last_at: string | null;

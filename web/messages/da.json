@@ -911,7 +911,9 @@
     "waTemplatePickHint": "Byggeblokken indsættes i feltet. Gratis beskeder tillader WhatsApp kun inden for 24 timer efter den sidste gæstebesked.",
     "waSendTemplateHint": "Meta-godkendte skabeloner sendes direkte – selvom der er gået mere end 24 timer siden den sidste gæstebesked. myNextDays udfylder oplysningerne fra reservationen.",
     "waSendTemplate": "Send",
-    "waFormatMono": "Fast tegnhøjde"
+    "waFormatMono": "Fast tegnhøjde",
+    "badgeCalendar": "Kalender",
+    "badgeGuest": "Gæstekort"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp er endnu ikke forbundet. Angiv adgangsoplysningerne (Meta Cloud API) i serverindstillingerne, så er afsendelse aktiv.",

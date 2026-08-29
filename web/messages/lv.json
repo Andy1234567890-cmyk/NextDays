@@ -911,7 +911,9 @@
     "waTemplatePickHint": "Bloks tiks ievietots laukā. WhatsApp atļauj bezmaksas ziņojumus tikai 24 stundu laikā pēc pēdējās viesa ziņas.",
     "waSendTemplateHint": "Meta apstiprinātās veidnes tiek nosūtītas tieši — pat ja kopš pēdējās viesa ziņas ir pagājušas vairāk nekā 24 stundas. myNextDays aizpilda informāciju no rezervācijas.",
     "waSendTemplate": "Sūtīt",
-    "waFormatMono": "Fiksēts rakstzīmju platums"
+    "waFormatMono": "Fiksēts rakstzīmju platums",
+    "badgeCalendar": "Kalendārs",
+    "badgeGuest": "Viesu karte"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp vēl nav savienots. Ievadiet piekļuves datus (Meta Cloud API) servera iestatījumos, tad sūtīšana būs aktīva.",
